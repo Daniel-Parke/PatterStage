@@ -56,4 +56,14 @@ describe("resolveSafeProfileName", () => {
     const max = "a".repeat(128);
     expect(resolveSafeProfileName(max)).toEqual({ ok: true, profile: max });
   });
+
+  it("accepts dot-prefixed profile names like .Retired", () => {
+    expect(resolveSafeProfileName(".Retired")).toEqual({ ok: true, profile: ".Retired" });
+    expect(resolveSafeProfileName(".retired")).toEqual({ ok: true, profile: ".retired" });
+  });
+
+  it("rejects dot-prefixed names exceeding 127 chars", () => {
+    const long = ".a".repeat(64); // ".a" * 64 = 128 chars total
+    expect(resolveSafeProfileName(long).ok).toBe(false);
+  });
 });

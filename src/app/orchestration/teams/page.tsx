@@ -292,7 +292,7 @@ export default function TeamsPage() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="pl-64 flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <div>

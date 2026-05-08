@@ -181,7 +181,7 @@ export default function MemoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg">
+    <div className="pl-64 flex flex-col h-full">
       <PageHeader
         icon={Brain}
         title={getTitle()}

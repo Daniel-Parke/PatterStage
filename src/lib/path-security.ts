@@ -7,7 +7,7 @@ import { homedir } from "os";
 
 import { HERMES_HOME, CH_DATA_DIR } from "@/lib/hermes";
 
-const PROFILE_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
+const PROFILE_PATTERN = /^\.[a-zA-Z0-9][a-zA-Z0-9_-]{0,126}$|^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
 
 /** On Unix, `path.resolve("C:/...")` is relative to cwd; reject drive paths. */
 const WINDOWS_DRIVE_PATH = /^[a-zA-Z]:[/\\]/;

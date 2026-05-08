@@ -41,8 +41,6 @@ export const mainSections: SidebarSection[] = [
     label: "Main",
     links: [
       { icon: Zap, label: "Dashboard", href: "/", color: "cyan" },
-      { icon: Rocket, label: "Missions", href: "/missions", color: "cyan" },
-      { icon: ListTodo, label: "Cron", href: "/cron", color: "orange" },
       { icon: Clock, label: "Sessions", href: "/sessions", color: "orange" },
       { icon: Database, label: "Memory", href: "/memory", color: "pink" },
       { icon: Globe, label: "Gateway", href: "/gateway", color: "cyan" },
@@ -52,8 +50,10 @@ export const mainSections: SidebarSection[] = [
   {
     label: "Orchestration",
     links: [
-      { icon: Users, label: "Teams", href: "/orchestration/teams", color: "purple" },
+      { icon: ListTodo, label: "Cron", href: "/cron", color: "orange" },
+      { icon: Rocket, label: "Missions", href: "/missions", color: "cyan" },
       { icon: Kanban, label: "Kanban", href: "/kanban", color: "purple" },
+      { icon: Users, label: "Teams", href: "/orchestration/teams", color: "purple" },
     ],
   },
   {

@@ -294,13 +294,31 @@ async function handleGenerateChapter(body: Record<string, unknown>): Promise<Nex
     const raw = (await callLLM([{ role: "system", content: system }, { role: "user", content: userMessage }], { temperature: 0.85, maxTokens: 4096 })).content;
     const content = validateChapterOutput(raw);
 
+    // Extract a descriptive chapter title from the generated content
+    let generatedTitle = chapterOutline.title;
+    try {
+      const titleSystem = "You are a story editor. Extract a short, evocative title (3-7 words) for this chapter. Return ONLY the title text, nothing else.";
+      const titleRaw = (await callLLM([{ role: "system", content: titleSystem }, { role: "user", content: `Chapter content:\n${content.slice(0, 500)}` }], { temperature: 0.3, maxTokens: 32 })).content;
+      const extracted = titleRaw.trim().replace(/^["']|["']$/g, "").slice(0, 80);
+      if (extracted.length > 5) generatedTitle = extracted;
+    } catch { /* keep outline title on failure */ }
+
     const updatedChapters = [...story.chapters];
     updatedChapters[nextIdx] = {
       ...updatedChapters[nextIdx],
+      title: generatedTitle,
       status: "complete",
       wordCount: content.split(/\s+/).length,
       generatedAt: new Date().toISOString(),
     };
+
+    // Keep chapterOutlines in sync so future regenerate/edit uses the real title
+    const arc = { ...(story.storyArc as unknown as StoryArcType) };
+    if (arc.chapterOutlines) {
+      arc.chapterOutlines = arc.chapterOutlines.map((o, i) =>
+        i === nextIdx ? { ...o, title: generatedTitle } : o
+      );
+    }
 
     const newContents = { ...story.chapterContents, [String(nextNum)]: content };
 
@@ -319,6 +337,7 @@ async function handleGenerateChapter(body: Record<string, unknown>): Promise<Nex
       chapters: updatedChapters,
       chapterContents: newContents,
       rollingSummary,
+      storyArc: arc,
       status: allComplete ? "complete" : "active",
     });
 

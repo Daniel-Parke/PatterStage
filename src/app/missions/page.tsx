@@ -677,14 +677,14 @@ export default function MissionsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-950 grid-bg flex items-center justify-center">
+      <div className="pl-64 flex items-center justify-center h-full">
         <Loader2 className="w-8 h-8 text-neon-cyan animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg relative scanlines">
+    <div className="pl-64 flex flex-col h-full relative">
       {toastElement}
 
       {/* Header */}

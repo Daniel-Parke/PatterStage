@@ -14,7 +14,7 @@ function resolvePython(): string {
   const candidates = [
     path.join(HERMES_HOME, "hermes-agent", "venv", "bin", "python3"),
     path.join(HERMES_HOME, "hermes-agent", ".venv", "bin", "python3"),
-    path.join(HERMES_HOME, "..", "local", "share", "hermes-agent", "venv", "bin", "python3"),
+    path.join(HERMES_HOME, "..", ".local", "share", "hermes-agent", "venv", "bin", "python3"),
     path.join(HERMES_HOME, "..", "hermes-agent", "venv", "bin", "python3"),
     path.join(process.env.HOME || "", ".local", "share", "hermes-agent", "venv", "bin", "python3"),
     "/usr/bin/python3",
@@ -59,7 +59,7 @@ function runBridgeAsync(
       ...(apiKey ? { HINDSIGHT_API_KEY: apiKey } : {}),
     };
 
-    exec(cmd, { timeout: timeoutMs, env: execEnv, maxBuffer: 1024 * 1024 }, (error, stdout, stderr) => {
+    exec(cmd, { timeout: timeoutMs, env: execEnv, maxBuffer: 10 * 1024 * 1024 }, (error, stdout, stderr) => {
       if (error && !stdout) {
         reject(new Error(stderr || error.message));
         return;

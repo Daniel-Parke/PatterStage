@@ -15,6 +15,7 @@ import {
   X,
   Play,
   Pause,
+  Trash2,
 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
@@ -101,6 +102,7 @@ export default function LogsPage() {
   const [autoScroll, setAutoScroll] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(false);
   const [lineCount, setLineCount] = useState(200);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
   const terminalRef = useRef<HTMLDivElement>(null);
 
   const loadLogs = useCallback(async () => {
@@ -117,6 +119,27 @@ export default function LogsPage() {
       setLoading(false);
     }
   }, [activeLog, lineCount]);
+
+  const handleDeleteAllLogs = useCallback(async () => {
+    if (!deleteConfirm) {
+      setDeleteConfirm(true);
+      return;
+    }
+    setLoading(true);
+    setDeleteConfirm(false);
+    try {
+      const res = await fetch("/api/logs", { method: "DELETE" });
+      if (res.ok) {
+        void loadLogs();
+      }
+    } catch { /* ignore */ } finally {
+      setLoading(false);
+    }
+  }, [deleteConfirm, loadLogs]);
+
+  const handleCancelDelete = useCallback(() => {
+    setDeleteConfirm(false);
+  }, []);
 
   useEffect(() => {
     loadLogs();
@@ -153,7 +176,7 @@ export default function LogsPage() {
   const searchMatches = search ? filteredLines.length : 0;
 
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg">
+    <div className="pl-64 flex flex-col h-full">
       <PageHeader
         icon={Terminal}
         title="System Logs"
@@ -195,6 +218,23 @@ export default function LogsPage() {
             >
               Refresh
             </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={handleDeleteAllLogs}
+              icon={Trash2}
+            >
+              {deleteConfirm ? "Confirm Clear" : "Delete All"}
+            </Button>
+            {deleteConfirm && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCancelDelete}
+              >
+                Cancel
+              </Button>
+            )}
           </div>
         }
       />
