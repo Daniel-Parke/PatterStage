@@ -252,6 +252,11 @@ This report covers three areas: (1) dead code and files removed, (2) bugs found 
 | Cron page `eslint-disable` comment for unused `error` | Renamed to `_apiError` (idiomatic discard) |
 | Cron empty state has no card container | Wrapped `EmptyState` in `div.rounded-xl.border.bg-dark-900/50` |
 | `ErrorBoundary` component added | New `src/components/ui/ErrorBoundary.tsx` for client error catching |
+| Logs page: long lines truncated (overflow-y-auto) | Changed to `overflow-auto` — allows horizontal scroll |
+| Mission categories hardcoded in filter pills | Filter pills now dynamically derived from loaded templates |
+| Mission filter pills always used neon-cyan active state | Active pill now uses correct per-category accent colour via `activeClasses` map |
+| Mission accordion defaultOpen hardcoded to "Custom" | Now syncs: if a category is selected, that accordion is open by default |
+| Mission groupTemplates dropped unknown categories | Now appends dynamic categories after hardcoded order |
 
 ### 🔧 Design Improvements (documented for future work)
 
