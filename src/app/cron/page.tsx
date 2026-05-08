@@ -593,8 +593,7 @@ export default function CronPage() {
   const [pauseAllBusy, setPauseAllBusy] = useState(false);
   const { showToast, toastElement } = useToast();
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data, loading, error, refetch: loadJobs } = useApiData<CronData>("/api/cron", {
+  const { data, loading, error: _apiError, refetch: loadJobs } = useApiData<CronData>("/api/cron", {
     transform: (raw) => raw as CronData,
   });
 
@@ -737,7 +736,8 @@ export default function CronPage() {
         {loading ? (
           <LoadingSpinner text="Loading cron jobs..." />
         ) : filteredJobs.length === 0 ? (
-          <EmptyState
+          <div className="rounded-xl border border-white/10 bg-dark-900/50">
+            <EmptyState
             icon={Clock}
             title="No cron jobs"
             description={
@@ -759,6 +759,7 @@ export default function CronPage() {
               ) : undefined
             }
           />
+          </div>
         ) : (
           <div className="grid gap-3">
             {filteredJobs.map((job) => (

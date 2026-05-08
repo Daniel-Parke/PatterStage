@@ -4,10 +4,11 @@
 
 import {
   Terminal, FileText, Database, Clock, Shield, Zap,
-  Cpu, Activity, Layers, HardDrive, Wrench, ListTodo, Globe,
+  Cpu, Activity, Layers, HardDrive, Wrench, ListTodo, Globe, Globe2,
   ScrollText, Sparkles, Rocket, Volume2, Mic, GitBranch,
   RotateCcw, ShieldCheck, MessageSquare, Lock, Code,
-  BookOpen, Users, Layout, Kanban,
+  BookOpen, Users, Layout, Kanban, Bot, MessageCircle,
+  AudioLines, Calendar, Settings2, Network, Monitor,
 } from "lucide-react";
 
 import type { AccentColor } from "@/types/hermes";
@@ -52,7 +53,7 @@ export const mainSections: SidebarSection[] = [
     label: "Orchestration",
     links: [
       { icon: Users, label: "Teams", href: "/orchestration/teams", color: "purple" },
-      { icon: Layout, label: "Kanban", href: "/kanban", color: "purple" },
+      { icon: Kanban, label: "Kanban", href: "/kanban", color: "purple" },
     ],
   },
   {
@@ -72,11 +73,11 @@ export const mainSections: SidebarSection[] = [
   {
     label: "Operations",
     links: [
-      { icon: Users, label: "Agents", href: "/agent/agents", color: "purple" },
+      { icon: Bot, label: "Agents", href: "/agent/agents", color: "purple" },
       { icon: FileText, label: "Skills", href: "/skills", color: "green" },
       { icon: Wrench, label: "Tools", href: "/agent/tools", color: "purple" },
       { icon: Sparkles, label: "Personalities", href: "/personalities", color: "purple" },
-      { icon: FileText, label: "HERMES.md", href: "/config/hermes_md", color: "cyan" },
+      { icon: Cpu, label: "HERMES.md", href: "/config/hermes_md", color: "cyan" },
       { icon: Lock, label: "Environment", href: "/config/env", color: "orange" },
     ],
   },
@@ -100,7 +101,7 @@ export const configGroups: ConfigGroup[] = [
     links: [
       { icon: Terminal, label: "Terminal", href: "/config/terminal", color: "orange" },
       { icon: HardDrive, label: "Compression", href: "/config/compression", color: "cyan" },
-      { icon: Globe, label: "Browser", href: "/config/browser", color: "green" },
+      { icon: Globe2, label: "Browser", href: "/config/browser", color: "green" },
       { icon: Zap, label: "Checkpoints", href: "/config/checkpoints", color: "cyan" },
       { icon: Code, label: "Code Execution", href: "/config/code_execution", color: "green" },
       { icon: ScrollText, label: "Logging", href: "/config/logging", color: "green" },
@@ -117,9 +118,9 @@ export const configGroups: ConfigGroup[] = [
   {
     label: "Voice & Audio",
     links: [
-      { icon: Volume2, label: "Text-to-Speech", href: "/config/tts", color: "pink" },
+      { icon: AudioLines, label: "Text-to-Speech", href: "/config/tts", color: "pink" },
       { icon: Mic, label: "Speech-to-Text", href: "/config/stt", color: "purple" },
-      { icon: Mic, label: "Voice", href: "/config/voice", color: "pink" },
+      { icon: Volume2, label: "Voice", href: "/config/voice", color: "pink" },
     ],
   },
   {
@@ -134,10 +135,10 @@ export const configGroups: ConfigGroup[] = [
   {
     label: "Integrations",
     links: [
-      { icon: MessageSquare, label: "Discord", href: "/config/discord", color: "purple" },
-      { icon: Globe, label: "Web", href: "/config/web", color: "green" },
+      { icon: MessageCircle, label: "Discord", href: "/config/discord", color: "purple" },
+      { icon: Network, label: "Web", href: "/config/web", color: "green" },
       { icon: Cpu, label: "Auxiliary Models", href: "/config/auxiliary", color: "cyan" },
-      { icon: Wrench, label: "Platform Toolsets", href: "/config/platform_toolsets", color: "purple" },
+      { icon: Settings2, label: "Platform Toolsets", href: "/config/platform_toolsets", color: "purple" },
       { icon: GitBranch, label: "Smart Routing", href: "/config/smart_model_routing", color: "purple" },
       { icon: Clock, label: "Human Delay", href: "/config/human_delay", color: "orange" },
     ],

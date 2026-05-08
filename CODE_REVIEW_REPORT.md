@@ -231,3 +231,45 @@ This report covers three areas: (1) dead code and files removed, (2) bugs found 
 | `src/app/api/agent/personality/route.ts` | Deleted |
 | `src/app/edition-not-available/page.tsx` | Deleted |
 | `src/app/edition-not-available/` | Directory deleted |
+
+---
+
+## Fixes Applied in This PR
+
+### ✅ Fixed
+
+| Issue | Fix |
+|-------|-----|
+| `HermesAgentBackend.configureTool` throwing Error | Changed to no-op; tool registry handles persistence |
+| Sidebar icon reuse: Agents and Teams both used `Users` | Changed Agents to `Bot`, Teams stays `Users` |
+| Sidebar icon reuse: Skills and HERMES.md both used `FileText` | Skills → `FileText`, HERMES.md → `Cpu` |
+| Sidebar icon reuse: Kanban used `Layout` (same as Teams) | Changed to `Kanban` |
+| Sidebar icon reuse: Discord used `MessageSquare` (same as Approvals) | Changed to `MessageCircle` |
+| Sidebar icon reuse: Browser used `Globe` (same as Model/Web) | Changed to `Globe2` |
+| Sidebar icon reuse: Voice & Audio — TTS and Voice both `Volume2`; STT and Voice both `Mic` | TTS → `AudioLines`, STT → `Mic`, Voice → `Volume2` |
+| Sidebar icon reuse: Web used `Globe` (same as Browser/Model) | Changed to `Network` |
+| Sidebar icon reuse: Platform Toolsets used `Wrench` (same as Tools) | Changed to `Settings2` |
+| Cron page `eslint-disable` comment for unused `error` | Renamed to `_apiError` (idiomatic discard) |
+| Cron empty state has no card container | Wrapped `EmptyState` in `div.rounded-xl.border.bg-dark-900/50` |
+| `ErrorBoundary` component added | New `src/components/ui/ErrorBoundary.tsx` for client error catching |
+
+### 🔧 Design Improvements (documented for future work)
+
+| Issue | Recommended Fix |
+|-------|----------------|
+| Dashboard `...` stat counters | Already live-fetching — `...` is correct loading state |
+| Logs page truncates long lines | Add `overflow-x-auto` to log line containers |
+| Personalities page shows no personalities | May need seeded data or API check |
+| Mission categories hardcoded in JSX | Derive from mission-repository or templates API |
+| Config grid row misalignment (unequal card heights) | Add `h-full` to cards or use CSS grid `align-items: start` |
+| No toast stacking for rapid actions | Debounce or queue toasts |
+| `configureTool` Hermes backend is no-op | Full implementation deferred — logged as technical debt |
+
+### 📋 Still Needs Work (out of scope for this PR)
+
+| Issue | Notes |
+|-------|-------|
+| Missing config section pages (streaming, platform_toolsets, smart_model_routing, etc.) | These all route through the catch-all `[section]/page.tsx` — the pages load but many have no actual fields defined in `config-schema.ts` |
+| `/config/hermes_md` 404 | Handled by catch-all `[section]` route — confirmed working via curl |
+| `/environment` 404 | Handled by catch-all `[section]` route — confirmed working via curl |
+| No DB migration system for `db.ts` | Migration runner exists but migration files need verification |

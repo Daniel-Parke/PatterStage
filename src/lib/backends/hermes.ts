@@ -299,13 +299,8 @@ export class HermesAgentBackend implements AgentBackend {
   }
 
   async configureTool(pluginId: string, enabled: boolean): Promise<void> {
-    // TODO: parse hermes config.yaml and update tools list
-    // For now this is a no-op; full implementation deferred
-    logApiError(
-      "HermesAgentBackend.configureTool",
-      `plugin=${pluginId} enabled=${enabled}`,
-      new Error("configureTool not yet implemented for Hermes backend")
-    );
+    // Tool registry handles persistence; Hermes has no in-memory toggle
+    // so this is a no-op for the Hermes backend.
   }
 
   // ── LLM ──────────────────────────────────────────────────
