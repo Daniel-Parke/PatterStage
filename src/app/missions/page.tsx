@@ -172,7 +172,11 @@ function groupTemplates(
     if (!grouped[cat]) grouped[cat] = [];
     grouped[cat].push(t);
   }
-  return CATEGORY_ORDER.filter((c) => grouped[c]).map((cat) => [
+  // Preserve hardcoded category order, then append any categories
+  // discovered from templates that aren't in the hardcoded list.
+  const knownOrder = new Set(CATEGORY_ORDER);
+  const extra = Object.keys(grouped).filter((c) => !knownOrder.has(c));
+  return [...CATEGORY_ORDER, ...extra].filter((c) => grouped[c]).map((cat) => [
     cat,
     grouped[cat],
   ]);
@@ -772,19 +776,37 @@ export default function MissionsPage() {
               >
                 All
               </button>
-              {CATEGORY_ORDER.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setCategoryFilter(cat)}
-                  className={`px-3 py-1 rounded-full text-xs font-mono transition-colors ${
-                    categoryFilter === cat
-                      ? `bg-${CATEGORY_COLORS[cat] || "cyan"}-500/20 text-${CATEGORY_COLORS[cat] || "cyan"}-400 border border-${CATEGORY_COLORS[cat] || "cyan"}-500/40`
-                      : "text-white/40 border border-white/10 hover:text-white/60 hover:border-white/20"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+              {(() => {
+                const knownSet = new Set(CATEGORY_ORDER);
+                const extra = templates
+                  .map((t) => (t.isCustom ? "Custom" : t.category || "Other"))
+                  .filter((c) => !knownSet.has(c));
+                const allCats = [...CATEGORY_ORDER, ...extra];
+                return allCats.map((cat) => {
+                  const color = CATEGORY_COLORS[cat] || "cyan";
+                  const active = categoryFilter === cat;
+                  const activeClasses: Record<string, string> = {
+                    cyan: "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40",
+                    purple: "bg-neon-purple/20 text-neon-purple border border-neon-purple/40",
+                    pink: "bg-neon-pink/20 text-neon-pink border border-neon-pink/40",
+                    green: "bg-neon-green/20 text-neon-green border border-neon-green/40",
+                    orange: "bg-neon-orange/20 text-neon-orange border border-neon-orange/40",
+                  };
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setCategoryFilter(cat)}
+                      className={`px-3 py-1 rounded-full text-xs font-mono transition-colors ${
+                        active
+                          ? activeClasses[color] || activeClasses.cyan
+                          : "text-white/40 border border-white/10 hover:text-white/60 hover:border-white/20"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  );
+                });
+              })()}
             </div>
             {/* Category Accordion */}
             <div className="space-y-2">
@@ -1445,13 +1467,14 @@ export default function MissionsPage() {
               const grouped = groupTemplates(templates);
               return grouped.map(([cat, items]) => {
                 const color = CATEGORY_COLORS[cat] || "cyan";
+                const isExtra = !CATEGORY_ORDER.includes(cat);
                 return (
                   <CategoryAccordion
                     key={cat}
                     name={cat}
                     count={items.length}
-                    color={color}
-                    defaultOpen={cat === "Custom"}
+                    color={isExtra ? "cyan" : color}
+                    defaultOpen={categoryFilter === "all" ? cat === "Custom" : categoryFilter === cat}
                   >
                     <div className="space-y-1.5">
                       {items.map((t) => (

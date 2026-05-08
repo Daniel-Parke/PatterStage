@@ -316,7 +316,7 @@ export default function LogsPage() {
             </div>
 
             {/* Log lines */}
-            <div className="p-4 font-mono text-xs space-y-0 max-h-[calc(100vh-320px)] overflow-y-auto">
+            <div className="p-4 font-mono text-xs space-y-0 max-h-[calc(100vh-320px)] overflow-auto">
               {filteredLines.length > 0 ? (
                 filteredLines.map((line, i) => (
                   <LogLine
