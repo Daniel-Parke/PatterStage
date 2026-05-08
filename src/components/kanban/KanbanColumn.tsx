@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import KanbanCard from "./KanbanCard";
 import type {
@@ -56,6 +56,11 @@ export default function KanbanColumn({
   const [titleValue, setTitleValue] = useState(column.title);
   const [editingWip, setEditingWip] = useState(false);
   const [wipValue, setWipValue] = useState(column.wipLimit?.toString() ?? "");
+
+  // Sync wipValue when column.wipLimit changes externally
+  useEffect(() => {
+    setWipValue(column.wipLimit?.toString() ?? "");
+  }, [column.wipLimit]);
 
   const cardCount = cards.length;
   const wipExceeded = column.wipLimit !== null && cardCount > column.wipLimit;

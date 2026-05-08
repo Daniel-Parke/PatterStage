@@ -129,7 +129,7 @@ export default function ConfigIndexPage() {
           )}
           {section.complexKeys && section.complexKeys.length > 0 && (
             <span className="text-[10px] font-mono text-neon-orange/60 bg-neon-orange/5 px-1.5 py-0.5 rounded">
-              +{section.complexKeys.length} complex
+              +{section.complexKeys.length} advanced
             </span>
           )}
         </div>

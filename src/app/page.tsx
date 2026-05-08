@@ -205,7 +205,17 @@ export default function Dashboard() {
   const [config, setConfig] = useState<Record<string, unknown> | null>(null);
   const [templates, setTemplates] = useState<Array<{ id: string; name: string; icon: string; color: string; category: string; profile: string; description: string; isCustom?: boolean }>>([]);
   const [dispatchExpanded, setDispatchExpanded] = useState(false);
+  const [errorSev, setErrorSev] = useState<"all" | "error" | "warning">("all");
   const { showToast, toastElement } = useToast();
+
+  const filteredErrors = useMemo(() => {
+    if (!monitor?.errors) return [];
+    if (errorSev === "all") return monitor.errors;
+    return monitor.errors.filter((e) => {
+      const msg = e.message.toLowerCase();
+      return errorSev === "error" ? msg.includes("error") : msg.includes("warning");
+    });
+  }, [monitor?.errors, errorSev]);
 
   // Cancel a mission from the dashboard
   const handleCancelMission = useCallback(async (missionId: string, missionName: string) => {
@@ -294,7 +304,7 @@ export default function Dashboard() {
           <h1 className="text-xl font-bold tracking-tight">
             <span className="text-neon-cyan text-glow-cyan">MISSION</span>
             <span className="text-white/40 mx-1">/</span>
-            <span className="text-white">CONTROL</span>
+            <span className="text-white/70">CONTROL</span>
           </h1>
           <p className="text-xs text-white/40 font-mono">
             {currentModel}{currentProvider ? ` · ${currentProvider}` : ""}
@@ -670,18 +680,28 @@ export default function Dashboard() {
                 <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
                 <span className="text-xs font-mono text-white/60">Errors</span>
               </div>
-              <Link href="/logs" className="text-[10px] font-mono text-red-400 hover:underline">
-                logs →
-              </Link>
+              <div className="flex items-center gap-1">
+                {(["all", "error", "warning"] as const).map((sev) => (
+                  <button
+                    key={sev}
+                    onClick={() => setErrorSev(sev)}
+                    className={`text-[10px] font-mono px-1.5 py-0.5 rounded transition-colors ${
+                      errorSev === sev ? "bg-red-500/20 text-red-400" : "text-white/30 hover:text-white/60"
+                    }`}
+                  >
+                    {sev.charAt(0).toUpperCase() + sev.slice(1)}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="max-h-48 overflow-y-auto">
-              {monitor?.errors.length === 0 && (
+              {filteredErrors.length === 0 && (
                 <div className="px-4 py-6 text-center">
                   <CheckCircle2 className="w-5 h-5 text-neon-green mx-auto mb-1" />
                   <div className="text-xs text-neon-green">No recent errors</div>
                 </div>
               )}
-              {monitor?.errors.map((err, i) => (
+              {filteredErrors.map((err, i) => (
                 <div key={i} className="px-4 py-2 border-b border-white/5 last:border-0">
                   <div className="text-[10px] text-red-400/80 font-mono truncate">{err.message}</div>
                   <div className="text-[10px] text-white/20 font-mono mt-0.5">

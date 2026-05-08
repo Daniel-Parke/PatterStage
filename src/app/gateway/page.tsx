@@ -120,7 +120,7 @@ export default function GatewayPage() {
                         {meta.label}
                       </div>
                       <div className="text-xs text-white/40 font-mono mt-1">
-                        {active ? "Connected" : "Not configured"}
+                        {active ? "Connected" : "Disabled"}
                       </div>
                     </div>
                   );

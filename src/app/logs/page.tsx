@@ -13,6 +13,8 @@ import {
   AlertCircle,
   FileText,
   X,
+  Play,
+  Pause,
 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
@@ -97,6 +99,7 @@ export default function LogsPage() {
   const [search, setSearch] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(false);
   const [lineCount, setLineCount] = useState(200);
   const terminalRef = useRef<HTMLDivElement>(null);
 
@@ -118,6 +121,13 @@ export default function LogsPage() {
   useEffect(() => {
     loadLogs();
   }, [loadLogs]);
+
+  // Auto-refresh interval
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const id = setInterval(loadLogs, 5000);
+    return () => clearInterval(id);
+  }, [autoRefresh, loadLogs]);
 
   useEffect(() => {
     if (autoScroll && terminalRef.current) {
@@ -155,6 +165,17 @@ export default function LogsPage() {
         color="cyan"
         actions={
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors ${
+                autoRefresh
+                  ? "bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/30"
+                  : "bg-dark-900/50 text-white/40 border border-white/10 hover:text-white/60"
+              }`}
+            >
+              {autoRefresh ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+              {autoRefresh ? "Auto-refresh On" : "Auto-refresh Off"}
+            </button>
             <select
               value={lineCount}
               onChange={(e) => setLineCount(parseInt(e.target.value))}

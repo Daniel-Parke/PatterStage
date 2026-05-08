@@ -535,6 +535,7 @@ export default function HindsightBrowser() {
             placeholder="Search memories (semantic search)..."
             accentColor="pink"
           />
+          <p className="text-xs text-white/30 -mt-2 mb-2 pl-1">Press Enter to search</p>
         </div>
         <Button
           variant="secondary"

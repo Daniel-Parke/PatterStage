@@ -236,7 +236,7 @@ export default function MissionsPage() {
   const [newTimeout, setNewTimeout] = useState(10);
   const [newProfile, setNewProfile] = useState("");
   const [dispatching, setDispatching] = useState(false);
-  const [categoryFilter, _setCategoryFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
 
   const fetchData = useCallback(() => {
     fetchMissions()
@@ -759,6 +759,32 @@ export default function MissionsPage() {
                 <Layers className="w-3 h-3" />
                 Edit Templates
               </button>
+            </div>
+            {/* Category Filter Buttons */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              <button
+                onClick={() => setCategoryFilter("all")}
+                className={`px-3 py-1 rounded-full text-xs font-mono transition-colors ${
+                  categoryFilter === "all"
+                    ? "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40"
+                    : "text-white/40 border border-white/10 hover:text-white/60 hover:border-white/20"
+                }`}
+              >
+                All
+              </button>
+              {CATEGORY_ORDER.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setCategoryFilter(cat)}
+                  className={`px-3 py-1 rounded-full text-xs font-mono transition-colors ${
+                    categoryFilter === cat
+                      ? `bg-${CATEGORY_COLORS[cat] || "cyan"}-500/20 text-${CATEGORY_COLORS[cat] || "cyan"}-400 border border-${CATEGORY_COLORS[cat] || "cyan"}-500/40`
+                      : "text-white/40 border border-white/10 hover:text-white/60 hover:border-white/20"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
             {/* Category Accordion */}
             <div className="space-y-2">

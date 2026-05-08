@@ -13,10 +13,9 @@ import {
   Check,
   Loader2,
   AlertCircle,
-  ChevronDown,
-  ChevronUp,
   Sparkles,
   Copy,
+  MoreVertical,
 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
@@ -92,7 +91,7 @@ function PersonalityCard({
     <div
       className={`rounded-xl border transition-all ${
         isActive
-          ? "border-neon-cyan/40 bg-neon-cyan/5 shadow-[0_0_20px_rgba(0,245,255,0.08)]"
+          ? "border-neon-cyan/50 bg-neon-cyan/5 shadow-[0_0_20px_rgba(0,245,255,0.15)] animate-pulse"
           : "border-white/10 bg-dark-900/50 hover:border-white/20"
       }`}
     >
@@ -132,39 +131,35 @@ function PersonalityCard({
                 onClick={() => onActivate(personality.name)}
                 className="p-1.5 rounded-lg text-neon-cyan hover:bg-neon-cyan/10 transition-colors"
                 title="Set as active"
-                aria-label={`Activate ${personality.name}`}
               >
                 <Sparkles className="w-3.5 h-3.5" />
               </button>
             )}
-            <button
-              onClick={() => onEdit(personality)}
-              className="p-1.5 rounded-lg text-white/40 hover:bg-white/5 transition-colors"
-              title="Edit"
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={handleDelete}
-              className={`p-1.5 rounded-lg transition-colors ${
-                deleting
-                  ? "text-red-400 bg-red-500/10"
-                  : "text-white/40 hover:bg-white/5"
-              }`}
-              title={deleting ? "Click again to confirm" : "Delete"}
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => setExpanded(!expanded)}
-              className="p-1.5 rounded-lg text-white/30 hover:bg-white/5 transition-colors"
-            >
-              {expanded ? (
-                <ChevronUp className="w-3.5 h-3.5" />
-              ) : (
-                <ChevronDown className="w-3.5 h-3.5" />
+            {/* Kebab menu */}
+            <div className="relative">
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="p-1.5 rounded-lg text-white/30 hover:bg-white/5 transition-colors"
+              >
+                <MoreVertical className="w-3.5 h-3.5" />
+              </button>
+              {expanded && (
+                <div className="absolute right-0 top-full mt-1 z-10 bg-dark-800 border border-white/10 rounded-lg shadow-xl py-1 min-w-[120px]">
+                  <button
+                    onClick={() => { onEdit(personality); setExpanded(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-white/70 hover:bg-white/5 hover:text-white"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" /> Edit
+                  </button>
+                  <button
+                    onClick={() => { handleDelete(); setExpanded(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400/80 hover:bg-red-500/10 hover:text-red-400"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete
+                  </button>
+                </div>
               )}
-            </button>
+            </div>
           </div>
         </div>
       </div>

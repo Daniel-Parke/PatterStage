@@ -19,6 +19,8 @@ import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import Badge from "@/components/ui/Badge";
 import type { SessionsData, Session } from "@/types/hermes";
 
+const PAGE_SIZE = 50;
+
 function formatDate(dateStr: string) {
   const date = new Date(dateStr);
   const now = new Date();
@@ -35,9 +37,9 @@ function formatDate(dateStr: string) {
 }
 
 function formatSessionTitle(rawTitle: string, modified: string): string {
-  // If title looks like a raw session ID, format it nicely
-  if (rawTitle.startsWith("session ")) {
-    const date = new Date(modified);
+  const date = new Date(modified);
+  if (rawTitle.startsWith("Session — ")) return rawTitle;
+  if (rawTitle.startsWith("session ") || /^\d{8}\s\d{6}/.test(rawTitle)) {
     return `Session — ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })} ${date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
   }
   return rawTitle;
@@ -91,6 +93,7 @@ export default function SessionsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     fetch("/api/sessions")
@@ -98,6 +101,10 @@ export default function SessionsPage() {
       .then((d) => setData(d.data))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    setPage(0);
+  }, [search, sourceFilter]);
 
   const sessions = data?.sessions;
   const sources = useMemo(() => {
@@ -121,6 +128,9 @@ export default function SessionsPage() {
       if (sourceFilter && session.source !== sourceFilter) return false;
       return true;
     }) || [];
+
+  const totalPages = Math.ceil(filteredSessions.length / PAGE_SIZE);
+  const paginatedSessions = filteredSessions.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
     <div className="min-h-screen bg-dark-950 grid-bg">
@@ -186,10 +196,31 @@ export default function SessionsPage() {
               Showing {filteredSessions.length} of {data?.total || 0} sessions
             </div>
             <div className="grid gap-3">
-              {filteredSessions.map((session) => (
+              {paginatedSessions.map((session) => (
                 <SessionCard key={session.id} session={session} />
               ))}
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-white/10">
+                <button
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={page === 0}
+                  className="text-xs font-mono px-3 py-1.5 rounded bg-white/5 text-white/40 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                <span className="text-xs text-white/30 font-mono">
+                  Page {page + 1} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  disabled={page >= totalPages - 1}
+                  className="text-xs font-mono px-3 py-1.5 rounded bg-white/5 text-white/40 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

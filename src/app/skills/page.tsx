@@ -50,9 +50,11 @@ export default function SkillsPage() {
     fetch("/api/agent/profiles")
       .then((res) => res.json())
       .then((d) => {
-        const ps = (d.data?.profiles || []).map((p: { id: string; name: string }) => ({
-          id: p.id, name: p.name,
-        }));
+        // Deduplicate profiles by id
+        const seen = new Set<string>();
+        const ps = (d.data?.profiles || [])
+          .map((p: { id: string; name: string }) => ({ id: p.id, name: p.name }))
+          .filter((p: { id: string }) => { if (seen.has(p.id)) return false; seen.add(p.id); return true; });
         setProfiles(ps);
       })
       .catch((error) => {
@@ -226,7 +228,7 @@ export default function SkillsPage() {
                                   <ToggleLeft className="w-6 h-6 text-white/20" />
                                 )}
                               </button>
-                              <div className="flex-1 min-w-0">
+                              <div className="flex-1 min-w-0 max-w-[200px]">
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm font-mono text-white/80">{skill.name}</span>
                                   {isPending && (
@@ -235,7 +237,7 @@ export default function SkillsPage() {
                                     </Badge>
                                   )}
                                 </div>
-                                <p className="text-xs text-white/30 truncate">{skill.description}</p>
+                                <p className="text-xs text-white/30 truncate" title={skill.description}>{skill.description}</p>
                               </div>
                               <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button variant="ghost" size="sm" icon={Eye} onClick={() => viewSkill(skill)}>
