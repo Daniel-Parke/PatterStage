@@ -1,8 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
-// hermes.ts — Backward-compatibility re-export + Hermes aliases
+// hermes.ts — DEPRECATED backward-compatibility re-export + Hermes aliases
 // ═══════════════════════════════════════════════════════════════
-// All new code should import from lib/paths.ts instead.
-// This file maintains backward compat for existing imports.
+// DEPRECATED: All new code should import from lib/paths.ts instead.
+// This file exists solely for backward compatibility with existing
+// imports and will be removed in a future release.
+// ─────────────────────────────────────────────────────────────
+// @deprecated since Control Hub v1.4 — import from paths.ts
 
 export {
   AGENT_HOME,
