@@ -572,6 +572,10 @@ export interface Mission {
 
   skills: string[];
 
+  localDirs?: string[];
+
+  references?: string[];
+
   model: string;
 
   profile: string;

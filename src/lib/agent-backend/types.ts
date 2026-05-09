@@ -42,6 +42,10 @@ export interface Mission {
   sessionId?: string;
   createdAt: string;
   updatedAt: string;
+  localDirs?: string[];
+  references?: string[];
+  skills?: string[];
+  goals?: string[];
 }
 
 export interface DispatchMissionInput {

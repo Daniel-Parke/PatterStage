@@ -48,6 +48,7 @@ import MissionTimeSelector from "@/components/ui/MissionTimeSelector";
 import TimeoutSelector from "@/components/ui/TimeoutSelector";
 import IntervalSelector from "@/components/ui/IntervalSelector";
 import ProfileSelector from "@/components/ui/ProfileSelector";
+import SkillSelector from "@/components/ui/SkillSelector";
 import CategoryAccordion from "@/components/ui/CategoryAccordion";
 import TemplateCard from "@/components/ui/TemplateCard";
 import { timeAgo, titleCase } from "@/lib/utils";
@@ -98,6 +99,8 @@ interface MissionTemplate {
   context: string;
   goals: string[];
   suggestedSkills: string[];
+  localDirs?: string[];
+  references?: string[];
   isCustom?: boolean;
   dispatchMode?: string;
   schedule?: string;
@@ -239,6 +242,11 @@ export default function MissionsPage() {
   const [newMissionTime, setNewMissionTime] = useState(15);
   const [newTimeout, setNewTimeout] = useState(10);
   const [newProfile, setNewProfile] = useState("");
+  const [newLocalDirs, setNewLocalDirs] = useState<string[]>([]);
+  const [newReferences, setNewReferences] = useState<string[]>([]);
+  const [newSkills, setNewSkills] = useState<string[]>([]);
+  const [localDirInput, setLocalDirInput] = useState("");
+  const [referenceInput, setReferenceInput] = useState("");
   const [dispatching, setDispatching] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
 
@@ -320,9 +328,43 @@ export default function MissionsPage() {
 
   // Build final prompt from instruction + context
   const buildPrompt = () => {
-    const parts = [newInstruction.trim()];
+    const parts: string[] = [];
+
+    // 1. WORKING DIRECTORIES — highest priority
+    if (newLocalDirs.length > 0) {
+      parts.push(
+        "## Working Directories\n" +
+        "Focus all work within the following directories:\n" +
+        newLocalDirs.map((d) => `  - ${d}`).join("\n") +
+        "\n"
+      );
+    }
+
+    // 2. KEY REFERENCES
+    if (newReferences.length > 0) {
+      parts.push(
+        "## Key References\n" +
+        "Consult and prioritise the following sources:\n" +
+        newReferences.map((r) => `  - ${r}`).join("\n") +
+        "\n"
+      );
+    }
+
+    // 3. RECOMMENDED SKILLS
+    if (newSkills.length > 0) {
+      parts.push(
+        "## Recommended Skills\n" +
+        "Apply expertise from the following skills where relevant:\n" +
+        newSkills.map((s) => `  - ${s}`).join("\n") +
+        "\n"
+      );
+    }
+
+    // 4. CORE INSTRUCTION
+    parts.push(newInstruction.trim());
+
+    // 5. ADDITIONAL CONTEXT
     if (newContext.trim()) {
-      // Strip any existing header from context (defense against round-trip duplication)
       const cleanContext = newContext
         .trim()
         .replace(/(?:## Additional Context\n\n?)+/g, "")
@@ -360,12 +402,15 @@ export default function MissionsPage() {
               action: "update",
               missionId: editingId,
               name: newName,
-              prompt: fullPrompt,
+              instruction: buildPrompt(),
               goals: newGoals.split("\n").filter((g) => g.trim()),
               profile: newProfile || undefined,
               missionTimeMinutes: newMissionTime,
               timeoutMinutes: newTimeout,
               schedule: newDispatch === "cron" ? newSchedule : undefined,
+              localDirs: newLocalDirs,
+              references: newReferences,
+              skills: newSkills,
             }),
           });
           if (res.ok) {
@@ -382,21 +427,23 @@ export default function MissionsPage() {
         }
 
         // Completed/failed mission - create a NEW dispatch (re-dispatch)
-        setEditingId(null); // Clear so we fall through to create path
-        // Don't show info toast here - the create path below handles it
+        setEditingId(null);
 
         const res = await fetch("/api/missions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            action: "create",
+            action: "dispatch",
             name: newName,
-            prompt: fullPrompt,
+            instruction: buildPrompt(),
             goals: newGoals.split("\n").filter((g) => g.trim()),
             dispatchMode: "now",
             profile: newProfile || undefined,
             missionTimeMinutes: newMissionTime,
             timeoutMinutes: newTimeout,
+            localDirs: newLocalDirs,
+            references: newReferences,
+            skills: newSkills,
           }),
         });
 
@@ -421,15 +468,18 @@ export default function MissionsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "create",
+          action: "dispatch",
           name: newName,
-          prompt: fullPrompt,
+          instruction: buildPrompt(),
           goals: newGoals.split("\n").filter((g) => g.trim()),
           dispatchMode: newDispatch,
           schedule: newDispatch === "cron" ? newSchedule : undefined,
           profile: newProfile || undefined,
           missionTimeMinutes: newMissionTime,
           timeoutMinutes: newTimeout,
+          localDirs: newLocalDirs,
+          references: newReferences,
+          skills: newSkills,
         }),
       });
 
@@ -441,6 +491,9 @@ export default function MissionsPage() {
           setNewInstruction("");
           setNewContext("");
           setNewGoals("");
+          setNewLocalDirs([]);
+          setNewReferences([]);
+          setNewSkills([]);
           setShowCreate(false);
           fetchData();
           setDispatching(false);
@@ -468,24 +521,38 @@ export default function MissionsPage() {
     setNewName(m.name);
     // Split prompt back into instruction + context (best effort)
     // The stored prompt has injected sections from buildMissionPrompt:
-    // Goals header, MISSION SCOPE, SAFETY LIMITS
-    // We need to strip these and recover the original instruction
+    // Working Directories, Key References, Recommended Skills, Goals tracking header, MISSION SCOPE, SAFETY LIMITS
     let rawPrompt = m.prompt;
 
-    // Remove ## Goals tracking header block
+    // Remove ## Working Directories section
+    rawPrompt = rawPrompt.replace(
+      /^## Working Directories\n[\s\S]*?(?=\n## |\n\n---|,?\n[A-Z])/m,
+      ""
+    );
+    // Remove ## Key References section
+    rawPrompt = rawPrompt.replace(
+      /^## Key References\n[\s\S]*?(?=\n## |\n\n---|,?\n[A-Z])/m,
+      ""
+    );
+    // Remove ## Recommended Skills section
+    rawPrompt = rawPrompt.replace(
+      /^## Recommended Skills\n[\s\S]*?(?=\n## |\n\n---|,?\n[A-Z])/m,
+      ""
+    );
+    // Remove ## Goals (complete each in order) block
     rawPrompt = rawPrompt.replace(
       /^## Goals \(complete each in order\)\n[\s\S]*?Mark each goal as done.*\n\n---\n\n/m,
-      "",
+      ""
     );
     // Remove ## MISSION SCOPE section (injected by buildMissionPrompt)
     rawPrompt = rawPrompt.replace(
-      /## MISSION SCOPE\n[\s\S]*?(?=\n## |\n\n---|\n\n[A-Z])/m,
-      "\n",
+      /## MISSION SCOPE\n[\s\S]*?(?=\n## |\n\n---|,?\n[A-Z])/m,
+      "\n"
     );
     // Remove ## SAFETY LIMITS section (injected by buildMissionPrompt)
     rawPrompt = rawPrompt.replace(
-      /## SAFETY LIMITS\n[\s\S]*?(?=\n## |\n\n---|\n\n[A-Z])/m,
-      "\n",
+      /## SAFETY LIMITS\n[\s\S]*?(?=\n## |\n\n---|,?\n[A-Z])/m,
+      "\n"
     );
 
     const parts = rawPrompt.split("\n---\n");
@@ -497,7 +564,10 @@ export default function MissionsPage() {
             .trim()
         : "",
     );
-    setNewGoals(m.goals.join("\n"));
+    setNewGoals(m.goals?.join("\n") ?? "");
+    setNewLocalDirs(m.localDirs ?? []);
+    setNewReferences(m.references ?? []);
+    setNewSkills(m.skills ?? []);
     // Auto-set dispatch mode to "now" for completed/failed missions (re-dispatch)
     if (m.status === "successful" || m.status === "failed") {
       setNewDispatch("now");
@@ -531,6 +601,9 @@ export default function MissionsPage() {
       payload.instruction = newInstruction;
       payload.context = newContext;
       payload.goals = newGoals.split("\n").filter((g) => g.trim());
+      payload.localDirs = newLocalDirs;
+      payload.references = newReferences;
+      payload.skills = newSkills;
       if (!editingTemplateId) {
         payload.dispatchMode = newDispatch;
         payload.schedule = newSchedule;
@@ -602,9 +675,12 @@ export default function MissionsPage() {
   const handleTemplateSelect = (t: MissionTemplate) => {
     setNewName(t.name);
     setNewInstruction(t.instruction);
-    setNewContext(t.context);
-    setNewGoals(t.goals.join("\n"));
+    setNewContext(t.context || "");
+    setNewGoals((t.goals || []).join("\n"));
     setNewProfile(t.profile || "");
+    setNewLocalDirs((t as MissionTemplate & { localDirs?: string[] }).localDirs ?? []);
+    setNewReferences((t as MissionTemplate & { references?: string[] }).references ?? []);
+    setNewSkills(t.suggestedSkills || []);
     if (t.dispatchMode)
       setNewDispatch(t.dispatchMode as "save" | "now" | "cron");
     if (t.schedule) setNewSchedule(t.schedule);
@@ -677,14 +753,14 @@ export default function MissionsPage() {
 
   if (loading) {
     return (
-      <div className="pl-64 flex items-center justify-center h-full">
+      <div className="min-h-screen bg-dark-950 grid-bg flex items-center justify-center h-full">
         <Loader2 className="w-8 h-8 text-neon-cyan animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="pl-64 flex flex-col h-full relative">
+    <div className="min-h-screen bg-dark-950 grid-bg relative scanlines">
       {toastElement}
 
       {/* Header */}
@@ -945,6 +1021,164 @@ export default function MissionsPage() {
                   requirements.
                 </p>
               </div>
+
+              {/* Working Directories */}
+              <div>
+                <label className="text-xs text-white/40 font-mono block mb-1">
+                  Working Directories{" "}
+                  <span className="text-white/20">(optional)</span>
+                </label>
+                <div className="space-y-1.5">
+                  {newLocalDirs.map((dir, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 bg-dark-800/50 border border-neon-cyan/20 rounded-lg px-3 py-1.5"
+                    >
+                      <span className="text-xs font-mono text-neon-cyan truncate flex-1">
+                        {dir}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setNewLocalDirs((d) => d.filter((_, j) => j !== i))
+                        }
+                        className="text-white/30 hover:text-red-400 transition-colors flex-shrink-0"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <input
+                      value={localDirInput}
+                      onChange={(e) => setLocalDirInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (localDirInput.trim()) {
+                            setNewLocalDirs((d) => [
+                              ...d,
+                              localDirInput.trim(),
+                            ]);
+                            setLocalDirInput("");
+                          }
+                        }
+                      }}
+                      placeholder="~/projects/my-app/"
+                      className="flex-1 bg-dark-800/50 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 outline-none focus:border-neon-cyan/50 font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (localDirInput.trim()) {
+                          setNewLocalDirs((d) => [
+                            ...d,
+                            localDirInput.trim(),
+                          ]);
+                          setLocalDirInput("");
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-neon-cyan/10 border border-neon-cyan/30 text-xs text-neon-cyan hover:bg-neon-cyan/20 font-mono transition-colors"
+                    >
+                      + Add
+                    </button>
+                  </div>
+                </div>
+                <p className="text-[10px] text-white/20 font-mono mt-0.5">
+                  Directories the agent should focus work within. Injected as
+                  highest-priority section in the mission prompt.
+                </p>
+              </div>
+
+              {/* Key References */}
+              <div>
+                <label className="text-xs text-white/40 font-mono block mb-1">
+                  Key References{" "}
+                  <span className="text-white/20">(optional)</span>
+                </label>
+                <div className="space-y-1.5">
+                  {newReferences.map((ref, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 bg-dark-800/50 border border-neon-pink/20 rounded-lg px-3 py-1.5"
+                    >
+                      <span className="text-xs font-mono text-neon-pink truncate flex-1">
+                        {ref}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setNewReferences((r) =>
+                            r.filter((_, j) => j !== i)
+                          )
+                        }
+                        className="text-white/30 hover:text-red-400 transition-colors flex-shrink-0"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <input
+                      value={referenceInput}
+                      onChange={(e) => setReferenceInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (referenceInput.trim()) {
+                            setNewReferences((r) => [
+                              ...r,
+                              referenceInput.trim(),
+                            ]);
+                            setReferenceInput("");
+                          }
+                        }
+                      }}
+                      placeholder="www.example.com, docs/spec.md, README.md..."
+                      className="flex-1 bg-dark-800/50 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 outline-none focus:border-neon-pink/50 font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (referenceInput.trim()) {
+                          setNewReferences((r) => [
+                            ...r,
+                            referenceInput.trim(),
+                          ]);
+                          setReferenceInput("");
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-neon-pink/10 border border-neon-pink/30 text-xs text-neon-pink hover:bg-neon-pink/20 font-mono transition-colors"
+                    >
+                      + Add
+                    </button>
+                  </div>
+                </div>
+                <p className="text-[10px] text-white/20 font-mono mt-0.5">
+                  File names, URLs, or resources the agent should prioritise.
+                  Added as &quot;Key References&quot; in the prompt.
+                </p>
+              </div>
+
+              {/* Skills */}
+              <div>
+                <label className="text-xs text-white/40 font-mono block mb-1">
+                  Attached Skills{" "}
+                  <span className="text-white/20">(optional, max 10)</span>
+                </label>
+                <SkillSelector
+                  value={newSkills}
+                  onChange={setNewSkills}
+                  profileId={newProfile}
+                  max={10}
+                />
+                <p className="text-[10px] text-white/20 font-mono mt-0.5">
+                  Skills guide the agent&apos;s approach. Filtered by the
+                  selected profile. Added as &quot;Recommended Skills&quot; in
+                  the prompt.
+                </p>
+              </div>
+
               <div>
                 <label className="text-xs text-white/40 font-mono block mb-1">
                   Goals (one per line)

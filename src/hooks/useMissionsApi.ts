@@ -13,7 +13,7 @@ export function useMissionsApi() {
   }, []);
 
   const fetchTemplates = useCallback(async () => {
-    const r = await fetch("/api/missions?action=templates");
+    const r = await fetch("/api/templates");
     const d = await r.json();
     return d.data?.templates ?? [];
   }, []);

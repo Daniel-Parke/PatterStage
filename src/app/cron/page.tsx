@@ -688,7 +688,7 @@ export default function CronPage() {
   const enabledCount = data?.jobs.filter((j) => j.enabled).length || 0;
 
   return (
-    <div className="pl-64 flex flex-col h-full">
+    <div className="min-h-screen bg-dark-950 grid-bg">
       <PageHeader
         icon={Clock}
         title="Cron Jobs"

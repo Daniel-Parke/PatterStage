@@ -133,7 +133,7 @@ export default function SessionsPage() {
   const paginatedSessions = filteredSessions.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
-    <div className="pl-64 flex flex-col h-full">
+    <div className="min-h-screen bg-dark-950 grid-bg">
       <PageHeader
         icon={Clock}
         title="Session History"

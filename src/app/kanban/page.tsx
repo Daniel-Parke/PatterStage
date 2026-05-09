@@ -547,7 +547,7 @@ export default function KanbanPage() {
   // ── Render ───────────────────────────────────────────────────
 
   return (
-    <div className="pl-64 flex flex-col h-full">
+    <div className="pl-6 flex flex-col h-full">
       {/* Page header */}
       <div className="flex items-center justify-between mb-6 flex-shrink-0">
         <div className="flex items-center gap-3">
