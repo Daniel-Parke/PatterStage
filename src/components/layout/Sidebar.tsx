@@ -18,6 +18,7 @@ import {
   ChevronRight,
   ChevronLeft,
   ChevronDown,
+  X,
   Terminal,
   Settings,
   RefreshCw,
@@ -41,128 +42,212 @@ function isActive(pathname: string, href: string): boolean {
   return pathname.startsWith(href);
 }
 
-// ── Version Check & Update ───────────────────────────────────
+// ── Branch Modal ───────────────────────────────────────────────
+
+interface BranchModalProps {
+  open: boolean;
+  branches: string[];
+  defaultBranch: string;
+  onConfirm: (branch: string) => void;
+  onCancel: () => void;
+  loading?: boolean;
+}
+
+function BranchModal({
+  open,
+  branches,
+  defaultBranch,
+  onConfirm,
+  onCancel,
+  loading,
+}: BranchModalProps) {
+  const [selected, setSelected] = useState(defaultBranch);
+
+  useEffect(() => {
+    if (open) setSelected(defaultBranch);
+  }, [open, defaultBranch]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="w-full max-w-sm mx-4 rounded-xl border border-white/10 bg-dark-950 shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <h2 className="text-base font-bold text-white">Select Branch</h2>
+          <button
+            onClick={onCancel}
+            className="p-1 rounded-lg text-white/40 hover:bg-white/5 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-5">
+          <label className="block text-xs font-mono text-white/40 uppercase tracking-wider mb-2">
+            Branch
+          </label>
+          <select
+            value={selected}
+            onChange={(e) => setSelected(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg bg-dark-900 border border-white/10 text-white text-sm focus:outline-none focus:border-neon-cyan/50 focus:ring-1 focus:ring-neon-cyan/20"
+          >
+            {branches.map((b) => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-white/10">
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            className="px-4 py-2 rounded-lg text-sm text-white/60 hover:bg-white/5 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onConfirm(selected)}
+            disabled={loading || !selected}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-neon-cyan text-dark-900 hover:brightness-110 transition disabled:opacity-50"
+          >
+            {loading ? "..." : "Confirm"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Version Check & Update ─────────────────────────────────────
 
 interface VersionInfo {
   localHash: string;
-
   remoteHash: string;
-
   updateAvailable: boolean;
-
   commitMessage: string;
-
   behind: number;
-
   branch: string;
-
   lastChecked: string;
 }
 
 function VersionFooter({ collapsed }: { collapsed: boolean }) {
   const [version, setVersion] = useState<VersionInfo | null>(null);
-
-  const [checking, setChecking] = useState(false);
-
+  const [checkState, setCheckState] = useState<
+    "idle" | "checking" | "up-to-date" | "update-available"
+  >("idle");
   const [updating, setUpdating] = useState(false);
-
   const [restarting, setRestarting] = useState(false);
-
   const [rebuilding, setRebuilding] = useState(false);
-
   const [message, setMessage] = useState<string | null>(null);
 
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Branch modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalPurpose, setModalPurpose] = useState<"check" | "rebuild">("check");
+  const [branches, setBranches] = useState<string[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState("main");
 
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isMountedRef = useRef(true);
 
   useEffect(() => {
     isMountedRef.current = true;
-
     return () => {
       isMountedRef.current = false;
-
       if (pollIntervalRef.current !== null) {
         clearInterval(pollIntervalRef.current);
-
         pollIntervalRef.current = null;
       }
     };
   }, []);
 
-  const checkVersion = useCallback(async () => {
-    setChecking(true);
-
-    setMessage(null);
-
+  // Fetch branch list and open modal
+  const openBranchModal = async (purpose: "check" | "rebuild") => {
+    setModalPurpose(purpose);
     try {
-      const res = await fetch("/api/update");
-
+      const res = await fetch("/api/update?branches=1");
       const d = await res.json();
-
-      if (d.data) setVersion(d.data);
+      if (d.data?.branches) {
+        setBranches(d.data.branches);
+        setSelectedBranch(d.data.default || "main");
+      } else {
+        setBranches(["main", "dev"]);
+        setSelectedBranch("main");
+      }
     } catch {
-      setMessage("Check failed");
-    } finally {
-      setChecking(false);
+      setBranches(["main", "dev"]);
+      setSelectedBranch("main");
     }
-  }, []);
+    setModalOpen(true);
+  };
 
-  // No auto-check — user clicks "Check" to trigger
+  const handleModalConfirm = async (branch: string) => {
+    setModalOpen(false);
+    if (modalPurpose === "check") {
+      await doCheck(branch);
+    } else {
+      await doRebuild(branch);
+    }
+  };
+
+  // Check version against a specific branch
+  const doCheck = async (branch: string) => {
+    setCheckState("checking");
+    setMessage(null);
+    try {
+      const res = await fetch(`/api/update?branch=${encodeURIComponent(branch)}`);
+      const d = await res.json();
+      if (d.data) {
+        setVersion(d.data);
+        setCheckState(d.data.updateAvailable ? "update-available" : "up-to-date");
+      } else {
+        setCheckState("idle");
+        setMessage("Check failed");
+      }
+    } catch {
+      setCheckState("idle");
+      setMessage("Check failed");
+    }
+  };
 
   const handleUpdate = async () => {
-    if (updating) return;
-
+    if (updating || !version?.updateAvailable) return;
     setUpdating(true);
-
     setMessage("Updating...");
-
     try {
       const res = await fetch("/api/update", {
         method: "POST",
-
         headers: { "Content-Type": "application/json" },
-
         body: JSON.stringify({ action: "update" }),
       });
-
       const d = await res.json();
-
       if (d.error) {
         setMessage(d.error);
-
         setUpdating(false);
-
         return;
       }
-
-      // Poll for server return
-
       setMessage("Restarting...");
-
       pollForReturn();
     } catch {
       setMessage("Update failed");
-
       setUpdating(false);
     }
   };
 
   const handleRestart = async () => {
     if (restarting) return;
-
     setRestarting(true);
     setMessage("Restarting...");
-
     try {
       const res = await fetch("/api/update", {
         method: "POST",
-
         headers: { "Content-Type": "application/json" },
-
         body: JSON.stringify({ action: "restart" }),
       });
-
       if (!res.ok) {
         let msg = "Restart failed";
         try {
@@ -171,7 +256,6 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
         } catch { /* ignore */ }
         throw new Error(msg);
       }
-
       pollForReturn();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Restart failed";
@@ -180,19 +264,16 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
     }
   };
 
-  const handleRebuild = async () => {
+  const doRebuild = async (branch: string) => {
     if (rebuilding) return;
-
     setRebuilding(true);
     setMessage("Rebuilding...");
-
     try {
       const res = await fetch("/api/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "rebuild" }),
+        body: JSON.stringify({ action: "rebuild", branch }),
       });
-
       if (!res.ok) {
         let msg = "Rebuild failed";
         try {
@@ -201,9 +282,7 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
         } catch { /* ignore */ }
         throw new Error(msg);
       }
-
       setMessage("Build complete — restarting...");
-
       pollForReturn();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Rebuild failed";
@@ -215,41 +294,27 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
   const pollForReturn = () => {
     if (pollIntervalRef.current !== null) {
       clearInterval(pollIntervalRef.current);
-
       pollIntervalRef.current = null;
     }
-
     let attempts = 0;
-
     const maxAttempts = 30;
-
     const interval = setInterval(async () => {
       attempts++;
-
       try {
         const res = await fetch("/api/update", {
           signal: AbortSignal.timeout(3000),
         });
-
         if (res.ok) {
           clearInterval(interval);
-
           pollIntervalRef.current = null;
-
           const d = await res.json();
-
           if (!isMountedRef.current) return;
-
           if (d.data) setVersion(d.data);
-
           setUpdating(false);
-
           setRestarting(false);
-
           setRebuilding(false);
-
+          setCheckState(d.data?.updateAvailable ? "update-available" : "up-to-date");
           setMessage("Done!");
-
           setTimeout(() => {
             if (isMountedRef.current) setMessage(null);
           }, 3000);
@@ -257,97 +322,158 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
       } catch {
         if (attempts >= maxAttempts) {
           clearInterval(interval);
-
           pollIntervalRef.current = null;
-
           if (!isMountedRef.current) return;
-
           setUpdating(false);
-
           setRestarting(false);
-
           setRebuilding(false);
-
           setMessage("Timeout — check server");
         }
       }
     }, 2000);
-
     pollIntervalRef.current = interval;
   };
 
+  const isBusy = updating || restarting || rebuilding;
+
+  // ── Collapsed view ───────────────────────────────────────────
   if (collapsed) {
     return (
-      <div className="flex flex-col items-center gap-2">
-        {version?.updateAvailable && (
-          <button
-            onClick={handleUpdate}
-            disabled={updating || rebuilding}
-            className="p-1.5 rounded-lg bg-orange-500/10 text-neon-orange hover:bg-orange-500/20 transition-colors"
-            title={`Update available (${version.behind} behind)`}
-          >
-            {updating ? (
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-            ) : (
+      <>
+        <div className="flex flex-col items-center gap-2">
+          {/* Check transforms to orange alert when update available */}
+          {checkState === "update-available" ? (
+            <button
+              onClick={handleUpdate}
+              disabled={isBusy}
+              className="p-1.5 rounded-lg bg-orange-500/10 text-neon-orange hover:bg-orange-500/20 transition-colors"
+              title={`Update available — ${version?.behind} behind`}
+            >
               <AlertTriangle className="w-3.5 h-3.5" />
-            )}
+            </button>
+          ) : (
+            <button
+              onClick={() => openBranchModal("check")}
+              disabled={checkState === "checking" || isBusy}
+              className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
+              title={checkState === "checking" ? "Checking..." : "Check for Update"}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${checkState === "checking" ? "animate-spin" : ""}`} />
+            </button>
+          )}
+
+          {/* Rebuild — opens branch modal */}
+          <button
+            onClick={() => openBranchModal("rebuild")}
+            disabled={isBusy}
+            className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
+            title={message || "Rebuild App"}
+          >
+            <Hammer className={`w-3.5 h-3.5 ${rebuilding ? "animate-spin" : ""}`} />
           </button>
-        )}
+
+          {/* Restart */}
+          <button
+            onClick={handleRestart}
+            disabled={isBusy}
+            className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            title={message || "Restart App"}
+          >
+            <Power className={`w-3.5 h-3.5 ${restarting ? "animate-spin" : ""}`} />
+          </button>
+        </div>
+
+        <BranchModal
+          open={modalOpen}
+          branches={branches}
+          defaultBranch={selectedBranch}
+          onConfirm={handleModalConfirm}
+          onCancel={() => setModalOpen(false)}
+          loading={checkState === "checking" || rebuilding}
+        />
+      </>
+    );
+  }
+
+  // ── Expanded view ────────────────────────────────────────────
+  const checkButton = () => {
+    if (checkState === "idle") {
+      return (
+        <button
+          onClick={() => openBranchModal("check")}
+          disabled={isBusy}
+          className="flex-1 flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-[9px] font-mono text-blue-400 hover:bg-blue-500/20 transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className="w-2.5 h-2.5 flex-shrink-0" />
+          Check
+        </button>
+      );
+    }
+    if (checkState === "checking") {
+      return (
+        <button disabled className="flex-1 flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-[9px] font-mono text-blue-400 opacity-70">
+          <RefreshCw className="w-2.5 h-2.5 flex-shrink-0 animate-spin" />
+          ...
+        </button>
+      );
+    }
+    if (checkState === "up-to-date") {
+      return (
+        <button
+          disabled
+          className="flex-1 flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-green-500/10 border border-green-500/20 text-[9px] font-mono text-green-400 cursor-default"
+        >
+          <Check className="w-2.5 h-2.5 flex-shrink-0" />
+          Up to Date
+        </button>
+      );
+    }
+    // update-available
+    return (
+      <button
+        onClick={handleUpdate}
+        disabled={isBusy}
+        className="flex-1 flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-orange-500/10 border border-orange-500/20 text-[9px] font-mono text-neon-orange hover:bg-orange-500/20 transition-colors disabled:opacity-50"
+      >
+        <AlertTriangle className="w-2.5 h-2.5 flex-shrink-0" />
+        Update Available!
+      </button>
+    );
+  };
+
+  return (
+    <>
+      <div className="flex gap-1.5">
+        {checkButton()}
 
         <button
-          onClick={handleRebuild}
-          disabled={rebuilding}
-          className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
-          title={message || "Rebuild App"}
+          onClick={() => openBranchModal("rebuild")}
+          disabled={isBusy}
+          className="flex-1 flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-purple-500/10 border border-purple-500/20 text-[9px] font-mono text-purple-400 hover:bg-purple-500/20 transition-colors disabled:opacity-50"
         >
-          <Hammer
-            className={`w-3.5 h-3.5 ${rebuilding ? "animate-spin" : ""}`}
-          />
+          <Hammer className={`w-2.5 h-2.5 flex-shrink-0 ${rebuilding ? "animate-spin" : ""}`} />
+          {rebuilding ? "..." : "Rebuild"}
         </button>
 
         <button
           onClick={handleRestart}
-          disabled={restarting}
-          className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-          title={message || "Restart App"}
+          disabled={isBusy}
+          className="flex-1 flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-red-500/10 border border-red-500/20 text-[9px] font-mono text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50"
         >
-          <Power
-            className={`w-3.5 h-3.5 ${restarting ? "animate-spin" : ""}`}
-          />
+          <Power className={`w-2.5 h-2.5 flex-shrink-0 ${restarting ? "animate-spin" : ""}`} />
+          {restarting ? "..." : "Restart"}
         </button>
       </div>
-    );
-  }
 
-  return (
-    <div className="flex gap-1.5">
-      <button
-        onClick={checkVersion}
-        disabled={checking || updating || restarting || rebuilding}
-        className="flex-1 flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-[9px] font-mono text-blue-400 hover:bg-blue-500/20 transition-colors disabled:opacity-50"
-      >
-        <RefreshCw className={`w-2.5 h-2.5 flex-shrink-0 ${checking ? "animate-spin" : ""}`} />
-        {checking ? "..." : "Check"}
-      </button>
-
-      <button
-        onClick={handleRebuild}
-        disabled={updating || restarting || rebuilding}
-        className="flex-1 flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-purple-500/10 border border-purple-500/20 text-[9px] font-mono text-purple-400 hover:bg-purple-500/20 transition-colors disabled:opacity-50"
-      >
-        <Hammer className={`w-2.5 h-2.5 flex-shrink-0 ${rebuilding ? "animate-spin" : ""}`} />
-        {rebuilding ? "..." : "Rebuild"}
-      </button>
-
-      <button
-        onClick={handleRestart}
-        disabled={updating || restarting || rebuilding}
-        className="flex-1 flex items-center justify-center gap-1 px-1.5 py-1 rounded-md bg-red-500/10 border border-red-500/20 text-[9px] font-mono text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50"
-      >
-        <Power className={`w-2.5 h-2.5 flex-shrink-0 ${restarting ? "animate-spin" : ""}`} />
-        {restarting ? "..." : "Restart"}
-      </button>
-    </div>
+      <BranchModal
+        open={modalOpen}
+        branches={branches}
+        defaultBranch={selectedBranch}
+        onConfirm={handleModalConfirm}
+        onCancel={() => setModalOpen(false)}
+        loading={checkState === "checking" || rebuilding}
+      />
+    </>
   );
 }
 

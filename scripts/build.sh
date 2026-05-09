@@ -28,7 +28,23 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"
 }
 
+# ── Parse Arguments ──────────────────────────────────────────
+CH_BRANCH="${CH_UPDATE_GIT_BRANCH:-dev}"
+while [ "${1:-}" ]; do
+    case "${1}" in
+        --branch) CH_BRANCH="${2:-}"; shift 2 ;;
+        *)        shift ;;
+    esac
+done
+
 cd "$APP_DIR"
+
+# Checkout the target branch if specified
+if [ -n "$CH_BRANCH" ]; then
+    log "Checking out branch: $CH_BRANCH"
+    git fetch origin "$CH_BRANCH" --quiet 2>>"$LOG_FILE" || true
+    git checkout "$CH_BRANCH" --quiet 2>>"$LOG_FILE" || true
+fi
 
 # Resolve full paths using which (more reliable than command -v)
 NODE_BIN="$(which node 2>/dev/null || echo "$HOME/.local/bin/node")"

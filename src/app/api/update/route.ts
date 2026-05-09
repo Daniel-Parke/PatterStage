@@ -35,6 +35,32 @@ const UPDATE_BRANCH = sanitizeGitBranch(
   process.env.CH_UPDATE_GIT_BRANCH || "main"
 );
 
+// ── Branch listing ──────────────────────────────────────────────
+
+function listRemoteBranches(): string[] {
+  try {
+    // Ensure we have the latest remote refs
+    execSync("git fetch origin --quiet 2>/dev/null", {
+      cwd: APP_DIR,
+      timeout: 15000,
+    });
+    const raw = execSync("git branch -r --format='%(refname:short)'", {
+      cwd: APP_DIR,
+      encoding: "utf-8",
+      timeout: 10000,
+    });
+    const branches = raw
+      .split("\n")
+      .map((b) => b.trim())
+      .filter((b) => b && b !== "origin/HEAD" && b.startsWith("origin/"))
+      .map((b) => b.replace(/^origin\//, ""))
+      .filter((b) => b);
+    return Array.from(new Set(branches)).sort();
+  } catch {
+    return [];
+  }
+}
+
 function sanitizeGitBranch(raw: string): string {
   const s = raw.replace(/[^a-zA-Z0-9._/-]/g, "").slice(0, 200);
   return s || "main";
@@ -79,16 +105,17 @@ function saveVersionCache(cache: VersionCache): void {
   }
 }
 
-function checkVersion(): VersionCache {
+function checkVersion(branch?: string): VersionCache {
+  const targetBranch = branch ?? UPDATE_BRANCH;
   const cached = getCachedVersion();
-  if (cached) return cached;
+  if (cached && cached.branch === targetBranch) return cached;
 
   try {
-    runGit(["fetch", "origin", UPDATE_BRANCH, "--quiet"]);
+    runGit(["fetch", "origin", targetBranch, "--quiet"]);
     const localHash = runGit(["rev-parse", "HEAD"]);
-    const remoteRef = "origin/" + UPDATE_BRANCH;
+    const remoteRef = "origin/" + targetBranch;
     const remoteHash = runGit(["rev-parse", remoteRef]);
-    const branch = runGit(["rev-parse", "--abbrev-ref", "HEAD"]);
+    const currentBranch = runGit(["rev-parse", "--abbrev-ref", "HEAD"]);
 
     let commitMessage = "";
     let commitDate = "";
@@ -114,7 +141,7 @@ function checkVersion(): VersionCache {
       commitMessage,
       commitDate,
       behind,
-      branch,
+      branch: currentBranch,
       lastChecked: new Date().toISOString(),
     };
     saveVersionCache(cache);
@@ -134,9 +161,21 @@ function checkVersion(): VersionCache {
 }
 
 // GET /api/update
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    return NextResponse.json({ data: checkVersion() });
+    const { searchParams } = new URL(request.url);
+
+    // Branch listing endpoint
+    if (searchParams.get("branches") === "1") {
+      const branches = listRemoteBranches();
+      return NextResponse.json({ data: { branches, default: "main" } });
+    }
+
+    const branchParam = searchParams.get("branch");
+    const branch = branchParam
+      ? sanitizeGitBranch(branchParam)
+      : UPDATE_BRANCH;
+    return NextResponse.json({ data: checkVersion(branch) });
   } catch (error) {
     logApiError("GET /api/update", "checking version", error);
     return NextResponse.json({ error: "Failed to check version" }, { status: 500 });
@@ -177,12 +216,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "rebuild") {
+      const rebuildBranch = body.branch
+        ? sanitizeGitBranch(String(body.branch))
+        : sanitizeGitBranch(process.env.CH_UPDATE_GIT_BRANCH || "main");
       // Run build as a detached background process so the server's memory
       // context is not consumed by npm/build child processes (avoids OOM
       // kills on memory-constrained systems). Uses systemd-run like restart.
       const BUILD_SCRIPT = APP_DIR + "/scripts/build.sh";
       try {
-        spawnScript(BUILD_SCRIPT, "ch-rebuild");
+        spawnScript(BUILD_SCRIPT, "ch-rebuild", rebuildBranch);
       } catch (error) {
         logApiError("POST /api/update", "spawn build", error);
         appendAuditLine({
@@ -203,7 +245,7 @@ export async function POST(request: NextRequest) {
         ok: true,
         correlationId,
       });
-      return NextResponse.json({ data: { action: "rebuild", status: "started" } });
+      return NextResponse.json({ data: { action: "rebuild", status: "started", branch: rebuildBranch } });
     }
 
     if (action === "update") {
@@ -305,8 +347,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function spawnScript(scriptPath: string, unitName = "ch-action"): void {
-  const command = `sleep 3; bash "${scriptPath}"`;
+function spawnScript(scriptPath: string, unitName = "ch-action", branch?: string): void {
+  const branchArgs = branch ? `--branch "${branch}"` : "";
+  const command = `sleep 3; bash "${scriptPath}" ${branchArgs}`.trimEnd();
 
   try {
     spawn(

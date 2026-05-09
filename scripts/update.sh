@@ -50,9 +50,14 @@ echo $$ > "$LOCK_FILE"
 
 # ── Parse Arguments ──────────────────────────────────────────
 RESTART_ONLY=false
-if [ "${1:-}" = "--restart-only" ]; then
-    RESTART_ONLY=true
-fi
+CH_BRANCH="${CH_UPDATE_GIT_BRANCH:-dev}"
+while [ "${1:-}" ]; do
+    case "${1}" in
+        --restart-only) RESTART_ONLY=true; shift ;;
+        --branch)       CH_BRANCH="${2:-}"; shift 2 ;;
+        *)              shift ;;
+    esac
+done
 
 cd "$APP_DIR"
 
