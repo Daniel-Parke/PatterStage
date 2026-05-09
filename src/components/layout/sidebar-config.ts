@@ -57,6 +57,17 @@ export const mainSections: SidebarSection[] = [
     ],
   },
   {
+    label: "Operations",
+    links: [
+      { icon: Bot, label: "Agents", href: "/agent/agents", color: "purple" },
+      { icon: FileText, label: "Skills", href: "/skills", color: "green" },
+      { icon: Wrench, label: "Tools", href: "/agent/tools", color: "purple" },
+      { icon: Sparkles, label: "Personalities", href: "/personalities", color: "purple" },
+      { icon: Cpu, label: "HERMES.md", href: "/config/hermes_md", color: "cyan" },
+      { icon: Lock, label: "Environment", href: "/config/env", color: "orange" },
+    ],
+  },
+  {
     label: "Rec Room",
     links: [
       {
@@ -68,17 +79,6 @@ export const mainSections: SidebarSection[] = [
           { label: "Themes", href: "/recroom/story-weaver/themes" },
         ],
       },
-    ],
-  },
-  {
-    label: "Operations",
-    links: [
-      { icon: Bot, label: "Agents", href: "/agent/agents", color: "purple" },
-      { icon: FileText, label: "Skills", href: "/skills", color: "green" },
-      { icon: Wrench, label: "Tools", href: "/agent/tools", color: "purple" },
-      { icon: Sparkles, label: "Personalities", href: "/personalities", color: "purple" },
-      { icon: Cpu, label: "HERMES.md", href: "/config/hermes_md", color: "cyan" },
-      { icon: Lock, label: "Environment", href: "/config/env", color: "orange" },
     ],
   },
 ];
