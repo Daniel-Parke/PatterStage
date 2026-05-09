@@ -289,6 +289,23 @@ export class HermesAgentBackend implements AgentBackend {
     }
   }
 
+  async syncMission(
+    missionId: string,
+    updates: { prompt?: string; name?: string }
+  ): Promise<void> {
+    try {
+      const path = join(PATHS.missions, `${missionId}.json`);
+      if (!existsSync(path)) return;
+      const mission = JSON.parse(readFileSync(path, "utf-8"));
+      if (updates.prompt !== undefined) mission.prompt = updates.prompt;
+      if (updates.name !== undefined) mission.name = updates.name;
+      mission.updatedAt = new Date().toISOString();
+      writeFileSync(path, JSON.stringify(mission, null, 2));
+    } catch (err) {
+      logApiError("HermesAgentBackend.syncMission", "syncMission", err);
+    }
+  }
+
   // ── Tools ─────────────────────────────────────────────────
 
   async listTools(): Promise<ToolDefinition[]> {

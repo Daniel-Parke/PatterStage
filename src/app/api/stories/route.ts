@@ -17,10 +17,18 @@ import {
 } from "@/lib/story-repository";
 import type { StoryArc as StoryArcType, ChapterOutline } from "@/types/recroom";
 
-function safeArc(arc: unknown): StoryArcType | null {
-  if (!arc || typeof arc !== "object") return null;
+function safeArc(arc: unknown): StoryArcType | undefined {
+  if (!arc || typeof arc !== "object") return undefined;
   const a = arc as Record<string, unknown>;
-  if (!a || typeof a !== "object") return null;
+  if (
+    typeof a.storyArc !== "string" ||
+    !Array.isArray(a.fixedPlotPoints) ||
+    !Array.isArray(a.characterArcs) ||
+    !Array.isArray(a.worldRules) ||
+    !Array.isArray(a.themes) ||
+    !Array.isArray(a.chapterOutlines)
+  )
+    return undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return a as any;
 }
@@ -240,7 +248,7 @@ async function handleCreate(body: Record<string, unknown>): Promise<NextResponse
 
     const story = updateStory(draft.id, {
       masterPrompt,
-      storyArc: safeArc(storyArc),
+      storyArc: safeArc(storyArc) as Record<string, unknown> | undefined,
       rollingSummary,
       chapters,
       chapterContents: chapter1 ? { "1": chapter1 } : {},
@@ -289,10 +297,13 @@ async function handleGenerateChapter(body: Record<string, unknown>): Promise<Nex
 
   const prevChapter = nextNum > 1 ? story.chapterContents[String(nextNum - 1)] ?? null : null;
 
+  const arc = safeArc(story.storyArc);
+  if (!arc) return NextResponse.json({ error: "Story arc not found" }, { status: 400 });
+
   const system = getStoryPrompt("chapter");
   const userMessage = buildChapterPrompt(
     story.masterPrompt ?? "",
-    safeArc(story.storyArc),
+    arc,
     story.rollingSummary ?? null,
     prevChapter,
     chapterOutline
@@ -471,7 +482,7 @@ async function handleEditChapter(body: Record<string, unknown>): Promise<NextRes
 
   const existingChapter = story.chapterContents[String(chNum)] || "";
   const arc = safeArc(story.storyArc);
-  const outline = arc.chapterOutlines?.[chIdx] ?? {
+  const outline = arc?.chapterOutlines?.[chIdx] ?? {
     number: chNum, title: story.chapters[chIdx].title, purpose: "Continue", keyBeats: [], emotionalTone: "Engaging",
   };
 

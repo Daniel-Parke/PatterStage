@@ -73,29 +73,33 @@ if (migrationsApplied === 0) {
 }
 
 // ── Run pending seeds ────────────────────────────────────────
-const seedFiles = readdirSync(SEEDS_DIR)
-  .filter((f) => f.endsWith(".sql"))
-  .sort();
-
-const seedsRun = getMeta(db, "seeds_run") || "";
-const seedsRunSet = new Set(seedsRun ? seedsRun.split(",") : []);
-
-let seedsApplied = 0;
-for (const file of seedFiles) {
-  if (!seedsRunSet.has(file)) {
-    const sql = readFileSync(join(SEEDS_DIR, file), "utf-8");
-    db.exec(sql);
-    seedsRunSet.add(file);
-    setMeta(db, "seeds_run", [...seedsRunSet].join(","));
-    console.log(`✓ Seed ${file} applied`);
-    seedsApplied++;
-  }
-}
-
-if (seedsApplied === 0) {
-  console.log("✓ Seeds up to date");
+if (!existsSync(SEEDS_DIR)) {
+  console.log("✓ No seeds directory — skipping");
 } else {
-  console.log(`✓ ${seedsApplied} seed(s) applied`);
+  const seedFiles = readdirSync(SEEDS_DIR)
+    .filter((f) => f.endsWith(".sql"))
+    .sort();
+
+  const seedsRun = getMeta(db, "seeds_run") || "";
+  const seedsRunSet = new Set(seedsRun ? seedsRun.split(",") : []);
+
+  let seedsApplied = 0;
+  for (const file of seedFiles) {
+    if (!seedsRunSet.has(file)) {
+      const sql = readFileSync(join(SEEDS_DIR, file), "utf-8");
+      db.exec(sql);
+      seedsRunSet.add(file);
+      setMeta(db, "seeds_run", [...seedsRunSet].join(","));
+      console.log(`✓ Seed ${file} applied`);
+      seedsApplied++;
+    }
+  }
+
+  if (seedsApplied === 0) {
+    console.log("✓ Seeds up to date");
+  } else {
+    console.log(`✓ ${seedsApplied} seed(s) applied`);
+  }
 }
 
 db.close();

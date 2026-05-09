@@ -45,6 +45,13 @@ export interface AgentBackend {
    */
   getMissionStatus(missionId: string): Promise<MissionStatus>;
 
+  /**
+   * Sync an updated mission prompt to the on-disk mission manifest.
+   * Call this after a mission's prompt is updated so the next cron run
+   * picks up the new prompt.
+   */
+  syncMission(missionId: string, updates: { prompt?: string; name?: string }): Promise<void>;
+
   // ── Tools ─────────────────────────────────────────────────
 
   /**
