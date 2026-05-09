@@ -15,14 +15,31 @@ describe("getScopeLabel", () => {
   });
 
   it("returns 'Half Day' for 11-15 min", () => {
+    expect(getScopeLabel(11)).toBe("Half Day");
+    expect(getScopeLabel(14)).toBe("Half Day");
     expect(getScopeLabel(15)).toBe("Half Day");
   });
 
+  it("returns 'Most of a Day' for 16-20 min", () => {
+    expect(getScopeLabel(16)).toBe("Most of a Day");
+    expect(getScopeLabel(18)).toBe("Most of a Day");
+    expect(getScopeLabel(20)).toBe("Most of a Day");
+  });
+
   it("returns 'Full Day' for 21-30 min", () => {
+    expect(getScopeLabel(21)).toBe("Full Day");
+    expect(getScopeLabel(25)).toBe("Full Day");
     expect(getScopeLabel(30)).toBe("Full Day");
   });
 
+  it("returns 'Deep Dive' for 31-45 min", () => {
+    expect(getScopeLabel(31)).toBe("Deep Dive");
+    expect(getScopeLabel(40)).toBe("Deep Dive");
+    expect(getScopeLabel(45)).toBe("Deep Dive");
+  });
+
   it("returns 'Sprint' for > 45 min", () => {
+    expect(getScopeLabel(46)).toBe("Sprint");
     expect(getScopeLabel(60)).toBe("Sprint");
     expect(getScopeLabel(120)).toBe("Sprint");
   });

@@ -135,11 +135,12 @@ export async function POST(request: NextRequest) {
 
     // ── Update Mission ─────────────────────────────────────────
     if (action === "update") {
-      const { id, missionId, status, result, localDirs, references, skills, goals } = body as {
+      const { id, missionId, status, result, instruction, localDirs, references, skills, goals } = body as {
         id?: string;
         missionId?: string;
         status?: string;
         result?: string;
+        instruction?: string;
         localDirs?: string[];
         references?: string[];
         skills?: string[];
@@ -149,9 +150,19 @@ export async function POST(request: NextRequest) {
       if (!missionIdFinal)
         return NextResponse.json({ error: "Mission id is required" }, { status: 400 });
 
+      // Build updated prompt if instruction changed.
+      // The client sends instruction=buildPrompt() which already contains the full
+      // formatted prompt (with Working Directories, Goals header, etc.). Store it
+      // directly without re-wrapping through buildMissionPrompt to avoid duplication.
+      let prompt: string | undefined;
+      if (instruction !== undefined) {
+        prompt = instruction.trim();
+      }
+
       const updates: {
         status?: MissionStatus;
         result?: string;
+        prompt?: string;
         localDirs?: string[];
         references?: string[];
         skills?: string[];
@@ -159,6 +170,7 @@ export async function POST(request: NextRequest) {
       } = {};
       if (status) updates.status = status as MissionStatus;
       if (result !== undefined) updates.result = result;
+      if (prompt !== undefined) updates.prompt = prompt;
       if (localDirs !== undefined) updates.localDirs = localDirs;
       if (references !== undefined) updates.references = references;
       if (skills !== undefined) updates.skills = skills;
@@ -167,6 +179,15 @@ export async function POST(request: NextRequest) {
       const mission = updateMission(missionIdFinal, updates);
       if (!mission)
         return NextResponse.json({ error: "Mission not found" }, { status: 404 });
+
+      // Sync updated prompt to the cron job so future runs use the new prompt
+      if (prompt !== undefined) {
+        try {
+          await agentBackend.syncMission(missionIdFinal, { prompt });
+        } catch (err) {
+          logApiError("POST /api/missions", "syncMission", err);
+        }
+      }
 
       appendAuditLine({ action: "mission.update", resource: missionIdFinal, ok: true });
       return NextResponse.json({ data: { mission } });

@@ -249,6 +249,8 @@ export default function MissionsPage() {
   const [referenceInput, setReferenceInput] = useState("");
   const [dispatching, setDispatching] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
+  // newLocalDir is the text input value for the Local Directory field
+  const [newLocalDir, setNewLocalDir] = useState("");
 
   const fetchData = useCallback(() => {
     fetchMissions()
@@ -494,6 +496,7 @@ export default function MissionsPage() {
           setNewLocalDirs([]);
           setNewReferences([]);
           setNewSkills([]);
+          setNewLocalDir("");
           setShowCreate(false);
           fetchData();
           setDispatching(false);
@@ -566,6 +569,7 @@ export default function MissionsPage() {
     );
     setNewGoals(m.goals?.join("\n") ?? "");
     setNewLocalDirs(m.localDirs ?? []);
+    setNewLocalDir("");
     setNewReferences(m.references ?? []);
     setNewSkills(m.skills ?? []);
     // Auto-set dispatch mode to "now" for completed/failed missions (re-dispatch)
@@ -1157,6 +1161,69 @@ export default function MissionsPage() {
                 <p className="text-[10px] text-white/20 font-mono mt-0.5">
                   File names, URLs, or resources the agent should prioritise.
                   Added as &quot;Key References&quot; in the prompt.
+                </p>
+              </div>
+
+              {/* Local Directory */}
+              <div>
+                <label className="text-xs text-white/40 font-mono block mb-1">
+                  Local Directory{" "}
+                  <span className="text-white/20">(optional)</span>
+                </label>
+                <div className="space-y-2">
+                  {newLocalDirs.map((dir, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 bg-dark-800/50 border border-neon-cyan/20 rounded-lg px-3 py-1.5"
+                    >
+                      <span className="text-xs font-mono text-neon-cyan truncate flex-1">
+                        {dir}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setNewLocalDirs((r) => r.filter((_, j) => j !== i))
+                        }
+                        className="text-white/30 hover:text-red-400 transition-colors flex-shrink-0"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <div className="flex gap-2">
+                    <input
+                      value={newLocalDir}
+                      onChange={(e) => setNewLocalDir(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (newLocalDir.trim() && !newLocalDirs.includes(newLocalDir.trim())) {
+                            setNewLocalDirs((r) => [...r, newLocalDir.trim()]);
+                            setNewLocalDir("");
+                          }
+                        }
+                      }}
+                      placeholder="~/control-hub/, ~/projects/my-app/..."
+                      className="flex-1 bg-dark-800/50 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-white/20 outline-none focus:border-neon-cyan/50 font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (newLocalDir.trim() && !newLocalDirs.includes(newLocalDir.trim())) {
+                          setNewLocalDirs((r) => [...r, newLocalDir.trim()]);
+                          setNewLocalDir("");
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-neon-cyan/10 border border-neon-cyan/30 text-xs text-neon-cyan hover:bg-neon-cyan/20 font-mono transition-colors"
+                    >
+                      + Add
+                    </button>
+                  </div>
+                </div>
+                <p className="text-[10px] text-white/20 font-mono mt-0.5">
+                  Directories the agent should focus on. Added as &quot;Working
+                  Directories&quot; at the top of the prompt — takes priority
+                  over general descriptions.
                 </p>
               </div>
 

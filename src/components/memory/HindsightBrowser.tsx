@@ -509,7 +509,7 @@ export default function HindsightBrowser() {
   };
 
   return (
-    <div>
+    <div className="pt-2">
       {toastElement}
       {/* Health Status */}
       {health && !health.available && (
@@ -614,10 +614,8 @@ export default function HindsightBrowser() {
           ) : memories.length === 0 ? (
             <EmptyState
               icon={Brain}
-              title={hasRecalled ? "No memories found" : "No memories yet"}
-              description={hasRecalled
-                ? "Try a different search query, or store new memories with Add Memory or the agent."
-                : "Store your first memory with Add Memory or ask the agent to retain one."}
+              title="No memories yet"
+              description="Store your first memory with Add Memory or ask the agent to retain one."
             />
           ) : (
             <div className="space-y-3">

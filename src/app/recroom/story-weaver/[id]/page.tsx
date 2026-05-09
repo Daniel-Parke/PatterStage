@@ -492,7 +492,7 @@ export default function StoryReaderPage() {
       </div>
 
       {/* Body */}
-      <div className="flex-1 flex" style={{ height: "calc(100vh - 120px)" }}>
+      <div className="flex-1 flex" style={{ height: "calc(100vh - 72px)" }}>
         {/* Chapter Sidebar */}
         {sidebarOpen && (
           <div className="w-56 flex-shrink-0 border-r border-white/5 sticky top-16 overflow-y-auto hidden md:block" style={{ background: theme.panel, maxHeight: "calc(100vh - 64px)" }}>

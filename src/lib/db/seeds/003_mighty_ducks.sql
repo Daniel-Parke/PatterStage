@@ -1,5 +1,0 @@
--- ============================================================
--- Seed: 003_mighty_ducks
--- NOTE: organisations feature removed. This seed is a no-op.
--- The Development team is created via 002_dev_team_seed.sql.
--- ============================================================

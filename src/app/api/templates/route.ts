@@ -9,6 +9,7 @@ import { zodErrorResponse } from "@/lib/api-schemas";
 import { logApiError } from "@/lib/api-logger";
 import { PATHS } from "@/lib/paths";
 import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
+import { TEMPLATES } from "@/lib/mission-helpers";
 
 const DATA_DIR = PATHS.templates;
 
@@ -58,18 +59,41 @@ function saveTemplate(template: CustomTemplate) {
 
 export async function GET() {
   try {
+    // 1. Load custom user templates from disk
     ensureDir();
     const files = readdirSync(DATA_DIR).filter((f) => f.endsWith(".json"));
-    const templates: CustomTemplate[] = [];
+    const customTemplates: CustomTemplate[] = [];
 
     for (const file of files) {
       try {
         const content = readFileSync(DATA_DIR + "/" + file, "utf-8");
-        templates.push(JSON.parse(content));
+        customTemplates.push({ ...JSON.parse(content), isCustom: true as const });
       } catch {}
     }
 
-    templates.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    customTemplates.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    // 2. Merge built-in templates (marked isCustom: false) from mission-helpers
+    const builtInTemplates = TEMPLATES.map((t) => ({
+      id: t.id,
+      name: t.name,
+      icon: t.icon,
+      color: t.color,
+      category: t.category,
+      profile: t.profile,
+      description: t.description,
+      instruction: t.instruction,
+      context: t.context,
+      goals: t.goals,
+      suggestedSkills: t.suggestedSkills,
+      dispatchMode: "now" as const,
+      schedule: "every 5m",
+      createdAt: new Date(0).toISOString(), // oldest — sort after recent custom
+      updatedAt: new Date(0).toISOString(),
+      isCustom: false as const,
+    }));
+
+    const templates = [...customTemplates, ...builtInTemplates];
 
     return NextResponse.json({ data: { templates, total: templates.length } });
   } catch (err) {
