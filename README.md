@@ -764,16 +764,10 @@ Documentation for **Control Hub OSS** lives in the `docs/` directory:
 | [API Reference](docs/API.md) | REST endpoints with request/response formats |
 
 
-| [Architecture](docs/ARCHITECTURE.md) | System design, data flow, directory structure |
-
-
 | [Contributing](docs/CONTRIBUTING.md) | Development workflow, code standards, PR checklist |
 
 
-| [Branching](docs/BRANCHING.md) | Git branching strategy and agent permissions |
-
-
-| [Upgrade](docs/UPGRADE.md) | Upgrade notes and migration checklist |
+| [Platform Vision](docs/PLATFORM_VISION.md) | Architecture, goals, and design philosophy |
 
 
 
