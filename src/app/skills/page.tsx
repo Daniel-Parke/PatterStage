@@ -40,9 +40,9 @@ export default function SkillsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedProfile, setSelectedProfile] = useState("default");
 
-  // Per-section collapse state
-  const [activeCollapsed, setActiveCollapsed] = useState(false);
-  const [inactiveCollapsed, setInactiveCollapsed] = useState(false);
+  // Per-section collapse state — default collapsed so users see the full list at a glance
+  const [activeCollapsed, setActiveCollapsed] = useState(true);
+  const [inactiveCollapsed, setInactiveCollapsed] = useState(true);
 
   // Per-section search
   const [activeSearch, setActiveSearch] = useState("");
@@ -194,11 +194,37 @@ export default function SkillsPage() {
         subtitle={`${total} skill${total !== 1 ? "s" : ""} across ${data?.categoryCount ?? 0} categor${data?.categoryCount !== 1 ? "ies" : "y"}`}
         color="green"
         actions={
-          <ProfileSelector
-            value={selectedProfile}
-            onChange={(id) => setSelectedProfile(id)}
-            compact={false}
-          />
+          <div className="flex items-center gap-2">
+            {/* Collapse / Expand All */}
+            <button
+              onClick={() => {
+                const allCollapsed = activeCollapsed && inactiveCollapsed;
+                setActiveCollapsed(!allCollapsed);
+                setInactiveCollapsed(!allCollapsed);
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/10 bg-dark-900/60 hover:bg-dark-900/80 text-white/50 hover:text-white/80 text-xs transition-colors"
+              title={
+                activeCollapsed && inactiveCollapsed ? "Expand all sections" : "Collapse all sections"
+              }
+            >
+              {activeCollapsed && inactiveCollapsed ? (
+                <>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                  Expand
+                </>
+              ) : (
+                <>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                  Collapse
+                </>
+              )}
+            </button>
+            <ProfileSelector
+              value={selectedProfile}
+              onChange={(id) => setSelectedProfile(id)}
+              compact={false}
+            />
+          </div>
         }
       />
 
@@ -389,7 +415,7 @@ function SkillSection({
       {/* Section header */}
       <button
         onClick={onToggleCollapse}
-        className="w-full flex items-center justify-between mb-3 px-4 py-2.5 rounded-xl border border-white/10 bg-dark-900/60 hover:bg-dark-900/80 transition-colors cursor-pointer group"
+        className="w-full flex items-center justify-between mb-3 px-4 py-2.5 rounded-xl border border-white/10 bg-dark-900/40 hover:bg-dark-900/80 hover:border-white/20 transition-all cursor-pointer group"
       >
         <div className="flex items-center gap-2.5">
           <Icon className={`w-4 h-4 ${iconColor}`} />
@@ -399,11 +425,16 @@ function SkillSection({
             {count !== ofTotal ? `/${ofTotal}` : ""}
           </Badge>
         </div>
-        <ChevronRight
-          className={`w-4 h-4 text-white/30 group-hover:text-white/60 transition-all ${
-            collapsed ? "" : "rotate-90"
-          }`}
-        />
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-white/25 group-hover:text-white/40 transition-colors">
+            {collapsed ? "expand" : "collapse"}
+          </span>
+          <ChevronRight
+            className={`w-4 h-4 text-white/30 group-hover:text-white/60 transition-all ${
+              collapsed ? "" : "rotate-90"
+            }`}
+          />
+        </div>
       </button>
 
       {/* Collapsible body */}
