@@ -11,7 +11,6 @@ import {
 import PageHeader from "@/components/layout/PageHeader";
 import { SearchInput } from "@/components/ui/Input";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
-import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
@@ -88,6 +87,22 @@ export default function SkillsPage() {
         s.name.toLowerCase().includes(search.toLowerCase()) ||
         s.description.toLowerCase().includes(search.toLowerCase()),
     );
+
+  // Group skills by category, sorted alphabetically; skills within each category sorted alphabetically
+  const groupByCategory = (skills: Skill[]) => {
+    const groups: Record<string, Skill[]> = {};
+    for (const s of skills) {
+      const cat = s.category || "Other";
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(s);
+    }
+    return Object.entries(groups)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([category, items]) => ({
+        category,
+        skills: items.sort((x, y) => x.name.localeCompare(y.name)),
+      }));
+  };
 
   // ── Toggle — fires API immediately, optimistic update, reverts on failure ───
 
@@ -203,9 +218,6 @@ export default function SkillsPage() {
               title="Active"
               icon={ToggleRight}
               iconColor="text-neon-green"
-              accentColor="green"
-              accentClass="border-neon-green/20 bg-neon-green/5"
-              headerBg="bg-neon-green/10"
               count={activeFiltered.length}
               ofTotal={activeSkills.length}
               collapsed={activeCollapsed}
@@ -230,20 +242,31 @@ export default function SkillsPage() {
                   }
                 />
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {activeFiltered.map((skill) => (
-                    <SkillCard
-                      key={skill.name}
-                      skill={skill}
-                      enabled
-                      isExpanded={expandedSkill === skill.name}
-                      isPending={skill.name in toggling}
-                      onToggle={() => toggleSkill(skill.name, true)}
-                      onView={() => viewSkill(skill)}
-                      expandedContent={
-                        expandedSkill === skill.name ? skillContent : undefined
-                      }
-                    />
+                <div className="space-y-5">
+                  {groupByCategory(activeFiltered).map(({ category, skills }) => (
+                    <div key={category}>
+                      <CategoryLabel
+                        category={category}
+                        count={skills.length}
+                        accentColor="text-neon-green/50"
+                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
+                        {skills.map((skill) => (
+                          <SkillCard
+                            key={skill.name}
+                            skill={skill}
+                            enabled
+                            isExpanded={expandedSkill === skill.name}
+                            isPending={skill.name in toggling}
+                            onToggle={() => toggleSkill(skill.name, true)}
+                            onView={() => viewSkill(skill)}
+                            expandedContent={
+                              expandedSkill === skill.name ? skillContent : undefined
+                            }
+                          />
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -254,9 +277,6 @@ export default function SkillsPage() {
               title="Inactive"
               icon={ToggleLeft}
               iconColor="text-white/30"
-              accentColor="white"
-              accentClass="border-white/5 bg-white/[0.02]"
-              headerBg="bg-white/5"
               count={inactiveFiltered.length}
               ofTotal={inactiveSkills.length}
               collapsed={inactiveCollapsed}
@@ -281,20 +301,31 @@ export default function SkillsPage() {
                   }
                 />
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {inactiveFiltered.map((skill) => (
-                    <SkillCard
-                      key={skill.name}
-                      skill={skill}
-                      enabled={false}
-                      isExpanded={expandedSkill === skill.name}
-                      isPending={skill.name in toggling}
-                      onToggle={() => toggleSkill(skill.name, false)}
-                      onView={() => viewSkill(skill)}
-                      expandedContent={
-                        expandedSkill === skill.name ? skillContent : undefined
-                      }
-                    />
+                <div className="space-y-5">
+                  {groupByCategory(inactiveFiltered).map(({ category, skills }) => (
+                    <div key={category}>
+                      <CategoryLabel
+                        category={category}
+                        count={skills.length}
+                        accentColor="text-white/30"
+                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
+                        {skills.map((skill) => (
+                          <SkillCard
+                            key={skill.name}
+                            skill={skill}
+                            enabled={false}
+                            isExpanded={expandedSkill === skill.name}
+                            isPending={skill.name in toggling}
+                            onToggle={() => toggleSkill(skill.name, false)}
+                            onView={() => viewSkill(skill)}
+                            expandedContent={
+                              expandedSkill === skill.name ? skillContent : undefined
+                            }
+                          />
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
@@ -306,15 +337,34 @@ export default function SkillsPage() {
   );
 }
 
+// ── CategoryLabel ───────────────────────────────────────────────────────────────
+
+interface CategoryLabelProps {
+  category: string;
+  count: number;
+  accentColor: string;
+}
+
+function CategoryLabel({ category, count, accentColor }: CategoryLabelProps) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`text-[10px] font-mono font-semibold uppercase tracking-widest ${accentColor}`}>
+        {category}
+      </span>
+      <span className={`text-[10px] font-mono ${accentColor}`}>
+        ({count})
+      </span>
+      <div className={`h-px flex-1 bg-gradient-to-r from-white/10 to-transparent ${accentColor.replace("/50", "/5").replace("/30", "/5")}`} />
+    </div>
+  );
+}
+
 // ── SkillSection ──────────────────────────────────────────────────────────────
 
 interface SkillSectionProps {
   title: string;
   icon: React.ComponentType<{ className?: string }>;
   iconColor: string;
-  accentColor: string;
-  accentClass: string;
-  headerBg: string;
   count: number;
   ofTotal: number;
   collapsed: boolean;
