@@ -18,6 +18,7 @@ import {
   Edit3,
   Loader2,
   Database,
+  RefreshCw,
 } from "lucide-react";
 
 import AppPageShell from "@/components/layout/AppPageShell";
@@ -103,6 +104,7 @@ export default function ModelsPage() {
   );
   const [busyTaskType, setBusyTaskType] = useState<TaskType | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const { showToast, toastElement } = useToast();
 
   const loadAll = useCallback(async () => {
@@ -235,6 +237,34 @@ export default function ModelsPage() {
     [loadAll, showToast]
   );
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const res = await fetch("/api/models/import", { method: "POST" });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error || "Refresh failed");
+      }
+      const result = (await res.json()) as {
+        data?: { imported?: number; skipped?: number; credentials?: number };
+      };
+      const imported = result.data?.imported ?? 0;
+      const creds = result.data?.credentials ?? 0;
+      showToast(
+        `Refreshed: ${imported} model${imported !== 1 ? "s" : ""}, ${creds} credential${creds !== 1 ? "s" : ""} synced from Hermes`,
+        "success"
+      );
+      await loadAll();
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : "Refresh failed",
+        "error"
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadAll, showToast]);
+
   return (
     <AppPageShell>
       <PageHeader
@@ -245,14 +275,26 @@ export default function ModelsPage() {
         backHref="/config"
         backLabel="CONFIG"
         actions={
-          <Button
-            variant="primary"
-            color="purple"
-            icon={Plus}
-            onClick={() => setEditing(null)}
-          >
-            Add Model
-          </Button>
+          <>
+            <Button
+              variant="secondary"
+              color="purple"
+              icon={refreshing ? Loader2 : RefreshCw}
+              onClick={handleRefresh}
+              disabled={refreshing}
+              title="Sync models from ~/.hermes/config.yaml and ~/.hermes/.env"
+            >
+              {refreshing ? "Refreshing…" : "Refresh Models"}
+            </Button>
+            <Button
+              variant="primary"
+              color="purple"
+              icon={Plus}
+              onClick={() => setEditing(null)}
+            >
+              Add Model
+            </Button>
+          </>
         }
       />
 

@@ -360,3 +360,112 @@ export function setDefaultModel(taskType: TaskType, modelId: string | null): Mod
 
   return getModelDefaults();
 }
+
+// ── Upsert (used by hermes-import.ts) ─────────────────────────────────
+
+export interface UpsertModelResult {
+  id: string;
+  action: "inserted" | "updated";
+}
+
+/**
+ * Idempotent upsert: insert a new model if no row with the same import_key
+ * exists, otherwise update it (keeping the existing id and defaults not
+ * covered by the import).
+ *
+ * import_key is SHA-256(provider :: model_id) — stable across re-imports.
+ * Used by hermes-import.ts so that re-importing the same Hermes config
+ * never creates duplicate rows.
+ */
+export function upsertModel(input: {
+  importKey: string;
+  name: string;
+  provider: string;
+  modelId: string;
+  baseUrl: string | null;
+  contextLength: number | null;
+  defaultSlots: TaskType[];
+}): UpsertModelResult {
+  const ts = now();
+  const existing = db()
+    .prepare("SELECT id FROM models WHERE import_key = ?")
+    .get(input.importKey) as { id: string } | undefined;
+
+  if (existing) {
+    // Update existing row — preserve the credentials_id link
+    const sets = ["name = ?", "provider = ?", "model_id = ?", "base_url = ?", "updated_at = ?"];
+    const vals: unknown[] = [input.name, input.provider, input.modelId, input.baseUrl, ts];
+
+    // Clear all default flags first, then set the ones claimed by this import
+    for (const slot of TASK_TYPES) {
+      sets.push(`${slot === "agent" ? "is_default_agent" : `is_default_${slot}`} = 0`);
+    }
+    for (const slot of input.defaultSlots) {
+      const flag = `is_default_${slot}`;
+      const idx = sets.indexOf(`${flag} = 0`);
+      if (idx !== -1) {
+        sets.splice(idx, 1, `${flag} = 1`);
+      }
+    }
+
+    vals.push(existing.id);
+    db().prepare(`UPDATE models SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
+    return { id: existing.id, action: "updated" };
+  }
+
+  // Insert new row
+  const id = uuid();
+  const flags = flagsFromDefaults(
+    input.defaultSlots.reduce<Partial<Record<TaskType, boolean>>>(
+      (acc, slot) => ({ ...acc, [slot]: true }),
+      {}
+    )
+  );
+
+  inTransaction(() => {
+    for (const slot of TASK_TYPES) {
+      const flag = `is_default_${slot}`;
+      if (flags[flag] === 1) {
+        db().prepare(`UPDATE models SET ${flag} = 0, updated_at = ? WHERE ${flag} = 1`).run(ts);
+      }
+    }
+
+    db()
+      .prepare(
+        `INSERT INTO models (
+           id, name, provider, model_id, base_url, context_length, credentials_id, import_key,
+           is_default_agent, is_default_hindsight, is_default_compression,
+           is_default_vision, is_default_web_extract, is_default_session_search,
+           is_default_title_generation, is_default_skills_hub, is_default_mcp,
+           is_default_triage_specifier, is_default_approval, is_default_delegation,
+           created_at, updated_at
+         ) VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+      .run(
+        id,
+        input.name.trim(),
+        input.provider.trim(),
+        input.modelId.trim(),
+        input.baseUrl ?? null,
+        input.contextLength ?? null,
+        input.importKey,
+        flags.is_default_agent,
+        flags.is_default_hindsight,
+        flags.is_default_compression,
+        flags.is_default_vision,
+        flags.is_default_web_extract,
+        flags.is_default_session_search,
+        flags.is_default_title_generation,
+        flags.is_default_skills_hub,
+        flags.is_default_mcp,
+        flags.is_default_triage_specifier,
+        flags.is_default_approval,
+        flags.is_default_delegation,
+        ts,
+        ts
+      );
+  });
+
+  return { id, action: "inserted" };
+}
+

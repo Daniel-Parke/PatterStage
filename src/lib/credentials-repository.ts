@@ -7,6 +7,7 @@
 // Listing endpoints expose only `keyHint`, never `apiKey`.
 
 import { db, inTransaction, uuid, now } from "./db";
+import type { HermesProvider } from "./hermes-providers";
 
 // ── Public types ────────────────────────────────────────────────
 
@@ -173,4 +174,53 @@ export function updateCredential(
 export function deleteCredential(id: string): boolean {
   const result = db().prepare("DELETE FROM credentials WHERE id = ?").run(id);
   return result.changes > 0;
+}
+
+// ── Upsert (used by hermes-import.ts / prebuild-db.mjs) ────────
+
+export interface UpsertCredentialResult {
+  id: string;
+  action: "inserted" | "updated";
+}
+
+/**
+ * Idempotent upsert: insert a credential if no row for this provider
+ * exists, otherwise update the API key if it changed.
+ *
+ * Credentials are matched by `provider` (unique constraint).
+ * Used by hermes-import.ts so re-importing the same .env
+ * never creates duplicate credential rows.
+ */
+export function upsertCredential(input: {
+  provider: HermesProvider;
+  apiKey: string;
+}): UpsertCredentialResult {
+  const existing = db()
+    .prepare("SELECT id, api_key FROM credentials WHERE provider = ?")
+    .get(input.provider) as { id: string; api_key: string } | undefined;
+
+  const hint = buildKeyHint(input.apiKey);
+  const ts = now();
+
+  if (existing) {
+    if (existing.api_key !== input.apiKey) {
+      db()
+        .prepare(
+          "UPDATE credentials SET api_key = ?, key_hint = ?, updated_at = ? WHERE id = ?"
+        )
+        .run(input.apiKey, hint, ts, existing.id);
+    }
+    return { id: existing.id, action: "updated" };
+  }
+
+  const id = uuid();
+  inTransaction(() => {
+    db()
+      .prepare(
+        `INSERT INTO credentials (id, label, provider, api_key, key_hint, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      )
+      .run(id, `${input.provider} key`, input.provider, input.apiKey, hint, ts, ts);
+  });
+  return { id, action: "inserted" };
 }

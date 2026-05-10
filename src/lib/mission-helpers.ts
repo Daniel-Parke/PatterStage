@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { CronJobData } from "@/lib/utils";
+import { listModels, getModelDefaults } from "@/lib/models-repository";
 
 // ── Template definition (prompt-building blocks) ───────────────
 
@@ -30,6 +31,59 @@ export interface TemplateDef {
    * provider id in src/lib/hermes-providers.ts.
    */
   defaultProvider?: string;
+}
+
+// ── Template Model Resolution ──────────────────────────────────
+
+/**
+ * Resolve the best modelId + provider for a template.
+ *
+ * Strategy:
+ *   1. If the template's `defaultModel` is registered in the models registry,
+ *      use it (respects user's configured base_url, credentials, etc.).
+ *   2. Fall back to the `agent` default slot from the registry.
+ *   3. Fall back to the raw template values (bare IDs used directly).
+ *
+ * This ensures that imported Hermes config models are always preferred over
+ * bare IDs, and that templates always have a valid model to dispatch with.
+ */
+export function resolveTemplateModel(template: TemplateDef): { modelId: string; provider: string } {
+  try {
+    const models = listModels();
+    const defaults = getModelDefaults();
+
+    if (template.defaultModel) {
+      // Try to find a registry entry matching the template's bare model ID.
+      // Match by (model_id === defaultModel) — the registry stores full IDs.
+      const tm = template.defaultModel;
+      const match = models.find(
+        (m) =>
+          m.modelId === tm ||
+          m.modelId === `anthropic/${tm}` ||
+          m.modelId === tm.replace("anthropic/", "")
+      );
+      if (match) {
+        return { modelId: match.modelId, provider: match.provider };
+      }
+    }
+
+    // Fall back to agent default from registry
+    if (defaults.agent) {
+      const agentModel = models.find((m) => m.id === defaults.agent);
+      if (agentModel) {
+        return { modelId: agentModel.modelId, provider: agentModel.provider };
+      }
+    }
+  } catch {
+    // Registry unavailable — fall through to template raw values
+  }
+
+  // Last resort: use template's raw values (bare IDs used as-is)
+  const tm2 = template.defaultModel ?? "";
+  return {
+    modelId: tm2,
+    provider: template.defaultProvider ?? "",
+  };
 }
 
 // ── Scope Labels ──────────────────────────────────────────────

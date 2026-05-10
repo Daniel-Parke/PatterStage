@@ -443,6 +443,27 @@ export async function PUT(request: NextRequest) {
 
     }
 
+    // Validate model field: if set, it must exist in the registry
+    const modelUpdate = (updates as Record<string, unknown>).model;
+    if (typeof modelUpdate === "string" && modelUpdate.trim() !== "") {
+      try {
+        const { listModels } = await import("@/lib/models-repository");
+        const models = listModels();
+        const known = models.some(
+          (m) => m.modelId === modelUpdate || m.modelId === modelUpdate.trim()
+        );
+        if (!known) {
+          return NextResponse.json(
+            {
+              error: `Model "${modelUpdate}" is not in the registry. Add it under Config → Models, or leave blank to use the default.`,
+            },
+            { status: 400 }
+          );
+        }
+      } catch {
+        // Registry unavailable — skip validation
+      }
+    }
 
 
     const out = await withJobsFileLock(CRON_PATH, JOBS_BACKUP_DIR, (jobs) => {
