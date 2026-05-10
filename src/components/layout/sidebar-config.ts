@@ -83,8 +83,9 @@ export const mainSections: SidebarSection[] = [
   },
 ];
 
-/** Shown under “Config Settings”, above “All Settings” (file editors + env). */
+/** Shown under "Config Settings", above "All Settings" (file editors + env). */
 export const configSettingsPinnedLinks: SidebarLink[] = [
+  { icon: Globe, label: "Models", href: "/config/models", color: "purple" },
   { icon: Cpu, label: "HERMES.md", href: "/config/hermes_md", color: "cyan" },
   { icon: Lock, label: "Environment", href: "/config/env", color: "orange" },
 ];
@@ -97,7 +98,6 @@ export const configGroups: ConfigGroup[] = [
     defaultOpen: false,
     links: [
       { icon: Cpu, label: "Agent", href: "/config/agent", color: "cyan" },
-      { icon: Globe, label: "Models", href: "/config/models", color: "purple" },
       { icon: Activity, label: "Display", href: "/config/display", color: "green" },
       { icon: Layers, label: "Memory", href: "/config/memory", color: "pink" },
     ],
