@@ -46,22 +46,54 @@ function listRemoteBranches(): string[] {
       cwd: APP_DIR,
       timeout: 15000,
     });
-    const raw = execSync("git branch -r --format='%(refname:short)'", {
+
+    // Get remote branches
+    const rawRemote = execSync("git branch -r --format='%(refname:short)'", {
       cwd: APP_DIR,
       encoding: "utf-8",
       timeout: 10000,
     });
+
+    // Get local branches — only include branches that exist locally (active/checked-out)
+    const rawLocal = execSync("git branch --format='%(refname:short)'", {
+      cwd: APP_DIR,
+      encoding: "utf-8",
+      timeout: 10000,
+    });
+    const localSet = new Set<string>();
+    for (const line of rawLocal.split("\n")) {
+      const b = line.trim();
+      if (b) localSet.add(b);
+    }
+
     const seen = new Set<string>();
     const out: string[] = [];
-    for (const line of raw.split("\n")) {
+    for (const line of rawRemote.split("\n")) {
       const trimmed = line.trim();
       if (!trimmed || trimmed === "origin/HEAD" || !trimmed.startsWith("origin/")) continue;
       const short = trimmed.replace(/^origin\//, "");
       const clean = sanitizeGitBranch(short);
       if (!clean || clean === "HEAD") continue;
       if (seen.has(clean)) continue;
+      // Only include branches that exist locally (active) or are the configured deploy branch
+      const isDeployBranch = clean === UPDATE_BRANCH;
+      const existsLocally = localSet.has(clean);
+      if (!existsLocally && !isDeployBranch) continue;
       seen.add(clean);
       out.push(clean);
+    }
+    // Always include UPDATE_BRANCH even if never checked out locally
+    if (!seen.has(UPDATE_BRANCH)) {
+      try {
+        execSync(`git ls-remote --heads origin ${UPDATE_BRANCH} 2>/dev/null`, {
+          cwd: APP_DIR,
+          encoding: "utf-8",
+          timeout: 10000,
+        });
+        out.push(UPDATE_BRANCH);
+      } catch {
+        // branch doesn't exist on remote — skip
+      }
     }
     out.sort((a, b) => a.localeCompare(b));
     return out.slice(0, MAX_REMOTE_BRANCHES);

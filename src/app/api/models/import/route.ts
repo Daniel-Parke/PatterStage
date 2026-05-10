@@ -87,34 +87,31 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    let credentialsUpdated = 0;
     for (const cred of parsed.credentials) {
       try {
         upsertCredential({ provider: cred.provider, apiKey: cred.apiKey });
-        details.push({
-          name: `${cred.provider} API key`,
-          action: "inserted",
-          reason: "from .env",
-        });
+        credentialsUpdated++;
       } catch (err) {
         logApiError("POST /api/models/import", `upsert credential ${cred.provider}`, err);
       }
     }
 
-    const imported = details.filter((d) => d.action !== "skipped").length;
-    const skipped = details.filter((d) => d.action === "skipped").length;
+    const modelsImported = details.filter((d) => d.action !== "skipped").length;
+    const modelsSkipped = details.filter((d) => d.action === "skipped").length;
 
     appendAuditLine({
       action: "models.import",
       resource: "hermes",
       ok: true,
-      detail: `imported=${imported} skipped=${skipped}`,
+      detail: `models_imported=${modelsImported} models_skipped=${modelsSkipped} credentials_updated=${credentialsUpdated}`,
     });
 
     return NextResponse.json({
       data: {
-        imported,
-        skipped,
-        credentials: parsed.credentials.length,
+        modelsImported,
+        modelsSkipped,
+        credentialsUpdated,
         details,
       },
     });

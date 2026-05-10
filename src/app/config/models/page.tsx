@@ -246,12 +246,12 @@ export default function ModelsPage() {
         throw new Error(data.error || "Refresh failed");
       }
       const result = (await res.json()) as {
-        data?: { imported?: number; skipped?: number; credentials?: number };
+        data?: { modelsImported?: number; modelsSkipped?: number; credentialsUpdated?: number };
       };
-      const imported = result.data?.imported ?? 0;
-      const creds = result.data?.credentials ?? 0;
+      const modelsImported = result.data?.modelsImported ?? 0;
+      const creds = result.data?.credentialsUpdated ?? 0;
       showToast(
-        `Refreshed: ${imported} model${imported !== 1 ? "s" : ""}, ${creds} credential${creds !== 1 ? "s" : ""} synced from Hermes`,
+        `Synced: ${modelsImported} model${modelsImported !== 1 ? "s" : ""} ${modelsImported > 0 ? "(updated)" : "(no change)"}${creds > 0 ? `, ${creds} credential${creds !== 1 ? "s" : ""} updated` : ""} from Hermes`,
         "success"
       );
       await loadAll();
