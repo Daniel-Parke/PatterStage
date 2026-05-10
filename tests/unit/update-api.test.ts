@@ -65,6 +65,14 @@ describe("GET /api/update", () => {
     mockExecSync.mockReset();
     mockExecFileSync.mockReset();
     mockSpawn.mockReset();
+    mockExecSync.mockImplementation((cmd: string) => {
+      if (typeof cmd !== "string") throw new Error("not a string");
+      if (cmd.includes("git fetch")) return ""; // success, no output
+      if (cmd.includes("git branch -r")) return "origin/main\norigin/dev\norigin/HEAD\norigin/feature_x\n";
+      if (cmd.includes("git branch --format")) return "main\ndev\nfeature_x\n";
+      if (cmd.includes("git ls-remote")) return ""; // found on remote, UPDATE_BRANCH will be added
+      throw new Error("unexpected execSync: " + cmd);
+    });
     mockExecFileSync.mockImplementation((cmd: string, args: string[]) => {
       if (cmd !== "git") return "";
       const sub = args[0];
@@ -75,17 +83,19 @@ describe("GET /api/update", () => {
       if (sub === "rev-parse" && args.includes("HEAD")) return "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
       if (sub === "log") return "msg";
       if (sub === "rev-list") return "0";
+      if (sub === "branch" && args.includes("-r")) {
+        // Remote branches — all three are also local in this test
+        return "origin/main\norigin/dev\norigin/HEAD\norigin/feature_x\n";
+      }
+      if (sub === "branch") {
+        // Local branches
+        return "main\ndev\nfeature_x\n";
+      }
       return "";
     });
   });
 
   it("returns branches=1 with sanitized remote list", async () => {
-    mockExecSync.mockImplementation((cmd: string) => {
-      if (typeof cmd === "string" && cmd.includes("git branch -r")) {
-        return "origin/main\norigin/dev\norigin/HEAD\norigin/feature_x\n";
-      }
-      return "";
-    });
     const { GET } = await import("@/app/api/update/route");
     const res = await GET(getReq("http://localhost/api/update?branches=1") as never);
     const body = await res.json();

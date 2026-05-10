@@ -40,7 +40,7 @@ export default function SkillsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedProfile, setSelectedProfile] = useState("default");
 
-  // Per-category collapse state — default all expanded (user sees all cards at once)
+  // Per-category collapse state — default collapsed (value is true when collapsed)
   const [categoryCollapsed, setCategoryCollapsed] = useState<Record<string, boolean>>({});
   // Per-section collapse state — Active open by default
   const [activeCollapsed, setActiveCollapsed] = useState(false);
@@ -249,7 +249,7 @@ export default function SkillsPage() {
               ) : (
                 <div className="space-y-5">
                   {groupByCategory(activeFiltered).map(({ category, skills }) => {
-                    const isCollapsed = !!categoryCollapsed[category];
+                    const isCollapsed = categoryCollapsed[category];
                     return (
                       <div key={category}>
                         <CategoryLabel
@@ -315,7 +315,7 @@ export default function SkillsPage() {
               ) : (
                 <div className="space-y-5">
                   {groupByCategory(inactiveFiltered).map(({ category, skills }) => {
-                    const isCollapsed = !!categoryCollapsed[category];
+                    const isCollapsed = categoryCollapsed[category];
                     return (
                       <div key={category}>
                         <CategoryLabel
