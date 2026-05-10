@@ -40,9 +40,14 @@ export default function SkillsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedProfile, setSelectedProfile] = useState("default");
 
-  // Per-section collapse state — default collapsed so users see the full list at a glance
-  const [activeCollapsed, setActiveCollapsed] = useState(true);
+  // Per-category collapse state — default all expanded (user sees all cards at once)
+  const [categoryCollapsed, setCategoryCollapsed] = useState<Record<string, boolean>>({});
+  // Per-section collapse state — Active open by default
+  const [activeCollapsed, setActiveCollapsed] = useState(false);
   const [inactiveCollapsed, setInactiveCollapsed] = useState(true);
+
+  const toggleCategory = (cat: string) =>
+    setCategoryCollapsed((prev) => ({ ...prev, [cat]: !prev[cat] }));
 
   // Per-section search
   const [activeSearch, setActiveSearch] = useState("");
@@ -194,37 +199,11 @@ export default function SkillsPage() {
         subtitle={`${total} skill${total !== 1 ? "s" : ""} across ${data?.categoryCount ?? 0} categor${data?.categoryCount !== 1 ? "ies" : "y"}`}
         color="green"
         actions={
-          <div className="flex items-center gap-2">
-            {/* Collapse / Expand All */}
-            <button
-              onClick={() => {
-                const allCollapsed = activeCollapsed && inactiveCollapsed;
-                setActiveCollapsed(!allCollapsed);
-                setInactiveCollapsed(!allCollapsed);
-              }}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-white/10 bg-dark-900/60 hover:bg-dark-900/80 text-white/50 hover:text-white/80 text-xs transition-colors"
-              title={
-                activeCollapsed && inactiveCollapsed ? "Expand all sections" : "Collapse all sections"
-              }
-            >
-              {activeCollapsed && inactiveCollapsed ? (
-                <>
-                  <ChevronDown className="w-3.5 h-3.5" />
-                  Expand
-                </>
-              ) : (
-                <>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                  Collapse
-                </>
-              )}
-            </button>
-            <ProfileSelector
-              value={selectedProfile}
-              onChange={(id) => setSelectedProfile(id)}
-              compact={false}
-            />
-          </div>
+          <ProfileSelector
+            value={selectedProfile}
+            onChange={(id) => setSelectedProfile(id)}
+            compact={false}
+          />
         }
       />
 
@@ -269,31 +248,38 @@ export default function SkillsPage() {
                 />
               ) : (
                 <div className="space-y-5">
-                  {groupByCategory(activeFiltered).map(({ category, skills }) => (
-                    <div key={category}>
-                      <CategoryLabel
-                        category={category}
-                        count={skills.length}
-                        accentColor="text-neon-green/50"
-                      />
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
-                        {skills.map((skill) => (
-                          <SkillCard
-                            key={skill.name}
-                            skill={skill}
-                            enabled
-                            isExpanded={expandedSkill === skill.name}
-                            isPending={skill.name in toggling}
-                            onToggle={() => toggleSkill(skill.name, true)}
-                            onView={() => viewSkill(skill)}
-                            expandedContent={
-                              expandedSkill === skill.name ? skillContent : undefined
-                            }
-                          />
-                        ))}
+                  {groupByCategory(activeFiltered).map(({ category, skills }) => {
+                    const isCollapsed = !!categoryCollapsed[category];
+                    return (
+                      <div key={category}>
+                        <CategoryLabel
+                          category={category}
+                          count={skills.length}
+                          accentColor="text-neon-green/50"
+                          collapsed={isCollapsed}
+                          onToggle={() => toggleCategory(category)}
+                        />
+                        {!isCollapsed && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
+                            {skills.map((skill) => (
+                              <SkillCard
+                                key={skill.name}
+                                skill={skill}
+                                enabled
+                                isExpanded={expandedSkill === skill.name}
+                                isPending={skill.name in toggling}
+                                onToggle={() => toggleSkill(skill.name, true)}
+                                onView={() => viewSkill(skill)}
+                                expandedContent={
+                                  expandedSkill === skill.name ? skillContent : undefined
+                                }
+                              />
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </SkillSection>
@@ -328,31 +314,38 @@ export default function SkillsPage() {
                 />
               ) : (
                 <div className="space-y-5">
-                  {groupByCategory(inactiveFiltered).map(({ category, skills }) => (
-                    <div key={category}>
-                      <CategoryLabel
-                        category={category}
-                        count={skills.length}
-                        accentColor="text-white/30"
-                      />
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
-                        {skills.map((skill) => (
-                          <SkillCard
-                            key={skill.name}
-                            skill={skill}
-                            enabled={false}
-                            isExpanded={expandedSkill === skill.name}
-                            isPending={skill.name in toggling}
-                            onToggle={() => toggleSkill(skill.name, false)}
-                            onView={() => viewSkill(skill)}
-                            expandedContent={
-                              expandedSkill === skill.name ? skillContent : undefined
-                            }
-                          />
-                        ))}
+                  {groupByCategory(inactiveFiltered).map(({ category, skills }) => {
+                    const isCollapsed = !!categoryCollapsed[category];
+                    return (
+                      <div key={category}>
+                        <CategoryLabel
+                          category={category}
+                          count={skills.length}
+                          accentColor="text-white/30"
+                          collapsed={isCollapsed}
+                          onToggle={() => toggleCategory(category)}
+                        />
+                        {!isCollapsed && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
+                            {skills.map((skill) => (
+                              <SkillCard
+                                key={skill.name}
+                                skill={skill}
+                                enabled={false}
+                                isExpanded={expandedSkill === skill.name}
+                                isPending={skill.name in toggling}
+                                onToggle={() => toggleSkill(skill.name, false)}
+                                onView={() => viewSkill(skill)}
+                                expandedContent={
+                                  expandedSkill === skill.name ? skillContent : undefined
+                                }
+                              />
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </SkillSection>
@@ -369,11 +362,22 @@ interface CategoryLabelProps {
   category: string;
   count: number;
   accentColor: string;
+  collapsed: boolean;
+  onToggle: () => void;
 }
 
-function CategoryLabel({ category, count, accentColor }: CategoryLabelProps) {
+function CategoryLabel({ category, count, accentColor, collapsed, onToggle }: CategoryLabelProps) {
   return (
-    <div className="flex items-center gap-2">
+    <button
+      onClick={onToggle}
+      className="w-full flex items-center gap-2 group cursor-pointer py-0.5"
+      title={collapsed ? `Expand ${category}` : `Collapse ${category}`}
+    >
+      <ChevronRight
+        className={`w-3 h-3 flex-shrink-0 text-white/20 group-hover:text-white/50 transition-all ${
+          collapsed ? "" : "rotate-90"
+        }`}
+      />
       <span className={`text-[10px] font-mono font-semibold uppercase tracking-widest ${accentColor}`}>
         {category}
       </span>
@@ -381,7 +385,7 @@ function CategoryLabel({ category, count, accentColor }: CategoryLabelProps) {
         ({count})
       </span>
       <div className={`h-px flex-1 bg-gradient-to-r from-white/10 to-transparent ${accentColor.replace("/50", "/5").replace("/30", "/5")}`} />
-    </div>
+    </button>
   );
 }
 
