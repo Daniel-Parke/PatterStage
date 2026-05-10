@@ -105,30 +105,36 @@ if (!existsSync(SEEDS_DIR)) {
   }
 }
 
-// ── Migration 008: backfill import_key for pre-existing rows ──
+// ── Migration 008: add + backfill import_key column (idempotent) ──
 {
   const cols = db.prepare("PRAGMA table_info(models)").all();
   const hasImportKey = cols.some((c) => c.name === "import_key");
-  if (hasImportKey) {
-    const rows = db
-      .prepare(
-        "SELECT id, provider, model_id FROM models WHERE import_key IS NULL AND provider IS NOT NULL AND model_id IS NOT NULL"
-      )
-      .all();
-    if (rows.length > 0) {
-      const update = db.prepare("UPDATE models SET import_key = ? WHERE id = ?");
-      const backfill = db.transaction((rows) => {
-        for (const row of rows) {
-          const importKey = createHash("sha256")
-            .update(`${row.provider}::${row.model_id}`)
-            .digest("hex")
-            .slice(0, 16);
-          update.run(importKey, row.id);
-        }
-      });
-      backfill(rows);
-      console.log(`✓ Backfilled import_key for ${rows.length} pre-existing model row(s)`);
-    }
+
+  if (!hasImportKey) {
+    // SQLite doesn't support IF NOT EXISTS for ADD COLUMN, but catching the
+    // error is safe here since the column-check above is the guard.
+    db.exec("ALTER TABLE models ADD COLUMN import_key TEXT");
+    console.log("✓ Added import_key column to models table");
+  }
+
+  const rows = db
+    .prepare(
+      "SELECT id, provider, model_id FROM models WHERE import_key IS NULL AND provider IS NOT NULL AND model_id IS NOT NULL"
+    )
+    .all();
+  if (rows.length > 0) {
+    const update = db.prepare("UPDATE models SET import_key = ? WHERE id = ?");
+    const backfill = db.transaction((rows) => {
+      for (const row of rows) {
+        const importKey = createHash("sha256")
+          .update(`${row.provider}::${row.model_id}`)
+          .digest("hex")
+          .slice(0, 16);
+        update.run(importKey, row.id);
+      }
+    });
+    backfill(rows);
+    console.log(`✓ Backfilled import_key for ${rows.length} pre-existing model row(s)`);
   }
 }
 
