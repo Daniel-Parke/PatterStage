@@ -15,7 +15,6 @@ import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
-import { effectiveSkillEnabled } from "@/lib/skills-ui";
 
 interface Skill {
   name: string;
