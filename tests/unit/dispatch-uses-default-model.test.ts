@@ -11,7 +11,6 @@
  */
 
 import { existsSync, rmSync, readFileSync } from "fs";
-import { join } from "path";
 
 const spawnCalls: Array<{ cmd: string; args: readonly string[]; scriptContent?: string }> = [];
 
