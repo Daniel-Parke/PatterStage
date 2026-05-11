@@ -298,6 +298,7 @@ export interface UpdateCronJobInput {
   last_run_at?: string | null;
   last_status?: string | null;
   last_delivery_error?: string | null;
+  profile_name?: string;
   hermes_job_id?: string | null;
   orphan?: boolean;
 }
