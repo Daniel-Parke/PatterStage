@@ -52,6 +52,7 @@ function recordToApiJob(job: CronJobRecord) {
     deliver: job.deliver,
     script: job.script ?? "",
     repeat: job.repeat,
+    profile_name: job.profile_name,
     next_run_at: job.next_run_at,
     last_run_at: job.last_run_at,
     last_status: job.last_status,
@@ -172,6 +173,7 @@ export async function POST(request: NextRequest) {
       repeat,
       deliver,
       script,
+      profile_name,
     } = body as {
       name?: string;
       schedule?: string;
@@ -183,6 +185,7 @@ export async function POST(request: NextRequest) {
       repeat?: boolean | { times: number | null; completed?: number };
       deliver?: string;
       script?: string | null;
+      profile_name?: string;
     };
 
     if (!name?.trim()) {
@@ -234,6 +237,7 @@ export async function POST(request: NextRequest) {
       state: "scheduled",
       deliver: (deliver as string) ?? "none",
       script: (script as string | null) ?? null,
+      profile_name: (profile_name as string) ?? "default",
       source: "ch",
     });
 
@@ -337,6 +341,7 @@ export async function PUT(request: NextRequest) {
     if (updates.base_url !== undefined) updatePayload.base_url = updates.base_url as string | null;
     if (updates.deliver !== undefined) updatePayload.deliver = updates.deliver as string;
     if (updates.script !== undefined) updatePayload.script = updates.script as string | null;
+    if (updates.profile_name !== undefined) updatePayload.profile_name = updates.profile_name as string;
     if (updates.enabled !== undefined) updatePayload.enabled = Boolean(updates.enabled);
     if (updates.state !== undefined) updatePayload.state = updates.state as string;
 
