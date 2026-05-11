@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { RefreshCw, Upload, Info } from "lucide-react";
 import type { FallbackConfig } from "@/types/hermes";
 

@@ -80,9 +80,8 @@ export async function POST(
       updates.baseUrl = hermesModel.baseUrl;
     }
 
-    let updated = model;
     if (Object.keys(updates).length > 0) {
-      updated = updateModel(id, updates)!;
+      updateModel(id, updates);
     }
 
     return NextResponse.json({

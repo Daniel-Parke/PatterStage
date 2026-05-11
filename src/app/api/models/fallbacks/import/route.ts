@@ -7,8 +7,8 @@ import * as yaml from "js-yaml";
 import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
-import { addFallbackEntry, listFallbackChain } from "@/lib/fallbacks-repository";
-import { getModel, upsertModel } from "@/lib/models-repository";
+import { addFallbackEntry } from "@/lib/fallbacks-repository";
+import { upsertModel } from "@/lib/models-repository";
 import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 

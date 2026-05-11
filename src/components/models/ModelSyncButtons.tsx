@@ -176,7 +176,7 @@ export default function ModelSyncButtons({
       ],
       confirming: false,
     });
-  }, [modelId, modelName, provider, modelIdString]);
+  }, [modelName, provider, modelIdString]);
 
   const handlePull = useCallback(async () => {
     setModalState({
@@ -190,7 +190,7 @@ export default function ModelSyncButtons({
       ],
       confirming: false,
     });
-  }, [modelId, modelName, provider, modelIdString]);
+  }, [modelName, provider, modelIdString]);
 
   const handleConfirm = useCallback(async () => {
     if (!modalState) return;

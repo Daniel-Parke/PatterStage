@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { ChevronUp, ChevronDown, Plus, Edit3, Trash2, ChevronDown as ChevronDownIcon } from "lucide-react";
 import type { FallbackChainEntry } from "@/types/hermes";
 

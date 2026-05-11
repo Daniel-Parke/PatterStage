@@ -277,7 +277,7 @@ export default function ModelsPage() {
         };
       }
     },
-    [framework, loadAll, showToast]
+    [loadAll, showToast]
   );
 
   const handlePull = useCallback(
@@ -307,7 +307,7 @@ export default function ModelsPage() {
         };
       }
     },
-    [framework, loadAll, showToast]
+    [loadAll, showToast]
   );
 
   // ── Model editor callbacks ─────────────────────────────────────
@@ -383,7 +383,7 @@ export default function ModelsPage() {
         setBusyTaskType(null);
       }
     },
-    [framework, loadAll, showToast]
+    [loadAll, showToast]
   );
 
   // ── Bulk auxiliary setter ─────────────────────────────────────
@@ -416,7 +416,7 @@ export default function ModelsPage() {
         setBusyTaskType(null);
       }
     },
-    [framework, loadAll, showToast]
+    [loadAll, showToast]
   );
 
   // ── Refresh handler ───────────────────────────────────────────
@@ -469,7 +469,7 @@ export default function ModelsPage() {
         );
       }
     },
-    [framework, loadAll, showToast]
+    [loadAll, showToast]
   );
 
   const handleFallbackToggle = useCallback(
@@ -490,7 +490,7 @@ export default function ModelsPage() {
         );
       }
     },
-    [framework, loadAll, showToast]
+    [loadAll, showToast]
   );
 
   const handleFallbackDelete = useCallback(
@@ -509,7 +509,7 @@ export default function ModelsPage() {
         );
       }
     },
-    [framework, loadAll, showToast]
+    [loadAll, showToast]
   );
 
   const handleFallbackEdit = useCallback(
@@ -538,7 +538,7 @@ export default function ModelsPage() {
         );
       }
     },
-    [framework, loadAll, showToast]
+    [loadAll, showToast]
   );
 
   const handleFallbackAddCustom = useCallback(
@@ -559,7 +559,7 @@ export default function ModelsPage() {
         );
       }
     },
-    [framework, loadAll, showToast]
+    [loadAll, showToast]
   );
 
   const handleSyncFallbackToHermes = useCallback(async () => {
@@ -601,7 +601,7 @@ export default function ModelsPage() {
     } finally {
       setImportingFallback(false);
     }
-  }, [framework, loadAll, showToast]);
+  }, [loadAll, showToast]);
 
   // ── Render ────────────────────────────────────────────────────
 

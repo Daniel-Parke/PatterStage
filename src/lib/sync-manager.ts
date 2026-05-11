@@ -7,7 +7,7 @@ import { existsSync, readFileSync } from "fs";
 import * as yaml from "js-yaml";
 
 import { getActiveHermesPaths } from "./hermes-agent-runtime";
-import { getModel, listModels, getModelDefaults, setDefaultModel } from "./models-repository";
+import { getModel, listModels } from "./models-repository";
 import { getCredentialWithKey, listCredentials } from "./credentials-repository";
 import { listFallbackChain, getFallbackConfig } from "./fallbacks-repository";
 import {
@@ -15,7 +15,7 @@ import {
   syncSingleCredentialToHermesEnv,
   syncFallbacksToHermesConfig,
 } from "./hermes-config-sync";
-import { envVarForProvider, isHermesProvider, type HermesProvider } from "./hermes-providers";
+import { isHermesProvider, type HermesProvider } from "./hermes-providers";
 import { getActiveFrameworkId } from "./framework-registry";
 
 // ── Types ────────────────────────────────────────────────────

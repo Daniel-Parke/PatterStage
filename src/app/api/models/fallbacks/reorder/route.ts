@@ -6,7 +6,7 @@ import { z } from "zod";
 import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
-import { reorderFallbackChain, listFallbackChain } from "@/lib/fallbacks-repository";
+import { reorderFallbackChain } from "@/lib/fallbacks-repository";
 import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
 
 const reorderSchema = z.object({

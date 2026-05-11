@@ -8,7 +8,7 @@
 // separate model_defaults table keyed on (framework_id, task_type).
 
 import { db, inTransaction, uuid, now } from "./db";
-import { TASK_TYPES, isTaskType, type TaskType } from "./hermes-providers";
+import { isTaskType, type TaskType } from "./hermes-providers";
 import { getCredentialWithKey } from "./credentials-repository";
 
 // ── Public types ────────────────────────────────────────────────

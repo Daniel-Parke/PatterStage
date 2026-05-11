@@ -19,7 +19,8 @@ export default function FrameworkSelector({
   className = "",
 }: FrameworkSelectorProps) {
   const frameworks = listFrameworks();
-  const active = getFramework(activeFrameworkId) ?? frameworks[0];
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _active = getFramework(activeFrameworkId) ?? frameworks[0];
 
   return (
     <div className={`inline-flex items-center gap-2 ${className}`}>
