@@ -50,6 +50,7 @@ interface CronJob {
   skills: string[];
   script: string;
   state?: string;
+  profile_name?: string;
 }
 
 interface CronData {
@@ -323,6 +324,7 @@ function EditJobModal({
   const [prompt, setPrompt] = useState(job.prompt);
   const [deliver, setDeliver] = useState(job.deliver || "none");
   const [model, setModel] = useState(job.model);
+  const [profile_name, setProfileName] = useState(job.profile_name || "default");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -350,6 +352,7 @@ function EditJobModal({
           prompt,
           deliver,
           model,
+          profile_name,
         }),
       });
       if (!res.ok) {
@@ -455,6 +458,27 @@ function EditJobModal({
             />
           </div>
         </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-white/70">
+            Agent Profile
+          </label>
+          <select
+            value={profile_name}
+            onChange={(e) => setProfileName(e.target.value)}
+            className={baseInputStyles}
+          >
+            <option value="default">Bob (default)</option>
+            <option value="swe">swe</option>
+            <option value="qa">qa</option>
+            <option value="devops">devops</option>
+            <option value="web-design">web-design</option>
+            <option value="researcher">researcher</option>
+            <option value="marketing">marketing</option>
+            <option value="creative-lead">creative-lead</option>
+            <option value="data-scientist">data-scientist</option>
+          </select>
+        </div>
       </div>
     </Modal>
   );
@@ -472,6 +496,7 @@ function CreateJobModal({
   const [prompt, setPrompt] = useState("");
   const [deliver, setDeliver] = useState("none");
   const [model, setModel] = useState("");
+  const [profile_name, setProfileName] = useState("default");
   const [repeat, setRepeat] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -494,6 +519,7 @@ function CreateJobModal({
           deliver,
           model,
           repeat,
+          profile_name,
         }),
       });
       if (!res.ok) {
@@ -567,7 +593,7 @@ function CreateJobModal({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
           <Select
             value={deliver}
             onChange={setDeliver}
@@ -593,6 +619,27 @@ function CreateJobModal({
               className={baseInputStyles}
             />
           </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-white/70">
+            Agent Profile
+          </label>
+          <select
+            value={profile_name}
+            onChange={(e) => setProfileName(e.target.value)}
+            className={baseInputStyles}
+          >
+            <option value="default">Bob (default)</option>
+            <option value="swe">swe</option>
+            <option value="qa">qa</option>
+            <option value="devops">devops</option>
+            <option value="web-design">web-design</option>
+            <option value="researcher">researcher</option>
+            <option value="marketing">marketing</option>
+            <option value="creative-lead">creative-lead</option>
+            <option value="data-scientist">data-scientist</option>
+          </select>
         </div>
 
         <div className="flex items-center justify-between py-2">
