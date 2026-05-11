@@ -977,3 +977,39 @@ export interface NavItem {
 
 }
 
+export type FrameworkId = "universal" | string;
+
+export interface FallbackChainEntry {
+    id: string;
+    modelId: string | null;
+    modelName: string;
+    provider: string;
+    modelIdString: string;
+    position: number;
+    enabled: boolean;
+    overrideBaseUrl: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface FallbackConfig {
+    restorePrimaryOnFallback: boolean;
+    fallbackNotification: boolean;
+    apiMaxRetries: number;
+}
+
+export interface FrameworkDefaults {
+    agent: string | null;
+    hindsight: string | null;
+    compression: string | null;
+    vision: string | null;
+    web_extract: string | null;
+    session_search: string | null;
+    title_generation: string | null;
+    skills_hub: string | null;
+    mcp: string | null;
+    triage_specifier: string | null;
+    approval: string | null;
+    delegation: string | null;
+}
+

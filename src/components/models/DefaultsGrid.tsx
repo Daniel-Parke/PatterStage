@@ -103,7 +103,7 @@ export default function DefaultsGrid({
           <div
             key={slot}
             data-task-slot={slot}
-            className="rounded-xl border border-white/10 bg-dark-900/50 p-4 space-y-2"
+            className="rounded-xl border border-white/10 bg-dark-900/50 p-4 space-y-2 min-h-[120px]"
           >
             <div className="flex items-start justify-between gap-2">
               <div>
@@ -128,7 +128,7 @@ export default function DefaultsGrid({
                   const value = e.target.value;
                   void onChange(slot, value === "" ? null : value);
                 }}
-                className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 pr-8 text-sm text-white outline-none transition-colors font-mono appearance-none cursor-pointer focus:border-neon-purple/50 disabled:opacity-50"
+                className="w-full h-9 min-h-9 bg-dark-900/50 border border-white/10 rounded-lg px-3 pr-8 text-sm text-white outline-none transition-colors font-mono appearance-none cursor-pointer focus:border-neon-purple/50 disabled:opacity-50 truncate"
               >
                 <option value="" className="bg-dark-900">
                   — none —

@@ -7,6 +7,7 @@ interface ApiModel {
   name: string;
   provider: string;
   modelId: string;
+  frameworkId: string;
 }
 
 interface ApiDefaults {

@@ -1,5 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // /api/models/defaults — read & write the 12 task-slot defaults
+// Supports optional ?framework= query param; defaults to "*"
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 
@@ -11,9 +12,10 @@ import { zodErrorResponse, setDefaultPutSchema } from "@/lib/api-schemas";
 import type { TaskType } from "@/lib/hermes-providers";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const framework = request.nextUrl.searchParams.get("framework") ?? "*";
   try {
-    return NextResponse.json({ data: { defaults: getModelDefaults() } });
+    return NextResponse.json({ data: { defaults: getModelDefaults(framework) } });
   } catch (error) {
     logApiError("GET /api/models/defaults", "reading defaults", error);
     return NextResponse.json({ error: "Failed to read defaults" }, { status: 500 });
@@ -35,12 +37,15 @@ export async function PUT(request: NextRequest) {
   const parsed = setDefaultPutSchema.safeParse(raw);
   if (!parsed.success) return zodErrorResponse(parsed.error);
 
+  // Support framework in body; default to universal
+  const framework = (raw as Record<string, unknown>)?.framework as string | undefined ?? "*";
+
   try {
-    const defaults = setDefaultModel(parsed.data.taskType as TaskType, parsed.data.modelId);
+    const defaults = setDefaultModel(parsed.data.taskType as TaskType, parsed.data.modelId, framework);
     syncDefaultsToHermesConfig();
     appendAuditLine({
       action: "model.default.set",
-      resource: `${parsed.data.taskType}=${parsed.data.modelId ?? "null"}`,
+      resource: `${framework}/${parsed.data.taskType}=${parsed.data.modelId ?? "null"}`,
       ok: true,
     });
     return NextResponse.json({ data: { defaults } });
