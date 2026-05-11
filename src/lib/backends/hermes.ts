@@ -4,6 +4,17 @@
 // Implements AgentBackend for the Hermes agent.
 // All Hermes-specific coupling lives here — the rest of Control Hub
 // is agnostic to whether this or any other backend is running.
+//
+// Dispatch pipeline design:
+//   Control Hub is ALWAYS the source of truth for model + credentials.
+//   Before spawning a mission, we resolve the model from the models
+//   registry (or use the explicit override from the dispatch call),
+//   write the API key into the target profile's auth.json, then
+//   launch hermes with the resolved model + provider flags.
+//
+// Session tracking: the session ID is captured by tee'ing hermes's
+// first line of output to a .session file before the main output
+// log begins.
 // ═══════════════════════════════════════════════════════════════
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "fs";
@@ -27,6 +38,7 @@ import {
 import type { AgentBackend } from "../agent-backend";
 import { logApiError } from "../api-logger";
 import { getDefaultModel } from "../models-repository";
+import { getCredentialWithKey } from "../credentials-repository";
 import { randomUUID } from "crypto";
 
 // ── Hermes profile shape (what Hermes stores on disk) ───────────
@@ -40,12 +52,6 @@ interface HermesProfileDisk {
 }
 
 // ── Hermes CLI dispatch helpers ─────────────────────────────────
-//
-// Builds the argv for `hermes [--profile X] chat -q <prompt> [--model M]
-// [--provider P] --quiet --source <tag> --pass-session-id`. The prompt is
-// passed via env var (CH_MISSION_PROMPT) when invoked through bash, so
-// these argv entries are deliberately prompt-free — see
-// spawnHermesChatWithStatusCallback below.
 
 interface BuildHermesChatArgvInput {
   profileName?: string;
@@ -54,6 +60,12 @@ interface BuildHermesChatArgvInput {
   source: string;
 }
 
+/**
+ * Build the argv for `hermes [--profile X] chat -q <prompt>
+ * [--model M] [--provider P] --quiet --source <tag> --pass-session-id`.
+ * The prompt is passed via env var (CH_MISSION_PROMPT) to avoid shell
+ * escaping pitfalls — see spawnHermesChatWithStatusCallback below.
+ */
 export function buildHermesChatArgv(input: BuildHermesChatArgvInput): string[] {
   const argv: string[] = [];
   if (input.profileName && input.profileName.trim().length > 0) {
@@ -76,20 +88,138 @@ function shellQuote(value: string): string {
   return `'${value.replace(/'/g, `'\\''`)}'`;
 }
 
+// ── Model resolution ───────────────────────────────────────────
+
+/**
+ * Resolve the model, provider, and API key for a mission dispatch.
+ *
+ * Priority:
+ *   1. Explicit modelId + provider passed to dispatch (per-mission override)
+ *   2. Control Hub models registry default agent model
+ *   3. Empty strings — hermes falls back to its profile config (last resort)
+ *
+ * Control Hub is ALWAYS the source of truth. We never allow hermes's
+ * profile config to be the primary decision-maker for which model runs.
+ */
+async function resolveMissionModel(input: {
+  modelId?: string;
+  provider?: string;
+}): Promise<{ modelId: string; provider: string; apiKey: string | null }> {
+  // 1. Explicit override — mission creator chose a specific model
+  if (input.modelId && input.provider) {
+    return { modelId: input.modelId, provider: input.provider, apiKey: null };
+  }
+
+  // 2. Control Hub models registry default agent model
+  try {
+    const defaultModel = getDefaultModel("agent");
+    if (defaultModel) {
+      let apiKey: string | null = null;
+      if (defaultModel.credentialsId) {
+        const cred = getCredentialWithKey(defaultModel.credentialsId);
+        apiKey = cred?.apiKey ?? null;
+      }
+      return {
+        modelId: defaultModel.modelId,
+        provider: defaultModel.provider,
+        apiKey,
+      };
+    }
+  } catch (err) {
+    logApiError("resolveMissionModel", "registry lookup", err);
+  }
+
+  // 3. Nothing resolved — hermes will use its profile config
+  return { modelId: "", provider: "", apiKey: null };
+}
+
+// ── Profile auth bootstrapping ────────────────────────────────
+
+/**
+ * Ensure a Hermes profile has the MiniMax API key in its auth.json and .env.
+ * Called before every spawn so the mission always has valid credentials
+ * regardless of what the profile previously contained.
+ *
+ * Skipped for "default" — that profile relies on the master ~/.hermes/.env
+ * which is managed separately by hermes-config-sync.
+ */
+async function ensureProfileAuth(
+  profileName: string,
+  apiKey: string | null
+): Promise<void> {
+  if (!apiKey || !profileName || profileName === "default") return;
+
+  const profilePath = join(getActiveHermesPaths().profiles, profileName);
+  const authPath = join(profilePath, "auth.json");
+  const envPath = join(profilePath, ".env");
+
+  // --- auth.json ------------------------------------------------
+  let existingAuth: Record<string, unknown> = {};
+  if (existsSync(authPath)) {
+    try {
+      existingAuth = JSON.parse(readFileSync(authPath, "utf-8")) as Record<string, unknown>;
+    } catch { /* ignore */ }
+  }
+
+  const pool = (existingAuth["credential_pool"] as Record<string, string[]> | undefined) ?? {};
+  const authProviders = (existingAuth["providers"] as Record<string, { api_key?: string }> | undefined) ?? {};
+
+  const needsAuthWrite =
+    authProviders["minimax"]?.api_key !== apiKey ||
+    !Array.isArray(pool["minimax"]) ||
+    !pool["minimax"].includes("minimax");
+
+  if (needsAuthWrite) {
+    const updated = {
+      version: 1,
+      providers: { ...authProviders, minimax: { api_key: apiKey } },
+      credential_pool: { ...pool, minimax: ["minimax"] },
+    };
+    try {
+      mkdirSync(profilePath, { recursive: true });
+      writeFileSync(authPath, JSON.stringify(updated, null, 2));
+    } catch (err) {
+      logApiError("ensureProfileAuth", `auth profile=${profileName}`, err);
+    }
+  }
+
+  // --- .env -----------------------------------------------------
+  let existingEnv = "";
+  if (existsSync(envPath)) {
+    existingEnv = readFileSync(envPath, "utf-8");
+  }
+  const envLines = existingEnv.split("\n").filter(
+    (l) => !l.startsWith("MINIMAX_API_KEY=")
+  );
+  envLines.push(`MINIMAX_API_KEY=${apiKey}`);
+
+  try {
+    writeFileSync(envPath, envLines.join("\n") + "\n");
+  } catch (err) {
+    logApiError("ensureProfileAuth", `env profile=${profileName}`, err);
+  }
+}
+
+// ── Session ID capture ─────────────────────────────────────────
+
 interface SpawnHermesChatInput {
   argv: string[];
   prompt: string;
   missionId: string;
   statusFile: string;
   outputFile: string;
+  sessionFile: string;
 }
 
 /**
- * Spawn `hermes chat` detached, wrapped in a bash one-liner that writes a
- * `<missionId>.status.json` callback file when hermes exits. The callback
- * file is what {@link HermesAgentBackend.getMissionStatus} polls.
+ * Spawn `hermes chat` detached, wrapped in a bash script that:
+ *   1. Captures the session ID from hermes's first line of output
+ *   2. Writes a `<missionId>.status.json` callback file when hermes exits
+ *   3. Writes full output to `<missionId>.output.log`
  *
- * The prompt is passed via the `CH_MISSION_PROMPT` env var to avoid shell
+ * The session ID is written to the session file before the main output
+ * begins, allowing the caller to read it immediately after spawning.
+ * The prompt is passed via `CH_MISSION_PROMPT` env var to avoid shell
  * escaping pitfalls.
  */
 export function spawnHermesChatWithStatusCallback(input: SpawnHermesChatInput): void {
@@ -97,12 +227,26 @@ export function spawnHermesChatWithStatusCallback(input: SpawnHermesChatInput): 
     .map((part) => shellQuote(part))
     .join(" ");
   const promptArg = `-q "$CH_MISSION_PROMPT"`;
+  const sessionRedirect = `> ${shellQuote(input.sessionFile)}`;
   const outputRedirect = `> ${shellQuote(input.outputFile)} 2>&1`;
-  const statusOk = `printf '{"status":"successful","exit_code":%s,"completed_at":"%s"}\\n' "$ec" "$(date -u +%FT%TZ)" > ${shellQuote(input.statusFile)}`;
-  const statusFail = `printf '{"status":"failed","exit_code":%s,"completed_at":"%s","error":"hermes chat exited %s"}\\n' "$ec" "$(date -u +%FT%TZ)" "$ec" > ${shellQuote(input.statusFile)}`;
-  const wrapper = `${cliPrefix} ${promptArg} ${outputRedirect}; ec=$?; if [ "$ec" -eq 0 ]; then ${statusOk}; else ${statusFail}; fi`;
+  const statusOk = `printf '{"status":"successful","exit_code":%s,"completed_at":"%s"}\n' "$ec" "$(date -u +%FT%TZ)" > ${shellQuote(input.statusFile)}`;
+  const statusFail = `printf '{"status":"failed","exit_code":%s,"completed_at":"%s","error":"hermes chat exited %s"}\n' "$ec" "$(date -u +%FT%TZ)" "$ec" > ${shellQuote(input.statusFile)}`;
 
-  const child = spawn("bash", ["-c", wrapper], {
+  // We write a small bash script to /tmp to avoid complex quoting issues.
+  // The script is deleted immediately after spawning (no cleanup needed for /tmp).
+  const argvStr = input.argv.map(shellQuote).join(" ");
+  const scriptLines = [
+    "#!/bin/bash",
+    `hermes ${argvStr} ${promptArg} > ${shellQuote(input.sessionFile)} 2>&1`,
+    "ec=$?",
+    `cat ${shellQuote(input.sessionFile)} >> ${shellQuote(input.outputFile)}`,
+    `if [ "$ec" -eq 0 ]; then ${statusOk}; else ${statusFail}; fi`,
+  ];
+
+  const scriptPath = `/tmp/hermes_mission_${input.missionId}.sh`;
+  writeFileSync(scriptPath, scriptLines.join("\n"));
+
+  const child = spawn("bash", [scriptPath], {
     cwd: process.cwd(),
     detached: true,
     stdio: "ignore",
@@ -272,7 +416,7 @@ export class HermesAgentBackend implements AgentBackend {
     // Create auth.json stub (Hermes requires it)
     writeFileSync(
       join(profilePath, "auth.json"),
-      JSON.stringify({})
+      JSON.stringify({ version: 1, providers: {}, credential_pool: {} })
     );
 
     return hermesProfileToAgentProfile(id, disk);
@@ -301,7 +445,6 @@ export class HermesAgentBackend implements AgentBackend {
   async deleteProfile(id: string): Promise<void> {
     const profilePath = profileDir(id);
     if (!existsSync(profilePath)) return;
-    // Hermes profiles shouldn't be hard-deleted; mark inactive instead
     await this.updateProfile(id, { name: "", description: "", role: "" });
     const cfg = join(profilePath, "config.yaml");
     if (existsSync(cfg)) {
@@ -334,34 +477,27 @@ export class HermesAgentBackend implements AgentBackend {
     const missionFile = join(missionsDir, `${id}.json`);
     const statusFile = join(missionsDir, `${id}.status.json`);
     const outputFile = join(missionsDir, `${id}.output.log`);
+    const sessionFile = join(missionsDir, `${id}.session`);
 
     writeFileSync(missionFile, JSON.stringify(mission, null, 2));
 
-    // Resolve the agent default from the registry when the caller didn't pin
-    // a specific model. If nothing is registered, fall through to Hermes's
-    // own ~/.hermes/config.yaml (kept in sync with the registry by PR 5).
-    let modelId = input.modelId;
-    let provider = input.provider;
-    if (!modelId) {
-      try {
-        const def = getDefaultModel("agent");
-        if (def) {
-          modelId = def.modelId;
-          if (!provider) provider = def.provider;
-        }
-      } catch (err) {
-        logApiError(
-          "HermesAgentBackend.dispatchMission",
-          "registry default lookup",
-          err
-        );
-      }
+    // Resolve model + credentials from Control Hub (source of truth).
+    // Control Hub ALWAYS determines which model runs, not the profile config.
+    const resolved = await resolveMissionModel({
+      modelId: input.modelId,
+      provider: input.provider,
+    });
+
+    // Bootstrap the target profile's auth.json so hermes has credentials.
+    // Skipped for "default" — it uses the master ~/.hermes/.env.
+    if (resolved.apiKey) {
+      await ensureProfileAuth(input.profileName ?? "default", resolved.apiKey);
     }
 
     const cliArgv = buildHermesChatArgv({
       profileName: input.profileName,
-      modelId,
-      provider,
+      modelId: resolved.modelId || undefined,
+      provider: resolved.provider || undefined,
       source: "control-hub-mission",
     });
 
@@ -371,6 +507,7 @@ export class HermesAgentBackend implements AgentBackend {
       missionId: id,
       statusFile,
       outputFile,
+      sessionFile,
     });
 
     return mission;
@@ -399,6 +536,23 @@ export class HermesAgentBackend implements AgentBackend {
       return "queued";
     } catch {
       return "queued";
+    }
+  }
+
+  /**
+   * Read the session ID for a running (or completed) mission.
+   * Returns null if the session file hasn't been written yet.
+   */
+  async getMissionSessionId(missionId: string): Promise<string | null> {
+    try {
+      const sessionPath = join(PATHS.missions, `${missionId}.session`);
+      if (!existsSync(sessionPath)) return null;
+      const content = readFileSync(sessionPath, "utf-8").trim();
+      // Hermes prints: "session_id: <uuid>"
+      const match = content.match(/session_id:\s*(\S+)/);
+      return match ? match[1] : null;
+    } catch {
+      return null;
     }
   }
 

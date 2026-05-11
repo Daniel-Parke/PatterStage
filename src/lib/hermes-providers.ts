@@ -43,7 +43,7 @@ export type TaskType = (typeof TASK_TYPES)[number];
 export const HERMES_PROVIDERS = [
   // chat --provider choices (excluding "auto")
   "openrouter",
-  "nous",
+  // "nous" removed — Nous Portal is not used; MiniMax is our sole provider
   "openai-codex",
   "copilot-acp",
   "copilot",
@@ -77,7 +77,7 @@ export type HermesProvider = (typeof HERMES_PROVIDERS)[number];
  */
 export const PROVIDER_ENV_VAR: Record<HermesProvider, string> = {
   openrouter: "OPENROUTER_API_KEY",
-  nous: "NOUS_API_KEY",
+  // "nous" removed — Nous Portal is not used
   "openai-codex": "OPENAI_API_KEY",
   "copilot-acp": "COPILOT_ACP_API_KEY",
   copilot: "COPILOT_API_KEY",

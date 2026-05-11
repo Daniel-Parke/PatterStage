@@ -102,10 +102,25 @@ export async function POST(request: NextRequest) {
         context: context ?? "",
       });
 
+      // Resolve Hermes profile name to the DB profile_id for the mission record.
+      // listProfiles() returns profiles keyed by their Hermes directory name
+      // (which is what hermes --profile <name> expects). We use it directly
+      // as the profile_id so the mission record shows which profile was used.
+      let resolvedProfileId: string | undefined;
+      if (profileName) {
+        try {
+          const profiles = await agentBackend.listProfiles();
+          const match = profiles.find(
+            (p) => p.name === profileName || p.id === profileName
+          );
+          resolvedProfileId = match?.id;
+        } catch { /* profile lookup failed — leave undefined */ }
+      }
+
       const mission = createMission({
         name: (name as string)?.trim() || "Untitled Mission",
         prompt,
-        profileId,
+        profileId: resolvedProfileId ?? profileId,
         localDirs: dirsNorm,
         references: references ?? [],
         skills: skills ?? [],
@@ -126,8 +141,19 @@ export async function POST(request: NextRequest) {
             modelId,
             provider,
           });
+
+          // Capture session ID from the running hermes process and write it
+          // back to the mission record so Sessions can display it.
+          let sessionId = dispatched.sessionId ?? undefined;
+          if (!sessionId && resolvedProfileId) {
+            try {
+              const sid = await agentBackend.getMissionSessionId?.(mission.id);
+              if (sid) sessionId = sid;
+            } catch { /* session ID capture is best-effort */ }
+          }
+
           updateMission(mission.id, {
-            sessionId: dispatched.sessionId,
+            sessionId,
             status: "dispatched",
           });
         } catch (err) {
