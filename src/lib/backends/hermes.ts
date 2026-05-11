@@ -457,7 +457,10 @@ export class HermesAgentBackend implements AgentBackend {
   // ── Execution ──────────────────────────────────────────────
 
   async dispatchMission(input: DispatchMissionInput): Promise<Mission> {
-    const id = randomUUID();
+    // Prefer the caller-supplied mission ID so all output files land under the
+    // same ID the API returned. Fall back to generating one for tests/backwards
+    // compatibility that don't pass a missionId.
+    const id = input.missionId ?? randomUUID();
     const now = new Date().toISOString();
     const mission: Mission = {
       id,

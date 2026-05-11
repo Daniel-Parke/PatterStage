@@ -51,6 +51,10 @@ export interface Mission {
 }
 
 export interface DispatchMissionInput {
+  /** Pre-created mission ID from Control Hub DB. If omitted, dispatchMission
+   *  generates its own (legacy behaviour — prefer passing the ID so all files
+   *  land under the same ID that the API returns to the caller). */
+  missionId?: string;
   name: string;
   prompt: string;
   profileId?: string;

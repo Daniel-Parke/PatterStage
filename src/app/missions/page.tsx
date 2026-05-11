@@ -153,6 +153,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 const CATEGORY_ORDER = [
   "Business - Operations",
+  "Engineering",
   "Engineering - QA",
   "Engineering - DevOps",
   "Engineering - Software",
@@ -164,6 +165,7 @@ const CATEGORY_ORDER = [
 ];
 
 const CATEGORY_COLORS: Record<string, string> = {
+  "Engineering": "cyan",
   "Engineering - QA": "pink",
   "Engineering - DevOps": "cyan",
   "Engineering - Software": "purple",
