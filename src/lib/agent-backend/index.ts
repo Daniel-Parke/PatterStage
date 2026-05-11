@@ -46,6 +46,12 @@ export interface AgentBackend {
   getMissionStatus(missionId: string): Promise<MissionStatus>;
 
   /**
+   * Read the Hermes session ID for a completed (or running) mission.
+   * Returns null if the session file hasn't been written yet.
+   */
+  getMissionSessionId(missionId: string): Promise<string | null>;
+
+  /**
    * Sync an updated mission prompt to the on-disk mission manifest.
    * Call this after a mission's prompt is updated so the next cron run
    * picks up the new prompt.

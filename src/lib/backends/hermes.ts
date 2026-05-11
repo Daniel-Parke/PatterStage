@@ -223,14 +223,7 @@ interface SpawnHermesChatInput {
  * escaping pitfalls.
  */
 export function spawnHermesChatWithStatusCallback(input: SpawnHermesChatInput): void {
-  const cliPrefix = ["hermes", ...input.argv]
-    .map((part) => shellQuote(part))
-    .join(" ");
   const promptArg = `-q "$CH_MISSION_PROMPT"`;
-  const sessionRedirect = `> ${shellQuote(input.sessionFile)}`;
-  const outputRedirect = `> ${shellQuote(input.outputFile)} 2>&1`;
-  const statusOk = `printf '{"status":"successful","exit_code":%s,"completed_at":"%s"}\n' "$ec" "$(date -u +%FT%TZ)" > ${shellQuote(input.statusFile)}`;
-  const statusFail = `printf '{"status":"failed","exit_code":%s,"completed_at":"%s","error":"hermes chat exited %s"}\n' "$ec" "$(date -u +%FT%TZ)" "$ec" > ${shellQuote(input.statusFile)}`;
 
   // We write a small bash script to /tmp to avoid complex quoting issues.
   // The script is deleted immediately after spawning (no cleanup needed for /tmp).
@@ -240,7 +233,7 @@ export function spawnHermesChatWithStatusCallback(input: SpawnHermesChatInput): 
     `hermes ${argvStr} ${promptArg} > ${shellQuote(input.sessionFile)} 2>&1`,
     "ec=$?",
     `cat ${shellQuote(input.sessionFile)} >> ${shellQuote(input.outputFile)}`,
-    `if [ "$ec" -eq 0 ]; then ${statusOk}; else ${statusFail}; fi`,
+    `if [ "$ec" -eq 0 ]; then printf '{"status":"successful","exit_code":%s,"completed_at":"%s"}\n' "$ec" "$(date -u +%FT%TZ)" > ${shellQuote(input.statusFile)}; else printf '{"status":"failed","exit_code":%s,"completed_at":"%s","error":"hermes chat exited %s"}\n' "$ec" "$(date -u +%FT%TZ)" "$ec" > ${shellQuote(input.statusFile)}; fi`,
   ];
 
   const scriptPath = `/tmp/hermes_mission_${input.missionId}.sh`;

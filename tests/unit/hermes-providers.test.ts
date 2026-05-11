@@ -25,7 +25,6 @@ describe("hermes-providers — provider list", () => {
   it("includes every Hermes CLI --provider choice (excluding 'auto')", () => {
     const cliChoices = [
       "openrouter",
-      "nous",
       "openai-codex",
       "copilot-acp",
       "copilot",

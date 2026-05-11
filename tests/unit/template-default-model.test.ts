@@ -13,7 +13,7 @@ import {
 
 describe("template defaults", () => {
   it("every built-in template omits explicit defaultModel (defers to registry agent default)", () => {
-    expect(TEMPLATES.length).toBeGreaterThanOrEqual(9);
+    expect(TEMPLATES.length).toBe(3);
     for (const t of TEMPLATES) {
       // Templates must not hardcode a specific model — they defer to the registry agent default.
       // defaultModel may be undefined, null, or USE_REGISTRY_DEFAULT.

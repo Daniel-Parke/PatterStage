@@ -2,24 +2,26 @@
 /** @jest-environment node */
 
 /**
- * Tests the new HermesAgentBackend.dispatchMission CLI invocation:
- *   hermes [--profile X] chat -q "$CH_MISSION_PROMPT" [--model M]
- *          [--provider P] --quiet --source control-hub-mission --pass-session-id
- *
- * Verified against the canonical CLI surface in the Hermes agent repo
- * (hermes_cli/main.py argparse declarations).
+ * Tests the HermesAgentBackend.dispatchMission CLI invocation.
+ * The hermes command is written to a temp script at /tmp/hermes_mission_<id>.sh
+ * and spawned as `bash <scriptPath>`. The hermes argv and CH_MISSION_PROMPT
+ * env var are verified by reading the actual script content.
  */
 
-import { writeFileSync, existsSync, rmSync } from "fs";
+import { writeFileSync, existsSync, rmSync, readFileSync } from "fs";
 import { join } from "path";
 import { buildHermesChatArgv } from "@/lib/backends/hermes";
 
 // Capture spawn calls without actually starting subprocesses.
-const spawnCalls: Array<{ cmd: string; args: readonly string[]; opts: Record<string, unknown> }> = [];
+const spawnCalls: Array<{ cmd: string; args: readonly string[]; opts: Record<string, unknown>; scriptContent?: string }> = [];
 
 jest.mock("child_process", () => ({
   spawn: jest.fn((cmd: string, args: readonly string[], opts: Record<string, unknown>) => {
-    spawnCalls.push({ cmd, args, opts });
+    let scriptContent: string | undefined;
+    if (cmd === "bash" && args[0] && typeof args[0] === "string" && args[0].includes("hermes_mission_")) {
+      try { scriptContent = readFileSync(args[0], "utf-8"); } catch { /* ignore */ }
+    }
+    spawnCalls.push({ cmd, args, opts, scriptContent });
     return { unref: jest.fn(), on: jest.fn() };
   }),
 }));
@@ -111,8 +113,9 @@ describe("buildHermesChatArgv", () => {
 });
 
 describe("HermesAgentBackend.dispatchMission spawn", () => {
-  it("spawns bash with -c wrapper and CH_MISSION_PROMPT env", async () => {
-    const { HermesAgentBackend } = require("@/lib/backends/hermes") as typeof import("@/lib/backends/hermes");
+  it("spawns bash with script path and CH_MISSION_PROMPT env", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
     const backend = new HermesAgentBackend();
 
     const mission = await backend.dispatchMission({
@@ -126,20 +129,20 @@ describe("HermesAgentBackend.dispatchMission spawn", () => {
     expect(spawnCalls).toHaveLength(1);
     const call = spawnCalls[0];
     expect(call.cmd).toBe("bash");
-    expect(call.args[0]).toBe("-c");
-    const wrapper = call.args[1];
-    expect(wrapper).toContain("hermes");
-    expect(wrapper).toContain("--profile engineering");
-    expect(wrapper).toContain("chat");
-    expect(wrapper).toContain("--model anthropic/claude-sonnet-4");
-    expect(wrapper).toContain("--provider anthropic");
-    expect(wrapper).toContain("--quiet");
-    expect(wrapper).toContain("--source control-hub-mission");
-    expect(wrapper).toContain("--pass-session-id");
-    expect(wrapper).toContain('-q "$CH_MISSION_PROMPT"');
-    expect(wrapper).toContain(".status.json");
-    expect(wrapper).toContain(`"successful"`);
-    expect(wrapper).toContain(`"failed"`);
+    // args[0] is the script path, not -c
+    expect(call.args[0]).toMatch(/hermes_mission_.+\.sh$/);
+    expect(call.scriptContent).toContain("hermes");
+    expect(call.scriptContent).toContain("--profile engineering");
+    expect(call.scriptContent).toContain("chat");
+    expect(call.scriptContent).toContain("--model anthropic/claude-sonnet-4");
+    expect(call.scriptContent).toContain("--provider anthropic");
+    expect(call.scriptContent).toContain("--quiet");
+    expect(call.scriptContent).toContain("--source control-hub-mission");
+    expect(call.scriptContent).toContain("--pass-session-id");
+    expect(call.scriptContent).toContain('-q "$CH_MISSION_PROMPT"');
+    expect(call.scriptContent).toContain(".status.json");
+    expect(call.scriptContent).toContain(`"successful"`);
+    expect(call.scriptContent).toContain(`"failed"`);
 
     const env = (call.opts.env as Record<string, string>) ?? {};
     expect(env.CH_MISSION_PROMPT).toBe("do the thing");
@@ -149,7 +152,8 @@ describe("HermesAgentBackend.dispatchMission spawn", () => {
   });
 
   it("dispatches without --model/--provider when not supplied", async () => {
-    const { HermesAgentBackend } = require("@/lib/backends/hermes") as typeof import("@/lib/backends/hermes");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
     const backend = new HermesAgentBackend();
 
     await backend.dispatchMission({
@@ -158,14 +162,14 @@ describe("HermesAgentBackend.dispatchMission spawn", () => {
     });
 
     expect(spawnCalls).toHaveLength(1);
-    const wrapper = spawnCalls[0].args[1];
-    expect(wrapper).not.toContain("--model");
-    expect(wrapper).not.toContain("--provider");
-    expect(wrapper).toContain("hermes chat");
+    expect(spawnCalls[0].scriptContent).not.toContain("--model");
+    expect(spawnCalls[0].scriptContent).not.toContain("--provider");
+    expect(spawnCalls[0].scriptContent).toContain("hermes chat");
   });
 
   it("returns a mission record with status='dispatched'", async () => {
-    const { HermesAgentBackend } = require("@/lib/backends/hermes") as typeof import("@/lib/backends/hermes");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
     const backend = new HermesAgentBackend();
 
     const mission = await backend.dispatchMission({
@@ -181,7 +185,8 @@ describe("HermesAgentBackend.dispatchMission spawn", () => {
 
 describe("HermesAgentBackend.getMissionStatus reads callback file", () => {
   it("returns 'successful' when status.json reports successful", async () => {
-    const { HermesAgentBackend } = require("@/lib/backends/hermes") as typeof import("@/lib/backends/hermes");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
     const { PATHS } = require("@/lib/paths") as { PATHS: { missions: string } };
     const backend = new HermesAgentBackend();
 
@@ -196,7 +201,8 @@ describe("HermesAgentBackend.getMissionStatus reads callback file", () => {
   });
 
   it("returns 'failed' when status.json reports failed", async () => {
-    const { HermesAgentBackend } = require("@/lib/backends/hermes") as typeof import("@/lib/backends/hermes");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
     const { PATHS } = require("@/lib/paths") as { PATHS: { missions: string } };
     const backend = new HermesAgentBackend();
 
@@ -210,7 +216,8 @@ describe("HermesAgentBackend.getMissionStatus reads callback file", () => {
   });
 
   it("returns 'dispatched' when only mission record exists (no callback yet)", async () => {
-    const { HermesAgentBackend } = require("@/lib/backends/hermes") as typeof import("@/lib/backends/hermes");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
     const { PATHS } = require("@/lib/paths") as { PATHS: { missions: string } };
     const backend = new HermesAgentBackend();
 
@@ -224,14 +231,16 @@ describe("HermesAgentBackend.getMissionStatus reads callback file", () => {
   });
 
   it("returns 'queued' when nothing on disk", async () => {
-    const { HermesAgentBackend } = require("@/lib/backends/hermes") as typeof import("@/lib/backends/hermes");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
     const backend = new HermesAgentBackend();
 
     expect(await backend.getMissionStatus("nonexistent-id")).toBe("queued");
   });
 
   it("ignores invalid status values in callback file", async () => {
-    const { HermesAgentBackend } = require("@/lib/backends/hermes") as typeof import("@/lib/backends/hermes");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
     const { PATHS } = require("@/lib/paths") as { PATHS: { missions: string } };
     const backend = new HermesAgentBackend();
 

@@ -217,7 +217,6 @@ function deriveProviderFromModelId(modelId: string): HermesProvider | null {
   if (lower.startsWith("openrouter/")) return "openrouter";
   if (lower.startsWith("google/")) return "gemini";
   if (lower.startsWith("gemini/")) return "gemini";
-  if (lower.startsWith("nous/")) return "nous";
   if (lower.startsWith("deepseek/")) return "deepseek";
   if (lower.startsWith("mistral/")) return "mistral";
   if (lower.startsWith("groq/")) return "groq";
