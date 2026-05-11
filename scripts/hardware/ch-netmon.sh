@@ -6,7 +6,7 @@ LOG_DIR="${LOG_DIR:-$HOME/.hermes/logs}"
 LOG_FILE="${LOG_DIR}/ch-netmon.log"
 
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [ch-netmon] $*" >> "$LOG_FILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] INFO [ch-netmon] $*" >> "$LOG_FILE"
 }
 
 log "Network monitor triggered"

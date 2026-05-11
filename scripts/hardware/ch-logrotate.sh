@@ -6,7 +6,7 @@ LOG_DIR="${LOG_DIR:-$HOME/.hermes/logs}"
 LOG_FILE="${LOG_DIR}/ch-logrotate.log"
 
 log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [ch-logrotate] $*" >> "$LOG_FILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] INFO [ch-logrotate] $*" >> "$LOG_FILE"
 }
 
 log "Log rotation triggered"
