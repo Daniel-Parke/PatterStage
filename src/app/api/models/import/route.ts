@@ -90,8 +90,8 @@ export async function POST(request: NextRequest) {
     let credentialsUpdated = 0;
     for (const cred of parsed.credentials) {
       try {
-        upsertCredential({ provider: cred.provider, apiKey: cred.apiKey });
-        credentialsUpdated++;
+        const result = upsertCredential({ provider: cred.provider, apiKey: cred.apiKey });
+        if (result) credentialsUpdated++;
       } catch (err) {
         logApiError("POST /api/models/import", `upsert credential ${cred.provider}`, err);
       }

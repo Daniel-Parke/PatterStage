@@ -147,14 +147,20 @@ export function syncCredentialToHermesEnv(input: SyncCredentialInput): { backupP
     throw new Error(`Unknown provider: ${input.provider}`);
   }
   const paths = getActiveHermesPaths();
-  ensureDir(paths.root);
   const envPath = paths.env;
+
+  // OAuth-only providers (e.g. nous) have no env var — nothing to write.
+  const envVar = envVarForProvider(input.provider);
+  if (!envVar) {
+    throw new Error(`Provider "${input.provider}" uses OAuth -- no API key env var to write`);
+  }
+
+  ensureDir(paths.root);
   const backupPath = backupFile(envPath, paths.backups);
 
   const original = existsSync(envPath) ? readFileSync(envPath, "utf-8") : "";
   const prior = parseEnvFile(original);
   const next = new Map(prior);
-  const envVar = envVarForProvider(input.provider);
   next.set(envVar, input.apiKey);
 
   atomicWriteFile(envPath, serializeEnvFile(prior, next, original));

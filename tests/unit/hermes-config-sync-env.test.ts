@@ -96,15 +96,24 @@ describe("syncCredentialToHermesEnv", () => {
     ).toThrow(/Unknown provider/);
   });
 
-  it("every Hermes provider routes to its mapped env var", () => {
+  it("every Hermes provider with an env var routes to its mapped env var", () => {
     const { syncCredentialToHermesEnv } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const oauthOnly = new Set(["nous"]);
     for (const provider of HERMES_PROVIDERS) {
+      if (oauthOnly.has(provider)) continue;
       // Reset .env between iterations.
       writeFileSync(join(fakeRoot, ".env"), "");
       syncCredentialToHermesEnv({ provider, apiKey: `key-for-${provider}` });
       const env = readFileSync(join(fakeRoot, ".env"), "utf-8");
       expect(env).toContain(`${PROVIDER_ENV_VAR[provider]}=key-for-${provider}`);
     }
+  });
+
+  it("rejects OAuth-only providers (e.g. nous) with a clear error", () => {
+    const { syncCredentialToHermesEnv } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    expect(() =>
+      syncCredentialToHermesEnv({ provider: "nous", apiKey: "x" })
+    ).toThrow(/uses OAuth/);
   });
 
   it("atomic write does not leave a tmp file behind on success", () => {

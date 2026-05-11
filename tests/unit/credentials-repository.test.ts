@@ -133,4 +133,39 @@ describe("credentials-repository — CRUD", () => {
       expect(row.keyHint).toMatch(/^sk-/);
     }
   });
+
+  it("upsertCredential returns null for OAuth-only providers (e.g. nous)", () => {
+    const { upsertCredential } =
+      require("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
+    // Should skip silently — no credential row should be created.
+    const result = upsertCredential({ provider: "nous", apiKey: "no-key-needed" });
+    expect(result).toBeNull();
+  });
+
+  it("upsertCredential works normally for API-key providers", () => {
+    const { upsertCredential, listCredentials } =
+      require("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
+    const result = upsertCredential({ provider: "minimax", apiKey: "test-key-123" });
+    expect(result).not.toBeNull();
+    expect(result?.action).toBe("inserted");
+    const creds = listCredentials();
+    const mm = creds.find((c) => c.provider === "minimax");
+    expect(mm).toBeDefined();
+    expect(mm?.keyHint).toMatch(/test/);
+    expect(mm?.keyHint).toMatch(/123$/);
+  });
+
+  it("upsertCredential updates existing row when key changes", () => {
+    const { upsertCredential, getCredentialWithKey, listCredentials } =
+      require("@/lib/credentials-repository") as typeof import("@/lib/credentials-repository");
+    upsertCredential({ provider: "openrouter", apiKey: "original-key" });
+    const creds = listCredentials();
+    const orCred = creds.find((c) => c.provider === "openrouter")!;
+
+    const result = upsertCredential({ provider: "openrouter", apiKey: "rotated-key" });
+    expect(result?.action).toBe("updated");
+    expect(result?.id).toBe(orCred.id);
+
+    expect(getCredentialWithKey(orCred.id)?.apiKey).toBe("rotated-key");
+  });
 });

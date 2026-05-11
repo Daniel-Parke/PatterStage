@@ -64,6 +64,8 @@ export const HERMES_PROVIDERS = [
   "lmstudio",
   "vllm",
   "custom",
+  // OAuth-only providers (no API key env var needed)
+  "nous",
 ] as const;
 
 export type HermesProvider = (typeof HERMES_PROVIDERS)[number];
@@ -96,6 +98,8 @@ export const PROVIDER_ENV_VAR: Record<HermesProvider, string> = {
   lmstudio: "LMSTUDIO_API_KEY",
   vllm: "VLLM_API_KEY",
   custom: "CUSTOM_API_KEY",
+  // OAuth-only — empty sentinel so callers know no env var exists
+  nous: "",
 };
 
 export function isHermesProvider(value: unknown): value is HermesProvider {
