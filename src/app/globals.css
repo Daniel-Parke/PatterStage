@@ -187,3 +187,22 @@
     linear-gradient(90deg, rgb(var(--ch-rgb-neon-cyan) / 0.03) 1px, transparent 1px);
   background-size: 40px 40px;
 }
+
+/* Auto-refresh button pulse — fires on each log refresh tick */
+@keyframes auto-refresh-tick {
+  0% { box-shadow: 0 0 0px rgba(6, 214, 214, 0); }
+  30% { box-shadow: 0 0 12px rgba(6, 214, 214, 0.55); }
+  100% { box-shadow: 0 0 0px rgba(6, 214, 214, 0); }
+}
+.animate-auto-refresh-tick {
+  animation: auto-refresh-tick 0.8s ease-out forwards;
+}
+
+/* Slow spin for auto-refresh icon */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}

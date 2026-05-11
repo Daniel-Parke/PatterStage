@@ -106,6 +106,25 @@ export async function GET(request: Request) {
     const allLines = content.split("\n").filter((line) => line.length > 0);
     const lines = allLines.slice(-maxLines).reverse();
 
+    // Fallback timestamp: use file mtime for lines that have no parseable timestamp.
+    // Format must match RE_SPACE_TS so the frontend parseLogLine() recognizes it.
+    const fileMtime = stats.mtime.toISOString().replace("T", " ").slice(0, 19);
+    const linesWithTimestamp = lines.map((line) => {
+      // Only inject if line is non-empty and has no recognized timestamp pattern.
+      if (!line.trim()) return line;
+      // Quick check: if it starts with a known timestamp-like pattern, leave it.
+      // Patterns: YYYY-MM-DD, YYYY/MM/DD, YYYY-MM-DDTHH:MM:SS, or [YYYY-MM-DD
+      if (
+        /^\d{4}[-\/]/.test(line) ||
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(line) ||
+        /^\[\d{4}-\d{2}-\d{2}/.test(line)
+      ) {
+        return line;
+      }
+      // Inject mtime prefix: "YYYY-MM-DD HH:MM:SS <original line>"
+      return `${fileMtime} ${line}`;
+    });
+
     return NextResponse.json<ApiResponse<LogGetData>>({
       data: {
         name: safeName,
@@ -113,7 +132,7 @@ export async function GET(request: Request) {
         showingLines: lines.length,
         size: stats.size,
         modified: stats.mtime.toISOString(),
-        lines,
+        lines: linesWithTimestamp,
         availableLogs,
       },
     });

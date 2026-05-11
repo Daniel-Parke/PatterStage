@@ -15,7 +15,6 @@ import {
   FileText,
   X,
   Play,
-  Pause,
   Trash2,
 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
@@ -120,12 +119,14 @@ export default function LogsPage() {
   const [searchVisible, setSearchVisible] = useState(false);
   const [fileQuery, setFileQuery] = useState("");
   const [autoScroll, setAutoScroll] = useState(true);
-  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
   const [lineCount, setLineCount] = useState(200);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [refreshTick, setRefreshTick] = useState(false);
   const terminalRef = useRef<HTMLDivElement>(null);
   const dataRef = useRef<LogData | null>(null);
+  const isMountedRef = useRef(true);
   useEffect(() => {
     dataRef.current = data;
   }, [data]);
@@ -135,6 +136,9 @@ export default function LogsPage() {
     setLoadError(null);
     if (hasData) {
       setRefreshing(true);
+      setRefreshTick(false);
+      await new Promise((r) => setTimeout(r, 10));
+      setRefreshTick(true);
     } else {
       setLoading(true);
     }
@@ -207,10 +211,15 @@ export default function LogsPage() {
 
   useEffect(() => {
     if (!autoRefresh) return;
+    isMountedRef.current = true;
     const id = setInterval(() => {
       void loadLogs();
     }, 5000);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      isMountedRef.current = false;
+      setAutoRefresh(false);
+    };
   }, [autoRefresh, loadLogs]);
 
   useEffect(() => {
@@ -255,14 +264,18 @@ export default function LogsPage() {
             <button
               type="button"
               onClick={() => setAutoRefresh(!autoRefresh)}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all duration-300 ${
                 autoRefresh
-                  ? "bg-neon-cyan/10 text-neon-cyan border border-neon-cyan/30"
+                  ? "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50 shadow-[0_0_8px_rgba(6,214,214,0.3)]"
                   : "bg-dark-900/50 text-white/40 border border-white/10 hover:text-white/60"
-              }`}
+              } ${autoRefresh && refreshTick ? "animate-auto-refresh-tick" : ""}`}
+              title={autoRefresh ? "Auto-refresh on (click to disable)" : "Auto-refresh off (click to enable)"}
             >
-              {autoRefresh ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-              {autoRefresh ? "Auto-refresh On" : "Auto-refresh Off"}
+              {autoRefresh ? (
+                <RefreshCw className={`w-3.5 h-3.5 ${autoRefresh ? "animate-spin-slow" : ""}`} />
+              ) : (
+                <Play className="w-3.5 h-3.5" />
+              )}
             </button>
             <select
               value={lineCount}
