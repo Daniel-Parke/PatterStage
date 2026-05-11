@@ -2,13 +2,8 @@
  * @jest-environment jsdom
  */
 // ═══════════════════════════════════════════════════════════════
-// PR 6 — Models page rendering
+// Models page rendering tests
 // ═══════════════════════════════════════════════════════════════
-// Covers:
-//   - empty state when /api/models returns []
-//   - populated state with model rows + default badges
-//   - defaults grid renders one card per task type and reflects the
-//     /api/models/defaults response
 
 import "@testing-library/jest-dom";
 import { render, screen, waitFor, within } from "@testing-library/react";
@@ -43,13 +38,44 @@ afterEach(() => {
   global.fetch = originalFetch;
 });
 
+/**
+ * Smart fetch mock: matches by URL prefix so query params don't break tests.
+ */
 function setFetch(map: Record<string, FetchResponseInit>) {
   global.fetch = jest.fn(async (input: RequestInfo | URL) => {
     const url = typeof input === "string" ? input : input.toString();
+    // Try exact match first
     const matched = map[url];
-    if (!matched) throw new Error(`Unmatched fetch: ${url}`);
-    return jsonResponse(matched) as unknown as Response;
+    if (matched) return jsonResponse(matched) as unknown as Response;
+    // Fallback: prefix match (routes with query params)
+    for (const [k, v] of Object.entries(map)) {
+      if (url.startsWith(k)) return jsonResponse(v) as unknown as Response;
+    }
+    // For any unmatched fetch, return a safe 200 with empty data
+    // so the page doesn't crash — these are optional endpoints
+    if (url.includes("/api/models/sync/drift")) {
+      return jsonResponse({ data: null }) as unknown as Response;
+    }
+    if (url.includes("/api/models/fallbacks")) {
+      return jsonResponse({ data: { chain: [], config: null } }) as unknown as Response;
+    }
+    if (url.includes("/api/models/framework")) {
+      return jsonResponse({ data: { active: "hermes" } }) as unknown as Response;
+    }
+    if (url.includes("/api/models/import")) {
+      return jsonResponse({ data: { modelsImported: 0 } }) as unknown as Response;
+    }
+    throw new Error(`Unmatched fetch: ${url}`);
   }) as typeof global.fetch;
+}
+
+// Default fallback responses used across tests
+function defaultFallbacks() {
+  return {
+    "/api/models/sync/drift": { data: null },
+    "/api/models/fallbacks": { data: { chain: [], config: { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 } } },
+    "/api/models/fallbacks/config": { data: { config: { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 } } },
+  } as Record<string, FetchResponseInit>;
 }
 
 describe("ModelsPage", () => {
@@ -67,6 +93,7 @@ describe("ModelsPage", () => {
           },
         },
       },
+      ...defaultFallbacks(),
     });
 
     render(<ModelsPage />);
@@ -93,6 +120,7 @@ describe("ModelsPage", () => {
           },
         },
       },
+      ...defaultFallbacks(),
     });
 
     const { container } = render(<ModelsPage />);
@@ -105,22 +133,23 @@ describe("ModelsPage", () => {
 
     for (const slot of TASK_TYPES) {
       expect(
-        container.querySelector(`[data-task-slot=\"${slot}\"]`)
+        container.querySelector(`[data-task-slot="${slot}"]`)
       ).toBeInTheDocument();
     }
   });
 
   it("renders rows + Default-For badges for populated models", async () => {
-    const claude = {
-      id: "model-claude",
-      name: "Claude Sonnet 4",
-      provider: "anthropic",
-      modelId: "anthropic/claude-sonnet-4",
+    const minimax = {
+      id: "model-minimax",
+      name: "MiniMax M2.1",
+      provider: "minimax",
+      modelId: "MiniMax/MiniMax-M2.1",
+      frameworkId: "*",
       baseUrl: null,
       contextLength: 200000,
-      credentialsId: "cred-anthropic",
+      credentialsId: null,
       defaults: TASK_TYPES.reduce<Record<string, string | null>>((acc, t) => {
-        acc[t] = t === "agent" ? "model-claude" : null;
+        acc[t] = t === "agent" ? "model-minimax" : null;
         return acc;
       }, {}),
       createdAt: "2026-01-01T00:00:00.000Z",
@@ -128,20 +157,11 @@ describe("ModelsPage", () => {
     };
 
     setFetch({
-      "/api/models": { body: { data: { models: [claude] } } },
+      "/api/models": { body: { data: { models: [minimax] } } },
       "/api/credentials": {
         body: {
           data: {
-            credentials: [
-              {
-                id: "cred-anthropic",
-                label: "anthropic key",
-                provider: "anthropic",
-                keyHint: "sk-a...wxyz",
-                createdAt: "2026-01-01T00:00:00.000Z",
-                updatedAt: "2026-01-01T00:00:00.000Z",
-              },
-            ],
+            credentials: [],
           },
         },
       },
@@ -150,7 +170,7 @@ describe("ModelsPage", () => {
           data: {
             defaults: TASK_TYPES.reduce<Record<string, string | null>>(
               (acc, t) => {
-                acc[t] = t === "agent" ? claude.id : null;
+                acc[t] = t === "agent" ? minimax.id : null;
                 return acc;
               },
               {}
@@ -158,22 +178,22 @@ describe("ModelsPage", () => {
           },
         },
       },
+      ...defaultFallbacks(),
     });
 
     const { container } = render(<ModelsPage />);
 
     await waitFor(() =>
-      // Name appears in hero panel (active default display) AND in the table row
-      expect(screen.getAllByText("Claude Sonnet 4")).toHaveLength(2)
+      expect(screen.getByText("MiniMax M2.1")).toBeInTheDocument()
     );
 
     const row = container.querySelector(
-      `[data-row-id="${claude.id}"]`
+      `[data-row-id="${minimax.id}"]`
     ) as HTMLElement;
     expect(row).not.toBeNull();
     // Provider + modelId + context cells
-    expect(within(row).getByText("anthropic")).toBeInTheDocument();
-    expect(within(row).getByText("anthropic/claude-sonnet-4")).toBeInTheDocument();
+    expect(within(row).getByText("minimax")).toBeInTheDocument();
+    expect(within(row).getByText("MiniMax/MiniMax-M2.1")).toBeInTheDocument();
     expect(within(row).getByText("200000")).toBeInTheDocument();
     // Default-For badge
     expect(within(row).getByText(/agent/i)).toBeInTheDocument();

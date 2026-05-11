@@ -47,6 +47,12 @@ export interface ModelWithKey extends ModelRecord {
 
 export type ModelDefaultFlags = Partial<Record<TaskType, boolean>>;
 
+/**
+ * Default slot flags — used at the API level to declare which task
+ * types this model is the default for. Translated into model_defaults
+ * table entries by createModel / updateModel.
+ */
+
 export interface CreateModelInput {
   name: string;
   provider: string;
@@ -55,6 +61,8 @@ export interface CreateModelInput {
   baseUrl?: string | null;
   contextLength?: number | null;
   credentialsId?: string | null;
+  /** Optional default-slot flags (post-migration, writes to model_defaults). */
+  defaults?: ModelDefaultFlags;
 }
 
 export interface UpdateModelInput {
@@ -65,6 +73,8 @@ export interface UpdateModelInput {
   baseUrl?: string | null;
   contextLength?: number | null;
   credentialsId?: string | null;
+  /** Optional default-slot flags (post-migration, writes to model_defaults). */
+  defaults?: ModelDefaultFlags;
 }
 
 export interface UpsertModelResult {
@@ -223,6 +233,25 @@ export function createModel(input: CreateModelInput): ModelRecord {
       ts
     );
 
+  // Process default-slot flags: if any defaults are set, first clear ALL
+  // existing defaults for the universal framework (single-default invariant),
+  // then set the new defaults.
+  if (input.defaults && Object.values(input.defaults).some(Boolean)) {
+    for (const [slot, isDefault] of Object.entries(input.defaults)) {
+      if (isDefault && isTaskType(slot)) {
+        // Clear all existing defaults for this slot first
+        db()
+          .prepare(
+            "DELETE FROM model_defaults WHERE task_type = ? AND framework_id = ?"
+          )
+          .run(slot, frameworkId);
+        db()
+          .prepare("INSERT INTO model_defaults (id, framework_id, task_type, model_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)")
+          .run(uuid(), frameworkId, slot, id, ts, ts);
+      }
+    }
+  }
+
   return getModel(id)!;
 }
 
@@ -267,19 +296,50 @@ export function updateModel(id: string, input: UpdateModelInput): ModelRecord | 
 
     vals.push(id);
     db().prepare(`UPDATE models SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
+
+    // Process default-slot flags
+    if (input.defaults) {
+      const frameworkId = existing.frameworkId;
+      for (const [slot, isDefault] of Object.entries(input.defaults)) {
+        if (!isTaskType(slot)) continue;
+        // Clear all existing defaults for this slot
+        db()
+          .prepare("DELETE FROM model_defaults WHERE task_type = ? AND framework_id = ?")
+          .run(slot, frameworkId);
+        if (isDefault) {
+          db()
+            .prepare("INSERT INTO model_defaults (id, framework_id, task_type, model_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)")
+            .run(uuid(), frameworkId, slot, id, ts, ts);
+        }
+      }
+    }
   });
 
   return getModel(id);
 }
 
 export function deleteModel(id: string): boolean {
-  const result = db().prepare("DELETE FROM models WHERE id = ?").run(id);
-  return result.changes > 0;
+  const exists = db().prepare("SELECT 1 FROM models WHERE id = ?").get(id);
+  if (!exists) return false;
+
+  inTransaction(() => {
+    db().prepare("DELETE FROM models WHERE id = ?").run(id);
+    db().prepare("DELETE FROM model_defaults WHERE model_id = ?").run(id);
+  });
+  return true;
 }
 
 export function setDefaultModel(taskType: TaskType, modelId: string | null, frameworkId: string = "*"): ModelDefaults {
   if (!isTaskType(taskType)) {
     throw new Error(`Unknown task type: ${taskType}`);
+  }
+
+  // Validate model exists when setting a non-null default
+  if (modelId !== null) {
+    const model = getModel(modelId);
+    if (!model) {
+      throw new Error(`Model not found: ${modelId}`);
+    }
   }
 
   const ts = now();

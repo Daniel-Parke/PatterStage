@@ -18,10 +18,14 @@ export interface FallbackEntryRecord {
 }
 
 export interface CreateFallbackInput {
-  modelId: string;
+  modelId: string | null;
   position?: number;
   enabled?: boolean;
   overrideBaseUrl?: string | null;
+  /** Optional denormalised display fields for custom (non-registry) fallbacks */
+  modelName?: string;
+  provider?: string;
+  modelIdString?: string;
 }
 
 export interface UpdateFallbackInput {
@@ -51,40 +55,71 @@ function rowToEntry(row: {
   };
 }
 
-/** List the entire fallback chain ordered by position, joined to model info. */
+/** List the entire fallback chain ordered by position.
+ *  Registry entries are joined to models for display info.
+ *  Custom entries (no FK) return with denormalised data.
+ */
 export function listFallbackChain(): FallbackEntryRecord[] {
+  // First get all entries without the join
   const rows = db()
     .prepare(
-      `SELECT f.*, m.name AS model_name, m.provider, m.model_id AS model_id_string
+      `SELECT f.id, f.model_id, f.position, f.enabled, f.override_base_url,
+              f.created_at, f.updated_at,
+              m.name AS model_name, m.provider, m.model_id AS model_id_string
        FROM model_fallbacks f
-       INNER JOIN models m ON f.model_id = m.id
+       LEFT JOIN models m ON f.model_id = m.id
        ORDER BY f.position ASC`
     )
     .all() as Array<{
       id: string; model_id: string | null; position: number;
       enabled: number; override_base_url: string | null;
       created_at: string; updated_at: string;
-      model_name: string; provider: string; model_id_string: string;
+      model_name: string | null; provider: string | null; model_id_string: string | null;
     }>;
-  return rows.map(rowToEntry);
+  return rows.map(r => ({
+    id: r.id,
+    modelId: r.model_id,
+    modelName: r.model_name ?? "Custom",
+    provider: r.provider ?? "custom",
+    modelIdString: r.model_id_string ?? "",
+    position: r.position,
+    enabled: r.enabled === 1,
+    overrideBaseUrl: r.override_base_url,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  }));
 }
 
 /** Get a single fallback entry. */
 export function getFallbackEntry(id: string): FallbackEntryRecord | null {
   const row = db()
     .prepare(
-      `SELECT f.*, m.name AS model_name, m.provider, m.model_id AS model_id_string
+      `SELECT f.id, f.model_id, f.position, f.enabled, f.override_base_url,
+              f.created_at, f.updated_at,
+              m.name AS model_name, m.provider, m.model_id AS model_id_string
        FROM model_fallbacks f
-       INNER JOIN models m ON f.model_id = m.id
+       LEFT JOIN models m ON f.model_id = m.id
        WHERE f.id = ?`
     )
     .get(id) as {
       id: string; model_id: string | null; position: number;
       enabled: number; override_base_url: string | null;
       created_at: string; updated_at: string;
-      model_name: string; provider: string; model_id_string: string;
+      model_name: string | null; provider: string | null; model_id_string: string | null;
     } | undefined;
-  return row ? rowToEntry(row) : null;
+  if (!row) return null;
+  return {
+    id: row.id,
+    modelId: row.model_id,
+    modelName: row.model_name ?? "Custom",
+    provider: row.provider ?? "custom",
+    modelIdString: row.model_id_string ?? "",
+    position: row.position,
+    enabled: row.enabled === 1,
+    overrideBaseUrl: row.override_base_url,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
 }
 
 /** Add a new entry to the chain. Auto-positions at end if position omitted. */
@@ -102,7 +137,23 @@ export function addFallbackEntry(input: CreateFallbackInput): FallbackEntryRecor
      VALUES (?, ?, ?, ?, ?, ?, ?)`
   ).run(id, input.modelId, position, enabled, input.overrideBaseUrl ?? null, ts, ts);
 
-  return getFallbackEntry(id)!;
+  // For registry-backed entries, return the JOIN'd row
+  if (input.modelId) {
+    return getFallbackEntry(id)!;
+  }
+  // Custom entries have no FK to models — return denormalised record
+  return {
+    id,
+    modelId: input.modelId,
+    modelName: input.modelName ?? "Custom",
+    provider: input.provider ?? "custom",
+    modelIdString: input.modelIdString ?? "",
+    position,
+    enabled: enabled === 1,
+    overrideBaseUrl: input.overrideBaseUrl ?? null,
+    createdAt: ts,
+    updatedAt: ts,
+  };
 }
 
 /** Update an existing fallback entry. */
@@ -122,6 +173,11 @@ export function updateFallbackEntry(id: string, input: UpdateFallbackInput): Fal
   vals.push(id);
   db().prepare(`UPDATE model_fallbacks SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
   return getFallbackEntry(id);
+}
+
+/** Toggle the enabled flag of a fallback entry. */
+export function toggleFallbackEntry(id: string, enabled: boolean): FallbackEntryRecord | null {
+  return updateFallbackEntry(id, { enabled });
 }
 
 /** Delete a fallback entry and reposition remaining entries to close the gap. */

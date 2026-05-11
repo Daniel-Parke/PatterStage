@@ -13,9 +13,10 @@ import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, modelPostSchema } from "@/lib/api-schemas";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const framework = request.nextUrl.searchParams.get("framework");
   try {
-    return NextResponse.json({ data: { models: listModels() } });
+    return NextResponse.json({ data: { models: listModels(framework ?? undefined) } });
   } catch (error) {
     logApiError("GET /api/models", "listing models", error);
     return NextResponse.json({ error: "Failed to list models" }, { status: 500 });

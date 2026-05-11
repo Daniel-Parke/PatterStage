@@ -7,7 +7,7 @@ import { existsSync, readFileSync } from "fs";
 import * as yaml from "js-yaml";
 
 import { getActiveHermesPaths } from "./hermes-agent-runtime";
-import { getModel, listModels } from "./models-repository";
+import { getModel, listModels, getModelDefaults } from "./models-repository";
 import { getCredentialWithKey, listCredentials } from "./credentials-repository";
 import { listFallbackChain, getFallbackConfig } from "./fallbacks-repository";
 import {
@@ -15,7 +15,7 @@ import {
   syncSingleCredentialToHermesEnv,
   syncFallbacksToHermesConfig,
 } from "./hermes-config-sync";
-import { isHermesProvider, type HermesProvider } from "./hermes-providers";
+import { isHermesProvider, type HermesProvider, envVarForProvider } from "./hermes-providers";
 import { getActiveFrameworkId } from "./framework-registry";
 
 // ── Types ────────────────────────────────────────────────────
@@ -155,12 +155,15 @@ export function detectConfigDrift(): DriftReport {
     if (matched) {
       // Compare with the DB default agent model for the active framework
       const dbDefaults = getModelDefaults(frameworkId);
-      const dbDefault = dbDefaults.agent ? getModel(dbDefaults.agent) : null;
-      if (dbDefault && dbDefault.id !== matched.id) {
-        primaryDiffers = {
-          dbModel: `${dbDefault.provider}/${dbDefault.modelId}`,
-          hermesModel: `${matched.provider}/${matched.modelId}`,
-        };
+      const defaultAgentId = dbDefaults.agent;
+      if (defaultAgentId) {
+        const dbDefault = getModel(defaultAgentId);
+        if (dbDefault && dbDefault.id !== matched.id) {
+          primaryDiffers = {
+            dbModel: `${dbDefault.provider}/${dbDefault.modelId}`,
+            hermesModel: `${matched.provider}/${matched.modelId}`,
+          };
+        }
       }
     } else {
       // Primary in config but not matched in DB — treat as drift
@@ -211,12 +214,73 @@ export function pushModelToHermes(modelId: string): SyncActionResult {
   }
 }
 
-// ── Credential pull (Hermes .env → registry) ─────────────────
+// ── Credential pull (Hermes .env → Control Hub) ──────────────
 
 /**
- * Pull credential for a provider from .env into registry.
+ * Read a credential value for a provider from the Hermes .env file.
+ * Returns the raw value so the caller can display or store it.
  */
-export function pullCredential(provider: string, apiKey: string): SyncActionResult {
+export function pullCredentialFromEnv(provider: string): SyncActionResult & { value?: string } {
+  if (!isHermesProvider(provider as HermesProvider)) {
+    return {
+      success: false,
+      backupPath: null,
+      details: [{ action: "error", detail: `Unknown provider: ${provider}` }],
+    };
+  }
+  const envVar = envVarForProvider(provider as HermesProvider);
+  if (!envVar) {
+    return {
+      success: false,
+      backupPath: null,
+      details: [{ action: "error", detail: `Provider "${provider}" uses OAuth — no env var to read` }],
+    };
+  }
+  const paths = getActiveHermesPaths();
+  if (!existsSync(paths.env)) {
+    return {
+      success: false,
+      backupPath: null,
+      details: [{ action: "error", detail: "No .env file found" }],
+    };
+  }
+  try {
+    const raw = readFileSync(paths.env, "utf-8");
+    const lines = raw.split(/\r?\n/);
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith("#") || !trimmed.includes("=")) continue;
+      const [key, ...rest] = trimmed.split("=");
+      if (key === envVar) {
+        const value = rest.join("=");
+        return {
+          success: true,
+          backupPath: null,
+          details: [{ action: "pulled", detail: `Read credential for ${provider} from .env` }],
+          value,
+        };
+      }
+    }
+    return {
+      success: false,
+      backupPath: null,
+      details: [{ action: "not_found", detail: `No env var ${envVar} in .env for ${provider}` }],
+    };
+  } catch (err) {
+    return {
+      success: false,
+      backupPath: null,
+      details: [{ action: "error", detail: String(err instanceof Error ? err.message : err) }],
+    };
+  }
+}
+
+// ── Credential push (Control Hub → Hermes .env) ──────────────
+
+/**
+ * Push a credential (provider + apiKey) to the Hermes .env file.
+ */
+export function pushCredentialToHermesEnv(provider: string, apiKey: string): SyncActionResult {
   if (!isHermesProvider(provider as HermesProvider)) {
     return {
       success: false,
@@ -234,7 +298,7 @@ export function pullCredential(provider: string, apiKey: string): SyncActionResu
       backupPath,
       details: [
         {
-          action: "pulled",
+          action: "pushed",
           detail: `Credential for ${provider} written to .env`,
         },
       ],
@@ -267,7 +331,7 @@ export function pushCredential(credentialId: string): SyncActionResult {
       details: [{ action: "error", detail: "Credential not found" }],
     };
   }
-  return pullCredential(cred.provider, cred.apiKey);
+  return pushCredentialToHermesEnv(cred.provider, cred.apiKey);
 }
 
 // ── Full push (models + credentials + fallbacks → Hermes) ─────
@@ -279,24 +343,21 @@ export interface FullPushResult {
 }
 
 /**
- * Push all models, credentials, and fallback chain to Hermes files.
- * Used for a full registry → Hermes sync.
+ * Push the primary (default agent) model, all credentials, and the fallback
+ * chain to Hermes files. Only the default-agent model is pushed to
+ * config.yaml's `model.*` section; auxiliary slots are left untouched
+ * because they are managed by the /api/models/defaults endpoint.
  */
 export function pushAllToHermes(): FullPushResult {
   const modelResults: SyncActionResult[] = [];
   const credentialResults: SyncActionResult[] = [];
 
-  // Push every model that has a default slot for the active framework
+  // Push only the default agent model for the active framework
   const frameworkId = getActiveFrameworkId();
-  const dbModels = listModels(frameworkId);
-
-  for (const model of dbModels) {
-    // Check if this model has any defaults set (is the default for any slot)
-    const result = pushModelToHermes(model.id);
-    // Only report if something actually changed (not an error)
-    if (result.success) {
-      modelResults.push(result);
-    }
+  const defaults = getModelDefaults(frameworkId);
+  if (defaults.agent) {
+    const result = pushModelToHermes(defaults.agent);
+    if (result.success) modelResults.push(result);
   }
 
   // Push every credential
@@ -304,7 +365,7 @@ export function pushAllToHermes(): FullPushResult {
   for (const cred of credentials) {
     const full = getCredentialWithKey(cred.id);
     if (!full) continue;
-    const result = pullCredential(full.provider, full.apiKey);
+    const result = pushCredentialToHermesEnv(full.provider, full.apiKey);
     if (result.success) {
       credentialResults.push(result);
     }

@@ -19,7 +19,6 @@ export default function FrameworkSelector({
   className = "",
 }: FrameworkSelectorProps) {
   const frameworks = listFrameworks();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _active = getFramework(activeFrameworkId) ?? frameworks[0];
 
   return (

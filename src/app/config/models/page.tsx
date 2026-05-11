@@ -218,8 +218,18 @@ export default function ModelsPage() {
 
   // ── Framework change handler ───────────────────────────────────
 
-  const handleFrameworkChange = useCallback((newFramework: string) => {
+  const handleFrameworkChange = useCallback(async (newFramework: string) => {
     setFramework(newFramework);
+    // Persist the active framework via API so it survives page reloads
+    try {
+      await fetch("/api/models/framework", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ framework: newFramework }),
+      });
+    } catch {
+      // Best-effort — page will still work without persistence
+    }
   }, []);
 
   // ── Derived model options (framework-scoped) ──────────────────
@@ -277,7 +287,7 @@ export default function ModelsPage() {
         };
       }
     },
-    [loadAll, showToast]
+    [framework, loadAll, showToast]
   );
 
   const handlePull = useCallback(
@@ -307,7 +317,7 @@ export default function ModelsPage() {
         };
       }
     },
-    [loadAll, showToast]
+    [framework, loadAll, showToast]
   );
 
   // ── Model editor callbacks ─────────────────────────────────────
@@ -383,7 +393,7 @@ export default function ModelsPage() {
         setBusyTaskType(null);
       }
     },
-    [loadAll, showToast]
+    [framework, loadAll, showToast]
   );
 
   // ── Bulk auxiliary setter ─────────────────────────────────────
@@ -416,7 +426,7 @@ export default function ModelsPage() {
         setBusyTaskType(null);
       }
     },
-    [loadAll, showToast]
+    [framework, loadAll, showToast]
   );
 
   // ── Refresh handler ───────────────────────────────────────────
@@ -469,7 +479,7 @@ export default function ModelsPage() {
         );
       }
     },
-    [loadAll, showToast]
+    [framework, loadAll, showToast]
   );
 
   const handleFallbackToggle = useCallback(
@@ -490,7 +500,7 @@ export default function ModelsPage() {
         );
       }
     },
-    [loadAll, showToast]
+    [framework, loadAll, showToast]
   );
 
   const handleFallbackDelete = useCallback(
@@ -538,7 +548,7 @@ export default function ModelsPage() {
         );
       }
     },
-    [loadAll, showToast]
+    [framework, loadAll, showToast]
   );
 
   const handleFallbackAddCustom = useCallback(
@@ -559,7 +569,7 @@ export default function ModelsPage() {
         );
       }
     },
-    [loadAll, showToast]
+    [framework, loadAll, showToast]  // handleFallbackAddCustom uses 'framework' in body
   );
 
   const handleSyncFallbackToHermes = useCallback(async () => {
@@ -601,7 +611,7 @@ export default function ModelsPage() {
     } finally {
       setImportingFallback(false);
     }
-  }, [loadAll, showToast]);
+  }, [framework, loadAll, showToast]);
 
   // ── Render ────────────────────────────────────────────────────
 
