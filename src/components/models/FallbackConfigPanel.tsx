@@ -159,8 +159,8 @@ export default function FallbackConfigPanel({
       <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-neon-purple/5 border border-neon-purple/10">
         <Info className="w-4 h-4 text-neon-purple/60 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-white/40 font-mono">
-          Fallback settings apply to the active framework only. Changes sync to
-          <span className="text-white/60"> ~/.hermes/config.yaml</span> via the [Sync to Hermes] button.
+          Fallback settings apply to the active framework only. Sync to save
+          these settings to your agent configuration.
         </p>
       </div>
 

@@ -241,7 +241,7 @@ export default function ModelSyncButtons({
           type="button"
           onClick={() => void handlePull()}
           disabled={disabled || loadingDiff}
-          title="Pull from Hermes config"
+          title="Import model from Hermes config"
           className="p-1.5 rounded-lg text-white/30 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loadingDiff && modalState?.direction === "pull" ? (
@@ -254,7 +254,7 @@ export default function ModelSyncButtons({
           type="button"
           onClick={() => void handlePush()}
           disabled={disabled || loadingDiff}
-          title="Push to Hermes config"
+          title="Save model to Hermes config"
           className="p-1.5 rounded-lg text-white/30 hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loadingDiff && modalState?.direction === "push" ? (

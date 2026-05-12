@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { ChevronUp, ChevronDown, Plus, Edit3, Trash2, ChevronDown as ChevronDownIcon } from "lucide-react";
 import type { FallbackChainEntry } from "@/types/hermes";
+import GlowSurface from "@/components/ui/GlowSurface";
 
 interface FallbackChainListProps {
   chain: FallbackChainEntry[];
@@ -150,11 +151,13 @@ export default function FallbackChainList({
   return (
     <div className="space-y-2">
       {sortedChain.length === 0 && !showAddCustom ? (
-        <div className="text-center py-6 text-xs text-white/30 font-mono">
-          No fallback models configured
-        </div>
+        <GlowSurface accent="purple">
+          <div className="text-center py-6 rounded-xl border border-white/10 bg-dark-900/50 text-xs text-white/30 font-mono">
+            No fallback models configured
+          </div>
+        </GlowSurface>
       ) : (
-        <div className="rounded-xl border border-white/10 bg-dark-900/30 overflow-hidden">
+        <GlowSurface accent="purple">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-[10px] font-mono uppercase tracking-widest text-white/40 border-b border-white/5">
@@ -254,7 +257,7 @@ export default function FallbackChainList({
               ))}
             </tbody>
           </table>
-        </div>
+        </GlowSurface>
       )}
 
       {/* Add Custom inline form */}

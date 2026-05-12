@@ -24,9 +24,10 @@ export default function GlowSurface({
   intensity = 1,
   animated = false,
   className = "",
-}: GlowSurfaceProps) {
+  ...rest
+}: GlowSurfaceProps & Record<string, unknown>) {
   if (!accent) {
-    return <div className={className}>{children}</div>;
+    return <div className={className} {...rest}>{children}</div>;
   }
 
   const rgb = glowSurfaceRgbMap[accent];
@@ -48,7 +49,7 @@ export default function GlowSurface({
     .join(" ");
 
   return (
-    <div className={glowClasses} style={style}>
+    <div className={glowClasses} style={style} {...rest}>
       {children}
     </div>
   );

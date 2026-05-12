@@ -9,6 +9,7 @@
 "use client";
 
 import { ChevronDown, Zap } from "lucide-react";
+import GlowSurface from "@/components/ui/GlowSurface";
 
 import {
   TASK_TYPES,
@@ -113,9 +114,10 @@ export default function DefaultsGrid({
         };
 
         return (
-          <div
+          <GlowSurface
             key={slot}
             data-task-slot={slot}
+            accent={slot === "agent" ? "orange" : modelForSlot ? "purple" : undefined}
             className="rounded-xl border border-white/10 bg-dark-900/50 p-4 space-y-2 min-h-[120px]"
           >
             <div className="flex items-start justify-between gap-2">
@@ -165,7 +167,7 @@ export default function DefaultsGrid({
               </select>
               <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
             </div>
-          </div>
+          </GlowSurface>
         );
       })}
     </div>

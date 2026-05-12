@@ -693,17 +693,13 @@ export default function ModelsPage() {
             >
               Add Model
             </Button>
+            <FrameworkSelector
+              activeFrameworkId={framework}
+              onFrameworkChange={handleFrameworkChange}
+            />
           </>
         }
       />
-
-      {/* Framework Selector — right after PageHeader */}
-      <div className="max-w-6xl mx-auto px-6 pt-4">
-        <FrameworkSelector
-          activeFrameworkId={framework}
-          onFrameworkChange={handleFrameworkChange}
-        />
-      </div>
 
       <div className="max-w-6xl mx-auto px-6 py-6 w-full flex-1 space-y-10">
         {error && <ErrorBanner message={error} />}
@@ -750,70 +746,126 @@ export default function ModelsPage() {
                 </p>
               </div>
 
-              <div className="rounded-xl border border-neon-orange/20 bg-gradient-to-r from-neon-orange/5 to-neon-purple/5 p-6">
-                <div className="flex flex-col lg:flex-row lg:items-end gap-4">
-                  {/* Model selector */}
-                  <div className="flex-1 min-w-0">
-                    <label className="block text-xs font-mono text-white/50 uppercase tracking-wider mb-2">
-                      Default Model
-                    </label>
-                    <select
-                      className="w-full bg-dark-800 border border-white/10 rounded-lg px-4 py-2.5 text-white font-mono text-sm focus:outline-none focus:border-neon-orange/50 transition-colors"
-                      value={defaults.agent ?? ""}
-                      onChange={(e) => {
-                        const val = e.target.value || null;
-                        void handleSetDefault("agent", val);
-                      }}
-                      disabled={busyTaskType === "agent"}
-                    >
-                      <option value="">— None —</option>
-                      {modelOptions.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name} ({m.provider} / {m.modelId})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+              <GlowSurface accent="orange">
+                <div className="rounded-xl border border-neon-orange/20 bg-dark-900/40 p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Left column: Bulk Auxiliaries */}
+                    <BulkAuxiliaryUpdater
+                      models={modelOptions}
+                      onChange={handleBulkAuxiliaryChange}
+                      disabled={busyTaskType !== null}
+                    />
 
-                  {/* Status indicator */}
-                  <div className="flex-shrink-0">
-                    {defaults.agent ? (
-                      <div className="flex items-center gap-2 text-green-400 text-sm font-mono">
-                        <CheckCircle2 className="w-4 h-4" />
-                        Active
+                    {/* Right column: Default Model selector + status */}
+                    <div className="flex flex-col justify-between gap-3">
+                      <div>
+                        <label className="block text-xs font-mono text-white/50 uppercase tracking-wider mb-2">
+                          Default Model
+                        </label>
+                        <select
+                          className="w-full bg-dark-800 border border-white/10 rounded-lg px-4 py-2.5 text-white font-mono text-sm focus:outline-none focus:border-neon-orange/50 transition-colors"
+                          value={defaults.agent ?? ""}
+                          onChange={(e) => {
+                            const val = e.target.value || null;
+                            void handleSetDefault("agent", val);
+                          }}
+                          disabled={busyTaskType === "agent"}
+                        >
+                          <option value="">— None —</option>
+                          {modelOptions.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name} ({m.provider} / {m.modelId})
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-white/30 text-sm font-mono">
-                        No default set
-                      </div>
-                    )}
-                  </div>
-                </div>
 
-                {/* Show which model is currently the default */}
-                {defaults.agent && (() => {
-                  const activeModel = models.find((m) => m.id === defaults.agent);
-                  return activeModel ? (
-                    <div className="mt-3 text-xs text-white/40 font-mono">
-                      Currently: <span className="text-white/70">{activeModel.name}</span>
-                      {" — "}
-                      <span className="text-white/50">{activeModel.provider}</span>
-                      {" / "}
-                      <span className="text-white/50">{activeModel.modelId}</span>
+                      {/* Current model info */}
+                      {defaults.agent && (() => {
+                        const activeModel = models.find((m) => m.id === defaults.agent);
+                        return activeModel ? (
+                          <div className="text-xs text-white/40 font-mono">
+                            Currently: <span className="text-white/70">{activeModel.name}</span>
+                            {" — "}
+                            <span className="text-white/50">{activeModel.provider}</span>
+                            {" / "}
+                            <span className="text-white/50">{activeModel.modelId}</span>
+                          </div>
+                        ) : null;
+                      })()}
+
+                      {/* Status indicator */}
+                      {defaults.agent ? (
+                        <div className="flex items-center gap-2 text-green-400 text-sm font-mono">
+                          <CheckCircle2 className="w-4 h-4" />
+                          Active
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-white/30 text-sm font-mono">
+                          No default set
+                        </div>
+                      )}
                     </div>
-                  ) : null;
-                })()}
-
-                {/* BulkAuxiliaryUpdater — right side of hero */}
-                <div className="mt-4 lg:mt-0 lg:ml-4">
-                  <BulkAuxiliaryUpdater
-                    models={modelOptions}
-                    onChange={handleBulkAuxiliaryChange}
-                    disabled={busyTaskType !== null}
-                  />
+                  </div>
                 </div>
-              </div>
+              </GlowSurface>
             </section>
+
+            {/* ── Fallback Chain ─────────────────────────────────────── */}
+            <section data-section="fallback-chain" className="space-y-4">
+              <div>
+                <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider">
+                  Fallback Chain
+                </h2>
+                <p className="text-xs text-white/30 mt-0.5">
+                  Ordered fallback models are tried sequentially when the primary model is unavailable.
+                </p>
+              </div>
+
+              <FallbackChainList
+                chain={fallbackChain}
+                models={modelOptions}
+                onReorder={handleFallbackReorder}
+                onToggle={handleFallbackToggle}
+                onDelete={handleFallbackDelete}
+                onEdit={handleFallbackEdit}
+                onAddFromRegistry={handleFallbackAddFromRegistry}
+                onAddCustom={handleFallbackAddCustom}
+                disabled={busyTaskType !== null}
+              />
+
+              <FallbackConfigPanel
+                config={fallbackConfig}
+                onUpdate={setFallbackConfig}
+                onSyncToHermes={handleSyncFallbackToHermes}
+                onImportFromConfig={handleImportFallbackFromConfig}
+                syncing={syncingFallback}
+                importing={importingFallback}
+              />
+            </section>
+
+            {/* ── Default Models (DefaultsGrid) ─────────────────────── */}
+            <section data-section="defaults" className="space-y-4">
+              <div>
+                <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider">
+                  Default Models
+                </h2>
+                <p className="text-xs text-white/30 mt-0.5">
+                  Each task slot maps to a Hermes auxiliary section
+                  (~/.hermes/config.yaml). Changing a default re-syncs the
+                  config file automatically.
+                </p>
+              </div>
+              <DefaultsGrid
+                defaults={defaults}
+                models={modelOptions}
+                onChange={handleSetDefault}
+                onSetAllAux={handleBulkAuxiliaryChange}
+                busyTaskType={busyTaskType}
+              />
+            </section>
+
+
 
             {/* ── My Models ──────────────────────────────────────────── */}
             <section data-section="my-models" className="space-y-4">
@@ -976,60 +1028,6 @@ export default function ModelsPage() {
               )}
             </section>
 
-            {/* ── Default Models (DefaultsGrid) ─────────────────────── */}
-            <section data-section="defaults" className="space-y-4">
-              <div>
-                <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider">
-                  Default Models
-                </h2>
-                <p className="text-xs text-white/30 mt-0.5">
-                  Each task slot maps to a Hermes auxiliary section
-                  (~/.hermes/config.yaml). Changing a default re-syncs the
-                  config file automatically.
-                </p>
-              </div>
-              <DefaultsGrid
-                defaults={defaults}
-                models={modelOptions}
-                onChange={handleSetDefault}
-                onSetAllAux={handleBulkAuxiliaryChange}
-                busyTaskType={busyTaskType}
-              />
-            </section>
-
-            {/* ── Fallback Chain ─────────────────────────────────────── */}
-            <section data-section="fallback-chain" className="space-y-4">
-              <div>
-                <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider">
-                  Fallback Chain
-                </h2>
-                <p className="text-xs text-white/30 mt-0.5">
-                  Ordered fallback models when the primary model is unavailable.
-                  Sync to Hermes to activate.
-                </p>
-              </div>
-
-              <FallbackChainList
-                chain={fallbackChain}
-                models={modelOptions}
-                onReorder={handleFallbackReorder}
-                onToggle={handleFallbackToggle}
-                onDelete={handleFallbackDelete}
-                onEdit={handleFallbackEdit}
-                onAddFromRegistry={handleFallbackAddFromRegistry}
-                onAddCustom={handleFallbackAddCustom}
-                disabled={busyTaskType !== null}
-              />
-
-              <FallbackConfigPanel
-                config={fallbackConfig}
-                onUpdate={setFallbackConfig}
-                onSyncToHermes={handleSyncFallbackToHermes}
-                onImportFromConfig={handleImportFallbackFromConfig}
-                syncing={syncingFallback}
-                importing={importingFallback}
-              />
-            </section>
           </>
         )}
       </div>
