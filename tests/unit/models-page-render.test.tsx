@@ -104,8 +104,13 @@ describe("ModelsPage", () => {
       expect(screen.getByText(/No models yet/i)).toBeInTheDocument()
     );
 
-    expect(screen.getByText(/My Models/i)).toBeInTheDocument();
-    expect(screen.getByText(/Default Models/i)).toBeInTheDocument();
+    // Section headers (h2 elements with icons)
+    const headings = screen.getAllByRole("heading", { level: 2 });
+    const headingTexts = headings.map((h) => h.textContent);
+
+    expect(headingTexts.some((t) => t.includes("Models"))).toBe(true);
+    expect(headingTexts.some((t) => t.includes("Task Defaults"))).toBe(true);
+    expect(headingTexts.some((t) => t.includes("Agent Default"))).toBe(true);
   });
 
   it("renders one defaults card per task type", async () => {

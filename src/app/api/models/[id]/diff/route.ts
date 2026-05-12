@@ -78,30 +78,39 @@ export async function POST(
     const hermesModel = readHermesModelSection();
 
     if (direction === "push") {
-      // Push: DB → config.yaml (show what will be overwritten)
+      // Push: DB -> config.yaml (show what will be written)
       const hProvider = hermesModel?.provider ?? "";
       const hModelId = hermesModel?.default ?? "";
       const hBaseUrl = hermesModel?.base_url ?? "";
 
-      if (model.modelId && model.modelId !== hModelId) {
+      if (model.modelId) {
+        const detail = hModelId && hModelId !== model.modelId
+          ? `${hModelId} -> ${model.modelId}`
+          : model.modelId;
         diffs.push({
           id: "modelId",
           label: "Model ID",
-          detail: `${hModelId || "(empty)"} → ${model.modelId}`,
+          detail,
         });
       }
-      if (model.provider && model.provider !== hProvider) {
+      if (model.provider) {
+        const detail = hProvider && hProvider !== model.provider
+          ? `${hProvider} -> ${model.provider}`
+          : model.provider;
         diffs.push({
           id: "provider",
           label: "Provider",
-          detail: `${hProvider || "(empty)"} → ${model.provider}`,
+          detail,
         });
       }
-      if ((model.baseUrl ?? "") !== hBaseUrl) {
+      {
+        const detail = (model.baseUrl ?? "") !== hBaseUrl
+          ? `${hBaseUrl || "(none)"} -> ${model.baseUrl ?? "(none)"}`
+          : model.baseUrl ?? "(none)";
         diffs.push({
           id: "baseUrl",
           label: "Base URL",
-          detail: `${hBaseUrl || "(empty)"} → ${model.baseUrl ?? "(empty)"}`,
+          detail,
         });
       }
 

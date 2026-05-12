@@ -40,6 +40,9 @@ function SyncModal({
   onCancel,
   confirming,
 }: SyncModalProps) {
+  const title = direction === "push"
+    ? "Export to Hermes"
+    : "Import from Hermes";
   const [removed, setRemoved] = useState<Set<string>>(new Set());
 
   const visibleChanges = diffs.filter((d) => !removed.has(d.id));
@@ -70,9 +73,7 @@ function SyncModal({
             ) : (
               <ArrowDownToLine className="w-4 h-4 text-neon-cyan" />
             )}
-            <span className="text-sm font-semibold text-white">
-              {direction === "push" ? "Push to Hermes" : "Pull from Hermes"}
-            </span>
+            <span className="text-sm font-semibold text-white">{title}</span>
           </div>
           <button
             type="button"
@@ -185,18 +186,19 @@ export default function ModelSyncButtons({
       setModalState({ direction, diffs, confirming: false });
     } catch {
       // Fallback to generic messages if diff API fails
+      const fallbackLabel = direction === "push"
+        ? "Write model settings to Hermes config.yaml"
+        : "Read model settings from Hermes config.yaml";
       setModalState({
         direction,
         diffs: [
           {
             id: "model-config",
-            label: modelName,
-            detail: direction === "push"
-              ? `Write ${provider}/${modelIdString} to config.yaml`
-              : `Read ${provider}/${modelIdString} from config.yaml`,
+            label: fallbackLabel,
+            detail: `${provider}/${modelIdString}`,
           },
           ...(direction === "push"
-            ? [{ id: "model-env", label: "Credential", detail: `Push API key to ~/.hermes/.env` }]
+            ? [{ id: "model-env", label: "Credential", detail: `Write API key for ${provider} to .env` }]
             : []),
         ],
         confirming: false,
@@ -241,7 +243,7 @@ export default function ModelSyncButtons({
           type="button"
           onClick={() => void handlePull()}
           disabled={disabled || loadingDiff}
-          title="Import model from Hermes config"
+          title="Import: read matching model settings from Hermes config into the database"
           className="p-1.5 rounded-lg text-white/30 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loadingDiff && modalState?.direction === "pull" ? (
@@ -254,7 +256,7 @@ export default function ModelSyncButtons({
           type="button"
           onClick={() => void handlePush()}
           disabled={disabled || loadingDiff}
-          title="Save model to Hermes config"
+          title="Export: write this model's settings into Hermes config.yaml"
           className="p-1.5 rounded-lg text-white/30 hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loadingDiff && modalState?.direction === "push" ? (

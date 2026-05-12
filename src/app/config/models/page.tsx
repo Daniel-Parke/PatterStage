@@ -22,6 +22,7 @@ import {
   Star,
   CheckCircle2,
   AlertTriangle,
+  Settings,
 } from "lucide-react";
 
 import AppPageShell from "@/components/layout/AppPageShell";
@@ -122,7 +123,7 @@ const DEFAULT_FALLBACK_CONFIG: FallbackConfig = {
 
 export default function ModelsPage() {
   const [framework, setFramework] = useState<string>("*");
-  const [_frameworkLoaded, setFrameworkLoaded] = useState(false);
+  const [frameworkLoaded, setFrameworkLoaded] = useState(false);
   const [models, setModels] = useState<ApiModel[]>([]);
   const [credentials, setCredentials] = useState<ApiCredential[]>([]);
   const [defaults, setDefaults] = useState<Record<TaskType, string | null>>(
@@ -166,9 +167,10 @@ export default function ModelsPage() {
       if (!mRes.ok) throw new Error(`Failed to load models (${mRes.status})`);
       if (!cRes.ok) throw new Error(`Failed to load credentials (${cRes.status})`);
       if (!dRes.ok) throw new Error(`Failed to load defaults (${dRes.status})`);
-      if (!driftRes.ok) console.warn("Failed to load drift status");
-      if (!fbRes.ok) console.warn("Failed to load fallback chain");
-      if (!fbCfgRes.ok) console.warn("Failed to load fallback config");
+      // Non-critical fetches — silence failures (drift/fallbacks gracefully degrade)
+      if (!driftRes.ok) { /* drift check is non-critical */ }
+      if (!fbRes.ok) { /* fallback chain is non-critical */ }
+      if (!fbCfgRes.ok) { /* fallback config is non-critical */ }
 
       const m = (await mRes.json()) as { data?: { models?: ApiModel[] } };
       const c = (await cRes.json()) as { data?: { credentials?: ApiCredential[] } };
@@ -236,10 +238,10 @@ export default function ModelsPage() {
 
   // Load data once framework is determined
   useEffect(() => {
-    if (_frameworkLoaded) {
+    if (frameworkLoaded) {
       void loadAll();
     }
-  }, [loadAll, _frameworkLoaded]);
+  }, [loadAll, frameworkLoaded]);
 
   // ── Framework change handler ───────────────────────────────────
 
@@ -748,16 +750,10 @@ export default function ModelsPage() {
           <>
             {/* ── My Models ──────────────────────────────────────────── */}
             <section data-section="my-models" className="space-y-4">
-              <div>
-                <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider">
-                  My Models
-                </h2>
-                <p className="text-xs text-white/30 mt-0.5">
-                  Each row owns its own credential row in the registry — adding a
-                  model writes the API key through to ~/.hermes/.env so Hermes
-                  can use it.
-                </p>
-              </div>
+              <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider flex items-center gap-2">
+                <Database className="w-4 h-4 text-neon-purple/60" />
+                Models
+              </h2>
 
               {models.length === 0 ? (
                 <EmptyState
@@ -907,24 +903,17 @@ export default function ModelsPage() {
               )}
             </section>
 
-            {/* ── Universal Agent Default (Framework-scoped) ──────────── */}
-            <section data-section="agent-default-hero" className="space-y-4">
-              <div>
-                <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider flex items-center gap-2">
-                  <Star className="w-4 h-4 text-neon-orange" />
-                  Universal Agent Default (Framework-scoped)
-                </h2>
-                <p className="text-xs text-white/30 mt-0.5">
-                  This model is used by every agent profile by default unless overridden per-profile.
-                  Setting a new default here applies immediately to all missions and cron jobs.
-                  Changes are scoped to the <span className="text-white/50">{framework}</span> framework.
-                </p>
-              </div>
+            {/* ── Agent Default ─────────────────────────────────────────── */}
+            <section data-section="agent-default" className="space-y-4">
+              <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider flex items-center gap-2">
+                <Star className="w-4 h-4 text-neon-orange" />
+                Agent Default
+              </h2>
 
               <GlowSurface accent="orange">
                 <div className="rounded-xl border border-neon-orange/20 bg-dark-900/40 p-6">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Left column: Bulk Auxiliaries */}
+                    {/* Left column: Bulk Auxiliaries (compact header) */}
                     <BulkAuxiliaryUpdater
                       models={modelOptions}
                       onChange={handleBulkAuxiliaryChange}
@@ -932,54 +921,50 @@ export default function ModelsPage() {
                     />
 
                     {/* Right column: Default Model selector + inline status */}
-                    <div className="flex flex-col justify-between gap-3">
-                      <label className="block text-xs font-mono text-white/50 uppercase tracking-wider mb-0">
+                    <div className="flex flex-col justify-center gap-3">
+                      <label className="block text-xs font-mono text-white/50 uppercase tracking-wider">
                         Default Model
                       </label>
-                      <div className="flex flex-row items-center gap-3 flex-wrap">
+                      <div className="flex items-center gap-3 flex-wrap">
                         <select
-                          className="flex-shrink-0 w-full max-w-sm bg-dark-800 border border-white/10 rounded-lg px-4 py-2.5 text-white font-mono text-sm focus:outline-none focus:border-neon-orange/50 transition-colors"
+                          className="flex-shrink-0 w-full max-w-xs bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-white font-mono text-sm h-9 min-w-0 focus:outline-none focus:border-neon-orange/50 transition-colors truncate appearance-none"
                           value={defaults.agent ?? ""}
                           onChange={(e) => {
                             const val = e.target.value || null;
                             void handleSetDefault("agent", val);
                           }}
                           disabled={busyTaskType === "agent"}
+                          title="Primary model used for all agent missions"
                         >
                           <option value="">— None —</option>
                           {modelOptions.map((m) => (
                             <option key={m.id} value={m.id}>
-                              {m.name} ({m.provider} / {m.modelId})
+                              {m.name}
                             </option>
                           ))}
                         </select>
 
                         {/* Inline current model info + status */}
-                        <div className="flex flex-col gap-0.5 min-w-0">
-                          {defaults.agent && (() => {
-                            const activeModel = models.find((m) => m.id === defaults.agent);
-                            return activeModel ? (
-                              <div className="text-xs text-white/40 font-mono whitespace-nowrap">
-                                Currently:{" "}
-                                <span className="text-white/70">{activeModel.name}</span>
-                                {" — "}
-                                <span className="text-white/50">
-                                  {activeModel.provider}/{activeModel.modelId}
-                                </span>
-                              </div>
-                            ) : null;
-                          })()}
-                          {defaults.agent ? (
-                            <div className="flex items-center gap-1.5 text-green-400 text-xs font-mono whitespace-nowrap">
-                              <CheckCircle2 className="w-3.5 h-3.5" />
-                              Active
+                        {defaults.agent && (() => {
+                          const activeModel = models.find((m) => m.id === defaults.agent);
+                          return activeModel ? (
+                            <div className="min-w-0 flex-1">
+                              <span className="text-xs text-white/40 font-mono">
+                                {" "}
+                                {activeModel.provider}/
+                                <span className="text-white/60">{activeModel.modelId}</span>
+                              </span>
+                              {" "}
+                              <span className="inline-flex items-center gap-1 text-green-400 text-xs font-mono">
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                Active
+                              </span>
                             </div>
-                          ) : (
-                            <div className="text-xs text-white/30 font-mono whitespace-nowrap">
-                              No default set
-                            </div>
-                          )}
-                        </div>
+                          ) : null;
+                        })()}
+                        {!defaults.agent && (
+                          <span className="text-xs text-white/30 font-mono">No default set</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -991,7 +976,7 @@ export default function ModelsPage() {
             <section data-section="fallback-chain" className="space-y-4">
               <CollapsibleSection
                 title="Fallback Chain"
-                description="Ordered fallback models are tried sequentially when the primary model is unavailable."
+                description="Ordered models tried sequentially when the primary is unavailable."
                 badge={fallbackChain.length}
                 badgeColor="purple"
               >
@@ -1018,18 +1003,12 @@ export default function ModelsPage() {
               </CollapsibleSection>
             </section>
 
-            {/* ── Default Models (DefaultsGrid) ─────────────────────── */}
+            {/* ── Default Models ─────────────────────────────────────── */}
             <section data-section="defaults" className="space-y-4">
-              <div>
-                <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider">
-                  Default Models
-                </h2>
-                <p className="text-xs text-white/30 mt-0.5">
-                  Each task slot maps to a Hermes auxiliary section
-                  (~/.hermes/config.yaml). Changing a default re-syncs the
-                  config file automatically.
-                </p>
-              </div>
+              <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider flex items-center gap-2">
+                <Settings className="w-4 h-4 text-neon-purple/60" />
+                Task Defaults
+              </h2>
               <DefaultsGrid
                 defaults={defaults}
                 models={modelOptions}

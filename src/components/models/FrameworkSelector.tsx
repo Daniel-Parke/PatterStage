@@ -32,10 +32,7 @@ export default function FrameworkSelector({
   );
 
   return (
-    <div className={`inline-flex items-center gap-2 ${className}`}>
-      <span className="text-xs text-white/40 font-mono uppercase tracking-widest">
-        Framework
-      </span>
+    <div className={className}>
       <div className="relative">
         <select
           value={activeFrameworkId}
