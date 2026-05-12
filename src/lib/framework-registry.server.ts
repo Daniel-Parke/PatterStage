@@ -7,13 +7,15 @@
 // Used by: hermes-config-sync, sync-manager, API routes.
 // ═══════════════════════════════════════════════════════════════
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { getActiveHermesHome } from "./hermes-agent-runtime";
 
-/** Path to the persisted active-framework file. */
-const ACTIVE_FW_FILE = `${getActiveHermesHome()}/.control-hub-active-fw.json`;
-
 let _activeFrameworkId: string | null = null;
+
+/** Lazily construct the active-framework file path. */
+function activeFwFilePath(): string {
+  return `${getActiveHermesHome()}/.control-hub-active-fw.json`;
+}
 
 /**
  * Read the currently active framework ID from disk.
@@ -22,11 +24,12 @@ let _activeFrameworkId: string | null = null;
 export function getActiveFrameworkId(): string {
   if (_activeFrameworkId !== null) return _activeFrameworkId;
   try {
-    if (!existsSync(ACTIVE_FW_FILE)) {
+    const file = activeFwFilePath();
+    if (!existsSync(file)) {
       _activeFrameworkId = "hermes";
       return _activeFrameworkId;
     }
-    const raw = JSON.parse(readFileSync(ACTIVE_FW_FILE, "utf-8"));
+    const raw = JSON.parse(readFileSync(file, "utf-8"));
     _activeFrameworkId = (raw.id as string) || "hermes";
     return _activeFrameworkId;
   } catch {
@@ -44,7 +47,7 @@ export function setActiveFrameworkId(id: string): void {
     const home = getActiveHermesHome();
     if (!existsSync(home)) mkdirSync(home, { recursive: true });
     writeFileSync(
-      `${home}/.control-hub-active-fw.json`,
+      activeFwFilePath(),
       JSON.stringify({ id, updatedAt: new Date().toISOString() }),
       "utf-8"
     );

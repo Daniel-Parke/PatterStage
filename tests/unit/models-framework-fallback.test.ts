@@ -328,7 +328,7 @@ describe("models-repository — modelOptions filter logic", () => {
 
 describe("framework-registry", () => {
   it("returns 'hermes' as default for getActiveFrameworkId when no file exists", () => {
-    const fw = require("@/lib/framework-registry");
+    const fw = require("@/lib/framework-registry.server");
     const active = fw.getActiveFrameworkId();
     expect(active).toBe("hermes");
   });
