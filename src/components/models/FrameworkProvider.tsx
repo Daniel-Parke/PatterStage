@@ -11,8 +11,8 @@
 
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode, type Provider } from "react";
-import { type FrameworkEntry, getFramework, listFrameworks, UNIVERSAL_FRAMEWORK_ID } from "@/lib/framework-registry";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { getFramework, listFrameworks, UNIVERSAL_FRAMEWORK_ID } from "@/lib/framework-registry";
 import { FrameworkContext } from "@/lib/framework-context";
 
 interface FrameworkProviderProps {
