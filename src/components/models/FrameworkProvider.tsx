@@ -12,7 +12,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { type FrameworkEntry, getFramework, listFrameworks, UNIVERSAL_FRAMEWORK_ID, UNIVERSAL_FRAMEWORK_LABEL } from "@/lib/framework-registry";
+import { type FrameworkEntry, getFramework, listFrameworks, UNIVERSAL_FRAMEWORK_ID } from "@/lib/framework-registry";
 
 interface FrameworkContextValue {
   activeFrameworkId: string;
