@@ -8,7 +8,7 @@
 
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Zap } from "lucide-react";
 
 import {
   TASK_TYPES,
@@ -22,10 +22,11 @@ export interface DefaultsModelOption {
   modelId: string;
 }
 
-interface DefaultsGridProps {
+export interface DefaultsGridProps {
   defaults: Record<TaskType, string | null>;
   models: DefaultsModelOption[];
   onChange: (taskType: TaskType, modelId: string | null) => void | Promise<void>;
+  onSetAllAux?: (taskTypes: TaskType[], targetModelId: string) => void | Promise<void>;
   busyTaskType?: TaskType | null;
 }
 
@@ -89,14 +90,27 @@ export default function DefaultsGrid({
   defaults,
   models,
   onChange,
+  onSetAllAux,
   busyTaskType = null,
 }: DefaultsGridProps) {
+  const auxTypes = TASK_TYPES.filter((t) => t !== "agent");
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {TASK_TYPES.map((slot) => {
         const meta = SLOT_META[slot];
         const selected = defaults[slot];
         const isBusy = busyTaskType === slot;
+        const isAux = slot !== "agent";
+        const modelForSlot = selected ? models.find((m) => m.id === selected) : null;
+
+        const handleQuickSetAll = async () => {
+          if (!onSetAllAux || !selected) return;
+          // Set all OTHER auxiliary slots to this model
+          const others = auxTypes.filter((t) => t !== slot);
+          if (others.length === 0) return;
+          await onSetAllAux(others, selected);
+        };
 
         return (
           <div
@@ -105,15 +119,26 @@ export default function DefaultsGrid({
             className="rounded-xl border border-white/10 bg-dark-900/50 p-4 space-y-2 min-h-[120px]"
           >
             <div className="flex items-start justify-between gap-2">
-              <div>
-                <div className="text-sm font-semibold text-white">
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold text-white flex items-center gap-2">
                   {meta.label}
+                  {isAux && onSetAllAux && modelForSlot && (
+                    <button
+                      type="button"
+                      onClick={() => void handleQuickSetAll()}
+                      disabled={isBusy}
+                      className="p-0.5 rounded text-neon-purple/40 hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      title={`Set all auxiliary slots to ${modelForSlot.name}`}
+                    >
+                      <Zap className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
-                <p className="text-xs text-white/30 font-mono mt-0.5">
+                <p className="text-xs text-white/30 font-mono mt-0.5 truncate">
                   {meta.description}
                 </p>
               </div>
-              <span className="text-[10px] font-mono text-white/30 bg-white/5 px-1.5 py-0.5 rounded uppercase tracking-widest">
+              <span className="text-[10px] font-mono text-white/30 bg-white/5 px-1.5 py-0.5 rounded uppercase tracking-widest flex-shrink-0">
                 {slot}
               </span>
             </div>
