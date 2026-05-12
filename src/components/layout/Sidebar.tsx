@@ -772,7 +772,7 @@ export default function Sidebar() {
       {/* Sidebar — desktop */}
 
       <aside
-        className={`hidden lg:flex flex-col bg-dark-900/80 border-r border-white/10 backdrop-blur-xl transition-all duration-200 ${
+        className={`hidden lg:flex flex-col bg-dark-900/80 border-r border-white/10 backdrop-blur-xl transition-all duration-200 h-screen ${
           collapsed ? "w-16" : "w-56"
         }`}
       >
@@ -782,7 +782,7 @@ export default function Sidebar() {
       {/* Sidebar — mobile drawer */}
 
       <aside
-        className={`lg:hidden fixed inset-y-0 left-0 z-50 w-56 bg-dark-950 border-r border-white/10 transform transition-transform ${
+        className={`lg:hidden fixed inset-y-0 left-0 z-50 w-56 bg-dark-950 border-r border-white/10 transform transition-transform h-screen ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

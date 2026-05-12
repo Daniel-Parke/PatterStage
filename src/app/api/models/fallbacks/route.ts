@@ -21,7 +21,9 @@ export async function GET(_request: NextRequest) {
   try {
     const entries = listFallbackChain();
     const config = getFallbackConfig();
-    return NextResponse.json({ data: { entries, config } });
+    // Return both 'entries' and 'chain' keys for backwards compatibility.
+    // Legacy page code references data.chain; the canonical key is entries.
+    return NextResponse.json({ data: { entries, chain: entries, config } });
   } catch (error) {
     logApiError("GET /api/models/fallbacks", "reading fallback chain", error);
     return NextResponse.json({ error: "Failed to read fallback chain" }, { status: 500 });

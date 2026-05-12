@@ -42,6 +42,7 @@ import BulkAuxiliaryUpdater from "@/components/models/BulkAuxiliaryUpdater";
 import ModelSyncButtons from "@/components/models/ModelSyncButtons";
 import FallbackChainList from "@/components/models/FallbackChainList";
 import FallbackConfigPanel from "@/components/models/FallbackConfigPanel";
+import CollapsibleSection from "@/components/ui/CollapsibleSection";
 import {
   TASK_TYPES,
   type TaskType,
@@ -732,141 +733,6 @@ export default function ModelsPage() {
           <LoadingSpinner text="Loading models..." />
         ) : (
           <>
-            {/* ── Universal Agent Default (Framework-scoped) ──────────── */}
-            <section data-section="agent-default-hero" className="space-y-4">
-              <div>
-                <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider flex items-center gap-2">
-                  <Star className="w-4 h-4 text-neon-orange" />
-                  Universal Agent Default (Framework-scoped)
-                </h2>
-                <p className="text-xs text-white/30 mt-0.5">
-                  This model is used by every agent profile by default unless overridden per-profile.
-                  Setting a new default here applies immediately to all missions and cron jobs.
-                  Changes are scoped to the <span className="text-white/50">{framework}</span> framework.
-                </p>
-              </div>
-
-              <GlowSurface accent="orange">
-                <div className="rounded-xl border border-neon-orange/20 bg-dark-900/40 p-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                    {/* Left column: Bulk Auxiliaries */}
-                    <BulkAuxiliaryUpdater
-                      models={modelOptions}
-                      onChange={handleBulkAuxiliaryChange}
-                      disabled={busyTaskType !== null}
-                    />
-
-                    {/* Right column: Default Model selector + status */}
-                    <div className="flex flex-col justify-between gap-3">
-                      <div>
-                        <label className="block text-xs font-mono text-white/50 uppercase tracking-wider mb-2">
-                          Default Model
-                        </label>
-                        <select
-                          className="w-full bg-dark-800 border border-white/10 rounded-lg px-4 py-2.5 text-white font-mono text-sm focus:outline-none focus:border-neon-orange/50 transition-colors"
-                          value={defaults.agent ?? ""}
-                          onChange={(e) => {
-                            const val = e.target.value || null;
-                            void handleSetDefault("agent", val);
-                          }}
-                          disabled={busyTaskType === "agent"}
-                        >
-                          <option value="">— None —</option>
-                          {modelOptions.map((m) => (
-                            <option key={m.id} value={m.id}>
-                              {m.name} ({m.provider} / {m.modelId})
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Current model info */}
-                      {defaults.agent && (() => {
-                        const activeModel = models.find((m) => m.id === defaults.agent);
-                        return activeModel ? (
-                          <div className="text-xs text-white/40 font-mono">
-                            Currently: <span className="text-white/70">{activeModel.name}</span>
-                            {" — "}
-                            <span className="text-white/50">{activeModel.provider}</span>
-                            {" / "}
-                            <span className="text-white/50">{activeModel.modelId}</span>
-                          </div>
-                        ) : null;
-                      })()}
-
-                      {/* Status indicator */}
-                      {defaults.agent ? (
-                        <div className="flex items-center gap-2 text-green-400 text-sm font-mono">
-                          <CheckCircle2 className="w-4 h-4" />
-                          Active
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-white/30 text-sm font-mono">
-                          No default set
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </GlowSurface>
-            </section>
-
-            {/* ── Fallback Chain ─────────────────────────────────────── */}
-            <section data-section="fallback-chain" className="space-y-4">
-              <div>
-                <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider">
-                  Fallback Chain
-                </h2>
-                <p className="text-xs text-white/30 mt-0.5">
-                  Ordered fallback models are tried sequentially when the primary model is unavailable.
-                </p>
-              </div>
-
-              <FallbackChainList
-                chain={fallbackChain}
-                models={modelOptions}
-                onReorder={handleFallbackReorder}
-                onToggle={handleFallbackToggle}
-                onDelete={handleFallbackDelete}
-                onEdit={handleFallbackEdit}
-                onAddFromRegistry={handleFallbackAddFromRegistry}
-                onAddCustom={handleFallbackAddCustom}
-                disabled={busyTaskType !== null}
-              />
-
-              <FallbackConfigPanel
-                config={fallbackConfig}
-                onUpdate={setFallbackConfig}
-                onSyncToHermes={handleSyncFallbackToHermes}
-                onImportFromConfig={handleImportFallbackFromConfig}
-                syncing={syncingFallback}
-                importing={importingFallback}
-              />
-            </section>
-
-            {/* ── Default Models (DefaultsGrid) ─────────────────────── */}
-            <section data-section="defaults" className="space-y-4">
-              <div>
-                <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider">
-                  Default Models
-                </h2>
-                <p className="text-xs text-white/30 mt-0.5">
-                  Each task slot maps to a Hermes auxiliary section
-                  (~/.hermes/config.yaml). Changing a default re-syncs the
-                  config file automatically.
-                </p>
-              </div>
-              <DefaultsGrid
-                defaults={defaults}
-                models={modelOptions}
-                onChange={handleSetDefault}
-                onSetAllAux={handleBulkAuxiliaryChange}
-                busyTaskType={busyTaskType}
-              />
-            </section>
-
-
-
             {/* ── My Models ──────────────────────────────────────────── */}
             <section data-section="my-models" className="space-y-4">
               <div>
@@ -1026,6 +892,138 @@ export default function ModelsPage() {
                   </div>
                 </GlowSurface>
               )}
+            </section>
+
+            {/* ── Universal Agent Default (Framework-scoped) ──────────── */}
+            <section data-section="agent-default-hero" className="space-y-4">
+              <div>
+                <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider flex items-center gap-2">
+                  <Star className="w-4 h-4 text-neon-orange" />
+                  Universal Agent Default (Framework-scoped)
+                </h2>
+                <p className="text-xs text-white/30 mt-0.5">
+                  This model is used by every agent profile by default unless overridden per-profile.
+                  Setting a new default here applies immediately to all missions and cron jobs.
+                  Changes are scoped to the <span className="text-white/50">{framework}</span> framework.
+                </p>
+              </div>
+
+              <GlowSurface accent="orange">
+                <div className="rounded-xl border border-neon-orange/20 bg-dark-900/40 p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Left column: Bulk Auxiliaries */}
+                    <BulkAuxiliaryUpdater
+                      models={modelOptions}
+                      onChange={handleBulkAuxiliaryChange}
+                      disabled={busyTaskType !== null}
+                    />
+
+                    {/* Right column: Default Model selector + inline status */}
+                    <div className="flex flex-col justify-between gap-3">
+                      <label className="block text-xs font-mono text-white/50 uppercase tracking-wider mb-0">
+                        Default Model
+                      </label>
+                      <div className="flex flex-row items-center gap-3 flex-wrap">
+                        <select
+                          className="flex-shrink-0 w-full max-w-sm bg-dark-800 border border-white/10 rounded-lg px-4 py-2.5 text-white font-mono text-sm focus:outline-none focus:border-neon-orange/50 transition-colors"
+                          value={defaults.agent ?? ""}
+                          onChange={(e) => {
+                            const val = e.target.value || null;
+                            void handleSetDefault("agent", val);
+                          }}
+                          disabled={busyTaskType === "agent"}
+                        >
+                          <option value="">— None —</option>
+                          {modelOptions.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name} ({m.provider} / {m.modelId})
+                            </option>
+                          ))}
+                        </select>
+
+                        {/* Inline current model info + status */}
+                        <div className="flex flex-col gap-0.5 min-w-0">
+                          {defaults.agent && (() => {
+                            const activeModel = models.find((m) => m.id === defaults.agent);
+                            return activeModel ? (
+                              <div className="text-xs text-white/40 font-mono whitespace-nowrap">
+                                Currently:{" "}
+                                <span className="text-white/70">{activeModel.name}</span>
+                                {" — "}
+                                <span className="text-white/50">
+                                  {activeModel.provider}/{activeModel.modelId}
+                                </span>
+                              </div>
+                            ) : null;
+                          })()}
+                          {defaults.agent ? (
+                            <div className="flex items-center gap-1.5 text-green-400 text-xs font-mono whitespace-nowrap">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              Active
+                            </div>
+                          ) : (
+                            <div className="text-xs text-white/30 font-mono whitespace-nowrap">
+                              No default set
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </GlowSurface>
+            </section>
+
+            {/* ── Fallback Chain (Collapsible) ───────────────────────── */}
+            <section data-section="fallback-chain" className="space-y-4">
+              <CollapsibleSection
+                title="Fallback Chain"
+                description="Ordered fallback models are tried sequentially when the primary model is unavailable."
+                badge={fallbackChain.length}
+                badgeColor="purple"
+              >
+                <FallbackChainList
+                  chain={fallbackChain}
+                  models={modelOptions}
+                  onReorder={handleFallbackReorder}
+                  onToggle={handleFallbackToggle}
+                  onDelete={handleFallbackDelete}
+                  onEdit={handleFallbackEdit}
+                  onAddFromRegistry={handleFallbackAddFromRegistry}
+                  onAddCustom={handleFallbackAddCustom}
+                  disabled={busyTaskType !== null}
+                />
+
+                <FallbackConfigPanel
+                  config={fallbackConfig}
+                  onUpdate={setFallbackConfig}
+                  onSyncToHermes={handleSyncFallbackToHermes}
+                  onImportFromConfig={handleImportFallbackFromConfig}
+                  syncing={syncingFallback}
+                  importing={importingFallback}
+                />
+              </CollapsibleSection>
+            </section>
+
+            {/* ── Default Models (DefaultsGrid) ─────────────────────── */}
+            <section data-section="defaults" className="space-y-4">
+              <div>
+                <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider">
+                  Default Models
+                </h2>
+                <p className="text-xs text-white/30 mt-0.5">
+                  Each task slot maps to a Hermes auxiliary section
+                  (~/.hermes/config.yaml). Changing a default re-syncs the
+                  config file automatically.
+                </p>
+              </div>
+              <DefaultsGrid
+                defaults={defaults}
+                models={modelOptions}
+                onChange={handleSetDefault}
+                onSetAllAux={handleBulkAuxiliaryChange}
+                busyTaskType={busyTaskType}
+              />
             </section>
 
           </>
