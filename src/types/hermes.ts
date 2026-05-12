@@ -585,7 +585,15 @@ export interface Mission {
 
   model: string;
 
+  modelId?: string;
+
+  provider?: string;
+
   profile: string;
+
+  profileName?: string;
+
+  profile_id?: string;
 
   missionTimeMinutes: number;
 

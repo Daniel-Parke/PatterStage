@@ -702,9 +702,10 @@ export default function MissionsPage() {
     setNewSkills(m.skills ?? []);
 
     // Restore mission runtime settings (migration 013 — may be null on old missions)
-    setNewModel(m.modelId ?? "");
-    setNewProvider(m.provider ?? "");
+    setNewModel(m.modelId || m.model || "");
+    setNewProvider(m.provider || "");
     if (m.profileName) setNewProfile(m.profileName);
+    else if (m.profile) setNewProfile(m.profile);
     if (typeof m.missionTimeMinutes === "number") setNewMissionTime(m.missionTimeMinutes);
     if (typeof m.timeoutMinutes === "number") setNewTimeout(m.timeoutMinutes);
     if (m.schedule) setNewSchedule(m.schedule);
