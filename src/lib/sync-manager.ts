@@ -16,7 +16,7 @@ import {
   syncFallbacksToHermesConfig,
 } from "./hermes-config-sync";
 import { isHermesProvider, type HermesProvider, envVarForProvider } from "./hermes-providers";
-import { getActiveFrameworkId } from "./framework-registry";
+import { getActiveFrameworkId } from "./framework-registry.server";
 
 // ── Types ────────────────────────────────────────────────────
 

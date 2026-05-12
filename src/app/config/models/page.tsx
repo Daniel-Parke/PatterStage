@@ -503,7 +503,7 @@ export default function ModelsPage() {
         );
       }
     },
-    [framework, loadAll, showToast]
+    [loadAll, showToast]
   );
 
   const handleFallbackToggle = useCallback(
@@ -524,7 +524,7 @@ export default function ModelsPage() {
         );
       }
     },
-    [framework, loadAll, showToast]
+    [loadAll, showToast]
   );
 
   const handleFallbackDelete = useCallback(
@@ -592,7 +592,7 @@ export default function ModelsPage() {
         );
       }
     },
-    [framework, loadAll, showToast]
+    [loadAll, showToast]
   );
 
   const handleFallbackAddCustom = useCallback(
@@ -613,7 +613,7 @@ export default function ModelsPage() {
         );
       }
     },
-    [framework, loadAll, showToast]  // handleFallbackAddCustom uses 'framework' in body
+    [loadAll, showToast]
   );
 
   const handleSyncFallbackToHermes = useCallback(async () => {
@@ -634,7 +634,7 @@ export default function ModelsPage() {
     } finally {
       setSyncingFallback(false);
     }
-  }, [framework, fallbackConfig, showToast]);
+  }, [fallbackConfig, showToast]);
 
   const handleImportFallbackFromConfig = useCallback(async () => {
     setImportingFallback(true);
@@ -655,7 +655,7 @@ export default function ModelsPage() {
     } finally {
       setImportingFallback(false);
     }
-  }, [framework, loadAll, showToast]);
+  }, [loadAll, showToast]);
 
   // ── Render ────────────────────────────────────────────────────
 

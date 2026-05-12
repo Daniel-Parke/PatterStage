@@ -30,7 +30,7 @@ import {
   type HermesProvider,
   type TaskType,
 } from "./hermes-providers";
-import { getActiveFrameworkId } from "./framework-registry";
+import { getActiveFrameworkId } from "./framework-registry.server";
 import { getModelDefaults, getModel } from "./models-repository";
 
 // ── Internal helpers ───────────────────────────────────────────

@@ -5,7 +5,8 @@
 // PUT  — sets the active framework (persists to disk)
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
-import { listFrameworks, getActiveFrameworkId, setActiveFrameworkId } from "@/lib/framework-registry";
+import { listFrameworks } from "@/lib/framework-registry";
+import { getActiveFrameworkId, setActiveFrameworkId } from "@/lib/framework-registry.server";
 import { logApiError } from "@/lib/api-logger";
 import { requireMcApiKey } from "@/lib/api-auth";
 

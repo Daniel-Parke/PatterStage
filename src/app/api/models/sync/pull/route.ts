@@ -10,7 +10,7 @@ import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { getModel, updateModel, listModels } from "@/lib/models-repository";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { getActiveFrameworkId } from "@/lib/framework-registry";
+import { getActiveFrameworkId } from "@/lib/framework-registry.server";
 
 function readHermesPrimaryModel(): { modelId: string; provider: string; baseUrl: string | null } | null {
   const paths = getActiveHermesPaths();
