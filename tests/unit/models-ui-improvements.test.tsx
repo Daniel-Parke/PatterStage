@@ -86,7 +86,7 @@ function defaultModelsFetch(models: unknown[] = []) {
 describe("ModelsPage UI improvements", () => {
   it("renders section titles with icons: Models, Agent Default, Task Defaults", async () => {
     setFetch(defaultModelsFetch());
-    const { container } = render(<ModelsPage />);
+    const { container: _c1 } = render(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.getByText(/No models yet/i)).toBeInTheDocument()
@@ -148,7 +148,7 @@ describe("ModelsPage UI improvements", () => {
       },
     });
 
-    const { container } = render(<ModelsPage />);
+    const { container: _c2 } = render(<ModelsPage />);
 
     await waitFor(() =>
       expect(screen.getByText("Active")).toBeInTheDocument()

@@ -158,7 +158,7 @@ function SyncModal({
 
 export default function ModelSyncButtons({
   modelId,
-  modelName,
+  modelName: _modelName,
   provider,
   modelIdString,
   onPush,
@@ -206,7 +206,7 @@ export default function ModelSyncButtons({
     } finally {
       setLoadingDiff(false);
     }
-  }, [modelId, modelName, provider, modelIdString]);
+  }, [modelId, provider, modelIdString]);
 
   const handlePush = useCallback(async () => {
     void fetchDiffs("push");
