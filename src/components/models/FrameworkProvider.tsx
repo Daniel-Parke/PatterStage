@@ -7,32 +7,16 @@
 // /api/models/framework API so changes survive page reloads.
 //
 // Usage: wrap <ComponentTree> with <FrameworkProvider> in layout.
-// Consuming pages call useFramework() to get/set the active id.
+// Consuming pages call useFramework() from framework-context.tsx.
 
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode, type Provider } from "react";
 import { type FrameworkEntry, getFramework, listFrameworks, UNIVERSAL_FRAMEWORK_ID } from "@/lib/framework-registry";
-
-interface FrameworkContextValue {
-  activeFrameworkId: string;
-  setActiveFrameworkId: (id: string) => Promise<boolean>;
-  framework: FrameworkEntry | undefined;
-  frameworks: FrameworkEntry[];
-  isUniversal: boolean;
-  loading: boolean;
-}
-
-const FrameworkContext = createContext<FrameworkContextValue | null>(null);
-
-export function useFramework(): FrameworkContextValue {
-  const ctx = useContext(FrameworkContext);
-  if (!ctx) throw new Error("useFramework must be used within <FrameworkProvider>");
-  return ctx;
-}
+import { FrameworkContext } from "@/lib/framework-context";
 
 interface FrameworkProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export default function FrameworkProvider({ children }: FrameworkProviderProps) {
