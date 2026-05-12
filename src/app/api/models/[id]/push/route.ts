@@ -8,8 +8,6 @@ import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { pushModelToHermes, pushCredential } from "@/lib/sync-manager";
 import { getModelWithKey } from "@/lib/models-repository";
-import { isHermesProvider, type HermesProvider } from "@/lib/hermes-providers";
-import { syncSingleCredentialToHermesEnv } from "@/lib/hermes-config-sync";
 
 export async function POST(
   request: NextRequest,

@@ -1,11 +1,11 @@
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // /api/models/sync/push — push single model DB → Hermes
 // Wrapper that receives modelId from body and delegates to push
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
-import { pushModelToHermes, pushCredential, pushCredentialToHermesEnv, pullCredentialFromEnv } from "@/lib/sync-manager";
+import { pushModelToHermes } from "@/lib/sync-manager";
 
 export async function POST(request: NextRequest) {
   const ro = requireNotReadOnly();

@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import { getActiveFrameworkId, listFrameworks, setActiveFrameworkId } from "@/lib/framework-registry";
+import { listFrameworks } from "@/lib/framework-registry";
 import { getActiveHermesHome } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import { requireMcApiKey } from "@/lib/api-auth";

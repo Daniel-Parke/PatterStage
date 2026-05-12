@@ -35,26 +35,6 @@ export interface UpdateFallbackInput {
   overrideBaseUrl?: string | null;
 }
 
-function rowToEntry(row: {
-  id: string; model_id: string | null; position: number;
-  enabled: number; override_base_url: string | null;
-  created_at: string; updated_at: string;
-  model_name?: string; provider?: string; model_id_string?: string;
-}): FallbackEntryRecord {
-  return {
-    id: row.id,
-    modelId: row.model_id,
-    modelName: row.model_name ?? "unknown",
-    provider: row.provider ?? "unknown",
-    modelIdString: row.model_id_string ?? "",
-    position: row.position,
-    enabled: row.enabled === 1,
-    overrideBaseUrl: row.override_base_url,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
-}
-
 /** List the entire fallback chain ordered by position.
  *  Registry entries are joined to models for display info.
  *  Custom entries (no FK) return with denormalised data.
