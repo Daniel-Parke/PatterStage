@@ -19,7 +19,7 @@ interface ModelSyncButtonsProps {
   modelName: string;
   provider: string;
   modelIdString: string;
-  onPush: (modelId: string) => Promise<SyncActionResult>;
+  onPush: (modelId: string, options?: { pushCredential?: boolean }) => Promise<SyncActionResult>;
   onPull: (modelId: string) => Promise<SyncActionResult>;
   disabled?: boolean;
 }
@@ -27,7 +27,7 @@ interface ModelSyncButtonsProps {
 interface SyncModalProps {
   direction: "push" | "pull";
   changes: SyncChange[];
-  onConfirm: () => void;
+  onConfirm: (excludedIds: Set<string>) => void;
   onCancel: () => void;
   confirming: boolean;
 }
@@ -52,10 +52,8 @@ function SyncModal({
   };
 
   const handleConfirm = () => {
-    // Only confirm remaining changes
-    if (visibleChanges.length > 0) {
-      onConfirm();
-    }
+    // Pass the removed/excluded IDs to the caller
+    onConfirm(removed);
   };
 
   return (
@@ -192,13 +190,15 @@ export default function ModelSyncButtons({
     });
   }, [modelName, provider, modelIdString]);
 
-  const handleConfirm = useCallback(async () => {
+  const handleConfirm = useCallback(async (excluded: Set<string>) => {
     if (!modalState) return;
     setModalState((prev) => (prev ? { ...prev, confirming: true } : null));
 
     try {
       if (modalState.direction === "push") {
-        await onPush(modelId);
+        // Only push credential if it wasn't excluded
+        const pushCred = !excluded.has("model-env");
+        await onPush(modelId, { pushCredential: pushCred });
       } else {
         await onPull(modelId);
       }
@@ -236,7 +236,7 @@ export default function ModelSyncButtons({
           direction={modalState.direction}
           changes={modalState.changes}
           confirming={modalState.confirming}
-          onConfirm={() => void handleConfirm()}
+          onConfirm={(excluded) => void handleConfirm(excluded)}
           onCancel={() => setModalState(null)}
         />
       )}

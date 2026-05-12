@@ -30,6 +30,7 @@ import {
   type HermesProvider,
   type TaskType,
 } from "./hermes-providers";
+import { getActiveFrameworkId } from "./framework-registry";
 import { getModelDefaults, getModel } from "./models-repository";
 
 // ── Internal helpers ───────────────────────────────────────────
@@ -233,7 +234,8 @@ export function syncDefaultsToHermesConfig(): { backupPath: string | null } {
     ? ((yaml.load(original) as HermesConfig) ?? {})
     : {};
 
-  const defaults = getModelDefaults();
+  const frameworkId = getActiveFrameworkId();
+  const defaults = getModelDefaults(frameworkId);
 
   // ── Primary agent model
   const agentDefault = defaults.agent ? getModel(defaults.agent) : null;

@@ -112,4 +112,5 @@ CREATE TABLE fallback_config (
 -- Seed default fallback behaviour
 INSERT OR IGNORE INTO fallback_config (key, value) VALUES
     ('restore_primary_on_fallback', 'true'),
-    ('fallback_notification', 'true');
+    ('fallback_notification', 'true'),
+    ('api_max_retries', '3');

@@ -117,7 +117,8 @@ const DEFAULT_FALLBACK_CONFIG: FallbackConfig = {
 };
 
 export default function ModelsPage() {
-  const [framework, setFramework] = useState<string>("hermes");
+  const [framework, setFramework] = useState<string>("*");
+  const [_frameworkLoaded, setFrameworkLoaded] = useState(false);
   const [models, setModels] = useState<ApiModel[]>([]);
   const [credentials, setCredentials] = useState<ApiCredential[]>([]);
   const [defaults, setDefaults] = useState<Record<TaskType, string | null>>(
@@ -212,9 +213,29 @@ export default function ModelsPage() {
     }
   }, [framework]);
 
+  // Load persisted framework on mount, then load data
   useEffect(() => {
-    void loadAll();
-  }, [loadAll]);
+    // First, fetch the persisted active framework
+    fetch("/api/models/framework")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        const active = data?.data?.active;
+        if (active) {
+          setFramework(active);
+        }
+        setFrameworkLoaded(true);
+      })
+      .catch(() => {
+        setFrameworkLoaded(true);
+      });
+  }, []);
+
+  // Load data once framework is determined
+  useEffect(() => {
+    if (_frameworkLoaded) {
+      void loadAll();
+    }
+  }, [loadAll, _frameworkLoaded]);
 
   // ── Framework change handler ───────────────────────────────────
 
@@ -222,13 +243,16 @@ export default function ModelsPage() {
     setFramework(newFramework);
     // Persist the active framework via API so it survives page reloads
     try {
-      await fetch("/api/models/framework", {
+      const res = await fetch("/api/models/framework", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ framework: newFramework }),
       });
-    } catch {
-      // Best-effort — page will still work without persistence
+      if (!res.ok) {
+        console.error(`Failed to persist framework: ${res.status}`);
+      }
+    } catch (e) {
+      console.error("Failed to persist framework:", e);
     }
   }, []);
 
@@ -237,7 +261,7 @@ export default function ModelsPage() {
   const modelOptions = useMemo<DefaultsModelOption[]>(
     () =>
       models
-        .filter((m) => !framework || m.frameworkId === framework)
+        .filter((m) => m.frameworkId === framework || m.frameworkId === "*")
         .map((m) => ({
           id: m.id,
           name: m.name,
@@ -261,12 +285,12 @@ export default function ModelsPage() {
   // ── Model sync handlers ────────────────────────────────────────
 
   const handlePush = useCallback(
-    async (modelId: string): Promise<SyncActionResult> => {
+    async (modelId: string, options?: { pushCredential?: boolean }): Promise<SyncActionResult> => {
       try {
         const res = await fetch(`/api/models/sync/push`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ modelId, framework }),
+          body: JSON.stringify({ modelId, framework, pushCredential: options?.pushCredential !== false }),
         });
         if (!res.ok) {
           const data = (await res.json().catch(() => ({}))) as { error?: string };
@@ -467,7 +491,7 @@ export default function ModelsPage() {
         const res = await fetch("/api/models/fallbacks/reorder", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ entryId, direction, framework }),
+          body: JSON.stringify({ entryId, direction }),
         });
         if (!res.ok) throw new Error("Reorder failed");
         await loadAll();
@@ -488,7 +512,7 @@ export default function ModelsPage() {
         const res = await fetch("/api/models/fallbacks/toggle", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ entryId, enabled, framework }),
+          body: JSON.stringify({ entryId, enabled }),
         });
         if (!res.ok) throw new Error("Toggle failed");
         await loadAll();
@@ -523,11 +547,31 @@ export default function ModelsPage() {
   );
 
   const handleFallbackEdit = useCallback(
-    (entry: FallbackChainEntry) => {
-      // Could open an editor modal - for now just toast
-      showToast(`Edit ${entry.modelName} — implement edit modal`, "info");
+    async (entry: FallbackChainEntry) => {
+      // For now, allow editing the override base URL
+      const overrideBaseUrl = entry.overrideBaseUrl || "";
+      const newValue = prompt(
+        `Edit override base URL for ${entry.modelName}:\n(Current: ${overrideBaseUrl || "(empty)"})`,
+        overrideBaseUrl
+      );
+      if (newValue === null) return; // cancelled
+      try {
+        const res = await fetch(`/api/models/fallbacks/${encodeURIComponent(entry.id)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ overrideBaseUrl: newValue.trim() || null }),
+        });
+        if (!res.ok) throw new Error("Update failed");
+        await loadAll();
+        showToast("Fallback updated", "success");
+      } catch (err) {
+        showToast(
+          err instanceof Error ? err.message : "Update failed",
+          "error"
+        );
+      }
     },
-    [showToast]
+    [loadAll, showToast]
   );
 
   const handleFallbackAddFromRegistry = useCallback(
@@ -536,7 +580,7 @@ export default function ModelsPage() {
         const res = await fetch("/api/models/fallbacks", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ modelId, framework }),
+          body: JSON.stringify({ modelId }),
         });
         if (!res.ok) throw new Error("Add failed");
         await loadAll();
@@ -557,7 +601,7 @@ export default function ModelsPage() {
         const res = await fetch("/api/models/fallbacks/custom", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, provider, modelIdString, baseUrl, framework }),
+          body: JSON.stringify({ name, provider, modelIdString, baseUrl }),
         });
         if (!res.ok) throw new Error("Add failed");
         await loadAll();
@@ -578,7 +622,7 @@ export default function ModelsPage() {
       const res = await fetch("/api/models/fallbacks/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ framework, config: fallbackConfig }),
+        body: JSON.stringify({ config: fallbackConfig }),
       });
       if (!res.ok) throw new Error("Sync failed");
       showToast("Fallback config synced to Hermes", "success");
@@ -598,7 +642,7 @@ export default function ModelsPage() {
       const res = await fetch("/api/models/fallbacks/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ framework }),
+        body: JSON.stringify({}),
       });
       if (!res.ok) throw new Error("Import failed");
       await loadAll();

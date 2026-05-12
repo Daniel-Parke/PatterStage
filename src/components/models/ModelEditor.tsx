@@ -16,7 +16,10 @@ import {
   AlertCircle,
   Loader2,
   Check,
+  ChevronDown,
 } from "lucide-react";
+
+import { listFrameworks, UNIVERSAL_FRAMEWORK_ID, UNIVERSAL_FRAMEWORK_LABEL, type FrameworkEntry } from "@/lib/framework-registry";
 
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
@@ -33,6 +36,7 @@ export interface ModelEditorRecord {
   baseUrl: string | null;
   contextLength: number | null;
   credentialsId: string | null;
+  frameworkId?: string;
 }
 
 interface ModelEditorProps {
@@ -50,6 +54,7 @@ interface FormState {
   baseUrl: string;
   contextLength: string;
   credentialsId: string | null;
+  frameworkId: string;
   apiKey: string;
   credentialLabel: string;
 }
@@ -63,6 +68,7 @@ function initialFormState(model: ModelEditorRecord | null): FormState {
     contextLength:
       model?.contextLength != null ? String(model.contextLength) : "",
     credentialsId: model?.credentialsId ?? null,
+    frameworkId: model?.frameworkId ?? UNIVERSAL_FRAMEWORK_ID,
     apiKey: "",
     credentialLabel: "",
   };
@@ -158,13 +164,14 @@ export default function ModelEditor({
         throw new Error("Context length must be a positive number");
       }
 
-      const body = {
+      const body: Record<string, unknown> = {
         name: form.name.trim(),
         provider: form.provider,
         modelId: form.modelId.trim(),
         baseUrl,
         contextLength,
         credentialsId,
+        frameworkId: form.frameworkId,
       };
 
       if (isEdit && model) {
@@ -259,6 +266,34 @@ export default function ModelEditor({
               className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-neon-purple/50 transition-colors font-mono"
             />
           </div>
+        </div>
+
+        {/* Framework Scope Selector */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-white/70">
+            Framework Scope
+            <span className="ml-2 text-xs text-white/30 font-mono">(which agent framework this model belongs to)</span>
+          </label>
+          <div className="relative">
+            <select
+              value={form.frameworkId}
+              onChange={(e) => update("frameworkId", e.target.value)}
+              className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 pr-8 text-sm text-white outline-none transition-colors font-mono appearance-none cursor-pointer focus:border-neon-purple/50"
+            >
+              <option value={UNIVERSAL_FRAMEWORK_ID} className="bg-dark-900">
+                {UNIVERSAL_FRAMEWORK_LABEL} (*) — available to all frameworks
+              </option>
+              {listFrameworks().map((fw: FrameworkEntry) => (
+                <option key={fw.id} value={fw.id} className="bg-dark-900">
+                  {fw.label} — {fw.description}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+          </div>
+          <p className="text-xs text-white/30 font-mono">
+            Universal models can be used by any agent framework. Framework-specific models are only visible when that framework is selected.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

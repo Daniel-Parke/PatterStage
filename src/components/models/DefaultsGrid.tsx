@@ -1,11 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
-// DefaultsGrid — 12 task-slot cards driving model.* + auxiliary.*
+// DefaultsGrid — task-slot cards driving model.* + auxiliary.*
 // ═══════════════════════════════════════════════════════════════
 //
-// Each slot maps to one of the `is_default_<task>` columns in the
-// models registry (migration 006_models_credentials.sql), which in
-// turn drives ~/.hermes/config.yaml model.* and auxiliary.<task>.*
-// after PR 5's write-through sync.
+// Each slot maps to an entry in the model_defaults table
+// (migration 012), keyed on (framework_id, task_type). Changes
+// propagate to ~/.hermes/config.yaml via syncDefaultsToHermesConfig.
 
 "use client";
 

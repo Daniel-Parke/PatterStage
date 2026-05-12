@@ -1,26 +1,18 @@
 // ═══════════════════════════════════════════════════════════════
-// /api/models/fallbacks/reorder — bulk reorder fallback chain
+// /api/models/fallbacks/reorder — swap two adjacent entries
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
-import { reorderFallbackChain } from "@/lib/fallbacks-repository";
+import {
+  getFallbackEntry,
+  updateFallbackEntry,
+  listFallbackChain,
+} from "@/lib/fallbacks-repository";
 import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
 
-const reorderSchema = z.object({
-  positions: z
-    .array(
-      z.object({
-        id: z.string().min(1),
-        position: z.number().int().min(0),
-      })
-    )
-    .min(1),
-});
-
-export async function PUT(request: NextRequest) {
+export async function POST(request: NextRequest) {
   const ro = requireNotReadOnly();
   if (ro) return ro;
   const auth = requireMcApiKey(request);
@@ -33,21 +25,49 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const parsed = reorderSchema.safeParse(raw);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid request body", details: parsed.error.flatten() },
-      { status: 400 }
-    );
+  const body = raw as Record<string, unknown>;
+  const entryId = body?.entryId as string | undefined;
+  const direction = body?.direction as "up" | "down" | undefined;
+
+  if (!entryId || !direction) {
+    return NextResponse.json({
+      error: "entryId and direction are required",
+    }, { status: 400 });
+  }
+
+  if (direction !== "up" && direction !== "down") {
+    return NextResponse.json({ error: "direction must be 'up' or 'down'" }, { status: 400 });
   }
 
   try {
-    const reordered = reorderFallbackChain(parsed.data.positions);
+    const entry = getFallbackEntry(entryId);
+    if (!entry) {
+      return NextResponse.json({ error: "Entry not found" }, { status: 404 });
+    }
 
-    // Re-sync fallback chain to Hermes config
-    const chain = reordered.filter((e) => e.enabled);
+    const chain = listFallbackChain();
+    const idx = chain.findIndex((e) => e.id === entryId);
+    if (idx === -1) {
+      return NextResponse.json({ error: "Entry not in chain" }, { status: 404 });
+    }
+
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= chain.length) {
+      // Already at top/bottom — no-op
+      return NextResponse.json({ data: { fallbacks: chain } });
+    }
+
+    // Swap positions
+    const posA = chain[idx].position;
+    const posB = chain[targetIdx].position;
+
+    updateFallbackEntry(chain[idx].id, { position: posB });
+    updateFallbackEntry(chain[targetIdx].id, { position: posA });
+
+    // Re-sync
+    const updatedChain = listFallbackChain().filter((e) => e.enabled);
     syncFallbacksToHermesConfig(
-      chain.map((e) => ({
+      updatedChain.map((e) => ({
         modelId: e.modelIdString,
         provider: e.provider,
         baseUrl: e.overrideBaseUrl,
@@ -58,12 +78,14 @@ export async function PUT(request: NextRequest) {
 
     appendAuditLine({
       action: "fallback.reorder",
-      resource: "bulk",
+      resource: entryId,
       ok: true,
     });
-    return NextResponse.json({ data: { fallbacks: reordered } });
+
+    const refreshed = listFallbackChain();
+    return NextResponse.json({ data: { fallbacks: refreshed } });
   } catch (error) {
-    logApiError("PUT /api/models/fallbacks/reorder", "reordering fallbacks", error);
+    logApiError("POST /api/models/fallbacks/reorder", "reordering fallback", error);
     return NextResponse.json({ error: "Failed to reorder fallbacks" }, { status: 500 });
   }
 }
