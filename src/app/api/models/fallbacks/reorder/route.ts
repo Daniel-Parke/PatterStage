@@ -71,7 +71,8 @@ export async function POST(request: NextRequest) {
       updatedChain.map((e) => ({
         modelId: e.modelIdString,
         provider: e.provider,
-        baseUrl: e.overrideBaseUrl,
+        baseUrl: null,
+        overrideBaseUrl: e.overrideBaseUrl,
         apiKey: null,
       })),
       getFallbackConfig()

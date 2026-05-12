@@ -93,9 +93,61 @@ export async function POST(request: NextRequest) {
   const auth = requireMcApiKey(request);
   if (auth) return auth;
 
-  const hermesModels = readHermesConfigModels();
-  const dbModels = listModels();
+  let raw: unknown;
+  try {
+    raw = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
 
+  const body = raw as Record<string, unknown>;
+  const targetModelId = body?.modelId as string | undefined;
+  const excluded = new Set<string>((body?.excluded as string[] | undefined) ?? []);
+  const hermesModels = readHermesConfigModels();
+
+  // Single-model pull: only the model whose button was clicked
+  if (targetModelId) {
+    const dbModel = listModels().find((m) => m.id === targetModelId);
+    if (!dbModel) {
+      return NextResponse.json({ error: "Model not found" }, { status: 404 });
+    }
+
+    const key = `${dbModel.provider}::${dbModel.modelId}`;
+    const hermes = hermesModels.get(key);
+    if (!hermes) {
+      return NextResponse.json({
+        data: {
+          success: true,
+          details: [{ action: "info", detail: `No matching section in config.yaml for ${dbModel.provider}/${dbModel.modelId}` }],
+          diffs: [],
+        },
+      });
+    }
+
+    const { diffs, updates } = computeDiffs(dbModel, hermes);
+
+    // Filter out excluded fields
+    const filteredKeys = Object.keys(updates).filter((f) => !excluded.has(f));
+    const filteredDiffs = diffs.filter((d) => !excluded.has(d.field));
+    const filteredUpdates: Record<string, unknown> = {};
+    for (const k of filteredKeys) {
+      filteredUpdates[k] = updates[k];
+    }
+
+    if (Object.keys(filteredUpdates).length > 0) {
+      updateModel(dbModel.id, filteredUpdates);
+    }
+
+    return NextResponse.json({
+      data: {
+        success: true,
+        diffs: filteredDiffs,
+      },
+    });
+  }
+
+  // Bulk pull (backward-compatible — all DB models matched against config.yaml)
+  const dbModels = listModels();
   let updatedCount = 0;
   const allDiffs: Array<{ modelId: string; name: string; diffs: Diff[] }> = [];
 

@@ -20,7 +20,7 @@ interface ModelSyncButtonsProps {
   provider: string;
   modelIdString: string;
   onPush: (modelId: string, options?: { pushCredential?: boolean }) => Promise<SyncActionResult>;
-  onPull: (modelId: string) => Promise<SyncActionResult>;
+  onPull: (modelId: string, options?: { excluded?: Set<string> }) => Promise<SyncActionResult>;
   disabled?: boolean;
 }
 
@@ -196,11 +196,15 @@ export default function ModelSyncButtons({
 
     try {
       if (modalState.direction === "push") {
-        // Only push credential if it wasn't excluded
-        const pushCred = !excluded.has("model-env");
-        await onPush(modelId, { pushCredential: pushCred });
+        // Skip entire push if model itself was excluded
+        const pushModel = !excluded.has("model-config");
+        const pushCred = !excluded.has("model-env") && pushModel;
+        if (pushModel) {
+          await onPush(modelId, { pushCredential: pushCred });
+        }
       } else {
-        await onPull(modelId);
+        // Pass excluded IDs to the pull handler so it can skip items
+        await onPull(modelId, { excluded });
       }
       setModalState(null);
     } catch {

@@ -318,12 +318,14 @@ export default function ModelsPage() {
   );
 
   const handlePull = useCallback(
-    async (modelId: string): Promise<SyncActionResult> => {
+    async (modelId: string, options?: { excluded?: Set<string> }): Promise<SyncActionResult> => {
       try {
+        const excluded = options?.excluded ?? new Set<string>();
+        // Filter to only the changes NOT excluded by the user
         const res = await fetch(`/api/models/sync/pull`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ modelId, framework }),
+          body: JSON.stringify({ modelId, framework, excluded: [...excluded] }),
         });
         if (!res.ok) {
           const data = (await res.json().catch(() => ({}))) as { error?: string };

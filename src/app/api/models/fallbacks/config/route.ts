@@ -54,7 +54,8 @@ export async function PUT(request: NextRequest) {
       chain.map((e) => ({
         modelId: e.modelIdString,
         provider: e.provider,
-        baseUrl: e.overrideBaseUrl,
+        baseUrl: null,
+        overrideBaseUrl: e.overrideBaseUrl,
         apiKey: null,
       })),
       {

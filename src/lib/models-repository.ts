@@ -297,19 +297,21 @@ export function updateModel(id: string, input: UpdateModelInput): ModelRecord | 
     vals.push(id);
     db().prepare(`UPDATE models SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
 
-    // Process default-slot flags
+    // Process default-slot flags — use new frameworkId if changed, else existing
     if (input.defaults) {
-      const frameworkId = existing.frameworkId;
+      const effectiveFw = (input.frameworkId && input.frameworkId.trim().length > 0)
+        ? input.frameworkId.trim()
+        : existing.frameworkId;
       for (const [slot, isDefault] of Object.entries(input.defaults)) {
         if (!isTaskType(slot)) continue;
-        // Clear all existing defaults for this slot
+        // Clear all existing defaults for this slot in the effective framework
         db()
           .prepare("DELETE FROM model_defaults WHERE task_type = ? AND framework_id = ?")
-          .run(slot, frameworkId);
+          .run(slot, effectiveFw);
         if (isDefault) {
           db()
             .prepare("INSERT INTO model_defaults (id, framework_id, task_type, model_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)")
-            .run(uuid(), frameworkId, slot, id, ts, ts);
+            .run(uuid(), effectiveFw, slot, id, ts, ts);
         }
       }
     }

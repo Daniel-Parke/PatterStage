@@ -7,7 +7,7 @@
 // Used by: hermes-config-sync, sync-manager, API routes.
 // ═══════════════════════════════════════════════════════════════
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, renameSync, unlinkSync } from "fs";
 import { getActiveHermesHome } from "./hermes-agent-runtime";
 
 let _activeFrameworkId: string | null = null;
@@ -46,12 +46,16 @@ export function setActiveFrameworkId(id: string): void {
   try {
     const home = getActiveHermesHome();
     if (!existsSync(home)) mkdirSync(home, { recursive: true });
-    writeFileSync(
-      activeFwFilePath(),
-      JSON.stringify({ id, updatedAt: new Date().toISOString() }),
-      "utf-8"
-    );
+    const filePath = activeFwFilePath();
+    const tmpPath = `${filePath}.tmp.${process.pid}.${Date.now()}`;
+    try {
+      writeFileSync(tmpPath, JSON.stringify({ id, updatedAt: new Date().toISOString() }), "utf-8");
+      renameSync(tmpPath, filePath);
+    } catch {
+      if (existsSync(tmpPath)) { try { unlinkSync(tmpPath); } catch { /* best-effort */ } }
+      _activeFrameworkId = null;
+    }
   } catch {
-    // best-effort
+    _activeFrameworkId = null; // revert cache so next read hits disk
   }
 }

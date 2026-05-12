@@ -29,7 +29,7 @@ export interface CreateFallbackInput {
 }
 
 export interface UpdateFallbackInput {
-  modelId?: string;
+  modelId?: string | null;
   position?: number;
   enabled?: boolean;
   overrideBaseUrl?: string | null;
