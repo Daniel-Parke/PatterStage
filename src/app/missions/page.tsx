@@ -700,6 +700,15 @@ export default function MissionsPage() {
     setLocalDirDraft({ path: "", branch: null });
     setNewReferences(m.references ?? []);
     setNewSkills(m.skills ?? []);
+
+    // Restore mission runtime settings (migration 013 — may be null on old missions)
+    setNewModel(m.modelId ?? "");
+    setNewProvider(m.provider ?? "");
+    if (m.profileName) setNewProfile(m.profileName);
+    if (typeof m.missionTimeMinutes === "number") setNewMissionTime(m.missionTimeMinutes);
+    if (typeof m.timeoutMinutes === "number") setNewTimeout(m.timeoutMinutes);
+    if (m.schedule) setNewSchedule(m.schedule);
+
     // Auto-set dispatch mode to "now" for completed/failed missions (re-dispatch)
     if (m.status === "successful" || m.status === "failed") {
       setNewDispatch("now");

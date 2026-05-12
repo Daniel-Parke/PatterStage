@@ -102,7 +102,9 @@ export async function POST(request: NextRequest) {
         goals,
         context,
         dispatchMode,
-        schedule: _schedule,
+        schedule: scheduleVal,
+        missionTimeMinutes,
+        timeoutMinutes,
       } = body as {
         name?: string;
         instruction?: string;
@@ -117,6 +119,8 @@ export async function POST(request: NextRequest) {
         context?: string;
         dispatchMode?: string;
         schedule?: string;
+        missionTimeMinutes?: number;
+        timeoutMinutes?: number;
       };
 
       if (!instruction || typeof instruction !== "string" || !instruction.trim()) {
@@ -157,6 +161,12 @@ export async function POST(request: NextRequest) {
         references: references ?? [],
         skills: skills ?? [],
         goals: goals ?? [],
+        modelId: modelId ?? null,
+        provider: provider ?? null,
+        profileName: profileName ?? null,
+        missionTimeMinutes,
+        timeoutMinutes,
+        schedule: scheduleVal,
       });
 
       const isSaveMode = dispatchMode === "save";
@@ -239,7 +249,7 @@ export async function POST(request: NextRequest) {
 
     // ── Update Mission ─────────────────────────────────────────
     if (action === "update") {
-      const { id, missionId, status, result, instruction, localDirs, references, skills, goals } = body as {
+      const { id, missionId, status, result, instruction, localDirs, references, skills, goals, modelId, provider, profileName, missionTimeMinutes, timeoutMinutes, schedule } = body as {
         id?: string;
         missionId?: string;
         status?: string;
@@ -249,6 +259,12 @@ export async function POST(request: NextRequest) {
         references?: string[];
         skills?: string[];
         goals?: string[];
+        modelId?: string;
+        provider?: string;
+        profileName?: string;
+        missionTimeMinutes?: number;
+        timeoutMinutes?: number;
+        schedule?: string;
       };
       const missionIdFinal = id ?? missionId;
       if (!missionIdFinal)
@@ -271,6 +287,12 @@ export async function POST(request: NextRequest) {
         references?: string[];
         skills?: string[];
         goals?: string[];
+        modelId?: string | null;
+        provider?: string | null;
+        profileName?: string | null;
+        missionTimeMinutes?: number | null;
+        timeoutMinutes?: number | null;
+        schedule?: string | null;
       } = {};
       if (status) updates.status = status as MissionStatus;
       if (result !== undefined) updates.result = result;
@@ -279,6 +301,12 @@ export async function POST(request: NextRequest) {
       if (references !== undefined) updates.references = references;
       if (skills !== undefined) updates.skills = skills;
       if (goals !== undefined) updates.goals = goals;
+      if (modelId !== undefined) updates.modelId = modelId;
+      if (provider !== undefined) updates.provider = provider;
+      if (profileName !== undefined) updates.profileName = profileName;
+      if (missionTimeMinutes !== undefined) updates.missionTimeMinutes = missionTimeMinutes;
+      if (timeoutMinutes !== undefined) updates.timeoutMinutes = timeoutMinutes;
+      if (schedule !== undefined) updates.schedule = schedule;
 
       const mission = updateMission(missionIdFinal, updates);
       if (!mission)

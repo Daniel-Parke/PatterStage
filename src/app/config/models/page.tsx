@@ -432,20 +432,33 @@ export default function ModelsPage() {
     async (taskTypes: TaskType[], targetModelId: string) => {
       setBusyTaskType("agent"); // block all while bulk updating
       try {
-        await Promise.all(
-          taskTypes.map((taskType) =>
-            fetch("/api/models/defaults", {
+        const results = await Promise.all(
+          taskTypes.map(async (taskType) => {
+            const res = await fetch("/api/models/defaults", {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ taskType, modelId: targetModelId, framework }),
-            })
-          )
+            });
+            if (!res.ok) {
+              const data = (await res.json().catch(() => ({}))) as { error?: string };
+              return { taskType, ok: false, error: data.error || `Failed (${res.status})` };
+            }
+            return { taskType, ok: true };
+          })
         );
         await loadAll();
-        showToast(
-          `Set ${taskTypes.length} auxiliary default${taskTypes.length !== 1 ? "s" : ""}`,
-          "success"
-        );
+        const failures = results.filter((r) => !r.ok);
+        if (failures.length === 0) {
+          showToast(
+            `Set ${taskTypes.length} auxiliary default${taskTypes.length !== 1 ? "s" : ""}`,
+            "success"
+          );
+        } else {
+          showToast(
+            `${results.length - failures.length}/${taskTypes.length} updated — ${failures.map((f) => f.taskType).join(", ")} failed`,
+            "error"
+          );
+        }
       } catch (err) {
         showToast(
           err instanceof Error ? err.message : "Bulk update failed",

@@ -48,6 +48,12 @@ export interface Mission {
   references?: string[];
   skills?: string[];
   goals?: string[];
+  modelId?: string;
+  provider?: string;
+  profileName?: string;
+  missionTimeMinutes?: number;
+  timeoutMinutes?: number;
+  schedule?: string;
 }
 
 export interface DispatchMissionInput {
