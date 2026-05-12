@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { listFrameworks } from "@/lib/framework-registry";
 import { getActiveFrameworkId, setActiveFrameworkId } from "@/lib/framework-registry.server";
 import { logApiError } from "@/lib/api-logger";
-import { requireMcApiKey } from "@/lib/api-auth";
+import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
 
 export async function GET() {
   try {
@@ -20,6 +20,8 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
+  const ro = requireNotReadOnly();
+  if (ro) return ro;
   const auth = requireMcApiKey(request);
   if (auth) return auth;
 

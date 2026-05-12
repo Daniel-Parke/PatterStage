@@ -24,8 +24,9 @@ export async function POST(
     const result = pushModelToHermes(id);
     if (!result.success) {
       return NextResponse.json({
+        error: result.details[0]?.detail ?? "Push failed",
         data: { success: false, details: result.details, backupPath: result.backupPath },
-      });
+      }, { status: 422 });
     }
 
     // Also push the linked credential if the model has one

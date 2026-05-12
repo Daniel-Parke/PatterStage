@@ -48,8 +48,10 @@ function setFetch(map: Record<string, FetchResponseInit>) {
     const matched = map[url];
     if (matched) return jsonResponse(matched) as unknown as Response;
     // Fallback: prefix match (routes with query params)
-    for (const [k, v] of Object.entries(map)) {
-      if (url.startsWith(k)) return jsonResponse(v) as unknown as Response;
+    // Sort keys longest-first so "/api/models/defaults" matches before "/api/models"
+    const sortedKeys = Object.keys(map).sort((a, b) => b.length - a.length);
+    for (const k of sortedKeys) {
+      if (url.startsWith(k)) return jsonResponse(map[k] as FetchResponseInit) as unknown as Response;
     }
     // For any unmatched fetch, return a safe 200 with empty data
     // so the page doesn't crash — these are optional endpoints
@@ -184,7 +186,7 @@ describe("ModelsPage", () => {
     const { container } = render(<ModelsPage />);
 
     await waitFor(() =>
-      expect(screen.getByText("MiniMax M2.1")).toBeInTheDocument()
+      expect(screen.getAllByText("MiniMax M2.1").length).toBeGreaterThanOrEqual(1)
     );
 
     const row = container.querySelector(

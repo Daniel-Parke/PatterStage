@@ -10,6 +10,7 @@ import {
   updateFallbackEntry,
   listFallbackChain,
 } from "@/lib/fallbacks-repository";
+import { getFallbackConfig } from "@/lib/fallbacks-repository";
 import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
 
 export async function POST(request: NextRequest) {
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
         baseUrl: e.overrideBaseUrl,
         apiKey: null,
       })),
-      {}
+      getFallbackConfig()
     );
 
     appendAuditLine({

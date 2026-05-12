@@ -57,17 +57,19 @@ export const modelPostSchema = z.object({
   name: nonEmpty,
   provider: providerSchema,
   modelId: nonEmpty,
+  frameworkId: z.string().optional(),
   baseUrl: z.string().optional().nullable(),
   contextLength: z.number().int().min(1000).max(2_000_000).optional().nullable(),
   credentialsId: z.string().optional().nullable(),
   defaults: modelDefaultsSchema.optional(),
-});
+}).strict();
 
 export const modelPutSchema = z
   .object({
     name: z.string().min(1).optional(),
     provider: providerSchema.optional(),
     modelId: z.string().min(1).optional(),
+    frameworkId: z.string().optional(),
     baseUrl: z.string().optional().nullable(),
     contextLength: z.number().int().min(1000).max(2_000_000).optional().nullable(),
     credentialsId: z.string().optional().nullable(),

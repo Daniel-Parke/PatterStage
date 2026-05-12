@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RefreshCw, Upload, Info } from "lucide-react";
 import type { FallbackConfig } from "@/types/hermes";
 
@@ -28,9 +28,21 @@ export default function FallbackConfigPanel({
   importing = false,
 }: FallbackConfigPanelProps) {
   const [localConfig, setLocalConfig] = useState<FallbackConfig>(config);
+
+  // Sync when external prop changes (e.g., after sync import)
+  useEffect(() => {
+    setLocalConfig(config);
+  }, [config]);
   const [restorationPolicy, setRestorationPolicy] = useState<RestorationPolicy>(
-    config.restorePrimaryOnFallback ? "restore_primary" : "stay_on_fallback"
+    localConfig.restorePrimaryOnFallback ? "restore_primary" : "stay_on_fallback"
   );
+
+  // Sync restoration policy when localConfig changes
+  useEffect(() => {
+    setRestorationPolicy(
+      localConfig.restorePrimaryOnFallback ? "restore_primary" : "stay_on_fallback"
+    );
+  }, [localConfig.restorePrimaryOnFallback]);
 
   const handleRetriesChange = (value: string) => {
     const num = parseInt(value, 10);

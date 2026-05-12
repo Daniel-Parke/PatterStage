@@ -7,22 +7,24 @@ import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
 import { listFallbackChain, addFallbackEntry } from "@/lib/fallbacks-repository";
-import { getModel } from "@/lib/models-repository";
+import { getFallbackConfig } from "@/lib/fallbacks-repository";
 import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
 
-const fallbackPostSchema = z.object({
+const fallbackInputSchema = z.object({
   modelId: z.string().min(1),
   position: z.number().int().min(0).optional(),
   enabled: z.boolean().optional(),
   overrideBaseUrl: z.string().nullable().optional(),
 });
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
-    return NextResponse.json({ data: { fallbacks: listFallbackChain() } });
+    const entries = listFallbackChain();
+    const config = getFallbackConfig();
+    return NextResponse.json({ data: { entries, config } });
   } catch (error) {
-    logApiError("GET /api/models/fallbacks", "listing fallbacks", error);
-    return NextResponse.json({ error: "Failed to list fallbacks" }, { status: 500 });
+    logApiError("GET /api/models/fallbacks", "reading fallback chain", error);
+    return NextResponse.json({ error: "Failed to read fallback chain" }, { status: 500 });
   }
 }
 
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const parsed = fallbackPostSchema.safeParse(raw);
+  const parsed = fallbackInputSchema.safeParse(raw);
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Invalid request body", details: parsed.error.flatten() },
@@ -48,18 +50,22 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Validate model exists
-    const model = getModel(parsed.data.modelId);
-    if (!model) {
-      return NextResponse.json({ error: "Model not found" }, { status: 404 });
-    }
-
     const entry = addFallbackEntry(parsed.data);
-    syncFallbacksToHermesConfig([], {});
-    appendAuditLine({ action: "fallback.create", resource: entry.id, ok: true });
-    return NextResponse.json({ data: { fallback: entry } }, { status: 201 });
+    // Sync the actual chain (not empty) so the new entry reaches Hermes config.yaml
+    const chain = listFallbackChain().filter((e) => e.enabled);
+    syncFallbacksToHermesConfig(
+      chain.map((e) => ({
+        modelId: e.modelIdString,
+        provider: e.provider,
+        baseUrl: e.overrideBaseUrl,
+        apiKey: null,
+      })),
+      getFallbackConfig()
+    );
+    appendAuditLine({ action: "fallback.add", resource: entry.id, ok: true });
+    return NextResponse.json({ data: { entry } }, { status: 201 });
   } catch (error) {
-    logApiError("POST /api/models/fallbacks", "creating fallback", error);
-    return NextResponse.json({ error: "Failed to create fallback" }, { status: 500 });
+    logApiError("POST /api/models/fallbacks", "adding fallback entry", error);
+    return NextResponse.json({ error: "Failed to add fallback entry" }, { status: 500 });
   }
 }

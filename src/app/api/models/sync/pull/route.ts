@@ -1,33 +1,90 @@
 // ═══════════════════════════════════════════════════════════════
-// /api/models/sync/pull — pull single model from Hermes → DB
-// Wrapper that reads the model.* section from config.yaml and
-// updates the matching DB record by provider+modelId (not DB UUID).
+// /api/models/sync/pull — pull all matching models from Hermes → DB
+// Reads all model sections from config.yaml and updates matching
+// DB records by provider+modelId.
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 import { existsSync, readFileSync } from "fs";
 import * as yaml from "js-yaml";
 import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
-import { logApiError } from "@/lib/api-logger";
-import { getModel, updateModel, listModels } from "@/lib/models-repository";
+import { updateModel, listModels } from "@/lib/models-repository";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { getActiveFrameworkId } from "@/lib/framework-registry.server";
 
-function readHermesPrimaryModel(): { modelId: string; provider: string; baseUrl: string | null } | null {
+interface HermesModelSection {
+  modelId: string;
+  provider: string;
+  baseUrl: string | null;
+}
+
+/**
+ * Read config.yaml and return a map of all model sections keyed by
+ * their `provider::modelId` combination. Covers both `model.*` (primary)
+ * and `auxiliary.*` sections.
+ */
+function readHermesConfigModels(): Map<string, HermesModelSection> {
   const paths = getActiveHermesPaths();
-  if (!existsSync(paths.config)) return null;
+  if (!existsSync(paths.config)) return new Map();
 
   try {
     const raw = readFileSync(paths.config, "utf-8");
-    const config = yaml.load(raw) as { model?: { default?: string; provider?: string; base_url?: string } } | null;
-    if (!config?.model?.default) return null;
-    return {
-      modelId: config.model.default,
-      provider: config.model.provider ?? "",
-      baseUrl: config.model.base_url?.trim() || null,
-    };
+    const config = yaml.load(raw) as Record<string, unknown> | null;
+    if (!config) return new Map();
+
+    const map = new Map<string, HermesModelSection>();
+
+    // Primary model section
+    const model = config.model as { default?: string; provider?: string; base_url?: string } | undefined;
+    if (model?.default && model.provider) {
+      const key = `${model.provider}::${model.default}`;
+      map.set(key, {
+        modelId: model.default,
+        provider: model.provider,
+        baseUrl: model.base_url?.trim() || null,
+      });
+    }
+
+    // Auxiliary sections
+    const aux = config.auxiliary as Record<string, { model?: string; provider?: string; base_url?: string }> | undefined;
+    for (const entry of Object.values(aux ?? {})) {
+      if (entry?.model && entry.provider) {
+        const key = `${entry.provider}::${entry.model}`;
+        map.set(key, {
+          modelId: entry.model,
+          provider: entry.provider,
+          baseUrl: entry.base_url?.trim() || null,
+        });
+      }
+    }
+
+    return map;
   } catch {
-    return null;
+    return new Map();
   }
+}
+
+interface Diff { field: string; before: unknown; after: unknown }
+
+function computeDiffs(
+  model: { modelId: string; provider: string; baseUrl: string | null },
+  hermes: HermesModelSection,
+): { diffs: Diff[]; updates: Record<string, unknown> } {
+  const diffs: Diff[] = [];
+  const updates: Record<string, unknown> = {};
+
+  if (hermes.modelId && hermes.modelId !== model.modelId) {
+    diffs.push({ field: "modelId", before: model.modelId, after: hermes.modelId });
+    updates.modelId = hermes.modelId;
+  }
+  if (hermes.provider && hermes.provider !== model.provider) {
+    diffs.push({ field: "provider", before: model.provider, after: hermes.provider });
+    updates.provider = hermes.provider;
+  }
+  if (hermes.baseUrl !== model.baseUrl) {
+    diffs.push({ field: "baseUrl", before: model.baseUrl, after: hermes.baseUrl ?? "" });
+    updates.baseUrl = hermes.baseUrl;
+  }
+
+  return { diffs, updates };
 }
 
 export async function POST(request: NextRequest) {
@@ -36,76 +93,41 @@ export async function POST(request: NextRequest) {
   const auth = requireMcApiKey(request);
   if (auth) return auth;
 
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const hermesModels = readHermesConfigModels();
+  const dbModels = listModels();
 
-  const { modelId } = (raw as Record<string, string>) ?? {};
-  if (!modelId) {
-    return NextResponse.json({ error: "modelId is required" }, { status: 400 });
-  }
+  let updatedCount = 0;
+  const allDiffs: Array<{ modelId: string; name: string; diffs: Diff[] }> = [];
 
-  try {
-    // Find the model in DB by ID (could be DB UUID or the actual DB model record ID)
-    const dbModels = listModels(getActiveFrameworkId());
-    const model = dbModels.find((m) => m.id === modelId) ?? getModel(modelId);
-    if (!model) {
-      return NextResponse.json({ error: "Model not found" }, { status: 404 });
-    }
+  for (const dbModel of dbModels) {
+    const key = `${dbModel.provider}::${dbModel.modelId}`;
+    const hermes = hermesModels.get(key);
+    if (!hermes) continue;
 
-    // Read config.yaml primary model section
-    const hermesModel = readHermesPrimaryModel();
-
-    if (!hermesModel) {
-      return NextResponse.json({
-        data: {
-          success: true,
-          details: [{ action: "info", detail: "No model section in config.yaml" }],
-          diffs: [],
-        },
-      });
-    }
-
-    interface Diff { field: string; before: unknown; after: unknown }
-    const diffs: Diff[] = [];
-    const updates: Record<string, unknown> = {};
-
-    if (hermesModel.modelId && hermesModel.modelId !== model.modelId) {
-      diffs.push({ field: "modelId", before: model.modelId, after: hermesModel.modelId });
-      updates.modelId = hermesModel.modelId;
-    }
-    if (hermesModel.provider && hermesModel.provider !== model.provider) {
-      diffs.push({ field: "provider", before: model.provider, after: hermesModel.provider });
-      updates.provider = hermesModel.provider;
-    }
-    if (hermesModel.baseUrl !== model.baseUrl) {
-      diffs.push({ field: "baseUrl", before: model.baseUrl, after: hermesModel.baseUrl + "" });
-      updates.baseUrl = hermesModel.baseUrl;
-    }
-
+    const { diffs, updates } = computeDiffs(dbModel, hermes);
     if (Object.keys(updates).length > 0) {
-      updateModel(model.id, updates);
+      updateModel(dbModel.id, updates);
+      updatedCount++;
     }
-
-    return NextResponse.json({
-      data: {
-        success: true,
-        details: [
-          {
-            action: diffs.length > 0 ? "updated" : "unchanged",
-            detail: diffs.length > 0
-              ? `Applied ${diffs.length} change(s)`
-              : `No changes needed for ${model.name}`,
-          },
-        ],
-        diffs,
-      },
-    });
-  } catch (error) {
-    logApiError("POST /api/models/sync/pull", `pulling model ${modelId}`, error);
-    return NextResponse.json({ error: "Failed to pull model" }, { status: 500 });
+    if (diffs.length > 0) {
+      allDiffs.push({ modelId: dbModel.id, name: dbModel.name, diffs });
+    }
   }
+
+  return NextResponse.json({
+    data: {
+      success: true,
+      updatedCount,
+      details: [
+        {
+          action: updatedCount > 0 ? "updated" : "unchanged",
+          detail: updatedCount > 0
+            ? `Applied updates to ${updatedCount} model(s)`
+            : "All models already in sync with config.yaml",
+        },
+      ],
+      diffs: allDiffs,
+    },
+  });
 }
+// ═══════════════════════════════════════════════════════════════

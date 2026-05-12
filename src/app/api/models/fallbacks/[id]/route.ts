@@ -10,8 +10,7 @@ import {
   getFallbackEntry,
   updateFallbackEntry,
   deleteFallbackEntry,
-  listFallbackChain,
-} from "@/lib/fallbacks-repository";
+  listFallbackChain, getFallbackConfig} from "@/lib/fallbacks-repository";
 import { getModel } from "@/lib/models-repository";
 import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
 
@@ -88,7 +87,7 @@ export async function PUT(
         baseUrl: e.overrideBaseUrl,
         apiKey: null,
       })),
-      {}
+      getFallbackConfig()
     );
 
     appendAuditLine({ action: "fallback.update", resource: id, ok: true });
@@ -125,7 +124,7 @@ export async function DELETE(
         baseUrl: e.overrideBaseUrl,
         apiKey: null,
       })),
-      {}
+      getFallbackConfig()
     );
 
     appendAuditLine({ action: "fallback.delete", resource: id, ok: true });

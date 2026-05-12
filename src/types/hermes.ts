@@ -992,10 +992,13 @@ export interface FallbackChainEntry {
     updatedAt: string;
 }
 
+export type RestorationPolicy = "restore_primary" | "stay_on_fallback" | "prompt_user";
+
 export interface FallbackConfig {
     restorePrimaryOnFallback: boolean;
     fallbackNotification: boolean;
     apiMaxRetries: number;
+    restorationPolicy?: RestorationPolicy;
 }
 
 export interface FrameworkDefaults {

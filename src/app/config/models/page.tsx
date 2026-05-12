@@ -850,6 +850,7 @@ export default function ModelsPage() {
                         <tr className="text-left text-[10px] font-mono uppercase tracking-widest text-white/40 border-b border-white/5">
                           <th className="px-4 py-2">Name</th>
                           <th className="px-4 py-2">Provider</th>
+                          <th className="px-4 py-2">Framework</th>
                           <th className="px-4 py-2">Model ID</th>
                           <th className="px-4 py-2">Context</th>
                           <th className="px-4 py-2">Default For</th>
@@ -870,6 +871,17 @@ export default function ModelsPage() {
                               </td>
                               <td className="px-4 py-3 font-mono text-white/70">
                                 {m.provider}
+                              </td>
+                              <td className="px-4 py-3">
+                                {m.frameworkId === "*" ? (
+                                  <span className="text-[10px] font-mono bg-white/5 text-white/40 px-1.5 py-0.5 rounded uppercase tracking-widest">
+                                    Universal
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] font-mono bg-neon-purple/10 text-neon-purple/70 px-1.5 py-0.5 rounded uppercase tracking-widest">
+                                    {m.frameworkId}
+                                  </span>
+                                )}
                               </td>
                               <td className="px-4 py-3 font-mono text-white/70">
                                 {m.modelId}

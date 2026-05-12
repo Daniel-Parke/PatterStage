@@ -1,10 +1,22 @@
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 // /api/models/fallbacks/custom — add custom (non-registry) fallback
-// ═══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
-import { addFallbackEntry } from "@/lib/fallbacks-repository";
+import { appendAuditLine } from "@/lib/audit-log";
+import { addFallbackEntry, listFallbackChain, getFallbackConfig } from "@/lib/fallbacks-repository";
+import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
+
+const customFallbackSchema = z.object({
+  modelName: z.string().min(1),
+  provider: z.string().min(1),
+  modelIdString: z.string().min(1),
+  position: z.number().int().min(0).optional(),
+  enabled: z.boolean().optional(),
+  overrideBaseUrl: z.string().nullable().optional(),
+});
 
 export async function POST(request: NextRequest) {
   const ro = requireNotReadOnly();
@@ -19,22 +31,37 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const body = raw as Record<string, string>;
-  const { name, provider, modelIdString, baseUrl } = body ?? {};
-  if (!name || !provider || !modelIdString) {
-    return NextResponse.json({
-      error: "name, provider, modelIdString are required",
-    }, { status: 400 });
+  const parsed = customFallbackSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid request body", details: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
 
   try {
-    const entry = addFallbackEntry({
+    const input = {
       modelId: null,
-      modelName: name,
-      provider,
-      modelIdString,
-      overrideBaseUrl: baseUrl ?? null,
-    });
+      position: parsed.data.position,
+      enabled: parsed.data.enabled,
+      overrideBaseUrl: parsed.data.overrideBaseUrl,
+      modelName: parsed.data.modelName,
+      provider: parsed.data.provider,
+      modelIdString: parsed.data.modelIdString,
+    };
+    const entry = addFallbackEntry(input);
+    // Sync the chain so the new entry reaches Hermes config.yaml
+    const chain = listFallbackChain().filter((e) => e.enabled);
+    syncFallbacksToHermesConfig(
+      chain.map((e) => ({
+        modelId: e.modelIdString,
+        provider: e.provider,
+        baseUrl: e.overrideBaseUrl,
+        apiKey: null,
+      })),
+      getFallbackConfig()
+    );
+    appendAuditLine({ action: "fallback.custom.add", resource: entry.id, ok: true });
     return NextResponse.json({ data: { entry } }, { status: 201 });
   } catch (error) {
     logApiError("POST /api/models/fallbacks/custom", "adding custom fallback", error);
