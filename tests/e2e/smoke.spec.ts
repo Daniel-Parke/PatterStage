@@ -29,12 +29,13 @@ test.describe("Smoke", () => {
     expect(response.status()).toBe(404);
   });
 
-  test("agent targets API returns registry shape", async ({ request }) => {
+  test("agent targets API returns Hermes entry", async ({ request }) => {
     const response = await request.get("/api/agent/targets");
     expect(response.status()).toBe(200);
     const body = await response.json();
     expect(body.data).toBeDefined();
-    expect(Array.isArray(body.data.agents)).toBe(true);
-    expect(typeof body.data.activeAgentId).toBe("string");
+    expect(typeof body.data.id).toBe("string");
+    expect(typeof body.data.label).toBe("string");
+    expect(typeof body.data.filesystemRoot).toBe("string");
   });
 });
