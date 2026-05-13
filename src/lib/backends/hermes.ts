@@ -1,9 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 // backends/hermes.ts — Hermes agent backend
 //
-// Implements AgentBackend for the Hermes agent.
-// All Hermes-specific coupling lives here — the rest of Control Hub
-// is agnostic to whether this or any other backend is running.
+// Implements the AgentBackend interface for the Hermes agent.
+// This is the only backend — all mission dispatch flows through here.
 //
 // Dispatch pipeline design:
 //   Control Hub is ALWAYS the source of truth for model + credentials.

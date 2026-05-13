@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// Kanban Page — Multi-Agent Coordination Kanban
+// Kanban Page — Mission Coordination Kanban
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -551,7 +551,7 @@ export default function KanbanPage() {
       <PageHeader
         icon={Bot}
         title="Kanban"
-        subtitle="Multi-Agent Coordination Board"
+        subtitle="Mission Coordination Board"
         color="purple"
         backHref="/"
         backIconOnly

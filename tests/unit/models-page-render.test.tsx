@@ -61,9 +61,6 @@ function setFetch(map: Record<string, FetchResponseInit>) {
     if (url.includes("/api/models/fallbacks")) {
       return jsonResponse({ data: { chain: [], config: null } }) as unknown as Response;
     }
-    if (url.includes("/api/models/framework")) {
-      return jsonResponse({ data: { active: "hermes" } }) as unknown as Response;
-    }
     if (url.includes("/api/models/import")) {
       return jsonResponse({ data: { modelsImported: 0 } }) as unknown as Response;
     }

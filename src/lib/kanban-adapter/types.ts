@@ -5,8 +5,7 @@
 // consumers can import from a single well-known path:
 //   import type { KanbanBoard, KanbanCard } from "@/lib/kanban-adapter/types";
 //
-// This indirection also means a future backend (e.g. PI, OpenClaw) could
-// provide its own type definitions without forcing a refactor of every import.
+// This indirection keeps the public API stable even if the underlying storage changes.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export type {

@@ -1,15 +1,20 @@
 // ═══════════════════════════════════════════════════════════════
 // agent-registry.ts — Persisted Hermes install (single agent)
 // ═══════════════════════════════════════════════════════════════
+//
+// Stores the location of the local Hermes agent install so Control
+// Hub can resolve paths, gateway URLs, and LLM endpoints.
+// ═══════════════════════════════════════════════════════════════
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { homedir } from "os";
 import { CH_DATA_DIR } from "./paths";
 
-const REGISTRY_VERSION = 2;
+const REGISTRY_VERSION = 3;
 const REGISTRY_FILENAME = "agents-registry.json";
 
-export interface AgentRegistryEntry {
+/** Minimal record describing where the local Hermes agent lives. */
+export interface HermesRegistryEntry {
   id: string;
   label: string;
   filesystemRoot: string;
@@ -19,10 +24,23 @@ export interface AgentRegistryEntry {
   llmBaseUrl?: string;
 }
 
-export interface AgentRegistryFile {
+/** Persisted JSON shape — version 3 is a single entry (no array). */
+interface HermesRegistryFile {
   version: number;
-  activeAgentId: string;
-  agents: AgentRegistryEntry[];
+  entry: HermesRegistryEntry;
+}
+
+/** Legacy shape (v1–v2) — array-based for backwards compat. */
+interface LegacyRegistryFile {
+  version: number;
+  activeAgentId?: string;
+  agents?: Array<{
+    id: string;
+    label: string;
+    filesystemRoot: string;
+    gatewayBaseUrl?: string;
+    llmBaseUrl?: string;
+  }>;
 }
 
 function registryFilePath(): string {
@@ -37,94 +55,91 @@ function envDefaultRoot(): string {
   return homedir() + "/.hermes";
 }
 
-function defaultRegistry(): AgentRegistryFile {
-  const filesystemRoot = envDefaultRoot();
+function defaultEntry(): HermesRegistryEntry {
   return {
-    version: REGISTRY_VERSION,
-    activeAgentId: "default",
-    agents: [
-      {
-        id: "default",
-        label: "Default Hermes",
-        filesystemRoot,
-      },
-    ],
+    id: "default",
+    label: "Default Hermes",
+    filesystemRoot: envDefaultRoot(),
   };
 }
 
-export function readAgentRegistry(): AgentRegistryFile {
+function normalizeEntry(raw: unknown): HermesRegistryEntry {
+  const e = raw as Record<string, unknown>;
+  const root = typeof e.filesystemRoot === "string"
+    ? e.filesystemRoot.replace(/[/\\]+$/, "")
+    : envDefaultRoot();
+  return {
+    id: String(e.id || "default"),
+    label: String(e.label || e.id || "Default Hermes"),
+    filesystemRoot: root,
+    gatewayBaseUrl:
+      typeof e.gatewayBaseUrl === "string" && e.gatewayBaseUrl.trim()
+        ? e.gatewayBaseUrl.trim()
+        : undefined,
+    llmBaseUrl:
+      typeof e.llmBaseUrl === "string" && e.llmBaseUrl.trim()
+        ? e.llmBaseUrl.trim()
+        : undefined,
+  };
+}
+
+/**
+ * Read the Hermes registry. Handles three cases:
+ *  - File doesn't exist → create default
+ *  - v3 format (single entry) → return as-is
+ *  - v1/v2 format (agents array) → migrate in-memory to v3
+ */
+export function getHermesEntry(): HermesRegistryEntry {
   const p = registryFilePath();
   if (!existsSync(p)) {
-    const data = defaultRegistry();
+    const data = buildV3File(defaultEntry());
     mkdirSync(CH_DATA_DIR, { recursive: true });
     writeFileSync(p, JSON.stringify(data, null, 2), { mode: 0o600 });
-    return data;
+    return data.entry;
   }
   try {
     const raw = readFileSync(p, "utf-8");
-    const parsed = JSON.parse(raw) as AgentRegistryFile;
-    if (!parsed.agents || !Array.isArray(parsed.agents) || parsed.agents.length === 0) {
-      return defaultRegistry();
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+
+    // v3: single entry format
+    const ver = typeof parsed.version === "number" ? parsed.version : 0;
+    if (ver >= 3 && parsed.entry) {
+      return normalizeEntry(parsed.entry);
     }
-    const active = parsed.activeAgentId || parsed.agents[0].id;
-    const activeExists = parsed.agents.some((a) => a.id === active);
-    return {
-      version: parsed.version || REGISTRY_VERSION,
-      activeAgentId: activeExists ? active : parsed.agents[0].id,
-      agents: parsed.agents.map((a) => ({
-        id: String(a.id),
-        label: String(a.label || a.id),
-        filesystemRoot: String(a.filesystemRoot || "").replace(/[/\\]+$/, ""),
-        gatewayBaseUrl:
-          typeof a.gatewayBaseUrl === "string" && a.gatewayBaseUrl.trim()
-            ? a.gatewayBaseUrl.trim()
-            : undefined,
-        llmBaseUrl:
-          typeof a.llmBaseUrl === "string" && a.llmBaseUrl.trim()
-            ? a.llmBaseUrl.trim()
-            : undefined,
-      })),
-    };
+
+    // v1/v2: array format — pick the active or first entry
+    const legacy = parsed as unknown as LegacyRegistryFile;
+    if (legacy.agents && Array.isArray(legacy.agents) && legacy.agents.length > 0) {
+      const activeId = legacy.activeAgentId || legacy.agents[0].id;
+      const match = legacy.agents.find((a) => a.id === activeId);
+      const entry = normalizeEntry(match || legacy.agents[0]);
+      // Write migrated v3 file
+      writeAgentEntry(entry);
+      return entry;
+    }
+
+    // Fallback: no usable data
+    const fallback = defaultEntry();
+    writeAgentEntry(fallback);
+    return fallback;
   } catch {
-    return defaultRegistry();
+    const fallback = defaultEntry();
+    writeAgentEntry(fallback);
+    return fallback;
   }
 }
 
-export function writeAgentRegistry(data: AgentRegistryFile): void {
+function buildV3File(entry: HermesRegistryEntry): HermesRegistryFile {
+  return { version: REGISTRY_VERSION, entry };
+}
+
+export function writeAgentEntry(entry: HermesRegistryEntry): void {
   mkdirSync(CH_DATA_DIR, { recursive: true });
   const p = registryFilePath();
-  writeFileSync(p, JSON.stringify(data, null, 2), { mode: 0o600 });
+  writeFileSync(p, JSON.stringify(buildV3File(entry), null, 2), { mode: 0o600 });
 }
 
-export function getActiveAgentEntry(): AgentRegistryEntry | null {
-  const reg = readAgentRegistry();
-  return reg.agents.find((a) => a.id === reg.activeAgentId) ?? reg.agents[0] ?? null;
-}
-
-export function listFilesystemRootsForWorkspacePolicy(): string[] {
-  const reg = readAgentRegistry();
-  const roots = new Set<string>();
-  for (const a of reg.agents) {
-    if (a.filesystemRoot) roots.add(a.filesystemRoot.replace(/[/\\]+$/, ""));
-  }
-  if (roots.size === 0) roots.add(envDefaultRoot());
-  return Array.from(roots);
-}
-
-export function setActiveAgentId(agentId: string): { ok: true } | { ok: false; error: string } {
-  const reg = readAgentRegistry();
-  if (!reg.agents.some((a) => a.id === agentId)) {
-    return { ok: false, error: "Unknown agent id" };
-  }
-  writeAgentRegistry({ ...reg, activeAgentId: agentId });
-  return { ok: true };
-}
-
-export function upsertAgentEntry(entry: AgentRegistryEntry): void {
-  const reg = readAgentRegistry();
-  const idx = reg.agents.findIndex((a) => a.id === entry.id);
-  const next = [...reg.agents];
-  if (idx >= 0) next[idx] = entry;
-  else next.push(entry);
-  writeAgentRegistry({ ...reg, agents: next });
+/** Returns the Hermes filesystem root for path allowlist checks. */
+export function getHermesFilesystemRoot(): string {
+  return getHermesEntry().filesystemRoot.replace(/[/\\]+$/, "");
 }

@@ -1,9 +1,8 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 // kanban-adapter/index.ts — KanbanAdapter interface
 //
-// The core abstraction: any kanban backend (Hermes, PI, OpenClaw, a REST API,
-// local SQLite, etc.) implements this interface. Control Hub's UI and API
-// routes are completely agnostic to which backend is active.
+// The core abstraction: the kanban backend (Hermes SQLite storage) implements
+// this interface. Control Hub's UI and API routes are decoupled from the storage layer.
 //
 // Usage:
 //   const adapter: KanbanAdapter = getKanbanAdapter(); // factory below

@@ -1,32 +1,22 @@
 import { NextResponse } from "next/server";
-import { existsSync, readFileSync } from "fs";
-
-import { readAgentRegistry } from "@/lib/agent-registry";
+import { getHermesEntry } from "@/lib/agent-registry";
 import { logApiError } from "@/lib/api-logger";
-import { CH_DATA_DIR } from "@/lib/paths";
 
-const DISCOVERY_FILE = CH_DATA_DIR + "/agents.discovery.json";
-
+/** Returns the single local Hermes agent entry for dashboard display. */
 export async function GET() {
   try {
-    const reg = readAgentRegistry();
-    let discovery: unknown = null;
-    if (existsSync(DISCOVERY_FILE)) {
-      try {
-        discovery = JSON.parse(readFileSync(DISCOVERY_FILE, "utf-8"));
-      } catch {
-        discovery = null;
-      }
-    }
+    const entry = getHermesEntry();
     return NextResponse.json({
       data: {
-        activeAgentId: reg.activeAgentId,
-        agents: reg.agents,
-        discovery,
+        id: entry.id,
+        label: entry.label,
+        filesystemRoot: entry.filesystemRoot,
+        gatewayBaseUrl: entry.gatewayBaseUrl ?? null,
+        llmBaseUrl: entry.llmBaseUrl ?? null,
       },
     });
   } catch (error) {
-    logApiError("GET /api/agent/targets", "read registry", error);
-    return NextResponse.json({ error: "Failed to read agent targets" }, { status: 500 });
+    logApiError("GET /api/agent/targets", "read hermes entry", error);
+    return NextResponse.json({ error: "Failed to read Hermes agent info" }, { status: 500 });
   }
 }

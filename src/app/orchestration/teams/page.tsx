@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// Teams Page — Team management for multi-agent coordination
+// Teams Page — Profile team management
 // ═══════════════════════════════════════════════════════════════
 
 "use client";

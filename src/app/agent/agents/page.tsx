@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect, useCallback } from "react";
 import {
   Users, FileText, Save, RotateCcw, Download, Eye, EyeOff,
-  Check, AlertCircle, Plus, Trash2, Server,
+  Check, AlertCircle, Plus, Trash2,
 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
@@ -38,18 +38,8 @@ interface EditorState {
   original: string;
 }
 
-interface RegistryAgentRow {
-  id: string;
-  label: string;
-  filesystemRoot: string;
-}
-
 export default function BehaviourPage() {
   const [profiles, setProfiles] = useState<AgentProfile[]>([]);
-  const [registryAgents, setRegistryAgents] = useState<RegistryAgentRow[]>([]);
-  const [activeAgentId, setActiveAgentId] = useState<string>("default");
-  const [pendingAgentId, setPendingAgentId] = useState<string>("default");
-  const [switchingAgent, setSwitchingAgent] = useState(false);
   const [loading, setLoading] = useState(true);
   const [expandedProfile, setExpandedProfile] = useState<string | null>(null);
   const [editor, setEditor] = useState<EditorState | null>(null);
@@ -71,21 +61,6 @@ export default function BehaviourPage() {
 
   const { showToast, toastElement } = useToast();
 
-
-  const loadAgentTargets = useCallback(async () => {
-    try {
-      const res = await fetch("/api/agent/targets");
-      const data = await res.json();
-      const agents = (data.data?.agents || []) as RegistryAgentRow[];
-      const active = data.data?.activeAgentId || "default";
-      setRegistryAgents(agents);
-      setActiveAgentId(active);
-      setPendingAgentId(active);
-    } catch {
-      showToast("Failed to load agent registry", "error");
-    }
-  }, [showToast]);
-
   const loadProfiles = useCallback(async () => {
     setLoading(true);
     try {
@@ -99,35 +74,7 @@ export default function BehaviourPage() {
     }
   }, [showToast]);
 
-  useEffect(() => {
-    void loadAgentTargets();
-  }, [loadAgentTargets]);
-
   useEffect(() => { loadProfiles(); }, [loadProfiles]);
-
-  const applyActiveAgent = async () => {
-    if (pendingAgentId === activeAgentId) return;
-    setSwitchingAgent(true);
-    try {
-      const res = await fetch("/api/agent/active", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agentId: pendingAgentId }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        showToast(data.error || "Failed to switch agent", "error");
-        return;
-      }
-      setActiveAgentId(pendingAgentId);
-      showToast("Active Hermes install updated", "success");
-      await loadProfiles();
-    } catch {
-      showToast("Failed to switch agent", "error");
-    } finally {
-      setSwitchingAgent(false);
-    }
-  };
 
   const handleCreate = async () => {
     if (creating || !createName.trim()) return;
@@ -189,7 +136,6 @@ export default function BehaviourPage() {
       return;
     }
     try {
-      // Load content from existing files API or directly
       const url = profileId === "default"
         ? `/api/agent/files/${file.key}`
         : `/api/agent/files/${file.key}?profile=${profileId}`;
@@ -273,7 +219,7 @@ export default function BehaviourPage() {
       {toastElement}
       <PageHeader
         icon={Users}
-        title="Agents"
+        title="Agent Profiles"
         subtitle={`${profiles.length} profiles configured`}
         color="purple"
         actions={
@@ -283,42 +229,12 @@ export default function BehaviourPage() {
             icon={Plus}
             onClick={() => setShowCreate(true)}
           >
-            New Agent
+            New Profile
           </Button>
         }
       />
 
       <div className="px-6 py-6">
-        {registryAgents.length > 0 && (
-          <div className="mb-6 rounded-xl border border-white/10 bg-dark-900/50 p-4 flex flex-col sm:flex-row sm:items-end gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 text-sm text-white/50 mb-2">
-                <Server className="w-4 h-4 text-cyan-400" />
-                <span>Hermes install (all API paths use this root)</span>
-              </div>
-              <select
-                value={pendingAgentId}
-                onChange={(e) => setPendingAgentId(e.target.value)}
-                className="w-full max-w-xl bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white"
-              >
-                {registryAgents.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.label} — {a.filesystemRoot}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <Button
-              variant="secondary"
-              color="cyan"
-              disabled={switchingAgent || pendingAgentId === activeAgentId}
-              onClick={() => void applyActiveAgent()}
-            >
-              {switchingAgent ? "Applying…" : "Apply"}
-            </Button>
-          </div>
-        )}
-
         {/* Profile Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {profiles.map((profile) => {
@@ -544,6 +460,7 @@ export default function BehaviourPage() {
             </div>
           </div>
         )}
+
         {/* Create Profile Modal */}
         <Modal
           open={showCreate}

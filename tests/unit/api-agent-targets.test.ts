@@ -1,63 +1,65 @@
 /** @jest-environment node */
 
-import { existsSync, readFileSync } from "fs";
+import { getHermesEntry } from "@/lib/agent-registry";
 
-jest.mock("fs", () => ({
-  existsSync: jest.fn(),
-  readFileSync: jest.fn(),
+jest.mock("@/lib/agent-registry", () => ({
+  getHermesEntry: jest.fn(),
 }));
 
 jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
-const mockReadAgentRegistry = jest.fn();
-
-jest.mock("@/lib/agent-registry", () => ({
-  readAgentRegistry: () => mockReadAgentRegistry(),
-}));
-
-jest.mock("@/lib/paths", () => ({
-  CH_DATA_DIR: "/tmp/ch-data",
-}));
-
 describe("GET /api/agent/targets", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockReadAgentRegistry.mockReturnValue({
-      version: 1,
-      activeAgentId: "default",
-      agents: [
-        {
-          id: "default",
-          label: "Default",
-          filesystemRoot: "/tmp/hermes",
-        },
-      ],
+    (getHermesEntry as jest.Mock).mockReturnValue({
+      id: "default",
+      label: "Default Hermes",
+      filesystemRoot: "/tmp/hermes",
+      gatewayBaseUrl: undefined,
+      llmBaseUrl: undefined,
     });
   });
 
-  it("returns registry and null discovery when file missing", async () => {
-    (existsSync as jest.Mock).mockReturnValue(false);
-
+  it("returns the single Hermes entry", async () => {
     const { GET } = await import("@/app/api/agent/targets/route");
     const res = await GET();
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.data.activeAgentId).toBe("default");
-    expect(body.data.agents).toHaveLength(1);
-    expect(body.data.discovery).toBeNull();
+    expect(body.data.id).toBe("default");
+    expect(body.data.label).toBe("Default Hermes");
+    expect(body.data.filesystemRoot).toBe("/tmp/hermes");
+    expect(body.data.gatewayBaseUrl).toBeNull();
+    expect(body.data.llmBaseUrl).toBeNull();
   });
 
-  it("includes discovery JSON when present", async () => {
-    (existsSync as jest.Mock).mockImplementation((p: string) =>
-      String(p).endsWith("agents.discovery.json")
-    );
-    (readFileSync as jest.Mock).mockReturnValue(JSON.stringify({ version: 1, entries: [] }));
+  it("includes gateway and LLM URLs when set", async () => {
+    (getHermesEntry as jest.Mock).mockReturnValue({
+      id: "default",
+      label: "Custom",
+      filesystemRoot: "/opt/hermes",
+      gatewayBaseUrl: "http://localhost:9999",
+      llmBaseUrl: "http://localhost:9999/v1/chat/completions",
+    });
+
+    // Force re-import to pick up new mock
+    jest.resetModules();
+    jest.mock("@/lib/agent-registry", () => ({
+      getHermesEntry: jest.fn().mockReturnValue({
+        id: "default",
+        label: "Custom",
+        filesystemRoot: "/opt/hermes",
+        gatewayBaseUrl: "http://localhost:9999",
+        llmBaseUrl: "http://localhost:9999/v1/chat/completions",
+      }),
+    }));
+    jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 
     const { GET } = await import("@/app/api/agent/targets/route");
     const res = await GET();
     const body = await res.json();
-    expect(body.data.discovery).toEqual({ version: 1, entries: [] });
+    expect(body.data.gatewayBaseUrl).toBe("http://localhost:9999");
+    expect(body.data.llmBaseUrl).toBe("http://localhost:9999/v1/chat/completions");
   });
 });

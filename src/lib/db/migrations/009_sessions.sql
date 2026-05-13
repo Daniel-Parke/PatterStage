@@ -1,6 +1,6 @@
 -- 009_sessions.sql
 -- Unified session registry: Control Hub is the source of truth for all agent sessions,
--- whether born from CLI, cron, mission dispatch, or future agent frameworks.
+-- whether born from CLI, cron, or mission dispatch.
 -- Hermes session files on disk are synced into this table; agent-native sessions
 -- (missions, cron) are written here directly by the dispatch pipeline.
 
