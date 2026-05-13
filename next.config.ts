@@ -6,7 +6,9 @@ import type { NextConfig } from "next";
 const extraOrigins = (process.env.CH_ALLOWED_DEV_ORIGINS || "")
   .split(",")
   .map((s) => s.trim())
-  .filter(Boolean);
+  .filter(Boolean)
+  // Strip scheme prefix — Next.js allowedDevOrigins expects bare host:port, not full URLs
+  .map((s) => s.replace(/^https?:\/\//, ""));
 
 const nextConfig: NextConfig = {
   experimental: {

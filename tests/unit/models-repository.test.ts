@@ -15,7 +15,7 @@ const initialPath = join(repoRoot, "src", "lib", "db", "migrations", "001_initia
 const missionExtPath = join(repoRoot, "src", "lib", "db", "migrations", "004_mission_extensions.sql");
 const statusEnumPath = join(repoRoot, "src", "lib", "db", "migrations", "005_mission_status_enum.sql");
 const modelsPath = join(repoRoot, "src", "lib", "db", "migrations", "006_models_credentials.sql");
-const frameworkFallbackPath = join(repoRoot, "src", "lib", "db", "migrations", "012_models_framework_fallback.sql");
+const migration012Path = join(repoRoot, "src", "lib", "db", "migrations", "012_models_framework_fallback.sql");
 const hermesOnlyPath = join(repoRoot, "src", "lib", "db", "migrations", "014_hermes_only.sql");
 
 let testDb: import("better-sqlite3").Database | null = null;
@@ -48,7 +48,7 @@ beforeEach(() => {
   // Migration 012 needs a guard to run safely in the test DB — the CREATE TABLE
   // IF NOT EXISTS guard ensures we can skip the guard rows
   testDb.exec(readFileSync(modelsPath, "utf-8"));
-  testDb.exec(readFileSync(frameworkFallbackPath, "utf-8"));
+  testDb.exec(readFileSync(migration012Path, "utf-8"));
   // Apply migration 014 to reverse framework scaffolding (Hermes-only)
   testDb.exec(readFileSync(hermesOnlyPath, "utf-8"));
 });

@@ -29,8 +29,8 @@ describe("POST /api/agent/active", () => {
       version: 1,
       activeAgentId: "a2",
       agents: [
-        { id: "a1", label: "One", framework: "hermes", filesystemRoot: "/x" },
-        { id: "a2", label: "Two", framework: "hermes", filesystemRoot: "/y" },
+        { id: "a1", label: "One", filesystemRoot: "/x" },
+        { id: "a2", label: "Two", filesystemRoot: "/y" },
       ],
     });
   });
@@ -67,7 +67,6 @@ describe("POST /api/agent/active", () => {
         register: {
           id: "new1",
           label: "New",
-          framework: "hermes",
           filesystemRoot: "/z/",
         },
       }),

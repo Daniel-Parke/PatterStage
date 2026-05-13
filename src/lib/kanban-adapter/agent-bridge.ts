@@ -9,8 +9,8 @@
 //   3. Records the missionId on the card (via KanbanAdapter)
 //   4. Returns the created mission so the UI can display it
 //
-// This keeps the kanban UI completely agnostic to HOW missions run — any
-// AgentBackend (Hermes, PI, OpenClaw, etc.) works without changing the UI.
+// This keeps the kanban UI decoupled from HOW missions run — the
+// AgentBackend interface (Hermes) handles execution without changing the UI.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { agentBackend } from "@/lib/backends";

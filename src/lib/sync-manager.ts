@@ -120,7 +120,7 @@ function readHermesConfigModels(): Array<{ name: string; provider: string; model
 
 /**
  * Compare active agent model in config.yaml against the DB default
- * for the active framework. Also reports models present only in one
+ * for the Hermes agent. Also reports models present only in one
  * side or the other.
  */
 export function detectConfigDrift(): DriftReport {
@@ -140,7 +140,7 @@ export function detectConfigDrift(): DriftReport {
     (m) => !dbModelByKey.has(`${m.provider}::${m.modelId}`)
   );
 
-  // 2. Models in DB but not in config.yaml (for the active framework)
+  // 2. Models in DB but not in config.yaml (Hermes)
   const modelsInDbNotInHermes = dbModels.filter(
     (m) => !hermesKeySet.has(`${m.provider}::${m.modelId}`)
   );
@@ -151,7 +151,7 @@ export function detectConfigDrift(): DriftReport {
     // Find the DB model that matches the hermes primary by provider+modelId
     const matched = dbModelByKey.get(`${hermesPrimary.provider}::${hermesPrimary.modelId}`);
     if (matched) {
-      // Compare with the DB default agent model for the active framework
+      // Compare with the DB default agent model for Hermes
       const dbDefaults = getModelDefaults();
       const defaultAgentId = dbDefaults.agent;
       if (defaultAgentId) {

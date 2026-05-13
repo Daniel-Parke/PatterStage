@@ -31,7 +31,6 @@ describe("GET /api/agent/targets", () => {
         {
           id: "default",
           label: "Default",
-          framework: "hermes",
           filesystemRoot: "/tmp/hermes",
         },
       ],

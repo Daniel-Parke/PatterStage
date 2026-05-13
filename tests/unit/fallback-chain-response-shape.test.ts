@@ -14,7 +14,7 @@ const initialPath = join(repoRoot, "src", "lib", "db", "migrations", "001_initia
 const missionExtPath = join(repoRoot, "src", "lib", "db", "migrations", "004_mission_extensions.sql");
 const statusEnumPath = join(repoRoot, "src", "lib", "db", "migrations", "005_mission_status_enum.sql");
 const modelsPath = join(repoRoot, "src", "lib", "db", "migrations", "006_models_credentials.sql");
-const frameworkFallbackPath = join(repoRoot, "src", "lib", "db", "migrations", "012_models_framework_fallback.sql");
+const migration012Path = join(repoRoot, "src", "lib", "db", "migrations", "012_models_framework_fallback.sql");
 
 let testDb: import("better-sqlite3").Database | null = null;
 
@@ -55,7 +55,7 @@ function setupDb() {
   testDb.exec(readFileSync(modelsPath, "utf-8"));
   testDb.exec("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
   testDb.exec(`INSERT INTO meta (key, value) VALUES ('schema_version', '006');`);
-  testDb.exec(readFileSync(frameworkFallbackPath, "utf-8"));
+  testDb.exec(readFileSync(migration012Path, "utf-8"));
 }
 
 beforeEach(() => {

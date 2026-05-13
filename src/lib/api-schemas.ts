@@ -81,7 +81,6 @@ export const setDefaultPutSchema = z
   .object({
     taskType: taskTypeSchema,
     modelId: z.string().nullable(),
-    framework: z.string().optional(),
   })
   .strict();
 

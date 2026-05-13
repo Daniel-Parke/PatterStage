@@ -3,8 +3,8 @@
 //
 // Control Hub is the source of truth for ALL agent sessions.
 // Hermes session files on disk are synced into this table on every
-// sessions API call. Agent-native sessions (mission dispatch, cron,
-// future agent frameworks) are written here directly.
+// sessions API call. Agent-native sessions (mission dispatch, cron)
+// are written here directly.
 //
 // Schema: src/lib/db/migrations/009_sessions.sql
 // ═══════════════════════════════════════════════════════════════

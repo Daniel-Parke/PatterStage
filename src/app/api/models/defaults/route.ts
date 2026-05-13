@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
-// /api/models/defaults — read & write the 12 task-slot defaults
-// Supports optional ?framework= query param; defaults to "*"
+// /api/models/defaults — read & write the 11 task-slot defaults
+// Hermes-only; no framework scoping needed.
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 
