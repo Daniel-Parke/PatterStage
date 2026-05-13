@@ -12,7 +12,7 @@ import { listModels, getModelDefaults } from "@/lib/models-repository";
  * Sentinel value for TemplateDef.defaultModel that opts out of any template
  * default and forces resolution through the models registry (agent default).
  */
-export const USE_REGISTRY_DEFAULT = "__use_registry_default__";
+export const USE_HERMES_DEFAULT = "__use_hermes_default__";
 
 export interface TemplateDef {
   id: string;
@@ -27,8 +27,8 @@ export interface TemplateDef {
   goals: string[];
   suggestedSkills: string[];
   /**
-   * Hermes model id hint for the mission form. Set to USE_REGISTRY_DEFAULT
-   * to explicitly defer to the agent default from the models registry.
+ * Hermes model id hint for the mission form. Set to USE_HERMES_DEFAULT
+ * to explicitly defer to the Hermes agent model defaults.
    * Omit or use a blank string to also fall through to the registry.
    * User can override per-mission. Resolves through the models registry —
    * see src/lib/models-repository.ts.
@@ -47,7 +47,7 @@ export interface TemplateDef {
  * Resolve the best modelId + provider for a template.
  *
  * Strategy:
- *   1. If the template's `defaultModel` is USE_REGISTRY_DEFAULT or falsy,
+ *   1. If the template's `defaultModel` is USE_HERMES_DEFAULT or falsy,
  *      fall through to the registry agent default.
  *   2. If the template's `defaultModel` is registered in the models registry,
  *      use it (respects user's configured base_url, credentials, etc.).
@@ -63,8 +63,8 @@ export function resolveTemplateModel(template: TemplateDef): { modelId: string; 
     const defaults = getModelDefaults();
 
     // Only attempt a registry lookup if defaultModel is a concrete value
-    // (USE_REGISTRY_DEFAULT and falsy both skip directly to agent default)
-    if (template.defaultModel && template.defaultModel !== USE_REGISTRY_DEFAULT) {
+    // (USE_HERMES_DEFAULT and falsy both skip directly to agent default)
+    if (template.defaultModel && template.defaultModel !== USE_HERMES_DEFAULT) {
       // Try to find a registry entry matching the template's bare model ID.
       // Match by (model_id === defaultModel) — the registry stores full IDs.
       const tm = template.defaultModel;

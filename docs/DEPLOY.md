@@ -40,8 +40,8 @@ bash scripts/application/ch-deploy.sh rebuild --branch dev
 
 | Variable | Purpose |
 |----------|---------|
-| `HERMES_HOME` / `AGENT_HOME` | Hermes install root; seeds `agents-registry.json` if missing. Optional for standalone Control Hub. |
-| `CH_DATA_DIR` | Control Hub JSON root (default `~/control-hub/data`). Holds `agents-registry.json` and optional `agents.discovery.json`. |
+| `HERMES_HOME` / `AGENT_HOME` | Hermes install root. Defaults to `~/.hermes`. |
+| `CH_DATA_DIR` | Control Hub data root (default `~/control-hub/data`).
 | `CH_SCRIPTS_DIR` / `CH_HARDWARE_LOG_DIR` | Hardware cron script prefix and logs (default `CH_DATA_DIR/scripts` and `CH_DATA_DIR/logs`). |
 | `CH_READ_ONLY` | Set to `1` for read-only UI/API. |
 

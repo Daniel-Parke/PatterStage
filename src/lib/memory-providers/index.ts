@@ -143,7 +143,6 @@ function getConfiguredProvider(): MemoryProviderType {
         const val = line.split("provider:")[1].trim().replace(/['"]/g, "");
         if (val === "holographic") return "holographic";
         if (val === "hindsight") return "hindsight";
-        if (val && val !== "none") return val as MemoryProviderType;
         return "none";
       }
     }

@@ -34,7 +34,7 @@
 
     "test:full-install-hermes": "python tests/integration/test_full_install_update_process.py --profile release --skip-http --with-real-hermes-install",
     "test:docker-deploy-smoke": "bash tests/scripts/docker-deploy-api-smoke.sh",
-    "discover-agents": "node scripts/tooling/discover-agents.mjs",
+    "discover-hermes": "node scripts/tooling/discover-agents.mjs",
 
     "generate:schema-json": "npx tsx scripts/tooling/generate-json-schema.ts"
 

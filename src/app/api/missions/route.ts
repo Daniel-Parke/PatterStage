@@ -2,7 +2,7 @@
 // /api/missions — Mission CRUD + dispatch (SQLite)
 // ═══════════════════════════════════════════════════════════════
 // Missions are stored in Control Hub SQLite. Dispatch is handled
-// by the AgentBackend so any agent backend can run missions.
+// by the Hermes backend for mission execution.
 import { NextRequest, NextResponse } from "next/server";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";

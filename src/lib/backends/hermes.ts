@@ -1,8 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 // backends/hermes.ts — Hermes agent backend
 //
-// Implements the AgentBackend interface for the Hermes agent.
-// This is the only backend — all mission dispatch flows through here.
+// Implements the Hermes mission dispatch backend.
+// This is the only backend -- all mission dispatch flows through here.
 //
 // Dispatch pipeline design:
 //   Control Hub is ALWAYS the source of truth for model + credentials.
@@ -94,7 +94,7 @@ function shellQuote(value: string): string {
  *
  * Priority:
  *   1. Explicit modelId + provider passed to dispatch (per-mission override)
- *   2. Control Hub models registry default agent model
+ *   2. Control Hub models DB default agent model
  *   3. Empty strings — hermes falls back to its profile config (last resort)
  *
  * Control Hub is ALWAYS the source of truth. We never allow hermes's
@@ -109,7 +109,7 @@ async function resolveMissionModel(input: {
     return { modelId: input.modelId, provider: input.provider, apiKey: null };
   }
 
-  // 2. Control Hub models registry default agent model
+  // 2. Control Hub models DB default agent model
   try {
     const defaultModel = getDefaultModel("agent");
     if (defaultModel) {
@@ -345,8 +345,7 @@ function hermesProfileToAgentProfile(
 // ── HermesAgentBackend ──────────────────────────────────────────
 
 export class HermesAgentBackend implements AgentBackend {
-  readonly name = "Hermes";
-  readonly id = "hermes";
+
 
   // ── Profiles ────────────────────────────────────────────────
 

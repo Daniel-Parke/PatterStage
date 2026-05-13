@@ -7,7 +7,7 @@
 // else in this file needs to change.
 //
 // Agent integration: when a card moves to "in_progress", dispatchKanbanCard is called
-// automatically, creating a mission via the active AgentBackend and linking it
+// automatically, creating a mission via the Hermes backend and linking it
 // to the card.
 // ═════════════════════════════════════════════════════════════════════════════════════
 
@@ -346,7 +346,7 @@ export async function POST(request: NextRequest) {
 
       // ── Agent dispatch bridge ─────────────────────────────────────────────
       // When a card moves to "in_progress", automatically dispatch it to the
-      // active agent backend. This is the key integration point that connects
+      // Hermes backend. This is the key integration point that connects
       // the kanban board to the agent execution layer — completely abstracted
       // behind the adapter so any backend can implement this behaviour.
       let missionResult: { missionId: string } | null = null;

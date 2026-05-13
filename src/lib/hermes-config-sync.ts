@@ -214,7 +214,7 @@ const AUXILIARY_TASKS: ReadonlyArray<TaskType> = TASK_TYPES.filter(
 ) as ReadonlyArray<TaskType>;
 
 /**
- * Read ~/.hermes/config.yaml, set `model.*` from the registry's default
+ * Read ~/.hermes/config.yaml, set `model.*` from Control Hub DB's default
  * `agent` model and `auxiliary.<task>.{model, provider, base_url, api_key}`
  * for each of the 11 auxiliary slots, then write back atomically with a
  * pre-write backup.
@@ -276,9 +276,9 @@ export function syncDefaultsToHermesConfig(): { backupPath: string | null } {
 // ── Combined helper used by API routes ─────────────────────────
 
 /**
- * Re-apply the full registry state to Hermes. Called after every
+ * Re-apply the full Control Hub DB state to Hermes. Called after every
  * model/credential mutation so the on-disk Hermes config stays in lock
- * step with the SQLite registry.
+ * step with the Control Hub DB.
  */
 export function syncAllToHermes(): { envBackup: string | null; configBackup: string | null } {
   // .env writes happen per-provider, but here we don't have a single

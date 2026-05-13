@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Discover local Hermes installs and write CH_DATA_DIR/agents.discovery.json
- * Schema version 1 — extend with more detectors later.
+ * Detect the local Hermes install and write CH_DATA_DIR/hermes-detection.json.
+ * Resolves from HERMES_HOME / AGENT_HOME env vars, defaulting to ~/.hermes.
  */
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync } from "fs";
 import { homedir } from "os";
-import { join, resolve } from "path";
+import { join } from "path";
 
 function normalizeDir(d) {
   return String(d || "").replace(/[/\\]+$/, "");
@@ -17,118 +17,43 @@ function getChDataDir() {
   return normalizeDir(join(homedir(), "control-hub", "data"));
 }
 
-function countProfiles(root) {
-  const p = join(root, "profiles");
-  if (!existsSync(p)) return 0;
-  let n = 0;
-  try {
-    for (const name of readdirSync(p)) {
-      if (existsSync(join(p, name, "config.yaml"))) n++;
-    }
-  } catch {
-    return 0;
-  }
-  return n;
+function getHermesHome() {
+  const envHome = process.env.HERMES_HOME || process.env.AGENT_HOME;
+  if (envHome && String(envHome).trim()) return normalizeDir(String(envHome).trim());
+  return join(homedir(), ".hermes");
 }
 
-function countSkills(root) {
-  const p = join(root, "skills");
-  if (!existsSync(p)) return 0;
-  let n = 0;
-  function walk(dir) {
+const home = getHermesHome();
+const hasConfigYaml = existsSync(join(home, "config.yaml"));
+const hasHermesMd = existsSync(join(home, "HERMES.md"));
+const isValidHermesRoot = hasConfigYaml || hasHermesMd;
+
+let profileCount = 0;
+if (isValidHermesRoot) {
+  const profilesDir = join(home, "profiles");
+  if (existsSync(profilesDir)) {
     try {
-      for (const name of readdirSync(dir, { withFileTypes: true })) {
-        const fp = join(dir, name.name);
-        if (name.isDirectory()) walk(fp);
-        else if (name.name === "SKILL.md") n++;
+      const { readdirSync } = await import("fs");
+      for (const name of readdirSync(profilesDir)) {
+        if (existsSync(join(profilesDir, name, "config.yaml"))) profileCount++;
       }
-    } catch {
-      /* ignore */
-    }
+    } catch { /* ignore */ }
   }
-  walk(p);
-  return n;
-}
-
-function isHermesRoot(dir) {
-  const cfg = join(dir, "config.yaml");
-  const marker = join(dir, "HERMES.md");
-  if (existsSync(cfg)) {
-    try {
-      const s = readFileSync(cfg, "utf8");
-      if (s.includes("model:") || s.includes("memory:")) return true;
-    } catch {
-      /* ignore */
-    }
-  }
-  return existsSync(marker);
-}
-
-function searchRoots() {
-  const roots = new Set();
-  const home = homedir();
-  roots.add(home);
-  roots.add(join(home, ".hermes"));
-  for (const sub of ["projects", "src", "code", "dev", "Documents"]) {
-    const p = join(home, sub);
-    if (existsSync(p)) roots.add(p);
-  }
-  const extra = process.env.CH_AGENT_DISCOVERY_ROOTS;
-  if (extra) {
-    for (const p of extra.split(/[,;]/).map((s) => s.trim()).filter(Boolean)) {
-      roots.add(resolve(p));
-    }
-  }
-  return [...roots];
-}
-
-function discoverHermes() {
-  /** @type {Array<Record<string, unknown>>} */
-  const found = [];
-  const seen = new Set();
-
-  function consider(dir) {
-    const norm = normalizeDir(dir);
-    if (!norm || seen.has(norm)) return;
-    if (!existsSync(norm)) return;
-    seen.add(norm);
-    if (isHermesRoot(norm)) {
-      found.push({
-        framework: "hermes",
-        root: norm,
-        profileCount: countProfiles(norm),
-        skillCount: countSkills(norm),
-        hasConfigYaml: existsSync(join(norm, "config.yaml")),
-        hasHermesMd: existsSync(join(norm, "HERMES.md")),
-        detectedAt: new Date().toISOString(),
-      });
-    }
-  }
-
-  for (const r of searchRoots()) {
-    consider(r);
-    if (!existsSync(r)) continue;
-    try {
-      for (const name of readdirSync(r, { withFileTypes: true })) {
-        if (!name.isDirectory()) continue;
-        if (name.name.startsWith(".")) continue;
-        consider(join(r, name.name));
-      }
-    } catch {
-      /* ignore */
-    }
-  }
-  return found;
 }
 
 const outDir = getChDataDir();
 mkdirSync(outDir, { recursive: true });
-const outPath = join(outDir, "agents.discovery.json");
-const entries = discoverHermes();
+const outPath = join(outDir, "hermes-detection.json");
 const doc = {
   version: 1,
   generatedAt: new Date().toISOString(),
-  entries,
+  hermesHome: home,
+  valid: isValidHermesRoot,
+  profileCount,
+  hasConfigYaml,
+  hasHermesMd,
 };
+
+const { writeFileSync } = await import("fs");
 writeFileSync(outPath, JSON.stringify(doc, null, 2), "utf8");
-console.log(`Wrote ${entries.length} entr(y/ies) to ${outPath}`);
+console.log(`Detected Hermes at ${home} (valid: ${isValidHermesRoot}, profiles: ${profileCount})`);

@@ -6,7 +6,7 @@ import { relative, resolve } from "path";
 import { homedir } from "os";
 
 import { CH_DATA_DIR } from "@/lib/paths";
-import { getHermesFilesystemRoot } from "@/lib/agent-registry";
+import { getHermesFilesystemRoot } from "@/lib/hermes-home";
 
 const PROFILE_PATTERN = /^\.[a-zA-Z0-9][a-zA-Z0-9_-]{0,126}$|^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
 
@@ -51,7 +51,7 @@ export function resolveAllowedWorkspacePath(
   }
   return {
     ok: false,
-    error: "Path must be under your home directory, Control Hub data, or a registered agent root",
+    error: "Path must be under your home directory, Control Hub data, or the Hermes install root",
   };
 }
 

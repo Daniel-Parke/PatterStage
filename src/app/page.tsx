@@ -19,7 +19,6 @@ import {
   CheckCircle2,
   Pause,
   Play,
-  Bot,
   Radio,
   Rocket,
   ChevronRight,
@@ -39,7 +38,7 @@ import type { SystemStatus, AccentColor } from "@/types/hermes";
 import { timeAgo, timeUntil, titleCase } from "@/lib/utils";
 import { shellHeaderBarClasses } from "@/lib/theme";
 
-interface AgentRun {
+interface HermesProcess {
   id: string;
   type: "cron" | "gateway" | "manual" | "subagent";
   name: string;
@@ -201,7 +200,7 @@ function StatPill({
 export default function Dashboard() {
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [monitor, setMonitor] = useState<MonitorData | null>(null);
-  const [agents, setAgents] = useState<AgentRun[]>([]);
+  const [processes, setProcesses] = useState<HermesProcess[]>([]);
   const [missions, setMissions] = useState<MissionBrief[]>([]);
   const [config, setConfig] = useState<Record<string, unknown> | null>(null);
   const [templates, setTemplates] = useState<Array<{ id: string; name: string; icon: string; color: string; category: string; profile: string; description: string; isCustom?: boolean }>>([]);
@@ -274,21 +273,21 @@ export default function Dashboard() {
     }, 10000);
 
     // Agents + missions poll at offset intervals to spread network load
-    const fetchAgents = () => {
-      if (!signal.aborted) fetch("/api/agents", { signal }).then((r) => r.json()).then((d) => setAgents(d.data?.agents || d.agents || [])).catch(() => {});
+    const fetchProcesses = () => {
+      if (!signal.aborted) fetch("/api/agents", { signal }).then((r) => r.json()).then((d) => setProcesses(d.data?.processes || d.processes || [])).catch(() => {});
     };
     const fetchMissions = () => {
       if (!signal.aborted) fetch("/api/missions", { signal }).then((r) => r.json()).then((d) => setMissions(d.data?.missions || [])).catch(() => {});
     };
-    fetchAgents();
+    fetchProcesses();
     fetchMissions();
-    const agentsInterval = setInterval(fetchAgents, 15000);
+    const processesInterval = setInterval(fetchProcesses, 15000);
     const missionsInterval = setInterval(fetchMissions, 15000);
 
     return () => {
       controller.abort();
       clearInterval(monitorInterval);
-      clearInterval(agentsInterval);
+      clearInterval(processesInterval);
       clearInterval(missionsInterval);
     };
   }, []);
@@ -296,7 +295,7 @@ export default function Dashboard() {
   const modelConfig = config?.model as Record<string, unknown> | undefined;
   const currentModel = (modelConfig?.default as string) || "-";
   const currentProvider = (modelConfig?.provider as string) || "";
-  const activeAgents = useMemo(() => agents.filter((a) => a.status === "running"), [agents]);
+  const activeProcesses = useMemo(() => processes.filter((p) => p.status === "running"), [processes]);
   const activeMissions = useMemo(() => missions.filter((m) => m.status === "queued" || m.status === "dispatched"), [missions]);
 
   return (
@@ -328,10 +327,10 @@ export default function Dashboard() {
         {/* ═══ Compact Stat Row ═══ */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatPill
-            icon={Bot}
-            label="Agents"
-            value={activeAgents.length > 0 ? `${activeAgents.length} Active` : status?.soulFile ? "Idle" : "Offline"}
-            color={activeAgents.length > 0 ? "green" : status?.soulFile ? "cyan" : "pink"}
+            icon={Radio}
+            label="Processes"
+            value={activeProcesses.length > 0 ? `${activeProcesses.length} Active` : status?.soulFile ? "Idle" : "Offline"}
+            color={activeProcesses.length > 0 ? "green" : status?.soulFile ? "cyan" : "pink"}
           />
           <StatPill
             icon={ListTodo}
@@ -714,61 +713,60 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-
-        {/* ═══ Running Agents ═══ */}
+        {/* ═══ Running Hermes Processes ═══ */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-mono text-white/40 uppercase tracking-widest flex items-center gap-2">
-              <Bot className="w-3 h-3 text-neon-purple" />
-              Running Agents
-              <span className="text-[10px] text-white/25 ml-1">({activeAgents.length} Active)</span>
+              <Radio className="w-3 h-3 text-neon-purple" />
+              Running Hermes Processes
+              <span className="text-[10px] text-white/25 ml-1">({activeProcesses.length} Active)</span>
             </h2>
             <RefreshCw
               className="w-3 h-3 text-white/20 hover:text-white/50 cursor-pointer"
-              onClick={() => fetch("/api/agents").then((r) => r.json()).then((d) => setAgents(d.data?.agents || d.agents || []))}
+              onClick={() => fetch("/api/agents").then((r) => r.json()).then((d) => setProcesses(d.data?.processes || d.processes || []))}
             />
           </div>
-          {agents.length === 0 ? (
+          {processes.length === 0 ? (
             <div className="rounded-xl border border-neon-purple/20 bg-dark-900/50 p-6 text-center">
-              <Bot className="w-8 h-8 text-white/20 mx-auto mb-2" />
-              <div className="text-xs text-white/30">No Active Agents Detected</div>
+              <Radio className="w-8 h-8 text-white/20 mx-auto mb-2" />
+              <div className="text-xs text-white/30">No Active Processes Detected</div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {agents.map((agent) => (
-                <div key={agent.id} className="rounded-xl border border-neon-purple/20 bg-dark-900/50 p-4">
+              {processes.map((proc) => (
+                <div key={proc.id} className="rounded-xl border border-neon-purple/20 bg-dark-900/50 p-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Radio className={`w-4 h-4 ${agent.status === "running" ? "text-neon-green pulse-glow" : "text-white/30"}`} />
-                      <span className="text-sm text-white/90 font-medium truncate">{agent.name}</span>
+                      <Radio className={`w-4 h-4 ${proc.status === "running" ? "text-neon-green pulse-glow" : "text-white/30"}`} />
+                      <span className="text-sm text-white/90 font-medium truncate">{proc.name}</span>
                     </div>
                     <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                      agent.status === "running" ? "bg-neon-green/10 text-neon-green" : "bg-white/5 text-white/30"
+                      proc.status === "running" ? "bg-neon-green/10 text-neon-green" : "bg-white/5 text-white/30"
                     }`}>
-                      {titleCase(agent.status)}
+                      {titleCase(proc.status)}
                     </span>
                   </div>
                   <div className="space-y-1 text-[10px] font-mono text-white/40">
                     <div className="flex justify-between">
                       <span>Type</span>
-                      <span className="text-white/60 capitalize">{agent.type}</span>
+                      <span className="text-white/60 capitalize">{proc.type}</span>
                     </div>
-                    {agent.model !== "unknown" && agent.model !== "gateway" && (
+                    {proc.model !== "unknown" && proc.model !== "gateway" && (
                       <div className="flex justify-between">
                         <span>Model</span>
-                        <span className="text-white/60">{agent.model}</span>
+                        <span className="text-white/60">{proc.model}</span>
                       </div>
                     )}
-                    {agent.turns > 0 && (
+                    {proc.turns > 0 && (
                       <div className="flex justify-between">
                         <span>Turns</span>
-                        <span className="text-white/60">{agent.turns}</span>
+                        <span className="text-white/60">{proc.turns}</span>
                       </div>
                     )}
-                    {agent.lastActivity && (
+                    {proc.lastActivity && (
                       <div className="flex justify-between">
                         <span>Last activity</span>
-                        <span className="text-white/60">{timeAgo(agent.lastActivity)}</span>
+                        <span className="text-white/60">{timeAgo(proc.lastActivity)}</span>
                       </div>
                     )}
                   </div>

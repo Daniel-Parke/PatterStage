@@ -16,7 +16,8 @@ import { join } from "path";
 
 // ── Types ────────────────────────────────────────────────────
 
-export type AgentType = "hermes" | string;
+export type AgentType = "hermes";
+// Single agent type — Hermes only.
 export type SessionSource = "cli" | "cron" | "mission" | "api";
 export type SessionStatus = "active" | "completed" | "failed";
 

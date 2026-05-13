@@ -17,9 +17,9 @@ flowchart TB
   H --> AH
 ```
 
-- **`CH_DATA_DIR`** (default `~/control-hub/data`, overridable via `CH_DATA_DIR` / `CONTROL_HUB_DATA_DIR`): Control Hub state—missions, templates, stories, Rec Room data, SQLite (`control-hub.db`), **`agents-registry.json`**, optional **`agents.discovery.json`**, hardware cron scripts/logs defaults (`CH_SCRIPTS_DIR`, `CH_HARDWARE_LOG_DIR` under this tree unless overridden).
+- **`CH_DATA_DIR`** (default `~/control-hub/data`, overridable via `CH_DATA_DIR` / `CONTROL_HUB_DATA_DIR`): Control Hub state—missions, templates, stories, Rec Room data, SQLite (`control-hub.db`), hardware cron scripts/logs defaults (`CH_SCRIPTS_DIR`, `CH_HARDWISE_LOG_DIR` under this tree unless overridden).
 
-- **Active Hermes install:** Paths for profiles, skills, sessions, logs, `config.yaml`, agent **`cron/jobs.json`**, and related files come from **`getActiveHermesPaths()`** / **`getActiveHermesHome()`** in `src/lib/hermes-agent-runtime.ts`, driven by **`agents-registry.json`** (active row + registered roots). **`AGENT_HOME`** / **`HERMES_HOME`** seed the registry when it is first created; the UI can switch installs without relying on a single global `HERMES_HOME` at runtime.
+- **Active Hermes install:** Paths for profiles, skills, sessions, logs, `config.yaml`, agent **`cron/jobs.json`**, and related files come from **`getActiveHermesPaths()`** / **`getActiveHermesHome()`** in `src/lib/hermes-agent-runtime.ts`, driven by **`HERMES_HOME`** / **`AGENT_HOME`** env vars (default `~/.hermes`).
 
 - **Hardware cron** (OS-level scripts managed by Control Hub) is separate from Hermes agent cron: different directories and **`/api/cron/hardware`** vs Hermes **`jobs.json`** via **`/api/cron`**.
 
@@ -35,7 +35,7 @@ flowchart TB
 
 | Area | Role |
 |------|------|
-| Model / provider | SQLite registry + `/api/models`, `/api/credentials`, `/api/models/defaults`; UI at `/config/models`; write-through to Hermes `~/.hermes/.env` and `config.yaml`. |
+| Model / provider | SQLite DB + `/api/models`, `/api/credentials`, `/api/models/defaults`; UI at `/config/models`; write-through to Hermes `~/.hermes/.env` and `config.yaml`. |
 | Missions | CRUD, dispatch, templates (built-in set). |
 | Cron | CRUD against the active Hermes `jobs.json`; hardware cron under `CH_*` paths. |
 | Config / sessions / memory / gateway / logs / skills / personalities | Hermes-aligned surfaces as shipped in this repo. |
@@ -56,4 +56,4 @@ This document describes the product surface shipped in this repository.
 
 - [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md) — optional `hermes-config` checklist.
 
-- [CONTROL_HUB.md](CONTROL_HUB.md) — registry, discovery, and where to read next.
+- [CONTROL_HUB.md](CONTROL_HUB.md) — architecture overview and where to read next.

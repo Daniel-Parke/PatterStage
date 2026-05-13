@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// agent-backend/types.ts — Shared types for all agent backends
+// agent-backend/types.ts — Shared types for Hermes mission dispatch
 // ═══════════════════════════════════════════════════════════════
 
 import type { LocalDirEntry } from "@/types/hermes";

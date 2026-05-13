@@ -41,14 +41,14 @@ Use `npm run dev:network` for LAN HMR (`CH_ALLOWED_DEV_ORIGINS` is set during se
 ## Prerequisites
 
 - **Node.js 20+** (matches [CI](.github/workflows/ci.yml))
-- **Hermes Agent** (optional for a standalone UI): the app resolves the **active** install via `agents-registry.json` under **`CH_DATA_DIR`**, seeded from **`AGENT_HOME`** / **`HERMES_HOME`** (default `~/.hermes`). Use **Agents** in the UI to switch installs. Run `npm run discover-agents` (also from **`scripts/bootstrap/setup.sh`** / **`scripts/application/ch-deploy.sh update`**) to refresh `agents.discovery.json`.
+- **Hermes Agent** (optional for a standalone UI): the app resolves the local install from **`HERMES_HOME`** / **`AGENT_HOME`** (default `~/.hermes`).
 - **Optional:** PostgreSQL + pgvector and Python for [Hindsight](docs/DEPLOY.md)—`bash scripts/bootstrap/setup-hindsight.sh` or follow prompts in **`scripts/bootstrap/setup.sh`**.
 
 ---
 
 ## Data, installs, and cron
 
-- **`CH_DATA_DIR`** (or `CONTROL_HUB_DATA_DIR`, default `~/control-hub/data`): missions, templates, stories, SQLite (`control-hub.db`), **`agents-registry.json`**, optional **`agents.discovery.json`**, and default locations for hardware-cron scripts/logs unless overridden. **Not committed**—see [.gitignore](.gitignore).
+- **`CH_DATA_DIR`** (or `CONTROL_HUB_DATA_DIR`, default `~/control-hub/data`): missions, templates, stories, SQLite (`control-hub.db`), and default locations for hardware-cron scripts/logs unless overridden. **Not committed**\u2014see [.gitignore](.gitignore).
 - **Hermes agent cron** lives on the **active** Hermes filesystem as `cron/jobs.json` (edited by Control Hub; Hermes runs schedules). See [PLATFORM_VISION](docs/PLATFORM_VISION.md) and [MIGRATION](docs/MIGRATION.md).
 - **Hardware cron** is separate: scripts and logs under **`CH_SCRIPTS_DIR`** / **`CH_HARDWARE_LOG_DIR`** (see [API](docs/API.md) `/api/cron/hardware`).
 - Audit-style events may append to `~/.hermes/logs/ch-audit.log` when Hermes is present—see [.env.example](.env.example).
@@ -91,7 +91,7 @@ Preset hardware cron shells: **`scripts/hardware/`**. Hermes markdown templates:
 
 ## Configuration
 
-Control Hub reads and writes Hermes **`config.yaml`** (and related files) through the API for the **active** Hermes root chosen in the UI / registry—not a single hard-coded `~/.hermes` when multiple installs exist. See [HERMES_CONFIG_INTEGRATION.md](docs/HERMES_CONFIG_INTEGRATION.md).
+Control Hub reads and writes Hermes **`config.yaml`** (and related files) through the API for the local Hermes install. See [HERMES_CONFIG_INTEGRATION.md](docs/HERMES_CONFIG_INTEGRATION.md).
 
 ---
 
@@ -118,7 +118,7 @@ Shared logic: [`scripts/lib/ch-hermes-profile-templates.sh`](scripts/lib/ch-herm
 | Area | Purpose |
 |------|---------|
 | `src/app/` | App Router pages and `api/` REST routes |
-| `src/lib/` | `paths.ts`, `hermes-agent-runtime.ts`, `agent-registry.ts`, `config-schema.ts`, `schema/`, providers, utilities |
+| `src/lib/` | `paths.ts`, `hermes-agent-runtime.ts`, `hermes-home.ts`, `config-schema.ts`, `schema/`, providers, utilities |
 | `src/components/` | UI including `layout/sidebar-config.ts` |
 | `tests/unit/` | Jest |
 | `tests/e2e/` | Playwright (keep `app-routes.ts` aligned with the sidebar) |

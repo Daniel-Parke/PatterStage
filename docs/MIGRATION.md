@@ -16,10 +16,10 @@
 
 **Cron repeat:** Recurring jobs created by CH use **`repeat.times: null`** for “run forever”, matching Hermes’ canonical form.
 
-## Active Hermes installs (`agents-registry.json`)
+## Local Hermes install resolution
 
-**Current behaviour:** Under **`CH_DATA_DIR`**, Control Hub persists **`agents-registry.json`** (active agent id + registered Hermes filesystem roots). API routes and the UI resolve Hermes paths via **`getActiveHermesPaths()`**, not a single implicit **`HERMES_HOME`** at runtime.
+**Current behaviour:** Control Hub resolves the local Hermes install path from **`HERMES_HOME`** / **`AGENT_HOME`** environment variables (default `~/.hermes`) via **`getActiveHermesPaths()`** / **`getActiveHermesHome()`** in `src/lib/hermes-agent-runtime.ts`.
 
-**If you only ever used env vars:** On first run, the registry is **seeded** from **`AGENT_HOME`** or **`HERMES_HOME`** when the file does not exist. After that, prefer switching installs from **Agents** in the UI or **`POST /api/agent/active`** so every surface stays consistent.
+**If you use env vars:** Set `HERMES_HOME` or `AGENT_HOME` to your Hermes install directory. The default is `~/.hermes`.
 
-**Backups:** Include **`CH_DATA_DIR/agents-registry.json`** with the rest of `CH_DATA_DIR` so active-install choice survives restores. See [CONTROL_HUB.md](CONTROL_HUB.md) and [DEPLOY.md](DEPLOY.md).
+**Backups:** Include `CH_DATA_DIR` and your Hermes install root (`HERMES_HOME`). See [CONTROL_HUB.md](CONTROL_HUB.md) and [DEPLOY.md](DEPLOY.md).

@@ -47,10 +47,10 @@ interface ModelPickerProps {
 }
 
 /**
- * Registry-backed model select. Emits Hermes `modelId` + `provider` strings
+ * Hermes model select for mission dispatch. Emits Hermes `modelId` + `provider` strings
  * (same shape as built-in templates and dispatch).
  */
-const EMPTY_REGISTRY_TITLE =
+const EMPTY_DEFAULT_HINT =
   "Configure models under Config → Models. Dispatch falls back to Hermes config when none selected.";
 
 export default function ModelPicker({
@@ -100,7 +100,7 @@ export default function ModelPicker({
     void load();
   }, [load]);
 
-  const registryValue = (() => {
+  const selectedValue = (() => {
     const m = models.find((x) => x.modelId === modelId && x.provider === provider);
     if (m) return m.id;
     return "";
@@ -151,7 +151,7 @@ export default function ModelPicker({
           disabled
           title={
             models.length === 0
-              ? `${optionLabel}\n\n${EMPTY_REGISTRY_TITLE}`
+              ? `${optionLabel}\n\n${EMPTY_DEFAULT_HINT}`
               : String(error ?? "Models unavailable")
           }
           className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/40 font-mono"
@@ -169,7 +169,7 @@ export default function ModelPicker({
         >
           <option>{optionLabel}</option>
         </select>
-        <p className="text-[10px] text-white/25 font-mono">{EMPTY_REGISTRY_TITLE}</p>
+        <p className="text-[10px] text-white/25 font-mono">{EMPTY_DEFAULT_HINT}</p>
       </div>
     );
   }
@@ -177,7 +177,7 @@ export default function ModelPicker({
   return (
     <select
       id={id}
-      value={registryValue}
+      value={selectedValue}
       onChange={(e) => handleSelect(e.target.value)}
       className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-neon-cyan/50 font-mono"
     >

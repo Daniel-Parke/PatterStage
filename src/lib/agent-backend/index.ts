@@ -1,6 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// agent-backend/index.ts — AgentBackend interface
-// All agent backends must implement this contract.
+// agent-backend/index.ts — Hermes mission dispatch contract
 // ═══════════════════════════════════════════════════════════════
 
 import type {
@@ -18,11 +17,6 @@ import type {
 // ── The contract ────────────────────────────────────────────────
 
 export interface AgentBackend {
-  /** Human-readable name of this backend */
-  readonly name: string;
-
-  /** Machine identifier used in config */
-  readonly id: string;
 
   // ── Profiles ────────────────────────────────────────────────
 
@@ -61,7 +55,7 @@ export interface AgentBackend {
   // ── Tools ─────────────────────────────────────────────────
 
   /**
-   * List all available tools for this backend.
+   * List all available tools in this Hermes install.
    * Tools with category "mcp" are MCP servers.
    */
   listTools(): Promise<ToolDefinition[]>;

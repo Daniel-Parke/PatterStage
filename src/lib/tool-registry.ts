@@ -4,7 +4,7 @@
 // Provides CRUD for tool plugins and seeds default Hermes tools.
 
 import { db, inTransaction, uuid, now } from "./db";
-import type { ToolDefinition } from "./agent-backend/types";
+import type { ToolDefinition } from "./agent-backend/types";  // HMS dispatch types
 
 // ── Row shape ─────────────────────────────────────────────────
 

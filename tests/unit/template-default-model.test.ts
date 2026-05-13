@@ -4,7 +4,7 @@
  * accepts entries where these fields are optional.
  */
 
-import { TEMPLATES, USE_REGISTRY_DEFAULT } from "@/lib/mission-helpers";
+import { TEMPLATES, USE_HERMES_DEFAULT } from "@/lib/mission-helpers";
 import {
   templatePackEntrySchema,
   parseTemplatePackManifestV1,
@@ -16,14 +16,14 @@ describe("template defaults", () => {
     expect(TEMPLATES.length).toBe(3);
     for (const t of TEMPLATES) {
       // Templates must not hardcode a specific model — they defer to the registry agent default.
-      // defaultModel may be undefined, null, or USE_REGISTRY_DEFAULT.
+      // defaultModel may be undefined, null, or USE_HERMES_DEFAULT.
       const hasNoHardcodedModel =
-        t.defaultModel == null || t.defaultModel === USE_REGISTRY_DEFAULT;
+        t.defaultModel == null || t.defaultModel === USE_HERMES_DEFAULT;
       expect(hasNoHardcodedModel).toBe(true);
       // defaultProvider must similarly be absent when defaultModel is absent.
       const hasNoProvider =
         (t.defaultModel == null && t.defaultProvider == null) ||
-        (t.defaultModel === USE_REGISTRY_DEFAULT && t.defaultProvider == null);
+        (t.defaultModel === USE_HERMES_DEFAULT && t.defaultProvider == null);
       expect(hasNoProvider).toBe(true);
     }
   });

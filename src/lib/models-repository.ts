@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// models-repository.ts — CRUD for the user-models registry
+// models-repository.ts — CRUD for user models (Hermes dispatch)
 // ═══════════════════════════════════════════════════════════════
 //
 // Drives mission dispatch, generic LLM calls, and the Hindsight bridge.

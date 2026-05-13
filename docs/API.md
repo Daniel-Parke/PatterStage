@@ -12,7 +12,7 @@ All error handlers must call `logApiError(route, context, error)` from `@/lib/ap
 
 | Route | Methods | Purpose |
 |---|---|---|
-| `/api/agent/targets` | `GET` | Active agent id, registry entries, optional `agents.discovery.json`. |
+| `/api/agent/profiles` | `GET`, `POST`, `PUT`, `DELETE` | Hermes profile management. |
 | `/api/agent/active` | `POST` | Set `activeAgentId` (optional `register` to upsert an entry). |
 | `/api/agent/files` | `GET` | List agent behavior files. |
 | `/api/agent/files/[key]` | `GET`, `PUT` | Read/update one behavior file. |

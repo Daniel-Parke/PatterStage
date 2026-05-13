@@ -5,12 +5,12 @@
 // layer. When a card moves to "In Progress" (or the user explicitly dispatches
 // it), this bridge:
 //   1. Creates a mission from the card's title + description
-//   2. Dispatches it to the active AgentBackend
+//   2. Dispatches it to the Hermes backend
 //   3. Records the missionId on the card (via KanbanAdapter)
 //   4. Returns the created mission so the UI can display it
 //
 // This keeps the kanban UI decoupled from HOW missions run — the
-// AgentBackend interface (Hermes) handles execution without changing the UI.
+// Hermes backend handles execution without changing the UI.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { agentBackend } from "@/lib/backends";

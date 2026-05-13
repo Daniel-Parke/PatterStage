@@ -17,7 +17,7 @@ export const templatePackEntrySchema = z.object({
   suggestedSkills: z.array(z.string()),
   // defaultModel + defaultProvider are pre-fill hints for the mission
   // form. Both are optional — when omitted, the dispatch falls back to
-  // the registry's `agent` default (see src/lib/models-repository.ts).
+  // Control Hub DB's `agent` default (see src/lib/models-repository.ts).
   defaultModel: z.string().optional(),
   defaultProvider: z.string().optional(),
   timeoutMinutes: z.number().int().min(1).max(120),
