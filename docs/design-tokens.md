@@ -49,7 +49,6 @@ TypeScript `AccentColor` in `src/types/hermes.ts` is unchanged: `cyan | purple |
 | `semantic-warning` | `#fbbf24` | Paused / degraded |
 | `semantic-danger` | `#f87171` | Errors / destructive |
 | `semantic-info` | `#00a1e6` | Informational chips |
-| `semantic-neutral` | white @ opacity | Muted badges via `white/` utilities |
 
 ## Glow / TS parity
 
@@ -58,7 +57,7 @@ TypeScript `AccentColor` in `src/types/hermes.ts` is unchanged: `cyan | purple |
 ## Shell chrome
 
 - `--ch-shell-header-min-height`: `5rem` — sidebar brand row + `PageHeader` / dashboard bar.
-- Mobile: `MobileHeader` intentionally uses `min-h-12` (`3rem`) for touch targets; documented as **mobile-compact** chrome.
+- `--ch-mobile-header-min-height`: `3rem` — mobile compact chrome for touch targets.
 
 ## Forbidden patterns
 

@@ -34,7 +34,7 @@ npm run generate:schema-json
 
 - **`scripts/bootstrap/`** — install, setup, stop, backup, Hindsight bootstrap.
 - **`scripts/application/ch-deploy.sh`** — unified **`update`** / **`restart`** / **`rebuild`** for CLI and **`POST /api/update`**.
-- **`scripts/tooling/`** — DB prep, agent discovery, JSON Schema emit (`npm run prebuild`, `discover-agents`, `generate:schema-json`).
+- **`scripts/tooling/`** — DB prep, agent discovery, JSON Schema emit (`npm run prebuild`, `discover-hermes`, `generate:schema-json`).
 - **`scripts/lib/`**, **`scripts/hardware/`**, **`scripts/bundled-profiles/`** — shared bash, hardware cron presets, Hermes templates.
 
-Details: **[DEPLOY.md](DEPLOY.md)**. Supplementary layout notes: [internal/script-deploy-unification.md](internal/script-deploy-unification.md).
+Details: **[DEPLOY.md](DEPLOY.md)**.

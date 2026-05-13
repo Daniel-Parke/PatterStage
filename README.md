@@ -79,7 +79,7 @@ Mission and template Zod schemas live in **`src/lib/schema/`**; regenerate JSON 
 | `scripts/application/ch-deploy.sh` | **`update`** \| **`restart`** \| **`rebuild`** — single CLI / dashboard deploy entry (`POST /api/update`; pull, conditional npm, build, profile gate, discover-agents, restart). Options: `--branch` |
 | `scripts/bootstrap/stop.sh` | Stop `next start` listeners on PORT |
 | `scripts/tooling/prebuild-db.mjs` | Invoked via `npm run prebuild` |
-| `scripts/tooling/discover-agents.mjs` | `npm run discover-agents` |
+| `scripts/tooling/discover-agents.mjs` | `npm run discover-hermes` |
 | `scripts/tooling/generate-json-schema.ts` | `npm run generate:schema-json` |
 | `scripts/bootstrap/backup-hermes-config.sh` | Backup `CH_DATA_DIR` (or legacy paths) |
 | `scripts/bootstrap/setup-hindsight.sh` | Hindsight-only install |
