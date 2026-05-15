@@ -15,6 +15,26 @@ import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 
 const DATA_DIR = PATHS.templates;
 
+// ── Simple in-memory cache (30s TTL) ───────────────────────
+let templatesCache: { data: unknown; timestamp: number } | null = null;
+const CACHE_TTL_MS = 30_000;
+
+function getTemplatesCached() {
+  const now = Date.now();
+  if (templatesCache && now - templatesCache.timestamp < CACHE_TTL_MS) {
+    return templatesCache.data;
+  }
+  return null;
+}
+
+function setTemplatesCache(data: unknown) {
+  templatesCache = { data, timestamp: Date.now() };
+}
+
+function invalidateTemplatesCache() {
+  templatesCache = null;
+}
+
 function sanitizeTemplateId(id: string): string {
   return id.replace(/[^a-zA-Z0-9_-]/g, "");
 }
@@ -108,6 +128,12 @@ function saveTemplate(template: CustomTemplate) {
 
 export async function GET() {
   try {
+    // Return cached result if fresh
+    const cached = getTemplatesCached();
+    if (cached) {
+      return NextResponse.json(cached);
+    }
+
     ensureDir();
     const files = readdirSync(DATA_DIR).filter((f) => f.endsWith(".json"));
     const customTemplates: (CustomTemplate & { isCustom: true })[] = [];
@@ -148,8 +174,12 @@ export async function GET() {
     }));
 
     const templates = [...customTemplates, ...builtInTemplates];
+    const response = { data: { templates, total: templates.length } };
 
-    return NextResponse.json({ data: { templates, total: templates.length } });
+    // Cache the response
+    setTemplatesCache(response);
+
+    return NextResponse.json(response);
   } catch (err) {
     logApiError("GET /api/templates", "listing templates", err);
     return NextResponse.json({ error: "Failed to list templates" }, { status: 500 });
@@ -212,6 +242,7 @@ export async function POST(request: NextRequest) {
       };
 
       saveTemplate(template);
+      invalidateTemplatesCache();
       return NextResponse.json({ data: enrichCustomTemplateFromDisk(template as unknown as Record<string, unknown>) });
     }
 
@@ -267,6 +298,7 @@ export async function POST(request: NextRequest) {
       template.updatedAt = new Date().toISOString();
 
       saveTemplate(template);
+      invalidateTemplatesCache();
       return NextResponse.json({
         data: enrichCustomTemplateFromDisk(template as unknown as Record<string, unknown>),
       });
@@ -305,6 +337,7 @@ export async function POST(request: NextRequest) {
           updatedAt: now,
         };
         saveTemplate(template);
+        invalidateTemplatesCache();
         created.push(template);
       }
       return NextResponse.json({
@@ -321,6 +354,7 @@ export async function POST(request: NextRequest) {
       const path = DATA_DIR + "/" + sanitizedId + ".json";
       if (existsSync(path)) {
         unlinkSync(path);
+        invalidateTemplatesCache();
         return NextResponse.json({ data: { deleted: true } });
       }
       return NextResponse.json({ error: "Template not found" }, { status: 404 });

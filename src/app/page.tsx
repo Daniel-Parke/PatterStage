@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, memo as reactMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, memo as reactMemo, startTransition } from "react";
 import Link from "next/link";
 import {
   // Dashboard icons
@@ -37,6 +37,7 @@ import { useToast } from "@/components/ui/Toast";
 import type { SystemStatus, AccentColor } from "@/types/hermes";
 import { timeAgo, timeUntil, titleCase } from "@/lib/utils";
 import { shellHeaderBarClasses } from "@/lib/theme";
+import { StatPillSkeleton } from "@/components/skeletons";
 
 interface HermesProcess {
   id: string;
@@ -199,12 +200,28 @@ function StatPill({
 }
 
 export default function Dashboard() {
-  const [status, setStatus] = useState<SystemStatus | null>(null);
-  const [monitor, setMonitor] = useState<MonitorData | null>(null);
-  const [processes, setProcesses] = useState<HermesProcess[]>([]);
-  const [missions, setMissions] = useState<MissionBrief[]>([]);
-  const [config, setConfig] = useState<Record<string, unknown> | null>(null);
-  const [templates, setTemplates] = useState<Array<{ id: string; name: string; icon: string; color: string; category: string; profile: string; description: string; isCustom?: boolean }>>([]);
+  const [data, setDataFields] = useState<{
+    status: SystemStatus | null;
+    monitor: MonitorData | null;
+    processes: HermesProcess[];
+    missions: MissionBrief[];
+    config: Record<string, unknown> | null;
+    templates: Array<{ id: string; name: string; icon: string; color: string; category: string; profile: string; description: string; isCustom?: boolean }>;
+  }>({
+    status: null,
+    monitor: null,
+    processes: [],
+    missions: [],
+    config: null,
+    templates: [],
+  });
+  const { status, monitor, processes, missions, config, templates } = data;
+
+  const setData = useCallback((partial: Partial<typeof data>) => {
+    startTransition(() => {
+      setDataFields(prev => ({ ...prev, ...partial }));
+    });
+  }, []);
   const [dispatchExpanded, setDispatchExpanded] = useState(false);
   const [errorSev, setErrorSev] = useState<"all" | "error" | "warning">("all");
   const { showToast, toastElement } = useToast();
@@ -233,7 +250,7 @@ export default function Dashboard() {
       // Refresh missions
       const data = await fetch("/api/missions");
       const d = await data.json();
-      if (d.data) setMissions(d.data.missions || []);
+      if (d.data) setData({ missions: d.data.missions || [] });
     } catch {
       showToast("Failed to cancel mission", "error");
     }
@@ -250,7 +267,7 @@ export default function Dashboard() {
       // Refresh monitor data to show updated schedule
       const res = await fetch("/api/monitor");
       const d = await res.json();
-      if (d.data) setMonitor(d.data);
+      if (d.data) setData({ monitor: d.data });
     } catch {
       showToast("Failed to update cron schedule", "error");
     }
@@ -273,12 +290,12 @@ export default function Dashboard() {
         ]);
 
       if (!signal.aborted) {
-        setStatus(statusRes.data);
-        setConfig(configRes.data);
-        setTemplates(templatesRes.data?.templates || []);
-        setMonitor(monitorRes.data);
-        setProcesses(processesRes.data?.processes || processesRes.processes || []);
-        setMissions(missionsRes.data?.missions || []);
+        setData({ status: statusRes.data });
+        setData({ config: configRes.data });
+        setData({ templates: templatesRes.data?.templates || [] });
+        setData({ monitor: monitorRes.data });
+        setData({ processes: processesRes.data?.processes || processesRes.processes || [] });
+        setData({ missions: missionsRes.data?.missions || [] });
       }
     };
     initialLoad();
@@ -289,7 +306,7 @@ export default function Dashboard() {
         const res = await fetch("/api/monitor", { signal }).catch(() => null);
         if (res?.ok) {
           const d = await res.json().catch(() => null);
-          if (d?.data) setMonitor(d.data);
+          if (d?.data) setData({ monitor: d.data });
         }
       }
     }, 10000);
@@ -299,7 +316,7 @@ export default function Dashboard() {
         const res = await fetch("/api/agents", { signal }).catch(() => null);
         if (res?.ok) {
           const d = await res.json().catch(() => null);
-          if (d?.data) setProcesses(d.data.processes || []);
+          if (d?.data) setData({ processes: d.data.processes || [] });
         }
       }
     }, 15000);
@@ -309,7 +326,7 @@ export default function Dashboard() {
         const res = await fetch("/api/missions", { signal }).catch(() => null);
         if (res?.ok) {
           const d = await res.json().catch(() => null);
-          if (d?.data) setMissions(d.data.missions || []);
+          if (d?.data) setData({ missions: d.data.missions || [] });
         }
       }
     }, 15000);
@@ -356,30 +373,41 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
         {/* ═══ Compact Stat Row ═══ */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatPill
-            icon={Radio}
-            label="Processes"
-            value={activeProcesses.length > 0 ? `${activeProcesses.length} Active` : status?.soulFile ? "Idle" : "Offline"}
-            color={activeProcesses.length > 0 ? "green" : status?.soulFile ? "cyan" : "pink"}
-          />
-          <StatPill
-            icon={ListTodo}
-            label="Cron Jobs"
-            value={monitor ? `${monitor.cron.active} Active` : "..."}
-            color="orange"
-          />
-          <StatPill
-            icon={Activity}
-            label="Sessions"
-            value={monitor ? `${monitor.sessions.total}` : status ? `${status.sessionsCount}` : "..."}
-            color="purple"
-          />
-          <StatPill
-            icon={Layers}
-            label={`Memory · ${monitor?.memory.provider || "Not Installed"}`}
-            value={monitor ? (monitor.memory.factCount >= 0 ? `${monitor.memory.factCount} facts` : "0 facts") : "..."}
-            color="pink"
-          />
+          {monitor ? (
+            <>
+              <StatPill
+                icon={Radio}
+                label="Processes"
+                value={activeProcesses.length > 0 ? `${activeProcesses.length} Active` : status?.soulFile ? "Idle" : "Offline"}
+                color={activeProcesses.length > 0 ? "green" : status?.soulFile ? "cyan" : "pink"}
+              />
+              <StatPill
+                icon={ListTodo}
+                label="Cron Jobs"
+                value={`${monitor.cron.active} Active`}
+                color="orange"
+              />
+              <StatPill
+                icon={Activity}
+                label="Sessions"
+                value={`${monitor.sessions.total}`}
+                color="purple"
+              />
+              <StatPill
+                icon={Layers}
+                label={`Memory · ${monitor.memory.provider || "Not Installed"}`}
+                value={monitor.memory.factCount >= 0 ? `${monitor.memory.factCount} facts` : "0 facts"}
+                color="pink"
+              />
+            </>
+          ) : (
+            <>
+              <StatPillSkeleton />
+              <StatPillSkeleton />
+              <StatPillSkeleton />
+              <StatPillSkeleton />
+            </>
+          )}
         </div>
 
         {/* ═══ Handoff / continuation ═══ */}
@@ -753,7 +781,7 @@ export default function Dashboard() {
             </h2>
             <RefreshCw
               className="w-3 h-3 text-white/20 hover:text-white/50 cursor-pointer"
-              onClick={() => fetch("/api/agents").then((r) => r.json()).then((d) => setProcesses(d.data?.processes || d.processes || []))}
+              onClick={() => fetch("/api/agents").then((r) => r.json()).then((d) => setData({ processes: d.data?.processes || d.processes || [] }))}
             />
           </div>
           {processes.length === 0 ? (

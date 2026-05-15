@@ -27,6 +27,18 @@ import {
 import { requireMcApiKey } from "@/lib/api-auth";
 import { ensureSyncLayer } from "@/lib/sync";
 
+// ── Debounce: only sync if 30s since last sync ──────────────
+let lastSyncTime = 0;
+const SYNC_DEBOUNCE_MS = 30_000;
+
+function ensureSyncLayerDebounced() {
+  const now = Date.now();
+  if (now - lastSyncTime > SYNC_DEBOUNCE_MS) {
+    lastSyncTime = now;
+    ensureSyncLayer();
+  }
+}
+
 function parseQuery(
   req: NextRequest,
 ): {
@@ -64,8 +76,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ data: { session } });
     }
 
-    // Sync layer handles background syncing of Hermes sessions
-    ensureSyncLayer();
+    // Sync layer handles background syncing of Hermes sessions (debounced — at most once per 30s)
+    ensureSyncLayerDebounced();
 
     const result = listSessions({
       agentType: q.agentType,

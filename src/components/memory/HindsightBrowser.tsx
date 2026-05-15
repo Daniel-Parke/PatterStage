@@ -165,7 +165,9 @@ export default function HindsightBrowser() {
         await fetchHealthOnly();
       }
     } catch {
-      await fetchHealthOnly();
+      // Silently swallow initial load errors — the system may still be starting up.
+      // fetchHealthOnly() runs in the background to determine actual availability.
+      void fetchHealthOnly();
     } finally {
       setLoadingInitial(false);
     }
@@ -173,8 +175,7 @@ export default function HindsightBrowser() {
 
   useEffect(() => {
     void loadRecentMemories();
-    void fetchHealthOnly();
-  }, [loadRecentMemories, fetchHealthOnly]);
+  }, [loadRecentMemories]);
 
   const applyRecallPayload = useCallback(
     async (
@@ -558,7 +559,7 @@ export default function HindsightBrowser() {
     <div className="pt-2">
       {toastElement}
       {/* Health Status */}
-      {health && !health.available && (
+      {!loadingInitial && health && !health.available && (
         <div className="mb-4">
           <ErrorBanner
             message={
