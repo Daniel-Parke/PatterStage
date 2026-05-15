@@ -1,70 +1,33 @@
-import { NextResponse } from "next/server";
-import { existsSync, statSync } from "fs";
-import { readdir } from "fs/promises";
+// ═══════════════════════════════════════════════════════════════
+// /api/status/route.ts — System status (DB-centric)
+//
+// Reads from the meta table (synced by ConfigSync, SessionSync, MemorySync)
+// instead of recursive filesystem walks.
+// ═══════════════════════════════════════════════════════════════
 
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { NextResponse } from "next/server";
+
+import { ensureSyncLayer } from "@/lib/sync";
+import { getSystemStat, getSystemStatNumber } from "@/lib/system-repository";
 import { logApiError } from "@/lib/api-logger";
 
 export async function GET() {
   try {
-    const H = getActiveHermesPaths();
-    // Check SOUL.md
-    const soulPath = H.soul;
-    const soulFile = existsSync(soulPath);
+    ensureSyncLayer();
 
-    // Check config.yaml
-    const configPath = H.config;
-    const configFile = existsSync(configPath);
-
-    // Count skills
-    let skillsCount = 0;
-    const skillsPath = H.skills;
-    if (existsSync(skillsPath)) {
-      const countSkills = async (dir: string): Promise<number> => {
-        let count = 0;
-        try {
-          const items = await readdir(dir, { withFileTypes: true });
-          for (const item of items) {
-            if (item.isDirectory()) {
-              count += await countSkills(dir + "/" + item.name);
-            } else if (item.name === "SKILL.md") {
-              count++;
-            }
-          }
-        } catch (err) { logApiError("GET /api/status", "counting skills in " + dir, err); }
-        return count;
-      };
-      skillsCount = await countSkills(skillsPath);
-    }
-
-    // Count sessions
-    let sessionsCount = 0;
-    const sessionsPath = H.sessions;
-    if (existsSync(sessionsPath)) {
-      try {
-        const files = await readdir(sessionsPath);
-        sessionsCount = files.filter((f) => f.endsWith(".json") || f.endsWith(".jsonl")).length;
-      } catch (err) { logApiError("GET /api/status", "counting sessions", err); }
-    }
-
-    // Memory DB size
-    let memorySize = "N/A";
-    const memoryPath = H.memoryDb;
-    if (existsSync(memoryPath)) {
-      try {
-        const stats = statSync(memoryPath);
-        const sizeKB = Math.round(stats.size / 1024);
-        memorySize = sizeKB > 1024 ? (sizeKB / 1024).toFixed(1) + " MB" : sizeKB + " KB";
-      } catch (err) { logApiError("GET /api/status", "reading memory db stats", err); }
-    }
+    const soulPresent = getSystemStat("config.soul_present") === "true";
+    const configPresent = getSystemStat("config.present") === "true";
+    const skillsCount = getSystemStatNumber("skills.count", 0);
+    const sessionsTotal = getSystemStatNumber("sessions.total", 0);
+    const memoryDbSize = getSystemStat("memory.db_size") ?? "N/A";
 
     return NextResponse.json({
       data: {
-        soulFile,
-        configFile,
+        soulFile: soulPresent,
+        configFile: configPresent,
         skillsCount,
-        sessionsCount,
-        memorySize,
+        sessionsCount: sessionsTotal,
+        memorySize: memoryDbSize,
         timestamp: new Date().toISOString(),
       },
     });

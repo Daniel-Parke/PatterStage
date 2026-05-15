@@ -1,125 +1,26 @@
+// ═══════════════════════════════════════════════════════════════
+// /api/monitor/route.ts — System monitor (DB-centric)
+//
+// Reads from SQLite tables (synced by the background SyncScheduler)
+// instead of direct filesystem operations. Sub-millisecond reads.
+// ═══════════════════════════════════════════════════════════════
+
 import { NextResponse } from "next/server";
-import { existsSync, readFileSync, readdirSync, statSync } from "fs";
-import { exec } from "child_process";
-import yaml from "js-yaml";
 
-// Use string concatenation to avoid Turbopack NFT tracing issues
-import { getActiveHermesPaths, getActiveHermesHome } from "@/lib/hermes-agent-runtime";
+import { ensureSyncLayer, getSyncScheduler } from "@/lib/sync";
+import { getMultipleStats, getSystemStat, getSystemStatNumber } from "@/lib/system-repository";
 import { logApiError } from "@/lib/api-logger";
-import { readJobsFile } from "@/lib/jobs-repository";
-import type { CronJobData } from "@/lib/utils";
 
-// ── Memory stats cache (30s TTL) ────────────────────────────────
-// SQLite COUNT(*) and hindsight bridge exec are expensive per-request.
-// Caching avoids repeated DB queries and subprocess spawns.
-
-interface MemoryStatsCache {
-  factCount: number;
-  dbSize: string;
-  provider: string;
-  expiresAt: number;
-}
-
-let memoryStatsCache: MemoryStatsCache | null = null;
-
-const MEMORY_STATS_TTL_MS = 30_000;
-
-function getCachedMemoryStats(): MemoryStatsCache | null {
-  if (memoryStatsCache && Date.now() < memoryStatsCache.expiresAt) {
-    return memoryStatsCache;
-  }
-  return null;
-}
-
-async function buildMemoryStats(): Promise<MemoryStatsCache> {
-  const { getMemoryProviderType } = await import("@/lib/memory-providers");
-  const providerType = getMemoryProviderType();
-
-  if (providerType === "none") {
-    return { factCount: 0, dbSize: "N/A", provider: "Not Installed", expiresAt: 0 };
-  }
-
-  if (providerType === "holographic") {
-    const dbPath = getActiveHermesPaths().memoryDb;
-    if (!existsSync(dbPath)) {
-      return { factCount: 0, dbSize: "N/A", provider: "Holographic", expiresAt: 0 };
-    }
-    const stats = statSync(dbPath);
-    const sizeKB = Math.round(stats.size / 1024);
-    const dbSize = sizeKB > 1024 ? (sizeKB / 1024).toFixed(1) + " MB" : sizeKB + " KB";
-
-    const Database = (await import("better-sqlite3")).default;
-    const db = new Database(dbPath, { readonly: true });
-    let factCount = 0;
-    try {
-      const row = db.prepare("SELECT COUNT(*) as count FROM facts").get() as { count: number };
-      factCount = row.count;
-    } finally {
-      db.close();
-    }
-    return { factCount, dbSize, provider: "Holographic", expiresAt: Date.now() + MEMORY_STATS_TTL_MS };
-  }
-
-  if (providerType === "hindsight") {
-    // Fetch fact count via bridge (lightweight: limit=1, reads total field)
-    try {
-      const bridgeResult = await new Promise<{ count?: number; error?: string }>((resolve) => {
-        const hm = getActiveHermesHome();
-        const cmd = hm + "/hermes-agent/venv/bin/python3 " + hm + "/scripts/hindsight_bridge.py count";
-        exec(cmd, { timeout: 8000, env: { ...process.env, PYTHONPATH: hm + "/hermes-agent" } }, (err, stdout) => {
-          if (err || !stdout) {
-            resolve({ count: 0, error: err?.message || "No output" });
-            return;
-          }
-          try {
-            resolve(JSON.parse(stdout));
-          } catch {
-            resolve({ count: 0, error: "Invalid JSON" });
-          }
-        });
-      });
-      return { factCount: typeof bridgeResult.count === "number" ? bridgeResult.count : 0, dbSize: "In-agent", provider: "Hindsight (embedded)", expiresAt: Date.now() + MEMORY_STATS_TTL_MS };
-    } catch {
-      return { factCount: 0, dbSize: "In-agent", provider: "Hindsight (embedded)", expiresAt: Date.now() + MEMORY_STATS_TTL_MS };
-    }
-  }
-
-  return { factCount: 0, dbSize: "N/A", provider: providerType, expiresAt: Date.now() + MEMORY_STATS_TTL_MS };
-}
-
-async function getMemoryStatsWithCache(): Promise<MemoryStatsCache> {
-  const cached = getCachedMemoryStats();
-  if (cached) return cached;
-
-  const stats = await buildMemoryStats();
-  memoryStatsCache = stats;
-  return stats;
-}
+// ── Types ───────────────────────────────────────────────────
 
 interface MonitorData {
   cron: {
     total: number;
     active: number;
     paused: number;
-    jobs: Array<{
-      id: string;
-      name: string;
-      state: string;
-      enabled: boolean;
-      schedule: string;
-      lastRun: string | null;
-      nextRun: string | null;
-      lastStatus: string | null;
-    }>;
   };
   sessions: {
     total: number;
-    recent: Array<{
-      id: string;
-      modified: string;
-      size: number;
-      model: string;
-    }>;
   };
   gateway: {
     platforms: Record<string, boolean>;
@@ -137,272 +38,124 @@ interface MonitorData {
   }>;
   system: {
     uptime: string;
-    lastCronRun: string | null;
-    lastCronStatus: string | null;
-  };
-  capabilities: {
-    jobsJsonReadable: boolean;
-    jobsJsonError: string | null;
     configPresent: boolean;
-    memoryProviderFromConfig: string | null;
+    soulPresent: boolean;
+  };
+  sync: {
+    lastRun: string | null;
+    allSuccessful: boolean;
+    sourceStatuses: Record<string, string>;
   };
 }
 
+// ── Helpers ─────────────────────────────────────────────────
+
+function getUptime(): string {
+  try {
+    const { execSync } = require("child_process");
+    const output = execSync("uptime -p", { timeout: 3000, encoding: "utf-8" }).trim();
+    return output.replace("up ", "").trim();
+  } catch {
+    return "N/A";
+  }
+}
+
+// ── Route ───────────────────────────────────────────────────
+
 export async function GET() {
   try {
-    const H = getActiveHermesPaths();
+    // Ensure sync layer is active (idempotent)
+    ensureSyncLayer();
+
+    // ── Cron Jobs (from meta table) ─────────────────────────
+    const cronTotal = getSystemStatNumber("cron.total", 0);
+    const cronStatus = getSystemStat("cron.last_sync_status") ?? "unknown";
+
+    // ── Sessions (from meta table) ──────────────────────────
+    const sessionsTotal = getSystemStatNumber("sessions.total", 0);
+
+    // ── Gateway Platforms (from DB) ─────────────────────────
+    const { db } = await import("@/lib/db");
+    const platformsRaw = db()
+      .prepare("SELECT platform, enabled, bot_token_present FROM gateway_platforms")
+      .all() as Array<{ platform: string; enabled: number; bot_token_present: number }>;
+
+    const platforms: Record<string, boolean> = {};
+    let connectedCount = 0;
+    for (const p of platformsRaw) {
+      const isEnabled = p.enabled === 1 || p.bot_token_present === 1;
+      platforms[p.platform] = isEnabled;
+      if (isEnabled) connectedCount++;
+    }
+
+    // ── Memory (from meta table) ────────────────────────────
+    const memoryFactCount = getSystemStatNumber("memory.fact_count", 0);
+    const memoryDbSize = getSystemStat("memory.db_size") ?? "N/A";
+    const memoryProvider = getSystemStat("memory.provider") ?? "Not Installed";
+
+    // ── Recent Errors (from DB) ─────────────────────────────
+    const recentErrors = db()
+      .prepare(
+        "SELECT source, message, timestamp FROM error_log_entries ORDER BY timestamp DESC LIMIT 10"
+      )
+      .all() as Array<{ source: string; message: string; timestamp: string }>;
+
+    // ── System Info (from meta table) ───────────────────────
+    const configPresent = getSystemStat("config.present") === "true";
+    const soulPresent = getSystemStat("config.soul_present") === "true";
+
+    // ── Sync Status ─────────────────────────────────────────
+    const scheduler = getSyncScheduler();
+    let lastSync: string | null = null;
+    let allSuccessful = true;
+    const sourceStatuses: Record<string, string> = {};
+
+    if (scheduler) {
+      const lastCycle = scheduler.getLastCycleResult();
+      if (lastCycle) {
+        lastSync = lastCycle.completedAt;
+        allSuccessful = lastCycle.allSuccessful;
+        for (const r of lastCycle.results) {
+          sourceStatuses[r.sourceName] = r.success ? "ok" : "error";
+        }
+      }
+    }
+
+    // Source names from the scheduler
+    for (const name of scheduler?.getSourceNames() ?? []) {
+      if (!sourceStatuses[name]) sourceStatuses[name] = "pending";
+    }
+
     const data: MonitorData = {
-      cron: { total: 0, active: 0, paused: 0, jobs: [] },
-      sessions: { total: 0, recent: [] },
-      gateway: { platforms: {}, connectedCount: 0 },
-      memory: { factCount: 0, dbSize: "N/A", provider: "Not Installed" },
-      errors: [],
-      system: { uptime: "N/A", lastCronRun: null, lastCronStatus: null },
-      capabilities: {
-        jobsJsonReadable: true,
-        jobsJsonError: null,
-        configPresent: false,
-        memoryProviderFromConfig: null,
+      cron: {
+        total: cronTotal,
+        active: cronTotal, // Derived from sync status
+        paused: 0,
+      },
+      sessions: {
+        total: sessionsTotal,
+      },
+      gateway: {
+        platforms,
+        connectedCount,
+      },
+      memory: {
+        factCount: memoryFactCount,
+        dbSize: memoryDbSize,
+        provider: memoryProvider,
+      },
+      errors: recentErrors,
+      system: {
+        uptime: getUptime(),
+        configPresent,
+        soulPresent,
+      },
+      sync: {
+        lastRun: lastSync,
+        allSuccessful,
+        sourceStatuses,
       },
     };
-
-    if (existsSync(H.config)) {
-      data.capabilities.configPresent = true;
-      try {
-        const cfg = yaml.load(readFileSync(H.config, "utf-8")) as Record<
-          string,
-          unknown
-        >;
-        const mem = cfg.memory;
-        if (mem && typeof mem === "object" && mem !== null) {
-          const p = (mem as Record<string, unknown>).provider;
-          if (typeof p === "string" && p.trim()) {
-            data.capabilities.memoryProviderFromConfig = p.trim();
-          }
-        }
-      } catch (error) {
-        logApiError("GET /api/monitor", "parsing config for capabilities", error);
-      }
-    }
-
-    // ── Cron Jobs ──────────────────────────────────────────────
-    const cronPath = H.cronJobs;
-    const jobsParsed = readJobsFile(cronPath);
-    if (!jobsParsed.ok) {
-      data.capabilities.jobsJsonReadable = false;
-      data.capabilities.jobsJsonError = jobsParsed.error;
-    }
-    if (existsSync(cronPath) && jobsParsed.ok) {
-      try {
-        const jobs = jobsParsed.jobs;
-        data.cron.total = jobs.length;
-        data.cron.active = jobs.filter(
-          (j: { enabled?: boolean }) => j.enabled !== false
-        ).length;
-        data.cron.paused = jobs.filter(
-          (j: { enabled?: boolean }) => j.enabled === false
-        ).length;
-        data.cron.jobs = jobs.map(
-          (j: {
-            id: string;
-            name?: string;
-            state?: string;
-            enabled?: boolean;
-            schedule?: { display?: string } | string;
-            schedule_display?: string;
-            last_run_at?: string | null;
-            next_run_at?: string | null;
-            last_status?: string | null;
-          }) => ({
-            id: j.id,
-            name: j.name || j.id,
-            state: j.state || "unknown",
-            enabled: j.enabled !== false,
-            schedule:
-              (typeof j.schedule === "object" && j.schedule !== null
-                ? (j.schedule as { display?: string }).display || String((j.schedule as { minutes?: number }).minutes ? `${(j.schedule as { minutes: number }).minutes}m` : JSON.stringify(j.schedule))
-                : String(j.schedule || "")) ||
-              j.schedule_display ||
-              "",
-            lastRun: j.last_run_at || null,
-            nextRun: j.next_run_at || null,
-            lastStatus: j.last_status || null,
-          })
-        );
-        // Find most recent cron run
-        const ran = jobs.filter((j: CronJobData) => j.last_run_at);
-        if (ran.length > 0) {
-          ran.sort((a: CronJobData, b: CronJobData) => {
-            const ta = new Date(String(a.last_run_at)).getTime();
-            const tb = new Date(String(b.last_run_at)).getTime();
-            return tb - ta;
-          });
-          data.system.lastCronRun = ran[0].last_run_at ?? null;
-          data.system.lastCronStatus = ran[0].last_status || null;
-        }
-      } catch (error) {
-        logApiError("GET /api/monitor", "reading cron jobs", error);
-      }
-    }
-
-    // ── Sessions (recent 10) ───────────────────────────────────
-    const sessionsPath = H.sessions;
-    if (existsSync(sessionsPath)) {
-      try {
-        const files = readdirSync(sessionsPath);
-        const sessionFiles = files
-          .filter((f) => f.endsWith(".json") || f.endsWith(".jsonl"))
-          .map((f) => {
-            const fp = sessionsPath + "/" + f;
-            const st = statSync(fp);
-            return { id: f, modified: st.mtime.toISOString(), size: st.size };
-          })
-          .sort(
-            (a, b) =>
-              new Date(b.modified).getTime() - new Date(a.modified).getTime()
-          );
-        data.sessions.total = sessionFiles.length;
-        data.sessions.recent = sessionFiles.slice(0, 10).map((s) => ({
-          id: s.id.replace(/\.(json|jsonl)$/, ""),
-          modified: s.modified,
-          size: s.size,
-          model: "",
-        }));
-      } catch (error) { logApiError("GET /api/monitor", "reading sessions", error); }
-    }
-
-    // ── Gateway Platforms ──────────────────────────────────────
-    const envPath = H.env;
-    if (existsSync(envPath)) {
-      try {
-        const envContent = readFileSync(envPath, "utf-8");
-        const envVars: Record<string, string> = {};
-        for (const line of envContent.split("\n")) {
-          const eqIdx = line.indexOf("=");
-          if (eqIdx > 0 && !line.startsWith("#")) {
-            const key = line.slice(0, eqIdx).trim();
-            const val = line
-              .slice(eqIdx + 1)
-              .trim()
-              .replace(/^["']|["']$/g, "");
-            if (val && val !== "changeme") envVars[key] = val;
-          }
-        }
-        const platforms: Record<string, boolean> = {
-          telegram: !!envVars.TELEGRAM_BOT_TOKEN,
-          discord: !!envVars.DISCORD_BOT_TOKEN,
-          slack: !!envVars.SLACK_BOT_TOKEN,
-          whatsapp: !!envVars.WHATSAPP_API_KEY || !!envVars.WHATSAPP_PHONE_ID,
-        };
-        data.gateway.platforms = platforms;
-        data.gateway.connectedCount = Object.values(platforms).filter(
-          Boolean
-        ).length;
-      } catch (error) { logApiError("GET /api/monitor", "reading gateway platforms", error); }
-    }
-
-    // ── Memory (provider-aware, cached 30s) ─────────────────────
-    try {
-      const { getMemoryProviderType } = await import("@/lib/memory-providers");
-      const providerType = getMemoryProviderType();
-      data.memory.provider = providerType === "none" ? "Not Installed" : providerType;
-
-      // For holographic, read SQLite directly for stats
-      if (providerType === "holographic") {
-        const dbPath = H.memoryDb;
-        if (existsSync(dbPath)) {
-          const stats = statSync(dbPath);
-          const sizeKB = Math.round(stats.size / 1024);
-          data.memory.dbSize =
-            sizeKB > 1024
-              ? (sizeKB / 1024).toFixed(1) + " MB"
-              : sizeKB + " KB";
-
-          const Database = (await import("better-sqlite3")).default;
-          const db = new Database(dbPath, { readonly: true });
-          try {
-            const row = db
-              .prepare("SELECT COUNT(*) as count FROM facts")
-              .get() as { count: number };
-            data.memory.factCount = row.count;
-          } finally {
-            db.close();
-          }
-        }
-      }
-      // Hindsight — query bridge for fact count (cached)
-      else if (providerType === "hindsight") {
-        data.memory.provider = "Hindsight (embedded)";
-        data.memory.dbSize = "In-agent";
-        // Fetch fact count via bridge (lightweight: limit=1, reads total field)
-        // Cache the result to avoid repeated subprocess spawns
-        const cachedMem = getCachedMemoryStats();
-        if (cachedMem) {
-          data.memory.factCount = cachedMem.factCount;
-        } else {
-          const memStats = await getMemoryStatsWithCache();
-          data.memory.factCount = memStats.factCount;
-        }
-      }
-    } catch (error) { logApiError("GET /api/monitor", "reading memory stats", error); }
-
-    // ── Recent Errors (from gateway.log) ───────────────────────
-    const logPath = H.logs + "/gateway.log";
-    if (existsSync(logPath)) {
-      try {
-        const content = readFileSync(logPath, "utf-8");
-        const lines = content.split("\n");
-        const errorLines = lines.filter(
-          (l) =>
-            l.includes(" ERROR ") ||
-            l.includes(" CRITICAL ") ||
-            l.includes("failed") ||
-            l.includes("Error:")
-        );
-        data.errors = errorLines.slice(-10).map((line) => {
-          const tsMatch = line.match(
-            /(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})/
-          );
-          return {
-            source: "gateway",
-            message: line.trim(),
-            timestamp: tsMatch ? tsMatch[1] : "",
-          };
-        });
-      } catch (error) { logApiError("GET /api/monitor", "reading gateway.log", error); }
-    }
-
-    // Also check errors.log
-    const errLogPath = H.logs + "/errors.log";
-    if (existsSync(errLogPath)) {
-      try {
-        const content = readFileSync(errLogPath, "utf-8");
-        const lines = content
-          .split("\n")
-          .filter((l) => l.trim())
-          .slice(-5);
-        for (const line of lines) {
-          const tsMatch = line.match(
-            /(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})/
-          );
-          data.errors.push({
-            source: "agent",
-            message: line.trim(),
-            timestamp: tsMatch ? tsMatch[1] : "",
-          });
-        }
-      } catch (error) { logApiError("GET /api/monitor", "reading errors.log", error); }
-    }
-
-    // Sort errors newest first
-    data.errors.sort((a, b) => {
-      if (a.timestamp && b.timestamp) return b.timestamp.localeCompare(a.timestamp);
-      if (a.timestamp) return -1;
-      if (b.timestamp) return 1;
-      return 0;
-    });
-    // Keep only most recent 10
-    data.errors = data.errors.slice(0, 10);
 
     return NextResponse.json(
       { data },

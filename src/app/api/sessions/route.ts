@@ -20,12 +20,12 @@ import {
   updateSession,
   getSession,
   listSessions,
-  syncHermesSessionsToDb,
   type AgentType,
   type SessionSource,
   type SessionStatus,
 } from "@/lib/session-repository";
 import { requireMcApiKey } from "@/lib/api-auth";
+import { ensureSyncLayer } from "@/lib/sync";
 
 function parseQuery(
   req: NextRequest,
@@ -64,8 +64,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ data: { session } });
     }
 
-    // Always sync Hermes sessions into DB first — keeps CLI/cron sessions visible
-    syncHermesSessionsToDb();
+    // Sync layer handles background syncing of Hermes sessions
+    ensureSyncLayer();
 
     const result = listSessions({
       agentType: q.agentType,

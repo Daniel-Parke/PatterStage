@@ -261,28 +261,59 @@ export default function Dashboard() {
     const controller = new AbortController();
     const signal = controller.signal;
 
-    // One-shot fetches (fire-and-forget with abort support)
-    fetch("/api/status", { signal }).then((r) => r.json()).then((d) => setStatus(d.data)).catch(() => {});
-    fetch("/api/config", { signal }).then((r) => r.json()).then((d) => setConfig(d.data)).catch(() => {});
-    fetch("/api/templates", { signal }).then((r) => r.json()).then((d) => setTemplates(d.data?.templates || [])).catch(() => {});
+    // Batch all initial fetches — single render update
+    const initialLoad = async () => {
+      const [statusRes, configRes, templatesRes, monitorRes, processesRes, missionsRes] =
+        await Promise.all([
+          fetch("/api/status", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
+          fetch("/api/config", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
+          fetch("/api/templates", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
+          fetch("/api/monitor", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
+          fetch("/api/agents", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
+          fetch("/api/missions", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
+        ]);
 
-    // Staggered polling — avoid burst load from simultaneous API calls
-    fetch("/api/monitor", { signal }).then((r) => r.json()).then((d) => setMonitor(d.data)).catch(() => {});
-    const monitorInterval = setInterval(() => {
-      if (!signal.aborted) fetch("/api/monitor", { signal }).then((r) => r.json()).then((d) => setMonitor(d.data)).catch(() => {});
+      if (!signal.aborted) {
+        setStatus(statusRes.data);
+        setConfig(configRes.data);
+        setTemplates(templatesRes.data?.templates || []);
+        setMonitor(monitorRes.data);
+        setProcesses(processesRes.data?.processes || processesRes.processes || []);
+        setMissions(missionsRes.data?.missions || []);
+      }
+    };
+    initialLoad();
+
+    // Polling: monitor (10s), processes (15s), missions (15s)
+    const monitorInterval = setInterval(async () => {
+      if (!signal.aborted) {
+        const res = await fetch("/api/monitor", { signal }).catch(() => null);
+        if (res?.ok) {
+          const d = await res.json().catch(() => null);
+          if (d?.data) setMonitor(d.data);
+        }
+      }
     }, 10000);
 
-    // Agents + missions poll at offset intervals to spread network load
-    const fetchProcesses = () => {
-      if (!signal.aborted) fetch("/api/agents", { signal }).then((r) => r.json()).then((d) => setProcesses(d.data?.processes || d.processes || [])).catch(() => {});
-    };
-    const fetchMissions = () => {
-      if (!signal.aborted) fetch("/api/missions", { signal }).then((r) => r.json()).then((d) => setMissions(d.data?.missions || [])).catch(() => {});
-    };
-    fetchProcesses();
-    fetchMissions();
-    const processesInterval = setInterval(fetchProcesses, 15000);
-    const missionsInterval = setInterval(fetchMissions, 15000);
+    const processesInterval = setInterval(async () => {
+      if (!signal.aborted) {
+        const res = await fetch("/api/agents", { signal }).catch(() => null);
+        if (res?.ok) {
+          const d = await res.json().catch(() => null);
+          if (d?.data) setProcesses(d.data.processes || []);
+        }
+      }
+    }, 15000);
+
+    const missionsInterval = setInterval(async () => {
+      if (!signal.aborted) {
+        const res = await fetch("/api/missions", { signal }).catch(() => null);
+        if (res?.ok) {
+          const d = await res.json().catch(() => null);
+          if (d?.data) setMissions(d.data.missions || []);
+        }
+      }
+    }, 15000);
 
     return () => {
       controller.abort();
