@@ -52,19 +52,19 @@ export const mainSections: SidebarSection[] = [
   {
     label: "Orchestration",
     links: [
-      { icon: ListTodo, label: "Cron", href: "/cron", color: "orange" },
-      { icon: Rocket, label: "Missions", href: "/missions", color: "cyan" },
-      { icon: Kanban, label: "Kanban", href: "/kanban", color: "purple" },
+      { icon: ListTodo, label: "Cron", href: "/orchestration/cron", color: "orange" },
+      { icon: Rocket, label: "Missions", href: "/orchestration/missions", color: "cyan" },
+      { icon: Kanban, label: "Kanban", href: "/orchestration/kanban", color: "purple" },
       { icon: Users, label: "Teams", href: "/orchestration/teams", color: "purple" },
     ],
   },
   {
     label: "Operations",
     links: [
-      { icon: Bot, label: "Agents", href: "/agent/agents", color: "purple" },
-      { icon: FileText, label: "Skills", href: "/skills", color: "green" },
-      { icon: Wrench, label: "Tools", href: "/agent/tools", color: "purple" },
-      { icon: Sparkles, label: "Personalities", href: "/personalities", color: "purple" },
+      { icon: Bot, label: "Agents", href: "/operations/agents", color: "purple" },
+      { icon: FileText, label: "Skills", href: "/operations/skills", color: "green" },
+      { icon: Wrench, label: "Tools", href: "/operations/tools", color: "purple" },
+      { icon: Sparkles, label: "Personalities", href: "/operations/personalities", color: "purple" },
     ],
   },
   {

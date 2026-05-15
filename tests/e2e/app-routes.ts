@@ -5,8 +5,8 @@
  */
 export const APP_NAV_ROUTES: readonly string[] = [
   "/",
-  "/agent/agents",
-  "/agent/tools",
+  "/operations/agents",
+  "/operations/tools",
   "/config",
   "/config/agent",
   "/config/approvals",
@@ -35,21 +35,21 @@ export const APP_NAV_ROUTES: readonly string[] = [
   "/config/tts",
   "/config/voice",
   "/config/web",
-  "/cron",
+  "/orchestration/cron",
   "/gateway",
-  "/kanban",
+  "/orchestration/kanban",
   "/logs",
   "/memory",
-  "/missions",
+  "/orchestration/missions",
   "/orchestration/teams",
-  "/personalities",
+  "/operations/personalities",
   "/recroom/story-weaver",
   "/recroom/story-weaver/characters",
   "/recroom/story-weaver/create",
   "/recroom/story-weaver/library",
   "/recroom/story-weaver/themes",
   "/sessions",
-  "/skills",
+  "/operations/skills",
 ];
 
 /** Config hub and YAML/file-backed section editors (subset of `APP_NAV_ROUTES`). */

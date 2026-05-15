@@ -395,7 +395,7 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center gap-2">
               <Link
-                href="/missions"
+                href="/orchestration/missions"
                 onClick={(e) => e.stopPropagation()}
                 className="text-[10px] font-mono text-neon-cyan hover:underline flex items-center gap-1"
               >
@@ -515,7 +515,7 @@ export default function Dashboard() {
                   ({activeMissions.length})
                 </span>
               </div>
-              <Link href="/missions" className="text-[10px] font-mono text-neon-cyan hover:underline flex items-center gap-1">
+              <Link href="/orchestration/missions" className="text-[10px] font-mono text-neon-cyan hover:underline flex items-center gap-1">
                 all missions <ChevronRight className="w-3 h-3" />
               </Link>
             </div>
@@ -528,7 +528,7 @@ export default function Dashboard() {
                         status={m.status === "dispatched" ? "online" : "warning"}
                         pulse={m.status === "dispatched"}
                       />
-                      <Link href="/missions" className="text-xs text-white/80 truncate hover:text-neon-cyan transition-colors">{m.name}</Link>
+                      <Link href="/orchestration/missions" className="text-xs text-white/80 truncate hover:text-neon-cyan transition-colors">{m.name}</Link>
                       <span className="text-[10px] font-mono text-white/30 capitalize">{m.dispatchMode}</span>
                       {m.latestSession ? (
                         <Link
@@ -570,7 +570,7 @@ export default function Dashboard() {
                 <ListTodo className="w-3.5 h-3.5 text-neon-orange" />
                 <span className="text-xs font-mono text-white/60">Cron Jobs</span>
               </div>
-              <Link href="/cron" className="text-[10px] font-mono text-neon-orange hover:underline">
+              <Link href="/orchestration/cron" className="text-[10px] font-mono text-neon-orange hover:underline">
                 manage →
               </Link>
             </div>

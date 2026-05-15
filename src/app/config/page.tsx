@@ -146,7 +146,7 @@ export default function ConfigIndexPage() {
                 </div>
               </Link>
               <Link
-                href="/agent/tools"
+                href="/operations/tools"
                 className={`group rounded-xl border bg-dark-900/50 p-5 transition-all ${colorBorderMap.cyan}`}
               >
                 <div className="flex items-center justify-between mb-3">

@@ -284,7 +284,7 @@ export default function TeamsPage() {
         title="Teams"
         subtitle="Agent teams — assign a leader and specialists to a board"
         color="purple"
-        backHref="/kanban"
+        backHref="/orchestration/kanban"
         backIconOnly
         backLabel="Back to Kanban"
         actions={
@@ -371,7 +371,7 @@ export default function TeamsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Link
-                        href={"/kanban?team=" + team.id}
+                        href={"/orchestration/kanban?team=" + team.id}
                         className="flex items-center gap-1 text-xs text-neon-cyan/70 hover:text-neon-cyan transition-colors"
                       >
                         <Layout className="w-3.5 h-3.5" />

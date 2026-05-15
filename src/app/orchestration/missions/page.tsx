@@ -1705,7 +1705,7 @@ export default function MissionsPage() {
                                               </span>
                                             </div>
                                             <Link
-                                              href="/cron"
+                                              href="/orchestration/cron"
                                               onClick={(e) =>
                                                 e.stopPropagation()
                                               }
