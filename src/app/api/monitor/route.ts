@@ -6,9 +6,10 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from "next/server";
+import { execSync } from "child_process";
 
 import { ensureSyncLayer, getSyncScheduler } from "@/lib/sync";
-import { getMultipleStats, getSystemStat, getSystemStatNumber } from "@/lib/system-repository";
+import { getSystemStat, getSystemStatNumber } from "@/lib/system-repository";
 import { logApiError } from "@/lib/api-logger";
 
 // ── Types ───────────────────────────────────────────────────
@@ -52,7 +53,6 @@ interface MonitorData {
 
 function getUptime(): string {
   try {
-    const { execSync } = require("child_process");
     const output = execSync("uptime -p", { timeout: 3000, encoding: "utf-8" }).trim();
     return output.replace("up ", "").trim();
   } catch {
@@ -69,7 +69,6 @@ export async function GET() {
 
     // ── Cron Jobs (from meta table) ─────────────────────────
     const cronTotal = getSystemStatNumber("cron.total", 0);
-    const cronStatus = getSystemStat("cron.last_sync_status") ?? "unknown";
 
     // ── Sessions (from meta table) ──────────────────────────
     const sessionsTotal = getSystemStatNumber("sessions.total", 0);

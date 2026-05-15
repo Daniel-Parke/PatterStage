@@ -7,6 +7,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { existsSync, statSync } from "fs";
+import Database from "better-sqlite3";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { setMultipleStats, setSystemStatBoolean } from "@/lib/system-repository";
 import { getMemoryProviderType } from "@/lib/memory-providers";
@@ -37,7 +38,6 @@ function getHolographicFactCount(): number {
     const dbPath = getActiveHermesPaths().memoryDb;
     if (!existsSync(dbPath)) return 0;
 
-    const Database = require("better-sqlite3");
     const memDb = new Database(dbPath, { readonly: true });
     try {
       const row = memDb

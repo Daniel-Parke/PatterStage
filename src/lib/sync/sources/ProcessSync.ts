@@ -26,7 +26,7 @@ interface ParsedProcess {
 
 /** Run `ps aux` and return parsed lines. */
 function runPs(): Promise<string[]> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     exec("ps aux", { timeout: 5000 }, (err, stdout) => {
       if (err && !stdout) {
         resolve([]);
