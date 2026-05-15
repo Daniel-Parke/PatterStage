@@ -3,6 +3,10 @@
 // Matches layout: header + file sidebar + log terminal
 // ═══════════════════════════════════════════════════════════════
 
+// Pre-computed widths for log line bars — stable across renders
+// (Math.random() in render violates React purity rules)
+const LOG_BAR_WIDTHS = [65, 45, 80, 55, 35, 70, 50, 60, 40, 75, 55, 65, 45, 70, 50];
+
 export function LogViewerSkeleton() {
   return (
     <div className="min-h-screen bg-dark-950 grid-bg flex flex-col">
@@ -58,7 +62,7 @@ export function LogViewerSkeleton() {
                 <div className="h-3 w-12 rounded bg-white/10 shrink-0" />
                 <div
                   className="h-3 rounded bg-white/10"
-                  style={{ width: `${30 + Math.random() * 50}%` }}
+                  style={{ width: `${LOG_BAR_WIDTHS[i]}%` }}
                 />
               </div>
             ))}

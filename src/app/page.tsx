@@ -254,7 +254,7 @@ export default function Dashboard() {
     } catch {
       showToast("Failed to cancel mission", "error");
     }
-  }, [showToast]);
+  }, [showToast, setData]);
 
   // Update cron job schedule inline
   const handleCronScheduleChange = useCallback(async (jobId: string, newSchedule: string) => {
@@ -271,7 +271,7 @@ export default function Dashboard() {
     } catch {
       showToast("Failed to update cron schedule", "error");
     }
-  }, [showToast]);
+  }, [showToast, setData]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -337,7 +337,7 @@ export default function Dashboard() {
       clearInterval(processesInterval);
       clearInterval(missionsInterval);
     };
-  }, []);
+  }, [setData]);
 
   const modelConfig = config?.model as Record<string, unknown> | undefined;
   const currentModel = (modelConfig?.default as string) || "-";
