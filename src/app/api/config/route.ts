@@ -6,14 +6,65 @@ import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
+import { db } from "@/lib/db";
 
-function parseConfig(): Record<string, unknown> {
+const CACHE_TTL_MS = 15_000; // 15 seconds
+
+function readCachedConfig(): Record<string, unknown> {
   const configPath = getActiveHermesPaths().config;
+
+  // Try meta table cache first
+  try {
+    const cachedJson = db()
+      .prepare("SELECT value FROM meta WHERE key = ?")
+      .pluck()
+      .get("config.cached_json") as string | undefined;
+
+    const cachedAt = db()
+      .prepare("SELECT value FROM meta WHERE key = ?")
+      .pluck()
+      .get("config.cached_at") as string | undefined;
+
+    if (cachedJson && cachedAt) {
+      const age = Date.now() - new Date(cachedAt).getTime();
+      if (age < CACHE_TTL_MS) {
+        return JSON.parse(cachedJson) as Record<string, unknown>;
+      }
+    }
+  } catch {
+    // Cache read failed — fall through to filesystem
+  }
+
+  // Cache miss or stale — read from filesystem
   if (!existsSync(configPath)) {
     return {};
   }
   const content = readFileSync(configPath, "utf-8");
-  return (yaml.load(content) as Record<string, unknown>) || {};
+  const config = (yaml.load(content) as Record<string, unknown>) || {};
+
+  // Update cache
+  try {
+    db()
+      .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
+      .run("config.cached_json", JSON.stringify(config));
+    db()
+      .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
+      .run("config.cached_at", new Date().toISOString());
+  } catch {
+    // Cache write failure is non-critical
+  }
+
+  return config;
+}
+
+function invalidateConfigCache(): void {
+  try {
+    db()
+      .prepare("DELETE FROM meta WHERE key IN ('config.cached_json', 'config.cached_at')")
+      .run();
+  } catch {
+    // Cache invalidation failure is non-critical
+  }
 }
 
 // Whitelist of config sections that can be modified via PUT
@@ -36,7 +87,7 @@ function maskConfigSecrets(config: Record<string, unknown>): Record<string, unkn
 // GET /api/config — return full config (with secrets masked)
 export async function GET() {
   try {
-    const config = parseConfig();
+    const config = readCachedConfig();
     return NextResponse.json({ data: maskConfigSecrets(config) });
   } catch (error) {
     logApiError("GET /api/config", "reading config.yaml", error);
@@ -81,7 +132,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const config = parseConfig();
+    const config = readCachedConfig();
 
     // Create backup
     const H = getActiveHermesPaths();
@@ -107,6 +158,9 @@ export async function PUT(request: NextRequest) {
       resource: String(section),
       ok: true,
     });
+
+    // Invalidate cache so next read picks up the change
+    invalidateConfigCache();
 
     return NextResponse.json({ data: { success: true, section, values } });
   } catch (error) {

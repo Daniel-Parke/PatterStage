@@ -113,7 +113,7 @@ interface MonitorData {
   sessions: { total: number; recent: Array<{ id: string; modified: string; size: number }> };
   gateway: { platforms: Record<string, boolean>; connectedCount: number };
   memory: { factCount: number; dbSize: string; provider: string };
-  errors: Array<{ source: string; message: string; timestamp: string }>;
+  errors: Array<{ source: string; message: string; timestamp: string; severity: string }>;
   system: { uptime: string; configPresent: boolean; soulPresent: boolean };
   sync: { lastRun: string | null; allSuccessful: boolean; sourceStatuses: Record<string, string> };
 }
@@ -212,10 +212,8 @@ export default function Dashboard() {
   const filteredErrors = useMemo(() => {
     if (!monitor?.errors) return [];
     if (errorSev === "all") return monitor.errors;
-    return monitor.errors.filter((e) => {
-      const msg = e.message.toLowerCase();
-      return errorSev === "error" ? msg.includes("error") : msg.includes("warning");
-    });
+    // Use the DB severity field — reliable, no string matching
+    return monitor.errors.filter((e) => e.severity === errorSev);
   }, [monitor?.errors, errorSev]);
 
   // Cancel a mission from the dashboard

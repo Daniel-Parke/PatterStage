@@ -58,6 +58,7 @@ interface MonitorData {
     source: string;
     message: string;
     timestamp: string;
+    severity: string;
   }>;
   system: {
     uptime: string;
@@ -137,9 +138,9 @@ export async function GET() {
     // ── Recent Errors (from DB) ─────────────────────────────
     const recentErrors = db()
       .prepare(
-        "SELECT source, message, timestamp FROM error_log_entries ORDER BY timestamp DESC LIMIT 10"
+        "SELECT source, message, timestamp, severity FROM error_log_entries ORDER BY timestamp DESC LIMIT 10"
       )
-      .all() as Array<{ source: string; message: string; timestamp: string }>;
+      .all() as Array<{ source: string; message: string; timestamp: string; severity: string }>;
 
     // ── System Info (from meta table) ───────────────────────
     const configPresent = getSystemStat("config.present") === "true";
@@ -189,7 +190,7 @@ export async function GET() {
       },
       errors: recentErrors,
       system: {
-        uptime: "N/A", // Was execSync("uptime -p") — removed for performance. Use /api/status for uptime.
+        uptime: getSystemStat("system.uptime") ?? "N/A", // Synced by ProcessSync from /proc/uptime
         configPresent,
         soulPresent,
       },

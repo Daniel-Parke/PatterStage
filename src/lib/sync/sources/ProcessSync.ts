@@ -174,6 +174,24 @@ export class ProcessSync implements SyncSource {
         tx();
       }
 
+      // ── Track system uptime from /proc/uptime ─────────────
+      try {
+        const uptimeRaw = readFileSync("/proc/uptime", "utf-8");
+        const uptimeSeconds = parseFloat(uptimeRaw.split(" ")[0]);
+        if (!isNaN(uptimeSeconds)) {
+          const hours = Math.floor(uptimeSeconds / 3600);
+          const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+          const uptimeStr = `${hours}h ${minutes}m`;
+          db()
+            .prepare(
+              "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)"
+            )
+            .run("system.uptime", uptimeStr);
+        }
+      } catch {
+        // /proc/uptime not available (non-Linux) — skip silently
+      }
+
       return {
         sourceName: this.name,
         success: true,
