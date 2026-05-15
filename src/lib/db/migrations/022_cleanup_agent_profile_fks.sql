@@ -12,7 +12,7 @@ CREATE TABLE missions_new (
     id           TEXT PRIMARY KEY,
     name         TEXT NOT NULL,
     prompt       TEXT NOT NULL,
-    profile_id   TEXT NOT NULL DEFAULT 'default',
+    profile_id   TEXT DEFAULT 'default',
     status       TEXT NOT NULL DEFAULT 'queued'
                    CHECK (status IN ('queued', 'dispatched', 'successful', 'failed')),
     result       TEXT,
@@ -95,7 +95,7 @@ CREATE TABLE kanban_cards_new (
     position            INTEGER NOT NULL DEFAULT 0,
     status              TEXT NOT NULL DEFAULT 'todo'
                           CHECK (status IN ('backlog', 'todo', 'in_progress', 'review', 'done', 'blocked')),
-    assignee_profile_id TEXT NOT NULL DEFAULT 'default',
+    assignee_profile_id TEXT DEFAULT 'default',
     labels              TEXT NOT NULL DEFAULT '[]',
     mission_ids         TEXT NOT NULL DEFAULT '[]',
     created_at          TEXT NOT NULL DEFAULT (datetime('now')),
@@ -127,7 +127,7 @@ CREATE TABLE goal_steps_new (
     status              TEXT NOT NULL DEFAULT 'pending'
                           CHECK (status IN ('pending', 'active', 'done', 'failed', 'skipped')),
     mission_id          TEXT,
-    assigned_profile_id TEXT NOT NULL DEFAULT 'default',
+    assigned_profile_id TEXT DEFAULT 'default',
     completed_at        TEXT,
     error               TEXT,
     created_at          TEXT NOT NULL DEFAULT (datetime('now')),
