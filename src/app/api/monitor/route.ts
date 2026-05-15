@@ -3,25 +3,47 @@
 //
 // Reads from SQLite tables (synced by the background SyncScheduler)
 // instead of direct filesystem operations. Sub-millisecond reads.
+// Also includes cron job details and recent sessions for the
+// dashboard's inline views.
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from "next/server";
-import { execSync } from "child_process";
 
 import { ensureSyncLayer, getSyncScheduler } from "@/lib/sync";
 import { getSystemStat, getSystemStatNumber } from "@/lib/system-repository";
+import { listCronJobs } from "@/lib/cron-repository";
+import { listSessions } from "@/lib/session-repository";
 import { logApiError } from "@/lib/api-logger";
 
 // ── Types ───────────────────────────────────────────────────
+
+interface CronJobBrief {
+  id: string;
+  name: string;
+  state: string;
+  enabled: boolean;
+  schedule: string;
+  lastRun: string | null;
+  nextRun: string | null;
+  lastStatus: string | null;
+}
+
+interface SessionBrief {
+  id: string;
+  modified: string;
+  size: number;
+}
 
 interface MonitorData {
   cron: {
     total: number;
     active: number;
     paused: number;
+    jobs: CronJobBrief[];
   };
   sessions: {
     total: number;
+    recent: SessionBrief[];
   };
   gateway: {
     platforms: Record<string, boolean>;
@@ -51,13 +73,31 @@ interface MonitorData {
 
 // ── Helpers ─────────────────────────────────────────────────
 
-function getUptime(): string {
-  try {
-    const output = execSync("uptime -p", { timeout: 3000, encoding: "utf-8" }).trim();
-    return output.replace("up ", "").trim();
-  } catch {
-    return "N/A";
-  }
+/** Convert a CronJobRecord to the brief shape the frontend expects. */
+function toCronJobBrief(
+  job: import("@/lib/cron-repository").CronJobRecord
+): CronJobBrief {
+  return {
+    id: job.id,
+    name: job.name,
+    state: job.state,
+    enabled: job.enabled,
+    schedule: job.schedule_display || job.schedule,
+    lastRun: job.last_run_at,
+    nextRun: job.next_run_at,
+    lastStatus: job.last_status,
+  };
+}
+
+/** Convert a SessionRecord to the brief shape the frontend expects. */
+function toSessionBrief(
+  session: import("@/lib/session-repository").SessionRecord
+): SessionBrief {
+  return {
+    id: session.id,
+    modified: session.endedAt || session.startedAt,
+    size: session.size,
+  };
 }
 
 // ── Route ───────────────────────────────────────────────────
@@ -67,11 +107,13 @@ export async function GET() {
     // Ensure sync layer is active (idempotent)
     ensureSyncLayer();
 
-    // ── Cron Jobs (from meta table) ─────────────────────────
-    const cronTotal = getSystemStatNumber("cron.total", 0);
+    // ── Cron Jobs (from DB) ─────────────────────────────────
+    const allJobs = listCronJobs();
+    const activeJobs = allJobs.filter((j) => j.enabled && j.state !== "completed");
+    const pausedJobs = allJobs.filter((j) => !j.enabled);
 
-    // ── Sessions (from meta table) ──────────────────────────
-    const sessionsTotal = getSystemStatNumber("sessions.total", 0);
+    // ── Sessions (from DB — recent 5) ───────────────────────
+    const { sessions: recentSessions } = listSessions({ limit: 5 });
 
     // ── Gateway Platforms (from DB) ─────────────────────────
     const { db } = await import("@/lib/db");
@@ -127,12 +169,14 @@ export async function GET() {
 
     const data: MonitorData = {
       cron: {
-        total: cronTotal,
-        active: cronTotal, // Derived from sync status
-        paused: 0,
+        total: allJobs.length,
+        active: activeJobs.length,
+        paused: pausedJobs.length,
+        jobs: allJobs.map(toCronJobBrief),
       },
       sessions: {
-        total: sessionsTotal,
+        total: getSystemStatNumber("sessions.total", 0),
+        recent: recentSessions.map(toSessionBrief),
       },
       gateway: {
         platforms,
@@ -145,7 +189,7 @@ export async function GET() {
       },
       errors: recentErrors,
       system: {
-        uptime: getUptime(),
+        uptime: "N/A", // Was execSync("uptime -p") — removed for performance. Use /api/status for uptime.
         configPresent,
         soulPresent,
       },

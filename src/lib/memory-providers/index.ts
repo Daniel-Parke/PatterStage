@@ -7,7 +7,7 @@
 //
 // Supported providers:
 //   - holographic: SQLite direct access (memory_store.db)
-//   - hindsight: Control Hub `/api/memory/hindsight` shells `hindsight_bridge.py` (Hermes agent) against the Hindsight HTTP server
+//   - hindsight: Control Hub `/api/memory/hindsight` makes direct HTTP calls to the Hindsight HTTP server (port 9177)
 //   - none: Graceful degradation when no provider configured
 
 import { readFileSync, existsSync } from "fs";

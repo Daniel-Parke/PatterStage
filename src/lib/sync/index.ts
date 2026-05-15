@@ -15,6 +15,7 @@ import { EnvSync } from "./sources/EnvSync";
 import { LogSync } from "./sources/LogSync";
 import { ProcessSync } from "./sources/ProcessSync";
 import { MemorySync } from "./sources/MemorySync";
+import { MissionSync } from "./sources/MissionSync";
 
 // ── Singleton ────────────────────────────────────────────────
 
@@ -48,6 +49,7 @@ export function ensureSyncLayer(): void {
   scheduler.register(new LogSync());
   scheduler.register(new ProcessSync());
   scheduler.register(new MemorySync());
+  scheduler.register(new MissionSync());
 
   scheduler.start();
 }

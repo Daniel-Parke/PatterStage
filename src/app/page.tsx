@@ -114,7 +114,8 @@ interface MonitorData {
   gateway: { platforms: Record<string, boolean>; connectedCount: number };
   memory: { factCount: number; dbSize: string; provider: string };
   errors: Array<{ source: string; message: string; timestamp: string }>;
-  system: { lastCronRun: string | null; lastCronStatus: string | null };
+  system: { uptime: string; configPresent: boolean; soulPresent: boolean };
+  sync: { lastRun: string | null; allSuccessful: boolean; sourceStatuses: Record<string, string> };
 }
 
 function CronStatusBadge({ state, enabled }: { state: string; enabled: boolean }) {
@@ -690,15 +691,15 @@ export default function Dashboard() {
                 <div className="text-[10px] text-white/30 text-center py-2">No platforms configured</div>
               )}
             </div>
-            {monitor?.system.lastCronRun && (
+            {monitor?.sync.lastRun && (
               <div className="px-4 py-2 border-t border-white/10">
                 <div className="text-[10px] text-white/30 font-mono flex items-center gap-2">
-                  <Clock className="w-3 h-3" />
-                  Last cron: {timeAgo(monitor.system.lastCronRun)}
-                  {monitor.system.lastCronStatus && (
-                    <span className={monitor.system.lastCronStatus === "ok" ? "text-neon-green" : "text-red-400"}>
-                      {monitor.system.lastCronStatus === "ok" ? "✓" : "✗"}
-                    </span>
+                  <RefreshCw className="w-3 h-3" />
+                  Sync: {timeAgo(monitor.sync.lastRun)}
+                  {monitor.sync.allSuccessful ? (
+                    <span className="text-neon-green">✓</span>
+                  ) : (
+                    <span className="text-red-400">✗</span>
                   )}
                 </div>
               </div>

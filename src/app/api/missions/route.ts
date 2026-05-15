@@ -4,8 +4,6 @@
 // Missions are stored in Control Hub SQLite. Dispatch is handled
 // by the Hermes backend for mission execution.
 import { NextRequest, NextResponse } from "next/server";
-import { existsSync, readFileSync } from "fs";
-import { join } from "path";
 import {
   getMission,
   listMissions,
@@ -15,7 +13,6 @@ import {
   buildMissionPrompt,
 } from "@/lib/mission-repository";
 import { createSession, updateSession } from "@/lib/session-repository";
-import { PATHS } from "@/lib/paths";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import type { LocalDirEntry } from "@/types/hermes";
 import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
@@ -25,26 +22,6 @@ import type { MissionStatus } from "@/lib/agent-backend/types";
 import { agentBackend } from "@/lib/backends";
 
 // ── GET ───────────────────────────────────────────────────────
-
-interface DiskStatus {
-  status: string;
-  exit_code: number;
-  completed_at: string;
-  error?: string;
-}
-
-/** For dispatched missions, read the Hermes-side status from status.json. */
-function syncMissionStatusFromDisk(mission: ReturnType<typeof getMission>): void {
-  if (!mission || mission.status !== "dispatched") return;
-  const statusPath = join(PATHS.missions, `${mission.id}.status.json`);
-  if (!existsSync(statusPath)) return;
-  try {
-    const disk = JSON.parse(readFileSync(statusPath, "utf-8")) as DiskStatus;
-    if (disk.status === "successful" || disk.status === "failed") {
-      updateMission(mission.id, { status: disk.status as MissionStatus });
-    }
-  } catch { /* ignore read errors */ }
-}
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -56,19 +33,12 @@ export async function GET(request: Request) {
       if (!mission) {
         return NextResponse.json({ error: "Mission not found" }, { status: 404 });
       }
-      syncMissionStatusFromDisk(mission);
-      // Re-fetch after potential update
-      const refreshed = getMission(id);
-      return NextResponse.json({ data: { mission: refreshed } });
+      // Mission status is synced in background by MissionSync
+      return NextResponse.json({ data: { mission } });
     }
 
     const missions = listMissions();
-    // Sync dispatched missions in bulk — only update ones that have a status.json
-    for (const m of missions) {
-      syncMissionStatusFromDisk(m);
-    }
-    const refreshed = listMissions();
-    return NextResponse.json({ data: { missions: refreshed } });
+    return NextResponse.json({ data: { missions } });
   } catch (error) {
     logApiError("GET /api/missions", id ? `mission ${id}` : "listing missions", error);
     return NextResponse.json({ error: "Failed to load missions" }, { status: 500 });

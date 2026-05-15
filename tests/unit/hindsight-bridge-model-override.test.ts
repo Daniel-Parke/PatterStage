@@ -2,9 +2,26 @@
 /** @jest-environment node */
 
 /**
- * PR 7 — Hindsight bridge picks up the registry's `hindsight` default
- * by injecting HINDSIGHT_LLM_* env vars on the spawned subprocess.
+ * PR 7 — Hindsight bridge model override
+ *
+ * Now uses direct HTTP calls instead of subprocess. These tests verify
+ * that the route makes correct HTTP requests to the Hindsight server.
  */
+
+const fetchCalls: Array<{ url: string; method: string; body?: string }> = [];
+
+const mockFetch = jest.fn(
+  (url: string, opts?: RequestInit): Promise<Response> => {
+    fetchCalls.push({ url, method: opts?.method || "GET", body: opts?.body as string | undefined });
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve({ memories: [], items: [], total: 0 }),
+    } as Response);
+  }
+);
+
+global.fetch = mockFetch;
 
 jest.mock("next/server", () => ({
   NextRequest: class NextRequest {
@@ -29,136 +46,95 @@ jest.mock("next/server", () => ({
   },
 }));
 
-const execCalls: Array<{ cmd: string; opts: { env?: Record<string, string> } }> = [];
-
-jest.mock("child_process", () => ({
-  exec: jest.fn(
-    (
-      cmd: string,
-      opts: { env?: Record<string, string> },
-      cb: (err: Error | null, stdout: string, stderr: string) => void
-    ) => {
-      execCalls.push({ cmd, opts });
-      // Pretend the bridge returned an empty list.
-      cb(null, JSON.stringify({ memories: [] }), "");
-    }
-  ),
-}));
-
-jest.mock("fs", () => ({
-  existsSync: jest.fn(() => false),
-  readFileSync: jest.fn(),
-}));
-
-jest.mock("@/lib/hermes-agent-runtime", () => ({
-  getActiveHermesHome: jest.fn(() => "/tmp/hermes-home"),
-}));
-
 jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
-jest.mock("@/lib/models-repository", () => {
-  const getDefaultModel = jest.fn();
-  const getModelWithKey = jest.fn();
-  return {
-    getDefaultModel,
-    getModelWithKey,
-    __getDefaultModel: getDefaultModel,
-    __getModelWithKey: getModelWithKey,
-  };
-});
-
 beforeEach(() => {
-  execCalls.length = 0;
-  const repo = require("@/lib/models-repository") as {
-    __getDefaultModel: jest.Mock;
-    __getModelWithKey: jest.Mock;
-  };
-  repo.__getDefaultModel.mockReset();
-  repo.__getModelWithKey.mockReset();
+  fetchCalls.length = 0;
+  mockFetch.mockClear();
 });
 
-describe("Hindsight bridge model override", () => {
-  it("injects HINDSIGHT_LLM_MODEL/_BASE_URL/_API_KEY when default exists", async () => {
-    const repo = require("@/lib/models-repository") as {
-      __getDefaultModel: jest.Mock;
-      __getModelWithKey: jest.Mock;
-    };
-    repo.__getDefaultModel.mockReturnValue({
-      id: "m-hindsight",
-      modelId: "anthropic/claude-sonnet-4",
-      provider: "anthropic",
-      baseUrl: "https://api.anthropic.com/v1",
-    });
-    repo.__getModelWithKey.mockReturnValue({
-      id: "m-hindsight",
-      modelId: "anthropic/claude-sonnet-4",
-      provider: "anthropic",
-      baseUrl: "https://api.anthropic.com/v1",
-      apiKey: "sk-hindsight",
-    });
-
-    const { GET } = require("@/app/api/memory/hindsight/route") as typeof import("@/app/api/memory/hindsight/route");
+describe("Hindsight memory direct HTTP", () => {
+  it("calls Hindsight server for recall action", async () => {
+    const { GET } = await import("@/app/api/memory/hindsight/route");
     const { NextRequest } = require("next/server") as typeof import("next/server");
     const url = "http://localhost/api/memory/hindsight?action=recall&query=foo";
     const req = new NextRequest(url);
     await GET(req);
 
-    expect(execCalls).toHaveLength(1);
-    const env = execCalls[0].opts.env ?? {};
-    expect(env.HINDSIGHT_LLM_MODEL).toBe("anthropic/claude-sonnet-4");
-    expect(env.HINDSIGHT_LLM_BASE_URL).toBe("https://api.anthropic.com/v1");
-    expect(env.HINDSIGHT_LLM_API_KEY).toBe("sk-hindsight");
+    expect(fetchCalls.length).toBeGreaterThanOrEqual(1);
+    const call = fetchCalls[0];
+    expect(call.url).toContain("9177");
+    expect(call.url).toContain("memories/list");
+    expect(call.url).toContain("search=foo");
+    expect(call.method).toBe("GET");
   });
 
-  it("does not inject HINDSIGHT_LLM_* when no default is registered", async () => {
-    const repo = require("@/lib/models-repository") as {
-      __getDefaultModel: jest.Mock;
-    };
-    repo.__getDefaultModel.mockReturnValue(null);
-
-    const { GET } = require("@/app/api/memory/hindsight/route") as typeof import("@/app/api/memory/hindsight/route");
+  it("calls Hindsight server for list action with limit", async () => {
+    const { GET } = await import("@/app/api/memory/hindsight/route");
     const { NextRequest } = require("next/server") as typeof import("next/server");
-    const url = "http://localhost/api/memory/hindsight?action=recall&query=foo";
+    const url = "http://localhost/api/memory/hindsight?action=list&limit=10";
     const req = new NextRequest(url);
     await GET(req);
 
-    expect(execCalls).toHaveLength(1);
-    const env = execCalls[0].opts.env ?? {};
-    expect(env.HINDSIGHT_LLM_MODEL).toBeUndefined();
-    expect(env.HINDSIGHT_LLM_BASE_URL).toBeUndefined();
-    expect(env.HINDSIGHT_LLM_API_KEY).toBeUndefined();
+    expect(fetchCalls.length).toBeGreaterThanOrEqual(1);
+    const call = fetchCalls[0];
+    expect(call.url).toContain("9177");
+    expect(call.url).toContain("limit=10");
+    expect(call.method).toBe("GET");
   });
 
-  it("omits HINDSIGHT_LLM_BASE_URL when registry row has no baseUrl", async () => {
-    const repo = require("@/lib/models-repository") as {
-      __getDefaultModel: jest.Mock;
-      __getModelWithKey: jest.Mock;
-    };
-    repo.__getDefaultModel.mockReturnValue({
-      id: "m-h",
-      modelId: "anthropic/claude-sonnet-4",
-      provider: "anthropic",
-      baseUrl: null,
-    });
-    repo.__getModelWithKey.mockReturnValue({
-      id: "m-h",
-      modelId: "anthropic/claude-sonnet-4",
-      provider: "anthropic",
-      baseUrl: null,
-      apiKey: "sk-only",
-    });
-
-    const { GET } = require("@/app/api/memory/hindsight/route") as typeof import("@/app/api/memory/hindsight/route");
+  it("calls Hindsight server for health action", async () => {
+    const { GET } = await import("@/app/api/memory/hindsight/route");
     const { NextRequest } = require("next/server") as typeof import("next/server");
-    const url = "http://localhost/api/memory/hindsight?action=recall&query=foo";
+    const url = "http://localhost/api/memory/hindsight?action=health";
     const req = new NextRequest(url);
     await GET(req);
 
-    const env = execCalls[0].opts.env ?? {};
-    expect(env.HINDSIGHT_LLM_MODEL).toBe("anthropic/claude-sonnet-4");
-    expect(env.HINDSIGHT_LLM_API_KEY).toBe("sk-only");
-    expect(env.HINDSIGHT_LLM_BASE_URL).toBeUndefined();
+    expect(fetchCalls.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("calls Hindsight server for retain action via POST", async () => {
+    const { POST } = await import("@/app/api/memory/hindsight/route");
+    const { NextRequest } = require("next/server") as typeof import("next/server");
+    const req = new NextRequest("http://localhost/api/memory/hindsight", {
+      method: "POST",
+      body: JSON.stringify({ action: "retain", content: "Test memory", tags: ["test"] }),
+    });
+    // NextRequest in the mock doesn't support body, so we need to call the handler directly
+    // with the body parsed differently. For now, just test that it makes HTTP calls.
+    // We create a proper mock request
+    const mockReq = {
+      json: () => Promise.resolve({ action: "retain", content: "Test memory", tags: ["test"] }),
+    } as unknown as Request;
+    await POST(mockReq);
+
+    expect(fetchCalls.length).toBeGreaterThanOrEqual(1);
+    const call = fetchCalls[0];
+    expect(call.method).toBe("POST");
+    expect(call.url).toContain("memories");
+  });
+
+  it("handles missing query for recall with 400 error", async () => {
+    const { GET } = await import("@/app/api/memory/hindsight/route");
+    const { NextRequest } = require("next/server") as typeof import("next/server");
+    const url = "http://localhost/api/memory/hindsight?action=recall";
+    const req = new NextRequest(url);
+    const res = await GET(req);
+    const data = await res.json();
+    expect(res.status).toBe(400);
+    expect(data.error).toContain("query is required");
+  });
+
+  it("handles unknown action with 400 error", async () => {
+    const { GET } = await import("@/app/api/memory/hindsight/route");
+    const { NextRequest } = require("next/server") as typeof import("next/server");
+    const url = "http://localhost/api/memory/hindsight?action=invalid";
+    const req = new NextRequest(url);
+    const res = await GET(req);
+    const data = await res.json();
+    expect(res.status).toBe(400);
+    expect(data.error).toContain("Unknown action");
   });
 });
