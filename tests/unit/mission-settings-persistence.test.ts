@@ -75,7 +75,7 @@ describe("Migration 013 — mission settings columns", () => {
   });
 
   it("Missions page handleEdit restores model/provider/settings", () => {
-    const p = join(repoRoot, "src", "app", "missions", "page.tsx");
+    const p = join(repoRoot, "src", "app", "orchestration", "missions", "page.tsx");
     const content = readFileSync(p, "utf-8");
     expect(content).toContain("setNewModel(m.modelId");
     expect(content).toContain("setNewProvider(m.provider");

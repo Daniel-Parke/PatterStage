@@ -9,14 +9,14 @@ test.describe("Smoke", () => {
   });
 
   test("cron page loads", async ({ page }) => {
-    await page.goto("/cron");
+    await page.goto("/orchestration/cron");
     await expect(
       page.getByRole("heading", { name: "Cron Jobs", exact: true })
     ).toBeVisible();
   });
 
   test("missions page loads", async ({ page }) => {
-    await page.goto("/missions");
+    await page.goto("/orchestration/missions");
     await expect(
       page.getByRole("heading", { name: "Missions", exact: true })
     ).toBeVisible();
