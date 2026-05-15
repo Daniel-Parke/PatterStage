@@ -97,14 +97,6 @@ describe("Hindsight memory direct HTTP", () => {
 
   it("calls Hindsight server for retain action via POST", async () => {
     const { POST } = await import("@/app/api/memory/hindsight/route");
-    const { NextRequest } = require("next/server") as typeof import("next/server");
-    const req = new NextRequest("http://localhost/api/memory/hindsight", {
-      method: "POST",
-      body: JSON.stringify({ action: "retain", content: "Test memory", tags: ["test"] }),
-    });
-    // NextRequest in the mock doesn't support body, so we need to call the handler directly
-    // with the body parsed differently. For now, just test that it makes HTTP calls.
-    // We create a proper mock request
     const mockReq = {
       json: () => Promise.resolve({ action: "retain", content: "Test memory", tags: ["test"] }),
     } as unknown as Request;
