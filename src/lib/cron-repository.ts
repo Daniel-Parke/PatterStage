@@ -550,40 +550,37 @@ export function importHermesJobs(): {
     const row = hermesJobToRow(job);
 
     if (existing) {
-      // Update — preserve CH-specific fields (source, id) from existing row
+      // Update — preserve CH-specific fields from existing row
       const ts = now();
-      db()
-        .prepare(
-          `UPDATE cron_jobs SET
-            name=?, prompt=?, skills=?, model=?, provider=?, base_url=?,
+      // For CH-sourced jobs, don't overwrite enabled/state — the UI controls those
+      // For Hermes-sourced jobs, sync everything (they're mirrors)
+      const preserveEnabledState = existing.source === "ch";
+      const updateFields = preserveEnabledState
+        ? `name=?, prompt=?, skills=?, model=?, provider=?, base_url=?,
+            schedule=?, schedule_display=?, repeat_json=?,
+            deliver=?, script=?, profile_name=?, next_run_at=?, last_run_at=?,
+            last_status=?, last_delivery_error=?, updated_at=?,
+            orphan=0`
+        : `name=?, prompt=?, skills=?, model=?, provider=?, base_url=?,
             schedule=?, schedule_display=?, repeat_json=?, enabled=?, state=?,
             deliver=?, script=?, profile_name=?, next_run_at=?, last_run_at=?,
             last_status=?, last_delivery_error=?, updated_at=?,
-            orphan=0
+            orphan=0`;
+      const updateParams = preserveEnabledState
+        ? [row.name, row.prompt, row.skills, row.model, row.provider, row.base_url,
+           row.schedule, row.schedule_display, row.repeat_json,
+           row.deliver, row.script, row.profile_name, row.next_run_at, row.last_run_at,
+           row.last_status, row.last_delivery_error, ts]
+        : [row.name, row.prompt, row.skills, row.model, row.provider, row.base_url,
+           row.schedule, row.schedule_display, row.repeat_json, row.enabled, row.state,
+           row.deliver, row.script, row.profile_name, row.next_run_at, row.last_run_at,
+           row.last_status, row.last_delivery_error, ts];
+      db()
+        .prepare(
+          `UPDATE cron_jobs SET ${updateFields}
           WHERE hermes_job_id=?`
         )
-        .run(
-          row.name,
-          row.prompt,
-          row.skills,
-          row.model,
-          row.provider,
-          row.base_url,
-          row.schedule,
-          row.schedule_display,
-          row.repeat_json,
-          row.enabled,
-          row.state,
-          row.deliver,
-          row.script,
-          row.profile_name,
-          row.next_run_at,
-          row.last_run_at,
-          row.last_status,
-          row.last_delivery_error,
-          ts,
-          job.id
-        );
+        .run(...updateParams, job.id);
       imported.push({ id: existing.id, action: "updated", hermes_job_id: job.id });
     } else {
       // Insert new

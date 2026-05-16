@@ -25,10 +25,7 @@ import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import Modal from "@/components/ui/Modal";
 import {
-  PERSONALITIES,
-  PERSONALITY_EMOJIS,
   getPersonalityEmoji,
-  titleCasePersonality,
 } from "@/lib/personalities";
 
 interface Personality {

@@ -14,7 +14,8 @@
  *   const data = await apiFetch("/api/teams");
  *   await apiFetch("/api/missions", { method: "POST", body: JSON.stringify({...}) });
  */
-export async function apiFetch<T = any>(path: string, options?: RequestInit): Promise<any> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic JSON fetch returns arbitrary shapes
+export async function apiFetch(path: string, options?: RequestInit): Promise<any> {
   const res = await fetch(path, {
     ...options,
     headers: { "Content-Type": "application/json", ...options?.headers },
@@ -38,12 +39,12 @@ export async function apiFetch<T = any>(path: string, options?: RequestInit): Pr
  *   const { ok, error } = await safeApiCall("/api/cron", { method: "POST", body: { action: "sync" } });
  *   if (!ok) showToast(error!, "error");
  */
-export async function safeApiCall<T = any>(
+export async function safeApiCall<T = unknown>(
   path: string,
   options?: Omit<RequestInit, "body"> & { body?: unknown }
 ): Promise<{ ok: boolean; data?: T; error?: string }> {
   try {
-    const data = await apiFetch<T>(path, {
+    const data = await apiFetch(path, {
       ...options,
       body: options?.body !== undefined ? JSON.stringify(options.body) : undefined,
     });

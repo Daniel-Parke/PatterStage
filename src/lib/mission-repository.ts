@@ -5,7 +5,7 @@
 import { db, inTransaction, uuid, now } from "./db";
 import type { Mission, MissionStatus } from "@/lib/agent-backend/types";
 import type { LocalDirEntry } from "@/types/hermes";
-import { formatLocalDirEntryLine, normalizeLocalDirsInput } from "@/lib/local-dir-entry";
+import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 
 // ── Row shape ─────────────────────────────────────────────────
 

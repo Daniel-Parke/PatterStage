@@ -236,7 +236,7 @@ export default function Dashboard() {
     if (errorSev === "all") return monitor.errors;
     // Use the DB severity field — reliable, no string matching
     return monitor.errors.filter((e) => e.severity === errorSev);
-  }, [monitor?.errors, errorSev]);
+  }, [monitor, errorSev]);
 
   // Cancel a mission from the dashboard
   const handleCancelMission = useCallback(async (missionId: string, missionName: string) => {
@@ -365,8 +365,8 @@ export default function Dashboard() {
   const activeProcesses = useMemo(() => processes.filter((p) => p.status === "running"), [processes]);
   const activeMissions = useMemo(() => missions.filter((m) => m.status === "queued" || m.status === "dispatched"), [missions]);
 
-  // Snapshot current time for render — avoid calling Date.now() in JSX
-  const now = Date.now();
+  // Snapshot current time for render — capture once on mount
+  const [now] = useState(() => Date.now());
 
   // Group templates by category for the dispatch section
   const groupedTemplates = useMemo(() => {

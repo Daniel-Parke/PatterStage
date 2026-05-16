@@ -39,7 +39,6 @@ import {
   TemplateManagerModal,
   TemplateEditorModal,
   MissionTemplate,
-  ICON_MAP,
   CATEGORY_ORDER,
   CATEGORY_COLORS,
   groupTemplates,
