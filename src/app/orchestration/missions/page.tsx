@@ -128,6 +128,10 @@ export default function MissionsPage() {
   const [detail, setDetail] = useState<MissionDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [promptCollapsed, setPromptCollapsed] = useState(true);
+  const [collapsedColumns, setCollapsedColumns] = useState<Record<string, boolean>>({
+    successful: true,
+    failed: true,
+  });
   const { showToast, toastElement } = useToast();
   const templateApplied = useRef(false);
   const expandedIdRef = useRef<string | null>(null);
@@ -950,6 +954,10 @@ export default function MissionsPage() {
                   (m) => m.status === status,
                 );
                 const sc = STATUS_CONFIG[status];
+                const isCollapsible = (status === "successful" || status === "failed") && columnMissions.length > 5;
+                const visibleMissions = isCollapsible && collapsedColumns[status]
+                  ? columnMissions.slice(0, 5)
+                  : columnMissions;
                 if (filter !== "all" && filter !== status) return null;
                 return (
                   <div
@@ -970,11 +978,21 @@ export default function MissionsPage() {
                               : titleCase(status)}
                         </span>
                       </div>
-                      <span
-                        className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${sc?.bg} ${sc?.text}`}
-                      >
-                        {columnMissions.length}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {(status === "successful" || status === "failed") && columnMissions.length > 5 && (
+                          <button
+                            onClick={() => setCollapsedColumns(prev => ({ ...prev, [status]: !prev[status] }))}
+                            className="text-[9px] font-mono text-white/25 hover:text-neon-cyan transition-colors"
+                          >
+                            {collapsedColumns[status] ? "Show all" : "Collapse"}
+                          </button>
+                        )}
+                        <span
+                          className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${sc?.bg} ${sc?.text}`}
+                        >
+                          {columnMissions.length}
+                        </span>
+                      </div>
                     </div>
                     {/* Column Cards */}
                     <div className="space-y-2 flex-1">
@@ -985,7 +1003,8 @@ export default function MissionsPage() {
                           No missions
                         </div>
                       ) : (
-                        columnMissions.map((mission) => {
+                        <div className="contents">
+                        {visibleMissions.map((mission) => {
                           const sc =
                             STATUS_CONFIG[mission.status] || { dot: "idle" as const, bg: "bg-white/5", text: "text-white/40" };
                           const isExpanded = expandedId === mission.id;
@@ -1012,15 +1031,12 @@ export default function MissionsPage() {
                                         {mission.name}
                                       </span>
                                     </div>
-                                    <div className="text-[10px] text-white/40 font-mono line-clamp-1">
-                                      {mission.prompt}
-                                    </div>
                                     <div className="flex items-center gap-2 mt-1.5 text-[10px] font-mono text-white/25 flex-wrap">
                                       <span className="flex items-center gap-0.5">
                                         <Clock className="w-2.5 h-2.5" />
                                         {timeAgo(mission.createdAt)}
                                       </span>
-                                      {mission.cronJob?.lastStatus && (
+                                      {mission.status !== "queued" && mission.cronJob?.lastStatus && (
                                         <span
                                           className={
                                             mission.cronJob.lastStatus === "ok"
@@ -1303,7 +1319,16 @@ export default function MissionsPage() {
                               )}
                             </div>
                           );
-                        })
+                        })}
+                        {isCollapsible && collapsedColumns[status] && columnMissions.length > 5 && (
+                          <button
+                            onClick={() => setCollapsedColumns(prev => ({ ...prev, [status]: false }))}
+                            className="w-full text-[10px] font-mono text-neon-cyan/60 hover:text-neon-cyan py-2 text-center border border-dashed border-white/5 rounded-lg transition-colors mt-2"
+                          >
+                            Show all {columnMissions.length} missions →
+                          </button>
+                        )}
+                        </div>
                       )}
                     </div>
                   </div>
