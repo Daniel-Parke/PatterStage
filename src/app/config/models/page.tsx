@@ -106,12 +106,6 @@ function defaultBadgesFor(
   return TASK_TYPES.filter((slot) => defaults[slot] === model.id);
 }
 
-const DEFAULT_FALLBACK_CONFIG: FallbackConfig = {
-  restorePrimaryOnFallback: true,
-  fallbackNotification: false,
-  apiMaxRetries: 2,
-};
-
 export default function ModelsPage() {
   const [models, setModels] = useState<ApiModel[]>([]);
   const [credentials, setCredentials] = useState<ApiCredential[]>([]);
@@ -124,15 +118,16 @@ export default function ModelsPage() {
     undefined
   );
   const [busyTaskType, setBusyTaskType] = useState<TaskType | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [drift, setDrift] = useState<SyncDrift | null>(null);
 
   // Fallback chain state
   const [fallbackChain, setFallbackChain] = useState<FallbackChainEntry[]>([]);
-  const [fallbackConfig, setFallbackConfig] = useState<FallbackConfig>(
-    DEFAULT_FALLBACK_CONFIG
-  );
+  const [fallbackConfig, setFallbackConfig] = useState<FallbackConfig>({
+    restorePrimaryOnFallback: true,
+    fallbackNotification: false,
+    apiMaxRetries: 2,
+  });
   const [syncingFallback, setSyncingFallback] = useState(false);
   const [importingFallback, setImportingFallback] = useState(false);
   const [editingFallbackEntry, setEditingFallbackEntry] = useState<FallbackChainEntry | null>(null);
@@ -201,8 +196,6 @@ export default function ModelsPage() {
       // Fallback config
       if (fbCfgData.data?.config) {
         setFallbackConfig(fbCfgData.data.config);
-      } else {
-        setFallbackConfig(DEFAULT_FALLBACK_CONFIG);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load registry");
@@ -313,35 +306,27 @@ export default function ModelsPage() {
 
   const handleDelete = useCallback(
     async (model: ApiModel) => {
-      if (deletingId === model.id) {
-        try {
-          const res = await fetch(`/api/models/${encodeURIComponent(model.id)}`, {
-            method: "DELETE",
-          });
-          if (!res.ok) {
-            const data = (await res.json().catch(() => ({}))) as {
-              error?: string;
-            };
-            throw new Error(data.error || "Delete failed");
-          }
-          showToast(`Deleted ${model.name}`, "success");
-          setDeletingId(null);
-          await loadAll();
-        } catch (err) {
-          showToast(
-            err instanceof Error ? err.message : "Delete failed",
-            "error"
-          );
-          setDeletingId(null);
+      if (!confirm(`Delete model "${model.name}"? This cannot be undone.`)) return;
+      try {
+        const res = await fetch(`/api/models/${encodeURIComponent(model.id)}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          const data = (await res.json().catch(() => ({}))) as {
+            error?: string;
+          };
+          throw new Error(data.error || "Delete failed");
         }
-      } else {
-        setDeletingId(model.id);
-        setTimeout(() => {
-          setDeletingId((curr) => (curr === model.id ? null : curr));
-        }, 4000);
+        showToast(`Deleted ${model.name}`, "success");
+        await loadAll();
+      } catch (err) {
+        showToast(
+          err instanceof Error ? err.message : "Delete failed",
+          "error"
+        );
       }
     },
-    [deletingId, loadAll, showToast]
+    [loadAll, showToast]
   );
 
   // ── Default model setter ───────────────────────────────────────
@@ -817,23 +802,11 @@ export default function ModelsPage() {
                                   <button
                                     type="button"
                                     onClick={() => handleDelete(m)}
-                                    className={`p-1.5 rounded-lg transition-colors ${
-                                      deletingId === m.id
-                                        ? "text-red-400 bg-red-500/10"
-                                        : "text-white/30 hover:text-red-400 hover:bg-red-500/10"
-                                    }`}
+                                    className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
                                     aria-label={`Delete ${m.name}`}
-                                    title={
-                                      deletingId === m.id
-                                        ? "Click again to confirm"
-                                        : "Delete"
-                                    }
+                                    title="Delete"
                                   >
-                                    {deletingId === m.id ? (
-                                      <Loader2 className="w-3.5 h-3.5" />
-                                    ) : (
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    )}
+                                    <Trash2 className="w-3.5 h-3.5" />
                                   </button>
                                 </div>
                               </td>

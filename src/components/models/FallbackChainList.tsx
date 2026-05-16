@@ -129,16 +129,10 @@ export default function FallbackChainList({
 }: FallbackChainListProps) {
   const [showRegistryDropdown, setShowRegistryDropdown] = useState(false);
   const [showAddCustom, setShowAddCustom] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const handleDeleteClick = (id: string) => {
-    if (deletingId === id) {
-      onDelete(id);
-      setDeletingId(null);
-    } else {
-      setDeletingId(id);
-      setTimeout(() => setDeletingId((curr) => (curr === id ? null : curr)), 3000);
-    }
+    if (!confirm("Remove this fallback model?")) return;
+    onDelete(id);
   };
 
   const handleAddFromRegistry = (modelId: string) => {
@@ -242,12 +236,8 @@ export default function FallbackChainList({
                         type="button"
                         onClick={() => handleDeleteClick(entry.id)}
                         disabled={disabled}
-                        title={deletingId === entry.id ? "Click again to confirm" : "Delete"}
-                        className={`p-1 rounded transition-colors disabled:opacity-50 ${
-                          deletingId === entry.id
-                            ? "text-red-400 bg-red-500/10"
-                            : "text-white/30 hover:text-red-400 hover:bg-red-500/10"
-                        }`}
+                        title="Delete"
+                        className="p-1 rounded text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>

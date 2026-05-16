@@ -54,6 +54,57 @@ const CATEGORIES: CategoryDef[] = [
   },
 ];
 
+// ── SectionCard Component ─────────────────────────────────────
+
+function SectionCard({
+  sectionId,
+  config,
+}: {
+  sectionId: string;
+  config: Record<string, unknown> | null;
+}) {
+  const section = CONFIG_SECTIONS[sectionId];
+  if (!section) return null;
+
+  const Icon = getConfigSectionIcon(section.icon);
+  const sectionData = config?.[section.id] as Record<string, unknown> | undefined;
+  const fieldCount = section.fields.length;
+
+  return (
+    <Link
+      key={section.id}
+      href={`/config/${section.id}`}
+      className={`group rounded-xl border bg-dark-900/50 p-5 transition-all ${colorBorderMap[section.color]}`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <Icon className={`w-5 h-5 ${iconColorMap[section.color]}`} />
+        <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/60 group-hover:translate-x-1 transition-all" />
+      </div>
+      <h3 className="text-base font-semibold text-white mb-1">
+        {section.label}
+      </h3>
+      <p className="text-xs text-white/40 leading-relaxed">
+        {section.description}
+      </p>
+      <div className="mt-3 flex items-center gap-2">
+        <span className="text-[10px] font-mono text-white/25 bg-white/5 px-1.5 py-0.5 rounded">
+          {fieldCount} field{fieldCount !== 1 ? "s" : ""}
+        </span>
+        {sectionData && (
+          <span className="text-[10px] font-mono text-neon-green/60 bg-neon-green/5 px-1.5 py-0.5 rounded">
+            configured
+          </span>
+        )}
+        {section.complexKeys && section.complexKeys.length > 0 && (
+          <span className="text-[10px] font-mono text-neon-orange/60 bg-neon-orange/5 px-1.5 py-0.5 rounded">
+            +{section.complexKeys.length} advanced
+          </span>
+        )}
+      </div>
+    </Link>
+  );
+}
+
 export default function ConfigIndexPage() {
   const [config, setConfig] = useState<Record<string, unknown> | null>(null);
 
@@ -63,49 +114,6 @@ export default function ConfigIndexPage() {
       .then((d) => setConfig(d.data))
       .catch(() => setConfig(null));
   }, []);
-
-  const renderSectionCard = (sectionId: string) => {
-    const section = CONFIG_SECTIONS[sectionId];
-    if (!section) return null;
-
-    const Icon = getConfigSectionIcon(section.icon);
-    const sectionData = config?.[section.id] as Record<string, unknown> | undefined;
-    const fieldCount = section.fields.length;
-
-    return (
-      <Link
-        key={section.id}
-        href={`/config/${section.id}`}
-        className={`group rounded-xl border bg-dark-900/50 p-5 transition-all ${colorBorderMap[section.color]}`}
-      >
-        <div className="flex items-center justify-between mb-3">
-          <Icon className={`w-5 h-5 ${iconColorMap[section.color]}`} />
-          <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/60 group-hover:translate-x-1 transition-all" />
-        </div>
-        <h3 className="text-base font-semibold text-white mb-1">
-          {section.label}
-        </h3>
-        <p className="text-xs text-white/40 leading-relaxed">
-          {section.description}
-        </p>
-        <div className="mt-3 flex items-center gap-2">
-          <span className="text-[10px] font-mono text-white/25 bg-white/5 px-1.5 py-0.5 rounded">
-            {fieldCount} field{fieldCount !== 1 ? "s" : ""}
-          </span>
-          {sectionData && (
-            <span className="text-[10px] font-mono text-neon-green/60 bg-neon-green/5 px-1.5 py-0.5 rounded">
-              configured
-            </span>
-          )}
-          {section.complexKeys && section.complexKeys.length > 0 && (
-            <span className="text-[10px] font-mono text-neon-orange/60 bg-neon-orange/5 px-1.5 py-0.5 rounded">
-              +{section.complexKeys.length} advanced
-            </span>
-          )}
-        </div>
-      </Link>
-    );
-  };
 
   return (
     <AppPageShell>
@@ -177,7 +185,9 @@ export default function ConfigIndexPage() {
                   <p className="text-xs text-white/30 mt-0.5">{cat.description}</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {cat.sectionIds.map(renderSectionCard)}
+                  {cat.sectionIds.map((sectionId) => (
+                    <SectionCard key={sectionId} sectionId={sectionId} config={config} />
+                  ))}
                 </div>
               </div>
             ))}

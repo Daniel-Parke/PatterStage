@@ -105,14 +105,6 @@ export default function DefaultsGrid({
         const isAux = slot !== "agent";
         const modelForSlot = selected ? models.find((m) => m.id === selected) : null;
 
-        const handleQuickSetAll = async () => {
-          if (!onSetAllAux || !selected) return;
-          // Set all OTHER auxiliary slots to this model
-          const others = auxTypes.filter((t) => t !== slot);
-          if (others.length === 0) return;
-          await onSetAllAux(others, selected);
-        };
-
         return (
           <GlowSurface
             key={slot}
@@ -134,7 +126,13 @@ export default function DefaultsGrid({
                   {isAux && onSetAllAux && modelForSlot && (
                     <button
                       type="button"
-                      onClick={() => void handleQuickSetAll()}
+                      onClick={() => {
+                        if (!onSetAllAux || !selected) return;
+                        const others = auxTypes.filter((t) => t !== slot);
+                        if (others.length > 0) {
+                          void onSetAllAux(others, selected);
+                        }
+                      }}
                       disabled={isBusy}
                       className="p-0.5 rounded text-neon-purple/40 hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                       title={`Set all auxiliary slots to ${modelForSlot.name}`}
