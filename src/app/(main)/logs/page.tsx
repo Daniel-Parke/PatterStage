@@ -23,6 +23,7 @@ import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { LogFileGroup, LogFileMeta } from "@/lib/log-files";
 import { parseLogLine, type ParsedLogLevel } from "@/lib/log-line-format";
+import { formatBytes } from "@/lib/utils";
 
 interface LogData {
   name: string;
@@ -33,12 +34,6 @@ interface LogData {
   lines: string[];
   availableLogs: LogFileMeta[];
   error?: string;
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return bytes + " B";
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
 
 function levelTextClass(level: ParsedLogLevel): string {
@@ -119,7 +114,6 @@ export default function LogsPage() {
   const [refreshTick, setRefreshTick] = useState(false);
   const terminalRef = useRef<HTMLDivElement>(null);
   const dataRef = useRef<LogData | null>(null);
-  const isMountedRef = useRef(true);
   useEffect(() => {
     dataRef.current = data;
   }, [data]);
@@ -129,9 +123,6 @@ export default function LogsPage() {
     setLoadError(null);
     if (hasData) {
       setRefreshing(true);
-      setRefreshTick(false);
-      await new Promise((r) => setTimeout(r, 10));
-      setRefreshTick(true);
     } else {
       setLoading(true);
     }
@@ -156,6 +147,10 @@ export default function LogsPage() {
       setRefreshing(false);
     }
   }, [activeLog, lineCount]);
+
+  // Stable ref for polling — avoids recreating the interval when loadLogs deps change
+  const loadLogsRef = useRef(loadLogs);
+  useEffect(() => { loadLogsRef.current = loadLogs; }, [loadLogs]);
 
   const handleDeleteAllLogs = useCallback(async () => {
     if (!deleteConfirm) {
@@ -204,16 +199,13 @@ export default function LogsPage() {
 
   useEffect(() => {
     if (!autoRefresh) return;
-    isMountedRef.current = true;
     const id = setInterval(() => {
-      void loadLogs();
+      void loadLogsRef.current();
     }, 5000);
     return () => {
       clearInterval(id);
-      isMountedRef.current = false;
-      setAutoRefresh(false);
     };
-  }, [autoRefresh, loadLogs]);
+  }, [autoRefresh]);
 
   useEffect(() => {
     if (autoScroll && terminalRef.current) {

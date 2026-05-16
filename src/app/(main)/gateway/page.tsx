@@ -55,7 +55,9 @@ export default function GatewayPage() {
   };
 
   useEffect(() => {
+    const controller = new AbortController();
     loadData();
+    return () => { controller.abort(); };
   }, []);
 
   return (

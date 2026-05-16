@@ -34,7 +34,7 @@ import IntervalSelector from "@/components/ui/IntervalSelector";
 import CategoryAccordion from "@/components/ui/CategoryAccordion";
 import TemplateCard from "@/components/ui/TemplateCard";
 import { useToast } from "@/components/ui/Toast";
-import type { SystemStatus, AccentColor } from "@/types/hermes";
+import type { SystemStatus, AccentColor } from "@/types/hermes";  // eslint-disable-line @typescript-eslint/no-unused-vars
 import { timeAgo, timeUntil, titleCase } from "@/lib/utils";
 import AppPageShell from "@/components/layout/AppPageShell";
 import { StatPillSkeleton } from "@/components/skeletons";
@@ -291,12 +291,14 @@ export default function Dashboard() {
         ]);
 
       if (!signal.aborted) {
-        setData({ status: statusRes.data });
-        setData({ config: configRes.data });
-        setData({ templates: templatesRes.data?.templates || [] });
-        setData({ monitor: monitorRes.data });
-        setData({ processes: processesRes.data?.processes || processesRes.processes || [] });
-        setData({ missions: missionsRes.data?.missions || [] });
+        setData({
+          status: statusRes.data,
+          config: configRes.data,
+          templates: templatesRes.data?.templates || [],
+          monitor: monitorRes.data,
+          processes: processesRes.data?.processes || processesRes.processes || [],
+          missions: missionsRes.data?.missions || [],
+        });
       }
     };
     initialLoad();
@@ -369,7 +371,7 @@ export default function Dashboard() {
     "Custom",
   ].filter((c) => groupedTemplates[c]), [groupedTemplates]);
 
-  const TEMPLATE_CAT_COLORS: Record<string, string> = {
+  const TEMPLATE_CAT_COLORS: Record<string, AccentColor> = {
     "Engineering - QA": "pink",
     "Engineering - DevOps": "cyan",
     "Engineering - Software": "purple",

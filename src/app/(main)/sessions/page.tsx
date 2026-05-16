@@ -65,12 +65,12 @@ const PAGE_SIZE = 50;
 
 const SOURCE_META: Record<
   SessionSource,
-  { label: string; color: string; icon: React.ReactNode }
+  { label: string; colorClass: string; icon: React.ReactNode }
 > = {
-  cli: { label: "CLI", color: "orange", icon: <Bot className="w-3 h-3" /> },
-  cron: { label: "Cron", color: "cyan", icon: <Calendar className="w-3 h-3" /> },
-  mission: { label: "Mission", color: "green", icon: <Zap className="w-3 h-3" /> },
-  api: { label: "API", color: "purple", icon: <ChevronRight className="w-3 h-3" /> },
+  cli: { label: "CLI", colorClass: "bg-neon-orange/10 text-neon-orange", icon: <Bot className="w-3 h-3" /> },
+  cron: { label: "Cron", colorClass: "bg-neon-cyan/10 text-neon-cyan", icon: <Calendar className="w-3 h-3" /> },
+  mission: { label: "Mission", colorClass: "bg-neon-green/10 text-neon-green", icon: <Zap className="w-3 h-3" /> },
+  api: { label: "API", colorClass: "bg-neon-purple/10 text-neon-purple", icon: <ChevronRight className="w-3 h-3" /> },
 };
 
 // ── Helpers ─────────────────────────────────────────────────
@@ -114,7 +114,7 @@ function SessionCard({ session }: { session: Session }) {
                 {timeAgo(session.startedAt)}
               </span>
               <span className="flex items-center gap-1">
-                <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-neon-${meta.color}/10 text-neon-${meta.color}`}>
+                <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono ${meta.colorClass}`}>
                   {meta.icon}
                   {meta.label}
                 </span>

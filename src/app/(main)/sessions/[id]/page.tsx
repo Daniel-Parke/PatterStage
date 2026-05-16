@@ -47,6 +47,44 @@ interface SessionData {
   created: string;
 }
 
+// ── Role-to-meta mapping (module-level, shared by MessageBubble and page) ──
+const ROLE_META: Record<string, {
+  icon: React.ReactNode; color: string; bg: string; bgSolid: string; text: string; label: string;
+}> = {
+  user: {
+    icon: <User className="w-3.5 h-3.5" />,
+    color: "text-neon-cyan",
+    bg: "border-neon-cyan/20 bg-neon-cyan/5",
+    bgSolid: "bg-neon-cyan/10",
+    text: "text-neon-cyan",
+    label: "USER",
+  },
+  assistant: {
+    icon: <Bot className="w-3.5 h-3.5" />,
+    color: "text-neon-purple",
+    bg: "border-neon-purple/20 bg-neon-purple/5",
+    bgSolid: "bg-neon-purple/10",
+    text: "text-neon-purple",
+    label: "ASSISTANT",
+  },
+  tool: {
+    icon: <Wrench className="w-3.5 h-3.5" />,
+    color: "text-neon-green",
+    bg: "border-neon-green/20 bg-neon-green/5",
+    bgSolid: "bg-neon-green/10",
+    text: "text-neon-green",
+    label: "TOOL",
+  },
+  system: {
+    icon: <Cpu className="w-3.5 h-3.5" />,
+    color: "text-white/50",
+    bg: "border-white/10 bg-white/5",
+    bgSolid: "bg-white/5",
+    text: "text-white/40",
+    label: "SYSTEM",
+  },
+};
+
 function MessageBubble({ msg, index, messageRefs }: { msg: SessionMessage; index: number; messageRefs: React.MutableRefObject<Map<number, HTMLDivElement>> }) {
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -60,35 +98,7 @@ function MessageBubble({ msg, index, messageRefs }: { msg: SessionMessage; index
     setTimeout(() => setCopied(false), 1500);
   };
 
-  // Role-based styling
-  const roleConfig: Record<string, { icon: React.ReactNode; color: string; bg: string; label: string }> = {
-    user: {
-      icon: <User className="w-3.5 h-3.5" />,
-      color: "text-neon-cyan",
-      bg: "border-neon-cyan/20 bg-neon-cyan/5",
-      label: "USER",
-    },
-    assistant: {
-      icon: <Bot className="w-3.5 h-3.5" />,
-      color: "text-neon-purple",
-      bg: "border-neon-purple/20 bg-neon-purple/5",
-      label: "ASSISTANT",
-    },
-    tool: {
-      icon: <Wrench className="w-3.5 h-3.5" />,
-      color: "text-neon-green",
-      bg: "border-neon-green/20 bg-neon-green/5",
-      label: "TOOL",
-    },
-    system: {
-      icon: <Cpu className="w-3.5 h-3.5" />,
-      color: "text-white/50",
-      bg: "border-white/10 bg-white/5",
-      label: "SYSTEM",
-    },
-  };
-
-  const config = roleConfig[role] || roleConfig.system;
+  const config = ROLE_META[role] || ROLE_META.system;
   const isLong = content && content.length > 200;
   const displayContent = expanded ? content : "";
 
@@ -185,11 +195,9 @@ export default function SessionDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const messageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-  const loadEpochRef = useRef(0);
 
   useEffect(() => {
     const controller = new AbortController();
-    const epoch = ++loadEpochRef.current;
 
     setLoading(true);
     setError(null);
@@ -198,20 +206,17 @@ export default function SessionDetailPage() {
       const url = "/api/sessions/" + encodeURIComponent(sessionId);
       try {
         const res = await fetch(url, { signal: controller.signal });
-        if (epoch !== loadEpochRef.current) return;
         if (!res.ok) {
           const errBody = (await res.json().catch(() => null)) as { error?: string } | null;
           throw new Error(errBody?.error || "Failed to load session");
         }
         const json = (await res.json()) as { data?: SessionData };
-        if (epoch !== loadEpochRef.current) return;
         setData(json.data ?? (json as unknown as SessionData));
       } catch (err) {
         if (controller.signal.aborted) return;
-        if (epoch !== loadEpochRef.current) return;
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
-        if (epoch === loadEpochRef.current) {
+        if (!controller.signal.aborted) {
           setLoading(false);
         }
       }
@@ -266,12 +271,7 @@ export default function SessionDetailPage() {
     if (firstEl) firstEl.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [data?.messages]);
 
-  const roleColors: Record<string, { bg: string; text: string }> = {
-    user: { bg: "bg-neon-cyan/10", text: "text-neon-cyan" },
-    assistant: { bg: "bg-neon-purple/10", text: "text-neon-purple" },
-    tool: { bg: "bg-neon-green/10", text: "text-neon-green" },
-    system: { bg: "bg-white/5", text: "text-white/40" },
-  };
+  // Reuse roleMeta for filter-button styling
 
   if (loading) {
     return (
@@ -315,7 +315,7 @@ export default function SessionDetailPage() {
         actions={
           <div className="flex items-center gap-2 flex-wrap justify-end">
             {Object.entries(roleCounts).map(([role, count]) => {
-              const colors = roleColors[role] || roleColors.system;
+              const m = ROLE_META[role] || ROLE_META.system;
               const isActive = roleFilter === role;
               return (
                 <button
@@ -326,8 +326,8 @@ export default function SessionDetailPage() {
                   title={`Click to filter · Double-click to jump to next ${role}`}
                   className={`text-xs font-mono px-2 py-1 rounded transition-colors cursor-pointer ${
                     isActive
-                      ? `${colors.bg} ${colors.text} ring-1 ring-white/20`
-                      : `${colors.bg} ${colors.text} opacity-60 hover:opacity-100`
+                      ? `${m.bgSolid} ${m.text} ring-1 ring-white/20`
+                      : `${m.bgSolid} ${m.text} opacity-60 hover:opacity-100`
                   }`}
                 >
                   {count} {role}

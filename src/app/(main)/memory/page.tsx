@@ -126,16 +126,26 @@ function formatDate(iso: string): string {
   }
 }
 
+const PROVIDER_TITLES: Record<string, string> = {
+  hindsight: "Hindsight Memory",
+  holographic: "Holographic Memory",
+};
+
+const PROVIDER_DESCRIPTIONS: Record<string, string> = {
+  hindsight: "Knowledge graph memory with semantic search",
+  holographic: "Structured fact storage with trust scoring",
+};
+
 export default function MemoryPage() {
   const [provider, setProvider] = useState<MemoryProviderType | null>(null);
+  const [memData, setMemData] = useState<{ facts?: unknown[]; total?: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
     const signal = controller.signal;
 
-    // Detect provider from config — wait up to 8s for the memory API,
-    // then fall back to "none" rather than showing an endless spinner
+    // Detect provider and fetch data in a single request
     const timer = setTimeout(() => {
       if (!signal.aborted) {
         setProvider("none");
@@ -148,6 +158,7 @@ export default function MemoryPage() {
       .then((d) => {
         if (!signal.aborted) {
           setProvider(d.data?.provider || "none");
+          setMemData(d.data || null);
           clearTimeout(timer);
         }
       })
@@ -167,13 +178,10 @@ export default function MemoryPage() {
     };
   }, []);
 
-  const getTitle = () => {
-    switch (provider) {
-      case "hindsight": return "Hindsight Memory";
-      case "holographic": return "Holographic Memory";
-      default: return "Memory";
-    }
-  };
+  const title = PROVIDER_TITLES[provider ?? ""] || "Memory";
+  const description = provider
+    ? (PROVIDER_DESCRIPTIONS[provider] || "No memory provider configured")
+    : "Loading...";
 
   if (loading) {
     return (
@@ -188,16 +196,14 @@ export default function MemoryPage() {
     <AppPageShell>
       <PageHeader
         icon={Brain}
-        title={getTitle()}
-        subtitle={provider === "hindsight" ? "Knowledge graph memory with semantic search" :
-                  provider === "holographic" ? "Structured fact storage with trust scoring" :
-                  "No memory provider configured"}
+        title={title}
+        subtitle={description}
         color="pink"
       />
 
       <div className="px-6 py-6">
         {provider === "hindsight" && <HindsightBrowser />}
-        {provider === "holographic" && <HolographicBrowser />}
+        {provider === "holographic" && memData && <HolographicBrowserWithData data={memData} />}
         {provider === "none" && (
           <div className="text-center py-12">
             <Brain className="w-12 h-12 text-pink-400/40 mx-auto mb-4" />
@@ -209,4 +215,9 @@ export default function MemoryPage() {
       </div>
     </AppPageShell>
   );
+}
+
+/** Wrapper that passes pre-loaded data to HolographicBrowser to avoid a double-fetch */
+function HolographicBrowserWithData({ data }: { data: { facts?: unknown[]; total?: number } }) {
+  return <HolographicBrowser />;
 }
