@@ -106,10 +106,13 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   },
 };
 
-const defaultStatusColor = {
-  dot: "idle" as const,
-  bg: "bg-white/5",
-  text: "text-white/40",
+// ── Category filter button active styles ──────────────────────
+const CATEGORY_ACTIVE_CLASSES: Record<string, string> = {
+  cyan: "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40",
+  purple: "bg-neon-purple/20 text-neon-purple border border-neon-purple/40",
+  pink: "bg-neon-pink/20 text-neon-pink border border-neon-pink/40",
+  green: "bg-neon-green/20 text-neon-green border border-neon-green/40",
+  orange: "bg-neon-orange/20 text-neon-orange border border-neon-orange/40",
 };
 
 export default function MissionsPage() {
@@ -804,20 +807,13 @@ export default function MissionsPage() {
               {allCategories.map((cat) => {
                 const color = CATEGORY_COLORS[cat] || "cyan";
                 const active = categoryFilter === cat;
-                const activeClasses: Record<string, string> = {
-                  cyan: "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40",
-                  purple: "bg-neon-purple/20 text-neon-purple border border-neon-purple/40",
-                  pink: "bg-neon-pink/20 text-neon-pink border border-neon-pink/40",
-                  green: "bg-neon-green/20 text-neon-green border border-neon-green/40",
-                  orange: "bg-neon-orange/20 text-neon-orange border border-neon-orange/40",
-                };
                 return (
                   <button
                     key={cat}
                     onClick={() => setCategoryFilter(cat)}
                     className={`px-3 py-1 rounded-full text-xs font-mono transition-colors ${
                       active
-                        ? activeClasses[color] || activeClasses.cyan
+                        ? CATEGORY_ACTIVE_CLASSES[color] || CATEGORY_ACTIVE_CLASSES.cyan
                         : "text-white/40 border border-white/10 hover:text-white/60 hover:border-white/20"
                     }`}
                   >
@@ -971,7 +967,7 @@ export default function MissionsPage() {
                       ) : (
                         columnMissions.map((mission) => {
                           const sc =
-                            STATUS_CONFIG[mission.status] || defaultStatusColor;
+                            STATUS_CONFIG[mission.status] || { dot: "idle" as const, bg: "bg-white/5", text: "text-white/40" };
                           const isExpanded = expandedId === mission.id;
                           return (
                             <div

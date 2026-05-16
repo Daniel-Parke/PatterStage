@@ -5,7 +5,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronUp, ChevronDown, Plus, Edit3, Trash2, ChevronDown as ChevronDownIcon } from "lucide-react";
+import { ChevronUp, ChevronDown, Plus, Edit3, Trash2 } from "lucide-react";
 import type { FallbackChainEntry } from "@/types/hermes";
 import GlowSurface from "@/components/ui/GlowSurface";
 
@@ -283,7 +283,7 @@ export default function FallbackChainList({
           >
             <Plus className="w-3.5 h-3.5" />
             Add from Registry
-            <ChevronDownIcon className="w-3 h-3" />
+            <ChevronDown className="w-3 h-3" />
           </button>
           {showRegistryDropdown && (
             <div className="absolute top-full left-0 mt-1 z-10 w-56 bg-dark-800 border border-white/10 rounded-lg shadow-xl overflow-hidden">

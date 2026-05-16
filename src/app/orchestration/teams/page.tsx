@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
+import Button from "@/components/ui/Button";
 import TeamAgentCard from "@/components/kanban/TeamAgentCard";
 import { useToast } from "@/components/ui/Toast";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
@@ -73,9 +74,6 @@ export default function TeamsPage() {
     return map;
   }, [profiles]);
 
-  const getProfileName = (profileId: string) =>
-    profileNameCache[profileId] ?? profileId;
-
   return (
     <div className="min-h-screen bg-dark-950 grid-bg flex flex-col">
       {toastElement}
@@ -88,15 +86,9 @@ export default function TeamsPage() {
         backIconOnly
         backLabel="Back to Kanban"
         actions={
-          <button
-            type="button"
-            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border border-neon-purple/30
-              text-neon-purple hover:bg-neon-purple/10 transition-colors"
-            onClick={() => setShowCreate(true)}
-          >
-            <Plus className="w-4 h-4" />
+          <Button variant="primary" color="purple" size="sm" icon={Plus} onClick={() => setShowCreate(true)}>
             New Team
-          </button>
+          </Button>
         }
       />
 
@@ -111,13 +103,9 @@ export default function TeamsPage() {
             title="No teams yet"
             description="Create your first team to organize agents"
             action={
-              <button
-                className="text-sm px-4 py-2 rounded-lg bg-neon-purple/10 text-neon-purple
-                  hover:bg-neon-purple/20 border border-neon-purple/20 transition-colors"
-                onClick={() => setShowCreate(true)}
-              >
+              <Button variant="primary" color="purple" size="sm" onClick={() => setShowCreate(true)}>
                 Create your first team
-              </button>
+              </Button>
             }
           />
         </div>
@@ -158,7 +146,7 @@ export default function TeamsPage() {
                     <Crown className="w-3.5 h-3.5 text-neon-yellow flex-shrink-0" />
                     <span className="text-xs text-white/50">Lead:</span>
                     <span className="text-sm text-white/80">
-                      {getProfileName(team.leaderProfileId)}
+                      {profileNameCache[team.leaderProfileId] ?? team.leaderProfileId}
                     </span>
                   </div>
 
@@ -197,7 +185,7 @@ export default function TeamsPage() {
                         <TeamAgentCard
                           key={member.profileId}
                           member={member}
-                          profileName={getProfileName(member.profileId)}
+                          profileName={profileNameCache[member.profileId] ?? member.profileId}
                           isLeader={member.profileId === team.leaderProfileId}
                         />
                       ))}

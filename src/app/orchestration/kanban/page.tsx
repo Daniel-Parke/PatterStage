@@ -112,8 +112,7 @@ export default function KanbanPage() {
 
   useEffect(() => {
     loadBoards();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadBoards]);
 
   // Auto-select first board when boards load and none selected
   useEffect(() => {

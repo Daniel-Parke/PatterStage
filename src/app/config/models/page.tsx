@@ -10,7 +10,7 @@
 
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Globe,
   Plus,
@@ -138,8 +138,6 @@ export default function ModelsPage() {
   const [editingFallbackEntry, setEditingFallbackEntry] = useState<FallbackChainEntry | null>(null);
   const [editingFallbackUrl, setEditingFallbackUrl] = useState("");
   const [savingFallbackUrl, setSavingFallbackUrl] = useState(false);
-  const editingFallbackEntryRef = useRef<FallbackChainEntry | null>(null);
-  const editingFallbackUrlRef = useRef("");
 
   const { showToast, toastElement } = useToast();
 
@@ -524,17 +522,15 @@ export default function ModelsPage() {
     async (entry: FallbackChainEntry) => {
       setEditingFallbackEntry(entry);
       setEditingFallbackUrl(entry.overrideBaseUrl || "");
-      editingFallbackEntryRef.current = entry;
-      editingFallbackUrlRef.current = entry.overrideBaseUrl || "";
     },
     [],
   );
 
   const handleFallbackEditSave = useCallback(
     async () => {
-      const entry = editingFallbackEntryRef.current;
-      const overrideUrl = editingFallbackUrlRef.current;
-      if (!entry) return;
+      if (!editingFallbackEntry) return;
+      const entry = editingFallbackEntry;
+      const overrideUrl = editingFallbackUrl;
       setSavingFallbackUrl(true);
       try {
         const res = await fetch(`/api/models/fallbacks/${encodeURIComponent(entry.id)}`, {
@@ -555,7 +551,7 @@ export default function ModelsPage() {
         setSavingFallbackUrl(false);
       }
     },
-    [loadAll, showToast]
+    [editingFallbackEntry, editingFallbackUrl, loadAll, showToast]
   );
 
   const handleFallbackAddFromRegistry = useCallback(

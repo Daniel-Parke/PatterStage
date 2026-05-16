@@ -228,13 +228,14 @@ export default function BehaviourPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {profiles.map((profile) => {
             const isExpanded = expandedProfile === profile.id;
-            const color = profile.isDefault ? "cyan" : "purple";
             return (
               <div
                 key={profile.id}
                 className={`rounded-xl border transition-all cursor-pointer ${
                   isExpanded
-                    ? `border-${color}-500/50 bg-${color}-500/5 col-span-full`
+                    ? profile.isDefault
+                      ? "border-cyan-500/50 bg-cyan-500/5 col-span-full"
+                      : "border-purple-500/50 bg-purple-500/5 col-span-full"
                     : "border-white/10 bg-dark-900/50 hover:border-white/20"
                 }`}
                 onClick={() => !isExpanded && setExpandedProfile(profile.id)}
@@ -243,7 +244,7 @@ export default function BehaviourPage() {
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Users className={`w-5 h-5 text-${color}-400`} />
+                      <Users className={`w-5 h-5 ${profile.isDefault ? "text-cyan-400" : "text-purple-400"}`} />
                       <span className="font-semibold text-white">{profile.name}</span>
                       {profile.isDefault && (
                         <Badge color="cyan" size="sm">Default</Badge>

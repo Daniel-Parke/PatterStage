@@ -33,6 +33,21 @@ function readPersonalities(): Record<string, string> {
 
 function writePersonalities(personalities: Record<string, string>): boolean {
   if (!existsSync(configYamlPath())) return false;
+
+  /**
+   * Serialize a single personality key-value pair as a YAML line,
+   * handling multi-line values, special characters, and quotes correctly.
+   */
+  function serializePersonalityEntry(key: string, val: string): string {
+    if (val.includes("\n")) {
+      return `    ${key}: "${val.replace(/"/g, '\\"').replace(/\n/g, "\\n")}"`;
+    }
+    if (val.includes(":") || val.includes("#") || val.includes('"') || val.includes("'")) {
+      return `    ${key}: "${val.replace(/"/g, '\\"')}"`;
+    }
+    return `    ${key}: ${val}`;
+  }
+
   try {
     const content = readFileSync(configYamlPath(), "utf-8");
     const lines = content.split("\n");
@@ -56,15 +71,7 @@ function writePersonalities(personalities: Record<string, string>): boolean {
           result.push("  personalities:");
           const keys = Object.keys(personalities).sort();
           for (const key of keys) {
-            const val = personalities[key];
-            if (val.includes("\n")) {
-              // Multi-line: use quoted block
-              result.push(`    ${key}: "${val.replace(/"/g, '\\"').replace(/\n/g, "\\n")}"`);
-            } else if (val.includes(":") || val.includes("#") || val.includes('"') || val.includes("'")) {
-              result.push(`    ${key}: "${val.replace(/"/g, '\\"')}"`);
-            } else {
-              result.push(`    ${key}: ${val}`);
-            }
+            result.push(serializePersonalityEntry(key, personalities[key]));
           }
           personalitiesInserted = true;
         }
@@ -80,14 +87,7 @@ function writePersonalities(personalities: Record<string, string>): boolean {
         result.push("  personalities:");
         const keys = Object.keys(personalities).sort();
         for (const key of keys) {
-          const val = personalities[key];
-          if (val.includes("\n")) {
-            result.push(`    ${key}: "${val.replace(/"/g, '\\"').replace(/\n/g, "\\n")}"`);
-          } else if (val.includes(":") || val.includes("#") || val.includes('"') || val.includes("'")) {
-            result.push(`    ${key}: "${val.replace(/"/g, '\\"')}"`);
-          } else {
-            result.push(`    ${key}: ${val}`);
-          }
+          result.push(serializePersonalityEntry(key, personalities[key]));
         }
         personalitiesInserted = true;
         continue;
@@ -113,14 +113,7 @@ function writePersonalities(personalities: Record<string, string>): boolean {
       result.push("  personalities:");
       const keys = Object.keys(personalities).sort();
       for (const key of keys) {
-        const val = personalities[key];
-        if (val.includes("\n")) {
-          result.push(`    ${key}: "${val.replace(/"/g, '\\"').replace(/\n/g, "\\n")}"`);
-        } else if (val.includes(":") || val.includes("#") || val.includes('"') || val.includes("'")) {
-          result.push(`    ${key}: "${val.replace(/"/g, '\\"')}"`);
-        } else {
-          result.push(`    ${key}: ${val}`);
-        }
+        result.push(serializePersonalityEntry(key, personalities[key]));
       }
     }
 

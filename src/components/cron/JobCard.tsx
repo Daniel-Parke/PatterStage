@@ -16,6 +16,7 @@ import {
   ChevronUp,
   Zap,
 } from "lucide-react";
+import { describeSchedule } from "@/components/cron/CronScheduleInput";
 
 export interface CronJob {
   id: string;
@@ -33,84 +34,6 @@ export interface CronJob {
   script: string;
   state?: string;
   profile_name?: string;
-}
-
-function formatSchedule(schedule: string): string {
-  if (!schedule) return "No schedule";
-  const parts = schedule.trim().split(/\s+/);
-  if (parts.length < 5) return schedule;
-  const offset = parts.length - 5;
-  const [min, hour, dom, mon, dow] = parts.slice(offset);
-
-  if (min.startsWith("*/") && hour === "*" && dom === "*" && mon === "*" && dow === "*") {
-    const n = min.slice(2);
-    return `Every ${n}m`;
-  }
-
-  if (min === "0" && hour.startsWith("*/") && dom === "*" && mon === "*" && dow === "*") {
-    const n = hour.slice(2);
-    return `Every ${n}h`;
-  }
-
-  if (min !== "*" && hour === "*" && dom === "*" && mon === "*" && dow === "*") {
-    const m = parseInt(min);
-    if (Number.isFinite(m) && m >= 0 && m <= 59) {
-      return `Every hour:(${String(m).padStart(2, "0")})`;
-    }
-  }
-
-  if (min === "*" && hour === "*" && dom === "*" && mon === "*" && dow === "*") {
-    return "Every minute";
-  }
-
-  if (min !== "*" && hour !== "*" && dom === "*" && mon === "*" && dow === "*") {
-    const h = parseInt(hour);
-    const m = parseInt(min);
-    if (Number.isFinite(h) && Number.isFinite(m)) {
-      const period = h >= 12 ? "PM" : "AM";
-      const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-      const displayMin = String(m).padStart(2, "0");
-      return `Daily ${displayHour}:${displayMin}${period}`;
-    }
-  }
-
-  if (min !== "*" && hour !== "*" && dom === "*" && mon === "*" && dow !== "*") {
-    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const dayIndex = parseInt(dow);
-    const h = parseInt(hour);
-    const m = parseInt(min);
-    if (Number.isFinite(dayIndex) && dayIndex >= 0 && dayIndex <= 6 && Number.isFinite(h) && Number.isFinite(m)) {
-      const period = h >= 12 ? "PM" : "AM";
-      const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-      const displayMin = String(m).padStart(2, "0");
-      return `${days[dayIndex]}s ${displayHour}:${displayMin}${period}`;
-    }
-  }
-
-  if (min !== "*" && hour !== "*" && dom !== "*" && mon === "*" && dow === "*") {
-    const h = parseInt(hour);
-    const m = parseInt(min);
-    const d = parseInt(dom);
-    if (Number.isFinite(h) && Number.isFinite(m) && Number.isFinite(d)) {
-      const period = h >= 12 ? "PM" : "AM";
-      const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-      const displayMin = String(m).padStart(2, "0");
-      return `Day ${d} ${displayHour}:${displayMin}${period}`;
-    }
-  }
-
-  if (min !== "*" && hour !== "*" && dom === "*" && mon === "*" && /^[1-5](,[1-5])*$/.test(dow)) {
-    const h = parseInt(hour);
-    const m = parseInt(min);
-    if (Number.isFinite(h) && Number.isFinite(m)) {
-      const period = h >= 12 ? "PM" : "AM";
-      const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-      const displayMin = String(m).padStart(2, "0");
-      return `Weekdays ${displayHour}:${displayMin}${period}`;
-    }
-  }
-
-  return schedule;
 }
 
 interface JobCardProps {
@@ -167,7 +90,7 @@ export default function JobCard({
             <div className="flex items-center gap-3 text-xs text-white/40 font-mono">
               <span className="flex items-center gap-1 shrink-0">
                 <Calendar className="w-3 h-3" />
-                {job.schedule_display || formatSchedule(job.schedule)}
+                {job.schedule_display || describeSchedule(job.schedule)}
               </span>
               {job.deliver && job.deliver !== "none" && (
                 <span

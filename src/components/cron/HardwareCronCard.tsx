@@ -45,13 +45,9 @@ export default function HardwareCronCard({
   onEdit,
 }: HardwareCronCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   const handleDelete = () => {
-    if (!deleting) {
-      setDeleting(true);
-      return;
-    }
+    if (!confirm("Delete this hardware cron job?")) return;
     onDelete(job.id);
   };
 
@@ -133,12 +129,8 @@ export default function HardwareCronCard({
             {/* Delete with confirmation */}
             <button
               onClick={handleDelete}
-              className={`p-1.5 rounded-lg transition-colors ${
-                deleting
-                  ? "text-red-400 bg-red-500/10"
-                  : "text-white/40 hover:bg-white/5"
-              }`}
-              title={deleting ? "Click again to confirm" : "Delete"}
+              className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+              title="Delete"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
