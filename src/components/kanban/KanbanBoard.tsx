@@ -51,13 +51,18 @@ export default function KanbanBoard({
       "col_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     const position = board.columnIds.length;
 
+    const now = new Date().toISOString();
+
     const newCol: KanbanColumnType = {
       id: colId,
+      boardId: board.id,
       title: title.trim(),
       color: "cyan",
       position,
       wipLimit: null,
       cardIds: [],
+      createdAt: now,
+      updatedAt: now,
     };
 
     onBoardChange({

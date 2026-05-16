@@ -142,6 +142,7 @@ export const configGroups: ConfigGroup[] = [
     label: "Integrations",
     links: [
       { icon: MessageCircle, label: "Discord", href: "/config/discord", color: "purple" },
+      { icon: Activity, label: "Streaming", href: "/config/streaming", color: "cyan" },
       { icon: Network, label: "Web", href: "/config/web", color: "green" },
       { icon: Settings2, label: "Platform Toolsets", href: "/config/platform_toolsets", color: "purple" },
       { icon: GitBranch, label: "Smart Routing", href: "/config/smart_model_routing", color: "purple" },

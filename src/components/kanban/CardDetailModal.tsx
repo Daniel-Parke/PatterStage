@@ -300,7 +300,7 @@ export default function CardDetailModal({
                         <span
                           className={`text-[10px] font-mono
                             ${goalSession.steps[i].status === "done" ? "text-neon-green" : ""}
-                            ${goalSession.steps[i].status === "active" ? "text-neon-purple" : ""}
+                            ${goalSession.steps[i].status === "in_progress" ? "text-neon-purple" : ""}
                             ${goalSession.steps[i].status === "failed" ? "text-red-400" : ""}
                             ${goalSession.steps[i].status === "pending" ? "text-white/30" : ""}`}
                         >

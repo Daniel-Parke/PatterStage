@@ -19,7 +19,7 @@ interface Props {
 
 const STEP_ICONS = {
   pending: Circle,
-  active: Zap,
+  in_progress: Zap,
   done: CheckCircle2,
   failed: XCircle,
   skipped: AlertCircle,
@@ -27,7 +27,7 @@ const STEP_ICONS = {
 
 const STEP_COLORS = {
   pending: "text-white/30",
-  active: "text-neon-purple",
+  in_progress: "text-neon-purple",
   done: "text-neon-green",
   failed: "text-red-400",
   skipped: "text-white/30",
@@ -167,7 +167,7 @@ export default function GoalLoopPanel({
                 )}
 
                 {/* Check completion button for active step with a mission */}
-                {step.status === "active" && step.missionId && (
+                {step.status === "in_progress" && step.missionId && (
                   <div className="ml-6 mt-1">
                     <button
                       className="text-[11px] px-2 py-0.5 rounded bg-neon-cyan/10 text-neon-cyan/70

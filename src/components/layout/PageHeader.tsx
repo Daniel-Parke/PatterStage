@@ -27,6 +27,9 @@ const iconColorMap: Record<AccentColor, string> = {
   green: "text-neon-green",
   pink: "text-neon-pink",
   orange: "text-neon-orange",
+  red: "text-red-400",
+  blue: "text-blue-400",
+  yellow: "text-yellow-400",
 };
 
 export default function PageHeader({

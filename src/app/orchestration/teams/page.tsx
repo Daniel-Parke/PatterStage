@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import TeamAgentCard from "@/components/kanban/TeamAgentCard";
-import ProfileSelector from "@/components/ui/ProfileSelector";
 import { useToast } from "@/components/ui/Toast";
 import type { Team, AgentProfile } from "@/types/hermes";
 import { apiFetch } from "@/lib/api-fetch";
@@ -213,6 +212,7 @@ export default function TeamsPage() {
           setTeams((prev) => [team, ...prev]);
           showToast(`Team "${team.name}" created`, "success");
         }}
+        onError={(msg) => showToast(msg, "error")}
       />
     </div>
   );

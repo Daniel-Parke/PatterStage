@@ -26,7 +26,7 @@ export interface CronJobFormData {
   prompt: string;
   deliver: string;
   model: string;
-  profile_name: string;
+  profile_name?: string;
   repeat?: boolean;
 }
 

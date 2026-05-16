@@ -297,6 +297,8 @@ export interface KanbanColumn {
   updatedAt: string;
 }
 
+export type KanbanCardStatus = "backlog" | "todo" | "in_progress" | "review" | "done" | "blocked";
+
 export interface KanbanCard {
   id: string;
   boardId: string;
@@ -304,7 +306,7 @@ export interface KanbanCard {
   title: string;
   description: string;
   position: number;
-  status: "backlog" | "todo" | "in_progress" | "review" | "done" | "blocked";
+  status: KanbanCardStatus;
   assigneeProfileId: string | null;
   labels: string[];
   missionIds: string[];

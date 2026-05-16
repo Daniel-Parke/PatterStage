@@ -126,7 +126,7 @@ export default function ConfigIndexPage() {
             {/* Quick links */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Link
-                href="/personalities"
+                href="/operations/personalities"
                 className={`group rounded-xl border bg-dark-900/50 p-5 transition-all ${colorBorderMap.purple}`}
               >
                 <div className="flex items-center justify-between mb-3">

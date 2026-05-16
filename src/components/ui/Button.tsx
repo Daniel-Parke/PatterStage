@@ -47,6 +47,24 @@ const colorMap: Record<AccentColor, { bg: string; border: string; text: string; 
     text: "text-neon-orange",
     hover: "hover:bg-neon-orange/30",
   },
+  red: {
+    bg: "bg-red-500/20",
+    border: "border-red-500/30",
+    text: "text-red-400",
+    hover: "hover:bg-red-500/30",
+  },
+  blue: {
+    bg: "bg-blue-500/20",
+    border: "border-blue-500/30",
+    text: "text-blue-400",
+    hover: "hover:bg-blue-500/30",
+  },
+  yellow: {
+    bg: "bg-yellow-500/20",
+    border: "border-yellow-500/30",
+    text: "text-yellow-400",
+    hover: "hover:bg-yellow-500/30",
+  },
 };
 
 const sizeMap = {

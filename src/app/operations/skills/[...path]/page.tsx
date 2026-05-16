@@ -240,7 +240,7 @@ export default function SkillDetailPage() {
           <h2 className="text-xl font-bold text-white mb-2">Skill Not Found</h2>
           <p className="text-white/40 font-mono mb-4">{error}</p>
           <Link
-            href="/skills"
+            href="/operations/skills"
             className="text-neon-green text-sm font-mono hover:underline"
           >
             ← Back to Skills

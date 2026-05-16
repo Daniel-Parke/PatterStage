@@ -59,20 +59,14 @@ function parseCrontabLine(
   logFile: string;
   name: string;
   enabled: boolean;
-  isMarker: boolean; // true for lines starting with ": "
 } | null {
   const trimmed = line.trim();
 
-  // Disabled managed entries start with ": " — cron ignores them
-  // We still want to parse them so toggle/delete work correctly
-  const isMarker = trimmed.startsWith(": ");
-  const workingLine = isMarker ? trimmed.slice(2) : trimmed;
+  if (!trimmed || trimmed.startsWith("#")) return null;
 
-  if (!workingLine || workingLine.startsWith("#")) return null;
+  if (!crontabLineUsesScriptsDir(trimmed, getChScriptsDir())) return null;
 
-  if (!crontabLineUsesScriptsDir(workingLine, getChScriptsDir())) return null;
-
-  const parts = workingLine.split(/\s+/);
+  const parts = trimmed.split(/\s+/);
   if (parts.length < 6) return null;
 
   const [min, hour, dom, mon, dow, ...rest] = parts;
@@ -102,9 +96,7 @@ function parseCrontabLine(
     .replace(/\.sh$/, "")
     .replace(/\b\w/g, (c) => c.toUpperCase());
 
-  // Note: enabled status is tracked via loadDisabledIds(), not the : prefix.
-  // parseCrontabLine always returns enabled:true — the caller overrides from JSON.
-  return { id, raw: trimmed, schedule, command, logFile, name, enabled: true, isMarker: false };
+  return { id, raw: trimmed, schedule, command, logFile, name, enabled: true };
 }
 
 /**

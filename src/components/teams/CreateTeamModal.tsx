@@ -15,12 +15,17 @@ export default function CreateTeamModal({
   open,
   onClose,
   onCreated,
+  onError,
 }: {
   open: boolean;
   onClose: () => void;
   onCreated: (team: Team) => void;
+  onError?: (msg: string) => void;
 }) {
-  const { showToast, toastElement } = useToast();
+  const { showToast: toastShow, toastElement } = useToast();
+  // When onError is provided by the parent, use it for errors instead of our own toast
+  // This avoids duplicate toast renderers when the parent already has one.
+  const showError = onError ?? ((msg: string) => toastShow(msg, "error"));
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [leaderProfileId, setLeaderProfileId] = useState("");
@@ -73,7 +78,7 @@ export default function CreateTeamModal({
         setMembers([]);
       }
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "Failed to create team", "error");
+      showError(e instanceof Error ? e.message : "Failed to create team");
     } finally {
       setSaving(false);
     }

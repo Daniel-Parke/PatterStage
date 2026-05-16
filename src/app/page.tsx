@@ -187,6 +187,9 @@ function StatPill({
     green: "border-neon-green/20 text-neon-green",
     pink: "border-neon-pink/20 text-neon-pink",
     orange: "border-neon-orange/20 text-neon-orange",
+    red: "border-red-500/20 text-red-400",
+    blue: "border-blue-500/20 text-blue-400",
+    yellow: "border-yellow-500/20 text-yellow-400",
   };
   return (
     <div className={`rounded-lg border ${colorClasses[color]} bg-dark-900/50 px-4 py-3 flex items-center gap-3`}>

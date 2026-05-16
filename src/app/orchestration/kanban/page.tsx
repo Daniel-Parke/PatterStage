@@ -163,7 +163,7 @@ export default function KanbanPage() {
         }
         // Check completion for any active step with a mission
         const activeStep = session.steps.find(
-          (s) => s.status === "active" && s.missionId
+          (s) => s.status === "in_progress" && s.missionId
         );
         if (activeStep) {
           try {

@@ -1,11 +1,4 @@
-// ═══════════════════════════════════════════════════════════════
-// Orchestration layout — wraps cron, missions, kanban, teams
-// ═══════════════════════════════════════════════════════════════
-
-export default function OrchestrationLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <>{children}</>;
+// Orchestration layout — uses Next.js default passthrough
+export default function OrchestrationLayout({ children }: { children: React.ReactNode }) {
+  return children;
 }

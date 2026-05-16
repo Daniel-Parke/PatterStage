@@ -8,82 +8,65 @@ import type { AccentColor } from "@/types/hermes";
 export const shellHeaderBarClasses =
   "border-b border-white/10 bg-dark-900/50 backdrop-blur-xl min-h-[var(--ch-shell-header-min-height)] flex items-center px-6";
 
+type ColorEntry = string;
+
+const ALL_COLORS: AccentColor[] = ["cyan", "purple", "green", "pink", "orange", "red", "blue", "yellow"];
+
+function makeMap<T>(fn: (c: AccentColor) => T): Record<AccentColor, T> {
+  return Object.fromEntries(ALL_COLORS.map((c) => [c, fn(c)])) as Record<AccentColor, T>;
+}
+
 // ── Icon Color Map ────────────────────────────────────────────
-export const iconColorMap: Record<AccentColor, string> = {
-  cyan: "text-neon-cyan",
-  purple: "text-neon-purple",
-  green: "text-neon-green",
-  pink: "text-neon-pink",
-  orange: "text-neon-orange",
-};
+export const iconColorMap: Record<AccentColor, ColorEntry> = makeMap((c) => {
+  const m: Record<string, string> = { cyan: "text-neon-cyan", purple: "text-neon-purple", green: "text-neon-green", pink: "text-neon-pink", orange: "text-neon-orange", red: "text-red-400", blue: "text-blue-400", yellow: "text-yellow-400" };
+  return m[c];
+});
 
 // ── Border Color Map (for hover effects) — token-aligned ─────
-export const colorBorderMap: Record<AccentColor, string> = {
-  cyan:
-    "border-neon-cyan/30 hover:border-neon-cyan/60 hover:shadow-[0_0_20px_rgb(var(--ch-rgb-neon-cyan)_/_0.12)]",
-  purple:
-    "border-neon-purple/30 hover:border-neon-purple/60 hover:shadow-[0_0_20px_rgb(var(--ch-rgb-neon-purple)_/_0.12)]",
-  green:
-    "border-neon-green/30 hover:border-neon-green/60 hover:shadow-[0_0_20px_rgb(var(--ch-rgb-neon-green)_/_0.12)]",
-  pink:
-    "border-neon-pink/30 hover:border-neon-pink/60 hover:shadow-[0_0_20px_rgb(var(--ch-rgb-neon-pink)_/_0.12)]",
-  orange:
-    "border-neon-orange/30 hover:border-neon-orange/60 hover:shadow-[0_0_20px_rgb(var(--ch-rgb-neon-orange)_/_0.12)]",
-};
+export const colorBorderMap: Record<AccentColor, ColorEntry> = makeMap((c) => {
+  const accentColors: Record<string, string> = { cyan: "neon-cyan", purple: "neon-purple", green: "neon-green", pink: "neon-pink", orange: "neon-orange", red: "red", blue: "blue", yellow: "yellow" };
+  const token = accentColors[c] || "white";
+  const opacity = ["red", "blue", "yellow"].includes(c) ? "40" : "30";
+  const hoverOpacity = ["red", "blue", "yellow"].includes(c) ? "70" : "60";
+  const shadowRgb = c === "red" ? "239,68,68" : c === "blue" ? "96,165,250" : c === "yellow" ? "250,204,21" : `var(--ch-rgb-${accentColors[c]})`;
+  return `border-${token}/${opacity} hover:border-${token}/${hoverOpacity} hover:shadow-[0_0_20px_rgb(${shadowRgb}_/_0.12)]`;
+});
 
 // ── Focus Ring Color (for inputs/selects) ─────────────────────
-export const focusColorMap: Record<AccentColor, string> = {
-  cyan: "focus:border-neon-cyan/50",
-  purple: "focus:border-neon-purple/50",
-  green: "focus:border-neon-green/50",
-  pink: "focus:border-neon-pink/50",
-  orange: "focus:border-neon-orange/50",
-};
+export const focusColorMap: Record<AccentColor, ColorEntry> = makeMap((c) => {
+  const m: Record<string, string> = { cyan: "neon-cyan", purple: "neon-purple", green: "neon-green", pink: "neon-pink", orange: "neon-orange", red: "red", blue: "blue", yellow: "yellow" };
+  return `focus:border-${m[c]}/50`;
+});
 
 // ── Glow Class Map (legacy box-shadow utilities in globals.css) ─
-export const glowClassMap: Record<AccentColor, string> = {
-  cyan: "glow-cyan",
-  purple: "glow-purple",
-  green: "glow-green",
-  pink: "glow-pink",
-  orange: "glow-orange",
-};
+export const glowClassMap: Record<AccentColor, ColorEntry> = makeMap((c) => {
+  const m: Record<string, string> = { cyan: "glow-cyan", purple: "glow-purple", green: "glow-green", pink: "glow-pink", orange: "glow-orange", red: "shadow-red-500/20", blue: "shadow-blue-500/20", yellow: "shadow-yellow-500/20" };
+  return m[c];
+});
 
-/** RGB triplets for `rgb(var(--glow-surface-rgb) / …)` — must match docs/design-tokens.md + globals :root */
-export const glowSurfaceRgbMap: Record<AccentColor, string> = {
-  cyan: "0, 191, 255",
-  purple: "139, 92, 255",
-  green: "163, 255, 18",
-  pink: "232, 121, 249",
-  orange: "255, 159, 28",
-};
+/** RGB triplets for `rgb(var(--glow-surface-rgb) / …)` */
+export const glowSurfaceRgbMap: Record<AccentColor, ColorEntry> = makeMap((c) => {
+  const m: Record<string, string> = { cyan: "0, 191, 255", purple: "139, 92, 255", green: "163, 255, 18", pink: "232, 121, 249", orange: "255, 159, 28", red: "239, 68, 68", blue: "96, 165, 250", yellow: "250, 204, 21" };
+  return m[c];
+});
 
 // ── Badge Background Color ────────────────────────────────────
-export const badgeBgMap: Record<AccentColor, string> = {
-  cyan: "bg-neon-cyan/10",
-  purple: "bg-neon-purple/10",
-  green: "bg-neon-green/10",
-  pink: "bg-neon-pink/10",
-  orange: "bg-neon-orange/10",
-};
+export const badgeBgMap: Record<AccentColor, ColorEntry> = makeMap((c) => {
+  const m: Record<string, string> = { cyan: "neon-cyan", purple: "neon-purple", green: "neon-green", pink: "neon-pink", orange: "neon-orange", red: "red-500", blue: "blue-500", yellow: "yellow-500" };
+  return `bg-${m[c]}/10`;
+});
 
 // ── Badge Text Color ──────────────────────────────────────────
-export const badgeTextMap: Record<AccentColor, string> = {
-  cyan: "text-neon-cyan",
-  purple: "text-neon-purple",
-  green: "text-neon-green",
-  pink: "text-neon-pink",
-  orange: "text-neon-orange",
-};
+export const badgeTextMap: Record<AccentColor, ColorEntry> = makeMap((c) => {
+  const m: Record<string, string> = { cyan: "neon-cyan", purple: "neon-purple", green: "neon-green", pink: "neon-pink", orange: "neon-orange", red: "red-400", blue: "blue-400", yellow: "yellow-400" };
+  return `text-${m[c]}`;
+});
 
 // ── Badge Border Color ────────────────────────────────────────
-export const badgeBorderMap: Record<AccentColor, string> = {
-  cyan: "border-neon-cyan/20",
-  purple: "border-neon-purple/20",
-  green: "border-neon-green/20",
-  pink: "border-neon-pink/20",
-  orange: "border-neon-orange/20",
-};
+export const badgeBorderMap: Record<AccentColor, ColorEntry> = makeMap((c) => {
+  const m: Record<string, string> = { cyan: "neon-cyan", purple: "neon-purple", green: "neon-green", pink: "neon-pink", orange: "neon-orange", red: "red", blue: "blue", yellow: "yellow" };
+  return `border-${m[c]}/20`;
+});
 
 // ── Combined Badge Styles ─────────────────────────────────────
 export function badgeClasses(color: AccentColor): string {

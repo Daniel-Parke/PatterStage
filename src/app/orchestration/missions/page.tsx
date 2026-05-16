@@ -1,9 +1,5 @@
 "use client";
 
-// Force client-side rendering so hooks (useState, useEffect, useCallback)
-// resolve correctly on first render without SSR hydration timing issues.
-export const dynamic = "force-dynamic";
-
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -55,8 +51,8 @@ import TemplateCard from "@/components/ui/TemplateCard";
 import { timeAgo, titleCase } from "@/lib/utils";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
 import type { LocalDirEntry, Mission } from "@/types/hermes";
-import { formatLocalDirEntryLine, normalizeLocalDirsInput } from "@/lib/local-dir-entry";
-import { buildMissionPrompt } from "@/lib/build-mission-prompt";
+import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
+import { buildMissionPrompt, stripPromptSections } from "@/lib/build-mission-prompt";
 import ModelPicker from "@/components/missions/ModelPicker";
 import LocalDirRow from "@/components/missions/LocalDirRow";
 
@@ -90,6 +86,10 @@ type MissionRow = Mission & {
     lastStatus: string | null;
   };
   latestSession?: { id: string; modified: string } | null;
+  /** API may return results as plural field for backward compatibility */
+  results?: string;
+  /** Runtime error state (not persisted in schema) */
+  error?: string;
 };
 
 interface MissionTemplate {
@@ -612,51 +612,10 @@ export default function MissionsPage() {
   const handleEdit = (m: MissionRow) => {
     setEditingId(m.id);
     setNewName(m.name);
-    // Split prompt back into instruction + context (best effort)
-    // The stored prompt has injected sections from buildMissionPrompt:
-    // Working Directories, Key References, Recommended Skills, Goals tracking header, MISSION SCOPE, SAFETY LIMITS
-    let rawPrompt = m.prompt;
-
-    // Remove ## Working Directories section
-    rawPrompt = rawPrompt.replace(
-      /^## Working Directories\n[\s\S]*?(?=\n## |\n\n---|,?\n[A-Z])/m,
-      ""
-    );
-    // Remove ## Key References section
-    rawPrompt = rawPrompt.replace(
-      /^## Key References\n[\s\S]*?(?=\n## |\n\n---|,?\n[A-Z])/m,
-      ""
-    );
-    // Remove ## Recommended Skills section
-    rawPrompt = rawPrompt.replace(
-      /^## Recommended Skills\n[\s\S]*?(?=\n## |\n\n---|,?\n[A-Z])/m,
-      ""
-    );
-    // Remove ## Goals (complete each in order) block
-    rawPrompt = rawPrompt.replace(
-      /^## Goals \(complete each in order\)\n[\s\S]*?Mark each goal as done.*\n\n---\n\n/m,
-      ""
-    );
-    // Remove ## MISSION SCOPE section (injected by buildMissionPrompt)
-    rawPrompt = rawPrompt.replace(
-      /## MISSION SCOPE\n[\s\S]*?(?=\n## |\n\n---|,?\n[A-Z])/m,
-      "\n"
-    );
-    // Remove ## SAFETY LIMITS section (injected by buildMissionPrompt)
-    rawPrompt = rawPrompt.replace(
-      /## SAFETY LIMITS\n[\s\S]*?(?=\n## |\n\n---|,?\n[A-Z])/m,
-      "\n"
-    );
-
-    const parts = rawPrompt.split("\n---\n");
-    setNewInstruction(parts[0]?.trim() || rawPrompt);
-    setNewContext(
-      parts.length > 1
-        ? parts[parts.length - 1]
-            .replace(/(?:## Additional Context\n\n?)+/g, "")
-            .trim()
-        : "",
-    );
+    // Split prompt back into instruction + context using shared utility
+    const { instruction, context } = stripPromptSections(m.prompt);
+    setNewInstruction(instruction);
+    setNewContext(context);
     setNewGoals(m.goals?.join("\n") ?? "");
     setNewLocalDirs(normalizeLocalDirsInput(m.localDirs));
     setLocalDirDraft({ path: "", branch: null });
@@ -667,7 +626,6 @@ export default function MissionsPage() {
     setNewModel(m.modelId || m.model || "");
     setNewProvider(m.provider || "");
     if (m.profileName) setNewProfile(m.profileName);
-    else if (m.profile) setNewProfile(m.profile);
     if (typeof m.missionTimeMinutes === "number") setNewMissionTime(m.missionTimeMinutes);
     if (typeof m.timeoutMinutes === "number") setNewTimeout(m.timeoutMinutes);
     if (m.schedule) {
@@ -1631,15 +1589,15 @@ export default function MissionsPage() {
                                       </div>
 
                                       {/* Goals */}
-                                      {detail.mission.goals.length > 0 && (
+                                      {(detail.mission.goals?.length ?? 0) > 0 && (
                                         <div>
                                           <div className="text-[10px] font-mono text-white/30 uppercase mb-1">
                                             Goals
                                           </div>
                                           <div className="flex flex-wrap gap-1">
                                             {detail.mission.goals
-                                              .slice(0, 3)
-                                              .map((goal, i) => (
+                                              ?.slice(0, 3)
+                                              ?.map((goal, i) => (
                                                 <span
                                                   key={i}
                                                   className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-white/40 border border-white/5"
@@ -1647,11 +1605,11 @@ export default function MissionsPage() {
                                                   {goal}
                                                 </span>
                                               ))}
-                                            {detail.mission.goals.length >
+                                            {(detail.mission.goals?.length ?? 0) >
                                               3 && (
                                               <span className="text-[9px] font-mono text-white/25">
                                                 +
-                                                {detail.mission.goals.length -
+                                                {(detail.mission.goals?.length ?? 0) -
                                                   3}{" "}
                                                 more
                                               </span>

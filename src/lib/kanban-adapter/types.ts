@@ -14,8 +14,6 @@ export type {
   KanbanCard,
   KanbanCardStatus,
   KanbanDocument,
-  KanbanBoardsResponse,
-  KanbanBoardResponse,
   AccentColor,
 } from "@/types/hermes";
 
