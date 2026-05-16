@@ -12,7 +12,7 @@ import {
   Info, ToggleLeft, ToggleRight, Plus,
 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
@@ -30,6 +30,19 @@ const CATEGORY_COLORS: Record<string, "cyan" | "purple" | "orange" | "pink" | "g
   core: "cyan",
   platform: "purple",
   custom: "orange",
+  mcp: "pink",
+};
+
+/** Map category → badge label shown next to each tool row. */
+const CATEGORY_BADGE_LABELS: Record<string, string> = {
+  core: "Core",
+  platform: "Platform",
+  mcp: "MCP",
+};
+
+const CATEGORY_BADGE_COLORS: Record<string, "cyan" | "purple" | "pink" | "gray"> = {
+  core: "cyan",
+  platform: "purple",
   mcp: "pink",
 };
 
@@ -170,11 +183,11 @@ export default function ToolsPage() {
         {loading ? (
           <LoadingSpinner text="Loading tools..." />
         ) : tools.length === 0 ? (
-          <div className="text-center py-16 text-white/30">
-            <Wrench className="w-12 h-12 mx-auto mb-4 opacity-20" />
-            <p className="text-lg font-medium">No tools registered</p>
-            <p className="text-sm mt-1">Register custom tools or enable Hermes platform tools</p>
-          </div>
+          <EmptyState
+            icon={Wrench}
+            title="No tools registered"
+            description="Register custom tools or enable Hermes platform tools"
+          />
         ) : (
           <div className="space-y-4">
             {["core", "platform", "custom", "mcp"].map((category) => {
@@ -231,14 +244,13 @@ export default function ToolsPage() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className="text-sm font-mono text-white/80">{tool.label}</span>
-                                {tool.category === "mcp" && (
-                                  <Badge color="pink" size="sm">MCP</Badge>
-                                )}
-                                {tool.category === "platform" && (
-                                  <Badge color="purple" size="sm">Platform</Badge>
-                                )}
-                                {tool.category === "core" && (
-                                  <Badge color="cyan" size="sm">Core</Badge>
+                                {CATEGORY_BADGE_LABELS[tool.category] && (
+                                  <Badge
+                                    color={CATEGORY_BADGE_COLORS[tool.category] ?? "gray"}
+                                    size="sm"
+                                  >
+                                    {CATEGORY_BADGE_LABELS[tool.category]}
+                                  </Badge>
                                 )}
                               </div>
                               <p className="text-xs text-white/30 mt-0.5">{tool.description}</p>

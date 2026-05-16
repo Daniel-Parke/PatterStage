@@ -25,7 +25,7 @@ import type {
   KanbanDocument,
   GoalSession,
 } from "@/types/hermes";
-import { apiFetch } from "@/lib/fetch-api";
+import { apiFetch } from "@/lib/api-fetch";
 
 // ── Board Selector ─────────────────────────────────────────────
 
@@ -331,27 +331,8 @@ export default function KanbanPage() {
       const newCards = { ...doc.cards, [card.id]: card };
       const newDoc = { ...doc, cards: newCards };
       await handleBoardChange(newDoc);
-
-      // Persist via API
-      try {
-        await apiFetch("/api/kanban", {
-          method: "POST",
-          body: JSON.stringify({
-            action: "update-card",
-            boardId: card.boardId,
-            cardId: card.id,
-            title: card.title,
-            description: card.description,
-            status: card.status,
-            assigneeProfileId: card.assigneeProfileId,
-            labels: card.labels,
-          }),
-        });
-      } catch {
-        showToast("Failed to save card", "error");
-      }
     },
-    [doc, handleBoardChange, showToast]
+    [doc, handleBoardChange]
   );
 
   const handleDeleteCard = useCallback(

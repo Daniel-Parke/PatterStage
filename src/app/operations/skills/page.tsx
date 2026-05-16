@@ -34,6 +34,39 @@ interface SkillsData {
   profile: string;
 }
 
+// ── Pure helpers (hoisted outside component) ──────────────────────────────
+
+function effectiveSkillEnabled(
+  skill: Skill,
+  toggling: Record<string, boolean>,
+): boolean {
+  return skill.name in toggling ? toggling[skill.name] : skill.enabled;
+}
+
+function filterBySearch(skills: Skill[], search: string) {
+  return skills.filter(
+    (s) =>
+      !search ||
+      s.name.toLowerCase().includes(search.toLowerCase()) ||
+      s.description.toLowerCase().includes(search.toLowerCase()),
+  );
+}
+
+function groupCategories(skills: Skill[]) {
+  const groups: Record<string, Skill[]> = {};
+  for (const s of skills) {
+    const cat = s.category || "Other";
+    if (!groups[cat]) groups[cat] = [];
+    groups[cat].push(s);
+  }
+  return Object.entries(groups)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([category, items]) => ({
+      category,
+      skills: items.sort((x, y) => x.name.localeCompare(y.name)),
+    }));
+}
+
 export default function SkillsPage() {
   const [data, setData] = useState<SkillsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,35 +114,9 @@ export default function SkillsPage() {
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
-  const effectiveEnabled = (skill: Skill) =>
-    skill.name in toggling ? toggling[skill.name] : skill.enabled;
-
-  const activeSkills = (data?.skills || []).filter((s) => effectiveEnabled(s));
-  const inactiveSkills = (data?.skills || []).filter((s) => !effectiveEnabled(s));
-
-  const filterBySearch = (skills: Skill[], search: string) =>
-    skills.filter(
-      (s) =>
-        !search ||
-        s.name.toLowerCase().includes(search.toLowerCase()) ||
-        s.description.toLowerCase().includes(search.toLowerCase()),
-    );
-
-  // Group skills by category, sorted alphabetically; skills within each category sorted alphabetically
-  const groupByCategory = (skills: Skill[]) => {
-    const groups: Record<string, Skill[]> = {};
-    for (const s of skills) {
-      const cat = s.category || "Other";
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(s);
-    }
-    return Object.entries(groups)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([category, items]) => ({
-        category,
-        skills: items.sort((x, y) => x.name.localeCompare(y.name)),
-      }));
-  };
+  // Derive active/inactive from the skills + pending toggles
+  const activeSkills = (data?.skills || []).filter((s) => effectiveSkillEnabled(s, toggling));
+  const inactiveSkills = (data?.skills || []).filter((s) => !effectiveSkillEnabled(s, toggling));
 
   // ── Toggle — fires API immediately, optimistic update, reverts on failure ───
 
@@ -249,40 +256,18 @@ export default function SkillsPage() {
                   }
                 />
               ) : (
-                <div className="space-y-5">
-                  {groupByCategory(activeFiltered).map(({ category, skills }) => {
-                    const isCollapsed = categoryCollapsed[category];
-                    return (
-                      <div key={category}>
-                        <CategoryLabel
-                          category={category}
-                          count={skills.length}
-                          accentColor="text-neon-green/50"
-                          collapsed={isCollapsed}
-                          onToggle={() => toggleCategory(category)}
-                        />
-                        {!isCollapsed && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
-                            {skills.map((skill) => (
-                              <SkillCard
-                                key={skill.name}
-                                skill={skill}
-                                enabled
-                                isExpanded={expandedSkill === skill.name}
-                                isPending={skill.name in toggling}
-                                onToggle={() => toggleSkill(skill.name, true)}
-                                onView={() => viewSkill(skill)}
-                                expandedContent={
-                                  expandedSkill === skill.name ? skillContent : undefined
-                                }
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                <SkillCategoryGrid
+                  categories={groupCategories(activeFiltered)}
+                  categoryCollapsed={categoryCollapsed}
+                  onToggleCategory={toggleCategory}
+                  accentColor="text-neon-green/50"
+                  enabled
+                  expandedSkill={expandedSkill}
+                  skillContent={skillContent}
+                  toggling={toggling}
+                  onToggleSkill={(skill) => toggleSkill(skill.name, true)}
+                  onViewSkill={viewSkill}
+                />
               )}
             </SkillSection>
 
@@ -315,40 +300,18 @@ export default function SkillsPage() {
                   }
                 />
               ) : (
-                <div className="space-y-5">
-                  {groupByCategory(inactiveFiltered).map(({ category, skills }) => {
-                    const isCollapsed = categoryCollapsed[category];
-                    return (
-                      <div key={category}>
-                        <CategoryLabel
-                          category={category}
-                          count={skills.length}
-                          accentColor="text-white/30"
-                          collapsed={isCollapsed}
-                          onToggle={() => toggleCategory(category)}
-                        />
-                        {!isCollapsed && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
-                            {skills.map((skill) => (
-                              <SkillCard
-                                key={skill.name}
-                                skill={skill}
-                                enabled={false}
-                                isExpanded={expandedSkill === skill.name}
-                                isPending={skill.name in toggling}
-                                onToggle={() => toggleSkill(skill.name, false)}
-                                onView={() => viewSkill(skill)}
-                                expandedContent={
-                                  expandedSkill === skill.name ? skillContent : undefined
-                                }
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                <SkillCategoryGrid
+                  categories={groupCategories(inactiveFiltered)}
+                  categoryCollapsed={categoryCollapsed}
+                  onToggleCategory={toggleCategory}
+                  accentColor="text-white/30"
+                  enabled={false}
+                  expandedSkill={expandedSkill}
+                  skillContent={skillContent}
+                  toggling={toggling}
+                  onToggleSkill={(skill) => toggleSkill(skill.name, false)}
+                  onViewSkill={viewSkill}
+                />
               )}
             </SkillSection>
           </div>
@@ -388,6 +351,71 @@ function CategoryLabel({ category, count, accentColor, collapsed, onToggle }: Ca
       </span>
       <div className={`h-px flex-1 bg-gradient-to-r from-white/10 to-transparent ${accentColor.replace("/50", "/5").replace("/30", "/5")}`} />
     </button>
+  );
+}
+
+// ── SkillCategoryGrid — shared rendering for a filtered skill list ─────────
+
+interface SkillCategoryGridProps {
+  categories: Array<{ category: string; skills: Skill[] }>;
+  categoryCollapsed: Record<string, boolean>;
+  onToggleCategory: (cat: string) => void;
+  accentColor: string;
+  enabled: boolean;
+  expandedSkill: string | null;
+  skillContent: string;
+  toggling: Record<string, boolean>;
+  onToggleSkill: (skill: Skill) => void;
+  onViewSkill: (skill: Skill) => void;
+}
+
+function SkillCategoryGrid({
+  categories,
+  categoryCollapsed,
+  onToggleCategory,
+  accentColor,
+  enabled,
+  expandedSkill,
+  skillContent,
+  toggling,
+  onToggleSkill,
+  onViewSkill,
+}: SkillCategoryGridProps) {
+  return (
+    <div className="space-y-5">
+      {categories.map(({ category, skills }) => {
+        const isCollapsed = categoryCollapsed[category];
+        return (
+          <div key={category}>
+            <CategoryLabel
+              category={category}
+              count={skills.length}
+              accentColor={accentColor}
+              collapsed={isCollapsed}
+              onToggle={() => onToggleCategory(category)}
+            />
+            {!isCollapsed && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
+                {skills.map((skill) => (
+                  <SkillCard
+                    key={skill.name}
+                    skill={skill}
+                    enabled={enabled}
+                    isExpanded={expandedSkill === skill.name}
+                    isPending={skill.name in toggling}
+                    onToggle={() => onToggleSkill(skill)}
+                    onView={() => onViewSkill(skill)}
+                    expandedContent={
+                      expandedSkill === skill.name ? skillContent : undefined
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

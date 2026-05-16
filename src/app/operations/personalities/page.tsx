@@ -23,32 +23,16 @@ import { SearchInput } from "@/components/ui/Input";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import Modal from "@/components/ui/Modal";
+import {
+  PERSONALITIES,
+  PERSONALITY_EMOJIS,
+  getPersonalityEmoji,
+  titleCasePersonality,
+} from "@/lib/personalities";
 
 interface Personality {
   name: string;
   prompt: string;
-}
-
-// Personality emoji presets for visual flair
-const PERSONALITY_EMOJIS: Record<string, string> = {
-  catgirl: "🐱",
-  concise: "📌",
-  creative: "🎨",
-  helpful: "🤝",
-  hype: "🔥",
-  kawaii: "✨",
-  noir: "🕵️",
-  philosopher: "🤔",
-  pirate: "🏴‍☠️",
-  shakespeare: "🎭",
-  surfer: "🤙",
-  teacher: "📚",
-  technical: "🔧",
-  uwu: "🌸",
-};
-
-function getPersonalityEmoji(name: string): string {
-  return PERSONALITY_EMOJIS[name] || "💬";
 }
 
 function PersonalityCard({

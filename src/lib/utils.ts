@@ -128,4 +128,22 @@ export interface CronJobData {
   [key: string]: unknown;
 }
 
+// ── Model Defaults ───────────────────────────────────────────
+
+/**
+ * Empty task-defaults map — initialises all 12 slots to null.
+ * Client-safe (no DB dependency), shared between server and UI.
+ */
+export function emptyModelDefaults(): Record<string, string | null> {
+  const SLOTS = [
+    "agent", "hindsight", "compression", "vision", "web_extract",
+    "session_search", "title_generation", "skills_hub", "mcp",
+    "triage_specifier", "approval", "delegation",
+  ] as const;
+  return SLOTS.reduce<Record<string, string | null>>(
+    (acc, slot) => { acc[slot] = null; return acc; },
+    {} as Record<string, string | null>
+  );
+}
+
 

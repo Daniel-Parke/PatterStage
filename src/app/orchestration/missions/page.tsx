@@ -56,6 +56,7 @@ import { timeAgo, titleCase } from "@/lib/utils";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
 import type { LocalDirEntry, Mission } from "@/types/hermes";
 import { formatLocalDirEntryLine, normalizeLocalDirsInput } from "@/lib/local-dir-entry";
+import { buildMissionPrompt } from "@/lib/build-mission-prompt";
 import ModelPicker from "@/components/missions/ModelPicker";
 import LocalDirRow from "@/components/missions/LocalDirRow";
 
@@ -338,6 +339,7 @@ export default function MissionsPage() {
     "now",
   );
   const [newSchedule, setNewSchedule] = useState("every 5m");
+  const [scheduleType, setScheduleType] = useState<"interval" | "cron-expr">("interval");
   const [newMissionTime, setNewMissionTime] = useState(15);
   const [newTimeout, setNewTimeout] = useState(10);
   const [newProfile, setNewProfile] = useState("");
@@ -444,55 +446,15 @@ export default function MissionsPage() {
     }
   }, [expandedId, fetchDetail]);
 
-  // Build final prompt from instruction + context
+  // Build final prompt using shared utility
   const buildPrompt = () => {
-    const parts: string[] = [];
-
-    // 1. WORKING DIRECTORIES — highest priority
-    const dirsNorm = normalizeLocalDirsInput(newLocalDirs);
-    if (dirsNorm.length > 0) {
-      parts.push(
-        "## Working Directories\n" +
-        "Focus all work within the following directories:\n" +
-        dirsNorm.map((d) => formatLocalDirEntryLine(d)).join("\n") +
-        "\n"
-      );
-    }
-
-    // 2. KEY REFERENCES
-    if (newReferences.length > 0) {
-      parts.push(
-        "## Key References\n" +
-        "Consult and prioritise the following sources:\n" +
-        newReferences.map((r) => `  - ${r}`).join("\n") +
-        "\n"
-      );
-    }
-
-    // 3. RECOMMENDED SKILLS
-    if (newSkills.length > 0) {
-      parts.push(
-        "## Recommended Skills\n" +
-        "Apply expertise from the following skills where relevant:\n" +
-        newSkills.map((s) => `  - ${s}`).join("\n") +
-        "\n"
-      );
-    }
-
-    // 4. CORE INSTRUCTION
-    parts.push(newInstruction.trim());
-
-    // 5. ADDITIONAL CONTEXT
-    if (newContext.trim()) {
-      const cleanContext = newContext
-        .trim()
-        .replace(/(?:## Additional Context\n\n?)+/g, "")
-        .trim();
-      if (cleanContext) {
-        parts.push("", "---", "", "## Additional Context", "", cleanContext);
-      }
-    }
-    return parts.join("\n");
+    return buildMissionPrompt({
+      instruction: newInstruction,
+      localDirs: newLocalDirs,
+      references: newReferences,
+      skills: newSkills,
+      context: newContext,
+    });
   };
 
   const handleCreate = async () => {
@@ -708,7 +670,16 @@ export default function MissionsPage() {
     else if (m.profile) setNewProfile(m.profile);
     if (typeof m.missionTimeMinutes === "number") setNewMissionTime(m.missionTimeMinutes);
     if (typeof m.timeoutMinutes === "number") setNewTimeout(m.timeoutMinutes);
-    if (m.schedule) setNewSchedule(m.schedule);
+    if (m.schedule) {
+      setNewSchedule(m.schedule);
+      // Detect whether this is a cron expression or interval format
+      const s = m.schedule.trim();
+      if (s.includes("*") || /^\d/.test(s)) {
+        setScheduleType("cron-expr");
+      } else {
+        setScheduleType("interval");
+      }
+    }
 
     // Auto-set dispatch mode to "now" for completed/failed missions (re-dispatch)
     if (m.status === "successful" || m.status === "failed") {
@@ -798,12 +769,23 @@ export default function MissionsPage() {
     setTemplateDescription(t.description || "");
     setTemplateIcon(t.icon);
     setTemplateColor(t.color);
+    applyTemplateToForm(t);
+    setShowTemplateManager(false);
+    setShowTemplateEditor(true);
+  };
+
+  // Shared helper to fill mission form fields from a template.
+  const applyTemplateToForm = (
+    t: MissionTemplate & {
+      instruction?: string;
+      context?: string;
+      dispatchMode?: string;
+      schedule?: string;
+    },
+  ) => {
     setNewInstruction(t.instruction || "");
     setNewContext(t.context || "");
     setNewGoals((t.goals || []).join("\n"));
-    if (t.dispatchMode)
-      setNewDispatch(t.dispatchMode as "save" | "now" | "cron");
-    if (t.schedule) setNewSchedule(t.schedule);
     setNewProfile(t.profile || "");
     setNewModel(t.defaultModel || "");
     setNewProvider(t.defaultProvider || "");
@@ -821,8 +803,9 @@ export default function MissionsPage() {
     if (typeof tm === "number" && Number.isFinite(tm)) {
       setNewTimeout(tm);
     }
-    setShowTemplateManager(false);
-    setShowTemplateEditor(true);
+    if (t.dispatchMode)
+      setNewDispatch(t.dispatchMode as "save" | "now" | "cron");
+    if (t.schedule) setNewSchedule(t.schedule);
   };
 
   const handleDeleteTemplate = async (templateId: string) => {
@@ -843,29 +826,7 @@ export default function MissionsPage() {
   };
   const handleTemplateSelect = (t: MissionTemplate) => {
     setNewName(t.name);
-    setNewInstruction(t.instruction);
-    setNewContext(t.context || "");
-    setNewGoals((t.goals || []).join("\n"));
-    setNewProfile(t.profile || "");
-    setNewModel(t.defaultModel || "");
-    setNewProvider(t.defaultProvider || "");
-    setNewLocalDirs(
-      normalizeLocalDirsInput(
-        (t as MissionTemplate & { localDirs?: unknown }).localDirs,
-      ),
-    );
-    setLocalDirDraft({ path: "", branch: null });
-    setNewReferences(
-      (t as MissionTemplate & { references?: string[] }).references ?? [],
-    );
-    setNewSkills(t.suggestedSkills || []);
-    const tm = (t as MissionTemplate & { timeoutMinutes?: number }).timeoutMinutes;
-    if (typeof tm === "number" && Number.isFinite(tm)) {
-      setNewTimeout(tm);
-    }
-    if (t.dispatchMode)
-      setNewDispatch(t.dispatchMode as "save" | "now" | "cron");
-    if (t.schedule) setNewSchedule(t.schedule);
+    applyTemplateToForm(t);
     setShowCreate(true);
   };
 
@@ -1032,7 +993,13 @@ export default function MissionsPage() {
               >
                 All
               </button>
-              {allCategories.map((cat) => {
+              {(() => {
+                const knownSet = new Set(CATEGORY_ORDER);
+                const extra = templates
+                  .map((t) => (t.isCustom ? "Custom" : t.category || "Other"))
+                  .filter((c) => !knownSet.has(c));
+                const allCats = [...CATEGORY_ORDER, ...extra];
+                return allCats.map((cat) => {
                   const color = CATEGORY_COLORS[cat] || "cyan";
                   const active = categoryFilter === cat;
                   const activeClasses: Record<string, string> = {
@@ -1055,7 +1022,8 @@ export default function MissionsPage() {
                       {cat}
                     </button>
                   );
-                  });
+                });
+              })()}
             </div>
             {/* Category Accordion */}
             <div className="space-y-2">
@@ -1094,7 +1062,8 @@ export default function MissionsPage() {
                       </div>
                     </CategoryAccordion>
                   );
-                  });
+                });
+              })()}
             </div>
           </div>
         )}
@@ -1391,8 +1360,13 @@ export default function MissionsPage() {
               </div>
               {newDispatch === "now" && (
                 <div className="text-[10px] text-white/30 font-mono bg-dark-800/50 rounded-lg px-3 py-2 border border-white/5">
-                  ⚡ Creates a one-shot cron job that fires within ~60 seconds.
+                  ⚡ Launches hermes chat immediately. One-shot execution.
                   Results delivered to Discord.
+                </div>
+              )}
+              {newDispatch === "save" && (
+                <div className="text-[10px] text-white/30 font-mono bg-dark-800/50 rounded-lg px-3 py-2 border border-white/5">
+                  💾 Saves the mission as a draft. Nothing is executed yet.
                 </div>
               )}
               {newDispatch === "cron" && (

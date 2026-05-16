@@ -1,9 +1,5 @@
 "use client";
 
-// Force client-side rendering so hooks (useState, useEffect, useCallback)
-// resolve correctly on first render without SSR hydration timing issues.
-export const dynamic = "force-dynamic";
-
 import { useState, useEffect, useCallback } from "react";
 import {
   Users, FileText, Save, RotateCcw, Download, Eye, EyeOff,
@@ -16,19 +12,11 @@ import Modal from "@/components/ui/Modal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import type { AgentProfile, ProfileFile } from "@/types/hermes";
-
-const PERSONALITIES = [
-  "technical", "helpful", "creative", "concise", "teacher",
-  "philosopher", "pirate", "shakespeare", "surfer", "noir",
-  "kawaii", "catgirl", "hype", "uwu",
-];
-
-const PERSONALITY_COLORS: Record<string, string> = {
-  technical: "cyan", helpful: "green", creative: "pink", concise: "orange",
-  teacher: "purple", philosopher: "cyan", pirate: "orange", shakespeare: "purple",
-  surfer: "green", noir: "gray", kawaii: "pink", catgirl: "pink",
-  hype: "orange", uwu: "pink",
-};
+import {
+  PERSONALITIES,
+  PERSONALITY_COLORS,
+  titleCasePersonality,
+} from "@/lib/personalities";
 
 interface EditorState {
   profileId: string;
@@ -264,7 +252,7 @@ export default function BehaviourPage() {
                       color={(PERSONALITY_COLORS[profile.personality] || "gray") as "cyan" | "green" | "pink" | "orange" | "purple" | "gray" | "red"}
                       size="sm"
                     >
-                      {profile.personality.charAt(0).toUpperCase() + profile.personality.slice(1)}
+                      {titleCasePersonality(profile.personality)}
                     </Badge>
                   </div>
                   <p className="text-sm text-white/50 mb-3">{profile.description}</p>
@@ -283,13 +271,13 @@ export default function BehaviourPage() {
                     <div className="mb-4 flex items-center gap-3">
                       <span className="text-sm text-white/50">Personality:</span>
                       <select
-                        value={profile.personality.charAt(0).toUpperCase() + profile.personality.slice(1)}
+                        value={profile.personality}
                         onChange={(e) => handlePersonalityChange(profile.id, e.target.value)}
                         disabled={savingPersonality === profile.id}
                         className="bg-dark-800 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:border-purple-500/50 focus:outline-none"
                       >
                         {PERSONALITIES.map((p) => (
-                          <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+                          <option key={p} value={p}>{titleCasePersonality(p)}</option>
                         ))}
                       </select>
                       {savingPersonality === profile.id && (
