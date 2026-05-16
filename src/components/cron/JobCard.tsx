@@ -21,6 +21,7 @@ export interface CronJob {
   id: string;
   name: string;
   schedule: string;
+  schedule_display?: string;
   prompt: string;
   deliver: string;
   model: string;
@@ -166,7 +167,7 @@ export default function JobCard({
             <div className="flex items-center gap-3 text-xs text-white/40 font-mono">
               <span className="flex items-center gap-1 shrink-0">
                 <Calendar className="w-3 h-3" />
-                {formatSchedule(job.schedule)}
+                {job.schedule_display || formatSchedule(job.schedule)}
               </span>
               {job.deliver && job.deliver !== "none" && (
                 <span

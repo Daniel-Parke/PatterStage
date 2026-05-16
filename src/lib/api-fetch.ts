@@ -28,3 +28,27 @@ export async function apiFetch<T = any>(path: string, options?: RequestInit): Pr
 
   return json;
 }
+
+/**
+ * Safe API call wrapper — catches errors and returns { ok, error, data }.
+ * Use in hooks/event handlers where you need to handle errors gracefully
+ * without try/catch at every call site.
+ *
+ * @example
+ *   const { ok, error } = await safeApiCall("/api/cron", { method: "POST", body: { action: "sync" } });
+ *   if (!ok) showToast(error!, "error");
+ */
+export async function safeApiCall<T = any>(
+  path: string,
+  options?: Omit<RequestInit, "body"> & { body?: unknown }
+): Promise<{ ok: boolean; data?: T; error?: string }> {
+  try {
+    const data = await apiFetch<T>(path, {
+      ...options,
+      body: options?.body !== undefined ? JSON.stringify(options.body) : undefined,
+    });
+    return { ok: true, data: data as T };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Request failed" };
+  }
+}

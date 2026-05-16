@@ -143,7 +143,7 @@ function hermesJobToRow(job: HermesJobRaw): HermesJobRowPartial {
     next_run_at: job.next_run_at ?? null,
     last_run_at: job.last_run_at ?? null,
     last_status: job.last_status ?? null,
-    last_delivery_error: job.last_status ?? null,
+    last_delivery_error: job.last_delivery_error ?? null,
     created_at: job.created_at ?? new Date().toISOString(),
   };
 }

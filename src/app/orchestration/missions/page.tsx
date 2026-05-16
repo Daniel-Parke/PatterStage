@@ -17,19 +17,7 @@ import {
   ExternalLink,
   StopCircle,
   RefreshCw,
-  Bug,
-  GitPullRequest,
-  Wrench,
-  PenTool,
   Edit3,
-  Cpu,
-  Activity,
-  Shield,
-  Terminal,
-  Database,
-  Globe,
-  Code,
-  FileText,
   Layers,
 } from "lucide-react";
 import Link from "next/link";
@@ -100,6 +88,22 @@ const defaultStatusColor = {
   dot: "idle" as const,
   bg: "bg-white/5",
   text: "text-white/40",
+};
+
+// ── Status icon lookup ───────────────────────────────────────────
+const STATUS_ICON: Record<string, React.ReactNode> = {
+  successful: <CheckCircle2 className="w-3.5 h-3.5 text-neon-green" />,
+  failed: <XCircle className="w-3.5 h-3.5 text-red-400" />,
+  dispatched: <Loader2 className="w-3.5 h-3.5 text-neon-cyan animate-spin" />,
+  queued: <Clock className="w-3.5 h-3.5 text-neon-orange" />,
+};
+
+// ── Column dot color lookup ──────────────────────────────────────
+const COLUMN_DOT_COLORS: Record<string, string> = {
+  queued: "bg-neon-orange",
+  dispatched: "bg-neon-cyan",
+  successful: "bg-neon-green",
+  failed: "bg-red-400",
 };
 
 export default function MissionsPage() {
@@ -699,6 +703,23 @@ export default function MissionsPage() {
     [missions],
   );
 
+  // ── Template category computation (extracted from inline IIFEs) ──
+
+  const allCategories = useMemo(() => {
+    const knownSet = new Set(CATEGORY_ORDER);
+    const extra = templates
+      .map((t) => (t.isCustom ? "Custom" : t.category || "Other"))
+      .filter((c) => !knownSet.has(c));
+    return [...CATEGORY_ORDER, ...extra];
+  }, [templates]);
+
+  const filteredGrouped = useMemo(() => {
+    const grouped = groupTemplates(templates);
+    return categoryFilter === "all"
+      ? grouped
+      : grouped.filter(([cat]) => cat === categoryFilter);
+  }, [templates, categoryFilter]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-dark-950 grid-bg flex items-center justify-center h-full">
@@ -736,38 +757,21 @@ export default function MissionsPage() {
       <div className="max-w-7xl mx-auto px-6 py-6">
         {/* Stats Row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div className="rounded-lg border border-white/10 bg-dark-900/50 p-3">
-            <div className="text-[10px] font-mono text-white/40 uppercase">
-              Total
+          {[
+            { label: "Total", value: missions.length, border: "border-white/10", text: "text-white" },
+            { label: "Active", value: activeCount, border: "border-neon-orange/20", text: "text-neon-orange" },
+            { label: "Completed", value: completedCount, border: "border-neon-green/20", text: "text-neon-green" },
+            { label: "Failed", value: failedCount, border: "border-red-500/20", text: "text-red-400" },
+          ].map((stat) => (
+            <div key={stat.label} className={`rounded-lg border ${stat.border} bg-dark-900/50 p-3`}>
+              <div className={`text-[10px] font-mono ${stat.text} uppercase`}>
+                {stat.label}
+              </div>
+              <div className={`text-xl font-bold font-mono ${stat.text}`}>
+                {stat.value}
+              </div>
             </div>
-            <div className="text-xl font-bold font-mono text-white">
-              {missions.length}
-            </div>
-          </div>
-          <div className="rounded-lg border border-neon-orange/20 bg-dark-900/50 p-3">
-            <div className="text-[10px] font-mono text-neon-orange uppercase">
-              Active
-            </div>
-            <div className="text-xl font-bold font-mono text-neon-orange">
-              {activeCount}
-            </div>
-          </div>
-          <div className="rounded-lg border border-neon-green/20 bg-dark-900/50 p-3">
-            <div className="text-[10px] font-mono text-neon-green uppercase">
-              Completed
-            </div>
-            <div className="text-xl font-bold font-mono text-neon-green">
-              {completedCount}
-            </div>
-          </div>
-          <div className="rounded-lg border border-red-500/20 bg-dark-900/50 p-3">
-            <div className="text-[10px] font-mono text-red-400 uppercase">
-              Failed
-            </div>
-            <div className="text-xl font-bold font-mono text-red-400">
-              {failedCount}
-            </div>
-          </div>
+          ))}
         </div>
 
         {/* Quick Deploy Templates */}
@@ -798,77 +802,62 @@ export default function MissionsPage() {
               >
                 All
               </button>
-              {(() => {
-                const knownSet = new Set(CATEGORY_ORDER);
-                const extra = templates
-                  .map((t) => (t.isCustom ? "Custom" : t.category || "Other"))
-                  .filter((c) => !knownSet.has(c));
-                const allCats = [...CATEGORY_ORDER, ...extra];
-                return allCats.map((cat) => {
-                  const color = CATEGORY_COLORS[cat] || "cyan";
-                  const active = categoryFilter === cat;
-                  const activeClasses: Record<string, string> = {
-                    cyan: "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40",
-                    purple: "bg-neon-purple/20 text-neon-purple border border-neon-purple/40",
-                    pink: "bg-neon-pink/20 text-neon-pink border border-neon-pink/40",
-                    green: "bg-neon-green/20 text-neon-green border border-neon-green/40",
-                    orange: "bg-neon-orange/20 text-neon-orange border border-neon-orange/40",
-                  };
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => setCategoryFilter(cat)}
-                      className={`px-3 py-1 rounded-full text-xs font-mono transition-colors ${
-                        active
-                          ? activeClasses[color] || activeClasses.cyan
-                          : "text-white/40 border border-white/10 hover:text-white/60 hover:border-white/20"
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  );
-                });
-              })()}
+              {allCategories.map((cat) => {
+                const color = CATEGORY_COLORS[cat] || "cyan";
+                const active = categoryFilter === cat;
+                const activeClasses: Record<string, string> = {
+                  cyan: "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40",
+                  purple: "bg-neon-purple/20 text-neon-purple border border-neon-purple/40",
+                  pink: "bg-neon-pink/20 text-neon-pink border border-neon-pink/40",
+                  green: "bg-neon-green/20 text-neon-green border border-neon-green/40",
+                  orange: "bg-neon-orange/20 text-neon-orange border border-neon-orange/40",
+                };
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setCategoryFilter(cat)}
+                    className={`px-3 py-1 rounded-full text-xs font-mono transition-colors ${
+                      active
+                        ? activeClasses[color] || activeClasses.cyan
+                        : "text-white/40 border border-white/10 hover:text-white/60 hover:border-white/20"
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
             </div>
             {/* Category Accordion */}
             <div className="space-y-2">
-              {(() => {
-                const grouped = groupTemplates(templates);
-                // Apply category filter
-                const filteredGrouped =
-                  categoryFilter === "all"
-                    ? grouped
-                    : grouped.filter(([cat]) => cat === categoryFilter);
-                return filteredGrouped.map(([cat, items]) => {
-                  const color = CATEGORY_COLORS[cat] || "cyan";
-                  return (
-                    <CategoryAccordion
-                      key={cat}
-                      name={cat}
-                      count={items.length}
-                      color={color}
-                      expandable={cat === "Custom" && items.length > 6}
-                      defaultOpen={categoryFilter !== "all"}
-                    >
-                      <div className="flex flex-wrap gap-1.5">
-                        {items.map((t) => (
-                          <TemplateCard
-                            key={t.id}
-                            id={t.id}
-                            name={t.name}
-                            icon={t.icon}
-                            color={t.color}
-                            description={t.description}
-                            isCustom={t.isCustom}
-                            compact
-                            onSelect={() => handleTemplateSelect(t)}
-                          />
-                        ))}
-                      </div>
-                    </CategoryAccordion>
-                  );
-                });
-              })()}
+              {filteredGrouped.map(([cat, items]) => {
+                const color = CATEGORY_COLORS[cat] || "cyan";
+                return (
+                  <CategoryAccordion
+                    key={cat}
+                    name={cat}
+                    count={items.length}
+                    color={color}
+                    expandable={cat === "Custom" && items.length > 6}
+                    defaultOpen={categoryFilter !== "all"}
+                  >
+                    <div className="flex flex-wrap gap-1.5">
+                      {items.map((t) => (
+                        <TemplateCard
+                          key={t.id}
+                          id={t.id}
+                          name={t.name}
+                          icon={t.icon}
+                          color={t.color}
+                          description={t.description}
+                          isCustom={t.isCustom}
+                          compact
+                          onSelect={() => handleTemplateSelect(t)}
+                        />
+                      ))}
+                    </div>
+                  </CategoryAccordion>
+                );
+              })}
             </div>
           </div>
         )}
@@ -956,15 +945,7 @@ export default function MissionsPage() {
                     <div className="flex items-center justify-between mb-3 px-1">
                       <div className="flex items-center gap-2">
                         <div
-                          className={`w-2 h-2 rounded-full ${
-                            status === "queued"
-                              ? "bg-neon-orange"
-                              : status === "dispatched"
-                                ? "bg-neon-cyan"
-                                : status === "successful"
-                                  ? "bg-neon-green"
-                                  : "bg-red-400"
-                          }`}
+                          className={`w-2 h-2 rounded-full ${COLUMN_DOT_COLORS[status] || "bg-white/20"}`}
                         />
                         <span className="text-[11px] font-mono text-white/50 uppercase tracking-wider">
                           {status === "successful"
@@ -1038,18 +1019,7 @@ export default function MissionsPage() {
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-1 flex-shrink-0">
-                                    {mission.status === "successful" && (
-                                      <CheckCircle2 className="w-3.5 h-3.5 text-neon-green" />
-                                    )}
-                                    {mission.status === "failed" && (
-                                      <XCircle className="w-3.5 h-3.5 text-red-400" />
-                                    )}
-                                    {mission.status === "dispatched" && (
-                                      <Loader2 className="w-3.5 h-3.5 text-neon-cyan animate-spin" />
-                                    )}
-                                    {mission.status === "queued" && (
-                                      <Clock className="w-3.5 h-3.5 text-neon-orange" />
-                                    )}
+                                    {STATUS_ICON[mission.status] ?? null}
                                     <ChevronRight
                                       className={`w-3.5 h-3.5 text-white/20 transition-transform ${isExpanded ? "rotate-90" : ""}`}
                                     />
