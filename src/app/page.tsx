@@ -38,6 +38,7 @@ import { useToast } from "@/components/ui/Toast";
 import type { SystemStatus, AccentColor } from "@/types/hermes";
 import { timeAgo, timeUntil, titleCase } from "@/lib/utils";
 import AppPageShell from "@/components/layout/AppPageShell";
+import { shellHeaderBarClasses } from "@/lib/theme";
 import { StatPillSkeleton } from "@/components/skeletons";
 
 interface HermesProcess {
@@ -382,7 +383,7 @@ export default function Dashboard() {
   return (
     <AppPageShell variant="scanlines">
       {/* Top Bar */}
-      <div className="sticky top-0 z-30 flex items-center justify-between">
+      <div className={`${shellHeaderBarClasses} sticky top-0 z-30 justify-between gap-4 w-full`}>
         <div>
           <h1 className="text-xl font-bold tracking-tight">
             <span className="text-neon-cyan text-glow-cyan">CONTROL</span>{" "}

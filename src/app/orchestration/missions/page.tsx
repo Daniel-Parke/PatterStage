@@ -510,13 +510,17 @@ export default function MissionsPage() {
     if (typeof m.timeoutMinutes === "number") setNewTimeout(m.timeoutMinutes);
     if (m.schedule) {
       setNewSchedule(m.schedule);
-      // Detect whether this is a cron expression or interval format
+      // Detect schedule format: cron expressions contain "*" or start with digits
       const s = m.schedule.trim();
       if (s.includes("*") || /^\d/.test(s)) {
         setScheduleType("wall-clock");
       } else {
+        // "every N" format covers both interval and post-run (can't distinguish without stored scheduleType)
         setScheduleType("interval");
       }
+    } else {
+      setNewSchedule("every 5m");
+      setScheduleType("interval");
     }
 
     // Auto-set dispatch mode to "now" for completed/failed missions (re-dispatch)
