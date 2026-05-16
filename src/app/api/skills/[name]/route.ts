@@ -1,57 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFileSync, existsSync, readdirSync, statSync } from "fs";
+import { readFileSync, existsSync, statSync } from "fs";
 
 import { getActiveHermesHome } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
-
-/** Find the SKILL.md file for a given skill name */
-function findSkillFile(skillName: string, profile: string): string | null {
-  const home = getActiveHermesHome();
-  const searchDirs: string[] = [];
-
-  if (profile === "default") {
-    searchDirs.push(home + "/skills");
-  } else {
-    const profileSkillsDir = home + "/profiles/" + profile + "/skills";
-    if (existsSync(profileSkillsDir)) {
-      searchDirs.push(profileSkillsDir);
-    }
-    searchDirs.push(home + "/skills");
-  }
-
-  for (const baseDir of searchDirs) {
-    if (!existsSync(baseDir)) continue;
-
-    // Direct match: <baseDir>/<skillName>/SKILL.md
-    const directPath = baseDir + "/" + skillName + "/SKILL.md";
-    if (existsSync(directPath)) return directPath;
-
-    // Walk subdirectories
-    try {
-      const walk = (dir: string): string | null => {
-        for (const item of readdirSync(dir)) {
-          const fullPath = dir + "/" + item;
-          try {
-            const st = statSync(fullPath);
-            if (st.isDirectory()) {
-              // Check if this dir matches
-              if (item === skillName && existsSync(fullPath + "/SKILL.md")) {
-                return fullPath + "/SKILL.md";
-              }
-              const result = walk(fullPath);
-              if (result) return result;
-            }
-          } catch {}
-        }
-        return null;
-      };
-      const found = walk(baseDir);
-      if (found) return found;
-    } catch {}
-  }
-
-  return null;
-}
+import { findSkillFile } from "@/lib/skills-enabled-config";
 
 export async function GET(
   request: NextRequest,
@@ -61,7 +13,7 @@ export async function GET(
   const profile = request.nextUrl.searchParams.get("profile") || "default";
 
   try {
-    const filePath = findSkillFile(name, profile);
+    const filePath = findSkillFile(name, getActiveHermesHome(), profile);
 
     if (!filePath || !existsSync(filePath)) {
       return NextResponse.json(

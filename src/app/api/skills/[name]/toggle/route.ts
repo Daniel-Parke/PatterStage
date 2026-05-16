@@ -10,15 +10,9 @@ import {
   findSkillsEnabledBlockLineRange,
   findSkillsHeaderLineIndex,
   getResolvedEnabledSkillNames,
+  configPathForProfile,
+  skillsRootForProfile,
 } from "@/lib/skills-enabled-config";
-
-function resolveSkillsRoot(profile: string): string {
-  const home = getActiveHermesHome();
-  if (profile === "default") return home + "/skills";
-  const profileSkills = home + "/profiles/" + profile + "/skills";
-  if (existsSync(profileSkills)) return profileSkills;
-  return home + "/skills";
-}
 
 // PUT — Toggle a skill on/off for a profile
 export async function PUT(
@@ -46,19 +40,15 @@ export async function PUT(
     }
     const profile = profileResult.profile;
 
-    let configPath: string;
-    if (profile === "default") {
-      configPath = getActiveHermesHome() + "/config.yaml";
-    } else {
-      configPath = getActiveHermesHome() + "/profiles/" + profile + "/config.yaml";
-    }
+    const home = getActiveHermesHome();
+    const configPath = configPathForProfile(home, profile);
 
     if (!existsSync(configPath)) {
       return NextResponse.json({ error: "Profile config not found" }, { status: 404 });
     }
 
     const content = readFileSync(configPath, "utf-8");
-    const skillsRoot = resolveSkillsRoot(profile);
+    const skillsRoot = skillsRootForProfile(home, profile);
     const currentEnabled = getResolvedEnabledSkillNames(content, skillsRoot);
 
     const newEnabled = enabled

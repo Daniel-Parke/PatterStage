@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from "fs";
+import { existsSync, readdirSync, statSync } from "fs";
 
 /**
  * How Hermes profile config treats skills.enabled for Control Hub.
@@ -204,6 +204,73 @@ export function findSkillsEnabledBlockLineRange(
       break;
     }
     return { start, endExclusive: j };
+  }
+
+  return null;
+}
+
+/**
+ * Resolve config.yaml path for a given profile.
+ */
+export function configPathForProfile(home: string, profile: string): string {
+  return profile === "default"
+    ? home + "/config.yaml"
+    : home + "/profiles/" + profile + "/config.yaml";
+}
+
+/**
+ * Resolve skills root directory for a given profile, falling back to default.
+ */
+export function skillsRootForProfile(home: string, profile: string): string {
+  if (profile === "default") return home + "/skills";
+  const profileSkills = home + "/profiles/" + profile + "/skills";
+  return existsSync(profileSkills) ? profileSkills : home + "/skills";
+}
+
+/**
+ * Find the SKILL.md file for a given skill name across profile directories.
+ */
+export function findSkillFile(skillName: string, home: string, profile: string): string | null {
+  const searchDirs: string[] = [];
+
+  if (profile === "default") {
+    searchDirs.push(home + "/skills");
+  } else {
+    const profileSkillsDir = home + "/profiles/" + profile + "/skills";
+    if (existsSync(profileSkillsDir)) {
+      searchDirs.push(profileSkillsDir);
+    }
+    searchDirs.push(home + "/skills");
+  }
+
+  for (const baseDir of searchDirs) {
+    if (!existsSync(baseDir)) continue;
+
+    // Direct match: <baseDir>/<skillName>/SKILL.md
+    const directPath = baseDir + "/" + skillName + "/SKILL.md";
+    if (existsSync(directPath)) return directPath;
+
+    // Walk subdirectories
+    try {
+      const walk = (dir: string): string | null => {
+        for (const item of readdirSync(dir)) {
+          const fullPath = dir + "/" + item;
+          try {
+            const st = statSync(fullPath);
+            if (st.isDirectory()) {
+              if (item === skillName && existsSync(fullPath + "/SKILL.md")) {
+                return fullPath + "/SKILL.md";
+              }
+              const result = walk(fullPath);
+              if (result) return result;
+            }
+          } catch { /* skip unreadable entries */ }
+        }
+        return null;
+      };
+      const found = walk(baseDir);
+      if (found) return found;
+    } catch { /* skip unreadable directories */ }
   }
 
   return null;

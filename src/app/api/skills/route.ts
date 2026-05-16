@@ -5,6 +5,8 @@ import { getActiveHermesHome } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import {
   parseSkillsEnabledFromYaml,
+  configPathForProfile,
+  skillsRootForProfile,
   type ParsedSkillsEnabled,
 } from "@/lib/skills-enabled-config";
 
@@ -78,24 +80,9 @@ export async function GET(request: NextRequest) {
   const profile = request.nextUrl.searchParams.get("profile") || "default";
 
   try {
-    let configPath: string;
-    if (profile === "default") {
-      configPath = getActiveHermesHome() + "/config.yaml";
-    } else {
-      configPath = getActiveHermesHome() + "/profiles/" + profile + "/config.yaml";
-    }
-
-    let skillsDir: string;
-    if (profile === "default") {
-      skillsDir = getActiveHermesHome() + "/skills";
-    } else {
-      const profileSkillsDir = getActiveHermesHome() + "/profiles/" + profile + "/skills";
-      if (existsSync(profileSkillsDir)) {
-        skillsDir = profileSkillsDir;
-      } else {
-        skillsDir = getActiveHermesHome() + "/skills";
-      }
-    }
+    const home = getActiveHermesHome();
+    const configPath = configPathForProfile(home, profile);
+    const skillsDir = skillsRootForProfile(home, profile);
 
     const rawConfig = existsSync(configPath) ? readFileSync(configPath, "utf-8") : "";
     const parsed = rawConfig

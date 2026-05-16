@@ -8,6 +8,7 @@
 import { db, inTransaction, uuid, now } from "./db";
 import { isTaskType, type TaskType } from "./hermes-providers";
 import { getCredentialWithKey } from "./credentials-repository";
+import { emptyModelDefaults } from "./utils";
 
 // ── Public types ────────────────────────────────────────────────
 
@@ -106,12 +107,7 @@ function rowToModel(row: ModelRow): ModelRecord {
 }
 
 function emptyDefaults(): ModelDefaults {
-  return {
-    agent: null, hindsight: null, compression: null, vision: null,
-    web_extract: null, session_search: null, title_generation: null,
-    skills_hub: null, mcp: null, triage_specifier: null,
-    approval: null, delegation: null,
-  };
+  return emptyModelDefaults() as unknown as ModelDefaults;
 }
 
 // ── Read ───────────────────────────────────────────────────────

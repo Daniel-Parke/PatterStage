@@ -19,31 +19,11 @@ import Modal from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import type { ToolDefinition } from "@/lib/agent-backend/types";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  core: "Core Tools",
-  platform: "Platform Tools",
-  custom: "Custom Tools",
-  mcp: "MCP Tools",
-};
-
-const CATEGORY_COLORS: Record<string, "cyan" | "purple" | "orange" | "pink" | "green" | "gray"> = {
-  core: "cyan",
-  platform: "purple",
-  custom: "orange",
-  mcp: "pink",
-};
-
-/** Map category → badge label shown next to each tool row. */
-const CATEGORY_BADGE_LABELS: Record<string, string> = {
-  core: "Core",
-  platform: "Platform",
-  mcp: "MCP",
-};
-
-const CATEGORY_BADGE_COLORS: Record<string, "cyan" | "purple" | "pink" | "gray"> = {
-  core: "cyan",
-  platform: "purple",
-  mcp: "pink",
+const CATEGORY_META: Record<string, { label: string; color: "cyan" | "purple" | "orange" | "pink" | "green" | "gray"; badgeLabel?: string; badgeColor?: "cyan" | "purple" | "pink" | "gray" }> = {
+  core: { label: "Core Tools", color: "cyan", badgeLabel: "Core", badgeColor: "cyan" },
+  platform: { label: "Platform Tools", color: "purple", badgeLabel: "Platform", badgeColor: "purple" },
+  custom: { label: "Custom Tools", color: "orange" },
+  mcp: { label: "MCP Tools", color: "pink", badgeLabel: "MCP", badgeColor: "pink" },
 };
 
 export default function ToolsPage() {
@@ -191,11 +171,12 @@ export default function ToolsPage() {
         ) : (
           <div className="space-y-4">
             {["core", "platform", "custom", "mcp"].map((category) => {
+              const meta = CATEGORY_META[category];
+              if (!meta) return null;
               const categoryTools = toolsByCategory[category] ?? [];
               if (categoryTools.length === 0) return null;
               const isExpanded = expandedCategories[category] ?? true;
               const enabledCount = categoryTools.filter(t => isEnabled(t)).length;
-              const color = CATEGORY_COLORS[category] ?? "gray";
 
               return (
                 <div key={category} className="rounded-xl border border-white/10 bg-dark-900/50">
@@ -211,9 +192,9 @@ export default function ToolsPage() {
                         ? <ChevronDown className="w-4 h-4 text-white/30" />
                         : <ChevronRight className="w-4 h-4 text-white/30" />}
                       <span className="text-sm font-semibold text-white/70">
-                        {CATEGORY_LABELS[category] || category}
+                        {meta.label}
                       </span>
-                      <Badge color={color} size="sm">
+                      <Badge color={meta.color} size="sm">
                         {enabledCount}/{categoryTools.length}
                       </Badge>
                     </div>
@@ -224,6 +205,7 @@ export default function ToolsPage() {
                     <div className="border-t border-white/5">
                       {categoryTools.map((tool) => {
                         const enabled = isEnabled(tool);
+                        const toolMeta = CATEGORY_META[tool.category];
                         return (
                           <div
                             key={tool.id}
@@ -244,12 +226,12 @@ export default function ToolsPage() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className="text-sm font-mono text-white/80">{tool.label}</span>
-                                {CATEGORY_BADGE_LABELS[tool.category] && (
+                                {toolMeta?.badgeLabel && (
                                   <Badge
-                                    color={CATEGORY_BADGE_COLORS[tool.category] ?? "gray"}
+                                    color={toolMeta.badgeColor ?? "gray"}
                                     size="sm"
                                   >
-                                    {CATEGORY_BADGE_LABELS[tool.category]}
+                                    {toolMeta.badgeLabel}
                                   </Badge>
                                 )}
                               </div>

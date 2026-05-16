@@ -287,7 +287,7 @@ export default function BehaviourPage() {
 
                     {/* File Groups */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {["identity", "user", "system"].map((group) => {
+                      {["identity", "user"].map((group) => {
                         const groupFiles = profile.files.filter((f) => {
                           if (group === "identity") return ["soul", "agents"].includes(f.key);
                           if (group === "user") return ["user", "memory"].includes(f.key);

@@ -4,7 +4,6 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
 import { RefreshCw, Upload, Info } from "lucide-react";
 import type { FallbackConfig } from "@/types/hermes";
 
@@ -17,8 +16,6 @@ interface FallbackConfigPanelProps {
   importing?: boolean;
 }
 
-type RestorationPolicy = "restore_primary" | "stay_on_fallback" | "prompt_user";
-
 export default function FallbackConfigPanel({
   config,
   onUpdate,
@@ -27,46 +24,20 @@ export default function FallbackConfigPanel({
   syncing = false,
   importing = false,
 }: FallbackConfigPanelProps) {
-  const [localConfig, setLocalConfig] = useState<FallbackConfig>(config);
-
-  // Sync when external prop changes (e.g., after sync import)
-  useEffect(() => {
-    setLocalConfig(config);
-  }, [config]);
-  const [restorationPolicy, setRestorationPolicy] = useState<RestorationPolicy>(
-    localConfig.restorePrimaryOnFallback ? "restore_primary" : "stay_on_fallback"
-  );
-
-  // Sync restoration policy when localConfig changes
-  useEffect(() => {
-    setRestorationPolicy(
-      localConfig.restorePrimaryOnFallback ? "restore_primary" : "stay_on_fallback"
-    );
-  }, [localConfig.restorePrimaryOnFallback]);
-
+  // Local state mirrors props; no cascading effects needed — invoke onUpdate directly
   const handleRetriesChange = (value: string) => {
     const num = parseInt(value, 10);
     if (!isNaN(num) && num >= 0) {
-      const updated = { ...localConfig, apiMaxRetries: num };
-      setLocalConfig(updated);
-      onUpdate(updated);
+      onUpdate({ ...config, apiMaxRetries: num });
     }
   };
 
-  const handleRestorationChange = (policy: RestorationPolicy) => {
-    setRestorationPolicy(policy);
-    const updated = {
-      ...localConfig,
-      restorePrimaryOnFallback: policy === "restore_primary",
-    };
-    setLocalConfig(updated);
-    onUpdate(updated);
+  const handleRestorationChange = (restorePrimary: boolean) => {
+    onUpdate({ ...config, restorePrimaryOnFallback: restorePrimary });
   };
 
   const handleNotificationChange = (enabled: boolean) => {
-    const updated = { ...localConfig, fallbackNotification: enabled };
-    setLocalConfig(updated);
-    onUpdate(updated);
+    onUpdate({ ...config, fallbackNotification: enabled });
   };
 
   return (
@@ -82,7 +53,7 @@ export default function FallbackConfigPanel({
             type="number"
             min="0"
             max="10"
-            value={localConfig.apiMaxRetries}
+            value={config.apiMaxRetries}
             onChange={(e) => handleRetriesChange(e.target.value)}
             className="w-24 h-9 min-h-9 bg-dark-800 border border-white/10 rounded-lg px-3 text-sm text-white font-mono outline-none focus:border-neon-purple/50 transition-colors"
           />
@@ -96,13 +67,13 @@ export default function FallbackConfigPanel({
           <label className="block text-xs font-mono text-white/50 uppercase tracking-widest mb-2">
             Restoration Policy
           </label>
-          <div className="space-y-2">
+            <div className="space-y-2">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="radio"
                 name="restoration-policy"
-                checked={restorationPolicy === "restore_primary"}
-                onChange={() => handleRestorationChange("restore_primary")}
+                checked={config.restorePrimaryOnFallback}
+                onChange={() => handleRestorationChange(true)}
                 className="accent-neon-purple"
               />
               <span className="text-sm font-mono text-white/70">
@@ -113,24 +84,12 @@ export default function FallbackConfigPanel({
               <input
                 type="radio"
                 name="restoration-policy"
-                checked={restorationPolicy === "stay_on_fallback"}
-                onChange={() => handleRestorationChange("stay_on_fallback")}
+                checked={!config.restorePrimaryOnFallback}
+                onChange={() => handleRestorationChange(false)}
                 className="accent-neon-purple"
               />
               <span className="text-sm font-mono text-white/70">
                 Stay on fallback model
-              </span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="restoration-policy"
-                checked={restorationPolicy === "prompt_user"}
-                onChange={() => handleRestorationChange("prompt_user")}
-                className="accent-neon-purple"
-              />
-              <span className="text-sm font-mono text-white/70">
-                Prompt user before switching
               </span>
             </label>
           </div>
@@ -141,7 +100,7 @@ export default function FallbackConfigPanel({
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              checked={localConfig.fallbackNotification}
+              checked={config.fallbackNotification}
               onChange={(e) => handleNotificationChange(e.target.checked)}
               className="accent-neon-purple w-4 h-4"
             />
