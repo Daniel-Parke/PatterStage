@@ -10,6 +10,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import AppPageShell from "@/components/layout/AppPageShell";
 import type { MemoryProviderType } from "@/types/hermes";
+import { timeAgo } from "@/lib/utils";
 
 // Lazy load provider-specific components
 import HindsightBrowser from "@/components/memory/HindsightBrowser";
@@ -112,28 +113,11 @@ function parseHolographicFact(raw: string): {
     const text = textMatch ? textMatch[1].replace(/\\'/g, "'") : raw;
     const type = typeMatch ? typeMatch[1] : "observation";
     const entities = entitiesMatch ? entitiesMatch[1] : "";
-    const occurred = occurredMatch ? formatDate(occurredMatch[1]) : "";
+    const occurred = occurredMatch ? timeAgo(occurredMatch[1]) : "";
 
     return { text, type, entities, occurred };
   } catch {
     return { text: raw, type: "observation", entities: "", occurred: "" };
-  }
-}
-
-function formatDate(iso: string): string {
-  try {
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return "";
-    const now = new Date();
-    const diffMs = now.getTime() - d.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays}d ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-    return d.toLocaleDateString("en-GB", { month: "short", day: "numeric" });
-  } catch {
-    return "";
   }
 }
 

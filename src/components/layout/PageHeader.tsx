@@ -5,7 +5,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { AccentColor } from "@/types/hermes";
-import { shellHeaderBarClasses } from "@/lib/theme";
+import { shellHeaderBarClasses, iconColorMap } from "@/lib/theme";
 import { StatusDot } from "@/components/ui/Card";
 
 interface PageHeaderProps {
@@ -20,17 +20,6 @@ interface PageHeaderProps {
   status?: "online" | "warning" | "error" | "idle";
   actions?: React.ReactNode;
 }
-
-const iconColorMap: Record<AccentColor, string> = {
-  cyan: "text-neon-cyan",
-  purple: "text-neon-purple",
-  green: "text-neon-green",
-  pink: "text-neon-pink",
-  orange: "text-neon-orange",
-  red: "text-red-400",
-  blue: "text-blue-400",
-  yellow: "text-yellow-400",
-};
 
 export default function PageHeader({
   icon: Icon,

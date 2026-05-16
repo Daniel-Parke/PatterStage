@@ -39,8 +39,7 @@ export default function GatewayPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-const loadData = async (...args: unknown[]) => {
-    const signal = args[0] instanceof AbortSignal ? args[0] : undefined;
+const loadData = async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     try {

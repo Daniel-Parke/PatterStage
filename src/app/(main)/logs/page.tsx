@@ -111,7 +111,6 @@ export default function LogsPage() {
   const [lineCount, setLineCount] = useState(200);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const [refreshTick, setRefreshTick] = useState(false);
   const terminalRef = useRef<HTMLDivElement>(null);
   const dataRef = useRef<LogData | null>(null);
   useEffect(() => {
@@ -253,7 +252,7 @@ export default function LogsPage() {
                 autoRefresh
                   ? "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50 shadow-[0_0_8px_rgba(6,214,214,0.3)]"
                   : "bg-dark-900/50 text-white/40 border border-white/10 hover:text-white/60"
-              } ${autoRefresh && refreshTick ? "animate-auto-refresh-tick" : ""}`}
+              } ${autoRefresh ? "animate-auto-refresh-tick" : ""}`}
               title={autoRefresh ? "Auto-refresh on (click to disable)" : "Auto-refresh off (click to enable)"}
             >
               {autoRefresh ? (

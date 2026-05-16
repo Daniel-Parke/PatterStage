@@ -200,10 +200,6 @@ export default function SessionsPage() {
   }, [sessions, search]);
 
   const totalPages = Math.ceil((data?.total ?? 0) / PAGE_SIZE);
-  const paginatedSessions = filteredSessions.slice(
-    page * PAGE_SIZE,
-    (page + 1) * PAGE_SIZE,
-  );
 
   return (
     <AppPageShell>
@@ -272,7 +268,7 @@ export default function SessionsPage() {
               Showing {filteredSessions.length} of {data?.total ?? 0} sessions
             </div>
             <div className="grid gap-3">
-              {paginatedSessions.map((session) => (
+              {filteredSessions.map((session) => (
                 <SessionCard key={session.id} session={session} />
               ))}
             </div>
