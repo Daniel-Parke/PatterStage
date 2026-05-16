@@ -25,20 +25,7 @@ import type {
   KanbanDocument,
   GoalSession,
 } from "@/types/hermes";
-
-// ── API helpers ────────────────────────────────────────────────
-
-async function apiFetch(path: string, options?: RequestInit) {
-  const res = await fetch(path, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...options?.headers },
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: "Request failed" }));
-    throw new Error(err.error ?? `HTTP ${res.status}`);
-  }
-  return res.json();
-}
+import { apiFetch } from "@/lib/fetch-api";
 
 // ── Board Selector ─────────────────────────────────────────────
 

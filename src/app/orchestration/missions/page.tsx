@@ -1032,13 +1032,7 @@ export default function MissionsPage() {
               >
                 All
               </button>
-              {(() => {
-                const knownSet = new Set(CATEGORY_ORDER);
-                const extra = templates
-                  .map((t) => (t.isCustom ? "Custom" : t.category || "Other"))
-                  .filter((c) => !knownSet.has(c));
-                const allCats = [...CATEGORY_ORDER, ...extra];
-                return allCats.map((cat) => {
+              {allCategories.map((cat) => {
                   const color = CATEGORY_COLORS[cat] || "cyan";
                   const active = categoryFilter === cat;
                   const activeClasses: Record<string, string> = {
@@ -1061,8 +1055,7 @@ export default function MissionsPage() {
                       {cat}
                     </button>
                   );
-                });
-              })()}
+                  });
             </div>
             {/* Category Accordion */}
             <div className="space-y-2">
@@ -1101,8 +1094,7 @@ export default function MissionsPage() {
                       </div>
                     </CategoryAccordion>
                   );
-                });
-              })()}
+                  });
             </div>
           </div>
         )}
