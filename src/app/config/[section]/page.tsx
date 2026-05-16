@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import { Save, Check, RotateCcw, AlertCircle } from "lucide-react";
 import Link from "next/link";
@@ -15,6 +15,8 @@ import { Toggle, Select, NumberInput, TextInput } from "@/components/ui/Input";
 import { LoadingSpinner, ErrorBanner } from "@/components/ui/LoadingSpinner";
 import { getSectionDef, type FieldDef } from "@/lib/config-schema";
 import { getConfigSectionIcon } from "@/lib/config-section-icons";
+
+const FULLSCREEN_CLASS = "min-h-screen bg-dark-950 grid-bg flex items-center justify-center";
 
 export default function ConfigSectionPage() {
   const params = useParams();
@@ -33,26 +35,35 @@ export default function ConfigSectionPage() {
   const [fileContent, setFileContent] = useState("");
   const [originalFileContent, setOriginalFileContent] = useState("");
 
-  const loadConfig = useCallback(async () => {
+  // Stable ref for change detection — avoids JSON.stringify on every render
+  const hasChangesRef = useRef(false);
+
+  const hasChanges = isFileSection
+    ? fileContent !== originalFileContent
+    : hasChangesRef.current;
+
+  const loadConfig = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     try {
       if (isFileSection && sectionDef?.filePath) {
-        const res = await fetch(`/api/agent/files/${sectionDef.filePath === ".env" ? "env" : "hermes"}`);
+        const res = await fetch(`/api/agent/files/${sectionDef.filePath === ".env" ? "env" : "hermes"}`, { signal });
         const json = await res.json();
         const content = json.data?.content || "";
         setFileContent(content);
         setOriginalFileContent(content);
       } else {
-        const res = await fetch("/api/config");
+        const res = await fetch("/api/config", { signal });
         if (!res.ok) throw new Error("Failed to load config");
         const json = await res.json();
         const config = json.data || json;
         const sectionValues = (config[sectionId] as Record<string, unknown>) || {};
         setValues(sectionValues);
         setOriginalValues({ ...sectionValues });
+        hasChangesRef.current = false;
       }
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
@@ -60,10 +71,12 @@ export default function ConfigSectionPage() {
   }, [sectionId, isFileSection, sectionDef]);
 
   useEffect(() => {
-    loadConfig();
+    const controller = new AbortController();
+    loadConfig(controller.signal);
+    return () => controller.abort();
   }, [loadConfig]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!sectionDef) return;
 
     setSaving(true);
@@ -91,6 +104,7 @@ export default function ConfigSectionPage() {
         });
         if (!res.ok) throw new Error("Failed to save");
         setOriginalValues({ ...values });
+        hasChangesRef.current = false;
       }
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 2000);
@@ -100,27 +114,28 @@ export default function ConfigSectionPage() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [sectionDef, isFileSection, fileContent, sectionId, values]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     if (isFileSection) {
       setFileContent(originalFileContent);
     } else {
       setValues({ ...originalValues });
+      hasChangesRef.current = false;
     }
-  };
+  }, [isFileSection, originalFileContent, originalValues]);
 
-  const hasChanges = isFileSection
-    ? fileContent !== originalFileContent
-    : JSON.stringify(values) !== JSON.stringify(originalValues);
-
-  const updateValue = (key: string, value: unknown) => {
-    setValues((prev) => ({ ...prev, [key]: value }));
-  };
+  const updateValue = useCallback((key: string, value: unknown) => {
+    setValues((prev) => {
+      const next = { ...prev, [key]: value };
+      hasChangesRef.current = true;
+      return next;
+    });
+  }, []);
 
   if (!sectionDef) {
     return (
-      <div className="min-h-screen bg-dark-950 grid-bg flex items-center justify-center">
+      <div className={FULLSCREEN_CLASS}>
         <div className="text-center">
           <h2 className="text-xl font-bold text-white mb-2">
             Unknown Config Section
@@ -138,7 +153,7 @@ export default function ConfigSectionPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-950 grid-bg flex items-center justify-center">
+      <div className={FULLSCREEN_CLASS}>
         <LoadingSpinner text={`Loading ${sectionDef.label}...`} />
       </div>
     );
@@ -215,6 +230,7 @@ export default function ConfigSectionPage() {
   };
 
   const SectionIcon = getConfigSectionIcon(sectionDef.icon);
+  const showActions = sectionDef.fields.length > 0 || isFileSection;
 
   return (
     <AppPageShell>
@@ -226,7 +242,7 @@ export default function ConfigSectionPage() {
         backHref="/config"
         backLabel="CONFIG"
         actions={
-          (sectionDef.fields.length > 0 || isFileSection) ? (
+          showActions ? (
             <>
               {hasChanges && (
                 <span className="text-xs text-neon-orange font-mono flex items-center gap-1">
@@ -323,7 +339,7 @@ export default function ConfigSectionPage() {
         {/* Complex / nested fields (read-only preview) */}
         {sectionDef.complexKeys && sectionDef.complexKeys.length > 0 && (
           <div className="rounded-xl border border-white/10 bg-dark-900/50 p-6">
-            {(sectionDef.fields.length > 0 || isFileSection) && (
+            {showActions && (
               <p className="text-xs text-white/30 font-mono uppercase tracking-widest mb-4">
                 Complex Fields
               </p>

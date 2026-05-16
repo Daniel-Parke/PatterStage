@@ -67,11 +67,15 @@ function invalidateConfigCache(): void {
   }
 }
 
-// Whitelist of config sections that can be modified via PUT
-const WRITABLE_SECTIONS = new Set([
-  "agent", "display", "memory", "terminal", "compression",
-  "security", "tts", "stt", "delegation", "cron", "checkpoints", "approvals",
-]);
+import { CONFIG_SECTIONS } from "@/lib/config-schema";
+
+// Dynamically derive writable sections from the schema
+// Only YAML sections with editable fields are writable
+const WRITABLE_SECTIONS = new Set(
+  Object.entries(CONFIG_SECTIONS)
+    .filter(([, def]) => def.type !== "file" && def.fields.length > 0)
+    .map(([id]) => id)
+);
 
 // Mask sensitive values in config before returning to client
 function maskConfigSecrets(config: Record<string, unknown>): Record<string, unknown> {

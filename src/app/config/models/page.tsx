@@ -10,7 +10,7 @@
 
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Globe,
   Plus,
@@ -138,6 +138,8 @@ export default function ModelsPage() {
   const [editingFallbackEntry, setEditingFallbackEntry] = useState<FallbackChainEntry | null>(null);
   const [editingFallbackUrl, setEditingFallbackUrl] = useState("");
   const [savingFallbackUrl, setSavingFallbackUrl] = useState(false);
+  const editingFallbackEntryRef = useRef<FallbackChainEntry | null>(null);
+  const editingFallbackUrlRef = useRef("");
 
   const { showToast, toastElement } = useToast();
 
@@ -522,20 +524,23 @@ export default function ModelsPage() {
     async (entry: FallbackChainEntry) => {
       setEditingFallbackEntry(entry);
       setEditingFallbackUrl(entry.overrideBaseUrl || "");
+      editingFallbackEntryRef.current = entry;
+      editingFallbackUrlRef.current = entry.overrideBaseUrl || "";
     },
     [],
   );
 
   const handleFallbackEditSave = useCallback(
     async () => {
-      const entry = editingFallbackEntry;
+      const entry = editingFallbackEntryRef.current;
+      const overrideUrl = editingFallbackUrlRef.current;
       if (!entry) return;
       setSavingFallbackUrl(true);
       try {
         const res = await fetch(`/api/models/fallbacks/${encodeURIComponent(entry.id)}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ overrideBaseUrl: editingFallbackUrl.trim() || null }),
+          body: JSON.stringify({ overrideBaseUrl: overrideUrl.trim() || null }),
         });
         if (!res.ok) throw new Error("Update failed");
         await loadAll();
@@ -550,7 +555,7 @@ export default function ModelsPage() {
         setSavingFallbackUrl(false);
       }
     },
-    [editingFallbackEntry, editingFallbackUrl, loadAll, showToast]
+    [loadAll, showToast]
   );
 
   const handleFallbackAddFromRegistry = useCallback(
