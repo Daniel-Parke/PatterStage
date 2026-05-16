@@ -210,8 +210,12 @@ export default function SessionDetailPage() {
           const errBody = (await res.json().catch(() => null)) as { error?: string } | null;
           throw new Error(errBody?.error || "Failed to load session");
         }
-        const json = (await res.json()) as { data?: SessionData };
-        setData(json.data ?? (json as unknown as SessionData));
+        const json = await res.json() as { data?: SessionData };
+        if (json.data) {
+          setData(json.data);
+        } else {
+          throw new Error("Invalid session data format");
+        }
       } catch (err) {
         if (controller.signal.aborted) return;
         setError(err instanceof Error ? err.message : "Unknown error");
@@ -275,26 +279,30 @@ export default function SessionDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-950 grid-bg flex items-center justify-center">
-        <LoadingSpinner text="Loading transcript..." />
-      </div>
+      <AppPageShell>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <LoadingSpinner text="Loading transcript..." />
+        </div>
+      </AppPageShell>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-dark-950 grid-bg flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-bold text-white mb-2">Session Not Found</h2>
-          <p className="text-white/40 font-mono mb-4">{error || "Unknown error"}</p>
-          <Link
-            href="/sessions"
-            className="text-neon-orange text-sm font-mono hover:underline"
-          >
-            ← Back to Sessions
-          </Link>
+      <AppPageShell>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-white mb-2">Session Not Found</h2>
+            <p className="text-white/40 font-mono mb-4">{error || "Unknown error"}</p>
+            <Link
+              href="/sessions"
+              className="text-neon-orange text-sm font-mono hover:underline"
+            >
+              ← Back to Sessions
+            </Link>
+          </div>
         </div>
-      </div>
+      </AppPageShell>
     );
   }
 

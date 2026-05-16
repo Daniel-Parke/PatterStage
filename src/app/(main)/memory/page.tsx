@@ -15,22 +15,33 @@ import type { MemoryProviderType } from "@/types/hermes";
 import HindsightBrowser from "@/components/memory/HindsightBrowser";
 
 // Holographic browser (inline for holographic provider)
-function HolographicBrowser() {
+function HolographicBrowser({ initialData }: {
+  initialData?: {
+    facts: Array<{
+      id: number; content: string; category: string; tags: string;
+      trust: number; createdAt: string; updatedAt: string;
+    }>; total: number; dbSize: number; available: boolean;
+    provider: string; message?: string;
+  } | null;
+}) {
   const [data, setData] = useState<{
     facts: Array<{
       id: number; content: string; category: string; tags: string;
       trust: number; createdAt: string; updatedAt: string;
     }>; total: number; dbSize: number; available: boolean;
     provider: string; message?: string;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
+  } | null>(() => initialData ?? null);
+  const [loading, setLoading] = useState(!initialData);
 
   useEffect(() => {
+    // Only fetch if no initial data was provided by the parent
+    if (initialData) return;
     fetch("/api/memory")
       .then((r) => r.json())
       .then((d) => setData(d.data))
+      .catch(() => { /* silently handled by data.available check */ })
       .finally(() => setLoading(false));
-  }, []);
+  }, [initialData]);
 
   if (loading) return <LoadingSpinner text="Loading memory..." />;
 
@@ -203,7 +214,7 @@ export default function MemoryPage() {
 
       <div className="px-6 py-6">
         {provider === "hindsight" && <HindsightBrowser />}
-        {provider === "holographic" && memData && <HolographicBrowserWithData data={memData} />}
+        {provider === "holographic" && memData && <HolographicBrowser initialData={memData as any} />}
         {provider === "none" && (
           <div className="text-center py-12">
             <Brain className="w-12 h-12 text-pink-400/40 mx-auto mb-4" />
@@ -217,7 +228,4 @@ export default function MemoryPage() {
   );
 }
 
-/** Wrapper that passes pre-loaded data to HolographicBrowser to avoid a double-fetch */
-function HolographicBrowserWithData({ data }: { data: { facts?: unknown[]; total?: number } }) {
-  return <HolographicBrowser />;
-}
+

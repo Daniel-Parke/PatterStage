@@ -51,8 +51,12 @@ function parseQuery(
 } {
   const u = new URL(req.url);
   const id = u.searchParams.get("id") ?? undefined;
-  const agentType = (u.searchParams.get("agentType") ?? undefined) as AgentType | undefined;
-  const source = (u.searchParams.get("source") ?? undefined) as SessionSource | undefined;
+  const rawAgentType = u.searchParams.get("agentType");
+  const agentType: AgentType | undefined =
+    rawAgentType && ["hermes"].includes(rawAgentType) ? rawAgentType as AgentType : undefined;
+  const rawSource = u.searchParams.get("source");
+  const source: SessionSource | undefined =
+    rawSource && ["cli", "cron", "mission", "api"].includes(rawSource) ? rawSource as SessionSource : undefined;
   const missionIdParam = u.searchParams.get("missionId");
   const missionId: string | null | undefined =
     missionIdParam === null ? undefined : missionIdParam;

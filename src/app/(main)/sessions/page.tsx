@@ -175,7 +175,7 @@ export default function SessionsPage() {
   // Initial load + reload on filter change
   useEffect(() => {
     setPage(0);
-    loadSessions(0);
+    void loadSessions(0);
   }, [loadSessions]);
 
   const sessions = useMemo(() => data?.sessions ?? [], [data?.sessions]);
@@ -282,7 +282,7 @@ export default function SessionsPage() {
                   onClick={() => {
                     const newPage = Math.max(0, page - 1);
                     setPage(newPage);
-                    loadSessions(newPage * PAGE_SIZE);
+                    void loadSessions(newPage * PAGE_SIZE);
                   }}
                   disabled={page === 0}
                   className="text-xs font-mono px-3 py-1.5 rounded bg-white/5 text-white/40 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
@@ -296,7 +296,7 @@ export default function SessionsPage() {
                   onClick={() => {
                     const newPage = Math.min(totalPages - 1, page + 1);
                     setPage(newPage);
-                    loadSessions(newPage * PAGE_SIZE);
+                    void loadSessions(newPage * PAGE_SIZE);
                   }}
                   disabled={page >= totalPages - 1}
                   className="text-xs font-mono px-3 py-1.5 rounded bg-white/5 text-white/40 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"

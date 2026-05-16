@@ -155,6 +155,7 @@ export async function DELETE(request: NextRequest) {
       { status: 404 },
     );
   }
+  const resolvedLogsDir = resolve(logsDir);
 
   try {
     if (logName) {
@@ -166,7 +167,6 @@ export async function DELETE(request: NextRequest) {
         );
       }
       const logPath = resolve(logsDir, safe + ".log");
-      const resolvedLogsDir = resolve(logsDir);
       if (!logFileUnderLogsDir(resolvedLogsDir, logPath)) {
         return NextResponse.json<ApiResponse<never>>(
           { error: "Invalid log path" },
@@ -188,7 +188,6 @@ export async function DELETE(request: NextRequest) {
       const base = file.slice(0, -4);
       if (sanitizeLogBasename(base) !== base) continue;
       const filePath = resolve(logsDir, file);
-      const resolvedLogsDir = resolve(logsDir);
       if (logFileUnderLogsDir(resolvedLogsDir, filePath)) {
         writeFileSync(filePath, "");
         cleared++;

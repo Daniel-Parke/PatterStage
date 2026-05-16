@@ -39,15 +39,17 @@ export default function GatewayPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadData = async () => {
+const loadData = async (...args: unknown[]) => {
+    const signal = args[0] instanceof AbortSignal ? args[0] : undefined;
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/gateway");
+      const res = await fetch("/api/gateway", { signal });
       if (!res.ok) throw new Error("Failed to load gateway data");
       const json = await res.json();
       setData(json.data);
     } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
@@ -56,7 +58,7 @@ export default function GatewayPage() {
 
   useEffect(() => {
     const controller = new AbortController();
-    loadData();
+    loadData(controller.signal);
     return () => { controller.abort(); };
   }, []);
 
@@ -71,7 +73,7 @@ export default function GatewayPage() {
           <Button
             variant="secondary"
             size="sm"
-            onClick={loadData}
+            onClick={() => loadData()}
             loading={loading}
             icon={RefreshCw}
           >

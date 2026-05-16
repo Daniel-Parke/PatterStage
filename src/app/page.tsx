@@ -34,7 +34,7 @@ import IntervalSelector from "@/components/ui/IntervalSelector";
 import CategoryAccordion from "@/components/ui/CategoryAccordion";
 import TemplateCard from "@/components/ui/TemplateCard";
 import { useToast } from "@/components/ui/Toast";
-import type { SystemStatus, AccentColor } from "@/types/hermes";  // eslint-disable-line @typescript-eslint/no-unused-vars
+import type { SystemStatus, AccentColor } from "@/types/hermes";
 import { timeAgo, timeUntil, titleCase } from "@/lib/utils";
 import AppPageShell from "@/components/layout/AppPageShell";
 import { StatPillSkeleton } from "@/components/skeletons";
@@ -225,6 +225,7 @@ export default function Dashboard() {
   }, []);
   const [dispatchExpanded, setDispatchExpanded] = useState(false);
   const [errorSev, setErrorSev] = useState<"all" | "error" | "warning">("all");
+  const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null);
   const { showToast, toastElement } = useToast();
 
   const filteredErrors = useMemo(() => {
@@ -236,7 +237,13 @@ export default function Dashboard() {
 
   // Cancel a mission from the dashboard
   const handleCancelMission = useCallback(async (missionId: string, missionName: string) => {
-    if (!confirm(`Cancel "${missionName}"? The cron job will be paused.`)) return;
+    // First click: show confirmation state
+    if (cancelConfirmId !== missionId) {
+      setCancelConfirmId(missionId);
+      setTimeout(() => setCancelConfirmId((prev) => prev === missionId ? null : prev), 4000);
+      return;
+    }
+    setCancelConfirmId(null);
     try {
       const res = await fetch("/api/missions", {
         method: "POST",
@@ -248,6 +255,7 @@ export default function Dashboard() {
         showToast(body?.error || "Failed to cancel mission", "error");
         return;
       }
+      showToast(`Cancelled "${missionName}"`, "success");
       // Refresh missions
       const data = await fetch("/api/missions");
       const d = await data.json();
@@ -255,7 +263,7 @@ export default function Dashboard() {
     } catch {
       showToast("Failed to cancel mission", "error");
     }
-  }, [showToast, setData]);
+  }, [showToast, setData, cancelConfirmId]);
 
   // Update cron job schedule inline
   const handleCronScheduleChange = useCallback(async (jobId: string, newSchedule: string) => {
@@ -615,10 +623,14 @@ export default function Dashboard() {
                       <span className="text-[10px] font-mono text-white/25">{timeAgo(m.createdAt)}</span>
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCancelMission(m.id, m.name); }}
-                        className="text-[10px] font-mono text-white/20 hover:text-red-400 transition-colors px-1.5 py-0.5 rounded hover:bg-red-500/10"
+                        className={`text-[10px] font-mono transition-colors px-1.5 py-0.5 rounded ${
+                          cancelConfirmId === m.id
+                            ? "bg-red-500/20 text-red-400"
+                            : "text-white/20 hover:text-red-400 hover:bg-red-500/10"
+                        }`}
                         title="Cancel mission"
                       >
-                        Cancel
+                        {cancelConfirmId === m.id ? "Confirm?" : "Cancel"}
                       </button>
                     </div>
                   </div>
