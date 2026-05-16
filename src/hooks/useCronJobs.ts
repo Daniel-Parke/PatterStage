@@ -7,6 +7,7 @@
 import { useCallback } from "react";
 import { useApiData } from "@/hooks/useApiData";
 import { useToast } from "@/components/ui/Toast";
+import { apiFetch } from "@/lib/api-fetch";
 import type { CronJob } from "@/components/cron/JobCard";
 
 interface CronData {
@@ -14,45 +15,16 @@ interface CronData {
   total: number;
 }
 
-/** Generic fetch-with-body wrapper that handles error display. */
-async function apiPost(path: string, body: unknown): Promise<{ ok: boolean; error?: string }> {
+/** Thin wrapper: call apiFetch and return { ok, error } for consistent error display. */
+async function safeApiCall<T>(method: string, url: string, body?: T): Promise<{ ok: boolean; error?: string }> {
   try {
-    const res = await fetch(path, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+    await apiFetch(url, {
+      method,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
     });
-    const j = await res.json().catch(() => null);
-    if (!res.ok) return { ok: false, error: j?.error ?? "Request failed" };
     return { ok: true };
-  } catch {
-    return { ok: false, error: "Network error" };
-  }
-}
-
-async function apiPut(path: string, body: unknown): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const res = await fetch(path, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const j = await res.json().catch(() => null);
-    if (!res.ok) return { ok: false, error: j?.error ?? "Request failed" };
-    return { ok: true };
-  } catch {
-    return { ok: false, error: "Network error" };
-  }
-}
-
-async function apiDelete(path: string): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const res = await fetch(path, { method: "DELETE" });
-    const j = await res.json().catch(() => null);
-    if (!res.ok) return { ok: false, error: j?.error ?? "Request failed" };
-    return { ok: true };
-  } catch {
-    return { ok: false, error: "Network error" };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Request failed" };
   }
 }
 
@@ -67,7 +39,7 @@ export function useCronJobs() {
       const job = data?.jobs.find((j) => j.id === id);
       if (!job) return;
       const action = job.enabled ? "pause" : "resume";
-      const { ok, error } = await apiPut("/api/cron", { id, action });
+      const { ok, error } = await safeApiCall("PUT", "/api/cron", { id, action });
       showToast(ok ? `Job ${action === "pause" ? "Paused" : "Resumed"}` : (error ?? `Failed to ${action} job`), ok ? undefined : "error");
       loadJobs();
     },
@@ -76,7 +48,7 @@ export function useCronJobs() {
 
   const handleDelete = useCallback(
     async (id: string) => {
-      const { ok, error } = await apiDelete(`/api/cron?id=${id}`);
+      const { ok, error } = await safeApiCall("DELETE", `/api/cron?id=${id}`);
       showToast(ok ? "Job deleted" : (error ?? "Failed to delete job"), ok ? undefined : "error");
       loadJobs();
     },
@@ -85,7 +57,7 @@ export function useCronJobs() {
 
   const handleRun = useCallback(
     async (id: string) => {
-      const { ok, error } = await apiPut("/api/cron", { id, action: "run" });
+      const { ok, error } = await safeApiCall("PUT", "/api/cron", { id, action: "run" });
       showToast(ok ? "Run triggered" : (error ?? "Failed to trigger run"), ok ? undefined : "error");
       loadJobs();
     },
@@ -101,7 +73,7 @@ export function useCronJobs() {
 
   const handlePauseAll = useCallback(
     async () => {
-      const { ok, error } = await apiPost("/api/cron", { action: "pauseAll" });
+      const { ok, error } = await safeApiCall("POST", "/api/cron", { action: "pauseAll" });
       if (!ok) {
         showToast(error ?? "Failed to pause jobs", "error");
       } else {
@@ -114,7 +86,7 @@ export function useCronJobs() {
 
   const handleSync = useCallback(
     async () => {
-      const { ok, error } = await apiPost("/api/cron", { action: "sync" });
+      const { ok, error } = await safeApiCall("POST", "/api/cron", { action: "sync" });
       if (ok) {
         showToast("Sync complete");
       } else {

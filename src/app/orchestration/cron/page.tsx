@@ -259,8 +259,7 @@ export default function CronPage() {
       />
 
       <div className="px-6 py-6">
-        {activeTab === "agent" && renderTabContent()}
-        {activeTab === "hardware" && renderTabContent()}
+        {renderTabContent()}
       </div>
 
       {/* ── Agent Job Modal (create + edit) ── */}

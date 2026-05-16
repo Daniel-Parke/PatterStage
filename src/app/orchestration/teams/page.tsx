@@ -4,11 +4,10 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
   Plus,
-  Loader2,
   Trash2,
   Crown,
   Users,
@@ -18,6 +17,7 @@ import {
 import PageHeader from "@/components/layout/PageHeader";
 import TeamAgentCard from "@/components/kanban/TeamAgentCard";
 import { useToast } from "@/components/ui/Toast";
+import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import type { Team, AgentProfile } from "@/types/hermes";
 import { apiFetch } from "@/lib/api-fetch";
 import CreateTeamModal from "@/components/teams/CreateTeamModal";
@@ -65,10 +65,13 @@ export default function TeamsPage() {
     }
   };
 
-  const getProfileName = (profileId: string) => {
-    const p = profiles.find((x) => x.id === profileId);
-    return p?.name ?? profileId;
-  };
+  const getProfileName = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const p of profiles) {
+      map[p.id] = p.name ?? p.id;
+    }
+    return (profileId: string) => map[profileId] ?? profileId;
+  }, [profiles]);
 
   return (
     <div className="min-h-screen bg-dark-950 grid-bg flex flex-col">
@@ -97,22 +100,23 @@ export default function TeamsPage() {
       {/* Content */}
       <div className="flex-1 flex flex-col min-h-0 px-6 py-4">
       {loading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-neon-purple animate-spin" />
-        </div>
+        <LoadingSpinner text="Loading teams..." />
       ) : teams.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <Users className="w-12 h-12 text-white/20 mx-auto mb-4" />
-            <p className="text-white/50 mb-4">No teams yet</p>
-            <button
-              className="text-sm px-4 py-2 rounded-lg bg-neon-purple/10 text-neon-purple
-                hover:bg-neon-purple/20 border border-neon-purple/20 transition-colors"
-              onClick={() => setShowCreate(true)}
-            >
-              Create your first team
-            </button>
-          </div>
+          <EmptyState
+            icon={Users}
+            title="No teams yet"
+            description="Create your first team to organize agents"
+            action={
+              <button
+                className="text-sm px-4 py-2 rounded-lg bg-neon-purple/10 text-neon-purple
+                  hover:bg-neon-purple/20 border border-neon-purple/20 transition-colors"
+                onClick={() => setShowCreate(true)}
+              >
+                Create your first team
+              </button>
+            }
+          />
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto">

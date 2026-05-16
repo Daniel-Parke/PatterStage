@@ -41,11 +41,8 @@ import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import AutoTextarea from "@/components/ui/AutoTextarea";
 import Modal from "@/components/ui/Modal";
-import MissionTimeSelector from "@/components/ui/MissionTimeSelector";
-import TimeoutSelector from "@/components/ui/TimeoutSelector";
-import IntervalSelector from "@/components/ui/IntervalSelector";
-import ProfileSelector from "@/components/ui/ProfileSelector";
 import SkillSelector from "@/components/ui/SkillSelector";
+import IntervalSelector from "@/components/ui/IntervalSelector";
 import CategoryAccordion from "@/components/ui/CategoryAccordion";
 import TemplateCard from "@/components/ui/TemplateCard";
 import { timeAgo, titleCase } from "@/lib/utils";
@@ -55,6 +52,7 @@ import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { buildMissionPrompt, stripPromptSections } from "@/lib/build-mission-prompt";
 import ModelPicker from "@/components/missions/ModelPicker";
 import LocalDirRow from "@/components/missions/LocalDirRow";
+import AgentRuntimeDefaultsCard from "@/components/missions/AgentRuntimeDefaultsCard";
 
 // Available icons for templates
 const TEMPLATE_ICONS = [
@@ -212,94 +210,6 @@ const defaultStatusColor = {
   bg: "bg-white/5",
   text: "text-white/40",
 };
-
-interface AgentRuntimeDefaultsCardProps {
-  profileId: string;
-  onProfileChange: (id: string) => void;
-  missionTimeMinutes: number;
-  onMissionTimeChange: (v: number) => void;
-  timeoutMinutes: number;
-  onTimeoutChange: (v: number) => void;
-  modelId: string;
-  provider: string;
-  onModelChange: (mid: string, prov: string) => void;
-  modelPickerId?: string;
-  timeoutHeading: string;
-}
-
-function AgentRuntimeDefaultsCard({
-  profileId,
-  onProfileChange,
-  missionTimeMinutes,
-  onMissionTimeChange,
-  timeoutMinutes,
-  onTimeoutChange,
-  modelId,
-  provider,
-  onModelChange,
-  modelPickerId,
-  timeoutHeading,
-}: AgentRuntimeDefaultsCardProps) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-dark-800/30 p-3 sm:p-4 space-y-4">
-      <div className="space-y-1">
-        <h3 className="text-[11px] font-mono text-white/50 uppercase tracking-wider">
-          {"Agent & runtime defaults"}
-        </h3>
-        <p className="text-[10px] text-white/25 font-mono leading-relaxed">
-          These fields feed the mission prompt and dispatch configuration.
-        </p>
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-xs text-white/40 font-mono block">Agent profile</label>
-        <ProfileSelector
-          value={profileId}
-          onChange={onProfileChange}
-          subtitle="tooltip"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch">
-        <div className="flex flex-col gap-1.5 min-h-[3.25rem]">
-          <label className="text-xs text-white/40 font-mono block">Mission scope</label>
-          <div className="flex-1 flex flex-col justify-center">
-            <MissionTimeSelector
-              value={missionTimeMinutes}
-              onChange={onMissionTimeChange}
-            />
-          </div>
-        </div>
-        <div className="flex flex-col gap-1.5 min-h-[3.25rem]">
-          <label className="text-xs text-white/40 font-mono block">
-            {timeoutHeading}{" "}
-            <span className="text-white/25 font-normal normal-case">
-              — Inactivity kill switch
-            </span>
-          </label>
-          <div className="flex-1 flex flex-col justify-center">
-            <TimeoutSelector
-              value={timeoutMinutes}
-              onChange={onTimeoutChange}
-              showSubtitle={false}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-1.5">
-        <label className="text-xs text-white/40 font-mono block">Model</label>
-        <ModelPicker
-          id={modelPickerId}
-          modelId={modelId}
-          provider={provider}
-          onChange={onModelChange}
-          helperPlacement="tooltip"
-        />
-      </div>
-    </div>
-  );
-}
 
 export default function MissionsPage() {
   const { fetchMissions, fetchTemplates, fetchMissionDetail } =
