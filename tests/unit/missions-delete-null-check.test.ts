@@ -41,10 +41,9 @@ jest.mock("next/server", () => ({
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireMcApiKey: jest.fn(() => null),
+  requireAuth: jest.fn(() => null),
   requireNotReadOnly: jest.fn(() => null),
 }));
-
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
 jest.mock("@/lib/backends", () => ({

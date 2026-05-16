@@ -12,7 +12,7 @@ describe("buildMissionPrompt localDirs branches", () => {
     });
     expect(p).toContain("## Working Directories");
     expect(p).toContain("/repo");
-    expect(p).toContain("Use git branch: feature/x");
+    expect(p).toContain("(branch: feature/x)");
   });
 
   it("accepts legacy string[] dirs", () => {
@@ -24,7 +24,7 @@ describe("buildMissionPrompt localDirs branches", () => {
       goals: [],
       context: "",
     });
-    expect(p).toContain("  - /only");
-    expect(p).not.toContain("Use git branch:");
+    expect(p).toContain("/only");
+    expect(p).not.toContain("(branch:");
   });
 });

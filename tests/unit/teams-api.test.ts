@@ -40,6 +40,7 @@ jest.mock("next/server", () => ({
 }));
 
 jest.mock("@/lib/api-auth", () => ({
+  requireAuth: jest.fn(() => null),
   requireMcApiKey: jest.fn(() => null),
   requireNotReadOnly: jest.fn(() => null),
 }));

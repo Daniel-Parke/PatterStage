@@ -18,6 +18,7 @@ jest.mock("@/lib/db", () => ({
   ensureDb: jest.fn(),
   now: jest.fn(() => "2026-05-15T00:00:00.000Z"),
   uuid: jest.fn(() => "test-uuid"),
+  getGatewayPlatforms: jest.fn(),
 }));
 
 jest.mock("@/lib/sync", () => ({
@@ -130,12 +131,11 @@ describe("GET /api/gateway", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("returns gateway status with platforms", async () => {
-    mockDb.prepare.mockReturnValue({
-      all: jest.fn(() => [
-        { platform: "discord", enabled: 1, bot_token_present: 1, last_synced_at: "2026-05-15T00:00:00Z" },
-        { platform: "telegram", enabled: 0, bot_token_present: 0, last_synced_at: "2026-05-15T00:00:00Z" },
-      ]),
-    });
+    const { getGatewayPlatforms } = await import("@/lib/db");
+    (getGatewayPlatforms as jest.Mock).mockReturnValue([
+      { platform: "discord", enabled: 1, bot_token_present: 1, last_synced_at: "2026-05-15T00:00:00Z" },
+      { platform: "telegram", enabled: 0, bot_token_present: 0, last_synced_at: "2026-05-15T00:00:00Z" },
+    ]);
 
     const { GET } = await import("@/app/api/gateway/route");
     const res = await GET();
@@ -147,9 +147,8 @@ describe("GET /api/gateway", () => {
   });
 
   it("handles empty platforms gracefully", async () => {
-    mockDb.prepare.mockReturnValue({
-      all: jest.fn(() => []),
-    });
+    const { getGatewayPlatforms } = await import("@/lib/db");
+    (getGatewayPlatforms as jest.Mock).mockReturnValue([]);
 
     const { GET } = await import("@/app/api/gateway/route");
     const res = await GET();
