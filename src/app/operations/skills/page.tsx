@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from "react";
 import {
   FileText, ToggleRight, ToggleLeft, X, ChevronDown, ChevronRight,
 } from "lucide-react";
+import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { SearchInput } from "@/components/ui/Input";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
@@ -200,7 +201,7 @@ export default function SkillsPage() {
   const inactiveFiltered = filterBySearch(inactiveSkills, inactiveSearch);
 
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg">
+    <AppPageShell>
       {toastElement}
       <PageHeader
         icon={FileText}
@@ -317,7 +318,7 @@ export default function SkillsPage() {
           </div>
         )}
       </div>
-    </div>
+    </AppPageShell>
   );
 }
 

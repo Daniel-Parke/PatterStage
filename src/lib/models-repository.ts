@@ -106,9 +106,7 @@ function rowToModel(row: ModelRow): ModelRecord {
   };
 }
 
-function emptyDefaults(): ModelDefaults {
-  return emptyModelDefaults() as unknown as ModelDefaults;
-}
+
 
 // ── Read ───────────────────────────────────────────────────────
 
@@ -148,7 +146,7 @@ export function getDefaultModel(taskType: TaskType): ModelRecord | null {
 }
 
 export function getModelDefaults(): ModelDefaults {
-  const defaults = emptyDefaults();
+  const defaults = emptyModelDefaults() as unknown as ModelDefaults;
   
   const rows = db()
     .prepare("SELECT task_type, model_id FROM model_defaults")

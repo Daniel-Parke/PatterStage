@@ -5,6 +5,7 @@ import {
   Users, FileText, Save, RotateCcw, Download, Eye, EyeOff,
   Check, AlertCircle, Plus, Trash2,
 } from "lucide-react";
+import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
@@ -194,16 +195,16 @@ export default function BehaviourPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-950 grid-bg">
+      <AppPageShell>
         {toastElement}
         <PageHeader icon={Users} title="Agents" subtitle="Loading profiles..." color="purple" />
         <div className="px-6 py-12"><LoadingSpinner text="Loading profiles..." /></div>
-      </div>
+      </AppPageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg">
+    <AppPageShell>
       {toastElement}
       <PageHeader
         icon={Users}
@@ -539,6 +540,6 @@ export default function BehaviourPage() {
           </p>
         </Modal>
       </div>
-    </div>
+    </AppPageShell>
   );
 }

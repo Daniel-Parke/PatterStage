@@ -11,6 +11,7 @@ import {
   Wrench, Check, ChevronDown, ChevronRight,
   Info, ToggleLeft, ToggleRight, Plus,
 } from "lucide-react";
+import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import Button from "@/components/ui/Button";
@@ -125,7 +126,7 @@ export default function ToolsPage() {
   const hasPending = Object.keys(pendingToggles).length > 0;
 
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg">
+    <AppPageShell>
       {toastElement}
       <PageHeader
         icon={Wrench}
@@ -331,6 +332,6 @@ export default function ToolsPage() {
           </div>
         </div>
       </Modal>
-    </div>
+    </AppPageShell>
   );
 }

@@ -41,7 +41,4 @@ export function getPersonalityEmoji(name: string): string {
 }
 
 /** Capitalise first letter: technical → Technical */
-export function titleCasePersonality(name: string): string {
-  if (!name) return name;
-  return name.charAt(0).toUpperCase() + name.slice(1);
-}
+export { titleCase as titleCasePersonality } from "@/lib/utils";
