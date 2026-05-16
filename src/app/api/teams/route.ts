@@ -15,6 +15,7 @@ import {
   addTeamMember,
   removeTeamMember,
 } from "@/lib/teams-repository";
+import { updateBoard } from "@/lib/kanban-repository";
 import type { TeamMember } from "@/types/hermes";
 
 // ── GET ───────────────────────────────────────────────────────
@@ -157,7 +158,6 @@ export async function POST(request: NextRequest) {
       if (!team) return NextResponse.json({ error: "Team not found" }, { status: 404 });
 
       // Update board's team_id and return updated team
-      const { updateBoard } = await import("@/lib/kanban-repository");
       const board = updateBoard(boardId, { teamId });
       if (!board) return NextResponse.json({ error: "Board not found" }, { status: 404 });
 

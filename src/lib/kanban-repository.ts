@@ -333,11 +333,14 @@ export function loadKanbanDocument(boardId: string): KanbanDocument | null {
   const cardsMap: Record<string, KanbanCard> = {};
 
   for (const col of columns) {
+    col.cardIds = cards.filter((c) => c.columnId === col.id).map((c) => c.id);
     columnsMap[col.id] = col;
   }
   for (const card of cards) {
     cardsMap[card.id] = card;
   }
+
+  board.columnIds = Object.keys(columnsMap);
 
   return { board, columns: columnsMap, cards: cardsMap };
 }

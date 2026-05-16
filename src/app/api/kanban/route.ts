@@ -38,14 +38,6 @@ export async function GET(request: Request) {
       if (!doc) {
         return NextResponse.json({ error: "Board not found" }, { status: 404 });
       }
-      // Ensure columnIds and cardIds are populated
-      doc.board.columnIds = Object.keys(doc.columns);
-      for (const col of Object.values(doc.columns)) {
-        col.cardIds = adapter()
-          .listCards(boardId)
-          .filter((c) => c.columnId === col.id)
-          .map((c) => c.id);
-      }
       return NextResponse.json({ data: doc });
     }
 

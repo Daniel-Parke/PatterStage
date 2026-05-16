@@ -65,10 +65,10 @@ function recordToApiJob(job: CronJobRecord) {
 
 // ── GET ─────────────────────────────────────────────────────
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const url = new URL(request.url);
-    const id = url.searchParams.get("id");
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
 
     if (id) {
       const job = getCronJob(id);
@@ -323,13 +323,6 @@ export async function PUT(request: NextRequest) {
 
     // ── Field updates ─────────────────────────────────────────
 
-    if (updates.schedule !== undefined) {
-      const parsed = parseSchedule(updates.schedule as string);
-      if (parsed.kind === "invalid") {
-        return NextResponse.json({ error: parsed.message }, { status: 400 });
-      }
-    }
-
     // Build update payload
     const updatePayload: Parameters<typeof updateCronJob>[1] = {};
 
@@ -347,10 +340,11 @@ export async function PUT(request: NextRequest) {
 
     if (updates.schedule !== undefined) {
       const parsed = parseSchedule(updates.schedule as string);
+      if (parsed.kind === "invalid") {
+        return NextResponse.json({ error: parsed.message }, { status: 400 });
+      }
       updatePayload.schedule = updates.schedule as string;
-      updatePayload.schedule_display = parsed.kind === "invalid"
-        ? (updates.schedule as string)
-        : (parsed as { display?: string }).display ?? (updates.schedule as string);
+      updatePayload.schedule_display = (parsed as { display?: string }).display ?? (updates.schedule as string);
     }
 
     if (updates.repeat !== undefined) {
