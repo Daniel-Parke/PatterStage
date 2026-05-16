@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { RefreshCw, ChevronDown } from "lucide-react";
 
@@ -155,9 +155,9 @@ function DropdownMenu({
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Position the menu above or below the anchor, staying within viewport
-  const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!anchorRef.current) return;
     const rect = anchorRef.current.getBoundingClientRect();
     const menuH = presets.length * 36 + 16; // approx height
@@ -185,7 +185,7 @@ function DropdownMenu({
     return () => document.removeEventListener("mousedown", handler);
   }, [anchorRef, onClose]);
 
-  if (typeof document === "undefined") return null;
+  if (typeof document === "undefined" || !pos) return null;
 
   return createPortal(
     <div

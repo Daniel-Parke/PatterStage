@@ -7,9 +7,10 @@
 
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { RefreshCw, ChevronDown, Clock, Timer } from "lucide-react";
+import { parseCronExpression } from "@/lib/utils";
 
 export type ScheduleMode = "interval" | "wall-clock" | "post-run";
 
@@ -63,9 +64,9 @@ function DropdownMenu({
   width?: number;
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!anchorRef.current) return;
     const rect = anchorRef.current.getBoundingClientRect();
     const menuH = presets.length * 36 + 16;
@@ -90,7 +91,7 @@ function DropdownMenu({
     return () => document.removeEventListener("mousedown", handler);
   }, [anchorRef, onClose]);
 
-  if (typeof document === "undefined") return null;
+  if (typeof document === "undefined" || !pos) return null;
 
   return createPortal(
     <div
@@ -163,6 +164,8 @@ export default function ScheduleSelector({
     const stripped = value.replace(/^every\s+/i, "");
     const preset = PRESETS.find((p) => p.value === stripped || p.value === value);
     if (preset) return preset.label;
+    const cronLabel = parseCronExpression(value);
+    if (cronLabel) return cronLabel;
     return stripped || value;
   })();
 
@@ -326,7 +329,11 @@ export default function ScheduleSelector({
       {/* Post-run mode */}
       {mode === "post-run" && (
         <div>
-          <div className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5">
+          <button
+            ref={buttonRef}
+            onClick={() => setDropdownOpen((o) => !o)}
+            className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white hover:border-white/30 transition-colors"
+          >
             <div className="flex items-center gap-2">
               <Timer className="w-4 h-4 text-neon-purple" />
               <div className="text-left">
@@ -334,13 +341,7 @@ export default function ScheduleSelector({
                 <div className="text-[10px] text-white/30">After each run completes</div>
               </div>
             </div>
-          </div>
-          <button
-            ref={buttonRef}
-            onClick={() => setDropdownOpen((o) => !o)}
-            className="mt-2 text-xs text-white/40 hover:text-neon-cyan font-mono transition-colors"
-          >
-            Change frequency →
+            <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
           </button>
           {dropdownOpen && (
             <DropdownMenu
