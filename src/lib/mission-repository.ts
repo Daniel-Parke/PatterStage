@@ -31,6 +31,7 @@ interface MissionRow {
   mission_time_minutes: number | null;
   timeout_minutes: number | null;
   schedule: string | null;
+  cron_job_id: string | null;
 }
 
 function safeJsonParse<T>(val: string | null | undefined, fallback: T): T {
@@ -63,6 +64,7 @@ function rowToMission(row: MissionRow | undefined): Mission | null {
     missionTimeMinutes: row.mission_time_minutes ?? undefined,
     timeoutMinutes: row.timeout_minutes ?? undefined,
     schedule: row.schedule ?? undefined,
+    cronJobId: row.cron_job_id ?? undefined,
   };
 }
 
@@ -104,6 +106,7 @@ export function createMission(data: {
   missionTimeMinutes?: number;
   timeoutMinutes?: number;
   schedule?: string;
+  cronJobId?: string;
 }): Mission {
   const id = uuid();
   const ts = now();
@@ -115,12 +118,12 @@ export function createMission(data: {
   inTransaction(() => {
     db()
       .prepare(
-        `INSERT INTO missions (id, name, prompt, profile_id, status, created_at, updated_at, local_dirs, references_, skills, goals, model_id, provider, profile_name, mission_time_minutes, timeout_minutes, schedule)
-         VALUES (?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO missions (id, name, prompt, profile_id, status, created_at, updated_at, local_dirs, references_, skills, goals, model_id, provider, profile_name, mission_time_minutes, timeout_minutes, schedule, cron_job_id)
+         VALUES (?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(id, data.name, data.prompt, data.profileId ?? null, ts, ts, localDirs, references, skills, goals,
         data.modelId ?? null, data.provider ?? null, data.profileName ?? null,
-        data.missionTimeMinutes ?? null, data.timeoutMinutes ?? null, data.schedule ?? null);
+        data.missionTimeMinutes ?? null, data.timeoutMinutes ?? null, data.schedule ?? null, data.cronJobId ?? null);
   });
 
   return getMission(id)!;
@@ -143,6 +146,7 @@ export function updateMission(
     missionTimeMinutes?: number | null;
     timeoutMinutes?: number | null;
     schedule?: string | null;
+    cronJobId?: string | null;
   }
 ): Mission | null {
   const existing = getMission(id);
@@ -208,6 +212,10 @@ export function updateMission(
     if (updates.schedule !== undefined) {
       sets.push("schedule = ?");
       vals.push(updates.schedule);
+    }
+    if (updates.cronJobId !== undefined) {
+      sets.push("cron_job_id = ?");
+      vals.push(updates.cronJobId);
     }
 
     vals.push(id);
