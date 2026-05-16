@@ -436,3 +436,14 @@ export interface FallbackConfig {
   fallbackNotification: boolean;
   apiMaxRetries: number;
 }
+
+// ── Hardware Cron ────────────────────────────────────────────
+
+export interface HardwareCronJob {
+  id: string;
+  name: string;
+  schedule: string;
+  enabled: boolean;
+  command: string;
+  logFile?: string;
+}

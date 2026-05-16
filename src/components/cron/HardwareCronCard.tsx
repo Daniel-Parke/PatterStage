@@ -21,15 +21,7 @@ import {
   Terminal,
 } from "lucide-react";
 import { describeSchedule } from "@/components/cron/CronScheduleInput";
-
-export interface HardwareCronJob {
-  id: string;
-  name: string;
-  schedule: string;
-  enabled: boolean;
-  command: string;
-  logFile?: string;
-}
+import type { HardwareCronJob } from "@/types/hermes";
 
 interface HardwareCronCardProps {
   job: HardwareCronJob;

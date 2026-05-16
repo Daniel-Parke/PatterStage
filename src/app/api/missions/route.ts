@@ -21,6 +21,12 @@ import { appendAuditLine } from "@/lib/audit-log";
 import type { MissionStatus } from "@/lib/agent-backend/types";
 import { agentBackend } from "@/lib/backends";
 
+// ── Helpers ───────────────────────────────────────────────────────
+
+function resolveMissionId(body: Record<string, unknown>): string | undefined {
+  return (body.id ?? body.missionId) as string | undefined;
+}
+
 // ── GET ───────────────────────────────────────────────────────
 
 export async function GET(request: Request) {
@@ -234,7 +240,7 @@ export async function POST(request: NextRequest) {
         timeoutMinutes?: number;
         schedule?: string;
       };
-      const missionIdFinal = id ?? missionId;
+      const missionIdFinal = resolveMissionId(body as Record<string, unknown>);
       if (!missionIdFinal)
         return NextResponse.json({ error: "Mission id is required" }, { status: 400 });
 
@@ -297,7 +303,7 @@ export async function POST(request: NextRequest) {
     // The unified V1 status enum has no `cancelled` state — cancellations
     // are recorded as `failed` with an explicit "Cancelled by user" result.
     if (action === "cancel") {
-      const cancelId = (body as Record<string, string>).id ?? (body as Record<string, string>).missionId;
+      const cancelId = resolveMissionId(body as Record<string, unknown>);
       if (!cancelId)
         return NextResponse.json({ error: "Mission id is required" }, { status: 400 });
 
@@ -314,8 +320,7 @@ export async function POST(request: NextRequest) {
 
     // ── Delete Mission ─────────────────────────────────────────
     if (action === "delete") {
-      const { id, missionId } = body as { id?: string; missionId?: string };
-      const missionIdFinal = id ?? missionId;
+      const missionIdFinal = resolveMissionId(body as Record<string, unknown>);
       if (!missionIdFinal)
         return NextResponse.json({ error: "Mission id is required" }, { status: 400 });
 

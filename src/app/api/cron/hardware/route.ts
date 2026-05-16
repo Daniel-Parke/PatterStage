@@ -128,8 +128,6 @@ function readCrontab(): Promise<string> {
 function writeCrontab(content: string): { ok: boolean; error?: string } {
   const tmpFile = `/tmp/ch-crontab-${Date.now()}.txt`;
   try {
-    // Write to a temp file first, then pipe to crontab.
-    // This avoids shell interpretation of >> 2>&1 and other special chars.
     fs.writeFileSync(tmpFile, content + "\n", { mode: 0o600 });
     execSync(`crontab ${tmpFile}`, { encoding: "utf-8" });
     fs.unlinkSync(tmpFile);
@@ -141,25 +139,39 @@ function writeCrontab(content: string): { ok: boolean; error?: string } {
   }
 }
 
+// ── Shared crontab read+parse helper ─────────────────────────
+
+interface CrontabJobRaw {
+  id: string;
+  name: string;
+  schedule: string;
+  command: string;
+  logFile: string;
+}
+
+async function readAndParseCrontab(): Promise<{ jobs: CrontabJobRaw[]; disabledIds: Set<string> }> {
+  const crontab = await readCrontab();
+  const disabledIds = loadDisabledIds();
+  const lines = crontab.split("\n");
+  const jobs = lines
+    .map(parseCrontabLine)
+    .filter((j): j is NonNullable<typeof j> => j !== null)
+    .map((j) => ({
+      id: j.id,
+      name: j.name,
+      schedule: j.schedule,
+      enabled: !disabledIds.has(j.id),
+      command: j.command,
+      logFile: j.logFile,
+    }));
+  return { jobs, disabledIds };
+}
+
 // ── API handlers ───────────────────────────────────────────────
 
 export async function GET() {
   try {
-    const crontab = await readCrontab();
-    const disabledIds = loadDisabledIds();
-    const lines = crontab.split("\n");
-    const jobs = lines
-      .map(parseCrontabLine)
-      .filter((j): j is NonNullable<typeof j> => j !== null)
-      .map((j) => ({
-        id: j.id,
-        name: j.name,
-        schedule: j.schedule,
-        enabled: !disabledIds.has(j.id),
-        command: j.command,
-        logFile: j.logFile,
-      }));
-
+    const { jobs } = await readAndParseCrontab();
     return NextResponse.json({ data: { jobs, total: jobs.length } });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
@@ -194,21 +206,7 @@ export async function POST(request: NextRequest) {
     // Re-read crontab and return all detected hardware cron jobs.
     // This picks up any jobs added or modified outside Control Hub.
     if (body && typeof body === "object" && (body as Record<string, unknown>).action === "sync") {
-      const crontab = await readCrontab();
-      const disabledIds = loadDisabledIds();
-      const lines = crontab.split("\n");
-      const jobs = lines
-        .map(parseCrontabLine)
-        .filter((j): j is NonNullable<typeof j> => j !== null)
-        .map((j) => ({
-          id: j.id,
-          name: j.name,
-          schedule: j.schedule,
-          enabled: !disabledIds.has(j.id),
-          command: j.command,
-          logFile: j.logFile,
-        }));
-
+      const { jobs } = await readAndParseCrontab();
       return NextResponse.json({ data: { jobs, total: jobs.length } });
     }
 

@@ -7,7 +7,7 @@
 import { useCallback } from "react";
 import { useApiData } from "@/hooks/useApiData";
 import { useToast } from "@/components/ui/Toast";
-import { apiFetch, safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall } from "@/lib/api-fetch";
 import type { CronJob } from "@/components/cron/JobCard";
 
 interface CronData {
@@ -35,12 +35,8 @@ export function useCronJobs() {
 
   const handleDelete = useCallback(
     async (id: string) => {
-      try {
-        await apiFetch(`/api/cron?id=${id}`, { method: "DELETE" });
-        showToast("Job deleted");
-      } catch (e) {
-        showToast(e instanceof Error ? e.message : "Failed to delete job", "error");
-      }
+      const { ok, error } = await safeApiCall(`/api/cron?id=${id}`, { method: "DELETE" });
+      showToast(ok ? "Job deleted" : (error ?? "Failed to delete job"), ok ? undefined : "error");
       loadJobs();
     },
     [showToast, loadJobs],

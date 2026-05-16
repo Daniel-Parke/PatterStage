@@ -13,15 +13,7 @@ import Button from "@/components/ui/Button";
 import CronScheduleInput from "@/components/cron/CronScheduleInput";
 import { baseInputStyles } from "@/lib/theme";
 import { HARDWARE_CRON_UI_PRESETS } from "@/lib/hardware-cron";
-
-export interface HardwareCronJob {
-  id: string;
-  name: string;
-  schedule: string;
-  command: string;
-  logFile?: string;
-  enabled: boolean;
-}
+import type { HardwareCronJob } from "@/types/hermes";
 
 interface Props {
   open: boolean;

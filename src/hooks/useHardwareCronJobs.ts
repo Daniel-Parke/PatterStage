@@ -7,7 +7,7 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { safeApiCall } from "@/lib/api-fetch";
-import type { HardwareCronJob } from "@/components/cron/HardwareCronCard";
+import type { HardwareCronJob } from "@/types/hermes";
 
 export function useHardwareCronJobs() {
   const { showToast } = useToast();

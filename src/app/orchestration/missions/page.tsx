@@ -222,6 +222,39 @@ export default function MissionsPage() {
     }
   };
 
+  // ── Shared dispatch payload builder ─────────────────────────
+  function dispatchPayload(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+    return {
+      instruction: buildPrompt(),
+      goals: newGoals.split("\n").filter((g) => g.trim()),
+      profile: newProfile || undefined,
+      profileName: newProfile || undefined,
+      modelId: newModel || undefined,
+      provider: newProvider || undefined,
+      missionTimeMinutes: newMissionTime,
+      timeoutMinutes: newTimeout,
+      localDirs: newLocalDirs,
+      references: newReferences,
+      skills: newSkills,
+      ...overrides,
+    };
+  }
+
+  // ── Shared form reset ─────────────────────────────────────
+  function resetForm() {
+    setNewName("");
+    setNewInstruction("");
+    setNewContext("");
+    setNewGoals("");
+    setNewModel("");
+    setNewProvider("");
+    setNewLocalDirs([]);
+    setLocalDirDraft({ path: "", branch: null });
+    setNewReferences([]);
+    setNewSkills([]);
+    setShowCreate(false);
+  }
+
   const fetchData = useCallback(() => {
     fetchMissions()
       .then((list) => setMissions(list))
@@ -328,8 +361,6 @@ export default function MissionsPage() {
     if (dispatching) return; // Prevent double-submit
     setDispatching(true);
 
-    const fullPrompt = buildPrompt();
-
     try {
       // Update existing mission (only for active missions with a live cron job)
       if (editingId) {
@@ -349,18 +380,7 @@ export default function MissionsPage() {
               action: "update",
               missionId: editingId,
               name: newName,
-              instruction: fullPrompt,
-              goals: newGoals.split("\n").filter((g) => g.trim()),
-              profile: newProfile || undefined,
-              profileName: newProfile || undefined,
-              modelId: newModel || undefined,
-              provider: newProvider || undefined,
-              missionTimeMinutes: newMissionTime,
-              timeoutMinutes: newTimeout,
-              schedule: newDispatch === "cron" ? newSchedule : undefined,
-              localDirs: newLocalDirs,
-              references: newReferences,
-              skills: newSkills,
+              ...dispatchPayload({ schedule: newDispatch === "cron" ? newSchedule : undefined }),
             }),
           });
           if (res.ok) {
@@ -385,18 +405,7 @@ export default function MissionsPage() {
           body: JSON.stringify({
             action: "dispatch",
             name: newName,
-            instruction: fullPrompt,
-            goals: newGoals.split("\n").filter((g) => g.trim()),
-            dispatchMode: "now",
-            profile: newProfile || undefined,
-            profileName: newProfile || undefined,
-            modelId: newModel || undefined,
-            provider: newProvider || undefined,
-            missionTimeMinutes: newMissionTime,
-            timeoutMinutes: newTimeout,
-            localDirs: newLocalDirs,
-            references: newReferences,
-            skills: newSkills,
+            ...dispatchPayload({ dispatchMode: "now" }),
           }),
         });
 
@@ -423,51 +432,22 @@ export default function MissionsPage() {
         body: JSON.stringify({
           action: "dispatch",
           name: newName,
-          instruction: fullPrompt,
-          goals: newGoals.split("\n").filter((g) => g.trim()),
-          dispatchMode: newDispatch,
-          schedule: newDispatch === "cron" ? newSchedule : undefined,
-          profile: newProfile || undefined,
-          profileName: newProfile || undefined,
-          modelId: newModel || undefined,
-          provider: newProvider || undefined,
-          missionTimeMinutes: newMissionTime,
-          timeoutMinutes: newTimeout,
-          localDirs: newLocalDirs,
-          references: newReferences,
-          skills: newSkills,
+          ...dispatchPayload({
+            dispatchMode: newDispatch,
+            schedule: newDispatch === "cron" ? newSchedule : undefined,
+          }),
         }),
       });
 
       if (res.ok) {
-        if (newDispatch === "save") {
-          showToast("Mission saved as draft", "success");
-          setNewName("");
-          setNewInstruction("");
-          setNewContext("");
-          setNewGoals("");
-          setNewModel("");
-          setNewProvider("");
-          setNewLocalDirs([]);
-          setLocalDirDraft({ path: "", branch: null });
-          setNewReferences([]);
-          setNewSkills([]);
-          setShowCreate(false);
-          fetchData();
-          setDispatching(false);
-        } else if (newDispatch === "queue") {
-          showToast("Mission queued — visible on the board", "success");
-          setNewName("");
-          setNewInstruction("");
-          setNewContext("");
-          setNewGoals("");
-          setNewModel("");
-          setNewProvider("");
-          setNewLocalDirs([]);
-          setLocalDirDraft({ path: "", branch: null });
-          setNewReferences([]);
-          setNewSkills([]);
-          setShowCreate(false);
+        if (newDispatch === "save" || newDispatch === "queue") {
+          showToast(
+            newDispatch === "save"
+              ? "Mission saved as draft"
+              : "Mission queued — visible on the board",
+            "success",
+          );
+          resetForm();
           fetchData();
           setDispatching(false);
         } else if (newDispatch === "now") {

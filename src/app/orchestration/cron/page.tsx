@@ -21,7 +21,8 @@ import { useCronJobs } from "@/hooks/useCronJobs";
 import { useHardwareCronJobs } from "@/hooks/useHardwareCronJobs";
 import JobCard, { CronJob } from "@/components/cron/JobCard";
 import JobFormModal from "@/components/cron/JobFormModal";
-import HardwareCronCard, { HardwareCronJob } from "@/components/cron/HardwareCronCard";
+import HardwareCronCard from "@/components/cron/HardwareCronCard";
+import type { HardwareCronJob } from "@/types/hermes";
 import HardwareCronModal from "@/components/cron/HardwareCronModal";
 
 // ── Tab config ──────────────────────────────────────────────
@@ -102,10 +103,103 @@ function ActionButtons({ color, pauseBusy, hasJobs, onPauseAll, onSync, syncing,
   );
 }
 
+// ── Tab Content Component (manages own search state) ────────
+
+interface CronTabContentProps {
+  isAgent: boolean;
+  jobs: (CronJob | HardwareCronJob)[];
+  loading: boolean;
+  accentColor: "orange" | "cyan";
+  icon: typeof Clock | typeof Cpu;
+  title: string;
+  desc: string;
+  searchPlaceholder: string;
+  createLabel: string;
+  onCreate: () => void;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
+  onRun?: (id: string) => void;
+  onEditAgent?: (job: CronJob) => void;
+  onEditHardware?: (job: HardwareCronJob) => void;
+}
+
+function CronTabContent({
+  isAgent,
+  jobs,
+  loading,
+  accentColor,
+  icon: Icon,
+  title,
+  desc,
+  searchPlaceholder,
+  createLabel,
+  onCreate,
+  onToggle,
+  onDelete,
+  onRun,
+  onEditAgent,
+  onEditHardware,
+}: CronTabContentProps) {
+  const [search, setSearch] = useState("");
+  const filtered = filterJobs(jobs, search);
+
+  if (loading) {
+    return <LoadingSpinner text={`Loading ${isAgent ? "" : "hardware "}cron jobs...`} />;
+  }
+
+  if (filtered.length === 0) {
+    return (
+      <div className={`rounded-xl border ${isAgent ? "border-white/10" : "border-cyan-500/20"} bg-dark-900/50`}>
+        <EmptyState
+          icon={Icon}
+          title={title}
+          description={search ? "No jobs match your search" : desc}
+          action={
+            !search ? (
+              <Button variant="primary" color={accentColor} size="sm" icon={Plus} onClick={onCreate}>
+                {createLabel}
+              </Button>
+            ) : undefined
+          }
+        />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="mb-6">
+        <SearchInput value={search} onChange={setSearch} placeholder={searchPlaceholder} accentColor={accentColor} />
+      </div>
+      <div className="grid gap-3">
+        {filtered.map((job) =>
+          isAgent ? (
+            <JobCard
+              key={job.id}
+              job={job as CronJob}
+              onToggle={onToggle}
+              onDelete={onDelete}
+              onRun={onRun!}
+              onEdit={(j) => onEditAgent?.(j)}
+            />
+          ) : (
+            <HardwareCronCard
+              key={job.id}
+              job={job as HardwareCronJob}
+              onToggle={onToggle}
+              onEdit={(j) => onEditHardware?.(j)}
+              onDelete={onDelete}
+            />
+          ),
+        )}
+      </div>
+    </>
+  );
+}
+
 // ── Main Page ───────────────────────────────────────────────
 
 export default function CronPage() {
-  const [search, setSearch] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [editingJob, setEditingJob] = useState<CronJob | null>(null);
   const [pauseAllBusy, setPauseAllBusy] = useState(false);
@@ -114,7 +208,6 @@ export default function CronPage() {
   const [activeTab, setActiveTab] = useState<"agent" | "hardware">("agent");
   const [showHardwareCreate, setShowHardwareCreate] = useState(false);
   const [editingHardwareJob, setEditingHardwareJob] = useState<HardwareCronJob | null>(null);
-  const [hardwareSearch, setHardwareSearch] = useState("");
   const { showToast, toastElement } = useToast();
 
   const agent = useCronJobs();
@@ -122,90 +215,12 @@ export default function CronPage() {
 
   // ── Derived state ─────────────────────────────────────────
 
-  const filteredJobs = filterJobs(agent.data?.jobs ?? [], search);
-  const filteredHardwareJobs = filterJobs(hardware.jobs, hardwareSearch);
   const enabledCount = agent.data?.jobs.filter((j) => j.enabled).length || 0;
-  const enabledHwCount = hardware.jobs.filter((j) => j.enabled).length || 0;
-
   const pageSubtitle = agent.data
-    ? `Agent: ${enabledCount}/${agent.data.total}  •  Hardware: ${enabledHwCount}/${hardware.jobs.length || 0}`
+    ? `Agent: ${enabledCount}/${agent.data.total}  •  Hardware: ${hardware.jobs.filter((j) => j.enabled).length}/${hardware.jobs.length || 0}`
     : "Scheduled tasks";
 
   // ── Render ────────────────────────────────────────────────
-
-  const renderTabContent = () => {
-    const isAgent = activeTab === "agent";
-    const jobs = isAgent ? filteredJobs : filteredHardwareJobs;
-    const loading = isAgent ? agent.loading : hardware.loading;
-    const icon = isAgent ? Clock : Cpu;
-    const title = isAgent ? "No cron jobs" : "No hardware cron jobs";
-    const desc = isAgent
-      ? (search ? "No jobs match your search" : "Create your first scheduled job")
-      : (hardwareSearch ? "No jobs match your search" : "Add a real system cron job");
-    const accentColor = isAgent ? "orange" : "cyan";
-    const searchValue = isAgent ? search : hardwareSearch;
-    const setSearchValue = isAgent ? setSearch : setHardwareSearch;
-    const searchPlaceholder = isAgent ? "Search agent jobs..." : "Search hardware jobs...";
-    const borderClass = isAgent ? "" : "border-cyan-500/20";
-    const createAction = isAgent
-      ? () => setShowCreate(true)
-      : () => setShowHardwareCreate(true);
-
-    return (
-      <>
-        <div className="mb-6">
-          <SearchInput value={searchValue} onChange={setSearchValue} placeholder={searchPlaceholder} accentColor={accentColor} />
-        </div>
-        {loading ? (
-          <LoadingSpinner text={`Loading ${isAgent ? "" : "hardware "}cron jobs...`} />
-        ) : jobs.length === 0 ? (
-          <div className={`rounded-xl border ${borderClass || "border-white/10"} bg-dark-900/50`}>
-            <EmptyState
-              icon={icon}
-              title={title}
-              description={desc}
-              action={
-                !searchValue ? (
-                  <Button variant="primary" color={accentColor} size="sm" icon={Plus} onClick={createAction}>
-                    {isAgent ? "Create Agent Job" : "Create Hardware Job"}
-                  </Button>
-                ) : undefined
-              }
-            />
-          </div>
-        ) : (
-          <div className="grid gap-3">
-            {jobs.map((job) =>
-              isAgent ? (
-                <JobCard
-                  key={job.id}
-                  job={job as CronJob}
-                  onToggle={(id) => agent.handleToggle(id)}
-                  onDelete={(id) => agent.handleDelete(id)}
-                  onRun={(id) => agent.handleRun(id)}
-                  onEdit={(j) => {
-                    setEditingJob(j);
-                    setShowCreate(true);
-                  }}
-                />
-              ) : (
-                <HardwareCronCard
-                  key={job.id}
-                  job={job as HardwareCronJob}
-                  onToggle={(id) => hardware.handleToggle(id)}
-                  onEdit={(j) => {
-                    setEditingHardwareJob(j);
-                    setShowHardwareCreate(true);
-                  }}
-                  onDelete={(id) => hardware.handleDelete(id)}
-                />
-              ),
-            )}
-          </div>
-        )}
-      </>
-    );
-  };
 
   return (
     <div className="min-h-screen bg-dark-950 grid-bg">
@@ -268,7 +283,46 @@ export default function CronPage() {
       />
 
       <div className="px-6 py-6">
-        {renderTabContent()}
+        {activeTab === "agent" ? (
+          <CronTabContent
+            isAgent
+            jobs={agent.data?.jobs ?? []}
+            loading={agent.loading}
+            accentColor="orange"
+            icon={Clock}
+            title="No cron jobs"
+            desc="Create your first scheduled job"
+            searchPlaceholder="Search agent jobs..."
+            createLabel="Create Agent Job"
+            onCreate={() => setShowCreate(true)}
+            onToggle={(id) => agent.handleToggle(id)}
+            onDelete={(id) => agent.handleDelete(id)}
+            onRun={(id) => agent.handleRun(id)}
+            onEditAgent={(job) => {
+              setEditingJob(job);
+              setShowCreate(true);
+            }}
+          />
+        ) : (
+          <CronTabContent
+            isAgent={false}
+            jobs={hardware.jobs}
+            loading={hardware.loading}
+            accentColor="cyan"
+            icon={Cpu}
+            title="No hardware cron jobs"
+            desc="Add a real system cron job"
+            searchPlaceholder="Search hardware jobs..."
+            createLabel="Create Hardware Job"
+            onCreate={() => setShowHardwareCreate(true)}
+            onToggle={(id) => hardware.handleToggle(id)}
+            onDelete={(id) => hardware.handleDelete(id)}
+            onEditHardware={(job) => {
+              setEditingHardwareJob(job);
+              setShowHardwareCreate(true);
+            }}
+          />
+        )}
       </div>
 
       {/* ── Agent Job Modal (create + edit) ── */}
