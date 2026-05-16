@@ -1037,8 +1037,17 @@ export default function MissionsPage() {
                                     </div>
                                     <div className="flex items-center gap-2 mt-1.5 text-[10px] font-mono text-white/25 flex-wrap">
                                       <span className="flex items-center gap-0.5">
-                                        <Clock className="w-2.5 h-2.5" />
-                                        {timeAgo(mission.createdAt)}
+                                        {mission.status === "queued" ? (
+                                          <>
+                                            <Clock className="w-2.5 h-2.5 text-neon-orange" />
+                                            <span className="text-neon-orange/60">Queued</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Clock className="w-2.5 h-2.5" />
+                                            {timeAgo(mission.createdAt)}
+                                          </>
+                                        )}
                                       </span>
                                       {mission.status !== "queued" && mission.cronJob?.lastStatus && (
                                         <span

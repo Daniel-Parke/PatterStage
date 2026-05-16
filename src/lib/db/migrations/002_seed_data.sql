@@ -84,25 +84,8 @@ INSERT OR IGNORE INTO team_members (id, team_id, profile_id, role) VALUES
   ('seed-member-bob',   'seed-team-eng', 'seed-bob',   'leader'),
   ('seed-member-daniel','seed-team-eng', 'seed-daniel', 'specialist');
 
--- ── Mission templates ─────────────────────────────────────────────
-INSERT OR IGNORE INTO missions (id, name, prompt, profile_id, status, created_at, updated_at) VALUES
-  ('seed-mission-research',
-   'Research Task',
-   'Conduct a thorough investigation of the following topic. Search the web for recent developments, key players, and best practices. Synthesise your findings into a structured report with: 1) Executive Summary, 2) Key Findings, 3) Implications for PatterTech, 4) Recommended Next Steps.\n\nTopic: {{TOPIC}}',
-   'seed-bob',
-   'pending',
-   datetime('now'), datetime('now')),
-
-  ('seed-mission-code-review',
-   'Code Review',
-   'Review the following pull request / codebase section. Provide a detailed code review covering: 1) Code quality and readability, 2) Potential bugs or edge cases, 3) Performance concerns, 4) Security considerations, 5) Suggestions for improvement.\n\nRepository / PR: {{REPO_OR_PR}}\n\nBe specific and constructive. Flag critical issues separately from nitpicks.',
-   'seed-bob',
-   'pending',
-   datetime('now'), datetime('now')),
-
-  ('seed-mission-content',
-   'Content Creation',
-   'Write a high-quality piece of content on the following topic, suitable for a technical audience.\n\nTopic: {{TOPIC}}\nFormat: Blog post (800–1200 words)\nTone: Professional but approachable\nInclude: Introduction, 3–4 key sections, conclusion with CTA\n\nTarget audience: Developers and tech founders.',
-   'seed-bob',
-   'pending',
-   datetime('now'), datetime('now'));
+-- ── Seed data note ──────────────────────────────────────────────
+-- Initial seed missions were removed in migration 028.
+-- Templates are managed separately via the templates system.
+-- See src/app/api/templates/ for built-in templates.
+--

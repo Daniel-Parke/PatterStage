@@ -162,9 +162,9 @@ function DropdownMenu({
     const rect = anchorRef.current.getBoundingClientRect();
     const menuH = presets.length * 36 + 16; // approx height
     const spaceBelow = window.innerHeight - rect.bottom;
-    const spaceAbove = rect.top;
 
-    const top = spaceBelow >= menuH || spaceBelow >= spaceAbove
+    // Prefer below — only show above when there truly isn't room beneath
+    const top = spaceBelow >= menuH
       ? rect.bottom + 4        // show below
       : rect.top - menuH - 4; // show above
 

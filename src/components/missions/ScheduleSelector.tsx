@@ -71,8 +71,9 @@ function DropdownMenu({
     const rect = anchorRef.current.getBoundingClientRect();
     const menuH = presets.length * 36 + 16;
     const spaceBelow = window.innerHeight - rect.bottom;
-    const spaceAbove = rect.top;
-    const top = spaceBelow >= menuH || spaceBelow >= spaceAbove
+
+    // Prefer below — only show above when there truly isn't room beneath
+    const top = spaceBelow >= menuH
       ? rect.bottom + 4
       : rect.top - menuH - 4;
     setPos({ top, left: rect.left });
@@ -155,9 +156,17 @@ export default function ScheduleSelector({
   onStartTimeChange,
   compact = false,
 }: ScheduleSelectorProps) {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  // Track which mode's dropdown is open — resets automatically when mode changes
+  const [activeDropdown, setActiveDropdown] = useState<ScheduleMode | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const handleClose = useCallback(() => setDropdownOpen(false), []);
+  const handleClose = useCallback(() => setActiveDropdown(null), []);
+
+  const isOpen = activeDropdown === mode;
+
+  // Close dropdown when mode changes (prevents stale buttonRef targeting)
+  useEffect(() => {
+    setActiveDropdown(null);
+  }, [mode]);
 
   // Parse value for display
   const displayLabel = (() => {
@@ -179,14 +188,14 @@ export default function ScheduleSelector({
       <>
         <button
           ref={buttonRef}
-          onClick={() => setDropdownOpen((o) => !o)}
+          onClick={() => setActiveDropdown((prev) => prev === mode ? null : mode)}
           className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-white/60 hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors"
           title={`Interval: ${displayLabel}`}
         >
           <RefreshCw className="w-3 h-3" />
           {displayLabel}
         </button>
-        {dropdownOpen && (
+        {isOpen && (
           <DropdownMenu
             anchorRef={buttonRef}
             presets={PRESETS}
@@ -248,7 +257,7 @@ export default function ScheduleSelector({
         <div>
           <button
             ref={buttonRef}
-            onClick={() => setDropdownOpen((o) => !o)}
+            onClick={() => setActiveDropdown((prev) => prev === mode ? null : mode)}
             className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white hover:border-white/30 transition-colors"
           >
             <div className="flex items-center gap-2">
@@ -258,14 +267,14 @@ export default function ScheduleSelector({
                 <div className="text-[10px] text-white/30">Repeat frequency</div>
               </div>
             </div>
-            <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+            <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${isOpen ? "rotate-180" : ""}`} />
           </button>
-          {dropdownOpen && (
+          {isOpen && (
             <DropdownMenu
               anchorRef={buttonRef}
               presets={PRESETS}
               activePresetValue={activePresetValue}
-              onSelect={(v) => { onChange(v); setDropdownOpen(false); }}
+              onSelect={(v) => { onChange(v); setActiveDropdown(null); }}
               onClose={handleClose}
               width={220}
             />
@@ -302,13 +311,13 @@ export default function ScheduleSelector({
               </label>
               <button
                 ref={buttonRef}
-                onClick={() => setDropdownOpen((o) => !o)}
+                onClick={() => setActiveDropdown((prev) => prev === mode ? null : mode)}
                 className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white hover:border-white/30 transition-colors"
               >
                 <span>Every {displayLabel}</span>
-                <ChevronDown className={`w-3.5 h-3.5 text-white/30 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+                <ChevronDown className={`w-3.5 h-3.5 text-white/30 transition-transform ${isOpen ? "rotate-180" : ""}`} />
               </button>
-              {dropdownOpen && (
+              {isOpen && (
                 <DropdownMenu
                   anchorRef={buttonRef}
                   presets={PRESETS}
@@ -331,7 +340,7 @@ export default function ScheduleSelector({
         <div>
           <button
             ref={buttonRef}
-            onClick={() => setDropdownOpen((o) => !o)}
+            onClick={() => setActiveDropdown((prev) => prev === mode ? null : mode)}
             className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white hover:border-white/30 transition-colors"
           >
             <div className="flex items-center gap-2">
@@ -341,14 +350,14 @@ export default function ScheduleSelector({
                 <div className="text-[10px] text-white/30">After each run completes</div>
               </div>
             </div>
-            <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+            <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${isOpen ? "rotate-180" : ""}`} />
           </button>
-          {dropdownOpen && (
+          {isOpen && (
             <DropdownMenu
               anchorRef={buttonRef}
               presets={PRESETS}
               activePresetValue={activePresetValue}
-              onSelect={(v) => { onChange(v); setDropdownOpen(false); }}
+              onSelect={(v) => { onChange(v); setActiveDropdown(null); }}
               onClose={handleClose}
               width={220}
             />
