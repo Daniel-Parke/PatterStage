@@ -53,6 +53,26 @@ function filterJobs<T extends { name: string; schedule: string; prompt?: string 
   );
 }
 
+// ── Tab button component ───────────────────────────────────
+
+function TabButton({ tab, activeTab, onSelect }: {
+  tab: TabConfig;
+  activeTab: "agent" | "hardware";
+  onSelect: (key: "agent" | "hardware") => void;
+}) {
+  return (
+    <button
+      onClick={() => onSelect(tab.key)}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+        activeTab === tab.key ? tab.bgColor : "text-white/50 hover:text-white"
+      }`}
+    >
+      <tab.icon className="w-3.5 h-3.5" />
+      {tab.label}
+    </button>
+  );
+}
+
 // ── Shared button bar for agent/hardware tabs ───────────────
 
 interface ActionButtonsProps {
@@ -112,19 +132,6 @@ export default function CronPage() {
     : "Scheduled tasks";
 
   // ── Render ────────────────────────────────────────────────
-
-  const renderTabButton = (tab: TabConfig) => (
-    <button
-      key={tab.key}
-      onClick={() => setActiveTab(tab.key)}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-        activeTab === tab.key ? tab.bgColor : "text-white/50 hover:text-white"
-      }`}
-    >
-      <tab.icon className="w-3.5 h-3.5" />
-      {tab.label}
-    </button>
-  );
 
   const renderTabContent = () => {
     const isAgent = activeTab === "agent";
@@ -210,7 +217,9 @@ export default function CronPage() {
         actions={
           <div className="flex items-center gap-2">
             <div className="flex items-center bg-white/5 border border-white/10 rounded-lg p-0.5">
-              {TABS.map(renderTabButton)}
+              {TABS.map((tab) => (
+                <TabButton key={tab.key} tab={tab} activeTab={activeTab} onSelect={setActiveTab} />
+              ))}
             </div>
             {activeTab === "agent" && (
               <ActionButtons

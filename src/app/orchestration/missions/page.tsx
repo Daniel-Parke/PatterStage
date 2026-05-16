@@ -74,36 +74,42 @@ interface MissionDetail {
   sessions: Array<{ id: string; modified: string; size: number }>;
 }
 
-const statusColors: Record<
-  string,
-  { dot: "online" | "warning" | "error" | "idle"; bg: string; text: string }
-> = {
-  queued: { dot: "warning", bg: "bg-neon-orange/10", text: "text-neon-orange" },
-  dispatched: { dot: "online", bg: "bg-neon-cyan/10", text: "text-neon-cyan" },
-  successful: { dot: "online", bg: "bg-neon-green/10", text: "text-neon-green" },
-  failed: { dot: "error", bg: "bg-red-500/10", text: "text-red-400" },
+// ── Unified status configuration ─────────────────────────────────
+interface StatusConfig {
+  dot: "online" | "warning" | "error" | "idle";
+  bg: string;
+  text: string;
+  icon: React.ReactNode;
+  columnDot: string;
+}
+
+const STATUS_CONFIG: Record<string, StatusConfig> = {
+  queued: {
+    dot: "warning", bg: "bg-neon-orange/10", text: "text-neon-orange",
+    icon: <Clock className="w-3.5 h-3.5 text-neon-orange" />,
+    columnDot: "bg-neon-orange",
+  },
+  dispatched: {
+    dot: "online", bg: "bg-neon-cyan/10", text: "text-neon-cyan",
+    icon: <Loader2 className="w-3.5 h-3.5 text-neon-cyan animate-spin" />,
+    columnDot: "bg-neon-cyan",
+  },
+  successful: {
+    dot: "online", bg: "bg-neon-green/10", text: "text-neon-green",
+    icon: <CheckCircle2 className="w-3.5 h-3.5 text-neon-green" />,
+    columnDot: "bg-neon-green",
+  },
+  failed: {
+    dot: "error", bg: "bg-red-500/10", text: "text-red-400",
+    icon: <XCircle className="w-3.5 h-3.5 text-red-400" />,
+    columnDot: "bg-red-400",
+  },
 };
 
 const defaultStatusColor = {
   dot: "idle" as const,
   bg: "bg-white/5",
   text: "text-white/40",
-};
-
-// ── Status icon lookup ───────────────────────────────────────────
-const STATUS_ICON: Record<string, React.ReactNode> = {
-  successful: <CheckCircle2 className="w-3.5 h-3.5 text-neon-green" />,
-  failed: <XCircle className="w-3.5 h-3.5 text-red-400" />,
-  dispatched: <Loader2 className="w-3.5 h-3.5 text-neon-cyan animate-spin" />,
-  queued: <Clock className="w-3.5 h-3.5 text-neon-orange" />,
-};
-
-// ── Column dot color lookup ──────────────────────────────────────
-const COLUMN_DOT_COLORS: Record<string, string> = {
-  queued: "bg-neon-orange",
-  dispatched: "bg-neon-cyan",
-  successful: "bg-neon-green",
-  failed: "bg-red-400",
 };
 
 export default function MissionsPage() {
@@ -298,7 +304,7 @@ export default function MissionsPage() {
   }, [expandedId, fetchDetail]);
 
   // Build final prompt using shared utility
-  const buildPrompt = () => {
+  const buildPrompt = useCallback(() => {
     return buildMissionPrompt({
       instruction: newInstruction,
       localDirs: newLocalDirs,
@@ -306,7 +312,7 @@ export default function MissionsPage() {
       skills: newSkills,
       context: newContext,
     });
-  };
+  }, [newInstruction, newLocalDirs, newReferences, newSkills, newContext]);
 
   const handleCreate = async () => {
     if (!newName.trim() || !newInstruction.trim()) return;
@@ -425,7 +431,6 @@ export default function MissionsPage() {
       });
 
       if (res.ok) {
-        const _res = await res.json();
         if (newDispatch === "save") {
           showToast("Mission saved as draft", "success");
           setNewName("");
@@ -688,18 +693,12 @@ export default function MissionsPage() {
     [missions, filter, search],
   );
 
-  const activeCount = useMemo(
-    () =>
-      missions.filter((m) => m.status === "queued" || m.status === "dispatched")
-        .length,
-    [missions],
-  );
-  const completedCount = useMemo(
-    () => missions.filter((m) => m.status === "successful").length,
-    [missions],
-  );
-  const failedCount = useMemo(
-    () => missions.filter((m) => m.status === "failed").length,
+  const missionCounts = useMemo(
+    () => ({
+      active: missions.filter((m) => m.status === "queued" || m.status === "dispatched").length,
+      completed: missions.filter((m) => m.status === "successful").length,
+      failed: missions.filter((m) => m.status === "failed").length,
+    }),
     [missions],
   );
 
@@ -759,9 +758,9 @@ export default function MissionsPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           {[
             { label: "Total", value: missions.length, border: "border-white/10", text: "text-white" },
-            { label: "Active", value: activeCount, border: "border-neon-orange/20", text: "text-neon-orange" },
-            { label: "Completed", value: completedCount, border: "border-neon-green/20", text: "text-neon-green" },
-            { label: "Failed", value: failedCount, border: "border-red-500/20", text: "text-red-400" },
+            { label: "Active", value: missionCounts.active, border: "border-neon-orange/20", text: "text-neon-orange" },
+            { label: "Completed", value: missionCounts.completed, border: "border-neon-green/20", text: "text-neon-green" },
+            { label: "Failed", value: missionCounts.failed, border: "border-red-500/20", text: "text-red-400" },
           ].map((stat) => (
             <div key={stat.label} className={`rounded-lg border ${stat.border} bg-dark-900/50 p-3`}>
               <div className={`text-[10px] font-mono ${stat.text} uppercase`}>
@@ -934,7 +933,7 @@ export default function MissionsPage() {
                 const columnMissions = filtered.filter(
                   (m) => m.status === status,
                 );
-                const sc = statusColors[status];
+                const sc = STATUS_CONFIG[status];
                 if (filter !== "all" && filter !== status) return null;
                 return (
                   <div
@@ -945,7 +944,7 @@ export default function MissionsPage() {
                     <div className="flex items-center justify-between mb-3 px-1">
                       <div className="flex items-center gap-2">
                         <div
-                          className={`w-2 h-2 rounded-full ${COLUMN_DOT_COLORS[status] || "bg-white/20"}`}
+                          className={`w-2 h-2 rounded-full ${STATUS_CONFIG[status]?.columnDot || "bg-white/20"}`}
                         />
                         <span className="text-[11px] font-mono text-white/50 uppercase tracking-wider">
                           {status === "successful"
@@ -972,7 +971,7 @@ export default function MissionsPage() {
                       ) : (
                         columnMissions.map((mission) => {
                           const sc =
-                            statusColors[mission.status] || defaultStatusColor;
+                            STATUS_CONFIG[mission.status] || defaultStatusColor;
                           const isExpanded = expandedId === mission.id;
                           return (
                             <div
@@ -1019,7 +1018,7 @@ export default function MissionsPage() {
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-1 flex-shrink-0">
-                                    {STATUS_ICON[mission.status] ?? null}
+                                    {STATUS_CONFIG[mission.status]?.icon ?? null}
                                     <ChevronRight
                                       className={`w-3.5 h-3.5 text-white/20 transition-transform ${isExpanded ? "rotate-90" : ""}`}
                                     />
