@@ -9,21 +9,13 @@ import { NextResponse } from "next/server";
 
 import { ensureSyncLayer } from "@/lib/sync";
 import { logApiError } from "@/lib/api-logger";
+import { getGatewayPlatforms } from "@/lib/db";
 
 export async function GET() {
   try {
     ensureSyncLayer();
 
-    const { db } = await import("@/lib/db");
-
-    const platforms = db()
-      .prepare("SELECT platform, enabled, bot_token_present, last_synced_at FROM gateway_platforms")
-      .all() as Array<{
-      platform: string;
-      enabled: number;
-      bot_token_present: number;
-      last_synced_at: string;
-    }>;
+    const platforms = getGatewayPlatforms();
 
     const platformStatus: Record<string, { enabled: boolean; tokenPresent: boolean }> = {};
     for (const p of platforms) {

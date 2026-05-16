@@ -1,5 +1,5 @@
-import { TabbedContentSkeleton } from "@/components/skeletons";
+import { CardGridSkeleton } from "@/components/skeletons";
 
 export default function GatewayLoading() {
-  return <TabbedContentSkeleton tabs={0} sidebar />;
+  return <CardGridSkeleton count={4} columns={2} />;
 }

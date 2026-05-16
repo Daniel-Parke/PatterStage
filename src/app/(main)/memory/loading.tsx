@@ -1,5 +1,9 @@
-import { TabbedContentSkeleton } from "@/components/skeletons";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function MemoryLoading() {
-  return <TabbedContentSkeleton tabs={3} />;
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <LoadingSpinner text="Detecting memory provider..." />
+    </div>
+  );
 }

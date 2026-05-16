@@ -39,6 +39,28 @@ export function getDb(): Database.Database {
 /** Alias — most code uses db() not getDb() */
 export const db = getDb;
 
+/** Result row from gateway_platforms table */
+interface GatewayPlatformRow {
+  platform: string;
+  enabled: number;
+  bot_token_present: number;
+  last_synced_at: string;
+}
+
+/**
+ * Read all gateway platform records from the DB.
+ * Returns empty array if table doesn't exist or query fails.
+ */
+export function getGatewayPlatforms(): GatewayPlatformRow[] {
+  try {
+    return getDb()
+      .prepare("SELECT platform, enabled, bot_token_present, last_synced_at FROM gateway_platforms")
+      .all() as GatewayPlatformRow[];
+  } catch {
+    return [];
+  }
+}
+
 // ── Shorthand helpers ─────────────────────────────────────────
 
 /**

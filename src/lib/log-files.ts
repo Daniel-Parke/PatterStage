@@ -6,6 +6,13 @@ export const MAX_LOG_BASENAME_LEN = 128;
 
 export type LogFileGroup = "core" | "hardware" | "other";
 
+export interface LogFileMeta {
+  name: string;
+  size: number;
+  modified: string;
+  group: LogFileGroup;
+}
+
 /** Allowed characters: letters, digits, dot, underscore, hyphen (no path segments). */
 const BASENAME_RE = /^[a-zA-Z0-9._-]+$/;
 

@@ -117,10 +117,9 @@ export async function GET() {
     const { sessions: recentSessions } = listSessions({ limit: 5 });
 
     // ── Gateway Platforms (from DB) ─────────────────────────
+    const { getGatewayPlatforms } = await import("@/lib/db");
     const { db } = await import("@/lib/db");
-    const platformsRaw = db()
-      .prepare("SELECT platform, enabled, bot_token_present FROM gateway_platforms")
-      .all() as Array<{ platform: string; enabled: number; bot_token_present: number }>;
+    const platformsRaw = getGatewayPlatforms();
 
     const platforms: Record<string, boolean> = {};
     let connectedCount = 0;

@@ -21,15 +21,8 @@ import PageHeader from "@/components/layout/PageHeader";
 import AppPageShell from "@/components/layout/AppPageShell";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import type { LogFileGroup } from "@/lib/log-files";
+import type { LogFileGroup, LogFileMeta } from "@/lib/log-files";
 import { parseLogLine, type ParsedLogLevel } from "@/lib/log-line-format";
-
-interface LogFileMeta {
-  name: string;
-  size: number;
-  modified: string;
-  group: LogFileGroup;
-}
 
 interface LogData {
   name: string;

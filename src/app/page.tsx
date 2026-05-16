@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, memo as reactMemo, startTransition } from "react";
+import { useState, useEffect, useCallback, useMemo, memo as reactMemo } from "react";
 import Link from "next/link";
 import {
   // Dashboard icons
@@ -36,7 +36,7 @@ import TemplateCard from "@/components/ui/TemplateCard";
 import { useToast } from "@/components/ui/Toast";
 import type { SystemStatus, AccentColor } from "@/types/hermes";
 import { timeAgo, timeUntil, titleCase } from "@/lib/utils";
-import { shellHeaderBarClasses } from "@/lib/theme";
+import AppPageShell from "@/components/layout/AppPageShell";
 import { StatPillSkeleton } from "@/components/skeletons";
 
 interface HermesProcess {
@@ -218,9 +218,7 @@ export default function Dashboard() {
   const { status, monitor, processes, missions, config, templates } = data;
 
   const setData = useCallback((partial: Partial<typeof data>) => {
-    startTransition(() => {
-      setDataFields(prev => ({ ...prev, ...partial }));
-    });
+    setDataFields(prev => ({ ...prev, ...partial }));
   }, []);
   const [dispatchExpanded, setDispatchExpanded] = useState(false);
   const [errorSev, setErrorSev] = useState<"all" | "error" | "warning">("all");
@@ -345,10 +343,45 @@ export default function Dashboard() {
   const activeProcesses = useMemo(() => processes.filter((p) => p.status === "running"), [processes]);
   const activeMissions = useMemo(() => missions.filter((m) => m.status === "queued" || m.status === "dispatched"), [missions]);
 
+  // Group templates by category for the dispatch section
+  const groupedTemplates = useMemo(() => {
+    const grouped: Record<string, typeof templates> = {};
+    for (const t of templates) {
+      const cat = t.isCustom ? "Custom" : (t.category || "Other");
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(t);
+    }
+    return grouped;
+  }, [templates]);
+
+  const TEMPLATE_CAT_ORDER = useMemo(() => [
+    "Business - Operations",
+    "Engineering - QA",
+    "Engineering - DevOps",
+    "Engineering - Software",
+    "Engineering - Data",
+    "Engineering - Data Science",
+    "Business - Creative",
+    "Support",
+    "Custom",
+  ].filter((c) => groupedTemplates[c]), [groupedTemplates]);
+
+  const TEMPLATE_CAT_COLORS: Record<string, string> = {
+    "Engineering - QA": "pink",
+    "Engineering - DevOps": "cyan",
+    "Engineering - Software": "purple",
+    "Engineering - Data": "green",
+    "Engineering - Data Science": "orange",
+    "Business - Operations": "cyan",
+    "Business - Creative": "orange",
+    "Support": "blue",
+    "Custom": "purple",
+  };
+
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg relative scanlines">
+    <AppPageShell variant="scanlines">
       {/* Top Bar */}
-      <div className={`${shellHeaderBarClasses} sticky top-0 z-30 justify-between`}>
+      <div className="sticky top-0 z-30 justify-between">
         <div>
           <h1 className="text-xl font-bold tracking-tight">
             <span className="text-neon-cyan text-glow-cyan">CONTROL</span>{" "}
@@ -497,67 +530,37 @@ export default function Dashboard() {
           {/* Expanded: grouped by category, all compact pills */}
           {dispatchExpanded && (
             <div className="px-4 pb-4 space-y-3">
-              {(() => {
-                const grouped: Record<string, typeof templates> = {};
-                for (const t of templates) {
-                  const cat = t.isCustom ? "Custom" : (t.category || "Other");
-                  if (!grouped[cat]) grouped[cat] = [];
-                  grouped[cat].push(t);
-                }
-                const catOrder = [
-                  "Business - Operations",
-                  "Engineering - QA",
-                  "Engineering - DevOps",
-                  "Engineering - Software",
-                  "Engineering - Data",
-                  "Engineering - Data Science",
-                  "Business - Creative",
-                  "Support",
-                  "Custom",
-                ].filter((c) => grouped[c]);
-                const categoryColors: Record<string, string> = {
-                  "Engineering - QA": "pink",
-                  "Engineering - DevOps": "cyan",
-                  "Engineering - Software": "purple",
-                  "Engineering - Data": "green",
-                  "Engineering - Data Science": "orange",
-                  "Business - Operations": "cyan",
-                  "Business - Creative": "orange",
-                  "Support": "blue",
-                  "Custom": "purple",
-                };
-                return catOrder.map((cat) => {
-                  const items = grouped[cat];
-                  if (!items) return null;
-                  const color = categoryColors[cat] || "cyan";
-                  return (
-                    <CategoryAccordion
-                      key={cat}
-                      name={cat}
-                      count={items.length}
-                      color={color}
-                      expandable={cat === "Custom" && items.length > 6}
-                      defaultOpen={true}
-                    >
-                      <div className="flex flex-wrap gap-1.5">
-                        {items.map((t) => (
-                          <TemplateCard
-                            key={t.id}
-                            id={t.id}
-                            name={t.name}
-                            icon={t.icon}
-                            color={t.color}
-                            description={t.description}
-                            isCustom={t.isCustom}
-                            compact
-                            onSelect={() => window.location.href = `/missions?template=${t.id}`}
-                          />
-                        ))}
-                      </div>
-                    </CategoryAccordion>
-                  );
-                });
-              })()}
+              {TEMPLATE_CAT_ORDER.map((cat) => {
+                const items = groupedTemplates[cat];
+                if (!items) return null;
+                const color = TEMPLATE_CAT_COLORS[cat] || "cyan";
+                return (
+                  <CategoryAccordion
+                    key={cat}
+                    name={cat}
+                    count={items.length}
+                    color={color}
+                    expandable={cat === "Custom" && items.length > 6}
+                    defaultOpen={true}
+                  >
+                    <div className="flex flex-wrap gap-1.5">
+                      {items.map((t) => (
+                        <TemplateCard
+                          key={t.id}
+                          id={t.id}
+                          name={t.name}
+                          icon={t.icon}
+                          color={t.color}
+                          description={t.description}
+                          isCustom={t.isCustom}
+                          compact
+                          onSelect={() => window.location.href = `/missions?template=${t.id}`}
+                        />
+                      ))}
+                    </div>
+                  </CategoryAccordion>
+                );
+              })}
             </div>
           )}
         </div>
@@ -848,6 +851,6 @@ export default function Dashboard() {
           </Link>
         </div>
       </div>
-    </div>
+    </AppPageShell>
   );
 }

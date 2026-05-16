@@ -29,6 +29,8 @@ import { SearchInput } from "@/components/ui/Input";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import Badge from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/Toast";
+import { timeAgo } from "@/lib/utils";
+import AppPageShell from "@/components/layout/AppPageShell";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -73,20 +75,6 @@ const SOURCE_META: Record<
 
 // ── Helpers ─────────────────────────────────────────────────
 
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
-}
 
 function formatTitle(session: Session): string {
   if (session.title) return session.title;
@@ -123,7 +111,7 @@ function SessionCard({ session }: { session: Session }) {
             <div className="flex items-center gap-3 text-xs text-white/30 font-mono flex-wrap">
               <span className={`flex items-center gap-1 ${statusColor}`}>
                 <Clock className="w-3 h-3" />
-                {formatDate(session.startedAt)}
+                {timeAgo(session.startedAt)}
               </span>
               <span className="flex items-center gap-1">
                 <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono bg-neon-${meta.color}/10 text-neon-${meta.color}`}>
@@ -218,7 +206,7 @@ export default function SessionsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg">
+    <AppPageShell>
       <PageHeader
         icon={Clock}
         title="Session History"
@@ -321,6 +309,6 @@ export default function SessionsPage() {
         )}
       </div>
       {toastElement}
-    </div>
+    </AppPageShell>
   );
 }

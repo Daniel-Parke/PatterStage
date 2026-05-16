@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { Brain } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import AppPageShell from "@/components/layout/AppPageShell";
 import type { MemoryProviderType } from "@/types/hermes";
 
 // Lazy load provider-specific components
@@ -130,36 +131,38 @@ export default function MemoryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     // Detect provider from config — wait up to 8s for the memory API,
     // then fall back to "none" rather than showing an endless spinner
     const timer = setTimeout(() => {
-      if (!cancelled) {
+      if (!signal.aborted) {
         setProvider("none");
         setLoading(false);
       }
     }, 8000);
 
-    fetch("/api/memory")
+    fetch("/api/memory", { signal })
       .then((r) => r.json())
       .then((d) => {
-        if (!cancelled) {
+        if (!signal.aborted) {
           setProvider(d.data?.provider || "none");
           clearTimeout(timer);
         }
       })
       .catch(() => {
-        if (!cancelled) {
+        if (!signal.aborted) {
           setProvider("none");
           clearTimeout(timer);
         }
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!signal.aborted) setLoading(false);
       });
 
     return () => {
-      cancelled = true;
+      controller.abort();
       clearTimeout(timer);
     };
   }, []);
@@ -174,15 +177,15 @@ export default function MemoryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-dark-950 grid-bg">
+      <AppPageShell>
         <PageHeader icon={Brain} title="Memory" subtitle="Loading..." color="pink" />
         <div className="px-6 py-12"><LoadingSpinner text="Detecting memory provider..." /></div>
-      </div>
+      </AppPageShell>
     );
   }
 
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg">
+    <AppPageShell>
       <PageHeader
         icon={Brain}
         title={getTitle()}
@@ -204,6 +207,6 @@ export default function MemoryPage() {
           </div>
         )}
       </div>
-    </div>
+    </AppPageShell>
   );
 }

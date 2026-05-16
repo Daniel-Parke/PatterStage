@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// Gateway Status — Platform connection & log viewer
+// Gateway Status — Platform connection status
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -11,16 +11,16 @@ import {
   Hash,
   Phone,
   RefreshCw,
-  FileText,
 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import AppPageShell from "@/components/layout/AppPageShell";
 import Button from "@/components/ui/Button";
 
 interface GatewayData {
   platforms: Record<string, boolean>;
-  recentLogs: string[];
-  logAvailable: boolean;
+  connectedCount: number;
+  lastSynced: string | null;
 }
 
 const platformMeta: Record<string, {
@@ -59,7 +59,7 @@ export default function GatewayPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg">
+    <AppPageShell>
       <PageHeader
         title="Gateway Status"
         subtitle="Platform connections and recent gateway logs"
@@ -128,52 +128,9 @@ export default function GatewayPage() {
               </div>
             </div>
 
-            {/* Gateway Logs */}
-            <div>
-              <h2 className="text-sm font-mono text-white/40 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <FileText className="w-3 h-3 text-neon-cyan" />
-                Recent Gateway Logs
-              </h2>
-              <div className="rounded-xl border border-white/10 bg-dark-900/50 overflow-hidden">
-                <div className="flex items-center gap-2 px-4 py-2 border-b border-white/10 bg-dark-800/50">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                    <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                  </div>
-                  <span className="text-xs text-white/40 font-mono ml-2">
-                    gateway.log
-                  </span>
-                </div>
-                <div className="p-4 font-mono text-xs space-y-0.5 max-h-96 overflow-y-auto">
-                  {data?.recentLogs && data.recentLogs.length > 0 ? (
-                    data.recentLogs.map((line, i) => (
-                      <div
-                        key={i}
-                        className={`${
-                          line.includes("ERROR")
-                            ? "text-red-400"
-                            : line.includes("WARN")
-                            ? "text-neon-orange"
-                            : "text-white/40"
-                        }`}
-                      >
-                        {line}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-white/20 py-8 text-center">
-                      {data?.logAvailable
-                        ? "Log file is empty"
-                        : "No gateway log found"}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
           </>
         )}
       </div>
-    </div>
+    </AppPageShell>
   );
 }

@@ -10,7 +10,8 @@ import {
   sanitizeLogBasename,
 } from "@/lib/log-files";
 import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
-import type { ApiResponse } from "@/types/hermes";
+import { ApiResponse } from "@/types/hermes";
+import type { LogFileMeta } from "@/lib/log-files";
 
 function logFileUnderLogsDir(logsDir: string, logPath: string): boolean {
   const R = resolve(logsDir);
@@ -18,13 +19,6 @@ function logFileUnderLogsDir(logsDir: string, logPath: string): boolean {
   if (C === R) return false;
   const rel = relative(R, C);
   return rel !== "" && !rel.startsWith("..") && !rel.includes("..");
-}
-
-export interface LogFileMeta {
-  name: string;
-  size: number;
-  modified: string;
-  group: ReturnType<typeof categorizeLogFileGroup>;
 }
 
 export interface LogGetData {
