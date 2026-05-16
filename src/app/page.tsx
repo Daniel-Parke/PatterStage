@@ -128,44 +128,17 @@ function CronStatusBadge({ state, enabled }: { state: string; enabled: boolean }
       </span>
     );
   }
-  if (state === "running") {
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-neon-green/10 text-neon-green">
-        <Loader2 className="w-2.5 h-2.5 animate-spin" /> Running
-      </span>
-    );
-  }
-  if (state === "scheduled") {
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-neon-green/10 text-neon-green">
-        <Play className="w-2.5 h-2.5" /> Active
-      </span>
-    );
-  }
-  if (state === "queued") {
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-neon-orange/10 text-neon-orange">
-        <Clock className="w-2.5 h-2.5" /> Queued
-      </span>
-    );
-  }
-  if (state === "completed") {
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-neon-green/10 text-neon-green">
-        <CheckCircle2 className="w-2.5 h-2.5" /> Done
-      </span>
-    );
-  }
-  if (state === "failed") {
-    return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-red-500/10 text-red-400">
-        <XCircle className="w-2.5 h-2.5" /> Failed
-      </span>
-    );
-  }
+  const styles: Record<string, { bg: string; text: string; icon: React.ReactNode; label: string }> = {
+    running: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <Loader2 className="w-2.5 h-2.5 animate-spin" />, label: "Running" },
+    scheduled: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <Play className="w-2.5 h-2.5" />, label: "Active" },
+    queued: { bg: "bg-neon-orange/10", text: "text-neon-orange", icon: <Clock className="w-2.5 h-2.5" />, label: "Queued" },
+    completed: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <CheckCircle2 className="w-2.5 h-2.5" />, label: "Done" },
+    failed: { bg: "bg-red-500/10", text: "text-red-400", icon: <XCircle className="w-2.5 h-2.5" />, label: "Failed" },
+  };
+  const s = styles[state] || { bg: "bg-white/5", text: "text-white/40", icon: null, label: state.charAt(0).toUpperCase() + state.slice(1) };
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-white/5 text-white/40">
-      {state.charAt(0).toUpperCase() + state.slice(1)}
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono ${s.bg} ${s.text}`}>
+      {s.icon} {s.label}
     </span>
   );
 }
@@ -204,6 +177,8 @@ function StatPill({
 }
 
 // ── Template Category Constants (module-level — don't re-create on every render) ──
+
+const DEFAULT_PLATFORMS = ["discord", "telegram", "slack", "whatsapp"] as const;
 
 const TEMPLATE_CAT_ORDER = [
   "Business - Operations",
@@ -390,6 +365,9 @@ export default function Dashboard() {
   const activeProcesses = useMemo(() => processes.filter((p) => p.status === "running"), [processes]);
   const activeMissions = useMemo(() => missions.filter((m) => m.status === "queued" || m.status === "dispatched"), [missions]);
 
+  // Snapshot current time for render — avoid calling Date.now() in JSX
+  const now = Date.now();
+
   // Group templates by category for the dispatch section
   const groupedTemplates = useMemo(() => {
     const grouped: Record<string, typeof templates> = {};
@@ -404,7 +382,7 @@ export default function Dashboard() {
   return (
     <AppPageShell variant="scanlines">
       {/* Top Bar */}
-      <div className="sticky top-0 z-30 justify-between">
+      <div className="sticky top-0 z-30 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold tracking-tight">
             <span className="text-neon-cyan text-glow-cyan">CONTROL</span>{" "}
@@ -693,9 +671,7 @@ export default function Dashboard() {
                             : job.lastRun && !job.nextRun
                             ? `${titleCase(job.lastStatus || "Ok")} ${timeAgo(job.lastRun)}`
                             : job.nextRun &&
-                              new Date(job.nextRun).getTime() >
-                                // eslint-disable-next-line react-hooks/purity -- need current time vs scheduled next_run
-                                Date.now()
+                              new Date(job.nextRun).getTime() > now
                             ? "Next " + timeUntil(job.nextRun)
                             : job.lastRun
                             ? `Active · Ran ${timeAgo(job.lastRun)}`
@@ -734,7 +710,7 @@ export default function Dashboard() {
                       </span>
                     </div>
                   ))
-                : ["discord", "telegram", "slack", "whatsapp"].map((p) => (
+                : DEFAULT_PLATFORMS.map((p) => (
                     <div key={p} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <StatusDot status="idle" />

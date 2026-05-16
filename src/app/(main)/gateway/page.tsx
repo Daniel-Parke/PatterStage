@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Globe,
   MessageCircle,
@@ -38,28 +38,37 @@ export default function GatewayPage() {
   const [data, setData] = useState<GatewayData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const loadData = async (signal?: AbortSignal) => {
+  const loadData = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/gateway", { signal });
       if (!res.ok) throw new Error("Failed to load gateway data");
       const json = await res.json();
-      setData(json.data);
+      if (!signal?.aborted) setData(json.data);
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
-      setError(err instanceof Error ? err.message : "Unknown error");
+      if (!signal?.aborted) setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
+    abortRef.current = controller;
     loadData(controller.signal);
     return () => { controller.abort(); };
-  }, []);
+  }, [loadData]);
+
+  const handleRefresh = useCallback(() => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    loadData(controller.signal);
+  }, [loadData]);
 
   return (
     <AppPageShell>
@@ -72,7 +81,7 @@ export default function GatewayPage() {
           <Button
             variant="secondary"
             size="sm"
-            onClick={() => loadData()}
+            onClick={handleRefresh}
             loading={loading}
             icon={RefreshCw}
           >

@@ -109,14 +109,9 @@ function parseHolographicFact(raw: string): {
   }
 }
 
-const PROVIDER_TITLES: Record<string, string> = {
-  hindsight: "Hindsight Memory",
-  holographic: "Holographic Memory",
-};
-
-const PROVIDER_DESCRIPTIONS: Record<string, string> = {
-  hindsight: "Knowledge graph memory with semantic search",
-  holographic: "Structured fact storage with trust scoring",
+const PROVIDER_META: Record<string, { title: string; description: string }> = {
+  hindsight: { title: "Hindsight Memory", description: "Knowledge graph memory with semantic search" },
+  holographic: { title: "Holographic Memory", description: "Structured fact storage with trust scoring" },
 };
 
 export default function MemoryPage() {
@@ -128,27 +123,17 @@ export default function MemoryPage() {
     const controller = new AbortController();
     const signal = controller.signal;
 
-    // Detect provider and fetch data in a single request
-    const timer = setTimeout(() => {
-      if (!signal.aborted) {
-        setProvider("none");
-        setLoading(false);
-      }
-    }, 8000);
-
     fetch("/api/memory", { signal })
       .then((r) => r.json())
       .then((d) => {
         if (!signal.aborted) {
           setProvider(d.data?.provider || "none");
           setMemData(d.data || null);
-          clearTimeout(timer);
         }
       })
       .catch(() => {
         if (!signal.aborted) {
           setProvider("none");
-          clearTimeout(timer);
         }
       })
       .finally(() => {
@@ -157,13 +142,12 @@ export default function MemoryPage() {
 
     return () => {
       controller.abort();
-      clearTimeout(timer);
     };
   }, []);
 
-  const title = PROVIDER_TITLES[provider ?? ""] || "Memory";
+  const title = PROVIDER_META[provider ?? ""]?.title || "Memory";
   const description = provider
-    ? (PROVIDER_DESCRIPTIONS[provider] || "No memory provider configured")
+    ? (PROVIDER_META[provider]?.description || "No memory provider configured")
     : "Loading...";
 
   if (loading) {
