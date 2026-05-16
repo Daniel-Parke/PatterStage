@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// AgentRuntimeDefaultsCard — Agent profile, scope, timeout, model
+// AgentRuntimeDefaultsCard — Agent profile, scope, timeout, model, skills
 // Extracted from missions/page.tsx for modularity.
 // ═══════════════════════════════════════════════════════════════
 
@@ -9,6 +9,7 @@ import ProfileSelector from "@/components/ui/ProfileSelector";
 import MissionTimeSelector from "@/components/ui/MissionTimeSelector";
 import TimeoutSelector from "@/components/ui/TimeoutSelector";
 import ModelPicker from "@/components/missions/ModelPicker";
+import SkillSelector from "@/components/ui/SkillSelector";
 
 export interface AgentRuntimeDefaultsCardProps {
   profileId: string;
@@ -22,6 +23,9 @@ export interface AgentRuntimeDefaultsCardProps {
   onModelChange: (mid: string, prov: string) => void;
   modelPickerId?: string;
   timeoutHeading: string;
+  /** Skills attached to this mission — rendered inside the card */
+  skills?: string[];
+  onSkillsChange?: (skills: string[]) => void;
 }
 
 export default function AgentRuntimeDefaultsCard({
@@ -36,6 +40,8 @@ export default function AgentRuntimeDefaultsCard({
   onModelChange,
   modelPickerId,
   timeoutHeading,
+  skills,
+  onSkillsChange,
 }: AgentRuntimeDefaultsCardProps) {
   return (
     <div className="rounded-xl border border-white/10 bg-dark-800/30 p-3 sm:p-4 space-y-4">
@@ -48,15 +54,29 @@ export default function AgentRuntimeDefaultsCard({
         </p>
       </div>
 
-      <div className="space-y-1.5">
-        <label className="text-xs text-white/40 font-mono block">Agent profile</label>
-        <ProfileSelector
-          value={profileId}
-          onChange={onProfileChange}
-          subtitle="tooltip"
-        />
+      {/* Agent Profile + Model side-by-side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <label className="text-xs text-white/40 font-mono block">Model</label>
+          <ModelPicker
+            id={modelPickerId}
+            modelId={modelId}
+            provider={provider}
+            onChange={onModelChange}
+            helperPlacement="tooltip"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs text-white/40 font-mono block">Agent profile</label>
+          <ProfileSelector
+            value={profileId}
+            onChange={onProfileChange}
+            subtitle="tooltip"
+          />
+        </div>
       </div>
 
+      {/* Mission scope + Timeout */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch">
         <div className="flex flex-col gap-1.5 min-h-[3.25rem]">
           <label className="text-xs text-white/40 font-mono block">Mission scope</label>
@@ -84,16 +104,21 @@ export default function AgentRuntimeDefaultsCard({
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <label className="text-xs text-white/40 font-mono block">Model</label>
-        <ModelPicker
-          id={modelPickerId}
-          modelId={modelId}
-          provider={provider}
-          onChange={onModelChange}
-          helperPlacement="tooltip"
-        />
-      </div>
+      {/* Attached Skills — at the bottom of this card */}
+      {typeof skills !== "undefined" && onSkillsChange && (
+        <div className="space-y-1.5">
+          <label className="text-xs text-white/40 font-mono block">
+            Attached Skills{" "}
+            <span className="text-white/20">(optional, max 10)</span>
+          </label>
+          <SkillSelector
+            value={skills}
+            onChange={onSkillsChange}
+            profileId={profileId}
+            max={10}
+          />
+        </div>
+      )}
     </div>
   );
 }

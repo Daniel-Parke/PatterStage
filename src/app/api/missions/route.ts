@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
         schedule: scheduleVal,
       });
 
-      const isSaveMode = dispatchMode === "save";
+      const isSaveMode = dispatchMode === "save" || dispatchMode === "queue";
 
       if (!isSaveMode) {
         updateMission(mission.id, { status: "dispatched" });
@@ -297,18 +297,18 @@ export async function POST(request: NextRequest) {
     // The unified V1 status enum has no `cancelled` state — cancellations
     // are recorded as `failed` with an explicit "Cancelled by user" result.
     if (action === "cancel") {
-      const { id } = body as { id?: string };
-      if (!id)
+      const cancelId = (body as Record<string, string>).id ?? (body as Record<string, string>).missionId;
+      if (!cancelId)
         return NextResponse.json({ error: "Mission id is required" }, { status: 400 });
 
-      const mission = updateMission(id, {
+      const mission = updateMission(cancelId, {
         status: "failed",
         result: "Cancelled by user",
       });
       if (!mission)
         return NextResponse.json({ error: "Mission not found" }, { status: 404 });
 
-      appendAuditLine({ action: "mission.cancel", resource: id, ok: true });
+      appendAuditLine({ action: "mission.cancel", resource: cancelId, ok: true });
       return NextResponse.json({ data: { mission } });
     }
 

@@ -148,11 +148,12 @@ export default function MissionsPage() {
   const [newInstruction, setNewInstruction] = useState("");
   const [newContext, setNewContext] = useState("");
   const [newGoals, setNewGoals] = useState("");
-  const [newDispatch, setNewDispatch] = useState<"save" | "now" | "cron">(
+  const [newDispatch, setNewDispatch] = useState<"save" | "now" | "cron" | "queue">(
     "now",
   );
   const [newSchedule, setNewSchedule] = useState("every 5m");
-  const [scheduleType, setScheduleType] = useState<"interval" | "cron-expr">("interval");
+  const [scheduleType, setScheduleType] = useState<"interval" | "wall-clock" | "post-run">("interval");
+  const [scheduleStartTime, setScheduleStartTime] = useState("00:00");
   const [newMissionTime, setNewMissionTime] = useState(15);
   const [newTimeout, setNewTimeout] = useState(10);
   const [newProfile, setNewProfile] = useState("");
@@ -178,6 +179,7 @@ export default function MissionsPage() {
     newDispatch,
     newSchedule,
     scheduleType,
+    scheduleStartTime,
     newMissionTime,
     newTimeout,
     newProfile,
@@ -199,9 +201,9 @@ export default function MissionsPage() {
       case "newInstruction": setNewInstruction(value as string); break;
       case "newContext": setNewContext(value as string); break;
       case "newGoals": setNewGoals(value as string); break;
-      case "newDispatch": setNewDispatch(value as "save" | "now" | "cron"); break;
+      case "newDispatch": setNewDispatch(value as "save" | "now" | "cron" | "queue"); break;
       case "newSchedule": setNewSchedule(value as string); break;
-      case "scheduleType": setScheduleType(value as "interval" | "cron-expr"); break;
+      case "scheduleType": setScheduleType(value as "interval" | "wall-clock" | "post-run"); break;
       case "newMissionTime": setNewMissionTime(value as number); break;
       case "newTimeout": setNewTimeout(value as number); break;
       case "newProfile": setNewProfile(value as string); break;
@@ -212,6 +214,7 @@ export default function MissionsPage() {
       case "newReferences": setNewReferences(value as string[]); break;
       case "referenceInput": setReferenceInput(value as string); break;
       case "newSkills": setNewSkills(value as string[]); break;
+      case "scheduleStartTime": setScheduleStartTime(value as string); break;
     }
   };
 
@@ -448,6 +451,21 @@ export default function MissionsPage() {
           setShowCreate(false);
           fetchData();
           setDispatching(false);
+        } else if (newDispatch === "queue") {
+          showToast("Mission queued — visible on the board", "success");
+          setNewName("");
+          setNewInstruction("");
+          setNewContext("");
+          setNewGoals("");
+          setNewModel("");
+          setNewProvider("");
+          setNewLocalDirs([]);
+          setLocalDirDraft({ path: "", branch: null });
+          setNewReferences([]);
+          setNewSkills([]);
+          setShowCreate(false);
+          fetchData();
+          setDispatching(false);
         } else if (newDispatch === "now") {
           showToast("Mission dispatched! Returning to dashboard...", "success");
           setDispatching(false);
@@ -491,7 +509,7 @@ export default function MissionsPage() {
       // Detect whether this is a cron expression or interval format
       const s = m.schedule.trim();
       if (s.includes("*") || /^\d/.test(s)) {
-        setScheduleType("cron-expr");
+        setScheduleType("wall-clock");
       } else {
         setScheduleType("interval");
       }
@@ -824,15 +842,18 @@ export default function MissionsPage() {
             {/* Category Accordion */}
             <div className="space-y-2">
               {filteredGrouped.map(([cat, items]) => {
-                const color = CATEGORY_COLORS[cat] || "cyan";
                 return (
                   <CategoryAccordion
                     key={cat}
                     name={cat}
                     count={items.length}
-                    color={color}
-                    expandable={cat === "Custom" && items.length > 6}
-                    defaultOpen={categoryFilter !== "all"}
+                    color="cyan"
+                    expandable={true}
+                    defaultOpen={
+                      categoryFilter !== "all"
+                        ? true
+                        : allCategories.length <= 3
+                    }
                   >
                     <div className="flex flex-wrap gap-1.5">
                       {items.map((t) => (
@@ -1030,7 +1051,70 @@ export default function MissionsPage() {
                                     </div>
                                   ) : detail ? (
                                     <div className="space-y-3">
-                                      {/* Prompt */}
+                                      {/* ── Metadata grid ── */}
+                                      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px] font-mono">
+                                        <div className="flex justify-between">
+                                          <span className="text-white/30">Agent</span>
+                                          <span className="text-white/70 truncate ml-2 text-right">
+                                            {detail.mission.profileName || detail.mission.profileId || "—"}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                          <span className="text-white/30">Model</span>
+                                          <span className="text-white/70 truncate ml-2 text-right">
+                                            {detail.mission.modelId || detail.mission.model || "—"}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                          <span className="text-white/30">Provider</span>
+                                          <span className="text-white/70 truncate ml-2 text-right">
+                                            {detail.mission.provider || "—"}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                          <span className="text-white/30">Scope</span>
+                                          <span className="text-white/70 ml-2 text-right">
+                                            {detail.mission.missionTimeMinutes ? `${detail.mission.missionTimeMinutes}m` : "—"}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                          <span className="text-white/30">Timeout</span>
+                                          <span className="text-white/70 ml-2 text-right">
+                                            {detail.mission.timeoutMinutes ? `${detail.mission.timeoutMinutes}m` : "—"}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                          <span className="text-white/30">Elapsed</span>
+                                          <span className="text-white/70 ml-2 text-right">
+                                            {(() => {
+                                              const created = new Date(detail.mission.createdAt).getTime();
+                                              const now = Date.now();
+                                              const elapsed = Math.floor((now - created) / 1000);
+                                              if (elapsed < 60) return `${elapsed}s`;
+                                              if (elapsed < 3600) return `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
+                                              const h = Math.floor(elapsed / 3600);
+                                              const m = Math.floor((elapsed % 3600) / 60);
+                                              return `${h}h ${m}m`;
+                                            })()}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                          <span className="text-white/30">Schedule</span>
+                                          <span className="text-white/70 truncate ml-2 text-right">
+                                            {detail.mission.schedule || "One-shot"}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                          <span className="text-white/30">Skills</span>
+                                          <span className="text-white/70 truncate ml-2 text-right">
+                                            {(detail.mission.skills?.length ?? 0) > 0
+                                              ? `${detail.mission.skills!.length} attached`
+                                              : "—"}
+                                          </span>
+                                        </div>
+                                      </div>
+
+                                      {/* ── Prompt (collapsible) ── */}
                                       <div>
                                         <button
                                           onClick={() =>
@@ -1038,8 +1122,9 @@ export default function MissionsPage() {
                                           }
                                           className="w-full flex items-center justify-between mb-1 hover:opacity-80 transition-opacity"
                                         >
-                                          <div className="text-[10px] font-mono text-white/30 uppercase">
-                                            Prompt
+                                          <div className="text-[10px] font-mono text-white/30 uppercase flex items-center gap-1.5">
+                                            <Edit3 className="w-3 h-3" />
+                                            Full Template Details
                                           </div>
                                           <div className="flex items-center gap-1 text-[10px] font-mono text-white/30">
                                             <span>
@@ -1061,7 +1146,7 @@ export default function MissionsPage() {
                                         </div>
                                       </div>
 
-                                      {/* Goals */}
+                                      {/* ── Goals ── */}
                                       {(detail.mission.goals?.length ?? 0) > 0 && (
                                         <div>
                                           <div className="text-[10px] font-mono text-white/30 uppercase mb-1">
@@ -1091,7 +1176,7 @@ export default function MissionsPage() {
                                         </div>
                                       )}
 
-                                      {/* Cron Job Status */}
+                                      {/* ── Cron Job Status ── */}
                                       {detail.cronJob && (
                                         <div className="rounded-lg border border-neon-orange/20 bg-dark-900/50 p-2">
                                           <div className="flex items-center justify-between mb-1">
@@ -1147,7 +1232,7 @@ export default function MissionsPage() {
                                         </div>
                                       )}
 
-                                      {/* Results */}
+                                      {/* ── Results ── */}
                                       {detail.mission.results && (
                                         <div>
                                           <div className="text-[10px] font-mono text-white/30 uppercase mb-1">
@@ -1159,7 +1244,7 @@ export default function MissionsPage() {
                                         </div>
                                       )}
 
-                                      {/* Error */}
+                                      {/* ── Error ── */}
                                       {detail.mission.error && (
                                         <div className="rounded-lg bg-red-500/5 border border-red-500/10 p-2">
                                           <div className="text-[10px] font-mono text-red-400 uppercase mb-0.5">
@@ -1171,7 +1256,7 @@ export default function MissionsPage() {
                                         </div>
                                       )}
 
-                                      {/* Actions */}
+                                      {/* ── Actions ── */}
                                       <div className="flex gap-1.5 pt-1">
                                         {(mission.status === "queued" ||
                                           mission.status === "successful" ||

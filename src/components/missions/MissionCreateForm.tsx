@@ -10,8 +10,8 @@ import { X, Send, Save } from "lucide-react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import AutoTextarea from "@/components/ui/AutoTextarea";
-import SkillSelector from "@/components/ui/SkillSelector";
-import IntervalSelector from "@/components/ui/IntervalSelector";
+import ScheduleSelector from "@/components/missions/ScheduleSelector";
+import type { ScheduleMode } from "@/components/missions/ScheduleSelector";
 import LocalDirRow from "@/components/missions/LocalDirRow";
 import AgentRuntimeDefaultsCard from "@/components/missions/AgentRuntimeDefaultsCard";
 import type { LocalDirEntry } from "@/types/hermes";
@@ -21,9 +21,10 @@ export interface MissionFormState {
   newInstruction: string;
   newContext: string;
   newGoals: string;
-  newDispatch: "save" | "now" | "cron";
+  newDispatch: "save" | "now" | "cron" | "queue";
   newSchedule: string;
-  scheduleType: "interval" | "cron-expr";
+  scheduleType: ScheduleMode;
+  scheduleStartTime: string;
   newMissionTime: number;
   newTimeout: number;
   newProfile: string;
@@ -113,6 +114,21 @@ export default function MissionCreateForm({
             className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-neon-cyan/50 font-mono"
           />
         </div>
+
+        {/* Goals — moved to top, immediately below Mission Name */}
+        <div>
+          <label className="text-xs text-white/40 font-mono block mb-1">
+            Goals (one per line)
+          </label>
+          <AutoTextarea
+            value={formState.newGoals}
+            onChange={(v) => setFormField("newGoals", v)}
+            minRows={2}
+            maxRows={8}
+            placeholder="Gather data&#10;Analyze findings&#10;Write report"
+          />
+        </div>
+
         <div>
           <label className="text-xs text-white/40 font-mono block mb-1">
             Instruction Prompt
@@ -287,37 +303,7 @@ export default function MissionCreateForm({
           </p>
         </div>
 
-        {/* Skills */}
-        <div>
-          <label className="text-xs text-white/40 font-mono block mb-1">
-            Attached Skills{" "}
-            <span className="text-white/20">(optional, max 10)</span>
-          </label>
-          <SkillSelector
-            value={formState.newSkills}
-            onChange={(skills) => setFormField("newSkills", skills)}
-            profileId={formState.newProfile}
-            max={10}
-          />
-          <p className="text-[10px] text-white/20 font-mono mt-0.5">
-            Showing only skills enabled for this profile. Added as
-            &quot;Recommended Skills&quot; in the prompt.
-          </p>
-        </div>
-
-        <div>
-          <label className="text-xs text-white/40 font-mono block mb-1">
-            Goals (one per line)
-          </label>
-          <AutoTextarea
-            value={formState.newGoals}
-            onChange={(v) => setFormField("newGoals", v)}
-            minRows={2}
-            maxRows={8}
-            placeholder="Gather data&#10;Analyze findings&#10;Write report"
-          />
-        </div>
-        {/* Mission Settings — agent & runtime card */}
+        {/* Mission Settings — agent & runtime card (now includes Skills) */}
         <AgentRuntimeDefaultsCard
           profileId={formState.newProfile}
           onProfileChange={(id) => setFormField("newProfile", id)}
@@ -332,12 +318,14 @@ export default function MissionCreateForm({
             setFormField("newProvider", prov);
           }}
           timeoutHeading="Timeout (Advanced)"
+          skills={formState.newSkills}
+          onSkillsChange={(skills) => setFormField("newSkills", skills)}
         />
         <div className="flex items-center gap-3">
           <label className="text-xs text-white/40 font-mono">
             Dispatch:
           </label>
-          {(["save", "now", "cron"] as const).map((mode) => (
+          {(["save", "now", "queue", "cron"] as const).map((mode) => (
             <button
               key={mode}
               onClick={() => setFormField("newDispatch", mode)}
@@ -351,7 +339,9 @@ export default function MissionCreateForm({
                 ? "Save Draft"
                 : mode === "now"
                   ? "Run Now"
-                  : "Recurring"}
+                  : mode === "queue"
+                    ? "Queue"
+                    : "Recurring"}
             </button>
           ))}
         </div>
@@ -366,14 +356,24 @@ export default function MissionCreateForm({
             💾 Saves the mission as a draft. Nothing is executed yet.
           </div>
         )}
+        {formState.newDispatch === "queue" && (
+          <div className="text-[10px] text-white/30 font-mono bg-dark-800/50 rounded-lg px-3 py-2 border border-white/5">
+            📋 Adds the mission to the queued column on the board.
+            Launch it manually when ready.
+          </div>
+        )}
         {formState.newDispatch === "cron" && (
           <div className="space-y-2">
             <label className="text-xs text-white/40 font-mono block">
               Schedule
             </label>
-            <IntervalSelector
+            <ScheduleSelector
               value={formState.newSchedule}
               onChange={(s) => setFormField("newSchedule", s)}
+              mode={formState.scheduleType}
+              onModeChange={(m) => setFormField("scheduleType", m)}
+              startTime={formState.scheduleStartTime}
+              onStartTimeChange={(t) => setFormField("scheduleStartTime", t)}
             />
           </div>
         )}
@@ -392,6 +392,7 @@ export default function MissionCreateForm({
               if (isReDispatch) return "Re-Dispatch Now";
               if (formState.newDispatch === "save") return "Save Mission";
               if (formState.newDispatch === "now") return "Dispatch Now";
+              if (formState.newDispatch === "queue") return "Queue Mission";
               return "Schedule Mission";
             })()}
           </Button>

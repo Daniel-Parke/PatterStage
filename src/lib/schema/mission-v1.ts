@@ -10,7 +10,7 @@ export const missionStatusSchema = z.enum([
   "failed",
 ]);
 
-export const dispatchModeSchema = z.enum(["save", "now", "cron"]);
+export const dispatchModeSchema = z.enum(["save", "now", "cron", "queue"]);
 
 /**
  * Mission record as persisted under CH_DATA_DIR/missions/{id}.json.

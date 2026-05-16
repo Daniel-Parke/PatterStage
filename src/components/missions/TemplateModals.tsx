@@ -26,6 +26,8 @@ import {
   Globe,
   Code,
   FileText,
+  Bot,
+  RefreshCw,
 } from "lucide-react";
 import AutoTextarea from "@/components/ui/AutoTextarea";
 import Button from "@/components/ui/Button";
@@ -33,7 +35,6 @@ import CategoryAccordion from "@/components/ui/CategoryAccordion";
 import Modal from "@/components/ui/Modal";
 import AgentRuntimeDefaultsCard from "@/components/missions/AgentRuntimeDefaultsCard";
 import LocalDirRow from "@/components/missions/LocalDirRow";
-import SkillSelector from "@/components/ui/SkillSelector";
 import type { LocalDirEntry } from "@/types/hermes";
 
 // ── Types ─────────────────────────────────────────────────────
@@ -79,6 +80,8 @@ const TEMPLATE_ICONS = [
   "Code",
   "FileText",
   "Layers",
+  "Bot",
+  "RefreshCw",
 ] as const;
 
 const TEMPLATE_COLORS = ["cyan", "purple", "pink", "green", "orange"] as const;
@@ -100,6 +103,8 @@ export const ICON_MAP: Record<string, React.ComponentType<{ className?: string }
   Code,
   FileText,
   Layers,
+  Bot,
+  RefreshCw,
 };
 
 export const CATEGORY_ORDER = [
@@ -443,6 +448,8 @@ export function TemplateEditorModal({
           onModelChange={onModelChange}
           modelPickerId="template-model-picker"
           timeoutHeading="Timeout"
+          skills={newSkills}
+          onSkillsChange={onNewSkillsChange}
         />
         <div>
           <label className="text-xs text-white/40 font-mono block mb-1">
@@ -547,18 +554,6 @@ export function TemplateEditorModal({
               </button>
             </div>
           </div>
-        </div>
-        <div>
-          <label className="text-xs text-white/40 font-mono block mb-1">
-            Attached Skills{" "}
-            <span className="text-white/20">(optional, max 10)</span>
-          </label>
-          <SkillSelector
-            value={newSkills}
-            onChange={onNewSkillsChange}
-            profileId={newProfile}
-            max={10}
-          />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
