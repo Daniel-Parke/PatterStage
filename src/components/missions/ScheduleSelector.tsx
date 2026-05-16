@@ -45,8 +45,6 @@ const PRESETS = [
   { value: "every 7d",  label: "7 days"    },
 ];
 
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
 // ── Dropdown Menu (reused from IntervalSelector) ─────────────
 
 function DropdownMenu({
@@ -200,7 +198,7 @@ export default function ScheduleSelector({
   }
 
   // Build wall-clock cron expression from start time + interval
-  const buildWallClockSchedule = (time: string, interval: string) => {
+  const buildWallClockSchedule = (time: string, _interval: string) => {
     // Parse HH:MM or default to 00:00
     const parts = time.split(":");
     const hh = parts[0]?.padStart(2, "0") || "00";
