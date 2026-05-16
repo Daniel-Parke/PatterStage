@@ -84,3 +84,39 @@ export function requireDeployApiEnabled(): NextResponse | null {
 export const getMcApiKey = getChApiKey;
 export const isMcReadOnly = isChReadOnly;
 export const requireMcApiKey = requireChApiKey;
+
+/**
+ * Combined auth guard: checks read-only mode AND optional API key.
+ * Returns a NextResponse (to return) if auth fails, or null if allowed.
+ *
+ * Use as the first line in route handlers:
+ *   const auth = requireAuth(request);
+ *   if (auth) return auth;
+ */
+export function requireAuth(request: NextRequest): NextResponse | null {
+  const ro = requireNotReadOnly();
+  if (ro) return ro;
+  const auth = requireMcApiKey(request);
+  if (auth) return auth;
+  return null;
+}
+
+/**
+ * Safely parse the JSON body of a request.
+ * Returns the parsed object on success, or a NextResponse (400) on parse failure.
+ *
+ * Usage:
+ *   const body = await parseJsonBody(request);
+ *   if (body instanceof NextResponse) return body;
+ *   // body is now Record<string, unknown>
+ */
+export async function parseJsonBody(
+  request: NextRequest,
+): Promise<Record<string, unknown> | NextResponse> {
+  try {
+    const body = await request.json();
+    return body as Record<string, unknown>;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+}

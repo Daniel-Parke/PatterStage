@@ -15,7 +15,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
-import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
+import { requireAuth, parseJsonBody } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { parseSchedule } from "@/lib/utils";
 
@@ -90,19 +90,13 @@ export async function GET(request: NextRequest) {
 // ── POST ─────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const ro = requireNotReadOnly();
-  if (ro) return ro;
-
-  const auth = requireMcApiKey(request);
+  const auth = requireAuth(request);
   if (auth) return auth;
 
   try {
-    let body: Record<string, unknown>;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
+    const bodyResult = await parseJsonBody(request);
+    if (bodyResult instanceof NextResponse) return bodyResult;
+    const body = bodyResult;
 
     const { action } = body as { action?: string };
 
@@ -265,19 +259,13 @@ export async function POST(request: NextRequest) {
 // ── PUT ─────────────────────────────────────────────────────
 
 export async function PUT(request: NextRequest) {
-  const ro = requireNotReadOnly();
-  if (ro) return ro;
-
-  const auth = requireMcApiKey(request);
+  const auth = requireAuth(request);
   if (auth) return auth;
 
   try {
-    let body: Record<string, unknown>;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-    }
+    const bodyResult = await parseJsonBody(request);
+    if (bodyResult instanceof NextResponse) return bodyResult;
+    const body = bodyResult;
 
     const { id, action, ...updates } = body as {
       id?: string;
@@ -378,10 +366,7 @@ export async function PUT(request: NextRequest) {
 // ── DELETE ───────────────────────────────────────────────────
 
 export async function DELETE(request: NextRequest) {
-  const ro = requireNotReadOnly();
-  if (ro) return ro;
-
-  const auth = requireMcApiKey(request);
+  const auth = requireAuth(request);
   if (auth) return auth;
 
   try {

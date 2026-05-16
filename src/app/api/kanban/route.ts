@@ -12,7 +12,7 @@
 // ═════════════════════════════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
+import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
 import { getKanbanAdapter } from "@/lib/kanban-adapter/default-adapter";
@@ -52,9 +52,7 @@ export async function GET(request: Request) {
 // ── POST ───────────────────────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const ro = requireNotReadOnly();
-  if (ro) return ro;
-  const auth = requireMcApiKey(request);
+  const auth = requireAuth(request);
   if (auth) return auth;
 
   try {

@@ -128,13 +128,8 @@ export default function JobCard({
   onEdit,
 }: JobCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-
   const handleDelete = async () => {
-    if (!deleting) {
-      setDeleting(true);
-      return;
-    }
+    if (!confirm("Delete this cron job?")) return;
     await onDelete(job.id);
   };
 
@@ -217,12 +212,8 @@ export default function JobCard({
             </button>
             <button
               onClick={handleDelete}
-              className={`p-1.5 rounded-lg transition-colors ${
-                deleting
-                  ? "text-red-400 bg-red-500/10"
-                  : "text-white/40 hover:bg-white/5"
-              }`}
-              title={deleting ? "Click again to confirm" : "Delete"}
+              className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+              title="Delete"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>

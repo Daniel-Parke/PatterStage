@@ -8,6 +8,32 @@ import { useState, useCallback } from "react";
 import { useToast } from "@/components/ui/Toast";
 import type { HardwareCronJob } from "@/components/cron/HardwareCronCard";
 
+/** Thin wrapper: call fetch and return { ok, error } for consistent error display. */
+async function safeHardwareApiCall(
+  ...args: Parameters<typeof fetch>
+): Promise<{ ok: boolean; error?: string; data?: unknown }> {
+  try {
+    const res = await fetch(...args);
+    const json = await res.json().catch(() => null);
+    if (!res.ok) {
+      const errMsg =
+        (json && typeof json === "object" && "error" in json
+          ? (json as Record<string, unknown>).error
+          : undefined) ?? `HTTP ${res.status}`;
+      return { ok: false, error: String(errMsg) };
+    }
+    return {
+      ok: true,
+      data:
+        json && typeof json === "object" && "data" in json
+          ? (json as Record<string, unknown>).data
+          : undefined,
+    };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Request failed" };
+  }
+}
+
 export function useHardwareCronJobs() {
   const { showToast } = useToast();
   const [jobs, setJobs] = useState<HardwareCronJob[]>([]);
@@ -15,21 +41,14 @@ export function useHardwareCronJobs() {
 
   const loadJobs = useCallback(async () => {
     setLoading(true);
-    try {
-      const res = await fetch("/api/cron/hardware");
-      const d = (await res.json()) as { data?: { jobs: HardwareCronJob[] }; error?: string };
-      if (!res.ok) {
-        showToast(d.error ?? "Failed to load hardware cron jobs", "error");
-        setJobs([]);
-        return;
-      }
-      setJobs(d.data?.jobs ?? []);
-    } catch {
+    const { ok, data } = await safeHardwareApiCall("/api/cron/hardware");
+    if (!ok) {
       showToast("Failed to load hardware cron jobs", "error");
       setJobs([]);
-    } finally {
-      setLoading(false);
+    } else {
+      setJobs((data as { jobs?: HardwareCronJob[] })?.jobs ?? []);
     }
+    setLoading(false);
   }, [showToast]);
 
   const handleToggle = useCallback(
@@ -37,21 +56,16 @@ export function useHardwareCronJobs() {
       const job = jobs.find((j) => j.id === id);
       if (!job) return;
       const newEnabled = !job.enabled;
-      try {
-        const res = await fetch("/api/cron/hardware", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, enabled: newEnabled }),
-        });
-        if (res.ok) {
-          showToast(newEnabled ? "Hardware job enabled" : "Hardware job paused");
-          loadJobs();
-        } else {
-          const body = await res.json().catch(() => null);
-          showToast(body?.error || "Failed to update hardware job", "error");
-        }
-      } catch {
-        showToast("Failed to update hardware job", "error");
+      const { ok, error } = await safeHardwareApiCall("/api/cron/hardware", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, enabled: newEnabled }),
+      });
+      if (ok) {
+        showToast(newEnabled ? "Hardware job enabled" : "Hardware job paused");
+        loadJobs();
+      } else {
+        showToast(error ?? "Failed to update hardware job", "error");
       }
     },
     [jobs, showToast, loadJobs],
@@ -59,18 +73,15 @@ export function useHardwareCronJobs() {
 
   const handleDelete = useCallback(
     async (id: string) => {
-      try {
-        const res = await fetch(`/api/cron/hardware?id=${id}`, { method: "DELETE" });
-        if (res.ok) {
-          showToast("Hardware cron job deleted");
-        } else {
-          const body = await res.json().catch(() => null);
-          showToast(body?.error || "Failed to delete hardware job", "error");
-        }
-        loadJobs();
-      } catch {
-        showToast("Failed to delete hardware job", "error");
+      const { ok, error } = await safeHardwareApiCall(`/api/cron/hardware?id=${id}`, {
+        method: "DELETE",
+      });
+      if (ok) {
+        showToast("Hardware cron job deleted");
+      } else {
+        showToast(error ?? "Failed to delete hardware job", "error");
       }
+      loadJobs();
     },
     [showToast, loadJobs],
   );
@@ -79,71 +90,60 @@ export function useHardwareCronJobs() {
     async (job: Partial<HardwareCronJob>) => {
       try {
         if (job.id) {
-          const res = await fetch("/api/cron/hardware", {
+          const { ok, error } = await safeHardwareApiCall("/api/cron/hardware", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(job),
           });
-          if (!res.ok) {
-            const body = await res.json().catch(() => null);
-            throw new Error(body?.error || "Failed to update hardware job");
-          }
+          if (!ok) throw new Error(error || "Failed to update hardware job");
           showToast("Hardware cron job updated");
         } else {
-          const res = await fetch("/api/cron/hardware", {
+          const { ok, error } = await safeHardwareApiCall("/api/cron/hardware", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(job),
           });
-          if (!res.ok) {
-            const body = await res.json().catch(() => null);
-            throw new Error(body?.error || "Failed to create hardware job");
-          }
+          if (!ok) throw new Error(error || "Failed to create hardware job");
           showToast("Hardware cron job created");
         }
         loadJobs();
       } catch (e) {
-        showToast(e instanceof Error ? e.message : "Failed to save hardware job", "error");
+        showToast(
+          e instanceof Error ? e.message : "Failed to save hardware job",
+          "error",
+        );
       }
     },
     [showToast, loadJobs],
   );
 
   const handlePauseAll = useCallback(async () => {
-    try {
-      const res = await fetch("/api/cron/hardware", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "pauseAll" }),
-      });
-      const j = await res.json();
-      if (!res.ok) {
-        showToast(j.error || "Failed to pause hardware jobs", "error");
-      } else {
-        showToast(`Paused ${j.data?.pausedCount ?? 0} hardware job(s)`);
-        loadJobs();
-      }
-    } catch {
-      showToast("Failed to pause hardware jobs", "error");
+    const { ok, error, data } = await safeHardwareApiCall("/api/cron/hardware", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "pauseAll" }),
+    });
+    if (!ok) {
+      showToast(error || "Failed to pause hardware jobs", "error");
+    } else {
+      showToast(
+        `Paused ${(data as { pausedCount?: number })?.pausedCount ?? 0} hardware job(s)`,
+      );
+      loadJobs();
     }
   }, [showToast, loadJobs]);
 
   const handleSync = useCallback(async () => {
-    try {
-      const res = await fetch("/api/cron/hardware", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "sync" }),
-      });
-      const d = await res.json();
-      if (!res.ok) {
-        showToast(d.error || "Hardware sync failed", "error");
-      } else {
-        showToast("Hardware jobs synced");
-        loadJobs();
-      }
-    } catch {
-      showToast("Hardware sync failed", "error");
+    const { ok, error } = await safeHardwareApiCall("/api/cron/hardware", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "sync" }),
+    });
+    if (ok) {
+      showToast("Hardware jobs synced");
+      loadJobs();
+    } else {
+      showToast(error || "Hardware sync failed", "error");
     }
   }, [showToast, loadJobs]);
 

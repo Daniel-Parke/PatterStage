@@ -65,13 +65,16 @@ export default function TeamsPage() {
     }
   };
 
-  const getProfileName = useMemo(() => {
+  const profileNameCache = useMemo(() => {
     const map: Record<string, string> = {};
     for (const p of profiles) {
       map[p.id] = p.name ?? p.id;
     }
-    return (profileId: string) => map[profileId] ?? profileId;
+    return map;
   }, [profiles]);
+
+  const getProfileName = (profileId: string) =>
+    profileNameCache[profileId] ?? profileId;
 
   return (
     <div className="min-h-screen bg-dark-950 grid-bg flex flex-col">
