@@ -2,7 +2,11 @@
 // CardGridSkeleton — Grid/list of card skeletons
 // Matches: sessions list, cron jobs, missions, agents, tools,
 //          personalities, teams, kanban, skills pages
+// When useAppPageShell is true (default), wraps in AppPageShell.
+// When false, uses the bare wrapper (matching orchestration/operations).
 // ═══════════════════════════════════════════════════════════════
+
+import AppPageShell from "@/components/layout/AppPageShell";
 
 interface CardGridSkeletonProps {
   count?: number;
@@ -11,6 +15,8 @@ interface CardGridSkeletonProps {
   list?: boolean;
   /** Optional heading skeleton */
   title?: string;
+  /** Wrap in AppPageShell (default: true). Set false for pages that don't use AppPageShell */
+  useAppPageShell?: boolean;
 }
 
 function CardSkeleton({ list }: { list?: boolean }) {
@@ -44,7 +50,7 @@ function CardSkeleton({ list }: { list?: boolean }) {
   );
 }
 
-export function CardGridSkeleton({
+function CardGridSkeletonContent({
   count = 6,
   columns = 2,
   list = false,
@@ -58,7 +64,7 @@ export function CardGridSkeleton({
         : "grid-cols-1 md:grid-cols-2";
 
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg">
+    <>
       {/* Page header skeleton */}
       <div className="border-b border-white/10 bg-dark-900/50 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -92,6 +98,24 @@ export function CardGridSkeleton({
           ))}
         </div>
       </div>
+    </>
+  );
+}
+
+export function CardGridSkeleton(props: CardGridSkeletonProps) {
+  const { useAppPageShell = true } = props;
+
+  if (useAppPageShell) {
+    return (
+      <AppPageShell>
+        <CardGridSkeletonContent {...props} />
+      </AppPageShell>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-dark-950 grid-bg">
+      <CardGridSkeletonContent {...props} />
     </div>
   );
 }

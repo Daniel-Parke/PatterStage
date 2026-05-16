@@ -2,7 +2,10 @@
 // TabbedContentSkeleton — With sidebar/tab navigation
 // Matches: /memory (tabs: memories/directives/models),
 //          /gateway (platform cards + log viewer)
+// Wraps in AppPageShell to match actual pages.
 // ═══════════════════════════════════════════════════════════════
+
+import AppPageShell from "@/components/layout/AppPageShell";
 
 interface TabbedContentSkeletonProps {
   tabs?: number;
@@ -15,7 +18,7 @@ export function TabbedContentSkeleton({
   sidebar = false,
 }: TabbedContentSkeletonProps) {
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg">
+    <AppPageShell>
       {/* Header */}
       <div className="border-b border-white/10 bg-dark-900/50 px-6 py-4">
         <div className="flex items-center gap-3">
@@ -106,6 +109,6 @@ export function TabbedContentSkeleton({
           </>
         )}
       </div>
-    </div>
+    </AppPageShell>
   );
 }

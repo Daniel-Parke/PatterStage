@@ -1,11 +1,14 @@
 // ═══════════════════════════════════════════════════════════════
 // DetailSkeleton — Full-page skeleton for session detail
 // Matches layout: header with stats + message thread
+// Wraps in AppPageShell to match the session detail page.
 // ═══════════════════════════════════════════════════════════════
+
+import AppPageShell from "@/components/layout/AppPageShell";
 
 export function DetailSkeleton() {
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg">
+    <AppPageShell>
       {/* Header */}
       <div className="border-b border-white/10 bg-dark-900/50 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -52,6 +55,6 @@ export function DetailSkeleton() {
           </div>
         ))}
       </div>
-    </div>
+    </AppPageShell>
   );
 }

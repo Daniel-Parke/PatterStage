@@ -1,7 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
 // LogViewerSkeleton — Full-page skeleton for /logs
 // Matches layout: header + file sidebar + log terminal
+// Wraps in AppPageShell to match the Logs page.
 // ═══════════════════════════════════════════════════════════════
+
+import AppPageShell from "@/components/layout/AppPageShell";
 
 // Pre-computed widths for log line bars — stable across renders
 // (Math.random() in render violates React purity rules)
@@ -9,7 +12,7 @@ const LOG_BAR_WIDTHS = [65, 45, 80, 55, 35, 70, 50, 60, 40, 75, 55, 65, 45, 70, 
 
 export function LogViewerSkeleton() {
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg flex flex-col">
+    <AppPageShell>
       {/* Header */}
       <div className="border-b border-white/10 bg-dark-900/50 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -69,6 +72,6 @@ export function LogViewerSkeleton() {
           </div>
         </div>
       </div>
-    </div>
+    </AppPageShell>
   );
 }

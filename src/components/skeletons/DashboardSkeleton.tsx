@@ -2,7 +2,10 @@
 // DashboardSkeleton — Full-page skeleton for /
 // Matches layout: stat row (4 cards) + handoff bar + dispatch
 // + 3-column panel + process grid + rec room card
+// Uses AppPageShell variant="scanlines" to match Dashboard page
 // ═══════════════════════════════════════════════════════════════
+
+import AppPageShell from "@/components/layout/AppPageShell";
 
 export function StatPillSkeleton() {
   return (
@@ -95,7 +98,7 @@ function ProcessCardSkeleton() {
 
 export function DashboardSkeleton() {
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg">
+    <AppPageShell variant="scanlines">
       {/* Top Bar skeleton */}
       <div className="sticky top-0 z-30 border-b border-white/10 bg-dark-900/80 backdrop-blur-md px-6 py-3 flex items-center justify-between">
         <div className="space-y-1">
@@ -160,6 +163,6 @@ export function DashboardSkeleton() {
           </div>
         </div>
       </div>
-    </div>
+    </AppPageShell>
   );
 }

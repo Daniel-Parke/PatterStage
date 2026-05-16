@@ -298,7 +298,7 @@ async function handleHealth() {
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 3000);
-    const res = await fetch(`http://127.0.0.1:9177/v1/`, { signal: controller.signal });
+    const res = await fetch(`http://127.0.0.1:9177/health`, { signal: controller.signal });
     clearTimeout(timer);
     if (res.ok) {
       return { available: true, mode: "external", status: "healthy" };
@@ -376,6 +376,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json<ApiResponse<Record<string, unknown>>>({ data: result });
   } catch (error) {
     logApiError("GET /api/memory/hindsight", `action=${action}`, error);
+    const isConnectionError =
+      error instanceof Error &&
+      (error.message.includes("connect") ||
+       error.message.includes("ECONNREFUSED") ||
+       error.message.includes("refused") ||
+       error.message.includes("timed out"));
     return NextResponse.json(
       {
         data: {
@@ -384,6 +390,7 @@ export async function GET(request: NextRequest) {
           memories: [],
         },
       },
+      { status: isConnectionError ? 503 : 500 },
     );
   }
 }

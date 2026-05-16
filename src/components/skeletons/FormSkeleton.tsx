@@ -1,11 +1,14 @@
 // ═══════════════════════════════════════════════════════════════
 // FormSkeleton — Full-page skeleton for config/[section] and /config/models
 // Matches layout: header + form fields sidebar
+// Wraps in AppPageShell to match Config pages.
 // ═══════════════════════════════════════════════════════════════
+
+import AppPageShell from "@/components/layout/AppPageShell";
 
 export function FormSkeleton() {
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg">
+    <AppPageShell>
       {/* Header */}
       <div className="border-b border-white/10 bg-dark-900/50 px-6 py-4">
         <div className="flex items-center gap-3">
@@ -39,13 +42,13 @@ export function FormSkeleton() {
           <div className="h-9 w-24 rounded-lg bg-white/10 animate-pulse" />
         </div>
       </div>
-    </div>
+    </AppPageShell>
   );
 }
 
 export function ModelsPageSkeleton() {
   return (
-    <div className="min-h-screen bg-dark-950 grid-bg">
+    <AppPageShell>
       {/* Header with tabs */}
       <div className="border-b border-white/10 bg-dark-900/50 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -87,6 +90,6 @@ export function ModelsPageSkeleton() {
           </div>
         ))}
       </div>
-    </div>
+    </AppPageShell>
   );
 }

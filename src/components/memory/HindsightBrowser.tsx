@@ -560,16 +560,29 @@ export default function HindsightBrowser() {
       {toastElement}
       {/* Health Status */}
       {!loadingInitial && health && !health.available && (
-        <div className="mb-4">
-          <ErrorBanner
-            message={
-              health.error?.includes("Redis")
-                ? "Redis is not running. Start Redis to enable memory features: redis-server"
-                : health.message
-                  ? `Hindsight ${health.mode}: ${health.message}`
-                  : `Hindsight ${health.mode}: ${health.error || "not responding"}`
-            }
-          />
+        <div className="mb-4 flex items-start gap-3">
+          <div className="flex-1">
+            <ErrorBanner
+              message={
+                health.error?.includes("Redis")
+                  ? "Redis is not running. Start Redis to enable memory features: redis-server"
+                  : health.message
+                    ? `Hindsight ${health.mode}: ${health.message}`
+                    : `Hindsight ${health.mode}: ${health.error || "not responding"}`
+              }
+            />
+          </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={RefreshCw}
+            onClick={() => {
+              void loadRecentMemories();
+              void fetchHealthOnly();
+            }}
+          >
+            Retry
+          </Button>
         </div>
       )}
 
