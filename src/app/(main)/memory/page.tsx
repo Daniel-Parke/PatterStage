@@ -9,7 +9,7 @@ import { Brain } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import AppPageShell from "@/components/layout/AppPageShell";
-import type { MemoryProviderType } from "@/types/hermes";
+import type { MemoryProviderType, MemoryData } from "@/types/hermes";
 import { timeAgo } from "@/lib/utils";
 
 // Lazy load provider-specific components
@@ -17,21 +17,9 @@ import HindsightBrowser from "@/components/memory/HindsightBrowser";
 
 // Holographic browser (inline for holographic provider)
 function HolographicBrowser({ initialData }: {
-  initialData?: {
-    facts: Array<{
-      id: number; content: string; category: string; tags: string;
-      trust: number; createdAt: string; updatedAt: string;
-    }>; total: number; dbSize: number; available: boolean;
-    provider: string; message?: string;
-  } | null;
+  initialData?: MemoryData | null;
 }) {
-  const [data, setData] = useState<{
-    facts: Array<{
-      id: number; content: string; category: string; tags: string;
-      trust: number; createdAt: string; updatedAt: string;
-    }>; total: number; dbSize: number; available: boolean;
-    provider: string; message?: string;
-  } | null>(() => initialData ?? null);
+  const [data, setData] = useState<MemoryData | null>(() => initialData ?? null);
   const [loading, setLoading] = useState(!initialData);
 
   useEffect(() => {
@@ -133,7 +121,7 @@ const PROVIDER_DESCRIPTIONS: Record<string, string> = {
 
 export default function MemoryPage() {
   const [provider, setProvider] = useState<MemoryProviderType | null>(null);
-  const [memData, setMemData] = useState<{ facts?: unknown[]; total?: number } | null>(null);
+  const [memData, setMemData] = useState<MemoryData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -198,7 +186,7 @@ export default function MemoryPage() {
 
       <div className="px-6 py-6">
         {provider === "hindsight" && <HindsightBrowser />}
-        {provider === "holographic" && memData && <HolographicBrowser initialData={memData as any} />}
+        {provider === "holographic" && memData && <HolographicBrowser initialData={memData} />}
         {provider === "none" && (
           <div className="text-center py-12">
             <Brain className="w-12 h-12 text-pink-400/40 mx-auto mb-4" />

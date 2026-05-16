@@ -154,20 +154,20 @@ export default function SessionsPage() {
   const { showToast, toastElement } = useToast();
 
   const loadSessions = useCallback(
-    (offset: number) => {
+    async (offset: number) => {
       setLoading(true);
       const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) });
       if (sourceFilter) params.set("source", sourceFilter);
 
-      fetch(`/api/sessions?${params}`)
-        .then((res) => res.json())
-        .then((d) => {
-          setData(d.data ?? { sessions: [], total: 0 });
-        })
-        .catch(() => {
-          showToast("Failed to load sessions", "error");
-        })
-        .finally(() => setLoading(false));
+      try {
+        const res = await fetch(`/api/sessions?${params}`);
+        const d = await res.json();
+        setData(d.data ?? { sessions: [], total: 0 });
+      } catch {
+        showToast("Failed to load sessions", "error");
+      } finally {
+        setLoading(false);
+      }
     },
     [sourceFilter, showToast],
   );

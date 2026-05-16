@@ -268,15 +268,21 @@ export default function Dashboard() {
   // Update cron job schedule inline
   const handleCronScheduleChange = useCallback(async (jobId: string, newSchedule: string) => {
     try {
-      await fetch("/api/cron", {
+      const putRes = await fetch("/api/cron", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: jobId, schedule: newSchedule }),
       });
+      if (!putRes.ok) {
+        const body = await putRes.json().catch(() => null);
+        showToast(body?.error || "Failed to update cron schedule", "error");
+        return;
+      }
       // Refresh monitor data to show updated schedule
       const res = await fetch("/api/monitor");
       const d = await res.json();
       if (d.data) setData({ monitor: d.data });
+      showToast("Schedule updated", "success");
     } catch {
       showToast("Failed to update cron schedule", "error");
     }
@@ -801,7 +807,12 @@ export default function Dashboard() {
             </h2>
             <RefreshCw
               className="w-3 h-3 text-white/20 hover:text-white/50 cursor-pointer"
-              onClick={() => fetch("/api/agents").then((r) => r.json()).then((d) => setData({ processes: d.data?.processes || d.processes || [] }))}
+              onClick={() => {
+                fetch("/api/agents")
+                  .then((r) => r.json())
+                  .then((d) => setData({ processes: d.data?.processes || d.processes || [] }))
+                  .catch(() => showToast("Failed to refresh processes", "error"));
+              }}
             />
           </div>
           {processes.length === 0 ? (

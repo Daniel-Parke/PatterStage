@@ -39,7 +39,7 @@ export default function GatewayPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-const loadData = async (signal?: AbortSignal) => {
+  const loadData = async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     try {
