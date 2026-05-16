@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback, useMemo, memo as reactMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   // Dashboard icons
   Activity,
@@ -202,6 +203,32 @@ function StatPill({
   );
 }
 
+// ── Template Category Constants (module-level — don't re-create on every render) ──
+
+const TEMPLATE_CAT_ORDER = [
+  "Business - Operations",
+  "Engineering - QA",
+  "Engineering - DevOps",
+  "Engineering - Software",
+  "Engineering - Data",
+  "Engineering - Data Science",
+  "Business - Creative",
+  "Support",
+  "Custom",
+] as const;
+
+const TEMPLATE_CAT_COLORS: Record<string, AccentColor> = {
+  "Engineering - QA": "pink",
+  "Engineering - DevOps": "cyan",
+  "Engineering - Software": "purple",
+  "Engineering - Data": "green",
+  "Engineering - Data Science": "orange",
+  "Business - Operations": "cyan",
+  "Business - Creative": "orange",
+  "Support": "blue",
+  "Custom": "purple",
+};
+
 export default function Dashboard() {
   const [data, setDataFields] = useState<{
     status: SystemStatus | null;
@@ -227,6 +254,7 @@ export default function Dashboard() {
   const [errorSev, setErrorSev] = useState<"all" | "error" | "warning">("all");
   const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null);
   const { showToast, toastElement } = useToast();
+  const router = useRouter();
 
   const filteredErrors = useMemo(() => {
     if (!monitor?.errors) return [];
@@ -373,30 +401,6 @@ export default function Dashboard() {
     return grouped;
   }, [templates]);
 
-  const TEMPLATE_CAT_ORDER = useMemo(() => [
-    "Business - Operations",
-    "Engineering - QA",
-    "Engineering - DevOps",
-    "Engineering - Software",
-    "Engineering - Data",
-    "Engineering - Data Science",
-    "Business - Creative",
-    "Support",
-    "Custom",
-  ].filter((c) => groupedTemplates[c]), [groupedTemplates]);
-
-  const TEMPLATE_CAT_COLORS: Record<string, AccentColor> = {
-    "Engineering - QA": "pink",
-    "Engineering - DevOps": "cyan",
-    "Engineering - Software": "purple",
-    "Engineering - Data": "green",
-    "Engineering - Data Science": "orange",
-    "Business - Operations": "cyan",
-    "Business - Creative": "orange",
-    "Support": "blue",
-    "Custom": "purple",
-  };
-
   return (
     <AppPageShell variant="scanlines">
       {/* Top Bar */}
@@ -532,7 +536,7 @@ export default function Dashboard() {
                   description={t.description}
                   isCustom={t.isCustom}
                   compact
-                  onSelect={() => window.location.href = `/missions?template=${t.id}`}
+                  onSelect={() => router.push(`/missions?template=${t.id}`)}
                 />
               ))}
               {templates.length > 12 && (
@@ -573,7 +577,7 @@ export default function Dashboard() {
                           description={t.description}
                           isCustom={t.isCustom}
                           compact
-                          onSelect={() => window.location.href = `/missions?template=${t.id}`}
+                          onSelect={() => router.push(`/missions?template=${t.id}`)}
                         />
                       ))}
                     </div>

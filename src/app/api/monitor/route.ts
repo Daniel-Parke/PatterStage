@@ -14,6 +14,7 @@ import { getSystemStat, getSystemStatNumber } from "@/lib/system-repository";
 import { listCronJobs } from "@/lib/cron-repository";
 import { listSessions } from "@/lib/session-repository";
 import { logApiError } from "@/lib/api-logger";
+import { getGatewayPlatforms, db } from "@/lib/db";
 
 // ── Types ───────────────────────────────────────────────────
 
@@ -117,8 +118,6 @@ export async function GET() {
     const { sessions: recentSessions } = listSessions({ limit: 5 });
 
     // ── Gateway Platforms (from DB) ─────────────────────────
-    const { getGatewayPlatforms } = await import("@/lib/db");
-    const { db } = await import("@/lib/db");
     const platformsRaw = getGatewayPlatforms();
 
     const platforms: Record<string, boolean> = {};
