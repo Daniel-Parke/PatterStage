@@ -269,7 +269,7 @@ export async function POST(request: NextRequest) {
 
     // ── Update Mission ─────────────────────────────────────────
     if (action === "update") {
-      const { id, missionId, status, result, instruction, localDirs, references, skills, goals, modelId, provider, profileName, missionTimeMinutes, timeoutMinutes, schedule } = body as {
+      const { status, result, instruction, localDirs, references, skills, goals, modelId, provider, profileName, missionTimeMinutes, timeoutMinutes, schedule } = body as {
         id?: string;
         missionId?: string;
         status?: string;

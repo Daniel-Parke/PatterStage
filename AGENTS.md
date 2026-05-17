@@ -236,9 +236,9 @@ git pull origin dev
 
 §
 
-# After making changes — build and test first
+# After making changes — lint, build, and test first
 
-npm run build && npm test
+npm run lint && npm run build && npm test
 
 git add -A
 

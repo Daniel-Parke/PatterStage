@@ -280,7 +280,7 @@ describe("POST /api/missions — cron dispatch (dispatchMode='cron')", () => {
     const agentBackend = require("@/lib/backends").agentBackend;
     agentBackend.dispatchMission.mockResolvedValue({ sessionId: "session-mock" });
 
-    const res = await postRoute({
+    await postRoute({
       action: "dispatch",
       name: "Cron No Schedule",
       instruction: "Recurring but no schedule set",
