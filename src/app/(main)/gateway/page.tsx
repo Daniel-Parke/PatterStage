@@ -105,14 +105,14 @@ export default function GatewayPage() {
                 <Globe className="w-3 h-3 text-neon-cyan" />
                 Platform Connections
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0">
                 {Object.entries(platformMeta).map(([key, meta]) => {
                   const active = data?.platforms?.[key] ?? false;
                   const Icon = meta.icon;
                   return (
                     <div
                       key={key}
-                      className={`rounded-xl border p-5 transition-all ${
+                      className={`rounded-xl border p-5 transition-all min-w-0 ${
                         active
                           ? "border-neon-green/30 bg-dark-900/50"
                           : "border-white/5 bg-dark-900/30 opacity-50"

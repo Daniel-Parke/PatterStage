@@ -48,10 +48,10 @@ export default function TemplateCard({
     return (
       <button
         onClick={onSelect}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-mono text-white/60 hover:border-white/30 hover:text-white hover:bg-white/[0.07] transition-colors"
+        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs font-mono text-white/60 hover:border-white/30 hover:text-white hover:bg-white/[0.07] transition-colors min-w-0 max-w-full"
       >
-        <IconComponent className={`w-3 h-3 ${iconColorMap[color as AccentColor] || "text-neon-cyan"}`} />
-        <span className="truncate max-w-[140px]">{name}</span>
+        <IconComponent className={`w-3 h-3 flex-shrink-0 ${iconColorMap[color as AccentColor] || "text-neon-cyan"}`} />
+        <span className="truncate min-w-0">{name}</span>
       </button>
     );
   }

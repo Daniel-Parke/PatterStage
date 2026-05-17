@@ -76,3 +76,45 @@ export function badgeClasses(color: AccentColor): string {
 // ── Base Input Styles ─────────────────────────────────────────
 export const baseInputStyles =
   "w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none transition-colors font-mono";
+
+// ── Responsive Layout Utilities ────────────────────────────────
+// These constants enforce consistent responsive behavior across the app.
+// Use them in components to ensure text truncates properly in flex containers.
+
+/**
+ * Apply to flex containers that contain text content which may truncate.
+ * Required when the container has `flex: 1` or `flex-1` and contains text.
+ */
+export const RESPONSIVE_MIN_WIDTH_ZERO = "min-w-0";
+
+/**
+ * Apply to icons in flex containers to prevent them from being squished.
+ * Always add this to icon components when they share space with text.
+ */
+export const RESPONSIVE_ICON_SHRINK_FALSE = "flex-shrink-0";
+
+/**
+ * Apply to the parent grid/container to ensure it doesn't overflow.
+ * Use this for grid layouts with potentially long content.
+ */
+export const RESPONSIVE_GRID_NO_OVERFLOW = "min-w-0";
+
+/**
+ * Common responsive grid configurations for consistent use across pages.
+ */
+export const RESPONSIVE_GRIDS = {
+  /** 1 col mobile, 2 col tablet, 4 col desktop - for stats/metrics */
+  stats: "grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 min-w-0",
+  /** 1 col mobile, 2 col tablet, 3 col desktop - for cards/panels */
+  cards: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 min-w-0",
+  /** 1 col mobile, 2 col tablet, 4 col desktop - for small cards */
+  smallCards: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 min-w-0",
+  /** 1 col mobile, 2 col tablet, 3 col desktop - for wide cards */
+  wideCards: "grid-cols-1 lg:grid-cols-3 gap-4 min-w-0",
+} as const;
+
+/**
+ * Card container classes that prevent overflow issues.
+ * Use these instead of manually adding overflow handling.
+ */
+export const RESPONSIVE_CARD_BASE = "rounded-xl border border-white/10 bg-dark-900/50 min-w-0 overflow-hidden";

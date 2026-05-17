@@ -37,7 +37,7 @@ export default function Card({
     : "";
   const padClass = paddingMap[padding];
 
-  const innerClasses = `rounded-xl border border-white/10 bg-dark-900/50 ${padClass} ${hoverClass} ${className}`;
+  const innerClasses = `rounded-xl border border-white/10 bg-dark-900/50 min-w-0 ${padClass} ${hoverClass} ${className}`;
 
   return (
     <GlowSurface

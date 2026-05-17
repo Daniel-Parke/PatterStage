@@ -88,14 +88,14 @@ const LiveClock = reactMemo(function LiveClock() {
 // ── Status Badge ──────────────────────────────────────────────
 function MissionStatusBadge({ status }: { status: string }) {
   const styles: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
-    queued: { bg: "bg-neon-orange/10", text: "text-neon-orange", icon: <Clock className="w-3 h-3" /> },
-    dispatched: { bg: "bg-neon-cyan/10", text: "text-neon-cyan", icon: <Loader2 className="w-3 h-3 animate-spin" /> },
-    successful: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <CheckCircle2 className="w-3 h-3" /> },
-    failed: { bg: "bg-red-500/10", text: "text-red-400", icon: <XCircle className="w-3 h-3" /> },
+    queued: { bg: "bg-neon-orange/10", text: "text-neon-orange", icon: <Clock className="w-3 h-3 flex-shrink-0" /> },
+    dispatched: { bg: "bg-neon-cyan/10", text: "text-neon-cyan", icon: <Loader2 className="w-3 h-3 animate-spin flex-shrink-0" /> },
+    successful: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <CheckCircle2 className="w-3 h-3 flex-shrink-0" /> },
+    failed: { bg: "bg-red-500/10", text: "text-red-400", icon: <XCircle className="w-3 h-3 flex-shrink-0" /> },
   };
   const s = styles[status] || styles.queued;
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono ${s.bg} ${s.text}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono ${s.bg} ${s.text} flex-shrink-0`}>
       {s.icon} {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
@@ -125,21 +125,21 @@ interface MonitorData {
 function CronStatusBadge({ state, enabled }: { state: string; enabled: boolean }) {
   if (!enabled) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-white/5 text-white/40">
-        <Pause className="w-2.5 h-2.5" /> Paused
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-white/5 text-white/40 flex-shrink-0">
+        <Pause className="w-2.5 h-2.5 flex-shrink-0" /> Paused
       </span>
     );
   }
   const styles: Record<string, { bg: string; text: string; icon: React.ReactNode; label: string }> = {
-    running: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <Loader2 className="w-2.5 h-2.5 animate-spin" />, label: "Running" },
-    scheduled: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <Play className="w-2.5 h-2.5" />, label: "Active" },
-    queued: { bg: "bg-neon-orange/10", text: "text-neon-orange", icon: <Clock className="w-2.5 h-2.5" />, label: "Queued" },
-    completed: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <CheckCircle2 className="w-2.5 h-2.5" />, label: "Done" },
-    failed: { bg: "bg-red-500/10", text: "text-red-400", icon: <XCircle className="w-2.5 h-2.5" />, label: "Failed" },
+    running: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <Loader2 className="w-2.5 h-2.5 animate-spin flex-shrink-0" />, label: "Running" },
+    scheduled: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <Play className="w-2.5 h-2.5 flex-shrink-0" />, label: "Active" },
+    queued: { bg: "bg-neon-orange/10", text: "text-neon-orange", icon: <Clock className="w-2.5 h-2.5 flex-shrink-0" />, label: "Queued" },
+    completed: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <CheckCircle2 className="w-2.5 h-2.5 flex-shrink-0" />, label: "Done" },
+    failed: { bg: "bg-red-500/10", text: "text-red-400", icon: <XCircle className="w-2.5 h-2.5 flex-shrink-0" />, label: "Failed" },
   };
   const s = styles[state] || { bg: "bg-white/5", text: "text-white/40", icon: null, label: state.charAt(0).toUpperCase() + state.slice(1) };
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono ${s.bg} ${s.text}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono ${s.bg} ${s.text} flex-shrink-0`}>
       {s.icon} {s.label}
     </span>
   );
@@ -168,11 +168,11 @@ function StatPill({
     yellow: "border-yellow-500/20 text-yellow-400",
   };
   return (
-    <div className={`rounded-lg border ${colorClasses[color]} bg-dark-900/50 px-4 py-3 flex items-center gap-3`}>
-      <Icon className="w-4 h-4 opacity-60" />
-      <div>
-        <div className="text-[10px] font-mono text-white/40 uppercase">{label}</div>
-        <div className="text-lg font-bold font-mono">{value}</div>
+    <div className={`rounded-lg border ${colorClasses[color]} bg-dark-900/50 px-4 py-3 flex items-center gap-3 min-w-0`}>
+      <Icon className="w-4 h-4 opacity-60 flex-shrink-0" />
+      <div className="min-w-0 flex-1">
+        <div className="text-[10px] font-mono text-white/40 uppercase truncate">{label}</div>
+        <div className="text-lg font-bold font-mono truncate">{value}</div>
       </div>
     </div>
   );
@@ -415,7 +415,7 @@ export default function Dashboard() {
       ) : (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
         {/* ═══ Compact Stat Row ═══ */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 min-w-0">
           {monitor ? (
             <>
               <StatPill
@@ -654,10 +654,10 @@ export default function Dashboard() {
                 <div className="px-4 py-6 text-center text-xs text-white/30">No cron jobs</div>
               )}
               {monitor?.cron.jobs.map((job) => (
-                <div key={job.id} className="px-4 py-2.5 flex items-center justify-between">
+                <div key={job.id} className="px-4 py-2.5 flex items-center justify-between gap-3 min-w-0">
                   <div className="min-w-0 flex-1">
                     <div className="text-xs text-white/80 truncate">{job.name}</div>
-                    <div className="flex items-center gap-2 mt-0.5">
+                    <div className="flex items-center gap-2 mt-0.5 min-w-0">
                       <div className="flex-shrink-0">
                         <IntervalSelector
                           value={job.schedule}
@@ -666,7 +666,7 @@ export default function Dashboard() {
                         />
                       </div>
                       {job.enabled && (
-                        <span className={`text-xs truncate ml-2 ${
+                        <span className={`text-xs truncate min-w-0 flex-1 ${
                           job.state === "running"
                             ? "text-neon-green"
                             : job.lastStatus === "ok"

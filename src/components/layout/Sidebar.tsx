@@ -428,7 +428,7 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
             className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
             title={message || "Rebuild App"}
           >
-            <Hammer className={`w-3.5 h-3.5 ${rebuilding ? "animate-spin" : ""}`} />
+            <Hammer className={`w-3.5 h-3.5 flex-shrink-0 ${rebuilding ? "animate-spin" : ""}`} />
           </button>
 
           {/* Restart */}
@@ -438,7 +438,7 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
             className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
             title={message || "Restart App"}
           >
-            <Power className={`w-3.5 h-3.5 ${restarting ? "animate-spin" : ""}`} />
+            <Power className={`w-3.5 h-3.5 flex-shrink-0 ${restarting ? "animate-spin" : ""}`} />
           </button>
         </div>
       </>
@@ -525,7 +525,7 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
             disabled={isBusy}
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-neon-purple/10 border border-neon-purple/20 text-xs font-mono text-neon-purple hover:bg-neon-purple/20 transition-colors disabled:opacity-50"
           >
-            <Hammer className={`w-3.5 h-3.5 ${rebuilding ? "animate-spin" : ""}`} />
+            <Hammer className={`w-3.5 h-3.5 flex-shrink-0 ${rebuilding ? "animate-spin" : ""}`} />
             {serverRestarting ? "Restarting…" : rebuilding ? "…" : "Rebuild"}
           </button>
 
@@ -534,7 +534,7 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
             disabled={isBusy}
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs font-mono text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50"
           >
-            <Power className={`w-3.5 h-3.5 ${restarting ? "animate-spin" : ""}`} />
+            <Power className={`w-3.5 h-3.5 flex-shrink-0 ${restarting ? "animate-spin" : ""}`} />
             {restarting ? "Restarting…" : "Restart"}
           </button>
         </div>
