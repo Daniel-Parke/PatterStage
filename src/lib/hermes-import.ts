@@ -164,6 +164,31 @@ function parseConfigYaml(configPath: string): Map<string, ParsedModel> {
     addModel(entry.model, provider, entry.model, baseUrl, slot);
   }
 
+  // Fallback providers chain — models referenced in fallback_providers
+  // that aren't already imported from model.* or auxiliary.* get added
+  // with no default-slot assignment.
+  const fallback = config.fallback_providers as Array<{ provider?: string; model?: string; base_url?: string }> | undefined;
+  if (Array.isArray(fallback)) {
+    for (const entry of fallback) {
+      if (!entry?.model || !entry.provider) continue;
+      const provider = entry.provider as HermesProvider;
+      if (!isHermesProvider(provider)) continue;
+      const baseUrl = entry.base_url?.trim() || null;
+      const key = importKeyFor(provider, entry.model);
+      if (!byKey.has(key)) {
+        byKey.set(key, {
+          importKey: key,
+          name: entry.model,
+          provider,
+          modelId: entry.model,
+          baseUrl: baseUrl ?? null,
+          contextLength: null,
+          defaultSlots: [],
+        });
+      }
+    }
+  }
+
   return byKey;
 }
 

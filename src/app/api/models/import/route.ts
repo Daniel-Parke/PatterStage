@@ -12,7 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { parseHermesConfig } from "@/lib/hermes-import";
-import { upsertModel } from "@/lib/models-repository";
+import { upsertModel, updateModel, listModels } from "@/lib/models-repository";
 import { upsertCredential } from "@/lib/credentials-repository";
 import { logApiError } from "@/lib/api-logger";
 import { requireMcApiKey, requireNotReadOnly } from "@/lib/api-auth";
@@ -88,12 +88,40 @@ export async function POST(request: NextRequest) {
     }
 
     let credentialsUpdated = 0;
+    // Build provider → credentialId map from upsert results
+    const providerToCredId: Record<string, string> = {};
     for (const cred of parsed.credentials) {
       try {
         const result = upsertCredential({ provider: cred.provider, apiKey: cred.apiKey });
-        if (result) credentialsUpdated++;
+        if (result) {
+          credentialsUpdated++;
+          providerToCredId[cred.provider] = result.id;
+        }
       } catch (err) {
         logApiError("POST /api/models/import", `upsert credential ${cred.provider}`, err);
+      }
+    }
+
+    // Link credentials to models where provider matches
+    let credentialsLinked = 0;
+    if (Object.keys(providerToCredId).length > 0) {
+      for (const entry of parsed.models) {
+        const credId = providerToCredId[entry.provider];
+        if (credId) {
+          // Look up the just-upserted model by (provider, modelId) to get its id
+          // re-use upsertModel's matching: find model by provider + modelId
+          try {
+            const model = listModels().find(
+              (m) => m.provider === entry.provider && m.modelId === entry.modelId
+            );
+            if (model && model.credentialsId !== credId) {
+              updateModel(model.id, { credentialsId: credId });
+              credentialsLinked++;
+            }
+          } catch {
+            // best-effort
+          }
+        }
       }
     }
 
@@ -104,7 +132,7 @@ export async function POST(request: NextRequest) {
       action: "models.import",
       resource: "hermes",
       ok: true,
-      detail: `models_imported=${modelsImported} models_skipped=${modelsSkipped} credentials_updated=${credentialsUpdated}`,
+      detail: `models_imported=${modelsImported} models_skipped=${modelsSkipped} credentials_updated=${credentialsUpdated} credentials_linked=${credentialsLinked}`,
     });
 
     return NextResponse.json({
@@ -112,6 +140,7 @@ export async function POST(request: NextRequest) {
         modelsImported,
         modelsSkipped,
         credentialsUpdated,
+        credentialsLinked,
         details,
       },
     });

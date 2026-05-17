@@ -14,6 +14,7 @@ import {
   syncSingleModelToHermesConfig,
   syncSingleCredentialToHermesEnv,
   syncFallbacksToHermesConfig,
+  syncDefaultsToHermesConfig,
 } from "./hermes-config-sync";
 import { isHermesProvider, type HermesProvider, envVarForProvider } from "./hermes-providers";
 
@@ -341,20 +342,29 @@ export interface FullPushResult {
 }
 
 /**
- * Push the primary (default agent) model, all credentials, and the fallback
- * chain to Hermes files. Only the default-agent model is pushed to
- * config.yaml's `model.*` section; auxiliary slots are left untouched
- * because they are managed by the /api/models/defaults endpoint.
+ * Push all default models (agent + 11 auxiliary), all credentials, and the
+ * fallback chain to Hermes files. Uses syncDefaultsToHermesConfig which
+ * writes the full set of 12 task-slot defaults to config.yaml's model.*
+ * and auxiliary.* sections.
  */
 export function pushAllToHermes(): FullPushResult {
   const modelResults: SyncActionResult[] = [];
   const credentialResults: SyncActionResult[] = [];
 
-  // Push only the default agent model
-  const defaults = getModelDefaults();
-  if (defaults.agent) {
-    const result = pushModelToHermes(defaults.agent);
-    if (result.success) modelResults.push(result);
+  // Push all default models (agent + 11 auxiliary) via syncDefaultsToHermesConfig
+  try {
+    const { backupPath } = syncDefaultsToHermesConfig();
+    modelResults.push({
+      success: true,
+      backupPath,
+      details: [{ action: "pushed", detail: "All default models synced to config.yaml" }],
+    });
+  } catch (err) {
+    modelResults.push({
+      success: false,
+      backupPath: null,
+      details: [{ action: "error", detail: String(err instanceof Error ? err.message : err) }],
+    });
   }
 
   // Push every credential
