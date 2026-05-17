@@ -1,10 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
 // Kanban Board — Main board with all columns
 // ═══════════════════════════════════════════════════════════════
+// Groups tasks by status into 7 columns. Supports drag-and-drop
+// between columns, triage "specify all", and board awareness.
 
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import HermesKanbanColumn from "./HermesKanbanColumn";
 
 interface KanbanTask {
@@ -20,12 +22,17 @@ interface KanbanTask {
   result: string | null;
   max_runtime_seconds: number | null;
   skills: string | null;
+  spawn_failures?: number;
+  consecutive_failures?: number;
+  workspace_kind?: string | null;
 }
 
 interface HermesKanbanBoardProps {
   tasks: KanbanTask[];
   onCardClick: (task: KanbanTask) => void;
   onInlineCreate: (status: string, title: string) => void;
+  onDropCard?: (taskId: string, newStatus: string) => void;
+  onSpecifyAll?: (status: string) => void;
 }
 
 interface ColumnDef {
@@ -48,6 +55,8 @@ export default function HermesKanbanBoard({
   tasks,
   onCardClick,
   onInlineCreate,
+  onDropCard,
+  onSpecifyAll,
 }: HermesKanbanBoardProps) {
   const groupedTasks = useMemo(() => {
     const map = new Map<string, KanbanTask[]>();
@@ -59,12 +68,20 @@ export default function HermesKanbanBoard({
       if (existing) {
         existing.push(task);
       } else {
-        // Unknown status — put in triage
         map.get("triage")!.push(task);
       }
     }
     return map;
   }, [tasks]);
+
+  const handleDropCard = useCallback(
+    (taskId: string, newStatus: string) => {
+      if (onDropCard) {
+        onDropCard(taskId, newStatus);
+      }
+    },
+    [onDropCard],
+  );
 
   return (
     <div className="flex gap-4 pb-6 overflow-x-auto">
@@ -77,6 +94,8 @@ export default function HermesKanbanBoard({
           tasks={groupedTasks.get(col.status) || []}
           onCardClick={onCardClick}
           onCreateCard={onInlineCreate}
+          onDropCard={handleDropCard}
+          onSpecifyAll={onSpecifyAll}
         />
       ))}
     </div>

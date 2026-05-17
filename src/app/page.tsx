@@ -15,6 +15,8 @@ import {
   Layers,
   ListTodo,
   Globe,
+  Target,
+  Kanban,
   AlertTriangle,
   RefreshCw,
   CheckCircle2,
@@ -214,6 +216,8 @@ export default function Dashboard() {
     missions: MissionBrief[];
     config: Record<string, unknown> | null;
     templates: Array<{ id: string; name: string; icon: string; color: string; category: string; profile: string; description: string; isCustom?: boolean }>;
+    kanbanStats: { by_status: Record<string, number> } | null;
+    goalStats: { active: number; in_progress: number; total: number } | null;
   }>({
     status: null,
     monitor: null,
@@ -221,8 +225,10 @@ export default function Dashboard() {
     missions: [],
     config: null,
     templates: [],
+    kanbanStats: null,
+    goalStats: null,
   });
-  const { status, monitor, processes, missions, config, templates } = data;
+  const { status, monitor, processes, missions, config, templates, kanbanStats, goalStats } = data;
 
   const setData = useCallback((partial: Partial<typeof data>) => {
     setDataFields(prev => ({ ...prev, ...partial }));
@@ -300,7 +306,8 @@ export default function Dashboard() {
 
     // Batch all initial fetches — single render update
     const initialLoad = async () => {
-      const [statusRes, configRes, templatesRes, monitorRes, processesRes, missionsRes] =
+      const [statusRes, configRes, templatesRes, monitorRes, processesRes, missionsRes,
+             kanbanStatsRes, goalStatsRes] =
         await Promise.all([
           fetch("/api/status", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
           fetch("/api/config", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
@@ -308,6 +315,8 @@ export default function Dashboard() {
           fetch("/api/monitor", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
           fetch("/api/agents", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
           fetch("/api/missions", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
+          fetch("/api/orchestration/hermes-kanban/stats", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
+          fetch("/api/orchestration/goals/stats", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
         ]);
 
       if (!signal.aborted) {
@@ -318,6 +327,8 @@ export default function Dashboard() {
           monitor: monitorRes.data,
           processes: processesRes.data?.processes || processesRes.processes || [],
           missions: missionsRes.data?.missions || [],
+          kanbanStats: kanbanStatsRes.data || null,
+          goalStats: goalStatsRes.data || null,
         });
         setReady(true);
       }
@@ -415,7 +426,7 @@ export default function Dashboard() {
       ) : (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
         {/* ═══ Compact Stat Row ═══ */}
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 min-w-0">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 min-w-0">
           {monitor ? (
             <>
               <StatPill
@@ -429,6 +440,18 @@ export default function Dashboard() {
                 label="Cron Jobs"
                 value={`${monitor.cron.active} Active`}
                 color="orange"
+              />
+              <StatPill
+                icon={Kanban}
+                label="Kanban Tasks"
+                value={kanbanStats ? `${Object.values(kanbanStats.by_status).reduce((a, b) => a + b, 0)} Total` : "—"}
+                color="purple"
+              />
+              <StatPill
+                icon={Target}
+                label="Goals"
+                value={goalStats ? `${goalStats.active + goalStats.in_progress} Active` : "—"}
+                color="green"
               />
               <StatPill
                 icon={Activity}
@@ -445,6 +468,8 @@ export default function Dashboard() {
             </>
           ) : (
             <>
+              <StatPillSkeleton />
+              <StatPillSkeleton />
               <StatPillSkeleton />
               <StatPillSkeleton />
               <StatPillSkeleton />
