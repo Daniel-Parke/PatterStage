@@ -100,13 +100,24 @@ export function getTask(id: string): KanbanTaskDetail | null {
   const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id) as KanbanTask | undefined;
   if (!task) return null;
   
-  const parents = db.prepare("SELECT parent_id FROM task_links WHERE child_id = ?").all(id).map((r: any) => r.parent_id);
-  const children = db.prepare("SELECT child_id FROM task_links WHERE parent_id = ?").all(id).map((r: any) => r.child_id);
-  const comments = db.prepare("SELECT * FROM task_comments WHERE task_id = ? ORDER BY created_at ASC").all(id) as any[];
-  const runs = db.prepare("SELECT * FROM task_runs WHERE task_id = ? ORDER BY started_at DESC").all(id) as any[];
-  const events = db.prepare("SELECT * FROM task_events WHERE task_id = ? ORDER BY id DESC LIMIT 50").all(id) as any[];
-  
-  return { ...task, parents, children, comments, runs, events };
+  const parents = db.prepare("SELECT parent_id FROM task_links WHERE child_id = ?").all(id) as Array<{ parent_id: string }>;
+  const _parents = parents.map((r) => r.parent_id);
+  const children = db.prepare("SELECT child_id FROM task_links WHERE parent_id = ?").all(id) as Array<{ child_id: string }>;
+  const _children = children.map((r) => r.child_id);
+  const comments = db.prepare("SELECT * FROM task_comments WHERE task_id = ? ORDER BY created_at ASC").all(id) as Array<{
+    id: number; task_id: string; author: string; body: string; created_at: number;
+  }>;
+  const runs = db.prepare("SELECT * FROM task_runs WHERE task_id = ? ORDER BY started_at DESC").all(id) as Array<{
+    id: number; task_id: string; profile: string | null; outcome: string | null;
+    summary: string | null; metadata: string | null;
+    started_at: number; ended_at: number | null; error: string | null;
+  }>;
+  const events = db.prepare("SELECT * FROM task_events WHERE task_id = ? ORDER BY id DESC LIMIT 50").all(id) as Array<{
+    id: number; task_id: string; run_id: number | null; kind: string;
+    payload: string | null; created_at: number;
+  }>;
+
+  return { ...task, parents: _parents, children: _children, comments, runs, events };
 }
 
 export function getBoardSummary(): KanbanBoardSummary {

@@ -46,7 +46,6 @@ export default function HermesKanbanCard({
   onClick,
 }: HermesKanbanCardProps) {
   const shortId = task.id.slice(0, 8);
-  const commentCount = 0; // shown via detail, not on card — placeholder
   const hasBody = !!task.body;
 
   return (

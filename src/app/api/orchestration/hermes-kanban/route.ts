@@ -14,8 +14,6 @@ function handleError(error: unknown, context: string) {
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url);
-    const pathParts = url.pathname.split("/").filter(Boolean);
-    // pathParts = ["api", "orchestration", "hermes-kanban", ...]
 
     // /stats
     if (url.pathname.endsWith("/stats")) {

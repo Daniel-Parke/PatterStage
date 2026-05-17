@@ -10,7 +10,6 @@ import {
   Send,
   ArrowRight,
   Ban,
-  CheckCircle2,
   Archive,
   Play,
   Link2,
@@ -70,16 +69,6 @@ interface HermesKanbanDrawerProps {
   onUpdate: (id: string, data: Record<string, unknown>) => void;
 }
 
-const STATUS_ACTION_LABELS: Record<string, string> = {
-  triage: "→ Todo",
-  todo: "→ Ready",
-  ready: "",
-  running: "",
-  blocked: "→ Ready",
-  done: "→ Todo",
-  archived: "→ Todo",
-};
-
 const priorityColors: Record<number, string> = {
   1: "text-white/40",
   2: "text-white/40",
@@ -110,7 +99,7 @@ export default function HermesKanbanDrawer({
         }
       })
       .catch(() => {});
-  }, [task?.id]);
+  }, [task]);
 
   const handleStatusAction = useCallback(
     async (action: string, extra: Record<string, unknown> = {}) => {
