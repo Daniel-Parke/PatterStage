@@ -5,7 +5,7 @@
 // Stored in control-hub.db (CH SQLite), not Hermes kanban.db.
 // ═══════════════════════════════════════════════════════════════
 
-import { getDb, uuid, now } from "@/lib/db";
+import { getDb, uuid } from "@/lib/db";
 
 // ── Types ──────────────────────────────────────────────────────────
 

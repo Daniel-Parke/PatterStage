@@ -8,9 +8,9 @@
 
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import {
-  MessageCircle, Send, Plus, Copy, Check, Trash2,
+  MessageCircle, Send, Plus, Trash2,
   Bot, User, Loader2,
 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
@@ -75,7 +75,7 @@ export default function ChatPage() {
 
   // Get or create active session
   const activeSession = sessions.find((s) => s.id === activeSessionId);
-  const messages = activeSession?.messages || [];
+  const messages = useMemo(() => activeSession?.messages || [], [activeSession]);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -252,17 +252,6 @@ export default function ChatPage() {
       ),
     );
   }, [activeSessionId]);
-
-  // ── Delete session ───────────────────────────────────
-  const handleDeleteSession = useCallback(
-    (id: string) => {
-      setSessions((prev) => prev.filter((s) => s.id !== id));
-      if (activeSessionId === id) {
-        setActiveSessionId(sessions.find((s) => s.id !== id)?.id || null);
-      }
-    },
-    [activeSessionId, sessions],
-  );
 
   // ── Copy code block handler ───────────────────────────
   useEffect(() => {

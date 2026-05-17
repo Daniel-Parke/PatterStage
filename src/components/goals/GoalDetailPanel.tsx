@@ -10,10 +10,9 @@ import { useState, useCallback } from "react";
 import {
   X, Target, Calendar, Flag, Edit3, Trash2, ChevronRight,
 } from "lucide-react";
-import Button from "@/components/ui/Button";
 import GoalCheckpointList from "./GoalCheckpointList";
 import GoalKanbanLinker from "./GoalKanbanLinker";
-import type { GoalDetail, GoalCheckpoint } from "@/lib/goals-bridge";
+import type { GoalDetail } from "@/lib/goals-bridge";
 import { timeAgo } from "@/lib/utils";
 
 interface GoalDetailPanelProps {
@@ -291,7 +290,6 @@ export default function GoalDetailPanel({
 
           {/* ── Linked Kanban Tasks ─────────────────────────────── */}
           <GoalKanbanLinker
-            goalId={goal.id}
             linkedTaskIds={linkedTaskIds}
             onLink={handleLinkTask}
             onUnlink={handleUnlinkTask}

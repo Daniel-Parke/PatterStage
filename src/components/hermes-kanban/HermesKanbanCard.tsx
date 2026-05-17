@@ -9,7 +9,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { MessageSquare, Play, Clock, AlertTriangle, Ban, Zap } from "lucide-react";
+import { MessageSquare, Play, Clock, AlertTriangle, Ban } from "lucide-react";
 import { timeAgo } from "@/lib/utils";
 
 interface KanbanTask {
@@ -38,7 +38,7 @@ interface HermesKanbanCardProps {
   /** Run count. */
   runCount?: number;
   /** Index within the column for drag ordering. */
-  index?: number;
+  _index?: number;
 }
 
 const priorityColors: Record<number, string> = {
@@ -67,7 +67,7 @@ export default function HermesKanbanCard({
   onClick,
   commentCount,
   runCount,
-  index = 0,
+  _index = 0,
 }: HermesKanbanCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const shortId = task.id.slice(0, 8);
@@ -91,8 +91,9 @@ export default function HermesKanbanCard({
 
   useEffect(() => {
     // Clean up on unmount
+    const el = cardRef.current;
     return () => {
-      cardRef.current?.classList.remove("opacity-50");
+      el?.classList.remove("opacity-50");
     };
   }, []);
 

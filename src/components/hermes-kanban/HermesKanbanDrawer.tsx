@@ -9,9 +9,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import {
-  X, Send, ArrowRight, Ban, Archive, Play, Link2, MessageSquare,
+  X, Send, Ban, Archive, Play, Link2, MessageSquare,
   Clock, AlertTriangle, Sparkles, RefreshCw, UserCheck, GitBranch,
-  Trash2, Save, ChevronDown,
+  Save,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { timeAgo } from "@/lib/utils";
@@ -120,8 +120,6 @@ export default function HermesKanbanDrawer({
 
   // Metadata viewer
   const [expandedRunMeta, setExpandedRunMeta] = useState<number | null>(null);
-  const [expandedRunId, setExpandedRunId] = useState<number | null>(null);
-  const [expandedMetadata, setExpandedMetadata] = useState<number | null>(null);
 
   // Fetch assignees on mount
   useEffect(() => {
@@ -151,19 +149,6 @@ export default function HermesKanbanDrawer({
       }
     },
     [task, onUpdate],
-  );
-
-  const apiGet = useCallback(
-    async (path: string): Promise<unknown> => {
-      try {
-        const res = await fetch(path);
-        const json = await res.json();
-        return json.data;
-      } catch {
-        return null;
-      }
-    },
-    [],
   );
 
   // ── Handlers ────────────────────────────────────────────────

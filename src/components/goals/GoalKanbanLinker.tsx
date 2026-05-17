@@ -17,7 +17,6 @@ interface KanbanTaskBasic {
 }
 
 interface GoalKanbanLinkerProps {
-  goalId: string;
   /** Currently linked task IDs (from GoalDetail). */
   linkedTaskIds: string[];
   /** Called when a task is linked. */
@@ -43,7 +42,6 @@ function getStatusStyle(status: string): string {
 }
 
 export default function GoalKanbanLinker({
-  goalId,
   linkedTaskIds,
   onLink,
   onUnlink,
@@ -234,7 +232,7 @@ export default function GoalKanbanLinker({
 
       {/* Empty state when collapsed and no links */}
       {!expanded && linkedTasks.length === 0 && (
-        <p className="text-xs text-white/30 italic px-1">No linked tasks. Click "Link Task" to connect kanban tasks.</p>
+        <p className="text-xs text-white/30 italic px-1">No linked tasks. Click &ldquo;Link Task&rdquo; to connect kanban tasks.</p>
       )}
     </div>
   );

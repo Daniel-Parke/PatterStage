@@ -104,7 +104,6 @@ export default function HermesKanbanColumn({
 
   const borderClass = textToBorder(color);
   const isTriage = status === "triage";
-  const hasTriageTasks = isTriage && tasks.length > 0;
 
   return (
     <div
@@ -191,12 +190,11 @@ export default function HermesKanbanColumn({
             )}
           </div>
         ) : (
-          tasks.map((task, i) => (
+          tasks.map((task) => (
             <HermesKanbanCard
               key={task.id}
               task={task}
               onClick={() => onCardClick(task)}
-              index={i}
             />
           ))
         )}

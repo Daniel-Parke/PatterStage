@@ -10,7 +10,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { Kanban, Plus, Sparkles } from "lucide-react";
+import { Kanban, Plus } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";

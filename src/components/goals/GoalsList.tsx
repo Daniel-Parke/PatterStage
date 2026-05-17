@@ -151,7 +151,7 @@ export default function GoalsList({
   );
 
   const handleDelete = useCallback(
-    (goalId: string) => {
+    (_goalId: string) => {
       setSelectedGoal(null);
       loadGoals();
     },
