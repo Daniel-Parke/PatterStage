@@ -90,15 +90,6 @@ describe("MissionStatus enum unification", () => {
     expect(src).not.toMatch(/status:\s*"cancelled"/);
   });
 
-  it("kanban-adapter checks for 'successful' (not 'completed')", () => {
-    const src = readFileSync(
-      join(srcRoot, "lib", "kanban-adapter", "agent-bridge.ts"),
-      "utf-8"
-    );
-    expect(src).toContain('"successful"');
-    expect(src).not.toMatch(/status\s*!==?\s*"completed"/);
-  });
-
   it("/api/missions cancel branch maps to 'failed' (no 'cancelled' status)", () => {
     const src = readFileSync(
       join(srcRoot, "app", "api", "missions", "route.ts"),

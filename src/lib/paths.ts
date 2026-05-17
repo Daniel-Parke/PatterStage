@@ -48,7 +48,7 @@ export const PATHS = {
   stories: CH_DATA_DIR + "/stories",
   recroom: CH_DATA_DIR + "/recroom",
   workspaces: CH_DATA_DIR + "/workspaces",
-  teams: CH_DATA_DIR + "/teams",
+  // teams: CH_DATA_DIR + "/teams",  // removed — replaced by Hermes kanban
   auditLog: CH_DATA_DIR + "/audit",
   chScripts: getChScriptsDir(),
   chHardwareLogs: getChHardwareLogDir(),

@@ -263,7 +263,7 @@ export interface ConfigSectionDef {
   fields: ConfigFieldDef[];
 }
 
-// ── Kanban ────────────────────────────────────────────────────
+// ── Accent Color ───────────────────────────────────────────────
 
 export type AccentColor =
   | "cyan"
@@ -274,82 +274,6 @@ export type AccentColor =
   | "red"
   | "blue"
   | "yellow";
-
-export interface KanbanBoard {
-  id: string;
-  name: string;
-  description: string;
-  teamId?: string;
-  columnIds: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface KanbanColumn {
-  id: string;
-  boardId: string;
-  title: string;
-  color: AccentColor;
-  position: number;
-  wipLimit: number | null;
-  cardIds: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export type KanbanCardStatus = "backlog" | "todo" | "in_progress" | "review" | "done" | "blocked";
-
-export interface KanbanCard {
-  id: string;
-  boardId: string;
-  columnId: string;
-  title: string;
-  description: string;
-  position: number;
-  status: KanbanCardStatus;
-  assigneeProfileId: string | null;
-  labels: string[];
-  missionIds: string[];
-  goalIndices: number[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface KanbanDocument {
-  board: KanbanBoard;
-  columns: Record<string, KanbanColumn>;
-  cards: Record<string, KanbanCard>;
-}
-
-// ── Goals ─────────────────────────────────────────────────────
-
-export type GoalLoopMode = "sequential" | "parallel";
-
-export type GoalSessionStatus = "active" | "paused" | "completed" | "failed" | "cancelled";
-
-export interface GoalStep {
-  index: number;
-  goal: string;
-  status: "pending" | "in_progress" | "done" | "failed" | "skipped";
-  missionId: string | null;
-  assignedProfileId: string | null;
-  completedAt: string | null;
-  error: string | null;
-}
-
-export interface GoalSession {
-  id: string;
-  cardId: string;
-  boardId: string;
-  goalLoopMode: GoalLoopMode;
-  goals: string[];
-  currentGoalIndex: number;
-  steps: GoalStep[];
-  status: GoalSessionStatus;
-  coordinatorMissionId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
 
 // ── Credentials ───────────────────────────────────────────────
 
@@ -384,25 +308,6 @@ export interface LocalDirEntry {
   branch: string | null;
 }
 
-// ── Teams ─────────────────────────────────────────────────────
-
-export interface TeamMember {
-  profileId: string;
-  role: "leader" | "specialist" | "reviewer" | "observer";
-  joinedAt: string;
-}
-
-export interface Team {
-  id: string;
-  name: string;
-  description: string;
-  leaderProfileId: string;
-  members: TeamMember[];
-  boardIds: string[];
-  createdAt: string;
-  updatedAt: string;
-}
-
 // ── Credentials ───────────────────────────────────────────────
 
 export interface Credential {
@@ -413,8 +318,6 @@ export interface Credential {
   createdAt: string;
   updatedAt: string;
 }
-
-// ── Goals / Kanban ───────────────────────────────────────────
 
 // ── Fallback Chain ────────────────────────────────────────────
 
