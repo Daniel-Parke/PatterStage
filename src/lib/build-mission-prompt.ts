@@ -18,6 +18,10 @@ export interface BuildPromptOptions {
   skills?: string[];
   context?: string;
   goals?: string[];
+  /** Planning horizon guide — shown as ## MISSION SCOPE in the prompt. */
+  missionTimeMinutes?: number;
+  /** Inactivity timeout warning — shown as ## SAFETY LIMITS in the prompt. */
+  timeoutMinutes?: number;
 }
 
 // ── The sections injected by buildMissionPrompt ─────────────────
@@ -76,6 +80,27 @@ export function buildMissionPrompt(opts: BuildPromptOptions): string {
     );
   }
 
+  // MISSION SCOPE — planning horizon guide
+  if (opts.missionTimeMinutes != null && opts.missionTimeMinutes > 0) {
+    const devHours = (opts.missionTimeMinutes / 60).toFixed(1);
+    parts.push(
+      `${SCOPE_HEADER}\n` +
+      `Planning horizon: ${opts.missionTimeMinutes} minutes (${devHours} developer hours).\n` +
+      `This is a SOFT GUIDE — plan your work to fill this time with meaningful impact.\n` +
+      `Do NOT rush. Do NOT pad. Stop when the work is done.\n`,
+    );
+  }
+
+  // SAFETY LIMITS — inactivity timeout warning
+  if (opts.timeoutMinutes != null && opts.timeoutMinutes > 0) {
+    parts.push(
+      `${SAFETY_HEADER}\n` +
+      `- Inactivity timeout: ${opts.timeoutMinutes} minutes. If you stop making API calls or\n` +
+      `  tool requests for this duration, your session will be terminated.\n` +
+      `- To avoid timeout: stay active. Each tool call resets the timer.\n`,
+    );
+  }
+
   parts.push(opts.instruction);
 
   // Additional Context
@@ -99,50 +124,65 @@ export interface StrippedPrompt {
  * Uses the same section headers as buildMissionPrompt() so they
  * stay in sync.
  */
+/**
+ * Strip buildMissionPrompt-injected sections from a stored prompt,
+ * returning the original instruction and context parts.
+ *
+ * The built prompt joins parts with "\n\n---\n\n", producing chunks:
+ *   [0] Working Directories
+ *   [1] Key References
+ *   [2] Recommended Skills
+ *   [3] Goals
+ *   [4] MISSION SCOPE
+ *   [5] SAFETY LIMITS
+ *   [6] instruction
+ *   [7] Additional Context (optional)
+ *
+ * This function reconstructs the original instruction and context by
+ * finding the instruction chunk (always the 7th chunk when all sections
+ * are present, or the last chunk before Additional Context).
+ */
 export function stripPromptSections(raw: string): StrippedPrompt {
-  let cleaned = raw;
+  const chunks = raw.split(/\n{0,2}-\n{0,2}\n{0,2}/);
 
-  // Remove injected sections one by one
-  const sections = [
-    WORKING_DIRS_HEADER,
-    KEY_REFS_HEADER,
-    SKILLS_HEADER,
-    GOALS_HEADER,
-    SCOPE_HEADER,
-    SAFETY_HEADER,
-  ];
-
-  for (const header of sections) {
-    cleaned = cleaned.replace(
-      new RegExp(
-        `^${escapeRegex(header)}\\n[\\s\\S]*?(?=\\n## |\\n\\n---|,?\\n[A-Z]|$)`,
-        "m",
-      ),
-      "",
-    );
+  if (chunks.length === 1) {
+    // No separators at all — the entire thing is the instruction.
+    return { instruction: raw.trim(), context: "" };
   }
 
-  // Clean up excessive newlines
-  cleaned = cleaned.replace(/\n{3,}/g, "\n\n").trim();
+  // Find the instruction chunk by looking for the last content chunk
+  // before any "## Additional Context" chunk.
+  let instructionChunkIdx = -1;
+  let contextChunkIdx = -1;
 
-  // Split on the context separator
-  const sep = "\n---\n";
-  const sepIdx = cleaned.indexOf(sep);
-  if (sepIdx >= 0) {
-    return {
-      instruction: cleaned.slice(0, sepIdx).trim(),
-      context: cleaned
-        .slice(sepIdx + sep.length)
-        .replace(/^## Additional Context\n\n?/i, "")
-        .trim(),
-    };
+  for (let i = chunks.length - 1; i >= 0; i--) {
+    const trimmed = chunks[i].trim();
+    if (trimmed.startsWith("## Additional Context")) {
+      contextChunkIdx = i;
+      continue;
+    }
+    // Skip separator-only chunks (shouldn't exist with the split pattern
+    // but be defensive).
+    if (!trimmed || /^-+$/.test(trimmed)) continue;
+    // Skip chunks that are clearly section blocks (they start with ##).
+    if (trimmed.startsWith("## ")) continue;
+    // This is the first real content chunk from the bottom — it's the instruction.
+    if (instructionChunkIdx === -1) {
+      instructionChunkIdx = i;
+    }
   }
 
-  return { instruction: cleaned, context: "" };
+  const instruction = instructionChunkIdx >= 0
+    ? chunks[instructionChunkIdx].trim()
+    : "";
+
+  const context = contextChunkIdx >= 0
+    ? chunks[contextChunkIdx]
+        .replace(/^## Additional Context\n{0,3}/i, "")
+        .trim()
+    : "";
+
+  return { instruction, context };
 }
 
 // ── Helpers ────────────────────────────────────────────────────
-
-function escapeRegex(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}

@@ -25,8 +25,8 @@ All error handlers must call `logApiError(route, context, error)` from `@/lib/ap
 | `/api/credentials` | `GET`, `POST` | API key credentials (masked list). |
 | `/api/credentials/[id]` | `GET`, `PUT`, `DELETE` | One credential. |
 | `/api/cron` | `GET`, `POST`, `PUT`, `DELETE` | Manage **agent** cron jobs (Hermes `jobs.json` for the active install). |
-| `/api/cron/hardware` | `GET`, `POST`, `PUT`, `DELETE` | **Hardware** cron (system crontab): scripts/logs under `CH_SCRIPTS_DIR` / `CH_HARDWARE_LOG_DIR`; separate from agent `jobs.json`. |
-| `/api/cron/hardware/meta` | `GET` | `{ scriptsDir, logDir }` from [`getChScriptsDir()`](../src/lib/paths.ts) / [`getChHardwareLogDir()`](../src/lib/paths.ts). The Hardware Cron UI builds script paths only from `scriptsDir`. |
+| `/api/cron/hardware` | `GET`, `POST`, `PUT`, `DELETE` | **System** cron (system crontab): scripts/logs under `CH_SCRIPTS_DIR` / `CH_HARDWARE_LOG_DIR`; separate from agent `jobs.json`. |
+| `/api/cron/hardware/meta` | `GET` | `{ scriptsDir, logDir }` from [`getChScriptsDir()`](../src/lib/paths.ts) / [`getChHardwareLogDir()`](../src/lib/paths.ts). The System Cron UI builds script paths only from `scriptsDir`. |
 | `/api/goals` | `GET`, `POST` | Manage goal sessions. |
 | `/api/gateway` | `GET` | Read gateway/platform status. |
 | `/api/kanban` | `GET`, `POST`, `PUT`, `DELETE` | Manage boards, columns, and cards. |
@@ -51,9 +51,9 @@ All error handlers must call `logApiError(route, context, error)` from `@/lib/ap
 | `/api/tools` | `GET`, `PUT` | Read/update toolset configuration. |
 | `/api/update` | `GET`, `POST` | Check release status (`?branch=`, `?branches=1`). `POST` body: `action` = `restart` \| `rebuild` \| `update`; optional `branch` for `rebuild` and `update`. Spawns `scripts/application/ch-deploy.sh` in the background. |
 
-## Hardware cron notes
+## System cron notes
 
-Managed crontab lines must run a script **under** `scriptsDir` (default `CH_DATA_DIR/scripts`). `POST`/`PUT` reject any other command path. Preset scripts ship in repo **`scripts/hardware/`**; **`scripts/bootstrap/setup.sh`** copies any missing `*.sh` into `CH_DATA_DIR/scripts` during setup. Older crontab lines pointing elsewhere are ignored until edited or removed. See **[HARDWARE-CRON.md](HARDWARE-CRON.md)** for preset behaviour (including **`ch-backup.sh`** Hindsight snapshots via `hindsight_bridge.py`).
+Managed crontab lines must run a script **under** `scriptsDir` (default `CH_DATA_DIR/scripts`). `POST`/`PUT` reject any other command path. Preset scripts ship in repo **`scripts/hardware/`**; **`scripts/bootstrap/setup.sh`** copies any missing `*.sh` into `CH_DATA_DIR/scripts` during setup. Older crontab lines pointing elsewhere are ignored until edited or removed. See **[SYSTEM-CRON.md](SYSTEM-CRON.md)** for preset behaviour (including **`ch-backup.sh`** Hindsight snapshots via `hindsight_bridge.py`).
 
 ## Auth and Safety Notes
 

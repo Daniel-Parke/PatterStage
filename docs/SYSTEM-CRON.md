@@ -1,6 +1,6 @@
-# Hardware cron presets
+# System cron presets
 
-Control Hub ships POSIX shell stubs under [`scripts/hardware/`](../scripts/hardware/). During [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh), any missing `*.sh` files are copied into **`CH_DATA_DIR/scripts`** (see [`getChScriptsDir()`](../src/lib/paths.ts)). The **Cron** page → **Hardware** tab registers jobs in the **system crontab**; each line must invoke a script under that directory (validated by [`POST /api/cron/hardware`](../src/app/api/cron/hardware/route.ts)).
+Control Hub ships POSIX shell stubs under [`scripts/hardware/`](../scripts/hardware/). During [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh), any missing `*.sh` files are copied into **`CH_DATA_DIR/scripts`** (see [`getChScriptsDir()`](../src/lib/paths.ts)). The **Cron** page → **System** tab registers jobs in the **system crontab**; each line must invoke a script under that directory (validated by [`POST /api/cron/hardware`](../src/app/api/cron/hardware/route.ts)).
 
 Preset labels and filenames are defined in [`src/lib/hardware-cron.ts`](../src/lib/hardware-cron.ts) (`HARDWARE_CRON_UI_PRESETS`). Log output defaults to **`CH_HARDWARE_LOG_DIR`** (`CH_DATA_DIR/logs`).
 
@@ -26,4 +26,4 @@ Preset labels and filenames are defined in [`src/lib/hardware-cron.ts`](../src/l
 
 **Dependencies:** `bash`, `jq`, and `python3` (prefers `$HERMES_HOME/hermes-agent/venv/bin/python3` when executable).
 
-**Suggested schedule:** `0 1 * * *` (daily 01:00) with stderr appended to a file under `CH_HARDWARE_LOG_DIR`, matching the pattern enforced by the Hardware Cron UI.
+**Suggested schedule:** `0 1 * * *` (daily 01:00) with stderr appended to a file under `CH_HARDWARE_LOG_DIR`, matching the pattern enforced by the System Cron UI.

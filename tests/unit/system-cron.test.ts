@@ -7,7 +7,7 @@ import {
   normalizeHardwareCronPath,
 } from "@/lib/hardware-cron";
 
-describe("hardware-cron path helpers", () => {
+describe("system-cron path helpers", () => {
   const scriptsDir = "/home/zoe/control-hub/data/scripts";
 
   it("crontabLineUsesScriptsDir is true when expanded line contains scripts dir + file", () => {
@@ -52,7 +52,7 @@ describe("hardware-cron path helpers", () => {
     expect(HARDWARE_CRON_PRESET_SCRIPT_FILES.length).toBe(HARDWARE_CRON_UI_PRESETS.length);
   });
 
-  it("normalizeHardwareCronPath trims trailing slashes", () => {
+  it("normalizeSystemCronPath trims trailing slashes", () => {
     expect(normalizeHardwareCronPath("/a/b/c/")).toBe("/a/b/c");
   });
 

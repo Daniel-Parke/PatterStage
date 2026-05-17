@@ -56,6 +56,21 @@ function readHermesConfigModels(): Map<string, HermesModelSection> {
       }
     }
 
+    // Fallback providers chain — models used as fallbacks
+    const fallback = config.fallback_providers as Array<{ provider?: string; model?: string; base_url?: string }> | undefined;
+    for (const entry of fallback ?? []) {
+      if (entry?.model && entry.provider) {
+        const key = `${entry.provider}::${entry.model}`;
+        if (!map.has(key)) {
+          map.set(key, {
+            modelId: entry.model,
+            provider: entry.provider,
+            baseUrl: entry.base_url?.trim() || null,
+          });
+        }
+      }
+    }
+
     return map;
   } catch {
     return new Map();

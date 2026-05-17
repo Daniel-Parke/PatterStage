@@ -62,7 +62,7 @@ describe("GET /api/logs sanitisation", () => {
     expect(names).toContain("agent");
     expect(names).toContain("ch-health");
     const ch = body.data.availableLogs.find((x: { name: string }) => x.name === "ch-health");
-    expect(ch.group).toBe("hardware");
+      expect(ch.group).toBe("system");
   });
 });
 

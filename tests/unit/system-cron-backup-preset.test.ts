@@ -7,7 +7,7 @@ import {
   HARDWARE_CRON_UI_PRESETS,
 } from "@/lib/hardware-cron";
 
-describe("hardware cron backup preset", () => {
+describe("system cron backup preset", () => {
   it("includes Backup ch-backup.sh in UI presets", () => {
     const backup = HARDWARE_CRON_UI_PRESETS.find((p) => p.file === "ch-backup.sh");
     expect(backup).toBeDefined();

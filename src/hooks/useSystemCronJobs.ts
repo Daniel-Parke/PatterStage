@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// useHardwareCronJobs — Shared hook for hardware cron CRUD
+// useSystemCronJobs — Shared hook for system cron CRUD
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -7,18 +7,18 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { safeApiCall } from "@/lib/api-fetch";
-import type { HardwareCronJob } from "@/types/hermes";
+import type { SystemCronJob } from "@/types/hermes";
 
-export function useHardwareCronJobs() {
+export function useSystemCronJobs() {
   const { showToast } = useToast();
-  const [jobs, setJobs] = useState<HardwareCronJob[]>([]);
+  const [jobs, setJobs] = useState<SystemCronJob[]>([]);
   const [loading, setLoading] = useState(false);
 
   const loadJobs = useCallback(async () => {
     setLoading(true);
-    const { ok, data } = await safeApiCall<{ jobs?: HardwareCronJob[] }>("/api/cron/hardware");
+    const { ok, data } = await safeApiCall<{ jobs?: SystemCronJob[] }>("/api/cron/hardware");
     if (!ok) {
-      showToast("Failed to load hardware cron jobs", "error");
+      showToast("Failed to load system cron jobs", "error");
       setJobs([]);
     } else {
       setJobs(data?.jobs ?? []);
@@ -36,10 +36,10 @@ export function useHardwareCronJobs() {
         body: { id, enabled: newEnabled },
       });
       if (ok) {
-        showToast(newEnabled ? "Hardware job enabled" : "Hardware job paused");
+        showToast(newEnabled ? "System cron job enabled" : "System cron job paused");
         loadJobs();
       } else {
-        showToast(error ?? "Failed to update hardware job", "error");
+        showToast(error ?? "Failed to update system cron job", "error");
       }
     },
     [jobs, showToast, loadJobs],
@@ -51,9 +51,9 @@ export function useHardwareCronJobs() {
         method: "DELETE",
       });
       if (ok) {
-        showToast("Hardware cron job deleted");
+        showToast("System cron job deleted");
       } else {
-        showToast(error ?? "Failed to delete hardware job", "error");
+        showToast(error ?? "Failed to delete system cron job", "error");
       }
       loadJobs();
     },
@@ -61,27 +61,27 @@ export function useHardwareCronJobs() {
   );
 
   const handleSave = useCallback(
-    async (job: Partial<HardwareCronJob>) => {
+    async (job: Partial<SystemCronJob>) => {
       try {
         if (job.id) {
           const { ok, error } = await safeApiCall("/api/cron/hardware", {
             method: "PUT",
             body: job,
           });
-          if (!ok) throw new Error(error || "Failed to update hardware job");
-          showToast("Hardware cron job updated");
+          if (!ok) throw new Error(error || "Failed to update system cron job");
+          showToast("System cron job updated");
         } else {
           const { ok, error } = await safeApiCall("/api/cron/hardware", {
             method: "POST",
             body: job,
           });
-          if (!ok) throw new Error(error || "Failed to create hardware job");
-          showToast("Hardware cron job created");
+          if (!ok) throw new Error(error || "Failed to create system cron job");
+          showToast("System cron job created");
         }
         loadJobs();
       } catch (e) {
         showToast(
-          e instanceof Error ? e.message : "Failed to save hardware job",
+          e instanceof Error ? e.message : "Failed to save system cron job",
           "error",
         );
       }
@@ -95,10 +95,10 @@ export function useHardwareCronJobs() {
       body: { action: "pauseAll" },
     });
     if (!ok) {
-      showToast(error || "Failed to pause hardware jobs", "error");
+      showToast(error || "Failed to pause system cron jobs", "error");
     } else {
       showToast(
-        `Paused ${data?.pausedCount ?? 0} hardware job(s)`,
+        `Paused ${data?.pausedCount ?? 0} system cron job(s)`,
       );
       loadJobs();
     }
@@ -110,10 +110,10 @@ export function useHardwareCronJobs() {
       body: { action: "sync" },
     });
     if (ok) {
-      showToast("Hardware jobs synced");
+      showToast("System cron jobs synced");
       loadJobs();
     } else {
-      showToast(error || "Hardware sync failed", "error");
+      showToast(error || "System cron sync failed", "error");
     }
   }, [showToast, loadJobs]);
 

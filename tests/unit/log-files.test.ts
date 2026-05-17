@@ -30,7 +30,7 @@ describe("sanitizeLogBasename", () => {
 describe("categorizeLogFileGroup", () => {
   it("classifies core and hardware", () => {
     expect(categorizeLogFileGroup("agent")).toBe("core");
-    expect(categorizeLogFileGroup("ch-watchdog")).toBe("hardware");
+    expect(categorizeLogFileGroup("ch-watchdog")).toBe("system");
     expect(categorizeLogFileGroup("custom")).toBe("other");
   });
 });

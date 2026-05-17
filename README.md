@@ -13,7 +13,7 @@ A command-centre [Next.js](https://nextjs.org/) dashboard for [Hermes Agent](htt
 | **Dashboard** | Live stats, active missions, system health, mission dispatch |
 | **Missions** | Templates and custom templates ([CONTROL_HUB](docs/CONTROL_HUB.md)) |
 | **Agent profiles** | QA, DevOps, and SWE-style profiles |
-| **Cron manager** | Agent cron (`jobs.json`) plus hardware cron under `CH_*` paths ([API](docs/API.md)) |
+| **Cron manager** | Agent cron (`jobs.json`) plus system cron under `CH_*` paths ([API](docs/API.md)) |
 | **Agent behaviour** | Profile-centric editor, personalities, behaviour files |
 | **Config editor** | YAML sections driven by `src/lib/config-schema.ts` (29 sections) + HERMES.md + `.env` viewer |
 | **Session browser** | Conversation transcripts |
@@ -48,9 +48,9 @@ Use `npm run dev:network` for LAN HMR (`CH_ALLOWED_DEV_ORIGINS` is set during se
 
 ## Data, installs, and cron
 
-- **`CH_DATA_DIR`** (or `CONTROL_HUB_DATA_DIR`, default `~/control-hub/data`): missions, templates, stories, SQLite (`control-hub.db`), and default locations for hardware-cron scripts/logs unless overridden. **Not committed**\u2014see [.gitignore](.gitignore).
+- **`CH_DATA_DIR`** (or `CONTROL_HUB_DATA_DIR`, default `~/control-hub/data`): missions, templates, stories, SQLite (`control-hub.db`), and default locations for system-cron scripts/logs unless overridden. **Not committed**—see [.gitignore](.gitignore).
 - **Hermes agent cron** lives on the **active** Hermes filesystem as `cron/jobs.json` (edited by Control Hub; Hermes runs schedules). See [PLATFORM_VISION](docs/PLATFORM_VISION.md) and [MIGRATION](docs/MIGRATION.md).
-- **Hardware cron** is separate: scripts and logs under **`CH_SCRIPTS_DIR`** / **`CH_HARDWARE_LOG_DIR`** (see [API](docs/API.md) `/api/cron/hardware`).
+- **System cron** is separate: scripts and logs under **`CH_SCRIPTS_DIR`** / **`CH_HARDWARE_LOG_DIR`** (see [API](docs/API.md) `/api/cron/hardware`).
 - Audit-style events may append to `~/.hermes/logs/ch-audit.log` when Hermes is present—see [.env.example](.env.example).
 
 ---
@@ -85,7 +85,7 @@ Mission and template Zod schemas live in **`src/lib/schema/`**; regenerate JSON 
 | `scripts/bootstrap/setup-hindsight.sh` | Hindsight-only install |
 | `scripts/git-hooks/pre-push` | Optional: `git config core.hooksPath scripts/git-hooks` |
 
-Preset hardware cron shells: **`scripts/hardware/`**. Hermes markdown templates: **`scripts/bundled-profiles/`**. Shared bash modules: **`scripts/lib/`**. Full layout: [docs/DEPLOY.md](docs/DEPLOY.md).
+Preset system cron shells: **`scripts/hardware/`**. Hermes markdown templates: **`scripts/bundled-profiles/`**. Shared bash modules: **`scripts/lib/`**. Full layout: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ---
 

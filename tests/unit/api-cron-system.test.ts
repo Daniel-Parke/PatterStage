@@ -1,6 +1,6 @@
 /** @jest-environment node */
 /**
- * Hardware cron API — mocks crontab (`execSync`) and selective `fs` calls so CI works
+ * System cron API — mocks crontab (`execSync`) and selective `fs` calls so CI works
  * without a real user crontab (Windows-safe).
  */
 

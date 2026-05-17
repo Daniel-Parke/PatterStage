@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
-// HardwareCronCard — Display card for hardware cron jobs
+// SystemCronCard — Display card for system cron jobs
 //
-// Hardware cron jobs are system crontab entries that survive
+// System cron jobs are system crontab entries that survive
 // agent restarts and run independently of Hermes.
 // ═══════════════════════════════════════════════════════════════
 
@@ -21,25 +21,25 @@ import {
   Terminal,
 } from "lucide-react";
 import { describeSchedule } from "@/components/cron/CronScheduleInput";
-import type { HardwareCronJob } from "@/types/hermes";
+import type { SystemCronJob } from "@/types/hermes";
 
-interface HardwareCronCardProps {
-  job: HardwareCronJob;
+interface SystemCronCardProps {
+  job: SystemCronJob;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  onEdit: (job: HardwareCronJob) => void;
+  onEdit: (job: SystemCronJob) => void;
 }
 
-export default function HardwareCronCard({
+export default function SystemCronCard({
   job,
   onToggle,
   onDelete,
   onEdit,
-}: HardwareCronCardProps) {
+}: SystemCronCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   const handleDelete = () => {
-    if (!confirm("Delete this hardware cron job?")) return;
+    if (!confirm("Delete this system cron job?")) return;
     onDelete(job.id);
   };
 
@@ -65,10 +65,10 @@ export default function HardwareCronCard({
                 }`}
               />
               <h3 className="font-semibold text-white truncate">{job.name}</h3>
-              {/* Hardware badge */}
+              {/* System badge */}
               <span className="text-[10px] font-mono bg-neon-cyan/15 text-neon-cyan px-1.5 py-0.5 rounded flex items-center gap-1">
                 <Cpu className="w-3 h-3" />
-                Hardware
+                System
               </span>
             </div>
 

@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// HardwareCronModal — Create / Edit hardware cron jobs
+// SystemCronModal — Create / Edit system cron jobs
 //
 // Works with /api/cron/hardware and /api/cron/hardware/meta (scriptsDir + logDir).
 // ═══════════════════════════════════════════════════════════════
@@ -13,13 +13,13 @@ import Button from "@/components/ui/Button";
 import CronScheduleInput from "@/components/cron/CronScheduleInput";
 import { baseInputStyles } from "@/lib/theme";
 import { HARDWARE_CRON_UI_PRESETS } from "@/lib/hardware-cron";
-import type { HardwareCronJob } from "@/types/hermes";
+import type { SystemCronJob } from "@/types/hermes";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSave: (job: Partial<HardwareCronJob>) => Promise<void>;
-  editingJob?: HardwareCronJob | null;
+  onSave: (job: Partial<SystemCronJob>) => Promise<void>;
+  editingJob?: SystemCronJob | null;
 }
 
 interface MetaResponse {
@@ -31,7 +31,7 @@ function normalizePathSlashes(p: string): string {
   return p.replace(/\\/g, "/");
 }
 
-export default function HardwareCronModal({ open, onClose, onSave, editingJob }: Props) {
+export default function SystemCronModal({ open, onClose, onSave, editingJob }: Props) {
   const isEdit = !!editingJob;
 
   const [name, setName] = useState("");
@@ -67,11 +67,11 @@ export default function HardwareCronModal({ open, onClose, onSave, editingJob }:
             logDir: normalizePathSlashes(j.data.logDir ?? ""),
           });
         } else {
-          setMetaError(typeof j.error === "string" ? j.error : "Failed to load hardware cron paths");
+          setMetaError(typeof j.error === "string" ? j.error : "Failed to load system cron paths");
         }
       })
       .catch(() => {
-        if (!cancelled) setMetaError("Failed to load hardware cron paths");
+        if (!cancelled) setMetaError("Failed to load system cron paths");
       })
       .finally(() => {
         if (!cancelled) setMetaLoading(false);
@@ -153,7 +153,7 @@ export default function HardwareCronModal({ open, onClose, onSave, editingJob }:
       });
       onClose();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to save hardware cron job");
+      setError(e instanceof Error ? e.message : "Failed to save system cron job");
     } finally {
       setIsSaving(false);
     }
@@ -181,7 +181,7 @@ export default function HardwareCronModal({ open, onClose, onSave, editingJob }:
     <Modal
       open={open}
       onClose={onClose}
-      title={isEdit ? "Edit Hardware Cron Job" : "New Hardware Cron Job"}
+      title={isEdit ? "Edit System Cron Job" : "New System Cron Job"}
       icon={Cpu}
       iconColor="text-neon-orange"
       size="md"
@@ -238,7 +238,7 @@ export default function HardwareCronModal({ open, onClose, onSave, editingJob }:
             ))}
           </select>
           <p className="text-xs text-white/30">
-            Scripts live under Control Hub&apos;s hardware scripts directory (
+            Scripts live under Control Hub&apos;s system scripts directory (
             <span className="font-mono text-white/50">{meta?.scriptsDir ?? "…"}</span>
             ). Default logs:{" "}
             <span className="font-mono text-white/50">{meta?.logDir ?? "…"}</span>

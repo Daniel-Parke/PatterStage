@@ -4,7 +4,7 @@
 
 export const MAX_LOG_BASENAME_LEN = 128;
 
-export type LogFileGroup = "core" | "hardware" | "other";
+export type LogFileGroup = "core" | "system" | "other";
 
 export interface LogFileMeta {
   name: string;
@@ -43,7 +43,7 @@ export function categorizeLogFileGroup(name: string): LogFileGroup {
     return "core";
   }
   if (lower.startsWith("ch-")) {
-    return "hardware";
+    return "system";
   }
   return "other";
 }

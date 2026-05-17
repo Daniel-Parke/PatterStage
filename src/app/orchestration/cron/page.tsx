@@ -18,17 +18,17 @@ import { SearchInput } from "@/components/ui/Input";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import { useCronJobs } from "@/hooks/useCronJobs";
-import { useHardwareCronJobs } from "@/hooks/useHardwareCronJobs";
+import { useSystemCronJobs } from "@/hooks/useSystemCronJobs";
 import JobCard, { CronJob } from "@/components/cron/JobCard";
 import JobFormModal from "@/components/cron/JobFormModal";
-import HardwareCronCard from "@/components/cron/HardwareCronCard";
-import type { HardwareCronJob } from "@/types/hermes";
-import HardwareCronModal from "@/components/cron/HardwareCronModal";
+import SystemCronCard from "@/components/cron/SystemCronCard";
+import type { SystemCronJob } from "@/types/hermes";
+import SystemCronModal from "@/components/cron/SystemCronModal";
 
 // ── Tab config ──────────────────────────────────────────────
 
 interface TabConfig {
-  key: "agent" | "hardware";
+  key: "agent" | "system";
   label: string;
   icon: typeof Clock;
   color: string;
@@ -37,7 +37,7 @@ interface TabConfig {
 
 const TABS: TabConfig[] = [
   { key: "agent", label: "Agent", icon: Clock, color: "text-neon-orange", bgColor: "bg-neon-orange/20 text-neon-orange" },
-  { key: "hardware", label: "Hardware", icon: Cpu, color: "text-neon-cyan", bgColor: "bg-neon-cyan/20 text-neon-cyan" },
+  { key: "system", label: "System", icon: Cpu, color: "text-neon-cyan", bgColor: "bg-neon-cyan/20 text-neon-cyan" },
 ];
 
 // ── Search filter helpers ───────────────────────────────────
@@ -58,8 +58,8 @@ function filterJobs<T extends { name: string; schedule: string; prompt?: string 
 
 function TabButton({ tab, activeTab, onSelect }: {
   tab: TabConfig;
-  activeTab: "agent" | "hardware";
-  onSelect: (key: "agent" | "hardware") => void;
+  activeTab: "agent" | "system";
+  onSelect: (key: "agent" | "system") => void;
 }) {
   return (
     <button
@@ -107,7 +107,7 @@ function ActionButtons({ color, pauseBusy, hasJobs, onPauseAll, onSync, syncing,
 
 interface CronTabContentProps {
   isAgent: boolean;
-  jobs: (CronJob | HardwareCronJob)[];
+  jobs: (CronJob | SystemCronJob)[];
   loading: boolean;
   accentColor: "orange" | "cyan";
   icon: typeof Clock | typeof Cpu;
@@ -120,7 +120,7 @@ interface CronTabContentProps {
   onDelete: (id: string) => void;
   onRun?: (id: string) => void;
   onEditAgent?: (job: CronJob) => void;
-  onEditHardware?: (job: HardwareCronJob) => void;
+  onEditSystem?: (job: SystemCronJob) => void;
 }
 
 function CronTabContent({
@@ -138,13 +138,13 @@ function CronTabContent({
   onDelete,
   onRun,
   onEditAgent,
-  onEditHardware,
+  onEditSystem,
 }: CronTabContentProps) {
   const [search, setSearch] = useState("");
   const filtered = filterJobs(jobs, search);
 
   if (loading) {
-    return <LoadingSpinner text={`Loading ${isAgent ? "" : "hardware "}cron jobs...`} />;
+    return <LoadingSpinner text={`Loading ${isAgent ? "" : "system "}cron jobs...`} />;
   }
 
   if (filtered.length === 0) {
@@ -183,11 +183,11 @@ function CronTabContent({
               onEdit={(j) => onEditAgent?.(j)}
             />
           ) : (
-            <HardwareCronCard
+            <SystemCronCard
               key={job.id}
-              job={job as HardwareCronJob}
+              job={job as SystemCronJob}
               onToggle={onToggle}
-              onEdit={(j) => onEditHardware?.(j)}
+              onEdit={(j) => onEditSystem?.(j)}
               onDelete={onDelete}
             />
           ),
@@ -205,19 +205,19 @@ export default function CronPage() {
   const [pauseAllBusy, setPauseAllBusy] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"agent" | "hardware">("agent");
+  const [activeTab, setActiveTab] = useState<"agent" | "system">("agent");
   const [showHardwareCreate, setShowHardwareCreate] = useState(false);
-  const [editingHardwareJob, setEditingHardwareJob] = useState<HardwareCronJob | null>(null);
+  const [editingHardwareJob, setEditingHardwareJob] = useState<SystemCronJob | null>(null);
   const { showToast, toastElement } = useToast();
 
   const agent = useCronJobs();
-  const hardware = useHardwareCronJobs();
+  const hardware = useSystemCronJobs();
 
   // ── Derived state ─────────────────────────────────────────
 
   const enabledCount = agent.data?.jobs.filter((j) => j.enabled).length || 0;
   const pageSubtitle = agent.data
-    ? `Agent: ${enabledCount}/${agent.data.total}  •  Hardware: ${hardware.jobs.filter((j) => j.enabled).length}/${hardware.jobs.length || 0}`
+    ? `Agent: ${enabledCount}/${agent.data.total}  •  System: ${hardware.jobs.filter((j) => j.enabled).length}/${hardware.jobs.length || 0}`
     : "Scheduled tasks";
 
   // ── Render ────────────────────────────────────────────────
@@ -256,7 +256,7 @@ export default function CronPage() {
                 createLabel="New Job"
               />
             )}
-            {activeTab === "hardware" && (
+            {activeTab === "system" && (
               <>
                 {hardware.jobs.length === 0 && hardware.loading === false && (
                   <button
@@ -310,14 +310,14 @@ export default function CronPage() {
             loading={hardware.loading}
             accentColor="cyan"
             icon={Cpu}
-            title="No hardware cron jobs"
+            title="No system cron jobs"
             desc="Add a real system cron job"
-            searchPlaceholder="Search hardware jobs..."
-            createLabel="Create Hardware Job"
+            searchPlaceholder="Search system jobs..."
+            createLabel="Create System Job"
             onCreate={() => setShowHardwareCreate(true)}
             onToggle={(id) => hardware.handleToggle(id)}
             onDelete={(id) => hardware.handleDelete(id)}
-            onEditHardware={(job) => {
+            onEditSystem={(job) => {
               setEditingHardwareJob(job);
               setShowHardwareCreate(true);
             }}
@@ -341,8 +341,8 @@ export default function CronPage() {
         }}
       />
 
-      {/* ── Hardware Modal (create + edit) ── */}
-      <HardwareCronModal
+      {/* ── System Modal (create + edit) ── */}
+      <SystemCronModal
         open={showHardwareCreate || !!editingHardwareJob}
         editingJob={editingHardwareJob}
         onClose={() => {

@@ -51,10 +51,10 @@ function levelTextClass(level: ParsedLogLevel): string {
   }
 }
 
-const GROUP_ORDER: LogFileGroup[] = ["core", "hardware", "other"];
+const GROUP_ORDER: LogFileGroup[] = ["core", "system", "other"];
 const GROUP_LABELS: Record<LogFileGroup, string> = {
   core: "Core",
-  hardware: "Hardware",
+  system: "System",
   other: "Other",
 };
 

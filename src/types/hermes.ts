@@ -437,9 +437,9 @@ export interface FallbackConfig {
   apiMaxRetries: number;
 }
 
-// ── Hardware Cron ────────────────────────────────────────────
+// ── System Cron ────────────────────────────────────────────
 
-export interface HardwareCronJob {
+export interface SystemCronJob {
   id: string;
   name: string;
   schedule: string;

@@ -111,6 +111,8 @@ export async function POST(request: NextRequest) {
         skills: skills ?? [],
         goals: goals ?? [],
         context: context ?? "",
+        missionTimeMinutes: missionTimeMinutes ?? undefined,
+        timeoutMinutes: timeoutMinutes ?? undefined,
       });
 
       // Resolve Hermes profile name to the DB profile_id for the mission record.

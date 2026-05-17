@@ -1,7 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // Control Hub - Mission template definitions
 // Only TEMPLATES and TemplateDef are used (by templates/route.ts).
-// All other exports have been cleaned up — they were dead code.
 // ═══════════════════════════════════════════════════════════════
 
 // ── Template definition (prompt-building blocks) ───────────────
