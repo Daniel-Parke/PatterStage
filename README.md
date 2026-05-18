@@ -21,7 +21,7 @@ A command-centre [Next.js](https://nextjs.org/) dashboard for [Hermes Agent](htt
 | **Personalities / skills / tools** | Profile-aware management |
 | **Gateway / logs** | Connection status and log tail |
 | **Story Weaver** | Rec Room interactive fiction |
-| **Kanban / teams** | Multi-agent board and team roles under `src/app/orchestration/teams/` |
+|| **Teams** | Multi-agent team roles under `src/app/orchestration/teams/` |
 
 ---
 

@@ -78,7 +78,6 @@ control-hub/
 
 │   │   ├── page.tsx                # Dashboard
 
-│   │   ├── kanban/              # Multi-Agent Coordination Kanban
 │   │   ├── orchestration/teams/ # Team management
 │   │   ├── missions/page.tsx      # Missions page
 
@@ -366,7 +365,7 @@ Control Hub is a command centre, not a file manager. The operator opens the dash
 
 §
 
-**Sidebar sections:** Main (Dashboard, Missions, Kanban, Teams, Cron, Sessions, Memory, Gateway, Logs, Config) | Agents (Agents) | Operations (Skills, Tools, Personalities) | pinned above **All Settings**: HERMES.md, Environment | Config Sections
+**Sidebar sections:** Main (Dashboard, Missions, Teams, Cron, Sessions, Memory, Gateway, Logs, Config) | Agents (Agents) | Operations (Skills, Tools, Personalities) | pinned above **All Settings**: HERMES.md, Environment | Config Sections
 
 §
 
