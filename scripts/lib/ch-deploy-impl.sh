@@ -307,18 +307,10 @@ ch_deploy_cmd_rebuild_impl() {
 
   if [ -n "$CH_BRANCH" ]; then
     log "Checking out branch: $CH_BRANCH"
-    git fetch origin "$CH_BRANCH" --quiet 2>>"$LOG_FILE_RESTART" || true
-    git checkout "$CH_BRANCH" --quiet 2>>"$LOG_FILE_RESTART" || true
-    if git rev-parse "origin/${CH_BRANCH}" >/dev/null 2>&1; then
-      log "Resetting to origin/${CH_BRANCH}..."
-      git reset --hard "origin/${CH_BRANCH}" --quiet 2>>"$LOG_FILE_RESTART" || {
-        log "ERROR: git reset --hard origin/${CH_BRANCH} failed"
-        exit 1
-      }
-    else
-      log "ERROR: origin/${CH_BRANCH} not found after fetch — cannot rebuild to remote tip"
+    git checkout "$CH_BRANCH" --quiet 2>>"$LOG_FILE_RESTART" || {
+      log "ERROR: Branch '$CH_BRANCH' not found locally"
       exit 1
-    fi
+    }
   fi
 
   local NODE_BIN

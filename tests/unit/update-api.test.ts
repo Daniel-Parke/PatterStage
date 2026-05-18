@@ -201,10 +201,4 @@ describe("POST /api/update", () => {
     const body = await res.json();
     expect(String(body.error)).toContain("origin");
   });
-
-  it("returns 400 when rebuild branch missing on origin", async () => {
-    const { POST } = await import("@/app/api/update/route");
-    const res = await POST(postReq({ action: "rebuild", branch: "bad-branch" }));
-    expect(res.status).toBe(400);
-  });
 });

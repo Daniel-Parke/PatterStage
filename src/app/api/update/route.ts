@@ -287,10 +287,6 @@ export async function POST(request: NextRequest) {
       const rebuildBranch = body.branch
         ? sanitizeGitBranch(String(body.branch))
         : sanitizeGitBranch(process.env.CH_UPDATE_GIT_BRANCH || "dev");
-      const branchErr = verifyDeployBranchOnOrigin(rebuildBranch);
-      if (branchErr) {
-        return NextResponse.json({ error: branchErr }, { status: 400 });
-      }
       // Run build as a detached background process so the server's memory
       // context is not consumed by npm/build child processes (avoids OOM
       // kills on memory-constrained systems). Uses systemd-run like restart.
