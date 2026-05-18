@@ -122,7 +122,7 @@ function escapeHtml(text: string): string {
 
 function renderMarkdown(text: string): string {
   // Escape HTML entities first to prevent XSS
-  let safe = escapeHtml(text);
+  const safe = escapeHtml(text);
 
   // Code blocks (must come before inline code)
   let html = safe.replace(
@@ -289,26 +289,6 @@ export default function ChatPage() {
     setInput("");
     inputRef.current?.focus();
   }, [model]);
-
-  // ── Create session (used by handleSend when none exists) ───
-  const ensureSession = useCallback((): string => {
-    if (activeSessionId && sessions.find((s) => s.id === activeSessionId)) {
-      return activeSessionId;
-    }
-    const id = generateSessionId();
-    const newSession: ChatSession = {
-      id,
-      title: "New Chat",
-      messages: [],
-      model,
-      created_at: Date.now(),
-      updated_at: Date.now(),
-    };
-    // Use a batch state update approach — set both synchronously
-    setSessions((prev) => [newSession, ...prev]);
-    setActiveSessionId(id);
-    return id;
-  }, [activeSessionId, sessions, model]);
 
   // ── Delete session ─────────────────────────────────────────
   const handleDeleteSession = useCallback(
