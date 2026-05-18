@@ -219,6 +219,9 @@ ch_deploy_restart_once() {
 
   log "Starting next-server on $HOST:$PORT..."
   rm -f "$PID_FILE"
+  # Release the deploy lock BEFORE spawning nohup child — otherwise the child
+  # inherits fd 200 (the flock file) and the kernel never releases the lock.
+  exec 200>&-
   # nohup + detached stdin: survive dashboard-spawned systemd-run/nohup transient shells exiting.
   nohup "$NODE_BIN" node_modules/next/dist/bin/next start -p "$PORT" -H "$HOST" \
     >>"$LOG_FILE_RESTART" 2>&1 </dev/null &
