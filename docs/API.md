@@ -27,9 +27,7 @@ All error handlers must call `logApiError(route, context, error)` from `@/lib/ap
 | `/api/cron` | `GET`, `POST`, `PUT`, `DELETE` | Manage **agent** cron jobs (Hermes `jobs.json` for the active install). |
 | `/api/cron/hardware` | `GET`, `POST`, `PUT`, `DELETE` | **System** cron (system crontab): scripts/logs under `CH_SCRIPTS_DIR` / `CH_HARDWARE_LOG_DIR`; separate from agent `jobs.json`. |
 | `/api/cron/hardware/meta` | `GET` | `{ scriptsDir, logDir }` from [`getChScriptsDir()`](../src/lib/paths.ts) / [`getChHardwareLogDir()`](../src/lib/paths.ts). The System Cron UI builds script paths only from `scriptsDir`. |
-| `/api/goals` | `GET`, `POST` | Manage goal sessions. |
 | `/api/gateway` | `GET` | Read gateway/platform status. |
-| `/api/kanban` | `GET`, `POST`, `PUT`, `DELETE` | Manage boards, columns, and cards. |
 | `/api/logs` | `GET` | Read recent Hermes logs. |
 | `/api/memory` | `GET`, `POST`, `PUT`, `DELETE` | Manage holographic memory facts. |
 | `/api/memory/hindsight` | `GET`, `POST` | Query/retain hindsight memory records. |

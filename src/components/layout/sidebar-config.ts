@@ -9,7 +9,7 @@ import {
   Cpu, Activity, Layers, HardDrive, Wrench, ListTodo, Globe, Globe2,
   ScrollText, Sparkles, Rocket, Volume2, Mic, GitBranch,
   RotateCcw, ShieldCheck, Lock, Code,
-  BookOpen, Kanban, Bot, MessageCircle, Target,
+  BookOpen, Bot, MessageCircle,
   AudioLines, Settings2, Network,
 } from "lucide-react";
 
@@ -54,8 +54,6 @@ export const mainSections: SidebarSection[] = [
     links: [
       { icon: ListTodo, label: "Cron", href: "/orchestration/cron", color: "orange" },
       { icon: Rocket, label: "Missions", href: "/orchestration/missions", color: "cyan" },
-      { icon: Kanban, label: "Kanban", href: "/orchestration/hermes-kanban", color: "purple" },
-      { icon: Target, label: "Goals", href: "/orchestration/goals", color: "green" },
       { icon: MessageCircle, label: "Chat", href: "/orchestration/chat", color: "cyan" },
     ],
   },

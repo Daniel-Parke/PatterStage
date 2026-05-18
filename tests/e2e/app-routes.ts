@@ -37,7 +37,6 @@ export const APP_NAV_ROUTES: readonly string[] = [
   "/config/web",
   "/orchestration/cron",
   "/gateway",
-  "/orchestration/hermes-kanban",
   "/logs",
   "/memory",
   "/orchestration/missions",
