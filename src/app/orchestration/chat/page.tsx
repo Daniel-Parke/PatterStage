@@ -2,20 +2,28 @@
 // Chat Page — Web-based Hermes agent chat interface
 // ═══════════════════════════════════════════════════════════════
 // Streaming LLM responses via Hermes Gateway API Server.
-// Supports: message history, streaming, markdown rendering,
-// code block copy, session management, model selector.
+// Supports: localStorage session persistence, session deletion,
+// streaming, markdown rendering, code block copy, model selector.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import {
-  MessageCircle, Send, Plus, Trash2,
+  MessageCircle, Send, Plus, Trash2, X,
   Bot, User, Loader2, AlertTriangle,
 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+
+// ── Constants ──────────────────────────────────────────────────
+
+const STORAGE_KEY = "ch_sessions";
+const DEFAULT_MODEL = "hermes-agent";
+const MAX_SESSIONS = 50;
+
+// ── Types ──────────────────────────────────────────────────────
 
 interface ChatMessage {
   id: string;
@@ -33,10 +41,47 @@ interface ChatSession {
   updated_at: number;
 }
 
-// Simple markdown-like rendering for chat responses
+// ── localStorage helpers ───────────────────────────────────────
+
+function loadSessions(): ChatSession[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.slice(0, MAX_SESSIONS);
+  } catch {
+    return [];
+  }
+}
+
+function saveSessions(sessions: ChatSession[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions.slice(0, MAX_SESSIONS)));
+  } catch {
+    // localStorage full or unavailable — silently ignore
+  }
+}
+
+// ── Simple HTML entity escape for markdown rendering ───────────
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// ── Simple markdown-like rendering for chat responses ──────────
+
 function renderMarkdown(text: string): string {
-  // Code blocks
-  let html = text.replace(
+  // Escape HTML entities first to prevent XSS
+  let safe = escapeHtml(text);
+
+  // Code blocks (must come before inline code)
+  let html = safe.replace(
     /```(\w*)\n([\s\S]*?)```/g,
     '<div class="relative group"><div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">' +
     '<button class="copy-btn text-[10px] font-mono text-white/40 hover:text-white/80 bg-gray-900/80 px-2 py-1 rounded border border-white/10" data-code="$2">Copy</button></div>' +
@@ -57,15 +102,39 @@ function generateId(): string {
   return `msg_${Math.random().toString(36).slice(2, 10)}_${Date.now()}`;
 }
 
-const DEFAULT_MODEL = "hermes-agent";
+function generateSessionId(): string {
+  return `session_${Math.random().toString(36).slice(2, 10)}_${Date.now()}`;
+}
+
+// ── Typing indicator component ─────────────────────────────────
+
+function TypingIndicator() {
+  return (
+    <div className="flex gap-3 justify-start">
+      <div className="w-8 h-8 rounded-lg bg-neon-purple/20 border border-neon-purple/30 flex items-center justify-center shrink-0 mt-1">
+        <Bot className="w-4 h-4 text-neon-purple" />
+      </div>
+      <div className="max-w-[70%] rounded-xl px-4 py-3 bg-white/5 border border-white/10">
+        <div className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+          <span className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+          <span className="w-1.5 h-1.5 bg-white/40 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Page component ─────────────────────────────────────────────
 
 export default function ChatPage() {
   const { showToast } = useToast();
 
-  // Sessions
+  // Sessions — initialized from localStorage
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [model, setModel] = useState(DEFAULT_MODEL);
+  const [availableModels, setAvailableModels] = useState<string[]>([DEFAULT_MODEL]);
 
   // Current messages
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -76,6 +145,48 @@ export default function ChatPage() {
   // Gateway connectivity check
   const [gatewayOnline, setGatewayOnline] = useState<boolean | null>(null);
 
+  // ── Load persisted sessions from localStorage on mount ─────
+  useEffect(() => {
+    const saved = loadSessions();
+    if (saved.length > 0) {
+      setSessions(saved);
+      setActiveSessionId(saved[0].id);
+    }
+  }, []);
+
+  // ── Persist sessions to localStorage on every change ───────
+  // We use a ref to avoid saving during initial mount hydration
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    saveSessions(sessions);
+  }, [sessions]);
+
+  // ── Fetch dynamic models from gateway ──────────────────────
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const res = await fetch("/api/gateway/models", {
+          signal: AbortSignal.timeout(3000),
+        });
+        if (res.ok) {
+          const json = await res.json();
+          const models: string[] = json.data?.models || json.data || [];
+          if (models.length > 0) {
+            setAvailableModels(models);
+          }
+        }
+      } catch {
+        // Gateway not available — keep defaults
+      }
+    };
+    fetchModels();
+  }, []);
+
+  // ── Gateway connectivity check ─────────────────────────────
   useEffect(() => {
     const checkGateway = async () => {
       try {
@@ -107,9 +218,20 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ── New chat ──────────────────────────────────────────
+  // ── Session state mutation helpers (auto-persist via useEffect) ─
+
+  const updateSession = useCallback(
+    (sessionId: string, updater: (s: ChatSession) => ChatSession) => {
+      setSessions((prev) =>
+        prev.map((s) => (s.id === sessionId ? updater(s) : s)),
+      );
+    },
+    [],
+  );
+
+  // ── New chat ───────────────────────────────────────────────
   const handleNewChat = useCallback(() => {
-    const id = `session_${Math.random().toString(36).slice(2, 10)}`;
+    const id = generateSessionId();
     const newSession: ChatSession = {
       id,
       title: "New Chat",
@@ -124,12 +246,33 @@ export default function ChatPage() {
     inputRef.current?.focus();
   }, [model]);
 
-  // Auto-create first session
+  // Auto-create first session if none exist and none loaded from localStorage
   useEffect(() => {
-    if (sessions.length === 0) handleNewChat();
-  }, [sessions.length, handleNewChat]);
+    if (sessions.length === 0 && activeSessionId === null) {
+      handleNewChat();
+    }
+  }, [sessions.length, activeSessionId, handleNewChat]);
 
-  // ── Send message ──────────────────────────────────────
+  // ── Delete session ─────────────────────────────────────────
+  const handleDeleteSession = useCallback(
+    (id: string, e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      setSessions((prev) => {
+        const next = prev.filter((s) => s.id !== id);
+        // If we deleted the active session, switch to the next available
+        if (id === activeSessionId) {
+          const nextActive = next.length > 0 ? next[0].id : null;
+          // Schedule the next tick to set activeSessionId
+          setTimeout(() => setActiveSessionId(nextActive), 0);
+        }
+        return next;
+      });
+      showToast("Session deleted", "success");
+    },
+    [activeSessionId, showToast],
+  );
+
+  // ── Send message ───────────────────────────────────────────
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if (!text || isStreaming || !activeSessionId) return;
@@ -148,18 +291,12 @@ export default function ChatPage() {
     };
 
     // Add user message optimistically
-    setSessions((prev) =>
-      prev.map((s) =>
-        s.id === activeSessionId
-          ? {
-              ...s,
-              messages: [...s.messages, userMessage],
-              updated_at: Date.now(),
-              title: s.messages.length === 0 ? text.slice(0, 50) : s.title,
-            }
-          : s,
-      ),
-    );
+    updateSession(activeSessionId, (s) => ({
+      ...s,
+      messages: [...s.messages, userMessage],
+      updated_at: Date.now(),
+      title: s.messages.length === 0 ? text.slice(0, 50) : s.title,
+    }));
     setInput("");
 
     // Prepare assistant message placeholder
@@ -171,18 +308,17 @@ export default function ChatPage() {
       timestamp: Date.now(),
     };
 
-    setSessions((prev) =>
-      prev.map((s) =>
-        s.id === activeSessionId
-          ? { ...s, messages: [...s.messages, assistantMessage] }
-          : s,
-      ),
-    );
+    updateSession(activeSessionId, (s) => ({
+      ...s,
+      messages: [...s.messages, assistantMessage],
+    }));
     setIsStreaming(true);
 
     try {
       // Build message history for the API
-      const currentMessages = sessions.find((s) => s.id === activeSessionId)?.messages || [];
+      // Use current session messages directly (before state updates above take effect)
+      const session = sessions.find((s) => s.id === activeSessionId);
+      const currentMessages = session?.messages || [];
       const apiMessages = [
         ...currentMessages.map((m) => ({ role: m.role, content: m.content })),
         { role: "user" as const, content: text },
@@ -233,20 +369,14 @@ export default function ChatPage() {
               const parsed = JSON.parse(data);
               const delta = parsed.choices?.[0]?.delta?.content || "";
               if (delta) {
-                setSessions((prev) =>
-                  prev.map((s) =>
-                    s.id === activeSessionId
-                      ? {
-                          ...s,
-                          messages: s.messages.map((m) =>
-                            m.id === assistantId
-                              ? { ...m, content: m.content + delta }
-                              : m,
-                          ),
-                        }
-                      : s,
+                updateSession(activeSessionId, (s) => ({
+                  ...s,
+                  messages: s.messages.map((m) =>
+                    m.id === assistantId
+                      ? { ...m, content: m.content + delta }
+                      : m,
                   ),
-                );
+                }));
               }
             } catch {
               // Skip malformed JSON chunks
@@ -259,9 +389,9 @@ export default function ChatPage() {
     } finally {
       setIsStreaming(false);
     }
-  }, [input, isStreaming, activeSessionId, sessions, model, showToast, gatewayOnline]);
+  }, [input, isStreaming, activeSessionId, sessions, model, showToast, gatewayOnline, updateSession]);
 
-  // ── Keyboard shortcuts ────────────────────────────────
+  // ── Keyboard shortcuts ─────────────────────────────────────
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -272,19 +402,25 @@ export default function ChatPage() {
     [handleSend],
   );
 
-  // ── Clear session ─────────────────────────────────────
+  // ── Clear session messages ─────────────────────────────────
   const handleClearSession = useCallback(() => {
     if (!activeSessionId) return;
-    setSessions((prev) =>
-      prev.map((s) =>
-        s.id === activeSessionId
-          ? { ...s, messages: [], title: "New Chat", updated_at: Date.now() }
-          : s,
-      ),
-    );
-  }, [activeSessionId]);
+    const session = sessions.find((s) => s.id === activeSessionId);
+    if (!session || session.messages.length === 0) return;
 
-  // ── Copy code block handler ───────────────────────────
+    const count = session.messages.length;
+
+    updateSession(activeSessionId, (s) => ({
+      ...s,
+      messages: [],
+      title: "New Chat",
+      updated_at: Date.now(),
+    }));
+
+    showToast(`${count} message${count !== 1 ? "s" : ""} cleared`, "info");
+  }, [activeSessionId, sessions, showToast, updateSession]);
+
+  // ── Copy code block handler ────────────────────────────────
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -299,8 +435,16 @@ export default function ChatPage() {
     return () => document.removeEventListener("click", handler);
   }, [showToast]);
 
-  const sessionList = sessions.slice(0, 50); // Cap at 50 sessions
+  // ── Models that appear in dropdown ─────────────────────────
+  // Always include user-selected model + defaults + fetched
+  const mergedModels = useMemo(() => {
+    const set = new Set([DEFAULT_MODEL, ...availableModels, model]);
+    return Array.from(set);
+  }, [availableModels, model]);
 
+  const sessionList = sessions.slice(0, MAX_SESSIONS);
+
+  // ── Render ─────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-full">
       <PageHeader
@@ -313,11 +457,12 @@ export default function ChatPage() {
             <select
               value={model}
               onChange={(e) => setModel(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/80 outline-none focus:border-neon-purple/50 transition-colors font-mono cursor-pointer appearance-none"
+              className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white/80 outline-none focus:border-neon-purple/50 transition-colors font-mono cursor-pointer appearance-none max-w-[200px]"
+              title="Select model"
             >
-              <option value="hermes-agent">hermes-agent</option>
-              <option value="deepseek/deepseek-v4-flash">deepseek-v4-flash</option>
-              <option value="anthropic/claude-sonnet-4">claude-sonnet-4</option>
+              {mergedModels.map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
             </select>
             <Button
               variant="secondary"
@@ -335,7 +480,7 @@ export default function ChatPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
         <div className="w-60 border-r border-white/10 bg-white/[0.01] flex flex-col">
-          <div className="px-3 py-2 border-b border-white/10">
+          <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
             <span className="text-[10px] font-mono text-white/30 uppercase tracking-wider">
               Sessions ({sessionList.length})
             </span>
@@ -345,16 +490,29 @@ export default function ChatPage() {
               <button
                 key={s.id}
                 onClick={() => setActiveSessionId(s.id)}
-                className={`w-full text-left px-3 py-2 border-b border-white/5 transition-colors hover:bg-white/5 ${
+                className={`w-full text-left px-3 py-2 border-b border-white/5 transition-colors hover:bg-white/5 group relative ${
                   s.id === activeSessionId ? "bg-white/10 border-l-2 border-l-neon-cyan" : ""
                 }`}
                 title={s.title}
               >
-                <div className="text-xs text-white/70 truncate font-medium">
-                  {s.title}
-                </div>
-                <div className="text-[10px] text-white/30 mt-0.5 font-mono">
-                  {s.messages.length} messages
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs text-white/70 truncate font-medium">
+                      {s.title}
+                    </div>
+                    <div className="text-[10px] text-white/30 mt-0.5 font-mono">
+                      {s.messages.length} message{s.messages.length !== 1 ? "s" : ""}
+                      {s.messages.length === 0 && " (empty)"}
+                    </div>
+                  </div>
+                  {/* Delete button — visible on hover */}
+                  <button
+                    onClick={(e) => handleDeleteSession(s.id, e)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 w-5 h-5 flex items-center justify-center rounded hover:bg-neon-red/20 hover:text-neon-red text-white/30"
+                    title="Delete session"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
                 </div>
               </button>
             ))}
@@ -455,6 +613,12 @@ export default function ChatPage() {
                 </div>
               ))
             )}
+
+            {/* Typing indicator while streaming */}
+            {isStreaming && messages.length > 0 && (
+              <TypingIndicator />
+            )}
+
             <div ref={messagesEndRef} />
           </div>
 
