@@ -91,7 +91,7 @@
 
     "@types/jest": "^30.0.0",
 
-    "@types/node": "^20",
+    "@types/node": "^25",
 
     "@types/react": "^19",
 
