@@ -38,13 +38,23 @@ function readCachedConfig(): Record<string, unknown> {
     return {};
   }
   const content = readFileSync(configPath, "utf-8");
-  const config = (yaml.load(content) as Record<string, unknown>) || {};
-
-  // Update cache (both keys in a single statement)
+  let config: Record<string, unknown>;
   try {
-    const stmt = db().prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)");
-    stmt.run("config.cached_json", JSON.stringify(config));
-    stmt.run("config.cached_at", new Date().toISOString());
+    config = (yaml.load(content) as Record<string, unknown>) || {};
+  } catch {
+    // YAML parse error — return empty config rather than crashing
+    return {};
+  }
+
+  // Update cache (both keys in a transaction for atomicity)
+  try {
+    const dbInstance = db();
+    const txn = dbInstance.transaction(() => {
+      const stmt = dbInstance.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)");
+      stmt.run("config.cached_json", JSON.stringify(config));
+      stmt.run("config.cached_at", new Date().toISOString());
+    });
+    txn();
   } catch {
     // Cache write failure is non-critical
   }

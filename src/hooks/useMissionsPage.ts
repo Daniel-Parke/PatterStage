@@ -545,7 +545,7 @@ export function useMissionsPage() {
 
         if (isPromotable) {
           showToast(submitToastForDispatch(newDispatch), "info");
-          const { ok, error, data } = await safeApiCall<{ data?: { mission?: object } }>("/api/missions", {
+          const { ok, error } = await safeApiCall<{ data?: { mission?: object } }>("/api/missions", {
             method: "POST",
             body: {
               action: "promote",

@@ -4,7 +4,6 @@
 
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
-import type { Directive, MentalModel } from "./types";
 
 // ── Add Memory Modal ───────────────────────────────────────────
 

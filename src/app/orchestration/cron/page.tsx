@@ -226,7 +226,6 @@ export default function CronPage() {
       safeApiCall("/api/cron/hardware", { method: "POST", body: { action: "sync" } }),
     ]);
     await Promise.all([agent.loadJobs(), hardware.loadJobs()]);
-    setSyncing(false);
     if (agentRes.ok && hwRes.ok) {
       showToast("Agent and system cron synced", "success");
     } else {
@@ -235,6 +234,7 @@ export default function CronPage() {
       if (!hwRes.ok) parts.push("system");
       showToast(`Sync failed: ${parts.join(", ")}`, "error");
     }
+    setSyncing(false);
   }, [agent, hardware, showToast]);
 
   // ── Derived state ─────────────────────────────────────────
@@ -305,7 +305,8 @@ export default function CronPage() {
                 onToggle: (id: string) => agent.handleToggle(id),
                 onDelete: (id: string) => agent.handleDelete(id),
                 onRun: (id: string) => agent.handleRun(id),
-                onEdit: (job: CronJob) => {
+                onEdit: (job: CronJob | SystemCronJob) => {
+                  if ("command" in job) return; // agent jobs don't have "command"
                   setEditingJob(job);
                   setShowCreate(true);
                 },

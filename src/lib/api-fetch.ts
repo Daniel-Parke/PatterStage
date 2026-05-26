@@ -34,7 +34,10 @@ export function formatApiError(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic JSON fetch returns arbitrary shapes
-export async function apiFetch(path: string, options?: RequestInit): Promise<any> {
+export async function apiFetch<T = any>(
+  path: string,
+  options?: RequestInit
+): Promise<T> {
   const res = await fetch(path, {
     ...options,
     headers: { "Content-Type": "application/json", ...options?.headers },

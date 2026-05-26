@@ -5,7 +5,7 @@
 // and SOURCE_META (used by session list page).
 // Previously both were duplicated inline across multiple components.
 
-import { Bot, Calendar, Cpu, Globe, MessageSquare, Wrench, User, Zap } from "lucide-react";
+import { Bot, Calendar, Cpu, Globe, Wrench, User, Zap } from "lucide-react";
 import type { SessionSource } from "@/lib/session-repository";
 
 // ── Role Metadata (session transcript viewer) ───────────────

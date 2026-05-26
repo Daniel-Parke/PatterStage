@@ -58,7 +58,6 @@ async function safeFetchJSON<T extends { data: unknown } = { data: unknown }>(ur
 }
 
 // ── Typed response shapes for each API endpoint ─────────────
-interface StatusResponseData { soulFile: boolean; configFile: boolean; skillsCount: number; sessionsCount: number; memorySize: string; timestamp: string; }
 interface TemplatesResponseData { templates: Array<{ id: string; name: string; icon: string; color: string; category: string; categoryId?: string; profile: string; description: string; isCustom?: boolean }>; }
 interface CategoriesResponseData { categories: MissionCategory[]; }
 interface AgentsResponseData { processes: HermesProcess[]; }

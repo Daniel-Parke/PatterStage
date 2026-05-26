@@ -143,7 +143,7 @@ export default function BehaviourPage() {
     if (creating || !createName.trim()) return;
     setCreating(true);
     try {
-      const data = await apiFetch("/api/agent/profiles", {
+      await apiFetch("/api/agent/profiles", {
         method: "POST",
         body: JSON.stringify({
           name: createName.trim(),

@@ -198,7 +198,7 @@ export default function SkillsPage() {
         showToast(err instanceof Error ? err.message : "Failed to update skill", "error");
       }
     },
-    [selectedProfile, showToast],
+    [data, selectedProfile, showToast],
   );
 
   // ── Skill content preview ───────────────────────────────────────────────────

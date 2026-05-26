@@ -23,8 +23,8 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { safeApiCall } from "@/lib/api-fetch";
 import type { LogFileMeta } from "@/lib/log-files";
 import { formatBytes } from "@/lib/utils";
-import { LogRow, highlightText } from "@/components/logs/LogRow";
-import { LEVEL_TEXT_CLASS, GROUP_ORDER, GROUP_LABELS } from "@/components/logs/constants";
+import { LogRow } from "@/components/logs/LogRow";
+import { GROUP_ORDER, GROUP_LABELS } from "@/components/logs/constants";
 
 interface LogData {
   name: string;
