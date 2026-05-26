@@ -25,17 +25,24 @@ export interface LogGetData {
   availableLogs: LogFileMeta[];
 }
 
+interface ReadLastLinesResult {
+  allLines: number;
+  lines: string[];
+  mtime: Date;
+  size: number;
+}
+
 /**
  * Read the last `maxLines` lines from a file efficiently by reading
  * from the end in chunks. Avoids loading multi-MB log files entirely
  * into memory just to show the last 200 lines.
+ * Returns the file's mtime alongside the lines so callers don't need
+ * a redundant statSync call.
  */
-function readLastLines(filePath: string, maxLines: number): {
-  allLines: number;
-  lines: string[];
-} {
+function readLastLines(filePath: string, maxLines: number): ReadLastLinesResult {
   const stats = statSync(filePath);
   const fileSize = stats.size;
+  const mtime = stats.mtime;
 
   // Small file: read entirely via readFileSync (also supports test mocks)
   if (fileSize <= CHUNK_SIZE) {
@@ -44,6 +51,8 @@ function readLastLines(filePath: string, maxLines: number): {
     return {
       allLines: allLines.length,
       lines: allLines.slice(-maxLines).reverse(),
+      mtime,
+      size: fileSize,
     };
   }
 
@@ -85,6 +94,8 @@ function readLastLines(filePath: string, maxLines: number): {
     return {
       allLines: allLines.length,
       lines: allLines.slice(-maxLines).reverse(),
+      mtime,
+      size: fileSize,
     };
   } finally {
     closeSync(fd);
@@ -143,12 +154,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const stats = statSync(logPath);
-    const { allLines, lines } = readLastLines(logPath, maxLines);
+    const { allLines, lines, mtime, size } = readLastLines(logPath, maxLines);
 
     // Fallback timestamp: use file mtime for lines that have no parseable timestamp.
     // Format must match RE_SPACE_TS so the frontend parseLogLine() recognizes it.
-    const fileMtime = stats.mtime.toISOString().replace("T", " ").slice(0, 19);
+    const fileMtime = mtime.toISOString().replace("T", " ").slice(0, 19);
     const linesWithTimestamp = lines.map((line) => {
       // Only inject if line is non-empty and has no recognized timestamp pattern.
       if (!line.trim()) return line;
@@ -170,8 +180,8 @@ export async function GET(request: NextRequest) {
         name: safeName,
         totalLines: allLines,
         showingLines: lines.length,
-        size: stats.size,
-        modified: stats.mtime.toISOString(),
+        size: size,
+        modified: mtime.toISOString(),
         lines: linesWithTimestamp,
         availableLogs,
       },
