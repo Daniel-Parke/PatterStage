@@ -19,11 +19,7 @@ import {
   MessageSquare,
   HardDrive,
   ChevronRight,
-  Globe,
   Filter,
-  Bot,
-  Zap,
-  Calendar,
 } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import { SearchInput } from "@/components/ui/Input";
@@ -33,7 +29,9 @@ import Pagination from "@/components/ui/Pagination";
 import { useToast } from "@/components/ui/Toast";
 import { timeAgo } from "@/lib/utils";
 import AppPageShell from "@/components/layout/AppPageShell";
-import type { SessionRecord, SessionSource } from "@/lib/session-repository";
+import type { SessionRecord } from "@/lib/session-repository";
+import type { SessionSource } from "@/lib/session-repository";
+import { SOURCE_META, formatSessionTitle } from "@/components/session/constants";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -46,34 +44,10 @@ interface SessionsResponse {
 
 const PAGE_SIZE = 50;
 
-const SOURCE_META: Record<
-  SessionSource,
-  { label: string; colorClass: string; icon: React.ReactNode }
-> = {
-  cli: { label: "CLI", colorClass: "bg-neon-orange/10 text-neon-orange", icon: <Bot className="w-3 h-3" /> },
-  cron: { label: "Cron", colorClass: "bg-neon-cyan/10 text-neon-cyan", icon: <Calendar className="w-3 h-3" /> },
-  mission: { label: "Mission", colorClass: "bg-neon-green/10 text-neon-green", icon: <Zap className="w-3 h-3" /> },
-  api: { label: "API", colorClass: "bg-neon-purple/10 text-neon-purple", icon: <Globe className="w-3 h-3" /> },
-};
-
-// ── Helpers ─────────────────────────────────────────────────
-
-
-function formatTitle(session: SessionRecord): string {
-  if (session.title) return session.title;
-  if (session.source === "cron" && session.profileName) {
-    return `Cron: ${session.profileName}`;
-  }
-  if (session.source === "mission" && session.profileName) {
-    return `Mission: ${session.profileName}`;
-  }
-  return `Session ${session.id.slice(0, 8)}`;
-}
-
 // ── Components ───────────────────────────────────────────────
 
 function SessionCard({ session }: { session: SessionRecord }) {
-  const title = formatTitle(session);
+  const title = formatSessionTitle(session);
   const meta = SOURCE_META[session.source] ?? SOURCE_META.cli;
   const statusColor =
     session.status === "active"

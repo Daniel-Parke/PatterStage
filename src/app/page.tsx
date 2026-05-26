@@ -46,8 +46,9 @@ import { timeAgo, timeUntil, titleCase, parseSchedule } from "@/lib/utils";
 const MONITOR_FETCH_INIT: RequestInit = { cache: "no-store" };
 import AppPageShell from "@/components/layout/AppPageShell";
 import { shellHeaderBarClasses } from "@/lib/theme";
-import { StatPillSkeleton } from "@/components/skeletons";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
+import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
 
 // ── Live Clock (isolated re-render) ───────────────────────────
 
@@ -68,86 +69,6 @@ const LiveClock = reactMemo(function LiveClock() {
     </>
   );
 });
-
-// ── Status Badge (unified — used by both missions and cron) ──
-interface StatusBadgeDef {
-  bg: string;
-  text: string;
-  icon: React.ReactNode;
-  label: string;
-}
-
-function StatusBadge({ def }: { def: StatusBadgeDef }) {
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono ${def.bg} ${def.text} flex-shrink-0`}>
-      {def.icon} {def.label}
-    </span>
-  );
-}
-
-const MISSION_BADGE_STYLES: Record<string, StatusBadgeDef> = {
-  queued: { bg: "bg-neon-orange/10", text: "text-neon-orange", icon: <Clock className="w-3 h-3" />, label: "Queued" },
-  dispatched: { bg: "bg-neon-cyan/10", text: "text-neon-cyan", icon: <Loader2 className="w-3 h-3 animate-spin" />, label: "Dispatched" },
-  successful: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <CheckCircle2 className="w-3 h-3" />, label: "Successful" },
-  failed: { bg: "bg-red-500/10", text: "text-red-400", icon: <XCircle className="w-3 h-3" />, label: "Failed" },
-};
-
-const CRON_BADGE_STYLES: Record<string, StatusBadgeDef> = {
-  running: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <Loader2 className="w-2.5 h-2.5 animate-spin" />, label: "Running" },
-  scheduled: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <Play className="w-2.5 h-2.5" />, label: "Active" },
-  queued: { bg: "bg-neon-orange/10", text: "text-neon-orange", icon: <Clock className="w-2.5 h-2.5" />, label: "Queued" },
-  completed: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <CheckCircle2 className="w-2.5 h-2.5" />, label: "Done" },
-  failed: { bg: "bg-red-500/10", text: "text-red-400", icon: <XCircle className="w-2.5 h-2.5" />, label: "Failed" },
-};
-
-function MissionStatusBadge({ status }: { status: string }) {
-  const def = MISSION_BADGE_STYLES[status] || MISSION_BADGE_STYLES.queued;
-  return <StatusBadge def={{ ...def, label: titleCase(status) }} />;
-}
-
-function CronStatusBadge({ state, enabled }: { state: string; enabled: boolean }) {
-  if (!enabled) {
-    return (
-      <StatusBadge def={{ bg: "bg-white/5", text: "text-white/40", icon: <Pause className="w-2.5 h-2.5" />, label: "Paused" }} />
-    );
-  }
-  const def = CRON_BADGE_STYLES[state] || { bg: "bg-white/5", text: "text-white/40", icon: null, label: titleCase(state) };
-  return <StatusBadge def={def} />;
-}
-
-// ── Compact Stat Pill ─────────────────────────────────────────
-const STAT_COLOR_CLASSES: Record<AccentColor, string> = {
-  cyan: "border-neon-cyan/20 text-neon-cyan",
-  purple: "border-neon-purple/20 text-neon-purple",
-  green: "border-neon-green/20 text-neon-green",
-  pink: "border-neon-pink/20 text-neon-pink",
-  orange: "border-neon-orange/20 text-neon-orange",
-  red: "border-red-500/20 text-red-400",
-  blue: "border-blue-500/20 text-blue-400",
-  yellow: "border-yellow-500/20 text-yellow-400",
-};
-
-function StatPill({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-  color: AccentColor;
-}) {
-  return (
-    <div className={`rounded-lg border ${STAT_COLOR_CLASSES[color]} bg-dark-900/50 px-4 py-3 flex items-center gap-3 min-w-0`}>
-      <Icon className="w-4 h-4 opacity-60 flex-shrink-0" />
-      <div className="min-w-0 flex-1">
-        <div className="text-[10px] font-mono text-white/40 uppercase truncate">{label}</div>
-        <div className="text-lg font-bold font-mono truncate">{value}</div>
-      </div>
-    </div>
-  );
-}
 
 // ── Template Category Constants (module-level — don't re-create on every render) ──
 

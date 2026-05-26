@@ -8,10 +8,6 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
-  User,
-  Bot,
-  Wrench,
-  Cpu,
   Copy,
   Check,
   ChevronDown,
@@ -22,6 +18,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { messageSummary } from "@/lib/utils";
+import { ROLE_META } from "@/components/session/constants";
 
 interface SessionMessage {
   index: number;
@@ -49,43 +46,6 @@ interface SessionData {
   size: number;
   created: string;
 }
-// ── Role-to-meta mapping (module-level, shared by MessageBubble and page) ──
-const ROLE_META: Record<string, {
-  icon: React.ReactNode; color: string; bg: string; bgSolid: string; text: string; label: string;
-}> = {
-  user: {
-    icon: <User className="w-3.5 h-3.5" />,
-    color: "text-neon-cyan",
-    bg: "border-neon-cyan/20 bg-neon-cyan/5",
-    bgSolid: "bg-neon-cyan/10",
-    text: "text-neon-cyan",
-    label: "USER",
-  },
-  assistant: {
-    icon: <Bot className="w-3.5 h-3.5" />,
-    color: "text-neon-purple",
-    bg: "border-neon-purple/20 bg-neon-purple/5",
-    bgSolid: "bg-neon-purple/10",
-    text: "text-neon-purple",
-    label: "ASSISTANT",
-  },
-  tool: {
-    icon: <Wrench className="w-3.5 h-3.5" />,
-    color: "text-neon-green",
-    bg: "border-neon-green/20 bg-neon-green/5",
-    bgSolid: "bg-neon-green/10",
-    text: "text-neon-green",
-    label: "TOOL",
-  },
-  system: {
-    icon: <Cpu className="w-3.5 h-3.5" />,
-    color: "text-white/50",
-    bg: "border-white/10 bg-white/5",
-    bgSolid: "bg-white/5",
-    text: "text-white/40",
-    label: "SYSTEM",
-  },
-};
 
 function MessageBubble({ msg, index, messageRefs }: { msg: SessionMessage; index: number; messageRefs: React.MutableRefObject<Map<number, HTMLDivElement>> }) {
   const [expanded, setExpanded] = useState(false);

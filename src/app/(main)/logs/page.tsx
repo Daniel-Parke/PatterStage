@@ -22,7 +22,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { LogFileGroup, LogFileMeta } from "@/lib/log-files";
-import { parseLogLine, type ParsedLogLevel } from "@/lib/log-line-format";
+import { parseLogLine } from "@/lib/log-line-format";
 import { formatBytes } from "@/lib/utils";
 
 interface LogData {
@@ -36,20 +36,14 @@ interface LogData {
   error?: string;
 }
 
-function levelTextClass(level: ParsedLogLevel): string {
-  switch (level) {
-    case "error":
-      return "text-red-400";
-    case "warn":
-      return "text-neon-orange";
-    case "debug":
-      return "text-white/30";
-    case "info":
-      return "text-white/60";
-    default:
-      return "text-white/45";
-  }
-}
+// ── Level text class lookup (const map, faster than switch) ──
+const LEVEL_TEXT_CLASS: Record<string, string> = {
+  error: "text-red-400",
+  warn: "text-neon-orange",
+  debug: "text-white/30",
+  info: "text-white/60",
+  unknown: "text-white/45",
+};
 
 const GROUP_ORDER: LogFileGroup[] = ["core", "system", "other"];
 const GROUP_LABELS: Record<LogFileGroup, string> = {
@@ -89,10 +83,10 @@ function LogRow({
       }`}
     >
       <span className="text-neon-cyan/45 truncate tabular-nums">{p.timestamp ?? "—"}</span>
-      <span className={`uppercase tracking-wide text-[10px] ${levelTextClass(p.level)}`}>
+      <span className={`uppercase tracking-wide text-[10px] ${LEVEL_TEXT_CLASS[p.level] ?? LEVEL_TEXT_CLASS.unknown}`}>
         {p.level}
       </span>
-      <span className={`min-w-0 break-words ${levelTextClass(p.level)}`}>
+      <span className={`min-w-0 break-words ${LEVEL_TEXT_CLASS[p.level] ?? LEVEL_TEXT_CLASS.unknown}`}>
         {highlightText(p.message, searchTerm)}
       </span>
     </div>
