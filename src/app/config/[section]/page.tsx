@@ -11,10 +11,10 @@ import Link from "next/link";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
-import { Toggle, Select, NumberInput, TextInput } from "@/components/ui/Input";
 import { LoadingSpinner, ErrorBanner } from "@/components/ui/LoadingSpinner";
-import { getSectionDef, type FieldDef } from "@/lib/config-schema";
+import { getSectionDef } from "@/lib/config-schema";
 import { apiFetch } from "@/lib/api-fetch";
+import ConfigField from "@/components/config/ConfigField";
 
 export default function ConfigSectionPage() {
   const params = useParams();
@@ -163,93 +163,6 @@ export default function ConfigSectionPage() {
     );
   }
 
-  const renderField = (field: FieldDef) => {
-    const value = values[field.key];
-
-    switch (field.type) {
-      case "boolean":
-        return (
-          <Toggle
-            key={field.key}
-            label={field.label}
-            value={Boolean(value)}
-            onChange={(v) => updateValue(field.key, v)}
-            description={field.description}
-            color={sectionDef.color}
-          />
-        );
-      case "number":
-        return (
-          <NumberInput
-            key={field.key}
-            label={field.label}
-            value={typeof value === "number" ? value : 0}
-            onChange={(v) => updateValue(field.key, v)}
-            min={field.min}
-            max={field.max}
-            description={field.description}
-          />
-        );
-      case "select":
-        return (
-          <Select
-            key={field.key}
-            label={field.label}
-            value={typeof value === "string" ? value : ""}
-            onChange={(v) => updateValue(field.key, v)}
-            options={field.options || []}
-            description={field.description}
-            color={sectionDef.color}
-          />
-        );
-      case "textarea":
-        return (
-          <div key={field.key} className="space-y-1.5">
-            <label className="text-sm font-medium text-white/70">
-              {field.label}
-            </label>
-            {field.description && (
-              <p className="text-xs text-white/40">{field.description}</p>
-            )}
-            <textarea
-              value={typeof value === "string" ? value : ""}
-              onChange={(e) => updateValue(field.key, e.target.value)}
-              rows={4}
-              className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-neon-cyan/50 transition-colors font-mono resize-y"
-            />
-          </div>
-        );
-      default:
-        // Guard against rendering object/array values as "[object Object]"
-        // which would silently corrupt the config.yaml on save.
-        if (typeof value === "object" && value !== null) {
-          return (
-            <div key={field.key} className="space-y-1.5">
-              <label className="text-sm font-medium text-white/70">
-                {field.label}
-              </label>
-              {field.description && (
-                <p className="text-xs text-white/40">{field.description}</p>
-              )}
-              <div className="text-xs text-white/30 bg-dark-800/50 rounded-lg p-3 font-mono max-h-60 overflow-y-auto whitespace-pre-wrap">
-                {JSON.stringify(value, null, 2) || "(not configured)"}
-              </div>
-            </div>
-          );
-        }
-        return (
-          <TextInput
-            key={field.key}
-            label={field.label}
-            value={typeof value === "string" ? value : String(value ?? "")}
-            onChange={(v) => updateValue(field.key, v)}
-            description={field.description}
-            placeholder={field.placeholder}
-          />
-        );
-    }
-  };
-
   const SectionIcon = sectionDef.icon;
   const showActions =
     !isPlatformToolsetsPreview && (sectionDef.fields.length > 0 || isFileSection);
@@ -366,7 +279,15 @@ export default function ConfigSectionPage() {
         {/* Editable fields for YAML sections */}
         {sectionDef.fields.length > 0 && (
           <div className="rounded-xl border border-white/10 bg-dark-900/50 p-6 space-y-5 mb-6">
-            {sectionDef.fields.map(renderField)}
+            {sectionDef.fields.map((field) => (
+              <ConfigField
+                key={field.key}
+                field={field}
+                value={values[field.key]}
+                sectionDef={sectionDef}
+                onUpdate={updateValue}
+              />
+            ))}
           </div>
         )}
 

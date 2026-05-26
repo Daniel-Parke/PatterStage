@@ -82,8 +82,10 @@ function maskConfigSecrets(config: Record<string, unknown>): Record<string, unkn
 }
 
 // GET /api/config — return full config (with secrets masked)
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const auth = requireAuth(request);
+    if (auth) return auth;
     const config = readCachedConfig();
     return NextResponse.json({ data: maskConfigSecrets(config) });
   } catch (error) {

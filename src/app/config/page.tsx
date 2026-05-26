@@ -5,13 +5,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Settings, ChevronRight, Wrench, Sparkles } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { iconColorMap, colorBorderMap } from "@/lib/theme";
+import { apiFetch } from "@/lib/api-fetch";
 
 // ── Category definitions (mirrors sidebar groups) ─────────
 interface CategoryDef {
@@ -106,13 +107,25 @@ function SectionCard({
 
 export default function ConfigIndexPage() {
   const [config, setConfig] = useState<Record<string, unknown> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadConfig = useCallback(async (signal?: AbortSignal) => {
+    setLoading(true);
+    try {
+      const json = await apiFetch("/api/config", { signal });
+      setConfig(json.data ?? null);
+    } catch {
+      setConfig(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    fetch("/api/config")
-      .then((res) => res.json())
-      .then((d) => setConfig(d.data))
-      .catch(() => setConfig(null));
-  }, []);
+    const controller = new AbortController();
+    void loadConfig(controller.signal);
+    return () => controller.abort();
+  }, [loadConfig]);
 
   return (
     <AppPageShell>
@@ -126,8 +139,10 @@ export default function ConfigIndexPage() {
       />
 
       <div className="max-w-7xl mx-auto px-6 py-6 space-y-8 flex-1 w-full">
-        {!config ? (
+        {!config && loading ? (
           <LoadingSpinner text="Loading configuration..." />
+        ) : !config ? (
+          <p className="text-xs text-white/40 font-mono">Failed to load configuration.</p>
         ) : (
           <>
             {/* Quick links */}
