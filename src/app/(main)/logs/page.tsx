@@ -20,6 +20,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import AppPageShell from "@/components/layout/AppPageShell";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { safeApiCall } from "@/lib/api-fetch";
 import type { LogFileMeta } from "@/lib/log-files";
 import { formatBytes } from "@/lib/utils";
 import { LogRow, highlightText } from "@/components/logs/LogRow";
@@ -94,15 +95,14 @@ export default function LogsPage() {
     setLoading(true);
     setActionMessage(null);
     try {
-      const res = await fetch("/api/logs", { method: "DELETE" });
-      const json: { data?: { cleared?: number }; error?: string } = await res.json().catch(() => ({}));
-      if (!res.ok || json.error) {
-        setActionMessage(json.error ?? "Delete failed");
+      const { ok, data, error } = await safeApiCall<{ cleared?: number }>("/api/logs", { method: "DELETE" });
+      if (!ok || error) {
+        setActionMessage(error ?? "Delete failed");
         return;
       }
       setActionMessage(
-        typeof json.data?.cleared === "number"
-          ? `Cleared ${json.data.cleared} log file(s).`
+        typeof data?.cleared === "number"
+          ? `Cleared ${data.cleared} log file(s).`
           : "Logs cleared.",
       );
       void loadLogs();

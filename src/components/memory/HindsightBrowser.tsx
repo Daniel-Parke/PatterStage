@@ -17,6 +17,7 @@ import {
 import { SearchInput } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
+import { safeApiCall } from "@/lib/api-fetch";
 import { parseReflectResponse } from "./hindsight/utils";
 import type { Tab, Memory, Directive, MentalModel, HealthState } from "./hindsight/types";
 import HealthBanner from "./hindsight/HealthBanner";
@@ -159,12 +160,14 @@ export default function HindsightBrowser() {
     setAdding(true);
     try {
       const tags = newTags.split(",").map(t => t.trim()).filter(Boolean);
-      const res = await fetch("/api/memory/hindsight", {
+      const { ok, error } = await safeApiCall("/api/memory/hindsight", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: newContent, tags: tags.length > 0 ? tags : undefined }),
+        body: { content: newContent, tags: tags.length > 0 ? tags : undefined },
       });
-      if (!res.ok) throw new Error("Failed");
+      if (!ok) {
+        showToast(error ?? "Failed to store memory", "error");
+        return;
+      }
       showToast("Memory stored", "success");
       setShowAddModal(false);
       setNewContent("");
@@ -208,12 +211,14 @@ export default function HindsightBrowser() {
     setCreatingDirective(true);
     try {
       const tags = dirForm.tags.split(",").map(t => t.trim()).filter(Boolean);
-      const res = await fetch("/api/memory/hindsight", {
+      const { ok, error } = await safeApiCall("/api/memory/hindsight", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "create-directive", name: dirForm.name, content: dirForm.content, priority: parseInt(dirForm.priority) || 0, tags: tags.length > 0 ? tags : undefined }),
+        body: { action: "create-directive", name: dirForm.name, content: dirForm.content, priority: parseInt(dirForm.priority) || 0, tags: tags.length > 0 ? tags : undefined },
       });
-      if (!res.ok) throw new Error("Failed");
+      if (!ok) {
+        showToast(error ?? "Failed to create directive", "error");
+        return;
+      }
       showToast("Directive created", "success");
       setShowDirectiveModal(false);
       setDirForm({ name: "", content: "", priority: "0", tags: "" });
@@ -226,33 +231,29 @@ export default function HindsightBrowser() {
   };
 
   const handleToggleDirective = async (directive: Directive) => {
-    try {
-      const res = await fetch("/api/memory/hindsight", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "update-directive", id: directive.id, is_active: !directive.is_active }),
-      });
-      if (!res.ok) throw new Error("Failed");
-      showToast(directive.is_active ? "Directive deactivated" : "Directive activated", "success");
-      await loadDirectives();
-    } catch {
-      showToast("Failed to update directive", "error");
+    const { ok, error } = await safeApiCall("/api/memory/hindsight", {
+      method: "POST",
+      body: { action: "update-directive", id: directive.id, is_active: !directive.is_active },
+    });
+    if (!ok) {
+      showToast(error ?? "Failed to update directive", "error");
+      return;
     }
+    showToast(directive.is_active ? "Directive deactivated" : "Directive activated", "success");
+    await loadDirectives();
   };
 
   const handleDeleteDirective = async (id: string) => {
-    try {
-      const res = await fetch("/api/memory/hindsight", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "directive", id }),
-      });
-      if (!res.ok) throw new Error("Failed");
-      showToast("Directive deleted", "success");
-      setDirectives(prev => prev.filter(d => d.id !== id));
-    } catch {
-      showToast("Failed to delete directive", "error");
+    const { ok, error } = await safeApiCall("/api/memory/hindsight", {
+      method: "DELETE",
+      body: { type: "directive", id },
+    });
+    if (!ok) {
+      showToast(error ?? "Failed to delete directive", "error");
+      return;
     }
+    showToast("Directive deleted", "success");
+    setDirectives(prev => prev.filter(d => d.id !== id));
   };
 
   const openEditDirective = (d: Directive) => {
@@ -265,12 +266,14 @@ export default function HindsightBrowser() {
     setSavingDirective(true);
     try {
       const tags = editDirForm.tags.split(",").map(t => t.trim()).filter(Boolean);
-      const res = await fetch("/api/memory/hindsight", {
+      const { ok, error } = await safeApiCall("/api/memory/hindsight", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "update-directive", id: editingDirective.id, name: editDirForm.name, content: editDirForm.content, priority: parseInt(editDirForm.priority) || 0, tags }),
+        body: { action: "update-directive", id: editingDirective.id, name: editDirForm.name, content: editDirForm.content, priority: parseInt(editDirForm.priority) || 0, tags },
       });
-      if (!res.ok) throw new Error("Failed");
+      if (!ok) {
+        showToast(error ?? "Failed to update directive", "error");
+        return;
+      }
       showToast("Directive updated", "success");
       setEditingDirective(null);
       await loadDirectives();
@@ -312,12 +315,14 @@ export default function HindsightBrowser() {
     setCreatingModel(true);
     try {
       const tags = modelForm.tags.split(",").map(t => t.trim()).filter(Boolean);
-      const res = await fetch("/api/memory/hindsight", {
+      const { ok, error } = await safeApiCall("/api/memory/hindsight", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "create-model", name: modelForm.name, query: modelForm.query, tags: tags.length > 0 ? tags : undefined }),
+        body: { action: "create-model", name: modelForm.name, query: modelForm.query, tags: tags.length > 0 ? tags : undefined },
       });
-      if (!res.ok) throw new Error("Failed");
+      if (!ok) {
+        showToast(error ?? "Failed to create mental model", "error");
+        return;
+      }
       showToast("Mental model created (generating in background)", "success");
       setShowModelModal(false);
       setModelForm({ name: "", query: "", tags: "" });
@@ -331,35 +336,31 @@ export default function HindsightBrowser() {
 
   const handleRefreshModel = async (id: string) => {
     setRefreshingModelId(id);
-    try {
-      const res = await fetch("/api/memory/hindsight", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "refresh-model", id }),
-      });
-      if (!res.ok) throw new Error("Failed");
-      showToast("Mental model refresh started", "success");
-      await loadModels();
-    } catch {
-      showToast("Failed to refresh mental model", "error");
-    } finally {
+    const { ok, error } = await safeApiCall("/api/memory/hindsight", {
+      method: "POST",
+      body: { action: "refresh-model", id },
+    });
+    if (!ok) {
+      showToast(error ?? "Failed to refresh mental model", "error");
       setRefreshingModelId(null);
+      return;
     }
+    showToast("Mental model refresh started", "success");
+    await loadModels();
+    setRefreshingModelId(null);
   };
 
   const handleDeleteModel = async (id: string) => {
-    try {
-      const res = await fetch("/api/memory/hindsight", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "model", id }),
-      });
-      if (!res.ok) throw new Error("Failed");
-      showToast("Mental model deleted", "success");
-      setMentalModels(prev => prev.filter(m => m.id !== id));
-    } catch {
-      showToast("Failed to delete mental model", "error");
+    const { ok, error } = await safeApiCall("/api/memory/hindsight", {
+      method: "DELETE",
+      body: { type: "model", id },
+    });
+    if (!ok) {
+      showToast(error ?? "Failed to delete mental model", "error");
+      return;
     }
+    showToast("Mental model deleted", "success");
+    setMentalModels(prev => prev.filter(m => m.id !== id));
   };
 
   const openEditModel = (m: MentalModel) => {
@@ -372,12 +373,14 @@ export default function HindsightBrowser() {
     setSavingModel(true);
     try {
       const tags = editModelForm.tags.split(",").map(t => t.trim()).filter(Boolean);
-      const res = await fetch("/api/memory/hindsight", {
+      const { ok, error } = await safeApiCall("/api/memory/hindsight", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "update-model", id: editingModel.id, name: editModelForm.name, query: editModelForm.query || undefined, tags }),
+        body: { action: "update-model", id: editingModel.id, name: editModelForm.name, query: editModelForm.query || undefined, tags },
       });
-      if (!res.ok) throw new Error("Failed");
+      if (!ok) {
+        showToast(error ?? "Failed to update mental model", "error");
+        return;
+      }
       showToast("Mental model updated", "success");
       setEditingModel(null);
       await loadModels();

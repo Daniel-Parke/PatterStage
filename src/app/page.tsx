@@ -156,10 +156,9 @@ export default function Dashboard() {
   const handleSyncNow = useCallback(async () => {
     setSyncNowBusy(true);
     try {
-      const res = await fetch("/api/sync", { method: "POST" });
-      const data = (await res.json()) as { error?: string };
-      if (!res.ok) {
-        showToast(data.error ?? "Sync failed", "error");
+      const { ok, error } = await safeApiCall("/api/sync", { method: "POST" });
+      if (!ok) {
+        showToast(error ?? "Sync failed", "error");
         return;
       }
       showToast("Background sync completed", "success");
@@ -209,9 +208,8 @@ export default function Dashboard() {
       }
       showToast(`Cancelled "${missionName}"`, "success");
       // Refresh missions
-      const data = await fetch("/api/missions");
-      const d = await data.json();
-      if (d.data) setData({ missions: d.data.missions || [] });
+      const { data: refreshData } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions");
+      if (refreshData) setData({ missions: refreshData.missions || [] });
     } catch {
       showToast("Failed to cancel mission", "error");
     }
@@ -817,13 +815,8 @@ export default function Dashboard() {
             <RefreshCw
               className="w-3 h-3 text-white/20 hover:text-white/50 cursor-pointer"
               onClick={async () => {
-                try {
-                  const res = await fetch("/api/agents");
-                  const d = await res.json();
-                  setData({ processes: d.data?.processes || [] });
-                } catch {
-                  showToast("Failed to refresh processes", "error");
-                }
+                const { data: agentsData } = await safeApiCall<{ processes: HermesProcess[] }>("/api/agents");
+                setData({ processes: agentsData?.processes || [] });
               }}
             />
           </div>

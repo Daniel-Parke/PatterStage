@@ -28,6 +28,7 @@ import Badge from "@/components/ui/Badge";
 import Pagination from "@/components/ui/Pagination";
 import { useToast } from "@/components/ui/Toast";
 import { timeAgo } from "@/lib/utils";
+import { apiFetch } from "@/lib/api-fetch";
 import AppPageShell from "@/components/layout/AppPageShell";
 import type { SessionRecord } from "@/lib/session-repository";
 import type { SessionSource } from "@/lib/session-repository";
@@ -117,9 +118,8 @@ export default function SessionsPage() {
       if (sourceFilter) params.set("source", sourceFilter);
 
       try {
-        const res = await fetch(`/api/sessions?${params}`);
-        const d = await res.json();
-        setData(d.data ?? { sessions: [], total: 0 });
+        const json = await apiFetch(`/api/sessions?${params}`);
+        setData(json.data ?? { sessions: [], total: 0 });
       } catch {
         showToast("Failed to load sessions", "error");
       } finally {
