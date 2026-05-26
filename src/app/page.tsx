@@ -145,11 +145,8 @@ export default function Dashboard() {
   const router = useRouter();
 
   const refreshMonitor = useCallback(async () => {
-    const res = await fetch("/api/monitor", MONITOR_FETCH_INIT).catch(() => null);
-    if (res?.ok) {
-      const d = await res.json().catch(() => null);
-      if (d?.data) setData({ monitor: d.data });
-    }
+    const { data } = await safeApiCall<{ data?: MonitorData }>("/api/monitor", { cache: "no-store" } as RequestInit);
+    if (data?.data) setData({ monitor: data.data });
   }, [setData]);
 
   const handleSyncNow = useCallback(async () => {
