@@ -5,7 +5,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, createElement } from "react";
+import { useState, useEffect } from "react";
 import { Settings, ChevronRight, Wrench, Sparkles } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -76,9 +76,7 @@ function SectionCard({
       className={`group rounded-xl border bg-dark-900/50 p-5 transition-all ${colorBorderMap[section.color]}`}
     >
       <div className="flex items-center justify-between mb-3">
-        <span className={iconClass}>
-          {createElement(section.icon)}
-        </span>
+        <section.icon className={iconClass} />
         <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/60 group-hover:translate-x-1 transition-all" />
       </div>
       <h3 className="text-base font-semibold text-white mb-1">
