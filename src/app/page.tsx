@@ -43,8 +43,19 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import AppPageShell from "@/components/layout/AppPageShell";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
+import { safeApiCall } from "@/lib/api-fetch";
 
 const MONITOR_FETCH_INIT: RequestInit = { cache: "no-store" };
+
+// ── Safe JSON fetcher for parallel initial loads ─────────────────
+async function safeFetchJSON<T = unknown>(url: string, init?: RequestInit): Promise<T | null> {
+  try {
+    const res = await fetch(url, init);
+    return await res.json() as T;
+  } catch {
+    return null;
+  }
+}
 
 // ── Polling configuration type (module-level, not inline in useEffect) ──
 interface PollConfig {
@@ -180,14 +191,12 @@ export default function Dashboard() {
     if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
     setCancelConfirmId(null);
     try {
-      const res = await fetch("/api/missions", {
+      const { ok, error } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "cancel", missionId }),
+        body: { action: "cancel", missionId },
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        showToast(body?.error || "Failed to cancel mission", "error");
+      if (!ok) {
+        showToast(error || "Failed to cancel mission", "error");
         return;
       }
       showToast(`Cancelled "${missionName}"`, "success");
@@ -209,14 +218,12 @@ export default function Dashboard() {
         : newSchedule;
 
     try {
-      const putRes = await fetch("/api/cron", {
+      const { ok, error } = await safeApiCall("/api/cron", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: jobId, schedule: newSchedule }),
+        body: { id: jobId, schedule: newSchedule },
       });
-      if (!putRes.ok) {
-        const body = await putRes.json().catch(() => null);
-        showToast(body?.error || "Failed to update cron schedule", "error");
+      if (!ok) {
+        showToast(error || "Failed to update cron schedule", "error");
         return;
       }
       // Optimistic local update (will be reconciled by refreshMonitor)
@@ -261,27 +268,27 @@ export default function Dashboard() {
         missionsRes,
         defaultsRes,
       ] = await Promise.all([
-          fetch("/api/status", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
-          fetch("/api/config", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
-          fetch("/api/templates", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
-          fetch("/api/mission-categories", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
-          fetch("/api/monitor", { ...MONITOR_FETCH_INIT, signal }).then((r) => r.json()).catch(() => ({ data: null })),
-          fetch("/api/agents", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
-          fetch("/api/missions", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
-          fetch("/api/models/defaults", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
+          safeFetchJSON<{ data: unknown }>("/api/status", { signal }),
+          safeFetchJSON<{ data: unknown }>("/api/config", { signal }),
+          safeFetchJSON<{ data: unknown }>("/api/templates", { signal }),
+          safeFetchJSON<{ data: unknown }>("/api/mission-categories", { signal }),
+          safeFetchJSON<{ data: unknown }>("/api/monitor", { ...MONITOR_FETCH_INIT, signal }),
+          safeFetchJSON<{ data: unknown }>("/api/agents", { signal }),
+          safeFetchJSON<{ data: unknown }>("/api/missions", { signal }),
+          safeFetchJSON<{ data: unknown }>("/api/models/defaults", { signal }),
         ]);
 
       if (!signal.aborted) {
-        const agentDefaultId = defaultsRes.data?.defaults?.agent as string | undefined;
+        const agentDefaultId = defaultsRes?.data?.defaults?.agent as string | undefined;
         setRegistryAgentModelLabel(agentDefaultId ?? null);
         setData({
-          status: statusRes.data,
-          config: configRes.data,
-          templates: templatesRes.data?.templates || [],
-          categories: categoriesRes.data?.categories || [],
-          monitor: monitorRes.data,
-          processes: processesRes.data?.processes || processesRes.processes || [],
-          missions: missionsRes.data?.missions || [],
+          status: statusRes?.data ?? null,
+          config: configRes?.data ?? null,
+          templates: (templatesRes?.data as { templates?: unknown[] } | undefined)?.templates || [],
+          categories: (categoriesRes?.data as { categories?: unknown[] } | undefined)?.categories || [],
+          monitor: monitorRes?.data ?? null,
+          processes: (processesRes?.data as { processes?: HermesProcess[] } | undefined)?.processes || processesRes?.processes || [],
+          missions: (missionsRes?.data as { missions?: MissionBrief[] } | undefined)?.missions || [],
         });
         setReady(true);
       }
