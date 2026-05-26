@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
+import { requireAuth } from "@/lib/api-auth";
 import type { ApiResponse } from "@/types/hermes";
 
 // ── Tags normalization ───────────────────────────────────────
@@ -297,6 +298,8 @@ async function handleCount(bank: string) {
 
 // GET — List memories, recall, reflect, health check
 export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
   const action = request.nextUrl.searchParams.get("action") || "list";
   const query = request.nextUrl.searchParams.get("query") || undefined;
   const budget = request.nextUrl.searchParams.get("budget") || undefined;
@@ -363,6 +366,8 @@ export async function GET(request: NextRequest) {
 
 // POST — Retain memory, create directive, create mental model
 export async function POST(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
   try {
     const body = await request.json();
     const action = body.action || "retain";
@@ -435,6 +440,8 @@ export async function POST(request: NextRequest) {
 
 // DELETE — Remove directive or mental model
 export async function DELETE(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
   try {
     const body = await request.json();
     const { type, id, bank = DEFAULT_BANK } = body;

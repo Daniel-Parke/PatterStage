@@ -63,17 +63,16 @@ export default function LogsPage() {
       setLoading(true);
     }
     try {
-      const res = await fetch(
+      const { data: logData, error: logError } = await safeApiCall<LogData>(
         `/api/logs?name=${encodeURIComponent(activeLog)}&lines=${lineCount}`,
       );
-      const json: { data?: LogData; error?: string } = await res.json();
-      if (!res.ok || json.error) {
-        setLoadError(json.error ?? `Request failed (${res.status})`);
+      if (logError) {
+        setLoadError(logError ?? `Request failed`);
         if (!alreadyLoaded) setData(null);
         return;
       }
-      if (json.data) {
-        setData(json.data);
+      if (logData) {
+        setData(logData);
       }
     } catch {
       setLoadError("Network error while loading logs");
