@@ -5,7 +5,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import type { ReactNode } from "react";
 import {
   Terminal,
   RefreshCw,
@@ -21,9 +20,11 @@ import PageHeader from "@/components/layout/PageHeader";
 import AppPageShell from "@/components/layout/AppPageShell";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import type { LogFileGroup, LogFileMeta } from "@/lib/log-files";
-import { parseLogLine, type ParsedLogLevel } from "@/lib/log-line-format";
+import { safeApiCall } from "@/lib/api-fetch";
+import type { LogFileMeta } from "@/lib/log-files";
 import { formatBytes } from "@/lib/utils";
+import { LogRow } from "@/components/logs/LogRow";
+import { GROUP_ORDER, GROUP_LABELS } from "@/components/logs/constants";
 
 interface LogData {
   name: string;
@@ -34,69 +35,6 @@ interface LogData {
   lines: string[];
   availableLogs: LogFileMeta[];
   error?: string;
-}
-
-function levelTextClass(level: ParsedLogLevel): string {
-  switch (level) {
-    case "error":
-      return "text-red-400";
-    case "warn":
-      return "text-neon-orange";
-    case "debug":
-      return "text-white/30";
-    case "info":
-      return "text-white/60";
-    default:
-      return "text-white/45";
-  }
-}
-
-const GROUP_ORDER: LogFileGroup[] = ["core", "system", "other"];
-const GROUP_LABELS: Record<LogFileGroup, string> = {
-  core: "Core",
-  system: "System",
-  other: "Other",
-};
-
-function highlightText(text: string, searchTerm: string): ReactNode {
-  if (!searchTerm) return text;
-  const idx = text.toLowerCase().indexOf(searchTerm.toLowerCase());
-  if (idx === -1) return text;
-  return (
-    <>
-      {text.slice(0, idx)}
-      <span className="bg-neon-cyan/20 text-neon-cyan">{text.slice(idx, idx + searchTerm.length)}</span>
-      {text.slice(idx + searchTerm.length)}
-    </>
-  );
-}
-
-function LogRow({
-  line,
-  searchTerm,
-}: {
-  line: string;
-  searchTerm: string;
-}) {
-  const p = parseLogLine(line);
-  // filteredLines in the parent already pre-filters by search term,
-  // so every rendered LogRow is already a match when search is active.
-  const isMatch = !!searchTerm;
-  return (
-    <div
-      className={`grid grid-cols-1 sm:grid-cols-[minmax(0,9.5rem)_minmax(0,4.5rem)_1fr] gap-x-3 gap-y-0.5 items-baseline text-xs font-mono py-1.5 border-b border-white/[0.06] ${
-        isMatch ? "bg-neon-cyan/5 -mx-2 px-2 rounded" : ""
-      }`}
-    >
-      <span className="text-neon-cyan/45 truncate tabular-nums">{p.timestamp ?? "—"}</span>
-      <span className={`uppercase tracking-wide text-[10px] ${levelTextClass(p.level)}`}>
-        {p.level}
-      </span>
-      <span className={`min-w-0 break-words ${levelTextClass(p.level)}`}>
-        {highlightText(p.message, searchTerm)}
-      </span>
-    </div>
-  );
 }
 
 export default function LogsPage() {
@@ -157,15 +95,14 @@ export default function LogsPage() {
     setLoading(true);
     setActionMessage(null);
     try {
-      const res = await fetch("/api/logs", { method: "DELETE" });
-      const json: { data?: { cleared?: number }; error?: string } = await res.json().catch(() => ({}));
-      if (!res.ok || json.error) {
-        setActionMessage(json.error ?? "Delete failed");
+      const { ok, data, error } = await safeApiCall<{ cleared?: number }>("/api/logs", { method: "DELETE" });
+      if (!ok || error) {
+        setActionMessage(error ?? "Delete failed");
         return;
       }
       setActionMessage(
-        typeof json.data?.cleared === "number"
-          ? `Cleared ${json.data.cleared} log file(s).`
+        typeof data?.cleared === "number"
+          ? `Cleared ${data.cleared} log file(s).`
           : "Logs cleared.",
       );
       void loadLogs();

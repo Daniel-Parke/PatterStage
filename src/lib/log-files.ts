@@ -2,7 +2,7 @@
  * Hermes log file basenames (no directory, no .log suffix in API `name` param).
  */
 
-import { existsSync, readdirSync, statSync } from "fs";
+import { closeSync, existsSync, openSync, readFileSync, readdirSync, readSync, statSync } from "fs";
 import { relative, resolve } from "path";
 
 export const MAX_LOG_BASENAME_LEN = 128;
@@ -62,6 +62,85 @@ export function compareLogFileNames(a: string, b: string): number {
   const pb = LOG_SORT_PRIORITY[b] ?? 10;
   if (pa !== pb) return pa - pb;
   return a.localeCompare(b);
+}
+
+const CHUNK_SIZE = 64 * 1024; // 64KB — read from end of file in chunks
+
+export interface ReadLastLinesResult {
+  allLines: number;
+  lines: string[];
+  mtime: Date;
+  size: number;
+}
+
+/**
+ * Read the last `maxLines` lines from a file efficiently by reading
+ * from the end in chunks. Avoids loading multi-MB log files entirely
+ * into memory just to show the last 200 lines.
+ * Returns the file's mtime and size alongside the lines so callers don't need
+ * a redundant statSync call.
+ */
+export function readLastLines(filePath: string, maxLines: number): ReadLastLinesResult {
+  const stats = statSync(filePath);
+  const fileSize = stats.size;
+  const mtime = stats.mtime;
+
+  // Small file: read entirely via readFileSync (also supports test mocks)
+  if (fileSize <= CHUNK_SIZE) {
+    const content = readFileSync(filePath, "utf-8");
+    const allLines = content.split("\n").filter((l) => l.length > 0);
+    return {
+      allLines: allLines.length,
+      lines: allLines.slice(-maxLines).reverse(),
+      mtime,
+      size: fileSize,
+    };
+  }
+
+  // Large file: read chunks from the end
+  const fd = openSync(filePath, "r");
+  try {
+    let collected = "";
+    let bytesToRead = Math.min(CHUNK_SIZE, fileSize);
+    let offset = fileSize - bytesToRead;
+    let lineCount = 0;
+
+    // Read chunks from the end until we have enough lines or hit the start
+    while (offset >= 0 && lineCount < maxLines) {
+      const buf = Buffer.alloc(bytesToRead);
+      readSync(fd, buf, 0, bytesToRead, offset);
+      const chunk = buf.toString("utf-8");
+      collected = chunk + collected;
+
+      // Count lines in what we've collected
+      lineCount = 0;
+      for (let i = 0; i < collected.length; i++) {
+        if (collected[i] === "\n") lineCount++;
+      }
+
+      if (lineCount >= maxLines) break;
+
+      // Move back and read the previous chunk
+      offset -= CHUNK_SIZE;
+      if (offset < 0) {
+        // Read from start with adjusted size
+        bytesToRead = CHUNK_SIZE + offset;
+        offset = 0;
+      } else {
+        bytesToRead = CHUNK_SIZE;
+      }
+    }
+
+    const allLines = collected.split("\n").filter((l) => l.length > 0);
+    return {
+      allLines: allLines.length,
+      lines: allLines.slice(-maxLines).reverse(),
+      mtime,
+      size: fileSize,
+    };
+  } finally {
+    closeSync(fd);
+  }
 }
 
 /**

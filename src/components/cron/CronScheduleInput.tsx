@@ -56,7 +56,7 @@ interface CronScheduleInputProps {
 export default function CronScheduleInput({ value, onChange, error }: CronScheduleInputProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [textValue, setTextValue] = useState(value);
-  const [matchedPreset, setMatchedPreset] = useState<number>(-2); // -2 = not yet determined
+  const [matchedPreset, setMatchedPreset] = useState<number>(-1); // -1 = not matched yet
   const [customLabel, setCustomLabel] = useState<string>("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -94,7 +94,7 @@ export default function CronScheduleInput({ value, onChange, error }: CronSchedu
     const trimmed = raw.trim();
     if (!trimmed) {
       onChange("");
-      setMatchedPreset(-2);
+      setMatchedPreset(-1);
       setCustomLabel("");
       return;
     }

@@ -1,12 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
 // /api/models/sync/drift — detect config drift between DB and config.yaml
-// No auth required (read-only diagnostic)
 // ═══════════════════════════════════════════════════════════════
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
+import { requireAuth } from "@/lib/api-auth";
 import { detectConfigDrift } from "@/lib/sync-manager";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   try {
     const drift = detectConfigDrift();
     return NextResponse.json({ data: drift });

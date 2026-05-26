@@ -20,6 +20,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
+import { apiFetch } from "@/lib/api-fetch";
 import type { PlatformToolsets } from "@/lib/profile-config-builder";
 import type { AgentProfile } from "@/types/hermes";
 import {
@@ -50,9 +51,7 @@ export default function ToolsPage() {
 
   const loadProfileSyncStatus = useCallback(async () => {
     try {
-      const res = await fetch("/api/agent/profiles");
-      const data = await res.json();
-      if (!res.ok) return;
+      const data = await apiFetch("/api/agent/profiles");
       const profiles = (data.data?.profiles ?? []) as AgentProfile[];
       const match = profiles.find((p) => p.id === selectedProfile);
       setProfileSyncStatus(match?.syncStatus ?? null);
@@ -64,9 +63,7 @@ export default function ToolsPage() {
   const loadToolsets = useCallback(async () => {
     setLoadingToolsets(true);
     try {
-      const res = await fetch(`/api/agent/profiles/${selectedProfile}/toolsets`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to load toolsets");
+      const data = await apiFetch(`/api/agent/profiles/${selectedProfile}/toolsets`);
       const loaded = (data.data?.platformToolsets ?? {}) as PlatformToolsets;
       const unified = (data.data?.unifiedEnabled as string[] | undefined) ??
         unionToolsetsFromPlatforms(loaded);
@@ -150,13 +147,10 @@ export default function ToolsPage() {
       } else {
         payload = expandUnifiedToAllPlatforms(unifiedEnabled);
       }
-      const res = await fetch(`/api/agent/profiles/${selectedProfile}/toolsets`, {
+      await apiFetch(`/api/agent/profiles/${selectedProfile}/toolsets`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ platformToolsets: payload }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to save toolsets");
       showToast("Toolsets saved and pushed to Hermes", "success");
       await loadToolsets();
     } catch (err) {
@@ -172,13 +166,10 @@ export default function ToolsPage() {
   const pullFromHermes = async () => {
     setSyncing("pull");
     try {
-      const res = await fetch("/api/agent/profiles/sync/pull", {
+      await apiFetch("/api/agent/profiles/sync/pull", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profileSyncBody()),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Pull failed");
       showToast("Pulled toolsets from Hermes", "success");
       await loadToolsets();
       await loadProfileSyncStatus();
@@ -192,13 +183,10 @@ export default function ToolsPage() {
   const pushToHermes = async () => {
     setSyncing("push");
     try {
-      const res = await fetch("/api/agent/profiles/sync/push", {
+      await apiFetch("/api/agent/profiles/sync/push", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profileSyncBody()),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Push failed");
       const pushMsg =
         selectedProfile === "default"
           ? "Pushed profile to Hermes. Model defaults re-applied to config.yaml."
@@ -437,17 +425,7 @@ export default function ToolsPage() {
             {showAdvancedJson && (
               <textarea
                 value={toolsetsJson}
-                onChange={(event) => {
-                  setToolsetsJson(event.target.value);
-                  try {
-                    const parsed = JSON.parse(event.target.value) as PlatformToolsets;
-                    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-                      setPlatformToolsets(parsed);
-                    }
-                  } catch {
-                    /* invalid while typing */
-                  }
-                }}
+                onChange={(event) => setToolsetsJson(event.target.value)}
                 className="mt-2 w-full min-h-32 rounded-lg bg-dark-950/80 border border-white/10 p-3 text-xs font-mono text-white/80 outline-none focus:border-neon-orange/50"
                 spellCheck={false}
               />

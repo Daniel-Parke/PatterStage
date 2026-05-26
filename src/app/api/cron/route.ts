@@ -389,12 +389,15 @@ export async function PUT(request: NextRequest) {
     if (updates.state !== undefined) updatePayload.state = updates.state as string;
 
     if (updates.schedule !== undefined) {
-      const schedParsed = parseScheduleToJson(updates.schedule as string);
       const parsed = parseSchedule(updates.schedule as string);
       if (parsed.kind === "invalid") {
-        return NextResponse.json({ error: (parsed as { message: string }).message }, { status: 400 });
+        return NextResponse.json(
+          { error: parsed.message || `Invalid schedule: "${updates.schedule}"` },
+          { status: 400 }
+        );
       }
-      updatePayload.schedule = updates.schedule as string;
+      const schedParsed = parseScheduleToJson(updates.schedule as string);
+      updatePayload.schedule = schedParsed.scheduleJson;
       updatePayload.schedule_display = schedParsed.scheduleDisplay;
     }
 

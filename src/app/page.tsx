@@ -18,15 +18,11 @@ import {
   AlertTriangle,
   RefreshCw,
   CheckCircle2,
-  Pause,
-  Play,
+
   Radio,
   Rocket,
   ChevronRight,
   ChevronDown,
-  Clock,
-  Loader2,
-  XCircle,
   Gamepad2,
   BookOpen,
 } from "lucide-react";
@@ -42,12 +38,43 @@ import TemplateCard from "@/components/ui/TemplateCard";
 import { useToast } from "@/components/ui/Toast";
 import type { SystemStatus, AccentColor, MonitorData, HermesProcess, MissionBrief } from "@/types/hermes";
 import { timeAgo, timeUntil, titleCase, parseSchedule } from "@/lib/utils";
+import { shellHeaderBarClasses } from "@/lib/theme";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import AppPageShell from "@/components/layout/AppPageShell";
+import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
+import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
+import { safeApiCall } from "@/lib/api-fetch";
 
 const MONITOR_FETCH_INIT: RequestInit = { cache: "no-store" };
-import AppPageShell from "@/components/layout/AppPageShell";
-import { shellHeaderBarClasses } from "@/lib/theme";
-import { StatPillSkeleton } from "@/components/skeletons";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+
+// ── Safe JSON fetcher for parallel initial loads ─────────────────
+async function safeFetchJSON<T extends { data: unknown } = { data: unknown }>(url: string, init?: RequestInit): Promise<T | null> {
+  try {
+    const res = await fetch(url, init);
+    return await res.json() as T;
+  } catch {
+    return null;
+  }
+}
+
+// ── Typed response shapes for each API endpoint ─────────────
+interface TemplatesResponseData { templates: Array<{ id: string; name: string; icon: string; color: string; category: string; categoryId?: string; profile: string; description: string; isCustom?: boolean }>; }
+interface CategoriesResponseData { categories: MissionCategory[]; }
+interface AgentsResponseData { processes: HermesProcess[]; }
+interface MissionsResponseData { missions: MissionBrief[]; }
+interface DefaultsResponseData { defaults: { agent?: string } | null; }
+
+// ── Polling configuration type (module-level, not inline in useEffect) ──
+interface PollConfig {
+  url: string;
+  ms: number;
+  extract: (d: { data?: unknown }) => Partial<{
+    monitor: MonitorData | null;
+    processes: HermesProcess[];
+    missions: MissionBrief[];
+  }> | null;
+  init?: RequestInit;
+}
 
 // ── Live Clock (isolated re-render) ───────────────────────────
 
@@ -68,86 +95,6 @@ const LiveClock = reactMemo(function LiveClock() {
     </>
   );
 });
-
-// ── Status Badge (unified — used by both missions and cron) ──
-interface StatusBadgeDef {
-  bg: string;
-  text: string;
-  icon: React.ReactNode;
-  label: string;
-}
-
-function StatusBadge({ def }: { def: StatusBadgeDef }) {
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono ${def.bg} ${def.text} flex-shrink-0`}>
-      {def.icon} {def.label}
-    </span>
-  );
-}
-
-const MISSION_BADGE_STYLES: Record<string, StatusBadgeDef> = {
-  queued: { bg: "bg-neon-orange/10", text: "text-neon-orange", icon: <Clock className="w-3 h-3" />, label: "Queued" },
-  dispatched: { bg: "bg-neon-cyan/10", text: "text-neon-cyan", icon: <Loader2 className="w-3 h-3 animate-spin" />, label: "Dispatched" },
-  successful: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <CheckCircle2 className="w-3 h-3" />, label: "Successful" },
-  failed: { bg: "bg-red-500/10", text: "text-red-400", icon: <XCircle className="w-3 h-3" />, label: "Failed" },
-};
-
-const CRON_BADGE_STYLES: Record<string, StatusBadgeDef> = {
-  running: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <Loader2 className="w-2.5 h-2.5 animate-spin" />, label: "Running" },
-  scheduled: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <Play className="w-2.5 h-2.5" />, label: "Active" },
-  queued: { bg: "bg-neon-orange/10", text: "text-neon-orange", icon: <Clock className="w-2.5 h-2.5" />, label: "Queued" },
-  completed: { bg: "bg-neon-green/10", text: "text-neon-green", icon: <CheckCircle2 className="w-2.5 h-2.5" />, label: "Done" },
-  failed: { bg: "bg-red-500/10", text: "text-red-400", icon: <XCircle className="w-2.5 h-2.5" />, label: "Failed" },
-};
-
-function MissionStatusBadge({ status }: { status: string }) {
-  const def = MISSION_BADGE_STYLES[status] || MISSION_BADGE_STYLES.queued;
-  return <StatusBadge def={{ ...def, label: titleCase(status) }} />;
-}
-
-function CronStatusBadge({ state, enabled }: { state: string; enabled: boolean }) {
-  if (!enabled) {
-    return (
-      <StatusBadge def={{ bg: "bg-white/5", text: "text-white/40", icon: <Pause className="w-2.5 h-2.5" />, label: "Paused" }} />
-    );
-  }
-  const def = CRON_BADGE_STYLES[state] || { bg: "bg-white/5", text: "text-white/40", icon: null, label: titleCase(state) };
-  return <StatusBadge def={def} />;
-}
-
-// ── Compact Stat Pill ─────────────────────────────────────────
-const STAT_COLOR_CLASSES: Record<AccentColor, string> = {
-  cyan: "border-neon-cyan/20 text-neon-cyan",
-  purple: "border-neon-purple/20 text-neon-purple",
-  green: "border-neon-green/20 text-neon-green",
-  pink: "border-neon-pink/20 text-neon-pink",
-  orange: "border-neon-orange/20 text-neon-orange",
-  red: "border-red-500/20 text-red-400",
-  blue: "border-blue-500/20 text-blue-400",
-  yellow: "border-yellow-500/20 text-yellow-400",
-};
-
-function StatPill({
-  icon: Icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-  color: AccentColor;
-}) {
-  return (
-    <div className={`rounded-lg border ${STAT_COLOR_CLASSES[color]} bg-dark-900/50 px-4 py-3 flex items-center gap-3 min-w-0`}>
-      <Icon className="w-4 h-4 opacity-60 flex-shrink-0" />
-      <div className="min-w-0 flex-1">
-        <div className="text-[10px] font-mono text-white/40 uppercase truncate">{label}</div>
-        <div className="text-lg font-bold font-mono truncate">{value}</div>
-      </div>
-    </div>
-  );
-}
 
 // ── Template Category Constants (module-level — don't re-create on every render) ──
 
@@ -208,10 +155,9 @@ export default function Dashboard() {
   const handleSyncNow = useCallback(async () => {
     setSyncNowBusy(true);
     try {
-      const res = await fetch("/api/sync", { method: "POST" });
-      const data = (await res.json()) as { error?: string };
-      if (!res.ok) {
-        showToast(data.error ?? "Sync failed", "error");
+      const { ok, error } = await safeApiCall("/api/sync", { method: "POST" });
+      if (!ok) {
+        showToast(error ?? "Sync failed", "error");
         return;
       }
       showToast("Background sync completed", "success");
@@ -251,21 +197,18 @@ export default function Dashboard() {
     if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
     setCancelConfirmId(null);
     try {
-      const res = await fetch("/api/missions", {
+      const { ok, error } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "cancel", missionId }),
+        body: { action: "cancel", missionId },
       });
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        showToast(body?.error || "Failed to cancel mission", "error");
+      if (!ok) {
+        showToast(error || "Failed to cancel mission", "error");
         return;
       }
       showToast(`Cancelled "${missionName}"`, "success");
       // Refresh missions
-      const data = await fetch("/api/missions");
-      const d = await data.json();
-      if (d.data) setData({ missions: d.data.missions || [] });
+      const { data: refreshData } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions");
+      if (refreshData) setData({ missions: refreshData.missions || [] });
     } catch {
       showToast("Failed to cancel mission", "error");
     }
@@ -280,14 +223,12 @@ export default function Dashboard() {
         : newSchedule;
 
     try {
-      const putRes = await fetch("/api/cron", {
+      const { ok, error } = await safeApiCall("/api/cron", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: jobId, schedule: newSchedule }),
+        body: { id: jobId, schedule: newSchedule },
       });
-      if (!putRes.ok) {
-        const body = await putRes.json().catch(() => null);
-        showToast(body?.error || "Failed to update cron schedule", "error");
+      if (!ok) {
+        showToast(error || "Failed to update cron schedule", "error");
         return;
       }
       // Optimistic local update (will be reconciled by refreshMonitor)
@@ -332,27 +273,26 @@ export default function Dashboard() {
         missionsRes,
         defaultsRes,
       ] = await Promise.all([
-          fetch("/api/status", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
-          fetch("/api/config", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
-          fetch("/api/templates", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
-          fetch("/api/mission-categories", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
-          fetch("/api/monitor", { ...MONITOR_FETCH_INIT, signal }).then((r) => r.json()).catch(() => ({ data: null })),
-          fetch("/api/agents", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
-          fetch("/api/missions", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
-          fetch("/api/models/defaults", { signal }).then((r) => r.json()).catch(() => ({ data: null })),
+          safeFetchJSON<{ data: SystemStatus }>("/api/status", { signal }),
+          safeFetchJSON<{ data: Record<string, unknown> }>("/api/config", { signal }),
+          safeFetchJSON<{ data: TemplatesResponseData }>("/api/templates", { signal }),
+          safeFetchJSON<{ data: CategoriesResponseData }>("/api/mission-categories", { signal }),
+          safeFetchJSON<{ data: MonitorData }>("/api/monitor", { ...MONITOR_FETCH_INIT, signal }),
+          safeFetchJSON<{ data: AgentsResponseData }>("/api/agents", { signal }),
+          safeFetchJSON<{ data: MissionsResponseData }>("/api/missions", { signal }),
+          safeFetchJSON<{ data: DefaultsResponseData }>("/api/models/defaults", { signal }),
         ]);
 
       if (!signal.aborted) {
-        const agentDefaultId = defaultsRes.data?.defaults?.agent as string | undefined;
-        setRegistryAgentModelLabel(agentDefaultId ?? null);
+        setRegistryAgentModelLabel(defaultsRes?.data?.defaults?.agent ?? null);
         setData({
-          status: statusRes.data,
-          config: configRes.data,
-          templates: templatesRes.data?.templates || [],
-          categories: categoriesRes.data?.categories || [],
-          monitor: monitorRes.data,
-          processes: processesRes.data?.processes || processesRes.processes || [],
-          missions: missionsRes.data?.missions || [],
+          status: statusRes?.data ?? null,
+          config: configRes?.data ?? null,
+          templates: templatesRes?.data?.templates || [],
+          categories: categoriesRes?.data?.categories || [],
+          monitor: monitorRes?.data ?? null,
+          processes: processesRes?.data?.processes || [],
+          missions: missionsRes?.data?.missions || [],
         });
         setReady(true);
       }
@@ -360,13 +300,6 @@ export default function Dashboard() {
     initialLoad();
 
     // ── Polling: consolidated — runs each interval on schedule ──────────
-    interface PollConfig {
-      url: string;
-      ms: number;
-      extract: (d: { data?: unknown }) => Partial<typeof data> | null;
-      init?: RequestInit;
-    }
-
     const polls: PollConfig[] = [
       {
         url: "/api/monitor",
@@ -880,11 +813,9 @@ export default function Dashboard() {
             </h2>
             <RefreshCw
               className="w-3 h-3 text-white/20 hover:text-white/50 cursor-pointer"
-              onClick={() => {
-                fetch("/api/agents")
-                  .then((r) => r.json())
-                  .then((d) => setData({ processes: d.data?.processes || d.processes || [] }))
-                  .catch(() => showToast("Failed to refresh processes", "error"));
+              onClick={async () => {
+                const { data: agentsData } = await safeApiCall<{ processes: HermesProcess[] }>("/api/agents");
+                setData({ processes: agentsData?.processes || [] });
               }}
             />
           </div>

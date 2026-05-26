@@ -130,7 +130,7 @@ export interface UpdateCronJobInput {
 
 export interface ImportHermesJobResult {
   id: string;
-  action: "inserted" | "updated" | "skipped";
+  action: "inserted" | "updated";
   hermes_job_id: string;
 }
 

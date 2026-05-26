@@ -82,6 +82,8 @@ function parseQuery(
 }
 
 export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
 
   try {
     const q = parseQuery(request);

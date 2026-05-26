@@ -98,17 +98,3 @@ export function buildTemplatePayload({
 
   return payload;
 }
-
-/**
- * Normalize a model value for API payloads.
- */
-export function normalizeModelParam(value: string): string | undefined {
-  return value?.trim() || undefined;
-}
-
-/**
- * Normalize a provider value for API payloads.
- */
-export function normalizeProviderParam(value: string): string | undefined {
-  return value?.trim() || undefined;
-}

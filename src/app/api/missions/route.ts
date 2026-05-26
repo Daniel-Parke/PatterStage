@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
 
     // ── Dispatch Mission ────────────────────────────────────────
     if (action === "dispatch") {
-      const { name, instruction, context, localDirs, references, skills, suggestedToolsets, goals, modelId, provider, profileName: fProfileName, missionTimeMinutes, timeoutMinutes, categoryId: categoryIdRaw, outputFormat, constraints } =
+      const { name, instruction, context, localDirs, references, skills, suggestedToolsets, goals, modelId, provider, profileName, missionTimeMinutes, timeoutMinutes, categoryId: categoryIdRaw, outputFormat, constraints } =
         parseMissionBodyFields(body);
       const { dispatchMode, schedule: scheduleVal, profileId } = body as {
         dispatchMode?: string;
@@ -152,7 +152,6 @@ export async function POST(request: NextRequest) {
         profileId?: string;
         [key: string]: unknown;
       };
-      const profileName = fProfileName;
 
       const categoryParsed = parseCategoryId(categoryIdRaw);
       if (!categoryParsed.ok) {

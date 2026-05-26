@@ -10,7 +10,7 @@ import {
   getFallbackEntry,
   updateFallbackEntry,
   deleteFallbackEntry,
-  listFallbackChain, getFallbackConfig} from "@/lib/fallbacks-repository";
+  listFallbackChain, getFallbackConfig } from "@/lib/fallbacks-repository";
 import { getModel } from "@/lib/models-repository";
 import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
 

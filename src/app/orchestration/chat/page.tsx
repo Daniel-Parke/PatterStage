@@ -102,19 +102,17 @@ export default function ChatPage() {
 
   // ── Restore per-session model when switching sessions ────────
   const activeSession = sessions.find((s) => s.id === activeSessionId);
-  const messages = activeSession?.messages ?? [];
-
-  // Restore per-session model when switching sessions
+  const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);
   useEffect(() => {
     if (activeSession) {
       setModel(activeSession.model || CHAT_DEFAULT_MODEL);
     }
   }, [activeSessionId, activeSession]);
 
-  // Auto-scroll on new messages
+  // Auto-scroll on new messages (only when current session's messages change)
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [sessions, activeSessionId]);
+  }, [messages]);
 
   // ── Model change ────────────────────────────────────────────
   const handleModelChange = useCallback(
@@ -524,7 +522,7 @@ export default function ChatPage() {
               ))
             )}
 
-            {isStreaming && messages.length > 0 && (
+            {isStreaming && messages.length > 0 && !messages[messages.length - 1].content && (
               <TypingIndicator />
             )}
 

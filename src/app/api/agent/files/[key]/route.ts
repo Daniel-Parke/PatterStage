@@ -68,6 +68,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ key: string }> },
 ) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   const { key } = await params;
   const profile = request.nextUrl.searchParams.get("profile");
   const resolved = resolveFilePath(key, profile);

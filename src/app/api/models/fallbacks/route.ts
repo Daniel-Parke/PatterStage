@@ -17,7 +17,10 @@ const fallbackInputSchema = z.object({
   overrideBaseUrl: z.string().nullable().optional(),
 });
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   try {
     const entries = listFallbackChain();
     const config = getFallbackConfig();

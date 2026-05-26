@@ -340,13 +340,6 @@ export function setProfileSyncStatus(
     .run(syncedAt, syncError, now(), slug);
 }
 
-export function listSeededProfiles(): AgentProfileRow[] {
-  const rows = db()
-    .prepare(`SELECT ${SELECT_COLS} FROM agent_profiles WHERE seed_key IS NOT NULL`)
-    .all() as DbRow[];
-  return rows.map(rowToProfile);
-}
-
 export function defaultConfigYaml(personality: string): string {
   return buildConfigYaml({
     personality,

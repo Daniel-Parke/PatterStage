@@ -205,8 +205,11 @@ export async function readChatStream(
           if (delta) {
             onDelta(delta);
           }
-        } catch {
+        } catch (e) {
           // Skip malformed JSON chunks
+          if (typeof data === "string") {
+            console.warn("[chat] Skipped malformed SSE chunk:", data.slice(0, 120), e);
+          }
         }
       }
     }
@@ -220,7 +223,7 @@ export async function readChatStream(
  * Streams the response via onDelta callback. Returns true on success.
  */
 export async function streamChatResponse(
-  apiMessages: { role: string; content: string }[],
+  apiMessages: ApiMessage[],
   sendModel: string,
   controller: AbortController,
   onDelta: (delta: string) => void,
