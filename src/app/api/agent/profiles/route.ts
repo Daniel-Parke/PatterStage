@@ -117,7 +117,10 @@ function rowToApiProfile(slug: string): AgentProfile | null {
   };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   try {
     ensureDb();
     const profiles: AgentProfile[] = [];

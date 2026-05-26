@@ -9,8 +9,9 @@ import {
   getFallbackEntry,
   updateFallbackEntry,
   listFallbackChain,
+  getFallbackConfig,
 } from "@/lib/fallbacks-repository";
-import { getFallbackConfig } from "@/lib/fallbacks-repository";
+import { inTransaction } from "@/lib/db";
 import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
 
 export async function POST(request: NextRequest) {
@@ -56,12 +57,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ data: { fallbacks: chain } });
     }
 
-    // Swap positions
-    const posA = chain[idx].position;
-    const posB = chain[targetIdx].position;
-
-    updateFallbackEntry(chain[idx].id, { position: posB });
-    updateFallbackEntry(chain[targetIdx].id, { position: posA });
+    // Swap positions atomically
+    inTransaction(() => {
+      const posA = chain[idx].position;
+      const posB = chain[targetIdx].position;
+      updateFallbackEntry(chain[idx].id, { position: posB });
+      updateFallbackEntry(chain[targetIdx].id, { position: posA });
+    });
 
     // Re-sync
     const updatedChain = listFallbackChain().filter((e) => e.enabled);

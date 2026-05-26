@@ -17,9 +17,12 @@ import {
 import { resolveSafeProfileName } from "@/lib/path-security";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   const { id } = await params;
   const prof = resolveSafeProfileName(id);
   if (!prof.ok) return NextResponse.json({ error: prof.error }, { status: 400 });

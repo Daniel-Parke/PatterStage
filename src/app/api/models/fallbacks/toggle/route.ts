@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       })),
       getFallbackConfig()
     );
-    appendAuditLine({ action: `fallback.toggle`, resource: entry.id, ok: true });
+    appendAuditLine({ action: "fallback.toggle", resource: entry.id, ok: true });
     return NextResponse.json({ data: { entry } });
   } catch (error) {
     logApiError("POST /api/models/fallbacks/toggle", "toggling fallback", error);
