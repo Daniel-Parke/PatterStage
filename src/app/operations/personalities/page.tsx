@@ -254,10 +254,12 @@ export default function PersonalitiesPage() {
         apiFetch("/api/personalities"),
         apiFetch("/api/config"),
       ]);
-      setPersonalities(persData.data?.personalities || persData.personalities || []);
-      setActivePersonality(
-        ((configData.data?.display as Record<string, unknown>)?.personality as string) || ""
-      );
+      setPersonalities(persData?.data?.personalities ?? []);
+      const displaySection = configData?.data?.display;
+      const activeP = displaySection && typeof displaySection === "object" && "personality" in displaySection
+        ? String((displaySection as Record<string, unknown>).personality ?? "")
+        : "";
+      setActivePersonality(activeP);
     } catch {
       showToast("Failed to load personalities", "error");
     } finally {

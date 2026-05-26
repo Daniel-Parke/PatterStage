@@ -425,17 +425,7 @@ export default function ToolsPage() {
             {showAdvancedJson && (
               <textarea
                 value={toolsetsJson}
-                onChange={(event) => {
-                  setToolsetsJson(event.target.value);
-                  try {
-                    const parsed = JSON.parse(event.target.value) as PlatformToolsets;
-                    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-                      setPlatformToolsets(parsed);
-                    }
-                  } catch {
-                    /* invalid while typing */
-                  }
-                }}
+                onChange={(event) => setToolsetsJson(event.target.value)}
                 className="mt-2 w-full min-h-32 rounded-lg bg-dark-950/80 border border-white/10 p-3 text-xs font-mono text-white/80 outline-none focus:border-neon-orange/50"
                 spellCheck={false}
               />

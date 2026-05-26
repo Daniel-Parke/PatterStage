@@ -24,32 +24,30 @@ import { slugifyDisplayName } from "@/lib/profile-slug";
 import { buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
 import type { ApiResponse, AgentProfile, ProfileFile } from "@/types/hermes";
 
+const PROFILE_FILE_DEFS = [
+  { key: "soul", name: "SOUL.md", getPath: (b: ReturnType<typeof buildProfileHermesPathBundle>) => b.soul },
+  { key: "agent", name: "AGENTS.md", getPath: (b: ReturnType<typeof buildProfileHermesPathBundle>) => b.agents },
+  { key: "user", name: "USER.md", getPath: (b: ReturnType<typeof buildProfileHermesPathBundle>) => b.userMemory },
+  { key: "memory", name: "MEMORY.md", getPath: (b: ReturnType<typeof buildProfileHermesPathBundle>) => b.agentMemory },
+  { key: "config", name: "config.yaml", getPath: (b: ReturnType<typeof buildProfileHermesPathBundle>) => b.config },
+] as const;
+
 function getProfileFilesForSlug(slug: string): ProfileFile[] {
   const bundle = buildProfileHermesPathBundle(slug);
-  const fileDefs =
-    slug === "default"
-      ? [
-          { key: "soul", name: "SOUL.md", path: bundle.soul },
-          { key: "agent", name: "AGENTS.md", path: bundle.agents },
-          { key: "hermes", name: "HERMES.md", path: bundle.hermes },
-          { key: "user", name: "USER.md", path: bundle.userMemory },
-          { key: "memory", name: "MEMORY.md", path: bundle.agentMemory },
-          { key: "config", name: "config.yaml", path: bundle.config },
-        ]
-      : [
-          { key: "soul", name: "SOUL.md", path: bundle.soul },
-          { key: "agent", name: "AGENTS.md", path: bundle.agents },
-          { key: "user", name: "USER.md", path: bundle.userMemory },
-          { key: "memory", name: "MEMORY.md", path: bundle.agentMemory },
-          { key: "config", name: "config.yaml", path: bundle.config },
-        ];
-  return fileDefs.map((def) => {
-    const exists = existsSync(def.path);
+  const defs = slug === "default"
+    ? [
+        ...PROFILE_FILE_DEFS,
+        { key: "hermes", name: "HERMES.md", getPath: (b: ReturnType<typeof buildProfileHermesPathBundle>) => b.hermes },
+      ]
+    : PROFILE_FILE_DEFS;
+  return defs.map((def) => {
+    const path = def.getPath(bundle);
+    const exists = existsSync(path);
     let size = 0;
     let lastModified: string | null = null;
     if (exists) {
       try {
-        const stats = statSync(def.path);
+        const stats = statSync(path);
         size = stats.size;
         lastModified = stats.mtime.toISOString();
       } catch {
@@ -59,7 +57,7 @@ function getProfileFilesForSlug(slug: string): ProfileFile[] {
     return {
       key: def.key,
       name: def.name,
-      path: def.path,
+      path,
       exists,
       size,
       lastModified,
@@ -67,13 +65,17 @@ function getProfileFilesForSlug(slug: string): ProfileFile[] {
   });
 }
 
+/** Derive sync status from drift/error state — shared by all profile types. */
+function deriveSyncStatus(drift: { drifted: boolean }, syncError: string | null): AgentProfile["syncStatus"] {
+  if (syncError) return "error";
+  if (drift.drifted) return "drift";
+  return "synced";
+}
+
 function rowToApiProfile(slug: string): AgentProfile | null {
   if (slug === "default") {
     const root = getAgentRoot();
     const drift = detectRootDrift();
-    let syncStatus: AgentProfile["syncStatus"] = "synced";
-    if (root.syncError) syncStatus = "error";
-    else if (drift.drifted) syncStatus = "drift";
 
     return {
       id: "default",
@@ -87,7 +89,7 @@ function rowToApiProfile(slug: string): AgentProfile | null {
       skillsCount: countProfileSkills("default"),
       toolsCount: countProfileToolsets("default"),
       files: getProfileFilesForSlug("default"),
-      syncStatus,
+      syncStatus: deriveSyncStatus(drift, root.syncError),
       syncedAt: root.syncedAt,
       syncError: root.syncError,
     };
@@ -97,9 +99,6 @@ function rowToApiProfile(slug: string): AgentProfile | null {
   if (!row) return null;
 
   const drift = detectProfileDrift(slug);
-  let syncStatus: AgentProfile["syncStatus"] = "synced";
-  if (row.syncError) syncStatus = "error";
-  else if (drift.drifted) syncStatus = "drift";
 
   return {
     id: row.slug,
@@ -111,7 +110,7 @@ function rowToApiProfile(slug: string): AgentProfile | null {
     skillsCount: countProfileSkills(slug),
     toolsCount: countProfileToolsets(slug),
     files: getProfileFilesForSlug(slug),
-    syncStatus,
+    syncStatus: deriveSyncStatus(drift, row.syncError),
     syncedAt: row.syncedAt,
     syncError: row.syncError,
   };

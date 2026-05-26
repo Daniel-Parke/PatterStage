@@ -89,7 +89,7 @@ export default function BehaviourPage() {
       "/api/agent/profiles/sync/push",
       profileSyncBody(slug),
       slug === "default"
-        ? "Pushed Bob to Hermes. Model defaults re-applied to config.yaml."
+        ? `Pushed default profile to Hermes. Model defaults re-applied to config.yaml.`
         : `Pushed ${slug} to Hermes`,
       "Push failed",
     );

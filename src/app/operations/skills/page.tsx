@@ -159,22 +159,22 @@ export default function SkillsPage() {
       const next = !currentEnabled;
       // Optimistic
       setToggling((prev) => ({ ...prev, [skillName]: next }));
+      const prevData = data; // Snapshot for revert on failure
+      setData((prev) =>
+        prev
+          ? {
+              ...prev,
+              skills: prev.skills.map((s) =>
+                s.name === skillName ? { ...s, enabled: next } : s,
+              ),
+            }
+          : prev,
+      );
       try {
         await apiFetch(`/api/skills/${encodeURIComponent(skillName)}/toggle`, {
           method: "PUT",
           body: JSON.stringify({ profile: selectedProfile, enabled: next }),
         });
-        // Commit to server state
-        setData((prev) =>
-          prev
-            ? {
-                ...prev,
-                skills: prev.skills.map((s) =>
-                  s.name === skillName ? { ...s, enabled: next } : s,
-                ),
-              }
-            : prev,
-        );
         // Clear pending toggle
         setToggling((prev) => {
           const next2 = { ...prev };
@@ -186,12 +186,15 @@ export default function SkillsPage() {
           "success",
         );
       } catch (err) {
-        // Revert optimistic update
+        // Revert BOTH optimistic states on failure
         setToggling((prev) => {
           const next2 = { ...prev };
           delete next2[skillName];
           return next2;
         });
+        if (prevData) {
+          setData(prevData);
+        }
         showToast(err instanceof Error ? err.message : "Failed to update skill", "error");
       }
     },
@@ -470,7 +473,7 @@ function CategoryLabel({ category, count, accentColor, collapsed, onToggle }: Ca
       <span className={`text-[10px] font-mono ${accentColor}`}>
         ({count})
       </span>
-      <div className={`h-px flex-1 bg-gradient-to-r from-white/10 to-transparent ${accentColor.replace("/50", "/5").replace("/30", "/5")}`} />
+      <div className={`h-px flex-1 bg-gradient-to-r from-white/10 to-transparent ${accentColor.replace(/\/\d+$/, "/5")}`} />
     </button>
   );
 }
