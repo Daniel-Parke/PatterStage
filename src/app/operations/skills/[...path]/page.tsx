@@ -14,6 +14,7 @@ import {
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface SkillData {
   name: string;
@@ -207,12 +208,7 @@ export default function SkillDetailPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/skills/${skillPath}`);
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.error || "Failed to load skill");
-      }
-      const json = await res.json();
+      const json = await apiFetch(`/api/skills/${skillPath}`);
       setData(json.data || json);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");

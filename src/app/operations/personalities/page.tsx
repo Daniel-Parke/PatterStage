@@ -26,6 +26,7 @@ import Modal from "@/components/ui/Modal";
 import {
   getPersonalityEmoji,
 } from "@/lib/personalities";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface Personality {
   name: string;
@@ -149,16 +150,10 @@ function EditPersonalityModal({
     setSaving(true);
     setError(null);
     try {
-      const body = JSON.stringify({ profile: name.trim(), prompt: prompt.trim() });
-      const res = await fetch("/api/personalities", {
+      await apiFetch("/api/personalities", {
         method: isEdit ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body,
+        body: JSON.stringify({ profile: name.trim(), prompt: prompt.trim() }),
       });
-      if (!res.ok) {
-        const resBody = await res.json() as { error?: string };
-        throw new Error(resBody.error || `Failed to ${isEdit ? "update" : "create"} personality`);
-      }
       onSaved();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -255,13 +250,10 @@ export default function PersonalitiesPage() {
   const loadPersonalities = useCallback(async () => {
     setLoading(true);
     try {
-      const [persRes, configRes] = await Promise.all([
-        fetch("/api/personalities"),
-        fetch("/api/config"),
+      const [persData, configData] = await Promise.all([
+        apiFetch("/api/personalities"),
+        apiFetch("/api/config"),
       ]);
-      const persData = await persRes.json();
-      const configData = await configRes.json();
-
       setPersonalities(persData.data?.personalities || persData.personalities || []);
       setActivePersonality(
         ((configData.data?.display as Record<string, unknown>)?.personality as string) || ""
@@ -279,15 +271,13 @@ export default function PersonalitiesPage() {
 
   const handleActivate = async (name: string) => {
     try {
-      const res = await fetch("/api/config", {
+      await apiFetch("/api/config", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           section: "display",
           values: { personality: activePersonality === name ? "" : name },
         }),
       });
-      if (!res.ok) throw new Error("Failed to set active personality");
       setActivePersonality(activePersonality === name ? "" : name);
       showToast(
         activePersonality === name

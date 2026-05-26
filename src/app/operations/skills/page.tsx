@@ -19,6 +19,7 @@ import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface Skill {
   name: string;
@@ -112,14 +113,12 @@ export default function SkillsPage() {
   const importSkillsFromHermes = async () => {
     setImporting(true);
     try {
-      const res = await fetch("/api/agent/profiles/sync/import", {
+      const data = await apiFetch("/api/agent/profiles/sync/import", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ importSkills: true }),
       });
-      const body = (await res.json()) as { error?: string; data?: { success?: boolean } };
-      if (!res.ok || body.data?.success === false) {
-        throw new Error(body.error ?? "Import failed");
+      if (data.data?.success === false) {
+        throw new Error(data.error ?? "Import failed");
       }
       showToast("Skills catalog imported from Hermes disk", "success");
       await loadSkills();
@@ -133,8 +132,7 @@ export default function SkillsPage() {
   const loadSkills = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/skills?profile=${selectedProfile}`);
-      const d = await res.json();
+      const d = await apiFetch(`/api/skills?profile=${selectedProfile}`);
       setData(d.data);
       // Seed all categories as collapsed on first load
       const cats = Object.keys(d.data.categories || {});
@@ -162,15 +160,10 @@ export default function SkillsPage() {
       // Optimistic
       setToggling((prev) => ({ ...prev, [skillName]: next }));
       try {
-        const res = await fetch(`/api/skills/${encodeURIComponent(skillName)}/toggle`, {
+        await apiFetch(`/api/skills/${encodeURIComponent(skillName)}/toggle`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ profile: selectedProfile, enabled: next }),
         });
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error((body as { error?: string })?.error || `HTTP ${res.status}`);
-        }
         // Commit to server state
         setData((prev) =>
           prev
@@ -212,13 +205,7 @@ export default function SkillsPage() {
     setEditContent("");
     setEditOriginal("");
     try {
-      const res = await fetch(skillApiUrl(skill.name));
-      const d = await res.json();
-      if (!res.ok) {
-        showToast(d?.error || "Failed to load skill", "error");
-        setEditingSkill(null);
-        return;
-      }
+      const d = await apiFetch(skillApiUrl(skill.name));
       const content = d.data?.content || "";
       setEditContent(content);
       setEditOriginal(content);
@@ -232,15 +219,10 @@ export default function SkillsPage() {
     if (!editingSkill || savingEdit) return;
     setSavingEdit(true);
     try {
-      const res = await fetch(skillApiUrl(editingSkill), {
+      await apiFetch(skillApiUrl(editingSkill), {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: editContent }),
       });
-      const d = await res.json();
-      if (!res.ok) {
-        throw new Error(d?.error || "Failed to save skill");
-      }
       setEditOriginal(editContent);
       showToast(`${editingSkill} saved`, "success");
       if (expandedSkill === editingSkill) {
@@ -262,12 +244,7 @@ export default function SkillsPage() {
     }
     setExpandedSkill(skill.name);
     try {
-      const res = await fetch(skillApiUrl(skill.name));
-      const d = await res.json();
-      if (!res.ok) {
-        setSkillContent("// " + (d?.error || res.statusText || "Failed to load"));
-        return;
-      }
+      const d = await apiFetch(skillApiUrl(skill.name));
       setSkillContent(d.data?.content || "// No content");
     } catch {
       setSkillContent("// Failed to load content");
