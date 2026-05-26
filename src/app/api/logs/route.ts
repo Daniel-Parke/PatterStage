@@ -14,6 +14,23 @@ import { requireAuth } from "@/lib/api-auth";
 import { ApiResponse } from "@/types/hermes";
 import type { LogFileMeta } from "@/lib/log-files";
 
+// ── Shared log directory resolution ──────────────────────────
+
+interface LogsDirResult {
+  logsDir: string;
+  resolvedLogsDir: string;
+}
+
+/**
+ * Resolve the active Hermes logs directory and its resolved form.
+ * Returns null when the directory doesn't exist (caller handles 404).
+ */
+function resolveLogsDir(): LogsDirResult | null {
+  const logsDir = getActiveHermesPaths().logs;
+  if (!existsSync(logsDir)) return null;
+  return { logsDir, resolvedLogsDir: resolve(logsDir) };
+}
+
 export interface LogGetData {
   name: string;
   totalLines: number;
@@ -33,13 +50,14 @@ export async function GET(request: NextRequest) {
     const parsedLines = parseInt(searchParams.get("lines") || "200", 10);
     const maxLines = Number.isFinite(parsedLines) ? Math.min(parsedLines, 1000) : 200;
 
-    const logsDir = getActiveHermesPaths().logs;
-    if (!existsSync(logsDir)) {
+    const dirResult = resolveLogsDir();
+    if (!dirResult) {
       return NextResponse.json<ApiResponse<never>>(
         { error: "No logs directory found" },
         { status: 404 },
       );
     }
+    const { logsDir, resolvedLogsDir } = dirResult;
 
     let availableLogs: LogFileMeta[] = [];
     try {
@@ -60,7 +78,6 @@ export async function GET(request: NextRequest) {
       );
     }
     const logPath = resolve(logsDir, safeName + ".log");
-    const resolvedLogsDir = resolve(logsDir);
 
     if (!logFileUnderLogsDir(resolvedLogsDir, logPath)) {
       return NextResponse.json<ApiResponse<never>>(
@@ -124,14 +141,14 @@ export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const logName = searchParams.get("name");
 
-  const logsDir = getActiveHermesPaths().logs;
-  if (!existsSync(logsDir)) {
+  const dirResult = resolveLogsDir();
+  if (!dirResult) {
     return NextResponse.json<ApiResponse<never>>(
       { error: "No logs directory found" },
       { status: 404 },
     );
   }
-  const resolvedLogsDir = resolve(logsDir);
+  const { logsDir, resolvedLogsDir } = dirResult;
 
   try {
     if (logName) {

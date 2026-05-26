@@ -42,13 +42,25 @@ import TemplateCard from "@/components/ui/TemplateCard";
 import { useToast } from "@/components/ui/Toast";
 import type { SystemStatus, AccentColor, MonitorData, HermesProcess, MissionBrief } from "@/types/hermes";
 import { timeAgo, timeUntil, titleCase, parseSchedule } from "@/lib/utils";
-
-const MONITOR_FETCH_INIT: RequestInit = { cache: "no-store" };
-import AppPageShell from "@/components/layout/AppPageShell";
 import { shellHeaderBarClasses } from "@/lib/theme";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import AppPageShell from "@/components/layout/AppPageShell";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
+
+const MONITOR_FETCH_INIT: RequestInit = { cache: "no-store" };
+
+// ── Polling configuration type (module-level, not inline in useEffect) ──
+interface PollConfig {
+  url: string;
+  ms: number;
+  extract: (d: { data?: unknown }) => Partial<{
+    monitor: MonitorData | null;
+    processes: HermesProcess[];
+    missions: MissionBrief[];
+  }> | null;
+  init?: RequestInit;
+}
 
 // ── Live Clock (isolated re-render) ───────────────────────────
 
@@ -281,13 +293,6 @@ export default function Dashboard() {
     initialLoad();
 
     // ── Polling: consolidated — runs each interval on schedule ──────────
-    interface PollConfig {
-      url: string;
-      ms: number;
-      extract: (d: { data?: unknown }) => Partial<typeof data> | null;
-      init?: RequestInit;
-    }
-
     const polls: PollConfig[] = [
       {
         url: "/api/monitor",
@@ -801,11 +806,13 @@ export default function Dashboard() {
             </h2>
             <RefreshCw
               className="w-3 h-3 text-white/20 hover:text-white/50 cursor-pointer"
-              onClick={() => {
-                fetch("/api/agents")
-                  .then((r) => r.json())
-                  .then((d) => setData({ processes: d.data?.processes || d.processes || [] }))
-                  .catch(() => showToast("Failed to refresh processes", "error"));
+              onClick={async () => {
+                try {
+                  const d = await fetch("/api/agents").then((r) => r.json());
+                  setData({ processes: d.data?.processes || [] });
+                } catch {
+                  showToast("Failed to refresh processes", "error");
+                }
               }}
             />
           </div>
