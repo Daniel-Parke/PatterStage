@@ -48,7 +48,7 @@ import { safeApiCall } from "@/lib/api-fetch";
 const MONITOR_FETCH_INIT: RequestInit = { cache: "no-store" };
 
 // ── Safe JSON fetcher for parallel initial loads ─────────────────
-async function safeFetchJSON<T = unknown>(url: string, init?: RequestInit): Promise<T | null> {
+async function safeFetchJSON<T extends { data: unknown } = { data: unknown }>(url: string, init?: RequestInit): Promise<T | null> {
   try {
     const res = await fetch(url, init);
     return await res.json() as T;
@@ -56,6 +56,14 @@ async function safeFetchJSON<T = unknown>(url: string, init?: RequestInit): Prom
     return null;
   }
 }
+
+// ── Typed response shapes for each API endpoint ─────────────
+interface StatusResponseData { soulFile: boolean; configFile: boolean; skillsCount: number; sessionsCount: number; memorySize: string; timestamp: string; }
+interface TemplatesResponseData { templates: Array<{ id: string; name: string; icon: string; color: string; category: string; categoryId?: string; profile: string; description: string; isCustom?: boolean }>; }
+interface CategoriesResponseData { categories: MissionCategory[]; }
+interface AgentsResponseData { processes: HermesProcess[]; }
+interface MissionsResponseData { missions: MissionBrief[]; }
+interface DefaultsResponseData { defaults: { agent?: string } | null; }
 
 // ── Polling configuration type (module-level, not inline in useEffect) ──
 interface PollConfig {
@@ -268,27 +276,26 @@ export default function Dashboard() {
         missionsRes,
         defaultsRes,
       ] = await Promise.all([
-          safeFetchJSON<{ data: unknown }>("/api/status", { signal }),
-          safeFetchJSON<{ data: unknown }>("/api/config", { signal }),
-          safeFetchJSON<{ data: unknown }>("/api/templates", { signal }),
-          safeFetchJSON<{ data: unknown }>("/api/mission-categories", { signal }),
-          safeFetchJSON<{ data: unknown }>("/api/monitor", { ...MONITOR_FETCH_INIT, signal }),
-          safeFetchJSON<{ data: unknown }>("/api/agents", { signal }),
-          safeFetchJSON<{ data: unknown }>("/api/missions", { signal }),
-          safeFetchJSON<{ data: unknown }>("/api/models/defaults", { signal }),
+          safeFetchJSON<{ data: SystemStatus }>("/api/status", { signal }),
+          safeFetchJSON<{ data: Record<string, unknown> }>("/api/config", { signal }),
+          safeFetchJSON<{ data: TemplatesResponseData }>("/api/templates", { signal }),
+          safeFetchJSON<{ data: CategoriesResponseData }>("/api/mission-categories", { signal }),
+          safeFetchJSON<{ data: MonitorData }>("/api/monitor", { ...MONITOR_FETCH_INIT, signal }),
+          safeFetchJSON<{ data: AgentsResponseData }>("/api/agents", { signal }),
+          safeFetchJSON<{ data: MissionsResponseData }>("/api/missions", { signal }),
+          safeFetchJSON<{ data: DefaultsResponseData }>("/api/models/defaults", { signal }),
         ]);
 
       if (!signal.aborted) {
-        const agentDefaultId = defaultsRes?.data?.defaults?.agent as string | undefined;
-        setRegistryAgentModelLabel(agentDefaultId ?? null);
+        setRegistryAgentModelLabel(defaultsRes?.data?.defaults?.agent ?? null);
         setData({
           status: statusRes?.data ?? null,
           config: configRes?.data ?? null,
-          templates: (templatesRes?.data as { templates?: unknown[] } | undefined)?.templates || [],
-          categories: (categoriesRes?.data as { categories?: unknown[] } | undefined)?.categories || [],
+          templates: templatesRes?.data?.templates || [],
+          categories: categoriesRes?.data?.categories || [],
           monitor: monitorRes?.data ?? null,
-          processes: (processesRes?.data as { processes?: HermesProcess[] } | undefined)?.processes || processesRes?.processes || [],
-          missions: (missionsRes?.data as { missions?: MissionBrief[] } | undefined)?.missions || [],
+          processes: processesRes?.data?.processes || [],
+          missions: missionsRes?.data?.missions || [],
         });
         setReady(true);
       }
