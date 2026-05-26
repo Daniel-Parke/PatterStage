@@ -120,8 +120,7 @@ interface CronTabContentProps {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onRun?: (id: string) => void;
-  onEditAgent?: (job: CronJob) => void;
-  onEditSystem?: (job: SystemCronJob) => void;
+  onEdit?: (job: CronJob | SystemCronJob) => void;
 }
 
 function CronTabContent({
@@ -138,8 +137,7 @@ function CronTabContent({
   onToggle,
   onDelete,
   onRun,
-  onEditAgent,
-  onEditSystem,
+  onEdit,
 }: CronTabContentProps) {
   const [search, setSearch] = useState("");
   const filtered = filterJobs(jobs, search);
@@ -181,14 +179,14 @@ function CronTabContent({
               onToggle={onToggle}
               onDelete={onDelete}
               onRun={onRun!}
-              onEdit={(j) => onEditAgent?.(j)}
+              onEdit={(j) => onEdit?.(j)}
             />
           ) : (
             <SystemCronCard
               key={job.id}
               job={job as SystemCronJob}
               onToggle={onToggle}
-              onEdit={(j) => onEditSystem?.(j)}
+              onEdit={(j) => onEdit?.(j)}
               onDelete={onDelete}
             />
           ),
@@ -352,8 +350,7 @@ export default function CronPage() {
               onToggle={tabConfig.onToggle}
               onDelete={tabConfig.onDelete}
               onRun={tabConfig.onRun}
-              onEditAgent={tabConfig.isAgent ? tabConfig.onEdit : undefined}
-              onEditSystem={!tabConfig.isAgent ? tabConfig.onEdit : undefined}
+              onEdit={tabConfig.onEdit}
             />
           );
         })()}

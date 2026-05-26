@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
+import { safeApiCall } from "@/lib/api-fetch";
 import type { LocalDirEntry, Mission } from "@/types/hermes";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { parseMissionPrompt } from "@/lib/build-mission-prompt";
@@ -518,26 +519,25 @@ export function useMissionsPage() {
 
         if (isRunning) {
           showToast("Updating mission...", "info");
-          const res = await fetch("/api/missions", {
+          const { ok, error } = await safeApiCall("/api/missions", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+            body: {
               action: "update",
               missionId: editingId,
               name: newName,
               ...dispatchPayload({
                 schedule: newDispatch === "cron" ? newSchedule : undefined,
               }),
-            }),
+            },
           });
-          if (res.ok) {
+          if (ok) {
             showToast("Mission updated", "success");
             setEditingId(null);
             setShowCreate(false);
             fetchData();
             if (expandedId === editingId) fetchDetail(editingId);
           } else {
-            showToast("Failed to update mission", "error");
+            showToast(error || "Failed to update mission", "error");
           }
           setDispatching(false);
           return;
@@ -545,10 +545,9 @@ export function useMissionsPage() {
 
         if (isPromotable) {
           showToast(submitToastForDispatch(newDispatch), "info");
-          const res = await fetch("/api/missions", {
+          const { ok, error, data } = await safeApiCall<{ data?: { mission?: object } }>("/api/missions", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+            body: {
               action: "promote",
               missionId: editingId,
               name: newName,
@@ -556,9 +555,9 @@ export function useMissionsPage() {
                 dispatchMode: newDispatch,
                 schedule: newDispatch === "cron" ? newSchedule : undefined,
               }),
-            }),
+            },
           });
-          if (res.ok) {
+          if (ok) {
             if (newDispatch === "save") {
               showToast("Mission saved as draft", "success");
             } else if (newDispatch === "queue") {
@@ -574,17 +573,7 @@ export function useMissionsPage() {
             await fetchData();
             if (expandedId === editingId) fetchDetail(editingId);
           } else {
-            let msg = "Failed to update mission";
-            try {
-              const errBody = (await res.json()) as {
-                error?: string;
-                cronPushError?: string;
-              };
-              msg = errBody.cronPushError ?? errBody.error ?? msg;
-            } catch {
-              /* keep default */
-            }
-            showToast(msg, "error");
+            showToast(error || "Failed to update mission", "error");
           }
           setDispatching(false);
           return;
@@ -597,27 +586,26 @@ export function useMissionsPage() {
 
         setEditingId(null);
 
-        const res = await fetch("/api/missions", {
+        const { ok, error, data } = await safeApiCall<{ data?: { mission?: { id: string } } }>("/api/missions", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+          body: {
             action: "dispatch",
             name: newName,
             ...dispatchPayload({ dispatchMode: "now" }),
-          }),
+          },
         });
 
-        if (res.ok) {
-          const body = (await res.json()) as { data?: { mission?: { id: string } } };
+        if (ok) {
+          const body = data;
           showToast("Mission re-dispatched", "success");
           setDispatching(false);
           await fetchData();
-          if (body.data?.mission?.id) {
+          if (body?.data?.mission?.id) {
             setExpandedId(body.data.mission.id);
             void fetchDetail(body.data.mission.id);
           }
         } else {
-          showToast("Failed to re-dispatch mission", "error");
+          showToast(error || "Failed to re-dispatch mission", "error");
           setDispatching(false);
         }
         return;
@@ -625,20 +613,19 @@ export function useMissionsPage() {
 
       showToast(submitToastForDispatch(newDispatch), "info");
 
-      const res = await fetch("/api/missions", {
+      const { ok, error, data } = await safeApiCall<{ data?: { mission?: { id: string } } }>("/api/missions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           action: "dispatch",
           name: newName,
           ...dispatchPayload({
             dispatchMode: newDispatch,
             schedule: newDispatch === "cron" ? newSchedule : undefined,
           }),
-        }),
+        },
       });
 
-      if (res.ok) {
+      if (ok) {
         if (newDispatch === "save" || newDispatch === "queue") {
           showToast(
             newDispatch === "save"
@@ -650,11 +637,11 @@ export function useMissionsPage() {
           fetchData();
           setDispatching(false);
         } else if (newDispatch === "now") {
-          const body = (await res.json()) as { data?: { mission?: { id: string } } };
+          const body = data;
           showToast("Mission dispatched", "success");
           setDispatching(false);
           await fetchData();
-          if (body.data?.mission?.id) {
+          if (body?.data?.mission?.id) {
             setExpandedId(body.data.mission.id);
             void fetchDetail(body.data.mission.id);
           }
@@ -664,18 +651,7 @@ export function useMissionsPage() {
           await fetchData();
         }
       } else {
-        let msg = "Failed to create mission";
-        try {
-          const errBody = (await res.json()) as { error?: string; cronPushError?: string };
-          if (errBody.cronPushError) {
-            msg = errBody.cronPushError;
-          } else if (errBody.error) {
-            msg = errBody.error;
-          }
-        } catch {
-          /* keep default */
-        }
-        showToast(msg, "error");
+        showToast(error || "Failed to create mission", "error");
         setDispatching(false);
       }
     } catch {
@@ -797,10 +773,9 @@ export function useMissionsPage() {
         categoryId: newCategoryId,
       });
 
-      const res = await fetch("/api/templates", {
+      const res = await safeApiCall("/api/templates", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: payload,
       });
 
       if (res.ok) {
@@ -811,7 +786,7 @@ export function useMissionsPage() {
         setEditingTemplateId(null);
         fetchData();
       } else {
-        showToast("Failed to save template", "error");
+        showToast(res.error || "Failed to save template", "error");
       }
     } catch {
       showToast("Failed to save template", "error");
@@ -869,10 +844,9 @@ export function useMissionsPage() {
         schedule: editingTemplateId ? undefined : newSchedule,
       });
 
-      const res = await fetch("/api/templates", {
+      const res = await safeApiCall("/api/templates", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: payload,
       });
       if (res.ok) {
         showToast(
@@ -883,7 +857,7 @@ export function useMissionsPage() {
         setEditingTemplateId(null);
         fetchData();
       } else {
-        showToast("Failed to save template", "error");
+        showToast(res.error || "Failed to save template", "error");
       }
     } catch {
       showToast("Failed to save template", "error");
@@ -913,18 +887,16 @@ export function useMissionsPage() {
 
   const handleDeleteTemplate = async (templateId: string) => {
     if (!confirm("Delete this template?")) return;
-    const res = await fetch("/api/templates", {
+    const { ok, error } = await safeApiCall("/api/templates", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "delete", templateId }),
+      body: { action: "delete", templateId },
     });
-    if (res.ok) {
+    if (ok) {
       showToast("Template deleted", "success");
       setShowTemplateManager(false);
       fetchData();
     } else {
-      const body = await res.json().catch(() => null);
-      showToast(body?.error || "Failed to delete template", "error");
+      showToast(error || "Failed to delete template", "error");
     }
   };
   const handleTemplateSelect = (t: MissionTemplate) => {
@@ -935,18 +907,16 @@ export function useMissionsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this mission and its cron job?")) return;
-    const res = await fetch("/api/missions", {
+    const { ok, error } = await safeApiCall("/api/missions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "delete", missionId: id }),
+      body: { action: "delete", missionId: id },
     });
-    if (res.ok) {
+    if (ok) {
       showToast("Mission deleted", "success");
       if (expandedId === id) setExpandedId(null);
       fetchData();
     } else {
-      const body = await res.json().catch(() => null);
-      showToast(body?.error || "Failed to delete mission", "error");
+      showToast(error || "Failed to delete mission", "error");
     }
   };
 
@@ -970,26 +940,21 @@ export function useMissionsPage() {
     );
 
     try {
-      const res = await fetch("/api/missions", {
+      const { ok, error } = await safeApiCall("/api/missions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "cancel", missionId: id }),
+        body: { action: "cancel", missionId: id },
       });
-      if (res.ok) {
+      if (ok) {
         showToast("Mission cancelled", "success");
         await fetchData();
         if (expandedId === id) void fetchDetail(id);
       } else {
-        const body = await res.json().catch(() => null);
         if (previousMission) {
           setMissions((prev) =>
             prev.map((m) => (m.id === id ? previousMission : m)),
           );
         }
-        showToast(
-          (body as { error?: string } | null)?.error || "Failed to cancel mission",
-          "error",
-        );
+        showToast(error || "Failed to cancel mission", "error");
       }
     } catch {
       if (previousMission) {
