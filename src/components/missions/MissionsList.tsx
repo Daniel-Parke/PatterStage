@@ -30,6 +30,9 @@ import {
 } from "@/lib/mission-board";
 import MissionEditorPanel from "./MissionEditorPanel";
 
+const STATUS_FILTERS = ["all", "draft", "queued", "dispatched", "successful", "failed"] as const;
+const BOARD_COLUMNS = ["draft", "queued", "dispatched", "successful", "failed"] as const;
+
 export interface MissionsListProps {
   vm: MissionsPageViewModel;
 }
@@ -237,7 +240,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
         )}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1 bg-dark-900/50 rounded-lg border border-white/10 p-1">
-            {(["all", "draft", "queued", "dispatched", "successful", "failed"] as const).map(
+            {STATUS_FILTERS.map(
               (f) => (
                 <button
                   type="button"
@@ -286,7 +289,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
         </div>
       ) : (
         <div className="flex flex-col lg:flex-row gap-4 overflow-x-auto pb-2">
-          {(["draft", "queued", "dispatched", "successful", "failed"] as const).map(
+          {BOARD_COLUMNS.map(
             (status) => {
               const columnMissions = filtered.filter(
                 (m) => missionBoardColumn(m) === status,

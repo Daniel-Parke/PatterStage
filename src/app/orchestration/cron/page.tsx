@@ -33,13 +33,12 @@ interface TabConfig {
   key: "agent" | "system";
   label: string;
   icon: typeof Clock;
-  color: string;
   bgColor: string;
 }
 
 const TABS: TabConfig[] = [
-  { key: "agent", label: "Agent", icon: Clock, color: "text-neon-orange", bgColor: "bg-neon-orange/20 text-neon-orange" },
-  { key: "system", label: "System", icon: Cpu, color: "text-neon-cyan", bgColor: "bg-neon-cyan/20 text-neon-cyan" },
+  { key: "agent", label: "Agent", icon: Clock, bgColor: "bg-neon-orange/20 text-neon-orange" },
+  { key: "system", label: "System", icon: Cpu, bgColor: "bg-neon-cyan/20 text-neon-cyan" },
 ];
 
 // ── Search filter helpers ───────────────────────────────────
@@ -228,8 +227,7 @@ export default function CronPage() {
       safeApiCall("/api/cron", { method: "POST", body: { action: "sync" } }),
       safeApiCall("/api/cron/hardware", { method: "POST", body: { action: "sync" } }),
     ]);
-    agent.loadJobs();
-    await hardware.loadJobs();
+    await Promise.all([agent.loadJobs(), hardware.loadJobs()]);
     setSyncing(false);
     if (agentRes.ok && hwRes.ok) {
       showToast("Agent and system cron synced", "success");

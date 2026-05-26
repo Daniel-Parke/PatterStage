@@ -103,8 +103,6 @@ export default function ChatPage() {
   // ── Restore per-session model when switching sessions ────────
   const activeSession = sessions.find((s) => s.id === activeSessionId);
   const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);
-
-  // Restore per-session model when switching sessions
   useEffect(() => {
     if (activeSession) {
       setModel(activeSession.model || CHAT_DEFAULT_MODEL);
@@ -524,7 +522,7 @@ export default function ChatPage() {
               ))
             )}
 
-            {isStreaming && messages.length > 0 && (
+            {isStreaming && messages.length > 0 && !messages[messages.length - 1].content && (
               <TypingIndicator />
             )}
 

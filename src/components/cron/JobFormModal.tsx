@@ -113,14 +113,15 @@ export default function JobFormModal({
     };
   }, [open]);
 
-  // Derive the actual cron expression from the current schedule value.
-  const cronExpr =
-    schedule.trim().split(/\s+/).length === 5
-      ? schedule.trim()
-      : (() => {
-          const p = parseSchedule(schedule);
-          return p.kind !== "invalid" ? p.kind : schedule;
-        })();
+  // Derive the actual cron expression from the current schedule value (edit mode only).
+  const cronExpr = isEdit
+    ? (() => {
+        const trimmed = schedule.trim();
+        if (trimmed.split(/\s+/).length === 5) return trimmed;
+        const p = parseSchedule(schedule);
+        return p.kind !== "invalid" ? p.kind : schedule;
+      })()
+    : "";
 
   const handleSubmit = async () => {
     if (isEdit) {

@@ -185,8 +185,8 @@ export default function JobCard({
             )}
             <div className="flex items-center gap-4 text-xs text-white/30 font-mono">
               <span>ID: {job.id}</span>
-              {job.lastRun && (
-                <span>Last run: {new Date(job.lastRun).toLocaleString()}</span>
+              {job.last_run_at && (
+                <span>Last run: {new Date(job.last_run_at).toLocaleString()}</span>
               )}
             </div>
           </div>
