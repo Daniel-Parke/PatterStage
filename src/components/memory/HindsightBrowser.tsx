@@ -11,7 +11,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import {
-  Brain, Search, Plus, Sparkles, List, FileText,
+  Search, Plus, Sparkles, List, FileText,
   Settings, RefreshCw,
 } from "lucide-react";
 import { SearchInput } from "@/components/ui/Input";
@@ -400,11 +400,13 @@ export default function HindsightBrowser() {
     <div className="pt-2">
       {toastElement}
 
-      <HealthBanner
-        health={health}
-        loadingInitial={loadingInitial}
-        onRetry={() => { void loadRecentMemories(); void fetchHealthOnly(); }}
-      />
+      {health !== null && (
+        <HealthBanner
+          health={health}
+          loadingInitial={loadingInitial}
+          onRetry={() => { void loadRecentMemories(); void fetchHealthOnly(); }}
+        />
+      )}
 
       {/* Search Bar */}
       <div className="flex gap-3 mb-6">
