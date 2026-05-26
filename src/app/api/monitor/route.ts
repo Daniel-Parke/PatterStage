@@ -8,12 +8,14 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 import { ensureSyncLayer, getSyncScheduler } from "@/lib/sync";
 import { getSystemStat, getSystemStatNumber } from "@/lib/system-repository";
 import { listCronJobs } from "@/lib/cron-repository";
 import { listSessions } from "@/lib/session-repository";
 import { logApiError } from "@/lib/api-logger";
+import { requireAuth } from "@/lib/api-auth";
 import { getGatewayPlatforms, db } from "@/lib/db";
 import type { CronJobBrief, SessionBrief, MonitorData } from "@/types/hermes";
 
@@ -48,7 +50,10 @@ function toSessionBrief(
 
 // ── Route ───────────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   try {
     // Ensure sync layer is active (idempotent)
     ensureSyncLayer();
