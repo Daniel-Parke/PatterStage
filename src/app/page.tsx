@@ -18,15 +18,11 @@ import {
   AlertTriangle,
   RefreshCw,
   CheckCircle2,
-  Pause,
-  Play,
+
   Radio,
   Rocket,
   ChevronRight,
   ChevronDown,
-  Clock,
-  Loader2,
-  XCircle,
   Gamepad2,
   BookOpen,
 } from "lucide-react";
@@ -808,7 +804,8 @@ export default function Dashboard() {
               className="w-3 h-3 text-white/20 hover:text-white/50 cursor-pointer"
               onClick={async () => {
                 try {
-                  const d = await fetch("/api/agents").then((r) => r.json());
+                  const res = await fetch("/api/agents");
+                  const d = await res.json();
                   setData({ processes: d.data?.processes || [] });
                 } catch {
                   showToast("Failed to refresh processes", "error");
