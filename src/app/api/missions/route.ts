@@ -99,6 +99,9 @@ function parseMissionBodyFields(body: Record<string, unknown>): MissionBodyField
 // ── GET ───────────────────────────────────────────────────────
 
 export async function GET(request: Request) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   ensureSyncLayer();
   const url = new URL(request.url);
   const id = url.searchParams.get("id");

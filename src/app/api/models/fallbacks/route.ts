@@ -23,8 +23,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const entries = listFallbackChain();
-    const config = getFallbackConfig();
-    return NextResponse.json({ data: { entries, config } });
+    return NextResponse.json({ data: { entries, config: getFallbackConfig() } });
   } catch (error) {
     logApiError("GET /api/models/fallbacks", "reading fallback chain", error);
     return NextResponse.json({ error: "Failed to read fallback chain" }, { status: 500 });

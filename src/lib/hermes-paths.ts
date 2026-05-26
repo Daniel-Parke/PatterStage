@@ -2,7 +2,8 @@
 // hermes-paths.ts — Hermes filesystem layout from a single root
 // ═══════════════════════════════════════════════════════════════
 
-function normRoot(root: string): string {
+/** Trailing-slash-normalise a directory path. Exported for reuse. */
+export function normPath(root: string): string {
   return root.replace(/[/\\]+$/, "");
 }
 
@@ -30,7 +31,7 @@ export interface HermesPathBundle {
 }
 
 export function buildHermesPathBundle(root: string): HermesPathBundle {
-  const R = normRoot(root);
+  const R = normPath(root);
   return {
     root: R,
     env: R + "/.env",

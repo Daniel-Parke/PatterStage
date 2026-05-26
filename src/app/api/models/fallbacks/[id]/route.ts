@@ -22,9 +22,12 @@ const fallbackPutSchema = z.object({
 });
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   const { id } = await params;
   try {
     const entry = getFallbackEntry(id);

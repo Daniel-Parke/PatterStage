@@ -51,23 +51,6 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
           color={sectionDef.color}
         />
       );
-    case "textarea":
-      return (
-        <div key={field.key} className="space-y-1.5">
-          <label className="text-sm font-medium text-white/70">
-            {field.label}
-          </label>
-          {field.description && (
-            <p className="text-xs text-white/40">{field.description}</p>
-          )}
-          <textarea
-            value={typeof value === "string" ? value : ""}
-            onChange={(e) => onUpdate(field.key, e.target.value)}
-            rows={4}
-            className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-neon-cyan/50 transition-colors font-mono resize-y"
-          />
-        </div>
-      );
     default:
       // Guard against rendering object/array values as "[object Object]"
       // which would silently corrupt the config.yaml on save.

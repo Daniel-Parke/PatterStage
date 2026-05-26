@@ -171,7 +171,10 @@ async function readAndParseCrontab(): Promise<{ jobs: CrontabJobRaw[]; disabledI
 
 // ── API handlers ───────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   try {
     const { jobs } = await readAndParseCrontab();
     return NextResponse.json({ data: { jobs, total: jobs.length } });

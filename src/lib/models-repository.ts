@@ -9,7 +9,6 @@ import { db, inTransaction, uuid, now } from "./db";
 import { isTaskType, type TaskType } from "./hermes-providers";
 import { getCredentialWithKey } from "./credentials-repository";
 import { emptyModelDefaults } from "./utils";
-
 // ── Public types ────────────────────────────────────────────────
 
 export interface ModelDefaults {

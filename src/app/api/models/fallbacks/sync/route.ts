@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   try {
     raw = await request.json();
   } catch {
-    raw = {};
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   const parsed = fallbackSyncPostSchema.safeParse(raw);
