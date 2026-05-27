@@ -288,6 +288,8 @@ export async function POST(request: NextRequest) {
       newLines.push(newLine);
     }
 
+    // Write crontab synchronously (execSync is acceptable here — it is a
+    // single blocking call with no async I/O available for crontab writes).
     const result = writeCrontab(newLines.filter((l) => l.trim() || l === "").join("\n"));
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: 500 });

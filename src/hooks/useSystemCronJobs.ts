@@ -94,7 +94,7 @@ export function useSystemCronJobs() {
     [showToast, loadJobs],
   );
 
-  const handlePauseAll = useCallback(async () => {
+  const handlePauseAll = useCallback(async (): Promise<void> => {
     const { ok, error, data: resData } = await safeApiCall<{ pausedCount?: number }>(
       HARDWARE_ENDPOINT,
       {

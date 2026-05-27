@@ -19,7 +19,6 @@ import { safeApiCall } from "@/lib/api-fetch";
 import { inputFieldClasses } from "@/lib/theme";
 import { parseSchedule } from "@/lib/utils";
 import CronScheduleInput from "@/components/cron/CronScheduleInput";
-
 export interface CronJobFormData {
   id?: string;
   name: string;
