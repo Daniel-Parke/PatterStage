@@ -266,13 +266,15 @@ export default function CronPage() {
               color={activeTab === "agent" ? "orange" : "cyan"}
               pauseBusy={activeTab === "agent" ? pauseAllBusy : false}
               hasJobs={activeTab === "agent" ? !!agent.data?.total : hardwareTotal > 0}
-              onPauseAll={async () => {
+              onPauseAll={() => {
                 if (activeTab === "agent") {
                   setPauseAllBusy(true);
-                  await agent.handlePauseAll();
-                  setPauseAllBusy(false);
+                  void (async () => {
+                    await agent.handlePauseAll();
+                    setPauseAllBusy(false);
+                  })();
                 } else {
-                  await hardware.handlePauseAll();
+                  void hardware.handlePauseAll();
                 }
               }}
               onSync={() => void handleSyncAll()}
