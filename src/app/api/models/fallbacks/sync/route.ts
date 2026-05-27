@@ -6,10 +6,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
 import { fallbackSyncPostSchema } from "@/lib/fallback-config-schema";
-import {
-  getFallbackConfig,
-  updateFallbackConfigBatch,
-} from "@/lib/fallbacks-repository";
+import { getFallbackConfig, updateFallbackConfigBatch } from "@/lib/fallbacks-repository";
 import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
 
 export async function POST(request: NextRequest) {

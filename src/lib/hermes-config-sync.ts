@@ -429,20 +429,6 @@ export function syncSingleModelToHermesConfig(modelId: string): { backupPath: st
 // ── Per-credential sync to .env ──────────────────────────────
 
 /**
- * Write a single API key to ~/.hermes/.env without rewriting the
- * entire file. Used by the per-model Push credential button.
- * Delegates to syncCredentialToHermesEnv to avoid duplication.
- */
-export function syncSingleCredentialToHermesEnv(
-  provider: HermesProvider,
-  apiKey: string
-): { backupPath: string | null } {
-  return syncCredentialToHermesEnv({ provider, apiKey });
-}
-
-// ── Fallback chain sync to Hermes config ──────────────────────
-
-export interface FallbackAgentSettingsFromDisk {
   apiMaxRetries?: number;
   restorePrimaryOnFallback?: boolean;
   fallbackNotification?: boolean;

@@ -11,7 +11,7 @@ import { getModel, listModels, getModelDefaults } from "./models-repository";
 import { getCredentialWithKey } from "./credentials-repository";
 import {
   syncSingleModelToHermesConfig,
-  syncSingleCredentialToHermesEnv,
+  syncCredentialToHermesEnv,
   readHermesConfigModels,
 } from "./hermes-config-sync";
 import { isHermesProvider, type HermesProvider } from "./hermes-providers";
@@ -177,7 +177,7 @@ function pushCredentialToHermesEnv(provider: string, apiKey: string): SyncAction
     };
   }
   try {
-    const { backupPath } = syncSingleCredentialToHermesEnv(
+    const { backupPath } = syncCredentialToHermesEnv(
       provider as HermesProvider,
       apiKey
     );
