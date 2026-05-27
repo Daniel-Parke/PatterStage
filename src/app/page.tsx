@@ -18,7 +18,6 @@ import {
   AlertTriangle,
   RefreshCw,
   CheckCircle2,
-
   Radio,
   Rocket,
   ChevronRight,
@@ -45,36 +44,12 @@ import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
 import { safeApiCall } from "@/lib/api-fetch";
 
-const MONITOR_FETCH_INIT: RequestInit = { cache: "no-store" };
-
-// ── Safe JSON fetcher for parallel initial loads ─────────────────
-async function safeFetchJSON<T extends { data: unknown } = { data: unknown }>(url: string, init?: RequestInit): Promise<T | null> {
-  try {
-    const res = await fetch(url, init);
-    return await res.json() as T;
-  } catch {
-    return null;
-  }
-}
-
 // ── Typed response shapes for each API endpoint ─────────────
 interface TemplatesResponseData { templates: Array<{ id: string; name: string; icon: string; color: string; category: string; categoryId?: string; profile: string; description: string; isCustom?: boolean }>; }
 interface CategoriesResponseData { categories: MissionCategory[]; }
 interface AgentsResponseData { processes: HermesProcess[]; }
 interface MissionsResponseData { missions: MissionBrief[]; }
 interface DefaultsResponseData { defaults: { agent?: string } | null; }
-
-// ── Polling configuration type (module-level, not inline in useEffect) ──
-interface PollConfig {
-  url: string;
-  ms: number;
-  extract: (d: { data?: unknown }) => Partial<{
-    monitor: MonitorData | null;
-    processes: HermesProcess[];
-    missions: MissionBrief[];
-  }> | null;
-  init?: RequestInit;
-}
 
 // ── Live Clock (isolated re-render) ───────────────────────────
 
@@ -254,6 +229,13 @@ export default function Dashboard() {
     }
   }, [showToast, setDataFields, refreshMonitor]);
 
+  const handleRefreshProcesses = useCallback(async () => {
+    const { data: agentsData } = await safeApiCall<{ data: { processes: HermesProcess[] } }>("/api/agents");
+    if (agentsData?.data?.processes) {
+      setData({ processes: agentsData.data.processes });
+    }
+  }, [setData]);
+
   useEffect(() => {
     const controller = new AbortController();
     const signal = controller.signal;
@@ -270,26 +252,26 @@ export default function Dashboard() {
         missionsRes,
         defaultsRes,
       ] = await Promise.all([
-          safeFetchJSON<{ data: SystemStatus }>("/api/status", { signal }),
-          safeFetchJSON<{ data: Record<string, unknown> }>("/api/config", { signal }),
-          safeFetchJSON<{ data: TemplatesResponseData }>("/api/templates", { signal }),
-          safeFetchJSON<{ data: CategoriesResponseData }>("/api/mission-categories", { signal }),
-          safeFetchJSON<{ data: MonitorData }>("/api/monitor", { ...MONITOR_FETCH_INIT, signal }),
-          safeFetchJSON<{ data: AgentsResponseData }>("/api/agents", { signal }),
-          safeFetchJSON<{ data: MissionsResponseData }>("/api/missions", { signal }),
-          safeFetchJSON<{ data: DefaultsResponseData }>("/api/models/defaults", { signal }),
+          safeApiCall<{ data: SystemStatus }>("/api/status", { signal } as RequestInit),
+          safeApiCall<{ data: Record<string, unknown> }>("/api/config", { signal } as RequestInit),
+          safeApiCall<{ data: TemplatesResponseData }>("/api/templates", { signal } as RequestInit),
+          safeApiCall<{ data: CategoriesResponseData }>("/api/mission-categories", { signal } as RequestInit),
+          safeApiCall<{ data: MonitorData }>("/api/monitor", { cache: "no-store", signal } as RequestInit),
+          safeApiCall<{ data: AgentsResponseData }>("/api/agents", { signal } as RequestInit),
+          safeApiCall<{ data: MissionsResponseData }>("/api/missions", { signal } as RequestInit),
+          safeApiCall<{ data: DefaultsResponseData }>("/api/models/defaults", { signal } as RequestInit),
         ]);
 
       if (!signal.aborted) {
-        setRegistryAgentModelLabel(defaultsRes?.data?.defaults?.agent ?? null);
+        setRegistryAgentModelLabel(defaultsRes?.data?.data?.defaults?.agent ?? null);
         setData({
-          status: statusRes?.data ?? null,
-          config: configRes?.data ?? null,
-          templates: templatesRes?.data?.templates || [],
-          categories: categoriesRes?.data?.categories || [],
-          monitor: monitorRes?.data ?? null,
-          processes: processesRes?.data?.processes || [],
-          missions: missionsRes?.data?.missions || [],
+          status: statusRes?.data?.data ?? null,
+          config: configRes?.data?.data ?? null,
+          templates: templatesRes?.data?.data?.templates || [],
+          categories: categoriesRes?.data?.data?.categories || [],
+          monitor: monitorRes?.data?.data ?? null,
+          processes: processesRes?.data?.data?.processes || [],
+          missions: missionsRes?.data?.data?.missions || [],
         });
         setReady(true);
       }
@@ -297,41 +279,40 @@ export default function Dashboard() {
     initialLoad();
 
     // ── Polling: consolidated — runs each interval on schedule ──────────
-    const polls: PollConfig[] = [
+    const polls = [
       {
         url: "/api/monitor",
         ms: 10000,
-        extract: (d) => {
-          if (!d?.data) return null;
-          return { monitor: d.data as MonitorData };
+        extract: (d: { data?: { data?: MonitorData } }) => {
+          if (!d?.data?.data) return null;
+          return { monitor: d.data.data };
         },
       },
       {
         url: "/api/agents",
         ms: 15000,
-        extract: (d) => {
-          if (!d?.data) return null;
-          return { processes: (d.data as { processes?: HermesProcess[] }).processes ?? [] };
+        extract: (d: { data?: { data?: { processes?: HermesProcess[] } } }) => {
+          if (!d?.data?.data) return null;
+          return { processes: d.data.data.processes ?? [] };
         },
       },
       {
         url: "/api/missions",
         ms: 15000,
-        extract: (d) => {
-          if (!d?.data) return null;
-          return { missions: (d.data as { missions?: MissionBrief[] }).missions ?? [] };
+        extract: (d: { data?: { data?: { missions?: MissionBrief[] } } }) => {
+          if (!d?.data?.data) return null;
+          return { missions: d.data.data.missions ?? [] };
         },
       },
     ];
 
-    const pollIntervals = polls.map(({ url, ms, extract, init }) =>
+    const pollIntervals = polls.map(({ url, ms, extract }) =>
       setInterval(async () => {
         if (signal.aborted) return;
-        const res = await fetch(url, { ...init, signal }).catch(() => null);
-        if (!res?.ok) return;
-        const d = await res.json().catch(() => null);
-        if (!d) return;
-        const update = extract(d);
+        const { data: raw } = await safeApiCall(url, { signal } as RequestInit);
+        if (!raw) return;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- extract functions handle their own typing
+        const update = (extract as (d: any) => any)(raw);
         if (update) setData(update);
       }, ms),
     );
@@ -810,10 +791,7 @@ export default function Dashboard() {
             </h2>
             <RefreshCw
               className="w-3 h-3 text-white/20 hover:text-white/50 cursor-pointer"
-              onClick={async () => {
-                const { data: agentsData } = await safeApiCall<{ processes: HermesProcess[] }>("/api/agents");
-                setData({ processes: agentsData?.processes || [] });
-              }}
+              onClick={() => { void handleRefreshProcesses(); }}
             />
           </div>
           {processes.length === 0 ? (

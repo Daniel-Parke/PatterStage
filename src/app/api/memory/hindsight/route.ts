@@ -61,36 +61,6 @@ async function requestWithTimeout<T = Record<string, unknown>>(
   }
 }
 
-async function apiGet<T = Record<string, unknown>>(
-  path: string,
-  timeoutMs = DEFAULT_TIMEOUT_MS,
-): Promise<T> {
-  return requestWithTimeout<T>(path, { timeoutMs });
-}
-
-async function apiPost<T = Record<string, unknown>>(
-  path: string,
-  body: Record<string, unknown>,
-  timeoutMs = DEFAULT_TIMEOUT_MS,
-): Promise<T> {
-  return requestWithTimeout<T>(path, { method: "POST", body, timeoutMs });
-}
-
-async function apiDelete<T = Record<string, unknown>>(
-  path: string,
-  timeoutMs = DEFAULT_TIMEOUT_MS,
-): Promise<T> {
-  return requestWithTimeout<T>(path, { method: "DELETE", timeoutMs });
-}
-
-async function apiPatch<T = Record<string, unknown>>(
-  path: string,
-  body: Record<string, unknown>,
-  timeoutMs = DEFAULT_TIMEOUT_MS,
-): Promise<T> {
-  return requestWithTimeout<T>(path, { method: "PATCH", body, timeoutMs });
-}
-
 // ── Response shaping helpers ─────────────────────────────────
 
 function mapMemoryItem(item: Record<string, unknown>) {
@@ -134,7 +104,7 @@ function mapMentalModelItem(m: Record<string, unknown>) {
 async function handleList(bank: string, search?: string, limit?: number) {
   let params = `?limit=${limit || 100}`;
   if (search) params += `&search=${encodeURIComponent(search)}`;
-  const result = await apiGet<{ items?: Record<string, unknown>[]; total?: number }>(
+  const result = await requestWithTimeout<{ items?: Record<string, unknown>[]; total?: number }>(
     `/v1/default/banks/${bank}/memories/list${params}`,
   );
   const memories = (result.items || []).map(mapMemoryItem);
@@ -142,16 +112,15 @@ async function handleList(bank: string, search?: string, limit?: number) {
 }
 
 async function handleRetain(bank: string, content: string, tags?: string[]) {
-  const result = await apiPost<{ success?: boolean; operation_id?: string }>(
+  const result = await requestWithTimeout<{ success?: boolean; operation_id?: string }>(
     `/v1/default/banks/${bank}/memories`,
-    { items: [{ content, tags: tags || [] }] },
-    30_000,
+    { method: "POST", body: { items: [{ content, tags: tags || [] }] }, timeoutMs: 30_000 },
   );
   return { success: result.success || false, operation_id: result.operation_id };
 }
 
 async function handleRecall(bank: string, query: string) {
-  const result = await apiGet<{ items?: Record<string, unknown>[] }>(
+  const result = await requestWithTimeout<{ items?: Record<string, unknown>[] }>(
     `/v1/default/banks/${bank}/memories/list?limit=20&search=${encodeURIComponent(query)}`,
   );
   const memories = (result.items || []).map(mapMemoryItem);
@@ -160,10 +129,9 @@ async function handleRecall(bank: string, query: string) {
 
 async function handleReflect(bank: string, query: string, budget?: string) {
   try {
-    const result = await apiPost<{ response?: string; facts?: unknown[] }>(
+    const result = await requestWithTimeout<{ response?: string; facts?: unknown[] }>(
       `/v1/default/banks/${bank}/reflect`,
-      { query, budget: budget || "mid" },
-      60_000,
+      { method: "POST", body: { query, budget: budget || "mid" }, timeoutMs: 60_000 },
     );
     return { response: result.response || String(result), facts: result.facts || [] };
   } catch {
@@ -175,7 +143,7 @@ async function handleReflect(bank: string, query: string, budget?: string) {
 }
 
 async function handleDirectives(bank: string) {
-  const result = await apiGet<Record<string, unknown>[] | { items?: Record<string, unknown>[] }>(
+  const result = await requestWithTimeout<Record<string, unknown>[] | { items?: Record<string, unknown>[] }>(
     `/v1/default/banks/${bank}/directives`,
   );
   const items = Array.isArray(result) ? result : (result.items || []);
@@ -193,12 +161,12 @@ async function handleCreateDirective(
   const body: Record<string, unknown> = { name, content };
   if (priority !== undefined) body.priority = priority;
   if (tags) body.tags = tags;
-  const result = await apiPost(`/v1/default/banks/${bank}/directives`, body);
+  const result = await requestWithTimeout(`/v1/default/banks/${bank}/directives`, { method: "POST", body });
   return { success: true, directive: result };
 }
 
 async function handleDeleteDirective(bank: string, id: string) {
-  await apiDelete(`/v1/default/banks/${bank}/directives/${id}`);
+  await requestWithTimeout(`/v1/default/banks/${bank}/directives/${id}`, { method: "DELETE" });
   return { success: true, id };
 }
 
@@ -213,12 +181,12 @@ async function handleUpdateDirective(
   if (updates.priority !== undefined) body.priority = updates.priority;
   if (updates.is_active !== undefined) body.is_active = String(updates.is_active) === "true";
   if (updates.tags !== undefined) body.tags = normalizeTags(updates.tags);
-  const result = await apiPatch(`/v1/default/banks/${bank}/directives/${id}`, body);
+  const result = await requestWithTimeout(`/v1/default/banks/${bank}/directives/${id}`, { method: "PATCH", body });
   return { success: true, directive: result };
 }
 
 async function handleMentalModels(bank: string) {
-  const result = await apiGet<Record<string, unknown>[] | { items?: Record<string, unknown>[] }>(
+  const result = await requestWithTimeout<Record<string, unknown>[] | { items?: Record<string, unknown>[] }>(
     `/v1/default/banks/${bank}/mental-models`,
   );
   const items = Array.isArray(result) ? result : (result.items || []);
@@ -234,22 +202,22 @@ async function handleCreateMentalModel(
 ) {
   const body: Record<string, unknown> = { name, source_query: query };
   if (tags) body.tags = tags;
-  const result = await apiPost<{ mental_model_id?: string; operation_id?: string }>(
+  const result = await requestWithTimeout<{ mental_model_id?: string; operation_id?: string }>(
     `/v1/default/banks/${bank}/mental-models`,
-    body,
+    { method: "POST", body },
   );
   return { success: true, mental_model_id: result.mental_model_id, operation_id: result.operation_id };
 }
 
 async function handleDeleteMentalModel(bank: string, id: string) {
-  await apiDelete(`/v1/default/banks/${bank}/mental-models/${id}`);
+  await requestWithTimeout(`/v1/default/banks/${bank}/mental-models/${id}`, { method: "DELETE" });
   return { success: true, id };
 }
 
 async function handleRefreshMentalModel(bank: string, id: string) {
-  const result = await apiPost<{ operation_id?: string }>(
+  const result = await requestWithTimeout<{ operation_id?: string }>(
     `/v1/default/banks/${bank}/mental-models/${id}/refresh`,
-    {},
+    { method: "POST", body: {} },
   );
   return { success: true, operation_id: result.operation_id };
 }
@@ -263,13 +231,13 @@ async function handleUpdateMentalModel(
   if (updates.name !== undefined) body.name = updates.name;
   if (updates.query !== undefined) body.source_query = updates.query;
   if (updates.tags !== undefined) body.tags = normalizeTags(updates.tags);
-  const result = await apiPatch(`/v1/default/banks/${bank}/mental-models/${id}`, body);
+  const result = await requestWithTimeout(`/v1/default/banks/${bank}/mental-models/${id}`, { method: "PATCH", body });
   return { success: true, model: result };
 }
 
 async function handleHealth() {
   try {
-    const result = await apiGet<{ ok?: boolean; status?: string }>("/health", 3000);
+    const result = await requestWithTimeout<{ ok?: boolean; status?: string }>("/health", { timeoutMs: 3000 });
     return { available: true, mode: "external", status: result.status ?? "healthy" };
   } catch (e) {
     return {
@@ -281,7 +249,7 @@ async function handleHealth() {
 
 async function handleCount(bank: string) {
   try {
-    const result = await apiGet<{ total?: number }>(
+    const result = await requestWithTimeout<{ total?: number }>(
       `/v1/default/banks/${bank}/memories/list?limit=1`,
     );
     return { count: result.total || 0, bank };
