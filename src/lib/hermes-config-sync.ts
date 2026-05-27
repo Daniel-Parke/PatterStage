@@ -428,7 +428,7 @@ export function syncSingleModelToHermesConfig(modelId: string): { backupPath: st
 
 // ── Per-credential sync to .env ──────────────────────────────
 
-/**
+interface FallbackAgentSettingsFromDisk {
   apiMaxRetries?: number;
   restorePrimaryOnFallback?: boolean;
   fallbackNotification?: boolean;

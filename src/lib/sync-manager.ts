@@ -177,10 +177,10 @@ function pushCredentialToHermesEnv(provider: string, apiKey: string): SyncAction
     };
   }
   try {
-    const { backupPath } = syncCredentialToHermesEnv(
-      provider as HermesProvider,
-      apiKey
-    );
+    const { backupPath } = syncCredentialToHermesEnv({
+      provider: provider as HermesProvider,
+      apiKey,
+    });
     return {
       success: true,
       backupPath,

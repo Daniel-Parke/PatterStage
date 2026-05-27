@@ -41,12 +41,11 @@ export default function LocalDirRow({
     }
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      safeApiCall<{ isGitRepo: boolean; branches: string[]; current: string | null }>(
+      safeApiCall<{ data: { isGitRepo: boolean; branches: string[]; current: string | null } }>(
         "/api/fs/git/branches?path=" + encodeURIComponent(p),
       )
         .then((j) => {
           if (j.ok) {
-            // safeApiCall wraps response in { ok, data }, so the API body is at .data.data
             setGit(j.data?.data ?? { isGitRepo: false, branches: [], current: null });
           } else {
             setGit({ isGitRepo: false, branches: [], current: null });
