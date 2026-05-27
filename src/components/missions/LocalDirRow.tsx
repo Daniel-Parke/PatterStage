@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { FolderOpen, Plus, Trash2 } from "lucide-react";
 
 import type { LocalDirEntry } from "@/types/hermes";
+import { safeApiCall } from "@/lib/api-fetch";
 
 import DirectoryPickerModal from "./DirectoryPickerModal";
 
@@ -40,12 +41,16 @@ export default function LocalDirRow({
     }
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
-      fetch("/api/fs/git/branches?path=" + encodeURIComponent(p))
-        .then((r) => r.json())
-        .then((j: { data?: GitBranchesData }) => {
-          setGit(j.data ?? { isGitRepo: false, branches: [], current: null });
-        })
-        .catch(() => setGit({ isGitRepo: false, branches: [], current: null }));
+      safeApiCall<{ isGitRepo: boolean; branches: string[]; current: string | null }>(
+        "/api/fs/git/branches?path=" + encodeURIComponent(p),
+      )
+        .then((j) => {
+          if (j.ok) {
+            setGit(j.data ?? { isGitRepo: false, branches: [], current: null });
+          } else {
+            setGit({ isGitRepo: false, branches: [], current: null });
+          }
+        });
     }, 400);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);

@@ -89,25 +89,27 @@ export default function JobFormModal({
   useEffect(() => {
     if (!open) return;
     setProfilesLoading(true);
+    setError(null);
     let cancelled = false;
-    void fetch("/api/agent/profiles")
-      .then((r) => r.json())
-      .then((d: { data?: { profiles?: AgentProfileOption[] } }) => {
-        if (cancelled) return;
-        const raw = d.data?.profiles ?? [];
-        if (raw.length > 0) {
-          setProfiles(
-            raw.map((p) => ({
-              id: p.id,
-              name: p.name,
-            })),
-          );
-        }
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setProfilesLoading(false);
-      });
+    void safeApiCall<{ profiles?: AgentProfileOption[] }>("/api/agent/profiles", {
+      method: "GET",
+    }).then((result) => {
+      if (cancelled) return;
+      if (!result.ok) {
+        setProfilesLoading(false);
+        return;
+      }
+      const raw = result.data?.profiles ?? [];
+      if (raw.length > 0) {
+        setProfiles(
+          raw.map((p) => ({
+            id: p.id,
+            name: p.name,
+          })),
+        );
+      }
+      if (!cancelled) setProfilesLoading(false);
+    });
     return () => {
       cancelled = true;
     };

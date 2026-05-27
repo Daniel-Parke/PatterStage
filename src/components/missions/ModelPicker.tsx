@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { safeApiCall } from "@/lib/api-fetch";
 
 /** Minimal shape of a model returned by /api/models. */
 interface ApiModel {
@@ -81,12 +82,12 @@ export default function ModelPicker({
     setLoading(true);
     setError(null);
     Promise.all([
-      fetch("/api/models").then((r) => r.json()),
-      fetch("/api/models/defaults").then((r) => r.json()),
+      safeApiCall<{ models?: ApiModel[] }>("/api/models"),
+      safeApiCall<{ defaults?: ApiDefaults }>("/api/models/defaults"),
     ])
       .then(([mRes, dRes]) => {
-        const list = (mRes.data?.models ?? []) as ApiModel[];
-        const def = (dRes.data?.defaults ?? null) as ApiDefaults | null;
+        const list = mRes.data?.models ?? [];
+        const def = dRes.data?.defaults ?? null;
         setModels(list);
         setDefaults(def);
       })

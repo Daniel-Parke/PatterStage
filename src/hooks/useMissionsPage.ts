@@ -246,20 +246,18 @@ export function useMissionsPage() {
     const controller = new AbortController();
     const slug = encodeURIComponent(newProfile);
     Promise.all([
-      fetch(`/api/skills?profile=${slug}`, { signal: controller.signal }),
-      fetch(`/api/agent/profiles/${slug}/toolsets`, { signal: controller.signal }),
+      safeApiCall<{ skills?: Array<{ name: string; enabled: boolean }> }>(`/api/skills?profile=${slug}`),
+      safeApiCall<{ platformToolsets?: PlatformToolsets }>(`/api/agent/profiles/${slug}/toolsets`),
     ])
-      .then(async ([skillsRes, toolsetsRes]) => {
-        const skillsData = await skillsRes.json();
-        const toolsetsData = await toolsetsRes.json();
+      .then(([skillsResult, toolsetsResult]) => {
         const enabled = new Set(
-          ((skillsData.data?.skills ?? []) as Array<{ name: string; enabled: boolean }>)
+          (skillsResult.data?.skills ?? [])
             .filter((s) => s.enabled)
             .map((s) => s.name),
         );
         const toolsetIds = new Set(
           unionToolsetsFromPlatforms(
-            (toolsetsData.data?.platformToolsets ?? {}) as PlatformToolsets,
+            toolsetsResult.data?.platformToolsets ?? {},
           ),
         );
         setNewSkills((prev) => prev.filter((s) => enabled.has(s)));
@@ -1012,24 +1010,15 @@ export function useMissionsPage() {
     void (async () => {
       try {
         const [defaultsRes, modelsRes] = await Promise.all([
-          fetch("/api/models/defaults", { signal: controller.signal }),
-          fetch("/api/models", { signal: controller.signal }),
+          safeApiCall<{ defaults?: { agent?: string | null } }>("/api/models/defaults", { signal: controller.signal }),
+          safeApiCall<{ models?: Array<{ id: string; modelId: string; provider: string }> }>("/api/models", { signal: controller.signal }),
         ]);
         if (!defaultsRes.ok || !modelsRes.ok) return;
 
-        const defaultsBody = (await defaultsRes.json()) as {
-          data?: { defaults?: { agent?: string | null } };
-        };
-        const modelsBody = (await modelsRes.json()) as {
-          data?: {
-            models?: Array<{ id: string; modelId: string; provider: string }>;
-          };
-        };
-
-        const agentRegistryId = defaultsBody.data?.defaults?.agent;
+        const agentRegistryId = defaultsRes.data?.defaults?.agent;
         if (!agentRegistryId) return;
 
-        const match = modelsBody.data?.models?.find((m) => m.id === agentRegistryId);
+        const match = modelsRes.data?.models?.find((m) => m.id === agentRegistryId);
         if (!match) return;
 
         setNewModel(match.modelId);
