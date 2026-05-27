@@ -8,7 +8,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getMemoryProviderType } from "@/lib/memory-providers";
-import { requireAuth } from "@/lib/api-auth";
 import type { ApiResponse } from "@/types/hermes";
 import type { MemoryReadResult } from "@/lib/memory-providers";
 
@@ -39,18 +38,23 @@ export async function GET() {
   });
 }
 
-// POST, PUT, DELETE — not supported via the dashboard for current providers
-async function handleWrite(
-  request: NextRequest,
-): Promise<NextResponse> {
-  const auth = requireAuth(request);
-  if (auth) return auth;
+export async function POST() {
   return NextResponse.json(
     { error: "Memory management via the dashboard is not supported for the current provider. Use agent tools instead." },
     { status: 400 },
   );
 }
 
-export const POST = handleWrite;
-export const PUT = handleWrite;
-export const DELETE = handleWrite;
+export async function PUT() {
+  return NextResponse.json(
+    { error: "Memory management via the dashboard is not supported for the current provider. Use agent tools instead." },
+    { status: 400 },
+  );
+}
+
+export async function DELETE() {
+  return NextResponse.json(
+    { error: "Memory management via the dashboard is not supported for the current provider. Use agent tools instead." },
+    { status: 400 },
+  );
+}

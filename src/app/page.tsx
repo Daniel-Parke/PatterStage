@@ -188,27 +188,22 @@ export default function Dashboard() {
 
   // Update cron job schedule inline
   const handleCronScheduleChange = useCallback(async (jobId: string, newSchedule: string) => {
+    if (!data.monitor?.cron?.jobs) {
+      showToast("Schedule update unavailable: no monitor data", "error");
+      return;
+    }
+
     const parsed = parseSchedule(newSchedule);
     const scheduleDisplay =
       parsed.kind !== "invalid"
         ? parsed.display
         : newSchedule;
 
-    try {
-      const { ok, error } = await safeApiCall("/api/cron", {
-        method: "PUT",
-        body: { id: jobId, schedule: newSchedule },
-      });
-      if (!ok) {
-        showToast(error || "Failed to update cron schedule", "error");
-        return;
-      }
-      // Optimistic local update (will be reconciled by refreshMonitor)
-      setDataFields((prev) => {
-        if (!prev.monitor?.cron.jobs) return prev;
-        return {
-          ...prev,
-          monitor: {
+    // Optimistic local update before the API call so the UI updates immediately
+    setDataFields((prev) => ({
+      ...prev,
+      monitor: prev.monitor
+        ? {
             ...prev.monitor,
             cron: {
               ...prev.monitor.cron,
@@ -218,16 +213,30 @@ export default function Dashboard() {
                   : job,
               ),
             },
-          },
-        };
+          }
+        : prev.monitor,
+    }));
+
+    try {
+      const { ok, error } = await safeApiCall("/api/cron", {
+        method: "PUT",
+        body: { id: jobId, schedule: newSchedule },
       });
+      if (!ok) {
+        showToast(error || "Failed to update cron schedule", "error");
+        // Revoke optimistic update on failure
+        void refreshMonitor();
+        return;
+      }
       showToast("Schedule updated", "success");
     } catch {
       showToast("Failed to update cron schedule", "error");
+      // Revoke optimistic update on failure
+      void refreshMonitor();
     } finally {
-      await refreshMonitor();
+      void refreshMonitor();
     }
-  }, [showToast, setDataFields, refreshMonitor]);
+  }, [data.monitor, showToast, refreshMonitor]);
 
   const handleRefreshProcesses = useCallback(async () => {
     const { data: agentsData } = await safeApiCall<{ data: { processes: HermesProcess[] } }>("/api/agents");

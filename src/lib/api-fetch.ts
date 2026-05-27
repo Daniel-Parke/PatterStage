@@ -43,7 +43,9 @@ export async function apiFetch<T = any>(
     headers: { "Content-Type": "application/json", ...options?.headers },
   });
 
-  const json = await res.json().catch(() => ({ error: "Request failed" }));
+  const json = await res.json().catch(() => {
+    throw new Error(`API returned invalid JSON (HTTP ${res.status})`);
+  });
 
   if (!res.ok) {
     throw new Error(formatApiError(json, `HTTP ${res.status}`));
