@@ -34,7 +34,7 @@ export function useModelsPage() {
   const [fallbackConfig, setFallbackConfig] = useState<FallbackConfig>({
     restorePrimaryOnFallback: true,
     fallbackNotification: false,
-    apiMaxRetries: 2,
+    apiMaxRetries: 3,
   });
   const [syncingFallback, setSyncingFallback] = useState(false);
   const [fallbackConfigSaving, setFallbackConfigSaving] = useState(false);

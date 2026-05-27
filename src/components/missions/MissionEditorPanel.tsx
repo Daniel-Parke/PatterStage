@@ -170,8 +170,8 @@ export default function MissionEditorPanel({
               </div>
               <div className="flex flex-wrap gap-1">
                 {detail.mission.goals
-                  ?.slice(0, 3)
-                  ?.map((goal, i) => (
+                  .slice(0, 3)
+                  .map((goal, i) => (
                     <span
                       key={i}
                       className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-white/40 border border-white/5"
@@ -179,12 +179,10 @@ export default function MissionEditorPanel({
                       {goal}
                     </span>
                   ))}
-                {(detail.mission.goals?.length ?? 0) >
-                  3 && (
+                {(detail.mission.goals?.length ?? 0) > 3 && (
                   <span className="text-[9px] font-mono text-white/25">
                     +
-                    {(detail.mission.goals?.length ?? 0) -
-                      3}
+                    {(detail.mission.goals?.length ?? 0) - 3}
                     {" "}
                     more
                   </span>

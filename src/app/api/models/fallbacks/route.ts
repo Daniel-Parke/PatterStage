@@ -6,8 +6,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
-import { listFallbackChain, addFallbackEntry } from "@/lib/fallbacks-repository";
-import { getFallbackConfig } from "@/lib/fallbacks-repository";
+import { listFallbackChain, addFallbackEntry, getFallbackConfig } from "@/lib/fallbacks-repository";
 import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
 
 const fallbackInputSchema = z.object({

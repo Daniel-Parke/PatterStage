@@ -19,7 +19,6 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
     case "boolean":
       return (
         <Toggle
-          key={field.key}
           label={field.label}
           value={Boolean(value)}
           onChange={(v) => onUpdate(field.key, v)}
@@ -30,7 +29,6 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
     case "number":
       return (
         <NumberInput
-          key={field.key}
           label={field.label}
           value={typeof value === "number" ? value : 0}
           onChange={(v) => onUpdate(field.key, v)}
@@ -42,7 +40,6 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
     case "select":
       return (
         <Select
-          key={field.key}
           label={field.label}
           value={typeof value === "string" ? value : ""}
           onChange={(v) => onUpdate(field.key, v)}
@@ -56,7 +53,7 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
       // which would silently corrupt the config.yaml on save.
       if (typeof value === "object" && value !== null) {
         return (
-          <div key={field.key} className="space-y-1.5">
+          <div className="space-y-1.5">
             <label className="text-sm font-medium text-white/70">
               {field.label}
             </label>
@@ -71,7 +68,6 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
       }
       return (
         <TextInput
-          key={field.key}
           label={field.label}
           value={typeof value === "string" ? value : String(value ?? "")}
           onChange={(v) => onUpdate(field.key, v)}

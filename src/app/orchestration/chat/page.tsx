@@ -90,13 +90,9 @@ export default function ChatPage() {
     }
   }, []);
 
-  // ── Persist sessions to localStorage on every change ───────
-  const isFirstRender = useRef(true);
+  // ── Persist sessions to localStorage on every change (skip empty initial state) ───
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
+    if (sessions.length === 0) return;
     saveSessions(sessions);
   }, [sessions]);
 
