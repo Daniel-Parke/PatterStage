@@ -78,16 +78,18 @@ export function useCronJobs() {
     [showToast, loadJobs],
   );
 
-  const handlePauseAll = useCallback(async () => {
-    const { ok, error } = await safeApiCall("/api/cron", {
-      method: "POST",
-      body: { action: "pauseAll" },
-    });
-    showToast(
-      ok ? "All jobs paused" : (error ?? "Failed to pause jobs"),
-      ok ? undefined : "error",
-    );
-    loadJobs();
+  const handlePauseAll = useCallback(() => {
+    void (async () => {
+      const { ok, error } = await safeApiCall("/api/cron", {
+        method: "POST",
+        body: { action: "pauseAll" },
+      });
+      showToast(
+        ok ? "All jobs paused" : (error ?? "Failed to pause jobs"),
+        ok ? undefined : "error",
+      );
+      loadJobs();
+    })();
   }, [showToast, loadJobs]);
 
   return {
