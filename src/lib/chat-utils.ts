@@ -162,9 +162,6 @@ export function createAssistantMessage(content = ""): ChatMessage {
 
 // ── API message helpers ─────────────────────────────────────────
 
-// Re-export from types for backward compatibility
-export type { ApiMessage } from "@/types/chat";
-
 export function toApiMessages(messages: ChatMessage[], newText: string): ApiMessage[] {
   return [
     ...messages.map((m) => ({ role: m.role, content: m.content })),
@@ -255,7 +252,7 @@ export async function streamChatResponse(
 
     await readChatStream(reader, onDelta);
     return true;
-  } catch (err) {
+  } catch (err: unknown) {
     if (err instanceof DOMException && err.name === "AbortError") {
       return false;
     }

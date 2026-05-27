@@ -80,8 +80,7 @@ export function useGatewayHealth(): GatewayHealth & {
         signal: AbortSignal.timeout(5000),
       }),
     ]);
-    try {
-      const registryOk = defaultsRes.ok && Boolean(defaultsRes.data?.defaults?.agent?.trim());
+    const registryOk = defaultsRes.ok && Boolean(defaultsRes.data?.defaults?.agent?.trim());
       let diskOk = false;
       if (configRes.ok) {
         const modelCfg = configRes.data?.model;
@@ -92,9 +91,6 @@ export function useGatewayHealth(): GatewayHealth & {
         }
       }
       setAgentDefaultModelSet(registryOk && diskOk);
-    } catch {
-      setAgentDefaultModelSet(null);
-    }
   }, []);
 
   // ── Fetch model lists ───────────────────────────────────────

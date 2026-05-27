@@ -14,7 +14,7 @@ import {
   groupTemplatesByCategory,
 } from "@/lib/mission-categories";
 import type { ManagedCategory } from "@/components/missions/CategoryManagerModal";
-import { buildTemplatePayload } from "@/lib/mission-form-utils";
+import { buildTemplatePayload, splitGoals } from "@/lib/mission-form-utils";
 import {
   isMissionActive,
   isMissionDraft,
@@ -208,7 +208,7 @@ export function useMissionsPage() {
       outputFormat: newOutputFormat.trim() || undefined,
       constraints: newConstraints.trim() || undefined,
       categoryId: newCategoryId,
-      goals: newGoals.split("\n").filter((g) => g.trim()),
+      goals: splitGoals(newGoals),
       profileName: newProfile || undefined,
       modelId: newModel || undefined,
       provider: newProvider || undefined,

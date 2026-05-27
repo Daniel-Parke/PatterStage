@@ -34,7 +34,6 @@ import {
 } from "@/lib/cron-repository";
 
 import {
-  parseScheduleToJson,
   normalizeRepeat,
 } from "@/lib/cron/write";
 
@@ -106,11 +105,6 @@ export async function GET(request: NextRequest) {
   if (auth) return auth;
 
   try {
-    // Pull latest execution state from Hermes before reading
-    const importResult = importHermesJobs();
-    if (importResult.errors.length > 0) {
-      logApiError("GET /api/cron", "importing Hermes jobs", new Error(importResult.errors.join("; ")));
-    }
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
@@ -120,6 +114,12 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Job not found" }, { status: 404 });
       }
       return NextResponse.json({ data: { job: recordToApiJob(job) } });
+    }
+
+    // Pull latest execution state from Hermes before listing all jobs
+    const importResult = importHermesJobs();
+    if (importResult.errors.length > 0) {
+      logApiError("GET /api/cron", "importing Hermes jobs", new Error(importResult.errors.join("; ")));
     }
 
     const rawJobs = listCronJobs();
@@ -401,7 +401,6 @@ export async function PUT(request: NextRequest) {
     if (updates.state !== undefined) updatePayload.state = updates.state as string;
 
     if (updates.schedule !== undefined) {
-      const schedParsed = parseScheduleToJson(updates.schedule as string);
       const parsed = parseSchedule(updates.schedule as string);
       if (parsed.kind === "invalid") {
         return NextResponse.json(
@@ -409,8 +408,8 @@ export async function PUT(request: NextRequest) {
           { status: 400 }
         );
       }
-      updatePayload.schedule = schedParsed.scheduleJson;
-      updatePayload.schedule_display = schedParsed.scheduleDisplay;
+      updatePayload.schedule = JSON.stringify(parsed);
+      updatePayload.schedule_display = "display" in parsed ? (parsed as { display: string }).display : (updates.schedule as string);
     }
 
     if (updates.repeat !== undefined) {

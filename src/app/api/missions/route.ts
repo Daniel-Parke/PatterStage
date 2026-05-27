@@ -540,16 +540,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ data: { deleted: missionIdFinal } });
     }
 
-    // ── Get Status ────────────────────────────────────────────
-    if (action === "status") {
-      const { id } = body as { id?: string };
-      if (!id)
-        return NextResponse.json({ error: "Mission id is required" }, { status: 400 });
-
-      const status = await agentBackend.getMissionStatus(id);
-      return NextResponse.json({ data: { status } });
-    }
-
     return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
   } catch (error) {
     logApiError("POST /api/missions", "processing request", error);
