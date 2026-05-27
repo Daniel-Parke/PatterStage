@@ -98,7 +98,7 @@ function parseMissionBodyFields(body: Record<string, unknown>): MissionBodyField
 
 // ── GET ───────────────────────────────────────────────────────
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 

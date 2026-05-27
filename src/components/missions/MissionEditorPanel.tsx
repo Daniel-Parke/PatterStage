@@ -169,7 +169,7 @@ export default function MissionEditorPanel({
                 Goals
               </div>
               <div className="flex flex-wrap gap-1">
-                {detail.mission.goals
+                {(detail.mission.goals ?? [])
                   .slice(0, 3)
                   .map((goal, i) => (
                     <span

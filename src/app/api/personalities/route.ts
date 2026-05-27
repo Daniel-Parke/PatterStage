@@ -98,12 +98,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function DELETE() {
-  return NextResponse.json(
-    { error: "Personalities are profile SOUL.md identities and cannot be deleted here" },
-    { status: 410 },
-  );
-}
+// DELETE is not supported — personalities are profile SOUL.md identities
+// and cannot be individually deleted from Control Hub. Delete the profile instead.
 
 export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);

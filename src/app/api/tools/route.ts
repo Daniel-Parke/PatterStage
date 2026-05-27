@@ -31,13 +31,11 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  const body = (await request.json().catch(() => ({}))) as { action?: string };
   return NextResponse.json(
     {
       error:
         "Tool registry mutations are disabled. Configure Hermes runtime toolsets on Operations → Tools (profile-scoped platform_toolsets).",
-      action: body.action,
     },
-    { status: 410 },
+    { status: 410 }
   );
 }

@@ -43,6 +43,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
 import { safeApiCall } from "@/lib/api-fetch";
+import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
 
 // ── Typed response shapes for each API endpoint ─────────────
 interface TemplatesResponseData { templates: Array<{ id: string; name: string; icon: string; color: string; category: string; categoryId?: string; profile: string; description: string; isCustom?: boolean }>; }
@@ -706,7 +707,7 @@ export default function Dashboard() {
                       </span>
                     </div>
                   ))
-                : DEFAULT_PLATFORMS.map((p) => (
+: (HERMES_PLATFORMS.map((p) => p.id)).map((p) => (
                     <div key={p} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <StatusDot status="idle" />
