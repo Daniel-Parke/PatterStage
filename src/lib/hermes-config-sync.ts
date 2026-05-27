@@ -205,7 +205,7 @@ interface AuxiliarySection {
 interface HermesConfig {
   model?: { default?: string; provider?: string; base_url?: string; api_key?: string; context_length?: number };
   auxiliary?: Record<string, AuxiliarySection>;
-  fallback_providers?: Array<Record<string, string>>;
+  fallback_providers?: Array<{ provider: string; model: string; base_url?: string; api_key?: string }>;
   [key: string]: unknown;
 }
 
@@ -482,7 +482,7 @@ export function readFallbackAgentSettingsFromConfig(
 function assertFallbackAgentSettingsWritten(
   configPath: string,
   expected: {
-    apiMaxRetries?: number;
+    apiMaxRetries?: number | null;
     restorePrimaryOnFallback?: boolean;
     fallbackNotification?: boolean;
   },
@@ -535,16 +535,18 @@ export function syncFallbacksToHermesConfig(
     : {};
 
   // Write fallback_providers chain
-  yamlConfig.fallback_providers = chain.map((entry) => {
-    const result: Record<string, string> = {
-      provider: entry.provider,
-      model: entry.modelId,
-    };
-    const url = entry.overrideBaseUrl || entry.baseUrl;
-    if (url) result.base_url = url;
-    if (entry.apiKey) result.api_key = entry.apiKey;
-    return result;
-  });
+  yamlConfig.fallback_providers = chain.map(
+    (entry): { provider: string; model: string; base_url?: string; api_key?: string } => {
+      const result: { provider: string; model: string; base_url?: string; api_key?: string } = {
+        provider: entry.provider,
+        model: entry.modelId,
+      };
+      const url = entry.overrideBaseUrl || entry.baseUrl;
+      if (url) result.base_url = url;
+      if (entry.apiKey) result.api_key = entry.apiKey;
+      return result;
+    },
+  );
 
   // Write agent behavioural settings
   const agentSection: Record<string, unknown> = { ...(yamlConfig.agent ?? {}) };
