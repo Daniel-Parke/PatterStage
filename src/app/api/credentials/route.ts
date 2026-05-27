@@ -14,7 +14,10 @@ import { zodErrorResponse, credentialPostSchema } from "@/lib/api-schemas";
 import { syncCredentialToHermesEnv } from "@/lib/hermes-config-sync";
 import { isHermesProvider, type HermesProvider } from "@/lib/hermes-providers";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   try {
     return NextResponse.json({ data: { credentials: listCredentials() } });
   } catch (error) {

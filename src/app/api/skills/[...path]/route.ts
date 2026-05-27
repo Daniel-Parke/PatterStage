@@ -5,11 +5,14 @@ import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import { resolveSkillDirUnderRoot } from "@/lib/path-security";
 import { parseSkillFrontmatter } from "@/lib/skills-repository";
+import { requireAuth } from "@/lib/api-auth";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
   const { path } = await params;
   const resolved = resolveSkillDirUnderRoot(getActiveHermesPaths().skills, path);
   if (!resolved.ok) {
