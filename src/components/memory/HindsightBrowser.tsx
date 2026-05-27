@@ -106,24 +106,25 @@ export default function HindsightBrowser() {
       return;
     }
     setLoading(true);
-    const { data, error } = await safeApiCall<{ data?: { memories?: Memory[]; available?: boolean; mode?: string; message?: string; error?: string } }>(`/api/memory/hindsight?action=recall&query=${encodeURIComponent(q)}`);
-    setLoading(false);
-    if (error) {
-      showToast(error, "error");
-      await fetchHealthOnly();
-      return;
-    }
-    const payload = data?.data;
-    setMemories(payload?.memories || []);
-    const backendSaysDown = payload?.available === false || (typeof payload?.error === "string" && payload.error.length > 0);
-    if (!backendSaysDown) {
-      setHealth({ available: true, mode: typeof payload?.mode === "string" ? payload.mode : "ok", message: typeof payload?.message === "string" ? payload.message : undefined });
-    } else {
-      await fetchHealthOnly();
+    try {
+      const { data, error } = await safeApiCall<{ data?: { memories?: Memory[]; available?: boolean; mode?: string; message?: string; error?: string } }>(`/api/memory/hindsight?action=recall&query=${encodeURIComponent(q)}`);
+      if (error) {
+        showToast(error, "error");
+        await fetchHealthOnly();
+        return;
+      }
+      const payload = data?.data;
+      setMemories(payload?.memories || []);
+      const backendSaysDown = payload?.available === false || (typeof payload?.error === "string" && payload.error.length > 0);
+      if (!backendSaysDown) {
+        setHealth({ available: true, mode: typeof payload?.mode === "string" ? payload.mode : "ok", message: typeof payload?.message === "string" ? payload.message : undefined });
+      } else {
+        await fetchHealthOnly();
+      }
+    } finally {
+      setLoading(false);
     }
   }, [search, showToast, fetchHealthOnly]);
-
-  const handleSearch = () => void runRecall();
 
   const handleRefreshMemories = () => {
     if (search.trim()) {
@@ -392,7 +393,7 @@ export default function HindsightBrowser() {
           <SearchInput value={search} onChange={setSearch} placeholder="Search memories (semantic search)..." accentColor="pink" />
           <p className="text-xs text-white/30 pl-1">Press Enter to search</p>
         </div>
-        <Button variant="secondary" color="pink" size="sm" icon={Search} onClick={handleSearch} disabled={!search.trim() || loading}>
+        <Button variant="secondary" color="pink" size="sm" icon={Search} onClick={() => void runRecall()} disabled={!search.trim() || loading}>
           Recall
         </Button>
         <Button variant="secondary" color="purple" size="sm" icon={Sparkles} onClick={handleReflect} disabled={reflecting || !search.trim()}>

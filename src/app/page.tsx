@@ -71,11 +71,6 @@ const LiveClock = reactMemo(function LiveClock() {
   );
 });
 
-// ── Template Category Constants (module-level — don't re-create on every render) ──
-
-const DEFAULT_PLATFORMS = ["discord", "telegram", "slack", "whatsapp"] as const;
-
-
 export default function Dashboard() {
   const [data, setDataFields] = useState<{
     status: SystemStatus | null;
