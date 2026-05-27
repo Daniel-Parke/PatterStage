@@ -39,7 +39,7 @@ export function getProfileNameFromHermesHome(home: string): string | null {
  * Mirrors upstream hermes_constants.get_default_hermes_root().
  */
 export function getHermesDefaultRootFromHome(home: string): string {
-  const envPath = resolve(norm(home));
+  const envPath = resolve(normPath(home));
 
   if (isPathUnderRoot(envPath, NATIVE_HERMES_HOME)) {
     return resolve(NATIVE_HERMES_HOME);
@@ -84,7 +84,7 @@ export function readHermesActiveProfile(defaultRoot?: string): string | null {
  */
 export function resolveProfileHermesHome(profileName: string): string {
   const profile = (profileName || "default").trim() || "default";
-  const envHome = norm(getHermesHome());
+  const envHome = normPath(getHermesHome());
   const defaultRoot = getHermesDefaultRoot();
 
   if (profile === "default") {
