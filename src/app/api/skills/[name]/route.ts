@@ -14,6 +14,8 @@ export async function GET(
   { params }: { params: Promise<{ name: string }> },
 ) {
   const { name } = await params;
+  const auth = requireAuth(request);
+  if (auth) return auth;
 
   try {
     ensureDb();
