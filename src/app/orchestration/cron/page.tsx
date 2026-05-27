@@ -234,6 +234,8 @@ export default function CronPage() {
       if (!hwRes.ok) parts.push("system");
       showToast(`Sync failed: ${parts.join(", ")}`, "error");
     }
+    // Always reset syncing state AFTER toast calls so the UI never briefly
+    // shows "not syncing" while a failure toast is still visible.
     setSyncing(false);
   }, [agent, hardware, showToast]);
 

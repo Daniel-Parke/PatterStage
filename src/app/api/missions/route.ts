@@ -14,7 +14,7 @@ import {
 } from "@/lib/mission-repository";
 import { updateSession } from "@/lib/session-repository";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
-import { requireAuth } from "@/lib/api-auth";
+import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
 import { agentBackend } from "@/lib/backends";
@@ -138,6 +138,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  if (isChReadOnly()) {
+    return NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 });
+  }
 
   ensureSyncLayer();
 

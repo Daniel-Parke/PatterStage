@@ -63,7 +63,12 @@ export async function POST(request: NextRequest) {
   if (auth) return auth;
 
   try {
-    const body = await request.json();
+    let body: { messages?: unknown; model?: string; stream?: boolean };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const { messages, model, stream } = body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {

@@ -263,7 +263,7 @@ export function useMissionsPage() {
         setNewSkills((prev) => prev.filter((s) => enabled.has(s)));
         setNewToolsets((prev) => prev.filter((t) => toolsetIds.has(t)));
       })
-      .catch(() => {});
+      .catch((err) => console.warn("[useMissionsPage] failed to load profile skills/toolsets:", err.message));
     return () => controller.abort();
   }, [newProfile]);
 

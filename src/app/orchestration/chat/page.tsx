@@ -405,8 +405,8 @@ export default function ChatPage() {
         </div>
       </div>
 
-        {/* Main chat area */}
-        <div className="flex-1 flex flex-col min-w-0">
+      {/* Main chat area */}
+      <div className="flex-1 flex flex-col min-w-0">
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             {/* Gateway status banners — shown regardless of session state */}
