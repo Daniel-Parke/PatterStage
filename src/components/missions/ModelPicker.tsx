@@ -86,8 +86,9 @@ export default function ModelPicker({
       safeApiCall<{ defaults?: ApiDefaults }>("/api/models/defaults"),
     ])
       .then(([mRes, dRes]) => {
-        const list = mRes.data?.models ?? [];
-        const def = dRes.data?.defaults ?? null;
+        // safeApiCall wraps response in { ok, data }, so the API body is at .data.data
+        const list = mRes.data?.data?.models ?? [];
+        const def = dRes.data?.data?.defaults ?? null;
         setModels(list);
         setDefaults(def);
       })

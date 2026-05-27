@@ -46,7 +46,8 @@ export default function LocalDirRow({
       )
         .then((j) => {
           if (j.ok) {
-            setGit(j.data ?? { isGitRepo: false, branches: [], current: null });
+            // safeApiCall wraps response in { ok, data }, so the API body is at .data.data
+            setGit(j.data?.data ?? { isGitRepo: false, branches: [], current: null });
           } else {
             setGit({ isGitRepo: false, branches: [], current: null });
           }
