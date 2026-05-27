@@ -1,0 +1,27 @@
+See latest commits on the branch for the full changelog. Summary: auth fixes, safeApiCall consolidation, dead code removal, TypeScript fixes, and bug fixes across Lists 1-4.
+
+## Latest changes (this session)
+
+### Refactors (List 4: Models, HERMES.md, Environment, All Settings)
+- resolve 4 remaining TypeScript errors — zero TS errors across entire codebase:
+  - FallbackAgentSettingsFromDisk interface was referenced in hermes-config-sync.ts but never defined (TS2304 on two call sites)
+  - ModelPicker.tsx (missions): safeApiCall generic must be the API response shape { data: { models? } }, not the bare inner type
+  - LocalDirRow.tsx (missions): same safeApiCall generic fix for git branches endpoint
+  - sync-manager.ts: syncCredentialToHermesEnv takes a single SyncCredentialInput object, not two positional args
+
+All 631 tests pass.
+
+### Prior session changes (List 4: Models, HERMES.md, Environment, All Settings)
+- remove dead updateFallbackConfig() from fallbacks-repository
+- remove redundant syncSingleCredentialToHermesEnv() wrapper
+- fix duplicate icon: code_execution (changed from Terminal to Cpu)
+- fix duplicate icon: streaming (changed from Activity to Globe)
+- fix unused multi-line import in fallback sync route
+
+### Prior session changes (List 2: Cron, Missions, Chat)
+- Cron page: wrap async onPauseAll handler, JSX structure fix
+- Consolidate raw fetch() to safeApiCall across Cron, Missions, and Chat
+- Deep code quality cleanups for Cron, Missions, Chat
+
+### Prior session changes (List 1: Dashboard, Sessions, Memory, Logs)
+- Auth gap fixes, session API improvements, dead code removal
