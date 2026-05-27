@@ -56,8 +56,8 @@ export function useModelsPage() {
     try {
       // First, sync models from ~/.hermes/config.yaml — ensures we show
       // live data even if the user changed defaults externally via hermes CLI
-      await apiFetch("/api/models/import", { method: "POST" }).catch(() => {
-        console.warn("Model auto-import failed — showing cached data");
+      await apiFetch("/api/models/import", { method: "POST" }).catch((err) => {
+        console.warn("Model auto-import failed — showing cached data:", err instanceof Error ? err.message : err);
       });
 
       const [mData, cData, dData, driftData, fbData, fbCfgData] = await Promise.all([

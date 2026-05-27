@@ -1,13 +1,13 @@
-// ══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // /api/models/fallbacks/toggle — toggle enabled for fallback entry
 // ══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
-import { toggleFallbackEntry, listFallbackChain, getFallbackConfig } from "@/lib/fallbacks-repository";
-import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
+import { toggleFallbackEntry, getFallbackConfig } from "@/lib/fallbacks-repository";
+import { fallbackToggleSchema } from "@/lib/fallback-config-schema";
+import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const parsed = z.object({ id: z.string(), enabled: z.boolean() }).safeParse(raw);
+  const parsed = fallbackToggleSchema.safeParse(raw);
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Invalid request body", details: parsed.error.flatten() },
@@ -33,19 +33,12 @@ export async function POST(request: NextRequest) {
     if (!entry) {
       return NextResponse.json({ error: "Fallback entry not found" }, { status: 404 });
     }
-    // Sync the chain so the toggled state reaches Hermes config.yaml
-    const chain = listFallbackChain().filter((e) => e.enabled);
-    syncFallbacksToHermesConfig(
-      chain.map((e) => ({
-        modelId: e.modelIdString,
-        provider: e.provider,
-        baseUrl: null,
-        overrideBaseUrl: e.overrideBaseUrl,
-        apiKey: null,
-      })),
-      getFallbackConfig()
-    );
-    appendAuditLine({ action: "fallback.toggle", resource: entry.id, ok: true });
+    syncEnabledFallbackChainToHermes(getFallbackConfig());
+    try {
+      appendAuditLine({ action: "fallback.toggle", resource: entry.id, ok: true });
+    } catch {
+      // Non-fatal
+    }
     return NextResponse.json({ data: { entry } });
   } catch (error) {
     logApiError("POST /api/models/fallbacks/toggle", "toggling fallback", error);

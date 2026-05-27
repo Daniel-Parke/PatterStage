@@ -5,14 +5,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
-import {
-  getFallbackEntry,
-  updateFallbackEntry,
-  listFallbackChain,
-  getFallbackConfig,
-} from "@/lib/fallbacks-repository";
+import { getFallbackEntry, updateFallbackEntry, listFallbackChain, getFallbackConfig } from "@/lib/fallbacks-repository";
+import { fallbackReorderSchema } from "@/lib/fallback-config-schema";
 import { inTransaction } from "@/lib/db";
-import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
+import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -25,19 +21,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const body = raw as Record<string, unknown>;
-  const entryId = body?.entryId as string | undefined;
-  const direction = body?.direction as "up" | "down" | undefined;
-
-  if (!entryId || !direction) {
-    return NextResponse.json({
-      error: "entryId and direction are required",
-    }, { status: 400 });
+  const parsed = fallbackReorderSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid request body", details: parsed.error.flatten() },
+      { status: 400 }
+    );
   }
 
-  if (direction !== "up" && direction !== "down") {
-    return NextResponse.json({ error: "direction must be 'up' or 'down'" }, { status: 400 });
-  }
+  const { entryId, direction } = parsed.data;
 
   try {
     const entry = getFallbackEntry(entryId);
@@ -65,24 +57,16 @@ export async function POST(request: NextRequest) {
       updateFallbackEntry(chain[targetIdx].id, { position: posA });
     });
 
-    // Re-sync
-    const updatedChain = listFallbackChain().filter((e) => e.enabled);
-    syncFallbacksToHermesConfig(
-      updatedChain.map((e) => ({
-        modelId: e.modelIdString,
-        provider: e.provider,
-        baseUrl: null,
-        overrideBaseUrl: e.overrideBaseUrl,
-        apiKey: null,
-      })),
-      getFallbackConfig()
-    );
-
-    appendAuditLine({
-      action: "fallback.reorder",
-      resource: entryId,
-      ok: true,
-    });
+    syncEnabledFallbackChainToHermes(getFallbackConfig());
+    try {
+      appendAuditLine({
+        action: "fallback.reorder",
+        resource: entryId,
+        ok: true,
+      });
+    } catch {
+      // Non-fatal
+    }
 
     const refreshed = listFallbackChain();
     return NextResponse.json({ data: { fallbacks: refreshed } });
