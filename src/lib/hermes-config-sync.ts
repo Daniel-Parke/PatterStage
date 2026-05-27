@@ -431,55 +431,13 @@ export function syncSingleModelToHermesConfig(modelId: string): { backupPath: st
 /**
  * Write a single API key to ~/.hermes/.env without rewriting the
  * entire file. Used by the per-model Push credential button.
+ * Delegates to syncCredentialToHermesEnv to avoid duplication.
  */
 export function syncSingleCredentialToHermesEnv(
   provider: HermesProvider,
   apiKey: string
 ): { backupPath: string | null } {
-  if (!isHermesProvider(provider)) {
-    throw new Error(`Unknown provider: ${provider}`);
-  }
-  const paths = getActiveHermesPaths();
-  const envPath = paths.env;
-
-  const envVar = envVarForProvider(provider);
-  if (!envVar) {
-    throw new Error(`Provider "${provider}" uses OAuth -- no API key env var`);
-  }
-
-  ensureDir(paths.root);
-  const backupPath = backupFile(envPath, paths.backups);
-
-  const original = existsSync(envPath) ? readFileSync(envPath, "utf-8") : "";
-  const prior = parseEnvFile(original);
-  const next = new Map(prior);
-  next.set(envVar, apiKey);
-
-  atomicWriteFile(envPath, serializeEnvFile(prior, next, original));
-
-  return { backupPath };
-}
-
-// ── Single credential removal from .env ───────────────────────
-
-export function removeSingleCredentialFromHermesEnv(
-  provider: HermesProvider
-): { backupPath: string | null } {
-  if (!isHermesProvider(provider)) {
-    throw new Error(`Unknown provider: ${provider}`);
-  }
-  const paths = getActiveHermesPaths();
-  const envPath = paths.env;
-  if (!existsSync(envPath)) return { backupPath: null };
-  const backupPath = backupFile(envPath, paths.backups);
-
-  const original = readFileSync(envPath, "utf-8");
-  const prior = parseEnvFile(original);
-  const next = new Map(prior);
-  next.delete(envVarForProvider(provider)!);
-
-  atomicWriteFile(envPath, serializeEnvFile(prior, next, original));
-  return { backupPath };
+  return syncCredentialToHermesEnv({ provider, apiKey });
 }
 
 // ── Fallback chain sync to Hermes config ──────────────────────
