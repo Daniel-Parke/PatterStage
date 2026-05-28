@@ -221,22 +221,25 @@ export default function CronPage() {
 
   const handleSyncAll = useCallback(async () => {
     setSyncing(true);
-    const [agentRes, hwRes] = await Promise.all([
-      safeApiCall("/api/cron", { method: "POST", body: { action: "sync" } }),
-      safeApiCall("/api/cron/hardware", { method: "POST", body: { action: "sync" } }),
-    ]);
-    await Promise.all([agent.loadJobs(), hardware.loadJobs()]);
-    if (agentRes.ok && hwRes.ok) {
-      showToast("Agent and system cron synced", "success");
-    } else {
-      const parts: string[] = [];
-      if (!agentRes.ok) parts.push("agent");
-      if (!hwRes.ok) parts.push("system");
-      showToast(`Sync failed: ${parts.join(", ")}`, "error");
+    try {
+      const [agentRes, hwRes] = await Promise.all([
+        safeApiCall("/api/cron", { method: "POST", body: { action: "sync" } }),
+        safeApiCall("/api/cron/hardware", { method: "POST", body: { action: "sync" } }),
+      ]);
+      await Promise.all([agent.loadJobs(), hardware.loadJobs()]);
+      if (agentRes.ok && hwRes.ok) {
+        showToast("Agent and system cron synced", "success");
+      } else {
+        const parts: string[] = [];
+        if (!agentRes.ok) parts.push("agent");
+        if (!hwRes.ok) parts.push("system");
+        showToast(`Sync failed: ${parts.join(", ")}`, "error");
+      }
+    } finally {
+      // Always reset syncing state so the UI never gets stuck in "syncing"
+      // even if an exception is thrown (e.g., network failure).
+      setSyncing(false);
     }
-    // Always reset syncing state AFTER toast calls so the UI never briefly
-    // shows "not syncing" while a failure toast is still visible.
-    setSyncing(false);
   }, [agent, hardware, showToast]);
 
   // ── Derived state ─────────────────────────────────────────

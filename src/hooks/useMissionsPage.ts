@@ -85,10 +85,6 @@ export function useMissionsPage() {
   const { showToast, toastElement } = useToast();
   const templateApplied = useRef(false);
   const expandedIdRef = useRef<string | null>(null);
-  const scrollToCreateForm = useCallback(() => {
-    // No-op: the ref-based scroll target was removed during refactor.
-    // Kept as a no-op to avoid breaking callers that pass scrollToCreateForm.
-  }, []);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
   const [showTemplateManager, setShowTemplateManager] = useState(false);
@@ -435,9 +431,6 @@ export function useMissionsPage() {
             setShowCreate(true);
             templateApplied.current = true;
             showToast(`Template loaded: ${t.name}`, "success");
-            if (compose !== "1") {
-              scrollToCreateForm();
-            }
             window.history.replaceState({}, "", "/orchestration/missions");
           }
         }
@@ -446,7 +439,7 @@ export function useMissionsPage() {
       console.error("Failed to load templates:", error);
       showToast("Failed to load templates", "error");
     }
-  }, [fetchMissions, fetchTemplates, showToast, scrollToCreateForm, loadCategories]);
+  }, [fetchMissions, fetchTemplates, showToast, loadCategories]);
 
   const fetchDetail = useCallback(
     (id: string, showLoading = true) => {

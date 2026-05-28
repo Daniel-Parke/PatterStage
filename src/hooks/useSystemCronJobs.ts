@@ -107,6 +107,7 @@ export function useSystemCronJobs() {
     } else {
       showToast(`Paused ${resData?.pausedCount ?? 0} system cron job(s)`);
     }
+    // Always refetch so the UI reflects the latest state regardless of outcome.
     loadJobs();
   }, [showToast, loadJobs]);
 
