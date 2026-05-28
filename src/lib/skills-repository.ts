@@ -146,3 +146,8 @@ export function parseSkillFrontmatter(content: string): {
   }
   return { name, description, category };
 }
+
+/** Derive category from row data or skill key path — single source of truth. */
+export function deriveCategory(row: { category: string; skillKey: string }): string {
+  return row.category || row.skillKey.split("/")[0] || "uncategorized";
+}

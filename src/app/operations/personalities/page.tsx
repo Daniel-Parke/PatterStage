@@ -208,7 +208,6 @@ function EditPersonalityModal({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. pirate, teacher, creative"
-            disabled={false}
             className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-neon-purple/50 transition-colors font-mono"
           />
           <p className="text-xs text-white/30 font-mono">

@@ -6,16 +6,11 @@ import { requireAuth } from "@/lib/api-auth";
 import { ensureDb } from "@/lib/db";
 import { resolveEffectiveDisabledSkills } from "@/lib/effective-disabled-skills";
 import { getProfile } from "@/lib/profiles-repository";
-import { listSkills } from "@/lib/skills-repository";
+import { listSkills, deriveCategory } from "@/lib/skills-repository";
 import { skillsRootForProfile } from "@/lib/skills-config";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { scanDiskSkillsCatalog } from "@/lib/hermes-profile-sync";
 import type { Skill } from "@/types/hermes";
-
-/** Derive category from row data or key path — single source of truth. */
-function deriveCategory(row: { category: string; skillKey: string }): string {
-  return row.category || row.skillKey.split("/")[0] || "uncategorized";
-}
 
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);
