@@ -32,9 +32,9 @@ function levelFromToken(token: string): ParsedLogLevel | null {
   return null;
 }
 
-function levelFromMessage(text: string): ParsedLogLevel {
-  const upper = text.toUpperCase();
-  if (/\b(ERROR|ERR|FATAL)\b/.test(upper) || text.includes("Error")) {
+function levelFromMessage(raw: string): ParsedLogLevel {
+  const upper = raw.toUpperCase();
+  if (/\b(ERROR|ERR|FATAL)\b/.test(upper) || raw.includes("Error")) {
     return "error";
   }
   if (/\b(WARN|WARNING)\b/.test(upper)) return "warn";
@@ -150,9 +150,12 @@ function finishParse(ts: string | null, msg: string): ParsedLogLine {
       message = sourceLabel ? `${sourceLabel} ${remaining}` : remaining;
     } else {
       level = levelFromMessage(trimmed);
-      message = trimmed;
+      // Strip leading level token: "ERROR Something went wrong" → "Something went wrong"
+      // (when there was no source: label to strip via RE_LEADING_LEVEL_PLAIN)
+      const stripped = trimmed.replace(/^[A-Z]{3,}\s+/, "");
+      message = stripped;
     }
   }
 
-  return { timestamp: ts, level, message: message || trimmed };
+  return { timestamp: ts, level, message };
 }

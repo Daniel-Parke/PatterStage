@@ -192,10 +192,10 @@ describe("parseLogLine", () => {
 
     it("falls back to levelFromMessage when no colon follows plain level token", () => {
       // "ERROR Something went wrong" — no colon, RE_LEADING_LEVEL_PLAIN doesn't match.
-      // levelFromMessage sees "ERROR" and returns "error"; message stays full line.
+      // levelFromMessage sees "ERROR" and returns "error"; message is stripped of the level token.
       const result = parseLogLine("2026-05-11 10:20:04 ERROR Something went wrong");
       expect(result.level).toBe("error");
-      expect(result.message).toBe("ERROR Something went wrong");
+      expect(result.message).toBe("Something went wrong");
     });
   });
 
