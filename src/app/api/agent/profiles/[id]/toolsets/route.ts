@@ -92,3 +92,7 @@ export async function PUT(
     return NextResponse.json({ error: "Failed to save toolsets" }, { status: 500 });
   }
 }
+
+export async function DELETE() {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+}

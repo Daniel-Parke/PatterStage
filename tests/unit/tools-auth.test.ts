@@ -99,7 +99,7 @@ describe("POST /api/tools configure action auth", () => {
     expect(mockRequireAuth).toHaveBeenCalled();
   });
 
-  it("returns 410 when auth passes (mutations disabled)", async () => {
+  it("returns 405 when auth passes (POST not allowed on read-only tool registry)", async () => {
     mockRequireAuth.mockReturnValue(null);
 
     const req = new NextRequest("http://localhost/api/tools", {
@@ -108,7 +108,7 @@ describe("POST /api/tools configure action auth", () => {
     });
     const res = await POST(req);
 
-    expect(res.status).toBe(410);
+    expect(res.status).toBe(405);
   });
 });
 

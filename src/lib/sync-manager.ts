@@ -33,15 +33,12 @@ export interface DriftReport {
 /**
  * Read the primary model from ~/.hermes/config.yaml.
  * Returns null if no primary model is set or file can't be parsed.
- * Re-uses readHermesConfigModels to avoid duplicating the YAML parsing.
+ * Accepts the already-parsed hermesModelMap so callers can reuse it
+ * and avoid parsing the YAML file twice.
  */
-function readHermesPrimaryModel(): { modelId: string; provider: string; baseUrl: string | null } | null {
-  const hermesModelMap = readHermesConfigModels();
-  if (hermesModelMap.size === 0) return null;
-
-  // The primary model is keyed as "provider::modelId" in readHermesConfigModels.
-  // We find it by scanning for the entry that was parsed from the top-level
-  // `model.default` field (identified by provider + baseUrl source).
+function readHermesPrimaryModel(
+  hermesModelMap: Map<string, { modelId: string; provider: string; baseUrl: string | null }>
+): { modelId: string; provider: string; baseUrl: string | null } | null {
   const paths = getActiveHermesPaths();
   if (!existsSync(paths.config)) return null;
 
@@ -77,8 +74,8 @@ export function detectConfigDrift(): DriftReport {
   );
 
   // Read what's currently in config.yaml
-  const hermesPrimary = readHermesPrimaryModel();
   const hermesModelMap = readHermesConfigModels();
+  const hermesPrimary = readHermesPrimaryModel(hermesModelMap);
   const hermesKeySet = new Set(hermesModelMap.keys());
   const hermesModels = [...hermesModelMap.values()].map((m) => ({
     name: m.modelId,

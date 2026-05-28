@@ -36,6 +36,6 @@ export async function POST(request: NextRequest) {
       error:
         "Tool registry mutations are disabled. Configure Hermes runtime toolsets on Operations → Tools (profile-scoped platform_toolsets).",
     },
-    { status: 410 }
+    { status: 405 }
   );
 }
