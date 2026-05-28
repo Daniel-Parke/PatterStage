@@ -352,56 +352,59 @@ export function useMissionsPage() {
    * Populate form state from a mission template.
    * Used by handleTemplateSelect, handleTemplateEdit, and fetchData.
    */
-  const applyTemplateToForm = (
-    t: MissionTemplate & {
-      instruction?: string;
-      context?: string;
-      dispatchMode?: string;
-      schedule?: string;
-      name?: string;
+  const applyTemplateToForm = useCallback(
+    (
+      t: MissionTemplate & {
+        instruction?: string;
+        context?: string;
+        dispatchMode?: string;
+        schedule?: string;
+        name?: string;
+      },
+      categoryIdOverride?: string | null,
+    ) => {
+      setNewName(t.name ?? "");
+      setNewInstruction(t.instruction || "");
+      setNewContext(t.context || "");
+      setNewGoals((t.goals || []).join("\n"));
+      setNewOutputFormat(
+        (t as MissionTemplate & { outputFormat?: string }).outputFormat ?? "",
+      );
+      setNewConstraints(
+        (t as MissionTemplate & { constraints?: string }).constraints ?? "",
+      );
+      setNewProfile(t.profile || "");
+      setNewModel(t.defaultModel || "");
+      setNewProvider(t.defaultProvider || "");
+      setNewLocalDirs(
+        normalizeLocalDirsInput(
+          (t as MissionTemplate & { localDirs?: unknown }).localDirs,
+        ),
+      );
+      setLocalDirDraft({ path: "", branch: null });
+      setNewReferences(
+        (t as MissionTemplate & { references?: string[] }).references ?? [],
+      );
+      setNewSkills(t.suggestedSkills || []);
+      setNewToolsets(
+        (t as MissionTemplate & { suggestedToolsets?: string[] }).suggestedToolsets ?? [],
+      );
+      setNewCategoryId(
+        categoryIdOverride !== undefined
+          ? categoryIdOverride
+          : (t as MissionTemplate & { categoryId?: string }).categoryId ?? null
+      );
+      const tm = (t as MissionTemplate & { timeoutMinutes?: number }).timeoutMinutes;
+      if (typeof tm === "number" && Number.isFinite(tm)) {
+        setNewTimeout(tm);
+      }
+      if (t.dispatchMode) {
+        setNewDispatch(t.dispatchMode as "save" | "now" | "cron" | "queue");
+      }
+      if (t.schedule) setNewSchedule(t.schedule);
     },
-    categoryIdOverride?: string | null,
-  ) => {
-    setNewName(t.name ?? "");
-    setNewInstruction(t.instruction || "");
-    setNewContext(t.context || "");
-    setNewGoals((t.goals || []).join("\n"));
-    setNewOutputFormat(
-      (t as MissionTemplate & { outputFormat?: string }).outputFormat ?? "",
-    );
-    setNewConstraints(
-      (t as MissionTemplate & { constraints?: string }).constraints ?? "",
-    );
-    setNewProfile(t.profile || "");
-    setNewModel(t.defaultModel || "");
-    setNewProvider(t.defaultProvider || "");
-    setNewLocalDirs(
-      normalizeLocalDirsInput(
-        (t as MissionTemplate & { localDirs?: unknown }).localDirs,
-      ),
-    );
-    setLocalDirDraft({ path: "", branch: null });
-    setNewReferences(
-      (t as MissionTemplate & { references?: string[] }).references ?? [],
-    );
-    setNewSkills(t.suggestedSkills || []);
-    setNewToolsets(
-      (t as MissionTemplate & { suggestedToolsets?: string[] }).suggestedToolsets ?? [],
-    );
-    setNewCategoryId(
-      categoryIdOverride !== undefined
-        ? categoryIdOverride
-        : (t as MissionTemplate & { categoryId?: string }).categoryId ?? null
-    );
-    const tm = (t as MissionTemplate & { timeoutMinutes?: number }).timeoutMinutes;
-    if (typeof tm === "number" && Number.isFinite(tm)) {
-      setNewTimeout(tm);
-    }
-    if (t.dispatchMode) {
-      setNewDispatch(t.dispatchMode as "save" | "now" | "cron" | "queue");
-    }
-    if (t.schedule) setNewSchedule(t.schedule);
-  };
+    [],
+  );
 
   const fetchData = useCallback(async () => {
     try {
@@ -493,7 +496,7 @@ export function useMissionsPage() {
     }
   }, [expandedId, fetchDetail]);
 
-  const handleCreate = async () => {
+  const handleCreate = useCallback(async () => {
     if (!newName.trim() || !newInstruction.trim()) return;
     if (!editingId && !dispatchAcknowledged) {
       showToast("Open Dispatch to choose how this mission runs.", "error");
@@ -655,7 +658,7 @@ export function useMissionsPage() {
       showToast("Network error — please try again", "error");
       setDispatching(false);
     }
-  };
+  }, [newName, newInstruction, editingId, dispatchAcknowledged, dispatching, showToast, newDispatch, newSchedule, missions, dispatchPayload, fetchData, resetForm, fetchDetail, expandedId]);
 
   // ── Shared form population helpers ─────────────────────────────────
 
@@ -663,10 +666,8 @@ export function useMissionsPage() {
    * Populate form state from a mission.
    * Used by both handleEdit (in-place edit) and handleDuplicateMission.
    */
-  function populateFormFromMission(
-    m: MissionRow,
-    opts: { editing: boolean; namePrefix?: string },
-  ) {
+  const populateFormFromMission = useCallback(
+    (m: MissionRow, opts: { editing: boolean; namePrefix?: string }) => {
     const parsed = parseMissionPrompt(m.prompt);
     setNewName(opts.namePrefix ? `${m.name} ${opts.namePrefix}` : m.name);
     setNewInstruction(parsed.instruction);
@@ -706,25 +707,25 @@ export function useMissionsPage() {
         setNewDispatch("now");
       }
     }
-  }
+  }, []);
 
   // ── Mission handlers ───────────────────────────────────────────────
 
-  const handleEdit = (m: MissionRow) => {
+  const handleEdit = useCallback((m: MissionRow) => {
     setEditingId(m.id);
     populateFormFromMission(m, { editing: true });
     setShowCreate(true);
-  };
+  }, [populateFormFromMission]);
 
-  const handleDuplicateMission = (m: MissionRow) => {
+  const handleDuplicateMission = useCallback((m: MissionRow) => {
     setEditingId(null);
     populateFormFromMission(m, { editing: false, namePrefix: "(copy)" });
     setNewDispatch("save");
     setShowCreate(true);
     showToast("Mission duplicated as draft", "success");
-  };
+  }, [populateFormFromMission, showToast]);
 
-  const handleSaveAsTemplate = async () => {
+  const handleSaveAsTemplate = useCallback(async () => {
     if (!newInstruction.trim()) return;
 
     const name = newName.trim() || "Untitled Template";
@@ -790,7 +791,7 @@ export function useMissionsPage() {
     } finally {
       setTemplateSaving(false);
     }
-  };
+  }, [newInstruction, newName, editingTemplateId, templates, templateIcon, templateColor, templateDescription, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, showToast, fetchData]);
 
   const handleCreateNewTemplate = useCallback(() => {
     setEditingTemplateId(null);
@@ -812,7 +813,7 @@ export function useMissionsPage() {
     setShowTemplateEditor(true);
   }, []);
 
-  const handleTemplateSave = async () => {
+  const handleTemplateSave = useCallback(async () => {
     if (!templateName.trim()) return;
     setTemplateSaving(true);
     try {
@@ -861,28 +862,29 @@ export function useMissionsPage() {
     } finally {
       setTemplateSaving(false);
     }
-  };
+  }, [templateName, editingTemplateId, templateIcon, templateColor, templateDescription, newInstruction, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, newDispatch, newSchedule, showToast, fetchData]);
 
-  const handleEditTemplate = (
-    t: MissionTemplate & {
+  const handleEditTemplate = useCallback(
+    (t: MissionTemplate & {
       isCustom?: boolean;
       instruction?: string;
       context?: string;
       dispatchMode?: string;
       schedule?: string;
+    }) => {
+      setEditingTemplateId(t.id);
+      setTemplateName(t.name);
+      setTemplateDescription(t.description || "");
+      setTemplateIcon(t.icon);
+      setTemplateColor(t.color);
+      applyTemplateToForm(t);
+      setShowTemplateManager(false);
+      setShowTemplateEditor(true);
     },
-  ) => {
-    setEditingTemplateId(t.id);
-    setTemplateName(t.name);
-    setTemplateDescription(t.description || "");
-    setTemplateIcon(t.icon);
-    setTemplateColor(t.color);
-    applyTemplateToForm(t);
-    setShowTemplateManager(false);
-    setShowTemplateEditor(true);
-  };
+    [applyTemplateToForm],
+  );
 
-  const handleDeleteTemplate = async (templateId: string) => {
+  const handleDeleteTemplate = useCallback(async (templateId: string) => {
     if (!confirm("Delete this template?")) return;
     const { ok, error } = await safeApiCall("/api/templates", {
       method: "POST",
@@ -895,14 +897,15 @@ export function useMissionsPage() {
     } else {
       showToast(error || "Failed to delete template", "error");
     }
-  };
-  const handleTemplateSelect = (t: MissionTemplate) => {
+  }, [showToast, fetchData]);
+
+  const handleTemplateSelect = useCallback((t: MissionTemplate) => {
     applyTemplateToForm(t);
     setShowCreate(true);
     showToast(`Template loaded: ${t.name}`, "success");
-  };
+  }, [applyTemplateToForm, showToast]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     if (!confirm("Delete this mission and its cron job?")) return;
     const { ok, error } = await safeApiCall("/api/missions", {
       method: "POST",
@@ -915,9 +918,9 @@ export function useMissionsPage() {
     } else {
       showToast(error || "Failed to delete mission", "error");
     }
-  };
+  }, [showToast, expandedId, fetchData]);
 
-  const handleCancel = async (id: string) => {
+  const handleCancel = useCallback(async (id: string) => {
     if (
       !confirm(
         "Cancel this mission? The running agent (and any subagents) will be stopped, and linked cron jobs will be paused.",
@@ -963,7 +966,7 @@ export function useMissionsPage() {
     } finally {
       setCancellingMissionId(null);
     }
-  };
+  }, [missions, showToast, fetchData, expandedId, fetchDetail]);
 
   const filtered = useMemo(
     () =>
