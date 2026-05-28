@@ -1,27 +1,76 @@
-See latest commits on the branch for the full changelog. Summary: auth fixes, safeApiCall consolidation, dead code removal, TypeScript fixes, and bug fixes across Lists 1-4.
+See latest commits on the branch for the full changelog. Summary: ongoing codebase tidy across Lists 1-4 — dead code removal, TypeScript fixes, error response consistency, and bug fixes.
 
 ## Latest changes (this session)
 
-### Refactors (List 4: Models, HERMES.md, Environment, All Settings)
-- resolve 4 remaining TypeScript errors — zero TS errors across entire codebase:
-  - FallbackAgentSettingsFromDisk interface was referenced in hermes-config-sync.ts but never defined (TS2304 on two call sites)
-  - ModelPicker.tsx (missions): safeApiCall generic must be the API response shape { data: { models? } }, not the bare inner type
-  - LocalDirRow.tsx (missions): same safeApiCall generic fix for git branches endpoint
-  - sync-manager.ts: syncCredentialToHermesEnv takes a single SyncCredentialInput object, not two positional args
+### Review findings (List 4: Models, HERMES.md, Environment, Settings) — 2026-05-28 (session 20)
 
-All 631 tests pass.
+**Critical runtime bug fixed — ensureProfileAuth hardcoded MINIMAX_API_KEY:**
+- `src/lib/backends/hermes.ts` `ensureProfileAuth()` wrote `MINIMAX_API_KEY=***` to the profile .env regardless of the actual provider
+- Any non-minimax provider (anthropic, openai, etc.) would incorrectly write MINIMAX_API_KEY when dispatching missions for non-default profiles
+- Fix: added `provider` parameter to `ensureProfileAuth()`, derive correct env var via `envVarForProvider()` from `hermes-providers`, skip .env write for OAuth-only providers (nous, etc.)
+- Also fixed auth.json credential pool to use the actual provider key instead of hardcoded "minimax"
 
-### Prior session changes (List 4: Models, HERMES.md, Environment, All Settings)
-- remove dead updateFallbackConfig() from fallbacks-repository
-- remove redundant syncSingleCredentialToHermesEnv() wrapper
-- fix duplicate icon: code_execution (changed from Terminal to Cpu)
-- fix duplicate icon: streaming (changed from Activity to Globe)
-- fix unused multi-line import in fallback sync route
+**ConfigSectionPage hasChanges computation bug:**
+- `hasChanges` for file sections (HERMES.md, .env) was using `yamlHasChanges` useMemo instead of `fileContent !== originalFileContent`
+- `yamlHasChanges` computed `JSON.stringify({}) !== JSON.stringify({})` = false, but the inline comparison was replaced with a useMemo that wasn't being recomputed on file changes
+- Fix: extract `fileHasChanges` as a separate useMemo, use it in the `hasChanges` conditional
 
-### Prior session changes (List 2: Cron, Missions, Chat)
-- Cron page: wrap async onPauseAll handler, JSX structure fix
-- Consolidate raw fetch() to safeApiCall across Cron, Missions, and Chat
-- Deep code quality cleanups for Cron, Missions, Chat
+All 630 tests pass.
 
-### Prior session changes (List 1: Dashboard, Sessions, Memory, Logs)
+### Prior changes
+
+#### Review findings (List 3: Models, Agents, Skills, Personalities) — 2026-05-28 (session 18)
+Comprehensive review of all source files (skills/page.tsx, agents/page.tsx, personalities/page.tsx, skills/route.ts, skills/[name]/toggle/route.ts, skills/[...path]/route.ts, personalities/route.ts, agent/personality/route.ts, agent/profiles/route.ts, useModelsPage.ts, lib/personalities.ts, lib/skills-*.ts, etc.).
+
+**Code consolidation:**
+- Add `enabled` field to shared `Skill` interface in `@/types/hermes` (was missing — runtime shape includes it; removing local duplicates required adding it)
+- Add `profile` field to shared `SkillsData` interface
+- Remove duplicate `Skill` and `SkillsData` interfaces from:
+  - `src/app/api/skills/route.ts`
+  - `src/app/operations/skills/page.tsx`
+  - Both now import from `@/types/hermes`
+
+**Bug fixes:**
+- **Skills toggle inversion bug** (skills/page.tsx lines 342, 387): Active section passed `true`, inactive passed `false` as `currentEnabled` arg to `toggleSkill`. Since `toggleSkill` computes `next = !currentEnabled`, every click on either section toggled the skill to the wrong state. Fix: resolve effective state from `toggling[skill.name] ?? skill.enabled` (or its negation) at each call site.
+- **Timer stacking in `handleCopy`** (personalities/page.tsx `PersonalityCard`): Multiple rapid clicks stacked `setTimeout` calls, each 2000ms. Fixed with `copiedTimerRef` pattern (clear before setting, null on callback).
+- **Missing explicit DELETE 405** (personalities/route.ts): Route had a comment noting DELETE is unsupported but no actual handler. Added explicit `DELETE → 405`.
+- **Unused import** (agents/page.tsx): `Plus` imported but never used in JSX (New Profile button uses `Button` icon prop, not an inline icon).
+- **ESLint warning** (useMissionsPage.ts): `applyTemplateToForm` missing from `fetchData` useCallback deps. Fixed by adding it to the deps array.
+
+All 630 tests pass. Build clean. Zero ESLint warnings.
+
+### Prior session changes
+
+#### List 2: Cron, Missions, Chat
+- useMissionsPage.ts: wrap dispatchPayload in useCallback; wrap resetForm in useCallback([])
+- useCronJobs.ts: handlePauseAll — remove unnecessary async IIFE wrapper
+- useSystemCronJobs.ts: handlePauseAll — move loadJobs() outside conditional (bug fix)
+- cron/page.tsx: onPauseAll — replace async IIFE with void ... .finally(...)
+- chat/route.ts: remove dead nonStreaming variable
+- useCronJobs.ts: fix handlePauseAll missing loadJobs() on success path
+- buildMissionPrompt: fix every Nm format (≥60min intervals)
+- Consolidate cron display logic — parseCronExpression canonical source
+
+#### List 1: Dashboard, Sessions, Memory, Logs
+- remove redundant useMemo wrapping messageSummary() in MessageBubble.tsx
+- Fix inconsistent error response format in /api/memory/hindsight
+- Fix hardcoded "Port 9177 not responding" error message in handleHealth
 - Auth gap fixes, session API improvements, dead code removal
+
+#### List 3 (Models, Agents, Skills, Personalities) — prior sessions
+- Remove dead SyncResult interface from fallback-sync-helpers.ts
+- Eliminate double YAML parse in detectConfigDrift
+- Fix POST /api/tools returning 410 → 405
+- Add explicit DELETE 405 to /api/agent/profiles/[id]/toolsets
+- Fix setSaving(false) missing on success path in EditPersonalityModal
+
+#### List 4 (Models, HERMES.md, Environment, Settings)
+- handleSyncFallbackToHermes: fix missing setSyncingFallback(false) in catch block
+- fallback-sync-helpers.ts: return explicit SyncResult | null instead of void
+- hermes-config-sync.ts: add null guard for OAuth-only providers with no .env key
+- fallbacks-repository.ts: clarify enabled ternary readability
+- upsertModel throws on invalid task types instead of silent no-op
+- **NEW: ensureProfileAuth() hardcoded MINIMAX_API_KEY bug fix** (see above)
+- **NEW: ConfigSectionPage hasChanges computation bug fix** (see above)
+
+See individual commits on branch for full history.
