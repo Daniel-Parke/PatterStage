@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { RefreshCw, ChevronDown } from "lucide-react";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
+import { INTERVAL_PRESETS } from "@/components/cron/CronScheduleInput";
 import { parseCronExpression } from "@/lib/cron-display";
 
 interface IntervalSelectorProps {
@@ -10,25 +11,6 @@ interface IntervalSelectorProps {
   onChange: (interval: string) => void;
   compact?: boolean;
 }
-
-// Presets used when the user selects a value via the dropdown.
-// These use the "every N" format that the cron API expects.
-const PRESETS = [
-  { value: "every 1m",  label: "1 minute"  },
-  { value: "every 5m",  label: "5 minutes" },
-  { value: "every 10m", label: "10 minutes"},
-  { value: "every 15m", label: "15 minutes"},
-  { value: "every 30m", label: "30 minutes"},
-  { value: "every 1h",  label: "1 hour"    },
-  { value: "every 2h",  label: "2 hours"   },
-  { value: "every 3h",  label: "3 hours"   },
-  { value: "every 4h",  label: "4 hours"   },
-  { value: "every 8h",  label: "8 hours"   },
-  { value: "every 12h", label: "12 hours"  },
-  { value: "every 1d",  label: "1 day"     },
-  { value: "every 3d",  label: "3 days"    },
-  { value: "every 7d",  label: "7 days"    },
-];
 
 export default function IntervalSelector({ value, onChange, compact = false }: IntervalSelectorProps) {
   const [open, setOpen] = useState(false);
@@ -38,7 +20,7 @@ export default function IntervalSelector({ value, onChange, compact = false }: I
   // Parse value for display
   const displayLabel = (() => {
     const stripped = value.replace(/^every\s+/i, "");
-    const preset = PRESETS.find((p) => p.value === stripped || p.value === value);
+    const preset = INTERVAL_PRESETS.find((p) => p.value === stripped || p.value === value);
     if (preset) return preset.label;
     const cronLabel = parseCronExpression(value);
     if (cronLabel) return cronLabel;
@@ -46,7 +28,7 @@ export default function IntervalSelector({ value, onChange, compact = false }: I
   })();
 
   const stripped = value.replace(/^every\s+/i, "");
-  const activePresetValue = PRESETS.find(
+  const activePresetValue = INTERVAL_PRESETS.find(
     (p) => p.value === value || p.value === stripped || stripped === p.value
   )?.value;
 
@@ -65,7 +47,7 @@ export default function IntervalSelector({ value, onChange, compact = false }: I
         {open && (
           <DropdownMenu
             anchorRef={buttonRef}
-            presets={PRESETS}
+            presets={INTERVAL_PRESETS}
             activePresetValue={activePresetValue}
             onSelect={(v) => onChange(v)}
             onClose={handleClose}
@@ -95,7 +77,7 @@ export default function IntervalSelector({ value, onChange, compact = false }: I
       {open && (
         <DropdownMenu
           anchorRef={buttonRef}
-          presets={PRESETS}
+          presets={INTERVAL_PRESETS}
           activePresetValue={activePresetValue}
           onSelect={(v) => onChange(v)}
           onClose={handleClose}
