@@ -201,7 +201,6 @@ function CronTabContent({
 export default function CronPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editingJob, setEditingJob] = useState<CronJob | null>(null);
-  const [pauseAllBusy, setPauseAllBusy] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"agent" | "system">("agent");
@@ -212,6 +211,7 @@ export default function CronPage() {
   const agent = useCronJobs();
   const hardware = useSystemCronJobs();
   const { loadJobs: loadHardwareJobs } = hardware;
+  void loadHardwareJobs; // just to suppress the unused warning, it's also used in the useEffect below
 
   useEffect(() => {
     if (activeTab === "system") {
@@ -269,12 +269,11 @@ export default function CronPage() {
             </div>
             <ActionButtons
               color={activeTab === "agent" ? "orange" : "cyan"}
-              pauseBusy={activeTab === "agent" ? pauseAllBusy : false}
+              pauseBusy={activeTab === "agent" ? agent.pauseAllBusy : false}
               hasJobs={activeTab === "agent" ? !!agent.data?.total : hardwareTotal > 0}
               onPauseAll={() => {
                 if (activeTab === "agent") {
-                  setPauseAllBusy(true);
-                  void agent.handlePauseAll().finally(() => setPauseAllBusy(false));
+                  void agent.handlePauseAll();
                 } else {
                   void hardware.handlePauseAll();
                 }

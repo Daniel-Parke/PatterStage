@@ -161,9 +161,10 @@ function EditPersonalityModal({
         body: JSON.stringify({ profile: name.trim(), prompt: prompt.trim() }),
       });
       onSaved();
-      setSaving(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
+      setSaving(false);
+    } finally {
       setSaving(false);
     }
   };

@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       max_tokens: 4096,
     };
 
-    return await fetchGateway(apiUrl, gatewayBody, isStreaming);
+    return fetchGateway(apiUrl, gatewayBody, isStreaming);
   } catch (error) {
     return handleError(error, "POST /api/orchestration/chat");
   }

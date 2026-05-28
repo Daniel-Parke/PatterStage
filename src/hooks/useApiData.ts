@@ -63,6 +63,8 @@ export function useApiData<T = unknown>(
         setData(result);
       }
     } catch (e: unknown) {
+      // AbortError is expected from AbortController — not an error condition
+      if (e instanceof Error && e.name === "AbortError") return;
       if (mountedRef.current) {
         setError(e instanceof Error ? e.message : "Request failed");
       }

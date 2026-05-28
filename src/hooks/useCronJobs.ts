@@ -7,7 +7,7 @@
 
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useApiData } from "@/hooks/useApiData";
 import { useToast } from "@/components/ui/Toast";
 import { safeApiCall } from "@/lib/api-fetch";
@@ -26,6 +26,9 @@ export function useCronJobs() {
   const { data, loading, refetch: loadJobs } = useApiData<CronData>("/api/cron", {
     transform: (raw) => raw as CronData,
   });
+  const [pauseAllBusy, setPauseAllBusy] = useState(false);
+  // Guard against stale closures in the pause-all async operation
+  const pauseAllActiveRef = useRef(false);
 
   const jobs = (data?.jobs as CronJob[]) ?? [];
 
@@ -78,16 +81,26 @@ export function useCronJobs() {
     [showToast, loadJobs],
   );
 
+  // Returns Promise so callers can chain .finally() / await as needed.
+  // Manages its own pauseAllBusy state internally.
   const handlePauseAll = useCallback(async (): Promise<void> => {
-    const { ok, error } = await safeApiCall("/api/cron", {
-      method: "POST",
-      body: { action: "pauseAll" },
-    });
-    showToast(
-      ok ? "All jobs paused" : (error ?? "Failed to pause jobs"),
-      ok ? undefined : "error",
-    );
-    loadJobs();
+    if (pauseAllActiveRef.current) return;
+    pauseAllActiveRef.current = true;
+    setPauseAllBusy(true);
+    try {
+      const { ok, error } = await safeApiCall("/api/cron", {
+        method: "POST",
+        body: { action: "pauseAll" },
+      });
+      showToast(
+        ok ? "All jobs paused" : (error ?? "Failed to pause jobs"),
+        ok ? undefined : "error",
+      );
+    } finally {
+      pauseAllActiveRef.current = false;
+      setPauseAllBusy(false);
+      loadJobs();
+    }
   }, [showToast, loadJobs]);
 
   return {
@@ -99,5 +112,6 @@ export function useCronJobs() {
     handleDelete,
     handleRun,
     handlePauseAll,
+    pauseAllBusy,
   };
 }
