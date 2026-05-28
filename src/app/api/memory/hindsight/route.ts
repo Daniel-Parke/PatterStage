@@ -242,7 +242,7 @@ async function handleHealth() {
   } catch (e) {
     return {
       available: false,
-      error: e instanceof Error ? e.message : "Port 9177 not responding",
+      error: e instanceof Error ? e.message : "Connection refused",
     };
   }
 }
@@ -400,7 +400,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logApiError("POST /api/memory/hindsight", "action", error);
     return NextResponse.json(
-      { error: `Failed: ${error instanceof Error ? error.message : "Unknown"}` },
+      {
+        data: {
+          available: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
+      },
       { status: 500 },
     );
   }
@@ -429,7 +434,12 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     logApiError("DELETE /api/memory/hindsight", "delete", error);
     return NextResponse.json(
-      { error: `Failed: ${error instanceof Error ? error.message : "Unknown"}` },
+      {
+        data: {
+          available: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
+      },
       { status: 500 },
     );
   }

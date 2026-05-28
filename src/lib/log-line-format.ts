@@ -145,7 +145,7 @@ function finishParse(ts: string | null, msg: string): ParsedLogLine {
     if (leadPlain) {
       level = levelFromToken(leadPlain[1]) ?? levelFromMessage(trimmed);
       // Preserve the source name in the message (e.g. "gateway.run:" from "ERROR gateway.run: msg")
-      const sourceLabel = leadPlain[2] ?? "";
+      const sourceLabel = leadPlain[2];
       const remaining = trimmed.slice(leadPlain[0].length);
       message = sourceLabel ? `${sourceLabel} ${remaining}` : remaining;
     } else {
