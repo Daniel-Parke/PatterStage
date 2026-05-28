@@ -17,7 +17,6 @@ import {
   Pause,
   ChevronDown,
   ChevronUp,
-  Terminal,
 } from "lucide-react";
 import { describeSchedule } from "@/lib/utils";
 import { useExpandable } from "@/hooks/useExpandable";
@@ -83,7 +82,7 @@ export default function SystemCronCard({
                   className="flex items-center gap-1 text-white/60 truncate max-w-[200px]"
                   title={job.command}
                 >
-                  <Terminal className="w-3 h-3 shrink-0" />
+                  <FileCode className="w-3 h-3 shrink-0" />
                   {job.command.split("/").pop() || job.command}
                 </span>
               )}
