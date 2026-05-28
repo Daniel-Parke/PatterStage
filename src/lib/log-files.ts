@@ -88,7 +88,7 @@ export function readLastLines(filePath: string, maxLines: number): ReadLastLines
   // Small file: read entirely via readFileSync (also supports test mocks)
   if (fileSize <= CHUNK_SIZE) {
     const content = readFileSync(filePath, "utf-8");
-    const allLines = content.split("\n").filter((l) => l.length > 0);
+    const allLines = content.split("\n").filter(Boolean);
     return {
       allLines: allLines.length,
       lines: allLines.slice(-maxLines).reverse(),
@@ -131,7 +131,7 @@ export function readLastLines(filePath: string, maxLines: number): ReadLastLines
       }
     }
 
-    const allLines = collected.split("\n").filter((l) => l.length > 0);
+    const allLines = collected.split("\n").filter(Boolean);
     return {
       allLines: allLines.length,
       lines: allLines.slice(-maxLines).reverse(),

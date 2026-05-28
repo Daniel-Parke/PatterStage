@@ -134,7 +134,7 @@ export function tailLogHint(logHint: string, maxLines = 20): string[] {
   if (!existsSync(path)) return [];
   try {
     const lines = readFileSync(path, "utf-8").split("\n");
-    return lines.slice(-maxLines).filter((l) => l.length > 0);
+    return lines.slice(-maxLines).filter(Boolean);
   } catch {
     return [];
   }
