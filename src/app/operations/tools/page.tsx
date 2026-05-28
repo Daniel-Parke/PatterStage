@@ -65,7 +65,6 @@ export default function ToolsPage() {
       setToolsetsJson(JSON.stringify(loaded, null, 2));
       setToolsetsSource(data.data?.source ?? null);
     } catch (err) {
-      setPlatformToolsets({});
       setToolsetsJson("{}");
       setToolsetsSource(null);
       showToast(err instanceof Error ? err.message : "Failed to load toolsets", "error");
@@ -87,7 +86,6 @@ export default function ToolsPage() {
       else next.push(toolsetId);
       const sorted = [...new Set(next)].sort();
       const expanded = expandUnifiedToAllPlatforms(sorted);
-      setPlatformToolsets(expanded);
       setToolsetsJson(JSON.stringify(expanded, null, 2));
       return sorted;
     });
