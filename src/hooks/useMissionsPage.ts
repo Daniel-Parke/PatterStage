@@ -195,8 +195,8 @@ export function useMissionsPage() {
     updaters[field]?.(value);
   };
 
-  function dispatchPayload(overrides: Record<string, unknown> = {}): Record<string, unknown> {
-    return {
+  const dispatchPayload = useCallback(
+    (overrides: Record<string, unknown> = {}): Record<string, unknown> => ({
       instruction: newInstruction.trim(),
       context: newContext.trim() || undefined,
       outputFormat: newOutputFormat.trim() || undefined,
@@ -213,10 +213,15 @@ export function useMissionsPage() {
       skills: newSkills,
       suggestedToolsets: newToolsets,
       ...overrides,
-    };
-  }
+    }),
+    [
+      newInstruction, newContext, newOutputFormat, newConstraints, newCategoryId, newGoals,
+      newProfile, newModel, newProvider, newMissionTime, newTimeout,
+      newLocalDirs, newReferences, newSkills, newToolsets,
+    ],
+  );
 
-  function resetForm() {
+  const resetForm = useCallback(() => {
     setNewName("");
     setNewInstruction("");
     setNewContext("");
@@ -233,7 +238,7 @@ export function useMissionsPage() {
     setNewSkills([]);
     setNewToolsets([]);
     setShowCreate(false);
-  }
+  }, []);
 
   useEffect(() => {
     if (!newProfile) return;
