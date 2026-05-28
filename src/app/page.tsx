@@ -707,7 +707,7 @@ export default function Dashboard() {
                       </span>
                     </div>
                   ))
-: (HERMES_PLATFORMS.map((p) => p.id)).map((p) => (
+: HERMES_PLATFORMS.map((p) => p.id).map((p) => (
                     <div key={p} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <StatusDot status="idle" />
