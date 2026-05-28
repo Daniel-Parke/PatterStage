@@ -8,6 +8,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import { STORY_TEMPLATES } from "@/types/recroom";
 import type { StoryCharacter, CharacterSheet, StoryTheme } from "@/types/recroom";
 import GenerateOverlay from "@/components/story-weaver/GenerateOverlay";
+import { WORD_COUNT_OPTIONS } from "@/components/story-weaver/ReaderSettings";
 
 const DEFAULT_GENRES = ["Sci-Fi", "Mystery", "Fantasy", "Romance", "Crime", "Horror", "Adventure", "Historical"];
 const DEFAULT_ERAS = ["Ancient", "Medieval", "Modern", "Near Future", "Far Future", "Timeless"];
@@ -659,11 +660,7 @@ function CreateStoryPage() {
           <div>
             <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-2">Chapter Length (words per chapter)</label>
             <div className="flex flex-wrap gap-2">
-              {[
-                { id: "short", label: "800-1.2k" }, { id: "medium", label: "1.2-1.8k" },
-                { id: "standard", label: "1.8-2.5k" }, { id: "long", label: "2.5-3.5k" },
-                { id: "epic", label: "3.5-5k" }, { id: "marathon", label: "5k+" },
-              ].map((opt) => (
+              {WORD_COUNT_OPTIONS.map((opt) => (
                 <button key={opt.id} onClick={() => setWordCountRange(opt.id)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-mono border transition-all ${
                     wordCountRange === opt.id ? "border-neon-purple/40 bg-neon-purple/15 text-neon-purple" : "border-white/8 text-white/30 hover:text-white/50"
