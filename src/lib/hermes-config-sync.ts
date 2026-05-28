@@ -186,7 +186,10 @@ export function removeCredentialFromHermesEnv(provider: HermesProvider): { backu
   const original = readFileSync(paths.env, "utf-8");
   const prior = parseEnvFile(original);
   const next = new Map(prior);
-  next.delete(envVarForProvider(provider)!);
+  const envVar = envVarForProvider(provider);
+  // OAuth-only providers (e.g. nous) have no .env key — nothing to remove
+  if (!envVar) return { backupPath };
+  next.delete(envVar);
 
   atomicWriteFile(paths.env, serializeEnvFile(prior, next, original));
   return { backupPath };

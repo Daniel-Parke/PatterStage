@@ -111,7 +111,7 @@ export function addFallbackEntry(input: CreateFallbackInput): FallbackEntryRecor
     .get() as { mx: number };
   const position = input.position ?? maxPos.mx + 1;
   // Default to enabled (1) unless explicitly set to false
-  const enabled = input.enabled === false ? 0 : 1;
+  const enabled = input.enabled !== false ? 1 : 0;
 
   db().prepare(
     `INSERT INTO model_fallbacks (id, model_id, position, enabled, override_base_url, created_at, updated_at)

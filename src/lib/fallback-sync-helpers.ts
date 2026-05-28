@@ -2,7 +2,13 @@ import { listFallbackChain } from "@/lib/fallbacks-repository";
 import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
 import type { FallbackConfig } from "@/types/hermes";
 
-export function syncEnabledFallbackChainToHermes(config: FallbackConfig) {
+interface SyncResult {
+  hermesHome: string;
+  configPath: string;
+  backupPath: string | null;
+}
+
+export function syncEnabledFallbackChainToHermes(config: FallbackConfig): SyncResult | null {
   const chain = listFallbackChain()
     .filter((e) => e.enabled)
     .map((e) => ({

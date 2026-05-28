@@ -362,11 +362,17 @@ export function upsertModel(input: {
       .prepare("UPDATE models SET name = ?, base_url = ?, updated_at = ? WHERE id = ?")
       .run(input.name, input.baseUrl, ts, existing.id);
 
+    // Validate all task types upfront — failures are programmer errors
+    // in internal callers, not user input, so throw rather than silently skip.
+    for (const slot of input.defaultSlots) {
+      if (!isTaskType(slot)) {
+        throw new Error(`Unknown task type in defaultSlots: ${slot}`);
+      }
+    }
+
     // Update defaults for this model
     for (const slot of input.defaultSlots) {
-      if (isTaskType(slot)) {
-        setDefaultModel(slot, existing.id);
-      }
+      setDefaultModel(slot, existing.id);
     }
 
     return { id: existing.id, action: "updated" };
@@ -393,11 +399,17 @@ export function upsertModel(input: {
       ts
     );
 
+  // Validate all task types upfront — failures are programmer errors
+  // in internal callers, not user input, so throw rather than silently skip.
+  for (const slot of input.defaultSlots) {
+    if (!isTaskType(slot)) {
+      throw new Error(`Unknown task type in defaultSlots: ${slot}`);
+    }
+  }
+
   // Set defaults for newly inserted model
   for (const slot of input.defaultSlots) {
-    if (isTaskType(slot)) {
-      setDefaultModel(slot, id);
-    }
+    setDefaultModel(slot, id);
   }
 
   return { id, action: "inserted" };

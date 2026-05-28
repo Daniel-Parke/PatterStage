@@ -506,7 +506,7 @@ export function useModelsPage() {
         return;
       }
 
-      const { ok, data: res, error } = await safeApiCall<{
+      const res = await apiFetch<{
         data: {
           success: boolean;
           config: FallbackConfig;
@@ -514,12 +514,12 @@ export function useModelsPage() {
         };
       }>("/api/models/fallbacks/sync", {
         method: "POST",
-        body: { config: fallbackConfig },
+        body: JSON.stringify({ config: fallbackConfig }),
       });
 
-      const payload = res?.data;
-      if (!ok || !payload?.success) {
-        showToast(error ?? "Sync failed", "error");
+      const payload = res.data;
+      if (!payload?.success) {
+        showToast("Sync failed", "error");
         return;
       }
 
@@ -545,12 +545,7 @@ export function useModelsPage() {
     } finally {
       setSyncingFallback(false);
     }
-  }, [
-    fallbackConfig,
-    fallbackConfigError,
-    flushFallbackConfigSave,
-    showToast,
-  ]);
+  }, [fallbackConfig, fallbackConfigError, flushFallbackConfigSave, showToast]);
 
   return {
     models,
