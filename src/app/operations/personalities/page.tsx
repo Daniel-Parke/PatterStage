@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Brain,
   Plus,
@@ -47,10 +47,16 @@ function PersonalityCard({
   const [textExpanded, setTextExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleCopy = () => {
+    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
     navigator.clipboard.writeText(personality.prompt);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    copiedTimerRef.current = setTimeout(() => {
+      copiedTimerRef.current = null;
+      setCopied(false);
+    }, 2000);
   };
 
   const preview =

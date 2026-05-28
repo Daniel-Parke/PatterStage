@@ -339,7 +339,7 @@ export default function SkillsPage() {
                   expandedSkill={expandedSkill}
                   skillContent={skillContent}
                   toggling={toggling}
-                  onToggleSkill={(skill) => toggleSkill(skill.name, true)}
+                  onToggleSkill={(skill) => toggleSkill(skill.name, toggling[skill.name] ?? skill.enabled)}
                   onViewSkill={viewSkill}
                   onEditSkill={openSkillEditor}
                 />
@@ -384,7 +384,7 @@ export default function SkillsPage() {
                   expandedSkill={expandedSkill}
                   skillContent={skillContent}
                   toggling={toggling}
-                  onToggleSkill={(skill) => toggleSkill(skill.name, false)}
+                  onToggleSkill={(skill) => toggleSkill(skill.name, toggling[skill.name] ?? !skill.enabled)}
                   onViewSkill={viewSkill}
                   onEditSkill={openSkillEditor}
                 />
