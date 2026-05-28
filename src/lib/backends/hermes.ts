@@ -10,6 +10,7 @@ import { randomUUID } from "crypto";
 
 import { PATHS } from "../paths";
 import { resolveProfileHermesHome } from "../hermes-profile-paths";
+import { envVarForProvider } from "../hermes-providers";
 import type {
   Mission,
   DispatchMissionInput,
@@ -96,6 +97,7 @@ export async function resolveMissionModel(input: {
 async function ensureProfileAuth(
   profileName: string,
   apiKey: string | null,
+  provider: string,
 ): Promise<void> {
   if (!apiKey || !profileName || profileName === "default") return;
 
@@ -117,15 +119,15 @@ async function ensureProfileAuth(
     (existingAuth["providers"] as Record<string, { api_key?: string }> | undefined) ?? {};
 
   const needsAuthWrite =
-    authProviders["minimax"]?.api_key !== apiKey ||
-    !Array.isArray(pool["minimax"]) ||
-    !pool["minimax"].includes("minimax");
+    authProviders[provider]?.api_key !== apiKey ||
+    !Array.isArray(pool[provider]) ||
+    !pool[provider].includes(provider);
 
   if (needsAuthWrite) {
     const updated = {
       version: 1,
-      providers: { ...authProviders, minimax: { api_key: apiKey } },
-      credential_pool: { ...pool, minimax: ["minimax"] },
+      providers: { ...authProviders, [provider]: { api_key: apiKey } },
+      credential_pool: { ...pool, [provider]: [provider] },
     };
     try {
       mkdirSync(profilePath, { recursive: true });
@@ -135,12 +137,15 @@ async function ensureProfileAuth(
     }
   }
 
+  const envVar = envVarForProvider(provider);
+  if (!envVar) return; // OAuth-only providers have no .env key
+
   let existingEnv = "";
   if (existsSync(envPath)) {
     existingEnv = readFileSync(envPath, "utf-8");
   }
-  const envLines = existingEnv.split("\n").filter((l) => !l.startsWith("MINIMAX_API_KEY="));
-  envLines.push(`MINIMAX_API_KEY=${apiKey}`);
+  const envLines = existingEnv.split("\n").filter((l) => !l.startsWith(`${envVar}=`));
+  envLines.push(`${envVar}=${apiKey}`);
 
   try {
     writeFileSync(envPath, envLines.join("\n") + "\n");
@@ -353,7 +358,7 @@ export class HermesAgentBackend implements AgentBackend {
     });
 
     if (resolved.apiKey) {
-      await ensureProfileAuth(input.profileName ?? "default", resolved.apiKey);
+      await ensureProfileAuth(input.profileName ?? "default", resolved.apiKey, resolved.provider);
     }
 
     const profileName = input.profileName ?? "default";

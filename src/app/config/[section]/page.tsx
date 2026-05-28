@@ -46,9 +46,12 @@ export default function ConfigSectionPage() {
     [values, originalValues],
   );
 
-  const hasChanges = isFileSection
-    ? fileContent !== originalFileContent
-    : yamlHasChanges;
+  const fileHasChanges = useMemo(
+    () => fileContent !== originalFileContent,
+    [fileContent, originalFileContent],
+  );
+
+  const hasChanges = isFileSection ? fileHasChanges : yamlHasChanges;
 
   const isPlatformToolsetsPreview = sectionId === "platform_toolsets";
 
