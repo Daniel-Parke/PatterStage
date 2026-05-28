@@ -67,10 +67,13 @@ export function MessageBubble({
   }, []);
 
   const handleCopy = () => {
+    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
     navigator.clipboard.writeText(content || "");
     setCopied(true);
-    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
-    copiedTimerRef.current = setTimeout(() => setCopied(false), 1500);
+    copiedTimerRef.current = setTimeout(() => {
+      copiedTimerRef.current = null;
+      setCopied(false);
+    }, 1500);
   };
 
   const config = ROLE_META[role] || ROLE_META.system;

@@ -396,7 +396,7 @@ export default function HindsightBrowser() {
         <Button variant="secondary" color="pink" size="sm" icon={Search} onClick={() => void runRecall()} disabled={!search.trim() || loading}>
           Recall
         </Button>
-        <Button variant="secondary" color="purple" size="sm" icon={Sparkles} onClick={handleReflect} disabled={reflecting || !search.trim()}>
+        <Button variant="secondary" color="purple" size="sm" icon={Sparkles} onClick={() => void handleReflect()} disabled={reflecting || !search.trim()}>
           {reflecting ? "Reflecting..." : "Reflect"}
         </Button>
         <Button variant="primary" color="pink" size="sm" icon={Plus} onClick={() => setShowAddModal(true)}>

@@ -155,14 +155,16 @@ export default function Dashboard() {
   }, []);
 
   const handleCancelMission = useCallback(async (missionId: string, missionName: string) => {
-    // First click: show confirmation state
+    // First click: show confirmation state and arm the auto-dismiss timer
     if (cancelConfirmId !== missionId) {
-      setCancelConfirmId(missionId);
       if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
-      cancelTimerRef.current = setTimeout(() => setCancelConfirmId((prev) => prev === missionId ? null : prev), 4000);
+      setCancelConfirmId(missionId);
+      cancelTimerRef.current = setTimeout(() => setCancelConfirmId(null), 4000);
       return;
     }
+    // Second click: confirmed — clear timer and cancel
     if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
+    cancelTimerRef.current = null;
     setCancelConfirmId(null);
     try {
       const { ok, error } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions", {
@@ -695,27 +697,20 @@ export default function Dashboard() {
               className="px-4 py-3 space-y-2"
               title="Token present in Hermes .env; gateway must be running for live messaging."
             >
-              {monitor
-                ? Object.entries(monitor.gateway.platforms).map(([platform, configured]) => (
-                    <div key={platform} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <StatusDot status={configured ? "online" : "idle"} pulse={configured} />
-                        <span className="text-xs text-white/70 capitalize">{platform}</span>
-                      </div>
-                      <span className={`text-[10px] font-mono ${configured ? "text-neon-green" : "text-white/25"}`}>
-                        {configured ? "Configured" : "Not configured"}
-                      </span>
+              {HERMES_PLATFORMS.map((p) => {
+                const configured = monitor?.gateway.platforms[p.id] ?? false;
+                return (
+                  <div key={p.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <StatusDot status={configured ? "online" : "idle"} pulse={configured} />
+                      <span className="text-xs text-white/70 capitalize">{p.id}</span>
                     </div>
-                  ))
-: HERMES_PLATFORMS.map((p) => p.id).map((p) => (
-                    <div key={p} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <StatusDot status="idle" />
-                        <span className="text-xs text-white/70 capitalize">{p}</span>
-                      </div>
-                      <span className="text-[10px] font-mono text-white/25">...</span>
-                    </div>
-                  ))}
+                    <span className={`text-[10px] font-mono ${configured ? "text-neon-green" : "text-white/25"}`}>
+                      {configured ? "Configured" : "Not configured"}
+                    </span>
+                  </div>
+                );
+              })}
               {monitor && monitor.gateway.connectedCount === 0 && (
                 <div className="text-[10px] text-white/30 text-center py-2">No platforms configured</div>
               )}
