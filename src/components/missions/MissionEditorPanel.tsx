@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import {
-  ChevronRight,
   Copy,
   Edit3,
   ExternalLink,
@@ -11,6 +10,7 @@ import {
   Trash2,
   Zap,
 } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { timeAgo, titleCase } from "@/lib/utils";
 import type { MissionDetail, MissionRow } from "@/hooks/useMissionsPage";

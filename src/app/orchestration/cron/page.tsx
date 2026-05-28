@@ -210,14 +210,12 @@ export default function CronPage() {
 
   const agent = useCronJobs();
   const hardware = useSystemCronJobs();
-  const { loadJobs: loadHardwareJobs } = hardware;
-  void loadHardwareJobs; // just to suppress the unused warning, it's also used in the useEffect below
 
   useEffect(() => {
     if (activeTab === "system") {
-      void loadHardwareJobs();
+      void hardware.loadJobs();
     }
-  }, [activeTab, loadHardwareJobs]);
+  }, [activeTab]);
 
   const handleSyncAll = useCallback(async () => {
     setSyncing(true);
