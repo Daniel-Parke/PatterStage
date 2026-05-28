@@ -118,6 +118,7 @@ export interface Skill {
   category: string;
   path: string;
   description: string;
+  enabled: boolean;
   size: number;
   lastModified: string;
 }
@@ -127,6 +128,7 @@ export interface SkillsData {
   categories: Record<string, Skill[]>;
   total: number;
   categoryCount: number;
+  profile: string;
 }
 
 // ── Sessions ───────────────────────────────────────────────────

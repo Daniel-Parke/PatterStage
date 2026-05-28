@@ -20,24 +20,7 @@ import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
 import { apiFetch } from "@/lib/api-fetch";
-
-interface Skill {
-  name: string;
-  category: string;
-  path: string;
-  description: string;
-  enabled: boolean;
-  size: number;
-  lastModified: string;
-}
-
-interface SkillsData {
-  skills: Skill[];
-  categories: Record<string, Skill[]>;
-  total: number;
-  categoryCount: number;
-  profile: string;
-}
+import type { Skill, SkillsData } from "@/types/hermes";
 
 // ── Pure helpers (hoisted outside component) ──────────────────────────────
 

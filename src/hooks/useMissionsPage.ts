@@ -447,7 +447,7 @@ export function useMissionsPage() {
       console.error("Failed to load templates:", error);
       showToast("Failed to load templates", "error");
     }
-  }, [fetchMissions, fetchTemplates, showToast, loadCategories]);
+  }, [fetchMissions, fetchTemplates, showToast, loadCategories, applyTemplateToForm]);
 
   const fetchDetail = useCallback(
     (id: string, showLoading = true) => {
