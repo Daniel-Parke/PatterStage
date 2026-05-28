@@ -115,12 +115,16 @@ export default function JobFormModal({
   }, [open]);
 
   // Derive the actual cron expression from the current schedule value (edit mode only).
+  // For raw 5-field cron expressions, show as-is.
+  // For interval shorthand (e.g. "every 5m"), call parseSchedule to normalise to
+  // the canonical display form ("every 5m" → stays "every 5m").
   const cronExpr = isEdit
     ? (() => {
         const trimmed = schedule.trim();
         if (trimmed.split(/\s+/).length === 5) return trimmed;
-        const p = parseSchedule(schedule);
-        return p.kind !== "invalid" ? p.kind : schedule;
+        const p = parseSchedule(trimmed);
+        if (p.kind === "invalid") return trimmed;
+        return (p as { display?: string }).display ?? trimmed;
       })()
     : "";
 

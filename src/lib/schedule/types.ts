@@ -115,13 +115,25 @@ export function parseCronExpression(expr: string): string | null {
 }
 
 /**
- * Parse a cron expression into a human-readable string for display.
- * Handles common patterns: interval minutes, interval hours, daily, weekly, etc.
+ * Parse a cron expression (or interval shorthand) into a human-readable string for display.
+ * Handles common patterns: "every Nm", interval minutes, interval hours, daily, weekly, etc.
  * Falls back to the raw expression for unrecognised patterns.
  */
 export function describeSchedule(cron: string): string {
   if (!cron) return "No schedule";
-  const parts = cron.trim().split(/\s+/);
+  const trimmed = cron.trim();
+
+  // Handle "every N" format (e.g. "every 5m") — produced by parseSchedule display field
+  const everyMatch = trimmed.match(/^every\s+(\d+)([mhd])$/i);
+  if (everyMatch) {
+    const num = parseInt(everyMatch[1], 10);
+    const unit = everyMatch[2].toLowerCase();
+    if (unit === "m") return `Every ${num}m`;
+    if (unit === "h") return num === 1 ? "Every 1h" : `Every ${num}h`;
+    if (unit === "d") return num === 1 ? "Every 1d" : `Every ${num}d`;
+  }
+
+  const parts = trimmed.split(/\s+/);
   if (parts.length < 5) return cron;
   const [min, hour, dom, mon, dow] = parts;
 
