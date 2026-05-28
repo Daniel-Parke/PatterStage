@@ -30,6 +30,7 @@ import {
   importHermesJobs,
   syncCronWithHermes,
   triggerJobViaGateway,
+  normalizeRepeat,
   type CronJobRecord,
 } from "@/lib/cron-repository";
 

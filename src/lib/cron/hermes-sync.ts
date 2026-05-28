@@ -16,6 +16,7 @@ import { join } from "path";
 import { db, uuid, now } from "../db";
 import { getActiveHermesPaths } from "../hermes-agent-runtime";
 import { logApiError } from "../api-logger";
+import { gatewayUrl } from "../gateway-client";
 import {
   getHermesAgentPackageDir,
   resolveHermesAgentPackage,
@@ -525,8 +526,6 @@ export async function removeJobFromHermes(hermesJobId: string): Promise<{ ok: bo
 
 // ── Gateway trigger (run now) ─────────────────────────────────
 
-const GATEWAY_BASE = "http://127.0.0.1:8642";
-
 /**
  * Trigger a job to run immediately via the Hermes gateway's run endpoint.
  * This calls POST /api/jobs/{job_id}/run which calls trigger_job() in Hermes,
@@ -538,7 +537,7 @@ export async function triggerJobViaGateway(
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     const res = await fetch(
-      `${GATEWAY_BASE}/api/jobs/${encodeURIComponent(hermesJobId)}/run`,
+      gatewayUrl(`/api/jobs/${encodeURIComponent(hermesJobId)}/run`),
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
