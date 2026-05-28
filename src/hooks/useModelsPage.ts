@@ -157,7 +157,7 @@ export function useModelsPage() {
 
   const handlePush = useCallback(
     (modelId: string, options?: { pushCredential?: boolean }): Promise<SyncActionResult> =>
-      syncModel("push", modelId, { pushCredential: options?.pushCredential !== false }),
+      syncModel("push", modelId, { pushCredential: options?.pushCredential ?? true }),
     [syncModel],
   );
 
