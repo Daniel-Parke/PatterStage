@@ -123,12 +123,21 @@ export function describeSchedule(cron: string): string {
   if (!cron) return "No schedule";
   const trimmed = cron.trim();
 
-  // Handle "every N" format (e.g. "every 5m") — produced by parseSchedule display field
+  // Handle "every N" format (e.g. "every 5m", "every 1h", "every 7d")
+  // — produced by parseSchedule display field and used by IntervalSelector / ScheduleSelector.
   const everyMatch = trimmed.match(/^every\s+(\d+)([mhd])$/i);
   if (everyMatch) {
     const num = parseInt(everyMatch[1], 10);
     const unit = everyMatch[2].toLowerCase();
-    if (unit === "m") return `Every ${num}m`;
+    if (unit === "m") {
+      if (num >= 60) {
+        const h = Math.floor(num / 60);
+        const m = num % 60;
+        if (m === 0) return h === 1 ? "Every 1h" : `Every ${h}h`;
+        return `Every ${h}h ${m}m`;
+      }
+      return num === 1 ? "Every 1m" : `Every ${num}m`;
+    }
     if (unit === "h") return num === 1 ? "Every 1h" : `Every ${num}h`;
     if (unit === "d") return num === 1 ? "Every 1d" : `Every ${num}d`;
   }

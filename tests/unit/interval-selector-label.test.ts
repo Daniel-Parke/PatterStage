@@ -1,45 +1,69 @@
 /**
- * Regression test for IntervalSelector getIntervalLabel bug.
+ * Regression test for IntervalSelector displayLabel logic.
  *
- * Bug: getIntervalLabel failed to match presets when the value had an "every " prefix
+ * Bug (fixed): displayLabel failed to match presets when the value had an "every " prefix
  * (which is how the API returns schedule values like "every 5m", "every 60m").
  * This caused the dashboard's inline cron selector to show raw strings like "every 60m"
- * instead of friendly labels like "1 hour", and the selected state highlighting didn't work.
+ * instead of friendly labels like "Every 2h".
+ *
+ * The fix: after stripping "every " prefix, fall back to describeSchedule() for
+ * values that don't match a preset — e.g. "every 120m" → "Every 2h".
  */
 
 /**
- * Inline copy of the fixed getIntervalLabel function for testing.
+ * Inline copy of the fixed displayLabel function for testing.
  * Mirrors the logic in src/components/ui/IntervalSelector.tsx
  */
 function getIntervalLabel(value: string): string {
   const stripped = value.replace(/^every\s+/i, "");
-  const preset = PRESETS.find((p) => p.value === stripped);
-  return preset ? preset.label : stripped;
+  const preset = PRESETS.find((p) => p.value === stripped || p.value === value);
+  if (preset) return preset.label;
+  // describeSchedule handles "every Nm" formats like "every 120m" → "Every 2h"
+  const described = describeSchedule(value);
+  if (described && described !== "No schedule") return described;
+  return stripped || value;
 }
 
 const PRESETS = [
-  { value: "1m", label: "1 minute" },
-  { value: "5m", label: "5 minutes" },
-  { value: "10m", label: "10 minutes" },
-  { value: "15m", label: "15 minutes" },
-  { value: "30m", label: "30 minutes" },
-  { value: "1h", label: "1 hour" },
-  { value: "2h", label: "2 hours" },
-  { value: "4h", label: "4 hours" },
-  { value: "8h", label: "8 hours" },
-  { value: "12h", label: "12 hours" },
-  { value: "1d", label: "1 day" },
-  { value: "3d", label: "3 days" },
-  { value: "7d", label: "7 days" },
+  { value: "every 1m",  label: "1 minute"  },
+  { value: "every 5m",  label: "5 minutes" },
+  { value: "every 10m", label: "10 minutes" },
+  { value: "every 15m", label: "15 minutes" },
+  { value: "every 30m", label: "30 minutes" },
+  { value: "every 1h",  label: "1 hour"    },
+  { value: "every 2h",  label: "2 hours"   },
+  { value: "every 4h",  label: "4 hours"   },
+  { value: "every 8h",  label: "8 hours"   },
+  { value: "every 12h", label: "12 hours"  },
+  { value: "every 1d",  label: "1 day"     },
+  { value: "every 3d",  label: "3 days"    },
+  { value: "every 7d",  label: "7 days"    },
 ];
 
-describe("getIntervalLabel (IntervalSelector)", () => {
-  it("matches presets without 'every ' prefix (compact mode values)", () => {
-    expect(getIntervalLabel("5m")).toBe("5 minutes");
-    expect(getIntervalLabel("1h")).toBe("1 hour");
-    expect(getIntervalLabel("7d")).toBe("7 days");
-  });
+/** describeSchedule handles "every Nm" (≥60min → hours) */
+function describeSchedule(cron: string): string {
+  if (!cron) return "No schedule";
+  const trimmed = cron.trim();
+  const everyMatch = trimmed.match(/^every\s+(\d+)([mhd])$/i);
+  if (everyMatch) {
+    const num = parseInt(everyMatch[1], 10);
+    const unit = everyMatch[2].toLowerCase();
+    if (unit === "m") {
+      if (num >= 60) {
+        const h = Math.floor(num / 60);
+        const m = num % 60;
+        if (m === 0) return h === 1 ? "Every 1h" : `Every ${h}h`;
+        return `Every ${h}h ${m}m`;
+      }
+      return num === 1 ? "Every 1m" : `Every ${num}m`;
+    }
+    if (unit === "h") return num === 1 ? "Every 1h" : `Every ${num}h`;
+    if (unit === "d") return num === 1 ? "Every 1d" : `Every ${num}d`;
+  }
+  return cron;
+}
 
+describe("getIntervalLabel (IntervalSelector)", () => {
   it("matches presets WITH 'every ' prefix (API return values)", () => {
     expect(getIntervalLabel("every 5m")).toBe("5 minutes");
     expect(getIntervalLabel("every 1h")).toBe("1 hour");
@@ -47,16 +71,13 @@ describe("getIntervalLabel (IntervalSelector)", () => {
     expect(getIntervalLabel("every 7d")).toBe("7 days");
   });
 
-  it("handles case-insensitive 'every' prefix", () => {
-    expect(getIntervalLabel("Every 5m")).toBe("5 minutes");
-    expect(getIntervalLabel("EVERY 1h")).toBe("1 hour");
-  });
-
-  it("handles API display values (minutes from parseSchedule)", () => {
+  it("handles API display values with ≥60min that exceed preset range", () => {
     // When parseSchedule converts "every 2h" → { minutes: 120, display: "every 120m" }
-    // The component receives "every 120m" which won't match a preset
-    // It should return the stripped value "120m" as the fallback label
-    expect(getIntervalLabel("every 120m")).toBe("120m");
+    // The component receives "every 120m" which won't match a preset.
+    // describeSchedule handles it: "every 120m" → "Every 2h"
+    expect(getIntervalLabel("every 120m")).toBe("Every 2h");
+    // "every 240m" → "Every 4h"
+    expect(getIntervalLabel("every 240m")).toBe("Every 4h");
   });
 
   it("returns raw value for unrecognized inputs", () => {

@@ -11,7 +11,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { RefreshCw, ChevronDown, Clock, Timer } from "lucide-react";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { INTERVAL_PRESETS } from "@/components/cron/CronScheduleInput";
-import { parseCronExpression } from "@/lib/cron-display";
+import { describeSchedule } from "@/lib/schedule/types";
 
 export type ScheduleMode = "interval" | "wall-clock" | "post-run";
 
@@ -84,8 +84,8 @@ export default function ScheduleSelector({
     const stripped = value.replace(/^every\s+/i, "");
     const preset = INTERVAL_PRESETS.find((p) => p.value === stripped || p.value === value);
     if (preset) return preset.label;
-    const cronLabel = parseCronExpression(value);
-    if (cronLabel) return cronLabel;
+    const cronLabel = describeSchedule(value);
+    if (cronLabel && cronLabel !== "No schedule") return cronLabel;
     return stripped || value;
   })();
 
