@@ -41,7 +41,6 @@ import CategoryCombobox, {
 import LocalDirRow from "@/components/missions/LocalDirRow";
 import { inputFieldClasses } from "@/lib/theme";
 import {
-  categoryAccentColor,
   groupTemplatesByCategory,
   type CategoryLike,
 } from "@/lib/mission-categories";
@@ -246,7 +245,7 @@ export function TemplateManagerModal({
         )}
         {grouped.map((group) => {
           const filterKey = group.categoryId ?? "__uncategorized__";
-          const color = categoryAccentColor(group.color);
+          const color = group.color;
           return (
             <CategoryAccordion
               key={filterKey}

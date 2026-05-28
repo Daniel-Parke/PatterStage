@@ -15,7 +15,7 @@ import {
   ChevronUp,
   Zap,
 } from "lucide-react";
-import { describeSchedule } from "@/lib/schedule/types";
+import { describeSchedule } from "@/lib/utils";
 import { useExpandable } from "@/hooks/useExpandable";
 
 export interface CronJob {
@@ -27,8 +27,6 @@ export interface CronJob {
   deliver: string;
   model: string;
   enabled: boolean;
-  lastRun?: string | null;
-  last_run_at?: string | null;
   nextRun?: string | null;
   next_run_at?: string | null;
   repeat: boolean;

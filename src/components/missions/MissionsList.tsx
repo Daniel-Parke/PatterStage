@@ -309,7 +309,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
                   <div className="flex items-center justify-between mb-3 px-1">
                     <div className="flex items-center gap-2">
                       <div
-                        className={`w-2 h-2 rounded-full ${STATUS_CONFIG[status]?.columnDot || "bg-white/20"}`}
+                        className={`w-2 h-2 rounded-full ${sc?.columnDot || "bg-white/20"}`}
                       />
                       <span className="text-[11px] font-mono text-white/50 uppercase tracking-wider">
                         {status === "successful"

@@ -19,7 +19,7 @@ import {
   ChevronUp,
   Terminal,
 } from "lucide-react";
-import { describeSchedule } from "@/lib/schedule/types";
+import { describeSchedule } from "@/lib/utils";
 import { useExpandable } from "@/hooks/useExpandable";
 import type { SystemCronJob } from "@/types/hermes";
 

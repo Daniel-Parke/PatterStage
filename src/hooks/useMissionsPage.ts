@@ -166,32 +166,33 @@ export function useMissionsPage() {
     field: K,
     value: MissionFormState[K],
   ) => {
-    switch (field) {
-      case "newName": setNewName(value as string); break;
-      case "newInstruction": setNewInstruction(value as string); break;
-      case "newContext": setNewContext(value as string); break;
-      case "newGoals": setNewGoals(value as string); break;
-      case "newOutputFormat": setNewOutputFormat(value as string); break;
-      case "newConstraints": setNewConstraints(value as string); break;
-      case "newDispatch":
-        setNewDispatch(value as "save" | "now" | "cron" | "queue");
+    const updaters: Record<keyof MissionFormState, (v: MissionFormState[keyof MissionFormState]) => void> = {
+      newName: (v) => setNewName(v as string),
+      newInstruction: (v) => setNewInstruction(v as string),
+      newContext: (v) => setNewContext(v as string),
+      newGoals: (v) => setNewGoals(v as string),
+      newOutputFormat: (v) => setNewOutputFormat(v as string),
+      newConstraints: (v) => setNewConstraints(v as string),
+      newDispatch: (v) => {
+        setNewDispatch(v as "save" | "now" | "cron" | "queue");
         setDispatchAcknowledged(true);
-        break;
-      case "newSchedule": setNewSchedule(value as string); break;
-      case "scheduleType": setScheduleType(value as "interval" | "wall-clock" | "post-run"); break;
-      case "newMissionTime": setNewMissionTime(value as number); break;
-      case "newTimeout": setNewTimeout(value as number); break;
-      case "newProfile": setNewProfile(value as string); break;
-      case "newModel": setNewModel(value as string); break;
-      case "newProvider": setNewProvider(value as string); break;
-      case "newLocalDirs": setNewLocalDirs(value as LocalDirEntry[]); break;
-      case "localDirDraft": setLocalDirDraft(value as LocalDirEntry); break;
-      case "newReferences": setNewReferences(value as string[]); break;
-      case "referenceInput": setReferenceInput(value as string); break;
-      case "newSkills": setNewSkills(value as string[]); break;
-      case "newToolsets": setNewToolsets(value as string[]); break;
-      case "scheduleStartTime": setScheduleStartTime(value as string); break;
-    }
+      },
+      newSchedule: (v) => setNewSchedule(v as string),
+      scheduleType: (v) => setScheduleType(v as "interval" | "wall-clock" | "post-run"),
+      newMissionTime: (v) => setNewMissionTime(v as number),
+      newTimeout: (v) => setNewTimeout(v as number),
+      newProfile: (v) => setNewProfile(v as string),
+      newModel: (v) => setNewModel(v as string),
+      newProvider: (v) => setNewProvider(v as string),
+      newLocalDirs: (v) => setNewLocalDirs(v as LocalDirEntry[]),
+      localDirDraft: (v) => setLocalDirDraft(v as LocalDirEntry),
+      newReferences: (v) => setNewReferences(v as string[]),
+      referenceInput: (v) => setReferenceInput(v as string),
+      newSkills: (v) => setNewSkills(v as string[]),
+      newToolsets: (v) => setNewToolsets(v as string[]),
+      scheduleStartTime: (v) => setScheduleStartTime(v as string),
+    };
+    updaters[field]?.(value);
   };
 
   function dispatchPayload(overrides: Record<string, unknown> = {}): Record<string, unknown> {
@@ -472,7 +473,7 @@ export function useMissionsPage() {
       void fetchData();
       const id = expandedIdRef.current;
       if (id) fetchDetail(id, false);
-    }, 5000);
+    }, 15_000);
     return () => {
       cancelled = true;
       clearInterval(interval);
