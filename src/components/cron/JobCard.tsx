@@ -34,6 +34,8 @@ export interface CronJob {
   script: string;
   state?: string;
   profile_name?: string;
+  last_run_at?: string | null;
+  last_status?: string | null;
 }
 
 interface JobCardProps {
