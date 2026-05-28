@@ -13,7 +13,6 @@ import {
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { useToast } from "@/components/ui/Toast";
 import { safeApiCall } from "@/lib/api-fetch";
 import { ROLE_META } from "@/components/session/constants";
 import { MessageBubble, type SessionMessage, type SessionData } from "@/components/session/MessageBubble";

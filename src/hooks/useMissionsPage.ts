@@ -414,7 +414,6 @@ export function useMissionsPage() {
       if (!templateApplied.current && loaded.length > 0) {
         const url = new URL(window.location.href);
         const templateId = url.searchParams.get("template");
-        const compose = url.searchParams.get("compose");
         if (templateId) {
           const t = loaded.find(
             (tmpl: MissionTemplate) => tmpl.id === templateId,
