@@ -119,15 +119,10 @@ export function messageSummary(content: string | undefined): string {
   return trimmed + (firstNonEmpty.length > 120 || hasMoreContent ? "..." : "");
 }
 
-/**
- * Parse a cron expression into a human-readable string for display.
- * Handles common patterns: interval minutes, interval hours, daily, weekly, etc.
- */
-export { describeSchedule, parseCronExpression } from "@/lib/schedule/types";
-
-// Re-export from schedule module
-export type { ParsedSchedule } from "@/lib/schedule/types";
+// Re-exports from schedule module
 export { parseSchedule } from "@/lib/schedule/parse-schedule";
+export type { ParsedSchedule } from "@/lib/schedule/types";
+export { describeSchedule, parseCronExpression } from "@/lib/schedule/types";
 
 // ── Model Defaults ───────────────────────────────────────────
 
@@ -144,5 +139,3 @@ export function emptyModelDefaults(): Record<TaskType, string | null> {
     {} as Record<TaskType, string | null>
   );
 }
-
-

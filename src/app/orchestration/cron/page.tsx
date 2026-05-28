@@ -215,7 +215,7 @@ export default function CronPage() {
     if (activeTab === "system") {
       void hardware.loadJobs();
     }
-  }, [activeTab]);
+  }, [activeTab, hardware]);
 
   const handleSyncAll = useCallback(async () => {
     setSyncing(true);

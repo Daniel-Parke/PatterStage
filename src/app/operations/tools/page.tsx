@@ -31,7 +31,6 @@ import {
 
 export default function ToolsPage() {
   const [selectedProfile, setSelectedProfile] = useState("default");
-  const [platformToolsets, setPlatformToolsets] = useState<PlatformToolsets>({});
   const [toolsetsJson, setToolsetsJson] = useState("{}");
   const [toolsetsSource, setToolsetsSource] = useState<string | null>(null);
   const [loadingToolsets, setLoadingToolsets] = useState(true);
@@ -61,7 +60,6 @@ export default function ToolsPage() {
       const loaded = (data.data?.platformToolsets ?? {}) as PlatformToolsets;
       const unified = (data.data?.unifiedEnabled as string[] | undefined) ??
         unionToolsetsFromPlatforms(loaded);
-      setPlatformToolsets(loaded);
       setUnifiedEnabled(unified);
       setPlatformsDiverged(Boolean(data.data?.platformsDiverged));
       setToolsetsJson(JSON.stringify(loaded, null, 2));
