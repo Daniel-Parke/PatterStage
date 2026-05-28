@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall, apiFetch } from "@/lib/api-fetch";
 import type { LocalDirEntry, Mission } from "@/types/hermes";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { parseMissionPrompt } from "@/lib/build-mission-prompt";
@@ -85,12 +85,9 @@ export function useMissionsPage() {
   const { showToast, toastElement } = useToast();
   const templateApplied = useRef(false);
   const expandedIdRef = useRef<string | null>(null);
-  const createFormRef = useRef<HTMLDivElement | null>(null);
-
   const scrollToCreateForm = useCallback(() => {
-    requestAnimationFrame(() => {
-      createFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    // No-op: the ref-based scroll target was removed during refactor.
+    // Kept as a no-op to avoid breaking callers that pass scrollToCreateForm.
   }, []);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
@@ -246,8 +243,8 @@ export function useMissionsPage() {
     const controller = new AbortController();
     const slug = encodeURIComponent(newProfile);
     Promise.all([
-      safeApiCall<{ skills?: Array<{ name: string; enabled: boolean }> }>(`/api/skills?profile=${slug}`),
-      safeApiCall<{ platformToolsets?: PlatformToolsets }>(`/api/agent/profiles/${slug}/toolsets`),
+      apiFetch<{ data: { skills?: Array<{ name: string; enabled: boolean }> } }>(`/api/skills?profile=${slug}`, { signal: controller.signal }),
+      apiFetch<{ data: { platformToolsets?: PlatformToolsets } }>(`/api/agent/profiles/${slug}/toolsets`, { signal: controller.signal }),
     ])
       .then(([skillsResult, toolsetsResult]) => {
         const enabled = new Set(
@@ -263,7 +260,11 @@ export function useMissionsPage() {
         setNewSkills((prev) => prev.filter((s) => enabled.has(s)));
         setNewToolsets((prev) => prev.filter((t) => toolsetIds.has(t)));
       })
-      .catch((err) => console.warn("[useMissionsPage] failed to load profile skills/toolsets:", err.message));
+      .catch((err) => {
+        if (err instanceof Error && err.name !== "AbortError") {
+          console.warn("[useMissionsPage] failed to load profile skills/toolsets:", err.message);
+        }
+      });
     return () => controller.abort();
   }, [newProfile]);
 
@@ -1119,7 +1120,6 @@ export function useMissionsPage() {
     dispatching,
     cancellingMissionId,
     handleTemplateSelect,
-    createFormRef,
     setShowTemplateManager,
     showTemplateManager,
     handleEditTemplate,
