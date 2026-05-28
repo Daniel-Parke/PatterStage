@@ -298,17 +298,17 @@ export default function Dashboard() {
       {
         url: "/api/agents",
         ms: 15000,
-        extract: (d: { data?: { data?: { processes?: HermesProcess[] } } }) => {
-          if (!d?.data?.data) return null;
-          return { processes: d.data.data.processes ?? [] };
+        extract: (d: { data?: { processes?: HermesProcess[] } }) => {
+          if (!d?.data) return null;
+          return { processes: d.data.processes ?? [] };
         },
       },
       {
         url: "/api/missions",
         ms: 15000,
-        extract: (d: { data?: { data?: { missions?: MissionBrief[] } } }) => {
-          if (!d?.data?.data) return null;
-          return { missions: d.data.data.missions ?? [] };
+        extract: (d: { data?: { missions?: MissionBrief[] } }) => {
+          if (!d?.data) return null;
+          return { missions: d.data.missions ?? [] };
         },
       },
     ];

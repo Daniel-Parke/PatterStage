@@ -35,14 +35,14 @@ export default function SessionDetailPage() {
     void (async () => {
       const url = "/api/sessions/" + encodeURIComponent(sessionId);
       try {
-        const { data, error: fetchError } = await safeApiCall<{ session?: SessionData; data?: SessionData }>(url, { method: "GET" });
+        const { data, error: fetchError } = await safeApiCall<{ data: SessionData }>(url, { method: "GET" });
         if (controller.signal.aborted) return;
         if (fetchError) {
           throw new Error(fetchError || "Failed to load session");
         }
-        const sessionData = data?.data || data?.session;
+        const { data: sessionData } = data ?? {};
         if (sessionData) {
-          setData(sessionData);
+          setData(sessionData as SessionData);
         } else {
           throw new Error("Invalid session data format");
         }
