@@ -150,22 +150,18 @@ export default function ChatPage() {
   );
 
   // ── Download session ───────────────────────────────────────
-  const handleDownloadJSON = useCallback(
-    (s: ChatSession, e?: React.MouseEvent) => {
+  const handleDownloadSession = useCallback(
+    (s: ChatSession, format: "json" | "csv", e?: React.MouseEvent) => {
       e?.stopPropagation();
-      const filename = `${s.title.replace(/[^a-zA-Z0-9_-]/g, "_")}_${Date.now()}.json`;
-      downloadFile(sessionToJson(s), filename, "application/json");
-      showToast("Session exported as JSON", "success");
-    },
-    [showToast],
-  );
-
-  const handleDownloadCSV = useCallback(
-    (s: ChatSession, e?: React.MouseEvent) => {
-      e?.stopPropagation();
-      const filename = `${s.title.replace(/[^a-zA-Z0-9_-]/g, "_")}_${Date.now()}.csv`;
-      downloadFile(sessionToCsv(s), filename, "text/csv");
-      showToast("Session exported as CSV", "success");
+      const safeTitle = s.title.replace(/[^a-zA-Z0-9_-]/g, "_");
+      const timestamp = Date.now();
+      if (format === "json") {
+        downloadFile(sessionToJson(s), `${safeTitle}_${timestamp}.json`, "application/json");
+        showToast("Session exported as JSON", "success");
+      } else {
+        downloadFile(sessionToCsv(s), `${safeTitle}_${timestamp}.csv`, "text/csv");
+        showToast("Session exported as CSV", "success");
+      }
     },
     [showToast],
   );
@@ -372,7 +368,7 @@ export default function ChatPage() {
                   <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                     <div className="relative group/download">
                       <button
-                        onClick={(e) => handleDownloadJSON(s, e)}
+                        onClick={(e) => handleDownloadSession(s, "json", e)}
                         className="w-7 h-7 flex items-center justify-center rounded hover:bg-neon-cyan/20 hover:text-neon-cyan text-white/30"
                         title="Download as JSON"
                       >
@@ -380,7 +376,7 @@ export default function ChatPage() {
                       </button>
                       <div className="absolute right-0 top-full mt-0.5 hidden group-hover/download:block z-50">
                         <button
-                          onClick={(e) => handleDownloadCSV(s, e)}
+                          onClick={(e) => handleDownloadSession(s, "csv", e)}
                           className="whitespace-nowrap text-[10px] font-mono px-2 py-1 rounded bg-dark-900 border border-white/10 text-white/60 hover:text-white hover:bg-white/5 transition-colors shadow-lg"
                         >
                           as CSV
