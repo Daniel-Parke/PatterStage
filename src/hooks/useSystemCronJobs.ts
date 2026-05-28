@@ -106,8 +106,8 @@ export function useSystemCronJobs() {
       showToast(error || "Failed to pause system cron jobs", "error");
     } else {
       showToast(`Paused ${resData?.pausedCount ?? 0} system cron job(s)`);
-      loadJobs();
     }
+    loadJobs();
   }, [showToast, loadJobs]);
 
   return {

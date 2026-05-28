@@ -74,7 +74,6 @@ export async function POST(request: NextRequest) {
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: "messages array is required" }, { status: 400 });
     }
-
     const isStreaming = stream !== false; // default to streaming
     const { apiUrl } = getAgentLlmEndpoints();
 

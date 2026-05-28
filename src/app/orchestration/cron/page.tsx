@@ -271,10 +271,7 @@ export default function CronPage() {
               onPauseAll={() => {
                 if (activeTab === "agent") {
                   setPauseAllBusy(true);
-                  void (async () => {
-                    await agent.handlePauseAll();
-                    setPauseAllBusy(false);
-                  })();
+                  void agent.handlePauseAll().finally(() => setPauseAllBusy(false));
                 } else {
                   void hardware.handlePauseAll();
                 }
