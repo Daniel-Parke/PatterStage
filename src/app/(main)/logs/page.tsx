@@ -21,6 +21,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { safeApiCall } from "@/lib/api-fetch";
+import { useApiData } from "@/hooks/useApiData";
 import type { LogFileMeta } from "@/lib/log-files";
 import { formatBytes } from "@/lib/utils";
 import { LogRow } from "@/components/logs/LogRow";
@@ -38,11 +39,8 @@ interface LogData {
 }
 
 export default function LogsPage() {
-  const [data, setData] = useState<LogData | null>(null);
   const [activeLog, setActiveLog] = useState("agent");
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
   const [fileQuery, setFileQuery] = useState("");
@@ -52,37 +50,14 @@ export default function LogsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
-  const hasDataRef = useRef(false);
 
-  const loadLogs = useCallback(async () => {
-    const alreadyLoaded = hasDataRef.current;
-    setLoadError(null);
-    if (alreadyLoaded) {
-      setRefreshing(true);
-    } else {
-      setLoading(true);
-    }
-    try {
-      const { data: logData, error: logError } = await safeApiCall<LogData>(
-        `/api/logs?name=${encodeURIComponent(activeLog)}&lines=${lineCount}`,
-      );
-      if (logError) {
-        setLoadError(logError ?? `Request failed`);
-        if (!alreadyLoaded) setData(null);
-        return;
-      }
-      if (logData) {
-        setData(logData);
-      }
-    } catch {
-      setLoadError("Network error while loading logs");
-      if (!alreadyLoaded) setData(null);
-    } finally {
-      hasDataRef.current = true;
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [activeLog, lineCount]);
+  const logUrl = useMemo(
+    () => `/api/logs?name=${encodeURIComponent(activeLog)}&lines=${lineCount}`,
+    [activeLog, lineCount],
+  );
+
+  const { data, loading, error: loadError, refetch } = useApiData<LogData>(logUrl);
+  const isInitialLoad = !data && !loadError;
 
   const handleDeleteAllLogs = useCallback(async () => {
     if (!deleteConfirm) {
@@ -91,35 +66,32 @@ export default function LogsPage() {
       return;
     }
     setDeleteConfirm(false);
-    setLoading(true);
     setActionMessage(null);
     try {
-      const { ok, data, error } = await safeApiCall<{ cleared?: number }>("/api/logs", { method: "DELETE" });
+      const { ok, data: delData, error } = await safeApiCall<{ cleared?: number }>(
+        "/api/logs",
+        { method: "DELETE" },
+      );
       if (!ok || error) {
         setActionMessage(error ?? "Delete failed");
         return;
       }
       setActionMessage(
-        typeof data?.cleared === "number"
-          ? `Cleared ${data.cleared} log file(s).`
+        typeof delData?.cleared === "number"
+          ? `Cleared ${delData.cleared} log file(s).`
           : "Logs cleared.",
       );
-      void loadLogs();
+      void refetch();
     } catch {
       setActionMessage("Delete failed (network error)");
-    } finally {
-      setLoading(false);
     }
-  }, [deleteConfirm, loadLogs]);
+  }, [deleteConfirm, refetch]);
 
   const handleCancelDelete = useCallback(() => {
     setDeleteConfirm(false);
   }, []);
 
-  useEffect(() => {
-    void loadLogs();
-  }, [activeLog, lineCount, loadLogs]);
-
+  // Auto-set activeLog to first available log when list loads
   useEffect(() => {
     if (!data?.availableLogs?.length) return;
     const ok = data.availableLogs.some((l) => l.name === activeLog);
@@ -128,16 +100,18 @@ export default function LogsPage() {
     }
   }, [data?.availableLogs, activeLog]);
 
+  // Auto-refresh
   useEffect(() => {
     if (!autoRefresh) return;
     const id = setInterval(() => {
-      void loadLogs();
+      void refetch();
     }, 5000);
     return () => {
       clearInterval(id);
     };
-  }, [autoRefresh, loadLogs]);
+  }, [autoRefresh, refetch]);
 
+  // Auto-scroll to top on new data
   useEffect(() => {
     if (autoScroll && terminalRef.current) {
       terminalRef.current.scrollTop = 0;
@@ -149,6 +123,15 @@ export default function LogsPage() {
     const { scrollTop } = terminalRef.current;
     setAutoScroll(scrollTop < 50);
   };
+
+  const handleRefresh = useCallback(() => {
+    if (data) setRefreshing(true);
+    void refetch();
+  }, [data, refetch]);
+
+  useEffect(() => {
+    if (refreshing && !loading) setRefreshing(false);
+  }, [refreshing, loading]);
 
   const filteredFiles = useMemo(() => {
     if (!data?.availableLogs) return [];
@@ -206,7 +189,7 @@ export default function LogsPage() {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => void loadLogs()}
+              onClick={() => void handleRefresh()}
               loading={refreshing}
               icon={RefreshCw}
             >
