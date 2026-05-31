@@ -1,6 +1,10 @@
+import { mkdtempSync, rmSync, writeFileSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 import {
   categorizeLogFileGroup,
   compareLogFileNames,
+  readLastLines,
   sanitizeLogBasename,
 } from "@/lib/log-files";
 
@@ -39,5 +43,62 @@ describe("compareLogFileNames", () => {
   it("orders agent before gateway before zzz", () => {
     const names = ["zzz", "agent", "gateway"].sort(compareLogFileNames);
     expect(names).toEqual(["agent", "gateway", "zzz"]);
+  });
+});
+
+describe("readLastLines", () => {
+  let dir: string;
+
+  beforeAll(() => {
+    dir = mkdtempSync(join(tmpdir(), "log-files-test-"));
+  });
+
+  afterAll(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("returns the last N lines of a normal multi-line file", () => {
+    const file = join(dir, "many.log");
+    const lines = Array.from({ length: 5000 }, (_, i) => `line ${i}`);
+    writeFileSync(file, lines.join("\n"));
+
+    const r = readLastLines(file, 200);
+    expect(r.lines).toHaveLength(200);
+    expect(r.allLines).toBe(5000);
+    // lines are returned reversed (newest first)
+    expect(r.lines[0]).toBe("line 4999");
+  });
+
+  // Regression: a file larger than the 64KB chunk size but containing fewer
+  // total newlines than maxLines used to pin offset at 0 and spin forever,
+  // blocking the Node event loop and taking down the whole server. The
+  // start-of-file guard must let it return after reading the whole file once.
+  it("terminates on a large file with fewer lines than maxLines (no infinite loop)", () => {
+    const file = join(dir, "few-long-lines.log");
+    // 10 lines of ~7KB each => ~70KB total, 9 newlines, > 64KB CHUNK_SIZE.
+    const lines = Array.from({ length: 10 }, () => "X".repeat(7000));
+    writeFileSync(file, lines.join("\n"));
+
+    const start = Date.now();
+    const r = readLastLines(file, 200);
+    const elapsed = Date.now() - start;
+
+    expect(elapsed).toBeLessThan(2000); // would hang (timeout) before the fix
+    expect(r.lines).toHaveLength(10);
+    expect(r.allLines).toBe(10);
+    expect(r.lines.every((l) => l === "X".repeat(7000))).toBe(true);
+  });
+
+  it("handles a large file whose lines exactly straddle the chunk boundary", () => {
+    const file = join(dir, "straddle.log");
+    // 30 lines of ~5KB each => ~150KB, more than 2 chunks, fewer than maxLines.
+    const lines = Array.from({ length: 30 }, (_, i) => `${i}:` + "Y".repeat(5000));
+    writeFileSync(file, lines.join("\n"));
+
+    const start = Date.now();
+    const r = readLastLines(file, 200);
+    expect(Date.now() - start).toBeLessThan(2000);
+    expect(r.lines).toHaveLength(30);
+    expect(r.allLines).toBe(30);
   });
 });
