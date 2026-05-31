@@ -2,29 +2,21 @@
 // /api/models/fallbacks/[id] — GET/PUT/DELETE single fallback entry
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
-import {
-  getFallbackEntry,
-  updateFallbackEntry,
-  deleteFallbackEntry,
-  listFallbackChain, getFallbackConfig } from "@/lib/fallbacks-repository";
-import { getModel } from "@/lib/models-repository";
-import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
-
-const fallbackPutSchema = z.object({
-  modelId: z.string().min(1).optional(),
-  position: z.number().int().min(0).optional(),
-  enabled: z.boolean().optional(),
-  overrideBaseUrl: z.string().nullable().optional(),
-});
+import { getFallbackEntry, updateFallbackEntry, deleteFallbackEntry, getFallbackConfig } from "@/lib/fallbacks-repository";
+import { fallbackEntryPutSchema } from "@/lib/fallback-config-schema";
+import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
+import { zodErrorResponse } from "@/lib/api-schemas";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   const { id } = await params;
   try {
     const entry = getFallbackEntry(id);
@@ -54,42 +46,23 @@ export async function PUT(
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const parsed = fallbackPutSchema.safeParse(raw);
+  const parsed = fallbackEntryPutSchema.safeParse(raw);
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid request body", details: parsed.error.flatten() },
-      { status: 400 }
-    );
+    return zodErrorResponse(parsed.error);
   }
 
   try {
-    // Validate model exists if modelId is being changed
-    if (parsed.data.modelId) {
-      const model = getModel(parsed.data.modelId);
-      if (!model) {
-        return NextResponse.json({ error: "Model not found" }, { status: 404 });
-      }
-    }
-
     const updated = updateFallbackEntry(id, parsed.data);
     if (!updated) {
       return NextResponse.json({ error: "Fallback entry not found" }, { status: 404 });
     }
 
-    // Re-sync fallback chain to Hermes config
-    const chain = listFallbackChain().filter((e) => e.enabled);
-    syncFallbacksToHermesConfig(
-      chain.map((e) => ({
-        modelId: e.modelIdString,
-        provider: e.provider,
-        baseUrl: null,
-        overrideBaseUrl: e.overrideBaseUrl,
-        apiKey: null,
-      })),
-      getFallbackConfig()
-    );
-
-    appendAuditLine({ action: "fallback.update", resource: id, ok: true });
+    syncEnabledFallbackChainToHermes(getFallbackConfig());
+    try {
+      appendAuditLine({ action: "fallback.update", resource: id, ok: true });
+    } catch {
+      // Non-fatal
+    }
     return NextResponse.json({ data: { fallback: updated } });
   } catch (error) {
     logApiError("PUT /api/models/fallbacks/[id]", `updating ${id}`, error);
@@ -112,20 +85,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Fallback entry not found" }, { status: 404 });
     }
 
-    // Re-sync fallback chain to Hermes config
-    const chain = listFallbackChain().filter((e) => e.enabled);
-    syncFallbacksToHermesConfig(
-      chain.map((e) => ({
-        modelId: e.modelIdString,
-        provider: e.provider,
-        baseUrl: null,
-        overrideBaseUrl: e.overrideBaseUrl,
-        apiKey: null,
-      })),
-      getFallbackConfig()
-    );
-
-    appendAuditLine({ action: "fallback.delete", resource: id, ok: true });
+    syncEnabledFallbackChainToHermes(getFallbackConfig());
+    try {
+      appendAuditLine({ action: "fallback.delete", resource: id, ok: true });
+    } catch {
+      // Non-fatal
+    }
     return NextResponse.json({ data: { deleted: true } });
   } catch (error) {
     logApiError("DELETE /api/models/fallbacks/[id]", `deleting ${id}`, error);

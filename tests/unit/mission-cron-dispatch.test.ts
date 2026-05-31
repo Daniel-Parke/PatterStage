@@ -44,6 +44,7 @@ jest.mock("@/lib/api-logger", () => ({ logApiError: (...args: unknown[]) => mock
 
 jest.mock("@/lib/api-auth", () => ({
   requireAuth: jest.fn(() => null),
+  isChReadOnly: jest.fn(() => false),
 }));
 
 jest.mock("@/lib/audit-log", () => ({

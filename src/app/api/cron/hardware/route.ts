@@ -4,7 +4,7 @@ import { exec, execSync } from "child_process";
 import { join } from "path";
 
 import { logApiError } from "@/lib/api-logger";
-import { requireAuth, parseJsonBody } from "@/lib/api-auth";
+import { requireAuth, parseJsonBody, isChReadOnly } from "@/lib/api-auth";
 import { toError } from "@/lib/api-fetch";
 import { crontabLineUsesScriptsDir } from "@/lib/hardware-cron";
 import { getChScriptsDir, getChHardwareLogDir, CH_DATA_DIR } from "@/lib/paths";
@@ -171,7 +171,10 @@ async function readAndParseCrontab(): Promise<{ jobs: CrontabJobRaw[]; disabledI
 
 // ── API handlers ───────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   try {
     const { jobs } = await readAndParseCrontab();
     return NextResponse.json({ data: { jobs, total: jobs.length } });
@@ -184,6 +187,9 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  if (isChReadOnly()) {
+    return NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 });
+  }
 
   try {
     const bodyResult = await parseJsonBody(request);
@@ -285,6 +291,8 @@ export async function POST(request: NextRequest) {
       newLines.push(newLine);
     }
 
+    // Write crontab synchronously (execSync is acceptable here — it is a
+    // single blocking call with no async I/O available for crontab writes).
     const result = writeCrontab(newLines.filter((l) => l.trim() || l === "").join("\n"));
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: 500 });
@@ -302,6 +310,9 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  if (isChReadOnly()) {
+    return NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 });
+  }
 
   try {
     const bodyResult = await parseJsonBody(request);
@@ -410,6 +421,9 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  if (isChReadOnly()) {
+    return NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 });
+  }
 
   try {
     const { searchParams } = new URL(request.url);

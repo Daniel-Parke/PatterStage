@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Copy, Check, ChevronDown, ChevronRight } from "lucide-react";
 import { messageSummary } from "@/lib/utils";
 import { ROLE_META } from "@/components/session/constants";
@@ -57,7 +57,7 @@ export function MessageBubble({
     typeof msg.content === "string"
       ? msg.content
       : JSON.stringify(msg.content, null, 2);
-  const summary = useMemo(() => messageSummary(content), [content]);
+  const summary = messageSummary(content);
 
   // Cleanup the copied-state timeout on unmount
   useEffect(() => {
@@ -67,10 +67,13 @@ export function MessageBubble({
   }, []);
 
   const handleCopy = () => {
+    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
     navigator.clipboard.writeText(content || "");
     setCopied(true);
-    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
-    copiedTimerRef.current = setTimeout(() => setCopied(false), 1500);
+    copiedTimerRef.current = setTimeout(() => {
+      copiedTimerRef.current = null;
+      setCopied(false);
+    }, 1500);
   };
 
   const config = ROLE_META[role] || ROLE_META.system;

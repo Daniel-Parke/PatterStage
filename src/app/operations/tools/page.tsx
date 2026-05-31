@@ -7,8 +7,6 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   Wrench,
-  ChevronDown,
-  ChevronRight,
   Info,
   RefreshCw,
   Upload,
@@ -25,17 +23,14 @@ import type { PlatformToolsets } from "@/lib/profile-config-builder";
 import type { AgentProfile } from "@/types/hermes";
 import {
   HERMES_CONFIGURABLE_TOOLSETS,
-  HERMES_PLATFORMS,
 } from "@/lib/hermes-toolset-catalog";
 import {
   expandUnifiedToAllPlatforms,
-  mergeAdvancedOverrides,
   unionToolsetsFromPlatforms,
 } from "@/lib/hermes-toolset-unify";
 
 export default function ToolsPage() {
   const [selectedProfile, setSelectedProfile] = useState("default");
-  const [platformToolsets, setPlatformToolsets] = useState<PlatformToolsets>({});
   const [toolsetsJson, setToolsetsJson] = useState("{}");
   const [toolsetsSource, setToolsetsSource] = useState<string | null>(null);
   const [loadingToolsets, setLoadingToolsets] = useState(true);
@@ -43,9 +38,7 @@ export default function ToolsPage() {
   const [syncing, setSyncing] = useState<"pull" | "push" | null>(null);
   const [unifiedEnabled, setUnifiedEnabled] = useState<string[]>([]);
   const [platformsDiverged, setPlatformsDiverged] = useState(false);
-  const [showAdvancedPerPlatform, setShowAdvancedPerPlatform] = useState(false);
   const [showAdvancedJson, setShowAdvancedJson] = useState(false);
-  const [expandedPlatforms, setExpandedPlatforms] = useState<Record<string, boolean>>({});
   const [profileSyncStatus, setProfileSyncStatus] = useState<AgentProfile["syncStatus"] | null>(null);
   const { showToast, toastElement } = useToast();
 
@@ -67,13 +60,11 @@ export default function ToolsPage() {
       const loaded = (data.data?.platformToolsets ?? {}) as PlatformToolsets;
       const unified = (data.data?.unifiedEnabled as string[] | undefined) ??
         unionToolsetsFromPlatforms(loaded);
-      setPlatformToolsets(loaded);
       setUnifiedEnabled(unified);
       setPlatformsDiverged(Boolean(data.data?.platformsDiverged));
       setToolsetsJson(JSON.stringify(loaded, null, 2));
       setToolsetsSource(data.data?.source ?? null);
     } catch (err) {
-      setPlatformToolsets({});
       setToolsetsJson("{}");
       setToolsetsSource(null);
       showToast(err instanceof Error ? err.message : "Failed to load toolsets", "error");
@@ -83,8 +74,6 @@ export default function ToolsPage() {
   }, [selectedProfile, showToast]);
 
   useEffect(() => {
-    setShowAdvancedPerPlatform(false);
-    setExpandedPlatforms({});
     void loadToolsets();
     void loadProfileSyncStatus();
   }, [loadToolsets, loadProfileSyncStatus]);
@@ -96,41 +85,13 @@ export default function ToolsPage() {
       if (idx >= 0) next.splice(idx, 1);
       else next.push(toolsetId);
       const sorted = [...new Set(next)].sort();
-      if (!showAdvancedPerPlatform) {
-        const expanded = expandUnifiedToAllPlatforms(sorted);
-        setPlatformToolsets(expanded);
-        setToolsetsJson(JSON.stringify(expanded, null, 2));
-      }
+      const expanded = expandUnifiedToAllPlatforms(sorted);
+      setToolsetsJson(JSON.stringify(expanded, null, 2));
       return sorted;
     });
   };
 
   const isUnifiedEnabled = (toolsetId: string): boolean => unifiedEnabled.includes(toolsetId);
-
-  const toggleToolset = (platformId: string, toolsetId: string) => {
-    setPlatformToolsets((prev) => {
-      const current = [...(prev[platformId] ?? [])];
-      const idx = current.indexOf(toolsetId);
-      if (idx >= 0) {
-        current.splice(idx, 1);
-      } else {
-        current.push(toolsetId);
-      }
-      const next = { ...prev, [platformId]: current.sort() };
-      if (current.length === 0) {
-        const copy = { ...next };
-        delete copy[platformId];
-        setToolsetsJson(JSON.stringify(copy, null, 2));
-        return copy;
-      }
-      setToolsetsJson(JSON.stringify(next, null, 2));
-      return next;
-    });
-  };
-
-  const isToolsetEnabled = (platformId: string, toolsetId: string): boolean => {
-    return (platformToolsets[platformId] ?? []).includes(toolsetId);
-  };
 
   const saveToolsets = async () => {
     setSavingToolsets(true);
@@ -142,8 +103,6 @@ export default function ToolsPage() {
           throw new Error("Invalid JSON object");
         }
         payload = parsed as PlatformToolsets;
-      } else if (showAdvancedPerPlatform) {
-        payload = mergeAdvancedOverrides(unifiedEnabled, platformToolsets);
       } else {
         payload = expandUnifiedToAllPlatforms(unifiedEnabled);
       }
@@ -257,7 +216,7 @@ export default function ToolsPage() {
             <p className="text-xs text-semantic-warning/90">
               Toolset policy on disk differs from Control Hub (format or values).{" "}
               <strong>Pull from Hermes</strong> imports disk into SQLite;{" "}
-              <strong>Save & push toolsets</strong> or <strong>Push</strong> writes canonical{" "}
+              <strong>Save &amp; push toolsets</strong> or <strong>Push</strong> writes canonical{" "}
               <code className="text-white/50">config.yaml</code> to{" "}
               <code className="text-white/50">~/.hermes</code>.
             </p>
@@ -270,14 +229,13 @@ export default function ToolsPage() {
             </p>
           </div>
         )}
-        {platformsDiverged && !showAdvancedPerPlatform && (
+        {platformsDiverged && (
           <div className="mb-4 p-3 rounded-lg bg-semantic-warning/10 border border-semantic-warning/30 flex items-start gap-2">
             <Info className="w-4 h-4 text-semantic-warning flex-shrink-0 mt-0.5" />
             <p className="text-xs text-semantic-warning/90">
-              Platforms have different toolsets on disk. The grid below shows the union.{" "}
-              <strong>Save & push</strong> applies one list to all gateways (like{" "}
-              <code className="text-white/50">hermes tools</code> configure all), or open{" "}
-              <strong>Advanced per-platform</strong> to keep differences.
+              Platforms have different toolsets on disk. The grid below shows the union.
+              <strong>Save &amp; push</strong> applies one list to all gateways (like
+              <code className="text-white/50">hermes tools</code> configure all).
             </p>
           </div>
         )}
@@ -341,95 +299,22 @@ export default function ToolsPage() {
                     <button
                       type="button"
                       className="text-[10px] font-mono text-white/40 hover:text-white/60"
-                      onClick={() => {
-                        setShowAdvancedPerPlatform((v) => {
-                          const next = !v;
-                          if (!next) {
-                            setExpandedPlatforms({});
-                          }
-                          return next;
-                        });
-                      }}
+                      onClick={() => setShowAdvancedJson((v) => !v)}
                     >
-                      {showAdvancedPerPlatform ? "Hide" : "Show"} advanced per-platform overrides
+                      {showAdvancedJson ? "Hide" : "Show"} advanced JSON
                     </button>
+                    {showAdvancedJson && (
+                      <textarea
+                        value={toolsetsJson}
+                        onChange={(event) => setToolsetsJson(event.target.value)}
+                        className="mt-2 w-full min-h-32 rounded-lg bg-dark-950/80 border border-white/10 p-3 text-xs font-mono text-white/80 outline-none focus:border-neon-orange/50"
+                        spellCheck={false}
+                      />
+                    )}
                   </div>
-                  {showAdvancedPerPlatform && (
-                  <div className="mt-3 space-y-2">
-                    {HERMES_PLATFORMS.map((platform) => {
-                      const expanded = expandedPlatforms[platform.id] ?? false;
-                      return (
-                        <div
-                          key={platform.id}
-                          className="rounded-lg border border-white/10 bg-dark-950/40"
-                        >
-                          <button
-                            type="button"
-                            className="w-full flex items-center justify-between px-3 py-2 hover:bg-white/5 rounded-lg"
-                            onClick={() =>
-                              setExpandedPlatforms((prev) => ({
-                                ...prev,
-                                [platform.id]: !expanded,
-                              }))
-                            }
-                          >
-                            <span className="text-xs font-mono text-white/70 uppercase">
-                              {platform.label}
-                            </span>
-                            {expanded ? (
-                              <ChevronDown className="w-4 h-4 text-white/30" />
-                            ) : (
-                              <ChevronRight className="w-4 h-4 text-white/30" />
-                            )}
-                          </button>
-                          {expanded && (
-                            <div className="px-3 pb-3 flex flex-wrap gap-2 border-t border-white/5 pt-2">
-                              {HERMES_CONFIGURABLE_TOOLSETS.map((toolset) => {
-                                const on = isToolsetEnabled(platform.id, toolset.id);
-                                return (
-                                  <button
-                                    key={`${platform.id}-${toolset.id}`}
-                                    type="button"
-                                    title={toolset.description}
-                                    onClick={() => toggleToolset(platform.id, toolset.id)}
-                                    className={`text-[10px] font-mono px-2 py-1 rounded border transition-colors ${
-                                      on
-                                        ? "border-neon-orange/50 bg-neon-orange/15 text-neon-orange"
-                                        : "border-white/10 bg-white/5 text-white/40 hover:border-white/20"
-                                    }`}
-                                  >
-                                    {toolset.label}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  )}
                 </>
               )}
             </div>
-          </div>
-
-          <div className="border-t border-white/10 pt-3">
-            <button
-              type="button"
-              className="text-[10px] font-mono text-white/40 hover:text-white/60"
-              onClick={() => setShowAdvancedJson((v) => !v)}
-            >
-              {showAdvancedJson ? "Hide" : "Show"} advanced JSON
-            </button>
-            {showAdvancedJson && (
-              <textarea
-                value={toolsetsJson}
-                onChange={(event) => setToolsetsJson(event.target.value)}
-                className="mt-2 w-full min-h-32 rounded-lg bg-dark-950/80 border border-white/10 p-3 text-xs font-mono text-white/80 outline-none focus:border-neon-orange/50"
-                spellCheck={false}
-              />
-            )}
           </div>
         </div>
 

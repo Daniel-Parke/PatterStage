@@ -20,19 +20,6 @@ export function toError(e: unknown): Error {
   return e instanceof Error ? e : new Error(String(e));
 }
 
-/** Build a user-visible message from an API error JSON body. */
-export function formatApiError(
-  json: { error?: unknown; cronPushError?: unknown },
-  fallback: string,
-): string {
-  const base = typeof json.error === "string" ? json.error : fallback;
-  const push =
-    typeof json.cronPushError === "string" && json.cronPushError.trim()
-      ? json.cronPushError
-      : null;
-  return push ? `${base}: ${push}` : base;
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic JSON fetch returns arbitrary shapes
 export async function apiFetch<T = any>(
   path: string,
@@ -43,10 +30,17 @@ export async function apiFetch<T = any>(
     headers: { "Content-Type": "application/json", ...options?.headers },
   });
 
-  const json = await res.json().catch(() => ({ error: "Request failed" }));
+  const json = await res.json().catch(() => {
+    throw new Error(`API returned invalid JSON (HTTP ${res.status})`);
+  });
 
   if (!res.ok) {
-    throw new Error(formatApiError(json, `HTTP ${res.status}`));
+    const base = typeof json.error === "string" ? json.error : `HTTP ${res.status}`;
+    const push =
+      typeof json.cronPushError === "string" && json.cronPushError.trim()
+        ? json.cronPushError
+        : null;
+    throw new Error(push ? `${base}: ${push}` : base);
   }
 
   return json;

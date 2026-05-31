@@ -118,6 +118,7 @@ export interface Skill {
   category: string;
   path: string;
   description: string;
+  enabled: boolean;
   size: number;
   lastModified: string;
 }
@@ -127,6 +128,7 @@ export interface SkillsData {
   categories: Record<string, Skill[]>;
   total: number;
   categoryCount: number;
+  profile: string;
 }
 
 // ── Sessions ───────────────────────────────────────────────────
@@ -180,146 +182,7 @@ export interface ProfilesData {
   profiles: AgentProfile[];
 }
 
-// ── Config Sections ────────────────────────────────────────────
-
-export interface AgentConfig {
-  max_turns: number;
-  reasoning_effort: string;
-  tool_use_enforcement: string;
-  verbose: boolean;
-  gateway_timeout: number;
-  personalities: Record<string, string>;
-}
-
-export interface ModelConfig {
-  default: string;
-  provider: string;
-  base_url: string;
-  api_key: string;
-  context_length: number;
-}
-
-export interface DisplayConfig {
-  skin: string;
-  show_cost: boolean;
-  show_reasoning: boolean;
-  streaming: boolean;
-  tool_progress: boolean;
-  compact: boolean;
-  personality: string;
-  tool_preview_length: number;
-}
-
-export interface MemoryConfig {
-  memory_enabled: boolean;
-  provider: string;
-  memory_char_limit: number;
-  user_char_limit: number;
-  nudge_interval: number;
-  user_profile_enabled: boolean;
-  flush_min_turns: number;
-}
-
-export interface TerminalConfig {
-  backend: string;
-  timeout: number;
-  persistent_shell: boolean;
-  docker_image: string;
-  container_cpu: number;
-  container_memory: number;
-  container_disk: number;
-}
-
-export interface CompressionConfig {
-  enabled: boolean;
-  threshold: number;
-  target_ratio: number;
-  protect_last_n: number;
-}
-
-export interface SecurityConfig {
-  tirith_enabled: boolean;
-  tirith_fail_open: boolean;
-  redact_secrets: boolean;
-  website_blocklist: {
-    domains: string[];
-    enabled: boolean;
-  };
-}
-
-export interface TTSConfig {
-  provider: string;
-  edge: { voice: string };
-  elevenlabs: { voice_id: string };
-  openai: { voice: string };
-}
-
-export interface STTConfig {
-  enabled: boolean;
-  provider: string;
-  model: string;
-  local: { model: string };
-}
-
-export interface DelegationConfig {
-  model: string;
-  provider: string;
-  max_iterations: number;
-  default_toolsets: string[];
-}
-
-export interface CronConfig {
-  wrap_response: boolean;
-}
-
-export interface CheckpointsConfig {
-  enabled: boolean;
-  max_snapshots: number;
-}
-
-export interface FullConfig {
-  _config_version: number;
-  agent: AgentConfig;
-  model: ModelConfig;
-  display: DisplayConfig;
-  memory: MemoryConfig;
-  terminal: TerminalConfig;
-  compression: CompressionConfig;
-  security: SecurityConfig;
-  tts: TTSConfig;
-  stt: STTConfig;
-  delegation: DelegationConfig;
-  cron: CronConfig;
-  checkpoints: CheckpointsConfig;
-  approvals: { mode: string; timeout: number };
-  [key: string]: unknown;
-}
-
-// ── Config Section Definition (for UI rendering) ──────────────
-
-export interface ConfigFieldDef {
-  key: string;
-  label: string;
-  type: "string" | "number" | "boolean" | "select" | "textarea";
-  options?: string[];
-  description?: string;
-  min?: number;
-  max?: number;
-}
-
-// ── Accent Color ───────────────────────────────────────────────
-
-export type AccentColor =
-  | "cyan"
-  | "purple"
-  | "pink"
-  | "green"
-  | "orange"
-  | "red"
-  | "blue"
-  | "yellow";
-
-// ── Credentials ───────────────────────────────────────────────
+// ── Mission ─────────────────────────────────────────────────
 
 export interface Mission {
   id: string;
@@ -399,3 +262,15 @@ export interface SystemCronJob {
   command: string;
   logFile?: string;
 }
+
+// ── Accent Color ───────────────────────────────────────────────
+
+export type AccentColor =
+  | "cyan"
+  | "purple"
+  | "pink"
+  | "green"
+  | "orange"
+  | "red"
+  | "blue"
+  | "yellow";

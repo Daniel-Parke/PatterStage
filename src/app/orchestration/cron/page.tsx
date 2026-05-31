@@ -201,7 +201,6 @@ function CronTabContent({
 export default function CronPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editingJob, setEditingJob] = useState<CronJob | null>(null);
-  const [pauseAllBusy, setPauseAllBusy] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"agent" | "system">("agent");
@@ -211,30 +210,34 @@ export default function CronPage() {
 
   const agent = useCronJobs();
   const hardware = useSystemCronJobs();
-  const { loadJobs: loadHardwareJobs } = hardware;
 
   useEffect(() => {
     if (activeTab === "system") {
-      void loadHardwareJobs();
+      void hardware.loadJobs();
     }
-  }, [activeTab, loadHardwareJobs]);
+  }, [activeTab, hardware]);
 
   const handleSyncAll = useCallback(async () => {
     setSyncing(true);
-    const [agentRes, hwRes] = await Promise.all([
-      safeApiCall("/api/cron", { method: "POST", body: { action: "sync" } }),
-      safeApiCall("/api/cron/hardware", { method: "POST", body: { action: "sync" } }),
-    ]);
-    await Promise.all([agent.loadJobs(), hardware.loadJobs()]);
-    if (agentRes.ok && hwRes.ok) {
-      showToast("Agent and system cron synced", "success");
-    } else {
-      const parts: string[] = [];
-      if (!agentRes.ok) parts.push("agent");
-      if (!hwRes.ok) parts.push("system");
-      showToast(`Sync failed: ${parts.join(", ")}`, "error");
+    try {
+      const [agentRes, hwRes] = await Promise.all([
+        safeApiCall("/api/cron", { method: "POST", body: { action: "sync" } }),
+        safeApiCall("/api/cron/hardware", { method: "POST", body: { action: "sync" } }),
+      ]);
+      await Promise.all([agent.loadJobs(), hardware.loadJobs()]);
+      if (agentRes.ok && hwRes.ok) {
+        showToast("Agent and system cron synced", "success");
+      } else {
+        const parts: string[] = [];
+        if (!agentRes.ok) parts.push("agent");
+        if (!hwRes.ok) parts.push("system");
+        showToast(`Sync failed: ${parts.join(", ")}`, "error");
+      }
+    } finally {
+      // Always reset syncing state so the UI never gets stuck in "syncing"
+      // even if an exception is thrown (e.g., network failure).
+      setSyncing(false);
     }
-    setSyncing(false);
   }, [agent, hardware, showToast]);
 
   // ── Derived state ─────────────────────────────────────────
@@ -264,15 +267,13 @@ export default function CronPage() {
             </div>
             <ActionButtons
               color={activeTab === "agent" ? "orange" : "cyan"}
-              pauseBusy={activeTab === "agent" ? pauseAllBusy : false}
+              pauseBusy={activeTab === "agent" ? agent.pauseAllBusy : false}
               hasJobs={activeTab === "agent" ? !!agent.data?.total : hardwareTotal > 0}
-              onPauseAll={async () => {
+              onPauseAll={() => {
                 if (activeTab === "agent") {
-                  setPauseAllBusy(true);
-                  await agent.handlePauseAll();
-                  setPauseAllBusy(false);
+                  void agent.handlePauseAll();
                 } else {
-                  await hardware.handlePauseAll();
+                  void hardware.handlePauseAll();
                 }
               }}
               onSync={() => void handleSyncAll()}

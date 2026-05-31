@@ -71,6 +71,7 @@ describe("ModelPicker defaults", () => {
 
     render(<ModelPicker modelId="" provider="" onChange={onChange} id="t-model-picker-2" />);
 
+    // ModelPicker uses safeApiCall which returns { ok, data } — auto-fill with first model
     await waitFor(() => {
       expect(onChange).toHaveBeenCalledWith("mv", "pv");
     });

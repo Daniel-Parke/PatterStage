@@ -34,6 +34,7 @@ jest.mock("@/lib/cron-repository", () => ({
     hermesImported: [],
     hermesExportErrors: [],
   })),
+  normalizeRepeat: jest.fn(),
 }));
 
 import * as cronRepository from "@/lib/cron-repository";

@@ -6,11 +6,9 @@ import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
 import { fallbackSyncPostSchema } from "@/lib/fallback-config-schema";
-import {
-  getFallbackConfig,
-  updateFallbackConfigBatch,
-} from "@/lib/fallbacks-repository";
+import { getFallbackConfig, updateFallbackConfigBatch } from "@/lib/fallbacks-repository";
 import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
+import { zodErrorResponse } from "@/lib/api-schemas";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -20,15 +18,12 @@ export async function POST(request: NextRequest) {
   try {
     raw = await request.json();
   } catch {
-    raw = {};
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   const parsed = fallbackSyncPostSchema.safeParse(raw);
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid request body", details: parsed.error.flatten() },
-      { status: 400 },
-    );
+    return zodErrorResponse(parsed.error);
   }
 
   try {

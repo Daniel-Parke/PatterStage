@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Brain,
   Plus,
@@ -47,10 +47,16 @@ function PersonalityCard({
   const [textExpanded, setTextExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleCopy = () => {
+    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
     navigator.clipboard.writeText(personality.prompt);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    copiedTimerRef.current = setTimeout(() => {
+      copiedTimerRef.current = null;
+      setCopied(false);
+    }, 2000);
   };
 
   const preview =
@@ -154,6 +160,7 @@ function EditPersonalityModal({
         method: isEdit ? "PUT" : "POST",
         body: JSON.stringify({ profile: name.trim(), prompt: prompt.trim() }),
       });
+      setSaving(false);
       onSaved();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -201,7 +208,6 @@ function EditPersonalityModal({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. pirate, teacher, creative"
-            disabled={false}
             className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-neon-purple/50 transition-colors font-mono"
           />
           <p className="text-xs text-white/30 font-mono">

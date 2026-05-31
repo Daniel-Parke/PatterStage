@@ -49,10 +49,5 @@ export const STATUS_CONFIG: Record<string, StatusConfig> = {
   },
 };
 
-export const CATEGORY_ACTIVE_CLASSES: Record<string, string> = {
-  cyan: "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40",
-  purple: "bg-neon-purple/20 text-neon-purple border border-neon-purple/40",
-  pink: "bg-neon-pink/20 text-neon-pink border border-neon-pink/40",
-  green: "bg-neon-green/20 text-neon-green border border-neon-green/40",
-  orange: "bg-neon-orange/20 text-neon-orange border border-neon-orange/40",
-};
+/** Fallback active class for unknown category colors */
+export const FALLBACK_CATEGORY_ACTIVE = "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40";

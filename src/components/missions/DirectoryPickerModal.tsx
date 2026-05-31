@@ -5,17 +5,12 @@ import { ChevronUp, Folder, FolderOpen } from "lucide-react";
 
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
+import { safeApiCall } from "@/lib/api-fetch";
 
 interface Entry {
   name: string;
   isDir: boolean;
   isFile: boolean;
-}
-
-interface ListData {
-  path: string;
-  parent: string | null;
-  entries: Entry[];
 }
 
 interface DirectoryPickerModalProps {
@@ -39,10 +34,9 @@ export default function DirectoryPickerModal({
     setLoading(true);
     setError(null);
     const q = next && next.length > 0 ? "?path=" + encodeURIComponent(next) : "";
-    fetch("/api/fs/list" + q)
-      .then(async (r) => {
-        const j = (await r.json()) as { data?: ListData; error?: string };
-        if (!r.ok) {
+    safeApiCall<{ path: string; parent: string | null; entries: Entry[] }>("/api/fs/list" + q)
+      .then((j) => {
+        if (!j.ok) {
           setError(typeof j.error === "string" ? j.error : "Failed to list");
           return;
         }

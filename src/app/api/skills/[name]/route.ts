@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
 import { getSkill, upsertSkill, parseSkillFrontmatter } from "@/lib/skills-repository";
@@ -14,6 +14,8 @@ export async function GET(
   { params }: { params: Promise<{ name: string }> },
 ) {
   const { name } = await params;
+  const auth = requireAuth(request);
+  if (auth) return auth;
 
   try {
     ensureDb();
@@ -61,6 +63,12 @@ export async function PUT(
 ) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  if (isChReadOnly()) {
+    return NextResponse.json(
+      { error: "Control Hub is in read-only mode — skill writes are disabled" },
+      { status: 503 }
+    );
+  }
 
   const { name } = await params;
 

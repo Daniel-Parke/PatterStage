@@ -70,12 +70,11 @@ export default function HindsightBrowser() {
   // ── Health ───────────────────────────────────────────────
 
   const fetchHealthOnly = useCallback(async () => {
-    try {
-      const res = await fetch("/api/memory/hindsight?action=health");
-      const data = await res.json();
-      setHealth(data.data || { available: false, mode: "unknown", message: "No response" });
-    } catch {
-      setHealth({ available: false, mode: "error" });
+    const { data, error } = await safeApiCall<{ data?: HealthState }>("/api/memory/hindsight?action=health");
+    if (data?.data) {
+      setHealth(data.data);
+    } else {
+      setHealth({ available: false, mode: "unknown", message: error || "No response" });
     }
   }, []);
 
@@ -83,21 +82,17 @@ export default function HindsightBrowser() {
 
   const loadRecentMemories = useCallback(async () => {
     setLoadingInitial(true);
-    try {
-      const res = await fetch("/api/memory/hindsight?action=list&limit=50");
-      const body = await res.json();
-      const payload = body.data;
+    const { data, error } = await safeApiCall<{ data?: { memories?: Memory[]; mode?: string; error?: string } }>("/api/memory/hindsight?action=list&limit=50");
+    if (error || data?.data?.error) {
+      void fetchHealthOnly();
+    } else {
+      const payload = data?.data;
       setMemories(payload?.memories || []);
       if (payload && !payload.error) {
         setHealth({ available: true, mode: typeof payload.mode === "string" ? payload.mode : "ok" });
-      } else {
-        await fetchHealthOnly();
       }
-    } catch {
-      void fetchHealthOnly();
-    } finally {
-      setLoadingInitial(false);
     }
+    setLoadingInitial(false);
   }, [fetchHealthOnly]);
 
   useEffect(() => {
@@ -112,9 +107,13 @@ export default function HindsightBrowser() {
     }
     setLoading(true);
     try {
-      const res = await fetch(`/api/memory/hindsight?action=recall&query=${encodeURIComponent(q)}`);
-      const body = await res.json();
-      const payload = body.data as { memories?: Memory[]; available?: boolean; error?: string; mode?: string; message?: string } | undefined;
+      const { data, error } = await safeApiCall<{ data?: { memories?: Memory[]; available?: boolean; mode?: string; message?: string; error?: string } }>(`/api/memory/hindsight?action=recall&query=${encodeURIComponent(q)}`);
+      if (error) {
+        showToast(error, "error");
+        await fetchHealthOnly();
+        return;
+      }
+      const payload = data?.data;
       setMemories(payload?.memories || []);
       const backendSaysDown = payload?.available === false || (typeof payload?.error === "string" && payload.error.length > 0);
       if (!backendSaysDown) {
@@ -122,15 +121,10 @@ export default function HindsightBrowser() {
       } else {
         await fetchHealthOnly();
       }
-    } catch {
-      showToast("Recall failed", "error");
-      await fetchHealthOnly();
     } finally {
       setLoading(false);
     }
   }, [search, showToast, fetchHealthOnly]);
-
-  const handleSearch = () => void runRecall();
 
   const handleRefreshMemories = () => {
     if (search.trim()) {
@@ -144,14 +138,12 @@ export default function HindsightBrowser() {
     if (!search.trim()) return;
     setReflecting(true);
     setReflectResult(null);
-    try {
-      const res = await fetch(`/api/memory/hindsight?action=reflect&query=${encodeURIComponent(search)}`);
-      const data = await res.json();
-      setReflectResult(data.data?.response || "No reflection generated");
-    } catch {
-      showToast("Reflection failed", "error");
-    } finally {
-      setReflecting(false);
+    const { data, error } = await safeApiCall<{ data?: { response?: string } }>(`/api/memory/hindsight?action=reflect&query=${encodeURIComponent(search)}`);
+    setReflecting(false);
+    if (error) {
+      showToast(error, "error");
+    } else {
+      setReflectResult(data?.data?.response || "No reflection generated");
     }
   };
 
@@ -184,22 +176,14 @@ export default function HindsightBrowser() {
 
   const loadDirectives = useCallback(async () => {
     setLoadingDirectives(true);
-    try {
-      const res = await fetch("/api/memory/hindsight?action=directives");
-      const body = (await res.json()) as { data?: { directives?: Directive[]; error?: string }; error?: string };
-      if (!res.ok) {
-        const msg = (typeof body.error === "string" && body.error) || (typeof body.data?.error === "string" && body.data.error) || `Failed to load directives (${res.status})`;
-        showToast(msg, "error");
-        setDirectives([]);
-        return;
-      }
-      setDirectives(body.data?.directives || []);
-    } catch {
-      showToast("Failed to load directives", "error");
+    const { data, error } = await safeApiCall<{ data?: { directives?: Directive[]; error?: string } }>("/api/memory/hindsight?action=directives");
+    setLoadingDirectives(false);
+    if (error || data?.data?.error) {
+      showToast(error || data?.data?.error || "Failed to load directives", "error");
       setDirectives([]);
-    } finally {
-      setLoadingDirectives(false);
+      return;
     }
+    setDirectives(data?.data?.directives || []);
   }, [showToast]);
 
   useEffect(() => {
@@ -288,22 +272,14 @@ export default function HindsightBrowser() {
 
   const loadModels = useCallback(async () => {
     setLoadingModels(true);
-    try {
-      const res = await fetch("/api/memory/hindsight?action=mental-models");
-      const body = (await res.json()) as { data?: { models?: MentalModel[]; error?: string }; error?: string };
-      if (!res.ok) {
-        const msg = (typeof body.error === "string" && body.error) || (typeof body.data?.error === "string" && body.data.error) || `Failed to load mental models (${res.status})`;
-        showToast(msg, "error");
-        setMentalModels([]);
-        return;
-      }
-      setMentalModels(body.data?.models || []);
-    } catch {
-      showToast("Failed to load mental models", "error");
+    const { data, error } = await safeApiCall<{ data?: { models?: MentalModel[]; error?: string } }>("/api/memory/hindsight?action=mental-models");
+    setLoadingModels(false);
+    if (error || data?.data?.error) {
+      showToast(error || data?.data?.error || "Failed to load mental models", "error");
       setMentalModels([]);
-    } finally {
-      setLoadingModels(false);
+      return;
     }
+    setMentalModels(data?.data?.models || []);
   }, [showToast]);
 
   useEffect(() => {
@@ -417,10 +393,10 @@ export default function HindsightBrowser() {
           <SearchInput value={search} onChange={setSearch} placeholder="Search memories (semantic search)..." accentColor="pink" />
           <p className="text-xs text-white/30 pl-1">Press Enter to search</p>
         </div>
-        <Button variant="secondary" color="pink" size="sm" icon={Search} onClick={handleSearch} disabled={!search.trim() || loading}>
+        <Button variant="secondary" color="pink" size="sm" icon={Search} onClick={() => void runRecall()} disabled={!search.trim() || loading}>
           Recall
         </Button>
-        <Button variant="secondary" color="purple" size="sm" icon={Sparkles} onClick={handleReflect} disabled={reflecting || !search.trim()}>
+        <Button variant="secondary" color="purple" size="sm" icon={Sparkles} onClick={() => void handleReflect()} disabled={reflecting || !search.trim()}>
           {reflecting ? "Reflecting..." : "Reflect"}
         </Button>
         <Button variant="primary" color="pink" size="sm" icon={Plus} onClick={() => setShowAddModal(true)}>

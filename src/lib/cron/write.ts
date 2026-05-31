@@ -13,13 +13,8 @@ export function parseScheduleToJson(
 ): { scheduleJson: string; scheduleDisplay: string } {
   const parsed = parseSchedule(schedule);
   return {
-    scheduleJson:
-      typeof parsed === "object"
-        ? JSON.stringify(parsed)
-        : JSON.stringify({ kind: parsed }),
-    scheduleDisplay: typeof parsed === "object" && "display" in parsed
-      ? (parsed.display as string)
-      : schedule,
+    scheduleJson: JSON.stringify(parsed),
+    scheduleDisplay: "display" in parsed ? (parsed.display as string) : schedule,
   };
 }
 

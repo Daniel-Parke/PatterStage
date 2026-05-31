@@ -21,10 +21,6 @@ export const CATEGORY_COLOR_CLASSES: Record<string, string> = {
   red: "bg-red-500/20 text-red-400 border-red-500/40",
 };
 
-export function categoryAccentColor(color: string): string {
-  return CATEGORY_COLOR_CLASSES[color] ? color : "cyan";
-}
-
 export function buildCategoryMap(
   categories: CategoryLike[] | MissionCategory[],
 ): Map<string, CategoryLike> {

@@ -83,10 +83,24 @@ const WRITABLE_SECTIONS = new Set(
 // Mask sensitive values in config before returning to client
 function maskConfigSecrets(config: Record<string, unknown>): Record<string, unknown> {
   const clone = structuredClone(config);
-  // Mask api_key in model section
-  if (clone.model && typeof clone.model === "object" && (clone.model as Record<string, unknown>).api_key) {
-    const key = String((clone.model as Record<string, unknown>).api_key);
-    (clone.model as Record<string, unknown>).api_key = key.length > 8 ? key.slice(0, 4) + "••••" + key.slice(-4) : "••••";
+  // Mask model.api_key
+  if (clone.model && typeof clone.model === "object") {
+    const m = clone.model as Record<string, unknown>;
+    if (typeof m.api_key === "string" && m.api_key.length > 0) {
+      const key = m.api_key;
+      m.api_key = key.length > 8 ? key.slice(0, 4) + "••••" + key.slice(-4) : "••••";
+    }
+  }
+  // Mask auxiliary.<task>.api_key
+  if (clone.auxiliary && typeof clone.auxiliary === "object") {
+    const aux = clone.auxiliary as Record<string, Record<string, unknown>>;
+    for (const task of Object.keys(aux)) {
+      const entry = aux[task];
+      if (typeof entry?.api_key === "string" && entry.api_key.length > 0) {
+        const key = entry.api_key;
+        entry.api_key = key.length > 8 ? key.slice(0, 4) + "••••" + key.slice(-4) : "••••";
+      }
+    }
   }
   return clone;
 }

@@ -21,8 +21,6 @@ export default function ProfileSyncBar({
   onPullOne,
   busy,
 }: ProfileSyncBarProps) {
-  const canActOnOne = selectedSlug != null;
-
   return (
     <div className="flex flex-wrap items-center gap-2 mb-4">
       <button
@@ -64,7 +62,7 @@ export default function ProfileSyncBar({
           Import discovered
         </button>
       ) : null}
-      {canActOnOne ? (
+      {selectedSlug != null ? (
         <>
           <span className="text-white/20">|</span>
           <button

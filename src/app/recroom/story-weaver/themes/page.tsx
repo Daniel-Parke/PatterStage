@@ -88,7 +88,7 @@ export default function PromptsPage() {
   };
 
   const loadTheme = (theme: StoryTheme) => {
-    router.push(`/recroom/story-weaver/create?themeId=${theme.id}`);
+    router.push(`/recroom/story-weaver/create?theme=${theme.id}`);
   };
 
   const toggleTag = (field: "genre" | "mood", tag: string) => {

@@ -29,7 +29,7 @@ export function useSystemCronJobs() {
     { transform: (raw) => raw as SystemCronData },
   );
 
-  const jobs = useMemo(() => data?.jobs ?? [], [data?.jobs]);
+  const jobs = useMemo(() => data?.jobs ?? [], [data]);
 
   const handleToggle = useCallback(
     async (id: string) => {
@@ -94,7 +94,7 @@ export function useSystemCronJobs() {
     [showToast, loadJobs],
   );
 
-  const handlePauseAll = useCallback(async () => {
+  const handlePauseAll = useCallback(async (): Promise<void> => {
     const { ok, error, data: resData } = await safeApiCall<{ pausedCount?: number }>(
       HARDWARE_ENDPOINT,
       {
@@ -106,8 +106,9 @@ export function useSystemCronJobs() {
       showToast(error || "Failed to pause system cron jobs", "error");
     } else {
       showToast(`Paused ${resData?.pausedCount ?? 0} system cron job(s)`);
-      loadJobs();
     }
+    // Always refetch so the UI reflects the latest state regardless of outcome.
+    loadJobs();
   }, [showToast, loadJobs]);
 
   return {

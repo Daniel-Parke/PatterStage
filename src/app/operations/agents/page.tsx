@@ -281,10 +281,10 @@ export default function BehaviourPage() {
         <ProfileSyncBar
           selectedSlug={selectedProfileId}
           onPushAll={handlePushAll}
-          onPullAll={() => void handlePullAll()}
-          onImportDiscovered={() => void handleImportDiscovered()}
+          onPullAll={handlePullAll}
+          onImportDiscovered={handleImportDiscovered}
           onPushOne={handlePushOne}
-          onPullOne={(slug) => void handlePullOne(slug)}
+          onPullOne={handlePullOne}
           busy={syncBusy}
         />
 

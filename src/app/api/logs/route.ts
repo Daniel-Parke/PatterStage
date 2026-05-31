@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
         { status: 400 },
       );
     }
-    const logPath = resolve(logsDir, safeName + ".log");
+    const logPath = resolve(logsDir, `${safeName}.log`);
 
     if (!logFileUnderLogsDir(resolvedLogsDir, logPath)) {
       return NextResponse.json<ApiResponse<never>>(
@@ -159,7 +159,7 @@ export async function DELETE(request: NextRequest) {
           { status: 400 },
         );
       }
-      const logPath = resolve(logsDir, safe + ".log");
+      const logPath = resolve(logsDir, `${safe}.log`);
       if (!logFileUnderLogsDir(resolvedLogsDir, logPath)) {
         return NextResponse.json<ApiResponse<never>>(
           { error: "Invalid log path" },
@@ -177,7 +177,7 @@ export async function DELETE(request: NextRequest) {
     const files = listLogFilesInDir(logsDir);
     let cleared = 0;
     for (const file of files) {
-      const filePath = resolve(logsDir, file.name + ".log");
+      const filePath = resolve(logsDir, `${file.name}.log`);
       if (logFileUnderLogsDir(resolvedLogsDir, filePath)) {
         writeFileSync(filePath, "");
         cleared++;

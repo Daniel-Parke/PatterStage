@@ -15,7 +15,9 @@ import type { MemoryReadResult } from "@/lib/memory-providers";
 // ── GET — Memory status ──────────────────────────────────────
 // Hindsight: dormant status (facts managed via agent tools)
 // None: tell the user to run `hermes memory setup`
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
   const providerType = getMemoryProviderType();
 
   if (providerType === "none") {
@@ -39,18 +41,29 @@ export async function GET() {
   });
 }
 
-// POST, PUT, DELETE — not supported via the dashboard for current providers
-async function handleWrite(
-  request: NextRequest,
-): Promise<NextResponse> {
+export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
   return NextResponse.json(
     { error: "Memory management via the dashboard is not supported for the current provider. Use agent tools instead." },
-    { status: 400 },
+    { status: 400 }
   );
 }
 
-export const POST = handleWrite;
-export const PUT = handleWrite;
-export const DELETE = handleWrite;
+export async function PUT(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+  return NextResponse.json(
+    { error: "Memory management via the dashboard is not supported for the current provider. Use agent tools instead." },
+    { status: 400 }
+  );
+}
+
+export async function DELETE(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+  return NextResponse.json(
+    { error: "Memory management via the dashboard is not supported for the current provider. Use agent tools instead." },
+    { status: 400 }
+  );
+}

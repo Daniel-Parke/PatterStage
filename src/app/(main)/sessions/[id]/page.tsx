@@ -13,6 +13,7 @@ import {
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { safeApiCall } from "@/lib/api-fetch";
 import { ROLE_META } from "@/components/session/constants";
 import { MessageBubble, type SessionMessage, type SessionData } from "@/components/session/MessageBubble";
 
@@ -34,14 +35,14 @@ export default function SessionDetailPage() {
     void (async () => {
       const url = "/api/sessions/" + encodeURIComponent(sessionId);
       try {
-        const res = await fetch(url, { signal: controller.signal });
-        if (!res.ok) {
-          const errBody = (await res.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(errBody?.error || "Failed to load session");
+        const { data, error: fetchError } = await safeApiCall<{ data: SessionData }>(url, { method: "GET" });
+        if (controller.signal.aborted) return;
+        if (fetchError) {
+          throw new Error(fetchError || "Failed to load session");
         }
-        const json = await res.json() as { data?: SessionData };
-        if (json.data) {
-          setData(json.data);
+        const { data: sessionData } = data ?? {};
+        if (sessionData) {
+          setData(sessionData as SessionData);
         } else {
           throw new Error("Invalid session data format");
         }

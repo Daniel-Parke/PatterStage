@@ -31,5 +31,5 @@ export interface ApiCredential {
 
 export interface SyncDrift {
   hasDrift: boolean;
-  driftDetails?: string[];
+  driftDetails: string[];
 }

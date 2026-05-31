@@ -111,7 +111,7 @@ export function addFallbackEntry(input: CreateFallbackInput): FallbackEntryRecor
     .get() as { mx: number };
   const position = input.position ?? maxPos.mx + 1;
   // Default to enabled (1) unless explicitly set to false
-  const enabled = input.enabled === false ? 0 : 1;
+  const enabled = input.enabled !== false ? 1 : 0;
 
   db().prepare(
     `INSERT INTO model_fallbacks (id, model_id, position, enabled, override_base_url, created_at, updated_at)
@@ -215,17 +215,6 @@ export function getFallbackConfig(): {
   };
 }
 
-export function updateFallbackConfig(key: string, value: string | boolean | number): {
-  restorePrimaryOnFallback: boolean;
-  fallbackNotification: boolean;
-  apiMaxRetries: number;
-} {
-  db()
-    .prepare("INSERT OR REPLACE INTO fallback_config (key, value) VALUES (?, ?)")
-    .run(key, String(value));
-  return getFallbackConfig();
-}
-
 /** Bulk update of fallback behaviour config. Returns updated config. */
 export function updateFallbackConfigBatch(updates: {
   restorePrimaryOnFallback?: boolean;
@@ -237,13 +226,19 @@ export function updateFallbackConfigBatch(updates: {
   apiMaxRetries: number;
 } {
   if (updates.restorePrimaryOnFallback !== undefined) {
-    updateFallbackConfig("restore_primary_on_fallback", updates.restorePrimaryOnFallback);
+    db()
+      .prepare("INSERT OR REPLACE INTO fallback_config (key, value) VALUES (?, ?)")
+      .run("restore_primary_on_fallback", String(updates.restorePrimaryOnFallback));
   }
   if (updates.fallbackNotification !== undefined) {
-    updateFallbackConfig("fallback_notification", updates.fallbackNotification);
+    db()
+      .prepare("INSERT OR REPLACE INTO fallback_config (key, value) VALUES (?, ?)")
+      .run("fallback_notification", String(updates.fallbackNotification));
   }
   if (updates.apiMaxRetries !== undefined) {
-    updateFallbackConfig("api_max_retries", updates.apiMaxRetries);
+    db()
+      .prepare("INSERT OR REPLACE INTO fallback_config (key, value) VALUES (?, ?)")
+      .run("api_max_retries", String(updates.apiMaxRetries));
   }
   return getFallbackConfig();
 }

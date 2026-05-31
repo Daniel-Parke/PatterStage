@@ -19,7 +19,6 @@ import { safeApiCall } from "@/lib/api-fetch";
 import { inputFieldClasses } from "@/lib/theme";
 import { parseSchedule } from "@/lib/utils";
 import CronScheduleInput from "@/components/cron/CronScheduleInput";
-
 export interface CronJobFormData {
   id?: string;
   name: string;
@@ -89,37 +88,43 @@ export default function JobFormModal({
   useEffect(() => {
     if (!open) return;
     setProfilesLoading(true);
+    setError(null);
     let cancelled = false;
-    void fetch("/api/agent/profiles")
-      .then((r) => r.json())
-      .then((d: { data?: { profiles?: AgentProfileOption[] } }) => {
-        if (cancelled) return;
-        const raw = d.data?.profiles ?? [];
-        if (raw.length > 0) {
-          setProfiles(
-            raw.map((p) => ({
-              id: p.id,
-              name: p.name,
-            })),
-          );
-        }
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!cancelled) setProfilesLoading(false);
-      });
+    void safeApiCall<{ profiles?: AgentProfileOption[] }>("/api/agent/profiles", {
+      method: "GET",
+    }).then((result) => {
+      if (cancelled) return;
+      if (!result.ok) {
+        setProfilesLoading(false);
+        return;
+      }
+      const raw = result.data?.profiles ?? [];
+      if (raw.length > 0) {
+        setProfiles(
+          raw.map((p) => ({
+            id: p.id,
+            name: p.name,
+          })),
+        );
+      }
+      if (!cancelled) setProfilesLoading(false);
+    });
     return () => {
       cancelled = true;
     };
   }, [open]);
 
   // Derive the actual cron expression from the current schedule value (edit mode only).
+  // For raw 5-field cron expressions, show as-is.
+  // For interval shorthand (e.g. "every 5m"), call parseSchedule to normalise to
+  // the canonical display form ("every 5m" → stays "every 5m").
   const cronExpr = isEdit
     ? (() => {
         const trimmed = schedule.trim();
         if (trimmed.split(/\s+/).length === 5) return trimmed;
-        const p = parseSchedule(schedule);
-        return p.kind !== "invalid" ? p.kind : schedule;
+        const p = parseSchedule(trimmed);
+        if (p.kind === "invalid") return trimmed;
+        return (p as { display?: string }).display ?? trimmed;
       })()
     : "";
 

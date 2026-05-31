@@ -7,7 +7,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   FileText, ToggleRight, ToggleLeft, X, ChevronDown, ChevronRight,
-  Edit3, Save, RotateCcw,
+  Edit3, Save, RotateCcw, type LucideIcon,
 } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
@@ -20,33 +20,11 @@ import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
 import { apiFetch } from "@/lib/api-fetch";
-
-interface Skill {
-  name: string;
-  category: string;
-  path: string;
-  description: string;
-  enabled: boolean;
-  size: number;
-  lastModified: string;
-}
-
-interface SkillsData {
-  skills: Skill[];
-  categories: Record<string, Skill[]>;
-  total: number;
-  categoryCount: number;
-  profile: string;
-}
+import type { Skill, SkillsData } from "@/types/hermes";
 
 // ── Pure helpers (hoisted outside component) ──────────────────────────────
 
-function effectiveSkillEnabled(
-  skill: Skill,
-  toggling: Record<string, boolean>,
-): boolean {
-  return skill.name in toggling ? toggling[skill.name] : skill.enabled;
-}
+// effectiveSkillEnabled inlined at call sites for clarity: toggling[skill.name] ?? skill.enabled
 
 function filterBySearch(skills: Skill[], search: string) {
   return skills.filter(
@@ -149,8 +127,8 @@ export default function SkillsPage() {
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
   // Derive active/inactive from the skills + pending toggles
-  const activeSkills = (data?.skills || []).filter((s) => effectiveSkillEnabled(s, toggling));
-  const inactiveSkills = (data?.skills || []).filter((s) => !effectiveSkillEnabled(s, toggling));
+  const activeSkills = (data?.skills || []).filter((s) => toggling[s.name] ?? s.enabled);
+  const inactiveSkills = (data?.skills || []).filter((s) => !(toggling[s.name] ?? s.enabled));
 
   // ── Toggle — fires API immediately, optimistic update, reverts on failure ───
 
@@ -344,7 +322,7 @@ export default function SkillsPage() {
                   expandedSkill={expandedSkill}
                   skillContent={skillContent}
                   toggling={toggling}
-                  onToggleSkill={(skill) => toggleSkill(skill.name, true)}
+                  onToggleSkill={(skill) => toggleSkill(skill.name, toggling[skill.name] ?? skill.enabled)}
                   onViewSkill={viewSkill}
                   onEditSkill={openSkillEditor}
                 />
@@ -389,7 +367,7 @@ export default function SkillsPage() {
                   expandedSkill={expandedSkill}
                   skillContent={skillContent}
                   toggling={toggling}
-                  onToggleSkill={(skill) => toggleSkill(skill.name, false)}
+                  onToggleSkill={(skill) => toggleSkill(skill.name, toggling[skill.name] ?? !skill.enabled)}
                   onViewSkill={viewSkill}
                   onEditSkill={openSkillEditor}
                 />
@@ -550,7 +528,7 @@ function SkillCategoryGrid({
 
 interface SkillSectionProps {
   title: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   iconColor: string;
   count: number;
   ofTotal: number;

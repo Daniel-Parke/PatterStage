@@ -34,7 +34,7 @@ export function useModelsPage() {
   const [fallbackConfig, setFallbackConfig] = useState<FallbackConfig>({
     restorePrimaryOnFallback: true,
     fallbackNotification: false,
-    apiMaxRetries: 2,
+    apiMaxRetries: 3,
   });
   const [syncingFallback, setSyncingFallback] = useState(false);
   const [fallbackConfigSaving, setFallbackConfigSaving] = useState(false);
@@ -56,8 +56,8 @@ export function useModelsPage() {
     try {
       // First, sync models from ~/.hermes/config.yaml — ensures we show
       // live data even if the user changed defaults externally via hermes CLI
-      await apiFetch("/api/models/import", { method: "POST" }).catch(() => {
-        console.warn("Model auto-import failed — showing cached data");
+      await apiFetch("/api/models/import", { method: "POST" }).catch((err) => {
+        console.warn("Model auto-import failed — showing cached data:", err instanceof Error ? err.message : err);
       });
 
       const [mData, cData, dData, driftData, fbData, fbCfgData] = await Promise.all([
@@ -157,7 +157,7 @@ export function useModelsPage() {
 
   const handlePush = useCallback(
     (modelId: string, options?: { pushCredential?: boolean }): Promise<SyncActionResult> =>
-      syncModel("push", modelId, { pushCredential: options?.pushCredential !== false }),
+      syncModel("push", modelId, { pushCredential: options?.pushCredential ?? true }),
     [syncModel],
   );
 
@@ -506,7 +506,7 @@ export function useModelsPage() {
         return;
       }
 
-      const { ok, data: res, error } = await safeApiCall<{
+      const res = await apiFetch<{
         data: {
           success: boolean;
           config: FallbackConfig;
@@ -514,12 +514,12 @@ export function useModelsPage() {
         };
       }>("/api/models/fallbacks/sync", {
         method: "POST",
-        body: { config: fallbackConfig },
+        body: JSON.stringify({ config: fallbackConfig }),
       });
 
-      const payload = res?.data;
-      if (!ok || !payload?.success) {
-        showToast(error ?? "Sync failed", "error");
+      const payload = res.data;
+      if (!payload?.success) {
+        showToast("Sync failed", "error");
         return;
       }
 
@@ -545,12 +545,7 @@ export function useModelsPage() {
     } finally {
       setSyncingFallback(false);
     }
-  }, [
-    fallbackConfig,
-    fallbackConfigError,
-    flushFallbackConfigSave,
-    showToast,
-  ]);
+  }, [fallbackConfig, fallbackConfigError, flushFallbackConfigSave, showToast]);
 
   return {
     models,

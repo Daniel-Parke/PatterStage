@@ -104,6 +104,7 @@ export function setupRouteMocks() {
     requireChApiKey: jest.fn(() => null),
     requireNotReadOnly: jest.fn(() => null),
     requireSignedRequest: jest.fn(() => null),
+    isChReadOnly: jest.fn(() => false),
   }));
 
   jest.mock("@/lib/audit-log", () => ({

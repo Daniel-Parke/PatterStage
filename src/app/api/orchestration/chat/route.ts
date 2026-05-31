@@ -63,13 +63,17 @@ export async function POST(request: NextRequest) {
   if (auth) return auth;
 
   try {
-    const body = await request.json();
+    let body: { messages?: unknown; model?: string; stream?: boolean };
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const { messages, model, stream } = body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: "messages array is required" }, { status: 400 });
     }
-
     const isStreaming = stream !== false; // default to streaming
     const { apiUrl } = getAgentLlmEndpoints();
 
@@ -80,7 +84,7 @@ export async function POST(request: NextRequest) {
       max_tokens: 4096,
     };
 
-    return await fetchGateway(apiUrl, gatewayBody, isStreaming);
+    return fetchGateway(apiUrl, gatewayBody, isStreaming);
   } catch (error) {
     return handleError(error, "POST /api/orchestration/chat");
   }

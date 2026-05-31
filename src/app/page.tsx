@@ -18,7 +18,6 @@ import {
   AlertTriangle,
   RefreshCw,
   CheckCircle2,
-
   Radio,
   Rocket,
   ChevronRight,
@@ -44,18 +43,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
 import { safeApiCall } from "@/lib/api-fetch";
-
-const MONITOR_FETCH_INIT: RequestInit = { cache: "no-store" };
-
-// ── Safe JSON fetcher for parallel initial loads ─────────────────
-async function safeFetchJSON<T extends { data: unknown } = { data: unknown }>(url: string, init?: RequestInit): Promise<T | null> {
-  try {
-    const res = await fetch(url, init);
-    return await res.json() as T;
-  } catch {
-    return null;
-  }
-}
+import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
 
 // ── Typed response shapes for each API endpoint ─────────────
 interface TemplatesResponseData { templates: Array<{ id: string; name: string; icon: string; color: string; category: string; categoryId?: string; profile: string; description: string; isCustom?: boolean }>; }
@@ -63,18 +51,6 @@ interface CategoriesResponseData { categories: MissionCategory[]; }
 interface AgentsResponseData { processes: HermesProcess[]; }
 interface MissionsResponseData { missions: MissionBrief[]; }
 interface DefaultsResponseData { defaults: { agent?: string } | null; }
-
-// ── Polling configuration type (module-level, not inline in useEffect) ──
-interface PollConfig {
-  url: string;
-  ms: number;
-  extract: (d: { data?: unknown }) => Partial<{
-    monitor: MonitorData | null;
-    processes: HermesProcess[];
-    missions: MissionBrief[];
-  }> | null;
-  init?: RequestInit;
-}
 
 // ── Live Clock (isolated re-render) ───────────────────────────
 
@@ -95,11 +71,6 @@ const LiveClock = reactMemo(function LiveClock() {
     </>
   );
 });
-
-// ── Template Category Constants (module-level — don't re-create on every render) ──
-
-const DEFAULT_PLATFORMS = ["discord", "telegram", "slack", "whatsapp"] as const;
-
 
 export default function Dashboard() {
   const [data, setDataFields] = useState<{
@@ -145,11 +116,8 @@ export default function Dashboard() {
   const router = useRouter();
 
   const refreshMonitor = useCallback(async () => {
-    const res = await fetch("/api/monitor", MONITOR_FETCH_INIT).catch(() => null);
-    if (res?.ok) {
-      const d = await res.json().catch(() => null);
-      if (d?.data) setData({ monitor: d.data });
-    }
+    const { data } = await safeApiCall<{ data?: MonitorData }>("/api/monitor", { cache: "no-store" } as RequestInit);
+    if (data?.data) setData({ monitor: data.data });
   }, [setData]);
 
   const handleSyncNow = useCallback(async () => {
@@ -187,14 +155,16 @@ export default function Dashboard() {
   }, []);
 
   const handleCancelMission = useCallback(async (missionId: string, missionName: string) => {
-    // First click: show confirmation state
+    // First click: show confirmation state and arm the auto-dismiss timer
     if (cancelConfirmId !== missionId) {
-      setCancelConfirmId(missionId);
       if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
-      cancelTimerRef.current = setTimeout(() => setCancelConfirmId((prev) => prev === missionId ? null : prev), 4000);
+      setCancelConfirmId(missionId);
+      cancelTimerRef.current = setTimeout(() => setCancelConfirmId(null), 4000);
       return;
     }
+    // Second click: confirmed — clear timer and cancel
     if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
+    cancelTimerRef.current = null;
     setCancelConfirmId(null);
     try {
       const { ok, error } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions", {
@@ -216,27 +186,22 @@ export default function Dashboard() {
 
   // Update cron job schedule inline
   const handleCronScheduleChange = useCallback(async (jobId: string, newSchedule: string) => {
+    if (!data.monitor?.cron?.jobs) {
+      showToast("Schedule update unavailable: no monitor data", "error");
+      return;
+    }
+
     const parsed = parseSchedule(newSchedule);
     const scheduleDisplay =
       parsed.kind !== "invalid"
         ? parsed.display
         : newSchedule;
 
-    try {
-      const { ok, error } = await safeApiCall("/api/cron", {
-        method: "PUT",
-        body: { id: jobId, schedule: newSchedule },
-      });
-      if (!ok) {
-        showToast(error || "Failed to update cron schedule", "error");
-        return;
-      }
-      // Optimistic local update (will be reconciled by refreshMonitor)
-      setDataFields((prev) => {
-        if (!prev.monitor?.cron.jobs) return prev;
-        return {
-          ...prev,
-          monitor: {
+    // Optimistic local update before the API call so the UI updates immediately
+    setDataFields((prev) => ({
+      ...prev,
+      monitor: prev.monitor
+        ? {
             ...prev.monitor,
             cron: {
               ...prev.monitor.cron,
@@ -246,16 +211,37 @@ export default function Dashboard() {
                   : job,
               ),
             },
-          },
-        };
+          }
+        : prev.monitor,
+    }));
+
+    try {
+      const { ok, error } = await safeApiCall("/api/cron", {
+        method: "PUT",
+        body: { id: jobId, schedule: newSchedule },
       });
+      if (!ok) {
+        showToast(error || "Failed to update cron schedule", "error");
+        // Revoke optimistic update on failure
+        void refreshMonitor();
+        return;
+      }
       showToast("Schedule updated", "success");
     } catch {
       showToast("Failed to update cron schedule", "error");
+      // Revoke optimistic update on failure
+      void refreshMonitor();
     } finally {
-      await refreshMonitor();
+      void refreshMonitor();
     }
-  }, [showToast, setDataFields, refreshMonitor]);
+  }, [data.monitor, showToast, refreshMonitor]);
+
+  const handleRefreshProcesses = useCallback(async () => {
+    const { data: agentsData } = await safeApiCall<{ data: { processes: HermesProcess[] } }>("/api/agents");
+    if (agentsData?.data?.processes) {
+      setData({ processes: agentsData.data.processes });
+    }
+  }, [setData]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -273,26 +259,26 @@ export default function Dashboard() {
         missionsRes,
         defaultsRes,
       ] = await Promise.all([
-          safeFetchJSON<{ data: SystemStatus }>("/api/status", { signal }),
-          safeFetchJSON<{ data: Record<string, unknown> }>("/api/config", { signal }),
-          safeFetchJSON<{ data: TemplatesResponseData }>("/api/templates", { signal }),
-          safeFetchJSON<{ data: CategoriesResponseData }>("/api/mission-categories", { signal }),
-          safeFetchJSON<{ data: MonitorData }>("/api/monitor", { ...MONITOR_FETCH_INIT, signal }),
-          safeFetchJSON<{ data: AgentsResponseData }>("/api/agents", { signal }),
-          safeFetchJSON<{ data: MissionsResponseData }>("/api/missions", { signal }),
-          safeFetchJSON<{ data: DefaultsResponseData }>("/api/models/defaults", { signal }),
+          safeApiCall<{ data: SystemStatus }>("/api/status", { signal } as RequestInit),
+          safeApiCall<{ data: Record<string, unknown> }>("/api/config", { signal } as RequestInit),
+          safeApiCall<{ data: TemplatesResponseData }>("/api/templates", { signal } as RequestInit),
+          safeApiCall<{ data: CategoriesResponseData }>("/api/mission-categories", { signal } as RequestInit),
+          safeApiCall<{ data: MonitorData }>("/api/monitor", { cache: "no-store", signal } as RequestInit),
+          safeApiCall<{ data: AgentsResponseData }>("/api/agents", { signal } as RequestInit),
+          safeApiCall<{ data: MissionsResponseData }>("/api/missions", { signal } as RequestInit),
+          safeApiCall<{ data: DefaultsResponseData }>("/api/models/defaults", { signal } as RequestInit),
         ]);
 
       if (!signal.aborted) {
-        setRegistryAgentModelLabel(defaultsRes?.data?.defaults?.agent ?? null);
+        setRegistryAgentModelLabel(defaultsRes?.data?.data?.defaults?.agent ?? null);
         setData({
-          status: statusRes?.data ?? null,
-          config: configRes?.data ?? null,
-          templates: templatesRes?.data?.templates || [],
-          categories: categoriesRes?.data?.categories || [],
-          monitor: monitorRes?.data ?? null,
-          processes: processesRes?.data?.processes || [],
-          missions: missionsRes?.data?.missions || [],
+          status: statusRes?.data?.data ?? null,
+          config: configRes?.data?.data ?? null,
+          templates: templatesRes?.data?.data?.templates || [],
+          categories: categoriesRes?.data?.data?.categories || [],
+          monitor: monitorRes?.data?.data ?? null,
+          processes: processesRes?.data?.data?.processes || [],
+          missions: missionsRes?.data?.data?.missions || [],
         });
         setReady(true);
       }
@@ -300,41 +286,40 @@ export default function Dashboard() {
     initialLoad();
 
     // ── Polling: consolidated — runs each interval on schedule ──────────
-    const polls: PollConfig[] = [
+    const polls = [
       {
         url: "/api/monitor",
         ms: 10000,
-        extract: (d) => {
-          if (!d?.data) return null;
-          return { monitor: d.data as MonitorData };
+        extract: (d: { data?: { data?: MonitorData } }) => {
+          if (!d?.data?.data) return null;
+          return { monitor: d.data.data };
         },
       },
       {
         url: "/api/agents",
         ms: 15000,
-        extract: (d) => {
+        extract: (d: { data?: { processes?: HermesProcess[] } }) => {
           if (!d?.data) return null;
-          return { processes: (d.data as { processes?: HermesProcess[] }).processes ?? [] };
+          return { processes: d.data.processes ?? [] };
         },
       },
       {
         url: "/api/missions",
         ms: 15000,
-        extract: (d) => {
+        extract: (d: { data?: { missions?: MissionBrief[] } }) => {
           if (!d?.data) return null;
-          return { missions: (d.data as { missions?: MissionBrief[] }).missions ?? [] };
+          return { missions: d.data.missions ?? [] };
         },
       },
     ];
 
-    const pollIntervals = polls.map(({ url, ms, extract, init }) =>
+    const pollIntervals = polls.map(({ url, ms, extract }) =>
       setInterval(async () => {
         if (signal.aborted) return;
-        const res = await fetch(url, { ...init, signal }).catch(() => null);
-        if (!res?.ok) return;
-        const d = await res.json().catch(() => null);
-        if (!d) return;
-        const update = extract(d);
+        const { data: raw } = await safeApiCall(url, { signal } as RequestInit);
+        if (!raw) return;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- extract functions handle their own typing
+        const update = (extract as (d: any) => any)(raw);
         if (update) setData(update);
       }, ms),
     );
@@ -712,27 +697,20 @@ export default function Dashboard() {
               className="px-4 py-3 space-y-2"
               title="Token present in Hermes .env; gateway must be running for live messaging."
             >
-              {monitor
-                ? Object.entries(monitor.gateway.platforms).map(([platform, configured]) => (
-                    <div key={platform} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <StatusDot status={configured ? "online" : "idle"} pulse={configured} />
-                        <span className="text-xs text-white/70 capitalize">{platform}</span>
-                      </div>
-                      <span className={`text-[10px] font-mono ${configured ? "text-neon-green" : "text-white/25"}`}>
-                        {configured ? "Configured" : "Not configured"}
-                      </span>
+              {HERMES_PLATFORMS.map((p) => {
+                const configured = monitor?.gateway.platforms[p.id] ?? false;
+                return (
+                  <div key={p.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <StatusDot status={configured ? "online" : "idle"} pulse={configured} />
+                      <span className="text-xs text-white/70 capitalize">{p.id}</span>
                     </div>
-                  ))
-                : DEFAULT_PLATFORMS.map((p) => (
-                    <div key={p} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <StatusDot status="idle" />
-                        <span className="text-xs text-white/70 capitalize">{p}</span>
-                      </div>
-                      <span className="text-[10px] font-mono text-white/25">...</span>
-                    </div>
-                  ))}
+                    <span className={`text-[10px] font-mono ${configured ? "text-neon-green" : "text-white/25"}`}>
+                      {configured ? "Configured" : "Not configured"}
+                    </span>
+                  </div>
+                );
+              })}
               {monitor && monitor.gateway.connectedCount === 0 && (
                 <div className="text-[10px] text-white/30 text-center py-2">No platforms configured</div>
               )}
@@ -813,10 +791,7 @@ export default function Dashboard() {
             </h2>
             <RefreshCw
               className="w-3 h-3 text-white/20 hover:text-white/50 cursor-pointer"
-              onClick={async () => {
-                const { data: agentsData } = await safeApiCall<{ processes: HermesProcess[] }>("/api/agents");
-                setData({ processes: agentsData?.processes || [] });
-              }}
+              onClick={() => { void handleRefreshProcesses(); }}
             />
           </div>
           {processes.length === 0 ? (

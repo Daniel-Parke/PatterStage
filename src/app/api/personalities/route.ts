@@ -53,7 +53,10 @@ async function upsertPersonality(request: NextRequest) {
   });
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   try {
     ensureDb();
     const root = getAgentRoot();
@@ -95,10 +98,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// DELETE is not supported — personalities are profile SOUL.md identities
+// and cannot be individually deleted from Control Hub. Delete the profile instead.
 export async function DELETE() {
   return NextResponse.json(
-    { error: "Personalities are profile SOUL.md identities and cannot be deleted here" },
-    { status: 410 },
+    { error: "Individual personalities cannot be deleted — delete the profile instead" },
+    { status: 405 }
   );
 }
 
