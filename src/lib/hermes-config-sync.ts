@@ -310,9 +310,19 @@ export function syncDefaultsToHermesConfig(): { backupPath: string | null } {
   const backupPath = backupFile(configPath, paths.backups);
 
   const original = existsSync(configPath) ? readFileSync(configPath, "utf-8") : "";
-  const config: HermesConfig = original
-    ? ((yaml.load(original) as HermesConfig) ?? {})
-    : {};
+  let config: HermesConfig;
+  try {
+    config = original ? ((yaml.load(original) as HermesConfig) ?? {}) : {};
+  } catch (err) {
+    // If the YAML is malformed (e.g. duplicated keys from a prior failed write),
+    // yaml.load throws and we cannot safely write a merged config. Report the
+    // backing error so it surfaces in server logs but do NOT write a corrupted
+    // file — return the backup path so the caller can surface a meaningful error.
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[syncDefaultsToHermesConfig] yaml.load failed: ${msg} — not overwriting ${configPath}`);
+    console.error(`[syncDefaultsToHermesConfig] Backup at: ${backupPath}. Please repair the YAML and retry.`);
+    return { backupPath };
+  }
 
   const defaults = getModelDefaults();
 
