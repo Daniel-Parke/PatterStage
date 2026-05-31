@@ -57,7 +57,6 @@ export default function LogsPage() {
   );
 
   const { data, loading, error: loadError, refetch } = useApiData<LogData>(logUrl);
-  const isInitialLoad = !data && !loadError;
 
   const handleDeleteAllLogs = useCallback(async () => {
     if (!deleteConfirm) {
