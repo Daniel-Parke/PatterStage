@@ -20,7 +20,7 @@ import {
 import { timeAgo, titleCase } from "@/lib/utils";
 import type { MissionsPageViewModel, MissionRow } from "@/hooks/useMissionsPage";
 import {
-  CATEGORY_ACTIVE_CLASSES,
+  FALLBACK_CATEGORY_ACTIVE,
   STATUS_CONFIG,
 } from "./mission-page-constants";
 import {
@@ -29,6 +29,9 @@ import {
   missionBoardColumn,
 } from "@/lib/mission-board";
 import MissionEditorPanel from "./MissionEditorPanel";
+
+const STATUS_FILTERS = ["all", "draft", "queued", "dispatched", "successful", "failed"] as const;
+const BOARD_COLUMNS = ["draft", "queued", "dispatched", "successful", "failed"] as const;
 
 export interface MissionsListProps {
   vm: MissionsPageViewModel;
@@ -139,8 +142,8 @@ export default function MissionsList({ vm }: MissionsListProps) {
                   onClick={() => setCategoryFilter("all")}
                   className={`px-3 py-1 rounded-full text-xs font-mono transition-colors ${
                     categoryFilter === "all"
-                      ? "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40"
-                      : "text-white/40 border border-white/10 hover:text-white/60 hover:border-white/20"
+                      ? FALLBACK_CATEGORY_ACTIVE
+                                            : "text-white/40 border border-white/10 hover:text-white/60 hover:border-white/20"
                   }`}
                 >
                   All
@@ -154,8 +157,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
                       onClick={() => setCategoryFilter(pill.id)}
                       className={`px-3 py-1 rounded-full text-xs font-mono transition-colors ${
                         active
-                          ? CATEGORY_COLOR_CLASSES[pill.color] ??
-                            CATEGORY_ACTIVE_CLASSES.cyan
+                          ? (CATEGORY_COLOR_CLASSES[pill.color] ?? FALLBACK_CATEGORY_ACTIVE)
                           : "text-white/40 border border-white/10 hover:text-white/60 hover:border-white/20"
                       }`}
                     >
@@ -209,8 +211,8 @@ export default function MissionsList({ vm }: MissionsListProps) {
               onClick={() => setMissionCategoryFilter("all")}
               className={`px-3 py-1 rounded-full text-xs font-mono transition-colors ${
                 missionCategoryFilter === "all"
-                  ? "bg-neon-purple/20 text-neon-purple border border-neon-purple/40"
-                  : "text-white/40 border border-white/10 hover:text-white/60 hover:border-white/20"
+                  ? FALLBACK_CATEGORY_ACTIVE
+                                        : "text-white/40 border border-white/10 hover:text-white/60 hover:border-white/20"
               }`}
             >
               All missions
@@ -224,8 +226,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
                   onClick={() => setMissionCategoryFilter(pill.id)}
                   className={`px-3 py-1 rounded-full text-xs font-mono transition-colors ${
                     active
-                      ? CATEGORY_COLOR_CLASSES[pill.color] ??
-                        CATEGORY_ACTIVE_CLASSES.cyan
+                      ? (CATEGORY_COLOR_CLASSES[pill.color] ?? FALLBACK_CATEGORY_ACTIVE)
                       : "text-white/40 border border-white/10 hover:text-white/60 hover:border-white/20"
                   }`}
                 >
@@ -237,7 +238,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
         )}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1 bg-dark-900/50 rounded-lg border border-white/10 p-1">
-            {(["all", "draft", "queued", "dispatched", "successful", "failed"] as const).map(
+            {STATUS_FILTERS.map(
               (f) => (
                 <button
                   type="button"
@@ -286,7 +287,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
         </div>
       ) : (
         <div className="flex flex-col lg:flex-row gap-4 overflow-x-auto pb-2">
-          {(["draft", "queued", "dispatched", "successful", "failed"] as const).map(
+          {BOARD_COLUMNS.map(
             (status) => {
               const columnMissions = filtered.filter(
                 (m) => missionBoardColumn(m) === status,
@@ -308,7 +309,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
                   <div className="flex items-center justify-between mb-3 px-1">
                     <div className="flex items-center gap-2">
                       <div
-                        className={`w-2 h-2 rounded-full ${STATUS_CONFIG[status]?.columnDot || "bg-white/20"}`}
+                        className={`w-2 h-2 rounded-full ${sc?.columnDot || "bg-white/20"}`}
                       />
                       <span className="text-[11px] font-mono text-white/50 uppercase tracking-wider">
                         {status === "successful"
@@ -389,7 +390,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
                                           className={`text-[9px] font-mono px-1.5 py-0.5 rounded-full border ${
                                             CATEGORY_COLOR_CLASSES[
                                               catDisplay.color
-                                            ] ?? CATEGORY_ACTIVE_CLASSES.cyan
+                                            ] ?? FALLBACK_CATEGORY_ACTIVE
                                           }`}
                                         >
                                           {catDisplay.name}

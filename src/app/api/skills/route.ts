@@ -1,26 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
+import { statSync } from "fs";
 
 import { logApiError } from "@/lib/api-logger";
+import { requireAuth } from "@/lib/api-auth";
 import { ensureDb } from "@/lib/db";
 import { resolveEffectiveDisabledSkills } from "@/lib/effective-disabled-skills";
 import { getProfile } from "@/lib/profiles-repository";
-import { listSkills } from "@/lib/skills-repository";
+import { listSkills, deriveCategory } from "@/lib/skills-repository";
 import { skillsRootForProfile } from "@/lib/skills-config";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { scanDiskSkillsCatalog } from "@/lib/hermes-profile-sync";
-import { statSync } from "fs";
-
-interface Skill {
-  name: string;
-  category: string;
-  path: string;
-  description: string;
-  enabled: boolean;
-  size: number;
-  lastModified: string;
-}
+import type { Skill } from "@/types/hermes";
 
 export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   const profileParam = request.nextUrl.searchParams.get("profile") || "default";
   const refreshFromDisk = request.nextUrl.searchParams.get("refresh") === "1";
   const prof = resolveSafeProfileName(profileParam);
@@ -32,8 +27,11 @@ export async function GET(request: NextRequest) {
   try {
     ensureDb();
 
-    if (profile !== "default" && !getProfile(profile)) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    if (profile !== "default") {
+      const p = getProfile(profile);
+      if (!p) {
+        return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      }
     }
 
     const disabled = resolveEffectiveDisabledSkills(profile, { refreshFromDisk });
@@ -53,10 +51,9 @@ export async function GET(request: NextRequest) {
       catch {
         // statSync not essential — fall back to DB metadata if file unavailable
       }
-      const category = row.category || row.skillKey.split("/")[0] || "uncategorized";
       return {
         name: row.skillKey,
-        category,
+        category: deriveCategory(row),
         path,
         description: row.description,
         enabled: !disabled.has(row.skillKey),
@@ -70,10 +67,9 @@ export async function GET(request: NextRequest) {
       if (dbKeys.has(skillKey)) continue;
       try {
         const st = statSync(path);
-        const category = skillKey.split("/")[0] || "uncategorized";
         skills.push({
           name: skillKey,
-          category,
+          category: deriveCategory({ category: "", skillKey }),
           path,
           description: "",
           enabled: !disabled.has(skillKey),

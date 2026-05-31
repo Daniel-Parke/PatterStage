@@ -73,7 +73,6 @@ export default function ConfigSeedPage() {
     try {
       await apiFetch("/api/seed", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ target, mode, ...extra }),
       });
       await load();

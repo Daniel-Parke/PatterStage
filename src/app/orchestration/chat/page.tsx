@@ -90,31 +90,25 @@ export default function ChatPage() {
     }
   }, []);
 
-  // ── Persist sessions to localStorage on every change ───────
-  const isFirstRender = useRef(true);
+  // ── Persist sessions to localStorage on every change (skip empty initial state) ───
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
+    if (sessions.length === 0) return;
     saveSessions(sessions);
   }, [sessions]);
 
   // ── Restore per-session model when switching sessions ────────
   const activeSession = sessions.find((s) => s.id === activeSessionId);
-  const messages = activeSession?.messages ?? [];
-
-  // Restore per-session model when switching sessions
+  const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);
   useEffect(() => {
     if (activeSession) {
       setModel(activeSession.model || CHAT_DEFAULT_MODEL);
     }
   }, [activeSessionId, activeSession]);
 
-  // Auto-scroll on new messages
+  // Auto-scroll on new messages (only when current session's messages change)
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [sessions, activeSessionId]);
+  }, [messages]);
 
   // ── Model change ────────────────────────────────────────────
   const handleModelChange = useCallback(
@@ -156,22 +150,18 @@ export default function ChatPage() {
   );
 
   // ── Download session ───────────────────────────────────────
-  const handleDownloadJSON = useCallback(
-    (s: ChatSession, e?: React.MouseEvent) => {
+  const handleDownloadSession = useCallback(
+    (s: ChatSession, format: "json" | "csv", e?: React.MouseEvent) => {
       e?.stopPropagation();
-      const filename = `${s.title.replace(/[^a-zA-Z0-9_-]/g, "_")}_${Date.now()}.json`;
-      downloadFile(sessionToJson(s), filename, "application/json");
-      showToast("Session exported as JSON", "success");
-    },
-    [showToast],
-  );
-
-  const handleDownloadCSV = useCallback(
-    (s: ChatSession, e?: React.MouseEvent) => {
-      e?.stopPropagation();
-      const filename = `${s.title.replace(/[^a-zA-Z0-9_-]/g, "_")}_${Date.now()}.csv`;
-      downloadFile(sessionToCsv(s), filename, "text/csv");
-      showToast("Session exported as CSV", "success");
+      const safeTitle = s.title.replace(/[^a-zA-Z0-9_-]/g, "_");
+      const timestamp = Date.now();
+      if (format === "json") {
+        downloadFile(sessionToJson(s), `${safeTitle}_${timestamp}.json`, "application/json");
+        showToast("Session exported as JSON", "success");
+      } else {
+        downloadFile(sessionToCsv(s), `${safeTitle}_${timestamp}.csv`, "text/csv");
+        showToast("Session exported as CSV", "success");
+      }
     },
     [showToast],
   );
@@ -259,7 +249,7 @@ export default function ChatPage() {
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        handleSend();
+        void handleSend();
       }
     },
     [handleSend],
@@ -378,7 +368,7 @@ export default function ChatPage() {
                   <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                     <div className="relative group/download">
                       <button
-                        onClick={(e) => handleDownloadJSON(s, e)}
+                        onClick={(e) => handleDownloadSession(s, "json", e)}
                         className="w-7 h-7 flex items-center justify-center rounded hover:bg-neon-cyan/20 hover:text-neon-cyan text-white/30"
                         title="Download as JSON"
                       >
@@ -386,7 +376,7 @@ export default function ChatPage() {
                       </button>
                       <div className="absolute right-0 top-full mt-0.5 hidden group-hover/download:block z-50">
                         <button
-                          onClick={(e) => handleDownloadCSV(s, e)}
+                          onClick={(e) => handleDownloadSession(s, "csv", e)}
                           className="whitespace-nowrap text-[10px] font-mono px-2 py-1 rounded bg-dark-900 border border-white/10 text-white/60 hover:text-white hover:bg-white/5 transition-colors shadow-lg"
                         >
                           as CSV
@@ -409,9 +399,10 @@ export default function ChatPage() {
             )}
           </div>
         </div>
+      </div>
 
-        {/* Main chat area */}
-        <div className="flex-1 flex flex-col min-w-0">
+      {/* Main chat area */}
+      <div className="flex-1 flex flex-col min-w-0">
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             {/* Gateway status banners — shown regardless of session state */}
@@ -524,7 +515,7 @@ export default function ChatPage() {
               ))
             )}
 
-            {isStreaming && messages.length > 0 && (
+            {isStreaming && messages.length > 0 && !messages[messages.length - 1].content && (
               <TypingIndicator />
             )}
 
@@ -573,7 +564,6 @@ export default function ChatPage() {
             </div>
           </div>
         </div>
-      </div>
       </div>
     </AppPageShell>
   );

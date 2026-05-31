@@ -7,14 +7,10 @@ import { existsSync, readFileSync } from "fs";
 import { homedir } from "os";
 import { basename, join, relative, resolve } from "path";
 
-import { buildHermesPathBundle, type HermesPathBundle } from "./hermes-paths";
+import { buildHermesPathBundle, normPath, type HermesPathBundle } from "./hermes-paths";
 import { getHermesHome } from "./hermes-home";
 
 const NATIVE_HERMES_HOME = join(homedir(), ".hermes");
-
-function norm(p: string): string {
-  return p.replace(/[/\\]+$/, "");
-}
 
 function isPathUnderRoot(absolutePath: string, root: string): boolean {
   const R = resolve(root);
@@ -28,14 +24,14 @@ function isPathUnderRoot(absolutePath: string, root: string): boolean {
  * True when `home` is a named profile directory (`.../profiles/<name>`).
  */
 export function isProfileHermesHome(home: string): boolean {
-  const resolved = resolve(norm(home));
+  const resolved = resolve(normPath(home));
   return basename(resolve(resolved, "..")) === "profiles";
 }
 
 /** Profile segment when `home` is `.../profiles/<name>`, else null. */
 export function getProfileNameFromHermesHome(home: string): string | null {
   if (!isProfileHermesHome(home)) return null;
-  return basename(norm(home));
+  return basename(normPath(home));
 }
 
 /**
@@ -43,7 +39,7 @@ export function getProfileNameFromHermesHome(home: string): string | null {
  * Mirrors upstream hermes_constants.get_default_hermes_root().
  */
 export function getHermesDefaultRootFromHome(home: string): string {
-  const envPath = resolve(norm(home));
+  const envPath = resolve(normPath(home));
 
   if (isPathUnderRoot(envPath, NATIVE_HERMES_HOME)) {
     return resolve(NATIVE_HERMES_HOME);
@@ -88,7 +84,7 @@ export function readHermesActiveProfile(defaultRoot?: string): string | null {
  */
 export function resolveProfileHermesHome(profileName: string): string {
   const profile = (profileName || "default").trim() || "default";
-  const envHome = norm(getHermesHome());
+  const envHome = normPath(getHermesHome());
   const defaultRoot = getHermesDefaultRoot();
 
   if (profile === "default") {

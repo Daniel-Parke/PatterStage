@@ -33,13 +33,12 @@ interface TabConfig {
   key: "agent" | "system";
   label: string;
   icon: typeof Clock;
-  color: string;
   bgColor: string;
 }
 
 const TABS: TabConfig[] = [
-  { key: "agent", label: "Agent", icon: Clock, color: "text-neon-orange", bgColor: "bg-neon-orange/20 text-neon-orange" },
-  { key: "system", label: "System", icon: Cpu, color: "text-neon-cyan", bgColor: "bg-neon-cyan/20 text-neon-cyan" },
+  { key: "agent", label: "Agent", icon: Clock, bgColor: "bg-neon-orange/20 text-neon-orange" },
+  { key: "system", label: "System", icon: Cpu, bgColor: "bg-neon-cyan/20 text-neon-cyan" },
 ];
 
 // ── Search filter helpers ───────────────────────────────────
@@ -121,8 +120,7 @@ interface CronTabContentProps {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onRun?: (id: string) => void;
-  onEditAgent?: (job: CronJob) => void;
-  onEditSystem?: (job: SystemCronJob) => void;
+  onEdit?: (job: CronJob | SystemCronJob) => void;
 }
 
 function CronTabContent({
@@ -139,8 +137,7 @@ function CronTabContent({
   onToggle,
   onDelete,
   onRun,
-  onEditAgent,
-  onEditSystem,
+  onEdit,
 }: CronTabContentProps) {
   const [search, setSearch] = useState("");
   const filtered = filterJobs(jobs, search);
@@ -182,14 +179,14 @@ function CronTabContent({
               onToggle={onToggle}
               onDelete={onDelete}
               onRun={onRun!}
-              onEdit={(j) => onEditAgent?.(j)}
+              onEdit={(j) => onEdit?.(j)}
             />
           ) : (
             <SystemCronCard
               key={job.id}
               job={job as SystemCronJob}
               onToggle={onToggle}
-              onEdit={(j) => onEditSystem?.(j)}
+              onEdit={(j) => onEdit?.(j)}
               onDelete={onDelete}
             />
           ),
@@ -204,7 +201,6 @@ function CronTabContent({
 export default function CronPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [editingJob, setEditingJob] = useState<CronJob | null>(null);
-  const [pauseAllBusy, setPauseAllBusy] = useState(false);
   const [syncing, setSyncing] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"agent" | "system">("agent");
@@ -214,30 +210,33 @@ export default function CronPage() {
 
   const agent = useCronJobs();
   const hardware = useSystemCronJobs();
-  const { loadJobs: loadHardwareJobs } = hardware;
 
   useEffect(() => {
     if (activeTab === "system") {
-      void loadHardwareJobs();
+      void hardware.loadJobs();
     }
-  }, [activeTab, loadHardwareJobs]);
+  }, [activeTab, hardware]);
 
   const handleSyncAll = useCallback(async () => {
     setSyncing(true);
-    const [agentRes, hwRes] = await Promise.all([
-      safeApiCall("/api/cron", { method: "POST", body: { action: "sync" } }),
-      safeApiCall("/api/cron/hardware", { method: "POST", body: { action: "sync" } }),
-    ]);
-    agent.loadJobs();
-    await hardware.loadJobs();
-    setSyncing(false);
-    if (agentRes.ok && hwRes.ok) {
-      showToast("Agent and system cron synced", "success");
-    } else {
-      const parts: string[] = [];
-      if (!agentRes.ok) parts.push("agent");
-      if (!hwRes.ok) parts.push("system");
-      showToast(`Sync failed: ${parts.join(", ")}`, "error");
+    try {
+      const [agentRes, hwRes] = await Promise.all([
+        safeApiCall("/api/cron", { method: "POST", body: { action: "sync" } }),
+        safeApiCall("/api/cron/hardware", { method: "POST", body: { action: "sync" } }),
+      ]);
+      await Promise.all([agent.loadJobs(), hardware.loadJobs()]);
+      if (agentRes.ok && hwRes.ok) {
+        showToast("Agent and system cron synced", "success");
+      } else {
+        const parts: string[] = [];
+        if (!agentRes.ok) parts.push("agent");
+        if (!hwRes.ok) parts.push("system");
+        showToast(`Sync failed: ${parts.join(", ")}`, "error");
+      }
+    } finally {
+      // Always reset syncing state so the UI never gets stuck in "syncing"
+      // even if an exception is thrown (e.g., network failure).
+      setSyncing(false);
     }
   }, [agent, hardware, showToast]);
 
@@ -268,15 +267,13 @@ export default function CronPage() {
             </div>
             <ActionButtons
               color={activeTab === "agent" ? "orange" : "cyan"}
-              pauseBusy={activeTab === "agent" ? pauseAllBusy : false}
+              pauseBusy={activeTab === "agent" ? agent.pauseAllBusy : false}
               hasJobs={activeTab === "agent" ? !!agent.data?.total : hardwareTotal > 0}
-              onPauseAll={async () => {
+              onPauseAll={() => {
                 if (activeTab === "agent") {
-                  setPauseAllBusy(true);
-                  await agent.handlePauseAll();
-                  setPauseAllBusy(false);
+                  void agent.handlePauseAll();
                 } else {
-                  await hardware.handlePauseAll();
+                  void hardware.handlePauseAll();
                 }
               }}
               onSync={() => void handleSyncAll()}
@@ -309,7 +306,8 @@ export default function CronPage() {
                 onToggle: (id: string) => agent.handleToggle(id),
                 onDelete: (id: string) => agent.handleDelete(id),
                 onRun: (id: string) => agent.handleRun(id),
-                onEdit: (job: CronJob) => {
+                onEdit: (job: CronJob | SystemCronJob) => {
+                  if ("command" in job) return; // agent jobs don't have "command"
                   setEditingJob(job);
                   setShowCreate(true);
                 },
@@ -354,8 +352,7 @@ export default function CronPage() {
               onToggle={tabConfig.onToggle}
               onDelete={tabConfig.onDelete}
               onRun={tabConfig.onRun}
-              onEditAgent={tabConfig.isAgent ? tabConfig.onEdit : undefined}
-              onEditSystem={!tabConfig.isAgent ? tabConfig.onEdit : undefined}
+              onEdit={tabConfig.onEdit}
             />
           );
         })()}

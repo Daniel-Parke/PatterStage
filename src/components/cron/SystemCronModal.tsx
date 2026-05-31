@@ -12,6 +12,7 @@ import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import CronScheduleInput from "@/components/cron/CronScheduleInput";
 import { baseInputStyles, inputFieldClasses } from "@/lib/theme";
+import { safeApiCall } from "@/lib/api-fetch";
 import { HARDWARE_CRON_UI_PRESETS } from "@/lib/hardware-cron";
 import type { SystemCronJob } from "@/types/hermes";
 
@@ -20,11 +21,6 @@ interface Props {
   onClose: () => void;
   onSave: (job: Partial<SystemCronJob>) => Promise<void>;
   editingJob?: SystemCronJob | null;
-}
-
-interface MetaResponse {
-  data?: { scriptsDir: string; logDir: string };
-  error?: string;
 }
 
 function normalizePathSlashes(p: string): string {
@@ -51,31 +47,29 @@ export default function SystemCronModal({ open, onClose, onSave, editingJob }: P
     if (!open) return;
     setMeta(null);
     setMetaError(null);
+    setScheduleError(null);
+    setError(null);
     setMetaLoading(true);
     let cancelled = false;
-    void fetch("/api/cron/hardware/meta")
-      .then(async (r) => {
-        const j = (await r.json()) as MetaResponse;
-        if (cancelled) return;
-        if (!r.ok) {
-          setMetaError(typeof j.error === "string" ? j.error : `HTTP ${r.status}`);
-          return;
-        }
-        if (j.data?.scriptsDir) {
-          setMeta({
-            scriptsDir: normalizePathSlashes(j.data.scriptsDir),
-            logDir: normalizePathSlashes(j.data.logDir ?? ""),
-          });
-        } else {
-          setMetaError(typeof j.error === "string" ? j.error : "Failed to load system cron paths");
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setMetaError("Failed to load system cron paths");
-      })
-      .finally(() => {
-        if (!cancelled) setMetaLoading(false);
-      });
+    void safeApiCall<{ scriptsDir: string; logDir: string }>("/api/cron/hardware/meta", {
+      method: "GET",
+    }).then((result) => {
+      if (cancelled) return;
+      if (!result.ok) {
+        setMetaError(result.error ?? `Failed to load system cron paths`);
+        setMetaLoading(false);
+        return;
+      }
+      if (result.data?.scriptsDir) {
+        setMeta({
+          scriptsDir: normalizePathSlashes(result.data.scriptsDir),
+          logDir: normalizePathSlashes(result.data.logDir ?? ""),
+        });
+      } else {
+        setMetaError("Failed to load system cron paths");
+      }
+      if (!cancelled) setMetaLoading(false);
+    });
     return () => {
       cancelled = true;
     };

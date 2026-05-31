@@ -118,10 +118,10 @@ export async function GET(
 
   if (existsSync(fullPath)) {
     filePath = fullPath;
-  } else if (existsSync(fullPath + ".json")) {
-    filePath = fullPath + ".json";
-  } else if (existsSync(fullPath + ".jsonl")) {
-    filePath = fullPath + ".jsonl";
+  } else if (existsSync(`${fullPath}.json`)) {
+    filePath = `${fullPath}.json`;
+  } else if (existsSync(`${fullPath}.jsonl`)) {
+    filePath = `${fullPath}.jsonl`;
   } else {
     // No file on disk — try the DB record for mission-born sessions
     const dbSession = getSession(sanitizedId);
@@ -210,7 +210,7 @@ export async function GET(
             const msg = JSON.parse(line);
             return { index, ...msg };
           } catch (err) {
-            logApiError("GET /api/sessions/[id]", "parsing JSONL line " + index + " in session " + sanitizedId, err);
+            logApiError("GET /api/sessions/[id]", `parsing JSONL line ${index} in session ${sanitizedId}`, err);
             return { index, raw: line };
           }
         });

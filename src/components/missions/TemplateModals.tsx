@@ -41,7 +41,6 @@ import CategoryCombobox, {
 import LocalDirRow from "@/components/missions/LocalDirRow";
 import { inputFieldClasses } from "@/lib/theme";
 import {
-  categoryAccentColor,
   groupTemplatesByCategory,
   type CategoryLike,
 } from "@/lib/mission-categories";
@@ -119,49 +118,6 @@ export const ICON_MAP: Record<string, React.ComponentType<{ className?: string }
   Bot,
   RefreshCw,
 };
-
-export const CATEGORY_ORDER = [
-  "Business - Operations",
-  "Engineering",
-  "Engineering - QA",
-  "Engineering - DevOps",
-  "Engineering - Software",
-  "Engineering - Data",
-  "Engineering - Data Science",
-  "Business - Creative",
-  "Support",
-  "Custom",
-];
-
-export const CATEGORY_COLORS: Record<string, string> = {
-  "Engineering": "cyan",
-  "Engineering - QA": "pink",
-  "Engineering - DevOps": "cyan",
-  "Engineering - Software": "purple",
-  "Engineering - Data": "green",
-  "Engineering - Data Science": "orange",
-  "Business - Operations": "cyan",
-  "Business - Creative": "orange",
-  Support: "blue",
-  Custom: "purple",
-};
-
-export function groupTemplates(
-  templates: MissionTemplate[],
-): [string, MissionTemplate[]][] {
-  const grouped: Record<string, MissionTemplate[]> = {};
-  for (const t of templates) {
-    const cat = t.isCustom ? "Custom" : t.category || "Other";
-    if (!grouped[cat]) grouped[cat] = [];
-    grouped[cat].push(t);
-  }
-  const knownOrder = new Set(CATEGORY_ORDER);
-  const extra = Object.keys(grouped).filter((c) => !knownOrder.has(c));
-  return [...CATEGORY_ORDER, ...extra].filter((c) => grouped[c]).map((cat) => [
-    cat,
-    grouped[cat],
-  ]);
-}
 
 // ── Template Manager Modal Props ───────────────────────────────
 
@@ -289,7 +245,7 @@ export function TemplateManagerModal({
         )}
         {grouped.map((group) => {
           const filterKey = group.categoryId ?? "__uncategorized__";
-          const color = categoryAccentColor(group.color);
+          const color = group.color;
           return (
             <CategoryAccordion
               key={filterKey}

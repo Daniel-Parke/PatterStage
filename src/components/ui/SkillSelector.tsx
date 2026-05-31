@@ -2,13 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Cpu, Loader2, X, ChevronDown, Search } from "lucide-react";
-
-interface Skill {
-  name: string;
-  category: string;
-  description: string;
-  enabled: boolean;
-}
+import type { Skill } from "@/types/hermes";
 
 interface SkillSelectorProps {
   value: string[];

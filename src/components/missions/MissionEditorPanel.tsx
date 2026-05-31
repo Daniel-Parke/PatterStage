@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import {
-  ChevronRight,
   Copy,
   Edit3,
   ExternalLink,
@@ -11,6 +10,7 @@ import {
   Trash2,
   Zap,
 } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { timeAgo, titleCase } from "@/lib/utils";
 import type { MissionDetail, MissionRow } from "@/hooks/useMissionsPage";
@@ -169,9 +169,9 @@ export default function MissionEditorPanel({
                 Goals
               </div>
               <div className="flex flex-wrap gap-1">
-                {detail.mission.goals
-                  ?.slice(0, 3)
-                  ?.map((goal, i) => (
+                {(detail.mission.goals ?? [])
+                  .slice(0, 3)
+                  .map((goal, i) => (
                     <span
                       key={i}
                       className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-white/40 border border-white/5"
@@ -179,12 +179,10 @@ export default function MissionEditorPanel({
                       {goal}
                     </span>
                   ))}
-                {(detail.mission.goals?.length ?? 0) >
-                  3 && (
+                {(detail.mission.goals?.length ?? 0) > 3 && (
                   <span className="text-[9px] font-mono text-white/25">
                     +
-                    {(detail.mission.goals?.length ?? 0) -
-                      3}
+                    {(detail.mission.goals?.length ?? 0) - 3}
                     {" "}
                     more
                   </span>

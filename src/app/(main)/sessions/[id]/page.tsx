@@ -8,196 +8,14 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
-  User,
-  Bot,
-  Wrench,
-  Cpu,
-  Copy,
-  Check,
-  ChevronDown,
-  ChevronRight,
   MessageSquare,
 } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { messageSummary } from "@/lib/utils";
-
-interface SessionMessage {
-  index: number;
-  role?: string;
-  content?: string;
-  name?: string;
-  tool_calls?: unknown[];
-  tool_call_id?: string;
-  tool_name?: string | null;
-  finish_reason?: string | null;
-  reasoning?: string | null;
-  timestamp?: number;
-  raw?: string;
-}
-
-interface SessionData {
-  id: string;
-  filename: string;
-  format: string;
-  title: string;
-  model: string;
-  source: string;
-  messages: SessionMessage[];
-  messageCount: number;
-  size: number;
-  created: string;
-}
-// ── Role-to-meta mapping (module-level, shared by MessageBubble and page) ──
-const ROLE_META: Record<string, {
-  icon: React.ReactNode; color: string; bg: string; bgSolid: string; text: string; label: string;
-}> = {
-  user: {
-    icon: <User className="w-3.5 h-3.5" />,
-    color: "text-neon-cyan",
-    bg: "border-neon-cyan/20 bg-neon-cyan/5",
-    bgSolid: "bg-neon-cyan/10",
-    text: "text-neon-cyan",
-    label: "USER",
-  },
-  assistant: {
-    icon: <Bot className="w-3.5 h-3.5" />,
-    color: "text-neon-purple",
-    bg: "border-neon-purple/20 bg-neon-purple/5",
-    bgSolid: "bg-neon-purple/10",
-    text: "text-neon-purple",
-    label: "ASSISTANT",
-  },
-  tool: {
-    icon: <Wrench className="w-3.5 h-3.5" />,
-    color: "text-neon-green",
-    bg: "border-neon-green/20 bg-neon-green/5",
-    bgSolid: "bg-neon-green/10",
-    text: "text-neon-green",
-    label: "TOOL",
-  },
-  system: {
-    icon: <Cpu className="w-3.5 h-3.5" />,
-    color: "text-white/50",
-    bg: "border-white/10 bg-white/5",
-    bgSolid: "bg-white/5",
-    text: "text-white/40",
-    label: "SYSTEM",
-  },
-};
-
-function MessageBubble({ msg, index, messageRefs }: { msg: SessionMessage; index: number; messageRefs: React.MutableRefObject<Map<number, HTMLDivElement>> }) {
-  const [expanded, setExpanded] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const role = (msg.role || "unknown").toLowerCase();
-  const content = typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content, null, 2);
-  const summary = useMemo(() => messageSummary(content), [content]);
-
-  // Cleanup the copied-state timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
-    };
-  }, []);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(content || "");
-    setCopied(true);
-    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
-    copiedTimerRef.current = setTimeout(() => setCopied(false), 1500);
-  };
-
-  const config = ROLE_META[role] || ROLE_META.system;
-  const isLong = content && content.length > 200;
-
-  return (
-    <div ref={(el) => { if (el) messageRefs.current.set(index, el); else messageRefs.current.delete(index); }} className={`rounded-xl border ${config.bg} overflow-hidden`}>
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-4 py-2 border-b border-white/5 hover:bg-white/[0.02] transition-colors text-left"
-      >
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <span className={config.color}>{config.icon}</span>
-          <span className={`text-xs font-mono font-bold ${config.color}`}>
-            {config.label}
-          </span>
-          {msg.tool_call_id && (
-            <span className="text-[10px] font-mono text-white/30 bg-white/5 px-1.5 py-0.5 rounded">
-              {msg.tool_call_id.slice(0, 12)}
-            </span>
-          )}
-          {msg.name && (
-            <span className="text-xs font-mono text-neon-green">
-              {String(msg.name)}
-            </span>
-          )}
-          {!expanded && (
-            <span className="text-xs text-white/30 font-mono truncate ml-1">
-              {summary}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-          {isLong && (
-            <span className="text-[10px] font-mono text-white/20 mr-1">
-              {(content.length / 1024).toFixed(1)}KB
-            </span>
-          )}
-          {expanded ? (
-            <ChevronDown className="w-3.5 h-3.5 text-white/30" />
-          ) : (
-            <ChevronRight className="w-3.5 h-3.5 text-white/30" />
-          )}
-        </div>
-      </button>
-      {expanded && (
-        <div className="px-4 py-3">
-          <div className="flex justify-end mb-2">
-            <button
-              onClick={handleCopy}
-              className="p-1 rounded text-white/30 hover:text-white/60 transition-colors"
-              title="Copy"
-            >
-              {copied ? (
-                <Check className="w-3.5 h-3.5 text-neon-green" />
-              ) : (
-                <Copy className="w-3.5 h-3.5" />
-              )}
-            </button>
-          </div>
-          <pre className="text-sm text-white/80 font-mono whitespace-pre-wrap break-words">
-            {content || "(no content)"}
-          </pre>
-        {Array.isArray(msg.tool_calls) && msg.tool_calls.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
-            <div className="text-[10px] font-mono text-white/30 uppercase tracking-widest">
-              Tool Calls ({msg.tool_calls.length})
-            </div>
-            {msg.tool_calls.map((tc: unknown, i: number) => {
-              const toolCall = tc as Record<string, unknown>;
-              const fn = toolCall.function as Record<string, unknown> | undefined;
-              const fnName = String(fn?.name || "unknown");
-              const tcKey = `toolcall-${i}-${fnName.replace(/[^a-zA-Z0-9]/g, "-")}`;
-              return (
-                <div key={tcKey} className="bg-dark-900/50 rounded-lg p-3 text-xs font-mono">
-                  <span className="text-neon-green">{String(fn?.name || "unknown")}</span>
-                  <pre className="mt-1 text-white/40 whitespace-pre-wrap">
-                    {typeof fn?.arguments === "string"
-                      ? fn.arguments
-                      : JSON.stringify(fn?.arguments, null, 2)}
-                  </pre>
-                </div>
-              );
-            })}
-          </div>
-        )}
-        </div>
-      )}
-    </div>
-  );
-}
+import { safeApiCall } from "@/lib/api-fetch";
+import { ROLE_META } from "@/components/session/constants";
+import { MessageBubble, type SessionMessage, type SessionData } from "@/components/session/MessageBubble";
 
 export default function SessionDetailPage() {
   const params = useParams();
@@ -217,14 +35,14 @@ export default function SessionDetailPage() {
     void (async () => {
       const url = "/api/sessions/" + encodeURIComponent(sessionId);
       try {
-        const res = await fetch(url, { signal: controller.signal });
-        if (!res.ok) {
-          const errBody = (await res.json().catch(() => null)) as { error?: string } | null;
-          throw new Error(errBody?.error || "Failed to load session");
+        const { data, error: fetchError } = await safeApiCall<{ data: SessionData }>(url, { method: "GET" });
+        if (controller.signal.aborted) return;
+        if (fetchError) {
+          throw new Error(fetchError || "Failed to load session");
         }
-        const json = await res.json() as { data?: SessionData };
-        if (json.data) {
-          setData(json.data);
+        const { data: sessionData } = data ?? {};
+        if (sessionData) {
+          setData(sessionData as SessionData);
         } else {
           throw new Error("Invalid session data format");
         }

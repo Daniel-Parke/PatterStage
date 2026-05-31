@@ -14,16 +14,15 @@ export async function PUT(request: NextRequest) {
 
   try {
     ensureDb();
-    const body = await request.json();
-    const { profile, personality } = body;
+    const body = (await request.json()) as Record<string, unknown>;
+    const personality = typeof body.personality === "string" ? body.personality : "";
+    const profile = typeof body.profile === "string" ? body.profile : "default";
 
-    if (!personality || typeof personality !== "string") {
+    if (!personality) {
       return NextResponse.json({ error: "Personality is required" }, { status: 400 });
     }
 
-    const prof = resolveSafeProfileName(
-      profile && typeof profile === "string" ? profile : "default",
-    );
+    const prof = resolveSafeProfileName(profile);
     if (!prof.ok) {
       return NextResponse.json({ error: prof.error }, { status: 400 });
     }

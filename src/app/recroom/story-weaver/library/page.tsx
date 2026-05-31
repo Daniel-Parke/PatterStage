@@ -3,6 +3,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { BookOpen, Sparkles, Clock, CheckCircle2, Loader2, BookMarked, Trash2 } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -147,9 +148,10 @@ export default function LibraryPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <h3 className="text-base font-semibold text-white/90 truncate group-hover:text-white transition-colors">
+                          <Link href={"/recroom/story-weaver/" + story.id}
+                            className="block text-base font-semibold text-white/90 truncate group-hover:text-white transition-colors">
                             {story.title}
-                          </h3>
+                          </Link>
                           <div className="flex items-center gap-3 mt-1 text-[10px] font-mono text-white/25">
                             <span>{story.config?.genre || "General"}</span>
                             <span>·</span>

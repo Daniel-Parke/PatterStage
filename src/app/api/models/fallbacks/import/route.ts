@@ -25,7 +25,10 @@ interface ImportPreview {
   alreadyImported: boolean;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   try {
     const paths = getActiveHermesPaths();
     if (!existsSync(paths.config)) {

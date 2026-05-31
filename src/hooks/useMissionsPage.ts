@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
+import { safeApiCall, apiFetch } from "@/lib/api-fetch";
 import type { LocalDirEntry, Mission } from "@/types/hermes";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { parseMissionPrompt } from "@/lib/build-mission-prompt";
@@ -13,7 +14,7 @@ import {
   groupTemplatesByCategory,
 } from "@/lib/mission-categories";
 import type { ManagedCategory } from "@/components/missions/CategoryManagerModal";
-import { buildTemplatePayload } from "@/lib/mission-form-utils";
+import { buildTemplatePayload, splitGoals } from "@/lib/mission-form-utils";
 import {
   isMissionActive,
   isMissionDraft,
@@ -84,13 +85,6 @@ export function useMissionsPage() {
   const { showToast, toastElement } = useToast();
   const templateApplied = useRef(false);
   const expandedIdRef = useRef<string | null>(null);
-  const createFormRef = useRef<HTMLDivElement | null>(null);
-
-  const scrollToCreateForm = useCallback(() => {
-    requestAnimationFrame(() => {
-      createFormRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  }, []);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showTemplateEditor, setShowTemplateEditor] = useState(false);
   const [showTemplateManager, setShowTemplateManager] = useState(false);
@@ -172,42 +166,43 @@ export function useMissionsPage() {
     field: K,
     value: MissionFormState[K],
   ) => {
-    switch (field) {
-      case "newName": setNewName(value as string); break;
-      case "newInstruction": setNewInstruction(value as string); break;
-      case "newContext": setNewContext(value as string); break;
-      case "newGoals": setNewGoals(value as string); break;
-      case "newOutputFormat": setNewOutputFormat(value as string); break;
-      case "newConstraints": setNewConstraints(value as string); break;
-      case "newDispatch":
-        setNewDispatch(value as "save" | "now" | "cron" | "queue");
+    const updaters: Record<keyof MissionFormState, (v: MissionFormState[keyof MissionFormState]) => void> = {
+      newName: (v) => setNewName(v as string),
+      newInstruction: (v) => setNewInstruction(v as string),
+      newContext: (v) => setNewContext(v as string),
+      newGoals: (v) => setNewGoals(v as string),
+      newOutputFormat: (v) => setNewOutputFormat(v as string),
+      newConstraints: (v) => setNewConstraints(v as string),
+      newDispatch: (v) => {
+        setNewDispatch(v as "save" | "now" | "cron" | "queue");
         setDispatchAcknowledged(true);
-        break;
-      case "newSchedule": setNewSchedule(value as string); break;
-      case "scheduleType": setScheduleType(value as "interval" | "wall-clock" | "post-run"); break;
-      case "newMissionTime": setNewMissionTime(value as number); break;
-      case "newTimeout": setNewTimeout(value as number); break;
-      case "newProfile": setNewProfile(value as string); break;
-      case "newModel": setNewModel(value as string); break;
-      case "newProvider": setNewProvider(value as string); break;
-      case "newLocalDirs": setNewLocalDirs(value as LocalDirEntry[]); break;
-      case "localDirDraft": setLocalDirDraft(value as LocalDirEntry); break;
-      case "newReferences": setNewReferences(value as string[]); break;
-      case "referenceInput": setReferenceInput(value as string); break;
-      case "newSkills": setNewSkills(value as string[]); break;
-      case "newToolsets": setNewToolsets(value as string[]); break;
-      case "scheduleStartTime": setScheduleStartTime(value as string); break;
-    }
+      },
+      newSchedule: (v) => setNewSchedule(v as string),
+      scheduleType: (v) => setScheduleType(v as "interval" | "wall-clock" | "post-run"),
+      newMissionTime: (v) => setNewMissionTime(v as number),
+      newTimeout: (v) => setNewTimeout(v as number),
+      newProfile: (v) => setNewProfile(v as string),
+      newModel: (v) => setNewModel(v as string),
+      newProvider: (v) => setNewProvider(v as string),
+      newLocalDirs: (v) => setNewLocalDirs(v as LocalDirEntry[]),
+      localDirDraft: (v) => setLocalDirDraft(v as LocalDirEntry),
+      newReferences: (v) => setNewReferences(v as string[]),
+      referenceInput: (v) => setReferenceInput(v as string),
+      newSkills: (v) => setNewSkills(v as string[]),
+      newToolsets: (v) => setNewToolsets(v as string[]),
+      scheduleStartTime: (v) => setScheduleStartTime(v as string),
+    };
+    updaters[field]?.(value);
   };
 
-  function dispatchPayload(overrides: Record<string, unknown> = {}): Record<string, unknown> {
-    return {
+  const dispatchPayload = useCallback(
+    (overrides: Record<string, unknown> = {}): Record<string, unknown> => ({
       instruction: newInstruction.trim(),
       context: newContext.trim() || undefined,
       outputFormat: newOutputFormat.trim() || undefined,
       constraints: newConstraints.trim() || undefined,
       categoryId: newCategoryId,
-      goals: newGoals.split("\n").filter((g) => g.trim()),
+      goals: splitGoals(newGoals),
       profileName: newProfile || undefined,
       modelId: newModel || undefined,
       provider: newProvider || undefined,
@@ -218,10 +213,15 @@ export function useMissionsPage() {
       skills: newSkills,
       suggestedToolsets: newToolsets,
       ...overrides,
-    };
-  }
+    }),
+    [
+      newInstruction, newContext, newOutputFormat, newConstraints, newCategoryId, newGoals,
+      newProfile, newModel, newProvider, newMissionTime, newTimeout,
+      newLocalDirs, newReferences, newSkills, newToolsets,
+    ],
+  );
 
-  function resetForm() {
+  const resetForm = useCallback(() => {
     setNewName("");
     setNewInstruction("");
     setNewContext("");
@@ -238,33 +238,35 @@ export function useMissionsPage() {
     setNewSkills([]);
     setNewToolsets([]);
     setShowCreate(false);
-  }
+  }, []);
 
   useEffect(() => {
     if (!newProfile) return;
     const controller = new AbortController();
     const slug = encodeURIComponent(newProfile);
     Promise.all([
-      fetch(`/api/skills?profile=${slug}`, { signal: controller.signal }),
-      fetch(`/api/agent/profiles/${slug}/toolsets`, { signal: controller.signal }),
+      apiFetch<{ data: { skills?: Array<{ name: string; enabled: boolean }> } }>(`/api/skills?profile=${slug}`, { signal: controller.signal }),
+      apiFetch<{ data: { platformToolsets?: PlatformToolsets } }>(`/api/agent/profiles/${slug}/toolsets`, { signal: controller.signal }),
     ])
-      .then(async ([skillsRes, toolsetsRes]) => {
-        const skillsData = await skillsRes.json();
-        const toolsetsData = await toolsetsRes.json();
+      .then(([skillsResult, toolsetsResult]) => {
         const enabled = new Set(
-          ((skillsData.data?.skills ?? []) as Array<{ name: string; enabled: boolean }>)
+          (skillsResult.data?.skills ?? [])
             .filter((s) => s.enabled)
             .map((s) => s.name),
         );
         const toolsetIds = new Set(
           unionToolsetsFromPlatforms(
-            (toolsetsData.data?.platformToolsets ?? {}) as PlatformToolsets,
+            toolsetsResult.data?.platformToolsets ?? {},
           ),
         );
         setNewSkills((prev) => prev.filter((s) => enabled.has(s)));
         setNewToolsets((prev) => prev.filter((t) => toolsetIds.has(t)));
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (err instanceof Error && err.name !== "AbortError") {
+          console.warn("[useMissionsPage] failed to load profile skills/toolsets:", err.message);
+        }
+      });
     return () => controller.abort();
   }, [newProfile]);
 
@@ -350,56 +352,59 @@ export function useMissionsPage() {
    * Populate form state from a mission template.
    * Used by handleTemplateSelect, handleTemplateEdit, and fetchData.
    */
-  const applyTemplateToForm = (
-    t: MissionTemplate & {
-      instruction?: string;
-      context?: string;
-      dispatchMode?: string;
-      schedule?: string;
-      name?: string;
+  const applyTemplateToForm = useCallback(
+    (
+      t: MissionTemplate & {
+        instruction?: string;
+        context?: string;
+        dispatchMode?: string;
+        schedule?: string;
+        name?: string;
+      },
+      categoryIdOverride?: string | null,
+    ) => {
+      setNewName(t.name ?? "");
+      setNewInstruction(t.instruction || "");
+      setNewContext(t.context || "");
+      setNewGoals((t.goals || []).join("\n"));
+      setNewOutputFormat(
+        (t as MissionTemplate & { outputFormat?: string }).outputFormat ?? "",
+      );
+      setNewConstraints(
+        (t as MissionTemplate & { constraints?: string }).constraints ?? "",
+      );
+      setNewProfile(t.profile || "");
+      setNewModel(t.defaultModel || "");
+      setNewProvider(t.defaultProvider || "");
+      setNewLocalDirs(
+        normalizeLocalDirsInput(
+          (t as MissionTemplate & { localDirs?: unknown }).localDirs,
+        ),
+      );
+      setLocalDirDraft({ path: "", branch: null });
+      setNewReferences(
+        (t as MissionTemplate & { references?: string[] }).references ?? [],
+      );
+      setNewSkills(t.suggestedSkills || []);
+      setNewToolsets(
+        (t as MissionTemplate & { suggestedToolsets?: string[] }).suggestedToolsets ?? [],
+      );
+      setNewCategoryId(
+        categoryIdOverride !== undefined
+          ? categoryIdOverride
+          : (t as MissionTemplate & { categoryId?: string }).categoryId ?? null
+      );
+      const tm = (t as MissionTemplate & { timeoutMinutes?: number }).timeoutMinutes;
+      if (typeof tm === "number" && Number.isFinite(tm)) {
+        setNewTimeout(tm);
+      }
+      if (t.dispatchMode) {
+        setNewDispatch(t.dispatchMode as "save" | "now" | "cron" | "queue");
+      }
+      if (t.schedule) setNewSchedule(t.schedule);
     },
-    categoryIdOverride?: string | null,
-  ) => {
-    setNewName(t.name ?? "");
-    setNewInstruction(t.instruction || "");
-    setNewContext(t.context || "");
-    setNewGoals((t.goals || []).join("\n"));
-    setNewOutputFormat(
-      (t as MissionTemplate & { outputFormat?: string }).outputFormat ?? "",
-    );
-    setNewConstraints(
-      (t as MissionTemplate & { constraints?: string }).constraints ?? "",
-    );
-    setNewProfile(t.profile || "");
-    setNewModel(t.defaultModel || "");
-    setNewProvider(t.defaultProvider || "");
-    setNewLocalDirs(
-      normalizeLocalDirsInput(
-        (t as MissionTemplate & { localDirs?: unknown }).localDirs,
-      ),
-    );
-    setLocalDirDraft({ path: "", branch: null });
-    setNewReferences(
-      (t as MissionTemplate & { references?: string[] }).references ?? [],
-    );
-    setNewSkills(t.suggestedSkills || []);
-    setNewToolsets(
-      (t as MissionTemplate & { suggestedToolsets?: string[] }).suggestedToolsets ?? [],
-    );
-    setNewCategoryId(
-      categoryIdOverride !== undefined
-        ? categoryIdOverride
-        : (t as MissionTemplate & { categoryId?: string }).categoryId ?? null
-    );
-    const tm = (t as MissionTemplate & { timeoutMinutes?: number }).timeoutMinutes;
-    if (typeof tm === "number" && Number.isFinite(tm)) {
-      setNewTimeout(tm);
-    }
-    if (t.dispatchMode) {
-      setNewDispatch(t.dispatchMode as "save" | "now" | "cron" | "queue");
-    }
-    if (t.schedule) setNewSchedule(t.schedule);
-  };
+    [],
+  );
 
   const fetchData = useCallback(async () => {
     try {
@@ -417,7 +422,6 @@ export function useMissionsPage() {
       if (!templateApplied.current && loaded.length > 0) {
         const url = new URL(window.location.href);
         const templateId = url.searchParams.get("template");
-        const compose = url.searchParams.get("compose");
         if (templateId) {
           const t = loaded.find(
             (tmpl: MissionTemplate) => tmpl.id === templateId,
@@ -435,9 +439,6 @@ export function useMissionsPage() {
             setShowCreate(true);
             templateApplied.current = true;
             showToast(`Template loaded: ${t.name}`, "success");
-            if (compose !== "1") {
-              scrollToCreateForm();
-            }
             window.history.replaceState({}, "", "/orchestration/missions");
           }
         }
@@ -446,7 +447,7 @@ export function useMissionsPage() {
       console.error("Failed to load templates:", error);
       showToast("Failed to load templates", "error");
     }
-  }, [fetchMissions, fetchTemplates, showToast, scrollToCreateForm, loadCategories]);
+  }, [fetchMissions, fetchTemplates, showToast, loadCategories, applyTemplateToForm]);
 
   const fetchDetail = useCallback(
     (id: string, showLoading = true) => {
@@ -479,7 +480,7 @@ export function useMissionsPage() {
       void fetchData();
       const id = expandedIdRef.current;
       if (id) fetchDetail(id, false);
-    }, 5000);
+    }, 15_000);
     return () => {
       cancelled = true;
       clearInterval(interval);
@@ -495,7 +496,7 @@ export function useMissionsPage() {
     }
   }, [expandedId, fetchDetail]);
 
-  const handleCreate = async () => {
+  const handleCreate = useCallback(async () => {
     if (!newName.trim() || !newInstruction.trim()) return;
     if (!editingId && !dispatchAcknowledged) {
       showToast("Open Dispatch to choose how this mission runs.", "error");
@@ -518,26 +519,25 @@ export function useMissionsPage() {
 
         if (isRunning) {
           showToast("Updating mission...", "info");
-          const res = await fetch("/api/missions", {
+          const { ok, error } = await safeApiCall("/api/missions", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+            body: {
               action: "update",
               missionId: editingId,
               name: newName,
               ...dispatchPayload({
                 schedule: newDispatch === "cron" ? newSchedule : undefined,
               }),
-            }),
+            },
           });
-          if (res.ok) {
+          if (ok) {
             showToast("Mission updated", "success");
             setEditingId(null);
             setShowCreate(false);
             fetchData();
             if (expandedId === editingId) fetchDetail(editingId);
           } else {
-            showToast("Failed to update mission", "error");
+            showToast(error || "Failed to update mission", "error");
           }
           setDispatching(false);
           return;
@@ -545,10 +545,9 @@ export function useMissionsPage() {
 
         if (isPromotable) {
           showToast(submitToastForDispatch(newDispatch), "info");
-          const res = await fetch("/api/missions", {
+          const { ok, error } = await safeApiCall<{ data?: { mission?: object } }>("/api/missions", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+            body: {
               action: "promote",
               missionId: editingId,
               name: newName,
@@ -556,9 +555,9 @@ export function useMissionsPage() {
                 dispatchMode: newDispatch,
                 schedule: newDispatch === "cron" ? newSchedule : undefined,
               }),
-            }),
+            },
           });
-          if (res.ok) {
+          if (ok) {
             if (newDispatch === "save") {
               showToast("Mission saved as draft", "success");
             } else if (newDispatch === "queue") {
@@ -574,17 +573,7 @@ export function useMissionsPage() {
             await fetchData();
             if (expandedId === editingId) fetchDetail(editingId);
           } else {
-            let msg = "Failed to update mission";
-            try {
-              const errBody = (await res.json()) as {
-                error?: string;
-                cronPushError?: string;
-              };
-              msg = errBody.cronPushError ?? errBody.error ?? msg;
-            } catch {
-              /* keep default */
-            }
-            showToast(msg, "error");
+            showToast(error || "Failed to update mission", "error");
           }
           setDispatching(false);
           return;
@@ -597,27 +586,26 @@ export function useMissionsPage() {
 
         setEditingId(null);
 
-        const res = await fetch("/api/missions", {
+        const { ok, error, data } = await safeApiCall<{ data?: { mission?: { id: string } } }>("/api/missions", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+          body: {
             action: "dispatch",
             name: newName,
             ...dispatchPayload({ dispatchMode: "now" }),
-          }),
+          },
         });
 
-        if (res.ok) {
-          const body = (await res.json()) as { data?: { mission?: { id: string } } };
+        if (ok) {
+          const body = data;
           showToast("Mission re-dispatched", "success");
           setDispatching(false);
           await fetchData();
-          if (body.data?.mission?.id) {
+          if (body?.data?.mission?.id) {
             setExpandedId(body.data.mission.id);
             void fetchDetail(body.data.mission.id);
           }
         } else {
-          showToast("Failed to re-dispatch mission", "error");
+          showToast(error || "Failed to re-dispatch mission", "error");
           setDispatching(false);
         }
         return;
@@ -625,20 +613,19 @@ export function useMissionsPage() {
 
       showToast(submitToastForDispatch(newDispatch), "info");
 
-      const res = await fetch("/api/missions", {
+      const { ok, error, data } = await safeApiCall<{ data?: { mission?: { id: string } } }>("/api/missions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           action: "dispatch",
           name: newName,
           ...dispatchPayload({
             dispatchMode: newDispatch,
             schedule: newDispatch === "cron" ? newSchedule : undefined,
           }),
-        }),
+        },
       });
 
-      if (res.ok) {
+      if (ok) {
         if (newDispatch === "save" || newDispatch === "queue") {
           showToast(
             newDispatch === "save"
@@ -650,11 +637,11 @@ export function useMissionsPage() {
           fetchData();
           setDispatching(false);
         } else if (newDispatch === "now") {
-          const body = (await res.json()) as { data?: { mission?: { id: string } } };
+          const body = data;
           showToast("Mission dispatched", "success");
           setDispatching(false);
           await fetchData();
-          if (body.data?.mission?.id) {
+          if (body?.data?.mission?.id) {
             setExpandedId(body.data.mission.id);
             void fetchDetail(body.data.mission.id);
           }
@@ -664,25 +651,14 @@ export function useMissionsPage() {
           await fetchData();
         }
       } else {
-        let msg = "Failed to create mission";
-        try {
-          const errBody = (await res.json()) as { error?: string; cronPushError?: string };
-          if (errBody.cronPushError) {
-            msg = errBody.cronPushError;
-          } else if (errBody.error) {
-            msg = errBody.error;
-          }
-        } catch {
-          /* keep default */
-        }
-        showToast(msg, "error");
+        showToast(error || "Failed to create mission", "error");
         setDispatching(false);
       }
     } catch {
       showToast("Network error — please try again", "error");
       setDispatching(false);
     }
-  };
+  }, [newName, newInstruction, editingId, dispatchAcknowledged, dispatching, showToast, newDispatch, newSchedule, missions, dispatchPayload, fetchData, resetForm, fetchDetail, expandedId]);
 
   // ── Shared form population helpers ─────────────────────────────────
 
@@ -690,10 +666,8 @@ export function useMissionsPage() {
    * Populate form state from a mission.
    * Used by both handleEdit (in-place edit) and handleDuplicateMission.
    */
-  function populateFormFromMission(
-    m: MissionRow,
-    opts: { editing: boolean; namePrefix?: string },
-  ) {
+  const populateFormFromMission = useCallback(
+    (m: MissionRow, opts: { editing: boolean; namePrefix?: string }) => {
     const parsed = parseMissionPrompt(m.prompt);
     setNewName(opts.namePrefix ? `${m.name} ${opts.namePrefix}` : m.name);
     setNewInstruction(parsed.instruction);
@@ -733,25 +707,25 @@ export function useMissionsPage() {
         setNewDispatch("now");
       }
     }
-  }
+  }, []);
 
   // ── Mission handlers ───────────────────────────────────────────────
 
-  const handleEdit = (m: MissionRow) => {
+  const handleEdit = useCallback((m: MissionRow) => {
     setEditingId(m.id);
     populateFormFromMission(m, { editing: true });
     setShowCreate(true);
-  };
+  }, [populateFormFromMission]);
 
-  const handleDuplicateMission = (m: MissionRow) => {
+  const handleDuplicateMission = useCallback((m: MissionRow) => {
     setEditingId(null);
     populateFormFromMission(m, { editing: false, namePrefix: "(copy)" });
     setNewDispatch("save");
     setShowCreate(true);
     showToast("Mission duplicated as draft", "success");
-  };
+  }, [populateFormFromMission, showToast]);
 
-  const handleSaveAsTemplate = async () => {
+  const handleSaveAsTemplate = useCallback(async () => {
     if (!newInstruction.trim()) return;
 
     const name = newName.trim() || "Untitled Template";
@@ -797,10 +771,9 @@ export function useMissionsPage() {
         categoryId: newCategoryId,
       });
 
-      const res = await fetch("/api/templates", {
+      const res = await safeApiCall("/api/templates", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: payload,
       });
 
       if (res.ok) {
@@ -811,14 +784,14 @@ export function useMissionsPage() {
         setEditingTemplateId(null);
         fetchData();
       } else {
-        showToast("Failed to save template", "error");
+        showToast(res.error || "Failed to save template", "error");
       }
     } catch {
       showToast("Failed to save template", "error");
     } finally {
       setTemplateSaving(false);
     }
-  };
+  }, [newInstruction, newName, editingTemplateId, templates, templateIcon, templateColor, templateDescription, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, showToast, fetchData]);
 
   const handleCreateNewTemplate = useCallback(() => {
     setEditingTemplateId(null);
@@ -840,7 +813,7 @@ export function useMissionsPage() {
     setShowTemplateEditor(true);
   }, []);
 
-  const handleTemplateSave = async () => {
+  const handleTemplateSave = useCallback(async () => {
     if (!templateName.trim()) return;
     setTemplateSaving(true);
     try {
@@ -869,10 +842,9 @@ export function useMissionsPage() {
         schedule: editingTemplateId ? undefined : newSchedule,
       });
 
-      const res = await fetch("/api/templates", {
+      const res = await safeApiCall("/api/templates", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: payload,
       });
       if (res.ok) {
         showToast(
@@ -883,74 +855,72 @@ export function useMissionsPage() {
         setEditingTemplateId(null);
         fetchData();
       } else {
-        showToast("Failed to save template", "error");
+        showToast(res.error || "Failed to save template", "error");
       }
     } catch {
       showToast("Failed to save template", "error");
     } finally {
       setTemplateSaving(false);
     }
-  };
+  }, [templateName, editingTemplateId, templateIcon, templateColor, templateDescription, newInstruction, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, newDispatch, newSchedule, showToast, fetchData]);
 
-  const handleEditTemplate = (
-    t: MissionTemplate & {
+  const handleEditTemplate = useCallback(
+    (t: MissionTemplate & {
       isCustom?: boolean;
       instruction?: string;
       context?: string;
       dispatchMode?: string;
       schedule?: string;
+    }) => {
+      setEditingTemplateId(t.id);
+      setTemplateName(t.name);
+      setTemplateDescription(t.description || "");
+      setTemplateIcon(t.icon);
+      setTemplateColor(t.color);
+      applyTemplateToForm(t);
+      setShowTemplateManager(false);
+      setShowTemplateEditor(true);
     },
-  ) => {
-    setEditingTemplateId(t.id);
-    setTemplateName(t.name);
-    setTemplateDescription(t.description || "");
-    setTemplateIcon(t.icon);
-    setTemplateColor(t.color);
-    applyTemplateToForm(t);
-    setShowTemplateManager(false);
-    setShowTemplateEditor(true);
-  };
+    [applyTemplateToForm],
+  );
 
-  const handleDeleteTemplate = async (templateId: string) => {
+  const handleDeleteTemplate = useCallback(async (templateId: string) => {
     if (!confirm("Delete this template?")) return;
-    const res = await fetch("/api/templates", {
+    const { ok, error } = await safeApiCall("/api/templates", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "delete", templateId }),
+      body: { action: "delete", templateId },
     });
-    if (res.ok) {
+    if (ok) {
       showToast("Template deleted", "success");
       setShowTemplateManager(false);
       fetchData();
     } else {
-      const body = await res.json().catch(() => null);
-      showToast(body?.error || "Failed to delete template", "error");
+      showToast(error || "Failed to delete template", "error");
     }
-  };
-  const handleTemplateSelect = (t: MissionTemplate) => {
+  }, [showToast, fetchData]);
+
+  const handleTemplateSelect = useCallback((t: MissionTemplate) => {
     applyTemplateToForm(t);
     setShowCreate(true);
     showToast(`Template loaded: ${t.name}`, "success");
-  };
+  }, [applyTemplateToForm, showToast]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     if (!confirm("Delete this mission and its cron job?")) return;
-    const res = await fetch("/api/missions", {
+    const { ok, error } = await safeApiCall("/api/missions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "delete", missionId: id }),
+      body: { action: "delete", missionId: id },
     });
-    if (res.ok) {
+    if (ok) {
       showToast("Mission deleted", "success");
       if (expandedId === id) setExpandedId(null);
       fetchData();
     } else {
-      const body = await res.json().catch(() => null);
-      showToast(body?.error || "Failed to delete mission", "error");
+      showToast(error || "Failed to delete mission", "error");
     }
-  };
+  }, [showToast, expandedId, fetchData]);
 
-  const handleCancel = async (id: string) => {
+  const handleCancel = useCallback(async (id: string) => {
     if (
       !confirm(
         "Cancel this mission? The running agent (and any subagents) will be stopped, and linked cron jobs will be paused.",
@@ -970,26 +940,21 @@ export function useMissionsPage() {
     );
 
     try {
-      const res = await fetch("/api/missions", {
+      const { ok, error } = await safeApiCall("/api/missions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "cancel", missionId: id }),
+        body: { action: "cancel", missionId: id },
       });
-      if (res.ok) {
+      if (ok) {
         showToast("Mission cancelled", "success");
         await fetchData();
         if (expandedId === id) void fetchDetail(id);
       } else {
-        const body = await res.json().catch(() => null);
         if (previousMission) {
           setMissions((prev) =>
             prev.map((m) => (m.id === id ? previousMission : m)),
           );
         }
-        showToast(
-          (body as { error?: string } | null)?.error || "Failed to cancel mission",
-          "error",
-        );
+        showToast(error || "Failed to cancel mission", "error");
       }
     } catch {
       if (previousMission) {
@@ -1001,7 +966,7 @@ export function useMissionsPage() {
     } finally {
       setCancellingMissionId(null);
     }
-  };
+  }, [missions, showToast, fetchData, expandedId, fetchDetail]);
 
   const filtered = useMemo(
     () =>
@@ -1047,24 +1012,15 @@ export function useMissionsPage() {
     void (async () => {
       try {
         const [defaultsRes, modelsRes] = await Promise.all([
-          fetch("/api/models/defaults", { signal: controller.signal }),
-          fetch("/api/models", { signal: controller.signal }),
+          safeApiCall<{ defaults?: { agent?: string | null } }>("/api/models/defaults", { signal: controller.signal }),
+          safeApiCall<{ models?: Array<{ id: string; modelId: string; provider: string }> }>("/api/models", { signal: controller.signal }),
         ]);
         if (!defaultsRes.ok || !modelsRes.ok) return;
 
-        const defaultsBody = (await defaultsRes.json()) as {
-          data?: { defaults?: { agent?: string | null } };
-        };
-        const modelsBody = (await modelsRes.json()) as {
-          data?: {
-            models?: Array<{ id: string; modelId: string; provider: string }>;
-          };
-        };
-
-        const agentRegistryId = defaultsBody.data?.defaults?.agent;
+        const agentRegistryId = defaultsRes.data?.defaults?.agent;
         if (!agentRegistryId) return;
 
-        const match = modelsBody.data?.models?.find((m) => m.id === agentRegistryId);
+        const match = modelsRes.data?.models?.find((m) => m.id === agentRegistryId);
         if (!match) return;
 
         setNewModel(match.modelId);
@@ -1165,7 +1121,6 @@ export function useMissionsPage() {
     dispatching,
     cancellingMissionId,
     handleTemplateSelect,
-    createFormRef,
     setShowTemplateManager,
     showTemplateManager,
     handleEditTemplate,

@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireAuth } from "@/lib/api-auth";
+import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import {
   HERMES_CONFIGURABLE_TOOLSETS,
@@ -30,14 +30,18 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  if (isChReadOnly()) {
+    return NextResponse.json(
+      { error: "Control Hub is in read-only mode — tool mutations are disabled" },
+      { status: 503 }
+    );
+  }
 
-  const body = (await request.json().catch(() => ({}))) as { action?: string };
   return NextResponse.json(
     {
       error:
         "Tool registry mutations are disabled. Configure Hermes runtime toolsets on Operations → Tools (profile-scoped platform_toolsets).",
-      action: body.action,
     },
-    { status: 410 },
+    { status: 405 }
   );
 }

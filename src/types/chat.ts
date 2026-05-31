@@ -20,7 +20,7 @@ export interface ChatSession {
 
 /** Message shape accepted by the /api/orchestration/chat endpoint */
 export interface ApiMessage {
-  role: string;
+  role: "user" | "assistant";
   content: string;
 }
 

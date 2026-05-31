@@ -1,23 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 // Shared Personality Constants — used by both Agents & Personalities pages
-// ═══════════════════════════════════════════════════════════════
-// Single source of truth for built-in personality names, display colors,
-// and emoji icons. Import this instead of duplicating constants per page.
-
-export const PERSONALITIES = [
-  "technical", "helpful", "creative", "concise", "teacher",
-  "philosopher", "pirate", "shakespeare", "surfer", "noir",
-  "kawaii", "catgirl", "hype", "uwu",
-] as const;
-
-export type PersonalityName = (typeof PERSONALITIES)[number];
-
-export const PERSONALITY_COLORS: Record<string, string> = {
-  technical: "cyan", helpful: "green", creative: "pink", concise: "orange",
-  teacher: "purple", philosopher: "cyan", pirate: "orange", shakespeare: "purple",
-  surfer: "green", noir: "gray", kawaii: "pink", catgirl: "pink",
-  hype: "orange", uwu: "pink",
-};
+// Shared Personality Emoji constants for Control Hub UI.
+// PERSONALITIES, PersonalityName, and PERSONALITY_COLORS were removed
+// as they were unused and represented stale documentation.
 
 export const PERSONALITY_EMOJIS: Record<string, string> = {
   catgirl: "🐱",

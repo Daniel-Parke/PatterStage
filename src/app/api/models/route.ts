@@ -13,7 +13,10 @@ import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, modelPostSchema } from "@/lib/api-schemas";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   try {
     return NextResponse.json({ data: { models: listModels() } });
   } catch (error) {

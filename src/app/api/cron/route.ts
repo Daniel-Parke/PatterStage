@@ -30,13 +30,9 @@ import {
   importHermesJobs,
   syncCronWithHermes,
   triggerJobViaGateway,
+  normalizeRepeat,
   type CronJobRecord,
 } from "@/lib/cron-repository";
-
-import {
-  parseScheduleToJson,
-  normalizeRepeat,
-} from "@/lib/cron/write";
 
 import { getDefaultModel } from "@/lib/models-repository";
 
@@ -102,12 +98,10 @@ function recordToApiJob(job: CronJobRecord) {
 // ── GET ─────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   try {
-    // Pull latest execution state from Hermes before reading
-    const importResult = importHermesJobs();
-    if (importResult.errors.length > 0) {
-      logApiError("GET /api/cron", "importing Hermes jobs", new Error(importResult.errors.join("; ")));
-    }
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
@@ -117,6 +111,12 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Job not found" }, { status: 404 });
       }
       return NextResponse.json({ data: { job: recordToApiJob(job) } });
+    }
+
+    // Pull latest execution state from Hermes before listing all jobs
+    const importResult = importHermesJobs();
+    if (importResult.errors.length > 0) {
+      logApiError("GET /api/cron", "importing Hermes jobs", new Error(importResult.errors.join("; ")));
     }
 
     const rawJobs = listCronJobs();
@@ -323,23 +323,29 @@ export async function PUT(request: NextRequest) {
     // ── Pause ─────────────────────────────────────────────────
     if (action === "pause") {
       const updated = updateCronJob(id, { enabled: false, state: "paused" });
+      if (!updated) {
+        return NextResponse.json({ error: "Job not found after update" }, { status: 404 });
+      }
       const pushResult = await pushJobToHermes(id);
       appendAuditLine({ action: "cron.pause", resource: id, ok: pushResult.ok, detail: pushResult.ok ? undefined : pushResult.error });
       if (!pushResult.ok) {
         return cronSyncFailureResponse("PUT /api/cron pause", pushResult);
       }
-      return NextResponse.json({ data: { success: true, job: recordToApiJob(updated!) } });
+      return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
     }
 
     // ── Resume ────────────────────────────────────────────────
     if (action === "resume") {
       const updated = updateCronJob(id, { enabled: true, state: "scheduled" });
+      if (!updated) {
+        return NextResponse.json({ error: "Job not found after update" }, { status: 404 });
+      }
       const pushResult = await pushJobToHermes(id);
       appendAuditLine({ action: "cron.resume", resource: id, ok: pushResult.ok, detail: pushResult.ok ? undefined : pushResult.error });
       if (!pushResult.ok) {
         return cronSyncFailureResponse("PUT /api/cron resume", pushResult);
       }
-      return NextResponse.json({ data: { success: true, job: recordToApiJob(updated!) } });
+      return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
     }
 
     // ── Run now ──────────────────────────────────────────────
@@ -368,7 +374,10 @@ export async function PUT(request: NextRequest) {
         state: "run_requested",
         next_run_at: new Date().toISOString(),
       });
-      return NextResponse.json({ data: { success: true, job: recordToApiJob(updated!) } });
+      if (!updated) {
+        return NextResponse.json({ error: "Job not found after update" }, { status: 404 });
+      }
+      return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
     }
 
     // ── Field updates ─────────────────────────────────────────
@@ -389,13 +398,15 @@ export async function PUT(request: NextRequest) {
     if (updates.state !== undefined) updatePayload.state = updates.state as string;
 
     if (updates.schedule !== undefined) {
-      const schedParsed = parseScheduleToJson(updates.schedule as string);
       const parsed = parseSchedule(updates.schedule as string);
       if (parsed.kind === "invalid") {
-        return NextResponse.json({ error: (parsed as { message: string }).message }, { status: 400 });
+        return NextResponse.json(
+          { error: parsed.message || `Invalid schedule: "${updates.schedule}"` },
+          { status: 400 }
+        );
       }
-      updatePayload.schedule = updates.schedule as string;
-      updatePayload.schedule_display = schedParsed.scheduleDisplay;
+      updatePayload.schedule = JSON.stringify(parsed);
+      updatePayload.schedule_display = "display" in parsed ? (parsed as { display: string }).display : (updates.schedule as string);
     }
 
     if (updates.repeat !== undefined) {

@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import {
   listSessions,
   getSession,
@@ -82,6 +82,8 @@ function parseQuery(
 }
 
 export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
 
   try {
     const q = parseQuery(request);
@@ -120,6 +122,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
+
+  if (isChReadOnly()) {
+    return NextResponse.json(
+      { error: "Control Hub is in read-only mode" },
+      { status: 503 }
+    );
+  }
 
   try {
     const body = await request.json() as {

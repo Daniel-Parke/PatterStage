@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { closeSync, existsSync, openSync, readFileSync, readSync, statSync, writeFileSync } from "fs";
+import { existsSync, writeFileSync } from "fs";
 import { resolve } from "path";
 
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
@@ -8,12 +8,28 @@ import {
   listLogFilesInDir,
   logFileUnderLogsDir,
   sanitizeLogBasename,
+  readLastLines,
 } from "@/lib/log-files";
 import { requireAuth } from "@/lib/api-auth";
 import { ApiResponse } from "@/types/hermes";
 import type { LogFileMeta } from "@/lib/log-files";
 
-const CHUNK_SIZE = 64 * 1024; // 64KB — read from end of file in chunks
+// ── Shared log directory resolution ──────────────────────────
+
+interface LogsDirResult {
+  logsDir: string;
+  resolvedLogsDir: string;
+}
+
+/**
+ * Resolve the active Hermes logs directory and its resolved form.
+ * Returns null when the directory doesn't exist (caller handles 404).
+ */
+function resolveLogsDir(): LogsDirResult | null {
+  const logsDir = getActiveHermesPaths().logs;
+  if (!existsSync(logsDir)) return null;
+  return { logsDir, resolvedLogsDir: resolve(logsDir) };
+}
 
 export interface LogGetData {
   name: string;
@@ -25,72 +41,6 @@ export interface LogGetData {
   availableLogs: LogFileMeta[];
 }
 
-/**
- * Read the last `maxLines` lines from a file efficiently by reading
- * from the end in chunks. Avoids loading multi-MB log files entirely
- * into memory just to show the last 200 lines.
- */
-function readLastLines(filePath: string, maxLines: number): {
-  allLines: number;
-  lines: string[];
-} {
-  const stats = statSync(filePath);
-  const fileSize = stats.size;
-
-  // Small file: read entirely via readFileSync (also supports test mocks)
-  if (fileSize <= CHUNK_SIZE) {
-    const content = readFileSync(filePath, "utf-8");
-    const allLines = content.split("\n").filter((l) => l.length > 0);
-    return {
-      allLines: allLines.length,
-      lines: allLines.slice(-maxLines).reverse(),
-    };
-  }
-
-  // Large file: read chunks from the end
-  const fd = openSync(filePath, "r");
-  try {
-    let collected = "";
-    let bytesToRead = Math.min(CHUNK_SIZE, fileSize);
-    let offset = fileSize - bytesToRead;
-    let lineCount = 0;
-
-    // Read chunks from the end until we have enough lines or hit the start
-    while (offset >= 0 && lineCount < maxLines) {
-      const buf = Buffer.alloc(bytesToRead);
-      readSync(fd, buf, 0, bytesToRead, offset);
-      const chunk = buf.toString("utf-8");
-      collected = chunk + collected;
-
-      // Count lines in what we've collected
-      lineCount = 0;
-      for (let i = 0; i < collected.length; i++) {
-        if (collected[i] === "\n") lineCount++;
-      }
-
-      if (lineCount >= maxLines) break;
-
-      // Move back and read the previous chunk
-      offset -= CHUNK_SIZE;
-      if (offset < 0) {
-        // Read from start with adjusted size
-        bytesToRead = CHUNK_SIZE + offset;
-        offset = 0;
-      } else {
-        bytesToRead = CHUNK_SIZE;
-      }
-    }
-
-    const allLines = collected.split("\n").filter((l) => l.length > 0);
-    return {
-      allLines: allLines.length,
-      lines: allLines.slice(-maxLines).reverse(),
-    };
-  } finally {
-    closeSync(fd);
-  }
-}
-
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
@@ -100,13 +50,14 @@ export async function GET(request: NextRequest) {
     const parsedLines = parseInt(searchParams.get("lines") || "200", 10);
     const maxLines = Number.isFinite(parsedLines) ? Math.min(parsedLines, 1000) : 200;
 
-    const logsDir = getActiveHermesPaths().logs;
-    if (!existsSync(logsDir)) {
+    const dirResult = resolveLogsDir();
+    if (!dirResult) {
       return NextResponse.json<ApiResponse<never>>(
         { error: "No logs directory found" },
         { status: 404 },
       );
     }
+    const { logsDir, resolvedLogsDir } = dirResult;
 
     let availableLogs: LogFileMeta[] = [];
     try {
@@ -126,8 +77,7 @@ export async function GET(request: NextRequest) {
         { status: 400 },
       );
     }
-    const logPath = resolve(logsDir, safeName + ".log");
-    const resolvedLogsDir = resolve(logsDir);
+    const logPath = resolve(logsDir, `${safeName}.log`);
 
     if (!logFileUnderLogsDir(resolvedLogsDir, logPath)) {
       return NextResponse.json<ApiResponse<never>>(
@@ -143,12 +93,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const stats = statSync(logPath);
-    const { allLines, lines } = readLastLines(logPath, maxLines);
+    const { allLines, lines, mtime, size } = readLastLines(logPath, maxLines);
 
     // Fallback timestamp: use file mtime for lines that have no parseable timestamp.
     // Format must match RE_SPACE_TS so the frontend parseLogLine() recognizes it.
-    const fileMtime = stats.mtime.toISOString().replace("T", " ").slice(0, 19);
+    const fileMtime = mtime.toISOString().replace("T", " ").slice(0, 19);
     const linesWithTimestamp = lines.map((line) => {
       // Only inject if line is non-empty and has no recognized timestamp pattern.
       if (!line.trim()) return line;
@@ -170,8 +119,8 @@ export async function GET(request: NextRequest) {
         name: safeName,
         totalLines: allLines,
         showingLines: lines.length,
-        size: stats.size,
-        modified: stats.mtime.toISOString(),
+        size: size,
+        modified: mtime.toISOString(),
         lines: linesWithTimestamp,
         availableLogs,
       },
@@ -192,14 +141,14 @@ export async function DELETE(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const logName = searchParams.get("name");
 
-  const logsDir = getActiveHermesPaths().logs;
-  if (!existsSync(logsDir)) {
+  const dirResult = resolveLogsDir();
+  if (!dirResult) {
     return NextResponse.json<ApiResponse<never>>(
       { error: "No logs directory found" },
       { status: 404 },
     );
   }
-  const resolvedLogsDir = resolve(logsDir);
+  const { logsDir, resolvedLogsDir } = dirResult;
 
   try {
     if (logName) {
@@ -210,7 +159,7 @@ export async function DELETE(request: NextRequest) {
           { status: 400 },
         );
       }
-      const logPath = resolve(logsDir, safe + ".log");
+      const logPath = resolve(logsDir, `${safe}.log`);
       if (!logFileUnderLogsDir(resolvedLogsDir, logPath)) {
         return NextResponse.json<ApiResponse<never>>(
           { error: "Invalid log path" },
@@ -228,7 +177,7 @@ export async function DELETE(request: NextRequest) {
     const files = listLogFilesInDir(logsDir);
     let cleared = 0;
     for (const file of files) {
-      const filePath = resolve(logsDir, file.name + ".log");
+      const filePath = resolve(logsDir, `${file.name}.log`);
       if (logFileUnderLogsDir(resolvedLogsDir, filePath)) {
         writeFileSync(filePath, "");
         cleared++;

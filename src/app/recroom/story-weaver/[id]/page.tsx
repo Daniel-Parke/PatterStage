@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, BookOpen, Sparkles, Loader2, X, RefreshCw, P
 import AppPageShell from "@/components/layout/AppPageShell";
 import ChapterList from "@/components/story-weaver/ChapterList";
 import GenerateOverlay from "@/components/story-weaver/GenerateOverlay";
-import ReaderSettings, { loadSettings, DEFAULT_SETTINGS, FONTS, THEMES, type ReadingSettings } from "@/components/story-weaver/ReaderSettings";
+import ReaderSettings, { loadSettings, DEFAULT_SETTINGS, FONTS, THEMES, WORD_COUNT_OPTIONS, type ReadingSettings } from "@/components/story-weaver/ReaderSettings";
 
 interface Chapter {
   number: number;
@@ -352,11 +352,7 @@ export default function StoryReaderPage() {
             <div>
               <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-1.5">Chapter Length</label>
               <div className="flex flex-wrap gap-2">
-                {[
-                  { id: "short", label: "800-1.2k" }, { id: "medium", label: "1.2-1.8k" },
-                  { id: "standard", label: "1.8-2.5k" }, { id: "long", label: "2.5-3.5k" },
-                  { id: "epic", label: "3.5-5k" }, { id: "marathon", label: "5k+" },
-                ].map((opt) => (
+                {WORD_COUNT_OPTIONS.map((opt) => (
                   <button key={opt.id} onClick={() => setEditWordCount(opt.id)}
                     className={`px-2 py-1 rounded text-[10px] font-mono border transition-all ${
                       editWordCount === opt.id ? "border-neon-purple/40 bg-neon-purple/15 text-neon-purple" : "border-white/8 text-white/30 hover:text-white/50"
@@ -416,11 +412,7 @@ export default function StoryReaderPage() {
             <div>
               <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-1.5">Chapter Length</label>
               <div className="flex flex-wrap gap-2">
-                {[
-                  { id: "short", label: "800-1.2k" }, { id: "medium", label: "1.2-1.8k" },
-                  { id: "standard", label: "1.8-2.5k" }, { id: "long", label: "2.5-3.5k" },
-                  { id: "epic", label: "3.5-5k" }, { id: "marathon", label: "5k+" },
-                ].map((opt) => (
+                {WORD_COUNT_OPTIONS.map((opt) => (
                   <button key={opt.id} onClick={() => setContinueWordCount(opt.id)}
                     className={`px-2 py-1 rounded text-[10px] font-mono border transition-all ${
                       continueWordCount === opt.id ? "border-green-500/40 bg-green-500/15 text-green-400" : "border-white/8 text-white/30 hover:text-white/50"

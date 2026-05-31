@@ -162,9 +162,6 @@ export function createAssistantMessage(content = ""): ChatMessage {
 
 // ── API message helpers ─────────────────────────────────────────
 
-// Re-export from types for backward compatibility
-export type { ApiMessage } from "@/types/chat";
-
 export function toApiMessages(messages: ChatMessage[], newText: string): ApiMessage[] {
   return [
     ...messages.map((m) => ({ role: m.role, content: m.content })),
@@ -205,8 +202,11 @@ export async function readChatStream(
           if (delta) {
             onDelta(delta);
           }
-        } catch {
+        } catch (e) {
           // Skip malformed JSON chunks
+          if (typeof data === "string") {
+            console.warn("[chat] Skipped malformed SSE chunk:", data.slice(0, 120), e);
+          }
         }
       }
     }
@@ -220,7 +220,7 @@ export async function readChatStream(
  * Streams the response via onDelta callback. Returns true on success.
  */
 export async function streamChatResponse(
-  apiMessages: { role: string; content: string }[],
+  apiMessages: ApiMessage[],
   sendModel: string,
   controller: AbortController,
   onDelta: (delta: string) => void,
@@ -252,7 +252,7 @@ export async function streamChatResponse(
 
     await readChatStream(reader, onDelta);
     return true;
-  } catch (err) {
+  } catch (err: unknown) {
     if (err instanceof DOMException && err.name === "AbortError") {
       return false;
     }

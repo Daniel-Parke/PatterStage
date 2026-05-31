@@ -8,8 +8,12 @@ import { appendAuditLine } from "@/lib/audit-log";
 import { fallbackConfigPutSchema } from "@/lib/fallback-config-schema";
 import { getFallbackConfig, updateFallbackConfigBatch } from "@/lib/fallbacks-repository";
 import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
+import { zodErrorResponse } from "@/lib/api-schemas";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   try {
     return NextResponse.json({ data: { config: getFallbackConfig() } });
   } catch (error) {
@@ -31,10 +35,7 @@ export async function PUT(request: NextRequest) {
 
   const parsed = fallbackConfigPutSchema.safeParse(raw);
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid request body", details: parsed.error.flatten() },
-      { status: 400 }
-    );
+    return zodErrorResponse(parsed.error);
   }
 
   try {

@@ -14,7 +14,7 @@ import {
 } from "@/lib/mission-repository";
 import { updateSession } from "@/lib/session-repository";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
-import { requireAuth } from "@/lib/api-auth";
+import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
 import { agentBackend } from "@/lib/backends";
@@ -98,7 +98,10 @@ function parseMissionBodyFields(body: Record<string, unknown>): MissionBodyField
 
 // ── GET ───────────────────────────────────────────────────────
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
   ensureSyncLayer();
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
@@ -135,6 +138,9 @@ export async function GET(request: Request) {
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  if (isChReadOnly()) {
+    return NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 });
+  }
 
   ensureSyncLayer();
 
@@ -144,7 +150,7 @@ export async function POST(request: NextRequest) {
 
     // ── Dispatch Mission ────────────────────────────────────────
     if (action === "dispatch") {
-      const { name, instruction, context, localDirs, references, skills, suggestedToolsets, goals, modelId, provider, profileName: fProfileName, missionTimeMinutes, timeoutMinutes, categoryId: categoryIdRaw, outputFormat, constraints } =
+      const { name, instruction, context, localDirs, references, skills, suggestedToolsets, goals, modelId, provider, profileName, missionTimeMinutes, timeoutMinutes, categoryId: categoryIdRaw, outputFormat, constraints } =
         parseMissionBodyFields(body);
       const { dispatchMode, schedule: scheduleVal, profileId } = body as {
         dispatchMode?: string;
@@ -152,7 +158,6 @@ export async function POST(request: NextRequest) {
         profileId?: string;
         [key: string]: unknown;
       };
-      const profileName = fProfileName;
 
       const categoryParsed = parseCategoryId(categoryIdRaw);
       if (!categoryParsed.ok) {
@@ -536,16 +541,6 @@ export async function POST(request: NextRequest) {
 
       appendAuditLine({ action: "mission.delete", resource: missionIdFinal, ok: true });
       return NextResponse.json({ data: { deleted: missionIdFinal } });
-    }
-
-    // ── Get Status ────────────────────────────────────────────
-    if (action === "status") {
-      const { id } = body as { id?: string };
-      if (!id)
-        return NextResponse.json({ error: "Mission id is required" }, { status: 400 });
-
-      const status = await agentBackend.getMissionStatus(id);
-      return NextResponse.json({ data: { status } });
     }
 
     return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });

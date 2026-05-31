@@ -14,17 +14,14 @@ const CACHE_TTL_MS = 15_000; // 15 seconds
 function readCachedConfig(): Record<string, unknown> {
   const configPath = getActiveHermesPaths().config;
 
-  // Try meta table cache first
+  // Try meta table cache first — single query for both keys
   try {
-    const cachedJson = db()
-      .prepare("SELECT value FROM meta WHERE key = ?")
-      .pluck()
-      .get("config.cached_json") as string | undefined;
+    const rows = db()
+      .prepare("SELECT key, value FROM meta WHERE key IN ('config.cached_json', 'config.cached_at')")
+      .all() as { key: string; value: string }[];
 
-    const cachedAt = db()
-      .prepare("SELECT value FROM meta WHERE key = ?")
-      .pluck()
-      .get("config.cached_at") as string | undefined;
+    const cachedJson = rows.find((r) => r.key === "config.cached_json")?.value;
+    const cachedAt = rows.find((r) => r.key === "config.cached_at")?.value;
 
     if (cachedJson && cachedAt) {
       const age = Date.now() - new Date(cachedAt).getTime();
@@ -41,16 +38,23 @@ function readCachedConfig(): Record<string, unknown> {
     return {};
   }
   const content = readFileSync(configPath, "utf-8");
-  const config = (yaml.load(content) as Record<string, unknown>) || {};
-
-  // Update cache
+  let config: Record<string, unknown>;
   try {
-    db()
-      .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
-      .run("config.cached_json", JSON.stringify(config));
-    db()
-      .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
-      .run("config.cached_at", new Date().toISOString());
+    config = (yaml.load(content) as Record<string, unknown>) || {};
+  } catch {
+    // YAML parse error — return empty config rather than crashing
+    return {};
+  }
+
+  // Update cache (both keys in a transaction for atomicity)
+  try {
+    const dbInstance = db();
+    const txn = dbInstance.transaction(() => {
+      const stmt = dbInstance.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)");
+      stmt.run("config.cached_json", JSON.stringify(config));
+      stmt.run("config.cached_at", new Date().toISOString());
+    });
+    txn();
   } catch {
     // Cache write failure is non-critical
   }
@@ -78,18 +82,34 @@ const WRITABLE_SECTIONS = new Set(
 
 // Mask sensitive values in config before returning to client
 function maskConfigSecrets(config: Record<string, unknown>): Record<string, unknown> {
-  const clone = JSON.parse(JSON.stringify(config));
-  // Mask api_key in model section
-  if (clone.model && typeof clone.model === "object" && clone.model.api_key) {
-    const key = String(clone.model.api_key);
-    clone.model.api_key = key.length > 8 ? key.slice(0, 4) + "••••" + key.slice(-4) : "••••";
+  const clone = structuredClone(config);
+  // Mask model.api_key
+  if (clone.model && typeof clone.model === "object") {
+    const m = clone.model as Record<string, unknown>;
+    if (typeof m.api_key === "string" && m.api_key.length > 0) {
+      const key = m.api_key;
+      m.api_key = key.length > 8 ? key.slice(0, 4) + "••••" + key.slice(-4) : "••••";
+    }
+  }
+  // Mask auxiliary.<task>.api_key
+  if (clone.auxiliary && typeof clone.auxiliary === "object") {
+    const aux = clone.auxiliary as Record<string, Record<string, unknown>>;
+    for (const task of Object.keys(aux)) {
+      const entry = aux[task];
+      if (typeof entry?.api_key === "string" && entry.api_key.length > 0) {
+        const key = entry.api_key;
+        entry.api_key = key.length > 8 ? key.slice(0, 4) + "••••" + key.slice(-4) : "••••";
+      }
+    }
   }
   return clone;
 }
 
 // GET /api/config — return full config (with secrets masked)
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const auth = requireAuth(request);
+    if (auth) return auth;
     const config = readCachedConfig();
     return NextResponse.json({ data: maskConfigSecrets(config) });
   } catch (error) {

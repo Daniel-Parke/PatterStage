@@ -217,3 +217,10 @@ export function zodErrorResponse(error: z.ZodError): NextResponse {
     { status: 400 }
   );
 }
+
+// Synchronous JSON body parser with Zod validation for NextRequest.
+// Returns { ok, data } or { ok: false, error: NextResponse } — never throws.
+// Callers that need the ZodError directly should use the pattern:
+//   let raw: unknown; try { raw = await request.json(); } catch { return 400; }
+//   const parsed = schema.safeParse(raw);
+//   if (!parsed.success) return zodErrorResponse(parsed.error);

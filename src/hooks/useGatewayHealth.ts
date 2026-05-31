@@ -10,6 +10,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { safeApiCall } from "@/lib/api-fetch";
 import { CHAT_DEFAULT_MODEL } from "@/types/chat";
 
 const GATEWAY_HEALTH_URL = "/api/gateway/health";
@@ -35,8 +36,9 @@ export interface GatewayHealth {
   modelsLoading: boolean;
 }
 
-interface GatewayModelsResponse {
-  data?: { models?: string[] };
+interface RegistryModelRecord {
+  modelId: string;
+  name: string;
 }
 
 /**
@@ -62,42 +64,26 @@ export function useGatewayHealth(): GatewayHealth & {
 
   // ── Check gateway connectivity ───────────────────────────────
   const checkOnline = useCallback(async () => {
-    try {
-      const res = await fetch(GATEWAY_HEALTH_URL, {
-        method: "GET",
-        signal: AbortSignal.timeout(3000),
-      });
-      if (res.ok) {
-        const json = await res.json();
-        setOnline(json.data?.online === true);
-      } else {
-        setOnline(false);
-      }
-    } catch {
-      setOnline(false);
-    }
+    const result = await safeApiCall<{ online: boolean }>(GATEWAY_HEALTH_URL, {
+      signal: AbortSignal.timeout(3000),
+    });
+    setOnline(result.ok ? result.data?.online === true : false);
   }, []);
 
   // ── Check agent default model setup ─────────────────────────
   const checkAgentModel = useCallback(async () => {
-    try {
-      const [defaultsRes, configRes] = await Promise.all([
-        fetch(MODELS_DEFAULTS_URL, { signal: AbortSignal.timeout(5000) }),
-        fetch(CONFIG_URL, { signal: AbortSignal.timeout(5000) }),
-      ]);
-      let registryOk = false;
-      if (defaultsRes.ok) {
-        const defaultsJson = (await defaultsRes.json()) as {
-          data?: { defaults?: { agent?: string } };
-        };
-        registryOk = Boolean(defaultsJson.data?.defaults?.agent?.trim());
-      }
+    const [defaultsRes, configRes] = await Promise.all([
+      safeApiCall<{ defaults?: { agent?: string } }>(MODELS_DEFAULTS_URL, {
+        signal: AbortSignal.timeout(5000),
+      }),
+      safeApiCall<{ model?: { default?: string } | string }>(CONFIG_URL, {
+        signal: AbortSignal.timeout(5000),
+      }),
+    ]);
+    const registryOk = defaultsRes.ok && Boolean(defaultsRes.data?.defaults?.agent?.trim());
       let diskOk = false;
       if (configRes.ok) {
-        const cfgJson = (await configRes.json()) as {
-          data?: { model?: { default?: string } | string };
-        };
-        const modelCfg = cfgJson.data?.model;
+        const modelCfg = configRes.data?.model;
         if (typeof modelCfg === "string") {
           diskOk = modelCfg.trim().length > 0;
         } else if (modelCfg && typeof modelCfg === "object") {
@@ -105,9 +91,6 @@ export function useGatewayHealth(): GatewayHealth & {
         }
       }
       setAgentDefaultModelSet(registryOk && diskOk);
-    } catch {
-      setAgentDefaultModelSet(null);
-    }
   }, []);
 
   // ── Fetch model lists ───────────────────────────────────────
@@ -118,43 +101,34 @@ export function useGatewayHealth(): GatewayHealth & {
     let registryIds: string[] = [];
     let gateway: string[] = [CHAT_DEFAULT_MODEL];
 
-    try {
-      const [registryRes, gatewayRes] = await Promise.all([
-        fetch(MODELS_REGISTRY_URL),
-        fetch(GATEWAY_MODELS_URL, { signal: AbortSignal.timeout(5000) }),
-      ]);
+    const [registryRes, gatewayRes] = await Promise.all([
+      safeApiCall<{ models?: RegistryModelRecord[] }>(MODELS_REGISTRY_URL),
+      safeApiCall<{ models?: string[] }>(GATEWAY_MODELS_URL, {
+        signal: AbortSignal.timeout(5000),
+      }),
+    ]);
 
-      if (registryRes.ok) {
-        const registryJson = await registryRes.json();
-        const records = registryJson.data?.models as Array<{
-          modelId: string;
-          name: string;
-        }> | undefined;
-        if (Array.isArray(records)) {
-          registryIds = records
-            .map((m) => m.modelId)
-            .filter((id): id is string => typeof id === "string" && id.length > 0);
-          for (const m of records) {
-            if (m.modelId) labels[m.modelId] = m.name;
-          }
-        }
+    if (registryRes.ok && Array.isArray(registryRes.data?.models)) {
+      const records = registryRes.data.models;
+      registryIds = records
+        .map((m) => m.modelId)
+        .filter((id): id is string => typeof id === "string" && id.length > 0);
+      for (const m of records) {
+        if (m.modelId) labels[m.modelId] = m.name;
       }
-
-      if (gatewayRes.ok) {
-        const gatewayJson = (await gatewayRes.json()) as GatewayModelsResponse;
-        const ids: string[] = gatewayJson.data?.models || [];
-        if (ids.length > 0) gateway = ids;
-      } else {
-        setModelsError("Gateway models unavailable");
-      }
-    } catch {
-      setModelsError("Failed to load models");
-    } finally {
-      setRegistryModelIds(registryIds);
-      setGatewayModelIds(gateway);
-      setModelLabels(labels);
-      setModelsLoading(false);
     }
+
+    if (gatewayRes.ok) {
+      const ids: string[] = gatewayRes.data?.models || [];
+      if (ids.length > 0) gateway = ids;
+    } else {
+      setModelsError("Gateway models unavailable");
+    }
+
+    setRegistryModelIds(registryIds);
+    setGatewayModelIds(gateway);
+    setModelLabels(labels);
+    setModelsLoading(false);
   }, []);
 
   // ── Initial load ────────────────────────────────────────────

@@ -5,13 +5,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
-import {
-  getFallbackEntry,
-  updateFallbackEntry,
-  listFallbackChain,
-} from "@/lib/fallbacks-repository";
-import { getFallbackConfig } from "@/lib/fallbacks-repository";
-import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
+import { getFallbackEntry, updateFallbackEntry, listFallbackChain, getFallbackConfig } from "@/lib/fallbacks-repository";
+import { fallbackReorderSchema } from "@/lib/fallback-config-schema";
+import { inTransaction } from "@/lib/db";
+import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
+import { zodErrorResponse } from "@/lib/api-schemas";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -24,19 +22,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const body = raw as Record<string, unknown>;
-  const entryId = body?.entryId as string | undefined;
-  const direction = body?.direction as "up" | "down" | undefined;
-
-  if (!entryId || !direction) {
-    return NextResponse.json({
-      error: "entryId and direction are required",
-    }, { status: 400 });
+  const parsed = fallbackReorderSchema.safeParse(raw);
+  if (!parsed.success) {
+    return zodErrorResponse(parsed.error);
   }
 
-  if (direction !== "up" && direction !== "down") {
-    return NextResponse.json({ error: "direction must be 'up' or 'down'" }, { status: 400 });
-  }
+  const { entryId, direction } = parsed.data;
 
   try {
     const entry = getFallbackEntry(entryId);
@@ -56,31 +47,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ data: { fallbacks: chain } });
     }
 
-    // Swap positions
-    const posA = chain[idx].position;
-    const posB = chain[targetIdx].position;
-
-    updateFallbackEntry(chain[idx].id, { position: posB });
-    updateFallbackEntry(chain[targetIdx].id, { position: posA });
-
-    // Re-sync
-    const updatedChain = listFallbackChain().filter((e) => e.enabled);
-    syncFallbacksToHermesConfig(
-      updatedChain.map((e) => ({
-        modelId: e.modelIdString,
-        provider: e.provider,
-        baseUrl: null,
-        overrideBaseUrl: e.overrideBaseUrl,
-        apiKey: null,
-      })),
-      getFallbackConfig()
-    );
-
-    appendAuditLine({
-      action: "fallback.reorder",
-      resource: entryId,
-      ok: true,
+    // Swap positions atomically
+    inTransaction(() => {
+      const posA = chain[idx].position;
+      const posB = chain[targetIdx].position;
+      updateFallbackEntry(chain[idx].id, { position: posB });
+      updateFallbackEntry(chain[targetIdx].id, { position: posA });
     });
+
+    syncEnabledFallbackChainToHermes(getFallbackConfig());
+    try {
+      appendAuditLine({
+        action: "fallback.reorder",
+        resource: entryId,
+        ok: true,
+      });
+    } catch {
+      // Non-fatal
+    }
 
     const refreshed = listFallbackChain();
     return NextResponse.json({ data: { fallbacks: refreshed } });

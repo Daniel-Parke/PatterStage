@@ -2,8 +2,10 @@ import { listFallbackChain } from "@/lib/fallbacks-repository";
 import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
 import type { FallbackConfig } from "@/types/hermes";
 
-export function mapEnabledFallbackChainForSync() {
-  return listFallbackChain()
+export function syncEnabledFallbackChainToHermes(
+  config: FallbackConfig
+): { backupPath: string | null; configPath: string; hermesHome: string } | null {
+  const chain = listFallbackChain()
     .filter((e) => e.enabled)
     .map((e) => ({
       modelId: e.modelIdString,
@@ -12,10 +14,6 @@ export function mapEnabledFallbackChainForSync() {
       overrideBaseUrl: e.overrideBaseUrl,
       apiKey: null as string | null,
     }));
-}
-
-export function syncEnabledFallbackChainToHermes(config: FallbackConfig) {
-  const chain = mapEnabledFallbackChainForSync();
   if (chain.length === 0) return null;
   return syncFallbacksToHermesConfig(chain, {
     restorePrimaryOnFallback: config.restorePrimaryOnFallback,

@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Brain,
   Plus,
@@ -26,6 +26,7 @@ import Modal from "@/components/ui/Modal";
 import {
   getPersonalityEmoji,
 } from "@/lib/personalities";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface Personality {
   name: string;
@@ -46,10 +47,16 @@ function PersonalityCard({
   const [textExpanded, setTextExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleCopy = () => {
+    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
     navigator.clipboard.writeText(personality.prompt);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    copiedTimerRef.current = setTimeout(() => {
+      copiedTimerRef.current = null;
+      setCopied(false);
+    }, 2000);
   };
 
   const preview =
@@ -149,16 +156,11 @@ function EditPersonalityModal({
     setSaving(true);
     setError(null);
     try {
-      const body = JSON.stringify({ profile: name.trim(), prompt: prompt.trim() });
-      const res = await fetch("/api/personalities", {
+      await apiFetch("/api/personalities", {
         method: isEdit ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body,
+        body: JSON.stringify({ profile: name.trim(), prompt: prompt.trim() }),
       });
-      if (!res.ok) {
-        const resBody = await res.json() as { error?: string };
-        throw new Error(resBody.error || `Failed to ${isEdit ? "update" : "create"} personality`);
-      }
+      setSaving(false);
       onSaved();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
@@ -206,7 +208,6 @@ function EditPersonalityModal({
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. pirate, teacher, creative"
-            disabled={false}
             className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-neon-purple/50 transition-colors font-mono"
           />
           <p className="text-xs text-white/30 font-mono">
@@ -255,17 +256,16 @@ export default function PersonalitiesPage() {
   const loadPersonalities = useCallback(async () => {
     setLoading(true);
     try {
-      const [persRes, configRes] = await Promise.all([
-        fetch("/api/personalities"),
-        fetch("/api/config"),
+      const [persData, configData] = await Promise.all([
+        apiFetch("/api/personalities"),
+        apiFetch("/api/config"),
       ]);
-      const persData = await persRes.json();
-      const configData = await configRes.json();
-
-      setPersonalities(persData.data?.personalities || persData.personalities || []);
-      setActivePersonality(
-        ((configData.data?.display as Record<string, unknown>)?.personality as string) || ""
-      );
+      setPersonalities(persData?.data?.personalities ?? []);
+      const displaySection = configData?.data?.display;
+      const activeP = displaySection && typeof displaySection === "object" && "personality" in displaySection
+        ? String((displaySection as Record<string, unknown>).personality ?? "")
+        : "";
+      setActivePersonality(activeP);
     } catch {
       showToast("Failed to load personalities", "error");
     } finally {
@@ -279,15 +279,13 @@ export default function PersonalitiesPage() {
 
   const handleActivate = async (name: string) => {
     try {
-      const res = await fetch("/api/config", {
+      await apiFetch("/api/config", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           section: "display",
           values: { personality: activePersonality === name ? "" : name },
         }),
       });
-      if (!res.ok) throw new Error("Failed to set active personality");
       setActivePersonality(activePersonality === name ? "" : name);
       showToast(
         activePersonality === name

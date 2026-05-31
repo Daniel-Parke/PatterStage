@@ -25,7 +25,12 @@ import CredentialPicker, {
   type CredentialOption,
 } from "@/components/models/CredentialPicker";
 import { inputFieldClasses } from "@/lib/theme";
+import { apiFetch } from "@/lib/api-fetch";
 
+/**
+ * Minimal model shape for the editor form — a subset of ApiModel
+ * that omits defaults, createdAt, updatedAt (not editable in the form).
+ */
 export interface ModelEditorRecord {
   id: string;
   name: string;
@@ -69,32 +74,6 @@ function initialFormState(model: ModelEditorRecord | null): FormState {
   };
 }
 
-async function postJson(url: string, body: unknown): Promise<unknown> {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || `POST ${url} failed (${res.status})`);
-  }
-  return res.json();
-}
-
-async function putJson(url: string, body: unknown): Promise<unknown> {
-  const res = await fetch(url, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || `PUT ${url} failed (${res.status})`);
-  }
-  return res.json();
-}
-
 export default function ModelEditor({
   model,
   credentials,
@@ -136,11 +115,14 @@ export default function ModelEditor({
       if (!usingExisting && form.apiKey.trim().length > 0) {
         const label =
           form.credentialLabel.trim() || `${form.provider} key`;
-        const result = (await postJson("/api/credentials", {
-          label,
-          provider: form.provider,
-          apiKey: form.apiKey.trim(),
-        })) as { data?: { credential?: { id: string } } };
+        const result = await apiFetch<{ data?: { credential?: { id: string } } }>("/api/credentials", {
+          method: "POST",
+          body: JSON.stringify({
+            label,
+            provider: form.provider,
+            apiKey: form.apiKey.trim(),
+          }),
+        });
         const newId = result.data?.credential?.id;
         if (!newId) throw new Error("Credential creation returned no id");
         credentialsId = newId;
@@ -169,9 +151,9 @@ export default function ModelEditor({
       };
 
       if (isEdit && model) {
-        await putJson(`/api/models/${encodeURIComponent(model.id)}`, body);
+        await apiFetch(`/api/models/${encodeURIComponent(model.id)}`, { method: "PUT", body: JSON.stringify(body) });
       } else {
-        await postJson("/api/models", body);
+        await apiFetch("/api/models", { method: "POST", body: JSON.stringify(body) });
       }
 
       onSaved();

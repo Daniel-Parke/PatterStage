@@ -24,7 +24,7 @@ export interface PresetOption {
   value: string;      // Cron expression                     e.g. "*/5 * * * *"
 }
 
-// Preset intervals — ordered by frequency
+// Preset intervals — ordered by frequency (cron expression format)
 export const CRON_PRESETS: PresetOption[] = [
   { label: "Every 5 minutes",  shortLabel: "5m",  value: "*/5 * * * *"  },
   { label: "Every 10 minutes", shortLabel: "10m", value: "*/10 * * * *" },
@@ -38,6 +38,29 @@ export const CRON_PRESETS: PresetOption[] = [
   { label: "Every 12 hours",  shortLabel: "12h", value: "0 */12 * * *" },
   { label: "Daily at midnight",shortLabel: "1d",  value: "0 0 * * *"    },
   { label: "Daily at 9am",    shortLabel: "9am", value: "0 9 * * *"    },
+];
+
+// Interval presets for "every N" format (used by IntervalSelector and ScheduleSelector)
+export interface IntervalPreset {
+  value: string;   // "every 5m", "every 1h", etc.
+  label: string;   // "5 minutes", "1 hour", etc.
+}
+
+export const INTERVAL_PRESETS: IntervalPreset[] = [
+  { value: "every 1m",  label: "1 minute"  },
+  { value: "every 5m",  label: "5 minutes" },
+  { value: "every 10m", label: "10 minutes"},
+  { value: "every 15m", label: "15 minutes"},
+  { value: "every 30m", label: "30 minutes"},
+  { value: "every 1h",  label: "1 hour"    },
+  { value: "every 2h",  label: "2 hours"   },
+  { value: "every 3h",  label: "3 hours"   },
+  { value: "every 4h",  label: "4 hours"   },
+  { value: "every 8h",  label: "8 hours"   },
+  { value: "every 12h", label: "12 hours"  },
+  { value: "every 1d",  label: "1 day"     },
+  { value: "every 3d",  label: "3 days"    },
+  { value: "every 7d",  label: "7 days"    },
 ];
 
 // Reverse-lookup: cron expression → preset index (-1 = custom)
@@ -56,7 +79,7 @@ interface CronScheduleInputProps {
 export default function CronScheduleInput({ value, onChange, error }: CronScheduleInputProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [textValue, setTextValue] = useState(value);
-  const [matchedPreset, setMatchedPreset] = useState<number>(-2); // -2 = not yet determined
+  const [matchedPreset, setMatchedPreset] = useState<number>(-1); // -1 = not matched yet
   const [customLabel, setCustomLabel] = useState<string>("");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -94,7 +117,7 @@ export default function CronScheduleInput({ value, onChange, error }: CronSchedu
     const trimmed = raw.trim();
     if (!trimmed) {
       onChange("");
-      setMatchedPreset(-2);
+      setMatchedPreset(-1);
       setCustomLabel("");
       return;
     }

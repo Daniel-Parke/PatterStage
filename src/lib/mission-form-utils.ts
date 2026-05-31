@@ -5,6 +5,11 @@
 import type { LocalDirEntry } from "@/types/hermes";
 import type { ManagedCategory } from "@/components/missions/CategoryManagerModal";
 
+/** Split newline-delimited goals string into non-empty array. */
+export function splitGoals(goals: string): string[] {
+  return goals.split("\n").filter((g) => g.trim());
+}
+
 /**
  * Map categories to the common { id, name, color } shape used across modals.
  * Consolidates the repeated `categories.map(c => ({ id, name, color }))` pattern.
@@ -79,7 +84,7 @@ export function buildTemplatePayload({
     context,
     outputFormat,
     constraints,
-    goals: goals.split("\n").filter((g) => g.trim()),
+    goals: splitGoals(goals),
     localDirs,
     references,
     suggestedSkills,
@@ -97,18 +102,4 @@ export function buildTemplatePayload({
   }
 
   return payload;
-}
-
-/**
- * Normalize a model value for API payloads.
- */
-export function normalizeModelParam(value: string): string | undefined {
-  return value?.trim() || undefined;
-}
-
-/**
- * Normalize a provider value for API payloads.
- */
-export function normalizeProviderParam(value: string): string | undefined {
-  return value?.trim() || undefined;
 }

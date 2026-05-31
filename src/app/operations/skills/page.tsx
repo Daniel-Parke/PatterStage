@@ -7,7 +7,7 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   FileText, ToggleRight, ToggleLeft, X, ChevronDown, ChevronRight,
-  Edit3, Save, RotateCcw,
+  Edit3, Save, RotateCcw, type LucideIcon,
 } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
@@ -19,33 +19,12 @@ import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
-
-interface Skill {
-  name: string;
-  category: string;
-  path: string;
-  description: string;
-  enabled: boolean;
-  size: number;
-  lastModified: string;
-}
-
-interface SkillsData {
-  skills: Skill[];
-  categories: Record<string, Skill[]>;
-  total: number;
-  categoryCount: number;
-  profile: string;
-}
+import { apiFetch } from "@/lib/api-fetch";
+import type { Skill, SkillsData } from "@/types/hermes";
 
 // ── Pure helpers (hoisted outside component) ──────────────────────────────
 
-function effectiveSkillEnabled(
-  skill: Skill,
-  toggling: Record<string, boolean>,
-): boolean {
-  return skill.name in toggling ? toggling[skill.name] : skill.enabled;
-}
+// effectiveSkillEnabled inlined at call sites for clarity: toggling[skill.name] ?? skill.enabled
 
 function filterBySearch(skills: Skill[], search: string) {
   return skills.filter(
@@ -112,14 +91,12 @@ export default function SkillsPage() {
   const importSkillsFromHermes = async () => {
     setImporting(true);
     try {
-      const res = await fetch("/api/agent/profiles/sync/import", {
+      const data = await apiFetch("/api/agent/profiles/sync/import", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ importSkills: true }),
       });
-      const body = (await res.json()) as { error?: string; data?: { success?: boolean } };
-      if (!res.ok || body.data?.success === false) {
-        throw new Error(body.error ?? "Import failed");
+      if (data.data?.success === false) {
+        throw new Error(data.error ?? "Import failed");
       }
       showToast("Skills catalog imported from Hermes disk", "success");
       await loadSkills();
@@ -133,8 +110,7 @@ export default function SkillsPage() {
   const loadSkills = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/skills?profile=${selectedProfile}`);
-      const d = await res.json();
+      const d = await apiFetch(`/api/skills?profile=${selectedProfile}`);
       setData(d.data);
       // Seed all categories as collapsed on first load
       const cats = Object.keys(d.data.categories || {});
@@ -151,8 +127,8 @@ export default function SkillsPage() {
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
   // Derive active/inactive from the skills + pending toggles
-  const activeSkills = (data?.skills || []).filter((s) => effectiveSkillEnabled(s, toggling));
-  const inactiveSkills = (data?.skills || []).filter((s) => !effectiveSkillEnabled(s, toggling));
+  const activeSkills = (data?.skills || []).filter((s) => toggling[s.name] ?? s.enabled);
+  const inactiveSkills = (data?.skills || []).filter((s) => !(toggling[s.name] ?? s.enabled));
 
   // ── Toggle — fires API immediately, optimistic update, reverts on failure ───
 
@@ -161,27 +137,22 @@ export default function SkillsPage() {
       const next = !currentEnabled;
       // Optimistic
       setToggling((prev) => ({ ...prev, [skillName]: next }));
+      const prevData = data; // Snapshot for revert on failure
+      setData((prev) =>
+        prev
+          ? {
+              ...prev,
+              skills: prev.skills.map((s) =>
+                s.name === skillName ? { ...s, enabled: next } : s,
+              ),
+            }
+          : prev,
+      );
       try {
-        const res = await fetch(`/api/skills/${encodeURIComponent(skillName)}/toggle`, {
+        await apiFetch(`/api/skills/${encodeURIComponent(skillName)}/toggle`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ profile: selectedProfile, enabled: next }),
         });
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error((body as { error?: string })?.error || `HTTP ${res.status}`);
-        }
-        // Commit to server state
-        setData((prev) =>
-          prev
-            ? {
-                ...prev,
-                skills: prev.skills.map((s) =>
-                  s.name === skillName ? { ...s, enabled: next } : s,
-                ),
-              }
-            : prev,
-        );
         // Clear pending toggle
         setToggling((prev) => {
           const next2 = { ...prev };
@@ -193,16 +164,19 @@ export default function SkillsPage() {
           "success",
         );
       } catch (err) {
-        // Revert optimistic update
+        // Revert BOTH optimistic states on failure
         setToggling((prev) => {
           const next2 = { ...prev };
           delete next2[skillName];
           return next2;
         });
+        if (prevData) {
+          setData(prevData);
+        }
         showToast(err instanceof Error ? err.message : "Failed to update skill", "error");
       }
     },
-    [selectedProfile, showToast],
+    [data, selectedProfile, showToast],
   );
 
   // ── Skill content preview ───────────────────────────────────────────────────
@@ -212,13 +186,7 @@ export default function SkillsPage() {
     setEditContent("");
     setEditOriginal("");
     try {
-      const res = await fetch(skillApiUrl(skill.name));
-      const d = await res.json();
-      if (!res.ok) {
-        showToast(d?.error || "Failed to load skill", "error");
-        setEditingSkill(null);
-        return;
-      }
+      const d = await apiFetch(skillApiUrl(skill.name));
       const content = d.data?.content || "";
       setEditContent(content);
       setEditOriginal(content);
@@ -232,15 +200,10 @@ export default function SkillsPage() {
     if (!editingSkill || savingEdit) return;
     setSavingEdit(true);
     try {
-      const res = await fetch(skillApiUrl(editingSkill), {
+      await apiFetch(skillApiUrl(editingSkill), {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: editContent }),
       });
-      const d = await res.json();
-      if (!res.ok) {
-        throw new Error(d?.error || "Failed to save skill");
-      }
       setEditOriginal(editContent);
       showToast(`${editingSkill} saved`, "success");
       if (expandedSkill === editingSkill) {
@@ -262,12 +225,7 @@ export default function SkillsPage() {
     }
     setExpandedSkill(skill.name);
     try {
-      const res = await fetch(skillApiUrl(skill.name));
-      const d = await res.json();
-      if (!res.ok) {
-        setSkillContent("// " + (d?.error || res.statusText || "Failed to load"));
-        return;
-      }
+      const d = await apiFetch(skillApiUrl(skill.name));
       setSkillContent(d.data?.content || "// No content");
     } catch {
       setSkillContent("// Failed to load content");
@@ -364,7 +322,7 @@ export default function SkillsPage() {
                   expandedSkill={expandedSkill}
                   skillContent={skillContent}
                   toggling={toggling}
-                  onToggleSkill={(skill) => toggleSkill(skill.name, true)}
+                  onToggleSkill={(skill) => toggleSkill(skill.name, toggling[skill.name] ?? skill.enabled)}
                   onViewSkill={viewSkill}
                   onEditSkill={openSkillEditor}
                 />
@@ -409,7 +367,7 @@ export default function SkillsPage() {
                   expandedSkill={expandedSkill}
                   skillContent={skillContent}
                   toggling={toggling}
-                  onToggleSkill={(skill) => toggleSkill(skill.name, false)}
+                  onToggleSkill={(skill) => toggleSkill(skill.name, toggling[skill.name] ?? !skill.enabled)}
                   onViewSkill={viewSkill}
                   onEditSkill={openSkillEditor}
                 />
@@ -493,7 +451,7 @@ function CategoryLabel({ category, count, accentColor, collapsed, onToggle }: Ca
       <span className={`text-[10px] font-mono ${accentColor}`}>
         ({count})
       </span>
-      <div className={`h-px flex-1 bg-gradient-to-r from-white/10 to-transparent ${accentColor.replace("/50", "/5").replace("/30", "/5")}`} />
+      <div className={`h-px flex-1 bg-gradient-to-r from-white/10 to-transparent ${accentColor.replace(/\/\d+$/, "/5")}`} />
     </button>
   );
 }
@@ -570,7 +528,7 @@ function SkillCategoryGrid({
 
 interface SkillSectionProps {
   title: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: LucideIcon;
   iconColor: string;
   count: number;
   ofTotal: number;

@@ -275,7 +275,7 @@ export const CONFIG_SECTIONS: Record<string, SectionDef> = {
     id: "code_execution",
     label: "Code Execution",
     description: "Settings for the code execution sandbox",
-    icon: Terminal,
+    icon: Cpu,
     color: "green",
     fields: [
       { key: "max_tool_calls", label: "Max Tool Calls", type: "number", min: 1, max: 200, description: "Maximum tool calls per code execution" },
@@ -346,7 +346,7 @@ export const CONFIG_SECTIONS: Record<string, SectionDef> = {
     id: "streaming",
     label: "Streaming",
     description: "Response streaming configuration",
-    icon: Activity,
+    icon: Globe,
     color: "cyan",
     fields: [
       { key: "enabled", label: "Enabled", type: "boolean", description: "Enable response streaming" },

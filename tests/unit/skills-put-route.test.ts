@@ -27,6 +27,7 @@ const mockRequireAuth = jest.fn(() => null);
 
 jest.mock("@/lib/api-auth", () => ({
   requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
+  isChReadOnly: jest.fn(() => false),
 }));
 
 const mockEnsureDb = jest.fn();

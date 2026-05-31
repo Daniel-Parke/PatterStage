@@ -34,6 +34,15 @@ export const THEMES: Record<string, { bg: string; text: string; panel: string; a
   light:  { bg: "#f5f0e8", text: "#2c2c2c", panel: "#e8e0d4", accent: "#7c3aed" },
 };
 
+export const WORD_COUNT_OPTIONS: Array<{ id: string; label: string }> = [
+  { id: "short", label: "800-1.2k" },
+  { id: "medium", label: "1.2-1.8k" },
+  { id: "standard", label: "1.8-2.5k" },
+  { id: "long", label: "2.5-3.5k" },
+  { id: "epic", label: "3.5-5k" },
+  { id: "marathon", label: "5k+" },
+];
+
 const STORAGE_KEY = "story-weaver-reader-settings";
 
 export function loadSettings(): ReadingSettings {

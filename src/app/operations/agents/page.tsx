@@ -15,6 +15,7 @@ import Modal from "@/components/ui/Modal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import type { AgentProfile, ProfileFile } from "@/types/hermes";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface EditorState {
   profileId: string;
@@ -58,20 +59,18 @@ export default function BehaviourPage() {
   ): Promise<void> => {
     setSyncBusy(true);
     try {
-      const res = await fetch(url, {
+      const data = await apiFetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = (await res.json()) as { error?: string; data?: { success?: boolean } };
-      if (!res.ok || data.data?.success === false) {
+      if (data.data?.success === false) {
         showToast(data.error ?? errorMessage, "error");
         return;
       }
       showToast(successMessage, "success");
       await loadProfiles();
-    } catch {
-      showToast(errorMessage, "error");
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : errorMessage, "error");
     } finally {
       setSyncBusy(false);
     }
@@ -90,7 +89,7 @@ export default function BehaviourPage() {
       "/api/agent/profiles/sync/push",
       profileSyncBody(slug),
       slug === "default"
-        ? "Pushed Bob to Hermes. Model defaults re-applied to config.yaml."
+        ? `Pushed default profile to Hermes. Model defaults re-applied to config.yaml.`
         : `Pushed ${slug} to Hermes`,
       "Push failed",
     );
@@ -122,8 +121,7 @@ export default function BehaviourPage() {
   const loadProfiles = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/agent/profiles");
-      const data = await res.json();
+      const data = await apiFetch("/api/agent/profiles");
       setProfiles(data.data?.profiles || []);
     } catch {
       showToast("Failed to load profiles", "error");
@@ -145,28 +143,22 @@ export default function BehaviourPage() {
     if (creating || !createName.trim()) return;
     setCreating(true);
     try {
-      const res = await fetch("/api/agent/profiles", {
+      await apiFetch("/api/agent/profiles", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: createName.trim(),
           description: createDescription.trim(),
           cloneFrom: createCloneFrom,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) {
-        showToast(data.error || "Failed to create profile", "error");
-        return;
-      }
       showToast(`Profile "${createName.trim()}" created`, "success");
       setShowCreate(false);
       setCreateName("");
       setCreateDescription("");
       setCreateCloneFrom("default");
-      loadProfiles();
-    } catch {
-      showToast("Failed to create profile", "error");
+      await loadProfiles();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Failed to create profile", "error");
     } finally {
       setCreating(false);
     }
@@ -176,23 +168,18 @@ export default function BehaviourPage() {
     if (deleting || !deleteTarget) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/agent/profiles/${deleteTarget}`, {
+      await apiFetch(`/api/agent/profiles/${deleteTarget}`, {
         method: "DELETE",
       });
-      if (!res.ok) {
-        const data = await res.json();
-        showToast(data.error || "Failed to delete profile", "error");
-        return;
-      }
       showToast("Profile deleted", "success");
       setDeleteTarget(null);
       if (selectedProfileId === deleteTarget) {
         setSelectedProfileId(null);
         setEditor(null);
       }
-      loadProfiles();
-    } catch {
-      showToast("Failed to delete profile", "error");
+      await loadProfiles();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Failed to delete profile", "error");
     } finally {
       setDeleting(false);
     }
@@ -203,12 +190,7 @@ export default function BehaviourPage() {
       const url = profileId === "default"
         ? `/api/agent/files/${file.key}`
         : `/api/agent/files/${file.key}?profile=${profileId}`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if (!res.ok) {
-        showToast(data.error || "Failed to load file", "error");
-        return;
-      }
+      const data = await apiFetch(url);
       const content = data.data?.content || "";
       setEditor({
         profileId,
@@ -219,8 +201,8 @@ export default function BehaviourPage() {
       });
       setPreviewMode(true);
       setSaveStatus("idle");
-    } catch {
-      showToast("Failed to load file", "error");
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Failed to load file", "error");
     }
   };
 
@@ -232,17 +214,15 @@ export default function BehaviourPage() {
       const url = editor.profileId === "default"
         ? `/api/agent/files/${editor.fileKey}`
         : `/api/agent/files/${editor.fileKey}?profile=${editor.profileId}`;
-      const res = await fetch(url, {
+      await apiFetch(url, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: editor.content, backup: true }),
       });
-      if (!res.ok) throw new Error("Save failed");
       setEditor({ ...editor, original: editor.content });
       setSaveStatus("saved");
       showToast(`${editor.fileName} saved`, "success");
       setTimeout(() => setSaveStatus("idle"), 2000);
-      loadProfiles();
+      await loadProfiles();
     } catch {
       setSaveStatus("error");
       showToast("Failed to save file", "error");
@@ -301,10 +281,10 @@ export default function BehaviourPage() {
         <ProfileSyncBar
           selectedSlug={selectedProfileId}
           onPushAll={handlePushAll}
-          onPullAll={() => void handlePullAll()}
-          onImportDiscovered={() => void handleImportDiscovered()}
+          onPullAll={handlePullAll}
+          onImportDiscovered={handleImportDiscovered}
           onPushOne={handlePushOne}
-          onPullOne={(slug) => void handlePullOne(slug)}
+          onPullOne={handlePullOne}
           busy={syncBusy}
         />
 

@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useToast } from "@/components/ui/Toast";
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall, apiFetch } from "@/lib/api-fetch";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
 import { TASK_TYPES, type TaskType } from "@/lib/hermes-providers";
@@ -34,7 +34,7 @@ export function useModelsPage() {
   const [fallbackConfig, setFallbackConfig] = useState<FallbackConfig>({
     restorePrimaryOnFallback: true,
     fallbackNotification: false,
-    apiMaxRetries: 2,
+    apiMaxRetries: 3,
   });
   const [syncingFallback, setSyncingFallback] = useState(false);
   const [fallbackConfigSaving, setFallbackConfigSaving] = useState(false);
@@ -56,44 +56,23 @@ export function useModelsPage() {
     try {
       // First, sync models from ~/.hermes/config.yaml — ensures we show
       // live data even if the user changed defaults externally via hermes CLI
-      const importRes = await fetch("/api/models/import", { method: "POST" });
-      if (!importRes.ok) {
-        console.warn(`Model auto-import failed (${importRes.status}) — showing cached data`);
-      }
+      await apiFetch("/api/models/import", { method: "POST" }).catch((err) => {
+        console.warn("Model auto-import failed — showing cached data:", err instanceof Error ? err.message : err);
+      });
 
-      const [mRes, cRes, dRes, driftRes, fbRes, fbCfgRes] = await Promise.all([
-        fetch(`/api/models`),
-        fetch("/api/credentials"),
-        fetch(`/api/models/defaults`),
-        fetch("/api/models/sync/drift"),
-        fetch("/api/models/fallbacks"),
-        fetch("/api/models/fallbacks/config"),
+      const [mData, cData, dData, driftData, fbData, fbCfgData] = await Promise.all([
+        apiFetch("/api/models"),
+        apiFetch("/api/credentials"),
+        apiFetch("/api/models/defaults"),
+        apiFetch("/api/models/sync/drift").catch(() => ({ data: null as SyncDrift | null })),
+        apiFetch("/api/models/fallbacks").catch(() => ({ data: null as { entries?: FallbackChainEntry[] } | null })),
+        apiFetch("/api/models/fallbacks/config").catch(() => ({ data: null as { config?: FallbackConfig } | null })),
       ]);
 
-      if (!mRes.ok) throw new Error(`Failed to load models (${mRes.status})`);
-      if (!cRes.ok) throw new Error(`Failed to load credentials (${cRes.status})`);
-      if (!dRes.ok) throw new Error(`Failed to load defaults (${dRes.status})`);
-      if (!driftRes.ok) { /* drift check is non-critical */ }
-      if (!fbRes.ok) { /* fallback chain is non-critical */ }
-      if (!fbCfgRes.ok) { /* fallback config is non-critical */ }
-
-      const m = (await mRes.json()) as { data?: { models?: ApiModel[] } };
-      const c = (await cRes.json()) as { data?: { credentials?: ApiCredential[] } };
-      const d = (await dRes.json()) as { data?: { defaults?: Record<TaskType, string | null> } };
-      const driftData = driftRes.ok
-        ? ((await driftRes.json()) as { data?: SyncDrift })
-        : { data: null };
-      const fbData = fbRes.ok
-        ? ((await fbRes.json()) as { data?: { entries?: FallbackChainEntry[] } })
-        : { data: null };
-      const fbCfgData = fbCfgRes.ok
-        ? ((await fbCfgRes.json()) as { data?: { config?: FallbackConfig } })
-        : { data: null };
-
-      setModels(m.data?.models ?? []);
-      setCredentials(c.data?.credentials ?? []);
+      setModels(mData.data?.models ?? []);
+      setCredentials(cData.data?.credentials ?? []);
       const next = emptyModelDefaults();
-      const incoming = d.data?.defaults;
+      const incoming = dData.data?.defaults;
       if (incoming) {
         for (const slot of TASK_TYPES) {
           next[slot] = incoming[slot] ?? null;
@@ -102,7 +81,7 @@ export function useModelsPage() {
       setDefaults(next);
 
       if (driftData.data) {
-        setDrift(driftData.data);
+        setDrift(driftData.data as SyncDrift);
       }
 
       if (fbData.data?.entries) {
@@ -154,15 +133,10 @@ export function useModelsPage() {
     ): Promise<SyncActionResult> => {
       const label = action === "push" ? "Push" : "Pull";
       try {
-        const res = await fetch(`/api/models/sync/${action}`, {
+        await apiFetch(`/api/models/sync/${action}`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ modelId, ...options }),
         });
-        if (!res.ok) {
-          const data = (await res.json().catch(() => ({}))) as { error?: string };
-          throw new Error(data.error || `${label} failed`);
-        }
         showToast(`Model ${action}ed to Hermes`, "success");
         void loadAll();
         return { success: true, backupPath: null, details: [] };
@@ -183,7 +157,7 @@ export function useModelsPage() {
 
   const handlePush = useCallback(
     (modelId: string, options?: { pushCredential?: boolean }): Promise<SyncActionResult> =>
-      syncModel("push", modelId, { pushCredential: options?.pushCredential !== false }),
+      syncModel("push", modelId, { pushCredential: options?.pushCredential ?? true }),
     [syncModel],
   );
 
@@ -203,15 +177,9 @@ export function useModelsPage() {
     async (model: ApiModel) => {
       if (!confirm(`Delete model "${model.name}"? This cannot be undone.`)) return;
       try {
-        const res = await fetch(`/api/models/${encodeURIComponent(model.id)}`, {
+        await apiFetch(`/api/models/${encodeURIComponent(model.id)}`, {
           method: "DELETE",
         });
-        if (!res.ok) {
-          const data = (await res.json().catch(() => ({}))) as {
-            error?: string;
-          };
-          throw new Error(data.error || "Delete failed");
-        }
         showToast(`Deleted ${model.name}`, "success");
         await loadAll();
       } catch (err) {
@@ -229,15 +197,10 @@ export function useModelsPage() {
       setBusyTaskType(taskType);
       setDefaults((prev) => ({ ...prev, [taskType]: modelId }));
       try {
-        const res = await fetch("/api/models/defaults", {
+        await apiFetch("/api/models/defaults", {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ taskType, modelId }),
         });
-        if (!res.ok) {
-          const data = (await res.json().catch(() => ({}))) as { error?: string };
-          throw new Error(data.error || "Failed to update default");
-        }
         await loadAll();
         showToast(
           modelId ? `Default updated for ${taskType}` : `Cleared default for ${taskType}`,
@@ -262,16 +225,15 @@ export function useModelsPage() {
       try {
         const results = await Promise.all(
           taskTypes.map(async (taskType) => {
-            const res = await fetch("/api/models/defaults", {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ taskType, modelId: targetModelId }),
-            });
-            if (!res.ok) {
-              const data = (await res.json().catch(() => ({}))) as { error?: string };
-              return { taskType, ok: false, error: data.error || `Failed (${res.status})` };
+            try {
+              await apiFetch("/api/models/defaults", {
+                method: "PUT",
+                body: JSON.stringify({ taskType, modelId: targetModelId }),
+              });
+              return { taskType, ok: true };
+            } catch (err) {
+              return { taskType, ok: false, error: err instanceof Error ? err.message : "Failed" };
             }
-            return { taskType, ok: true };
           })
         );
         await loadAll();
@@ -303,14 +265,9 @@ export function useModelsPage() {
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const res = await fetch("/api/models/import", { method: "POST" });
-      if (!res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(data.error || "Refresh failed");
-      }
-      const result = (await res.json()) as {
+      const result = await apiFetch<{
         data?: { modelsImported?: number; modelsSkipped?: number; credentialsUpdated?: number };
-      };
+      }>("/api/models/import", { method: "POST" });
       const modelsImported = result.data?.modelsImported ?? 0;
       const creds = result.data?.credentialsUpdated ?? 0;
       showToast(
@@ -331,12 +288,10 @@ export function useModelsPage() {
   const handleFallbackReorder = useCallback(
     async (entryId: string, direction: "up" | "down") => {
       try {
-        const res = await fetch("/api/models/fallbacks/reorder", {
+        await apiFetch("/api/models/fallbacks/reorder", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ entryId, direction }),
         });
-        if (!res.ok) throw new Error("Reorder failed");
         await loadAll();
         showToast("Fallback chain reordered", "success");
       } catch (err) {
@@ -352,12 +307,10 @@ export function useModelsPage() {
   const handleFallbackToggle = useCallback(
     async (entryId: string, enabled: boolean) => {
       try {
-        const res = await fetch("/api/models/fallbacks/toggle", {
+        await apiFetch("/api/models/fallbacks/toggle", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ entryId, enabled }),
         });
-        if (!res.ok) throw new Error("Toggle failed");
         await loadAll();
         showToast(enabled ? "Fallback model enabled" : "Fallback model disabled", "success");
       } catch (err) {
@@ -373,10 +326,9 @@ export function useModelsPage() {
   const handleFallbackDelete = useCallback(
     async (entryId: string) => {
       try {
-        const res = await fetch(`/api/models/fallbacks/${encodeURIComponent(entryId)}`, {
+        await apiFetch(`/api/models/fallbacks/${encodeURIComponent(entryId)}`, {
           method: "DELETE",
         });
-        if (!res.ok) throw new Error("Delete failed");
         await loadAll();
         showToast("Fallback model removed", "success");
       } catch (err) {
@@ -404,12 +356,10 @@ export function useModelsPage() {
       const overrideUrl = editingFallbackUrl;
       setSavingFallbackUrl(true);
       try {
-        const res = await fetch(`/api/models/fallbacks/${encodeURIComponent(entry.id)}`, {
+        await apiFetch(`/api/models/fallbacks/${encodeURIComponent(entry.id)}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ overrideBaseUrl: overrideUrl.trim() || null }),
         });
-        if (!res.ok) throw new Error("Update failed");
         await loadAll();
         setEditingFallbackEntry(null);
         showToast("Fallback updated", "success");
@@ -428,12 +378,10 @@ export function useModelsPage() {
   const handleFallbackAddFromRegistry = useCallback(
     async (modelId: string) => {
       try {
-        const res = await fetch("/api/models/fallbacks", {
+        await apiFetch("/api/models/fallbacks", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ modelId }),
         });
-        if (!res.ok) throw new Error("Add failed");
         await loadAll();
         showToast("Fallback model added from registry", "success");
       } catch (err) {
@@ -449,12 +397,10 @@ export function useModelsPage() {
   const handleFallbackAddCustom = useCallback(
     async (name: string, provider: string, modelIdString: string, baseUrl?: string) => {
       try {
-        const res = await fetch("/api/models/fallbacks/custom", {
+        await apiFetch("/api/models/fallbacks/custom", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, provider, modelIdString, baseUrl }),
         });
-        if (!res.ok) throw new Error("Add failed");
         await loadAll();
         showToast("Custom fallback model added", "success");
       } catch (err) {
@@ -466,6 +412,26 @@ export function useModelsPage() {
     },
     [loadAll, showToast]
   );
+
+  // ── handleImportFallbackFromConfig ───────────────────────────────
+
+  const handleImportFallbackFromConfig = useCallback(async () => {
+    setImportingFallback(true);
+    try {
+      await apiFetch("/api/models/fallbacks/import", {
+        method: "POST",
+      });
+      await loadAll();
+      showToast("Fallback config imported from Hermes", "success");
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : "Import failed",
+        "error"
+      );
+    } finally {
+      setImportingFallback(false);
+    }
+  }, [loadAll, showToast]);
 
   const persistFallbackConfigNow = useCallback(
     async (config: FallbackConfig): Promise<boolean> => {
@@ -540,7 +506,7 @@ export function useModelsPage() {
         return;
       }
 
-      const { ok, data: res, error } = await safeApiCall<{
+      const res = await apiFetch<{
         data: {
           success: boolean;
           config: FallbackConfig;
@@ -548,12 +514,12 @@ export function useModelsPage() {
         };
       }>("/api/models/fallbacks/sync", {
         method: "POST",
-        body: { config: fallbackConfig },
+        body: JSON.stringify({ config: fallbackConfig }),
       });
 
-      const payload = res?.data;
-      if (!ok || !payload?.success) {
-        showToast(error ?? "Sync failed", "error");
+      const payload = res.data;
+      if (!payload?.success) {
+        showToast("Sync failed", "error");
         return;
       }
 
@@ -579,31 +545,7 @@ export function useModelsPage() {
     } finally {
       setSyncingFallback(false);
     }
-  }, [
-    fallbackConfig,
-    fallbackConfigError,
-    flushFallbackConfigSave,
-    showToast,
-  ]);
-
-  const handleImportFallbackFromConfig = useCallback(async () => {
-    setImportingFallback(true);
-    try {
-      const res = await fetch("/api/models/fallbacks/import", {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error("Import failed");
-      await loadAll();
-      showToast("Fallback config imported from Hermes", "success");
-    } catch (err) {
-      showToast(
-        err instanceof Error ? err.message : "Import failed",
-        "error"
-      );
-    } finally {
-      setImportingFallback(false);
-    }
-  }, [loadAll, showToast]);
+  }, [fallbackConfig, fallbackConfigError, flushFallbackConfigSave, showToast]);
 
   return {
     models,
