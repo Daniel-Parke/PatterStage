@@ -120,6 +120,12 @@ export function readLastLines(filePath: string, maxLines: number): ReadLastLines
 
       if (lineCount >= maxLines) break;
 
+      // If this iteration already read from the start of the file, the entire
+      // file has been collected and we still have fewer than maxLines lines.
+      // Stop — otherwise the back-off below pins offset at 0 with a zero-width
+      // read and the loop spins forever (file > CHUNK_SIZE but < maxLines lines).
+      if (offset === 0) break;
+
       // Move back and read the previous chunk
       offset -= CHUNK_SIZE;
       if (offset < 0) {
