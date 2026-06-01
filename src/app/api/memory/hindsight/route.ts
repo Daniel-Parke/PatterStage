@@ -11,17 +11,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import type { ApiResponse } from "@/types/hermes";
-
-// ── Tags normalization ───────────────────────────────────────
-
-function normalizeTags(tags: unknown): string[] {
-  if (!Array.isArray(tags)) return [];
-  return [...new Set(
-    tags
-      .filter((t): t is string => typeof t === "string" && t.trim() !== "")
-      .map(t => t.trim().toLowerCase())
-  )];
-}
+import {
+  mapMemoryItem,
+  mapDirectiveItem,
+  mapMentalModelItem,
+  normalizeTags,
+} from "@/lib/hindsight-bridge";
 
 // ── Constants ────────────────────────────────────────────────
 
@@ -59,44 +54,6 @@ async function requestWithTimeout<T = Record<string, unknown>>(
   } finally {
     clearTimeout(timer);
   }
-}
-
-// ── Response shaping helpers ─────────────────────────────────
-
-function mapMemoryItem(item: Record<string, unknown>) {
-  return {
-    id: item.id,
-    content: item.text || item.content || "",
-    type: item.fact_type || "experience",
-    created_at: item.date || item.created_at || "",
-    tags: item.tags || [],
-    entities: item.entities || "",
-    score: item.proof_count || 0,
-  };
-}
-
-function mapDirectiveItem(d: Record<string, unknown>) {
-  return {
-    id: d.id || "",
-    name: d.name || "",
-    content: d.content || "",
-    priority: d.priority || 0,
-    is_active: d.is_active ?? true,
-    tags: d.tags || [],
-    created_at: d.created_at || "",
-  };
-}
-
-function mapMentalModelItem(m: Record<string, unknown>) {
-  return {
-    id: m.id || "",
-    name: m.name || "",
-    source_query: m.source_query || "",
-    content: m.content || "",
-    tags: m.tags || [],
-    created_at: m.created_at || "",
-    last_refreshed_at: m.last_refreshed_at || "",
-  };
 }
 
 // ── Action handlers ──────────────────────────────────────────
@@ -137,7 +94,7 @@ async function handleReflect(bank: string, query: string, budget?: string) {
   } catch {
     // Fallback: search
     const listResult = await handleRecall(bank, query);
-    const facts = listResult.memories.map((m: Record<string, unknown>) => m.content);
+    const facts = listResult.memories.map((m) => m.content);
     return { response: `Found ${facts.length} relevant memories.`, facts };
   }
 }

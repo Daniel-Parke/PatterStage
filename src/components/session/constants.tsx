@@ -6,7 +6,7 @@
 // Previously both were duplicated inline across multiple components.
 
 import { Bot, Calendar, Cpu, Globe, Wrench, User, Zap } from "lucide-react";
-import type { SessionSource } from "@/lib/session-repository";
+import type { SessionRecord, SessionSource } from "@/lib/session-repository";
 
 // ── Role Metadata (session transcript viewer) ───────────────
 
@@ -84,8 +84,6 @@ export const SOURCE_META: Record<
 };
 
 // ── Session title helper ────────────────────────────────────
-
-import type { SessionRecord } from "@/lib/session-repository";
 
 /**
  * Generate a display title for a session record.

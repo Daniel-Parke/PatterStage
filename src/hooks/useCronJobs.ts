@@ -23,9 +23,7 @@ interface CronData {
 
 export function useCronJobs() {
   const { showToast } = useToast();
-  const { data, loading, refetch: loadJobs } = useApiData<CronData>("/api/cron", {
-    transform: (raw) => raw as CronData,
-  });
+  const { data, loading, refetch: loadJobs } = useApiData<CronData>("/api/cron");
   const [pauseAllBusy, setPauseAllBusy] = useState(false);
   // Guard against stale closures in the pause-all async operation
   const pauseAllActiveRef = useRef(false);
