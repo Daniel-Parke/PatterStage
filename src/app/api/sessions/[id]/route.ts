@@ -8,10 +8,42 @@ import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { getSession, estimateSessionSize } from "@/lib/session-repository";
 import { PATHS } from "@/lib/paths";
+import { db } from "@/lib/db";
 import {
   getMaxSessionFileBytes,
   sessionsRateLimitResponse,
 } from "@/lib/sessions-api-guard";
+
+/**
+ * Best-effort lookup of the Control-Hub mission id for a cron-spawned
+ * session. The session id has the form `cron_<job-uuid>_<date>_<time>`;
+ * the job uuid resolves to cron_jobs.id, which resolves to missions.id
+ * via the missions.cron_job_id FK. Returns null for non-cron sessions
+ * or when no mission has been registered for the job.
+ */
+function lookupMissionIdForCronSession(sessionId: string): string | null {
+  if (!sessionId.startsWith("cron_")) return null;
+  const rest = sessionId.slice("cron_".length);
+  const firstUnderscore = rest.indexOf("_");
+  if (firstUnderscore <= 0) return null;
+  const jobId = rest.slice(0, firstUnderscore);
+  try {
+    const row = db()
+      .prepare(
+        `SELECT m.id AS mission_id
+         FROM missions m
+         JOIN cron_jobs c ON c.id = m.cron_job_id
+         WHERE c.hermes_job_id = ?
+         LIMIT 1`,
+      )
+      .get(jobId) as { mission_id: string } | undefined;
+    return row?.mission_id ?? null;
+  } catch {
+    // DB unavailable or schema differs — non-fatal, detail page just won't
+    // show the Mission link.
+    return null;
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -99,6 +131,10 @@ export async function GET(
             created: sessionRow.started_at
               ? new Date(sessionRow.started_at * 1000).toISOString()
               : null,
+            // Look up the Control-Hub mission id by matching the embedded
+            // cron job id against the missions table. Lets the detail page
+            // render a "Open Mission" link for cron-spawned sessions.
+            missionId: lookupMissionIdForCronSession(sanitizedId),
           },
         });
         return response;
@@ -152,10 +188,13 @@ export async function GET(
               messageCount: messages.length,
               size: st.size,
               created: dbSession.startedAt,
+              missionId: dbSession.missionId,
             },
           });
         }
       }
+      // No output file yet (agent running, or output was streamed to Hermes).
+      // Surface the parent mission id so the detail page can link to it.
       return NextResponse.json({
         data: {
           id: sanitizedId,
@@ -168,7 +207,12 @@ export async function GET(
           messageCount: 0,
           size: dbSession.size,
           created: dbSession.startedAt,
-          note: "No session output file found. The agent ran but produced no output file.",
+          missionId: dbSession.missionId ?? null,
+          note: dbSession.source === "mission"
+            ? "This mission-spawned session has no output file yet. The agent may still be running, or the output was written to ~/.hermes/state.db — refresh to check."
+            : dbSession.source === "cron"
+              ? "This cron-spawned session is still running. Messages will appear here when the agent completes."
+              : "The agent ran but produced no output file.",
         },
       });
     }

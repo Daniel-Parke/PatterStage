@@ -36,6 +36,19 @@ export interface SessionData {
   messageCount: number;
   size: number;
   created: string;
+  /**
+   * Optional human-readable note returned by /api/sessions/[id] when the
+   * session exists in the registry but no transcript is available yet
+   * (e.g. mission-spawned session whose agent hasn't produced an output
+   * file, or an active session mid-flight). Render this in the detail
+   * page's empty state instead of the generic "No messages".
+   */
+  note?: string;
+  /**
+   * Control-Hub mission id for sessions spawned by the dispatch pipeline.
+   * The detail page links to the mission page when this is present.
+   */
+  missionId?: string | null;
 }
 
 // ── MessageBubble ────────────────────────────────────────────
