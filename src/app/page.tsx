@@ -139,9 +139,26 @@ export default function Dashboard() {
 
   const filteredErrors = useMemo(() => {
     if (!monitor?.errors) return [];
-    if (errorSev === "all") return monitor.errors;
-    // Use the DB severity field — reliable, no string matching
-    return monitor.errors.filter((e) => e.severity === errorSev);
+    let filtered = monitor.errors;
+    if (errorSev !== "all") {
+      // Use the DB severity field — reliable, no string matching
+      filtered = filtered.filter((e) => e.severity === errorSev);
+    }
+    // Dedup: collapse consecutive identical (source, message) pairs into the
+    // most recent occurrence, but keep the count so users see "Api_Server:
+    // Refusing to start (×5)" instead of 5 separate rows. Without this, the
+    // panel can be dominated by repeated gateway reconnect errors that all
+    // log the same line every few minutes.
+    const seen = new Map<string, { err: typeof filtered[number]; count: number }>();
+    for (const e of filtered) {
+      const key = `${e.source}::${e.message}`;
+      const existing = seen.get(key);
+      if (existing) existing.count += 1;
+      else seen.set(key, { err: e, count: 1 });
+    }
+    return Array.from(seen.values()).map(({ err, count }) =>
+      count > 1 ? { ...err, message: `${err.message}  (×${count})` } : err,
+    );
   }, [monitor, errorSev]);
 
   // Cancel a mission from the dashboard
@@ -420,8 +437,25 @@ export default function Dashboard() {
               <StatPill
                 icon={Activity}
                 label="Sessions"
-                value={`${monitor.sessions.total}`}
+                value={monitor.sessions.total.toLocaleString()}
                 color="purple"
+                subtitle={(() => {
+                  // Derive a one-line context string from the recent-5 sample.
+                  // We only have the 5 most recent on the dashboard; for larger
+                  // windows the user clicks through to the Sessions page.
+                  const active = monitor.sessions.recent.filter((s) => {
+                    // "active" = no end time on the session. The recent list only
+                    // exposes `modified`, so a session modified in the last 5
+                    // minutes is a reasonable proxy for "still running".
+                    if (!s.modified) return false;
+                    return Date.now() - new Date(s.modified).getTime() < 5 * 60_000;
+                  }).length;
+                  const last7d = monitor.sessions.recent.filter((s) => {
+                    if (!s.modified) return false;
+                    return Date.now() - new Date(s.modified).getTime() < 7 * 24 * 60 * 60_000;
+                  }).length;
+                  return `${active} active · ${last7d} last 7d`;
+                })()}
               />
               <StatPill
                 icon={Layers}
@@ -770,8 +804,8 @@ export default function Dashboard() {
                   <div className="text-xs text-neon-green">No recent errors</div>
                 </div>
               )}
-              {filteredErrors.map((err, idx) => (
-                <div key={`${err.source}-${err.timestamp}-${err.message.slice(0, 40)}-${idx}`} className="px-4 py-2 border-b border-white/5 last:border-0">
+              {filteredErrors.map((err) => (
+                <div key={`${err.source}-${err.message}`} className="px-4 py-2 border-b border-white/5 last:border-0">
                   <div className="text-[10px] text-red-400/80 font-mono truncate">{err.message}</div>
                   <div className="text-[10px] text-white/20 font-mono mt-0.5">
                     {err.source} {err.timestamp && `· ${err.timestamp}`}

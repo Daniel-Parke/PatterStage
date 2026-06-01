@@ -76,6 +76,16 @@ export interface ListSessionsOptions {
   missionId?: string | null;
   limit?: number;
   offset?: number;
+  /**
+   * If true, triggers a one-shot sync from Hermes' state.db before returning.
+   * Use this on the sessions list/detail pages so that the currently-active
+   * session (which may have been updated since the periodic 15s sync cycle
+   * last ran) shows a fresh `messageCount`, `title`, and `status`.
+   *
+   * Default false: callers that don't need the active session's live data
+   * (e.g. bulk exports) skip the extra state.db read.
+   */
+  syncIfActive?: boolean;
 }
 
 // ── Row shape (internal) ─────────────────────────────────────
@@ -196,7 +206,20 @@ export function listSessions(opts: ListSessionsOptions = {}): {
   sessions: SessionRecord[];
   total: number;
 } {
-  const { agentType, source, missionId, limit = 50, offset = 0 } = opts;
+  const { agentType, source, missionId, limit = 50, offset = 0, syncIfActive = false } = opts;
+
+  // Optional one-shot sync from Hermes' state.db. Catches the currently-active
+  // session before the periodic 15s sync cycle would have updated it. Wrapped
+  // in try/catch because a failed sync must NEVER block the list response —
+  // the user can still see whatever the last sync captured.
+  if (syncIfActive) {
+    try {
+      syncHermesSessionsToDb();
+    } catch (e) {
+      console.warn("[listSessions] syncIfActive sync failed, returning stale data:", e);
+    }
+  }
+
   const conditions: string[] = [];
   const params: (string | number)[] = [];
 

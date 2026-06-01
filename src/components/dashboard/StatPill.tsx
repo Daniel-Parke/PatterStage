@@ -17,11 +17,14 @@ export function StatPill({
   label,
   value,
   color,
+  subtitle,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
   color: AccentColor;
+  /** Optional secondary line below the value (e.g. "12 last 7d"). */
+  subtitle?: string;
 }) {
   const textColor = iconColorMap[color];
   // Derive border colour from the text colour pattern: replace "text-" with "border-"
@@ -39,6 +42,11 @@ export function StatPill({
         <div className={`text-lg font-bold font-mono truncate ${textColor}`}>
           {value}
         </div>
+        {subtitle && (
+          <div className="text-[10px] font-mono text-white/30 truncate">
+            {subtitle}
+          </div>
+        )}
       </div>
     </div>
   );

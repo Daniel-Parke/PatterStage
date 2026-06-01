@@ -110,6 +110,11 @@ export async function GET(request: NextRequest) {
       missionId: q.missionId,
       limit: q.limit,
       offset: q.offset,
+      // Force an immediate sync from state.db so the active session shows
+      // fresh messageCount, title, and status. The periodic sync is
+      // debounced at 30s; without this the user sees a stale "0 msgs"
+      // for the session they're currently in.
+      syncIfActive: true,
     });
 
     return NextResponse.json({
