@@ -12,6 +12,21 @@ import { requireAuth } from "@/lib/api-auth";
 import type { ApiResponse } from "@/types/hermes";
 import type { MemoryReadResult } from "@/lib/memory-providers";
 
+// ── Helpers ─────────────────────────────────────────────────
+
+/**
+ * Memory facts are managed by agent tools (hindsight_retain / recall /
+ * reflect), not by the dashboard. Surface a single consistent 400 across
+ * every write verb so the route's capability is self-documenting.
+ */
+const UNSUPPORTED_WRITE_RESPONSE = NextResponse.json(
+  {
+    error:
+      "Memory management via the dashboard is not supported for the current provider. Use agent tools instead.",
+  },
+  { status: 400 },
+);
+
 // ── GET — Memory status ──────────────────────────────────────
 // Hindsight: dormant status (facts managed via agent tools)
 // None: tell the user to run `hermes memory setup`
@@ -41,29 +56,20 @@ export async function GET(request: NextRequest) {
   });
 }
 
-export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
+export async function POST(_request: NextRequest) {
+  const auth = requireAuth(_request);
   if (auth) return auth;
-  return NextResponse.json(
-    { error: "Memory management via the dashboard is not supported for the current provider. Use agent tools instead." },
-    { status: 400 }
-  );
+  return UNSUPPORTED_WRITE_RESPONSE;
 }
 
 export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  return NextResponse.json(
-    { error: "Memory management via the dashboard is not supported for the current provider. Use agent tools instead." },
-    { status: 400 }
-  );
+  return UNSUPPORTED_WRITE_RESPONSE;
 }
 
 export async function DELETE(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  return NextResponse.json(
-    { error: "Memory management via the dashboard is not supported for the current provider. Use agent tools instead." },
-    { status: 400 }
-  );
+  return UNSUPPORTED_WRITE_RESPONSE;
 }

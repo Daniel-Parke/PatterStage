@@ -14,6 +14,7 @@ import Database from "better-sqlite3";
 import { getActiveHermesPaths } from "./hermes-agent-runtime";
 import { existsSync } from "fs";
 import { join } from "path";
+import { loadCronJobsMap } from "./session-title-server";
 
 // ── Types ───────────────────────────────────────────────────
 
@@ -36,6 +37,15 @@ export interface SessionRecord {
   status: SessionStatus;
   exitCode: number | null;
   error: string | null;
+  /**
+   * Number of messages in this session. Populated from the Hermes state.db
+   * sync when available; null for sessions written directly by the Control
+   * Hub dispatch pipeline (mission/cron rows) where the message count is
+   * only known after the agent finishes. Used by the Sessions list to show
+   * a "5 msgs" badge so users can tell an empty session from a populated
+   * one without clicking through.
+   */
+  messageCount: number | null;
 }
 
 export interface CreateSessionInput {
@@ -85,6 +95,7 @@ interface SessionRow {
   status: string;
   exit_code: number | null;
   error: string | null;
+  message_count: number | null;
 }
 
 function rowToSession(row: SessionRow | undefined): SessionRecord | null {
@@ -104,6 +115,7 @@ function rowToSession(row: SessionRow | undefined): SessionRecord | null {
     status: row.status as SessionStatus,
     exitCode: row.exit_code ?? null,
     error: row.error ?? null,
+    messageCount: row.message_count ?? null,
   };
 }
 
@@ -379,11 +391,34 @@ function buildMissionIdByJobId(): Map<string, string> {
 // See audit Issue #3 (dogfood-output/report.md).
 let lastOrphanCloseCount: number | null = null;
 
+/**
+ * Idempotent runtime check that the sessions.message_count column exists.
+ *
+ * The 006_sessions_message_count.sql migration adds it for fresh installs;
+ * existing DBs that pre-date the migration are upgraded lazily the first
+ * time a sync runs. Same pattern as profiles-tools-parity-ensure.
+ */
+function ensureMessageCountColumn(database: Database.Database): void {
+  try {
+    const col = database
+      .prepare("SELECT 1 FROM pragma_table_info('sessions') WHERE name='message_count'")
+      .get();
+    if (!col) {
+      database.exec("ALTER TABLE sessions ADD COLUMN message_count INTEGER");
+    }
+  } catch {
+    // Non-fatal: the column will simply remain unavailable and the upsert
+    // below will skip message_count via COALESCE handling.
+  }
+}
+
 export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
   const hermesSessions = readHermesSessionsFromStateDb();
   const missionIdByJobId = buildMissionIdByJobId();
   const validMissionIds = buildValidMissionIdSet();
   const database = db();
+  ensureMessageCountColumn(database);
+  const cronJobsById = loadCronJobsMap();
 
   // ── Step 1: Clean up stale mission_id references ─────────────
   // NULL out mission_ids that point to soft-deleted or missing missions
@@ -404,22 +439,23 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
     INSERT INTO sessions (
       id, agent_type, source, mission_id,
       model_id, provider, title, size, started_at, ended_at,
-      status, exit_code
+      status, exit_code, message_count
     ) VALUES (
       ?, 'hermes', ?, ?,
       ?, NULL, ?, ?, ?, ?,
-      ?, ?
+      ?, ?, ?
     )
     ON CONFLICT(id) DO UPDATE SET
-      source     = excluded.source,
-      title      = excluded.title,
-      model_id   = COALESCE(excluded.model_id, model_id),
-      mission_id = COALESCE(excluded.mission_id, mission_id),
-      size       = excluded.size,
-      started_at = excluded.started_at,
-      ended_at   = COALESCE(excluded.ended_at, ended_at),
-      status     = excluded.status,
-      exit_code  = COALESCE(excluded.exit_code, exit_code)
+      source        = excluded.source,
+      title         = excluded.title,
+      model_id      = COALESCE(excluded.model_id, model_id),
+      mission_id    = COALESCE(excluded.mission_id, mission_id),
+      size          = excluded.size,
+      started_at    = excluded.started_at,
+      ended_at      = COALESCE(excluded.ended_at, ended_at),
+      status        = excluded.status,
+      exit_code     = COALESCE(excluded.exit_code, exit_code),
+      message_count = COALESCE(excluded.message_count, message_count)
   `);
 
   const tx = database.transaction(() => {
@@ -441,7 +477,12 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
         const parts = row.id.replace(/^cron_/, "").split("_");
         if (parts.length >= 3) {
           const jobId = parts[0];
-          title = `Cron: ${jobId} — ${parts.slice(1).join(" ")}`;
+          // Prefer the cron job's human name from jobs.json over the raw jobId.
+          // Falls back to the jobId prefix if the job isn't in jobs.json
+          // (e.g. legacy entries from before the recurring mission was registered).
+          const jobName = cronJobsById.get(jobId)?.name;
+          const displayJob = jobName ? jobName : jobId.slice(0, 8);
+          title = `Cron: ${displayJob} — ${parts.slice(1).join(" ")}`;
           const candidateMissionId = missionIdByJobId.get(jobId) ?? null;
           // Only set mission_id if it exists in missions table (avoids FK violations)
           missionId =
@@ -465,6 +506,7 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
           endedAt,
           status,
           exitCode,
+          row.message_count ?? null,
         );
         synced++;
       } catch {

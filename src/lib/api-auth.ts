@@ -71,8 +71,18 @@ export function requireDeployApiEnabled(): NextResponse | null {
 }
 
 /**
- * Combined auth guard: checks read-only mode.
- * Returns a NextResponse (to return) if auth fails, or null if allowed.
+ * Combined write-access guard: checks the read-only mode flag.
+ * Returns a NextResponse (to return) if write access is denied, or null if allowed.
+ *
+ * NOTE: Despite the name, this function does NOT perform authentication — it only
+ * checks the read-only env flag (CH_READ_ONLY). The `_request` parameter is
+ * intentionally ignored. For new code, prefer the explicit `requireNotReadOnly()`
+ * or the dedicated signed-request check `requireSignedRequest()`.
+ *
+ * Historical: this helper was originally named `requireAuth` because every route
+ * that called it was also a write route, so the read-only check was sufficient.
+ * The misnomer persists across ~30 call sites; renaming to `requireWriteAccess()`
+ * is a separate, larger refactor (deferred).
  */
 export function requireAuth(_request: NextRequest): NextResponse | null {
   return requireNotReadOnly();

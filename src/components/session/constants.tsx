@@ -85,19 +85,9 @@ export const SOURCE_META: Record<
 
 // ── Session title helper ────────────────────────────────────
 
-import type { SessionRecord } from "@/lib/session-repository";
-
-/**
- * Generate a display title for a session record.
- * Falls back through title → source-based → truncated id.
- */
-export function formatSessionTitle(session: SessionRecord): string {
-  if (session.title) return session.title;
-  if (session.source === "cron" && session.profileName) {
-    return `Cron: ${session.profileName}`;
-  }
-  if (session.source === "mission" && session.profileName) {
-    return `Mission: ${session.profileName}`;
-  }
-  return `Session ${session.id.slice(0, 8)}`;
-}
+// Re-exported from src/lib/session-title.ts for backward compatibility with
+// existing imports. The new module owns the implementation; this file just
+// exposes the same symbol so consumers don't need to update their imports.
+//
+// See references/sessions-architecture.md for the full fallback chain.
+export { formatSessionTitle } from "@/lib/session-title";
