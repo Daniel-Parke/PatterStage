@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ChevronUp, Folder, FolderOpen } from "lucide-react";
+import { ChevronUp, File, Folder, FolderOpen } from "lucide-react";
 
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
@@ -34,16 +34,21 @@ export default function DirectoryPickerModal({
     setLoading(true);
     setError(null);
     const q = next && next.length > 0 ? "?path=" + encodeURIComponent(next) : "";
-    safeApiCall<{ path: string; parent: string | null; entries: Entry[] }>("/api/fs/list" + q)
+    // safeApiCall returns { ok, data: <body> } where <body> is the API envelope
+    // ({ data: { path, parent, entries } }). Read the nested .data to access fields.
+    safeApiCall<{ data: { path: string; parent: string | null; entries: Entry[] } }>(
+      "/api/fs/list" + q,
+    )
       .then((j) => {
         if (!j.ok) {
           setError(typeof j.error === "string" ? j.error : "Failed to list");
           return;
         }
-        if (j.data) {
-          setPath(j.data.path);
-          setParent(j.data.parent);
-          setEntries(j.data.entries);
+        const payload = j.data?.data;
+        if (payload) {
+          setPath(payload.path);
+          setParent(payload.parent);
+          setEntries(payload.entries ?? []);
         }
       })
       .catch(() => setError("Network error"))
@@ -128,7 +133,7 @@ export default function DirectoryPickerModal({
                     {e.isDir ? (
                       <Folder className="w-3.5 h-3.5 text-neon-cyan flex-shrink-0" />
                     ) : (
-                      <FolderOpen className="w-3.5 h-3.5 text-white/20 flex-shrink-0" />
+                      <File className="w-3.5 h-3.5 text-white/20 flex-shrink-0" />
                     )}
                     <span className="truncate">{e.name}</span>
                   </button>
