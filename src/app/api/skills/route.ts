@@ -10,6 +10,7 @@ import { listSkills, deriveCategory } from "@/lib/skills-repository";
 import { skillsRootForProfile } from "@/lib/skills-config";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { scanDiskSkillsCatalog } from "@/lib/hermes-profile-sync";
+import { groupByCategory } from "@/lib/skills-grouping";
 import type { Skill } from "@/types/hermes";
 
 export async function GET(request: NextRequest) {
@@ -82,11 +83,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Group skills by category (case-insensitive). The helper handles
+    // mismatched frontmatter case ("Creative" vs "creative") so the
+    // audit-found case-collision duplicates collapse into a single
+    // bucket. The page does the same with groupByCategory().
+    const categoryGroups = groupByCategory(skills, "uncategorized");
     const categories: Record<string, Skill[]> = {};
-    for (const skill of skills) {
-      const cat = skill.category || "uncategorized";
-      if (!categories[cat]) categories[cat] = [];
-      categories[cat].push(skill);
+    for (const [key, items] of categoryGroups) {
+      categories[key] = items;
     }
 
     return NextResponse.json({

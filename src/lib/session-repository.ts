@@ -372,6 +372,13 @@ function buildMissionIdByJobId(): Map<string, string> {
  * Completed sessions in Hermes are updated to "completed"/"failed"
  * status here — their end state is always driven by Hermes.
  */
+
+// Tracks the most recent orphan-close count so the periodic log can
+// suppress the steady-state churn and only fire when the count changes
+// meaningfully. Reset to null to log a fresh first-occurrence value.
+// See audit Issue #3 (dogfood-output/report.md).
+let lastOrphanCloseCount: number | null = null;
+
 export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
   const hermesSessions = readHermesSessionsFromStateDb();
   const missionIdByJobId = buildMissionIdByJobId();
@@ -479,6 +486,14 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
   // so sessions end up permanently stuck as "active". Close any
   // session that has actual content, no end state, and is older
   // than 5 minutes (safely past any in-progress window).
+  //
+  // The 15s sync cycle re-runs this UPDATE on every tick, so without
+  // the suppression below the log line fires ~4×/min with a count
+  // that hovers between the same values forever (gateway keeps
+  // re-inserting them as active on the next cycle's upsert). That's
+  // not actionable signal — keep the first-occurrence log for the
+  // diagnostic value and stay quiet for the steady-state churn.
+  // Audit reference: dogfood-output/report.md Issue #3.
   try {
     const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const { changes } = database
@@ -492,8 +507,18 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
           AND started_at < ?
       `)
       .run(cutoff);
-    if (changes > 0) {
+    if (changes > 0 && (lastOrphanCloseCount === null || Math.abs(changes - lastOrphanCloseCount) >= 100)) {
       console.log(`[syncHermesSessionsToDb] closed ${changes} orphaned active sessions`);
+      lastOrphanCloseCount = changes;
+    } else if (changes === 0 && lastOrphanCloseCount !== null && lastOrphanCloseCount > 0) {
+      // The queue has drained — log a final "0" so the operator knows
+      // the steady-state was reached, then reset.
+      console.log(`[syncHermesSessionsToDb] orphan session queue drained (was ${lastOrphanCloseCount})`);
+      lastOrphanCloseCount = null;
+    } else if (changes > 0) {
+      // Suppressed — but keep the latest count so we log when it
+      // changes by >=100 (a real shift worth noting).
+      lastOrphanCloseCount = changes;
     }
   } catch {
     // non-fatal cleanup
