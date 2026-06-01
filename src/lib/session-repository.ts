@@ -290,8 +290,13 @@ function readHermesSessionsFromStateDb(): HermesSessionRow[] {
 
     const rows = hermesDb
       .prepare(
+        // LIMIT bounds the sync cost on a giant state.db. The /api/sessions
+        // route paginates 50 per page anyway, and 10K is a generous ceiling
+        // for any UI use case. The full set can still be inspected via the
+        // Hermes CLI (`hermes sessions list`). See session-repository.ts
+        // header for the FTS-bloat rationale.
         `SELECT id, source, model, title, started_at, ended_at, end_reason, message_count, api_call_count
-         FROM sessions ORDER BY started_at DESC`,
+         FROM sessions ORDER BY started_at DESC LIMIT 10000`,
       )
       .all() as HermesSessionRow[];
     hermesDb.close();

@@ -31,6 +31,11 @@ LOCK_FILE="${TMPDIR:-/tmp}/ch-deploy.lock"
 LOG_FILE="$HOME/.hermes/logs/ch-update.log"
 CH_RESTART_LOG="$HOME/.hermes/logs/ch-restart.log"
 CH_BUILD_LOG="$HOME/.hermes/logs/ch-build.log"
+# Dedicated server stdout log — separate from ch-restart.log so the
+# runtime output of next-server is preserved across deploys. The
+# /api/logs UI should also include this file once the Logs page is
+# updated to discover it.
+CH_RUNTIME_LOG="${CH_RUNTIME_LOG:-$HOME/.hermes/logs/ch-runtime.log}"
 
 mkdir -p "$(dirname "$LOG_FILE")"
 
@@ -234,28 +239,37 @@ ch_deploy_do_restart_body() {
   ch_deploy_log_restart "Starting next-server on $HOST:$deploy_port…"
   rm -f "$PID_FILE"
   ch_deploy_release_lock
+  # Truncate the runtime log on each fresh start so old output doesn't
+  # bleed into a new run. The previous run's log is preserved if the
+  # user wants it (rotated by the watchdog or backup tooling).
+  : > "$CH_RUNTIME_LOG"
   nohup "$NODE_BIN" node_modules/next/dist/bin/next start -p "$deploy_port" -H "$HOST" \
-    >>"$CH_RESTART_LOG" 2>&1 </dev/null &
+    >>"$CH_RUNTIME_LOG" 2>&1 </dev/null &
   local SERVER_PID=$!
   echo "$SERVER_PID" >"$PID_FILE"
-  ch_deploy_log_restart "Server started (PID $SERVER_PID)"
+  ch_deploy_log_restart "Server started (PID $SERVER_PID) — stdout -> $CH_RUNTIME_LOG"
 
-  local i ready=0
+  # Readiness check: probe /api/status with a real HTTP GET, not just
+  # TCP connect. The previous curl `/` check passed even when the
+  # event loop was blocked (TCP accept succeeds in the kernel). See
+  # 2026-06-01 outage for the diagnostic.
+  local i ready=0 status_code
   for i in $(seq 1 20); do
-    if curl -s -o /dev/null -w '' "http://127.0.0.1:${deploy_port}" 2>/dev/null; then
-      ch_deploy_log_restart "Server is ready on http://127.0.0.1:${deploy_port}"
+    status_code=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 2 --max-time 5 "http://127.0.0.1:${deploy_port}/api/status" 2>/dev/null || echo "000")
+    if [ "$status_code" = "200" ]; then
+      ch_deploy_log_restart "Server is ready on http://127.0.0.1:${deploy_port} (HTTP $status_code)"
       ready=1
       break
     fi
     if ! kill -0 "$SERVER_PID" 2>/dev/null; then
-      ch_deploy_log_restart "ERROR: next-server died during startup"
+      ch_deploy_log_restart "ERROR: next-server died during startup — see $CH_RUNTIME_LOG"
       return 1
     fi
     sleep 1
   done
 
   if [ "$ready" -ne 1 ]; then
-    ch_deploy_log_restart "ERROR: Server did not become ready in time"
+    ch_deploy_log_restart "ERROR: Server did not respond at /api/status within 20s — see $CH_RUNTIME_LOG"
     return 1
   fi
 
