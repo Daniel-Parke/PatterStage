@@ -210,12 +210,17 @@ export default function CronPage() {
 
   const agent = useCronJobs();
   const hardware = useSystemCronJobs();
+  // Destructure loadJobs to a stable reference. `hardware` is a fresh object
+  // literal on every render (returned by useSystemCronJobs), so depending on
+  // it directly caused the effect to re-fire every render, producing the
+  // loading-spinner ↔ empty-state flicker on the System tab.
+  const { loadJobs: loadHardwareJobs } = hardware;
 
   useEffect(() => {
     if (activeTab === "system") {
-      void hardware.loadJobs();
+      void loadHardwareJobs();
     }
-  }, [activeTab, hardware]);
+  }, [activeTab, loadHardwareJobs]);
 
   const handleSyncAll = useCallback(async () => {
     setSyncing(true);
