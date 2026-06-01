@@ -5,7 +5,8 @@
 // and writes enabled/disabled status to the gateway_platforms table.
 // ═══════════════════════════════════════════════════════════════
 
-import { existsSync, readFileSync } from "fs";
+import { access, constants } from "fs/promises";
+import { readFile } from "fs/promises";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { db } from "@/lib/db";
 import { logApiError } from "@/lib/api-logger";
@@ -38,7 +39,14 @@ export class EnvSync implements SyncSource {
     const start = performance.now();
     try {
       const envPath = getActiveHermesPaths().env;
-      if (!existsSync(envPath)) {
+      let envExists = false;
+      try {
+        await access(envPath, constants.F_OK);
+        envExists = true;
+      } catch {
+        envExists = false;
+      }
+      if (!envExists) {
         return {
           sourceName: this.name,
           success: true,
@@ -47,7 +55,7 @@ export class EnvSync implements SyncSource {
         };
       }
 
-      const content = readFileSync(envPath, "utf-8");
+      const content = await readFile(envPath, "utf-8");
       const vars = parseEnvVars(content);
 
       const platforms: Array<{

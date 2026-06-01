@@ -20,6 +20,7 @@ import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
 import { apiFetch } from "@/lib/api-fetch";
+import { groupByCategory, titleCaseCategory } from "@/lib/skills-grouping";
 import type { Skill, SkillsData } from "@/types/hermes";
 
 // ── Pure helpers (hoisted outside component) ──────────────────────────────
@@ -36,18 +37,16 @@ function filterBySearch(skills: Skill[], search: string) {
 }
 
 function groupCategories(skills: Skill[]) {
-  const groups: Record<string, Skill[]> = {};
-  for (const s of skills) {
-    const cat = s.category || "Other";
-    if (!groups[cat]) groups[cat] = [];
-    groups[cat].push(s);
-  }
-  return Object.entries(groups)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([category, items]) => ({
-      category,
-      skills: items.sort((x, y) => x.name.localeCompare(y.name)),
-    }));
+  // Case-insensitive grouping. The helper handles the
+  // "Creative" vs "creative" case-mismatch class of bug found in
+  // the 2026-06-01 audit (Issue #2 in dogfood-output/report.md).
+  // Display name is the title-cased first item's original case, so
+  // the page keeps a polished display label even when the underlying
+  // values vary in case.
+  return groupByCategory(skills, "Other").map(([key, items]) => ({
+    category: titleCaseCategory(items[0].category) || titleCaseCategory(key),
+    skills: items.sort((x, y) => x.name.localeCompare(y.name)),
+  }));
 }
 
 export default function SkillsPage() {

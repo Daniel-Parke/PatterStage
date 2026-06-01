@@ -20,6 +20,8 @@ jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 const mockScheduler = {
   isRunning: true,
   getSourceNames: () => ["missions", "cron"],
+  getRunningSources: () => [],
+  getLastErrorBySource: () => ({}),
   getLastCycleResult: () => null,
 };
 

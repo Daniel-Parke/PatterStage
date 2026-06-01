@@ -14,6 +14,7 @@ import {
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { SimpleMarkdown } from "@/components/skills/SimpleMarkdown";
 import { apiFetch } from "@/lib/api-fetch";
 
 interface SkillData {
@@ -27,184 +28,35 @@ interface SkillData {
   linkedFiles: { name: string; path: string; size: number }[];
 }
 
-function SimpleMarkdown({ content }: { content: string }) {
-  // Lightweight markdown rendering — no external dependencies needed
-  const lines = content.split("\n");
-  const elements: React.ReactNode[] = [];
-  let inCodeBlock = false;
-  let codeBlockLines: string[] = [];
-  let codeBlockLang = "";
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    // Code blocks
-    if (line.trim().startsWith("```")) {
-      if (!inCodeBlock) {
-        inCodeBlock = true;
-        codeBlockLang = line.trim().slice(3).trim();
-        codeBlockLines = [];
-      } else {
-        inCodeBlock = false;
-        elements.push(
-          <div
-            key={`code-${i}`}
-            className="my-3 rounded-lg border border-white/10 bg-dark-800/80 overflow-hidden"
-          >
-            {codeBlockLang && (
-              <div className="px-3 py-1.5 border-b border-white/5 text-[10px] font-mono text-white/30 uppercase">
-                {codeBlockLang}
-              </div>
-            )}
-            <pre className="p-3 text-sm font-mono text-white/70 overflow-x-auto">
-              {codeBlockLines.join("\n")}
-            </pre>
-          </div>
-        );
-      }
-      continue;
-    }
-
-    if (inCodeBlock) {
-      codeBlockLines.push(line);
-      continue;
-    }
-
-    const trimmed = line.trim();
-
-    // Headings
-    if (trimmed.startsWith("# ")) {
-      elements.push(
-        <h1
-          key={i}
-          className="text-xl font-bold text-white mt-6 mb-3 pb-2 border-b border-white/10"
-        >
-          {trimmed.slice(2)}
-        </h1>
-      );
-      continue;
-    }
-    if (trimmed.startsWith("## ")) {
-      elements.push(
-        <h2
-          key={i}
-          className="text-lg font-bold text-white mt-5 mb-2 pb-1 border-b border-white/5"
-        >
-          {trimmed.slice(3)}
-        </h2>
-      );
-      continue;
-    }
-    if (trimmed.startsWith("### ")) {
-      elements.push(
-        <h3 key={i} className="text-base font-bold text-white mt-4 mb-2">
-          {trimmed.slice(4)}
-        </h3>
-      );
-      continue;
-    }
-
-    // Horizontal rule
-    if (trimmed === "---" || trimmed === "***") {
-      elements.push(<hr key={i} className="my-4 border-white/10" />);
-      continue;
-    }
-
-    // List items
-    if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-      elements.push(
-        <div key={i} className="flex items-start gap-2 my-1 ml-4">
-          <span className="text-neon-cyan mt-1.5 flex-shrink-0">•</span>
-          <span className="text-sm text-white/70">
-            {inlineFormat(trimmed.slice(2))}
-          </span>
-        </div>
-      );
-      continue;
-    }
-
-    // Numbered list
-    const numMatch = trimmed.match(/^(\d+)\.\s/);
-    if (numMatch) {
-      elements.push(
-        <div key={i} className="flex items-start gap-2 my-1 ml-4">
-          <span className="text-neon-cyan font-mono text-sm mt-0.5 flex-shrink-0">
-            {numMatch[1]}.
-          </span>
-          <span className="text-sm text-white/70">
-            {inlineFormat(trimmed.slice(numMatch[0].length))}
-          </span>
-        </div>
-      );
-      continue;
-    }
-
-    // Empty line
-    if (!trimmed) {
-      elements.push(<div key={i} className="h-2" />);
-      continue;
-    }
-
-    // Regular paragraph
-    elements.push(
-      <p key={i} className="text-sm text-white/70 my-1 leading-relaxed">
-        {inlineFormat(trimmed)}
-      </p>
-    );
-  }
-
-  return <div className="space-y-1">{elements}</div>;
-}
-
-function inlineFormat(text: string): React.ReactNode {
-  // Handle inline code
-  const parts = text.split(/(`[^`]+`)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith("`") && part.endsWith("`")) {
-      return (
-        <code
-          key={i}
-          className="bg-dark-800/80 text-neon-green px-1.5 py-0.5 rounded text-xs font-mono"
-        >
-          {part.slice(1, -1)}
-        </code>
-      );
-    }
-    // Bold
-    const boldParts = part.split(/(\*\*[^*]+\*\*)/g);
-    return boldParts.map((bp, j) => {
-      if (bp.startsWith("**") && bp.endsWith("**")) {
-        return (
-          <strong key={`${i}-${j}`} className="font-semibold text-white">
-            {bp.slice(2, -2)}
-          </strong>
-        );
-      }
-      // Italic
-      const italicParts = bp.split(/(\*[^*]+\*)/g);
-      return italicParts.map((ip, k) => {
-        if (ip.startsWith("*") && ip.endsWith("*") && !ip.startsWith("**")) {
-          return (
-            <em key={`${i}-${j}-${k}`} className="italic text-white/80">
-              {ip.slice(1, -1)}
-            </em>
-          );
-        }
-        return ip || null;
-      });
-    });
-  });
-}
-
 export default function SkillDetailPage() {
+  // Defensive: useParams can return string | string[] | undefined
+  // depending on the catch-all. URL-encoded slashes (%2F) land in
+  // params.path as a single string with a literal slash inside, which
+  // then breaks the API call below. Validate before use.
+  // Audit reference: dogfood-output/report.md Issue #4.
   const params = useParams();
-  const skillPath = (params.path as string[]).join("/");
+  const rawPath = params.path;
+  const pathSegments = Array.isArray(rawPath)
+    ? rawPath
+    : typeof rawPath === "string"
+    ? [rawPath]
+    : [];
+  // Reject paths with embedded slashes (URL-encoded) or empty segments.
+  const hasMalformedPath =
+    pathSegments.length === 0 ||
+    pathSegments.some((seg) => seg.length === 0 || seg.includes("/"));
+  const skillPath = hasMalformedPath ? "" : pathSegments.join("/");
   const [data, setData] = useState<SkillData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showRaw, setShowRaw] = useState(false);
 
   const loadSkill = useCallback(async () => {
+    if (hasMalformedPath) {
+      setError("Invalid skill path. Use the skills list to navigate.");
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -215,7 +67,7 @@ export default function SkillDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [skillPath]);
+  }, [hasMalformedPath, skillPath]);
 
   useEffect(() => {
     loadSkill();

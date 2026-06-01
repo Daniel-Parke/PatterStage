@@ -34,6 +34,12 @@ export async function GET(request: NextRequest) {
       data: {
         running: scheduler.isRunning,
         sources: scheduler.getSourceNames(),
+        // Per-source liveness: which sources are currently in-flight, and
+        // which errored on their last run. The watchdog and the dashboard
+        // can use these to detect a wedged scheduler without polling every
+        // route. See SyncScheduler for the per-source timeout.
+        inFlight: scheduler.getRunningSources(),
+        lastErrorBySource: scheduler.getLastErrorBySource(),
         lastCycle: lastCycle
           ? {
               completedAt: lastCycle.completedAt,

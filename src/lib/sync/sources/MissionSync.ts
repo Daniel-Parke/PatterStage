@@ -8,9 +8,16 @@
 //
 // Also detects orphaned dispatched missions whose process died
 // before writing status.json and marks them as failed.
+//
+// All filesystem I/O uses fs.promises so the event loop is not
+// blocked while iterating hundreds of missions (or touching a
+// slow filesystem). The previous synchronous readFileSync loop
+// was an event-loop block proportional to mission count + status
+// file size. Combined with the SyncScheduler per-source timeout,
+// this guarantees mission sync can never wedge the server.
 // ═══════════════════════════════════════════════════════════════
 
-import { existsSync, readFileSync, writeFileSync } from "fs";
+import { access, constants, readFile, writeFile } from "fs/promises";
 import { join } from "path";
 
 import { listMissions, updateMission } from "@/lib/mission-repository";
@@ -37,12 +44,22 @@ function isPidAlive(pid: number): boolean {
   }
 }
 
-/** Read PID from a mission's pid.json file, or null if missing/invalid. */
-function readMissionPid(missionId: string): number | null {
-  const pidPath = join(PATHS.missions, `${missionId}.pid.json`);
-  if (!existsSync(pidPath)) return null;
+/** Async file existence check. */
+async function fileExists(path: string): Promise<boolean> {
   try {
-    const data = JSON.parse(readFileSync(pidPath, "utf-8")) as { pid?: number };
+    await access(path, constants.F_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Read PID from a mission's pid.json file, or null if missing/invalid. */
+async function readMissionPid(missionId: string): Promise<number | null> {
+  const pidPath = join(PATHS.missions, `${missionId}.pid.json`);
+  if (!(await fileExists(pidPath))) return null;
+  try {
+    const data = JSON.parse(await readFile(pidPath, "utf-8")) as { pid?: number };
     return typeof data.pid === "number" && data.pid > 0 ? data.pid : null;
   } catch {
     return null;
@@ -53,9 +70,9 @@ function readMissionPid(missionId: string): number | null {
  * Write a canonical failed status.json for a mission whose process
  * died without writing a completion status.
  */
-function writeFailedStatus(missionId: string): void {
+async function writeFailedStatus(missionId: string): Promise<void> {
   const statusPath = join(PATHS.missions, `${missionId}.status.json`);
-  if (existsSync(statusPath)) return;
+  if (await fileExists(statusPath)) return;
   const payload = {
     status: "failed",
     exit_code: null,
@@ -63,7 +80,7 @@ function writeFailedStatus(missionId: string): void {
     error: "Process terminated without completion",
   };
   try {
-    writeFileSync(statusPath, JSON.stringify(payload) + "\n");
+    await writeFile(statusPath, JSON.stringify(payload) + "\n");
   } catch {
     // best-effort
   }
@@ -85,11 +102,11 @@ export class MissionSync implements SyncSource {
         if (mission.status !== "dispatched") continue;
 
         const statusPath = join(PATHS.missions, `${mission.id}.status.json`);
-        if (!existsSync(statusPath)) {
+        if (!(await fileExists(statusPath))) {
           // No status file yet. Check if the process died.
-          const pid = readMissionPid(mission.id);
+          const pid = await readMissionPid(mission.id);
           if (pid !== null && !isPidAlive(pid)) {
-            writeFailedStatus(mission.id);
+            await writeFailedStatus(mission.id);
             updateMission(mission.id, { status: "failed" });
             syncedCount++;
           }
@@ -97,7 +114,7 @@ export class MissionSync implements SyncSource {
         }
 
         try {
-          const disk = JSON.parse(readFileSync(statusPath, "utf-8")) as DiskStatus;
+          const disk = JSON.parse(await readFile(statusPath, "utf-8")) as DiskStatus;
           if (disk.status === "successful" || disk.status === "failed") {
             updateMission(mission.id, { status: disk.status as MissionStatus });
             syncedCount++;

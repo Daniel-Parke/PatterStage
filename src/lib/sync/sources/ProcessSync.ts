@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { exec } from "child_process";
-import { existsSync, readFileSync } from "fs";
+import { access, constants, readFile } from "fs/promises";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { db, now } from "@/lib/db";
 import { logApiError } from "@/lib/api-logger";
@@ -83,8 +83,15 @@ export class ProcessSync implements SyncSource {
         try {
           const H = getActiveHermesPaths();
           const envPath = H.env;
-          if (existsSync(envPath)) {
-            const envContent = readFileSync(envPath, "utf-8");
+          let envExists = false;
+          try {
+            await access(envPath, constants.F_OK);
+            envExists = true;
+          } catch {
+            envExists = false;
+          }
+          if (envExists) {
+            const envContent = await readFile(envPath, "utf-8");
             const platforms: string[] = [];
             if (
               envContent.includes("DISCORD_BOT_TOKEN=") &&
@@ -176,7 +183,7 @@ export class ProcessSync implements SyncSource {
 
       // ── Track system uptime from /proc/uptime ─────────────
       try {
-        const uptimeRaw = readFileSync("/proc/uptime", "utf-8");
+        const uptimeRaw = await readFile("/proc/uptime", "utf-8");
         const uptimeSeconds = parseFloat(uptimeRaw.split(" ")[0]);
         if (!isNaN(uptimeSeconds)) {
           const hours = Math.floor(uptimeSeconds / 3600);
