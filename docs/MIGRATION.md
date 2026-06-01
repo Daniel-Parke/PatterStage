@@ -36,6 +36,14 @@ Breaking or structural data changes, documented so upgrades are not guesswork. I
 
 **Automatic upgrade (legacy pre-baseline DBs):** On first open after updating, Control Hub may still run the baseline rebuild path (backup → recreate → re-import). See preserved table list below.
 
+## 2026-06 — `sessions.message_count` column (migration 006)
+
+**Change:** New idempotent migration **[`006_sessions_message_count.sql`](../src/lib/db/migrations/006_sessions_message_count.sql)** adds a `message_count INTEGER` column to the `sessions` table. Mirrors `state.db.sessions.message_count`; populated by the Hermes state.db sync with `COALESCE(excluded.message_count, message_count)` so prior values are preserved on re-sync.
+
+**Why:** The `/sessions` list page renders a "5 msgs" badge per row when `messageCount > 0`, and renders nothing when NULL. The detail page can also show the message count in its header subtitle. For mission/cron sessions written directly by the dispatch pipeline, `message_count` is NULL until the next sync tick populates it.
+
+**Automatic upgrade:** The migration runs as part of the standard `db-schema-ensure` step at next server start. An inline `ensureMessageCountColumn()` in `session-repository.ts` also handles DBs that pre-date the migration but are still on an older CH version — the column is added lazily on the first sync. Idempotent via `PRAGMA if_null` matching the 005_cron_workdir.sql pattern.
+
 **Automatic upgrade:** On first open after updating, Control Hub:
 
 1. Backs up the existing DB to `control-hub.db.pre-baseline-<timestamp>` under `CH_DATA_DIR`
