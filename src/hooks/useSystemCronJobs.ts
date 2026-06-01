@@ -26,7 +26,6 @@ export function useSystemCronJobs() {
 
   const { data, loading, refetch: loadJobs } = useApiData<SystemCronData>(
     HARDWARE_ENDPOINT,
-    { transform: (raw) => raw as SystemCronData },
   );
 
   const jobs = useMemo(() => data?.jobs ?? [], [data]);

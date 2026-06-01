@@ -22,21 +22,12 @@ import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useApiData } from "@/hooks/useApiData";
-import type { LogFileMeta } from "@/lib/log-files";
+import type { LogGetData } from "@/app/api/logs/route";
 import { formatBytes } from "@/lib/utils";
 import { LogRow } from "@/components/logs/LogRow";
 import { GROUP_ORDER, GROUP_LABELS } from "@/components/logs/constants";
 
-interface LogData {
-  name: string;
-  totalLines: number;
-  showingLines: number;
-  size: number;
-  modified: string;
-  lines: string[];
-  availableLogs: LogFileMeta[];
-  error?: string;
-}
+type LogData = LogGetData;
 
 export default function LogsPage() {
   const [activeLog, setActiveLog] = useState("agent");
@@ -349,16 +340,6 @@ export default function LogsPage() {
 
             {loading && !data ? (
               <LoadingSpinner text="Loading logs..." />
-            ) : data?.error && data.lines.length === 0 ? (
-              <div className="flex items-center gap-3 text-sm text-white/40 bg-dark-900/50 border border-white/10 rounded-xl px-4 py-6">
-                <AlertCircle className="w-5 h-5 text-white/20 shrink-0" />
-                <div>
-                  <p className="text-white/60">{data.error}</p>
-                  <p className="text-xs text-white/30 mt-1">
-                    Log files are created when the Hermes gateway or agent runs.
-                  </p>
-                </div>
-              </div>
             ) : data ? (
               <div
                 ref={terminalRef}

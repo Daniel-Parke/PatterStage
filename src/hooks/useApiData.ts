@@ -7,11 +7,9 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 
-interface UseApiDataOptions<T> {
+interface UseApiDataOptions {
   /** Auto-fetch on mount (default: true) */
   autoFetch?: boolean;
-  /** Transform the raw response data */
-  transform?: (raw: unknown) => T;
 }
 
 interface UseApiDataResult<T> {
@@ -35,7 +33,7 @@ interface UseApiDataResult<T> {
  */
 export function useApiData<T = unknown>(
   url: string,
-  options?: UseApiDataOptions<T>
+  options?: UseApiDataOptions
 ): UseApiDataResult<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(options?.autoFetch !== false);
@@ -51,16 +49,14 @@ export function useApiData<T = unknown>(
   const fetch_ = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const opts = optionsRef.current;
     try {
       const res = await fetch(url);
       const json = await res.json();
       if (!res.ok) {
         throw new Error(json.error || `Request failed (${res.status})`);
       }
-      const result = opts?.transform ? opts.transform(json.data) : json.data;
       if (mountedRef.current) {
-        setData(result);
+        setData(json.data as T);
       }
     } catch (e: unknown) {
       // AbortError is expected from AbortController — not an error condition

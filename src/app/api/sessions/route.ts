@@ -32,6 +32,19 @@ import { ensureSyncLayer } from "@/lib/sync";
 const ALL_AGENT_TYPES = ["hermes"] as const;
 const ALL_SOURCES = ["cli", "cron", "mission", "api"] as const;
 
+/**
+ * Pick a value from a known enum tuple if the raw input matches.
+ * Returns undefined for missing / invalid values so callers can short-circuit.
+ */
+function pickEnum<T extends string>(
+  raw: string | null,
+  allowed: readonly T[],
+): T | undefined {
+  return raw && (allowed as readonly string[]).includes(raw)
+    ? (raw as T)
+    : undefined;
+}
+
 // ── Debounced sync: fires at most once per 30s ───────────────
 // Uses a module-level Promise to track whether a sync window is
 // active. ensureSyncLayer() is called OUTSIDE the Promise so it
@@ -63,16 +76,8 @@ function parseQuery(
 } {
   const u = new URL(req.url);
   const id = u.searchParams.get("id") ?? undefined;
-  const rawAgentType = u.searchParams.get("agentType");
-  const agentType: AgentType | undefined =
-    rawAgentType && (ALL_AGENT_TYPES as readonly string[]).includes(rawAgentType)
-      ? rawAgentType as AgentType
-      : undefined;
-  const rawSource = u.searchParams.get("source");
-  const source: SessionSource | undefined =
-    rawSource && (ALL_SOURCES as readonly string[]).includes(rawSource)
-      ? rawSource as SessionSource
-      : undefined;
+  const agentType = pickEnum(u.searchParams.get("agentType"), ALL_AGENT_TYPES);
+  const source = pickEnum(u.searchParams.get("source"), ALL_SOURCES);
   const missionIdParam = u.searchParams.get("missionId");
   const missionId: string | null | undefined =
     missionIdParam === null ? undefined : missionIdParam;
@@ -105,6 +110,11 @@ export async function GET(request: NextRequest) {
       missionId: q.missionId,
       limit: q.limit,
       offset: q.offset,
+      // Force an immediate sync from state.db so the active session shows
+      // fresh messageCount, title, and status. The periodic sync is
+      // debounced at 30s; without this the user sees a stale "0 msgs"
+      // for the session they're currently in.
+      syncIfActive: true,
     });
 
     return NextResponse.json({

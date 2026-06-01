@@ -16,6 +16,23 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { safeApiCall } from "@/lib/api-fetch";
 import { ROLE_META } from "@/components/session/constants";
 import { MessageBubble, type SessionMessage, type SessionData } from "@/components/session/MessageBubble";
+// ── Helpers ───────────────────────────────────────────────────
+
+/**
+ * Pure helper extracted from the page render so it can be unit-tested
+ * without rendering the full Next.js page. Returns true when the session
+ * has no messages but the API note suggests the agent is still running.
+ */
+export function isSessionStillRunning(
+  messageCount: number,
+  note: string | null | undefined,
+): boolean {
+  if (messageCount > 0) return false;
+  if (!note) return false;
+  return /still running|in progress|mid-flight/i.test(note);
+}
+
+// ── Page ────────────────────────────────────────────────────
 
 export default function SessionDetailPage() {
   const params = useParams();
@@ -143,6 +160,15 @@ export default function SessionDetailPage() {
   subtitleParts.push(`${data.messageCount} messages`);
   subtitleParts.push(`${(data.size / 1024).toFixed(1)} KB`);
 
+  // Active session: detect by either status field (when present) or
+  // by the data.note text containing the "still running" hint. We use
+  // a simple heuristic that works without changing the API contract:
+  // if messages are empty AND note mentions running, show a refresh CTA.
+  const isRunning = isSessionStillRunning(
+    data.messages.length,
+    typeof data.note === "string" ? data.note : null,
+  );
+
   return (
     <AppPageShell>
       <PageHeader
@@ -154,6 +180,25 @@ export default function SessionDetailPage() {
         backLabel="SESSIONS"
         actions={
           <div className="flex items-center gap-2 flex-wrap justify-end">
+            {data.missionId && (
+              <a
+                href={`/orchestration/missions/${data.missionId}`}
+                className="text-[10px] font-mono px-2 py-1 rounded bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-colors"
+                title="Open the parent mission"
+              >
+                ↗ Mission
+              </a>
+            )}
+            {isRunning && (
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="text-[10px] font-mono px-2 py-1 rounded bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20 transition-colors"
+                title="Reload to check for new messages"
+              >
+                ⟳ Refresh
+              </button>
+            )}
             {Object.entries(roleCounts).map(([role, count]) => {
               const m = ROLE_META[role] || ROLE_META.system;
               const isActive = roleFilter === role;
@@ -201,9 +246,23 @@ export default function SessionDetailPage() {
         </div>
 
         {data.messages.length === 0 && (
-          <div className="text-center py-12">
+          <div className="text-center py-12 max-w-md mx-auto">
             <MessageSquare className="w-8 h-8 text-white/20 mx-auto mb-3" />
-            <p className="text-white/40 font-mono">No messages in this session</p>
+            {data.note ? (
+              <>
+                <p className="text-white/60 font-mono mb-3">{data.note}</p>
+                {data.missionId && (
+                  <a
+                    href={`/orchestration/missions/${data.missionId}`}
+                    className="text-neon-orange text-sm font-mono hover:underline"
+                  >
+                    Open the parent mission →
+                  </a>
+                )}
+              </>
+            ) : (
+              <p className="text-white/40 font-mono">No messages in this session</p>
+            )}
           </div>
         )}
       </div>
