@@ -9,6 +9,7 @@ import { appendAuditLine } from "@/lib/audit-log";
 import { db } from "@/lib/db";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
+import { parseJsonBody } from "@/lib/parse-json-body";
 
 const CACHE_TTL_MS = 15_000; // 15 seconds
 
@@ -125,33 +126,43 @@ export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
+  // Hoist body parsing out of the main try/catch so malformed JSON
+  // returns 400 (via parseJsonBody) rather than 500. This matches the
+  // behaviour of every other route that adopted parseJsonBody.
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+
+  // Narrow body shape — parseJsonBody returns Record<string, unknown>
+  // so we cast to the structural shape we expect from the client.
+  const { section, values } = bodyResult as {
+    section?: string;
+    values?: unknown;
+  };
+
+  if (!section || !values) {
+    return NextResponse.json(
+      { error: "Missing 'section' or 'values'" },
+      { status: 400 }
+    );
+  }
+
+  // Validate that values is a plain object (not string, array, or null)
+  if (typeof values !== "object" || Array.isArray(values) || values === null) {
+    return NextResponse.json(
+      { error: "values must be an object" },
+      { status: 400 }
+    );
+  }
+
+  // Security: only allow whitelisted sections (prevent modifying model/provider keys)
+  if (!WRITABLE_SECTIONS.has(section)) {
+    return NextResponse.json(
+      { error: `Section '${section}' is not writable. Allowed: ${[...WRITABLE_SECTIONS].join(", ")}` },
+      { status: 403 }
+    );
+  }
+
   try {
-    const body = await request.json();
-    const { section, values } = body;
-
-    if (!section || !values) {
-      return NextResponse.json(
-        { error: "Missing 'section' or 'values'" },
-        { status: 400 }
-      );
-    }
-
-    // Validate that values is a plain object (not string, array, or null)
-    if (typeof values !== "object" || Array.isArray(values) || values === null) {
-      return NextResponse.json(
-        { error: "values must be an object" },
-        { status: 400 }
-      );
-    }
-
-    // Security: only allow whitelisted sections (prevent modifying model/provider keys)
-    if (!WRITABLE_SECTIONS.has(section)) {
-      return NextResponse.json(
-        { error: `Section '${section}' is not writable. Allowed: ${[...WRITABLE_SECTIONS].join(", ")}` },
-        { status: 403 }
-      );
-    }
-
     const config = readCachedConfig();
 
     // Create backup
@@ -167,7 +178,7 @@ export async function PUT(request: NextRequest) {
 
     // Merge values into section
     const current = (config[section] as Record<string, unknown>) || {};
-    config[section] = { ...current, ...values };
+    config[section] = { ...current, ...(values as Record<string, unknown>) };
 
     // Write back
     const content = yaml.dump(config, { lineWidth: -1, noRefs: true });
@@ -175,7 +186,7 @@ export async function PUT(request: NextRequest) {
 
     appendAuditLine({
       action: "config.put",
-      resource: String(section),
+      resource: section,
       ok: true,
     });
 

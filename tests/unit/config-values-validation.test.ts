@@ -129,4 +129,22 @@ describe("PUT /api/config values validation regression", () => {
     // Should not return 400
     expect(res.status).not.toBe(400);
   });
+
+  // Regression for: PUT used to call request.json() inside the main
+  // try/catch, so malformed JSON returned 500 (caught by the catch-all).
+  // After adopting parseJsonBody (hoisted out of the main try/catch),
+  // malformed JSON now correctly returns 400 with a parse error message.
+  it("returns 400 (not 500) when request body is malformed JSON", async () => {
+    const { PUT } = await import("@/app/api/config/route");
+    const req = new NextRequest("http://localhost/api/config", {
+      method: "PUT",
+      // Intentionally truncated JSON that will fail to parse
+      body: "{this is not valid json",
+    });
+    const res = await PUT(req);
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.error).toMatch(/invalid json/i);
+  });
 });

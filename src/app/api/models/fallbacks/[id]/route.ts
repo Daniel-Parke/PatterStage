@@ -5,10 +5,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { logApiError } from "@/lib/api-logger";
-import { appendAuditLine } from "@/lib/audit-log";
-import { getFallbackEntry, updateFallbackEntry, deleteFallbackEntry, getFallbackConfig } from "@/lib/fallbacks-repository";
+import { getFallbackEntry, updateFallbackEntry, deleteFallbackEntry } from "@/lib/fallbacks-repository";
 import { fallbackEntryPutSchema } from "@/lib/fallback-config-schema";
-import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
+import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
 
 export async function GET(
@@ -54,8 +53,7 @@ export async function PUT(
       return NextResponse.json({ error: "Fallback entry not found" }, { status: 404 });
     }
 
-    syncEnabledFallbackChainToHermes(getFallbackConfig());
-    appendAuditLine({ action: "fallback.update", resource: id, ok: true });
+    commitFallbackChange("fallback.update", id);
     return NextResponse.json({ data: { fallback: updated } });
   } catch (error) {
     logApiError("PUT /api/models/fallbacks/[id]", `updating ${id}`, error);
@@ -78,8 +76,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Fallback entry not found" }, { status: 404 });
     }
 
-    syncEnabledFallbackChainToHermes(getFallbackConfig());
-    appendAuditLine({ action: "fallback.delete", resource: id, ok: true });
+    commitFallbackChange("fallback.delete", id);
     return NextResponse.json({ data: { deleted: true } });
   } catch (error) {
     logApiError("DELETE /api/models/fallbacks/[id]", `deleting ${id}`, error);

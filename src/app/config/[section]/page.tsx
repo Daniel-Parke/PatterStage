@@ -14,6 +14,7 @@ import Button from "@/components/ui/Button";
 import { LoadingSpinner, ErrorBanner } from "@/components/ui/LoadingSpinner";
 import { getSectionDef } from "@/lib/config-schema";
 import { apiFetch } from "@/lib/api-fetch";
+import { maskKeyHint } from "@/lib/secret-mask";
 import ConfigField from "@/components/config/ConfigField";
 
 export default function ConfigSectionPage() {
@@ -254,7 +255,7 @@ export default function ConfigSectionPage() {
                   if (eqIdx < 0) return <div key={lineKey} className="text-xs font-mono text-white/50">{line}</div>;
                   const key = line.slice(0, eqIdx).trim();
                   const val = line.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, "");
-                  const masked = val.length > 8 ? val.slice(0, 4) + "..." + val.slice(-4) : "****";
+                  const masked = maskKeyHint(val);
                   return (
                     <div key={lineKey} className="flex items-center gap-2 text-xs font-mono">
                       <span className="text-neon-cyan w-48 flex-shrink-0 truncate">{key}</span>

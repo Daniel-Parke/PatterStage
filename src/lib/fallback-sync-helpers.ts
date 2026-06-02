@@ -1,5 +1,6 @@
-import { listFallbackChain } from "@/lib/fallbacks-repository";
+import { listFallbackChain, getFallbackConfig } from "@/lib/fallbacks-repository";
 import { syncFallbacksToHermesConfig } from "@/lib/hermes-config-sync";
+import { appendAuditLine } from "@/lib/audit-log";
 import type { FallbackConfig } from "@/types/hermes";
 
 export function syncEnabledFallbackChainToHermes(
@@ -20,4 +21,28 @@ export function syncEnabledFallbackChainToHermes(
     fallbackNotification: config.fallbackNotification,
     apiMaxRetries: config.apiMaxRetries,
   });
+}
+
+/**
+ * Apply a fallback-chain mutation's two side-effects: sync the chain to
+ * Hermes and append an audit line. Centralises the boilerplate that was
+ * duplicated across 5 routes (POST fallbacks, POST reorder, POST toggle,
+ * POST custom, PUT/DELETE [id]).
+ *
+ *   try {
+ *     const entry = addFallbackEntry(...);
+ *     commitFallbackChange("fallback.add", entry.id);
+ *     return NextResponse.json(...);
+ *   } catch (error) { ... }
+ *
+ * Both `appendAuditLine` and `syncEnabledFallbackChainToHermes` are
+ * non-throwing (audit has an internal try/catch; sync returns null on an
+ * empty chain), so this helper itself never throws.
+ */
+export function commitFallbackChange(
+  action: string,
+  resource: string
+): void {
+  syncEnabledFallbackChainToHermes(getFallbackConfig());
+  appendAuditLine({ action, resource, ok: true });
 }
