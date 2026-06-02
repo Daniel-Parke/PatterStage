@@ -195,6 +195,55 @@ export function updateSession(id: string, updates: UpdateSessionInput): SessionR
   return getSession(id);
 }
 
+/**
+ * Close the active session row(s) attached to a mission.
+ *
+ * Mission dispatch pre-registers a `sessions` row with `status: "active"` before
+ * spawning the Hermes process. When the mission finishes, the on-disk
+ * `<id>.status.json` carries the terminal state, but the dispatcher never
+ * gets a callback to write the session row. This helper is the single
+ * bridge: it finds the active session for the mission and stamps the
+ * terminal fields (status, ended_at, exit_code, error) onto it.
+ *
+ * - Picks the most recently-started active session (recurring missions
+ *   produce one row per run; the latest is the one that just finished).
+ * - Idempotent: if no active session exists, returns null silently.
+ * - Returns the closed session id, or null when nothing was changed.
+ *
+ * Used by:
+ *   - `MissionSync` happy path (status.json says successful/failed)
+ *   - `MissionSync` orphan path (process died without writing status.json)
+ *   - Admin backfill endpoint (`/api/admin/backfill-session-status`)
+ *   - The recurring orphan-sweep in `syncHermesSessionsToDb`
+ */
+export function closeSessionForMission(
+  missionId: string,
+  updates: {
+    status: SessionStatus;
+    endedAt: string;
+    exitCode: number | null;
+    error: string | null;
+  },
+): string | null {
+  const database = db();
+  const row = database
+    .prepare(
+      `SELECT id FROM sessions
+       WHERE mission_id = ? AND status = 'active'
+       ORDER BY started_at DESC
+       LIMIT 1`,
+    )
+    .get(missionId) as { id: string } | undefined;
+  if (!row) return null;
+  updateSession(row.id, {
+    status: updates.status,
+    endedAt: updates.endedAt,
+    exitCode: updates.exitCode,
+    error: updates.error,
+  });
+  return row.id;
+}
+
 export function getSession(id: string): SessionRecord | null {
   const row = db().prepare("SELECT * FROM sessions WHERE id = ?").get(id) as
     | SessionRow
@@ -547,47 +596,273 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
   }
 
   // ── Step 3: Close orphaned active sessions ──────────────────
-  // The Hermes Gateway API doesn't set end_reason on completion,
-  // so sessions end up permanently stuck as "active". Close any
-  // session that has actual content, no end state, and is older
-  // than 5 minutes (safely past any in-progress window).
+  // Two independent mechanisms protect the Sessions page from rows
+  // stuck on "active" forever:
   //
-  // The 15s sync cycle re-runs this UPDATE on every tick, so without
-  // the suppression below the log line fires ~4×/min with a count
-  // that hovers between the same values forever (gateway keeps
-  // re-inserting them as active on the next cycle's upsert). That's
-  // not actionable signal — keep the first-occurrence log for the
-  // diagnostic value and stay quiet for the steady-state churn.
-  // Audit reference: dogfood-output/report.md Issue #3.
+  //   (A) Parent-mission status. If a session has a non-null
+  //       mission_id and the parent mission has a terminal status
+  //       (anything other than "dispatched"), the session's terminal
+  //       state is derived from the mission: "successful" → "completed"
+  //       (exit 0), "failed" → "failed" (exit 1), other → "completed"
+  //       (exit 0, the parent is no longer running so it ended). This
+  //       catches mission, cron, api, cli, discord, and telegram
+  //       sessions uniformly — previously the sweep only covered
+  //       cli/api, which left 33 mission + 202 cron + 57 discord + 43
+  //       telegram rows permanently stuck.
+  //
+  //   (B) Age-based fallback. Sessions with no parent mission_id
+  //       (e.g. Hermes CLI sessions that never went through a
+  //       mission) are closed by age alone: started_at older than 5
+  //       minutes (safely past any in-progress window) and size > 0
+  //       (has actual content — empty sessions are probably still
+  //       booting and shouldn't be closed prematurely).
+  //
+  // The 15s sync cycle re-runs these UPDATEs on every tick, so
+  // without log suppression the message would fire ~4×/min with a
+  // count that hovers between the same values forever (gateway
+  // keeps re-inserting them as active on the next cycle's upsert).
+  // Suppress the noise; only log on first occurrence and on a real
+  // shift of >=100. Audit reference: dogfood-output/report.md Issue #3.
   try {
-    const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    const { changes } = database
-      .prepare(/* sql */ `
-        UPDATE sessions
-        SET status = 'completed',
-            ended_at = COALESCE(ended_at, started_at)
-        WHERE status = 'active'
-          AND source IN ('api', 'cli')
-          AND size > 0
-          AND started_at < ?
-      `)
-      .run(cutoff);
-    if (changes > 0 && (lastOrphanCloseCount === null || Math.abs(changes - lastOrphanCloseCount) >= 100)) {
-      console.log(`[syncHermesSessionsToDb] closed ${changes} orphaned active sessions`);
-      lastOrphanCloseCount = changes;
-    } else if (changes === 0 && lastOrphanCloseCount !== null && lastOrphanCloseCount > 0) {
-      // The queue has drained — log a final "0" so the operator knows
-      // the steady-state was reached, then reset.
-      console.log(`[syncHermesSessionsToDb] orphan session queue drained (was ${lastOrphanCloseCount})`);
-      lastOrphanCloseCount = null;
-    } else if (changes > 0) {
-      // Suppressed — but keep the latest count so we log when it
-      // changes by >=100 (a real shift worth noting).
-      lastOrphanCloseCount = changes;
-    }
+    const result = closeOrphanedActiveSessions(database, { log: true });
+    void result; // logging side-effect captured in module-level state
   } catch {
     // non-fatal cleanup
   }
 
   return { synced: result.synced, skipped: result.skipped };
+}
+
+/**
+ * Preview what the orphan sweep would change, without writing.
+ *
+ * Counts active sessions that match the close criteria, broken down
+ * by source and by the status they would receive. Used by the admin
+ * backfill endpoint's `dryRun` mode.
+ *
+ * The dry-run SELECTs mirror the UPDATE predicates in `closeOrphanedActiveSessions`
+ * exactly, so the dry-run count equals the post-write count (modulo
+ * concurrent sync activity).
+ */
+export function previewOrphanSweep(
+  database: Database.Database,
+): OrphanSweepResult {
+  const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  const bySource: Record<string, number> = {};
+  const byNewStatus: Record<string, number> = {};
+  let total = 0;
+
+  // (A) parent-mission gated: status derived from mission.status
+  // (LEFT JOIN so missing/soft-deleted parents are also matched;
+  // mission_id IS NOT NULL keeps parentless rows out — they belong
+  // to path (B))
+  try {
+    const rows = database
+      .prepare(/* sql */ `
+        SELECT sessions.source,
+               CASE
+                 WHEN m.id IS NULL OR m.deleted_at IS NOT NULL THEN 'completed'
+                 WHEN m.status = 'successful' THEN 'completed'
+                 WHEN m.status IN ('failed', 'cancelled') THEN 'failed'
+                 ELSE 'completed'
+               END AS new_status
+        FROM sessions
+        LEFT JOIN missions m ON m.id = sessions.mission_id
+        WHERE sessions.status = 'active'
+          AND sessions.mission_id IS NOT NULL
+          AND sessions.started_at < ?
+          AND (m.id IS NULL OR m.deleted_at IS NOT NULL OR m.status != 'dispatched')
+      `)
+      .all(cutoff) as Array<{ source: string; new_status: string }>;
+    for (const row of rows) {
+      total += 1;
+      bySource[row.source] = (bySource[row.source] ?? 0) + 1;
+      byNewStatus[row.new_status] = (byNewStatus[row.new_status] ?? 0) + 1;
+    }
+  } catch {
+    // non-fatal
+  }
+
+  // (B) age-only fallback for parentless sessions. Same dual-gate
+  // logic as closeOrphanedActiveSessions (B): size>0 OR >30-min-old.
+  try {
+    const longCutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    const rows = database
+      .prepare(/* sql */ `
+        SELECT source
+        FROM sessions
+        WHERE status = 'active'
+          AND mission_id IS NULL
+          AND started_at < ?
+          AND (size > 0 OR started_at < ?)
+      `)
+      .all(cutoff, longCutoff) as Array<{ source: string }>;
+    for (const row of rows) {
+      total += 1;
+      bySource[row.source] = (bySource[row.source] ?? 0) + 1;
+      byNewStatus["completed"] = (byNewStatus["completed"] ?? 0) + 1;
+    }
+  } catch {
+    // non-fatal
+  }
+
+  return { total, bySource, byNewStatus };
+}
+
+/**
+ * Close active session rows that should be terminal but never got the
+ * status update.
+ *
+ * Exported for the admin backfill endpoint (`/api/admin/sessions/backfill-status`)
+ * so the operator can dry-run + apply the same sweep on demand.
+ *
+ * Returns counts by source and by new status. `options.log` controls
+ * whether the function emits its own throttled console log; the
+ * recurring sync path passes `log: true` to inherit the existing
+ * suppression behaviour, while the admin endpoint passes `log: false`
+ * (it returns the counts to the caller instead).
+ */
+export interface OrphanSweepResult {
+  total: number;
+  bySource: Record<string, number>;
+  byNewStatus: Record<string, number>;
+}
+
+export function closeOrphanedActiveSessions(
+  database: Database.Database,
+  options: { log?: boolean } = {},
+): OrphanSweepResult {
+  const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  const bySource: Record<string, number> = {};
+  const byNewStatus: Record<string, number> = {};
+  let total = 0;
+
+  // (A) Parent-mission gated close. Applies to all sources whose
+  // session row carries a mission_id (mission, cron, and any
+  // session Hermes tagged with a mission via its profile).
+  // Recurring missions produce one row per run — we close the
+  // active one for that mission, picking the latest started_at
+  // (matches the behaviour of closeSessionForMission()).
+  //
+  // Four sub-cases (driven by a CTE that does a LEFT JOIN so missing
+  // parents still match):
+  //   1. Parent mission exists, status = 'successful' → 'completed', exit 0
+  //   2. Parent mission exists, status in ('failed', 'cancelled') → 'failed', exit 1
+  //   3. Parent mission exists, status = anything else (incl. 'queued', 'draft')
+  //      but NOT 'dispatched' → 'completed', exit 0 (the parent is no longer
+  //      running, so the session has ended)
+  //   4. Parent mission is missing OR soft-deleted → 'completed', exit 0
+  //      (the session is by definition orphaned; the parent reference is
+  //      stale and the session is no longer associated with anything live)
+  //
+  // We use RETURNING to get a per-row breakdown of the actual
+  // changes this call made (not a re-read of all matching rows,
+  // which would double-count across sync ticks).
+  try {
+    const changedRows = database
+      .prepare(/* sql */ `
+        WITH session_with_mission AS (
+          SELECT s.id AS session_id,
+                 s.source AS source,
+                 m.id AS mission_id,
+                 m.status AS mission_status,
+                 m.deleted_at AS mission_deleted_at
+          FROM sessions s
+          LEFT JOIN missions m ON m.id = s.mission_id
+          WHERE s.status = 'active'
+            AND s.mission_id IS NOT NULL
+            AND s.started_at < ?
+            AND (m.id IS NULL OR m.deleted_at IS NOT NULL OR m.status != 'dispatched')
+        )
+        UPDATE sessions
+        SET status = CASE
+              WHEN swm.mission_id IS NULL OR swm.mission_deleted_at IS NOT NULL THEN 'completed'
+              WHEN swm.mission_status = 'successful' THEN 'completed'
+              WHEN swm.mission_status IN ('failed', 'cancelled') THEN 'failed'
+              ELSE 'completed'
+            END,
+            ended_at = COALESCE(sessions.ended_at, sessions.started_at),
+            exit_code = COALESCE(
+              sessions.exit_code,
+              CASE
+                WHEN swm.mission_id IS NULL OR swm.mission_deleted_at IS NOT NULL THEN 0
+                WHEN swm.mission_status = 'successful' THEN 0
+                WHEN swm.mission_status IN ('failed', 'cancelled') THEN 1
+                ELSE 0
+              END
+            )
+        FROM session_with_mission swm
+        WHERE swm.session_id = sessions.id
+        RETURNING sessions.source, sessions.status
+      `)
+      .all(cutoff) as Array<{ source: string; status: string }>;
+
+    for (const row of changedRows) {
+      total += 1;
+      bySource[row.source] = (bySource[row.source] ?? 0) + 1;
+      byNewStatus[row.status] = (byNewStatus[row.status] ?? 0) + 1;
+    }
+  } catch {
+    // non-fatal — the table layout or FK may not permit the join
+  }
+
+  // (B) Age-only fallback. Sessions with no parent mission. Two
+  // independent gates both close the session, so a session only
+  // needs to satisfy *one* of them to be considered terminal:
+  //
+  //   (i)  size > 0 AND started > 5 min ago — the original
+  //        cli/api sweep logic; protects against closing a session
+  //        that's actively writing content but the gateway hasn't
+  //        propagated `end_reason` to us yet.
+  //   (ii) started > 30 min ago (regardless of size) — catches
+  //        sessions that are clearly orphaned: their parent mission
+  //        was never created, the dispatcher never wrote a status
+  //        file, and 30 minutes is far past any conceivable
+  //        in-progress window. The 30-min number is intentionally
+  //        generous — any real Hermes session that takes >30 min
+  //        to start writing content has a much bigger problem than
+  //        the Sessions page showing it as "active".
+  //
+  // The 15s sync cycle re-runs these UPDATEs on every tick, so
+  // without log suppression the message would fire ~4×/min with a
+  // count that hovers between the same values forever. Suppress
+  // the noise; only log on first occurrence and on a real shift
+  // of >=100. Audit reference: dogfood-output/report.md Issue #3.
+  try {
+    const longCutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    const changedRows = database
+      .prepare(/* sql */ `
+        UPDATE sessions
+        SET status = 'completed',
+            ended_at = COALESCE(ended_at, started_at)
+        WHERE status = 'active'
+          AND mission_id IS NULL
+          AND started_at < ?
+          AND (size > 0 OR started_at < ?)
+        RETURNING source
+      `)
+      .all(cutoff, longCutoff) as Array<{ source: string }>;
+
+    for (const row of changedRows) {
+      total += 1;
+      bySource[row.source] = (bySource[row.source] ?? 0) + 1;
+      byNewStatus["completed"] = (byNewStatus["completed"] ?? 0) + 1;
+    }
+  } catch {
+    // non-fatal
+  }
+
+  if (options.log !== false) {
+    if (total > 0 && (lastOrphanCloseCount === null || Math.abs(total - lastOrphanCloseCount) >= 100)) {
+      console.log(`[syncHermesSessionsToDb] closed ${total} orphaned active sessions`);
+      lastOrphanCloseCount = total;
+    } else if (total === 0 && lastOrphanCloseCount !== null && lastOrphanCloseCount > 0) {
+      console.log(`[syncHermesSessionsToDb] orphan session queue drained (was ${lastOrphanCloseCount})`);
+      lastOrphanCloseCount = null;
+    } else if (total > 0) {
+      lastOrphanCloseCount = total;
+    }
+  }
+
+  return { total, bySource, byNewStatus };
 }

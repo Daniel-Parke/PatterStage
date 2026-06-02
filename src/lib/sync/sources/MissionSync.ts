@@ -9,6 +9,20 @@
 // Also detects orphaned dispatched missions whose process died
 // before writing status.json and marks them as failed.
 //
+// Cross-cutting responsibility: closing the session row.
+// Mission dispatch pre-registers a `sessions` row with
+// `status: "active"` before spawning the Hermes process. The
+// dispatcher never gets a synchronous callback when the mission
+// finishes — the terminal state lives in the on-disk
+// `<id>.status.json` file. To keep the Sessions page in sync,
+// this sync source is the bridge: whenever a mission's status
+// transitions, it also closes the matching session row via
+// `closeSessionForMission()`. This is the single chokepoint —
+// keeping the session-side update here means every future entry
+// point (admin backfill, recurring sweep, future API) only has
+// to update the mission and rely on this sync to catch the
+// session row.
+//
 // All filesystem I/O uses fs.promises so the event loop is not
 // blocked while iterating hundreds of missions (or touching a
 // slow filesystem). The previous synchronous readFileSync loop
@@ -21,6 +35,7 @@ import { access, constants, readFile, writeFile } from "fs/promises";
 import { join } from "path";
 
 import { listMissions, updateMission } from "@/lib/mission-repository";
+import { closeSessionForMission } from "@/lib/session-repository";
 import { PATHS } from "@/lib/paths";
 import { logApiError } from "@/lib/api-logger";
 import { db } from "@/lib/db";
@@ -108,6 +123,16 @@ export class MissionSync implements SyncSource {
           if (pid !== null && !isPidAlive(pid)) {
             await writeFailedStatus(mission.id);
             updateMission(mission.id, { status: "failed" });
+            // Close the active session row that was pre-registered at
+            // dispatch time. Without this the session stays "active"
+            // forever on the Sessions page even though the mission is
+            // already terminal.
+            closeSessionForMission(mission.id, {
+              status: "failed",
+              endedAt: new Date().toISOString(),
+              exitCode: null,
+              error: "Process terminated without completion",
+            });
             syncedCount++;
           }
           continue;
@@ -117,6 +142,16 @@ export class MissionSync implements SyncSource {
           const disk = JSON.parse(await readFile(statusPath, "utf-8")) as DiskStatus;
           if (disk.status === "successful" || disk.status === "failed") {
             updateMission(mission.id, { status: disk.status as MissionStatus });
+            // Close the session row in lockstep with the mission
+            // transition. The session status mirrors the mission
+            // outcome: "successful" → "completed" (exit 0),
+            // "failed" → "failed" (preserve the bash-script's exit code).
+            closeSessionForMission(mission.id, {
+              status: disk.status === "successful" ? "completed" : "failed",
+              endedAt: disk.completed_at,
+              exitCode: disk.exit_code ?? null,
+              error: disk.error ?? null,
+            });
             syncedCount++;
           }
         } catch (e) {
