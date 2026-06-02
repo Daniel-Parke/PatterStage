@@ -164,18 +164,20 @@ export function pushModelToHermes(modelId: string): SyncActionResult {
 
 /**
  * Push a credential (provider + apiKey) to the Hermes .env file.
+ *
+ * `provider` is typed as `HermesProvider` because the body only accepts
+ * the canonical list (it checks via `isHermesProvider` and passes the
+ * value to `syncCredentialToHermesEnv` which requires the literal
+ * union). Callers that source the value from a `string` field (e.g.
+ * the credentials DB column) must validate with `isHermesProvider`
+ * before calling. The previous `provider: string` signature forced two
+ * internal `as HermesProvider` casts and a defensive `isHermesProvider`
+ * re-check that doubled the work. (Session 53 refactor.)
  */
-function pushCredentialToHermesEnv(provider: string, apiKey: string): SyncActionResult {
-  if (!isHermesProvider(provider as HermesProvider)) {
-    return {
-      success: false,
-      backupPath: null,
-      details: [{ action: "error", detail: `Unknown provider: ${provider}` }],
-    };
-  }
+function pushCredentialToHermesEnv(provider: HermesProvider, apiKey: string): SyncActionResult {
   try {
     const { backupPath } = syncCredentialToHermesEnv({
-      provider: provider as HermesProvider,
+      provider,
       apiKey,
     });
     return {
@@ -214,6 +216,19 @@ export function pushCredential(credentialId: string): SyncActionResult {
       success: false,
       backupPath: null,
       details: [{ action: "error", detail: "Credential not found" }],
+    };
+  }
+  // The DB column is `provider TEXT` (no CHECK constraint), so validate
+  // against the canonical list before passing to the typed push helper.
+  // The check was previously inside pushCredentialToHermesEnv as a
+  // defensive double-check; hoisting it here makes the call site
+  // honest about the type narrowing and lets the helper accept the
+  // narrow type without an internal cast.
+  if (!isHermesProvider(cred.provider)) {
+    return {
+      success: false,
+      backupPath: null,
+      details: [{ action: "error", detail: `Unknown provider: ${cred.provider}` }],
     };
   }
   return pushCredentialToHermesEnv(cred.provider, cred.apiKey);

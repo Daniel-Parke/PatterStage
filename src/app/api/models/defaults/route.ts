@@ -10,7 +10,6 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, setDefaultPutSchema } from "@/lib/api-schemas";
-import type { TaskType } from "@/lib/hermes-providers";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
 export async function GET(request: NextRequest) {
@@ -36,7 +35,10 @@ export async function PUT(request: NextRequest) {
   if (!parsed.success) return zodErrorResponse(parsed.error);
 
   try {
-    const defaults = setDefaultModel(parsed.data.taskType as TaskType, parsed.data.modelId);
+    // setDefaultPutSchema narrows parsed.data.taskType to TaskType, so no
+    // cast is needed. (Session 53 dropped the z.enum widening cast on
+    // taskTypeSchema.)
+    const defaults = setDefaultModel(parsed.data.taskType, parsed.data.modelId);
     syncDefaultsToHermesConfig();
     appendAuditLine({
       action: "model.default.set",

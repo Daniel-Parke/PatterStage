@@ -123,6 +123,29 @@ describe("/api/credentials", () => {
     );
   });
 
+  it("POST forwards parsed provider to syncCredentialToHermesEnv (narrowing contract)", async () => {
+    // Session 53: providerSchema narrows parsed.data.provider to HermesProvider
+    // (a literal union), so syncCredentialToHermesEnv is called with the
+    // exact value from the request — no widening cast and no defensive
+    // isHermesProvider() guard. This test locks the contract: any future
+    // change that re-widens the type or re-introduces the guard is
+    // caught here.
+    const configSync = require("@/lib/hermes-config-sync") as {
+      syncCredentialToHermesEnv: jest.Mock;
+    };
+    repo.__createCredential.mockReturnValue(SAMPLE);
+    const res = await postCreds({
+      label: "Anthropic Personal",
+      provider: "anthropic",
+      apiKey: "sk-test",
+    });
+    expect(res.status).toBe(201);
+    expect(configSync.syncCredentialToHermesEnv).toHaveBeenCalledWith({
+      provider: "anthropic",
+      apiKey: "sk-test",
+    });
+  });
+
   it("POST rejects unknown provider", async () => {
     const res = await postCreds({ label: "x", provider: "weird", apiKey: "y" });
     expect(res.status).toBe(400);

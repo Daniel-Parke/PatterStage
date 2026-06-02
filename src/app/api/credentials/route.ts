@@ -13,7 +13,6 @@ import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, credentialPostSchema } from "@/lib/api-schemas";
 import { syncCredentialToHermesEnv } from "@/lib/hermes-config-sync";
-import { isHermesProvider, type HermesProvider } from "@/lib/hermes-providers";
 
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);
@@ -43,12 +42,15 @@ export async function POST(request: NextRequest) {
   try {
     const credential = createCredential(parsed.data);
     createdId = credential.id;
-    if (isHermesProvider(parsed.data.provider)) {
-      syncCredentialToHermesEnv({
-        provider: parsed.data.provider as HermesProvider,
-        apiKey: parsed.data.apiKey,
-      });
-    }
+    // providerSchema narrows parsed.data.provider to HermesProvider, so no
+    // defensive isHermesProvider() guard is needed. The previous widening
+    // cast (`as HermesProvider`) was a workaround for the z.enum widening
+    // cast on providerSchema; session 53 dropped the widening cast, so
+    // the type now flows through without manual coercion.
+    syncCredentialToHermesEnv({
+      provider: parsed.data.provider,
+      apiKey: parsed.data.apiKey,
+    });
     appendAuditLine({ action: "credential.create", resource: credential.id, ok: true });
     return NextResponse.json({ data: { credential } }, { status: 201 });
   } catch (error) {
