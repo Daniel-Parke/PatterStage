@@ -18,6 +18,7 @@ import { SearchInput } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { safeApiCall } from "@/lib/api-fetch";
+import { parseOptionalTagsInput, parseTagsInput } from "@/lib/hindsight-tag-input";
 import { parseReflectResponse } from "./hindsight/utils";
 import type { Tab, Memory, Directive, MentalModel, HealthState } from "./hindsight/types";
 import HealthBanner from "./hindsight/HealthBanner";
@@ -151,10 +152,10 @@ export default function HindsightBrowser() {
     if (!newContent.trim()) return;
     setAdding(true);
     try {
-      const tags = newTags.split(",").map(t => t.trim()).filter(Boolean);
+      const tags = parseOptionalTagsInput(newTags);
       const { ok, error } = await safeApiCall("/api/memory/hindsight", {
         method: "POST",
-        body: { content: newContent, tags: tags.length > 0 ? tags : undefined },
+        body: { content: newContent, tags },
       });
       if (!ok) {
         showToast(error ?? "Failed to store memory", "error");
@@ -194,10 +195,10 @@ export default function HindsightBrowser() {
     if (!dirForm.name.trim() || !dirForm.content.trim()) return;
     setCreatingDirective(true);
     try {
-      const tags = dirForm.tags.split(",").map(t => t.trim()).filter(Boolean);
+      const tags = parseOptionalTagsInput(dirForm.tags);
       const { ok, error } = await safeApiCall("/api/memory/hindsight", {
         method: "POST",
-        body: { action: "create-directive", name: dirForm.name, content: dirForm.content, priority: parseInt(dirForm.priority) || 0, tags: tags.length > 0 ? tags : undefined },
+        body: { action: "create-directive", name: dirForm.name, content: dirForm.content, priority: parseInt(dirForm.priority) || 0, tags },
       });
       if (!ok) {
         showToast(error ?? "Failed to create directive", "error");
@@ -249,7 +250,7 @@ export default function HindsightBrowser() {
     if (!editingDirective || !editDirForm.name.trim() || !editDirForm.content.trim()) return;
     setSavingDirective(true);
     try {
-      const tags = editDirForm.tags.split(",").map(t => t.trim()).filter(Boolean);
+      const tags = parseTagsInput(editDirForm.tags);
       const { ok, error } = await safeApiCall("/api/memory/hindsight", {
         method: "POST",
         body: { action: "update-directive", id: editingDirective.id, name: editDirForm.name, content: editDirForm.content, priority: parseInt(editDirForm.priority) || 0, tags },
@@ -290,10 +291,10 @@ export default function HindsightBrowser() {
     if (!modelForm.name.trim() || !modelForm.query.trim()) return;
     setCreatingModel(true);
     try {
-      const tags = modelForm.tags.split(",").map(t => t.trim()).filter(Boolean);
+      const tags = parseOptionalTagsInput(modelForm.tags);
       const { ok, error } = await safeApiCall("/api/memory/hindsight", {
         method: "POST",
-        body: { action: "create-model", name: modelForm.name, query: modelForm.query, tags: tags.length > 0 ? tags : undefined },
+        body: { action: "create-model", name: modelForm.name, query: modelForm.query, tags },
       });
       if (!ok) {
         showToast(error ?? "Failed to create mental model", "error");
@@ -344,11 +345,19 @@ export default function HindsightBrowser() {
     setEditModelForm({ name: m.name, query: m.source_query, tags: m.tags.join(", ") });
   };
 
+  // Field setters for the directive + mental-model modals. Each modal
+  // exposes 3-4 separate `onNameChange` / `onContentChange` / etc. props
+  // and the inline setter body is the same shape every time. `setField`
+  // builds a partial-update setter for one key, so the JSX collapses to
+  // `onNameChange={setField(setDirForm, "name")}`.
+  const setField = <S,>(setter: React.Dispatch<React.SetStateAction<S>>, key: keyof S) =>
+    (v: S[keyof S]) => setter((p) => ({ ...p, [key]: v }));
+
   const handleSaveModel = async () => {
     if (!editingModel || !editModelForm.name.trim()) return;
     setSavingModel(true);
     try {
-      const tags = editModelForm.tags.split(",").map(t => t.trim()).filter(Boolean);
+      const tags = parseTagsInput(editModelForm.tags);
       const { ok, error } = await safeApiCall("/api/memory/hindsight", {
         method: "POST",
         body: { action: "update-model", id: editingModel.id, name: editModelForm.name, query: editModelForm.query || undefined, tags },
@@ -464,20 +473,20 @@ export default function HindsightBrowser() {
         isEdit={false}
         name={dirForm.name} content={dirForm.content} priority={dirForm.priority} tags={dirForm.tags}
         saving={creatingDirective}
-        onNameChange={(v) => setDirForm(p => ({ ...p, name: v }))}
-        onContentChange={(v) => setDirForm(p => ({ ...p, content: v }))}
-        onPriorityChange={(v) => setDirForm(p => ({ ...p, priority: v }))}
-        onTagsChange={(v) => setDirForm(p => ({ ...p, tags: v }))}
+        onNameChange={setField(setDirForm, "name")}
+        onContentChange={setField(setDirForm, "content")}
+        onPriorityChange={setField(setDirForm, "priority")}
+        onTagsChange={setField(setDirForm, "tags")}
         onSave={handleCreateDirective}
       />
       <DirectiveModal
         open={!!editingDirective} onClose={() => setEditingDirective(null)} isEdit={true}
         name={editDirForm.name} content={editDirForm.content} priority={editDirForm.priority} tags={editDirForm.tags}
         saving={savingDirective}
-        onNameChange={(v) => setEditDirForm(p => ({ ...p, name: v }))}
-        onContentChange={(v) => setEditDirForm(p => ({ ...p, content: v }))}
-        onPriorityChange={(v) => setEditDirForm(p => ({ ...p, priority: v }))}
-        onTagsChange={(v) => setEditDirForm(p => ({ ...p, tags: v }))}
+        onNameChange={setField(setEditDirForm, "name")}
+        onContentChange={setField(setEditDirForm, "content")}
+        onPriorityChange={setField(setEditDirForm, "priority")}
+        onTagsChange={setField(setEditDirForm, "tags")}
         onSave={handleSaveDirective}
       />
       <MentalModelModal
@@ -485,18 +494,18 @@ export default function HindsightBrowser() {
         isEdit={false}
         name={modelForm.name} query={modelForm.query} tags={modelForm.tags}
         saving={creatingModel}
-        onNameChange={(v) => setModelForm(p => ({ ...p, name: v }))}
-        onQueryChange={(v) => setModelForm(p => ({ ...p, query: v }))}
-        onTagsChange={(v) => setModelForm(p => ({ ...p, tags: v }))}
+        onNameChange={setField(setModelForm, "name")}
+        onQueryChange={setField(setModelForm, "query")}
+        onTagsChange={setField(setModelForm, "tags")}
         onSave={handleCreateModel}
       />
       <MentalModelModal
         open={!!editingModel} onClose={() => setEditingModel(null)} isEdit={true}
         name={editModelForm.name} query={editModelForm.query} tags={editModelForm.tags}
         saving={savingModel}
-        onNameChange={(v) => setEditModelForm(p => ({ ...p, name: v }))}
-        onQueryChange={(v) => setEditModelForm(p => ({ ...p, query: v }))}
-        onTagsChange={(v) => setEditModelForm(p => ({ ...p, tags: v }))}
+        onNameChange={setField(setEditModelForm, "name")}
+        onQueryChange={setField(setEditModelForm, "query")}
+        onTagsChange={setField(setEditModelForm, "tags")}
         onSave={handleSaveModel}
       />
     </div>

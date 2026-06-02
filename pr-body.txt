@@ -226,3 +226,106 @@ Random pick: **List 1** (Dashboard, Sessions, Memory, Logs). Closes the **other*
 1. **List-aware audit recipe for the factory trio** — `grep -nE "status: (400|404|500)" src/app/api/<list>/**/*.ts | grep -vE "(badRequest|notFound|serverError)"` — run against the picked list every session. Session 61 closed List 1's contribution (13 sites); Lists 2 + 3 still have a few inline 400s to migrate.
 2. **Status-code discipline** — keep factories status-code-locked; no "any 4xx" / "any 5xx" overloads. Promote a new factory only when 2+ sites need it.
 3. **Soft-fail envelopes stay inline** — they have a different contract than the canonical `{ error }` shape; the frontend keys off the data shape. Pinned by session 57.
+
+---
+
+## Session 62 — List 1 (Dashboard, Sessions, Memory, Logs) — UI handler refactors
+
+Random pick: **List 1**. After sessions 48/60/61 closed the List 1 factory migration (13 inline 400/404/500 sites), this session turned to **non-API** duplication: helpers that don't depend on the HTTP contract but on repeated UI-handler logic in the Hindsight memory page + dashboard polling. 3 small-bore refactors, +15 new unit tests, 1 `any` cast removed.
+
+### Refactor 1 — `parseTagsInput` + `parseOptionalTagsInput` (5× → 1)
+
+The Hindsight modals (Add Memory, Directive create/edit, Mental Model create/edit) all parse a free-form "Tags (comma-separated)" input. Every handler ran the same 3-step pipeline inline:
+
+```ts
+const tags = <X>Form.tags.split(",").map(t => t.trim()).filter(Boolean);
+```
+
+…and **3 of the 5** sites then folded with `tags.length > 0 ? tags : undefined` so the JSON body omits the `tags` key when blank (matches the Hindsight API contract — `tags: []` is silently treated as "no tags", but `tags: undefined` is what the rest of the Hindsight code path produces and keeps the wire payload tight).
+
+Extracted to `src/lib/hindsight-tag-input.ts` as two named helpers:
+- `parseTagsInput(raw: string): string[]` — returns `[]` for empty input
+- `parseOptionalTagsInput(raw: string): string[] | undefined` — returns `undefined` for empty input
+
+The two-helper split is per the **session-51 byte-equivalence discipline**: the 2 sites that passed `tags` directly (no `? tags : undefined` fold) use the non-optional variant; the 3 sites with the fold use the optional variant. Behaviour preserved exactly.
+
+**15 new unit tests** in `tests/unit/hindsight-tag-input.test.ts` cover: empty, whitespace-only, single tag, trim, double-comma drop, leading/trailing-comma drop, commas-only, multi-word tags, special characters (`ch-deploy`, `hermes/gateway`, `v1.2.3`), and the `undefined` fold on the optional variant.
+
+### Refactor 2 — `setField(setter, key)` helper for 12× inline modal setter bodies
+
+The 4 Hindsight modals each take 3-4 separate `onNameChange` / `onContentChange` / `onPriorityChange` / `onTagsChange` / `onQueryChange` props. The original JSX inlined the same `(v) => setForm(p => ({ ...p, key: v }))` setter body **12 times** (4 props × 3 modal bodies, minus the 0-prop AddMemoryModal):
+
+```tsx
+onNameChange={(v) => setDirForm(p => ({ ...p, name: v }))}
+onContentChange={(v) => setDirForm(p => ({ ...p, content: v }))}
+onPriorityChange={(v) => setDirForm(p => ({ ...p, priority: v }))}
+onTagsChange={(v) => setDirForm(p => ({ ...p, tags: v }))}
+```
+
+Extracted to a small file-local generic helper:
+
+```ts
+const setField = <S,>(
+  setter: React.Dispatch<React.SetStateAction<S>>,
+  key: keyof S,
+) => (v: S[keyof S]) => setter((p) => ({ ...p, [key]: v }));
+```
+
+Call site collapses to:
+```tsx
+onNameChange={setField(setDirForm, "name")}
+onContentChange={setField(setDirForm, "content")}
+...
+```
+
+**Why I rejected `useCallback` wrapping the helper itself:** the helper returns a NEW closure per call, so `useCallback([], ...)` on the outer factory doesn't stabilise the per-key closures. Wrapping the *inner* closure with `useCallback(..., [setter, key])` would require hoisting the per-key call out of the JSX (one `useMemo` per call), which costs more than it saves. The current shape is the right trade-off.
+
+**Byte-equivalence audit:** the helper invokes the `setter` callback with the exact same `(p) => ({ ...p, [key]: v })` shallow-update closure. React's state-update batching treats the inline arrow and the helper-returned arrow identically.
+
+### Refactor 3 — Type the dashboard polling `extract` array, remove the `any` cast
+
+The dashboard polls 3 endpoints on independent intervals via a declarative `polls: [{url, ms, extract}]` array. The `extract` field was typed inline as `(d: { data?: unknown }) => ...`, and the `pollIntervals.map()` consumer had to cast it via `(extract as (d: any) => any)` to drop the per-element type into the async loop. The result was a single `eslint-disable-next-line @typescript-eslint/no-explicit-any` comment on the cast.
+
+Replaced with a module-local `PollExtractor` alias:
+
+```ts
+type DashboardUpdate = Partial<Pick<typeof data, "monitor" | "processes" | "missions">>;
+type PollExtractor = (d: { data?: unknown }) => DashboardUpdate | null;
+const polls: Array<{ url: string; ms: number; extract: PollExtractor }> = [...];
+```
+
+The consumer now calls `extract(raw)` directly with the type checker verifying the return shape. The `eslint-disable` is gone. The 3 inline `(d: { data?: unknown }) =>` parameter types on the extractor functions collapse to the inferred `(d) =>`.
+
+**Byte-equivalence audit:** the helper signature is identical. The `setData(update)` call sees the same input as before. Only difference is the cast is gone.
+
+### What was rejected
+
+- **`parseInt(priority) || 0` extraction (2 sites)** — only 2 occurrences in `HindsightBrowser.tsx`. Below Rule of Three. Left inline.
+- **`memories/loading/loadingInitial` useMemo consolidation in HindsightBrowser** — `loading` and `loadingInitial` are intentionally distinct (search-in-flight vs first load). Collapsing them would change the spinner text. Left alone.
+- **Dashboard batched `safeApiCall` `?.data?.data?.X ?? Y` repetition (8 sites)** — explicitly rejected by session-57 ("8 lines of repetition, not enough to justify a new helper. Left alone."). Same applies this session.
+- **4-quadrant modal prop drilling (24 props total)** — extracting a single `DirectiveFormContext` would save lines but add indirection. The flat prop shape is more grep-able and the modals are stable contracts. Left alone.
+- **`hindsight/utils.ts` 3 untested helpers (parseMemoryContent, parseReflectResponse, hindsightFactTypeBadgeColor)** — Rule of Three for testability: parseMemoryContent has 5 branches (qualifies), parseReflectResponse has 1, hindsightFactTypeBadgeColor has 5. The first qualifies but adding tests for a tiny regex + Python-repr parser is low-yield; the bridge test already exercises the parse path transitively. Left for a future session if a 2nd consumer appears.
+
+### Files
+
+- `src/lib/hindsight-tag-input.ts` (NEW) — 38-line helper, 2 named functions
+- `tests/unit/hindsight-tag-input.test.ts` (NEW) — 15 tests
+- `src/components/memory/HindsightBrowser.tsx` (MODIFIED) — 5 sites use `parseTagsInput`/`parseOptionalTagsInput`; 12 sites use `setField(setter, key)`
+- `src/app/page.tsx` (MODIFIED) — `PollExtractor` type, `any` cast removed
+- `references/control-hub-list1-session62-findings.md` (NEW) — session findings
+- `pr-body.txt` (MODIFIED) — this section
+
+### Verification
+
+- All 1024 unit tests pass (174 suites, +15 from this session)
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint . --max-warnings 0` clean (was: 1 `eslint-disable-next-line @typescript-eslint/no-explicit-any` in src/app/page.tsx; now: 0)
+- `npm run build` passes
+- 0 user-visible behaviour changes across all 3 refactors (byte-equivalence audit per session 51)
+
+### Patterns to take forward
+
+1. **"Two-named-helper split preserves byte equivalence when 2 sites have one shape and 3 have another"** — `parseTagsInput` (returns `[]`) vs `parseOptionalTagsInput` (returns `undefined`). Avoids a `boolean` flag parameter and avoids a `string[] | undefined` call-site type that some sites don't want.
+2. **`setField(setter, key)` for modal prop drilling** — generic helper, file-local scope, no need to promote to `src/lib/` until a 2nd file uses it. Catches the case where one prop is missing (AddMemoryModal has 0 of these setter props; the helper isn't applied there).
+3. **Per-element extract-function typing for declarative polling arrays** — `Array<{...}>` annotation on the array + per-element `extract` type is enough to drop the `any` cast in the consumer. The type checker proves the loop body is sound.
+

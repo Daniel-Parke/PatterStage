@@ -317,11 +317,16 @@ export default function Dashboard() {
     initialLoad();
 
     // ── Polling: consolidated — runs each interval on schedule ──────────
-    const polls = [
+    // `extract` receives the safeApiCall envelope `{ data: T }` and returns
+    // the partial DashboardData update or `null` to skip. Typed via
+    // `PollExtractor<Update>` so the cast through `any` is gone.
+    type DashboardUpdate = Partial<Pick<typeof data, "monitor" | "processes" | "missions">>;
+    type PollExtractor = (d: { data?: unknown }) => DashboardUpdate | null;
+    const polls: Array<{ url: string; ms: number; extract: PollExtractor }> = [
       {
         url: "/api/monitor",
         ms: 10000,
-        extract: (d: { data?: unknown }) => {
+        extract: (d) => {
           const inner = unwrapPollPath(d, ["data"]);
           if (!inner) return null;
           // unwrapPollPath returns Record<string, unknown>; cast through
@@ -332,7 +337,7 @@ export default function Dashboard() {
       {
         url: "/api/agents",
         ms: 15000,
-        extract: (d: { data?: unknown }) => {
+        extract: (d) => {
           const inner = unwrapPollPath(d, []);
           if (!inner) return null;
           return { processes: (inner.processes as HermesProcess[] | undefined) ?? [] };
@@ -341,7 +346,7 @@ export default function Dashboard() {
       {
         url: "/api/missions",
         ms: 15000,
-        extract: (d: { data?: unknown }) => {
+        extract: (d) => {
           const inner = unwrapPollPath(d, []);
           if (!inner) return null;
           return { missions: (inner.missions as MissionBrief[] | undefined) ?? [] };
@@ -354,8 +359,7 @@ export default function Dashboard() {
         if (signal.aborted) return;
         const { data: raw } = await safeApiCall(url, { signal } as RequestInit);
         if (!raw) return;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- extract functions handle their own typing
-        const update = (extract as (d: any) => any)(raw);
+        const update = extract(raw);
         if (update) setData(update);
       }, ms),
     );
