@@ -15,6 +15,12 @@
 
 import type { SessionRecord } from "@/lib/session-repository";
 
+/** Threshold (in bytes) below which an api-source session is considered "noise". */
+export const API_NOISE_MAX_BYTES = 1024;
+
+/** Age (in milliseconds) below which a short-lived session is considered "noise". */
+export const API_NOISE_MAX_AGE_MS = 60_000;
+
 /**
  * Free-text search across a session's title, id, profile, and mission
  * fields. Case-insensitive. Empty/whitespace queries return the input
@@ -33,22 +39,16 @@ export function sessionMatchesQuery(session: SessionRecord, query: string): bool
 
 /**
  * Returns the subset of `sessions` that match `query` per
- * `sessionMatchesQuery`. Convenience wrapper for the common
- * `sessions.filter(s => sessionMatchesQuery(s, q))` pattern.
+ * `sessionMatchesQuery`. Implemented in terms of the single-record
+ * predicate so the case-insensitive matching logic lives in exactly
+ * one place. Empty queries return a defensive copy of the input.
  */
 export function searchSessionsByQuery(
   sessions: readonly SessionRecord[],
   query: string,
 ): SessionRecord[] {
   if (!query) return [...sessions];
-  const q = query.toLowerCase();
-  return sessions.filter(
-    (s) =>
-      (s.title?.toLowerCase() ?? "").includes(q) ||
-      s.id.toLowerCase().includes(q) ||
-      (s.profileName?.toLowerCase() ?? "").includes(q) ||
-      (s.missionId?.toLowerCase() ?? "").includes(q),
-  );
+  return sessions.filter((s) => sessionMatchesQuery(s, query));
 }
 
 /**
@@ -65,8 +65,8 @@ export function isApiNoiseSession(
   now: number = Date.now(),
 ): boolean {
   if (session.source !== "api") return false;
-  if (session.size >= 1024) return false;
+  if (session.size >= API_NOISE_MAX_BYTES) return false;
   const ageMs = now - new Date(session.startedAt).getTime();
-  if (ageMs > 60_000) return false;
+  if (ageMs > API_NOISE_MAX_AGE_MS) return false;
   return true;
 }

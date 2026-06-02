@@ -27,73 +27,17 @@ import {
   type SessionSource,
   type SessionStatus,
 } from "@/lib/session-repository";
-import { ensureSyncLayer } from "@/lib/sync";
-
-// ── Type constants ──────────────────────────────────────────────
-
-const ALL_AGENT_TYPES = ["hermes"] as const;
-const ALL_SOURCES = ["cli", "cron", "mission", "api"] as const;
-
-/**
- * Pick a value from a known enum tuple if the raw input matches.
- * Returns undefined for missing / invalid values so callers can short-circuit.
- */
-function pickEnum<T extends string>(
-  raw: string | null,
-  allowed: readonly T[],
-): T | undefined {
-  return raw && (allowed as readonly string[]).includes(raw)
-    ? (raw as T)
-    : undefined;
-}
-
-// ── Debounced sync: fires at most once per 30s ───────────────
-// Uses a module-level Promise to track whether a sync window is
-// active. ensureSyncLayer() is called OUTSIDE the Promise so it
-// fires immediately on the first call; subsequent calls within
-// 30s are no-ops until the window expires.
-let pendingSync: Promise<void> | null = null;
-
-function triggerSyncOnce(): void {
-  if (pendingSync) return;
-  // Call OUTSIDE the Promise so it runs immediately, not after 30s delay.
-  ensureSyncLayer();
-  pendingSync = new Promise<void>((resolve) => {
-    setTimeout(() => {
-      pendingSync = null;
-      resolve();
-    }, 30_000);
-  });
-}
-
-function parseQuery(
-  req: NextRequest,
-): {
-  agentType?: AgentType;
-  source?: SessionSource;
-  missionId?: string | null;
-  limit: number;
-  offset: number;
-  id?: string;
-} {
-  const u = new URL(req.url);
-  const id = u.searchParams.get("id") ?? undefined;
-  const agentType = pickEnum(u.searchParams.get("agentType"), ALL_AGENT_TYPES);
-  const source = pickEnum(u.searchParams.get("source"), ALL_SOURCES);
-  const missionIdParam = u.searchParams.get("missionId");
-  const missionId: string | null | undefined =
-    missionIdParam === null ? undefined : missionIdParam;
-  const limit = Math.min(parseInt(u.searchParams.get("limit") ?? "50", 10), 100);
-  const offset = parseInt(u.searchParams.get("offset") ?? "0", 10);
-  return { agentType, source, missionId, limit, offset, id };
-}
+import {
+  parseSessionQuery,
+  triggerSyncOnce,
+} from "@/lib/sessions-api-helpers";
 
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
   try {
-    const q = parseQuery(request);
+    const q = parseSessionQuery(request);
 
     if (q.id) {
       const session = getSession(q.id);

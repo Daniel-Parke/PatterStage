@@ -16,16 +16,32 @@ import type { MemoryReadResult } from "@/lib/memory-providers";
 
 /**
  * Memory facts are managed by agent tools (hindsight_retain / recall /
- * reflect), not by the dashboard. Surface a single consistent 400 across
- * every write verb so the route's capability is self-documenting.
+ * reflect), not by the dashboard. Build a single consistent 400
+ * response so the route's capability is self-documenting and each
+ * write verb is a one-liner.
  */
-const UNSUPPORTED_WRITE_RESPONSE = NextResponse.json(
-  {
-    error:
-      "Memory management via the dashboard is not supported for the current provider. Use agent tools instead.",
-  },
-  { status: 400 },
-);
+function unsupportedWriteResponse(): NextResponse {
+  return NextResponse.json<ApiResponse<never>>(
+    {
+      error:
+        "Memory management via the dashboard is not supported for the current provider. Use agent tools instead.",
+    },
+    { status: 400 },
+  );
+}
+
+/**
+ * Combine the auth check + the unsupported-write 400 response into
+ * a single helper. Every write verb (POST/PUT/DELETE) on this route
+ * is the same shape, so the handler is a one-liner:
+ *
+ *   export const POST = unsupportedWriteHandler;
+ */
+function unsupportedWriteHandler(request: NextRequest): NextResponse {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+  return unsupportedWriteResponse();
+}
 
 // ── GET — Memory status ──────────────────────────────────────
 // Hindsight: dormant status (facts managed via agent tools)
@@ -56,20 +72,6 @@ export async function GET(request: NextRequest) {
   });
 }
 
-export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-  return UNSUPPORTED_WRITE_RESPONSE;
-}
-
-export async function PUT(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-  return UNSUPPORTED_WRITE_RESPONSE;
-}
-
-export async function DELETE(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-  return UNSUPPORTED_WRITE_RESPONSE;
-}
+export const POST = unsupportedWriteHandler;
+export const PUT = unsupportedWriteHandler;
+export const DELETE = unsupportedWriteHandler;

@@ -54,7 +54,8 @@ import { searchSessionsByQuery, isApiNoiseSession } from "@/lib/session-filters"
 import AppPageShell from "@/components/layout/AppPageShell";
 import type { SessionRecord } from "@/lib/session-repository";
 import type { SessionSource } from "@/lib/session-repository";
-import { SOURCE_META, formatSessionTitle } from "@/components/session/constants";
+import { SOURCE_META } from "@/components/session/constants";
+import { formatSessionTitle } from "@/lib/session-title";
 
 // ── Types ────────────────────────────────────────────────────
 
