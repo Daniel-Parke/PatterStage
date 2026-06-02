@@ -53,6 +53,25 @@ function saveDisabledIds(ids: Set<string>): void {
 // ── Parse / serialise helpers ───────────────────────────────────
 
 /**
+ * Apply an enable/disable flag to the disabledIds set:
+ *   enabled === false → add
+ *   enabled === true  → delete
+ *   enabled === undefined → no-op (skip)
+ *
+ * Shared by PUT (toggle-only branch) and PUT (non-toggle branch's
+ * post-write sync), so the "if (enabled === false) add else delete"
+ * tri-state lives in exactly one place.
+ */
+function setDisabled(disabledIds: Set<string>, id: string, enabled: boolean | undefined): void {
+  if (enabled === undefined) return;
+  if (enabled === false) {
+    disabledIds.add(id);
+  } else {
+    disabledIds.delete(id);
+  }
+}
+
+/**
  * Return a 400 NextResponse if `command` is set and doesn't run a script
  * under the CH scripts dir. Returns null when the command is acceptable
  * (or undefined — in which case the caller is not editing the command
@@ -392,11 +411,7 @@ export async function PUT(request: NextRequest) {
 
     // Toggle-only: update JSON state, no crontab change
     if (isToggleOnly) {
-      if (enabled === false) {
-        disabledIds.add(id);
-      } else {
-        disabledIds.delete(id);
-      }
+      setDisabled(disabledIds, id, enabled);
       saveDisabledIds(disabledIds);
       return NextResponse.json({ data: { id, enabled } });
     }
@@ -408,11 +423,7 @@ export async function PUT(request: NextRequest) {
 
     // Sync disabled state to JSON for this job
     if (enabled !== undefined) {
-      if (enabled === false) {
-        disabledIds.add(id);
-      } else {
-        disabledIds.delete(id);
-      }
+      setDisabled(disabledIds, id, enabled);
       saveDisabledIds(disabledIds);
     }
 
