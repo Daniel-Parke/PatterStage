@@ -53,6 +53,20 @@ function saveDisabledIds(ids: Set<string>): void {
 // ── Parse / serialise helpers ───────────────────────────────────
 
 /**
+ * Extract the script basename (e.g. "ch-backup.sh") from a command string,
+ * or empty string if the command does not invoke a ch-* script.
+ *
+ * Used by both `parseCrontabLine` (read) and the POST handler (write) to
+ * derive a stable entry ID from the command body. The match anchors on
+ * `/ch-` so we don't pick up other paths in the command (env vars,
+ * redirected log file paths, etc.).
+ */
+function extractScriptName(command: string): string {
+  const m = command.match(/(\S+\/ch-[^\s]+)/);
+  return m ? m[1].split("/").pop()! : "";
+}
+
+/**
  * Apply an enable/disable flag to the disabledIds set:
  *   enabled === false → add
  *   enabled === true  → delete
@@ -129,8 +143,7 @@ function parseCrontabLine(
   const command = fullCmd.replace(/>>\s*\S+\.log\s*2>.*$/, "").trim();
 
   // Extract script name for ID and display name
-  const scriptMatch = command.match(/(\S+\/ch-[^\s]+)/);
-  const scriptName = scriptMatch ? scriptMatch[1].split("/").pop()! : "";
+  const scriptName = extractScriptName(command);
   const id =
     scriptName.replace(/\.sh$/, "") ||
     command.split(" ")[0]?.split("/").pop() ||
@@ -295,8 +308,7 @@ export async function POST(request: NextRequest) {
     const lines = crontab.split("\n");
 
     // Check if this script already has an entry (replace if so)
-    const scriptMatch = command.match(/(\S+\/ch-[^\s]+)/);
-    const scriptName = scriptMatch ? scriptMatch[1].split("/").pop()! : "";
+    const scriptName = extractScriptName(command);
     const entryId = scriptName.replace(/\.sh$/, "") || "hw";
 
     const logDir = getChHardwareLogDir();

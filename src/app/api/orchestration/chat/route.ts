@@ -12,8 +12,7 @@ import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { getAgentLlmEndpoints } from "@/lib/hermes-agent-runtime";
-
-const DEFAULT_MODEL = "hermes-agent";
+import { CHAT_DEFAULT_MODEL } from "@/types/chat";
 
 function handleError(error: unknown, context: string) {
   logApiError("chat", context, error);
@@ -77,7 +76,7 @@ export async function POST(request: NextRequest) {
     const { apiUrl } = getAgentLlmEndpoints();
 
     const gatewayBody = {
-      model: model || DEFAULT_MODEL,
+      model: model || CHAT_DEFAULT_MODEL,
       messages,
       stream: isStreaming,
       max_tokens: 4096,

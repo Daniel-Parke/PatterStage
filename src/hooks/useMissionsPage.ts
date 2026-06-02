@@ -22,6 +22,9 @@ import {
   missionBoardColumn,
 } from "@/lib/mission-board";
 
+/** localStorage key for the most recently selected mission category */
+const LAST_CATEGORY_KEY = "ch-last-mission-category";
+
 function submitToastForDispatch(mode: "save" | "now" | "cron" | "queue"): string {
   if (mode === "save") return "Saving draft...";
   if (mode === "queue") return "Queueing mission...";
@@ -136,7 +139,6 @@ export function useMissionsPage() {
   );
   const [newCategoryId, setNewCategoryId] = useState<string | null>(null);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
-  const LAST_CATEGORY_KEY = "ch-last-mission-category";
 
   const formState: MissionFormState = {
     newName,
