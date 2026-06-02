@@ -5,7 +5,7 @@
  * CTA instead of "No messages in this session".
  */
 
-import { isSessionStillRunning } from "@/app/(main)/sessions/[id]/page";
+import { isSessionStillRunning } from "@/lib/session-title";
 
 describe("isSessionStillRunning", () => {
   it("returns true when messages are empty and note mentions 'still running'", () => {

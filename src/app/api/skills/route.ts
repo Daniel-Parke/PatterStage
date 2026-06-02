@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { statSync } from "fs";
 
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { ensureDb } from "@/lib/db";
+import { safeStat } from "@/lib/fs-stats";
 import { resolveEffectiveDisabledSkills } from "@/lib/effective-disabled-skills";
 import { getProfile } from "@/lib/profiles-repository";
 import { listSkills, deriveCategory } from "@/lib/skills-repository";
@@ -42,45 +42,37 @@ export async function GET(request: NextRequest) {
     const dbKeys = new Set(dbSkills.map((s) => s.skillKey));
     const skills: Skill[] = dbSkills.map((row) => {
       const path = skillsDir + "/" + row.skillKey + "/SKILL.md";
-      let size = row.content.length;
-      let lastModified = row.updatedAt;
-      try {
-        const st = statSync(path);
-        size = st.size;
-        lastModified = st.mtime.toISOString();
-      }
-      catch {
-        // statSync not essential — fall back to DB metadata if file unavailable
-      }
+      // safeStat returns null if the disk file is missing; fall back
+      // to DB row metadata in that case.
+      const st = safeStat(path);
       return {
         name: row.skillKey,
         category: deriveCategory(row),
         path,
         description: row.description,
         enabled: !disabled.has(row.skillKey),
-        size,
-        lastModified,
+        size: st?.size ?? row.content.length,
+        lastModified: st?.mtime ?? row.updatedAt,
       };
     });
 
     // Merge disk-only skills (not yet in DB) using the shared catalog scanner
     for (const { skillKey, path } of scanDiskSkillsCatalog()) {
       if (dbKeys.has(skillKey)) continue;
-      try {
-        const st = statSync(path);
-        skills.push({
-          name: skillKey,
-          category: deriveCategory({ category: "", skillKey }),
-          path,
-          description: "",
-          enabled: !disabled.has(skillKey),
-          size: st.size,
-          lastModified: st.mtime.toISOString(),
-        });
-      }
-      catch {
+      const st = safeStat(path);
+      if (!st) {
         // disk-only skill file may have been removed since scan; skip silently
+        continue;
       }
+      skills.push({
+        name: skillKey,
+        category: deriveCategory({ category: "", skillKey }),
+        path,
+        description: "",
+        enabled: !disabled.has(skillKey),
+        size: st.size,
+        lastModified: st.mtime,
+      });
     }
 
     // Group skills by category (case-insensitive). The helper handles

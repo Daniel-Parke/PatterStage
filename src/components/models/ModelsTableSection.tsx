@@ -7,10 +7,30 @@ import { EmptyState } from "@/components/ui/LoadingSpinner";
 import GlowSurface from "@/components/ui/GlowSurface";
 import ModelSyncButtons from "@/components/models/ModelSyncButtons";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
-import type { TaskType } from "@/lib/hermes-providers";
+import { TASK_TYPES, type TaskType } from "@/lib/hermes-providers";
 import type { SyncActionResult } from "@/lib/sync-manager";
 
 import type { ApiModel } from "./types";
+
+/**
+ * Project an ApiModel row down to the subset of fields the editor form
+ * edits. Centralised here so the table row and any future call site
+ * (e.g. a context-menu "Edit" action) stay in lockstep with the
+ * `ModelEditorRecord` shape — adding a new editable field is a one-line
+ * change in `ModelEditor.tsx` plus one line here, instead of touching
+ * every call site.
+ */
+function toModelEditorRecord(m: ApiModel): ModelEditorRecord {
+  return {
+    id: m.id,
+    name: m.name,
+    provider: m.provider,
+    modelId: m.modelId,
+    baseUrl: m.baseUrl,
+    contextLength: m.contextLength,
+    credentialsId: m.credentialsId,
+  };
+}
 
 interface ModelsTableSectionProps {
   models: ApiModel[];
@@ -78,7 +98,7 @@ export default function ModelsTableSection({
               </thead>
               <tbody>
                 {models.map((m) => {
-                  const badges = (Object.keys(defaults) as TaskType[]).filter(
+                  const badges = TASK_TYPES.filter(
                     (slot) => defaults[slot] === m.id,
                   );
                   return (
@@ -128,18 +148,7 @@ export default function ModelsTableSection({
 
                           <button
                             type="button"
-                            onClick={() =>
-                              onEdit({
-                                id: m.id,
-                                name: m.name,
-                                provider: m.provider,
-                                modelId: m.modelId,
-                                baseUrl: m.baseUrl,
-                                contextLength: m.contextLength,
-                                credentialsId: m.credentialsId,
-
-                              })
-                            }
+                            onClick={() => onEdit(toModelEditorRecord(m))}
                             className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-colors"
                             aria-label={`Edit ${m.name}`}
                             title="Edit"

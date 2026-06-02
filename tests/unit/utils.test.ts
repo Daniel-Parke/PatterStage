@@ -3,6 +3,7 @@ import {
   timeAgo,
   timeUntil,
   formatBytes,
+  formatElapsed,
   truncate,
   messageSummary,
   safeJsonParse,
@@ -80,6 +81,33 @@ describe("timeAgo", () => {
   it("returns 'never' for invalid ISO string", () => {
     expect(timeAgo("not-a-date")).toBe("never");
     expect(timeAgo("")).toBe("never");
+  });
+});
+
+describe("formatElapsed", () => {
+  it("returns seconds for sub-minute durations", () => {
+    const fiveSecAgo = new Date(Date.now() - 5 * 1000).toISOString();
+    expect(formatElapsed(fiveSecAgo)).toBe("5s");
+  });
+
+  it("returns minutes+seconds for sub-hour durations", () => {
+    const twoMinFiveSecAgo = new Date(Date.now() - (2 * 60 + 5) * 1000).toISOString();
+    expect(formatElapsed(twoMinFiveSecAgo)).toBe("2m 5s");
+  });
+
+  it("returns hours+minutes for multi-hour durations", () => {
+    const twoHoursFifteenMinAgo = new Date(Date.now() - (2 * 3600 + 15 * 60) * 1000).toISOString();
+    expect(formatElapsed(twoHoursFifteenMinAgo)).toBe("2h 15m");
+  });
+
+  it("clamps negative diffs (future timestamps) to 0s", () => {
+    const future = new Date(Date.now() + 60 * 1000).toISOString();
+    expect(formatElapsed(future)).toBe("0s");
+  });
+
+  it("returns empty string for unparseable timestamps", () => {
+    expect(formatElapsed("not-a-date")).toBe("");
+    expect(formatElapsed("")).toBe("");
   });
 });
 

@@ -26,7 +26,7 @@ interface ModelsFallbackSectionProps {
   onReorder: (entryId: string, direction: "up" | "down") => Promise<void>;
   onToggle: (entryId: string, enabled: boolean) => Promise<void>;
   onDelete: (entryId: string) => Promise<void>;
-  onEdit: (entry: FallbackChainEntry) => Promise<void>;
+  onEdit: (entry: FallbackChainEntry) => void;
   onAddFromRegistry: (modelId: string) => Promise<void>;
   onAddCustom: (
     name: string,

@@ -4,7 +4,9 @@ import { join } from "path";
 import {
   categorizeLogFileGroup,
   compareLogFileNames,
+  logValidationError,
   readLastLines,
+  resolveLogFilePath,
   sanitizeLogBasename,
 } from "@/lib/log-files";
 
@@ -28,6 +30,16 @@ describe("sanitizeLogBasename", () => {
     expect(sanitizeLogBasename("")).toBeNull();
     expect(sanitizeLogBasename("a b")).toBeNull();
     expect(sanitizeLogBasename("a;rm")).toBeNull();
+  });
+});
+
+describe("logValidationError", () => {
+  it("maps 'invalid-name' to 'Invalid log name'", () => {
+    expect(logValidationError("invalid-name")).toBe("Invalid log name");
+  });
+
+  it("maps 'invalid-path' to 'Invalid log path'", () => {
+    expect(logValidationError("invalid-path")).toBe("Invalid log path");
   });
 });
 
@@ -100,5 +112,69 @@ describe("readLastLines", () => {
     expect(Date.now() - start).toBeLessThan(2000);
     expect(r.lines).toHaveLength(30);
     expect(r.allLines).toBe(30);
+  });
+});
+
+describe("resolveLogFilePath", () => {
+  const logsDir = "/tmp/test-logs";
+  const resolvedLogsDir = "/tmp/test-logs";
+
+  it("defaults to 'agent' when name is null", () => {
+    const r = resolveLogFilePath(logsDir, resolvedLogsDir, null);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.safeName).toBe("agent");
+      expect(r.absolutePath).toBe("/tmp/test-logs/agent.log");
+    }
+  });
+
+  it("defaults to 'agent' when name is empty or whitespace", () => {
+    expect(resolveLogFilePath(logsDir, resolvedLogsDir, "")).toMatchObject({
+      ok: true,
+      safeName: "agent",
+    });
+    expect(resolveLogFilePath(logsDir, resolvedLogsDir, "   ")).toMatchObject({
+      ok: true,
+      safeName: "agent",
+    });
+  });
+
+  it("returns ok with the sanitized name for a valid name", () => {
+    const r = resolveLogFilePath(logsDir, resolvedLogsDir, "ch-backup");
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.safeName).toBe("ch-backup");
+      expect(r.absolutePath).toBe("/tmp/test-logs/ch-backup.log");
+    }
+  });
+
+  it("strips a trailing .log suffix from the input", () => {
+    const r = resolveLogFilePath(logsDir, resolvedLogsDir, "agent.log");
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.safeName).toBe("agent");
+    }
+  });
+
+  it("rejects path traversal with reason 'invalid-name'", () => {
+    expect(resolveLogFilePath(logsDir, resolvedLogsDir, "../etc/passwd")).toEqual({
+      ok: false,
+      reason: "invalid-name",
+    });
+    expect(resolveLogFilePath(logsDir, resolvedLogsDir, "a/b")).toEqual({
+      ok: false,
+      reason: "invalid-name",
+    });
+  });
+
+  it("rejects bad characters with reason 'invalid-name'", () => {
+    expect(resolveLogFilePath(logsDir, resolvedLogsDir, "a;rm")).toEqual({
+      ok: false,
+      reason: "invalid-name",
+    });
+    expect(resolveLogFilePath(logsDir, resolvedLogsDir, "a b")).toEqual({
+      ok: false,
+      reason: "invalid-name",
+    });
   });
 });

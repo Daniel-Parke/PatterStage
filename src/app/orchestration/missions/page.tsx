@@ -57,8 +57,7 @@ export default function MissionsPage() {
     setNewProfile,
     newModel,
     newProvider,
-    setNewModel,
-    setNewProvider,
+    setModelAndProvider,
     newMissionTime,
     setNewMissionTime,
     newTimeout,
@@ -253,10 +252,7 @@ export default function MissionsPage() {
         onNewProfileChange={setNewProfile}
         newModel={newModel}
         newProvider={newProvider}
-        onModelChange={(mid, prov) => {
-          setNewModel(mid);
-          setNewProvider(prov);
-        }}
+        onModelChange={setModelAndProvider}
         newMissionTime={newMissionTime}
         onNewMissionTimeChange={setNewMissionTime}
         newTimeout={newTimeout}

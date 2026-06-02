@@ -15,6 +15,7 @@ import { getActiveHermesPaths } from "./hermes-agent-runtime";
 import { existsSync } from "fs";
 import { join } from "path";
 import { loadCronJobsMap } from "./session-title-server";
+import { parseCronSessionId, cronJobIdFromSessionId } from "./session-title";
 
 // ── Types ───────────────────────────────────────────────────
 
@@ -444,6 +445,57 @@ function buildMissionIdByJobId(): Map<string, string> {
 }
 
 /**
+ * Look up the Control-Hub mission id for a single Hermes cron job id.
+ *
+ * Used by the per-session detail API (`/api/sessions/[id]`) to surface
+ * an "Open Mission" link on the transcript page for cron-spawned sessions
+ * without paying for a full sync build of the job-id → mission-id map.
+ *
+ * Companion to `buildMissionIdByJobId` (bulk version used during the
+ * 15s sessions sync). Both use the same join path:
+ *   cron_jobs.hermes_job_id → cron_jobs.id → missions.cron_job_id → missions.id
+ *
+ * Returns null when the job id is missing/empty, when the DB is
+ * unavailable, or when no mission has been registered for the job
+ * (the detail page just doesn't render a Mission link in that case).
+ */
+export function lookupMissionIdForHermesJob(hermesJobId: string): string | null {
+  if (!hermesJobId) return null;
+  try {
+    const row = db()
+      .prepare(
+        `SELECT m.id AS mission_id
+         FROM missions m
+         JOIN cron_jobs c ON c.id = m.cron_job_id
+         WHERE c.hermes_job_id = ?
+         LIMIT 1`,
+      )
+      .get(hermesJobId) as { mission_id: string } | undefined;
+    return row?.mission_id ?? null;
+  } catch {
+    // DB unavailable or schema differs — non-fatal
+    return null;
+  }
+}
+
+/**
+ * Best-effort lookup of the Control-Hub mission id for a cron-spawned
+ * session. The session id has the form `cron_<job-uuid>_<date>_<time>`;
+ * the job uuid resolves to cron_jobs.id, which resolves to missions.id
+ * via the missions.cron_job_id FK. Returns null for non-cron sessions
+ * or when no mission has been registered for the job.
+ *
+ * Used by the per-session detail API (`/api/sessions/[id]`) so the
+ * transcript page can render an "Open Mission" link for cron-spawned
+ * sessions without doing the bulk sync build (`buildMissionIdByJobId`).
+ */
+export function lookupMissionIdForCronSession(sessionId: string): string | null {
+  const jobId = cronJobIdFromSessionId(sessionId);
+  if (!jobId) return null;
+  return lookupMissionIdForHermesJob(jobId);
+}
+
+/**
  * Sync Hermes sessions into the sessions table.
  *
  * Reads session metadata from Hermes's state.db (v0.14+).
@@ -545,16 +597,16 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
       let missionId: string | null = null;
 
       if (row.source === "cron") {
-        // cron session id: cron_<jobid>_<date>_<time>
-        const parts = row.id.replace(/^cron_/, "").split("_");
-        if (parts.length >= 3) {
-          const jobId = parts[0];
+        // cron session id: cron_<jobid>_<date>_<time> — see parseCronSessionId.
+        const parsed = parseCronSessionId(row.id);
+        if (parsed) {
+          const { jobId, rest } = parsed;
           // Prefer the cron job's human name from jobs.json over the raw jobId.
           // Falls back to the jobId prefix if the job isn't in jobs.json
           // (e.g. legacy entries from before the recurring mission was registered).
           const jobName = cronJobsById.get(jobId)?.name;
           const displayJob = jobName ? jobName : jobId.slice(0, 8);
-          title = `Cron: ${displayJob} — ${parts.slice(1).join(" ")}`;
+          title = `Cron: ${displayJob} — ${rest.join(" ")}`;
           const candidateMissionId = missionIdByJobId.get(jobId) ?? null;
           // Only set mission_id if it exists in missions table (avoids FK violations)
           missionId =

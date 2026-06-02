@@ -15,7 +15,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
-import { requireAuth, parseJsonBody, isChReadOnly } from "@/lib/api-auth";
+import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
+import { badRequest } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { parseSchedule } from "@/lib/utils";
 
@@ -45,6 +47,53 @@ function cronSyncFailureResponse(
     { error: "Failed to sync cron job to Hermes", cronPushError: pushResult.error ?? "unknown" },
     { status: 502 },
   );
+}
+
+/**
+ * Parse a schedule string and return either the parsed schedule (when valid)
+ * or a 400 NextResponse the caller can return directly. Eliminates the
+ * parseSchedule+kind==="invalid" boilerplate from POST and PUT.
+ */
+function parseScheduleOrError(schedule: string): { ok: true; parsed: ReturnType<typeof parseSchedule> } | { ok: false; response: NextResponse } {
+  const parsed = parseSchedule(schedule);
+  if (parsed.kind === "invalid") {
+    return {
+      ok: false,
+      response: badRequest(parsed.message || `Invalid schedule: "${schedule}"`),
+    };
+  }
+  return { ok: true, parsed };
+}
+
+/**
+ * Apply an enabled/disabled toggle to a cron job and sync to Hermes.
+ * Shared between the `pause` and `resume` PUT branches, which differ only
+ * in the new (enabled, state) values and the audit action label.
+ */
+async function applyEnabledChange(
+  id: string,
+  enabled: boolean,
+  state: "paused" | "scheduled",
+  auditAction: "cron.pause" | "cron.resume",
+): Promise<NextResponse> {
+  const updated = updateCronJob(id, { enabled, state });
+  if (!updated) {
+    return NextResponse.json({ error: "Job not found after update" }, { status: 404 });
+  }
+  const pushResult = await pushJobToHermes(id);
+  appendAuditLine({
+    action: auditAction,
+    resource: id,
+    ok: pushResult.ok,
+    detail: pushResult.ok ? undefined : pushResult.error,
+  });
+  if (!pushResult.ok) {
+    return cronSyncFailureResponse(
+      `PUT /api/cron ${state === "paused" ? "pause" : "resume"}`,
+      pushResult,
+    );
+  }
+  return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -228,16 +277,15 @@ export async function POST(request: NextRequest) {
     };
 
     if (!name?.trim()) {
-      return NextResponse.json({ error: "name is required" }, { status: 400 });
+      return badRequest("name is required");
     }
     if (!schedule?.trim()) {
-      return NextResponse.json({ error: "schedule is required" }, { status: 400 });
+      return badRequest("schedule is required");
     }
 
-    const parsedSchedule = parseSchedule(schedule);
-    if (parsedSchedule.kind === "invalid") {
-      return NextResponse.json({ error: parsedSchedule.message }, { status: 400 });
-    }
+    const scheduleCheck = parseScheduleOrError(schedule);
+    if (!scheduleCheck.ok) return scheduleCheck.response;
+    const parsedSchedule = scheduleCheck.parsed;
 
     // Resolve model: use explicit model or fall back to registry default
     const registryDefault = (() => {
@@ -315,7 +363,7 @@ export async function PUT(request: NextRequest) {
     };
 
     if (!id) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
+      return badRequest("id is required");
     }
 
     const existing = getCronJob(id);
@@ -325,30 +373,12 @@ export async function PUT(request: NextRequest) {
 
     // ── Pause ─────────────────────────────────────────────────
     if (action === "pause") {
-      const updated = updateCronJob(id, { enabled: false, state: "paused" });
-      if (!updated) {
-        return NextResponse.json({ error: "Job not found after update" }, { status: 404 });
-      }
-      const pushResult = await pushJobToHermes(id);
-      appendAuditLine({ action: "cron.pause", resource: id, ok: pushResult.ok, detail: pushResult.ok ? undefined : pushResult.error });
-      if (!pushResult.ok) {
-        return cronSyncFailureResponse("PUT /api/cron pause", pushResult);
-      }
-      return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
+      return applyEnabledChange(id, false, "paused", "cron.pause");
     }
 
     // ── Resume ────────────────────────────────────────────────
     if (action === "resume") {
-      const updated = updateCronJob(id, { enabled: true, state: "scheduled" });
-      if (!updated) {
-        return NextResponse.json({ error: "Job not found after update" }, { status: 404 });
-      }
-      const pushResult = await pushJobToHermes(id);
-      appendAuditLine({ action: "cron.resume", resource: id, ok: pushResult.ok, detail: pushResult.ok ? undefined : pushResult.error });
-      if (!pushResult.ok) {
-        return cronSyncFailureResponse("PUT /api/cron resume", pushResult);
-      }
-      return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
+      return applyEnabledChange(id, true, "scheduled", "cron.resume");
     }
 
     // ── Run now ──────────────────────────────────────────────
@@ -401,13 +431,9 @@ export async function PUT(request: NextRequest) {
     if (updates.state !== undefined) updatePayload.state = updates.state as string;
 
     if (updates.schedule !== undefined) {
-      const parsed = parseSchedule(updates.schedule as string);
-      if (parsed.kind === "invalid") {
-        return NextResponse.json(
-          { error: parsed.message || `Invalid schedule: "${updates.schedule}"` },
-          { status: 400 }
-        );
-      }
+      const scheduleCheck = parseScheduleOrError(updates.schedule as string);
+      if (!scheduleCheck.ok) return scheduleCheck.response;
+      const parsed = scheduleCheck.parsed;
       updatePayload.schedule = JSON.stringify(parsed);
       updatePayload.schedule_display = "display" in parsed ? (parsed as { display: string }).display : (updates.schedule as string);
     }
@@ -449,7 +475,7 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
+      return badRequest("id is required");
     }
 
     const existing = getCronJob(id);

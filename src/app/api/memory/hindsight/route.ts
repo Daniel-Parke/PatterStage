@@ -10,6 +10,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { badRequest } from "@/lib/api-response";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import type { ApiResponse } from "@/types/hermes";
 import {
   mapMemoryItem,
@@ -17,6 +19,27 @@ import {
   mapMentalModelItem,
   normalizeTags,
 } from "@/lib/hindsight-bridge";
+
+// ── Connection-error detection ─────────────────────────────────
+
+/**
+ * Heuristic for "is this a connection-level failure?" — used to
+ * downgrade the catch-branch response status from 500 to 503 (the
+ * Hindsight server isn't responding, so it's not really a code bug).
+ * The original `requestWithTimeout` error message already includes
+ * the upstream status + body, so the match must look at substrings
+ * of `error.message`, not at `error.name` or a typed `code` field.
+ */
+export function isHindsightConnectionError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const msg = error.message;
+  return (
+    msg.includes("connect") ||
+    msg.includes("ECONNREFUSED") ||
+    msg.includes("refused") ||
+    msg.includes("timed out")
+  );
+}
 
 // ── Constants ────────────────────────────────────────────────
 
@@ -241,13 +264,13 @@ export async function GET(request: NextRequest) {
         break;
       case "recall":
         if (!query) {
-          return NextResponse.json({ error: "query is required for recall" }, { status: 400 });
+          return badRequest("query is required for recall");
         }
         result = await handleRecall(bank, query);
         break;
       case "reflect":
         if (!query) {
-          return NextResponse.json({ error: "query is required for reflect" }, { status: 400 });
+          return badRequest("query is required for reflect");
         }
         result = await handleReflect(bank, query, budget);
         break;
@@ -264,18 +287,12 @@ export async function GET(request: NextRequest) {
         result = await handleCount(bank);
         break;
       default:
-        return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
+        return badRequest(`Unknown action: ${action}`);
     }
 
     return NextResponse.json<ApiResponse<Record<string, unknown>>>({ data: result });
   } catch (error) {
     logApiError("GET /api/memory/hindsight", `action=${action}`, error);
-    const isConnectionError =
-      error instanceof Error &&
-      (error.message.includes("connect") ||
-       error.message.includes("ECONNREFUSED") ||
-       error.message.includes("refused") ||
-       error.message.includes("timed out"));
     return NextResponse.json(
       {
         data: {
@@ -284,7 +301,7 @@ export async function GET(request: NextRequest) {
           memories: [],
         },
       },
-      { status: isConnectionError ? 503 : 500 },
+      { status: isHindsightConnectionError(error) ? 503 : 500 },
     );
   }
 }
@@ -293,8 +310,25 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+
+  // Narrow the unknown body to the structural shape we expect from the
+  // client. parseJsonBody returns Record<string, unknown>; this cast
+  // is the documented pattern in src/lib/parse-json-body.ts.
+  const body = bodyResult as {
+    action?: string;
+    bank?: string;
+    content?: string;
+    tags?: string[];
+    name?: string;
+    priority?: number;
+    query?: string;
+    id?: string;
+    is_active?: string | boolean;
+  };
+
   try {
-    const body = await request.json();
     const action = body.action || "retain";
     const bank = body.bank || DEFAULT_BANK;
 
@@ -304,7 +338,7 @@ export async function POST(request: NextRequest) {
       case "retain": {
         const { content, tags } = body;
         if (!content || typeof content !== "string" || content.trim().length === 0) {
-          return NextResponse.json({ error: "Content is required" }, { status: 400 });
+          return badRequest("Content is required");
         }
         result = await handleRetain(bank, content.trim(), tags);
         break;
@@ -312,7 +346,7 @@ export async function POST(request: NextRequest) {
       case "create-directive": {
         const { name, content: dirContent, priority, tags } = body;
         if (!name || !dirContent) {
-          return NextResponse.json({ error: "name and content are required" }, { status: 400 });
+          return badRequest("name and content are required");
         }
         result = await handleCreateDirective(bank, name, dirContent, priority, tags);
         break;
@@ -320,7 +354,7 @@ export async function POST(request: NextRequest) {
       case "create-model": {
         const { name, query: mQuery, tags } = body;
         if (!name || !mQuery) {
-          return NextResponse.json({ error: "name and query are required" }, { status: 400 });
+          return badRequest("name and query are required");
         }
         result = await handleCreateMentalModel(bank, name, mQuery, tags);
         break;
@@ -328,7 +362,7 @@ export async function POST(request: NextRequest) {
       case "update-directive": {
         const { id, name, content: uContent, priority, is_active, tags } = body;
         if (!id) {
-          return NextResponse.json({ error: "id is required" }, { status: 400 });
+          return badRequest("id is required");
         }
         result = await handleUpdateDirective(bank, id, { name, content: uContent, priority, is_active, tags });
         break;
@@ -336,7 +370,7 @@ export async function POST(request: NextRequest) {
       case "update-model": {
         const { id, name, query: umQuery, tags } = body;
         if (!id) {
-          return NextResponse.json({ error: "id is required" }, { status: 400 });
+          return badRequest("id is required");
         }
         result = await handleUpdateMentalModel(bank, id, { name, query: umQuery, tags });
         break;
@@ -344,13 +378,13 @@ export async function POST(request: NextRequest) {
       case "refresh-model": {
         const { id } = body;
         if (!id) {
-          return NextResponse.json({ error: "id is required" }, { status: 400 });
+          return badRequest("id is required");
         }
         result = await handleRefreshMentalModel(bank, id);
         break;
       }
       default:
-        return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
+        return badRequest(`Unknown action: ${action}`);
     }
 
     return NextResponse.json<ApiResponse<Record<string, unknown>>>({ data: result });
@@ -372,12 +406,19 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+  const body = bodyResult;
+
   try {
-    const body = await request.json();
-    const { type, id, bank = DEFAULT_BANK } = body;
+    const { type, id, bank = DEFAULT_BANK } = body as {
+      type?: string;
+      id?: string;
+      bank?: string;
+    };
 
     if (!id || !type) {
-      return NextResponse.json({ error: "type and id are required" }, { status: 400 });
+      return badRequest("type and id are required");
     }
 
     let result: Record<string, unknown>;

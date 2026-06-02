@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { existsSync, readFileSync } from "fs";
 
 import { logApiError } from "@/lib/api-logger";
-import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
+import { safeStat } from "@/lib/fs-stats";
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
 import { getSkill, upsertSkill, parseSkillFrontmatter } from "@/lib/skills-repository";
 import { pushSkillToHermes } from "@/lib/hermes-profile-sync";
 import { skillsRootForProfile } from "@/lib/skills-config";
-import { existsSync, readFileSync, statSync } from "fs";
 
 export async function GET(
   request: NextRequest,
@@ -39,15 +41,15 @@ export async function GET(
     }
 
     const content = readFileSync(filePath, "utf-8");
-    const stats = statSync(filePath);
+    const st = safeStat(filePath)!; // file confirmed to exist above
 
     return NextResponse.json({
       data: {
         name,
         path: filePath,
         content,
-        size: stats.size,
-        lastModified: stats.mtime.toISOString(),
+        size: st.size,
+        lastModified: st.mtime,
       },
     });
   }
@@ -63,26 +65,17 @@ export async function PUT(
 ) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  if (isChReadOnly()) {
-    return NextResponse.json(
-      { error: "Control Hub is in read-only mode — skill writes are disabled" },
-      { status: 503 }
-    );
-  }
+  const ro = requireNotReadOnly("skill writes are disabled");
+  if (ro) return ro;
 
   const { name } = await params;
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  }
-  catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
 
   const content =
-    typeof body === "object" && body !== null && "content" in body
-      ? (body as { content: unknown }).content
+    "content" in bodyResult && typeof bodyResult.content === "string"
+      ? bodyResult.content
       : undefined;
 
   if (typeof content !== "string") {

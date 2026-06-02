@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef, memo as reactMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, memo as reactMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -36,7 +36,7 @@ import type { MissionCategory } from "@/lib/mission-category-repository";
 import TemplateCard from "@/components/ui/TemplateCard";
 import { useToast } from "@/components/ui/Toast";
 import type { SystemStatus, AccentColor, MonitorData, HermesProcess, MissionBrief } from "@/types/hermes";
-import { timeAgo, timeUntil, titleCase, parseSchedule } from "@/lib/utils";
+import { timeAgo, titleCase, parseSchedule } from "@/lib/utils";
 import { shellHeaderBarClasses } from "@/lib/theme";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import AppPageShell from "@/components/layout/AppPageShell";
@@ -44,6 +44,10 @@ import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
 import { safeApiCall } from "@/lib/api-fetch";
 import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
+import { unwrapPollPath } from "@/lib/dashboard-poll";
+import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
+import { computeCronJobRowCaption } from "@/lib/cron-row-helpers";
+import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 
 // ── Typed response shapes for each API endpoint ─────────────
 interface TemplatesResponseData { templates: Array<{ id: string; name: string; icon: string; color: string; category: string; categoryId?: string; profile: string; description: string; isCustom?: boolean }>; }
@@ -71,6 +75,29 @@ const LiveClock = reactMemo(function LiveClock() {
     </>
   );
 });
+
+// ── Cron job caption span ─────────────────────────────────────
+
+/**
+ * Tiny presentational component that renders the cron-job caption
+ * produced by `computeCronJobRowCaption`. Extracted so the JSX
+ * .map() can pass a single prop instead of an IIFE.
+ */
+function CronJobCaptionSpan({
+  caption,
+}: {
+  caption: ReturnType<typeof computeCronJobRowCaption> | null;
+}) {
+  if (!caption) return null;
+  return (
+    <span
+      className={`text-xs truncate min-w-0 flex-1 ${caption.colorClass}`}
+      title={caption.text}
+    >
+      {caption.text}
+    </span>
+  );
+}
 
 export default function Dashboard() {
   const [data, setDataFields] = useState<{
@@ -109,11 +136,11 @@ export default function Dashboard() {
   const [ready, setReady] = useState(false);
   const [dispatchExpanded, setDispatchExpanded] = useState(false);
   const [errorSev, setErrorSev] = useState<"all" | "error" | "warning">("all");
-  const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null);
   const [syncNowBusy, setSyncNowBusy] = useState(false);
   const [registryAgentModelLabel, setRegistryAgentModelLabel] = useState<string | null>(null);
   const { showToast, toastElement } = useToast();
   const router = useRouter();
+  const { isArmedFor, arm, confirm } = useTwoStepConfirm({ autoDismissMs: 4000 });
 
   const refreshMonitor = useCallback(async () => {
     const { data } = await safeApiCall<{ data?: MonitorData }>("/api/monitor", { cache: "no-store" } as RequestInit);
@@ -161,45 +188,32 @@ export default function Dashboard() {
     );
   }, [monitor, errorSev]);
 
-  // Cancel a mission from the dashboard
-  const cancelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Cleanup cancel-confirm timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
-    };
-  }, []);
-
+  // Note: useTwoStepConfirm handles its own unmount cleanup.
   const handleCancelMission = useCallback(async (missionId: string, missionName: string) => {
-    // First click: show confirmation state and arm the auto-dismiss timer
-    if (cancelConfirmId !== missionId) {
-      if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
-      setCancelConfirmId(missionId);
-      cancelTimerRef.current = setTimeout(() => setCancelConfirmId(null), 4000);
+    const doCancel = async () => {
+      try {
+        const { ok, error } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions", {
+          method: "POST",
+          body: { action: "cancel", missionId },
+        });
+        if (!ok) {
+          showToast(error || "Failed to cancel mission", "error");
+          return;
+        }
+        showToast(`Cancelled "${missionName}"`, "success");
+        // Refresh missions
+        const { data: refreshData } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions");
+        if (refreshData) setData({ missions: refreshData.missions || [] });
+      } catch {
+        showToast("Failed to cancel mission", "error");
+      }
+    };
+    if (!isArmedFor(missionId)) {
+      arm(missionId);
       return;
     }
-    // Second click: confirmed — clear timer and cancel
-    if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
-    cancelTimerRef.current = null;
-    setCancelConfirmId(null);
-    try {
-      const { ok, error } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions", {
-        method: "POST",
-        body: { action: "cancel", missionId },
-      });
-      if (!ok) {
-        showToast(error || "Failed to cancel mission", "error");
-        return;
-      }
-      showToast(`Cancelled "${missionName}"`, "success");
-      // Refresh missions
-      const { data: refreshData } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions");
-      if (refreshData) setData({ missions: refreshData.missions || [] });
-    } catch {
-      showToast("Failed to cancel mission", "error");
-    }
-  }, [showToast, setData, cancelConfirmId]);
+    await confirm(doCancel);
+  }, [showToast, setData, isArmedFor, arm, confirm]);
 
   // Update cron job schedule inline
   const handleCronScheduleChange = useCallback(async (jobId: string, newSchedule: string) => {
@@ -239,16 +253,16 @@ export default function Dashboard() {
       });
       if (!ok) {
         showToast(error || "Failed to update cron schedule", "error");
-        // Revoke optimistic update on failure
-        void refreshMonitor();
         return;
       }
       showToast("Schedule updated", "success");
     } catch {
       showToast("Failed to update cron schedule", "error");
-      // Revoke optimistic update on failure
-      void refreshMonitor();
     } finally {
+      // Revoke optimistic update on failure; refresh on success. The
+      // finally block covers all paths (success, !ok return, thrown),
+      // so no inline refreshMonitor() is needed in the success/catch
+      // branches above.
       void refreshMonitor();
     }
   }, [data.monitor, showToast, refreshMonitor]);
@@ -307,25 +321,30 @@ export default function Dashboard() {
       {
         url: "/api/monitor",
         ms: 10000,
-        extract: (d: { data?: { data?: MonitorData } }) => {
-          if (!d?.data?.data) return null;
-          return { monitor: d.data.data };
+        extract: (d: { data?: unknown }) => {
+          const inner = unwrapPollPath(d, ["data"]);
+          if (!inner) return null;
+          // unwrapPollPath returns Record<string, unknown>; cast through
+          // unknown first to satisfy TS2352 (no sufficient overlap).
+          return { monitor: inner as unknown as MonitorData };
         },
       },
       {
         url: "/api/agents",
         ms: 15000,
-        extract: (d: { data?: { processes?: HermesProcess[] } }) => {
-          if (!d?.data) return null;
-          return { processes: d.data.processes ?? [] };
+        extract: (d: { data?: unknown }) => {
+          const inner = unwrapPollPath(d, []);
+          if (!inner) return null;
+          return { processes: (inner.processes as HermesProcess[] | undefined) ?? [] };
         },
       },
       {
         url: "/api/missions",
         ms: 15000,
-        extract: (d: { data?: { missions?: MissionBrief[] } }) => {
-          if (!d?.data) return null;
-          return { missions: d.data.missions ?? [] };
+        extract: (d: { data?: unknown }) => {
+          const inner = unwrapPollPath(d, []);
+          if (!inner) return null;
+          return { missions: (inner.missions as MissionBrief[] | undefined) ?? [] };
         },
       },
     ];
@@ -350,11 +369,18 @@ export default function Dashboard() {
   const modelConfig = config?.model as Record<string, unknown> | undefined;
   const diskModel = (modelConfig?.default as string) || "";
   const diskProvider = (modelConfig?.provider as string) || "";
-  const modelSubtitle = diskModel
-    ? `${diskModel}${diskProvider ? ` · ${diskProvider}` : ""}`
-    : registryAgentModelLabel
-      ? `${registryAgentModelLabel} · Models registry (push Bob to write config.yaml)`
-      : "-";
+  // Header subtitle: prefer the model written to config.yaml; fall back to
+  // the registry's "default agent" (the user has set a default in the
+  // Models registry but hasn't yet pushed it to config.yaml); else "-".
+  const modelSubtitle = useMemo(
+    () =>
+      diskModel
+        ? `${diskModel}${diskProvider ? ` · ${diskProvider}` : ""}`
+        : registryAgentModelLabel
+          ? `${registryAgentModelLabel} · Models registry (push Bob to write config.yaml)`
+          : "-",
+    [diskModel, diskProvider, registryAgentModelLabel],
+  );
   const activeProcesses = useMemo(() => processes.filter((p) => p.status === "running"), [processes]);
   const activeMissions = useMemo(
     () =>
@@ -368,6 +394,29 @@ export default function Dashboard() {
 
   // Timestamp for cron scheduling comparisons — computed fresh per render
   const now = new Date().getTime();
+
+  // Per-job caption map: priority-ordered ladder extracted to
+  // computeCronJobRowCaption (src/lib/cron-row-helpers.ts) so the
+  // rules are unit-testable in isolation. The map lets the JSX
+  // .map() do a single lookup per row instead of recomputing.
+  const cronCaptions = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof computeCronJobRowCaption>>();
+    for (const job of monitor?.cron.jobs ?? []) {
+      map.set(job.id, computeCronJobRowCaption(job, now));
+    }
+    return map;
+  }, [monitor?.cron.jobs, now]);
+
+  // Sessions stat-pill subtitle: "N active · M last 7d" derived from
+  // the 5 most recent sessions exposed by /api/monitor. The full
+  // window math lives in countInWindow (src/lib/session-window.ts) so
+  // it's unit-testable without rendering the dashboard.
+  const sessionWindowSubtitle = useMemo(() => {
+    const recent = monitor?.sessions.recent ?? [];
+    const active = countInWindow(recent, ACTIVE_WINDOW_MS, now);
+    const last7d = countInWindow(recent, RECENT_WINDOW_MS, now);
+    return `${active} active · ${last7d} last 7d`;
+  }, [monitor?.sessions.recent, now]);
 
   // Group templates by category for the dispatch section
   const templateGroups = useMemo(
@@ -439,23 +488,7 @@ export default function Dashboard() {
                 label="Sessions"
                 value={monitor.sessions.total.toLocaleString()}
                 color="purple"
-                subtitle={(() => {
-                  // Derive a one-line context string from the recent-5 sample.
-                  // We only have the 5 most recent on the dashboard; for larger
-                  // windows the user clicks through to the Sessions page.
-                  const active = monitor.sessions.recent.filter((s) => {
-                    // "active" = no end time on the session. The recent list only
-                    // exposes `modified`, so a session modified in the last 5
-                    // minutes is a reasonable proxy for "still running".
-                    if (!s.modified) return false;
-                    return Date.now() - new Date(s.modified).getTime() < 5 * 60_000;
-                  }).length;
-                  const last7d = monitor.sessions.recent.filter((s) => {
-                    if (!s.modified) return false;
-                    return Date.now() - new Date(s.modified).getTime() < 7 * 24 * 60 * 60_000;
-                  }).length;
-                  return `${active} active · ${last7d} last 7d`;
-                })()}
+                subtitle={sessionWindowSubtitle}
               />
               <StatPill
                 icon={Layers}
@@ -645,13 +678,13 @@ export default function Dashboard() {
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCancelMission(m.id, m.name); }}
                         className={`text-[10px] font-mono transition-colors px-1.5 py-0.5 rounded ${
-                          cancelConfirmId === m.id
+                          isArmedFor(m.id)
                             ? "bg-red-500/20 text-red-400"
                             : "text-white/20 hover:text-red-400 hover:bg-red-500/10"
                         }`}
                         title="Cancel mission"
                       >
-                        {cancelConfirmId === m.id ? "Confirm?" : "Cancel"}
+                        {isArmedFor(m.id) ? "Confirm?" : "Cancel"}
                       </button>
                     </div>
                   </div>
@@ -690,26 +723,9 @@ export default function Dashboard() {
                         />
                       </div>
                       {job.enabled && (
-                        <span className={`text-xs truncate min-w-0 flex-1 ${
-                          job.state === "running"
-                            ? "text-neon-green"
-                            : job.lastStatus === "ok"
-                            ? "text-neon-green"
-                            : job.lastStatus && job.lastStatus !== "ok"
-                            ? "text-red-400"
-                            : "text-neon-orange"
-                        }`}>
-                          {job.state === "running"
-                            ? "Executing..."
-                            : job.lastRun && !job.nextRun
-                            ? `${titleCase(job.lastStatus || "Ok")} ${timeAgo(job.lastRun)}`
-                            : job.nextRun &&
-                              new Date(job.nextRun).getTime() > now
-                            ? "Next " + timeUntil(job.nextRun)
-                            : job.lastRun
-                            ? `Active · Ran ${timeAgo(job.lastRun)}`
-                            : "Queued"}
-                        </span>
+                        <CronJobCaptionSpan
+                          caption={cronCaptions.get(job.id) ?? null}
+                        />
                       )}
                     </div>
                   </div>

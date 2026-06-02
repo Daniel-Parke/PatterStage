@@ -82,8 +82,10 @@ describe("Baseline — mission settings columns", () => {
   it("Missions page handleEdit restores model/provider/settings", () => {
     const p = join(repoRoot, "src", "hooks", "useMissionsPage.ts");
     const content = readFileSync(p, "utf-8");
-    expect(content).toContain("setNewModel(m.modelId");
-    expect(content).toContain("setNewProvider(m.provider");
+    // After the setModelAndProvider refactor, model + provider are restored
+    // via a single paired helper (the two values always travel together —
+    // a model id implies its provider). setNewProfile is unchanged.
+    expect(content).toContain("setModelAndProvider(m.modelId");
     expect(content).toContain("setNewProfile(m.profileName");
   });
 });

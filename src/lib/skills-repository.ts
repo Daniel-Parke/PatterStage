@@ -122,13 +122,32 @@ export function setSkillSyncStatus(
     .run(syncedAt, syncError, now(), skillKey);
 }
 
+/** Match the SKILL.md frontmatter block (--- on its own line, body, --- on its own line). */
+const FRONTMATTER_PATTERN = /^---\r?\n([\s\S]*?)\r?\n---/;
+
+/**
+ * Strip the YAML frontmatter block from a SKILL.md-style document,
+ * returning the body content. If no frontmatter is present, the
+ * content is returned unchanged. Used by routes that render the
+ * markdown body separately from the parsed metadata.
+ *
+ * Behaviour matches the previous inline implementation byte-for-byte:
+ * the post-strip body is trimmed (so leading blank lines after the
+ * `---` fence are removed), but a content that has no frontmatter
+ * is returned verbatim.
+ */
+export function stripSkillFrontmatter(content: string): string {
+  const match = content.match(FRONTMATTER_PATTERN);
+  return match ? content.slice(match[0].length).trim() : content;
+}
+
 /** Parse SKILL.md frontmatter for name/description. */
 export function parseSkillFrontmatter(content: string): {
   name: string;
   description: string;
   category: string;
 } {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  const match = content.match(FRONTMATTER_PATTERN);
   let name = "";
   let description = "";
   let category = "";

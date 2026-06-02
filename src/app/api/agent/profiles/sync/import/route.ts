@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
+import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
 import {
   discoverLocalProfiles,
   importDiscoveredProfile,
@@ -29,14 +30,9 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    raw = {};
-  }
-
-  const body = (raw ?? {}) as Record<string, unknown>;
+  // Body is a bag of optional flags (slug, importSkills,
+  // importAllDiscovered); missing or malformed body is treated as {}.
+  const body = await parseOptionalJsonBody(request);
   const slug = typeof body.slug === "string" ? body.slug.trim() : undefined;
   const importSkills = body.importSkills === true;
   const importAllDiscovered = body.importAllDiscovered === true;

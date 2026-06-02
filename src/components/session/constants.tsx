@@ -84,10 +84,24 @@ export const SOURCE_META: Record<
 };
 
 // ── Session title helper ────────────────────────────────────
-
-// Re-exported from src/lib/session-title.ts for backward compatibility with
-// existing imports. The new module owns the implementation; this file just
-// exposes the same symbol so consumers don't need to update their imports.
 //
-// See references/sessions-architecture.md for the full fallback chain.
-export { formatSessionTitle } from "@/lib/session-title";
+// `formatSessionTitle` lives in src/lib/session-title.ts and is
+// imported directly by consumers. This file used to re-export it
+// for backward compatibility, but every consumer has been migrated
+// to import from the canonical location.
+
+/**
+ * Normalize a session message's `role` field for filtering / counting.
+ *
+ * The state.db sync stores some messages with a missing or empty `role`
+ * (notably tool messages with no role prefix in legacy files), so callers
+ * need a defensive default. Returning a lower-cased string means downstream
+ * comparisons can use plain `===` against the lowercase keys in ROLE_META.
+ *
+ * Used by the session detail page's role counts, the role filter, and the
+ * "scroll to next role" jump. Single source of truth so the "unknown"
+ * default doesn't drift between the three callsites.
+ */
+export function getMessageRole(msg: { role?: string | null }): string {
+  return (msg.role || "unknown").toLowerCase();
+}

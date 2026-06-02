@@ -43,6 +43,7 @@ const mockRequireAuth = jest.fn(() => null);
 
 jest.mock("@/lib/api-auth", () => ({
   requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
+  requireNotReadOnly: jest.fn(() => null),
   isChReadOnly: jest.fn(() => false),
 }));
 
@@ -122,5 +123,22 @@ describe("PUT /api/skills/[name]/toggle", () => {
 
     expect(res.status).toBeLessThan(500);
     expect(mockRequireAuth).toHaveBeenCalled();
+  });
+
+  it("returns 400 on invalid JSON body (regression — was 500)", async () => {
+    // Before parseJsonBody was extracted, request.json() was inside the
+    // try/catch that returned 500. Refactor to use parseJsonBody so
+    // invalid JSON now correctly returns 400 with an "Invalid JSON" error.
+    const { PUT } = await import("@/app/api/skills/[name]/toggle/route");
+    const req = new NextRequest("http://localhost/api/skills/test-skill/toggle", {
+      method: "PUT",
+      body: "{not valid json",
+      headers: { "content-type": "application/json" },
+    });
+
+    const res = await PUT(req, { params: Promise.resolve({ name: "test-skill" }) });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toMatch(/invalid json/i);
   });
 });

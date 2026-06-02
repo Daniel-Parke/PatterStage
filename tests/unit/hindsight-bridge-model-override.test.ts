@@ -34,15 +34,27 @@ jest.mock("next/server", () => ({
       this.headers = new Headers();
     }
   },
-  NextResponse: {
-    json: (data: unknown, init?: ResponseInit) => {
+  // NextResponse is mocked as a class so route handlers can use
+  // `instanceof NextResponse` to detect parse-error returns from
+  // parseJsonBody. The static .json() factory still returns the same
+  // plain-object shape so existing tests that read .status / .json()
+  // keep working.
+  NextResponse: class MockNextResponse {
+    ok: boolean;
+    status: number;
+    private _data: unknown;
+    constructor(data: unknown, init?: ResponseInit) {
       const status = init?.status ?? 200;
-      return {
-        ok: status >= 200 && status < 300,
-        status,
-        json: () => Promise.resolve(data),
-      };
-    },
+      this.status = status;
+      this.ok = status >= 200 && status < 300;
+      this._data = data;
+    }
+    json() {
+      return Promise.resolve(this._data);
+    }
+    static json(data: unknown, init?: ResponseInit) {
+      return new MockNextResponse(data, init);
+    }
   },
 }));
 

@@ -17,10 +17,21 @@ const nonEmpty = z.string().min(1);
  * Provider name validated against the canonical list in
  * src/lib/hermes-providers.ts. Adding a new provider is a single edit
  * to that file.
+ *
+ * Inferred as `HermesProvider` (a literal union) so consumers like
+ * `parsed.data.provider` narrow automatically — no `as HermesProvider`
+ * cast needed at call sites. Previously widened to `string` via
+ * `as readonly [string, ...string[]]`, which forced 3+ call sites
+ * to cast back to the narrow type. (Session 53 refactor.)
  */
-export const providerSchema = z.enum(HERMES_PROVIDERS as readonly [string, ...string[]]);
+export const providerSchema = z.enum(HERMES_PROVIDERS);
 
-export const taskTypeSchema = z.enum(TASK_TYPES as readonly [string, ...string[]]);
+/**
+ * Task slot (one of the 12 `TASK_TYPES`). Infers as `TaskType` literal
+ * union so consumers get narrow typing without an `as TaskType` cast.
+ * (Session 53 refactor.)
+ */
+export const taskTypeSchema = z.enum(TASK_TYPES);
 
 const modelDefaultsSchema = z
   .object({

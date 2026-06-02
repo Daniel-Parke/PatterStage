@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { listModels, createModel, deleteModel } from "@/lib/models-repository";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, modelPostSchema } from "@/lib/api-schemas";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
@@ -29,14 +30,10 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
 
-  const parsed = modelPostSchema.safeParse(raw);
+  const parsed = modelPostSchema.safeParse(bodyResult);
   if (!parsed.success) {
     return zodErrorResponse(parsed.error);
   }

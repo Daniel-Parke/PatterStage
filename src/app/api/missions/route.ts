@@ -16,6 +16,8 @@ import { updateSession } from "@/lib/session-repository";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
+import { parseJsonBody } from "@/lib/parse-json-body";
+import { badRequest } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { agentBackend } from "@/lib/backends";
 import { createCronJob, deleteCronJob, importHermesJobs, pushJobToHermes } from "@/lib/cron-repository";
@@ -37,6 +39,34 @@ import { ensureSyncLayer } from "@/lib/sync";
 
 function resolveMissionId(body: Record<string, unknown>): string | undefined {
   return (body.id ?? body.missionId) as string | undefined;
+}
+
+/**
+ * Resolve a mission id from the request body and return a 400 NextResponse
+ * if it is missing. Callers check `if (missionId instanceof NextResponse) return missionId;`
+ * to short-circuit. Centralises the "Mission id is required" 400 message
+ * — the prior 4 inline copies all returned the exact same string.
+ */
+function requireMissionId(body: Record<string, unknown>): string | NextResponse {
+  const id = resolveMissionId(body);
+  if (!id) {
+    return badRequest("Mission id is required");
+  }
+  return id;
+}
+
+/**
+ * Look up a mission by id and return a 404 NextResponse if it is missing.
+ * Callers check `if (mission instanceof NextResponse) return mission;` to
+ * short-circuit. Centralises the "Mission not found" 404 message — the
+ * prior 5 inline copies all returned the exact same string.
+ */
+function getMissionOrNotFound(id: string): NonNullable<ReturnType<typeof getMission>> | NextResponse {
+  const mission = getMission(id);
+  if (!mission) {
+    return NextResponse.json({ error: "Mission not found" }, { status: 404 });
+  }
+  return mission;
 }
 
 function parseCategoryId(
@@ -110,10 +140,8 @@ export async function GET(request: NextRequest) {
     // Pull latest cron job execution state from Hermes before reading
     importHermesJobs();
     if (id) {
-      const mission = getMission(id);
-      if (!mission) {
-        return NextResponse.json({ error: "Mission not found" }, { status: 404 });
-      }
+      const mission = getMissionOrNotFound(id);
+      if (mission instanceof NextResponse) return mission;
       // Mission status is synced in background by MissionSync
       return NextResponse.json({ data: { mission: enrichMissionCron(mission) } });
     }
@@ -144,8 +172,15 @@ export async function POST(request: NextRequest) {
 
   ensureSyncLayer();
 
+  // Hoist parseJsonBody out of the main try/catch so malformed JSON returns
+  // 400 (REST semantics) instead of being swallowed and re-thrown as a
+  // generic 500 from the catch below. Same bug class as the session-37
+  // fix for /api/sessions, /api/memory/hindsight, etc.
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+  const body = bodyResult as Record<string, unknown>;
+
   try {
-    const body = await request.json();
     const { action } = body as { action?: string };
 
     // ── Dispatch Mission ────────────────────────────────────────
@@ -161,11 +196,11 @@ export async function POST(request: NextRequest) {
 
       const categoryParsed = parseCategoryId(categoryIdRaw);
       if (!categoryParsed.ok) {
-        return NextResponse.json({ error: categoryParsed.error }, { status: 400 });
+        return badRequest(categoryParsed.error);
       }
 
       if (!instruction || typeof instruction !== "string" || !instruction.trim()) {
-        return NextResponse.json({ error: "instruction is required" }, { status: 400 });
+        return badRequest("instruction is required");
       }
 
       const dirsNorm = normalizeLocalDirsInput(localDirs);
@@ -317,10 +352,8 @@ export async function POST(request: NextRequest) {
 
     // ── Promote draft / queued-waiting mission ─────────────────
     if (action === "promote") {
-      const missionIdFinal = resolveMissionId(body as Record<string, unknown>);
-      if (!missionIdFinal) {
-        return NextResponse.json({ error: "Mission id is required" }, { status: 400 });
-      }
+      const missionIdFinal = requireMissionId(body as Record<string, unknown>);
+      if (missionIdFinal instanceof NextResponse) return missionIdFinal;
 
       const { dispatchMode, ...rest } = body as {
         dispatchMode?: string;
@@ -330,19 +363,19 @@ export async function POST(request: NextRequest) {
       const { name, instruction, context, localDirs, references, skills, suggestedToolsets, goals, modelId, provider, profileName, missionTimeMinutes, timeoutMinutes, schedule: scheduleVal, categoryId: categoryIdRaw, outputFormat, constraints } = f;
 
       if (!dispatchMode) {
-        return NextResponse.json({ error: "dispatchMode is required" }, { status: 400 });
+        return badRequest("dispatchMode is required");
       }
 
       const categoryParsed = parseCategoryId(categoryIdRaw);
       if (!categoryParsed.ok) {
-        return NextResponse.json({ error: categoryParsed.error }, { status: 400 });
+        return badRequest(categoryParsed.error);
       }
 
       if (
         instruction !== undefined &&
         (typeof instruction !== "string" || !instruction.trim())
       ) {
-        return NextResponse.json({ error: "instruction cannot be empty" }, { status: 400 });
+        return badRequest("instruction cannot be empty");
       }
 
       const result = await promoteMission({
@@ -393,25 +426,19 @@ export async function POST(request: NextRequest) {
       };
       const f = parseMissionBodyFields(rest);
       const { name, instruction, localDirs, references, skills, suggestedToolsets, goals, modelId, provider, profileName, missionTimeMinutes, timeoutMinutes, schedule, context, categoryId: categoryIdRaw, outputFormat, constraints } = f;
-      const missionIdFinal = resolveMissionId(body as Record<string, unknown>);
-      if (!missionIdFinal)
-        return NextResponse.json({ error: "Mission id is required" }, { status: 400 });
+      const missionIdFinal = requireMissionId(body as Record<string, unknown>);
+      if (missionIdFinal instanceof NextResponse) return missionIdFinal;
 
-      const existing = getMission(missionIdFinal);
-      if (!existing) {
-        return NextResponse.json({ error: "Mission not found" }, { status: 404 });
-      }
+      const existing = getMissionOrNotFound(missionIdFinal);
+      if (existing instanceof NextResponse) return existing;
 
       const categoryParsed = parseCategoryId(categoryIdRaw);
       if (!categoryParsed.ok) {
-        return NextResponse.json({ error: categoryParsed.error }, { status: 400 });
+        return badRequest(categoryParsed.error);
       }
 
       if (existing.status !== "dispatched") {
-        return NextResponse.json(
-          { error: "Use promote for draft or queued missions; update is for running missions" },
-          { status: 400 },
-        );
+        return badRequest("Use promote for draft or queued missions; update is for running missions");
       }
 
       const { shouldRebuildPrompt, prompt, updates } = buildMissionFieldPatch(
@@ -473,13 +500,11 @@ export async function POST(request: NextRequest) {
     // The unified V1 status enum has no `cancelled` state — cancellations
     // are recorded as `failed` with an explicit "Cancelled by user" result.
     if (action === "cancel") {
-      const cancelId = resolveMissionId(body as Record<string, unknown>);
-      if (!cancelId)
-        return NextResponse.json({ error: "Mission id is required" }, { status: 400 });
+      const cancelId = requireMissionId(body as Record<string, unknown>);
+      if (cancelId instanceof NextResponse) return cancelId;
 
-      const existingMission = getMission(cancelId);
-      if (!existingMission)
-        return NextResponse.json({ error: "Mission not found" }, { status: 404 });
+      const existingMission = getMissionOrNotFound(cancelId);
+      if (existingMission instanceof NextResponse) return existingMission;
 
       const mission = updateMission(cancelId, {
         status: "failed",
@@ -524,14 +549,11 @@ export async function POST(request: NextRequest) {
 
     // ── Delete Mission ─────────────────────────────────────────
     if (action === "delete") {
-      const missionIdFinal = resolveMissionId(body as Record<string, unknown>);
-      if (!missionIdFinal)
-        return NextResponse.json({ error: "Mission id is required" }, { status: 400 });
+      const missionIdFinal = requireMissionId(body as Record<string, unknown>);
+      if (missionIdFinal instanceof NextResponse) return missionIdFinal;
 
-      const existing = getMission(missionIdFinal);
-      if (!existing) {
-        return NextResponse.json({ error: "Mission not found" }, { status: 404 });
-      }
+      const existing = getMissionOrNotFound(missionIdFinal);
+      if (existing instanceof NextResponse) return existing;
 
       await deleteMissionCron(missionIdFinal);
 
@@ -543,7 +565,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ data: { deleted: missionIdFinal } });
     }
 
-    return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
+    return badRequest(`Unknown action: ${action}`);
   } catch (error) {
     logApiError("POST /api/missions", "processing request", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

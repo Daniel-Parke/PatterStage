@@ -35,6 +35,20 @@ export const TASK_TYPES = [
 export type TaskType = (typeof TASK_TYPES)[number];
 
 /**
+ * The 11 auxiliary task slots (everything except the primary `agent` slot).
+ * Mirrors the `auxiliary.<task>.*` section of ~/.hermes/config.yaml.
+ *
+ * Exported as a single source of truth so callers don't independently
+ * compute `TASK_TYPES.filter((t) => t !== "agent")` (which was duplicated
+ * in `BulkAuxiliaryUpdater.tsx` and `hermes-config-sync.ts` as of 2026-06-02).
+ * The type predicate `t is Exclude<TaskType, "agent">` narrows the result
+ * to a precise tuple, preserving literal types and avoiding `as` casts.
+ */
+export const AUXILIARY_TASK_TYPES = TASK_TYPES.filter(
+  (t): t is Exclude<TaskType, "agent"> => t !== "agent"
+);
+
+/**
  * Hermes-recognised inference providers. The first 14 must stay in
  * lock-step with the `hermes chat --provider` argparse `choices=[...]`
  * list (excluding "auto"). Auxiliary-only providers from the user-guide

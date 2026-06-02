@@ -1,7 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
-import { existsSync, statSync } from "fs";
+import { existsSync } from "fs";
 
 import { logApiError } from "@/lib/api-logger";
+import { parseJsonBody } from "@/lib/parse-json-body";
+import { safeStat } from "@/lib/fs-stats";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
@@ -43,24 +45,14 @@ function getProfileFilesForSlug(slug: string): ProfileFile[] {
   return defs.map((def) => {
     const path = def.getPath(bundle);
     const exists = existsSync(path);
-    let size = 0;
-    let lastModified: string | null = null;
-    if (exists) {
-      try {
-        const stats = statSync(path);
-        size = stats.size;
-        lastModified = stats.mtime.toISOString();
-      } catch {
-        // ignore
-      }
-    }
+    const st = exists ? safeStat(path) : null;
     return {
       key: def.key,
       name: def.name,
       path,
       exists,
-      size,
-      lastModified,
+      size: st?.size ?? 0,
+      lastModified: st?.mtime ?? null,
     };
   });
 }
@@ -146,8 +138,9 @@ export async function POST(request: NextRequest) {
 
   try {
     ensureDb();
-    const body = await request.json();
-    const { name, description, cloneFrom } = body as {
+    const bodyResult = await parseJsonBody(request);
+    if (bodyResult instanceof NextResponse) return bodyResult;
+    const { name, description, cloneFrom } = bodyResult as {
       name?: string;
       description?: string;
       cloneFrom?: string;

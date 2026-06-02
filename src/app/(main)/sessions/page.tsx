@@ -46,12 +46,16 @@ import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import Badge from "@/components/ui/Badge";
 import Pagination from "@/components/ui/Pagination";
 import { useToast } from "@/components/ui/Toast";
-import { timeAgo } from "@/lib/utils";
+import { timeAgo, formatElapsed } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
+import { useInterval } from "@/hooks/useInterval";
+import { useStoredBool } from "@/hooks/useStoredBool";
+import { searchSessionsByQuery, isApiNoiseSession } from "@/lib/session-filters";
 import AppPageShell from "@/components/layout/AppPageShell";
 import type { SessionRecord } from "@/lib/session-repository";
 import type { SessionSource } from "@/lib/session-repository";
-import { SOURCE_META, formatSessionTitle } from "@/components/session/constants";
+import { SOURCE_META } from "@/components/session/constants";
+import { formatSessionTitle } from "@/lib/session-title";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -83,34 +87,6 @@ type ListEntry = MissionGroup | SingleSession;
 const PAGE_SIZE = 50;
 const GROUP_BY_MISSION_STORAGE_KEY = "ch.sessions.groupByMission";
 const HIDE_API_NOISE_STORAGE_KEY = "ch.sessions.hideApiNoise";
-
-// ── Hooks ────────────────────────────────────────────────────
-
-function useStoredBool(key: string, defaultValue: boolean): [boolean, (v: boolean) => void] {
-  const [value, setValue] = useState<boolean>(defaultValue);
-  // Hydrate from localStorage after mount to avoid SSR hydration mismatches
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(key);
-      if (raw === "true") setValue(true);
-      else if (raw === "false") setValue(false);
-    } catch {
-      // localStorage may be unavailable (private mode, etc.) — keep default
-    }
-  }, [key]);
-  const update = useCallback(
-    (v: boolean) => {
-      setValue(v);
-      try {
-        window.localStorage.setItem(key, v ? "true" : "false");
-      } catch {
-        // ignore
-      }
-    },
-    [key],
-  );
-  return [value, update];
-}
 
 // ── Grouping helper ──────────────────────────────────────────
 
@@ -164,19 +140,6 @@ function buildGroupedEntries(
   });
 
   return entries;
-}
-
-// ── Live elapsed-time formatter ──────────────────────────────
-
-function formatElapsed(startedAt: string): string {
-  const start = new Date(startedAt).getTime();
-  if (!Number.isFinite(start)) return "";
-  const seconds = Math.max(0, Math.floor((Date.now() - start) / 1000));
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ${seconds % 60}s`;
-  const hours = Math.floor(minutes / 60);
-  return `${hours}h ${minutes % 60}m`;
 }
 
 // ── Components ───────────────────────────────────────────────
@@ -338,10 +301,7 @@ export default function SessionsPage() {
   const [hideApiNoise, setHideApiNoise] = useStoredBool(HIDE_API_NOISE_STORAGE_KEY, false);
   // Tick state so the live indicator refreshes every second for active sessions
   const [, setNowTick] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => setNowTick((n) => n + 1), 1000);
-    return () => clearInterval(interval);
-  }, []);
+  useInterval(() => setNowTick((n) => n + 1), { ms: 1000 });
   const { showToast, toastElement } = useToast();
 
   const loadSessions = useCallback(
@@ -376,31 +336,18 @@ export default function SessionsPage() {
   // All known session source types — always show filter buttons regardless of current page contents
   const sources = Object.keys(SOURCE_META) as SessionSource[];
 
-  const searchedSessions = useMemo(() => {
-    if (!search) return sessions;
-    const q = search.toLowerCase();
-    return sessions.filter(
-      (s) =>
-        (s.title?.toLowerCase() ?? "").includes(q) ||
-        s.id.toLowerCase().includes(q) ||
-        (s.profileName?.toLowerCase() ?? "").includes(q) ||
-        (s.missionId?.toLowerCase() ?? "").includes(q),
-    );
-  }, [sessions, search]);
+  const searchedSessions = useMemo(
+    () => searchSessionsByQuery(sessions, search),
+    [sessions, search],
+  );
 
-  // Apply "hide API noise" filter (opt-in, default off). Heuristic: short
-  // api-source sessions (< 1KB) that completed in under a minute. The list
-  // is dominated by these during heavy Hindsight stress testing.
-  const filteredSessions = useMemo(() => {
-    if (!hideApiNoise) return searchedSessions;
-    return searchedSessions.filter((s) => {
-      if (s.source !== "api") return true;
-      if (s.size >= 1024) return true;
-      const ageMs = Date.now() - new Date(s.startedAt).getTime();
-      if (ageMs > 60_000) return true;
-      return false;
-    });
-  }, [searchedSessions, hideApiNoise]);
+  // Apply "hide API noise" filter (opt-in, default off). Heuristic and
+  // date arithmetic both live in isApiNoiseSession (src/lib/session-filters.ts)
+  // so the predicate is unit-testable without rendering the page.
+  const filteredSessions = useMemo(
+    () => (hideApiNoise ? searchedSessions.filter((s) => !isApiNoiseSession(s)) : searchedSessions),
+    [searchedSessions, hideApiNoise],
+  );
 
   const entries = useMemo(
     () => buildGroupedEntries(filteredSessions, groupByMission),

@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 
 import { resolveProfileHermesHome, buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
 import { getBehaviorFiles } from "@/lib/behavior-files";
 import { logApiError } from "@/lib/api-logger";
+import { parseJsonBody } from "@/lib/parse-json-body";
+import { safeStat } from "@/lib/fs-stats";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
@@ -14,9 +16,7 @@ import {
   writeManagedFileContent,
   type ManagedFileKey,
 } from "@/lib/agent-file-store";
-import { pushProfileToHermes, pushRootToHermes } from "@/lib/hermes-profile-sync";
-import { updateAgentRoot } from "@/lib/agent-root-repository";
-import { updateProfileContent } from "@/lib/profiles-repository";
+import { applyProfileOrRootPatch, pushProfileOrRoot, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
 import {
   configYamlToColumnValues,
   platformToolsetsFromJson,
@@ -25,6 +25,50 @@ import {
 import { normalizePlatformToolsets } from "@/lib/hermes-toolset-normalize";
 
 const MANAGED_KEYS = new Set<string>(["soul", "agent", "user", "memory", "config", "hermes"]);
+
+type FileResponseVariant = {
+  content: string;
+  size: number;
+  exists: boolean;
+  lastModified: string | undefined;
+};
+
+/**
+ * Build the GET response payload for a file-read branch. The 3 branches
+ * (managed-file hit, missing file, real-file read) all share the same
+ * `key`/`name`/`description` envelope and only differ in `content`,
+ * `size`, `lastModified`, and `exists`. This helper centralizes the
+ * common envelope so the per-branch code can focus on the variant.
+ * `lastModified: undefined` is omitted from the payload (matching the
+ * original shape where the "missing file" branch had no `lastModified`
+ * field at all).
+ */
+function buildFileResponse(
+  resolved: { path: string; name: string; description: string },
+  key: string,
+  variant: FileResponseVariant,
+) {
+  const data: {
+    key: string;
+    content: string;
+    name: string;
+    description: string;
+    exists: boolean;
+    size: number;
+    lastModified?: string;
+  } = {
+    key,
+    content: variant.content,
+    name: resolved.name,
+    description: resolved.description,
+    exists: variant.exists,
+    size: variant.size,
+  };
+  if (variant.lastModified !== undefined) {
+    data.lastModified = variant.lastModified;
+  }
+  return { data };
+}
 
 /** Build a path lookup map from a Hermes path bundle. */
 function getBundlePathMap(bundle: ReturnType<typeof buildProfileHermesPathBundle>): Record<string, string> {
@@ -90,46 +134,39 @@ export async function GET(
     if (MANAGED_KEYS.has(key)) {
       const stored = readManagedFileContent(profileSlug, key as ManagedFileKey);
       if (stored) {
-        return NextResponse.json({
-          data: {
-            key,
+        return NextResponse.json(
+          buildFileResponse(resolved, key, {
             content: stored.content,
-            name: resolved.name,
-            description: resolved.description,
-            exists: stored.content.length > 0,
             size: stored.content.length,
+            exists: stored.content.length > 0,
             lastModified: stored.updatedAt,
-          },
-        });
+          }),
+        );
       }
     }
 
     if (!existsSync(resolved.path)) {
-      return NextResponse.json({
-        data: {
-          key,
+      return NextResponse.json(
+        buildFileResponse(resolved, key, {
           content: "",
-          name: resolved.name,
-          description: resolved.description,
-          exists: false,
           size: 0,
-        },
-      });
+          exists: false,
+          lastModified: undefined,
+        }),
+      );
     }
 
     const content = readFileSync(resolved.path, "utf-8");
-    const stats = statSync(resolved.path);
-    return NextResponse.json({
-      data: {
-        key,
+    // File confirmed to exist above; safeStat never null.
+    const stats = safeStat(resolved.path)!;
+    return NextResponse.json(
+      buildFileResponse(resolved, key, {
         content,
-        name: resolved.name,
-        description: resolved.description,
-        exists: true,
         size: stats.size,
-        lastModified: stats.mtime.toISOString(),
-      },
-    });
+        exists: true,
+        lastModified: stats.mtime,
+      }),
+    );
   }
   catch (error) {
     logApiError("GET /api/agent/files/[key]", `reading ${resolved.path}`, error);
@@ -157,8 +194,9 @@ export async function PUT(
 
   try {
     ensureDb();
-    const body = await request.json();
-    const { content, backup } = body;
+    const bodyResult = await parseJsonBody(request);
+    if (bodyResult instanceof NextResponse) return bodyResult;
+    const { content, backup } = bodyResult;
 
     if (typeof content !== "string") {
       return NextResponse.json({ error: "Content is required" }, { status: 400 });
@@ -197,36 +235,36 @@ export async function PUT(
           normalizePlatformToolsets(platformToolsetsFromJson(cols.platformToolsetsJson)),
         );
         writeManagedFileContent(profileSlug, "config", cols.configYaml);
-        if (profileSlug === "default") {
-          updateAgentRoot({
-            personality: cols.personality,
-            disabledSkillsJson: cols.disabledSkillsJson,
-            platformToolsetsJson,
-            configYaml: cols.configYaml,
-          });
-        }
-        else {
-          updateProfileContent(profileSlug, {
-            personality: cols.personality,
-            disabledSkillsJson: cols.disabledSkillsJson,
-            platformToolsetsJson,
-            configYaml: cols.configYaml,
-          });
-        }
+        // applyProfileOrRootPatch handles default-vs-non-default
+        // dispatch + 404 on missing profile + 500 on push failure —
+        // replaces the if/else update block AND the separate push
+        // block below (2 places, 16 lines total).
+        const configPatch = {
+          personality: cols.personality,
+          disabledSkillsJson: cols.disabledSkillsJson,
+          platformToolsetsJson,
+          configYaml: cols.configYaml,
+        };
+        const result = applyProfileOrRootPatch(
+          profileSlug,
+          configPatch,
+          configPatch,
+        );
+        const err = toPatchResponse(result, "Failed to sync profile to Hermes");
+        if (err) return err;
+        if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
       }
       else {
+        // Non-config managed file (SOUL.md, AGENTS.md, etc.) — write
+        // the column-free file body to the managed-files table, then
+        // push. pushProfileOrRoot handles default-vs-non-default
+        // dispatch + 404 + push-fail without doing a no-op DB write
+        // that would bump updated_at.
         writeManagedFileContent(profileSlug, key as ManagedFileKey, content);
-      }
-
-      const push =
-        profileSlug === "default"
-          ? pushRootToHermes()
-          : pushProfileToHermes(profileSlug);
-      if (!push.success) {
-        return NextResponse.json(
-          { error: push.error ?? "Failed to sync profile to Hermes" },
-          { status: 500 },
-        );
+        const result = pushProfileOrRoot(profileSlug);
+        const err = toPatchResponse(result, "Failed to sync profile to Hermes");
+        if (err) return err;
+        if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
       }
     }
     else {

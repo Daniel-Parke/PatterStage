@@ -3,26 +3,22 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { logApiError } from "@/lib/api-logger";
-import { appendAuditLine } from "@/lib/audit-log";
-import { getFallbackEntry, updateFallbackEntry, listFallbackChain, getFallbackConfig } from "@/lib/fallbacks-repository";
+import { getFallbackEntry, updateFallbackEntry, listFallbackChain } from "@/lib/fallbacks-repository";
 import { fallbackReorderSchema } from "@/lib/fallback-config-schema";
 import { inTransaction } from "@/lib/db";
-import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
+import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
 
-  const parsed = fallbackReorderSchema.safeParse(raw);
+  const parsed = fallbackReorderSchema.safeParse(bodyResult);
   if (!parsed.success) {
     return zodErrorResponse(parsed.error);
   }
@@ -55,16 +51,7 @@ export async function POST(request: NextRequest) {
       updateFallbackEntry(chain[targetIdx].id, { position: posA });
     });
 
-    syncEnabledFallbackChainToHermes(getFallbackConfig());
-    try {
-      appendAuditLine({
-        action: "fallback.reorder",
-        resource: entryId,
-        ok: true,
-      });
-    } catch {
-      // Non-fatal
-    }
+    commitFallbackChange("fallback.reorder", entryId);
 
     const refreshed = listFallbackChain();
     return NextResponse.json({ data: { fallbacks: refreshed } });

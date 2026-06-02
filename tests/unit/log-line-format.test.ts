@@ -1,6 +1,6 @@
 /** @jest-environment node */
 
-import { parseLogLine } from "@/lib/log-line-format";
+import { injectMissingTimestamps, parseLogLine } from "@/lib/log-line-format";
 
 describe("parseLogLine", () => {
   describe("agent.log standard format", () => {
@@ -210,5 +210,57 @@ describe("parseLogLine", () => {
       const result = parseLogLine("just some random text with no structure");
       expect(result.level).toBe("unknown");
     });
+  });
+});
+
+describe("injectMissingTimestamps", () => {
+  const FALLBACK = "2026-05-11 10:20:04";
+
+  it("injects the fallback on lines without a parseable timestamp", () => {
+    const out = injectMissingTimestamps(
+      ["plain text with no timestamp", "another bare line"],
+      FALLBACK,
+    );
+    expect(out).toEqual([
+      `${FALLBACK} plain text with no timestamp`,
+      `${FALLBACK} another bare line`,
+    ]);
+  });
+
+  it("leaves lines that already have a parseable timestamp unchanged", () => {
+    const lines = [
+      "2026-05-11 09:00:00 INFO already has a timestamp",
+      "2026-05-11T09:00:00.000Z ISO format",
+      "2026/05/11 09:00:00 slash format",
+      "[2026-05-11 09:00:00] bracket format",
+    ];
+    const out = injectMissingTimestamps(lines, FALLBACK);
+    expect(out).toEqual(lines);
+  });
+
+  it("leaves empty / whitespace-only lines unchanged (no garbage timestamps)", () => {
+    const lines = ["", "   ", "\t"];
+    const out = injectMissingTimestamps(lines, FALLBACK);
+    expect(out).toEqual(lines);
+  });
+
+  it("injected timestamps round-trip through parseLogLine (no UI special-casing)", () => {
+    const out = injectMissingTimestamps(["bare line"], FALLBACK);
+    const parsed = parseLogLine(out[0]);
+    expect(parsed.timestamp).toBe(FALLBACK);
+  });
+
+  it("mixes injected and existing timestamps in one call", () => {
+    const lines = [
+      "2026-05-11 09:00:00 INFO has timestamp",
+      "bare line gets injected",
+      "another bare",
+    ];
+    const out = injectMissingTimestamps(lines, FALLBACK);
+    expect(out).toEqual([
+      "2026-05-11 09:00:00 INFO has timestamp",
+      `${FALLBACK} bare line gets injected`,
+      `${FALLBACK} another bare`,
+    ]);
   });
 });

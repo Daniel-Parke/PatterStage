@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { renameSync, existsSync } from "fs";
 
 import { logApiError } from "@/lib/api-logger";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
@@ -44,8 +45,9 @@ export async function PUT(
 
   try {
     ensureDb();
-    const body = await request.json();
-    const { name, description } = body as { name?: string; description?: string };
+    const bodyResult = await parseJsonBody(request);
+    if (bodyResult instanceof NextResponse) return bodyResult;
+    const { name, description } = bodyResult as { name?: string; description?: string };
 
     let slug = prof.profile;
     if (name && typeof name === "string" && name.trim().length >= 2) {

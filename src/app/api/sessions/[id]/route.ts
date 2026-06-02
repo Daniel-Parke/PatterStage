@@ -1,49 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import Database from "better-sqlite3";
 import { existsSync, readFileSync, statSync } from "fs";
-import { join } from "path";
+import { basename, join } from "path";
 
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { getSession, estimateSessionSize } from "@/lib/session-repository";
+import { badRequest } from "@/lib/api-response";
+import { safeStat } from "@/lib/fs-stats";
+import { getSession, estimateSessionSize, lookupMissionIdForCronSession } from "@/lib/session-repository";
 import { PATHS } from "@/lib/paths";
-import { db } from "@/lib/db";
 import {
   getMaxSessionFileBytes,
   sessionsRateLimitResponse,
 } from "@/lib/sessions-api-guard";
+import { buildSessionData, findFileWithExtension } from "@/lib/session-detail";
 
-/**
- * Best-effort lookup of the Control-Hub mission id for a cron-spawned
- * session. The session id has the form `cron_<job-uuid>_<date>_<time>`;
- * the job uuid resolves to cron_jobs.id, which resolves to missions.id
- * via the missions.cron_job_id FK. Returns null for non-cron sessions
- * or when no mission has been registered for the job.
- */
-function lookupMissionIdForCronSession(sessionId: string): string | null {
-  if (!sessionId.startsWith("cron_")) return null;
-  const rest = sessionId.slice("cron_".length);
-  const firstUnderscore = rest.indexOf("_");
-  if (firstUnderscore <= 0) return null;
-  const jobId = rest.slice(0, firstUnderscore);
-  try {
-    const row = db()
-      .prepare(
-        `SELECT m.id AS mission_id
-         FROM missions m
-         JOIN cron_jobs c ON c.id = m.cron_job_id
-         WHERE c.hermes_job_id = ?
-         LIMIT 1`,
-      )
-      .get(jobId) as { mission_id: string } | undefined;
-    return row?.mission_id ?? null;
-  } catch {
-    // DB unavailable or schema differs — non-fatal, detail page just won't
-    // show the Mission link.
-    return null;
-  }
-}
+// ── Mission-output file extensions to try in preference order ───────────
+// Recurring mission dispatch writes a `.session` file (full transcript);
+// the older `.output.log` fallback is the legacy format. The session
+// detail view tries the newer format first, then falls back to the log.
+const MISSION_FILE_EXTENSIONS = [".session", ".output.log"] as const;
 
 export async function GET(
   request: NextRequest,
@@ -59,7 +36,7 @@ export async function GET(
   // Security: prevent path traversal
   const sanitizedId = id.replace(/[^a-zA-Z0-9_.-]/g, "");
   if (sanitizedId !== id || sanitizedId.includes("..")) {
-    return NextResponse.json({ error: "Invalid session ID" }, { status: 400 });
+    return badRequest("Invalid session ID");
   }
 
   // ── Step 1: Try Hermes state.db (v0.14+ — canonical source) ──────────
@@ -118,7 +95,7 @@ export async function GET(
         );
 
         const response = NextResponse.json({
-          data: {
+          data: buildSessionData({
             id: sanitizedId,
             filename: sanitizedId,
             format: "db",
@@ -126,7 +103,6 @@ export async function GET(
             model: sessionRow.model ?? "",
             source: sessionRow.source,
             messages,
-            messageCount: messages.length,
             size,
             created: sessionRow.started_at
               ? new Date(sessionRow.started_at * 1000).toISOString()
@@ -135,7 +111,7 @@ export async function GET(
             // cron job id against the missions table. Lets the detail page
             // render a "Open Mission" link for cron-spawned sessions.
             missionId: lookupMissionIdForCronSession(sanitizedId),
-          },
+          }),
         });
         return response;
       }
@@ -149,24 +125,23 @@ export async function GET(
 
   // ── Step 2: Legacy file-based sessions (~/.hermes/sessions/) ──────────
   const sessionsPath = getActiveHermesPaths().sessions;
-  const fullPath = join(sessionsPath, sanitizedId);
-  let filePath = "";
+  // Try the raw name first, then `.json`, then `.jsonl`. Legacy sessions
+  // were written both with and without an extension.
+  const filePath = findFileWithExtension(sessionsPath, sanitizedId, ["", ".json", ".jsonl"]);
 
-  if (existsSync(fullPath)) {
-    filePath = fullPath;
-  } else if (existsSync(`${fullPath}.json`)) {
-    filePath = `${fullPath}.json`;
-  } else if (existsSync(`${fullPath}.jsonl`)) {
-    filePath = `${fullPath}.jsonl`;
-  } else {
+  if (!filePath) {
     // No file on disk — try the DB record for mission-born sessions
     const dbSession = getSession(sanitizedId);
     if (dbSession && (dbSession.source === "mission" || dbSession.source === "cron")) {
-      // Check for a mission output file
+      // Check for a mission output file (try newer `.session` first,
+      // then legacy `.output.log`). findFileWithExtension collapses
+      // the 2x `existsSync` ladder into one call.
       if (dbSession.missionId) {
-        const missionFile = join(PATHS.missions, `${dbSession.missionId}.session`);
-        const missionLog = join(PATHS.missions, `${dbSession.missionId}.output.log`);
-        const sessionPath = existsSync(missionFile) ? missionFile : existsSync(missionLog) ? missionLog : null;
+        const sessionPath = findFileWithExtension(
+          PATHS.missions,
+          dbSession.missionId,
+          MISSION_FILE_EXTENSIONS,
+        );
         if (sessionPath) {
           const content = readFileSync(sessionPath, "utf-8");
           const lines = content.split("\n").filter((l: string) => l.trim());
@@ -175,28 +150,28 @@ export async function GET(
             role: "assistant",
             content: line,
           }));
-          const st = statSync(sessionPath);
+          // File confirmed to exist above (missionFile or missionLog); safeStat never null.
+          const st = safeStat(sessionPath)!;
           return NextResponse.json({
-            data: {
+            data: buildSessionData({
               id: sanitizedId,
-              filename: sessionPath.split("/").pop(),
+              filename: basename(sessionPath),
               format: "mission-output",
               title: dbSession.title || sanitizedId,
               model: dbSession.modelId || "",
               source: dbSession.source,
               messages,
-              messageCount: messages.length,
               size: st.size,
               created: dbSession.startedAt,
               missionId: dbSession.missionId,
-            },
+            }),
           });
         }
       }
       // No output file yet (agent running, or output was streamed to Hermes).
       // Surface the parent mission id so the detail page can link to it.
       return NextResponse.json({
-        data: {
+        data: buildSessionData({
           id: sanitizedId,
           filename: sanitizedId,
           format: "db",
@@ -204,7 +179,6 @@ export async function GET(
           model: dbSession.modelId || "",
           source: dbSession.source,
           messages: [],
-          messageCount: 0,
           size: dbSession.size,
           created: dbSession.startedAt,
           missionId: dbSession.missionId ?? null,
@@ -213,7 +187,7 @@ export async function GET(
             : dbSession.source === "cron"
               ? "This cron-spawned session is still running. Messages will appear here when the agent completes."
               : "The agent ran but produced no output file.",
-        },
+        }),
       });
     }
     return NextResponse.json(
@@ -260,14 +234,13 @@ export async function GET(
         });
 
       return NextResponse.json({
-        data: {
+        data: buildSessionData({
           id: sanitizedId,
-          filename: filePath.split("/").pop(),
+          filename: basename(filePath),
           format: "jsonl",
           messages,
-          messageCount: messages.length,
           size: st.size,
-        },
+        }),
       });
     } else {
       // Parse JSON
@@ -275,18 +248,17 @@ export async function GET(
       const messages = data.messages || data.conversation || data.turns || [];
 
       return NextResponse.json({
-        data: {
+        data: buildSessionData({
           id: sanitizedId,
-          filename: filePath.split("/").pop(),
+          filename: basename(filePath),
           format: "json",
           title: data.title || data.name || "",
           model: data.model || "",
           source: data.source || "",
           messages,
-          messageCount: messages.length,
           size: st.size,
           created: data.created || st.birthtime.toISOString(),
-        },
+        }),
       });
     }
   } catch (error) {

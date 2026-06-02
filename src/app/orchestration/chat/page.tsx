@@ -11,7 +11,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import {
   MessageCircle, Send, Plus, X, Download,
-  Bot, User, Loader2, AlertTriangle, Square,
+  Bot, User, Square,
 } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -35,6 +35,7 @@ import {
   streamChatResponse,
 } from "@/lib/chat-utils";
 import TypingIndicator from "@/components/chat/TypingIndicator";
+import GatewayBanner from "@/components/chat/GatewayBanner";
 import { useGatewayHealth } from "@/hooks/useGatewayHealth";
 
 // ── Page component ─────────────────────────────────────────────
@@ -97,13 +98,21 @@ export default function ChatPage() {
   }, [sessions]);
 
   // ── Restore per-session model when switching sessions ────────
+  // The previous dependency `[activeSessionId, activeSession]` re-fired this
+  // effect on EVERY session mutation (including message updates), because
+  // `activeSession` is a fresh object reference each time `sessions` changes.
+  // The effect is a no-op when the model is unchanged, but the call itself
+  // still ran setModel() on every streamed delta. Narrowing the dependency
+  // to the actual field we read (the model) keeps the call to once per
+  // session switch + once per explicit model change.
   const activeSession = sessions.find((s) => s.id === activeSessionId);
+  const activeSessionModel = activeSession?.model;
   const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);
   useEffect(() => {
-    if (activeSession) {
-      setModel(activeSession.model || CHAT_DEFAULT_MODEL);
+    if (activeSessionModel !== undefined) {
+      setModel(activeSessionModel || CHAT_DEFAULT_MODEL);
     }
-  }, [activeSessionId, activeSession]);
+  }, [activeSessionId, activeSessionModel]);
 
   // Auto-scroll on new messages (only when current session's messages change)
   useEffect(() => {
@@ -271,6 +280,9 @@ export default function ChatPage() {
   }, [showToast]);
 
   // ── Models for dropdown ────────────────────────────────────
+  // The `add` closure dedupes via `seen`, so the gateway loop doesn't
+  // need its own `id !== CHAT_DEFAULT_MODEL` guard — that was redundant
+  // (and silently relied on `seen` to do the work anyway).
   const mergedModels = useMemo(() => {
     const seen = new Set<string>();
     const merged: string[] = [];
@@ -281,9 +293,7 @@ export default function ChatPage() {
     };
     add(CHAT_DEFAULT_MODEL);
     for (const id of registryModelIds) add(id);
-    for (const id of gatewayModelIds) {
-      if (id !== CHAT_DEFAULT_MODEL) add(id);
-    }
+    for (const id of gatewayModelIds) add(id);
     return merged;
   }, [registryModelIds, gatewayModelIds]);
 
@@ -339,13 +349,13 @@ export default function ChatPage() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar — only visible when there are sessions to show */}
-        <div className="w-60 border-r border-white/10 bg-white/[0.01] flex flex-col">
+        <div className="w-60 shrink-0 border-r border-white/10 bg-white/[0.01] flex flex-col min-h-0">
           <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
             <span className="text-[10px] font-mono text-white/30 uppercase tracking-wider">
               Sessions ({sessionList.length})
             </span>
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto min-h-0">
             {sessionList.map((s) => (
               <button
                 key={s.id}
@@ -399,47 +409,19 @@ export default function ChatPage() {
             )}
           </div>
         </div>
-      </div>
 
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             {/* Gateway status banners — shown regardless of session state */}
             {!hasActiveSession && messages.length === 0 && (
               <>
-                {gatewayOnline === false && (
-                  <div className="w-full max-w-md mx-auto mb-6 p-4 bg-neon-red/10 border border-neon-red/20 rounded-lg text-left">
-                    <div className="flex items-center gap-2 text-neon-red mb-1">
-                      <AlertTriangle className="w-4 h-4" />
-                      <span className="text-sm font-semibold">Gateway Offline</span>
-                    </div>
-                    <p className="text-xs text-white/60">
-                      The Hermes Gateway (port 8642) is not responding.
-                      Start it with: <code className="text-neon-cyan">hermes gateway start</code>
-                    </p>
-                  </div>
-                )}
+                {gatewayOnline === false && <GatewayBanner status="offline" />}
                 {gatewayOnline !== false && agentDefaultModelSet === false && (
-                  <div className="w-full max-w-md mx-auto mb-6 p-4 bg-neon-orange/10 border border-neon-orange/20 rounded-lg text-left">
-                    <div className="flex items-center gap-2 text-neon-orange mb-1">
-                      <AlertTriangle className="w-4 h-4" />
-                      <span className="text-sm font-semibold">Model not ready for chat</span>
-                    </div>
-                    <p className="text-xs text-white/60">
-                      Set an agent default under Config → Models, push to Hermes (or Operations →
-                      Agents → Push Bob), or run <code className="text-neon-cyan">hermes model</code>.
-                      The gateway reads <code className="text-white/50">~/.hermes/config.yaml</code>{" "}
-                      model.default — the chat dropdown label alone does not change inference.
-                    </p>
-                  </div>
+                  <GatewayBanner status="model-missing" />
                 )}
-                {gatewayOnline === null && (
-                  <div className="flex items-center gap-2 mb-4 justify-center">
-                    <Loader2 className="w-3 h-3 text-white/30 animate-spin" />
-                    <span className="text-xs text-white/30">Checking gateway connection...</span>
-                  </div>
-                )}
+                {gatewayOnline === null && <GatewayBanner status="checking" />}
               </>
             )}
             {messages.length === 0 ? (
@@ -564,6 +546,7 @@ export default function ChatPage() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </AppPageShell>
   );

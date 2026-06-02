@@ -2,6 +2,9 @@
 /** @jest-environment node */
 
 jest.mock("next/server", () => ({
+  // NextRequest must be a real class (not a plain object literal) so the
+  // `parseJsonBody` caller can use `instanceof` on NextResponse — see
+  // session 37 control-hub-list1-session37-findings for the failure mode.
   NextRequest: class NextRequest {
     url: string;
     method: string;
@@ -16,15 +19,20 @@ jest.mock("next/server", () => ({
     }
     async json() { return JSON.parse(this._body); }
   },
-  NextResponse: {
-    json: (data: unknown, init?: ResponseInit) => {
+  // NextResponse is a class (not an object literal) so `instanceof` works
+  // in the `parseJsonBody` call site. Static `json()` factory keeps the
+  // existing call sites' usage (`NextResponse.json(data, init)`) intact.
+  NextResponse: class NextResponse {
+    status: number;
+    private _data: unknown;
+    static json(data: unknown, init?: ResponseInit): NextResponse {
       const status = init?.status ?? 200;
-      return {
-        ok: status >= 200 && status < 300,
-        status,
-        json: () => Promise.resolve(data),
-      };
-    },
+      const r = new NextResponse();
+      r.status = status;
+      r._data = data;
+      return r;
+    }
+    async json() { return this._data; }
   },
 }));
 
@@ -32,7 +40,6 @@ jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
   requireAuth: jest.fn(() => null),
 }));
 
@@ -65,7 +72,6 @@ const audit = require("@/lib/audit-log") as { appendAuditLine: jest.Mock };
 
 beforeEach(() => {
   jest.clearAllMocks();
-  auth.requireAuth.mockReturnValue(null);
   auth.requireAuth.mockReturnValue(null);
 });
 
@@ -117,6 +123,29 @@ describe("/api/credentials", () => {
     );
   });
 
+  it("POST forwards parsed provider to syncCredentialToHermesEnv (narrowing contract)", async () => {
+    // Session 53: providerSchema narrows parsed.data.provider to HermesProvider
+    // (a literal union), so syncCredentialToHermesEnv is called with the
+    // exact value from the request — no widening cast and no defensive
+    // isHermesProvider() guard. This test locks the contract: any future
+    // change that re-widens the type or re-introduces the guard is
+    // caught here.
+    const configSync = require("@/lib/hermes-config-sync") as {
+      syncCredentialToHermesEnv: jest.Mock;
+    };
+    repo.__createCredential.mockReturnValue(SAMPLE);
+    const res = await postCreds({
+      label: "Anthropic Personal",
+      provider: "anthropic",
+      apiKey: "sk-test",
+    });
+    expect(res.status).toBe(201);
+    expect(configSync.syncCredentialToHermesEnv).toHaveBeenCalledWith({
+      provider: "anthropic",
+      apiKey: "sk-test",
+    });
+  });
+
   it("POST rejects unknown provider", async () => {
     const res = await postCreds({ label: "x", provider: "weird", apiKey: "y" });
     expect(res.status).toBe(400);
@@ -138,5 +167,21 @@ describe("/api/credentials", () => {
     auth.requireAuth.mockReturnValue({ status: 401, json: async () => ({}) });
     const res = await postCreds({ label: "x", provider: "anthropic", apiKey: "y" });
     expect(res.status).toBe(401);
+  });
+
+  it("POST returns 400 on malformed JSON", async () => {
+    // Regression for the request.json() bug class: malformed JSON previously
+    // returned 500 via the outer try/catch. parseJsonBody now returns 400.
+    const route = require("@/app/api/credentials/route") as { POST: (req: Request) => Promise<unknown> };
+    const req = {
+      url: "http://localhost/api/credentials",
+      method: "POST",
+      headers: new Headers({ "content-type": "application/json" }),
+      json: async () => { throw new SyntaxError("Unexpected token"); },
+    } as unknown as Request;
+    const res = await (route.POST(req) as Promise<{ status: number; json: () => Promise<unknown> }>);
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as Record<string, unknown>;
+    expect(String(body.error)).toMatch(/invalid json/i);
   });
 });

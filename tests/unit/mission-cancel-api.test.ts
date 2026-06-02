@@ -3,6 +3,23 @@
 
 jest.mock("next/server", () => {
   const responses: Array<{ data: unknown; init?: ResponseInit }> = [];
+  // NextResponse as a real class so `bodyResult instanceof NextResponse`
+  // (used by parseJsonBody's callsite) works. See session-37 findings.
+  class NextResponse {
+    ok: boolean;
+    status: number;
+    private _data: unknown;
+    constructor(data: unknown = null, init?: ResponseInit) {
+      this._data = data;
+      this.status = init?.status ?? 200;
+      this.ok = this.status >= 200 && this.status < 300;
+    }
+    json() { return Promise.resolve(this._data); }
+    static json(data: unknown, init?: ResponseInit) {
+      responses.push({ data, init });
+      return new NextResponse(data, init);
+    }
+  }
   return {
     NextRequest: class NextRequest {
       url: string;
@@ -19,19 +36,8 @@ jest.mock("next/server", () => {
         return JSON.parse(this._body);
       }
     },
-    NextResponse: {
-      json: (data: unknown, init?: ResponseInit) => {
-        const entry = { data, init };
-        responses.push(entry);
-        const status = init?.status ?? 200;
-        return {
-          ok: status >= 200 && status < 300,
-          status,
-          json: () => Promise.resolve(data),
-        };
-      },
-      __responses: responses,
-    },
+    NextResponse,
+    __responses: responses,
   };
 });
 

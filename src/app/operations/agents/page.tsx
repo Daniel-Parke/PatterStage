@@ -16,6 +16,8 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import type { AgentProfile, ProfileFile } from "@/types/hermes";
 import { apiFetch } from "@/lib/api-fetch";
+import { profileSyncBody } from "@/lib/profile-sync-body";
+import { runSyncAction } from "@/lib/operation-sync-action";
 
 interface EditorState {
   profileId: string;
@@ -25,13 +27,21 @@ interface EditorState {
   original: string;
 }
 
+/** Build the file URL for /api/agent/files/[key], with profile query param when scoped. */
+function agentFileUrl(profileId: string, fileKey: string): string {
+  return profileId === "default"
+    ? `/api/agent/files/${fileKey}`
+    : `/api/agent/files/${fileKey}?profile=${profileId}`;
+}
+
 export default function BehaviourPage() {
   const [profiles, setProfiles] = useState<AgentProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [editor, setEditor] = useState<EditorState | null>(null);
-  const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  // `saving` is derived from saveStatus so the two are never out of sync.
+  const saving = saveStatus === "saving";
   const [previewMode, setPreviewMode] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [createName, setCreateName] = useState("");
@@ -45,36 +55,30 @@ export default function BehaviourPage() {
 
   const { showToast, toastElement } = useToast();
 
-  const driftCount = profiles.filter((p) => p.syncStatus === "drift").length;
-  const syncErrorCount = profiles.filter((p) => p.syncStatus === "error").length;
-
-  const profileSyncBody = (slug: string) =>
-    slug === "default" ? { root: true } : { slug };
+  const { driftCount, syncErrorCount } = profiles.reduce(
+    (acc, p) => {
+      if (p.syncStatus === "drift") acc.driftCount += 1;
+      else if (p.syncStatus === "error") acc.syncErrorCount += 1;
+      return acc;
+    },
+    { driftCount: 0, syncErrorCount: 0 },
+  );
 
   const doSync = async (
     url: string,
     body: Record<string, unknown>,
     successMessage: string,
     errorMessage: string,
-  ): Promise<void> => {
-    setSyncBusy(true);
-    try {
-      const data = await apiFetch(url, {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-      if (data.data?.success === false) {
-        showToast(data.error ?? errorMessage, "error");
-        return;
-      }
-      showToast(successMessage, "success");
-      await loadProfiles();
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : errorMessage, "error");
-    } finally {
-      setSyncBusy(false);
-    }
-  };
+  ): Promise<void> =>
+    runSyncAction({
+      setBusy: setSyncBusy,
+      showToast,
+      url,
+      body,
+      successMessage,
+      errorMessage,
+      onSuccess: loadProfiles,
+    });
 
   const handlePushAll = () =>
     void doSync(
@@ -141,56 +145,54 @@ export default function BehaviourPage() {
 
   const handleCreate = async () => {
     if (creating || !createName.trim()) return;
-    setCreating(true);
-    try {
-      await apiFetch("/api/agent/profiles", {
-        method: "POST",
-        body: JSON.stringify({
-          name: createName.trim(),
-          description: createDescription.trim(),
-          cloneFrom: createCloneFrom,
-        }),
-      });
-      showToast(`Profile "${createName.trim()}" created`, "success");
-      setShowCreate(false);
-      setCreateName("");
-      setCreateDescription("");
-      setCreateCloneFrom("default");
-      await loadProfiles();
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : "Failed to create profile", "error");
-    } finally {
-      setCreating(false);
-    }
+    const name = createName.trim();
+    await runSyncAction({
+      setBusy: setCreating,
+      showToast,
+      url: "/api/agent/profiles",
+      method: "POST",
+      body: {
+        name,
+        description: createDescription.trim(),
+        cloneFrom: createCloneFrom,
+      },
+      successMessage: `Profile "${name}" created`,
+      errorMessage: "Failed to create profile",
+      onSuccess: async () => {
+        setShowCreate(false);
+        setCreateName("");
+        setCreateDescription("");
+        setCreateCloneFrom("default");
+        await loadProfiles();
+      },
+    });
   };
 
   const handleDelete = async () => {
     if (deleting || !deleteTarget) return;
-    setDeleting(true);
-    try {
-      await apiFetch(`/api/agent/profiles/${deleteTarget}`, {
-        method: "DELETE",
-      });
-      showToast("Profile deleted", "success");
-      setDeleteTarget(null);
-      if (selectedProfileId === deleteTarget) {
-        setSelectedProfileId(null);
-        setEditor(null);
-      }
-      await loadProfiles();
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : "Failed to delete profile", "error");
-    } finally {
-      setDeleting(false);
-    }
+    const target = deleteTarget;
+    await runSyncAction({
+      setBusy: setDeleting,
+      showToast,
+      url: `/api/agent/profiles/${target}`,
+      method: "DELETE",
+      body: {},
+      successMessage: "Profile deleted",
+      errorMessage: "Failed to delete profile",
+      onSuccess: async () => {
+        setDeleteTarget(null);
+        if (selectedProfileId === target) {
+          setSelectedProfileId(null);
+          setEditor(null);
+        }
+        await loadProfiles();
+      },
+    });
   };
 
   const openFile = async (profileId: string, file: ProfileFile) => {
     try {
-      const url = profileId === "default"
-        ? `/api/agent/files/${file.key}`
-        : `/api/agent/files/${file.key}?profile=${profileId}`;
-      const data = await apiFetch(url);
+      const data = await apiFetch(agentFileUrl(profileId, file.key));
       const content = data.data?.content || "";
       setEditor({
         profileId,
@@ -208,13 +210,9 @@ export default function BehaviourPage() {
 
   const handleSave = async () => {
     if (!editor) return;
-    setSaving(true);
     setSaveStatus("saving");
     try {
-      const url = editor.profileId === "default"
-        ? `/api/agent/files/${editor.fileKey}`
-        : `/api/agent/files/${editor.fileKey}?profile=${editor.profileId}`;
-      await apiFetch(url, {
+      await apiFetch(agentFileUrl(editor.profileId, editor.fileKey), {
         method: "PUT",
         body: JSON.stringify({ content: editor.content, backup: true }),
       });
@@ -226,8 +224,6 @@ export default function BehaviourPage() {
     } catch {
       setSaveStatus("error");
       showToast("Failed to save file", "error");
-    } finally {
-      setSaving(false);
     }
   };
 

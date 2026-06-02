@@ -15,7 +15,13 @@ jest.mock("@/lib/db", () => ({
   now: () => "2026-01-01T00:00:00.000Z",
 }));
 
-import { getSkill, listSkills, upsertSkill } from "@/lib/skills-repository";
+import {
+  getSkill,
+  listSkills,
+  parseSkillFrontmatter,
+  stripSkillFrontmatter,
+  upsertSkill,
+} from "@/lib/skills-repository";
 
 beforeEach(() => {
   const Database = loadRealBetterSqlite3();
@@ -42,5 +48,42 @@ describe("skills-repository", () => {
     const row = getSkill("github/git-workflow");
     expect(row?.displayName).toBe("Git Workflow");
     expect(listSkills().some((s) => s.skillKey === "github/git-workflow")).toBe(true);
+  });
+});
+
+describe("stripSkillFrontmatter", () => {
+  it("returns the body trimmed when frontmatter is present", () => {
+    const content = "---\nname: x\n---\n\nHello body\n";
+    expect(stripSkillFrontmatter(content)).toBe("Hello body");
+  });
+
+  it("returns the content verbatim when no frontmatter is present", () => {
+    const content = "Just body, no frontmatter\n  leading indent\n";
+    // Mirrors the previous inline implementation byte-for-byte:
+    // no-trim on the no-frontmatter path was a deliberate choice
+    // because callers (e.g. the skills route) compose the result
+    // into a larger payload and don't expect mutation.
+    expect(stripSkillFrontmatter(content)).toBe(content);
+  });
+
+  it("handles CRLF line endings", () => {
+    const content = "---\r\nname: x\r\n---\r\n\r\nBody\r\n";
+    expect(stripSkillFrontmatter(content)).toBe("Body");
+  });
+
+  it("returns an empty string for empty input", () => {
+    expect(stripSkillFrontmatter("")).toBe("");
+  });
+});
+
+describe("parseSkillFrontmatter", () => {
+  it("extracts name, description, and first tag as category", () => {
+    const content =
+      "---\nname: git-workflow\ndescription: Git helpers\ntags: [github, git]\n---\n\nBody\n";
+    expect(parseSkillFrontmatter(content)).toEqual({
+      name: "git-workflow",
+      description: "Git helpers",
+      category: "github",
+    });
   });
 });

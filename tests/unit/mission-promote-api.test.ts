@@ -1,16 +1,31 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 /** @jest-environment node */
 
-jest.mock("next/server", () => ({
-  NextRequest: class NextRequest {},
-  NextResponse: {
-    json: (data: unknown, init?: ResponseInit) => ({
-      ok: (init?.status ?? 200) >= 200 && (init?.status ?? 200) < 300,
-      status: init?.status ?? 200,
-      json: () => Promise.resolve(data),
-    }),
-  },
-}));
+jest.mock("next/server", () => {
+  // NextResponse as a real class so `bodyResult instanceof NextResponse`
+  // (used by parseJsonBody's callsite) works. See session-37 findings.
+  const responses: Array<{ data: unknown; init?: ResponseInit }> = [];
+  class NextResponse {
+    ok: boolean;
+    status: number;
+    private _data: unknown;
+    constructor(data: unknown = null, init?: ResponseInit) {
+      this._data = data;
+      this.status = init?.status ?? 200;
+      this.ok = this.status >= 200 && this.status < 300;
+    }
+    json() { return Promise.resolve(this._data); }
+    static json(data: unknown, init?: ResponseInit) {
+      responses.push({ data, init });
+      return new NextResponse(data, init);
+    }
+  }
+  return {
+    NextRequest: class NextRequest {},
+    NextResponse,
+    __responses: responses,
+  };
+});
 
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 jest.mock("@/lib/api-auth", () => ({ requireAuth: jest.fn(() => null), isChReadOnly: jest.fn(() => false) }));

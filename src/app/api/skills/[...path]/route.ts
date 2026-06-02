@@ -4,7 +4,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from "fs";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import { resolveSkillDirUnderRoot } from "@/lib/path-security";
-import { parseSkillFrontmatter } from "@/lib/skills-repository";
+import { parseSkillFrontmatter, stripSkillFrontmatter } from "@/lib/skills-repository";
 import { requireAuth } from "@/lib/api-auth";
 
 export async function GET(
@@ -43,9 +43,8 @@ export async function GET(
       category: fm.category,
     };
 
-    // Strip frontmatter from body — mirrors the logic used by skills-repository.ts
-    const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-    const body = fmMatch ? content.slice(fmMatch[0].length).trim() : content;
+    // Strip frontmatter from body using the canonical helper.
+    const body = stripSkillFrontmatter(content);
 
     // Find linked files (references/, templates/, scripts/, assets/)
     const linkedFiles: { name: string; path: string; size: number }[] = [];

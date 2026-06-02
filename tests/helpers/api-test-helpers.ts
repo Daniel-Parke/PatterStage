@@ -102,9 +102,14 @@ export function setupRouteMocks() {
   jest.mock("@/lib/api-auth", () => ({
     requireMcApiKey: jest.fn(() => null),
     requireChApiKey: jest.fn(() => null),
+    requireAuth: jest.fn(() => null),
     requireNotReadOnly: jest.fn(() => null),
     requireSignedRequest: jest.fn(() => null),
     isChReadOnly: jest.fn(() => false),
+  }));
+
+  jest.mock("@/lib/parse-json-body", () => ({
+    parseJsonBody: jest.fn(async () => ({})),
   }));
 
   jest.mock("@/lib/audit-log", () => ({

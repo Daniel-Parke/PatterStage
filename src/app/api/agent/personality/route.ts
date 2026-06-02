@@ -2,10 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { updateAgentRoot } from "@/lib/agent-root-repository";
-import { getProfile, updateProfileContent } from "@/lib/profiles-repository";
-import { pushProfileToHermes, pushRootToHermes } from "@/lib/hermes-profile-sync";
+import { applyProfileOrRootPatch, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
 import { resolveSafeProfileName } from "@/lib/path-security";
 
 export async function PUT(request: NextRequest) {
@@ -14,9 +13,10 @@ export async function PUT(request: NextRequest) {
 
   try {
     ensureDb();
-    const body = (await request.json()) as Record<string, unknown>;
-    const personality = typeof body.personality === "string" ? body.personality : "";
-    const profile = typeof body.profile === "string" ? body.profile : "default";
+    const bodyResult = await parseJsonBody(request);
+    if (bodyResult instanceof NextResponse) return bodyResult;
+    const personality = typeof bodyResult.personality === "string" ? bodyResult.personality : "";
+    const profile = typeof bodyResult.profile === "string" ? bodyResult.profile : "default";
 
     if (!personality) {
       return NextResponse.json({ error: "Personality is required" }, { status: 400 });
@@ -27,27 +27,20 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: prof.error }, { status: 400 });
     }
 
-    if (prof.profile === "default") {
-      updateAgentRoot({ personality });
-      const push = pushRootToHermes();
-      if (!push.success) {
-        return NextResponse.json({ error: push.error ?? "Push failed" }, { status: 500 });
-      }
-    }
-    else {
-      const row = getProfile(prof.profile);
-      if (!row) {
-        return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-      }
-      updateProfileContent(prof.profile, { personality });
-      const push = pushProfileToHermes(prof.profile);
-      if (!push.success) {
-        return NextResponse.json({ error: push.error ?? "Push failed" }, { status: 500 });
-      }
-    }
+    // applyProfileOrRootPatch handles default-vs-non-default dispatch,
+    // 404 on missing profile, and 500 on push failure — was previously
+    // a 16-line if/else in this handler.
+    const result = applyProfileOrRootPatch(
+      prof.profile,
+      { personality },
+      { personality },
+    );
+    const err = toPatchResponse(result, "Failed to sync personality to Hermes");
+    if (err) return err;
+    if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
 
     return NextResponse.json({
-      data: { success: true, profile: prof.profile, personality },
+      data: { success: true, profile: result.profile, personality },
     });
   }
   catch (error) {

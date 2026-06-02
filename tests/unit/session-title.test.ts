@@ -13,6 +13,7 @@
 import {
   formatSessionTitle,
   cronJobIdFromSessionId,
+  parseCronSessionId,
   type CronJobEntry,
   type TitleInput,
 } from "@/lib/session-title";
@@ -129,5 +130,39 @@ describe("cronJobIdFromSessionId", () => {
   it("returns null when the cron_ prefix has no underscore-separated job id", () => {
     expect(cronJobIdFromSessionId("cron_")).toBeNull();
     expect(cronJobIdFromSessionId("cron_onlyonesegment")).toBeNull();
+  });
+});
+
+describe("parseCronSessionId", () => {
+  it("extracts the job id and remaining date+time segments", () => {
+    expect(parseCronSessionId("cron_22c05492-ee7a-4066-9193-de91c01b35c4_20260601_185050")).toEqual({
+      jobId: "22c05492-ee7a-4066-9193-de91c01b35c4",
+      rest: ["20260601", "185050"],
+    });
+  });
+
+  it("preserves any extra underscore-separated segments in rest", () => {
+    // If Hermes ever adds a 5th segment, parseCronSessionId must not
+    // silently drop it — the sync loop in session-repository.ts joins
+    // rest with a space when building the "Cron: <name> — ..." title.
+    expect(parseCronSessionId("cron_jobid_date_time_extra")).toEqual({
+      jobId: "jobid",
+      rest: ["date", "time", "extra"],
+    });
+  });
+
+  it("returns null when the id does not start with cron_", () => {
+    expect(parseCronSessionId("cli_jobid_date_time")).toBeNull();
+    expect(parseCronSessionId("")).toBeNull();
+  });
+
+  it("returns null when the id has only the job id and no date/time", () => {
+    // cron_<jobid> has just one segment after the prefix — no date+time to parse.
+    expect(parseCronSessionId("cron_onlyonesegment")).toBeNull();
+  });
+
+  it("returns null when the id has only a job id and a trailing underscore", () => {
+    // rest is [""] which has length 1 (not 2), so the date+time gate fails.
+    expect(parseCronSessionId("cron_jobid_")).toBeNull();
   });
 });

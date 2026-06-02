@@ -2,16 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { getAgentRoot, updateAgentRoot } from "@/lib/agent-root-repository";
-import { listProfiles, updateProfileContent } from "@/lib/profiles-repository";
-import { pushProfileToHermes, pushRootToHermes } from "@/lib/hermes-profile-sync";
+import { getAgentRoot } from "@/lib/agent-root-repository";
+import { listProfiles } from "@/lib/profiles-repository";
+import { applyProfileOrRootPatch, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
 import { resolveSafeProfileName } from "@/lib/path-security";
 
 /** Shared upsert logic used by both POST (create) and PUT (update). */
 async function upsertPersonality(request: NextRequest) {
   ensureDb();
-  const body = (await request.json()) as Record<string, unknown>;
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+  const body = bodyResult;
   const profile = typeof body.profile === "string" ? body.profile : "default";
   const prompt = typeof body.prompt === "string" ? body.prompt : "";
   if (!prompt.trim()) {
@@ -23,33 +26,29 @@ async function upsertPersonality(request: NextRequest) {
     return NextResponse.json({ error: resolved.error }, { status: 400 });
   }
 
-  try {
-    if (resolved.profile === "default") {
-      updateAgentRoot({ soulMd: prompt });
-      const push = pushRootToHermes();
-      if (!push.success) {
-        return NextResponse.json({ error: push.error ?? "Push failed" }, { status: 500 });
-      }
+  // applyProfileOrRootPatch handles default-vs-non-default dispatch,
+  // 404 on missing profile, and 500 on push failure — was previously
+  // a 16-line if/else here.
+  const result = applyProfileOrRootPatch(
+    resolved.profile,
+    { soulMd: prompt },
+    { soulMd: prompt },
+  );
+  const err = toPatchResponse(result, "Failed to sync personality to Hermes");
+  if (err) {
+    if (!result.ok && result.reason === "push-failed") {
+      logApiError(
+        resolved.profile === "default" ? "pushRootToHermes" : "pushProfileToHermes",
+        `personality push for ${resolved.profile}`,
+        new Error(result.error),
+      );
     }
-    else {
-      const updated = updateProfileContent(resolved.profile, { soulMd: prompt });
-      if (!updated) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-      const push = pushProfileToHermes(resolved.profile);
-      if (!push.success) {
-        return NextResponse.json({ error: push.error ?? "Push failed" }, { status: 500 });
-      }
-    }
-  } catch (pushErr) {
-    logApiError(
-      resolved.profile === "default" ? "pushRootToHermes" : "pushProfileToHermes",
-      `personality push for ${resolved.profile}`,
-      pushErr,
-    );
-    return NextResponse.json({ error: "Failed to sync personality to Hermes" }, { status: 500 });
+    return err;
   }
+  if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
 
   return NextResponse.json({
-    data: { success: true, name: resolved.profile, prompt, source: "SOUL.md" },
+    data: { success: true, name: result.profile, prompt, source: "SOUL.md" },
   });
 }
 
