@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { badRequest } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import type { ApiResponse } from "@/types/hermes";
 import {
@@ -242,13 +243,13 @@ export async function GET(request: NextRequest) {
         break;
       case "recall":
         if (!query) {
-          return NextResponse.json({ error: "query is required for recall" }, { status: 400 });
+          return badRequest("query is required for recall");
         }
         result = await handleRecall(bank, query);
         break;
       case "reflect":
         if (!query) {
-          return NextResponse.json({ error: "query is required for reflect" }, { status: 400 });
+          return badRequest("query is required for reflect");
         }
         result = await handleReflect(bank, query, budget);
         break;
@@ -265,7 +266,7 @@ export async function GET(request: NextRequest) {
         result = await handleCount(bank);
         break;
       default:
-        return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
+        return badRequest(`Unknown action: ${action}`);
     }
 
     return NextResponse.json<ApiResponse<Record<string, unknown>>>({ data: result });
@@ -322,7 +323,7 @@ export async function POST(request: NextRequest) {
       case "retain": {
         const { content, tags } = body;
         if (!content || typeof content !== "string" || content.trim().length === 0) {
-          return NextResponse.json({ error: "Content is required" }, { status: 400 });
+          return badRequest("Content is required");
         }
         result = await handleRetain(bank, content.trim(), tags);
         break;
@@ -330,7 +331,7 @@ export async function POST(request: NextRequest) {
       case "create-directive": {
         const { name, content: dirContent, priority, tags } = body;
         if (!name || !dirContent) {
-          return NextResponse.json({ error: "name and content are required" }, { status: 400 });
+          return badRequest("name and content are required");
         }
         result = await handleCreateDirective(bank, name, dirContent, priority, tags);
         break;
@@ -338,7 +339,7 @@ export async function POST(request: NextRequest) {
       case "create-model": {
         const { name, query: mQuery, tags } = body;
         if (!name || !mQuery) {
-          return NextResponse.json({ error: "name and query are required" }, { status: 400 });
+          return badRequest("name and query are required");
         }
         result = await handleCreateMentalModel(bank, name, mQuery, tags);
         break;
@@ -346,7 +347,7 @@ export async function POST(request: NextRequest) {
       case "update-directive": {
         const { id, name, content: uContent, priority, is_active, tags } = body;
         if (!id) {
-          return NextResponse.json({ error: "id is required" }, { status: 400 });
+          return badRequest("id is required");
         }
         result = await handleUpdateDirective(bank, id, { name, content: uContent, priority, is_active, tags });
         break;
@@ -354,7 +355,7 @@ export async function POST(request: NextRequest) {
       case "update-model": {
         const { id, name, query: umQuery, tags } = body;
         if (!id) {
-          return NextResponse.json({ error: "id is required" }, { status: 400 });
+          return badRequest("id is required");
         }
         result = await handleUpdateMentalModel(bank, id, { name, query: umQuery, tags });
         break;
@@ -362,13 +363,13 @@ export async function POST(request: NextRequest) {
       case "refresh-model": {
         const { id } = body;
         if (!id) {
-          return NextResponse.json({ error: "id is required" }, { status: 400 });
+          return badRequest("id is required");
         }
         result = await handleRefreshMentalModel(bank, id);
         break;
       }
       default:
-        return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
+        return badRequest(`Unknown action: ${action}`);
     }
 
     return NextResponse.json<ApiResponse<Record<string, unknown>>>({ data: result });
@@ -402,7 +403,7 @@ export async function DELETE(request: NextRequest) {
     };
 
     if (!id || !type) {
-      return NextResponse.json({ error: "type and id are required" }, { status: 400 });
+      return badRequest("type and id are required");
     }
 
     let result: Record<string, unknown>;

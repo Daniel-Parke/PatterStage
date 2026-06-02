@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { badRequest } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import {
   listSessions,
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest) {
     // action=create — used by dispatch pipeline to pre-register a session
     if (body.action === "create") {
       if (!body.source) {
-        return NextResponse.json({ error: "source is required" }, { status: 400 });
+        return badRequest("source is required");
       }
       const session = createSession({
         agentType: body.agentType ?? "hermes",
@@ -181,7 +182,7 @@ export async function POST(request: NextRequest) {
     // action=update — used by dispatch pipeline on mission complete/fail
     if (body.action === "update") {
       if (!body.id) {
-        return NextResponse.json({ error: "id is required" }, { status: 400 });
+        return badRequest("id is required");
       }
       const session = updateSession(body.id, {
         endedAt: body.endedAt,
@@ -195,7 +196,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ data: { session } });
     }
 
-    return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+    return badRequest("Unknown action");
   } catch (error) {
     logApiError("POST /api/sessions", "session action", error);
     return NextResponse.json({ error: "Failed to process session action" }, { status: 500 });
