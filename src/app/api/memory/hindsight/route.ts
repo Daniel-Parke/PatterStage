@@ -20,6 +20,27 @@ import {
   normalizeTags,
 } from "@/lib/hindsight-bridge";
 
+// ── Connection-error detection ─────────────────────────────────
+
+/**
+ * Heuristic for "is this a connection-level failure?" — used to
+ * downgrade the catch-branch response status from 500 to 503 (the
+ * Hindsight server isn't responding, so it's not really a code bug).
+ * The original `requestWithTimeout` error message already includes
+ * the upstream status + body, so the match must look at substrings
+ * of `error.message`, not at `error.name` or a typed `code` field.
+ */
+export function isHindsightConnectionError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const msg = error.message;
+  return (
+    msg.includes("connect") ||
+    msg.includes("ECONNREFUSED") ||
+    msg.includes("refused") ||
+    msg.includes("timed out")
+  );
+}
+
 // ── Constants ────────────────────────────────────────────────
 
 const HINDSIGHT_BASE_URL = "http://localhost:9177";
@@ -272,12 +293,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json<ApiResponse<Record<string, unknown>>>({ data: result });
   } catch (error) {
     logApiError("GET /api/memory/hindsight", `action=${action}`, error);
-    const isConnectionError =
-      error instanceof Error &&
-      (error.message.includes("connect") ||
-       error.message.includes("ECONNREFUSED") ||
-       error.message.includes("refused") ||
-       error.message.includes("timed out"));
     return NextResponse.json(
       {
         data: {
@@ -286,7 +301,7 @@ export async function GET(request: NextRequest) {
           memories: [],
         },
       },
-      { status: isConnectionError ? 503 : 500 },
+      { status: isHindsightConnectionError(error) ? 503 : 500 },
     );
   }
 }

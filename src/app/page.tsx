@@ -253,16 +253,16 @@ export default function Dashboard() {
       });
       if (!ok) {
         showToast(error || "Failed to update cron schedule", "error");
-        // Revoke optimistic update on failure
-        void refreshMonitor();
         return;
       }
       showToast("Schedule updated", "success");
     } catch {
       showToast("Failed to update cron schedule", "error");
-      // Revoke optimistic update on failure
-      void refreshMonitor();
     } finally {
+      // Revoke optimistic update on failure; refresh on success. The
+      // finally block covers all paths (success, !ok return, thrown),
+      // so no inline refreshMonitor() is needed in the success/catch
+      // branches above.
       void refreshMonitor();
     }
   }, [data.monitor, showToast, refreshMonitor]);

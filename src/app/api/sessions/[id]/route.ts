@@ -16,6 +16,12 @@ import {
 } from "@/lib/sessions-api-guard";
 import { buildSessionData, findFileWithExtension } from "@/lib/session-detail";
 
+// ── Mission-output file extensions to try in preference order ───────────
+// Recurring mission dispatch writes a `.session` file (full transcript);
+// the older `.output.log` fallback is the legacy format. The session
+// detail view tries the newer format first, then falls back to the log.
+const MISSION_FILE_EXTENSIONS = [".session", ".output.log"] as const;
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -127,11 +133,15 @@ export async function GET(
     // No file on disk — try the DB record for mission-born sessions
     const dbSession = getSession(sanitizedId);
     if (dbSession && (dbSession.source === "mission" || dbSession.source === "cron")) {
-      // Check for a mission output file
+      // Check for a mission output file (try newer `.session` first,
+      // then legacy `.output.log`). findFileWithExtension collapses
+      // the 2x `existsSync` ladder into one call.
       if (dbSession.missionId) {
-        const missionFile = join(PATHS.missions, `${dbSession.missionId}.session`);
-        const missionLog = join(PATHS.missions, `${dbSession.missionId}.output.log`);
-        const sessionPath = existsSync(missionFile) ? missionFile : existsSync(missionLog) ? missionLog : null;
+        const sessionPath = findFileWithExtension(
+          PATHS.missions,
+          dbSession.missionId,
+          MISSION_FILE_EXTENSIONS,
+        );
         if (sessionPath) {
           const content = readFileSync(sessionPath, "utf-8");
           const lines = content.split("\n").filter((l: string) => l.trim());
