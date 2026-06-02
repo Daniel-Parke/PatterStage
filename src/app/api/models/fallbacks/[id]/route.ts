@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
 import { getFallbackEntry, updateFallbackEntry, deleteFallbackEntry, getFallbackConfig } from "@/lib/fallbacks-repository";
@@ -39,14 +40,10 @@ export async function PUT(
 
   const { id } = await params;
 
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
 
-  const parsed = fallbackEntryPutSchema.safeParse(raw);
+  const parsed = fallbackEntryPutSchema.safeParse(bodyResult);
   if (!parsed.success) {
     return zodErrorResponse(parsed.error);
   }

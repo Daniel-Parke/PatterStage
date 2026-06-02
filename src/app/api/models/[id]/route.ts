@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getModel, updateModel, deleteModel } from "@/lib/models-repository";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, modelPutSchema } from "@/lib/api-schemas";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
@@ -31,13 +32,11 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
   if (auth) return auth;
 
   const { id } = await ctx.params;
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-  const parsed = modelPutSchema.safeParse(raw);
+
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+
+  const parsed = modelPutSchema.safeParse(bodyResult);
   if (!parsed.success) return zodErrorResponse(parsed.error);
 
   try {

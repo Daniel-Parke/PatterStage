@@ -18,15 +18,17 @@ jest.mock("next/server", () => ({
     }
     async json() { return JSON.parse(this._body); }
   },
-  NextResponse: {
-    json: (data: unknown, init?: ResponseInit) => {
-      const status = init?.status ?? 200;
-      return {
-        ok: status >= 200 && status < 300,
-        status,
-        json: () => Promise.resolve(data),
-      };
-    },
+  NextResponse: class NextResponse {
+    status: number;
+    body: unknown;
+    constructor(status: number, body: unknown) {
+      this.status = status;
+      this.body = body;
+    }
+    async json() { return this.body; }
+    static json(data: unknown, init?: ResponseInit) {
+      return new NextResponse(init?.status ?? 200, data);
+    }
   },
 }));
 
@@ -35,7 +37,10 @@ jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
 jest.mock("@/lib/api-auth", () => ({
   requireAuth: jest.fn(() => null),
-  requireAuth: jest.fn(() => null),
+}));
+
+jest.mock("@/lib/parse-json-body", () => ({
+  parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
 }));
 
 jest.mock("@/lib/hermes-config-sync", () => ({

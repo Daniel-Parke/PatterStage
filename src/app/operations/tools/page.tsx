@@ -19,6 +19,7 @@ import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
 import { apiFetch } from "@/lib/api-fetch";
+import { profileSyncBody } from "@/lib/profile-sync-body";
 import type { PlatformToolsets } from "@/lib/profile-config-builder";
 import type { AgentProfile } from "@/types/hermes";
 import {
@@ -119,15 +120,12 @@ export default function ToolsPage() {
     }
   };
 
-  const profileSyncBody = () =>
-    selectedProfile === "default" ? { root: true } : { slug: selectedProfile };
-
   const pullFromHermes = async () => {
     setSyncing("pull");
     try {
       await apiFetch("/api/agent/profiles/sync/pull", {
         method: "POST",
-        body: JSON.stringify(profileSyncBody()),
+        body: JSON.stringify(profileSyncBody(selectedProfile)),
       });
       showToast("Pulled toolsets from Hermes", "success");
       await loadToolsets();
@@ -144,7 +142,7 @@ export default function ToolsPage() {
     try {
       await apiFetch("/api/agent/profiles/sync/push", {
         method: "POST",
-        body: JSON.stringify(profileSyncBody()),
+        body: JSON.stringify(profileSyncBody(selectedProfile)),
       });
       const pushMsg =
         selectedProfile === "default"

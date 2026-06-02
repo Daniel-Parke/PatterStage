@@ -87,23 +87,3 @@ export function requireDeployApiEnabled(): NextResponse | null {
 export function requireAuth(_request: NextRequest): NextResponse | null {
   return requireNotReadOnly();
 }
-
-/**
- * Safely parse the JSON body of a request.
- * Returns the parsed object on success, or a NextResponse (400) on parse failure.
- *
- * Usage:
- *   const body = await parseJsonBody(request);
- *   if (body instanceof NextResponse) return body;
- *   // body is now Record<string, unknown>
- */
-export async function parseJsonBody(
-  request: NextRequest,
-): Promise<Record<string, unknown> | NextResponse> {
-  try {
-    const body = await request.json();
-    return body as Record<string, unknown>;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-}

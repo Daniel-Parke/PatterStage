@@ -4,7 +4,8 @@ import { exec, execSync } from "child_process";
 import { join } from "path";
 
 import { logApiError } from "@/lib/api-logger";
-import { requireAuth, parseJsonBody, isChReadOnly } from "@/lib/api-auth";
+import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { toError } from "@/lib/api-fetch";
 import { crontabLineUsesScriptsDir } from "@/lib/hardware-cron";
 import { getChScriptsDir, getChHardwareLogDir, CH_DATA_DIR } from "@/lib/paths";

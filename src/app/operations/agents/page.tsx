@@ -16,6 +16,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import type { AgentProfile, ProfileFile } from "@/types/hermes";
 import { apiFetch } from "@/lib/api-fetch";
+import { profileSyncBody } from "@/lib/profile-sync-body";
 
 interface EditorState {
   profileId: string;
@@ -23,6 +24,13 @@ interface EditorState {
   fileName: string;
   content: string;
   original: string;
+}
+
+/** Build the file URL for /api/agent/files/[key], with profile query param when scoped. */
+function agentFileUrl(profileId: string, fileKey: string): string {
+  return profileId === "default"
+    ? `/api/agent/files/${fileKey}`
+    : `/api/agent/files/${fileKey}?profile=${profileId}`;
 }
 
 export default function BehaviourPage() {
@@ -47,9 +55,6 @@ export default function BehaviourPage() {
 
   const driftCount = profiles.filter((p) => p.syncStatus === "drift").length;
   const syncErrorCount = profiles.filter((p) => p.syncStatus === "error").length;
-
-  const profileSyncBody = (slug: string) =>
-    slug === "default" ? { root: true } : { slug };
 
   const doSync = async (
     url: string,
@@ -187,10 +192,7 @@ export default function BehaviourPage() {
 
   const openFile = async (profileId: string, file: ProfileFile) => {
     try {
-      const url = profileId === "default"
-        ? `/api/agent/files/${file.key}`
-        : `/api/agent/files/${file.key}?profile=${profileId}`;
-      const data = await apiFetch(url);
+      const data = await apiFetch(agentFileUrl(profileId, file.key));
       const content = data.data?.content || "";
       setEditor({
         profileId,
@@ -211,10 +213,7 @@ export default function BehaviourPage() {
     setSaving(true);
     setSaveStatus("saving");
     try {
-      const url = editor.profileId === "default"
-        ? `/api/agent/files/${editor.fileKey}`
-        : `/api/agent/files/${editor.fileKey}?profile=${editor.profileId}`;
-      await apiFetch(url, {
+      await apiFetch(agentFileUrl(editor.profileId, editor.fileKey), {
         method: "PUT",
         body: JSON.stringify({ content: editor.content, backup: true }),
       });
