@@ -59,8 +59,12 @@ export async function POST(request: NextRequest) {
     const parsed = parseHermesConfig();
 
     const details: Array<{ name: string; action: string; reason?: string }> = [];
+    // Track each upserted model's id by (provider::modelId) so the
+    // credential-link pass below doesn't have to re-query the DB.
+    const modelKeyToId = new Map<string, string>();
 
     for (const model of parsed.models) {
+      const key = `${model.provider}::${model.modelId}`;
       try {
         const result = upsertModel({
           name: model.name,
@@ -70,6 +74,7 @@ export async function POST(request: NextRequest) {
           contextLength: model.contextLength,
           defaultSlots: model.defaultSlots,
         });
+        modelKeyToId.set(key, result.id);
         details.push({
           name: model.name,
           action: result.action,
@@ -105,20 +110,19 @@ export async function POST(request: NextRequest) {
     if (Object.keys(providerToCredId).length > 0) {
       for (const entry of parsed.models) {
         const credId = providerToCredId[entry.provider];
-        if (credId) {
-          // Look up the just-upserted model by (provider, modelId) to get its id
-          // re-use upsertModel's matching: find model by provider + modelId
-          try {
-            const model = listModels().find(
-              (m) => m.provider === entry.provider && m.modelId === entry.modelId
-            );
-            if (model && model.credentialsId !== credId) {
-              updateModel(model.id, { credentialsId: credId });
-              credentialsLinked++;
-            }
-          } catch {
-            // best-effort
+        if (!credId) continue;
+        const modelId = modelKeyToId.get(`${entry.provider}::${entry.modelId}`);
+        if (!modelId) continue;
+        // Re-read the existing model once to check whether the link is
+        // already in place — avoids a redundant write + audit line.
+        try {
+          const model = listModels().find((m) => m.id === modelId);
+          if (model && model.credentialsId !== credId) {
+            updateModel(modelId, { credentialsId: credId });
+            credentialsLinked++;
           }
+        } catch {
+          // best-effort
         }
       }
     }
