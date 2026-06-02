@@ -1,192 +1,132 @@
-See latest commits on the branch for the full changelog. Summary: ongoing codebase tidy across Lists 1-4 — dead code removal, TypeScript fixes, error response consistency, and bug fixes.
+## Summary
 
-## Latest changes (this session)
+Session-58 of the recurring `mission/hermes-review-and-refactor` sweep. List 2 (Cron, Missions, Chat) picked at random.
 
-### Review findings (List 4: Models, HERMES.md, Environment, All Settings) — 2026-06-02 (session 44)
+### What changed
 
-This session picked List 4 (the last of the four lists) and focused on the
-`/config/*` family: the section editor, the index page, the seed page, the
-file-section → file-key mapping, and the `/api/gateway/models` proxy.
+Extracted `buildCronUpdatePayload(updates)` from the cron PUT handler's 11-branch conditional ladder + inline schedule parse + repeat normalize (~26 lines) into a single pure helper in `src/lib/cron-field-updates.ts`.
 
-**Bug fix — broken `saving` state in ConfigSectionPage:**
+- **Before:** 11 inline `if (updates.X !== undefined) updatePayload.X = ... as Y` statements, plus a 6-line schedule parse + 2-line repeat normalize, scattered across the route handler.
+- **After:** 3-line call site at the route handler. The helper returns a discriminated union: `{ ok: true, payload } | { ok: false, response: NextResponse }` so the 400-on-invalid-schedule path is folded into the same flow.
 
-The previous session landed half of an intended DRY refactor on
-`src/app/config/[section]/page.tsx`: it added a comment claiming
-"`saving` is derived as `saveStatus === 'saving'` so the two are never
-out of sync", but the `saving` state was *removed* while three
-references to `setSaving(...)` / `saving` were left in place:
+### Why this refactor (and not the obvious candidates)
 
-```ts
-// Line 101: setSaving(true);        ← broke (no setter)
-// Line 130: setSaving(false);       ← broke (no setter)  
-// Line 209: loading={saving}        ← broke (no value)
-```
+Three candidates were considered from the session-56 next-session block:
 
-`npx tsc --noEmit` flagged all three as TS2304 errors. The session
-*intent* was clearly to derive `saving` from `saveStatus` (matching
-the comment), so this session finished the job:
+1. `isChReadOnly()` consolidation (8 sites with BARE message + 1 with custom message) — **rejected** per session-51 carry-over audit. Migrating would silently change the user-visible error string to a canonical-with-hint version.
+2. `cron/route.ts` PUT field-update ladder extraction — **chosen**. Justified by session-57's \"extract for testability\" Rule-of-Three exception (13 conditional branches + schedule parse + repeat normalize).
+3. `badRequest()` migration in other lists — out of scope for List 2.
 
-```ts
-const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-const saving = saveStatus === "saving";  // ← derived; one source of truth
-```
+### Tests
 
-Net change on this file: -3 setSaving calls, +1 derivation, +0 net LOC.
-Build is now clean.
+13 new unit tests in `tests/unit/cron-field-updates.test.ts` lock all 11 field paths and 3 schedule/repeat branches in isolation. Caught a real test-fixture bug during development: `normalizeRepeat` boolean semantics are inverted (`true` = forever, `false` = run once) — the first test draft assumed the opposite.
 
-**Consolidation — `fileKeyForFilePath` helper in config-schema.ts:**
+### Files
 
-The same session that broke `saving` also extracted the file-section →
-file-key mapping to a helper:
+- `src/lib/cron-field-updates.ts` (NEW) — 76-line helper
+- `src/app/api/cron/route.ts` (MODIFIED) — 11-line ladder → 3-line call site
+- `tests/unit/cron-field-updates.test.ts` (NEW) — 13 tests
+- `references/control-hub-list2-session58-findings.md` (NEW) — session findings
 
-```ts
-// src/lib/config-schema.ts
-export function fileKeyForFilePath(filePath: string): string {
-  return filePath === ".env" ? "env" : "hermes";
-}
-```
+### Verification
 
-Adopted in both file-section branches of ConfigSectionPage
-(load and save). Centralises the mapping so the two file sections
-in the schema (`hermes_md`, `env`) and any future file sections
-don't drift from `behavior-files.ts`' key namespace.
+- All 990 unit tests pass (172 suites, +13 new)
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint` clean on touched files
+- `npm run build` passes
+- Byte-equivalence audit per session-51 lesson: all 13 field paths produce the same output as the inline form. No user-visible behaviour change.
 
-Added `tests/unit/config-schema-file-key.test.ts` with 3 tests
-covering `.env → env`, `HERMES.md → hermes`, and the fallback
-default for unknown paths.
+### Deferred to future sessions
 
-**Deduplication — `isBusy` derived once in seed page:**
+- `isChReadOnly()` consolidation (8 sites) — needs 3rd helper mode OR renamed 2-mode helper, deferred per session-51 over-engineering rejection
+- `buildCronCreatePayload` in cron POST — single callsite, no testability benefit until a sibling callsite appears
+- Chat page `setSessions` map pattern (3 sites) — divergent bodies, Rule of Three not met
 
-`src/app/config/seed/page.tsx` had `disabled={busy !== null}`
-repeated 6 times. Extracted to a single derived value:
+---
 
-```ts
-const [busy, setBusy] = useState<string | null>(null);
-const isBusy = busy !== null;
-// 6 call sites: disabled={isBusy}
-```
+## Session 59 — List 4 (Models, HERMES.md, Environment, All Settings)
 
-**Refactor — flatten nested if-else in /api/gateway/models:**
+Random pick: List 4. 4 small-bore refactors + 11 new unit tests, all byte-equivalent.
 
-The route had a 4-level nested `if (res.ok) { if (json.data) { if (Array.isArray) { if (models.length > 0) ... } } }`
-shape. Extracted the model-list normalisation into a small
-`parseModelList()` helper and flattened the handler to 2 nesting
-levels. Net change: -3 / +16 LOC (a few extra lines for the named
-helper, but the handler is now linear and the helper is unit-testable).
+### Refactor 1 — `badRequest()` migration in 7 sites
 
-**Deduplication — remove dead `key` prop on SectionCard's <Link>:**
+`badRequest(msg)` was adopted in sessions 48 + 56 across Lists 1 + 2. List 4 still had 7 inline `NextResponse.json({ error: msg }, { status: 400 })` blocks that the prior audits didn't cover. Migrated all 7 in:
 
-`src/app/config/page.tsx` SectionCard had `key={section.id}` on its
-root `<Link>` element, but Link is the component root (not in a
-`.map()`). The actual key is applied by the parent at
-`<SectionCard key={sectionId} ...>`. Dead prop removed.
+- `src/app/api/config/route.ts` (2 sites: missing section/values, values-not-object)
+- `src/app/api/agent/files/[key]/route.ts` (5 sites: 2 unknown-file-key + 2 resolved-error + 1 missing-content)
 
-**Lint cleanup — two pre-existing branch-level lint issues:**
+**Byte-equivalence audit per session-51 lesson:** all 7 sites preserve the same body + status. 404/500 responses stay inline (badRequest is 400-only per session-48 design). 0 user-visible behaviour changes.
 
-This branch (mission/hermes-review-and-refactor) had two lint issues
-introduced in the prior mission's commits (List 2/3 work that has
-not yet been merged to `dev`):
+**Audit recipe for future sessions:** `grep -rn "status: 400" src/app/api/ | grep -v "badRequest"` — currently 17 hits across skills, fs, mission-categories, logs, memory, stories. None on List 4 anymore.
 
-1. `src/app/api/templates/route.ts:225` — `const body = parsed as any;`
-   produced `@typescript-eslint/no-explicit-any` (introduced in commit
-   57e4fc4 "refactor(List2): adopt parseJsonBody in 3 more routes").
-   Tried typing as `Record<string, unknown>` — that broke 17 downstream
-   type checks because the per-branch validators use un-narrowed
-   `body.X` access patterns. Reverted the type change and added a
-   targeted `eslint-disable-next-line` with a one-line rationale
-   ("body is action-discriminated; per-branch validators narrow
-   the shape"). Deeper typing is a separate, larger refactor.
+### Refactor 2 — `parseEnvLine(line): EnvLine` helper
 
-2. `tests/unit/apply-profile-or-root-patch.test.ts:10` — unused
-   `import { NextResponse } from "next/server"` (introduced in commit
-   88134fc "refactor(List3): toPatchResponse helper"). Just removed
-   the import.
-
-Net change: -3 / +5 LOC across 5 route/lib files + tests, +33 LOC
-for the new test file. All 823 tests pass across 157 suites
-(805 → 823 = +18 across this session's commits). `npx tsc --noEmit`
-clean. `CI=true npx eslint .` clean (zero warnings). Production
-`pnpm build` succeeds. Live smoke test of `/api/config`,
-`/api/agent/files/hermes`, `/api/agent/files/env`,
-`/api/gateway/models`, `/config/models`, `/config/seed`,
-`/config/hermes_md`, `/config/env` — all return HTTP 200.
-
-**Consolidation — `toPatchResponse` helper collapses 6 patch-result switches:**
-
-The previous session (40) extracted `applyProfileOrRootPatch(slug, rootPatch, profilePatch)`
-which returns a `ProfileOrRootPatchResult` discriminated union
-(`{ok: true, profile}` | `{ok: false, reason: "not-found"}` | `{ok: false, reason: "push-failed", error}`).
-This session found that **all 6 call sites** of that helper (and its sibling
-`pushProfileOrRoot`) had the exact same 7-line if/else switch that turned
-the union's failure cases into a 404 / 500 NextResponse.
-
-Added `toPatchResponse(result, fallbackError)` to `src/lib/apply-profile-or-root-patch.ts`:
+The `.env` preview loop in `src/app/config/[section]/page.tsx` (the `sensitive: true` branch of the file editor) had a 4-branch inline parser with 2 string-regex operations. Extracted to `src/lib/env-line.ts` (47 LOC) as a 25-line discriminated-union helper.
 
 ```ts
-const result = applyProfileOrRootPatch(...);
-const err = toPatchResponse(result, "Failed to sync ...");
-if (err) return err;
-if (!result.ok) throw new Error("unreachable: ...");
+type EnvLine =
+  | { kind: "blank" }
+  | { kind: "comment"; raw: string }
+  | { kind: "invalid"; raw: string }
+  | { kind: "keyval"; key: string; value: string };
 ```
 
-The unreachable guard is required for TypeScript narrowing — the helper's
-return type is independent of the result, so TS can't narrow `result.ok`
-from `toPatchResponse`'s signature alone. The throw sits in the hot path
-but is never reached in practice (verified by tests).
+**11 new unit tests** in `tests/unit/env-line.test.ts` cover: blank (empty + whitespace), comment (with/without leading whitespace), invalid (no `=`), keyval (simple, whitespace-padded, empty value, embedded `=`, leading-whitespace-before-`=`), and quote-stripping (single + double quotes, matching python-dotenv behaviour).
 
-Migrated call sites:
-- `src/app/api/agent/personality/route.ts` (PUT)
-- `src/app/api/personalities/route.ts` (POST + PUT shared `upsertPersonality`)
-  — preserves the existing 500 log line on push-failed
-- `src/app/api/agent/profiles/[id]/toolsets/route.ts` (PUT)
-- `src/app/api/skills/[name]/toggle/route.ts` (PUT)
-- `src/app/api/agent/files/[key]/route.ts` (PUT — 2 sites: config + non-config branches)
+**Rule-of-Three exception applied:** helper has 1 call site (the page). Justification is **testability** (3+ conditional branches + 2+ regex ops) per the session-57 pattern. Promotion to `src/lib/` makes it adoptable by a future 2nd callsite without re-promotion.
 
-Added `tests/unit/apply-profile-or-root-patch.test.ts` with 4 tests covering
-all 4 union shapes (success, not-found, push-failed with error, push-failed
-without error fallback).
+**Visual fidelity pitfall caught:** the original parser was `line.indexOf("=") + 1` for the value — the helper preserves this exactly, including the behaviour that "  KEY  =value" has key="KEY" and value="  value" pre-trim. A naive "slice around first `=`" would have lost the whitespace-handling semantic. The unit test `treats leading-whitespace before '=' as part of the value` locks this.
 
-Net change: -66 / +69 LOC across 6 route/lib files, +53 LOC for the test file.
-All 805 tests pass across 156 suites. `npx tsc --noEmit` clean.
+### Refactor 3 — `confirmAndRun(message, target, mode, extra?)` helper
 
-
-### Review findings (List 3: Models, Agents, Skills, Tools, Personalities) — 2026-06-02 (session 43)
-
-**Consolidation — `toPatchResponse` helper collapses 6 patch-result switches:**
-
-The previous session (40) extracted `applyProfileOrRootPatch(slug, rootPatch, profilePatch)`
-which returns a `ProfileOrRootPatchResult` discriminated union
-(`{ok: true, profile}` | `{ok: false, reason: "not-found"}` | `{ok: false, reason: "push-failed", error}`).
-This session found that **all 6 call sites** of that helper (and its sibling
-`pushProfileOrRoot`) had the exact same 7-line if/else switch that turned
-the union's failure cases into a 404 / 500 NextResponse.
-
-Added `toPatchResponse(result, fallbackError)` to `src/lib/apply-profile-or-root-patch.ts`:
+The "Restore this agent" inline `if(window.confirm)+void runSeed` block in `src/app/config/seed/page.tsx` (line 184, inside a `.map()` callback) and 4 other `void runSeed(...)` callsites collapsed to a single 4-line helper:
 
 ```ts
-const result = applyProfileOrRootPatch(...);
-const err = toPatchResponse(result, "Failed to sync ...");
-if (err) return err;
-if (!result.ok) throw new Error("unreachable: ...");
+const confirmAndRun = (
+  message: string,
+  target: "all" | "root" | "profiles" | "templates" | "categories",
+  mode: "merge" | "replace",
+  extra?: { slug?: string; templateId?: string },
+) => {
+  if (message && !window.confirm(message)) return;
+  void runSeed(target, mode, extra);
+};
 ```
 
-The unreachable guard is required for TypeScript narrowing — the helper's
-return type is independent of the result, so TS can't narrow `result.ok`
-from `toPatchResponse`'s signature alone. The throw sits in the hot path
-but is never reached in practice (verified by tests).
+**5 callsite consolidations:** "Restore Bob only", "Restore this agent" (with confirm), "Restore" (template, in `.map()`), "Restore categories", "Merge missing defaults". All 5 previously had either inline `window.confirm + void runSeed` or bare `void runSeed`. Now they're all `confirmAndRun(message, target, mode, extra?)` calls.
 
-Migrated call sites:
-- `src/app/api/agent/personality/route.ts` (PUT)
-- `src/app/api/personalities/route.ts` (POST + PUT shared `upsertPersonality`)
-  — preserves the existing 500 log line on push-failed
-- `src/app/api/agent/profiles/[id]/toolsets/route.ts` (PUT)
-- `src/app/api/skills/[name]/toggle/route.ts` (PUT)
-- `src/app/api/agent/files/[key]/route.ts` (PUT — 2 sites: config + non-config branches)
+**Outlier kept inline:** the "Restore entire default catalog" button stays in `confirmReseedAll` because its 2-sentence message is too long to inline at the call site. **5/1 ratio doesn't justify a 2-mode helper** per session-51's "two modes max" rule. When the 2nd long-message button appears, extract a `confirmAndRunLong` companion or refactor `confirmReseedAll` to take a message parameter.
 
-Added `tests/unit/apply-profile-or-root-patch.test.ts` with 4 tests covering
-all 4 union shapes (success, not-found, push-failed with error, push-failed
-without error fallback).
+**Empty-string sentinel for "no confirm"** avoids a `string | null | undefined` union or a `boolean` flag. The `if (message && !window.confirm(message))` line is the only place the "empty = no confirm" semantic is encoded.
 
-Net change: -66 / +69 LOC across 6 route/lib files, +53 LOC for the test file.
-All 805 tests pass across 156 suites. `npx tsc --noEmit` clean.
+### Refactor 4 — Fix duplicate `requireAuth: jest.fn(() => null)` in `api-routes-complex.test.ts`
 
+The session-38 test-mock-pitfall family flagged duplicate keys in `jest.mock` factories as silent no-ops. This file had exactly that at lines 69-70. Removed the duplicate. Test count unchanged (the duplicate was always silent, no test depended on its presence).
+
+**Audit recipe:** `grep -nE "(\\.mockReturnValue\\(.*\\),\\s*$|\\w+:\\s*jest\\.fn.*,\\s*$)" tests/` — any factory with 2+ identical `mockXxx(...)` lines on adjacent lines is a candidate.
+
+### Files
+
+- `src/lib/env-line.ts` (NEW) — 47-line helper
+- `tests/unit/env-line.test.ts` (NEW) — 11 tests
+- `src/app/api/config/route.ts` (MODIFIED) — 2 sites migrated
+- `src/app/api/agent/files/[key]/route.ts` (MODIFIED) — 5 sites migrated
+- `src/app/config/[section]/page.tsx` (MODIFIED) — inline parser → helper call
+- `src/app/config/seed/page.tsx` (MODIFIED) — 5 callsites → confirmAndRun
+- `tests/unit/api-routes-complex.test.ts` (MODIFIED) — duplicate mock removed
+- `references/control-hub-list4-session59-findings.md` (NEW) — session findings
+
+### Verification
+
+- All 1001 unit tests pass (173 suites, +11 new from this session)
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint . --max-warnings 0` clean
+- `npm run build` passes
+- 0 user-visible behaviour changes across all 4 refactors (byte-equivalence audit per session 51)
+
+### Patterns / rules to take forward
+
+1. **List-aware audit recipe for `badRequest()` migration** — run `grep -rn "status: 400" src/app/api/ | grep -v "badRequest"` against the picked list each session. 17 sites remain across skills, fs, mission-categories, logs, memory, stories.
+2. **"Page-local helper promoted to `src/lib/` for testability" is a valid Rule-of-Three exception** — 3+ conditional branches + 2+ string-regex ops justify extraction even with 1 callsite.
+3. **"Outlier kept inline, common case unified"** — 5/1 ratio: extract the 5, leave the 1 alone. 4/2 would justify 2 helpers or inlining.
+4. **Empty-string sentinel over `boolean` flag or `null | string`** for "this param is optional with 2 distinct effects."
