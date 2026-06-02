@@ -44,6 +44,7 @@ import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
 import { safeApiCall } from "@/lib/api-fetch";
 import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
+import { unwrapPollPath } from "@/lib/dashboard-poll";
 
 // ── Typed response shapes for each API endpoint ─────────────
 interface TemplatesResponseData { templates: Array<{ id: string; name: string; icon: string; color: string; category: string; categoryId?: string; profile: string; description: string; isCustom?: boolean }>; }
@@ -307,25 +308,30 @@ export default function Dashboard() {
       {
         url: "/api/monitor",
         ms: 10000,
-        extract: (d: { data?: { data?: MonitorData } }) => {
-          if (!d?.data?.data) return null;
-          return { monitor: d.data.data };
+        extract: (d: { data?: unknown }) => {
+          const inner = unwrapPollPath(d, ["data"]);
+          if (!inner) return null;
+          // unwrapPollPath returns Record<string, unknown>; cast through
+          // unknown first to satisfy TS2352 (no sufficient overlap).
+          return { monitor: inner as unknown as MonitorData };
         },
       },
       {
         url: "/api/agents",
         ms: 15000,
-        extract: (d: { data?: { processes?: HermesProcess[] } }) => {
-          if (!d?.data) return null;
-          return { processes: d.data.processes ?? [] };
+        extract: (d: { data?: unknown }) => {
+          const inner = unwrapPollPath(d, []);
+          if (!inner) return null;
+          return { processes: (inner.processes as HermesProcess[] | undefined) ?? [] };
         },
       },
       {
         url: "/api/missions",
         ms: 15000,
-        extract: (d: { data?: { missions?: MissionBrief[] } }) => {
-          if (!d?.data) return null;
-          return { missions: d.data.missions ?? [] };
+        extract: (d: { data?: unknown }) => {
+          const inner = unwrapPollPath(d, []);
+          if (!inner) return null;
+          return { missions: (inner.missions as MissionBrief[] | undefined) ?? [] };
         },
       },
     ];

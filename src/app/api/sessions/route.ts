@@ -16,6 +16,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import {
   listSessions,
   getSession,
@@ -140,23 +141,25 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  try {
-    const body = await request.json() as {
-      action?: string;
-      id?: string;
-      agentType?: AgentType;
-      source?: SessionSource;
-      missionId?: string | null;
-      profileName?: string | null;
-      modelId?: string | null;
-      provider?: string | null;
-      title?: string | null;
-      status?: SessionStatus;
-      endedAt?: string | null;
-      exitCode?: number | null;
-      error?: string | null;
-    };
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+  const body = bodyResult as {
+    action?: string;
+    id?: string;
+    agentType?: AgentType;
+    source?: SessionSource;
+    missionId?: string | null;
+    profileName?: string | null;
+    modelId?: string | null;
+    provider?: string | null;
+    title?: string | null;
+    status?: SessionStatus;
+    endedAt?: string | null;
+    exitCode?: number | null;
+    error?: string | null;
+  };
 
+  try {
     // action=create — used by dispatch pipeline to pre-register a session
     if (body.action === "create") {
       if (!body.source) {

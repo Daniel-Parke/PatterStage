@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import type { ApiResponse } from "@/types/hermes";
 import {
   mapMemoryItem,
@@ -293,8 +294,25 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+
+  // Narrow the unknown body to the structural shape we expect from the
+  // client. parseJsonBody returns Record<string, unknown>; this cast
+  // is the documented pattern in src/lib/parse-json-body.ts.
+  const body = bodyResult as {
+    action?: string;
+    bank?: string;
+    content?: string;
+    tags?: string[];
+    name?: string;
+    priority?: number;
+    query?: string;
+    id?: string;
+    is_active?: string | boolean;
+  };
+
   try {
-    const body = await request.json();
     const action = body.action || "retain";
     const bank = body.bank || DEFAULT_BANK;
 
@@ -372,9 +390,16 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+  const body = bodyResult;
+
   try {
-    const body = await request.json();
-    const { type, id, bank = DEFAULT_BANK } = body;
+    const { type, id, bank = DEFAULT_BANK } = body as {
+      type?: string;
+      id?: string;
+      bank?: string;
+    };
 
     if (!id || !type) {
       return NextResponse.json({ error: "type and id are required" }, { status: 400 });

@@ -2,7 +2,119 @@ See latest commits on the branch for the full changelog. Summary: ongoing codeba
 
 ## Latest changes (this session)
 
-### Review findings (List 4: Models, HERMES.md, Environment, Settings) — 2026-05-28 (session 21)
+### Review findings (List 1: Dashboard, Sessions, Memory, Logs) — 2026-06-02 (session 37)
+
+**Bug fixes — three `request.json()` 500→400 fixes on List 1 routes:**
+
+The `request.json()` 500-instead-of-400 bug class was identified in session 33
+(commit `60f0733`) and audited again in sessions 35 and 36 — both audits
+covered the routes on their respective lists (Lists 2, 3, 4). **List 1 was
+never re-audited** for the same pattern, and three of its routes had the bug.
+
+Fixed routes:
+- `src/app/api/sessions/route.ts` POST — `await request.json()` inside the
+  main try/catch. Hoisted to `parseJsonBody` outside the try/catch so invalid
+  JSON returns 400 with `{ error: "Invalid JSON" }` instead of 500 with
+  `{ error: "Failed to process session action" }`.
+- `src/app/api/memory/hindsight/route.ts` POST — same pattern, fixed with
+  `parseJsonBody`. Body narrowed to a structural shape at destructure per the
+  pattern documented in `src/lib/parse-json-body.ts`.
+- `src/app/api/memory/hindsight/route.ts` DELETE — same pattern, fixed
+  identically.
+
+Why this is in scope (per the mission brief): invalid JSON returning 500
+instead of 400 is "a current feature is not working" — REST semantics require
+400 for malformed input, and the user-visible behaviour change is from
+"generic 500" to "clear 400 with field validation hint". See
+`references/json-parse-bug-class.md` for the bug class details.
+
+**Consolidation — `unwrapPollPath` helper for dashboard polling (deferred from session 34):**
+
+This was the one List 1 deferred item from session 34. The dashboard's
+`useEffect` declared three polling entries with near-duplicate `extract`
+functions, each with a different response shape (monitor: double-wrap,
+agents: single-wrap, missions: single-wrap).
+
+Extracted `unwrapPollPath(envelope, path)` to `src/lib/dashboard-poll.ts`.
+The helper walks a path of keys through `envelope.data` and returns the
+final object (or `null` if any segment is missing or non-object). The caller
+still does the typed cast and the fallback for the array endpoints.
+
+Why not collapse the three further? Each extractor's *fallback behaviour*
+differs — monitor returns `null` (no monitor = no stat row), agents and
+missions default the array to `[]` (empty list is still renderable). The
+path-walking is the only thing they share, and that's exactly what the
+helper does.
+
+**Test mock fix:**
+
+`tests/unit/hindsight-bridge-model-override.test.ts` mocked `NextResponse`
+as a plain object literal. The new `parseJsonBody` callsite in
+`/api/memory/hindsight` POST does `bodyResult instanceof NextResponse` to
+detect parse errors — but `instanceof` on a plain object literal throws
+`TypeError: Right-hand side of 'instanceof' is not callable`. Fixed by
+upgrading the mock to a real class with a static `.json()` factory.
+
+All 769 tests pass. TypeScript clean. ESLint clean. Build clean.
+
+## Prior changes (this PR)
+
+### Review findings (List 4: Models, HERMES.md, Environment, Settings) — 2026-06-02 (session 36)
+
+**Critical runtime bug fixed — api/config 500→400:**
+- `src/app/api/config/route.ts` PUT called `request.json()` inside the main try/catch which returned 500 "Failed to update config"
+- The last list-4 route still using the old pattern after sessions 33 and 35 fixed `/api/personalities`, `/api/skills/[name]/toggle`, `/api/skills/[name]`, and `/api/orchestration/chat`
+- Fixed by hoisting `parseJsonBody` out of the try/catch. The body-shape validation (section/values/writable-section check) now runs OUTSIDE the try block too — only the I/O (filesystem read, YAML dump, write) is inside the try
+- 1 regression test added in `tests/unit/config-values-validation.test.ts` ("returns 400 (not 500) when request body is malformed JSON")
+
+**Code consolidation — `commitFallbackChange` helper:**
+- New `src/lib/fallback-sync-helpers.ts` consolidates the "sync to Hermes + append audit line" pair that was duplicated across 5 fallback routes
+- Each route's success path now reads `commitFallbackChange("fallback.toggle", entry.id)` instead of two duplicated lines
+- The 3 remaining fallback routes (`/import`, `/sync`, `/config`) are intentionally NOT migrated because they pass a different config object to the sync helper or use the return value
+
+**`maskKeyHint` dedup:**
+- Inline copies of `maskKeyHint` (or any other pure helper) should be replaced with the helper call
+- Found one in `src/app/config/[section]/page.tsx` .env preview that inlined the same `slice(0,4) + "..." + slice(-4)` algorithm
+- Displayed format is byte-identical when the helper is called instead, and now there's exactly one place to update the masking policy
+
+All 754 tests pass. Build clean.
+
+### Review findings (List 2: Cron, Missions, Chat) — 2026-06-02 (session 35, round 2)
+
+**Pattern 9c — JSX IIFE config-builder → ternary at the call site:**
+- `tabConfig` IIFE in `cron/page.tsx` replaced with a ternary `<CronTabContent>` invocation. Net −3 LOC, no logic change.
+
+**Pattern 9d — Config-record-driven banner component for 2-4 near-identical banners:**
+- `GatewayBanner` driven by `Record<Status, Copy>` with `{code}…{/code}` inline-tokens. Two near-identical banner blocks (gateway connected/error) collapsed.
+
+**Pattern 9e — Paired-PUT-action helper for toggle-style handlers:**
+- `applyEnabledChange(id, enabled, state, auditAction)` deduplicating `pause`/`resume` in cron route handlers.
+
+**Pattern 20b — Partial-clear helper extraction:**
+- `clearMissionFormFields` extracted from `resetForm` and `handleCreateNewTemplate` in missions page. Only the *shared* setState calls go in the helper, divergent ones stay at the call site.
+
+**Pitfall:** when extracting a shared helper from inside an existing `useCallback` body, every caller must add the new helper to its `useCallback` deps array — the linter catches this for `useCallback` helpers but not for module-level ones.
+
+All 754 tests pass. Build clean.
+
+### Review findings (List 1: Dashboard, Sessions, Memory, Logs) — 2026-06-02 (session 34)
+
+**`resolveLogFilePath` helper extracted to `src/lib/log-files.ts` (FIXED + unit tested)**
+- The `/api/logs` route had a 12-line copy-pasted chain repeated **twice** (GET + DELETE)
+- Discriminated union: `{ ok: true, safeName, absolutePath } | { ok: false, reason: "invalid-name" | "invalid-path" }`
+- Net: −16 LOC from the route, and the two HTTP status codes are now derived from a single source of truth
+
+**`injectMissingTimestamps` helper extracted to `src/lib/log-line-format.ts` (FIXED + unit tested)**
+- The GET handler had a 15-line inline `.map()` block that did timestamp-prefix injection on lines without a parseable timestamp
+- Delegates timestamp detection to `parseLogLine().timestamp !== null`, so the two stay in lockstep
+- Round-trip test asserts that the consumer of the output (`parseLogLine`) will see the same timestamp the producer injected
+
+**`memory/route.ts` POST — rename `_request` → `request` (FIXED, consistency)**
+- The leading underscore convention is used in this codebase to signal "intentionally unused" — but the memory POST *does* call `requireAuth`, so the underscore was misleading
+
+All 745 tests pass. Build clean.
+
+### Review findings (List 1: Dashboard, Sessions, Memory, Logs) — 2026-05-28 (session 21)
 
 **Consolidation: zodErrorResponse standardization across all fallback routes**
 
@@ -66,5 +178,5 @@ All 630 tests pass. Build clean.
 - remove redundant useMemo wrapping messageSummary() in MessageBubble.tsx
 - Fix inconsistent error response format in /api/memory/hindsight
 - Auth gap fixes, session API improvements, dead code removal
-
+See individual commits on branch for full history.
 See individual commits on branch for full history.
