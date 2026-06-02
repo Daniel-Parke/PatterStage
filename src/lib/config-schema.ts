@@ -398,3 +398,13 @@ export const CONFIG_SECTIONS: Record<string, SectionDef> = {
 export function getSectionDef(sectionId: string): SectionDef | null {
   return CONFIG_SECTIONS[sectionId] || null;
 }
+
+/**
+ * Map a file-section's `filePath` (e.g. ".env") to the file key used by
+ * /api/agent/files/[key] (e.g. "env"). Centralised so the two file
+ * sections in this schema (hermes_md, env) and any future file sections
+ * don't drift from the behavior-files module's key namespace.
+ */
+export function fileKeyForFilePath(filePath: string): string {
+  return filePath === ".env" ? "env" : "hermes";
+}

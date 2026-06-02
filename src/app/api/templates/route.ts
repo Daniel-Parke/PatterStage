@@ -222,6 +222,7 @@ export async function POST(request: NextRequest) {
     // template fields.
     const parsed = await parseJsonBody(request);
     if (parsed instanceof NextResponse) return parsed;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- body is action-discriminated; per-branch validators narrow the shape
     const body = parsed as any;
     const { action } = body;
 

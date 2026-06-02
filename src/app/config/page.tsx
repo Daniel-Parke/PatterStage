@@ -72,7 +72,6 @@ function SectionCard({
 
   return (
     <Link
-      key={section.id}
       href={`/config/${section.id}`}
       className={`group rounded-xl border bg-dark-900/50 p-5 transition-all ${colorBorderMap[section.color]}`}
     >

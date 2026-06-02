@@ -7,8 +7,6 @@
 // 500 on push-failed). Six call sites across the agent / skills /
 // personalities / files routes have been collapsed onto this helper.
 
-import { NextResponse } from "next/server";
-
 import {
   toPatchResponse,
   type ProfileOrRootPatchResult,

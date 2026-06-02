@@ -26,6 +26,7 @@ interface CatalogTemplate {
 export default function ConfigSeedPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  const isBusy = busy !== null;
   const [error, setError] = useState<string | null>(null);
   const [state, setState] = useState<SeedState | null>(null);
   const [profiles, setProfiles] = useState<AgentProfile[]>([]);
@@ -134,7 +135,7 @@ export default function ConfigSeedPage() {
               </p>
               <button
                 type="button"
-                disabled={busy !== null}
+                disabled={isBusy}
                 onClick={confirmReseedAll}
                 className="px-4 py-2 rounded-lg bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40 hover:bg-neon-cyan/30 font-mono text-sm disabled:opacity-50"
               >
@@ -142,7 +143,7 @@ export default function ConfigSeedPage() {
               </button>
               <button
                 type="button"
-                disabled={busy !== null}
+                disabled={isBusy}
                 onClick={() => void runSeed("root", "replace")}
                 className="ml-3 px-4 py-2 rounded-lg bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 font-mono text-sm disabled:opacity-50"
               >
@@ -178,7 +179,7 @@ export default function ConfigSeedPage() {
                     </div>
                     <button
                       type="button"
-                      disabled={busy !== null}
+                      disabled={isBusy}
                       onClick={() => {
                         if (
                           window.confirm(`Restore agent "${p.name}" from defaults?`)
@@ -209,7 +210,7 @@ export default function ConfigSeedPage() {
                     <span className="font-mono text-white/80">{t.name}</span>
                     <button
                       type="button"
-                      disabled={busy !== null}
+                      disabled={isBusy}
                       onClick={() => void runSeed("templates", "replace", { templateId: t.id })}
                       className="text-[10px] font-mono px-2 py-1 rounded border border-white/20 text-white/60 hover:text-neon-cyan disabled:opacity-50"
                     >
@@ -227,7 +228,7 @@ export default function ConfigSeedPage() {
               </h2>
               <button
                 type="button"
-                disabled={busy !== null}
+                disabled={isBusy}
                 onClick={() => void runSeed("categories", "replace")}
                 className="text-xs font-mono px-3 py-1.5 rounded border border-white/20 text-white/50 hover:text-white disabled:opacity-50 mr-2"
               >
@@ -235,7 +236,7 @@ export default function ConfigSeedPage() {
               </button>
               <button
                 type="button"
-                disabled={busy !== null}
+                disabled={isBusy}
                 onClick={() => void runSeed("all", "merge")}
                 className="text-xs font-mono px-3 py-1.5 rounded border border-white/20 text-white/50 hover:text-white disabled:opacity-50"
               >
