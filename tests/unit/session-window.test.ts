@@ -52,7 +52,12 @@ describe("countInWindow", () => {
   });
 
   it("uses Date.now() when no `now` is supplied (smoke test)", () => {
-    const sessions: SessionModified[] = [modifiedAgo(0)];
+    // Anchor the fixture to *now* (not FIXED_NOW) so the test stays
+    // deterministic regardless of when it runs. The "0 ms ago" session
+    // must be within ACTIVE_WINDOW_MS of Date.now() by definition.
+    const sessions: SessionModified[] = [
+      { modified: new Date(Date.now()).toISOString() },
+    ];
     expect(countInWindow(sessions, ACTIVE_WINDOW_MS)).toBe(1);
   });
 });

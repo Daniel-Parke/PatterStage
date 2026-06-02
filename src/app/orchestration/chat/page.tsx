@@ -98,13 +98,21 @@ export default function ChatPage() {
   }, [sessions]);
 
   // ── Restore per-session model when switching sessions ────────
+  // The previous dependency `[activeSessionId, activeSession]` re-fired this
+  // effect on EVERY session mutation (including message updates), because
+  // `activeSession` is a fresh object reference each time `sessions` changes.
+  // The effect is a no-op when the model is unchanged, but the call itself
+  // still ran setModel() on every streamed delta. Narrowing the dependency
+  // to the actual field we read (the model) keeps the call to once per
+  // session switch + once per explicit model change.
   const activeSession = sessions.find((s) => s.id === activeSessionId);
+  const activeSessionModel = activeSession?.model;
   const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);
   useEffect(() => {
-    if (activeSession) {
-      setModel(activeSession.model || CHAT_DEFAULT_MODEL);
+    if (activeSessionModel !== undefined) {
+      setModel(activeSessionModel || CHAT_DEFAULT_MODEL);
     }
-  }, [activeSessionId, activeSession]);
+  }, [activeSessionId, activeSessionModel]);
 
   // Auto-scroll on new messages (only when current session's messages change)
   useEffect(() => {
@@ -272,6 +280,9 @@ export default function ChatPage() {
   }, [showToast]);
 
   // ── Models for dropdown ────────────────────────────────────
+  // The `add` closure dedupes via `seen`, so the gateway loop doesn't
+  // need its own `id !== CHAT_DEFAULT_MODEL` guard — that was redundant
+  // (and silently relied on `seen` to do the work anyway).
   const mergedModels = useMemo(() => {
     const seen = new Set<string>();
     const merged: string[] = [];
@@ -282,9 +293,7 @@ export default function ChatPage() {
     };
     add(CHAT_DEFAULT_MODEL);
     for (const id of registryModelIds) add(id);
-    for (const id of gatewayModelIds) {
-      if (id !== CHAT_DEFAULT_MODEL) add(id);
-    }
+    for (const id of gatewayModelIds) add(id);
     return merged;
   }, [registryModelIds, gatewayModelIds]);
 
