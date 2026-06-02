@@ -15,9 +15,7 @@ import {
   writeManagedFileContent,
   type ManagedFileKey,
 } from "@/lib/agent-file-store";
-import { pushProfileToHermes, pushRootToHermes } from "@/lib/hermes-profile-sync";
-import { updateAgentRoot } from "@/lib/agent-root-repository";
-import { updateProfileContent } from "@/lib/profiles-repository";
+import { applyProfileOrRootPatch, pushProfileOrRoot } from "@/lib/apply-profile-or-root-patch";
 import {
   configYamlToColumnValues,
   platformToolsetsFromJson,
@@ -199,36 +197,48 @@ export async function PUT(
           normalizePlatformToolsets(platformToolsetsFromJson(cols.platformToolsetsJson)),
         );
         writeManagedFileContent(profileSlug, "config", cols.configYaml);
-        if (profileSlug === "default") {
-          updateAgentRoot({
-            personality: cols.personality,
-            disabledSkillsJson: cols.disabledSkillsJson,
-            platformToolsetsJson,
-            configYaml: cols.configYaml,
-          });
-        }
-        else {
-          updateProfileContent(profileSlug, {
-            personality: cols.personality,
-            disabledSkillsJson: cols.disabledSkillsJson,
-            platformToolsetsJson,
-            configYaml: cols.configYaml,
-          });
+        // applyProfileOrRootPatch handles default-vs-non-default
+        // dispatch + 404 on missing profile + 500 on push failure —
+        // replaces the if/else update block AND the separate push
+        // block below (2 places, 16 lines total).
+        const configPatch = {
+          personality: cols.personality,
+          disabledSkillsJson: cols.disabledSkillsJson,
+          platformToolsetsJson,
+          configYaml: cols.configYaml,
+        };
+        const result = applyProfileOrRootPatch(
+          profileSlug,
+          configPatch,
+          configPatch,
+        );
+        if (!result.ok) {
+          if (result.reason === "not-found") {
+            return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+          }
+          return NextResponse.json(
+            { error: result.error ?? "Failed to sync profile to Hermes" },
+            { status: 500 },
+          );
         }
       }
       else {
+        // Non-config managed file (SOUL.md, AGENTS.md, etc.) — write
+        // the column-free file body to the managed-files table, then
+        // push. pushProfileOrRoot handles default-vs-non-default
+        // dispatch + 404 + push-fail without doing a no-op DB write
+        // that would bump updated_at.
         writeManagedFileContent(profileSlug, key as ManagedFileKey, content);
-      }
-
-      const push =
-        profileSlug === "default"
-          ? pushRootToHermes()
-          : pushProfileToHermes(profileSlug);
-      if (!push.success) {
-        return NextResponse.json(
-          { error: push.error ?? "Failed to sync profile to Hermes" },
-          { status: 500 },
-        );
+        const result = pushProfileOrRoot(profileSlug);
+        if (!result.ok) {
+          if (result.reason === "not-found") {
+            return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+          }
+          return NextResponse.json(
+            { error: result.error ?? "Failed to sync profile to Hermes" },
+            { status: 500 },
+          );
+        }
       }
     }
     else {

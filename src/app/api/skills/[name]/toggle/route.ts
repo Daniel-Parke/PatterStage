@@ -4,13 +4,12 @@ import { logApiError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { getAgentRoot, updateAgentRoot } from "@/lib/agent-root-repository";
+import { getAgentRoot } from "@/lib/agent-root-repository";
 import {
   getDisabledSkills,
   getProfile,
-  setProfileDisabledSkills,
 } from "@/lib/profiles-repository";
-import { pushProfileToHermes, pushRootToHermes } from "@/lib/hermes-profile-sync";
+import { applyProfileOrRootPatch } from "@/lib/apply-profile-or-root-patch";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { serializeJsonArray } from "@/lib/profile-config-builder";
 import { getSkill } from "@/lib/skills-repository";
@@ -71,19 +70,24 @@ export async function PUT(
         ? currentDisabled
         : [...currentDisabled, name].sort();
 
-    if (profile === "default") {
-      updateAgentRoot({ disabledSkillsJson: serializeJsonArray(newDisabled) });
-      const push = pushRootToHermes();
-      if (!push.success) {
-        return NextResponse.json({ error: push.error ?? "Push failed" }, { status: 500 });
+    // applyProfileOrRootPatch handles default-vs-non-default dispatch
+    // + 500 on push failure. The pre-check above for "Profile not
+    // found" is preserved because getDisabledSkills would silently
+    // return [] for a missing profile — we want a real 404 instead.
+    const disabledSkillsJson = serializeJsonArray(newDisabled);
+    const result = applyProfileOrRootPatch(
+      profile,
+      { disabledSkillsJson },
+      { disabledSkillsJson },
+    );
+    if (!result.ok) {
+      if (result.reason === "not-found") {
+        return NextResponse.json({ error: "Profile not found" }, { status: 404 });
       }
-    }
-    else {
-      setProfileDisabledSkills(profile, newDisabled);
-      const push = pushProfileToHermes(profile);
-      if (!push.success) {
-        return NextResponse.json({ error: push.error ?? "Push failed" }, { status: 500 });
-      }
+      return NextResponse.json(
+        { error: result.error },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({

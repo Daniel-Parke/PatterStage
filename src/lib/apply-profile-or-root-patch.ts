@@ -81,3 +81,31 @@ export function applyProfileOrRootPatch(
   }
   return { ok: true, profile: slug };
 }
+
+/**
+ * Push-only variant: dispatch a Hermes push to the right sync function
+ * without writing to the DB. Use this when the route has already
+ * mutated a file on disk (or in the case of a managed non-column
+ * file, written via `writeManagedFileContent`) and just needs the
+ * current DB state mirrored to disk via the same push pipeline.
+ *
+ * Returns the same union as `applyProfileOrRootPatch` so callers can
+ * share a single 404/500 switch.
+ */
+export function pushProfileOrRoot(slug: string): ProfileOrRootPatchResult {
+  if (slug === "default") {
+    const push = pushRootToHermes();
+    if (!push.success) {
+      return { ok: false, reason: "push-failed", error: push.error ?? "Push failed" };
+    }
+    return { ok: true, profile: slug };
+  }
+  if (!getProfile(slug)) {
+    return { ok: false, reason: "not-found" };
+  }
+  const push = pushProfileToHermes(slug);
+  if (!push.success) {
+    return { ok: false, reason: "push-failed", error: push.error ?? "Push failed" };
+  }
+  return { ok: true, profile: slug };
+}

@@ -4,9 +4,8 @@ import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { updateAgentRoot } from "@/lib/agent-root-repository";
-import { getProfile, updateProfileContent, hydratePlatformToolsetsForSlug } from "@/lib/profiles-repository";
-import { pushProfileToHermes, pushRootToHermes } from "@/lib/hermes-profile-sync";
+import { applyProfileOrRootPatch } from "@/lib/apply-profile-or-root-patch";
+import { hydratePlatformToolsetsForSlug } from "@/lib/profiles-repository";
 import {
   normalizePlatformToolsetsFromInput,
   serializeJsonToolsets,
@@ -70,24 +69,26 @@ export async function PUT(
     const platformToolsets = normalizePlatformToolsetsFromInput(bodyResult.platformToolsets);
     const platformToolsetsJson = serializeJsonToolsets(platformToolsets);
 
-    if (prof.profile === "default") {
-      updateAgentRoot({ platformToolsetsJson });
-      const push = pushRootToHermes();
-      if (!push.success) {
-        return NextResponse.json({ error: push.error ?? "Push failed" }, { status: 500 });
+    // applyProfileOrRootPatch handles default-vs-non-default dispatch,
+    // 404 on missing profile, and 500 on push failure — was previously
+    // a 16-line if/else here.
+    const result = applyProfileOrRootPatch(
+      prof.profile,
+      { platformToolsetsJson },
+      { platformToolsetsJson },
+    );
+
+    if (!result.ok) {
+      if (result.reason === "not-found") {
+        return NextResponse.json({ error: "Profile not found" }, { status: 404 });
       }
-    }
-    else {
-      const row = getProfile(prof.profile);
-      if (!row) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-      updateProfileContent(prof.profile, { platformToolsetsJson });
-      const push = pushProfileToHermes(prof.profile);
-      if (!push.success) {
-        return NextResponse.json({ error: push.error ?? "Push failed" }, { status: 500 });
-      }
+      return NextResponse.json(
+        { error: result.error },
+        { status: 500 },
+      );
     }
 
-    return NextResponse.json({ data: { success: true, profile: prof.profile, platformToolsets } });
+    return NextResponse.json({ data: { success: true, profile: result.profile, platformToolsets } });
   }
   catch (error) {
     logApiError("PUT /api/agent/profiles/[id]/toolsets", "saving toolsets", error);
