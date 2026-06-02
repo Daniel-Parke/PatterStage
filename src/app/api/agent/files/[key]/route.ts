@@ -17,7 +17,7 @@ import {
   type ManagedFileKey,
 } from "@/lib/agent-file-store";
 import { applyProfileOrRootPatch, pushProfileOrRoot, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, notFound, serverError } from "@/lib/api-response";
 import {
   configYamlToColumnValues,
   platformToolsetsFromJson,
@@ -171,7 +171,7 @@ export async function GET(
   }
   catch (error) {
     logApiError("GET /api/agent/files/[key]", `reading ${resolved.path}`, error);
-    return NextResponse.json({ error: "Failed to read file" }, { status: 500 });
+    return serverError("Failed to read file");
   }
 }
 
@@ -207,7 +207,7 @@ export async function PUT(
     const profileSlug = prof.ok ? prof.profile : "default";
 
     if (profileSlug !== "default" && !getProfile(profileSlug) && MANAGED_KEYS.has(key)) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      return notFound("Profile not found");
     }
 
     const dir = resolved.path.substring(0, resolved.path.lastIndexOf("/"));
@@ -282,6 +282,6 @@ export async function PUT(
   }
   catch (error) {
     logApiError("PUT /api/agent/files/[key]", `writing ${resolved.path}`, error);
-    return NextResponse.json({ error: "Failed to write file" }, { status: 500 });
+    return serverError("Failed to write file");
   }
 }

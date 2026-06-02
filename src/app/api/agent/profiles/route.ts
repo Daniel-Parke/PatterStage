@@ -25,6 +25,7 @@ import {
 import { slugifyDisplayName } from "@/lib/profile-slug";
 import { buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
 import type { ApiResponse, AgentProfile, ProfileFile } from "@/types/hermes";
+import { badRequest, serverError } from "@/lib/api-response";
 
 const PROFILE_FILE_DEFS = [
   { key: "soul", name: "SOUL.md", getPath: (b: ReturnType<typeof buildProfileHermesPathBundle>) => b.soul },
@@ -128,7 +129,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logApiError("GET /api/agent/profiles", "listing profiles", error);
-    return NextResponse.json({ error: "Failed to list profiles" }, { status: 500 });
+    return serverError("Failed to list profiles");
   }
 }
 
@@ -147,17 +148,14 @@ export async function POST(request: NextRequest) {
     };
 
     if (!name || typeof name !== "string" || name.trim().length < 2) {
-      return NextResponse.json(
-        { error: "Name is required (min 2 characters)" },
-        { status: 400 },
-      );
+      return badRequest("Name is required (min 2 characters)");
     }
 
     const slug = slugifyDisplayName(name);
 
     const prof = resolveSafeProfileName(slug);
     if (!prof.ok) {
-      return NextResponse.json({ error: prof.error }, { status: 400 });
+      return badRequest(prof.error);
     }
 
     if (getProfile(slug)) {
@@ -197,10 +195,7 @@ export async function POST(request: NextRequest) {
 
     const push = pushProfileToHermes(slug);
     if (!push.success) {
-      return NextResponse.json(
-        { error: push.error ?? "Failed to sync profile to Hermes" },
-        { status: 500 },
-      );
+      return serverError(push.error ?? "Failed to sync profile to Hermes");
     }
 
     appendAuditLine({
@@ -214,6 +209,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logApiError("POST /api/agent/profiles", "creating profile", error);
-    return NextResponse.json({ error: "Failed to create profile" }, { status: 500 });
+    return serverError("Failed to create profile");
   }
 }

@@ -9,6 +9,7 @@ import { toggleFallbackEntry } from "@/lib/fallbacks-repository";
 import { fallbackToggleSchema } from "@/lib/fallback-config-schema";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
+import { notFound, serverError } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -25,12 +26,12 @@ export async function POST(request: NextRequest) {
   try {
     const entry = toggleFallbackEntry(parsed.data.id, parsed.data.enabled);
     if (!entry) {
-      return NextResponse.json({ error: "Fallback entry not found" }, { status: 404 });
+      return notFound("Fallback entry not found");
     }
     commitFallbackChange("fallback.toggle", entry.id);
     return NextResponse.json({ data: { entry } });
   } catch (error) {
     logApiError("POST /api/models/fallbacks/toggle", "toggling fallback", error);
-    return NextResponse.json({ error: "Failed to toggle fallback" }, { status: 500 });
+    return serverError("Failed to toggle fallback");
   }
 }

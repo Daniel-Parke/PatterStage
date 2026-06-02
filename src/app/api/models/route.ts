@@ -12,6 +12,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, modelPostSchema } from "@/lib/api-schemas";
+import { serverError } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
 export async function GET(request: NextRequest) {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: { models: listModels() } });
   } catch (error) {
     logApiError("GET /api/models", "listing models", error);
-    return NextResponse.json({ error: "Failed to list models" }, { status: 500 });
+    return serverError("Failed to list models");
   }
 }
 
@@ -58,6 +59,6 @@ export async function POST(request: NextRequest) {
       }
     }
     logApiError("POST /api/models", "creating model", error);
-    return NextResponse.json({ error: "Failed to create model" }, { status: 500 });
+    return serverError("Failed to create model");
   }
 }

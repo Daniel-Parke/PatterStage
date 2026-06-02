@@ -10,6 +10,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, setDefaultPutSchema } from "@/lib/api-schemas";
+import { notFound, serverError } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
 export async function GET(request: NextRequest) {
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: { defaults: getModelDefaults() } });
   } catch (error) {
     logApiError("GET /api/models/defaults", "reading defaults", error);
-    return NextResponse.json({ error: "Failed to read defaults" }, { status: 500 });
+    return serverError("Failed to read defaults");
   }
 }
 
@@ -48,9 +49,9 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ data: { defaults } });
   } catch (error) {
     if (error instanceof Error && /Model not found/.test(error.message)) {
-      return NextResponse.json({ error: error.message }, { status: 404 });
+      return notFound(error.message);
     }
     logApiError("PUT /api/models/defaults", "setting default", error);
-    return NextResponse.json({ error: "Failed to set default" }, { status: 500 });
+    return serverError("Failed to set default");
   }
 }

@@ -9,6 +9,7 @@ import { addFallbackEntry, getFallbackConfig, listFallbackChain } from "@/lib/fa
 import { fallbackInputSchema } from "@/lib/fallback-config-schema";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
+import { serverError } from "@/lib/api-response";
 
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: { entries: listFallbackChain(), config: getFallbackConfig() } });
   } catch (error) {
     logApiError("GET /api/models/fallbacks", "reading fallback chain", error);
-    return NextResponse.json({ error: "Failed to read fallback chain" }, { status: 500 });
+    return serverError("Failed to read fallback chain");
   }
 }
 
@@ -40,6 +41,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data: { entry } }, { status: 201 });
   } catch (error) {
     logApiError("POST /api/models/fallbacks", "adding fallback entry", error);
-    return NextResponse.json({ error: "Failed to add fallback entry" }, { status: 500 });
+    return serverError("Failed to add fallback entry");
   }
 }

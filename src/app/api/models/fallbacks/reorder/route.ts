@@ -10,6 +10,7 @@ import { fallbackReorderSchema } from "@/lib/fallback-config-schema";
 import { inTransaction } from "@/lib/db";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
+import { notFound, serverError } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -28,13 +29,13 @@ export async function POST(request: NextRequest) {
   try {
     const entry = getFallbackEntry(entryId);
     if (!entry) {
-      return NextResponse.json({ error: "Entry not found" }, { status: 404 });
+      return notFound("Entry not found");
     }
 
     const chain = listFallbackChain();
     const idx = chain.findIndex((e) => e.id === entryId);
     if (idx === -1) {
-      return NextResponse.json({ error: "Entry not in chain" }, { status: 404 });
+      return notFound("Entry not in chain");
     }
 
     const targetIdx = direction === "up" ? idx - 1 : idx + 1;
@@ -57,6 +58,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data: { fallbacks: refreshed } });
   } catch (error) {
     logApiError("POST /api/models/fallbacks/reorder", "reordering fallback", error);
-    return NextResponse.json({ error: "Failed to reorder fallbacks" }, { status: 500 });
+    return serverError("Failed to reorder fallbacks");
   }
 }

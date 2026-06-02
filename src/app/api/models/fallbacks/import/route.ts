@@ -18,6 +18,7 @@ import { parseFallbackAgentSettingsFromYaml } from "@/lib/fallback-config-yaml";
 import { upsertModel } from "@/lib/models-repository";
 import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { notFound, serverError } from "@/lib/api-response";
 
 interface ImportPreview {
   provider: string;
@@ -60,7 +61,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: { fallbacks: preview } });
   } catch (error) {
     logApiError("GET /api/models/fallbacks/import", "previewing import", error);
-    return NextResponse.json({ error: "Failed to preview import" }, { status: 500 });
+    return serverError("Failed to preview import");
   }
 }
 
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
   try {
     const paths = getActiveHermesPaths();
     if (!existsSync(paths.config)) {
-      return NextResponse.json({ error: "config.yaml not found" }, { status: 404 });
+      return notFound("config.yaml not found");
     }
 
     const rawContent = readFileSync(paths.config, "utf-8");
@@ -149,6 +150,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logApiError("POST /api/models/fallbacks/import", "importing fallbacks", error);
-    return NextResponse.json({ error: "Failed to import fallbacks" }, { status: 500 });
+    return serverError("Failed to import fallbacks");
   }
 }

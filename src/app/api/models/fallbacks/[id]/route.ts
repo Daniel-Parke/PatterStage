@@ -9,6 +9,7 @@ import { getFallbackEntry, updateFallbackEntry, deleteFallbackEntry } from "@/li
 import { fallbackEntryPutSchema } from "@/lib/fallback-config-schema";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
+import { notFound, serverError } from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
@@ -21,12 +22,12 @@ export async function GET(
   try {
     const entry = getFallbackEntry(id);
     if (!entry) {
-      return NextResponse.json({ error: "Fallback entry not found" }, { status: 404 });
+      return notFound("Fallback entry not found");
     }
     return NextResponse.json({ data: { fallback: entry } });
   } catch (error) {
     logApiError("GET /api/models/fallbacks/[id]", `reading ${id}`, error);
-    return NextResponse.json({ error: "Failed to read fallback" }, { status: 500 });
+    return serverError("Failed to read fallback");
   }
 }
 
@@ -50,14 +51,14 @@ export async function PUT(
   try {
     const updated = updateFallbackEntry(id, parsed.data);
     if (!updated) {
-      return NextResponse.json({ error: "Fallback entry not found" }, { status: 404 });
+      return notFound("Fallback entry not found");
     }
 
     commitFallbackChange("fallback.update", id);
     return NextResponse.json({ data: { fallback: updated } });
   } catch (error) {
     logApiError("PUT /api/models/fallbacks/[id]", `updating ${id}`, error);
-    return NextResponse.json({ error: "Failed to update fallback" }, { status: 500 });
+    return serverError("Failed to update fallback");
   }
 }
 
@@ -73,13 +74,13 @@ export async function DELETE(
   try {
     const deleted = deleteFallbackEntry(id);
     if (!deleted) {
-      return NextResponse.json({ error: "Fallback entry not found" }, { status: 404 });
+      return notFound("Fallback entry not found");
     }
 
     commitFallbackChange("fallback.delete", id);
     return NextResponse.json({ data: { deleted: true } });
   } catch (error) {
     logApiError("DELETE /api/models/fallbacks/[id]", `deleting ${id}`, error);
-    return NextResponse.json({ error: "Failed to delete fallback" }, { status: 500 });
+    return serverError("Failed to delete fallback");
   }
 }

@@ -8,6 +8,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { updateModel, listModels } from "@/lib/models-repository";
 import { readHermesConfigModels, type HermesConfigModelEntry } from "@/lib/hermes-config-sync";
+import { notFound } from "@/lib/api-response";
 
 
 interface Diff { field: string; before: unknown; after: unknown }
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
   if (targetModelId) {
     const dbModel = listModels().find((m) => m.id === targetModelId);
     if (!dbModel) {
-      return NextResponse.json({ error: "Model not found" }, { status: 404 });
+      return notFound("Model not found");
     }
 
     const key = `${dbModel.provider}::${dbModel.modelId}`;

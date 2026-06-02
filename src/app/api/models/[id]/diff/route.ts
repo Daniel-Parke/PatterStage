@@ -13,6 +13,7 @@ import { envVarForProvider, isHermesProvider } from "@/lib/hermes-providers";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { maskKeyHint } from "@/lib/secret-mask";
+import { notFound, serverError } from "@/lib/api-response";
 
 interface DiffEntry {
   id: string;
@@ -56,7 +57,7 @@ export async function POST(
   try {
     const model = getModelWithKey(id);
     if (!model) {
-      return NextResponse.json({ error: "Model not found" }, { status: 404 });
+      return notFound("Model not found");
     }
 
     const diffs: DiffEntry[] = [];
@@ -143,6 +144,6 @@ export async function POST(
     return NextResponse.json({ data: { diffs, modelName: model.name } });
   } catch (error) {
     logApiError("POST /api/models/[id]/diff", "computing diff", error);
-    return NextResponse.json({ error: "Failed to compute diff" }, { status: 500 });
+    return serverError("Failed to compute diff");
   }
 }

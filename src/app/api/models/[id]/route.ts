@@ -9,6 +9,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, modelPutSchema } from "@/lib/api-schemas";
+import { notFound, serverError } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
 interface Ctx {
@@ -19,11 +20,11 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
   try {
     const model = getModel(id);
-    if (!model) return NextResponse.json({ error: "Model not found" }, { status: 404 });
+    if (!model) return notFound("Model not found");
     return NextResponse.json({ data: { model } });
   } catch (error) {
     logApiError("GET /api/models/[id]", `id=${id}`, error);
-    return NextResponse.json({ error: "Failed to load model" }, { status: 500 });
+    return serverError("Failed to load model");
   }
 }
 
@@ -41,7 +42,7 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
 
   try {
     const updated = updateModel(id, parsed.data);
-    if (!updated) return NextResponse.json({ error: "Model not found" }, { status: 404 });
+    if (!updated) return notFound("Model not found");
     // Re-sync config.yaml whenever fields that propagate to Hermes change
     // or when default slots move.
     syncDefaultsToHermesConfig();
@@ -49,7 +50,7 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
     return NextResponse.json({ data: { model: updated } });
   } catch (error) {
     logApiError("PUT /api/models/[id]", `id=${id}`, error);
-    return NextResponse.json({ error: "Failed to update model" }, { status: 500 });
+    return serverError("Failed to update model");
   }
 }
 
@@ -60,12 +61,12 @@ export async function DELETE(request: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
   try {
     const ok = deleteModel(id);
-    if (!ok) return NextResponse.json({ error: "Model not found" }, { status: 404 });
+    if (!ok) return notFound("Model not found");
     syncDefaultsToHermesConfig();
     appendAuditLine({ action: "model.delete", resource: id, ok: true });
     return NextResponse.json({ data: { deleted: id } });
   } catch (error) {
     logApiError("DELETE /api/models/[id]", `id=${id}`, error);
-    return NextResponse.json({ error: "Failed to delete model" }, { status: 500 });
+    return serverError("Failed to delete model");
   }
 }

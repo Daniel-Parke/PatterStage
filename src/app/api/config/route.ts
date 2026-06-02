@@ -6,7 +6,7 @@ import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, serverError } from "@/lib/api-response";
 import { db } from "@/lib/db";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
@@ -124,10 +124,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: maskConfigSecrets(config) });
   } catch (error) {
     logApiError("GET /api/config", "reading config.yaml", error);
-    return NextResponse.json(
-      { error: "Failed to read config.yaml" },
-      { status: 500 }
-    );
+    return serverError("Failed to read config.yaml");
   }
 }
 
@@ -200,9 +197,6 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ data: { success: true, section, values } });
   } catch (error) {
     logApiError("PUT /api/config", "updating config", error);
-    return NextResponse.json(
-      { error: "Failed to update config" },
-      { status: 500 }
-    );
+    return serverError("Failed to update config");
   }
 }

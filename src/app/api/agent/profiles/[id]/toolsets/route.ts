@@ -15,6 +15,7 @@ import {
   unionToolsetsFromPlatforms,
 } from "@/lib/hermes-toolset-unify";
 import { resolveSafeProfileName } from "@/lib/path-security";
+import { badRequest, notFound, serverError } from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
@@ -25,13 +26,13 @@ export async function GET(
 
   const { id } = await params;
   const prof = resolveSafeProfileName(id);
-  if (!prof.ok) return NextResponse.json({ error: prof.error }, { status: 400 });
+  if (!prof.ok) return badRequest(prof.error);
 
   try {
     ensureDb();
     const hydrated = hydratePlatformToolsetsForSlug(prof.profile, { persist: true });
     if (!hydrated) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      return notFound("Profile not found");
     }
     const divergence = platformsDiffer(hydrated.toolsets);
     return NextResponse.json({
@@ -47,7 +48,7 @@ export async function GET(
   }
   catch (error) {
     logApiError("GET /api/agent/profiles/[id]/toolsets", "reading toolsets", error);
-    return NextResponse.json({ error: "Failed to read toolsets" }, { status: 500 });
+    return serverError("Failed to read toolsets");
   }
 }
 
@@ -60,7 +61,7 @@ export async function PUT(
 
   const { id } = await params;
   const prof = resolveSafeProfileName(id);
-  if (!prof.ok) return NextResponse.json({ error: prof.error }, { status: 400 });
+  if (!prof.ok) return badRequest(prof.error);
 
   try {
     ensureDb();
@@ -85,7 +86,7 @@ export async function PUT(
   }
   catch (error) {
     logApiError("PUT /api/agent/profiles/[id]/toolsets", "saving toolsets", error);
-    return NextResponse.json({ error: "Failed to save toolsets" }, { status: 500 });
+    return serverError("Failed to save toolsets");
   }
 }
 

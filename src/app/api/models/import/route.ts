@@ -18,6 +18,7 @@ import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { maskKeyHint } from "@/lib/secret-mask";
+import { serverError } from "@/lib/api-response";
 
 // GET /api/models/import — dry-run preview
 export async function GET(request: NextRequest) {
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logApiError("GET /api/models/import", "previewing Hermes import", error);
-    return NextResponse.json({ error: "Failed to preview import" }, { status: 500 });
+    return serverError("Failed to preview import");
   }
 }
 
@@ -154,6 +155,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logApiError("POST /api/models/import", "importing Hermes models", error);
-    return NextResponse.json({ error: "Failed to import models" }, { status: 500 });
+    return serverError("Failed to import models");
   }
 }
