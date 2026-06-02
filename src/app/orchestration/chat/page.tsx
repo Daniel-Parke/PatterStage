@@ -11,7 +11,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import {
   MessageCircle, Send, Plus, X, Download,
-  Bot, User, Loader2, AlertTriangle, Square,
+  Bot, User, Square,
 } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -35,6 +35,7 @@ import {
   streamChatResponse,
 } from "@/lib/chat-utils";
 import TypingIndicator from "@/components/chat/TypingIndicator";
+import GatewayBanner from "@/components/chat/GatewayBanner";
 import { useGatewayHealth } from "@/hooks/useGatewayHealth";
 
 // ── Page component ─────────────────────────────────────────────
@@ -407,38 +408,11 @@ export default function ChatPage() {
             {/* Gateway status banners — shown regardless of session state */}
             {!hasActiveSession && messages.length === 0 && (
               <>
-                {gatewayOnline === false && (
-                  <div className="w-full max-w-md mx-auto mb-6 p-4 bg-neon-red/10 border border-neon-red/20 rounded-lg text-left">
-                    <div className="flex items-center gap-2 text-neon-red mb-1">
-                      <AlertTriangle className="w-4 h-4" />
-                      <span className="text-sm font-semibold">Gateway Offline</span>
-                    </div>
-                    <p className="text-xs text-white/60">
-                      The Hermes Gateway (port 8642) is not responding.
-                      Start it with: <code className="text-neon-cyan">hermes gateway start</code>
-                    </p>
-                  </div>
-                )}
+                {gatewayOnline === false && <GatewayBanner status="offline" />}
                 {gatewayOnline !== false && agentDefaultModelSet === false && (
-                  <div className="w-full max-w-md mx-auto mb-6 p-4 bg-neon-orange/10 border border-neon-orange/20 rounded-lg text-left">
-                    <div className="flex items-center gap-2 text-neon-orange mb-1">
-                      <AlertTriangle className="w-4 h-4" />
-                      <span className="text-sm font-semibold">Model not ready for chat</span>
-                    </div>
-                    <p className="text-xs text-white/60">
-                      Set an agent default under Config → Models, push to Hermes (or Operations →
-                      Agents → Push Bob), or run <code className="text-neon-cyan">hermes model</code>.
-                      The gateway reads <code className="text-white/50">~/.hermes/config.yaml</code>{" "}
-                      model.default — the chat dropdown label alone does not change inference.
-                    </p>
-                  </div>
+                  <GatewayBanner status="model-missing" />
                 )}
-                {gatewayOnline === null && (
-                  <div className="flex items-center gap-2 mb-4 justify-center">
-                    <Loader2 className="w-3 h-3 text-white/30 animate-spin" />
-                    <span className="text-xs text-white/30">Checking gateway connection...</span>
-                  </div>
-                )}
+                {gatewayOnline === null && <GatewayBanner status="checking" />}
               </>
             )}
             {messages.length === 0 ? (

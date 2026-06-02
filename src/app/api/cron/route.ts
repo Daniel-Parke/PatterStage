@@ -67,6 +67,37 @@ function parseScheduleOrError(schedule: string): { ok: true; parsed: ReturnType<
   return { ok: true, parsed };
 }
 
+/**
+ * Apply an enabled/disabled toggle to a cron job and sync to Hermes.
+ * Shared between the `pause` and `resume` PUT branches, which differ only
+ * in the new (enabled, state) values and the audit action label.
+ */
+async function applyEnabledChange(
+  id: string,
+  enabled: boolean,
+  state: "paused" | "scheduled",
+  auditAction: "cron.pause" | "cron.resume",
+): Promise<NextResponse> {
+  const updated = updateCronJob(id, { enabled, state });
+  if (!updated) {
+    return NextResponse.json({ error: "Job not found after update" }, { status: 404 });
+  }
+  const pushResult = await pushJobToHermes(id);
+  appendAuditLine({
+    action: auditAction,
+    resource: id,
+    ok: pushResult.ok,
+    detail: pushResult.ok ? undefined : pushResult.error,
+  });
+  if (!pushResult.ok) {
+    return cronSyncFailureResponse(
+      `PUT /api/cron ${state === "paused" ? "pause" : "resume"}`,
+      pushResult,
+    );
+  }
+  return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
+}
+
 // ── Helpers ───────────────────────────────────────────────────
 
 function recordToApiJob(job: CronJobRecord) {
@@ -344,30 +375,12 @@ export async function PUT(request: NextRequest) {
 
     // ── Pause ─────────────────────────────────────────────────
     if (action === "pause") {
-      const updated = updateCronJob(id, { enabled: false, state: "paused" });
-      if (!updated) {
-        return NextResponse.json({ error: "Job not found after update" }, { status: 404 });
-      }
-      const pushResult = await pushJobToHermes(id);
-      appendAuditLine({ action: "cron.pause", resource: id, ok: pushResult.ok, detail: pushResult.ok ? undefined : pushResult.error });
-      if (!pushResult.ok) {
-        return cronSyncFailureResponse("PUT /api/cron pause", pushResult);
-      }
-      return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
+      return applyEnabledChange(id, false, "paused", "cron.pause");
     }
 
     // ── Resume ────────────────────────────────────────────────
     if (action === "resume") {
-      const updated = updateCronJob(id, { enabled: true, state: "scheduled" });
-      if (!updated) {
-        return NextResponse.json({ error: "Job not found after update" }, { status: 404 });
-      }
-      const pushResult = await pushJobToHermes(id);
-      appendAuditLine({ action: "cron.resume", resource: id, ok: pushResult.ok, detail: pushResult.ok ? undefined : pushResult.error });
-      if (!pushResult.ok) {
-        return cronSyncFailureResponse("PUT /api/cron resume", pushResult);
-      }
-      return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
+      return applyEnabledChange(id, true, "scheduled", "cron.resume");
     }
 
     // ── Run now ──────────────────────────────────────────────

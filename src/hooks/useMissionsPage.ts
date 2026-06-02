@@ -221,15 +221,16 @@ export function useMissionsPage() {
     ],
   );
 
-  const resetForm = useCallback(() => {
+  // Clears the mission-creation form fields shared between resetForm and
+  // handleCreateNewTemplate. Does NOT touch the dispatch-acknowledgement flag
+  // or the visibility of the create sheet — callers decide those.
+  const clearMissionFormFields = useCallback(() => {
     setNewName("");
     setNewInstruction("");
     setNewContext("");
     setNewGoals("");
     setNewOutputFormat("");
     setNewConstraints("");
-    setDispatchAcknowledged(false);
-    setNewDispatch("save");
     setNewModel("");
     setNewProvider("");
     setNewLocalDirs([]);
@@ -237,8 +238,14 @@ export function useMissionsPage() {
     setNewReferences([]);
     setNewSkills([]);
     setNewToolsets([]);
-    setShowCreate(false);
   }, []);
+
+  const resetForm = useCallback(() => {
+    clearMissionFormFields();
+    setDispatchAcknowledged(false);
+    setNewDispatch("save");
+    setShowCreate(false);
+  }, [clearMissionFormFields]);
 
   useEffect(() => {
     if (!newProfile) return;
@@ -793,19 +800,10 @@ export function useMissionsPage() {
     setTemplateDescription("");
     setTemplateIcon("Zap");
     setTemplateColor("cyan");
-    setNewInstruction("");
-    setNewContext("");
-    setNewGoals("");
-    setNewOutputFormat("");
-    setNewConstraints("");
-    setNewLocalDirs([]);
-    setLocalDirDraft({ path: "", branch: null });
-    setNewReferences([]);
-    setNewSkills([]);
-    setNewToolsets([]);
+    clearMissionFormFields();
     setShowTemplateManager(false);
     setShowTemplateEditor(true);
-  }, []);
+  }, [clearMissionFormFields]);
 
   const handleTemplateSave = useCallback(async () => {
     if (!templateName.trim()) return;

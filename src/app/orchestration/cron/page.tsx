@@ -295,70 +295,55 @@ export default function CronPage() {
       />
 
       <div className="px-6 py-6">
-        {(() => {
-          const tabConfig = activeTab === "agent"
-            ? {
-                isAgent: true as const,
-                jobs: agent.data?.jobs ?? [],
-                loading: agent.loading,
-                accentColor: "orange" as const,
-                icon: Clock,
-                title: "No cron jobs",
-                desc: "Create your first scheduled job",
-                searchPlaceholder: "Search agent jobs...",
-                createLabel: "Create Agent Job",
-                onCreate: () => setShowCreate(true),
-                onToggle: (id: string) => agent.handleToggle(id),
-                onDelete: (id: string) => agent.handleDelete(id),
-                onRun: (id: string) => agent.handleRun(id),
-                onEdit: (job: CronJob | SystemCronJob) => {
-                  // tabConfig is a discriminated union (isAgent) — agent tab always sees CronJob
-                  if ("command" in job) return; // unreachable on agent tab
-                  setEditingJob(job);
-                  setShowCreate(true);
-                },
-              }
-            : {
-                isAgent: false as const,
-                jobs: hardware.jobs,
-                loading: hardware.loading,
-                accentColor: "cyan" as const,
-                icon: Cpu,
-                title: "No system cron jobs",
-                desc: "Add a real system cron job",
-                searchPlaceholder: "Search system jobs...",
-                createLabel: "Create System Job",
-                onCreate: () => setShowHardwareCreate(true),
-                onToggle: (id: string) => hardware.handleToggle(id),
-                onDelete: (id: string) => hardware.handleDelete(id),
-                onRun: undefined,
-                onEdit: (job: CronJob | SystemCronJob) => {
-                  // tabConfig is a discriminated union (isAgent) — system tab always sees SystemCronJob
-                  if (!("command" in job)) return; // unreachable on system tab
-                  setEditingHardwareJob(job);
-                  setShowHardwareCreate(true);
-                },
-              };
-
-          return (
-            <CronTabContent
-              isAgent={tabConfig.isAgent}
-              jobs={tabConfig.jobs}
-              loading={tabConfig.loading}
-              accentColor={tabConfig.accentColor}
-              icon={tabConfig.icon}
-              title={tabConfig.title}
-              desc={tabConfig.desc}
-              searchPlaceholder={tabConfig.searchPlaceholder}
-              createLabel={tabConfig.createLabel}
-              onCreate={tabConfig.onCreate}
-              onToggle={tabConfig.onToggle}
-              onDelete={tabConfig.onDelete}
-              onRun={tabConfig.onRun}
-              onEdit={tabConfig.onEdit}
-            />
-          );
-        })()}
+        {activeTab === "agent" ? (
+          <CronTabContent
+            isAgent
+            jobs={agent.data?.jobs ?? []}
+            loading={agent.loading}
+            accentColor="orange"
+            icon={Clock}
+            title="No cron jobs"
+            desc="Create your first scheduled job"
+            searchPlaceholder="Search agent jobs..."
+            createLabel="Create Agent Job"
+            onCreate={() => setShowCreate(true)}
+            onToggle={(id) => agent.handleToggle(id)}
+            onDelete={(id) => agent.handleDelete(id)}
+            onRun={(id) => agent.handleRun(id)}
+            onEdit={(job) => {
+              // Wide type because TabButton can dispatch either kind; on
+              // the agent tab runtime the value is always CronJob, so any
+              // `command` field means we're seeing the wrong type.
+              if ("command" in job) return;
+              setEditingJob(job);
+              setShowCreate(true);
+            }}
+          />
+        ) : (
+          <CronTabContent
+            isAgent={false}
+            jobs={hardware.jobs}
+            loading={hardware.loading}
+            accentColor="cyan"
+            icon={Cpu}
+            title="No system cron jobs"
+            desc="Add a real system cron job"
+            searchPlaceholder="Search system jobs..."
+            createLabel="Create System Job"
+            onCreate={() => setShowHardwareCreate(true)}
+            onToggle={(id) => hardware.handleToggle(id)}
+            onDelete={(id) => hardware.handleDelete(id)}
+            onRun={undefined}
+            onEdit={(job) => {
+              // Mirror of the agent branch: on the system tab the runtime
+              // type is SystemCronJob (has `command`), so its absence is
+              // an unexpected shape.
+              if (!("command" in job)) return;
+              setEditingHardwareJob(job);
+              setShowHardwareCreate(true);
+            }}
+          />
+        )}
       </div>
 
       {/* ── Agent Job Modal (create + edit) ── */}
