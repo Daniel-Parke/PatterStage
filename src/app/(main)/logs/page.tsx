@@ -83,13 +83,6 @@ export default function LogsPage() {
     });
   }, [deleteArmed, armDelete, confirmDelete, refetch]);
 
-  // handleCancelDelete is a thin wrapper so the JSX can call it without
-  // importing the hook's `cancel` directly. This keeps the destructured
-  // hook's surface area smaller in this file.
-  const handleCancelDelete = useCallback(() => {
-    cancelDelete();
-  }, [cancelDelete]);
-
   // Auto-set activeLog to first available log when list loads
   useEffect(() => {
     if (!data?.availableLogs?.length) return;
@@ -132,9 +125,10 @@ export default function LogsPage() {
   }, [data?.availableLogs, fileQuery]);
 
   const allLines = data?.lines || [];
-  const filteredLines = search
-    ? allLines.filter((line) => line.toLowerCase().includes(search.toLowerCase()))
-    : allLines;
+  const filteredLines = useMemo(
+    () => (search ? allLines.filter((line) => line.toLowerCase().includes(search.toLowerCase())) : allLines),
+    [allLines, search],
+  );
 
   const searchMatches = search ? filteredLines.length : 0;
 
@@ -195,7 +189,7 @@ export default function LogsPage() {
               {deleteArmed ? "Confirm Clear" : "Delete All"}
             </Button>
             {deleteArmed && (
-              <Button variant="ghost" size="sm" onClick={handleCancelDelete}>
+              <Button variant="ghost" size="sm" onClick={cancelDelete}>
                 Cancel
               </Button>
             )}

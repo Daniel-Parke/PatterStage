@@ -50,6 +50,7 @@ import { timeAgo, formatElapsed } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
 import { useInterval } from "@/hooks/useInterval";
 import { useStoredBool } from "@/hooks/useStoredBool";
+import { searchSessionsByQuery, isApiNoiseSession } from "@/lib/session-filters";
 import AppPageShell from "@/components/layout/AppPageShell";
 import type { SessionRecord } from "@/lib/session-repository";
 import type { SessionSource } from "@/lib/session-repository";
@@ -334,31 +335,18 @@ export default function SessionsPage() {
   // All known session source types — always show filter buttons regardless of current page contents
   const sources = Object.keys(SOURCE_META) as SessionSource[];
 
-  const searchedSessions = useMemo(() => {
-    if (!search) return sessions;
-    const q = search.toLowerCase();
-    return sessions.filter(
-      (s) =>
-        (s.title?.toLowerCase() ?? "").includes(q) ||
-        s.id.toLowerCase().includes(q) ||
-        (s.profileName?.toLowerCase() ?? "").includes(q) ||
-        (s.missionId?.toLowerCase() ?? "").includes(q),
-    );
-  }, [sessions, search]);
+  const searchedSessions = useMemo(
+    () => searchSessionsByQuery(sessions, search),
+    [sessions, search],
+  );
 
-  // Apply "hide API noise" filter (opt-in, default off). Heuristic: short
-  // api-source sessions (< 1KB) that completed in under a minute. The list
-  // is dominated by these during heavy Hindsight stress testing.
-  const filteredSessions = useMemo(() => {
-    if (!hideApiNoise) return searchedSessions;
-    return searchedSessions.filter((s) => {
-      if (s.source !== "api") return true;
-      if (s.size >= 1024) return true;
-      const ageMs = Date.now() - new Date(s.startedAt).getTime();
-      if (ageMs > 60_000) return true;
-      return false;
-    });
-  }, [searchedSessions, hideApiNoise]);
+  // Apply "hide API noise" filter (opt-in, default off). Heuristic and
+  // date arithmetic both live in isApiNoiseSession (src/lib/session-filters.ts)
+  // so the predicate is unit-testable without rendering the page.
+  const filteredSessions = useMemo(
+    () => (hideApiNoise ? searchedSessions.filter((s) => !isApiNoiseSession(s)) : searchedSessions),
+    [searchedSessions, hideApiNoise],
+  );
 
   const entries = useMemo(
     () => buildGroupedEntries(filteredSessions, groupByMission),

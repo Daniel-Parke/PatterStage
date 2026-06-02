@@ -57,6 +57,7 @@ export default function MissionsPage() {
     setNewProfile,
     newModel,
     newProvider,
+    setModelAndProvider,
     newMissionTime,
     setNewMissionTime,
     newTimeout,

@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
-import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
 import { badRequest } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import {
@@ -135,12 +135,8 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  if (isChReadOnly()) {
-    return NextResponse.json(
-      { error: "Control Hub is in read-only mode" },
-      { status: 503 }
-    );
-  }
+  const ro = requireNotReadOnly();
+  if (ro) return ro;
 
   const bodyResult = await parseJsonBody(request);
   if (bodyResult instanceof NextResponse) return bodyResult;
