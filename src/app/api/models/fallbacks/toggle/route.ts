@@ -32,11 +32,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Fallback entry not found" }, { status: 404 });
     }
     syncEnabledFallbackChainToHermes(getFallbackConfig());
-    try {
-      appendAuditLine({ action: "fallback.toggle", resource: entry.id, ok: true });
-    } catch {
-      // Non-fatal
-    }
+    appendAuditLine({ action: "fallback.toggle", resource: entry.id, ok: true });
     return NextResponse.json({ data: { entry } });
   } catch (error) {
     logApiError("POST /api/models/fallbacks/toggle", "toggling fallback", error);

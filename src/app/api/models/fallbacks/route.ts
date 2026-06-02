@@ -42,11 +42,7 @@ export async function POST(request: NextRequest) {
   try {
     const entry = addFallbackEntry(parsed.data);
     syncEnabledFallbackChainToHermes(getFallbackConfig());
-    try {
-      appendAuditLine({ action: "fallback.add", resource: entry.id, ok: true });
-    } catch {
-      // Non-fatal — audit write failure should not fail the request
-    }
+    appendAuditLine({ action: "fallback.add", resource: entry.id, ok: true });
     return NextResponse.json({ data: { entry } }, { status: 201 });
   } catch (error) {
     logApiError("POST /api/models/fallbacks", "adding fallback entry", error);

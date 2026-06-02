@@ -37,11 +37,7 @@ export async function POST(request: NextRequest) {
       overrideBaseUrl: parsed.data.overrideBaseUrl,
     });
     syncEnabledFallbackChainToHermes(getFallbackConfig());
-    try {
-      appendAuditLine({ action: "fallback.custom.add", resource: entry.id, ok: true });
-    } catch {
-      // Non-fatal
-    }
+    appendAuditLine({ action: "fallback.custom.add", resource: entry.id, ok: true });
     return NextResponse.json({ data: { entry } }, { status: 201 });
   } catch (error) {
     logApiError("POST /api/models/fallbacks/custom", "adding custom fallback", error);

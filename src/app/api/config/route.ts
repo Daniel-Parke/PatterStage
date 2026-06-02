@@ -8,6 +8,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { db } from "@/lib/db";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
+import { maskApiKey } from "@/lib/secret-mask";
 
 const CACHE_TTL_MS = 15_000; // 15 seconds
 
@@ -87,8 +88,7 @@ function maskConfigSecrets(config: Record<string, unknown>): Record<string, unkn
   if (clone.model && typeof clone.model === "object") {
     const m = clone.model as Record<string, unknown>;
     if (typeof m.api_key === "string" && m.api_key.length > 0) {
-      const key = m.api_key;
-      m.api_key = key.length > 8 ? key.slice(0, 4) + "••••" + key.slice(-4) : "••••";
+      m.api_key = maskApiKey(m.api_key);
     }
   }
   // Mask auxiliary.<task>.api_key
@@ -97,8 +97,7 @@ function maskConfigSecrets(config: Record<string, unknown>): Record<string, unkn
     for (const task of Object.keys(aux)) {
       const entry = aux[task];
       if (typeof entry?.api_key === "string" && entry.api_key.length > 0) {
-        const key = entry.api_key;
-        entry.api_key = key.length > 8 ? key.slice(0, 4) + "••••" + key.slice(-4) : "••••";
+        entry.api_key = maskApiKey(entry.api_key);
       }
     }
   }

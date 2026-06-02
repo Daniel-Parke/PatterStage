@@ -56,15 +56,11 @@ export async function POST(request: NextRequest) {
     });
 
     syncEnabledFallbackChainToHermes(getFallbackConfig());
-    try {
-      appendAuditLine({
-        action: "fallback.reorder",
-        resource: entryId,
-        ok: true,
-      });
-    } catch {
-      // Non-fatal
-    }
+    appendAuditLine({
+      action: "fallback.reorder",
+      resource: entryId,
+      ok: true,
+    });
 
     const refreshed = listFallbackChain();
     return NextResponse.json({ data: { fallbacks: refreshed } });

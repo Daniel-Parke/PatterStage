@@ -58,11 +58,7 @@ export async function PUT(
     }
 
     syncEnabledFallbackChainToHermes(getFallbackConfig());
-    try {
-      appendAuditLine({ action: "fallback.update", resource: id, ok: true });
-    } catch {
-      // Non-fatal
-    }
+    appendAuditLine({ action: "fallback.update", resource: id, ok: true });
     return NextResponse.json({ data: { fallback: updated } });
   } catch (error) {
     logApiError("PUT /api/models/fallbacks/[id]", `updating ${id}`, error);
@@ -86,11 +82,7 @@ export async function DELETE(
     }
 
     syncEnabledFallbackChainToHermes(getFallbackConfig());
-    try {
-      appendAuditLine({ action: "fallback.delete", resource: id, ok: true });
-    } catch {
-      // Non-fatal
-    }
+    appendAuditLine({ action: "fallback.delete", resource: id, ok: true });
     return NextResponse.json({ data: { deleted: true } });
   } catch (error) {
     logApiError("DELETE /api/models/fallbacks/[id]", `deleting ${id}`, error);

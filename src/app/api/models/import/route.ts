@@ -17,6 +17,7 @@ import { upsertCredential } from "@/lib/credentials-repository";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
+import { maskKeyHint } from "@/lib/secret-mask";
 
 // GET /api/models/import — dry-run preview
 export async function GET(request: NextRequest) {
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
         })),
         credentials: parsed.credentials.map((c) => ({
           provider: c.provider,
-          keyHint: c.apiKey.trim().slice(0, 4) + "..." + c.apiKey.trim().slice(-4),
+          keyHint: maskKeyHint(c.apiKey.trim()),
         })),
         details: parsed.details,
       },

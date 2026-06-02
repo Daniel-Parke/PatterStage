@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/Toast";
 import { safeApiCall, apiFetch } from "@/lib/api-fetch";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
-import { TASK_TYPES, type TaskType } from "@/lib/hermes-providers";
+import { type TaskType } from "@/lib/hermes-providers";
 import type { FallbackChainEntry, FallbackConfig } from "@/types/hermes";
 import type { SyncActionResult } from "@/lib/sync-manager";
 import { emptyModelDefaults } from "@/lib/utils";
@@ -71,14 +71,9 @@ export function useModelsPage() {
 
       setModels(mData.data?.models ?? []);
       setCredentials(cData.data?.credentials ?? []);
-      const next = emptyModelDefaults();
-      const incoming = dData.data?.defaults;
-      if (incoming) {
-        for (const slot of TASK_TYPES) {
-          next[slot] = incoming[slot] ?? null;
-        }
-      }
-      setDefaults(next);
+      // API returns a complete defaults object (all 12 slots populated or null).
+      // Fall back to empty defaults if the response is missing.
+      setDefaults(dData.data?.defaults ?? emptyModelDefaults());
 
       if (driftData.data) {
         setDrift(driftData.data as SyncDrift);
@@ -342,7 +337,7 @@ export function useModelsPage() {
   );
 
   const handleFallbackEdit = useCallback(
-    async (entry: FallbackChainEntry) => {
+    (entry: FallbackChainEntry) => {
       setEditingFallbackEntry(entry);
       setEditingFallbackUrl(entry.overrideBaseUrl || "");
     },
