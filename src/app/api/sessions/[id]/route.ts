@@ -6,6 +6,7 @@ import { join } from "path";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { safeStat } from "@/lib/fs-stats";
 import { getSession, estimateSessionSize, lookupMissionIdForHermesJob } from "@/lib/session-repository";
 import { cronJobIdFromSessionId } from "@/lib/session-title";
 import { PATHS } from "@/lib/paths";
@@ -157,7 +158,8 @@ export async function GET(
             role: "assistant",
             content: line,
           }));
-          const st = statSync(sessionPath);
+          // File confirmed to exist above (missionFile or missionLog); safeStat never null.
+          const st = safeStat(sessionPath)!;
           return NextResponse.json({
             data: {
               id: sanitizedId,

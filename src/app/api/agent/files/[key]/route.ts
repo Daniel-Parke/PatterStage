@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 
 import { resolveProfileHermesHome, buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
 import { getBehaviorFiles } from "@/lib/behavior-files";
 import { logApiError } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
+import { safeStat } from "@/lib/fs-stats";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
@@ -117,7 +118,8 @@ export async function GET(
     }
 
     const content = readFileSync(resolved.path, "utf-8");
-    const stats = statSync(resolved.path);
+    // File confirmed to exist above; safeStat never null.
+    const stats = safeStat(resolved.path)!;
     return NextResponse.json({
       data: {
         key,
@@ -126,7 +128,7 @@ export async function GET(
         description: resolved.description,
         exists: true,
         size: stats.size,
-        lastModified: stats.mtime.toISOString(),
+        lastModified: stats.mtime,
       },
     });
   }
