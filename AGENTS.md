@@ -2,11 +2,11 @@
 
 §
 
-Extends `~/.hermes/AGENT.md` (base instructions). This file adds project-specific context for working on the Control Hub web application.
+Extends `~/.hermes/AGENTS.md` (base instructions). This file adds project-specific context for working on the Control Hub web application.
 
 §
 
-> **Always read `~/.hermes/AGENT.md` first.** It contains the universal rules, execution loop, and repository structure that apply to all agents.
+> **Always read `~/.hermes/AGENTS.md` first.** It contains the universal rules, execution loop, and repository structure that apply to all agents.
 
 §
 
@@ -242,15 +242,9 @@ gh pr create \
 
 §
 
-# Fallback: curl with $GITHUB_TOKEN (always available)
+# Fallback: GitHub REST API with $GITHUB_TOKEN (only if `gh` is unavailable — e.g. minimal container)
 
-curl -X POST https://api.github.com/repos/Daniel-Parke/hermes-control-hub/pulls \
-
-  -H "Authorization: Bearer \$GITHUB_TOKEN" \
-
-  -H "Content-Type: application/json" \
-
-  -d '{"title":"type: description","body":"what changed","head":"feature/your-feature","base":"dev"}'
+# See docs/CONTRIBUTING.md for the full snippet. Prefer `gh pr create` above.
 
 ```
 
