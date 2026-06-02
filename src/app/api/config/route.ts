@@ -8,6 +8,8 @@ import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { db } from "@/lib/db";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
+import { maskApiKey } from "@/lib/secret-mask";
+import { parseJsonBody } from "@/lib/parse-json-body";
 
 const CACHE_TTL_MS = 15_000; // 15 seconds
 
@@ -85,31 +87,38 @@ function maskConfigSecrets(config: Record<string, unknown>): Record<string, unkn
   const clone = structuredClone(config);
   // Mask model.api_key
   if (clone.model && typeof clone.model === "object") {
-    const m = clone.model as Record<string, unknown>;
-    if (typeof m.api_key === "string" && m.api_key.length > 0) {
-      const key = m.api_key;
-      m.api_key = key.length > 8 ? key.slice(0, 4) + "••••" + key.slice(-4) : "••••";
-    }
+    maskApiKeyField(clone.model as Record<string, unknown>, "api_key");
   }
-  // Mask auxiliary.<task>.api_key
+  // Mask auxiliary.<task>.api_key — every task entry can carry a key
   if (clone.auxiliary && typeof clone.auxiliary === "object") {
     const aux = clone.auxiliary as Record<string, Record<string, unknown>>;
     for (const task of Object.keys(aux)) {
-      const entry = aux[task];
-      if (typeof entry?.api_key === "string" && entry.api_key.length > 0) {
-        const key = entry.api_key;
-        entry.api_key = key.length > 8 ? key.slice(0, 4) + "••••" + key.slice(-4) : "••••";
-      }
+      maskApiKeyField(aux[task], "api_key");
     }
   }
   return clone;
 }
 
+/**
+ * In-place replace `record[key]` with its masked form, but only if it's a
+ * non-empty string. Centralises the `typeof === "string" && length > 0`
+ * guard that the two model/auxiliary branches used to repeat.
+ */
+function maskApiKeyField(record: Record<string, unknown>, key: string): void {
+  const value = record[key];
+  if (typeof value === "string" && value.length > 0) {
+    record[key] = maskApiKey(value);
+  }
+}
+
 // GET /api/config — return full config (with secrets masked)
 export async function GET(request: NextRequest) {
+  // Auth check outside the main try/catch so it matches the PUT pattern
+  // and so any future throw inside requireAuth would be classified as an
+  // auth failure rather than a "reading config.yaml" error in the log.
+  const auth = requireAuth(request);
+  if (auth) return auth;
   try {
-    const auth = requireAuth(request);
-    if (auth) return auth;
     const config = readCachedConfig();
     return NextResponse.json({ data: maskConfigSecrets(config) });
   } catch (error) {
@@ -126,33 +135,43 @@ export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
+  // Hoist body parsing out of the main try/catch so malformed JSON
+  // returns 400 (via parseJsonBody) rather than 500. This matches the
+  // behaviour of every other route that adopted parseJsonBody.
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+
+  // Narrow body shape — parseJsonBody returns Record<string, unknown>
+  // so we cast to the structural shape we expect from the client.
+  const { section, values } = bodyResult as {
+    section?: string;
+    values?: unknown;
+  };
+
+  if (!section || !values) {
+    return NextResponse.json(
+      { error: "Missing 'section' or 'values'" },
+      { status: 400 }
+    );
+  }
+
+  // Validate that values is a plain object (not string, array, or null)
+  if (typeof values !== "object" || Array.isArray(values) || values === null) {
+    return NextResponse.json(
+      { error: "values must be an object" },
+      { status: 400 }
+    );
+  }
+
+  // Security: only allow whitelisted sections (prevent modifying model/provider keys)
+  if (!WRITABLE_SECTIONS.has(section)) {
+    return NextResponse.json(
+      { error: `Section '${section}' is not writable. Allowed: ${[...WRITABLE_SECTIONS].join(", ")}` },
+      { status: 403 }
+    );
+  }
+
   try {
-    const body = await request.json();
-    const { section, values } = body;
-
-    if (!section || !values) {
-      return NextResponse.json(
-        { error: "Missing 'section' or 'values'" },
-        { status: 400 }
-      );
-    }
-
-    // Validate that values is a plain object (not string, array, or null)
-    if (typeof values !== "object" || Array.isArray(values) || values === null) {
-      return NextResponse.json(
-        { error: "values must be an object" },
-        { status: 400 }
-      );
-    }
-
-    // Security: only allow whitelisted sections (prevent modifying model/provider keys)
-    if (!WRITABLE_SECTIONS.has(section)) {
-      return NextResponse.json(
-        { error: `Section '${section}' is not writable. Allowed: ${[...WRITABLE_SECTIONS].join(", ")}` },
-        { status: 403 }
-      );
-    }
-
     const config = readCachedConfig();
 
     // Create backup
@@ -168,7 +187,7 @@ export async function PUT(request: NextRequest) {
 
     // Merge values into section
     const current = (config[section] as Record<string, unknown>) || {};
-    config[section] = { ...current, ...values };
+    config[section] = { ...current, ...(values as Record<string, unknown>) };
 
     // Write back
     const content = yaml.dump(config, { lineWidth: -1, noRefs: true });
@@ -176,7 +195,7 @@ export async function PUT(request: NextRequest) {
 
     appendAuditLine({
       action: "config.put",
-      resource: String(section),
+      resource: section,
       ok: true,
     });
 

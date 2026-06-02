@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Brain,
   Plus,
@@ -27,6 +27,7 @@ import {
   getPersonalityEmoji,
 } from "@/lib/personalities";
 import { apiFetch } from "@/lib/api-fetch";
+import { runSyncAction } from "@/lib/operation-sync-action";
 
 interface Personality {
   name: string;
@@ -160,10 +161,10 @@ function EditPersonalityModal({
         method: isEdit ? "PUT" : "POST",
         body: JSON.stringify({ profile: name.trim(), prompt: prompt.trim() }),
       });
-      setSaving(false);
       onSaved();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
+    } finally {
       setSaving(false);
     }
   };
@@ -262,10 +263,8 @@ export default function PersonalitiesPage() {
       ]);
       setPersonalities(persData?.data?.personalities ?? []);
       const displaySection = configData?.data?.display;
-      const activeP = displaySection && typeof displaySection === "object" && "personality" in displaySection
-        ? String((displaySection as Record<string, unknown>).personality ?? "")
-        : "";
-      setActivePersonality(activeP);
+      const personalityValue = (displaySection as { personality?: unknown } | null)?.personality;
+      setActivePersonality(typeof personalityValue === "string" ? personalityValue : "");
     } catch {
       showToast("Failed to load personalities", "error");
     } finally {
@@ -277,25 +276,22 @@ export default function PersonalitiesPage() {
     loadPersonalities();
   }, [loadPersonalities]);
 
-  const handleActivate = async (name: string) => {
-    try {
-      await apiFetch("/api/config", {
-        method: "PUT",
-        body: JSON.stringify({
-          section: "display",
-          values: { personality: activePersonality === name ? "" : name },
-        }),
-      });
-      setActivePersonality(activePersonality === name ? "" : name);
-      showToast(
-        activePersonality === name
-          ? "Cleared active personality"
-          : `Activated: ${name}`,
-        "success"
-      );
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Activation failed", "error");
-    }
+  const handleActivate = (name: string) => {
+    const next = activePersonality === name ? "" : name;
+    // No busy state for activation — the no-op setter keeps the helper
+    // happy without adding a UI spinner for a sub-100ms action.
+    return runSyncAction({
+      setBusy: () => undefined,
+      showToast,
+      url: "/api/config",
+      method: "PUT",
+      body: { section: "display", values: { personality: next } },
+      successMessage: next ? `Activated: ${next}` : "Cleared active personality",
+      errorMessage: "Activation failed",
+      onSuccess: () => {
+        setActivePersonality(next);
+      },
+    });
   };
 
   const handleSaved = () => {
@@ -304,21 +300,26 @@ export default function PersonalitiesPage() {
     showToast("Personality saved!", "success");
   };
 
-  const sortedPersonalities = [...personalities].sort((a, b) => {
-    if (a.name === activePersonality) return -1;
-    if (b.name === activePersonality) return 1;
-    return a.name.localeCompare(b.name);
-  });
+  const sortedPersonalities = useMemo(
+    () =>
+      [...personalities].sort((a, b) => {
+        if (a.name === activePersonality) return -1;
+        if (b.name === activePersonality) return 1;
+        return a.name.localeCompare(b.name);
+      }),
+    [personalities, activePersonality],
+  );
 
-  const filtered = sortedPersonalities.filter((p) => {
-    if (!search.trim()) return true;
+  const filtered = useMemo(() => {
+    if (!search.trim()) return sortedPersonalities;
     const q = search.toLowerCase();
-    return (
-      p.name.toLowerCase().includes(q) ||
-      p.prompt.toLowerCase().includes(q) ||
-      p.name === activePersonality
+    return sortedPersonalities.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.prompt.toLowerCase().includes(q) ||
+        p.name === activePersonality,
     );
-  });
+  }, [sortedPersonalities, search, activePersonality]);
 
   return (
     <AppPageShell>

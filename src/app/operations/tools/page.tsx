@@ -19,6 +19,8 @@ import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
 import { apiFetch } from "@/lib/api-fetch";
+import { runSyncAction } from "@/lib/operation-sync-action";
+import { profileSyncBody } from "@/lib/profile-sync-body";
 import type { PlatformToolsets } from "@/lib/profile-config-builder";
 import type { AgentProfile } from "@/types/hermes";
 import {
@@ -93,70 +95,61 @@ export default function ToolsPage() {
 
   const isUnifiedEnabled = (toolsetId: string): boolean => unifiedEnabled.includes(toolsetId);
 
-  const saveToolsets = async () => {
-    setSavingToolsets(true);
-    try {
-      let payload: PlatformToolsets;
-      if (showAdvancedJson) {
-        const parsed = JSON.parse(toolsetsJson) as unknown;
-        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-          throw new Error("Invalid JSON object");
-        }
-        payload = parsed as PlatformToolsets;
-      } else {
-        payload = expandUnifiedToAllPlatforms(unifiedEnabled);
+  const saveToolsets = () => {
+    let payload: PlatformToolsets;
+    if (showAdvancedJson) {
+      const parsed = JSON.parse(toolsetsJson) as unknown;
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        // Original behaviour: validation error shown via direct
+        // showToast (not via the helper's catch path, because the
+        // helper's `errorMessage` would replace this with the generic
+        // fallback). The error message text is byte-identical to the
+        // pre-refactor "Invalid JSON object" toast.
+        showToast("Invalid JSON object", "error");
+        return Promise.resolve();
       }
-      await apiFetch(`/api/agent/profiles/${selectedProfile}/toolsets`, {
-        method: "PUT",
-        body: JSON.stringify({ platformToolsets: payload }),
-      });
-      showToast("Toolsets saved and pushed to Hermes", "success");
-      await loadToolsets();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to save toolsets", "error");
-    } finally {
-      setSavingToolsets(false);
+      payload = parsed as PlatformToolsets;
+    } else {
+      payload = expandUnifiedToAllPlatforms(unifiedEnabled);
     }
+    return runSyncAction({
+      setBusy: setSavingToolsets,
+      showToast,
+      url: `/api/agent/profiles/${selectedProfile}/toolsets`,
+      method: "PUT",
+      body: { platformToolsets: payload },
+      successMessage: "Toolsets saved and pushed to Hermes",
+      errorMessage: "Failed to save toolsets",
+      onSuccess: loadToolsets,
+    });
   };
 
-  const profileSyncBody = () =>
-    selectedProfile === "default" ? { root: true } : { slug: selectedProfile };
-
-  const pullFromHermes = async () => {
-    setSyncing("pull");
-    try {
-      await apiFetch("/api/agent/profiles/sync/pull", {
-        method: "POST",
-        body: JSON.stringify(profileSyncBody()),
-      });
-      showToast("Pulled toolsets from Hermes", "success");
+  const pullFromHermes = (mode: "pull" | "push") => {
+    // syncing is a 2-state string ("pull" | "push" | null) so the
+    // buttons can show "Pulling..." / "Pushing..." independently. Wrap
+    // it as a boolean setter for the shared runSyncAction helper.
+    const setBusy = (busy: boolean) => setSyncing(busy ? mode : null);
+    const successMessage = mode === "pull" ? "Pulled toolsets from Hermes" : (
+      selectedProfile === "default"
+        ? "Pushed profile to Hermes. Model defaults re-applied to config.yaml."
+        : "Pushed profile to Hermes"
+    );
+    const onSuccess = async () => {
       await loadToolsets();
       await loadProfileSyncStatus();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Pull failed", "error");
-    } finally {
-      setSyncing(null);
-    }
-  };
-
-  const pushToHermes = async () => {
-    setSyncing("push");
-    try {
-      await apiFetch("/api/agent/profiles/sync/push", {
-        method: "POST",
-        body: JSON.stringify(profileSyncBody()),
-      });
-      const pushMsg =
-        selectedProfile === "default"
-          ? "Pushed profile to Hermes. Model defaults re-applied to config.yaml."
-          : "Pushed profile to Hermes";
-      showToast(pushMsg, "success");
-      await loadProfileSyncStatus();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Push failed", "error");
-    } finally {
-      setSyncing(null);
-    }
+    };
+    return runSyncAction({
+      setBusy,
+      showToast,
+      url: `/api/agent/profiles/sync/${mode}`,
+      body: profileSyncBody(selectedProfile),
+      successMessage,
+      errorMessage: mode === "pull" ? "Pull failed" : "Push failed",
+      onSuccess,
+      // /api/agent/profiles/sync/* throw on failure (return 500), they
+      // don't return {data: {success: false}}; rely on the catch path.
+      checkSuccess: false,
+    });
   };
 
   const enabledCount = unifiedEnabled.length;
@@ -180,7 +173,7 @@ export default function ToolsPage() {
               size="sm"
               color="orange"
               icon={syncing === "pull" ? undefined : Download}
-              onClick={() => void pullFromHermes()}
+              onClick={() => void pullFromHermes("pull")}
               disabled={syncing !== null}
             >
               {syncing === "pull" ? "Pulling…" : "Pull from Hermes"}
@@ -190,7 +183,7 @@ export default function ToolsPage() {
               size="sm"
               color="orange"
               icon={syncing === "push" ? undefined : Upload}
-              onClick={() => void pushToHermes()}
+              onClick={() => void pullFromHermes("push")}
               disabled={syncing !== null}
             >
               {syncing === "push" ? "Pushing…" : "Push to Hermes"}

@@ -3,11 +3,11 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { logApiError } from "@/lib/api-logger";
-import { appendAuditLine } from "@/lib/audit-log";
 import { addFallbackEntry, getFallbackConfig, listFallbackChain } from "@/lib/fallbacks-repository";
 import { fallbackInputSchema } from "@/lib/fallback-config-schema";
-import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
+import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
 
 export async function GET(request: NextRequest) {
@@ -15,8 +15,7 @@ export async function GET(request: NextRequest) {
   if (auth) return auth;
 
   try {
-    const entries = listFallbackChain();
-    return NextResponse.json({ data: { entries, config: getFallbackConfig() } });
+    return NextResponse.json({ data: { entries: listFallbackChain(), config: getFallbackConfig() } });
   } catch (error) {
     logApiError("GET /api/models/fallbacks", "reading fallback chain", error);
     return NextResponse.json({ error: "Failed to read fallback chain" }, { status: 500 });
@@ -27,26 +26,17 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
 
-  const parsed = fallbackInputSchema.safeParse(raw);
+  const parsed = fallbackInputSchema.safeParse(bodyResult);
   if (!parsed.success) {
     return zodErrorResponse(parsed.error);
   }
 
   try {
     const entry = addFallbackEntry(parsed.data);
-    syncEnabledFallbackChainToHermes(getFallbackConfig());
-    try {
-      appendAuditLine({ action: "fallback.add", resource: entry.id, ok: true });
-    } catch {
-      // Non-fatal — audit write failure should not fail the request
-    }
+    commitFallbackChange("fallback.add", entry.id);
     return NextResponse.json({ data: { entry } }, { status: 201 });
   } catch (error) {
     logApiError("POST /api/models/fallbacks", "adding fallback entry", error);

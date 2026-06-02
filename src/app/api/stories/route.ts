@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { getStoryPrompt } from "@/lib/story-weaver/prompts";
 import { callLLM } from "@/lib/llm";
 import {
@@ -123,7 +124,8 @@ export async function POST(request: NextRequest) {
   if (auth) return auth;
 
   try {
-    const body = await request.json();
+    const body = await parseJsonBody(request);
+    if (body instanceof NextResponse) return body;
     const { action } = body;
     switch (action) {
       case "create":    return handleCreate(body);

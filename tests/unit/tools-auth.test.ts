@@ -60,6 +60,7 @@ jest.mock("@/lib/api-logger", () => ({
 
 jest.mock("@/lib/api-auth", () => ({
   requireAuth: mockRequireAuth,
+  requireNotReadOnly: jest.fn(() => null),
   isChReadOnly: jest.fn(() => false),
 }));
 

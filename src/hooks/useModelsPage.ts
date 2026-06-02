@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/Toast";
 import { safeApiCall, apiFetch } from "@/lib/api-fetch";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
-import { TASK_TYPES, type TaskType } from "@/lib/hermes-providers";
+import { type TaskType } from "@/lib/hermes-providers";
 import type { FallbackChainEntry, FallbackConfig } from "@/types/hermes";
 import type { SyncActionResult } from "@/lib/sync-manager";
 import { emptyModelDefaults } from "@/lib/utils";
@@ -71,14 +71,9 @@ export function useModelsPage() {
 
       setModels(mData.data?.models ?? []);
       setCredentials(cData.data?.credentials ?? []);
-      const next = emptyModelDefaults();
-      const incoming = dData.data?.defaults;
-      if (incoming) {
-        for (const slot of TASK_TYPES) {
-          next[slot] = incoming[slot] ?? null;
-        }
-      }
-      setDefaults(next);
+      // API returns a complete defaults object (all 12 slots populated or null).
+      // Fall back to empty defaults if the response is missing.
+      setDefaults(dData.data?.defaults ?? emptyModelDefaults());
 
       if (driftData.data) {
         setDrift(driftData.data as SyncDrift);
@@ -101,6 +96,34 @@ export function useModelsPage() {
   useEffect(() => {
     void loadAll();
   }, [loadAll]);
+
+  /**
+   * Shared helper for the four fallback-chain CRUD handlers (reorder, toggle,
+   * delete, add-from-registry, add-custom). They all do the same thing:
+   * call the API, refetch, toast success; on failure, toast the error.
+   * Edit + config flows have side-effects (closing the modal, optimistic UI)
+   * that don't fit this pattern — those stay as bespoke handlers.
+   */
+  const runFallbackMutation = useCallback(
+    async (
+      successMessage: string,
+      errorFallback: string,
+      url: string,
+      init: { method: "POST" | "PUT" | "DELETE"; body?: string },
+    ): Promise<void> => {
+      try {
+        await apiFetch(url, init);
+        await loadAll();
+        showToast(successMessage, "success");
+      } catch (err) {
+        showToast(
+          err instanceof Error ? err.message : errorFallback,
+          "error",
+        );
+      }
+    },
+    [loadAll, showToast]
+  );
 
   const modelOptions = useMemo<DefaultsModelOption[]>(
     () =>
@@ -286,63 +309,40 @@ export function useModelsPage() {
   }, [loadAll, showToast]);
 
   const handleFallbackReorder = useCallback(
-    async (entryId: string, direction: "up" | "down") => {
-      try {
-        await apiFetch("/api/models/fallbacks/reorder", {
-          method: "POST",
-          body: JSON.stringify({ entryId, direction }),
-        });
-        await loadAll();
-        showToast("Fallback chain reordered", "success");
-      } catch (err) {
-        showToast(
-          err instanceof Error ? err.message : "Reorder failed",
-          "error"
-        );
-      }
-    },
-    [loadAll, showToast]
+    async (entryId: string, direction: "up" | "down") =>
+      runFallbackMutation(
+        "Fallback chain reordered",
+        "Reorder failed",
+        "/api/models/fallbacks/reorder",
+        { method: "POST", body: JSON.stringify({ entryId, direction }) },
+      ),
+    [runFallbackMutation]
   );
 
   const handleFallbackToggle = useCallback(
-    async (entryId: string, enabled: boolean) => {
-      try {
-        await apiFetch("/api/models/fallbacks/toggle", {
-          method: "POST",
-          body: JSON.stringify({ entryId, enabled }),
-        });
-        await loadAll();
-        showToast(enabled ? "Fallback model enabled" : "Fallback model disabled", "success");
-      } catch (err) {
-        showToast(
-          err instanceof Error ? err.message : "Toggle failed",
-          "error"
-        );
-      }
-    },
-    [loadAll, showToast]
+    async (entryId: string, enabled: boolean) =>
+      runFallbackMutation(
+        enabled ? "Fallback model enabled" : "Fallback model disabled",
+        "Toggle failed",
+        "/api/models/fallbacks/toggle",
+        { method: "POST", body: JSON.stringify({ entryId, enabled }) },
+      ),
+    [runFallbackMutation]
   );
 
   const handleFallbackDelete = useCallback(
-    async (entryId: string) => {
-      try {
-        await apiFetch(`/api/models/fallbacks/${encodeURIComponent(entryId)}`, {
-          method: "DELETE",
-        });
-        await loadAll();
-        showToast("Fallback model removed", "success");
-      } catch (err) {
-        showToast(
-          err instanceof Error ? err.message : "Delete failed",
-          "error"
-        );
-      }
-    },
-    [loadAll, showToast]
+    async (entryId: string) =>
+      runFallbackMutation(
+        "Fallback model removed",
+        "Delete failed",
+        `/api/models/fallbacks/${encodeURIComponent(entryId)}`,
+        { method: "DELETE" },
+      ),
+    [runFallbackMutation]
   );
 
   const handleFallbackEdit = useCallback(
-    async (entry: FallbackChainEntry) => {
+    (entry: FallbackChainEntry) => {
       setEditingFallbackEntry(entry);
       setEditingFallbackUrl(entry.overrideBaseUrl || "");
     },
@@ -376,41 +376,25 @@ export function useModelsPage() {
   );
 
   const handleFallbackAddFromRegistry = useCallback(
-    async (modelId: string) => {
-      try {
-        await apiFetch("/api/models/fallbacks", {
-          method: "POST",
-          body: JSON.stringify({ modelId }),
-        });
-        await loadAll();
-        showToast("Fallback model added from registry", "success");
-      } catch (err) {
-        showToast(
-          err instanceof Error ? err.message : "Add failed",
-          "error"
-        );
-      }
-    },
-    [loadAll, showToast]
+    async (modelId: string) =>
+      runFallbackMutation(
+        "Fallback model added from registry",
+        "Add failed",
+        "/api/models/fallbacks",
+        { method: "POST", body: JSON.stringify({ modelId }) },
+      ),
+    [runFallbackMutation]
   );
 
   const handleFallbackAddCustom = useCallback(
-    async (name: string, provider: string, modelIdString: string, baseUrl?: string) => {
-      try {
-        await apiFetch("/api/models/fallbacks/custom", {
-          method: "POST",
-          body: JSON.stringify({ name, provider, modelIdString, baseUrl }),
-        });
-        await loadAll();
-        showToast("Custom fallback model added", "success");
-      } catch (err) {
-        showToast(
-          err instanceof Error ? err.message : "Add failed",
-          "error"
-        );
-      }
-    },
-    [loadAll, showToast]
+    async (name: string, provider: string, modelIdString: string, baseUrl?: string) =>
+      runFallbackMutation(
+        "Custom fallback model added",
+        "Add failed",
+        "/api/models/fallbacks/custom",
+        { method: "POST", body: JSON.stringify({ name, provider, modelIdString, baseUrl }) },
+      ),
+    [runFallbackMutation]
   );
 
   // ── handleImportFallbackFromConfig ───────────────────────────────

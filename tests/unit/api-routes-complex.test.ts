@@ -141,6 +141,31 @@ describe("GET /api/config", () => {
     expect(res.status).toBe(200);
     expect(data.data).toBeDefined();
   });
+
+  // Regression guard: the masking helper (maskApiKeyField) was extracted
+  // from an inline if/else pair, and the original code had two branches
+  // (model.api_key and auxiliary.<task>.api_key). This test exercises
+  // BOTH branches so a future refactor that drops one of them would
+  // be caught.
+  it("masks model.api_key and auxiliary.<task>.api_key in the response", async () => {
+    mockExistsSync.mockReturnValue(true);
+    mockReadFileSync.mockReturnValue(
+      "model:\n  api_key: sk-supersecretapikey1234\n  default: test-model\nauxiliary:\n  vision:\n    api_key: sk-visionkeyapikey1234\n  embed:\n    api_key: sk-embedkeyapikey1234\n"
+    );
+
+    const { GET } = await import("@/app/api/config/route");
+    const res = await GET();
+    const data = await res.json();
+
+    // The original keys must NOT appear in the response.
+    expect(JSON.stringify(data)).not.toContain("supersecretapikey1234");
+    expect(JSON.stringify(data)).not.toContain("visionkeyapikey1234");
+    expect(JSON.stringify(data)).not.toContain("embedkeyapikey1234");
+    // The masked form (first 4 + •••• + last 4) MUST appear.
+    expect(JSON.stringify(data)).toContain("sk-s••••1234");
+    expect(JSON.stringify(data)).toContain("sk-v••••1234");
+    expect(JSON.stringify(data)).toContain("sk-e••••1234");
+  });
 });
 
 describe("GET /api/skills", () => {

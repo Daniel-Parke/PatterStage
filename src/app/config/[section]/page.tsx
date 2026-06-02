@@ -12,8 +12,9 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner, ErrorBanner } from "@/components/ui/LoadingSpinner";
-import { getSectionDef } from "@/lib/config-schema";
+import { getSectionDef, fileKeyForFilePath } from "@/lib/config-schema";
 import { apiFetch } from "@/lib/api-fetch";
+import { maskKeyHint } from "@/lib/secret-mask";
 import ConfigField from "@/components/config/ConfigField";
 
 export default function ConfigSectionPage() {
@@ -25,8 +26,10 @@ export default function ConfigSectionPage() {
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [originalValues, setOriginalValues] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  // Single source of truth for save flow — `saving` is derived as
+  // saveStatus === "saving" so the two are never out of sync.
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const saving = saveStatus === "saving";
   const [error, setError] = useState<string | null>(null);
 
   // File editor state
@@ -60,7 +63,8 @@ export default function ConfigSectionPage() {
     setError(null);
     try {
       if (isFileSection && sectionDef?.filePath) {
-        const json = await apiFetch(`/api/agent/files/${sectionDef.filePath === ".env" ? "env" : "hermes"}`, { signal });
+        const fileKey = fileKeyForFilePath(sectionDef.filePath);
+        const json = await apiFetch(`/api/agent/files/${fileKey}`, { signal });
         const content = json.data?.content || "";
         setFileContent(content);
         setOriginalFileContent(content);
@@ -95,11 +99,10 @@ export default function ConfigSectionPage() {
   const handleSave = useCallback(async () => {
     if (!sectionDef) return;
 
-    setSaving(true);
     setSaveStatus("saving");
     try {
-      if (isFileSection) {
-        const fileKey = sectionDef.filePath === ".env" ? "env" : "hermes";
+      if (isFileSection && sectionDef?.filePath) {
+        const fileKey = fileKeyForFilePath(sectionDef.filePath);
         await apiFetch(`/api/agent/files/${fileKey}`, {
           method: "PUT",
           body: JSON.stringify({ content: fileContent, backup: true }),
@@ -123,8 +126,6 @@ export default function ConfigSectionPage() {
     } catch (err) {
       setSaveStatus("error");
       setError(err instanceof Error ? err.message : "Save failed");
-    } finally {
-      setSaving(false);
     }
   }, [sectionDef, isFileSection, fileContent, sectionId, values]);
 
@@ -254,7 +255,7 @@ export default function ConfigSectionPage() {
                   if (eqIdx < 0) return <div key={lineKey} className="text-xs font-mono text-white/50">{line}</div>;
                   const key = line.slice(0, eqIdx).trim();
                   const val = line.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, "");
-                  const masked = val.length > 8 ? val.slice(0, 4) + "..." + val.slice(-4) : "****";
+                  const masked = maskKeyHint(val);
                   return (
                     <div key={lineKey} className="flex items-center gap-2 text-xs font-mono">
                       <span className="text-neon-cyan w-48 flex-shrink-0 truncate">{key}</span>

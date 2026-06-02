@@ -7,9 +7,11 @@ import { logApiError } from "@/lib/api-logger";
 import {
   listLogFilesInDir,
   logFileUnderLogsDir,
-  sanitizeLogBasename,
+  logValidationError,
   readLastLines,
+  resolveLogFilePath,
 } from "@/lib/log-files";
+import { injectMissingTimestamps } from "@/lib/log-line-format";
 import { requireAuth } from "@/lib/api-auth";
 import { ApiResponse } from "@/types/hermes";
 import type { LogFileMeta } from "@/lib/log-files";
@@ -66,25 +68,18 @@ export async function GET(request: NextRequest) {
       logApiError("GET /api/logs", "listing available logs", err);
     }
 
-    const rawName = searchParams.get("name");
-    const safeName =
-      rawName === null || rawName.trim() === ""
-        ? "agent"
-        : sanitizeLogBasename(rawName);
-    if (safeName === null) {
+    const resolved = resolveLogFilePath(
+      logsDir,
+      resolvedLogsDir,
+      searchParams.get("name"),
+    );
+    if (!resolved.ok) {
       return NextResponse.json<ApiResponse<never>>(
-        { error: "Invalid log name" },
+        { error: logValidationError(resolved.reason) },
         { status: 400 },
       );
     }
-    const logPath = resolve(logsDir, `${safeName}.log`);
-
-    if (!logFileUnderLogsDir(resolvedLogsDir, logPath)) {
-      return NextResponse.json<ApiResponse<never>>(
-        { error: "Invalid log path" },
-        { status: 400 },
-      );
-    }
+    const { safeName, absolutePath: logPath } = resolved;
 
     if (!existsSync(logPath)) {
       return NextResponse.json<ApiResponse<never>>(
@@ -95,24 +90,9 @@ export async function GET(request: NextRequest) {
 
     const { allLines, lines, mtime, size } = readLastLines(logPath, maxLines);
 
-    // Fallback timestamp: use file mtime for lines that have no parseable timestamp.
-    // Format must match RE_SPACE_TS so the frontend parseLogLine() recognizes it.
+    // Fallback timestamp must match RE_SPACE_TS so parseLogLine() recognises it.
     const fileMtime = mtime.toISOString().replace("T", " ").slice(0, 19);
-    const linesWithTimestamp = lines.map((line) => {
-      // Only inject if line is non-empty and has no recognized timestamp pattern.
-      if (!line.trim()) return line;
-      // Quick check: if it starts with a known timestamp-like pattern, leave it.
-      // Patterns: YYYY-MM-DD, YYYY/MM/DD, YYYY-MM-DDTHH:MM:SS, or [YYYY-MM-DD
-      if (
-        /^\d{4}[-\/]/.test(line) ||
-        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(line) ||
-        /^\[\d{4}-\d{2}-\d{2}/.test(line)
-      ) {
-        return line;
-      }
-      // Inject mtime prefix: "YYYY-MM-DD HH:MM:SS <original line>"
-      return `${fileMtime} ${line}`;
-    });
+    const linesWithTimestamp = injectMissingTimestamps(lines, fileMtime);
 
     return NextResponse.json<ApiResponse<LogGetData>>({
       data: {
@@ -152,25 +132,18 @@ export async function DELETE(request: NextRequest) {
 
   try {
     if (logName) {
-      const safe = sanitizeLogBasename(logName);
-      if (!safe) {
+      const resolved = resolveLogFilePath(logsDir, resolvedLogsDir, logName);
+      if (!resolved.ok) {
         return NextResponse.json<ApiResponse<never>>(
-          { error: "Invalid log name" },
+          { error: logValidationError(resolved.reason) },
           { status: 400 },
         );
       }
-      const logPath = resolve(logsDir, `${safe}.log`);
-      if (!logFileUnderLogsDir(resolvedLogsDir, logPath)) {
-        return NextResponse.json<ApiResponse<never>>(
-          { error: "Invalid log path" },
-          { status: 400 },
-        );
-      }
-      if (existsSync(logPath)) {
-        writeFileSync(logPath, "");
+      if (existsSync(resolved.absolutePath)) {
+        writeFileSync(resolved.absolutePath, "");
       }
       return NextResponse.json<ApiResponse<{ deleted: string }>>({
-        data: { deleted: safe },
+        data: { deleted: resolved.safeName },
       });
     }
 

@@ -7,8 +7,8 @@
  * Skills/profile sync to cron jobs is NOT implemented in the update action.
  */
 
-jest.mock("next/server", () => ({
-  NextRequest: class NextRequest {
+jest.mock("next/server", () => {
+  class NextRequest {
     url: string;
     method: string;
     headers: Headers;
@@ -21,21 +21,23 @@ jest.mock("next/server", () => ({
       this._body = typeof init?.body === "string" ? init.body : JSON.stringify(init?.body ?? {});
     }
     async json() { return JSON.parse(this._body); }
-  },
-  NextResponse: {
-    json: (data: unknown, init?: ResponseInit) => {
-      const status = init?.status ?? 200;
-      const res = {
-        ok: status >= 200 && status < 300,
-        status,
-        statusText: "OK",
-        headers: new Headers(),
-        json: () => Promise.resolve(data),
-      };
-      return res;
-    },
-  },
-}));
+  }
+  // Use a real class so `bodyResult instanceof NextResponse` works
+  // (parseJsonBody returns a NextResponse on invalid JSON).
+  class NextResponse {
+    status: number;
+    private _data: unknown;
+    constructor(data: unknown, init?: ResponseInit) {
+      this.status = init?.status ?? 200;
+      this._data = data;
+    }
+    static json(data: unknown, init?: ResponseInit) {
+      return new NextResponse(data, init);
+    }
+    async json() { return this._data; }
+  }
+  return { NextRequest, NextResponse };
+});
 
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 

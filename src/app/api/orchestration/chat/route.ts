@@ -10,9 +10,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
+import { badRequest } from "@/lib/api-response";
 import { getAgentLlmEndpoints } from "@/lib/hermes-agent-runtime";
-
-const DEFAULT_MODEL = "hermes-agent";
+import { CHAT_DEFAULT_MODEL } from "@/types/chat";
 
 function handleError(error: unknown, context: string) {
   logApiError("chat", context, error);
@@ -62,23 +63,21 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+  const body = bodyResult as { messages?: unknown; model?: string; stream?: boolean };
+
   try {
-    let body: { messages?: unknown; model?: string; stream?: boolean };
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
     const { messages, model, stream } = body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json({ error: "messages array is required" }, { status: 400 });
+      return badRequest("messages array is required");
     }
     const isStreaming = stream !== false; // default to streaming
     const { apiUrl } = getAgentLlmEndpoints();
 
     const gatewayBody = {
-      model: model || DEFAULT_MODEL,
+      model: model || CHAT_DEFAULT_MODEL,
       messages,
       stream: isStreaming,
       max_tokens: 4096,

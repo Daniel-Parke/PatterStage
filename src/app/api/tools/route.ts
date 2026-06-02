@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import {
   HERMES_CONFIGURABLE_TOOLSETS,
@@ -30,12 +30,8 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  if (isChReadOnly()) {
-    return NextResponse.json(
-      { error: "Control Hub is in read-only mode — tool mutations are disabled" },
-      { status: 503 }
-    );
-  }
+  const ro = requireNotReadOnly("tool mutations are disabled");
+  if (ro) return ro;
 
   return NextResponse.json(
     {

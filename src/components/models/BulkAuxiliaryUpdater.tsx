@@ -7,7 +7,7 @@
 import { useState, useCallback } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import {
-  TASK_TYPES,
+  AUXILIARY_TASK_TYPES,
   type TaskType,
 } from "@/lib/hermes-providers";
 
@@ -17,7 +17,7 @@ interface BulkAuxiliaryUpdaterProps {
   disabled?: boolean;
 }
 
-const AUXILIARY_TYPES = TASK_TYPES.filter((t) => t !== "agent");
+
 
 export default function BulkAuxiliaryUpdater({
   models,
@@ -26,7 +26,7 @@ export default function BulkAuxiliaryUpdater({
 }: BulkAuxiliaryUpdaterProps) {
   const [expanded, setExpanded] = useState(false);
   const [mode, setMode] = useState<"all" | "custom">("all");
-  const [selected, setSelected] = useState<Set<TaskType>>(new Set(AUXILIARY_TYPES));
+  const [selected, setSelected] = useState<Set<TaskType>>(new Set(AUXILIARY_TASK_TYPES));
   const [targetModelId, setTargetModelId] = useState<string>("");
   const [applying, setApplying] = useState(false);
 
@@ -46,7 +46,7 @@ export default function BulkAuxiliaryUpdater({
     if (applying || !targetModelId) return;
     setApplying(true);
     try {
-      const taskTypes = mode === "all" ? AUXILIARY_TYPES : Array.from(selected);
+      const taskTypes = mode === "all" ? AUXILIARY_TASK_TYPES : Array.from(selected);
       await onChange(taskTypes, targetModelId);
       setExpanded(false);
     } finally {
@@ -68,7 +68,7 @@ export default function BulkAuxiliaryUpdater({
             Bulk Set Auxiliaries
           </span>
           <span className="text-[10px] font-mono text-white/30">
-            ({AUXILIARY_TYPES.length} slots)
+            ({AUXILIARY_TASK_TYPES.length} slots)
           </span>
         </div>
         {expanded ? (
@@ -113,7 +113,7 @@ export default function BulkAuxiliaryUpdater({
                 checked={mode === "all"}
                 onChange={() => {
                   setMode("all");
-                  setSelected(new Set(AUXILIARY_TYPES));
+                  setSelected(new Set(AUXILIARY_TASK_TYPES));
                 }}
                 disabled={disabled}
                 className="accent-neon-purple"
@@ -136,7 +136,7 @@ export default function BulkAuxiliaryUpdater({
           {/* Task type checkboxes */}
           {mode === "custom" && (
             <div className="grid grid-cols-3 gap-x-4 gap-y-1 pl-1">
-              {AUXILIARY_TYPES.map((taskType) => (
+              {AUXILIARY_TASK_TYPES.map((taskType) => (
                 <label
                   key={taskType}
                   className="flex items-center gap-1.5 cursor-pointer hover:bg-white/5 px-2 py-1 rounded transition-colors"

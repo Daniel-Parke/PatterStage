@@ -7,9 +7,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getModelDefaults, setDefaultModel } from "@/lib/models-repository";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, setDefaultPutSchema } from "@/lib/api-schemas";
-import type { TaskType } from "@/lib/hermes-providers";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
 export async function GET(request: NextRequest) {
@@ -28,17 +28,17 @@ export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-  const parsed = setDefaultPutSchema.safeParse(raw);
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+
+  const parsed = setDefaultPutSchema.safeParse(bodyResult);
   if (!parsed.success) return zodErrorResponse(parsed.error);
 
   try {
-    const defaults = setDefaultModel(parsed.data.taskType as TaskType, parsed.data.modelId);
+    // setDefaultPutSchema narrows parsed.data.taskType to TaskType, so no
+    // cast is needed. (Session 53 dropped the z.enum widening cast on
+    // taskTypeSchema.)
+    const defaults = setDefaultModel(parsed.data.taskType, parsed.data.modelId);
     syncDefaultsToHermesConfig();
     appendAuditLine({
       action: "model.default.set",

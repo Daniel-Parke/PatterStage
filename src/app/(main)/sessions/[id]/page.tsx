@@ -14,23 +14,9 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { safeApiCall } from "@/lib/api-fetch";
-import { ROLE_META } from "@/components/session/constants";
+import { ROLE_META, getMessageRole } from "@/components/session/constants";
 import { MessageBubble, type SessionMessage, type SessionData } from "@/components/session/MessageBubble";
-// ── Helpers ───────────────────────────────────────────────────
-
-/**
- * Pure helper extracted from the page render so it can be unit-tested
- * without rendering the full Next.js page. Returns true when the session
- * has no messages but the API note suggests the agent is still running.
- */
-export function isSessionStillRunning(
-  messageCount: number,
-  note: string | null | undefined,
-): boolean {
-  if (messageCount > 0) return false;
-  if (!note) return false;
-  return /still running|in progress|mid-flight/i.test(note);
-}
+import { isSessionStillRunning } from "@/lib/session-title";
 
 // ── Page ────────────────────────────────────────────────────
 
@@ -83,7 +69,7 @@ export default function SessionDetailPage() {
     if (!data?.messages) return {};
     return data.messages.reduce(
       (acc, msg) => {
-        const role = msg.role || "unknown";
+        const role = getMessageRole(msg);
         acc[role] = (acc[role] || 0) + 1;
         return acc;
       },
@@ -97,7 +83,7 @@ export default function SessionDetailPage() {
     if (!roleFilter) return data.messages.map((msg, i) => ({ msg, originalIndex: i }));
     const result: Array<{ msg: SessionMessage; originalIndex: number }> = [];
     for (let i = 0; i < data.messages.length; i++) {
-      if ((data.messages[i].role || "unknown").toLowerCase() === roleFilter) {
+      if (getMessageRole(data.messages[i]) === roleFilter) {
         result.push({ msg: data.messages[i], originalIndex: i });
       }
     }
@@ -109,7 +95,7 @@ export default function SessionDetailPage() {
     if (!data?.messages) return;
     const roleMessages = data.messages
       .map((msg, i) => ({ msg, index: i }))
-      .filter(({ msg }) => (msg.role || "unknown").toLowerCase() === role);
+      .filter(({ msg }) => getMessageRole(msg) === role);
     if (roleMessages.length === 0) return;
 
     // Find first message below current viewport

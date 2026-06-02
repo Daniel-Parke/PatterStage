@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb, getSchemaHealth } from "@/lib/db";
 import {
   countMissionsInCategory,
@@ -65,7 +66,8 @@ export async function POST(request: NextRequest) {
   try {
     ensureDb();
     ensureDefaultCategories();
-    const body = await request.json();
+    const body = await parseJsonBody(request);
+    if (body instanceof NextResponse) return body;
     const name = typeof body.name === "string" ? body.name : "";
     const color = typeof body.color === "string" ? body.color : undefined;
     if (!name.trim()) {
@@ -99,7 +101,8 @@ export async function PUT(request: NextRequest) {
   if (auth) return auth;
 
   try {
-    const body = await request.json();
+    const body = await parseJsonBody(request);
+    if (body instanceof NextResponse) return body;
     const id = typeof body.id === "string" ? body.id : "";
     if (!id) {
       return NextResponse.json({ error: "id is required" }, { status: 400 });

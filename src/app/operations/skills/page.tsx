@@ -20,6 +20,7 @@ import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
 import { apiFetch } from "@/lib/api-fetch";
+import { runSyncAction } from "@/lib/operation-sync-action";
 import { groupByCategory, titleCaseCategory } from "@/lib/skills-grouping";
 import type { Skill, SkillsData } from "@/types/hermes";
 
@@ -87,24 +88,16 @@ export default function SkillsPage() {
   const skillApiUrl = (name: string) =>
     `/api/skills/${encodeURIComponent(name)}?profile=${selectedProfile}`;
 
-  const importSkillsFromHermes = async () => {
-    setImporting(true);
-    try {
-      const data = await apiFetch("/api/agent/profiles/sync/import", {
-        method: "POST",
-        body: JSON.stringify({ importSkills: true }),
-      });
-      if (data.data?.success === false) {
-        throw new Error(data.error ?? "Import failed");
-      }
-      showToast("Skills catalog imported from Hermes disk", "success");
-      await loadSkills();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Import failed", "error");
-    } finally {
-      setImporting(false);
-    }
-  };
+  const importSkillsFromHermes = () =>
+    runSyncAction({
+      setBusy: setImporting,
+      showToast,
+      url: "/api/agent/profiles/sync/import",
+      body: { importSkills: true },
+      successMessage: "Skills catalog imported from Hermes disk",
+      errorMessage: "Import failed",
+      onSuccess: loadSkills,
+    });
 
   const loadSkills = useCallback(async () => {
     setLoading(true);
@@ -125,9 +118,18 @@ export default function SkillsPage() {
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
-  // Derive active/inactive from the skills + pending toggles
-  const activeSkills = (data?.skills || []).filter((s) => toggling[s.name] ?? s.enabled);
-  const inactiveSkills = (data?.skills || []).filter((s) => !(toggling[s.name] ?? s.enabled));
+  // Derive active/inactive from the skills + pending toggles in a single pass.
+  const { activeSkills, inactiveSkills } = (data?.skills ?? []).reduce<{
+    activeSkills: Skill[];
+    inactiveSkills: Skill[];
+  }>(
+    (acc, s) => {
+      const isActive = toggling[s.name] ?? s.enabled;
+      (isActive ? acc.activeSkills : acc.inactiveSkills).push(s);
+      return acc;
+    },
+    { activeSkills: [], inactiveSkills: [] },
+  );
 
   // ── Toggle — fires API immediately, optimistic update, reverts on failure ───
 
@@ -152,27 +154,28 @@ export default function SkillsPage() {
           method: "PUT",
           body: JSON.stringify({ profile: selectedProfile, enabled: next }),
         });
-        // Clear pending toggle
-        setToggling((prev) => {
-          const next2 = { ...prev };
-          delete next2[skillName];
-          return next2;
-        });
         showToast(
           next ? `${skillName} enabled` : `${skillName} disabled`,
           "success",
         );
       } catch (err) {
-        // Revert BOTH optimistic states on failure
+        // Revert the optimistic data on failure (toggling is cleared
+        // by the finally block below, so we only need to revert data
+        // here).
+        if (prevData) {
+          setData(prevData);
+        }
+        showToast(err instanceof Error ? err.message : "Failed to update skill", "error");
+      } finally {
+        // Always clear the pending toggle, regardless of success or
+        // failure — single source of truth for the toggling-map
+        // cleanup. Was previously duplicated in the success and
+        // failure branches (3 lines × 2 = 6 lines).
         setToggling((prev) => {
           const next2 = { ...prev };
           delete next2[skillName];
           return next2;
         });
-        if (prevData) {
-          setData(prevData);
-        }
-        showToast(err instanceof Error ? err.message : "Failed to update skill", "error");
       }
     },
     [data, selectedProfile, showToast],

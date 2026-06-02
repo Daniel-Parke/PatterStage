@@ -7,6 +7,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, unlink
 import { parseTemplatePackManifestV1 } from "@/lib/schema";
 import { zodErrorResponse } from "@/lib/api-schemas";
 import { logApiError } from "@/lib/api-logger";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { PATHS } from "@/lib/paths";
 import { requireAuth } from "@/lib/api-auth";
@@ -214,7 +215,15 @@ export async function POST(request: NextRequest) {
   if (auth) return auth;
 
   try {
-    const body = await request.json();
+    // Body shape is action-discriminated and validated per-branch below;
+    // parseJsonBody gives us a 400 on malformed JSON but the inner field
+    // types are checked per-branch. Body is untyped (was `any` when read
+    // via request.json()) to preserve the original assignability to typed
+    // template fields.
+    const parsed = await parseJsonBody(request);
+    if (parsed instanceof NextResponse) return parsed;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- body is action-discriminated; per-branch validators narrow the shape
+    const body = parsed as any;
     const { action } = body;
 
     if (action === "create") {

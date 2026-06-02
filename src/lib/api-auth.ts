@@ -54,11 +54,29 @@ export function requireSignedRequest(request: NextRequest): NextResponse | null 
   return null;
 }
 
-export function requireNotReadOnly(): NextResponse | null {
+/**
+ * Guard for write endpoints. Returns a 503 NextResponse (to be returned
+ * from the route handler) if the control hub is in read-only mode, or
+ * `null` if writes are allowed.
+ *
+ * Optional `context` is appended to the default message as a
+ * resource-specific hint (e.g. "skill toggles are disabled",
+ * "tool mutations are disabled"). When omitted, the canonical default
+ * message including the env-var hint is used.
+ */
+export function requireNotReadOnly(context?: string): NextResponse | null {
   if (!isChReadOnly()) return null;
+  if (!context) {
+    return NextResponse.json(
+      { error: "Control Hub is in read-only mode (set CH_READ_ONLY=true to allow writes)." },
+      { status: 503 },
+    );
+  }
   return NextResponse.json(
-    { error: "Control Hub is in read-only mode (set CH_READ_ONLY=true to allow writes)." },
-    { status: 503 }
+    {
+      error: `Control Hub is in read-only mode — ${context}`,
+    },
+    { status: 503 },
   );
 }
 
@@ -86,24 +104,4 @@ export function requireDeployApiEnabled(): NextResponse | null {
  */
 export function requireAuth(_request: NextRequest): NextResponse | null {
   return requireNotReadOnly();
-}
-
-/**
- * Safely parse the JSON body of a request.
- * Returns the parsed object on success, or a NextResponse (400) on parse failure.
- *
- * Usage:
- *   const body = await parseJsonBody(request);
- *   if (body instanceof NextResponse) return body;
- *   // body is now Record<string, unknown>
- */
-export async function parseJsonBody(
-  request: NextRequest,
-): Promise<Record<string, unknown> | NextResponse> {
-  try {
-    const body = await request.json();
-    return body as Record<string, unknown>;
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
 }

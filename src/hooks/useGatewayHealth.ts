@@ -81,16 +81,16 @@ export function useGatewayHealth(): GatewayHealth & {
       }),
     ]);
     const registryOk = defaultsRes.ok && Boolean(defaultsRes.data?.defaults?.agent?.trim());
-      let diskOk = false;
-      if (configRes.ok) {
-        const modelCfg = configRes.data?.model;
-        if (typeof modelCfg === "string") {
-          diskOk = modelCfg.trim().length > 0;
-        } else if (modelCfg && typeof modelCfg === "object") {
-          diskOk = Boolean(String((modelCfg as Record<string, unknown>).default ?? "").trim());
-        }
+    let diskOk = false;
+    if (configRes.ok) {
+      const modelCfg = configRes.data?.model;
+      if (typeof modelCfg === "string") {
+        diskOk = modelCfg.trim().length > 0;
+      } else if (modelCfg && typeof modelCfg === "object") {
+        diskOk = Boolean(String((modelCfg as Record<string, unknown>).default ?? "").trim());
       }
-      setAgentDefaultModelSet(registryOk && diskOk);
+    }
+    setAgentDefaultModelSet(registryOk && diskOk);
   }, []);
 
   // ── Fetch model lists ───────────────────────────────────────

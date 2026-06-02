@@ -24,11 +24,10 @@ import * as yaml from "js-yaml";
 
 import { getActiveHermesPaths } from "./hermes-agent-runtime";
 import {
+  AUXILIARY_TASK_TYPES,
   envVarForProvider,
   isHermesProvider,
-  TASK_TYPES,
   type HermesProvider,
-  type TaskType,
 } from "./hermes-providers";
 import { updateAgentRoot } from "./agent-root-repository";
 import { getModelDefaults, getModel } from "./models-repository";
@@ -289,10 +288,8 @@ export function readHermesConfigModels(): Map<string, HermesConfigModelEntry> {
   }
 }
 
-/** Auxiliary slots written through to `auxiliary.<task>.*`. */
-const AUXILIARY_TASKS: ReadonlyArray<TaskType> = TASK_TYPES.filter(
-  (t) => t !== "agent"
-) as ReadonlyArray<TaskType>;
+/** Auxiliary slots written through to `auxiliary.<task>.*`.
+ *  See `AUXILIARY_TASK_TYPES` in `@/lib/hermes-providers` (canonical). */
 
 /**
  * Read ~/.hermes/config.yaml, set `model.*` from Control Hub DB's default
@@ -341,7 +338,7 @@ export function syncDefaultsToHermesConfig(): { backupPath: string | null } {
 
   // ── 11 auxiliary slots
   const aux: Record<string, AuxiliarySection> = { ...(config.auxiliary ?? {}) };
-  for (const slot of AUXILIARY_TASKS) {
+  for (const slot of AUXILIARY_TASK_TYPES) {
     const modelId = defaults[slot];
     if (!modelId) continue;
     const m = getModel(modelId);

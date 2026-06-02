@@ -162,6 +162,52 @@ export function logFileUnderLogsDir(logsDir: string, logPath: string): boolean {
 }
 
 /**
+ * Resolve a user-supplied log basename to an absolute, validated path.
+ *
+ * Returns a discriminated union so callers can short-circuit on validation
+ * failures with the right HTTP status (400 for invalid name/path, 404 for
+ * missing file). The default basename is "agent" when `raw` is null or
+ * empty so GET /api/logs has a sensible default target.
+ *
+ * Path safety: rejects traversal attempts via `sanitizeLogBasename` (no
+ * slashes, no `..`, no bad chars) and double-checks the resolved absolute
+ * path stays under `logsDir` via `logFileUnderLogsDir`.
+ */
+export type ResolvedLogFile =
+  | { ok: true; safeName: string; absolutePath: string }
+  | { ok: false; reason: "invalid-name" }
+  | { ok: false; reason: "invalid-path" };
+
+/**
+ * Human-readable error message for a `ResolvedLogFile` failure reason.
+ * Maps the union discriminant to the user-visible string used by
+ * `GET /api/logs` and `DELETE /api/logs`. Add a new branch here when
+ * `ResolvedLogFile` grows a new reason.
+ */
+export function logValidationError(reason: "invalid-name" | "invalid-path"): string {
+  return reason === "invalid-name" ? "Invalid log name" : "Invalid log path";
+}
+
+export function resolveLogFilePath(
+  logsDir: string,
+  resolvedLogsDir: string,
+  raw: string | null,
+): ResolvedLogFile {
+  const safeName =
+    raw === null || raw.trim() === ""
+      ? "agent"
+      : sanitizeLogBasename(raw);
+  if (safeName === null) {
+    return { ok: false, reason: "invalid-name" };
+  }
+  const absolutePath = resolve(logsDir, `${safeName}.log`);
+  if (!logFileUnderLogsDir(resolvedLogsDir, absolutePath)) {
+    return { ok: false, reason: "invalid-path" };
+  }
+  return { ok: true, safeName, absolutePath };
+}
+
+/**
  * Collect available `.log` files from a directory.
  * Returns sorted by name priority (core first, then system, then other).
  */

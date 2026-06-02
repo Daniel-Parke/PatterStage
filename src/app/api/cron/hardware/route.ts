@@ -4,7 +4,9 @@ import { exec, execSync } from "child_process";
 import { join } from "path";
 
 import { logApiError } from "@/lib/api-logger";
-import { requireAuth, parseJsonBody, isChReadOnly } from "@/lib/api-auth";
+import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
+import { badRequest } from "@/lib/api-response";
 import { toError } from "@/lib/api-fetch";
 import { crontabLineUsesScriptsDir } from "@/lib/hardware-cron";
 import { getChScriptsDir, getChHardwareLogDir, CH_DATA_DIR } from "@/lib/paths";
@@ -52,6 +54,57 @@ function saveDisabledIds(ids: Set<string>): void {
 // ── Parse / serialise helpers ───────────────────────────────────
 
 /**
+ * Extract the script basename (e.g. "ch-backup.sh") from a command string,
+ * or empty string if the command does not invoke a ch-* script.
+ *
+ * Used by both `parseCrontabLine` (read) and the POST handler (write) to
+ * derive a stable entry ID from the command body. The match anchors on
+ * `/ch-` so we don't pick up other paths in the command (env vars,
+ * redirected log file paths, etc.).
+ */
+function extractScriptName(command: string): string {
+  const m = command.match(/(\S+\/ch-[^\s]+)/);
+  return m ? m[1].split("/").pop()! : "";
+}
+
+/**
+ * Apply an enable/disable flag to the disabledIds set:
+ *   enabled === false → add
+ *   enabled === true  → delete
+ *   enabled === undefined → no-op (skip)
+ *
+ * Shared by PUT (toggle-only branch) and PUT (non-toggle branch's
+ * post-write sync), so the "if (enabled === false) add else delete"
+ * tri-state lives in exactly one place.
+ */
+function setDisabled(disabledIds: Set<string>, id: string, enabled: boolean | undefined): void {
+  if (enabled === undefined) return;
+  if (enabled === false) {
+    disabledIds.add(id);
+  } else {
+    disabledIds.delete(id);
+  }
+}
+
+/**
+ * Return a 400 NextResponse if `command` is set and doesn't run a script
+ * under the CH scripts dir. Returns null when the command is acceptable
+ * (or undefined — in which case the caller is not editing the command
+ * field and the check is skipped). Shared between POST (create) and PUT
+ * (update).
+ */
+function rejectIfBadScriptsCommand(command: string | undefined): NextResponse | null {
+  if (command === undefined) return null;
+  const scriptsDir = getChScriptsDir();
+  if (!crontabLineUsesScriptsDir(command, scriptsDir)) {
+    return badRequest(
+      `Command must run a script under ${scriptsDir} (Control Hub hardware cron scripts directory).`,
+    );
+  }
+  return null;
+}
+
+/**
  * Parse a crontab line into a structured job.
  * Returns null for lines we don't manage.
  */
@@ -88,8 +141,7 @@ function parseCrontabLine(
   const command = fullCmd.replace(/>>\s*\S+\.log\s*2>.*$/, "").trim();
 
   // Extract script name for ID and display name
-  const scriptMatch = command.match(/(\S+\/ch-[^\s]+)/);
-  const scriptName = scriptMatch ? scriptMatch[1].split("/").pop()! : "";
+  const scriptName = extractScriptName(command);
   const id =
     scriptName.replace(/\.sh$/, "") ||
     command.split(" ")[0]?.split("/").pop() ||
@@ -232,37 +284,23 @@ export async function POST(request: NextRequest) {
     };
 
     if (!schedule || !command) {
-      return NextResponse.json(
-        { error: "schedule and command are required" },
-        { status: 400 }
-      );
+      return badRequest("schedule and command are required");
     }
 
     // Basic cron validation — 5 fields
     const fields = schedule.trim().split(/\s+/);
     if (fields.length !== 5) {
-      return NextResponse.json(
-        { error: "Schedule must have exactly 5 fields: min hour dom mon dow" },
-        { status: 400 }
-      );
+      return badRequest("Schedule must have exactly 5 fields: min hour dom mon dow");
     }
 
-    const scriptsDir = getChScriptsDir();
-    if (!crontabLineUsesScriptsDir(command, scriptsDir)) {
-      return NextResponse.json(
-        {
-          error: `Command must run a script under ${scriptsDir} (Control Hub hardware cron scripts directory).`,
-        },
-        { status: 400 }
-      );
-    }
+    const badCmd = rejectIfBadScriptsCommand(command);
+    if (badCmd) return badCmd;
 
     const crontab = await readCrontab();
     const lines = crontab.split("\n");
 
     // Check if this script already has an entry (replace if so)
-    const scriptMatch = command.match(/(\S+\/ch-[^\s]+)/);
-    const scriptName = scriptMatch ? scriptMatch[1].split("/").pop()! : "";
+    const scriptName = extractScriptName(command);
     const entryId = scriptName.replace(/\.sh$/, "") || "hw";
 
     const logDir = getChHardwareLogDir();
@@ -329,7 +367,7 @@ export async function PUT(request: NextRequest) {
     };
 
     if (!id) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
+      return badRequest("id is required");
     }
 
     const crontab = await readCrontab();
@@ -372,26 +410,12 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: `Hardware cron job '${id}' not found` }, { status: 404 });
     }
 
-    const scriptsDir = getChScriptsDir();
-    if (
-      command !== undefined &&
-      !crontabLineUsesScriptsDir(command, scriptsDir)
-    ) {
-      return NextResponse.json(
-        {
-          error: `Command must run a script under ${scriptsDir} (Control Hub hardware cron scripts directory).`,
-        },
-        { status: 400 }
-      );
-    }
+    const badCmd = rejectIfBadScriptsCommand(command);
+    if (badCmd) return badCmd;
 
     // Toggle-only: update JSON state, no crontab change
     if (isToggleOnly) {
-      if (enabled === false) {
-        disabledIds.add(id);
-      } else {
-        disabledIds.delete(id);
-      }
+      setDisabled(disabledIds, id, enabled);
       saveDisabledIds(disabledIds);
       return NextResponse.json({ data: { id, enabled } });
     }
@@ -403,11 +427,7 @@ export async function PUT(request: NextRequest) {
 
     // Sync disabled state to JSON for this job
     if (enabled !== undefined) {
-      if (enabled === false) {
-        disabledIds.add(id);
-      } else {
-        disabledIds.delete(id);
-      }
+      setDisabled(disabledIds, id, enabled);
       saveDisabledIds(disabledIds);
     }
 
@@ -430,7 +450,7 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
+      return badRequest("id is required");
     }
 
     const crontab = await readCrontab();

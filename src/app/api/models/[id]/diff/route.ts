@@ -11,6 +11,8 @@ import { existsSync, readFileSync } from "fs";
 import * as yaml from "js-yaml";
 import { envVarForProvider, isHermesProvider } from "@/lib/hermes-providers";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
+import { maskKeyHint } from "@/lib/secret-mask";
 
 interface DiffEntry {
   id: string;
@@ -44,12 +46,10 @@ export async function POST(
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  let raw: unknown;
-  try { raw = await request.json(); } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
 
-  const body = raw as Record<string, unknown>;
+  const body = bodyResult;
   const direction = (body?.direction as "push" | "pull") ?? "push";
   const { id } = await params;
 
@@ -88,11 +88,10 @@ export async function POST(
       if (model.credentialsId && model.apiKey) {
         const envVar = isHermesProvider(model.provider) ? envVarForProvider(model.provider) : null;
         if (envVar) {
-          const hint = model.apiKey.slice(0, 4) + "..." + model.apiKey.slice(-4);
           diffs.push({
             id: "model-env",
             label: "Credential",
-            detail: `Write ${envVar}=${hint} to ~/.hermes/.env`,
+            detail: `Write ${envVar}=${maskKeyHint(model.apiKey)} to ~/.hermes/.env`,
           });
         }
       }
