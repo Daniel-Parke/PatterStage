@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { listCredentials, createCredential, deleteCredential } from "@/lib/credentials-repository";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, credentialPostSchema } from "@/lib/api-schemas";
 import { syncCredentialToHermesEnv } from "@/lib/hermes-config-sync";
@@ -30,13 +31,12 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-  const parsed = credentialPostSchema.safeParse(raw);
+  // Hoist body parsing out of the main try/catch so malformed JSON returns
+  // 400 (via parseJsonBody) rather than 500. Aligns with every other route
+  // in the Models/Config/Fallbacks surface.
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+  const parsed = credentialPostSchema.safeParse(bodyResult);
   if (!parsed.success) return zodErrorResponse(parsed.error);
 
   let createdId: string | null = null;

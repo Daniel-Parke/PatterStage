@@ -26,6 +26,12 @@ export default function ModelsAgentDefaultSection({
   onBulkAuxiliaryChange,
   onSetDefault,
 }: ModelsAgentDefaultSectionProps) {
+  // Hoist the active-model lookup out of JSX (no IIFE wrapper) — the find
+  // runs on every render either way, but extracting to a const makes the
+  // conditional read more naturally as `activeModel && <div>...</div>`.
+  const activeModel = defaults.agent
+    ? models.find((m) => m.id === defaults.agent)
+    : null;
   return (
     <section data-section="agent-default" className="space-y-4">
       <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider flex items-center gap-2">
@@ -65,23 +71,19 @@ export default function ModelsAgentDefaultSection({
                   ))}
                 </select>
 
-                {defaults.agent && (() => {
-                  const activeModel = models.find((m) => m.id === defaults.agent);
-                  return activeModel ? (
-                    <div className="min-w-0 flex-1">
-                      <span className="text-xs text-white/40 font-mono">
-                        {" "}
-                        {activeModel.provider}/
-                        <span className="text-white/60">{activeModel.modelId}</span>
-                      </span>
+                {activeModel && (
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs text-white/40 font-mono">
                       {" "}
-                      <span className="inline-flex items-center gap-1 text-green-400 text-xs font-mono">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        Active
-                      </span>
-                    </div>
-                  ) : null;
-                })()}
+                      {activeModel.provider}/
+                      <span className="text-white/60">{activeModel.modelId}</span>
+                    </span>
+                    {" "}
+                    <span className="inline-flex items-center gap-1 text-green-400 text-xs font-mono">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Active
+                    </span>
+                  </div>
+                )}
                 {!defaults.agent && (
                   <span className="text-xs text-white/30 font-mono">No default set</span>
                 )}

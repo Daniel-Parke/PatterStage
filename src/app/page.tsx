@@ -36,7 +36,7 @@ import type { MissionCategory } from "@/lib/mission-category-repository";
 import TemplateCard from "@/components/ui/TemplateCard";
 import { useToast } from "@/components/ui/Toast";
 import type { SystemStatus, AccentColor, MonitorData, HermesProcess, MissionBrief } from "@/types/hermes";
-import { timeAgo, timeUntil, titleCase, parseSchedule } from "@/lib/utils";
+import { timeAgo, titleCase, parseSchedule } from "@/lib/utils";
 import { shellHeaderBarClasses } from "@/lib/theme";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import AppPageShell from "@/components/layout/AppPageShell";
@@ -45,6 +45,8 @@ import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/Stat
 import { safeApiCall } from "@/lib/api-fetch";
 import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
 import { unwrapPollPath } from "@/lib/dashboard-poll";
+import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
+import { computeCronJobRowCaption } from "@/lib/cron-row-helpers";
 
 // ── Typed response shapes for each API endpoint ─────────────
 interface TemplatesResponseData { templates: Array<{ id: string; name: string; icon: string; color: string; category: string; categoryId?: string; profile: string; description: string; isCustom?: boolean }>; }
@@ -72,6 +74,29 @@ const LiveClock = reactMemo(function LiveClock() {
     </>
   );
 });
+
+// ── Cron job caption span ─────────────────────────────────────
+
+/**
+ * Tiny presentational component that renders the cron-job caption
+ * produced by `computeCronJobRowCaption`. Extracted so the JSX
+ * .map() can pass a single prop instead of an IIFE.
+ */
+function CronJobCaptionSpan({
+  caption,
+}: {
+  caption: ReturnType<typeof computeCronJobRowCaption> | null;
+}) {
+  if (!caption) return null;
+  return (
+    <span
+      className={`text-xs truncate min-w-0 flex-1 ${caption.colorClass}`}
+      title={caption.text}
+    >
+      {caption.text}
+    </span>
+  );
+}
 
 export default function Dashboard() {
   const [data, setDataFields] = useState<{
@@ -356,11 +381,18 @@ export default function Dashboard() {
   const modelConfig = config?.model as Record<string, unknown> | undefined;
   const diskModel = (modelConfig?.default as string) || "";
   const diskProvider = (modelConfig?.provider as string) || "";
-  const modelSubtitle = diskModel
-    ? `${diskModel}${diskProvider ? ` · ${diskProvider}` : ""}`
-    : registryAgentModelLabel
-      ? `${registryAgentModelLabel} · Models registry (push Bob to write config.yaml)`
-      : "-";
+  // Header subtitle: prefer the model written to config.yaml; fall back to
+  // the registry's "default agent" (the user has set a default in the
+  // Models registry but hasn't yet pushed it to config.yaml); else "-".
+  const modelSubtitle = useMemo(
+    () =>
+      diskModel
+        ? `${diskModel}${diskProvider ? ` · ${diskProvider}` : ""}`
+        : registryAgentModelLabel
+          ? `${registryAgentModelLabel} · Models registry (push Bob to write config.yaml)`
+          : "-",
+    [diskModel, diskProvider, registryAgentModelLabel],
+  );
   const activeProcesses = useMemo(() => processes.filter((p) => p.status === "running"), [processes]);
   const activeMissions = useMemo(
     () =>
@@ -374,6 +406,29 @@ export default function Dashboard() {
 
   // Timestamp for cron scheduling comparisons — computed fresh per render
   const now = new Date().getTime();
+
+  // Per-job caption map: priority-ordered ladder extracted to
+  // computeCronJobRowCaption (src/lib/cron-row-helpers.ts) so the
+  // rules are unit-testable in isolation. The map lets the JSX
+  // .map() do a single lookup per row instead of recomputing.
+  const cronCaptions = useMemo(() => {
+    const map = new Map<string, ReturnType<typeof computeCronJobRowCaption>>();
+    for (const job of monitor?.cron.jobs ?? []) {
+      map.set(job.id, computeCronJobRowCaption(job, now));
+    }
+    return map;
+  }, [monitor?.cron.jobs, now]);
+
+  // Sessions stat-pill subtitle: "N active · M last 7d" derived from
+  // the 5 most recent sessions exposed by /api/monitor. The full
+  // window math lives in countInWindow (src/lib/session-window.ts) so
+  // it's unit-testable without rendering the dashboard.
+  const sessionWindowSubtitle = useMemo(() => {
+    const recent = monitor?.sessions.recent ?? [];
+    const active = countInWindow(recent, ACTIVE_WINDOW_MS, now);
+    const last7d = countInWindow(recent, RECENT_WINDOW_MS, now);
+    return `${active} active · ${last7d} last 7d`;
+  }, [monitor?.sessions.recent, now]);
 
   // Group templates by category for the dispatch section
   const templateGroups = useMemo(
@@ -445,23 +500,7 @@ export default function Dashboard() {
                 label="Sessions"
                 value={monitor.sessions.total.toLocaleString()}
                 color="purple"
-                subtitle={(() => {
-                  // Derive a one-line context string from the recent-5 sample.
-                  // We only have the 5 most recent on the dashboard; for larger
-                  // windows the user clicks through to the Sessions page.
-                  const active = monitor.sessions.recent.filter((s) => {
-                    // "active" = no end time on the session. The recent list only
-                    // exposes `modified`, so a session modified in the last 5
-                    // minutes is a reasonable proxy for "still running".
-                    if (!s.modified) return false;
-                    return Date.now() - new Date(s.modified).getTime() < 5 * 60_000;
-                  }).length;
-                  const last7d = monitor.sessions.recent.filter((s) => {
-                    if (!s.modified) return false;
-                    return Date.now() - new Date(s.modified).getTime() < 7 * 24 * 60 * 60_000;
-                  }).length;
-                  return `${active} active · ${last7d} last 7d`;
-                })()}
+                subtitle={sessionWindowSubtitle}
               />
               <StatPill
                 icon={Layers}
@@ -696,26 +735,9 @@ export default function Dashboard() {
                         />
                       </div>
                       {job.enabled && (
-                        <span className={`text-xs truncate min-w-0 flex-1 ${
-                          job.state === "running"
-                            ? "text-neon-green"
-                            : job.lastStatus === "ok"
-                            ? "text-neon-green"
-                            : job.lastStatus && job.lastStatus !== "ok"
-                            ? "text-red-400"
-                            : "text-neon-orange"
-                        }`}>
-                          {job.state === "running"
-                            ? "Executing..."
-                            : job.lastRun && !job.nextRun
-                            ? `${titleCase(job.lastStatus || "Ok")} ${timeAgo(job.lastRun)}`
-                            : job.nextRun &&
-                              new Date(job.nextRun).getTime() > now
-                            ? "Next " + timeUntil(job.nextRun)
-                            : job.lastRun
-                            ? `Active · Ran ${timeAgo(job.lastRun)}`
-                            : "Queued"}
-                        </span>
+                        <CronJobCaptionSpan
+                          caption={cronCaptions.get(job.id) ?? null}
+                        />
                       )}
                     </div>
                   </div>

@@ -51,4 +51,22 @@ describe("/api/seed", () => {
       expect.objectContaining({ target: "all", mode: "merge" }),
     );
   });
+
+  it("POST returns 400 on malformed JSON", async () => {
+    // Regression for the request.json() bug class: malformed JSON previously
+    // returned 500 via the outer try/catch ("Failed to run seed"). parseJsonBody
+    // now returns 400 with a clean error message.
+    const { POST } = await import("@/app/api/seed/route");
+    const { NextRequest } = await import("next/server");
+    const req = new NextRequest("http://localhost/api/seed", {
+      method: "POST",
+      body: "{not valid json",
+      headers: { "content-type": "application/json" },
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toMatch(/invalid json/i);
+    expect(mockRunCatalogSeed).not.toHaveBeenCalled();
+  });
 });

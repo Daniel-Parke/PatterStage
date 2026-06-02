@@ -12,6 +12,7 @@ import { ChevronDown, Zap } from "lucide-react";
 import GlowSurface from "@/components/ui/GlowSurface";
 
 import {
+  AUXILIARY_TASK_TYPES,
   TASK_TYPES,
   type TaskType,
 } from "@/lib/hermes-providers";
@@ -127,7 +128,12 @@ export default function DefaultsGrid({
                       type="button"
                       onClick={() => {
                         if (!onSetAllAux || !selected) return;
-                        const others = TASK_TYPES.filter((t) => t !== slot);
+                        // Apply to all OTHER auxiliary slots — the current
+                        // slot already has this value, so we skip it to
+                        // avoid an extra (no-op) PUT + Hermes write-through.
+                        // AUXILIARY_TASK_TYPES is the canonical 11-slot list;
+                        // we exclude the current one inline.
+                        const others = AUXILIARY_TASK_TYPES.filter((t) => t !== slot);
                         if (others.length > 0) {
                           void onSetAllAux(others, selected);
                         }
