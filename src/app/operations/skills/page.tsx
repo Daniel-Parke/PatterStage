@@ -118,9 +118,18 @@ export default function SkillsPage() {
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
 
-  // Derive active/inactive from the skills + pending toggles
-  const activeSkills = (data?.skills || []).filter((s) => toggling[s.name] ?? s.enabled);
-  const inactiveSkills = (data?.skills || []).filter((s) => !(toggling[s.name] ?? s.enabled));
+  // Derive active/inactive from the skills + pending toggles in a single pass.
+  const { activeSkills, inactiveSkills } = (data?.skills ?? []).reduce<{
+    activeSkills: Skill[];
+    inactiveSkills: Skill[];
+  }>(
+    (acc, s) => {
+      const isActive = toggling[s.name] ?? s.enabled;
+      (isActive ? acc.activeSkills : acc.inactiveSkills).push(s);
+      return acc;
+    },
+    { activeSkills: [], inactiveSkills: [] },
+  );
 
   // ── Toggle — fires API immediately, optimistic update, reverts on failure ───
 

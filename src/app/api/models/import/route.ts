@@ -127,8 +127,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const modelsImported = details.filter((d) => d.action !== "skipped").length;
-    const modelsSkipped = details.filter((d) => d.action === "skipped").length;
+    const { modelsImported, modelsSkipped } = details.reduce(
+      (acc, d) => {
+        if (d.action === "skipped") acc.modelsSkipped += 1;
+        else acc.modelsImported += 1;
+        return acc;
+      },
+      { modelsImported: 0, modelsSkipped: 0 },
+    );
 
     appendAuditLine({
       action: "models.import",

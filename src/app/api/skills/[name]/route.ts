@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { existsSync, readFileSync } from "fs";
 
 import { logApiError } from "@/lib/api-logger";
-import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { safeStat } from "@/lib/fs-stats";
 import { appendAuditLine } from "@/lib/audit-log";
@@ -65,12 +65,8 @@ export async function PUT(
 ) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  if (isChReadOnly()) {
-    return NextResponse.json(
-      { error: "Control Hub is in read-only mode — skill writes are disabled" },
-      { status: 503 }
-    );
-  }
+  const ro = requireNotReadOnly("skill writes are disabled");
+  if (ro) return ro;
 
   const { name } = await params;
 

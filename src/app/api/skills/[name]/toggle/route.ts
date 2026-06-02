@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
-import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
@@ -20,12 +20,8 @@ export async function PUT(
 ) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  if (isChReadOnly()) {
-    return NextResponse.json(
-      { error: "Control Hub is in read-only mode — skill toggles are disabled" },
-      { status: 503 }
-    );
-  }
+  const ro = requireNotReadOnly("skill toggles are disabled");
+  if (ro) return ro;
 
   const { name } = await params;
 

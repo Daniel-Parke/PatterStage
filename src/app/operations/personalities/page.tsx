@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Brain,
   Plus,
@@ -302,21 +302,26 @@ export default function PersonalitiesPage() {
     showToast("Personality saved!", "success");
   };
 
-  const sortedPersonalities = [...personalities].sort((a, b) => {
-    if (a.name === activePersonality) return -1;
-    if (b.name === activePersonality) return 1;
-    return a.name.localeCompare(b.name);
-  });
+  const sortedPersonalities = useMemo(
+    () =>
+      [...personalities].sort((a, b) => {
+        if (a.name === activePersonality) return -1;
+        if (b.name === activePersonality) return 1;
+        return a.name.localeCompare(b.name);
+      }),
+    [personalities, activePersonality],
+  );
 
-  const filtered = sortedPersonalities.filter((p) => {
-    if (!search.trim()) return true;
+  const filtered = useMemo(() => {
+    if (!search.trim()) return sortedPersonalities;
     const q = search.toLowerCase();
-    return (
-      p.name.toLowerCase().includes(q) ||
-      p.prompt.toLowerCase().includes(q) ||
-      p.name === activePersonality
+    return sortedPersonalities.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.prompt.toLowerCase().includes(q) ||
+        p.name === activePersonality,
     );
-  });
+  }, [sortedPersonalities, search, activePersonality]);
 
   return (
     <AppPageShell>

@@ -39,8 +39,9 @@ export default function BehaviourPage() {
   const [loading, setLoading] = useState(true);
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [editor, setEditor] = useState<EditorState | null>(null);
-  const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  // `saving` is derived from saveStatus so the two are never out of sync.
+  const saving = saveStatus === "saving";
   const [previewMode, setPreviewMode] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [createName, setCreateName] = useState("");
@@ -54,8 +55,14 @@ export default function BehaviourPage() {
 
   const { showToast, toastElement } = useToast();
 
-  const driftCount = profiles.filter((p) => p.syncStatus === "drift").length;
-  const syncErrorCount = profiles.filter((p) => p.syncStatus === "error").length;
+  const { driftCount, syncErrorCount } = profiles.reduce(
+    (acc, p) => {
+      if (p.syncStatus === "drift") acc.driftCount += 1;
+      else if (p.syncStatus === "error") acc.syncErrorCount += 1;
+      return acc;
+    },
+    { driftCount: 0, syncErrorCount: 0 },
+  );
 
   const doSync = async (
     url: string,
@@ -202,7 +209,6 @@ export default function BehaviourPage() {
 
   const handleSave = async () => {
     if (!editor) return;
-    setSaving(true);
     setSaveStatus("saving");
     try {
       await apiFetch(agentFileUrl(editor.profileId, editor.fileKey), {
@@ -217,8 +223,6 @@ export default function BehaviourPage() {
     } catch {
       setSaveStatus("error");
       showToast("Failed to save file", "error");
-    } finally {
-      setSaving(false);
     }
   };
 

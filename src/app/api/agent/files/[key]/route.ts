@@ -26,6 +26,50 @@ import { normalizePlatformToolsets } from "@/lib/hermes-toolset-normalize";
 
 const MANAGED_KEYS = new Set<string>(["soul", "agent", "user", "memory", "config", "hermes"]);
 
+type FileResponseVariant = {
+  content: string;
+  size: number;
+  exists: boolean;
+  lastModified: string | undefined;
+};
+
+/**
+ * Build the GET response payload for a file-read branch. The 3 branches
+ * (managed-file hit, missing file, real-file read) all share the same
+ * `key`/`name`/`description` envelope and only differ in `content`,
+ * `size`, `lastModified`, and `exists`. This helper centralizes the
+ * common envelope so the per-branch code can focus on the variant.
+ * `lastModified: undefined` is omitted from the payload (matching the
+ * original shape where the "missing file" branch had no `lastModified`
+ * field at all).
+ */
+function buildFileResponse(
+  resolved: { path: string; name: string; description: string },
+  key: string,
+  variant: FileResponseVariant,
+) {
+  const data: {
+    key: string;
+    content: string;
+    name: string;
+    description: string;
+    exists: boolean;
+    size: number;
+    lastModified?: string;
+  } = {
+    key,
+    content: variant.content,
+    name: resolved.name,
+    description: resolved.description,
+    exists: variant.exists,
+    size: variant.size,
+  };
+  if (variant.lastModified !== undefined) {
+    data.lastModified = variant.lastModified;
+  }
+  return { data };
+}
+
 /** Build a path lookup map from a Hermes path bundle. */
 function getBundlePathMap(bundle: ReturnType<typeof buildProfileHermesPathBundle>): Record<string, string> {
   return {
@@ -90,47 +134,39 @@ export async function GET(
     if (MANAGED_KEYS.has(key)) {
       const stored = readManagedFileContent(profileSlug, key as ManagedFileKey);
       if (stored) {
-        return NextResponse.json({
-          data: {
-            key,
+        return NextResponse.json(
+          buildFileResponse(resolved, key, {
             content: stored.content,
-            name: resolved.name,
-            description: resolved.description,
-            exists: stored.content.length > 0,
             size: stored.content.length,
+            exists: stored.content.length > 0,
             lastModified: stored.updatedAt,
-          },
-        });
+          }),
+        );
       }
     }
 
     if (!existsSync(resolved.path)) {
-      return NextResponse.json({
-        data: {
-          key,
+      return NextResponse.json(
+        buildFileResponse(resolved, key, {
           content: "",
-          name: resolved.name,
-          description: resolved.description,
-          exists: false,
           size: 0,
-        },
-      });
+          exists: false,
+          lastModified: undefined,
+        }),
+      );
     }
 
     const content = readFileSync(resolved.path, "utf-8");
     // File confirmed to exist above; safeStat never null.
     const stats = safeStat(resolved.path)!;
-    return NextResponse.json({
-      data: {
-        key,
+    return NextResponse.json(
+      buildFileResponse(resolved, key, {
         content,
-        name: resolved.name,
-        description: resolved.description,
-        exists: true,
         size: stats.size,
+        exists: true,
         lastModified: stats.mtime,
-      },
-    });
+      }),
+    );
   }
   catch (error) {
     logApiError("GET /api/agent/files/[key]", `reading ${resolved.path}`, error);
