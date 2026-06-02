@@ -171,14 +171,23 @@ describe("isApiNoiseSession", () => {
     expect(isApiNoiseSession(s, FIXED_NOW)).toBe(false);
   });
 
-  it("treats the 60s boundary as exclusive (exactly 60s old is not noise)", () => {
+  it("treats the 60s boundary as inclusive (exactly 60s old is still noise)", () => {
     // isApiNoiseSession uses `ageMs > 60_000` to *exclude*; so an exact
-    // 60_000 ms age returns false (the session has "graduated" out of
-    // noise status by clock-tick).
+    // 60_000 ms age is NOT greater than 60_000, and the session is still
+    // classified as noise. The boundary only flips at 60_000 + 1 ms.
     const s = makeSession({
       source: "api",
       size: 100,
       startedAt: new Date(FIXED_NOW - 60_000).toISOString(),
+    });
+    expect(isApiNoiseSession(s, FIXED_NOW)).toBe(true);
+  });
+
+  it("returns false at 60_001ms (just past the boundary)", () => {
+    const s = makeSession({
+      source: "api",
+      size: 100,
+      startedAt: new Date(FIXED_NOW - 60_001).toISOString(),
     });
     expect(isApiNoiseSession(s, FIXED_NOW)).toBe(false);
   });
