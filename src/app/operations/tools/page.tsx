@@ -95,30 +95,33 @@ export default function ToolsPage() {
 
   const isUnifiedEnabled = (toolsetId: string): boolean => unifiedEnabled.includes(toolsetId);
 
-  const saveToolsets = async () => {
-    setSavingToolsets(true);
-    try {
-      let payload: PlatformToolsets;
-      if (showAdvancedJson) {
-        const parsed = JSON.parse(toolsetsJson) as unknown;
-        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-          throw new Error("Invalid JSON object");
-        }
-        payload = parsed as PlatformToolsets;
-      } else {
-        payload = expandUnifiedToAllPlatforms(unifiedEnabled);
+  const saveToolsets = () => {
+    let payload: PlatformToolsets;
+    if (showAdvancedJson) {
+      const parsed = JSON.parse(toolsetsJson) as unknown;
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        // Original behaviour: validation error shown via direct
+        // showToast (not via the helper's catch path, because the
+        // helper's `errorMessage` would replace this with the generic
+        // fallback). The error message text is byte-identical to the
+        // pre-refactor "Invalid JSON object" toast.
+        showToast("Invalid JSON object", "error");
+        return Promise.resolve();
       }
-      await apiFetch(`/api/agent/profiles/${selectedProfile}/toolsets`, {
-        method: "PUT",
-        body: JSON.stringify({ platformToolsets: payload }),
-      });
-      showToast("Toolsets saved and pushed to Hermes", "success");
-      await loadToolsets();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to save toolsets", "error");
-    } finally {
-      setSavingToolsets(false);
+      payload = parsed as PlatformToolsets;
+    } else {
+      payload = expandUnifiedToAllPlatforms(unifiedEnabled);
     }
+    return runSyncAction({
+      setBusy: setSavingToolsets,
+      showToast,
+      url: `/api/agent/profiles/${selectedProfile}/toolsets`,
+      method: "PUT",
+      body: { platformToolsets: payload },
+      successMessage: "Toolsets saved and pushed to Hermes",
+      errorMessage: "Failed to save toolsets",
+      onSuccess: loadToolsets,
+    });
   };
 
   const pullFromHermes = (mode: "pull" | "push") => {

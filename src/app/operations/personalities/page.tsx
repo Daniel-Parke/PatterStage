@@ -27,6 +27,7 @@ import {
   getPersonalityEmoji,
 } from "@/lib/personalities";
 import { apiFetch } from "@/lib/api-fetch";
+import { runSyncAction } from "@/lib/operation-sync-action";
 
 interface Personality {
   name: string;
@@ -275,25 +276,22 @@ export default function PersonalitiesPage() {
     loadPersonalities();
   }, [loadPersonalities]);
 
-  const handleActivate = async (name: string) => {
-    try {
-      await apiFetch("/api/config", {
-        method: "PUT",
-        body: JSON.stringify({
-          section: "display",
-          values: { personality: activePersonality === name ? "" : name },
-        }),
-      });
-      setActivePersonality(activePersonality === name ? "" : name);
-      showToast(
-        activePersonality === name
-          ? "Cleared active personality"
-          : `Activated: ${name}`,
-        "success"
-      );
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Activation failed", "error");
-    }
+  const handleActivate = (name: string) => {
+    const next = activePersonality === name ? "" : name;
+    // No busy state for activation — the no-op setter keeps the helper
+    // happy without adding a UI spinner for a sub-100ms action.
+    return runSyncAction({
+      setBusy: () => undefined,
+      showToast,
+      url: "/api/config",
+      method: "PUT",
+      body: { section: "display", values: { personality: next } },
+      successMessage: next ? `Activated: ${next}` : "Cleared active personality",
+      errorMessage: "Activation failed",
+      onSuccess: () => {
+        setActivePersonality(next);
+      },
+    });
   };
 
   const handleSaved = () => {

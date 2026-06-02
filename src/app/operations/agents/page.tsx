@@ -145,48 +145,49 @@ export default function BehaviourPage() {
 
   const handleCreate = async () => {
     if (creating || !createName.trim()) return;
-    setCreating(true);
-    try {
-      await apiFetch("/api/agent/profiles", {
-        method: "POST",
-        body: JSON.stringify({
-          name: createName.trim(),
-          description: createDescription.trim(),
-          cloneFrom: createCloneFrom,
-        }),
-      });
-      showToast(`Profile "${createName.trim()}" created`, "success");
-      setShowCreate(false);
-      setCreateName("");
-      setCreateDescription("");
-      setCreateCloneFrom("default");
-      await loadProfiles();
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : "Failed to create profile", "error");
-    } finally {
-      setCreating(false);
-    }
+    const name = createName.trim();
+    await runSyncAction({
+      setBusy: setCreating,
+      showToast,
+      url: "/api/agent/profiles",
+      method: "POST",
+      body: {
+        name,
+        description: createDescription.trim(),
+        cloneFrom: createCloneFrom,
+      },
+      successMessage: `Profile "${name}" created`,
+      errorMessage: "Failed to create profile",
+      onSuccess: async () => {
+        setShowCreate(false);
+        setCreateName("");
+        setCreateDescription("");
+        setCreateCloneFrom("default");
+        await loadProfiles();
+      },
+    });
   };
 
   const handleDelete = async () => {
     if (deleting || !deleteTarget) return;
-    setDeleting(true);
-    try {
-      await apiFetch(`/api/agent/profiles/${deleteTarget}`, {
-        method: "DELETE",
-      });
-      showToast("Profile deleted", "success");
-      setDeleteTarget(null);
-      if (selectedProfileId === deleteTarget) {
-        setSelectedProfileId(null);
-        setEditor(null);
-      }
-      await loadProfiles();
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : "Failed to delete profile", "error");
-    } finally {
-      setDeleting(false);
-    }
+    const target = deleteTarget;
+    await runSyncAction({
+      setBusy: setDeleting,
+      showToast,
+      url: `/api/agent/profiles/${target}`,
+      method: "DELETE",
+      body: {},
+      successMessage: "Profile deleted",
+      errorMessage: "Failed to delete profile",
+      onSuccess: async () => {
+        setDeleteTarget(null);
+        if (selectedProfileId === target) {
+          setSelectedProfileId(null);
+          setEditor(null);
+        }
+        await loadProfiles();
+      },
+    });
   };
 
   const openFile = async (profileId: string, file: ProfileFile) => {

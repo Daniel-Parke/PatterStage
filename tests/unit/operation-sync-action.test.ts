@@ -151,4 +151,52 @@ describe("runSyncAction", () => {
     expect(showToast).toHaveBeenCalledWith("ok", "success");
     expect(onSuccess).toHaveBeenCalledTimes(1);
   });
+
+  it("defaults to POST when no method is specified (backward compat)", async () => {
+    apiFetch.mockResolvedValue({ data: { success: true } });
+
+    await runSyncAction(baseOptions());
+
+    expect(apiFetch).toHaveBeenCalledWith(
+      "/api/test",
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
+
+  it("forwards an explicit PUT method to apiFetch", async () => {
+    apiFetch.mockResolvedValue({ data: { success: true } });
+
+    await runSyncAction(baseOptions({ method: "PUT" }));
+
+    expect(apiFetch).toHaveBeenCalledWith(
+      "/api/test",
+      expect.objectContaining({ method: "PUT" }),
+    );
+  });
+
+  it("forwards an explicit DELETE method to apiFetch", async () => {
+    apiFetch.mockResolvedValue({ data: { success: true } });
+
+    await runSyncAction(baseOptions({ method: "DELETE" }));
+
+    expect(apiFetch).toHaveBeenCalledWith(
+      "/api/test",
+      expect.objectContaining({ method: "DELETE" }),
+    );
+  });
+
+  it("does not require a body for DELETE-style requests", async () => {
+    // Some DELETE handlers don't read the body, but the helper still
+    // passes body: JSON.stringify(body) — verify we don't break the
+    // existing shape. (The `body` field is required in the type, so
+    // callers always pass at least `{}`.)
+    apiFetch.mockResolvedValue({ data: { success: true } });
+
+    await runSyncAction(baseOptions({ method: "DELETE", body: {} }));
+
+    expect(apiFetch).toHaveBeenCalledWith(
+      "/api/test",
+      expect.objectContaining({ method: "DELETE" }),
+    );
+  });
 });

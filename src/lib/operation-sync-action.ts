@@ -11,12 +11,19 @@
 // (doSync), once in operations/skills (importSkillsFromHermes), and
 // twice in operations/tools (pullFromHermes / pushToHermes).
 //
+// Session 55 extended the helper to accept an explicit HTTP `method`
+// (default POST) so non-POST flows in operations/agents (handleCreate
+// POST, handleDelete DELETE) and operations/tools (saveToolsets PUT)
+// can adopt the same pattern. The pre-existing callers are
+// unaffected — `method` defaults to "POST" for backward compatibility.
+//
 // This helper centralises the pattern. It takes the busy-state
-// setter, the toast, the URL, the body, the success/error messages,
-// an optional reload callback, and an optional `checkSuccess` flag
-// for endpoints that return `{data: {success: false, ...}}` on
-// logical failure (the sync/* routes do this; the toggle routes
-// throw on error instead and rely on the catch path).
+// setter, the toast, the URL, the method, the body, the
+// success/error messages, an optional reload callback, and an
+// optional `checkSuccess` flag for endpoints that return
+// `{data: {success: false, ...}}` on logical failure (the sync/*
+// routes do this; the toggle routes throw on error instead and rely
+// on the catch path).
 //
 // Usage:
 //   const doSync = useCallback(
@@ -32,6 +39,18 @@
 //       }),
 //     [showToast],
 //   );
+//
+//   // Non-POST (e.g. agents page handleCreate / handleDelete):
+//   runSyncAction({
+//     setBusy: setCreating,
+//     showToast,
+//     url: "/api/agent/profiles",
+//     method: "POST",
+//     body: { name, description, cloneFrom },
+//     successMessage: `Profile "${name}" created`,
+//     errorMessage: "Failed to create profile",
+//     onSuccess: () => { setShowCreate(false); resetForm(); return loadProfiles(); },
+//   });
 
 import { apiFetch } from "@/lib/api-fetch";
 
@@ -43,7 +62,12 @@ export interface RunSyncActionOptions {
   showToast: (message: string, variant: "success" | "error") => void;
   /** POST endpoint. */
   url: string;
-  /** JSON body to send. */
+  /** HTTP method. Defaults to "POST" for backward compat with the
+   *  original sync/* callers. Use "PUT" for upserts, "DELETE" for
+   *  removals, etc. */
+  method?: "POST" | "PUT" | "PATCH" | "DELETE";
+  /** JSON body to send. Always stringified — pass `{}` for callers
+   *  that don't need a body (e.g. many DELETE handlers). */
   body: Record<string, unknown>;
   /** Toast message on success. */
   successMessage: string;
@@ -63,6 +87,7 @@ export async function runSyncAction({
   setBusy,
   showToast,
   url,
+  method = "POST",
   body,
   successMessage,
   errorMessage,
@@ -71,7 +96,7 @@ export async function runSyncAction({
 }: RunSyncActionOptions): Promise<void> {
   setBusy(true);
   try {
-    const data = await apiFetch(url, { method: "POST", body: JSON.stringify(body) });
+    const data = await apiFetch(url, { method, body: JSON.stringify(body) });
     if (
       checkSuccess &&
       data &&
