@@ -20,6 +20,7 @@ import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
 import { apiFetch } from "@/lib/api-fetch";
+import { runSyncAction } from "@/lib/operation-sync-action";
 import { groupByCategory, titleCaseCategory } from "@/lib/skills-grouping";
 import type { Skill, SkillsData } from "@/types/hermes";
 
@@ -87,24 +88,16 @@ export default function SkillsPage() {
   const skillApiUrl = (name: string) =>
     `/api/skills/${encodeURIComponent(name)}?profile=${selectedProfile}`;
 
-  const importSkillsFromHermes = async () => {
-    setImporting(true);
-    try {
-      const data = await apiFetch("/api/agent/profiles/sync/import", {
-        method: "POST",
-        body: JSON.stringify({ importSkills: true }),
-      });
-      if (data.data?.success === false) {
-        throw new Error(data.error ?? "Import failed");
-      }
-      showToast("Skills catalog imported from Hermes disk", "success");
-      await loadSkills();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : "Import failed", "error");
-    } finally {
-      setImporting(false);
-    }
-  };
+  const importSkillsFromHermes = () =>
+    runSyncAction({
+      setBusy: setImporting,
+      showToast,
+      url: "/api/agent/profiles/sync/import",
+      body: { importSkills: true },
+      successMessage: "Skills catalog imported from Hermes disk",
+      errorMessage: "Import failed",
+      onSuccess: loadSkills,
+    });
 
   const loadSkills = useCallback(async () => {
     setLoading(true);

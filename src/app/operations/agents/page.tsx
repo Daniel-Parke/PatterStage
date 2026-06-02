@@ -17,6 +17,7 @@ import { useToast } from "@/components/ui/Toast";
 import type { AgentProfile, ProfileFile } from "@/types/hermes";
 import { apiFetch } from "@/lib/api-fetch";
 import { profileSyncBody } from "@/lib/profile-sync-body";
+import { runSyncAction } from "@/lib/operation-sync-action";
 
 interface EditorState {
   profileId: string;
@@ -61,25 +62,16 @@ export default function BehaviourPage() {
     body: Record<string, unknown>,
     successMessage: string,
     errorMessage: string,
-  ): Promise<void> => {
-    setSyncBusy(true);
-    try {
-      const data = await apiFetch(url, {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-      if (data.data?.success === false) {
-        showToast(data.error ?? errorMessage, "error");
-        return;
-      }
-      showToast(successMessage, "success");
-      await loadProfiles();
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : errorMessage, "error");
-    } finally {
-      setSyncBusy(false);
-    }
-  };
+  ): Promise<void> =>
+    runSyncAction({
+      setBusy: setSyncBusy,
+      showToast,
+      url,
+      body,
+      successMessage,
+      errorMessage,
+      onSuccess: loadProfiles,
+    });
 
   const handlePushAll = () =>
     void doSync(
