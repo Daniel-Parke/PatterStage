@@ -56,8 +56,8 @@ export async function GET(request: NextRequest) {
   });
 }
 
-export async function POST(_request: NextRequest) {
-  const auth = requireAuth(_request);
+export async function POST(request: NextRequest) {
+  const auth = requireAuth(request);
   if (auth) return auth;
   return UNSUPPORTED_WRITE_RESPONSE;
 }

@@ -159,3 +159,29 @@ function finishParse(ts: string | null, msg: string): ParsedLogLine {
 
   return { timestamp: ts, level, message };
 }
+
+/**
+ * Inject a fallback timestamp prefix on any line that doesn't already have a
+ * parseable timestamp. Used by the log API to ensure the frontend can render
+ * every line in its time-ordered table even when the underlying log writer
+ * forgot to emit a timestamp (e.g. raw `print()` output in a process log).
+ *
+ * The fallback format is `YYYY-MM-DD HH:MM:SS` (matching `RE_SPACE_TS`) so
+ * `parseLogLine` will round-trip it back into the `timestamp` field with no
+ * special-casing in the UI.
+ *
+ * Empty / whitespace-only lines are returned unchanged — they have no
+ * meaningful "time" and injecting one would just clutter the display.
+ */
+export function injectMissingTimestamps(
+  lines: readonly string[],
+  fallbackTimestamp: string,
+): string[] {
+  return lines.map((line) => {
+    if (!line.trim()) return line;
+    // parseLogLine is the canonical "does this line have a timestamp?" check.
+    // If it returns a non-null timestamp, the line is already parseable.
+    if (parseLogLine(line).timestamp !== null) return line;
+    return `${fallbackTimestamp} ${line}`;
+  });
+}
