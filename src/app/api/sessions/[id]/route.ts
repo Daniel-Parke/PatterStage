@@ -6,7 +6,7 @@ import { basename, join } from "path";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, notFound, serverError } from "@/lib/api-response";
 import { safeStat } from "@/lib/fs-stats";
 import { getSession, estimateSessionSize, lookupMissionIdForCronSession } from "@/lib/session-repository";
 import { PATHS } from "@/lib/paths";
@@ -190,10 +190,7 @@ export async function GET(
         }),
       });
     }
-    return NextResponse.json(
-      { error: `Session "${sanitizedId}" not found` },
-      { status: 404 }
-    );
+    return notFound(`Session "${sanitizedId}" not found`);
   }
 
   try {
@@ -263,9 +260,6 @@ export async function GET(
     }
   } catch (error) {
     logApiError("GET /api/sessions/[id]", "reading session " + sanitizedId, error);
-    return NextResponse.json(
-      { error: `Failed to read session "${sanitizedId}"` },
-      { status: 500 }
-    );
+    return serverError(`Failed to read session "${sanitizedId}"`);
   }
 }

@@ -9,39 +9,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getMemoryProviderType } from "@/lib/memory-providers";
 import { requireAuth } from "@/lib/api-auth";
+import { badRequest } from "@/lib/api-response";
 import type { ApiResponse } from "@/types/hermes";
 import type { MemoryReadResult } from "@/lib/memory-providers";
-
-// ── Helpers ─────────────────────────────────────────────────
-
-/**
- * Memory facts are managed by agent tools (hindsight_retain / recall /
- * reflect), not by the dashboard. Build a single consistent 400
- * response so the route's capability is self-documenting and each
- * write verb is a one-liner.
- */
-function unsupportedWriteResponse(): NextResponse {
-  return NextResponse.json<ApiResponse<never>>(
-    {
-      error:
-        "Memory management via the dashboard is not supported for the current provider. Use agent tools instead.",
-    },
-    { status: 400 },
-  );
-}
-
-/**
- * Combine the auth check + the unsupported-write 400 response into
- * a single helper. Every write verb (POST/PUT/DELETE) on this route
- * is the same shape, so the handler is a one-liner:
- *
- *   export const POST = unsupportedWriteHandler;
- */
-function unsupportedWriteHandler(request: NextRequest): NextResponse {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-  return unsupportedWriteResponse();
-}
 
 // ── GET — Memory status ──────────────────────────────────────
 // Hindsight: dormant status (facts managed via agent tools)
@@ -70,6 +40,18 @@ export async function GET(request: NextRequest) {
         "hindsight_retain (store), hindsight_recall (search), hindsight_reflect (reason).",
     },
   });
+}
+
+// Memory facts are managed by agent tools (hindsight_retain / recall /
+// reflect), not by the dashboard. Every write verb (POST/PUT/DELETE) on
+// this route is the same shape, so the handlers are one-line delegations
+// to a single helper that combines the auth check + the 400 response.
+function unsupportedWriteHandler(request: NextRequest): NextResponse {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+  return badRequest(
+    "Memory management via the dashboard is not supported for the current provider. Use agent tools instead.",
+  );
 }
 
 export const POST = unsupportedWriteHandler;

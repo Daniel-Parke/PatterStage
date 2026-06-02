@@ -16,7 +16,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, notFound, serverError } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import {
   listSessions,
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     if (q.id) {
       const session = getSession(q.id);
       if (!session) {
-        return NextResponse.json({ error: "Session not found" }, { status: 404 });
+        return notFound("Session not found");
       }
       return NextResponse.json({ data: { session } });
     }
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logApiError("GET /api/sessions", "listing sessions", error);
-    return NextResponse.json({ error: "Failed to load sessions" }, { status: 500 });
+    return serverError("Failed to load sessions");
   }
 }
 
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
         error: body.error,
       });
       if (!session) {
-        return NextResponse.json({ error: "Session not found" }, { status: 404 });
+        return notFound("Session not found");
       }
       return NextResponse.json({ data: { session } });
     }
@@ -143,6 +143,6 @@ export async function POST(request: NextRequest) {
     return badRequest("Unknown action");
   } catch (error) {
     logApiError("POST /api/sessions", "session action", error);
-    return NextResponse.json({ error: "Failed to process session action" }, { status: 500 });
+    return serverError("Failed to process session action");
   }
 }

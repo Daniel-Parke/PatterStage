@@ -13,7 +13,7 @@ import {
 } from "@/lib/log-files";
 import { injectMissingTimestamps } from "@/lib/log-line-format";
 import { requireAuth } from "@/lib/api-auth";
-import { ApiResponse } from "@/types/hermes";
+import { badRequest, notFound, serverError } from "@/lib/api-response";
 import type { LogFileMeta } from "@/lib/log-files";
 
 // ── Shared log directory resolution ──────────────────────────
@@ -54,10 +54,7 @@ export async function GET(request: NextRequest) {
 
     const dirResult = resolveLogsDir();
     if (!dirResult) {
-      return NextResponse.json<ApiResponse<never>>(
-        { error: "No logs directory found" },
-        { status: 404 },
-      );
+      return notFound("No logs directory found");
     }
     const { logsDir, resolvedLogsDir } = dirResult;
 
@@ -74,18 +71,12 @@ export async function GET(request: NextRequest) {
       searchParams.get("name"),
     );
     if (!resolved.ok) {
-      return NextResponse.json<ApiResponse<never>>(
-        { error: logValidationError(resolved.reason) },
-        { status: 400 },
-      );
+      return badRequest(logValidationError(resolved.reason));
     }
     const { safeName, absolutePath: logPath } = resolved;
 
     if (!existsSync(logPath)) {
-      return NextResponse.json<ApiResponse<never>>(
-        { error: `Log file '${safeName}.log' not found` },
-        { status: 404 },
-      );
+      return notFound(`Log file '${safeName}.log' not found`);
     }
 
     const { allLines, lines, mtime, size } = readLastLines(logPath, maxLines);
@@ -94,7 +85,7 @@ export async function GET(request: NextRequest) {
     const fileMtime = mtime.toISOString().replace("T", " ").slice(0, 19);
     const linesWithTimestamp = injectMissingTimestamps(lines, fileMtime);
 
-    return NextResponse.json<ApiResponse<LogGetData>>({
+    return NextResponse.json({
       data: {
         name: safeName,
         totalLines: allLines,
@@ -107,10 +98,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logApiError("GET /api/logs", "reading logs", error);
-    return NextResponse.json<ApiResponse<never>>(
-      { error: "Failed to read logs" },
-      { status: 500 },
-    );
+    return serverError("Failed to read logs");
   }
 }
 
@@ -123,10 +111,7 @@ export async function DELETE(request: NextRequest) {
 
   const dirResult = resolveLogsDir();
   if (!dirResult) {
-    return NextResponse.json<ApiResponse<never>>(
-      { error: "No logs directory found" },
-      { status: 404 },
-    );
+    return notFound("No logs directory found");
   }
   const { logsDir, resolvedLogsDir } = dirResult;
 
@@ -134,15 +119,12 @@ export async function DELETE(request: NextRequest) {
     if (logName) {
       const resolved = resolveLogFilePath(logsDir, resolvedLogsDir, logName);
       if (!resolved.ok) {
-        return NextResponse.json<ApiResponse<never>>(
-          { error: logValidationError(resolved.reason) },
-          { status: 400 },
-        );
+        return badRequest(logValidationError(resolved.reason));
       }
       if (existsSync(resolved.absolutePath)) {
         writeFileSync(resolved.absolutePath, "");
       }
-      return NextResponse.json<ApiResponse<{ deleted: string }>>({
+      return NextResponse.json({
         data: { deleted: resolved.safeName },
       });
     }
@@ -156,14 +138,11 @@ export async function DELETE(request: NextRequest) {
         cleared++;
       }
     }
-    return NextResponse.json<ApiResponse<{ cleared: number }>>({
+    return NextResponse.json({
       data: { cleared },
     });
   } catch (error) {
     logApiError("DELETE /api/logs", "deleting log", error);
-    return NextResponse.json<ApiResponse<never>>(
-      { error: "Failed to delete logs" },
-      { status: 500 },
-    );
+    return serverError("Failed to delete logs");
   }
 }

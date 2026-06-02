@@ -16,6 +16,7 @@ import { listCronJobs } from "@/lib/cron-repository";
 import { listSessions } from "@/lib/session-repository";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { serverError } from "@/lib/api-response";
 import { getGatewayPlatforms, db } from "@/lib/db";
 import type { CronJobBrief, SessionBrief, MonitorData } from "@/types/hermes";
 
@@ -158,9 +159,6 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     logApiError("GET /api/monitor", "aggregating monitor data", error);
-    return NextResponse.json(
-      { error: "Failed to read system monitor data" },
-      { status: 500 }
-    );
+    return serverError("Failed to read system monitor data");
   }
 }
