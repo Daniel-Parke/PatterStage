@@ -20,6 +20,7 @@ import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { parseSchedule } from "@/lib/utils";
+import { buildCronUpdatePayload } from "@/lib/cron-field-updates";
 
 import {
   listCronJobs,
@@ -415,32 +416,9 @@ export async function PUT(request: NextRequest) {
 
     // ── Field updates ─────────────────────────────────────────
 
-    // Build update payload
-    const updatePayload: Parameters<typeof updateCronJob>[1] = {};
-
-    if (updates.name !== undefined) updatePayload.name = (updates.name as string).trim();
-    if (updates.prompt !== undefined) updatePayload.prompt = updates.prompt as string;
-    if (updates.skills !== undefined) updatePayload.skills = updates.skills as string[];
-    if (updates.model !== undefined) updatePayload.model = updates.model as string;
-    if (updates.provider !== undefined) updatePayload.provider = updates.provider as string;
-    if (updates.base_url !== undefined) updatePayload.base_url = updates.base_url as string | null;
-    if (updates.deliver !== undefined) updatePayload.deliver = updates.deliver as string;
-    if (updates.script !== undefined) updatePayload.script = updates.script as string | null;
-    if (updates.profile_name !== undefined) updatePayload.profile_name = updates.profile_name as string;
-    if (updates.enabled !== undefined) updatePayload.enabled = Boolean(updates.enabled);
-    if (updates.state !== undefined) updatePayload.state = updates.state as string;
-
-    if (updates.schedule !== undefined) {
-      const scheduleCheck = parseScheduleOrError(updates.schedule as string);
-      if (!scheduleCheck.ok) return scheduleCheck.response;
-      const parsed = scheduleCheck.parsed;
-      updatePayload.schedule = JSON.stringify(parsed);
-      updatePayload.schedule_display = "display" in parsed ? (parsed as { display: string }).display : (updates.schedule as string);
-    }
-
-    if (updates.repeat !== undefined) {
-      updatePayload.repeat = normalizeRepeat(updates.repeat);
-    }
+    const updateResult = buildCronUpdatePayload(updates);
+    if (!updateResult.ok) return updateResult.response;
+    const updatePayload = updateResult.payload;
 
     const updated = updateCronJob(id, updatePayload);
     if (!updated) {
