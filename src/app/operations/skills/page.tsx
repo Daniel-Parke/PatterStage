@@ -152,27 +152,28 @@ export default function SkillsPage() {
           method: "PUT",
           body: JSON.stringify({ profile: selectedProfile, enabled: next }),
         });
-        // Clear pending toggle
-        setToggling((prev) => {
-          const next2 = { ...prev };
-          delete next2[skillName];
-          return next2;
-        });
         showToast(
           next ? `${skillName} enabled` : `${skillName} disabled`,
           "success",
         );
       } catch (err) {
-        // Revert BOTH optimistic states on failure
+        // Revert the optimistic data on failure (toggling is cleared
+        // by the finally block below, so we only need to revert data
+        // here).
+        if (prevData) {
+          setData(prevData);
+        }
+        showToast(err instanceof Error ? err.message : "Failed to update skill", "error");
+      } finally {
+        // Always clear the pending toggle, regardless of success or
+        // failure — single source of truth for the toggling-map
+        // cleanup. Was previously duplicated in the success and
+        // failure branches (3 lines × 2 = 6 lines).
         setToggling((prev) => {
           const next2 = { ...prev };
           delete next2[skillName];
           return next2;
         });
-        if (prevData) {
-          setData(prevData);
-        }
-        showToast(err instanceof Error ? err.message : "Failed to update skill", "error");
       }
     },
     [data, selectedProfile, showToast],

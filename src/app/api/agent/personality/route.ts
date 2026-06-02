@@ -4,9 +4,7 @@ import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { updateAgentRoot } from "@/lib/agent-root-repository";
-import { getProfile, updateProfileContent } from "@/lib/profiles-repository";
-import { pushProfileToHermes, pushRootToHermes } from "@/lib/hermes-profile-sync";
+import { applyProfileOrRootPatch } from "@/lib/apply-profile-or-root-patch";
 import { resolveSafeProfileName } from "@/lib/path-security";
 
 export async function PUT(request: NextRequest) {
@@ -29,27 +27,27 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: prof.error }, { status: 400 });
     }
 
-    if (prof.profile === "default") {
-      updateAgentRoot({ personality });
-      const push = pushRootToHermes();
-      if (!push.success) {
-        return NextResponse.json({ error: push.error ?? "Push failed" }, { status: 500 });
-      }
-    }
-    else {
-      const row = getProfile(prof.profile);
-      if (!row) {
+    // applyProfileOrRootPatch handles default-vs-non-default dispatch,
+    // 404 on missing profile, and 500 on push failure — was previously
+    // a 16-line if/else in this handler.
+    const result = applyProfileOrRootPatch(
+      prof.profile,
+      { personality },
+      { personality },
+    );
+
+    if (!result.ok) {
+      if (result.reason === "not-found") {
         return NextResponse.json({ error: "Profile not found" }, { status: 404 });
       }
-      updateProfileContent(prof.profile, { personality });
-      const push = pushProfileToHermes(prof.profile);
-      if (!push.success) {
-        return NextResponse.json({ error: push.error ?? "Push failed" }, { status: 500 });
-      }
+      return NextResponse.json(
+        { error: result.error },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({
-      data: { success: true, profile: prof.profile, personality },
+      data: { success: true, profile: result.profile, personality },
     });
   }
   catch (error) {
