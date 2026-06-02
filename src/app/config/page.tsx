@@ -11,8 +11,9 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
-import { iconColorMap, colorBorderMap } from "@/lib/theme";
+import { iconColorMap, colorBorderMap, badgeBgMap } from "@/lib/theme";
 import { apiFetch } from "@/lib/api-fetch";
+import type { AccentColor } from "@/types/hermes";
 
 // ── Category definitions (mirrors sidebar groups) ─────────
 interface CategoryDef {
@@ -104,6 +105,56 @@ function SectionCard({
   );
 }
 
+// ── QuickLinkCard Component ──────────────────────────────────
+//
+// Shared shape for the "Personalities" and "Toolsets" callout cards
+// under the SectionCard grid. Both are simple Link cards pointing to
+// an editor outside /config/[section]. DRY'd here so the two cards
+// stay in lockstep on hover/iconography styling.
+
+interface QuickLinkCardProps {
+  href: string;
+  icon: typeof Sparkles;
+  title: string;
+  description: string;
+  badge: string;
+  color: AccentColor;
+}
+
+function QuickLinkCard({
+  href,
+  icon: Icon,
+  title,
+  description,
+  badge,
+  color,
+}: QuickLinkCardProps) {
+  return (
+    <Link
+      href={href}
+      className={`group rounded-xl border bg-dark-900/50 p-5 transition-all ${colorBorderMap[color]}`}
+    >
+      <div className="flex items-center justify-between mb-3">
+        <Icon className={`w-5 h-5 ${iconColorMap[color]}`} />
+        <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/60 group-hover:translate-x-1 transition-all" />
+      </div>
+      <h3 className="text-base font-semibold text-white mb-1">
+        {title}
+      </h3>
+      <p className="text-xs text-white/40 leading-relaxed">
+        {description}
+      </p>
+      <div className="mt-3">
+        <span
+          className={`text-[10px] font-mono ${iconColorMap[color]}/60 ${badgeBgMap[color]}/5 px-1.5 py-0.5 rounded`}
+        >
+          {badge}
+        </span>
+      </div>
+    </Link>
+  );
+}
+
 export default function ConfigIndexPage() {
   const [config, setConfig] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
@@ -146,46 +197,22 @@ export default function ConfigIndexPage() {
           <>
             {/* Quick links */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Link
+              <QuickLinkCard
                 href="/operations/personalities"
-                className={`group rounded-xl border bg-dark-900/50 p-5 transition-all ${colorBorderMap.purple}`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <Sparkles className="w-5 h-5 text-neon-purple" />
-                  <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/60 group-hover:translate-x-1 transition-all" />
-                </div>
-                <h3 className="text-base font-semibold text-white mb-1">
-                  Personalities
-                </h3>
-                <p className="text-xs text-white/40 leading-relaxed">
-                  Manage personality presets with full CRUD, live preview, and one-click activation
-                </p>
-                <div className="mt-3">
-                  <span className="text-[10px] font-mono text-neon-purple/60 bg-neon-purple/5 px-1.5 py-0.5 rounded">
-                    dedicated editor
-                  </span>
-                </div>
-              </Link>
-              <Link
+                icon={Sparkles}
+                title="Personalities"
+                description="Manage personality presets with full CRUD, live preview, and one-click activation"
+                badge="dedicated editor"
+                color="purple"
+              />
+              <QuickLinkCard
                 href="/operations/tools"
-                className={`group rounded-xl border bg-dark-900/50 p-5 transition-all ${colorBorderMap.cyan}`}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <Wrench className="w-5 h-5 text-neon-cyan" />
-                  <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/60 group-hover:translate-x-1 transition-all" />
-                </div>
-                <h3 className="text-base font-semibold text-white mb-1">
-                  Toolsets
-                </h3>
-                <p className="text-xs text-white/40 leading-relaxed">
-                  Toggle tool availability per platform — control which tools each channel can use
-                </p>
-                <div className="mt-3">
-                  <span className="text-[10px] font-mono text-neon-cyan/60 bg-neon-cyan/5 px-1.5 py-0.5 rounded">
-                    per-platform toggle
-                  </span>
-                </div>
-              </Link>
+                icon={Wrench}
+                title="Toolsets"
+                description="Toggle tool availability per platform — control which tools each channel can use"
+                badge="per-platform toggle"
+                color="cyan"
+              />
             </div>
 
             {/* Grouped sections */}

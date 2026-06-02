@@ -87,29 +87,38 @@ function maskConfigSecrets(config: Record<string, unknown>): Record<string, unkn
   const clone = structuredClone(config);
   // Mask model.api_key
   if (clone.model && typeof clone.model === "object") {
-    const m = clone.model as Record<string, unknown>;
-    if (typeof m.api_key === "string" && m.api_key.length > 0) {
-      m.api_key = maskApiKey(m.api_key);
-    }
+    maskApiKeyField(clone.model as Record<string, unknown>, "api_key");
   }
-  // Mask auxiliary.<task>.api_key
+  // Mask auxiliary.<task>.api_key — every task entry can carry a key
   if (clone.auxiliary && typeof clone.auxiliary === "object") {
     const aux = clone.auxiliary as Record<string, Record<string, unknown>>;
     for (const task of Object.keys(aux)) {
-      const entry = aux[task];
-      if (typeof entry?.api_key === "string" && entry.api_key.length > 0) {
-        entry.api_key = maskApiKey(entry.api_key);
-      }
+      maskApiKeyField(aux[task], "api_key");
     }
   }
   return clone;
 }
 
+/**
+ * In-place replace `record[key]` with its masked form, but only if it's a
+ * non-empty string. Centralises the `typeof === "string" && length > 0`
+ * guard that the two model/auxiliary branches used to repeat.
+ */
+function maskApiKeyField(record: Record<string, unknown>, key: string): void {
+  const value = record[key];
+  if (typeof value === "string" && value.length > 0) {
+    record[key] = maskApiKey(value);
+  }
+}
+
 // GET /api/config — return full config (with secrets masked)
 export async function GET(request: NextRequest) {
+  // Auth check outside the main try/catch so it matches the PUT pattern
+  // and so any future throw inside requireAuth would be classified as an
+  // auth failure rather than a "reading config.yaml" error in the log.
+  const auth = requireAuth(request);
+  if (auth) return auth;
   try {
-    const auth = requireAuth(request);
-    if (auth) return auth;
     const config = readCachedConfig();
     return NextResponse.json({ data: maskConfigSecrets(config) });
   } catch (error) {
