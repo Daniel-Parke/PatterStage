@@ -444,6 +444,40 @@ function buildMissionIdByJobId(): Map<string, string> {
 }
 
 /**
+ * Look up the Control-Hub mission id for a single Hermes cron job id.
+ *
+ * Used by the per-session detail API (`/api/sessions/[id]`) to surface
+ * an "Open Mission" link on the transcript page for cron-spawned sessions
+ * without paying for a full sync build of the job-id → mission-id map.
+ *
+ * Companion to `buildMissionIdByJobId` (bulk version used during the
+ * 15s sessions sync). Both use the same join path:
+ *   cron_jobs.hermes_job_id → cron_jobs.id → missions.cron_job_id → missions.id
+ *
+ * Returns null when the job id is missing/empty, when the DB is
+ * unavailable, or when no mission has been registered for the job
+ * (the detail page just doesn't render a Mission link in that case).
+ */
+export function lookupMissionIdForHermesJob(hermesJobId: string): string | null {
+  if (!hermesJobId) return null;
+  try {
+    const row = db()
+      .prepare(
+        `SELECT m.id AS mission_id
+         FROM missions m
+         JOIN cron_jobs c ON c.id = m.cron_job_id
+         WHERE c.hermes_job_id = ?
+         LIMIT 1`,
+      )
+      .get(hermesJobId) as { mission_id: string } | undefined;
+    return row?.mission_id ?? null;
+  } catch {
+    // DB unavailable or schema differs — non-fatal
+    return null;
+  }
+}
+
+/**
  * Sync Hermes sessions into the sessions table.
  *
  * Reads session metadata from Hermes's state.db (v0.14+).

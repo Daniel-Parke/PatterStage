@@ -6,9 +6,9 @@ import { join } from "path";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { getSession, estimateSessionSize } from "@/lib/session-repository";
+import { getSession, estimateSessionSize, lookupMissionIdForHermesJob } from "@/lib/session-repository";
+import { cronJobIdFromSessionId } from "@/lib/session-title";
 import { PATHS } from "@/lib/paths";
-import { db } from "@/lib/db";
 import {
   getMaxSessionFileBytes,
   sessionsRateLimitResponse,
@@ -22,27 +22,9 @@ import {
  * or when no mission has been registered for the job.
  */
 function lookupMissionIdForCronSession(sessionId: string): string | null {
-  if (!sessionId.startsWith("cron_")) return null;
-  const rest = sessionId.slice("cron_".length);
-  const firstUnderscore = rest.indexOf("_");
-  if (firstUnderscore <= 0) return null;
-  const jobId = rest.slice(0, firstUnderscore);
-  try {
-    const row = db()
-      .prepare(
-        `SELECT m.id AS mission_id
-         FROM missions m
-         JOIN cron_jobs c ON c.id = m.cron_job_id
-         WHERE c.hermes_job_id = ?
-         LIMIT 1`,
-      )
-      .get(jobId) as { mission_id: string } | undefined;
-    return row?.mission_id ?? null;
-  } catch {
-    // DB unavailable or schema differs — non-fatal, detail page just won't
-    // show the Mission link.
-    return null;
-  }
+  const jobId = cronJobIdFromSessionId(sessionId);
+  if (!jobId) return null;
+  return lookupMissionIdForHermesJob(jobId);
 }
 
 export async function GET(
