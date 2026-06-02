@@ -97,6 +97,22 @@ Missions use non-interactive `hermes chat -q` (not an interactive TTY), so slash
 
 **Platforms:** process kill is implemented for **Linux and macOS** only (same as bootstrap scripts). If kill fails, the DB and cron pause still apply; check server logs and `~/.hermes/logs` for details.
 
+## Session closure bridge
+
+Every mission dispatch pre-registers a `sessions` row with `status="active"` before spawning Hermes (see `src/lib/mission-dispatch.ts`). The mission lifecycle and the session lifecycle therefore need to stay in lockstep — otherwise the Sessions page shows a "live" pulsing dot on rows whose mission is already `successful` or `failed` days ago.
+
+The bridge is `closeSessionForMission(missionId, updates)` in `src/lib/session-repository.ts`, called from two places:
+
+1. **`MissionSync.sync()`** — when the on-disk `<id>.status.json` says `successful`/`failed`, the sync updates the mission row and the session row in the same iteration. The orphan branch (process died without writing status.json) does the same with `status="failed"`, `error="Process terminated without completion"`.
+2. **Admin backfill** — `POST /api/admin/sessions/backfill-status` with `{"dryRun": false}` runs the same logic for any pre-existing stuck rows. The matching `dryRun: true` returns counts without writing. Default is `dryRun: true` for safety.
+
+The recurring orphan-sweep in `syncHermesSessionsToDb` (every 15s sync tick) also calls `closeOrphanedActiveSessions()` to catch any sessions the mission-side bridge missed — it has two paths:
+
+- **Path A — parent-mission gated.** Active session whose `mission_id` points to a mission that is no longer `dispatched` (status `successful`/`failed`/`cancelled`/anything-else-terminal, or the mission is missing/soft-deleted). Closes as `completed`/`failed` derived from the parent.
+- **Path B — age-only fallback.** Active session with no `mission_id` AND (size > 0 with age > 5 min, OR age > 30 min). The 30-min orphan gate catches parentless empty sessions that the original `size > 0` guard would have missed (e.g. orphaned api/cli/telegram sessions whose gateway never wrote `end_reason`).
+
+Both paths share a 5-min boot safety window — a session that started in the last 5 minutes is never closed, even if its parent is long gone.
+
 ## UI
 
 - **Compose:** right-side Sheet (`MissionCreateForm`) with category combobox and prompt preview.
