@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
+import { existsSync, readFileSync } from "fs";
 
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
+import { safeStat } from "@/lib/fs-stats";
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
 import { getSkill, upsertSkill, parseSkillFrontmatter } from "@/lib/skills-repository";
 import { pushSkillToHermes } from "@/lib/hermes-profile-sync";
 import { skillsRootForProfile } from "@/lib/skills-config";
-import { existsSync, readFileSync, statSync } from "fs";
 
 export async function GET(
   request: NextRequest,
@@ -40,15 +41,15 @@ export async function GET(
     }
 
     const content = readFileSync(filePath, "utf-8");
-    const stats = statSync(filePath);
+    const st = safeStat(filePath)!; // file confirmed to exist above
 
     return NextResponse.json({
       data: {
         name,
         path: filePath,
         content,
-        size: stats.size,
-        lastModified: stats.mtime.toISOString(),
+        size: st.size,
+        lastModified: st.mtime,
       },
     });
   }
