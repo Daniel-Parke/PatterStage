@@ -22,6 +22,8 @@ import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useApiData } from "@/hooks/useApiData";
+import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
+import { useInterval } from "@/hooks/useInterval";
 import type { LogGetData } from "@/app/api/logs/route";
 import { formatBytes } from "@/lib/utils";
 import { LogRow } from "@/components/logs/LogRow";
@@ -38,9 +40,13 @@ export default function LogsPage() {
   const [autoScroll, setAutoScroll] = useState(true);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [lineCount, setLineCount] = useState(200);
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
+  // "Delete all logs" is a destructive singleton action — no auto-dismiss
+  // (the user must explicitly confirm or cancel). The hook returns
+  // `isArmed` for the singleton key; `confirm` runs the action.
+  const { isArmed: deleteArmed, arm: armDelete, confirm: confirmDelete, cancel: cancelDelete } =
+    useTwoStepConfirm({ autoDismissMs: 0 });
 
   const logUrl = useMemo(
     () => `/api/logs?name=${encodeURIComponent(activeLog)}&lines=${lineCount}`,
@@ -50,36 +56,39 @@ export default function LogsPage() {
   const { data, loading, error: loadError, refetch } = useApiData<LogData>(logUrl);
 
   const handleDeleteAllLogs = useCallback(async () => {
-    if (!deleteConfirm) {
-      setDeleteConfirm(true);
+    if (!deleteArmed) {
       setActionMessage(null);
+      armDelete();
       return;
     }
-    setDeleteConfirm(false);
-    setActionMessage(null);
-    try {
-      const { ok, data: delData, error } = await safeApiCall<{ cleared?: number }>(
-        "/api/logs",
-        { method: "DELETE" },
-      );
-      if (!ok || error) {
-        setActionMessage(error ?? "Delete failed");
-        return;
+    await confirmDelete(async () => {
+      try {
+        const { ok, data: delData, error } = await safeApiCall<{ cleared?: number }>(
+          "/api/logs",
+          { method: "DELETE" },
+        );
+        if (!ok || error) {
+          setActionMessage(error ?? "Delete failed");
+          return;
+        }
+        setActionMessage(
+          typeof delData?.cleared === "number"
+            ? `Cleared ${delData.cleared} log file(s).`
+            : "Logs cleared.",
+        );
+        void refetch();
+      } catch {
+        setActionMessage("Delete failed (network error)");
       }
-      setActionMessage(
-        typeof delData?.cleared === "number"
-          ? `Cleared ${delData.cleared} log file(s).`
-          : "Logs cleared.",
-      );
-      void refetch();
-    } catch {
-      setActionMessage("Delete failed (network error)");
-    }
-  }, [deleteConfirm, refetch]);
+    });
+  }, [deleteArmed, armDelete, confirmDelete, refetch]);
 
+  // handleCancelDelete is a thin wrapper so the JSX can call it without
+  // importing the hook's `cancel` directly. This keeps the destructured
+  // hook's surface area smaller in this file.
   const handleCancelDelete = useCallback(() => {
-    setDeleteConfirm(false);
-  }, []);
+    cancelDelete();
+  }, [cancelDelete]);
 
   // Auto-set activeLog to first available log when list loads
   useEffect(() => {
@@ -90,16 +99,8 @@ export default function LogsPage() {
     }
   }, [data?.availableLogs, activeLog]);
 
-  // Auto-refresh
-  useEffect(() => {
-    if (!autoRefresh) return;
-    const id = setInterval(() => {
-      void refetch();
-    }, 5000);
-    return () => {
-      clearInterval(id);
-    };
-  }, [autoRefresh, refetch]);
+  // Auto-refresh every 5s (toggleable)
+  useInterval(() => { void refetch(); }, { ms: 5000, enabled: autoRefresh });
 
   // Auto-scroll to top on new data
   useEffect(() => {
@@ -191,9 +192,9 @@ export default function LogsPage() {
               onClick={() => void handleDeleteAllLogs()}
               icon={Trash2}
             >
-              {deleteConfirm ? "Confirm Clear" : "Delete All"}
+              {deleteArmed ? "Confirm Clear" : "Delete All"}
             </Button>
-            {deleteConfirm && (
+            {deleteArmed && (
               <Button variant="ghost" size="sm" onClick={handleCancelDelete}>
                 Cancel
               </Button>

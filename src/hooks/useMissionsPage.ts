@@ -430,7 +430,7 @@ export function useMissionsPage() {
       }
       if (t.schedule) setNewSchedule(t.schedule);
     },
-    [],
+    [setModelAndProvider],
   );
 
   const fetchData = useCallback(async () => {
@@ -723,7 +723,7 @@ export function useMissionsPage() {
         setNewDispatch("now");
       }
     }
-  }, []);
+  }, [setModelAndProvider]);
 
   // ── Mission handlers ───────────────────────────────────────────────
 
@@ -1024,7 +1024,7 @@ export function useMissionsPage() {
     })();
 
     return () => controller.abort();
-  }, [showCreate, editingId, newModel]);
+  }, [showCreate, editingId, newModel, setModelAndProvider]);
 
   const templateCategoryPills = useMemo(() => {
     const counts: Record<string, number> = {};

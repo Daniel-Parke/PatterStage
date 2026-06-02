@@ -10,13 +10,13 @@
 // rules and colour mapping can be unit-tested in isolation, and so
 // the JSX reads as `<span className={...}>{caption}</span>`.
 //
-// The pure formatting helpers (formatLastRunAgo, formatNextRunIn)
-// re-implement the "5m ago" / "Next 5m" formatting here rather than
-// reusing timeAgo/timeUntil from @/lib/utils, because those use
-// Date.now() internally and we want the output to be deterministic
-// when the caller passes a `now` for testing or rendering.
+// The formatLastRunAgo/formatNextRunIn helpers were previously
+// private duplicates of timeAgo/timeUntil from @/lib/utils. They've
+// been removed; the caption builder now calls timeAgo/timeUntil
+// directly with the explicit `now` parameter, so the output is
+// deterministic in tests and stable across re-renders.
 
-import { titleCase } from "@/lib/utils";
+import { timeAgo, timeUntil, titleCase } from "@/lib/utils";
 
 /**
  * Minimal cron-job shape used by the dashboard caption. The full
@@ -38,44 +38,6 @@ export interface CronJobRowCaption {
 }
 
 /**
- * Format `iso` as a "Xm ago"-style relative duration, measured
- * against `now`. Mirrors the public `timeAgo()` format from
- * @/lib/utils but uses an explicit `now` so the output is
- * deterministic in tests.
- */
-function formatLastRunAgo(iso: string, now: number): string {
-  const ts = new Date(iso).getTime();
-  if (!Number.isFinite(ts)) return "never";
-  const diff = now - ts;
-  if (diff < 0) return "never";
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-}
-
-/**
- * Format `iso` as a "Next X"-style relative duration, measured
- * against `now`. Mirrors the public `timeUntil()` format from
- * @/lib/utils but uses an explicit `now`.
- */
-function formatNextRunIn(iso: string, now: number): string {
-  const ts = new Date(iso).getTime();
-  if (!Number.isFinite(ts)) return "—";
-  const diff = ts - now;
-  if (diff <= 0) return "overdue";
-  const mins = Math.round(diff / 60_000);
-  if (mins < 1) return "< 1m";
-  if (mins < 60) return `${mins}m`;
-  const hours = Math.floor(mins / 60);
-  const remainderMins = mins % 60;
-  if (remainderMins === 0) return `${hours}h`;
-  return `${hours}h ${remainderMins}m`;
-}
-
-/**
  * Derive the dashboard row caption for a single cron job.
  *
  * Priority order (matches the previous inline ternary):
@@ -93,7 +55,7 @@ export function computeCronJobRowCaption(
     return { text: "Executing...", colorClass: "text-neon-green" };
   }
   if (job.lastRun && !job.nextRun) {
-    const text = `${titleCase(job.lastStatus || "Ok")} ${formatLastRunAgo(job.lastRun, now)}`;
+    const text = `${titleCase(job.lastStatus || "Ok")} ${timeAgo(job.lastRun, now)}`;
     // Color matches the original JSX ternary:
     //   green  → lastStatus === "ok" OR lastStatus missing
     //   red    → lastStatus exists AND !== "ok"
@@ -106,10 +68,10 @@ export function computeCronJobRowCaption(
     return { text, colorClass };
   }
   if (job.nextRun && new Date(job.nextRun).getTime() > now) {
-    return { text: "Next " + formatNextRunIn(job.nextRun, now), colorClass: "text-neon-green" };
+    return { text: "Next " + timeUntil(job.nextRun, now), colorClass: "text-neon-green" };
   }
   if (job.lastRun) {
-    return { text: `Active · Ran ${formatLastRunAgo(job.lastRun, now)}`, colorClass: "text-neon-green" };
+    return { text: `Active · Ran ${timeAgo(job.lastRun, now)}`, colorClass: "text-neon-green" };
   }
   return { text: "Queued", colorClass: "text-neon-orange" };
 }

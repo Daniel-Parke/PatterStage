@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef, memo as reactMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, memo as reactMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -47,6 +47,7 @@ import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
 import { unwrapPollPath } from "@/lib/dashboard-poll";
 import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
 import { computeCronJobRowCaption } from "@/lib/cron-row-helpers";
+import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 
 // ── Typed response shapes for each API endpoint ─────────────
 interface TemplatesResponseData { templates: Array<{ id: string; name: string; icon: string; color: string; category: string; categoryId?: string; profile: string; description: string; isCustom?: boolean }>; }
@@ -135,11 +136,11 @@ export default function Dashboard() {
   const [ready, setReady] = useState(false);
   const [dispatchExpanded, setDispatchExpanded] = useState(false);
   const [errorSev, setErrorSev] = useState<"all" | "error" | "warning">("all");
-  const [cancelConfirmId, setCancelConfirmId] = useState<string | null>(null);
   const [syncNowBusy, setSyncNowBusy] = useState(false);
   const [registryAgentModelLabel, setRegistryAgentModelLabel] = useState<string | null>(null);
   const { showToast, toastElement } = useToast();
   const router = useRouter();
+  const { isArmedFor, arm, confirm } = useTwoStepConfirm({ autoDismissMs: 4000 });
 
   const refreshMonitor = useCallback(async () => {
     const { data } = await safeApiCall<{ data?: MonitorData }>("/api/monitor", { cache: "no-store" } as RequestInit);
@@ -187,45 +188,32 @@ export default function Dashboard() {
     );
   }, [monitor, errorSev]);
 
-  // Cancel a mission from the dashboard
-  const cancelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Cleanup cancel-confirm timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
-    };
-  }, []);
-
+  // Note: useTwoStepConfirm handles its own unmount cleanup.
   const handleCancelMission = useCallback(async (missionId: string, missionName: string) => {
-    // First click: show confirmation state and arm the auto-dismiss timer
-    if (cancelConfirmId !== missionId) {
-      if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
-      setCancelConfirmId(missionId);
-      cancelTimerRef.current = setTimeout(() => setCancelConfirmId(null), 4000);
+    const doCancel = async () => {
+      try {
+        const { ok, error } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions", {
+          method: "POST",
+          body: { action: "cancel", missionId },
+        });
+        if (!ok) {
+          showToast(error || "Failed to cancel mission", "error");
+          return;
+        }
+        showToast(`Cancelled "${missionName}"`, "success");
+        // Refresh missions
+        const { data: refreshData } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions");
+        if (refreshData) setData({ missions: refreshData.missions || [] });
+      } catch {
+        showToast("Failed to cancel mission", "error");
+      }
+    };
+    if (!isArmedFor(missionId)) {
+      arm(missionId);
       return;
     }
-    // Second click: confirmed — clear timer and cancel
-    if (cancelTimerRef.current) clearTimeout(cancelTimerRef.current);
-    cancelTimerRef.current = null;
-    setCancelConfirmId(null);
-    try {
-      const { ok, error } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions", {
-        method: "POST",
-        body: { action: "cancel", missionId },
-      });
-      if (!ok) {
-        showToast(error || "Failed to cancel mission", "error");
-        return;
-      }
-      showToast(`Cancelled "${missionName}"`, "success");
-      // Refresh missions
-      const { data: refreshData } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions");
-      if (refreshData) setData({ missions: refreshData.missions || [] });
-    } catch {
-      showToast("Failed to cancel mission", "error");
-    }
-  }, [showToast, setData, cancelConfirmId]);
+    await confirm(doCancel);
+  }, [showToast, setData, isArmedFor, arm, confirm]);
 
   // Update cron job schedule inline
   const handleCronScheduleChange = useCallback(async (jobId: string, newSchedule: string) => {
@@ -690,13 +678,13 @@ export default function Dashboard() {
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCancelMission(m.id, m.name); }}
                         className={`text-[10px] font-mono transition-colors px-1.5 py-0.5 rounded ${
-                          cancelConfirmId === m.id
+                          isArmedFor(m.id)
                             ? "bg-red-500/20 text-red-400"
                             : "text-white/20 hover:text-red-400 hover:bg-red-500/10"
                         }`}
                         title="Cancel mission"
                       >
-                        {cancelConfirmId === m.id ? "Confirm?" : "Cancel"}
+                        {isArmedFor(m.id) ? "Confirm?" : "Cancel"}
                       </button>
                     </div>
                   </div>

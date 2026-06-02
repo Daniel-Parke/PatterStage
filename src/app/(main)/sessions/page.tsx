@@ -48,6 +48,8 @@ import Pagination from "@/components/ui/Pagination";
 import { useToast } from "@/components/ui/Toast";
 import { timeAgo, formatElapsed } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
+import { useInterval } from "@/hooks/useInterval";
+import { useStoredBool } from "@/hooks/useStoredBool";
 import AppPageShell from "@/components/layout/AppPageShell";
 import type { SessionRecord } from "@/lib/session-repository";
 import type { SessionSource } from "@/lib/session-repository";
@@ -83,34 +85,6 @@ type ListEntry = MissionGroup | SingleSession;
 const PAGE_SIZE = 50;
 const GROUP_BY_MISSION_STORAGE_KEY = "ch.sessions.groupByMission";
 const HIDE_API_NOISE_STORAGE_KEY = "ch.sessions.hideApiNoise";
-
-// ── Hooks ────────────────────────────────────────────────────
-
-function useStoredBool(key: string, defaultValue: boolean): [boolean, (v: boolean) => void] {
-  const [value, setValue] = useState<boolean>(defaultValue);
-  // Hydrate from localStorage after mount to avoid SSR hydration mismatches
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(key);
-      if (raw === "true") setValue(true);
-      else if (raw === "false") setValue(false);
-    } catch {
-      // localStorage may be unavailable (private mode, etc.) — keep default
-    }
-  }, [key]);
-  const update = useCallback(
-    (v: boolean) => {
-      setValue(v);
-      try {
-        window.localStorage.setItem(key, v ? "true" : "false");
-      } catch {
-        // ignore
-      }
-    },
-    [key],
-  );
-  return [value, update];
-}
 
 // ── Grouping helper ──────────────────────────────────────────
 
@@ -325,10 +299,7 @@ export default function SessionsPage() {
   const [hideApiNoise, setHideApiNoise] = useStoredBool(HIDE_API_NOISE_STORAGE_KEY, false);
   // Tick state so the live indicator refreshes every second for active sessions
   const [, setNowTick] = useState(0);
-  useEffect(() => {
-    const interval = setInterval(() => setNowTick((n) => n + 1), 1000);
-    return () => clearInterval(interval);
-  }, []);
+  useInterval(() => setNowTick((n) => n + 1), { ms: 1000 });
   const { showToast, toastElement } = useToast();
 
   const loadSessions = useCallback(

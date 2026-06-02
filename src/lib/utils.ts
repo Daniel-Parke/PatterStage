@@ -23,12 +23,16 @@ export function titleCase(s: string): string {
 
 /**
  * Format an ISO timestamp as a relative time string ("5m ago", "2h ago", etc.)
+ *
+ * @param now - Optional reference time (ms epoch). Defaults to `Date.now()`.
+ *              Pass an explicit value in tests or in render loops that need
+ *              a stable "now" across many calls.
  */
-export function timeAgo(iso: string | null): string {
+export function timeAgo(iso: string | null, now: number = Date.now()): string {
   if (!iso) return "never";
   const ts = new Date(iso).getTime();
   if (isNaN(ts)) return "never";
-  const diff = Date.now() - ts;
+  const diff = now - ts;
   if (isNaN(diff) || diff < 0) return "never";
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "just now";
@@ -40,12 +44,16 @@ export function timeAgo(iso: string | null): string {
 
 /**
  * Format a future ISO timestamp as a relative duration ("5m", "2h 30m", etc.)
+ *
+ * @param now - Optional reference time (ms epoch). Defaults to `Date.now()`.
+ *              Pass an explicit value in tests or in render loops that need
+ *              a stable "now" across many calls.
  */
-export function timeUntil(iso: string | null): string {
+export function timeUntil(iso: string | null, now: number = Date.now()): string {
   if (!iso) return "—";
   const ts = new Date(iso).getTime();
   if (isNaN(ts)) return "—";
-  const diff = ts - Date.now();
+  const diff = ts - now;
   if (isNaN(diff) || diff < 0) return "overdue";
   const mins = Math.round(diff / 60000);
   if (mins < 1) return "< 1m";
@@ -66,11 +74,15 @@ export function timeUntil(iso: string | null): string {
  * down to coarse buckets (m/h/d). formatElapsed produces a
  * finer-grained "Xh Ym Zs" string suitable for the active-session
  * badge where every second counts.
+ *
+ * @param now - Optional reference time (ms epoch). Defaults to `Date.now()`.
+ *              Pass an explicit value in tests or in render loops that need
+ *              a stable "now" across many calls.
  */
-export function formatElapsed(startedAt: string): string {
+export function formatElapsed(startedAt: string, now: number = Date.now()): string {
   const start = new Date(startedAt).getTime();
   if (!Number.isFinite(start)) return "";
-  const seconds = Math.max(0, Math.floor((Date.now() - start) / 1000));
+  const seconds = Math.max(0, Math.floor((now - start) / 1000));
   if (seconds < 60) return `${seconds}s`;
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}m ${seconds % 60}s`;

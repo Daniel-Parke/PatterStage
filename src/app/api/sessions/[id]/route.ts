@@ -6,6 +6,7 @@ import { basename, join } from "path";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { badRequest } from "@/lib/api-response";
 import { safeStat } from "@/lib/fs-stats";
 import { getSession, estimateSessionSize, lookupMissionIdForCronSession } from "@/lib/session-repository";
 import { PATHS } from "@/lib/paths";
@@ -29,7 +30,7 @@ export async function GET(
   // Security: prevent path traversal
   const sanitizedId = id.replace(/[^a-zA-Z0-9_.-]/g, "");
   if (sanitizedId !== id || sanitizedId.includes("..")) {
-    return NextResponse.json({ error: "Invalid session ID" }, { status: 400 });
+    return badRequest("Invalid session ID");
   }
 
   // ── Step 1: Try Hermes state.db (v0.14+ — canonical source) ──────────
