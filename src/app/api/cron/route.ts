@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
+import { badRequest } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { parseSchedule } from "@/lib/utils";
 
@@ -58,10 +59,7 @@ function parseScheduleOrError(schedule: string): { ok: true; parsed: ReturnType<
   if (parsed.kind === "invalid") {
     return {
       ok: false,
-      response: NextResponse.json(
-        { error: parsed.message || `Invalid schedule: "${schedule}"` },
-        { status: 400 },
-      ),
+      response: badRequest(parsed.message || `Invalid schedule: "${schedule}"`),
     };
   }
   return { ok: true, parsed };
@@ -279,10 +277,10 @@ export async function POST(request: NextRequest) {
     };
 
     if (!name?.trim()) {
-      return NextResponse.json({ error: "name is required" }, { status: 400 });
+      return badRequest("name is required");
     }
     if (!schedule?.trim()) {
-      return NextResponse.json({ error: "schedule is required" }, { status: 400 });
+      return badRequest("schedule is required");
     }
 
     const scheduleCheck = parseScheduleOrError(schedule);
@@ -365,7 +363,7 @@ export async function PUT(request: NextRequest) {
     };
 
     if (!id) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
+      return badRequest("id is required");
     }
 
     const existing = getCronJob(id);
@@ -477,7 +475,7 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
+      return badRequest("id is required");
     }
 
     const existing = getCronJob(id);

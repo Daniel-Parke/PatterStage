@@ -17,6 +17,7 @@ import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
+import { badRequest } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { agentBackend } from "@/lib/backends";
 import { createCronJob, deleteCronJob, importHermesJobs, pushJobToHermes } from "@/lib/cron-repository";
@@ -49,7 +50,7 @@ function resolveMissionId(body: Record<string, unknown>): string | undefined {
 function requireMissionId(body: Record<string, unknown>): string | NextResponse {
   const id = resolveMissionId(body);
   if (!id) {
-    return NextResponse.json({ error: "Mission id is required" }, { status: 400 });
+    return badRequest("Mission id is required");
   }
   return id;
 }
@@ -195,11 +196,11 @@ export async function POST(request: NextRequest) {
 
       const categoryParsed = parseCategoryId(categoryIdRaw);
       if (!categoryParsed.ok) {
-        return NextResponse.json({ error: categoryParsed.error }, { status: 400 });
+        return badRequest(categoryParsed.error);
       }
 
       if (!instruction || typeof instruction !== "string" || !instruction.trim()) {
-        return NextResponse.json({ error: "instruction is required" }, { status: 400 });
+        return badRequest("instruction is required");
       }
 
       const dirsNorm = normalizeLocalDirsInput(localDirs);
@@ -362,19 +363,19 @@ export async function POST(request: NextRequest) {
       const { name, instruction, context, localDirs, references, skills, suggestedToolsets, goals, modelId, provider, profileName, missionTimeMinutes, timeoutMinutes, schedule: scheduleVal, categoryId: categoryIdRaw, outputFormat, constraints } = f;
 
       if (!dispatchMode) {
-        return NextResponse.json({ error: "dispatchMode is required" }, { status: 400 });
+        return badRequest("dispatchMode is required");
       }
 
       const categoryParsed = parseCategoryId(categoryIdRaw);
       if (!categoryParsed.ok) {
-        return NextResponse.json({ error: categoryParsed.error }, { status: 400 });
+        return badRequest(categoryParsed.error);
       }
 
       if (
         instruction !== undefined &&
         (typeof instruction !== "string" || !instruction.trim())
       ) {
-        return NextResponse.json({ error: "instruction cannot be empty" }, { status: 400 });
+        return badRequest("instruction cannot be empty");
       }
 
       const result = await promoteMission({
@@ -433,14 +434,11 @@ export async function POST(request: NextRequest) {
 
       const categoryParsed = parseCategoryId(categoryIdRaw);
       if (!categoryParsed.ok) {
-        return NextResponse.json({ error: categoryParsed.error }, { status: 400 });
+        return badRequest(categoryParsed.error);
       }
 
       if (existing.status !== "dispatched") {
-        return NextResponse.json(
-          { error: "Use promote for draft or queued missions; update is for running missions" },
-          { status: 400 },
-        );
+        return badRequest("Use promote for draft or queued missions; update is for running missions");
       }
 
       const { shouldRebuildPrompt, prompt, updates } = buildMissionFieldPatch(
@@ -567,7 +565,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ data: { deleted: missionIdFinal } });
     }
 
-    return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
+    return badRequest(`Unknown action: ${action}`);
   } catch (error) {
     logApiError("POST /api/missions", "processing request", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

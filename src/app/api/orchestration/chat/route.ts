@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
+import { badRequest } from "@/lib/api-response";
 import { getAgentLlmEndpoints } from "@/lib/hermes-agent-runtime";
 import { CHAT_DEFAULT_MODEL } from "@/types/chat";
 
@@ -70,7 +71,7 @@ export async function POST(request: NextRequest) {
     const { messages, model, stream } = body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json({ error: "messages array is required" }, { status: 400 });
+      return badRequest("messages array is required");
     }
     const isStreaming = stream !== false; // default to streaming
     const { apiUrl } = getAgentLlmEndpoints();

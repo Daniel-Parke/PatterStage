@@ -6,6 +6,7 @@ import { join } from "path";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
+import { badRequest } from "@/lib/api-response";
 import { toError } from "@/lib/api-fetch";
 import { crontabLineUsesScriptsDir } from "@/lib/hardware-cron";
 import { getChScriptsDir, getChHardwareLogDir, CH_DATA_DIR } from "@/lib/paths";
@@ -96,11 +97,8 @@ function rejectIfBadScriptsCommand(command: string | undefined): NextResponse | 
   if (command === undefined) return null;
   const scriptsDir = getChScriptsDir();
   if (!crontabLineUsesScriptsDir(command, scriptsDir)) {
-    return NextResponse.json(
-      {
-        error: `Command must run a script under ${scriptsDir} (Control Hub hardware cron scripts directory).`,
-      },
-      { status: 400 },
+    return badRequest(
+      `Command must run a script under ${scriptsDir} (Control Hub hardware cron scripts directory).`,
     );
   }
   return null;
@@ -286,19 +284,13 @@ export async function POST(request: NextRequest) {
     };
 
     if (!schedule || !command) {
-      return NextResponse.json(
-        { error: "schedule and command are required" },
-        { status: 400 }
-      );
+      return badRequest("schedule and command are required");
     }
 
     // Basic cron validation — 5 fields
     const fields = schedule.trim().split(/\s+/);
     if (fields.length !== 5) {
-      return NextResponse.json(
-        { error: "Schedule must have exactly 5 fields: min hour dom mon dow" },
-        { status: 400 }
-      );
+      return badRequest("Schedule must have exactly 5 fields: min hour dom mon dow");
     }
 
     const badCmd = rejectIfBadScriptsCommand(command);
@@ -375,7 +367,7 @@ export async function PUT(request: NextRequest) {
     };
 
     if (!id) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
+      return badRequest("id is required");
     }
 
     const crontab = await readCrontab();
@@ -458,7 +450,7 @@ export async function DELETE(request: NextRequest) {
     const id = searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
+      return badRequest("id is required");
     }
 
     const crontab = await readCrontab();
