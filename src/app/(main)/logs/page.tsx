@@ -124,7 +124,7 @@ export default function LogsPage() {
     return data.availableLogs.filter((l) => l.name.toLowerCase().includes(q));
   }, [data?.availableLogs, fileQuery]);
 
-  const allLines = data?.lines || [];
+  const allLines = useMemo(() => data?.lines || [], [data?.lines]);
   const filteredLines = useMemo(
     () => (search ? allLines.filter((line) => line.toLowerCase().includes(search.toLowerCase())) : allLines),
     [allLines, search],
