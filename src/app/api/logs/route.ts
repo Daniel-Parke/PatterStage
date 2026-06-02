@@ -7,6 +7,7 @@ import { logApiError } from "@/lib/api-logger";
 import {
   listLogFilesInDir,
   logFileUnderLogsDir,
+  logValidationError,
   readLastLines,
   resolveLogFilePath,
 } from "@/lib/log-files";
@@ -73,9 +74,10 @@ export async function GET(request: NextRequest) {
       searchParams.get("name"),
     );
     if (!resolved.ok) {
-      const message =
-        resolved.reason === "invalid-name" ? "Invalid log name" : "Invalid log path";
-      return NextResponse.json<ApiResponse<never>>({ error: message }, { status: 400 });
+      return NextResponse.json<ApiResponse<never>>(
+        { error: logValidationError(resolved.reason) },
+        { status: 400 },
+      );
     }
     const { safeName, absolutePath: logPath } = resolved;
 
@@ -132,10 +134,8 @@ export async function DELETE(request: NextRequest) {
     if (logName) {
       const resolved = resolveLogFilePath(logsDir, resolvedLogsDir, logName);
       if (!resolved.ok) {
-        const message =
-          resolved.reason === "invalid-name" ? "Invalid log name" : "Invalid log path";
         return NextResponse.json<ApiResponse<never>>(
-          { error: message },
+          { error: logValidationError(resolved.reason) },
           { status: 400 },
         );
       }

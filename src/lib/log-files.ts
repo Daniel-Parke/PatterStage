@@ -178,6 +178,16 @@ export type ResolvedLogFile =
   | { ok: false; reason: "invalid-name" }
   | { ok: false; reason: "invalid-path" };
 
+/**
+ * Human-readable error message for a `ResolvedLogFile` failure reason.
+ * Maps the union discriminant to the user-visible string used by
+ * `GET /api/logs` and `DELETE /api/logs`. Add a new branch here when
+ * `ResolvedLogFile` grows a new reason.
+ */
+export function logValidationError(reason: "invalid-name" | "invalid-path"): string {
+  return reason === "invalid-name" ? "Invalid log name" : "Invalid log path";
+}
+
 export function resolveLogFilePath(
   logsDir: string,
   resolvedLogsDir: string,

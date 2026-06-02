@@ -4,6 +4,7 @@ import { join } from "path";
 import {
   categorizeLogFileGroup,
   compareLogFileNames,
+  logValidationError,
   readLastLines,
   resolveLogFilePath,
   sanitizeLogBasename,
@@ -29,6 +30,16 @@ describe("sanitizeLogBasename", () => {
     expect(sanitizeLogBasename("")).toBeNull();
     expect(sanitizeLogBasename("a b")).toBeNull();
     expect(sanitizeLogBasename("a;rm")).toBeNull();
+  });
+});
+
+describe("logValidationError", () => {
+  it("maps 'invalid-name' to 'Invalid log name'", () => {
+    expect(logValidationError("invalid-name")).toBe("Invalid log name");
+  });
+
+  it("maps 'invalid-path' to 'Invalid log path'", () => {
+    expect(logValidationError("invalid-path")).toBe("Invalid log path");
   });
 });
 
