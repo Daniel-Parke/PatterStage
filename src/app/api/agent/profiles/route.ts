@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { existsSync, statSync } from "fs";
 
 import { logApiError } from "@/lib/api-logger";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
@@ -146,8 +147,9 @@ export async function POST(request: NextRequest) {
 
   try {
     ensureDb();
-    const body = await request.json();
-    const { name, description, cloneFrom } = body as {
+    const bodyResult = await parseJsonBody(request);
+    if (bodyResult instanceof NextResponse) return bodyResult;
+    const { name, description, cloneFrom } = bodyResult as {
       name?: string;
       description?: string;
       cloneFrom?: string;

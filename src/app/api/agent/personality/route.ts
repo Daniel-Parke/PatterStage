@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { updateAgentRoot } from "@/lib/agent-root-repository";
 import { getProfile, updateProfileContent } from "@/lib/profiles-repository";
@@ -14,9 +15,10 @@ export async function PUT(request: NextRequest) {
 
   try {
     ensureDb();
-    const body = (await request.json()) as Record<string, unknown>;
-    const personality = typeof body.personality === "string" ? body.personality : "";
-    const profile = typeof body.profile === "string" ? body.profile : "default";
+    const bodyResult = await parseJsonBody(request);
+    if (bodyResult instanceof NextResponse) return bodyResult;
+    const personality = typeof bodyResult.personality === "string" ? bodyResult.personality : "";
+    const profile = typeof bodyResult.profile === "string" ? bodyResult.profile : "default";
 
     if (!personality) {
       return NextResponse.json({ error: "Personality is required" }, { status: 400 });

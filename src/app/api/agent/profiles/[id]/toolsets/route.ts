@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { updateAgentRoot } from "@/lib/agent-root-repository";
 import { getProfile, updateProfileContent, hydratePlatformToolsetsForSlug } from "@/lib/profiles-repository";
@@ -64,8 +65,9 @@ export async function PUT(
 
   try {
     ensureDb();
-    const body = (await request.json()) as Record<string, unknown>;
-    const platformToolsets = normalizePlatformToolsetsFromInput(body.platformToolsets);
+    const bodyResult = await parseJsonBody(request);
+    if (bodyResult instanceof NextResponse) return bodyResult;
+    const platformToolsets = normalizePlatformToolsetsFromInput(bodyResult.platformToolsets);
     const platformToolsetsJson = serializeJsonToolsets(platformToolsets);
 
     if (prof.profile === "default") {

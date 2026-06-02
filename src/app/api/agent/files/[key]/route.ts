@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "fs
 import { resolveProfileHermesHome, buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
 import { getBehaviorFiles } from "@/lib/behavior-files";
 import { logApiError } from "@/lib/api-logger";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
@@ -157,8 +158,9 @@ export async function PUT(
 
   try {
     ensureDb();
-    const body = await request.json();
-    const { content, backup } = body;
+    const bodyResult = await parseJsonBody(request);
+    if (bodyResult instanceof NextResponse) return bodyResult;
+    const { content, backup } = bodyResult;
 
     if (typeof content !== "string") {
       return NextResponse.json({ error: "Content is required" }, { status: 400 });
