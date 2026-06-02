@@ -6,6 +6,7 @@ import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
+import { badRequest } from "@/lib/api-response";
 import { db } from "@/lib/db";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
@@ -149,18 +150,12 @@ export async function PUT(request: NextRequest) {
   };
 
   if (!section || !values) {
-    return NextResponse.json(
-      { error: "Missing 'section' or 'values'" },
-      { status: 400 }
-    );
+    return badRequest("Missing 'section' or 'values'");
   }
 
   // Validate that values is a plain object (not string, array, or null)
   if (typeof values !== "object" || Array.isArray(values) || values === null) {
-    return NextResponse.json(
-      { error: "values must be an object" },
-      { status: 400 }
-    );
+    return badRequest("values must be an object");
   }
 
   // Security: only allow whitelisted sections (prevent modifying model/provider keys)

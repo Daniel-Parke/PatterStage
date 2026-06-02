@@ -17,6 +17,7 @@ import {
   type ManagedFileKey,
 } from "@/lib/agent-file-store";
 import { applyProfileOrRootPatch, pushProfileOrRoot, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import { badRequest } from "@/lib/api-response";
 import {
   configYamlToColumnValues,
   platformToolsetsFromJson,
@@ -120,10 +121,10 @@ export async function GET(
   const resolved = resolveFilePath(key, profile);
 
   if (!resolved) {
-    return NextResponse.json({ error: `Unknown file key: ${key}` }, { status: 400 });
+    return badRequest(`Unknown file key: ${key}`);
   }
   if ("error" in resolved) {
-    return NextResponse.json({ error: resolved.error }, { status: 400 });
+    return badRequest(resolved.error);
   }
 
   try {
@@ -186,10 +187,10 @@ export async function PUT(
   const resolved = resolveFilePath(key, profile);
 
   if (!resolved) {
-    return NextResponse.json({ error: `Unknown file key: ${key}` }, { status: 400 });
+    return badRequest(`Unknown file key: ${key}`);
   }
   if ("error" in resolved) {
-    return NextResponse.json({ error: resolved.error }, { status: 400 });
+    return badRequest(resolved.error);
   }
 
   try {
@@ -199,7 +200,7 @@ export async function PUT(
     const { content, backup } = bodyResult;
 
     if (typeof content !== "string") {
-      return NextResponse.json({ error: "Content is required" }, { status: 400 });
+      return badRequest("Content is required");
     }
 
     const prof = resolveSafeProfileName(profile);

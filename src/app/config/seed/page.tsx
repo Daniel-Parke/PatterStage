@@ -95,6 +95,23 @@ export default function ConfigSeedPage() {
     void runSeed("all", "replace");
   };
 
+  /**
+   * Show a native confirm() dialog and only run the seed operation if the
+   * user accepts. Centralises the "if (window.confirm(...)) void runSeed(...)"
+   * pattern that was inlined at 3 callsites in this page. Pass `message` to
+   * require confirmation; pass an empty/falsy message to run unconditionally
+   * (matches the prior `void runSeed(...)` callsites that had no confirm).
+   */
+  const confirmAndRun = (
+    message: string,
+    target: "all" | "root" | "profiles" | "templates" | "categories",
+    mode: "merge" | "replace",
+    extra?: { slug?: string; templateId?: string },
+  ) => {
+    if (message && !window.confirm(message)) return;
+    void runSeed(target, mode, extra);
+  };
+
   return (
     <AppPageShell>
       <PageHeader
@@ -144,7 +161,7 @@ export default function ConfigSeedPage() {
               <button
                 type="button"
                 disabled={isBusy}
-                onClick={() => void runSeed("root", "replace")}
+                onClick={() => confirmAndRun("", "root", "replace")}
                 className="ml-3 px-4 py-2 rounded-lg bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 font-mono text-sm disabled:opacity-50"
               >
                 {busy?.startsWith("root-replace") ? "Working…" : "Restore Bob only"}
@@ -180,13 +197,14 @@ export default function ConfigSeedPage() {
                     <button
                       type="button"
                       disabled={isBusy}
-                      onClick={() => {
-                        if (
-                          window.confirm(`Restore agent "${p.name}" from defaults?`)
-                        ) {
-                          void runSeed("profiles", "replace", { slug: p.id });
-                        }
-                      }}
+                      onClick={() =>
+                        confirmAndRun(
+                          `Restore agent "${p.name}" from defaults?`,
+                          "profiles",
+                          "replace",
+                          { slug: p.id },
+                        )
+                      }
                       className="text-xs font-mono px-3 py-1.5 rounded border border-neon-purple/40 text-neon-purple hover:bg-neon-purple/10 disabled:opacity-50"
                     >
                       Restore this agent
@@ -211,7 +229,7 @@ export default function ConfigSeedPage() {
                     <button
                       type="button"
                       disabled={isBusy}
-                      onClick={() => void runSeed("templates", "replace", { templateId: t.id })}
+                      onClick={() => confirmAndRun("", "templates", "replace", { templateId: t.id })}
                       className="text-[10px] font-mono px-2 py-1 rounded border border-white/20 text-white/60 hover:text-neon-cyan disabled:opacity-50"
                     >
                       Restore
@@ -229,7 +247,7 @@ export default function ConfigSeedPage() {
               <button
                 type="button"
                 disabled={isBusy}
-                onClick={() => void runSeed("categories", "replace")}
+                onClick={() => confirmAndRun("", "categories", "replace")}
                 className="text-xs font-mono px-3 py-1.5 rounded border border-white/20 text-white/50 hover:text-white disabled:opacity-50 mr-2"
               >
                 Restore categories
@@ -237,7 +255,7 @@ export default function ConfigSeedPage() {
               <button
                 type="button"
                 disabled={isBusy}
-                onClick={() => void runSeed("all", "merge")}
+                onClick={() => confirmAndRun("", "all", "merge")}
                 className="text-xs font-mono px-3 py-1.5 rounded border border-white/20 text-white/50 hover:text-white disabled:opacity-50"
               >
                 Merge missing defaults
