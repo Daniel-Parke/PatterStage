@@ -53,6 +53,27 @@ function saveDisabledIds(ids: Set<string>): void {
 // ── Parse / serialise helpers ───────────────────────────────────
 
 /**
+ * Return a 400 NextResponse if `command` is set and doesn't run a script
+ * under the CH scripts dir. Returns null when the command is acceptable
+ * (or undefined — in which case the caller is not editing the command
+ * field and the check is skipped). Shared between POST (create) and PUT
+ * (update).
+ */
+function rejectIfBadScriptsCommand(command: string | undefined): NextResponse | null {
+  if (command === undefined) return null;
+  const scriptsDir = getChScriptsDir();
+  if (!crontabLineUsesScriptsDir(command, scriptsDir)) {
+    return NextResponse.json(
+      {
+        error: `Command must run a script under ${scriptsDir} (Control Hub hardware cron scripts directory).`,
+      },
+      { status: 400 },
+    );
+  }
+  return null;
+}
+
+/**
  * Parse a crontab line into a structured job.
  * Returns null for lines we don't manage.
  */
@@ -248,15 +269,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const scriptsDir = getChScriptsDir();
-    if (!crontabLineUsesScriptsDir(command, scriptsDir)) {
-      return NextResponse.json(
-        {
-          error: `Command must run a script under ${scriptsDir} (Control Hub hardware cron scripts directory).`,
-        },
-        { status: 400 }
-      );
-    }
+    const badCmd = rejectIfBadScriptsCommand(command);
+    if (badCmd) return badCmd;
 
     const crontab = await readCrontab();
     const lines = crontab.split("\n");
@@ -373,18 +387,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: `Hardware cron job '${id}' not found` }, { status: 404 });
     }
 
-    const scriptsDir = getChScriptsDir();
-    if (
-      command !== undefined &&
-      !crontabLineUsesScriptsDir(command, scriptsDir)
-    ) {
-      return NextResponse.json(
-        {
-          error: `Command must run a script under ${scriptsDir} (Control Hub hardware cron scripts directory).`,
-        },
-        { status: 400 }
-      );
-    }
+    const badCmd = rejectIfBadScriptsCommand(command);
+    if (badCmd) return badCmd;
 
     // Toggle-only: update JSON state, no crontab change
     if (isToggleOnly) {

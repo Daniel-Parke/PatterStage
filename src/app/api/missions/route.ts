@@ -16,6 +16,7 @@ import { updateSession } from "@/lib/session-repository";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { agentBackend } from "@/lib/backends";
 import { createCronJob, deleteCronJob, importHermesJobs, pushJobToHermes } from "@/lib/cron-repository";
@@ -144,8 +145,15 @@ export async function POST(request: NextRequest) {
 
   ensureSyncLayer();
 
+  // Hoist parseJsonBody out of the main try/catch so malformed JSON returns
+  // 400 (REST semantics) instead of being swallowed and re-thrown as a
+  // generic 500 from the catch below. Same bug class as the session-37
+  // fix for /api/sessions, /api/memory/hindsight, etc.
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+  const body = bodyResult as Record<string, unknown>;
+
   try {
-    const body = await request.json();
     const { action } = body as { action?: string };
 
     // ── Dispatch Mission ────────────────────────────────────────
