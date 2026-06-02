@@ -107,3 +107,21 @@ export function formatSessionTitle(
 
   return `Session ${idPrefix}`;
 }
+
+/**
+ * Pure helper for the session detail page: detect when a session has no
+ * messages but the API note suggests the agent is still running, so the
+ * page can show a refresh CTA instead of "No messages in this session".
+ *
+ * The note comes from `/api/sessions/[id]`'s no-output-yet sentinel
+ * branches (mission-spawned, cron-spawned). Returns false when the
+ * note is missing, empty, or doesn't match the running pattern.
+ */
+export function isSessionStillRunning(
+  messageCount: number,
+  note: string | null | undefined,
+): boolean {
+  if (messageCount > 0) return false;
+  if (!note) return false;
+  return /still running|in progress|mid-flight/i.test(note);
+}
