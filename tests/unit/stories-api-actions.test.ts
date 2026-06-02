@@ -8,34 +8,45 @@
 // - unknown action returns 400
 // - validateChapterOutput strips meta commentary
 
-jest.mock("next/server", () => ({
-  NextRequest: class NextRequest {
-    url: string;
-    method: string;
+jest.mock("next/server", () => {
+  class NextResponse {
+    status: number;
+    ok: boolean;
+    statusText: string;
     headers: Headers;
-    bodyUsed: boolean = false;
-    private _body: string;
-    constructor(url: string, init?: RequestInit) {
-      this.url = url;
-      this.method = init?.method ?? "GET";
-      this.headers = new Headers(init?.headers as HeadersInit);
-      this._body = typeof init?.body === "string" ? init.body : JSON.stringify(init?.body ?? {});
+    private _data: unknown;
+    constructor(data?: unknown, init?: ResponseInit) {
+      this._data = data;
+      this.status = init?.status ?? 200;
+      this.ok = this.status >= 200 && this.status < 300;
+      this.statusText = init?.statusText ?? "OK";
+      this.headers = new Headers(init?.headers);
     }
-    async json() { return JSON.parse(this._body); }
-  },
-  NextResponse: {
-    json: (data: unknown, init?: ResponseInit) => {
-      const status = init?.status ?? 200;
-      return {
-        ok: status >= 200 && status < 300,
-        status,
-        statusText: "OK",
-        headers: new Headers(),
-        json: () => Promise.resolve(data),
-      };
+    static json(data: unknown, init?: ResponseInit) {
+      return new NextResponse(data, init);
+    }
+    async json() {
+      return this._data;
+    }
+  }
+  return {
+    NextRequest: class NextRequest {
+      url: string;
+      method: string;
+      headers: Headers;
+      bodyUsed: boolean = false;
+      private _body: string;
+      constructor(url: string, init?: RequestInit) {
+        this.url = url;
+        this.method = init?.method ?? "GET";
+        this.headers = new Headers(init?.headers as HeadersInit);
+        this._body = typeof init?.body === "string" ? init.body : JSON.stringify(init?.body ?? {});
+      }
+      async json() { return JSON.parse(this._body); }
     },
-  },
-}));
+    NextResponse,
+  };
+});
 
 jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),
