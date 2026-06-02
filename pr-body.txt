@@ -2,181 +2,84 @@ See latest commits on the branch for the full changelog. Summary: ongoing codeba
 
 ## Latest changes (this session)
 
-### Review findings (List 1: Dashboard, Sessions, Memory, Logs) — 2026-06-02 (session 37)
+### Review findings (List 3: Models, Agents, Skills, Tools, Personalities) — 2026-06-02 (session 43)
 
-**Bug fixes — three `request.json()` 500→400 fixes on List 1 routes:**
+**Consolidation — `toPatchResponse` helper collapses 6 patch-result switches:**
 
-The `request.json()` 500-instead-of-400 bug class was identified in session 33
-(commit `60f0733`) and audited again in sessions 35 and 36 — both audits
-covered the routes on their respective lists (Lists 2, 3, 4). **List 1 was
-never re-audited** for the same pattern, and three of its routes had the bug.
+The previous session (40) extracted `applyProfileOrRootPatch(slug, rootPatch, profilePatch)`
+which returns a `ProfileOrRootPatchResult` discriminated union
+(`{ok: true, profile}` | `{ok: false, reason: "not-found"}` | `{ok: false, reason: "push-failed", error}`).
+This session found that **all 6 call sites** of that helper (and its sibling
+`pushProfileOrRoot`) had the exact same 7-line if/else switch that turned
+the union's failure cases into a 404 / 500 NextResponse.
 
-Fixed routes:
-- `src/app/api/sessions/route.ts` POST — `await request.json()` inside the
-  main try/catch. Hoisted to `parseJsonBody` outside the try/catch so invalid
-  JSON returns 400 with `{ error: "Invalid JSON" }` instead of 500 with
-  `{ error: "Failed to process session action" }`.
-- `src/app/api/memory/hindsight/route.ts` POST — same pattern, fixed with
-  `parseJsonBody`. Body narrowed to a structural shape at destructure per the
-  pattern documented in `src/lib/parse-json-body.ts`.
-- `src/app/api/memory/hindsight/route.ts` DELETE — same pattern, fixed
-  identically.
+Added `toPatchResponse(result, fallbackError)` to `src/lib/apply-profile-or-root-patch.ts`:
 
-Why this is in scope (per the mission brief): invalid JSON returning 500
-instead of 400 is "a current feature is not working" — REST semantics require
-400 for malformed input, and the user-visible behaviour change is from
-"generic 500" to "clear 400 with field validation hint". See
-`references/json-parse-bug-class.md` for the bug class details.
+```ts
+const result = applyProfileOrRootPatch(...);
+const err = toPatchResponse(result, "Failed to sync ...");
+if (err) return err;
+if (!result.ok) throw new Error("unreachable: ...");
+```
 
-**Consolidation — `unwrapPollPath` helper for dashboard polling (deferred from session 34):**
+The unreachable guard is required for TypeScript narrowing — the helper's
+return type is independent of the result, so TS can't narrow `result.ok`
+from `toPatchResponse`'s signature alone. The throw sits in the hot path
+but is never reached in practice (verified by tests).
 
-This was the one List 1 deferred item from session 34. The dashboard's
-`useEffect` declared three polling entries with near-duplicate `extract`
-functions, each with a different response shape (monitor: double-wrap,
-agents: single-wrap, missions: single-wrap).
+Migrated call sites:
+- `src/app/api/agent/personality/route.ts` (PUT)
+- `src/app/api/personalities/route.ts` (POST + PUT shared `upsertPersonality`)
+  — preserves the existing 500 log line on push-failed
+- `src/app/api/agent/profiles/[id]/toolsets/route.ts` (PUT)
+- `src/app/api/skills/[name]/toggle/route.ts` (PUT)
+- `src/app/api/agent/files/[key]/route.ts` (PUT — 2 sites: config + non-config branches)
 
-Extracted `unwrapPollPath(envelope, path)` to `src/lib/dashboard-poll.ts`.
-The helper walks a path of keys through `envelope.data` and returns the
-final object (or `null` if any segment is missing or non-object). The caller
-still does the typed cast and the fallback for the array endpoints.
+Added `tests/unit/apply-profile-or-root-patch.test.ts` with 4 tests covering
+all 4 union shapes (success, not-found, push-failed with error, push-failed
+without error fallback).
 
-Why not collapse the three further? Each extractor's *fallback behaviour*
-differs — monitor returns `null` (no monitor = no stat row), agents and
-missions default the array to `[]` (empty list is still renderable). The
-path-walking is the only thing they share, and that's exactly what the
-helper does.
+Net change: -66 / +69 LOC across 6 route/lib files, +53 LOC for the test file.
+All 805 tests pass across 156 suites. `npx tsc --noEmit` clean.
 
-**Test mock fix:**
 
-`tests/unit/hindsight-bridge-model-override.test.ts` mocked `NextResponse`
-as a plain object literal. The new `parseJsonBody` callsite in
-`/api/memory/hindsight` POST does `bodyResult instanceof NextResponse` to
-detect parse errors — but `instanceof` on a plain object literal throws
-`TypeError: Right-hand side of 'instanceof' is not callable`. Fixed by
-upgrading the mock to a real class with a static `.json()` factory.
+### Review findings (List 3: Models, Agents, Skills, Tools, Personalities) — 2026-06-02 (session 43)
 
-All 769 tests pass. TypeScript clean. ESLint clean. Build clean.
+**Consolidation — `toPatchResponse` helper collapses 6 patch-result switches:**
 
-## Prior changes (this PR)
+The previous session (40) extracted `applyProfileOrRootPatch(slug, rootPatch, profilePatch)`
+which returns a `ProfileOrRootPatchResult` discriminated union
+(`{ok: true, profile}` | `{ok: false, reason: "not-found"}` | `{ok: false, reason: "push-failed", error}`).
+This session found that **all 6 call sites** of that helper (and its sibling
+`pushProfileOrRoot`) had the exact same 7-line if/else switch that turned
+the union's failure cases into a 404 / 500 NextResponse.
 
-### Review findings (List 4: Models, HERMES.md, Environment, Settings) — 2026-06-02 (session 36)
+Added `toPatchResponse(result, fallbackError)` to `src/lib/apply-profile-or-root-patch.ts`:
 
-**Critical runtime bug fixed — api/config 500→400:**
-- `src/app/api/config/route.ts` PUT called `request.json()` inside the main try/catch which returned 500 "Failed to update config"
-- The last list-4 route still using the old pattern after sessions 33 and 35 fixed `/api/personalities`, `/api/skills/[name]/toggle`, `/api/skills/[name]`, and `/api/orchestration/chat`
-- Fixed by hoisting `parseJsonBody` out of the try/catch. The body-shape validation (section/values/writable-section check) now runs OUTSIDE the try block too — only the I/O (filesystem read, YAML dump, write) is inside the try
-- 1 regression test added in `tests/unit/config-values-validation.test.ts` ("returns 400 (not 500) when request body is malformed JSON")
+```ts
+const result = applyProfileOrRootPatch(...);
+const err = toPatchResponse(result, "Failed to sync ...");
+if (err) return err;
+if (!result.ok) throw new Error("unreachable: ...");
+```
 
-**Code consolidation — `commitFallbackChange` helper:**
-- New `src/lib/fallback-sync-helpers.ts` consolidates the "sync to Hermes + append audit line" pair that was duplicated across 5 fallback routes
-- Each route's success path now reads `commitFallbackChange("fallback.toggle", entry.id)` instead of two duplicated lines
-- The 3 remaining fallback routes (`/import`, `/sync`, `/config`) are intentionally NOT migrated because they pass a different config object to the sync helper or use the return value
+The unreachable guard is required for TypeScript narrowing — the helper's
+return type is independent of the result, so TS can't narrow `result.ok`
+from `toPatchResponse`'s signature alone. The throw sits in the hot path
+but is never reached in practice (verified by tests).
 
-**`maskKeyHint` dedup:**
-- Inline copies of `maskKeyHint` (or any other pure helper) should be replaced with the helper call
-- Found one in `src/app/config/[section]/page.tsx` .env preview that inlined the same `slice(0,4) + "..." + slice(-4)` algorithm
-- Displayed format is byte-identical when the helper is called instead, and now there's exactly one place to update the masking policy
+Migrated call sites:
+- `src/app/api/agent/personality/route.ts` (PUT)
+- `src/app/api/personalities/route.ts` (POST + PUT shared `upsertPersonality`)
+  — preserves the existing 500 log line on push-failed
+- `src/app/api/agent/profiles/[id]/toolsets/route.ts` (PUT)
+- `src/app/api/skills/[name]/toggle/route.ts` (PUT)
+- `src/app/api/agent/files/[key]/route.ts` (PUT — 2 sites: config + non-config branches)
 
-All 754 tests pass. Build clean.
+Added `tests/unit/apply-profile-or-root-patch.test.ts` with 4 tests covering
+all 4 union shapes (success, not-found, push-failed with error, push-failed
+without error fallback).
 
-### Review findings (List 2: Cron, Missions, Chat) — 2026-06-02 (session 35, round 2)
+Net change: -66 / +69 LOC across 6 route/lib files, +53 LOC for the test file.
+All 805 tests pass across 156 suites. `npx tsc --noEmit` clean.
 
-**Pattern 9c — JSX IIFE config-builder → ternary at the call site:**
-- `tabConfig` IIFE in `cron/page.tsx` replaced with a ternary `<CronTabContent>` invocation. Net −3 LOC, no logic change.
-
-**Pattern 9d — Config-record-driven banner component for 2-4 near-identical banners:**
-- `GatewayBanner` driven by `Record<Status, Copy>` with `{code}…{/code}` inline-tokens. Two near-identical banner blocks (gateway connected/error) collapsed.
-
-**Pattern 9e — Paired-PUT-action helper for toggle-style handlers:**
-- `applyEnabledChange(id, enabled, state, auditAction)` deduplicating `pause`/`resume` in cron route handlers.
-
-**Pattern 20b — Partial-clear helper extraction:**
-- `clearMissionFormFields` extracted from `resetForm` and `handleCreateNewTemplate` in missions page. Only the *shared* setState calls go in the helper, divergent ones stay at the call site.
-
-**Pitfall:** when extracting a shared helper from inside an existing `useCallback` body, every caller must add the new helper to its `useCallback` deps array — the linter catches this for `useCallback` helpers but not for module-level ones.
-
-All 754 tests pass. Build clean.
-
-### Review findings (List 1: Dashboard, Sessions, Memory, Logs) — 2026-06-02 (session 34)
-
-**`resolveLogFilePath` helper extracted to `src/lib/log-files.ts` (FIXED + unit tested)**
-- The `/api/logs` route had a 12-line copy-pasted chain repeated **twice** (GET + DELETE)
-- Discriminated union: `{ ok: true, safeName, absolutePath } | { ok: false, reason: "invalid-name" | "invalid-path" }`
-- Net: −16 LOC from the route, and the two HTTP status codes are now derived from a single source of truth
-
-**`injectMissingTimestamps` helper extracted to `src/lib/log-line-format.ts` (FIXED + unit tested)**
-- The GET handler had a 15-line inline `.map()` block that did timestamp-prefix injection on lines without a parseable timestamp
-- Delegates timestamp detection to `parseLogLine().timestamp !== null`, so the two stay in lockstep
-- Round-trip test asserts that the consumer of the output (`parseLogLine`) will see the same timestamp the producer injected
-
-**`memory/route.ts` POST — rename `_request` → `request` (FIXED, consistency)**
-- The leading underscore convention is used in this codebase to signal "intentionally unused" — but the memory POST *does* call `requireAuth`, so the underscore was misleading
-
-All 745 tests pass. Build clean.
-
-### Review findings (List 1: Dashboard, Sessions, Memory, Logs) — 2026-05-28 (session 21)
-
-**Consolidation: zodErrorResponse standardization across all fallback routes**
-
-All 6 fallback API routes now use the centralized `zodErrorResponse()` helper instead of inlining `{ error, details: parsed.error.flatten() }`. This eliminates 21 lines of duplicated boilerplate and ensures consistent error response formatting.
-
-Files updated:
-- `fallbacks/route.ts` (POST)
-- `fallbacks/[id]/route.ts` (PUT)
-- `fallbacks/config/route.ts` (PUT)
-- `fallbacks/sync/route.ts` (POST)
-- `fallbacks/reorder/route.ts` (POST)
-- `fallbacks/toggle/route.ts` (POST)
-- `fallbacks/custom/route.ts` (POST)
-
-**Confirmed issues that are NOT bugs (subagent review findings corrected):**
-- `pushCredential` in `syncModel` was NOT being ignored — the sync/push route correctly reads `body.pushCredential` and defaults to `true`. No fix needed.
-- `handlePull` `excluded` parameter is NOT dead code — it IS passed through `syncModel` to the `/api/models/sync/pull` route which applies field filtering. No fix needed.
-- `SyncDrift` import in `sync/drift/route.ts` IS used (line 31: `const syncDrift: SyncDrift = {...}`). Not a real issue.
-
-All 630 tests pass. TypeScript compiles clean.
-
-### Prior changes
-
-#### Review findings (List 4: Models, HERMES.md, Environment, Settings) — 2026-05-28 (session 20)
-
-**Critical runtime bug fixed — ensureProfileAuth hardcoded MINIMAX_API_KEY:**
-- `src/lib/backends/hermes.ts` `ensureProfileAuth()` wrote `MINIMAX_API_KEY=***` to the profile .env regardless of the actual provider
-- Any non-minimax provider (anthropic, openai, etc.) would incorrectly write MINIMAX_API_KEY when dispatching missions for non-default profiles
-- Fix: added `provider` parameter to `ensureProfileAuth()`, derive correct env var via `envVarForProvider()` from `hermes-providers`, skip .env write for OAuth-only providers (nous, etc.)
-
-**ConfigSectionPage hasChanges computation bug:**
-- `hasChanges` for file sections (HERMES.md, .env) was using `yamlHasChanges` useMemo instead of `fileContent !== originalFileContent`
-- Fix: extract `fileHasChanges` as a separate useMemo
-
-All 630 tests pass.
-
-#### Review findings (List 3: Models, Agents, Skills, Personalities) — 2026-05-28 (session 18)
-
-**Code consolidation:**
-- Add `enabled` field to shared `Skill` interface in `@/types/hermes`
-- Add `profile` field to shared `SkillsData` interface
-- Remove duplicate interfaces from skills and agents routes
-
-**Bug fixes:**
-- Skills toggle inversion bug — active/inactive sections passed wrong `currentEnabled` arg
-- Timer stacking in `handleCopy` (personalities/page.tsx) — multiple rapid clicks stacked timeouts
-- Missing explicit DELETE 405 (personalities/route.ts)
-- Unused `Plus` import (agents/page.tsx)
-
-All 630 tests pass. Build clean.
-
-#### List 2: Cron, Missions, Chat
-- useMissionsPage.ts: wrap dispatchPayload in useCallback; wrap resetForm in useCallback([])
-- useCronJobs.ts: handlePauseAll — remove unnecessary async IIFE wrapper
-- useSystemCronJobs.ts: handlePauseAll — move loadJobs() outside conditional (bug fix)
-- cron/page.tsx: onPauseAll — replace async IIFE with void ... .finally(...)
-- chat/route.ts: remove dead nonStreaming variable
-- buildMissionPrompt: fix every Nm format (≥60min intervals)
-
-#### List 1: Dashboard, Sessions, Memory, Logs
-- remove redundant useMemo wrapping messageSummary() in MessageBubble.tsx
-- Fix inconsistent error response format in /api/memory/hindsight
-- Auth gap fixes, session API improvements, dead code removal
-See individual commits on branch for full history.
-See individual commits on branch for full history.
