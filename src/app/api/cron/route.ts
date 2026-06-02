@@ -47,6 +47,25 @@ function cronSyncFailureResponse(
   );
 }
 
+/**
+ * Parse a schedule string and return either the parsed schedule (when valid)
+ * or a 400 NextResponse the caller can return directly. Eliminates the
+ * parseSchedule+kind==="invalid" boilerplate from POST and PUT.
+ */
+function parseScheduleOrError(schedule: string): { ok: true; parsed: ReturnType<typeof parseSchedule> } | { ok: false; response: NextResponse } {
+  const parsed = parseSchedule(schedule);
+  if (parsed.kind === "invalid") {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: parsed.message || `Invalid schedule: "${schedule}"` },
+        { status: 400 },
+      ),
+    };
+  }
+  return { ok: true, parsed };
+}
+
 // ── Helpers ───────────────────────────────────────────────────
 
 function recordToApiJob(job: CronJobRecord) {
@@ -234,10 +253,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "schedule is required" }, { status: 400 });
     }
 
-    const parsedSchedule = parseSchedule(schedule);
-    if (parsedSchedule.kind === "invalid") {
-      return NextResponse.json({ error: parsedSchedule.message }, { status: 400 });
-    }
+    const scheduleCheck = parseScheduleOrError(schedule);
+    if (!scheduleCheck.ok) return scheduleCheck.response;
+    const parsedSchedule = scheduleCheck.parsed;
 
     // Resolve model: use explicit model or fall back to registry default
     const registryDefault = (() => {
@@ -401,13 +419,9 @@ export async function PUT(request: NextRequest) {
     if (updates.state !== undefined) updatePayload.state = updates.state as string;
 
     if (updates.schedule !== undefined) {
-      const parsed = parseSchedule(updates.schedule as string);
-      if (parsed.kind === "invalid") {
-        return NextResponse.json(
-          { error: parsed.message || `Invalid schedule: "${updates.schedule}"` },
-          { status: 400 }
-        );
-      }
+      const scheduleCheck = parseScheduleOrError(updates.schedule as string);
+      if (!scheduleCheck.ok) return scheduleCheck.response;
+      const parsed = scheduleCheck.parsed;
       updatePayload.schedule = JSON.stringify(parsed);
       updatePayload.schedule_display = "display" in parsed ? (parsed as { display: string }).display : (updates.schedule as string);
     }

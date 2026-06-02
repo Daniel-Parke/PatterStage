@@ -312,7 +312,8 @@ export default function CronPage() {
                 onDelete: (id: string) => agent.handleDelete(id),
                 onRun: (id: string) => agent.handleRun(id),
                 onEdit: (job: CronJob | SystemCronJob) => {
-                  if ("command" in job) return; // agent jobs don't have "command"
+                  // tabConfig is a discriminated union (isAgent) — agent tab always sees CronJob
+                  if ("command" in job) return; // unreachable on agent tab
                   setEditingJob(job);
                   setShowCreate(true);
                 },
@@ -332,13 +333,10 @@ export default function CronPage() {
                 onDelete: (id: string) => hardware.handleDelete(id),
                 onRun: undefined,
                 onEdit: (job: CronJob | SystemCronJob) => {
-                  if ("command" in job) {
-                    setEditingHardwareJob(job);
-                    setShowHardwareCreate(true);
-                  } else {
-                    setEditingJob(job);
-                    setShowCreate(true);
-                  }
+                  // tabConfig is a discriminated union (isAgent) — system tab always sees SystemCronJob
+                  if (!("command" in job)) return; // unreachable on system tab
+                  setEditingHardwareJob(job);
+                  setShowHardwareCreate(true);
                 },
               };
 

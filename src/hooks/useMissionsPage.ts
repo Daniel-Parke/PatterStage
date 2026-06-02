@@ -534,12 +534,11 @@ export function useMissionsPage() {
             showToast("Mission updated", "success");
             setEditingId(null);
             setShowCreate(false);
-            fetchData();
-            if (expandedId === editingId) fetchDetail(editingId);
+            void fetchData();
+            if (expandedId === editingId) void fetchDetail(editingId);
           } else {
             showToast(error || "Failed to update mission", "error");
           }
-          setDispatching(false);
           return;
         }
 
@@ -571,18 +570,14 @@ export function useMissionsPage() {
             setShowCreate(false);
             resetForm();
             await fetchData();
-            if (expandedId === editingId) fetchDetail(editingId);
+            if (expandedId === editingId) void fetchDetail(editingId);
           } else {
             showToast(error || "Failed to update mission", "error");
           }
-          setDispatching(false);
           return;
         }
 
-        if (!isCompleted) {
-          setDispatching(false);
-          return;
-        }
+        if (!isCompleted) return;
 
         setEditingId(null);
 
@@ -598,7 +593,6 @@ export function useMissionsPage() {
         if (ok) {
           const body = data;
           showToast("Mission re-dispatched", "success");
-          setDispatching(false);
           await fetchData();
           if (body?.data?.mission?.id) {
             setExpandedId(body.data.mission.id);
@@ -606,7 +600,6 @@ export function useMissionsPage() {
           }
         } else {
           showToast(error || "Failed to re-dispatch mission", "error");
-          setDispatching(false);
         }
         return;
       }
@@ -634,12 +627,10 @@ export function useMissionsPage() {
             "success",
           );
           resetForm();
-          fetchData();
-          setDispatching(false);
+          void fetchData();
         } else if (newDispatch === "now") {
           const body = data;
           showToast("Mission dispatched", "success");
-          setDispatching(false);
           await fetchData();
           if (body?.data?.mission?.id) {
             setExpandedId(body.data.mission.id);
@@ -647,15 +638,14 @@ export function useMissionsPage() {
           }
         } else {
           showToast(`Mission scheduled: ${newSchedule}`, "success");
-          setDispatching(false);
           await fetchData();
         }
       } else {
         showToast(error || "Failed to create mission", "error");
-        setDispatching(false);
       }
     } catch {
       showToast("Network error — please try again", "error");
+    } finally {
       setDispatching(false);
     }
   }, [newName, newInstruction, editingId, dispatchAcknowledged, dispatching, showToast, newDispatch, newSchedule, missions, dispatchPayload, fetchData, resetForm, fetchDetail, expandedId]);
@@ -725,6 +715,31 @@ export function useMissionsPage() {
     showToast("Mission duplicated as draft", "success");
   }, [populateFormFromMission, showToast]);
 
+  const persistTemplate = useCallback(
+    async (payload: Record<string, unknown>, postSuccess: () => void) => {
+      setTemplateSaving(true);
+      try {
+        const res = await safeApiCall("/api/templates", {
+          method: "POST",
+          body: payload,
+        });
+        if (res.ok) {
+          const wasUpdate = payload.action === "update";
+          showToast(wasUpdate ? "Template updated!" : "Template saved!", "success");
+          postSuccess();
+          void fetchData();
+        } else {
+          showToast(res.error || "Failed to save template", "error");
+        }
+      } catch {
+        showToast("Failed to save template", "error");
+      } finally {
+        setTemplateSaving(false);
+      }
+    },
+    [showToast, fetchData],
+  );
+
   const handleSaveAsTemplate = useCallback(async () => {
     if (!newInstruction.trim()) return;
 
@@ -746,52 +761,31 @@ export function useMissionsPage() {
       if (!confirmed) return;
     }
 
-    setTemplateSaving(true);
-    try {
-      const payload = buildTemplatePayload({
-        action: existingTemplate ? "update" : "create",
-        templateId: existingTemplate?.id,
-        name,
-        icon: templateIcon,
-        color: templateColor,
-        description: templateDescription,
-        instruction: newInstruction,
-        context: newContext,
-        outputFormat: newOutputFormat,
-        constraints: newConstraints,
-        goals: newGoals,
-        localDirs: newLocalDirs,
-        references: newReferences,
-        suggestedSkills: newSkills,
-        suggestedToolsets: newToolsets,
-        profile: newProfile,
-        defaultModel: newModel,
-        defaultProvider: newProvider,
-        timeoutMinutes: newTimeout,
-        categoryId: newCategoryId,
-      });
+    const payload = buildTemplatePayload({
+      action: existingTemplate ? "update" : "create",
+      templateId: existingTemplate?.id,
+      name,
+      icon: templateIcon,
+      color: templateColor,
+      description: templateDescription,
+      instruction: newInstruction,
+      context: newContext,
+      outputFormat: newOutputFormat,
+      constraints: newConstraints,
+      goals: newGoals,
+      localDirs: newLocalDirs,
+      references: newReferences,
+      suggestedSkills: newSkills,
+      suggestedToolsets: newToolsets,
+      profile: newProfile,
+      defaultModel: newModel,
+      defaultProvider: newProvider,
+      timeoutMinutes: newTimeout,
+      categoryId: newCategoryId,
+    });
 
-      const res = await safeApiCall("/api/templates", {
-        method: "POST",
-        body: payload,
-      });
-
-      if (res.ok) {
-        showToast(
-          existingTemplate ? "Template updated!" : "Template saved!",
-          "success",
-        );
-        setEditingTemplateId(null);
-        fetchData();
-      } else {
-        showToast(res.error || "Failed to save template", "error");
-      }
-    } catch {
-      showToast("Failed to save template", "error");
-    } finally {
-      setTemplateSaving(false);
-    }
-  }, [newInstruction, newName, editingTemplateId, templates, templateIcon, templateColor, templateDescription, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, showToast, fetchData]);
+    await persistTemplate(payload, () => setEditingTemplateId(null));
+  }, [newInstruction, newName, editingTemplateId, templates, templateIcon, templateColor, templateDescription, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, persistTemplate]);
 
   const handleCreateNewTemplate = useCallback(() => {
     setEditingTemplateId(null);
@@ -815,54 +809,37 @@ export function useMissionsPage() {
 
   const handleTemplateSave = useCallback(async () => {
     if (!templateName.trim()) return;
-    setTemplateSaving(true);
-    try {
-      const payload = buildTemplatePayload({
-        action: editingTemplateId ? "update" : "create",
-        templateId: editingTemplateId ?? undefined,
-        name: templateName,
-        icon: templateIcon,
-        color: templateColor,
-        description: templateDescription,
-        instruction: newInstruction,
-        context: newContext,
-        outputFormat: newOutputFormat,
-        constraints: newConstraints,
-        goals: newGoals,
-        localDirs: newLocalDirs,
-        references: newReferences,
-        suggestedSkills: newSkills,
-        suggestedToolsets: newToolsets,
-        profile: newProfile,
-        defaultModel: newModel,
-        defaultProvider: newProvider,
-        timeoutMinutes: newTimeout,
-        categoryId: newCategoryId ?? null,
-        dispatchMode: editingTemplateId ? undefined : newDispatch,
-        schedule: editingTemplateId ? undefined : newSchedule,
-      });
 
-      const res = await safeApiCall("/api/templates", {
-        method: "POST",
-        body: payload,
-      });
-      if (res.ok) {
-        showToast(
-          editingTemplateId ? "Template updated!" : "Template saved!",
-          "success",
-        );
-        setShowTemplateEditor(false);
-        setEditingTemplateId(null);
-        fetchData();
-      } else {
-        showToast(res.error || "Failed to save template", "error");
-      }
-    } catch {
-      showToast("Failed to save template", "error");
-    } finally {
-      setTemplateSaving(false);
-    }
-  }, [templateName, editingTemplateId, templateIcon, templateColor, templateDescription, newInstruction, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, newDispatch, newSchedule, showToast, fetchData]);
+    const payload = buildTemplatePayload({
+      action: editingTemplateId ? "update" : "create",
+      templateId: editingTemplateId ?? undefined,
+      name: templateName,
+      icon: templateIcon,
+      color: templateColor,
+      description: templateDescription,
+      instruction: newInstruction,
+      context: newContext,
+      outputFormat: newOutputFormat,
+      constraints: newConstraints,
+      goals: newGoals,
+      localDirs: newLocalDirs,
+      references: newReferences,
+      suggestedSkills: newSkills,
+      suggestedToolsets: newToolsets,
+      profile: newProfile,
+      defaultModel: newModel,
+      defaultProvider: newProvider,
+      timeoutMinutes: newTimeout,
+      categoryId: newCategoryId ?? null,
+      dispatchMode: editingTemplateId ? undefined : newDispatch,
+      schedule: editingTemplateId ? undefined : newSchedule,
+    });
+
+    await persistTemplate(payload, () => {
+      setShowTemplateEditor(false);
+      setEditingTemplateId(null);
+    });
+  }, [templateName, editingTemplateId, templateIcon, templateColor, templateDescription, newInstruction, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, newDispatch, newSchedule, persistTemplate]);
 
   const handleEditTemplate = useCallback(
     (t: MissionTemplate & {
