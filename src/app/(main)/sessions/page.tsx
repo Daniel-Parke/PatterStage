@@ -46,7 +46,7 @@ import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import Badge from "@/components/ui/Badge";
 import Pagination from "@/components/ui/Pagination";
 import { useToast } from "@/components/ui/Toast";
-import { timeAgo } from "@/lib/utils";
+import { timeAgo, formatElapsed } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
 import AppPageShell from "@/components/layout/AppPageShell";
 import type { SessionRecord } from "@/lib/session-repository";
@@ -164,19 +164,6 @@ function buildGroupedEntries(
   });
 
   return entries;
-}
-
-// ── Live elapsed-time formatter ──────────────────────────────
-
-function formatElapsed(startedAt: string): string {
-  const start = new Date(startedAt).getTime();
-  if (!Number.isFinite(start)) return "";
-  const seconds = Math.max(0, Math.floor((Date.now() - start) / 1000));
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ${seconds % 60}s`;
-  const hours = Math.floor(minutes / 60);
-  return `${hours}h ${minutes % 60}m`;
 }
 
 // ── Components ───────────────────────────────────────────────

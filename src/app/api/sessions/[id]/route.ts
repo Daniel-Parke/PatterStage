@@ -7,26 +7,12 @@ import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { safeStat } from "@/lib/fs-stats";
-import { getSession, estimateSessionSize, lookupMissionIdForHermesJob } from "@/lib/session-repository";
-import { cronJobIdFromSessionId } from "@/lib/session-title";
+import { getSession, estimateSessionSize, lookupMissionIdForCronSession } from "@/lib/session-repository";
 import { PATHS } from "@/lib/paths";
 import {
   getMaxSessionFileBytes,
   sessionsRateLimitResponse,
 } from "@/lib/sessions-api-guard";
-
-/**
- * Best-effort lookup of the Control-Hub mission id for a cron-spawned
- * session. The session id has the form `cron_<job-uuid>_<date>_<time>`;
- * the job uuid resolves to cron_jobs.id, which resolves to missions.id
- * via the missions.cron_job_id FK. Returns null for non-cron sessions
- * or when no mission has been registered for the job.
- */
-function lookupMissionIdForCronSession(sessionId: string): string | null {
-  const jobId = cronJobIdFromSessionId(sessionId);
-  if (!jobId) return null;
-  return lookupMissionIdForHermesJob(jobId);
-}
 
 export async function GET(
   request: NextRequest,

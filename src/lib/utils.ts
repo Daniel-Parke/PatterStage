@@ -57,6 +57,28 @@ export function timeUntil(iso: string | null): string {
 }
 
 /**
+ * Format the elapsed time since a startedAt ISO timestamp as
+ * "Xs / Xm Ys / Xh Ym" — used for active sessions where we want
+ * a live, monotonically-increasing duration. Returns an empty
+ * string when the timestamp can't be parsed.
+ *
+ * Distinct from timeAgo: timeAgo produces "5m ago" and rounds
+ * down to coarse buckets (m/h/d). formatElapsed produces a
+ * finer-grained "Xh Ym Zs" string suitable for the active-session
+ * badge where every second counts.
+ */
+export function formatElapsed(startedAt: string): string {
+  const start = new Date(startedAt).getTime();
+  if (!Number.isFinite(start)) return "";
+  const seconds = Math.max(0, Math.floor((Date.now() - start) / 1000));
+  if (seconds < 60) return `${seconds}s`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ${seconds % 60}s`;
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ${minutes % 60}m`;
+}
+
+/**
  * Safely format a Unix timestamp as a relative time string.
  * Returns "never" for null, undefined, NaN, or negative values.
  * Use this instead of `timeAgo(new Date(unixTs * 1000).toISOString())`

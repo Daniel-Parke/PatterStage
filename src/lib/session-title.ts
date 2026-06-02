@@ -48,6 +48,27 @@ export function cronJobIdFromSessionId(sessionId: string): string | null {
 }
 
 /**
+ * Parse the segments of a cron session id into structured parts.
+ *
+ * Hermes cron session ids look like `cron_<job-uuid>_<YYYYMMDD>_<HHMMSS>`.
+ * The legacy sync code in session-repository.ts used the same shape
+ * to format titles ("Cron: <name> — <date> <time>"), so this helper
+ * returns the segments in a structure that maps 1:1 onto that use.
+ *
+ * Returns null when the id doesn't match the expected shape (no
+ * `cron_` prefix, or fewer than 3 underscore-separated segments).
+ */
+export function parseCronSessionId(sessionId: string):
+  | { jobId: string; rest: string[] }
+  | null {
+  const jobId = cronJobIdFromSessionId(sessionId);
+  if (!jobId) return null;
+  const rest = sessionId.slice("cron_".length + jobId.length + 1).split("_");
+  if (rest.length < 2) return null; // need at least date + time
+  return { jobId, rest };
+}
+
+/**
  * Resolve a display title for a session record.
  *
  * @param session  the session record (or a subset of its fields)
