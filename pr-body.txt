@@ -130,3 +130,99 @@ The session-38 test-mock-pitfall family flagged duplicate keys in `jest.mock` fa
 2. **"Page-local helper promoted to `src/lib/` for testability" is a valid Rule-of-Three exception** — 3+ conditional branches + 2+ string-regex ops justify extraction even with 1 callsite.
 3. **"Outlier kept inline, common case unified"** — 5/1 ratio: extract the 5, leave the 1 alone. 4/2 would justify 2 helpers or inlining.
 4. **Empty-string sentinel over `boolean` flag or `null | string`** for "this param is optional with 2 distinct effects."
+
+---
+
+## Session 60 — List 4 followup (Models, config, agent/files, agent/profiles)
+
+Followup to session 59. Closes the cross-list factory gap by adding `notFound` (404) and `serverError` (500) factories to `@/lib/api-response.ts`, then migrating **16 inline `NextResponse.json({error}, {status: 404|500})` blocks** across the List 4 surface to use them.
+
+### Refactor 1 — New factories
+
+Added `notFound(error)` and `serverError(error)` to `src/lib/api-response.ts` as status-code-locked siblings of `badRequest`. Each factory is dependency-free and matches the existing `badRequest` shape (body `{ error }`). Per status-code discipline (session-48 design): no "any 4xx" / "any 5xx" overloads — pick the named factory that matches.
+
+### Refactor 2 — 16 inline 404/500 sites migrated across List 4
+
+| File | Sites |
+|---|---|
+| `src/app/api/agent/files/[key]/route.ts` | 2 |
+| `src/app/api/agent/profiles/[id]/route.ts` | 6 |
+| `src/app/api/agent/profiles/[id]/toolsets/route.ts` | 3 |
+| `src/app/api/agent/profiles/route.ts` | 4 |
+| `src/app/api/config/route.ts` | 1 (500 fallback) |
+| `src/app/api/models/[id]/diff/route.ts` | 1 |
+| `src/app/api/models/[id]/route.ts` | 3 |
+| `src/app/api/models/defaults/route.ts` | 2 |
+| `src/app/api/models/fallbacks/[id]/route.ts` | 3 |
+| `src/app/api/models/fallbacks/import/route.ts` | 2 |
+| `src/app/api/models/fallbacks/reorder/route.ts` | 2 |
+| `src/app/api/models/fallbacks/route.ts` | 1 (500 fallback) |
+| `src/app/api/models/fallbacks/toggle/route.ts` | 1 |
+| `src/app/api/models/import/route.ts` | 1 |
+| `src/app/api/models/route.ts` | 1 (500 fallback) |
+| `src/app/api/models/sync/pull/route.ts` | 1 |
+
+**Tests:** 6 new unit tests in `tests/unit/api-response.test.ts` (3 each for `notFound` and `serverError`) lock status code + body shape + message preservation. 173 suites total stays at 173, +6 tests.
+
+**Byte-equivalence audit (session-51):** all 16 sites preserve the same body + status. 400 sites remain inline (no `badRequest` adoption in this PR — List 4 already had 0 inline 400s after session 59). 503 sites remain inline (no factory for 503 — only 1 such site in the entire codebase). 0 user-visible behaviour changes.
+
+### Files
+
+- `src/lib/api-response.ts` (MODIFIED) — added `notFound` + `serverError` factories
+- `tests/unit/api-response.test.ts` (MODIFIED) — 6 new tests
+- 16 route files (MODIFIED) — 16 inline 404/500 sites → factories
+
+### Verification
+
+- All 1009 unit tests pass (173 suites, +6 new from this session)
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint . --max-warnings 0` clean
+- `npm run build` passes
+- 0 user-visible behaviour changes (byte-equivalence audit)
+
+---
+
+## Session 61 — List 1 (Dashboard, Sessions, Memory, Logs)
+
+Random pick: **List 1** (Dashboard, Sessions, Memory, Logs). Closes the **other** half of the cross-list factory gap: 13 inline `NextResponse.json({error}, {status: 400|404|500})` blocks across 5 List 1 routes, migrated to use the factories from sessions 48 + 60. Pure refactor, 0 new tests, all byte-equivalent.
+
+### The single big finding
+
+| File | Sites | Status codes |
+|---|---|---|
+| `src/app/api/sessions/route.ts` | 4 | 2× 404, 1× 500, 1× 503 (kept inline — no factory) |
+| `src/app/api/sessions/[id]/route.ts` | 2 | 1× 404, 1× 500 |
+| `src/app/api/logs/route.ts` | 5 | 2× 400, 2× 404, 1× 500 |
+| `src/app/api/memory/route.ts` | 1 | 1× 400 (deleted `unsupportedWriteResponse` helper — now just `badRequest()`) |
+| `src/app/api/monitor/route.ts` | 1 | 1× 500 |
+
+**Net:** -47 lines of `NextResponse.json({error}, {status: N})` boilerplate collapsed to 1-line factory calls. The `ApiResponse<never>` generic on each inline block (which was redundant — NextResponse's body type inference is fine) is also gone.
+
+### What was rejected
+
+- **503 in `sessions/route.ts`** — Rule of Three. Only 1 such site in the entire codebase. Kept inline; will promote to `serviceUnavailable()` factory when a 2nd site appears.
+- **`memory/hindsight` 500/503 catch blocks** — soft-fail envelope `{ data: { available: false, error, memories: [] } }`. Different contract from canonical `{ error }`; the frontend keys off `data?.available`. Session-57 already pinned this rejection. Kept inline.
+- **`session-detail/page.tsx` `data?.messages` optional-chaining** (3 sites) — useMemo can't be guarded by an early-return so the `?.` is required. Not a refactor target.
+
+### Files
+
+- `src/app/api/sessions/route.ts` (MODIFIED) — 4 sites → factories
+- `src/app/api/sessions/[id]/route.ts` (MODIFIED) — 2 sites → factories
+- `src/app/api/logs/route.ts` (MODIFIED) — 5 sites → factories; removed `ApiResponse<never>` generic on remaining `NextResponse.json` success sites
+- `src/app/api/memory/route.ts` (MODIFIED) — deleted `unsupportedWriteResponse` helper
+- `src/app/api/monitor/route.ts` (MODIFIED) — 1 site → factory
+- `references/control-hub-list1-session61-findings.md` (NEW) — session findings
+
+### Verification
+
+- All 1009 unit tests pass (no count change — pure refactor)
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint . --max-warnings 0` clean
+- `npm run build` passes
+- `grep -nE "status: (400|404|500)" src/app/api/{sessions,logs,memory,monitor}/**/*.ts` — **0 hits** (was 13)
+
+### Patterns to take forward
+
+1. **List-aware audit recipe for the factory trio** — `grep -nE "status: (400|404|500)" src/app/api/<list>/**/*.ts | grep -vE "(badRequest|notFound|serverError)"` — run against the picked list every session. Session 61 closed List 1's contribution (13 sites); Lists 2 + 3 still have a few inline 400s to migrate.
+2. **Status-code discipline** — keep factories status-code-locked; no "any 4xx" / "any 5xx" overloads. Promote a new factory only when 2+ sites need it.
+3. **Soft-fail envelopes stay inline** — they have a different contract than the canonical `{ error }` shape; the frontend keys off the data shape. Pinned by session 57.
