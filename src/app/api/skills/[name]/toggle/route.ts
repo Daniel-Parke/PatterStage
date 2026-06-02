@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot, updateAgentRoot } from "@/lib/agent-root-repository";
 import {
@@ -29,16 +30,20 @@ export async function PUT(
 
   const { name } = await params;
 
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+
+  ensureDb();
+  const { profile: profileParam, enabled } = bodyResult;
+
+  if (typeof enabled !== "boolean") {
+    return NextResponse.json({ error: "enabled (boolean) is required" }, { status: 400 });
+  }
+
   try {
-    ensureDb();
-    const body = await request.json();
-    const { profile: profileParam, enabled } = body;
-
-    if (typeof enabled !== "boolean") {
-      return NextResponse.json({ error: "enabled (boolean) is required" }, { status: 400 });
-    }
-
-    const profileResult = resolveSafeProfileName(profileParam);
+    const profileResult = resolveSafeProfileName(
+      typeof profileParam === "string" ? profileParam : null,
+    );
     if (!profileResult.ok) {
       return NextResponse.json({ error: profileResult.error }, { status: 400 });
     }

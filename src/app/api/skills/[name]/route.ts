@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
 import { getSkill, upsertSkill, parseSkillFrontmatter } from "@/lib/skills-repository";
@@ -72,17 +73,12 @@ export async function PUT(
 
   const { name } = await params;
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  }
-  catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
 
   const content =
-    typeof body === "object" && body !== null && "content" in body
-      ? (body as { content: unknown }).content
+    "content" in bodyResult && typeof bodyResult.content === "string"
+      ? bodyResult.content
       : undefined;
 
   if (typeof content !== "string") {

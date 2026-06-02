@@ -262,10 +262,8 @@ export default function PersonalitiesPage() {
       ]);
       setPersonalities(persData?.data?.personalities ?? []);
       const displaySection = configData?.data?.display;
-      const activeP = displaySection && typeof displaySection === "object" && "personality" in displaySection
-        ? String((displaySection as Record<string, unknown>).personality ?? "")
-        : "";
-      setActivePersonality(activeP);
+      const personalityValue = (displaySection as { personality?: unknown } | null)?.personality;
+      setActivePersonality(typeof personalityValue === "string" ? personalityValue : "");
     } catch {
       showToast("Failed to load personalities", "error");
     } finally {

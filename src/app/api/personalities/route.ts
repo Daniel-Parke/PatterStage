@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot, updateAgentRoot } from "@/lib/agent-root-repository";
 import { listProfiles, updateProfileContent } from "@/lib/profiles-repository";
@@ -11,7 +12,9 @@ import { resolveSafeProfileName } from "@/lib/path-security";
 /** Shared upsert logic used by both POST (create) and PUT (update). */
 async function upsertPersonality(request: NextRequest) {
   ensureDb();
-  const body = (await request.json()) as Record<string, unknown>;
+  const bodyResult = await parseJsonBody(request);
+  if (bodyResult instanceof NextResponse) return bodyResult;
+  const body = bodyResult;
   const profile = typeof body.profile === "string" ? body.profile : "default";
   const prompt = typeof body.prompt === "string" ? body.prompt : "";
   if (!prompt.trim()) {
