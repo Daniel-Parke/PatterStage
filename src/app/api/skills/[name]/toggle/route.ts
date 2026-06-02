@@ -9,7 +9,7 @@ import {
   getDisabledSkills,
   getProfile,
 } from "@/lib/profiles-repository";
-import { applyProfileOrRootPatch } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatch, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { serializeJsonArray } from "@/lib/profile-config-builder";
 import { getSkill } from "@/lib/skills-repository";
@@ -80,15 +80,9 @@ export async function PUT(
       { disabledSkillsJson },
       { disabledSkillsJson },
     );
-    if (!result.ok) {
-      if (result.reason === "not-found") {
-        return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-      }
-      return NextResponse.json(
-        { error: result.error },
-        { status: 500 },
-      );
-    }
+    const err = toPatchResponse(result, "Failed to toggle skill");
+    if (err) return err;
+    if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
 
     return NextResponse.json({
       data: { success: true, skill: name, profile, enabled },

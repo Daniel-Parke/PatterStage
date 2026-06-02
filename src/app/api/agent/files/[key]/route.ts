@@ -15,7 +15,7 @@ import {
   writeManagedFileContent,
   type ManagedFileKey,
 } from "@/lib/agent-file-store";
-import { applyProfileOrRootPatch, pushProfileOrRoot } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatch, pushProfileOrRoot, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
 import {
   configYamlToColumnValues,
   platformToolsetsFromJson,
@@ -212,15 +212,9 @@ export async function PUT(
           configPatch,
           configPatch,
         );
-        if (!result.ok) {
-          if (result.reason === "not-found") {
-            return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-          }
-          return NextResponse.json(
-            { error: result.error ?? "Failed to sync profile to Hermes" },
-            { status: 500 },
-          );
-        }
+        const err = toPatchResponse(result, "Failed to sync profile to Hermes");
+        if (err) return err;
+        if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
       }
       else {
         // Non-config managed file (SOUL.md, AGENTS.md, etc.) — write
@@ -230,15 +224,9 @@ export async function PUT(
         // that would bump updated_at.
         writeManagedFileContent(profileSlug, key as ManagedFileKey, content);
         const result = pushProfileOrRoot(profileSlug);
-        if (!result.ok) {
-          if (result.reason === "not-found") {
-            return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-          }
-          return NextResponse.json(
-            { error: result.error ?? "Failed to sync profile to Hermes" },
-            { status: 500 },
-          );
-        }
+        const err = toPatchResponse(result, "Failed to sync profile to Hermes");
+        if (err) return err;
+        if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
       }
     }
     else {

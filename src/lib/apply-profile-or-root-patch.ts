@@ -29,7 +29,12 @@
 // route the update.
 //
 // The returned union is shaped so the caller can produce the right
-// NextResponse status with a single `switch`:
+// NextResponse status with a single `switch`. To skip writing the
+// switch at every call site, use `toPatchResponse(result, fallback)`
+// below — it returns `null` on success (caller continues) or a
+// NextResponse (caller returns it) for not-found / push-failed.
+
+import { NextResponse } from "next/server";
 
 import { updateAgentRoot, type AgentRootPatch } from "./agent-root-repository";
 import { getProfile, updateProfileContent } from "./profiles-repository";
@@ -108,4 +113,37 @@ export function pushProfileOrRoot(slug: string): ProfileOrRootPatchResult {
     return { ok: false, reason: "push-failed", error: push.error ?? "Push failed" };
   }
   return { ok: true, profile: slug };
+}
+
+/**
+ * Convert a `ProfileOrRootPatchResult` into either a ready-to-return
+ * `NextResponse` (404 on not-found, 500 on push-failed) or `null` on
+ * success. Lets the 5 call sites of `applyProfileOrRootPatch` /
+ * `pushProfileOrRoot` collapse their identical 7-line if/else switch
+ * into:
+ *
+ *   const result = applyProfileOrRootPatch(...);
+ *   const err = toPatchResponse(result, "Failed to sync profile");
+ *   if (err) return err;
+ *   if (!result.ok) throw new Error("unreachable");
+ *
+ * The caller still needs the `if (!result.ok)` guard because TS
+ * can't narrow `result` from `toPatchResponse`'s return type alone.
+ * `fallbackError` is the body of the 500 response when the underlying
+ * push didn't supply its own `error` message. The not-found error
+ * string is always "Profile not found" to match the prior inline
+ * copy.
+ */
+export function toPatchResponse(
+  result: ProfileOrRootPatchResult,
+  fallbackError: string,
+): NextResponse | null {
+  if (result.ok) return null;
+  if (result.reason === "not-found") {
+    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+  }
+  return NextResponse.json(
+    { error: result.error ?? fallbackError },
+    { status: 500 },
+  );
 }

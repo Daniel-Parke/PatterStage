@@ -4,7 +4,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { applyProfileOrRootPatch } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatch, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
 import { hydratePlatformToolsetsForSlug } from "@/lib/profiles-repository";
 import {
   normalizePlatformToolsetsFromInput,
@@ -77,16 +77,9 @@ export async function PUT(
       { platformToolsetsJson },
       { platformToolsetsJson },
     );
-
-    if (!result.ok) {
-      if (result.reason === "not-found") {
-        return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-      }
-      return NextResponse.json(
-        { error: result.error },
-        { status: 500 },
-      );
-    }
+    const err = toPatchResponse(result, "Failed to sync profile to Hermes");
+    if (err) return err;
+    if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
 
     return NextResponse.json({ data: { success: true, profile: result.profile, platformToolsets } });
   }
