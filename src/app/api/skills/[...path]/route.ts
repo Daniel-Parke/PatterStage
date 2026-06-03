@@ -6,6 +6,7 @@ import { logApiError } from "@/lib/api-logger";
 import { resolveSkillDirUnderRoot } from "@/lib/path-security";
 import { parseSkillFrontmatter, stripSkillFrontmatter } from "@/lib/skills-repository";
 import { requireAuth } from "@/lib/api-auth";
+import { serverError } from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
@@ -84,9 +85,6 @@ export async function GET(
     });
   } catch (err) {
     logApiError("GET /api/skills/[...path]", "reading skill", err);
-    return NextResponse.json(
-      { error: "Failed to read skill" },
-      { status: 500 }
-    );
+    return serverError("Failed to read skill");
   }
 }

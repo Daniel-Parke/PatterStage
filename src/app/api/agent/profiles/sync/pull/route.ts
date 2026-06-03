@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
+import { booleanFlag, stringFlag } from "@/lib/parse-bag-flags";
 import { listProfiles } from "@/lib/profiles-repository";
 import {
   pullProfileFromHermes,
@@ -21,14 +22,15 @@ export async function POST(request: NextRequest) {
   // Body is a bag of optional flags (slug, all, root, skills,
   // reconcileDisk, ...); missing or malformed body is treated as {}.
   const body = await parseOptionalJsonBody(request);
-  const slug = typeof body.slug === "string" ? body.slug : undefined;
-  const all = body.all === true;
-  const root = body.root === true;
-  const skills = body.skills === true;
-  const skillKey = typeof body.skillKey === "string" ? body.skillKey : undefined;
-  const importDiscovered = body.importDiscovered === true;
+  const slug = stringFlag(body, "slug");
+  const all = booleanFlag(body, "all");
+  const root = booleanFlag(body, "root");
+  const skills = booleanFlag(body, "skills");
+  const skillKey = stringFlag(body, "skillKey");
+  const importDiscovered = booleanFlag(body, "importDiscovered");
   const reconcileDisk =
-    body.reconcileDisk === true || process.env.CH_PULL_RECONCILE_DISK === "1";
+    booleanFlag(body, "reconcileDisk") ||
+    process.env.CH_PULL_RECONCILE_DISK === "1";
 
   try {
     ensureDb();

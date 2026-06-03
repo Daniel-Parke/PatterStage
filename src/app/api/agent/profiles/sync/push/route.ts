@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
+import { booleanFlag, stringFlag } from "@/lib/parse-bag-flags";
 import {
   pushProfileToHermes,
   pushAllProfiles,
@@ -20,13 +21,13 @@ export async function POST(request: NextRequest) {
   // missing or malformed body is treated as {} so callers can POST
   // with no payload to trigger default behaviour.
   const body = await parseOptionalJsonBody(request);
-  const slug = typeof body.slug === "string" ? body.slug : undefined;
-  const all = body.all === true;
-  const root = body.root === true;
-  const skills = body.skills === true;
-  const skillKey = typeof body.skillKey === "string" ? body.skillKey : undefined;
-  const missingOnly = body.missingOnly === true;
-  const onlyOutOfSync = body.onlyOutOfSync === true;
+  const slug = stringFlag(body, "slug");
+  const all = booleanFlag(body, "all");
+  const root = booleanFlag(body, "root");
+  const skills = booleanFlag(body, "skills");
+  const skillKey = stringFlag(body, "skillKey");
+  const missingOnly = booleanFlag(body, "missingOnly");
+  const onlyOutOfSync = booleanFlag(body, "onlyOutOfSync");
 
   try {
     ensureDb();

@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
+import { booleanFlag, stringFlag } from "@/lib/parse-bag-flags";
 import {
   discoverLocalProfiles,
   importDiscoveredProfile,
@@ -33,9 +34,14 @@ export async function POST(request: NextRequest) {
   // Body is a bag of optional flags (slug, importSkills,
   // importAllDiscovered); missing or malformed body is treated as {}.
   const body = await parseOptionalJsonBody(request);
-  const slug = typeof body.slug === "string" ? body.slug.trim() : undefined;
-  const importSkills = body.importSkills === true;
-  const importAllDiscovered = body.importAllDiscovered === true;
+  // .trim() here is intentional: pre-refactor form was
+  //   const slug = typeof body.slug === "string" ? body.slug.trim() : undefined;
+  // — the trim is part of the route's slug-validity contract, not a
+  // nice-to-have, so the helper's opt-in `trim` is required to keep
+  // byte equivalence.
+  const slug = stringFlag(body, "slug", { trim: true });
+  const importSkills = booleanFlag(body, "importSkills");
+  const importAllDiscovered = booleanFlag(body, "importAllDiscovered");
 
   try {
     ensureDb();
