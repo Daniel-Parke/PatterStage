@@ -53,6 +53,24 @@ export default function BehaviourPage() {
   const [deleting, setDeleting] = useState(false);
   const [syncBusy, setSyncBusy] = useState(false);
 
+  // closeDelete — the Delete Profile modal has 3 single-setter
+  // close sites that all do the same thing: `() => setDeleteTarget(null)`.
+  //   1. Modal `onClose` (X-button / overlay click)
+  //   2. Modal Cancel button (footer)
+  // Centralising into a `useCallback` with empty deps (useState
+  // setters are stable) keeps the 2 sites in lockstep. The 3rd
+  // `setDeleteTarget(null)` site in handleDelete's success path is
+  // NOT migrated — it lives next to the `if (selectedProfileId === target)`
+  // block that also clears `selectedProfileId` and `editor`. Moving
+  // it into the callback would either need to thread the target as
+  // a parameter (changing the signature to `closeDelete(target: string)`)
+  // or accept that the success path's 3-setter block stays inline. The
+  // 3-setter success block is the existing pattern in this page
+  // (handleCreate → closeCreate = 4-setter success block), and threading
+  // a target into a setter-pair callback for one extra call site is
+  // over-engineering. The 2 identical-modal-close sites get the helper.
+  const closeDelete = useCallback(() => setDeleteTarget(null), []);
+
   const { showToast, toastElement } = useToast();
 
   const { driftCount, syncErrorCount } = profiles.reduce(
@@ -560,14 +578,14 @@ export default function BehaviourPage() {
 
         <Modal
           open={deleteTarget !== null}
-          onClose={() => setDeleteTarget(null)}
+          onClose={closeDelete}
           title="Delete Profile"
           icon={Trash2}
           iconColor="text-red-400"
           size="sm"
           footer={
             <>
-              <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+              <Button variant="ghost" size="sm" onClick={closeDelete}>Cancel</Button>
               <Button
                 variant="primary"
                 color="orange"

@@ -233,7 +233,7 @@ describe("useSystemCronJobs.handleSave semantics (PUT/POST byte-equivalence)", (
   const safeApiCallMock = jest.fn();
   const showToastMock = jest.fn();
   const loadJobsMock = jest.fn();
-  const toastErrorMock = jest.fn();
+  const _toastErrorMock = jest.fn();
 
   function old2BranchHandleSave(
     job: { id?: string; [k: string]: unknown },
@@ -250,7 +250,7 @@ describe("useSystemCronJobs.handleSave semantics (PUT/POST byte-equivalence)", (
         showToast("System cron job created");
       }
       loadJobs();
-    } catch (e) {
+    } catch {
       // toastError(showToast, e, "Failed to save system cron job");
     }
   }
@@ -276,7 +276,7 @@ describe("useSystemCronJobs.handleSave semantics (PUT/POST byte-equivalence)", (
       if (!result.ok) throw new Error(result.error || fallback);
       showToast(successMsg);
       loadJobs();
-    } catch (e) {
+    } catch {
       // toastError(showToast, e, "Failed to save system cron job");
     }
   }

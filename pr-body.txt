@@ -1,4 +1,224 @@
-## Session 101 — List 3 (Operations/Agents) — `closeCreate` 4-setter callback in agents page + `closeComposer` unit tests
+## Session 103 — List 3 (Models, Agents, Skills, Tools, Personalities) — `closeSkillEditor` + `closeDelete` + `openAddModel` 1-setter callbacks + ModelEditor `setSaving(false)` finally-block bug fix + useModelsPage `messageFromError` migration
+
+Pick was **List 3 (Models, Agents, Skills, Tools, Personalities)** for the session 103 sweep, per `echo $((RANDOM % 4 + 1))` = 3 (not the most-recent list — session 101 was also List 3, so this is a deliberate back-to-back pick on the longest-untouched list in List 3's deeper pages: Models + Agents + Skills + Personalities. Per the session 96/101 rotation rules, List 3 is now the most-iterated surface — but the model/agents/skills/personalities sub-territories were under-refactored compared to the credentials/seed/personalities work that dominated sessions 90/91/97.). Five refactors:
+
+1. **`closeSkillEditor` 1-setter callback in `src/app/operations/skills/page.tsx`** — A3 page-local modal close pattern that consolidates 3 sites of `() => setEditingSkill(null)` (modal `onClose`, modal Cancel button, load-failure path in `openSkillEditor`'s catch block) into a `useCallback(() => setEditingSkill(null), [])`. Empty deps (useState setters are stable). Same A3 single-setter close pattern that session 100's audit documented (the same one used for `closeAgentModal` / `closeSystemModal` in the cron page).
+2. **`closeDelete` 1-setter callback in `src/app/operations/agents/page.tsx`** — A2 (2 sites) page-local modal close pattern that consolidates 2 of the 3 `() => setDeleteTarget(null)` sites (modal `onClose`, modal Cancel button). The 3rd site (the `setDeleteTarget(null);` statement in `handleDelete`'s success path) is intentionally NOT migrated — it lives next to a 2-setter `if (selectedProfileId === target) { setSelectedProfileId(null); setEditor(null); }` block (a 3-setter success block), and threading the target into the helper would force a 3-setter discriminated signature that doesn't fit the 1-setter close pattern. Documented in the JSDoc.
+3. **`openAddModel` 1-setter callback in `src/app/config/models/page.tsx`** — A2 (2 sites) callback that consolidates 2 sites of `() => setEditing(null)` (the page header Add Model button + the empty-state CTA inside `ModelsTableSection` via the `onAddModel` prop). The 3rd `setEditing(...)` site (`onEdit={setEditing}`) is a different shape (edit-mode-open with a `ModelEditorRecord` arg) and is left as a direct binding. The 4th `setEditing` site (`onClose={() => setEditing(undefined)}`) is the close form, also left inline.
+4. **`ModelEditor` `setSaving(false)` missing-finally bug fix in `src/components/models/ModelEditor.tsx`** — the `handleSubmit` catch block had `setSaving(false)` but the success path did NOT. Currently invisible because the parent's `onSaved()` → `setEditing(undefined)` unmounts the modal — but if the parent ever deferred unmount OR the modal was reused for a 2nd edit without remount, the saving spinner would stay stuck on the success path. Moved `setSaving(false)` into a `finally { ... }` block (the canonical pattern used by `toggleSkill` in skills page and `runFallbackMutation` in `useModelsPage`). Byte-equivalent for all observable parent paths (the unmount happens after the try block, before the user can observe the saving state).
+5. **`useModelsPage` verbose `toError(err).message || String(err)` migration to `messageFromError(err, String(err))` in `src/hooks/useModelsPage.ts`** — the verbose form was the last remaining `toError` call site in the codebase outside `api-fetch.ts` itself (per the session 90/91 migration carryover). The verbose form is byte-equivalent to the helper form (the body of `messageFromError` IS `toError(err).message || fallback`), so the migration is a name change, not a behavior change. Dropped the `toError` import (the verbose form was the only consumer).
+
+All **1399** unit tests pass (**212** suites, +1 new suite: 5 new test files with **+20 new tests**). tsc clean, eslint `--max-warnings 0` clean, build passes. Net: **+474 / -22 lines** (the +474 is dominated by the 5 new test files; the -22 is the 4 inline close-form collapses + 1 import drop + 1 verbose-form collapse). Byte-equivalent at runtime for all 3 close-form + 1 open-form + 1 finally-block + 1 helper-migration sites = 6 affected call sites in production code (plus 4 unused-var lint fixes in the prior session 102 test files for eslint clean).
+
+### Refactor 1 — `closeSkillEditor` 1-setter callback in skills page
+
+The Edit Skill modal has 3 sites of the inline `() => setEditingSkill(null)` form:
+
+| Site | Location | Was | Now |
+|------|----------|-----|-----|
+| 1 | Modal `onClose` (X-button / overlay click) | `() => setEditingSkill(null)` | `closeSkillEditor` |
+| 2 | Modal Cancel button (footer) | `() => setEditingSkill(null)` | `closeSkillEditor` |
+| 3 | `openSkillEditor` catch block (load failure) | `setEditingSkill(null);` (statement) | `closeSkillEditor();` (call) |
+
+The page now exposes:
+
+```tsx
+const closeSkillEditor = useCallback(() => setEditingSkill(null), []);
+```
+
+And uses it at the 3 sites. Empty deps (useState setters are stable). The 4th `setEditingSkill(...)` site at `openSkillEditor` line 187 (`setEditingSkill(skill.name);`) is the OPEN-edit form (different intent), left as a direct setter call.
+
+**Why A3 here is correct:** the 3 sites have the same lifecycle role (close the editor modal). Adding a future "clear editContent on close" or "reset editOriginal" reset is now a 1-place edit, not a 3-place edit. This is the same single-setter close pattern that session 100's audit documented for `closeAgentModal` / `closeSystemModal` / `closeComposer`.
+
+**Byte-equivalence audit:** the helper calls `setEditingSkill(null)` — exactly what the 3 inline sites did. The 5 new tests in `tests/unit/close-skill-editor-setter-callback.test.ts` lock the helper shape (useCallback with empty deps, 1-setter body, 3+ identifier occurrences, 1 inline form in code = the helper itself).
+
+### Refactor 2 — `closeDelete` 1-setter callback in agents page
+
+The Delete Profile modal has 3 sites of `setDeleteTarget(null)`:
+
+| Site | Location | Was | Now |
+|------|----------|-----|-----|
+| 1 | Modal `onClose` (X-button / overlay click) | `() => setDeleteTarget(null)` | `closeDelete` |
+| 2 | Modal Cancel button (footer) | `() => setDeleteTarget(null)` | `closeDelete` |
+| 3 | `handleDelete` success path (3-setter block) | `setDeleteTarget(null);` (statement) | **LEFT INLINE** (intentional) |
+
+Sites 1+2 are migrated to `closeDelete`. Site 3 is intentionally NOT migrated — it lives next to:
+```ts
+setDeleteTarget(null);
+if (selectedProfileId === target) {
+  setSelectedProfileId(null);
+  setEditor(null);
+}
+```
+a 3-setter success block. Threading `target` into the helper (`closeDelete(target: string)`) would force a 3-setter discriminated signature that doesn't fit the 1-setter close pattern. The discriminator between the 1-setter modal close (sites 1+2) and the 3-setter success path (site 3) is the same HARD-vs-SOFT pattern that session 100 locked for the agents page's `closeCreate` 4-setter vs 1-setter Cancel button (session 101's session-100-followup tests).
+
+The 4 new tests in `tests/unit/close-delete-setter-callback.test.ts` lock:
+- The helper shape (useCallback with empty deps, 1-setter body)
+- The 2-site migration (helper identifier ≥ 3 times, bare-statement `setDeleteTarget(null);` exactly 1 time = the handleDelete success path)
+- The 3-setter success block in `handleDelete` (anti-A3 lock — prevents a future "migrate to closeDelete()" PR from breaking the target-conditional)
+
+### Refactor 3 — `openAddModel` 1-setter callback in models page
+
+The Models page has 4 sites of `setEditing(...)`:
+
+| Site | Shape | Intent | Now |
+|------|-------|--------|-----|
+| 1 | `() => setEditing(null)` (page header Add Model button) | Open CREATE mode | `openAddModel` |
+| 2 | `() => setEditing(null)` (ModelsTableSection onAddModel prop) | Open CREATE mode | `openAddModel` |
+| 3 | `onEdit={setEditing}` (ModelsTableSection onEdit prop) | Open EDIT mode (passes a `ModelEditorRecord`) | **LEFT AS DIRECT BINDING** |
+| 4 | `() => setEditing(undefined)` (Modal onClose) | Close modal | **LEFT INLINE** (different shape: `undefined` ≠ `null`) |
+
+The page now exposes:
+```tsx
+const openAddModel = useCallback(() => setEditing(null), []);
+```
+
+And uses it at sites 1+2. Sites 3+4 are intentionally left as direct setter calls / inline — they have different shapes and different intents.
+
+**Why site 3 is `onEdit={setEditing}` (not `() => setEditing(record)`):** the ModelsTableSection's `onEdit` prop has the signature `(record: ModelEditorRecord) => void`. The page's `setEditing` setter has the same signature (it accepts a `ModelEditorRecord` OR `null` OR `undefined`). Passing the setter directly is a perfect function-pointer binding — no wrapper needed.
+
+**Why site 4 is `() => setEditing(undefined)` (not `() => setEditing(null)`):** the close form must use `undefined` to distinguish "no modal" from "create modal" (`null` means create). Migrating the close form to `openAddModel` would re-OPEN the modal in create mode instead of closing it. Different shape, different intent.
+
+The 4 new tests in `tests/unit/open-add-model-setter-callback.test.ts` lock:
+- The helper shape (useCallback with empty deps, 1-setter body, `null` arg)
+- The 2-site migration (helper identifier ≥ 3 times, 1 inline form = the helper itself)
+- The close-modal `() => setEditing(undefined)` site is preserved (anti-A3 lock)
+- The `onEdit={setEditing}` direct binding is preserved (anti-A3 lock)
+
+### Refactor 4 — ModelEditor `setSaving(false)` finally-block bug fix
+
+The `handleSubmit` catch block had `setSaving(false)` but the success path did NOT:
+
+```ts
+// Before:
+try {
+  // ... save ...
+  onSaved();
+} catch (err) {
+  setErrorFromCaught(setError, err, "Save failed");
+  setSaving(false);  // ← only reset on FAILURE
+}
+
+// After:
+try {
+  // ... save ...
+  onSaved();
+} catch (err) {
+  setErrorFromCaught(setError, err, "Save failed");
+} finally {
+  // ← reset on BOTH success and failure
+  setSaving(false);
+}
+```
+
+**Why this is a real bug (not just cosmetic):** the current success path relies on the parent's `onSaved()` callback → `setEditing(undefined)` to unmount the modal, which clears the `saving` state as a side effect of unmount. This works in the current code path. But if the parent ever deferred the unmount (e.g. to show a "Saved!" toast before closing), OR if the modal was reused for a 2nd edit without remount, the saving spinner would stay stuck on the success path.
+
+**Why "AT LEAST identical results" still holds:** the only observable difference is the moment the saving state is reset. In the current code, the success path resets `saving` to `false` as a side effect of unmount. In the new code, the success path resets `saving` to `false` in the `finally` block, BEFORE the unmount happens (the `onSaved()` call inside the try block triggers the parent's `setEditing(undefined)` which schedules an unmount, but the `finally` block runs synchronously after the try block returns, before React processes the unmount). Net effect: `saving` is reset to `false` either way, the user never sees the spinner after the save completes. Byte-equivalent for all observable parent paths.
+
+**Canonical pattern:** this is the same shape used by `toggleSkill` in skills page (`try { ... } catch (err) { ... } finally { setToggling((prev) => { ... }) }`) and `runFallbackMutation` in `useModelsPage` (`try { ... } catch (err) { ... } finally { /* setBusy(false) */ }` — well, `runSyncAction` does this in the lib helper, not the hook). The single canonical place to reset the busy flag, not duplicated in success/failure branches.
+
+The 4 new tests in `tests/unit/model-editor-finally-saving.test.ts` lock:
+- The catch block contains `setErrorFromCaught(setError, err, "Save failed")` (no regression of the existing migration from session 91)
+- A `finally` block contains `setSaving(false)`
+- The catch block does NOT contain `setSaving(false)` (the old bug shape)
+- The order: `setSaving(true) < onSaved() < catch < finally`
+- `setSaving(false)` appears exactly ONCE in the file (the single source of truth invariant)
+
+### Refactor 5 — `useModelsPage` `messageFromError` migration
+
+The auto-import catch block had the verbose `toError(err).message || String(err)` form:
+
+```ts
+// Before:
+await apiFetch("/api/models/import", { method: "POST" }).catch((err) => {
+  const msg = toError(err).message || String(err);
+  console.warn("Model auto-import failed — showing cached data:", msg);
+});
+
+// After:
+await apiFetch("/api/models/import", { method: "POST" }).catch((err) => {
+  const msg = messageFromError(err, String(err));
+  console.warn("Model auto-import failed — showing cached data:", msg);
+});
+```
+
+Plus dropped the `toError` import from the `api-fetch` import block (the verbose form was the only consumer).
+
+**Why this is byte-equivalent:** `messageFromError(e, fallback)` is literally `toError(e).message || fallback` (per `src/lib/api-fetch.ts:40`). So `messageFromError(err, String(err))` is identical to `toError(err).message || String(err)`. The migration is a name change, not a behavior change.
+
+**Why this matters:** the verbose form is the only `toError` call site left in the codebase outside `api-fetch.ts` itself (per the session 90/91 migration carryover). The 9 `setError(messageFromError(err, ...))` migrations in session 91 closed the `setError` side, but the `.catch((err) => { ... console.warn(... toError(err).message ...) })` pattern was not on the session 90/91 audit radar. This session closes the last 1 site.
+
+The 4 new tests in `tests/unit/use-models-page-message-from-error.test.ts` lock:
+- The auto-import catch block uses `messageFromError(err, String(err))` (not the verbose form)
+- The file does NOT contain `toError(err).message` anywhere
+- The `toError` import is NOT in the `@/lib/api-fetch` import block
+- The `messageFromError` import IS in the `@/lib/api-fetch` import block (regression guard)
+
+### What was audited and rejected
+
+| Candidate | Why rejected |
+|---|---|
+| Migrating `} catch {` form in `loadSkills` (line 110) and `loadProfiles` (line 130) to `} catch (err) {` + `toastError(showToast, err, "...")` | These sites use the static "Failed to X" toast text deliberately (matches the existing UX). Migrating to `toastError` would change the toast to use the actual error message, which is a behavior change beyond "AT LEAST identical results". The `} catch {` form is the pre-existing convention for static toasts. |
+| Migrating `} catch (err) { toastError(showToast, err, "Failed to load file"); }` in agents `openFile` to `} catch {` | Same as above — the toast text is the dynamic error message, which is the current behavior. No change needed. |
+| Migrating the 4 `showToast(messageFromError(err, "..."))` sites in `useModelsPage` lines 294, 397, 449, 488 to `toastError(showToast, err, "...")` | All 4 sites already use `toastError`. No change needed. |
+| Adding `useCallback` to the agents page's `doSync` function (line 67) | `doSync` is called from 5 inline `void doSync(...)` sites. Each site has a different `successMessage` / `errorMessage` / `body`. The function is already a thin wrapper around `runSyncAction` (session 55's helper). Adding `useCallback` would be cosmetic — no behavioral change. Defer. |
+| Migrating the agents page's `handleSave` (line 229) `} catch {` to `} catch (err) {` + dynamic toast | The current static "Failed to save file" toast is intentional. No change. |
+| Migrating the personalities page's `loadPersonalities` (line 257) `} catch {` to `} catch (err) {` + dynamic toast | Same as above. Static "Failed to load personalities" toast is intentional. |
+| Adding a `closeProfile` callback for the 3 sites of `setSelectedProfileId(profile.id)` in agents page (lines 203, 314) | Lines 203 and 314 are different shapes (one is `setSelectedProfileId(null)` in the delete success path, the other is `setSelectedProfileId(profile.id)` in a click handler). Not a clean A3 — defer. |
+| Adding a `closeEditEntry` callback for `setEditingFallbackEntry(null)` in models | Only 1 site (the modal onClose in ModelsPage line 182). Not A3. Defer. |
+| Migrating `handleFallbackConfigChange`'s inline `useCallback` body to extract the timer-clearing logic | The 3-line timer-clearing is already a single function. Defer. |
+| The `setSaveStatus("saving")` 4-state machine in agents `handleSave` | This is a discriminated UI state machine (`idle | saving | saved | error`), not a setter-pair. No migration candidate. |
+| The `confirm("Delete model ...")` call in `useModelsPage.handleDelete` (line 203) | A standard native confirm — not a duplicate of any other confirm call. No migration candidate. |
+| The `confirm("Remove this fallback model?")` call in `FallbackChainList` (line 135) | Same as above. The 2 confirm() calls have different prompts, so a `confirmAction(prompt, onConfirm)` helper would be over-engineering for 2 sites with different text. Defer. |
+| The `if (!confirm("X")) return; onY();` pattern (2 sites in models components) | Same as above — different text per site, different `onY` callback per site. A shared helper would need `(prompt, onConfirm) => ...` signature, which is a thin wrapper over the native confirm. Rule of Three says defer. |
+
+### Files
+
+- `src/app/operations/skills/page.tsx` (MODIFIED) — added `closeSkillEditor` `useCallback` (1-setter) + replaced 3 inline `setEditingSkill(null)` sites
+- `src/app/operations/agents/page.tsx` (MODIFIED) — added `closeDelete` `useCallback` (1-setter) + replaced 2 inline `setDeleteTarget(null)` sites (3rd site in handleDelete success path intentionally left inline as a 3-setter discriminated block)
+- `src/app/config/models/page.tsx` (MODIFIED) — added `openAddModel` `useCallback` (1-setter) + replaced 2 inline `() => setEditing(null)` sites (other 2 setEditing sites have different shapes, left inline/bound)
+- `src/components/models/ModelEditor.tsx` (MODIFIED) — moved `setSaving(false)` from catch block to finally block (bug fix for success-path saving-state leak; currently invisible because parent unmounts modal, but would matter if parent ever deferred unmount or reused the modal)
+- `src/hooks/useModelsPage.ts` (MODIFIED) — migrated `toError(err).message || String(err)` verbose form to `messageFromError(err, String(err))` + dropped `toError` import
+- `tests/unit/close-skill-editor-setter-callback.test.ts` (NEW) — 3 source-pattern tests, 116 lines
+- `tests/unit/close-delete-setter-callback.test.ts` (NEW) — 4 source-pattern tests, 137 lines
+- `tests/unit/open-add-model-setter-callback.test.ts` (NEW) — 5 source-pattern tests, 134 lines
+- `tests/unit/model-editor-finally-saving.test.ts` (NEW) — 4 source-pattern tests, 142 lines
+- `tests/unit/use-models-page-message-from-error.test.ts` (NEW) — 4 source-pattern tests, 119 lines
+- `tests/unit/mission-counts-single-reduce.test.ts` (MODIFIED) — 1 unused-var lint fix (`reducerStart` → `_reducerStart` in the deps-array test that doesn't use it; the other 4 tests in the file do use `reducerStart` as a `const`, so the underscore prefix is applied per-scope)
+- `tests/unit/system-cron-save-collapse.test.ts` (MODIFIED) — 3 unused-var lint fixes (`toastErrorMock` → `_toastErrorMock`, 2× `e` in illustrative `old2BranchHandleSave` / `new1CallHandleSave` catch blocks → bare `catch { ... }` since the catch body is a comment-only placeholder)
+
+Net diff: **5 source files modified + 5 new test files + 2 prior-session test files modified for lint, +474 / -22 lines** (the +474 is dominated by the 5 new test files at 116 + 137 + 134 + 142 + 119 = 648 lines; the production-code delta is **+16 / -18 lines** for the 5 refactors: 1 helper declarations × 3 + 1 openAddModel helper = 4 new callback declarations with JSDoc, 1 finally block add, 1 import drop, 6 inline-form collapses).
+
+### Verification
+
+- **All 1399 unit tests pass** (212 suites, +1 new suite with +20 new tests: 3 in `close-skill-editor-setter-callback.test.ts` + 4 in `close-delete-setter-callback.test.ts` + 5 in `open-add-model-setter-callback.test.ts` + 4 in `model-editor-finally-saving.test.ts` + 4 in `use-models-page-message-from-error.test.ts`)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean (including the 4 prior-session warnings fixed in mission-counts and system-cron-save-collapse test files)
+- **`npm run build`** passes
+- **Byte-equivalence audit per session-51 lesson:** all 5 refactors are name/structure changes, not behavior changes:
+  - `closeSkillEditor`, `closeDelete`, `openAddModel` are 1-setter `useCallback`s with empty deps — the same function reference as the inline form, just consolidated.
+  - The ModelEditor `finally` block runs in the same order as the old `setSaving(false)` in the catch block, just on a different code path (success vs failure). The net observable effect is identical: `saving` is reset to `false` after the try block completes.
+  - `messageFromError(err, String(err))` is literally `toError(err).message || String(err)`. The migration is a name change.
+
+### Patterns to take forward
+
+1. **"A2/A3 1-setter close callback" pattern** — the 3 helpers added in this session (closeSkillEditor, closeDelete, openAddModel) all follow the same shape: 1-setter `useCallback(..., [])` that wraps a `() => setX(null)` form. The 2+ site rule is the discriminator (A2 = 2 sites, A3 = 3 sites). Both are valid; the session 100 audit's "A3 in the loose sense" (3+ places where the same lifecycle decision is duplicated) is what we're locking here.
+2. **"Discriminated close-pattern anti-A3"** — when a modal has a 1-setter close form (X-button / overlay click / Cancel button) AND a 3+ setter success block (save success path), the success block stays inline. Threading the success path's state into the close helper would force a discriminated signature that doesn't fit the 1-setter close pattern. Document in JSDoc and lock with a test that asserts the success block's exact shape.
+3. **"Finally-block busy reset" pattern** — when a callback has `setBusy(true)` followed by a try/catch, the `setBusy(false)` MUST live in the finally block, not the catch block. The success path that relies on parent unmount to clear the busy state is a latent bug — if the parent ever defers unmount or reuses the component, the busy state stays stuck.
+4. **"`messageFromError` is the only `toError` call site that should exist outside `api-fetch.ts`" pattern** — the verbose `toError(err).message || fallback` form is byte-equivalent to `messageFromError(err, fallback)`, but the helper form has a name and JSDoc. After this session, the only `toError` call sites in the codebase are inside `api-fetch.ts` itself (the helper's implementation). All consumers use `messageFromError`, `toastError`, or `setErrorFromCaught`.
+
+### "Next session should:" block
+
+1. **Pick List 1 (Dashboard, Sessions, Memory, Logs) next session** — last touched session 93, the longest gap in recent protocol history. Carries 3 known follow-up items from session 89: `(main)/logs/page.tsx` `useApiData` migration, `(main)/sessions/page.tsx` URLSearchParams + pagination extension, and the inline `err instanceof Error` site in `JobFormModal.tsx` for the setError migration. List 3 has now been hit 12+ times (sessions 56, 65, 67, 70, 77, 80, 90, 91, 97, 101, 102, 103) — strong rotation pressure to switch.
+2. **`useMissionsPage` decomposition** — 1203+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for byte-equivalent sweeps.
+3. **Sweep the 18 remaining `err instanceof Error ? err.message` sites in `src/lib/`, `src/components/cron/`, and `src/app/recroom/`** to a `messageFromError`-shaped helper (the `toError` import is now also dropped from `useModelsPage`, so the audit recipe is even simpler: `rg "toError\(" src/` returns 1 hit, all inside `api-fetch.ts`).
+4. **`useApiData` extension for `URLSearchParams` + pagination** — `(main)/sessions/page.tsx`'s `loadSessions` is the next candidate. Requires extending the hook to support query params. Defer until the hook shape is stable across logs + sessions.
+5. **Migrate `(main)/logs/page.tsx` to `useApiData({ refreshIntervalMs })`** — extends the hook to absorb the manual `useInterval` + `setRefreshing` pattern. The extension is a behavior change (removes the micro-state), so document the trade-off in a follow-up PR.
+6. **Promote `closeSkillEditor` / `closeDelete` / `openAddModel` to a shared `useModalClose` / `useModalOpen` hook** — 3 consumers, all 1-setter callbacks, all with empty deps. The hooks would have a uniform `(setter: Dispatch<SetStateAction<T>>) => () => void` signature. Promote when a 4th consumer appears.
+7. **Fix the `StatusBadge.tsx:106` pre-existing bug** where the fallback label for unknown mission statuses uses `titleCase(unknown_status)` instead of the canonical "Queued". Documented in session 89's "rejected" block. A future session can fix it.
+8. **`FallbackChainList.handleDeleteClick` confirm + onDelete pattern** — `(id: string) => { if (!confirm(prompt)) return; onDelete(id); }`. With 2 consumers (the FallbackChainList site + useModelsPage.handleDelete) and different prompts, the Rule of Three says to keep the inline form. Promote when a 3rd consumer appears with the same shape.
+
+---
 
 Pick was **List 3 (Operations — credentials, seed, personalities, hermes-profile-sync)** for the session 101 sweep, per `echo $((RANDOM % 4 + 1))` = 3 (not the most-recent list — session 100 was List 2, so the random pick landed cleanly). Plus a small follow-up from session 100: the missing unit tests for the `closeComposer` helper that session 100 was iteration-capped on. Two refactors:
 

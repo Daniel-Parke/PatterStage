@@ -11,7 +11,6 @@ import {
   messageFromError,
   setErrorFromCaught,
   toastError,
-  toError,
 } from "@/lib/api-fetch";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
@@ -64,7 +63,12 @@ export function useModelsPage() {
       // First, sync models from ~/.hermes/config.yaml — ensures we show
       // live data even if the user changed defaults externally via hermes CLI
       await apiFetch("/api/models/import", { method: "POST" }).catch((err) => {
-        const msg = toError(err).message || String(err);
+        // Verbose form `toError(err).message || String(err)` is the same
+        // as `messageFromError(err, String(err))` — the verbose body is
+        // literally the body of `messageFromError`, with `String(err)` as
+        // the fallback. The helper form is preferred because it has a
+        // name and JSDoc (per the session 90/91 migration carryover).
+        const msg = messageFromError(err, String(err));
         console.warn("Model auto-import failed — showing cached data:", msg);
       });
 

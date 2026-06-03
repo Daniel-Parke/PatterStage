@@ -159,6 +159,18 @@ export default function ModelEditor({
       onSaved();
     } catch (err) {
       setErrorFromCaught(setError, err, "Save failed");
+    } finally {
+      // Always clear the saving state, regardless of success or failure.
+      // The success path unmounts the modal via `onSaved()` → parent
+      // `setEditing(undefined)`, so this is currently invisible — but if
+      // the parent ever defers the unmount, OR if the modal is reused
+      // for a 2nd edit without remount, the saving spinner would stay
+      // stuck on the success path. The 3 lines are the same shape as
+      // `toggleSkill`'s `finally` block (skills page) and the
+      // `runFallbackMutation` pattern (useModelsPage) — one canonical
+      // place to reset the busy flag, not duplicated in success/failure
+      // branches. Was previously only in the catch block; the success
+      // path relied on the parent unmounting the modal.
       setSaving(false);
     }
   };

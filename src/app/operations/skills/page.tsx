@@ -72,11 +72,24 @@ export default function SkillsPage() {
   const [expandedSkill, setExpandedSkill] = useState<string | null>(null);
   const [skillContent, setSkillContent] = useState<string>("");
 
-  // Skill editor
+  // Per-skill editor
   const [editingSkill, setEditingSkill] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [editOriginal, setEditOriginal] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
+
+  // closeSkillEditor — the Edit Skill modal has 3 single-setter
+  // close sites that all do the same thing: `() => setEditingSkill(null)`.
+  //   1. Modal `onClose` (X-button / overlay click)
+  //   2. Modal Cancel button (footer)
+  //   3. The load-failure path in openSkillEditor's catch block
+  // Centralising into a `useCallback` with empty deps (useState setters
+  // are stable) keeps the 3 sites in lockstep if a future "clear
+  // editContent on close" or "reset editOriginal" extension lands.
+  // This is the A3 single-setter close pattern that session 100's
+  // discriminated-close audit established: a 1-setter callback is
+  // worth extracting when it has 3+ identical call sites.
+  const closeSkillEditor = useCallback(() => setEditingSkill(null), []);
 
   // Optimistic toggle state — key: skillName, value: the effective (pending) enabled state
   const [toggling, setToggling] = useState<Record<string, boolean>>({});
@@ -194,7 +207,7 @@ export default function SkillsPage() {
       setEditOriginal(content);
     } catch {
       showToast("Failed to load skill", "error");
-      setEditingSkill(null);
+      closeSkillEditor();
     }
   };
 
@@ -211,7 +224,7 @@ export default function SkillsPage() {
       if (expandedSkill === editingSkill) {
         setSkillContent(editContent);
       }
-      setEditingSkill(null);
+      closeSkillEditor();
     } catch (err) {
       toastError(showToast, err, "Failed to save skill");
     } finally {
@@ -381,7 +394,7 @@ export default function SkillsPage() {
 
       <Modal
         open={editingSkill !== null}
-        onClose={() => setEditingSkill(null)}
+        onClose={closeSkillEditor}
         title={editingSkill ? `Edit: ${editingSkill}` : "Edit skill"}
         icon={Edit3}
         iconColor="text-neon-green"
@@ -397,7 +410,7 @@ export default function SkillsPage() {
             >
               Reset
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setEditingSkill(null)}>
+            <Button variant="ghost" size="sm" onClick={closeSkillEditor}>
               Cancel
             </Button>
             <Button

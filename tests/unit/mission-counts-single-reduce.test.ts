@@ -143,7 +143,7 @@ describe("missionCounts single-pass reduce (session 102)", () => {
     // just before it. Acceptable forms: `[missions]`, `[ missions ]`.
     const memoStart = source.indexOf("const missionCounts = useMemo(");
     const afterUseMemo = source.indexOf("useMemo(", memoStart);
-    const reducerStart = source.indexOf("missions.reduce(", afterUseMemo);
+    const _reducerStart = source.indexOf("missions.reduce(", afterUseMemo);
     // Find the closing `)` of the useMemo call by matching
     // parens. The useMemo call has the reducer as arg 1, the
     // deps array as arg 2. Walk the source from afterUseMemo.
