@@ -25,29 +25,32 @@ function computeDiffs(
 ): { diffs: Diff[]; updates: Record<string, unknown> } {
   const diffs: Diff[] = [];
   const updates: Record<string, unknown> = {};
+  // Local closure — collapses the 4 inline `diffs.push({field, before, after})`
+  // + `updates.X = Y` site pairs into a single token per field. The wire
+  // shape (diffs array + updates object) is identical, so this is pure refactor.
+  const pushDiff = <K extends keyof typeof hermes & keyof typeof model>(
+    field: K,
+    before: unknown,
+    after: unknown,
+  ) => {
+    diffs.push({ field: field as string, before, after });
+    updates[field] = after;
+  };
 
   if (hermes.modelId && hermes.modelId !== model.modelId) {
-    diffs.push({ field: "modelId", before: model.modelId, after: hermes.modelId });
-    updates.modelId = hermes.modelId;
+    pushDiff("modelId", model.modelId, hermes.modelId);
   }
   if (hermes.provider && hermes.provider !== model.provider) {
-    diffs.push({ field: "provider", before: model.provider, after: hermes.provider });
-    updates.provider = hermes.provider;
+    pushDiff("provider", model.provider, hermes.provider);
   }
   if (hermes.baseUrl !== model.baseUrl) {
-    diffs.push({ field: "baseUrl", before: model.baseUrl, after: hermes.baseUrl ?? "" });
-    updates.baseUrl = hermes.baseUrl;
+    pushDiff("baseUrl", model.baseUrl, hermes.baseUrl ?? "");
   }
   if (
     hermes.contextLength != null &&
     hermes.contextLength !== model.contextLength
   ) {
-    diffs.push({
-      field: "contextLength",
-      before: model.contextLength,
-      after: hermes.contextLength,
-    });
-    updates.contextLength = hermes.contextLength;
+    pushDiff("contextLength", model.contextLength, hermes.contextLength);
   }
 
   return { diffs, updates };

@@ -52,83 +52,62 @@ export async function POST(
     }
 
     const diffs: DiffEntry[] = [];
+    // Local closure — collapses the 9 inline `diffs.push({id, label, detail})`
+    // sites below into a single token per call. The wire shape is identical
+    // (push appends the same `{id, label, detail}` object), so this is
+    // pure refactor.
+    const pushDiff = (id: string, label: string, detail: string) => {
+      diffs.push({ id, label, detail });
+    };
     const hermesModel = readHermesModelSection();
 
     if (direction === "push") {
       // Export: show the DB model's values as "will be written"
       if (model.modelId) {
-        diffs.push({
-          id: "modelId",
-          label: "Model ID",
-          detail: model.modelId,
-        });
+        pushDiff("modelId", "Model ID", model.modelId);
       }
       if (model.provider) {
-        diffs.push({
-          id: "provider",
-          label: "Provider",
-          detail: model.provider,
-        });
+        pushDiff("provider", "Provider", model.provider);
       }
-      diffs.push({
-        id: "baseUrl",
-        label: "Base URL",
-        detail: model.baseUrl ?? "(none)",
-      });
+      pushDiff("baseUrl", "Base URL", model.baseUrl ?? "(none)");
 
       // Credential
       if (model.credentialsId && model.apiKey) {
         const envVar = isHermesProvider(model.provider) ? envVarForProvider(model.provider) : null;
         if (envVar) {
-          diffs.push({
-            id: "model-env",
-            label: "Credential",
-            detail: `Write ${envVar}=${maskKeyHint(model.apiKey)} to ~/.hermes/.env`,
-          });
+          pushDiff(
+            "model-env",
+            "Credential",
+            `Write ${envVar}=${maskKeyHint(model.apiKey)} to ~/.hermes/.env`,
+          );
         }
       }
 
       if (diffs.length === 0) {
-        diffs.push({
-          id: "no-change",
-          label: "No data",
-          detail: `${model.name} has no settings to export`,
-        });
+        pushDiff("no-change", "No data", `${model.name} has no settings to export`);
       }
     } else {
       // Import: show config.yaml values as "current config has"
       if (!hermesModel || !hermesModel.default) {
-        diffs.push({
-          id: "no-hermes-data",
-          label: "No data in config.yaml",
-          detail: `No model section found in config.yaml`,
-        });
+        pushDiff(
+          "no-hermes-data",
+          "No data in config.yaml",
+          `No model section found in config.yaml`,
+        );
       } else {
-        diffs.push({
-          id: "modelId",
-          label: "Model ID",
-          detail: hermesModel.default,
-        });
+        pushDiff("modelId", "Model ID", hermesModel.default);
         if (hermesModel.provider) {
-          diffs.push({
-            id: "provider",
-            label: "Provider",
-            detail: hermesModel.provider,
-          });
+          pushDiff("provider", "Provider", hermesModel.provider);
         }
-        diffs.push({
-          id: "baseUrl",
-          label: "Base URL",
-          detail: hermesModel.base_url ?? "(none)",
-        });
+        pushDiff("baseUrl", "Base URL", hermesModel.base_url ?? "(none)");
       }
 
       if (diffs.length === 0) {
-        diffs.push({
-          id: "no-change",
-          label: "No changes",
-          detail: `${model.name} is already in sync with config.yaml`,
-        });
+        pushDiff(
+          "no-change",
+          "No changes",
+          `${model.name} is already in sync with config.yaml`,
+        );
       }
     }
 

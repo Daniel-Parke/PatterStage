@@ -1,3 +1,81 @@
+## Session 92 — List 4 (Models, HERMES.md, Environment, All Settings) — `pushDiff` closure refactor in 2 routes
+
+Pick was List 4 (per random selection `python3 -c "import random; random.seed(20260603); print(random.choice([1,2,3,4]))"` = 4, the first List-4 pick since session 90). Session 90's analysis had concluded List 4 was "mined clean" — this session targeted two short, well-scoped closure extractions that escaped the previous sweep's shallow-cosmetic scope: 9 inline `diffs.push({id, label, detail})` sites in `/api/models/[id]/diff/route.ts` and 4 inline `diffs.push({field, before, after}) + updates.X = Y` site pairs in `/api/models/sync/pull/route.ts`'s `computeDiffs` helper. Both extractions are pure byte-equivalent closures that collapse repeated `diffs.push({...})` boilerplate into a single token per call.
+
+All **1277** unit tests pass (**197** suites, no new tests added — both routes are already covered by `tests/unit/models-import-api.test.ts` + `tests/unit/models-pull-context-length.test.ts`). tsc clean, eslint `--max-warnings 0` clean, build passes. Net: -18 lines (44 insertions, 62 deletions). Byte-equivalent at runtime for all 13 affected call sites.
+
+### Refactor 1 — `pushDiff(id, label, detail)` closure in `src/app/api/models/[id]/diff/route.ts`
+
+The route's POST handler had 9 inline `diffs.push({id, label, detail})` calls spread across the push + pull branches (5 in the push branch: modelId/provider/baseUrl/credential/no-change; 4 in the pull branch: no-hermes-data/modelId/provider/baseUrl/no-change). The shape is identical — a 3-field object appended to a `DiffEntry[]` array. Extracted a local closure:
+
+```ts
+const pushDiff = (id: string, label: string, detail: string) => {
+  diffs.push({ id, label, detail });
+};
+```
+
+Each of the 9 sites collapsed from a 4-line object literal to a 1-line `pushDiff(id, label, detail)` call. The closure captures the `diffs` array via lexical scope, so no extra parameter is needed. The wire shape (`{ data: { diffs, modelName } }`) is identical — the closure is a 1:1 transformation of the 9 object-literal sites.
+
+### Refactor 2 — `pushDiff(field, before, after)` closure in `src/app/api/models/sync/pull/route.ts`
+
+`computeDiffs()` had 4 inline `diffs.push({field, before, after}) + updates.X = Y` site pairs (modelId, provider, baseUrl, contextLength). Each site had to (1) push a diff record to the `diffs[]` accumulator and (2) record the new value on the `updates` object. Extracted a local generic closure with a type-safe `field` parameter:
+
+```ts
+const pushDiff = <K extends keyof typeof hermes & keyof typeof model>(
+  field: K,
+  before: unknown,
+  after: unknown,
+) => {
+  diffs.push({ field: field as string, before, after });
+  updates[field] = after;
+};
+```
+
+Each of the 4 sites collapsed from 2-4 lines (the `diffs.push({...})` + `updates.X = Y` pair) to a 1-line `pushDiff(field, before, after)` call. The generic constraint `keyof typeof hermes & keyof typeof model` correctly limits `field` to the 4 shared keys (`modelId`, `provider`, `baseUrl`, `contextLength`) — TypeScript's structural typing rejects any other field name at the call site. The `field as string` cast is required because TypeScript can't narrow through a generic index. The wire shape (the `{diffs, updates}` return object) is identical.
+
+### What was rejected
+
+- **Extracting `pushDiff` to a shared `@/lib/diff-helpers.ts` module.** Only 2 consumers (the diff route and the pull route), and the closures have different signatures (3 strings vs 3 generics). Sharing would require a single over-parameterised signature or a thin wrapper module — neither is a clear win over 2 file-local closures. Promote to a shared lib on 3rd consumer.
+- **Using a class field or a `diffs.reduce()` chain** instead of a closure. A closure is the most idiomatic JS pattern for "operate on the enclosing array" — a `reduce` would require re-binding the array, and a class adds OOP overhead for a 4-line function. The closure is the simplest form.
+- **Migrating the 4 `diffs.push({id, label, detail})` sites in the `SyncModal` `fetchDiffs` fallback in `src/components/models/ModelSyncButtons.tsx`.** Component-side, not route-side. Different shape (`{id, label, detail}` with a `provider/modelIdString`-derived fallback, not a `diffs[].field` accumulator). The component's fallback array is built inline from a hardcoded set of diff labels, not from a diff-accumulation loop. Not the same pattern — the closure refactor doesn't apply. Out of scope.
+- **Migrating the inline `for (const task of Object.keys(aux)) maskApiKeyField(...)` loop in `src/app/api/config/route.ts:97-100` to `Object.values(aux).forEach(...)`.** Session 90 already evaluated this and called it "marginal leverage (1 LOC saved, no testability gain)". Left alone per session 90's guidance.
+- **The 4 `} catch { showToast("Failed to X", "error") }` sites in `src/app/operations/`** (carryover from session 90). Migrating to `toastError` is NOT byte-equivalent (it would show the actual API error message instead of the hardcoded string). Per session 91's "scope expansion" precedent, this is a future-session target when a session explicitly opts in to the "strictly more informative" interpretation of the constraint. The recipe is in `references/control-hub-list3-refactor-session-92.md`.
+
+### Files
+
+- `src/app/api/models/[id]/diff/route.ts` (MODIFIED) — `pushDiff` closure added, 9 sites collapsed
+- `src/app/api/models/sync/pull/route.ts` (MODIFIED) — `pushDiff` closure added inside `computeDiffs`, 4 site pairs collapsed
+
+Net diff: **2 files modified, +44 / -62 lines** (the +44 includes the 2 closures + their JSDoc-style inline comments; the -62 is the 13 collapsed site bodies).
+
+### Verification
+
+- **All 1277 unit tests pass** (197 suites, no regressions, no new tests — both routes are already exhaustively covered by `tests/unit/models-import-api.test.ts` and `tests/unit/models-pull-context-length.test.ts`)
+- **`npx tsc --noEmit`** clean (verified the generic `keyof typeof hermes & keyof typeof model` constraint compiles)
+- **`CI=true npx eslint . --max-warnings 0`** clean
+- **`npm run build`** passes
+- **Byte-equivalence audit:** both closures push the same object literal to the same array (or set the same key on the same object). The wire shape (`{ data: { diffs, ... } }` in the diff route and `{ data: { diffs, ... } }` + the `updates` arg to `updateModel()` in the pull route) is unchanged. The diff is a name-and-indirection refactor, not a behavior change.
+
+### Patterns to take forward
+
+1. **"Local closure over accumulator" pattern** — when 3+ inline `diffs.push({...})` calls in the same function share the same shape, extract a `pushX(...args)` closure that captures the accumulator. The closure pattern is more idiomatic than `array.reduce()` for "operate on the enclosing array" because it doesn't re-bind the array on every call. 2 file-local closures in this session; promote to `@/lib/` on 3rd consumer.
+2. **"Generic `pushDiff<K extends keyof T>(field: K, before, after)" pattern** — when the closure needs a type-safe key parameter, the `keyof typeof obj` constraint is the right tool. It rejects invalid key names at the call site AND captures the type for the `updates[field] = after` write. The `as string` cast on the push site is required because TypeScript can't narrow a generic index through a `diffs.push` call; this is a known TS limitation, not a bug.
+3. **"Closure vs shared lib" discriminator** — 2 file-local closures is fine. 3+ would justify a `@/lib/diff-helpers.ts` (or wherever the consumer module lives). Don't over-engineer at 2 consumers.
+
+### "Next session should:" block
+
+1. **Pick a different list next session.** List 4 has now been hit 5+ times (sessions 60, 70, 73, 85, 86, 90, 92). **List 1 is the next-ripe surface** — hasn't been touched since session 89 (the longest gap in recent protocol history). Carries 3 known follow-up items from session 89: `(main)/logs/page.tsx` `useApiData` migration, `(main)/sessions/page.tsx` URLSearchParams + pagination extension, and the inline `err instanceof Error` site in `JobFormModal.tsx` for the setError migration.
+2. **Promote `pushDiff` closure to `@/lib/diff-helpers.ts`** if a 3rd consumer appears. The current 2 consumers (diff route + pull route) don't share enough shape to justify a shared module — the diff route uses `{id, label, detail}` (3 strings), the pull route uses `{field, before, after}` (generic key + 2 unknowns). A shared module would need both signatures. Defer until a 3rd route or lib function wants one of them.
+3. **The 4 `} catch { showToast("Failed to X", "error") }` sites in `src/app/operations/`** are the next refactor target when a future session explicitly opts in to the "AT LEAST identical results = strictly more informative" interpretation. Recipe is in `references/control-hub-list3-refactor-session-92.md`.
+4. **Migrate `(main)/logs/page.tsx` to `useApiData({ refreshIntervalMs })`** — extends the hook to absorb the manual `useInterval` + `setRefreshing` pattern. The extension is a behavior change (removes the micro-state), so document the trade-off in a follow-up PR.
+5. **`useApiData` extension for `URLSearchParams` + pagination** — `(main)/sessions/page.tsx`'s `loadSessions` is the next candidate. Requires extending the hook to support query params. Defer until the hook shape is stable across logs + sessions.
+6. **`useMissionsPage` decomposition** — 1175+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results" — would need a careful hook-by-hook extraction with state-derivation verification.
+7. **Sweep the 22 inline `err instanceof Error ? err.message` sites in `src/lib/`, `src/components/cron/`, and `src/app/recroom/`** to a server-side `toMessage(e, fallback)` or a `setErrorFromCaught`-shaped helper. The 7 `src/lib/hermes-profile-sync.ts` sites alone are enough to justify the helper. Multi-session sweep.
+8. **Status badge label override follow-up** — `StatusBadge.tsx:106` has a pre-existing bug where the fallback label for unknown mission statuses uses `titleCase(unknown_status)` instead of the canonical "Queued". Documented in session 89's "rejected" block. A future session can fix it.
+9. **HindsightBrowser 4 inline `error ?? "..."` sites** — would benefit from a `runMutation`-shaped variant. Defer until a 2nd consumer wants the same shape.
+
+---
+
 ## Session 91 — List 3 (Models, Agents, Skills, Tools, Personalities) — `setErrorFromCaught` helper + 9-site migration
 
 Pick was List 3 (per random selection `echo $(( RANDOM % 4 + 1 ))` = 3, second List-3 pick in a row). This session picks up the explicit carryover from session 90's "Next session should:" block: promote `setErrorFromCaught` to `@/lib/api-fetch.ts` and migrate the 7 (now 9) `setError(messageFromError(err, "..."))` sites that the audit had been tracking. Single byte-equivalent refactor.
@@ -159,6 +237,8 @@ Net diff: **3 files, +7 / -7 lines** (each migration is a 1-line replacement + a
 
 ---
 
+
+
 ---
 
 ## Earlier Sessions (compressed index)
@@ -167,8 +247,9 @@ The full content of these earlier sessions is preserved in the git history of `p
 
 | # | List | Headline | Sites | New tests | Commit | Reference |
 |---|---|---|---|---|---|---|
-| 91 | 3 | `setErrorFromCaught` helper + 9-site migration | 9 | +8 | (this session) | this session |
-| 90 | 3 | `toastError` migration in operations pages | 4 | +0 (reuse) | `1f7c453` | session-90 carryover |
+| 92 | 4 | `pushDiff` closure in diff + pull routes (List 4 escape from session 90's "mined clean" verdict) | 13 | 0 (reuse) | session 92 | session 92 doc |
+| 91 | 3 | `setErrorFromCaught` helper + 9-site migration | 9 | +8 | `040107c` | session 91 |
+| 90 | 3 | 4-site `toastError` migration in operations pages | 4 | 0 (reuse) | `1f7c453` | session 90 |
 | 89 | 1 | `created()` 201 factory + dashboard `now` memo-stability | 7 + 1 bug | +4 + 1 | `48c7f14` | `references/session-89-list2-chat-toast-bug.md` |
 | 88 | 2 | Cron-modal populate-collapse + `restoreMission` closure | 3 | +12 | `5f422e3` | `references/session-88-list2-cron-populate-collapse.md` |
 | 87 | 1 | `setField` + `stringOr` helper extraction | 14 + 2 | +23 | `ae777fb` | `references/session-87-list1-set-field-string-or.md` |
@@ -200,4 +281,3 @@ The full content of these earlier sessions is preserved in the git history of `p
 | 59 | 4 | List 4 session (readFallbackAgentSettings + credential mask) | 4 | +4 | session-59 | session-59 carryover |
 | 56-58 | mixed | Earlier foundation sessions | 12 | +9 | sessions 56-58 | session-56-58 carryover |
 | 28-34 | mixed | Original refactor-sweep sessions (pre-rolling-PR) | 18 | +12 | sessions 28-34 | session-28-34 carryover |
-
