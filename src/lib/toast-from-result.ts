@@ -1,0 +1,45 @@
+// ═══════════════════════════════════════════════════════════════
+// toastFromResult — Centralised "ok ? success : error" toast helper
+// ═══════════════════════════════════════════════════════════════
+//
+// The pattern `showToast(ok ? success : (error ?? fallback), ok ? undefined : "error")`
+// repeats across useCronJobs + useSystemCronJobs (and other API hooks).
+// Centralising it here:
+//   1. locks the showToast contract (success uses default tone, error uses "error")
+//   2. makes the per-call error fallback the only knob — no risk of a caller
+//      forgetting the `"error"` tone on the failure branch
+//   3. removes the `ok ? undefined : "error"` argument-pile at every site
+//
+// Byte-equivalent to the prior inline form for all current call sites.
+
+/**
+ * Minimal shape required by {@link toastFromResult}. Matches the
+ * `{ ok, error? }` shape returned by `safeApiCall` from `@/lib/api-fetch`.
+ */
+export interface SafeCallResult {
+  ok: boolean;
+  error?: string | null;
+}
+
+type ShowToast = (message: string, tone?: "success" | "error" | "info") => void;
+
+/**
+ * Show a toast based on a `safeApiCall`-style result.
+ *
+ * @param showToast the `useToast()` return value
+ * @param result `{ ok, error? }` from `safeApiCall`
+ * @param successMsg shown when `result.ok === true`
+ * @param errorFallback shown when `result.ok === false` and `result.error` is missing
+ */
+export function toastFromResult(
+  showToast: ShowToast,
+  result: SafeCallResult,
+  successMsg: string,
+  errorFallback: string,
+): void {
+  if (result.ok) {
+    showToast(successMsg);
+  } else {
+    showToast(result.error ?? errorFallback, "error");
+  }
+}

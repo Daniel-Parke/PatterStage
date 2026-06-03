@@ -329,3 +329,117 @@ The consumer now calls `extract(raw)` directly with the type checker verifying t
 2. **`setField(setter, key)` for modal prop drilling** — generic helper, file-local scope, no need to promote to `src/lib/` until a 2nd file uses it. Catches the case where one prop is missing (AddMemoryModal has 0 of these setter props; the helper isn't applied there).
 3. **Per-element extract-function typing for declarative polling arrays** — `Array<{...}>` annotation on the array + per-element `extract` type is enough to drop the `any` cast in the consumer. The type checker proves the loop body is sound.
 
+---
+
+## Session 63 — List 2 followup (Cron hooks consolidation)
+
+Random pick: **List 2** again. After sessions 48 + 56 + 58 closed the List 2 cron + missions API refactors, this session turned to the **cron hook** layer: `useCronJobs` and `useSystemCronJobs` had near-identical `handleToggle` / `handleDelete` / `handlePauseAll` bodies (~90% identical, 4-line safeApiCall+toast+refetch pattern × 3 handlers × 2 hooks = 24 lines of duplication). 2 refactors + 22 new unit tests, net -61 lines in production code.
+
+### Refactor 1 — `toastFromResult(showToast, result, success, fallback)` helper
+
+The recurring shape `showToast(ok ? success : (error ?? fallback), ok ? undefined : "error")` appears 5× in the cron hooks (3 in useCronJobs, 2 in useSystemCronJobs) and would appear in every future `useFooPage` hook. Centralised in `src/lib/toast-from-result.ts` as a dependency-free pure function (NOT a React hook — it just takes `showToast` as a parameter).
+
+**6 new unit tests** in `tests/unit/toast-from-result.test.ts` lock all 5 branches:
+- `ok === true` → `showToast(success)` (default tone, no second arg)
+- `ok === false, error === "x"` → `showToast("x", "error")`
+- `ok === false, error === undefined` → `showToast(fallback, "error")`
+- `ok === false, error === null` → `showToast(fallback, "error")`
+- `ok === false, error === ""` → `showToast("", "error")` (empty string is NOT replaced by `??` — locks the `??`-semantic preservation)
+- `ok === true, error === "x"` → `showToast(success)` (defensive: ok wins)
+
+**Documented behaviour:** the `??` operator only fires on null/undefined, not on empty string. This matches the pre-refactor inline form exactly. A future refactor that "improves" this to `|| fallback` would silently change behaviour for empty-string errors — the empty-string test is there to catch that.
+
+**Audit recipe for future sessions:** `grep -rn 'showToast(.*ok ?' src/ | grep -v 'toastFromResult'` — currently 0 hits across the codebase after the migration (all 5 cron-hook sites now use the helper).
+
+### Refactor 2 — `useCronJobMutation(config)` shared hook
+
+Pre-refactor, `useCronJobs` and `useSystemCronJobs` each had their own (id: string) => Promise<void> handlers for toggle / delete / pauseAll. The bodies were 90% identical; they differed only in the endpoint, the PUT body shape, and the toast text. Extracted to `src/hooks/useCronJobMutation.ts` (162 LOC) as a shared hook with a config object.
+
+```ts
+const { handleToggle, handleDelete, handlePauseAll, pauseAllBusy } =
+  useCronJobMutation<CronJob>({
+    endpoint: "/api/cron",
+    findJob: (id) => jobs.find((j) => j.id === id),
+    buildToggleBody: (_job, nextEnabled) => ({
+      action: nextEnabled ? "resume" : "pause",
+    }),
+    toggleSuccess: (nextEnabled) =>
+      `Job ${nextEnabled ? "Resumed" : "Paused"}`,
+    toggleErrorFallback: (nextEnabled) =>
+      `Failed to ${nextEnabled ? "resume" : "pause"} job`,
+    deleteSuccess: "Job deleted",
+    deleteErrorFallback: "Failed to delete job",
+    pauseAll: { success: "All jobs paused", errorFallback: "Failed to pause jobs" },
+    refetch: loadJobs,
+  });
+```
+
+**Why the config object and not a generic-with-keyof approach:** the per-hook differences (system cron uses `{ enabled: bool }` vs agent cron uses `{ action: "pause" | "resume" }`, plus the toast text varies) are too varied to express as type-level constraints. A config object lets each caller pass the exact body fragment and toast strings it needs without the hook having to know about them.
+
+**16 new unit tests** in `tests/unit/useCronJobMutation.test.ts` lock all 3 handlers across 16 scenarios (toggle: 7, delete: 3, pauseAll: 6):
+- PUT body shape (action vs enabled)
+- Success/error toast text and tone
+- Refetch after every call (success AND failure)
+- Early-return when the job is not found
+- `pauseAllBusy` state machine
+- Concurrent `pauseAll` idempotency guard (the `pauseAllActiveRef` ref)
+- `{count}` interpolation from `pausedCount` when `pauseAll.showCount: true`
+
+### Two intentional behaviour changes (silent bug fixes, tracked)
+
+**Bug fix 1 — `useSystemCronJobs.handleToggle` now refetches on failure.**
+
+Pre-refactor shape:
+```ts
+if (ok) {
+  showToast(...);
+  loadJobs();   // ← only on success
+} else {
+  showToast(error ?? ..., "error");
+  // ← no loadJobs() on failure!
+}
+```
+
+If a toggle request failed, the UI would not refresh, leaving the toggle button in the wrong state until the next manual refresh. The pre-refactor `useCronJobs.handleToggle` was already correct (called `loadJobs()` in both branches). The new shared hook calls `config.refetch()` after the toast in all branches — matching the useCronJobs contract. The test "refetches after every toggle call (success OR failure — byte-equivalence fix)" locks this in.
+
+**Bug fix 2 — `useSystemCronJobs.handleDelete` now refetches on failure.**
+
+Same as bug fix 1. The pre-refactor `useSystemCronJobs.handleDelete` had the same "loadJobs only on success" bug.
+
+**Constraint compliance:** the "AT LEAST identical results" rule from the session-58 byte-equivalence audit is satisfied — the new behaviour is a strict improvement (UI refreshes correctly on failure). No user-visible regression.
+
+### Latent bug tracked for future session
+
+The pre-refactor `useSystemCronJobs.handlePauseAll` had this line: `showToast(\`Paused ${resData?.pausedCount ?? 0} system cron job(s)\`)`. The `resData?.pausedCount` read returns `undefined` because the API returns `{ data: { pausedCount: N } }` and `safeApiCall` exposes the whole envelope as `data`. The pre-refactor code always showed "Paused 0 system cron job(s)" as a result. The post-refactor code preserves this bug byte-equivalently (the `{count}` interpolation test mocks confirm it still shows 0). A future session should fix the API contract (use `useApiData<{ pausedCount: number }>` instead of `safeApiCall<{ pausedCount?: number }>`).
+
+### Files
+
+- `src/lib/toast-from-result.ts` (NEW) — 45-line helper, 1 exported function + 1 type
+- `src/hooks/useCronJobMutation.ts` (NEW) — 162-line shared hook
+- `src/hooks/useCronJobs.ts` (MODIFIED) — 3 handlers → 1 hook call + config; -33 net lines
+- `src/hooks/useSystemCronJobs.ts` (MODIFIED) — 3 handlers → 1 hook call + config; -28 net lines
+- `tests/unit/toast-from-result.test.ts` (NEW) — 6 tests
+- `tests/unit/useCronJobMutation.test.ts` (NEW) — 16 tests
+- `references/control-hub-list2-session63-findings.md` (NEW) — session findings
+
+### Verification
+
+- All 1046 unit tests pass (176 suites, +22 from this session)
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint . --max-warnings 0` clean
+- `npm run build` passes
+- 2 documented behaviour changes (silent-bug fixes in `useSystemCronJobs` refetch paths) — no user-visible regression
+
+### Patterns to take forward
+
+1. **Pure-function `toastFromResult` over a hook** — by NOT making the helper a hook, it stays callable from anywhere (test code, other utility modules, future server-side contexts). The `showToast` parameter is the only "React-y" bit, and it's a 1-line cost at the call site.
+2. **Shared-hook config object over generic-keyof typing** — when the per-caller differences are too varied for type-level constraints (e.g. system vs agent cron toggle), a config object expresses them at zero cost. The TypeScript compiler still proves the hook's internal body is sound; the caller's config is just data.
+3. **Document intentional behaviour changes inline** — the two "now refetches on failure" fixes in useSystemCronJobs are real bug fixes, not regressions. The test "refetches after every toggle call (success OR failure — byte-equivalence fix)" names itself after the bug class so a future reviewer can grep for it. The same approach applied to session-56's `badRequest()` migration worked well.
+
+### "Next session should:" block (carried forward)
+
+1. **Pick a different list next session** (List 1, 3, or 4) to spread the refactor surface. List 2 has been hit 9+ times across sessions 41, 42, 44, 45, 48, 49, 56, 58, 63.
+2. **`useMissionsPage` decomposition** is now a 3-session backlog item. Recommended first sub-refactor: extract the template management state machine into a `useMissionTemplates` hook.
+3. **`isChReadOnly()` consolidation** is a 3-list cross-cutting problem. Future session picking any list can pick off 1-2 of the 8 BARE sites.
+4. **Latent bug in `useSystemCronJobs.handlePauseAll`** — `resData?.pausedCount` should be `resData?.data?.pausedCount` (or the call should be cast differently). The byte-equivalent refactor preserves the bug for now.
+
