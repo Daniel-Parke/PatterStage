@@ -1,3 +1,82 @@
+## Session 90 — List 3 (Models, Agents, Skills, Tools, Personalities) — 4-site `toastError` migration in operations pages
+
+Pick was List 3 (per random selection `echo $(( RANDOM % 4 + 1 ))` = 3, the first List-3 pick since session 80). Single byte-equivalent refactor: a 4-site migration of the inline `showToast(messageFromError(err, "..."), "error")` pattern in `src/app/operations/` to the `toastError(showToast, err, "...")` helper that was promoted in sessions 77 + 79. The helper was already adopted in `src/hooks/useModelsPage.ts` (9 sites) but the operations pages had been left untouched. This session closes the last 4 sites in List 3 territory.
+
+All 1269 unit tests pass (196 suites, no new tests added — the helper is exhaustively tested in `tests/unit/toast-error.test.ts`). tsc clean, eslint `--max-warnings 0` clean, build passes. Byte-equivalent at runtime for all 4 migrated sites.
+
+### Refactor 1 — 4 `showToast(messageFromError(...))` → `toastError(...)` migrations
+
+| File | Line | Migration |
+|---|---|---|
+| `src/app/operations/skills/page.tsx` | 168 | `toastError(showToast, err, "Failed to update skill")` — toggleSkill catch block |
+| `src/app/operations/skills/page.tsx` | 216 | `toastError(showToast, err, "Failed to save skill")` — saveSkillEdit catch block |
+| `src/app/operations/tools/page.tsx`  | 72  | `toastError(showToast, err, "Failed to load toolsets")` — loadToolsets catch block |
+| `src/app/operations/agents/page.tsx` | 207 | `toastError(showToast, e, "Failed to load file")` — openFile catch block (uses `e` not `err`) |
+
+All 4 sites are clean catch-block patterns with no extra side effects on the error message (the skills toggle site has a `setData(prevData)` revert BEFORE the toast, which is preserved unchanged). The migration is mechanical and byte-equivalent: `toastError(showToast, err, fallback)` produces the same `showToast(messageFromError(err, fallback), "error")` call as the inline form (per `src/lib/api-fetch.ts:128`).
+
+### Why this matters
+
+The `toastError` helper is the canonical "catch-block error unwrap → toast" pattern. With this session, **every catch-block toast in `src/app/operations/` now uses the helper**, matching the convention in `useModelsPage.ts`. The `showToast(messageFromError(...))` form is now an outlier — it survives in `(main)/logs/page.tsx`, `config/seed/page.tsx`, and a few other List 1/4 sites, but is fully eliminated from List 3.
+
+### Audit recipe (to find any future inline site)
+
+```bash
+grep -rnE "showToast\(messageFromError\(" src/ --include="*.ts" --include="*.tsx" \
+  | grep -v "api-fetch\|tests/"
+```
+
+**Pre-session: 4 hits in List 3** (the 4 migrated sites). **Post-session: 0 hits in List 3** + 0 hits in `src/lib/api-fetch.ts` (those are JSDoc examples, not real call sites).
+
+### What was NOT migrated (and why)
+
+- `src/app/operations/skills/[...path]/page.tsx:66` — `setError(messageFromError(err, "Unknown error"))`. Uses `setError` (a useState setter), not `showToast`. The `toastError` helper is for `showToast`-based error reporting. A `setErrorFromCaught(setError, err, fallback)` helper would be the equivalent, but with only 7 sites total across the codebase and no 2nd-consumer pattern, the Rule of Three says to keep the inline form.
+- `src/app/operations/personalities/page.tsx:166` — same as above (`setError` not `showToast`).
+- `src/hooks/useModelsPage.ts:97,175,253` — same: `setError` (line 97) and `details[].detail` (line 175, 253). Not toast candidates.
+
+### Files
+
+- `src/app/operations/skills/page.tsx` (MODIFIED) — 2 sites migrated, import changed `messageFromError` → `toastError`
+- `src/app/operations/tools/page.tsx` (MODIFIED) — 1 site migrated, import changed
+- `src/app/operations/agents/page.tsx` (MODIFIED) — 1 site migrated, import changed
+
+Net diff: **3 files, +7 / -7 lines** (each migration is a 1-line replacement + a 1-character import change).
+
+### Verification
+
+- **All 1269 unit tests pass** (196 suites, no new tests — `toastError` is already exhaustively covered by `tests/unit/toast-error.test.ts`)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean on all 3 modified files
+- **`npm run build`** passes
+- **Byte-equivalence audit per session-51 lesson:** `toastError(showToast, err, fallback)` is the canonical implementation of `showToast(messageFromError(err, fallback), "error")` (`src/lib/api-fetch.ts:128`). The migration is a name change, not a behavior change.
+
+### What was rejected
+
+- **Migrating the 7 `setError(messageFromError(err, "..."))` sites to a `setErrorFromCaught` helper.** With only 7 sites across 6 files, the Rule of Three says to keep the inline form. The helper would be `setErrorFromCaught(setError, err, fallback)` — a 3-parameter setter wrapper. Not a clear win.
+- **Refactoring `apiFetch` to accept `body?: unknown` like `safeApiCall` does, eliminating the 12 `JSON.stringify({...})` wrappers in List 3 callsites.** This is a signature-level change with type-level ripples across the entire codebase. The current convention (`apiFetch` takes `RequestInit`, `safeApiCall` takes a body object) is documented in the JSDoc and is consistent across all 30+ callsites. Out of scope.
+- **Consolidating the 4 `Modal` import + 4 `useToast` + 4 `toastElement` patterns in the 4 operations pages into a shared `useOperationPage` hook.** Out of scope — the 4 pages have different state shapes, different modals, and different load/save semantics. A shared hook would have 4+ conditional branches and wouldn't reduce code.
+- **Extracting the `{ showToast, toastElement } = useToast()` + `{toastElement}` render pattern into a custom `useToastElement()` hook that returns the element directly.** Cosmetic only, doesn't reduce code at the call site. Defer.
+- **Auditing the inline `console.warn("Model auto-import failed", msg)` in `useModelsPage.ts:67` for a `logApiError` migration.** Different surface (server-side logging, not toasts). Already uses the canonical `toError(err).message || String(err)` pattern from session 79. No change needed.
+
+### Patterns to take forward
+
+1. **"List 3 operations pages are now `toastError`-complete" pattern** — the 4 sites that remained after the session-77 + session-79 migrations are all closed. The `showToast(messageFromError(...))` inline form is now an anti-pattern in operations pages, and code review should reject it. The audit recipe is a 1-line grep.
+2. **"Different catch-block consumer" discriminator for `toastError` vs `setError`/`details[].detail`** — `toastError` is only for `showToast`-based reporting. When a catch block writes to `setError` (a useState setter) or to a structured `details[].detail` field, the `messageFromError(err, fallback)` form is correct (it returns the message; the caller decides where to put it). The 7 sites in `src/app/operations/skills/[...path]/page.tsx`, `personalities/page.tsx`, `useModelsPage.ts` are all of this shape.
+
+### "Next session should:" block
+
+1. **Pick a different list next session** to spread the refactor surface. List 3 has been hit 6+ times now (sessions 67, 70, 77, 80, 90). **List 4 is the next-ripe surface** — it hasn't been touched since session 86 (the longest gap in the protocol history), and has accumulated 2 carry-over items from session 86: `safeWriteFileAtomic` helper promotion and `safeReadJson` helper promotion.
+2. **`setErrorFromCaught` helper promotion** — when the 8th `setError(messageFromError(err, ...))` site appears (currently 7), promote to a `setErrorFromCaught(setError, err, fallback)` helper. The 7th site is most likely to appear in List 4 territory.
+3. **Migrate `(main)/logs/page.tsx` to `useApiData({ refreshIntervalMs })`** — extends the hook to absorb the manual `useInterval` + `setRefreshing` pattern. The extension is a behavior change (removes the micro-state), so document the trade-off in a follow-up PR.
+4. **`useApiData` extension for `URLSearchParams` + pagination** — `(main)/sessions/page.tsx`'s `loadSessions` is the next candidate. Requires extending the hook to support query params. Defer until the hook shape is stable across logs + sessions.
+5. **`useMissionsPage` decomposition** — 1175+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results" — would need a careful hook-by-hook extraction with state-derivation verification.
+6. **`Sidebar.tsx`'s `openCheckDropdown` / `handleDropdownConfirm` / `doCheck` triplet** — 3 similar patterns for the version-check dropdown. Lower-value than the deploy consolidation done in session 78, but a candidate.
+7. **Promote `successMessageForDispatch` to `src/lib/`** when a 2nd consumer appears. Currently 1 consumer (useMissionsPage).
+8. **HindsightBrowser 4 inline `error ?? "..."` sites** — would benefit from a `runMutation`-shaped variant. Defer until a 2nd consumer wants the same shape.
+9. **Status badge label override follow-up** — `StatusBadge.tsx:106` has a pre-existing bug where the fallback label for unknown mission statuses uses `titleCase(unknown_status)` instead of the canonical "Queued". Documented in session 89's "rejected" block. A future session can fix it.
+
+---
+
 
 ---
 

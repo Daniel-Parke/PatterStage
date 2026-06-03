@@ -18,7 +18,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
-import { apiFetch, messageFromError } from "@/lib/api-fetch";
+import { apiFetch, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { profileSyncBody } from "@/lib/profile-sync-body";
 import type { PlatformToolsets } from "@/lib/profile-config-builder";
@@ -69,7 +69,7 @@ export default function ToolsPage() {
     } catch (err) {
       setToolsetsJson("{}");
       setToolsetsSource(null);
-      showToast(messageFromError(err, "Failed to load toolsets"), "error");
+      toastError(showToast, err, "Failed to load toolsets");
     } finally {
       setLoadingToolsets(false);
     }
