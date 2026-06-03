@@ -36,6 +36,7 @@ import { runMissionQueueTick } from "@/lib/mission-queue-tick";
 import { ensureSyncLayer } from "@/lib/sync";
 import { cronSyncFailureResponse, cronSyncFailureBody } from "@/lib/cron-sync-failure";
 import { missionResponse } from "@/lib/mission-response";
+import { parseDispatchMode } from "@/lib/dispatch-mode";
 
 // ── Helpers ───────────────────────────────────────────────────────
 
@@ -283,9 +284,7 @@ export async function POST(request: NextRequest) {
         constraints: constraints?.trim() || undefined,
       });
 
-      const isSaveMode = dispatchMode === "save";
-      const isQueueMode = dispatchMode === "queue";
-      const isCronMode = dispatchMode === "cron" && scheduleVal;
+      const { isSaveMode, isQueueMode, isCronMode } = parseDispatchMode(dispatchMode, scheduleVal);
 
       if (isSaveMode) {
         updateMission(mission.id, { queuedForRun: false });

@@ -19,8 +19,14 @@
 // Location: src/hooks/ (page-local helper, not promoted to src/lib/
 // because no other consumer exists; if a 2nd consumer appears, move
 // to src/lib/ alongside the toastFromResult helper).
+//
+// The `DispatchMode` type is re-exported for back-compat with the 1
+// inline consumer (`useMissionsPage.ts` imports `DispatchMode` from
+// here). The canonical type lives in `src/lib/dispatch-mode.ts`, which
+// is the single source of truth for the union and the parsing helper.
 
-export type DispatchMode = "save" | "now" | "cron" | "queue";
+export type { DispatchMode } from "@/lib/dispatch-mode";
+import type { DispatchMode } from "@/lib/dispatch-mode";
 
 /**
  * Resolve the success toast message for a dispatched mission based on

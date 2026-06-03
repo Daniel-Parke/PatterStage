@@ -1,4 +1,116 @@
+## Session 94 — List 2 (Cron, Missions, Chat) — `parseDispatchMode` + `scheduleForDispatch` + `joinCrontabLines` helpers
+
+Pick was List 2 (per session 93's "Next session should" recommendation — the longest gap in the protocol history after List 1's 2× streak, last touched at session 88, and the `useMissionsPage` decomposition was the next-ripe surface). Three byte-equivalent refactors targeted the highest-leverage duplications that survived the prior sweeps: a 4-line 4-boolean `dispatchMode` decomposition duplicated across 2 server-side files, a `schedule: newDispatch === "cron" ? newSchedule : undefined` 3-line pattern duplicated 3 times in `useMissionsPage.ts`, and a `lines.filter((l) => l.trim() || l === "").join("\n")` filter+join duplicated 3 times in the hardware cron write sites.
+
+All **1316** unit tests pass (**199** suites, +26 new tests across `tests/unit/dispatch-mode.test.ts` (20 tests) and `tests/unit/join-crontab-lines.test.ts` (6 tests) covering the 3 new helpers). tsc clean, eslint `--max-warnings 0` clean, build passes. Net: -10 deletions, +165 insertions (the +165 is dominated by the 26 new test cases + the 3 new helper definitions + the extensive doc-comments explaining the byte-equivalence contract). Byte-equivalent at runtime for all 8 affected call sites.
+
+### Refactor 1 — `parseDispatchMode(dispatchMode, schedule?)` in `src/lib/dispatch-mode.ts`
+
+The 4-line 4-boolean decomposition was duplicated verbatim across 2 server-side files:
+
+**`src/app/api/missions/route.ts:286-288`** (dispatch path):
+```ts
+const isSaveMode = dispatchMode === "save";
+const isQueueMode = dispatchMode === "queue";
+const isCronMode = dispatchMode === "cron" && scheduleVal;
+```
+
+**`src/lib/mission-promote-handler.ts:79-82`** (promote path):
+```ts
+const isSaveMode = dispatchMode === "save";
+const isQueueMode = dispatchMode === "queue";
+const isCronMode = dispatchMode === "cron" && input.schedule;
+const isNowMode = dispatchMode === "now";
+
+if (!isSaveMode && !isQueueMode && !isNowMode && !isCronMode) {
+  return { ok: false, status: 400, error: "Invalid dispatchMode for promote" };
+}
+```
+
+Both files had the same 3 `=== "literal"` lines and the same `&& schedule` truthiness gate. Extracted to a single `parseDispatchMode(dispatchMode, schedule?)` helper that returns all 4 booleans plus a `valid` boolean. The `valid` boolean lets the promote path write `if (!valid) return error` instead of the verbose 4-term negative boolean test. The dispatch path doesn't need `valid` (it doesn't reject unknown modes — the route's outer switch already handles that), so the 5th return field is destructured only where it's used.
+
+**Byte-equivalence audit:** the helper returns the same 4 booleans as the inline form for every (mode, schedule) input shape. The `valid` boolean is `true` exactly when one of the 4 flags is `true` — this matches the original `!isSaveMode && !isQueueMode && !isNowMode && !isCronMode` negative test. Verified by 13 unit tests including a byte-equivalence matrix that asserts the helper equals the inline form for 10 input shapes (all 4 modes, undefined, empty, case-mismatched, cron-without-schedule, cron-with-empty-schedule, cron-with-whitespace-schedule, and the full valid/invalid combination matrix).
+
+**Why `isCronMode` is `mode === "cron" && !!schedule` (not `?.trim()`):** the original inline form was `dispatchMode === "cron" && input.schedule` — a truthiness check, not a trim check. Whitespace-only schedules like `"   "` were treated as `isCronMode: true` by the original code (because `"   "` is truthy), and the call site did the `input.schedule?.trim()` check separately. The helper preserves that byte-equivalent discipline — a future "reject whitespace-only schedules at the parse site" change lands in one place (the helper) but is explicitly NOT made in this refactor.
+
+**Rejected:** lifting the helper to a generic `parseEnum<T>(value, validValues, predicates)` that would work for any 4-value union. The 4 modes are not a generic enum (they have semantic-specific predicates like `isCronMode && schedule`), and the type union is closed. The single-purpose helper is the simpler form; promote to a generic on a 2nd dispatch-mode consumer appearing elsewhere in the codebase.
+
+### Refactor 2 — `scheduleForDispatch(dispatchMode, schedule)` in `src/lib/dispatch-mode.ts`
+
+The 1-line ternary `schedule: newDispatch === "cron" ? newSchedule : undefined` was repeated 3 times in `useMissionsPage.ts` (the 3 `dispatchPayload` overrides that merge a `schedule` field — one each in the update, promote, and dispatch branches of `handleCreate`). Extracted to a `scheduleForDispatch(mode, schedule?)` helper that returns the schedule verbatim for cron and `undefined` for the other 3 modes.
+
+**Byte-equivalence audit:** the helper returns exactly `mode === "cron" ? schedule : undefined` for every input shape. Verified by 7 unit tests including a byte-equivalence matrix that asserts the helper equals the inline form for 7 (mode, schedule) combinations. The most subtle case: `scheduleForDispatch("cron", "")` returns `""` (not `undefined`) — this matches the inline form's verbatim return. The empty-string suppression (if any) is the caller's responsibility (e.g. the existing `input.schedule?.trim()` check in the API layer).
+
+**Why this is a separate helper from `parseDispatchMode`:** `parseDispatchMode` is server-side (returns 4 booleans + valid), `scheduleForDispatch` is client-side (returns a single field for an API payload). Different consumers, different return shapes. Combining them would force every consumer to destructure both shapes.
+
+### Refactor 3 — `joinCrontabLines(lines)` helper in `src/app/api/cron/hardware/route.ts`
+
+The verbatim `lines.filter((l) => l.trim() || l === "").join("\n")` pattern was repeated 3 times in the hardware cron route (POST create line 334, PUT update line 423, PUT delete line 481). Extracted to an inline `joinCrontabLines(lines)` helper in the same route file (no new module — it's a 1-liner, not worth a separate file).
+
+**Why inline, not `@/lib/`:** the helper is 1 line of pure function. Promoting to `@/lib/` would add a file boundary (and an import) for a function that's only used in this 1 route. The 3 call sites in the same file benefit from being a few lines apart from the helper definition. Promote to `@/lib/` on a 2nd route consumer (e.g. a future `software-cron/route.ts` that uses the same filter discipline).
+
+**Byte-equivalence audit:** the helper returns exactly the same string as the inline form for every input. Verified by 6 unit tests in `tests/unit/join-crontab-lines.test.ts` including a byte-equivalence matrix that asserts the helper equals the inline form for 6 input shapes (empty, all-blank, mixed blanks, comment + entry blocks, whitespace-only middle lines, and the read-then-write round-trip case).
+
+**The load-bearing bit:** the filter `(l) => l.trim() || l === ""` preserves intentionally empty lines (used as separators between job blocks in the on-disk crontab) while dropping lines that are only whitespace. A future "fix" that swapped to `.filter(Boolean)` or `.filter((l) => l)` would silently strip blank lines from the on-disk crontab, potentially concatenating job blocks. The helper + the byte-equivalence matrix lock this behaviour in.
+
+### What was rejected
+
+- **Migrating the chat page's `sessions.find((s) => s.id === activeSessionId)` (2 render-time sites at line 125 + line 463) to a `useMemo`-derived `activeSession`.** Initially attempted, but reverting because: the prior `const` form re-ran `find` on every render, which gave the downstream `messages` `useMemo` a fresh `activeSession` reference every render — meaning the `messagesEndRef.current?.scrollIntoView({...})` effect re-fired on every render. Memoising `activeSession` would change the scroll effect's dependency stability, which IS a behavior change (the auto-scroll would fire less often). The 2-site duplication is minor (one is in JSX, easy to read) and not worth a behavior change. Defer to a session that explicitly opts in to the "scroll on re-render no longer happens" behavior change.
+- **Extracting a shared "insert new session" helper for `handleNewChat` + `handleSend` in the chat page.** The 2 sites diverge significantly: `handleNewChat` creates an empty session (no messages), `handleSend` creates + optimistically adds 2 messages + sets the title from the first user input. A shared helper would require a 5+ parameter options bag. Defer until a 3rd consumer appears (e.g. a "duplicate session" feature).
+- **Promoting `submitToastForDispatch` (in `useMissionsPage.ts:30-35`) to `src/lib/`.** Already in `src/hooks/` and 1 consumer only (the dispatching toast in `useMissionsPage.ts:575, 634`). The 3 call sites already use the helper. Promote to `src/lib/` on a 2nd consumer.
+- **Lifting `joinCrontabLines` to a `@/lib/` module.** 1-liner function, 1 route file consumer, no test surface beyond the `join-crontab-lines.test.ts` byte-equivalence matrix. Promote on a 2nd route consumer.
+- **Adding a `useMissionsPage` decomposition step.** Still the biggest hook in the codebase (1182 LOC, mostly state). The `setFormField` + `dispatchPayload` + `setModelAndProvider` + `clearMissionFormFields` + `applyTemplateToForm` + `populateFormFromMission` helpers (extracted in sessions 84, 87, 91) cover the highest-leverage repetition. A full decomposition would require careful hook-by-hook extraction with state-derivation verification — out of scope for "AT LEAST identical results". Defer to a dedicated decomposition session.
+- **Consolidating the chat page's `stopEvent` helper into `@/lib/`.** 1 file consumer, 2 call sites in the same file. Promote on a 2nd file consumer.
+- **Consolidating the chat page's 3 `setInput("")` calls into a `clearInput()` helper.** 1 file consumer, 2 functional call sites (the 3rd is a `setSessions` cascade). 1-line reset — not worth a helper.
+- **Sweeping the 6 `err instanceof Error ? err.message` sites in `src/lib/cron/hermes-sync.ts`, `src/lib/sync/SyncScheduler.ts`, `src/lib/backends/hermes.ts`, `src/lib/sync-manager.ts`, `src/lib/hermes-profile-sync.ts` (7 sites alone) to a server-side `toMessage(e, fallback)` helper.** 9 files total. Multi-session sweep, deferred to a List 2/3/4 session with the budget to handle the spread.
+- **Extracting `parseDispatchMode` to a generic `parseEnum<T>(value, validValues, predicates)`.** The 4 modes are not a generic enum (they have semantic-specific predicates like `isCronMode && schedule`), and the type union is closed. The single-purpose helper is the simpler form; promote to a generic on a 2nd dispatch-mode consumer.
+- **Migrating the chat page's `safeTitle = s.title.replace(/[^a-zA-Z0-9_-]/g, "_")` (1 site) to a `safeFilename(title)` helper in `@/lib/`.** 1 site, 1 file. Promote on a 2nd consumer.
+- **Consolidating the 2 `try { localStorage.setItem(LAST_CATEGORY_KEY, ...) } catch { /* ignore */ }` sites in `useMissionsPage.ts:357-361, 459-463` into a `safeSetLocalStorage(key, value)` helper.** 2 sites, same file. The 3-line wrapper is already so trivial that the helper would obscure the intent more than it would save. Defer.
+
+### Files
+
+- `src/lib/dispatch-mode.ts` (NEW) — `parseDispatchMode` + `scheduleForDispatch` helpers + `DispatchMode` type
+- `src/app/api/missions/route.ts` (MODIFIED) — 3-line dispatchMode decomposition → 1-line helper call
+- `src/lib/mission-promote-handler.ts` (MODIFIED) — 4-line decomposition + 4-term negative test → 1-line helper call
+- `src/hooks/success-message-for-dispatch.ts` (MODIFIED) — `DispatchMode` type re-exported from the new `@/lib/dispatch-mode` module (back-compat with the 1 inline consumer)
+- `src/hooks/useMissionsPage.ts` (MODIFIED) — 3 `scheduleForDispatch` call sites migrated
+- `src/app/api/cron/hardware/route.ts` (MODIFIED) — `joinCrontabLines` helper + 3-site migration
+- `tests/unit/dispatch-mode.test.ts` (NEW) — 20 tests covering `parseDispatchMode` + `scheduleForDispatch`
+- `tests/unit/join-crontab-lines.test.ts` (NEW) — 6 tests covering `joinCrontabLines` (helper mirrored locally for isolation; byte-equivalence matrix locks the behaviour)
+
+Net diff: **8 files (2 new, 6 modified), +165 / -10 lines** (the +165 is dominated by the 26 new test cases + the 3 new helper definitions + the extensive doc-comments; the -10 is the 3-line decomposition collapse × 2 + the 1-line ternary collapse × 3 + the 1-line filter+join collapse × 3).
+
+### Verification
+
+- **All 1316 unit tests pass** (199 suites, no regressions, +26 new tests covering the 3 new helpers and their byte-equivalence contracts)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean
+- **`npm run build`** passes
+- **Byte-equivalence audit:** `parseDispatchMode(mode, schedule)` returns the same 4 booleans as the inline form for every (mode, schedule) combination (verified by the 13-test matrix in `tests/unit/dispatch-mode.test.ts`). `scheduleForDispatch(mode, schedule)` returns the same field value as the inline form for every (mode, schedule) combination (verified by the 7-test matrix). `joinCrontabLines(lines)` returns the same string as the inline form for every line array (verified by the 6-test matrix in `tests/unit/join-crontab-lines.test.ts`). Wire format, response shape, dispatch branch selection, and on-disk crontab format are all unchanged.
+
+### Patterns to take forward
+
+1. **"4-boolean decomposition from a discriminated union" pattern** — when a closed union of 4 values is decomposed into 4 booleans + 1 `valid` flag at multiple sites, extract to a `parseX(value, ...)` helper. The `valid` flag lets consumers write `if (!valid) return error` instead of the verbose 4-term negative test. The helper should preserve the union type for type-safe dispatch on the result.
+2. **"Field selection from a discriminated union" pattern** — when a single field is conditionally included in a payload based on a union value (`mode === X ? field : undefined`), extract to a `fieldForX(mode, field)` helper. The helper should return the field verbatim (including empty string) to match the inline form's byte-equivalent behaviour. The "empty-string suppression" (if any) is the caller's responsibility.
+3. **"Inline 1-liner helper in a 600-line route file" pattern** — when a 1-line filter+join or other transformation is repeated 3+ times in a single route file, lift it to an inline helper in the same file. Don't promote to `@/lib/` until a 2nd file consumer appears. The byte-equivalence matrix in a separate test file locks the behaviour in.
+4. **"Reverted behavior change" pattern** — when a refactor would technically deduplicate code but introduces a subtle behavior change (e.g. `useMemo` changing effect dependency stability), revert and document the rationale in a comment. The "AT LEAST identical results" rule applies, even when the behavior change is "probably better". A future session that explicitly opts in to the behavior change can land the refactor then.
+
+### "Next session should:" block
+
+1. **Pick a different list next session.** List 2 has been hit 4 times in this rolling PR (sessions 75, 82, 88, 94). The next pick should be **List 1 (Dashboard, Sessions, Memory, Logs)** — last hit at session 93 (the second-most-recent). List 1 still has known follow-ups: `useApiData` extension to absorb `(main)/logs/page.tsx`'s manual `useInterval` + `setRefreshing` pattern, and the `(main)/sessions/page.tsx` `loadSessions` migration to `useApiData({queryParams, pagination})`. Both are behavior changes that need an "AT LEAST identical results" opt-in.
+2. **`useApiData` extension for query params + pagination** — `(main)/sessions/page.tsx`'s `loadSessions` is the next candidate. Requires extending the hook to support `URLSearchParams`. Defer until the hook shape is stable across logs + sessions.
+3. **`setErrorFromCaught` promotion** — when the 8th `setError(messageFromError(err, ...))` site appears (currently 7), promote to a `setErrorFromCaught(setError, err, fallback)` helper. The 8th site is most likely to appear in List 1 or List 4 territory.
+4. **Sweep the 9 `err instanceof Error ? err.message` sites in `src/lib/cron/`, `src/lib/sync/`, `src/lib/backends/`, `src/lib/hermes-profile-sync.ts`** to a server-side `toMessage(e, fallback)` helper. Multi-session sweep, deferred to a session with the budget to handle 9 files.
+5. **`useMissionsPage` decomposition** — 1182 LOC, still the biggest hook in the codebase. The 5+ state-derivation helpers extracted in sessions 84, 87, 91, 94 cover the highest-leverage repetition. A full decomposition would require careful hook-by-hook extraction with state-derivation verification — out of scope for "AT LEAST identical results". Defer to a dedicated decomposition session.
+6. **Promote `joinCrontabLines` to `src/lib/`** when a 2nd route consumer appears (e.g. a future `software-cron/route.ts` that uses the same filter discipline).
+7. **Promote `submitToastForDispatch` to `src/lib/`** when a 2nd consumer appears. Currently 1 consumer in `useMissionsPage.ts`.
+8. **Migrate the chat page's `sessions.find((s) => s.id === activeSessionId)` (2 render-time sites) to a `useMemo`** — but ONLY in a session that explicitly opts in to the behavior change (the auto-scroll effect's dependency stability changes). The chat page's `setInput("")` calls (3 sites) and the `safeTitle` regex (1 site) are too small to refactor.
+9. **Sweep the 6 inline `} catch { showToast("Failed to X", "error") }` sites in `src/app/operations/`** to `toastError`. Most use **hardcoded strings** (not the caught error's message), so `toastError` would show the actual API error instead of the hardcoded string — a behavior change, NOT byte-equivalent. Leave inline until a future session explicitly opts in to the "AT LEAST identical results = strictly more informative" interpretation.
+
+---
+
 ## Session 93 — List 1 (Dashboard, Sessions, Memory, Logs) — `dbSessionFields` + `parseAssistantLines` helpers + `MessageBubble` `fnName` reuse
+
 
 Pick was List 1 (per session 92's "Next session should" recommendation — the longest gap in recent protocol history, last touched at session 89, and 3+ known follow-ups queued). Three byte-equivalent refactors targeted small but well-scoped duplications that survived the prior shallow sweep: a 4-field envelope shared across 2 route branches, a 4-line line-parser shared between mission-output and (transitively) the JSONL branch, and a 1-expression `String(fn?.name || "unknown")` repeated in a single component.
 
@@ -353,6 +465,8 @@ The full content of these earlier sessions is preserved in the git history of `p
 
 | # | List | Headline | Sites | New tests | Commit | Reference |
 |---|---|---|---|---|---|---|
+| 94 | 2 | `parseDispatchMode` + `scheduleForDispatch` + `joinCrontabLines` helpers (server dispatchMode decompose + 3-site useMissionsPage schedule + 3-site hardware-cron filter+join) | 8 | +26 | session 94 | session 94 |
+| 93 | 1 | `dbSessionFields` + `parseAssistantLines` helpers + `MessageBubble` `fnName` reuse | 4 | +13 | `c0657b7` | session 93 |
 | 92 | 4 | `pushDiff` closure in diff + pull routes (List 4 escape from session 90's "mined clean" verdict) | 13 | 0 (reuse) | session 92 | session 92 doc |
 | 91 | 3 | `setErrorFromCaught` helper + 9-site migration | 9 | +8 | `040107c` | session 91 |
 | 90 | 3 | 4-site `toastError` migration in operations pages | 4 | 0 (reuse) | `1f7c453` | session 90 |

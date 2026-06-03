@@ -122,6 +122,14 @@ export default function ChatPage() {
   // still ran setModel() on every streamed delta. Narrowing the dependency
   // to the actual field we read (the model) keeps the call to once per
   // session switch + once per explicit model change.
+  // NOTE: the previous code used `useMemo` here, but that subtly changed
+  // the auto-scroll effect's dependency stability (see session 94 for
+  // the full analysis). Reverted to the original inline `find` so the
+  // downstream `messages` `useMemo` re-fires on every render — matching
+  // the pre-session-94 scroll behavior exactly. The 2 render-time
+  // `sessions.find` sites in this file (line 125 + line 463) are kept
+  // inline; promoting them to a single `useMemo` is a behavior change
+  // (scroll effect dependency stability), not a byte-equivalent rename.
   const activeSession = sessions.find((s) => s.id === activeSessionId);
   const activeSessionModel = activeSession?.model;
   const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);

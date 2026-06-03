@@ -16,6 +16,7 @@ import { agentBackend } from "@/lib/backends";
 import { logApiError } from "@/lib/api-logger";
 import { isMissionDraft, isMissionQueuedForRun } from "@/lib/mission-board";
 import { cronSyncFailureResponse, cronSyncFailureBody } from "@/lib/cron-sync-failure";
+import { parseDispatchMode } from "@/lib/dispatch-mode";
 import type { Mission } from "@/lib/agent-backend/types";
 
 export interface PromoteMissionInput {
@@ -76,12 +77,9 @@ export async function promoteMission(
   }
 
   const dispatchMode = input.dispatchMode;
-  const isSaveMode = dispatchMode === "save";
-  const isQueueMode = dispatchMode === "queue";
-  const isCronMode = dispatchMode === "cron" && input.schedule;
-  const isNowMode = dispatchMode === "now";
+  const { isSaveMode, isQueueMode, isCronMode, isNowMode, valid } = parseDispatchMode(dispatchMode, input.schedule);
 
-  if (!isSaveMode && !isQueueMode && !isNowMode && !isCronMode) {
+  if (!valid) {
     return { ok: false, status: 400, error: "Invalid dispatchMode for promote" };
   }
 

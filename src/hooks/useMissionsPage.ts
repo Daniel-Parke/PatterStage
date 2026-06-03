@@ -17,6 +17,7 @@ import {
 } from "@/lib/mission-categories";
 import type { ManagedCategory } from "@/components/missions/CategoryManagerModal";
 import { buildTemplatePayload, splitGoals } from "@/lib/mission-form-utils";
+import { scheduleForDispatch } from "@/lib/dispatch-mode";
 import {
   isMissionActive,
   isMissionDraft,
@@ -552,7 +553,7 @@ export function useMissionsPage() {
               missionId: editingId,
               name: newName,
               ...dispatchPayload({
-                schedule: newDispatch === "cron" ? newSchedule : undefined,
+                schedule: scheduleForDispatch(newDispatch, newSchedule),
               }),
             },
           });
@@ -581,7 +582,7 @@ export function useMissionsPage() {
               name: newName,
               ...dispatchPayload({
                 dispatchMode: newDispatch,
-                schedule: newDispatch === "cron" ? newSchedule : undefined,
+                schedule: scheduleForDispatch(newDispatch, newSchedule),
               }),
             },
           });
@@ -640,7 +641,7 @@ export function useMissionsPage() {
           name: newName,
           ...dispatchPayload({
             dispatchMode: newDispatch,
-            schedule: newDispatch === "cron" ? newSchedule : undefined,
+            schedule: scheduleForDispatch(newDispatch, newSchedule),
           }),
         },
       });

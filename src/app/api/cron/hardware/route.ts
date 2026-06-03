@@ -193,6 +193,19 @@ function writeCrontab(content: string): { ok: boolean; error?: string } {
   }
 }
 
+/**
+ * Join a list of crontab lines into the on-disk format. The
+ * `.filter((l) => l.trim() || l === "")` step preserves intentionally
+ * empty lines (used as separators between job blocks) while dropping
+ * lines that are only whitespace. Centralised so the 3 call sites
+ * (POST create, PUT update, PUT delete) use the same exact filter
+ * discipline — a future "preserve lines containing only a `#`" change
+ * lands in one place.
+ */
+function joinCrontabLines(lines: string[]): string {
+  return lines.filter((l) => l.trim() || l === "").join("\n");
+}
+
 // ── Shared crontab read+parse helper ─────────────────────────
 
 interface CrontabJobRaw {
@@ -331,7 +344,7 @@ export async function POST(request: NextRequest) {
 
     // Write crontab synchronously (execSync is acceptable here — it is a
     // single blocking call with no async I/O available for crontab writes).
-    const result = writeCrontab(newLines.filter((l) => l.trim() || l === "").join("\n"));
+    const result = writeCrontab(joinCrontabLines(newLines));
     if (!result.ok) {
       return serverError(result.error ?? "unknown error");
     }
@@ -420,7 +433,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ data: { id, enabled } });
     }
 
-    const result = writeCrontab(newLines.filter((l) => l.trim() || l === "").join("\n"));
+    const result = writeCrontab(joinCrontabLines(newLines));
     if (!result.ok) {
       return serverError(result.error ?? "unknown error");
     }
@@ -478,7 +491,7 @@ export async function DELETE(request: NextRequest) {
       return notFound(`Hardware cron job '${id}' not found`);
     }
 
-    const result = writeCrontab(newLines.filter((l) => l.trim() || l === "").join("\n"));
+    const result = writeCrontab(joinCrontabLines(newLines));
     if (!result.ok) {
       return serverError(result.error ?? "unknown error");
     }
