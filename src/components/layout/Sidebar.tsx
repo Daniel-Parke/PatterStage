@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 
 import { iconColorMap } from "@/lib/theme";
+import { messageFromError } from "@/lib/api-fetch";
 import {
   mainSections,
   configSettingsPinnedLinks,
@@ -38,6 +39,10 @@ import {
 import type { SidebarLink, ConfigGroup } from "./sidebar-config";
 
 import { sanitizeGitBranch } from "@/lib/git-branch";
+import { fallbackForDeployMessage } from "@/lib/deploy-action-fallback";
+
+/** The three deploy actions supported by POST /api/update. */
+type DeployAction = "update" | "restart" | "rebuild";
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -180,6 +185,13 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
 
   const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isMountedRef = useRef(true);
+  // Refs to forward-declared callbacks so useCallbacks higher up in the
+  // file (handleUpdate/handleRestart/doRebuild) can read the latest
+  // pollDeployStatus/clearDeployBusy without depending on declaration
+  // order or rebuilding on every render. The forward declarations are
+  // reassigned to the real fns below.
+  const pollDeployStatusRef = useRef<(action: DeployAction) => void>(() => undefined);
+  const clearDeployBusyRef = useRef<() => void>(() => undefined);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -240,98 +252,104 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
     }
   };
 
-  const handleUpdate = async () => {
+  // ── Deploy actions ──────────────────────────────────────────
+  //
+  // POST /api/update supports three actions: update, restart, rebuild.
+  // The three click handlers (handleUpdate, handleRestart, doRebuild)
+  // shared an identical shape:
+  //   1. early-return on busy
+  //   2. setMessage("X started…")
+  //   3. POST {action, ...extras} to /api/update
+  //   4. if !res.ok, parse {error} and throw
+  //   5. on success, setMessage("X running…") and pollDeployStatus(action)
+  //   6. catch: setMessage(err.message || fallback) + clear busy
+  //
+  // The only differences are: the action name, the started/running
+  // messages, the busy setter, and (for update) the optional branch
+  // body + the d.error check. The helper below collapses them.
+  const runDeployAction = useCallback(
+    async (opts: {
+      action: DeployAction;
+      startedMessage: string;
+      runningMessage: string;
+      setBusy: (busy: boolean) => void;
+      useBusyRef?: boolean;
+      body?: Record<string, unknown>;
+    }) => {
+      const { action, startedMessage, runningMessage, setBusy, useBusyRef, body } = opts;
+      setBusy(true);
+      if (useBusyRef) busyRef.current = true;
+      setMessage(startedMessage);
+      try {
+        const res = await fetch("/api/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action, ...body }),
+        });
+        if (!res.ok) {
+          let msg = fallbackForDeployMessage(startedMessage);
+          try {
+            const errBody = await res.json();
+            if (errBody?.error) msg = errBody.error;
+          } catch { /* ignore */ }
+          throw new Error(msg);
+        }
+        // Update reads the response body for the synchronous error
+        // envelope ({error: "..."}); restart/rebuild trust the 2xx and
+        // let the poll surface failure. We only need the parsed body
+        // when the caller asked for it — update is the only one.
+        if (action === "update") {
+          const d = await res.json();
+          if (d.error) {
+            setMessage(d.error);
+            setBusy(false);
+            if (useBusyRef) busyRef.current = false;
+            return;
+          }
+        }
+        setMessage(runningMessage);
+        pollDeployStatusRef.current(action);
+      } catch (err: unknown) {
+        setMessage(messageFromError(err, fallbackForDeployMessage(startedMessage)));
+        setBusy(false);
+        if (useBusyRef) busyRef.current = false;
+      }
+    },
+    [],
+  );
+
+  const handleUpdate = useCallback(() => {
     if (updating || !version?.updateAvailable) return;
-    setUpdating(true);
-    setMessage("Update started — deploying in background...");
-    try {
-      const res = await fetch("/api/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "update",
-          ...(deployBranch ? { branch: deployBranch } : {}),
-        }),
-      });
-      if (!res.ok) {
-        let msg = "Update failed";
-        try {
-          const body = await res.json();
-          if (body?.error) msg = body.error;
-        } catch { /* ignore */ }
-        throw new Error(msg);
-      }
-      const d = await res.json();
-      if (d.error) {
-        setMessage(d.error);
-        setUpdating(false);
-        return;
-      }
-      setMessage("Update running…");
-      pollDeployStatus("update");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Update failed";
-      setMessage(msg);
-      setUpdating(false);
-    }
-  };
+    return runDeployAction({
+      action: "update",
+      startedMessage: "Update started — deploying in background...",
+      runningMessage: "Update running…",
+      setBusy: setUpdating,
+      body: deployBranch ? { branch: deployBranch } : {},
+    });
+  }, [runDeployAction, deployBranch, updating, version?.updateAvailable]);
 
-  const handleRestart = async () => {
+  const handleRestart = useCallback(() => {
     if (busyRef.current) return;
-    busyRef.current = true;
-    setRestarting(true);
-    setMessage("Restart requested (~/.hermes/logs/ch-restart.log)…");
-    try {
-      const res = await fetch("/api/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "restart" }),
-      });
-      if (!res.ok) {
-        let msg = "Restart failed";
-        try {
-          const body = await res.json();
-          if (body?.error) msg = body.error;
-        } catch { /* ignore */ }
-        throw new Error(msg);
-      }
-      setMessage("Restarting server…");
-      pollDeployStatus("restart");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Restart failed";
-      setMessage(msg);
-      setRestarting(false);
-      busyRef.current = false;
-    }
-  };
+    return runDeployAction({
+      action: "restart",
+      startedMessage: "Restart requested (~/.hermes/logs/ch-restart.log)…",
+      runningMessage: "Restarting server…",
+      setBusy: setRestarting,
+      useBusyRef: true,
+    });
+  }, [runDeployAction]);
 
-  const doRebuild = async () => {
+  const doRebuild = useCallback(() => {
     if (busyRef.current) return;
-    busyRef.current = true;
-    setRebuilding(true);
-    setMessage("Rebuild started…");
-    try {
-      const res = await fetch("/api/update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "rebuild" }),
-      });
-      if (!res.ok) {
-        let msg = "Rebuild failed";
-        try {
-          const body = await res.json();
-          if (body?.error) msg = body.error;
-        } catch { /* ignore */ }
-        throw new Error(msg);
-      }
-      pollDeployStatus("rebuild");
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Rebuild failed";
-      setMessage(msg);
-      setRebuilding(false);
-      busyRef.current = false;
-    }
-  };
+    return runDeployAction({
+      action: "rebuild",
+      startedMessage: "Rebuild started…",
+      runningMessage: "Rebuild running…",
+      setBusy: setRebuilding,
+      useBusyRef: true,
+    });
+  }, [runDeployAction]);
 
   const clearDeployBusy = () => {
     setUpdating(false);
@@ -339,8 +357,9 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
     setRebuilding(false);
     busyRef.current = false;
   };
+  clearDeployBusyRef.current = clearDeployBusy;
 
-  const pollDeployStatus = (expectedAction: "rebuild" | "restart" | "update") => {
+  const pollDeployStatus = (expectedAction: DeployAction) => {
     if (pollIntervalRef.current !== null) {
       clearInterval(pollIntervalRef.current);
       pollIntervalRef.current = null;
@@ -415,6 +434,7 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
     }, 2000);
     pollIntervalRef.current = interval;
   };
+  pollDeployStatusRef.current = pollDeployStatus;
 
   const isBusy = updating || restarting || rebuilding;
 

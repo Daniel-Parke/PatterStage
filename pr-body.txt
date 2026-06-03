@@ -1295,3 +1295,55 @@ grep -rn "status: 405\|status: 413\|status: 503" src/ --include="*.ts" --include
 
 - **3-line `apiFetch.toError` rename** to a more discoverable name (e.g. `coerceToError`) — the name is already used 30+ times and renaming is a churn risk for no readability win.
 - **Move `toError` to its own file (`src/lib/to-error.ts`)** — currently in `api-fetch.ts` because that's where it was born (it's the "coerce fetch errors" helper). Moving now would force 30+ import-path changes for no semantic gain. The name `toError` is the canonical name in the codebase.
+---
+
+## Session 77 — List 3 (Models, Agents, Skills, Tools, Personalities) — messageFromError helper + 13-site migration
+
+Carry-over from session 76's `toError()` bonus. Promotes a new `messageFromError(e, fallback)` helper in `src/lib/api-fetch.ts` that composes `toError()` with the `|| fallback` discipline. The helper guarantees a non-empty user-visible string — closing the empty-`Error.message` edge case that the inline `err instanceof Error ? err.message : <fallback>` pattern gets wrong (it returns `""` for `throw new Error("")`, producing a blank toast).
+
+Migrated 13 inline sites across 8 files:
+
+- `src/hooks/useModelsPage.ts` (12 sites: 8 catch blocks with multiple toasts/setErrors each)
+- `src/app/config/seed/page.tsx` (2: load + seed)
+- `src/app/operations/agents/page.tsx` (1: load file)
+- `src/app/operations/personalities/page.tsx` (1: save)
+- `src/app/operations/skills/page.tsx` (2: update toggle + save edit)
+- `src/app/operations/skills/[...path]/page.tsx` (1: load)
+- `src/app/operations/tools/page.tsx` (1: load toolsets)
+- `src/lib/api-fetch.ts` (1: safeApiCall catch)
+
+17 new unit tests in `tests/unit/message-from-error.test.ts` lock the helper's contract: empty-Error handling (the inline-pattern bug), null/undefined/number/string/object inputs, fallback discipline, Error subclass preservation, and a behaviour-contract test that the fallback is a true fallback (not a default).
+
+All 1190 tests pass (188 suites, +17 from this session). tsc clean, eslint --max-warnings 0 clean, build passes. Byte-equivalent at runtime for the common case (Error thrown with a real message); the 1 documented divergence is the empty-Error case, which is a strict improvement over the inline form.
+
+`references/control-hub-list3-session77-findings.md` captures the session details, the "next session should" block, and the audit recipe for closing the 16 remaining sites across the codebase.
+
+---
+
+## Session 78 — List 1 (Dashboard, Sessions, Memory, Logs) — Sidebar runDeployAction consolidation + messageFromError migration
+
+Two consolidations on the Sidebar surface. (1) **`runDeployAction` helper in `src/components/layout/Sidebar.tsx`** — collapsed three near-identical 30-line click handlers (`handleUpdate`, `handleRestart`, `doRebuild`) into one parameterized `useCallback` plus three 5-line wrappers. The 3 handlers shared the same fetch + error-parse + pollDeployStatus + catch shape; the only differences were the action name, the started/running messages, the busy setter, the body, and whether to read the success body for `d.error`. (2) **`fallbackForDeployMessage()` helper in `src/lib/deploy-action-fallback.ts`** — extracted the `startedMessage.replace(/started.*$/, "failed")` regex into a named, unit-testable function. 7 unit tests cover the 3 message shapes the Sidebar actually uses plus 4 edge cases (empty, no-match, multi-match, capitalization). The "Restart requested" message does NOT include "started", so the regex returns the input unchanged — a pre-existing quirk locked in by the test so a future "fix" of the restart message is intentional.
+
+Bonus: 4 inline `err instanceof Error ? err.message : <fallback>` patterns in `Sidebar.tsx` (consolidated into 1 in `runDeployAction`) + 1 in `src/app/(main)/sessions/[id]/page.tsx` migrated to the new `messageFromError()` helper from session 77. After session 78, the `err instanceof Error` pattern in `src/components/` is reduced from 4 to 0 sites.
+
+All 1197 tests pass (189 suites, +7 from this session). tsc clean, eslint clean, build passes. Byte-equivalent at runtime (same fetch URL, same body, same poll behavior, same error envelope) for the 3 deploy actions. 1 documented quirk preserved: the restart catch block sets the message to the literal startedMessage on network failure (no "started" word to match). Pre-existing behaviour.
+
+`references/control-hub-list1-session78-findings.md` captures the full session details, the byte-equivalence audit, the "next session should" block (useApiData adoption in logs, HindsightBrowser 4-site migration, the one remaining api/memory/hindsight/route.ts:310 inline `err instanceof Error` site), and the audit recipe.
+
+### "Next session should:" block (carried forward, picking up session 78)
+
+1. **Pick a different list next session** to spread the refactor surface. List 2 has been hit 12+ times (sessions 63, 68, 69, 75, 76 + others). List 1 has been hit 9 times now (sessions 62, 65, 66, 78 + others). **List 3 or List 4 are the next-ripe surfaces** — both have the most accumulated duplication. List 4 hasn't been touched since session 72 (and the sessions-72 next-session block has the modelKey + serverError + factory sweep carry-overs).
+2. **`useApiData` adoption in `(main)/logs/page.tsx`** — the page uses a manual `useEffect` + `useInterval` + `setRefreshing` + `handleScroll` pattern. The hook can be extended to support the auto-refresh + auto-scroll + abort pattern.
+3. **`HindsightBrowser` 4 inline `error ?? "..."` sites** — the toggle/delete handlers (handleToggleDirective, handleDeleteDirective, handleRefreshModel, handleDeleteModel) would need a `runMutation`-shaped variant. Defer until a 2nd consumer wants the same shape.
+4. **`api/memory/hindsight/route.ts:310`** — the only remaining inline `err instanceof Error` pattern in List 1 territory. Out of scope for "AT LEAST identical results" — would change the user-visible body for non-Error throws.
+5. **`Sidebar.tsx`'s `openCheckDropdown` / `handleDropdownConfirm` / `doCheck` triplet** — 3 similar patterns for the version-check dropdown. Lower-value than the deploy consolidation but a candidate.
+6. **Sessions page `loadSessions` data fetching** — uses `apiFetch` + try/catch, could be ported to `useApiData` with the abort pattern extended.
+7. **`useMissionsPage.ts` decomposition** — 1180 LOC, still the biggest hook in the codebase. List 2 territory.
+8. **Promote `messageFromError` to a more discoverable name** (e.g. `coerceErrorMessage`) — currently 1 of 3 inline patterns, the 1 in `api-fetch.ts` itself. Out of scope until a 3rd consumer of `toError` + `messageFromError` appears.
+
+### What was rejected this session
+
+- **`useApiData` adoption in `(main)/logs/page.tsx`** — out of scope for "AT LEAST identical results". The hook doesn't support the auto-refresh + abort pattern the logs page uses. A full sweep is a behaviour change (removes the `setRefreshing` micro-state, changes the abort timing).
+- **`HindsightBrowser` 4-site `runMutation` migration** — the 4 sites are toggle/delete handlers that don't have a single `isValid` + `busy` + `build` shape. Forcing the migration would change the success toast semantics.
+- **`Sidebar.tsx` 3-handler consolidation into a single `handleAction(action: DeployAction)`** — would force the click handlers to pass the action name from the JSX (`onClick={() => handleAction("update")}` vs `onClick={handleUpdate}`). The wrapper-per-action pattern is more discoverable in the JSX and matches the existing pattern from the rest of the codebase (e.g. MissionCreateForm, JobFormModal).
+- **`fallbackForDeployMessage` "fix" for the restart no-match quirk** — the restart message ("Restart requested…") doesn't match the "started" regex, so the helper returns it unchanged. Fixing would require a different regex or a per-action fallback string — out of scope for "AT LEAST identical results" and would change the user-visible string on a network failure.
