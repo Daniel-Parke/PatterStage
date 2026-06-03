@@ -49,6 +49,7 @@ import { unwrapPollPath } from "@/lib/dashboard-poll";
 import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
 import { computeCronJobRowCaption } from "@/lib/cron-row-helpers";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
+import { useInterval } from "@/hooks/useInterval";
 
 // ── Typed response shapes for each API endpoint ─────────────
 interface TemplatesResponseData { templates: Array<{ id: string; name: string; icon: string; color: string; category: string; categoryId?: string; profile: string; description: string; isCustom?: boolean }>; }
@@ -61,10 +62,7 @@ interface DefaultsResponseData { defaults: { agent?: string } | null; }
 
 const LiveClock = reactMemo(function LiveClock() {
   const [time, setTime] = useState<Date>(new Date());
-  useEffect(() => {
-    const id = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
+  useInterval(() => setTime(new Date()), { ms: 1000 });
   return (
     <>
       <div className="text-sm font-mono text-neon-cyan" suppressHydrationWarning>
