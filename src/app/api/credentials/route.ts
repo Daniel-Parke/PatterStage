@@ -7,12 +7,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { listCredentials, createCredential, deleteCredential } from "@/lib/credentials-repository";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, credentialPostSchema } from "@/lib/api-schemas";
-import { created, serverError } from "@/lib/api-response";
+import { created } from "@/lib/api-response";
 import { syncCredentialToHermesEnv } from "@/lib/hermes-config-sync";
 
 export async function GET(request: NextRequest) {
@@ -22,8 +22,12 @@ export async function GET(request: NextRequest) {
   try {
     return NextResponse.json({ data: { credentials: listCredentials() } });
   } catch (error) {
-    logApiError("GET /api/credentials", "listing credentials", error);
-    return serverError("Failed to list credentials");
+    return serverErrorFromCatch(
+      "GET /api/credentials",
+      "listing credentials",
+      error,
+      "Failed to list credentials",
+    );
   }
 }
 
@@ -63,7 +67,11 @@ export async function POST(request: NextRequest) {
         logApiError("POST /api/credentials", "rolling back credential after sync failure", cleanupErr);
       }
     }
-    logApiError("POST /api/credentials", "creating credential", error);
-    return serverError("Failed to create credential");
+    return serverErrorFromCatch(
+      "POST /api/credentials",
+      "creating credential",
+      error,
+      "Failed to create credential",
+    );
   }
 }

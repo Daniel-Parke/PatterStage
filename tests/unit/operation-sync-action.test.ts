@@ -17,6 +17,10 @@ import { runSyncAction, type RunSyncActionOptions } from "@/lib/operation-sync-a
 
 jest.mock("@/lib/api-fetch", () => ({
   apiFetch: jest.fn(),
+  toastError: jest.fn(
+    (showToast: (message: string, variant?: string) => void, err: unknown, fallback: string) =>
+      showToast(err instanceof Error ? err.message : fallback, "error"),
+  ),
 }));
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { apiFetch } = require("@/lib/api-fetch") as { apiFetch: jest.Mock };

@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { serverError } from "@/lib/api-response";
 import { runCatalogSeed, getSeedState, type SeedTarget } from "@/lib/seed/catalog-seed";
 import { importHermesStateFromDisk } from "@/lib/hermes-state-import";
 import { getHermesHome } from "@/lib/hermes-home";
@@ -14,8 +13,12 @@ export async function GET() {
     const state = getSeedState();
     return NextResponse.json({ data: { state } });
   } catch (error) {
-    logApiError("GET /api/seed", "state", error);
-    return serverError("Failed to read seed state");
+    return serverErrorFromCatch(
+      "GET /api/seed",
+      "state",
+      error,
+      "Failed to read seed state",
+    );
   }
 }
 
@@ -48,7 +51,11 @@ export async function POST(request: NextRequest) {
     const result = runCatalogSeed({ target, mode, slug, templateId });
     return NextResponse.json({ data: { ...result, imported } });
   } catch (error) {
-    logApiError("POST /api/seed", "seed", error);
-    return serverError("Failed to run seed");
+    return serverErrorFromCatch(
+      "POST /api/seed",
+      "seed",
+      error,
+      "Failed to run seed",
+    );
   }
 }

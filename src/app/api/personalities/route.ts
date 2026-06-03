@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest, methodNotAllowed, serverError } from "@/lib/api-response";
+import { badRequest, methodNotAllowed } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
@@ -80,8 +80,12 @@ export async function GET(request: NextRequest) {
     });
   }
   catch (error) {
-    logApiError("GET /api/personalities", "reading SOUL identities", error);
-    return serverError("Failed to read personalities");
+    return serverErrorFromCatch(
+      "GET /api/personalities",
+      "reading SOUL identities",
+      error,
+      "Failed to read personalities",
+    );
   }
 }
 
@@ -93,8 +97,12 @@ export async function POST(request: NextRequest) {
     return await upsertPersonality(request);
   }
   catch (error) {
-    logApiError("POST /api/personalities", "creating SOUL identity", error);
-    return serverError("Failed to save personality");
+    return serverErrorFromCatch(
+      "POST /api/personalities",
+      "creating SOUL identity",
+      error,
+      "Failed to save personality",
+    );
   }
 }
 
@@ -114,7 +122,11 @@ export async function PUT(request: NextRequest) {
     return await upsertPersonality(request);
   }
   catch (error) {
-    logApiError("PUT /api/personalities", "updating SOUL identity", error);
-    return serverError("Failed to save personality");
+    return serverErrorFromCatch(
+      "PUT /api/personalities",
+      "updating SOUL identity",
+      error,
+      "Failed to save personality",
+    );
   }
 }
