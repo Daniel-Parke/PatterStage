@@ -70,6 +70,28 @@ export function readHermesYamlConfig<T = Record<string, unknown>>(): T | null {
 }
 
 /**
+ * Parse a YAML string into a HermesConfig, treating empty/whitespace-only
+ * content as an empty object. The 3 callers that previously wrote
+ *   `original ? ((yaml.load(original) as HermesConfig) ?? {}) : {}`
+ * inline (syncDefaultsToHermesConfig's tail, syncSingleModelToHermesConfig,
+ * syncFallbacksToHermesConfig) all want the same "empty-string → {}" short
+ * circuit. Centralises the load + empty-fallback so a future parser tweak
+ * (e.g. swapping js-yaml for a different library) lands in one place.
+ *
+ * **Does NOT catch parse errors** — the three pre-refactor sites all
+ * allowed yaml.load throws to propagate, so this helper matches that
+ * behaviour. The exception is `syncDefaultsToHermesConfig`, which has a
+ * custom try/catch that *surfaces* the parse error to server logs and
+ * skips the write to avoid corrupting the on-disk file. That site stays
+ * inline (with a comment pointing here) because the recovery logic is
+ * specific to "must not overwrite a partially-written file".
+ */
+export function loadHermesConfigFromString(content: string): HermesConfig {
+  if (!content) return {};
+  return (yaml.load(content) as HermesConfig) ?? {};
+}
+
+/**
  * Atomic write: stage to a sibling tmpfile, then rename. fs.rename on
  * POSIX is atomic for same-volume operations. Caller must ensure dir
  * exists.
@@ -330,6 +352,10 @@ export function syncDefaultsToHermesConfig(): { backupPath: string | null } {
   const backupPath = backupFile(configPath, paths.backups);
 
   const original = existsSync(configPath) ? readFileSync(configPath, "utf-8") : "";
+  // Inline (not `loadHermesConfigFromString`) because this site needs
+  // custom parse-error handling — we must not overwrite a partially-
+  // corrupted file. The helper has the same happy path; the catch
+  // block is the only reason this isn't a one-liner.
   let config: HermesConfig;
   try {
     config = original ? ((yaml.load(original) as HermesConfig) ?? {}) : {};
@@ -437,9 +463,7 @@ export function syncSingleModelToHermesConfig(modelId: string): { backupPath: st
   const backupPath = backupFile(configPath, paths.backups);
 
   const original = existsSync(configPath) ? readFileSync(configPath, "utf-8") : "";
-  const config: HermesConfig = original
-    ? ((yaml.load(original) as HermesConfig) ?? {})
-    : {};
+  const config: HermesConfig = loadHermesConfigFromString(original);
 
   const model = getModel(modelId);
   if (model) {
@@ -549,9 +573,7 @@ export function syncFallbacksToHermesConfig(
   const backupPath = backupFile(configPath, paths.backups);
 
   const original = existsSync(configPath) ? readFileSync(configPath, "utf-8") : "";
-  const yamlConfig: HermesConfig = original
-    ? ((yaml.load(original) as HermesConfig) ?? {})
-    : {};
+  const yamlConfig: HermesConfig = loadHermesConfigFromString(original);
 
   // Write fallback_providers chain
   yamlConfig.fallback_providers = chain.map(

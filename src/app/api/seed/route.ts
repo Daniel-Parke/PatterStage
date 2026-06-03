@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
+import { serverError } from "@/lib/api-response";
 import { runCatalogSeed, getSeedState, type SeedTarget } from "@/lib/seed/catalog-seed";
 import { importHermesStateFromDisk } from "@/lib/hermes-state-import";
 import { getHermesHome } from "@/lib/hermes-home";
@@ -14,7 +15,7 @@ export async function GET() {
     return NextResponse.json({ data: { state } });
   } catch (error) {
     logApiError("GET /api/seed", "state", error);
-    return NextResponse.json({ error: "Failed to read seed state" }, { status: 500 });
+    return serverError("Failed to read seed state");
   }
 }
 
@@ -48,6 +49,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data: { ...result, imported } });
   } catch (error) {
     logApiError("POST /api/seed", "seed", error);
-    return NextResponse.json({ error: "Failed to run seed" }, { status: 500 });
+    return serverError("Failed to run seed");
   }
 }

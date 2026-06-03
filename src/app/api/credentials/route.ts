@@ -12,6 +12,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, credentialPostSchema } from "@/lib/api-schemas";
+import { serverError } from "@/lib/api-response";
 import { syncCredentialToHermesEnv } from "@/lib/hermes-config-sync";
 
 export async function GET(request: NextRequest) {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: { credentials: listCredentials() } });
   } catch (error) {
     logApiError("GET /api/credentials", "listing credentials", error);
-    return NextResponse.json({ error: "Failed to list credentials" }, { status: 500 });
+    return serverError("Failed to list credentials");
   }
 }
 
@@ -63,6 +64,6 @@ export async function POST(request: NextRequest) {
       }
     }
     logApiError("POST /api/credentials", "creating credential", error);
-    return NextResponse.json({ error: "Failed to create credential" }, { status: 500 });
+    return serverError("Failed to create credential");
   }
 }
