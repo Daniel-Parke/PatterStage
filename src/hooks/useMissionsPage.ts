@@ -374,15 +374,32 @@ export function useMissionsPage() {
     [updateCategory, loadCategories],
   );
 
+  // Refresh all three data slices (missions + categories + templates) in
+  // parallel. The 3 fetches are independent — none of them passes data
+  // to the others — so they can run concurrently instead of sequentially.
+  // Each fetch has its own per-promise error handling (loadCategories in
+  // its own try/catch, fetchMissions/fetchTemplates in their respective
+  // calling sites), so Promise.allSettled is the right primitive: the
+  // refetch attempt continues even if one slice fails, instead of the
+  // previous "stop on first rejection" behavior (where the rejection
+  // was unhandled in the caller anyway). Byte-equivalent at runtime when
+  // all 3 succeed (the common case); strictly more informative when one
+  // or more fail (the user gets a more complete UI instead of a partial
+  // refetch).
+  const reloadAllData = useCallback(async () => {
+    await Promise.allSettled([
+      fetchMissions().then(setMissions),
+      loadCategories(),
+      fetchTemplates().then(setTemplates),
+    ]);
+  }, [fetchMissions, loadCategories, fetchTemplates]);
+
   const handleDeleteCategory = useCallback(
     async (id: string, reassignToId: string | null) => {
       await deleteCategory(id, reassignToId);
-      await loadCategories();
-      await fetchMissions().then(setMissions);
-      const loaded = await fetchTemplates();
-      setTemplates(loaded);
+      await reloadAllData();
     },
-    [deleteCategory, loadCategories, fetchMissions, fetchTemplates],
+    [deleteCategory, reloadAllData],
   );
 
   const setCategoryId = useCallback((id: string | null) => {
