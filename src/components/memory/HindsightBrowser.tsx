@@ -19,7 +19,7 @@ import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { safeApiCall } from "@/lib/api-fetch";
 import { parseOptionalTagsInput, parseTagsInput } from "@/lib/hindsight-tag-input";
-import { parseReflectResponse } from "./hindsight/utils";
+import { parseReflectResponse, stringOr } from "./hindsight/utils";
 import type { Tab, Memory, Directive, MentalModel, HealthState } from "./hindsight/types";
 import HealthBanner from "./hindsight/HealthBanner";
 import MemoryTab from "./hindsight/MemoryTab";
@@ -27,6 +27,7 @@ import DirectivesTab from "./hindsight/DirectivesTab";
 import MentalModelsTab from "./hindsight/MentalModelsTab";
 import { AddMemoryModal, DirectiveModal, MentalModelModal } from "./hindsight/Modals";
 import { runMutation } from "@/lib/run-mutation";
+import { setField } from "@/lib/set-field";
 
 // ── Default form state ─────────────────────────────────────────
 //
@@ -106,7 +107,7 @@ export default function HindsightBrowser() {
       const payload = data?.data;
       setMemories(payload?.memories || []);
       if (payload && !payload.error) {
-        setHealth({ available: true, mode: typeof payload.mode === "string" ? payload.mode : "ok" });
+        setHealth({ available: true, mode: stringOr(payload.mode, "ok") });
       }
     }
     setLoadingInitial(false);
@@ -134,7 +135,11 @@ export default function HindsightBrowser() {
       setMemories(payload?.memories || []);
       const backendSaysDown = payload?.available === false || (typeof payload?.error === "string" && payload.error.length > 0);
       if (!backendSaysDown) {
-        setHealth({ available: true, mode: typeof payload?.mode === "string" ? payload.mode : "ok", message: typeof payload?.message === "string" ? payload.message : undefined });
+        setHealth({
+          available: true,
+          mode: stringOr(payload?.mode, "ok"),
+          message: stringOr(payload?.message),
+        });
       } else {
         await fetchHealthOnly();
       }
@@ -351,11 +356,11 @@ export default function HindsightBrowser() {
 
   // Field setters for the directive + mental-model modals. Each modal
   // exposes 3-4 separate `onNameChange` / `onContentChange` / etc. props
-  // and the inline setter body is the same shape every time. `setField`
-  // builds a partial-update setter for one key, so the JSX collapses to
-  // `onNameChange={setField(setDirForm, "name")}`.
-  const setField = <S,>(setter: React.Dispatch<React.SetStateAction<S>>, key: keyof S) =>
-    (v: S[keyof S]) => setter((p) => ({ ...p, [key]: v }));
+  // and the inline setter body is the same shape every time. The shared
+  // `setField` helper (src/lib/set-field.ts) builds a partial-update
+  // setter for one key, so the JSX collapses to
+  // `onNameChange={setField(setDirForm, "name")}`. 14 call sites
+  // (create/edit for both modals) share the same helper.
 
   const handleSaveModel = () => {
     if (!editingModel) return false;

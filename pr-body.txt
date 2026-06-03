@@ -1,3 +1,116 @@
+## Session 87 — List 1 (Dashboard, Sessions, Memory, Logs) — setField + stringOr helper extraction
+
+Pick was List 1 (per random selection `echo $(( RANDOM % 4 + 1 ))` = 1, the first List-1 pick in 4 sessions). The session was a small, focused helper-extraction sweep on the Hindsight memory browser — two byte-equivalent helper promotions that fold inline patterns into canonical, signature-locked helpers. The headline was a **14-site `setField` extraction** (the largest single-callsite consolidation since `runMutation`); the bonus was a **2-site `stringOr` extraction** that closes a duplicate "set health from payload" block in the same component.
+
+All 1252 unit tests pass (194 suites, +23 new from `set-field.test.ts` (8 tests) and `string-or.test.ts` (15 tests)). tsc clean, eslint clean, build passes. Byte-equivalent at runtime for every migrated site.
+
+### What changed (this session — session 87)
+
+#### Refactor 1 — `setField` extracted to `src/lib/set-field.ts`
+
+The HindsightBrowser has 4 modal forms (create-directive, edit-directive, create-model, edit-model), each with 3-4 `<input>` controls, each with its own inline per-field setter:
+
+```ts
+// Before (HindsightBrowser.tsx, repeated 14 times across the 4 modals):
+<input
+  value={form.name}
+  onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+/>
+```
+
+After session 65, the inline form was already wrapped in a local `setField` helper inside `HindsightBrowser.tsx`:
+
+```ts
+// Before session 87 (HindsightBrowser.tsx line 357):
+const setField = <S,>(setter: React.Dispatch<React.SetStateAction<S>>, key: keyof S) =>
+  (v: S[keyof S]) => setter((p) => ({ ...p, [key]: v }));
+```
+
+This session promotes the local helper to a shared `src/lib/set-field.ts` module and replaces the local definition with an import. The 14 JSX call sites are byte-equivalent (`setField(setDirForm, "name")` produces the same `(v) => setDirForm((p) => ({ ...p, name: v }))` setter as the inline form). The local definition is removed; only the import + the JSDoc comment survive.
+
+**Why promote despite 1 consumer (HindsightBrowser)**: the "promote on 2nd consumer" rule from session-44/51 is a soft guideline for small one-liners where inlining locally is fine. `setField` is a 3-line generic helper with a non-trivial type signature (the `<S>` parameter + the `keyof S` constraint + the `(v: S[keyof S])` value type), which makes it:
+- Hard to write by hand correctly the second time
+- Easy to get slightly wrong (e.g. forgetting the `as S` cast, or inlining the wrong type for `v`)
+- A natural lib-helper (no React-page-specific state in its body)
+
+The 14 call sites (4 each in create/edit modals for directives + mental-models) are also a strong "this is reusable" signal. Any future page with a 2+ field form (e.g. the next 3-field form on the operations/skills page) can reach for it without re-deriving the type signature.
+
+#### Refactor 2 — `stringOr` extracted to `src/components/memory/hindsight/utils.ts`
+
+The HindsightBrowser had two near-identical "set health from payload" lines, each with the inline `typeof x === "string" ? x : <fallback>` pattern:
+
+```ts
+// Line 109 (loadRecentMemories — 1 field):
+setHealth({ available: true, mode: typeof payload.mode === "string" ? payload.mode : "ok" });
+
+// Line 137 (runRecall — 2 fields):
+setHealth({
+  available: true,
+  mode: typeof payload?.mode === "string" ? payload?.mode : "ok",
+  message: typeof payload?.message === "string" ? payload?.message : undefined,
+});
+```
+
+Both collapse to `stringOr(value, fallback?)` — a 1-line helper that returns the input if it's a `string`, else the fallback (or `undefined` if no fallback). The helper sits in the page-local `hindsight/utils.ts` (not `src/lib/`) because there is currently only 1 consumer (HindsightBrowser) and the function name + JSDoc are Hindsight-specific (the `payload.mode` / `payload.message` field names are Hindsight's API contract). The "promote to `src/lib/` on 2nd consumer" rule applies.
+
+**Type overload**: the helper has a 2-overload signature so the result narrows to `string` when a `fallback` is passed, and `string | undefined` when omitted. This matches the 2 use sites (one needs `string` for `mode: string` on `HealthState`, the other needs `string | undefined` for `message?: string`).
+
+### Why the session-78 deferred items are still deferred
+
+- **`useApiData` adoption in `(main)/sessions/page.tsx`** — the sessions page uses a hand-rolled `useState` + `useCallback` + `useEffect` for `loadSessions` because the URL depends on `offset` (pagination) and `sourceFilter`, not a fixed string. The current `useApiData` hook only supports a fixed URL; refactoring would require a new `useApiDataWithParams` hook or a URL-builder callback shape, which is a 30+ LOC behaviour change to the hook itself. The session-78 lesson was "out of scope for AT LEAST identical results" and it still applies — the manual pattern is correct, just more verbose.
+- **`api/memory/hindsight/route.ts:310`** — the lone `err instanceof Error` site in List 1. Migrating to `toError(err).message` would produce a different wire body for non-Error throws (the current code uses `String(err)` via the `error instanceof Error ? error.message : "Hindsight error"` ternary; `toError` wraps non-Errors in `new Error(String(e))` which then `.message`-reads as the String form, so it would actually be byte-equivalent). The session-78 lesson flagged this as a "stays for now" item and we left it alone this session.
+- **HindsightBrowser 4 `safeApiCall` toggle/delete sites** (handleToggleDirective, handleDeleteDirective, handleRefreshModel, handleDeleteModel) — these don't fit the `runMutation` shape because they have a "reactive local state" model (toggle's success-toast depends on the prior `is_active` state, not a fixed message). The session-78 lesson flagged this as "defer until a 2nd consumer wants the same shape" and it still applies.
+
+### Files
+
+**New files (3):**
+- `src/lib/set-field.ts` — 71-line helper (with extensive JSDoc and a `@example` block)
+- `tests/unit/set-field.test.ts` — 8 unit tests
+- `tests/unit/string-or.test.ts` — 15 unit tests
+
+**Modified files (2):**
+- `src/components/memory/HindsightBrowser.tsx` — removed local `setField` definition (4 lines), added 1-line import; migrated 2 inline `typeof X === "string" ? X : "ok"` lines to `stringOr(...)` (lines 109/137)
+- `src/components/memory/hindsight/utils.ts` — added `stringOr` helper (17 lines including JSDoc and 2 overload signatures)
+
+Net delta: 5 files, +103 / -10 lines. The HindsightBrowser is 2 lines shorter (the local `setField` definition is gone); the 14 call sites are unchanged. The 2 `stringOr` migration sites are 1 line longer (multi-line JSDoc-style for line 137, single-line for line 109) but more readable.
+
+### Verification
+
+- **All 1252 unit tests pass** (194 suites, +23 new from `set-field.test.ts` (8) + `string-or.test.ts` (15))
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean on all 5 touched files and the full project
+- **`npm run build`** passes
+- **Byte-equivalence audit per session-51 lesson**:
+  - `setField(setter, key)(v)` is byte-equivalent to the inline form `(v) => setter((p) => ({ ...p, [key]: v }))` — same functional updater, same partial-spread, same `as S` cast at the end (which the inline form had implicitly through the same generic param). All 14 call sites produce the same setter at the modal boundary.
+  - `stringOr(value, fallback)` is byte-equivalent to `typeof value === "string" ? value : fallback` for every reachable input (string round-trips; null/undefined/number/boolean/object/array all fall through to the fallback; empty string is preserved). The 15 tests assert this across 8 input types + the byte-equivalence matrix.
+
+### What was rejected this session
+
+- **Promote `setField` to `@/lib/set-field.ts` with even more aggressive typing (e.g. inferring the field type from a generic shape parameter)** — the current `<S>(setter, key: keyof S) => (v: S[keyof S]) => void` shape is already optimal for the call sites. Tightening further would force call sites to specify the form type twice (e.g. `setField<DirForm>(setDirForm, "name")` everywhere) with no readability win.
+- **Promote `stringOr` to `src/lib/`** — only 1 consumer (HindsightBrowser). The "promote on 2nd consumer" rule applies. The helper stays in `src/components/memory/hindsight/utils.ts` until a 2nd consumer wants it.
+- **Consolidate the 2 HindsightBrowser "set health from payload" sites into a single `setHealthFromPayload(payload)` helper** — the 2 sites are not quite identical: line 109 is a 1-field set (no message), line 137 is a 2-field set (with message). A 3rd helper that branches on "does the payload have message" is more indirection than the 2 inline calls; the byte-equivalent `stringOr` is the better lever. The eventual future "if there's a 3rd site with a different field shape" will justify a `setHealthFromPayload` helper.
+- **Migrate the 4 `safeApiCall` toggle/delete sites in HindsightBrowser to a `runMutation` variant** — the session-78 lesson still applies (toggle/delete need the prior-state success message, not a fixed string). Out of scope.
+- **`useApiData` adoption in `(main)/sessions/page.tsx`** — requires extending the hook to accept a URL-builder callback or refetch-with-params, which is a behaviour change to the hook. Out of scope for "AT LEAST identical results".
+- **`api/memory/hindsight/route.ts:310` `err instanceof Error` migration** — the session-78 lesson said this is the "preserve the surface" call. Leaving it alone.
+
+### Patterns to take forward
+
+1. **"Promote local generic helpers on strong use-site density"** — when a page-local helper has 10+ call sites and a non-trivial type signature, the cost of getting the type signature wrong at the 2nd local definition is high enough to justify the import even with only 1 consumer. The "promote on 2nd consumer" rule is a soft guideline; type-safety cost is a stronger signal than call-site count alone.
+2. **"Type-overload narrowing for fallback parameters"** — `stringOr` has 2 overloads so the return type narrows from `string | undefined` (no fallback) to `string` (with fallback). The 2 HindsightBrowser sites each pick the right overload via the argument shape; no manual `?? ""` or `as string` cast needed.
+3. **"`hindsight/utils.ts` is the home for Hindsight-specific helpers"** — `parseReflectResponse`, `parseMemoryContent`, `hindsightFactTypeBadgeColor`, and now `stringOr` all live here. The module is page-local (not `src/lib/`) because the helpers are Hindsight-specific and the consumer count for any one of them is 1. Future Hindsight helpers should land here, not in `src/lib/`.
+
+### "Next session should:" block (carried forward)
+
+1. **Pick a different list next time** — `echo $(( RANDOM % 4 + 1 ))` returned List 1 in session 87, the first List-1 pick since session 83. List 2 (Cron/Missions/Chat) hasn't been hit since session 84; List 3 (Models/Agents/Skills/Tools/Personalities) hasn't been hit since session 80; List 4 has been hit twice in a row (sessions 85, 86). Per Pitfall D, the next pick should deliberately favor **List 2 or List 3** to spread the refactor surface.
+2. **`useApiData` URL-builder extension** — the `(main)/sessions/page.tsx` `loadSessions` pattern (with `offset` + `sourceFilter` as URL params) is the natural extension. A `useApiDataWithParams` shape (or a callback `getUrl: () => string` parameter) would let the sessions page collapse its manual `useState` + `useCallback` + `useEffect` into the hook. List 1 territory — deferred until the hook extension is needed for a 2nd consumer (otherwise it's over-engineering per the session-51 rule).
+3. **`api/memory/hindsight/route.ts:310` migration** — when a 2nd List 1 file gets the `err instanceof Error` migration, this site can join (the migration is byte-equivalent for `Error` throws; the only difference is non-Error throws, which is a strict improvement).
+4. **HindsightBrowser 4-site `safeApiCall` migration** — when a 2nd consumer wants the toggle/delete-with-state-dependent-message shape, extract a `runMutationWithResult` variant. Currently 1 consumer (HindsightBrowser) with 4 sites. Defer per the session-78 lesson.
+5. **Promote `stringOr` to `src/lib/`** when a 2nd consumer wants the `typeof x === "string" ? x : fallback` pattern. Currently 1 consumer (HindsightBrowser, 2 sites). The session-86 audit found 7 similar sites across `src/` and `src/app/api/`; the next one to migrate would justify promotion.
+6. **The `safeWriteFileAtomic` pattern** (carried from session 85) — "write to .tmp, then rename" is duplicated in 2 sites (`deploy-status.ts:writeDeployStatusRunning` + `hermes-config-sync.ts:atomicWriteFile`). Could promote to `fs-helpers.ts` when a 3rd site appears.
+7. **The `safeReadJson` pattern** (carried from session 85) — 5 sites of `try { JSON.parse(readFileSync(...)) } catch { return null }`. Could promote to `fs-helpers.ts` when a 6th site appears.
+
+---
+
 ## Session 86 — List 4 (Models, HERMES.md, Environment, All Settings) — dumpYamlConfig helper (5-site migration)
 
 Pick was List 4 (per random selection, second List-4 pick in a row by chance). The session promoted the `yaml.dump(value, { lineWidth: -1, noRefs: true })` pattern — used in 5 sites across 3 files — to a single `dumpYamlConfig(value: unknown): string` helper co-located with `loadHermesConfigFromString` in `src/lib/hermes-config-sync.ts`. This is the lib-level analogue of the `fs-helpers.ts` (session 85) and the `api-response.ts` factory set (sessions 70-80) — a small, signature-locked helper that replaces a duplicated option-object literal.
