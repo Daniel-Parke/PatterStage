@@ -292,6 +292,18 @@ export function useMissionsPage() {
     setShowCreate(false);
   }, [clearMissionFormFields]);
 
+  // Close the create/edit mission composer. The same `setEditingId(null)`
+  // + `setShowCreate(false)` pair appears at 3 sites — the 2 success
+  // branches of `handleCreate` (update + promote) and the page's
+  // `handleCloseCreate` (Sheet onClose, MissionComposerActions onClose,
+  // MissionCreateForm onClose). Centralising it here keeps the 3 sites
+  // in lockstep if a future "clear form fields" or "dismiss category"
+  // reset is added — a single edit here updates all 3.
+  const closeComposer = useCallback(() => {
+    setEditingId(null);
+    setShowCreate(false);
+  }, []);
+
   useEffect(() => {
     if (!newProfile) return;
     const controller = new AbortController();
@@ -573,8 +585,7 @@ export function useMissionsPage() {
             "Failed to update mission",
           );
           if (result.ok) {
-            setEditingId(null);
-            setShowCreate(false);
+            closeComposer();
             void fetchData();
             if (expandedId === editingId) void fetchDetail(editingId);
           }
@@ -602,8 +613,7 @@ export function useMissionsPage() {
             "Failed to update mission",
           );
           if (ok) {
-            setEditingId(null);
-            setShowCreate(false);
+            closeComposer();
             resetForm();
             await fetchData();
             if (expandedId === editingId) void fetchDetail(editingId);
@@ -681,7 +691,7 @@ export function useMissionsPage() {
     } finally {
       setDispatching(false);
     }
-  }, [newName, newInstruction, editingId, dispatchAcknowledged, dispatching, showToast, newDispatch, newSchedule, missions, dispatchPayload, fetchData, resetForm, fetchDetail, expandedId]);
+  }, [newName, newInstruction, editingId, dispatchAcknowledged, dispatching, showToast, newDispatch, newSchedule, missions, dispatchPayload, fetchData, resetForm, fetchDetail, expandedId, closeComposer]);
 
   // ── Shared form population helpers ─────────────────────────────────
 
@@ -1127,6 +1137,7 @@ export function useMissionsPage() {
     formState,
     setFormField,
     handleCreate,
+    closeComposer,
     handleSaveAsTemplate,
     dispatching,
     cancellingMissionId,

@@ -12,7 +12,7 @@ import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import CronScheduleInput from "@/components/cron/CronScheduleInput";
 import { baseInputStyles, inputFieldClasses } from "@/lib/theme";
-import { safeApiCall, messageFromError } from "@/lib/api-fetch";
+import { safeApiCall, setErrorFromCaught } from "@/lib/api-fetch";
 import { HARDWARE_CRON_UI_PRESETS } from "@/lib/hardware-cron";
 import type { SystemCronJob } from "@/types/hermes";
 
@@ -150,7 +150,7 @@ export default function SystemCronModal({ open, onClose, onSave, editingJob }: P
       });
       onClose();
     } catch (e: unknown) {
-      setError(messageFromError(e, "Failed to save system cron job"));
+      setErrorFromCaught(setError, e, "Failed to save system cron job");
     } finally {
       setIsSaving(false);
     }

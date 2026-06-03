@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { Loader2, Plus, RefreshCw, Rocket } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -27,7 +26,6 @@ export default function MissionsPage() {
     showCreate,
     setShowCreate,
     editingId,
-    setEditingId,
     templates,
     showTemplateManager,
     setShowTemplateManager,
@@ -94,17 +92,15 @@ export default function MissionsPage() {
     handleCreateNewTemplate,
   } = vm;
 
-  // Close the create/edit mission sheet. The same pair of resets
-  // (setShowCreate(false) + setEditingId(null)) appeared at 3 call
-  // sites — the Sheet's onClose, the MissionComposerActions footer
-  // onClose, and the embedded MissionCreateForm onClose. Centralising
-  // them here keeps the 3 sites in lockstep if a future "clear form
-  // fields" or "dismiss category" reset is added — a single edit here
-  // updates all 3.
-  const handleCloseCreate = useCallback(() => {
-    setShowCreate(false);
-    setEditingId(null);
-  }, [setShowCreate, setEditingId]);
+  // Close the create/edit mission sheet. The shared `closeComposer`
+  // callback lives in the hook (see useMissionsPage.ts) — the 2
+  // success branches of `handleCreate` (update + promote) use it
+  // too, so a future "clear form fields" or "dismiss category"
+  // reset lands in one place. The Sheet's onClose,
+  // MissionComposerActions footer onClose, and the embedded
+  // MissionCreateForm onClose all funnel through this single
+  // reference.
+  const handleCloseCreate = vm.closeComposer;
 
   if (loading) {
     return (

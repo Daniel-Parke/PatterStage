@@ -223,6 +223,29 @@ export default function CronPage() {
   // loading-spinner ↔ empty-state flicker on the System tab.
   const { loadJobs: loadHardwareJobs } = hardware;
 
+  // Close the agent cron modal. The same `setShowCreate(false)` +
+  // `setEditingJob(null)` pair appears at 2 sites (the modal's onClose
+  // and the onSaved success path) — centralising it here keeps the 2
+  // sites in lockstep if a future "clear form fields" or "reset
+  // hardware paths" reset is added — a single edit here updates both.
+  // The pattern mirrors the `closeComposer` callback that
+  // useMissionsPage exposes for the same 2-setter shape (see
+  // session-98-list2-close-composer-setter-pair.md).
+  const closeAgentModal = useCallback(() => {
+    setShowCreate(false);
+    setEditingJob(null);
+  }, []);
+
+  // Close the system cron modal. The same `setShowHardwareCreate(false)`
+  // + `setEditingHardwareJob(null)` pair appears at 2 sites (the modal's
+  // onClose and the onSave success path). Same discriminator as
+  // `closeAgentModal` — page-local, not in a hook, because the state is
+  // page-local. Promotes to a hook if a 2nd page needs the same shape.
+  const closeSystemModal = useCallback(() => {
+    setShowHardwareCreate(false);
+    setEditingHardwareJob(null);
+  }, []);
+
   useEffect(() => {
     if (activeTab === "system") {
       void loadHardwareJobs();
@@ -349,13 +372,9 @@ export default function CronPage() {
       <JobFormModal
         job={editingJob}
         open={showCreate || !!editingJob}
-        onClose={() => {
-          setShowCreate(false);
-          setEditingJob(null);
-        }}
+        onClose={closeAgentModal}
         onSaved={() => {
-          setShowCreate(false);
-          setEditingJob(null);
+          closeAgentModal();
           showToast(editingJob ? "Job updated!" : "Job created!");
           agent.loadJobs();
         }}
@@ -365,14 +384,10 @@ export default function CronPage() {
       <SystemCronModal
         open={showHardwareCreate || !!editingHardwareJob}
         editingJob={editingHardwareJob}
-        onClose={() => {
-          setShowHardwareCreate(false);
-          setEditingHardwareJob(null);
-        }}
+        onClose={closeSystemModal}
         onSave={async (job) => {
           await hardware.handleSave(job);
-          setShowHardwareCreate(false);
-          setEditingHardwareJob(null);
+          closeSystemModal();
         }}
       />
 
