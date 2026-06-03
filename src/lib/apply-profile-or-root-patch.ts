@@ -36,6 +36,7 @@
 
 import { NextResponse } from "next/server";
 
+import { notFound, serverError } from "./api-response";
 import { updateAgentRoot, type AgentRootPatch } from "./agent-root-repository";
 import { getProfile, updateProfileContent } from "./profiles-repository";
 import { pushProfileToHermes, pushRootToHermes } from "./hermes-profile-sync";
@@ -140,10 +141,7 @@ export function toPatchResponse(
 ): NextResponse | null {
   if (result.ok) return null;
   if (result.reason === "not-found") {
-    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    return notFound("Profile not found");
   }
-  return NextResponse.json(
-    { error: result.error ?? fallbackError },
-    { status: 500 },
-  );
+  return serverError(result.error ?? fallbackError);
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
+import { badRequest, serverError } from "@/lib/api-response";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
@@ -19,12 +20,12 @@ export async function PUT(request: NextRequest) {
     const profile = typeof bodyResult.profile === "string" ? bodyResult.profile : "default";
 
     if (!personality) {
-      return NextResponse.json({ error: "Personality is required" }, { status: 400 });
+      return badRequest("Personality is required");
     }
 
     const prof = resolveSafeProfileName(profile);
     if (!prof.ok) {
-      return NextResponse.json({ error: prof.error }, { status: 400 });
+      return badRequest(prof.error);
     }
 
     // applyProfileOrRootPatch handles default-vs-non-default dispatch,
@@ -45,6 +46,6 @@ export async function PUT(request: NextRequest) {
   }
   catch (error) {
     logApiError("PUT /api/agent/personality", "updating personality", error);
-    return NextResponse.json({ error: "Failed to update personality" }, { status: 500 });
+    return serverError("Failed to update personality");
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
+import { badRequest, serverError } from "@/lib/api-response";
 import { logApiError } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
@@ -66,10 +67,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!slug) {
-      return NextResponse.json(
-        { error: "slug, all, root, skills, or skillKey required" },
-        { status: 400 },
-      );
+      return badRequest("slug, all, root, skills, or skillKey required");
     }
 
     if (slug === "default") {
@@ -87,6 +85,6 @@ export async function POST(request: NextRequest) {
   }
   catch (error) {
     logApiError("POST /api/agent/profiles/sync/push", "push", error);
-    return NextResponse.json({ error: "Failed to push profile" }, { status: 500 });
+    return serverError("Failed to push profile");
   }
 }

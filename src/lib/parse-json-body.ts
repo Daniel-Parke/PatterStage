@@ -16,15 +16,17 @@
 // which would otherwise break the routes that import parseJsonBody from
 // the same module.
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+
+import { badRequest } from "./api-response";
 
 export async function parseJsonBody(
   request: NextRequest,
-): Promise<Record<string, unknown> | NextResponse> {
+): Promise<Record<string, unknown> | ReturnType<typeof badRequest>> {
   try {
     const body = await request.json();
     return body as Record<string, unknown>;
   } catch {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    return badRequest("Invalid JSON");
   }
 }

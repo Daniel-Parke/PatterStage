@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
+import { badRequest, serverError } from "@/lib/api-response";
 import { logApiError } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
   }
   catch (error) {
     logApiError("GET /api/agent/profiles/sync/import", "discover", error);
-    return NextResponse.json({ error: "Failed to discover profiles" }, { status: 500 });
+    return serverError("Failed to discover profiles");
   }
 }
 
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!slug || !isValidProfileSlug(slug)) {
-      return NextResponse.json({ error: "Valid slug is required" }, { status: 400 });
+      return badRequest("Valid slug is required");
     }
 
     const result = importDiscoveredProfile(slug);
@@ -84,6 +85,6 @@ export async function POST(request: NextRequest) {
   }
   catch (error) {
     logApiError("POST /api/agent/profiles/sync/import", "import", error);
-    return NextResponse.json({ error: "Failed to import profile" }, { status: 500 });
+    return serverError("Failed to import profile");
   }
 }

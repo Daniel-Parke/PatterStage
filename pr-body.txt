@@ -1,11 +1,29 @@
 ## Summary
 
-Session-70 of the recurring `mission/hermes-review-and-refactor` sweep. List 4 (Models, HERMES.md, Environment, All Settings) picked at random. Two refactors: 4 inline 500 sites in `seed/route.ts` + `credentials/route.ts` migrated to `serverError()` factory (List 4 was missed in the session-56 + 68 sweeps), and a new `loadHermesConfigFromString(content)` helper in `hermes-config-sync.ts` that consolidates the 3-site `original ? ((yaml.load(original) as HermesConfig) ?? {}) : {}` pattern (2 of 3 sites migrated; the 3rd stays inline with an explanatory comment because of custom parse-error reporting). **All 1116 tests pass (184 suites, +6).** Prior sessions (28-69) are listed below — see "Session 70" for the new work.
+Session-72 of the recurring `mission/hermes-review-and-refactor` sweep. List 4 (Models, HERMES.md, Environment, All Settings) picked at random. Three small-bore refactors: (1) 10 missed List 4 inline 400/500 sites in `agent/profiles/sync/*` + `agent/personality/route.ts` migrated to `badRequest()` + `serverError()` factories (5× 400 + 5× 500 across 5 files — the `agent/profiles/sync/*` sub-folder and the `agent/personality` route were missed in every prior sweep because they weren't covered by the broad `src/app/api/agent/` greps), (2) the 2 inline `NextResponse.json` calls inside `toPatchResponse()` in `src/lib/apply-profile-or-root-patch.ts` migrated to `notFound()` + `serverError()` (the lib helper that 5 routes depend on was carrying over the pre-factory inline form from when it was extracted in session 62, AFTER the session-60 factory migration), and (3) the inline 400 in `src/lib/parse-json-body.ts` migrated to `badRequest()` (the route-level session-59 sweep missed the lib helper that PRODUCES 400s). **All 1138 tests pass (185 suites, +0).** Prior sessions (28-71) are listed below — see "Session 72" for the new work.
 
 ### What changed (this session)
 
-- **Refactor 1** — `serverError()` factory migration in 4 List 4 sites (closed the session-56 + 68 gap): 2 sites in `seed/route.ts` (GET + POST) and 2 sites in `credentials/route.ts` (GET + POST). All 4 byte-equivalent: same body shape `{ error: msg }`, same 500 status. `fallbacks/sync/route.ts` POST deliberately NOT migrated — its catch block has custom error-message extraction (`error instanceof Error ? error.message : "Failed to sync fallback"`) that would change the user-visible string if migrated to `serverError()`.
-- **Refactor 2** — `loadHermesConfigFromString(content): HermesConfig` helper in `src/lib/hermes-config-sync.ts` (NEW) consolidates the 3-site `original ? ((yaml.load(original) as HermesConfig) ?? {}) : {}` pattern. 2 sites migrated (`syncSingleModelToHermesConfig`, `syncFallbacksToHermesConfig`); 1 site (`syncDefaultsToHermesConfig`) stays inline with a 3-line comment pointing at the helper because of its custom try/catch that surfaces parse errors to server logs and skips the write to avoid corrupting a partially-written file. 6 new unit tests in `tests/unit/load-hermes-config-from-string.test.ts` cover empty-string, whitespace-only, minimal-parse, multi-section-parse, parse-error-propagation, and a 12-input byte-equivalence battery (session-64 Pattern AJ).
+- **Refactor 1 — `badRequest` + `serverError` factory migration in 10 missed List 4 sites** — 5× 400 + 5× 500 across 5 files. The 4 `agent/profiles/sync/{push,import,drift,pull}/route.ts` files were missed in sessions 56, 60, 68, 70 because they live in a sub-folder (`src/app/api/agent/profiles/sync/`) that the broad `find src/app/api/agent -name "*.ts"` audits undercounted; `agent/personality/route.ts` was missed because it's a sibling of `agent/files/`, not under `agent/profiles/`. The session-72 manual directory walk caught them. All 10 sites are byte-equivalent: same body shape `{ error: msg }`, same status. The 1 inline 405 site in `agent/profiles/[id]/toolsets/route.ts` is deliberately kept inline (Rule of Three: 1 site, no `methodNotAllowed` factory).
+- **Refactor 2 — `toPatchResponse()` factory migration in `src/lib/apply-profile-or-root-patch.ts`** — the dispatch helper that 5 routes depend on (`agent/personality/route.ts`, `agent/profiles/[id]/toolsets/route.ts`, `agent/files/[key]/route.ts`, `personalities/route.ts`, `skills/[name]/toggle/route.ts`) had 2 inline `NextResponse.json({ error }, { status: 404 | 500 })` calls. Migrated to `notFound("Profile not found")` + `serverError(result.error ?? fallbackError)`. The 4 existing tests in `tests/unit/apply-profile-or-root-patch.test.ts` (one per branch: success / not-found / push-failed-with-error / push-failed-without-error) all pass unchanged — they lock the body + status contract that the factories preserve exactly. No new tests needed.
+- **Refactor 3 — `parseJsonBody` 400 site → `badRequest()` in `src/lib/parse-json-body.ts`** — the canonical "parse a NextRequest body as JSON" helper (used by 30+ routes across all 4 lists) had `return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })` in its catch block. Migrated to `badRequest("Invalid JSON")`. The return type annotation was updated from `Promise<... | NextResponse>` to `Promise<... | ReturnType<typeof badRequest>>` so callers still see the `instanceof NextResponse` discriminant without needing to import `NextResponse`. The 2 existing tests in `tests/unit/parse-json-body.test.ts` pass unchanged. No new tests needed.
+
+### Audit recipe that found these 10 + 2 sites
+
+```
+grep -rn "status: 400\|status: 404\|status: 500" src/app/api/models \
+  src/app/api/config src/app/api/agent src/app/api/seed \
+  src/app/api/credentials 2>&1 | grep -vE "(badRequest|notFound|serverError|forbidden)"
+```
+
+After session 72: **0 hits**. All List 4 inline 400/404/500 sites are now factory-migrated. The audit must walk `src/lib/` too (Refactor 2 + 3), not just routes:
+
+```
+grep -rn "status: 400\|status: 404\|status: 500" src/lib/ 2>&1 | \
+  grep -vE "(badRequest|notFound|serverError|forbidden|api-schemas|cron-field-updates|cron-sync-failure|sessions-api-guard|api-auth|api-response|mission-promote)"
+```
+
+After session 72: 0 hits in src/lib/.
 
 ### What changed (session 69)
 
@@ -917,3 +935,89 @@ The runtime check is gone; the `as CronJob` / `as SystemCronJob` cast lives at t
 8. **Extract `__FAKE_HERMES_ROOT__` mock pattern to `tests/helpers/hermes-paths-mock.ts`** when the 5th test file adopts it.
 9. **Promote `?? "unknown error"` to a `safeErrorMessage(result)` helper** when a 4th site appears.
 10. **Promote `toError(e).message` to a sibling helper** when a 3rd consumer appears (currently 2 in production code: `chat/route.ts`, `cron/hardware/meta/route.ts`).
+
+---
+
+## Session 72 — List 4 (Models, HERMES.md, Environment, All Settings) — sweep-up of missed factory sites
+
+Random pick: **List 4** (the 5th hit, the surface having been picked 4 times before across sessions 59, 60, 67 carry-over, 70). This session was a "sweep up the missed sites from prior sweeps" pass — the session-70 carry-over identified `agent/profiles/sync/*` as a likely gap, and the session-72 audit re-walked the directory tree manually to catch 10 more inline 400/500 sites that all prior route-level sweeps had missed. **3 refactors, 0 new tests, 0 user-visible behaviour changes, all byte-equivalent. All 1138 tests pass (185 suites, +0).**
+
+### The findings
+
+| File | 400 sites | 500 sites |
+|---|---|---|
+| `src/app/api/agent/profiles/sync/push/route.ts` | 1 | 1 |
+| `src/app/api/agent/profiles/sync/import/route.ts` | 1 | 2 |
+| `src/app/api/agent/profiles/sync/drift/route.ts` | 0 | 1 |
+| `src/app/api/agent/profiles/sync/pull/route.ts` | 1 | 1 |
+| `src/app/api/agent/personality/route.ts` | 2 | 1 |
+| **Total routes** | **5** | **5** |
+| `src/lib/apply-profile-or-root-patch.ts` (toPatchResponse) | 0 | 1 (404) + 1 (500) |
+| `src/lib/parse-json-body.ts` | 1 | 0 |
+| **Total lib** | **1** | **2** |
+
+### Refactor 1 — 10 missed List 4 inline sites → factories
+
+`src/app/api/agent/profiles/sync/{push,import,drift,pull}/route.ts` and `src/app/api/agent/personality/route.ts` had 10 inline 400/500 sites that the session-56 + 59 + 60 + 68 + 70 sweeps had all missed. The session-72 audit re-walked `src/app/api/agent/` manually and caught them.
+
+Why they were missed: (a) the `sync/*` sub-folder is one level deeper than the broad `find src/app/api/agent -name "*.ts"` greps could easily undercount (when a session is comparing "did I migrate this file before" against a manually-typed list), and (b) `agent/personality/route.ts` is a sibling of `agent/files/`, not under `agent/profiles/`, so the "agent/profiles sweep" didn't touch it.
+
+All 10 sites are byte-equivalent: same body shape `{ error: msg }`, same status (400 or 500). The 1 inline 405 site in `agent/profiles/[id]/toolsets/route.ts` is kept inline (Rule of Three: 1 site, no `methodNotAllowed` factory).
+
+### Refactor 2 — `toPatchResponse()` factory migration in `apply-profile-or-root-patch.ts`
+
+The dispatch helper that 5 routes depend on had 2 inline `NextResponse.json` calls (one for 404, one for 500). Migrated to `notFound("Profile not found")` + `serverError(result.error ?? fallbackError)`. The 4 existing tests in `tests/unit/apply-profile-or-root-patch.test.ts` pass unchanged — they lock the body + status contract that the factories preserve exactly.
+
+Why this wasn't migrated in session 60: the helper was extracted in session 62, AFTER the session-60 factory migration. The author carried over the inline form from the prior implementation (correctly — refactor ≠ change behaviour). The session-72 audit caught the leftover inline form when re-checking the lib layer.
+
+### Refactor 3 — `parseJsonBody` 400 site → `badRequest()` in `parse-json-body.ts`
+
+The canonical JSON body parser used by 30+ routes had an inline 400 catch block. Migrated to `badRequest("Invalid JSON")`. The return type was updated to `Promise<... | ReturnType<typeof badRequest>>` so callers still see the `instanceof NextResponse` discriminant. The 2 existing tests in `tests/unit/parse-json-body.test.ts` pass unchanged.
+
+### What was rejected
+
+- **`methodNotAllowed()` factory** — only 1 site in the codebase. Rule of Three not met.
+- **`isChReadOnly()` consolidation** — 7 inline sites across Lists 1 + 2, not List 4. Out of scope.
+- **`?? "unknown error"` promotion to `safeErrorMessage()`** — 3 sites, not List 4 surface, deferred.
+- **`zodErrorResponse()` migration** — returns 400 with `details` field; NOT byte-equivalent to `badRequest()`.
+- **`api-auth.ts` 401 sites** — no `unauthorized()` factory exists; 3 sites is below Rule of Three.
+
+### Files
+
+- `src/app/api/agent/profiles/sync/push/route.ts` (MODIFIED) — 1 400 + 1 500 → factories
+- `src/app/api/agent/profiles/sync/import/route.ts` (MODIFIED) — 1 400 + 2 500 → factories
+- `src/app/api/agent/profiles/sync/drift/route.ts` (MODIFIED) — 1 500 → factory
+- `src/app/api/agent/profiles/sync/pull/route.ts` (MODIFIED) — 1 400 + 1 500 → factories
+- `src/app/api/agent/personality/route.ts` (MODIFIED) — 2 400 + 1 500 → factories
+- `src/lib/apply-profile-or-root-patch.ts` (MODIFIED) — 2 inline NextResponse.json → factories
+- `src/lib/parse-json-body.ts` (MODIFIED) — 1 inline 400 → factory
+- `references/control-hub-list4-session72-findings.md` (NEW) — session findings
+
+### Verification
+
+- All 1138 unit tests pass (185 suites, +0 new — pure refactor)
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint . --max-warnings 0` clean
+- `npm run build` passes
+- 0 user-visible behaviour changes (byte-equivalence audit on all 10 route migrations + 2 lib migrations + 1 parse-helper migration)
+- 4 imports of `NextResponse` removed from parse-json-body.ts and apply-profile-or-root-patch.ts (1 from each)
+
+### Patterns to take forward
+
+1. **"List sweep that misses a sub-folder" pattern** — when a session migrates a factory across a list, the broad `find src/app/api/<list>/` audit can miss deeply-nested sub-folders. The session-72 audit recipe (above) found 10 missed sites.
+2. **"Lib layer is part of the list sweep" pattern** — `grep -rn "status: 400" src/lib/` is the second-stage audit. The route-level sweep in session 59 missed the lib helper that PRODUCES 400s (`parse-json-body.ts`). The session-72 lib audit caught it.
+3. **"Helper-extracted-from-prior-inline-form retains inline call sites" pattern** — when extracting a helper, the author carries over the inline call sites. A new inline form can land in the lib layer that the prior route-level sweeps didn't see. The session-72 audit caught the inline `NextResponse.json` inside `toPatchResponse()` (a helper added in session 62, after the session-60 factory migration).
+4. **"Pure refactor" small-bore session** — session 72 is a 3-refactor pure refactor with 0 new tests, 0 new features, 0 behaviour changes. The 3 refactors are small but each closes a real gap identified in the session-70 "next session should" block.
+
+### "Next session should:" block (carried forward)
+
+1. **Pick a different list next session** to spread the refactor surface. List 1 has been hit 8+ times. List 2 has been hit 10+ times. List 3 has been hit 5 times. List 4 has been hit 5 times now (sessions 59, 60, 67 carry-over, 70, 72). List 1 or List 3 are the next-ripe surfaces.
+2. **`runMutation` adoption in other lists** — List 2 (cron/missions/chat) and List 3 (models/agents/skills/tools) are still the next-ripe surfaces. The helper is in `src/lib/` and stable.
+3. **`useMissionsPage` decomposition** is still a backlog item. The hook is 1175 LOC.
+4. **`isChReadOnly()` consolidation** — 7 BARE sites across Lists 1 + 2. Future session picking any list can pick off 1-2 BARE sites, or leave the 7-site divergence as a documented outlier per the session-51 over-engineering rule.
+5. **Promote `methodNotAllowed()` factory** when a 2nd 405 site appears. Currently 1 site (agent/profiles/[id]/toolsets/route.ts:94).
+6. **Promote `unauthorized()` factory** when a 4th 401 site appears (api-auth.ts has 3).
+7. **Migrate `readFallbackAgentSettingsFromConfig()` to use `readHermesYamlConfig()`** — needs a custom-path overload.
+8. **Extract `__FAKE_HERMES_ROOT__` mock pattern to `tests/helpers/hermes-paths-mock.ts`** when the 5th test file adopts it.
+9. **Promote `?? "unknown error"` to a `safeErrorMessage(result)` helper** when a 4th site appears.
+10. **Promote `toError(e).message` to a sibling helper** when a 3rd consumer appears.
