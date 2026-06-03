@@ -13,7 +13,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner, ErrorBanner } from "@/components/ui/LoadingSpinner";
 import { getSectionDef, fileKeyForFilePath } from "@/lib/config-schema";
-import { apiFetch, toError } from "@/lib/api-fetch";
+import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
 import { maskKeyHint } from "@/lib/secret-mask";
 import { parseEnvLine } from "@/lib/env-line";
 import ConfigField from "@/components/config/ConfigField";
@@ -85,7 +85,7 @@ export default function ConfigSectionPage() {
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
-      setError(toError(err).message || "Unknown error");
+      setErrorFromCaught(setError, err, "Unknown error");
     } finally {
       setLoading(false);
     }
@@ -126,7 +126,7 @@ export default function ConfigSectionPage() {
       saveStatusTimerRef.current = setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (err) {
       setSaveStatus("error");
-      setError(toError(err).message || "Save failed");
+      setErrorFromCaught(setError, err, "Save failed");
     }
   }, [sectionDef, isFileSection, fileContent, sectionId, values]);
 

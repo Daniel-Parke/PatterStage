@@ -1,3 +1,85 @@
+## Session 91 — List 3 (Models, Agents, Skills, Tools, Personalities) — `setErrorFromCaught` helper + 9-site migration
+
+Pick was List 3 (per random selection `echo $(( RANDOM % 4 + 1 ))` = 3, second List-3 pick in a row). This session picks up the explicit carryover from session 90's "Next session should:" block: promote `setErrorFromCaught` to `@/lib/api-fetch.ts` and migrate the 7 (now 9) `setError(messageFromError(err, "..."))` sites that the audit had been tracking. Single byte-equivalent refactor.
+
+All **1277** unit tests pass (**197** suites — +1 new suite `set-error-from-caught.test.ts` with 8 new tests). tsc clean, eslint `--max-warnings 0` clean, build passes. Byte-equivalent at runtime for all 9 migrated sites.
+
+### Refactor 1 — `setErrorFromCaught` helper promotion
+
+Added `setErrorFromCaught(setError, err, fallback)` to `src/lib/api-fetch.ts` as the `setError` sibling of the existing `toastError(showToast, err, fallback)` helper. Same composition rules (toError() + `|| fallback` discipline), different consumer. The new helper is the canonical replacement for the 9 sites that did `setError(messageFromError(err, "..."))` — one fewer intermediate variable and one less line in the common catch block.
+
+Byte-equivalence to the inline form is documented in the JSDoc and proven by the byte-equivalence test in `tests/unit/set-error-from-caught.test.ts`:
+```ts
+directSetError(messageFromError(err, fallback));
+setErrorFromCaught(helperSetError, err, fallback);
+expect(helperCalls).toEqual(directCalls);
+```
+Both code paths produce the same `setError` call for 6 different caught-value shapes (Error, empty Error, string, null, undefined, TypeError).
+
+### Refactor 2 — 9-site migration
+
+| # | File | Line | Migration | Notes |
+|---|---|---|---|---|
+| 1 | `src/app/operations/personalities/page.tsx` | 166 | `setErrorFromCaught(setError, err, "Unknown error")` | List 3 — dropped `messageFromError` from import (was the only use) |
+| 2 | `src/app/operations/skills/[...path]/page.tsx` | 66 | `setErrorFromCaught(setError, err, "Unknown error")` | List 3 — dropped `messageFromError` from import (was the only use) |
+| 3 | `src/hooks/useModelsPage.ts` | 97 | `setErrorFromCaught(setError, err, "Failed to load registry")` | List 3 — kept `messageFromError` import (still used for `details[].detail` and bulk-update `error: msg`) |
+| 4 | `src/components/models/ModelEditor.tsx` | 161 | `setErrorFromCaught(setError, err, "Save failed")` | List 3 — dropped `messageFromError` from import (was the only use) |
+| 5 | `src/app/config/seed/page.tsx` | 56 | `setErrorFromCaught(setError, e, "Failed to load")` | List 4 — dropped `messageFromError` from import |
+| 6 | `src/app/config/seed/page.tsx` | 81 | `setErrorFromCaught(setError, e, "Seed failed")` | List 4 — same import drop |
+| 7 | `src/app/config/[section]/page.tsx` | 88 | `setErrorFromCaught(setError, err, "Unknown error")` | List 4 — migrated from verbose `setError(toError(err).message || "Unknown error")` form (byte-equivalent: toError + `\|\|` fallback IS messageFromError) |
+| 8 | `src/app/config/[section]/page.tsx` | 129 | `setErrorFromCaught(setError, err, "Save failed")` | List 4 — same verbose-to-helper migration |
+| 9 | `src/app/(main)/sessions/[id]/page.tsx` | 54 | `setErrorFromCaught(setError, err, "Unknown error")` | List 1 — dropped `messageFromError` from import |
+
+4 of the 9 sites are in List 3 territory (the focus of this session's pick), 4 are in List 4 (config pages), 1 is in List 1 (sessions). The carryover is fully resolved: session 90 noted 7 sites with the inline form. This session found 2 more (the verbose `setError(toError(err).message || "...")` form in `config/[section]/page.tsx`, which is byte-equivalent to the same `setError(messageFromError(err, "..."))` form), bringing the total to 9 and closing the loop.
+
+### What was rejected
+
+- **Migrating the `setError(err instanceof Error ? err.message : "Unknown error")` site in `src/components/cron/JobFormModal.tsx:166` and the 4 sites in `src/app/recroom/story-weaver/create/page.tsx` + `src/app/api/stories/route.ts`.** These are in Lists 1/2/3 and 4 (recroom/stories is its own category), not in this session's List 3 focus. They're all in scope for a future `setErrorFromCaught` extension, but pulling them in here would expand the session's scope beyond the List 3 pick. **9 sites across 7 files is plenty for a single session** — the 22 inline `err instanceof Error ? err.message` sites across the codebase are the next-tier refactor surface and will need a dedicated multi-session sweep.
+- **Migrating `setGenError(err instanceof Error ? err.message : "Unknown error")` in `src/app/recroom/story-weaver/create/page.tsx`.** Same as above — recroom/stories territory, out of scope for a List 3 pick.
+- **Migrating the 22 `err instanceof Error ? err.message : <fallback>` sites in `src/lib/sync/`, `src/lib/cron/`, `src/lib/backends/`, etc. to a server-side `toMessage(e, fallback)` helper.** The `messageFromError(e, fallback)` is already a server-safe helper (it only depends on `toError` which is pure JS). A dedicated sweep would touch `lib/sync/SyncScheduler.ts`, `lib/sync-manager.ts`, `lib/backends/hermes.ts`, `lib/cron/hermes-sync.ts`, `lib/hermes-profile-sync.ts` (7 inline sites in just that one file). Out of scope — would be a multi-session lib sweep, not a List 3 pick.
+- **Extending the `setErrorFromCaught` signature to accept the React Dispatch type directly via a `React.Dispatch<React.SetStateAction<string | null>>` import.** Adds React coupling to `api-fetch.ts` (which is currently a pure-TS module shared with server code). The current `SetErrorFn` local alias preserves the public type without coupling.
+- **Promoting `setErrorFromCaught` to accept a 4th `prevState: T | null` parameter for `setError((prev) => ...)` updater pattern.** None of the 9 migrated sites use the updater form. Rule of Three says: don't add the parameter until you need it.
+
+### Files
+
+- `src/lib/api-fetch.ts` (MODIFIED) — added `setErrorFromCaught` (45 lines: type alias + JSDoc + impl)
+- `tests/unit/set-error-from-caught.test.ts` (NEW) — 8 unit tests, 116 lines
+- `src/app/operations/personalities/page.tsx` (MODIFIED) — 1 site migrated, import updated
+- `src/app/operations/skills/[...path]/page.tsx` (MODIFIED) — 1 site migrated, import updated
+- `src/hooks/useModelsPage.ts` (MODIFIED) — 1 site migrated, import added (`messageFromError` retained)
+- `src/components/models/ModelEditor.tsx` (MODIFIED) — 1 site migrated, import updated
+- `src/app/config/seed/page.tsx` (MODIFIED) — 2 sites migrated, import updated
+- `src/app/config/[section]/page.tsx` (MODIFIED) — 2 sites migrated (verbose `toError(err).message || "..."` form), import updated
+- `src/app/(main)/sessions/[id]/page.tsx` (MODIFIED) — 1 site migrated, import updated
+
+Net diff: **8 files modified + 1 new test file, +179 / -16 lines** (the +179 is the helper + tests + JSDoc; the -16 is the 9 inline call sites collapsing to 9 helper calls).
+
+### Verification
+
+- **All 1277 unit tests pass** (197 suites, +1 suite with +8 new tests in `tests/unit/set-error-from-caught.test.ts`)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean
+- **`npm run build`** passes
+- **Byte-equivalence audit per session-51 lesson:** `setErrorFromCaught(setError, err, fallback)` is the canonical implementation of `setError(messageFromError(err, fallback))` (`src/lib/api-fetch.ts:151`). The migration is a name change, not a behavior change. The verbose `setError(toError(err).message || fallback)` form in `config/[section]/page.tsx` is byte-equivalent to `setError(messageFromError(err, fallback))` because `toError(err).message || fallback` is literally the body of `messageFromError`. So the 2 verbose sites get the same byte-equivalence treatment.
+
+### Patterns to take forward
+
+1. **"setErrorFromCaught is the setError sibling of toastError" pattern** — two parallel helpers in `api-fetch.ts`, one per consumer. The audit recipe is a 1-line grep: `rg "setError\(messageFromError" src/` (after this session: 0 hits) or `rg "setError\(toError" src/` (after this session: 0 hits). New code review should reject both inline forms.
+2. **"Verbose `toError(err).message || fallback` is the same as `messageFromError(err, fallback)`"** — they have identical semantics. The helper form is preferred because it has a name and JSDoc, but the verbose form is not a bug. Sites that use the verbose form can either keep it (with a JSDoc comment explaining the equivalence) or migrate to `setErrorFromCaught`. This session chose to migrate.
+3. **"Import `messageFromError` if and only if you have a non-setError, non-showToast consumer"** — 5 of the 9 migrated files dropped `messageFromError` from their imports entirely. Only `useModelsPage.ts` kept it (for `details[].detail` and bulk-update return). `setErrorFromCaught` is a strict subset of `messageFromError`'s consumer surface.
+
+### "Next session should:" block
+
+1. **Pick a different list next session** to spread the refactor surface. List 3 has been hit 7+ times now (sessions 67, 70, 77, 80, 90, 91). **List 1 is the next-ripe surface** — hasn't been touched since session 87 (the longest gap in recent protocol history). Carries 3 known follow-up items: `(main)/logs/page.tsx` `useApiData` migration, `(main)/sessions/page.tsx` URLSearchParams + pagination extension, and the inline `err instanceof Error` site in `JobFormModal.tsx` for the setError migration.
+2. **Sweep the 22 inline `err instanceof Error ? err.message` sites in `src/lib/`, `src/components/cron/`, and `src/app/recroom/`** to a server-side `toMessage(e, fallback)` or a `setErrorFromCaught`-shaped helper. The 7 `src/lib/hermes-profile-sync.ts` sites alone are enough to justify the helper. Multi-session sweep.
+3. **`useApiData` extension for `URLSearchParams` + pagination** — `(main)/sessions/page.tsx`'s `loadSessions` is the next candidate. Requires extending the hook to support query params. Defer until the hook shape is stable across logs + sessions.
+4. **Migrate `(main)/logs/page.tsx` to `useApiData({ refreshIntervalMs })`** — extends the hook to absorb the manual `useInterval` + `setRefreshing` pattern. The extension is a behavior change (removes the micro-state), so document the trade-off in a follow-up PR.
+5. **`useMissionsPage` decomposition** — 1175+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results" — would need a careful hook-by-hook extraction with state-derivation verification.
+6. **Status badge label override follow-up** — `StatusBadge.tsx:106` has a pre-existing bug where the fallback label for unknown mission statuses uses `titleCase(unknown_status)` instead of the canonical "Queued". Documented in session 89's "rejected" block. A future session can fix it.
+7. **HindsightBrowser 4 inline `error ?? "..."` sites** — would benefit from a `runMutation`-shaped variant. Defer until a 2nd consumer wants the same shape.
+
+---
+
 ## Session 90 — List 3 (Models, Agents, Skills, Tools, Personalities) — 4-site `toastError` migration in operations pages
 
 Pick was List 3 (per random selection `echo $(( RANDOM % 4 + 1 ))` = 3, the first List-3 pick since session 80). Single byte-equivalent refactor: a 4-site migration of the inline `showToast(messageFromError(err, "..."), "error")` pattern in `src/app/operations/` to the `toastError(showToast, err, "...")` helper that was promoted in sessions 77 + 79. The helper was already adopted in `src/hooks/useModelsPage.ts` (9 sites) but the operations pages had been left untouched. This session closes the last 4 sites in List 3 territory.
@@ -77,7 +159,6 @@ Net diff: **3 files, +7 / -7 lines** (each migration is a 1-line replacement + a
 
 ---
 
-
 ---
 
 ## Earlier Sessions (compressed index)
@@ -86,6 +167,8 @@ The full content of these earlier sessions is preserved in the git history of `p
 
 | # | List | Headline | Sites | New tests | Commit | Reference |
 |---|---|---|---|---|---|---|
+| 91 | 3 | `setErrorFromCaught` helper + 9-site migration | 9 | +8 | (this session) | this session |
+| 90 | 3 | `toastError` migration in operations pages | 4 | +0 (reuse) | `1f7c453` | session-90 carryover |
 | 89 | 1 | `created()` 201 factory + dashboard `now` memo-stability | 7 + 1 bug | +4 + 1 | `48c7f14` | `references/session-89-list2-chat-toast-bug.md` |
 | 88 | 2 | Cron-modal populate-collapse + `restoreMission` closure | 3 | +12 | `5f422e3` | `references/session-88-list2-cron-populate-collapse.md` |
 | 87 | 1 | `setField` + `stringOr` helper extraction | 14 + 2 | +23 | `ae777fb` | `references/session-87-list1-set-field-string-or.md` |

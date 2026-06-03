@@ -13,7 +13,7 @@ import {
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { safeApiCall, messageFromError } from "@/lib/api-fetch";
+import { safeApiCall, setErrorFromCaught } from "@/lib/api-fetch";
 import { ROLE_META, getMessageRole } from "@/components/session/constants";
 import { MessageBubble, type SessionMessage, type SessionData } from "@/components/session/MessageBubble";
 import { isSessionStillRunning } from "@/lib/session-title";
@@ -51,7 +51,7 @@ export default function SessionDetailPage() {
         }
       } catch (err) {
         if (controller.signal.aborted) return;
-        setError(messageFromError(err, "Unknown error"));
+        setErrorFromCaught(setError, err, "Unknown error");
       } finally {
         if (!controller.signal.aborted) {
           setLoading(false);

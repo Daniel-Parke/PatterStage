@@ -9,6 +9,7 @@ import {
   safeApiCall,
   apiFetch,
   messageFromError,
+  setErrorFromCaught,
   toastError,
   toError,
 } from "@/lib/api-fetch";
@@ -94,7 +95,7 @@ export function useModelsPage() {
         setFallbackConfig(fbCfgData.data.config);
       }
     } catch (err) {
-      setError(messageFromError(err, "Failed to load registry"));
+      setErrorFromCaught(setError, err, "Failed to load registry");
     } finally {
       setLoading(false);
     }

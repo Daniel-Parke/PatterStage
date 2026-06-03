@@ -127,3 +127,38 @@ export function toastError(
 ): void {
   showToast(messageFromError(err, fallback), "error");
 }
+
+/**
+ * Type signature matching the destructured `setError` from a
+ * `useState<string | null>`-style call. We don't import the type
+ * here to avoid React coupling in this module. The setter takes a
+ * string-or-null; we never pass null through this helper, only the
+ * resolved message.
+ */
+type SetErrorFn = (value: string | null) => void;
+
+/**
+ * Set a `useState<string | null>` error from a caught value in a
+ * single call. Composes `messageFromError()` so every
+ *   setError(messageFromError(err, "..."))
+ * catch block becomes `setErrorFromCaught(setError, err, "...")` —
+ * one fewer intermediate variable and the same byte-equivalent
+ * semantics as the inline form.
+ *
+ * This is the `setError` sibling of `toastError` — same composition
+ * rules (toError() + `|| fallback` discipline), different consumer.
+ * Use `toastError` for showToast-based error reporting and
+ * `setErrorFromCaught` for useState-based error reporting.
+ *
+ * @example
+ *   } catch (err) {
+ *     setErrorFromCaught(setError, err, "Failed to load");
+ *   }
+ */
+export function setErrorFromCaught(
+  setError: SetErrorFn,
+  err: unknown,
+  fallback: string,
+): void {
+  setError(messageFromError(err, fallback));
+}
