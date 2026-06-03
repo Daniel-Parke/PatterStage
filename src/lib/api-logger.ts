@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { serverError } from "./api-response";
+import { messageFromError } from "./api-fetch";
 import type { NextResponse } from "next/server";
 
 /**
@@ -14,7 +15,15 @@ import type { NextResponse } from "next/server";
  * @param error - The caught error
  */
 export function logApiError(route: string, context: string, error: unknown): void {
-  const message = error instanceof Error ? error.message : String(error);
+  // The empty-Error trap: new Error("") has message === "" and is an
+  // Error instance, so the original `error instanceof Error ? error.message : String(error)`
+  // would log an empty line. messageFromError(err, "") keeps the inline
+  // form's empty-Error behaviour (returns "") and matches all other input
+  // shapes byte-for-byte — see refactor-sweep-rolling-doc-safety
+  // Pitfall 8 for the byte-equivalence verification matrix. The "String(error)"
+  // fallback is tempting but breaks on new Error("") (it would log
+  // "Error" instead of "").
+  const message = messageFromError(error, "");
   console.error(`[API ${route}] Error ${context}: ${message}`);
 }
 

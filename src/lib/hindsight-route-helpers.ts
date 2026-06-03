@@ -16,6 +16,7 @@
 // The bodies are pure data-shaping; no DB or fetch calls live here.
 
 import { NextResponse } from "next/server";
+import { messageFromError } from "@/lib/api-fetch";
 import type { ApiResponse } from "@/types/hermes";
 
 /**
@@ -156,7 +157,7 @@ export async function deleteByType(
  * errors — see the inline call in the GET handler.
  */
 export function hindsightErrorResponse(error: unknown): NextResponse {
-  const message = error instanceof Error ? error.message : "Unknown error";
+  const message = messageFromError(error, "Unknown error");
   return NextResponse.json<ApiResponse<Record<string, unknown>>>(
     { data: { available: false, error: message } },
     { status: 500 },
