@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
-import { methodNotAllowed } from "@/lib/api-response";
+import { methodNotAllowed, serverError } from "@/lib/api-response";
 import {
   HERMES_CONFIGURABLE_TOOLSETS,
   HERMES_PLATFORMS,
@@ -24,7 +24,7 @@ export async function GET() {
     });
   } catch (error) {
     logApiError("GET /api/tools", "catalog", error);
-    return NextResponse.json({ error: "Failed to load toolset catalog" }, { status: 500 });
+    return serverError("Failed to load toolset catalog");
   }
 }
 

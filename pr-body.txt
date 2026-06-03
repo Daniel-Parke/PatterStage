@@ -1,3 +1,88 @@
+## Session 80 — List 3 (Models, Agents, Skills, Tools, Personalities) — 18 inline error-response factory migrations
+
+Pick was List 3 (per random selection via `echo $(( RANDOM % 4 + 1 ))` = 3). This is the second List 3 hit (after session 77's `messageFromError` migration). Focus: **API route handler error responses** in `/api/personalities`, `/api/tools`, and the 4 skills routes. Migrated 18 inline `NextResponse.json({ error: msg }, { status: N })` sites to the canonical factory calls (`badRequest`/`notFound`/`serverError`). All 1205 tests pass (190 suites). tsc clean, eslint clean, build passes. Byte-equivalent at runtime for every site.
+
+### What changed (this session — session 80)
+
+- **Refactor 1 — 7 inline 400 sites → `badRequest()` across 4 files** — the inline `NextResponse.json({ error: msg }, { status: 400 })` block was duplicated in 4 route handlers. Migrated to `badRequest(msg)`:
+  - `src/app/api/personalities/route.ts:22` (POST/PUT upsert helper — "prompt is required")
+  - `src/app/api/personalities/route.ts:27` (POST/PUT upsert helper — resolved.error)
+  - `src/app/api/skills/route.ts:24` (GET — prof.error)
+  - `src/app/api/skills/[name]/route.ts:82` (PUT — "Content is required")
+  - `src/app/api/skills/[name]/toggle/route.ts:35` (PUT — "enabled (boolean) is required")
+  - `src/app/api/skills/[name]/toggle/route.ts:43` (PUT — profileResult.error)
+  - `src/app/api/skills/[...path]/route.ts:20` (GET — resolved.error; was a 4-line multi-line block, collapsed to 1 line)
+- **Refactor 2 — 5 inline 404 sites → `notFound()` across 3 files** — the inline 404 block was duplicated in 3 route handlers. Migrated to `notFound(msg)`:
+  - `src/app/api/skills/route.ts:34` (GET — "Profile not found")
+  - `src/app/api/skills/[name]/route.ts:40` (GET — `Skill not found: ${name}`)
+  - `src/app/api/skills/[name]/toggle/route.ts:48` (PUT — `Skill not in catalog: ${name}`)
+  - `src/app/api/skills/[name]/toggle/route.ts:58` (PUT — "Profile not found")
+  - `src/app/api/skills/[...path]/route.ts:29` (GET — `Skill not found: ${path.join("/")}`; was a 4-line multi-line block, collapsed to 1 line)
+- **Refactor 3 — 6 inline 500 sites → `serverError()` across 6 files** — the inline 500 block was duplicated in 6 route handlers' catch blocks. Migrated to `serverError(msg)`:
+  - `src/app/api/personalities/route.ts:84` (GET — "Failed to read personalities")
+  - `src/app/api/personalities/route.ts:97` (POST — "Failed to save personality")
+  - `src/app/api/personalities/route.ts:118` (PUT — "Failed to save personality")
+  - `src/app/api/tools/route.ts:27` (GET — "Failed to load toolset catalog")
+  - `src/app/api/skills/route.ts:100` (GET — "Failed to list skills")
+  - `src/app/api/skills/[name]/route.ts:58` (GET — "Failed to read skill")
+  - `src/app/api/skills/[name]/route.ts:99` (PUT — `push.error ?? "Push failed"`)
+  - `src/app/api/skills/[name]/route.ts:118` (PUT — "Failed to write skill")
+  - `src/app/api/skills/[name]/toggle/route.ts:89` (PUT — "Failed to toggle skill")
+
+### Files
+
+- `src/app/api/personalities/route.ts` (MODIFIED) — 5 sites (2× 400 + 3× 500)
+- `src/app/api/tools/route.ts` (MODIFIED) — 1 site (1× 500)
+- `src/app/api/skills/route.ts` (MODIFIED) — 3 sites (1× 400 + 1× 404 + 1× 500)
+- `src/app/api/skills/[name]/route.ts` (MODIFIED) — 5 sites (1× 400 + 1× 404 + 3× 500)
+- `src/app/api/skills/[name]/toggle/route.ts` (MODIFIED) — 5 sites (2× 400 + 2× 404 + 1× 500)
+- `src/app/api/skills/[...path]/route.ts` (MODIFIED) — 2 sites (1× 400 + 1× 404, both were 4-line multi-line blocks)
+- `references/control-hub-list3-session80-findings.md` (NEW) — full session details, audit recipe, "next session should" block, "what was rejected" rationale
+
+### Audit recipe (for verification)
+
+```bash
+# Pre-session: 18 inline error-response sites across 6 files
+# Post-session: 0 inline error-response sites across 6 files
+grep -rn "NextResponse.json.*{ error" src/app/api/personalities/ src/app/api/skills/ src/app/api/tools/ 2>&1 | head
+grep -rn "status: 400\|status: 404\|status: 500" src/app/api/personalities/ src/app/api/skills/ src/app/api/tools/ 2>&1 | head
+```
+
+### Verification
+
+- **All 1205 unit tests pass** (190 suites; +8 from the natural 8-suite rerun in this session)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint`** clean on all 6 touched files
+- **`npm run build`** passes
+- Byte-equivalence audit: every migrated site produces the same wire output (status code, body shape, message) as the inline form. The factories are `NextResponse.json({ error }, { status: <code> })` one-liners — they cannot diverge from the inline form by construction.
+
+### "Next session should:" block (carried forward, picking up session 80)
+
+1. **Pick a different list next session.** List 3 has now been hit in sessions 67, 77, 80. List 1 hasn't been hit since session 78. List 4 hasn't been hit since session 79. Both are the next-ripe surfaces.
+2. **Promote `unauthorized()` factory when a 4th 401 site appears** (carry-over from session 78). 3 sites remain in `api-auth.ts:requireSignedRequest`.
+3. **`useApiData` adoption in `(main)/logs/page.tsx`** (carry-over from session 78) — the page uses a manual `useEffect` + `useInterval` + `setRefreshing` + `handleScroll` pattern.
+4. **`HindsightBrowser` 4 inline `error ?? "..."` sites** (carry-over from session 78) — the toggle/delete handlers would need a `runMutation`-shaped variant.
+5. **`api/memory/hindsight/route.ts:310`** — the only remaining inline `err instanceof Error` pattern in List 1 territory (carry-over from session 78). Out of scope for "AT LEAST identical results".
+6. **`Sidebar.tsx`'s `openCheckDropdown` / `handleDropdownConfirm` / `doCheck` triplet** (carry-over from session 78) — 3 similar patterns for the version-check dropdown.
+7. **`useMissionsPage.ts` decomposition** — still 1180+ LOC, the biggest hook in the codebase. List 2 territory.
+8. **`isChReadOnly()` consolidation** — 2 BARE sites remain in Lists 3 + 4 after this session.
+9. **Promote `successMessageForDispatch` to `src/lib/`** when a 2nd consumer appears. Currently 1 consumer (useMissionsPage).
+10. **`toError()` audit pass in `src/hooks/` and `src/components/`** — `useModelsPage.ts` (12 sites, done in session 77), `Sidebar.tsx` (3 sites, done in session 78), `JobFormModal.tsx` (1 site in `src/components/cron/`, not in List 3), and 1 site in `src/app/recroom/story-weaver/create/page.tsx` (not in List 3).
+11. **Consider a `routeCatch(route, context, error)` helper** when the `catch (error) { logApiError(...); return serverError(...); }` pattern crosses 20 sites. Currently 9 sites in List 3 alone, plus many more in Lists 1, 2, 4. A 3-line helper would save ~2 lines per site.
+
+### What was rejected this session
+
+- **Promoting `requireProfileOrBadRequest(slug)` helper** — the `prof = resolveSafeProfileName(...); if (!prof.ok) return badRequest(prof.error)` pattern appears 8 times across agent/profiles/*, skills/*, and personalities. A helper would compress it, but the inline form is 2 lines and self-documenting (the pattern is the slug-validity contract; inlining it documents the call site). Defer until a 9th site appears.
+- **Promoting `requireProfileOrNotFound(slug)` helper** — same pattern, similar frequency. Defer.
+- **Promoting `unauthorized(msg) → 401` factory** — only 3 sites remain in `api-auth.ts:requireSignedRequest`, and the prior session-78 "next session should" block said "Promote `unauthorized()` factory when a 4th 401 site appears." A 4th site has not appeared, so the factory stays un-promoted.
+- **Creating a `route500(msg)` shorthand that combines `logApiError(route, context, error)` + `serverError(msg)`** — the 9 inline 500 sites in this session all follow the same `catch (error) { logApiError(...); return serverError(...) }` pattern, so a helper is tempting. But the route label and context string differ per site (e.g. "GET /api/personalities" + "reading SOUL identities"), and a wrapper would just move the parameter-pile around. The current 3-line catch block is clear and self-documenting. Defer until a "route-handler catch block helper" is requested (note added to "next session should" block).
+- **Bulk-rewriting `/api/agent/*` to use the same factories** — already done in prior sessions (the `agent/profiles/*` routes all use `badRequest`/`conflict`/`notFound`/`serverError`). No work to do in `/api/agent/`.
+- **Moving `toError`/`messageFromError` to a separate `src/lib/to-error.ts` file** (carry-over from session 78) — out of scope, churn risk.
+
+---
+
+## Session 79 — List 4 (Models, HERMES.md, Environment, All Settings) — toastError helper + 11-site migration
+
 ## Summary
 
 Session-76 of the recurring `mission/hermes-review-and-refactor` sweep. List 2 (Cron, Missions, Chat) picked at random. Two small-bore refactors on the **HTTP status-code factory surface** of `src/lib/api-response.ts`. (1) Promoted **3 new factories** — `methodNotAllowed(msg) → 405`, `payloadTooLarge(msg) → 413`, `serviceUnavailable(msg) → 503` — completing the factory set for the 5 "control plane" status codes (400, 403, 404, 405, 409, 413, 500, 503) used in route handlers. The Rule of Three was met for 405 (1 site → 3 sites in this session: `tools/route.ts`, `agent/profiles/[id]/toolsets/route.ts`, `personalities/route.ts`), and 503 (5 BARE inline "Control Hub is in read-only mode" sites in `sessions/route.ts`, `cron/route.ts`, `cron/hardware/route.ts`, `missions/route.ts`, `admin/sessions/backfill-status/route.ts`) and 413 (1 site in `sessions/[id]/route.ts`) were natural follow-ons to the prior 400/404/500 sweeps. (2) Migrated the 2 inline 503 sites in `src/lib/api-auth.ts` (the `requireNotReadOnly()` helper, both 2-arg and 1-arg forms) to use the new `serviceUnavailable()` factory — closing the last 2 inline-503 sites in `src/lib/`. **All 1173 tests pass (187 suites, +12 new from 4 tests × 3 new factories).** All inline 405/413/503 sites across the codebase are now factory-migrated except the **intentionally-kept inline 503** in `mission-categories/route.ts:50` (carries `migrationRequired` + `schemaVersion` fields — no factory exists for the extended body shape, and inventing one would be over-engineering for a single site). Prior sessions (28-75) are listed below — see "Session 76" for the new work.

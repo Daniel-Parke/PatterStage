@@ -6,7 +6,7 @@ import { logApiError } from "@/lib/api-logger";
 import { resolveSkillDirUnderRoot } from "@/lib/path-security";
 import { parseSkillFrontmatter, stripSkillFrontmatter } from "@/lib/skills-repository";
 import { requireAuth } from "@/lib/api-auth";
-import { serverError } from "@/lib/api-response";
+import { badRequest, notFound, serverError } from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
@@ -17,19 +17,13 @@ export async function GET(
   const { path } = await params;
   const resolved = resolveSkillDirUnderRoot(getActiveHermesPaths().skills, path);
   if (!resolved.ok) {
-    return NextResponse.json(
-      { error: resolved.error },
-      { status: 400 }
-    );
+    return badRequest(resolved.error);
   }
   const skillDir = resolved.skillDir;
   const skillMdPath = skillDir + "/SKILL.md";
 
   if (!existsSync(skillMdPath)) {
-    return NextResponse.json(
-      { error: `Skill not found: ${path.join("/")}` },
-      { status: 404 }
-    );
+    return notFound(`Skill not found: ${path.join("/")}`);
   }
 
   try {

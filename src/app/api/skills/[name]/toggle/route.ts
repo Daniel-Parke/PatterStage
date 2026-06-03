@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
+import { badRequest, notFound, serverError } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
@@ -32,7 +33,7 @@ export async function PUT(
   const { profile: profileParam, enabled } = bodyResult;
 
   if (typeof enabled !== "boolean") {
-    return NextResponse.json({ error: "enabled (boolean) is required" }, { status: 400 });
+    return badRequest("enabled (boolean) is required");
   }
 
   try {
@@ -40,12 +41,12 @@ export async function PUT(
       typeof profileParam === "string" ? profileParam : null,
     );
     if (!profileResult.ok) {
-      return NextResponse.json({ error: profileResult.error }, { status: 400 });
+      return badRequest(profileResult.error);
     }
     const profile = profileResult.profile;
 
     if (!getSkill(name)) {
-      return NextResponse.json({ error: `Skill not in catalog: ${name}` }, { status: 404 });
+      return notFound(`Skill not in catalog: ${name}`);
     }
 
     let currentDisabled: string[];
@@ -55,7 +56,7 @@ export async function PUT(
     }
     else {
       if (!getProfile(profile)) {
-        return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+        return notFound("Profile not found");
       }
       currentDisabled = getDisabledSkills(profile);
     }
@@ -86,6 +87,6 @@ export async function PUT(
   }
   catch (error) {
     logApiError("PUT /api/skills/[name]/toggle", `toggle ${name}`, error);
-    return NextResponse.json({ error: "Failed to toggle skill" }, { status: 500 });
+    return serverError("Failed to toggle skill");
   }
 }

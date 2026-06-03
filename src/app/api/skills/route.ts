@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { badRequest, notFound, serverError } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
 import { safeStat } from "@/lib/fs-stats";
 import { resolveEffectiveDisabledSkills } from "@/lib/effective-disabled-skills";
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
   const refreshFromDisk = request.nextUrl.searchParams.get("refresh") === "1";
   const prof = resolveSafeProfileName(profileParam);
   if (!prof.ok) {
-    return NextResponse.json({ error: prof.error }, { status: 400 });
+    return badRequest(prof.error);
   }
   const profile = prof.profile;
 
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
     if (profile !== "default") {
       const p = getProfile(profile);
       if (!p) {
-        return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+        return notFound("Profile not found");
       }
     }
 
@@ -97,6 +98,6 @@ export async function GET(request: NextRequest) {
   }
   catch (error) {
     logApiError("GET /api/skills", "listing skills", error);
-    return NextResponse.json({ error: "Failed to list skills" }, { status: 500 });
+    return serverError("Failed to list skills");
   }
 }

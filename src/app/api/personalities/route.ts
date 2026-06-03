@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { methodNotAllowed } from "@/lib/api-response";
+import { badRequest, methodNotAllowed, serverError } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
@@ -19,12 +19,12 @@ async function upsertPersonality(request: NextRequest) {
   const profile = typeof body.profile === "string" ? body.profile : "default";
   const prompt = typeof body.prompt === "string" ? body.prompt : "";
   if (!prompt.trim()) {
-    return NextResponse.json({ error: "prompt is required" }, { status: 400 });
+    return badRequest("prompt is required");
   }
 
   const resolved = resolveSafeProfileName(profile);
   if (!resolved.ok) {
-    return NextResponse.json({ error: resolved.error }, { status: 400 });
+    return badRequest(resolved.error);
   }
 
   // applyProfileOrRootPatch handles default-vs-non-default dispatch,
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
   }
   catch (error) {
     logApiError("GET /api/personalities", "reading SOUL identities", error);
-    return NextResponse.json({ error: "Failed to read personalities" }, { status: 500 });
+    return serverError("Failed to read personalities");
   }
 }
 
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
   }
   catch (error) {
     logApiError("POST /api/personalities", "creating SOUL identity", error);
-    return NextResponse.json({ error: "Failed to save personality" }, { status: 500 });
+    return serverError("Failed to save personality");
   }
 }
 
@@ -115,6 +115,6 @@ export async function PUT(request: NextRequest) {
   }
   catch (error) {
     logApiError("PUT /api/personalities", "updating SOUL identity", error);
-    return NextResponse.json({ error: "Failed to save personality" }, { status: 500 });
+    return serverError("Failed to save personality");
   }
 }
