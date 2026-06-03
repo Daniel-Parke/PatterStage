@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { parseHermesConfig } from "@/lib/hermes-import";
+import { modelKey } from "@/lib/model-key";
 import { upsertModel, updateModel, listModels } from "@/lib/models-repository";
 import { upsertCredential } from "@/lib/credentials-repository";
 import { logApiError } from "@/lib/api-logger";
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
     const modelKeyToId = new Map<string, string>();
 
     for (const model of parsed.models) {
-      const key = `${model.provider}::${model.modelId}`;
+      const key = modelKey(model.provider, model.modelId);
       try {
         const result = upsertModel({
           name: model.name,
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
       for (const entry of parsed.models) {
         const credId = providerToCredId[entry.provider];
         if (!credId) continue;
-        const modelId = modelKeyToId.get(`${entry.provider}::${entry.modelId}`);
+        const modelId = modelKeyToId.get(modelKey(entry.provider, entry.modelId));
         if (!modelId) continue;
         // Re-read the existing model once to check whether the link is
         // already in place — avoids a redundant write + audit line.
