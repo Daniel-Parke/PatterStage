@@ -16,7 +16,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
-import { badRequest, created, notFound, serverError, serviceUnavailable } from "@/lib/api-response";
+import { badRequest, created, notFound, ok, serverError, serviceUnavailable } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import {
   listSessions,
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       if (!session) {
         return notFound("Session not found");
       }
-      return NextResponse.json({ data: { session } });
+      return ok({ session });
     }
 
     // Sync layer handles background syncing of Hermes sessions (debounced — at most once per 30s)
@@ -63,11 +63,9 @@ export async function GET(request: NextRequest) {
       syncIfActive: true,
     });
 
-    return NextResponse.json({
-      data: {
-        sessions: result.sessions,
-        total: result.total,
-      },
+    return ok({
+      sessions: result.sessions,
+      total: result.total,
     });
   } catch (error) {
     logApiError("GET /api/sessions", "listing sessions", error);
@@ -134,7 +132,7 @@ export async function POST(request: NextRequest) {
       if (!session) {
         return notFound("Session not found");
       }
-      return NextResponse.json({ data: { session } });
+      return ok({ session });
     }
 
     return badRequest("Unknown action");

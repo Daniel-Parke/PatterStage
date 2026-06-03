@@ -48,7 +48,17 @@ const API_DIR = join(REPO_ROOT, "src", "app", "api");
  * inline form is preferred over `ok(...)`.
  */
 const EXEMPTIONS: ReadonlyArray<{ file: string; line: number; reason: string }> = [
-  // (none — every List 3 site migrated across sessions 111 + 112)
+  // List 1 (api/sessions, api/memory, api/logs) — session 113.
+  // The api/memory/hindsight route's only inline `data:` site is a
+  // 503/500 error response. `ok()` is status-200-locked, so this
+  // site cannot use the factory. Keep the inline form so the
+  // status code is honoured.
+  {
+    file: "src/app/api/memory/hindsight/route.ts",
+    line: 306,
+    reason:
+      "503/500 error response with conditional status (`isHindsightConnectionError(error) ? 503 : 500`). `ok()` is status-200-locked, so the inline form must stay.",
+  },
 ];
 
 /**
@@ -147,14 +157,50 @@ describe("ok() factory source-pattern coverage (List 3 surface)", () => {
     expect(list3).toEqual([]);
   });
 
+  it("has zero `return NextResponse.json({ data: ... })` sites in the List 1 surface (api/sessions, api/memory, api/logs)", () => {
+    // Filter to List 1 surface: api/sessions/, api/memory/, api/logs/.
+    // The List 1 surface backs the Dashboard, Sessions, Memory, and
+    // Logs pages (per the session-113 sweep). The api/memory surface
+    // includes the api/memory/hindsight route whose only inline
+    // `data:` site is a 503/500 error response — `ok()` is
+    // status-200-locked, so that site is exempt and the EXEMPTIONS
+    // table below documents it. The test will fail on any new inline
+    // site added to the List 1 surface.
+    const list1 = allSites.filter(
+      (s) =>
+        s.file.includes(`${join("src", "app", "api", "sessions")}`) ||
+        s.file.includes(`${join("src", "app", "api", "memory")}`) ||
+        s.file.includes(`${join("src", "app", "api", "logs")}`),
+    );
+    // EXEMPTIONS already enumerate the known inline 503/500 sites in
+    // the List 1 surface. Filter those out before asserting zero.
+    // The `s.file` from the scanner is absolute; EXEMPTIONS uses
+    // repo-relative paths, so we match on the suffix.
+    const exempted = new Set(EXEMPTIONS.map((e) => e.file));
+    const live = list1.filter((s) => !exempted.has(s.file.replace(REPO_ROOT + "/", "")));
+    if (live.length > 0) {
+      const summary = live
+        .map((s) => `  ${s.file.replace(REPO_ROOT + "/", "")}:${s.line}  ${s.text}`)
+        .join("\n");
+      throw new Error(
+        `Found ${live.length} un-migrated 'return NextResponse.json({ data: ... })' site(s) in the List 1 surface (migrate to 'ok(...)' or add to EXEMPTIONS):\n${summary}`,
+      );
+    }
+    expect(live).toEqual([]);
+  });
+
   it("documents every exemption in EXEMPTIONS", () => {
     // Defensive: if EXEMPTIONS is non-empty, every entry's file must
     // still contain a `return NextResponse.json({ data: ... })` site
     // (the line number may have shifted across refactors, so we
     // assert site presence, not line exactness). If the exemption is
     // stale, the entry should be removed.
+    // EXEMPTIONS uses repo-relative paths; resolve them against
+    // REPO_ROOT so `findSites` (which expects absolute paths) can
+    // read the file.
     for (const ex of EXEMPTIONS) {
-      const sites = findSites(ex.file);
+      const absFile = join(REPO_ROOT, ex.file);
+      const sites = findSites(absFile);
       const matching = sites.find((s) => Math.abs(s.line - ex.line) <= 2);
       if (!matching) {
         throw new Error(

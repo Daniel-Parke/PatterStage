@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { existsSync, writeFileSync } from "fs";
 import { resolve } from "path";
 
@@ -13,7 +13,7 @@ import {
 } from "@/lib/log-files";
 import { injectMissingTimestamps } from "@/lib/log-line-format";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest, notFound, serverError } from "@/lib/api-response";
+import { badRequest, notFound, ok, serverError } from "@/lib/api-response";
 import type { LogFileMeta } from "@/lib/log-files";
 
 // ── Shared log directory resolution ──────────────────────────
@@ -85,16 +85,14 @@ export async function GET(request: NextRequest) {
     const fileMtime = mtime.toISOString().replace("T", " ").slice(0, 19);
     const linesWithTimestamp = injectMissingTimestamps(lines, fileMtime);
 
-    return NextResponse.json({
-      data: {
-        name: safeName,
-        totalLines: allLines,
-        showingLines: lines.length,
-        size: size,
-        modified: mtime.toISOString(),
-        lines: linesWithTimestamp,
-        availableLogs,
-      },
+    return ok({
+      name: safeName,
+      totalLines: allLines,
+      showingLines: lines.length,
+      size: size,
+      modified: mtime.toISOString(),
+      lines: linesWithTimestamp,
+      availableLogs,
     });
   } catch (error) {
     logApiError("GET /api/logs", "reading logs", error);
@@ -124,9 +122,7 @@ export async function DELETE(request: NextRequest) {
       if (existsSync(resolved.absolutePath)) {
         writeFileSync(resolved.absolutePath, "");
       }
-      return NextResponse.json({
-        data: { deleted: resolved.safeName },
-      });
+      return ok({ deleted: resolved.safeName });
     }
 
     const files = listLogFilesInDir(logsDir);
@@ -138,9 +134,7 @@ export async function DELETE(request: NextRequest) {
         cleared++;
       }
     }
-    return NextResponse.json({
-      data: { cleared },
-    });
+    return ok({ cleared });
   } catch (error) {
     logApiError("DELETE /api/logs", "deleting log", error);
     return serverError("Failed to delete logs");

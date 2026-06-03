@@ -6,7 +6,7 @@ import { basename, join } from "path";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest, notFound, payloadTooLarge, serverError } from "@/lib/api-response";
+import { badRequest, notFound, ok, payloadTooLarge, serverError } from "@/lib/api-response";
 import { safeStat } from "@/lib/fs-stats";
 import { getSession, estimateSessionSize, lookupMissionIdForCronSession } from "@/lib/session-repository";
 import { PATHS } from "@/lib/paths";
@@ -152,8 +152,8 @@ export async function GET(
           const messages = parseAssistantLines(content);
           // File confirmed to exist above (missionFile or missionLog); safeStat never null.
           const st = safeStat(sessionPath)!;
-          return NextResponse.json({
-            data: buildSessionData({
+          return ok(
+            buildSessionData({
               id: sanitizedId,
               filename: basename(sessionPath),
               format: "mission-output",
@@ -162,13 +162,13 @@ export async function GET(
               size: st.size,
               missionId: dbSession.missionId,
             }),
-          });
+          );
         }
       }
       // No output file yet (agent running, or output was streamed to Hermes).
       // Surface the parent mission id so the detail page can link to it.
-      return NextResponse.json({
-        data: buildSessionData({
+      return ok(
+        buildSessionData({
           id: sanitizedId,
           filename: sanitizedId,
           format: "db",
@@ -182,7 +182,7 @@ export async function GET(
               ? "This cron-spawned session is still running. Messages will appear here when the agent completes."
               : "The agent ran but produced no output file.",
         }),
-      });
+      );
     }
     return notFound(`Session "${sanitizedId}" not found`);
   }
@@ -220,22 +220,22 @@ export async function GET(
           }
         });
 
-      return NextResponse.json({
-        data: buildSessionData({
+      return ok(
+        buildSessionData({
           id: sanitizedId,
           filename: basename(filePath),
           format: "jsonl",
           messages,
           size: st.size,
         }),
-      });
+      );
     } else {
       // Parse JSON
       const data = JSON.parse(content);
       const messages = data.messages || data.conversation || data.turns || [];
 
-      return NextResponse.json({
-        data: buildSessionData({
+      return ok(
+        buildSessionData({
           id: sanitizedId,
           filename: basename(filePath),
           format: "json",
@@ -246,7 +246,7 @@ export async function GET(
           size: st.size,
           created: data.created || st.birthtime.toISOString(),
         }),
-      });
+      );
     }
   } catch (error) {
     logApiError("GET /api/sessions/[id]", "reading session " + sanitizedId, error);
