@@ -134,6 +134,27 @@ export default function BehaviourPage() {
     }
   }, [showToast]);
 
+  // Close the New Agent Profile modal. The same 4-setter pair
+  //   setShowCreate(false); setCreateName(""); setCreateDescription(""); setCreateCloneFrom("default");
+  // appears at 2 sites — the modal's `onClose` (X-button / overlay
+  // click) and the `handleCreate` success path (`onSuccess` after
+  // the POST resolves). Centralising it here keeps the 2 sites in
+  // lockstep if a future "clear profile-suggestion cache" or "reset
+  // clone-from default" reset is added — a single edit here updates
+  // both. The pattern mirrors the A3 page-local modal setter-pair
+  // callbacks (session 100: `closeAgentModal` / `closeSystemModal`
+  // in cron; session 98: `closeComposer` in useMissionsPage).
+  // Note: the modal's Cancel button (line 492) uses a deliberate
+  // SOFT close (1 setter, no clear) to preserve the user's in-flight
+  // form input if they cancel by accident. That is a discriminated
+  // pattern, not a duplicate — left inline.
+  const closeCreate = useCallback(() => {
+    setShowCreate(false);
+    setCreateName("");
+    setCreateDescription("");
+    setCreateCloneFrom("default");
+  }, []);
+
   useEffect(() => { loadProfiles(); }, [loadProfiles]);
 
   useEffect(() => {
@@ -159,10 +180,7 @@ export default function BehaviourPage() {
       successMessage: `Profile "${name}" created`,
       errorMessage: "Failed to create profile",
       onSuccess: async () => {
-        setShowCreate(false);
-        setCreateName("");
-        setCreateDescription("");
-        setCreateCloneFrom("default");
+        closeCreate();
         await loadProfiles();
       },
     });
@@ -482,7 +500,7 @@ export default function BehaviourPage() {
 
         <Modal
           open={showCreate}
-          onClose={() => { setShowCreate(false); setCreateName(""); setCreateDescription(""); setCreateCloneFrom("default"); }}
+          onClose={closeCreate}
           title="New Agent Profile"
           icon={Plus}
           iconColor="text-neon-purple"
