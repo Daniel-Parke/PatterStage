@@ -45,6 +45,7 @@ import {
   type CategoryLike,
 } from "@/lib/mission-categories";
 import type { LocalDirEntry } from "@/types/hermes";
+import { commitLocalDirDraft } from "@/lib/local-dir-entry";
 
 // ── Types ─────────────────────────────────────────────────────
 
@@ -470,14 +471,10 @@ export function TemplateEditorModal({
               entry={localDirDraft}
               onChange={onLocalDirDraftChange}
               onAdd={() => {
-                const p = localDirDraft.path.trim();
-                if (!p) return;
-                if (newLocalDirs.some((d) => d.path === p)) return;
-                onNewLocalDirsChange([
-                  ...newLocalDirs,
-                  { path: p, branch: localDirDraft.branch || null },
-                ]);
-                onLocalDirDraftChange({ path: "", branch: null });
+                const result = commitLocalDirDraft(localDirDraft, newLocalDirs);
+                if (!result) return;
+                onNewLocalDirsChange(result.nextEntries);
+                onLocalDirDraftChange(result.emptyDraft);
               }}
             />
             {newLocalDirs.map((dir, i) => (

@@ -45,6 +45,19 @@ export function generateSessionId(): string {
 
 // ── Download helpers ────────────────────────────────────────────
 
+/**
+ * Sanitise a session title into a filename-safe slug.
+ *
+ * Replaces any character that isn't `[A-Za-z0-9_-]` with an underscore.
+ * Centralised so the regex lives in one place — the only call site
+ * (chat page `handleDownloadSession`) used to inline it, and any
+ * future "download session as Markdown" or "export PDF" feature will
+ * need the exact same shape.
+ */
+export function sanitiseFilename(title: string): string {
+  return title.replace(/[^a-zA-Z0-9_-]/g, "_");
+}
+
 export function downloadFile(content: string, filename: string, mime: string): void {
   const blob = new Blob([content], { type: mime });
   const url = URL.createObjectURL(blob);

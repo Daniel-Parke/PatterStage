@@ -19,6 +19,7 @@ import {
   ComposerFieldLabel,
 } from "@/components/missions/MissionComposerLayout";
 import type { LocalDirEntry } from "@/types/hermes";
+import { commitLocalDirDraft } from "@/lib/local-dir-entry";
 import {
   isMissionDraft,
   isMissionQueuedForRun,
@@ -253,6 +254,25 @@ export default function MissionCreateForm({
   const editingCtx = resolveEditContext(editingId, missions);
   const { isReDispatch, isRunningEdit, isDraftEdit, isQueuedEdit } = editingCtx;
 
+  // Helper: commit the current `localDirDraft` to `newLocalDirs` and
+  // clear the draft. The 4-line "trim → dedupe-by-path → push → reset"
+  // sequence used to be inline in the LocalDirRow onClick. Now extracted
+  // to a named callback (mirrors the `addReferenceFromInput` pattern for
+  // references, line 265). The actual dedupe + push logic is delegated
+  // to `commitLocalDirDraft` in `@/lib/local-dir-entry`, which is shared
+  // with the template editor (TemplateModals.tsx) — same call site, same
+  // helper. Returns early on the no-op cases (empty path, duplicate)
+  // without touching state.
+  const addLocalDirFromDraft = () => {
+    const result = commitLocalDirDraft(
+      formState.localDirDraft,
+      formState.newLocalDirs,
+    );
+    if (!result) return;
+    setFormField("newLocalDirs", result.nextEntries);
+    setFormField("localDirDraft", result.emptyDraft);
+  };
+
   // Helper: append the current `referenceInput` (trimmed) to
   // `newReferences`, then clear the input. The 3-line sequence appears
   // twice below — once in the input's onKeyDown (Enter-to-add) and once
@@ -380,19 +400,7 @@ export default function MissionCreateForm({
               mode="draft"
               entry={formState.localDirDraft}
               onChange={(next) => setFormField("localDirDraft", next)}
-              onAdd={() => {
-                const p = formState.localDirDraft.path.trim();
-                if (!p) return;
-                if (formState.newLocalDirs.some((d) => d.path === p)) return;
-                setFormField("newLocalDirs", [
-                  ...formState.newLocalDirs,
-                  {
-                    path: p,
-                    branch: formState.localDirDraft.branch || null,
-                  },
-                ]);
-                setFormField("localDirDraft", { path: "", branch: null });
-              }}
+              onAdd={addLocalDirFromDraft}
             />
             {formState.newLocalDirs.map((dir, i) => (
               <div

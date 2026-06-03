@@ -28,6 +28,7 @@ import {
   sessionToCsv,
   renderMarkdown,
   formatModelName,
+  sanitiseFilename,
   createEmptySession,
   createUserMessage,
   createAssistantMessage,
@@ -126,10 +127,13 @@ export default function ChatPage() {
   // the auto-scroll effect's dependency stability (see session 94 for
   // the full analysis). Reverted to the original inline `find` so the
   // downstream `messages` `useMemo` re-fires on every render — matching
-  // the pre-session-94 scroll behavior exactly. The 2 render-time
-  // `sessions.find` sites in this file (line 125 + line 463) are kept
-  // inline; promoting them to a single `useMemo` is a behavior change
-  // (scroll effect dependency stability), not a byte-equivalent rename.
+  // the pre-session-94 scroll behavior exactly. The remaining inline
+  // `sessions.find` site (this line) is the canonical `activeSession`
+  // derivation; the 2 other `sessions.find` call sites that used to
+  // exist (the JSX empty-state title and `handleSend`'s `existing`
+  // lookup) now reuse this `activeSession` value directly. Promoting
+  // THIS line to a `useMemo` would be a behavior change (scroll effect
+  // dependency stability), not a byte-equivalent rename.
   const activeSession = sessions.find((s) => s.id === activeSessionId);
   const activeSessionModel = activeSession?.model;
   const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);
@@ -194,7 +198,11 @@ export default function ChatPage() {
   const handleDownloadSession = useCallback(
     (s: ChatSession, format: "json" | "csv", e?: React.MouseEvent) => {
       stopEvent(e);
-      const safeTitle = s.title.replace(/[^a-zA-Z0-9_-]/g, "_");
+      // Filename slug via the shared `sanitiseFilename` helper (was an
+      // inline `replace(/[^a-zA-Z0-9_-]/g, "_")` regex). The helper lives
+      // in `@/lib/chat-utils` next to `sessionToJson` / `sessionToCsv` so
+      // any future "export as Markdown / PDF" feature can reuse it.
+      const safeTitle = sanitiseFilename(s.title);
       const timestamp = Date.now();
       if (format === "json") {
         downloadFile(sessionToJson(s), `${safeTitle}_${timestamp}.json`, "application/json");
@@ -228,10 +236,12 @@ export default function ChatPage() {
     // active session yet. The `existing` lookup decides (a) whether we
     // need to insert a brand-new session and (b) what prior-message
     // history to send to the API (empty for new sessions, full history
-    // for existing ones).
-    const existing = activeSessionId
-      ? sessions.find((s) => s.id === activeSessionId)
-      : undefined;
+    // for existing ones). The top-level `activeSession` (line 134) is
+    // already the same `sessions.find` — reusing it is byte-equivalent
+    // (the prior `activeSessionId ? find : undefined` ternary collapses
+    // to `activeSession ?? undefined`, which is the same when activeSession
+    // is already undefined for the null-id case).
+    const existing = activeSession;
     const newSession = !existing ? createEmptySession(model) : undefined;
     const targetSessionId = existing?.id ?? newSession!.id;
 
@@ -288,7 +298,7 @@ export default function ChatPage() {
     if (gen === streamGenRef.current) {
       setIsStreaming(false);
     }
-  }, [input, activeSessionId, sessions, model, gatewayOnline, showToast, updateSessionMessages]);
+  }, [input, activeSession, model, gatewayOnline, showToast, updateSessionMessages]);
 
   // ── Keyboard shortcuts ─────────────────────────────────────
   const handleKeyDown = useCallback(
@@ -468,7 +478,7 @@ export default function ChatPage() {
                 </div>
                 <h3 className="text-lg font-semibold text-white/60 mb-1">
                   {hasActiveSession
-                    ? sessions.find((s) => s.id === activeSessionId)?.title || "New Chat"
+                    ? activeSession?.title || "New Chat"
                     : "Chat with your agent"}
                 </h3>
                 <p className="text-sm text-white/40 mb-2 max-w-md">

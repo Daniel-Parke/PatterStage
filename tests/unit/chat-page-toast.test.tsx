@@ -101,6 +101,7 @@ jest.mock("@/lib/chat-utils", () => {
     sessionToCsv: () => "",
     renderMarkdown: (s: string) => s,
     formatModelName: (id: string) => id,
+    sanitiseFilename: (title: string) => title.replace(/[^a-zA-Z0-9_-]/g, "_"),
     createEmptySession: (model: string) => ({
       id: `sess_${++idCounter}`,
       title: "New Chat",
