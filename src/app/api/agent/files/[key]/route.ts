@@ -16,7 +16,7 @@ import {
   writeManagedFileContent,
   type ManagedFileKey,
 } from "@/lib/agent-file-store";
-import { applyProfileOrRootPatch, pushProfileOrRoot, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatch, assertPatchSucceeded, pushProfileOrRoot, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
 import { badRequest, notFound, serverError } from "@/lib/api-response";
 import {
   configYamlToColumnValues,
@@ -253,7 +253,7 @@ export async function PUT(
         );
         const err = toPatchResponse(result, "Failed to sync profile to Hermes");
         if (err) return err;
-        if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
+        assertPatchSucceeded(result);
       }
       else {
         // Non-config managed file (SOUL.md, AGENTS.md, etc.) — write
@@ -265,7 +265,7 @@ export async function PUT(
         const result = pushProfileOrRoot(profileSlug);
         const err = toPatchResponse(result, "Failed to sync profile to Hermes");
         if (err) return err;
-        if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
+        assertPatchSucceeded(result);
       }
     }
     else {

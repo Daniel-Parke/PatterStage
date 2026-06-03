@@ -62,3 +62,13 @@ export function forbidden(error: string): NextResponse {
 export function serverError(error: string): NextResponse {
   return NextResponse.json({ error }, { status: 500 });
 }
+
+/**
+ * Return a 409 Conflict with the given error message. Use in route
+ * handlers when a write would collide with existing state (duplicate
+ * profile slug, unique-key violation, etc.). Sibling of the rest of
+ * the factory quartet — same body shape, different status code.
+ */
+export function conflict(error: string): NextResponse {
+  return NextResponse.json({ error }, { status: 409 });
+}

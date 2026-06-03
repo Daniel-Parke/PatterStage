@@ -25,7 +25,7 @@ import {
 import { slugifyDisplayName } from "@/lib/profile-slug";
 import { buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
 import type { ApiResponse, AgentProfile, ProfileFile } from "@/types/hermes";
-import { badRequest, serverError } from "@/lib/api-response";
+import { badRequest, conflict, serverError } from "@/lib/api-response";
 
 const PROFILE_FILE_DEFS = [
   { key: "soul", name: "SOUL.md", getPath: (b: ReturnType<typeof buildProfileHermesPathBundle>) => b.soul },
@@ -159,10 +159,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (getProfile(slug)) {
-      return NextResponse.json(
-        { error: `Profile "${slug}" already exists` },
-        { status: 409 },
-      );
+      return conflict(`Profile "${slug}" already exists`);
     }
 
     let soulMd =

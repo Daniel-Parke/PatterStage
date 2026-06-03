@@ -9,7 +9,7 @@ import {
   getDisabledSkills,
   getProfile,
 } from "@/lib/profiles-repository";
-import { applyProfileOrRootPatch, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { serializeJsonArray } from "@/lib/profile-config-builder";
 import { getSkill } from "@/lib/skills-repository";
@@ -78,7 +78,7 @@ export async function PUT(
     );
     const err = toPatchResponse(result, "Failed to toggle skill");
     if (err) return err;
-    if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
+    assertPatchSucceeded(result);
 
     return NextResponse.json({
       data: { success: true, skill: name, profile, enabled },

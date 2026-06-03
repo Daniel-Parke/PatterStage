@@ -17,7 +17,7 @@ import { pushProfileToHermes, removeProfileFromDisk } from "@/lib/hermes-profile
 import { resolveProfileHermesHome } from "@/lib/hermes-profile-paths";
 import { slugifyDisplayName } from "@/lib/profile-slug";
 import type { ApiResponse } from "@/types/hermes";
-import { badRequest, notFound, serverError } from "@/lib/api-response";
+import { badRequest, conflict, notFound, serverError } from "@/lib/api-response";
 
 export async function PUT(
   request: NextRequest,
@@ -57,10 +57,7 @@ export async function PUT(
           return badRequest(newProf.error);
         }
         if (getProfile(newSlug)) {
-          return NextResponse.json(
-            { error: `Profile "${newSlug}" already exists` },
-            { status: 409 },
-          );
+          return conflict(`Profile "${newSlug}" already exists`);
         }
 
         const oldDir = resolveProfileHermesHome(prof.profile);

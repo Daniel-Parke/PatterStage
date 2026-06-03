@@ -5,7 +5,7 @@ import { badRequest, serverError } from "@/lib/api-response";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { applyProfileOrRootPatch, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
 import { resolveSafeProfileName } from "@/lib/path-security";
 
 export async function PUT(request: NextRequest) {
@@ -38,7 +38,7 @@ export async function PUT(request: NextRequest) {
     );
     const err = toPatchResponse(result, "Failed to sync personality to Hermes");
     if (err) return err;
-    if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
+    assertPatchSucceeded(result);
 
     return NextResponse.json({
       data: { success: true, profile: result.profile, personality },

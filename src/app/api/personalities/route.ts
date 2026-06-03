@@ -6,7 +6,7 @@ import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
 import { listProfiles } from "@/lib/profiles-repository";
-import { applyProfileOrRootPatch, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
 import { resolveSafeProfileName } from "@/lib/path-security";
 
 /** Shared upsert logic used by both POST (create) and PUT (update). */
@@ -45,7 +45,7 @@ async function upsertPersonality(request: NextRequest) {
     }
     return err;
   }
-  if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
+  assertPatchSucceeded(result);
 
   return NextResponse.json({
     data: { success: true, name: result.profile, prompt, source: "SOUL.md" },

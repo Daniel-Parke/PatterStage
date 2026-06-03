@@ -10,7 +10,7 @@
  * `NextResponse.json` so the JSON Content-Type is set.
  */
 
-import { badRequest, forbidden, notFound, serverError } from "@/lib/api-response";
+import { badRequest, conflict, forbidden, notFound, serverError } from "@/lib/api-response";
 
 describe("badRequest", () => {
   it("returns a response with status 400", async () => {
@@ -116,6 +116,32 @@ describe("forbidden", () => {
   it("empty string is a valid error message", async () => {
     const res = forbidden("");
     expect(res.status).toBe(403);
+    const body = await res.json();
+    expect(body).toEqual({ error: "" });
+  });
+});
+
+describe("conflict", () => {
+  it("returns a response with status 409", async () => {
+    const res = conflict(`Profile "qa" already exists`);
+    expect(res.status).toBe(409);
+  });
+
+  it("body is { error: <message> }", async () => {
+    const res = conflict(`Profile "qa" already exists`);
+    const body = await res.json();
+    expect(body).toEqual({ error: `Profile "qa" already exists` });
+  });
+
+  it("preserves the exact error message including special characters", async () => {
+    const res = conflict(`Profile "weird/slug:with-chars" already exists`);
+    const body = await res.json();
+    expect(body.error).toBe(`Profile "weird/slug:with-chars" already exists`);
+  });
+
+  it("empty string is a valid error message", async () => {
+    const res = conflict("");
+    expect(res.status).toBe(409);
     const body = await res.json();
     expect(body).toEqual({ error: "" });
   });

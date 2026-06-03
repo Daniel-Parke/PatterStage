@@ -126,10 +126,9 @@ export function pushProfileOrRoot(slug: string): ProfileOrRootPatchResult {
  *   const result = applyProfileOrRootPatch(...);
  *   const err = toPatchResponse(result, "Failed to sync profile");
  *   if (err) return err;
- *   if (!result.ok) throw new Error("unreachable");
+ *   assertPatchSucceeded(result);
+ *   return NextResponse.json({ data: { success: true, profile: result.profile } });
  *
- * The caller still needs the `if (!result.ok)` guard because TS
- * can't narrow `result` from `toPatchResponse`'s return type alone.
  * `fallbackError` is the body of the 500 response when the underlying
  * push didn't supply its own `error` message. The not-found error
  * string is always "Profile not found" to match the prior inline
@@ -144,4 +143,31 @@ export function toPatchResponse(
     return notFound("Profile not found");
   }
   return serverError(result.error ?? fallbackError);
+}
+
+/**
+ * TypeScript assertion that narrows `ProfileOrRootPatchResult` to the
+ * `{ ok: true; profile: string }` branch. Use immediately after a
+ * successful `toPatchResponse` check so the caller can read
+ * `result.profile` without a manual `!result.ok` guard.
+ *
+ * The companion function to `toPatchResponse` is intentionally a
+ * separate helper rather than a second return on `toPatchResponse`:
+ * keeping the response-or-null contract pure makes the helper trivially
+ * testable (existing tests in `tests/unit/apply-profile-or-root-patch.test.ts`
+ * only check the response shape, not the narrowing side-effect). The
+ * asserts signature also has no runtime effect — TypeScript discards
+ * the call at compile time, so adding this helper does not change
+ * the wire output of any route.
+ */
+export function assertPatchSucceeded(
+  result: ProfileOrRootPatchResult,
+): asserts result is { ok: true; profile: string } {
+  if (!result.ok) {
+    // toPatchResponse is supposed to be called first; reaching this
+    // branch is a programmer error (caller wired the helper pair
+    // wrong). Throw a recognisable string so debugging points at the
+    // contract.
+    throw new Error("assertPatchSucceeded called on a failed result");
+  }
 }

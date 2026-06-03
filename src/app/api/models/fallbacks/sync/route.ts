@@ -2,6 +2,7 @@
 // /api/models/fallbacks/sync — write fallback chain + config to Hermes
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
+import { toError } from "@/lib/api-fetch";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { logApiError } from "@/lib/api-logger";
@@ -10,6 +11,7 @@ import { fallbackSyncPostSchema } from "@/lib/fallback-config-schema";
 import { getFallbackConfig, updateFallbackConfigBatch } from "@/lib/fallbacks-repository";
 import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
+import { serverError } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -48,7 +50,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logApiError("POST /api/models/fallbacks/sync", "syncing fallback to Hermes", error);
-    const message = error instanceof Error ? error.message : "Failed to sync fallback";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return serverError(toError(error).message);
   }
 }
