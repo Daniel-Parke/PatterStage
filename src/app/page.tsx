@@ -82,6 +82,36 @@ function composeTemplateUrl(templateId: string): string {
   return `/orchestration/missions?template=${templateId}&compose=1`;
 }
 
+/**
+ * Return a new monitor with the given cron job's schedule field set
+ * to `newSchedule`. Used by the dashboard's "update cron schedule"
+ * handler to apply the change optimistically before the API call
+ * round-trips. The original `monitor` is returned when it is null
+ * (defensive — the page already guards against this case via a
+ * showToast, but the helper stays safe to call on stale state).
+ *
+ * Pure function: never mutates the input. The page can call this
+ * inside its setDataFields updater and the React reference-equality
+ * checks downstream will see a new monitor object only when the
+ * target job actually exists.
+ */
+function withCronJobSchedule(
+  monitor: MonitorData | null,
+  jobId: string,
+  newSchedule: string,
+): MonitorData | null {
+  if (!monitor) return monitor;
+  return {
+    ...monitor,
+    cron: {
+      ...monitor.cron,
+      jobs: monitor.cron.jobs.map((job) =>
+        job.id === jobId ? { ...job, schedule: newSchedule } : job,
+      ),
+    },
+  };
+}
+
 // ── Live Clock (isolated re-render) ───────────────────────────
 
 const LiveClock = reactMemo(function LiveClock() {
@@ -248,19 +278,7 @@ export default function Dashboard() {
     // Optimistic local update before the API call so the UI updates immediately
     setDataFields((prev) => ({
       ...prev,
-      monitor: prev.monitor
-        ? {
-            ...prev.monitor,
-            cron: {
-              ...prev.monitor.cron,
-              jobs: prev.monitor.cron.jobs.map((job) =>
-                job.id === jobId
-                  ? { ...job, schedule: scheduleDisplay }
-                  : job,
-              ),
-            },
-          }
-        : prev.monitor,
+      monitor: withCronJobSchedule(prev.monitor, jobId, scheduleDisplay),
     }));
 
     try {

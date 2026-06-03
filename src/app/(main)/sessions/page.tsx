@@ -27,7 +27,7 @@
 
 "use client";
 
-import { useCallback, useState, useEffect, useMemo } from "react";
+import { useCallback, useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
   Clock,
@@ -48,7 +48,7 @@ import Pagination from "@/components/ui/Pagination";
 import { useToast } from "@/components/ui/Toast";
 import { LiveDot } from "@/components/ui/LiveDot";
 import { timeAgo, formatElapsed } from "@/lib/utils";
-import { apiFetch } from "@/lib/api-fetch";
+import { useApiData } from "@/hooks/useApiData";
 import { useInterval } from "@/hooks/useInterval";
 import { useStoredBool } from "@/hooks/useStoredBool";
 import { searchSessionsByQuery, isApiNoiseSession } from "@/lib/session-filters";
@@ -284,8 +284,6 @@ function MissionGroupCard({ group }: { group: MissionGroup }) {
 // ── Page ────────────────────────────────────────────────────
 
 export default function SessionsPage() {
-  const [data, setData] = useState<SessionsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<SessionSource | null>(null);
   const [page, setPage] = useState(0);
@@ -296,29 +294,39 @@ export default function SessionsPage() {
   useInterval(() => setNowTick((n) => n + 1), { ms: 1000 });
   const { showToast, toastElement } = useToast();
 
-  const loadSessions = useCallback(
-    async (offset: number) => {
-      setLoading(true);
-      const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) });
-      if (sourceFilter) params.set("source", sourceFilter);
+  // When the source filter changes, jump back to page 0 so the user
+  // doesn't see "no results" on a stale page index. We mirror the
+  // filter into a ref so the `urlBuilder` closure can read the
+  // freshest value without invalidating the `useApiData` URL callback
+  // (which would trigger an extra fetch on the same page transition).
+  const sourceFilterRef = useRef(sourceFilter);
+  useEffect(() => {
+    sourceFilterRef.current = sourceFilter;
+    setPage(0);
+  }, [sourceFilter]);
 
-      try {
-        const json = await apiFetch(`/api/sessions?${params}`);
-        setData(json.data ?? { sessions: [], total: 0 });
-      } catch {
-        showToast("Failed to load sessions", "error");
-      } finally {
-        setLoading(false);
-      }
+  // URL is rebuilt from the current page + source filter. The hook
+  // re-fetches on URL change, so a page click or a filter change
+  // triggers a single fetch (matches the pre-refactor `loadSessions`
+  // behaviour: 1 fetch per state change, no extra renders).
+  const sessionsUrl = useCallback(
+    () => {
+      const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(page * PAGE_SIZE) });
+      if (sourceFilterRef.current) params.set("source", sourceFilterRef.current);
+      return `/api/sessions?${params}`;
     },
-    [sourceFilter, showToast],
+    [page],
   );
 
-  // Initial load + reload on filter change
+  const { data, loading, error: loadError } = useApiData<SessionsResponse>(sessionsUrl, {
+    urlBuilder: sessionsUrl,
+  });
+
+  // Surface API errors as a toast. The hook exposes the error string;
+  // we forward to showToast for parity with the previous try/catch.
   useEffect(() => {
-    setPage(0);
-    void loadSessions(0);
-  }, [loadSessions]);
+    if (loadError) showToast("Failed to load sessions", "error");
+  }, [loadError, showToast]);
 
   // Stable reference for downstream useMemo hooks — prevents unnecessary recomputation
   // on renders where data hasn't changed. Using data?.sessions as dependency is safe:
@@ -469,10 +477,7 @@ export default function SessionsPage() {
               <Pagination
                 currentPage={page}
                 totalPages={totalPages}
-                onPageChange={(newPage) => {
-                  setPage(newPage);
-                  void loadSessions(newPage * PAGE_SIZE);
-                }}
+                onPageChange={setPage}
               />
             )}
           </>

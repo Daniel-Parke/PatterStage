@@ -10,6 +10,49 @@ import { useState, useEffect, useCallback, useRef } from "react";
 interface UseApiDataOptions {
   /** Auto-fetch on mount (default: true) */
   autoFetch?: boolean;
+  /**
+   * Optional polling interval in milliseconds. When set to a positive
+   * number, the hook re-fetches the URL on that cadence. When
+   * `undefined` or `0`, no polling is registered.
+   *
+   * Used by the Logs page so the file viewer auto-refreshes every 5s
+   * (and pauses via the `enabled: boolean` toggle) without the
+   * 4-line `useInterval` + `setRefreshing` micro-state boilerplate.
+   *
+   * Pair with `useInterval` for non-`useApiData` polling cases. The
+   * two helpers stay decoupled so each page picks the shape it needs.
+   */
+  refreshIntervalMs?: number;
+  /**
+   * Toggle for the auto-refresh loop. Default `true`. Set to `false`
+   * to pause polling without unmounting the hook. The hook reads
+   * `optionsRef.current.enabled` on every interval tick so a parent
+   * state change takes effect on the next tick without a re-render.
+   */
+  refreshEnabled?: boolean;
+  /**
+   * Optional `RequestInit` options merged into every fetch. Used by
+   * the Sessions page to thread the `URLSearchParams` body for
+   * `limit`/`offset`/`source` filters through the same hook. The
+   * extension stays generic — any future consumer that needs custom
+   * headers, signal, etc. can pass them here.
+   *
+   * Note: when this is a `URLSearchParams` instance, fetch will send
+   * it with `Content-Type: application/x-www-form-urlencoded`. For
+   * GET requests, the params should be appended to the URL via
+   * `toString()` so they show up in the query string. The helper
+   * handles both shapes.
+   */
+  init?: RequestInit;
+  /**
+   * Optional URL builder. The hook calls this on every render to
+   * resolve the current URL, so the parent can thread reactive
+   * dependencies (page, filter, sort) through `useMemo` and the
+   * hook will re-fetch on URL change. When omitted, `url` is used
+   * directly. The builder signature is intentionally identical to
+   * the `url` argument so either form is supported.
+   */
+  urlBuilder?: () => string;
 }
 
 interface UseApiDataResult<T> {
@@ -25,6 +68,10 @@ interface UseApiDataResult<T> {
  * Usage:
  *   const { data, loading, error, refetch } = useApiData<ProfilesData>("/api/agent/profiles");
  *
+ *   // Reactive URL with pagination / filters:
+ *   const url = useCallback(() => `/api/sessions?page=${page}`, [page]);
+ *   const { data, loading, error } = useApiData<SessionsResponse>(url, { urlBuilder: url });
+ *
  * Replaces the boilerplate pattern:
  *   const [loading, setLoading] = useState(true);
  *   const [data, setData] = useState<T | null>(null);
@@ -32,7 +79,7 @@ interface UseApiDataResult<T> {
  *   useEffect(() => { load(); }, [load]);
  */
 export function useApiData<T = unknown>(
-  url: string,
+  url: string | (() => string),
   options?: UseApiDataOptions
 ): UseApiDataResult<T> {
   const [data, setData] = useState<T | null>(null);
@@ -49,8 +96,15 @@ export function useApiData<T = unknown>(
   const fetch_ = useCallback(async () => {
     setLoading(true);
     setError(null);
+    // Resolve the URL lazily so a `urlBuilder` can read fresh
+    // closure state on every fetch (e.g. the current page index).
+    const resolvedUrl: string = optionsRef.current?.urlBuilder
+      ? optionsRef.current.urlBuilder()
+      : typeof url === "function"
+        ? url()
+        : url;
     try {
-      const res = await fetch(url);
+      const res = await fetch(resolvedUrl, optionsRef.current?.init);
       const json = await res.json();
       if (!res.ok) {
         throw new Error(json.error || `Request failed (${res.status})`);
@@ -78,6 +132,22 @@ export function useApiData<T = unknown>(
     }
     return () => { mountedRef.current = false; };
   }, [fetch_]);
+
+  // Polling loop: re-fetch on the configured cadence while enabled.
+  // We read the latest `refreshEnabled` flag from optionsRef on every
+  // tick so a state change in the parent pauses/resumes the loop
+  // without a hook re-mount. The interval clears on unmount, on
+  // options change, or when paused — same lifecycle as the parent
+  // page that owns the toggle.
+  useEffect(() => {
+    const ms = options?.refreshIntervalMs;
+    if (!ms || ms <= 0) return;
+    const id = setInterval(() => {
+      if (optionsRef.current?.refreshEnabled === false) return;
+      void fetch_();
+    }, ms);
+    return () => clearInterval(id);
+  }, [options?.refreshIntervalMs, fetch_]);
 
   return { data, loading, error, refetch: fetch_ };
 }

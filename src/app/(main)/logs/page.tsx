@@ -23,7 +23,6 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useApiData } from "@/hooks/useApiData";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
-import { useInterval } from "@/hooks/useInterval";
 import type { LogGetData } from "@/app/api/logs/route";
 import { formatBytes } from "@/lib/utils";
 import { LogRow } from "@/components/logs/LogRow";
@@ -33,7 +32,6 @@ type LogData = LogGetData;
 
 export default function LogsPage() {
   const [activeLog, setActiveLog] = useState("agent");
-  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
   const [fileQuery, setFileQuery] = useState("");
@@ -53,7 +51,20 @@ export default function LogsPage() {
     [activeLog, lineCount],
   );
 
-  const { data, loading, error: loadError, refetch } = useApiData<LogData>(logUrl);
+  // Auto-refresh is owned by the hook: 5s polling loop, gated by the
+  // `autoRefresh` toggle. Eliminates the previous `useInterval` +
+  // `setRefreshing` + `useEffect` micro-state trio. `loading` is
+  // exposed by the hook for the button's "Refresh" affordance, but
+  // we only show the spinner once we already have data (matches the
+  // pre-refactor UX: the very first load shows a full-page spinner,
+  // a background refresh shows the button spinner).
+  const { data, loading, error: loadError, refetch } = useApiData<LogData>(logUrl, {
+    refreshIntervalMs: 5000,
+    refreshEnabled: autoRefresh,
+  });
+  // Mirrors the pre-refactor `refreshing` derivation: button spinner
+  // only shows when a refresh runs on top of already-loaded data.
+  const refreshing = !!data && loading;
 
   const handleDeleteAllLogs = useCallback(async () => {
     if (!deleteArmed) {
@@ -92,8 +103,7 @@ export default function LogsPage() {
     }
   }, [data?.availableLogs, activeLog]);
 
-  // Auto-refresh every 5s (toggleable)
-  useInterval(() => { void refetch(); }, { ms: 5000, enabled: autoRefresh });
+  // Auto-refresh is now owned by the hook (refreshIntervalMs: 5000 above).
 
   // Auto-scroll to top on new data
   useEffect(() => {
@@ -109,13 +119,8 @@ export default function LogsPage() {
   };
 
   const handleRefresh = useCallback(() => {
-    if (data) setRefreshing(true);
     void refetch();
-  }, [data, refetch]);
-
-  useEffect(() => {
-    if (refreshing && !loading) setRefreshing(false);
-  }, [refreshing, loading]);
+  }, [refetch]);
 
   const filteredFiles = useMemo(() => {
     if (!data?.availableLogs) return [];
