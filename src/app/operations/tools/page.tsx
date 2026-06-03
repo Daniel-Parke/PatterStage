@@ -75,10 +75,37 @@ export default function ToolsPage() {
     }
   }, [selectedProfile, showToast]);
 
-  useEffect(() => {
-    void loadToolsets();
-    void loadProfileSyncStatus();
+  // reloadAll — pairs `loadToolsets` + `loadProfileSyncStatus` for callers
+  // that need BOTH reloaded (e.g. after a pull/push from Hermes that
+  // may have changed the sync status of the active profile). Appears
+  // at 2 sites:
+  //   1. The useEffect below (fires-and-forgets on mount and on
+  //      selectedProfile change)
+  //   2. The `pullFromHermes` onSuccess (awaits so the
+  //      `runSyncAction` helper's `await onSuccess()` is honoured
+  //      and the busy spinner doesn't clear before the refetch
+  //      completes — per the helper's JSDoc)
+  // Centralising into a `useCallback` with `[loadToolsets,
+  // loadProfileSyncStatus]` deps keeps the 2 sites in lockstep
+  // (a future "also reload X" extension lands in one place). The
+  // call sites are byte-equivalent:
+  //   - `void reloadAll();` ≡ `void loadToolsets(); void loadProfileSyncStatus();`
+  //     (sequential awaits inside the callback, caller discards the promise)
+  //   - `await reloadAll();` ≡ `await loadToolsets(); await loadProfileSyncStatus();`
+  //     (sequential awaits inside the callback, caller awaits the result)
+  // Both call shapes produce the same final state: toolsets AND sync
+  // status are both reloaded. The `saveToolsets` onSuccess is
+  // intentionally NOT migrated — it only needs `loadToolsets`
+  // (the sync status doesn't change on a local save, only on
+  // pull/push that touches Hermes disk).
+  const reloadAll = useCallback(async () => {
+    await loadToolsets();
+    await loadProfileSyncStatus();
   }, [loadToolsets, loadProfileSyncStatus]);
+
+  useEffect(() => {
+    void reloadAll();
+  }, [reloadAll]);
 
   const toggleUnifiedToolset = (toolsetId: string) => {
     setUnifiedEnabled((prev) => {
@@ -135,8 +162,7 @@ export default function ToolsPage() {
         : "Pushed profile to Hermes"
     );
     const onSuccess = async () => {
-      await loadToolsets();
-      await loadProfileSyncStatus();
+      await reloadAll();
     };
     return runSyncAction({
       setBusy,

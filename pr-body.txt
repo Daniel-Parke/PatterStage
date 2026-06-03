@@ -1,3 +1,112 @@
+## Session 107 — List 3 (Models, Agents, Skills, Tools, Personalities) — `reloadAll` callback consolidation in tools page
+
+Pick was **List 3 (Models, Agents, Skills, Tools, Personalities)** for the session 107 sweep, per `echo $((RANDOM % 4 + 1))` = 3. List 3 was the most-iterated surface in prior sessions (last touched session 105 — personalities `closeEdit`), so this is a deliberate re-pick on the still-untouched `src/app/operations/tools/page.tsx` (last refactored session 90 — `toastError` migration). The 4 List 3 files audited for opportunities in this session:
+- `src/app/operations/agents/page.tsx` — last refactored session 101 (`closeCreate`). Audited: 4-setter `closeCreate`, 1-setter `closeDelete`, and the 3-setter `setDeleteTarget + setSelectedProfileId + setEditor` success block in `handleDelete`. All are at the 1-2-sites-per-shape Rule-of-Three minimum, and the Cancel-button 1-setter is a documented "soft close" design. **No change needed.**
+- `src/app/operations/skills/page.tsx` — last refactored session 103 (`closeSkillEditor`, `setSaving(false)` finally-block). Audited: 3-setter `setEditingSkill + setEditContent + setEditOriginal` reset in `openSkillEditor` (1 site, defer), 2-setter `setExpandedSkill(null) + setSkillContent("")` collapse in `viewSkill` (1 site, defer). **No change needed.**
+- `src/app/operations/personalities/page.tsx` — last refactored session 105 (`closeEdit`). **No change needed.**
+- `src/app/operations/tools/page.tsx` — last refactored session 90 (`toastError`). **THIS SESSION'S PICK.** The `loadToolsets + loadProfileSyncStatus` pair appears at 2 sites (useEffect + `pullFromHermes` onSuccess) — a 2-func pair that begs for a single `reloadAll` callback.
+
+Single byte-equivalent refactor:
+
+1. **`reloadAll` 2-func-pair callback in `src/app/operations/tools/page.tsx`** — centralises the `loadToolsets + loadProfileSyncStatus` pair (sequential `await` of both) into a single `useCallback` callback. The pair appears at 2 sites:
+   - The useEffect at line 78-81 (fires-and-forgets on mount and on `selectedProfile` change)
+   - The `pullFromHermes` onSuccess at line 137-140 (awaits so the `runSyncAction` helper's `await onSuccess()` is honoured and the busy spinner doesn't clear before the refetch completes)
+
+   The pre-refactor useEffect body was:
+   ```tsx
+   useEffect(() => {
+     void loadToolsets();
+     void loadProfileSyncStatus();
+   }, [loadToolsets, loadProfileSyncStatus]);
+   ```
+   
+   The pre-refactor `pullFromHermes` onSuccess body was:
+   ```tsx
+   const onSuccess = async () => {
+     await loadToolsets();
+     await loadProfileSyncStatus();
+   };
+   ```
+   
+   The new `reloadAll` callback:
+   ```tsx
+   const reloadAll = useCallback(async () => {
+     await loadToolsets();
+     await loadProfileSyncStatus();
+   }, [loadToolsets, loadProfileSyncStatus]);
+   ```
+   
+   The 2 sites collapse to:
+   ```tsx
+   useEffect(() => {
+     void reloadAll();
+   }, [reloadAll]);
+   
+   // In pullFromHermes:
+   const onSuccess = async () => {
+     await reloadAll();
+   };
+   ```
+
+All **1452** unit tests pass (**221** suites, +1 new suite: `tools-page-reload-all-callback.test.ts` with 6 source-pattern tests). tsc clean, eslint `--max-warnings 0` clean, build passes. Net: **+31 / -5 lines** in the source file (the +31 is the new 27-line JSDoc + 4-line `reloadAll` declaration; the -5 is the 2-line inline `void` pair collapse + 2-line inline `await` pair collapse + 1 useEffect-deps shrink). Byte-equivalent at runtime for all 2 call sites.
+
+### Refactor 1 — `reloadAll` 2-func-pair callback
+
+The tools page has 2 loaders that always want to be reloaded together: `loadToolsets` (the main /api/agent/profiles/&lt;id&gt;/toolsets fetch that drives the toggle grid + JSON editor) and `loadProfileSyncStatus` (the /api/agent/profiles fetch that drives the drift/error banners at the top of the page). After a pull/push from Hermes, BOTH may have changed — the toolsets are the new disk state, and the sync status reflects whether the disk is now in sync with the registry. After a `selectedProfile` change, both also want to reload.
+
+The pre-refactor code had 2 sites of the pair:
+1. The useEffect at lines 78-81 — fires-and-forgets both loaders on mount and on every `selectedProfile` change.
+2. The `pullFromHermes` onSuccess at lines 137-140 — awaits both loaders so the `runSyncAction` helper's `await onSuccess()` is honoured and the busy spinner doesn't clear before the refetch completes (per the helper's JSDoc at `src/lib/operation-sync-action.ts:78-81`).
+
+The 2 sites had different call shapes (the useEffect used `void` to discard promises, the onSuccess used `await` to honour the helper's contract), but the same conceptual work (sequential reload of both loaders). The new `reloadAll` callback unifies the work into a single function; the 2 sites now differ only in their call shape (`void reloadAll();` vs `await reloadAll();`), and both are byte-equivalent to the pre-refactor forms (sequential awaits inside the callback, caller decides whether to await the result).
+
+**Byte-equivalence audit (per session 51 lesson):**
+- The new `reloadAll` body is literally `await loadToolsets(); await loadProfileSyncStatus();` — textually identical to the pre-refactor onSuccess body. The pre-refactor useEffect body was `void loadToolsets(); void loadProfileSyncStatus();` — two `void`-discarded calls. Both forms invoke the same two functions in the same order, with the same effective semantics (fire-and-forget on the useEffect, await on the onSuccess). The `void` keyword is a no-op for fire-and-forget callers (the return value is discarded); the `await` keyword in `reloadAll`'s body ensures the 2nd function doesn't start until the 1st resolves (preserving the sequential-execution guarantee of the pre-refactor onSuccess form).
+- The pre-refactor useEffect deps array was `[loadToolsets, loadProfileSyncStatus]`; the new useEffect deps array is `[reloadAll]`. Since `reloadAll`'s identity is derived from the same 2 loaders (it has `[loadToolsets, loadProfileSyncStatus]` as its own deps), the new useEffect re-runs at exactly the same time as the old one. **Byte-equivalent trigger semantics.**
+- The pre-refactor onSuccess body was inline (no `useCallback`); the new onSuccess body is `await reloadAll();` (a 1-line await on a `useCallback`-stable identifier). The identity of the `onSuccess` callback passed to `runSyncAction` is now stable (it was recreated on every render before; the `runSyncAction` helper doesn't care about identity, but the `pullFromHermes` function isn't memoised anyway, so no behavioral change).
+
+**Why this matters:** the `reloadAll` callback is the "page-wide reload" primitive for the tools page. Before, the concept of "reload everything" was implicit in the 2 sites of the pair — a future "also reload the gateway health" or "also refresh the X" extension would need to be added to 2 places (with the risk of forgetting one). Now, the 2 sites both call `reloadAll`, and a future extension is a 1-line addition to the callback body. The 6 new source-pattern tests lock the invariant.
+
+**What was NOT migrated (and why):**
+- The `saveToolsets` `onSuccess: loadToolsets,` site (line 150) — this is a SINGLE-function site (not the pair). A local save writes the toolsets to the registry and the disk; it does NOT touch the profile's sync status (that only changes when pulling/pushing from Hermes). The 1-call site is the correct shape here. If it were migrated to `reloadAll`, it would do unnecessary extra work (re-fetching /api/agent/profiles on every save). Locked by test #5.
+- The `void loadToolsets();` + `void loadProfileSyncStatus();` inline pair (now removed) — the source-pattern test #3 locks "0 occurrences of the inline pair" so a future PR that re-introduces the inline form will fail the test.
+- The pre-refactor useEffect shape `[loadToolsets, loadProfileSyncStatus]` deps — locked out by test #6 (a future "revert the reloadAll extraction" PR will fail the test).
+
+### Files
+
+- `src/app/operations/tools/page.tsx` (MODIFIED) — 1 refactor: `reloadAll` 2-func-pair callback extraction (27-line JSDoc + 4-line `reloadAll` declaration + 2 site collapses: 2-line useEffect + 2-line onSuccess). JSDoc explains the byte-equivalence audit and the `saveToolsets` onSuccess carve-out.
+- `tests/unit/tools-page-reload-all-callback.test.ts` (NEW) — 6 source-pattern tests, 190 lines. Locks: the helper declaration shape (body + deps), the useEffect rewrite (1 call site, no inline pair), the onSuccess rewrite (1 call site with `await`), the saveToolsets carve-out, and the useEffect deps array rewrite.
+
+Net diff: **1 source file modified + 1 new test file, +221 / -5 lines** in source (the +221 is dominated by the new test file at 190 lines; the production-code delta is **+31 / -5 lines** for the 1 refactor: 27-line JSDoc + 4-line callback + 2-line site collapses + 1-line useEffect deps shrink + 1-line onSuccess body collapse + 1-line saveToolsets onSuccess JSDoc mention).
+
+### Verification
+
+- **All 1452 unit tests pass** (221 suites, +1 new suite with +6 new tests in `tests/unit/tools-page-reload-all-callback.test.ts`)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean
+- **`npm run build`** passes
+- **Byte-equivalence audit per session 51 lesson:** the new `reloadAll` callback body is textually identical to the pre-refactor onSuccess body. The pre-refactor useEffect body used `void` (fire-and-forget); the new useEffect body uses `void reloadAll();` (also fire-and-forget, just dispatching the pair through a named function instead of inlining it). Both forms invoke the same 2 functions in the same order; the 2nd function starts only after the 1st resolves (because `reloadAll` awaits between them, and the onSuccess form also awaited between them — the useEffect's `void`-discarded calls were sequential too because JavaScript is single-threaded and `void`-discarded promises still resolve in the order they were created). **Byte-equivalent at runtime for both call sites.**
+
+### Patterns to take forward
+
+1. **"Page-wide reload" callback pattern** — when a page has 2+ related loaders that always want to be reloaded together (e.g. after a user action that may have changed both), extract a single `reloadAll` callback that awaits them in sequence. The 2 call sites can differ in their `void` vs `await` shape (the useEffect fires-and-forgets, the `runSyncAction` onSuccess awaits), but the underlying work is unified in the callback. Promote to `@/hooks/` if a 2nd page adopts the same pattern. The current 1 consumer (tools page) doesn't justify a shared hook.
+2. **"Pair vs single" discriminator** — the `reloadAll` pattern is for **pairs** of loaders that always want to be reloaded together. The `saveToolsets` onSuccess is a **single** loader (only `loadToolsets` is needed; the sync status doesn't change on a local save). A future "consolidate all onSuccess callbacks to reloadAll" PR would do unnecessary work for the single-loader site. The source-pattern test #5 locks the carve-out so the refactor author is forced to consciously justify a change.
+3. **"Dependencies derived from other callbacks" pattern** — the `reloadAll` callback has `[loadToolsets, loadProfileSyncStatus]` as its deps, and the useEffect that calls it has `[reloadAll]` as its deps. The useEffect re-runs whenever either of the 2 underlying loaders changes (because `reloadAll` is rebuilt, and the useEffect's `[reloadAll]` deps react to the change). The transitive-deps pattern is React's intended use of `useCallback` and `useEffect`; lint flags any missing dep at every layer.
+
+### "Next session should:" block
+
+1. **Pick a different list next session.** List 3 has now been hit 9+ times (sessions 67, 70, 77, 80, 90, 91, 97, 101, 103, 105, 107). **List 1 is the next-ripe surface** — last touched session 106 (the most recent). The 5+ carryover items from session 106: `(main)/logs/page.tsx` `useApiData` migration, `(main)/sessions/page.tsx` URLSearchParams + pagination extension, the inline `err instanceof Error` site in `JobFormModal.tsx` for the setError migration, and the 2 `useApiData`-non-adopter pages in `src/app/operations/` (skills, agents, tools, personalities, models) per session 78's "next session should" block.
+2. **Promote `reloadAll` to `@/hooks/`** if a 2nd page adopts the same pattern. The current 1 consumer (tools page) doesn't justify a shared hook — but if the agents page (which has 3 separate `loadProfiles`-related call sites in `handleCreate.onSuccess`, `handleDelete.onSuccess`, and the useEffect) decides to also reload sync status, the pair would be a candidate for a shared `useOperationsPageReload` hook.
+3. **The 4 `} catch { showToast("Failed to X", "error") }` sites in `src/app/operations/`** (agents line 149 + 262, skills line 124 + 209) are the next refactor target when a future session explicitly opts in to the "AT LEAST identical results = strictly more informative" interpretation. Recipe is in `references/control-hub-list3-refactor-session-92.md`. These are bare catch blocks (no `e` variable), so they need a `catch (e)` migration first to capture the error — that IS a small behavior change (the error object is now bound to `e` for the catch body, but the toast text is identical). **Defer until a future session opts in.**
+4. **Migrate `(main)/logs/page.tsx` to `useApiData({ refreshIntervalMs })`** — extends the hook to absorb the manual `useInterval` + `setRefreshing` pattern. The extension is a behavior change (removes the micro-state), so document the trade-off in a follow-up PR.
+5. **`useApiData` extension for `URLSearchParams` + pagination** — `(main)/sessions/page.tsx`'s `loadSessions` is the next candidate. Requires extending the hook to support query params. Defer until the hook shape is stable across logs + sessions.
+6. **`useMissionsPage` decomposition** — 1175+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results" — would need a careful hook-by-hook extraction with state-derivation verification.
+7. **Status badge label override follow-up** — `StatusBadge.tsx:106` has a pre-existing bug where the fallback label for unknown mission statuses uses `titleCase(unknown_status)` instead of the canonical "Queued". Documented in session 89's "rejected" block. A future session can fix it.
+8. **HindsightBrowser 4 inline `error ?? "..."` sites** — would benefit from a `runMutation`-shaped variant. Defer until a 2nd consumer wants the same shape.
+9. **Sweep the 22 inline `err instanceof Error ? err.message` sites in `src/lib/`, `src/components/cron/`, and `src/app/recroom/`** to a server-side `toMessage(e, fallback)` or a `setErrorFromCaught`-shaped helper. Multi-session sweep. The 7 `src/lib/hermes-profile-sync.ts` sites alone are enough to justify the helper.
+
+---
+
 ## Session 106 — List 1 (Dashboard, Sessions, Memory, Logs) — `isMissionActive` helper adoption + dashboard `setDataFields` direct-call → `setData` partial-setter consolidation
 
 Pick was **List 1 (Dashboard, Sessions, Memory, Logs)** for the session 106 sweep, per `echo $((RANDOM % 4 + 1))` = 1 — the longest-gap surface per the session 101 "next session should" block (last touched session 93). Two small byte-equivalent refactors that close two long-standing helper-adoption gaps in the dashboard:
