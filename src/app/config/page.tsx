@@ -5,14 +5,13 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useCallback } from "react";
 import { Settings, ChevronRight, Wrench, Sparkles } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { iconColorMap, colorBorderMap, badgeBgMap } from "@/lib/theme";
-import { apiFetch } from "@/lib/api-fetch";
+import { useApiData } from "@/hooks/useApiData";
 import type { AccentColor } from "@/types/hermes";
 
 // ── Category definitions (mirrors sidebar groups) ─────────
@@ -156,26 +155,16 @@ function QuickLinkCard({
 }
 
 export default function ConfigIndexPage() {
-  const [config, setConfig] = useState<Record<string, unknown> | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const loadConfig = useCallback(async (signal?: AbortSignal) => {
-    setLoading(true);
-    try {
-      const json = await apiFetch("/api/config", { signal });
-      setConfig(json.data ?? null);
-    } catch {
-      setConfig(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    void loadConfig(controller.signal);
-    return () => controller.abort();
-  }, [loadConfig]);
+  // useApiData absorbs the loadConfig + useEffect + AbortController trio
+  // and tracks loading/error in one place. The previous catch block
+  // silently swallowed errors and set config=null; the hook surfaces
+  // the error via the `error` return, but the rendered fallback
+  // ("Failed to load configuration.") is preserved by treating any
+  // missing data state — error or `data === null` — as the failure
+  // branch. The `data ?? null` line preserves the old `json.data ?? null`
+  // fallback for the (unreachable in practice) "no data key" case.
+  const { data, loading } = useApiData<Record<string, unknown> | null>("/api/config");
+  const config = data ?? null;
 
   return (
     <AppPageShell>

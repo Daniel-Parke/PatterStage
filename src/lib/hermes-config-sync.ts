@@ -33,6 +33,8 @@ import { getModelDefaults, getModel } from "./models-repository";
 import { modelKey } from "./model-key";
 import { toError } from "./api-fetch";
 import { backupFile as backupFileShared, ensureDir } from "./fs-helpers";
+import { parseFallbackAgentSettingsFromYaml } from "./fallback-config-yaml";
+import type { FallbackConfigPutInput } from "./fallback-config-schema";
 
 /**
  * Read `~/.hermes/config.yaml` and return the parsed YAML object, or
@@ -485,18 +487,21 @@ export function syncSingleModelToHermesConfig(modelId: string): { backupPath: st
 
 // ── Per-credential sync to .env ──────────────────────────────
 
-interface FallbackAgentSettingsFromDisk {
-  apiMaxRetries?: number;
-  restorePrimaryOnFallback?: boolean;
-  fallbackNotification?: boolean;
-}
-
 /**
  * Read `agent.*` fallback fields from on-disk config.yaml (post-write verify).
+ * Thin wrapper over `parseFallbackAgentSettingsFromYaml` — keeps the file I/O
+ * + YAML parse + null-on-missing-file contract at this layer and delegates
+ * the field-mapping + clamp (apiMaxRetries → 0..10) to the single source of
+ * truth. Previously this function duplicated the field extraction AND
+ * skipped the clamp, which let a corrupt on-disk value (e.g. apiMaxRetries
+ * 15) slip past `assertFallbackAgentSettingsWritten`'s "matches expected"
+ * check silently. Now both the import path (read Hermes → DB) and the
+ * read-back path enforce the same 0..10 contract defined by the Zod
+ * schema (`fallbackConfigPutSchema`).
  */
 export function readFallbackAgentSettingsFromConfig(
   configPath?: string,
-): FallbackAgentSettingsFromDisk | null {
+): FallbackConfigPutInput | null {
   const paths = getActiveHermesPaths();
   const target = configPath ?? paths.config;
   if (!existsSync(target)) return null;
@@ -504,19 +509,7 @@ export function readFallbackAgentSettingsFromConfig(
   try {
     const raw = readFileSync(target, "utf-8");
     const yamlConfig = (yaml.load(raw) as HermesConfig) ?? {};
-    const agent = yamlConfig.agent as Record<string, unknown> | undefined;
-    if (!agent) return {};
-    const out: FallbackAgentSettingsFromDisk = {};
-    if (typeof agent.api_max_retries === "number") {
-      out.apiMaxRetries = agent.api_max_retries;
-    }
-    if (typeof agent.restore_primary_on_fallback === "boolean") {
-      out.restorePrimaryOnFallback = agent.restore_primary_on_fallback;
-    }
-    if (typeof agent.fallback_notification === "boolean") {
-      out.fallbackNotification = agent.fallback_notification;
-    }
-    return out;
+    return parseFallbackAgentSettingsFromYaml(yamlConfig.agent);
   } catch {
     return null;
   }
