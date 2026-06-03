@@ -43,6 +43,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
 import { safeApiCall } from "@/lib/api-fetch";
+import { runMutation } from "@/lib/run-mutation";
 import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
 import { unwrapPollPath } from "@/lib/dashboard-poll";
 import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
@@ -147,22 +148,20 @@ export default function Dashboard() {
     if (data?.data) setData({ monitor: data.data });
   }, [setData]);
 
-  const handleSyncNow = useCallback(async () => {
-    setSyncNowBusy(true);
-    try {
-      const { ok, error } = await safeApiCall("/api/sync", { method: "POST" });
-      if (!ok) {
-        showToast(error ?? "Sync failed", "error");
-        return;
-      }
-      showToast("Background sync completed", "success");
-      await refreshMonitor();
-    } catch {
-      showToast("Sync failed", "error");
-    } finally {
-      setSyncNowBusy(false);
-    }
-  }, [refreshMonitor, showToast]);
+  const handleSyncNow = useCallback(
+    () =>
+      runMutation(showToast, {
+        busy: setSyncNowBusy,
+        build: () => ({}),
+        path: "/api/sync",
+        successMsg: "Background sync completed",
+        errorMsg: "Sync failed",
+        onSuccess: async () => {
+          await refreshMonitor();
+        },
+      }),
+    [refreshMonitor, showToast],
+  );
 
   const filteredErrors = useMemo(() => {
     if (!monitor?.errors) return [];
@@ -189,6 +188,10 @@ export default function Dashboard() {
   }, [monitor, errorSev]);
 
   // Note: useTwoStepConfirm handles its own unmount cleanup.
+  // The original handler had no busy state (the row already shows
+  // "Confirm?" via `isArmedFor`), so we keep the original `try/catch`
+  // shape rather than adopting `runMutation` (which requires a busy
+  // setter that the page does not consume).
   const handleCancelMission = useCallback(async (missionId: string, missionName: string) => {
     const doCancel = async () => {
       try {

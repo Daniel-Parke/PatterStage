@@ -1,20 +1,20 @@
 // ═══════════════════════════════════════════════════════════════
-// runMutation — consolidate the Hindsight mutation handler shape
+// runMutation — Consolidate the "mutation handler" boilerplate
 // ═══════════════════════════════════════════════════════════════
 //
-// All five Hindsight mutation handlers in HindsightBrowser follow the
-// exact same shape:
+// The Hindsight memory browser (5 handlers in HindsightBrowser.tsx),
+// the dashboard's "Sync now" + "Cancel mission" buttons, and other
+// pages all follow the exact same shape:
 //
-//   1. Validate inputs (the "guard" — usually a `!X.trim()` chain)
+//   1. Optional pre-flight guard (e.g. required-field check)
 //   2. setBusy(true)
-//   3. try { build() → safeApiCall → on success: toast + reset + reload }
+//   3. try { build() → safeApiCall → on success: toast + onSuccess }
 //      catch { toast error }
 //      finally { setBusy(false) }
 //
 // The handlers used to be 17-line near-clones; the variable parts were
 // just the validation predicate, the request body, the busy setter,
-// the success/error message strings, and the form-reset + reload
-// actions.
+// the success/error message strings, and the post-success work.
 //
 // `runMutation` collapses the boilerplate into one helper. Each call
 // site reads as a flat data object (validation, busy, request body,
@@ -24,8 +24,20 @@
 // instances of "forgot the finally" bugs that this shape prevents.
 //
 // `showToast` is injected rather than imported directly so the helper
-// stays trivially testable: a 6-line mock of `{ showToast, busyRef }`
+// stays trivially testable: a 6-line mock of `{ showToast, busy }`
 // is enough to assert the full happy + error path.
+//
+// History: this helper was first added in session 65 as
+// `src/components/memory/hindsight/run-mutation.ts` and applied to
+// the 5 Hindsight mutation handlers. Session 66 lifted it to
+// `src/lib/` so the dashboard's 2 POST handlers (handleSyncNow +
+// handleCancelMission.doCancel) can adopt the same shape.
+//
+// Scope note: the helper defaults to POST. PUT was added in session
+// 66 (1 callsite: the dashboard's cron schedule update). The Rule
+// of Three threshold (2 POST + 1 PUT = 3 sites) justifies the verb
+// parameter. If a future call site needs a 4th verb, consider
+// promoting to a generic `runAction({ verb, ... })` shape.
 
 import type { Dispatch, SetStateAction } from "react";
 
@@ -45,12 +57,14 @@ export interface RunMutationOptions<TBody extends Record<string, unknown>> {
   /** Build the request body. Runs after the guard, before the call. */
   build: () => TBody;
   /**
-   * The path to POST to. Always POST — the existing handlers are all
-   * mutation-via-POST (create / update / refresh). If a future
-   * handler needs a different verb, add a `method` field here; don't
-   * overload the helper to handle every verb (Rule of Three).
+   * The path to POST/PUT/PATCH/DELETE to. The verb defaults to POST —
+   * pass `method: "PUT"` etc. for the rare non-POST mutation.
+   * The pre-existing handlers are all mutation-via-POST (create /
+   * update / refresh); the dashboard's cron schedule update uses PUT.
    */
   path: string;
+  /** HTTP method. Defaults to "POST". */
+  method?: "POST" | "PUT" | "PATCH" | "DELETE";
   /** Toast message shown on a successful response. */
   successMsg: string;
   /**
@@ -76,7 +90,7 @@ export interface RunMutationOptions<TBody extends Record<string, unknown>> {
 }
 
 /**
- * Run a Hindsight mutation: validate, mark busy, POST, toast, reset.
+ * Run a mutation: validate, mark busy, fire the request, toast, reset.
  * Always clears `busy` in a `finally` block so a throw or an early
  * `return` cannot leave the button stuck in a loading state.
  *
@@ -93,7 +107,7 @@ export async function runMutation<TBody extends Record<string, unknown>>(
   try {
     const body = opts.build();
     const result = await safeApiCall<Record<string, unknown>>(opts.path, {
-      method: "POST",
+      method: opts.method ?? "POST",
       body,
     });
     if (!result.ok) {

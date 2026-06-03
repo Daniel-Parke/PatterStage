@@ -8,7 +8,7 @@
  * into one helper, and this suite is the regression net.
  */
 
-import { runMutation, type BusySetter } from "@/components/memory/hindsight/run-mutation";
+import { runMutation, type BusySetter } from "@/lib/run-mutation";
 
 describe("run-mutation: happy path", () => {
   it("toasts success, calls build(), sets busy true→false, runs onSuccess", async () => {

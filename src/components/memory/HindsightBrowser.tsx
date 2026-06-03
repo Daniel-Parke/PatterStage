@@ -26,7 +26,7 @@ import MemoryTab from "./hindsight/MemoryTab";
 import DirectivesTab from "./hindsight/DirectivesTab";
 import MentalModelsTab from "./hindsight/MentalModelsTab";
 import { AddMemoryModal, DirectiveModal, MentalModelModal } from "./hindsight/Modals";
-import { runMutation } from "./hindsight/run-mutation";
+import { runMutation } from "@/lib/run-mutation";
 
 // ── Default form state ─────────────────────────────────────────
 //
