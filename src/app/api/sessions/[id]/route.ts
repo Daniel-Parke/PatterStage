@@ -14,7 +14,12 @@ import {
   getMaxSessionFileBytes,
   sessionsRateLimitResponse,
 } from "@/lib/sessions-api-guard";
-import { buildSessionData, findFileWithExtension } from "@/lib/session-detail";
+import {
+  buildSessionData,
+  dbSessionFields,
+  findFileWithExtension,
+  parseAssistantLines,
+} from "@/lib/session-detail";
 
 // ── Mission-output file extensions to try in preference order ───────────
 // Recurring mission dispatch writes a `.session` file (full transcript);
@@ -144,12 +149,7 @@ export async function GET(
         );
         if (sessionPath) {
           const content = readFileSync(sessionPath, "utf-8");
-          const lines = content.split("\n").filter((l: string) => l.trim());
-          const messages = lines.map((line: string, i: number) => ({
-            index: i,
-            role: "assistant",
-            content: line,
-          }));
+          const messages = parseAssistantLines(content);
           // File confirmed to exist above (missionFile or missionLog); safeStat never null.
           const st = safeStat(sessionPath)!;
           return NextResponse.json({
@@ -157,12 +157,9 @@ export async function GET(
               id: sanitizedId,
               filename: basename(sessionPath),
               format: "mission-output",
-              title: dbSession.title || sanitizedId,
-              model: dbSession.modelId || "",
-              source: dbSession.source,
+              ...dbSessionFields(dbSession, sanitizedId),
               messages,
               size: st.size,
-              created: dbSession.startedAt,
               missionId: dbSession.missionId,
             }),
           });
@@ -175,12 +172,9 @@ export async function GET(
           id: sanitizedId,
           filename: sanitizedId,
           format: "db",
-          title: dbSession.title || sanitizedId,
-          model: dbSession.modelId || "",
-          source: dbSession.source,
+          ...dbSessionFields(dbSession, sanitizedId),
           messages: [],
           size: dbSession.size,
-          created: dbSession.startedAt,
           missionId: dbSession.missionId ?? null,
           note: dbSession.source === "mission"
             ? "This mission-spawned session has no output file yet. The agent may still be running, or the output was written to ~/.hermes/state.db — refresh to check."

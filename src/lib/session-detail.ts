@@ -77,3 +77,79 @@ export function findFileWithExtension(
   }
   return null;
 }
+
+// ── DB-derived envelope helper ─────────────────────────────────
+//
+// `GET /api/sessions/[id]` has 2 branches that build a `SessionData`
+// payload from a `SessionRecord` row: the mission-output-file branch
+// (transcript exists) and the no-output-yet branch (mission-spawned
+// session whose agent hasn't produced a file). Both share the same
+// 4 envelope fields (title/model/source/created) derived from the
+// DB row. Extracting the shared fields keeps the two call sites in
+// sync and lets a future 3rd branch (e.g. streaming-output) reuse the
+// same derivation without re-implementing the fallbacks.
+
+/**
+ * Minimal shape the helper reads from the `SessionRecord`. Defined as
+ * a local structural alias (not imported) so this module stays
+ * decoupled from the repository's full row type — the helper only
+ * needs these 4 fields.
+ */
+export interface DbSessionEnvelope {
+  title: string | null;
+  modelId: string | null;
+  source: string;
+  startedAt: string | null;
+}
+
+/**
+ * Build the 4 shared `SessionData` envelope fields from a DB session
+ * row. `title` falls back to the sanitized id; `model` falls back to
+ * `""` (matches the legacy file branches' `data.model || ""` shape).
+ * `created` is forwarded verbatim — `null` is allowed and surfaces as
+ * `"created": null` in the wire payload.
+ */
+export function dbSessionFields(
+  dbSession: DbSessionEnvelope,
+  sanitizedId: string,
+): { title: string; model: string; source: string; created: string | null } {
+  return {
+    title: dbSession.title || sanitizedId,
+    model: dbSession.modelId || "",
+    source: dbSession.source,
+    created: dbSession.startedAt,
+  };
+}
+
+// ── Mission-output line parser ─────────────────────────────────
+//
+// The mission-output branch of `GET /api/sessions/[id]` reads a
+// `.session` or `.output.log` file written by the recurring-mission
+// dispatch pipeline. The format is one assistant message per line
+// (no JSON envelope, no role field). Extracting the split/filter/map
+// skeleton gives us a unit-testable parser that future consumers
+// (e.g. an export-to-JSONL tool) can import rather than re-implement.
+
+/**
+ * Parse a mission-output file body into a `SessionMessage[]` array.
+ * Each non-blank line becomes a single assistant message with that
+ * line as its `content`. Empty / whitespace-only lines are dropped.
+ * `index` is the line's position in the *filtered* array (matches
+ * the pre-refactor behaviour where the `.map((line, i) => ...)`
+ * callback's `i` was the index of the filtered line, not the raw
+ * line in the file).
+ */
+export function parseAssistantLines(content: string): Array<{
+  index: number;
+  role: string;
+  content: string;
+}> {
+  return content
+    .split("\n")
+    .filter((line) => line.trim())
+    .map((line, index) => ({
+      index,
+      role: "assistant",
+      content: line,
+    }));
+}

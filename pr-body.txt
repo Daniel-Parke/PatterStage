@@ -1,3 +1,109 @@
+## Session 93 — List 1 (Dashboard, Sessions, Memory, Logs) — `dbSessionFields` + `parseAssistantLines` helpers + `MessageBubble` `fnName` reuse
+
+Pick was List 1 (per session 92's "Next session should" recommendation — the longest gap in recent protocol history, last touched at session 89, and 3+ known follow-ups queued). Three byte-equivalent refactors targeted small but well-scoped duplications that survived the prior shallow sweep: a 4-field envelope shared across 2 route branches, a 4-line line-parser shared between mission-output and (transitively) the JSONL branch, and a 1-expression `String(fn?.name || "unknown")` repeated in a single component.
+
+All **1290** unit tests pass (**197** suites, +13 new tests in `session-detail-helpers.test.ts` covering the 2 new helpers). tsc clean, eslint `--max-warnings 0` clean, build passes. Net: -19 deletions, +241 insertions (most of the insertions are the new test cases + the new helpers themselves, all of which will be exercised by future migrations). Byte-equivalent at runtime for all 5 affected call sites.
+
+### Refactor 1 — `dbSessionFields(dbSession, sanitizedId)` in `src/lib/session-detail.ts`
+
+`GET /api/sessions/[id]` has 2 branches that build a `SessionData` payload from a `SessionRecord` row — the mission-output-file branch (transcript exists at the mission output file) and the no-output-yet branch (mission-spawned session whose agent hasn't produced a file yet). Both branches shared the same 4 envelope fields derived from the row:
+
+```ts
+title: dbSession.title || sanitizedId,
+model: dbSession.modelId || "",
+source: dbSession.source,
+created: dbSession.startedAt,
+```
+
+Repeated verbatim across 2 call sites, 4 lines each = 8 lines of identical-looking-but-could-drift envelope construction. Extracted to `dbSessionFields()` which returns the 4 fields as a plain object spread into the `buildSessionData({...})` call. Each call site collapses from 4 envelope lines to a single `...dbSessionFields(dbSession, sanitizedId)` spread. The 2 branches diverge in `format/filename/messages/size/missionId/note` and those stay inline.
+
+**Byte-equivalence audit:** the helper returns `{title, model, source, created}` with the same `||` fallback discipline as the inline form. `title: dbSession.title || sanitizedId` falls back on null AND empty string (because `||` is truthy-falsy, not null-coalescing) — the helper preserves that. Verified by 6 unit tests including a byte-equivalence matrix that asserts the helper equals the inline form for 5 row shapes (full, null title, null modelId, empty-string title + modelId, null startedAt).
+
+### Refactor 2 — `parseAssistantLines(content)` in `src/lib/session-detail.ts`
+
+The mission-output-file branch read the file body and parsed it via:
+
+```ts
+const lines = content.split("\n").filter((l: string) => l.trim());
+const messages = lines.map((line: string, i: number) => ({
+  index: i,
+  role: "assistant",
+  content: line,
+}));
+```
+
+The same split+filter+map skeleton appears in the JSONL branch (line 216) but with a different `.map()` body (`{index, ...msg}` after `JSON.parse(line)`), so the JSONL branch stays inline. The mission-output branch's body is simpler and worth lifting to a unit-testable parser — extracted to `parseAssistantLines(content)` which returns the same `Array<{index, role, content}>` shape.
+
+**Why this isn't premature abstraction:** the parser is pure (no filesystem, no DB), has 3+ non-trivial behaviors to test (blank-line drop, filtered-index numbering, content verbatim preservation), and is the kind of utility a future export-to-JSONL tool or a `/api/sessions/[id]/export` endpoint would want. Verified by 7 unit tests including a byte-equivalence matrix against the inline form for 6 input shapes.
+
+**Rejected:** extracting a `parseSessionLines(content, parser)` generic that would unify the mission-output and JSONL branches. The per-line parsing logic is different (mock assistant vs JSON.parse with try/catch fallback) and a generic would require either a callback parameter or a discriminated return type. The "Rule of Three" doesn't apply — only 2 consumers with different downstream shapes. The `parseAssistantLines` lift is a single-purpose helper for the 1 branch that uses it; promote to a generic on a 3rd consumer.
+
+### Refactor 3 — `MessageBubble.tsx` `fnName` reuse
+
+`MessageBubble.tsx` had `String(fn?.name || "unknown")` computed twice for the same `fn`:
+
+```ts
+const fnName = String(fn?.name || "unknown");   // line 169 (for the React key)
+const tcKey = `toolcall-${i}-${fnName.replace(/[^a-zA-Z0-9]/g, "-")}`;
+// ... 8 lines later:
+<span className="text-neon-green">
+  {String(fn?.name || "unknown")}                // line 177 (recomputed for the rendered label)
+</span>
+```
+
+The second expression re-derives the same string for the rendered label. Reused the existing `fnName` local — the rendered text becomes `{fnName}` (the same `String(fn?.name || "unknown")` value, no recomputation, no behavior change).
+
+**Why this is byte-equivalent:** `fnName` is a `const` in the same `.map((tc, i) => {...})` callback scope, holding `String(fn?.name || "unknown")` for the current `tc`. The JSX `{fnName}` interpolation calls `String()` on it implicitly, producing the same string the inline `{String(fn?.name || "unknown")}` produced. No `useMemo` or external state — purely a local constant reuse.
+
+**Rejected:** promoting to a `<ToolCallName fn={fn} />` micro-component. The 2 sites are in the same `.map()` callback and the extraction would be 1 line of component definition for 1 line of JSX reuse — over-engineering for a same-scope variable reuse. The inline constant is the simplest form.
+
+### What was rejected
+
+- **Migrating `(main)/logs/page.tsx` to `useApiData({refreshIntervalMs})`** — session 91/89's follow-up. Would require extending the `useApiData` hook to absorb the manual `useInterval` + `setRefreshing` micro-state, which is a behavior change (removes the "Refresh" button's micro-spinner). The skill explicitly flags this as "AT LEAST identical results" → not a byte-equivalent move. Defer to a future session that opts in to the behavior change.
+- **Migrating `(main)/sessions/page.tsx`'s `loadSessions` to `useApiData({queryParams})`** — would require extending the hook to support `URLSearchParams` and pagination. Same behavior-change concern. Defer until `useApiData` shape stabilizes across the logs + sessions + dashboards consumers.
+- **Extracting `dbSessionFields` to a 2-arg `buildSessionDataForDb(dbSession, sanitizedId, overrides)` helper that builds the full payload** — would absorb the rest of the branch-specific fields (format/filename/messages/size/missionId/note) and unify the 2 branches into a single call. The shape of the 2 branches diverges enough (one returns size from `st.size`, the other from `dbSession.size`; one returns `missionId: dbSession.missionId`, the other `missionId: dbSession.missionId ?? null`; one has a `note`, the other doesn't; one has a file-derived `messages`, the other has `messages: []`) that the "unified" call would need 5+ override parameters. The 4-field spread keeps each branch's divergence explicit and readable. The 2-consumer Rule of Three doesn't justify the more abstract helper yet.
+- **Migrating the inline `} catch (err) { showToast("Failed to X", "error") }` sites in `(main)/sessions/page.tsx:309` and `(main)/logs/page.tsx:81, 224`** to `toastError`. Both use **hardcoded strings** (not the caught error's message), so `toastError` would show the actual API error instead of the hardcoded string — a behavior change, NOT byte-equivalent. Leave inline.
+- **Extracting `String(s)` coercion helpers from `MessageBubble.tsx:84, 119, 169, 177`** — only line 169/177 had the exact `String(fn?.name || "unknown")` form, so the lift was local. Lines 84 (`content || ""` for clipboard) and 119 (`String(msg.name)` for a name badge) are different expressions and stay inline.
+- **The `useApiData` migration in `(main)/sessions/page.tsx`** for `loadSessions` — would need `URLSearchParams` + pagination support. Defer per the logs-page rationale.
+- **The `({["all", "error", "warning"] as const}).map(...)` literal in `src/app/page.tsx:826`** for the errors panel severity filter. The `as const` + `.map()` is already the type-safe idiom; promoting to a `ERROR_SEVERITIES` constant in `@/lib/` would be 1 consumer (dashboard) and adds a file boundary for no testability gain. Defer until a 2nd consumer wants the same 3-value enum.
+
+### Files
+
+- `src/lib/session-detail.ts` (MODIFIED) — added `dbSessionFields` + `parseAssistantLines` helpers + `DbSessionEnvelope` type
+- `src/app/api/sessions/[id]/route.ts` (MODIFIED) — 2 call sites migrated to `dbSessionFields`, 1 call site migrated to `parseAssistantLines`
+- `src/components/session/MessageBubble.tsx` (MODIFIED) — 1 inline `String(fn?.name || "unknown")` replaced with the existing `fnName` const
+- `tests/unit/session-detail-helpers.test.ts` (MODIFIED) — added 13 new tests (6 for `dbSessionFields`, 7 for `parseAssistantLines`)
+
+Net diff: **4 files modified, +241 / -19 lines** (the +241 is dominated by the 13 new test cases + the 2 new helper definitions; the -19 is the 8-line envelope collapse × 2 + the 5-line line-parser collapse + the 2-line MessageBubble change).
+
+### Verification
+
+- **All 1290 unit tests pass** (197 suites, no regressions, +13 new tests covering the 2 new helpers and their byte-equivalence contract)
+- **`npx tsc --noEmit`** clean (verified the `DbSessionEnvelope` structural type accepts a `SessionRecord` row via subtyping)
+- **`CI=true npx eslint . --max-warnings 0`** clean
+- **`npm run build`** passes
+- **Byte-equivalence audit:** `dbSessionFields(row, id)` produces the same `{title: row.title || id, model: row.modelId || "", source: row.source, created: row.startedAt}` for every row shape (verified by the byte-equivalence matrix in `tests/unit/session-detail-helpers.test.ts`). `parseAssistantLines(content)` produces the same `Array<{index, role, content}>` as the inline form for every input shape (verified by the second byte-equivalence matrix). `MessageBubble.tsx`'s `{fnName}` reuses the same `String(fn?.name || "unknown")` result the inline form computed. Wire format, response shape, and rendered output are all unchanged.
+
+### Patterns to take forward
+
+1. **"Shared envelope helper for sibling route branches" pattern** — when 2 route branches share 3+ identical envelope fields and diverge on the rest, extract just the shared envelope to a `xxxFields(source, fallback)` helper. The 2 branches keep their divergence explicit. The alternative (a full `xxxResponse(source, override)` helper) absorbs all divergence into override parameters and obscures the branch-specific logic. The envelope-only helper is the lighter touch; promote to the full builder on a 3rd consumer.
+2. **"Same-shape parser, different downstream consumer" anti-pattern** — when 2 sites do `content.split("\n").filter(...).map(...)` but the `.map()` body is different (mission-output uses a mock, JSONL uses `JSON.parse`), don't extract a generic `parseLines(content, callback)`. The callback parameter adds noise for 2 consumers with different downstream shapes. Extract only the sites that have IDENTICAL downstream bodies; leave the divergent sites inline.
+3. **"Same-callback `{const}` reuse" pattern** — when a `.map((x, i) => {...})` callback computes the same value at the top and uses it in 2+ places inside the callback, just reuse the const. Don't promote to a sub-component, don't extract a helper. The variable reuse is the simplest form.
+
+### "Next session should:" block
+
+1. **Pick a different list next session.** List 1 has now been hit twice in a row (sessions 89, 93). The next pick should be List 2 (Cron, Missions, Chat) — last hit at session 88, the longest current gap after List 1's 2x streak. List 2 still has known follow-ups: `useMissionsPage` decomposition (1175+ LOC, the biggest hook in the codebase) and the 22-site `err instanceof Error ? err.message` sweep in `src/lib/cron/`, `src/lib/sync/`, `src/lib/backends/`.
+2. **Migrate `(main)/sessions/page.tsx`'s `loadSessions` to `useApiData({queryParams, pagination})`** — requires extending the hook. Once `useApiData` supports query params, the same hook can absorb `(main)/logs/page.tsx`'s manual `useInterval` + `setRefreshing` pattern. Both migrations are behavior changes (the `setRefreshing` micro-state disappears), so they need an "AT LEAST identical results" opt-in. Recipe is in this session's "What was rejected" block.
+3. **Promote `dbSessionFields` to a generic `extractEnvelopeFields<T, K>(source, fields, fallbacks)`** if a 2nd envelope-extraction appears (e.g. `extractAgentFields(agent)` in an agents route). The current 1-consumer Rule of Three doesn't justify a generic; defer until 2 distinct envelope shapes want the same treatment.
+4. **Promote `parseAssistantLines` to a generic `parseLines<T>(content, parseLine)`** if a 2nd consumer wants the "split + filter blank + map per line" shape with a different per-line parser. The current 1-consumer Rule of Three doesn't justify the generic; defer until a 2nd branch or a future export endpoint needs it.
+5. **The 4 `} catch { showToast("Failed to X", "error") }` sites in `src/app/operations/`** are the next refactor target when a future session explicitly opts in to the "AT LEAST identical results = strictly more informative" interpretation. Recipe is in session 92's "What was rejected" block.
+6. **Sweep the 22 inline `err instanceof Error ? err.message` sites in `src/lib/sync/`, `src/lib/cron/`, `src/lib/backends/`, `src/lib/hermes-profile-sync.ts` (7 sites alone) and the `src/components/cron/` operations pages** to a server-side `toMessage(e, fallback)` helper. Multi-session sweep, deferred to a List 2/3/4 session with the budget to handle 8+ files.
+7. **Status badge label override follow-up** — `StatusBadge.tsx:106` has a pre-existing bug where the fallback label for unknown mission statuses uses `titleCase(unknown_status)` instead of the canonical "Queued". Documented in session 89's "rejected" block. A future session can fix it.
+8. **HindsightBrowser 4 inline `error ?? "..."` sites** — would benefit from a `runMutation`-shaped variant. Defer until a 2nd consumer wants the same shape.
+9. **The `({["all", "error", "warning"] as const}).map(...)` literal in `src/app/page.tsx:826`** — promote to a `ERROR_SEVERITIES` constant in `@/lib/` if a 2nd consumer (e.g. a future "errors in last 24h" widget) wants the same 3-value enum.
+
+---
+
 ## Session 92 — List 4 (Models, HERMES.md, Environment, All Settings) — `pushDiff` closure refactor in 2 routes
 
 Pick was List 4 (per random selection `python3 -c "import random; random.seed(20260603); print(random.choice([1,2,3,4]))"` = 4, the first List-4 pick since session 90). Session 90's analysis had concluded List 4 was "mined clean" — this session targeted two short, well-scoped closure extractions that escaped the previous sweep's shallow-cosmetic scope: 9 inline `diffs.push({id, label, detail})` sites in `/api/models/[id]/diff/route.ts` and 4 inline `diffs.push({field, before, after}) + updates.X = Y` site pairs in `/api/models/sync/pull/route.ts`'s `computeDiffs` helper. Both extractions are pure byte-equivalent closures that collapse repeated `diffs.push({...})` boilerplate into a single token per call.
