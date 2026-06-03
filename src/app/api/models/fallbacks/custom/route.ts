@@ -9,6 +9,7 @@ import { addFallbackEntry } from "@/lib/fallbacks-repository";
 import { customFallbackInputSchema } from "@/lib/fallback-config-schema";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
+import { serverError } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -36,6 +37,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data: { entry } }, { status: 201 });
   } catch (error) {
     logApiError("POST /api/models/fallbacks/custom", "adding custom fallback", error);
-    return NextResponse.json({ error: "Failed to add custom fallback" }, { status: 500 });
+    return serverError("Failed to add custom fallback");
   }
 }

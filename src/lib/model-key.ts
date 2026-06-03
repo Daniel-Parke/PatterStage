@@ -8,7 +8,9 @@
 // models/fallbacks/import) repeatedly compose a lookup key from a
 // (provider, modelId) pair to dedupe rows across DB↔Hermes imports:
 //
-//   `${entry.provider}::${entry.modelId}`      (5 sites)
+//   `${entry.provider}::${entry.modelId}`      (9 sites, after
+//   session-68 migration of sync-manager + hermes-config-sync +
+//   sync/pull + hermes-import)
 //
 // The fallback chain has a sibling key:
 //

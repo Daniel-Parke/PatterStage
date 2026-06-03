@@ -12,6 +12,7 @@ import {
   readHermesYamlConfig,
 } from "./hermes-config-sync";
 import { isHermesProvider, type HermesProvider } from "./hermes-providers";
+import { modelKey } from "./model-key";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -45,7 +46,7 @@ function readHermesPrimaryModel(
   const primaryProvider = modelSection.provider as string | undefined;
   if (!primaryId || !primaryProvider) return null;
 
-  const entry = hermesModelMap.get(`${primaryProvider}::${primaryId}`);
+  const entry = hermesModelMap.get(modelKey(primaryProvider, primaryId));
   if (!entry) return null;
   return { modelId: entry.modelId, provider: entry.provider, baseUrl: entry.baseUrl };
 }
@@ -60,7 +61,7 @@ function readHermesPrimaryModel(
 export function detectConfigDrift(): DriftReport {
   const dbModels = listModels();
   const dbModelByKey = new Map(
-    dbModels.map((m) => [`${m.provider}::${m.modelId}`, m])
+    dbModels.map((m) => [modelKey(m.provider, m.modelId), m])
   );
 
   // Read what's currently in config.yaml
@@ -75,19 +76,19 @@ export function detectConfigDrift(): DriftReport {
 
   // 1. Models in config.yaml but not in DB
   const modelsInHermesNotInDb = hermesModels.filter(
-    (m) => !dbModelByKey.has(`${m.provider}::${m.modelId}`)
+    (m) => !dbModelByKey.has(modelKey(m.provider, m.modelId))
   );
 
   // 2. Models in DB but not in config.yaml (Hermes)
   const modelsInDbNotInHermes = dbModels.filter(
-    (m) => !hermesKeySet.has(`${m.provider}::${m.modelId}`)
+    (m) => !hermesKeySet.has(modelKey(m.provider, m.modelId))
   );
 
   // 3. Primary model drift
   let primaryDiffers: DriftReport["primaryDiffers"] = null;
   if (hermesPrimary) {
     // Find the DB model that matches the hermes primary by provider+modelId
-    const matched = dbModelByKey.get(`${hermesPrimary.provider}::${hermesPrimary.modelId}`);
+    const matched = dbModelByKey.get(modelKey(hermesPrimary.provider, hermesPrimary.modelId));
     if (matched) {
       // Compare with the DB default agent model for Hermes
       const dbDefaults = getModelDefaults();

@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { detectConfigDrift } from "@/lib/sync-manager";
+import { serverError } from "@/lib/api-response";
 import type { SyncDrift } from "@/components/models/types";
 
 export async function GET(request: NextRequest) {
@@ -36,6 +37,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: syncDrift });
   } catch (error) {
     logApiError("GET /api/models/sync/drift", "detecting drift", error);
-    return NextResponse.json({ error: "Failed to detect drift" }, { status: 500 });
+    return serverError("Failed to detect drift");
   }
 }

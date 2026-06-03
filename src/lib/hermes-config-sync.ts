@@ -31,6 +31,7 @@ import {
 } from "./hermes-providers";
 import { updateAgentRoot } from "./agent-root-repository";
 import { getModelDefaults, getModel } from "./models-repository";
+import { modelKey } from "./model-key";
 
 // ── Internal helpers ───────────────────────────────────────────
 
@@ -280,7 +281,7 @@ export function readHermesConfigModels(): Map<string, HermesConfigModelEntry> {
     const model = config.model as ConfigModelSlice | undefined;
     const primary = model ? entryFromSlice(model) : null;
     if (primary) {
-      map.set(`${primary.provider}::${primary.modelId}`, primary);
+      map.set(modelKey(primary.provider, primary.modelId), primary);
     }
 
     // Auxiliary sections
@@ -288,7 +289,7 @@ export function readHermesConfigModels(): Map<string, HermesConfigModelEntry> {
     for (const entry of Object.values(aux ?? {})) {
       const parsed = entryFromSlice(entry);
       if (parsed) {
-        map.set(`${parsed.provider}::${parsed.modelId}`, parsed);
+        map.set(modelKey(parsed.provider, parsed.modelId), parsed);
       }
     }
 
@@ -297,7 +298,7 @@ export function readHermesConfigModels(): Map<string, HermesConfigModelEntry> {
     for (const entry of fallback ?? []) {
       const parsed = entryFromSlice(entry);
       if (parsed) {
-        const key = `${parsed.provider}::${parsed.modelId}`;
+        const key = modelKey(parsed.provider, parsed.modelId);
         if (!map.has(key)) {
           map.set(key, parsed);
         }

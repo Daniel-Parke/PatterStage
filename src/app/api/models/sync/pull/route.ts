@@ -9,6 +9,7 @@ import { parseJsonBody } from "@/lib/parse-json-body";
 import { updateModel, listModels } from "@/lib/models-repository";
 import { readHermesConfigModels, type HermesConfigModelEntry } from "@/lib/hermes-config-sync";
 import { notFound } from "@/lib/api-response";
+import { modelKey } from "@/lib/model-key";
 
 
 interface Diff { field: string; before: unknown; after: unknown }
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
       return notFound("Model not found");
     }
 
-    const key = `${dbModel.provider}::${dbModel.modelId}`;
+    const key = modelKey(dbModel.provider, dbModel.modelId);
     const hermes = hermesModels.get(key);
     if (!hermes) {
       return NextResponse.json({
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
   const allDiffs: Array<{ modelId: string; name: string; diffs: Diff[] }> = [];
 
   for (const dbModel of dbModels) {
-    const key = `${dbModel.provider}::${dbModel.modelId}`;
+    const key = modelKey(dbModel.provider, dbModel.modelId);
     const hermes = hermesModels.get(key);
     if (!hermes) continue;
 

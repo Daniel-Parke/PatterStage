@@ -9,6 +9,7 @@ import { parseJsonBody } from "@/lib/parse-json-body";
 import { logApiError } from "@/lib/api-logger";
 import { pushModelToHermes, pushCredential } from "@/lib/sync-manager";
 import { getModelWithKey } from "@/lib/models-repository";
+import { badRequest, serverError } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
   const body = bodyResult;
   const modelId = body?.modelId as string | undefined;
   if (!modelId) {
-    return NextResponse.json({ error: "modelId is required" }, { status: 400 });
+    return badRequest("modelId is required");
   }
 
   const pushCred = (body.pushCredential as boolean | undefined) !== false;
@@ -60,6 +61,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logApiError("POST /api/models/sync/push", `pushing model ${modelId}`, error);
-    return NextResponse.json({ error: "Failed to push model" }, { status: 500 });
+    return serverError("Failed to push model");
   }
 }

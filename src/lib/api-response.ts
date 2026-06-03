@@ -42,6 +42,18 @@ export function notFound(error: string): NextResponse {
 }
 
 /**
+ * Return a 403 Forbidden with the given error message. Use in route
+ * handlers when a request is well-formed but the caller is not allowed
+ * to access the resource (e.g. PUT to a non-writable config section,
+ * or a credential category operation gated by a permission check).
+ * Sibling of `badRequest` and `notFound` — same body shape, different
+ * status code.
+ */
+export function forbidden(error: string): NextResponse {
+  return NextResponse.json({ error }, { status: 403 });
+}
+
+/**
  * Return a 500 Internal Server Error with the given error message.
  * Use in route handlers when an unexpected failure occurs (DB error,
  * filesystem error, sync push failure, etc.). Sibling of `badRequest`

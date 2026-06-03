@@ -10,6 +10,7 @@ import { fallbackConfigPutSchema } from "@/lib/fallback-config-schema";
 import { getFallbackConfig, updateFallbackConfigBatch } from "@/lib/fallbacks-repository";
 import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
+import { serverError } from "@/lib/api-response";
 
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: { config: getFallbackConfig() } });
   } catch (error) {
     logApiError("GET /api/models/fallbacks/config", "reading config", error);
-    return NextResponse.json({ error: "Failed to read fallback config" }, { status: 500 });
+    return serverError("Failed to read fallback config");
   }
 }
 
@@ -43,6 +44,6 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ data: { config: updated } });
   } catch (error) {
     logApiError("PUT /api/models/fallbacks/config", "updating config", error);
-    return NextResponse.json({ error: "Failed to update fallback config" }, { status: 500 });
+    return serverError("Failed to update fallback config");
   }
 }

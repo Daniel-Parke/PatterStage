@@ -6,7 +6,7 @@ import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
-import { badRequest, serverError } from "@/lib/api-response";
+import { badRequest, forbidden, serverError } from "@/lib/api-response";
 import { db } from "@/lib/db";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
@@ -157,9 +157,8 @@ export async function PUT(request: NextRequest) {
 
   // Security: only allow whitelisted sections (prevent modifying model/provider keys)
   if (!WRITABLE_SECTIONS.has(section)) {
-    return NextResponse.json(
-      { error: `Section '${section}' is not writable. Allowed: ${[...WRITABLE_SECTIONS].join(", ")}` },
-      { status: 403 }
+    return forbidden(
+      `Section '${section}' is not writable. Allowed: ${[...WRITABLE_SECTIONS].join(", ")}`
     );
   }
 
