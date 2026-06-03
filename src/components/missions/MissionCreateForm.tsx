@@ -85,6 +85,67 @@ export const DISPATCH_MODES = [
   { id: "cron" as const, label: "Schedule" },
 ] as const;
 
+/**
+ * Resolve the submit-button label for a given dispatch mode + edit context.
+ *
+ * Two of the four context branches (`isDraftEdit` and the default) share the
+ * same dispatch→label mapping ("Save draft" / "Queue mission" / "Dispatch now"
+ * / "Schedule mission"). The `isQueuedEdit` branch only differs in two of
+ * the four dispatch slots ("Move to drafts" / "Update queue" — the other two
+ * match the default). The shared mapping lives in `DEFAULT_DISPATCH_LABEL`
+ * so the 3 default slots are written once; the 2 divergent slots in the
+ * queued branch override it via a small per-slot table.
+ */
+const DEFAULT_DISPATCH_LABEL: Record<
+  MissionFormState["newDispatch"],
+  string
+> = {
+  save: "Save draft",
+  queue: "Queue mission",
+  now: "Dispatch now",
+  cron: "Schedule mission",
+};
+
+/** Queued-edit dispatch→label overrides for the 2 divergent slots. */
+const QUEUED_EDIT_OVERRIDES: Partial<
+  Record<MissionFormState["newDispatch"], string>
+> = {
+  save: "Move to drafts",
+  queue: "Update queue",
+};
+
+/**
+ * Edit-context derived from the optional `editingId` + missions list.
+ * Returned by the local `resolveEditContext` helper below — the 4 booleans
+ * (`isReDispatch` / `isRunningEdit` / `isDraftEdit` / `isQueuedEdit`) are
+ * used in BOTH `MissionComposerActions` (for the submit label) AND the
+ * default-exported `MissionCreateForm` (for the 4 status banners), so the
+ * derivation was duplicated 1× per export. This helper centralises it.
+ */
+export interface EditContext {
+  isReDispatch: boolean;
+  isRunningEdit: boolean;
+  isDraftEdit: boolean;
+  isQueuedEdit: boolean;
+}
+
+function resolveEditContext(
+  editingId: string | null,
+  missions: MissionCreateFormProps["missions"],
+): EditContext {
+  const existing = editingId
+    ? missions.find((m) => m.id === editingId)
+    : null;
+  return {
+    isReDispatch:
+      !!existing &&
+      (existing.status === "successful" || existing.status === "failed"),
+    isRunningEdit: existing?.status === "dispatched",
+    isDraftEdit: existing ? isMissionDraft(existing) : false,
+    isQueuedEdit: existing ? isMissionQueuedForRun(existing) : false,
+  };
+}
+
 export function dispatchSubmitLabel(
   dispatch: MissionFormState["newDispatch"],
   options: {
@@ -96,22 +157,11 @@ export function dispatchSubmitLabel(
 ): string {
   if (options.isReDispatch) return "Re-Dispatch Now";
   if (options.isRunningEdit) return "Update Mission";
-  if (options.isDraftEdit) {
-    if (dispatch === "save") return "Save draft";
-    if (dispatch === "queue") return "Queue mission";
-    if (dispatch === "now") return "Dispatch now";
-    return "Schedule mission";
-  }
+  if (options.isDraftEdit) return DEFAULT_DISPATCH_LABEL[dispatch];
   if (options.isQueuedEdit) {
-    if (dispatch === "save") return "Move to drafts";
-    if (dispatch === "queue") return "Update queue";
-    if (dispatch === "now") return "Dispatch now";
-    return "Schedule mission";
+    return QUEUED_EDIT_OVERRIDES[dispatch] ?? DEFAULT_DISPATCH_LABEL[dispatch];
   }
-  if (dispatch === "save") return "Save draft";
-  if (dispatch === "queue") return "Queue mission";
-  if (dispatch === "now") return "Dispatch now";
-  return "Schedule mission";
+  return DEFAULT_DISPATCH_LABEL[dispatch];
 }
 
 export function MissionComposerActions({
@@ -134,23 +184,13 @@ export function MissionComposerActions({
   | "dispatching"
   | "dispatchAcknowledged"
 >) {
-  const existing = editingId
-    ? missions.find((m) => m.id === editingId)
-    : null;
-
-  const isReDispatch =
-    existing &&
-    (existing.status === "successful" || existing.status === "failed");
-
-  const isRunningEdit = existing?.status === "dispatched";
-  const isDraftEdit = existing ? isMissionDraft(existing) : false;
-  const isQueuedEdit = existing ? isMissionQueuedForRun(existing) : false;
+  const editingCtx = resolveEditContext(editingId, missions);
 
   const submitLabel = dispatchSubmitLabel(formState.newDispatch, {
-    isReDispatch: Boolean(isReDispatch),
-    isRunningEdit,
-    isDraftEdit,
-    isQueuedEdit,
+    isReDispatch: editingCtx.isReDispatch,
+    isRunningEdit: editingCtx.isRunningEdit,
+    isDraftEdit: editingCtx.isDraftEdit,
+    isQueuedEdit: editingCtx.isQueuedEdit,
   });
 
   const needsDispatchAck = !editingId && !dispatchAcknowledged;
@@ -210,17 +250,8 @@ export default function MissionCreateForm({
   dispatchAcknowledged = false,
   onDispatchOpenChange,
 }: MissionCreateFormProps) {
-  const existing = editingId
-    ? missions.find((m) => m.id === editingId)
-    : null;
-
-  const isReDispatch =
-    existing &&
-    (existing.status === "successful" || existing.status === "failed");
-
-  const isRunningEdit = existing?.status === "dispatched";
-  const isDraftEdit = existing ? isMissionDraft(existing) : false;
-  const isQueuedEdit = existing ? isMissionQueuedForRun(existing) : false;
+  const editingCtx = resolveEditContext(editingId, missions);
+  const { isReDispatch, isRunningEdit, isDraftEdit, isQueuedEdit } = editingCtx;
 
   const inner = (
     <div className="space-y-4">

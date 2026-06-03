@@ -8,6 +8,8 @@ import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb, getSchemaHealth } from "@/lib/db";
+import { toError } from "@/lib/api-fetch";
+import { badRequest, forbidden, notFound, serverError } from "@/lib/api-response";
 import {
   countMissionsInCategory,
   countTemplatesInCategory,
@@ -36,6 +38,8 @@ export async function GET(request: NextRequest) {
     ensureDefaultCategories();
     const health = getSchemaHealth();
     if (!health.hasMissionCategoriesTable) {
+      // Custom 503 body (carries migrationRequired + schemaVersion) — kept inline
+      // because no factory exists for 503 + extended body shape.
       return NextResponse.json(
         {
           error:
@@ -54,8 +58,9 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logApiError("GET /api/mission-categories", "list", error);
-    const msg = error instanceof Error ? error.message : "Failed to load categories";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    // toError() unwraps Error instances; the `|| "..."` fallback preserves
+    // the byte-equivalent wire string for non-Error throws (e.g. throw "x").
+    return serverError(toError(error).message || "Failed to load categories");
   }
 }
 
@@ -71,7 +76,7 @@ export async function POST(request: NextRequest) {
     const name = typeof body.name === "string" ? body.name : "";
     const color = typeof body.color === "string" ? body.color : undefined;
     if (!name.trim()) {
-      return NextResponse.json({ error: "name is required" }, { status: 400 });
+      return badRequest("name is required");
     }
     const cat = createCategory({ name, color });
     return NextResponse.json(
@@ -87,12 +92,15 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "Create failed";
+    // The repository's "already exists" error surfaces a 409 — the only 409
+    // site in this route. No 409 factory exists (only 1 such site), so it
+    // stays inline.
+    const msg = toError(error).message || "Create failed";
     if (msg.includes("already exists")) {
       return NextResponse.json({ error: msg }, { status: 409 });
     }
     logApiError("POST /api/mission-categories", "create", error);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return serverError(msg);
   }
 }
 
@@ -105,7 +113,7 @@ export async function PUT(request: NextRequest) {
     if (body instanceof NextResponse) return body;
     const id = typeof body.id === "string" ? body.id : "";
     if (!id) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
+      return badRequest("id is required");
     }
     const updates: { name?: string; color?: string; sortOrder?: number } = {};
     if (typeof body.name === "string") updates.name = body.name;
@@ -114,7 +122,7 @@ export async function PUT(request: NextRequest) {
 
     const cat = updateCategory(id, updates);
     if (!cat) {
-      return NextResponse.json({ error: "Category not found" }, { status: 404 });
+      return notFound("Category not found");
     }
     return NextResponse.json({
       data: {
@@ -126,9 +134,8 @@ export async function PUT(request: NextRequest) {
       },
     });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "Update failed";
     logApiError("PUT /api/mission-categories", "update", error);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return serverError(toError(error).message || "Update failed");
   }
 }
 
@@ -140,7 +147,7 @@ export async function DELETE(request: NextRequest) {
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
     if (!id) {
-      return NextResponse.json({ error: "id is required" }, { status: 400 });
+      return badRequest("id is required");
     }
     const reassignParam = url.searchParams.get("reassignToId");
     const reassignToId =
@@ -151,6 +158,9 @@ export async function DELETE(request: NextRequest) {
     const missionCount = countMissionsInCategory(id);
     const templateCount = countTemplatesInCategory(id);
     if ((missionCount > 0 || templateCount > 0) && reassignToId === undefined) {
+      // Extended 400 body (carries missionCount + templateCount counts) — kept
+      // inline because the badRequest() factory doesn't support extra body
+      // fields. Matches the same outlier pattern as the 503 above.
       return NextResponse.json(
         {
           error: "reassignToId required when category is in use",
@@ -162,20 +172,17 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (reassignToId !== undefined && reassignToId !== null && !getCategory(reassignToId)) {
-      return NextResponse.json(
-        { error: "Reassign target category not found" },
-        { status: 400 },
-      );
+      return badRequest("Reassign target category not found");
     }
 
     deleteCategory(id, reassignToId);
     return NextResponse.json({ data: { deleted: id } });
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "Delete failed";
+    const msg = toError(error).message || "Delete failed";
     if (msg.includes("System categories")) {
-      return NextResponse.json({ error: msg }, { status: 403 });
+      return forbidden(msg);
     }
     logApiError("DELETE /api/mission-categories", "delete", error);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return serverError(msg);
   }
 }
