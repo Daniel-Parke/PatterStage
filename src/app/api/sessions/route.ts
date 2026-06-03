@@ -16,7 +16,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
-import { badRequest, notFound, serverError, serviceUnavailable } from "@/lib/api-response";
+import { badRequest, created, notFound, serverError, serviceUnavailable } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import {
   listSessions,
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
         title: body.title,
         status: body.status ?? "active",
       });
-      return NextResponse.json({ data: { session } }, { status: 201 });
+      return created({ session });
     }
 
     // action=update — used by dispatch pipeline on mission complete/fail

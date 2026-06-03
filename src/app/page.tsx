@@ -414,8 +414,17 @@ export default function Dashboard() {
     [missions],
   );
 
-  // Timestamp for cron scheduling comparisons — computed fresh per render
-  const now = new Date().getTime();
+  // Timestamp for cron scheduling comparisons. We DO NOT compute
+  // `new Date().getTime()` directly in the render body, because that
+  // would make `now` a brand-new number on every render, which in
+  // turn would invalidate the `cronCaptions` and `sessionWindowSubtitle`
+  // `useMemo`s on every render and defeat the entire purpose of the
+  // memo. Instead, hold `now` in `useState` (initialised once on mount)
+  // and refresh it on a 30-second `useInterval`. The captions stay
+  // stable for 30-second windows — close enough for a dashboard whose
+  // monitor already polls every 10s.
+  const [now, setNow] = useState(() => new Date().getTime());
+  useInterval(() => setNow(new Date().getTime()), { ms: 30_000 });
 
   // Per-job caption map: priority-ordered ladder extracted to
   // computeCronJobRowCaption (src/lib/cron-row-helpers.ts) so the

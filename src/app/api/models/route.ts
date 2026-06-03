@@ -12,7 +12,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, modelPostSchema } from "@/lib/api-schemas";
-import { serverError } from "@/lib/api-response";
+import { created, serverError } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
 export async function GET(request: NextRequest) {
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       syncDefaultsToHermesConfig();
     }
     appendAuditLine({ action: "model.create", resource: model.id, ok: true });
-    return NextResponse.json({ data: { model } }, { status: 201 });
+    return created({ model });
   } catch (error) {
     if (createdId) {
       try {

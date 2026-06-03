@@ -12,7 +12,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, credentialPostSchema } from "@/lib/api-schemas";
-import { serverError } from "@/lib/api-response";
+import { created, serverError } from "@/lib/api-response";
 import { syncCredentialToHermesEnv } from "@/lib/hermes-config-sync";
 
 export async function GET(request: NextRequest) {
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       apiKey: parsed.data.apiKey,
     });
     appendAuditLine({ action: "credential.create", resource: credential.id, ok: true });
-    return NextResponse.json({ data: { credential } }, { status: 201 });
+    return created({ credential });
   } catch (error) {
     if (createdId) {
       // Hermes write failed after the DB row was committed — roll back the row.

@@ -9,7 +9,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb, getSchemaHealth } from "@/lib/db";
 import { toError } from "@/lib/api-fetch";
-import { badRequest, forbidden, notFound, serverError } from "@/lib/api-response";
+import { badRequest, created, forbidden, notFound, serverError } from "@/lib/api-response";
 import {
   countMissionsInCategory,
   countTemplatesInCategory,
@@ -79,18 +79,13 @@ export async function POST(request: NextRequest) {
       return badRequest("name is required");
     }
     const cat = createCategory({ name, color });
-    return NextResponse.json(
-      {
-        data: {
-          category: {
-            ...cat,
-            missionCount: 0,
-            templateCount: 0,
-          },
-        },
+    return created({
+      category: {
+        ...cat,
+        missionCount: 0,
+        templateCount: 0,
       },
-      { status: 201 },
-    );
+    });
   } catch (error) {
     // The repository's "already exists" error surfaces a 409 — the only 409
     // site in this route. No 409 factory exists (only 1 such site), so it

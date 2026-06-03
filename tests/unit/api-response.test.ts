@@ -13,6 +13,7 @@
 import {
   badRequest,
   conflict,
+  created,
   forbidden,
   methodNotAllowed,
   notFound,
@@ -243,5 +244,41 @@ describe("serviceUnavailable", () => {
     expect(res.status).toBe(503);
     const body = await res.json();
     expect(body).toEqual({ error: "" });
+  });
+});
+
+describe("created", () => {
+  it("returns a response with status 201", async () => {
+    const res = created({ id: "abc" });
+    expect(res.status).toBe(201);
+  });
+
+  it("body is { data: <input> } — the input shape is preserved verbatim", async () => {
+    const res = created({ session: { id: "s1", title: "new session" } });
+    const body = await res.json();
+    expect(body).toEqual({ data: { session: { id: "s1", title: "new session" } } });
+  });
+
+  it("generic preserves the caller's type — works with arbitrary resource shapes", async () => {
+    // The 5 call sites that motivated this factory all use it with a
+    // different resource shape: { model }, { credential }, { session },
+    // { entry }, { category }. The generic <T> is what makes
+    // `created({ model })` and `created({ entry })` look identical at
+    // the call site — the type flows through without a cast.
+    const modelRes = created({ model: { id: "m1", name: "M" } });
+    const entryRes = created({ entry: { id: "e1", value: 1 } });
+    expect(await modelRes.json()).toEqual({ data: { model: { id: "m1", name: "M" } } });
+    expect(await entryRes.json()).toEqual({ data: { entry: { id: "e1", value: 1 } } });
+  });
+
+  it("null body is allowed — the wire shape is { data: null }", async () => {
+    // Some Created responses in the codebase intentionally return no
+    // body beyond the success signal (e.g. { success: true, job } where
+    // the job is the only payload). The factory should not crash on
+    // edge payloads.
+    const res = created(null);
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body).toEqual({ data: null });
   });
 });

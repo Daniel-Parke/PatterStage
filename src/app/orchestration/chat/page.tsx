@@ -38,10 +38,19 @@ import TypingIndicator from "@/components/chat/TypingIndicator";
 import GatewayBanner from "@/components/chat/GatewayBanner";
 import { useGatewayHealth } from "@/hooks/useGatewayHealth";
 
+// ── Event helpers ──────────────────────────────────────────────
+
+/** Stop click bubbling for inline button-on-button handlers. */
+const stopEvent = (e?: React.MouseEvent) => e?.stopPropagation();
+
 // ── Page component ─────────────────────────────────────────────
 
 export default function ChatPage() {
-  const { showToast } = useToast();
+  // `toastElement` is the portal-rendered toast UI — without rendering it
+  // in the JSX (just below the closing `</div>` of the page body), every
+  // `showToast(...)` call would be silent. Both the destructure and the
+  // render are required.
+  const { showToast, toastElement } = useToast();
 
   // Sessions — initialized from localStorage
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -91,7 +100,15 @@ export default function ChatPage() {
     }
   }, []);
 
-  // ── Persist sessions to localStorage on every change (skip empty initial state) ───
+  // ── Persist sessions to localStorage on every change ─────────
+  // The `if (sessions.length === 0) return;` guard is load-bearing: on
+  // first mount the loadSessions effect above populates `sessions`
+  // asynchronously (next tick), so the *very first* render of this effect
+  // sees `sessions = []`. Without the guard, we'd overwrite localStorage
+  // with `[]` before the load effect ran, wiping persisted data. After
+  // the first save, sessions is non-empty, so the guard is a no-op and
+  // every subsequent change (create/delete/rename/stream delta) is
+  // persisted normally.
   useEffect(() => {
     if (sessions.length === 0) return;
     saveSessions(sessions);
@@ -144,24 +161,31 @@ export default function ChatPage() {
   // ── Delete session ─────────────────────────────────────────
   const handleDeleteSession = useCallback(
     (id: string, e?: React.MouseEvent) => {
-      e?.stopPropagation();
+      stopEvent(e);
       abortControllerRef.current?.abort();
-      setSessions((prev) => {
-        const next = prev.filter((s) => s.id !== id);
-        if (id === activeSessionId) {
-          setTimeout(() => setActiveSessionId(next.length > 0 ? next[0].id : null), 0);
-        }
-        return next;
-      });
+      // We can't call `setActiveSessionId` directly inside the
+      // `setSessions` updater — React disallows setState-during-setState
+      // (the updater is supposed to be a pure function of `prev`). Using
+      // `flushSync` would force a sync flush and is even more invasive, so
+      // we just compute the next-id eagerly from the current `sessions`
+      // snapshot and call both setters synchronously outside the updater.
+      // This is byte-equivalent to the old `setTimeout(..., 0)` trick
+      // (which was the same thing — defer the setState to escape the
+      // updater scope) but without the microtask deferral.
+      setSessions((prev) => prev.filter((s) => s.id !== id));
+      if (id === activeSessionId) {
+        const remaining = sessions.filter((s) => s.id !== id);
+        setActiveSessionId(remaining.length > 0 ? remaining[0].id : null);
+      }
       showToast("Session deleted", "success");
     },
-    [activeSessionId, showToast],
+    [activeSessionId, sessions, showToast],
   );
 
   // ── Download session ───────────────────────────────────────
   const handleDownloadSession = useCallback(
     (s: ChatSession, format: "json" | "csv", e?: React.MouseEvent) => {
-      e?.stopPropagation();
+      stopEvent(e);
       const safeTitle = s.title.replace(/[^a-zA-Z0-9_-]/g, "_");
       const timestamp = Date.now();
       if (format === "json") {
@@ -192,16 +216,20 @@ export default function ChatPage() {
       return;
     }
 
-    // Determine or create the target session
-    let targetSessionId = activeSessionId;
-    let isNewSession = false;
+    // Resolve the target session — creating one on demand if there is no
+    // active session yet. The `existing` lookup decides (a) whether we
+    // need to insert a brand-new session and (b) what prior-message
+    // history to send to the API (empty for new sessions, full history
+    // for existing ones).
+    const existing = activeSessionId
+      ? sessions.find((s) => s.id === activeSessionId)
+      : undefined;
+    const newSession = !existing ? createEmptySession(model) : undefined;
+    const targetSessionId = existing?.id ?? newSession!.id;
 
-    if (!targetSessionId) {
-      isNewSession = true;
-      const newSession = createEmptySession(model);
-      targetSessionId = newSession.id;
+    if (newSession) {
       setSessions((prev) => [newSession, ...prev]);
-      setActiveSessionId(targetSessionId);
+      setActiveSessionId(newSession.id);
     }
 
     // Create user and assistant messages
@@ -217,7 +245,7 @@ export default function ChatPage() {
     ]);
 
     // If new session, set the title from first message
-    if (isNewSession) {
+    if (newSession) {
       setSessions((prev) =>
         prev.map((s) =>
           s.id === targetSessionId ? { ...s, title: text.slice(0, 50) } : s,
@@ -228,9 +256,10 @@ export default function ChatPage() {
     setInput("");
     setIsStreaming(true);
 
-    // Build API messages (for existing sessions, include history)
-    const sessionAtSend = sessions.find((s) => s.id === targetSessionId);
-    const priorMessages = isNewSession ? [] : (sessionAtSend?.messages ?? []);
+    // Build API messages (existing sessions include full history; new
+    // sessions send only the new user message). `existing` was the lookup
+    // we did above, so its `messages` field is the authoritative history.
+    const priorMessages = existing?.messages ?? [];
     const apiMessages = toApiMessages(priorMessages, text);
 
     // Stream the response (errors handled via onError callback)
@@ -548,6 +577,7 @@ export default function ChatPage() {
         </div>
       </div>
       </div>
+      {toastElement}
     </AppPageShell>
   );
 }

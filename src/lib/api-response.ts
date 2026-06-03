@@ -116,3 +116,29 @@ export function payloadTooLarge(error: string): NextResponse {
 export function serviceUnavailable(error: string): NextResponse {
   return NextResponse.json({ error }, { status: 503 });
 }
+
+/**
+ * Return a 201 Created with the given body. Use in route handlers
+ * when a POST/PUT successfully created a new resource (session,
+ * model, credential, fallback entry, …). Body is wrapped in
+ * `{ data }` to match the rest of the success-response surface
+ * (`{ data: { resource } }`), so the wire shape is identical to the
+ * 200 GET path for the same resource.
+ *
+ * The 5 sites that previously did this inline
+ * (models/route.ts:52, credentials/route.ts:56, sessions/route.ts:120,
+ * models/fallbacks/route.ts:41, models/fallbacks/custom/route.ts:37)
+ * collapsed to a single token `created(...)` per call. Rule of Three
+ * (5 sites across 5 files) is well over the threshold; the factory
+ * centralises the `{ data }` wrap so a future change (e.g. add a
+ * `createdAt: new Date().toISOString()` field to every Created
+ * response) lands in one place.
+ *
+ * Body shape: `{ data: T }`. Pass whatever the resource shape is —
+ * `{ data: { session } }` for sessions, `{ data: { model } }` for
+ * models, etc. The generic `T` preserves the caller's type
+ * information through the helper.
+ */
+export function created<T>(data: T): NextResponse {
+  return NextResponse.json({ data }, { status: 201 });
+}

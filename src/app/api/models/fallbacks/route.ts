@@ -9,7 +9,7 @@ import { addFallbackEntry, getFallbackConfig, listFallbackChain } from "@/lib/fa
 import { fallbackInputSchema } from "@/lib/fallback-config-schema";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
-import { serverError } from "@/lib/api-response";
+import { created, serverError } from "@/lib/api-response";
 
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   try {
     const entry = addFallbackEntry(parsed.data);
     commitFallbackChange("fallback.add", entry.id);
-    return NextResponse.json({ data: { entry } }, { status: 201 });
+    return created({ entry });
   } catch (error) {
     logApiError("POST /api/models/fallbacks", "adding fallback entry", error);
     return serverError("Failed to add fallback entry");

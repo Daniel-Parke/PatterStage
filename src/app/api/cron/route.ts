@@ -17,7 +17,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest, notFound, serverError, serviceUnavailable } from "@/lib/api-response";
+import { badRequest, created, notFound, serverError, serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { parseSchedule } from "@/lib/utils";
 import { buildCronUpdatePayload } from "@/lib/cron-field-updates";
@@ -323,10 +323,10 @@ export async function POST(request: NextRequest) {
 
     appendAuditLine({ action: "cron.create", resource: newJob.id, ok: true });
 
-    return NextResponse.json(
-      { data: { success: true, job: recordToApiJob(getCronJob(newJob.id)!) } },
-      { status: 201 }
-    );
+    return created({
+      success: true,
+      job: recordToApiJob(getCronJob(newJob.id)!),
+    });
   } catch (error) {
     logApiError("POST /api/cron", "creating cron job", error);
     return serverError("Failed to create cron job");
