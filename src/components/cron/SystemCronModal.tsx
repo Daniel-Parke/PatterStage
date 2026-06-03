@@ -80,19 +80,22 @@ export default function SystemCronModal({ open, onClose, onSave, editingJob }: P
     setError(null);
     setScheduleError(null);
 
-    if (editingJob) {
-      setName(editingJob.name);
-      setSchedule(editingJob.schedule);
-      setCommand(normalizePathSlashes(editingJob.command));
-      setLogFile(editingJob.logFile ?? "");
-      setEnabled(editingJob.enabled);
-    } else {
-      setName("");
-      setSchedule("*/5 * * * *");
-      setCommand("");
-      setLogFile("");
-      setEnabled(true);
-    }
+    // Edit + reset branches collapse into a single `source = editingJob ?? null`
+    // form. When source is null, `source?.field` short-circuits to undefined and
+    // the `?? default` fallback fires; when source is the editingJob, the
+    // per-field `?? editingJob-default` reads the value verbatim. The two
+    // branches above were byte-equivalent to this single block — the edit
+    // branch's `editingJob.name` matches `source?.name` for both null source
+    // (reset) and non-null source (edit), and the schedule default `*/5 * * * *`
+    // preserves the original create-mode value.
+    const source = editingJob ?? null;
+    setName(source?.name ?? "");
+    setSchedule(source?.schedule ?? "*/5 * * * *");
+    setCommand(
+      source?.command != null ? normalizePathSlashes(source.command) : "",
+    );
+    setLogFile(source?.logFile ?? "");
+    setEnabled(source?.enabled ?? true);
   }, [open, editingJob]);
 
   useEffect(() => {

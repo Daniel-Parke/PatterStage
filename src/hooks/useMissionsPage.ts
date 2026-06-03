@@ -933,6 +933,15 @@ export function useMissionsPage() {
       ),
     );
 
+    // Shared by both error paths below (API returned ok:false, and the
+    // catch-block network error path). Pulled out so the 3-line setter
+    // call doesn't get repeated verbatim.
+    const restoreMission = (restored: MissionRow) => {
+      setMissions((prev) =>
+        prev.map((m) => (m.id === id ? restored : m)),
+      );
+    };
+
     try {
       const result = await safeApiCall("/api/missions", {
         method: "POST",
@@ -948,15 +957,11 @@ export function useMissionsPage() {
         await fetchData();
         if (expandedId === id) void fetchDetail(id);
       } else if (previousMission) {
-        setMissions((prev) =>
-          prev.map((m) => (m.id === id ? previousMission : m)),
-        );
+        restoreMission(previousMission);
       }
     } catch {
       if (previousMission) {
-        setMissions((prev) =>
-          prev.map((m) => (m.id === id ? previousMission : m)),
-        );
+        restoreMission(previousMission);
       }
       showToast("Network error — could not cancel mission", "error");
     } finally {

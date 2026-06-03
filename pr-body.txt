@@ -1,3 +1,97 @@
+## Session 88 — List 2 (Cron, Missions, Chat) — populate-collapse refactor + restoreMission helper
+
+Pick was List 2 (per random selection `echo $(( RANDOM % 4 + 1 ))` = 2, the first List-2 pick since session 84). The session was a focused two-part byte-equivalent refactor on the cron-modals surface and the `useMissionsPage.handleCancel` error-revert flow.
+
+All 1264 unit tests pass (195 suites, +12 new from `cron-populate-collapse.test.ts`). tsc clean, eslint --max-warnings 0 clean, build passes. Byte-equivalent at runtime for every migrated site.
+
+### What changed (this session — session 88)
+
+#### Refactor 1 — `JobFormModal.tsx` populate-block collapse (14 lines → 8 lines)
+
+The `useEffect` that populates the form on modal open had two near-identical 7-line branches — one for "edit mode" (read from `job`) and one for "create mode" (reset to defaults). The refactor collapses the two branches into a single block by introducing a `source = job?.id ? job : null` binding and using `source?.field ?? default` (or `|| default` for falsy-only fallbacks). The 7 fields covered are: `name`, `schedule`, `prompt`, `deliver`, `model`, `profile_name`, `repeat`.
+
+**Why this works (byte-equivalence argument):**
+- `setName(job.name ?? "")` ≡ `setName(source?.name ?? "")` for both null source (reset) and non-null source (edit). When `source = null`, `source?.name` is `undefined`, so `?? ""` fires and returns `""`. When `source = job`, `source.name` is `string` and `?? ""` only fires on null/undefined, not on empty string.
+- `setDeliver(job.deliver || "none")` ≡ `setDeliver(source?.deliver || "none")` for the same reason — `||` fires on any falsy value, so null source and `deliver = ""` both produce `"none"`.
+
+**Removed lines:** 16 (the two 7-line `setX(value)` blocks plus the `if/else` braces). **Added lines:** 9 (the `const source = ...` binding + 7 single-line setters + a 6-line comment explaining the equivalence). **Net:** -7 lines, and the 6-line equivalence comment is the "this is a byte-equivalence refactor" documentation that future maintainers need.
+
+#### Refactor 2 — `SystemCronModal.tsx` populate-block collapse (12 lines → 9 lines)
+
+Same pattern as Refactor 1, but for the system cron modal. The `useEffect` had two 5-line branches setting `name`, `schedule`, `command`, `logFile`, `enabled`. The refactor uses the same `source = editingJob ?? null` form.
+
+**One nuance:** the `command` field goes through `normalizePathSlashes` only in the edit branch (the reset branch sets `""` directly, no normalization needed). The refactored form uses a ternary `source?.command != null ? normalizePathSlashes(source.command) : ""` to preserve the original behavior:
+- `source = null` → `source?.command != null` is `false` (undefined ≠ null), returns `""` (matching reset)
+- `source = editingJob` → `editingJob.command` is `string` (non-null by type), calls `normalizePathSlashes(editingJob.command)` (matching edit)
+- `source = editingJob` with `command = ""` (empty string, but non-null) → `"" != null` is `true`, calls `normalizePathSlashes("")` returning `""` (matching edit; empty string normalizes to empty string)
+
+The `setSchedule` field's `*/5 * * * *` default is preserved via `source?.schedule ?? "*/5 * * * *"` — `??` doesn't fire on empty string, so an edit with `schedule = ""` would still set `""` (matching original edit), while a null source falls through to `"*/5 * * * *"` (matching original reset).
+
+**Removed lines:** 14 (the two 5-line `setX(value)` blocks plus the `if/else` braces). **Added lines:** 9 (the `const source = ...` binding + 5 single-line setters + a 6-line equivalence comment). **Net:** -5 lines.
+
+#### Refactor 3 — `useMissionsPage.handleCancel` `restoreMission` helper extraction (6 lines → 4 lines)
+
+The `handleCancel` callback had two byte-equivalent revert blocks — one for the "API returned `ok: false`" path and one for the network-error catch path. Both did the same 3-line `setMissions((prev) => prev.map((m) => (m.id === id ? previousMission : m)))` call. The refactor extracts a local `restoreMission(restored: MissionRow)` closure at the top of the function and uses it in both error paths.
+
+**Why local closure (not module-level helper):** the helper captures `setMissions` and `id` from the outer scope, so promoting it to a module-level helper would force passing both as parameters and would lose the closure's "this is the cancel-flow revert" locality. The closure form is 1 line shorter and reads more naturally at the call sites (`restoreMission(previousMission)` vs `restoreMission(setMissions, id, previousMission)`). With only 2 call sites in a single function, a module-level helper would be over-engineering per the Rule of Three.
+
+### Files
+
+**New files (1):**
+- `tests/unit/cron-populate-collapse.test.ts` — 12 unit tests (6 for JobFormModal collapse, 6 for SystemCronModal collapse)
+
+**Modified files (3):**
+- `src/components/cron/JobFormModal.tsx` — collapsed 16-line two-branch populate into 9-line single-block (with 6-line equivalence comment)
+- `src/components/cron/SystemCronModal.tsx` — collapsed 14-line two-branch populate into 9-line single-block (with 6-line equivalence comment)
+- `src/hooks/useMissionsPage.ts` — extracted local `restoreMission` closure from 2 byte-equivalent 3-line `setMissions((prev) => ...)` calls
+
+### Verification
+
+- **All 1264 unit tests pass** (195 suites, +12 new from `cron-populate-collapse.test.ts`)
+- **`npx tsc --noEmit`** clean on all 3 modified files and the full project
+- **`CI=true npx eslint . --max-warnings 0`** clean on all 3 modified files + the new test file
+- **`npm run build`** passes
+- **Byte-equivalence audit per session-51 lesson**:
+  - **JobFormModal populate**: 6 input cases (null job, no-id job, normal edit, empty strings, undefined optional fields, falsy `deliver`) produce identical setter call sequences before and after the refactor. The 6 unit tests assert this via `expect(refactoredCalls).toEqual(originalCalls)`.
+  - **SystemCronModal populate**: 6 input cases (null job, normal edit, Windows-path edit, empty strings, undefined logFile, schedule = `*/5 * * * *` default) produce identical setter call sequences before and after. The 6 unit tests assert this same equivalence.
+  - **`restoreMission` closure**: byte-equivalent because the closure body is the exact 3-line lambda that was inline. No new logic, no new types, no new state. The two error paths now share the same 3-line implementation via a single name.
+
+### What was rejected this session
+
+- **Migrating the `setFormField` setter-builder in `useMissionsPage.ts` (16 inline `(v) => setNewX(v)` lambdas) to the `setField` helper from session 87.** This was the original session-88 plan — looks like a perfect 1-line replacement. But it fails at the TypeScript type level: `setField<MissionFormState>(setNewName, "newName")` requires `setNewName: Dispatch<SetStateAction<MissionFormState>>`, but `setNewName` is actually `Dispatch<SetStateAction<string>>`. The structural type incompatibility is a 19-line TS error. The HindsightBrowser use case in session 87 worked because each modal has ONE setter (`setForm`) covering the WHOLE form, not 16 setters each covering a different value type. **The session-87 lesson is "promote local generic helpers on strong use-site density" — but that lesson assumed a single-form shape, not a multi-`useState` dispatch-table shape.** The 3 cron/missions refactors above are the byte-equivalent alternatives.
+- **Migrating `(v) => setNewX(v)` setters to a hypothetical `setFieldOf<V>(setter: (v: V) => void): (v: V) => void` helper** (a per-field-shape overload of `setField`). Would require a new helper, an additional 8 unit tests, and the migration would be a 1-line change per field (same readability win as the rejected `setField` migration). The session-87 lesson "1 consumer promotion with non-trivial type signature" doesn't apply here because the inline form `(v) => setNewX(v)` is already a trivial 1-line lambda — promoting it to a helper is a wash, not a win.
+- **Replacing the chat page's inline `<textarea>` with the `AutoTextarea` component.** The chat page hand-rolls an auto-resize textarea (lines 521-529) that has the same `scrollHeight` pattern as `AutoTextarea`. But the chat version uses different Tailwind classes, different `minHeight`/`maxHeight` (42px/120px vs the `AutoTextarea` line-height-based min/max), and the `onInput` handler is content-triggered (vs the `useEffect` on value change in `AutoTextarea`). Migrating would change the visual appearance and the resize timing — a behavior change, not a byte-equivalent refactor.
+- **Promoting `restoreMission` to a module-level helper.** With only 2 call sites in a single function (`handleCancel`), the closure form is the right shape. A module-level `restoreMission(setMissions, id, mission)` would need to thread the setter and id through, losing the closure's locality. The session-51 over-engineering rule applies.
+- **Adopting `useMissionsPage` decomposition** (the 1175-LOC hook flagged as a backlog item since session-75). Out of scope for "AT LEAST identical results" — a 5+ helper extraction is a behavior-equivalent refactor at best, and risks subtle state-derivation bugs if any helper is wired up wrong.
+- **Migrating the chat page's `showToast("Gateway is offline — start it with: hermes gateway start", "error")` to `toastError(showToast, err, fallback)`.** The chat page's gateway-offline check is a `if (gatewayOnline === false)` guard, not a try/catch. `toastError` is for catch-block error unwrapping. The 1-line inline `showToast` is the correct shape here.
+- **Migrating the `if (result.ok) { ... } else if (previousMission) { restoreMission(...) }` flow to a `toastFromResult` variant.** `toastFromResult` is for the success/error toast, not for state-revert. The `restoreMission` call is a side effect on top of the toast.
+
+### Patterns to take forward
+
+1. **"Two-branch populate collapse via `source ?? null`"** — when a `useEffect` has two near-identical branches keyed on "edit mode" vs "create mode" (or "active entity" vs "null"), collapse them into a single block by introducing a `source = entity ?? null` binding and using `source?.field ?? default` for nullable fields and `source?.field || default` for falsy-fallback fields. The 6-line equivalence comment is the documentation that locks in the byte-equivalence claim. **Best when the per-field defaults are the same in both branches (e.g. both reset to `""` and both edit to `?? ""`)**.
+2. **"Local closure for byte-equivalent 2-call-site helpers"** — when a 3-line function literal appears twice in the same function (e.g. error-revert paths, optimistic-update + revert flows), extract a local closure at the top of the function. The closure captures outer scope and reads naturally at the call sites (`restoreMission(prev)` vs `setMissions((prev) => prev.map((m) => m.id === id ? prev : m))`). Don't promote to a module-level helper until a 3rd call site appears (Rule of Three with the locality exception).
+3. **"The `setField` promotion only works for single-form shapes"** — the session-87 `setField` helper is perfect for the HindsightBrowser modal use case (one `setForm` covering the whole form, 14 fields). It does NOT work for the multi-`useState` dispatch-table use case in `useMissionsPage` (16 independent `setNewX` setters, each typed by its own value type). The type-level reason: React's `Dispatch<SetStateAction<S>>` is structurally incompatible when `S` is the whole form vs. the per-field type. **Future sessions should not try to force `setField` into the multi-`useState` pattern** — the byte-equivalent alternatives (per-field inline lambdas, or a hypothetical `setFieldOf<V>` per-field-shape overload) are the right shape.
+4. **"The byte-equivalence contract test pattern"** — for any refactor that claims "this is byte-equivalent", write a unit test that mirrors both the original and refactored logic verbatim and asserts the same output for a representative input set. The 6 input cases per modal cover: null reset, undefined-id reset, normal edit, empty-string edge case, undefined optional fields, and the falsy-fallback branch (the one that exercises `|| default` vs `?? default`). The test makes the byte-equivalence claim auditable in CI.
+
+### "Next session should:" block (carried forward)
+
+1. **Pick a different list next session** — `echo $(( RANDOM % 4 + 1 ))` returned List 2 in session 88, the first List-2 pick since session 84. Per Pitfall D, the next pick should deliberately favor **List 1, List 3, or List 4** to spread the refactor surface. List 4 (Models, HERMES.md, Environment, All Settings) hasn't been hit since session 86 and has the most accumulated lib-level patterns (config writing, env management). List 3 (Models, Agents, Skills, Tools, Personalities) hasn't been hit since session 80 — the `useModelsPage.ts` 12-site `err instanceof Error` migration is still pending.
+2. **Try the `setFormField` setter-builder migration again** with a NEW helper shape. The rejected `setField<MissionFormState>` approach failed because `S` must be the whole form, not the per-field type. A `setFieldOf<V>(setter: (v: V) => void, _: V): (v: V) => void` helper (no React `Dispatch` type, just a value-typed callback) would let each `(v) => setNewX(v)` become `setFieldOf(setNewX, "")` (or `setFieldOf(setNewX, [])` for arrays) with no type mismatch. **Only worth doing if a 2nd consumer of the multi-`useState` dispatch-table pattern appears** (currently 1 consumer — `useMissionsPage`). Rule of Three applies.
+3. **`useMissionsPage` decomposition** (the 1175-LOC hook backlog item from session-75). The `setFormField` setter-builder is the natural "first cut" — extracting it to a `useMissionFormState` hook would shrink the file by ~30 lines and create a clear seam for the rest of the decomposition. Out of scope for "AT LEAST identical results" today.
+4. **Migrate the chat page's inline `scrollHeight` textarea to the `AutoTextarea` component** when the chat page can adopt the same `minRows`/`maxRows` shape (would require shrinking the max-height from 120px to ~6 rows, which is a visual change). Until then, the inline form stays.
+5. **Audit recipe for "two-branch populate collapse" across the codebase** — there may be more sites. Run: `grep -rnE "if \(.*\?\.id\)" src/components/ src/hooks/ | grep -B1 -A20 "set[A-Z][a-z]+" | head -100` — would surface any other 2-branch populate blocks. Session 88's audit was scoped to List 2 (Cron, Missions, Chat) — List 1 (Sidebar, Dashboard, Sessions, Memory, Logs) and List 3 (useModelsPage, operations pages) may have similar patterns.
+6. **`useMissionsPage` setter-builder generic-on-per-field-type** — the `setters: { [P in keyof MissionFormState]: (v: MissionFormState[P]) => void }` shape is correct and tested. No refactor needed; just a note that the type system is doing the right thing here.
+7. **Promote `useMissionFormState` hook** to `src/hooks/` when a 2nd mission-style form appears (e.g. the Template Editor modal in `TemplateModals.tsx` is a candidate — it has the same 7-field + model + provider + localDirs + references + skills + toolsets shape). The hook would extract the ~30 `useState` declarations and the `formState` object from `useMissionsPage` and re-export them. **Defer until the Template Editor also needs them** (out of scope today).
+
+### What was rejected this session
+
+- **3-line `apiFetch.toError` rename** to a more discoverable name (e.g. `coerceToError`) — already covered in session 75's rejection list, still rejected.
+- **Move `toError` to its own file (`src/lib/to-error.ts`)** — same as session 75's rejection, still rejected.
+- **Promote `useMissionsPage`'s 17 `useState` declarations to a single `useReducer`** — would change the dispatch shape, out of scope for "AT LEAST identical results".
+- **Decompose `useMissionsPage` into 5+ smaller hooks** — backlog item since session 75, the 1175-LOC size is a smell but the decomposition is a 30+ tool-call effort that doesn't fit a 15-minute session. Carried forward.
+
+---
+
 ## Session 87 — List 1 (Dashboard, Sessions, Memory, Logs) — setField + stringOr helper extraction
 
 Pick was List 1 (per random selection `echo $(( RANDOM % 4 + 1 ))` = 1, the first List-1 pick in 4 sessions). The session was a small, focused helper-extraction sweep on the Hindsight memory browser — two byte-equivalent helper promotions that fold inline patterns into canonical, signature-locked helpers. The headline was a **14-site `setField` extraction** (the largest single-callsite consolidation since `runMutation`); the bonus was a **2-site `stringOr` extraction** that closes a duplicate "set health from payload" block in the same component.

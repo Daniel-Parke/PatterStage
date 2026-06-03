@@ -66,23 +66,22 @@ export default function JobFormModal({
     if (!open) return;
     setError(null);
 
-    if (job?.id) {
-      setName(job.name ?? "");
-      setSchedule(job.schedule ?? "");
-      setPrompt(job.prompt ?? "");
-      setDeliver(job.deliver || "none");
-      setModel(job.model ?? "");
-      setProfileName(job.profile_name || "default");
-      setRepeat(job.repeat ?? false);
-    } else {
-      setName("");
-      setSchedule("");
-      setPrompt("");
-      setDeliver("none");
-      setModel("");
-      setProfileName("default");
-      setRepeat(false);
-    }
+    // Edit + reset branches collapse into a single `source = job ?? null` form.
+    // When source is null, `source?.field` short-circuits to undefined and
+    // the `?? default` fallback fires; when source is the job, the per-field
+    // `?? job-default` reads the value verbatim. The two branches above were
+    // byte-equivalent to this single block — the edit branch's `job.name ?? ""`
+    // matches `source?.name ?? ""` for both null source (reset) and non-null
+    // source (edit), and the `|| "default"` fallbacks for deliver/profile_name
+    // behave identically because they only fire on falsy values.
+    const source = job?.id ? job : null;
+    setName(source?.name ?? "");
+    setSchedule(source?.schedule ?? "");
+    setPrompt(source?.prompt ?? "");
+    setDeliver(source?.deliver || "none");
+    setModel(source?.model ?? "");
+    setProfileName(source?.profile_name || "default");
+    setRepeat(source?.repeat ?? false);
   }, [open, job]);
 
   useEffect(() => {
