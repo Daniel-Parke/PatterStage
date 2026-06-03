@@ -1,3 +1,47 @@
+## Session 83 — List 1 (Dashboard, Sessions, Memory, Logs) — dashboard internal helper consolidation
+
+Pick was List 1 (per random selection via `echo $(( RANDOM % 4 + 1 ))` = 1). List 1 was last hit in session 78 (`runDeployAction` + `messageFromError` migration). Focus: **internal helper extraction in `src/app/page.tsx`** — three small, byte-equivalent refactors. All 1205 tests pass (190 suites). tsc clean, eslint clean, build passes.
+
+### What changed (this session — session 83)
+
+- **Refactor 1 — `composeTemplateUrl(templateId)` helper, dedupe 2 inline `onSelect` handlers**. The collapsed and expanded `Mission Dispatch` template card lists each had identical 4-line arrow functions building the URL `` `/orchestration/missions?template=${t.id}&compose=1` ``. Extracted to a single module-level `composeTemplateUrl(templateId: string): string` helper. Each `onSelect` shrinks to a one-liner. Byte-equivalent at runtime.
+- **Refactor 2 — `TemplateListItem` type extraction, dedupe inline `Array<{...}>` type with the `TemplatesResponseData` interface**. The `useState` for the dashboard's `templates` slice had a 9-field inline `Array<{...}>` type, and the `TemplatesResponseData` interface just below it had the same 9-field inline type. Both were the same shape — the API response and the local state are both the same kind of object. Extracted to a single `export interface TemplateListItem` (top-level so other modules can import it if they need to). Both `useState` and `TemplatesResponseData` now reference the named type. Byte-equivalent.
+- **Refactor 3 — `titleCase(sev)` replaces inline `sev.charAt(0).toUpperCase() + sev.slice(1)` in the severity filter button**. The dashboard's "Errors" panel renders three severity filter buttons (All / Error / Warning) using an inline `charAt(0).toUpperCase() + sev.slice(1)` expression. `titleCase` is already imported in the file (line 39) and lives in `src/lib/utils.ts` — same one-liner semantic, used by `cron-row-helpers.ts` already. Switched to the existing helper. Byte-equivalent.
+
+### Files
+
+- `src/app/page.tsx` (MODIFIED) — 2 sites → `composeTemplateUrl`, 2 inline types → `TemplateListItem`, 1 inline capitalize → `titleCase`
+- `pr-body.txt` (MODIFIED) — this entry
+
+### Verification
+
+- All **1205 unit tests pass** (190 suites, 0 new)
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint . --max-warnings 0` clean on all touched files
+- `npm run build` passes
+- Byte-equivalence audit: every migrated site produces the same string as the inline form for all observed inputs.
+
+### Patterns to take forward
+
+1. **`composeTemplateUrl` is now module-local — promote to `src/lib/` only if a second page needs it**. Currently only the dashboard builds the `/orchestration/missions?template=X&compose=1` URL. If a future page adds a "compose" button (e.g. Rec Room → Story Weaver launching a mission from a template), promote it to `src/lib/mission-compose-url.ts` or similar.
+2. **`TemplateListItem` is exported for future reuse**. The Missions page (`src/app/orchestration/missions/page.tsx`) likely already has its own similar shape — a future sweep could migrate it to import this type.
+3. **`charAt(0).toUpperCase() + s.slice(1)` audit** — 3 sites remaining in the codebase (`hermes-profile-sync.ts`, `chat-utils.ts`, `utils.ts` itself). The `utils.ts` site is the `titleCase` definition itself; the other two may be candidates for migration.
+
+### Out of scope (deliberately skipped)
+
+- **`(main)/memory/page.tsx`** — already a 25-line file that just wraps `<HindsightBrowser />`. Nothing to consolidate.
+- **`(main)/logs/page.tsx`** — 390 LOC, but every helper and pattern in it is already a custom one (`useApiData`, `useTwoStepConfirm`, `useInterval`). The 2 inline `try/catch` blocks are simple enough that migrating to `runMutation` would require a custom `errorMsg` per site (different from the existing `setActionMessage` UI). The "noisy" inline `refreshing` state is actually a UX signal (cleared on first render of the refetched data) that `runMutation` would erase.
+- **`(main)/sessions/page.tsx` `buildGroupedEntries`** — already a pure function extracted from the JSX. The `sort((a, b) => (aTime < bTime ? 1 : -1))` comparator is called twice (line 118 and 137); deduplicating it would require a closure (cheaper to just leave the comparator inline).
+- **`api/sessions/[id]/route.ts` `new Error("PayloadTooLarge")` stringly-typed error** — out of scope for List 1 (route is API, not page). Would be a useful follow-up: replace with a typed `PayloadTooLargeError` class so the call site doesn't fabricate a fake Error just to log it.
+
+### "Next session should:" block
+
+1. **Pick a different list next session** to spread the refactor surface. List 1 has now been hit 14+ times across 83 sessions. Per the prior session's recommendation, List 3 (Models, Agents, Skills, Tools, Personalities) has the most remaining surface and was last touched in session 80. List 2 is also mature but `useMissionsPage.ts` decomposition is still the highest-value refactor (1178 LOC, still untouched).
+2. **The stringly-typed `new Error("PayloadTooLarge")` in `api/sessions/[id]/route.ts`** is the lowest-friction follow-up — a 2-line refactor that removes a code smell.
+3. **`(main)/logs/page.tsx` `useApiData` extension** — the auto-refresh + abort pattern is a one-line hook extension; would consolidate the 2 useEffects at lines 99-118 into a single hook call.
+4. **`Sidebar.tsx` 3-handler consolidation** — per session 82's notes, the deploy action handlers are the next layer after the wrappers.
+5. **The `HindsightBrowser` `runMutation` migration** — needs a custom busy shape, so it's a longer session.
+
 ## Session 82 — List 2 (Cron, Missions, Chat) — `messageFromError` + `toastError` carryover finalization
 
 Pick was List 2 (carryover from session 81). The session-81 work hit the tool-call cap mid-flight — 3 files in flight (`useMissionsPage.ts`, `useSystemCronJobs.ts`, `operation-sync-action.ts`). This session picks up the carryover, verifies, fixes two issues (one duplicate import, one byte-equivalence break), and commits as session 82.

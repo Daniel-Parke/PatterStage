@@ -53,11 +53,34 @@ import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { useInterval } from "@/hooks/useInterval";
 
 // ── Typed response shapes for each API endpoint ─────────────
-interface TemplatesResponseData { templates: Array<{ id: string; name: string; icon: string; color: string; category: string; categoryId?: string; profile: string; description: string; isCustom?: boolean }>; }
+/**
+ * Shape of a single template as returned by /api/templates. The dashboard
+ * uses the same shape for both the API response and the local state
+ * slice, so the type is exported as `TemplateListItem` and shared
+ * between them (avoids the previous inline `Array<{...}>` duplication
+ * at the useState declaration).
+ */
+export interface TemplateListItem {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  category: string;
+  categoryId?: string;
+  profile: string;
+  description: string;
+  isCustom?: boolean;
+}
+interface TemplatesResponseData { templates: TemplateListItem[]; }
 interface CategoriesResponseData { categories: MissionCategory[]; }
 interface AgentsResponseData { processes: HermesProcess[]; }
 interface MissionsResponseData { missions: MissionBrief[]; }
 interface DefaultsResponseData { defaults: { agent?: string } | null; }
+
+/** Build the missions page URL that opens the compose form prefilled with this template. */
+function composeTemplateUrl(templateId: string): string {
+  return `/orchestration/missions?template=${templateId}&compose=1`;
+}
 
 // ── Live Clock (isolated re-render) ───────────────────────────
 
@@ -106,17 +129,7 @@ export default function Dashboard() {
     processes: HermesProcess[];
     missions: MissionBrief[];
     config: Record<string, unknown> | null;
-    templates: Array<{
-      id: string;
-      name: string;
-      icon: string;
-      color: string;
-      category: string;
-      categoryId?: string;
-      profile: string;
-      description: string;
-      isCustom?: boolean;
-    }>;
+    templates: TemplateListItem[];
     categories: MissionCategory[];
   }>({
     status: null,
@@ -586,11 +599,7 @@ export default function Dashboard() {
                   description={t.description}
                   isCustom={t.isCustom}
                   compact
-                  onSelect={() =>
-                    router.push(
-                      `/orchestration/missions?template=${t.id}&compose=1`,
-                    )
-                  }
+                  onSelect={() => router.push(composeTemplateUrl(t.id))}
                 />
               ))}
               {templates.length > 12 && (
@@ -627,11 +636,7 @@ export default function Dashboard() {
                         description={t.description ?? ""}
                         isCustom={t.isCustom}
                         compact
-                        onSelect={() =>
-                          router.push(
-                            `/orchestration/missions?template=${t.id}&compose=1`,
-                          )
-                        }
+                        onSelect={() => router.push(composeTemplateUrl(t.id))}
                       />
                     ))}
                   </div>
@@ -817,7 +822,7 @@ export default function Dashboard() {
                       errorSev === sev ? "bg-red-500/20 text-red-400" : "text-white/30 hover:text-white/60"
                     }`}
                   >
-                    {sev.charAt(0).toUpperCase() + sev.slice(1)}
+                    {titleCase(sev)}
                   </button>
                 ))}
               </div>
