@@ -9,7 +9,7 @@ import { toggleFallbackEntry } from "@/lib/fallbacks-repository";
 import { fallbackToggleSchema } from "@/lib/fallback-config-schema";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
-import { notFound } from "@/lib/api-response";
+import { notFound, ok } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       return notFound("Fallback entry not found");
     }
     commitFallbackChange("fallback.toggle", entry.id);
-    return NextResponse.json({ data: { entry } });
+    return ok({ entry });
   } catch (error) {
     return serverErrorFromCatch(
       "POST /api/models/fallbacks/toggle",

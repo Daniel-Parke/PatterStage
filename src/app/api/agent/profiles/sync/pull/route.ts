@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, ok } from "@/lib/api-response";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
@@ -38,14 +38,12 @@ export async function POST(request: NextRequest) {
 
     if (skills) {
       const results = importAllSkillsFromDisk();
-      return NextResponse.json({
-        data: { success: results.every((r) => r.success), results },
-      });
+      return ok({ success: results.every((r) => r.success), results },);
     }
 
     if (skillKey) {
       const result = pullSkillFromHermes(skillKey);
-      return NextResponse.json({ data: { success: result.success, result } });
+      return ok({ success: result.success, result });
     }
 
     if (all || importDiscovered) {
@@ -75,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     if (root || slug === "default") {
       const result = pullRootFromHermes({ reconcileDisk });
-      return NextResponse.json({ data: { success: result.success, result } });
+      return ok({ success: result.success, result });
     }
 
     if (!slug) {

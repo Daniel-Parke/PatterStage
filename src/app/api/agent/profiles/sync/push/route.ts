@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, ok } from "@/lib/api-response";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
@@ -35,19 +35,17 @@ export async function POST(request: NextRequest) {
 
     if (root) {
       const result = pushRootToHermes();
-      return NextResponse.json({ data: { success: result.success, result } });
+      return ok({ success: result.success, result });
     }
 
     if (skills) {
       const results = pushAllSkillsToHermes();
-      return NextResponse.json({
-        data: { success: results.every((r) => r.success), results },
-      });
+      return ok({ success: results.every((r) => r.success), results },);
     }
 
     if (skillKey) {
       const result = pushSkillToHermes(skillKey);
-      return NextResponse.json({ data: { success: result.success, result } });
+      return ok({ success: result.success, result });
     }
 
     if (all || missingOnly || onlyOutOfSync) {
@@ -72,7 +70,7 @@ export async function POST(request: NextRequest) {
 
     if (slug === "default") {
       const result = pushRootToHermes();
-      return NextResponse.json({ data: { success: result.success, result } });
+      return ok({ success: result.success, result });
     }
 
     const result = pushProfileToHermes(slug);

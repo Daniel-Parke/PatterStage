@@ -11,7 +11,7 @@ import { envVarForProvider, isHermesProvider } from "@/lib/hermes-providers";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { maskKeyHint } from "@/lib/secret-mask";
-import { notFound } from "@/lib/api-response";
+import { notFound, ok } from "@/lib/api-response";
 
 interface DiffEntry {
   id: string;
@@ -111,7 +111,7 @@ export async function POST(
       }
     }
 
-    return NextResponse.json({ data: { diffs, modelName: model.name } });
+    return ok({ diffs, modelName: model.name });
   } catch (error) {
     return serverErrorFromCatch(
       "POST /api/models/[id]/diff",

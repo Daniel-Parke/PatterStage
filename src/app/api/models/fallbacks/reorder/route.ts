@@ -10,7 +10,7 @@ import { fallbackReorderSchema } from "@/lib/fallback-config-schema";
 import { inTransaction } from "@/lib/db";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
-import { notFound } from "@/lib/api-response";
+import { notFound, ok } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const targetIdx = direction === "up" ? idx - 1 : idx + 1;
     if (targetIdx < 0 || targetIdx >= chain.length) {
       // Already at top/bottom — no-op
-      return NextResponse.json({ data: { fallbacks: chain } });
+      return ok({ fallbacks: chain });
     }
 
     // Swap positions atomically
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     commitFallbackChange("fallback.reorder", entryId);
 
     const refreshed = listFallbackChain();
-    return NextResponse.json({ data: { fallbacks: refreshed } });
+    return ok({ fallbacks: refreshed });
   } catch (error) {
     return serverErrorFromCatch(
       "POST /api/models/fallbacks/reorder",

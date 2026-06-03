@@ -9,7 +9,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, modelPutSchema } from "@/lib/api-schemas";
-import { notFound } from "@/lib/api-response";
+import { notFound, ok } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
 interface Ctx {
@@ -21,7 +21,7 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
   try {
     const model = getModel(id);
     if (!model) return notFound("Model not found");
-    return NextResponse.json({ data: { model } });
+    return ok({ model });
   } catch (error) {
     return serverErrorFromCatch(
       "GET /api/models/[id]",
@@ -51,7 +51,7 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
     // or when default slots move.
     syncDefaultsToHermesConfig();
     appendAuditLine({ action: "model.update", resource: id, ok: true });
-    return NextResponse.json({ data: { model: updated } });
+    return ok({ model: updated });
   } catch (error) {
     return serverErrorFromCatch(
       "PUT /api/models/[id]",
@@ -68,11 +68,11 @@ export async function DELETE(request: NextRequest, ctx: Ctx) {
 
   const { id } = await ctx.params;
   try {
-    const ok = deleteModel(id);
-    if (!ok) return notFound("Model not found");
+    const okDeleted = deleteModel(id);
+    if (!okDeleted) return notFound("Model not found");
     syncDefaultsToHermesConfig();
     appendAuditLine({ action: "model.delete", resource: id, ok: true });
-    return NextResponse.json({ data: { deleted: id } });
+    return ok({ deleted: id });
   } catch (error) {
     return serverErrorFromCatch(
       "DELETE /api/models/[id]",

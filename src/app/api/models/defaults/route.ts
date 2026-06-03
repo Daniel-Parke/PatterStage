@@ -10,7 +10,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, setDefaultPutSchema } from "@/lib/api-schemas";
-import { notFound } from "@/lib/api-response";
+import { notFound, ok } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
 export async function GET(request: NextRequest) {
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   if (auth) return auth;
 
   try {
-    return NextResponse.json({ data: { defaults: getModelDefaults() } });
+    return ok({ defaults: getModelDefaults() });
   } catch (error) {
     return serverErrorFromCatch(
       "GET /api/models/defaults",
@@ -50,7 +50,7 @@ export async function PUT(request: NextRequest) {
       resource: `${parsed.data.taskType}=${parsed.data.modelId ?? "null"}`,
       ok: true,
     });
-    return NextResponse.json({ data: { defaults } });
+    return ok({ defaults });
   } catch (error) {
     if (error instanceof Error && /Model not found/.test(error.message)) {
       return notFound(error.message);

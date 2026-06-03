@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { methodNotAllowed } from "@/lib/api-response";
+import { methodNotAllowed, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
@@ -87,7 +87,7 @@ export async function PUT(
     if (err) return err;
     assertPatchSucceeded(result);
 
-    return NextResponse.json({ data: { success: true, profile: result.profile, platformToolsets } });
+    return ok({ success: true, profile: result.profile, platformToolsets });
   }
   catch (error) {
     return serverErrorFromCatch(

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { ok } from "@/lib/api-response";
 
 import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest) {
   try {
     ensureDb();
     const drift = detectFullDrift();
-    return NextResponse.json({ data: drift });
+    return ok(drift);
   }
   catch (error) {
     return serverErrorFromCatch(

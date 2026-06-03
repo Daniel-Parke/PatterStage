@@ -9,7 +9,7 @@ import { getFallbackEntry, updateFallbackEntry, deleteFallbackEntry } from "@/li
 import { fallbackEntryPutSchema } from "@/lib/fallback-config-schema";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
-import { notFound } from "@/lib/api-response";
+import { notFound, ok } from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
@@ -24,7 +24,7 @@ export async function GET(
     if (!entry) {
       return notFound("Fallback entry not found");
     }
-    return NextResponse.json({ data: { fallback: entry } });
+    return ok({ fallback: entry });
   } catch (error) {
     return serverErrorFromCatch(
       "GET /api/models/fallbacks/[id]",
@@ -59,7 +59,7 @@ export async function PUT(
     }
 
     commitFallbackChange("fallback.update", id);
-    return NextResponse.json({ data: { fallback: updated } });
+    return ok({ fallback: updated });
   } catch (error) {
     return serverErrorFromCatch(
       "PUT /api/models/fallbacks/[id]",
@@ -86,7 +86,7 @@ export async function DELETE(
     }
 
     commitFallbackChange("fallback.delete", id);
-    return NextResponse.json({ data: { deleted: true } });
+    return ok({ deleted: true });
   } catch (error) {
     return serverErrorFromCatch(
       "DELETE /api/models/fallbacks/[id]",

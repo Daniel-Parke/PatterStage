@@ -19,7 +19,7 @@ import {
   type ManagedFileKey,
 } from "@/lib/agent-file-store";
 import { applyProfileOrRootPatch, assertPatchSucceeded, pushProfileOrRoot, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
-import { badRequest, notFound } from "@/lib/api-response";
+import { badRequest, notFound, ok } from "@/lib/api-response";
 import {
   configYamlToColumnValues,
   platformToolsetsFromJson,
@@ -281,7 +281,7 @@ export async function PUT(
       ok: true,
     });
 
-    return NextResponse.json({ data: { success: true, key, path: resolved.path } });
+    return ok({ success: true, key, path: resolved.path });
   }
   catch (error) {
     return serverErrorFromCatch(

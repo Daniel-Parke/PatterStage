@@ -9,14 +9,14 @@ import { addFallbackEntry, getFallbackConfig, listFallbackChain } from "@/lib/fa
 import { fallbackInputSchema } from "@/lib/fallback-config-schema";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
-import { created } from "@/lib/api-response";
+import { created, ok } from "@/lib/api-response";
 
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
   try {
-    return NextResponse.json({ data: { entries: listFallbackChain(), config: getFallbackConfig() } });
+    return ok({ entries: listFallbackChain(), config: getFallbackConfig() });
   } catch (error) {
     return serverErrorFromCatch(
       "GET /api/models/fallbacks",

@@ -2,6 +2,7 @@
 // /api/models/fallbacks/config — GET/PUT fallback behaviour config
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
+import { ok } from "@/lib/api-response";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { serverErrorFromCatch } from "@/lib/api-logger";
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
   if (auth) return auth;
 
   try {
-    return NextResponse.json({ data: { config: getFallbackConfig() } });
+    return ok({ config: getFallbackConfig() });
   } catch (error) {
     return serverErrorFromCatch(
       "GET /api/models/fallbacks/config",
@@ -44,7 +45,7 @@ export async function PUT(request: NextRequest) {
     syncEnabledFallbackChainToHermes(updated);
 
     appendAuditLine({ action: "fallback.config.update", resource: "config", ok: true });
-    return NextResponse.json({ data: { config: updated } });
+    return ok({ config: updated });
   } catch (error) {
     return serverErrorFromCatch(
       "PUT /api/models/fallbacks/config",

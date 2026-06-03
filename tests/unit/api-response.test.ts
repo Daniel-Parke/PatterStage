@@ -17,6 +17,7 @@ import {
   forbidden,
   methodNotAllowed,
   notFound,
+  ok,
   payloadTooLarge,
   serverError,
   serviceUnavailable,
@@ -280,5 +281,79 @@ describe("created", () => {
     expect(res.status).toBe(201);
     const body = await res.json();
     expect(body).toEqual({ data: null });
+  });
+});
+
+describe("ok", () => {
+  it("returns a response with status 200", async () => {
+    const res = ok({ id: "abc" });
+    expect(res.status).toBe(200);
+  });
+
+  it("body is { data: <input> } — the input shape is preserved verbatim", async () => {
+    const res = ok({ drift: { items: ["a", "b"] } });
+    const body = await res.json();
+    expect(body).toEqual({ data: { drift: { items: ["a", "b"] } } });
+  });
+
+  it("is byte-equivalent to the inline `return NextResponse.json({ data })` form", async () => {
+    // This is the most important property: the 31 sites migrated to
+    // `ok(...)` in session 111 must produce wire-identical output to
+    // the pre-refactor inline form. The factory body is literally
+    // `NextResponse.json({ data }, { status: 200 })` — but the
+    // important verification is at the wire level (status + JSON
+    // body shape), not the implementation detail.
+    const res = ok({ models: [{ id: "m1" }, { id: "m2" }] });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toMatch(/application\/json/);
+    const body = await res.json();
+    expect(body).toEqual({ data: { models: [{ id: "m1" }, { id: "m2" }] } });
+  });
+
+  it("generic <T> preserves arbitrary resource shapes — the call sites use it with { model }, { drift }, { fallbacks }, { success: true, slug }, etc.", async () => {
+    // The 31 sites span 18 files with very different resource shapes.
+    // The generic <T> means `ok({ model })` and `ok({ drift })` look
+    // identical at the call site — the type flows through without a
+    // cast. This test pins the runtime behaviour for the most common
+    // shapes seen in the migration.
+    const modelRes = ok({ model: { id: "m1", name: "M" } });
+    const driftRes = ok({ drift: { added: [], removed: [] } });
+    const flagRes = ok({ success: true, deleted: "abc" });
+    expect(await modelRes.json()).toEqual({ data: { model: { id: "m1", name: "M" } } });
+    expect(await driftRes.json()).toEqual({ data: { drift: { added: [], removed: [] } } });
+    expect(await flagRes.json()).toEqual({ data: { success: true, deleted: "abc" } });
+  });
+
+  it("passes through a pre-built object (the `data` variable pattern in fs/git/branches and orchestration/chat)", async () => {
+    // Two of the 31 migrated sites pass through a variable rather than
+    // an inline object: `src/app/api/fs/git/branches/route.ts:25`
+    // (`return NextResponse.json({ data })` where `data` is the result
+    // of a prior `await`) and `src/app/api/orchestration/chat/route.ts:52`.
+    // The factory must accept arbitrary T — including a pre-built
+    // object — without unwrapping it.
+    const payload = { branches: ["main", "dev"], current: "main" };
+    const res = ok(payload);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({ data: payload });
+  });
+
+  it("null body is allowed — the wire shape is { data: null }", async () => {
+    // Some success responses in the codebase intentionally return no
+    // payload (e.g. a `POST /api/agent/files/[key]` PUT that returns
+    // `{ success: true, key, path }` — but a no-content acknowledgement
+    // could just be `ok(null)`). The factory must not crash on edge
+    // payloads.
+    const res = ok(null);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({ data: null });
+  });
+
+  it("empty object body is allowed — the wire shape is { data: {} }", async () => {
+    const res = ok({});
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({ data: {} });
   });
 });

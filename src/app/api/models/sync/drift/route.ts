@@ -1,7 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 // /api/models/sync/drift — detect config drift between DB and config.yaml
 // ═══════════════════════════════════════════════════════════════
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { ok } from "@/lib/api-response";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { detectConfigDrift } from "@/lib/sync-manager";
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
       driftDetails,
     };
 
-    return NextResponse.json({ data: syncDrift });
+    return ok(syncDrift);
   } catch (error) {
     return serverErrorFromCatch(
       "GET /api/models/sync/drift",

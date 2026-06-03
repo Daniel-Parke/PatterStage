@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, ok } from "@/lib/api-response";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   try {
     ensureDb();
     const discovered = discoverLocalProfiles();
-    return NextResponse.json({ data: { profiles: discovered } });
+    return ok({ profiles: discovered });
   }
   catch (error) {
     return serverErrorFromCatch(

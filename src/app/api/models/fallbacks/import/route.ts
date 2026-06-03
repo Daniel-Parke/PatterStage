@@ -16,7 +16,7 @@ import { parseFallbackAgentSettingsFromYaml } from "@/lib/fallback-config-yaml";
 import { upsertModel } from "@/lib/models-repository";
 import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
 import { readHermesYamlConfig } from "@/lib/hermes-config-sync";
-import { notFound } from "@/lib/api-response";
+import { notFound, ok } from "@/lib/api-response";
 import { fallbackKey } from "@/lib/model-key";
 
 interface ImportPreview {
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
       fallback_providers?: Array<{ provider?: string; model?: string; base_url?: string }>;
     }>();
     if (!config) {
-      return NextResponse.json({ data: { fallbacks: [], imported: false } });
+      return ok({ fallbacks: [], imported: false });
     }
 
     const preview: ImportPreview[] = [];
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ data: { fallbacks: preview } });
+    return ok({ fallbacks: preview });
   } catch (error) {
     return serverErrorFromCatch(
       "GET /api/models/fallbacks/import",
