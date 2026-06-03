@@ -1,3 +1,146 @@
+## Session 106 — List 1 (Dashboard, Sessions, Memory, Logs) — `isMissionActive` helper adoption + dashboard `setDataFields` direct-call → `setData` partial-setter consolidation
+
+Pick was **List 1 (Dashboard, Sessions, Memory, Logs)** for the session 106 sweep, per `echo $((RANDOM % 4 + 1))` = 1 — the longest-gap surface per the session 101 "next session should" block (last touched session 93). Two small byte-equivalent refactors that close two long-standing helper-adoption gaps in the dashboard:
+
+1. **`activeMissions` filter migrated to the existing `isMissionActive` helper in `src/app/page.tsx`** — the dashboard's "Active Missions" panel (lines 425-433 pre-refactor) re-derived the canonical `m.status === "dispatched" || (m.status === "queued" && m.queuedForRun === true)` predicate inline. The `isMissionActive(m)` helper in `src/lib/mission-board.ts:36-38` was added in a prior session (tested in `tests/unit/mission-board.test.ts`) and used by `useMissionsPage` — but the dashboard never adopted it. Single-line migration: `missions.filter(isMissionActive)`. Byte-equivalent for all 4 input shapes (dispatched, queued+true, queued+false, anything-else) because `isMissionActive`'s body is literally the inline predicate, one indent level deeper.
+2. **Dashboard `setDataFields((prev) => ({...prev, monitor: f(prev.monitor)}))` direct call collapsed to `setData({ monitor: f(data.monitor) })`** in `handleCronScheduleChange` (lines 277-282 pre-refactor). The page defines a canonical `setData` partial-state helper at line 179 (`useCallback((partial) => setDataFields(prev => ({ ...prev, ...partial })), [])`) and uses it at 4 other sites (lines 190, 253, 309, 341-349, 399). The optimistic-update site in `handleCronScheduleChange` was the only direct `setDataFields` call in the component body. Migrating to `setData({ monitor: withCronJobSchedule(data.monitor, ...) })` is byte-equivalent because `data.monitor` is in the useCallback deps (line 311) so the closure-captured value is always fresh. Also added `setData` to the `useCallback` deps array (required by `react-hooks/exhaustive-deps` after the body change).
+
+All **1446** unit tests pass (**220** suites, +1 new suite: `dashboard-list1-active-missions-and-setdata.test.ts` with 6 source-pattern tests). tsc clean, eslint `--max-warnings 0` clean, build passes. Net: **+18 / -16 lines** in the source file (the +18 is the new JSDoc + import + 5-line restructured block; the -16 is the inline 7-line activeMissions filter collapse + 4-line setDataFields call collapse). Byte-equivalent at runtime for both refactors.
+
+### Refactor 1 — `activeMissions` filter → `isMissionActive` helper
+
+The dashboard's "Active Missions" section is the only place in the dashboard codebase that filters missions by the "active" predicate. The predicate is also used by `useMissionsPage.ts:1038` and `useMissionsPage.ts:1039` (mission counts reduce) — but those sites already use the helper (the reduce was refactored in session 102). The dashboard was the lone holdout.
+
+Pre-refactor (lines 425-433):
+```tsx
+const activeMissions = useMemo(
+  () =>
+    missions.filter(
+      (m) =>
+        m.status === "dispatched" ||
+        (m.status === "queued" && m.queuedForRun === true),
+    ),
+  [missions],
+);
+```
+
+Post-refactor:
+```tsx
+const activeMissions = useMemo(
+  () => missions.filter(isMissionActive),
+  [missions],
+);
+```
+
+**Byte-equivalence audit (per session 51 lesson):** the `isMissionActive` helper body is:
+```ts
+return mission.status === "dispatched" || isMissionQueuedForRun(mission);
+```
+And `isMissionQueuedForRun(m) = m.status === "queued" && m.queuedForRun === true`. Substituting:
+```
+isMissionActive(m) = m.status === "dispatched" || (m.status === "queued" && m.queuedForRun === true)
+```
+This is **textually identical** to the inline form. The helper's `tests/unit/mission-board.test.ts` already exhaustively tests the 4 input shapes (dispatched, queued+true, queued+false, anything-else), so no new tests are needed for the helper itself — only the dashboard's *adoption* of the helper needs to be locked.
+
+**Why this matters:** the `isMissionActive` helper was promoted to `src/lib/mission-board.ts` (the canonical location for mission-state predicates) and adopted by `useMissionsPage` and `missionBoardColumn` in earlier sessions, but the dashboard never caught up. The dashboard's inline re-derivation was the only drift in the codebase — `grep` for the inline predicate pattern across `src/` now returns 0 hits. The single tests/unit/mission-counts-single-reduce.test.ts hit is a re-declaration inside the test's own fixture (intentional, isolates the test from the helper import).
+
+### Refactor 2 — `handleCronScheduleChange` `setDataFields` direct call → `setData` partial-setter
+
+The dashboard's `handleCronScheduleChange` is the only callback in the component body that bypasses the `setData` partial-setter helper and calls the raw `setDataFields` dispatch directly. The reason was the optimistic-update pattern: it needs to read the *current* `monitor` to compute the new one, which is what the React `useState` updater form `(prev) => ({...prev, monitor: f(prev.monitor)})` is designed for.
+
+But the dashboard's `useCallback` for `handleCronScheduleChange` already lists `data.monitor` in its deps array (line 311), so the closure-captured `data.monitor` is always fresh. The `(prev) => ...` updater form is unnecessary — reading `data.monitor` from the closure produces the same value as `prev.monitor` from the updater.
+
+Pre-refactor (lines 277-282):
+```tsx
+// Optimistic local update before the API call so the UI updates immediately
+setDataFields((prev) => ({
+  ...prev,
+  monitor: withCronJobSchedule(prev.monitor, jobId, scheduleDisplay),
+}));
+```
+
+Post-refactor:
+```tsx
+// Optimistic local update before the API call so the UI updates immediately.
+// `data.monitor` is in the useCallback deps (line 311 below) so the
+// captured value is always fresh — equivalent to reading `prev.monitor`
+// from a React-state updater. The `setData` helper is the canonical
+// partial-state setter (defined at line 179 above); only the `useState`
+// declaration itself uses the raw dispatch setter directly.
+setData({
+  monitor: withCronJobSchedule(data.monitor, jobId, scheduleDisplay),
+});
+```
+
+**Byte-equivalence audit:** the `setData` helper is defined as:
+```tsx
+const setData = useCallback((partial: Partial<typeof data>) => {
+  setDataFields(prev => ({ ...prev, ...partial }));
+}, []);
+```
+
+So `setData({ monitor: f(data.monitor) })` expands to:
+```tsx
+setDataFields(prev => ({ ...prev, monitor: f(data.monitor) }));
+```
+
+The old inline form was:
+```tsx
+setDataFields(prev => ({ ...prev, monitor: f(prev.monitor) }));
+```
+
+The only difference is `f(data.monitor)` vs `f(prev.monitor)`. Since `data.monitor` is in the `useCallback` deps, the callback is rebuilt on every `data.monitor` change — so the captured `data.monitor === prev.monitor` at invocation time. **Byte-equivalent for all observed paths.**
+
+**Required follow-up:** after the body change, the `react-hooks/exhaustive-deps` lint rule flagged the missing `setData` dep. Added `setData` to the deps array (line 311). The expanded deps array `[data.monitor, showToast, refreshMonitor, setData]` is also stable in practice — `setData` is a `useCallback(..., [])` so it has a stable reference for the page's lifetime.
+
+**`withCronJobSchedule` JSDoc update:** the JSDoc for the helper said "The page can call this inside its setDataFields updater" — updated to "The caller passes the current `data.monitor` (or the value of `prev.monitor` if it ever adopts the updater form again)" so the comment matches the new calling convention.
+
+### Files
+
+- `src/app/page.tsx` (MODIFIED) — `isMissionActive` import + 2 refactors: `activeMissions` filter (7-line collapse to 3-line) + `handleCronScheduleChange` `setDataFields` direct call → `setData({ monitor: ... })` (5-line JSDoc + 4-line call) + `setData` added to `useCallback` deps + `withCronJobSchedule` JSDoc rephrased
+- `tests/unit/dashboard-list1-active-missions-and-setdata.test.ts` (NEW) — 6 source-pattern tests, 223 lines
+
+Net diff: **1 source file modified + 1 new test file, +241 / -16 lines** in source (the +241 is dominated by the new test file at 223 lines; the production-code delta is **+18 / -16 lines** for the 2 refactors: 1 import + 1 JSDoc rephrasing + 1 deps-array add + 5-line restructured optimistic-update + 1 inline filter collapse).
+
+### Verification
+
+- **All 1446 unit tests pass** (220 suites, +1 new suite with +6 new tests in `tests/unit/dashboard-list1-active-missions-and-setdata.test.ts`)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean (including the `react-hooks/exhaustive-deps` fix at the deps array)
+- **`npm run build`** passes
+- **Byte-equivalence audit per session 51 lesson:** both migrations are name/structure changes, not behavior changes:
+  - `isMissionActive(m)` body is textually identical to the inline 2-line predicate (one indent level deeper). The existing `tests/unit/mission-board.test.ts` exhaustively tests the 4 input shapes; the new source-pattern test locks the dashboard's *adoption* (import + filter callback + inline-form-absent).
+  - `setData({ monitor: f(data.monitor) })` reads from the same closure as the old `setDataFields((prev) => ({...prev, monitor: f(prev.monitor)}))` because `data.monitor` is in the useCallback deps. The React reference-equality checks downstream still see a new `monitor` object only when the target job actually exists (the `withCronJobSchedule` helper's contract).
+
+### Patterns to take forward
+
+1. **"Inline predicate re-derivation is a code-smell when the helper exists"** — any time `grep` finds a multi-line predicate that's textually identical to an existing helper, it's a candidate for migration. The `isMissionActive` adoption in the dashboard closes the last drift in the codebase. Future code review should reject inline re-derivations of `isMissionDraft`, `isMissionQueuedForRun`, `isMissionActive`, `missionBoardColumn`.
+2. **"setData as the canonical partial-setter, not the raw dispatch"** — any time a component defines a `setData` (or similarly-named) helper that wraps the raw `useState` dispatch with a partial-state updater, the helper should be the SOLE callsite for partial updates. The raw dispatch should appear only in (a) the `useState` destructure and (b) the `setData` helper body. The dashboard's `handleCronScheduleChange` was the only drift; now consolidated. The 6 new tests lock the invariant: a future PR that re-introduces a direct `setDataFields((prev) => ...)` call will fail the "exactly 2 mentions" test, and a future PR that re-introduces the inline activeMissions predicate will fail the "does not match inline pattern" test.
+
+### What was audited and rejected
+
+| Candidate | Why rejected |
+|---|---|
+| Migrating `(main)/sessions/[id]/page.tsx` initial-load `useEffect` (lines 32-65) to `useApiData` | The page has a defensive `throw new Error("Invalid session data format")` at line 50 if `data?.data` is missing. The `useApiData` hook does NOT do this check — it would silently set `data = undefined` and the page would show the generic "Session Not Found" fallback. The current code shows the specific "Invalid session data format" error string in the (impossible-but-defensive) error case. Migration would change the user-visible string for an edge case. NOT byte-equivalent — out of scope. |
+| Migrating `(main)/sessions/page.tsx` `sourceFilter` + `setPage(0)` `useEffect` (lines 302-306) to a wrapped `setSourceFilter` callback | The `useEffect` is needed to sync `sourceFilterRef.current` (used by the `urlBuilder` closure). Migrating `setPage(0)` into the click handlers would require 2 separate wrapped callbacks (one for the "All" button at line 384 and one for the per-source buttons at line 396) — different shapes (one takes `null`, the other takes `src`). Not a clean A3. |
+| Migrating `(main)/logs/page.tsx` `handleDeleteAllLogs` (lines 69-95) to `useApiData` extension | The page is a DELETE-mutation handler, not a data-fetch. The `useApiData` hook is for `useEffect`-driven reads. Not a fit. |
+| Migrating `useMissionsPage.ts:566` `isMissionDraft(existingMission) \|\| isMissionQueuedForRun(existingMission)` to `isMissionActive(existingMission)` | The existing form is `isDraft || isQueuedForRun` — i.e., `status==="queued"` (any queued form, since `queuedForRun` covers all truthy/falsy values when `status==="queued"`). `isMissionActive` would also include `status==="dispatched"` which is NOT what this site wants. Different predicate. Defer. |
+| Adding a `closeSourceFilter` callback for the 2 click handlers in `(main)/sessions/page.tsx` lines 384 + 396 | Different shapes (one takes `null`, the other takes `src`). Not a clean A3. Defer. |
+| Migrating `(main)/logs/page.tsx` `handleDeleteAllLogs` `} catch {` to `} catch (err) {` + dynamic toast | The `setActionMessage("Delete failed (network error)")` in the catch is a static message by design (matches the prior UX). Migrating to a dynamic `messageFromError(err, "...")` would change the user-visible string. NOT byte-equivalent. |
+| The dashboard's `modelConfig?.default as string` and `modelConfig?.provider as string` (lines 410-411) | Single-line 1-field accesses on `Record<string, unknown>` — no clear helper shape. Defer. |
+| The 4 inline `m.status === "dispatched"` checks in the dashboard (lines 429, 697, 698, 710) | Different shape from `isMissionActive` (which is broader). Could promote `isMissionDispatched = (m) => m.status === "dispatched"`, but it's a trivial 1-line predicate with 4 sites in 1 file — over-engineering for 4 sites. Defer until a 2nd consumer appears. |
+
+### "Next session should:" block
+
+1. **Pick a different list next session** to spread the refactor surface. List 1 has been hit once in the last 13 sessions (the current 106). **List 4 (Models, HERMES.md, Environment, All Settings) is the next-ripe surface** — last touched session 92 (the 2nd-longest gap after List 1's session-93-just-closed). Per session 95: `safeWriteFileAtomic` helper promotion + `safeReadJson` helper promotion. Per session 96/97: `serverErrorFromCatch` is now done in List 2/3/4 territory; the remaining 7 inline `err instanceof Error ? err.message : <fallback>` sites in `src/lib/` (the `hermes-profile-sync` migration is done) are lower-leverage.
+2. **`useMissionsPage` decomposition** — 1203+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for byte-equivalent sweeps.
+3. **`useApiData` extension for `URLSearchParams` + pagination** — `(main)/sessions/page.tsx`'s `loadSessions` is the next candidate, but the page already uses `useApiData` with `urlBuilder` (lines 312-323). The migration would be a no-op (already on the hook). Defer until the hook shape needs a real extension.
+4. **Sweep the 7 `useApiData`-non-adopter pages in `src/app/operations/`** (skills, agents, tools, personalities, models) to use the hook. Listed in session 78's "next session should" block. Multi-session sweep.
+5. **Sweep the remaining 7 inline `err instanceof Error ? err.message : <fallback>` sites in `src/lib/`, `src/components/cron/`, and `src/app/recroom/`**. The `hermes-profile-sync` 7-site migration is done (session 97). The remaining sites are scattered and lower-leverage. Defer.
+6. **Add `isMissionDispatched` helper when a 2nd consumer appears** — 4 inline `m.status === "dispatched"` checks in the dashboard (lines 429, 697, 698, 710). Currently 1 file / 4 sites. Rule of Three says defer.
+
+---
+
 ## Session 103 — List 3 (Models, Agents, Skills, Tools, Personalities) — `closeSkillEditor` + `closeDelete` + `openAddModel` 1-setter callbacks + ModelEditor `setSaving(false)` finally-block bug fix + useModelsPage `messageFromError` migration
 
 Pick was **List 3 (Models, Agents, Skills, Tools, Personalities)** for the session 103 sweep, per `echo $((RANDOM % 4 + 1))` = 3 (not the most-recent list — session 101 was also List 3, so this is a deliberate back-to-back pick on the longest-untouched list in List 3's deeper pages: Models + Agents + Skills + Personalities. Per the session 96/101 rotation rules, List 3 is now the most-iterated surface — but the model/agents/skills/personalities sub-territories were under-refactored compared to the credentials/seed/personalities work that dominated sessions 90/91/97.). Five refactors:

@@ -47,6 +47,7 @@ import { runMutation } from "@/lib/run-mutation";
 import { toastFromResult } from "@/lib/toast-from-result";
 import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
 import { unwrapPollPath } from "@/lib/dashboard-poll";
+import { isMissionActive } from "@/lib/mission-board";
 import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
 import { computeCronJobRowCaption } from "@/lib/cron-row-helpers";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
@@ -90,10 +91,12 @@ function composeTemplateUrl(templateId: string): string {
  * (defensive — the page already guards against this case via a
  * showToast, but the helper stays safe to call on stale state).
  *
- * Pure function: never mutates the input. The page can call this
- * inside its setDataFields updater and the React reference-equality
- * checks downstream will see a new monitor object only when the
- * target job actually exists.
+ * Pure function: never mutates the input. The caller passes the
+ * current `data.monitor` (or the value of `prev.monitor` if it ever
+ * adopts the updater form again) and the helper returns a new
+ * `MonitorData` object so the React reference-equality checks
+ * downstream see a new monitor object only when the target job
+ * actually exists.
  */
 function withCronJobSchedule(
   monitor: MonitorData | null,
@@ -275,11 +278,15 @@ export default function Dashboard() {
         ? parsed.display
         : newSchedule;
 
-    // Optimistic local update before the API call so the UI updates immediately
-    setDataFields((prev) => ({
-      ...prev,
-      monitor: withCronJobSchedule(prev.monitor, jobId, scheduleDisplay),
-    }));
+    // Optimistic local update before the API call so the UI updates immediately.
+    // `data.monitor` is in the useCallback deps (line 311 below) so the
+    // captured value is always fresh — equivalent to reading `prev.monitor`
+    // from a React-state updater. The `setData` helper is the canonical
+    // partial-state setter (defined at line 179 above); only the `useState`
+    // declaration itself uses the raw dispatch setter directly.
+    setData({
+      monitor: withCronJobSchedule(data.monitor, jobId, scheduleDisplay),
+    });
 
     try {
       const { ok, error } = await safeApiCall("/api/cron", {
@@ -301,7 +308,7 @@ export default function Dashboard() {
       // branches above.
       void refreshMonitor();
     }
-  }, [data.monitor, showToast, refreshMonitor]);
+  }, [data.monitor, showToast, refreshMonitor, setData]);
 
   const handleRefreshProcesses = useCallback(async () => {
     const { data: agentsData } = await safeApiCall<{ data: { processes: HermesProcess[] } }>("/api/agents");
@@ -423,12 +430,7 @@ export default function Dashboard() {
   );
   const activeProcesses = useMemo(() => processes.filter((p) => p.status === "running"), [processes]);
   const activeMissions = useMemo(
-    () =>
-      missions.filter(
-        (m) =>
-          m.status === "dispatched" ||
-          (m.status === "queued" && m.queuedForRun === true),
-      ),
+    () => missions.filter(isMissionActive),
     [missions],
   );
 
