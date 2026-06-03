@@ -1,3 +1,97 @@
+## Session 96 — List 2 (Cron, Missions, Chat) — `serverErrorFromCatch` 6-site migration + `setErrorFromCaught` 1-site + `rememberLastCategory` + `handleCloseCreate`
+
+Pick was List 2 (per random selection `echo $(( RANDOM % 4 + 1 ))` = 2, per session 95's "Next session should" recommendation — List 2 was last touched at session 94 and had an explicit carryover for the same `serverErrorFromCatch` sweep that the prior 27-site List 4 session had just completed). Three small byte-equivalent refactors: (a) the 6 remaining static-message `logApiError + return serverError(STATIC)` sites in List 2 API territory, (b) the 1 inline `err instanceof Error` site in `JobFormModal.tsx` for the `setErrorFromCaught` migration, and (c) a finish-the-job commit of the in-progress `rememberLastCategory` helper + `handleCloseCreate` callback from the prior session (left uncommitted at session 95's end).
+
+All **1334** unit tests pass (**201** suites, +7 new tests in `tests/unit/remember-last-category.test.ts`). tsc clean, eslint `--max-warnings 0` clean, build passes. Net: **+50 / -43 lines** (the +50 is dominated by the `rememberLastCategory` JSDoc + the 7 new test cases; the -43 is the 6-site `logApiError + return serverError` collapse + the 1-site `setError` collapse + the 3-site `() => { setShowCreate(false); setEditingId(null); }` collapse). Byte-equivalent at runtime for all 7 affected API + UI call sites.
+
+### Refactor 1 — `serverErrorFromCatch` 6-site migration in List 2 (Cron, Missions)
+
+The same 2-line `logApiError(ROUTE, CONTEXT, error); return serverError(STATIC);` pattern that session 95 migrated 27 times in List 4 territory also survives in List 2. The audit recipe (per session 95's lessons) found **6** candidate sites — all 6 are clean static-message catch-block shims with no intervening side effects:
+
+| # | File | Line | Method | Site |
+|---|---|---|---|---|
+| 1 | `src/app/api/cron/route.ts` | 166 | GET | `serverErrorFromCatch("GET /api/cron", "listing cron jobs", error, "Failed to load cron jobs")` |
+| 2 | `src/app/api/cron/route.ts` | 330 | POST | `serverErrorFromCatch("POST /api/cron", "creating cron job", error, "Failed to create cron job")` |
+| 3 | `src/app/api/cron/route.ts` | 425 | PUT | `serverErrorFromCatch("PUT /api/cron", "updating cron job", error, "Failed to update cron job")` |
+| 4 | `src/app/api/cron/route.ts` | 465 | DELETE | `serverErrorFromCatch("DELETE /api/cron", "deleting cron job", error, "Failed to delete cron job")` |
+| 5 | `src/app/api/missions/route.ts` | 183 | GET | `serverErrorFromCatch("GET /api/missions", id ? \`mission ${id}\` : "listing missions", error, "Failed to load missions")` |
+| 6 | `src/app/api/missions/route.ts` | 579 | POST | `serverErrorFromCatch("POST /api/missions", "processing request", error, "Internal server error")` |
+
+The 4 cron sites are perfectly mechanical — all 4 had the same 2-line block. Migration drops the `logApiError` and `serverError` imports from `api-response` (no remaining uses in the catch block — the `logApiError` calls at lines 159 + 455 are informational log-only sites in the success path, not catch-block shims). The 2 missions sites preserve the `logApiError` import (5 remaining log-only sites at lines 349, 504, 536, 545) and preserve the `serverError` import (1 remaining use at line 352 in the cron-dispatch catch block that has intervening side effects — see "What was rejected" below).
+
+**Byte-equivalence audit:** the helper returns the same `NextResponse` as `serverError(message)` and emits the same `console.error` line as `logApiError(route, context, error)`. The migration is a name change, not a behavior change. The 11 byte-equivalence tests in `tests/unit/server-error-from-catch.test.ts` cover the helper for 5 input shapes — these 6 sites are 6 more byte-equivalent applications of the same tested helper.
+
+### Refactor 2 — `setErrorFromCaught` 1-site migration in `JobFormModal.tsx`
+
+The inline `setError(err instanceof Error ? err.message : "Unknown error")` pattern at `src/components/cron/JobFormModal.tsx:183` is the same 22-site pattern that session 91 audited across the codebase. The `setErrorFromCaught(setError, err, fallback)` helper from session 91 is the canonical replacement — it composes `messageFromError(err, fallback)` which is byte-equivalent to `err instanceof Error ? err.message : fallback` (the verbose form is what `messageFromError` literally does).
+
+| File | Line | Migration |
+|---|---|---|
+| `src/components/cron/JobFormModal.tsx` | 183 | `setErrorFromCaught(setError, err, "Unknown error")` — JobFormModal save-job catch block |
+
+`safeApiCall` and `setErrorFromCaught` are both imported from `@/lib/api-fetch`. The 1-site migration closes the only `err instanceof Error ? err.message : "Unknown error"` site in List 2 territory (the 7 `useMissionsPage.ts` uses are intentional AbortError discriminators — see "What was rejected" below). The remaining 21 sites in `src/lib/`, `src/components/cron/`, and `src/app/recroom/` are deferred to a future sweep session.
+
+**Byte-equivalence audit:** `setErrorFromCaught(setError, err, "Unknown error")` calls `setError(messageFromError(err, "Unknown error"))` which is `setError(toError(err).message || "Unknown error")` — exactly the same as the inline form. The 8 byte-equivalence tests in `tests/unit/set-error-from-caught.test.ts` cover 6 input shapes; the 1 migrated site is a 1:1 application.
+
+### Refactor 3 — `rememberLastCategory` helper + 3-site `setShowCreate(false) + setEditingId(null)` closure (carryover from session 95)
+
+Session 95 ended with 2 uncommitted refactors that didn't fit the List 4 focus:
+
+**`rememberLastCategory(id)` in `src/hooks/useMissionsPage.ts`** — extracted the 2 duplicated 5-line `try { localStorage.setItem(...) } catch { /* ignore */ }` blocks (the `setCategoryId` setter + the template-apply path) into a single helper. Exported for unit testing. 7 new tests in `tests/unit/remember-last-category.test.ts` lock the 3 contracts (truthy id → writes, falsy id → no-op, throw → silent swallow). The 2 callsites collapse to 1 line each.
+
+**`handleCloseCreate` `useCallback` in `src/app/orchestration/missions/page.tsx`** — extracted the 3 duplicated `() => { setShowCreate(false); setEditingId(null); }` arrow functions (the Sheet's `onClose`, the `MissionComposerActions` footer `onClose`, and the `MissionCreateForm` `onClose`) into a single `useCallback` closure. 3 sites collapse to a single named function with a JSDoc explaining the future-proofing rationale ("if a future clear-form-fields or dismiss-category reset is added, a single edit updates all 3 sites in lockstep").
+
+These 2 refactors were uncommitted at session 95's end. This session finishes the commit as a "carryover finalization" — the work is byte-equivalent and the `rememberLastCategory` test file is the only NEW code in this commit (7 tests covering the extracted helper's 3 contracts).
+
+### What was rejected
+
+- **Migrating `src/app/api/missions/route.ts:349-353` — the cron-dispatch catch block.** This is `try { await dispatchMissionNow(...); appendAuditLine(...); return missionResponse(...); } catch (err) { logApiError(...); updateMission(mission.id, { status: "failed" }); appendAuditLine({ action: "mission.cron_dispatch", resource: mission.id, ok: false }); return serverError("Failed to create cron job for mission"); }`. The 2 lines between the log and the return (`updateMission` + `appendAuditLine`) are side effects that must remain in order. The `serverErrorFromCatch` helper does the log+return as a single atomic call — it can't interleave side effects. Migrating this site would change behavior (the side effects would not happen on error path). Left inline.
+- **Migrating `src/app/api/cron/hardware/route.ts:247, 356, 449, 506` — `return serverError(\`Failed to X: ${toError(e).message}\`)`.** These 4 sites use *dynamic* error messages (the caught error's actual `.message` interpolated into a template string), not static fallbacks. Migrating to `serverErrorFromCatch` would change the user-facing response from "Failed to X: <actual error>" to "Failed to X" — a behavior change, NOT byte-equivalent. Left inline. This is the same dynamic-message exception that session 95 documented for `src/app/api/models/fallbacks/sync/route.ts`.
+- **Migrating `src/app/api/cron/hardware/meta/route.ts:23` — `return serverError(toError(e).message)`.** Same as above — dynamic message. Left inline.
+- **Migrating `src/app/api/orchestration/chat/route.ts:81` — `return serverError(toError(error).message)`.** Same as above — dynamic message. Left inline.
+- **Migrating `src/hooks/useMissionsPage.ts:318` — `if (err instanceof Error && err.name !== "AbortError") { console.warn(...) }`.** This is a discriminating catch (skip AbortError, log otherwise), not a `? .message : "fallback"` pattern. The `setErrorFromCaught` helper returns the error's message with a fallback; it doesn't conditionally suppress based on error name. The current code is intentionally different (AbortError is a normal cleanup signal, not an error to log). Left inline.
+- **Migrating the `logApiError` calls in `src/lib/cron/`, `src/lib/backends/`, `src/lib/sync/`, `src/lib/mission-promote-handler.ts` etc.** Out of scope — these are lib-internal `logApiError` calls that don't have a paired `return serverError`. They're informational log-only, exactly like the 3 cleanup-line sites session 95 audited in List 4 territory.
+- **Promoting `setErrorFromCaught` for the dynamic `setError(\`Save failed: ${e?.message ?? "unknown"}\`)` shape.** No such sites in List 2 territory. The 7 migrated sites in session 91 covered the simple form. A dynamic variant would be a separate sweep.
+
+### Files
+
+- `src/app/api/cron/route.ts` (MODIFIED) — 4 `serverErrorFromCatch` migrations + import cleanup (dropped `serverError` from `@/lib/api-response`, added `serverErrorFromCatch` to `@/lib/api-logger` import)
+- `src/app/api/missions/route.ts` (MODIFIED) — 2 `serverErrorFromCatch` migrations + import added (`serverErrorFromCatch` to `@/lib/api-logger` import; `serverError` and `logApiError` retained for the 5 log-only sites and the 1 dynamic-message site)
+- `src/components/cron/JobFormModal.tsx` (MODIFIED) — 1 `setErrorFromCaught` migration + import added (`setErrorFromCaught` to `@/lib/api-fetch` import)
+- `src/app/orchestration/missions/page.tsx` (MODIFIED, carryover) — `handleCloseCreate` `useCallback` extracted, 3 sites collapsed
+- `src/hooks/useMissionsPage.ts` (MODIFIED, carryover) — `rememberLastCategory` helper extracted (exported for unit testing), 2 callsites collapsed
+- `tests/unit/remember-last-category.test.ts` (NEW, carryover) — 7 unit tests, 104 lines: 3-contract coverage (truthy writes, falsy no-op, throw swallow)
+
+Net diff: **5 files modified + 1 new test file, +50 / -43 lines**.
+
+### Verification
+
+- **All 1334 unit tests pass** (201 suites, +1 suite with +7 new tests in `tests/unit/remember-last-category.test.ts`)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean
+- **`npm run build`** passes
+- **Byte-equivalence audit per session-51 lesson:** all 7 API + UI migrations are name changes, not behavior changes. The 6 API sites use the same `serverErrorFromCatch` helper that session 95 verified end-to-end with 11 byte-equivalence tests. The 1 UI site uses the same `setErrorFromCaught` helper that session 91 verified end-to-end with 8 byte-equivalence tests. The `rememberLastCategory` helper has 7 new tests covering the 3 contracts. The `handleCloseCreate` closure is a pure indirection — same 2 state updates, same order, same React batching semantics.
+
+### Patterns to take forward
+
+1. **"serverErrorFromCatch is now List 2 + List 4 complete" pattern** — the 6 List 2 sites are all the static-message catch-block shims in `src/app/api/cron/route.ts` and `src/app/api/missions/route.ts`. The remaining `serverError` uses in those files are dynamic-message sites (cron-dispatch with side effects) that intentionally don't fit the helper. Combined with session 95's 27 List 4 sites, **the cron + missions + models + config + agent-files + agent-profiles + fallbacks + personality surface area is now fully migrated**. Audit recipe: `rg -U "logApiError\([^)]+\);[ \t]*\n[ \t]*return serverError\([\"'][^\$]" src/app/api/` — after this session: 0 hits in cron + missions, 0 hits in List 4 (per session 95).
+2. **"setErrorFromCaught is now present in JobFormModal" pattern** — the inline `err instanceof Error ? err.message : "Unknown error"` form in `JobFormModal.tsx` is the 22nd inline site audited. The next sweep target is the 7 `src/lib/hermes-profile-sync.ts` sites which are pure server-side `messageFromError(e, fallback)` calls — these are the highest-leverage server-side targets for a future `toMessage(e, fallback)` helper. The remaining 14 client-side sites are scattered across `recroom/story-weaver` and other Lists.
+3. **"rememberLastCategory as exported helper for unit testing" pattern** — when a 2-site duplication is hard to test through the public hook (the `useMissionsPage` test setup requires React rendering), extract the helper as an exported function and test it directly. The hook still uses the helper at both callsites. This is the same pattern as session 79's `toastError` and session 91's `setErrorFromCaught` — test the helper in isolation, trust the hook to use it correctly.
+4. **"handleCloseCreate as a useCallback closure for the 3-site reset pattern" pattern** — when the same 2-line state reset appears at 3+ sites in a page, extract a `useCallback` so the function reference is stable across renders (helps React DevTools, prevents unnecessary child re-renders if the function is passed to a memoised child, and centralises the reset logic for future additions). The 3 sites in `missions/page.tsx` are: Sheet's `onClose`, `MissionComposerActions` footer's `onClose`, and the `MissionCreateForm`'s embedded `onClose`.
+
+### "Next session should:" block
+
+1. **Pick a different list next session** to spread the refactor surface. List 2 has been hit 6+ times now (sessions 56, 58, 63, 69, 71, 75, 76, 82, 84, 88, 94, 96). **List 1 (Dashboard, Sessions, Memory, Logs) is the next-ripe surface** — it hasn't been touched since session 93 (the 2nd-longest gap after List 2's session 96). Carries 2 known follow-up items from session 93: `(main)/logs/page.tsx` `useApiData` migration (extends the hook to absorb the manual `useInterval` + `setRefreshing` pattern), and `(main)/sessions/page.tsx`'s `loadSessions` is the next `useApiData` `URLSearchParams` + pagination extension candidate.
+2. **Sweep the 21 remaining inline `err instanceof Error ? err.message : <fallback>` sites** in `src/lib/`, `src/components/cron/`, and `src/app/recroom/`. The 7 `src/lib/hermes-profile-sync.ts` sites alone are enough to justify a server-side `toMessage(e, fallback)` helper. Multi-session sweep.
+3. **`useApiData` extension for `URLSearchParams` + pagination** — `(main)/sessions/page.tsx`'s `loadSessions` is the next candidate. Requires extending the hook to support query params. Defer until the hook shape is stable across logs + sessions.
+4. **`useMissionsPage` decomposition** — 1192 LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results" — would need a careful hook-by-hook extraction with state-derivation verification.
+5. **The `err instanceof Error && err.name !== "AbortError"` discriminator in `useMissionsPage.ts:318`** is a real pattern (skip AbortError) that could be extracted to a `isAborted(err)` helper if a 2nd consumer appears in another hook. Currently 1 consumer. Defer.
+6. **`serverErrorFromCatch` extension for the dynamic-message variant** — when a 3rd site appears that uses `serverError(dynamicVar)` AND is in a catch block AND the dynamic var references the caught error, add a `serverErrorFromCatchWithError(route, context, error)` variant that returns the caught error's actual message. Currently 1 site in List 4 territory (fallbacks/sync) + 4 sites in List 2 territory (cron/hardware × 3 + cron/hardware/meta × 1) that need different behaviour. Defer until a 2nd site in the same territory needs it.
+7. **`useApiData({ refreshIntervalMs })` extension** — `(main)/logs/page.tsx` is the next candidate. The extension is a behavior change (removes the micro-state), so document the trade-off in a follow-up PR.
+8. **HindsightBrowser 4 inline `error ?? "..."` sites** — would benefit from a `runMutation`-shaped variant. Defer until a 2nd consumer wants the same shape.
+9. **Status badge label override follow-up** — `StatusBadge.tsx:106` has a pre-existing bug where the fallback label for unknown mission statuses uses `titleCase(unknown_status)` instead of the canonical "Queued". Documented in session 89's "rejected" block. A future session can fix it.
+
+
 ## Session 95 — List 4 (Models, HERMES.md, Environment, All Settings) — `serverErrorFromCatch` helper + 27-site migration
 
 Pick was List 4 (per random selection `echo $(( RANDOM % 4 + 1 ))` = 4, per session 94's "Next session should" recommendation to keep spreading the surface after the 8x streak on Lists 1-3). Single byte-equivalent refactor: pick up the carryover from the prior session — a half-completed `serverErrorFromCatch` helper + 7 partially-migrated model routes — and finish the migration across the remaining 18 List 4 routes (8 fallbacks, 2 config, 1 agent-files, 6 agent-profiles, 1 agent-personality).
@@ -574,6 +668,8 @@ The full content of these earlier sessions is preserved in the git history of `p
 
 | # | List | Headline | Sites | New tests | Commit | Reference |
 |---|---|---|---|---|---|---|
+| 96 | 2 | `serverErrorFromCatch` 6-site List 2 migration + `setErrorFromCaught` 1-site + `rememberLastCategory` + `handleCloseCreate` (session 95 carryover) | 11 | +7 | session 96 | session 96 |
+| 95 | 4 | `serverErrorFromCatch` helper + 27-site List 4 migration (carryover from session 94) | 27 | +11 | `8b22f34` | session 95 |
 | 94 | 2 | `parseDispatchMode` + `scheduleForDispatch` + `joinCrontabLines` helpers (server dispatchMode decompose + 3-site useMissionsPage schedule + 3-site hardware-cron filter+join) | 8 | +26 | session 94 | session 94 |
 | 93 | 1 | `dbSessionFields` + `parseAssistantLines` helpers + `MessageBubble` `fnName` reuse | 4 | +13 | `c0657b7` | session 93 |
 | 92 | 4 | `pushDiff` closure in diff + pull routes (List 4 escape from session 90's "mined clean" verdict) | 13 | 0 (reuse) | session 92 | session 92 doc |

@@ -28,6 +28,27 @@ import {
 /** localStorage key for the most recently selected mission category */
 const LAST_CATEGORY_KEY = "ch-last-mission-category";
 
+/**
+ * Persist the user's last-selected mission category to localStorage.
+ * Centralised so the 2 callsites (`setCategoryId` setter + the
+ * template-apply path) use the same try/catch+ignore discipline.
+ * Failing localStorage writes (quota, private-mode, disabled) are
+ * silently ignored — the user-visible flow continues to work because
+ * the in-memory `newCategoryId` state has already been set; we just
+ * won't restore the same category on next mount.
+ *
+ * Exported for unit testing. Not part of the public hook contract;
+ * the canonical use is the 2 callsites in this file.
+ */
+export function rememberLastCategory(id: string | null | undefined): void {
+  if (!id) return;
+  try {
+    localStorage.setItem(LAST_CATEGORY_KEY, id);
+  } catch {
+    // localStorage full or unavailable — silently ignore
+  }
+}
+
 function submitToastForDispatch(mode: "save" | "now" | "cron" | "queue"): string {
   if (mode === "save") return "Saving draft...";
   if (mode === "queue") return "Queueing mission...";
@@ -354,13 +375,7 @@ export function useMissionsPage() {
 
   const setCategoryId = useCallback((id: string | null) => {
     setNewCategoryId(id);
-    if (id) {
-      try {
-        localStorage.setItem(LAST_CATEGORY_KEY, id);
-      } catch {
-        // ignore
-      }
-    }
+    rememberLastCategory(id);
   }, []);
 
   useEffect(() => {
@@ -456,13 +471,7 @@ export function useMissionsPage() {
           if (t) {
             const cid = (t as MissionTemplate & { categoryId?: string }).categoryId ?? null;
             applyTemplateToForm(t, cid);
-            if (cid) {
-              try {
-                localStorage.setItem(LAST_CATEGORY_KEY, cid);
-              } catch {
-                // ignore
-              }
-            }
+            rememberLastCategory(cid);
             setShowCreate(true);
             templateApplied.current = true;
             showToast(`Template loaded: ${t.name}`, "success");

@@ -14,10 +14,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest, created, notFound, serverError, serviceUnavailable } from "@/lib/api-response";
+import { badRequest, created, notFound, serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { parseSchedule } from "@/lib/utils";
 import { buildCronUpdatePayload } from "@/lib/cron-field-updates";
@@ -163,8 +163,7 @@ export async function GET(request: NextRequest) {
     const jobs = rawJobs.map(recordToApiJob);
     return NextResponse.json({ data: { jobs, total: jobs.length } });
   } catch (error) {
-    logApiError("GET /api/cron", "listing cron jobs", error);
-    return serverError("Failed to load cron jobs");
+    return serverErrorFromCatch("GET /api/cron", "listing cron jobs", error, "Failed to load cron jobs");
   }
 }
 
@@ -328,8 +327,7 @@ export async function POST(request: NextRequest) {
       job: recordToApiJob(getCronJob(newJob.id)!),
     });
   } catch (error) {
-    logApiError("POST /api/cron", "creating cron job", error);
-    return serverError("Failed to create cron job");
+    return serverErrorFromCatch("POST /api/cron", "creating cron job", error, "Failed to create cron job");
   }
 }
 
@@ -424,8 +422,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
   } catch (error) {
-    logApiError("PUT /api/cron", "updating cron job", error);
-    return serverError("Failed to update cron job");
+    return serverErrorFromCatch("PUT /api/cron", "updating cron job", error, "Failed to update cron job");
   }
 }
 
@@ -465,7 +462,6 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ data: { success: true, deleted: id } });
   } catch (error) {
-    logApiError("DELETE /api/cron", "deleting cron job", error);
-    return serverError("Failed to delete cron job");
+    return serverErrorFromCatch("DELETE /api/cron", "deleting cron job", error, "Failed to delete cron job");
   }
 }

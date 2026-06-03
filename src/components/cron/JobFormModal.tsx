@@ -15,7 +15,7 @@ import {
 import Button from "@/components/ui/Button";
 import Modal from "@/components/ui/Modal";
 import Select from "@/components/ui/Select";
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall, setErrorFromCaught } from "@/lib/api-fetch";
 import { inputFieldClasses } from "@/lib/theme";
 import { parseSchedule } from "@/lib/utils";
 import CronScheduleInput from "@/components/cron/CronScheduleInput";
@@ -180,7 +180,7 @@ export default function JobFormModal({
 
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setErrorFromCaught(setError, err, "Unknown error");
       setSaving(false);
     }
   };

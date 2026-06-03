@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { Loader2, Plus, RefreshCw, Rocket } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -93,6 +94,18 @@ export default function MissionsPage() {
     handleCreateNewTemplate,
   } = vm;
 
+  // Close the create/edit mission sheet. The same pair of resets
+  // (setShowCreate(false) + setEditingId(null)) appeared at 3 call
+  // sites — the Sheet's onClose, the MissionComposerActions footer
+  // onClose, and the embedded MissionCreateForm onClose. Centralising
+  // them here keeps the 3 sites in lockstep if a future "clear form
+  // fields" or "dismiss category" reset is added — a single edit here
+  // updates all 3.
+  const handleCloseCreate = useCallback(() => {
+    setShowCreate(false);
+    setEditingId(null);
+  }, [setShowCreate, setEditingId]);
+
   if (loading) {
     return (
       <AppPageShell variant="scanlines">
@@ -147,10 +160,7 @@ export default function MissionsPage() {
 
       <Sheet
         open={showCreate}
-        onClose={() => {
-          setShowCreate(false);
-          setEditingId(null);
-        }}
+        onClose={handleCloseCreate}
         title={sheetTitle}
         subtitle="Category, task, and dispatch settings"
         footer={
@@ -160,10 +170,7 @@ export default function MissionsPage() {
             formState={formState}
             onSubmit={handleCreate}
             onSaveAsTemplate={handleSaveAsTemplate}
-            onClose={() => {
-              setShowCreate(false);
-              setEditingId(null);
-            }}
+            onClose={handleCloseCreate}
             dispatching={dispatching}
             dispatchAcknowledged={dispatchAcknowledged}
           />
@@ -185,10 +192,7 @@ export default function MissionsPage() {
             onRetryCategories={() => void loadCategories()}
             onSubmit={handleCreate}
             onSaveAsTemplate={handleSaveAsTemplate}
-            onClose={() => {
-              setShowCreate(false);
-              setEditingId(null);
-            }}
+            onClose={handleCloseCreate}
             dispatching={dispatching}
             dispatchAcknowledged={dispatchAcknowledged}
             onDispatchOpenChange={(open) => {

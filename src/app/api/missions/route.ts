@@ -15,7 +15,7 @@ import {
 import { updateSession } from "@/lib/session-repository";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, notFound, serverError, serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
@@ -180,8 +180,7 @@ export async function GET(request: NextRequest) {
     ).map((m) => enrichMissionCron(m));
     return NextResponse.json({ data: { missions } });
   } catch (error) {
-    logApiError("GET /api/missions", id ? `mission ${id}` : "listing missions", error);
-    return serverError("Failed to load missions");
+    return serverErrorFromCatch("GET /api/missions", id ? `mission ${id}` : "listing missions", error, "Failed to load missions");
   }
 }
 
@@ -577,7 +576,6 @@ export async function POST(request: NextRequest) {
 
     return badRequest(`Unknown action: ${action}`);
   } catch (error) {
-    logApiError("POST /api/missions", "processing request", error);
-    return serverError("Internal server error");
+    return serverErrorFromCatch("POST /api/missions", "processing request", error, "Internal server error");
   }
 }
