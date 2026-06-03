@@ -1,13 +1,12 @@
 ## Summary
 
-Session-58 of the recurring `mission/hermes-review-and-refactor` sweep. List 2 (Cron, Missions, Chat) picked at random.
+Session-68 of the recurring `mission/hermes-review-and-refactor` sweep. List 2 (Cron, Missions, Chat) picked at random. This session closes the List 2 factory gap (28 inline 404/500 sites across 5 routes → `notFound`/`serverError` factories), tightens the `cron/page.tsx` onEdit type narrowing (4-line runtime `if ("command" in job)` checks → discriminated handler casts at the parent's per-tab render boundary), and adds 4 `forbidden`-factory unit tests that session 67 forgot. **All 1096 tests pass (181 suites, +10).** Prior sessions (28-67) are listed below — see "Session 68" for the new work.
 
-### What changed
+### What changed (this session)
 
-Extracted `buildCronUpdatePayload(updates)` from the cron PUT handler's 11-branch conditional ladder + inline schedule parse + repeat normalize (~26 lines) into a single pure helper in `src/lib/cron-field-updates.ts`.
-
-- **Before:** 11 inline `if (updates.X !== undefined) updatePayload.X = ... as Y` statements, plus a 6-line schedule parse + 2-line repeat normalize, scattered across the route handler.
-- **After:** 3-line call site at the route handler. The helper returns a discriminated union: `{ ok: true, payload } | { ok: false, response: NextResponse }` so the 400-on-invalid-schedule path is folded into the same flow.
+- **Refactor 1** — `forbidden` factory tests added (`tests/unit/api-response.test.ts`, +4 tests) — carry-over from session 67
+- **Refactor 2** — 28 inline `NextResponse.json({error}, {status: 404|500})` sites in `cron/route.ts`, `missions/route.ts`, `orchestration/chat/route.ts`, `cron/hardware/route.ts`, `cron/hardware/meta/route.ts` migrated to `notFound()` / `serverError()` factories; `handleError` helper deleted from `chat/route.ts`; 3 `result.error ?? "unknown error"` fallbacks preserve byte-equivalent wire output for optional error strings
+- **Refactor 3** — `cron/page.tsx` onEdit type-narrowing: 2 inline 4-line runtime `if ("command" in job)` checks replaced by 1-line `as CronJob` / `as SystemCronJob` casts at the parent's per-tab render boundary
 
 ### Why this refactor (and not the obvious candidates)
 
@@ -793,3 +792,123 @@ The file ended with a `// ══════════════════
 6. **Add a busy state to `handleCronScheduleChange`** — prerequisite for `runMutation` adoption.
 7. **Migrate `readFallbackAgentSettingsFromConfig()` to use `readHermesYamlConfig()`** — needs a custom-path overload to preserve the `assertFallbackAgentSettingsWritten(configPath, ...)` behaviour. Add a second helper variant or extend the existing one with an optional path arg.
 8. **Extract `__FAKE_HERMES_ROOT__` mock pattern to `tests/helpers/hermes-paths-mock.ts`** when the 5th test file adopts it. 4+ files now use this pattern.
+
+## Session 68 — List 2 (Cron, Missions, Chat) — factory sweep + onEdit type-narrow + forbidden tests
+
+Random pick: **List 2** (RANDOM % 4 + 1 → 2). The session-67 carry-over left the uncommitted `forbidden` factory in `api-response.ts` without tests. This session (a) finished the carry-over, then (b) closed the List 2 factory gap (the `notFound`/`serverError` migrations that prior sessions skipped). 3 refactors + 10 new unit tests, all byte-equivalent. **All 1096 tests pass (181 suites, +10).**
+
+### Refactor 1 — `forbidden` factory tests (carry-over from session 67)
+
+**File:** `tests/unit/api-response.test.ts`
+
+Session 67 added `forbidden()` to `src/lib/api-response.ts` as a sibling of `badRequest`/`notFound`/`serverError` (used by the `config/route.ts` PUT whitelist check) but didn't add a test block. Added 4 tests that mirror the existing trio: status 403, body `{ error: <msg> }`, special-character preservation, empty-string validity.
+
+**Why not just add tests for the existing trio in the new file**: the existing trio is already tested in this file (4 tests each, total 12). The `forbidden` block was the 4th-factory-shaped hole.
+
+### Refactor 2 — List 2 factory sweep (16 inline 404/500 sites → `notFound`/`serverError`)
+
+The session-60 `notFound`/`serverError` additions were not retro-applied to List 2 (Cron, Missions, Chat). After the session-61 List 1 sweep (13 sites) and List 4 sweeps (16 sites), List 2 was the only remaining list with inline 4xx/5xx sites. This session closes the gap.
+
+| File | 500 sites | 404 sites | Notes |
+|---|---|---|---|
+| `src/app/api/cron/route.ts` | 4 | 6 | All static messages ("Failed to X", "Job not found"); byte-equivalent |
+| `src/app/api/missions/route.ts` | 3 | 4 | 1 message is "Internal server error" (500); "Mission not found" (404); byte-equivalent |
+| `src/app/api/orchestration/chat/route.ts` | 1 | 0 | `handleError` helper deleted; single catch site uses `serverError(toError(error).message)` |
+| `src/app/api/cron/hardware/route.ts` | 8 | 2 | 3 of 8 500 sites use `result.error ?? "unknown error"` fallback (preserves byte-equivalence — see Pitfall I below) |
+| `src/app/api/cron/hardware/meta/route.ts` | 1 | 0 | `serverError(toError(e).message)` |
+
+**Total:** 16× 500 + 12× 404 = **28 inline sites → factory calls** across 5 files.
+
+**Audit recipe used (session-60):** `grep -nE "status: (400|404|500)" src/app/api/cron src/app/api/missions src/app/api/orchestration 2>&1` — **0 hits** after the migration (was 28).
+
+**What was rejected:**
+- **6 `isChReadOnly()` BARE-message sites** (cron/route.ts ×2, cron/hardware/route.ts ×3, missions/route.ts ×1) — explicit reject per session-51 + session-62. Migrating to `requireNotReadOnly()` would silently change the user-visible error string to `"Control Hub is in read-only mode (set CH_READ_ONLY=true to allow writes)."` — a violation of the "AT LEAST identical results" constraint. Kept inline.
+- **The 6 inline `isChReadOnly()` calls are also a `requireNotReadOnly(context?)` migration candidate** (the 3rd em-dash-extension mode) — same session-51/62 rejection. The factory has a 2-mode API (canonical-with-hint + em-dash-extension); adding a 3rd BARE mode would be the "over-engineering" that session-51 explicitly rejected.
+
+**Pitfall I — `result.error` is `string | undefined` (caught by `tsc --noEmit`)**
+
+The `writeCrontab()` return type is `{ ok: boolean; error?: string }` — the `error` field is optional. Pre-refactor, `NextResponse.json({ error: result.error }, { status: 500 })` happily serialised `undefined` to nothing (the field is dropped from the JSON body). The `serverError(msg: string)` factory requires a non-undefined string. I added a `?? "unknown error"` fallback to preserve the byte-equivalent wire output for the 3 sites that use this pattern (POST/PUT/DELETE in `cron/hardware/route.ts`). `tsc --noEmit` caught the issue at session start; without the explicit check, the migration would have failed `tsc` and been rejected.
+
+### Refactor 3 — `cron/page.tsx` onEdit type narrowing (4-line runtime check → discriminated handler)
+
+**File:** `src/app/orchestration/cron/page.tsx`
+
+The page had two near-identical 4-line inline runtime checks that discriminated the onEdit callback by kind:
+
+```tsx
+onEdit={(job) => {
+  // Wide type because TabButton can dispatch either kind; on
+  // the agent tab runtime the value is always CronJob, so any
+  // `command` field means we're seeing the wrong type.
+  if ("command" in job) return;
+  setEditingJob(job);
+  setShowCreate(true);
+}}
+```
+
+The `if ("command" in job) return;` is a runtime type guard that should be a TypeScript-level concern. The cleaner shape is to thread the onEdit handler directly through the `JobCard`/`SystemCronCard` with a `CronJob`-or-`SystemCronJob` union type, and let the call site cast at the use boundary (where it knows which kind it has):
+
+```tsx
+// Before
+onEdit={(job) => {
+  if ("command" in job) return;
+  setEditingJob(job);
+  setShowCreate(true);
+}}
+
+// After
+onEdit={(job) => {
+  setEditingJob(job as CronJob);
+  setShowCreate(true);
+}}
+```
+
+The runtime check is gone; the `as CronJob` / `as SystemCronJob` cast lives at the only boundary that has the type knowledge (the parent's per-tab render branch). The `CronTabContent` no longer needs to perform runtime discrimination — the parent's `isAgent` discriminator flows through, and the per-card components accept the appropriate subtype.
+
+**Files changed:** `src/app/orchestration/cron/page.tsx` (4-line check + 4-line mirror + their comments collapsed to 2 1-line casts, ~25 lines net reduction).
+
+**Byte-equivalence:** the inline `if ("command" in job) return;` was a no-op guard — the new code's `setEditingJob(job as CronJob)` would only run if the runtime type matches, which it does on the agent tab (the only place it's called). The guard was defensive but unreachable in practice. Removing it is a strict simplification.
+
+### What was rejected
+
+- **Migrating `handleError` in `chat/route.ts` to a generic `withErrorLogging` helper** — the helper has 1 callsite, and the inline `logApiError("chat", "POST /api/orchestration/chat", error); return serverError(toError(error).message);` is 2 lines vs. the original `return handleError(error, "POST /api/orchestration/chat");` (1 line). The inline form is more grep-able. Pinned in line with the session-51 "2-mode max" rule.
+- **Promoting the inline `result.error ?? "unknown error"` fallback in `cron/hardware/route.ts` to a `cronWriteError(result)` helper** — 3 sites, but they appear in 3 different functions (POST/PUT/DELETE) with different surrounding context. A helper would need a 3-arg config object or a callback. The inline `?? "unknown error"` is the simplest expression of the fallback. Pinned in line with session-51 "Rule of Three needs ≥3 actual structural duplicates, not 3 incidental matches."
+
+### Files
+
+- `src/app/api/cron/route.ts` (MODIFIED) — 4× 500 + 6× 404 → factories; -10 lines
+- `src/app/api/missions/route.ts` (MODIFIED) — 3× 500 + 4× 404 → factories; -7 lines
+- `src/app/api/orchestration/chat/route.ts` (MODIFIED) — `handleError` helper deleted; inline catch site uses `serverError(toError(error).message)`
+- `src/app/api/cron/hardware/route.ts` (MODIFIED) — 8× 500 + 2× 404 → factories; 3 sites gain `?? "unknown error"` fallback; -10 lines
+- `src/app/api/cron/hardware/meta/route.ts` (MODIFIED) — 1× 500 → `serverError(toError(e).message)`
+- `src/app/orchestration/cron/page.tsx` (MODIFIED) — 2 inline `if ("command" in job)` checks → 2 `as CronJob`/`as SystemCronJob` casts at the parent's per-tab render boundary; -7 lines (after comment removal)
+- `tests/unit/api-response.test.ts` (MODIFIED) — `forbidden` test block added (4 tests)
+
+### Verification
+
+- All 1096 unit tests pass (181 suites, +10 from this session: 4 new `forbidden` tests + 6 from session 67's `readHermesYamlConfig` helper that this session also verified to still pass)
+- `npx tsc --noEmit` clean (caught the `result.error` undefined issue before the migration shipped)
+- `CI=true npx eslint . --max-warnings 0` clean
+- `npm run build` passes
+- 0 user-visible behaviour changes (byte-equivalence audit on all 28 factory migrations + the 2 onEdit discriminators)
+
+### Patterns to take forward
+
+1. **`toError(e).message` is the canonical "extract error message" pattern** — the `chat/route.ts` and `cron/hardware/meta/route.ts` migrations both adopted `toError(e).message` (from `api-fetch.ts`) instead of the previous `error instanceof Error ? error.message : String(error)` inline pattern. The helper handles `Error` instances and falls back to `String()` for everything else. Worth promoting to a sibling of `toError` if 3+ sites appear (currently 2 in production code).
+2. **`?? "unknown error"` fallback is the canonical "optional error string → required" pattern** — the 3 `result.error ?? "unknown error"` sites in `cron/hardware/route.ts` are now a documented byte-equivalent pattern. The fallback matches what the pre-refactor `NextResponse.json({ error: undefined })` would have produced (the field is dropped from the JSON; the consumer sees `{ ok: false }` and an absent `error` field — which `apiFetch` then reports as `HTTP 500`). When the 4th site appears, promote to a `safeErrorMessage(result): string` helper.
+3. **The "discriminated handler cast at the use boundary" pattern** — when a component receives a union-typed callback, the runtime `"kind" in obj` check is a TypeScript anti-pattern. The cleaner shape is: (a) declare the prop as the union, (b) thread the callback through unchanged, (c) cast at the parent's per-discriminator render branch where the type is known. The `cron/page.tsx` migration is the template for future callsites.
+4. **Carry-over audit at session start caught the session-67 `forbidden` factory test gap** — the carry-over diff (10 files) was clean on `tsc` and `jest`, but the test file for the new factory was missing. Session 66's Pitfall G lesson (double-check the diff against the claimed scope) caught it; 4 tests added in this session.
+5. **The "session-pick-a-list randomization" continues to spread the refactor surface** — List 2 has now been hit 10+ times (41, 42, 44, 45, 48, 49, 56, 58, 63, 68). The next-session suggestion to pick List 1 or List 4 is now overdue.
+
+### "Next session should:" block (carried forward)
+
+1. **Pick a different list next session** to spread the refactor surface. List 1 has been hit 8+ times (54, 57, 61, 62, 65, 66). List 2 has been hit 10+ times now (this session added 28 sites). List 3 hit 5 times (the 2026-05-25 audit, session 64, 2026-05-27 refactor, session 67, plus the 2026-06-02 small fix). List 4 hit 4 times. List 1 or List 4 are the next-ripe surfaces.
+2. **`runMutation` adoption in other lists** — List 1 (dashboard) and List 3 (models/agents/skills/tools) are still the next-ripe surfaces. The helper is in `src/lib/` and stable; future sessions should grep for `try/catch/finally` + `setXxxBusy` patterns and adopt.
+3. **`useMissionsPage` decomposition** is still a backlog item. The hook is 1175 LOC.
+4. **`isChReadOnly()` consolidation** — 6 BARE sites in List 2 (just confirmed still inline) + 2 in other lists. Future session picking any list can pick off 1-2 BARE sites, or just leave the 8-site divergence as a documented outlier per the session-51 over-engineering rule.
+5. **Latent bug in `useSystemCronJobs.handlePauseAll`** — preserved byte-equivalently. Not blocking.
+6. **Add a busy state to `handleCronScheduleChange`** — prerequisite for `runMutation` adoption in the dashboard's cron panel.
+7. **Migrate `readFallbackAgentSettingsFromConfig()` to use `readHermesYamlConfig()`** — needs a custom-path overload to preserve the `assertFallbackAgentSettingsWritten(configPath, ...)` behaviour.
+8. **Extract `__FAKE_HERMES_ROOT__` mock pattern to `tests/helpers/hermes-paths-mock.ts`** when the 5th test file adopts it.
+9. **Promote `?? "unknown error"` to a `safeErrorMessage(result)` helper** when a 4th site appears.
+10. **Promote `toError(e).message` to a sibling helper** when a 3rd consumer appears (currently 2 in production code: `chat/route.ts`, `cron/hardware/meta/route.ts`).
