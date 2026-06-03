@@ -13,6 +13,7 @@ import {
 } from "./hermes-config-sync";
 import { isHermesProvider, type HermesProvider } from "./hermes-providers";
 import { modelKey } from "./model-key";
+import { messageFromError } from "@/lib/api-fetch";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -144,7 +145,7 @@ export function pushModelToHermes(modelId: string): SyncActionResult {
       details: [
         {
           action: "error",
-          detail: String(err instanceof Error ? err.message : err),
+          detail: String(messageFromError(err, "")),
         },
       ],
     };
@@ -188,7 +189,7 @@ function pushCredentialToHermesEnv(provider: HermesProvider, apiKey: string): Sy
       details: [
         {
           action: "error",
-          detail: String(err instanceof Error ? err.message : err),
+          detail: String(messageFromError(err, "")),
         },
       ],
     };

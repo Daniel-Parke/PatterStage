@@ -17,6 +17,7 @@ import { db, uuid, now } from "../db";
 import { getActiveHermesPaths } from "../hermes-agent-runtime";
 import { logApiError } from "../api-logger";
 import { gatewayUrl } from "../gateway-client";
+import { messageFromError } from "@/lib/api-fetch";
 import {
   getHermesAgentPackageDir,
   resolveHermesAgentPackage,
@@ -56,7 +57,7 @@ function resolveHermesCronRuntime(hermesHome: string): {
     const python = resolveHermesVenvPython(hermesHome);
     return { ok: true, hermesAgentPath, python };
   } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+    return { ok: false, error: messageFromError(err, "") };
   }
 }
 

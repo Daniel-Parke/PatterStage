@@ -12,6 +12,7 @@ import { PATHS } from "../paths";
 import { resolveProfileHermesHome } from "../hermes-profile-paths";
 import { ensureDir } from "../fs-helpers";
 import { envVarForProvider } from "../hermes-providers";
+import { messageFromError } from "@/lib/api-fetch";
 import type {
   Mission,
   DispatchMissionInput,
@@ -391,7 +392,7 @@ export class HermesAgentBackend implements AgentBackend {
       writeCancelledStatus(missionId);
       return {
         processKilled: false,
-        error: err instanceof Error ? err.message : String(err),
+        error: messageFromError(err, ""),
       };
     }
   }
