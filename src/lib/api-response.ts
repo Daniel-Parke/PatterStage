@@ -142,3 +142,58 @@ export function serviceUnavailable(error: string): NextResponse {
 export function created<T>(data: T): NextResponse {
   return NextResponse.json({ data }, { status: 201 });
 }
+
+/**
+ * Return a 200 OK with the given body. Use in route handlers for the
+ * common case of a successful read/write that did not create a new
+ * resource (GET, PUT update, POST that updates existing state, sync
+ * result, drift report, etc.). Body is wrapped in `{ data }` to match
+ * the rest of the success-response surface — the same wire shape as
+ * the 201 Created path, just without the resource-creation status.
+ *
+ * Sister of `created()` — both wrap the caller's payload in
+ * `{ data }`, but `ok` is the 200 default and `created` is the
+ * 201-Created sibling. Sister of `badRequest` / `notFound` /
+ * `serverError` / `forbidden` / `conflict` / `methodNotAllowed` /
+ * `payloadTooLarge` / `serviceUnavailable` — same module, same
+ * factory pattern, same body-shape contract — but `ok` is the
+ * success-side of the family while the rest are error-side.
+ *
+ * The 30+ sites in List 4 territory (config/route.ts, models/*,
+ * agent/files/[key], agent/profiles/*, agent/personality) that
+ * previously did this inline collapsed to a single token `ok(...)` per
+ * call. The 30 sites span 18 files, well over the Rule-of-Three
+ * threshold. The factory centralises the `{ data }` wrap so a future
+ * change (e.g. add a `version: 1` field to every success response)
+ * lands in one place.
+ *
+ * Byte-equivalent to the inline form: same `NextResponse.json({ data: T })`
+ * call, same status 200, same body shape. The generic `T` preserves
+ * the caller's type information through the helper — `ok({ model })`,
+ * `ok({ drift })`, `ok({ success: true, ... })` all flow the resource
+ * shape through without a cast.
+ *
+ * **Why this is a separate factory from `created()`**: the 200 vs 201
+ * distinction is semantically meaningful for HTTP clients (cache
+ * heuristics, idempotency expectations, "resource was created"
+ * signals). A single `okOrCreated<T>(data, isNew)` would force the
+ * caller to make the status decision; the separate factories let the
+ * call site declare the intent (resource created → `created`, anything
+ * else → `ok`).
+ *
+ * Body shape: `{ data: T }`. The `T` is the caller's resource shape —
+ * `ok({ model })` → `{ data: { model } }`, `ok({ drift })` →
+ * `{ data: { drift } }`, `ok({ fallbacks: chain })` →
+ * `{ data: { fallbacks: chain } }`, `ok({ success: true, slug })` →
+ * `{ data: { success: true, slug } }`, etc.
+ *
+ * @example
+ *   // Inline form (pre-refactor):
+ *   return NextResponse.json({ data: { model } });
+ *
+ *   // Factory form (post-refactor):
+ *   return ok({ model });
+ */
+export function ok<T>(data: T): NextResponse {
+  return NextResponse.json({ data }, { status: 200 });
+}
