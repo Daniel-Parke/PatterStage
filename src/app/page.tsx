@@ -44,6 +44,7 @@ import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
 import { safeApiCall } from "@/lib/api-fetch";
 import { runMutation } from "@/lib/run-mutation";
+import { toastFromResult } from "@/lib/toast-from-result";
 import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
 import { unwrapPollPath } from "@/lib/dashboard-poll";
 import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
@@ -197,11 +198,13 @@ export default function Dashboard() {
           method: "POST",
           body: { action: "cancel", missionId },
         });
-        if (!ok) {
-          showToast(error || "Failed to cancel mission", "error");
-          return;
-        }
-        showToast(`Cancelled "${missionName}"`, "success");
+        toastFromResult(
+          showToast,
+          { ok, error },
+          `Cancelled "${missionName}"`,
+          "Failed to cancel mission",
+        );
+        if (!ok) return;
         // Refresh missions
         const { data: refreshData } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions");
         if (refreshData) setData({ missions: refreshData.missions || [] });
@@ -252,11 +255,12 @@ export default function Dashboard() {
         method: "PUT",
         body: { id: jobId, schedule: newSchedule },
       });
-      if (!ok) {
-        showToast(error || "Failed to update cron schedule", "error");
-        return;
-      }
-      showToast("Schedule updated", "success");
+      toastFromResult(
+        showToast,
+        { ok, error },
+        "Schedule updated",
+        "Failed to update cron schedule",
+      );
     } catch {
       showToast("Failed to update cron schedule", "error");
     } finally {

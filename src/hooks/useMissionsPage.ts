@@ -3,6 +3,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
 import { safeApiCall, apiFetch } from "@/lib/api-fetch";
 import { toastFromResult } from "@/lib/toast-from-result";
+import { successMessageForDispatch } from "@/hooks/success-message-for-dispatch";
 import type { LocalDirEntry, Mission } from "@/types/hermes";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { parseMissionPrompt } from "@/lib/build-mission-prompt";
@@ -587,23 +588,18 @@ export function useMissionsPage() {
               }),
             },
           });
+          toastFromResult(
+            showToast,
+            { ok, error },
+            () => successMessageForDispatch(newDispatch, newSchedule),
+            "Failed to update mission",
+          );
           if (ok) {
-            if (newDispatch === "save") {
-              showToast("Mission saved as draft", "success");
-            } else if (newDispatch === "queue") {
-              showToast("Mission saved to queue", "success");
-            } else if (newDispatch === "now") {
-              showToast("Mission dispatched", "success");
-            } else {
-              showToast(`Mission scheduled: ${newSchedule}`, "success");
-            }
             setEditingId(null);
             setShowCreate(false);
             resetForm();
             await fetchData();
             if (expandedId === editingId) void fetchDetail(editingId);
-          } else {
-            showToast(error || "Failed to update mission", "error");
           }
           return;
         }
@@ -652,30 +648,26 @@ export function useMissionsPage() {
         },
       });
 
+      toastFromResult(
+        showToast,
+        { ok, error },
+        () => successMessageForDispatch(newDispatch, newSchedule),
+        "Failed to create mission",
+      );
       if (ok) {
         if (newDispatch === "save" || newDispatch === "queue") {
-          showToast(
-            newDispatch === "save"
-              ? "Mission saved as draft"
-              : "Mission saved to queue",
-            "success",
-          );
           resetForm();
           void fetchData();
         } else if (newDispatch === "now") {
           const body = data;
-          showToast("Mission dispatched", "success");
           await fetchData();
           if (body?.data?.mission?.id) {
             setExpandedId(body.data.mission.id);
             void fetchDetail(body.data.mission.id);
           }
         } else {
-          showToast(`Mission scheduled: ${newSchedule}`, "success");
           await fetchData();
         }
-      } else {
-        showToast(error || "Failed to create mission", "error");
       }
     } catch {
       showToast("Network error — please try again", "error");
@@ -756,13 +748,16 @@ export function useMissionsPage() {
           method: "POST",
           body: payload,
         });
+        const wasUpdate = payload.action === "update";
+        toastFromResult(
+          showToast,
+          res,
+          wasUpdate ? "Template updated!" : "Template saved!",
+          "Failed to save template",
+        );
         if (res.ok) {
-          const wasUpdate = payload.action === "update";
-          showToast(wasUpdate ? "Template updated!" : "Template saved!", "success");
           postSuccess();
           void fetchData();
-        } else {
-          showToast(res.error || "Failed to save template", "error");
         }
       } catch {
         showToast("Failed to save template", "error");

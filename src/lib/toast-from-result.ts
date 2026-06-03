@@ -26,19 +26,28 @@ type ShowToast = (message: string, tone?: "success" | "error" | "info") => void;
 /**
  * Show a toast based on a `safeApiCall`-style result.
  *
+ * The `successMsg` can be a static string (the common case) or a
+ * function returning a string. The function form is for handlers
+ * where the success message depends on a mode/state that the caller
+ * has already computed (e.g. dispatch mode → "Mission dispatched"
+ * vs. "Mission scheduled: cron_5min"). It's called lazily only on
+ * the success path, so the message-construction cost is paid once.
+ *
  * @param showToast the `useToast()` return value
  * @param result `{ ok, error? }` from `safeApiCall`
- * @param successMsg shown when `result.ok === true`
+ * @param successMsg shown when `result.ok === true`; may be a
+ *   string (always evaluated) or a function returning a string
+ *   (called only on success)
  * @param errorFallback shown when `result.ok === false` and `result.error` is missing
  */
 export function toastFromResult(
   showToast: ShowToast,
   result: SafeCallResult,
-  successMsg: string,
+  successMsg: string | (() => string),
   errorFallback: string,
 ): void {
   if (result.ok) {
-    showToast(successMsg);
+    showToast(typeof successMsg === "function" ? successMsg() : successMsg);
   } else {
     showToast(result.error ?? errorFallback, "error");
   }
