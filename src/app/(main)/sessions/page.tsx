@@ -47,7 +47,7 @@ import Badge from "@/components/ui/Badge";
 import Pagination from "@/components/ui/Pagination";
 import { useToast } from "@/components/ui/Toast";
 import { LiveDot } from "@/components/ui/LiveDot";
-import { timeAgo, formatElapsed } from "@/lib/utils";
+import { timeAgo, formatElapsed, pluralise } from "@/lib/utils";
 import { useApiData } from "@/hooks/useApiData";
 import { useInterval } from "@/hooks/useInterval";
 import { useStoredBool } from "@/hooks/useStoredBool";
@@ -182,7 +182,7 @@ function SessionCard({ session }: { session: SessionRecord }) {
               {typeof session.messageCount === "number" && session.messageCount > 0 && (
                 <span
                   className="flex items-center gap-1 text-white/40"
-                  title={`${session.messageCount} message${session.messageCount === 1 ? "" : "s"}`}
+                  title={`${session.messageCount} message${pluralise(session.messageCount)}`}
                 >
                   <MessageSquare className="w-3 h-3" />
                   {session.messageCount} msgs

@@ -21,6 +21,7 @@ import ProfileSelector from "@/components/ui/ProfileSelector";
 import { apiFetch, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { profileSyncBody } from "@/lib/profile-sync-body";
+import { pluralise } from "@/lib/utils";
 import type { PlatformToolsets } from "@/lib/profile-config-builder";
 import type { AgentProfile } from "@/types/hermes";
 import {
@@ -189,7 +190,7 @@ export default function ToolsPage() {
         subtitle={
           loadingToolsets
             ? "Loading profile toolsets…"
-            : `${enabledCount} toolset${enabledCount === 1 ? "" : "s"} enabled for selected profile`
+            : `${enabledCount} toolset${pluralise(enabledCount)} enabled for selected profile`
         }
         color="orange"
         actions={

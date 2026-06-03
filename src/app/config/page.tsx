@@ -10,6 +10,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
+import { pluralise } from "@/lib/utils";
 import { iconColorMap, colorBorderMap, badgeBgMap } from "@/lib/theme";
 import { useApiData } from "@/hooks/useApiData";
 import type { AccentColor } from "@/types/hermes";
@@ -87,7 +88,7 @@ function SectionCard({
       </p>
       <div className="mt-3 flex items-center gap-2">
         <span className="text-[10px] font-mono text-white/25 bg-white/5 px-1.5 py-0.5 rounded">
-          {fieldCount} field{fieldCount !== 1 ? "s" : ""}
+          {fieldCount} field{pluralise(fieldCount)}
         </span>
         {sectionData && (
           <span className="text-[10px] font-mono text-neon-green/60 bg-neon-green/5 px-1.5 py-0.5 rounded">

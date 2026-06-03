@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Wrench, Loader2, X, ChevronDown, Search } from "lucide-react";
 import { unionToolsetsFromPlatforms } from "@/lib/hermes-toolset-unify";
 import { toolsetCatalogLabel } from "@/lib/hermes-toolset-catalog";
+import { pluralise } from "@/lib/utils";
 import type { PlatformToolsets } from "@/lib/profile-config-builder";
 
 interface ToolsetSelectorProps {
@@ -78,7 +79,7 @@ export default function ToolsetSelector({
         <span className="text-white/50 flex-1">
           {value.length === 0
             ? "Recommend Hermes toolsets (optional)…"
-            : `${value.length} toolset${value.length === 1 ? "" : "s"} selected`}
+            : `${value.length} toolset${pluralise(value.length)} selected`}
         </span>
         <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>

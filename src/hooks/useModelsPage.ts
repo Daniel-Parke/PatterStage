@@ -291,7 +291,7 @@ export function useModelsPage() {
       const modelsImported = result.data?.modelsImported ?? 0;
       const creds = result.data?.credentialsUpdated ?? 0;
       showToast(
-        `Synced: ${modelsImported} model${modelsImported !== 1 ? "s" : ""} ${modelsImported > 0 ? "(updated)" : "(no change)"}${creds > 0 ? `, ${creds} credential${creds !== 1 ? "s" : ""} updated` : ""} from Hermes`,
+        `Synced: ${modelsImported} model${pluralise(modelsImported)} ${modelsImported > 0 ? "(updated)" : "(no change)"}${creds > 0 ? `, ${creds} credential${pluralise(creds)} updated` : ""} from Hermes`,
         "success"
       );
       await loadAll();

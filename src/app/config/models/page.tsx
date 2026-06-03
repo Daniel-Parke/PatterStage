@@ -24,6 +24,7 @@ import ModelsDriftBanner from "@/components/models/ModelsDriftBanner";
 import ModelsFallbackSection from "@/components/models/ModelsFallbackSection";
 import ModelsTableSection from "@/components/models/ModelsTableSection";
 import ModelsTaskDefaultsSection from "@/components/models/ModelsTaskDefaultsSection";
+import { pluralise } from "@/lib/utils";
 import { useModelsPage } from "@/hooks/useModelsPage";
 
 export default function ModelsPage() {
@@ -93,7 +94,7 @@ export default function ModelsPage() {
       <PageHeader
         icon={Globe}
         title="Models"
-        subtitle={`${models.length} model${models.length === 1 ? "" : "s"} in registry · ${credentials.length} credential${credentials.length === 1 ? "" : "s"}`}
+        subtitle={`${models.length} model${pluralise(models.length)} in registry · ${credentials.length} credential${pluralise(credentials.length)}`}
         color="purple"
         backHref="/config"
         backLabel="CONFIG"

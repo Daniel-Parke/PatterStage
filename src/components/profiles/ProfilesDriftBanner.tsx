@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
+import { pluralise } from "@/lib/utils";
 
 interface ProfilesDriftBannerProps {
   driftCount: number;
@@ -19,10 +20,10 @@ export default function ProfilesDriftBanner({
 
   const parts: string[] = [];
   if (driftCount > 0) {
-    parts.push(`${driftCount} profile${driftCount === 1 ? "" : "s"} drifted from database`);
+    parts.push(`${driftCount} profile${pluralise(driftCount)} drifted from database`);
   }
   if (errorCount > 0) {
-    parts.push(`${errorCount} sync error${errorCount === 1 ? "" : "s"}`);
+    parts.push(`${errorCount} sync error${pluralise(errorCount)}`);
   }
 
   return (

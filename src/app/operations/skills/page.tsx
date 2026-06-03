@@ -22,6 +22,7 @@ import ProfileSelector from "@/components/ui/ProfileSelector";
 import { apiFetch, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { groupByCategory, titleCaseCategory } from "@/lib/skills-grouping";
+import { pluralise } from "@/lib/utils";
 import type { Skill, SkillsData } from "@/types/hermes";
 
 // ── Pure helpers (hoisted outside component) ──────────────────────────────
@@ -259,7 +260,7 @@ export default function SkillsPage() {
       <PageHeader
         icon={FileText}
         title="Skills Manager"
-        subtitle={`${total} skill${total !== 1 ? "s" : ""} — active = catalog minus skills.disabled for ${selectedProfile}`}
+        subtitle={`${total} skill${pluralise(total)} — active = catalog minus skills.disabled for ${selectedProfile}`}
         color="green"
         actions={
           <ProfileSelector
