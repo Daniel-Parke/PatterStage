@@ -10,7 +10,8 @@ import { buildMissionFieldPatch } from "@/lib/mission-field-updates";
 import { dispatchMissionNow } from "@/lib/mission-dispatch";
 import { runMissionQueueTick } from "@/lib/mission-queue-tick";
 import { createCronJob, deleteCronJob, pushJobToHermes } from "@/lib/cron-repository";
-import { syncMissionToCronJob, enrichMissionCron } from "@/lib/mission-cron-sync";
+import { syncMissionToCronJob } from "@/lib/mission-cron-sync";
+import { enrichedMission } from "@/lib/mission-response";
 import { agentBackend } from "@/lib/backends";
 import { logApiError } from "@/lib/api-logger";
 import { isMissionDraft, isMissionQueuedForRun } from "@/lib/mission-board";
@@ -180,7 +181,7 @@ export async function promoteMission(
             ok: false,
             status: 502,
             ...cronSyncFailureBody(pushResult),
-            mission: enrichMissionCron(getMission(input.missionId)!),
+            mission: enrichedMission(input.missionId)!,
           };
         }
       }
@@ -196,7 +197,7 @@ export async function promoteMission(
       return { ok: false, status: 500, error: "Failed to promote mission to cron" };
     }
 
-    return { ok: true, mission: enrichMissionCron(getMission(input.missionId)!) };
+    return { ok: true, mission: enrichedMission(input.missionId)! };
   }
 
   if (isNowMode) {
@@ -210,15 +211,15 @@ export async function promoteMission(
         ok: false,
         status: 500,
         error: "Failed to dispatch mission",
-        mission: enrichMissionCron(getMission(input.missionId)!),
+        mission: enrichedMission(input.missionId)!,
       };
     }
-    return { ok: true, mission: enrichMissionCron(getMission(input.missionId)!) };
+    return { ok: true, mission: enrichedMission(input.missionId)! };
   }
 
   if (isQueueMode) {
     void runMissionQueueTick();
   }
 
-  return { ok: true, mission: enrichMissionCron(getMission(input.missionId)!) };
+  return { ok: true, mission: enrichedMission(input.missionId)! };
 }

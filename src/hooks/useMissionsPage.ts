@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
 import { safeApiCall, apiFetch } from "@/lib/api-fetch";
+import { toastFromResult } from "@/lib/toast-from-result";
 import type { LocalDirEntry, Mission } from "@/types/hermes";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { parseMissionPrompt } from "@/lib/build-mission-prompt";
@@ -546,7 +547,7 @@ export function useMissionsPage() {
 
         if (isRunning) {
           showToast("Updating mission...", "info");
-          const { ok, error } = await safeApiCall("/api/missions", {
+          const result = await safeApiCall("/api/missions", {
             method: "POST",
             body: {
               action: "update",
@@ -557,14 +558,17 @@ export function useMissionsPage() {
               }),
             },
           });
-          if (ok) {
-            showToast("Mission updated", "success");
+          toastFromResult(
+            showToast,
+            result,
+            "Mission updated",
+            "Failed to update mission",
+          );
+          if (result.ok) {
             setEditingId(null);
             setShowCreate(false);
             void fetchData();
             if (expandedId === editingId) void fetchDetail(editingId);
-          } else {
-            showToast(error || "Failed to update mission", "error");
           }
           return;
         }
@@ -608,7 +612,7 @@ export function useMissionsPage() {
 
         setEditingId(null);
 
-        const { ok, error, data } = await safeApiCall<{ data?: { mission?: { id: string } } }>("/api/missions", {
+        const result = await safeApiCall<{ data?: { mission?: { id: string } } }>("/api/missions", {
           method: "POST",
           body: {
             action: "dispatch",
@@ -617,16 +621,19 @@ export function useMissionsPage() {
           },
         });
 
-        if (ok) {
-          const body = data;
-          showToast("Mission re-dispatched", "success");
+        toastFromResult(
+          showToast,
+          result,
+          "Mission re-dispatched",
+          "Failed to re-dispatch mission",
+        );
+        if (result.ok) {
+          const body = result.data;
           await fetchData();
           if (body?.data?.mission?.id) {
             setExpandedId(body.data.mission.id);
             void fetchDetail(body.data.mission.id);
           }
-        } else {
-          showToast(error || "Failed to re-dispatch mission", "error");
         }
         return;
       }
@@ -880,16 +887,19 @@ export function useMissionsPage() {
 
   const handleDeleteTemplate = useCallback(async (templateId: string) => {
     if (!confirm("Delete this template?")) return;
-    const { ok, error } = await safeApiCall("/api/templates", {
+    const result = await safeApiCall("/api/templates", {
       method: "POST",
       body: { action: "delete", templateId },
     });
-    if (ok) {
-      showToast("Template deleted", "success");
+    toastFromResult(
+      showToast,
+      result,
+      "Template deleted",
+      "Failed to delete template",
+    );
+    if (result.ok) {
       setShowTemplateManager(false);
       fetchData();
-    } else {
-      showToast(error || "Failed to delete template", "error");
     }
   }, [showToast, fetchData]);
 
@@ -901,16 +911,14 @@ export function useMissionsPage() {
 
   const handleDelete = useCallback(async (id: string) => {
     if (!confirm("Delete this mission and its cron job?")) return;
-    const { ok, error } = await safeApiCall("/api/missions", {
+    const result = await safeApiCall("/api/missions", {
       method: "POST",
       body: { action: "delete", missionId: id },
     });
-    if (ok) {
-      showToast("Mission deleted", "success");
+    toastFromResult(showToast, result, "Mission deleted", "Failed to delete mission");
+    if (result.ok) {
       if (expandedId === id) setExpandedId(null);
       fetchData();
-    } else {
-      showToast(error || "Failed to delete mission", "error");
     }
   }, [showToast, expandedId, fetchData]);
 
@@ -934,21 +942,23 @@ export function useMissionsPage() {
     );
 
     try {
-      const { ok, error } = await safeApiCall("/api/missions", {
+      const result = await safeApiCall("/api/missions", {
         method: "POST",
         body: { action: "cancel", missionId: id },
       });
-      if (ok) {
-        showToast("Mission cancelled", "success");
+      toastFromResult(
+        showToast,
+        result,
+        "Mission cancelled",
+        "Failed to cancel mission",
+      );
+      if (result.ok) {
         await fetchData();
         if (expandedId === id) void fetchDetail(id);
-      } else {
-        if (previousMission) {
-          setMissions((prev) =>
-            prev.map((m) => (m.id === id ? previousMission : m)),
-          );
-        }
-        showToast(error || "Failed to cancel mission", "error");
+      } else if (previousMission) {
+        setMissions((prev) =>
+          prev.map((m) => (m.id === id ? previousMission : m)),
+        );
       }
     } catch {
       if (previousMission) {

@@ -35,6 +35,7 @@ import { promoteMission } from "@/lib/mission-promote-handler";
 import { runMissionQueueTick } from "@/lib/mission-queue-tick";
 import { ensureSyncLayer } from "@/lib/sync";
 import { cronSyncFailureResponse, cronSyncFailureBody } from "@/lib/cron-sync-failure";
+import { missionResponse } from "@/lib/mission-response";
 
 // ── Helpers ───────────────────────────────────────────────────────
 
@@ -345,10 +346,7 @@ export async function POST(request: NextRequest) {
           });
 
           appendAuditLine({ action: "mission.cron_dispatch", resource: mission.id, ok: true });
-          return NextResponse.json(
-            { data: { mission: enrichMissionCron(getMission(mission.id)!) } },
-            { status: 201 }
-          );
+          return missionResponse(mission.id, 201);
         } catch (err) {
           logApiError("POST /api/missions", "cron dispatch", err);
           updateMission(mission.id, { status: "failed" });
@@ -368,10 +366,7 @@ export async function POST(request: NextRequest) {
       }
 
       appendAuditLine({ action: "mission.dispatch", resource: mission.id, ok: true });
-      return NextResponse.json(
-        { data: { mission: enrichMissionCron(getMission(mission.id)!) } },
-        { status: 201 }
-      );
+      return missionResponse(mission.id, 201);
     }
 
     // ── Promote draft / queued-waiting mission ─────────────────
@@ -513,9 +508,7 @@ export async function POST(request: NextRequest) {
       }
 
       appendAuditLine({ action: "mission.update", resource: missionIdFinal, ok: true });
-      return NextResponse.json({
-        data: { mission: enrichMissionCron(getMission(missionIdFinal)!) },
-      });
+      return missionResponse(missionIdFinal);
     }
 
     // ── Cancel Mission ─────────────────────────────────────────

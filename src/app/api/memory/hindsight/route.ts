@@ -19,6 +19,13 @@ import {
   mapMentalModelItem,
   normalizeTags,
 } from "@/lib/hindsight-bridge";
+import {
+  buildPartialUpdateBody,
+  DIRECTIVE_UPDATE_FIELDS,
+  extractListItems,
+  hindsightErrorResponse,
+  MENTAL_MODEL_UPDATE_FIELDS,
+} from "@/lib/hindsight-route-helpers";
 
 // ── Connection-error detection ─────────────────────────────────
 
@@ -123,10 +130,10 @@ async function handleReflect(bank: string, query: string, budget?: string) {
 }
 
 async function handleDirectives(bank: string) {
-  const result = await requestWithTimeout<Record<string, unknown>[] | { items?: Record<string, unknown>[] }>(
+  const result = await requestWithTimeout(
     `/v1/default/banks/${bank}/directives`,
   );
-  const items = Array.isArray(result) ? result : (result.items || []);
+  const items = extractListItems(result);
   const directives = items.map(mapDirectiveItem);
   return { directives, count: directives.length };
 }
@@ -155,21 +162,20 @@ async function handleUpdateDirective(
   id: string,
   updates: Record<string, unknown>,
 ) {
-  const body: Record<string, unknown> = {};
-  if (updates.name !== undefined) body.name = updates.name;
-  if (updates.content !== undefined) body.content = updates.content;
-  if (updates.priority !== undefined) body.priority = updates.priority;
-  if (updates.is_active !== undefined) body.is_active = String(updates.is_active) === "true";
+  const body: Record<string, unknown> = buildPartialUpdateBody(
+    updates,
+    DIRECTIVE_UPDATE_FIELDS,
+  );
   if (updates.tags !== undefined) body.tags = normalizeTags(updates.tags);
   const result = await requestWithTimeout(`/v1/default/banks/${bank}/directives/${id}`, { method: "PATCH", body });
   return { success: true, directive: result };
 }
 
 async function handleMentalModels(bank: string) {
-  const result = await requestWithTimeout<Record<string, unknown>[] | { items?: Record<string, unknown>[] }>(
+  const result = await requestWithTimeout(
     `/v1/default/banks/${bank}/mental-models`,
   );
-  const items = Array.isArray(result) ? result : (result.items || []);
+  const items = extractListItems(result);
   const models = items.map(mapMentalModelItem);
   return { models, count: models.length };
 }
@@ -207,9 +213,13 @@ async function handleUpdateMentalModel(
   id: string,
   updates: Record<string, unknown>,
 ) {
-  const body: Record<string, unknown> = {};
-  if (updates.name !== undefined) body.name = updates.name;
-  if (updates.query !== undefined) body.source_query = updates.query;
+  // The wire field for `query` is `source_query`; remap the
+  // field-builder so the helper writes to the right key.
+  const fields = {
+    ...MENTAL_MODEL_UPDATE_FIELDS,
+    query: (raw: unknown): [string, unknown] => ["source_query", raw],
+  };
+  const body: Record<string, unknown> = buildPartialUpdateBody(updates, fields);
   if (updates.tags !== undefined) body.tags = normalizeTags(updates.tags);
   const result = await requestWithTimeout(`/v1/default/banks/${bank}/mental-models/${id}`, { method: "PATCH", body });
   return { success: true, model: result };
@@ -390,15 +400,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json<ApiResponse<Record<string, unknown>>>({ data: result });
   } catch (error) {
     logApiError("POST /api/memory/hindsight", "action", error);
-    return NextResponse.json(
-      {
-        data: {
-          available: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-        },
-      },
-      { status: 500 },
-    );
+    return hindsightErrorResponse(error);
   }
 }
 
@@ -431,14 +433,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json<ApiResponse<Record<string, unknown>>>({ data: result });
   } catch (error) {
     logApiError("DELETE /api/memory/hindsight", "delete", error);
-    return NextResponse.json(
-      {
-        data: {
-          available: false,
-          error: error instanceof Error ? error.message : "Unknown error",
-        },
-      },
-      { status: 500 },
-    );
+    return hindsightErrorResponse(error);
   }
 }

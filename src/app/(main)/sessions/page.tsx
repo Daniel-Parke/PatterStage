@@ -46,6 +46,7 @@ import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import Badge from "@/components/ui/Badge";
 import Pagination from "@/components/ui/Pagination";
 import { useToast } from "@/components/ui/Toast";
+import { LiveDot } from "@/components/ui/LiveDot";
 import { timeAgo, formatElapsed } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
 import { useInterval } from "@/hooks/useInterval";
@@ -143,15 +144,6 @@ function buildGroupedEntries(
 }
 
 // ── Components ───────────────────────────────────────────────
-
-function LiveDot() {
-  return (
-    <span className="relative inline-flex items-center" title="Session is active">
-      <span className="absolute inline-flex h-2 w-2 rounded-full bg-neon-green opacity-75 animate-ping" />
-      <span className="relative inline-flex rounded-full h-2 w-2 bg-neon-green" />
-    </span>
-  );
-}
 
 function SessionCard({ session }: { session: SessionRecord }) {
   const title = formatSessionTitle(session);
