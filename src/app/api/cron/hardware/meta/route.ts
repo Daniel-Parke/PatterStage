@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
+import { serverError } from "@/lib/api-response";
 import { getChHardwareLogDir, getChScriptsDir } from "@/lib/paths";
+import { toError } from "@/lib/api-fetch";
 
 /**
  * GET /api/cron/hardware/meta — scriptsDir + logDir for UI (single source of truth).
@@ -19,7 +21,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (e: unknown) {
     logApiError("GET /api/cron/hardware/meta", "paths", e);
-    const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return serverError(toError(e).message);
   }
 }

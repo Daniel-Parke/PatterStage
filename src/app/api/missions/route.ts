@@ -17,7 +17,7 @@ import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, notFound, serverError } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { agentBackend } from "@/lib/backends";
 import { createCronJob, deleteCronJob, importHermesJobs, pushJobToHermes } from "@/lib/cron-repository";
@@ -64,7 +64,7 @@ function requireMissionId(body: Record<string, unknown>): string | NextResponse 
 function getMissionOrNotFound(id: string): NonNullable<ReturnType<typeof getMission>> | NextResponse {
   const mission = getMission(id);
   if (!mission) {
-    return NextResponse.json({ error: "Mission not found" }, { status: 404 });
+    return notFound("Mission not found");
   }
   return mission;
 }
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: { missions } });
   } catch (error) {
     logApiError("GET /api/missions", id ? `mission ${id}` : "listing missions", error);
-    return NextResponse.json({ error: "Failed to load missions" }, { status: 500 });
+    return serverError("Failed to load missions");
   }
 }
 
@@ -329,7 +329,7 @@ export async function POST(request: NextRequest) {
           logApiError("POST /api/missions", "cron dispatch", err);
           updateMission(mission.id, { status: "failed" });
           appendAuditLine({ action: "mission.cron_dispatch", resource: mission.id, ok: false });
-          return NextResponse.json({ error: "Failed to create cron job for mission" }, { status: 500 });
+          return serverError("Failed to create cron job for mission");
         }
       }
 
@@ -468,7 +468,7 @@ export async function POST(request: NextRequest) {
 
       const mission = updateMission(missionIdFinal, updates);
       if (!mission)
-        return NextResponse.json({ error: "Mission not found" }, { status: 404 });
+        return notFound("Mission not found");
 
       const shouldSyncCron =
         mission.cronJobId &&
@@ -512,7 +512,7 @@ export async function POST(request: NextRequest) {
         queuedForRun: false,
       });
       if (!mission)
-        return NextResponse.json({ error: "Mission not found" }, { status: 404 });
+        return notFound("Mission not found");
 
       if (mission.sessionId) {
         try {
@@ -559,7 +559,7 @@ export async function POST(request: NextRequest) {
 
       const ok = deleteMission(missionIdFinal);
       if (!ok)
-        return NextResponse.json({ error: "Mission not found" }, { status: 404 });
+        return notFound("Mission not found");
 
       appendAuditLine({ action: "mission.delete", resource: missionIdFinal, ok: true });
       return NextResponse.json({ data: { deleted: missionIdFinal } });
@@ -568,6 +568,6 @@ export async function POST(request: NextRequest) {
     return badRequest(`Unknown action: ${action}`);
   } catch (error) {
     logApiError("POST /api/missions", "processing request", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return serverError("Internal server error");
   }
 }

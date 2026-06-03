@@ -10,7 +10,7 @@
  * `NextResponse.json` so the JSON Content-Type is set.
  */
 
-import { badRequest, notFound, serverError } from "@/lib/api-response";
+import { badRequest, forbidden, notFound, serverError } from "@/lib/api-response";
 
 describe("badRequest", () => {
   it("returns a response with status 400", async () => {
@@ -86,6 +86,36 @@ describe("serverError", () => {
   it("empty string is a valid error message", async () => {
     const res = serverError("");
     expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(body).toEqual({ error: "" });
+  });
+});
+
+describe("forbidden", () => {
+  it("returns a response with status 403", async () => {
+    const res = forbidden("Section 'foo' is not writable");
+    expect(res.status).toBe(403);
+  });
+
+  it("body is { error: <message> }", async () => {
+    const res = forbidden("Section 'foo' is not writable");
+    const body = await res.json();
+    expect(body).toEqual({ error: "Section 'foo' is not writable" });
+  });
+
+  it("preserves the exact error message including special characters", async () => {
+    const res = forbidden(
+      "Section 'cron' is not writable. Allowed: agent, models, fallbacks",
+    );
+    const body = await res.json();
+    expect(body.error).toBe(
+      "Section 'cron' is not writable. Allowed: agent, models, fallbacks",
+    );
+  });
+
+  it("empty string is a valid error message", async () => {
+    const res = forbidden("");
+    expect(res.status).toBe(403);
     const body = await res.json();
     expect(body).toEqual({ error: "" });
   });

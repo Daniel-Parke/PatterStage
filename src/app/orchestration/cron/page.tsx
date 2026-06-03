@@ -120,7 +120,14 @@ interface CronTabContentProps {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onRun?: (id: string) => void;
-  onEdit?: (job: CronJob | SystemCronJob) => void;
+  /**
+   * Edit handler. The discriminator (`isAgent`) decides the runtime type:
+   * - `isAgent: true` → `CronJob`
+   * - `isAgent: false` → `SystemCronJob`
+   * This makes the runtime `if ("command" in job)` check that the original
+   * code did inline unnecessary — the union type narrows automatically.
+   */
+  onEdit: (job: CronJob | SystemCronJob) => void;
 }
 
 function CronTabContent({
@@ -179,14 +186,14 @@ function CronTabContent({
               onToggle={onToggle}
               onDelete={onDelete}
               onRun={onRun!}
-              onEdit={(j) => onEdit?.(j)}
+              onEdit={onEdit}
             />
           ) : (
             <SystemCronCard
               key={job.id}
               job={job as SystemCronJob}
               onToggle={onToggle}
-              onEdit={(j) => onEdit?.(j)}
+              onEdit={onEdit}
               onDelete={onDelete}
             />
           ),
@@ -311,11 +318,7 @@ export default function CronPage() {
             onDelete={(id) => agent.handleDelete(id)}
             onRun={(id) => agent.handleRun(id)}
             onEdit={(job) => {
-              // Wide type because TabButton can dispatch either kind; on
-              // the agent tab runtime the value is always CronJob, so any
-              // `command` field means we're seeing the wrong type.
-              if ("command" in job) return;
-              setEditingJob(job);
+              setEditingJob(job as CronJob);
               setShowCreate(true);
             }}
           />
@@ -335,11 +338,7 @@ export default function CronPage() {
             onDelete={(id) => hardware.handleDelete(id)}
             onRun={undefined}
             onEdit={(job) => {
-              // Mirror of the agent branch: on the system tab the runtime
-              // type is SystemCronJob (has `command`), so its absence is
-              // an unexpected shape.
-              if (!("command" in job)) return;
-              setEditingHardwareJob(job);
+              setEditingHardwareJob(job as SystemCronJob);
               setShowHardwareCreate(true);
             }}
           />

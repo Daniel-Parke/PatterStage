@@ -17,7 +17,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, notFound, serverError } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { parseSchedule } from "@/lib/utils";
 import { buildCronUpdatePayload } from "@/lib/cron-field-updates";
@@ -79,7 +79,7 @@ async function applyEnabledChange(
 ): Promise<NextResponse> {
   const updated = updateCronJob(id, { enabled, state });
   if (!updated) {
-    return NextResponse.json({ error: "Job not found after update" }, { status: 404 });
+    return notFound("Job not found after update");
   }
   const pushResult = await pushJobToHermes(id);
   appendAuditLine({
@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
     if (id) {
       const job = getCronJob(id);
       if (!job) {
-        return NextResponse.json({ error: "Job not found" }, { status: 404 });
+        return notFound("Job not found");
       }
       return NextResponse.json({ data: { job: recordToApiJob(job) } });
     }
@@ -174,7 +174,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: { jobs, total: jobs.length } });
   } catch (error) {
     logApiError("GET /api/cron", "listing cron jobs", error);
-    return NextResponse.json({ error: "Failed to load cron jobs" }, { status: 500 });
+    return serverError("Failed to load cron jobs");
   }
 }
 
@@ -339,7 +339,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     logApiError("POST /api/cron", "creating cron job", error);
-    return NextResponse.json({ error: "Failed to create cron job" }, { status: 500 });
+    return serverError("Failed to create cron job");
   }
 }
 
@@ -369,7 +369,7 @@ export async function PUT(request: NextRequest) {
 
     const existing = getCronJob(id);
     if (!existing) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return notFound("Job not found");
     }
 
     // ── Pause ─────────────────────────────────────────────────
@@ -409,7 +409,7 @@ export async function PUT(request: NextRequest) {
         next_run_at: new Date().toISOString(),
       });
       if (!updated) {
-        return NextResponse.json({ error: "Job not found after update" }, { status: 404 });
+        return notFound("Job not found after update");
       }
       return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
     }
@@ -422,7 +422,7 @@ export async function PUT(request: NextRequest) {
 
     const updated = updateCronJob(id, updatePayload);
     if (!updated) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return notFound("Job not found");
     }
 
     // Sync to Hermes
@@ -435,7 +435,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
   } catch (error) {
     logApiError("PUT /api/cron", "updating cron job", error);
-    return NextResponse.json({ error: "Failed to update cron job" }, { status: 500 });
+    return serverError("Failed to update cron job");
   }
 }
 
@@ -458,7 +458,7 @@ export async function DELETE(request: NextRequest) {
 
     const existing = getCronJob(id);
     if (!existing) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return notFound("Job not found");
     }
 
     // Remove from Hermes first (best-effort)
@@ -476,6 +476,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ data: { success: true, deleted: id } });
   } catch (error) {
     logApiError("DELETE /api/cron", "deleting cron job", error);
-    return NextResponse.json({ error: "Failed to delete cron job" }, { status: 500 });
+    return serverError("Failed to delete cron job");
   }
 }

@@ -6,7 +6,7 @@ import { join } from "path";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, notFound, serverError } from "@/lib/api-response";
 import { toError } from "@/lib/api-fetch";
 import { crontabLineUsesScriptsDir } from "@/lib/hardware-cron";
 import { getChScriptsDir, getChHardwareLogDir, CH_DATA_DIR } from "@/lib/paths";
@@ -232,7 +232,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: { jobs, total: jobs.length } });
   } catch (e: unknown) {
     logApiError("GET /api/cron/hardware", "read crontab", e);
-    return NextResponse.json({ error: `Failed to read crontab: ${toError(e).message}` }, { status: 500 });
+    return serverError(`Failed to read crontab: ${toError(e).message}`);
   }
 }
 
@@ -333,7 +333,7 @@ export async function POST(request: NextRequest) {
     // single blocking call with no async I/O available for crontab writes).
     const result = writeCrontab(newLines.filter((l) => l.trim() || l === "").join("\n"));
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: 500 });
+      return serverError(result.error ?? "unknown error");
     }
 
     return NextResponse.json({
@@ -341,7 +341,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (e: unknown) {
     logApiError("POST /api/cron/hardware", "create hardware cron", e);
-    return NextResponse.json({ error: `Failed to create hardware cron job: ${toError(e).message}` }, { status: 500 });
+    return serverError(`Failed to create hardware cron job: ${toError(e).message}`);
   }
 }
 
@@ -407,7 +407,7 @@ export async function PUT(request: NextRequest) {
     }
 
     if (!found) {
-      return NextResponse.json({ error: `Hardware cron job '${id}' not found` }, { status: 404 });
+      return notFound(`Hardware cron job '${id}' not found`);
     }
 
     const badCmd = rejectIfBadScriptsCommand(command);
@@ -422,7 +422,7 @@ export async function PUT(request: NextRequest) {
 
     const result = writeCrontab(newLines.filter((l) => l.trim() || l === "").join("\n"));
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: 500 });
+      return serverError(result.error ?? "unknown error");
     }
 
     // Sync disabled state to JSON for this job
@@ -434,7 +434,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ data: { id, schedule, command, name, logFile, enabled } });
   } catch (e: unknown) {
     logApiError("PUT /api/cron/hardware", "update hardware cron", e);
-    return NextResponse.json({ error: `Failed to update hardware cron job: ${toError(e).message}` }, { status: 500 });
+    return serverError(`Failed to update hardware cron job: ${toError(e).message}`);
   }
 }
 
@@ -475,12 +475,12 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (!found) {
-      return NextResponse.json({ error: `Hardware cron job '${id}' not found` }, { status: 404 });
+      return notFound(`Hardware cron job '${id}' not found`);
     }
 
     const result = writeCrontab(newLines.filter((l) => l.trim() || l === "").join("\n"));
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: 500 });
+      return serverError(result.error ?? "unknown error");
     }
 
     // Remove from disabled set if present
@@ -491,6 +491,6 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ data: { id } });
   } catch (e: unknown) {
     logApiError("DELETE /api/cron/hardware", "delete hardware cron", e);
-    return NextResponse.json({ error: `Failed to delete hardware cron job: ${toError(e).message}` }, { status: 500 });
+    return serverError(`Failed to delete hardware cron job: ${toError(e).message}`);
   }
 }
