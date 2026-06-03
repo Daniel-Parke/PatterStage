@@ -34,6 +34,7 @@ import { buildMissionFieldPatch } from "@/lib/mission-field-updates";
 import { promoteMission } from "@/lib/mission-promote-handler";
 import { runMissionQueueTick } from "@/lib/mission-queue-tick";
 import { ensureSyncLayer } from "@/lib/sync";
+import { cronSyncFailureResponse, cronSyncFailureBody } from "@/lib/cron-sync-failure";
 
 // ── Helpers ───────────────────────────────────────────────────────
 
@@ -67,6 +68,27 @@ function getMissionOrNotFound(id: string): NonNullable<ReturnType<typeof getMiss
     return notFound("Mission not found");
   }
   return mission;
+}
+
+/**
+ * Look up a mission by id from a request body, returning either the
+ * `Mission` record or a `NextResponse` (400 if id missing, 404 if not
+ * found). Callers do:
+ *
+ *   const mission = requireMissionOrNotFound(body);
+ *   if (mission instanceof NextResponse) return mission;
+ *
+ * This is the two-line pattern (`requireMissionId` + `getMissionOrNotFound`)
+ * that appeared in 3 POST sites (update, cancel, delete). Both helpers
+ * already exist; this is just the composable 2-step form that lets
+ * callers stay one line. See session-69 for the audit.
+ */
+function requireMissionOrNotFound(
+  body: Record<string, unknown>,
+): NonNullable<ReturnType<typeof getMission>> | NextResponse {
+  const id = requireMissionId(body);
+  if (id instanceof NextResponse) return id;
+  return getMissionOrNotFound(id);
 }
 
 function parseCategoryId(
@@ -299,17 +321,19 @@ export async function POST(request: NextRequest) {
           // Push to Hermes so the scheduler picks it up
           const pushResult = await pushJobToHermes(cronJob.id);
           if (!pushResult.ok) {
-            logApiError("POST /api/missions", "pushJobToHermes", pushResult.error);
             deleteCronJob(cronJob.id);
             updateMission(mission.id, { cronJobId: null, status: "failed" });
             appendAuditLine({ action: "mission.cron_dispatch", resource: mission.id, ok: false });
+            // Log via the same helper that returns the 502 (same console
+            // shape as the cron/route.ts sites) — but we need to splice
+            // the mission data into the body before returning.
+            cronSyncFailureResponse("POST /api/missions", pushResult);
             return NextResponse.json(
               {
-                error: "Failed to sync cron job to Hermes",
-                cronPushError: pushResult.error ?? "unknown",
+                ...cronSyncFailureBody(pushResult),
                 data: { mission: enrichMissionCron(getMission(mission.id)!) },
               },
-              { status: 502 }
+              { status: 502 },
             );
           }
 
@@ -426,11 +450,9 @@ export async function POST(request: NextRequest) {
       };
       const f = parseMissionBodyFields(rest);
       const { name, instruction, localDirs, references, skills, suggestedToolsets, goals, modelId, provider, profileName, missionTimeMinutes, timeoutMinutes, schedule, context, categoryId: categoryIdRaw, outputFormat, constraints } = f;
-      const missionIdFinal = requireMissionId(body as Record<string, unknown>);
-      if (missionIdFinal instanceof NextResponse) return missionIdFinal;
-
-      const existing = getMissionOrNotFound(missionIdFinal);
+      const existing = requireMissionOrNotFound(body as Record<string, unknown>);
       if (existing instanceof NextResponse) return existing;
+      const missionIdFinal = existing.id;
 
       const categoryParsed = parseCategoryId(categoryIdRaw);
       if (!categoryParsed.ok) {
@@ -500,12 +522,10 @@ export async function POST(request: NextRequest) {
     // The unified V1 status enum has no `cancelled` state — cancellations
     // are recorded as `failed` with an explicit "Cancelled by user" result.
     if (action === "cancel") {
-      const cancelId = requireMissionId(body as Record<string, unknown>);
-      if (cancelId instanceof NextResponse) return cancelId;
-
-      const existingMission = getMissionOrNotFound(cancelId);
+      const existingMission = requireMissionOrNotFound(body as Record<string, unknown>);
       if (existingMission instanceof NextResponse) return existingMission;
 
+      const cancelId = existingMission.id;
       const mission = updateMission(cancelId, {
         status: "failed",
         result: "Cancelled by user",
@@ -549,12 +569,10 @@ export async function POST(request: NextRequest) {
 
     // ── Delete Mission ─────────────────────────────────────────
     if (action === "delete") {
-      const missionIdFinal = requireMissionId(body as Record<string, unknown>);
-      if (missionIdFinal instanceof NextResponse) return missionIdFinal;
-
-      const existing = getMissionOrNotFound(missionIdFinal);
+      const existing = requireMissionOrNotFound(body as Record<string, unknown>);
       if (existing instanceof NextResponse) return existing;
 
+      const missionIdFinal = existing.id;
       await deleteMissionCron(missionIdFinal);
 
       const ok = deleteMission(missionIdFinal);

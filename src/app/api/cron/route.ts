@@ -21,6 +21,7 @@ import { badRequest, notFound, serverError } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { parseSchedule } from "@/lib/utils";
 import { buildCronUpdatePayload } from "@/lib/cron-field-updates";
+import { cronSyncFailureResponse } from "@/lib/cron-sync-failure";
 
 import {
   listCronJobs,
@@ -38,17 +39,6 @@ import {
 } from "@/lib/cron-repository";
 
 import { getDefaultModel } from "@/lib/models-repository";
-
-function cronSyncFailureResponse(
-  route: string,
-  pushResult: { ok: boolean; error?: string },
-): NextResponse {
-  logApiError(route, "pushJobToHermes", new Error(pushResult.error ?? "unknown"));
-  return NextResponse.json(
-    { error: "Failed to sync cron job to Hermes", cronPushError: pushResult.error ?? "unknown" },
-    { status: 502 },
-  );
-}
 
 /**
  * Parse a schedule string and return either the parsed schedule (when valid)

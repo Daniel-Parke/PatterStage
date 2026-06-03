@@ -14,6 +14,7 @@ import { syncMissionToCronJob, enrichMissionCron } from "@/lib/mission-cron-sync
 import { agentBackend } from "@/lib/backends";
 import { logApiError } from "@/lib/api-logger";
 import { isMissionDraft, isMissionQueuedForRun } from "@/lib/mission-board";
+import { cronSyncFailureResponse, cronSyncFailureBody } from "@/lib/cron-sync-failure";
 import type { Mission } from "@/lib/agent-backend/types";
 
 export interface PromoteMissionInput {
@@ -169,11 +170,16 @@ export async function promoteMission(
         if (!pushResult.ok) {
           deleteCronJob(cronJob.id);
           updateMission(input.missionId, { cronJobId: null, status: "failed" });
+          // Log via the same helper used by cron/route.ts and the missions
+          // POST site so the console output (and body shape) is identical.
+          // The body fields below are the same strings the helper builds;
+          // we destructure it via `cronSyncFailureBody` so a future change
+          // to the wire contract lands in one place.
+          cronSyncFailureResponse("promoteMission", pushResult);
           return {
             ok: false,
             status: 502,
-            error: "Failed to sync cron job to Hermes",
-            cronPushError: pushResult.error ?? "unknown",
+            ...cronSyncFailureBody(pushResult),
             mission: enrichMissionCron(getMission(input.missionId)!),
           };
         }
