@@ -17,7 +17,7 @@ import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
 import { type TaskType } from "@/lib/hermes-providers";
 import type { FallbackChainEntry, FallbackConfig } from "@/types/hermes";
 import type { SyncActionResult } from "@/lib/sync-manager";
-import { emptyModelDefaults } from "@/lib/utils";
+import { emptyModelDefaults, pluralise } from "@/lib/utils";
 
 import type { ApiCredential, ApiModel, SyncDrift } from "@/components/models/types";
 
@@ -263,7 +263,7 @@ export function useModelsPage() {
         const failures = results.filter((r) => !r.ok);
         if (failures.length === 0) {
           showToast(
-            `Set ${taskTypes.length} auxiliary default${taskTypes.length !== 1 ? "s" : ""}`,
+            `Set ${taskTypes.length} auxiliary default${pluralise(taskTypes.length)}`,
             "success"
           );
         } else {

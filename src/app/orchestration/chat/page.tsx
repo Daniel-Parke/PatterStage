@@ -20,6 +20,7 @@ import { InlineSelect } from "@/components/ui/Select";
 import { useToast } from "@/components/ui/Toast";
 import { CHAT_DEFAULT_MODEL, CHAT_MAX_SESSIONS } from "@/types/chat";
 import type { ChatMessage, ChatSession } from "@/types/chat";
+import { pluralise } from "@/lib/utils";
 import {
   loadSessions,
   saveSessions,
@@ -418,7 +419,7 @@ export default function ChatPage() {
                       {s.title}
                     </div>
                     <div className="text-[10px] text-white/30 mt-0.5 font-mono">
-                      {s.messages.length} message{s.messages.length !== 1 ? "s" : ""}
+                      {s.messages.length} message{pluralise(s.messages.length)}
                     </div>
                   </div>
                   {/* Hover actions: download + delete */}

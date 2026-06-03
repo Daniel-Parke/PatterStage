@@ -8,6 +8,7 @@
 import { useState, useCallback } from "react";
 import { ArrowDownToLine, ArrowUpToLine, X, Loader2 } from "lucide-react";
 import type { SyncActionResult } from "@/lib/sync-manager";
+import { pluralise } from "@/lib/utils";
 
 interface DiffEntry {
   id: string;
@@ -151,7 +152,7 @@ function SyncModal({
             {confirming
               ? "Syncing…"
               : visibleChanges.length === diffs.length
-                ? `Confirm (${diffs.length} change${diffs.length !== 1 ? "s" : ""})`
+                ? `Confirm (${diffs.length} change${pluralise(diffs.length)})`
                 : `Confirm ${visibleChanges.length}/${diffs.length}`}
           </button>
         </div>

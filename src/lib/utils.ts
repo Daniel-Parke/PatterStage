@@ -124,6 +124,34 @@ export function truncate(str: string, maxLen: number): string {
 }
 
 /**
+ * English noun pluralisation: appends `"s"` when `count !== 1`.
+ *
+ * This is the *suffix*-only variant — the canonical English rule for
+ * "1 message / 2 messages" and the rule used at 6 sites across the
+ * codebase (chat page session count, SkillSelector, MentalModelsTab,
+ * DirectivesTab, ModelSyncButtons, useModelsPage). Returns `""` for
+ * `count === 1` and `"s"` otherwise. Callers compose it into JSX as
+ * `{count} thing{pluralise(count)}` or into template strings as
+ * `` `${count} thing${pluralise(count)}` ``.
+ *
+ * The helper is intentionally minimal (no irregulars, no `y → ies`):
+ * all 6 call sites use the simple `s`-suffix rule, and any future
+ * irregular-plural site should adopt a domain-specific helper rather
+ * than overloading this one. If a "child/children" or "person/people"
+ * call site appears, promote that to a separate `pluraliseIrregular`
+ * or to a per-domain helper at the call site.
+ *
+ * Byte-equivalent to the inline `${n} foo${n !== 1 ? "s" : ""}` form
+ * for all 6 current call sites — see
+ * `tests/unit/pluralise-helper.test.ts` for the truth-table coverage
+ * and `tests/unit/pluralise-source-patterns.test.ts` for the
+ * adoption locks.
+ */
+export function pluralise(count: number): "" | "s" {
+  return count !== 1 ? "s" : "";
+}
+
+/**
  * Debounce a function call
  */
 export function debounce<T extends (...args: unknown[]) => void>(
