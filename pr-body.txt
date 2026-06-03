@@ -1,6 +1,6 @@
 ## Summary
 
-Session-72 of the recurring `mission/hermes-review-and-refactor` sweep. List 4 (Models, HERMES.md, Environment, All Settings) picked at random. Three small-bore refactors: (1) 10 missed List 4 inline 400/500 sites in `agent/profiles/sync/*` + `agent/personality/route.ts` migrated to `badRequest()` + `serverError()` factories (5× 400 + 5× 500 across 5 files — the `agent/profiles/sync/*` sub-folder and the `agent/personality` route were missed in every prior sweep because they weren't covered by the broad `src/app/api/agent/` greps), (2) the 2 inline `NextResponse.json` calls inside `toPatchResponse()` in `src/lib/apply-profile-or-root-patch.ts` migrated to `notFound()` + `serverError()` (the lib helper that 5 routes depend on was carrying over the pre-factory inline form from when it was extracted in session 62, AFTER the session-60 factory migration), and (3) the inline 400 in `src/lib/parse-json-body.ts` migrated to `badRequest()` (the route-level session-59 sweep missed the lib helper that PRODUCES 400s). **All 1138 tests pass (185 suites, +0).** Prior sessions (28-71) are listed below — see "Session 72" for the new work.
+Session-75 of the recurring `mission/hermes-review-and-refactor` sweep. List 2 (Cron, Missions, Chat) picked at random. Two small-bore refactors on the mission-dispatch toast surface: (1) extracted `successMessageForDispatch(mode, schedule?)` helper to centralise the 4-branch mode→success-toast-string resolver that was duplicated inline in TWO branches of `useMissionsPage.ts` (the 'edit existing mission' and 'create new mission' branches — each had a 4-branch `if/else if/else if/else` ladder with the same 4 strings), and (2) extended `toastFromResult()` (added in session 63) to accept a thunk (`string | (() => string)`) for the success message, so callers with mode-dependent success messages pass a function that is called only on the success path (the message-construction cost is paid once, not always). **All 1161 tests pass (187 suites, +9 new from 7 success-message-for-dispatch tests + 2 toast-from-result thunk tests).** Prior sessions (28-74) are listed below — see "Session 75" for the new work.
 
 ### What changed (this session)
 
@@ -1021,3 +1021,91 @@ The canonical JSON body parser used by 30+ routes had an inline 400 catch block.
 8. **Extract `__FAKE_HERMES_ROOT__` mock pattern to `tests/helpers/hermes-paths-mock.ts`** when the 5th test file adopts it.
 9. **Promote `?? "unknown error"` to a `safeErrorMessage(result)` helper** when a 4th site appears.
 10. **Promote `toError(e).message` to a sibling helper** when a 3rd consumer appears.
+
+## Session 75 — List 2 (Cron, Missions, Chat) — toastFromResult thunk-form + successMessageForDispatch helper
+
+### Refactor 1 — New helper: `successMessageForDispatch(mode, schedule?)`
+
+The 4-branch mode→success-toast-string resolver was duplicated inline in TWO places in `src/hooks/useMissionsPage.ts`:
+
+```ts
+// 'create' branch (lines ~654) — inline 4-branch resolver:
+if (newDispatch === "save") showToast("Mission saved as draft", "success");
+else if (newDispatch === "queue") showToast("Mission saved to queue", "success");
+else if (newDispatch === "now") showToast("Mission dispatched", "success");
+else showToast(`Mission scheduled: ${newSchedule}`, "success");
+
+// 'edit' branch (lines ~591) — same 4-branch resolver, same 4 strings:
+if (newDispatch === "save") showToast("Mission saved as draft", "success");
+else if (newDispatch === "queue") showToast("Mission saved to queue", "success");
+else if (newDispatch === "now") showToast("Mission dispatched", "success");
+else showToast(`Mission scheduled: ${newSchedule}`, "success");
+```
+
+Extracted to `src/hooks/success-message-for-dispatch.ts` (page-local helper, not promoted to `src/lib/` because there is currently only 1 consumer). The 4 strings + the cron schedule interpolation are byte-equivalent to the inline form. **7 new unit tests** in `tests/unit/success-message-for-dispatch.test.ts` lock all 4 mode branches + 3 schedule edge cases (complex expression `*/5 * * * *`, empty string, undefined → `undefined` literal, all matching pre-refactor template-literal behaviour exactly).
+
+### Refactor 2 — Extend `toastFromResult()` to accept a thunk
+
+The `toastFromResult()` helper added in session 63 took a static `successMsg: string`. After the session-75 refactor, the signature is `successMsg: string | (() => string)`. The thunk form is for handlers with mode-dependent success messages (e.g. dispatch mode → different toast per mode) where the message-construction cost is paid only on the success path. Static-string call sites (`page.tsx` `handleCancelMission` + `handleCronScheduleChange`, `useMissionsPage` template-save branch) keep their existing API — the union type is widening, not breaking.
+
+**2 new unit tests** in `tests/unit/toast-from-result.test.ts`:
+- (a) Thunk is called on the success path (latch the call count + the return value)
+- (b) Thunk is NOT called on the failure path (lock the lazy-eval contract — the message-construction cost is paid zero times, not once)
+
+JSDoc updated with the new contract: "The `successMsg` can be a static string (the common case) or a function returning a string. The function form is for handlers where the success message depends on a mode/state that the caller has already computed."
+
+### Call-site migrations (3 sites in `useMissionsPage.ts` + 2 sites in `page.tsx`)
+
+The 4-branch dispatch resolver in the 'create' and 'edit' branches of `useMissionsPage.ts` collapses to:
+```ts
+toastFromResult(
+  showToast,
+  { ok, error },
+  () => successMessageForDispatch(newDispatch, newSchedule),
+  "Failed to create/update mission",
+);
+```
+
+Two more sites in `src/app/page.tsx` (`handleCancelMission`, `handleCronScheduleChange`) migrate the old 4-line `if (!ok) showToast(error||fallback, "error"); else showToast(success, "success")` pattern to a single `toastFromResult()` call. The template-save branch in `useMissionsPage` also migrates; the `wasUpdate` derivation moves above the toast call so it's available for both branches.
+
+### What was rejected
+
+- **Promote `successMessageForDispatch` to `src/lib/`** — currently only 1 consumer (useMissionsPage). Per the "promote on 2nd consumer" pattern from session-51, the helper stays in `src/hooks/` until a 2nd caller appears.
+- **Generalise `toastFromResult` thunk to accept the result too** (`(result) => string`) — 1 site would benefit, no others. Over-engineering.
+- **Replace `successMessageForDispatch` with a lookup table** (`{ save: "Mission saved as draft", ... }`) — same LOC, no readability win, and the cron branch still needs the `schedule` interpolation, so the function form is more honest about the asymmetry.
+
+### Files
+
+- `src/hooks/success-message-for-dispatch.ts` (NEW) — 48-line helper
+- `src/hooks/useMissionsPage.ts` (MODIFIED) — 2 × 4-branch inline resolvers → 2 × `toastFromResult(..., () => successMessageForDispatch(...))` + 1 template-save branch migrated
+- `src/lib/toast-from-result.ts` (MODIFIED) — `successMsg: string` → `successMsg: string | (() => string)`; JSDoc updated
+- `src/app/page.tsx` (MODIFIED) — `handleCancelMission` + `handleCronScheduleChange` migrated to `toastFromResult`
+- `tests/unit/success-message-for-dispatch.test.ts` (NEW) — 7 tests
+- `tests/unit/toast-from-result.test.ts` (MODIFIED) — +2 tests (thunk on success, thunk NOT on failure)
+
+### Verification
+
+- **All 1161 unit tests pass** (187 suites, +9 new from 7 + 2 above)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean
+- 0 user-visible behaviour changes (byte-equivalence audit on the 4 strings + the schedule interpolation, plus the 2 page.tsx toast sites)
+
+### Patterns to take forward
+
+1. **"Thunk-form for conditional-success messages" pattern** — when a `toastFromResult`/`safeApiCall` style helper takes a success message that's conditional, accept a thunk and call it lazily on the success path. The wire output is identical; the message-construction cost is paid only when it matters. This is the same pattern that `safeJsonParse` uses for fallible parsing — pay the cost only on the rare path.
+2. **"4-branch ladder duplicated in 2 branches" pattern** — when the same 4-branch resolver appears in two branches of the same hook (e.g. 'create' and 'edit' both have a 4-mode dispatch), extract to a helper even if the helper is only used twice. The duplication is across the two branches; the helper consolidates the strings and any future "renamed string" or "new mode" change lands in one place.
+3. **"Page-local helper in `src/hooks/`" pattern** — `successMessageForDispatch` lives in `src/hooks/` not `src/lib/` because the only consumer is the same hook's caller. Promote to `src/lib/` when a 2nd consumer appears. This matches the session-44 "promote on 2nd consumer" rule.
+
+### "Next session should:\" block (carried forward)
+
+1. **Pick a different list next session** to spread the refactor surface. List 1 has been hit 8+ times. List 2 has been hit 11+ times now (sessions 63, 68, 69, 75 + others). List 3 has been hit 5 times. List 4 has been hit 5 times (sessions 59, 60, 67 carry-over, 70, 72). **List 1 or List 3 are the next-ripe surfaces** — both have the most accumulated duplication.
+2. **`runMutation` adoption in other lists** — List 3 (models/agents/skills/tools) is still the next-ripe surface. The helper is in `src/lib/` and stable.
+3. **`useMissionsPage` decomposition** is still a backlog item. The hook is 1155+ LOC even after the session-75 dispatch-resolver extraction.
+4. **`isChReadOnly()` consolidation** — 7 BARE sites across Lists 1 + 2. Future session picking any list can pick off 1-2 BARE sites, or leave the 7-site divergence as a documented outlier per the session-51 over-engineering rule.
+5. **Promote `methodNotAllowed()` factory** when a 2nd 405 site appears. Currently 1 site (agent/profiles/[id]/toolsets/route.ts:94).
+6. **Promote `unauthorized()` factory** when a 4th 401 site appears (api-auth.ts has 3).
+7. **Migrate `readFallbackAgentSettingsFromConfig()` to use `readHermesYamlConfig()`** — needs a custom-path overload.
+8. **Extract `__FAKE_HERMES_ROOT__` mock pattern to `tests/helpers/hermes-paths-mock.ts`** when the 5th test file adopts it.
+9. **Promote `?? "unknown error"` to a `safeErrorMessage(result)` helper** when a 4th site appears.
+10. **Promote `toError(e).message` to a sibling helper** when a 3rd consumer appears.
+11. **Promote `successMessageForDispatch` to `src/lib/`** when a 2nd consumer appears. Currently 1 consumer (useMissionsPage).
