@@ -1014,14 +1014,33 @@ export function useMissionsPage() {
     [missions, filter, search, missionCategoryFilter],
   );
 
+  // Single .reduce() pass over `missions` instead of 5 separate
+  // .filter().length passes. The 5 buckets match the original
+  // `missions.filter(predicate).length` shape VERBATIM — including the
+  // non-mutually-exclusive nature of (a) `active` vs (b) `queued`.
+  // Per the source in src/lib/mission-board.ts:
+  //   isMissionActive       = status==="dispatched" || queuedForRun===true
+  //   isMissionQueuedForRun = status==="queued" && queuedForRun===true
+  // So a `status:"queued" && queuedForRun:true` mission increments BOTH
+  // `active` AND `queued` — the same as the original 5 independent
+  // .filter().length passes. We can't use `else if` to make them
+  // mutually exclusive without changing observable counts. Independent
+  // `if` branches are required to preserve the original semantics. The
+  // named keys + per-branch increment match the previous shape
+  // verbatim, so consumers (MissionsList) see no change in totals.
   const missionCounts = useMemo(
-    () => ({
-      active: missions.filter((m) => isMissionActive(m)).length,
-      completed: missions.filter((m) => m.status === "successful").length,
-      failed: missions.filter((m) => m.status === "failed").length,
-      drafts: missions.filter((m) => isMissionDraft(m)).length,
-      queued: missions.filter((m) => isMissionQueuedForRun(m)).length,
-    }),
+    () =>
+      missions.reduce(
+        (acc, m) => {
+          if (isMissionActive(m)) acc.active += 1;
+          if (m.status === "successful") acc.completed += 1;
+          if (m.status === "failed") acc.failed += 1;
+          if (isMissionDraft(m)) acc.drafts += 1;
+          if (isMissionQueuedForRun(m)) acc.queued += 1;
+          return acc;
+        },
+        { active: 0, completed: 0, failed: 0, drafts: 0, queued: 0 },
+      ),
     [missions],
   );
 

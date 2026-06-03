@@ -54,22 +54,30 @@ export function useSystemCronJobs() {
 
   const handleSave = useCallback(
     async (job: Partial<SystemCronJob>) => {
+      // The PUT-vs-POST branch only differs in (a) HTTP method, (b) success
+      // toast text, and (c) fallback error text. Collapsing it into a single
+      // safeApiCall + toast trio keeps the two branches in lockstep if a
+      // future "also clear form" or "also sync" extension lands. The
+      // `id`-derived discriminator is exactly the same branch the inline
+      // form used (job.id is truthy → PUT/update, falsy → POST/create), so
+      // the behaviour is byte-equivalent: same endpoint, same method, same
+      // body, same success toasts in each branch, same fallback text in
+      // each branch, same loadJobs() refetch on success, same toastError
+      // catch-block toast.
+      const isUpdate = !!job.id;
+      const successMsg = isUpdate
+        ? "System cron job updated"
+        : "System cron job created";
+      const fallback = isUpdate
+        ? "Failed to update system cron job"
+        : "Failed to create system cron job";
       try {
-        if (job.id) {
-          const result = await safeApiCall(HARDWARE_ENDPOINT, {
-            method: "PUT",
-            body: job,
-          });
-          if (!result.ok) throw new Error(result.error || "Failed to update system cron job");
-          showToast("System cron job updated");
-        } else {
-          const result = await safeApiCall(HARDWARE_ENDPOINT, {
-            method: "POST",
-            body: job,
-          });
-          if (!result.ok) throw new Error(result.error || "Failed to create system cron job");
-          showToast("System cron job created");
-        }
+        const result = await safeApiCall(HARDWARE_ENDPOINT, {
+          method: isUpdate ? "PUT" : "POST",
+          body: job,
+        });
+        if (!result.ok) throw new Error(result.error || fallback);
+        showToast(successMsg);
         loadJobs();
       } catch (e) {
         toastError(showToast, e, "Failed to save system cron job");

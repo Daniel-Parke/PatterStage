@@ -102,6 +102,29 @@ export default function MissionsPage() {
   // reference.
   const handleCloseCreate = vm.closeComposer;
 
+  // Three sibling modal close callbacks — each is a single-setter
+  // `() => setShow…(false)` that appears exactly once at the
+  // modal's `onClose` prop. Inlining them is fine, but naming
+  // them keeps the JSX readable and groups the 3 dismissals next
+  // to each other so a future "also reset X state on close"
+  // extension lands in one place. The functions are byte-equivalent
+  // to the inline form: each just calls its setter with `false`.
+  const closeCategoryManager = () => setShowCategoryManager(false);
+  const closeTemplateManager = () => setShowTemplateManager(false);
+  // The Template Editor has TWO close paths: `onClose` (X / overlay) which
+  // is a single-setter SOFT close, and `onCancel` (the Cancel button) which
+  // is a 2-setter HARD close that also clears `editingTemplateId`. This
+  // mirrors the HARD/SOFT discriminator pattern that the agents and
+  // missions modals use — see session-100-list2-cron-modal-setter-pair.md.
+  // They are NOT duplicates; they are a deliberate UX discriminator, and
+  // a future "migrate to a single setter" PR will break the cancel-then-
+  // reopen flow. Keep them as 2 separate callbacks.
+  const closeTemplateEditor = () => setShowTemplateEditor(false);
+  const cancelTemplateEditor = () => {
+    setShowTemplateEditor(false);
+    setEditingTemplateId(null);
+  };
+
   if (loading) {
     return (
       <AppPageShell variant="scanlines">
@@ -200,7 +223,7 @@ export default function MissionsPage() {
 
       <CategoryManagerModal
         open={showCategoryManager}
-        onClose={() => setShowCategoryManager(false)}
+        onClose={closeCategoryManager}
         categories={categories}
         categoriesLoadError={categoriesLoadError}
         onRefresh={() => void loadCategories()}
@@ -211,7 +234,7 @@ export default function MissionsPage() {
 
       <TemplateManagerModal
         open={showTemplateManager}
-        onClose={() => setShowTemplateManager(false)}
+        onClose={closeTemplateManager}
         templates={templates}
         categories={categories}
         categoryFilter={categoryFilter}
@@ -222,11 +245,8 @@ export default function MissionsPage() {
 
       <TemplateEditorModal
         open={showTemplateEditor}
-        onClose={() => setShowTemplateEditor(false)}
-        onCancel={() => {
-          setShowTemplateEditor(false);
-          setEditingTemplateId(null);
-        }}
+        onClose={closeTemplateEditor}
+        onCancel={cancelTemplateEditor}
         editingTemplateId={editingTemplateId}
         templateName={templateName}
         onTemplateNameChange={setTemplateName}

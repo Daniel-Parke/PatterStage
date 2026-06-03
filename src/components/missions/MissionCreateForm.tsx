@@ -253,6 +253,22 @@ export default function MissionCreateForm({
   const editingCtx = resolveEditContext(editingId, missions);
   const { isReDispatch, isRunningEdit, isDraftEdit, isQueuedEdit } = editingCtx;
 
+  // Helper: append the current `referenceInput` (trimmed) to
+  // `newReferences`, then clear the input. The 3-line sequence appears
+  // twice below — once in the input's onKeyDown (Enter-to-add) and once
+  // in the "+ Add" button's onClick. Both call sites are guarded by
+  // `referenceInput.trim()` (the onKeyDown in the predicate, the onClick
+  // in an `if`); the helper does the trim and the early-return so each
+  // callsite can stay a one-liner. The two callsites are now identical
+  // and easy to keep in lockstep if a future "dedup by path" or "cap
+  // at N references" extension lands.
+  const addReferenceFromInput = () => {
+    const trimmed = formState.referenceInput.trim();
+    if (!trimmed) return;
+    setFormField("newReferences", [...formState.newReferences, trimmed]);
+    setFormField("referenceInput", "");
+  };
+
   const inner = (
     <div className="space-y-4">
       {editingId && isReDispatch && (
@@ -438,13 +454,9 @@ export default function MissionCreateForm({
                   setFormField("referenceInput", e.target.value)
                 }
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && formState.referenceInput.trim()) {
+                  if (e.key === "Enter") {
                     e.preventDefault();
-                    setFormField("newReferences", [
-                      ...formState.newReferences,
-                      formState.referenceInput.trim(),
-                    ]);
-                    setFormField("referenceInput", "");
+                    addReferenceFromInput();
                   }
                 }}
                 placeholder="URL, doc path..."
@@ -452,15 +464,7 @@ export default function MissionCreateForm({
               />
               <button
                 type="button"
-                onClick={() => {
-                  if (formState.referenceInput.trim()) {
-                    setFormField("newReferences", [
-                      ...formState.newReferences,
-                      formState.referenceInput.trim(),
-                    ]);
-                    setFormField("referenceInput", "");
-                  }
-                }}
+                onClick={addReferenceFromInput}
                 className="h-9 px-3 rounded-lg bg-neon-pink/10 border border-neon-pink/30 text-xs text-neon-pink font-mono shrink-0"
               >
                 + Add
