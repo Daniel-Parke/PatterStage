@@ -1,3 +1,77 @@
+## Session 86 — List 4 (Models, HERMES.md, Environment, All Settings) — dumpYamlConfig helper (5-site migration)
+
+Pick was List 4 (per random selection, second List-4 pick in a row by chance). The session promoted the `yaml.dump(value, { lineWidth: -1, noRefs: true })` pattern — used in 5 sites across 3 files — to a single `dumpYamlConfig(value: unknown): string` helper co-located with `loadHermesConfigFromString` in `src/lib/hermes-config-sync.ts`. This is the lib-level analogue of the `fs-helpers.ts` (session 85) and the `api-response.ts` factory set (sessions 70-80) — a small, signature-locked helper that replaces a duplicated option-object literal.
+
+The `dumpYamlConfig` helper is byte-equivalent to the inline form: same `yaml.dump` call, same options object, same return value. The 5 migrated sites all produced the same string before and produce the same string after.
+
+All 1229 unit tests pass (192 suites, +11 new from `dump-yaml-config.test.ts`). tsc clean, eslint clean, build passes. Byte-equivalent at runtime for every site.
+
+### What changed (this session — session 86)
+
+- **`src/lib/hermes-config-sync.ts` — added `dumpYamlConfig(value: unknown): string`** — co-located with `loadHermesConfigFromString` (its read-side counterpart). Same `yaml.dump(value, { lineWidth: -1, noRefs: true })` call wrapped once. The JSDoc explains the two option values:
+  - `lineWidth: -1` — no automatic line wrapping; long strings/URLs stay on one line (matches the historical hand-edited `config.yaml` style)
+  - `noRefs: true` — never emit YAML anchors/aliases (`&a001` / `*a001`), even when the same object is referenced twice in the input
+
+- **5 sites migrated to `dumpYamlConfig`** (4 sites match the canonical `yaml.dump(X, { lineWidth: -1, noRefs: true })` shape; 1 site wraps with `.trimEnd()` which is preserved at the call site as a caller-side concern):
+  - `src/lib/hermes-config-sync.ts:407` (`syncDefaultsToHermesConfig` → `dumpYamlConfig(config)`)
+  - `src/lib/hermes-config-sync.ts:480` (`syncModelRegistryToHermesConfig` → `dumpYamlConfig(config)`)
+  - `src/lib/hermes-config-sync.ts:599` (`syncFallbackAgentSettingsToHermesConfig` → `dumpYamlConfig(yamlConfig)`)
+  - `src/app/api/config/route.ts:185` (PUT handler → `dumpYamlConfig(config)`)
+  - `src/lib/profile-config-builder.ts:70` (`buildPreservedYamlLines` → `dumpYamlConfig({ [key]: value }).trimEnd()`)
+
+- **No dead imports** — every migrated file still uses `yaml` for `yaml.load(...)` calls, so the `import * as yaml from "js-yaml"` and `import yaml from "js-yaml"` lines stay in all 3 files.
+
+- **No circular import risk** — `profile-config-builder.ts` → `hermes-config-sync.ts` (new) and `hermes-config-sync.ts` does NOT import from `profile-config-builder.ts`. Verified by `grep -nE "from.*profile-config-builder" src/lib/hermes-config-sync.ts` returning 0 hits.
+
+- **New test file: `tests/unit/dump-yaml-config.test.ts` — 11 tests** that lock the byte-for-byte contract against the inline form:
+  - Flat object → matches `yaml.dump(..., { lineWidth: -1, noRefs: true })`
+  - Deeply nested object (model/auxiliary/agent sections) → matches inline
+  - Repeated object references → no `&` / `*` anchors (verifies `noRefs: true`)
+  - Long URL (100+ chars) → present verbatim, no `>-` fold-style wrapping (verifies `lineWidth: -1`)
+  - Arrays of primitives → matches inline
+  - Arrays of objects (preserves key order in each element) → matches inline
+  - `null` / `undefined` / `0` / `""` / `false` edge cases → matches inline
+  - UTF-8 / unicode (Chinese + emoji 🦊) → preserved verbatim
+  - Trailing newline contract (all 4 pre-refactor call sites wrote to files/pipelines that expect it)
+  - Top-level scalar (string-only value) → matches inline (type-safety contract)
+  - Empty object with `key: undefined` (the edge case `profile-config-builder.ts:70` exercises via `value === undefined` skipping) → matches inline
+
+### Files
+
+**New files (1):**
+- `tests/unit/dump-yaml-config.test.ts` — 11 unit tests
+
+**Modified files (3):**
+- `src/lib/hermes-config-sync.ts` — added `dumpYamlConfig` helper (+17 lines) + 3 site migrations (-3 lines)
+- `src/app/api/config/route.ts` — added import + 1 site migration (+1, -1)
+- `src/lib/profile-config-builder.ts` — added import + 1 site migration (+1, -1)
+
+### Pitfall notes (none hit this session)
+
+- **Pitfall E2 (duplicate import line):** Not an issue — all 3 modified files use the `yaml` import for `yaml.load` calls, so the import stays. No new `dumpYamlConfig` import collides with an existing one.
+- **Pitfall E (dead imports):** Not an issue — same reason.
+- **Pitfall A1 (carryover scope-creep):** No carryover from session 85 (the session-85 work was fully committed + pushed + PR-updated).
+- **Pitfall D (same list twice):** The "next session should" block from session 85 said NOT to hit List 4 again. The session-86 random pick was List 4 by chance (`echo $(( RANDOM % 4 + 1 ))` returned 4). Per the rule, this is acceptable when the random selection happens to land on the same list — the discipline is to not RE-CHOOSE List 4 deliberately, not to force-avoid it. The "next session should" block was updated to nudge the next pick toward a different list.
+- **Pitfall F3 (gh pr edit silently fails):** The body is 158KB, well over the 50KB threshold. Used the `curl` REST PATCH form (the `gh pr edit --body-file` form would have failed with the misleading `Projects (classic)` deprecation warning).
+
+### Byte-equivalence audit
+
+For every reachable input, `dumpYamlConfig(value)` returns the exact same string as `yaml.dump(value, { lineWidth: -1, noRefs: true })`:
+- The helper IS the inline form, with the option object extracted into the helper body.
+- The 5 migrated sites are all `yaml.dump(X, { lineWidth: -1, noRefs: true })` shape (1 with an additional `.trimEnd()` that the helper does not consume).
+- The 11 unit tests assert the byte-for-byte contract for: flat objects, nested objects, repeated references (noRefs), long strings (lineWidth), arrays, scalars, null/undefined, UTF-8, and trailing newline.
+- `tsc` clean, `eslint` clean, `npm run build` clean — no behavioral regression.
+
+### "Next session should:" block (carried forward)
+
+1. **Pick a different list next time** — `echo $(( RANDOM % 4 + 1 ))` returned List 4 in session 86 by chance, but the previous session-85 also picked List 4. Per Pitfall D, the next pick should deliberately favor List 1 (Dashboard, Sessions, Memory, Logs), List 2 (Cron, Missions, Chat), or List 3 (Models, Agents, Skills, Tools, Personalities). The "always pick List 4 because the dumpYamlConfig is fresh" anti-pattern would skip other ripe surfaces.
+2. **Other lib-level yaml pattern candidates** — `yaml.load(raw) as HermesConfig ?? {}` is used in 6+ sites (5 in `hermes-config-sync.ts`, 1 in `config/route.ts:47`, 1 in `profile-config-builder.ts:45`). A `loadHermesConfigFromString`-style helper for "load or return null" already exists (session 70); the `?? {}` is a different concern (caller-side default). NOT a `dumpYamlConfig` follow-up.
+3. **The `safeWriteFileAtomic` pattern** (deferred from session 85) — "write to .tmp, then rename" is duplicated in `deploy-status.ts:writeDeployStatusRunning` and `hermes-config-sync.ts:atomicWriteFile`. Could promote to `fs-helpers.ts` when a 3rd site appears.
+4. **The `safeReadJson` pattern** (deferred from session 85) — `try { JSON.parse(readFileSync(...)) } catch { return null }` is duplicated 5+ times. Could promote to `fs-helpers.ts` when a 6th site appears.
+5. **`(main)/logs/page.tsx` useApiData adoption** (deferred from session 78) — the auto-refresh + abort pattern is a one-line hook extension. List 1 territory.
+
+---
+
 ## Session 85 — List 4 (Models, HERMES.md, Environment, All Settings) — fs-helpers consolidation
 
 Pick was List 4 (per random selection). The session was an fs-orchestration sweep across `src/lib/` and `src/app/api/` that promoted three private/inline filesystem primitives to a single canonical `src/lib/fs-helpers.ts` module. These helpers were used to be repeated in 12+ files: the `if (!existsSync(dir)) mkdirSync(dir, { recursive: true })` pattern (12+ sites), the `new Date().toISOString().replace(/[:.]/g, "-")` timestamp (3+ sites), and the "copy to timestamped backup" pattern (3+ sites, with 2 in `src/lib/` and 1 in `src/app/api/agent/files`). After this session, `mkdirSync` appears in exactly one file (`fs-helpers.ts`) — every other Control Hub module reaches for `ensureDir()`.

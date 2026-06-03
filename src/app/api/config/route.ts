@@ -8,6 +8,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { badRequest, forbidden, serverError } from "@/lib/api-response";
 import { db } from "@/lib/db";
+import { dumpYamlConfig } from "@/lib/hermes-config-sync";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
 import { parseJsonBody } from "@/lib/parse-json-body";
@@ -181,7 +182,7 @@ export async function PUT(request: NextRequest) {
     config[section] = { ...current, ...(values as Record<string, unknown>) };
 
     // Write back
-    const content = yaml.dump(config, { lineWidth: -1, noRefs: true });
+    const content = dumpYamlConfig(config);
     writeFileSync(getActiveHermesPaths().config, content, "utf-8");
 
     appendAuditLine({

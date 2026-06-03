@@ -81,6 +81,22 @@ export function loadHermesConfigFromString(content: string): HermesConfig {
 }
 
 /**
+ * Serialize a value to YAML using the canonical Control Hub options:
+ *   - `lineWidth: -1` — no automatic line wrapping; long strings/URLs stay on
+ *     one line (matches the historical hand-edited config.yaml style)
+ *   - `noRefs: true` — never emit YAML anchors/aliases (`&a001` / `*a001`),
+ *     even when the same object is referenced twice in the input
+ *
+ * Single source of truth for `yaml.dump(..., { lineWidth: -1, noRefs: true })`
+ * which was duplicated across 5 sites (3 in this module, 1 in
+ * `src/app/api/config/route.ts`, 1 in `src/lib/profile-config-builder.ts`).
+ * Byte-equivalent to the inline form for every reachable input — same string.
+ */
+export function dumpYamlConfig(value: unknown): string {
+  return yaml.dump(value, { lineWidth: -1, noRefs: true });
+}
+
+/**
  * Atomic write: stage to a sibling tmpfile, then rename. fs.rename on
  * POSIX is atomic for same-volume operations. Caller must ensure dir
  * exists.
@@ -388,7 +404,7 @@ export function syncDefaultsToHermesConfig(): { backupPath: string | null } {
     config.auxiliary = aux;
   }
 
-  const serialized = yaml.dump(config, { lineWidth: -1, noRefs: true });
+  const serialized = dumpYamlConfig(config);
   atomicWriteFile(configPath, serialized);
 
   return { backupPath };
@@ -461,7 +477,7 @@ export function syncSingleModelToHermesConfig(modelId: string): { backupPath: st
     };
   }
 
-  const serialized = yaml.dump(config, { lineWidth: -1, noRefs: true });
+  const serialized = dumpYamlConfig(config);
   atomicWriteFile(configPath, serialized);
 
   return { backupPath };
@@ -580,7 +596,7 @@ export function syncFallbacksToHermesConfig(
   if (config.fallbackNotification !== undefined) agentSection.fallback_notification = config.fallbackNotification;
   yamlConfig.agent = agentSection;
 
-  const serialized = yaml.dump(yamlConfig, { lineWidth: -1, noRefs: true });
+  const serialized = dumpYamlConfig(yamlConfig);
   atomicWriteFile(configPath, serialized);
 
   assertFallbackAgentSettingsWritten(configPath, {
