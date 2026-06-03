@@ -11,7 +11,7 @@
 import { useCallback, useMemo } from "react";
 import { useApiData } from "@/hooks/useApiData";
 import { useToast } from "@/components/ui/Toast";
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall, toastError } from "@/lib/api-fetch";
 import { useCronJobMutation } from "@/hooks/useCronJobMutation";
 import type { SystemCronJob } from "@/types/hermes";
 
@@ -72,10 +72,7 @@ export function useSystemCronJobs() {
         }
         loadJobs();
       } catch (e) {
-        showToast(
-          e instanceof Error ? e.message : "Failed to save system cron job",
-          "error",
-        );
+        toastError(showToast, e, "Failed to save system cron job");
       }
     },
     [showToast, loadJobs],

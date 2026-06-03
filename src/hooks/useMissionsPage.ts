@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
-import { safeApiCall, apiFetch } from "@/lib/api-fetch";
+import { safeApiCall, apiFetch, messageFromError } from "@/lib/api-fetch";
 import { toastFromResult } from "@/lib/toast-from-result";
 import { successMessageForDispatch } from "@/hooks/success-message-for-dispatch";
 import type { LocalDirEntry, Mission } from "@/types/hermes";
@@ -306,8 +306,7 @@ export function useMissionsPage() {
       setCategories(list);
       setCategoriesLoadError(null);
     } catch (error) {
-      const msg =
-        error instanceof Error ? error.message : "Failed to load categories";
+      const msg = messageFromError(error, "Failed to load categories");
       console.error("Failed to load categories:", error);
       setCategoriesLoadError(msg);
       showToast(msg, "error");
@@ -326,8 +325,7 @@ export function useMissionsPage() {
         showToast("Could not create category", "error");
       } catch (error) {
         console.error("Failed to create category:", error);
-        const msg =
-          error instanceof Error ? error.message : "Failed to create category";
+        const msg = messageFromError(error, "Failed to create category");
         showToast(msg, "error");
       }
       return null;
