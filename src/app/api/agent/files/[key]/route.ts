@@ -4,7 +4,7 @@ import { dirname } from "path";
 
 import { resolveProfileHermesHome, buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
 import { getBehaviorFiles } from "@/lib/behavior-files";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { safeStat } from "@/lib/fs-stats";
 import { ensureDir, backupTimestamp } from "@/lib/fs-helpers";
@@ -19,7 +19,7 @@ import {
   type ManagedFileKey,
 } from "@/lib/agent-file-store";
 import { applyProfileOrRootPatch, assertPatchSucceeded, pushProfileOrRoot, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
-import { badRequest, notFound, serverError } from "@/lib/api-response";
+import { badRequest, notFound } from "@/lib/api-response";
 import {
   configYamlToColumnValues,
   platformToolsetsFromJson,
@@ -172,8 +172,12 @@ export async function GET(
     );
   }
   catch (error) {
-    logApiError("GET /api/agent/files/[key]", `reading ${resolved.path}`, error);
-    return serverError("Failed to read file");
+    return serverErrorFromCatch(
+      "GET /api/agent/files/[key]",
+      `reading ${resolved.path}`,
+      error,
+      "Failed to read file",
+    );
   }
 }
 
@@ -280,7 +284,11 @@ export async function PUT(
     return NextResponse.json({ data: { success: true, key, path: resolved.path } });
   }
   catch (error) {
-    logApiError("PUT /api/agent/files/[key]", `writing ${resolved.path}`, error);
-    return serverError("Failed to write file");
+    return serverErrorFromCatch(
+      "PUT /api/agent/files/[key]",
+      `writing ${resolved.path}`,
+      error,
+      "Failed to write file",
+    );
   }
 }

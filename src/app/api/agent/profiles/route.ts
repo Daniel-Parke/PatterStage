@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { existsSync } from "fs";
 
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { safeStat } from "@/lib/fs-stats";
 import { resolveSafeProfileName } from "@/lib/path-security";
@@ -128,8 +128,12 @@ export async function GET(request: NextRequest) {
       data: { profiles },
     });
   } catch (error) {
-    logApiError("GET /api/agent/profiles", "listing profiles", error);
-    return serverError("Failed to list profiles");
+    return serverErrorFromCatch(
+      "GET /api/agent/profiles",
+      "listing profiles",
+      error,
+      "Failed to list profiles",
+    );
   }
 }
 
@@ -205,7 +209,11 @@ export async function POST(request: NextRequest) {
       data: { slug },
     });
   } catch (error) {
-    logApiError("POST /api/agent/profiles", "creating profile", error);
-    return serverError("Failed to create profile");
+    return serverErrorFromCatch(
+      "POST /api/agent/profiles",
+      "creating profile",
+      error,
+      "Failed to create profile",
+    );
   }
 }

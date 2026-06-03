@@ -4,12 +4,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getModel, updateModel, deleteModel } from "@/lib/models-repository";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, modelPutSchema } from "@/lib/api-schemas";
-import { notFound, serverError } from "@/lib/api-response";
+import { notFound } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
 interface Ctx {
@@ -23,8 +23,12 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
     if (!model) return notFound("Model not found");
     return NextResponse.json({ data: { model } });
   } catch (error) {
-    logApiError("GET /api/models/[id]", `id=${id}`, error);
-    return serverError("Failed to load model");
+    return serverErrorFromCatch(
+      "GET /api/models/[id]",
+      `id=${id}`,
+      error,
+      "Failed to load model",
+    );
   }
 }
 
@@ -49,8 +53,12 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
     appendAuditLine({ action: "model.update", resource: id, ok: true });
     return NextResponse.json({ data: { model: updated } });
   } catch (error) {
-    logApiError("PUT /api/models/[id]", `id=${id}`, error);
-    return serverError("Failed to update model");
+    return serverErrorFromCatch(
+      "PUT /api/models/[id]",
+      `id=${id}`,
+      error,
+      "Failed to update model",
+    );
   }
 }
 
@@ -66,7 +74,11 @@ export async function DELETE(request: NextRequest, ctx: Ctx) {
     appendAuditLine({ action: "model.delete", resource: id, ok: true });
     return NextResponse.json({ data: { deleted: id } });
   } catch (error) {
-    logApiError("DELETE /api/models/[id]", `id=${id}`, error);
-    return serverError("Failed to delete model");
+    return serverErrorFromCatch(
+      "DELETE /api/models/[id]",
+      `id=${id}`,
+      error,
+      "Failed to delete model",
+    );
   }
 }

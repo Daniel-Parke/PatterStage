@@ -6,10 +6,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { pushModelToHermes, pushCredential } from "@/lib/sync-manager";
 import { getModelWithKey } from "@/lib/models-repository";
-import { badRequest, serverError } from "@/lib/api-response";
+import { badRequest } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -60,7 +60,11 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    logApiError("POST /api/models/sync/push", `pushing model ${modelId}`, error);
-    return serverError("Failed to push model");
+    return serverErrorFromCatch(
+      "POST /api/models/sync/push",
+      `pushing model ${modelId}`,
+      error,
+      "Failed to push model",
+    );
   }
 }

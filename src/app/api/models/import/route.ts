@@ -15,12 +15,11 @@ import { parseHermesConfig } from "@/lib/hermes-import";
 import { modelKey } from "@/lib/model-key";
 import { upsertModel, updateModel, listModels } from "@/lib/models-repository";
 import { upsertCredential } from "@/lib/credentials-repository";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { toError } from "@/lib/api-fetch";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { maskKeyHint } from "@/lib/secret-mask";
-import { serverError } from "@/lib/api-response";
 
 // GET /api/models/import — dry-run preview
 export async function GET(request: NextRequest) {
@@ -48,8 +47,12 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    logApiError("GET /api/models/import", "previewing Hermes import", error);
-    return serverError("Failed to preview import");
+    return serverErrorFromCatch(
+      "GET /api/models/import",
+      "previewing Hermes import",
+      error,
+      "Failed to preview import",
+    );
   }
 }
 
@@ -156,7 +159,11 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    logApiError("POST /api/models/import", "importing Hermes models", error);
-    return serverError("Failed to import models");
+    return serverErrorFromCatch(
+      "POST /api/models/import",
+      "importing Hermes models",
+      error,
+      "Failed to import models",
+    );
   }
 }

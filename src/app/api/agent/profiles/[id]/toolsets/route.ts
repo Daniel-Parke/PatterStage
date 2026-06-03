@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { methodNotAllowed } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
@@ -16,7 +16,7 @@ import {
   unionToolsetsFromPlatforms,
 } from "@/lib/hermes-toolset-unify";
 import { resolveSafeProfileName } from "@/lib/path-security";
-import { badRequest, notFound, serverError } from "@/lib/api-response";
+import { badRequest, notFound } from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
@@ -48,8 +48,12 @@ export async function GET(
     });
   }
   catch (error) {
-    logApiError("GET /api/agent/profiles/[id]/toolsets", "reading toolsets", error);
-    return serverError("Failed to read toolsets");
+    return serverErrorFromCatch(
+      "GET /api/agent/profiles/[id]/toolsets",
+      "reading toolsets",
+      error,
+      "Failed to read toolsets",
+    );
   }
 }
 
@@ -86,8 +90,12 @@ export async function PUT(
     return NextResponse.json({ data: { success: true, profile: result.profile, platformToolsets } });
   }
   catch (error) {
-    logApiError("PUT /api/agent/profiles/[id]/toolsets", "saving toolsets", error);
-    return serverError("Failed to save toolsets");
+    return serverErrorFromCatch(
+      "PUT /api/agent/profiles/[id]/toolsets",
+      "saving toolsets",
+      error,
+      "Failed to save toolsets",
+    );
   }
 }
 

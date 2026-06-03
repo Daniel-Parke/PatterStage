@@ -5,12 +5,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getModelDefaults, setDefaultModel } from "@/lib/models-repository";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, setDefaultPutSchema } from "@/lib/api-schemas";
-import { notFound, serverError } from "@/lib/api-response";
+import { notFound } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
 export async function GET(request: NextRequest) {
@@ -20,8 +20,12 @@ export async function GET(request: NextRequest) {
   try {
     return NextResponse.json({ data: { defaults: getModelDefaults() } });
   } catch (error) {
-    logApiError("GET /api/models/defaults", "reading defaults", error);
-    return serverError("Failed to read defaults");
+    return serverErrorFromCatch(
+      "GET /api/models/defaults",
+      "reading defaults",
+      error,
+      "Failed to read defaults",
+    );
   }
 }
 
@@ -51,7 +55,11 @@ export async function PUT(request: NextRequest) {
     if (error instanceof Error && /Model not found/.test(error.message)) {
       return notFound(error.message);
     }
-    logApiError("PUT /api/models/defaults", "setting default", error);
-    return serverError("Failed to set default");
+    return serverErrorFromCatch(
+      "PUT /api/models/defaults",
+      "setting default",
+      error,
+      "Failed to set default",
+    );
   }
 }

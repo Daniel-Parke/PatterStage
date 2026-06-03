@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
 import {
   addFallbackEntry,
@@ -16,7 +16,7 @@ import { parseFallbackAgentSettingsFromYaml } from "@/lib/fallback-config-yaml";
 import { upsertModel } from "@/lib/models-repository";
 import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
 import { readHermesYamlConfig } from "@/lib/hermes-config-sync";
-import { notFound, serverError } from "@/lib/api-response";
+import { notFound } from "@/lib/api-response";
 import { fallbackKey } from "@/lib/model-key";
 
 interface ImportPreview {
@@ -56,8 +56,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ data: { fallbacks: preview } });
   } catch (error) {
-    logApiError("GET /api/models/fallbacks/import", "previewing import", error);
-    return serverError("Failed to preview import");
+    return serverErrorFromCatch(
+      "GET /api/models/fallbacks/import",
+      "previewing import",
+      error,
+      "Failed to preview import",
+    );
   }
 }
 
@@ -142,7 +146,11 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    logApiError("POST /api/models/fallbacks/import", "importing fallbacks", error);
-    return serverError("Failed to import fallbacks");
+    return serverErrorFromCatch(
+      "POST /api/models/fallbacks/import",
+      "importing fallbacks",
+      error,
+      "Failed to import fallbacks",
+    );
   }
 }

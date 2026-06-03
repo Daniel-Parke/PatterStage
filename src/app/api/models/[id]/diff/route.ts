@@ -4,14 +4,14 @@
 // Body: { direction?: "push" | "pull" } (default: "push")
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { getModelWithKey } from "@/lib/models-repository";
 import { readHermesYamlConfig } from "@/lib/hermes-config-sync";
 import { envVarForProvider, isHermesProvider } from "@/lib/hermes-providers";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { maskKeyHint } from "@/lib/secret-mask";
-import { notFound, serverError } from "@/lib/api-response";
+import { notFound } from "@/lib/api-response";
 
 interface DiffEntry {
   id: string;
@@ -113,7 +113,11 @@ export async function POST(
 
     return NextResponse.json({ data: { diffs, modelName: model.name } });
   } catch (error) {
-    logApiError("POST /api/models/[id]/diff", "computing diff", error);
-    return serverError("Failed to compute diff");
+    return serverErrorFromCatch(
+      "POST /api/models/[id]/diff",
+      "computing diff",
+      error,
+      "Failed to compute diff",
+    );
   }
 }

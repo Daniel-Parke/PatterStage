@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { renameSync, existsSync } from "fs";
 
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { requireAuth } from "@/lib/api-auth";
@@ -96,8 +96,12 @@ export async function PUT(
       data: { success: true, slug },
     });
   } catch (error) {
-    logApiError("PUT /api/agent/profiles/[id]", "updating profile", error);
-    return serverError("Failed to update profile");
+    return serverErrorFromCatch(
+      "PUT /api/agent/profiles/[id]",
+      "updating profile",
+      error,
+      "Failed to update profile",
+    );
   }
 }
 
@@ -135,7 +139,11 @@ export async function DELETE(
       data: { success: true },
     });
   } catch (error) {
-    logApiError("DELETE /api/agent/profiles/[id]", "deleting profile", error);
-    return serverError("Failed to delete profile");
+    return serverErrorFromCatch(
+      "DELETE /api/agent/profiles/[id]",
+      "deleting profile",
+      error,
+      "Failed to delete profile",
+    );
   }
 }

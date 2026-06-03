@@ -3,10 +3,10 @@ import { readFileSync, writeFileSync, existsSync } from "fs";
 import yaml from "js-yaml";
 
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
-import { badRequest, forbidden, serverError } from "@/lib/api-response";
+import { badRequest, forbidden } from "@/lib/api-response";
 import { db } from "@/lib/db";
 import { dumpYamlConfig } from "@/lib/hermes-config-sync";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
@@ -125,8 +125,12 @@ export async function GET(request: NextRequest) {
     const config = readCachedConfig();
     return NextResponse.json({ data: maskConfigSecrets(config) });
   } catch (error) {
-    logApiError("GET /api/config", "reading config.yaml", error);
-    return serverError("Failed to read config.yaml");
+    return serverErrorFromCatch(
+      "GET /api/config",
+      "reading config.yaml",
+      error,
+      "Failed to read config.yaml",
+    );
   }
 }
 
@@ -196,7 +200,11 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ data: { success: true, section, values } });
   } catch (error) {
-    logApiError("PUT /api/config", "updating config", error);
-    return serverError("Failed to update config");
+    return serverErrorFromCatch(
+      "PUT /api/config",
+      "updating config",
+      error,
+      "Failed to update config",
+    );
   }
 }

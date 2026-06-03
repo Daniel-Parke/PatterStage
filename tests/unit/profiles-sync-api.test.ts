@@ -4,7 +4,10 @@ jest.mock("@/lib/api-auth", () => ({
   requireAuth: jest.fn(() => null),
 }));
 
-jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/api-logger", () => ({
+  logApiError: jest.fn(),
+  serverErrorFromCatch: jest.fn(),
+}));
 jest.mock("@/lib/db", () => ({ ensureDb: jest.fn() }));
 
 const mockPushProfile = jest.fn(() => ({ success: true, slug: "qa", backupPath: null, error: null }));

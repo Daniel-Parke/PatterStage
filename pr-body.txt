@@ -1,3 +1,112 @@
+## Session 95 — List 4 (Models, HERMES.md, Environment, All Settings) — `serverErrorFromCatch` helper + 27-site migration
+
+Pick was List 4 (per random selection `echo $(( RANDOM % 4 + 1 ))` = 4, per session 94's "Next session should" recommendation to keep spreading the surface after the 8x streak on Lists 1-3). Single byte-equivalent refactor: pick up the carryover from the prior session — a half-completed `serverErrorFromCatch` helper + 7 partially-migrated model routes — and finish the migration across the remaining 18 List 4 routes (8 fallbacks, 2 config, 1 agent-files, 6 agent-profiles, 1 agent-personality).
+
+All **1327** unit tests pass (**200** suites, +11 new tests in `tests/unit/server-error-from-catch.test.ts` covering the new helper end-to-end). tsc clean, eslint `--max-warnings 0` clean, build passes. Net: **+344 / -127 lines** (the +344 is dominated by the 11 new test cases + the JSDoc on the new helper + the migration spread across 24 routes; the -127 is the 2-line `logApiError + return serverError` collapse × 27 sites + the import cleanups). Byte-equivalent at runtime for all 27 affected call sites.
+
+### Refactor 1 — `serverErrorFromCatch(route, context, error, message)` in `src/lib/api-logger.ts`
+
+The 2-line `logApiError(ROUTE, CONTEXT, error); return serverError(MESSAGE);` pattern was duplicated across **27** catch blocks in List 4 territory (models, config, agent-files, agent-profiles, fallbacks, personality). Each site is a perfectly identical 2-line block — the same `logApiError` call followed by the same `serverError(STATIC_MESSAGE)` return with a static user-facing string.
+
+The carryover from session 94 had already promoted the helper to `src/lib/api-logger.ts` (along with the test file) and migrated 7 of the model routes. This session finished the remaining 18 routes, bringing the total to 27.
+
+**Why this lives in `api-logger.ts`** (not `api-response.ts`): the helper is a *catch-block shim* that composes two existing primitives (logApiError + serverError). The natural home is the file where the `logApiError` side-effect lives. `api-response.ts` is response-shape only (no logging), and adding a logging import there would break its "keep this module tiny and dependency-free" rule (see the `api-response.ts` top comment).
+
+**Why not `setErrorFromCaught` / `toastError`-shaped** (which take a setter fn, not a log route): the API catch-block is a *combined log + response* contract — the setter-fn pattern is for client-side `useState` / `showToast` cases where there's no log side-effect. A dedicated `serverErrorFromCatch` matches the API contract (1 call → 1 log + 1 response) without forcing the caller to compose two helpers at every site.
+
+**Byte-equivalence audit:** the helper returns the same `NextResponse` as `serverError(message)` and emits the same `console.error` line as `logApiError(route, context, error)`. Tests cover the log+response pair end-to-end via console-error spying + NextResponse inspection (the 6 byte-equivalence tests in `tests/unit/server-error-from-catch.test.ts` assert the helper equals the inline 2-line block for 5 input shapes: Error, empty Error, string, null, TypeError).
+
+### Refactor 2 — 27-site migration
+
+| # | File | Sites | Notes |
+|---|---|---|---|
+| 1-7 | `src/app/api/models/{route,[id]/route,[id]/diff/route,defaults/route,import/route,sync/drift/route,sync/push/route}.ts` | 7 | **Carryover from prior session** — migrated with the helper |
+| 8 | `src/app/api/models/fallbacks/route.ts` | 2 (GET, POST) | List 4 |
+| 9 | `src/app/api/models/fallbacks/[id]/route.ts` | 3 (GET, PUT, DELETE) | List 4 |
+| 10 | `src/app/api/models/fallbacks/config/route.ts` | 2 (GET, PUT) | List 4 |
+| 11 | `src/app/api/models/fallbacks/custom/route.ts` | 1 (POST) | List 4 |
+| 12 | `src/app/api/models/fallbacks/import/route.ts` | 2 (GET, POST) | List 4 |
+| 13 | `src/app/api/models/fallbacks/reorder/route.ts` | 1 (POST) | List 4 |
+| 14 | `src/app/api/models/fallbacks/toggle/route.ts` | 1 (POST) | List 4 |
+| 15 | `src/app/api/config/route.ts` | 2 (GET, PUT) | List 4 |
+| 16 | `src/app/api/agent/files/[key]/route.ts` | 2 (GET, PUT) | List 4 |
+| 17 | `src/app/api/agent/profiles/route.ts` | 2 (GET, POST) | List 4 |
+| 18 | `src/app/api/agent/profiles/[id]/route.ts` | 2 (PUT, DELETE) | List 4 — left `serverError(push.error ?? "...")` for the dynamic push-error message intact |
+| 19 | `src/app/api/agent/profiles/[id]/toolsets/route.ts` | 2 (GET, PUT) | List 4 |
+| 20 | `src/app/api/agent/profiles/sync/push/route.ts` | 1 (POST) | List 4 |
+| 21 | `src/app/api/agent/profiles/sync/import/route.ts` | 2 (GET, POST) | List 4 |
+| 22 | `src/app/api/agent/profiles/sync/drift/route.ts` | 1 (GET) | List 4 |
+| 23 | `src/app/api/agent/profiles/sync/pull/route.ts` | 1 (POST) | List 4 |
+| 24 | `src/app/api/agent/personality/route.ts` | 1 (PUT) | List 4 |
+
+All 27 sites use the same mechanical `logApiError + return serverError(STATIC)` → `serverErrorFromCatch` transformation. The `logApiError` + `serverError` imports were dropped from the route file (unless still used elsewhere — see "What was rejected" for the 2 sites that retained `serverError` for dynamic messages).
+
+### What was rejected
+
+- **Migrating `src/app/api/models/fallbacks/sync/route.ts:53` — `return serverError(toError(error).message)`.** The site uses a *dynamic* error message (the caught error's actual `.message`), not a static fallback. Migrating to `serverErrorFromCatch` would change the user-facing response from "the error's actual message" to "Failed to sync fallback to Hermes" — a behavior change, NOT byte-equivalent. Left inline. This is the 1 List 4 site that DOESN'T fit the helper.
+- **Migrating `src/app/api/agent/profiles/route.ts:195` and `[id]/route.ts:86` — `return serverError(push.error ?? "Failed to sync profile to Hermes")`.** Both are *not* in catch blocks (they're `if (!push.success) return` checks in the success path), and both use a dynamic `push.error` message. `serverErrorFromCatch` is a catch-block shim — it requires an `error: unknown` argument and emits a `logApiError` call. Neither site has those characteristics. Left inline.
+- **Promoting `serverErrorFromCatch` to a generic `catchAndRespond({ route, context, message, bodyBuilder? })` helper that takes a custom response builder.** The 27 sites are byte-equivalent for the simple 2-line block. Promoting to a generic would add a parameter for the rare 2 sites (fallbacks/sync, push-error) that need different behaviour — but those 2 sites are intentionally NOT migrated (see above). Rule of Three says: don't add the parameter until you have 3 consumers needing it.
+- **Auditing the 3 `logApiError(...)` cleanup lines in `models/route.ts:62`, `models/import/route.ts:90, 110` for migration.** These are best-effort rollback logs in the *success* path (after a primary write succeeds, log a cleanup error if the rollback fails). They do NOT have a paired `return serverError(...)` — they're informational only. The `serverErrorFromCatch` helper requires both log+return. Left inline.
+
+### Files
+
+- `src/lib/api-logger.ts` (MODIFIED, carryover) — `serverErrorFromCatch` helper (58 lines added: type import + JSDoc + impl)
+- `src/app/api/models/route.ts` (MODIFIED, carryover) — 2 sites migrated
+- `src/app/api/models/[id]/route.ts` (MODIFIED, carryover) — 3 sites migrated (GET, PUT, DELETE)
+- `src/app/api/models/[id]/diff/route.ts` (MODIFIED, carryover) — 1 site migrated
+- `src/app/api/models/defaults/route.ts` (MODIFIED, carryover) — 2 sites migrated
+- `src/app/api/models/import/route.ts` (MODIFIED, carryover) — 2 sites migrated
+- `src/app/api/models/sync/drift/route.ts` (MODIFIED, carryover) — 1 site migrated
+- `src/app/api/models/sync/push/route.ts` (MODIFIED, carryover) — 1 site migrated
+- `src/app/api/models/fallbacks/route.ts` (MODIFIED) — 2 sites migrated + import cleanup
+- `src/app/api/models/fallbacks/[id]/route.ts` (MODIFIED) — 3 sites migrated + import cleanup
+- `src/app/api/models/fallbacks/config/route.ts` (MODIFIED) — 2 sites migrated + import cleanup
+- `src/app/api/models/fallbacks/custom/route.ts` (MODIFIED) — 1 site migrated + import cleanup
+- `src/app/api/models/fallbacks/import/route.ts` (MODIFIED) — 2 sites migrated + import cleanup
+- `src/app/api/models/fallbacks/reorder/route.ts` (MODIFIED) — 1 site migrated + import cleanup
+- `src/app/api/models/fallbacks/toggle/route.ts` (MODIFIED) — 1 site migrated + import cleanup
+- `src/app/api/config/route.ts` (MODIFIED) — 2 sites migrated + import cleanup
+- `src/app/api/agent/files/[key]/route.ts` (MODIFIED) — 2 sites migrated + import cleanup
+- `src/app/api/agent/profiles/route.ts` (MODIFIED) — 2 sites migrated + import cleanup
+- `src/app/api/agent/profiles/[id]/route.ts` (MODIFIED) — 2 sites migrated + import cleanup
+- `src/app/api/agent/profiles/[id]/toolsets/route.ts` (MODIFIED) — 2 sites migrated + import cleanup
+- `src/app/api/agent/profiles/sync/push/route.ts` (MODIFIED) — 1 site migrated + import cleanup
+- `src/app/api/agent/profiles/sync/import/route.ts` (MODIFIED) — 2 sites migrated + import cleanup
+- `src/app/api/agent/profiles/sync/drift/route.ts` (MODIFIED) — 1 site migrated + import cleanup
+- `src/app/api/agent/profiles/sync/pull/route.ts` (MODIFIED) — 1 site migrated + import cleanup
+- `src/app/api/agent/personality/route.ts` (MODIFIED) — 1 site migrated + import cleanup
+- `tests/unit/server-error-from-catch.test.ts` (NEW, carryover) — 11 unit tests (224 lines): 6 log+response tests + 5 byte-equivalence matrix tests
+- `tests/unit/profiles-sync-api.test.ts` (MODIFIED) — updated `api-logger` mock to include `serverErrorFromCatch: jest.fn()` (the prior mock only included `logApiError`, breaking the new import)
+
+Net diff: **26 files modified + 1 new test file, +344 / -127 lines** (the +344 is the helper + JSDoc + 11 test cases + the 27-site migration spread; the -127 is the 2-line `logApiError + return serverError` collapse × 27 sites + the import cleanups for 17 routes).
+
+### Verification
+
+- **All 1327 unit tests pass** (200 suites, +1 suite with +11 new tests in `tests/unit/server-error-from-catch.test.ts`)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean
+- **`npm run build`** passes
+- **Byte-equivalence audit per session-51 lesson:** `serverErrorFromCatch(route, context, error, message)` is the canonical implementation of `logApiError(route, context, error); return serverError(message)`. The 5 byte-equivalence tests in `tests/unit/server-error-from-catch.test.ts` assert the helper produces the same log line + same response as the inline 2-line block for 5 input shapes (Error, empty Error, string, null, TypeError). Wire format (`{ error: <message> }`), log line (`[API <route>] Error <context>: <message>`), and 500 status are all unchanged.
+
+### Patterns to take forward
+
+1. **"serverErrorFromCatch is the catch-block shim of setErrorFromCaught" pattern** — two parallel helpers, one for server-side catch blocks (log + return), one for client-side catch blocks (setter). Different return shapes (NextResponse vs void), different consumers. The audit recipe is a 1-line grep: `grep -nE "logApiError\([^)]*\);\\s*$" src/app/api/` followed by checking for the paired `return serverError(` on the next line. After this session: **0 hits in List 4 territory** (excluding the 2 dynamic-message sites + the 3 cleanup-line sites that intentionally don't fit the pattern).
+2. **"Static vs dynamic message" discriminator for the migration** — the helper is only for the static-message variant. Sites that use `serverError(toError(error).message)` or `serverError(dynamicVar)` (3 sites in List 4) keep the inline form. The discriminator is: does the second argument to `serverError` reference the caught `error` or a local variable? If yes, keep inline. If no (it's a hardcoded "Failed to X" string), migrate.
+3. **"Catch-block shim lives in api-logger.ts, not api-response.ts" pattern** — the helper is a log + response composition, not a response shape. `api-response.ts` is response-shape only (no logging) and has a "keep this module tiny" rule. The composition helper belongs with the log side-effect, not the response side-effect.
+4. **"Test mock update when adding new exported helpers" pattern** — `tests/unit/profiles-sync-api.test.ts:7` had a `jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }))` that broke when `serverErrorFromCatch` was added to the export. The fix is mechanical: add the new export to the mock. Audit recipe: `grep -rn "jest.mock.*api-logger" tests/` → all consumers of the new helper must be updated.
+
+### "Next session should:" block
+
+1. **Pick a different list next session.** List 4 has now been hit 8+ times (sessions 59, 60, 70, 73, 79, 85, 86, 92, 95). **List 1 (Dashboard, Sessions, Memory, Logs)** is the next-ripe surface — it hasn't been touched since session 93 (the second-longest gap after List 2's session 94). Carries 3 known follow-up items from session 93: `useApiData` extension for `URLSearchParams` + pagination in `(main)/sessions/page.tsx`, `(main)/logs/page.tsx` `useApiData({ refreshIntervalMs })` migration, and the inline `err instanceof Error` site in `JobFormModal.tsx` for the `setErrorFromCaught` migration.
+2. **Audit the ~48 remaining `logApiError + return serverError(STATIC)` sites outside List 4 territory** (List 1: dashboard, sessions, memory, logs, recroom/stories; List 2: missions, cron, chat; List 3: operations, tools, skills). After this session, List 4 is fully migrated. The same pattern probably survives in the other 3 lists and is the next sweep surface. The audit recipe is a 1-line grep: `rg -B1 "return serverError\(" src/app/ | rg "logApiError\(" | rg -v "tests/"`.
+3. **`serverErrorFromCatch` extension for the dynamic-message variant** — when a 3rd site appears that uses `serverError(dynamicVar)` AND is in a catch block AND the dynamic var references the caught error, add a `serverErrorFromCatchWithError(route, context, error)` variant that returns the caught error's actual message. Currently 1 site in List 4 territory (fallbacks/sync). Defer until a 2nd site appears.
+4. **Promote `serverErrorFromCatch` to a generic `respondToError({ route, context, error, message, bodyBuilder? })` helper** if the 2 dynamic-message sites + the 3 cleanup-line sites are ever migrated. Currently 5 sites that don't fit. Defer until 6+ sites need the generic form.
+5. **`useApiData` extension for query params + pagination** — `(main)/sessions/page.tsx`'s `loadSessions` is the next candidate. Requires extending the hook to support `URLSearchParams`. Defer until the hook shape is stable across logs + sessions.
+6. **`useMissionsPage` decomposition** — 1182+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results" — would need a careful hook-by-hook extraction with state-derivation verification.
+7. **Sweep the 22 inline `err instanceof Error ? err.message` sites in `src/lib/`, `src/components/cron/`, and `src/app/recroom/`** to a server-side `toMessage(e, fallback)` or a `setErrorFromCaught`-shaped helper. The 7 `src/lib/hermes-profile-sync.ts` sites alone are enough to justify the helper. Multi-session sweep.
+
+---
+
 ## Session 94 — List 2 (Cron, Missions, Chat) — `parseDispatchMode` + `scheduleForDispatch` + `joinCrontabLines` helpers
 
 Pick was List 2 (per session 93's "Next session should" recommendation — the longest gap in the protocol history after List 1's 2× streak, last touched at session 88, and the `useMissionsPage` decomposition was the next-ripe surface). Three byte-equivalent refactors targeted the highest-leverage duplications that survived the prior sweeps: a 4-line 4-boolean `dispatchMode` decomposition duplicated across 2 server-side files, a `schedule: newDispatch === "cron" ? newSchedule : undefined` 3-line pattern duplicated 3 times in `useMissionsPage.ts`, and a `lines.filter((l) => l.trim() || l === "").join("\n")` filter+join duplicated 3 times in the hardware cron write sites.

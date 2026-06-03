@@ -7,12 +7,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { listModels, createModel, deleteModel } from "@/lib/models-repository";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { zodErrorResponse, modelPostSchema } from "@/lib/api-schemas";
-import { created, serverError } from "@/lib/api-response";
+import { created } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
 export async function GET(request: NextRequest) {
@@ -22,8 +22,12 @@ export async function GET(request: NextRequest) {
   try {
     return NextResponse.json({ data: { models: listModels() } });
   } catch (error) {
-    logApiError("GET /api/models", "listing models", error);
-    return serverError("Failed to list models");
+    return serverErrorFromCatch(
+      "GET /api/models",
+      "listing models",
+      error,
+      "Failed to list models",
+    );
   }
 }
 
@@ -58,7 +62,11 @@ export async function POST(request: NextRequest) {
         logApiError("POST /api/models", "rolling back model after sync failure", cleanupErr);
       }
     }
-    logApiError("POST /api/models", "creating model", error);
-    return serverError("Failed to create model");
+    return serverErrorFromCatch(
+      "POST /api/models",
+      "creating model",
+      error,
+      "Failed to create model",
+    );
   }
 }

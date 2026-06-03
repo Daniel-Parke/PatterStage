@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest, serverError } from "@/lib/api-response";
-import { logApiError } from "@/lib/api-logger";
+import { badRequest } from "@/lib/api-response";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
 import { booleanFlag, stringFlag } from "@/lib/parse-bag-flags";
@@ -91,7 +91,11 @@ export async function POST(request: NextRequest) {
     });
   }
   catch (error) {
-    logApiError("POST /api/agent/profiles/sync/pull", "pull", error);
-    return serverError("Failed to pull profile");
+    return serverErrorFromCatch(
+      "POST /api/agent/profiles/sync/pull",
+      "pull",
+      error,
+      "Failed to pull profile",
+    );
   }
 }

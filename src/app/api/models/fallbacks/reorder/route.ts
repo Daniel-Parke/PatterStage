@@ -4,13 +4,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { getFallbackEntry, updateFallbackEntry, listFallbackChain } from "@/lib/fallbacks-repository";
 import { fallbackReorderSchema } from "@/lib/fallback-config-schema";
 import { inTransaction } from "@/lib/db";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
-import { notFound, serverError } from "@/lib/api-response";
+import { notFound } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -57,7 +57,11 @@ export async function POST(request: NextRequest) {
     const refreshed = listFallbackChain();
     return NextResponse.json({ data: { fallbacks: refreshed } });
   } catch (error) {
-    logApiError("POST /api/models/fallbacks/reorder", "reordering fallback", error);
-    return serverError("Failed to reorder fallbacks");
+    return serverErrorFromCatch(
+      "POST /api/models/fallbacks/reorder",
+      "reordering fallback",
+      error,
+      "Failed to reorder fallbacks",
+    );
   }
 }

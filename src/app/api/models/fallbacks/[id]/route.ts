@@ -4,12 +4,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { getFallbackEntry, updateFallbackEntry, deleteFallbackEntry } from "@/lib/fallbacks-repository";
 import { fallbackEntryPutSchema } from "@/lib/fallback-config-schema";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
-import { notFound, serverError } from "@/lib/api-response";
+import { notFound } from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
@@ -26,8 +26,12 @@ export async function GET(
     }
     return NextResponse.json({ data: { fallback: entry } });
   } catch (error) {
-    logApiError("GET /api/models/fallbacks/[id]", `reading ${id}`, error);
-    return serverError("Failed to read fallback");
+    return serverErrorFromCatch(
+      "GET /api/models/fallbacks/[id]",
+      `reading ${id}`,
+      error,
+      "Failed to read fallback",
+    );
   }
 }
 
@@ -57,8 +61,12 @@ export async function PUT(
     commitFallbackChange("fallback.update", id);
     return NextResponse.json({ data: { fallback: updated } });
   } catch (error) {
-    logApiError("PUT /api/models/fallbacks/[id]", `updating ${id}`, error);
-    return serverError("Failed to update fallback");
+    return serverErrorFromCatch(
+      "PUT /api/models/fallbacks/[id]",
+      `updating ${id}`,
+      error,
+      "Failed to update fallback",
+    );
   }
 }
 
@@ -80,7 +88,11 @@ export async function DELETE(
     commitFallbackChange("fallback.delete", id);
     return NextResponse.json({ data: { deleted: true } });
   } catch (error) {
-    logApiError("DELETE /api/models/fallbacks/[id]", `deleting ${id}`, error);
-    return serverError("Failed to delete fallback");
+    return serverErrorFromCatch(
+      "DELETE /api/models/fallbacks/[id]",
+      `deleting ${id}`,
+      error,
+      "Failed to delete fallback",
+    );
   }
 }

@@ -4,12 +4,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { addFallbackEntry, getFallbackConfig, listFallbackChain } from "@/lib/fallbacks-repository";
 import { fallbackInputSchema } from "@/lib/fallback-config-schema";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
-import { created, serverError } from "@/lib/api-response";
+import { created } from "@/lib/api-response";
 
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);
@@ -18,8 +18,12 @@ export async function GET(request: NextRequest) {
   try {
     return NextResponse.json({ data: { entries: listFallbackChain(), config: getFallbackConfig() } });
   } catch (error) {
-    logApiError("GET /api/models/fallbacks", "reading fallback chain", error);
-    return serverError("Failed to read fallback chain");
+    return serverErrorFromCatch(
+      "GET /api/models/fallbacks",
+      "reading fallback chain",
+      error,
+      "Failed to read fallback chain",
+    );
   }
 }
 
@@ -40,7 +44,11 @@ export async function POST(request: NextRequest) {
     commitFallbackChange("fallback.add", entry.id);
     return created({ entry });
   } catch (error) {
-    logApiError("POST /api/models/fallbacks", "adding fallback entry", error);
-    return serverError("Failed to add fallback entry");
+    return serverErrorFromCatch(
+      "POST /api/models/fallbacks",
+      "adding fallback entry",
+      error,
+      "Failed to add fallback entry",
+    );
   }
 }
