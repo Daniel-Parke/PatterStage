@@ -4,6 +4,8 @@
 
 import type { ChatSession, ChatMessage, ApiMessage } from "@/types/chat";
 import { CHAT_STORAGE_KEY, CHAT_MAX_SESSIONS } from "@/types/chat";
+import { messageFromError } from "@/lib/api-fetch";
+import { titleCase } from "@/lib/utils";
 
 // ── localStorage helpers ───────────────────────────────────────
 
@@ -125,7 +127,7 @@ export function renderMarkdown(text: string): string {
 export function formatModelName(id: string): string {
   if (id === "hermes-agent") return "Agent Default";
   const parts = id.split("/").pop()?.split(/[-_]+/) || [];
-  return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
+  return parts.map((p) => titleCase(p)).join(" ");
 }
 
 // ── Factory helpers ─────────────────────────────────────────────
@@ -256,7 +258,7 @@ export async function streamChatResponse(
     if (err instanceof DOMException && err.name === "AbortError") {
       return false;
     }
-    onError(err instanceof Error ? err.message : "Chat failed");
+    onError(messageFromError(err, "Chat failed"));
     return false;
   }
 }
