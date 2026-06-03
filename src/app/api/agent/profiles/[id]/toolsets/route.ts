@@ -36,15 +36,13 @@ export async function GET(
       return notFound("Profile not found");
     }
     const divergence = platformsDiffer(hydrated.toolsets);
-    return NextResponse.json({
-      data: {
-        profile: prof.profile,
-        platformToolsets: hydrated.toolsets,
-        source: hydrated.source,
-        unifiedEnabled: unionToolsetsFromPlatforms(hydrated.toolsets),
-        platformsDiverged: divergence.diverged,
-        divergedPlatforms: divergence.platforms,
-      },
+    return ok({
+      profile: prof.profile,
+      platformToolsets: hydrated.toolsets,
+      source: hydrated.source,
+      unifiedEnabled: unionToolsetsFromPlatforms(hydrated.toolsets),
+      platformsDiverged: divergence.diverged,
+      divergedPlatforms: divergence.platforms,
     });
   }
   catch (error) {

@@ -138,12 +138,10 @@ export async function POST(request: NextRequest) {
       ok: true,
     });
 
-    return NextResponse.json({
-      data: {
-        imported: imported.length,
-        skipped: skipped.length,
-        entries: imported,
-      },
+    return ok({
+      imported: imported.length,
+      skipped: skipped.length,
+      entries: imported,
     });
   } catch (error) {
     return serverErrorFromCatch(

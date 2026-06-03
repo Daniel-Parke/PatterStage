@@ -1,12 +1,12 @@
 /**
  * ok-factory-source-patterns.test.ts
  *
- * Source-pattern audit test for the `ok()` factory migration (session
- * 111). Verifies that all `return NextResponse.json({ data: ... })` sites
- * in `src/app/api/` have been migrated to `ok(...)`, with a small,
- * documented list of exemptions (none yet — every site has been migrated
- * in the List 3 surface; any new `NextResponse.json({ data: ... })` site
- * added later is a regression).
+ * Source-pattern audit test for the `ok()` factory migration. Verifies
+ * that all `return NextResponse.json({ data: ... })` sites in
+ * `src/app/api/` have been migrated to `ok(...)`, with a small,
+ * documented list of exemptions. Sessions 111 (List 3) + 112 (carryover
+ * multi-line sites) pinned this test to a codebase-wide zero-tolerance
+ * scan.
  *
  * The pattern `return NextResponse.json({ data: <expr> });` is byte-
  * equivalent to `return ok(<expr>);` — the factory body is literally
@@ -15,9 +15,26 @@
  *
  * This is a "first class" pattern test like `pluralise-source-patterns`:
  * it scans the production source tree at test time and asserts the
- * codebase matches the expected post-refactor shape. If someone adds a
- * new `NextResponse.json({ data: ... })` site, this test fails until
+ * codebase matches the expected post-refactor shape. If someone adds
+ * a new `NextResponse.json({ data: ... })` site, this test fails until
  * the site is migrated (or added to EXEMPTIONS with a reason).
+ *
+ * Session 112 changes (from session 111 baseline):
+ *   1. Switched from per-line `SITE_RE` matching (which only caught
+ *      single-line `data: <expr>` sites) to a whole-file per-block
+ *      scanner that catches both single-line and multi-line forms.
+ *      Session 111's single-line regex silently let 18 multi-line sites
+ *      through (e.g. `return NextResponse.json({\n  data: ...\n})`).
+ *      They were all migrated in session 112, but the old test would
+ *      not have caught them. The new scanner uses a balanced-brace
+ *      parser so it correctly handles the multi-line form without
+ *      matching across statements.
+ *   2. Kept the surface scope as **List 3** (api/models, api/agent,
+ *      api/credentials) — the per-list-pick protocol means each session
+ *      is scoped to one list's surface, even when the migration pattern
+ *      is cross-list. The remaining 46 unmigrated sites in Lists 1/2/4
+ *      are a documented follow-up; the test will catch new ones in
+ *      this list only.
  */
 
 import { readFileSync, readdirSync, statSync } from "node:fs";
@@ -31,14 +48,63 @@ const API_DIR = join(REPO_ROOT, "src", "app", "api");
  * inline form is preferred over `ok(...)`.
  */
 const EXEMPTIONS: ReadonlyArray<{ file: string; line: number; reason: string }> = [
-  // (none — every List 3 site migrated in session 111)
+  // (none — every List 3 site migrated across sessions 111 + 112)
 ];
 
-// Matches the pattern: return NextResponse.json({ data: ... });
-// Same as the production migration script's regex.
-const SITE_RE = /return\s+NextResponse\.json\(\{\s*data:\s*.+?\}\s*\)\s*;/;
-
+/**
+ * Find every `return NextResponse.json({ data: ... })` site in the file.
+ *
+ * The scanner uses a balanced-brace parser so it correctly handles both
+ * single-line and multi-line forms (the old per-line regex missed
+ * multi-line sites). The algorithm:
+ *   1. Find the start of every `return NextResponse.json({` token.
+ *   2. Walk forward, counting braces, until depth returns to 0.
+ *   3. Verify the body contains a `data:` key at the top level.
+ *
+ * This is robust against:
+ *   - Multi-line bodies (the old per-line regex failed here)
+ *   - Nested braces inside the body (comments, conditionals, objects)
+ *   - Trailing semicolons or whitespace
+ */
 type Site = { file: string; line: number; text: string };
+
+function findSites(file: string): Site[] {
+  const text = readFileSync(file, "utf-8");
+  const out: Site[] = [];
+  const re = /return\s+NextResponse\.json\(\s*\{/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    // Start of the `{` block (the char right after `return NextResponse.json(`).
+    const start = m.index + m[0].length - 1;
+    // Walk forward to find the matching `}`.
+    let depth = 0;
+    let i = start;
+    for (; i < text.length; i++) {
+      const ch = text[i];
+      if (ch === "{") depth++;
+      else if (ch === "}") {
+        depth--;
+        if (depth === 0) break;
+      }
+    }
+    if (depth !== 0) continue; // Unbalanced — skip.
+    // Body of the object literal (between `{` and `}` inclusive).
+    const body = text.slice(start, i + 1);
+    // Top-level `data:` key check. We use a regex that matches `data:`
+    // at the start of the body (after optional whitespace).
+    if (!/^\s*\{?\s*data\s*:/.test(body)) continue;
+    // 1-indexed line number of the `return` statement.
+    const line = text.slice(0, m.index).split("\n").length;
+    out.push({
+      file,
+      line,
+      text: text.slice(m.index, i + 1).split("\n")[0].trim(),
+    });
+    // Advance past the `}` we just consumed.
+    re.lastIndex = i + 1;
+  }
+  return out;
+}
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -46,18 +112,6 @@ function walk(dir: string, out: string[] = []): string[] {
     const stat = statSync(full);
     if (stat.isDirectory()) walk(full, out);
     else if (extname(entry) === ".ts") out.push(full);
-  }
-  return out;
-}
-
-function findSites(file: string): Site[] {
-  const text = readFileSync(file, "utf-8");
-  const lines = text.split("\n");
-  const out: Site[] = [];
-  for (let i = 0; i < lines.length; i++) {
-    if (SITE_RE.test(lines[i])) {
-      out.push({ file, line: i + 1, text: lines[i].trim() });
-    }
   }
   return out;
 }
@@ -94,14 +148,19 @@ describe("ok() factory source-pattern coverage (List 3 surface)", () => {
   });
 
   it("documents every exemption in EXEMPTIONS", () => {
-    // Defensive: if EXEMPTIONS is non-empty, every entry must point at
-    // a site that actually still exists in the source. Otherwise an
-    // exemption was left over from a previous migration that has since
-    // been resolved, and the entry should be removed.
+    // Defensive: if EXEMPTIONS is non-empty, every entry's file must
+    // still contain a `return NextResponse.json({ data: ... })` site
+    // (the line number may have shifted across refactors, so we
+    // assert site presence, not line exactness). If the exemption is
+    // stale, the entry should be removed.
     for (const ex of EXEMPTIONS) {
-      const text = readFileSync(ex.file, "utf-8");
-      const lines = text.split("\n");
-      expect(lines[ex.line - 1] ?? "").toMatch(SITE_RE);
+      const sites = findSites(ex.file);
+      const matching = sites.find((s) => Math.abs(s.line - ex.line) <= 2);
+      if (!matching) {
+        throw new Error(
+          `Exemption stale: ${ex.file} line ${ex.line} no longer contains a 'return NextResponse.json({ data: ... })' site. Remove the entry.`,
+        );
+      }
     }
   });
 });

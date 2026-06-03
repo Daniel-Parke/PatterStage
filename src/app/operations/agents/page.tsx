@@ -71,6 +71,24 @@ export default function BehaviourPage() {
   // over-engineering. The 2 identical-modal-close sites get the helper.
   const closeDelete = useCallback(() => setDeleteTarget(null), []);
 
+  // closeEditor — the file-editor card has 3 single-setter
+  // close sites that all do the same thing: `() => setEditor(null)`.
+  //   1. handleDelete's success path (line ~222) — but only when the
+  //      deleted profile was the one being edited
+  //   2. Profile-button onClick (line ~334) — when switching to a
+  //      different profile
+  //   3. Editor's "Close" button (line ~495)
+  // Centralising into a `useCallback` with empty deps (useState
+  // setters are stable) keeps the 3 sites in lockstep. The handleDelete
+  // site is part of a 3-setter success block (`setDeleteTarget(null);
+  // setSelectedProfileId(null); setEditor(null);`), so the inline
+  // `setEditor(null)` becomes `closeEditor()` — but the surrounding
+  // 2 setters stay inline. This mirrors the closeDelete pattern: a
+  // pure 1-setter helper extracted, leaving the multi-setter success
+  // path partially inline (which is the existing pattern in this page
+  // for both `closeDelete` and the 4-setter `closeCreate` block).
+  const closeEditor = useCallback(() => setEditor(null), []);
+
   const { showToast, toastElement } = useToast();
 
   const { driftCount, syncErrorCount } = profiles.reduce(
@@ -219,7 +237,7 @@ export default function BehaviourPage() {
         setDeleteTarget(null);
         if (selectedProfileId === target) {
           setSelectedProfileId(null);
-          setEditor(null);
+          closeEditor();
         }
         await loadProfiles();
       },
@@ -331,7 +349,7 @@ export default function BehaviourPage() {
                   onClick={() => {
                     setSelectedProfileId(profile.id);
                     if (editor && editor.profileId !== profile.id) {
-                      setEditor(null);
+                      closeEditor();
                     }
                   }}
                   className={`w-full text-left rounded-xl border p-3 transition-all ${
@@ -492,7 +510,7 @@ export default function BehaviourPage() {
                         >
                           {saving ? "Saving..." : saveStatus === "saved" ? "Saved!" : "Save"}
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => setEditor(null)}>
+                        <Button variant="ghost" size="sm" onClick={closeEditor}>
                           Close
                         </Button>
                       </div>

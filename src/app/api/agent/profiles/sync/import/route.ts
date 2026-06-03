@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { badRequest, ok } from "@/lib/api-response";
@@ -54,11 +54,9 @@ export async function POST(request: NextRequest) {
 
     if (importSkills) {
       const skillResults = importAllSkillsFromDisk();
-      return NextResponse.json({
-        data: {
-          success: skillResults.every((r) => r.success),
-          skills: skillResults,
-        },
+      return ok({
+        success: skillResults.every((r) => r.success),
+        skills: skillResults,
       });
     }
 
@@ -67,11 +65,9 @@ export async function POST(request: NextRequest) {
         const r = importDiscoveredProfile(d.slug);
         results.push({ slug: d.slug, success: r.success, error: r.error });
       }
-      return NextResponse.json({
-        data: {
-          success: results.every((r) => r.success),
-          results,
-        },
+      return ok({
+        success: results.every((r) => r.success),
+        results,
       });
     }
 
@@ -80,11 +76,9 @@ export async function POST(request: NextRequest) {
     }
 
     const result = importDiscoveredProfile(slug);
-    return NextResponse.json({
-      data: {
-        success: result.success,
-        result,
-      },
+    return ok({
+      success: result.success,
+      result,
     });
   }
   catch (error) {

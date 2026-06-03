@@ -9,13 +9,14 @@
 // GET: returns a dry-run preview of what would be imported without
 //   writing anything to the database.
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import { parseHermesConfig } from "@/lib/hermes-import";
 import { modelKey } from "@/lib/model-key";
 import { upsertModel, updateModel, listModels } from "@/lib/models-repository";
 import { upsertCredential } from "@/lib/credentials-repository";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
+import { ok } from "@/lib/api-response";
 import { toError } from "@/lib/api-fetch";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
@@ -28,23 +29,21 @@ export async function GET(request: NextRequest) {
 
   try {
     const parsed = parseHermesConfig();
-    return NextResponse.json({
-      data: {
-        modelsCount: parsed.models.length,
-        credentialsCount: parsed.credentials.length,
-        models: parsed.models.map((m) => ({
-          name: m.name,
-          provider: m.provider,
-          modelId: m.modelId,
-          baseUrl: m.baseUrl,
-          defaultSlots: m.defaultSlots,
-        })),
-        credentials: parsed.credentials.map((c) => ({
-          provider: c.provider,
-          keyHint: maskKeyHint(c.apiKey.trim()),
-        })),
-        details: parsed.details,
-      },
+    return ok({
+      modelsCount: parsed.models.length,
+      credentialsCount: parsed.credentials.length,
+      models: parsed.models.map((m) => ({
+        name: m.name,
+        provider: m.provider,
+        modelId: m.modelId,
+        baseUrl: m.baseUrl,
+        defaultSlots: m.defaultSlots,
+      })),
+      credentials: parsed.credentials.map((c) => ({
+        provider: c.provider,
+        keyHint: maskKeyHint(c.apiKey.trim()),
+      })),
+      details: parsed.details,
     });
   } catch (error) {
     return serverErrorFromCatch(
@@ -149,14 +148,12 @@ export async function POST(request: NextRequest) {
       detail: `models_imported=${modelsImported} models_skipped=${modelsSkipped} credentials_updated=${credentialsUpdated} credentials_linked=${credentialsLinked}`,
     });
 
-    return NextResponse.json({
-      data: {
-        modelsImported,
-        modelsSkipped,
-        credentialsUpdated,
-        credentialsLinked,
-        details,
-      },
+    return ok({
+      modelsImported,
+      modelsSkipped,
+      credentialsUpdated,
+      credentialsLinked,
+      details,
     });
   } catch (error) {
     return serverErrorFromCatch(

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, ok } from "@/lib/api-response";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
@@ -40,9 +40,7 @@ export async function PUT(request: NextRequest) {
     if (err) return err;
     assertPatchSucceeded(result);
 
-    return NextResponse.json({
-      data: { success: true, profile: result.profile, personality },
-    });
+    return ok({ success: true, profile: result.profile, personality });
   }
   catch (error) {
     return serverErrorFromCatch(

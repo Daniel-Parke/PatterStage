@@ -117,15 +117,28 @@ describe("closeDelete callback (session 103)", () => {
     //   setDeleteTarget(null);
     //   if (selectedProfileId === target) {
     //     setSelectedProfileId(null);
-    //     setEditor(null);
+    //     closeEditor();
     //   }
-    // This is a discriminated 3-setter success path — NOT a
-    // duplicate of the 1-setter modal close. The test locks
-    // this shape so a future "migrate to closeDelete()" PR
-    // (which would break the target-conditional + 2-setter
-    // inner block) is forced to consciously justify the change.
+    // This is a discriminated 3-setter success path — the 2nd +
+    // 3rd setters live behind a target-conditional. The
+    // `closeEditor()` reference (added in session 112) is the
+    // extracted 1-setter helper for the editor's "close" intent;
+    // the surrounding 2 setters stay inline because threading
+    // them through a single helper would break the
+    // target-conditional + 2-setter inner block.
+    // The test locks this shape so a future "migrate to a single
+    // close handleDelete helper" PR is forced to consciously
+    // justify the change.
+    //
+    // Session 112 update: the literal `setEditor(null);` in the
+    // success path was replaced with `closeEditor();` (matching
+    // the new 1-setter helper extracted in this session). The
+    // invariant is unchanged — the success block is still a
+    // 3-setter discriminated block — only the inner setter's
+    // spelling changed. We assert the new shape (the
+    // `closeEditor()` call replaces the inline `setEditor(null)`).
     expect(source).toMatch(
-      /onSuccess:\s*async\s*\(\s*\)\s*=>\s*\{[\s\S]*?setDeleteTarget\(\s*null\s*\)[\s\S]*?if\s*\(\s*selectedProfileId\s*===\s*target\s*\)\s*\{[\s\S]*?setSelectedProfileId\(\s*null\s*\)[\s\S]*?setEditor\(\s*null\s*\)/,
+      /onSuccess:\s*async\s*\(\s*\)\s*=>\s*\{[\s\S]*?setDeleteTarget\(\s*null\s*\)[\s\S]*?if\s*\(\s*selectedProfileId\s*===\s*target\s*\)\s*\{[\s\S]*?setSelectedProfileId\(\s*null\s*\)[\s\S]*?closeEditor\s*\(\s*\)/,
     );
   });
 });

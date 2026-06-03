@@ -11,7 +11,7 @@ import { fallbackSyncPostSchema } from "@/lib/fallback-config-schema";
 import { getFallbackConfig, updateFallbackConfigBatch } from "@/lib/fallbacks-repository";
 import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
 import { zodErrorResponse } from "@/lib/api-schemas";
-import { serverError } from "@/lib/api-response";
+import { ok, serverError } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -39,14 +39,12 @@ export async function POST(request: NextRequest) {
     const configPath = result?.configPath ?? null;
     const backupPath = result?.backupPath ?? null;
 
-    return NextResponse.json({
-      data: {
-        success: true,
-        config,
-        hermesHome,
-        configPath,
-        backupPath,
-      },
+    return ok({
+      success: true,
+      config,
+      hermesHome,
+      configPath,
+      backupPath,
     });
   } catch (error) {
     logApiError("POST /api/models/fallbacks/sync", "syncing fallback to Hermes", error);

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { badRequest, ok } from "@/lib/api-response";
@@ -54,13 +54,11 @@ export async function POST(request: NextRequest) {
         onlyOutOfSync,
       });
       const rootResult = pushRootToHermes();
-      return NextResponse.json({
-        data: {
-          success:
-            profileResults.every((r) => r.success) && rootResult.success,
-          root: rootResult,
-          results: profileResults,
-        },
+      return ok({
+        success:
+          profileResults.every((r) => r.success) && rootResult.success,
+        root: rootResult,
+        results: profileResults,
       });
     }
 
@@ -74,11 +72,9 @@ export async function POST(request: NextRequest) {
     }
 
     const result = pushProfileToHermes(slug);
-    return NextResponse.json({
-      data: {
-        success: result.success,
-        result,
-      },
+    return ok({
+      success: result.success,
+      result,
     });
   }
   catch (error) {

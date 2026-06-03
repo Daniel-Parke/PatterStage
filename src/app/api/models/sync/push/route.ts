@@ -9,7 +9,7 @@ import { parseJsonBody } from "@/lib/parse-json-body";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { pushModelToHermes, pushCredential } from "@/lib/sync-manager";
 import { getModelWithKey } from "@/lib/models-repository";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, ok } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -29,9 +29,7 @@ export async function POST(request: NextRequest) {
   try {
     const modelResult = pushModelToHermes(modelId);
     if (!modelResult.success) {
-      return NextResponse.json({
-        data: { success: false, details: modelResult.details, backupPath: modelResult.backupPath },
-      });
+      return ok({ success: false, details: modelResult.details, backupPath: modelResult.backupPath });
     }
 
     const details = [...modelResult.details];
@@ -52,12 +50,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      data: {
-        success: true,
-        details,
-        backupPath: modelResult.backupPath,
-      },
+    return ok({
+      success: true,
+      details,
+      backupPath: modelResult.backupPath,
     });
   } catch (error) {
     return serverErrorFromCatch(

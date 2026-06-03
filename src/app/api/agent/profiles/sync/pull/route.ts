@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { badRequest, ok } from "@/lib/api-response";
@@ -58,16 +58,14 @@ export async function POST(request: NextRequest) {
         }
       }
       const skillResults = importAllSkillsFromDisk();
-      return NextResponse.json({
-        data: {
-          success:
-            profileResults.every((r) => r.success) &&
-            rootResult.success &&
-            skillResults.every((r) => r.success),
-          root: rootResult,
-          profiles: profileResults,
-          skills: skillResults,
-        },
+      return ok({
+        success:
+          profileResults.every((r) => r.success) &&
+          rootResult.success &&
+          skillResults.every((r) => r.success),
+        root: rootResult,
+        profiles: profileResults,
+        skills: skillResults,
       });
     }
 
@@ -81,11 +79,9 @@ export async function POST(request: NextRequest) {
     }
 
     const result = pullProfileFromHermes(slug, { reconcileDisk });
-    return NextResponse.json({
-      data: {
-        success: result.success,
-        result,
-      },
+    return ok({
+      success: result.success,
+      result,
     });
   }
   catch (error) {

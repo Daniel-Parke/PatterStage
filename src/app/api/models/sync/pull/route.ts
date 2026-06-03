@@ -8,7 +8,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { updateModel, listModels } from "@/lib/models-repository";
 import { readHermesConfigModels, type HermesConfigModelEntry } from "@/lib/hermes-config-sync";
-import { notFound } from "@/lib/api-response";
+import { notFound, ok } from "@/lib/api-response";
 import { modelKey } from "@/lib/model-key";
 
 
@@ -78,12 +78,10 @@ export async function POST(request: NextRequest) {
     const key = modelKey(dbModel.provider, dbModel.modelId);
     const hermes = hermesModels.get(key);
     if (!hermes) {
-      return NextResponse.json({
-        data: {
-          success: true,
-          details: [{ action: "info", detail: `No matching section in config.yaml for ${dbModel.provider}/${dbModel.modelId}` }],
-          diffs: [],
-        },
+      return ok({
+        success: true,
+        details: [{ action: "info", detail: `No matching section in config.yaml for ${dbModel.provider}/${dbModel.modelId}` }],
+        diffs: [],
       });
     }
 
@@ -101,11 +99,9 @@ export async function POST(request: NextRequest) {
       updateModel(dbModel.id, filteredUpdates);
     }
 
-    return NextResponse.json({
-      data: {
-        success: true,
-        diffs: filteredDiffs,
-      },
+    return ok({
+      success: true,
+      diffs: filteredDiffs,
     });
   }
 
@@ -129,19 +125,17 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({
-    data: {
-      success: true,
-      updatedCount,
-      details: [
-        {
-          action: updatedCount > 0 ? "updated" : "unchanged",
-          detail: updatedCount > 0
-            ? `Applied updates to ${updatedCount} model(s)`
-            : "All models already in sync with config.yaml",
-        },
-      ],
-      diffs: allDiffs,
-    },
+  return ok({
+    success: true,
+    updatedCount,
+    details: [
+      {
+        action: updatedCount > 0 ? "updated" : "unchanged",
+        detail: updatedCount > 0
+          ? `Applied updates to ${updatedCount} model(s)`
+          : "All models already in sync with config.yaml",
+      },
+    ],
+    diffs: allDiffs,
   });
 }
