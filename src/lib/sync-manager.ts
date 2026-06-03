@@ -3,16 +3,13 @@
 //                      and Hermes config files
 // ═══════════════════════════════════════════════════════════════
 
-import { existsSync, readFileSync } from "fs";
-import * as yaml from "js-yaml";
-
-import { getActiveHermesPaths } from "./hermes-agent-runtime";
 import { getModel, listModels, getModelDefaults } from "./models-repository";
 import { getCredentialWithKey } from "./credentials-repository";
 import {
   syncSingleModelToHermesConfig,
   syncCredentialToHermesEnv,
   readHermesConfigModels,
+  readHermesYamlConfig,
 } from "./hermes-config-sync";
 import { isHermesProvider, type HermesProvider } from "./hermes-providers";
 
@@ -39,25 +36,18 @@ export interface DriftReport {
 function readHermesPrimaryModel(
   hermesModelMap: Map<string, { modelId: string; provider: string; baseUrl: string | null }>
 ): { modelId: string; provider: string; baseUrl: string | null } | null {
-  const paths = getActiveHermesPaths();
-  if (!existsSync(paths.config)) return null;
+  const config = readHermesYamlConfig<Record<string, unknown>>();
+  if (!config) return null;
+  const modelSection = config.model as Record<string, unknown> | undefined;
+  if (!modelSection) return null;
 
-  try {
-    const raw = readFileSync(paths.config, "utf-8");
-    const config = (yaml.load(raw) as Record<string, unknown>) ?? {};
-    const modelSection = config.model as Record<string, unknown> | undefined;
-    if (!modelSection) return null;
+  const primaryId = (modelSection.default ?? modelSection.model) as string | undefined;
+  const primaryProvider = modelSection.provider as string | undefined;
+  if (!primaryId || !primaryProvider) return null;
 
-    const primaryId = (modelSection.default ?? modelSection.model) as string | undefined;
-    const primaryProvider = modelSection.provider as string | undefined;
-    if (!primaryId || !primaryProvider) return null;
-
-    const entry = hermesModelMap.get(`${primaryProvider}::${primaryId}`);
-    if (!entry) return null;
-    return { modelId: entry.modelId, provider: entry.provider, baseUrl: entry.baseUrl };
-  } catch {
-    return null;
-  }
+  const entry = hermesModelMap.get(`${primaryProvider}::${primaryId}`);
+  if (!entry) return null;
+  return { modelId: entry.modelId, provider: entry.provider, baseUrl: entry.baseUrl };
 }
 
 // ── Drift detection ───────────────────────────────────────────

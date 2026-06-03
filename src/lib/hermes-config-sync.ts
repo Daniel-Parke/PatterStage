@@ -45,6 +45,30 @@ function backupTimestamp(): string {
 }
 
 /**
+ * Read `~/.hermes/config.yaml` and return the parsed YAML object, or
+ * `null` if the file is missing or unparseable. Single source of truth
+ * for the "existsSync + readFileSync + yaml.load + try/catch fallback"
+ * pattern that was duplicated across 5 sites (this module, the drift
+ * detector, the per-model diff route, and the fallbacks/import GET/POST).
+ *
+ * Byte-equivalence: callers that previously did
+ *   `yaml.load(raw) as HermesConfig ?? {}`
+ * get `null` instead and must handle the missing-file case explicitly —
+ * a more honest contract than silently substituting an empty object
+ * (which previously masked missing files in 2 of the 5 sites).
+ */
+export function readHermesYamlConfig<T = Record<string, unknown>>(): T | null {
+  const paths = getActiveHermesPaths();
+  if (!existsSync(paths.config)) return null;
+  try {
+    const raw = readFileSync(paths.config, "utf-8");
+    return (yaml.load(raw) as T) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Atomic write: stage to a sibling tmpfile, then rename. fs.rename on
  * POSIX is atomic for same-volume operations. Caller must ensure dir
  * exists.
@@ -226,12 +250,10 @@ export interface HermesConfigModelEntry {
 }
 
 export function readHermesConfigModels(): Map<string, HermesConfigModelEntry> {
-  const paths = getActiveHermesPaths();
-  if (!existsSync(paths.config)) return new Map();
+  const config = readHermesYamlConfig<Record<string, unknown>>();
+  if (!config) return new Map();
 
   try {
-    const raw = readFileSync(paths.config, "utf-8");
-    const config = (yaml.load(raw) as Record<string, unknown> | null) ?? {};
     const map = new Map<string, HermesConfigModelEntry>();
 
     type ConfigModelSlice = {

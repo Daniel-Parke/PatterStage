@@ -3,6 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { db, inTransaction, uuid, now } from "./db";
+import type { FallbackConfig } from "@/types/hermes";
 
 export interface FallbackEntryRecord {
   id: string;
@@ -197,17 +198,13 @@ interface ConfigRow {
   value: string;
 }
 
-export function getFallbackConfig(): {
-  restorePrimaryOnFallback: boolean;
-  fallbackNotification: boolean;
-  apiMaxRetries: number;
-} {
+export function getFallbackConfig(): FallbackConfig {
   const rows = db()
     .prepare("SELECT key, value FROM fallback_config")
     .all() as ConfigRow[];
 
   const map = Object.fromEntries(rows.map(r => [r.key, r.value]));
-  
+
   return {
     restorePrimaryOnFallback: map.restore_primary_on_fallback === "true",
     fallbackNotification: map.fallback_notification === "true",
@@ -220,11 +217,7 @@ export function updateFallbackConfigBatch(updates: {
   restorePrimaryOnFallback?: boolean;
   fallbackNotification?: boolean;
   apiMaxRetries?: number;
-}): {
-  restorePrimaryOnFallback: boolean;
-  fallbackNotification: boolean;
-  apiMaxRetries: number;
-} {
+}): FallbackConfig {
   if (updates.restorePrimaryOnFallback !== undefined) {
     db()
       .prepare("INSERT OR REPLACE INTO fallback_config (key, value) VALUES (?, ?)")

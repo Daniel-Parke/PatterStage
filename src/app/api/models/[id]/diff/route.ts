@@ -6,9 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { getModelWithKey } from "@/lib/models-repository";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { existsSync, readFileSync } from "fs";
-import * as yaml from "js-yaml";
+import { readHermesYamlConfig } from "@/lib/hermes-config-sync";
 import { envVarForProvider, isHermesProvider } from "@/lib/hermes-providers";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
@@ -29,15 +27,8 @@ interface ConfigModelSection {
 }
 
 function readHermesModelSection(): ConfigModelSection | null {
-  const paths = getActiveHermesPaths();
-  if (!existsSync(paths.config)) return null;
-  try {
-    const raw = readFileSync(paths.config, "utf-8");
-    const config = yaml.load(raw) as Record<string, unknown> | null;
-    return (config?.model as ConfigModelSection) ?? null;
-  } catch {
-    return null;
-  }
+  const config = readHermesYamlConfig<Record<string, unknown>>();
+  return (config?.model as ConfigModelSection) ?? null;
 }
 
 export async function POST(

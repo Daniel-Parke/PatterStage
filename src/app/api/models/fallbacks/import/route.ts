@@ -2,8 +2,6 @@
 // /api/models/fallbacks/import — GET preview / POST import fallbacks from Hermes config.yaml
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
-import { existsSync, readFileSync } from "fs";
-import * as yaml from "js-yaml";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { logApiError } from "@/lib/api-logger";
@@ -17,8 +15,9 @@ import {
 import { parseFallbackAgentSettingsFromYaml } from "@/lib/fallback-config-yaml";
 import { upsertModel } from "@/lib/models-repository";
 import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { readHermesYamlConfig } from "@/lib/hermes-config-sync";
 import { notFound, serverError } from "@/lib/api-response";
+import { fallbackKey } from "@/lib/model-key";
 
 interface ImportPreview {
   provider: string;
@@ -32,20 +31,17 @@ export async function GET(request: NextRequest) {
   if (auth) return auth;
 
   try {
-    const paths = getActiveHermesPaths();
-    if (!existsSync(paths.config)) {
+    const config = readHermesYamlConfig<{
+      fallback_providers?: Array<{ provider?: string; model?: string; base_url?: string }>;
+    }>();
+    if (!config) {
       return NextResponse.json({ data: { fallbacks: [], imported: false } });
     }
-
-    const raw = readFileSync(paths.config, "utf-8");
-    const config = yaml.load(raw) as {
-      fallback_providers?: Array<{ provider?: string; model?: string; base_url?: string }>;
-    } | null;
 
     const preview: ImportPreview[] = [];
     const existingChain = listFallbackChain();
     const existingKeys = new Set(
-      existingChain.map((e) => `${e.provider}::${e.modelIdString}`)
+      existingChain.map((e) => fallbackKey(e.provider, e.modelIdString))
     );
 
     for (const entry of config?.fallback_providers ?? []) {
@@ -54,7 +50,7 @@ export async function GET(request: NextRequest) {
         provider: entry.provider,
         model: entry.model,
         baseUrl: entry.base_url?.trim() || null,
-        alreadyImported: existingKeys.has(`${entry.provider}::${entry.model}`),
+        alreadyImported: existingKeys.has(fallbackKey(entry.provider, entry.model)),
       });
     }
 
@@ -75,18 +71,15 @@ export async function POST(request: NextRequest) {
   const body = bodyResult as { overwrite?: boolean };
 
   try {
-    const paths = getActiveHermesPaths();
-    if (!existsSync(paths.config)) {
+    const config = readHermesYamlConfig<{
+      fallback_providers?: Array<{ provider?: string; model?: string; base_url?: string }>;
+      agent?: unknown;
+    }>();
+    if (!config) {
       return notFound("config.yaml not found");
     }
 
-    const rawContent = readFileSync(paths.config, "utf-8");
-    const config = yaml.load(rawContent) as {
-      fallback_providers?: Array<{ provider?: string; model?: string; base_url?: string }>;
-      agent?: unknown;
-    } | null;
-
-    const agentSettings = parseFallbackAgentSettingsFromYaml(config?.agent);
+    const agentSettings = parseFallbackAgentSettingsFromYaml(config.agent);
     if (Object.keys(agentSettings).length > 0) {
       updateFallbackConfigBatch(agentSettings);
     }
@@ -97,14 +90,14 @@ export async function POST(request: NextRequest) {
 
     const existingChain = listFallbackChain();
     const existingKeys = new Set(
-      existingChain.map((e) => `${e.provider}::${e.modelIdString}`)
+      existingChain.map((e) => fallbackKey(e.provider, e.modelIdString))
     );
 
     for (let i = 0; i < chain.length; i++) {
       const entry = chain[i];
       if (!entry.provider || !entry.model) continue;
 
-      const key = `${entry.provider}::${entry.model}`;
+      const key = fallbackKey(entry.provider, entry.model);
       if (existingKeys.has(key) && !body?.overwrite) {
         skipped.push(key);
         continue;

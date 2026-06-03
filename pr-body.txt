@@ -680,3 +680,116 @@ Byte-equivalent: the hook stores the callback in a ref (changing identity doesn'
 4. **`isChReadOnly()` consolidation** — 8 BARE sites + 1 custom site. Future session picking any list can pick off 1-2 BARE sites.
 5. **Latent bug in `useSystemCronJobs.handlePauseAll`** — preserved byte-equivalently. Not blocking.
 6. **Add a busy state to `handleCronScheduleChange`** — if a future session wants to adopt `runMutation` there, the work is: (a) add `setCronScheduleBusy` state, (b) thread the busy state into the `IntervalSelector` (or a wrapper) for the in-flight indicator, (c) adopt `runMutation`. The 18-line optimistic update is a separate refactor that should be extracted as a pure helper in `src/lib/` first.
+
+---
+
+## Session 67 — List 3 (Models, Agents, Skills, Tools, Personalities) — readHermesYamlConfig + FallbackConfig type alias
+
+Random pick: List 3. The session-66 forward-guidance said to pick List 2, 3, or 4 next; this session randomised onto List 3 (RANDOM % 4 + 1 → 3). Four small-bore refactors + 1 carry-over completion + 6 new unit tests, all byte-equivalent.
+
+### Refactor 1 — `readHermesYamlConfig()` helper, adopted in 4 sites
+
+**File:** `src/lib/hermes-config-sync.ts` (NEW) + 3 routes/lib + cleanup of 2 dead imports.
+
+The "existsSync + readFileSync + yaml.load + try/catch fallback" pattern was duplicated across 4 sites:
+
+1. `readHermesConfigModels()` in `src/lib/hermes-config-sync.ts` — 9 lines
+2. `readHermesPrimaryModel()` in `src/lib/sync-manager.ts` — 16 lines
+3. `readHermesModelSection()` in `src/app/api/models/[id]/diff/route.ts` — 10 lines
+4. `GET` + `POST` handlers in `src/app/api/models/fallbacks/import/route.ts` — 2 × 7 lines
+
+Extracted to a single helper:
+
+```ts
+export function readHermesYamlConfig<T = Record<string, unknown>>(): T | null {
+  const paths = getActiveHermesPaths();
+  if (!existsSync(paths.config)) return null;
+  try {
+    const raw = readFileSync(paths.config, "utf-8");
+    return (yaml.load(raw) as T) ?? null;
+  } catch {
+    return null;
+  }
+}
+```
+
+After the migration, `sync-manager.ts` no longer needs `existsSync`, `readFileSync`, `* as yaml`, or `getActiveHermesPaths` (all 4 imports removed — were only used by `readHermesPrimaryModel`). The `[id]/diff/route.ts` file no longer needs 3 of those 4 imports either. The 2 routes in `models/fallbacks/import/route.ts` no longer need `existsSync`, `readFileSync`, `* as yaml`, or `getActiveHermesPaths` (4 imports removed).
+
+**6 new unit tests** in `tests/unit/read-hermes-yaml-config.test.ts` lock all 4 behavioural branches:
+- Returns `null` when the file is missing
+- Returns the parsed object for a valid file
+- Returns `null` for an empty file (yaml.load yields `undefined`)
+- Returns `null` for malformed YAML (yaml.load throws)
+- Returns the parsed object for valid YAML with multiple top-level sections
+- Generic `<T>` type-narrowing round-trip
+
+### Refactor 2 — `FallbackConfig` type alias consolidation in `fallbacks-repository.ts`
+
+**File:** `src/lib/fallbacks-repository.ts`
+
+The canonical `FallbackConfig` interface already lives at `src/types/hermes.ts:249-253` and is used by every consumer (5+ import sites, including the UI components and the `useModelsPage` hook). But `getFallbackConfig()` and `updateFallbackConfigBatch()` in this file each declared their return/input type as an inline 3-field anonymous struct — 2 redundant inline copies of the canonical type.
+
+Replaced both inline types with `FallbackConfig`. The byte-equivalence of the returned object is preserved (the 3 fields are identical, just the type alias is now the canonical one). No call-site changes needed because the structural type is already identical.
+
+### Refactor 3 — Carry-over from session 64 (List 3, commit `19fa7b3`)
+
+**File:** `src/app/api/models/fallbacks/import/route.ts`
+
+The session-64 `modelKey`/`fallbackKey` commit message claimed to migrate "5 sites" across `models/import`, `models/sync/pull`, and `models/fallbacks/import`, but the actual git diff only touched `models/import/route.ts` (2 sites). The 2 raw `${provider}::${modelId}` template literals in `models/fallbacks/import/route.ts` were missed.
+
+Migrated both sites:
+- Line 49: `existingKeys = new Set(existingChain.map((e) => fallbackKey(e.provider, e.modelIdString)))` (was raw template)
+- Line 57: `existingKeys.has(fallbackKey(entry.provider, entry.model))` (was raw template)
+- Line 101: same Set construction in POST handler
+- Line 108: `const key = fallbackKey(entry.provider, entry.model)` (was raw template)
+
+Byte-equivalent at runtime — `${a}::${b}` and `fallbackKey(a, b)` produce the same string. The session-64 work is now complete.
+
+### Refactor 4 — Orphan trailing banner removed
+
+**File:** `src/app/api/models/sync/pull/route.ts`
+
+The file ended with a `// ═══════════════════════════════════════════════════════════════` banner with no body — a leftover from a paste operation. Removed.
+
+### What was rejected
+
+- **Migrating `readFallbackAgentSettingsFromConfig()` in `hermes-config-sync.ts`** to use the new helper — this function takes an optional `configPath` argument (custom-path test seam) and falls back to `paths.config` only when omitted. The new `readHermesYamlConfig()` helper hardcodes `paths.config`. Migrating would either lose the custom-path behaviour or require overloading the helper signature with a custom path. The asymmetric `configPath ?? paths.config` is load-bearing for `assertFallbackAgentSettingsWritten(configPath, ...)` and its tests. Out of scope for a byte-equivalent refactor; leave the divergence as a documented outlier (same as the `runMutation` "shared AbortController" pattern from session 66).
+- **Centralising the `getActiveHermesPaths()` mock in the new test file** — the per-file `__FAKE_HERMES_ROOT__` mock pattern is already used in 3+ other tests; creating a shared mock helper would be a 4th-file refactor. Out of scope for a single-session byte-equivalent pass.
+
+### Files
+
+- `src/lib/hermes-config-sync.ts` (MODIFIED) — `readHermesYamlConfig<T>()` added; `readHermesConfigModels()` uses it
+- `src/lib/sync-manager.ts` (MODIFIED) — `readHermesPrimaryModel()` uses it; 4 dead imports removed (`existsSync`, `readFileSync`, `* as yaml`, `getActiveHermesPaths`)
+- `src/app/api/models/[id]/diff/route.ts` (MODIFIED) — `readHermesModelSection()` uses it; 3 dead imports removed
+- `src/app/api/models/fallbacks/import/route.ts` (MODIFIED) — GET + POST use it; 4 dead imports removed; 2 sites migrated to `fallbackKey`; `config?.agent` → `config.agent` (the `?.` was defensive against the deleted null check)
+- `src/app/api/models/sync/pull/route.ts` (MODIFIED) — orphan trailing banner removed
+- `src/lib/fallbacks-repository.ts` (MODIFIED) — 2 inline 3-field structs → `FallbackConfig`
+- `tests/unit/read-hermes-yaml-config.test.ts` (NEW) — 6 tests for the new helper
+
+### Verification
+
+- All 1092 unit tests pass (181 suites, +6 new) — 0 existing tests broken
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint . --max-warnings 0` clean
+- `npm run build` passes
+- 0 user-visible behaviour changes (all 4 refactors + the carry-over are byte-equivalent)
+- 4 imports removed from `sync-manager.ts` and 3 from `[id]/diff/route.ts` — the migration reduces both files' import surface area
+
+### Patterns to take forward
+
+1. **`readHermesYamlConfig<T>()` is the canonical read** — any new API route or lib function that needs to read `~/.hermes/config.yaml` should adopt this helper. The "return null on missing or unparseable" contract is more honest than the old "return `{}` on missing" pattern (which masked missing-file bugs in 2 of the 4 original sites). The migration of `readFallbackAgentSettingsFromConfig()` is the obvious next step once a custom-path overload is needed.
+2. **Inline 3-field structs in repository functions are usually type-alias duplications** — when a repository function returns a struct that matches an existing interface in `types/hermes.ts`, the inline form is almost always a missed-import. `grep -nE "export function.*\(\): \{$" src/lib/` is a good detector.
+3. **Carry-over audit at session start (Pitfall G reinforced, 2nd time)** — session 64's commit message claimed to migrate 5 sites but actually migrated 2. The "double-check the commit body against the git diff" step is non-negotiable. A session that started fresh would have shipped the half-finished refactor. The 3-step checklist (`git status` + `npx tsc --noEmit` + `npx jest`) catches the breakage, but only a human reading the actual diff against the claimed scope catches a false-complete claim.
+4. **ASCII banner orphans are a real category of dead code** — the trailing `// ═══════` in `models/sync/pull/route.ts` was harmless but a sign that something was pasted-in incorrectly. Pattern detector: `tail -3 src/**/*.ts | grep -E '^// ═+$'` (with the file count threshold) catches them.
+5. **The "shared `getActiveHermesPaths()` mock via `__FAKE_HERMES_ROOT__` global" pattern** has spread to 4+ test files now. When the 5th test file adopts it, it's worth extracting to `tests/helpers/hermes-paths-mock.ts` (or similar). Out of scope this session.
+
+### "Next session should:" block (carried forward)
+
+1. **Pick a different list next session** to spread the refactor surface. List 1 has been hit 8+ times (54, 57, 61, 62, 65, 66). List 2 has been hit 9+ times (41, 42, 44, 45, 48, 49, 56, 58, 63). List 3 hit 4 times now (the 2026-05-25 audit, session 64, plus the 2026-05-27 refactor, plus session 67). List 4 hit 4 times. List 2 or List 4 are the next-ripe surfaces.
+2. **`runMutation` adoption in other lists** — List 2 (cron/missions/chat) and List 3 (models/agents/skills/tools) are still the next-ripe surfaces. Session 67 confirmed that the patterns survive the refactor sweep; the helper is stable enough to adopt.
+3. **`useMissionsPage` decomposition** is still a backlog item.
+4. **`isChReadOnly()` consolidation** — 8 BARE sites + 1 custom site. Future session picking any list can pick off 1-2 BARE sites.
+5. **Latent bug in `useSystemCronJobs.handlePauseAll`** — preserved byte-equivalently. Not blocking.
+6. **Add a busy state to `handleCronScheduleChange`** — prerequisite for `runMutation` adoption.
+7. **Migrate `readFallbackAgentSettingsFromConfig()` to use `readHermesYamlConfig()`** — needs a custom-path overload to preserve the `assertFallbackAgentSettingsWritten(configPath, ...)` behaviour. Add a second helper variant or extend the existing one with an optional path arg.
+8. **Extract `__FAKE_HERMES_ROOT__` mock pattern to `tests/helpers/hermes-paths-mock.ts`** when the 5th test file adopts it. 4+ files now use this pattern.
