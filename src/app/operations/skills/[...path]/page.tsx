@@ -15,7 +15,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { SimpleMarkdown } from "@/components/skills/SimpleMarkdown";
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch, messageFromError } from "@/lib/api-fetch";
 
 interface SkillData {
   name: string;
@@ -63,7 +63,7 @@ export default function SkillDetailPage() {
       const json = await apiFetch(`/api/skills/${skillPath}`);
       setData(json.data || json);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(messageFromError(err, "Unknown error"));
     } finally {
       setLoading(false);
     }

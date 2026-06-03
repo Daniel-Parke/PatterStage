@@ -20,6 +20,26 @@ export function toError(e: unknown): Error {
   return e instanceof Error ? e : new Error(String(e));
 }
 
+/**
+ * Coerce an unknown caught value to a user-friendly error message,
+ * falling back to `fallback` when the error is empty/unknown.
+ *
+ * This is the canonical replacement for the long-standing pattern
+ *   err instanceof Error ? err.message : <fallback>
+ * that appears 20+ times across operations pages, hooks, and
+ * `safeApiCall` itself. It composes `toError()` and centralises the
+ * `|| fallback` discipline so every catch block is guaranteed to
+ * produce a non-empty string.
+ *
+ * @example
+ *   } catch (err) {
+ *     showToast(messageFromError(err, "Failed to load"), "error");
+ *   }
+ */
+export function messageFromError(e: unknown, fallback: string): string {
+  return toError(e).message || fallback;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic JSON fetch returns arbitrary shapes
 export async function apiFetch<T = any>(
   path: string,
@@ -73,6 +93,6 @@ export async function safeApiCall<T = unknown>(
     });
     return { ok: true, data: data as T };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Request failed" };
+    return { ok: false, error: messageFromError(e, "Request failed") };
   }
 }

@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useToast } from "@/components/ui/Toast";
-import { safeApiCall, apiFetch } from "@/lib/api-fetch";
+import { safeApiCall, apiFetch, messageFromError, toError } from "@/lib/api-fetch";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
 import { type TaskType } from "@/lib/hermes-providers";
@@ -57,7 +57,8 @@ export function useModelsPage() {
       // First, sync models from ~/.hermes/config.yaml — ensures we show
       // live data even if the user changed defaults externally via hermes CLI
       await apiFetch("/api/models/import", { method: "POST" }).catch((err) => {
-        console.warn("Model auto-import failed — showing cached data:", err instanceof Error ? err.message : err);
+        const msg = toError(err).message || String(err);
+        console.warn("Model auto-import failed — showing cached data:", msg);
       });
 
       const [mData, cData, dData, driftData, fbData, fbCfgData] = await Promise.all([
@@ -87,7 +88,7 @@ export function useModelsPage() {
         setFallbackConfig(fbCfgData.data.config);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load registry");
+      setError(messageFromError(err, "Failed to load registry"));
     } finally {
       setLoading(false);
     }
@@ -117,7 +118,7 @@ export function useModelsPage() {
         showToast(successMessage, "success");
       } catch (err) {
         showToast(
-          err instanceof Error ? err.message : errorFallback,
+          messageFromError(err, errorFallback),
           "error",
         );
       }
@@ -164,14 +165,12 @@ export function useModelsPage() {
         void loadAll();
         return { success: true, backupPath: null, details: [] };
       } catch (err) {
-        showToast(
-          err instanceof Error ? err.message : `${label} failed`,
-          "error",
-        );
+        const detail = messageFromError(err, `${label} failed`);
+        showToast(detail, "error");
         return {
           success: false,
           backupPath: null,
-          details: [{ action, detail: err instanceof Error ? err.message : `${label} failed` }],
+          details: [{ action, detail }],
         };
       }
     },
@@ -207,7 +206,7 @@ export function useModelsPage() {
         await loadAll();
       } catch (err) {
         showToast(
-          err instanceof Error ? err.message : "Delete failed",
+          messageFromError(err, "Delete failed"),
           "error"
         );
       }
@@ -231,7 +230,7 @@ export function useModelsPage() {
         );
       } catch (err) {
         showToast(
-          err instanceof Error ? err.message : "Default update failed",
+          messageFromError(err, "Default update failed"),
           "error"
         );
         await loadAll();
@@ -255,7 +254,7 @@ export function useModelsPage() {
               });
               return { taskType, ok: true };
             } catch (err) {
-              return { taskType, ok: false, error: err instanceof Error ? err.message : "Failed" };
+              return { taskType, ok: false, error: messageFromError(err, "Failed") };
             }
           })
         );
@@ -274,7 +273,7 @@ export function useModelsPage() {
         }
       } catch (err) {
         showToast(
-          err instanceof Error ? err.message : "Bulk update failed",
+          messageFromError(err, "Bulk update failed"),
           "error"
         );
         await loadAll();
@@ -300,7 +299,7 @@ export function useModelsPage() {
       await loadAll();
     } catch (err) {
       showToast(
-        err instanceof Error ? err.message : "Refresh failed",
+        messageFromError(err, "Refresh failed"),
         "error"
       );
     } finally {
@@ -365,7 +364,7 @@ export function useModelsPage() {
         showToast("Fallback updated", "success");
       } catch (err) {
         showToast(
-          err instanceof Error ? err.message : "Update failed",
+          messageFromError(err, "Update failed"),
           "error"
         );
       } finally {
@@ -409,7 +408,7 @@ export function useModelsPage() {
       showToast("Fallback config imported from Hermes", "success");
     } catch (err) {
       showToast(
-        err instanceof Error ? err.message : "Import failed",
+        messageFromError(err, "Import failed"),
         "error"
       );
     } finally {
@@ -523,7 +522,7 @@ export function useModelsPage() {
       showToast("Fallback config synced to Hermes", "success");
     } catch (err) {
       showToast(
-        err instanceof Error ? err.message : "Sync failed",
+        messageFromError(err, "Sync failed"),
         "error"
       );
     } finally {

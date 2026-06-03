@@ -6,7 +6,7 @@ import { RotateCcw, Database, Bot, ListTodo } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch, messageFromError } from "@/lib/api-fetch";
 import type { AgentProfile } from "@/types/hermes";
 
 interface SeedState {
@@ -53,7 +53,7 @@ export default function ConfigSeedPage() {
         ),
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load");
+      setError(messageFromError(e, "Failed to load"));
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,7 @@ export default function ConfigSeedPage() {
       });
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Seed failed");
+      setError(messageFromError(e, "Seed failed"));
     } finally {
       setBusy(null);
     }

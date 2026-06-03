@@ -15,7 +15,7 @@ import Modal from "@/components/ui/Modal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import type { AgentProfile, ProfileFile } from "@/types/hermes";
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch, messageFromError } from "@/lib/api-fetch";
 import { profileSyncBody } from "@/lib/profile-sync-body";
 import { runSyncAction } from "@/lib/operation-sync-action";
 
@@ -204,7 +204,7 @@ export default function BehaviourPage() {
       setPreviewMode(true);
       setSaveStatus("idle");
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "Failed to load file", "error");
+      showToast(messageFromError(e, "Failed to load file"), "error");
     }
   };
 

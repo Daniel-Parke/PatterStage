@@ -19,7 +19,7 @@ import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch, messageFromError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { groupByCategory, titleCaseCategory } from "@/lib/skills-grouping";
 import type { Skill, SkillsData } from "@/types/hermes";
@@ -165,7 +165,7 @@ export default function SkillsPage() {
         if (prevData) {
           setData(prevData);
         }
-        showToast(err instanceof Error ? err.message : "Failed to update skill", "error");
+        showToast(messageFromError(err, "Failed to update skill"), "error");
       } finally {
         // Always clear the pending toggle, regardless of success or
         // failure — single source of truth for the toggling-map
@@ -213,7 +213,7 @@ export default function SkillsPage() {
       }
       setEditingSkill(null);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to save skill", "error");
+      showToast(messageFromError(err, "Failed to save skill"), "error");
     } finally {
       setSavingEdit(false);
     }

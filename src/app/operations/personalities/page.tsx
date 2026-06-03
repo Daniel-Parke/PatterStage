@@ -26,7 +26,7 @@ import Modal from "@/components/ui/Modal";
 import {
   getPersonalityEmoji,
 } from "@/lib/personalities";
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch, messageFromError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 
 interface Personality {
@@ -163,7 +163,7 @@ function EditPersonalityModal({
       });
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setError(messageFromError(err, "Unknown error"));
     } finally {
       setSaving(false);
     }
