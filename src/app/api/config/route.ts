@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 import yaml from "js-yaml";
 
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
@@ -11,6 +11,7 @@ import { db } from "@/lib/db";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
 import { parseJsonBody } from "@/lib/parse-json-body";
+import { ensureDir, backupTimestamp } from "@/lib/fs-helpers";
 
 const CACHE_TTL_MS = 15_000; // 15 seconds
 
@@ -170,9 +171,8 @@ export async function PUT(request: NextRequest) {
     const configPath = H.config;
     if (existsSync(configPath)) {
       const backupDir = H.backups;
-      mkdirSync(backupDir, { recursive: true });
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const backupPath = `${backupDir}/config.yaml.${timestamp}.bak`;
+      ensureDir(backupDir);
+      const backupPath = `${backupDir}/config.yaml.${backupTimestamp()}.bak`;
       writeFileSync(backupPath, readFileSync(configPath, "utf-8"), "utf-8");
     }
 

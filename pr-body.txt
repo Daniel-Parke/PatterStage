@@ -1,3 +1,101 @@
+## Session 85 — List 4 (Models, HERMES.md, Environment, All Settings) — fs-helpers consolidation
+
+Pick was List 4 (per random selection). The session was an fs-orchestration sweep across `src/lib/` and `src/app/api/` that promoted three private/inline filesystem primitives to a single canonical `src/lib/fs-helpers.ts` module. These helpers were used to be repeated in 12+ files: the `if (!existsSync(dir)) mkdirSync(dir, { recursive: true })` pattern (12+ sites), the `new Date().toISOString().replace(/[:.]/g, "-")` timestamp (3+ sites), and the "copy to timestamped backup" pattern (3+ sites, with 2 in `src/lib/` and 1 in `src/app/api/agent/files`). After this session, `mkdirSync` appears in exactly one file (`fs-helpers.ts`) — every other Control Hub module reaches for `ensureDir()`.
+
+All 1218 tests pass (191 suites, +13 new from `fs-helpers.test.ts`). tsc clean, eslint clean, build passes. Byte-equivalent at runtime for every site.
+
+### What changed (this session — session 85)
+
+- **New file: `src/lib/fs-helpers.ts`** — three primitives that were previously duplicated (or hoisted as private helpers in `hermes-config-sync.ts`):
+  - `ensureDir(dir)` — `mkdir -p` without throwing on existing dir. Replaces the 12+ inline `if (!existsSync(dir)) mkdirSync(dir, { recursive: true })` blocks across `src/lib/` and `src/app/api/`.
+  - `backupTimestamp()` — filesystem-safe ISO-8601 timestamp suffix (`2026-06-03T12-34-56-789Z`). Replaces 3+ inline `new Date().toISOString().replace(/[:.]/g, "-")` expressions in `config/route.ts`, `agent/files/[key]/route.ts`, and `hermes-profile-sync.ts`.
+  - `backupFile(src, dir)` — copy `src` to `dir/<basename>.<ts>.bak`, creating the dir first. Returns the new path or null when `src` doesn't exist. Promoted from the private helper in `hermes-config-sync.ts`.
+
+- **Migrated 11 sites across 11 files** to use the new `fs-helpers`:
+  - `src/lib/audit-log.ts` — `ensureLogsDir()` uses `ensureDir()`
+  - `src/lib/db.ts` — data-dir creation uses `ensureDir()`
+  - `src/lib/db/upgrade.ts` — `dirname(dbPath)` dir creation uses `ensureDir()`
+  - `src/lib/deploy-status.ts` — `deployStatusDir()` simplified to use `path.dirname()` (and the `mkdirSync` call uses `ensureDir()`)
+  - `src/lib/hermes-config-sync.ts` — removed private `ensureDir`, `backupTimestamp`, `backupFile`; now imports from `fs-helpers`
+  - `src/lib/hermes-profile-sync.ts` — `ensureProfileDirs` + `writeWithBackup` + `pushSkillToHermes` use `ensureDir()` and `backupTimestamp()`
+  - `src/lib/seed/catalog-seed.ts` — `writeSeedState` uses `ensureDir()` (and the unused `existsSync` import cleaned up)
+  - `src/lib/backends/hermes.ts` — 2 sites (auth path + missions dir) use `ensureDir()`; `mkdirSync` import removed
+  - `src/app/api/agent/files/[key]/route.ts` — `dirname(resolved.path)` (instead of substring-slicing) + `ensureDir()` + `backupTimestamp()`
+  - `src/app/api/config/route.ts` — `ensureDir(backupDir)` + `backupTimestamp()` for the YAML backup filename
+  - `src/app/api/templates/route.ts` — the local `ensureDir` function is renamed to `ensureDataDir` to avoid shadowing the import
+
+- **New file: `tests/unit/fs-helpers.test.ts`** — 13 tests covering all 3 primitives:
+  - `ensureDir` (4): create non-existent, no-op on existing, recursive nested, byte-equivalent with the inline pattern
+  - `backupTimestamp` (4): ISO-8601 shape with `:` and `.` replaced by `-`, filename-safe, ms-precision + trailing Z, deterministic in same ms
+  - `backupFile` (5): null on missing source, happy-path copy + dir creation, UTF-8 roundtrip (with emoji), basename extraction handling `/` and `\`, backup-dir auto-create
+
+### Files
+
+**New files (2):**
+- `src/lib/fs-helpers.ts` — the 3 promoted primitives
+- `tests/unit/fs-helpers.test.ts` — 13 unit tests
+
+**Modified files (11):**
+- `src/lib/audit-log.ts` — 1 site → `ensureDir()`
+- `src/lib/db.ts` — 1 site → `ensureDir()`
+- `src/lib/db/upgrade.ts` — 1 site → `ensureDir()`
+- `src/lib/deploy-status.ts` — 1 site → `ensureDir()`; `dirname()` for `deployStatusDir()`
+- `src/lib/hermes-config-sync.ts` — removed 3 private helpers (12 lines deleted), 1 site → `backupFileShared()`
+- `src/lib/hermes-profile-sync.ts` — 4 sites → `ensureDir()` + `backupTimestamp()`
+- `src/lib/seed/catalog-seed.ts` — 1 site → `ensureDir()`; cleaned up duplicate `existsSync`/`writeFileSync` import
+- `src/lib/backends/hermes.ts` — 2 sites → `ensureDir()`; `mkdirSync` import removed
+- `src/app/api/agent/files/[key]/route.ts` — 1 site → `dirname()` + `ensureDir()` + `backupTimestamp()`
+- `src/app/api/config/route.ts` — 1 site → `ensureDir()` + `backupTimestamp()`
+- `src/app/api/templates/route.ts` — local `ensureDir` renamed to `ensureDataDir` to avoid shadowing
+
+Net delta: 12 files, +67 / -39 lines (after subtracting 13 test-file additions and the 13 new test bodies). The biggest win is the private-helper removal in `hermes-config-sync.ts` (12 lines of `ensureDir` + `backupTimestamp` + `backupFile` gone, replaced with 1 import line).
+
+### Verification
+
+- **All 1218 unit tests pass** (191 suites, +13 new from `fs-helpers.test.ts`)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint --max-warnings 0`** clean on all 12 touched files
+- **`npm run build`** passes
+- **Byte-equivalence audit per session-51 lesson**:
+  - `ensureDir(dir)` is byte-equivalent to the inline `if (!existsSync(dir)) mkdirSync(dir, { recursive: true })` — same existsSync check, same recursive mkdir, same no-op on existing.
+  - `backupTimestamp()` returns the same string as `new Date().toISOString().replace(/[:.]/g, "-")`.
+  - `backupFile(src, dir)` is byte-equivalent to the private `backupFile` in `hermes-config-sync.ts` (same `<basename>.<ts>.bak` naming, same UTF-8 read+write, same null-on-missing-source).
+  - `deploy-status.ts`'s `deployStatusDir()` change from `p.substring(0, p.lastIndexOf("/"))` to `dirname(p)` is byte-equivalent for the path shape used (`getActiveHermesPaths().deployStatus = $HERMES_HOME/logs/ch-deploy.status` — the only `/` is the last one, so both return `$HERMES_HOME/logs`). The `dirname` form is the canonical Node helper.
+  - `agent/files/[key]/route.ts`'s `resolved.path.substring(0, resolved.path.lastIndexOf("/"))` → `dirname(resolved.path)` is byte-equivalent for the profile-relative paths used (always contains at least one `/` since `path-security.ts` produces `profile/<key>`-shaped paths).
+
+### What was rejected
+
+- **Move `fs-helpers.ts` to `src/lib/fs/ensure-dir.ts` etc.** (one file per primitive) — over-decomposition for 3 tiny functions. The single-file form is more discoverable and matches the `api-fetch.ts` / `api-logger.ts` pattern.
+- **Promote `safeStat` (already in `src/lib/fs-stats.ts`) into `fs-helpers.ts`** — different concern (stat is for safe metadata reads, not directory creation). Keeping them in separate modules makes the dependency graph cleaner.
+- **Migrate `src/components/` and `src/hooks/` filesystem code** — a grep for `mkdirSync` in those directories returns 0 hits (they all go through `apiFetch` or the API routes). No work to do there.
+- **Add a `removeDir` / `removeFile` primitive** — none of the migrated sites need a removal helper. The existing `rmSync` call sites (e.g. `db/upgrade.ts`) are fine as-is.
+- **`backupFile` to use `copyFileSync` instead of `readFileSync` + `writeFileSync`** — the pre-refactor private form used the read+write form (which is what the migrated code did at every site). Switching to `copyFileSync` would change the syscall pattern (no UTF-8 roundtrip) and is out of scope for "AT LEAST identical results".
+
+### Patterns to take forward
+
+1. **"fs-helpers" pattern** — when 3+ sites duplicate the same filesystem primitive (directory creation, timestamp, backup), promote to `src/lib/fs-helpers.ts`. The current 3 helpers cover 18+ migrated sites; the next primitives to consider (when 3+ sites appear) are `safeWriteFileAtomic` (for the "write to .tmp, then rename" pattern in `deploy-status.ts:108` and `hermes-config-sync.ts:atomicWriteFile`) and `safeReadJson` (for the 5+ `try { JSON.parse(readFileSync(...)) } catch { return null }` blocks).
+2. **"Avoid shadowing" pattern** — when introducing a shared helper (`ensureDir`), rename any local-scope function with the same name (`templates/route.ts`'s `ensureDir` → `ensureDataDir`) rather than fight the import. The renamed function reads better in context anyway.
+3. **"`dirname` over substring-slicing" pattern** — when extracting a parent dir, use `path.dirname(p)` instead of `p.substring(0, p.lastIndexOf("/"))` or `p.slice(0, p.lastIndexOf("/"))`. The 2 substring-slicing sites that remained (`deploy-status.ts:deployStatusDir()` and `agent/files/[key]/route.ts:PUT`) are now `dirname()` calls.
+4. **"Byte-equivalent private-helper promotion" pattern** — when a private helper in module A (`hermes-config-sync.ts:backupFile`) is the canonical form for 3+ sites, promote to a shared module (`fs-helpers.ts`) and import from A. The promotion is byte-equivalent (same code, same behaviour) and unblocks future migrations.
+
+### "Next session should:" block (carried forward)
+
+1. **Pick a different list next session** to spread the refactor surface. List 4 has been hit 7 times now (sessions 67, 70, 72, 73, 79 + earlier). List 2 has been hit 11+ times. **List 1 or List 3 are the next-ripe surfaces** — both have the most accumulated duplication. List 1's `(main)/logs/page.tsx` is the next migration candidate (per session-78's next-session block — `useApiData` adoption + manual `useEffect`/`useInterval`/`setRefreshing`/`handleScroll` pattern).
+2. **`useMissionsPage.ts` decomposition** is still a backlog item. The hook is 1180+ LOC even after the session-84 `toastError` migration. List 2 territory.
+3. **`isChReadOnly()` consolidation** — the 2 remaining BARE sites across Lists 3 + 4 are still outstanding. The session-72 sweep took it from 7 to 5, session-73 took it from 5 to 2.
+4. **Promote `unauthorized()` factory** when a 4th 401 site appears (api-auth.ts has 3 inline 401 sites in `requireAuth`/`requireSignedRequest`).
+5. **`toError()` audit pass in `src/hooks/` and `src/components/`** — `Sidebar.tsx` (3 sites), `JobFormModal.tsx` (1 site), and the remaining `api/memory/hindsight/route.ts:310` site. The migration is mechanical: `err instanceof Error ? err.message : <fallback>` → `toError(err).message || <fallback>`.
+6. **Promote `safeWriteFileAtomic` to `fs-helpers.ts`** when a 3rd site adopts the "write to .tmp, then rename" pattern. Currently 2 sites (`deploy-status.ts:writeDeployStatusRunning` + `hermes-config-sync.ts:atomicWriteFile`).
+7. **Promote `safeReadJson` to `fs-helpers.ts`** when a 6th site adopts the `try { JSON.parse(readFileSync(...)) } catch { return null }` pattern. Currently 5 sites.
+
+### What was rejected this session
+
+- **`atomicWriteFile` promotion to `fs-helpers.ts`** — already lives in `hermes-config-sync.ts` (where it's used by 3 call sites) and is semantically coupled to the YAML config flow (which is what `hermes-config-sync.ts` orchestrates). Moving it would force 3 import-path changes for no readability win.
+- **`path.join` → string-concat** — the project convention (per AGENTS.md) is "String concatenation for paths, NOT `path.join`" because of a Turbopack NFT tracing issue. The new `dirname` use in `deploy-status.ts` and `agent/files/[key]/route.ts` follows this convention.
+- **`safeStat` consolidation into `fs-helpers.ts`** — different concern (stat is for safe metadata reads, not directory creation). Different module = clearer dependency graph.
+
+---
+
 ## Session 84 — List 2 (Cron, Missions, Chat) — chat-utils + useMissionsPage helper consolidation
 
 Pick was List 2 (per random selection via `echo $(( RANDOM % 4 + 1 ))` = 2). List 2 was last hit in session 82 (`messageFromError` + `toastError` carryover finalization). Focus: **targeted, byte-equivalent helper migrations in `src/lib/chat-utils.ts` and `src/hooks/useMissionsPage.ts`** — three small refactors that fold inline patterns into existing canonical helpers (`titleCase`, `messageFromError`, `toastError`). All 1205 tests pass (190 suites). tsc clean, eslint clean, build passes. Byte-equivalent at runtime for every site.

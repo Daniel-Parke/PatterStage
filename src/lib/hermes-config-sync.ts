@@ -14,7 +14,6 @@
 
 import {
   existsSync,
-  mkdirSync,
   readFileSync,
   renameSync,
   unlinkSync,
@@ -33,18 +32,7 @@ import { updateAgentRoot } from "./agent-root-repository";
 import { getModelDefaults, getModel } from "./models-repository";
 import { modelKey } from "./model-key";
 import { toError } from "./api-fetch";
-
-// ── Internal helpers ───────────────────────────────────────────
-
-function ensureDir(dir: string): void {
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
-}
-
-function backupTimestamp(): string {
-  return new Date().toISOString().replace(/[:.]/g, "-");
-}
+import { backupFile as backupFileShared, ensureDir } from "./fs-helpers";
 
 /**
  * Read `~/.hermes/config.yaml` and return the parsed YAML object, or
@@ -115,12 +103,7 @@ export function atomicWriteFile(targetPath: string, content: string): void {
 }
 
 function backupFile(originalPath: string, backupsDir: string): string | null {
-  if (!existsSync(originalPath)) return null;
-  ensureDir(backupsDir);
-  const base = originalPath.split(/[/\\]/).pop() ?? "file";
-  const target = `${backupsDir}/${base}.${backupTimestamp()}.bak`;
-  writeFileSync(target, readFileSync(originalPath, "utf-8"), { encoding: "utf-8" });
-  return target;
+  return backupFileShared(originalPath, backupsDir);
 }
 
 // ── ENV (.env) sync ────────────────────────────────────────────

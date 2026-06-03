@@ -2,7 +2,7 @@
 // backends/hermes.ts — Hermes mission dispatch backend
 // ═══════════════════════════════════════════════════════════════
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, unlinkSync } from "fs";
+import { existsSync, readFileSync, writeFileSync, unlinkSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { execSync, spawn } from "child_process";
@@ -10,6 +10,7 @@ import { randomUUID } from "crypto";
 
 import { PATHS } from "../paths";
 import { resolveProfileHermesHome } from "../hermes-profile-paths";
+import { ensureDir } from "../fs-helpers";
 import { envVarForProvider } from "../hermes-providers";
 import type {
   Mission,
@@ -130,7 +131,7 @@ async function ensureProfileAuth(
       credential_pool: { ...pool, [provider]: [provider] },
     };
     try {
-      mkdirSync(profilePath, { recursive: true });
+      ensureDir(profilePath);
       writeFileSync(authPath, JSON.stringify(updated, null, 2));
     } catch (err) {
       logApiError("ensureProfileAuth", `auth profile=${profileName}`, err);
@@ -341,9 +342,7 @@ export class HermesAgentBackend implements AgentBackend {
     };
 
     const missionsDir = PATHS.missions;
-    if (!existsSync(missionsDir)) {
-      mkdirSync(missionsDir, { recursive: true });
-    }
+    ensureDir(missionsDir);
 
     const missionFile = join(missionsDir, `${id}.json`);
     const statusFile = join(missionsDir, `${id}.status.json`);

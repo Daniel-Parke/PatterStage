@@ -2,15 +2,13 @@
 // Lightweight audit trail (no secrets)
 // ═══════════════════════════════════════════════════════════════
 
-import { appendFileSync, existsSync, mkdirSync } from "fs";
+import { appendFileSync } from "fs";
 
 import { PATHS } from "@/lib/paths";
+import { ensureDir } from "@/lib/fs-helpers";
 
 function ensureLogsDir(): void {
-  const dir = PATHS.auditLog;
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
+  ensureDir(PATHS.auditLog);
 }
 
 /**

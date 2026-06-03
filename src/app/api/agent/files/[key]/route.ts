@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
+import { dirname } from "path";
 
 import { resolveProfileHermesHome, buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
 import { getBehaviorFiles } from "@/lib/behavior-files";
 import { logApiError } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { safeStat } from "@/lib/fs-stats";
+import { ensureDir, backupTimestamp } from "@/lib/fs-helpers";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
@@ -210,17 +212,14 @@ export async function PUT(
       return notFound("Profile not found");
     }
 
-    const dir = resolved.path.substring(0, resolved.path.lastIndexOf("/"));
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
-    }
+    const dir = dirname(resolved.path);
+    ensureDir(dir);
 
     if (backup && existsSync(resolved.path)) {
       const profileHome = resolveProfileHermesHome(profileSlug);
       const backupDir = profileHome + "/backups";
-      if (!existsSync(backupDir)) mkdirSync(backupDir, { recursive: true });
-      const ts = new Date().toISOString().replace(/[:.]/g, "-");
-      const backupName = `${key}-${ts}.md`;
+      ensureDir(backupDir);
+      const backupName = `${key}-${backupTimestamp()}.md`;
       try {
         writeFileSync(backupDir + "/" + backupName, readFileSync(resolved.path, "utf-8"));
       }
