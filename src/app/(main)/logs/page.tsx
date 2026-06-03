@@ -125,10 +125,14 @@ export default function LogsPage() {
   }, [data?.availableLogs, fileQuery]);
 
   const allLines = useMemo(() => data?.lines || [], [data?.lines]);
-  const filteredLines = useMemo(
-    () => (search ? allLines.filter((line) => line.toLowerCase().includes(search.toLowerCase())) : allLines),
-    [allLines, search],
-  );
+  // Pre-normalize the search term once instead of calling
+  // `search.toLowerCase()` per-line in the filter (was 200 redundant
+  // calls for a 200-line log). Empty search short-circuits the filter.
+  const filteredLines = useMemo(() => {
+    if (!search) return allLines;
+    const needle = search.toLowerCase();
+    return allLines.filter((line) => line.toLowerCase().includes(needle));
+  }, [allLines, search]);
 
   const searchMatches = search ? filteredLines.length : 0;
 

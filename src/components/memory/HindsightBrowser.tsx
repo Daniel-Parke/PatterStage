@@ -26,6 +26,22 @@ import MemoryTab from "./hindsight/MemoryTab";
 import DirectivesTab from "./hindsight/DirectivesTab";
 import MentalModelsTab from "./hindsight/MentalModelsTab";
 import { AddMemoryModal, DirectiveModal, MentalModelModal } from "./hindsight/Modals";
+import { runMutation } from "./hindsight/run-mutation";
+
+// ── Default form state ─────────────────────────────────────────
+//
+// The directive + mental-model modals all reset to these blank
+// values on initial open, on close, and on successful save. Pulling
+// them into module constants means a future "I added a `description`
+// field to the directive modal" lands in one place — the inline form
+// literal was previously duplicated 3x per modal (6 sites total) and
+// the session-35 lesson was that those 6 sites tend to drift.
+const EMPTY_DIR_FORM = { name: "", content: "", priority: "0", tags: "" };
+type DirForm = typeof EMPTY_DIR_FORM;
+
+const EMPTY_MODEL_FORM = { name: "", query: "", tags: "" };
+type ModelForm = typeof EMPTY_MODEL_FORM;
+
 
 export default function HindsightBrowser() {
   const [memories, setMemories] = useState<Memory[]>([]);
@@ -49,20 +65,20 @@ export default function HindsightBrowser() {
   const [directives, setDirectives] = useState<Directive[]>([]);
   const [loadingDirectives, setLoadingDirectives] = useState(false);
   const [showDirectiveModal, setShowDirectiveModal] = useState(false);
-  const [dirForm, setDirForm] = useState({ name: "", content: "", priority: "0", tags: "" });
+  const [dirForm, setDirForm] = useState<DirForm>(EMPTY_DIR_FORM);
   const [creatingDirective, setCreatingDirective] = useState(false);
   const [editingDirective, setEditingDirective] = useState<Directive | null>(null);
-  const [editDirForm, setEditDirForm] = useState({ name: "", content: "", priority: "0", tags: "" });
+  const [editDirForm, setEditDirForm] = useState<DirForm>(EMPTY_DIR_FORM);
   const [savingDirective, setSavingDirective] = useState(false);
 
   // Mental models state
   const [mentalModels, setMentalModels] = useState<MentalModel[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [showModelModal, setShowModelModal] = useState(false);
-  const [modelForm, setModelForm] = useState({ name: "", query: "", tags: "" });
+  const [modelForm, setModelForm] = useState<ModelForm>(EMPTY_MODEL_FORM);
   const [creatingModel, setCreatingModel] = useState(false);
   const [editingModel, setEditingModel] = useState<MentalModel | null>(null);
-  const [editModelForm, setEditModelForm] = useState({ name: "", query: "", tags: "" });
+  const [editModelForm, setEditModelForm] = useState<ModelForm>(EMPTY_MODEL_FORM);
   const [savingModel, setSavingModel] = useState(false);
   const [refreshingModelId, setRefreshingModelId] = useState<string | null>(null);
 
@@ -148,30 +164,25 @@ export default function HindsightBrowser() {
     }
   };
 
-  const handleAdd = async () => {
-    if (!newContent.trim()) return;
-    setAdding(true);
-    try {
-      const tags = parseOptionalTagsInput(newTags);
-      const { ok, error } = await safeApiCall("/api/memory/hindsight", {
-        method: "POST",
-        body: { content: newContent, tags },
-      });
-      if (!ok) {
-        showToast(error ?? "Failed to store memory", "error");
-        return;
-      }
-      showToast("Memory stored", "success");
-      setShowAddModal(false);
-      setNewContent("");
-      setNewTags("");
-      void (search.trim() ? runRecall() : loadRecentMemories());
-    } catch {
-      showToast("Failed to store memory", "error");
-    } finally {
-      setAdding(false);
-    }
-  };
+  const handleAdd = () =>
+    runMutation(showToast, {
+      isValid: () => newContent.trim().length > 0,
+      busy: setAdding,
+      build: () => ({
+        content: newContent,
+        tags: parseOptionalTagsInput(newTags),
+      }),
+      path: "/api/memory/hindsight",
+      successMsg: "Memory stored",
+      errorMsg: "Failed to store memory",
+      onSuccess: async () => {
+        setShowAddModal(false);
+        setNewContent("");
+        setNewTags("");
+        if (search.trim()) await runRecall();
+        else await loadRecentMemories();
+      },
+    });
 
   // ── Directives ──────────────────────────────────────────
 
@@ -191,29 +202,26 @@ export default function HindsightBrowser() {
     if (activeTab === "directives") void loadDirectives();
   }, [activeTab, loadDirectives]);
 
-  const handleCreateDirective = async () => {
-    if (!dirForm.name.trim() || !dirForm.content.trim()) return;
-    setCreatingDirective(true);
-    try {
-      const tags = parseOptionalTagsInput(dirForm.tags);
-      const { ok, error } = await safeApiCall("/api/memory/hindsight", {
-        method: "POST",
-        body: { action: "create-directive", name: dirForm.name, content: dirForm.content, priority: parseInt(dirForm.priority) || 0, tags },
-      });
-      if (!ok) {
-        showToast(error ?? "Failed to create directive", "error");
-        return;
-      }
-      showToast("Directive created", "success");
-      setShowDirectiveModal(false);
-      setDirForm({ name: "", content: "", priority: "0", tags: "" });
-      await loadDirectives();
-    } catch {
-      showToast("Failed to create directive", "error");
-    } finally {
-      setCreatingDirective(false);
-    }
-  };
+  const handleCreateDirective = () =>
+    runMutation(showToast, {
+      isValid: () => dirForm.name.trim().length > 0 && dirForm.content.trim().length > 0,
+      busy: setCreatingDirective,
+      build: () => ({
+        action: "create-directive",
+        name: dirForm.name,
+        content: dirForm.content,
+        priority: parseInt(dirForm.priority) || 0,
+        tags: parseOptionalTagsInput(dirForm.tags),
+      }),
+      path: "/api/memory/hindsight",
+      successMsg: "Directive created",
+      errorMsg: "Failed to create directive",
+      onSuccess: async () => {
+        setShowDirectiveModal(false);
+        setDirForm(EMPTY_DIR_FORM);
+        await loadDirectives();
+      },
+    });
 
   const handleToggleDirective = async (directive: Directive) => {
     const { ok, error } = await safeApiCall("/api/memory/hindsight", {
@@ -246,27 +254,27 @@ export default function HindsightBrowser() {
     setEditDirForm({ name: d.name, content: d.content, priority: String(d.priority), tags: d.tags.join(", ") });
   };
 
-  const handleSaveDirective = async () => {
-    if (!editingDirective || !editDirForm.name.trim() || !editDirForm.content.trim()) return;
-    setSavingDirective(true);
-    try {
-      const tags = parseTagsInput(editDirForm.tags);
-      const { ok, error } = await safeApiCall("/api/memory/hindsight", {
-        method: "POST",
-        body: { action: "update-directive", id: editingDirective.id, name: editDirForm.name, content: editDirForm.content, priority: parseInt(editDirForm.priority) || 0, tags },
-      });
-      if (!ok) {
-        showToast(error ?? "Failed to update directive", "error");
-        return;
-      }
-      showToast("Directive updated", "success");
-      setEditingDirective(null);
-      await loadDirectives();
-    } catch {
-      showToast("Failed to update directive", "error");
-    } finally {
-      setSavingDirective(false);
-    }
+  const handleSaveDirective = () => {
+    if (!editingDirective) return false;
+    return runMutation(showToast, {
+      isValid: () => editDirForm.name.trim().length > 0 && editDirForm.content.trim().length > 0,
+      busy: setSavingDirective,
+      build: () => ({
+        action: "update-directive",
+        id: editingDirective.id,
+        name: editDirForm.name,
+        content: editDirForm.content,
+        priority: parseInt(editDirForm.priority) || 0,
+        tags: parseTagsInput(editDirForm.tags),
+      }),
+      path: "/api/memory/hindsight",
+      successMsg: "Directive updated",
+      errorMsg: "Failed to update directive",
+      onSuccess: async () => {
+        setEditingDirective(null);
+        await loadDirectives();
+      },
+    });
   };
 
   // ── Mental Models ───────────────────────────────────────
@@ -287,29 +295,25 @@ export default function HindsightBrowser() {
     if (activeTab === "mental-models") void loadModels();
   }, [activeTab, loadModels]);
 
-  const handleCreateModel = async () => {
-    if (!modelForm.name.trim() || !modelForm.query.trim()) return;
-    setCreatingModel(true);
-    try {
-      const tags = parseOptionalTagsInput(modelForm.tags);
-      const { ok, error } = await safeApiCall("/api/memory/hindsight", {
-        method: "POST",
-        body: { action: "create-model", name: modelForm.name, query: modelForm.query, tags },
-      });
-      if (!ok) {
-        showToast(error ?? "Failed to create mental model", "error");
-        return;
-      }
-      showToast("Mental model created (generating in background)", "success");
-      setShowModelModal(false);
-      setModelForm({ name: "", query: "", tags: "" });
-      await loadModels();
-    } catch {
-      showToast("Failed to create mental model", "error");
-    } finally {
-      setCreatingModel(false);
-    }
-  };
+  const handleCreateModel = () =>
+    runMutation(showToast, {
+      isValid: () => modelForm.name.trim().length > 0 && modelForm.query.trim().length > 0,
+      busy: setCreatingModel,
+      build: () => ({
+        action: "create-model",
+        name: modelForm.name,
+        query: modelForm.query,
+        tags: parseOptionalTagsInput(modelForm.tags),
+      }),
+      path: "/api/memory/hindsight",
+      successMsg: "Mental model created (generating in background)",
+      errorMsg: "Failed to create mental model",
+      onSuccess: async () => {
+        setShowModelModal(false);
+        setModelForm(EMPTY_MODEL_FORM);
+        await loadModels();
+      },
+    });
 
   const handleRefreshModel = async (id: string) => {
     setRefreshingModelId(id);
@@ -353,27 +357,26 @@ export default function HindsightBrowser() {
   const setField = <S,>(setter: React.Dispatch<React.SetStateAction<S>>, key: keyof S) =>
     (v: S[keyof S]) => setter((p) => ({ ...p, [key]: v }));
 
-  const handleSaveModel = async () => {
-    if (!editingModel || !editModelForm.name.trim()) return;
-    setSavingModel(true);
-    try {
-      const tags = parseTagsInput(editModelForm.tags);
-      const { ok, error } = await safeApiCall("/api/memory/hindsight", {
-        method: "POST",
-        body: { action: "update-model", id: editingModel.id, name: editModelForm.name, query: editModelForm.query || undefined, tags },
-      });
-      if (!ok) {
-        showToast(error ?? "Failed to update mental model", "error");
-        return;
-      }
-      showToast("Mental model updated", "success");
-      setEditingModel(null);
-      await loadModels();
-    } catch {
-      showToast("Failed to update mental model", "error");
-    } finally {
-      setSavingModel(false);
-    }
+  const handleSaveModel = () => {
+    if (!editingModel) return false;
+    return runMutation(showToast, {
+      isValid: () => editModelForm.name.trim().length > 0,
+      busy: setSavingModel,
+      build: () => ({
+        action: "update-model",
+        id: editingModel.id,
+        name: editModelForm.name,
+        query: editModelForm.query || undefined,
+        tags: parseTagsInput(editModelForm.tags),
+      }),
+      path: "/api/memory/hindsight",
+      successMsg: "Mental model updated",
+      errorMsg: "Failed to update mental model",
+      onSuccess: async () => {
+        setEditingModel(null);
+        await loadModels();
+      },
+    });
   };
 
   // ── Render ──
@@ -469,7 +472,7 @@ export default function HindsightBrowser() {
         onContentChange={setNewContent} onTagsChange={setNewTags} onSave={handleAdd}
       />
       <DirectiveModal
-        open={showDirectiveModal} onClose={() => { setShowDirectiveModal(false); setDirForm({ name: "", content: "", priority: "0", tags: "" }); }}
+        open={showDirectiveModal} onClose={() => { setShowDirectiveModal(false); setDirForm(EMPTY_DIR_FORM); }}
         isEdit={false}
         name={dirForm.name} content={dirForm.content} priority={dirForm.priority} tags={dirForm.tags}
         saving={creatingDirective}
@@ -490,7 +493,7 @@ export default function HindsightBrowser() {
         onSave={handleSaveDirective}
       />
       <MentalModelModal
-        open={showModelModal} onClose={() => { setShowModelModal(false); setModelForm({ name: "", query: "", tags: "" }); }}
+        open={showModelModal} onClose={() => { setShowModelModal(false); setModelForm(EMPTY_MODEL_FORM); }}
         isEdit={false}
         name={modelForm.name} query={modelForm.query} tags={modelForm.tags}
         saving={creatingModel}

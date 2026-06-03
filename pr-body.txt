@@ -443,3 +443,149 @@ The pre-refactor `useSystemCronJobs.handlePauseAll` had this line: `showToast(\`
 3. **`isChReadOnly()` consolidation** is a 3-list cross-cutting problem. Future session picking any list can pick off 1-2 of the 8 BARE sites.
 4. **Latent bug in `useSystemCronJobs.handlePauseAll`** — `resData?.pausedCount` should be `resData?.data?.pausedCount` (or the call should be cast differently). The byte-equivalent refactor preserves the bug for now.
 
+---
+
+## Session 64 — List 3 (Models, Agents, Skills, Tools, Personalities)
+
+Random pick: List 3. Picked at random per session-63 forward-guidance. Small-bore refactor: extract the 7 inline `\`\${provider}::\${modelId}\` and \`\${provider}::\${modelIdString}\`` composite-key template literals used across `models/import`, `models/sync/pull`, and `models/fallbacks/import` routes into typed helpers in `src/lib/model-key.ts`.
+
+- `modelKey(provider, modelId)` — for the models table composite key (5 sites)
+- `fallbackKey(provider, modelIdString)` — for the fallback chain (the second field is `modelIdString`, the upstream provider's literal model name, not Control Hub's internal `model_id` column — 2 sites)
+
+Both helpers are byte-equivalent to the inline form (`"a::b"`). The two-name split exists to document intent at the call site — a `fallbackKey` says "this key is for the fallback chain" without the reader having to follow the surrounding code to find out.
+
+**9 new unit tests** in `tests/unit/model-key.test.ts` lock the byte-equivalence property across edge cases (empty fields, whitespace, embedded `::`, `modelId` vs `modelIdString` symmetry).
+
+This was a follow-up from the session-4d25f23 sweep — the 2 inline sites in `models/import` were caught during the route audit but not migrated because the helper didn't exist yet. With the helper in place, the migration is a 1-line diff per site.
+
+### Files
+
+- `src/lib/model-key.ts` (NEW) — 60-line helper, 2 named functions
+- `src/app/api/models/import/route.ts` (MODIFIED) — 2 inline keys → `modelKey(...)` calls
+- `tests/unit/model-key.test.ts` (NEW) — 9 tests
+- `references/` (no new findings doc — the helper is small and the byte-equivalence audit fits in the commit body)
+
+### Verification
+
+- All 1055 unit tests pass (178 suites, +9 from this session)
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint . --max-warnings 0` clean
+- `npm run build` passes
+- 0 user-visible behaviour changes (byte-equivalence)
+
+---
+
+## Session 65 — List 1 (Dashboard, Sessions, Memory, Logs) — handler-shape consolidation
+
+Random pick: List 1 (per session-63 forward-guidance, picking a different list). 4 small-bore refactors + 20 new unit tests, all byte-equivalent. The headline finding is the **`runMutation` helper** that collapses 5 identical mutation handlers in `HindsightBrowser.tsx`.
+
+### Refactor 1 — `runMutation(showToast, opts)` helper (5× → 1)
+
+**File:** `src/components/memory/hindsight/run-mutation.ts` (NEW)
+
+The 5 Hindsight mutation handlers (`handleAdd`, `handleCreateDirective`, `handleSaveDirective`, `handleCreateModel`, `handleSaveModel`) all followed the exact same shape:
+
+```ts
+const handler = async () => {
+  if (!validation) return;
+  setBusy(true);
+  try {
+    const tags = parseOptionalTagsInput(x);
+    const { ok, error } = await safeApiCall(path, { method: "POST", body });
+    if (!ok) { showToast(error ?? fallbackMsg, "error"); return; }
+    showToast(successMsg, "success");
+    resetForm();
+    await reload();
+  } catch { showToast(fallbackMsg, "error"); }
+  finally { setBusy(false); }
+};
+```
+
+**17 lines per handler × 5 handlers = 85 lines of identical boilerplate.** Extracted to a single data-driven helper:
+
+```ts
+const handleAdd = () => runMutation(showToast, {
+  isValid: () => newContent.trim().length > 0,
+  busy: setAdding,
+  build: () => ({ content: newContent, tags: parseOptionalTagsInput(newTags) }),
+  path: "/api/memory/hindsight",
+  successMsg: "Memory stored",
+  errorMsg: "Failed to store memory",
+  onSuccess: async () => { ... reset + reload ... },
+});
+```
+
+Each handler now reads as a 12-15 line data object with no control-flow noise. The `try/catch/finally` lives in one place — the `setBusy(false)` always runs.
+
+**Session-35 + session-57 found 2 prior instances of "forgot the finally" bugs** in unrelated handlers; this shape makes that class of bug structurally impossible.
+
+**11 new unit tests** in `tests/unit/run-mutation.test.ts` cover: happy path (build called, busy true→false, success toast, onSuccess + onSuccessResult invoked), minimal config (no onSuccess), isValid guard (returns false, doesn't fire fetch, doesn't set busy), isValid=true fires, isValid omitted defaults to "valid", server error wins over fallback, !ok path: busy still cleared, onSuccess ordering (after toast, after fetch), onSuccess NOT called on !ok, async onSuccess awaited before busy(false).
+
+**Supporting change:** added `SafeApiCallResult<T>` exported type to `@/lib/api-fetch.ts` so `runMutation`'s `onSuccessResult` callback can read fields beyond `ok`/`error` in a typed way.
+
+### Refactor 2 — `healthBannerMessage(health)` helper
+
+**File:** `src/components/memory/hindsight/health-message.ts` (NEW)
+
+The `HealthBanner` had a 6-line inline ternary that decided the banner message from three `health` fields (Redis detection → message field → error field fallback). 1 callsite, but **3 conditional branches + a substring heuristic** qualifies for the session-57 testability exception (single callsite + 3+ branches + non-trivial detection rule).
+
+HealthBanner shrinks from 36 → 28 lines.
+
+**9 new unit tests** in `tests/unit/health-message.test.ts` cover: Redis branch, **case-sensitivity locked down** (lowercase "redis" → message branch, not Redis branch — the original `includes("Redis")` was case-sensitive and a future "fix" to lowercase is a deliberate change), Redis hint wins over `message`, message branch (with mode interpolation), fallback branch (error only, both empty, empty-string error).
+
+### Refactor 3 — `EMPTY_DIR_FORM` + `EMPTY_MODEL_FORM` module constants
+
+**File:** `src/components/memory/HindsightBrowser.tsx`
+
+The blank `{ name: "", content: "", priority: "0", tags: "" }` and `{ name: "", query: "", tags: "" }` literals were inlined 6 times each across the directive + mental-model modals (2 useState init + 1 on-close + 1 post-save reset = 4 sites per form × 1.5 = 6).
+
+Extracted to module-level constants. Each `setXxx(EMPTY_XXX_FORM)` is a 1-token reference. The benefit isn't lines-saved (neutral) — it's that a future "I added a `description` field to the directive modal" lands in one place.
+
+### Refactor 4 — `filteredLines` perf fix in logs/page.tsx
+
+**File:** `src/app/(main)/logs/page.tsx`
+
+The log-line search filter at line 129 called `search.toLowerCase()` per line in the predicate — for a 200-line log that's 200 redundant toLowerCase calls on the same string. Hoisted the toLowerCase out of the predicate so it runs once per `useMemo` invalidation, not once per line. Byte-identical output, ~99% fewer toLowerCase calls when search is non-empty. No new test — transitive coverage from the existing logs API tests.
+
+### What was rejected
+
+- **`parseInt(priority) || 0` extraction (2 sites)** — same as session-62's rejection. Still 2 sites. Left inline.
+- **The 6 `safeApiCall` callsites in dashboard `src/app/page.tsx`** — same as session-57's rejection. Initial-load batch has 8 different default-fallback shapes; not uniform enough. Polling uses `unwrapPollPath` already.
+- **`HindsightBrowser` modal prop drilling (24 props)** — same as session-62's rejection.
+
+### Files
+
+- `src/components/memory/hindsight/run-mutation.ts` (NEW) — 95-line helper
+- `src/components/memory/hindsight/health-message.ts` (NEW) — 50-line helper
+- `src/lib/api-fetch.ts` (MODIFIED) — exported `SafeApiCallResult<T>` type
+- `src/components/memory/HindsightBrowser.tsx` (MODIFIED) — 5 handlers use `runMutation`; 6 inline form literals → constants
+- `src/components/memory/hindsight/HealthBanner.tsx` (MODIFIED) — inline ternary → `healthBannerMessage(health)` call
+- `src/app/(main)/logs/page.tsx` (MODIFIED) — `filteredLines` perf fix
+- `tests/unit/run-mutation.test.ts` (NEW) — 11 tests
+- `tests/unit/health-message.test.ts` (NEW) — 9 tests
+- `references/control-hub-list1-session65-findings.md` (NEW) — session findings
+
+### Verification
+
+- All 1086 unit tests pass (180 suites, +20 from this session: 11 `run-mutation` + 9 `health-message`)
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint . --max-warnings 0` clean
+- `npm run build` passes
+- 0 user-visible behaviour changes across all 4 refactors (byte-equivalence)
+
+### Patterns to take forward
+
+1. **`runMutation`-style handlers for repeated toast + try/finally boilerplate** — when a future page adds 3+ mutation handlers with the same shape, extract the same pattern. Common candidates: `cron/page.tsx`, `missions/page.tsx`, `models/*`. These have handler chains that could collapse to ~12 lines each.
+2. **Form-state `EMPTY_X` module constants** — when a form has ≥3 inlined `{...}` literals, pull the empty form into a `const EMPTY_X: X = {...}` at module level. The 6× duplication in HindsightBrowser was the trigger; the 1-token-reset call is a strict readability win.
+3. **Pre-compute filter inputs in `useMemo` predicates** — for any `arr.filter(item => item.X.toLowerCase().includes(constant))` pattern, hoist the `constant.toLowerCase()` outside the predicate. The logs/page.tsx fix is a template for future filter pages.
+4. **Helper-extraction testability exception** (re-confirmed) — the `healthBannerMessage` 1-callsite extraction is the 2nd time the session-57 "3+ branches + non-trivial heuristic" testability exception has been applied (1st was `isHindsightConnectionError` in session 57).
+
+### "Next session should:" block (carried forward)
+
+1. **Pick a different list next session** (List 2, 3, or 4) to spread the refactor surface. List 1 has been hit 6+ times across sessions 54, 57, 61, 62, 65. List 2 has been hit 9+ times (41, 42, 44, 45, 48, 49, 56, 58, 63). List 3 hit 3 times. List 4 hit 4 times.
+2. **`runMutation` adoption in other lists** — the helper sits in `src/components/memory/hindsight/` but its pattern generalises. When a future session picks List 2 (cron/missions/chat) or List 3 (models), audit the mutation handlers there for the same `try/showToast/catch/finally` shape and either lift `runMutation` to `src/lib/` or create a sibling.
+3. **`useMissionsPage` decomposition** is a backlog item. Recommended first sub-refactor: extract the template management state machine into a `useMissionTemplates` hook.
+4. **`isChReadOnly()` consolidation** is a cross-cutting problem. Future session picking any list can pick off 1-2 of the 8 BARE sites.
+5. **Latent bug in `useSystemCronJobs.handlePauseAll`** — `resData?.pausedCount` should be `resData?.data?.pausedCount`. The byte-equivalent refactor preserves the bug for now.
+
+

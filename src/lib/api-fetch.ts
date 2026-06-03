@@ -55,10 +55,17 @@ export async function apiFetch<T = any>(
  *   const { ok, error } = await safeApiCall("/api/cron", { method: "POST", body: { action: "sync" } });
  *   if (!ok) showToast(error!, "error");
  */
+/** Return shape of `safeApiCall` — used by `runMutation` consumers to read fields beyond ok/error. */
+export type SafeApiCallResult<T = unknown> = {
+  ok: boolean;
+  data?: T;
+  error?: string;
+};
+
 export async function safeApiCall<T = unknown>(
   path: string,
   options?: Omit<RequestInit, "body"> & { body?: unknown }
-): Promise<{ ok: boolean; data?: T; error?: string }> {
+): Promise<SafeApiCallResult<T>> {
   try {
     const data = await apiFetch(path, {
       ...options,
