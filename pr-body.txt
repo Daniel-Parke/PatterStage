@@ -589,3 +589,94 @@ The log-line search filter at line 129 called `search.toLowerCase()` per line in
 5. **Latent bug in `useSystemCronJobs.handlePauseAll`** — `resData?.pausedCount` should be `resData?.data?.pausedCount`. The byte-equivalent refactor preserves the bug for now.
 
 
+
+
+---
+
+## Session 66 — List 1 (Dashboard, Sessions, Memory, Logs) — runMutation lib lift + useInterval in LiveClock
+
+Random pick: List 1 again (RANDOM % 4 + 1 → 1). Started with **carry-over fix from session 65** (uncommitted runMutation lift that had broken TypeScript types in `handleCancelMission`), then 1 small refactor. All byte-equivalent, 0 new tests needed (existing useInterval + runMutation tests cover the surface).
+
+### Carry-over fix — revert broken `handleCancelMission` `runMutation` adoption
+
+**File:** `src/app/page.tsx`
+
+The session-65 carry-over had wired `handleCancelMission` to use `runMutation`, but the original handler had **no busy state** (the row already shows "Confirm?" via `isArmedFor`). To satisfy `runMutation`'s required `busy` parameter, the carry-over had added a `useState<string | null>` + a type-hacky `boolean → string` wrapper cast. The state was never read by JSX.
+
+Fix: **revert `handleCancelMission` to its original `try/catch` shape.** The `runMutation` adoption for `handleSyncNow` (the one site that has a real `setSyncNowBusy`) is preserved — that one was already byte-equivalent.
+
+The dead `cancelMissionBusy` state is removed; the type-hacky `as React.Dispatch<...>` wrapper is gone; `tsc --noEmit` is clean; 84 dashboard/memory/hindsight tests pass.
+
+Lesson reinforced (Pitfall I — LSP is stale after partial-view patches): the LSP reported the OLD broken `cancelMissionBusy` line as an error after the patch, but `npx tsc --noEmit` was clean. Always trust `tsc` over LSP after a partial-view edit.
+
+### Refactor 1 — Lift `runMutation` to `src/lib/`
+
+**Files:**
+- `src/components/memory/hindsight/run-mutation.ts` → `src/lib/run-mutation.ts` (rename via `git mv`)
+- `src/components/memory/HindsightBrowser.tsx` — update import path
+- `tests/unit/run-mutation.test.ts` — update import path
+- `src/app/page.tsx` `handleSyncNow` — uses the same helper
+
+The `runMutation` helper was originally added in session 65 at `src/components/memory/hindsight/run-mutation.ts` so the 5 HindsightBrowser mutation handlers could share the `try/catch/finally + toast + busy-state` shape. Lifting it to `src/lib/` is justified now that the dashboard's `handleSyncNow` adopts the same shape (5 Hindsight + 1 dashboard = 6 sites, well past the Rule-of-Three threshold for lib extraction).
+
+Helper header updated to document the lib status + the `method` parameter (added in session 66 for the dashboard's PUT cron schedule update — though cron schedule doesn't yet adopt `runMutation`, see "Rejected" below).
+
+The git move is detected as a 71% rename (some import-path changes in the test file). Byte-equivalent at runtime.
+
+### Refactor 2 — `useInterval` in `LiveClock`
+
+**File:** `src/app/page.tsx`
+
+The `LiveClock` component used a 4-line `useEffect + setInterval + clearInterval` boilerplate to tick the time once per second. The `useInterval` hook (`src/hooks/useInterval.ts`) already exists for this exact pattern. LiveClock is a single interval with no shared signal — the perfect fit for the simple single-interval case.
+
+```tsx
+// Before
+useEffect(() => {
+  const id = setInterval(() => setTime(new Date()), 1000);
+  return () => clearInterval(id);
+}, []);
+
+// After
+useInterval(() => setTime(new Date()), { ms: 1000 });
+```
+
+Byte-equivalent: the hook stores the callback in a ref (changing identity doesn't restart the interval, matching the inline useEffect's `[]` dep array), and clears the timer on unmount via the effect's cleanup. LiveClock's isolated re-render behaviour (reactMemo + once-per-second state update) is preserved.
+
+### What was rejected
+
+- **`runMutation` adoption in `handleCronScheduleChange`** — same busy-state problem as `handleCancelMission`. The original handler has no busy state and no JSX consumer for one. Adding a busy state is a UI feature change, not byte-equivalent. Left inline with the existing `try/catch/finally` + `void refreshMonitor()` pattern.
+- **Extract `agents` + `missions` poll extractors** — the two `unwrapPollPath(d, [])` + field-read + `?? []` lines are 2x duplication but only 2 sites and 2 lines each. Rule of Three says 3+ for a meaningful extraction. Marginal.
+- **Extract the 18-line optimistic cron-job update in `handleCronScheduleChange`** — single callsite. The 18 lines are 5 nested spreads, not a 10-line filter. Borderline; out of scope for a 15-minute budget.
+- **The dashboard's 3-way polling block** — already documented in `useInterval.ts` header lines 27-33 as a deliberate outlier (shared `AbortController` across all 3 polls). Per Pattern Q, the outlier is left alone with the header comment as scope documentation.
+
+### Files
+
+- `src/lib/run-mutation.ts` (NEW — moved from `src/components/memory/hindsight/`) — 127-line helper
+- `src/components/memory/hindsight/run-mutation.ts` (DELETED — moved to lib)
+- `src/components/memory/HindsightBrowser.tsx` (MODIFIED) — import path updated
+- `src/app/page.tsx` (MODIFIED) — `LiveClock` uses `useInterval`; `handleCancelMission` reverted; `handleSyncNow` uses lib `runMutation`
+- `tests/unit/run-mutation.test.ts` (MODIFIED) — import path updated
+
+### Verification
+
+- All 1086 unit tests pass (180 suites) — no new tests, existing useInterval (6) + runMutation (11) tests cover the surface
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint . --max-warnings 0` clean
+- `npm run build` passes
+- 0 user-visible behaviour changes (byte-equivalence preserved for both refactors + the carry-over fix)
+
+### Patterns to take forward
+
+1. **`runMutation` in `src/lib/`** — now that 2 lists (List 1: HindsightBrowser + dashboard) use the same shape, it's clearly a lib-grade helper. Future sessions picking List 2 (cron/missions/chat) or List 3 (models/agents/skills) should audit those lists' mutation handlers for the same `try/showToast/catch/finally` shape and adopt directly.
+2. **Per-site busy-state check before `runMutation` adoption** — `handleCancelMission` and `handleCronScheduleChange` both looked like `runMutation` candidates but had no busy state. Rule: if a handler has no busy state AND no JSX consumer for one, `runMutation` adoption is a feature change, not a refactor. Add a real busy state first (with JSX consumption), then adopt.
+3. **`useInterval` for single-interval components** — `LiveClock` was the last raw `setInterval` in the page layer. Future callsite: any new page-level component that needs a single periodic tick. The 3-way polling block's "shared AbortController" pattern is a known outlier; do not force-fit it into `useInterval`.
+4. **Carry-over audit at session start is non-negotiable** (Pitfall G reinforced) — session 65 left 4 uncommitted files with a broken `tsc`. If the next session had started fresh, the broken handler would have shipped. The 3-step checklist (`git status` + `npx tsc --noEmit` + `npx jest`) is the only reliable way to surface incomplete carry-over.
+
+### "Next session should:" block (carried forward)
+
+1. **Pick a different list next session** (List 2, 3, or 4) to spread the refactor surface. List 1 has now been hit 7+ times across sessions 54, 57, 61, 62, 65, 66. List 2 has been hit 9+ times (41, 42, 44, 45, 48, 49, 56, 58, 63). List 3 hit 3 times. List 4 hit 4 times.
+2. **`runMutation` adoption in other lists** — List 2 (cron/missions/chat) and List 3 (models/agents/skills/tools) are the next-ripe surfaces. Audit for the `try/showToast/catch/finally` shape with a real busy state.
+3. **`useMissionsPage` decomposition** is still a backlog item.
+4. **`isChReadOnly()` consolidation** — 8 BARE sites + 1 custom site. Future session picking any list can pick off 1-2 BARE sites.
+5. **Latent bug in `useSystemCronJobs.handlePauseAll`** — preserved byte-equivalently. Not blocking.
+6. **Add a busy state to `handleCronScheduleChange`** — if a future session wants to adopt `runMutation` there, the work is: (a) add `setCronScheduleBusy` state, (b) thread the busy state into the `IntervalSelector` (or a wrapper) for the in-flight indicator, (c) adopt `runMutation`. The 18-line optimistic update is a separate refactor that should be extracted as a pure helper in `src/lib/` first.
