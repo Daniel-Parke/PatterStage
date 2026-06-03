@@ -25,7 +25,7 @@ import CredentialPicker, {
   type CredentialOption,
 } from "@/components/models/CredentialPicker";
 import { inputFieldClasses } from "@/lib/theme";
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch, messageFromError } from "@/lib/api-fetch";
 
 /**
  * Minimal model shape for the editor form — a subset of ApiModel
@@ -158,7 +158,7 @@ export default function ModelEditor({
 
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
+      setError(messageFromError(err, "Save failed"));
       setSaving(false);
     }
   };

@@ -96,3 +96,34 @@ export async function safeApiCall<T = unknown>(
     return { ok: false, error: messageFromError(e, "Request failed") };
   }
 }
+
+/**
+ * Type signature matching the destructured `showToast` from
+ * `@/components/ui/Toast`'s `useToast()`. We don't import the type
+ * here to avoid a circular dep (ui/Toast is a client component, this
+ * file is shared with server code).
+ */
+type ShowToastFn = (message: string, type?: "success" | "error" | "info") => void;
+
+/**
+ * Show a toast for a caught error in a single call. Composes
+ * `messageFromError()` so every `showToast(messageFromError(err, ...), "error")`
+ * site becomes `toastError(showToast, err, ...)` — one fewer intermediate
+ * variable and one less line in the common catch block.
+ *
+ * Byte-equivalent to the inline form: same `messageFromError` semantics
+ * (falls back to `fallback` when the error has no message), same
+ * `"error"` toast type, same call to `showToast`.
+ *
+ * @example
+ *   } catch (err) {
+ *     toastError(showToast, err, "Delete failed");
+ *   }
+ */
+export function toastError(
+  showToast: ShowToastFn,
+  err: unknown,
+  fallback: string,
+): void {
+  showToast(messageFromError(err, fallback), "error");
+}

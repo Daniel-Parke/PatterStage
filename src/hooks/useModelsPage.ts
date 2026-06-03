@@ -5,7 +5,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useToast } from "@/components/ui/Toast";
-import { safeApiCall, apiFetch, messageFromError, toError } from "@/lib/api-fetch";
+import {
+  safeApiCall,
+  apiFetch,
+  messageFromError,
+  toastError,
+  toError,
+} from "@/lib/api-fetch";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
 import { type TaskType } from "@/lib/hermes-providers";
@@ -117,10 +123,7 @@ export function useModelsPage() {
         await loadAll();
         showToast(successMessage, "success");
       } catch (err) {
-        showToast(
-          messageFromError(err, errorFallback),
-          "error",
-        );
+        toastError(showToast, err, errorFallback);
       }
     },
     [loadAll, showToast]
@@ -165,12 +168,11 @@ export function useModelsPage() {
         void loadAll();
         return { success: true, backupPath: null, details: [] };
       } catch (err) {
-        const detail = messageFromError(err, `${label} failed`);
-        showToast(detail, "error");
+        toastError(showToast, err, `${label} failed`);
         return {
           success: false,
           backupPath: null,
-          details: [{ action, detail }],
+          details: [{ action, detail: messageFromError(err, `${label} failed`) }],
         };
       }
     },
@@ -205,10 +207,7 @@ export function useModelsPage() {
         showToast(`Deleted ${model.name}`, "success");
         await loadAll();
       } catch (err) {
-        showToast(
-          messageFromError(err, "Delete failed"),
-          "error"
-        );
+        toastError(showToast, err, "Delete failed");
       }
     },
     [loadAll, showToast]
@@ -229,10 +228,7 @@ export function useModelsPage() {
           "success"
         );
       } catch (err) {
-        showToast(
-          messageFromError(err, "Default update failed"),
-          "error"
-        );
+        toastError(showToast, err, "Default update failed");
         await loadAll();
       } finally {
         setBusyTaskType(null);
@@ -272,10 +268,7 @@ export function useModelsPage() {
           );
         }
       } catch (err) {
-        showToast(
-          messageFromError(err, "Bulk update failed"),
-          "error"
-        );
+        toastError(showToast, err, "Bulk update failed");
         await loadAll();
       } finally {
         setBusyTaskType(null);
@@ -298,10 +291,7 @@ export function useModelsPage() {
       );
       await loadAll();
     } catch (err) {
-      showToast(
-        messageFromError(err, "Refresh failed"),
-        "error"
-      );
+      toastError(showToast, err, "Refresh failed");
     } finally {
       setRefreshing(false);
     }
@@ -363,10 +353,7 @@ export function useModelsPage() {
         setEditingFallbackEntry(null);
         showToast("Fallback updated", "success");
       } catch (err) {
-        showToast(
-          messageFromError(err, "Update failed"),
-          "error"
-        );
+        toastError(showToast, err, "Update failed");
       } finally {
         setSavingFallbackUrl(false);
       }
@@ -407,10 +394,7 @@ export function useModelsPage() {
       await loadAll();
       showToast("Fallback config imported from Hermes", "success");
     } catch (err) {
-      showToast(
-        messageFromError(err, "Import failed"),
-        "error"
-      );
+      toastError(showToast, err, "Import failed");
     } finally {
       setImportingFallback(false);
     }
@@ -521,10 +505,7 @@ export function useModelsPage() {
 
       showToast("Fallback config synced to Hermes", "success");
     } catch (err) {
-      showToast(
-        messageFromError(err, "Sync failed"),
-        "error"
-      );
+      toastError(showToast, err, "Sync failed");
     } finally {
       setSyncingFallback(false);
     }
