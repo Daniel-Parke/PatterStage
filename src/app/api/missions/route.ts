@@ -17,7 +17,7 @@ import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest, notFound, serverError } from "@/lib/api-response";
+import { badRequest, notFound, serverError, serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { agentBackend } from "@/lib/backends";
 import { createCronJob, deleteCronJob, importHermesJobs, pushJobToHermes } from "@/lib/cron-repository";
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
   if (isChReadOnly()) {
-    return NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 });
+    return serviceUnavailable("Control Hub is in read-only mode");
   }
 
   ensureSyncLayer();

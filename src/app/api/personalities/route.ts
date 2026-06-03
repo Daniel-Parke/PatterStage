@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { methodNotAllowed } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
@@ -100,9 +101,8 @@ export async function POST(request: NextRequest) {
 // DELETE is not supported — personalities are profile SOUL.md identities
 // and cannot be individually deleted from Control Hub. Delete the profile instead.
 export async function DELETE() {
-  return NextResponse.json(
-    { error: "Individual personalities cannot be deleted — delete the profile instead" },
-    { status: 405 }
+  return methodNotAllowed(
+    "Individual personalities cannot be deleted — delete the profile instead"
   );
 }
 

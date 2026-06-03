@@ -17,7 +17,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest, notFound, serverError } from "@/lib/api-response";
+import { badRequest, notFound, serverError, serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { parseSchedule } from "@/lib/utils";
 import { buildCronUpdatePayload } from "@/lib/cron-field-updates";
@@ -339,7 +339,7 @@ export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
   if (isChReadOnly()) {
-    return NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 });
+    return serviceUnavailable("Control Hub is in read-only mode");
   }
 
   try {
@@ -435,7 +435,7 @@ export async function DELETE(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
   if (isChReadOnly()) {
-    return NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 });
+    return serviceUnavailable("Control Hub is in read-only mode");
   }
 
   try {

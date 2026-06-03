@@ -72,3 +72,47 @@ export function serverError(error: string): NextResponse {
 export function conflict(error: string): NextResponse {
   return NextResponse.json({ error }, { status: 409 });
 }
+
+/**
+ * Return a 405 Method Not Allowed with the given error message. Use
+ * in route handlers that don't implement a particular HTTP verb (e.g.
+ * DELETE on a resource where it isn't supported). The error message
+ * should explain WHY the verb isn't supported, not just "method not
+ * allowed" — e.g. "Tool registry mutations are disabled. Configure
+ * Hermes runtime toolsets on Operations → Tools." Sibling of the rest
+ * of the factory set — same body shape, different status code.
+ *
+ * (Previously inline at 3 sites; promoted in session 76 when the
+ * Rule of Three was finally met.)
+ */
+export function methodNotAllowed(error: string): NextResponse {
+  return NextResponse.json({ error }, { status: 405 });
+}
+
+/**
+ * Return a 413 Payload Too Large with the given error message. Use
+ * in route handlers when the request body or attached file exceeds
+ * an upstream size cap (e.g. session transcript file > maxBytes).
+ * Sibling of the rest of the factory set — same body shape, different
+ * status code.
+ */
+export function payloadTooLarge(error: string): NextResponse {
+  return NextResponse.json({ error }, { status: 413 });
+}
+
+/**
+ * Return a 503 Service Unavailable with the given error message. Use
+ * in route handlers when a downstream service (DB, sync layer,
+ * migration state) is in a state that doesn't allow the request, OR
+ * when the Control Hub is in read-only mode and the request is a
+ * write. Sibling of the rest of the factory set — same body shape,
+ * different status code.
+ *
+ * Note: the read-only-mode case is usually handled by
+ * `requireNotReadOnly(context?)` in `@/lib/api-auth` so the canonical
+ * message can include the env-var hint. `serviceUnavailable()` is
+ * for ad-hoc 503 cases (e.g. missing migration, sync layer offline).
+ */
+export function serviceUnavailable(error: string): NextResponse {
+  return NextResponse.json({ error }, { status: 503 });
+}

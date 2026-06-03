@@ -6,7 +6,7 @@ import { basename, join } from "path";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest, notFound, serverError } from "@/lib/api-response";
+import { badRequest, notFound, payloadTooLarge, serverError } from "@/lib/api-response";
 import { safeStat } from "@/lib/fs-stats";
 import { getSession, estimateSessionSize, lookupMissionIdForCronSession } from "@/lib/session-repository";
 import { PATHS } from "@/lib/paths";
@@ -202,14 +202,10 @@ export async function GET(
         "session file exceeds max size (" + st.size + " bytes)",
         new Error("PayloadTooLarge")
       );
-      return NextResponse.json(
-        {
-          error:
-            "Session file is too large to load in Control Hub (max " +
-            Math.round(maxBytes / (1024 * 1024)) +
-            " MB).",
-        },
-        { status: 413 }
+      return payloadTooLarge(
+        "Session file is too large to load in Control Hub (max " +
+          Math.round(maxBytes / (1024 * 1024)) +
+          " MB)."
       );
     }
 

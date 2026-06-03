@@ -10,7 +10,16 @@
  * `NextResponse.json` so the JSON Content-Type is set.
  */
 
-import { badRequest, conflict, forbidden, notFound, serverError } from "@/lib/api-response";
+import {
+  badRequest,
+  conflict,
+  forbidden,
+  methodNotAllowed,
+  notFound,
+  payloadTooLarge,
+  serverError,
+  serviceUnavailable,
+} from "@/lib/api-response";
 
 describe("badRequest", () => {
   it("returns a response with status 400", async () => {
@@ -142,6 +151,96 @@ describe("conflict", () => {
   it("empty string is a valid error message", async () => {
     const res = conflict("");
     expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body).toEqual({ error: "" });
+  });
+});
+
+describe("methodNotAllowed", () => {
+  it("returns a response with status 405", async () => {
+    const res = methodNotAllowed("Tool registry mutations are disabled");
+    expect(res.status).toBe(405);
+  });
+
+  it("body is { error: <message> }", async () => {
+    const res = methodNotAllowed("DELETE is not supported on this resource");
+    const body = await res.json();
+    expect(body).toEqual({ error: "DELETE is not supported on this resource" });
+  });
+
+  it("preserves the exact error message including special characters", async () => {
+    const res = methodNotAllowed(
+      "Tool registry mutations are disabled. Configure Hermes runtime toolsets on Operations → Tools (profile-scoped platform_toolsets).",
+    );
+    const body = await res.json();
+    expect(body.error).toBe(
+      "Tool registry mutations are disabled. Configure Hermes runtime toolsets on Operations → Tools (profile-scoped platform_toolsets).",
+    );
+  });
+
+  it("empty string is a valid error message", async () => {
+    const res = methodNotAllowed("");
+    expect(res.status).toBe(405);
+    const body = await res.json();
+    expect(body).toEqual({ error: "" });
+  });
+});
+
+describe("payloadTooLarge", () => {
+  it("returns a response with status 413", async () => {
+    const res = payloadTooLarge("Session file is too large to load");
+    expect(res.status).toBe(413);
+  });
+
+  it("body is { error: <message> }", async () => {
+    const res = payloadTooLarge("File is 50 MB, max is 10 MB");
+    const body = await res.json();
+    expect(body).toEqual({ error: "File is 50 MB, max is 10 MB" });
+  });
+
+  it("preserves the exact error message including dynamic numbers", async () => {
+    const res = payloadTooLarge(
+      "Session file is too large to load in Control Hub (max 10 MB).",
+    );
+    const body = await res.json();
+    expect(body.error).toBe(
+      "Session file is too large to load in Control Hub (max 10 MB).",
+    );
+  });
+
+  it("empty string is a valid error message", async () => {
+    const res = payloadTooLarge("");
+    expect(res.status).toBe(413);
+    const body = await res.json();
+    expect(body).toEqual({ error: "" });
+  });
+});
+
+describe("serviceUnavailable", () => {
+  it("returns a response with status 503", async () => {
+    const res = serviceUnavailable("mission_categories table is missing");
+    expect(res.status).toBe(503);
+  });
+
+  it("body is { error: <message> }", async () => {
+    const res = serviceUnavailable("Control Hub is in read-only mode");
+    const body = await res.json();
+    expect(body).toEqual({ error: "Control Hub is in read-only mode" });
+  });
+
+  it("preserves the exact error message including newlines and special chars", async () => {
+    const res = serviceUnavailable(
+      "migration_required — restart Control Hub or run npm run db:migrate",
+    );
+    const body = await res.json();
+    expect(body.error).toBe(
+      "migration_required — restart Control Hub or run npm run db:migrate",
+    );
+  });
+
+  it("empty string is a valid error message", async () => {
+    const res = serviceUnavailable("");
+    expect(res.status).toBe(503);
     const body = await res.json();
     expect(body).toEqual({ error: "" });
   });

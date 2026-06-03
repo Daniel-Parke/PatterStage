@@ -27,6 +27,7 @@ import {
   previewOrphanSweep,
 } from "@/lib/session-repository";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { logApiError } from "@/lib/api-logger";
 
@@ -43,9 +44,8 @@ export async function POST(request: NextRequest) {
   const dryRun = body.dryRun !== false; // default to dry-run for safety
 
   if (dryRun === false && isChReadOnly()) {
-    return NextResponse.json(
-      { error: "Control Hub is in read-only mode (set CH_READ_ONLY=false to allow backfill writes)" },
-      { status: 503 },
+    return serviceUnavailable(
+      "Control Hub is in read-only mode (set CH_READ_ONLY=false to allow backfill writes)"
     );
   }
 

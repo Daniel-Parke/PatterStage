@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
+import { methodNotAllowed } from "@/lib/api-response";
 import {
   HERMES_CONFIGURABLE_TOOLSETS,
   HERMES_PLATFORMS,
@@ -33,11 +34,7 @@ export async function POST(request: NextRequest) {
   const ro = requireNotReadOnly("tool mutations are disabled");
   if (ro) return ro;
 
-  return NextResponse.json(
-    {
-      error:
-        "Tool registry mutations are disabled. Configure Hermes runtime toolsets on Operations → Tools (profile-scoped platform_toolsets).",
-    },
-    { status: 405 }
+  return methodNotAllowed(
+    "Tool registry mutations are disabled. Configure Hermes runtime toolsets on Operations → Tools (profile-scoped platform_toolsets).",
   );
 }

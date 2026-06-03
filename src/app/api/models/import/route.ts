@@ -16,6 +16,7 @@ import { modelKey } from "@/lib/model-key";
 import { upsertModel, updateModel, listModels } from "@/lib/models-repository";
 import { upsertCredential } from "@/lib/credentials-repository";
 import { logApiError } from "@/lib/api-logger";
+import { toError } from "@/lib/api-fetch";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { maskKeyHint } from "@/lib/secret-mask";
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
         details.push({
           name: model.name,
           action: "skipped",
-          reason: String(err instanceof Error ? err.message : err),
+          reason: toError(err).message,
         });
       }
     }

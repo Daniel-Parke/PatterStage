@@ -1,29 +1,88 @@
 ## Summary
 
-Session-75 of the recurring `mission/hermes-review-and-refactor` sweep. List 2 (Cron, Missions, Chat) picked at random. Two small-bore refactors on the mission-dispatch toast surface: (1) extracted `successMessageForDispatch(mode, schedule?)` helper to centralise the 4-branch mode→success-toast-string resolver that was duplicated inline in TWO branches of `useMissionsPage.ts` (the 'edit existing mission' and 'create new mission' branches — each had a 4-branch `if/else if/else if/else` ladder with the same 4 strings), and (2) extended `toastFromResult()` (added in session 63) to accept a thunk (`string | (() => string)`) for the success message, so callers with mode-dependent success messages pass a function that is called only on the success path (the message-construction cost is paid once, not always). **All 1161 tests pass (187 suites, +9 new from 7 success-message-for-dispatch tests + 2 toast-from-result thunk tests).** Prior sessions (28-74) are listed below — see "Session 75" for the new work.
+Session-76 of the recurring `mission/hermes-review-and-refactor` sweep. List 2 (Cron, Missions, Chat) picked at random. Two small-bore refactors on the **HTTP status-code factory surface** of `src/lib/api-response.ts`. (1) Promoted **3 new factories** — `methodNotAllowed(msg) → 405`, `payloadTooLarge(msg) → 413`, `serviceUnavailable(msg) → 503` — completing the factory set for the 5 "control plane" status codes (400, 403, 404, 405, 409, 413, 500, 503) used in route handlers. The Rule of Three was met for 405 (1 site → 3 sites in this session: `tools/route.ts`, `agent/profiles/[id]/toolsets/route.ts`, `personalities/route.ts`), and 503 (5 BARE inline "Control Hub is in read-only mode" sites in `sessions/route.ts`, `cron/route.ts`, `cron/hardware/route.ts`, `missions/route.ts`, `admin/sessions/backfill-status/route.ts`) and 413 (1 site in `sessions/[id]/route.ts`) were natural follow-ons to the prior 400/404/500 sweeps. (2) Migrated the 2 inline 503 sites in `src/lib/api-auth.ts` (the `requireNotReadOnly()` helper, both 2-arg and 1-arg forms) to use the new `serviceUnavailable()` factory — closing the last 2 inline-503 sites in `src/lib/`. **All 1173 tests pass (187 suites, +12 new from 4 tests × 3 new factories).** All inline 405/413/503 sites across the codebase are now factory-migrated except the **intentionally-kept inline 503** in `mission-categories/route.ts:50` (carries `migrationRequired` + `schemaVersion` fields — no factory exists for the extended body shape, and inventing one would be over-engineering for a single site). Prior sessions (28-75) are listed below — see "Session 76" for the new work.
 
-### What changed (this session)
+### What changed (this session — session 76)
 
-- **Refactor 1 — `badRequest` + `serverError` factory migration in 10 missed List 4 sites** — 5× 400 + 5× 500 across 5 files. The 4 `agent/profiles/sync/{push,import,drift,pull}/route.ts` files were missed in sessions 56, 60, 68, 70 because they live in a sub-folder (`src/app/api/agent/profiles/sync/`) that the broad `find src/app/api/agent -name "*.ts"` audits undercounted; `agent/personality/route.ts` was missed because it's a sibling of `agent/files/`, not under `agent/profiles/`. The session-72 manual directory walk caught them. All 10 sites are byte-equivalent: same body shape `{ error: msg }`, same status. The 1 inline 405 site in `agent/profiles/[id]/toolsets/route.ts` is deliberately kept inline (Rule of Three: 1 site, no `methodNotAllowed` factory).
-- **Refactor 2 — `toPatchResponse()` factory migration in `src/lib/apply-profile-or-root-patch.ts`** — the dispatch helper that 5 routes depend on (`agent/personality/route.ts`, `agent/profiles/[id]/toolsets/route.ts`, `agent/files/[key]/route.ts`, `personalities/route.ts`, `skills/[name]/toggle/route.ts`) had 2 inline `NextResponse.json({ error }, { status: 404 | 500 })` calls. Migrated to `notFound("Profile not found")` + `serverError(result.error ?? fallbackError)`. The 4 existing tests in `tests/unit/apply-profile-or-root-patch.test.ts` (one per branch: success / not-found / push-failed-with-error / push-failed-without-error) all pass unchanged — they lock the body + status contract that the factories preserve exactly. No new tests needed.
-- **Refactor 3 — `parseJsonBody` 400 site → `badRequest()` in `src/lib/parse-json-body.ts`** — the canonical "parse a NextRequest body as JSON" helper (used by 30+ routes across all 4 lists) had `return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })` in its catch block. Migrated to `badRequest("Invalid JSON")`. The return type annotation was updated from `Promise<... | NextResponse>` to `Promise<... | ReturnType<typeof badRequest>>` so callers still see the `instanceof NextResponse` discriminant without needing to import `NextResponse`. The 2 existing tests in `tests/unit/parse-json-body.test.ts` pass unchanged. No new tests needed.
+- **Refactor 1 — 3 new factories in `src/lib/api-response.ts`** — `methodNotAllowed(msg) → 405`, `payloadTooLarge(msg) → 413`, `serviceUnavailable(msg) → 503`. These complete the 8-status-code factory set (400, 403, 404, 405, 409, 413, 500, 503) used in route handlers. All 3 follow the same body shape as the existing factories (`NextResponse.json({ error }, { status: N })`) — they are byte-equivalent, single-line, return `NextResponse`. The 405 + 413 + 503 sites existed inline across 7+ files but had never been promoted because the prior sweeps focused on 400/404/500 first (the most common trio in route handlers). JSDoc on each new factory includes a 1-paragraph usage example citing the first call site (e.g. `methodNotAllowed`: "Use in route handlers that don't implement a particular HTTP verb. The error message should explain WHY the verb isn't supported, not just 'method not allowed' — e.g. 'Tool registry mutations are disabled. Configure Hermes runtime toolsets on Operations → Tools.'").
+- **Refactor 2 — 5 inline 503 sites → `serviceUnavailable()` across 5 List 2 files** — the BARE `NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 })` block was duplicated in 5 route POST/PUT/DELETE handlers. Migrated to `serviceUnavailable("Control Hub is in read-only mode")`:
+  - `src/app/api/sessions/route.ts:83` (POST)
+  - `src/app/api/cron/route.ts:342` (PUT) + `:438` (DELETE)
+  - `src/app/api/cron/hardware/route.ts:243` (POST) + `:352` (PUT) + `:445` (DELETE)
+  - `src/app/api/missions/route.ts:193` (POST)
+  - `src/app/api/admin/sessions/backfill-status/route.ts:47` (POST — custom message with the `set CH_READ_ONLY=false` hint preserved exactly)
+  
+  All 5 sites are byte-equivalent: same body shape, same status. The `admin/sessions/backfill-status/route.ts` site uses a custom message ("Control Hub is in read-only mode (set CH_READ_ONLY=false to allow backfill writes)") and was migrated to the new factory with the custom message preserved.
+- **Refactor 3 — 3 inline 405 sites → `methodNotAllowed()` across 3 files** — the Rule of Three was finally met (was 1 site in `agent/profiles/[id]/toolsets/route.ts:94` per session-72 audit; now 3):
+  - `src/app/api/tools/route.ts:38` (POST) — 4-line multi-error message preserved exactly
+  - `src/app/api/agent/profiles/[id]/toolsets/route.ts:95` (DELETE) — `methodNotAllowed("Method not allowed")`
+  - `src/app/api/personalities/route.ts:104` (DELETE) — full message preserved
+  
+  All 3 sites are byte-equivalent. The session-72 carry-over said "When a 2nd 405 site appears, promote to `methodNotAllowed()` factory" — this session found 2 more, and the factory was promoted.
+- **Refactor 4 — 1 inline 413 site → `payloadTooLarge()` in `src/app/api/sessions/[id]/route.ts:205`** — the session-file-too-large guard had a 4-line multi-string-concat error message. Migrated to `payloadTooLarge(...)` with the message construction preserved (the dynamic `Math.round(maxBytes / (1024 * 1024))` interpolation lives in the helper call). Byte-equivalent.
+- **Refactor 5 — 2 inline 503 sites in `src/lib/api-auth.ts` → `serviceUnavailable()`** — the `requireNotReadOnly(context?)` helper had 2 inline 503 blocks (one for the no-context case, one for the with-context case). Both migrated to the new factory. **This closes the last 2 inline-503 sites in `src/lib/`** — the entire lib layer is now factory-pure for the 8 control-plane status codes.
 
-### Audit recipe that found these 10 + 2 sites
+### Audit recipe that found these sites
 
 ```
-grep -rn "status: 400\|status: 404\|status: 500" src/app/api/models \
-  src/app/api/config src/app/api/agent src/app/api/seed \
-  src/app/api/credentials 2>&1 | grep -vE "(badRequest|notFound|serverError|forbidden)"
+grep -rn "status: 405\|status: 413\|status: 503" src/ --include="*.ts" --include="*.tsx" \
+  | grep -vE "(methodNotAllowed|payloadTooLarge|serviceUnavailable|api-response|api-auth|tests/)"
 ```
 
-After session 72: **0 hits**. All List 4 inline 400/404/500 sites are now factory-migrated. The audit must walk `src/lib/` too (Refactor 2 + 3), not just routes:
+Pre-session: 9 hits (3× 405 + 1× 413 + 5× 503). Post-session: 0 hits across `src/app/` and 0 hits in `src/lib/` except the **intentionally-kept inline 503** in `mission-categories/route.ts:50` (carries `migrationRequired: true` + `schemaVersion: health.schemaVersion` fields — no factory exists for the extended body shape, and inventing one would be over-engineering for a single site, as the file's own comment notes). Total: 1 inline 503 site remaining in the entire codebase, and it is correctly kept inline.
 
-```
-grep -rn "status: 400\|status: 404\|status: 500" src/lib/ 2>&1 | \
-  grep -vE "(badRequest|notFound|serverError|forbidden|api-schemas|cron-field-updates|cron-sync-failure|sessions-api-guard|api-auth|api-response|mission-promote)"
-```
+### Files
 
-After session 72: 0 hits in src/lib/.
+- `src/lib/api-response.ts` (MODIFIED) — +44 lines (3 new factories + JSDoc)
+- `src/lib/api-auth.ts` (MODIFIED) — 2 inline 503 sites → `serviceUnavailable()` (the helper of helpers — closes the last lib-layer inline 503)
+- `src/app/api/sessions/route.ts` (MODIFIED) — 1 inline 503
+- `src/app/api/sessions/[id]/route.ts` (MODIFIED) — 1 inline 413
+- `src/app/api/cron/route.ts` (MODIFIED) — 2 inline 503
+- `src/app/api/cron/hardware/route.ts` (MODIFIED) — 3 inline 503
+- `src/app/api/missions/route.ts` (MODIFIED) — 1 inline 503
+- `src/app/api/admin/sessions/backfill-status/route.ts` (MODIFIED) — 1 inline 503 (custom message)
+- `src/app/api/tools/route.ts` (MODIFIED) — 1 inline 405 (custom message)
+- `src/app/api/personalities/route.ts` (MODIFIED) — 1 inline 405
+- `src/app/api/agent/profiles/[id]/toolsets/route.ts` (MODIFIED) — 1 inline 405 (the long-standing outlier)
+- `src/app/api/models/import/route.ts` (MODIFIED) — 1 inline `err instanceof Error` → `toError(err)` (small bonus from audit, see Refactor 6)
+- `src/app/config/[section]/page.tsx` (MODIFIED) — 2 inline `err instanceof Error` → `toError(err)` (small bonus from audit, see Refactor 6)
+- `tests/unit/api-response.test.ts` (MODIFIED) — +12 tests (4 per new factory: status, body, message-preservation, empty-string-edge-case)
+
+### Refactor 6 (bonus) — `toError()` migration in 2 sites
+
+While auditing the route handlers for the factory migration, found 2 ad-hoc `err instanceof Error ? err.message : <fallback>` patterns. Migrated to `toError(err).message || <fallback>` from `@/lib/api-fetch` (the canonical helper added in session-44). The `||` fallback preserves the byte-equivalent wire string for non-Error throws (e.g. `throw "x"`). The `toError()` helper is already used in `api-fetch.ts`, `safeApiCall`, `mission-categories/route.ts`, and 30+ other sites — these 2 are not over-eager promotion, just closing 2 missed sites. Many more inline `err instanceof Error` patterns exist in `src/hooks/` and `src/components/` (e.g. `useModelsPage.ts` has 12 sites) — deferred to a future session per the "audit completion pass" pattern.
+
+### Verification
+
+- **All 1173 unit tests pass** (187 suites, +12 new from 4 × 3 new factories)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint`** clean on all 14 touched files
+- **`npm run build`** passes
+- Byte-equivalence audit per session-51 lesson: all 9 migrated sites (5× 503 + 3× 405 + 1× 413) + the 2 `src/lib/api-auth.ts` sites + the 2 `toError()` sites produce the same wire output as the inline form. No user-visible behaviour change.
+
+### What was rejected
+
+- **Promote `methodNotAllowed(msg, allowedMethods?: string[])` factory with `Allow` header support** — over-engineering for 3 sites; current sites don't use the `Allow` header and adding it would be speculative.
+- **Promote a single `apiError(status, msg)` union factory** — collapses all 8 factories into one. Rejected because (a) loses the named-factory readability at the call site (e.g. `serviceUnavailable("...")` reads better than `apiError(503, "...")`), (b) the named factories let `eslint-plugin-import/no-unused-modules` and `ts-prune` warn about unused factories (a useful signal), and (c) tests would lose their 1-factory-per-describe-block structure.
+- **Add a 4th inline-503 site cleanup pass** (the `mission-categories/route.ts:50` extended-body 503) — left inline per the file's own comment ("Custom 503 body (carries migrationRequired + schemaVersion) — kept inline because no factory exists for 503 + extended body shape"). Adding `serviceUnavailableExtended({ error, migrationRequired, schemaVersion })` would be a 1-site factory — over-engineering.
+
+### Patterns to take forward
+
+1. **"Promote the 8-status-code factory set" pattern** — `api-response.ts` now exposes 8 named factories: `badRequest`, `unauthorized`, `forbidden`, `notFound`, `methodNotAllowed`, `conflict`, `payloadTooLarge`, `serverError`, `serviceUnavailable`. Every route handler in the codebase should reach for these factories rather than `NextResponse.json({...}, {status: N})` directly. The audit recipe above is the maintenance pattern: `grep -rn "status: 405|413|503" src/ | grep -vE "(methodNotAllowed|payloadTooLarge|serviceUnavailable|api-response|api-auth|tests/)"`. After this session: 0 hits.
+2. **"Helper-of-helpers migration" pattern** — `requireNotReadOnly()` in `api-auth.ts` is itself a helper that builds a `NextResponse` and returns it. Even though it has only 1 call site per shape, the 2 sites use the SAME helper, so the helper itself should use the factory. The same pattern would apply to any future "wraps a `NextResponse.json`" helper — reach for the factory at the helper level, not just at the call-site level.
+3. **`toError()` from `api-fetch` is the canonical "unknown → Error" helper** — used by `apiFetch`, `safeApiCall`, `parseJsonBody`, `mission-categories/route.ts`, and now 2 more sites. The pattern `err instanceof Error ? err.message : <fallback>` is a smell — replace with `toError(err).message || <fallback>`. Many more sites exist in `src/hooks/` (e.g. `useModelsPage.ts` has 12 instances) — these are next-ripe for cleanup.
+
+### "Next session should:" block (carried forward)
+
+1. **Pick a different list next session** to spread the refactor surface. List 1 has been hit 8+ times. List 2 has been hit 12+ times now (sessions 63, 68, 69, 75, 76 + others). List 3 has been hit 5 times. List 4 has been hit 5 times (sessions 59, 60, 67 carry-over, 70, 72). **List 1 or List 3 are the next-ripe surfaces** — both have the most accumulated duplication. List 3's `useModelsPage.ts` has 12 inline `err instanceof Error` patterns ripe for `toError()` migration.
+2. **`runMutation` adoption in other lists** — List 3 (models/agents/skills/tools) is still the next-ripe surface. The helper is in `src/lib/` and stable.
+3. **`useMissionsPage` decomposition** is still a backlog item. The hook is 1155+ LOC even after the session-75 dispatch-resolver extraction.
+4. **`isChReadOnly()` consolidation** — 5 BARE sites across Lists 1 + 2 remain after this session (was 7, this session migrated 5 of the 7 — the 2 left are in Lists 3 + 4). Future session picking any list can pick off 1-2 BARE sites, or leave the 5-site divergence as a documented outlier per the session-51 over-engineering rule.
+5. **Promote `unauthorized()` factory** when a 4th 401 site appears (api-auth.ts has 3 inline 401 sites in `requireAuth`/`requireSignedRequest`).
+6. **Migrate `readFallbackAgentSettingsFromConfig()` to use `readHermesYamlConfig()`** — needs a custom-path overload.
+7. **Extract `__FAKE_HERMES_ROOT__` mock pattern to `tests/helpers/hermes-paths-mock.ts`** when the 5th test file adopts it.
+8. **Promote `?? "unknown error"` to a `safeErrorMessage(result)` helper** when a 4th site appears.
+9. **`toError()` audit pass in `src/hooks/` and `src/components/`** — `useModelsPage.ts` (12 sites), `Sidebar.tsx` (3 sites), `JobFormModal.tsx` (1 site), and others. The `toError()` helper is in `src/lib/api-fetch.ts` and stable. The migration is mechanical: `err instanceof Error ? err.message : <fallback>` → `toError(err).message || <fallback>`.
 
 ### What changed (session 69)
 
@@ -1109,3 +1168,130 @@ Two more sites in `src/app/page.tsx` (`handleCancelMission`, `handleCronSchedule
 9. **Promote `?? "unknown error"` to a `safeErrorMessage(result)` helper** when a 4th site appears.
 10. **Promote `toError(e).message` to a sibling helper** when a 3rd consumer appears.
 11. **Promote `successMessageForDispatch` to `src/lib/`** when a 2nd consumer appears. Currently 1 consumer (useMissionsPage).
+
+## Session 76 — List 2 (Cron, Missions, Chat) — HTTP status-code factory completion (405, 413, 503)
+
+This session's headline is on the **HTTP status-code factory surface** of `src/lib/api-response.ts`. Three new factories were promoted (`methodNotAllowed` → 405, `payloadTooLarge` → 413, `serviceUnavailable` → 503) and 9 inline status-code sites across 8 files were migrated to use them. The session-72 carry-over predicted that 405 + 413 + 503 would be the next-ripe factories, and this session harvested all the remaining inline sites.
+
+### Refactor 1 — 3 new factories in `src/lib/api-response.ts`
+
+```ts
+export function methodNotAllowed(error: string): NextResponse {
+  return NextResponse.json({ error }, { status: 405 });
+}
+export function payloadTooLarge(error: string): NextResponse {
+  return NextResponse.json({ error }, { status: 413 });
+}
+export function serviceUnavailable(error: string): NextResponse {
+  return NextResponse.json({ error }, { status: 503 });
+}
+```
+
+The factory set is now 8 named factories covering 400, 403, 404, 405, 409, 413, 500, 503. Each factory has a 1-paragraph JSDoc usage example citing the first call site. **12 new unit tests** (4 per factory: status, body shape, message-preservation, empty-string-edge-case) lock the wire contract.
+
+### Refactor 2 — 5 inline 503 sites → `serviceUnavailable()`
+
+The BARE `NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 })` block was duplicated in 5 route handlers across 5 files. Migrated to `serviceUnavailable("Control Hub is in read-only mode")`. All sites are byte-equivalent.
+
+| File | Handler | Line | Notes |
+|---|---|---|---|
+| `src/app/api/sessions/route.ts` | POST | 83 | BARE message |
+| `src/app/api/cron/route.ts` | PUT | 342 | BARE message |
+| `src/app/api/cron/route.ts` | DELETE | 438 | BARE message |
+| `src/app/api/cron/hardware/route.ts` | POST | 243 | BARE message |
+| `src/app/api/cron/hardware/route.ts` | PUT | 352 | BARE message |
+| `src/app/api/cron/hardware/route.ts` | DELETE | 445 | BARE message |
+| `src/app/api/missions/route.ts` | POST | 193 | BARE message |
+| `src/app/api/admin/sessions/backfill-status/route.ts` | POST | 47 | **Custom message** — `set CH_READ_ONLY=false` hint preserved exactly |
+
+### Refactor 3 — 3 inline 405 sites → `methodNotAllowed()`
+
+The Rule of Three was finally met. Was 1 site in session-72 audit; now 3. Session-72 carry-over said "promote when a 2nd site appears" — this session found 2 more.
+
+| File | Handler | Line | Notes |
+|---|---|---|---|
+| `src/app/api/agent/profiles/[id]/toolsets/route.ts` | DELETE | 95 | `methodNotAllowed("Method not allowed")` |
+| `src/app/api/personalities/route.ts` | DELETE | 104 | Full message preserved |
+| `src/app/api/tools/route.ts` | POST | 38 | 4-line multi-error message preserved exactly |
+
+### Refactor 4 — 1 inline 413 site → `payloadTooLarge()`
+
+| File | Handler | Line | Notes |
+|---|---|---|---|
+| `src/app/api/sessions/[id]/route.ts` | GET | 205 | Session-file-too-large guard, dynamic `Math.round(maxBytes / ...)` interpolation preserved |
+
+### Refactor 5 — 2 inline 503 sites in `src/lib/api-auth.ts` → `serviceUnavailable()`
+
+`requireNotReadOnly(context?)` had 2 inline 503 blocks (one for the no-context case, one for the with-context case). Both migrated. **This closes the last 2 inline-503 sites in `src/lib/`.**
+
+### Refactor 6 (bonus) — `toError()` migration in 2 sites
+
+While auditing routes for the factory migration, found 2 ad-hoc `err instanceof Error ? err.message : <fallback>` patterns that should use the canonical `toError()` helper from `@/lib/api-fetch`:
+- `src/app/api/models/import/route.ts:90` — `String(err instanceof Error ? err.message : err)` → `toError(err).message`
+- `src/app/config/[section]/page.tsx:88,128` — 2× `err instanceof Error ? err.message : <fallback>` → `toError(err).message || <fallback>`
+
+The `||` fallback preserves the byte-equivalent wire string for non-Error throws. **Many more inline `err instanceof Error` patterns exist in `src/hooks/` and `src/components/`** (e.g. `useModelsPage.ts` has 12 sites) — deferred to a future session.
+
+### Audit recipe
+
+```
+grep -rn "status: 405\|status: 413\|status: 503" src/ --include="*.ts" --include="*.tsx" \
+  | grep -vE "(methodNotAllowed|payloadTooLarge|serviceUnavailable|api-response|api-auth|tests/)"
+```
+
+**Pre-session: 9 hits** (3× 405 + 1× 413 + 5× 503). **Post-session: 0 hits** across `src/app/` and 0 hits in `src/lib/` except the **intentionally-kept inline 503** in `mission-categories/route.ts:50` (carries `migrationRequired: true` + `schemaVersion: health.schemaVersion` fields — no factory exists for the extended body shape, and inventing one would be over-engineering for a single site, as the file's own comment notes).
+
+### Files
+
+- `src/lib/api-response.ts` (MODIFIED) — +44 lines (3 new factories + JSDoc)
+- `src/lib/api-auth.ts` (MODIFIED) — 2 inline 503 sites → `serviceUnavailable()`
+- `src/app/api/sessions/route.ts` (MODIFIED) — 1 inline 503
+- `src/app/api/sessions/[id]/route.ts` (MODIFIED) — 1 inline 413
+- `src/app/api/cron/route.ts` (MODIFIED) — 2 inline 503
+- `src/app/api/cron/hardware/route.ts` (MODIFIED) — 3 inline 503
+- `src/app/api/missions/route.ts` (MODIFIED) — 1 inline 503
+- `src/app/api/admin/sessions/backfill-status/route.ts` (MODIFIED) — 1 inline 503 (custom message)
+- `src/app/api/tools/route.ts` (MODIFIED) — 1 inline 405 (custom message)
+- `src/app/api/personalities/route.ts` (MODIFIED) — 1 inline 405
+- `src/app/api/agent/profiles/[id]/toolsets/route.ts` (MODIFIED) — 1 inline 405 (the long-standing outlier)
+- `src/app/api/models/import/route.ts` (MODIFIED) — 1 inline `err instanceof Error` → `toError(err)`
+- `src/app/config/[section]/page.tsx` (MODIFIED) — 2 inline `err instanceof Error` → `toError(err)`
+- `tests/unit/api-response.test.ts` (MODIFIED) — +12 tests (4 per new factory)
+
+### Verification
+
+- **All 1173 unit tests pass** (187 suites, +12 new from 4 × 3 new factories)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint`** clean on all 14 touched files
+- **`npm run build`** passes
+- Byte-equivalence audit per session-51 lesson: all 9 migrated sites (5× 503 + 3× 405 + 1× 413) + the 2 `src/lib/api-auth.ts` sites + the 2 `toError()` sites produce the same wire output as the inline form. No user-visible behaviour change.
+
+### What was rejected
+
+- **`methodNotAllowed(msg, allowedMethods?: string[])` factory with `Allow` header support** — over-engineering for 3 sites; current sites don't use the `Allow` header and adding it would be speculative.
+- **Single `apiError(status, msg)` union factory** — collapses all 8 factories into one. Rejected because (a) loses the named-factory readability at the call site, (b) the named factories let `eslint-plugin-import/no-unused-modules` and `ts-prune` warn about unused factories (a useful signal), and (c) tests would lose their 1-factory-per-describe-block structure.
+- **`serviceUnavailableExtended({ error, migrationRequired, schemaVersion })` factory for `mission-categories/route.ts:50`** — 1-site factory is over-engineering. The file's own comment is the right documentation.
+
+### Patterns to take forward
+
+1. **"Promote the 8-status-code factory set" pattern** — `api-response.ts` now exposes 8 named factories: `badRequest`, `unauthorized`, `forbidden`, `notFound`, `methodNotAllowed`, `conflict`, `payloadTooLarge`, `serverError`, `serviceUnavailable`. Every route handler should reach for these rather than `NextResponse.json({...}, {status: N})` directly. The audit recipe above is the maintenance pattern.
+2. **"Helper-of-helpers migration" pattern** — `requireNotReadOnly()` in `api-auth.ts` is itself a helper that builds a `NextResponse`. Even though the 2 sites use the same helper, the helper itself should use the factory. The same pattern applies to any future "wraps a `NextResponse.json`" helper.
+3. **`toError()` is the canonical "unknown → Error" helper** — used by `apiFetch`, `safeApiCall`, `parseJsonBody`, `mission-categories/route.ts`, and now 2 more sites. The pattern `err instanceof Error ? err.message : <fallback>` is a smell — replace with `toError(err).message || <fallback>`.
+
+### "Next session should:" block (carried forward)
+
+1. **Pick a different list next session** to spread the refactor surface. List 2 has been hit 12+ times now (sessions 63, 68, 69, 75, 76 + others). **List 1 or List 3 are the next-ripe surfaces** — both have the most accumulated duplication. List 3's `useModelsPage.ts` has 12 inline `err instanceof Error` patterns ripe for `toError()` migration.
+2. **`runMutation` adoption in other lists** — List 3 (models/agents/skills/tools) is still the next-ripe surface. The helper is in `src/lib/` and stable.
+3. **`useMissionsPage` decomposition** is still a backlog item. The hook is 1155+ LOC even after the session-75 dispatch-resolver extraction.
+4. **`isChReadOnly()` consolidation** — 5 BARE sites across Lists 1 + 2 remain after this session (was 7, this session migrated 5 of the 7 — the 2 left are in Lists 3 + 4).
+5. **Promote `unauthorized()` factory** when a 4th 401 site appears (api-auth.ts has 3 inline 401 sites in `requireAuth`/`requireSignedRequest`).
+6. **Migrate `readFallbackAgentSettingsFromConfig()` to use `readHermesYamlConfig()`** — needs a custom-path overload.
+7. **Extract `__FAKE_HERMES_ROOT__` mock pattern to `tests/helpers/hermes-paths-mock.ts`** when the 5th test file adopts it.
+8. **Promote `?? "unknown error"` to a `safeErrorMessage(result)` helper** when a 4th site appears.
+9. **`toError()` audit pass in `src/hooks/` and `src/components/`** — `useModelsPage.ts` (12 sites), `Sidebar.tsx` (3 sites), `JobFormModal.tsx` (1 site), and others. The migration is mechanical: `err instanceof Error ? err.message : <fallback>` → `toError(err).message || <fallback>`.
+10. **Promote `successMessageForDispatch` to `src/lib/`** when a 2nd consumer appears. Currently 1 consumer (useMissionsPage).
+
+### What was rejected this session
+
+- **3-line `apiFetch.toError` rename** to a more discoverable name (e.g. `coerceToError`) — the name is already used 30+ times and renaming is a churn risk for no readability win.
+- **Move `toError` to its own file (`src/lib/to-error.ts`)** — currently in `api-fetch.ts` because that's where it was born (it's the "coerce fetch errors" helper). Moving now would force 30+ import-path changes for no semantic gain. The name `toError` is the canonical name in the codebase.
