@@ -46,12 +46,12 @@ import { safeApiCall, safeApiCallData } from "@/lib/api-fetch";
 import { runMutation } from "@/lib/run-mutation";
 import { toastFromResult } from "@/lib/toast-from-result";
 import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
-import { unwrapPollPath } from "@/lib/dashboard-poll";
 import { isMissionActive } from "@/lib/mission-board";
 import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
 import { computeCronJobRowCaption } from "@/lib/cron-row-helpers";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { useInterval } from "@/hooks/useInterval";
+import { usePolledUpdates } from "@/hooks/usePolledUpdates";
 
 // ── Typed response shapes for each API endpoint ─────────────
 /**
@@ -378,59 +378,47 @@ export default function Dashboard() {
     };
     initialLoad();
 
-    // ── Polling: consolidated — runs each interval on schedule ──────────
-    // `extract` receives the safeApiCall envelope `{ data: T }` and returns
-    // the partial DashboardData update or `null` to skip. Typed via
-    // `PollExtractor<Update>` so the cast through `any` is gone.
-    type DashboardUpdate = Partial<Pick<typeof data, "monitor" | "processes" | "missions">>;
-    type PollExtractor = (d: { data?: unknown }) => DashboardUpdate | null;
-    const polls: Array<{ url: string; ms: number; extract: PollExtractor }> = [
-      {
-        url: "/api/monitor",
-        ms: 10000,
-        extract: (d) => {
-          const inner = unwrapPollPath(d, ["data"]);
-          if (!inner) return null;
-          // unwrapPollPath returns Record<string, unknown>; cast through
-          // unknown first to satisfy TS2352 (no sufficient overlap).
-          return { monitor: inner as unknown as MonitorData };
-        },
-      },
-      {
-        url: "/api/agents",
-        ms: 15000,
-        extract: (d) => {
-          const inner = unwrapPollPath(d, []);
-          if (!inner) return null;
-          return { processes: (inner.processes as HermesProcess[] | undefined) ?? [] };
-        },
-      },
-      {
-        url: "/api/missions",
-        ms: 15000,
-        extract: (d) => {
-          const inner = unwrapPollPath(d, []);
-          if (!inner) return null;
-          return { missions: (inner.missions as MissionBrief[] | undefined) ?? [] };
-        },
-      },
-    ];
-
-    const pollIntervals = polls.map(({ url, ms, extract }) =>
-      setInterval(async () => {
-        if (signal.aborted) return;
-        const { data: raw } = await safeApiCall(url, { signal } as RequestInit);
-        if (!raw) return;
-        const update = extract(raw);
-        if (update) setData(update);
-      }, ms),
-    );
-
     return () => {
       controller.abort();
-      pollIntervals.forEach(clearInterval);
     };
   }, [setData]);
+
+  // ── Polling — declared as data, not as code ──────────────────────
+  // Three endpoints, three independent cadences, one shared
+  // `setData` merge. The `usePolledUpdates` hook (src/hooks/usePolledUpdates.ts)
+  // registers one `setInterval` per entry, walks the envelope via
+  // `unwrapPollPath`, and forwards the `extract` mapper's result to
+  // `setData`. Returning `null` from `extract` skips the tick.
+  //
+  // The poll array is built inline each render but the hook stores
+  // it in a ref (mirrors `useInterval`'s callback-ref pattern) so the
+  // intervals are not re-armed on every parent re-render.
+  usePolledUpdates<Partial<typeof data>>(setData, [
+    {
+      url: "/api/monitor",
+      ms: 10_000,
+      // /api/monitor is double-wrapped: { data: { data: MonitorData } }
+      paths: ["data"],
+      extract: (inner) => ({ monitor: inner as unknown as MonitorData }),
+    },
+    {
+      url: "/api/agents",
+      ms: 15_000,
+      // /api/agents is single-wrapped: { data: { processes: [...] } }
+      paths: [],
+      extract: (inner) => ({
+        processes: (inner.processes as HermesProcess[] | undefined) ?? [],
+      }),
+    },
+    {
+      url: "/api/missions",
+      ms: 15_000,
+      paths: [],
+      extract: (inner) => ({
+        missions: (inner.missions as MissionBrief[] | undefined) ?? [],
+      }),
+    },
+  ]);
 
   const modelConfig = config?.model as Record<string, unknown> | undefined;
   const diskModel = (modelConfig?.default as string) || "";
