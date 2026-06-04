@@ -6,7 +6,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { apiFetch, messageFromError } from "@/lib/api-fetch";
+import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
 
 interface UseApiDataOptions {
   /** Auto-fetch on mount (default: true) */
@@ -134,15 +134,15 @@ export function useApiData<T = unknown>(
       // AbortError is expected from AbortController — not an error condition
       if (e instanceof Error && e.name === "AbortError") return;
       if (mountedRef.current) {
-        // `messageFromError` returns "" when the caught value has no
-        // message (e.g. `throw ""`, `throw undefined`). The hook
-        // contract is `error: string | null` — null is reserved for
-        // the "no error" state, so an empty string is a real
-        // (if useless) error condition. We surface the apiFetch
-        // default ("Request failed") when the message is empty,
-        // matching the pre-refactor `Request failed (${res.status})`
-        // fallback for non-2xx responses that had no `json.error`.
-        setError(messageFromError(e, "Request failed"));
+        // `setErrorFromCaught` composes `messageFromError(e, "Request failed")`
+        // — byte-equivalent to the previous inline form. The "Request
+        // failed" fallback is the apiFetch default (see `apiFetch`'s
+        // empty-string coalescing) and matches the pre-refactor
+        // `Request failed (${res.status})` shape for non-2xx responses
+        // that had no `json.error`. The helper preserves the empty-Error
+        // trap (a thrown "" produces "" not "Error"), so the
+        // apiFetch-defaulted fallback fires for empty messages.
+        setErrorFromCaught(setError, e, "Request failed");
       }
     } finally {
       if (mountedRef.current) {
