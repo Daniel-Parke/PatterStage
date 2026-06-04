@@ -42,7 +42,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import AppPageShell from "@/components/layout/AppPageShell";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall, safeApiCallData } from "@/lib/api-fetch";
 import { runMutation } from "@/lib/run-mutation";
 import { toastFromResult } from "@/lib/toast-from-result";
 import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
@@ -204,8 +204,8 @@ export default function Dashboard() {
   const { isArmedFor, arm, confirm } = useTwoStepConfirm({ autoDismissMs: 4000 });
 
   const refreshMonitor = useCallback(async () => {
-    const { data } = await safeApiCall<{ data?: MonitorData }>("/api/monitor", { cache: "no-store" } as RequestInit);
-    if (data?.data) setData({ monitor: data.data });
+    const monitor = await safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store" } as RequestInit);
+    if (monitor) setData({ monitor });
   }, [setData]);
 
   const handleSyncNow = useCallback(
@@ -267,8 +267,8 @@ export default function Dashboard() {
         );
         if (!ok) return;
         // Refresh missions
-        const { data: refreshData } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions");
-        if (refreshData) setData({ missions: refreshData.missions || [] });
+        const missions = await safeApiCallData<{ missions: MissionBrief[] }>("/api/missions");
+        if (missions) setData({ missions: missions.missions || [] });
       } catch {
         showToast("Failed to cancel mission", "error");
       }
@@ -326,9 +326,9 @@ export default function Dashboard() {
   }, [data.monitor, showToast, refreshMonitor, setData]);
 
   const handleRefreshProcesses = useCallback(async () => {
-    const { data: agentsData } = await safeApiCall<{ data: { processes: HermesProcess[] } }>("/api/agents");
-    if (agentsData?.data?.processes) {
-      setData({ processes: agentsData.data.processes });
+    const processes = await safeApiCallData<{ processes: HermesProcess[] }>("/api/agents");
+    if (processes?.processes) {
+      setData({ processes: processes.processes });
     }
   }, [setData]);
 
@@ -336,38 +336,42 @@ export default function Dashboard() {
     const controller = new AbortController();
     const signal = controller.signal;
 
-    // Batch all initial fetches — single render update
+    // Batch all initial fetches — single render update. The
+    // `safeApiCallData` helper unwraps the `{ data: T }` envelope in one
+    // step so the destructured tuple holds the inner payload directly
+    // (matches the pre-refactor semantics: `T | null` per endpoint,
+    // identical to `result.data?.data ?? null` from `safeApiCall`).
     const initialLoad = async () => {
       const [
-        statusRes,
-        configRes,
-        templatesRes,
-        categoriesRes,
-        monitorRes,
-        processesRes,
-        missionsRes,
-        defaultsRes,
+        status,
+        config,
+        templates,
+        categories,
+        monitor,
+        processes,
+        missions,
+        defaults,
       ] = await Promise.all([
-          safeApiCall<{ data: SystemStatus }>("/api/status", { signal } as RequestInit),
-          safeApiCall<{ data: Record<string, unknown> }>("/api/config", { signal } as RequestInit),
-          safeApiCall<{ data: TemplatesResponseData }>("/api/templates", { signal } as RequestInit),
-          safeApiCall<{ data: CategoriesResponseData }>("/api/mission-categories", { signal } as RequestInit),
-          safeApiCall<{ data: MonitorData }>("/api/monitor", { cache: "no-store", signal } as RequestInit),
-          safeApiCall<{ data: AgentsResponseData }>("/api/agents", { signal } as RequestInit),
-          safeApiCall<{ data: MissionsResponseData }>("/api/missions", { signal } as RequestInit),
-          safeApiCall<{ data: DefaultsResponseData }>("/api/models/defaults", { signal } as RequestInit),
-        ]);
+        safeApiCallData<SystemStatus>("/api/status", { signal } as RequestInit),
+        safeApiCallData<Record<string, unknown>>("/api/config", { signal } as RequestInit),
+        safeApiCallData<TemplatesResponseData>("/api/templates", { signal } as RequestInit),
+        safeApiCallData<CategoriesResponseData>("/api/mission-categories", { signal } as RequestInit),
+        safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store", signal } as RequestInit),
+        safeApiCallData<AgentsResponseData>("/api/agents", { signal } as RequestInit),
+        safeApiCallData<MissionsResponseData>("/api/missions", { signal } as RequestInit),
+        safeApiCallData<DefaultsResponseData>("/api/models/defaults", { signal } as RequestInit),
+      ]);
 
       if (!signal.aborted) {
-        setRegistryAgentModelLabel(defaultsRes?.data?.data?.defaults?.agent ?? null);
+        setRegistryAgentModelLabel(defaults?.defaults?.agent ?? null);
         setData({
-          status: statusRes?.data?.data ?? null,
-          config: configRes?.data?.data ?? null,
-          templates: templatesRes?.data?.data?.templates || [],
-          categories: categoriesRes?.data?.data?.categories || [],
-          monitor: monitorRes?.data?.data ?? null,
-          processes: processesRes?.data?.data?.processes || [],
-          missions: missionsRes?.data?.data?.missions || [],
+          status: status ?? null,
+          config: config ?? null,
+          templates: templates?.templates || [],
+          categories: categories?.categories || [],
+          monitor: monitor ?? null,
+          processes: processes?.processes || [],
+          missions: missions?.missions || [],
         });
         setReady(true);
       }

@@ -98,6 +98,66 @@ export async function safeApiCall<T = unknown>(
 }
 
 /**
+ * Safe API call that unwraps the `{ data: T }` envelope in one step.
+ *
+ * Every Control Hub API route returns `{ data: T }` (or `{ data: T, error?: string }`).
+ * `safeApiCall<T>` returns the raw envelope as `{ ok, data: T, error? }` so the
+ * caller is responsible for picking the right envelope field. When the
+ * caller only needs the inner `data` field (the most common case for
+ * `Promise.all([...])` batched fetches and `if (data) setData(...)` updates),
+ * the manual form is:
+ *
+ * ```ts
+ * const { data } = await safeApiCall<{ data?: MonitorData }>("/api/monitor");
+ * if (data?.data) setData({ monitor: data.data });
+ * ```
+ *
+ * `safeApiCallData` collapses that to:
+ *
+ * ```ts
+ * const monitor = await safeApiCallData<MonitorData>("/api/monitor");
+ * if (monitor) setData({ monitor });
+ * ```
+ *
+ * Byte-equivalence:
+ * - `safeApiCallData<T>(path, init)` is `T | null`, identical to
+ *   `((await safeApiCall<{ data?: T }>(path, init)).data?.data ?? null)`.
+ *   On error (`ok: false`) `safeApiCall.data` is `undefined`, so the
+ *   optional chain short-circuits to `undefined` and the `?? null` returns
+ *   `null`. The helper produces the same `null` on error.
+ * - On success-but-no-data (e.g. a 200 response with `{ data: null }`),
+ *   the inner `data` is `undefined` and the helper returns `null` — same
+ *   as the inline form.
+ * - The `T` type is the inner payload, not the envelope — call sites
+ *   that used `safeApiCall<{ data: SomeType }>` to express "the API
+ *   returns `{ data: SomeType }`" pass `SomeType` directly here. The
+ *   helper infers the envelope shape internally.
+ *
+ * Use `safeApiCall` when you need `ok`/`error` (e.g. mutation results with
+ * toasts), or when the response shape isn't a `{ data: T }` envelope.
+ * Use `safeApiCallData` for read-only fetches of a `{ data: T }` envelope.
+ *
+ * @example
+ *   // Single fetch:
+ *   const monitor = await safeApiCallData<MonitorData>("/api/monitor");
+ *   if (monitor) setData({ monitor });
+ *
+ *   // Batched:
+ *   const [status, config] = await Promise.all([
+ *     safeApiCallData<SystemStatus>("/api/status", { signal }),
+ *     safeApiCallData<Record<string, unknown>>("/api/config", { signal }),
+ *   ]);
+ */
+export async function safeApiCallData<T = unknown>(
+  path: string,
+  options?: Omit<RequestInit, "body"> & { body?: unknown }
+): Promise<T | null> {
+  const { ok, data } = await safeApiCall<{ data?: T }>(path, options);
+  if (!ok) return null;
+  return (data?.data ?? null) as T | null;
+}
+
+/**
  * Type signature matching the destructured `showToast` from
  * `@/components/ui/Toast`'s `useToast()`. We don't import the type
  * here to avoid a circular dep (ui/Toast is a client component, this
