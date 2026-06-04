@@ -1,3 +1,128 @@
+## Session 124 — List 4 (Models, HERMES.md, Environment, All Settings) — `serverErrorFromCatch` in `fs/git/branches/route.ts`
+
+Random pick: **List 4** via `echo $((RANDOM % 4 + 1))` = 4, the third List 4 pick in 3 sessions (119 carryover, 120 backupFile/CardLink/fetch, 123 carryover). The pre-audit found the List 4 API surface exceptionally clean post-session 123: **only 1 site remained** in the entire `api/{config,gateway,seed,fs/git}/` subtree with the inline `logApiError + return NextResponse.json({ error: ..., status: 500 })` pattern.
+
+### Pre-audit
+
+Walked the List 4 API surface (`src/app/api/config/**`, `src/app/api/gateway/**`, `src/app/api/seed/**`, `src/app/api/fs/git/**`) and the List 4 UI surface (`src/app/config/**`, `src/components/models/**`, `src/hooks/useModelsPage.ts`, `src/lib/{models-repository,hermes-config-sync,config-schema,sync-manager,secret-mask}.ts`).
+
+**Findings:**
+
+- **Refactor candidate (1 site, HIGH value):** `src/app/api/fs/git/branches/route.ts:28-29` had the exact `logApiError + return NextResponse.json({ error: "Failed to read git branches" }, { status: 500 })` pattern. The session 123 carryover explicitly deferred this site as "different factory family, not in scope" for the `ok()` sweep. Session 124 closes it.
+- **No other inline `NextResponse.json({ error, status: 500 })` sites** in the entire List 4 surface — `rg -U "logApiError.*\n.*return NextResponse" src/app/api/{config,gateway,seed,fs/git}` returns zero hits after migration.
+- **No other `serverError(STATIC_LITERAL)` migrations** in List 4 territory — the wider codebase has 12 static-literal sites (sessions 95/96 swept most), but all 12 are in List 1/2/3 (monitor, sessions, logs, skills, tools) — not List 4.
+- **List 4 UI surface clean** — every catch block already uses `setErrorFromCaught(setError, err, fallback)` (5 sites in `useModelsPage`, `seed/page.tsx`, `config/[section]/page.tsx`, `ModelEditor.tsx`) and `toastError(showToast, err, fallback)` (9 sites in `useModelsPage`). No `showToast(messageFromError(...))` or `setError(messageFromError(...))` patterns remain in List 4.
+- **No raw `fetch(` sites** in List 4 — `apiFetch<T>()` is the canonical helper everywhere (session 120 closed the last one in `ModelSyncButtons.tsx`).
+- **No `instanceof Error ? .message : ...` sites** in List 4 — the `messageFromError(err, fallback)` helper family is used universally.
+- **No `pluralise` or `setField` or `setErrorFromCaught` follow-ups** — the canonical helpers are already adopted in every List 4 page.
+- **One 502 site in `src/lib/cron-sync-failure.ts:76`** — `return NextResponse.json(cronSyncFailureBody(pushResult), { status: 502 })` — but this is **NOT** a 500, so `serverError` is the wrong tool. The site already uses the canonical `cronSyncFailureResponse()` helper internally. Out of scope (would need a new `badGateway()` factory that's a different family).
+
+### Refactor
+
+| # | File | Lines | Migration |
+|---|---|---|---|
+| 1 | `src/app/api/fs/git/branches/route.ts` | 28-29 (2 lines) → 28-34 (5 lines, multi-line for readability) | `logApiError + return NextResponse.json({ error, status: 500 })` → `return serverErrorFromCatch(route, context, error, message)`. Drop `NextResponse` and `logApiError` imports. |
+| 1.5 | `tests/unit/fs-git-branches-api.test.ts` | +17 lines | Add byte-equivalence test (mock `readGitBranchMetadataForWorkspacePath` to throw, assert 500 + `{ error: "Failed to read git branches" }` body). Update `jest.mock("@/lib/api-logger")` to include `serverErrorFromCatch` via `jest.requireActual` (per session 121 P-1 / session 119 P-3 recipe). |
+
+### Refactor 1 detail — `fs/git/branches/route.ts`
+
+The catch block was the canonical `logApiError + return NextResponse.json({ error, status: 500 })` pair. `serverErrorFromCatch` is the byte-equivalent shim (per `src/lib/api-logger.ts:75`): it composes the two primitives (`logApiError` + `serverError`) and returns the same 500 + `{ error: <message> }` response.
+
+```typescript
+// before
+import { NextRequest, NextResponse } from "next/server";
+import { logApiError } from "@/lib/api-logger";
+// ...
+  } catch (error) {
+    logApiError("GET /api/fs/git/branches", "git info", error);
+    return NextResponse.json({ error: "Failed to read git branches" }, { status: 500 });
+  }
+
+// after
+import { NextRequest } from "next/server";
+import { serverErrorFromCatch } from "@/lib/api-logger";
+// ...
+  } catch (error) {
+    return serverErrorFromCatch(
+      "GET /api/fs/git/branches",
+      "git info",
+      error,
+      "Failed to read git branches",
+    );
+  }
+```
+
+**Byte-equivalence audit:**
+
+- `serverErrorFromCatch` is literally `logApiError(route, context, error); return serverError(message);` (`src/lib/api-logger.ts:75-83`). Same log line: `[API GET /api/fs/git/branches] Error git info: <error.message>`. Same response: 500 + `{ error: "Failed to read git branches" }`.
+- The 4 args (route + context + error + message) map 1:1 to the inline form's 2 statements. No semantic drift.
+- The `error` variable flows through `logApiError` → `messageFromError(err, "")` (the session 98 byte-equivalence fallback) → console.error. The pre-refactor inline form called `logApiError` directly with the same `error` arg, which dispatched through the same `messageFromError` call. The log line is byte-identical.
+
+### Test mock update — `fs-git-branches-api.test.ts`
+
+Per session 121 P-1 + session 119 P-3, the canonical `jest.requireActual` template re-exports the real `serverErrorFromCatch` from the mocked `@/lib/api-logger` module:
+
+```typescript
+jest.mock("@/lib/api-logger", () => ({
+  logApiError: jest.fn(),
+  // serverErrorFromCatch is the canonical 2-line catch-block shim that
+  // composes logApiError + serverError. The real helper from
+  // @/lib/api-logger is used here so the test exercises the same
+  // wire-format contract as production (status 500, body
+  // { error: <message> }).
+  serverErrorFromCatch: jest.requireActual("@/lib/api-logger").serverErrorFromCatch,
+}));
+```
+
+This is the "preserve the real helper, mock only the side-effects" pattern. The test's existing `jest.fn()` for `logApiError` still works for assertion (the new test doesn't assert on `logApiError` calls but the mock is preserved for any future test that does). The real `serverErrorFromCatch` exercises the full wire-format contract end-to-end.
+
+### New byte-equivalence test
+
+```typescript
+it("returns 500 with the static 'Failed to read git branches' message when readGitBranchMetadataForWorkspacePath throws (serverErrorFromCatch byte-equivalence)", async () => {
+  mockReadGit.mockRejectedValue(new Error("git binary not found"));
+  const { GET } = await import("@/app/api/fs/git/branches/route");
+  const res = await GET(
+    new NextRequest("http://localhost/api/fs/git/branches?path=/home/tester/repo"),
+  );
+  expect(res.status).toBe(500);
+  const body = await res.json();
+  expect(body).toEqual({ error: "Failed to read git branches" });
+});
+```
+
+This locks the contract: the static error message "Failed to read git branches" is the user-facing response body, regardless of what the underlying `error.message` is. The `serverErrorFromCatch` helper uses the static 4th arg as the response body, NOT the `error.message` — this is the "Shape 1" pattern from `refactor-sweep-rolling-doc-safety` Pitfall 4.
+
+### Verification
+
+- **All 1613 unit tests pass** (231 suites, +1 new test for the byte-equivalence contract; was 1612)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint src/app/api/fs/git/branches/route.ts tests/unit/fs-git-branches-api.test.ts --max-warnings 0`** clean on both modified files
+- **`npm run build`** passes
+- **Byte-equivalence audit per session-51 lesson:** `serverErrorFromCatch(route, context, error, message)` is literally `logApiError(route, context, error); return serverError(message);` (`src/lib/api-logger.ts:75-83`). The migration is a helper extraction, not a behavior change.
+
+### Net diff
+
+- 1 source file (`src/app/api/fs/git/branches/route.ts`): -2 imports + -2 lines inline catch = -3 net lines, 1 import added
+- 1 test file (`tests/unit/fs-git-branches-api.test.ts`): +17 lines (mock update comment + new test)
+- Total: 2 files, +31 / -4 lines
+
+### What was NOT migrated (and why)
+
+- **`src/lib/cron-sync-failure.ts:76` — `return NextResponse.json(cronSyncFailureBody(pushResult), { status: 502 })`** — this is a **502 Bad Gateway**, not a 500. The `serverError` factory produces a 500, so it would be a behavior change. The site is already using the canonical `cronSyncFailureResponse()` helper internally (the inline `NextResponse.json` is inside the helper itself). A new `badGateway(body)` factory would be the right tool, but that's a different family — out of scope for the List 4 serverErrorFromCatch sweep.
+- **The 12 `serverError(STATIC_LITERAL)` sites codebase-wide** — all 12 are in List 1/2/3 territory (monitor, sessions, logs, skills, tools). Not in List 4.
+- **The `serverError(DYNAMIC_MESSAGE)` sites** — `serverError(toError(error).message)` and `serverError(\`Failed to X: ${toError(e).message}\`)` patterns. These are NOT byte-equivalent to `serverErrorFromCatch(route, context, error, "Failed to X")` (per Pitfall 4 — the helper uses the static fallback for the response body regardless of error.message, but the inline form uses the dynamic error.message). Pitfall 4 disambiguator applies.
+
+### "Next session should:" block
+
+1. **Pick a different list next session.** List 4 has now been hit 4 times in 5 sessions (119, 120, 123, 124). The "mined clean" verdict for the `ok()` factory + `serverErrorFromCatch` is now accurate for the entire List 4 surface.
+2. **The wider codebase `serverError(STATIC_LITERAL)` sweep** — the 12 remaining sites in List 1/2/3 are the next-ripe target. A single session could close them all (small per-list budget).
+3. **The `badGateway()` factory** — if 2+ sites emerge that need a 502 response (e.g. a new "push to Hermes" failure pattern), promote a `badGateway(body)` factory. Currently only 1 site (`cronSyncFailureResponse`) needs 502 — Rule of Three says keep inline.
+4. **`useMissionsPage` decomposition** — 1200+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results".
+5. **Carryover Mode F protocol** — the new carryover failure mode (verified-green-but-cap-hit-before-push) is now documented in `references/session-123-list4-ok-factory-sweep.md`. Future sessions that hit the cap during the commit-and-push tail should follow the 4-step commit-when-verified protocol.
+
+---
+
 ## Session 123 — List 4 `ok()` factory migration + 4th list-surface test (carryover commit)
 
 This session is a **carryover commit** for the work session 123 verified-green (tsc + eslint + 1612/1612 jest + npm run build) but hit the iteration cap before the final commit + push + PR-update cycle. Per the new **Mode F** carryover detection recipe (documented in `references/session-123-list4-ok-factory-sweep.md`), the resolution is the 4-step commit-when-verified protocol: (1) verify green, (2) commit, (3) push, (4) update PR body — THEN start new work.
