@@ -1,3 +1,147 @@
+## Session 129 — List 1 (Dashboard, Sessions, Memory, Logs) — `serverErrorFromCatch` migration in `api/sessions/[id]/route.ts` (1 site)
+
+Random pick: **List 1** via `echo $((RANDOM % 4 + 1))` = 1 (2nd List-1 pick in a row). The List 1 surface was already closed for the static-literal `serverErrorFromCatch` form in session 125, but a pre-audit revealed one overlooked site: `api/sessions/[id]/route.ts:254-256` had a `logApiError + return serverError(\`Failed to read session "${sanitizedId}"\`)` pair that the scanner intentionally does NOT match (the dynamic-message rule, session 98 P-4 — the message is a template-literal-with-variable-interpolation, not a static-literal `serverError(STATIC)` form). The migration is belt-and-suspenders, not a scanner-enforced invariant, but it removes the only `logApiError + return serverError` pair in the List 1 surface that's still using the inline form.
+
+### Carryover from the previous cron session
+
+This session also finalised the **session 128 cron carryover** that was sitting uncommitted at the start of the session — the `serverErrorFromError` helper promotion (the dynamic-message sister-helper of `serverErrorFromCatch`) plus the 4-site migration in `api/cron/hardware/route.ts` (GET, POST, PUT, DELETE handlers) plus 2 new test files (`server-error-from-error.test.ts` + `server-error-from-error-source-patterns.test.ts`, 19 tests total). The carryover work was List 2 territory (`api/cron/hardware` is a Cron page, not a List 1 page) but the helper itself is reusable anywhere — promoting it in a session-128 cron job and finishing it in session 129 keeps the helper's home module consistent with `serverErrorFromCatch` (both live in `@/lib/api-logger`). The full carryover write-up is below.
+
+### 1. `serverErrorFromCatch` migration in `api/sessions/[id]/route.ts` (1 site)
+
+The route had one pre-`serverErrorFromCatch` 2-line block:
+
+```ts
+} catch (error) {
+  logApiError("GET /api/sessions/[id]", "reading session " + sanitizedId, error);
+  return serverError(`Failed to read session "${sanitizedId}"`);
+}
+```
+
+→ collapsed to:
+
+```ts
+} catch (error) {
+  return serverErrorFromCatch(
+    "GET /api/sessions/[id]",
+    "reading session " + sanitizedId,
+    error,
+    `Failed to read session "${sanitizedId}"`,
+  );
+}
+```
+
+The `serverError` import was dropped from `@/lib/api-response` (no longer used after the migration) and `serverErrorFromCatch` was added to the existing `@/lib/api-logger` import. The neighbouring `logApiError` calls at lines 127 and 221 (Hermes state.db read + JSONL parsing) are NOT candidates — they're inner-catch blocks that just log and fall through, no `return` involved, so they correctly use the bare `logApiError` form.
+
+**Why the scanner never matched this site** — the message is a template literal with a variable interpolation (`` `Failed to read session "${sanitizedId}"` ``), not a static-literal `serverError("…")` form. The scanner at `tests/unit/server-error-from-catch-source-patterns.test.ts:145` matches `/^(\s*)return\s+serverError\(\s*"([^"]+)"\s*\);?\s*$/` — the double-quoted string regex. Template literals with backticks fall through, so the scanner intentionally doesn't flag them. The dynamic-message rule (session 98 P-4) excluded them by design.
+
+**Byte-equivalence** — `serverErrorFromCatch(route, context, error, message)` is literally `logApiError(route, context, error)` + `serverError(message)` (per `src/lib/api-logger.ts:75-83`). The migrated site's log line and 500 response body are identical to the inline form for all `Error`-instance inputs (the realistic case for a `try` block around `fs.readFileSync` / `JSON.parse` / `statSync`).
+
+**Variable session ID preserved in the message** — the 4th-arg to `serverErrorFromCatch` is the *user-facing* error string. Even though the static-literal `serverError(STATIC)` scanner doesn't match template-literal-with-interpolation, the message itself is correctly preserved as a string template (the variable session ID stays in the error response — only the *composition* is collapsed). A user who hits a 500 from this endpoint still sees the specific session ID they requested, which is what the original inline form produced.
+
+### 2. Source-pattern test comment update
+
+Updated the stale comment in `tests/unit/server-error-from-catch-source-patterns.test.ts:26-37` that previously said:
+
+> The `api/sessions/[id]/route.ts:255-256` site uses a dynamic template literal message and is exempt per the dynamic-message rule.
+
+→ now reads:
+
+> The `api/sessions/[id]/route.ts` originally had a 2-line `logApiError + return serverError(\`Failed to read session "${sanitizedId}"\`)` pair at line 255-256; the message is a template-literal-with-variable-interpolation, NOT a static-literal `serverError(STATIC)` form, so the scanner never matched it. The site was migrated to `serverErrorFromCatch(...)` in session 129 (the variable session ID stays in the message — only the composition is collapsed). The dynamic-message rule (session 98 P-4) still excludes template-literal messages from this scanner, so the migration is belt-and-suspenders rather than a scanner-enforced invariant.
+
+The update keeps the comment in sync with the post-migration code. The scanner logic itself is unchanged.
+
+### 3. Verification
+
+- All 1653 unit tests pass (235 suites, +19 from the carryover — 0 new tests in the session 129 session-specific work; the migration is covered by the existing `server-error-from-catch.test.ts` helper tests + the source-pattern zero-tolerance assertion)
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint . --max-warnings 0` clean
+- `npm run build` passes
+- **Byte-equivalence** — `serverErrorFromCatch(route, context, error, message)` is textually identical to `logApiError(route, context, error)` + `return serverError(message)` (per `src/lib/api-logger.ts:75-83`). The migration is a name change, not a behavior change.
+
+### Files
+
+- `src/app/api/sessions/[id]/route.ts` (MODIFIED) — 1 import swap + 1 site migration + `serverError` removed from `@/lib/api-response` import
+- `tests/unit/server-error-from-catch-source-patterns.test.ts` (MODIFIED) — comment update only (scanner logic unchanged)
+
+Net diff: **1 source file + 1 test comment update, +6 / -3 lines** (the migration = 2 import changes + 5-line helper call replacing 2-line inline block).
+
+### Why only 1 site?
+
+The List 1 surface (api/sessions, api/memory, api/logs, api/monitor) was already exhaustively audited for `serverError(STATIC_LITERAL)` sites in session 125 (5 sites migrated). The session-129 pre-audit (the `rg --multiline` pass that found the dynamic-message site at `api/sessions/[id]/route.ts:255-256`) confirmed zero remaining static-literal sites in the List 1 surface, and the only **dynamic-message** site in List 1 territory is the one migrated in this session. The other dynamic-message sites in the codebase are in List 2 (`api/cron/hardware/route.ts`, all 4 migrated in the session-128 carryover) and List 4 (`api/mission-categories/route.ts`, `api/credentials/route.ts`, `api/orchestration/chat/route.ts`, `api/cron/hardware/meta/route.ts`, `api/models/fallbacks/sync/route.ts` — all out of scope for a List 1 pick).
+
+### What was NOT migrated (and why)
+
+- **`api/memory/hindsight/route.ts` dynamic-message sites** — `handleHealth`, `handleCount`, and the GET main catch all have `error: e instanceof Error ? e.message : "…"` patterns, not `logApiError + return serverError(\`prefix: ${toError(e).message}\`)` patterns. They use the `messageFromError` migration (closed in session 128) rather than the `serverErrorFromError` migration (the carryover helper from session 128 covers the latter shape). The two migrations target different inline forms; the Hindsight route's 3 sites are already done.
+- **`api/cron/hardware/meta/route.ts:22`** — has `return serverError(toError(e).message)` (bare message propagation, no static prefix). Out of scope for `serverErrorFromError` (no prefix → no `prefix + caught error's message` template-literal form). Already documented in the carryover test's "What the scanner does NOT match" section.
+- **`api/monitor/route.ts:151-158`** — the inline `NextResponse.json({data}, {headers})` form is used because the route sets a `Cache-Control` header on the response. `ok()` is hard-locked to status 200 with no headers option. The migration would require a `okWithHeaders` factory (an API surface change), which is out of scope for this session.
+- **`api/sessions/[id]/route.ts` 2 inner-catch `logApiError` calls (lines 127, 221)** — these are non-returning catch blocks (Hermes state.db read failure → fall through to file-based lookup; JSONL line parse failure → return `{index, raw}`). They correctly use the bare `logApiError` form because there's no `return serverError(...)` to compose with.
+
+### "Next session should:" block
+
+1. **Pick a different list next session.** List 1 has now been hit 2 sessions in a row (128, 129). **List 2 is the next-ripe surface** — last touched in the session-128 carryover (the `serverErrorFromError` 4-site migration in `api/cron/hardware/route.ts`). The cross-list follow-ups from the carryover: `api/cron/hardware/meta/route.ts:22` and `api/orchestration/chat/route.ts:82` (both have bare `return serverError(toError(e).message)` forms that are out of scope for `serverErrorFromError` but could benefit from a bare-message helper if a 2nd consumer appears). **List 3** also has follow-ups: the `serverError(STATIC_LITERAL)` sites in `api/credentials/route.ts` and `api/mission-categories/route.ts` (3 sites, already audited).
+2. **Promote a `bareServerError(e)` helper** when a 2nd consumer of the bare `return serverError(toError(e).message)` form appears. Currently 2 sites: `api/cron/hardware/meta/route.ts:22` and `api/orchestration/chat/route.ts:82`. The Rule of Three says: don't add the helper until a 3rd site appears.
+3. **Migrate the 4 inline `err instanceof Error ? err.message : "…"` sites in `src/lib/`, `src/components/cron/`, and `src/app/recroom/`** to a server-side `toMessage(e, fallback)` or extend `messageFromError` to accept a generic consumer. The 7 `src/lib/hermes-profile-sync.ts` sites alone are enough to justify the helper. Multi-session sweep.
+4. **`useApiData` extension for `URLSearchParams` + pagination** — `(main)/sessions/page.tsx` and `(main)/logs/page.tsx` both have URL-builder closures that could be lifted into the hook. Defer until the hook shape is stable across both pages.
+5. **`useMissionsPage` decomposition** — 1200+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results" — would need a careful hook-by-hook extraction with state-derivation verification.
+6. **HindsightBrowser `error ?? "…"` followup** — 4 inline `error ?? "…"` sites that would benefit from a `runMutation`-shaped variant. Defer until a 2nd consumer wants the same shape.
+
+---
+
+## Session 128 cron carryover — `serverErrorFromError` helper + 4-site migration in `api/cron/hardware/route.ts`
+
+The session 128 cron job left uncommitted work that this session finalised. The work was List 2 territory (the `api/cron/hardware/route.ts` is a Cron page endpoint, not a List 1 page) but the helper itself is generic — promoting it in a cron session and finishing it in a List 1 session is a slight scope-drift, justified by the helper's home-module consistency (both `serverErrorFromCatch` and `serverErrorFromError` live in `@/lib/api-logger`).
+
+### What the carryover contains
+
+**1 new helper** — `serverErrorFromError(route, context, error, prefix)` in `src/lib/api-logger.ts:140-148`. Sister-helper of `serverErrorFromCatch` for the dynamic-message-with-prefix variant. The composition is `logApiError(route, context, error)` + `serverError(\`${prefix}: ${toError(error).message}\`)`.
+
+**1 migration** — `api/cron/hardware/route.ts` (4 sites: GET, POST, PUT, DELETE handlers, all originally the 2-line `logApiError + return serverError(\`Failed to X hardware cron: ${toError(e).message}\`)` pattern). All 4 sites collapsed to `serverErrorFromError(ROUTE, CONTEXT, e, "Failed to X hardware cron")`.
+
+**2 new test files** (19 tests total):
+- `tests/unit/server-error-from-error.test.ts` (256 lines, 8 tests) — byte-equivalence matrix comparing the helper's output to the inline form for 6 different caught-value shapes (Error, empty Error, string, null, undefined, TypeError). Same shape as the existing `server-error-from-catch.test.ts`.
+- `tests/unit/server-error-from-error-source-patterns.test.ts` (313 lines, 11 tests) — source-pattern audit test that scans the List 2 surface (api/cron/hardware) for un-migrated `logApiError + return serverError(\`prefix: ${toError(...).message}\`)` sites. Per-list (matches the per-list-pick budget) and uses the same balanced-brace walker the session-112 carryover added.
+
+### Why a sister-helper (not an extension of `serverErrorFromCatch`)
+
+The two helpers have different message-source semantics:
+
+- `serverErrorFromCatch(route, context, error, message)` — message is a **static literal** (e.g. `"Failed to list models"`). The caller supplies the full string.
+- `serverErrorFromError(route, context, error, prefix)` — message is a **dynamic template-literal-with-prefix** (e.g. `` `Failed to read crontab: ${toError(e).message}` ``). The caller supplies a PREFIX, the helper concatenates the caught error's message.
+
+A `prefix?` optional 4th-arg on `serverErrorFromCatch` would muddy the static-only contract that the source-pattern test relies on (the test's scanner at line 145 matches `serverError("STATIC")` only — adding a prefix variant would require a second scanner or a parameter-aware scanner). Sister-helpers with distinct signatures is clearer than an overloaded 4th-arg, and the byte-equivalence test in `server-error-from-error.test.ts:119-256` proves the helper matches the inline form for every reachable input shape.
+
+### Files
+
+- `src/lib/api-logger.ts` (MODIFIED) — added `serverErrorFromError` (8-line implementation + 60-line JSDoc) + `toError` added to import
+- `src/app/api/cron/hardware/route.ts` (MODIFIED) — 1 import change + 4 site migrations
+- `tests/unit/server-error-from-error.test.ts` (NEW) — 8 tests, 256 lines
+- `tests/unit/server-error-from-error-source-patterns.test.ts` (NEW) — 11 tests, 313 lines
+
+Net diff: **1 source file + 1 test file (modified) + 2 test files (new) = 4 files**.
+
+### Verification
+
+- All 1653 unit tests pass (235 suites, +19 from the 2 new test files; the 4 migrated sites have no specific per-site test — the helper is exhaustively covered by `server-error-from-error.test.ts`, and the source-pattern test pins zero-tolerance for the dynamic-message-with-prefix form in the List 2 surface)
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint . --max-warnings 0` clean
+- `npm run build` passes
+- **Byte-equivalence** — `serverErrorFromError(route, context, error, prefix)` is textually identical to `logApiError(route, context, error)` + `` return serverError(`${prefix}: ${toError(error).message}`) `` (per `src/lib/api-logger.ts:140-148`). The 8 unit tests in `server-error-from-error.test.ts` pin the byte-equivalence for 6 different caught-value shapes.
+
+### What the scanner does NOT match (and why)
+
+The source-pattern test's scanner at line 131 only matches the **canonical 2-line** `logApiError + return serverError(\`prefix: ${toError(e).message}\`)` shape. The "What the scanner does NOT match" section in the test header documents the gaps:
+- `return serverError(toError(e).message)` — bare message propagation, no static prefix. Currently 2 sites: `api/cron/hardware/meta/route.ts:22` and `api/orchestration/chat/route.ts:82`. Out of scope for `serverErrorFromError` (no prefix → no template-literal form).
+- `return serverError(\`Failed: ${var}\`)` without `toError` — different shape, not a `serverErrorFromError` candidate.
+- `return serverError(msg)` where `msg` is a hoisted local variable — different shape, belongs in an EXEMPTIONS block.
+
+### Patterns to take forward
+
+1. **"Sister-helper with distinct signature" pattern** — when two related helpers have different message-source semantics (static literal vs dynamic template), prefer sister-helpers with distinct 4th-arg types (`message: string` vs `prefix: string`) over an overloaded optional 4th-arg. The clarity win is in the call site: `serverErrorFromCatch(...msg)` vs `serverErrorFromError(...prefix)` is self-documenting.
+2. **"Per-list source-pattern test" pattern** — the test scope is `api/cron/hardware` only (List 2's surface for the dynamic-message-with-prefix form). Matches the per-list-pick budget from the rolling-PR protocol. Other lists can add their own per-list tests when the dynamic-message form appears in their surface.
+3. **"Carryover finalisation in next session" pattern** — the previous cron job left uncommitted work that this session finalised. Per the rolling-PR protocol's carryover section, the verification (full suite + tsc + eslint + build) was re-run in this session, then the work was committed alongside the new List 1 work in a single commit chain.
+
+---
+
 ## Session 128 — List 1 (Dashboard, Sessions, Memory, Logs) — `messageFromError` migration in `/api/memory/hindsight` + HindsightBrowser form-reset consolidation
 
 Random pick: **List 1** via `echo $((RANDOM % 4 + 1))` = 1. The List 1 surface was closed for `serverErrorFromCatch` in session 125, but the broader `messageFromError()` migration (the cross-list "replace `instanceof Error ? err.message : \"…\"` with the canonical helper") had 3 leftover sites in `/api/memory/hindsight/route.ts` and a form-reset duplication in `HindsightBrowser.tsx`. This session closed both.
