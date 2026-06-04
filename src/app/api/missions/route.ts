@@ -34,7 +34,7 @@ import { buildMissionFieldPatch } from "@/lib/mission-field-updates";
 import { promoteMission } from "@/lib/mission-promote-handler";
 import { runMissionQueueTick } from "@/lib/mission-queue-tick";
 import { ensureSyncLayer } from "@/lib/sync";
-import { cronSyncFailureResponse, cronSyncFailureBody } from "@/lib/cron-sync-failure";
+import { cronSyncFailureBody, logCronSyncFailure } from "@/lib/cron-sync-failure";
 import { missionResponse } from "@/lib/mission-response";
 import { parseDispatchMode } from "@/lib/dispatch-mode";
 
@@ -323,10 +323,10 @@ export async function POST(request: NextRequest) {
             deleteCronJob(cronJob.id);
             updateMission(mission.id, { cronJobId: null, status: "failed" });
             appendAuditLine({ action: "mission.cron_dispatch", resource: mission.id, ok: false });
-            // Log via the same helper that returns the 502 (same console
-            // shape as the cron/route.ts sites) — but we need to splice
-            // the mission data into the body before returning.
-            cronSyncFailureResponse("POST /api/missions", pushResult);
+            // Log via the side-effect-only helper (same console shape as
+            // the cron/route.ts sites) and splice the mission data into
+            // the body before returning the 502.
+            logCronSyncFailure("POST /api/missions", pushResult);
             return NextResponse.json(
               {
                 ...cronSyncFailureBody(pushResult),
