@@ -9,7 +9,15 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb, getSchemaHealth } from "@/lib/db";
 import { toError } from "@/lib/api-fetch";
-import { badRequest, created, forbidden, notFound, ok, serverError } from "@/lib/api-response";
+import {
+  badRequest,
+  conflict,
+  created,
+  forbidden,
+  notFound,
+  ok,
+  serverError,
+} from "@/lib/api-response";
 import {
   countMissionsInCategory,
   countTemplatesInCategory,
@@ -85,12 +93,16 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    // The repository's "already exists" error surfaces a 409 — the only 409
-    // site in this route. No 409 factory exists (only 1 such site), so it
-    // stays inline.
+    // The repository's "already exists" error surfaces a 409 via the
+    // shared `conflict()` factory (sibling of `badRequest`/`notFound`/
+    // `forbidden`/`serverError` in `@/lib/api-response`). The factory
+    // was already exported but the only 409 site in this route was
+    // kept inline (per the session-71 outlier rule, since pre-session-95
+    // no other 409 sites existed in the codebase). Session 134 promotes
+    // the inline form to the factory now that the helper is canonical.
     const msg = toError(error).message || "Create failed";
     if (msg.includes("already exists")) {
-      return NextResponse.json({ error: msg }, { status: 409 });
+      return conflict(msg);
     }
     logApiError("POST /api/mission-categories", "create", error);
     return serverError(msg);

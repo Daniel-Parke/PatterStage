@@ -80,11 +80,15 @@ export async function GET(request: NextRequest) {
     // mismatched frontmatter case ("Creative" vs "creative") so the
     // audit-found case-collision duplicates collapse into a single
     // bucket. The page does the same with groupByCategory().
+    //
+    // `Object.fromEntries(map)` is the canonical Map→Record conversion
+    // (the 4-line `for (const [k, v] of map) record[k] = v;` pattern is
+    // the pre-`Object.fromEntries` idiom). The helper returns a fresh
+    // `Record<string, Skill[]>` with the same shape as the old loop
+    // (Map<string, Skill[]> → Record<string, Skill[]>) so the rest of
+    // the handler is byte-equivalent.
     const categoryGroups = groupByCategory(skills, "uncategorized");
-    const categories: Record<string, Skill[]> = {};
-    for (const [key, items] of categoryGroups) {
-      categories[key] = items;
-    }
+    const categories = Object.fromEntries(categoryGroups) as Record<string, Skill[]>;
 
     return ok({
       skills,

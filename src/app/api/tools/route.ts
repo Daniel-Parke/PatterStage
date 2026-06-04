@@ -7,27 +7,23 @@
 import { NextRequest } from "next/server";
 
 import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
-import { serverErrorFromCatch } from "@/lib/api-logger";
 import { methodNotAllowed, ok } from "@/lib/api-response";
 import {
   HERMES_CONFIGURABLE_TOOLSETS,
   HERMES_PLATFORMS,
 } from "@/lib/hermes-toolset-catalog";
 
+// The GET handler is a pure constant read — `ok()` cannot throw and
+// the two catalog constants are statically imported. The 7-line
+// try/catch + `serverErrorFromCatch` that used to wrap the call site
+// was dead code: there is no I/O, no JSON parse, no DB query, and no
+// file read. Migrated from the List 3 dead-code sweep; matches the
+// `api/agent/personality` GET handler shape (pure read, no try).
 export async function GET() {
-  try {
-    return ok({
-      platforms: HERMES_PLATFORMS,
-      toolsets: HERMES_CONFIGURABLE_TOOLSETS,
-    });
-  } catch (error) {
-    return serverErrorFromCatch(
-      "GET /api/tools",
-      "catalog",
-      error,
-      "Failed to load toolset catalog",
-    );
-  }
+  return ok({
+    platforms: HERMES_PLATFORMS,
+    toolsets: HERMES_CONFIGURABLE_TOOLSETS,
+  });
 }
 
 export async function POST(request: NextRequest) {
