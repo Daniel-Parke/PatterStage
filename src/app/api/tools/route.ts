@@ -4,11 +4,11 @@
 // Runtime tool access is configured per profile via platform_toolsets
 // (Operations → Tools). This route does not control Hermes runtime.
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { methodNotAllowed } from "@/lib/api-response";
+import { methodNotAllowed, ok } from "@/lib/api-response";
 import {
   HERMES_CONFIGURABLE_TOOLSETS,
   HERMES_PLATFORMS,
@@ -16,11 +16,9 @@ import {
 
 export async function GET() {
   try {
-    return NextResponse.json({
-      data: {
-        platforms: HERMES_PLATFORMS,
-        toolsets: HERMES_CONFIGURABLE_TOOLSETS,
-      },
+    return ok({
+      platforms: HERMES_PLATFORMS,
+      toolsets: HERMES_CONFIGURABLE_TOOLSETS,
     });
   } catch (error) {
     return serverErrorFromCatch(
