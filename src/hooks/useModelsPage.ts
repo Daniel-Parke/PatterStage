@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToast } from "@/components/ui/Toast";
 import {
   safeApiCall,
+  safeApiCallData,
   apiFetch,
   messageFromError,
   setErrorFromCaught,
@@ -72,31 +73,35 @@ export function useModelsPage() {
         console.warn("Model auto-import failed — showing cached data:", msg);
       });
 
-      const [mData, cData, dData, driftData, fbData, fbCfgData] = await Promise.all([
+      const [m, c, d, drift, fb, fbCfg] = await Promise.all([
         apiFetch("/api/models"),
         apiFetch("/api/credentials"),
         apiFetch("/api/models/defaults"),
-        apiFetch("/api/models/sync/drift").catch(() => ({ data: null as SyncDrift | null })),
-        apiFetch("/api/models/fallbacks").catch(() => ({ data: null as { entries?: FallbackChainEntry[] } | null })),
-        apiFetch("/api/models/fallbacks/config").catch(() => ({ data: null as { config?: FallbackConfig } | null })),
+        // Best-effort reads — fall back to `null` on per-endpoint error
+        // instead of failing the whole load. The first three (m/c/d)
+        // are still throw-on-error so the outer catch can show
+        // "Failed to load registry" if a primary endpoint is down.
+        safeApiCallData<SyncDrift>("/api/models/sync/drift"),
+        safeApiCallData<{ entries?: FallbackChainEntry[] }>("/api/models/fallbacks"),
+        safeApiCallData<{ config?: FallbackConfig }>("/api/models/fallbacks/config"),
       ]);
 
-      setModels(mData.data?.models ?? []);
-      setCredentials(cData.data?.credentials ?? []);
+      setModels(m.data?.models ?? []);
+      setCredentials(c.data?.credentials ?? []);
       // API returns a complete defaults object (all 12 slots populated or null).
       // Fall back to empty defaults if the response is missing.
-      setDefaults(dData.data?.defaults ?? emptyModelDefaults());
+      setDefaults(d.data?.defaults ?? emptyModelDefaults());
 
-      if (driftData.data) {
-        setDrift(driftData.data as SyncDrift);
+      if (drift) {
+        setDrift(drift);
       }
 
-      if (fbData.data?.entries) {
-        setFallbackChain(fbData.data.entries);
+      if (fb?.entries) {
+        setFallbackChain(fb.entries);
       }
 
-      if (fbCfgData.data?.config) {
-        setFallbackConfig(fbCfgData.data.config);
+      if (fbCfg?.config) {
+        setFallbackConfig(fbCfg.config);
       }
     } catch (err) {
       setErrorFromCaught(setError, err, "Failed to load registry");
@@ -285,11 +290,22 @@ export function useModelsPage() {
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const result = await apiFetch<{
-        data?: { modelsImported?: number; modelsSkipped?: number; credentialsUpdated?: number };
+      // `/api/models/import` returns `{ data: { modelsImported,
+      // modelsSkipped, credentialsUpdated } }`. `safeApiCallData`
+      // unwraps the envelope in one call — same observable
+      // result as the inline form (returns the inner payload
+      // or `null` on error). The success-path access is
+      // `res?.X` instead of `result.data?.X`; the catch path
+      // still surfaces the API's error message via the
+      // thrown error, which `toastError` converts to a
+      // toast.
+      const result = await safeApiCallData<{
+        modelsImported?: number;
+        modelsSkipped?: number;
+        credentialsUpdated?: number;
       }>("/api/models/import", { method: "POST" });
-      const modelsImported = result.data?.modelsImported ?? 0;
-      const creds = result.data?.credentialsUpdated ?? 0;
+      const modelsImported = result?.modelsImported ?? 0;
+      const creds = result?.credentialsUpdated ?? 0;
       showToast(
         `Synced: ${modelsImported} model${pluralise(modelsImported)} ${modelsImported > 0 ? "(updated)" : "(no change)"}${creds > 0 ? `, ${creds} credential${pluralise(creds)} updated` : ""} from Hermes`,
         "success"
@@ -410,7 +426,14 @@ export function useModelsPage() {
       const gen = ++fallbackSaveGenRef.current;
       setFallbackConfigSaving(true);
       setFallbackConfigError(null);
-      const { ok, data: res, error } = await safeApiCall<{ data: { config: FallbackConfig } }>(
+      // Drop the redundant `{ data: { config: ... } }` envelope:
+      // `safeApiCall<T>` already wraps the response as `{ data?: T }`,
+      // so the inner type only needs the inner shape. Byte-equivalent
+      // — `safeApiCall<{ config: FallbackConfig }>` returns the same
+      // `{ ok, data?: { config }, error? }` envelope that the old
+      // `safeApiCall<{ data: { config: FallbackConfig } }>` did, just
+      // without the double-nesting at the call site.
+      const { ok, data: res, error } = await safeApiCall<{ config: FallbackConfig }>(
         "/api/models/fallbacks/config",
         {
           method: "PUT",
@@ -425,7 +448,7 @@ export function useModelsPage() {
         return false;
       }
       setFallbackConfigSaving(false);
-      const saved = res?.data?.config;
+      const saved = res?.config;
       if (!ok || !saved) {
         setFallbackConfigError(error ?? "Failed to save fallback settings");
         return false;
