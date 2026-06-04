@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest, methodNotAllowed } from "@/lib/api-response";
+import { badRequest, methodNotAllowed, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
@@ -48,9 +48,7 @@ async function upsertPersonality(request: NextRequest) {
   }
   assertPatchSucceeded(result);
 
-  return NextResponse.json({
-    data: { success: true, name: result.profile, prompt, source: "SOUL.md" },
-  });
+  return ok({ success: true, name: result.profile, prompt, source: "SOUL.md" });
 }
 
 export async function GET(request: NextRequest) {
@@ -75,9 +73,7 @@ export async function GET(request: NextRequest) {
       })),
     ];
 
-    return NextResponse.json({
-      data: { personalities: profiles, total: profiles.length },
-    });
+    return ok({ personalities: profiles, total: profiles.length });
   }
   catch (error) {
     return serverErrorFromCatch(
