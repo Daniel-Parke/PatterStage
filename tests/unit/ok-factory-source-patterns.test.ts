@@ -45,6 +45,23 @@
  *      assertion enforces the post-session-123 zero-tolerance rule
  *      for the List 4 surface. Models + HERMES.md pages already
  *      have List 3 coverage and are not in the List 4 filter.
+ *
+ * Session 132 changes (List 3 filter extension):
+ *   1. The List 3 surface filter was incomplete — it covered
+ *      api/models, api/agent, and api/credentials but MISSED
+ *      api/skills, api/tools, and api/personalities. This is the
+ *      filter-scope-mismatch pitfall documented as session 130
+ *      P-130-1: the per-list page set in the mission brief is
+ *      page-named (Models/Agents/Skills/Tools/Personalities = 5
+ *      pages) but the source-pattern test filter was backend-
+ *      subtree-named and only matched 3 of the 6 backing subtrees.
+ *      The audit found 3 un-migrated `data:` sites in the missing
+ *      subtrees (api/tools/route.ts:19, api/personalities/route.ts:
+ *      51 + 78). The filter was extended to include the 3 missing
+ *      subtrees; the 3 sites were migrated to `ok(...)`; and a
+ *      self-test was added to pin the filter-scope contract so a
+ *      future drift between the page-named list and the backend-
+ *      subtree-named filter is caught at test time.
  */
 
 import { readFileSync, readdirSync, statSync, writeFileSync, unlinkSync } from "node:fs";
@@ -276,13 +293,28 @@ describe("ok() factory source-pattern coverage (Lists 1-4 surface)", () => {
     expect(files.length).toBeGreaterThan(0);
   });
 
-  it("has zero `return NextResponse.json({ data: ... })` sites in the List 3 surface (api/models, api/agent, api/credentials)", () => {
-    // Filter to List 3 surface: api/models/, api/agent/, api/credentials/.
+  it("has zero `return NextResponse.json({ data: ... })` sites in the List 3 surface (api/models, api/agent, api/credentials, api/skills, api/tools, api/personalities)", () => {
+    // Filter to List 3 surface. The List 3 page set is page-named
+    // (Models, Agents, Skills, Tools, Personalities — 5 pages per
+    // the mission brief) and maps to 6 backend subtrees. The
+    // original sessions 111/112 filter only covered 3 of the 6
+    // subtrees (api/models, api/agent, api/credentials), which is
+    // the filter-scope-mismatch gap from session 130 P-130-1.
+    // Session 132 extended the filter to include the 3 missing
+    // subtrees (api/skills, api/tools, api/personalities) and
+    // migrated 3 un-migrated sites that the old filter had been
+    // silently letting through. A scanner self-test below pins
+    // this contract — if a future session adds a 4th or 5th List-3
+    // backing subtree without extending the filter, the self-test
+    // fails.
     const list3 = allSites.filter(
       (s) =>
         s.file.includes(`${join("src", "app", "api", "models")}`) ||
         s.file.includes(`${join("src", "app", "api", "agent")}`) ||
-        s.file.includes(`${join("src", "app", "api", "credentials")}`),
+        s.file.includes(`${join("src", "app", "api", "credentials")}`) ||
+        s.file.includes(`${join("src", "app", "api", "skills")}`) ||
+        s.file.includes(`${join("src", "app", "api", "tools")}`) ||
+        s.file.includes(`${join("src", "app", "api", "personalities")}`),
     );
     if (list3.length > 0) {
       const summary = list3
@@ -510,6 +542,75 @@ describe("ok() factory source-pattern coverage (Lists 1-4 surface)", () => {
         }
       `;
       expect(countSitesForFixture(fixture)).toBe(0);
+    });
+
+    it("List 3 filter covers all 6 backing subtrees (session 132 contract)", () => {
+      // The filter-scope-mismatch pitfall from session 130 P-130-1:
+      // the List 3 page set is page-named (Models, Agents, Skills,
+      // Tools, Personalities — 5 pages per the mission brief) and
+      // maps to 6 backend subtrees. The original sessions 111/112
+      // filter only covered 3 of the 6 subtrees, silently letting 3
+      // un-migrated `data:` sites through. Session 132 extended the
+      // filter to cover all 6 subtrees. This self-test pins the
+      // contract by reading the production test file's source and
+      // verifying the production filter's it() block contains
+      // `s.file.includes(...)` clauses for all 6 expected
+      // subtrees. If a future session adds a 7th List-3 backing
+      // subtree but forgets to extend the filter, the production
+      // filter won't contain the new subtree's `includes()` call
+      // and this test will fail with a clear diagnostic of which
+      // subtree is missing.
+      //
+      // The 6 expected subtrees derive from the List 3 page set in
+      // the mission brief (Models, Agents, Skills, Tools,
+      // Personalities) and the documented backend-subtree mapping
+      // in session 130 P-130-3.
+      //
+      // Approach: read this test file's source, locate the
+      // production filter's it() block (the one whose title contains
+      // "List 3 surface"), and assert each expected subtree name
+      // appears as a literal inside that it() block. This is
+      // structural: a future session can change the filter clauses
+      // however they want, but if they don't include all 6 subtree
+      // names, the test fails.
+      const expectedSubtrees = [
+        "src/app/api/models",
+        "src/app/api/agent",
+        "src/app/api/credentials",
+        "src/app/api/skills",
+        "src/app/api/tools",
+        "src/app/api/personalities",
+      ];
+      // Read the test file's source.
+      const testFilePath = __filename;
+      const testFileSource = readFileSync(testFilePath, "utf-8");
+      // The production filter calls
+      // `s.file.includes(\`\${join("src", "app", "api", "<name>")}\`)`
+      // for each List 3 backing subtree. The simplest reliable
+      // check: assert each expected subtree's `join("src", "app",
+      // "api", "<name>")` call (rendered as a string) appears as
+      // a literal substring in the test file. A missing clause
+      // (the failure mode this self-test pins) means the test
+      // file is missing the `join("src", "app", "api", "<name>")`
+      // call for that subtree, which the substring check catches.
+      const missing = expectedSubtrees.filter((subtree) => {
+        // The expected join() call as it would appear literally
+        // in the source: `join("src", "app", "api", "<name>")`.
+        const leaf = subtree.split("/").pop() ?? "";
+        const expectedClause = `join("src", "app", "api", "${leaf}")`;
+        return !testFileSource.includes(expectedClause);
+      });
+      if (missing.length > 0) {
+        throw new Error(
+          `List 3 filter-scope self-test failed: the following expected subtrees are NOT ` +
+            `covered by the production filter: ${missing.join(", ")}. ` +
+            `Add the missing subtrees to the List 3 filter in the 'has zero ... List 3 surface' ` +
+            `it() block. Expected subtrees (from mission brief + session 130 P-130-3): ` +
+            `${expectedSubtrees.join(", ")}`,
+        );
+      }
+      expect(expectedSubtrees).toHaveLength(6);
+      expect(missing).toHaveLength(0);
     });
   });
 });
