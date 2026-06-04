@@ -1,3 +1,110 @@
+## Session 113 — List 1 (Dashboard, Sessions, Memory, Logs) — `ok()` factory migration of 10 sites across 3 files + List 1 source-pattern test
+
+Pick was **List 1 (Dashboard, Sessions, Memory, Logs)** for the session 113 sweep, per `echo $((RANDOM % 4 + 1))` = 1. List 1 was the next-ripe surface (last touched session 106, 7 sessions ago). The "next session should" block in session 111's PR-body entry named List 1 as the top follow-up: "**List 1 is still the next-ripe surface** — last touched session 106 (4+ sessions ago), carries 3 known follow-up items." The session-112 carryover (just below) upgraded the source-pattern scanner to a balanced-brace walker, which is what surfaced the 10 un-migrated `data:` sites in the List 1 API surface.
+
+### What changed
+
+**10 sites across 3 files migrated to `ok(...)`** — same byte-equivalent pattern as session 111/112:
+- `src/app/api/sessions/route.ts` (3 sites) — import extended with `ok`
+- `src/app/api/sessions/[id]/route.ts` (4 sites) — import extended with `ok`
+- `src/app/api/logs/route.ts` (3 sites) — import extended with `ok` + 1 unused-import removal (`NextResponse` no longer needed after migration)
+
+**1 new test in `ok-factory-source-patterns.test.ts`** that scans the List 1 surface (api/sessions/, api/memory/, api/logs/) and asserts zero un-migrated `data:` sites. Per session-111 P-3, the test is per-list (matches the per-list-pick budget) and uses the same balanced-brace walker the session-112 carryover added.
+
+**Path-resolution fixes in the existing `documents every exemption` test** — the test was passing only by accident. It called `findSites(ex.file)` with the repo-relative path from `EXEMPTIONS`, which would have failed if `cwd` wasn't the repo root. The fix resolves `ex.file` against `REPO_ROOT` so the test is robust to any working directory.
+
+**1 EXEMPTIONS entry for `api/memory/hindsight/route.ts:306`**. The api/memory/hindsight route has one inline `data:` site — a 503/500 error response with conditional status (`isHindsightConnectionError(error) ? 503 : 500`). `ok()` is status-200-locked, so the site cannot use the factory. Documented in the test's EXEMPTIONS table so the source-pattern test doesn't flag it as a regression.
+
+### What was NOT migrated (and why)
+
+- **The 1 site in `api/memory/hindsight/route.ts:306`** — see EXEMPTIONS entry above. `ok()` is status-200-locked; a 503/500 error response needs the inline form. Documented.
+- **The other 36 `return NextResponse.json({ data: ... })` sites outside the List 1 surface.** These span 14 files: `api/gateway/{health,models}` (5 sites), `api/cron/{route,cron/hardware}` (12 sites), `api/fs/git/branches` (1), `api/mission-categories` (1), `api/seed` (2), `api/stories` (13), `api/orchestration/chat` (1), `api/templates` (2), `api/missions` (4), `api/config` (2), `api/update` (5), `api/admin/sessions/backfill-status` (1), `api/sync` (4), `api/agent/personality` (1), `api/monitor` (1). The migration is byte-equivalent and would be a follow-up "List 2/3/4 API factories" sweep — the per-list-pick protocol means each session is scoped to one list's surface, even when the migration pattern is cross-list. These 36 sites are a documented follow-up; the source-pattern test enforces the constraint for the picked list only.
+
+### Files
+
+- `src/app/api/sessions/route.ts` (MODIFIED) — 1 import extension + 3 site migrations
+- `src/app/api/sessions/[id]/route.ts` (MODIFIED) — 1 import extension + 4 site migrations
+- `src/app/api/logs/route.ts` (MODIFIED) — 1 import extension + 3 site migrations + 1 unused-import removal (`NextResponse`)
+- `tests/unit/ok-factory-source-patterns.test.ts` (MODIFIED) — 1 new "List 1 zero sites" test + 1 EXEMPTIONS entry + path-resolution fix in the existing "documents every exemption" test
+
+Net diff: **3 source files + 1 test file, +79 / -41 lines** (the 10 migrations = 3 import extensions + 1 unused-import removal + 10 site collapses).
+
+### Verification
+
+- **All 1532 unit tests pass** (225 suites, +1 new test for the List 1 surface)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean
+- **`npm run build`** passes
+- **Byte-equivalence audit:** `ok(expr)` is textually identical to `return NextResponse.json({ data: expr });` (the form it replaces) — same `NextResponse.json({ data }, { status: 200 })` call, same status 200, same body shape `{ data: <expr> }`. The 7 unit tests in `api-response.test.ts` from session 111 pin this contract; the new List 1 source-pattern test pins the codebase-wide claim: 0 sites in the List 1 surface use the inline form (modulo the documented EXEMPTIONS entry). If someone adds a new `NextResponse.json({ data: ... })` site in the List 1 surface, the test fails.
+
+### "Next session should:" block
+
+1. **Pick a different list next session.** List 1 has now been hit again. **List 2 is the next-ripe surface** — last touched session 110 (3 sessions ago), and the session-110/111 carryover block recommended it: "the 46 inline 4xx/5xx response blocks in `api/cron/*` and the 4 inline `data:` sites in `api/missions/*` are the natural follow-up to the `ok()` factory migration." **List 3** is also still ripe — has 1 remaining inline 4xx/5xx site, plus the unmigrated sites in `api/sync/*` and `api/orchestration/chat`. **List 4** was last touched session 109 (4 sessions ago).
+2. **Migrate the 36 `return NextResponse.json({ data: ... })` sites outside the List 1 surface** to `ok(...)`. The migration is byte-equivalent and the source-pattern test added in this session enforces the constraint for the List 1 surface; the same pattern would extend to List 2/3/4 with per-list tests. Multi-session sweep.
+3. **Migrate the 46 inline 4xx/5xx response blocks in `api/cron/*`, `api/cron/hardware/*`, and `api/update/*`** to the existing `badRequest` / `notFound` / `serverError` / `serviceUnavailable` factories. The migration is byte-equivalent (the factories are 1-line wrappers). Carryover from session 109.
+4. **Extract the `err instanceof Error` helper for `setError`/`setErrorFromCaught` migration** of the remaining inline sites in `src/lib/`, `src/components/cron/`, and `src/app/recroom/`. Carryover from session 109.
+5. **`useApiData` extension for `URLSearchParams` + pagination** — the URL-builder form is already in `(main)/sessions/page.tsx` and `(main)/logs/page.tsx` (see lines 312-323 of the former for the closure-over-ref pattern). The next candidate that would benefit is `(main)/memory/page.tsx` (currently still a thin wrapper). Carryover from session 109.
+6. **`(main)/sessions/page.tsx` `sourceFilterRef` + `useEffect` for resetting page** — the pattern is workable but slightly awkward; a `useResetPageOnFilterChange(sourceFilter, setPage)` helper would consolidate the 5-line ref+effect block. Out of scope for "AT LEAST identical results" — would need a tiny test or visual verification.
+7. **`useMissionsPage` decomposition** — 1200+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results" — would need a careful hook-by-hook extraction with state-derivation verification.
+8. **`(main)/logs/page.tsx` `useApiData` migration followup** — the URL is rebuilt via `useMemo` (lines 49-52) rather than `useCallback`, so a tiny refactor to use the `urlBuilder` option of the hook (matches the pattern in `sessions/page.tsx`) would unify the two patterns. Carries a small behavior risk (the `useApiData` hook re-fetches on URL reference change) so document the trade-off in a follow-up PR. Carryover from session 99.
+
+---
+
+## Session 112 carryover — multi-line `ok()` site migration + balanced-brace scanner + closeEditor helper
+
+This entry covers the session 112 carryover: the work that session 112 left in the working tree at its iteration cap. Per P-3 of `references/session-112-pitfalls.md`, the carryover protocol requires verifying (full suite + commit + push) before exiting, and the previous session hit the cap at the final verification step. The verification was completed in this session, then the work was committed (`dc06520`) and pushed.
+
+### What the carryover contains
+
+**18 multi-line `data:` sites in the List 3 surface that the session 111 single-line scanner missed.** Plus 1 regression site in `api/agents/route.ts:52` (added between sessions 111 and 112, never caught by the old scanner). All 19 sites were migrated to `ok(...)` form. Per P-1 of session-112-pitfalls, the scanner was upgraded to a balanced-brace parser so it correctly handles both single-line and multi-line forms.
+
+**1 unused-import cleanup + 1 local-var shadowing fix** — `src/app/api/models/[id]/route.ts:71` had `const ok = deleteModel(id);` which would have shadowed the new `ok` import. Renamed to `okDeleted` (2-line diff). Two `sync/drift` routes had `NextResponse` removed from imports after migration.
+
+**1 source-pattern test upgrade** — `tests/unit/ok-factory-source-patterns.test.ts` switched from a per-line `SITE_RE` regex (which only caught single-line sites) to a balanced-brace parser. The new scanner catches the multi-line form (`return NextResponse.json({\n  data: ...\n})`) that the old regex missed. The 18 sites the new scanner found would have all slipped through session 111's verification.
+
+**1 closeEditor helper extraction in `src/app/operations/agents/page.tsx`** — 3 inline `setEditor(null)` sites collapsed to a `useCallback`-wrapped helper. Per P-2 of session-112-pitfalls, the test `close-delete-setter-callback.test.ts` was updated in the same commit with a documented contract evolution: the 3-setter discriminated success block is still locked, only the inner setter's spelling changed (`setEditor(null)` → `closeEditor()`).
+
+**1 unused `const text` removal in the source-pattern test** — the new scanner path doesn't need to read the file directly (it uses `findSites`); the dead `const text = readFileSync(...)` was removed.
+
+### Files
+
+- `src/app/api/models/import/route.ts` (MODIFIED) — 1 import + 2 site migrations
+- `src/app/api/models/sync/pull/route.ts` (MODIFIED) — 3 site migrations
+- `src/app/api/models/sync/push/route.ts` (MODIFIED) — 1 import extension + 1 site migration
+- `src/app/api/models/fallbacks/import/route.ts` (MODIFIED) — 1 site migration
+- `src/app/api/models/fallbacks/sync/route.ts` (MODIFIED) — 1 import extension + 1 site migration
+- `src/app/api/agents/route.ts` (MODIFIED) — 1 import + 1 site migration
+- `src/app/api/agent/personality/route.ts` (MODIFIED) — 1 import extension + 1 site migration
+- `src/app/api/agent/profiles/[id]/toolsets/route.ts` (MODIFIED) — 1 import extension + 1 site migration
+- `src/app/api/agent/profiles/sync/import/route.ts` (MODIFIED) — 1 unused-import removal + 3 site migrations
+- `src/app/api/agent/profiles/sync/pull/route.ts` (MODIFIED) — 1 unused-import removal + 2 site migrations
+- `src/app/api/agent/profiles/sync/push/route.ts` (MODIFIED) — 1 unused-import removal + 2 site migrations
+- `src/app/operations/agents/page.tsx` (MODIFIED) — closeEditor helper extraction (3 sites)
+- `tests/unit/ok-factory-source-patterns.test.ts` (MODIFIED) — balanced-brace scanner + 1 unused-var removal
+- `tests/unit/close-delete-setter-callback.test.ts` (MODIFIED) — test updated to assert closeEditor() in the 3-setter success block
+
+Net diff: **12 source files + 2 test files, +238 / -184 lines** (the 19 migrations = 5 import extensions + 3 unused-import removals + 19 site collapses; the closeEditor extraction = 1 helper + 3 call sites; the test upgrades are ~120 lines of new scanner code + comment blocks).
+
+### Verification (per P-3 of session-112-pitfalls)
+
+- **All 1531 unit tests pass** (225 suites, same as session 111 — no new tests in this carryover, the existing 3 source-pattern tests still pass with the new scanner)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean (1 warning was fixed: the unused `const text` in the source-pattern test)
+- **`npm run build`** passes
+- **Byte-equivalence audit:** all 19 sites are textually identical to the inline form they replace. The 7 unit tests in `api-response.test.ts` from session 111 pin the contract.
+
+### "Next session should:" block
+
+1. **Pick a different list next session.** **List 1 is the next-ripe surface** — last touched session 106 (4+ sessions ago), carries 3 known follow-up items: `(main)/logs/page.tsx` `useApiData` migration, `(main)/sessions/page.tsx` URLSearchParams + pagination extension, and the inline `err instanceof Error` site in `JobFormModal.tsx` for the setError migration. **List 2 is the second-best pick** — 18+ sessions iterated, but the 46 inline 4xx/5xx response blocks in `api/cron/*` and the 4 inline `data:` sites in `api/missions/*` are the natural follow-up to the `ok()` factory migration. **List 4 is also ripe** — last touched session 109 (2 sessions ago), carries 46 unmigrated `data:` sites in `api/gateway/*`, `api/seed/*`, `api/config/*`, `api/update/*`, `api/stories/*`, `api/templates/*`, `api/sessions/*`, `api/fs/git/branches/*`, `api/mission-categories/*`, and `api/orchestration/chat/*`.
+2. **Migrate the remaining ~46 `return NextResponse.json({ data: ... })` sites outside the List 3 surface** to `ok(...)`. The migration is byte-equivalent and the source-pattern test added in this session enforces the constraint across all 4 lists. Multi-session sweep.
+3. **Migrate the 46 inline 4xx/5xx response blocks in `api/cron/*`, `api/cron/hardware/*`, and `api/update/*`** to the existing `badRequest` / `notFound` / `serverError` factories. The migration is byte-equivalent (the factories are 1-line wrappers). Carryover from session 109.
+4. **Extract the `err instanceof Error` helper for `setError`/`setErrorFromCaught` migration** of the 22 inline sites in `src/lib/`, `src/components/cron/`, and `src/app/recroom/`. Carryover from session 109.
+5. **`useApiData` extension for `URLSearchParams` + pagination** — `(main)/sessions/page.tsx`'s `loadSessions` is the next candidate. Requires extending the hook to support query params. Carryover from session 109.
+6. **`useMissionsPage` decomposition** — 1200+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results" — would need a careful hook-by-hook extraction with state-derivation verification.
+7. **`(main)/logs/page.tsx` `useApiData` migration** — extends the hook to absorb the manual `useInterval` + `setRefreshing` pattern. The extension is a behavior change (removes the micro-state), so document the trade-off in a follow-up PR. Carryover from session 99.
+
+---
+
 ## Session 111 — List 3 (Models, Agents, Skills, Tools, Personalities) — `ok()` factory migration of 31 sites across 18 files
 
 Pick was **List 3 (Models, Agents, Skills, Tools, Personalities)** for the session 111 sweep, per `echo $((RANDOM % 4 + 1))` = 3. List 3 has been hit 7+ times (sessions 53, 61, 72, 78, 90, 91, 97, 101, 103, 105, 107) — the second-most-iterated surface in the protocol history. The session-110 commit message "session 111 carryover" indicated that the `ok()` factory extraction was started but not completed; this session finishes both the factory carryover and the 31-site migration it enabled.
