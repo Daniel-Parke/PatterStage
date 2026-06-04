@@ -298,19 +298,18 @@ export async function POST(request: NextRequest) {
         // next schedule tick.
 
         try {
-          const profileNameFinal = profileName as string | undefined;
           const cronJob = createCronJob({
             name: mission.name,
             prompt: mission.prompt,
-            skills: skills as string[] | undefined,
-            model: modelId as string | undefined,
-            provider: provider as string | undefined,
+            skills,
+            model: modelId,
+            provider,
             schedule: scheduleVal!,
             repeat: { times: null }, // infinite
             enabled: true,
             state: "scheduled",
             deliver: "none",
-            profile_name: profileNameFinal ?? "default",
+            profile_name: profileName ?? "default",
             source: "ch",
           });
 
@@ -337,11 +336,12 @@ export async function POST(request: NextRequest) {
           }
 
           // ── Immediate first-run dispatch ──
-          await dispatchMissionNow(mission.id, {
-            profileName: profileName as string | undefined,
-            modelId: modelId as string | undefined,
-            provider: provider as string | undefined,
-          });
+          // `profileName`/`modelId`/`provider` are already correctly typed
+          // as `string | undefined` by the `parseMissionBodyFields`
+          // destructure above, so no inline `as` casts are needed —
+          // `DispatchMissionNowOverrides` from `@/lib/mission-dispatch`
+          // accepts `string | undefined` directly.
+          await dispatchMissionNow(mission.id, { profileName, modelId, provider });
 
           appendAuditLine({ action: "mission.cron_dispatch", resource: mission.id, ok: true });
           return missionResponse(mission.id, 201);
@@ -354,11 +354,10 @@ export async function POST(request: NextRequest) {
       }
 
       if (!isSaveMode && !isQueueMode) {
-        await dispatchMissionNow(mission.id, {
-          profileName: profileName as string | undefined,
-          modelId: modelId as string | undefined,
-          provider: provider as string | undefined,
-        });
+        // See JSDoc above the cron-mode branch for the typing rationale —
+        // `DispatchMissionNowOverrides` accepts `string | undefined`
+        // directly, so no `as` casts are needed on the body fields.
+        await dispatchMissionNow(mission.id, { profileName, modelId, provider });
       } else if (isQueueMode) {
         void runMissionQueueTick();
       }

@@ -282,27 +282,42 @@ export async function POST(request: NextRequest) {
       }
     })();
 
-    const resolvedModel = (model as string | undefined)?.trim() || registryDefault?.modelId || "";
-    const resolvedProvider = (provider as string | undefined)?.trim() || registryDefault?.provider || "";
+    // Resolve model: use explicit model or fall back to registry default.
+    // `model`/`provider` are already typed `string | undefined` by the
+    // destructure above (lines 239-263), so the inline `as` casts the
+    // pre-refactor code had here were noise — the original pattern was
+    // `(x as string | undefined)?.trim()`, which is byte-equivalent to
+    // `x?.trim()` (the cast is a no-op, the type is already correct).
+    const resolvedModel = model?.trim() || registryDefault?.modelId || "";
+    const resolvedProvider = provider?.trim() || registryDefault?.provider || "";
 
     // Resolve repeat
     const repeatObj = normalizeRepeat(repeat);
 
+    // Same rationale as the resolvedModel/resolvedProvider block above:
+    // every destructure local on lines 239-263 is already typed as the
+    // declared `?:` shape, so the `(x as T) ?? default` expressions were
+    // redundant casts — `x ?? default` produces an identical value
+    // (cast is a no-op; the `??` fallback fires on the same undefined
+    // case). The single exception is the `name` field: the `if (!name?.trim())
+    // return badRequest(...)` guard on line 265 narrows `name` from
+    // `string | undefined` to `string`, so `(name as string).trim()` is
+    // the type-narrowing pattern, not a redundant cast — kept.
     const newJob = createCronJob({
       name: (name as string).trim(),
-      prompt: (prompt as string) ?? "",
-      skills: (skills as string[]) ?? [],
+      prompt: prompt ?? "",
+      skills: skills ?? [],
       model: resolvedModel,
       provider: resolvedProvider,
-      base_url: (base_url as string | null) ?? null,
+      base_url: base_url ?? null,
       schedule,
       schedule_display: "display" in parsedSchedule ? (parsedSchedule as { display: string }).display : schedule,
       repeat: repeatObj,
       enabled: true,
       state: "scheduled",
-      deliver: (deliver as string) ?? "none",
-      script: (script as string | null) ?? null,
-      profile_name: (profile_name as string) ?? "default",
+      deliver: deliver ?? "none",
+      script: script ?? null,
+      profile_name: profile_name ?? "default",
       source: "ch",
     });
 

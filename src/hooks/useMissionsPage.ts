@@ -470,6 +470,16 @@ export function useMissionsPage() {
   /**
    * Populate form state from a mission template.
    * Used by handleTemplateSelect, handleTemplateEdit, and fetchData.
+   *
+   * The 5 inline `(t as MissionTemplate & { X?: Y })` casts that used to
+   * wrap reads of `outputFormat`, `constraints`, `localDirs`, `references`,
+   * `suggestedToolsets`, and `timeoutMinutes` were redundant: those fields
+   * are already declared (as optional) on the `MissionTemplate` interface
+   * in `src/components/missions/TemplateModals.tsx`. The `categoryId`
+   * read is the only one that genuinely needs a cast — `MissionTemplate`
+   * exposes `category: string`, not `categoryId: string`, so the legacy
+   * backend response shape (`{ categoryId }`) needs a one-off structural
+   * cast to read the id.
    */
   const applyTemplateToForm = useCallback(
     (
@@ -486,33 +496,21 @@ export function useMissionsPage() {
       setNewInstruction(t.instruction || "");
       setNewContext(t.context || "");
       setNewGoals((t.goals || []).join("\n"));
-      setNewOutputFormat(
-        (t as MissionTemplate & { outputFormat?: string }).outputFormat ?? "",
-      );
-      setNewConstraints(
-        (t as MissionTemplate & { constraints?: string }).constraints ?? "",
-      );
+      setNewOutputFormat(t.outputFormat ?? "");
+      setNewConstraints(t.constraints ?? "");
       setNewProfile(t.profile || "");
       setModelAndProvider(t.defaultModel || "", t.defaultProvider || "");
-      setNewLocalDirs(
-        normalizeLocalDirsInput(
-          (t as MissionTemplate & { localDirs?: unknown }).localDirs,
-        ),
-      );
+      setNewLocalDirs(normalizeLocalDirsInput(t.localDirs));
       setLocalDirDraft({ path: "", branch: null });
-      setNewReferences(
-        (t as MissionTemplate & { references?: string[] }).references ?? [],
-      );
+      setNewReferences(t.references ?? []);
       setNewSkills(t.suggestedSkills || []);
-      setNewToolsets(
-        (t as MissionTemplate & { suggestedToolsets?: string[] }).suggestedToolsets ?? [],
-      );
+      setNewToolsets(t.suggestedToolsets ?? []);
       setNewCategoryId(
         categoryIdOverride !== undefined
           ? categoryIdOverride
           : (t as MissionTemplate & { categoryId?: string }).categoryId ?? null
       );
-      const tm = (t as MissionTemplate & { timeoutMinutes?: number }).timeoutMinutes;
+      const tm = t.timeoutMinutes;
       if (typeof tm === "number" && Number.isFinite(tm)) {
         setNewTimeout(tm);
       }
