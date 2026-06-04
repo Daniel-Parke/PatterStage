@@ -7,6 +7,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
+import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import type { AgentProfile } from "@/types/hermes";
 
 interface SeedState {
@@ -84,33 +85,22 @@ export default function ConfigSeedPage() {
     }
   };
 
-  const confirmReseedAll = () => {
-    if (
-      !window.confirm(
-        "Restore entire default catalog? This replaces Bob, seeded profiles, templates, and categories in the database.",
-      )
-    ) {
-      return;
-    }
-    void runSeed("all", "replace");
-  };
-
-  /**
-   * Show a native confirm() dialog and only run the seed operation if the
-   * user accepts. Centralises the "if (window.confirm(...)) void runSeed(...)"
-   * pattern that was inlined at 3 callsites in this page. Pass `message` to
-   * require confirmation; pass an empty/falsy message to run unconditionally
-   * (matches the prior `void runSeed(...)` callsites that had no confirm).
-   */
-  const confirmAndRun = (
-    message: string,
-    target: "all" | "root" | "profiles" | "templates" | "categories",
-    mode: "merge" | "replace",
-    extra?: { slug?: string; templateId?: string },
-  ) => {
-    if (message && !window.confirm(message)) return;
-    void runSeed(target, mode, extra);
-  };
+  // Two-step confirm hooks — replace the prior `window.confirm(...)` calls
+  // (browser-native modal, no styling, no a11y customization) with the
+  // in-page two-click pattern from `src/hooks/useTwoStepConfirm.ts`. The
+  // user clicks once to arm, twice to confirm; the auto-dismiss timer
+  // (4s) clears the armed state so a stray click hours later doesn't
+  // re-trigger. See `overnight-refactor-patterns` pattern #13.
+  //
+  // Two instances because the two confirms have different shapes:
+  //   - `reseedAll` (autoDismissMs: 0) — singleton button in the header
+  //     section. Deliberate confirm, no auto-dismiss (the user needs
+  //     time to read the "Confirm?" armed state).
+  //   - `agentRestore` (autoDismissMs: 4000) — per-agent keys (p.id)
+  //     so each "Restore this agent" button arms independently and a
+  //     second click on a DIFFERENT agent re-arms for that one.
+  const reseedAll = useTwoStepConfirm({ autoDismissMs: 0 });
+  const agentRestore = useTwoStepConfirm({ autoDismissMs: 4000 });
 
   return (
     <AppPageShell>
@@ -153,15 +143,26 @@ export default function ConfigSeedPage() {
               <button
                 type="button"
                 disabled={isBusy}
-                onClick={confirmReseedAll}
-                className="px-4 py-2 rounded-lg bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40 hover:bg-neon-cyan/30 font-mono text-sm disabled:opacity-50"
+                onClick={reseedAll.isArmed
+                  ? () => void reseedAll.confirm(() => runSeed("all", "replace"))
+                  : () => reseedAll.arm()
+                }
+                className={reseedAll.isArmed
+                  ? "px-4 py-2 rounded-lg bg-red-500/20 text-red-300 border border-red-500/40 hover:bg-red-500/30 font-mono text-sm disabled:opacity-50"
+                  : "px-4 py-2 rounded-lg bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/40 hover:bg-neon-cyan/30 font-mono text-sm disabled:opacity-50"
+                }
+                aria-label={reseedAll.isArmed ? "Click again to confirm reseed" : "Restore entire default catalog"}
               >
-                {busy?.startsWith("all-replace") ? "Working…" : "Restore entire default catalog"}
+                {busy?.startsWith("all-replace")
+                  ? "Working…"
+                  : reseedAll.isArmed
+                    ? "Click again to confirm"
+                    : "Restore entire default catalog"}
               </button>
               <button
                 type="button"
                 disabled={isBusy}
-                onClick={() => confirmAndRun("", "root", "replace")}
+                onClick={() => runSeed("root", "replace")}
                 className="ml-3 px-4 py-2 rounded-lg bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 font-mono text-sm disabled:opacity-50"
               >
                 {busy?.startsWith("root-replace") ? "Working…" : "Restore Bob only"}
@@ -197,17 +198,23 @@ export default function ConfigSeedPage() {
                     <button
                       type="button"
                       disabled={isBusy}
-                      onClick={() =>
-                        confirmAndRun(
-                          `Restore agent "${p.name}" from defaults?`,
-                          "profiles",
-                          "replace",
-                          { slug: p.id },
-                        )
+                      onClick={agentRestore.isArmedFor(p.id)
+                        ? () => void agentRestore.confirm(() =>
+                            runSeed("profiles", "replace", { slug: p.id }),
+                          )
+                        : () => agentRestore.arm(p.id)
                       }
-                      className="text-xs font-mono px-3 py-1.5 rounded border border-neon-purple/40 text-neon-purple hover:bg-neon-purple/10 disabled:opacity-50"
+                      className={agentRestore.isArmedFor(p.id)
+                        ? "text-xs font-mono px-3 py-1.5 rounded border border-red-500/40 text-red-300 bg-red-500/10 hover:bg-red-500/20 disabled:opacity-50"
+                        : "text-xs font-mono px-3 py-1.5 rounded border border-neon-purple/40 text-neon-purple hover:bg-neon-purple/10 disabled:opacity-50"
+                      }
+                      aria-label={
+                        agentRestore.isArmedFor(p.id)
+                          ? `Click again to confirm restoring ${p.name}`
+                          : `Restore agent ${p.name}`
+                      }
                     >
-                      Restore this agent
+                      {agentRestore.isArmedFor(p.id) ? "Click again to confirm" : "Restore this agent"}
                     </button>
                   </div>
                 ))}
@@ -229,7 +236,7 @@ export default function ConfigSeedPage() {
                     <button
                       type="button"
                       disabled={isBusy}
-                      onClick={() => confirmAndRun("", "templates", "replace", { templateId: t.id })}
+                      onClick={() => runSeed("templates", "replace", { templateId: t.id })}
                       className="text-[10px] font-mono px-2 py-1 rounded border border-white/20 text-white/60 hover:text-neon-cyan disabled:opacity-50"
                     >
                       Restore
@@ -247,7 +254,7 @@ export default function ConfigSeedPage() {
               <button
                 type="button"
                 disabled={isBusy}
-                onClick={() => confirmAndRun("", "categories", "replace")}
+                onClick={() => runSeed("categories", "replace")}
                 className="text-xs font-mono px-3 py-1.5 rounded border border-white/20 text-white/50 hover:text-white disabled:opacity-50 mr-2"
               >
                 Restore categories
@@ -255,7 +262,7 @@ export default function ConfigSeedPage() {
               <button
                 type="button"
                 disabled={isBusy}
-                onClick={() => confirmAndRun("", "all", "merge")}
+                onClick={() => runSeed("all", "merge")}
                 className="text-xs font-mono px-3 py-1.5 rounded border border-white/20 text-white/50 hover:text-white disabled:opacity-50"
               >
                 Merge missing defaults
