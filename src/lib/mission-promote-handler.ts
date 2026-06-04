@@ -15,7 +15,7 @@ import { enrichedMission } from "@/lib/mission-response";
 import { agentBackend } from "@/lib/backends";
 import { logApiError } from "@/lib/api-logger";
 import { isMissionDraft, isMissionQueuedForRun } from "@/lib/mission-board";
-import { cronSyncFailureResponse, cronSyncFailureBody } from "@/lib/cron-sync-failure";
+import { cronSyncFailureBody, logCronSyncFailure } from "@/lib/cron-sync-failure";
 import { parseDispatchMode } from "@/lib/dispatch-mode";
 import type { Mission } from "@/lib/agent-backend/types";
 
@@ -169,12 +169,10 @@ export async function promoteMission(
         if (!pushResult.ok) {
           deleteCronJob(cronJob.id);
           updateMission(input.missionId, { cronJobId: null, status: "failed" });
-          // Log via the same helper used by cron/route.ts and the missions
-          // POST site so the console output (and body shape) is identical.
-          // The body fields below are the same strings the helper builds;
-          // we destructure it via `cronSyncFailureBody` so a future change
-          // to the wire contract lands in one place.
-          cronSyncFailureResponse("promoteMission", pushResult);
+          // Log via the side-effect-only helper (same console shape as
+          // the cron/route.ts sites) and splice the mission into the
+          // result body before returning.
+          logCronSyncFailure("promoteMission", pushResult);
           return {
             ok: false,
             status: 502,
