@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
-import { badRequest, notFound } from "@/lib/api-response";
+import { badRequest, notFound, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
@@ -81,9 +81,7 @@ export async function PUT(
     if (err) return err;
     assertPatchSucceeded(result);
 
-    return NextResponse.json({
-      data: { success: true, skill: name, profile, enabled },
-    });
+    return ok({ success: true, skill: name, profile, enabled });
   }
   catch (error) {
     return serverErrorFromCatch(

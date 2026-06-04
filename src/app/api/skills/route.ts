@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest, notFound } from "@/lib/api-response";
+import { badRequest, notFound, ok } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
 import { safeStat } from "@/lib/fs-stats";
 import { resolveEffectiveDisabledSkills } from "@/lib/effective-disabled-skills";
@@ -86,14 +86,12 @@ export async function GET(request: NextRequest) {
       categories[key] = items;
     }
 
-    return NextResponse.json({
-      data: {
-        skills,
-        categories,
-        total: skills.length,
-        categoryCount: Object.keys(categories).length,
-        profile,
-      },
+    return ok({
+      skills,
+      categories,
+      total: skills.length,
+      categoryCount: Object.keys(categories).length,
+      profile,
     });
   }
   catch (error) {

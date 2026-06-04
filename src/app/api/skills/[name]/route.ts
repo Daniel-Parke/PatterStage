@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "fs";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
-import { badRequest, notFound, serverError } from "@/lib/api-response";
+import { badRequest, notFound, ok, serverError } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { safeStat } from "@/lib/fs-stats";
 import { appendAuditLine } from "@/lib/audit-log";
@@ -24,14 +24,12 @@ export async function GET(
     ensureDb();
     const row = getSkill(name);
     if (row) {
-      return NextResponse.json({
-        data: {
-          name,
-          path: skillsRootForProfile() + "/" + name + "/SKILL.md",
-          content: row.content,
-          size: row.content.length,
-          lastModified: row.updatedAt,
-        },
+      return ok({
+        name,
+        path: skillsRootForProfile() + "/" + name + "/SKILL.md",
+        content: row.content,
+        size: row.content.length,
+        lastModified: row.updatedAt,
       });
     }
 
@@ -44,14 +42,12 @@ export async function GET(
     const content = readFileSync(filePath, "utf-8");
     const st = safeStat(filePath)!; // file confirmed to exist above
 
-    return NextResponse.json({
-      data: {
-        name,
-        path: filePath,
-        content,
-        size: st.size,
-        lastModified: st.mtime,
-      },
+    return ok({
+      name,
+      path: filePath,
+      content,
+      size: st.size,
+      lastModified: st.mtime,
     });
   }
   catch (error) {
@@ -110,12 +106,10 @@ export async function PUT(
       ok: true,
     });
 
-    return NextResponse.json({
-      data: {
-        success: true,
-        name,
-        size: content.length,
-      },
+    return ok({
+      success: true,
+      name,
+      size: content.length,
     });
   }
   catch (error) {

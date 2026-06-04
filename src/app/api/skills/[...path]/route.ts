@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { readFileSync, existsSync, readdirSync, statSync } from "fs";
 
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
@@ -6,7 +6,7 @@ import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { resolveSkillDirUnderRoot } from "@/lib/path-security";
 import { parseSkillFrontmatter, stripSkillFrontmatter } from "@/lib/skills-repository";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest, notFound } from "@/lib/api-response";
+import { badRequest, notFound, ok } from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
@@ -65,17 +65,15 @@ export async function GET(
       }
     }
 
-    return NextResponse.json({
-      data: {
-        name: path[path.length - 1],
-        path: path.join("/"),
-        frontmatter,
-        content: body,
-        rawContent: content,
-        size: stats.size,
-        lastModified: stats.mtime.toISOString(),
-        linkedFiles,
-      },
+    return ok({
+      name: path[path.length - 1],
+      path: path.join("/"),
+      frontmatter,
+      content: body,
+      rawContent: content,
+      size: stats.size,
+      lastModified: stats.mtime.toISOString(),
+      linkedFiles,
     });
   } catch (err) {
     return serverErrorFromCatch(
