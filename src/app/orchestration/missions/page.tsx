@@ -24,7 +24,6 @@ export default function MissionsPage() {
     toastElement,
     fetchData,
     showCreate,
-    setShowCreate,
     editingId,
     templates,
     showTemplateManager,

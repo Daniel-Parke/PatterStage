@@ -9,7 +9,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb, getSchemaHealth } from "@/lib/db";
 import { toError } from "@/lib/api-fetch";
-import { badRequest, created, forbidden, notFound, serverError } from "@/lib/api-response";
+import { badRequest, created, forbidden, notFound, ok, serverError } from "@/lib/api-response";
 import {
   countMissionsInCategory,
   countTemplatesInCategory,
@@ -50,11 +50,9 @@ export async function GET(request: NextRequest) {
         { status: 503 },
       );
     }
-    return NextResponse.json({
-      data: {
-        categories: withCounts(),
-        schemaVersion: health.schemaVersion,
-      },
+    return ok({
+      categories: withCounts(),
+      schemaVersion: health.schemaVersion,
     });
   } catch (error) {
     logApiError("GET /api/mission-categories", "list", error);
@@ -119,13 +117,11 @@ export async function PUT(request: NextRequest) {
     if (!cat) {
       return notFound("Category not found");
     }
-    return NextResponse.json({
-      data: {
-        category: {
-          ...cat,
-          missionCount: countMissionsInCategory(cat.id),
-          templateCount: countTemplatesInCategory(cat.id),
-        },
+    return ok({
+      category: {
+        ...cat,
+        missionCount: countMissionsInCategory(cat.id),
+        templateCount: countTemplatesInCategory(cat.id),
       },
     });
   } catch (error) {
@@ -171,7 +167,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     deleteCategory(id, reassignToId);
-    return NextResponse.json({ data: { deleted: id } });
+    return ok({ deleted: id });
   } catch (error) {
     const msg = toError(error).message || "Delete failed";
     if (msg.includes("System categories")) {

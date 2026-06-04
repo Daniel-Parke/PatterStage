@@ -282,6 +282,22 @@ export default function CronPage() {
     setShowHardwareCreate(true);
   }, []);
 
+  // Open the cron modal in "create" mode for whichever tab is currently
+  // active. The `onCreate` prop on `ActionButtons` is a single callback
+  // that the tab-conditional inline arrow function used to fill — a
+  // "future 'reset form fields on create' extension would have to be
+  // added in two places (one per tab branch). The discriminator lives
+  // in this single callback so a future reset lands once.
+  // Mirrors the `closeCreate` discriminator pattern (session 101) but
+  // for the open direction.
+  const openCreateForActiveTab = useCallback(() => {
+    if (activeTab === "agent") {
+      setShowCreate(true);
+    } else {
+      setShowHardwareCreate(true);
+    }
+  }, [activeTab]);
+
   useEffect(() => {
     if (activeTab === "system") {
       void loadHardwareJobs();
@@ -349,11 +365,7 @@ export default function CronPage() {
               }}
               onSync={() => void handleSyncAll()}
               syncing={syncing}
-              onCreate={() =>
-                activeTab === "agent"
-                  ? setShowCreate(true)
-                  : setShowHardwareCreate(true)
-              }
+              onCreate={openCreateForActiveTab}
               createLabel="New Job"
             />
           </div>

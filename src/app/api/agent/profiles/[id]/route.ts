@@ -16,8 +16,7 @@ import {
 import { pushProfileToHermes, removeProfileFromDisk } from "@/lib/hermes-profile-sync";
 import { resolveProfileHermesHome } from "@/lib/hermes-profile-paths";
 import { slugifyDisplayName } from "@/lib/profile-slug";
-import type { ApiResponse } from "@/types/hermes";
-import { badRequest, conflict, notFound, serverError } from "@/lib/api-response";
+import { badRequest, conflict, notFound, ok, serverError } from "@/lib/api-response";
 
 export async function PUT(
   request: NextRequest,
@@ -133,9 +132,7 @@ export async function DELETE(
       ok: true,
     });
 
-    return NextResponse.json<ApiResponse<{ success: true }>>({
-      data: { success: true },
-    });
+    return ok({ success: true });
   } catch (error) {
     return serverErrorFromCatch(
       "DELETE /api/agent/profiles/[id]",
