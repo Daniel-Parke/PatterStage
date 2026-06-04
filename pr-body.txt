@@ -1,3 +1,44 @@
+## Session 128 — List 1 (Dashboard, Sessions, Memory, Logs) — `messageFromError` migration in `/api/memory/hindsight` + HindsightBrowser form-reset consolidation
+
+Random pick: **List 1** via `echo $((RANDOM % 4 + 1))` = 1. The List 1 surface was closed for `serverErrorFromCatch` in session 125, but the broader `messageFromError()` migration (the cross-list "replace `instanceof Error ? err.message : \"…\"` with the canonical helper") had 3 leftover sites in `/api/memory/hindsight/route.ts` and a form-reset duplication in `HindsightBrowser.tsx`. This session closed both.
+
+### 1. `messageFromError` migration in `/api/memory/hindsight/route.ts` (3 sites)
+
+The route had three pre-`messageFromError` boilerplate sites that the canonical helper replaces:
+
+- `handleHealth` catch (line 234): `error: e instanceof Error ? e.message : "Connection refused"` → `messageFromError(e, "Connection refused")`
+- `handleCount` catch (line 249): `error: e instanceof Error ? e.message : "Unknown error"` → `messageFromError(e, "Unknown error")`
+- GET main catch (line 309): `error: error instanceof Error ? error.message : "Hindsight error"` → `messageFromError(error, "Hindsight error")`
+
+The neighbouring `hindsight-route-helpers.ts` already imports `messageFromError` (line 19), so the route file gets a 1-line import addition. All 3 sites are byte-equivalent for the realistic case (fetch rejections are always `Error` instances).
+
+**Subtle behaviour change for the empty-Error trap** — `new Error("")` previously returned `""` from the inline form; the helper correctly returns the fallback (`"Hindsight error"`, etc.) via `toError().message || fallback`. This is the canonical "empty-Error trap" rule the rest of the codebase has standardised on (see `api-logger.ts` migration + `refactor-sweep-rolling-doc-safety` pitfall 8 for the verification matrix). The 3 sites are in error envelopes shown to the user, so the fallback behaviour is strictly better than an empty string.
+
+**Documented divergence for non-Error throws** — JS allows `throw "string"`, `throw null`, etc. The helper coerces non-Error values via `String(value)` (so `throw 42` becomes `"42"`), while the inline form fell through to the fallback. The 3 sites all catch fetch rejections (always `Error` instances), so this divergence is unobservable in production. The new test pins both branches explicitly so a future reader doesn't try to "tighten" the helper back to the inline form.
+
+### 2. HindsightBrowser form-reset consolidation (2 sites)
+
+`HindsightBrowser.tsx` had two inline form-reset sites that the already-defined `closeDirectiveModal` / `closeModelModal` callbacks collapse:
+
+- `handleCreateDirective.onSuccess` (lines 225-226): inline `setShowDirectiveModal(false); setDirForm(EMPTY_DIR_FORM);` → `closeDirectiveModal()`
+- `handleCreateModel.onSuccess` (lines 316-317): inline `setShowModelModal(false); setModelForm(EMPTY_MODEL_FORM);` → `closeModelModal()`
+
+The `closeDirectiveModal` and `closeModelModal` callbacks were already defined (lines 379-392) and used by the modal's X/overlay close paths. Promoting the save-success path to use them means the reset is in exactly one place per modal — a future "I added a `description` field to the directive modal" lands in one place (the `EMPTY_DIR_FORM` constant at the top), not in 4 scattered reset sites.
+
+The save-success path is invoked AFTER all the component body's `useCallback` declarations have completed, so the forward reference is safe (JS closures capture by binding, not by value, and the `const` binding is fully resolved by the time the user clicks "Save").
+
+### 3. Test coverage — `tests/unit/hindsight-message-from-error.test.ts` (new, 9 tests)
+
+Locks in the `messageFromError` byte-equivalence for the 3 migrated sites and pins the empty-Error trap + non-Error-throw behaviour so the divergence from the inline form is documented, not accidental.
+
+Test groups:
+- GET catch site (fallback = "Hindsight error") — populated Error, empty-Error trap
+- handleHealth site (fallback = "Connection refused") — populated Error, empty-Error trap
+- handleCount site (fallback = "Unknown error") — populated Error, empty-Error trap
+- Documented non-Error-throw behaviour (unreachable in production) — string, number, undefined/null
+
+All 9 new tests pass. Combined with the existing 4 HindsightBrowser render tests (which exercise the close-callback paths), the refactor is fully covered.
+
 ## Session 127 — List 3 (Models, Agents, Skills, Tools, Personalities) — `serverErrorFromCatch` 6-site List 3 migration + List 3 source-pattern surface assertion
 
 Random pick: **List 3** via `echo $((RANDOM % 4 + 1))` = 3, the first List 3 pick since session 119. The prior session (126) explicitly listed the cross-list `serverError(STATIC_LITERAL)` sweep as the next-ripe work — Lists 1, 2, and 4 are all zero-tolerance, but **List 3 still had 6 static-literal `serverError(STATIC)` sites** in `api/{skills/*, tools}/`. This session closed the gap.

@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
+import { messageFromError } from "@/lib/api-fetch";
 import { requireAuth } from "@/lib/api-auth";
 import { badRequest, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
@@ -231,7 +232,7 @@ async function handleHealth() {
   } catch (e) {
     return {
       available: false,
-      error: e instanceof Error ? e.message : "Connection refused",
+      error: messageFromError(e, "Connection refused"),
     };
   }
 }
@@ -246,7 +247,7 @@ async function handleCount(bank: string) {
     return {
       count: 0,
       bank,
-      error: e instanceof Error ? e.message : "Unknown error",
+      error: messageFromError(e, "Unknown error"),
     };
   }
 }
@@ -306,7 +307,7 @@ export async function GET(request: NextRequest) {
       {
         data: {
           available: false,
-          error: error instanceof Error ? error.message : "Hindsight error",
+          error: messageFromError(error, "Hindsight error"),
           memories: [],
         },
       },

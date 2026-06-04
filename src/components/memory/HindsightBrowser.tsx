@@ -222,8 +222,7 @@ export default function HindsightBrowser() {
       successMsg: "Directive created",
       errorMsg: "Failed to create directive",
       onSuccess: async () => {
-        setShowDirectiveModal(false);
-        setDirForm(EMPTY_DIR_FORM);
+        closeDirectiveModal();
         await loadDirectives();
       },
     });
@@ -314,8 +313,7 @@ export default function HindsightBrowser() {
       successMsg: "Mental model created (generating in background)",
       errorMsg: "Failed to create mental model",
       onSuccess: async () => {
-        setShowModelModal(false);
-        setModelForm(EMPTY_MODEL_FORM);
+        closeModelModal();
         await loadModels();
       },
     });
