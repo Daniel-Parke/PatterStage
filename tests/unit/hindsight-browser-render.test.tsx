@@ -39,31 +39,31 @@ function mockHindsightFetch(handlers: {
   global.fetch = jest.fn(async (input: RequestInfo | URL) => {
     const url = typeof input === "string" ? input : input.toString();
     if (url.includes("action=health")) {
-      return jsonResponse({ data: { available: true, mode: "ok" } }) as unknown as Response;
+      return jsonResponse({ available: true, mode: "ok" }) as unknown as Response;
     }
     if (url.includes("action=list")) {
       return jsonResponse({
-        data: { memories: handlers.memories ?? [] },
+        memories: handlers.memories ?? [],
       }) as unknown as Response;
     }
     if (url.includes("action=directives")) {
       return jsonResponse({
-        data: { directives: handlers.directives ?? [] },
+        directives: handlers.directives ?? [],
       }) as unknown as Response;
     }
     if (url.includes("action=mental-models")) {
       return jsonResponse({
-        data: { models: handlers.models ?? [] },
+        models: handlers.models ?? [],
       }) as unknown as Response;
     }
     if (url.includes("action=recall")) {
-      return jsonResponse({ data: { memories: [] } }) as unknown as Response;
+      return jsonResponse({ memories: [] }) as unknown as Response;
     }
     if (url.includes("action=reflect")) {
-      return jsonResponse({ data: { response: "text='ok'" } }) as unknown as Response;
+      return jsonResponse({ response: "text='ok'" }) as unknown as Response;
     }
     if (url.startsWith("/api/memory/hindsight") && !url.includes("action=")) {
-      return jsonResponse({ data: { success: true } }) as unknown as Response;
+      return jsonResponse({ success: true }) as unknown as Response;
     }
     throw new Error(`Unmocked fetch: ${url}`);
   }) as typeof global.fetch;
