@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import Database from "better-sqlite3";
 import { existsSync, readFileSync, statSync } from "fs";
 import { basename, join } from "path";
@@ -99,8 +99,12 @@ export async function GET(
           messages.length * 300,
         );
 
-        const response = NextResponse.json({
-          data: buildSessionData({
+        // Inline the `ok(buildSessionData({...}))` form rather than
+        // `const response = NextResponse.json({ data: buildSessionData({...}) })`
+        // because the variable is never modified (no headers, no status override)
+        // and the `ok()` factory already wraps the `{ data: ... }` envelope.
+        return ok(
+          buildSessionData({
             id: sanitizedId,
             filename: sanitizedId,
             format: "db",
@@ -117,8 +121,7 @@ export async function GET(
             // render a "Open Mission" link for cron-spawned sessions.
             missionId: lookupMissionIdForCronSession(sanitizedId),
           }),
-        });
-        return response;
+        );
       }
     } catch (err) {
       logApiError("GET /api/sessions/[id]", "reading Hermes state.db for " + sanitizedId, err);
