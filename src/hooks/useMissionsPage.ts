@@ -304,6 +304,23 @@ export function useMissionsPage() {
     setShowCreate(false);
   }, []);
 
+  // Open the create mission composer (fresh-create mode, not edit).
+  // The page's `<Button onClick={() => setShowCreate(true)}>` "New Mission"
+  // header action is the canonical caller — a named callback keeps the
+  // action bar's open-mission click in lockstep with `closeComposer`'s
+  // close-mission click, and groups the 2 sibling open/close callbacks
+  // next to each other. Mirrors the `openAgentCreate` / `closeAgentModal`
+  // pattern that session 114 promoted in `cron/page.tsx` (see commit
+  // `5f0ec5a` "openCreate/openEdit callbacks"). The 4 `setShowCreate(true)`
+  // sites inside this hook (handleEdit, handleDuplicateMission,
+  // handleTemplateSelect, fetchData's template-apply path) are NOT this
+  // callback — they all do additional state mutations (set editing,
+  // populate form, etc.) before opening. openCreate is the single-setter
+  // "open fresh" path used by the page's "New Mission" button only.
+  const openCreate = useCallback(() => {
+    setShowCreate(true);
+  }, []);
+
   useEffect(() => {
     if (!newProfile) return;
     const controller = new AbortController();
@@ -1173,6 +1190,7 @@ export function useMissionsPage() {
     formState,
     setFormField,
     handleCreate,
+    openCreate,
     closeComposer,
     handleSaveAsTemplate,
     dispatching,

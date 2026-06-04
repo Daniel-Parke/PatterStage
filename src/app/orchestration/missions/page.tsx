@@ -102,6 +102,17 @@ export default function MissionsPage() {
   // reference.
   const handleCloseCreate = vm.closeComposer;
 
+  // Sibling open callback for the action-bar's "New Mission" button.
+  // Mirrors the `closeComposer` shape (single-setter, no editing state
+  // mutation) — promoted from the inline `() => setShowCreate(true)`
+  // so the open/close pair are named siblings in the hook's return
+  // value. The 4 internal `setShowCreate(true)` sites in the hook
+  // (handleEdit, handleDuplicateMission, handleTemplateSelect,
+  // fetchData's template-apply path) are NOT this callback — they all
+  // do additional state mutations first. See `openCreate` JSDoc in
+  // useMissionsPage.ts.
+  const handleOpenCreate = vm.openCreate;
+
   // Three sibling modal close callbacks — each is a single-setter
   // `() => setShow…(false)` that appears exactly once at the
   // modal's `onClose` prop. Inlining them is fine, but naming
@@ -166,7 +177,7 @@ export default function MissionsPage() {
             >
               <RefreshCw className="w-4 h-4" />
             </button>
-            <Button onClick={() => setShowCreate(true)} size="sm">
+            <Button onClick={handleOpenCreate} size="sm">
               <Plus className="w-3.5 h-3.5" /> New Mission
             </Button>
           </>
