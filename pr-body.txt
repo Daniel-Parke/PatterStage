@@ -1,3 +1,58 @@
+## Session 123 — List 4 `ok()` factory migration + 4th list-surface test (carryover commit)
+
+This session is a **carryover commit** for the work session 123 verified-green (tsc + eslint + 1612/1612 jest + npm run build) but hit the iteration cap before the final commit + push + PR-update cycle. Per the new **Mode F** carryover detection recipe (documented in `references/session-123-list4-ok-factory-sweep.md`), the resolution is the 4-step commit-when-verified protocol: (1) verify green, (2) commit, (3) push, (4) update PR body — THEN start new work.
+
+**The session 123 work, re-summarised:**
+
+The `ok()` factory (added in `src/lib/api-response.ts:197`) collapses `return NextResponse.json({ data: <expr> });` to `return ok(<expr>);`. The migration is byte-equivalent — `ok<T>(data)` is literally `NextResponse.json({ data }, { status: 200 })`. The factory had been swept across Lists 1, 2, and 3 in sessions 111-119 (per `ok-factory-source-patterns.test.ts` per-list assertions) but List 4 was never touched. This session closed the gap.
+
+**Sites migrated (11 sites across 5 routes):**
+
+| File | Sites | Notes |
+|---|---|---|
+| `src/app/api/config/route.ts` | 2 (GET, PUT) | import extended with `ok` (kept `NextResponse` for `parseAndValidateJsonBody`'s `instanceof NextResponse` check) |
+| `src/app/api/gateway/health/route.ts` | 3 (online true/false/false-catch) | dropped `NextResponse` import (entire file no longer references it after migration) |
+| `src/app/api/gateway/models/route.ts` | 3 (success/fallback/catch) | dropped `NextResponse` import |
+| `src/app/api/seed/route.ts` | 2 (GET, POST) | import extended with `ok` (kept `NextResponse` for `parseJsonBody`'s `instanceof NextResponse` check) |
+| `src/app/api/fs/git/branches/route.ts` | 1 (success) | import extended with `ok, badRequest`; **plus 2 inline 400 sites → `badRequest(...)`** (drive-by: same file's inline 400 responses were the same shape) |
+
+**Drive-by scope discipline:** the `api/fs/git/branches/route.ts` `badRequest` migration is a related-family inline form, not an `ok()` migration per se. The 2 inline `NextResponse.json({ error: ... }, { status: 400 })` sites were the next factory (`badRequest`) and the same file. Including them in the same commit is the "one file, one consistent migration" pattern. The 500 site in the catch block was NOT migrated (the `serverError` factory is the right tool, but it would expand scope beyond the `ok()` sweep).
+
+**The 4th list-surface test (the audit guard):**
+
+Added a 4th `it()` block to `tests/unit/ok-factory-source-patterns.test.ts` covering `api/config/`, `api/gateway/`, `api/seed/`, `api/fs/git/`. The filter is **narrower than the page set** named in the per-list-pick protocol — the protocol cares about the *backend route*, not the page. Models is List 3, so `api/models` is List 3 (covered by the existing List 3 assertion). HERMES.md is List 3. The List 4 routes are: config (Settings), gateway (gateway health), seed (catalog), fs/git (env-path repo). The 4-route subtree is the right scope — any new inline `data:` site added to one of these routes will fail the test.
+
+**Renamed the `describe` block** from "List 3 surface" to "Lists 1-4 surface" to reflect that all 4 lists now have enforcement. This is the "audit trail of which lists are done" pattern from session 113 P-1.
+
+**Verification (re-run on the carryover commit, not the in-flight tree):**
+
+- **All 1612 unit tests pass** (231 suites, +1 new assertion in `ok-factory-source-patterns.test.ts`)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint` on all 6 modified files --max-warnings 0** clean
+- **`npm run build`** passes
+
+**Net diff:** 5 source files + 1 test file, +89 / -45 lines. The test grows by ~30 lines (the new assertion + comment block), the source files shrink by ~10 lines total (11 inline `data:` site collapses to 11 `ok()` calls, 2 inline 400 sites to 2 `badRequest` calls, minus 2 unused-import removals).
+
+**Reference:** `references/session-123-list4-ok-factory-sweep.md` — full session details, including:
+- The 5 new pitfall entries (carryover Mode F, phantom sibling subagent warning, per-list test surface scoping, NextResponse import drop, drive-by scope rule)
+- The "models is in 2 lists" disambiguation rationale
+- The pre-flight recipes for the 4 migration steps
+
+**The `ok()` factory migration is now COMPLETE across all 4 lists.** The source-pattern test enforces zero inline `data:` sites in `api/{sessions,memory,logs,models,agent,credentials,cron,missions,orchestration/chat,config,gateway,seed,fs/git}`. Future sessions can build on this foundation.
+
+**What was NOT migrated (and why):**
+- The 500 sites in the catch blocks — different factory family (`serverError`), not part of the `ok()` sweep scope. Would be a separate session if the list picks it.
+- The inline `error: "..."` responses in other files (not in the List 4 surface) — covered by prior sessions' `forbidden()`/`badRequest()` migrations and existing patterns.
+
+### "Next session should:" block
+
+1. **Pick a different list next session** to spread the refactor surface. List 4 was hit in sessions 119 (carryover) and 123 (this one). **List 1 or List 2 are the next-ripe surfaces** — the prior session 122 "next session should" suggested List 1's `(main)/logs/page.tsx` `useApiData` migration as a candidate, but it has higher friction (requires extending the hook).
+2. **`serverError` factory migration sweep** — the `ok()` sweep left 500 sites untouched. A future session could sweep the `return NextResponse.json({ error: "..." }, { status: 500 })` pattern into `return serverError("...")` from `@/lib/api-logger`. The pattern is codebase-wide; would need its own per-list scoping.
+3. **`setErrorFromCaught` helper promotion** — when the 8th `setError(messageFromError(err, ...))` site appears (currently 7), promote to a `setErrorFromCaught(setError, err, fallback)` helper.
+4. **`useMissionsPage` decomposition** — 1200+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results".
+
+---
+
 ## Session 120 — List 4 (Models, HERMES.md, Environment, All Settings) — `backupFile` helper adoption in config PUT + `CardLink` primitive + `raw fetch → apiFetch` migration
 
 Random pick: **List 4** via `echo $((RANDOM % 4 + 1))` = 4, the first List 4 pick since session 92 (28 sessions ago — the longest List 4 gap in the protocol history). List 4 had been hit 7+ times (sessions 59, 60, 67, 70, 72, 85, 92) — the carryover from session 119 (List 3, `openCreate` callback + `effectiveSkillEnabled` helper) was already committed in the prior carryover batch.
