@@ -246,6 +246,42 @@ export default function CronPage() {
     setEditingHardwareJob(null);
   }, []);
 
+  // Open the agent cron modal in "create" mode. The setter-pair 1-liner
+  // `() => setShowCreate(true)` appears at 2 sites (the ActionButtons
+  // `onCreate` for the agent tab, and the CronTabContent `onCreate`).
+  // Promoted to a named callback so a future "also reset form fields"
+  // extension lands in one place. Mirrors the `closeCreate` pattern
+  // promoted in session 101.
+  const openAgentCreate = useCallback(() => {
+    setShowCreate(true);
+  }, []);
+
+  // Open the system cron modal in "create" mode. Same shape as
+  // `openAgentCreate` but for the system tab. Promotes to a single
+  // source of truth so the action-bar and tab-content paths stay
+  // in lockstep.
+  const openSystemCreate = useCallback(() => {
+    setShowHardwareCreate(true);
+  }, []);
+
+  // Open the agent cron modal in "edit" mode for a specific job. The
+  // `setEditingJob(job); setShowCreate(true)` pair appears at 1 site
+  // (the CronTabContent `onEdit`). Promoted to a named callback so
+  // the discriminator ("set editing state, then open the modal")
+  // lives in exactly one place. Mirrors the `closeEdit` pattern
+  // promoted in session 101.
+  const openAgentEditor = useCallback((job: CronJob | SystemCronJob) => {
+    setEditingJob(job as CronJob);
+    setShowCreate(true);
+  }, []);
+
+  // Open the system cron modal in "edit" mode for a specific job.
+  // Same shape as `openAgentEditor` but for the system tab.
+  const openSystemEditor = useCallback((job: CronJob | SystemCronJob) => {
+    setEditingHardwareJob(job as SystemCronJob);
+    setShowHardwareCreate(true);
+  }, []);
+
   useEffect(() => {
     if (activeTab === "system") {
       void loadHardwareJobs();
@@ -336,14 +372,11 @@ export default function CronPage() {
             desc="Create your first scheduled job"
             searchPlaceholder="Search agent jobs..."
             createLabel="Create Agent Job"
-            onCreate={() => setShowCreate(true)}
+            onCreate={openAgentCreate}
             onToggle={(id) => agent.handleToggle(id)}
             onDelete={(id) => agent.handleDelete(id)}
             onRun={(id) => agent.handleRun(id)}
-            onEdit={(job) => {
-              setEditingJob(job as CronJob);
-              setShowCreate(true);
-            }}
+            onEdit={openAgentEditor}
           />
         ) : (
           <CronTabContent
@@ -356,14 +389,11 @@ export default function CronPage() {
             desc="Add a real system cron job"
             searchPlaceholder="Search system jobs..."
             createLabel="Create System Job"
-            onCreate={() => setShowHardwareCreate(true)}
+            onCreate={openSystemCreate}
             onToggle={(id) => hardware.handleToggle(id)}
             onDelete={(id) => hardware.handleDelete(id)}
             onRun={undefined}
-            onEdit={(job) => {
-              setEditingHardwareJob(job as SystemCronJob);
-              setShowHardwareCreate(true);
-            }}
+            onEdit={openSystemEditor}
           />
         )}
       </div>

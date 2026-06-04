@@ -17,7 +17,7 @@ import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest, notFound, serverError, serviceUnavailable } from "@/lib/api-response";
+import { badRequest, notFound, ok, serverError, serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { agentBackend } from "@/lib/backends";
 import { createCronJob, deleteCronJob, importHermesJobs, pushJobToHermes } from "@/lib/cron-repository";
@@ -167,7 +167,7 @@ export async function GET(request: NextRequest) {
       const mission = getMissionOrNotFound(id);
       if (mission instanceof NextResponse) return mission;
       // Mission status is synced in background by MissionSync
-      return NextResponse.json({ data: { mission: enrichMissionCron(mission) } });
+      return ok({ mission: enrichMissionCron(mission) });
     }
 
     const categoryIdParam = url.searchParams.get("categoryId");
@@ -178,7 +178,7 @@ export async function GET(request: NextRequest) {
           ? { categoryId: categoryIdParam }
           : undefined,
     ).map((m) => enrichMissionCron(m));
-    return NextResponse.json({ data: { missions } });
+    return ok({ missions });
   } catch (error) {
     return serverErrorFromCatch("GET /api/missions", id ? `mission ${id}` : "listing missions", error, "Failed to load missions");
   }
@@ -429,7 +429,7 @@ export async function POST(request: NextRequest) {
       }
 
       appendAuditLine({ action: "mission.promote", resource: missionIdFinal, ok: true });
-      return NextResponse.json({ data: { mission: result.mission } });
+      return ok({ mission: result.mission });
     }
 
     // ── Update Mission ─────────────────────────────────────────
@@ -547,13 +547,11 @@ export async function POST(request: NextRequest) {
       }
 
       appendAuditLine({ action: "mission.cancel", resource: cancelId, ok: true });
-      return NextResponse.json({
-        data: {
-          mission: enrichMissionCron(mission),
-          cancel: {
-            accepted: true,
-            processKillPending: shouldKillProcess,
-          },
+      return ok({
+        mission: enrichMissionCron(mission),
+        cancel: {
+          accepted: true,
+          processKillPending: shouldKillProcess,
         },
       });
     }
@@ -566,12 +564,12 @@ export async function POST(request: NextRequest) {
       const missionIdFinal = existing.id;
       await deleteMissionCron(missionIdFinal);
 
-      const ok = deleteMission(missionIdFinal);
-      if (!ok)
+      const deleted = deleteMission(missionIdFinal);
+      if (!deleted)
         return notFound("Mission not found");
 
       appendAuditLine({ action: "mission.delete", resource: missionIdFinal, ok: true });
-      return NextResponse.json({ data: { deleted: missionIdFinal } });
+      return ok({ deleted: missionIdFinal });
     }
 
     return badRequest(`Unknown action: ${action}`);

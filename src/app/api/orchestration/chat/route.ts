@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest, serverError } from "@/lib/api-response";
+import { badRequest, ok, serverError } from "@/lib/api-response";
 import { getAgentLlmEndpoints } from "@/lib/hermes-agent-runtime";
 import { CHAT_DEFAULT_MODEL } from "@/types/chat";
 import { toError } from "@/lib/api-fetch";
@@ -49,7 +49,7 @@ async function fetchGateway(
 
   // Non-streaming — return JSON
   const data = await response.json();
-  return NextResponse.json({ data });
+  return ok(data);
 }
 
 export async function POST(request: NextRequest) {

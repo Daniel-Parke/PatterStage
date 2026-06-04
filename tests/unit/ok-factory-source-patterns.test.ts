@@ -46,6 +46,16 @@ const API_DIR = join(REPO_ROOT, "src", "app", "api");
 /**
  * Sites exempted from the migration. Each entry documents why the
  * inline form is preferred over `ok(...)`.
+ *
+ * Note: this test's scanner only matches `data:` sites (not `error:`
+ * sites). Inline `error:` responses with variable status codes
+ * (e.g. `api/orchestration/chat/route.ts:33` propagating the
+ * gateway's response status, or `api/memory/hindsight/route.ts:306`
+ * with conditional 503/500) are out of scope for this scanner —
+ * the `ok()` factory is success-side, and the `error:` inline form
+ * would need a different factory family to migrate. Documented here
+ * as a design note, not as an EXEMPTIONS entry (the scanner won't
+ * see them).
  */
 const EXEMPTIONS: ReadonlyArray<{ file: string; line: number; reason: string }> = [
   // List 1 (api/sessions, api/memory, api/logs) — session 113.
@@ -187,6 +197,32 @@ describe("ok() factory source-pattern coverage (List 3 surface)", () => {
       );
     }
     expect(live).toEqual([]);
+  });
+
+  it("has zero `return NextResponse.json({ data: ... })` sites in the List 2 surface (api/cron, api/missions, api/orchestration/chat)", () => {
+    // Filter to List 2 surface: api/cron/, api/missions/,
+    // api/orchestration/chat/. The List 2 surface backs the
+    // Cron, Missions, and Chat pages (per the session-114 sweep).
+    // The api/orchestration/chat route's only inline site is a
+    // status-variable `{ error: ... }` response (propagating the
+    // upstream gateway's status) — that site is exempt and the
+    // EXEMPTIONS table below documents it. The test will fail on
+    // any new inline `data:` site added to the List 2 surface.
+    const list2 = allSites.filter(
+      (s) =>
+        s.file.includes(`${join("src", "app", "api", "cron")}`) ||
+        s.file.includes(`${join("src", "app", "api", "missions")}`) ||
+        s.file.includes(`${join("src", "app", "api", "orchestration", "chat")}`),
+    );
+    if (list2.length > 0) {
+      const summary = list2
+        .map((s) => `  ${s.file.replace(REPO_ROOT + "/", "")}:${s.line}  ${s.text}`)
+        .join("\n");
+      throw new Error(
+        `Found ${list2.length} un-migrated 'return NextResponse.json({ data: ... })' site(s) in the List 2 surface — migrate to 'ok(...)':\n${summary}`,
+      );
+    }
+    expect(list2).toEqual([]);
   });
 
   it("documents every exemption in EXEMPTIONS", () => {

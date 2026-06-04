@@ -17,7 +17,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest, created, notFound, serviceUnavailable } from "@/lib/api-response";
+import { badRequest, created, notFound, ok, serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { parseSchedule } from "@/lib/utils";
 import { buildCronUpdatePayload } from "@/lib/cron-field-updates";
@@ -84,7 +84,7 @@ async function applyEnabledChange(
       pushResult,
     );
   }
-  return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
+  return ok({ success: true, job: recordToApiJob(updated) });
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
       if (!job) {
         return notFound("Job not found");
       }
-      return NextResponse.json({ data: { job: recordToApiJob(job) } });
+      return ok({ job: recordToApiJob(job) });
     }
 
     // Pull latest execution state from Hermes before listing all jobs
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
 
     const rawJobs = listCronJobs();
     const jobs = rawJobs.map(recordToApiJob);
-    return NextResponse.json({ data: { jobs, total: jobs.length } });
+    return ok({ jobs, total: jobs.length });
   } catch (error) {
     return serverErrorFromCatch("GET /api/cron", "listing cron jobs", error, "Failed to load cron jobs");
   }
@@ -191,13 +191,11 @@ export async function POST(request: NextRequest) {
         ok: result.errors.length === 0,
         detail: `imported=${result.hermesImported.length} exported_errors=${result.hermesExportErrors.length}`,
       });
-      return NextResponse.json({
-        data: {
-          success: result.errors.length === 0,
-          hermesImported: result.hermesImported,
-          exportErrors: result.hermesExportErrors,
-          errors: result.errors,
-        },
+      return ok({
+        success: result.errors.length === 0,
+        hermesImported: result.hermesImported,
+        exportErrors: result.hermesExportErrors,
+        errors: result.errors,
       });
     }
 
@@ -210,12 +208,10 @@ export async function POST(request: NextRequest) {
         ok: result.errors.length === 0,
         detail: `imported=${result.imported.length}`,
       });
-      return NextResponse.json({
-        data: {
-          success: result.errors.length === 0,
-          imported: result.imported,
-          errors: result.errors,
-        },
+      return ok({
+        success: result.errors.length === 0,
+        imported: result.imported,
+        errors: result.errors,
       });
     }
 
@@ -235,7 +231,7 @@ export async function POST(request: NextRequest) {
         paused++;
       }
       appendAuditLine({ action: "cron.pauseAll", resource: "all", ok: true, detail: String(paused) });
-      return NextResponse.json({ data: { success: true, pausedCount: paused } });
+      return ok({ success: true, pausedCount: paused });
     }
 
     // ── Create job ─────────────────────────────────────────────
@@ -399,7 +395,7 @@ export async function PUT(request: NextRequest) {
       if (!updated) {
         return notFound("Job not found after update");
       }
-      return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
+      return ok({ success: true, job: recordToApiJob(updated) });
     }
 
     // ── Field updates ─────────────────────────────────────────
@@ -420,7 +416,7 @@ export async function PUT(request: NextRequest) {
       return cronSyncFailureResponse("PUT /api/cron", pushResult);
     }
 
-    return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
+    return ok({ success: true, job: recordToApiJob(updated) });
   } catch (error) {
     return serverErrorFromCatch("PUT /api/cron", "updating cron job", error, "Failed to update cron job");
   }
@@ -460,7 +456,7 @@ export async function DELETE(request: NextRequest) {
 
     appendAuditLine({ action: "cron.delete", resource: id, ok: true });
 
-    return NextResponse.json({ data: { success: true, deleted: id } });
+    return ok({ success: true, deleted: id });
   } catch (error) {
     return serverErrorFromCatch("DELETE /api/cron", "deleting cron job", error, "Failed to delete cron job");
   }
