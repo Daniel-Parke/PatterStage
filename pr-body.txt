@@ -1,3 +1,111 @@
+## Session 125 — List 1 (Dashboard, Sessions, Memory, Logs) — `serverErrorFromCatch` sweep in `api/{sessions,logs,monitor}/`
+
+Random pick: **List 1** via `echo $((RANDOM % 4 + 1))` = 1, the first List 1 pick since session 106 (the longest gap in recent protocol history). The prior session (124) explicitly recommended List 1 as the next-ripe surface: 5 static-literal `serverError(STATIC)` sites remained in `api/{sessions,logs,monitor}/`, with `api/sessions/[id]/route.ts:255-256` exempt as a dynamic-message site. This session closes all 5 static sites and adds the 1st-list surface assertion to the `serverErrorFromCatch` source-pattern test (sister to the `ok()` 4-list assertion).
+
+### Pre-audit
+
+Walked the List 1 API surface (`src/app/api/{sessions,memory,logs,monitor}/`) and the List 1 UI surface (`src/app/(main)/sessions/`, `src/app/(main)/memory/`, `src/app/(main)/logs/`, `src/app/page.tsx`, `src/hooks/use*Page.ts` for the relevant list-1 pages). Used the recipe from `references/session-124-list4-serverErrorFromCatch-deferred-cleanup.md` P-3 (the 12-site cross-list `serverError(STATIC_LITERAL)` follow-up).
+
+**Findings:**
+
+- **Refactor candidates (5 sites, HIGH value):**
+  - `src/app/api/sessions/route.ts:71-72` (GET handler) — `logApiError("GET /api/sessions", "listing sessions", error); return serverError("Failed to load sessions");`
+  - `src/app/api/sessions/route.ts:140-141` (POST handler) — `logApiError("POST /api/sessions", "session action", error); return serverError("Failed to process session action");`
+  - `src/app/api/logs/route.ts:98-99` (GET handler) — `logApiError("GET /api/logs", "reading logs", error); return serverError("Failed to read logs");`
+  - `src/app/api/logs/route.ts:139-140` (DELETE handler) — `logApiError("DELETE /api/logs", "deleting log", error); return serverError("Failed to delete logs");`
+  - `src/app/api/monitor/route.ts:161-162` (GET handler) — `logApiError("GET /api/monitor", "aggregating monitor data", error); return serverError("Failed to read system monitor data");`
+- **1 dynamic-message site in `api/sessions/[id]/route.ts:255-256`** — `serverError(\`Failed to read session "${sanitizedId}"\`)` — exempt per the dynamic-message rule (session 98 P-4 / session 124 P-3). The dynamic interpolation would change the response shape; the inline form is preserved.
+- **No `serverError(STATIC_LITERAL)` sites remain in the List 1 surface** after the 5 migrations. The pre-audit also checked `api/memory/` and found zero static-literal sites (the `api/memory/hindsight/route.ts:306` site is a 503/500 `data:` envelope — different family, out of scope for `serverErrorFromCatch`).
+- **List 1 UI surface clean** — every catch block already uses `setErrorFromCaught(setError, err, fallback)` and `toastError(showToast, err, fallback)` per the prior sessions 91/95/106 sweeps. The `useApiData` migration in session 122/123 closed the last raw `useEffect+safeApiCall` patterns in `(main)/sessions/[id]/page.tsx`.
+- **No follow-up candidates in List 1 UI** for additional byte-equivalent migrations.
+
+### Refactor — 5 static-literal `logApiError + serverError` sites → `serverErrorFromCatch`
+
+Each site collapses from:
+
+```typescript
+} catch (error) {
+  logApiError("METHOD /api/<route>", "<context>", error);
+  return serverError("Failed to ...");
+}
+```
+
+to:
+
+```typescript
+} catch (error) {
+  return serverErrorFromCatch("METHOD /api/<route>", "<context>", error, "Failed to ...");
+}
+```
+
+| # | File | Site | Migration |
+|---|---|---|---|
+| 1 | `src/app/api/sessions/route.ts` | GET handler :71-72 | `serverErrorFromCatch("GET /api/sessions", "listing sessions", error, "Failed to load sessions")`. `logApiError` import dropped (no other consumer in this file); `serverError` removed from `@/lib/api-response` import. |
+| 2 | `src/app/api/sessions/route.ts` | POST handler :140-141 | `serverErrorFromCatch("POST /api/sessions", "session action", error, "Failed to process session action")`. Same import drops as #1. |
+| 3 | `src/app/api/logs/route.ts` | GET handler :98-99 | `serverErrorFromCatch("GET /api/logs", "reading logs", error, "Failed to read logs")`. `serverError` removed from `@/lib/api-response` import. `logApiError` import preserved (still used at line 65 for the best-effort `availableLogs` list). |
+| 4 | `src/app/api/logs/route.ts` | DELETE handler :139-140 | `serverErrorFromCatch("DELETE /api/logs", "deleting log", error, "Failed to delete logs")`. Same import changes as #3. |
+| 5 | `src/app/api/monitor/route.ts` | GET handler :161-162 | `serverErrorFromCatch("GET /api/monitor", "aggregating monitor data", error, "Failed to read system monitor data")`. `logApiError` import dropped (no other consumer); `serverError` import dropped (only consumer was the migrated site). |
+
+### New audit guard — `server-error-from-catch-source-patterns.test.ts`
+
+Added `tests/unit/server-error-from-catch-source-patterns.test.ts` (303 lines, 7 tests) — the sister to `ok-factory-source-patterns.test.ts`. The new test:
+
+1. **Scans the api/ tree** with a balanced-paren walker for `logApiError(...)` calls followed (within 2 lines) by a `return serverError(STATIC_LITERAL);` pattern. The walker correctly handles multi-line `logApiError` calls and the single-line static-literal `serverError` shape.
+2. **Asserts zero matches in the List 1 surface** (`api/sessions`, `api/memory`, `api/logs`, `api/monitor`). Pinned for the post-session-125 zero-tolerance rule — any future static-literal site in the List 1 surface will fail this test.
+3. **Documents EXEMPTIONS** for the wider codebase's dynamic-message sites (10 entries across `api/sessions/[id]/route.ts`, `api/mission-categories/route.ts`, `api/orchestration/chat/route.ts`, `api/models/fallbacks/sync/route.ts`, `api/cron/hardware/route.ts`) — none of these are in the List 1 surface, but they're documented in the source file as the cross-list canonical exemption for the dynamic-message family.
+4. **Includes 4 scanner form-coverage self-tests:**
+   - Form 1: catches the canonical 2-line catch-block (✓)
+   - Negative: `logApiError` followed by `badRequest` (NOT caught — different shape)
+   - Negative: bare `return serverError(...)` without `logApiError` (NOT caught — out of scope)
+   - Negative: dynamic-message `serverError(\`template\`)` (NOT caught — exempt per dynamic-message rule)
+
+The test's scanner is intentionally narrower than the `ok()` scanner: it only matches the canonical 2-line static-literal shape, because that's exactly what `serverErrorFromCatch` is byte-equivalent to. The scanner's contract is pinned by the 4 self-tests so future scanner changes that break coverage fail immediately.
+
+### Verification
+
+**Pre-flight checks performed (per session 111 P-1, session 111 P-2):**
+
+- **Local-var shadowing check:** the new import `serverErrorFromCatch` is imported alongside `logApiError` in `api/logs/route.ts` — no local `const serverErrorFromCatch` shadows found (`rg -n "\b(const|let|var)\s+serverErrorFromCatch\b" src/app/api/sessions/ src/app/api/logs/ src/app/api/monitor/` returns zero hits).
+- **Unused-import pre-flight:** the new `logApiError` import is added to `api/sessions/route.ts` and `api/monitor/route.ts` in anticipation of the migration. After migration, both files no longer reference `logApiError` anywhere else. The 2 cleanup patches (drop `logApiError` from both files' `@/lib/api-logger` imports) were applied in the same per-file commit as the migration. `api/logs/route.ts:65` still uses `logApiError` (best-effort availableLogs list), so its import is preserved.
+- **`serverError` import cleanup:** `api/sessions/route.ts` and `api/monitor/route.ts` both drop `serverError` from their `@/lib/api-response` imports. `api/logs/route.ts` drops `serverError` similarly. `rg -c "serverError" <file>` after migration returns zero for all 3 files.
+
+**Full verification (post-migration, per the carryover protocol step 0):**
+
+```
+npx tsc --noEmit                                          # exit 0
+CI=true npx eslint . --max-warnings 0                     # exit 0
+CI=true npx jest tests/unit/server-error-from-catch-source-patterns.test.ts  # 7/7 pass
+CI=true npx jest                                          # 1620/1620 pass (was 1613, +7 new)
+npm run build                                              # exit 0
+```
+
+**Per-file commit granularity** (per session 116 P-2): 4 commits in this session — 1 for the new test, 1 each for the 3 source files. Each commit is self-consistent (imports updated, no dead imports, tsc clean) so the iteration cap can hit between commits without leaving any file in an inconsistent state.
+
+### Net diff
+
+- `src/app/api/sessions/route.ts` (MODIFIED) — 4 insertions, 6 deletions (2 sites migrated + 2 import drops)
+- `src/app/api/logs/route.ts` (MODIFIED) — 4 insertions, 6 deletions (2 sites migrated + 1 import drop, `logApiError` import preserved)
+- `src/app/api/monitor/route.ts` (MODIFIED) — 2 insertions, 4 deletions (1 site migrated + 2 import drops)
+- `tests/unit/server-error-from-catch-source-patterns.test.ts` (NEW) — 303 insertions (1 zero-tolerance assertion + 1 exemption-validity assertion + 4 scanner self-tests)
+- `pr-body.txt` (MODIFIED) — +~120 lines (this session entry prepended)
+
+**Total: 3 source files + 1 new test file + 1 docs file. The "List 1 is mined clean" verdict now applies to `serverErrorFromCatch` migrations — the audit guard is in place via the new test, and the prior `ok()` test already covers the List 1 surface for that family.**
+
+### What was NOT migrated (and why)
+
+- **`api/sessions/[id]/route.ts:255-256`** — the `serverError(\`Failed to read session "${sanitizedId}"\`)` site uses a dynamic template literal message. Per session 98 P-4 / session 124 P-3, the migration is byte-equivalent ONLY for static literals. The dynamic interpolation would change the response shape. The inline form is preserved and documented in the source-pattern test as the canonical List 1 dynamic-message exemption.
+- **No other List 1 API sites** — `api/memory/` has zero static-literal `serverError` sites (the only `api/memory/hindsight/route.ts:306` site is a 503/500 `data:` envelope, different family). After this session, the entire `api/{sessions,memory,logs,monitor}/` subtree has zero static-literal `logApiError + serverError` patterns.
+- **No other List 1 UI sites** — every catch block already uses `setErrorFromCaught` or `toastError` from the prior sweeps (sessions 91/95/106). The `useApiData` migration in session 122/123 closed the last raw `useEffect+safeApiCall` patterns. The 22 inline `err instanceof Error ? err.message` sites in `src/lib/`, `src/components/cron/`, and `src/app/recroom/` (per session 90's "next session should" item #2) are List 2/3 territory, not List 1, so they're out of scope for this pick.
+- **`status === 500` byte-equivalence for `api/sessions/[id]/route.ts:255`** — the helper is `serverError(STATIC_LITERAL)` (status 500), but the dynamic site propagates `sanitizedId` in the response. Even if the dynamic form were migratable, the response shape would change. Out of scope.
+
+### "Next session should:" block
+
+1. **Pick a different list next session.** List 1 has been hit 1 time in 3 sessions (the 22-site `toastError` in sessions 91/95 closed the list-1 UI surface; the 5-site `serverErrorFromCatch` in this session closed the list-1 API surface for that family). The next-ripe surface is **List 2 (Cron, Missions, Chat)** for the 4 cross-list static-literal `serverErrorFromCatch` sites in `api/{cron/hardware/meta, mission-categories, orchestration/chat}/` (4 sites from the session 124 P-3 cross-list follow-up, minus the 1 dynamic-message site in `api/orchestration/chat`).
+2. **Cross-list `serverError(STATIC_LITERAL)` sweep** — the remaining 3 List 2 sites + 7 List 3 sites (skills × 6, tools × 1) are a 2-session project. A single session can close all 3 List 2 sites. Another session can close the 7 List 3 sites in `api/{skills, skills/[name], skills/[...path], skills/[name]/toggle, tools}/`.
+3. **The 22 inline `err instanceof Error ? err.message` sites** in `src/lib/`, `src/components/cron/`, and `src/app/recroom/` — the 7 `src/lib/hermes-profile-sync.ts` sites alone are enough to justify a `toMessage(e, fallback)` helper (per session 90's "next session should" item #2). Multi-session sweep; defer until the cross-list `serverErrorFromCatch` work is done.
+4. **`useMissionsPage` decomposition** — 1200+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results" — would need a careful hook-by-hook extraction with state-derivation verification.
+5. **Carryover Mode F protocol** — battle-tested in session 124 P-1, now further exercised in this session (the 4-step commit-when-verified protocol was applied to all 4 commits). Future sessions that hit the cap during the commit-and-push tail should follow the 6-step detection + resolution protocol.
+6. **`serverErrorFromCatch` 1st-list-surface source-pattern test growth** — this session added the List 1 assertion. The `ok()` test (sessions 111/112/113/123) has 4 list-surface assertions. A future session should add List 2, List 3, and List 4 surface assertions to the new `server-error-from-catch-source-patterns.test.ts` as each list is swept. The test's growth is the audit trail of which lists are done.
 ## Session 124 — List 4 (Models, HERMES.md, Environment, All Settings) — `serverErrorFromCatch` in `fs/git/branches/route.ts`
 
 Random pick: **List 4** via `echo $((RANDOM % 4 + 1))` = 4, the third List 4 pick in 3 sessions (119 carryover, 120 backupFile/CardLink/fetch, 123 carryover). The pre-audit found the List 4 API surface exceptionally clean post-session 123: **only 1 site remained** in the entire `api/{config,gateway,seed,fs/git}/` subtree with the inline `logApiError + return NextResponse.json({ error: ..., status: 500 })` pattern.
