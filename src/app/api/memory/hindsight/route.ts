@@ -10,9 +10,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import type { ApiResponse } from "@/types/hermes";
 import {
   mapMemoryItem,
   mapDirectiveItem,
@@ -300,7 +299,7 @@ export async function GET(request: NextRequest) {
         return badRequest(`Unknown action: ${action}`);
     }
 
-    return NextResponse.json<ApiResponse<Record<string, unknown>>>({ data: result });
+    return ok(result);
   } catch (error) {
     logApiError("GET /api/memory/hindsight", `action=${action}`, error);
     return NextResponse.json(
@@ -397,7 +396,7 @@ export async function POST(request: NextRequest) {
         return badRequest(`Unknown action: ${action}`);
     }
 
-    return NextResponse.json<ApiResponse<Record<string, unknown>>>({ data: result });
+    return ok(result);
   } catch (error) {
     logApiError("POST /api/memory/hindsight", "action", error);
     return hindsightErrorResponse(error);
@@ -430,7 +429,7 @@ export async function DELETE(request: NextRequest) {
       result = await handleDeleteMentalModel(bank, id);
     }
 
-    return NextResponse.json<ApiResponse<Record<string, unknown>>>({ data: result });
+    return ok(result);
   } catch (error) {
     logApiError("DELETE /api/memory/hindsight", "delete", error);
     return hindsightErrorResponse(error);
