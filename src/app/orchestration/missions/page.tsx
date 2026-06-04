@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { Loader2, Plus, RefreshCw, Rocket } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -119,8 +120,27 @@ export default function MissionsPage() {
   // to each other so a future "also reset X state on close"
   // extension lands in one place. The functions are byte-equivalent
   // to the inline form: each just calls its setter with `false`.
-  const closeCategoryManager = () => setShowCategoryManager(false);
-  const closeTemplateManager = () => setShowTemplateManager(false);
+  const closeCategoryManager = useCallback(
+    () => setShowCategoryManager(false),
+    [setShowCategoryManager],
+  );
+  const closeTemplateManager = useCallback(
+    () => setShowTemplateManager(false),
+    [setShowTemplateManager],
+  );
+  // Open sibling for `closeCategoryManager`. The `onManageCategories` prop
+  // on `<MissionCreateForm>` previously received an inline `() =>
+  // setShowCategoryManager(true)` arrow — promoted to a named callback so
+  // the open/close pair is named next to each other in the page, matching
+  // the `openCreate` / `closeComposer` pair from session 114 + 116 and the
+  // `openAgentCreate` / `closeAgentModal` pair from session 114. As of
+  // session 118, this callback is exposed by `useMissionsPage` as
+  // `vm.openCategoryManager` so the same callback is reused by
+  // `MissionsList`'s "Manage categories" button (the 2 inline arrows
+  // that used to live at those 2 call sites are now this single named
+  // callback). The `useCallback` deps array is `[]` (the setter reference
+  // is stable), matching the sibling close callbacks.
+  const openCategoryManager = vm.openCategoryManager;
   // The Template Editor has TWO close paths: `onClose` (X / overlay) which
   // is a single-setter SOFT close, and `onCancel` (the Cancel button) which
   // is a 2-setter HARD close that also clears `editingTemplateId`. This
@@ -129,11 +149,14 @@ export default function MissionsPage() {
   // They are NOT duplicates; they are a deliberate UX discriminator, and
   // a future "migrate to a single setter" PR will break the cancel-then-
   // reopen flow. Keep them as 2 separate callbacks.
-  const closeTemplateEditor = () => setShowTemplateEditor(false);
-  const cancelTemplateEditor = () => {
+  const closeTemplateEditor = useCallback(
+    () => setShowTemplateEditor(false),
+    [setShowTemplateEditor],
+  );
+  const cancelTemplateEditor = useCallback(() => {
     setShowTemplateEditor(false);
     setEditingTemplateId(null);
-  };
+  }, [setShowTemplateEditor, setEditingTemplateId]);
 
   if (loading) {
     return (
@@ -216,7 +239,7 @@ export default function MissionsPage() {
             categoryId={newCategoryId}
             onCategoryChange={setCategoryId}
             onCreateCategory={handleCreateCategory}
-            onManageCategories={() => setShowCategoryManager(true)}
+            onManageCategories={openCategoryManager}
             categoriesLoadError={categoriesLoadError}
             onRetryCategories={() => void loadCategories()}
             onSubmit={handleCreate}

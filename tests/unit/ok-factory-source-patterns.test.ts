@@ -111,6 +111,15 @@ const EXEMPTIONS: ReadonlyArray<{ file: string; line: number; reason: string }> 
  * followed by `return response;` — a byte-equivalent `ok()` site that
  * the test missed. The scanner now matches both forms; the source
  * pattern is comprehensively covered.
+ *
+ * Session 118 changes: the scanner was extended to also recognise
+ * the `NextResponse.json<ApiResponse<...>>({ data: ... })` form
+ * (TypeScript generic between `json` and `(`). Session 118 found
+ * 2 sites in `api/memory/route.ts:25,34` that used this form and
+ * were silently let through by the prior scanner. The generic is
+ * now optional in the regex. The scanner also continues to
+ * ignore the form with no `data:` key (which is used for error
+ * responses, e.g. `api/agents/route.ts:61`'s `{ error: ... }`).
  */
 type Site = { file: string; line: number; text: string };
 
@@ -118,13 +127,61 @@ function findSites(file: string): Site[] {
   const text = readFileSync(file, "utf-8");
   const out: Site[] = [];
   // Match the call site, with or without a `return`/`const` prefix.
+  // The optional TypeScript generic between `NextResponse.json` and `(`
+  // (e.g. `NextResponse.json<ApiResponse<MyShape>>({ data: ... })`) is
+  // walked with a small balanced-`<>` scanner rather than a regex,
+  // because nested generics (`ApiResponse<MyShape>`) are valid TS and
+  // a regex like `<[^<>]+>` would only match a single level. The walk
+  // produces the same result as the brace walker below but for `<>`.
   // Capture the optional prefix for the call-site context check.
-  const re = /(return\s+|const\s+(\w+)\s*=\s*|let\s+(\w+)\s*=\s*|var\s+(\w+)\s*=\s*)?NextResponse\.json\(\s*\{/g;
+  const re = /(return\s+|const\s+(\w+)\s*=\s*|let\s+(\w+)\s*=\s*|var\s+(\w+)\s*=\s*)?NextResponse\.json/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) {
-    // Start of the `{` block (the char right after `NextResponse.json(`).
-    const start = m.index + m[0].length - 1;
-    // Walk forward to find the matching `}`.
+    // Index of the char right after `json` (could be `<` for a generic
+    // call or `(` for a direct call).
+    const after = m.index + m[0].length;
+    let start: number;
+    if (text[after] === "<") {
+      // Walk the generic to its matching `>`. Bail out on unbalanced.
+      let depth = 0;
+      let i = after;
+      for (; i < text.length; i++) {
+        const ch = text[i];
+        if (ch === "<") depth++;
+        else if (ch === ">") {
+          depth--;
+          if (depth === 0) break;
+        }
+      }
+      if (depth !== 0) continue; // Unbalanced generic — skip.
+      // After the closing `>` we expect `(`. If not, this isn't a
+      // call to `NextResponse.json` (e.g. `NextResponse.jsonOptions`).
+      // Advance past the `>` and require optional whitespace + `{`.
+      const afterGeneric = i + 1;
+      const wsMatch = /^\s*\{/.exec(text.slice(afterGeneric + 1));
+      if (!wsMatch) continue;
+      // `afterGeneric + 1` is the char right after `(`. The `wsMatch[0]`
+      // captures the leading whitespace + `{`. The `{` itself is at
+      // `afterGeneric + 1 + wsMatch[0].length - 1`.
+      start = afterGeneric + 1 + wsMatch[0].length - 1;
+      // Bump the regex past the generic + `(` so the next match attempt
+      // doesn't re-enter the same walk.
+      re.lastIndex = start + 1;
+    } else if (text[after] === "(") {
+      // No generic — the `{` is right after `(`. Skip optional whitespace.
+      const wsMatch = /^\s*\{/.exec(text.slice(after + 1));
+      if (!wsMatch) continue;
+      start = after + 1 + wsMatch[0].length - 1;
+      re.lastIndex = start + 1;
+    } else {
+      // Not a `NextResponse.json(...)` call (e.g. a different method
+      // on the same object, or property access). Skip.
+      re.lastIndex = after;
+      continue;
+    }
+    // Walk forward to find the matching `}` of the `{` block we just
+    // located (the index `start` is set by the generic / no-generic
+    // branches above).
     let depth = 0;
     let i = start;
     for (; i < text.length; i++) {
@@ -374,6 +431,40 @@ describe("ok() factory source-pattern coverage (List 3 surface)", () => {
         import { NextRequest, NextResponse } from "next/server";
         export async function GET() {
           return NextResponse.json({ error: "oops" }, { status: 500 });
+        }
+      `;
+      expect(countSitesForFixture(fixture)).toBe(0);
+    });
+
+    it("catches the TypeScript-generic form (Form 3, session 118)", () => {
+      // The `api/memory/route.ts:25,34` sites migrated in session 118.
+      // The pre-session-118 scanner silently let this form through
+      // because the regex required `(` immediately after `json`. The
+      // scanner was extended to optionally match a TypeScript generic
+      // between `json` and `(`. This test pins that contract so a
+      // future scanner regression does not silently let the same sites
+      // back in.
+      const fixture = `
+        import { NextRequest, NextResponse } from "next/server";
+        import type { ApiResponse, MyShape } from "./types";
+        export async function GET() {
+          return NextResponse.json<ApiResponse<MyShape>>({ data: { foo: 1 } });
+        }
+      `;
+      expect(countSitesForFixture(fixture)).toBe(1);
+    });
+
+    it("does NOT capture NextResponse.json<...>({ error: ... }) (generic with error: key)", () => {
+      // A `error:` envelope site using a TypeScript generic. The
+      // generic is irrelevant — the body must still have `data:` for
+      // the scanner to capture the site. The scanner must skip this
+      // site because the migration target is `ok(...)` which is
+      // `data:`-shaped, not `error:`-shaped.
+      const fixture = `
+        import { NextRequest, NextResponse } from "next/server";
+        import type { ApiResponse, MyError } from "./types";
+        export async function GET() {
+          return NextResponse.json<ApiResponse<MyError>>({ error: "oops" }, { status: 500 });
         }
       `;
       expect(countSitesForFixture(fixture)).toBe(0);

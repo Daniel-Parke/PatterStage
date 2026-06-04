@@ -64,8 +64,8 @@ export default function MissionsList({ vm }: MissionsListProps) {
     filtered,
     categories,
     handleTemplateSelect,
-    setShowTemplateManager,
-    setShowCategoryManager,
+    openTemplateManager,
+    openCategoryManager,
     handleEdit,
     handleDelete,
     handleCancel,
@@ -110,14 +110,14 @@ export default function MissionsList({ vm }: MissionsListProps) {
             <div className="flex flex-wrap items-center gap-3 shrink-0">
               <button
                 type="button"
-                onClick={() => setShowCategoryManager(true)}
+                onClick={openCategoryManager}
                 className="text-[10px] font-mono text-white/30 hover:text-neon-cyan"
               >
                 Manage categories
               </button>
               <button
                 type="button"
-                onClick={() => setShowTemplateManager(true)}
+                onClick={openTemplateManager}
                 className="text-[10px] font-mono text-white/30 hover:text-neon-cyan flex items-center gap-1 transition-colors"
               >
                 <Layers className="w-3 h-3" />

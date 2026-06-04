@@ -9,8 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getMemoryProviderType } from "@/lib/memory-providers";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest } from "@/lib/api-response";
-import type { ApiResponse } from "@/types/hermes";
+import { badRequest, ok } from "@/lib/api-response";
 import type { MemoryReadResult } from "@/lib/memory-providers";
 
 // ── GET — Memory status ──────────────────────────────────────
@@ -22,23 +21,19 @@ export async function GET(request: NextRequest) {
   const providerType = getMemoryProviderType();
 
   if (providerType === "none") {
-    return NextResponse.json<ApiResponse<MemoryReadResult>>({
-      data: {
-        facts: [], total: 0, dbSize: 0, available: false, provider: "none",
-        message: "No memory provider configured. Run: hermes memory setup",
-      },
+    return ok<MemoryReadResult>({
+      facts: [], total: 0, dbSize: 0, available: false, provider: "none",
+      message: "No memory provider configured. Run: hermes memory setup",
     });
   }
 
   // hindsight (or unexpected future provider) — dormant/read-only
-  return NextResponse.json<ApiResponse<MemoryReadResult>>({
-    data: {
-      facts: [], total: 0, dbSize: 0,
-      available: true, provider: "hindsight",
-      message:
-        "Hindsight memory is active. Facts are managed through agent tools: " +
-        "hindsight_retain (store), hindsight_recall (search), hindsight_reflect (reason).",
-    },
+  return ok<MemoryReadResult>({
+    facts: [], total: 0, dbSize: 0,
+    available: true, provider: "hindsight",
+    message:
+      "Hindsight memory is active. Facts are managed through agent tools: " +
+      "hindsight_retain (store), hindsight_recall (search), hindsight_reflect (reason).",
   });
 }
 

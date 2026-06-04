@@ -321,6 +321,31 @@ export function useMissionsPage() {
     setShowCreate(true);
   }, []);
 
+  // Open the category manager modal (the "Manage categories" button in
+  // `MissionsList`, plus the `onManageCategories` prop in the page's
+  // `<MissionCreateForm>`). The 2 inline `() => setShowCategoryManager(true)`
+  // arrows that used to live at those call sites are now this single
+  // named callback — the open/close pair is `openCategoryManager` here +
+  // the page's `closeCategoryManager` (defined locally because the close
+  // direction needs the inline `setShowCategoryManager` setter). The
+  // `useCallback` deps array is `[]` (the setter is stable), matching
+  // the sibling `openCreate` and `closeComposer` callbacks. Session 118
+  // promoted this from inline-arrow to named-callback per session 116 P-7.
+  const openCategoryManager = useCallback(() => {
+    setShowCategoryManager(true);
+  }, []);
+
+  // Open the template manager modal (the "Edit Templates" button in
+  // `MissionsList`). Sibling to the page's `closeTemplateManager` close
+  // callback — same `useCallback` + `[]` deps shape as `openCategoryManager`.
+  // The single inline `() => setShowTemplateManager(true)` arrow that
+  // lived at the MissionsList call site is now this named callback.
+  // Session 118 promoted this from inline-arrow to named-callback per
+  // session 116 P-7.
+  const openTemplateManager = useCallback(() => {
+    setShowTemplateManager(true);
+  }, []);
+
   useEffect(() => {
     if (!newProfile) return;
     const controller = new AbortController();
@@ -1177,6 +1202,7 @@ export function useMissionsPage() {
     setNewCategoryId,
     showCategoryManager,
     setShowCategoryManager,
+    openCategoryManager,
     loadCategories,
     handleCreateCategory,
     handleCreateNewTemplate,
@@ -1197,6 +1223,7 @@ export function useMissionsPage() {
     cancellingMissionId,
     handleTemplateSelect,
     setShowTemplateManager,
+    openTemplateManager,
     showTemplateManager,
     handleEditTemplate,
     handleDeleteTemplate,

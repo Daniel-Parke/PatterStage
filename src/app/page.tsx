@@ -181,6 +181,21 @@ export default function Dashboard() {
   }, []);
   const [ready, setReady] = useState(false);
   const [dispatchExpanded, setDispatchExpanded] = useState(false);
+  // Open-callback sibling for the dispatch panel. The "Mission Dispatch"
+  // header toggles `dispatchExpanded` (line 596) and the "+N more" pill
+  // (line 638) opens it from the collapsed state. Promoting the `() =>
+  // setDispatchExpanded(true)` inline arrow to a named useCallback
+  // follows the same open/close sibling pattern as session 116 P-7
+  // (the missions page's `openCategoryManager` + `closeCategoryManager`,
+  // the cron page's `openAgentCreate` / `openSystemCreate`). The deps
+  // array lists `setDispatchExpanded` so the
+  // `react-hooks/exhaustive-deps` rule is satisfied — the setter is a
+  // stable `useState` reference so the callback is still effectively
+  // constant per render cycle.
+  const openDispatchPanel = useCallback(
+    () => setDispatchExpanded(true),
+    [setDispatchExpanded],
+  );
   const [errorSev, setErrorSev] = useState<"all" | "error" | "warning">("all");
   const [syncNowBusy, setSyncNowBusy] = useState(false);
   const [registryAgentModelLabel, setRegistryAgentModelLabel] = useState<string | null>(null);
@@ -633,7 +648,7 @@ export default function Dashboard() {
               ))}
               {templates.length > 12 && (
                 <button
-                  onClick={() => setDispatchExpanded(true)}
+                  onClick={openDispatchPanel}
                   className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-mono text-white/30 hover:text-neon-cyan transition-colors"
                 >
                   +{templates.length - 12} more
