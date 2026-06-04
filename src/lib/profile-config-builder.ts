@@ -11,6 +11,7 @@ import {
   parseSkillsDisabledFromYaml,
 } from "./skills-config";
 import { normalizePlatformToolsets } from "./hermes-toolset-normalize";
+import { dumpYamlConfig } from "./hermes-config-sync";
 
 export type PlatformToolsets = Record<string, string[]>;
 
@@ -67,7 +68,7 @@ function buildPreservedYamlLines(
     if (key === "agent" && value !== null && typeof value === "object" && !Array.isArray(value)) {
       value = { ...(value as Record<string, unknown>), personality };
     }
-    const chunk = yaml.dump({ [key]: value }, { lineWidth: -1, noRefs: true }).trimEnd();
+    const chunk = dumpYamlConfig({ [key]: value }).trimEnd();
     if (lines.length > 0) lines.push("");
     lines.push(...chunk.split("\n"));
   }

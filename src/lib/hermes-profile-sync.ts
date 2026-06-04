@@ -5,7 +5,6 @@
 import {
   copyFileSync,
   existsSync,
-  mkdirSync,
   readFileSync,
   readdirSync,
   rmSync,
@@ -14,6 +13,8 @@ import {
 import { createHash } from "crypto";
 
 import { atomicWriteFile, finalizeRootConfigOnDisk } from "./hermes-config-sync";
+import { backupTimestamp, ensureDir } from "./fs-helpers";
+import { messageFromError } from "./api-fetch";
 import { getHermesDefaultRoot } from "./hermes-profile-paths";
 import { resolveProfileHermesHome } from "./hermes-profile-paths";
 import { buildHermesPathBundle } from "./hermes-paths";
@@ -121,9 +122,7 @@ function contentHash(content: string): string {
 function ensureProfileDirs(root: string): void {
   for (const sub of PROFILE_SUBDIRS) {
     const dir = root + "/" + sub;
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
-    }
+    ensureDir(dir);
   }
 }
 
@@ -142,12 +141,9 @@ function profileRootForSlug(slug: string): string {
 
 function writeWithBackup(targetPath: string, content: string, backupsDir: string): void {
   if (existsSync(targetPath)) {
-    if (!existsSync(backupsDir)) {
-      mkdirSync(backupsDir, { recursive: true });
-    }
+    ensureDir(backupsDir);
     const base = targetPath.split(/[/\\]/).pop() ?? "file";
-    const ts = new Date().toISOString().replace(/[:.]/g, "-");
-    const backup = backupsDir + "/" + base + "." + ts + ".bak";
+    const backup = backupsDir + "/" + base + "." + backupTimestamp() + ".bak";
     copyFileSync(targetPath, backup);
   }
   atomicWriteFile(targetPath, content);
@@ -201,7 +197,7 @@ export function pushProfileToHermes(slug: string): SyncResult {
     return { success: true, slug, backupPath: backupsDir, error: null };
   }
   catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = messageFromError(err, "");
     setProfileSyncStatus(slug, null, message);
     return { success: false, slug, backupPath: null, error: message };
   }
@@ -230,7 +226,7 @@ export function pushRootToHermes(): SyncResult {
     return { success: true, slug: "default", backupPath: backupsDir, error: null };
   }
   catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = messageFromError(err, "");
     setAgentRootSyncStatus(null, message);
     return { success: false, slug: "default", backupPath: null, error: message };
   }
@@ -243,20 +239,16 @@ export function pushSkillToHermes(skillKey: string): SyncResult {
   }
   try {
     const skillsRoot = globalSkillsRoot();
-    if (!existsSync(skillsRoot)) {
-      mkdirSync(skillsRoot, { recursive: true });
-    }
+    ensureDir(skillsRoot);
     const targetDir = skillsRoot + "/" + skillKey.replace(/\\/g, "/");
-    if (!existsSync(targetDir)) {
-      mkdirSync(targetDir, { recursive: true });
-    }
+    ensureDir(targetDir);
     const targetPath = targetDir + "/SKILL.md";
     atomicWriteFile(targetPath, skill.content);
     setSkillSyncStatus(skillKey, now(), null);
     return { success: true, slug: skillKey, backupPath: null, error: null };
   }
   catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = messageFromError(err, "");
     setSkillSyncStatus(skillKey, null, message);
     return { success: false, slug: skillKey, backupPath: null, error: message };
   }
@@ -350,7 +342,7 @@ export function pullProfileFromHermes(
     return { success: true, slug, backupPath: null, error: null };
   }
   catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = messageFromError(err, "");
     return { success: false, slug, backupPath: null, error: message };
   }
 }
@@ -385,7 +377,7 @@ export function pullRootFromHermes(options?: { reconcileDisk?: boolean }): SyncR
     return { success: true, slug: "default", backupPath: null, error: null };
   }
   catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = messageFromError(err, "");
     return { success: false, slug: "default", backupPath: null, error: message };
   }
 }
@@ -435,7 +427,7 @@ export function pullSkillFromHermes(skillKey: string): SyncResult {
     return { success: true, slug: skillKey, backupPath: null, error: null };
   }
   catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = messageFromError(err, "");
     return { success: false, slug: skillKey, backupPath: null, error: message };
   }
 }
@@ -662,7 +654,7 @@ export function importAllSkillsFromDisk(): SyncResult[] {
       results.push({ success: true, slug: skillKey, backupPath: null, error: null });
     }
     catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
+      const message = messageFromError(err, "");
       results.push({ success: false, slug: skillKey, backupPath: null, error: message });
     }
   }

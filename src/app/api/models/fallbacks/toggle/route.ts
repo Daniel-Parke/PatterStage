@@ -3,34 +3,33 @@
 // ══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
-import { logApiError } from "@/lib/api-logger";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { toggleFallbackEntry } from "@/lib/fallbacks-repository";
 import { fallbackToggleSchema } from "@/lib/fallback-config-schema";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
-import { zodErrorResponse } from "@/lib/api-schemas";
+import { notFound, ok } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
-
-  const parsed = fallbackToggleSchema.safeParse(bodyResult);
-  if (!parsed.success) {
-    return zodErrorResponse(parsed.error);
-  }
+  const parsed = await parseAndValidateJsonBody(request, fallbackToggleSchema);
+  if (parsed instanceof NextResponse) return parsed;
 
   try {
-    const entry = toggleFallbackEntry(parsed.data.id, parsed.data.enabled);
+    const entry = toggleFallbackEntry(parsed.id, parsed.enabled);
     if (!entry) {
-      return NextResponse.json({ error: "Fallback entry not found" }, { status: 404 });
+      return notFound("Fallback entry not found");
     }
     commitFallbackChange("fallback.toggle", entry.id);
-    return NextResponse.json({ data: { entry } });
+    return ok({ entry });
   } catch (error) {
-    logApiError("POST /api/models/fallbacks/toggle", "toggling fallback", error);
-    return NextResponse.json({ error: "Failed to toggle fallback" }, { status: 500 });
+    return serverErrorFromCatch(
+      "POST /api/models/fallbacks/toggle",
+      "toggling fallback",
+      error,
+      "Failed to toggle fallback",
+    );
   }
 }

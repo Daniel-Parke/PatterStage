@@ -3,10 +3,10 @@ import * as fs from "fs";
 import { exec, execSync } from "child_process";
 import { join } from "path";
 
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, notFound, ok, serverError, serviceUnavailable } from "@/lib/api-response";
 import { toError } from "@/lib/api-fetch";
 import { crontabLineUsesScriptsDir } from "@/lib/hardware-cron";
 import { getChScriptsDir, getChHardwareLogDir, CH_DATA_DIR } from "@/lib/paths";
@@ -193,6 +193,19 @@ function writeCrontab(content: string): { ok: boolean; error?: string } {
   }
 }
 
+/**
+ * Join a list of crontab lines into the on-disk format. The
+ * `.filter((l) => l.trim() || l === "")` step preserves intentionally
+ * empty lines (used as separators between job blocks) while dropping
+ * lines that are only whitespace. Centralised so the 3 call sites
+ * (POST create, PUT update, PUT delete) use the same exact filter
+ * discipline — a future "preserve lines containing only a `#`" change
+ * lands in one place.
+ */
+function joinCrontabLines(lines: string[]): string {
+  return lines.filter((l) => l.trim() || l === "").join("\n");
+}
+
 // ── Shared crontab read+parse helper ─────────────────────────
 
 interface CrontabJobRaw {
@@ -229,10 +242,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const { jobs } = await readAndParseCrontab();
-    return NextResponse.json({ data: { jobs, total: jobs.length } });
+    return ok({ jobs, total: jobs.length });
   } catch (e: unknown) {
-    logApiError("GET /api/cron/hardware", "read crontab", e);
-    return NextResponse.json({ error: `Failed to read crontab: ${toError(e).message}` }, { status: 500 });
+    return serverErrorFromError("GET /api/cron/hardware", "read crontab", e, "Failed to read crontab");
   }
 }
 
@@ -240,7 +252,7 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
   if (isChReadOnly()) {
-    return NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 });
+    return serviceUnavailable("Control Hub is in read-only mode");
   }
 
   try {
@@ -264,7 +276,7 @@ export async function POST(request: NextRequest) {
       }
 
       saveDisabledIds(disabledIds);
-      return NextResponse.json({ data: { success: true, pausedCount: jobIds.length } });
+      return ok({ success: true, pausedCount: jobIds.length });
     }
 
     // ── Sync action ───────────────────────────────────────────────────
@@ -272,7 +284,7 @@ export async function POST(request: NextRequest) {
     // This picks up any jobs added or modified outside Control Hub.
     if ((body as Record<string, unknown>).action === "sync") {
       const { jobs } = await readAndParseCrontab();
-      return NextResponse.json({ data: { jobs, total: jobs.length } });
+      return ok({ jobs, total: jobs.length });
     }
 
     // ── Create new hardware cron job ────────────────────────────────────
@@ -331,17 +343,14 @@ export async function POST(request: NextRequest) {
 
     // Write crontab synchronously (execSync is acceptable here — it is a
     // single blocking call with no async I/O available for crontab writes).
-    const result = writeCrontab(newLines.filter((l) => l.trim() || l === "").join("\n"));
+    const result = writeCrontab(joinCrontabLines(newLines));
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: 500 });
+      return serverError(result.error ?? "unknown error");
     }
 
-    return NextResponse.json({
-      data: { id: entryId, schedule, command, name, logFile },
-    });
+    return ok({ id: entryId, schedule, command, name, logFile });
   } catch (e: unknown) {
-    logApiError("POST /api/cron/hardware", "create hardware cron", e);
-    return NextResponse.json({ error: `Failed to create hardware cron job: ${toError(e).message}` }, { status: 500 });
+    return serverErrorFromError("POST /api/cron/hardware", "create hardware cron", e, "Failed to create hardware cron job");
   }
 }
 
@@ -349,7 +358,7 @@ export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
   if (isChReadOnly()) {
-    return NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 });
+    return serviceUnavailable("Control Hub is in read-only mode");
   }
 
   try {
@@ -407,7 +416,7 @@ export async function PUT(request: NextRequest) {
     }
 
     if (!found) {
-      return NextResponse.json({ error: `Hardware cron job '${id}' not found` }, { status: 404 });
+      return notFound(`Hardware cron job '${id}' not found`);
     }
 
     const badCmd = rejectIfBadScriptsCommand(command);
@@ -417,12 +426,12 @@ export async function PUT(request: NextRequest) {
     if (isToggleOnly) {
       setDisabled(disabledIds, id, enabled);
       saveDisabledIds(disabledIds);
-      return NextResponse.json({ data: { id, enabled } });
+      return ok({ id, enabled });
     }
 
-    const result = writeCrontab(newLines.filter((l) => l.trim() || l === "").join("\n"));
+    const result = writeCrontab(joinCrontabLines(newLines));
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: 500 });
+      return serverError(result.error ?? "unknown error");
     }
 
     // Sync disabled state to JSON for this job
@@ -431,10 +440,9 @@ export async function PUT(request: NextRequest) {
       saveDisabledIds(disabledIds);
     }
 
-    return NextResponse.json({ data: { id, schedule, command, name, logFile, enabled } });
+    return ok({ id, schedule, command, name, logFile, enabled });
   } catch (e: unknown) {
-    logApiError("PUT /api/cron/hardware", "update hardware cron", e);
-    return NextResponse.json({ error: `Failed to update hardware cron job: ${toError(e).message}` }, { status: 500 });
+    return serverErrorFromError("PUT /api/cron/hardware", "update hardware cron", e, "Failed to update hardware cron job");
   }
 }
 
@@ -442,7 +450,7 @@ export async function DELETE(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
   if (isChReadOnly()) {
-    return NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 });
+    return serviceUnavailable("Control Hub is in read-only mode");
   }
 
   try {
@@ -475,12 +483,12 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (!found) {
-      return NextResponse.json({ error: `Hardware cron job '${id}' not found` }, { status: 404 });
+      return notFound(`Hardware cron job '${id}' not found`);
     }
 
-    const result = writeCrontab(newLines.filter((l) => l.trim() || l === "").join("\n"));
+    const result = writeCrontab(joinCrontabLines(newLines));
     if (!result.ok) {
-      return NextResponse.json({ error: result.error }, { status: 500 });
+      return serverError(result.error ?? "unknown error");
     }
 
     // Remove from disabled set if present
@@ -488,9 +496,8 @@ export async function DELETE(request: NextRequest) {
     disabledIds.delete(id);
     saveDisabledIds(disabledIds);
 
-    return NextResponse.json({ data: { id } });
+    return ok({ id });
   } catch (e: unknown) {
-    logApiError("DELETE /api/cron/hardware", "delete hardware cron", e);
-    return NextResponse.json({ error: `Failed to delete hardware cron job: ${toError(e).message}` }, { status: 500 });
+    return serverErrorFromError("DELETE /api/cron/hardware", "delete hardware cron", e, "Failed to delete hardware cron job");
   }
 }

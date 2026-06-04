@@ -79,6 +79,10 @@ describe("PUT /api/config values validation regression", () => {
     mockRequireAuth.mockReturnValue(null);
   });
 
+  // PUT body is now zod-validated (session 121 migration to
+  // parseAndValidateJsonBody). Bad `values` shape → 400 "Invalid
+  // request body" with the per-field zod issue list. We assert on the
+  // status code + that the zod details point at the `values` field.
   it("rejects when values is a string", async () => {
     const { PUT } = await import("@/app/api/config/route");
     const req = new NextRequest("http://localhost/api/config", {
@@ -89,7 +93,8 @@ describe("PUT /api/config values validation regression", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toMatch(/values must be an object/i);
+    expect(body.error).toMatch(/invalid request body/i);
+    expect(JSON.stringify(body.details)).toMatch(/values/);
   });
 
   it("rejects when values is an array", async () => {
@@ -102,7 +107,8 @@ describe("PUT /api/config values validation regression", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toMatch(/values must be an object/i);
+    expect(body.error).toMatch(/invalid request body/i);
+    expect(JSON.stringify(body.details)).toMatch(/values/);
   });
 
   it("rejects when values is null", async () => {
@@ -115,7 +121,8 @@ describe("PUT /api/config values validation regression", () => {
     const body = await res.json();
 
     expect(res.status).toBe(400);
-    expect(body.error).toMatch(/values/i);
+    expect(body.error).toMatch(/invalid request body/i);
+    expect(JSON.stringify(body.details)).toMatch(/values/);
   });
 
   it("accepts when values is a valid object", async () => {

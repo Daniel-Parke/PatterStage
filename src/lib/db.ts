@@ -5,9 +5,10 @@
 
 import Database, { type Database as _DatabaseType } from "better-sqlite3";
 import { join } from "path";
-import { existsSync, mkdirSync, readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { CH_DATA_DIR } from "./paths";
 import { getSchemaVersion, setSchemaVersion } from "./db-schema";
+import { ensureDir } from "./fs-helpers";
 import { needsBaselineRebuild, rebuildToBaseline } from "./db/upgrade";
 import { applyProfilesToolsParityUpgrade } from "./db/apply-profiles-tools-upgrade";
 import { applyMissionRepeatMigration } from "./db/apply-mission-repeat-migration";
@@ -16,9 +17,7 @@ import { applyMissionQueueMigration } from "./db/apply-mission-queue-migration";
 // ── Ensure data directory exists ───────────────────────────────
 
 const dataDir = CH_DATA_DIR;
-if (!existsSync(dataDir)) {
-  mkdirSync(dataDir, { recursive: true });
-}
+ensureDir(dataDir);
 
 const DB_PATH = join(dataDir, "control-hub.db");
 

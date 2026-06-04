@@ -42,28 +42,84 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import AppPageShell from "@/components/layout/AppPageShell";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall, safeApiCallData } from "@/lib/api-fetch";
+import { runMutation } from "@/lib/run-mutation";
+import { toastFromResult } from "@/lib/toast-from-result";
 import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
 import { unwrapPollPath } from "@/lib/dashboard-poll";
+import { isMissionActive } from "@/lib/mission-board";
 import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
 import { computeCronJobRowCaption } from "@/lib/cron-row-helpers";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
+import { useInterval } from "@/hooks/useInterval";
 
 // ── Typed response shapes for each API endpoint ─────────────
-interface TemplatesResponseData { templates: Array<{ id: string; name: string; icon: string; color: string; category: string; categoryId?: string; profile: string; description: string; isCustom?: boolean }>; }
+/**
+ * Shape of a single template as returned by /api/templates. The dashboard
+ * uses the same shape for both the API response and the local state
+ * slice, so the type is exported as `TemplateListItem` and shared
+ * between them (avoids the previous inline `Array<{...}>` duplication
+ * at the useState declaration).
+ */
+export interface TemplateListItem {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  category: string;
+  categoryId?: string;
+  profile: string;
+  description: string;
+  isCustom?: boolean;
+}
+interface TemplatesResponseData { templates: TemplateListItem[]; }
 interface CategoriesResponseData { categories: MissionCategory[]; }
 interface AgentsResponseData { processes: HermesProcess[]; }
 interface MissionsResponseData { missions: MissionBrief[]; }
 interface DefaultsResponseData { defaults: { agent?: string } | null; }
 
+/** Build the missions page URL that opens the compose form prefilled with this template. */
+function composeTemplateUrl(templateId: string): string {
+  return `/orchestration/missions?template=${templateId}&compose=1`;
+}
+
+/**
+ * Return a new monitor with the given cron job's schedule field set
+ * to `newSchedule`. Used by the dashboard's "update cron schedule"
+ * handler to apply the change optimistically before the API call
+ * round-trips. The original `monitor` is returned when it is null
+ * (defensive — the page already guards against this case via a
+ * showToast, but the helper stays safe to call on stale state).
+ *
+ * Pure function: never mutates the input. The caller passes the
+ * current `data.monitor` (or the value of `prev.monitor` if it ever
+ * adopts the updater form again) and the helper returns a new
+ * `MonitorData` object so the React reference-equality checks
+ * downstream see a new monitor object only when the target job
+ * actually exists.
+ */
+function withCronJobSchedule(
+  monitor: MonitorData | null,
+  jobId: string,
+  newSchedule: string,
+): MonitorData | null {
+  if (!monitor) return monitor;
+  return {
+    ...monitor,
+    cron: {
+      ...monitor.cron,
+      jobs: monitor.cron.jobs.map((job) =>
+        job.id === jobId ? { ...job, schedule: newSchedule } : job,
+      ),
+    },
+  };
+}
+
 // ── Live Clock (isolated re-render) ───────────────────────────
 
 const LiveClock = reactMemo(function LiveClock() {
   const [time, setTime] = useState<Date>(new Date());
-  useEffect(() => {
-    const id = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
+  useInterval(() => setTime(new Date()), { ms: 1000 });
   return (
     <>
       <div className="text-sm font-mono text-neon-cyan" suppressHydrationWarning>
@@ -106,17 +162,7 @@ export default function Dashboard() {
     processes: HermesProcess[];
     missions: MissionBrief[];
     config: Record<string, unknown> | null;
-    templates: Array<{
-      id: string;
-      name: string;
-      icon: string;
-      color: string;
-      category: string;
-      categoryId?: string;
-      profile: string;
-      description: string;
-      isCustom?: boolean;
-    }>;
+    templates: TemplateListItem[];
     categories: MissionCategory[];
   }>({
     status: null,
@@ -135,6 +181,21 @@ export default function Dashboard() {
   }, []);
   const [ready, setReady] = useState(false);
   const [dispatchExpanded, setDispatchExpanded] = useState(false);
+  // Open-callback sibling for the dispatch panel. The "Mission Dispatch"
+  // header toggles `dispatchExpanded` (line 596) and the "+N more" pill
+  // (line 638) opens it from the collapsed state. Promoting the `() =>
+  // setDispatchExpanded(true)` inline arrow to a named useCallback
+  // follows the same open/close sibling pattern as session 116 P-7
+  // (the missions page's `openCategoryManager` + `closeCategoryManager`,
+  // the cron page's `openAgentCreate` / `openSystemCreate`). The deps
+  // array lists `setDispatchExpanded` so the
+  // `react-hooks/exhaustive-deps` rule is satisfied — the setter is a
+  // stable `useState` reference so the callback is still effectively
+  // constant per render cycle.
+  const openDispatchPanel = useCallback(
+    () => setDispatchExpanded(true),
+    [setDispatchExpanded],
+  );
   const [errorSev, setErrorSev] = useState<"all" | "error" | "warning">("all");
   const [syncNowBusy, setSyncNowBusy] = useState(false);
   const [registryAgentModelLabel, setRegistryAgentModelLabel] = useState<string | null>(null);
@@ -143,26 +204,24 @@ export default function Dashboard() {
   const { isArmedFor, arm, confirm } = useTwoStepConfirm({ autoDismissMs: 4000 });
 
   const refreshMonitor = useCallback(async () => {
-    const { data } = await safeApiCall<{ data?: MonitorData }>("/api/monitor", { cache: "no-store" } as RequestInit);
-    if (data?.data) setData({ monitor: data.data });
+    const monitor = await safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store" } as RequestInit);
+    if (monitor) setData({ monitor });
   }, [setData]);
 
-  const handleSyncNow = useCallback(async () => {
-    setSyncNowBusy(true);
-    try {
-      const { ok, error } = await safeApiCall("/api/sync", { method: "POST" });
-      if (!ok) {
-        showToast(error ?? "Sync failed", "error");
-        return;
-      }
-      showToast("Background sync completed", "success");
-      await refreshMonitor();
-    } catch {
-      showToast("Sync failed", "error");
-    } finally {
-      setSyncNowBusy(false);
-    }
-  }, [refreshMonitor, showToast]);
+  const handleSyncNow = useCallback(
+    () =>
+      runMutation(showToast, {
+        busy: setSyncNowBusy,
+        build: () => ({}),
+        path: "/api/sync",
+        successMsg: "Background sync completed",
+        errorMsg: "Sync failed",
+        onSuccess: async () => {
+          await refreshMonitor();
+        },
+      }),
+    [refreshMonitor, showToast],
+  );
 
   const filteredErrors = useMemo(() => {
     if (!monitor?.errors) return [];
@@ -189,6 +248,10 @@ export default function Dashboard() {
   }, [monitor, errorSev]);
 
   // Note: useTwoStepConfirm handles its own unmount cleanup.
+  // The original handler had no busy state (the row already shows
+  // "Confirm?" via `isArmedFor`), so we keep the original `try/catch`
+  // shape rather than adopting `runMutation` (which requires a busy
+  // setter that the page does not consume).
   const handleCancelMission = useCallback(async (missionId: string, missionName: string) => {
     const doCancel = async () => {
       try {
@@ -196,14 +259,16 @@ export default function Dashboard() {
           method: "POST",
           body: { action: "cancel", missionId },
         });
-        if (!ok) {
-          showToast(error || "Failed to cancel mission", "error");
-          return;
-        }
-        showToast(`Cancelled "${missionName}"`, "success");
+        toastFromResult(
+          showToast,
+          { ok, error },
+          `Cancelled "${missionName}"`,
+          "Failed to cancel mission",
+        );
+        if (!ok) return;
         // Refresh missions
-        const { data: refreshData } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions");
-        if (refreshData) setData({ missions: refreshData.missions || [] });
+        const missions = await safeApiCallData<{ missions: MissionBrief[] }>("/api/missions");
+        if (missions) setData({ missions: missions.missions || [] });
       } catch {
         showToast("Failed to cancel mission", "error");
       }
@@ -228,34 +293,27 @@ export default function Dashboard() {
         ? parsed.display
         : newSchedule;
 
-    // Optimistic local update before the API call so the UI updates immediately
-    setDataFields((prev) => ({
-      ...prev,
-      monitor: prev.monitor
-        ? {
-            ...prev.monitor,
-            cron: {
-              ...prev.monitor.cron,
-              jobs: prev.monitor.cron.jobs.map((job) =>
-                job.id === jobId
-                  ? { ...job, schedule: scheduleDisplay }
-                  : job,
-              ),
-            },
-          }
-        : prev.monitor,
-    }));
+    // Optimistic local update before the API call so the UI updates immediately.
+    // `data.monitor` is in the useCallback deps (line 311 below) so the
+    // captured value is always fresh — equivalent to reading `prev.monitor`
+    // from a React-state updater. The `setData` helper is the canonical
+    // partial-state setter (defined at line 179 above); only the `useState`
+    // declaration itself uses the raw dispatch setter directly.
+    setData({
+      monitor: withCronJobSchedule(data.monitor, jobId, scheduleDisplay),
+    });
 
     try {
       const { ok, error } = await safeApiCall("/api/cron", {
         method: "PUT",
         body: { id: jobId, schedule: newSchedule },
       });
-      if (!ok) {
-        showToast(error || "Failed to update cron schedule", "error");
-        return;
-      }
-      showToast("Schedule updated", "success");
+      toastFromResult(
+        showToast,
+        { ok, error },
+        "Schedule updated",
+        "Failed to update cron schedule",
+      );
     } catch {
       showToast("Failed to update cron schedule", "error");
     } finally {
@@ -265,12 +323,12 @@ export default function Dashboard() {
       // branches above.
       void refreshMonitor();
     }
-  }, [data.monitor, showToast, refreshMonitor]);
+  }, [data.monitor, showToast, refreshMonitor, setData]);
 
   const handleRefreshProcesses = useCallback(async () => {
-    const { data: agentsData } = await safeApiCall<{ data: { processes: HermesProcess[] } }>("/api/agents");
-    if (agentsData?.data?.processes) {
-      setData({ processes: agentsData.data.processes });
+    const processes = await safeApiCallData<{ processes: HermesProcess[] }>("/api/agents");
+    if (processes?.processes) {
+      setData({ processes: processes.processes });
     }
   }, [setData]);
 
@@ -278,38 +336,42 @@ export default function Dashboard() {
     const controller = new AbortController();
     const signal = controller.signal;
 
-    // Batch all initial fetches — single render update
+    // Batch all initial fetches — single render update. The
+    // `safeApiCallData` helper unwraps the `{ data: T }` envelope in one
+    // step so the destructured tuple holds the inner payload directly
+    // (matches the pre-refactor semantics: `T | null` per endpoint,
+    // identical to `result.data?.data ?? null` from `safeApiCall`).
     const initialLoad = async () => {
       const [
-        statusRes,
-        configRes,
-        templatesRes,
-        categoriesRes,
-        monitorRes,
-        processesRes,
-        missionsRes,
-        defaultsRes,
+        status,
+        config,
+        templates,
+        categories,
+        monitor,
+        processes,
+        missions,
+        defaults,
       ] = await Promise.all([
-          safeApiCall<{ data: SystemStatus }>("/api/status", { signal } as RequestInit),
-          safeApiCall<{ data: Record<string, unknown> }>("/api/config", { signal } as RequestInit),
-          safeApiCall<{ data: TemplatesResponseData }>("/api/templates", { signal } as RequestInit),
-          safeApiCall<{ data: CategoriesResponseData }>("/api/mission-categories", { signal } as RequestInit),
-          safeApiCall<{ data: MonitorData }>("/api/monitor", { cache: "no-store", signal } as RequestInit),
-          safeApiCall<{ data: AgentsResponseData }>("/api/agents", { signal } as RequestInit),
-          safeApiCall<{ data: MissionsResponseData }>("/api/missions", { signal } as RequestInit),
-          safeApiCall<{ data: DefaultsResponseData }>("/api/models/defaults", { signal } as RequestInit),
-        ]);
+        safeApiCallData<SystemStatus>("/api/status", { signal } as RequestInit),
+        safeApiCallData<Record<string, unknown>>("/api/config", { signal } as RequestInit),
+        safeApiCallData<TemplatesResponseData>("/api/templates", { signal } as RequestInit),
+        safeApiCallData<CategoriesResponseData>("/api/mission-categories", { signal } as RequestInit),
+        safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store", signal } as RequestInit),
+        safeApiCallData<AgentsResponseData>("/api/agents", { signal } as RequestInit),
+        safeApiCallData<MissionsResponseData>("/api/missions", { signal } as RequestInit),
+        safeApiCallData<DefaultsResponseData>("/api/models/defaults", { signal } as RequestInit),
+      ]);
 
       if (!signal.aborted) {
-        setRegistryAgentModelLabel(defaultsRes?.data?.data?.defaults?.agent ?? null);
+        setRegistryAgentModelLabel(defaults?.defaults?.agent ?? null);
         setData({
-          status: statusRes?.data?.data ?? null,
-          config: configRes?.data?.data ?? null,
-          templates: templatesRes?.data?.data?.templates || [],
-          categories: categoriesRes?.data?.data?.categories || [],
-          monitor: monitorRes?.data?.data ?? null,
-          processes: processesRes?.data?.data?.processes || [],
-          missions: missionsRes?.data?.data?.missions || [],
+          status: status ?? null,
+          config: config ?? null,
+          templates: templates?.templates || [],
+          categories: categories?.categories || [],
+          monitor: monitor ?? null,
+          processes: processes?.processes || [],
+          missions: missions?.missions || [],
         });
         setReady(true);
       }
@@ -317,11 +379,16 @@ export default function Dashboard() {
     initialLoad();
 
     // ── Polling: consolidated — runs each interval on schedule ──────────
-    const polls = [
+    // `extract` receives the safeApiCall envelope `{ data: T }` and returns
+    // the partial DashboardData update or `null` to skip. Typed via
+    // `PollExtractor<Update>` so the cast through `any` is gone.
+    type DashboardUpdate = Partial<Pick<typeof data, "monitor" | "processes" | "missions">>;
+    type PollExtractor = (d: { data?: unknown }) => DashboardUpdate | null;
+    const polls: Array<{ url: string; ms: number; extract: PollExtractor }> = [
       {
         url: "/api/monitor",
         ms: 10000,
-        extract: (d: { data?: unknown }) => {
+        extract: (d) => {
           const inner = unwrapPollPath(d, ["data"]);
           if (!inner) return null;
           // unwrapPollPath returns Record<string, unknown>; cast through
@@ -332,7 +399,7 @@ export default function Dashboard() {
       {
         url: "/api/agents",
         ms: 15000,
-        extract: (d: { data?: unknown }) => {
+        extract: (d) => {
           const inner = unwrapPollPath(d, []);
           if (!inner) return null;
           return { processes: (inner.processes as HermesProcess[] | undefined) ?? [] };
@@ -341,7 +408,7 @@ export default function Dashboard() {
       {
         url: "/api/missions",
         ms: 15000,
-        extract: (d: { data?: unknown }) => {
+        extract: (d) => {
           const inner = unwrapPollPath(d, []);
           if (!inner) return null;
           return { missions: (inner.missions as MissionBrief[] | undefined) ?? [] };
@@ -354,8 +421,7 @@ export default function Dashboard() {
         if (signal.aborted) return;
         const { data: raw } = await safeApiCall(url, { signal } as RequestInit);
         if (!raw) return;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- extract functions handle their own typing
-        const update = (extract as (d: any) => any)(raw);
+        const update = extract(raw);
         if (update) setData(update);
       }, ms),
     );
@@ -383,17 +449,21 @@ export default function Dashboard() {
   );
   const activeProcesses = useMemo(() => processes.filter((p) => p.status === "running"), [processes]);
   const activeMissions = useMemo(
-    () =>
-      missions.filter(
-        (m) =>
-          m.status === "dispatched" ||
-          (m.status === "queued" && m.queuedForRun === true),
-      ),
+    () => missions.filter(isMissionActive),
     [missions],
   );
 
-  // Timestamp for cron scheduling comparisons — computed fresh per render
-  const now = new Date().getTime();
+  // Timestamp for cron scheduling comparisons. We DO NOT compute
+  // `new Date().getTime()` directly in the render body, because that
+  // would make `now` a brand-new number on every render, which in
+  // turn would invalidate the `cronCaptions` and `sessionWindowSubtitle`
+  // `useMemo`s on every render and defeat the entire purpose of the
+  // memo. Instead, hold `now` in `useState` (initialised once on mount)
+  // and refresh it on a 30-second `useInterval`. The captions stay
+  // stable for 30-second windows — close enough for a dashboard whose
+  // monitor already polls every 10s.
+  const [now, setNow] = useState(() => new Date().getTime());
+  useInterval(() => setNow(new Date().getTime()), { ms: 30_000 });
 
   // Per-job caption map: priority-ordered ladder extracted to
   // computeCronJobRowCaption (src/lib/cron-row-helpers.ts) so the
@@ -577,16 +647,12 @@ export default function Dashboard() {
                   description={t.description}
                   isCustom={t.isCustom}
                   compact
-                  onSelect={() =>
-                    router.push(
-                      `/orchestration/missions?template=${t.id}&compose=1`,
-                    )
-                  }
+                  onSelect={() => router.push(composeTemplateUrl(t.id))}
                 />
               ))}
               {templates.length > 12 && (
                 <button
-                  onClick={() => setDispatchExpanded(true)}
+                  onClick={openDispatchPanel}
                   className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-mono text-white/30 hover:text-neon-cyan transition-colors"
                 >
                   +{templates.length - 12} more
@@ -618,11 +684,7 @@ export default function Dashboard() {
                         description={t.description ?? ""}
                         isCustom={t.isCustom}
                         compact
-                        onSelect={() =>
-                          router.push(
-                            `/orchestration/missions?template=${t.id}&compose=1`,
-                          )
-                        }
+                        onSelect={() => router.push(composeTemplateUrl(t.id))}
                       />
                     ))}
                   </div>
@@ -808,7 +870,7 @@ export default function Dashboard() {
                       errorSev === sev ? "bg-red-500/20 text-red-400" : "text-white/30 hover:text-white/60"
                     }`}
                   >
-                    {sev.charAt(0).toUpperCase() + sev.slice(1)}
+                    {titleCase(sev)}
                   </button>
                 ))}
               </div>

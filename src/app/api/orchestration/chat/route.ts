@@ -11,17 +11,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, ok, serverError } from "@/lib/api-response";
 import { getAgentLlmEndpoints } from "@/lib/hermes-agent-runtime";
 import { CHAT_DEFAULT_MODEL } from "@/types/chat";
-
-function handleError(error: unknown, context: string) {
-  logApiError("chat", context, error);
-  return NextResponse.json(
-    { error: error instanceof Error ? error.message : "Request failed" },
-    { status: 500 },
-  );
-}
+import { toError } from "@/lib/api-fetch";
 
 /** Shared gateway fetch — both streaming and non-streaming paths use this. */
 async function fetchGateway(
@@ -56,7 +49,7 @@ async function fetchGateway(
 
   // Non-streaming — return JSON
   const data = await response.json();
-  return NextResponse.json({ data });
+  return ok(data);
 }
 
 export async function POST(request: NextRequest) {
@@ -85,6 +78,7 @@ export async function POST(request: NextRequest) {
 
     return fetchGateway(apiUrl, gatewayBody, isStreaming);
   } catch (error) {
-    return handleError(error, "POST /api/orchestration/chat");
+    logApiError("chat", "POST /api/orchestration/chat", error);
+    return serverError(toError(error).message);
   }
 }

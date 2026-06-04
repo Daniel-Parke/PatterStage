@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { badRequest, notFound, ok } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
 import { safeStat } from "@/lib/fs-stats";
 import { resolveEffectiveDisabledSkills } from "@/lib/effective-disabled-skills";
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
   const refreshFromDisk = request.nextUrl.searchParams.get("refresh") === "1";
   const prof = resolveSafeProfileName(profileParam);
   if (!prof.ok) {
-    return NextResponse.json({ error: prof.error }, { status: 400 });
+    return badRequest(prof.error);
   }
   const profile = prof.profile;
 
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
     if (profile !== "default") {
       const p = getProfile(profile);
       if (!p) {
-        return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+        return notFound("Profile not found");
       }
     }
 
@@ -79,24 +80,30 @@ export async function GET(request: NextRequest) {
     // mismatched frontmatter case ("Creative" vs "creative") so the
     // audit-found case-collision duplicates collapse into a single
     // bucket. The page does the same with groupByCategory().
+    //
+    // `Object.fromEntries(map)` is the canonical Map→Record conversion
+    // (the 4-line `for (const [k, v] of map) record[k] = v;` pattern is
+    // the pre-`Object.fromEntries` idiom). The helper returns a fresh
+    // `Record<string, Skill[]>` with the same shape as the old loop
+    // (Map<string, Skill[]> → Record<string, Skill[]>) so the rest of
+    // the handler is byte-equivalent.
     const categoryGroups = groupByCategory(skills, "uncategorized");
-    const categories: Record<string, Skill[]> = {};
-    for (const [key, items] of categoryGroups) {
-      categories[key] = items;
-    }
+    const categories = Object.fromEntries(categoryGroups) as Record<string, Skill[]>;
 
-    return NextResponse.json({
-      data: {
-        skills,
-        categories,
-        total: skills.length,
-        categoryCount: Object.keys(categories).length,
-        profile,
-      },
+    return ok({
+      skills,
+      categories,
+      total: skills.length,
+      categoryCount: Object.keys(categories).length,
+      profile,
     });
   }
   catch (error) {
-    logApiError("GET /api/skills", "listing skills", error);
-    return NextResponse.json({ error: "Failed to list skills" }, { status: 500 });
+    return serverErrorFromCatch(
+      "GET /api/skills",
+      "listing skills",
+      error,
+      "Failed to list skills",
+    );
   }
 }

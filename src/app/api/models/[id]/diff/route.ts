@@ -4,15 +4,15 @@
 // Body: { direction?: "push" | "pull" } (default: "push")
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { getModelWithKey } from "@/lib/models-repository";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { existsSync, readFileSync } from "fs";
-import * as yaml from "js-yaml";
+import { readHermesYamlConfig } from "@/lib/hermes-config-sync";
 import { envVarForProvider, isHermesProvider } from "@/lib/hermes-providers";
 import { requireAuth } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { maskKeyHint } from "@/lib/secret-mask";
+import { notFound, ok } from "@/lib/api-response";
+import { z } from "zod";
 
 interface DiffEntry {
   id: string;
@@ -28,15 +28,8 @@ interface ConfigModelSection {
 }
 
 function readHermesModelSection(): ConfigModelSection | null {
-  const paths = getActiveHermesPaths();
-  if (!existsSync(paths.config)) return null;
-  try {
-    const raw = readFileSync(paths.config, "utf-8");
-    const config = yaml.load(raw) as Record<string, unknown> | null;
-    return (config?.model as ConfigModelSection) ?? null;
-  } catch {
-    return null;
-  }
+  const config = readHermesYamlConfig<Record<string, unknown>>();
+  return (config?.model as ConfigModelSection) ?? null;
 }
 
 export async function POST(
@@ -46,103 +39,91 @@ export async function POST(
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
+  // Body is `{ direction?: "push" | "pull" }` (default "push").
+  const diffPostSchema = z
+    .object({
+      direction: z.enum(["push", "pull"]).optional(),
+    })
+    .strict();
 
-  const body = bodyResult;
-  const direction = (body?.direction as "push" | "pull") ?? "push";
+  const parsed = await parseAndValidateJsonBody(request, diffPostSchema);
+  if (parsed instanceof NextResponse) return parsed;
+  const direction = parsed.direction ?? "push";
   const { id } = await params;
 
   try {
     const model = getModelWithKey(id);
     if (!model) {
-      return NextResponse.json({ error: "Model not found" }, { status: 404 });
+      return notFound("Model not found");
     }
 
     const diffs: DiffEntry[] = [];
+    // Local closure — collapses the 9 inline `diffs.push({id, label, detail})`
+    // sites below into a single token per call. The wire shape is identical
+    // (push appends the same `{id, label, detail}` object), so this is
+    // pure refactor.
+    const pushDiff = (id: string, label: string, detail: string) => {
+      diffs.push({ id, label, detail });
+    };
     const hermesModel = readHermesModelSection();
 
     if (direction === "push") {
       // Export: show the DB model's values as "will be written"
       if (model.modelId) {
-        diffs.push({
-          id: "modelId",
-          label: "Model ID",
-          detail: model.modelId,
-        });
+        pushDiff("modelId", "Model ID", model.modelId);
       }
       if (model.provider) {
-        diffs.push({
-          id: "provider",
-          label: "Provider",
-          detail: model.provider,
-        });
+        pushDiff("provider", "Provider", model.provider);
       }
-      diffs.push({
-        id: "baseUrl",
-        label: "Base URL",
-        detail: model.baseUrl ?? "(none)",
-      });
+      pushDiff("baseUrl", "Base URL", model.baseUrl ?? "(none)");
 
       // Credential
       if (model.credentialsId && model.apiKey) {
         const envVar = isHermesProvider(model.provider) ? envVarForProvider(model.provider) : null;
         if (envVar) {
-          diffs.push({
-            id: "model-env",
-            label: "Credential",
-            detail: `Write ${envVar}=${maskKeyHint(model.apiKey)} to ~/.hermes/.env`,
-          });
+          pushDiff(
+            "model-env",
+            "Credential",
+            `Write ${envVar}=${maskKeyHint(model.apiKey)} to ~/.hermes/.env`,
+          );
         }
       }
 
       if (diffs.length === 0) {
-        diffs.push({
-          id: "no-change",
-          label: "No data",
-          detail: `${model.name} has no settings to export`,
-        });
+        pushDiff("no-change", "No data", `${model.name} has no settings to export`);
       }
     } else {
       // Import: show config.yaml values as "current config has"
       if (!hermesModel || !hermesModel.default) {
-        diffs.push({
-          id: "no-hermes-data",
-          label: "No data in config.yaml",
-          detail: `No model section found in config.yaml`,
-        });
+        pushDiff(
+          "no-hermes-data",
+          "No data in config.yaml",
+          `No model section found in config.yaml`,
+        );
       } else {
-        diffs.push({
-          id: "modelId",
-          label: "Model ID",
-          detail: hermesModel.default,
-        });
+        pushDiff("modelId", "Model ID", hermesModel.default);
         if (hermesModel.provider) {
-          diffs.push({
-            id: "provider",
-            label: "Provider",
-            detail: hermesModel.provider,
-          });
+          pushDiff("provider", "Provider", hermesModel.provider);
         }
-        diffs.push({
-          id: "baseUrl",
-          label: "Base URL",
-          detail: hermesModel.base_url ?? "(none)",
-        });
+        pushDiff("baseUrl", "Base URL", hermesModel.base_url ?? "(none)");
       }
 
       if (diffs.length === 0) {
-        diffs.push({
-          id: "no-change",
-          label: "No changes",
-          detail: `${model.name} is already in sync with config.yaml`,
-        });
+        pushDiff(
+          "no-change",
+          "No changes",
+          `${model.name} is already in sync with config.yaml`,
+        );
       }
     }
 
-    return NextResponse.json({ data: { diffs, modelName: model.name } });
+    return ok({ diffs, modelName: model.name });
   } catch (error) {
-    logApiError("POST /api/models/[id]/diff", "computing diff", error);
-    return NextResponse.json({ error: "Failed to compute diff" }, { status: 500 });
+    return serverErrorFromCatch(
+      "POST /api/models/[id]/diff",
+      "computing diff",
+      error,
+      "Failed to compute diff",
+    );
   }
 }

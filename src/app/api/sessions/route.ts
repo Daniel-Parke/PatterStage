@@ -14,9 +14,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, created, notFound, ok, serviceUnavailable } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import {
   listSessions,
@@ -42,9 +42,9 @@ export async function GET(request: NextRequest) {
     if (q.id) {
       const session = getSession(q.id);
       if (!session) {
-        return NextResponse.json({ error: "Session not found" }, { status: 404 });
+        return notFound("Session not found");
       }
-      return NextResponse.json({ data: { session } });
+      return ok({ session });
     }
 
     // Sync layer handles background syncing of Hermes sessions (debounced — at most once per 30s)
@@ -63,15 +63,12 @@ export async function GET(request: NextRequest) {
       syncIfActive: true,
     });
 
-    return NextResponse.json({
-      data: {
-        sessions: result.sessions,
-        total: result.total,
-      },
+    return ok({
+      sessions: result.sessions,
+      total: result.total,
     });
   } catch (error) {
-    logApiError("GET /api/sessions", "listing sessions", error);
-    return NextResponse.json({ error: "Failed to load sessions" }, { status: 500 });
+    return serverErrorFromCatch("GET /api/sessions", "listing sessions", error, "Failed to load sessions");
   }
 }
 
@@ -80,10 +77,7 @@ export async function POST(request: NextRequest) {
   if (auth) return auth;
 
   if (isChReadOnly()) {
-    return NextResponse.json(
-      { error: "Control Hub is in read-only mode" },
-      { status: 503 }
-    );
+    return serviceUnavailable("Control Hub is in read-only mode");
   }
 
   const bodyResult = await parseJsonBody(request);
@@ -120,7 +114,7 @@ export async function POST(request: NextRequest) {
         title: body.title,
         status: body.status ?? "active",
       });
-      return NextResponse.json({ data: { session } }, { status: 201 });
+      return created({ session });
     }
 
     // action=update — used by dispatch pipeline on mission complete/fail
@@ -135,14 +129,13 @@ export async function POST(request: NextRequest) {
         error: body.error,
       });
       if (!session) {
-        return NextResponse.json({ error: "Session not found" }, { status: 404 });
+        return notFound("Session not found");
       }
-      return NextResponse.json({ data: { session } });
+      return ok({ session });
     }
 
     return badRequest("Unknown action");
   } catch (error) {
-    logApiError("POST /api/sessions", "session action", error);
-    return NextResponse.json({ error: "Failed to process session action" }, { status: 500 });
+    return serverErrorFromCatch("POST /api/sessions", "session action", error, "Failed to process session action");
   }
 }

@@ -64,8 +64,8 @@ export default function MissionsList({ vm }: MissionsListProps) {
     filtered,
     categories,
     handleTemplateSelect,
-    setShowTemplateManager,
-    setShowCategoryManager,
+    openTemplateManager,
+    openCategoryManager,
     handleEdit,
     handleDelete,
     handleCancel,
@@ -110,14 +110,14 @@ export default function MissionsList({ vm }: MissionsListProps) {
             <div className="flex flex-wrap items-center gap-3 shrink-0">
               <button
                 type="button"
-                onClick={() => setShowCategoryManager(true)}
+                onClick={openCategoryManager}
                 className="text-[10px] font-mono text-white/30 hover:text-neon-cyan"
               >
                 Manage categories
               </button>
               <button
                 type="button"
-                onClick={() => setShowTemplateManager(true)}
+                onClick={openTemplateManager}
                 className="text-[10px] font-mono text-white/30 hover:text-neon-cyan flex items-center gap-1 transition-colors"
               >
                 <Layers className="w-3 h-3" />
@@ -296,6 +296,20 @@ export default function MissionsList({ vm }: MissionsListProps) {
               const isCollapsible =
                 (status === "successful" || status === "failed") &&
                 columnMissions.length > 5;
+              // Closure over `status` + the `setCollapsedColumns` updater.
+              // The 2 inline call sites below (column header "Collapse /
+              // Show all" button + the "Show all N missions" footer
+              // button) use the same `setCollapsedColumns((prev) => ({
+              // ...prev, [status]: !prev[status] }))` shape. The
+              // `toggleCollapsedColumn` helper centralises the
+              // `setCollapsedColumns` updater + the key spread, so a
+              // future "also persist to localStorage" or "also fire
+              // analytics" extension lands in one place.
+              const toggleCollapsedColumn = () =>
+                setCollapsedColumns((prev) => ({
+                  ...prev,
+                  [status]: !prev[status],
+                }));
               const visibleMissions =
                 isCollapsible && collapsedColumns[status]
                   ? columnMissions.slice(0, 5)
@@ -326,12 +340,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
                         columnMissions.length > 5 && (
                           <button
                             type="button"
-                            onClick={() =>
-                              setCollapsedColumns((prev) => ({
-                                ...prev,
-                                [status]: !prev[status],
-                              }))
-                            }
+                            onClick={toggleCollapsedColumn}
                             className="text-[9px] font-mono text-white/25 hover:text-neon-cyan transition-colors"
                           >
                             {collapsedColumns[status] ? "Show all" : "Collapse"}
@@ -465,12 +474,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
                           columnMissions.length > 5 && (
                             <button
                               type="button"
-                              onClick={() =>
-                                setCollapsedColumns((prev) => ({
-                                  ...prev,
-                                  [status]: false,
-                                }))
-                              }
+                              onClick={toggleCollapsedColumn}
                               className="w-full text-[10px] font-mono text-neon-cyan/60 hover:text-neon-cyan py-2 text-center border border-dashed border-white/5 rounded-lg transition-colors mt-2"
                             >
                               Show all {columnMissions.length} missions →

@@ -2,8 +2,8 @@
 // useSystemCronJobs — System cron jobs
 // ═══════════════════════════════════════════════════════════════
 // Handles system cron job CRUD via /api/cron/hardware.
-// Shares patterns with useCronJobs but uses hardware-specific
-// toast messages and has handleSave (specific to hardware).
+// Toggle / delete / pauseAll share patterns with useCronJobs via
+// the shared useCronJobMutation hook; handleSave is hardware-specific.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -12,6 +12,8 @@ import { useCallback, useMemo } from "react";
 import { useApiData } from "@/hooks/useApiData";
 import { useToast } from "@/components/ui/Toast";
 import { safeApiCall } from "@/lib/api-fetch";
+import { useCronJobMutation } from "@/hooks/useCronJobMutation";
+import { toastFromResult } from "@/lib/toast-from-result";
 import type { SystemCronJob } from "@/types/hermes";
 
 const HARDWARE_ENDPOINT = "/api/cron/hardware";
@@ -30,85 +32,58 @@ export function useSystemCronJobs() {
 
   const jobs = useMemo(() => data?.jobs ?? [], [data]);
 
-  const handleToggle = useCallback(
-    async (id: string) => {
-      const job = jobs.find((j) => j.id === id);
-      if (!job) return;
-      const newEnabled = !job.enabled;
-      const { ok, error } = await safeApiCall(HARDWARE_ENDPOINT, {
-        method: "PUT",
-        body: { id, enabled: newEnabled },
-      });
-      if (ok) {
-        showToast(newEnabled ? "System cron job enabled" : "System cron job paused");
-        loadJobs();
-      } else {
-        showToast(error ?? "Failed to update system cron job", "error");
-      }
-    },
-    [jobs, showToast, loadJobs],
-  );
-
-  const handleDelete = useCallback(
-    async (id: string) => {
-      const { ok, error } = await safeApiCall(`${HARDWARE_ENDPOINT}?id=${id}`, {
-        method: "DELETE",
-      });
-      if (ok) {
-        showToast("System cron job deleted");
-      } else {
-        showToast(error ?? "Failed to delete system cron job", "error");
-      }
-      loadJobs();
-    },
-    [showToast, loadJobs],
-  );
+  // Toggle / delete / pauseAll are factored into useCronJobMutation
+  // (shared with useCronJobs). handleSave is hardware-specific and stays
+  // inline below.
+  const { handleToggle, handleDelete, handlePauseAll } =
+    useCronJobMutation<SystemCronJob>({
+      endpoint: HARDWARE_ENDPOINT,
+      findJob: (id) => jobs.find((j) => j.id === id),
+      buildToggleBody: (_job, nextEnabled) => ({ enabled: nextEnabled }),
+      toggleSuccess: (nextEnabled) =>
+        nextEnabled ? "System cron job enabled" : "System cron job paused",
+      toggleErrorFallback: () => "Failed to update system cron job",
+      deleteSuccess: "System cron job deleted",
+      deleteErrorFallback: "Failed to delete system cron job",
+      pauseAll: {
+        success: "Paused {count} system cron job(s)",
+        errorFallback: "Failed to pause system cron jobs",
+        showCount: true,
+      },
+      refetch: loadJobs,
+    });
 
   const handleSave = useCallback(
     async (job: Partial<SystemCronJob>) => {
-      try {
-        if (job.id) {
-          const { ok, error } = await safeApiCall(HARDWARE_ENDPOINT, {
-            method: "PUT",
-            body: job,
-          });
-          if (!ok) throw new Error(error || "Failed to update system cron job");
-          showToast("System cron job updated");
-        } else {
-          const { ok, error } = await safeApiCall(HARDWARE_ENDPOINT, {
-            method: "POST",
-            body: job,
-          });
-          if (!ok) throw new Error(error || "Failed to create system cron job");
-          showToast("System cron job created");
-        }
-        loadJobs();
-      } catch (e) {
-        showToast(
-          e instanceof Error ? e.message : "Failed to save system cron job",
-          "error",
-        );
-      }
+      // PUT-vs-POST discriminator: the 2 branches only differ in (a) HTTP
+      // method, (b) success toast text, and (c) fallback error text.
+      // `toastFromResult` collapses the 3-state try/catch into a single
+      // safeApiCall + toast trio (matching the `useCronJobs.handleRun`
+      // pattern at line 55), so a future "also clear form" or "also
+      // sync" extension lands in one place. The `id`-derived discriminator
+      // is exactly the same branch the inline form used (job.id is
+      // truthy → PUT/update, falsy → POST/create), so the behaviour is
+      // byte-equivalent: same endpoint, same method, same body, same
+      // success toasts in each branch, same fallback text in each
+      // branch, same loadJobs() refetch on success. The pre-refactor
+      // `if (!result.ok) throw new Error(...)` + outer try/catch was
+      // functionally identical to letting `toastFromResult` read
+      // `result.error` directly.
+      const isUpdate = !!job.id;
+      const result = await safeApiCall(HARDWARE_ENDPOINT, {
+        method: isUpdate ? "PUT" : "POST",
+        body: job,
+      });
+      toastFromResult(
+        showToast,
+        result,
+        isUpdate ? "System cron job updated" : "System cron job created",
+        isUpdate ? "Failed to update system cron job" : "Failed to create system cron job",
+      );
+      if (result.ok) loadJobs();
     },
     [showToast, loadJobs],
   );
-
-  const handlePauseAll = useCallback(async (): Promise<void> => {
-    const { ok, error, data: resData } = await safeApiCall<{ pausedCount?: number }>(
-      HARDWARE_ENDPOINT,
-      {
-        method: "POST",
-        body: { action: "pauseAll" },
-      },
-    );
-    if (!ok) {
-      showToast(error || "Failed to pause system cron jobs", "error");
-    } else {
-      showToast(`Paused ${resData?.pausedCount ?? 0} system cron job(s)`);
-    }
-    // Always refetch so the UI reflects the latest state regardless of outcome.
-    loadJobs();
-  }, [showToast, loadJobs]);
 
   return {
     jobs,

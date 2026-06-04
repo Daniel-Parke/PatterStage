@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
-import { logApiError } from "@/lib/api-logger";
+import { badRequest, ok } from "@/lib/api-response";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
+import { booleanFlag, stringFlag } from "@/lib/parse-bag-flags";
 import {
   pushProfileToHermes,
   pushAllProfiles,
@@ -20,32 +22,30 @@ export async function POST(request: NextRequest) {
   // missing or malformed body is treated as {} so callers can POST
   // with no payload to trigger default behaviour.
   const body = await parseOptionalJsonBody(request);
-  const slug = typeof body.slug === "string" ? body.slug : undefined;
-  const all = body.all === true;
-  const root = body.root === true;
-  const skills = body.skills === true;
-  const skillKey = typeof body.skillKey === "string" ? body.skillKey : undefined;
-  const missingOnly = body.missingOnly === true;
-  const onlyOutOfSync = body.onlyOutOfSync === true;
+  const slug = stringFlag(body, "slug");
+  const all = booleanFlag(body, "all");
+  const root = booleanFlag(body, "root");
+  const skills = booleanFlag(body, "skills");
+  const skillKey = stringFlag(body, "skillKey");
+  const missingOnly = booleanFlag(body, "missingOnly");
+  const onlyOutOfSync = booleanFlag(body, "onlyOutOfSync");
 
   try {
     ensureDb();
 
     if (root) {
       const result = pushRootToHermes();
-      return NextResponse.json({ data: { success: result.success, result } });
+      return ok({ success: result.success, result });
     }
 
     if (skills) {
       const results = pushAllSkillsToHermes();
-      return NextResponse.json({
-        data: { success: results.every((r) => r.success), results },
-      });
+      return ok({ success: results.every((r) => r.success), results },);
     }
 
     if (skillKey) {
       const result = pushSkillToHermes(skillKey);
-      return NextResponse.json({ data: { success: result.success, result } });
+      return ok({ success: result.success, result });
     }
 
     if (all || missingOnly || onlyOutOfSync) {
@@ -54,38 +54,35 @@ export async function POST(request: NextRequest) {
         onlyOutOfSync,
       });
       const rootResult = pushRootToHermes();
-      return NextResponse.json({
-        data: {
-          success:
-            profileResults.every((r) => r.success) && rootResult.success,
-          root: rootResult,
-          results: profileResults,
-        },
+      return ok({
+        success:
+          profileResults.every((r) => r.success) && rootResult.success,
+        root: rootResult,
+        results: profileResults,
       });
     }
 
     if (!slug) {
-      return NextResponse.json(
-        { error: "slug, all, root, skills, or skillKey required" },
-        { status: 400 },
-      );
+      return badRequest("slug, all, root, skills, or skillKey required");
     }
 
     if (slug === "default") {
       const result = pushRootToHermes();
-      return NextResponse.json({ data: { success: result.success, result } });
+      return ok({ success: result.success, result });
     }
 
     const result = pushProfileToHermes(slug);
-    return NextResponse.json({
-      data: {
-        success: result.success,
-        result,
-      },
+    return ok({
+      success: result.success,
+      result,
     });
   }
   catch (error) {
-    logApiError("POST /api/agent/profiles/sync/push", "push", error);
-    return NextResponse.json({ error: "Failed to push profile" }, { status: 500 });
+    return serverErrorFromCatch(
+      "POST /api/agent/profiles/sync/push",
+      "push",
+      error,
+      "Failed to push profile",
+    );
   }
 }

@@ -7,13 +7,13 @@ import { spawnSync } from "child_process";
 import {
   copyFileSync,
   existsSync,
-  mkdirSync,
   readdirSync,
   readFileSync,
   unlinkSync,
 } from "fs";
 import { dirname, join } from "path";
 import { PATHS } from "../paths";
+import { ensureDir } from "../fs-helpers";
 
 /** Squashed baseline schema, including profile/root/skills source-of-truth tables. */
 export const BASELINE_SCHEMA_VERSION = 3;
@@ -307,7 +307,7 @@ export function rebuildToBaseline(
     }
   }
 
-  mkdirSync(dirname(dbPath), { recursive: true });
+  ensureDir(dirname(dbPath));
 
   // Real driver (avoids Jest mock when integration tests unmock better-sqlite3).
   // eslint-disable-next-line @typescript-eslint/no-require-imports

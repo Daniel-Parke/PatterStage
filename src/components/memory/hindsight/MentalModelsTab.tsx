@@ -6,7 +6,7 @@ import { Settings, Plus, Pencil, Zap, Trash2, RefreshCw, Clock } from "lucide-re
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
-import { timeAgo } from "@/lib/utils";
+import { pluralise, timeAgo } from "@/lib/utils";
 import type { MentalModel } from "./types";
 
 interface MentalModelsTabProps {
@@ -34,7 +34,7 @@ export default function MentalModelsTab({
     <>
       <div className="flex justify-between items-center mb-4">
         <div className="text-xs text-white/30">
-          {models.length} mental model{models.length !== 1 ? "s" : ""} — cached reflect results with auto-refresh
+          {models.length} mental model{pluralise(models.length)} — cached reflect results with auto-refresh
         </div>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" icon={RefreshCw} onClick={onRefresh} disabled={loading}>

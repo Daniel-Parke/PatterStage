@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
+import { badRequest, methodNotAllowed, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
 import { listProfiles } from "@/lib/profiles-repository";
-import { applyProfileOrRootPatch, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
 import { resolveSafeProfileName } from "@/lib/path-security";
 
 /** Shared upsert logic used by both POST (create) and PUT (update). */
@@ -18,12 +19,12 @@ async function upsertPersonality(request: NextRequest) {
   const profile = typeof body.profile === "string" ? body.profile : "default";
   const prompt = typeof body.prompt === "string" ? body.prompt : "";
   if (!prompt.trim()) {
-    return NextResponse.json({ error: "prompt is required" }, { status: 400 });
+    return badRequest("prompt is required");
   }
 
   const resolved = resolveSafeProfileName(profile);
   if (!resolved.ok) {
-    return NextResponse.json({ error: resolved.error }, { status: 400 });
+    return badRequest(resolved.error);
   }
 
   // applyProfileOrRootPatch handles default-vs-non-default dispatch,
@@ -45,11 +46,9 @@ async function upsertPersonality(request: NextRequest) {
     }
     return err;
   }
-  if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
+  assertPatchSucceeded(result);
 
-  return NextResponse.json({
-    data: { success: true, name: result.profile, prompt, source: "SOUL.md" },
-  });
+  return ok({ success: true, name: result.profile, prompt, source: "SOUL.md" });
 }
 
 export async function GET(request: NextRequest) {
@@ -74,13 +73,15 @@ export async function GET(request: NextRequest) {
       })),
     ];
 
-    return NextResponse.json({
-      data: { personalities: profiles, total: profiles.length },
-    });
+    return ok({ personalities: profiles, total: profiles.length });
   }
   catch (error) {
-    logApiError("GET /api/personalities", "reading SOUL identities", error);
-    return NextResponse.json({ error: "Failed to read personalities" }, { status: 500 });
+    return serverErrorFromCatch(
+      "GET /api/personalities",
+      "reading SOUL identities",
+      error,
+      "Failed to read personalities",
+    );
   }
 }
 
@@ -92,17 +93,20 @@ export async function POST(request: NextRequest) {
     return await upsertPersonality(request);
   }
   catch (error) {
-    logApiError("POST /api/personalities", "creating SOUL identity", error);
-    return NextResponse.json({ error: "Failed to save personality" }, { status: 500 });
+    return serverErrorFromCatch(
+      "POST /api/personalities",
+      "creating SOUL identity",
+      error,
+      "Failed to save personality",
+    );
   }
 }
 
 // DELETE is not supported — personalities are profile SOUL.md identities
 // and cannot be individually deleted from Control Hub. Delete the profile instead.
 export async function DELETE() {
-  return NextResponse.json(
-    { error: "Individual personalities cannot be deleted — delete the profile instead" },
-    { status: 405 }
+  return methodNotAllowed(
+    "Individual personalities cannot be deleted — delete the profile instead"
   );
 }
 
@@ -114,7 +118,11 @@ export async function PUT(request: NextRequest) {
     return await upsertPersonality(request);
   }
   catch (error) {
-    logApiError("PUT /api/personalities", "updating SOUL identity", error);
-    return NextResponse.json({ error: "Failed to save personality" }, { status: 500 });
+    return serverErrorFromCatch(
+      "PUT /api/personalities",
+      "updating SOUL identity",
+      error,
+      "Failed to save personality",
+    );
   }
 }

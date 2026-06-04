@@ -4,27 +4,26 @@
 // Runtime tool access is configured per profile via platform_toolsets
 // (Operations → Tools). This route does not control Hermes runtime.
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
-import { logApiError } from "@/lib/api-logger";
+import { methodNotAllowed, ok } from "@/lib/api-response";
 import {
   HERMES_CONFIGURABLE_TOOLSETS,
   HERMES_PLATFORMS,
 } from "@/lib/hermes-toolset-catalog";
 
+// The GET handler is a pure constant read — `ok()` cannot throw and
+// the two catalog constants are statically imported. The 7-line
+// try/catch + `serverErrorFromCatch` that used to wrap the call site
+// was dead code: there is no I/O, no JSON parse, no DB query, and no
+// file read. Migrated from the List 3 dead-code sweep; matches the
+// `api/agent/personality` GET handler shape (pure read, no try).
 export async function GET() {
-  try {
-    return NextResponse.json({
-      data: {
-        platforms: HERMES_PLATFORMS,
-        toolsets: HERMES_CONFIGURABLE_TOOLSETS,
-      },
-    });
-  } catch (error) {
-    logApiError("GET /api/tools", "catalog", error);
-    return NextResponse.json({ error: "Failed to load toolset catalog" }, { status: 500 });
-  }
+  return ok({
+    platforms: HERMES_PLATFORMS,
+    toolsets: HERMES_CONFIGURABLE_TOOLSETS,
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -33,11 +32,7 @@ export async function POST(request: NextRequest) {
   const ro = requireNotReadOnly("tool mutations are disabled");
   if (ro) return ro;
 
-  return NextResponse.json(
-    {
-      error:
-        "Tool registry mutations are disabled. Configure Hermes runtime toolsets on Operations → Tools (profile-scoped platform_toolsets).",
-    },
-    { status: 405 }
+  return methodNotAllowed(
+    "Tool registry mutations are disabled. Configure Hermes runtime toolsets on Operations → Tools (profile-scoped platform_toolsets).",
   );
 }

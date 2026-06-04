@@ -10,6 +10,7 @@ import {
   AUXILIARY_TASK_TYPES,
   type TaskType,
 } from "@/lib/hermes-providers";
+import { pluralise } from "@/lib/utils";
 
 interface BulkAuxiliaryUpdaterProps {
   models: Array<{ id: string; name: string; provider: string; modelId: string }>;
@@ -163,7 +164,7 @@ export default function BulkAuxiliaryUpdater({
             disabled={disabled || applying || !targetModelId}
             className="w-full h-9 bg-neon-purple/10 border border-neon-purple/30 text-neon-purple text-xs font-mono rounded-lg hover:bg-neon-purple/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {applying ? "Applying…" : `Apply to ${selected.size} slot${selected.size !== 1 ? "s" : ""}`}
+            {applying ? "Applying…" : `Apply to ${selected.size} slot${pluralise(selected.size)}`}
           </button>
         </div>
       )}

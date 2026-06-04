@@ -2,6 +2,8 @@ import { createHmac, randomUUID, timingSafeEqual } from "crypto";
 
 import { NextRequest, NextResponse } from "next/server";
 
+import { serviceUnavailable } from "@/lib/api-response";
+
 function firstEnvFlag(keys: string[]): string | undefined {
   for (const key of keys) {
     const value = process.env[key];
@@ -67,16 +69,12 @@ export function requireSignedRequest(request: NextRequest): NextResponse | null 
 export function requireNotReadOnly(context?: string): NextResponse | null {
   if (!isChReadOnly()) return null;
   if (!context) {
-    return NextResponse.json(
-      { error: "Control Hub is in read-only mode (set CH_READ_ONLY=true to allow writes)." },
-      { status: 503 },
+    return serviceUnavailable(
+      "Control Hub is in read-only mode (set CH_READ_ONLY=true to allow writes)."
     );
   }
-  return NextResponse.json(
-    {
-      error: `Control Hub is in read-only mode — ${context}`,
-    },
-    { status: 503 },
+  return serviceUnavailable(
+    `Control Hub is in read-only mode — ${context}`,
   );
 }
 

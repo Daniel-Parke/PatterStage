@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
+import { methodNotAllowed, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { applyProfileOrRootPatch, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
 import { hydratePlatformToolsetsForSlug } from "@/lib/profiles-repository";
 import {
   normalizePlatformToolsetsFromInput,
@@ -15,6 +16,7 @@ import {
   unionToolsetsFromPlatforms,
 } from "@/lib/hermes-toolset-unify";
 import { resolveSafeProfileName } from "@/lib/path-security";
+import { badRequest, notFound } from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
@@ -25,29 +27,31 @@ export async function GET(
 
   const { id } = await params;
   const prof = resolveSafeProfileName(id);
-  if (!prof.ok) return NextResponse.json({ error: prof.error }, { status: 400 });
+  if (!prof.ok) return badRequest(prof.error);
 
   try {
     ensureDb();
     const hydrated = hydratePlatformToolsetsForSlug(prof.profile, { persist: true });
     if (!hydrated) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      return notFound("Profile not found");
     }
     const divergence = platformsDiffer(hydrated.toolsets);
-    return NextResponse.json({
-      data: {
-        profile: prof.profile,
-        platformToolsets: hydrated.toolsets,
-        source: hydrated.source,
-        unifiedEnabled: unionToolsetsFromPlatforms(hydrated.toolsets),
-        platformsDiverged: divergence.diverged,
-        divergedPlatforms: divergence.platforms,
-      },
+    return ok({
+      profile: prof.profile,
+      platformToolsets: hydrated.toolsets,
+      source: hydrated.source,
+      unifiedEnabled: unionToolsetsFromPlatforms(hydrated.toolsets),
+      platformsDiverged: divergence.diverged,
+      divergedPlatforms: divergence.platforms,
     });
   }
   catch (error) {
-    logApiError("GET /api/agent/profiles/[id]/toolsets", "reading toolsets", error);
-    return NextResponse.json({ error: "Failed to read toolsets" }, { status: 500 });
+    return serverErrorFromCatch(
+      "GET /api/agent/profiles/[id]/toolsets",
+      "reading toolsets",
+      error,
+      "Failed to read toolsets",
+    );
   }
 }
 
@@ -60,7 +64,7 @@ export async function PUT(
 
   const { id } = await params;
   const prof = resolveSafeProfileName(id);
-  if (!prof.ok) return NextResponse.json({ error: prof.error }, { status: 400 });
+  if (!prof.ok) return badRequest(prof.error);
 
   try {
     ensureDb();
@@ -79,16 +83,20 @@ export async function PUT(
     );
     const err = toPatchResponse(result, "Failed to sync profile to Hermes");
     if (err) return err;
-    if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
+    assertPatchSucceeded(result);
 
-    return NextResponse.json({ data: { success: true, profile: result.profile, platformToolsets } });
+    return ok({ success: true, profile: result.profile, platformToolsets });
   }
   catch (error) {
-    logApiError("PUT /api/agent/profiles/[id]/toolsets", "saving toolsets", error);
-    return NextResponse.json({ error: "Failed to save toolsets" }, { status: 500 });
+    return serverErrorFromCatch(
+      "PUT /api/agent/profiles/[id]/toolsets",
+      "saving toolsets",
+      error,
+      "Failed to save toolsets",
+    );
   }
 }
 
 export async function DELETE() {
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+  return methodNotAllowed("Method not allowed");
 }

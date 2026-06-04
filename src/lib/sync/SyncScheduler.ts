@@ -28,6 +28,7 @@
 // wedged for 20+ hours) was triggered by exactly this class of bug.
 // ═══════════════════════════════════════════════════════════════
 
+import { messageFromError } from "@/lib/api-fetch";
 import type { SyncSource, SyncResult, SyncCycleResult } from "./types";
 
 // ── Constants ────────────────────────────────────────────────
@@ -200,7 +201,7 @@ export class SyncScheduler {
           results.push(result);
         } catch (err) {
           this.lastSyncTime.set(source.name, Date.now());
-          const msg = err instanceof Error ? err.message : String(err);
+          const msg = messageFromError(err, "");
           this.lastErrorBySource.set(source.name, msg);
           results.push({
             sourceName: source.name,
@@ -255,7 +256,7 @@ export class SyncScheduler {
       return result;
     } catch (err) {
       this.lastSyncTime.set(name, Date.now());
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = messageFromError(err, "");
       this.lastErrorBySource.set(name, msg);
       return {
         sourceName: name,

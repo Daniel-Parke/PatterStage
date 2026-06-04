@@ -52,14 +52,16 @@
 //     onSuccess: () => { setShowCreate(false); resetForm(); return loadProfiles(); },
 //   });
 
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch, toastError } from "@/lib/api-fetch";
 
 export interface RunSyncActionOptions {
   /** Setter for the page's busy/syncing state. Called with true on
    *  start, false in finally. */
   setBusy: (busy: boolean) => void;
-  /** Toast helper from useToast(). */
-  showToast: (message: string, variant: "success" | "error") => void;
+  /** Toast helper from useToast(). The `variant` arg matches
+   *  `toastError`'s `ShowToastFn` signature (optional "success" |
+   *  "error" | "info") so the helper is callable directly. */
+  showToast: (message: string, variant?: "success" | "error" | "info") => void;
   /** POST endpoint. */
   url: string;
   /** HTTP method. Defaults to "POST" for backward compat with the
@@ -118,7 +120,7 @@ export async function runSyncAction({
     showToast(successMessage, "success");
     if (onSuccess) await onSuccess();
   } catch (e) {
-    showToast(e instanceof Error ? e.message : errorMessage, "error");
+    toastError(showToast, e, errorMessage);
   } finally {
     setBusy(false);
   }

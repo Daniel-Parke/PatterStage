@@ -19,6 +19,7 @@ import {
   ComposerFieldLabel,
 } from "@/components/missions/MissionComposerLayout";
 import type { LocalDirEntry } from "@/types/hermes";
+import { commitLocalDirDraft } from "@/lib/local-dir-entry";
 import {
   isMissionDraft,
   isMissionQueuedForRun,
@@ -85,6 +86,67 @@ export const DISPATCH_MODES = [
   { id: "cron" as const, label: "Schedule" },
 ] as const;
 
+/**
+ * Resolve the submit-button label for a given dispatch mode + edit context.
+ *
+ * Two of the four context branches (`isDraftEdit` and the default) share the
+ * same dispatch→label mapping ("Save draft" / "Queue mission" / "Dispatch now"
+ * / "Schedule mission"). The `isQueuedEdit` branch only differs in two of
+ * the four dispatch slots ("Move to drafts" / "Update queue" — the other two
+ * match the default). The shared mapping lives in `DEFAULT_DISPATCH_LABEL`
+ * so the 3 default slots are written once; the 2 divergent slots in the
+ * queued branch override it via a small per-slot table.
+ */
+const DEFAULT_DISPATCH_LABEL: Record<
+  MissionFormState["newDispatch"],
+  string
+> = {
+  save: "Save draft",
+  queue: "Queue mission",
+  now: "Dispatch now",
+  cron: "Schedule mission",
+};
+
+/** Queued-edit dispatch→label overrides for the 2 divergent slots. */
+const QUEUED_EDIT_OVERRIDES: Partial<
+  Record<MissionFormState["newDispatch"], string>
+> = {
+  save: "Move to drafts",
+  queue: "Update queue",
+};
+
+/**
+ * Edit-context derived from the optional `editingId` + missions list.
+ * Returned by the local `resolveEditContext` helper below — the 4 booleans
+ * (`isReDispatch` / `isRunningEdit` / `isDraftEdit` / `isQueuedEdit`) are
+ * used in BOTH `MissionComposerActions` (for the submit label) AND the
+ * default-exported `MissionCreateForm` (for the 4 status banners), so the
+ * derivation was duplicated 1× per export. This helper centralises it.
+ */
+export interface EditContext {
+  isReDispatch: boolean;
+  isRunningEdit: boolean;
+  isDraftEdit: boolean;
+  isQueuedEdit: boolean;
+}
+
+function resolveEditContext(
+  editingId: string | null,
+  missions: MissionCreateFormProps["missions"],
+): EditContext {
+  const existing = editingId
+    ? missions.find((m) => m.id === editingId)
+    : null;
+  return {
+    isReDispatch:
+      !!existing &&
+      (existing.status === "successful" || existing.status === "failed"),
+    isRunningEdit: existing?.status === "dispatched",
+    isDraftEdit: existing ? isMissionDraft(existing) : false,
+    isQueuedEdit: existing ? isMissionQueuedForRun(existing) : false,
+  };
+}
+
 export function dispatchSubmitLabel(
   dispatch: MissionFormState["newDispatch"],
   options: {
@@ -96,22 +158,11 @@ export function dispatchSubmitLabel(
 ): string {
   if (options.isReDispatch) return "Re-Dispatch Now";
   if (options.isRunningEdit) return "Update Mission";
-  if (options.isDraftEdit) {
-    if (dispatch === "save") return "Save draft";
-    if (dispatch === "queue") return "Queue mission";
-    if (dispatch === "now") return "Dispatch now";
-    return "Schedule mission";
-  }
+  if (options.isDraftEdit) return DEFAULT_DISPATCH_LABEL[dispatch];
   if (options.isQueuedEdit) {
-    if (dispatch === "save") return "Move to drafts";
-    if (dispatch === "queue") return "Update queue";
-    if (dispatch === "now") return "Dispatch now";
-    return "Schedule mission";
+    return QUEUED_EDIT_OVERRIDES[dispatch] ?? DEFAULT_DISPATCH_LABEL[dispatch];
   }
-  if (dispatch === "save") return "Save draft";
-  if (dispatch === "queue") return "Queue mission";
-  if (dispatch === "now") return "Dispatch now";
-  return "Schedule mission";
+  return DEFAULT_DISPATCH_LABEL[dispatch];
 }
 
 export function MissionComposerActions({
@@ -134,23 +185,13 @@ export function MissionComposerActions({
   | "dispatching"
   | "dispatchAcknowledged"
 >) {
-  const existing = editingId
-    ? missions.find((m) => m.id === editingId)
-    : null;
-
-  const isReDispatch =
-    existing &&
-    (existing.status === "successful" || existing.status === "failed");
-
-  const isRunningEdit = existing?.status === "dispatched";
-  const isDraftEdit = existing ? isMissionDraft(existing) : false;
-  const isQueuedEdit = existing ? isMissionQueuedForRun(existing) : false;
+  const editingCtx = resolveEditContext(editingId, missions);
 
   const submitLabel = dispatchSubmitLabel(formState.newDispatch, {
-    isReDispatch: Boolean(isReDispatch),
-    isRunningEdit,
-    isDraftEdit,
-    isQueuedEdit,
+    isReDispatch: editingCtx.isReDispatch,
+    isRunningEdit: editingCtx.isRunningEdit,
+    isDraftEdit: editingCtx.isDraftEdit,
+    isQueuedEdit: editingCtx.isQueuedEdit,
   });
 
   const needsDispatchAck = !editingId && !dispatchAcknowledged;
@@ -210,17 +251,43 @@ export default function MissionCreateForm({
   dispatchAcknowledged = false,
   onDispatchOpenChange,
 }: MissionCreateFormProps) {
-  const existing = editingId
-    ? missions.find((m) => m.id === editingId)
-    : null;
+  const editingCtx = resolveEditContext(editingId, missions);
+  const { isReDispatch, isRunningEdit, isDraftEdit, isQueuedEdit } = editingCtx;
 
-  const isReDispatch =
-    existing &&
-    (existing.status === "successful" || existing.status === "failed");
+  // Helper: commit the current `localDirDraft` to `newLocalDirs` and
+  // clear the draft. The 4-line "trim → dedupe-by-path → push → reset"
+  // sequence used to be inline in the LocalDirRow onClick. Now extracted
+  // to a named callback (mirrors the `addReferenceFromInput` pattern for
+  // references, line 265). The actual dedupe + push logic is delegated
+  // to `commitLocalDirDraft` in `@/lib/local-dir-entry`, which is shared
+  // with the template editor (TemplateModals.tsx) — same call site, same
+  // helper. Returns early on the no-op cases (empty path, duplicate)
+  // without touching state.
+  const addLocalDirFromDraft = () => {
+    const result = commitLocalDirDraft(
+      formState.localDirDraft,
+      formState.newLocalDirs,
+    );
+    if (!result) return;
+    setFormField("newLocalDirs", result.nextEntries);
+    setFormField("localDirDraft", result.emptyDraft);
+  };
 
-  const isRunningEdit = existing?.status === "dispatched";
-  const isDraftEdit = existing ? isMissionDraft(existing) : false;
-  const isQueuedEdit = existing ? isMissionQueuedForRun(existing) : false;
+  // Helper: append the current `referenceInput` (trimmed) to
+  // `newReferences`, then clear the input. The 3-line sequence appears
+  // twice below — once in the input's onKeyDown (Enter-to-add) and once
+  // in the "+ Add" button's onClick. Both call sites are guarded by
+  // `referenceInput.trim()` (the onKeyDown in the predicate, the onClick
+  // in an `if`); the helper does the trim and the early-return so each
+  // callsite can stay a one-liner. The two callsites are now identical
+  // and easy to keep in lockstep if a future "dedup by path" or "cap
+  // at N references" extension lands.
+  const addReferenceFromInput = () => {
+    const trimmed = formState.referenceInput.trim();
+    if (!trimmed) return;
+    setFormField("newReferences", [...formState.newReferences, trimmed]);
+    setFormField("referenceInput", "");
+  };
 
   const inner = (
     <div className="space-y-4">
@@ -333,19 +400,7 @@ export default function MissionCreateForm({
               mode="draft"
               entry={formState.localDirDraft}
               onChange={(next) => setFormField("localDirDraft", next)}
-              onAdd={() => {
-                const p = formState.localDirDraft.path.trim();
-                if (!p) return;
-                if (formState.newLocalDirs.some((d) => d.path === p)) return;
-                setFormField("newLocalDirs", [
-                  ...formState.newLocalDirs,
-                  {
-                    path: p,
-                    branch: formState.localDirDraft.branch || null,
-                  },
-                ]);
-                setFormField("localDirDraft", { path: "", branch: null });
-              }}
+              onAdd={addLocalDirFromDraft}
             />
             {formState.newLocalDirs.map((dir, i) => (
               <div
@@ -407,13 +462,9 @@ export default function MissionCreateForm({
                   setFormField("referenceInput", e.target.value)
                 }
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && formState.referenceInput.trim()) {
+                  if (e.key === "Enter") {
                     e.preventDefault();
-                    setFormField("newReferences", [
-                      ...formState.newReferences,
-                      formState.referenceInput.trim(),
-                    ]);
-                    setFormField("referenceInput", "");
+                    addReferenceFromInput();
                   }
                 }}
                 placeholder="URL, doc path..."
@@ -421,15 +472,7 @@ export default function MissionCreateForm({
               />
               <button
                 type="button"
-                onClick={() => {
-                  if (formState.referenceInput.trim()) {
-                    setFormField("newReferences", [
-                      ...formState.newReferences,
-                      formState.referenceInput.trim(),
-                    ]);
-                    setFormField("referenceInput", "");
-                  }
-                }}
+                onClick={addReferenceFromInput}
                 className="h-9 px-3 rounded-lg bg-neon-pink/10 border border-neon-pink/30 text-xs text-neon-pink font-mono shrink-0"
               >
                 + Add

@@ -13,8 +13,9 @@ import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner, ErrorBanner } from "@/components/ui/LoadingSpinner";
 import { getSectionDef, fileKeyForFilePath } from "@/lib/config-schema";
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
 import { maskKeyHint } from "@/lib/secret-mask";
+import { parseEnvLine } from "@/lib/env-line";
 import ConfigField from "@/components/config/ConfigField";
 
 export default function ConfigSectionPage() {
@@ -84,7 +85,7 @@ export default function ConfigSectionPage() {
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setErrorFromCaught(setError, err, "Unknown error");
     } finally {
       setLoading(false);
     }
@@ -125,7 +126,7 @@ export default function ConfigSectionPage() {
       saveStatusTimerRef.current = setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (err) {
       setSaveStatus("error");
-      setError(err instanceof Error ? err.message : "Save failed");
+      setErrorFromCaught(setError, err, "Save failed");
     }
   }, [sectionDef, isFileSection, fileContent, sectionId, values]);
 
@@ -242,25 +243,28 @@ export default function ConfigSectionPage() {
               // .env editor with masked values
               <div className="space-y-2">
                 {fileContent.split("\n").map((line, i) => {
-                  const trimmed = line.trim();
+                  const parsed = parseEnvLine(line);
                   const lineKey = `env-${i}-${line.slice(0, 24).replace(/[^a-zA-Z0-9]/g, "-")}`;
-                  if (!trimmed || trimmed.startsWith("#")) {
+                  if (parsed.kind === "blank" || parsed.kind === "comment") {
                     return (
                       <div key={lineKey} className="text-xs text-white/30 font-mono">
                         {line || "\u00A0"}
                       </div>
                     );
                   }
-                  const eqIdx = line.indexOf("=");
-                  if (eqIdx < 0) return <div key={lineKey} className="text-xs font-mono text-white/50">{line}</div>;
-                  const key = line.slice(0, eqIdx).trim();
-                  const val = line.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, "");
-                  const masked = maskKeyHint(val);
+                  if (parsed.kind === "invalid") {
+                    return (
+                      <div key={lineKey} className="text-xs font-mono text-white/50">
+                        {parsed.raw}
+                      </div>
+                    );
+                  }
+                  // parsed.kind === "keyval"
                   return (
                     <div key={lineKey} className="flex items-center gap-2 text-xs font-mono">
-                      <span className="text-neon-cyan w-48 flex-shrink-0 truncate">{key}</span>
+                      <span className="text-neon-cyan w-48 flex-shrink-0 truncate">{parsed.key}</span>
                       <span className="text-white/50">=</span>
-                      <span className="text-white/30">{masked}</span>
+                      <span className="text-white/30">{maskKeyHint(parsed.value)}</span>
                     </div>
                   );
                 })}

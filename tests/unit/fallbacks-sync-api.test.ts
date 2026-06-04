@@ -36,9 +36,17 @@ jest.mock("next/server", () => ({
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/api-auth", () => ({ requireAuth: jest.fn(() => null) }));
-jest.mock("@/lib/parse-json-body", () => ({
-  parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
-}));
+jest.mock("@/lib/parse-json-body", () => {
+  // Mock only parseJsonBody (legacy test pattern) — leave
+  // parseAndValidateJsonBody unmocked so the real zod validation runs
+  // against the test's body. The real helper composes parseJsonBody +
+  // zod schema.safeParse, so this still exercises the schema path.
+  const actual = jest.requireActual("@/lib/parse-json-body");
+  return {
+    parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
+    parseAndValidateJsonBody: actual.parseAndValidateJsonBody,
+  };
+});
 
 const mockGetFallbackConfig = jest.fn();
 const mockUpdateFallbackConfigBatch = jest.fn();

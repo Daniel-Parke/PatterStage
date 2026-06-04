@@ -26,7 +26,7 @@ import Modal from "@/components/ui/Modal";
 import {
   getPersonalityEmoji,
 } from "@/lib/personalities";
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 
 interface Personality {
@@ -163,7 +163,7 @@ function EditPersonalityModal({
       });
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
+      setErrorFromCaught(setError, err, "Unknown error");
     } finally {
       setSaving(false);
     }
@@ -276,6 +276,24 @@ export default function PersonalitiesPage() {
     loadPersonalities();
   }, [loadPersonalities]);
 
+  // closeEdit — the Edit/Create Personality modal has 2 single-setter
+  // close sites that both do the same thing: `() => setEditTarget(undefined)`.
+  //   1. The modal's `onClose` (X-button / overlay click)
+  //   2. The first line of `handleSaved`'s 3-setter success path
+  // Centralising into a `useCallback` with empty deps (useState setters
+  // are stable) keeps the 2 sites in lockstep if a future "clear
+  // toast on close" or "reset edit-form state" extension lands — a
+  // single edit here updates both. The pattern mirrors the A3
+  // single-setter close callbacks that session 100's discriminated
+  // audit established (e.g. `closeSkillEditor` in operations/skills,
+  // `closeDelete` in operations/agents) and the `closeCreate` /
+  // `closeComposer` setters from session 100/101. The remaining
+  // `setEditTarget(...)` sites (the New button + the card's
+  // onEdit) are OPEN sites that pass different values
+  // (null = create, Personality = edit) — left inline as direct
+  // setters, not duplicates of close.
+  const closeEdit = useCallback(() => setEditTarget(undefined), []);
+
   const handleActivate = (name: string) => {
     const next = activePersonality === name ? "" : name;
     // No busy state for activation — the no-op setter keeps the helper
@@ -295,7 +313,7 @@ export default function PersonalitiesPage() {
   };
 
   const handleSaved = () => {
-    setEditTarget(undefined);
+    closeEdit();
     loadPersonalities();
     showToast("Personality saved!", "success");
   };
@@ -402,7 +420,7 @@ export default function PersonalitiesPage() {
         <EditPersonalityModal
           key={editTarget?.name ?? 'new'}
           personality={editTarget}
-          onClose={() => setEditTarget(undefined)}
+          onClose={closeEdit}
           onSaved={handleSaved}
         />
       )}

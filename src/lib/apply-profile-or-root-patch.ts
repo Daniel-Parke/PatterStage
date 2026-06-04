@@ -36,6 +36,7 @@
 
 import { NextResponse } from "next/server";
 
+import { notFound, serverError } from "./api-response";
 import { updateAgentRoot, type AgentRootPatch } from "./agent-root-repository";
 import { getProfile, updateProfileContent } from "./profiles-repository";
 import { pushProfileToHermes, pushRootToHermes } from "./hermes-profile-sync";
@@ -64,27 +65,32 @@ export function applyProfileOrRootPatch(
   rootPatch: AgentRootPatch,
   profilePatch: Parameters<typeof updateProfileContent>[1],
 ): ProfileOrRootPatchResult {
+  // Step 1: write the patch to the right repo. The default profile
+  // lives in the `agent_root` singleton; every other profile lives
+  // in the `profiles` table. We do the DB write first so a 404
+  // return from `pushProfileOrRoot` below is impossible on the
+  // default branch (no existence check needed) and unambiguous on
+  // the non-default branch (existence pre-checked here).
   if (slug === "default") {
     updateAgentRoot(rootPatch);
-    const push = pushRootToHermes();
-    if (!push.success) {
-      return { ok: false, reason: "push-failed", error: push.error ?? "Push failed" };
+  } else {
+    // Non-default profile: check existence first (matches the
+    // `personalities` route's pre-check) so we can return 404
+    // distinctly from "push failed" / "update returned null".
+    if (!getProfile(slug)) {
+      return { ok: false, reason: "not-found" };
     }
-    return { ok: true, profile: slug };
+    updateProfileContent(slug, profilePatch);
   }
 
-  // Non-default profile: check existence first (matches the
-  // `personalities` route's pre-check) so we can return 404
-  // distinctly from "push failed" / "update returned null".
-  if (!getProfile(slug)) {
-    return { ok: false, reason: "not-found" };
-  }
-  updateProfileContent(slug, profilePatch);
-  const push = pushProfileToHermes(slug);
-  if (!push.success) {
-    return { ok: false, reason: "push-failed", error: push.error ?? "Push failed" };
-  }
-  return { ok: true, profile: slug };
+  // Step 2: push to Hermes via the shared dispatch helper. The
+  // `pushProfileOrRoot` body owns the default-vs-non-default push
+  // dispatch + 404 + push-failed handling, so we delegate instead
+  // of re-implementing the tail. On the non-default success path
+  // this calls `getProfile(slug)` once redundantly (a single
+  // in-memory check) but the call site returns the same
+  // `ProfileOrRootPatchResult` and produces identical wire output.
+  return pushProfileOrRoot(slug);
 }
 
 /**
@@ -125,10 +131,9 @@ export function pushProfileOrRoot(slug: string): ProfileOrRootPatchResult {
  *   const result = applyProfileOrRootPatch(...);
  *   const err = toPatchResponse(result, "Failed to sync profile");
  *   if (err) return err;
- *   if (!result.ok) throw new Error("unreachable");
+ *   assertPatchSucceeded(result);
+ *   return NextResponse.json({ data: { success: true, profile: result.profile } });
  *
- * The caller still needs the `if (!result.ok)` guard because TS
- * can't narrow `result` from `toPatchResponse`'s return type alone.
  * `fallbackError` is the body of the 500 response when the underlying
  * push didn't supply its own `error` message. The not-found error
  * string is always "Profile not found" to match the prior inline
@@ -140,10 +145,34 @@ export function toPatchResponse(
 ): NextResponse | null {
   if (result.ok) return null;
   if (result.reason === "not-found") {
-    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    return notFound("Profile not found");
   }
-  return NextResponse.json(
-    { error: result.error ?? fallbackError },
-    { status: 500 },
-  );
+  return serverError(result.error ?? fallbackError);
+}
+
+/**
+ * TypeScript assertion that narrows `ProfileOrRootPatchResult` to the
+ * `{ ok: true; profile: string }` branch. Use immediately after a
+ * successful `toPatchResponse` check so the caller can read
+ * `result.profile` without a manual `!result.ok` guard.
+ *
+ * The companion function to `toPatchResponse` is intentionally a
+ * separate helper rather than a second return on `toPatchResponse`:
+ * keeping the response-or-null contract pure makes the helper trivially
+ * testable (existing tests in `tests/unit/apply-profile-or-root-patch.test.ts`
+ * only check the response shape, not the narrowing side-effect). The
+ * asserts signature also has no runtime effect — TypeScript discards
+ * the call at compile time, so adding this helper does not change
+ * the wire output of any route.
+ */
+export function assertPatchSucceeded(
+  result: ProfileOrRootPatchResult,
+): asserts result is { ok: true; profile: string } {
+  if (!result.ok) {
+    // toPatchResponse is supposed to be called first; reaching this
+    // branch is a programmer error (caller wired the helper pair
+    // wrong). Throw a recognisable string so debugging points at the
+    // contract.
+    throw new Error("assertPatchSucceeded called on a failed result");
+  }
 }

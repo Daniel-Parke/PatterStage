@@ -23,7 +23,6 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useApiData } from "@/hooks/useApiData";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
-import { useInterval } from "@/hooks/useInterval";
 import type { LogGetData } from "@/app/api/logs/route";
 import { formatBytes } from "@/lib/utils";
 import { LogRow } from "@/components/logs/LogRow";
@@ -33,7 +32,6 @@ type LogData = LogGetData;
 
 export default function LogsPage() {
   const [activeLog, setActiveLog] = useState("agent");
-  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [searchVisible, setSearchVisible] = useState(false);
   const [fileQuery, setFileQuery] = useState("");
@@ -53,7 +51,20 @@ export default function LogsPage() {
     [activeLog, lineCount],
   );
 
-  const { data, loading, error: loadError, refetch } = useApiData<LogData>(logUrl);
+  // Auto-refresh is owned by the hook: 5s polling loop, gated by the
+  // `autoRefresh` toggle. Eliminates the previous `useInterval` +
+  // `setRefreshing` + `useEffect` micro-state trio. `loading` is
+  // exposed by the hook for the button's "Refresh" affordance, but
+  // we only show the spinner once we already have data (matches the
+  // pre-refactor UX: the very first load shows a full-page spinner,
+  // a background refresh shows the button spinner).
+  const { data, loading, error: loadError, refetch } = useApiData<LogData>(logUrl, {
+    refreshIntervalMs: 5000,
+    refreshEnabled: autoRefresh,
+  });
+  // Mirrors the pre-refactor `refreshing` derivation: button spinner
+  // only shows when a refresh runs on top of already-loaded data.
+  const refreshing = !!data && loading;
 
   const handleDeleteAllLogs = useCallback(async () => {
     if (!deleteArmed) {
@@ -92,8 +103,7 @@ export default function LogsPage() {
     }
   }, [data?.availableLogs, activeLog]);
 
-  // Auto-refresh every 5s (toggleable)
-  useInterval(() => { void refetch(); }, { ms: 5000, enabled: autoRefresh });
+  // Auto-refresh is now owned by the hook (refreshIntervalMs: 5000 above).
 
   // Auto-scroll to top on new data
   useEffect(() => {
@@ -102,6 +112,47 @@ export default function LogsPage() {
     }
   }, [data?.lines, autoScroll]);
 
+  // Open/close sibling pair for the search input. The X button on
+  // the visible search input (line 308) and the "Filter lines" pill
+  // (line 320) form a 2-state toggle. The X path is a 2-setter close
+  // (clear the search query AND hide the input); the open path is
+  // the 1-setter show. Both promoted to useCallback-wrapped named
+  // callbacks following the session 116 P-7 / session 118 P-7 pattern
+  // (named open/close siblings next to each other, with the stable
+  // `useState` setters listed explicitly in the deps array to satisfy
+  // the `react-hooks/exhaustive-deps` rule). The close path used to
+  // be an inline 3-line arrow on the X button's `onClick` prop.
+  const openSearchInput = useCallback(
+    () => setSearchVisible(true),
+    [setSearchVisible],
+  );
+  const closeSearchInput = useCallback(() => {
+    setSearch("");
+    setSearchVisible(false);
+  }, [setSearch, setSearchVisible]);
+  // The "Latest lines" pill (line 331) is a 2-step action: re-enable
+  // auto-scroll AND scroll the terminal to the top. The inline
+  // 4-line arrow on the button's `onClick` prop is promoted to a
+  // named useCallback so the page's intent is named (the inline
+  // form was a 5-line body buried in the JSX). The terminalRef
+  // read is unconditional — `current` is null only on the first
+  // render, in which case the autoScroll state still flips so the
+  // next render scrolls correctly.
+  const jumpToLatestLines = useCallback(() => {
+    setAutoScroll(true);
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = 0;
+    }
+  }, [setAutoScroll, terminalRef]);
+  // Dismiss the action message toast. Single-setter close callback
+  // following the same useCallback pattern as the sibling open/close
+  // callbacks above. Used by the small "×" button on the action
+  // message banner (line 221).
+  const dismissActionMessage = useCallback(
+    () => setActionMessage(null),
+    [setActionMessage],
+  );
+
   const handleScroll = () => {
     if (!terminalRef.current) return;
     const { scrollTop } = terminalRef.current;
@@ -109,13 +160,8 @@ export default function LogsPage() {
   };
 
   const handleRefresh = useCallback(() => {
-    if (data) setRefreshing(true);
     void refetch();
-  }, [data, refetch]);
-
-  useEffect(() => {
-    if (refreshing && !loading) setRefreshing(false);
-  }, [refreshing, loading]);
+  }, [refetch]);
 
   const filteredFiles = useMemo(() => {
     if (!data?.availableLogs) return [];
@@ -125,10 +171,14 @@ export default function LogsPage() {
   }, [data?.availableLogs, fileQuery]);
 
   const allLines = useMemo(() => data?.lines || [], [data?.lines]);
-  const filteredLines = useMemo(
-    () => (search ? allLines.filter((line) => line.toLowerCase().includes(search.toLowerCase())) : allLines),
-    [allLines, search],
-  );
+  // Pre-normalize the search term once instead of calling
+  // `search.toLowerCase()` per-line in the filter (was 200 redundant
+  // calls for a 200-line log). Empty search short-circuits the filter.
+  const filteredLines = useMemo(() => {
+    if (!search) return allLines;
+    const needle = search.toLowerCase();
+    return allLines.filter((line) => line.toLowerCase().includes(needle));
+  }, [allLines, search]);
 
   const searchMatches = search ? filteredLines.length : 0;
 
@@ -209,7 +259,7 @@ export default function LogsPage() {
             <span>{actionMessage}</span>
             <button
               type="button"
-              onClick={() => setActionMessage(null)}
+              onClick={dismissActionMessage}
               className="p-1 rounded text-white/40 hover:text-white/70"
               aria-label="Dismiss"
             >
@@ -296,10 +346,7 @@ export default function LogsPage() {
                   )}
                   <button
                     type="button"
-                    onClick={() => {
-                      setSearch("");
-                      setSearchVisible(false);
-                    }}
+                    onClick={closeSearchInput}
                     className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 shrink-0"
                   >
                     <X className="w-4 h-4" />
@@ -308,7 +355,7 @@ export default function LogsPage() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => setSearchVisible(true)}
+                  onClick={openSearchInput}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-white/40 hover:text-white/60 hover:bg-white/5 font-mono"
                 >
                   <Search className="w-3 h-3" />
@@ -319,12 +366,7 @@ export default function LogsPage() {
               {!autoScroll && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setAutoScroll(true);
-                    if (terminalRef.current) {
-                      terminalRef.current.scrollTop = 0;
-                    }
-                  }}
+                  onClick={jumpToLatestLines}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-neon-cyan bg-neon-cyan/10 font-mono"
                 >
                   <ChevronDown className="w-3 h-3 rotate-180" />

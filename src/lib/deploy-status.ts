@@ -1,11 +1,11 @@
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, renameSync, writeFileSync } from "fs";
+import { dirname } from "path";
 
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { ensureDir } from "@/lib/fs-helpers";
 
 function deployStatusDir(): string {
-  const p = deployStatusPath();
-  const slash = p.lastIndexOf("/");
-  return slash >= 0 ? p.slice(0, slash) : p;
+  return dirname(deployStatusPath());
 }
 
 export type DeployState = "idle" | "running" | "success" | "failed";
@@ -107,7 +107,7 @@ export function writeDeployStatusRunning(
 ): void {
   const path = deployStatusPath();
   try {
-    mkdirSync(deployStatusDir(), { recursive: true });
+    ensureDir(deployStatusDir());
     const startedAt = new Date().toISOString();
     const tmp = path + ".tmp";
     const body = [

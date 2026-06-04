@@ -6,6 +6,7 @@ import { FileText, Plus, Pencil, ToggleRight, ToggleLeft, Trash2, RefreshCw } fr
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
+import { pluralise } from "@/lib/utils";
 import type { Directive } from "./types";
 
 interface DirectivesTabProps {
@@ -31,7 +32,7 @@ export default function DirectivesTab({
     <>
       <div className="flex justify-between items-center mb-4">
         <div className="text-xs text-white/30">
-          {directives.length} directive{directives.length !== 1 ? "s" : ""} — injected into agent prompts automatically
+          {directives.length} directive{pluralise(directives.length)} — injected into agent prompts automatically
         </div>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" icon={RefreshCw} onClick={onRefresh} disabled={loading}>

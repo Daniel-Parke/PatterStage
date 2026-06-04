@@ -34,9 +34,15 @@ export default function DirectoryPickerModal({
     setLoading(true);
     setError(null);
     const q = next && next.length > 0 ? "?path=" + encodeURIComponent(next) : "";
-    // safeApiCall returns { ok, data: <body> } where <body> is the API envelope
-    // ({ data: { path, parent, entries } }). Read the nested .data to access fields.
-    safeApiCall<{ data: { path: string; parent: string | null; entries: Entry[] } }>(
+    // safeApiCall returns { ok, data: <body> } where <body> is the API
+    // envelope ({ data: { path, parent, entries } }). Drop the
+    // redundant `{ data: { ... } }` envelope: `safeApiCall<T>` already
+    // wraps the response as `{ data?: T }`, so the inner type only
+    // needs the inner shape. Byte-equivalent — the same
+    // `{ ok, data?, error? }` envelope is returned, just without the
+    // double-nesting at the call site. The payload is then read
+    // directly as `j.data?.path` / `j.data?.parent` / `j.data?.entries`.
+    safeApiCall<{ path: string; parent: string | null; entries: Entry[] }>(
       "/api/fs/list" + q,
     )
       .then((j) => {
@@ -44,7 +50,7 @@ export default function DirectoryPickerModal({
           setError(typeof j.error === "string" ? j.error : "Failed to list");
           return;
         }
-        const payload = j.data?.data;
+        const payload = j.data;
         if (payload) {
           setPath(payload.path);
           setParent(payload.parent);

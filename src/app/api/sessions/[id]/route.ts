@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import Database from "better-sqlite3";
 import { existsSync, readFileSync, statSync } from "fs";
 import { basename, join } from "path";
 
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, notFound, ok, payloadTooLarge } from "@/lib/api-response";
 import { safeStat } from "@/lib/fs-stats";
 import { getSession, estimateSessionSize, lookupMissionIdForCronSession } from "@/lib/session-repository";
 import { PATHS } from "@/lib/paths";
@@ -14,7 +14,12 @@ import {
   getMaxSessionFileBytes,
   sessionsRateLimitResponse,
 } from "@/lib/sessions-api-guard";
-import { buildSessionData, findFileWithExtension } from "@/lib/session-detail";
+import {
+  buildSessionData,
+  dbSessionFields,
+  findFileWithExtension,
+  parseAssistantLines,
+} from "@/lib/session-detail";
 
 // ── Mission-output file extensions to try in preference order ───────────
 // Recurring mission dispatch writes a `.session` file (full transcript);
@@ -94,8 +99,12 @@ export async function GET(
           messages.length * 300,
         );
 
-        const response = NextResponse.json({
-          data: buildSessionData({
+        // Inline the `ok(buildSessionData({...}))` form rather than
+        // `const response = NextResponse.json({ data: buildSessionData({...}) })`
+        // because the variable is never modified (no headers, no status override)
+        // and the `ok()` factory already wraps the `{ data: ... }` envelope.
+        return ok(
+          buildSessionData({
             id: sanitizedId,
             filename: sanitizedId,
             format: "db",
@@ -112,8 +121,7 @@ export async function GET(
             // render a "Open Mission" link for cron-spawned sessions.
             missionId: lookupMissionIdForCronSession(sanitizedId),
           }),
-        });
-        return response;
+        );
       }
     } catch (err) {
       logApiError("GET /api/sessions/[id]", "reading Hermes state.db for " + sanitizedId, err);
@@ -144,43 +152,32 @@ export async function GET(
         );
         if (sessionPath) {
           const content = readFileSync(sessionPath, "utf-8");
-          const lines = content.split("\n").filter((l: string) => l.trim());
-          const messages = lines.map((line: string, i: number) => ({
-            index: i,
-            role: "assistant",
-            content: line,
-          }));
+          const messages = parseAssistantLines(content);
           // File confirmed to exist above (missionFile or missionLog); safeStat never null.
           const st = safeStat(sessionPath)!;
-          return NextResponse.json({
-            data: buildSessionData({
+          return ok(
+            buildSessionData({
               id: sanitizedId,
               filename: basename(sessionPath),
               format: "mission-output",
-              title: dbSession.title || sanitizedId,
-              model: dbSession.modelId || "",
-              source: dbSession.source,
+              ...dbSessionFields(dbSession, sanitizedId),
               messages,
               size: st.size,
-              created: dbSession.startedAt,
               missionId: dbSession.missionId,
             }),
-          });
+          );
         }
       }
       // No output file yet (agent running, or output was streamed to Hermes).
       // Surface the parent mission id so the detail page can link to it.
-      return NextResponse.json({
-        data: buildSessionData({
+      return ok(
+        buildSessionData({
           id: sanitizedId,
           filename: sanitizedId,
           format: "db",
-          title: dbSession.title || sanitizedId,
-          model: dbSession.modelId || "",
-          source: dbSession.source,
+          ...dbSessionFields(dbSession, sanitizedId),
           messages: [],
           size: dbSession.size,
-          created: dbSession.startedAt,
           missionId: dbSession.missionId ?? null,
           note: dbSession.source === "mission"
             ? "This mission-spawned session has no output file yet. The agent may still be running, or the output was written to ~/.hermes/state.db — refresh to check."
@@ -188,12 +185,9 @@ export async function GET(
               ? "This cron-spawned session is still running. Messages will appear here when the agent completes."
               : "The agent ran but produced no output file.",
         }),
-      });
+      );
     }
-    return NextResponse.json(
-      { error: `Session "${sanitizedId}" not found` },
-      { status: 404 }
-    );
+    return notFound(`Session "${sanitizedId}" not found`);
   }
 
   try {
@@ -205,14 +199,10 @@ export async function GET(
         "session file exceeds max size (" + st.size + " bytes)",
         new Error("PayloadTooLarge")
       );
-      return NextResponse.json(
-        {
-          error:
-            "Session file is too large to load in Control Hub (max " +
-            Math.round(maxBytes / (1024 * 1024)) +
-            " MB).",
-        },
-        { status: 413 }
+      return payloadTooLarge(
+        "Session file is too large to load in Control Hub (max " +
+          Math.round(maxBytes / (1024 * 1024)) +
+          " MB)."
       );
     }
 
@@ -233,22 +223,22 @@ export async function GET(
           }
         });
 
-      return NextResponse.json({
-        data: buildSessionData({
+      return ok(
+        buildSessionData({
           id: sanitizedId,
           filename: basename(filePath),
           format: "jsonl",
           messages,
           size: st.size,
         }),
-      });
+      );
     } else {
       // Parse JSON
       const data = JSON.parse(content);
       const messages = data.messages || data.conversation || data.turns || [];
 
-      return NextResponse.json({
-        data: buildSessionData({
+      return ok(
+        buildSessionData({
           id: sanitizedId,
           filename: basename(filePath),
           format: "json",
@@ -259,13 +249,14 @@ export async function GET(
           size: st.size,
           created: data.created || st.birthtime.toISOString(),
         }),
-      });
+      );
     }
   } catch (error) {
-    logApiError("GET /api/sessions/[id]", "reading session " + sanitizedId, error);
-    return NextResponse.json(
-      { error: `Failed to read session "${sanitizedId}"` },
-      { status: 500 }
+    return serverErrorFromCatch(
+      "GET /api/sessions/[id]",
+      "reading session " + sanitizedId,
+      error,
+      `Failed to read session "${sanitizedId}"`,
     );
   }
 }

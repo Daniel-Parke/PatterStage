@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { existsSync, readFileSync } from "fs";
 
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
+import { badRequest, notFound, ok, serverError } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { safeStat } from "@/lib/fs-stats";
 import { appendAuditLine } from "@/lib/audit-log";
@@ -23,39 +24,39 @@ export async function GET(
     ensureDb();
     const row = getSkill(name);
     if (row) {
-      return NextResponse.json({
-        data: {
-          name,
-          path: skillsRootForProfile() + "/" + name + "/SKILL.md",
-          content: row.content,
-          size: row.content.length,
-          lastModified: row.updatedAt,
-        },
+      return ok({
+        name,
+        path: skillsRootForProfile() + "/" + name + "/SKILL.md",
+        content: row.content,
+        size: row.content.length,
+        lastModified: row.updatedAt,
       });
     }
 
     const skillsRoot = skillsRootForProfile();
     const filePath = skillsRoot + "/" + name + "/SKILL.md";
     if (!existsSync(filePath)) {
-      return NextResponse.json({ error: `Skill not found: ${name}` }, { status: 404 });
+      return notFound(`Skill not found: ${name}`);
     }
 
     const content = readFileSync(filePath, "utf-8");
     const st = safeStat(filePath)!; // file confirmed to exist above
 
-    return NextResponse.json({
-      data: {
-        name,
-        path: filePath,
-        content,
-        size: st.size,
-        lastModified: st.mtime,
-      },
+    return ok({
+      name,
+      path: filePath,
+      content,
+      size: st.size,
+      lastModified: st.mtime,
     });
   }
   catch (error) {
-    logApiError("GET /api/skills/[name]", `reading skill ${name}`, error);
-    return NextResponse.json({ error: "Failed to read skill" }, { status: 500 });
+    return serverErrorFromCatch(
+      "GET /api/skills/[name]",
+      `reading skill ${name}`,
+      error,
+      "Failed to read skill",
+    );
   }
 }
 
@@ -79,7 +80,7 @@ export async function PUT(
       : undefined;
 
   if (typeof content !== "string") {
-    return NextResponse.json({ error: "Content is required" }, { status: 400 });
+    return badRequest("Content is required");
   }
 
   try {
@@ -96,7 +97,7 @@ export async function PUT(
 
     const push = pushSkillToHermes(name);
     if (!push.success) {
-      return NextResponse.json({ error: push.error ?? "Push failed" }, { status: 500 });
+      return serverError(push.error ?? "Push failed");
     }
 
     appendAuditLine({
@@ -105,16 +106,18 @@ export async function PUT(
       ok: true,
     });
 
-    return NextResponse.json({
-      data: {
-        success: true,
-        name,
-        size: content.length,
-      },
+    return ok({
+      success: true,
+      name,
+      size: content.length,
     });
   }
   catch (error) {
-    logApiError("PUT /api/skills/[name]", `writing skill ${name}`, error);
-    return NextResponse.json({ error: "Failed to write skill" }, { status: 500 });
+    return serverErrorFromCatch(
+      "PUT /api/skills/[name]",
+      `writing skill ${name}`,
+      error,
+      "Failed to write skill",
+    );
   }
 }

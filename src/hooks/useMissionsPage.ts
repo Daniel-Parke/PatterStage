@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
-import { safeApiCall, apiFetch } from "@/lib/api-fetch";
+import { safeApiCall, apiFetch, messageFromError, toastError, safeApiCallData } from "@/lib/api-fetch";
+import { toastFromResult } from "@/lib/toast-from-result";
+import { successMessageForDispatch } from "@/hooks/success-message-for-dispatch";
 import type { LocalDirEntry, Mission } from "@/types/hermes";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { parseMissionPrompt } from "@/lib/build-mission-prompt";
@@ -15,6 +17,7 @@ import {
 } from "@/lib/mission-categories";
 import type { ManagedCategory } from "@/components/missions/CategoryManagerModal";
 import { buildTemplatePayload, splitGoals } from "@/lib/mission-form-utils";
+import { scheduleForDispatch } from "@/lib/dispatch-mode";
 import {
   isMissionActive,
   isMissionDraft,
@@ -24,6 +27,27 @@ import {
 
 /** localStorage key for the most recently selected mission category */
 const LAST_CATEGORY_KEY = "ch-last-mission-category";
+
+/**
+ * Persist the user's last-selected mission category to localStorage.
+ * Centralised so the 2 callsites (`setCategoryId` setter + the
+ * template-apply path) use the same try/catch+ignore discipline.
+ * Failing localStorage writes (quota, private-mode, disabled) are
+ * silently ignored — the user-visible flow continues to work because
+ * the in-memory `newCategoryId` state has already been set; we just
+ * won't restore the same category on next mount.
+ *
+ * Exported for unit testing. Not part of the public hook contract;
+ * the canonical use is the 2 callsites in this file.
+ */
+export function rememberLastCategory(id: string | null | undefined): void {
+  if (!id) return;
+  try {
+    localStorage.setItem(LAST_CATEGORY_KEY, id);
+  } catch {
+    // localStorage full or unavailable — silently ignore
+  }
+}
 
 function submitToastForDispatch(mode: "save" | "now" | "cron" | "queue"): string {
   if (mode === "save") return "Saving draft...";
@@ -268,6 +292,60 @@ export function useMissionsPage() {
     setShowCreate(false);
   }, [clearMissionFormFields]);
 
+  // Close the create/edit mission composer. The same `setEditingId(null)`
+  // + `setShowCreate(false)` pair appears at 3 sites — the 2 success
+  // branches of `handleCreate` (update + promote) and the page's
+  // `handleCloseCreate` (Sheet onClose, MissionComposerActions onClose,
+  // MissionCreateForm onClose). Centralising it here keeps the 3 sites
+  // in lockstep if a future "clear form fields" or "dismiss category"
+  // reset is added — a single edit here updates all 3.
+  const closeComposer = useCallback(() => {
+    setEditingId(null);
+    setShowCreate(false);
+  }, []);
+
+  // Open the create mission composer (fresh-create mode, not edit).
+  // The page's `<Button onClick={() => setShowCreate(true)}>` "New Mission"
+  // header action is the canonical caller — a named callback keeps the
+  // action bar's open-mission click in lockstep with `closeComposer`'s
+  // close-mission click, and groups the 2 sibling open/close callbacks
+  // next to each other. Mirrors the `openAgentCreate` / `closeAgentModal`
+  // pattern that session 114 promoted in `cron/page.tsx` (see commit
+  // `5f0ec5a` "openCreate/openEdit callbacks"). The 4 `setShowCreate(true)`
+  // sites inside this hook (handleEdit, handleDuplicateMission,
+  // handleTemplateSelect, fetchData's template-apply path) are NOT this
+  // callback — they all do additional state mutations (set editing,
+  // populate form, etc.) before opening. openCreate is the single-setter
+  // "open fresh" path used by the page's "New Mission" button only.
+  const openCreate = useCallback(() => {
+    setShowCreate(true);
+  }, []);
+
+  // Open the category manager modal (the "Manage categories" button in
+  // `MissionsList`, plus the `onManageCategories` prop in the page's
+  // `<MissionCreateForm>`). The 2 inline `() => setShowCategoryManager(true)`
+  // arrows that used to live at those call sites are now this single
+  // named callback — the open/close pair is `openCategoryManager` here +
+  // the page's `closeCategoryManager` (defined locally because the close
+  // direction needs the inline `setShowCategoryManager` setter). The
+  // `useCallback` deps array is `[]` (the setter is stable), matching
+  // the sibling `openCreate` and `closeComposer` callbacks. Session 118
+  // promoted this from inline-arrow to named-callback per session 116 P-7.
+  const openCategoryManager = useCallback(() => {
+    setShowCategoryManager(true);
+  }, []);
+
+  // Open the template manager modal (the "Edit Templates" button in
+  // `MissionsList`). Sibling to the page's `closeTemplateManager` close
+  // callback — same `useCallback` + `[]` deps shape as `openCategoryManager`.
+  // The single inline `() => setShowTemplateManager(true)` arrow that
+  // lived at the MissionsList call site is now this named callback.
+  // Session 118 promoted this from inline-arrow to named-callback per
+  // session 116 P-7.
+  const openTemplateManager = useCallback(() => {
+    setShowTemplateManager(true);
+  }, []);
+
   useEffect(() => {
     if (!newProfile) return;
     const controller = new AbortController();
@@ -304,9 +382,11 @@ export function useMissionsPage() {
       setCategories(list);
       setCategoriesLoadError(null);
     } catch (error) {
-      const msg =
-        error instanceof Error ? error.message : "Failed to load categories";
-      console.error("Failed to load categories:", error);
+      // The error is already surfaced to the user via (a) the inline
+      // `categoriesLoadError` state the page renders and (b) the toast.
+      // The pre-refactor `console.error` was redundant dev-only noise
+      // duplicating the same message.
+      const msg = messageFromError(error, "Failed to load categories");
       setCategoriesLoadError(msg);
       showToast(msg, "error");
     }
@@ -323,10 +403,10 @@ export function useMissionsPage() {
         }
         showToast("Could not create category", "error");
       } catch (error) {
-        console.error("Failed to create category:", error);
-        const msg =
-          error instanceof Error ? error.message : "Failed to create category";
-        showToast(msg, "error");
+        // `toastError` already shows the user-facing message; the
+        // pre-refactor `console.error` was redundant dev-only noise
+        // duplicating the same string.
+        toastError(showToast, error, "Failed to create category");
       }
       return null;
     },
@@ -341,26 +421,37 @@ export function useMissionsPage() {
     [updateCategory, loadCategories],
   );
 
+  // Refresh all three data slices (missions + categories + templates) in
+  // parallel. The 3 fetches are independent — none of them passes data
+  // to the others — so they can run concurrently instead of sequentially.
+  // Each fetch has its own per-promise error handling (loadCategories in
+  // its own try/catch, fetchMissions/fetchTemplates in their respective
+  // calling sites), so Promise.allSettled is the right primitive: the
+  // refetch attempt continues even if one slice fails, instead of the
+  // previous "stop on first rejection" behavior (where the rejection
+  // was unhandled in the caller anyway). Byte-equivalent at runtime when
+  // all 3 succeed (the common case); strictly more informative when one
+  // or more fail (the user gets a more complete UI instead of a partial
+  // refetch).
+  const reloadAllData = useCallback(async () => {
+    await Promise.allSettled([
+      fetchMissions().then(setMissions),
+      loadCategories(),
+      fetchTemplates().then(setTemplates),
+    ]);
+  }, [fetchMissions, loadCategories, fetchTemplates]);
+
   const handleDeleteCategory = useCallback(
     async (id: string, reassignToId: string | null) => {
       await deleteCategory(id, reassignToId);
-      await loadCategories();
-      await fetchMissions().then(setMissions);
-      const loaded = await fetchTemplates();
-      setTemplates(loaded);
+      await reloadAllData();
     },
-    [deleteCategory, loadCategories, fetchMissions, fetchTemplates],
+    [deleteCategory, reloadAllData],
   );
 
   const setCategoryId = useCallback((id: string | null) => {
     setNewCategoryId(id);
-    if (id) {
-      try {
-        localStorage.setItem(LAST_CATEGORY_KEY, id);
-      } catch {
-        // ignore
-      }
-    }
+    rememberLastCategory(id);
   }, []);
 
   useEffect(() => {
@@ -379,6 +470,16 @@ export function useMissionsPage() {
   /**
    * Populate form state from a mission template.
    * Used by handleTemplateSelect, handleTemplateEdit, and fetchData.
+   *
+   * The 5 inline `(t as MissionTemplate & { X?: Y })` casts that used to
+   * wrap reads of `outputFormat`, `constraints`, `localDirs`, `references`,
+   * `suggestedToolsets`, and `timeoutMinutes` were redundant: those fields
+   * are already declared (as optional) on the `MissionTemplate` interface
+   * in `src/components/missions/TemplateModals.tsx`. The `categoryId`
+   * read is the only one that genuinely needs a cast — `MissionTemplate`
+   * exposes `category: string`, not `categoryId: string`, so the legacy
+   * backend response shape (`{ categoryId }`) needs a one-off structural
+   * cast to read the id.
    */
   const applyTemplateToForm = useCallback(
     (
@@ -395,33 +496,21 @@ export function useMissionsPage() {
       setNewInstruction(t.instruction || "");
       setNewContext(t.context || "");
       setNewGoals((t.goals || []).join("\n"));
-      setNewOutputFormat(
-        (t as MissionTemplate & { outputFormat?: string }).outputFormat ?? "",
-      );
-      setNewConstraints(
-        (t as MissionTemplate & { constraints?: string }).constraints ?? "",
-      );
+      setNewOutputFormat(t.outputFormat ?? "");
+      setNewConstraints(t.constraints ?? "");
       setNewProfile(t.profile || "");
       setModelAndProvider(t.defaultModel || "", t.defaultProvider || "");
-      setNewLocalDirs(
-        normalizeLocalDirsInput(
-          (t as MissionTemplate & { localDirs?: unknown }).localDirs,
-        ),
-      );
+      setNewLocalDirs(normalizeLocalDirsInput(t.localDirs));
       setLocalDirDraft({ path: "", branch: null });
-      setNewReferences(
-        (t as MissionTemplate & { references?: string[] }).references ?? [],
-      );
+      setNewReferences(t.references ?? []);
       setNewSkills(t.suggestedSkills || []);
-      setNewToolsets(
-        (t as MissionTemplate & { suggestedToolsets?: string[] }).suggestedToolsets ?? [],
-      );
+      setNewToolsets(t.suggestedToolsets ?? []);
       setNewCategoryId(
         categoryIdOverride !== undefined
           ? categoryIdOverride
           : (t as MissionTemplate & { categoryId?: string }).categoryId ?? null
       );
-      const tm = (t as MissionTemplate & { timeoutMinutes?: number }).timeoutMinutes;
+      const tm = t.timeoutMinutes;
       if (typeof tm === "number" && Number.isFinite(tm)) {
         setNewTimeout(tm);
       }
@@ -456,13 +545,7 @@ export function useMissionsPage() {
           if (t) {
             const cid = (t as MissionTemplate & { categoryId?: string }).categoryId ?? null;
             applyTemplateToForm(t, cid);
-            if (cid) {
-              try {
-                localStorage.setItem(LAST_CATEGORY_KEY, cid);
-              } catch {
-                // ignore
-              }
-            }
+            rememberLastCategory(cid);
             setShowCreate(true);
             templateApplied.current = true;
             showToast(`Template loaded: ${t.name}`, "success");
@@ -546,32 +629,41 @@ export function useMissionsPage() {
 
         if (isRunning) {
           showToast("Updating mission...", "info");
-          const { ok, error } = await safeApiCall("/api/missions", {
+          const result = await safeApiCall("/api/missions", {
             method: "POST",
             body: {
               action: "update",
               missionId: editingId,
               name: newName,
               ...dispatchPayload({
-                schedule: newDispatch === "cron" ? newSchedule : undefined,
+                schedule: scheduleForDispatch(newDispatch, newSchedule),
               }),
             },
           });
-          if (ok) {
-            showToast("Mission updated", "success");
-            setEditingId(null);
-            setShowCreate(false);
+          toastFromResult(
+            showToast,
+            result,
+            "Mission updated",
+            "Failed to update mission",
+          );
+          if (result.ok) {
+            closeComposer();
             void fetchData();
             if (expandedId === editingId) void fetchDetail(editingId);
-          } else {
-            showToast(error || "Failed to update mission", "error");
           }
           return;
         }
 
         if (isPromotable) {
           showToast(submitToastForDispatch(newDispatch), "info");
-          const { ok, error } = await safeApiCall<{ data?: { mission?: object } }>("/api/missions", {
+          // Drop the redundant `{ data?: { ... } }` envelope:
+          // `safeApiCall<T>` already wraps the response as `{ data?: T }`,
+          // so the inner type only needs the inner shape. Byte-equivalent
+          // — `safeApiCall<{ mission?: object }>` returns the same
+          // `{ ok, data?: { mission }, error? }` envelope the old
+          // `safeApiCall<{ data?: { mission?: object } }>` did, just
+          // without the double-nesting at the call site.
+          const { ok, error } = await safeApiCall<{ mission?: object }>("/api/missions", {
             method: "POST",
             body: {
               action: "promote",
@@ -579,27 +671,21 @@ export function useMissionsPage() {
               name: newName,
               ...dispatchPayload({
                 dispatchMode: newDispatch,
-                schedule: newDispatch === "cron" ? newSchedule : undefined,
+                schedule: scheduleForDispatch(newDispatch, newSchedule),
               }),
             },
           });
+          toastFromResult(
+            showToast,
+            { ok, error },
+            () => successMessageForDispatch(newDispatch, newSchedule),
+            "Failed to update mission",
+          );
           if (ok) {
-            if (newDispatch === "save") {
-              showToast("Mission saved as draft", "success");
-            } else if (newDispatch === "queue") {
-              showToast("Mission saved to queue", "success");
-            } else if (newDispatch === "now") {
-              showToast("Mission dispatched", "success");
-            } else {
-              showToast(`Mission scheduled: ${newSchedule}`, "success");
-            }
-            setEditingId(null);
-            setShowCreate(false);
+            closeComposer();
             resetForm();
             await fetchData();
             if (expandedId === editingId) void fetchDetail(editingId);
-          } else {
-            showToast(error || "Failed to update mission", "error");
           }
           return;
         }
@@ -608,7 +694,14 @@ export function useMissionsPage() {
 
         setEditingId(null);
 
-        const { ok, error, data } = await safeApiCall<{ data?: { mission?: { id: string } } }>("/api/missions", {
+        // Drop the redundant `{ data?: { ... } }` envelope:
+        // `safeApiCall<T>` already wraps the response as `{ data?: T }`,
+        // so the inner type only needs the inner shape. Byte-equivalent
+        // — `safeApiCall<{ mission?: { id: string } }>` returns the same
+        // `{ ok, data?: { mission: { id: string } }, error? }` envelope
+        // the old `safeApiCall<{ data?: { mission?: { id: string } } }>`
+        // did, just without the double-nesting at the call site.
+        const result = await safeApiCall<{ mission?: { id: string } }>("/api/missions", {
           method: "POST",
           body: {
             action: "dispatch",
@@ -617,65 +710,71 @@ export function useMissionsPage() {
           },
         });
 
-        if (ok) {
-          const body = data;
-          showToast("Mission re-dispatched", "success");
+        toastFromResult(
+          showToast,
+          result,
+          "Mission re-dispatched",
+          "Failed to re-dispatch mission",
+        );
+        if (result.ok) {
+          const body = result.data;
           await fetchData();
-          if (body?.data?.mission?.id) {
-            setExpandedId(body.data.mission.id);
-            void fetchDetail(body.data.mission.id);
+          if (body?.mission?.id) {
+            setExpandedId(body.mission.id);
+            void fetchDetail(body.mission.id);
           }
-        } else {
-          showToast(error || "Failed to re-dispatch mission", "error");
         }
         return;
       }
 
       showToast(submitToastForDispatch(newDispatch), "info");
 
-      const { ok, error, data } = await safeApiCall<{ data?: { mission?: { id: string } } }>("/api/missions", {
+      // Drop the redundant `{ data?: { ... } }` envelope:
+      // `safeApiCall<T>` already wraps the response as `{ data?: T }`,
+      // so the inner type only needs the inner shape. Byte-equivalent
+      // — `safeApiCall<{ mission?: { id: string } }>` returns the same
+      // `{ ok, data?: { mission: { id: string } }, error? }` envelope
+      // the old `safeApiCall<{ data?: { mission?: { id: string } } }>`
+      // did, just without the double-nesting at the call site.
+      const { ok, error, data } = await safeApiCall<{ mission?: { id: string } }>("/api/missions", {
         method: "POST",
         body: {
           action: "dispatch",
           name: newName,
           ...dispatchPayload({
             dispatchMode: newDispatch,
-            schedule: newDispatch === "cron" ? newSchedule : undefined,
+            schedule: scheduleForDispatch(newDispatch, newSchedule),
           }),
         },
       });
 
+      toastFromResult(
+        showToast,
+        { ok, error },
+        () => successMessageForDispatch(newDispatch, newSchedule),
+        "Failed to create mission",
+      );
       if (ok) {
         if (newDispatch === "save" || newDispatch === "queue") {
-          showToast(
-            newDispatch === "save"
-              ? "Mission saved as draft"
-              : "Mission saved to queue",
-            "success",
-          );
           resetForm();
           void fetchData();
         } else if (newDispatch === "now") {
           const body = data;
-          showToast("Mission dispatched", "success");
           await fetchData();
-          if (body?.data?.mission?.id) {
-            setExpandedId(body.data.mission.id);
-            void fetchDetail(body.data.mission.id);
+          if (body?.mission?.id) {
+            setExpandedId(body.mission.id);
+            void fetchDetail(body.mission.id);
           }
         } else {
-          showToast(`Mission scheduled: ${newSchedule}`, "success");
           await fetchData();
         }
-      } else {
-        showToast(error || "Failed to create mission", "error");
       }
     } catch {
       showToast("Network error — please try again", "error");
     } finally {
       setDispatching(false);
     }
-  }, [newName, newInstruction, editingId, dispatchAcknowledged, dispatching, showToast, newDispatch, newSchedule, missions, dispatchPayload, fetchData, resetForm, fetchDetail, expandedId]);
+  }, [newName, newInstruction, editingId, dispatchAcknowledged, dispatching, showToast, newDispatch, newSchedule, missions, dispatchPayload, fetchData, resetForm, fetchDetail, expandedId, closeComposer]);
 
   // ── Shared form population helpers ─────────────────────────────────
 
@@ -749,13 +848,16 @@ export function useMissionsPage() {
           method: "POST",
           body: payload,
         });
+        const wasUpdate = payload.action === "update";
+        toastFromResult(
+          showToast,
+          res,
+          wasUpdate ? "Template updated!" : "Template saved!",
+          "Failed to save template",
+        );
         if (res.ok) {
-          const wasUpdate = payload.action === "update";
-          showToast(wasUpdate ? "Template updated!" : "Template saved!", "success");
           postSuccess();
           void fetchData();
-        } else {
-          showToast(res.error || "Failed to save template", "error");
         }
       } catch {
         showToast("Failed to save template", "error");
@@ -880,16 +982,19 @@ export function useMissionsPage() {
 
   const handleDeleteTemplate = useCallback(async (templateId: string) => {
     if (!confirm("Delete this template?")) return;
-    const { ok, error } = await safeApiCall("/api/templates", {
+    const result = await safeApiCall("/api/templates", {
       method: "POST",
       body: { action: "delete", templateId },
     });
-    if (ok) {
-      showToast("Template deleted", "success");
+    toastFromResult(
+      showToast,
+      result,
+      "Template deleted",
+      "Failed to delete template",
+    );
+    if (result.ok) {
       setShowTemplateManager(false);
       fetchData();
-    } else {
-      showToast(error || "Failed to delete template", "error");
     }
   }, [showToast, fetchData]);
 
@@ -901,16 +1006,14 @@ export function useMissionsPage() {
 
   const handleDelete = useCallback(async (id: string) => {
     if (!confirm("Delete this mission and its cron job?")) return;
-    const { ok, error } = await safeApiCall("/api/missions", {
+    const result = await safeApiCall("/api/missions", {
       method: "POST",
       body: { action: "delete", missionId: id },
     });
-    if (ok) {
-      showToast("Mission deleted", "success");
+    toastFromResult(showToast, result, "Mission deleted", "Failed to delete mission");
+    if (result.ok) {
       if (expandedId === id) setExpandedId(null);
       fetchData();
-    } else {
-      showToast(error || "Failed to delete mission", "error");
     }
   }, [showToast, expandedId, fetchData]);
 
@@ -933,28 +1036,35 @@ export function useMissionsPage() {
       ),
     );
 
+    // Shared by both error paths below (API returned ok:false, and the
+    // catch-block network error path). Pulled out so the 3-line setter
+    // call doesn't get repeated verbatim.
+    const restoreMission = (restored: MissionRow) => {
+      setMissions((prev) =>
+        prev.map((m) => (m.id === id ? restored : m)),
+      );
+    };
+
     try {
-      const { ok, error } = await safeApiCall("/api/missions", {
+      const result = await safeApiCall("/api/missions", {
         method: "POST",
         body: { action: "cancel", missionId: id },
       });
-      if (ok) {
-        showToast("Mission cancelled", "success");
+      toastFromResult(
+        showToast,
+        result,
+        "Mission cancelled",
+        "Failed to cancel mission",
+      );
+      if (result.ok) {
         await fetchData();
         if (expandedId === id) void fetchDetail(id);
-      } else {
-        if (previousMission) {
-          setMissions((prev) =>
-            prev.map((m) => (m.id === id ? previousMission : m)),
-          );
-        }
-        showToast(error || "Failed to cancel mission", "error");
+      } else if (previousMission) {
+        restoreMission(previousMission);
       }
     } catch {
       if (previousMission) {
-        setMissions((prev) =>
-          prev.map((m) => (m.id === id ? previousMission : m)),
-        );
+        restoreMission(previousMission);
       }
       showToast("Network error — could not cancel mission", "error");
     } finally {
@@ -987,14 +1097,33 @@ export function useMissionsPage() {
     [missions, filter, search, missionCategoryFilter],
   );
 
+  // Single .reduce() pass over `missions` instead of 5 separate
+  // .filter().length passes. The 5 buckets match the original
+  // `missions.filter(predicate).length` shape VERBATIM — including the
+  // non-mutually-exclusive nature of (a) `active` vs (b) `queued`.
+  // Per the source in src/lib/mission-board.ts:
+  //   isMissionActive       = status==="dispatched" || queuedForRun===true
+  //   isMissionQueuedForRun = status==="queued" && queuedForRun===true
+  // So a `status:"queued" && queuedForRun:true` mission increments BOTH
+  // `active` AND `queued` — the same as the original 5 independent
+  // .filter().length passes. We can't use `else if` to make them
+  // mutually exclusive without changing observable counts. Independent
+  // `if` branches are required to preserve the original semantics. The
+  // named keys + per-branch increment match the previous shape
+  // verbatim, so consumers (MissionsList) see no change in totals.
   const missionCounts = useMemo(
-    () => ({
-      active: missions.filter((m) => isMissionActive(m)).length,
-      completed: missions.filter((m) => m.status === "successful").length,
-      failed: missions.filter((m) => m.status === "failed").length,
-      drafts: missions.filter((m) => isMissionDraft(m)).length,
-      queued: missions.filter((m) => isMissionQueuedForRun(m)).length,
-    }),
+    () =>
+      missions.reduce(
+        (acc, m) => {
+          if (isMissionActive(m)) acc.active += 1;
+          if (m.status === "successful") acc.completed += 1;
+          if (m.status === "failed") acc.failed += 1;
+          if (isMissionDraft(m)) acc.drafts += 1;
+          if (isMissionQueuedForRun(m)) acc.queued += 1;
+          return acc;
+        },
+        { active: 0, completed: 0, failed: 0, drafts: 0, queued: 0 },
+      ),
     [missions],
   );
 
@@ -1005,16 +1134,30 @@ export function useMissionsPage() {
     const controller = new AbortController();
     void (async () => {
       try {
-        const [defaultsRes, modelsRes] = await Promise.all([
-          safeApiCall<{ defaults?: { agent?: string | null } }>("/api/models/defaults", { signal: controller.signal }),
-          safeApiCall<{ models?: Array<{ id: string; modelId: string; provider: string }> }>("/api/models", { signal: controller.signal }),
+        // Both endpoints return `{ data: <inner> }`. `safeApiCallData`
+        // unwraps the envelope directly so `defaults?.defaults?.agent`
+        // and `models?.models` read the actual payloads. The pre-
+        // refactor code read the envelope and the agent-default auto-
+        // fill was always a no-op (the values were on
+        // `result.data.data`, not `result.data`). This is the same
+        // "feature is not working" fix applied to `useGatewayHealth`
+        // and `useCronJobMutation` in this session.
+        const [defaults, models] = await Promise.all([
+          safeApiCallData<{ defaults?: { agent?: string | null } }>(
+            "/api/models/defaults",
+            { signal: controller.signal },
+          ),
+          safeApiCallData<{ models?: Array<{ id: string; modelId: string; provider: string }> }>(
+            "/api/models",
+            { signal: controller.signal },
+          ),
         ]);
-        if (!defaultsRes.ok || !modelsRes.ok) return;
+        if (!defaults || !models) return;
 
-        const agentRegistryId = defaultsRes.data?.defaults?.agent;
+        const agentRegistryId = defaults.defaults?.agent;
         if (!agentRegistryId) return;
 
-        const match = modelsRes.data?.models?.find((m) => m.id === agentRegistryId);
+        const match = models.models?.find((m) => m.id === agentRegistryId);
         if (!match) return;
 
         setModelAndProvider(match.modelId, match.provider);
@@ -1097,6 +1240,7 @@ export function useMissionsPage() {
     setNewCategoryId,
     showCategoryManager,
     setShowCategoryManager,
+    openCategoryManager,
     loadCategories,
     handleCreateCategory,
     handleCreateNewTemplate,
@@ -1110,11 +1254,14 @@ export function useMissionsPage() {
     formState,
     setFormField,
     handleCreate,
+    openCreate,
+    closeComposer,
     handleSaveAsTemplate,
     dispatching,
     cancellingMissionId,
     handleTemplateSelect,
     setShowTemplateManager,
+    openTemplateManager,
     showTemplateManager,
     handleEditTemplate,
     handleDeleteTemplate,

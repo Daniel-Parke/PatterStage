@@ -39,9 +39,16 @@ jest.mock("@/lib/api-auth", () => ({
   requireAuth: jest.fn(() => null),
 }));
 
-jest.mock("@/lib/parse-json-body", () => ({
-  parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
-}));
+jest.mock("@/lib/parse-json-body", () => {
+  // Re-expose the real parseAndValidateJsonBody so routes that switched
+  // from parseJsonBody + zodErrorResponse to the combined helper still
+  // exercise the schema. parseJsonBody stays mocked (legacy test shape).
+  const actual = jest.requireActual("@/lib/parse-json-body");
+  return {
+    parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
+    parseAndValidateJsonBody: actual.parseAndValidateJsonBody,
+  };
+});
 
 jest.mock("@/lib/hermes-config-sync", () => ({
   syncDefaultsToHermesConfig: jest.fn(() => ({ backupPath: null })),

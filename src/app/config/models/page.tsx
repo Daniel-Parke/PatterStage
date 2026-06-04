@@ -10,6 +10,7 @@
 
 "use client";
 
+import { useCallback } from "react";
 import { Globe, Loader2, Plus, RefreshCw } from "lucide-react";
 
 import AppPageShell from "@/components/layout/AppPageShell";
@@ -23,6 +24,7 @@ import ModelsDriftBanner from "@/components/models/ModelsDriftBanner";
 import ModelsFallbackSection from "@/components/models/ModelsFallbackSection";
 import ModelsTableSection from "@/components/models/ModelsTableSection";
 import ModelsTaskDefaultsSection from "@/components/models/ModelsTaskDefaultsSection";
+import { pluralise } from "@/lib/utils";
 import { useModelsPage } from "@/hooks/useModelsPage";
 
 export default function ModelsPage() {
@@ -71,12 +73,28 @@ export default function ModelsPage() {
     setEditingFallbackEntry,
   } = useModelsPage();
 
+  // openAddModel — opens the ModelEditor in CREATE mode (`setEditing(null)`).
+  // The "Add Model" button appears in 2 places: the page header (line 99) and
+  // the empty-state CTA inside ModelsTableSection (line 127). Both call sites
+  // do exactly the same thing: `() => setEditing(null)`. Centralising into a
+  // useCallback with empty deps (useState setters are stable) keeps the 2
+  // sites in lockstep if a future "navigate to the Models tab" or "pre-select
+  // a credential" extension lands — a single edit here updates both.
+  // The 3rd `setEditing(...)` site at line 128 (`onEdit={setEditing}`) is
+  // a different shape: it passes a `ModelEditorRecord` (edit mode), not
+  // `null` (create mode). Left as a direct binding — it's the canonical
+  // "open in edit mode" call, not a duplicate.
+  // The 4th `setEditing` site at line 186 (`onClose={() => setEditing(undefined)}`)
+  // is also a different shape (close vs open) — also left inline.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- useState setters are stable
+  const openAddModel = useCallback(() => setEditing(null), []);
+
   return (
     <AppPageShell>
       <PageHeader
         icon={Globe}
         title="Models"
-        subtitle={`${models.length} model${models.length === 1 ? "" : "s"} in registry · ${credentials.length} credential${credentials.length === 1 ? "" : "s"}`}
+        subtitle={`${models.length} model${pluralise(models.length)} in registry · ${credentials.length} credential${pluralise(credentials.length)}`}
         color="purple"
         backHref="/config"
         backLabel="CONFIG"
@@ -96,7 +114,7 @@ export default function ModelsPage() {
               variant="primary"
               color="purple"
               icon={Plus}
-              onClick={() => setEditing(null)}
+              onClick={openAddModel}
             >
               Add Model
             </Button>
@@ -124,7 +142,7 @@ export default function ModelsPage() {
               models={models}
               defaults={defaults}
               busyTaskType={busyTaskType}
-              onAddModel={() => setEditing(null)}
+              onAddModel={openAddModel}
               onEdit={setEditing}
               onDelete={handleDelete}
               onPush={handlePush}

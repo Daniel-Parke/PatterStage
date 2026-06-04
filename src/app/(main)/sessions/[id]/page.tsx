@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -13,7 +13,7 @@ import {
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { safeApiCall } from "@/lib/api-fetch";
+import { useApiData } from "@/hooks/useApiData";
 import { ROLE_META, getMessageRole } from "@/components/session/constants";
 import { MessageBubble, type SessionMessage, type SessionData } from "@/components/session/MessageBubble";
 import { isSessionStillRunning } from "@/lib/session-title";
@@ -23,46 +23,19 @@ import { isSessionStillRunning } from "@/lib/session-title";
 export default function SessionDetailPage() {
   const params = useParams();
   const sessionId = params.id as string;
-  const [data, setData] = useState<SessionData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // useApiData absorbs the entire useEffect + safeApiCall + setLoading/setError
+  // + AbortController boilerplate that the detail page used to inline. The
+  // hook's `data: T | null` contract is byte-equivalent to the previous
+  // `SessionData | null` local state, and `refetch()` replaces the old
+  // `window.location.reload()` refresh button with an in-page re-fetch
+  // (no full-page reload, no scroll position reset, no flash of the
+  // LoadingSpinner — the hook just sets `loading=true` and merges the
+  // new envelope.data into state).
+  const { data, loading, error, refetch } = useApiData<SessionData>(
+    `/api/sessions/${encodeURIComponent(sessionId)}`,
+  );
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const messageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    setLoading(true);
-    setError(null);
-
-    void (async () => {
-      const url = "/api/sessions/" + encodeURIComponent(sessionId);
-      try {
-        const { data, error: fetchError } = await safeApiCall<{ data: SessionData }>(url, { method: "GET" });
-        if (controller.signal.aborted) return;
-        if (fetchError) {
-          throw new Error(fetchError || "Failed to load session");
-        }
-        const { data: sessionData } = data ?? {};
-        if (sessionData) {
-          setData(sessionData as SessionData);
-        } else {
-          throw new Error("Invalid session data format");
-        }
-      } catch (err) {
-        if (controller.signal.aborted) return;
-        setError(err instanceof Error ? err.message : "Unknown error");
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    })();
-
-    return () => {
-      controller.abort();
-    };
-  }, [sessionId]);
 
   // Count messages by role
   const roleCounts = useMemo(() => {
@@ -111,6 +84,30 @@ export default function SessionDetailPage() {
     const firstEl = messageRefs.current.get(roleMessages[0].index);
     if (firstEl) firstEl.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [data?.messages]);
+
+  // Clear the role filter. Single-setter close callback following the
+  // same useCallback pattern as the open-callback promotions in
+  // session 116 P-7 / session 118 P-7. The inline `() => setRoleFilter(
+  // null)` arrow appeared at 2 sites — the "clear" pill (line 211) and
+  // the implicit clear path on a re-click of the active role button
+  // (line 195, where `setRoleFilter(isActive ? null : role)` flips
+  // back to `null` when the user re-clicks the active filter). The
+  // callback is reused at both sites for consistency.
+  const clearRoleFilter = useCallback(
+    () => setRoleFilter(null),
+    [setRoleFilter],
+  );
+
+  // Re-click handler for the role badge: if the badge is already
+  // active, clear the filter; otherwise set the filter to this role.
+  // Replaces the inline `() => setRoleFilter(isActive ? null : role)`
+  // arrow on the role button's onClick. Reads the current
+  // `roleFilter` value via the closure, so it's a 1-parameter
+  // useCallback — the `role` is supplied by the .map() in the JSX.
+  const handleRoleBadgeClick = useCallback(
+    (role: string) => setRoleFilter((prev) => (prev === role ? null : role)),
+    [setRoleFilter],
+  );
 
   if (loading) {
     return (
@@ -178,7 +175,7 @@ export default function SessionDetailPage() {
             {isRunning && (
               <button
                 type="button"
-                onClick={() => window.location.reload()}
+                onClick={() => void refetch()}
                 className="text-[10px] font-mono px-2 py-1 rounded bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20 transition-colors"
                 title="Reload to check for new messages"
               >
@@ -192,7 +189,7 @@ export default function SessionDetailPage() {
                 <button
                   key={role}
                   type="button"
-                  onClick={() => setRoleFilter(isActive ? null : role)}
+                  onClick={() => handleRoleBadgeClick(role)}
                   onDoubleClick={() => scrollToNextRole(role)}
                   title={`Click to filter · Double-click to jump to next ${role}`}
                   className={`text-xs font-mono px-2 py-1 rounded transition-colors cursor-pointer ${
@@ -208,7 +205,7 @@ export default function SessionDetailPage() {
             {roleFilter && (
               <button
                 type="button"
-                onClick={() => setRoleFilter(null)}
+                onClick={clearRoleFilter}
                 className="text-[10px] font-mono text-white/30 hover:text-white/60 px-1.5 py-1 rounded bg-white/5"
               >
                 clear

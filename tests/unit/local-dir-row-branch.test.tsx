@@ -15,9 +15,17 @@ describe("LocalDirRow branch UI", () => {
     jest.useFakeTimers();
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
+      // The on-the-wire envelope is `{ data: { ... } }`, but the
+      // session-135 migration collapsed the double-envelope type to
+      // `safeApiCall<{ isGitRepo, branches, current }>` and reads
+      // `j.data?.isGitRepo` directly. The `safeApiCall<T>` helper
+      // unwraps the envelope before the production code sees it, so
+      // the mock body matches the post-unwrap shape.
       json: () =>
         Promise.resolve({
-          data: { isGitRepo: true, branches: ["main", "dev"], current: "dev" },
+          isGitRepo: true,
+          branches: ["main", "dev"],
+          current: "dev",
         }),
     } as Response);
   });

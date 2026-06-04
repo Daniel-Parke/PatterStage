@@ -4,6 +4,8 @@
 
 import type { ChatSession, ChatMessage, ApiMessage } from "@/types/chat";
 import { CHAT_STORAGE_KEY, CHAT_MAX_SESSIONS } from "@/types/chat";
+import { messageFromError } from "@/lib/api-fetch";
+import { titleCase } from "@/lib/utils";
 
 // ── localStorage helpers ───────────────────────────────────────
 
@@ -42,6 +44,19 @@ export function generateSessionId(): string {
 }
 
 // ── Download helpers ────────────────────────────────────────────
+
+/**
+ * Sanitise a session title into a filename-safe slug.
+ *
+ * Replaces any character that isn't `[A-Za-z0-9_-]` with an underscore.
+ * Centralised so the regex lives in one place — the only call site
+ * (chat page `handleDownloadSession`) used to inline it, and any
+ * future "download session as Markdown" or "export PDF" feature will
+ * need the exact same shape.
+ */
+export function sanitiseFilename(title: string): string {
+  return title.replace(/[^a-zA-Z0-9_-]/g, "_");
+}
 
 export function downloadFile(content: string, filename: string, mime: string): void {
   const blob = new Blob([content], { type: mime });
@@ -125,7 +140,7 @@ export function renderMarkdown(text: string): string {
 export function formatModelName(id: string): string {
   if (id === "hermes-agent") return "Agent Default";
   const parts = id.split("/").pop()?.split(/[-_]+/) || [];
-  return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(" ");
+  return parts.map((p) => titleCase(p)).join(" ");
 }
 
 // ── Factory helpers ─────────────────────────────────────────────
@@ -256,7 +271,7 @@ export async function streamChatResponse(
     if (err instanceof DOMException && err.name === "AbortError") {
       return false;
     }
-    onError(err instanceof Error ? err.message : "Chat failed");
+    onError(messageFromError(err, "Chat failed"));
     return false;
   }
 }

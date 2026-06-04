@@ -173,9 +173,7 @@ export function MessageBubble({
                     key={tcKey}
                     className="bg-dark-900/50 rounded-lg p-3 text-xs font-mono"
                   >
-                    <span className="text-neon-green">
-                      {String(fn?.name || "unknown")}
-                    </span>
+                    <span className="text-neon-green">{fnName}</span>
                     <pre className="mt-1 text-white/40 whitespace-pre-wrap">
                       {typeof fn?.arguments === "string"
                         ? fn.arguments

@@ -8,6 +8,7 @@
 // personalities / files routes have been collapsed onto this helper.
 
 import {
+  assertPatchSucceeded,
   toPatchResponse,
   type ProfileOrRootPatchResult,
 } from "@/lib/apply-profile-or-root-patch";
@@ -55,5 +56,47 @@ describe("toPatchResponse", () => {
     expect(res!.status).toBe(500);
     const body = await res!.json();
     expect(body.error).toBe("Failed to toggle skill");
+  });
+});
+
+describe("assertPatchSucceeded", () => {
+  it("is a no-op when the result is ok (the canonical success case)", () => {
+    const result: ProfileOrRootPatchResult = { ok: true, profile: "qa" };
+    expect(() => assertPatchSucceeded(result)).not.toThrow();
+  });
+
+  it("throws a recognisable error when called on a not-found result", () => {
+    const result: ProfileOrRootPatchResult = {
+      ok: false,
+      reason: "not-found",
+    };
+    expect(() => assertPatchSucceeded(result)).toThrow(
+      "assertPatchSucceeded called on a failed result",
+    );
+  });
+
+  it("throws when called on a push-failed result", () => {
+    const result: ProfileOrRootPatchResult = {
+      ok: false,
+      reason: "push-failed",
+      error: "yaml parse error",
+    };
+    expect(() => assertPatchSucceeded(result)).toThrow(
+      "assertPatchSucceeded called on a failed result",
+    );
+  });
+
+  it("narrowing: lets TS read result.profile after a successful call", () => {
+    // This test is a compile-time check: if the asserts signature
+    // were removed, the `result.profile` access below would fail
+    // type-check with "Property 'profile' does not exist on type
+    // ProfileOrRootPatchResult".
+    const result: ProfileOrRootPatchResult = { ok: true, profile: "qa" };
+    assertPatchSucceeded(result);
+    // After the assertion, TypeScript should narrow `result` to the
+    // success branch which carries the `profile` field. The runtime
+    // value matches the type, so this is a pure compile-time lock.
+    const profile: string = result.profile;
+    expect(profile).toBe("qa");
   });
 });

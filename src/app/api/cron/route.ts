@@ -14,12 +14,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, created, notFound, ok, serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { parseSchedule } from "@/lib/utils";
+import { buildCronUpdatePayload } from "@/lib/cron-field-updates";
+import { cronSyncFailureResponse } from "@/lib/cron-sync-failure";
 
 import {
   listCronJobs,
@@ -37,17 +39,6 @@ import {
 } from "@/lib/cron-repository";
 
 import { getDefaultModel } from "@/lib/models-repository";
-
-function cronSyncFailureResponse(
-  route: string,
-  pushResult: { ok: boolean; error?: string },
-): NextResponse {
-  logApiError(route, "pushJobToHermes", new Error(pushResult.error ?? "unknown"));
-  return NextResponse.json(
-    { error: "Failed to sync cron job to Hermes", cronPushError: pushResult.error ?? "unknown" },
-    { status: 502 },
-  );
-}
 
 /**
  * Parse a schedule string and return either the parsed schedule (when valid)
@@ -78,7 +69,7 @@ async function applyEnabledChange(
 ): Promise<NextResponse> {
   const updated = updateCronJob(id, { enabled, state });
   if (!updated) {
-    return NextResponse.json({ error: "Job not found after update" }, { status: 404 });
+    return notFound("Job not found after update");
   }
   const pushResult = await pushJobToHermes(id);
   appendAuditLine({
@@ -93,7 +84,7 @@ async function applyEnabledChange(
       pushResult,
     );
   }
-  return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
+  return ok({ success: true, job: recordToApiJob(updated) });
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -157,9 +148,9 @@ export async function GET(request: NextRequest) {
     if (id) {
       const job = getCronJob(id);
       if (!job) {
-        return NextResponse.json({ error: "Job not found" }, { status: 404 });
+        return notFound("Job not found");
       }
-      return NextResponse.json({ data: { job: recordToApiJob(job) } });
+      return ok({ job: recordToApiJob(job) });
     }
 
     // Pull latest execution state from Hermes before listing all jobs
@@ -170,10 +161,9 @@ export async function GET(request: NextRequest) {
 
     const rawJobs = listCronJobs();
     const jobs = rawJobs.map(recordToApiJob);
-    return NextResponse.json({ data: { jobs, total: jobs.length } });
+    return ok({ jobs, total: jobs.length });
   } catch (error) {
-    logApiError("GET /api/cron", "listing cron jobs", error);
-    return NextResponse.json({ error: "Failed to load cron jobs" }, { status: 500 });
+    return serverErrorFromCatch("GET /api/cron", "listing cron jobs", error, "Failed to load cron jobs");
   }
 }
 
@@ -201,13 +191,11 @@ export async function POST(request: NextRequest) {
         ok: result.errors.length === 0,
         detail: `imported=${result.hermesImported.length} exported_errors=${result.hermesExportErrors.length}`,
       });
-      return NextResponse.json({
-        data: {
-          success: result.errors.length === 0,
-          hermesImported: result.hermesImported,
-          exportErrors: result.hermesExportErrors,
-          errors: result.errors,
-        },
+      return ok({
+        success: result.errors.length === 0,
+        hermesImported: result.hermesImported,
+        exportErrors: result.hermesExportErrors,
+        errors: result.errors,
       });
     }
 
@@ -220,12 +208,10 @@ export async function POST(request: NextRequest) {
         ok: result.errors.length === 0,
         detail: `imported=${result.imported.length}`,
       });
-      return NextResponse.json({
-        data: {
-          success: result.errors.length === 0,
-          imported: result.imported,
-          errors: result.errors,
-        },
+      return ok({
+        success: result.errors.length === 0,
+        imported: result.imported,
+        errors: result.errors,
       });
     }
 
@@ -245,7 +231,7 @@ export async function POST(request: NextRequest) {
         paused++;
       }
       appendAuditLine({ action: "cron.pauseAll", resource: "all", ok: true, detail: String(paused) });
-      return NextResponse.json({ data: { success: true, pausedCount: paused } });
+      return ok({ success: true, pausedCount: paused });
     }
 
     // ── Create job ─────────────────────────────────────────────
@@ -296,27 +282,42 @@ export async function POST(request: NextRequest) {
       }
     })();
 
-    const resolvedModel = (model as string | undefined)?.trim() || registryDefault?.modelId || "";
-    const resolvedProvider = (provider as string | undefined)?.trim() || registryDefault?.provider || "";
+    // Resolve model: use explicit model or fall back to registry default.
+    // `model`/`provider` are already typed `string | undefined` by the
+    // destructure above (lines 239-263), so the inline `as` casts the
+    // pre-refactor code had here were noise — the original pattern was
+    // `(x as string | undefined)?.trim()`, which is byte-equivalent to
+    // `x?.trim()` (the cast is a no-op, the type is already correct).
+    const resolvedModel = model?.trim() || registryDefault?.modelId || "";
+    const resolvedProvider = provider?.trim() || registryDefault?.provider || "";
 
     // Resolve repeat
     const repeatObj = normalizeRepeat(repeat);
 
+    // Same rationale as the resolvedModel/resolvedProvider block above:
+    // every destructure local on lines 239-263 is already typed as the
+    // declared `?:` shape, so the `(x as T) ?? default` expressions were
+    // redundant casts — `x ?? default` produces an identical value
+    // (cast is a no-op; the `??` fallback fires on the same undefined
+    // case). The single exception is the `name` field: the `if (!name?.trim())
+    // return badRequest(...)` guard on line 265 narrows `name` from
+    // `string | undefined` to `string`, so `(name as string).trim()` is
+    // the type-narrowing pattern, not a redundant cast — kept.
     const newJob = createCronJob({
       name: (name as string).trim(),
-      prompt: (prompt as string) ?? "",
-      skills: (skills as string[]) ?? [],
+      prompt: prompt ?? "",
+      skills: skills ?? [],
       model: resolvedModel,
       provider: resolvedProvider,
-      base_url: (base_url as string | null) ?? null,
+      base_url: base_url ?? null,
       schedule,
       schedule_display: "display" in parsedSchedule ? (parsedSchedule as { display: string }).display : schedule,
       repeat: repeatObj,
       enabled: true,
       state: "scheduled",
-      deliver: (deliver as string) ?? "none",
-      script: (script as string | null) ?? null,
-      profile_name: (profile_name as string) ?? "default",
+      deliver: deliver ?? "none",
+      script: script ?? null,
+      profile_name: profile_name ?? "default",
       source: "ch",
     });
 
@@ -332,13 +333,12 @@ export async function POST(request: NextRequest) {
 
     appendAuditLine({ action: "cron.create", resource: newJob.id, ok: true });
 
-    return NextResponse.json(
-      { data: { success: true, job: recordToApiJob(getCronJob(newJob.id)!) } },
-      { status: 201 }
-    );
+    return created({
+      success: true,
+      job: recordToApiJob(getCronJob(newJob.id)!),
+    });
   } catch (error) {
-    logApiError("POST /api/cron", "creating cron job", error);
-    return NextResponse.json({ error: "Failed to create cron job" }, { status: 500 });
+    return serverErrorFromCatch("POST /api/cron", "creating cron job", error, "Failed to create cron job");
   }
 }
 
@@ -348,7 +348,7 @@ export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
   if (isChReadOnly()) {
-    return NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 });
+    return serviceUnavailable("Control Hub is in read-only mode");
   }
 
   try {
@@ -368,7 +368,7 @@ export async function PUT(request: NextRequest) {
 
     const existing = getCronJob(id);
     if (!existing) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return notFound("Job not found");
     }
 
     // ── Pause ─────────────────────────────────────────────────
@@ -408,43 +408,20 @@ export async function PUT(request: NextRequest) {
         next_run_at: new Date().toISOString(),
       });
       if (!updated) {
-        return NextResponse.json({ error: "Job not found after update" }, { status: 404 });
+        return notFound("Job not found after update");
       }
-      return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
+      return ok({ success: true, job: recordToApiJob(updated) });
     }
 
     // ── Field updates ─────────────────────────────────────────
 
-    // Build update payload
-    const updatePayload: Parameters<typeof updateCronJob>[1] = {};
-
-    if (updates.name !== undefined) updatePayload.name = (updates.name as string).trim();
-    if (updates.prompt !== undefined) updatePayload.prompt = updates.prompt as string;
-    if (updates.skills !== undefined) updatePayload.skills = updates.skills as string[];
-    if (updates.model !== undefined) updatePayload.model = updates.model as string;
-    if (updates.provider !== undefined) updatePayload.provider = updates.provider as string;
-    if (updates.base_url !== undefined) updatePayload.base_url = updates.base_url as string | null;
-    if (updates.deliver !== undefined) updatePayload.deliver = updates.deliver as string;
-    if (updates.script !== undefined) updatePayload.script = updates.script as string | null;
-    if (updates.profile_name !== undefined) updatePayload.profile_name = updates.profile_name as string;
-    if (updates.enabled !== undefined) updatePayload.enabled = Boolean(updates.enabled);
-    if (updates.state !== undefined) updatePayload.state = updates.state as string;
-
-    if (updates.schedule !== undefined) {
-      const scheduleCheck = parseScheduleOrError(updates.schedule as string);
-      if (!scheduleCheck.ok) return scheduleCheck.response;
-      const parsed = scheduleCheck.parsed;
-      updatePayload.schedule = JSON.stringify(parsed);
-      updatePayload.schedule_display = "display" in parsed ? (parsed as { display: string }).display : (updates.schedule as string);
-    }
-
-    if (updates.repeat !== undefined) {
-      updatePayload.repeat = normalizeRepeat(updates.repeat);
-    }
+    const updateResult = buildCronUpdatePayload(updates);
+    if (!updateResult.ok) return updateResult.response;
+    const updatePayload = updateResult.payload;
 
     const updated = updateCronJob(id, updatePayload);
     if (!updated) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return notFound("Job not found");
     }
 
     // Sync to Hermes
@@ -454,10 +431,9 @@ export async function PUT(request: NextRequest) {
       return cronSyncFailureResponse("PUT /api/cron", pushResult);
     }
 
-    return NextResponse.json({ data: { success: true, job: recordToApiJob(updated) } });
+    return ok({ success: true, job: recordToApiJob(updated) });
   } catch (error) {
-    logApiError("PUT /api/cron", "updating cron job", error);
-    return NextResponse.json({ error: "Failed to update cron job" }, { status: 500 });
+    return serverErrorFromCatch("PUT /api/cron", "updating cron job", error, "Failed to update cron job");
   }
 }
 
@@ -467,7 +443,7 @@ export async function DELETE(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
   if (isChReadOnly()) {
-    return NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 });
+    return serviceUnavailable("Control Hub is in read-only mode");
   }
 
   try {
@@ -480,7 +456,7 @@ export async function DELETE(request: NextRequest) {
 
     const existing = getCronJob(id);
     if (!existing) {
-      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+      return notFound("Job not found");
     }
 
     // Remove from Hermes first (best-effort)
@@ -495,9 +471,8 @@ export async function DELETE(request: NextRequest) {
 
     appendAuditLine({ action: "cron.delete", resource: id, ok: true });
 
-    return NextResponse.json({ data: { success: true, deleted: id } });
+    return ok({ success: true, deleted: id });
   } catch (error) {
-    logApiError("DELETE /api/cron", "deleting cron job", error);
-    return NextResponse.json({ error: "Failed to delete cron job" }, { status: 500 });
+    return serverErrorFromCatch("DELETE /api/cron", "deleting cron job", error, "Failed to delete cron job");
   }
 }

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
+import { ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { runCatalogSeed, getSeedState, type SeedTarget } from "@/lib/seed/catalog-seed";
 import { importHermesStateFromDisk } from "@/lib/hermes-state-import";
@@ -11,10 +12,14 @@ import { existsSync } from "fs";
 export async function GET() {
   try {
     const state = getSeedState();
-    return NextResponse.json({ data: { state } });
+    return ok({ state });
   } catch (error) {
-    logApiError("GET /api/seed", "state", error);
-    return NextResponse.json({ error: "Failed to read seed state" }, { status: 500 });
+    return serverErrorFromCatch(
+      "GET /api/seed",
+      "state",
+      error,
+      "Failed to read seed state",
+    );
   }
 }
 
@@ -45,9 +50,13 @@ export async function POST(request: NextRequest) {
       ? importHermesStateFromDisk()
       : null;
     const result = runCatalogSeed({ target, mode, slug, templateId });
-    return NextResponse.json({ data: { ...result, imported } });
+    return ok({ ...result, imported });
   } catch (error) {
-    logApiError("POST /api/seed", "seed", error);
-    return NextResponse.json({ error: "Failed to run seed" }, { status: 500 });
+    return serverErrorFromCatch(
+      "POST /api/seed",
+      "seed",
+      error,
+      "Failed to run seed",
+    );
   }
 }

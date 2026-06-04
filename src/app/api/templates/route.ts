@@ -3,11 +3,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, unlinkSync } from "fs";
+import { existsSync, readFileSync, writeFileSync, readdirSync, unlinkSync } from "fs";
 import { parseTemplatePackManifestV1 } from "@/lib/schema";
 import { zodErrorResponse } from "@/lib/api-schemas";
 import { logApiError } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
+import { ensureDir } from "@/lib/fs-helpers";
 import { ensureDb } from "@/lib/db";
 import { PATHS } from "@/lib/paths";
 import { requireAuth } from "@/lib/api-auth";
@@ -42,10 +43,8 @@ function sanitizeTemplateId(id: string): string {
   return id.replace(/[^a-zA-Z0-9_-]/g, "");
 }
 
-function ensureDir() {
-  if (!existsSync(DATA_DIR)) {
-    mkdirSync(DATA_DIR, { recursive: true });
-  }
+function ensureDataDir() {
+  ensureDir(DATA_DIR);
 }
 
 interface CustomTemplate {
@@ -135,7 +134,7 @@ function loadTemplate(id: string): CustomTemplate | null {
 }
 
 function saveTemplate(template: CustomTemplate) {
-  ensureDir();
+  ensureDataDir();
   const path = DATA_DIR + "/" + template.id + ".json";
   const forDisk = { ...template } as Record<string, unknown>;
   delete forDisk.skills;
@@ -151,7 +150,7 @@ export async function GET() {
       return NextResponse.json(cached);
     }
 
-    ensureDir();
+    ensureDataDir();
     const files = readdirSync(DATA_DIR).filter((f) => f.endsWith(".json"));
     const customTemplates: (CustomTemplate & { isCustom: true })[] = [];
 

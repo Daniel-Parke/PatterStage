@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Cpu, Loader2, X, ChevronDown, Search } from "lucide-react";
 import type { Skill } from "@/types/hermes";
+import { pluralise } from "@/lib/utils";
 
 interface SkillSelectorProps {
   value: string[];
@@ -79,7 +80,7 @@ export default function SkillSelector({
           </span>
         ) : (
           <span className="text-xs font-mono text-neon-purple">
-            {value.length} skill{value.length !== 1 ? "s" : ""} attached
+            {value.length} skill{pluralise(value.length)} attached
           </span>
         )}
         <ChevronDown

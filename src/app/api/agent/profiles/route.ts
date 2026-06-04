@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { existsSync } from "fs";
 
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { safeStat } from "@/lib/fs-stats";
 import { resolveSafeProfileName } from "@/lib/path-security";
@@ -24,7 +24,8 @@ import {
 } from "@/lib/hermes-profile-sync";
 import { slugifyDisplayName } from "@/lib/profile-slug";
 import { buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
-import type { ApiResponse, AgentProfile, ProfileFile } from "@/types/hermes";
+import type { AgentProfile, ProfileFile } from "@/types/hermes";
+import { badRequest, conflict, ok, serverError } from "@/lib/api-response";
 
 const PROFILE_FILE_DEFS = [
   { key: "soul", name: "SOUL.md", getPath: (b: ReturnType<typeof buildProfileHermesPathBundle>) => b.soul },
@@ -123,12 +124,14 @@ export async function GET(request: NextRequest) {
       if (api) profiles.push(api);
     }
 
-    return NextResponse.json<ApiResponse<{ profiles: AgentProfile[] }>>({
-      data: { profiles },
-    });
+    return ok({ profiles });
   } catch (error) {
-    logApiError("GET /api/agent/profiles", "listing profiles", error);
-    return NextResponse.json({ error: "Failed to list profiles" }, { status: 500 });
+    return serverErrorFromCatch(
+      "GET /api/agent/profiles",
+      "listing profiles",
+      error,
+      "Failed to list profiles",
+    );
   }
 }
 
@@ -147,24 +150,18 @@ export async function POST(request: NextRequest) {
     };
 
     if (!name || typeof name !== "string" || name.trim().length < 2) {
-      return NextResponse.json(
-        { error: "Name is required (min 2 characters)" },
-        { status: 400 },
-      );
+      return badRequest("Name is required (min 2 characters)");
     }
 
     const slug = slugifyDisplayName(name);
 
     const prof = resolveSafeProfileName(slug);
     if (!prof.ok) {
-      return NextResponse.json({ error: prof.error }, { status: 400 });
+      return badRequest(prof.error);
     }
 
     if (getProfile(slug)) {
-      return NextResponse.json(
-        { error: `Profile "${slug}" already exists` },
-        { status: 409 },
-      );
+      return conflict(`Profile "${slug}" already exists`);
     }
 
     let soulMd =
@@ -197,10 +194,7 @@ export async function POST(request: NextRequest) {
 
     const push = pushProfileToHermes(slug);
     if (!push.success) {
-      return NextResponse.json(
-        { error: push.error ?? "Failed to sync profile to Hermes" },
-        { status: 500 },
-      );
+      return serverError(push.error ?? "Failed to sync profile to Hermes");
     }
 
     appendAuditLine({
@@ -209,11 +203,13 @@ export async function POST(request: NextRequest) {
       ok: true,
     });
 
-    return NextResponse.json<ApiResponse<{ slug: string }>>({
-      data: { slug },
-    });
+    return ok({ slug });
   } catch (error) {
-    logApiError("POST /api/agent/profiles", "creating profile", error);
-    return NextResponse.json({ error: "Failed to create profile" }, { status: 500 });
+    return serverErrorFromCatch(
+      "POST /api/agent/profiles",
+      "creating profile",
+      error,
+      "Failed to create profile",
+    );
   }
 }

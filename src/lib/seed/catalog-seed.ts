@@ -2,7 +2,7 @@
 // catalog-seed.ts — Seed professional catalog into SQLite
 // ═══════════════════════════════════════════════════════════════
 
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
 import { ensureDb } from "../db";
@@ -18,7 +18,7 @@ import { db } from "../db";
 import { CH_DATA_DIR } from "../paths";
 import { pushProfileToHermes, pushAllProfiles, pushRootToHermes } from "../hermes-profile-sync";
 import { getAgentRoot, updateAgentRoot } from "../agent-root-repository";
-import { writeFileSync, mkdirSync } from "fs";
+import { ensureDir } from "../fs-helpers";
 
 function resolveRepoRoot(): string {
   const candidates = [
@@ -323,9 +323,7 @@ function seedTemplates(mode: SeedMode, idFilter?: string): number {
 
 function writeSeedState(result: SeedResult): void {
   const dir = CH_DATA_DIR;
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
-  }
+  ensureDir(dir);
   const state = {
     lastRun: new Date().toISOString(),
     catalogVersion: "control-hub-professional-v1",

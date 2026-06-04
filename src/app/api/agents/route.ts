@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ensureSyncLayer } from "@/lib/sync";
 import { logApiError } from "@/lib/api-logger";
+import { ok } from "@/lib/api-response";
 import type { HermesProcess } from "@/types/hermes";
 
 export async function GET() {
@@ -49,13 +50,11 @@ export async function GET() {
     const runningCount = processes.filter((p) => p.status === "running").length;
     const idleCount = processes.filter((p) => p.status === "idle").length;
 
-    return NextResponse.json({
-      data: {
-        processes,
-        total: processes.length,
-        running: runningCount,
-        idle: idleCount,
-      },
+    return ok({
+      processes,
+      total: processes.length,
+      running: runningCount,
+      idle: idleCount,
     });
   } catch (err) {
     logApiError("GET /api/agents", "querying Hermes processes", err);

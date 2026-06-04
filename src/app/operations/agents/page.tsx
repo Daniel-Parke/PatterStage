@@ -15,7 +15,7 @@ import Modal from "@/components/ui/Modal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import type { AgentProfile, ProfileFile } from "@/types/hermes";
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch, toastError } from "@/lib/api-fetch";
 import { profileSyncBody } from "@/lib/profile-sync-body";
 import { runSyncAction } from "@/lib/operation-sync-action";
 
@@ -52,6 +52,42 @@ export default function BehaviourPage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [syncBusy, setSyncBusy] = useState(false);
+
+  // closeDelete — the Delete Profile modal has 3 single-setter
+  // close sites that all do the same thing: `() => setDeleteTarget(null)`.
+  //   1. Modal `onClose` (X-button / overlay click)
+  //   2. Modal Cancel button (footer)
+  // Centralising into a `useCallback` with empty deps (useState
+  // setters are stable) keeps the 2 sites in lockstep. The 3rd
+  // `setDeleteTarget(null)` site in handleDelete's success path is
+  // NOT migrated — it lives next to the `if (selectedProfileId === target)`
+  // block that also clears `selectedProfileId` and `editor`. Moving
+  // it into the callback would either need to thread the target as
+  // a parameter (changing the signature to `closeDelete(target: string)`)
+  // or accept that the success path's 3-setter block stays inline. The
+  // 3-setter success block is the existing pattern in this page
+  // (handleCreate → closeCreate = 4-setter success block), and threading
+  // a target into a setter-pair callback for one extra call site is
+  // over-engineering. The 2 identical-modal-close sites get the helper.
+  const closeDelete = useCallback(() => setDeleteTarget(null), []);
+
+  // closeEditor — the file-editor card has 3 single-setter
+  // close sites that all do the same thing: `() => setEditor(null)`.
+  //   1. handleDelete's success path (line ~222) — but only when the
+  //      deleted profile was the one being edited
+  //   2. Profile-button onClick (line ~334) — when switching to a
+  //      different profile
+  //   3. Editor's "Close" button (line ~495)
+  // Centralising into a `useCallback` with empty deps (useState
+  // setters are stable) keeps the 3 sites in lockstep. The handleDelete
+  // site is part of a 3-setter success block (`setDeleteTarget(null);
+  // setSelectedProfileId(null); setEditor(null);`), so the inline
+  // `setEditor(null)` becomes `closeEditor()` — but the surrounding
+  // 2 setters stay inline. This mirrors the closeDelete pattern: a
+  // pure 1-setter helper extracted, leaving the multi-setter success
+  // path partially inline (which is the existing pattern in this page
+  // for both `closeDelete` and the 4-setter `closeCreate` block).
+  const closeEditor = useCallback(() => setEditor(null), []);
 
   const { showToast, toastElement } = useToast();
 
@@ -134,6 +170,43 @@ export default function BehaviourPage() {
     }
   }, [showToast]);
 
+  // Close the New Agent Profile modal. The same 4-setter pair
+  //   setShowCreate(false); setCreateName(""); setCreateDescription(""); setCreateCloneFrom("default");
+  // appears at 2 sites — the modal's `onClose` (X-button / overlay
+  // click) and the `handleCreate` success path (`onSuccess` after
+  // the POST resolves). Centralising it here keeps the 2 sites in
+  // lockstep if a future "clear profile-suggestion cache" or "reset
+  // clone-from default" reset is added — a single edit here updates
+  // both. The pattern mirrors the A3 page-local modal setter-pair
+  // callbacks (session 100: `closeAgentModal` / `closeSystemModal`
+  // in cron; session 98: `closeComposer` in useMissionsPage).
+  // Note: the modal's Cancel button (line 492) uses a deliberate
+  // SOFT close (1 setter, no clear) to preserve the user's in-flight
+  // form input if they cancel by accident. That is a discriminated
+  // pattern, not a duplicate — left inline.
+  const closeCreate = useCallback(() => {
+    setShowCreate(false);
+    setCreateName("");
+    setCreateDescription("");
+    setCreateCloneFrom("default");
+  }, []);
+
+  // openCreate — sibling of `closeCreate` (session 116 P-7 /
+  // session 118 P-7 open/close sibling pattern). The "New Profile"
+  // header button (line 310) was an inline `() => setShowCreate(true)`
+  // arrow, sitting next to the `closeCreate` callback that handles
+  // the close path. Promoting the open to a useCallback sibling
+  // names the page's intent ("open the create modal") and keeps
+  // the open/close pair symmetric so a future "reset form on open"
+  // or "track last-opened create-tab" extension lands in one place.
+  // The deps array lists the stable setter explicitly to satisfy
+  // `react-hooks/exhaustive-deps` (per session 119 P-3 codebase
+  // convention).
+  const openCreate = useCallback(
+    () => setShowCreate(true),
+    [setShowCreate],
+  );
+
   useEffect(() => { loadProfiles(); }, [loadProfiles]);
 
   useEffect(() => {
@@ -159,10 +232,7 @@ export default function BehaviourPage() {
       successMessage: `Profile "${name}" created`,
       errorMessage: "Failed to create profile",
       onSuccess: async () => {
-        setShowCreate(false);
-        setCreateName("");
-        setCreateDescription("");
-        setCreateCloneFrom("default");
+        closeCreate();
         await loadProfiles();
       },
     });
@@ -183,7 +253,7 @@ export default function BehaviourPage() {
         setDeleteTarget(null);
         if (selectedProfileId === target) {
           setSelectedProfileId(null);
-          setEditor(null);
+          closeEditor();
         }
         await loadProfiles();
       },
@@ -204,7 +274,7 @@ export default function BehaviourPage() {
       setPreviewMode(true);
       setSaveStatus("idle");
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "Failed to load file", "error");
+      toastError(showToast, e, "Failed to load file");
     }
   };
 
@@ -253,7 +323,7 @@ export default function BehaviourPage() {
             variant="primary"
             color="purple"
             icon={Plus}
-            onClick={() => setShowCreate(true)}
+            onClick={openCreate}
           >
             New Profile
           </Button>
@@ -295,7 +365,7 @@ export default function BehaviourPage() {
                   onClick={() => {
                     setSelectedProfileId(profile.id);
                     if (editor && editor.profileId !== profile.id) {
-                      setEditor(null);
+                      closeEditor();
                     }
                   }}
                   className={`w-full text-left rounded-xl border p-3 transition-all ${
@@ -456,7 +526,7 @@ export default function BehaviourPage() {
                         >
                           {saving ? "Saving..." : saveStatus === "saved" ? "Saved!" : "Save"}
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => setEditor(null)}>
+                        <Button variant="ghost" size="sm" onClick={closeEditor}>
                           Close
                         </Button>
                       </div>
@@ -482,7 +552,7 @@ export default function BehaviourPage() {
 
         <Modal
           open={showCreate}
-          onClose={() => { setShowCreate(false); setCreateName(""); setCreateDescription(""); setCreateCloneFrom("default"); }}
+          onClose={closeCreate}
           title="New Agent Profile"
           icon={Plus}
           iconColor="text-neon-purple"
@@ -542,14 +612,14 @@ export default function BehaviourPage() {
 
         <Modal
           open={deleteTarget !== null}
-          onClose={() => setDeleteTarget(null)}
+          onClose={closeDelete}
           title="Delete Profile"
           icon={Trash2}
           iconColor="text-red-400"
           size="sm"
           footer={
             <>
-              <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+              <Button variant="ghost" size="sm" onClick={closeDelete}>Cancel</Button>
               <Button
                 variant="primary"
                 color="orange"

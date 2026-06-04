@@ -13,22 +13,27 @@ describe("ModelPicker defaults", () => {
     global.fetch = jest.fn((url: string | Request) => {
       const u = typeof url === "string" ? url : url.toString();
       if (u.includes("/api/models/defaults")) {
+        // The on-the-wire envelope is `{ data: { defaults: ... } }`, but
+        // the session-135 migration collapsed the double-envelope type
+        // to `safeApiCall<{ defaults?: ApiDefaults }>` and reads
+        // `dRes.data?.defaults` directly. The `safeApiCall<T>` helper
+        // unwraps the envelope before the production code sees it, so
+        // the mock body matches the post-unwrap shape.
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ data: { defaults: { agent: "reg-2" } } }),
+          json: () => Promise.resolve({ defaults: { agent: "reg-2" } }),
         } as Response);
       }
       if (u.includes("/api/models")) {
         return Promise.resolve({
           ok: true,
+          // See above — post-unwrap shape.
           json: () =>
             Promise.resolve({
-              data: {
-                models: [
-                  { id: "reg-1", name: "Older", provider: "p1", modelId: "m1" },
-                  { id: "reg-2", name: "AgentDefault", provider: "p2", modelId: "m2" },
-                ],
-              },
+              models: [
+                { id: "reg-1", name: "Older", provider: "p1", modelId: "m1" },
+                { id: "reg-2", name: "AgentDefault", provider: "p2", modelId: "m2" },
+              ],
             }),
         } as Response);
       }
@@ -47,22 +52,22 @@ describe("ModelPicker defaults", () => {
     global.fetch = jest.fn((url: string | Request) => {
       const u = typeof url === "string" ? url : url.toString();
       if (u.includes("/api/models/defaults")) {
+        // See above — post-unwrap shape.
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ data: { defaults: { agent: null } } }),
+          json: () => Promise.resolve({ defaults: { agent: null } }),
         } as Response);
       }
       if (u.includes("/api/models")) {
         return Promise.resolve({
           ok: true,
+          // See above — post-unwrap shape.
           json: () =>
             Promise.resolve({
-              data: {
-                models: [
-                  { id: "reg-newest", name: "Newest", provider: "pv", modelId: "mv" },
-                  { id: "reg-old", name: "Old", provider: "p1", modelId: "m1" },
-                ],
-              },
+              models: [
+                { id: "reg-newest", name: "Newest", provider: "pv", modelId: "mv" },
+                { id: "reg-old", name: "Old", provider: "p1", modelId: "m1" },
+              ],
             }),
         } as Response);
       }
@@ -81,15 +86,17 @@ describe("ModelPicker defaults", () => {
     global.fetch = jest.fn((url: string | Request) => {
       const u = typeof url === "string" ? url : url.toString();
       if (u.includes("/api/models/defaults")) {
+        // See above — post-unwrap shape.
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ data: { defaults: { agent: null } } }),
+          json: () => Promise.resolve({ defaults: { agent: null } }),
         } as Response);
       }
       if (u.includes("/api/models")) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ data: { models: [] } }),
+          // See above — post-unwrap shape.
+          json: () => Promise.resolve({ models: [] }),
         } as Response);
       }
       return Promise.reject(new Error("unexpected fetch: " + u));
@@ -123,15 +130,17 @@ describe("ModelPicker defaults", () => {
     global.fetch = jest.fn((url: string | Request) => {
       const u = typeof url === "string" ? url : url.toString();
       if (u.includes("/api/models/defaults")) {
+        // See above — post-unwrap shape.
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ data: { defaults: { agent: null } } }),
+          json: () => Promise.resolve({ defaults: { agent: null } }),
         } as Response);
       }
       if (u.includes("/api/models")) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ data: { models: [] } }),
+          // See above — post-unwrap shape.
+          json: () => Promise.resolve({ models: [] }),
         } as Response);
       }
       return Promise.reject(new Error("unexpected fetch: " + u));

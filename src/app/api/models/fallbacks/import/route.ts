@@ -2,11 +2,9 @@
 // /api/models/fallbacks/import — GET preview / POST import fallbacks from Hermes config.yaml
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
-import { existsSync, readFileSync } from "fs";
-import * as yaml from "js-yaml";
 import { requireAuth } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
-import { logApiError } from "@/lib/api-logger";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
 import {
   addFallbackEntry,
@@ -17,7 +15,10 @@ import {
 import { parseFallbackAgentSettingsFromYaml } from "@/lib/fallback-config-yaml";
 import { upsertModel } from "@/lib/models-repository";
 import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { readHermesYamlConfig } from "@/lib/hermes-config-sync";
+import { notFound, ok } from "@/lib/api-response";
+import { fallbackKey } from "@/lib/model-key";
+import { z } from "zod";
 
 interface ImportPreview {
   provider: string;
@@ -31,20 +32,17 @@ export async function GET(request: NextRequest) {
   if (auth) return auth;
 
   try {
-    const paths = getActiveHermesPaths();
-    if (!existsSync(paths.config)) {
-      return NextResponse.json({ data: { fallbacks: [], imported: false } });
-    }
-
-    const raw = readFileSync(paths.config, "utf-8");
-    const config = yaml.load(raw) as {
+    const config = readHermesYamlConfig<{
       fallback_providers?: Array<{ provider?: string; model?: string; base_url?: string }>;
-    } | null;
+    }>();
+    if (!config) {
+      return ok({ fallbacks: [], imported: false });
+    }
 
     const preview: ImportPreview[] = [];
     const existingChain = listFallbackChain();
     const existingKeys = new Set(
-      existingChain.map((e) => `${e.provider}::${e.modelIdString}`)
+      existingChain.map((e) => fallbackKey(e.provider, e.modelIdString))
     );
 
     for (const entry of config?.fallback_providers ?? []) {
@@ -53,39 +51,43 @@ export async function GET(request: NextRequest) {
         provider: entry.provider,
         model: entry.model,
         baseUrl: entry.base_url?.trim() || null,
-        alreadyImported: existingKeys.has(`${entry.provider}::${entry.model}`),
+        alreadyImported: existingKeys.has(fallbackKey(entry.provider, entry.model)),
       });
     }
 
-    return NextResponse.json({ data: { fallbacks: preview } });
+    return ok({ fallbacks: preview });
   } catch (error) {
-    logApiError("GET /api/models/fallbacks/import", "previewing import", error);
-    return NextResponse.json({ error: "Failed to preview import" }, { status: 500 });
+    return serverErrorFromCatch(
+      "GET /api/models/fallbacks/import",
+      "previewing import",
+      error,
+      "Failed to preview import",
+    );
   }
 }
+
+// POST body is optional: callers can pass { overwrite?: boolean } or empty.
+const importPostSchema = z
+  .object({ overwrite: z.boolean().optional() })
+  .strict();
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
-
-  const body = bodyResult as { overwrite?: boolean };
+  const parsed = await parseAndValidateJsonBody(request, importPostSchema);
+  if (parsed instanceof NextResponse) return parsed;
 
   try {
-    const paths = getActiveHermesPaths();
-    if (!existsSync(paths.config)) {
-      return NextResponse.json({ error: "config.yaml not found" }, { status: 404 });
-    }
-
-    const rawContent = readFileSync(paths.config, "utf-8");
-    const config = yaml.load(rawContent) as {
+    const config = readHermesYamlConfig<{
       fallback_providers?: Array<{ provider?: string; model?: string; base_url?: string }>;
       agent?: unknown;
-    } | null;
+    }>();
+    if (!config) {
+      return notFound("config.yaml not found");
+    }
 
-    const agentSettings = parseFallbackAgentSettingsFromYaml(config?.agent);
+    const agentSettings = parseFallbackAgentSettingsFromYaml(config.agent);
     if (Object.keys(agentSettings).length > 0) {
       updateFallbackConfigBatch(agentSettings);
     }
@@ -96,15 +98,15 @@ export async function POST(request: NextRequest) {
 
     const existingChain = listFallbackChain();
     const existingKeys = new Set(
-      existingChain.map((e) => `${e.provider}::${e.modelIdString}`)
+      existingChain.map((e) => fallbackKey(e.provider, e.modelIdString))
     );
 
     for (let i = 0; i < chain.length; i++) {
       const entry = chain[i];
       if (!entry.provider || !entry.model) continue;
 
-      const key = `${entry.provider}::${entry.model}`;
-      if (existingKeys.has(key) && !body?.overwrite) {
+      const key = fallbackKey(entry.provider, entry.model);
+      if (existingKeys.has(key) && !parsed.overwrite) {
         skipped.push(key);
         continue;
       }
@@ -140,15 +142,17 @@ export async function POST(request: NextRequest) {
       ok: true,
     });
 
-    return NextResponse.json({
-      data: {
-        imported: imported.length,
-        skipped: skipped.length,
-        entries: imported,
-      },
+    return ok({
+      imported: imported.length,
+      skipped: skipped.length,
+      entries: imported,
     });
   } catch (error) {
-    logApiError("POST /api/models/fallbacks/import", "importing fallbacks", error);
-    return NextResponse.json({ error: "Failed to import fallbacks" }, { status: 500 });
+    return serverErrorFromCatch(
+      "POST /api/models/fallbacks/import",
+      "importing fallbacks",
+      error,
+      "Failed to import fallbacks",
+    );
   }
 }

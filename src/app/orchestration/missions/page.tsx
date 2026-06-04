@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { Loader2, Plus, RefreshCw, Rocket } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -24,9 +25,7 @@ export default function MissionsPage() {
     toastElement,
     fetchData,
     showCreate,
-    setShowCreate,
     editingId,
-    setEditingId,
     templates,
     showTemplateManager,
     setShowTemplateManager,
@@ -93,6 +92,72 @@ export default function MissionsPage() {
     handleCreateNewTemplate,
   } = vm;
 
+  // Close the create/edit mission sheet. The shared `closeComposer`
+  // callback lives in the hook (see useMissionsPage.ts) — the 2
+  // success branches of `handleCreate` (update + promote) use it
+  // too, so a future "clear form fields" or "dismiss category"
+  // reset lands in one place. The Sheet's onClose,
+  // MissionComposerActions footer onClose, and the embedded
+  // MissionCreateForm onClose all funnel through this single
+  // reference.
+  const handleCloseCreate = vm.closeComposer;
+
+  // Sibling open callback for the action-bar's "New Mission" button.
+  // Mirrors the `closeComposer` shape (single-setter, no editing state
+  // mutation) — promoted from the inline `() => setShowCreate(true)`
+  // so the open/close pair are named siblings in the hook's return
+  // value. The 4 internal `setShowCreate(true)` sites in the hook
+  // (handleEdit, handleDuplicateMission, handleTemplateSelect,
+  // fetchData's template-apply path) are NOT this callback — they all
+  // do additional state mutations first. See `openCreate` JSDoc in
+  // useMissionsPage.ts.
+  const handleOpenCreate = vm.openCreate;
+
+  // Three sibling modal close callbacks — each is a single-setter
+  // `() => setShow…(false)` that appears exactly once at the
+  // modal's `onClose` prop. Inlining them is fine, but naming
+  // them keeps the JSX readable and groups the 3 dismissals next
+  // to each other so a future "also reset X state on close"
+  // extension lands in one place. The functions are byte-equivalent
+  // to the inline form: each just calls its setter with `false`.
+  const closeCategoryManager = useCallback(
+    () => setShowCategoryManager(false),
+    [setShowCategoryManager],
+  );
+  const closeTemplateManager = useCallback(
+    () => setShowTemplateManager(false),
+    [setShowTemplateManager],
+  );
+  // Open sibling for `closeCategoryManager`. The `onManageCategories` prop
+  // on `<MissionCreateForm>` previously received an inline `() =>
+  // setShowCategoryManager(true)` arrow — promoted to a named callback so
+  // the open/close pair is named next to each other in the page, matching
+  // the `openCreate` / `closeComposer` pair from session 114 + 116 and the
+  // `openAgentCreate` / `closeAgentModal` pair from session 114. As of
+  // session 118, this callback is exposed by `useMissionsPage` as
+  // `vm.openCategoryManager` so the same callback is reused by
+  // `MissionsList`'s "Manage categories" button (the 2 inline arrows
+  // that used to live at those 2 call sites are now this single named
+  // callback). The `useCallback` deps array is `[]` (the setter reference
+  // is stable), matching the sibling close callbacks.
+  const openCategoryManager = vm.openCategoryManager;
+  // The Template Editor has TWO close paths: `onClose` (X / overlay) which
+  // is a single-setter SOFT close, and `onCancel` (the Cancel button) which
+  // is a 2-setter HARD close that also clears `editingTemplateId`. This
+  // mirrors the HARD/SOFT discriminator pattern that the agents and
+  // missions modals use — see session-100-list2-cron-modal-setter-pair.md.
+  // They are NOT duplicates; they are a deliberate UX discriminator, and
+  // a future "migrate to a single setter" PR will break the cancel-then-
+  // reopen flow. Keep them as 2 separate callbacks.
+  const closeTemplateEditor = useCallback(
+    () => setShowTemplateEditor(false),
+    [setShowTemplateEditor],
+  );
+  const cancelTemplateEditor = useCallback(() => {
+    setShowTemplateEditor(false);
+    setEditingTemplateId(null);
+  }, [setShowTemplateEditor, setEditingTemplateId]);
+
   if (loading) {
     return (
       <AppPageShell variant="scanlines">
@@ -134,7 +199,7 @@ export default function MissionsPage() {
             >
               <RefreshCw className="w-4 h-4" />
             </button>
-            <Button onClick={() => setShowCreate(true)} size="sm">
+            <Button onClick={handleOpenCreate} size="sm">
               <Plus className="w-3.5 h-3.5" /> New Mission
             </Button>
           </>
@@ -147,10 +212,7 @@ export default function MissionsPage() {
 
       <Sheet
         open={showCreate}
-        onClose={() => {
-          setShowCreate(false);
-          setEditingId(null);
-        }}
+        onClose={handleCloseCreate}
         title={sheetTitle}
         subtitle="Category, task, and dispatch settings"
         footer={
@@ -160,10 +222,7 @@ export default function MissionsPage() {
             formState={formState}
             onSubmit={handleCreate}
             onSaveAsTemplate={handleSaveAsTemplate}
-            onClose={() => {
-              setShowCreate(false);
-              setEditingId(null);
-            }}
+            onClose={handleCloseCreate}
             dispatching={dispatching}
             dispatchAcknowledged={dispatchAcknowledged}
           />
@@ -180,15 +239,12 @@ export default function MissionsPage() {
             categoryId={newCategoryId}
             onCategoryChange={setCategoryId}
             onCreateCategory={handleCreateCategory}
-            onManageCategories={() => setShowCategoryManager(true)}
+            onManageCategories={openCategoryManager}
             categoriesLoadError={categoriesLoadError}
             onRetryCategories={() => void loadCategories()}
             onSubmit={handleCreate}
             onSaveAsTemplate={handleSaveAsTemplate}
-            onClose={() => {
-              setShowCreate(false);
-              setEditingId(null);
-            }}
+            onClose={handleCloseCreate}
             dispatching={dispatching}
             dispatchAcknowledged={dispatchAcknowledged}
             onDispatchOpenChange={(open) => {
@@ -200,7 +256,7 @@ export default function MissionsPage() {
 
       <CategoryManagerModal
         open={showCategoryManager}
-        onClose={() => setShowCategoryManager(false)}
+        onClose={closeCategoryManager}
         categories={categories}
         categoriesLoadError={categoriesLoadError}
         onRefresh={() => void loadCategories()}
@@ -211,7 +267,7 @@ export default function MissionsPage() {
 
       <TemplateManagerModal
         open={showTemplateManager}
-        onClose={() => setShowTemplateManager(false)}
+        onClose={closeTemplateManager}
         templates={templates}
         categories={categories}
         categoryFilter={categoryFilter}
@@ -222,11 +278,8 @@ export default function MissionsPage() {
 
       <TemplateEditorModal
         open={showTemplateEditor}
-        onClose={() => setShowTemplateEditor(false)}
-        onCancel={() => {
-          setShowTemplateEditor(false);
-          setEditingTemplateId(null);
-        }}
+        onClose={closeTemplateEditor}
+        onCancel={cancelTemplateEditor}
         editingTemplateId={editingTemplateId}
         templateName={templateName}
         onTemplateNameChange={setTemplateName}

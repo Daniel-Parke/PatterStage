@@ -5,9 +5,12 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { updateModel, listModels } from "@/lib/models-repository";
 import { readHermesConfigModels, type HermesConfigModelEntry } from "@/lib/hermes-config-sync";
+import { notFound, ok } from "@/lib/api-response";
+import { modelKey } from "@/lib/model-key";
+import { z } from "zod";
 
 
 interface Diff { field: string; before: unknown; after: unknown }
@@ -23,29 +26,32 @@ function computeDiffs(
 ): { diffs: Diff[]; updates: Record<string, unknown> } {
   const diffs: Diff[] = [];
   const updates: Record<string, unknown> = {};
+  // Local closure — collapses the 4 inline `diffs.push({field, before, after})`
+  // + `updates.X = Y` site pairs into a single token per field. The wire
+  // shape (diffs array + updates object) is identical, so this is pure refactor.
+  const pushDiff = <K extends keyof typeof hermes & keyof typeof model>(
+    field: K,
+    before: unknown,
+    after: unknown,
+  ) => {
+    diffs.push({ field: field as string, before, after });
+    updates[field] = after;
+  };
 
   if (hermes.modelId && hermes.modelId !== model.modelId) {
-    diffs.push({ field: "modelId", before: model.modelId, after: hermes.modelId });
-    updates.modelId = hermes.modelId;
+    pushDiff("modelId", model.modelId, hermes.modelId);
   }
   if (hermes.provider && hermes.provider !== model.provider) {
-    diffs.push({ field: "provider", before: model.provider, after: hermes.provider });
-    updates.provider = hermes.provider;
+    pushDiff("provider", model.provider, hermes.provider);
   }
   if (hermes.baseUrl !== model.baseUrl) {
-    diffs.push({ field: "baseUrl", before: model.baseUrl, after: hermes.baseUrl ?? "" });
-    updates.baseUrl = hermes.baseUrl;
+    pushDiff("baseUrl", model.baseUrl, hermes.baseUrl ?? "");
   }
   if (
     hermes.contextLength != null &&
     hermes.contextLength !== model.contextLength
   ) {
-    diffs.push({
-      field: "contextLength",
-      before: model.contextLength,
-      after: hermes.contextLength,
-    });
-    updates.contextLength = hermes.contextLength;
+    pushDiff("contextLength", model.contextLength, hermes.contextLength);
   }
 
   return { diffs, updates };
@@ -55,30 +61,36 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
+  // Body is entirely optional — `{}` triggers a bulk pull, `{ modelId }`
+  // triggers a single-model pull, `{ modelId, excluded: [...] }` pulls
+  // one model minus the excluded fields. All fields are optional.
+  const pullPostSchema = z
+    .object({
+      modelId: z.string().optional(),
+      excluded: z.array(z.string()).optional(),
+    })
+    .strict();
 
-  const body = bodyResult;
-  const targetModelId = body?.modelId as string | undefined;
-  const excluded = new Set<string>((body?.excluded as string[] | undefined) ?? []);
+  const parsed = await parseAndValidateJsonBody(request, pullPostSchema);
+  if (parsed instanceof NextResponse) return parsed;
+  const targetModelId = parsed.modelId;
+  const excluded = new Set<string>(parsed.excluded ?? []);
   const hermesModels = readHermesConfigModels();
 
   // Single-model pull: only the model whose button was clicked
   if (targetModelId) {
     const dbModel = listModels().find((m) => m.id === targetModelId);
     if (!dbModel) {
-      return NextResponse.json({ error: "Model not found" }, { status: 404 });
+      return notFound("Model not found");
     }
 
-    const key = `${dbModel.provider}::${dbModel.modelId}`;
+    const key = modelKey(dbModel.provider, dbModel.modelId);
     const hermes = hermesModels.get(key);
     if (!hermes) {
-      return NextResponse.json({
-        data: {
-          success: true,
-          details: [{ action: "info", detail: `No matching section in config.yaml for ${dbModel.provider}/${dbModel.modelId}` }],
-          diffs: [],
-        },
+      return ok({
+        success: true,
+        details: [{ action: "info", detail: `No matching section in config.yaml for ${dbModel.provider}/${dbModel.modelId}` }],
+        diffs: [],
       });
     }
 
@@ -96,11 +108,9 @@ export async function POST(request: NextRequest) {
       updateModel(dbModel.id, filteredUpdates);
     }
 
-    return NextResponse.json({
-      data: {
-        success: true,
-        diffs: filteredDiffs,
-      },
+    return ok({
+      success: true,
+      diffs: filteredDiffs,
     });
   }
 
@@ -110,7 +120,7 @@ export async function POST(request: NextRequest) {
   const allDiffs: Array<{ modelId: string; name: string; diffs: Diff[] }> = [];
 
   for (const dbModel of dbModels) {
-    const key = `${dbModel.provider}::${dbModel.modelId}`;
+    const key = modelKey(dbModel.provider, dbModel.modelId);
     const hermes = hermesModels.get(key);
     if (!hermes) continue;
 
@@ -124,20 +134,17 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({
-    data: {
-      success: true,
-      updatedCount,
-      details: [
-        {
-          action: updatedCount > 0 ? "updated" : "unchanged",
-          detail: updatedCount > 0
-            ? `Applied updates to ${updatedCount} model(s)`
-            : "All models already in sync with config.yaml",
-        },
-      ],
-      diffs: allDiffs,
-    },
+  return ok({
+    success: true,
+    updatedCount,
+    details: [
+      {
+        action: updatedCount > 0 ? "updated" : "unchanged",
+        detail: updatedCount > 0
+          ? `Applied updates to ${updatedCount} model(s)`
+          : "All models already in sync with config.yaml",
+      },
+    ],
+    diffs: allDiffs,
   });
 }
-// ═══════════════════════════════════════════════════════════════

@@ -9,12 +9,15 @@
 // GET: returns a dry-run preview of what would be imported without
 //   writing anything to the database.
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 import { parseHermesConfig } from "@/lib/hermes-import";
+import { modelKey } from "@/lib/model-key";
 import { upsertModel, updateModel, listModels } from "@/lib/models-repository";
 import { upsertCredential } from "@/lib/credentials-repository";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
+import { ok } from "@/lib/api-response";
+import { toError } from "@/lib/api-fetch";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { maskKeyHint } from "@/lib/secret-mask";
@@ -26,27 +29,29 @@ export async function GET(request: NextRequest) {
 
   try {
     const parsed = parseHermesConfig();
-    return NextResponse.json({
-      data: {
-        modelsCount: parsed.models.length,
-        credentialsCount: parsed.credentials.length,
-        models: parsed.models.map((m) => ({
-          name: m.name,
-          provider: m.provider,
-          modelId: m.modelId,
-          baseUrl: m.baseUrl,
-          defaultSlots: m.defaultSlots,
-        })),
-        credentials: parsed.credentials.map((c) => ({
-          provider: c.provider,
-          keyHint: maskKeyHint(c.apiKey.trim()),
-        })),
-        details: parsed.details,
-      },
+    return ok({
+      modelsCount: parsed.models.length,
+      credentialsCount: parsed.credentials.length,
+      models: parsed.models.map((m) => ({
+        name: m.name,
+        provider: m.provider,
+        modelId: m.modelId,
+        baseUrl: m.baseUrl,
+        defaultSlots: m.defaultSlots,
+      })),
+      credentials: parsed.credentials.map((c) => ({
+        provider: c.provider,
+        keyHint: maskKeyHint(c.apiKey.trim()),
+      })),
+      details: parsed.details,
     });
   } catch (error) {
-    logApiError("GET /api/models/import", "previewing Hermes import", error);
-    return NextResponse.json({ error: "Failed to preview import" }, { status: 500 });
+    return serverErrorFromCatch(
+      "GET /api/models/import",
+      "previewing Hermes import",
+      error,
+      "Failed to preview import",
+    );
   }
 }
 
@@ -64,7 +69,7 @@ export async function POST(request: NextRequest) {
     const modelKeyToId = new Map<string, string>();
 
     for (const model of parsed.models) {
-      const key = `${model.provider}::${model.modelId}`;
+      const key = modelKey(model.provider, model.modelId);
       try {
         const result = upsertModel({
           name: model.name,
@@ -85,7 +90,7 @@ export async function POST(request: NextRequest) {
         details.push({
           name: model.name,
           action: "skipped",
-          reason: String(err instanceof Error ? err.message : err),
+          reason: toError(err).message,
         });
       }
     }
@@ -111,7 +116,7 @@ export async function POST(request: NextRequest) {
       for (const entry of parsed.models) {
         const credId = providerToCredId[entry.provider];
         if (!credId) continue;
-        const modelId = modelKeyToId.get(`${entry.provider}::${entry.modelId}`);
+        const modelId = modelKeyToId.get(modelKey(entry.provider, entry.modelId));
         if (!modelId) continue;
         // Re-read the existing model once to check whether the link is
         // already in place — avoids a redundant write + audit line.
@@ -143,17 +148,19 @@ export async function POST(request: NextRequest) {
       detail: `models_imported=${modelsImported} models_skipped=${modelsSkipped} credentials_updated=${credentialsUpdated} credentials_linked=${credentialsLinked}`,
     });
 
-    return NextResponse.json({
-      data: {
-        modelsImported,
-        modelsSkipped,
-        credentialsUpdated,
-        credentialsLinked,
-        details,
-      },
+    return ok({
+      modelsImported,
+      modelsSkipped,
+      credentialsUpdated,
+      credentialsLinked,
+      details,
     });
   } catch (error) {
-    logApiError("POST /api/models/import", "importing Hermes models", error);
-    return NextResponse.json({ error: "Failed to import models" }, { status: 500 });
+    return serverErrorFromCatch(
+      "POST /api/models/import",
+      "importing Hermes models",
+      error,
+      "Failed to import models",
+    );
   }
 }

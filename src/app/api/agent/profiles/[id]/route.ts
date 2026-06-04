@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { renameSync, existsSync } from "fs";
 
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { requireAuth } from "@/lib/api-auth";
@@ -16,7 +16,7 @@ import {
 import { pushProfileToHermes, removeProfileFromDisk } from "@/lib/hermes-profile-sync";
 import { resolveProfileHermesHome } from "@/lib/hermes-profile-paths";
 import { slugifyDisplayName } from "@/lib/profile-slug";
-import type { ApiResponse } from "@/types/hermes";
+import { badRequest, conflict, notFound, ok, serverError } from "@/lib/api-response";
 
 export async function PUT(
   request: NextRequest,
@@ -28,19 +28,16 @@ export async function PUT(
   const { id } = await params;
   const prof = resolveSafeProfileName(id);
   if (!prof.ok) {
-    return NextResponse.json({ error: prof.error }, { status: 400 });
+    return badRequest(prof.error);
   }
 
   if (prof.profile === "default") {
-    return NextResponse.json(
-      { error: "Cannot modify the default profile slug" },
-      { status: 400 },
-    );
+    return badRequest("Cannot modify the default profile slug");
   }
 
   const existing = getProfile(prof.profile);
   if (!existing) {
-    return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+    return notFound("Profile not found");
   }
 
   try {
@@ -56,13 +53,10 @@ export async function PUT(
       if (newSlug && newSlug !== prof.profile) {
         const newProf = resolveSafeProfileName(newSlug);
         if (!newProf.ok) {
-          return NextResponse.json({ error: newProf.error }, { status: 400 });
+          return badRequest(newProf.error);
         }
         if (getProfile(newSlug)) {
-          return NextResponse.json(
-            { error: `Profile "${newSlug}" already exists` },
-            { status: 409 },
-          );
+          return conflict(`Profile "${newSlug}" already exists`);
         }
 
         const oldDir = resolveProfileHermesHome(prof.profile);
@@ -73,7 +67,7 @@ export async function PUT(
 
         const renamed = renameProfileSlug(prof.profile, newSlug);
         if (!renamed) {
-          return NextResponse.json({ error: "Failed to rename profile" }, { status: 500 });
+          return serverError("Failed to rename profile");
         }
         slug = newSlug;
       } else if (newSlug === prof.profile) {
@@ -88,10 +82,7 @@ export async function PUT(
 
     const push = pushProfileToHermes(slug);
     if (!push.success) {
-      return NextResponse.json(
-        { error: push.error ?? "Failed to sync profile to Hermes" },
-        { status: 500 },
-      );
+      return serverError(push.error ?? "Failed to sync profile to Hermes");
     }
 
     appendAuditLine({
@@ -100,12 +91,14 @@ export async function PUT(
       ok: true,
     });
 
-    return NextResponse.json<ApiResponse<{ success: true; slug: string }>>({
-      data: { success: true, slug },
-    });
+    return ok({ success: true, slug });
   } catch (error) {
-    logApiError("PUT /api/agent/profiles/[id]", "updating profile", error);
-    return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
+    return serverErrorFromCatch(
+      "PUT /api/agent/profiles/[id]",
+      "updating profile",
+      error,
+      "Failed to update profile",
+    );
   }
 }
 
@@ -119,20 +112,17 @@ export async function DELETE(
   const { id } = await params;
   const prof = resolveSafeProfileName(id);
   if (!prof.ok) {
-    return NextResponse.json({ error: prof.error }, { status: 400 });
+    return badRequest(prof.error);
   }
 
   if (prof.profile === "default") {
-    return NextResponse.json(
-      { error: "Cannot delete the default profile" },
-      { status: 400 },
-    );
+    return badRequest("Cannot delete the default profile");
   }
 
   try {
     ensureDb();
     if (!deleteProfile(prof.profile)) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      return notFound("Profile not found");
     }
     removeProfileFromDisk(prof.profile);
 
@@ -142,11 +132,13 @@ export async function DELETE(
       ok: true,
     });
 
-    return NextResponse.json<ApiResponse<{ success: true }>>({
-      data: { success: true },
-    });
+    return ok({ success: true });
   } catch (error) {
-    logApiError("DELETE /api/agent/profiles/[id]", "deleting profile", error);
-    return NextResponse.json({ error: "Failed to delete profile" }, { status: 500 });
+    return serverErrorFromCatch(
+      "DELETE /api/agent/profiles/[id]",
+      "deleting profile",
+      error,
+      "Failed to delete profile",
+    );
   }
 }

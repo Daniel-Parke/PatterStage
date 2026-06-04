@@ -8,6 +8,7 @@
 import { existsSync, statSync } from "fs";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { logApiError } from "@/lib/api-logger";
+import { messageFromError } from "@/lib/api-fetch";
 import type {
   MemoryProvider,
   MemoryProviderHealth,
@@ -65,7 +66,7 @@ export const holographicProvider: MemoryProvider = {
       return {
         available: false,
         provider: "holographic",
-        message: `Error reading database: ${error instanceof Error ? error.message : "Unknown error"}`,
+        message: `Error reading database: ${messageFromError(error, "Unknown error")}`,
       };
     }
   },
@@ -199,7 +200,7 @@ export const holographicProvider: MemoryProvider = {
     } catch (error) {
       return {
         success: false,
-        error: `Failed to add fact: ${error instanceof Error ? error.message : "Unknown error"}`,
+        error: `Failed to add fact: ${messageFromError(error, "Unknown error")}`,
       };
     }
   },
@@ -261,7 +262,7 @@ export const holographicProvider: MemoryProvider = {
     } catch (error) {
       return {
         success: false,
-        error: `Failed to update fact: ${error instanceof Error ? error.message : "Unknown error"}`,
+        error: `Failed to update fact: ${messageFromError(error, "Unknown error")}`,
       };
     }
   },
@@ -293,7 +294,7 @@ export const holographicProvider: MemoryProvider = {
           return { success: true, id };
         } catch (error) {
           db.close();
-          const msg = error instanceof Error ? error.message : "";
+          const msg = messageFromError(error, "");
           if (msg.includes("locked") && attempt < 1) {
             await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
             continue;
@@ -306,7 +307,7 @@ export const holographicProvider: MemoryProvider = {
       logApiError("DELETE /api/memory", "deleting fact", error);
       return {
         success: false,
-        error: `Failed to delete fact: ${error instanceof Error ? error.message : "Unknown error"}`,
+        error: `Failed to delete fact: ${messageFromError(error, "Unknown error")}`,
       };
     }
   },

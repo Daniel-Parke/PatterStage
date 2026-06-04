@@ -20,6 +20,26 @@ export function toError(e: unknown): Error {
   return e instanceof Error ? e : new Error(String(e));
 }
 
+/**
+ * Coerce an unknown caught value to a user-friendly error message,
+ * falling back to `fallback` when the error is empty/unknown.
+ *
+ * This is the canonical replacement for the long-standing pattern
+ *   err instanceof Error ? err.message : <fallback>
+ * that appears 20+ times across operations pages, hooks, and
+ * `safeApiCall` itself. It composes `toError()` and centralises the
+ * `|| fallback` discipline so every catch block is guaranteed to
+ * produce a non-empty string.
+ *
+ * @example
+ *   } catch (err) {
+ *     showToast(messageFromError(err, "Failed to load"), "error");
+ *   }
+ */
+export function messageFromError(e: unknown, fallback: string): string {
+  return toError(e).message || fallback;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic JSON fetch returns arbitrary shapes
 export async function apiFetch<T = any>(
   path: string,
@@ -55,10 +75,17 @@ export async function apiFetch<T = any>(
  *   const { ok, error } = await safeApiCall("/api/cron", { method: "POST", body: { action: "sync" } });
  *   if (!ok) showToast(error!, "error");
  */
+/** Return shape of `safeApiCall` — used by `runMutation` consumers to read fields beyond ok/error. */
+export type SafeApiCallResult<T = unknown> = {
+  ok: boolean;
+  data?: T;
+  error?: string;
+};
+
 export async function safeApiCall<T = unknown>(
   path: string,
   options?: Omit<RequestInit, "body"> & { body?: unknown }
-): Promise<{ ok: boolean; data?: T; error?: string }> {
+): Promise<SafeApiCallResult<T>> {
   try {
     const data = await apiFetch(path, {
       ...options,
@@ -66,6 +93,132 @@ export async function safeApiCall<T = unknown>(
     });
     return { ok: true, data: data as T };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Request failed" };
+    return { ok: false, error: messageFromError(e, "Request failed") };
   }
+}
+
+/**
+ * Safe API call that unwraps the `{ data: T }` envelope in one step.
+ *
+ * Every Control Hub API route returns `{ data: T }` (or `{ data: T, error?: string }`).
+ * `safeApiCall<T>` returns the raw envelope as `{ ok, data: T, error? }` so the
+ * caller is responsible for picking the right envelope field. When the
+ * caller only needs the inner `data` field (the most common case for
+ * `Promise.all([...])` batched fetches and `if (data) setData(...)` updates),
+ * the manual form is:
+ *
+ * ```ts
+ * const { data } = await safeApiCall<{ data?: MonitorData }>("/api/monitor");
+ * if (data?.data) setData({ monitor: data.data });
+ * ```
+ *
+ * `safeApiCallData` collapses that to:
+ *
+ * ```ts
+ * const monitor = await safeApiCallData<MonitorData>("/api/monitor");
+ * if (monitor) setData({ monitor });
+ * ```
+ *
+ * Byte-equivalence:
+ * - `safeApiCallData<T>(path, init)` is `T | null`, identical to
+ *   `((await safeApiCall<{ data?: T }>(path, init)).data?.data ?? null)`.
+ *   On error (`ok: false`) `safeApiCall.data` is `undefined`, so the
+ *   optional chain short-circuits to `undefined` and the `?? null` returns
+ *   `null`. The helper produces the same `null` on error.
+ * - On success-but-no-data (e.g. a 200 response with `{ data: null }`),
+ *   the inner `data` is `undefined` and the helper returns `null` — same
+ *   as the inline form.
+ * - The `T` type is the inner payload, not the envelope — call sites
+ *   that used `safeApiCall<{ data: SomeType }>` to express "the API
+ *   returns `{ data: SomeType }`" pass `SomeType` directly here. The
+ *   helper infers the envelope shape internally.
+ *
+ * Use `safeApiCall` when you need `ok`/`error` (e.g. mutation results with
+ * toasts), or when the response shape isn't a `{ data: T }` envelope.
+ * Use `safeApiCallData` for read-only fetches of a `{ data: T }` envelope.
+ *
+ * @example
+ *   // Single fetch:
+ *   const monitor = await safeApiCallData<MonitorData>("/api/monitor");
+ *   if (monitor) setData({ monitor });
+ *
+ *   // Batched:
+ *   const [status, config] = await Promise.all([
+ *     safeApiCallData<SystemStatus>("/api/status", { signal }),
+ *     safeApiCallData<Record<string, unknown>>("/api/config", { signal }),
+ *   ]);
+ */
+export async function safeApiCallData<T = unknown>(
+  path: string,
+  options?: Omit<RequestInit, "body"> & { body?: unknown }
+): Promise<T | null> {
+  const { ok, data } = await safeApiCall<{ data?: T }>(path, options);
+  if (!ok) return null;
+  return (data?.data ?? null) as T | null;
+}
+
+/**
+ * Type signature matching the destructured `showToast` from
+ * `@/components/ui/Toast`'s `useToast()`. We don't import the type
+ * here to avoid a circular dep (ui/Toast is a client component, this
+ * file is shared with server code).
+ */
+type ShowToastFn = (message: string, type?: "success" | "error" | "info") => void;
+
+/**
+ * Show a toast for a caught error in a single call. Composes
+ * `messageFromError()` so every `showToast(messageFromError(err, ...), "error")`
+ * site becomes `toastError(showToast, err, ...)` — one fewer intermediate
+ * variable and one less line in the common catch block.
+ *
+ * Byte-equivalent to the inline form: same `messageFromError` semantics
+ * (falls back to `fallback` when the error has no message), same
+ * `"error"` toast type, same call to `showToast`.
+ *
+ * @example
+ *   } catch (err) {
+ *     toastError(showToast, err, "Delete failed");
+ *   }
+ */
+export function toastError(
+  showToast: ShowToastFn,
+  err: unknown,
+  fallback: string,
+): void {
+  showToast(messageFromError(err, fallback), "error");
+}
+
+/**
+ * Type signature matching the destructured `setError` from a
+ * `useState<string | null>`-style call. We don't import the type
+ * here to avoid React coupling in this module. The setter takes a
+ * string-or-null; we never pass null through this helper, only the
+ * resolved message.
+ */
+type SetErrorFn = (value: string | null) => void;
+
+/**
+ * Set a `useState<string | null>` error from a caught value in a
+ * single call. Composes `messageFromError()` so every
+ *   setError(messageFromError(err, "..."))
+ * catch block becomes `setErrorFromCaught(setError, err, "...")` —
+ * one fewer intermediate variable and the same byte-equivalent
+ * semantics as the inline form.
+ *
+ * This is the `setError` sibling of `toastError` — same composition
+ * rules (toError() + `|| fallback` discipline), different consumer.
+ * Use `toastError` for showToast-based error reporting and
+ * `setErrorFromCaught` for useState-based error reporting.
+ *
+ * @example
+ *   } catch (err) {
+ *     setErrorFromCaught(setError, err, "Failed to load");
+ *   }
+ */
+export function setErrorFromCaught(
+  setError: SetErrorFn,
+  err: unknown,
+  fallback: string,
+): void {
+  setError(messageFromError(err, fallback));
 }

@@ -120,7 +120,14 @@ interface CronTabContentProps {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onRun?: (id: string) => void;
-  onEdit?: (job: CronJob | SystemCronJob) => void;
+  /**
+   * Edit handler. The discriminator (`isAgent`) decides the runtime type:
+   * - `isAgent: true` → `CronJob`
+   * - `isAgent: false` → `SystemCronJob`
+   * This makes the runtime `if ("command" in job)` check that the original
+   * code did inline unnecessary — the union type narrows automatically.
+   */
+  onEdit: (job: CronJob | SystemCronJob) => void;
 }
 
 function CronTabContent({
@@ -179,14 +186,14 @@ function CronTabContent({
               onToggle={onToggle}
               onDelete={onDelete}
               onRun={onRun!}
-              onEdit={(j) => onEdit?.(j)}
+              onEdit={onEdit}
             />
           ) : (
             <SystemCronCard
               key={job.id}
               job={job as SystemCronJob}
               onToggle={onToggle}
-              onEdit={(j) => onEdit?.(j)}
+              onEdit={onEdit}
               onDelete={onDelete}
             />
           ),
@@ -215,6 +222,81 @@ export default function CronPage() {
   // it directly caused the effect to re-fire every render, producing the
   // loading-spinner ↔ empty-state flicker on the System tab.
   const { loadJobs: loadHardwareJobs } = hardware;
+
+  // Close the agent cron modal. The same `setShowCreate(false)` +
+  // `setEditingJob(null)` pair appears at 2 sites (the modal's onClose
+  // and the onSaved success path) — centralising it here keeps the 2
+  // sites in lockstep if a future "clear form fields" or "reset
+  // hardware paths" reset is added — a single edit here updates both.
+  // The pattern mirrors the `closeComposer` callback that
+  // useMissionsPage exposes for the same 2-setter shape (see
+  // session-98-list2-close-composer-setter-pair.md).
+  const closeAgentModal = useCallback(() => {
+    setShowCreate(false);
+    setEditingJob(null);
+  }, []);
+
+  // Close the system cron modal. The same `setShowHardwareCreate(false)`
+  // + `setEditingHardwareJob(null)` pair appears at 2 sites (the modal's
+  // onClose and the onSave success path). Same discriminator as
+  // `closeAgentModal` — page-local, not in a hook, because the state is
+  // page-local. Promotes to a hook if a 2nd page needs the same shape.
+  const closeSystemModal = useCallback(() => {
+    setShowHardwareCreate(false);
+    setEditingHardwareJob(null);
+  }, []);
+
+  // Open the agent cron modal in "create" mode. The setter-pair 1-liner
+  // `() => setShowCreate(true)` appears at 2 sites (the ActionButtons
+  // `onCreate` for the agent tab, and the CronTabContent `onCreate`).
+  // Promoted to a named callback so a future "also reset form fields"
+  // extension lands in one place. Mirrors the `closeCreate` pattern
+  // promoted in session 101.
+  const openAgentCreate = useCallback(() => {
+    setShowCreate(true);
+  }, []);
+
+  // Open the system cron modal in "create" mode. Same shape as
+  // `openAgentCreate` but for the system tab. Promotes to a single
+  // source of truth so the action-bar and tab-content paths stay
+  // in lockstep.
+  const openSystemCreate = useCallback(() => {
+    setShowHardwareCreate(true);
+  }, []);
+
+  // Open the agent cron modal in "edit" mode for a specific job. The
+  // `setEditingJob(job); setShowCreate(true)` pair appears at 1 site
+  // (the CronTabContent `onEdit`). Promoted to a named callback so
+  // the discriminator ("set editing state, then open the modal")
+  // lives in exactly one place. Mirrors the `closeEdit` pattern
+  // promoted in session 101.
+  const openAgentEditor = useCallback((job: CronJob | SystemCronJob) => {
+    setEditingJob(job as CronJob);
+    setShowCreate(true);
+  }, []);
+
+  // Open the system cron modal in "edit" mode for a specific job.
+  // Same shape as `openAgentEditor` but for the system tab.
+  const openSystemEditor = useCallback((job: CronJob | SystemCronJob) => {
+    setEditingHardwareJob(job as SystemCronJob);
+    setShowHardwareCreate(true);
+  }, []);
+
+  // Open the cron modal in "create" mode for whichever tab is currently
+  // active. The `onCreate` prop on `ActionButtons` is a single callback
+  // that the tab-conditional inline arrow function used to fill — a
+  // "future 'reset form fields on create' extension would have to be
+  // added in two places (one per tab branch). The discriminator lives
+  // in this single callback so a future reset lands once.
+  // Mirrors the `closeCreate` discriminator pattern (session 101) but
+  // for the open direction.
+  const openCreateForActiveTab = useCallback(() => {
+    if (activeTab === "agent") {
+      setShowCreate(true);
+    } else {
+      setShowHardwareCreate(true);
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (activeTab === "system") {
@@ -283,11 +365,7 @@ export default function CronPage() {
               }}
               onSync={() => void handleSyncAll()}
               syncing={syncing}
-              onCreate={() =>
-                activeTab === "agent"
-                  ? setShowCreate(true)
-                  : setShowHardwareCreate(true)
-              }
+              onCreate={openCreateForActiveTab}
               createLabel="New Job"
             />
           </div>
@@ -306,18 +384,11 @@ export default function CronPage() {
             desc="Create your first scheduled job"
             searchPlaceholder="Search agent jobs..."
             createLabel="Create Agent Job"
-            onCreate={() => setShowCreate(true)}
+            onCreate={openAgentCreate}
             onToggle={(id) => agent.handleToggle(id)}
             onDelete={(id) => agent.handleDelete(id)}
             onRun={(id) => agent.handleRun(id)}
-            onEdit={(job) => {
-              // Wide type because TabButton can dispatch either kind; on
-              // the agent tab runtime the value is always CronJob, so any
-              // `command` field means we're seeing the wrong type.
-              if ("command" in job) return;
-              setEditingJob(job);
-              setShowCreate(true);
-            }}
+            onEdit={openAgentEditor}
           />
         ) : (
           <CronTabContent
@@ -330,18 +401,11 @@ export default function CronPage() {
             desc="Add a real system cron job"
             searchPlaceholder="Search system jobs..."
             createLabel="Create System Job"
-            onCreate={() => setShowHardwareCreate(true)}
+            onCreate={openSystemCreate}
             onToggle={(id) => hardware.handleToggle(id)}
             onDelete={(id) => hardware.handleDelete(id)}
             onRun={undefined}
-            onEdit={(job) => {
-              // Mirror of the agent branch: on the system tab the runtime
-              // type is SystemCronJob (has `command`), so its absence is
-              // an unexpected shape.
-              if (!("command" in job)) return;
-              setEditingHardwareJob(job);
-              setShowHardwareCreate(true);
-            }}
+            onEdit={openSystemEditor}
           />
         )}
       </div>
@@ -350,13 +414,9 @@ export default function CronPage() {
       <JobFormModal
         job={editingJob}
         open={showCreate || !!editingJob}
-        onClose={() => {
-          setShowCreate(false);
-          setEditingJob(null);
-        }}
+        onClose={closeAgentModal}
         onSaved={() => {
-          setShowCreate(false);
-          setEditingJob(null);
+          closeAgentModal();
           showToast(editingJob ? "Job updated!" : "Job created!");
           agent.loadJobs();
         }}
@@ -366,14 +426,10 @@ export default function CronPage() {
       <SystemCronModal
         open={showHardwareCreate || !!editingHardwareJob}
         editingJob={editingHardwareJob}
-        onClose={() => {
-          setShowHardwareCreate(false);
-          setEditingHardwareJob(null);
-        }}
+        onClose={closeSystemModal}
         onSave={async (job) => {
           await hardware.handleSave(job);
-          setShowHardwareCreate(false);
-          setEditingHardwareJob(null);
+          closeSystemModal();
         }}
       />
 

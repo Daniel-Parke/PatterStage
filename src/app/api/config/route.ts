@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 import yaml from "js-yaml";
+import { z } from "zod";
 
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
+import { forbidden, ok } from "@/lib/api-response";
 import { db } from "@/lib/db";
+import { dumpYamlConfig } from "@/lib/hermes-config-sync";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import { backupFile } from "@/lib/fs-helpers";
 
 const CACHE_TTL_MS = 15_000; // 15 seconds
 
@@ -82,6 +86,22 @@ const WRITABLE_SECTIONS = new Set(
     .map(([id]) => id)
 );
 
+// PUT body shape: a whitelisted section name + an object of values to
+// merge in. `values` is `Record<string, unknown>` (free-form) because
+// the per-section field validation lives in `config-schema.ts` (the
+// client sends the typed section schema and the server just trusts the
+// shape). `.strict()` rejects unknown top-level keys, matching the
+// pre-refactor manual cast + `badRequest("Missing 'section' or 'values'")`.
+// The section whitelist check is kept as a separate `forbidden()` branch
+// below so the 403 message format is preserved (zod refine would lose
+// the human-readable section list).
+const configPutSchema = z
+  .object({
+    section: z.string().min(1),
+    values: z.record(z.string(), z.unknown()),
+  })
+  .strict();
+
 // Mask sensitive values in config before returning to client
 function maskConfigSecrets(config: Record<string, unknown>): Record<string, unknown> {
   const clone = structuredClone(config);
@@ -120,12 +140,13 @@ export async function GET(request: NextRequest) {
   if (auth) return auth;
   try {
     const config = readCachedConfig();
-    return NextResponse.json({ data: maskConfigSecrets(config) });
+    return ok(maskConfigSecrets(config));
   } catch (error) {
-    logApiError("GET /api/config", "reading config.yaml", error);
-    return NextResponse.json(
-      { error: "Failed to read config.yaml" },
-      { status: 500 }
+    return serverErrorFromCatch(
+      "GET /api/config",
+      "reading config.yaml",
+      error,
+      "Failed to read config.yaml",
     );
   }
 }
@@ -135,63 +156,37 @@ export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  // Hoist body parsing out of the main try/catch so malformed JSON
-  // returns 400 (via parseJsonBody) rather than 500. This matches the
-  // behaviour of every other route that adopted parseJsonBody.
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
+  const parsed = await parseAndValidateJsonBody(request, configPutSchema);
+  if (parsed instanceof NextResponse) return parsed;
+  const { section, values } = parsed;
 
-  // Narrow body shape — parseJsonBody returns Record<string, unknown>
-  // so we cast to the structural shape we expect from the client.
-  const { section, values } = bodyResult as {
-    section?: string;
-    values?: unknown;
-  };
-
-  if (!section || !values) {
-    return NextResponse.json(
-      { error: "Missing 'section' or 'values'" },
-      { status: 400 }
-    );
-  }
-
-  // Validate that values is a plain object (not string, array, or null)
-  if (typeof values !== "object" || Array.isArray(values) || values === null) {
-    return NextResponse.json(
-      { error: "values must be an object" },
-      { status: 400 }
-    );
-  }
-
-  // Security: only allow whitelisted sections (prevent modifying model/provider keys)
+  // Non-writable section → 403 (zod refine surfaces the failure as
+  // { message: "section_not_writable" } in zodErrorResponse, but we
+  // need the custom `forbidden()` body with the section list to match
+  // the pre-refactor message format).
   if (!WRITABLE_SECTIONS.has(section)) {
-    return NextResponse.json(
-      { error: `Section '${section}' is not writable. Allowed: ${[...WRITABLE_SECTIONS].join(", ")}` },
-      { status: 403 }
+    return forbidden(
+      `Section '${section}' is not writable. Allowed: ${[...WRITABLE_SECTIONS].join(", ")}`
     );
   }
 
   try {
-    const config = readCachedConfig();
+    const paths = getActiveHermesPaths();
 
-    // Create backup
-    const H = getActiveHermesPaths();
-    const configPath = H.config;
-    if (existsSync(configPath)) {
-      const backupDir = H.backups;
-      mkdirSync(backupDir, { recursive: true });
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const backupPath = `${backupDir}/config.yaml.${timestamp}.bak`;
-      writeFileSync(backupPath, readFileSync(configPath, "utf-8"), "utf-8");
-    }
+    // Create backup (no-op when config.yaml doesn't exist) — single call
+    // to the canonical backupFile() helper replaces the 4-line inline
+    // `existsSync + ensureDir + backupTimestamp + writeFileSync` block.
+    backupFile(paths.config, paths.backups);
+
+    const config = readCachedConfig();
 
     // Merge values into section
     const current = (config[section] as Record<string, unknown>) || {};
     config[section] = { ...current, ...(values as Record<string, unknown>) };
 
     // Write back
-    const content = yaml.dump(config, { lineWidth: -1, noRefs: true });
-    writeFileSync(getActiveHermesPaths().config, content, "utf-8");
+    const content = dumpYamlConfig(config);
+    writeFileSync(paths.config, content, "utf-8");
 
     appendAuditLine({
       action: "config.put",
@@ -202,12 +197,13 @@ export async function PUT(request: NextRequest) {
     // Invalidate cache so next read picks up the change
     invalidateConfigCache();
 
-    return NextResponse.json({ data: { success: true, section, values } });
+    return ok({ success: true, section, values });
   } catch (error) {
-    logApiError("PUT /api/config", "updating config", error);
-    return NextResponse.json(
-      { error: "Failed to update config" },
-      { status: 500 }
+    return serverErrorFromCatch(
+      "PUT /api/config",
+      "updating config",
+      error,
+      "Failed to update config",
     );
   }
 }

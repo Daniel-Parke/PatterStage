@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
+import { dirname } from "path";
 
 import { resolveProfileHermesHome, buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
 import { getBehaviorFiles } from "@/lib/behavior-files";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { safeStat } from "@/lib/fs-stats";
+import { ensureDir, backupTimestamp } from "@/lib/fs-helpers";
 import { resolveSafeProfileName } from "@/lib/path-security";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
@@ -16,7 +18,8 @@ import {
   writeManagedFileContent,
   type ManagedFileKey,
 } from "@/lib/agent-file-store";
-import { applyProfileOrRootPatch, pushProfileOrRoot, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatch, assertPatchSucceeded, pushProfileOrRoot, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import { badRequest, notFound, ok } from "@/lib/api-response";
 import {
   configYamlToColumnValues,
   platformToolsetsFromJson,
@@ -120,10 +123,10 @@ export async function GET(
   const resolved = resolveFilePath(key, profile);
 
   if (!resolved) {
-    return NextResponse.json({ error: `Unknown file key: ${key}` }, { status: 400 });
+    return badRequest(`Unknown file key: ${key}`);
   }
   if ("error" in resolved) {
-    return NextResponse.json({ error: resolved.error }, { status: 400 });
+    return badRequest(resolved.error);
   }
 
   try {
@@ -134,7 +137,7 @@ export async function GET(
     if (MANAGED_KEYS.has(key)) {
       const stored = readManagedFileContent(profileSlug, key as ManagedFileKey);
       if (stored) {
-        return NextResponse.json(
+        return ok(
           buildFileResponse(resolved, key, {
             content: stored.content,
             size: stored.content.length,
@@ -146,7 +149,7 @@ export async function GET(
     }
 
     if (!existsSync(resolved.path)) {
-      return NextResponse.json(
+      return ok(
         buildFileResponse(resolved, key, {
           content: "",
           size: 0,
@@ -159,7 +162,7 @@ export async function GET(
     const content = readFileSync(resolved.path, "utf-8");
     // File confirmed to exist above; safeStat never null.
     const stats = safeStat(resolved.path)!;
-    return NextResponse.json(
+    return ok(
       buildFileResponse(resolved, key, {
         content,
         size: stats.size,
@@ -169,8 +172,12 @@ export async function GET(
     );
   }
   catch (error) {
-    logApiError("GET /api/agent/files/[key]", `reading ${resolved.path}`, error);
-    return NextResponse.json({ error: "Failed to read file" }, { status: 500 });
+    return serverErrorFromCatch(
+      "GET /api/agent/files/[key]",
+      `reading ${resolved.path}`,
+      error,
+      "Failed to read file",
+    );
   }
 }
 
@@ -186,10 +193,10 @@ export async function PUT(
   const resolved = resolveFilePath(key, profile);
 
   if (!resolved) {
-    return NextResponse.json({ error: `Unknown file key: ${key}` }, { status: 400 });
+    return badRequest(`Unknown file key: ${key}`);
   }
   if ("error" in resolved) {
-    return NextResponse.json({ error: resolved.error }, { status: 400 });
+    return badRequest(resolved.error);
   }
 
   try {
@@ -199,27 +206,24 @@ export async function PUT(
     const { content, backup } = bodyResult;
 
     if (typeof content !== "string") {
-      return NextResponse.json({ error: "Content is required" }, { status: 400 });
+      return badRequest("Content is required");
     }
 
     const prof = resolveSafeProfileName(profile);
     const profileSlug = prof.ok ? prof.profile : "default";
 
     if (profileSlug !== "default" && !getProfile(profileSlug) && MANAGED_KEYS.has(key)) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
+      return notFound("Profile not found");
     }
 
-    const dir = resolved.path.substring(0, resolved.path.lastIndexOf("/"));
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
-    }
+    const dir = dirname(resolved.path);
+    ensureDir(dir);
 
     if (backup && existsSync(resolved.path)) {
       const profileHome = resolveProfileHermesHome(profileSlug);
       const backupDir = profileHome + "/backups";
-      if (!existsSync(backupDir)) mkdirSync(backupDir, { recursive: true });
-      const ts = new Date().toISOString().replace(/[:.]/g, "-");
-      const backupName = `${key}-${ts}.md`;
+      ensureDir(backupDir);
+      const backupName = `${key}-${backupTimestamp()}.md`;
       try {
         writeFileSync(backupDir + "/" + backupName, readFileSync(resolved.path, "utf-8"));
       }
@@ -252,7 +256,7 @@ export async function PUT(
         );
         const err = toPatchResponse(result, "Failed to sync profile to Hermes");
         if (err) return err;
-        if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
+        assertPatchSucceeded(result);
       }
       else {
         // Non-config managed file (SOUL.md, AGENTS.md, etc.) — write
@@ -264,7 +268,7 @@ export async function PUT(
         const result = pushProfileOrRoot(profileSlug);
         const err = toPatchResponse(result, "Failed to sync profile to Hermes");
         if (err) return err;
-        if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
+        assertPatchSucceeded(result);
       }
     }
     else {
@@ -277,10 +281,14 @@ export async function PUT(
       ok: true,
     });
 
-    return NextResponse.json({ data: { success: true, key, path: resolved.path } });
+    return ok({ success: true, key, path: resolved.path });
   }
   catch (error) {
-    logApiError("PUT /api/agent/files/[key]", `writing ${resolved.path}`, error);
-    return NextResponse.json({ error: "Failed to write file" }, { status: 500 });
+    return serverErrorFromCatch(
+      "PUT /api/agent/files/[key]",
+      `writing ${resolved.path}`,
+      error,
+      "Failed to write file",
+    );
   }
 }

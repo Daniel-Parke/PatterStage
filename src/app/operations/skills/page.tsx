@@ -19,14 +19,39 @@ import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
-import { apiFetch } from "@/lib/api-fetch";
+import { apiFetch, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { groupByCategory, titleCaseCategory } from "@/lib/skills-grouping";
+import { pluralise } from "@/lib/utils";
 import type { Skill, SkillsData } from "@/types/hermes";
 
 // ── Pure helpers (hoisted outside component) ──────────────────────────────
 
-// effectiveSkillEnabled inlined at call sites for clarity: toggling[skill.name] ?? skill.enabled
+// effectiveSkillEnabled — the "effective" enabled state of a skill
+// after applying any pending optimistic toggle. The inline form
+// `toggling[skill.name] ?? skill.enabled` was repeated at 3 sites
+// in this file (line 141 inside the active/inactive split, line
+// 341 for the Active section's onToggleSkill, line 386 for the
+// Inactive section's onToggleSkill). The pattern is the canonical
+// "pending override of server state" idiom — a Record<string, T>
+// of in-flight mutations with a fallback to the server's last-
+// known value. The 3 sites are byte-equivalent (same `??` short-
+// circuit, same `boolean` return) so the helper is a true rename,
+// not a behavior change. The 2 onToggleSkill sites use slightly
+// different fallbacks (`?? skill.enabled` vs `?? !skill.enabled`)
+// because the Inactive section is the negation of the active
+// state — but the helper itself takes the fallback as a parameter
+// so both sites compose correctly.
+//
+// Inlined at call sites was the old comment on line 30; the helper
+// exists now and the misleading comment is removed.
+function effectiveSkillEnabled(
+  skill: Skill,
+  pending: Record<string, boolean>,
+  fallback: boolean = skill.enabled,
+): boolean {
+  return pending[skill.name] ?? fallback;
+}
 
 function filterBySearch(skills: Skill[], search: string) {
   return skills.filter(
@@ -72,11 +97,24 @@ export default function SkillsPage() {
   const [expandedSkill, setExpandedSkill] = useState<string | null>(null);
   const [skillContent, setSkillContent] = useState<string>("");
 
-  // Skill editor
+  // Per-skill editor
   const [editingSkill, setEditingSkill] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [editOriginal, setEditOriginal] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
+
+  // closeSkillEditor — the Edit Skill modal has 3 single-setter
+  // close sites that all do the same thing: `() => setEditingSkill(null)`.
+  //   1. Modal `onClose` (X-button / overlay click)
+  //   2. Modal Cancel button (footer)
+  //   3. The load-failure path in openSkillEditor's catch block
+  // Centralising into a `useCallback` with empty deps (useState setters
+  // are stable) keeps the 3 sites in lockstep if a future "clear
+  // editContent on close" or "reset editOriginal" extension lands.
+  // This is the A3 single-setter close pattern that session 100's
+  // discriminated-close audit established: a 1-setter callback is
+  // worth extracting when it has 3+ identical call sites.
+  const closeSkillEditor = useCallback(() => setEditingSkill(null), []);
 
   // Optimistic toggle state — key: skillName, value: the effective (pending) enabled state
   const [toggling, setToggling] = useState<Record<string, boolean>>({});
@@ -124,7 +162,7 @@ export default function SkillsPage() {
     inactiveSkills: Skill[];
   }>(
     (acc, s) => {
-      const isActive = toggling[s.name] ?? s.enabled;
+      const isActive = effectiveSkillEnabled(s, toggling);
       (isActive ? acc.activeSkills : acc.inactiveSkills).push(s);
       return acc;
     },
@@ -165,7 +203,7 @@ export default function SkillsPage() {
         if (prevData) {
           setData(prevData);
         }
-        showToast(err instanceof Error ? err.message : "Failed to update skill", "error");
+        toastError(showToast, err, "Failed to update skill");
       } finally {
         // Always clear the pending toggle, regardless of success or
         // failure — single source of truth for the toggling-map
@@ -194,7 +232,7 @@ export default function SkillsPage() {
       setEditOriginal(content);
     } catch {
       showToast("Failed to load skill", "error");
-      setEditingSkill(null);
+      closeSkillEditor();
     }
   };
 
@@ -211,9 +249,9 @@ export default function SkillsPage() {
       if (expandedSkill === editingSkill) {
         setSkillContent(editContent);
       }
-      setEditingSkill(null);
+      closeSkillEditor();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to save skill", "error");
+      toastError(showToast, err, "Failed to save skill");
     } finally {
       setSavingEdit(false);
     }
@@ -246,7 +284,7 @@ export default function SkillsPage() {
       <PageHeader
         icon={FileText}
         title="Skills Manager"
-        subtitle={`${total} skill${total !== 1 ? "s" : ""} — active = catalog minus skills.disabled for ${selectedProfile}`}
+        subtitle={`${total} skill${pluralise(total)} — active = catalog minus skills.disabled for ${selectedProfile}`}
         color="green"
         actions={
           <ProfileSelector
@@ -324,7 +362,7 @@ export default function SkillsPage() {
                   expandedSkill={expandedSkill}
                   skillContent={skillContent}
                   toggling={toggling}
-                  onToggleSkill={(skill) => toggleSkill(skill.name, toggling[skill.name] ?? skill.enabled)}
+                  onToggleSkill={(skill) => toggleSkill(skill.name, effectiveSkillEnabled(skill, toggling))}
                   onViewSkill={viewSkill}
                   onEditSkill={openSkillEditor}
                 />
@@ -369,7 +407,7 @@ export default function SkillsPage() {
                   expandedSkill={expandedSkill}
                   skillContent={skillContent}
                   toggling={toggling}
-                  onToggleSkill={(skill) => toggleSkill(skill.name, toggling[skill.name] ?? !skill.enabled)}
+                  onToggleSkill={(skill) => toggleSkill(skill.name, effectiveSkillEnabled(skill, toggling, !skill.enabled))}
                   onViewSkill={viewSkill}
                   onEditSkill={openSkillEditor}
                 />
@@ -381,7 +419,7 @@ export default function SkillsPage() {
 
       <Modal
         open={editingSkill !== null}
-        onClose={() => setEditingSkill(null)}
+        onClose={closeSkillEditor}
         title={editingSkill ? `Edit: ${editingSkill}` : "Edit skill"}
         icon={Edit3}
         iconColor="text-neon-green"
@@ -397,7 +435,7 @@ export default function SkillsPage() {
             >
               Reset
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => setEditingSkill(null)}>
+            <Button variant="ghost" size="sm" onClick={closeSkillEditor}>
               Cancel
             </Button>
             <Button

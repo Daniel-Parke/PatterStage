@@ -15,9 +15,9 @@ import {
 import { updateSession } from "@/lib/session-repository";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest } from "@/lib/api-response";
+import { badRequest, notFound, ok, serverError, serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { agentBackend } from "@/lib/backends";
 import { createCronJob, deleteCronJob, importHermesJobs, pushJobToHermes } from "@/lib/cron-repository";
@@ -34,6 +34,9 @@ import { buildMissionFieldPatch } from "@/lib/mission-field-updates";
 import { promoteMission } from "@/lib/mission-promote-handler";
 import { runMissionQueueTick } from "@/lib/mission-queue-tick";
 import { ensureSyncLayer } from "@/lib/sync";
+import { cronSyncFailureBody, logCronSyncFailure } from "@/lib/cron-sync-failure";
+import { missionResponse } from "@/lib/mission-response";
+import { parseDispatchMode } from "@/lib/dispatch-mode";
 
 // ── Helpers ───────────────────────────────────────────────────────
 
@@ -64,9 +67,30 @@ function requireMissionId(body: Record<string, unknown>): string | NextResponse 
 function getMissionOrNotFound(id: string): NonNullable<ReturnType<typeof getMission>> | NextResponse {
   const mission = getMission(id);
   if (!mission) {
-    return NextResponse.json({ error: "Mission not found" }, { status: 404 });
+    return notFound("Mission not found");
   }
   return mission;
+}
+
+/**
+ * Look up a mission by id from a request body, returning either the
+ * `Mission` record or a `NextResponse` (400 if id missing, 404 if not
+ * found). Callers do:
+ *
+ *   const mission = requireMissionOrNotFound(body);
+ *   if (mission instanceof NextResponse) return mission;
+ *
+ * This is the two-line pattern (`requireMissionId` + `getMissionOrNotFound`)
+ * that appeared in 3 POST sites (update, cancel, delete). Both helpers
+ * already exist; this is just the composable 2-step form that lets
+ * callers stay one line. See session-69 for the audit.
+ */
+function requireMissionOrNotFound(
+  body: Record<string, unknown>,
+): NonNullable<ReturnType<typeof getMission>> | NextResponse {
+  const id = requireMissionId(body);
+  if (id instanceof NextResponse) return id;
+  return getMissionOrNotFound(id);
 }
 
 function parseCategoryId(
@@ -143,7 +167,7 @@ export async function GET(request: NextRequest) {
       const mission = getMissionOrNotFound(id);
       if (mission instanceof NextResponse) return mission;
       // Mission status is synced in background by MissionSync
-      return NextResponse.json({ data: { mission: enrichMissionCron(mission) } });
+      return ok({ mission: enrichMissionCron(mission) });
     }
 
     const categoryIdParam = url.searchParams.get("categoryId");
@@ -154,10 +178,9 @@ export async function GET(request: NextRequest) {
           ? { categoryId: categoryIdParam }
           : undefined,
     ).map((m) => enrichMissionCron(m));
-    return NextResponse.json({ data: { missions } });
+    return ok({ missions });
   } catch (error) {
-    logApiError("GET /api/missions", id ? `mission ${id}` : "listing missions", error);
-    return NextResponse.json({ error: "Failed to load missions" }, { status: 500 });
+    return serverErrorFromCatch("GET /api/missions", id ? `mission ${id}` : "listing missions", error, "Failed to load missions");
   }
 }
 
@@ -167,7 +190,7 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
   if (isChReadOnly()) {
-    return NextResponse.json({ error: "Control Hub is in read-only mode" }, { status: 503 });
+    return serviceUnavailable("Control Hub is in read-only mode");
   }
 
   ensureSyncLayer();
@@ -260,9 +283,7 @@ export async function POST(request: NextRequest) {
         constraints: constraints?.trim() || undefined,
       });
 
-      const isSaveMode = dispatchMode === "save";
-      const isQueueMode = dispatchMode === "queue";
-      const isCronMode = dispatchMode === "cron" && scheduleVal;
+      const { isSaveMode, isQueueMode, isCronMode } = parseDispatchMode(dispatchMode, scheduleVal);
 
       if (isSaveMode) {
         updateMission(mission.id, { queuedForRun: false });
@@ -277,19 +298,18 @@ export async function POST(request: NextRequest) {
         // next schedule tick.
 
         try {
-          const profileNameFinal = profileName as string | undefined;
           const cronJob = createCronJob({
             name: mission.name,
             prompt: mission.prompt,
-            skills: skills as string[] | undefined,
-            model: modelId as string | undefined,
-            provider: provider as string | undefined,
+            skills,
+            model: modelId,
+            provider,
             schedule: scheduleVal!,
             repeat: { times: null }, // infinite
             enabled: true,
             state: "scheduled",
             deliver: "none",
-            profile_name: profileNameFinal ?? "default",
+            profile_name: profileName ?? "default",
             source: "ch",
           });
 
@@ -299,55 +319,51 @@ export async function POST(request: NextRequest) {
           // Push to Hermes so the scheduler picks it up
           const pushResult = await pushJobToHermes(cronJob.id);
           if (!pushResult.ok) {
-            logApiError("POST /api/missions", "pushJobToHermes", pushResult.error);
             deleteCronJob(cronJob.id);
             updateMission(mission.id, { cronJobId: null, status: "failed" });
             appendAuditLine({ action: "mission.cron_dispatch", resource: mission.id, ok: false });
+            // Log via the side-effect-only helper (same console shape as
+            // the cron/route.ts sites) and splice the mission data into
+            // the body before returning the 502.
+            logCronSyncFailure("POST /api/missions", pushResult);
             return NextResponse.json(
               {
-                error: "Failed to sync cron job to Hermes",
-                cronPushError: pushResult.error ?? "unknown",
+                ...cronSyncFailureBody(pushResult),
                 data: { mission: enrichMissionCron(getMission(mission.id)!) },
               },
-              { status: 502 }
+              { status: 502 },
             );
           }
 
           // ── Immediate first-run dispatch ──
-          await dispatchMissionNow(mission.id, {
-            profileName: profileName as string | undefined,
-            modelId: modelId as string | undefined,
-            provider: provider as string | undefined,
-          });
+          // `profileName`/`modelId`/`provider` are already correctly typed
+          // as `string | undefined` by the `parseMissionBodyFields`
+          // destructure above, so no inline `as` casts are needed —
+          // `DispatchMissionNowOverrides` from `@/lib/mission-dispatch`
+          // accepts `string | undefined` directly.
+          await dispatchMissionNow(mission.id, { profileName, modelId, provider });
 
           appendAuditLine({ action: "mission.cron_dispatch", resource: mission.id, ok: true });
-          return NextResponse.json(
-            { data: { mission: enrichMissionCron(getMission(mission.id)!) } },
-            { status: 201 }
-          );
+          return missionResponse(mission.id, 201);
         } catch (err) {
           logApiError("POST /api/missions", "cron dispatch", err);
           updateMission(mission.id, { status: "failed" });
           appendAuditLine({ action: "mission.cron_dispatch", resource: mission.id, ok: false });
-          return NextResponse.json({ error: "Failed to create cron job for mission" }, { status: 500 });
+          return serverError("Failed to create cron job for mission");
         }
       }
 
       if (!isSaveMode && !isQueueMode) {
-        await dispatchMissionNow(mission.id, {
-          profileName: profileName as string | undefined,
-          modelId: modelId as string | undefined,
-          provider: provider as string | undefined,
-        });
+        // See JSDoc above the cron-mode branch for the typing rationale —
+        // `DispatchMissionNowOverrides` accepts `string | undefined`
+        // directly, so no `as` casts are needed on the body fields.
+        await dispatchMissionNow(mission.id, { profileName, modelId, provider });
       } else if (isQueueMode) {
         void runMissionQueueTick();
       }
 
       appendAuditLine({ action: "mission.dispatch", resource: mission.id, ok: true });
-      return NextResponse.json(
-        { data: { mission: enrichMissionCron(getMission(mission.id)!) } },
-        { status: 201 }
-      );
+      return missionResponse(mission.id, 201);
     }
 
     // ── Promote draft / queued-waiting mission ─────────────────
@@ -412,7 +428,7 @@ export async function POST(request: NextRequest) {
       }
 
       appendAuditLine({ action: "mission.promote", resource: missionIdFinal, ok: true });
-      return NextResponse.json({ data: { mission: result.mission } });
+      return ok({ mission: result.mission });
     }
 
     // ── Update Mission ─────────────────────────────────────────
@@ -426,11 +442,9 @@ export async function POST(request: NextRequest) {
       };
       const f = parseMissionBodyFields(rest);
       const { name, instruction, localDirs, references, skills, suggestedToolsets, goals, modelId, provider, profileName, missionTimeMinutes, timeoutMinutes, schedule, context, categoryId: categoryIdRaw, outputFormat, constraints } = f;
-      const missionIdFinal = requireMissionId(body as Record<string, unknown>);
-      if (missionIdFinal instanceof NextResponse) return missionIdFinal;
-
-      const existing = getMissionOrNotFound(missionIdFinal);
+      const existing = requireMissionOrNotFound(body as Record<string, unknown>);
       if (existing instanceof NextResponse) return existing;
+      const missionIdFinal = existing.id;
 
       const categoryParsed = parseCategoryId(categoryIdRaw);
       if (!categoryParsed.ok) {
@@ -468,7 +482,7 @@ export async function POST(request: NextRequest) {
 
       const mission = updateMission(missionIdFinal, updates);
       if (!mission)
-        return NextResponse.json({ error: "Mission not found" }, { status: 404 });
+        return notFound("Mission not found");
 
       const shouldSyncCron =
         mission.cronJobId &&
@@ -491,28 +505,24 @@ export async function POST(request: NextRequest) {
       }
 
       appendAuditLine({ action: "mission.update", resource: missionIdFinal, ok: true });
-      return NextResponse.json({
-        data: { mission: enrichMissionCron(getMission(missionIdFinal)!) },
-      });
+      return missionResponse(missionIdFinal);
     }
 
     // ── Cancel Mission ─────────────────────────────────────────
     // The unified V1 status enum has no `cancelled` state — cancellations
     // are recorded as `failed` with an explicit "Cancelled by user" result.
     if (action === "cancel") {
-      const cancelId = requireMissionId(body as Record<string, unknown>);
-      if (cancelId instanceof NextResponse) return cancelId;
-
-      const existingMission = getMissionOrNotFound(cancelId);
+      const existingMission = requireMissionOrNotFound(body as Record<string, unknown>);
       if (existingMission instanceof NextResponse) return existingMission;
 
+      const cancelId = existingMission.id;
       const mission = updateMission(cancelId, {
         status: "failed",
         result: "Cancelled by user",
         queuedForRun: false,
       });
       if (!mission)
-        return NextResponse.json({ error: "Mission not found" }, { status: 404 });
+        return notFound("Mission not found");
 
       if (mission.sessionId) {
         try {
@@ -536,38 +546,33 @@ export async function POST(request: NextRequest) {
       }
 
       appendAuditLine({ action: "mission.cancel", resource: cancelId, ok: true });
-      return NextResponse.json({
-        data: {
-          mission: enrichMissionCron(mission),
-          cancel: {
-            accepted: true,
-            processKillPending: shouldKillProcess,
-          },
+      return ok({
+        mission: enrichMissionCron(mission),
+        cancel: {
+          accepted: true,
+          processKillPending: shouldKillProcess,
         },
       });
     }
 
     // ── Delete Mission ─────────────────────────────────────────
     if (action === "delete") {
-      const missionIdFinal = requireMissionId(body as Record<string, unknown>);
-      if (missionIdFinal instanceof NextResponse) return missionIdFinal;
-
-      const existing = getMissionOrNotFound(missionIdFinal);
+      const existing = requireMissionOrNotFound(body as Record<string, unknown>);
       if (existing instanceof NextResponse) return existing;
 
+      const missionIdFinal = existing.id;
       await deleteMissionCron(missionIdFinal);
 
-      const ok = deleteMission(missionIdFinal);
-      if (!ok)
-        return NextResponse.json({ error: "Mission not found" }, { status: 404 });
+      const deleted = deleteMission(missionIdFinal);
+      if (!deleted)
+        return notFound("Mission not found");
 
       appendAuditLine({ action: "mission.delete", resource: missionIdFinal, ok: true });
-      return NextResponse.json({ data: { deleted: missionIdFinal } });
+      return ok({ deleted: missionIdFinal });
     }
 
     return badRequest(`Unknown action: ${action}`);
   } catch (error) {
-    logApiError("POST /api/missions", "processing request", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return serverErrorFromCatch("POST /api/missions", "processing request", error, "Internal server error");
   }
 }

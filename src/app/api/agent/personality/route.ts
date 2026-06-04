@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
+import { badRequest, ok } from "@/lib/api-response";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { applyProfileOrRootPatch, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
 import { resolveSafeProfileName } from "@/lib/path-security";
 
 export async function PUT(request: NextRequest) {
@@ -19,12 +20,12 @@ export async function PUT(request: NextRequest) {
     const profile = typeof bodyResult.profile === "string" ? bodyResult.profile : "default";
 
     if (!personality) {
-      return NextResponse.json({ error: "Personality is required" }, { status: 400 });
+      return badRequest("Personality is required");
     }
 
     const prof = resolveSafeProfileName(profile);
     if (!prof.ok) {
-      return NextResponse.json({ error: prof.error }, { status: 400 });
+      return badRequest(prof.error);
     }
 
     // applyProfileOrRootPatch handles default-vs-non-default dispatch,
@@ -37,14 +38,16 @@ export async function PUT(request: NextRequest) {
     );
     const err = toPatchResponse(result, "Failed to sync personality to Hermes");
     if (err) return err;
-    if (!result.ok) throw new Error("unreachable: toPatchResponse returned null on failure");
+    assertPatchSucceeded(result);
 
-    return NextResponse.json({
-      data: { success: true, profile: result.profile, personality },
-    });
+    return ok({ success: true, profile: result.profile, personality });
   }
   catch (error) {
-    logApiError("PUT /api/agent/personality", "updating personality", error);
-    return NextResponse.json({ error: "Failed to update personality" }, { status: 500 });
+    return serverErrorFromCatch(
+      "PUT /api/agent/personality",
+      "updating personality",
+      error,
+      "Failed to update personality",
+    );
   }
 }
