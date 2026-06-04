@@ -65,27 +65,32 @@ export function applyProfileOrRootPatch(
   rootPatch: AgentRootPatch,
   profilePatch: Parameters<typeof updateProfileContent>[1],
 ): ProfileOrRootPatchResult {
+  // Step 1: write the patch to the right repo. The default profile
+  // lives in the `agent_root` singleton; every other profile lives
+  // in the `profiles` table. We do the DB write first so a 404
+  // return from `pushProfileOrRoot` below is impossible on the
+  // default branch (no existence check needed) and unambiguous on
+  // the non-default branch (existence pre-checked here).
   if (slug === "default") {
     updateAgentRoot(rootPatch);
-    const push = pushRootToHermes();
-    if (!push.success) {
-      return { ok: false, reason: "push-failed", error: push.error ?? "Push failed" };
+  } else {
+    // Non-default profile: check existence first (matches the
+    // `personalities` route's pre-check) so we can return 404
+    // distinctly from "push failed" / "update returned null".
+    if (!getProfile(slug)) {
+      return { ok: false, reason: "not-found" };
     }
-    return { ok: true, profile: slug };
+    updateProfileContent(slug, profilePatch);
   }
 
-  // Non-default profile: check existence first (matches the
-  // `personalities` route's pre-check) so we can return 404
-  // distinctly from "push failed" / "update returned null".
-  if (!getProfile(slug)) {
-    return { ok: false, reason: "not-found" };
-  }
-  updateProfileContent(slug, profilePatch);
-  const push = pushProfileToHermes(slug);
-  if (!push.success) {
-    return { ok: false, reason: "push-failed", error: push.error ?? "Push failed" };
-  }
-  return { ok: true, profile: slug };
+  // Step 2: push to Hermes via the shared dispatch helper. The
+  // `pushProfileOrRoot` body owns the default-vs-non-default push
+  // dispatch + 404 + push-failed handling, so we delegate instead
+  // of re-implementing the tail. On the non-default success path
+  // this calls `getProfile(slug)` once redundantly (a single
+  // in-memory check) but the call site returns the same
+  // `ProfileOrRootPatchResult` and produces identical wire output.
+  return pushProfileOrRoot(slug);
 }
 
 /**
