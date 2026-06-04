@@ -2,9 +2,9 @@
 // GET /api/fs/git/branches — list branches + current ref for a repo
 // ═══════════════════════════════════════════════════════════════
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, badRequest } from "@/lib/api-response";
 import { resolveAllowedWorkspacePath } from "@/lib/path-security";
 import { readGitBranchMetadataForWorkspacePath } from "@/lib/git-workspace-branches";
@@ -25,7 +25,11 @@ export async function GET(request: NextRequest) {
 
     return ok(data);
   } catch (error) {
-    logApiError("GET /api/fs/git/branches", "git info", error);
-    return NextResponse.json({ error: "Failed to read git branches" }, { status: 500 });
+    return serverErrorFromCatch(
+      "GET /api/fs/git/branches",
+      "git info",
+      error,
+      "Failed to read git branches",
+    );
   }
 }
