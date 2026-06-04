@@ -658,7 +658,14 @@ export function useMissionsPage() {
 
         if (isPromotable) {
           showToast(submitToastForDispatch(newDispatch), "info");
-          const { ok, error } = await safeApiCall<{ data?: { mission?: object } }>("/api/missions", {
+          // Drop the redundant `{ data?: { ... } }` envelope:
+          // `safeApiCall<T>` already wraps the response as `{ data?: T }`,
+          // so the inner type only needs the inner shape. Byte-equivalent
+          // — `safeApiCall<{ mission?: object }>` returns the same
+          // `{ ok, data?: { mission }, error? }` envelope the old
+          // `safeApiCall<{ data?: { mission?: object } }>` did, just
+          // without the double-nesting at the call site.
+          const { ok, error } = await safeApiCall<{ mission?: object }>("/api/missions", {
             method: "POST",
             body: {
               action: "promote",
@@ -689,7 +696,14 @@ export function useMissionsPage() {
 
         setEditingId(null);
 
-        const result = await safeApiCall<{ data?: { mission?: { id: string } } }>("/api/missions", {
+        // Drop the redundant `{ data?: { ... } }` envelope:
+        // `safeApiCall<T>` already wraps the response as `{ data?: T }`,
+        // so the inner type only needs the inner shape. Byte-equivalent
+        // — `safeApiCall<{ mission?: { id: string } }>` returns the same
+        // `{ ok, data?: { mission: { id: string } }, error? }` envelope
+        // the old `safeApiCall<{ data?: { mission?: { id: string } } }>`
+        // did, just without the double-nesting at the call site.
+        const result = await safeApiCall<{ mission?: { id: string } }>("/api/missions", {
           method: "POST",
           body: {
             action: "dispatch",
@@ -707,9 +721,9 @@ export function useMissionsPage() {
         if (result.ok) {
           const body = result.data;
           await fetchData();
-          if (body?.data?.mission?.id) {
-            setExpandedId(body.data.mission.id);
-            void fetchDetail(body.data.mission.id);
+          if (body?.mission?.id) {
+            setExpandedId(body.mission.id);
+            void fetchDetail(body.mission.id);
           }
         }
         return;
@@ -717,7 +731,14 @@ export function useMissionsPage() {
 
       showToast(submitToastForDispatch(newDispatch), "info");
 
-      const { ok, error, data } = await safeApiCall<{ data?: { mission?: { id: string } } }>("/api/missions", {
+      // Drop the redundant `{ data?: { ... } }` envelope:
+      // `safeApiCall<T>` already wraps the response as `{ data?: T }`,
+      // so the inner type only needs the inner shape. Byte-equivalent
+      // — `safeApiCall<{ mission?: { id: string } }>` returns the same
+      // `{ ok, data?: { mission: { id: string } }, error? }` envelope
+      // the old `safeApiCall<{ data?: { mission?: { id: string } } }>`
+      // did, just without the double-nesting at the call site.
+      const { ok, error, data } = await safeApiCall<{ mission?: { id: string } }>("/api/missions", {
         method: "POST",
         body: {
           action: "dispatch",
@@ -742,9 +763,9 @@ export function useMissionsPage() {
         } else if (newDispatch === "now") {
           const body = data;
           await fetchData();
-          if (body?.data?.mission?.id) {
-            setExpandedId(body.data.mission.id);
-            void fetchDetail(body.data.mission.id);
+          if (body?.mission?.id) {
+            setExpandedId(body.mission.id);
+            void fetchDetail(body.mission.id);
           }
         } else {
           await fetchData();

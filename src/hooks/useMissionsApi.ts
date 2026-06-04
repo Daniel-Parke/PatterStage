@@ -38,16 +38,19 @@ export function useMissionsApi() {
   // `data?.category` to return the created row; `updateCategory` is
   // fire-and-forget so the `result` is ignored.
   const createCategory = useCallback(async (name: string, color?: string) => {
-    // The route returns `{ data: { category: {...} } }` (envelope). The
-    // `safeApiCall<T>` result wraps the envelope as `result.data = T`,
-    // so reading the inner category is `result.data?.data?.category` —
-    // same as the pre-refactor `d.data?.category` shape, since
-    // `apiFetch<T>(...)` previously returned the full envelope too.
-    const result = await safeApiCall<{ data?: { category?: { id: string } } }>(
+    // The route returns `{ data: { category: {...} } }` (envelope). Drop
+    // the redundant `{ data?: { ... } }` envelope: `safeApiCall<T>`
+    // already wraps the response as `{ data?: T }`, so the inner type
+    // only needs the inner shape. Byte-equivalent — the same
+    // `{ ok, data?, error? }` envelope is returned, just without the
+    // double-nesting at the call site. Reading the inner category is
+    // `result.data?.category` (one indirection, matching `safeApiCall<T>`'s
+    // contract).
+    const result = await safeApiCall<{ category?: { id: string } }>(
       "/api/mission-categories",
       { method: "POST", body: { name, color } },
     );
-    return result.data?.data?.category ?? null;
+    return result.data?.category ?? null;
   }, []);
 
   const updateCategory = useCallback(

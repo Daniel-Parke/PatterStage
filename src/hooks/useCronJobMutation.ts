@@ -126,14 +126,17 @@ export function useCronJobMutation<TJob extends CronJobLike>(
     pauseAllActiveRef.current = true;
     setPauseAllBusy(true);
     try {
-      // The endpoint returns `{ data: { pausedCount: number } }`. Type the
-      // envelope so `result.data?.data?.pausedCount` reads the actual
-      // count rather than the envelope. The pre-refactor type
+      // The endpoint returns `{ data: { pausedCount: number } }`. Drop
+      // the redundant `{ data?: { ... } }` envelope: `safeApiCall<T>`
+      // already wraps the response as `{ data?: T }`, so the inner type
+      // only needs the inner shape. Byte-equivalent — the same
+      // `{ ok, data?, error? }` envelope is returned, just without the
+      // double-nesting at the call site. The pre-refactor type
       // `safeApiCall<{ pausedCount?: number }>` produced `undefined` for
       // `pausedCount` (the count was on `result.data.data`, not
       // `result.data`) and the toast always read 0. See list2-session63-
       // findings.md for the latent-bug history.
-      const result = await safeApiCall<{ data?: { pausedCount?: number } }>(
+      const result = await safeApiCall<{ pausedCount?: number }>(
         config.endpoint,
         { method: "POST", body: { action: "pauseAll" } },
       );
@@ -141,7 +144,7 @@ export function useCronJobMutation<TJob extends CronJobLike>(
         const msg = config.pauseAll.showCount
           ? config.pauseAll.success.replace(
               "{count}",
-              String(result.data?.data?.pausedCount ?? 0),
+              String(result.data?.pausedCount ?? 0),
             )
           : config.pauseAll.success;
         showToast(msg);
