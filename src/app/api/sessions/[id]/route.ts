@@ -4,9 +4,9 @@ import { existsSync, readFileSync, statSync } from "fs";
 import { basename, join } from "path";
 
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest, notFound, ok, payloadTooLarge, serverError } from "@/lib/api-response";
+import { badRequest, notFound, ok, payloadTooLarge } from "@/lib/api-response";
 import { safeStat } from "@/lib/fs-stats";
 import { getSession, estimateSessionSize, lookupMissionIdForCronSession } from "@/lib/session-repository";
 import { PATHS } from "@/lib/paths";
@@ -252,7 +252,11 @@ export async function GET(
       );
     }
   } catch (error) {
-    logApiError("GET /api/sessions/[id]", "reading session " + sanitizedId, error);
-    return serverError(`Failed to read session "${sanitizedId}"`);
+    return serverErrorFromCatch(
+      "GET /api/sessions/[id]",
+      "reading session " + sanitizedId,
+      error,
+      `Failed to read session "${sanitizedId}"`,
+    );
   }
 }

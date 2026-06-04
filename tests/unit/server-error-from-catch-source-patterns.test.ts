@@ -26,8 +26,16 @@
  * dashboard's inline monitor widget (per session 124 P-3's cross-list
  * `serverError(STATIC_LITERAL)` audit). The api/memory surface has zero
  * static-literal sites (all are dynamic-message and exempt). The
- * `api/sessions/[id]/route.ts:255-256` site uses a dynamic template
- * literal message and is exempt per the dynamic-message rule.
+ *   `api/sessions/[id]/route.ts` originally had a 2-line `logApiError +
+ *   return serverError(\`Failed to read session "${sanitizedId}"\`)` pair
+ *   at line 255-256; the message is a template-literal-with-variable-
+ *   interpolation, NOT a static-literal `serverError(STATIC)` form, so
+ *   the scanner never matched it. The site was migrated to
+ *   `serverErrorFromCatch(...)` in session 129 (the variable session ID
+ *   stays in the message — only the composition is collapsed). The
+ *   dynamic-message rule (session 98 P-4) still excludes template-
+ *   literal messages from this scanner, so the migration is
+ *   belt-and-suspenders rather than a scanner-enforced invariant.
  *
  * Session 125 history (the first session to add this test):
  *   - The List 1 surface had 5 static-literal `serverError(STATIC)`
