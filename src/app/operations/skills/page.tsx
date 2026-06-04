@@ -27,7 +27,31 @@ import type { Skill, SkillsData } from "@/types/hermes";
 
 // ── Pure helpers (hoisted outside component) ──────────────────────────────
 
-// effectiveSkillEnabled inlined at call sites for clarity: toggling[skill.name] ?? skill.enabled
+// effectiveSkillEnabled — the "effective" enabled state of a skill
+// after applying any pending optimistic toggle. The inline form
+// `toggling[skill.name] ?? skill.enabled` was repeated at 3 sites
+// in this file (line 141 inside the active/inactive split, line
+// 341 for the Active section's onToggleSkill, line 386 for the
+// Inactive section's onToggleSkill). The pattern is the canonical
+// "pending override of server state" idiom — a Record<string, T>
+// of in-flight mutations with a fallback to the server's last-
+// known value. The 3 sites are byte-equivalent (same `??` short-
+// circuit, same `boolean` return) so the helper is a true rename,
+// not a behavior change. The 2 onToggleSkill sites use slightly
+// different fallbacks (`?? skill.enabled` vs `?? !skill.enabled`)
+// because the Inactive section is the negation of the active
+// state — but the helper itself takes the fallback as a parameter
+// so both sites compose correctly.
+//
+// Inlined at call sites was the old comment on line 30; the helper
+// exists now and the misleading comment is removed.
+function effectiveSkillEnabled(
+  skill: Skill,
+  pending: Record<string, boolean>,
+  fallback: boolean = skill.enabled,
+): boolean {
+  return pending[skill.name] ?? fallback;
+}
 
 function filterBySearch(skills: Skill[], search: string) {
   return skills.filter(
@@ -138,7 +162,7 @@ export default function SkillsPage() {
     inactiveSkills: Skill[];
   }>(
     (acc, s) => {
-      const isActive = toggling[s.name] ?? s.enabled;
+      const isActive = effectiveSkillEnabled(s, toggling);
       (isActive ? acc.activeSkills : acc.inactiveSkills).push(s);
       return acc;
     },
@@ -338,7 +362,7 @@ export default function SkillsPage() {
                   expandedSkill={expandedSkill}
                   skillContent={skillContent}
                   toggling={toggling}
-                  onToggleSkill={(skill) => toggleSkill(skill.name, toggling[skill.name] ?? skill.enabled)}
+                  onToggleSkill={(skill) => toggleSkill(skill.name, effectiveSkillEnabled(skill, toggling))}
                   onViewSkill={viewSkill}
                   onEditSkill={openSkillEditor}
                 />
@@ -383,7 +407,7 @@ export default function SkillsPage() {
                   expandedSkill={expandedSkill}
                   skillContent={skillContent}
                   toggling={toggling}
-                  onToggleSkill={(skill) => toggleSkill(skill.name, toggling[skill.name] ?? !skill.enabled)}
+                  onToggleSkill={(skill) => toggleSkill(skill.name, effectiveSkillEnabled(skill, toggling, !skill.enabled))}
                   onViewSkill={viewSkill}
                   onEditSkill={openSkillEditor}
                 />
