@@ -92,9 +92,7 @@ export async function PUT(
       ok: true,
     });
 
-    return NextResponse.json<ApiResponse<{ success: true; slug: string }>>({
-      data: { success: true, slug },
-    });
+    return ok({ success: true, slug });
   } catch (error) {
     return serverErrorFromCatch(
       "PUT /api/agent/profiles/[id]",

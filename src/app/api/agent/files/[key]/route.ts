@@ -137,7 +137,7 @@ export async function GET(
     if (MANAGED_KEYS.has(key)) {
       const stored = readManagedFileContent(profileSlug, key as ManagedFileKey);
       if (stored) {
-        return NextResponse.json(
+        return ok(
           buildFileResponse(resolved, key, {
             content: stored.content,
             size: stored.content.length,
@@ -149,7 +149,7 @@ export async function GET(
     }
 
     if (!existsSync(resolved.path)) {
-      return NextResponse.json(
+      return ok(
         buildFileResponse(resolved, key, {
           content: "",
           size: 0,
@@ -162,7 +162,7 @@ export async function GET(
     const content = readFileSync(resolved.path, "utf-8");
     // File confirmed to exist above; safeStat never null.
     const stats = safeStat(resolved.path)!;
-    return NextResponse.json(
+    return ok(
       buildFileResponse(resolved, key, {
         content,
         size: stats.size,

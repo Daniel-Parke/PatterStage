@@ -24,8 +24,8 @@ import {
 } from "@/lib/hermes-profile-sync";
 import { slugifyDisplayName } from "@/lib/profile-slug";
 import { buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
-import type { ApiResponse, AgentProfile, ProfileFile } from "@/types/hermes";
-import { badRequest, conflict, serverError } from "@/lib/api-response";
+import type { AgentProfile, ProfileFile } from "@/types/hermes";
+import { badRequest, conflict, ok, serverError } from "@/lib/api-response";
 
 const PROFILE_FILE_DEFS = [
   { key: "soul", name: "SOUL.md", getPath: (b: ReturnType<typeof buildProfileHermesPathBundle>) => b.soul },
@@ -124,9 +124,7 @@ export async function GET(request: NextRequest) {
       if (api) profiles.push(api);
     }
 
-    return NextResponse.json<ApiResponse<{ profiles: AgentProfile[] }>>({
-      data: { profiles },
-    });
+    return ok({ profiles });
   } catch (error) {
     return serverErrorFromCatch(
       "GET /api/agent/profiles",
@@ -205,9 +203,7 @@ export async function POST(request: NextRequest) {
       ok: true,
     });
 
-    return NextResponse.json<ApiResponse<{ slug: string }>>({
-      data: { slug },
-    });
+    return ok({ slug });
   } catch (error) {
     return serverErrorFromCatch(
       "POST /api/agent/profiles",
