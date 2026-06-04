@@ -7,7 +7,7 @@ import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
-import { forbidden } from "@/lib/api-response";
+import { forbidden, ok } from "@/lib/api-response";
 import { db } from "@/lib/db";
 import { dumpYamlConfig } from "@/lib/hermes-config-sync";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
   if (auth) return auth;
   try {
     const config = readCachedConfig();
-    return NextResponse.json({ data: maskConfigSecrets(config) });
+    return ok(maskConfigSecrets(config));
   } catch (error) {
     return serverErrorFromCatch(
       "GET /api/config",
@@ -197,7 +197,7 @@ export async function PUT(request: NextRequest) {
     // Invalidate cache so next read picks up the change
     invalidateConfigCache();
 
-    return NextResponse.json({ data: { success: true, section, values } });
+    return ok({ success: true, section, values });
   } catch (error) {
     return serverErrorFromCatch(
       "PUT /api/config",

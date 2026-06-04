@@ -21,7 +21,7 @@
  *
  * Session 112 changes (from session 111 baseline):
  *   1. Switched from per-line `SITE_RE` matching (which only caught
- *      single-line `data: <expr>` sites) to a whole-file per-block
+ *      single-line `data:` sites) to a whole-file per-block
  *      scanner that catches both single-line and multi-line forms.
  *      Session 111's single-line regex silently let 18 multi-line sites
  *      through (e.g. `return NextResponse.json({\n  data: ...\n})`).
@@ -35,6 +35,16 @@
  *      is cross-list. The remaining 46 unmigrated sites in Lists 1/2/4
  *      are a documented follow-up; the test will catch new ones in
  *      this list only.
+ *
+ * Session 123 changes (new this session):
+ *   1. Added a 4th "List 4 surface" assertion. The List 4 surface
+ *      covers api/config, api/gateway, api/seed, and api/fs/git —
+ *      the routes that back the Settings, Environment, and All-
+ *      Settings pages. The List 3 sweep in sessions 111/112/113
+ *      skipped these (Models is in List 3, not List 4). The new
+ *      assertion enforces the post-session-123 zero-tolerance rule
+ *      for the List 4 surface. Models + HERMES.md pages already
+ *      have List 3 coverage and are not in the List 4 filter.
  */
 
 import { readFileSync, readdirSync, statSync, writeFileSync, unlinkSync } from "node:fs";
@@ -254,7 +264,7 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-describe("ok() factory source-pattern coverage (List 3 surface)", () => {
+describe("ok() factory source-pattern coverage (Lists 1-4 surface)", () => {
   const files = walk(API_DIR);
   const allSites: Site[] = [];
   for (const f of files) allSites.push(...findSites(f));
@@ -341,6 +351,38 @@ describe("ok() factory source-pattern coverage (List 3 surface)", () => {
       );
     }
     expect(list2).toEqual([]);
+  });
+
+  it("has zero `return NextResponse.json({ data: ... })` sites in the List 4 surface (api/config, api/gateway, api/seed, api/fs/git)", () => {
+    // Filter to List 4 surface: api/config/, api/gateway/, api/seed/,
+    // api/fs/git/. The List 4 surface backs the Settings, Environment,
+    // and All Settings pages (per the session-123 sweep). The Models
+    // and HERMES.md routes are part of List 3 (covered above), so
+    // they're not in this filter.
+    //
+    // The surface is intentionally narrower than the page set named in
+    // the per-list-pick protocol — the protocol cares about the
+    // *backend* route, not the page. Models is List 3, so api/models
+    // is List 3. Settings/Environment/All-Settings route reads/writes
+    // config.yaml, gateway health, the seed catalog, and the env file
+    // (fs/git for the env-path repo). All of those are in the
+    // api/config, api/gateway, api/seed, api/fs/git subtree.
+    const list4 = allSites.filter(
+      (s) =>
+        s.file.includes(`${join("src", "app", "api", "config")}`) ||
+        s.file.includes(`${join("src", "app", "api", "gateway")}`) ||
+        s.file.includes(`${join("src", "app", "api", "seed")}`) ||
+        s.file.includes(`${join("src", "app", "api", "fs", "git")}`),
+    );
+    if (list4.length > 0) {
+      const summary = list4
+        .map((s) => `  ${s.file.replace(REPO_ROOT + "/", "")}:${s.line}  ${s.text}`)
+        .join("\n");
+      throw new Error(
+        `Found ${list4.length} un-migrated 'return NextResponse.json({ data: ... })' site(s) in the List 4 surface — migrate to 'ok(...)':\n${summary}`,
+      );
+    }
+    expect(list4).toEqual([]);
   });
 
   it("documents every exemption in EXEMPTIONS", () => {

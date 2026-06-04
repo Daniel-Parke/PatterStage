@@ -5,9 +5,9 @@
 // Returns { data: { models: string[] } } or falls back gracefully.
 // ═══════════════════════════════════════════════════════════════
 
-import { NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { fetchGateway } from "@/lib/gateway-client";
+import { ok } from "@/lib/api-response";
 
 const DEFAULT_MODELS = [
   "hermes-agent",
@@ -22,13 +22,13 @@ export async function GET() {
     if (res.ok) {
       const models = parseModelList(await res.json());
       if (models.length > 0) {
-        return NextResponse.json({ data: { models } });
+        return ok({ models });
       }
     }
-    return NextResponse.json({ data: { models: DEFAULT_MODELS } });
+    return ok({ models: DEFAULT_MODELS });
   } catch (error) {
     logApiError("GET /api/gateway/models", "listing gateway models", error);
-    return NextResponse.json({ data: { models: DEFAULT_MODELS } });
+    return ok({ models: DEFAULT_MODELS });
   }
 }
 
