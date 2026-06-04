@@ -1,3 +1,53 @@
+## Session 117 — List 1 (Dashboard, Sessions, Memory, Logs) — `ok()` factory migration of 3 sites in `api/memory/hindsight/route.ts`
+
+Random pick: **List 1** via `echo $((RANDOM % 4 + 1))` = 1, the first List-1 pick since session 113.
+
+### Pre-audit
+
+Found 3 inline `NextResponse.json<ApiResponse<Record<string, unknown>>>({ data: result })` sites in `src/app/api/memory/hindsight/route.ts` (lines 303, 400, 433 — GET, POST, DELETE handlers). All 3 are status-200-locked `{ data: <T> }` envelope, byte-equivalent to `ok(<T>)`. The List 1 source-pattern test (`tests/unit/ok-factory-source-patterns.test.ts`) was already configured to scan api/sessions/, api/memory/, api/logs/ (session 113) — it would have failed on these 3 sites the next time anyone ran the test.
+
+### Refactor
+
+| File | Lines | Migration |
+|---|---|---|
+| `src/app/api/memory/hindsight/route.ts` | 303, 400, 433 | `ok(result)` × 3 (GET, POST, DELETE) |
+| same | imports | dropped dead `ApiResponse` type import; added `ok` to `@/lib/api-response` import |
+
+The 1 site that **was not migrated** is the GET catch-block error response at lines 305-314 — `NextResponse.json({ data: { available: false, error, memories: [] } }, { status: 503 or 500 })`. This is a **conditional-status** site (`isHindsightConnectionError(error) ? 503 : 500`), and the `ok()` factory is status-200-locked (per session 113 P-3). The EXEMPTIONS table in the source-pattern test already documents this site (added in session 113), and the test's "documents every exemption" guard validates the line number is within ±2 of the entry — it is post-migration, so no EXEMPTIONS update required.
+
+### Verification
+
+- All 1537 unit tests pass (225 suites; no new tests added — the source-pattern test is the audit guard)
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint . --max-warnings 0` clean on the modified file
+- `npm run build` passes
+- Byte-equivalent: `ok<T>(data)` is literally `NextResponse.json({ data }, { status: 200 })` (per `src/lib/api-response.ts:197`)
+
+### "Next session should:" block
+
+1. **Pick List 2 next session** to spread the refactor surface. List 1 has been hit 4+ times now (sessions 87, 93, 113, 117). List 2 hasn't been touched since session 116 (the open-callback promotion, committed at the start of this session).
+2. **List 4 audit follow-up** — the next-ripe List 4 work is the `safeWriteFileAtomic` + `safeReadJson` helper promotions flagged in session 86. List 4 has been quiet for 7+ sessions.
+3. **Migrate `(main)/sessions/page.tsx` to `useApiData({ refreshIntervalMs })`** — extends the hook to absorb the manual `useInterval` + `setNowTick` pattern. Defer until the hook shape is stable across logs + sessions.
+4. **`useMissionsPage` decomposition** — 1175+ LOC, List 2 territory. Out of scope for "AT LEAST identical results".
+5. **The 22 inline `err instanceof Error ? err.message` sites in `src/lib/`, `src/components/cron/`, and `src/app/recroom/`** were flagged in session 90's "next session should" block. A server-side `toMessage(e, fallback)` helper would be the natural migration target.
+
+---
+
+## Session 116 carryover (committed at the start of this session)
+
+The session 116 work was left in a half-applied state in the working tree when the previous cron session ended. This session committed the carry-over as a separate commit, then proceeded to the new List-1 work.
+
+### Carryover commit: `ee45558` — `ok()` migration completion + openCreateForActiveTab callback (List 2 P-7 + List 3 P-2)
+
+1. **`src/app/api/agent/profiles/[id]/route.ts`** — completed the partial ok() migration. The PUT handler (line 95) was already migrated but the DELETE handler still used the inline `NextResponse.json<ApiResponse<...>>({ data: { success: true } })` form. Migrated to `ok({ success: true })`. Removed now-unused `ApiResponse` type import (per session 111 P-2).
+2. **`src/app/api/mission-categories/route.ts`** — ok() factory migration of 3 inline `NextResponse.json({ data: ... })` sites in GET, PUT, and DELETE handlers. All status-200, `ok()`-compatible.
+3. **`src/app/orchestration/cron/page.tsx`** — promoted the inline `onCreate={() => activeTab === 'agent' ? setShowCreate(true) : setShowHardwareCreate(true)}` arrow function on `ActionButtons` to a named `openCreateForActiveTab` useCallback. The tab discriminator is the inverse of the `closeCreate` pattern (session 101) — the modal open direction. Per session 116 P-7.
+4. **`src/app/orchestration/missions/page.tsx`** — removed `setShowCreate` from the `useMissionsPage()` destructure after the prior session's open-callback promotion left it unused (per session 116 P-3).
+
+All 1537 unit tests pass. `tsc --noEmit` clean. ESLint `--max-warnings 0` clean. `npm run build` passes. Byte-equivalent at runtime for all migrated sites.
+
+---
+
 ## Session 113 — List 1 (Dashboard, Sessions, Memory, Logs) — `ok()` factory migration of 10 sites across 3 files + List 1 source-pattern test
 
 Pick was **List 1 (Dashboard, Sessions, Memory, Logs)** for the session 113 sweep, per `echo $((RANDOM % 4 + 1))` = 1. List 1 was the next-ripe surface (last touched session 106, 7 sessions ago). The "next session should" block in session 111's PR-body entry named List 1 as the top follow-up: "**List 1 is still the next-ripe surface** — last touched session 106 (4+ sessions ago), carries 3 known follow-up items." The session-112 carryover (just below) upgraded the source-pattern scanner to a balanced-brace walker, which is what surfaced the 10 un-migrated `data:` sites in the List 1 API surface.
