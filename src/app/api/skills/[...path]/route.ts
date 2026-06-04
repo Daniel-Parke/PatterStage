@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFileSync, existsSync, readdirSync, statSync } from "fs";
 
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { resolveSkillDirUnderRoot } from "@/lib/path-security";
 import { parseSkillFrontmatter, stripSkillFrontmatter } from "@/lib/skills-repository";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest, notFound, serverError } from "@/lib/api-response";
+import { badRequest, notFound } from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
@@ -78,7 +78,11 @@ export async function GET(
       },
     });
   } catch (err) {
-    logApiError("GET /api/skills/[...path]", "reading skill", err);
-    return serverError("Failed to read skill");
+    return serverErrorFromCatch(
+      "GET /api/skills/[...path]",
+      "reading skill",
+      err,
+      "Failed to read skill",
+    );
   }
 }

@@ -36,6 +36,23 @@
  *   - This test pins the post-migration zero-tolerance rule. Any
  *     future static-literal site added to the List 1 surface will
  *     fail this test until it's migrated to `serverErrorFromCatch`.
+ *
+ * Session 127 history (List 3 surface added):
+ *   - The List 3 surface had 6 static-literal `serverError(STATIC)`
+ *     sites: 1 in `api/skills/route.ts`, 2 in
+ *     `api/skills/[name]/route.ts`, 1 in
+ *     `api/skills/[name]/toggle/route.ts`, 1 in
+ *     `api/skills/[...path]/route.ts`, 1 in `api/tools/route.ts`.
+ *     All 6 were migrated in this session.
+ *   - A new `has zero … in the List 3 surface (api/skills, api/tools)`
+ *     assertion was added. Future static-literal sites added to
+ *     api/skills/* or api/tools/* will fail the test until migrated.
+ *   - The `api/models/*` routes were already on `serverErrorFromCatch`
+ *     from earlier sessions. `api/agent/files/[key]` was also already
+ *     migrated. The `api/skills/[name]/route.ts:104` site uses a
+ *     dynamic message (`push.error ?? "Push failed"`) and is exempt
+ *     per the dynamic-message rule (the scanner never matches
+ *     dynamic-message sites).
  */
 
 import { readFileSync, readdirSync, statSync, writeFileSync, unlinkSync } from "node:fs";
@@ -149,7 +166,7 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-describe("serverErrorFromCatch source-pattern coverage (List 1 surface)", () => {
+describe("serverErrorFromCatch source-pattern coverage (List 1 + List 3 surfaces)", () => {
   const files = walk(API_DIR);
   const allSites: Site[] = [];
   for (const f of files) allSites.push(...findSites(f));
@@ -188,6 +205,42 @@ describe("serverErrorFromCatch source-pattern coverage (List 1 surface)", () => 
         .join("\n");
       throw new Error(
         `Found ${live.length} un-migrated 'logApiError + return serverError(STATIC)' site(s) in the List 1 surface — migrate to 'serverErrorFromCatch(...)' or add to EXEMPTIONS:\n${summary}`,
+      );
+    }
+    expect(live).toEqual([]);
+  });
+
+  it("has zero `logApiError + return serverError(STATIC)` sites in the List 3 surface (api/skills, api/tools)", () => {
+    // Filter to List 3 surface. The List 3 surface backs the
+    // Models, Agents, Skills, Tools, and Personalities pages (per the
+    // session-127 sweep). api/skills and api/tools were the only
+    // List 3 files with static-literal `serverError(STATIC)` sites
+    // — 6 sites total: 1 in api/skills/route.ts, 2 in
+    // api/skills/[name]/route.ts, 1 in api/skills/[name]/toggle/route.ts,
+    // 1 in api/skills/[...path]/route.ts, 1 in api/tools/route.ts.
+    // The api/skills/[name]/route.ts:104 site uses a dynamic message
+    // (`push.error ?? "Push failed"`) and is exempt per the
+    // dynamic-message rule. The api/models/* routes already use
+    // `serverErrorFromCatch` (the helper was adopted during the
+    // List 4 sweep). api/agent/files/[key] was also migrated in an
+    // earlier session.
+    const list3 = allSites.filter(
+      (s) =>
+        s.file.includes(`${join("src", "app", "api", "skills")}`) ||
+        s.file.includes(`${join("src", "app", "api", "tools")}`),
+    );
+    // EXEMPTIONS already enumerates the known exempt files in the
+    // List 3 surface. Filter those out before asserting zero.
+    // The `s.file` from the scanner is absolute; EXEMPTIONS uses
+    // repo-relative paths, so we match on the suffix.
+    const exemptedFiles = new Set(EXEMPTIONS.map((e) => e.file));
+    const live = list3.filter((s) => !exemptedFiles.has(s.file.replace(REPO_ROOT + "/", "")));
+    if (live.length > 0) {
+      const summary = live
+        .map((s) => `  ${s.file.replace(REPO_ROOT + "/", "")}:${s.line}  ${s.text}`)
+        .join("\n");
+      throw new Error(
+        `Found ${live.length} un-migrated 'logApiError + return serverError(STATIC)' site(s) in the List 3 surface — migrate to 'serverErrorFromCatch(...)' or add to EXEMPTIONS:\n${summary}`,
       );
     }
     expect(live).toEqual([]);

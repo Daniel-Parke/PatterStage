@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { existsSync, readFileSync } from "fs";
 
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
 import { badRequest, notFound, serverError } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
@@ -55,8 +55,12 @@ export async function GET(
     });
   }
   catch (error) {
-    logApiError("GET /api/skills/[name]", `reading skill ${name}`, error);
-    return serverError("Failed to read skill");
+    return serverErrorFromCatch(
+      "GET /api/skills/[name]",
+      `reading skill ${name}`,
+      error,
+      "Failed to read skill",
+    );
   }
 }
 
@@ -115,7 +119,11 @@ export async function PUT(
     });
   }
   catch (error) {
-    logApiError("PUT /api/skills/[name]", `writing skill ${name}`, error);
-    return serverError("Failed to write skill");
+    return serverErrorFromCatch(
+      "PUT /api/skills/[name]",
+      `writing skill ${name}`,
+      error,
+      "Failed to write skill",
+    );
   }
 }

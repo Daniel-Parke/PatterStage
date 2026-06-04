@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
-import { badRequest, notFound, serverError } from "@/lib/api-response";
+import { badRequest, notFound } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
@@ -86,7 +86,11 @@ export async function PUT(
     });
   }
   catch (error) {
-    logApiError("PUT /api/skills/[name]/toggle", `toggle ${name}`, error);
-    return serverError("Failed to toggle skill");
+    return serverErrorFromCatch(
+      "PUT /api/skills/[name]/toggle",
+      `toggle ${name}`,
+      error,
+      "Failed to toggle skill",
+    );
   }
 }

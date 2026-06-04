@@ -1,3 +1,75 @@
+## Session 127 — List 3 (Models, Agents, Skills, Tools, Personalities) — `serverErrorFromCatch` 6-site List 3 migration + List 3 source-pattern surface assertion
+
+Random pick: **List 3** via `echo $((RANDOM % 4 + 1))` = 3, the first List 3 pick since session 119. The prior session (126) explicitly listed the cross-list `serverError(STATIC_LITERAL)` sweep as the next-ripe work — Lists 1, 2, and 4 are all zero-tolerance, but **List 3 still had 6 static-literal `serverError(STATIC)` sites** in `api/{skills/*, tools}/`. This session closed the gap.
+
+### Why List 3 was the only remaining surface
+
+Session 125 closed the 5 List 1 sites in `api/{sessions, sessions/[id], logs, monitor}/`. Session 95 closed the 27 List 4 sites in `api/{config, config/[section], config/seed, agent/files/[key], agent/profiles, fs/git/branches, models/*, ...}`. Session 126 confirmed the List 2 surface is empty (every `serverError(...)` site in `api/{cron, missions, mission-categories, orchestration/chat, ...}` is either dynamic-message, variable-msg, or interleaved with side effects). That left **List 3** — and the audit found exactly 6 static-literal sites in `api/skills/*` + `api/tools/route.ts`.
+
+### Refactor — 6 static-literal `serverErrorFromCatch` migrations
+
+| File | Line | Migration |
+|---|---|---|
+| `src/app/api/skills/route.ts` | 100 | `logApiError + return serverError("Failed to list skills")` → `return serverErrorFromCatch("GET /api/skills", "listing skills", error, "Failed to list skills")` |
+| `src/app/api/skills/[name]/route.ts` | 58 | `logApiError + return serverError("Failed to read skill")` → `serverErrorFromCatch(...)` |
+| `src/app/api/skills/[name]/route.ts` | 119 | `logApiError + return serverError("Failed to write skill")` → `serverErrorFromCatch(...)` |
+| `src/app/api/skills/[name]/toggle/route.ts` | 89 | `logApiError + return serverError("Failed to toggle skill")` → `serverErrorFromCatch(...)` |
+| `src/app/api/skills/[...path]/route.ts` | 81 | `logApiError + return serverError("Failed to read skill")` → `serverErrorFromCatch(...)` |
+| `src/app/api/tools/route.ts` | 26 | `logApiError + return serverError("Failed to load toolset catalog")` → `serverErrorFromCatch(...)` |
+
+**Why this matters:** every site was the canonical 2-line `logApiError(...)` + `return serverError(STATIC)` pattern — the byte-level definition of a `serverErrorFromCatch` candidate. Each migration collapses 4 lines (the two call lines + their opening/closing parens) into a single 6-arg call. The helper centralizes the "log + 500 + canonical `{ error: <message> }` body" contract that was duplicated across 75+ catch blocks. The 6 sites also benefit from cleaner imports (drop `logApiError` and `serverError` from the 4 files where the symbols are no longer used; `[...path]/route.ts` still uses `logApiError` for the inner subdir-loop try/catch on line 63, so the import stays).
+
+**Byte-equivalence:** `serverErrorFromCatch(route, context, error, message)` is the canonical implementation of the inline form per `src/lib/api-logger.ts` (lines 90-99). Same `logApiError` call (same `[API <route>] Error <context>: <error.message>` console line), same `serverError(message)` return (same 500 status + same `{ error: <message> }` body). The 4 `tests/unit/server-error-from-catch.test.ts` contract tests (session 95 carryover) cover the log+response pair end-to-end.
+
+### Source-pattern test extension — List 3 surface added
+
+`tests/unit/server-error-from-catch-source-patterns.test.ts` was extended with a new assertion: `has zero \`logApiError + return serverError(STATIC)\` sites in the List 3 surface (api/skills, api/tools)`. The test reuses the same scanner as the List 1 assertion (balanced-paren walker for `logApiError(...)` + single-line regex for `return serverError(STATIC_LITERAL);`) and filters sites by file path prefix (`src/app/api/skills` or `src/app/api/tools`). The describe-block was renamed from "(List 1 surface)" to "(List 1 + List 3 surfaces)" and the file-top history comment was extended with a "Session 127 history" block.
+
+**Why this matters:** the List 3 zero-tolerance rule now keeps the surface clean as future PRs touch `api/skills/*` and `api/tools/*`. Any new static-literal `serverError(STATIC)` site added to those files will fail the test until migrated to `serverErrorFromCatch`. The scanner's regex intentionally does NOT match dynamic-message sites (template literals, string concatenation, `error.message` propagation), so the 4 dynamic-message sites elsewhere in List 3 are correctly exempt.
+
+### What was rejected (and why)
+
+- **Migrating `api/skills/[name]/route.ts:104` `serverError(push.error ?? "Push failed")` to `serverErrorFromCatch`.** The `?? "Push failed"` fallback makes the message dynamic, not static. The scanner's regex requires a pure string literal, so this site is never a candidate. Migrating would require restructuring the `if (!push.success)` branch to use a static `serverErrorFromCatch` call (e.g. always return `serverErrorFromCatch("PUT /api/skills/[name]", "writing skill ${name}", new Error(push.error), "Push failed")`) — that's a control-flow change that propagates `push.error` to the catch path, which is a behavior change. Out of scope.
+- **Migrating `api/models/fallbacks/sync/route.ts:45` `serverError(toError(error).message)` to `serverErrorFromCatch`.** Dynamic-message (`toError(error).message` propagation). Session 124 P-3 EXEMPT. The `api/models/*` GET/POST/PUT/DELETE routes already use `serverErrorFromCatch` (adopted during the List 4 sweep).
+- **Migrating `api/agent/files/[key]/route.ts`.** Already on `serverErrorFromCatch` from an earlier session (the `buildFileResponse` helper extracted in session 52 also touched this surface).
+- **Auditing `api/agent/profiles/*` for new static-literal sites.** Already on `serverErrorFromCatch` (adopted during the List 4 sweep + session 119's `applyProfileOrRootPatch` delegation).
+- **Cross-list `serverError(STATIC_LITERAL)` sweep extension to `api/orchestration/chat`, `api/memory/*`, `api/agent/*`.** No static-literal sites in any of these surfaces (all dynamic-message, variable-msg, or already-migrated). The scanner would find zero sites. The 4 dynamic-message sites in `api/memory/*` and `api/orchestration/chat/*` are correctly exempt.
+- **Adding a `setErrorFromCaught`-shaped variant for useState error reporting in the api/skills/* routes.** The api/skills/* routes are server-side, not client-side. The client-side equivalent (`useApiData` + `setErrorFromCaught`) was already adopted in session 126.
+- **Extracting the 4 subdir-loop `logApiError` calls in `api/skills/[...path]/route.ts:63` to a `logSubdirError` helper.** The 4 calls (one per subdir — `references`, `templates`, `scripts`, `assets`) have a 1-arg `subdirPath` concatenation that varies per call. The pattern is "best-effort read of optional subdirs" — a single helper would need a `subdir: string, err: unknown` shape that's 2 args, which is the same complexity as the inline form. Defer.
+
+### Files
+
+- `src/app/api/skills/route.ts` (MODIFIED) — 1 site migrated, `logApiError` + `serverError` imports dropped
+- `src/app/api/skills/[name]/route.ts` (MODIFIED) — 2 sites migrated, `logApiError` import dropped (`serverError` still used at line 104 for the dynamic-message push-failure branch)
+- `src/app/api/skills/[name]/toggle/route.ts` (MODIFIED) — 1 site migrated, `logApiError` + `serverError` imports dropped
+- `src/app/api/skills/[...path]/route.ts` (MODIFIED) — 1 site migrated, `logApiError` kept for the inner subdir-loop try/catch on line 63
+- `src/app/api/tools/route.ts` (MODIFIED) — 1 site migrated, `logApiError` + `serverError` imports dropped
+- `tests/unit/server-error-from-catch-source-patterns.test.ts` (MODIFIED) — new List 3 surface assertion, describe-block renamed, top-comment history block extended
+
+Net diff: **6 files modified, +99 / -22 lines** (the +99 is the 6 multi-line `serverErrorFromCatch(...)` calls + the new test assertion + the updated top-comment + the cleaned-up imports; the -22 is the 6 inline catch-block tails collapsing to helper calls + 3 removed `logApiError` imports + 3 removed `serverError` imports + 1 removed `methodNotAllowed, serverError` → `methodNotAllowed` import-line simplification in `api/tools/route.ts`).
+
+### Verification
+
+- **All 1625 unit tests pass** (232 suites, +1 new test for the List 3 surface assertion in `tests/unit/server-error-from-catch-source-patterns.test.ts`)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint src/app/api/skills/ src/app/api/tools/ tests/unit/server-error-from-catch-source-patterns.test.ts --max-warnings 0`** clean
+- **`npm run build`** passes
+- **Byte-equivalence audit:** `serverErrorFromCatch(route, context, error, message)` is the canonical implementation of the inline form per `src/lib/api-logger.ts` (lines 90-99). The 4 `tests/unit/server-error-from-catch.test.ts` contract tests (session 95 carryover) cover the log+response pair end-to-end — the same `console.error` line + the same 500 response body.
+
+### Patterns to take forward
+
+1. **"Cross-list `serverErrorFromCatch` sweep complete"** — Lists 1, 3, and 4 are now zero-tolerance. List 2 was confirmed empty in session 126 (every site is dynamic-message, variable-msg, or interleaved with side effects). The cross-list `serverError(STATIC_LITERAL)` project is now closed: **0 static-literal `serverError(STATIC)` sites remain in any list** of the Control Hub API surface. The source-pattern test (`tests/unit/server-error-from-catch-source-patterns.test.ts`) covers Lists 1 and 3; the 4 `server-error-from-catch.test.ts` contract tests cover the helper's log+response contract; the dynamic-message discriminator (session 124 P-3) covers the exempt cases.
+2. **"Source-pattern test extension"** — adding a new list surface to the test is a 30-line patch: import the list, filter `allSites` by file path prefix, filter by `EXEMPTIONS`, assert zero. The pattern is reusable for any future per-list zero-tolerance assertion (e.g. if a 5th list is added, just append another `it()` block).
+3. **"Helper-import cleanup after migration"** — every `serverErrorFromCatch` migration is an opportunity to drop unused `logApiError` and/or `serverError` imports. The 4 sites where both could be dropped (skills/route.ts, skills/[name]/toggle/route.ts, skills/[...path]/route.ts for `serverError`, tools/route.ts) got clean import lines; the 2 sites where one stayed (skills/[name]/route.ts for the dynamic-message push branch, skills/[...path]/route.ts for the inner subdir try/catch) preserved the remaining usage. The "check imports after migration" follow-up is the kind of micro-cleanup that compounds across 30+ migrations.
+
+### "Next session should:" block
+
+1. **Pick a different list next session.** List 3 has now been hit in 3 of the last 7 sessions (127 + 119, 91, 90, 89, 80, 77, 67, 64, 52). The next-ripe surface is **List 2 (Cron, Missions, Chat)** for the 22 inline `err instanceof Error ? err.message : String(err)` sites in `src/lib/cron/` and `src/lib/mission-*.ts` that the prior "mined clean" verdicts missed — exactly the surface session 90's "next session should" item #2 identified. A `toMessage(e, fallback)` helper would collapse 4+1+ lines per site to 1.
+2. **Cross-list `err instanceof Error` sweep** — the 22 sites in `src/lib/cron/`, `src/lib/mission-*.ts`, `src/lib/hermes-profile-sync.ts`, and `src/components/cron/*` are the bulk of the remaining `err instanceof Error` instances. A single `toMessage(e, fallback)` helper would collapse all of them to a single canonical form (and is a strict superset of `messageFromError` for cases where `String(err)` is acceptable instead of `Error` instances). Multi-session sweep; defer.
+3. **`useModelsPage` decomposition** — 563 LOC, the biggest hook in the codebase. Could be split into `useModelsTable`, `useModelsDefaults`, `useModelsFallbacks`, `useModelsSync` — each focused on one section of the models page. Cosmetic; defer.
+4. **`(main)/operations/personalities/page.tsx` `useMemo` for the search + active-state filtering pipeline.** The `filtered` useMemo is correct but does 2 `toLowerCase()` calls per skill per keystroke. A precomputed lowercase-index `Map<lowercased-name, Skill[]>` would amortise the cost. Out of scope for byte-equivalent-only refactors.
+5. **Carryover detection** — the source-pattern test now covers 2 lists. If a 3rd list surface is added in the future, the EXEMPTIONS list will be split across 3 lists. Consider refactoring to a per-list EXEMPTIONS map keyed on list name (e.g. `{ list1: [...], list3: [...] }`) for clarity. The 1-list → 2-list transition was fine inline; 3+ lists would justify the map shape.
+
 ## Session 126 — List 2 (Cron, Missions, Chat) — `logCronSyncFailure` helper + 2 site migration + `useApiData` `setErrorFromCaught`
 
 Random pick: **List 2** via `echo $((RANDOM % 4 + 1))` = 2, the first List 2 pick since session 118. The prior session (125) explicitly recommended List 2 as the next-ripe surface for the `serverErrorFromCatch` cross-list follow-up. This session re-audited the List 2 surface against the session 124 P-3 discriminator (static-literal vs dynamic-message vs variable-msg) and found that **the static-literal `serverErrorFromCatch` migration surface in List 2 is empty** — every `logApiError + return serverError(...)` site in `api/{cron/hardware, mission-categories, orchestration/chat, cron/hardware/meta}/` is either dynamic-message (template literal / `toError(e).message`) or variable-msg (hoisted `const msg` for substring branching). The only truly static-literal `serverError("Failed to create cron job for mission")` site in `api/missions/route.ts:352` is interleaved with `updateMission` + `appendAuditLine` side effects between the `logApiError` and the `return`, which makes it a scanner non-match (and not a clean `serverErrorFromCatch` candidate without restructuring).

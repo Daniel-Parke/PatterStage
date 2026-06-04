@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest, notFound, serverError } from "@/lib/api-response";
+import { badRequest, notFound } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
 import { safeStat } from "@/lib/fs-stats";
 import { resolveEffectiveDisabledSkills } from "@/lib/effective-disabled-skills";
@@ -97,7 +97,11 @@ export async function GET(request: NextRequest) {
     });
   }
   catch (error) {
-    logApiError("GET /api/skills", "listing skills", error);
-    return serverError("Failed to list skills");
+    return serverErrorFromCatch(
+      "GET /api/skills",
+      "listing skills",
+      error,
+      "Failed to list skills",
+    );
   }
 }
