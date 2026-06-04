@@ -3,7 +3,7 @@ import * as fs from "fs";
 import { exec, execSync } from "child_process";
 import { join } from "path";
 
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, notFound, ok, serverError, serviceUnavailable } from "@/lib/api-response";
@@ -244,8 +244,7 @@ export async function GET(request: NextRequest) {
     const { jobs } = await readAndParseCrontab();
     return ok({ jobs, total: jobs.length });
   } catch (e: unknown) {
-    logApiError("GET /api/cron/hardware", "read crontab", e);
-    return serverError(`Failed to read crontab: ${toError(e).message}`);
+    return serverErrorFromError("GET /api/cron/hardware", "read crontab", e, "Failed to read crontab");
   }
 }
 
@@ -351,8 +350,7 @@ export async function POST(request: NextRequest) {
 
     return ok({ id: entryId, schedule, command, name, logFile });
   } catch (e: unknown) {
-    logApiError("POST /api/cron/hardware", "create hardware cron", e);
-    return serverError(`Failed to create hardware cron job: ${toError(e).message}`);
+    return serverErrorFromError("POST /api/cron/hardware", "create hardware cron", e, "Failed to create hardware cron job");
   }
 }
 
@@ -444,8 +442,7 @@ export async function PUT(request: NextRequest) {
 
     return ok({ id, schedule, command, name, logFile, enabled });
   } catch (e: unknown) {
-    logApiError("PUT /api/cron/hardware", "update hardware cron", e);
-    return serverError(`Failed to update hardware cron job: ${toError(e).message}`);
+    return serverErrorFromError("PUT /api/cron/hardware", "update hardware cron", e, "Failed to update hardware cron job");
   }
 }
 
@@ -501,7 +498,6 @@ export async function DELETE(request: NextRequest) {
 
     return ok({ id });
   } catch (e: unknown) {
-    logApiError("DELETE /api/cron/hardware", "delete hardware cron", e);
-    return serverError(`Failed to delete hardware cron job: ${toError(e).message}`);
+    return serverErrorFromError("DELETE /api/cron/hardware", "delete hardware cron", e, "Failed to delete hardware cron job");
   }
 }

@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { serverError } from "./api-response";
-import { messageFromError } from "./api-fetch";
+import { messageFromError, toError } from "./api-fetch";
 import type { NextResponse } from "next/server";
 
 /**
@@ -80,4 +80,69 @@ export function serverErrorFromCatch(
 ): NextResponse {
   logApiError(route, context, error);
   return serverError(message);
+}
+
+/**
+ * Sister-helper of `serverErrorFromCatch` for the dynamic-message variant.
+ * The static-message form (`serverErrorFromCatch`) is for sites where the
+ * user-facing error string is a static literal (e.g. "Failed to list
+ * models"). The dynamic-message form (`serverErrorFromError`) is for
+ * sites where the user-facing string is a static PREFIX concatenated with
+ * the caught error's message — the canonical pattern is
+ *
+ *   } catch (e) {
+ *     logApiError(ROUTE, CONTEXT, e);
+ *     return serverError(`Failed to read crontab: ${toError(e).message}`);
+ *   }
+ *
+ * which appears in 4 sites in `api/cron/hardware/route.ts` (GET, POST,
+ * PUT, DELETE handlers). The inline template-literal interpolation is a
+ * discriminator (Pitfall 4 / `audit-recipes-and-migration-status.md`)
+ * that excludes the site from `serverErrorFromCatch` — but the log +
+ * response composition is the same shape, so a dedicated helper that
+ * takes a `prefix` instead of a fully-formed `message` is the natural
+ * cousin.
+ *
+ * Byte-equivalent to the inline form: same log line
+ *   [API <route>] Error <context>: <error.message>
+ * (via `logApiError` which uses `messageFromError` for the `||` empty-Error
+ * discipline) and same response (500 + `{ error: "<prefix>: <error.message>" }`).
+ * The response body is identical character-for-character to the inline
+ * template-literal form for all `Error`-instance inputs (which is the
+ * realistic case for `try` blocks around `fs` / `child_process` /
+ * `db.prepare().run()` operations).
+ *
+ * **Why not extend `serverErrorFromCatch` to accept an optional `prefix`:**
+ * the two helpers have different message-source semantics — static
+ * (caller-supplied, never changes) vs dynamic (caller-supplied PREFIX +
+ * caught error's message). A `prefix?` optional 4th-arg would muddy the
+ * static-only contract that `serverErrorFromCatch` enforces (and that
+ * the source-pattern test in `tests/unit/server-error-from-catch-
+ * source-patterns.test.ts` relies on). Sister-helpers with distinct
+ * signatures is clearer than an overloaded 4th-arg.
+ *
+ * **Why the `toError` import is here and not in `api-response.ts`:** the
+ * helper is a *catch-block shim* that composes two existing primitives
+ * (logApiError + serverError + the inner `toError` for the dynamic
+ * message). Same module-home argument as `serverErrorFromCatch`.
+ *
+ * @param route - API route name (e.g., "GET /api/cron/hardware")
+ * @param context - What was being done (e.g., "read crontab")
+ * @param error - The caught error
+ * @param prefix - Static user-facing prefix (e.g., "Failed to read crontab")
+ * @returns A 500 NextResponse with `{ error: "<prefix>: <error.message>" }`
+ *
+ * @example
+ *   } catch (e) {
+ *     return serverErrorFromError("GET /api/cron/hardware", "read crontab", e, "Failed to read crontab");
+ *   }
+ */
+export function serverErrorFromError(
+  route: string,
+  context: string,
+  error: unknown,
+  prefix: string,
+): NextResponse {
+  logApiError(route, context, error);
+  return serverError(`${prefix}: ${toError(error).message}`);
 }
