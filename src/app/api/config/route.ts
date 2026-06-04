@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 import yaml from "js-yaml";
+import { z } from "zod";
 
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
-import { badRequest, forbidden } from "@/lib/api-response";
+import { forbidden } from "@/lib/api-response";
 import { db } from "@/lib/db";
 import { dumpYamlConfig } from "@/lib/hermes-config-sync";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { backupFile } from "@/lib/fs-helpers";
 
 const CACHE_TTL_MS = 15_000; // 15 seconds
@@ -85,6 +86,22 @@ const WRITABLE_SECTIONS = new Set(
     .map(([id]) => id)
 );
 
+// PUT body shape: a whitelisted section name + an object of values to
+// merge in. `values` is `Record<string, unknown>` (free-form) because
+// the per-section field validation lives in `config-schema.ts` (the
+// client sends the typed section schema and the server just trusts the
+// shape). `.strict()` rejects unknown top-level keys, matching the
+// pre-refactor manual cast + `badRequest("Missing 'section' or 'values'")`.
+// The section whitelist check is kept as a separate `forbidden()` branch
+// below so the 403 message format is preserved (zod refine would lose
+// the human-readable section list).
+const configPutSchema = z
+  .object({
+    section: z.string().min(1),
+    values: z.record(z.string(), z.unknown()),
+  })
+  .strict();
+
 // Mask sensitive values in config before returning to client
 function maskConfigSecrets(config: Record<string, unknown>): Record<string, unknown> {
   const clone = structuredClone(config);
@@ -139,29 +156,14 @@ export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  // Hoist body parsing out of the main try/catch so malformed JSON
-  // returns 400 (via parseJsonBody) rather than 500. This matches the
-  // behaviour of every other route that adopted parseJsonBody.
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
+  const parsed = await parseAndValidateJsonBody(request, configPutSchema);
+  if (parsed instanceof NextResponse) return parsed;
+  const { section, values } = parsed;
 
-  // Narrow body shape — parseJsonBody returns Record<string, unknown>
-  // so we cast to the structural shape we expect from the client.
-  const { section, values } = bodyResult as {
-    section?: string;
-    values?: unknown;
-  };
-
-  if (!section || !values) {
-    return badRequest("Missing 'section' or 'values'");
-  }
-
-  // Validate that values is a plain object (not string, array, or null)
-  if (typeof values !== "object" || Array.isArray(values) || values === null) {
-    return badRequest("values must be an object");
-  }
-
-  // Security: only allow whitelisted sections (prevent modifying model/provider keys)
+  // Non-writable section → 403 (zod refine surfaces the failure as
+  // { message: "section_not_writable" } in zodErrorResponse, but we
+  // need the custom `forbidden()` body with the section list to match
+  // the pre-refactor message format).
   if (!WRITABLE_SECTIONS.has(section)) {
     return forbidden(
       `Section '${section}' is not writable. Allowed: ${[...WRITABLE_SECTIONS].join(", ")}`

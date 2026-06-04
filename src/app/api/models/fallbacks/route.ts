@@ -3,12 +3,11 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { addFallbackEntry, getFallbackConfig, listFallbackChain } from "@/lib/fallbacks-repository";
 import { fallbackInputSchema } from "@/lib/fallback-config-schema";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
-import { zodErrorResponse } from "@/lib/api-schemas";
 import { created, ok } from "@/lib/api-response";
 
 export async function GET(request: NextRequest) {
@@ -31,16 +30,11 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
-
-  const parsed = fallbackInputSchema.safeParse(bodyResult);
-  if (!parsed.success) {
-    return zodErrorResponse(parsed.error);
-  }
+  const parsed = await parseAndValidateJsonBody(request, fallbackInputSchema);
+  if (parsed instanceof NextResponse) return parsed;
 
   try {
-    const entry = addFallbackEntry(parsed.data);
+    const entry = addFallbackEntry(parsed);
     commitFallbackChange("fallback.add", entry.id);
     return created({ entry });
   } catch (error) {

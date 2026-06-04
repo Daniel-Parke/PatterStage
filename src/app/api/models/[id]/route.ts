@@ -6,9 +6,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getModel, updateModel, deleteModel } from "@/lib/models-repository";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
-import { zodErrorResponse, modelPutSchema } from "@/lib/api-schemas";
+import { modelPutSchema } from "@/lib/api-schemas";
 import { notFound, ok } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
@@ -38,14 +38,11 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
 
   const { id } = await ctx.params;
 
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
-
-  const parsed = modelPutSchema.safeParse(bodyResult);
-  if (!parsed.success) return zodErrorResponse(parsed.error);
+  const parsed = await parseAndValidateJsonBody(request, modelPutSchema);
+  if (parsed instanceof NextResponse) return parsed;
 
   try {
-    const updated = updateModel(id, parsed.data);
+    const updated = updateModel(id, parsed);
     if (!updated) return notFound("Model not found");
     // Re-sync config.yaml whenever fields that propagate to Hermes change
     // or when default slots move.

@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
 import {
@@ -18,6 +18,7 @@ import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
 import { readHermesYamlConfig } from "@/lib/hermes-config-sync";
 import { notFound, ok } from "@/lib/api-response";
 import { fallbackKey } from "@/lib/model-key";
+import { z } from "zod";
 
 interface ImportPreview {
   provider: string;
@@ -65,14 +66,17 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// POST body is optional: callers can pass { overwrite?: boolean } or empty.
+const importPostSchema = z
+  .object({ overwrite: z.boolean().optional() })
+  .strict();
+
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
-
-  const body = bodyResult as { overwrite?: boolean };
+  const parsed = await parseAndValidateJsonBody(request, importPostSchema);
+  if (parsed instanceof NextResponse) return parsed;
 
   try {
     const config = readHermesYamlConfig<{
@@ -102,7 +106,7 @@ export async function POST(request: NextRequest) {
       if (!entry.provider || !entry.model) continue;
 
       const key = fallbackKey(entry.provider, entry.model);
-      if (existingKeys.has(key) && !body?.overwrite) {
+      if (existingKeys.has(key) && !parsed.overwrite) {
         skipped.push(key);
         continue;
       }

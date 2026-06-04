@@ -9,9 +9,10 @@ import { getModelWithKey } from "@/lib/models-repository";
 import { readHermesYamlConfig } from "@/lib/hermes-config-sync";
 import { envVarForProvider, isHermesProvider } from "@/lib/hermes-providers";
 import { requireAuth } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { maskKeyHint } from "@/lib/secret-mask";
 import { notFound, ok } from "@/lib/api-response";
+import { z } from "zod";
 
 interface DiffEntry {
   id: string;
@@ -38,11 +39,16 @@ export async function POST(
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
+  // Body is `{ direction?: "push" | "pull" }` (default "push").
+  const diffPostSchema = z
+    .object({
+      direction: z.enum(["push", "pull"]).optional(),
+    })
+    .strict();
 
-  const body = bodyResult;
-  const direction = (body?.direction as "push" | "pull") ?? "push";
+  const parsed = await parseAndValidateJsonBody(request, diffPostSchema);
+  if (parsed instanceof NextResponse) return parsed;
+  const direction = parsed.direction ?? "push";
   const { id } = await params;
 
   try {

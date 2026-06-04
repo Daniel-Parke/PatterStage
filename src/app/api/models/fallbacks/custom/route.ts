@@ -3,35 +3,29 @@
 // ══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { addFallbackEntry } from "@/lib/fallbacks-repository";
 import { customFallbackInputSchema } from "@/lib/fallback-config-schema";
 import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
-import { zodErrorResponse } from "@/lib/api-schemas";
 import { created } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
-
-  const parsed = customFallbackInputSchema.safeParse(bodyResult);
-  if (!parsed.success) {
-    return zodErrorResponse(parsed.error);
-  }
+  const parsed = await parseAndValidateJsonBody(request, customFallbackInputSchema);
+  if (parsed instanceof NextResponse) return parsed;
 
   try {
     const entry = addFallbackEntry({
       modelId: null,
-      modelName: parsed.data.modelName,
-      provider: parsed.data.provider,
-      modelIdString: parsed.data.modelIdString,
-      position: parsed.data.position,
-      enabled: parsed.data.enabled,
-      overrideBaseUrl: parsed.data.overrideBaseUrl,
+      modelName: parsed.modelName,
+      provider: parsed.provider,
+      modelIdString: parsed.modelIdString,
+      position: parsed.position,
+      enabled: parsed.enabled,
+      overrideBaseUrl: parsed.overrideBaseUrl,
     });
     commitFallbackChange("fallback.custom.add", entry.id);
     return created({ entry });

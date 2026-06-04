@@ -37,9 +37,13 @@ jest.mock("next/server", () => ({
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/api-auth", () => ({ requireAuth: jest.fn(() => null) }));
-jest.mock("@/lib/parse-json-body", () => ({
-  parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
-}));
+jest.mock("@/lib/parse-json-body", () => {
+  const actual = jest.requireActual("@/lib/parse-json-body");
+  return {
+    parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
+    parseAndValidateJsonBody: actual.parseAndValidateJsonBody,
+  };
+});
 
 // Capture the order and arguments of the calls so the test can assert
 // the credential-link pass uses the upserted ids (not a fresh DB read).

@@ -5,11 +5,12 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { updateModel, listModels } from "@/lib/models-repository";
 import { readHermesConfigModels, type HermesConfigModelEntry } from "@/lib/hermes-config-sync";
 import { notFound, ok } from "@/lib/api-response";
 import { modelKey } from "@/lib/model-key";
+import { z } from "zod";
 
 
 interface Diff { field: string; before: unknown; after: unknown }
@@ -60,12 +61,20 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
+  // Body is entirely optional — `{}` triggers a bulk pull, `{ modelId }`
+  // triggers a single-model pull, `{ modelId, excluded: [...] }` pulls
+  // one model minus the excluded fields. All fields are optional.
+  const pullPostSchema = z
+    .object({
+      modelId: z.string().optional(),
+      excluded: z.array(z.string()).optional(),
+    })
+    .strict();
 
-  const body = bodyResult;
-  const targetModelId = body?.modelId as string | undefined;
-  const excluded = new Set<string>((body?.excluded as string[] | undefined) ?? []);
+  const parsed = await parseAndValidateJsonBody(request, pullPostSchema);
+  if (parsed instanceof NextResponse) return parsed;
+  const targetModelId = parsed.modelId;
+  const excluded = new Set<string>(parsed.excluded ?? []);
   const hermesModels = readHermesConfigModels();
 
   // Single-model pull: only the model whose button was clicked

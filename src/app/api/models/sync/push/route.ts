@@ -5,26 +5,33 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { pushModelToHermes, pushCredential } from "@/lib/sync-manager";
 import { getModelWithKey } from "@/lib/models-repository";
-import { badRequest, ok } from "@/lib/api-response";
+import { ok } from "@/lib/api-response";
+import { z } from "zod";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
+  // `modelId` is required; `pushCredential` defaults to `true` when
+  // absent (matches the pre-refactor `!== false` semantics). The zod
+  // `.min(1)` + string check makes the post-parse `if (!modelId)`
+  // unreachable — a missing/empty `modelId` surfaces as a 400 from
+  // `zodErrorResponse` with the same "modelId is required" text.
+  const pushPostSchema = z
+    .object({
+      modelId: z.string().min(1, "modelId is required"),
+      pushCredential: z.boolean().optional(),
+    })
+    .strict();
 
-  const body = bodyResult;
-  const modelId = body?.modelId as string | undefined;
-  if (!modelId) {
-    return badRequest("modelId is required");
-  }
-
-  const pushCred = (body.pushCredential as boolean | undefined) !== false;
+  const parsed = await parseAndValidateJsonBody(request, pushPostSchema);
+  if (parsed instanceof NextResponse) return parsed;
+  const { modelId, pushCredential: pushCredRaw } = parsed;
+  const pushCred = pushCredRaw !== false;
 
   try {
     const modelResult = pushModelToHermes(modelId);

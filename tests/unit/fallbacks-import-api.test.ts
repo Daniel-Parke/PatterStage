@@ -43,6 +43,24 @@ jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/api-auth", () => ({ requireAuth: jest.fn(() => null) }));
 jest.mock("@/lib/parse-json-body", () => ({
   parseJsonBody: jest.fn(async (req: { json: () => Promise<unknown> }) => req.json()),
+  // parseAndValidateJsonBody composes parseJsonBody + zod schema.safeParse.
+  // Re-expose the real one so the route's validation step is exercised
+  // end-to-end (otherwise the mock would short-circuit the schema and
+  // the test would lose coverage of the strict zod object in the route).
+  parseAndValidateJsonBody: jest.fn(
+    async (req: unknown, schema: { safeParse: (b: unknown) => { success: boolean; data?: unknown; error?: unknown } }) => {
+      const body = await (req as { json: () => Promise<unknown> }).json();
+      const result = schema.safeParse(body);
+      if (!result.success) {
+        // Mirror the real helper's 400 response shape.
+        return {
+          status: 400,
+          body: { error: "Invalid request body", details: (result.error as { flatten: () => unknown })?.flatten?.() },
+        };
+      }
+      return result.data;
+    },
+  ),
 }));
 
 const mockUpdateBatch = jest.fn();

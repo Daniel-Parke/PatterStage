@@ -4,30 +4,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { toError } from "@/lib/api-fetch";
 import { requireAuth } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { logApiError } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
 import { fallbackSyncPostSchema } from "@/lib/fallback-config-schema";
 import { getFallbackConfig, updateFallbackConfigBatch } from "@/lib/fallbacks-repository";
 import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
-import { zodErrorResponse } from "@/lib/api-schemas";
 import { ok, serverError } from "@/lib/api-response";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
-
-  const parsed = fallbackSyncPostSchema.safeParse(bodyResult);
-  if (!parsed.success) {
-    return zodErrorResponse(parsed.error);
-  }
+  const parsed = await parseAndValidateJsonBody(request, fallbackSyncPostSchema);
+  if (parsed instanceof NextResponse) return parsed;
 
   try {
-    if (parsed.data.config && Object.keys(parsed.data.config).length > 0) {
-      updateFallbackConfigBatch(parsed.data.config);
+    if (parsed.config && Object.keys(parsed.config).length > 0) {
+      updateFallbackConfigBatch(parsed.config);
     }
 
     const config = getFallbackConfig();

@@ -7,9 +7,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getModelDefaults, setDefaultModel } from "@/lib/models-repository";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { parseJsonBody } from "@/lib/parse-json-body";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
-import { zodErrorResponse, setDefaultPutSchema } from "@/lib/api-schemas";
+import { setDefaultPutSchema } from "@/lib/api-schemas";
 import { notFound, ok } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
 
@@ -33,21 +33,18 @@ export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
-
-  const parsed = setDefaultPutSchema.safeParse(bodyResult);
-  if (!parsed.success) return zodErrorResponse(parsed.error);
+  const parsed = await parseAndValidateJsonBody(request, setDefaultPutSchema);
+  if (parsed instanceof NextResponse) return parsed;
 
   try {
-    // setDefaultPutSchema narrows parsed.data.taskType to TaskType, so no
+    // setDefaultPutSchema narrows parsed.taskType to TaskType, so no
     // cast is needed. (Session 53 dropped the z.enum widening cast on
     // taskTypeSchema.)
-    const defaults = setDefaultModel(parsed.data.taskType, parsed.data.modelId);
+    const defaults = setDefaultModel(parsed.taskType, parsed.modelId);
     syncDefaultsToHermesConfig();
     appendAuditLine({
       action: "model.default.set",
-      resource: `${parsed.data.taskType}=${parsed.data.modelId ?? "null"}`,
+      resource: `${parsed.taskType}=${parsed.modelId ?? "null"}`,
       ok: true,
     });
     return ok({ defaults });
