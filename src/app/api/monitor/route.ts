@@ -14,9 +14,8 @@ import { ensureSyncLayer, getSyncScheduler } from "@/lib/sync";
 import { getSystemStat, getSystemStatNumber } from "@/lib/system-repository";
 import { listCronJobs } from "@/lib/cron-repository";
 import { listSessions } from "@/lib/session-repository";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { serverError } from "@/lib/api-response";
 import { getGatewayPlatforms, db } from "@/lib/db";
 import type { CronJobBrief, SessionBrief, MonitorData } from "@/types/hermes";
 
@@ -158,7 +157,6 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (error) {
-    logApiError("GET /api/monitor", "aggregating monitor data", error);
-    return serverError("Failed to read system monitor data");
+    return serverErrorFromCatch("GET /api/monitor", "aggregating monitor data", error, "Failed to read system monitor data");
   }
 }
