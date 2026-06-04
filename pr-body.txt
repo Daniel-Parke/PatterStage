@@ -1,3 +1,85 @@
+## Session 126 — List 2 (Cron, Missions, Chat) — `logCronSyncFailure` helper + 2 site migration + `useApiData` `setErrorFromCaught`
+
+Random pick: **List 2** via `echo $((RANDOM % 4 + 1))` = 2, the first List 2 pick since session 118. The prior session (125) explicitly recommended List 2 as the next-ripe surface for the `serverErrorFromCatch` cross-list follow-up. This session re-audited the List 2 surface against the session 124 P-3 discriminator (static-literal vs dynamic-message vs variable-msg) and found that **the static-literal `serverErrorFromCatch` migration surface in List 2 is empty** — every `logApiError + return serverError(...)` site in `api/{cron/hardware, mission-categories, orchestration/chat, cron/hardware/meta}/` is either dynamic-message (template literal / `toError(e).message`) or variable-msg (hoisted `const msg` for substring branching). The only truly static-literal `serverError("Failed to create cron job for mission")` site in `api/missions/route.ts:352` is interleaved with `updateMission` + `appendAuditLine` side effects between the `logApiError` and the `return`, which makes it a scanner non-match (and not a clean `serverErrorFromCatch` candidate without restructuring).
+
+So the session pivoted to two high-leverage List 2 cleanups that the prior "mined clean" verdicts didn't catch:
+
+1. **New `logCronSyncFailure` helper** in `src/lib/cron-sync-failure.ts` to replace the side-effect-only misuse of `cronSyncFailureResponse` at 2 sites (`api/missions/route.ts:329` and `lib/mission-promote-handler.ts:177`). Both callers were calling `cronSyncFailureResponse(route, pushResult)` purely for its `logApiError` side effect and discarding the returned `NextResponse`, then rebuilding the same body inline to splice extra fields (`data: { mission: ... }` for the missions site, `mission: ...` for the promote site). The misuse was misleading — a reader scanning the call site would expect the response to be returned. The new `logCronSyncFailure(route, pushResult)` helper is the side-effect-only companion, pairing cleanly with `cronSyncFailureBody` for the response payload. 4 new unit tests pin the contract (returns undefined, identical console line to `cronSyncFailureResponse`, "unknown" fallback, verbatim push error).
+2. **`useApiData` setError migration** — the only `setError(messageFromError(...))` site left in production code is `src/hooks/useApiData.ts:145`. This is the shared `useApiData` hook used by `(main)/logs/page.tsx`, `(main)/sessions/page.tsx`, `(main)/sessions/[id]/page.tsx`, `(main)/logs/page.tsx`, and several others (the `api/data` consumers across all 4 lists). Migrating to `setErrorFromCaught(setError, e, "Request failed")` is byte-equivalent per session 91 P-2 (the verbose `toError(err).message || fallback` form is the same as `messageFromError(err, fallback)`) and removes one intermediate variable. Single high-leverage cleanup that touches every page using `useApiData`.
+
+### Refactor 1 — `logCronSyncFailure` helper + 2-site migration
+
+| File | Line | Migration |
+|---|---|---|
+| `src/lib/cron-sync-failure.ts` | new export | `logCronSyncFailure(route, pushResult): void` — same `logApiError` call as `cronSyncFailureResponse`, no `NextResponse` produced |
+| `src/app/api/missions/route.ts` | 329 | `cronSyncFailureResponse("POST /api/missions", pushResult);` (discarded return) → `logCronSyncFailure("POST /api/missions", pushResult);` |
+| `src/lib/mission-promote-handler.ts` | 177 | `cronSyncFailureResponse("promoteMission", pushResult);` (discarded return) → `logCronSyncFailure("promoteMission", pushResult);` |
+| `tests/unit/cron-sync-failure.test.ts` | new `describe("logCronSyncFailure")` block | 4 unit tests pinning the side-effect contract |
+
+**Why this matters:** the side-effect-only misuse was misleading. `cronSyncFailureResponse` is named after its return value, and a reader scanning `cronSyncFailureResponse("POST /api/missions", pushResult);` (no `return`!) would naturally expect to find the response discarded for some reason — but the comment had to explain that the call was for its side effect. With the new helper, the call site reads `logCronSyncFailure("POST /api/missions", pushResult);` — the name documents intent, no comment is needed. The 2 migrated sites also get cleaner imports (drop `cronSyncFailureResponse`, add `logCronSyncFailure`).
+
+**Byte-equivalence:** `logCronSyncFailure` and the `logApiError` call inside `cronSyncFailureResponse` produce the EXACT same `console.error` line for the same `(route, pushResult)` inputs. The "logs the same line as `cronSyncFailureResponse` for the same inputs" test compares the two console-error strings directly. The response body is unchanged at both call sites (the inline `NextResponse.json` and the inline `return { ... }` objects still call `cronSyncFailureBody(pushResult)` to build the canonical body — the migration only swaps the logging helper, not the body).
+
+### Refactor 2 — `useApiData` `setErrorFromCaught` migration
+
+| File | Line | Migration |
+|---|---|---|
+| `src/hooks/useApiData.ts` | 145 | `setError(messageFromError(e, "Request failed"))` → `setErrorFromCaught(setError, e, "Request failed")` |
+
+**Why this matters:** `useApiData` is the shared hook used by `(main)/logs/page.tsx`, `(main)/sessions/page.tsx`, `(main)/sessions/[id]/page.tsx`, `config/page.tsx`, and several others. After session 91's `setErrorFromCaught` helper landed, this was the LAST `setError(messageFromError(...))` site in production code (the 2 other hits in `src/lib/api-fetch.ts:203,223` are JSDoc examples for the helper definition itself). With this migration, the verbose `setError(messageFromError(err, "..."))` form is **fully eliminated from the codebase** — the helper is now the universal convention for catch-block `useState<string \| null>` error reporting.
+
+**Byte-equivalence:** `setErrorFromCaught(setError, e, fallback)` is the canonical implementation of `setError(messageFromError(e, fallback))` (`src/lib/api-fetch.ts:218-224`). The migration is a name change, not a behavior change. The verbose `setError(toError(err).message || "...")` form is byte-equivalent to the same `setError(messageFromError(err, "..."))` form because `toError(err).message || fallback` is literally the body of `messageFromError` (per session 91 P-2). The new code preserves the empty-Error trap: `setErrorFromCaught` calls `messageFromError(e, fallback)` which returns `""` for `new Error("")` (preserving the inline form's empty-Error behavior).
+
+### What was rejected (and why)
+
+- **Migrating the 7 inline `serverError(toError(error).message || "...")` sites in `api/{mission-categories, orchestration/chat, cron/hardware/meta}/` to `serverErrorFromCatch`.** All 7 are dynamic-message sites per the session 124 P-3 discriminator (`toError(err).message` propagation OR `|| "static fallback"` propagation). Migrating would change the response body from the error's actual message to the static fallback string, which is a behavior change. The 4 sites with `||` fallbacks have inline comments explicitly explaining the byte-equivalence is preserved (e.g. `mission-categories/route.ts:59-60`). Exempt by definition.
+- **Migrating the 4 template-literal `serverError(\`Failed to X: ${toError(e).message}\`)` sites in `api/cron/hardware/route.ts:248,355,448,505`.** Dynamic with static prefix. Session 124 P-3 EXEMPT.
+- **Migrating the 3 hoisted-msg sites in `api/mission-categories/route.ts:91,172` (and the matching `serverError(msg)` at 96, 177).** The `msg` is computed once and used for substring branching (e.g. `if (msg.includes("already exists"))` for the 409 site). The session 123 P-3 "err + variable-status" exemption case — out of scanner scope, belongs in an EXEMPTIONS doc block.
+- **Migrating `api/missions/route.ts:352` `serverError("Failed to create cron job for mission")` to `serverErrorFromCatch`.** The site is the only true static-literal `serverError(STATIC)` site in List 2, but it has `updateMission` + `appendAuditLine` interleaved between the `logApiError` and the `return serverError`. `serverErrorFromCatch` does `logApiError + return serverError(STATIC)` as a single call — the interleaved side effects block a clean migration. Restructuring to move the side effects before/after would be a control-flow change. Skipped.
+- **Refactoring `useApiData` to a 3-state error union (idle | error).** The current `error: string | null` contract is byte-equivalent and used by every consumer. A state-union refactor is a signature change with type-level ripples. Out of scope.
+- **Extracting `useApiData`'s `mountedRef` + `optionsRef` + `useEffect` polling loop into a `useApiDataLifecycle` hook.** Cosmetic split, doesn't reduce code. Defer.
+- **Auditing the 6 `err instanceof Error` sites in `src/lib/` and `src/components/cron/` for a `toMessage(e, fallback)` helper** (the 7 `src/lib/hermes-profile-sync.ts` sites alone are enough per session 90's "next session should" #2). Multi-session sweep; defer.
+- **Adding a `setErrorFromCaught`-shaped variant that accepts a `prevState: T | null` updater.** None of the current consumers use the updater form. Rule of Three says don't add the parameter until the 2nd consumer appears.
+- **Replacing `apiFetch<{ data?: T }>(...) + envelope.data ?? null` in `useApiData:121-131` with the `safeApiCallData<T>(url, init) → T \| null` helper from session 123 P-1.** The hook already does the right thing — it handles `T | undefined → T | null` coercion via `?? null` and documents the contract. The `safeApiCallData` helper would work but is for read-only `{ data: T }` envelope fetches without `.ok` / `.error` consumption. The hook could use it, but the current `apiFetch` form is more explicit about the envelope shape. Cosmetic preference, not a clear win. Defer.
+- **Consolidating the 2 `logApiError + return serverError(STATIC_LITERAL)` migrations into a `serverErrorFromCatch` extension with optional side-effect callback.** The `updateMission` + `appendAuditLine` interleaving in `api/missions/route.ts:348-353` doesn't fit a clean callback API. A callback-based helper would need a `{ pre?: (err) => void, post?: (err) => void }` shape that's more complex than the inline catch block. Out of scope.
+
+### Files
+
+- `src/lib/cron-sync-failure.ts` (MODIFIED) — added `logCronSyncFailure` (24 lines: JSDoc + impl), updated top comment
+- `tests/unit/cron-sync-failure.test.ts` (MODIFIED) — 4 new unit tests in a new `describe("logCronSyncFailure")` block
+- `src/app/api/missions/route.ts` (MODIFIED) — 1 site migrated, import changed
+- `src/lib/mission-promote-handler.ts` (MODIFIED) — 1 site migrated, import changed, comment updated
+- `src/hooks/useApiData.ts` (MODIFIED) — 1 site migrated, import changed, comment updated
+
+Net diff: **5 files modified, +80 / -22 lines** (the +80 is the helper JSDoc + impl + 4 new tests + updated comments; the -22 is the 3 inline call sites collapsing to 3 helper calls + the cleaned-up imports + comments).
+
+### Verification
+
+- **All 1624 unit tests pass** (232 suites, +4 new tests in `tests/unit/cron-sync-failure.test.ts`)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean
+- **`npm run build`** passes
+- **Byte-equivalence audit:**
+  - `logCronSyncFailure(route, pushResult)` produces the same `console.error` line as the `logApiError` call embedded in `cronSyncFailureResponse` for the same inputs. The "logs the same line as `cronSyncFailureResponse` for the same inputs" test compares the two console strings directly.
+  - `setErrorFromCaught(setError, e, fallback)` is the canonical implementation of `setError(messageFromError(e, fallback))` (`src/lib/api-fetch.ts:218-224`). The migration is a name change, not a behavior change.
+
+### Patterns to take forward
+
+1. **"Side-effect-only helper extraction" pattern** — when a helper that returns a value is misused purely for a side effect, split the side effect into a separate named helper. The new helper's name documents the intent (`logCronSyncFailure` reads as "log a sync failure"; the old `cronSyncFailureResponse` misread as "respond with a sync failure"). The 2 migrated sites also benefit from cleaner imports (drop the unused `cronSyncFailureResponse` import, add the new `logCronSyncFailure` import).
+2. **"The last `setError(messageFromError(...))` site in production code"** — after session 91's `setErrorFromCaught` helper landed, the only remaining verbose site was the shared `useApiData` hook. Migrating it closes the loop: every `setError(messageFromError(err, "..."))` call site in production code now uses the helper. The 2 remaining `src/lib/api-fetch.ts:203,223` hits are JSDoc examples for the helper definition itself. The audit recipe `rg -nU 'setError\(messageFromError' src/ | grep -v 'api-fetch\|tests/'` returns 0 hits post-session.
+3. **"List 2 serverErrorFromCatch surface is empty"** — every `logApiError + return serverError(...)` site in List 2 (api/cron, api/cron/hardware, api/cron/hardware/meta, api/missions, api/mission-categories, api/orchestration/chat) is either dynamic-message, variable-msg, or interleaved with side effects. The session 124 P-3 discriminator applies to all 11 List 2 sites. Future sessions that pick List 2 for `serverErrorFromCatch` will find the same empty surface — pick a different refactor target.
+
+### "Next session should:" block
+
+1. **Pick a different list next session.** List 2 has now been hit twice (this session + session 118). The next-ripe surface is **List 1 (Dashboard, Sessions, Memory, Logs)** for the 5 static-literal `serverErrorFromCatch` sites in `api/{sessions/[id], sessions, logs, monitor}/` — exactly the surface session 124 P-3 recommended. The `server-error-from-catch-source-patterns.test.ts` already has a List 1 surface assertion (added in session 125) — that test will keep the List 1 surface zero-tolerance as the migration lands.
+2. **Cross-list `serverError(STATIC_LITERAL)` sweep** — the 5 List 1 sites + 3 List 3 sites (skills × 2, tools × 1) are a 2-session project. A single session can close all 5 List 1 sites in `api/{sessions/[id], sessions, logs, monitor}/`. Another session can close the 3 List 3 sites in `api/{skills, skills/[name], skills/[...path], skills/[name]/toggle, tools}/`.
+3. **The 22 inline `err instanceof Error ? err.message` sites in `src/lib/`, `src/components/cron/`, and `src/app/recroom/`** — the 7 `src/lib/hermes-profile-sync.ts` sites alone are enough to justify a `toMessage(e, fallback)` helper (per session 90's "next session should" item #2). Multi-session sweep; defer until the cross-list `serverErrorFromCatch` work is done.
+4. **`useMissionsPage` decomposition** — 1200+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results".
+5. **Migrate the `(main)/logs/page.tsx` `useApiData({ refreshIntervalMs })` consumer to a new `useApiDataWithRefresh({ url, refreshIntervalMs, refreshEnabled })` typed export** — the inline shape in `(main)/logs/page.tsx` and `(main)/sessions/page.tsx` could benefit from a typed export with the polling fields promoted to top-level. Cosmetic; defer.
+6. **Consider extending `useApiData` to support `URLSearchParams` + pagination as first-class options** (session 87's "next session should" item). The hook already accepts `init?: RequestInit` for this; the next step is a `params?: URLSearchParams` convenience that threads through to the URL. Out of scope for byte-equivalent-only refactors.
+7. **Carryover detection** — the `logCronSyncFailure` helper is now a third export from `cron-sync-failure.ts`. If a future session adds a 2nd consumer for a side-effect-only cron-sync-failure helper (e.g. a webhook dispatcher), consider promoting the pattern to a generic `logSideEffect<T>(label: string, fn: () => T, sideEffect: (result: T) => void)` shape. The 1-consumer rule says defer until the 2nd consumer appears.
+
+---
 ## Session 125 — List 1 (Dashboard, Sessions, Memory, Logs) — `serverErrorFromCatch` sweep in `api/{sessions,logs,monitor}/`
 
 Random pick: **List 1** via `echo $((RANDOM % 4 + 1))` = 1, the first List 1 pick since session 106 (the longest gap in recent protocol history). The prior session (124) explicitly recommended List 1 as the next-ripe surface: 5 static-literal `serverError(STATIC)` sites remained in `api/{sessions,logs,monitor}/`, with `api/sessions/[id]/route.ts:255-256` exempt as a dynamic-message site. This session closes all 5 static sites and adds the 1st-list surface assertion to the `serverErrorFromCatch` source-pattern test (sister to the `ok()` 4-list assertion).
