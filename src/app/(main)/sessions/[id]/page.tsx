@@ -112,6 +112,30 @@ export default function SessionDetailPage() {
     if (firstEl) firstEl.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [data?.messages]);
 
+  // Clear the role filter. Single-setter close callback following the
+  // same useCallback pattern as the open-callback promotions in
+  // session 116 P-7 / session 118 P-7. The inline `() => setRoleFilter(
+  // null)` arrow appeared at 2 sites — the "clear" pill (line 211) and
+  // the implicit clear path on a re-click of the active role button
+  // (line 195, where `setRoleFilter(isActive ? null : role)` flips
+  // back to `null` when the user re-clicks the active filter). The
+  // callback is reused at both sites for consistency.
+  const clearRoleFilter = useCallback(
+    () => setRoleFilter(null),
+    [setRoleFilter],
+  );
+
+  // Re-click handler for the role badge: if the badge is already
+  // active, clear the filter; otherwise set the filter to this role.
+  // Replaces the inline `() => setRoleFilter(isActive ? null : role)`
+  // arrow on the role button's onClick. Reads the current
+  // `roleFilter` value via the closure, so it's a 1-parameter
+  // useCallback — the `role` is supplied by the .map() in the JSX.
+  const handleRoleBadgeClick = useCallback(
+    (role: string) => setRoleFilter((prev) => (prev === role ? null : role)),
+    [setRoleFilter],
+  );
+
   if (loading) {
     return (
       <AppPageShell>
@@ -192,7 +216,7 @@ export default function SessionDetailPage() {
                 <button
                   key={role}
                   type="button"
-                  onClick={() => setRoleFilter(isActive ? null : role)}
+                  onClick={() => handleRoleBadgeClick(role)}
                   onDoubleClick={() => scrollToNextRole(role)}
                   title={`Click to filter · Double-click to jump to next ${role}`}
                   className={`text-xs font-mono px-2 py-1 rounded transition-colors cursor-pointer ${
@@ -208,7 +232,7 @@ export default function SessionDetailPage() {
             {roleFilter && (
               <button
                 type="button"
-                onClick={() => setRoleFilter(null)}
+                onClick={clearRoleFilter}
                 className="text-[10px] font-mono text-white/30 hover:text-white/60 px-1.5 py-1 rounded bg-white/5"
               >
                 clear

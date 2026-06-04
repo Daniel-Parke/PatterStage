@@ -1,3 +1,51 @@
+## Session 118 carryover (committed at the start of this session) — `openSearchInput` / `closeSearchInput` / `jumpToLatestLines` / `dismissActionMessage` / `openAddModal` / `closeAddModal` / `openDirectiveModal` / `closeDirectiveModal` / `openModelModal` / `closeModelModal` / `closeEditDirective` / `closeEditModel` / `clearRoleFilter` / `handleRoleBadgeClick` (List 1 — logs + memory + sessions)
+
+The first half of session 118's List 1 work landed in commit `f7f4c7b` (the `ok()` 2-site migration in `api/memory/route.ts` + the `openCategoryManager` / `openTemplateManager` / `openDispatchPanel` open-callback promotions in `useMissionsPage` + `src/app/page.tsx`). The second half (14 named `useCallback` open/close sibling callbacks across 3 List-1 files) was left in the working tree when the previous cron session ended, along with a new source-pattern test (`tests/unit/list1-callback-promotions.test.ts`, 31 assertions).
+
+### Carryover commit — 14 callbacks + source-pattern test
+
+**1. `src/app/(main)/logs/page.tsx`** (4 callbacks):
+- `openSearchInput` / `closeSearchInput` — open/close sibling pair for the "Filter lines" pill and the X button on the visible search input. Close is a 2-setter (`setSearch("")` + `setSearchVisible(false)`).
+- `jumpToLatestLines` — 2-step action: re-enable auto-scroll AND scroll the terminal to the top. Promoted from an inline 5-line arrow on the "Latest lines" pill.
+- `dismissActionMessage` — 1-setter close for the action-message toast X button.
+
+**2. `src/components/memory/HindsightBrowser.tsx`** (8 callbacks):
+- 3 open/close sibling pairs for the AddMemory, Directive, and MentalModel create modals. The Directive and MentalModel close callbacks are 2-setters (`setShowX(false)` + form reset to `EMPTY_*_FORM`).
+- 2 close callbacks for the Directive and MentalModel edit modals (`closeEditDirective` / `closeEditModel` — 1-setter `setEditingX(null)`).
+- 1 close callback for the AddMemory create modal (`closeAddModal` — 1-setter `setShowAddModal(false)`).
+
+**3. `src/app/(main)/sessions/[id]/page.tsx`** (2 callbacks):
+- `clearRoleFilter` — 1-setter close for the role-filter clear pill.
+- `handleRoleBadgeClick` — 1-parameter `useCallback` that toggles `setRoleFilter` (clears if already active, otherwise sets to the new role). Replaces the inline `() => setRoleFilter(isActive ? null : role)` arrow on the role badge `onClick`.
+
+All 14 callbacks follow the session 116 P-7 / session 118 P-7 open/close sibling pattern (named `useCallback`s, stable `useState` setters listed in deps array, byte-equivalent to the inline arrows they replaced). All use the codebase convention `[setX]` deps form (per session 119 P-3) to satisfy `react-hooks/exhaustive-deps`.
+
+### Source-pattern test
+
+`tests/unit/list1-callback-promotions.test.ts` (31 assertions) pins the 14 callbacks and the absence of the inline forms they replaced. The test follows the source-pattern-test convention (reads the file as a string, asserts on the shape of the `useCallback` declarations and the `onClick`/`onClose` props they thread to). The test ran in isolation first (per session 119 P-4) — all 31 pass.
+
+### Verification
+
+- All 1585 unit tests pass (228 suites; 31 new in `list1-callback-promotions.test.ts`)
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint src/app/\(main\)/logs/page.tsx src/app/\(main\)/sessions/\[id\]/page.tsx src/components/memory/HindsightBrowser.tsx tests/unit/list1-callback-promotions.test.ts --max-warnings 0` clean
+- Byte-equivalent: each named `useCallback` body is the same expression as the inline arrow it replaced, lifted into a named function. No state transition changes (setter order preserved in multi-setter bodies).
+
+### What was NOT migrated
+
+- The inline `() => setActionMessage(...)` site in logs/page.tsx for the message-display path was left alone (not a setter).
+- The inline `() => void handleReflect()` and `() => void handleAdd()` arrows in HindsightBrowser are not the open/close shape (they have side-effects on data, not on show-state) — left inline.
+- The `clearRoleFilter` and `handleRoleBadgeClick` callbacks in `src/app/(main)/sessions/[id]/page.tsx` are siblings of a sibling (the scrollToNextRole double-click handler is left as a separate `useCallback` from session 50 — not promoted because it has 4 setters + 1 imperative scroll call, beyond the 1-2-setter "open/close" pattern's scope).
+
+### "Next session should:"
+
+1. **Pick List 4** — the most-quiet surface in the protocol (last touched session 109, 9 sessions ago). Two known follow-up items: `safeWriteFileAtomic` and `safeReadJson` helper promotions.
+2. **Consider a `(main)/sessions/page.tsx` `useApiData({ refreshIntervalMs })` extension** — same pattern as the logs page session 117 follow-up. Defer until the hook shape is stable across logs + sessions.
+3. **`useMissionsPage` decomposition** — 1175+ LOC, List 2 territory. Out of scope for "AT LEAST identical results".
+4. **Check whether any remaining inline `() => setShowX(true)` arrows on List 1 territory exist** — run `rg "onClick=\{\\(\) => setShow[A-Z]" src/app/\(main\)/` to audit.
+
+---
+
 ## Session 117 — List 1 (Dashboard, Sessions, Memory, Logs) — `ok()` factory migration of 3 sites in `api/memory/hindsight/route.ts`
 
 Random pick: **List 1** via `echo $((RANDOM % 4 + 1))` = 1, the first List-1 pick since session 113.

@@ -112,6 +112,47 @@ export default function LogsPage() {
     }
   }, [data?.lines, autoScroll]);
 
+  // Open/close sibling pair for the search input. The X button on
+  // the visible search input (line 308) and the "Filter lines" pill
+  // (line 320) form a 2-state toggle. The X path is a 2-setter close
+  // (clear the search query AND hide the input); the open path is
+  // the 1-setter show. Both promoted to useCallback-wrapped named
+  // callbacks following the session 116 P-7 / session 118 P-7 pattern
+  // (named open/close siblings next to each other, with the stable
+  // `useState` setters listed explicitly in the deps array to satisfy
+  // the `react-hooks/exhaustive-deps` rule). The close path used to
+  // be an inline 3-line arrow on the X button's `onClick` prop.
+  const openSearchInput = useCallback(
+    () => setSearchVisible(true),
+    [setSearchVisible],
+  );
+  const closeSearchInput = useCallback(() => {
+    setSearch("");
+    setSearchVisible(false);
+  }, [setSearch, setSearchVisible]);
+  // The "Latest lines" pill (line 331) is a 2-step action: re-enable
+  // auto-scroll AND scroll the terminal to the top. The inline
+  // 4-line arrow on the button's `onClick` prop is promoted to a
+  // named useCallback so the page's intent is named (the inline
+  // form was a 5-line body buried in the JSX). The terminalRef
+  // read is unconditional — `current` is null only on the first
+  // render, in which case the autoScroll state still flips so the
+  // next render scrolls correctly.
+  const jumpToLatestLines = useCallback(() => {
+    setAutoScroll(true);
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = 0;
+    }
+  }, [setAutoScroll, terminalRef]);
+  // Dismiss the action message toast. Single-setter close callback
+  // following the same useCallback pattern as the sibling open/close
+  // callbacks above. Used by the small "×" button on the action
+  // message banner (line 221).
+  const dismissActionMessage = useCallback(
+    () => setActionMessage(null),
+    [setActionMessage],
+  );
+
   const handleScroll = () => {
     if (!terminalRef.current) return;
     const { scrollTop } = terminalRef.current;
@@ -218,7 +259,7 @@ export default function LogsPage() {
             <span>{actionMessage}</span>
             <button
               type="button"
-              onClick={() => setActionMessage(null)}
+              onClick={dismissActionMessage}
               className="p-1 rounded text-white/40 hover:text-white/70"
               aria-label="Dismiss"
             >
@@ -305,10 +346,7 @@ export default function LogsPage() {
                   )}
                   <button
                     type="button"
-                    onClick={() => {
-                      setSearch("");
-                      setSearchVisible(false);
-                    }}
+                    onClick={closeSearchInput}
                     className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 shrink-0"
                   >
                     <X className="w-4 h-4" />
@@ -317,7 +355,7 @@ export default function LogsPage() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => setSearchVisible(true)}
+                  onClick={openSearchInput}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-white/40 hover:text-white/60 hover:bg-white/5 font-mono"
                 >
                   <Search className="w-3 h-3" />
@@ -328,12 +366,7 @@ export default function LogsPage() {
               {!autoScroll && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setAutoScroll(true);
-                    if (terminalRef.current) {
-                      terminalRef.current.scrollTop = 0;
-                    }
-                  }}
+                  onClick={jumpToLatestLines}
                   className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-neon-cyan bg-neon-cyan/10 font-mono"
                 >
                   <ChevronDown className="w-3 h-3 rotate-180" />

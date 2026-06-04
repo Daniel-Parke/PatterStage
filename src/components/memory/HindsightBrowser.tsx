@@ -354,6 +354,61 @@ export default function HindsightBrowser() {
     setEditModelForm({ name: m.name, query: m.source_query, tags: m.tags.join(", ") });
   };
 
+  // Open/close sibling pairs for the 3 modals (AddMemory, Directive,
+  // MentalModel). The X/overlay close paths were inline `() =>
+  // setShowX(false)` arrows (line 475, 480, 491, 501, 511); the open
+  // paths were inline `() => setShowX(true)` arrows on the trigger
+  // buttons (line 419, 461, 468) and on the `onCreateClick` prop of
+  // DirectivesTab + MentalModelsTab. Promoting all 5 to named
+  // useCallback-wrapped callbacks follows the session 116 P-7 /
+  // session 118 P-7 open/close sibling pattern, and the 2 close
+  // callbacks that ALSO reset a sibling state (Directive: `setDirForm(
+  // EMPTY_DIR_FORM)`; MentalModel: `setModelForm(EMPTY_MODEL_FORM)`)
+  // collapse to a single named callback. The deps array lists the
+  // setters explicitly to satisfy `react-hooks/exhaustive-deps`.
+  const openAddModal = useCallback(
+    () => setShowAddModal(true),
+    [setShowAddModal],
+  );
+  const closeAddModal = useCallback(
+    () => setShowAddModal(false),
+    [setShowAddModal],
+  );
+  const openDirectiveModal = useCallback(
+    () => setShowDirectiveModal(true),
+    [setShowDirectiveModal],
+  );
+  const closeDirectiveModal = useCallback(() => {
+    setShowDirectiveModal(false);
+    setDirForm(EMPTY_DIR_FORM);
+  }, [setShowDirectiveModal]);
+  const openModelModal = useCallback(
+    () => setShowModelModal(true),
+    [setShowModelModal],
+  );
+  const closeModelModal = useCallback(() => {
+    setShowModelModal(false);
+    setModelForm(EMPTY_MODEL_FORM);
+  }, [setShowModelModal]);
+
+  // Close callbacks for the 2 EDIT modals (the create modals' open
+  // paths were the 3 `onCreateClick` props above; the edit modals
+  // are opened by `openEditDirective` / `openEditModel` which are
+  // already named). The 2 inline `() => setEditingX(null)` arrows on
+  // the edit modals' `onClose` props (line 528, 548) are promoted
+  // to useCallback-wrapped named callbacks for consistency with the
+  // create-modals' close paths. The "set to null" is the canonical
+  // close — no extra form-reset (the form is only used during
+  // edit, and the next `openEditX` call overwrites it).
+  const closeEditDirective = useCallback(
+    () => setEditingDirective(null),
+    [setEditingDirective],
+  );
+  const closeEditModel = useCallback(
+    () => setEditingModel(null),
+    [setEditingModel],
+  );
+
   // Field setters for the directive + mental-model modals. Each modal
   // exposes 3-4 separate `onNameChange` / `onContentChange` / etc. props
   // and the inline setter body is the same shape every time. The shared
@@ -416,7 +471,7 @@ export default function HindsightBrowser() {
         <Button variant="secondary" color="purple" size="sm" icon={Sparkles} onClick={() => void handleReflect()} disabled={reflecting || !search.trim()}>
           {reflecting ? "Reflecting..." : "Reflect"}
         </Button>
-        <Button variant="primary" color="pink" size="sm" icon={Plus} onClick={() => setShowAddModal(true)}>
+        <Button variant="primary" color="pink" size="sm" icon={Plus} onClick={openAddModal}>
           Add Memory
         </Button>
       </div>
@@ -458,26 +513,26 @@ export default function HindsightBrowser() {
       {activeTab === "directives" && (
         <DirectivesTab
           directives={directives} loading={loadingDirectives}
-          onCreateClick={() => setShowDirectiveModal(true)} onRefresh={loadDirectives}
+          onCreateClick={openDirectiveModal} onRefresh={loadDirectives}
           onEdit={openEditDirective} onToggle={handleToggleDirective} onDelete={handleDeleteDirective}
         />
       )}
       {activeTab === "mental-models" && (
         <MentalModelsTab
           models={mentalModels} loading={loadingModels} refreshingModelId={refreshingModelId}
-          onCreateClick={() => setShowModelModal(true)} onRefresh={loadModels}
+          onCreateClick={openModelModal} onRefresh={loadModels}
           onEdit={openEditModel} onRefreshModel={handleRefreshModel} onDelete={handleDeleteModel}
         />
       )}
 
       {/* Modals */}
       <AddMemoryModal
-        open={showAddModal} onClose={() => setShowAddModal(false)}
+        open={showAddModal} onClose={closeAddModal}
         content={newContent} tags={newTags} adding={adding}
         onContentChange={setNewContent} onTagsChange={setNewTags} onSave={handleAdd}
       />
       <DirectiveModal
-        open={showDirectiveModal} onClose={() => { setShowDirectiveModal(false); setDirForm(EMPTY_DIR_FORM); }}
+        open={showDirectiveModal} onClose={closeDirectiveModal}
         isEdit={false}
         name={dirForm.name} content={dirForm.content} priority={dirForm.priority} tags={dirForm.tags}
         saving={creatingDirective}
@@ -488,7 +543,7 @@ export default function HindsightBrowser() {
         onSave={handleCreateDirective}
       />
       <DirectiveModal
-        open={!!editingDirective} onClose={() => setEditingDirective(null)} isEdit={true}
+        open={!!editingDirective} onClose={closeEditDirective} isEdit={true}
         name={editDirForm.name} content={editDirForm.content} priority={editDirForm.priority} tags={editDirForm.tags}
         saving={savingDirective}
         onNameChange={setField(setEditDirForm, "name")}
@@ -498,7 +553,7 @@ export default function HindsightBrowser() {
         onSave={handleSaveDirective}
       />
       <MentalModelModal
-        open={showModelModal} onClose={() => { setShowModelModal(false); setModelForm(EMPTY_MODEL_FORM); }}
+        open={showModelModal} onClose={closeModelModal}
         isEdit={false}
         name={modelForm.name} query={modelForm.query} tags={modelForm.tags}
         saving={creatingModel}
@@ -508,7 +563,7 @@ export default function HindsightBrowser() {
         onSave={handleCreateModel}
       />
       <MentalModelModal
-        open={!!editingModel} onClose={() => setEditingModel(null)} isEdit={true}
+        open={!!editingModel} onClose={closeEditModel} isEdit={true}
         name={editModelForm.name} query={editModelForm.query} tags={editModelForm.tags}
         saving={savingModel}
         onNameChange={setField(setEditModelForm, "name")}
