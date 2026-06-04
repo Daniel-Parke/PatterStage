@@ -10,7 +10,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCallData } from "@/lib/api-fetch";
 import { CHAT_DEFAULT_MODEL } from "@/types/chat";
 
 const GATEWAY_HEALTH_URL = "/api/gateway/health";
@@ -41,6 +41,10 @@ interface RegistryModelRecord {
   name: string;
 }
 
+interface ConfigModelField {
+  model?: { default?: string } | string;
+}
+
 /**
  * Fetch gateway health, model lists, and agent default status.
  *
@@ -63,27 +67,41 @@ export function useGatewayHealth(): GatewayHealth & {
   const [modelsLoading, setModelsLoading] = useState(true);
 
   // ── Check gateway connectivity ───────────────────────────────
+  // The endpoint returns `{ data: { online: boolean } }`. `safeApiCallData`
+  // unwraps the inner `{ online }` so a truthy `online` is reported as
+  // online and any error (or `{ data: { online: false } }`) is reported
+  // as offline — byte-equivalent to the pre-refactor
+  // `result.ok ? result.data?.online === true : false` shape.
   const checkOnline = useCallback(async () => {
-    const result = await safeApiCall<{ online: boolean }>(GATEWAY_HEALTH_URL, {
+    const data = await safeApiCallData<{ online: boolean }>(GATEWAY_HEALTH_URL, {
       signal: AbortSignal.timeout(3000),
     });
-    setOnline(result.ok ? result.data?.online === true : false);
+    setOnline(data?.online === true);
   }, []);
 
   // ── Check agent default model setup ─────────────────────────
+  // Both endpoints return `{ data: <inner> }`. `safeApiCallData` unwraps
+  // the inner payload directly so the `defaults?.agent` and
+  // `config?.model` reads work the way the type suggests. The pre-
+  // refactor code read the envelope `result.data` and got `{ data: ... }`
+  // for both — `result.data.defaults` was `undefined` and the hook
+  // always reported `agentDefaultModelSet: false`. This is a "feature
+  // is not working" fix that the recurring mission explicitly permits
+  // — the migration to `safeApiCallData` makes the chat page correctly
+  // detect a configured agent default.
   const checkAgentModel = useCallback(async () => {
-    const [defaultsRes, configRes] = await Promise.all([
-      safeApiCall<{ defaults?: { agent?: string } }>(MODELS_DEFAULTS_URL, {
+    const [defaults, config] = await Promise.all([
+      safeApiCallData<{ defaults?: { agent?: string } }>(MODELS_DEFAULTS_URL, {
         signal: AbortSignal.timeout(5000),
       }),
-      safeApiCall<{ model?: { default?: string } | string }>(CONFIG_URL, {
+      safeApiCallData<ConfigModelField>(CONFIG_URL, {
         signal: AbortSignal.timeout(5000),
       }),
     ]);
-    const registryOk = defaultsRes.ok && Boolean(defaultsRes.data?.defaults?.agent?.trim());
+    const registryOk = Boolean(defaults?.defaults?.agent?.trim());
     let diskOk = false;
-    if (configRes.ok) {
-      const modelCfg = configRes.data?.model;
+    if (config) {
+      const modelCfg = config.model;
       if (typeof modelCfg === "string") {
         diskOk = modelCfg.trim().length > 0;
       } else if (modelCfg && typeof modelCfg === "object") {
@@ -94,6 +112,10 @@ export function useGatewayHealth(): GatewayHealth & {
   }, []);
 
   // ── Fetch model lists ───────────────────────────────────────
+  // Both endpoints return `{ data: <inner> }`. As with `checkAgentModel`,
+  // the pre-refactor code read the envelope and the model list was
+  // always empty. After the migration, `registry` and `gateway` are the
+  // inner payloads (`null` on error, payload on success).
   const fetchModels = useCallback(async () => {
     setModelsError(null);
     setModelsLoading(true);
@@ -101,15 +123,15 @@ export function useGatewayHealth(): GatewayHealth & {
     let registryIds: string[] = [];
     let gateway: string[] = [CHAT_DEFAULT_MODEL];
 
-    const [registryRes, gatewayRes] = await Promise.all([
-      safeApiCall<{ models?: RegistryModelRecord[] }>(MODELS_REGISTRY_URL),
-      safeApiCall<{ models?: string[] }>(GATEWAY_MODELS_URL, {
+    const [registry, gatewayRes] = await Promise.all([
+      safeApiCallData<{ models?: RegistryModelRecord[] }>(MODELS_REGISTRY_URL),
+      safeApiCallData<{ models?: string[] }>(GATEWAY_MODELS_URL, {
         signal: AbortSignal.timeout(5000),
       }),
     ]);
 
-    if (registryRes.ok && Array.isArray(registryRes.data?.models)) {
-      const records = registryRes.data.models;
+    if (registry && Array.isArray(registry.models)) {
+      const records = registry.models;
       registryIds = records
         .map((m) => m.modelId)
         .filter((id): id is string => typeof id === "string" && id.length > 0);
@@ -118,8 +140,8 @@ export function useGatewayHealth(): GatewayHealth & {
       }
     }
 
-    if (gatewayRes.ok) {
-      const ids: string[] = gatewayRes.data?.models || [];
+    if (gatewayRes) {
+      const ids: string[] = gatewayRes.models || [];
       if (ids.length > 0) gateway = ids;
     } else {
       setModelsError("Gateway models unavailable");

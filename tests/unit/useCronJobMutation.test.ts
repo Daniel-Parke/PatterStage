@@ -290,12 +290,11 @@ describe("useCronJobMutation — handlePauseAll", () => {
 
   it("interpolates {count} from the API's pausedCount when showCount is true", async () => {
     // The API returns `{ data: { pausedCount: 5 } }` and safeApiCall
-    // surfaces the whole envelope as `result.data`. So `result.data` is
-    // `{ data: { pausedCount: 5 } }` and `result.data.pausedCount` is
-    // undefined — which is the pre-existing behaviour this refactor
-    // preserves. (The original `useSystemCronJobs.handlePauseAll` had the
-    // same shape and also always showed 0; tracked as a latent bug for
-    // a future session — see list2-session63-findings.md.)
+    // surfaces the whole envelope as `result.data`. After the session-
+    // 123 fix the type is `{ data?: { pausedCount?: number } }` and
+    // `result.data?.data?.pausedCount` reads the actual count —
+    // previously the toast always showed 0 (see list2-session63-
+    // findings.md for the latent-bug history).
     fetchMock.mockReturnValueOnce(okResponse({ pausedCount: 5 }));
     const { result } = renderMutation({
       pauseAll: {
@@ -307,7 +306,7 @@ describe("useCronJobMutation — handlePauseAll", () => {
     await act(async () => {
       await result.current.handlePauseAll();
     });
-    expect(showToast).toHaveBeenLastCalledWith("Paused 0 system cron job(s)");
+    expect(showToast).toHaveBeenLastCalledWith("Paused 5 system cron job(s)");
   });
 
   it("falls back to 0 when pausedCount is missing and showCount is true", async () => {

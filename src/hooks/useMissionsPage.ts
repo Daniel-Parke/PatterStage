@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
-import { safeApiCall, apiFetch, messageFromError, toastError } from "@/lib/api-fetch";
+import { safeApiCall, apiFetch, messageFromError, toastError, safeApiCallData } from "@/lib/api-fetch";
 import { toastFromResult } from "@/lib/toast-from-result";
 import { successMessageForDispatch } from "@/hooks/success-message-for-dispatch";
 import type { LocalDirEntry, Mission } from "@/types/hermes";
@@ -1110,16 +1110,30 @@ export function useMissionsPage() {
     const controller = new AbortController();
     void (async () => {
       try {
-        const [defaultsRes, modelsRes] = await Promise.all([
-          safeApiCall<{ defaults?: { agent?: string | null } }>("/api/models/defaults", { signal: controller.signal }),
-          safeApiCall<{ models?: Array<{ id: string; modelId: string; provider: string }> }>("/api/models", { signal: controller.signal }),
+        // Both endpoints return `{ data: <inner> }`. `safeApiCallData`
+        // unwraps the envelope directly so `defaults?.defaults?.agent`
+        // and `models?.models` read the actual payloads. The pre-
+        // refactor code read the envelope and the agent-default auto-
+        // fill was always a no-op (the values were on
+        // `result.data.data`, not `result.data`). This is the same
+        // "feature is not working" fix applied to `useGatewayHealth`
+        // and `useCronJobMutation` in this session.
+        const [defaults, models] = await Promise.all([
+          safeApiCallData<{ defaults?: { agent?: string | null } }>(
+            "/api/models/defaults",
+            { signal: controller.signal },
+          ),
+          safeApiCallData<{ models?: Array<{ id: string; modelId: string; provider: string }> }>(
+            "/api/models",
+            { signal: controller.signal },
+          ),
         ]);
-        if (!defaultsRes.ok || !modelsRes.ok) return;
+        if (!defaults || !models) return;
 
-        const agentRegistryId = defaultsRes.data?.defaults?.agent;
+        const agentRegistryId = defaults.defaults?.agent;
         if (!agentRegistryId) return;
 
-        const match = modelsRes.data?.models?.find((m) => m.id === agentRegistryId);
+        const match = models.models?.find((m) => m.id === agentRegistryId);
         if (!match) return;
 
         setModelAndProvider(match.modelId, match.provider);
