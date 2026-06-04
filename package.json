@@ -101,7 +101,7 @@
 
     "eslint": "^9",
 
-    "eslint-config-next": "16.2.3",
+    "eslint-config-next": "16.2.7",
 
     "jest": "^30.3.0",
 
