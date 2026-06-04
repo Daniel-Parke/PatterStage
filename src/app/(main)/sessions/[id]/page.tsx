@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -13,7 +13,7 @@ import {
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { safeApiCall, setErrorFromCaught } from "@/lib/api-fetch";
+import { useApiData } from "@/hooks/useApiData";
 import { ROLE_META, getMessageRole } from "@/components/session/constants";
 import { MessageBubble, type SessionMessage, type SessionData } from "@/components/session/MessageBubble";
 import { isSessionStillRunning } from "@/lib/session-title";
@@ -23,46 +23,19 @@ import { isSessionStillRunning } from "@/lib/session-title";
 export default function SessionDetailPage() {
   const params = useParams();
   const sessionId = params.id as string;
-  const [data, setData] = useState<SessionData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // useApiData absorbs the entire useEffect + safeApiCall + setLoading/setError
+  // + AbortController boilerplate that the detail page used to inline. The
+  // hook's `data: T | null` contract is byte-equivalent to the previous
+  // `SessionData | null` local state, and `refetch()` replaces the old
+  // `window.location.reload()` refresh button with an in-page re-fetch
+  // (no full-page reload, no scroll position reset, no flash of the
+  // LoadingSpinner — the hook just sets `loading=true` and merges the
+  // new envelope.data into state).
+  const { data, loading, error, refetch } = useApiData<SessionData>(
+    `/api/sessions/${encodeURIComponent(sessionId)}`,
+  );
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const messageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    setLoading(true);
-    setError(null);
-
-    void (async () => {
-      const url = "/api/sessions/" + encodeURIComponent(sessionId);
-      try {
-        const { data, error: fetchError } = await safeApiCall<{ data: SessionData }>(url, { method: "GET" });
-        if (controller.signal.aborted) return;
-        if (fetchError) {
-          throw new Error(fetchError || "Failed to load session");
-        }
-        const { data: sessionData } = data ?? {};
-        if (sessionData) {
-          setData(sessionData as SessionData);
-        } else {
-          throw new Error("Invalid session data format");
-        }
-      } catch (err) {
-        if (controller.signal.aborted) return;
-        setErrorFromCaught(setError, err, "Unknown error");
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    })();
-
-    return () => {
-      controller.abort();
-    };
-  }, [sessionId]);
 
   // Count messages by role
   const roleCounts = useMemo(() => {
@@ -202,7 +175,7 @@ export default function SessionDetailPage() {
             {isRunning && (
               <button
                 type="button"
-                onClick={() => window.location.reload()}
+                onClick={() => void refetch()}
                 className="text-[10px] font-mono px-2 py-1 rounded bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20 transition-colors"
                 title="Reload to check for new messages"
               >
