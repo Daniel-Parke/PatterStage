@@ -12,7 +12,7 @@ import { dumpYamlConfig } from "@/lib/hermes-config-sync";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { ensureDir, backupTimestamp } from "@/lib/fs-helpers";
+import { backupFile } from "@/lib/fs-helpers";
 
 const CACHE_TTL_MS = 15_000; // 15 seconds
 
@@ -169,17 +169,14 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const config = readCachedConfig();
+    const paths = getActiveHermesPaths();
 
-    // Create backup
-    const H = getActiveHermesPaths();
-    const configPath = H.config;
-    if (existsSync(configPath)) {
-      const backupDir = H.backups;
-      ensureDir(backupDir);
-      const backupPath = `${backupDir}/config.yaml.${backupTimestamp()}.bak`;
-      writeFileSync(backupPath, readFileSync(configPath, "utf-8"), "utf-8");
-    }
+    // Create backup (no-op when config.yaml doesn't exist) — single call
+    // to the canonical backupFile() helper replaces the 4-line inline
+    // `existsSync + ensureDir + backupTimestamp + writeFileSync` block.
+    backupFile(paths.config, paths.backups);
+
+    const config = readCachedConfig();
 
     // Merge values into section
     const current = (config[section] as Record<string, unknown>) || {};
@@ -187,7 +184,7 @@ export async function PUT(request: NextRequest) {
 
     // Write back
     const content = dumpYamlConfig(config);
-    writeFileSync(getActiveHermesPaths().config, content, "utf-8");
+    writeFileSync(paths.config, content, "utf-8");
 
     appendAuditLine({
       action: "config.put",

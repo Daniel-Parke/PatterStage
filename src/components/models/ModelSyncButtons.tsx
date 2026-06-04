@@ -9,6 +9,7 @@ import { useState, useCallback } from "react";
 import { ArrowDownToLine, ArrowUpToLine, X, Loader2 } from "lucide-react";
 import type { SyncActionResult } from "@/lib/sync-manager";
 import { pluralise } from "@/lib/utils";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface DiffEntry {
   id: string;
@@ -179,14 +180,14 @@ export default function ModelSyncButtons({
   const fetchDiffs = useCallback(async (direction: "push" | "pull") => {
     setLoadingDiff(true);
     try {
-      const res = await fetch(`/api/models/${encodeURIComponent(modelId)}/diff`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ direction }),
-      });
-      if (!res.ok) throw new Error("Failed to compute diffs");
-      const json = await res.json();
-      const diffs = (json as { data?: { diffs?: DiffEntry[] } })?.data?.diffs ?? [];
+      const json = await apiFetch<{ data?: { diffs?: DiffEntry[] } }>(
+        `/api/models/${encodeURIComponent(modelId)}/diff`,
+        {
+          method: "POST",
+          body: JSON.stringify({ direction }),
+        },
+      );
+      const diffs = json.data?.diffs ?? [];
       setModalState({ direction, diffs, confirming: false });
     } catch {
       // Fallback to generic messages if diff API fails
