@@ -191,6 +191,22 @@ export default function BehaviourPage() {
     setCreateCloneFrom("default");
   }, []);
 
+  // openCreate — sibling of `closeCreate` (session 116 P-7 /
+  // session 118 P-7 open/close sibling pattern). The "New Profile"
+  // header button (line 310) was an inline `() => setShowCreate(true)`
+  // arrow, sitting next to the `closeCreate` callback that handles
+  // the close path. Promoting the open to a useCallback sibling
+  // names the page's intent ("open the create modal") and keeps
+  // the open/close pair symmetric so a future "reset form on open"
+  // or "track last-opened create-tab" extension lands in one place.
+  // The deps array lists the stable setter explicitly to satisfy
+  // `react-hooks/exhaustive-deps` (per session 119 P-3 codebase
+  // convention).
+  const openCreate = useCallback(
+    () => setShowCreate(true),
+    [setShowCreate],
+  );
+
   useEffect(() => { loadProfiles(); }, [loadProfiles]);
 
   useEffect(() => {
@@ -307,7 +323,7 @@ export default function BehaviourPage() {
             variant="primary"
             color="purple"
             icon={Plus}
-            onClick={() => setShowCreate(true)}
+            onClick={openCreate}
           >
             New Profile
           </Button>
