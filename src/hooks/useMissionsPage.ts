@@ -382,7 +382,10 @@ export function useMissionsPage() {
       setCategories(list);
       setCategoriesLoadError(null);
     } catch (error) {
-      console.error("Failed to load categories:", error);
+      // The error is already surfaced to the user via (a) the inline
+      // `categoriesLoadError` state the page renders and (b) the toast.
+      // The pre-refactor `console.error` was redundant dev-only noise
+      // duplicating the same message.
       const msg = messageFromError(error, "Failed to load categories");
       setCategoriesLoadError(msg);
       showToast(msg, "error");
@@ -400,7 +403,9 @@ export function useMissionsPage() {
         }
         showToast("Could not create category", "error");
       } catch (error) {
-        console.error("Failed to create category:", error);
+        // `toastError` already shows the user-facing message; the
+        // pre-refactor `console.error` was redundant dev-only noise
+        // duplicating the same string.
         toastError(showToast, error, "Failed to create category");
       }
       return null;

@@ -11,8 +11,9 @@
 import { useCallback, useMemo } from "react";
 import { useApiData } from "@/hooks/useApiData";
 import { useToast } from "@/components/ui/Toast";
-import { safeApiCall, toastError } from "@/lib/api-fetch";
+import { safeApiCall } from "@/lib/api-fetch";
 import { useCronJobMutation } from "@/hooks/useCronJobMutation";
+import { toastFromResult } from "@/lib/toast-from-result";
 import type { SystemCronJob } from "@/types/hermes";
 
 const HARDWARE_ENDPOINT = "/api/cron/hardware";
@@ -54,34 +55,32 @@ export function useSystemCronJobs() {
 
   const handleSave = useCallback(
     async (job: Partial<SystemCronJob>) => {
-      // The PUT-vs-POST branch only differs in (a) HTTP method, (b) success
-      // toast text, and (c) fallback error text. Collapsing it into a single
-      // safeApiCall + toast trio keeps the two branches in lockstep if a
-      // future "also clear form" or "also sync" extension lands. The
-      // `id`-derived discriminator is exactly the same branch the inline
-      // form used (job.id is truthy → PUT/update, falsy → POST/create), so
-      // the behaviour is byte-equivalent: same endpoint, same method, same
-      // body, same success toasts in each branch, same fallback text in
-      // each branch, same loadJobs() refetch on success, same toastError
-      // catch-block toast.
+      // PUT-vs-POST discriminator: the 2 branches only differ in (a) HTTP
+      // method, (b) success toast text, and (c) fallback error text.
+      // `toastFromResult` collapses the 3-state try/catch into a single
+      // safeApiCall + toast trio (matching the `useCronJobs.handleRun`
+      // pattern at line 55), so a future "also clear form" or "also
+      // sync" extension lands in one place. The `id`-derived discriminator
+      // is exactly the same branch the inline form used (job.id is
+      // truthy → PUT/update, falsy → POST/create), so the behaviour is
+      // byte-equivalent: same endpoint, same method, same body, same
+      // success toasts in each branch, same fallback text in each
+      // branch, same loadJobs() refetch on success. The pre-refactor
+      // `if (!result.ok) throw new Error(...)` + outer try/catch was
+      // functionally identical to letting `toastFromResult` read
+      // `result.error` directly.
       const isUpdate = !!job.id;
-      const successMsg = isUpdate
-        ? "System cron job updated"
-        : "System cron job created";
-      const fallback = isUpdate
-        ? "Failed to update system cron job"
-        : "Failed to create system cron job";
-      try {
-        const result = await safeApiCall(HARDWARE_ENDPOINT, {
-          method: isUpdate ? "PUT" : "POST",
-          body: job,
-        });
-        if (!result.ok) throw new Error(result.error || fallback);
-        showToast(successMsg);
-        loadJobs();
-      } catch (e) {
-        toastError(showToast, e, "Failed to save system cron job");
-      }
+      const result = await safeApiCall(HARDWARE_ENDPOINT, {
+        method: isUpdate ? "PUT" : "POST",
+        body: job,
+      });
+      toastFromResult(
+        showToast,
+        result,
+        isUpdate ? "System cron job updated" : "System cron job created",
+        isUpdate ? "Failed to update system cron job" : "Failed to create system cron job",
+      );
+      if (result.ok) loadJobs();
     },
     [showToast, loadJobs],
   );
