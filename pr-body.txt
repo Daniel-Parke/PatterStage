@@ -1,3 +1,118 @@
+## Session 119 — List 3 (Models, Agents, Skills, Tools, Personalities) — `applyProfileOrRootPatch` delegation + `openCreate` callback + `effectiveSkillEnabled` helper
+
+Random pick: **List 3** via `echo $((RANDOM % 4 + 1))` = 3, the first List 3 pick since session 107 (12 sessions ago — the longest List gap in the protocol history). The carryover from session 118 (14 open/close useCallback siblings across logs/memory/sessions) was committed first as a separate carryover commit per the carryover protocol.
+
+### Pre-audit
+
+Per the List 3 audit checklist (`references/list3-audit-checklist.md`), 3 known follow-up items from prior sessions:
+
+- **Item A**: `applyProfileOrRootPatch` (DB-write + push) and `pushProfileOrRoot` (push-only) both inlined the same default-vs-non-default push dispatch + 404 + push-failed handling. Two near-identical dispatch tails (~12 LOC each).
+- **Item D**: `toggling[skill.name] ?? <fallback>` at 3 sites in `src/app/operations/skills/page.tsx` (line 141 inside the active/inactive split, line 341 in the Active section's onToggleSkill, line 386 in the Inactive section's onToggleSkill), plus a misleading comment at line 30 claiming the form was "inlined for clarity" (no helper existed).
+- **Inline `() => setShowX(true)` open arrows**: 1 site in `src/app/operations/agents/page.tsx:310` — the "New Profile" header button — sitting next to a `closeCreate` useCallback (4-setter: setShowCreate(false) + setCreateName("") + setCreateDescription("") + setCreateCloneFrom("default")) that handled the close path.
+
+The other audit items (B: inline JSON.parse in skills/toggle route; C: `handleActivate` ternary repeated 3x; E: `agentFileUrl` already extracted) were either already-fixed (C) or not byte-equivalent (B) — documented in the "What was rejected" section below.
+
+### Refactor
+
+| # | File | Lines | Migration |
+|---|---|---|---|
+| 1 | `src/lib/apply-profile-or-root-patch.ts` | 63-89 | `applyProfileOrRootPatch` delegates the push step to `pushProfileOrRoot(slug)` (which already owned the dispatch tail). Removes ~12 LOC of duplicated dispatch. |
+| 2 | `src/app/operations/agents/page.tsx` | 310, new 193-205 | `openCreate = useCallback(() => setShowCreate(true), [setShowCreate])` sibling of `closeCreate` (4-setter). The "New Profile" header button's inline `() => setShowCreate(true)` arrow is replaced by `onClick={openCreate}`. |
+| 3 | `src/app/operations/skills/page.tsx` | 30-50 (new helper), 141, 341, 386 | New module-scope `effectiveSkillEnabled(skill, pending, fallback = skill.enabled): boolean` helper. The 3 inline `toggling[skill.name] ?? <fallback>` sites collapse to `effectiveSkillEnabled(...)` calls. Misleading "inlined for clarity" comment removed. |
+| 3b | `tests/unit/skills-page-effective-skill-enabled.test.ts` | new | 8-assertion test (6 truth-table cases + 2 source-pattern checks) pins the helper's behavior and locks the page's invariant. |
+
+### Refactor 1 detail — `applyProfileOrRootPatch` delegation
+
+The duplication was the push tail in 2 places. `pushProfileOrRoot` was always the single source of truth on the push-only path; this refactor makes `applyProfileOrRootPatch` reuse it for the push step (the DB-write step stays at the top, split per slug).
+
+```typescript
+// before
+if (slug === "default") {
+  updateAgentRoot(rootPatch);
+  const push = pushRootToHermes();
+  if (!push.success) return { ok: false, reason: "push-failed", error: push.error ?? "Push failed" };
+  return { ok: true, profile: slug };
+} else {
+  if (!getProfile(slug)) return { ok: false, reason: "not-found" };
+  updateProfileContent(slug, profilePatch);
+  const push = pushProfileToHermes(slug);
+  if (!push.success) return { ok: false, reason: "push-failed", error: push.error ?? "Push failed" };
+  return { ok: true, profile: slug };
+}
+
+// after
+if (slug === "default") {
+  updateAgentRoot(rootPatch);
+} else {
+  if (!getProfile(slug)) return { ok: false, reason: "not-found" };
+  updateProfileContent(slug, profilePatch);
+}
+return pushProfileOrRoot(slug);
+```
+
+**Byte-equivalence**:
+- default branch: identical (pushRootToHermes() + push-failed or ok)
+- non-default success path: `getProfile(slug)` called twice (once pre-write, once inside `pushProfileOrRoot`'s existence check) — both in-memory DB lookups, no observable change
+- non-default 404 path: getProfile returns null in applyProfileOrRootPatch, early-returns; pushProfileOrRoot never called
+- non-default push-failed: identical return shape
+
+The redundant `getProfile` on the non-default success path is acceptable: the in-memory check is microseconds and the wire output is byte-identical.
+
+### Refactor 2 detail — `openCreate` callback sibling of `closeCreate`
+
+Per session 116 P-7 / session 118 P-7 open/close sibling pattern. The "New Profile" button's inline `() => setShowCreate(true)` arrow sat next to a `closeCreate` useCallback (4-setter close). Promoting the open to a `useCallback` sibling names the page's intent ("open the create modal") and keeps the open/close pair symmetric so a future "reset form on open" or "track last-opened create-tab" extension lands in one place.
+
+```typescript
+const openCreate = useCallback(
+  () => setShowCreate(true),
+  [setShowCreate],
+);
+```
+
+The `[setShowCreate]` deps form is the codebase convention (per session 119 P-3) to satisfy `react-hooks/exhaustive-deps`.
+
+**The other `setShowCreate` arrow at line 546** (the modal's Cancel button) is a deliberate SOFT close (preserves the user's in-flight form input if they cancel by accident). The existing `closeCreate` comment already documents this discriminator. Left inline intentionally.
+
+### Refactor 3 detail — `effectiveSkillEnabled` helper
+
+Extracted a module-scope pure function for the "pending override of server state" idiom. The 3 inline sites are byte-equivalent (same `??` short-circuit, same `boolean` return). The 2 `onToggleSkill` sites use slightly different fallbacks (`?? skill.enabled` vs `?? !skill.enabled`) because the Inactive section is the negation of the active state — the helper takes the fallback as a parameter with the default of `skill.enabled`.
+
+```typescript
+function effectiveSkillEnabled(
+  skill: Skill,
+  pending: Record<string, boolean>,
+  fallback: boolean = skill.enabled,
+): boolean {
+  return pending[skill.name] ?? fallback;
+}
+```
+
+The misleading "inlined at call sites for clarity: toggling[skill.name] ?? skill.enabled" comment at line 30 is removed (the helper now exists, so the comment was lying about the codebase).
+
+### Verification
+
+- 1593 unit tests pass (229 suites; 8 new in `skills-page-effective-skill-enabled.test.ts`)
+- `npx tsc --noEmit` clean
+- `CI=true npx eslint . --max-warnings 0` clean on the 4 modified files
+- All 3 refactors are byte-equivalent by construction (named function lifted from inline body; no behavior change)
+- The new test file ran in isolation first (per session 119 P-4): 8/8 pass
+
+### What was NOT migrated
+
+- **Item B (skills/toggle route inline `JSON.parse`)** — the canonical helper `disabledSkillsFromJson` is **NOT byte-equivalent** to the inline form. The inline `JSON.parse(row.disabledSkillsJson || "[]") as string[]` throws on malformed JSON (caught by the route's outer try/catch → 500), while `disabledSkillsFromJson` (via `parseJsonArray`) silently returns `[]` on malformed JSON. This is a behavior change — the route's current behavior is "500 on malformed JSON" (treating it as a real error) vs the helper's "silently swallow + return []" (treating it as empty). **The migration is rejected** as a behavior change. A future session can fix this by either (a) accepting the helper's behavior (silently swallow, return 500 only on the surrounding push failure), or (b) introducing a new helper that throws. Neither is byte-equivalent.
+- **Item C (`handleActivate` ternary)** — already fixed in session 105; the function now uses a single `const next = activePersonality === name ? "" : name;` at the top and reuses `next` everywhere.
+- **8 inline `handle*` functions in `agents/page.tsx` (`handlePushAll`, `handlePushOne`, `handleImportDiscovered`, `handlePullAll`, `handlePullOne`, `handleCreate`, `handleDelete`, `handleSave`)** — these are NOT `useCallback`-wrapped, but converting them would change the runtime function identity on every render. That's a perf improvement, not a refactor. The 3 `closeX` callbacks and `loadProfiles` ARE `useCallback`-wrapped (the ones passed to memoised children or used in `useEffect` deps). The asymmetry is the existing pattern; left as-is.
+
+### "Next session should:"
+
+1. **Pick List 2 next session** to spread the refactor surface. List 2 hasn't been touched since session 116 (the open-callback promotion, 4 sessions ago). Known follow-up: `useMissionsPage` decomposition (1200+ LOC, out of scope for byte-equivalent sweeps).
+2. **Consider an `applyProfileOrRootPatchHttp(slug, rootPatch, profilePatch)` wrapper** that returns the NextResponse directly (combines `applyProfileOrRootPatch` + `toPatchResponse` + `assertPatchSucceeded` into 1 call). 5 routes use the helper pair today; when a 6th route adopts it, the wrapper wins.
+3. **Consider promoting `effectiveSkillEnabled` to `@/lib/skills`** if a 2nd consumer outside `operations/skills/page.tsx` appears (e.g. the skills import route or a future "skills" sidebar widget). Currently 1 consumer; inline is fine.
+4. **Consider migrating the `setEditor({ ...editor, content: e.target.value })` partial-update in agents/page.tsx:525 to a `setEditorContent(content: string)` helper** — the inline form is 1 site but it spreads the editor object on every keystroke (re-creates the EditorState object, invalidates `hasChanges` derived state). A 1-arg setter would let the helper take a `Content` argument and return a new EditorState (or use `setEditor((prev) => prev ? { ...prev, content } : prev)`). Defer until a 2nd partial-update site appears.
+5. **Consider migrating `api/skills/[name]/toggle/route.ts:55` to `disabledSkillsFromJson`** as a planned behavior change (not a refactor). The current behavior (500 on malformed JSON) is the safer default; document the decision before flipping the wire behavior.
+
+---
+
 ## Session 118 carryover (committed at the start of this session) — `openSearchInput` / `closeSearchInput` / `jumpToLatestLines` / `dismissActionMessage` / `openAddModal` / `closeAddModal` / `openDirectiveModal` / `closeDirectiveModal` / `openModelModal` / `closeModelModal` / `closeEditDirective` / `closeEditModel` / `clearRoleFilter` / `handleRoleBadgeClick` (List 1 — logs + memory + sessions)
 
 The first half of session 118's List 1 work landed in commit `f7f4c7b` (the `ok()` 2-site migration in `api/memory/route.ts` + the `openCategoryManager` / `openTemplateManager` / `openDispatchPanel` open-callback promotions in `useMissionsPage` + `src/app/page.tsx`). The second half (14 named `useCallback` open/close sibling callbacks across 3 List-1 files) was left in the working tree when the previous cron session ended, along with a new source-pattern test (`tests/unit/list1-callback-promotions.test.ts`, 31 assertions).
