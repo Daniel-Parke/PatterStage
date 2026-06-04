@@ -6,6 +6,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { apiFetch, messageFromError } from "@/lib/api-fetch";
 
 interface UseApiDataOptions {
   /** Auto-fetch on mount (default: true) */
@@ -42,6 +43,14 @@ interface UseApiDataOptions {
    * GET requests, the params should be appended to the URL via
    * `toString()` so they show up in the query string. The helper
    * handles both shapes.
+   *
+   * The hook calls `apiFetch` under the hood, which merges a
+   * `Content-Type: application/json` header into the caller's
+   * `headers` (caller-supplied headers win on key collision). The
+   * canonical Content-Type makes the request shape match every
+   * other Control Hub API consumer — readers familiar with the
+   * `apiFetch`/`safeApiCall` contract will recognise the merged
+   * `RequestInit` shape immediately.
    */
   init?: RequestInit;
   /**
@@ -104,19 +113,36 @@ export function useApiData<T = unknown>(
         ? url()
         : url;
     try {
-      const res = await fetch(resolvedUrl, optionsRef.current?.init);
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || `Request failed (${res.status})`);
-      }
+      // Use apiFetch instead of raw fetch so the hook benefits from
+      // the canonical error-message shape (cronPushError enrichment,
+      // invalid-JSON guard) shared by every other Control Hub API
+      // consumer. The hook still pulls `data` out of the envelope so
+      // the consumer-facing contract is unchanged: `data: T | null`.
+      const envelope = await apiFetch<{ data?: T }>(
+        resolvedUrl,
+        optionsRef.current?.init,
+      );
       if (mountedRef.current) {
-        setData(json.data as T);
+        // The envelope's `data` is optional (`T | undefined`); the
+        // hook contract is `T | null` (null is the "no data yet"
+        // sentinel for `useState<T | null>(null)`). Coerce missing
+        // → null so consumers can still do `data?.foo` without
+        // TS complaining about `T | null | undefined`.
+        setData(envelope.data ?? null);
       }
     } catch (e: unknown) {
       // AbortError is expected from AbortController — not an error condition
       if (e instanceof Error && e.name === "AbortError") return;
       if (mountedRef.current) {
-        setError(e instanceof Error ? e.message : "Request failed");
+        // `messageFromError` returns "" when the caught value has no
+        // message (e.g. `throw ""`, `throw undefined`). The hook
+        // contract is `error: string | null` — null is reserved for
+        // the "no error" state, so an empty string is a real
+        // (if useless) error condition. We surface the apiFetch
+        // default ("Request failed") when the message is empty,
+        // matching the pre-refactor `Request failed (${res.status})`
+        // fallback for non-2xx responses that had no `json.error`.
+        setError(messageFromError(e, "Request failed"));
       }
     } finally {
       if (mountedRef.current) {

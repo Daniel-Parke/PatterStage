@@ -37,7 +37,9 @@ describe("useApiData", () => {
 
     expect(result.current.data).toEqual({ items: [1, 2, 3] });
     expect(result.current.error).toBeNull();
-    expect(mockFetch).toHaveBeenCalledWith("/api/test", undefined);
+    expect(mockFetch).toHaveBeenCalledWith("/api/test", {
+      headers: { "Content-Type": "application/json" },
+    });
   });
 
   it("handles API errors", async () => {
@@ -155,7 +157,12 @@ describe("useApiData", () => {
     );
 
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(mockFetch).toHaveBeenCalledWith("/api/test", init);
+    // apiFetch merges `Content-Type: application/json` into the caller's
+    // headers (canonical auth header for every CH API request). The
+    // caller's `X-Test` header is preserved in the merged object.
+    expect(mockFetch).toHaveBeenCalledWith("/api/test", {
+      headers: { "Content-Type": "application/json", "X-Test": "1" },
+    });
   });
 
   it("resolves URL via urlBuilder on every fetch (lazy)", async () => {
@@ -171,7 +178,9 @@ describe("useApiData", () => {
     );
 
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(mockFetch).toHaveBeenLastCalledWith("/api/test?p=0", undefined);
+    expect(mockFetch).toHaveBeenLastCalledWith("/api/test?p=0", {
+      headers: { "Content-Type": "application/json" },
+    });
 
     // Change the page prop. Because the parent URL string is unchanged,
     // the auto-fetch effect doesn't re-fire, but a manual `refetch()`
@@ -180,6 +189,27 @@ describe("useApiData", () => {
     await act(async () => {
       await result.current.refetch();
     });
-    expect(mockFetch).toHaveBeenLastCalledWith("/api/test?p=2", undefined);
+    expect(mockFetch).toHaveBeenLastCalledWith("/api/test?p=2", {
+      headers: { "Content-Type": "application/json" },
+    });
+  });
+
+  it("unwraps the { data } envelope — sets data to null when envelope.data is missing", async () => {
+    // Server returned a 2xx response with no `data` key (rare but
+    // legal — the envelope contract is `{ data?: T }`). The hook
+    // contract is `T | null`, so a missing data key must produce
+    // `null`, not `undefined`. The `data?.foo` consumers in the
+    // Logs / Sessions / Dashboard pages depend on the null sentinel.
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({}),
+    });
+
+    const { result } = renderHook(() => useApiData<{ items: number[] }>("/api/test"));
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    expect(result.current.data).toBeNull();
+    expect(result.current.error).toBeNull();
   });
 });
