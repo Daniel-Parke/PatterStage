@@ -14,9 +14,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
-import { badRequest, created, notFound, ok, serverError, serviceUnavailable } from "@/lib/api-response";
+import { badRequest, created, notFound, ok, serviceUnavailable } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import {
   listSessions,
@@ -68,8 +68,7 @@ export async function GET(request: NextRequest) {
       total: result.total,
     });
   } catch (error) {
-    logApiError("GET /api/sessions", "listing sessions", error);
-    return serverError("Failed to load sessions");
+    return serverErrorFromCatch("GET /api/sessions", "listing sessions", error, "Failed to load sessions");
   }
 }
 
@@ -137,7 +136,6 @@ export async function POST(request: NextRequest) {
 
     return badRequest("Unknown action");
   } catch (error) {
-    logApiError("POST /api/sessions", "session action", error);
-    return serverError("Failed to process session action");
+    return serverErrorFromCatch("POST /api/sessions", "session action", error, "Failed to process session action");
   }
 }
