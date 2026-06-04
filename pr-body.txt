@@ -3165,6 +3165,122 @@ Net diff: **3 files, +7 / -7 lines** (each migration is a 1-line replacement + a
 
 ---
 
+---
+
+## Session 132 — List 3 (Models, Agents, Skills, Tools, Personalities) — `ok()` factory migration of 3 missed sites + filter-scope-mismatch fix
+
+Pick was **List 3** via `echo $((RANDOM % 4 + 1))` = 3, the first List-3 pick since session 130. Random pick: **List 3**. Session 130 documented a known gap (session 130 P-130-1, "filter-scope-mismatch") — the per-list page set in the mission brief is page-named (Models/Agents/Skills/Tools/Personalities = 5 pages) and maps to 6 backend subtrees, but the `ok-factory-source-patterns.test.ts` List 3 filter only covered 3 of the 6 subtrees (`api/models`, `api/agent`, `api/credentials`). The 3 missing subtrees (`api/skills`, `api/tools`, `api/personalities`) silently let 3 un-migrated `data:` sites through. This session closes the gap.
+
+### 1. Filter extension (3 subtrees added)
+
+The List 3 production it() block's filter was extended from:
+
+```ts
+s.file.includes(`${join("src", "app", "api", "models")}`) ||
+s.file.includes(`${join("src", "app", "api", "agent")}`) ||
+s.file.includes(`${join("src", "app", "api", "credentials")}`),
+```
+
+to:
+
+```ts
+s.file.includes(`${join("src", "app", "api", "models")}`) ||
+s.file.includes(`${join("src", "app", "api", "agent")}`) ||
+s.file.includes(`${join("src", "app", "api", "credentials")}`) ||
+s.file.includes(`${join("src", "app", "api", "skills")}`) ||
+s.file.includes(`${join("src", "app", "api", "tools")}`) ||
+s.file.includes(`${join("src", "app", "api", "personalities")}`),
+```
+
+Per session 130 P-130-3: the page-named List 3 → backend-subtree mapping is **6 subtrees**, not 3. The block comment was updated to document the mapping for future maintainers.
+
+### 2. 3 un-migrated `data:` sites discovered + migrated
+
+Running the test BEFORE the migration (with the extended filter) catches the 3 sites:
+
+```
+Found 3 un-migrated 'return NextResponse.json({ data: ... })' site(s) in the List 3 surface:
+  src/app/api/personalities/route.ts:51  return NextResponse.json({
+  src/app/api/personalities/route.ts:78  return NextResponse.json({
+  src/app/api/tools/route.ts:19  return NextResponse.json({
+```
+
+All 3 sites are 200-locked success responses, byte-equivalent to `ok(...)`:
+
+| File | Line | Site | Migration |
+|------|------|------|-----------|
+| `src/app/api/personalities/route.ts` | 51 | `return NextResponse.json({ data: { success: true, name, prompt, source: "SOUL.md" } })` (PUT/POST success) | `ok({ success: true, name: result.profile, prompt, source: "SOUL.md" })` |
+| `src/app/api/personalities/route.ts` | 78 | `return NextResponse.json({ data: { personalities, total } })` (GET success) | `ok({ personalities: profiles, total: profiles.length })` |
+| `src/app/api/tools/route.ts` | 19 | `return NextResponse.json({ data: { platforms: HERMES_PLATFORMS, toolsets: HERMES_CONFIGURABLE_TOOLSETS } })` (GET toolset catalog) | `ok({ platforms: HERMES_PLATFORMS, toolsets: HERMES_CONFIGURABLE_TOOLSETS })` |
+
+**Per-file commit granularity** (session 116 P-2): 2 separate commits, one per file. The `api/personalities` and `api/tools` routes are independent of each other, so a per-file commit makes the carryover-detection state clean if the session hits the iteration cap mid-file.
+
+**Import cleanup** (session 130 P-130-4): `api/tools/route.ts` no longer uses `NextResponse` after the migration, so the import was dropped (the only reference was the migrated site). `api/personalities/route.ts` still uses `NextResponse` at line 17 for the `instanceof NextResponse` bodyResult check, so the import is retained.
+
+**Per the pitfall from session 111 P-1** ("local-var shadowing when adding a new helper import"), I checked for any pre-existing `const ok = ...` in the modified files. Neither file had one, so no rename was needed. Per session 130 P-130-4, the post-migration `rg -c "NextResponse\." <file>` audit confirmed `api/tools/route.ts` had 0 references and `api/personalities/route.ts` had 1 (the `instanceof` check).
+
+### 3. Filter-scope self-test (`scanner form coverage` block)
+
+A new self-test was added to the `scanner form coverage` describe block to pin the filter-scope contract. The test reads this test file's source and asserts each of the 6 expected subtrees has a matching `join("src", "app", "api", "<name>")` call in the production filter.
+
+**Why the design**: an earlier iteration of this self-test (path-based: synthesize fixture paths and run the production filter against them) was a false positive — it passed even with the `api/tools` clause removed, because both `expectedSubtrees.length` and `matched.length` shrunk by 1 in lockstep. The substring approach (read the test file's source, check for `join("src", "app", "api", "<name>")` literally) is robust because `expectedSubtrees` is a hard-coded constant — if a future session removes a clause from the production filter, `expectedSubtrees` stays at 6 and the substring check fails.
+
+**Self-test verification**: temporarily removing the `api/tools` clause from the production filter makes the test fail with a clear diagnostic:
+
+```
+List 3 filter-scope self-test failed: the following expected subtrees are NOT
+covered by the production filter: src/app/api/tools. Add the missing subtrees
+to the List 3 filter in the 'has zero ... List 3 surface' it() block. Expected
+subtrees (from mission brief + session 130 P-130-3): src/app/api/models,
+src/app/api/agent, src/app/api/credentials, src/app/api/skills,
+src/app/api/tools, src/app/api/personalities
+```
+
+The test was then restored and re-verified green.
+
+### 4. What was NOT migrated (and why)
+
+- **The 3 `ok()` sites in `api/skills/*` and the 18 in `api/models/*`** — already migrated in sessions 111-117. Re-verified via the `ok-factory-source-patterns.test.ts` source-pattern test (List 3 filter now covers all 6 subtrees, 0 un-migrated sites).
+- **The `messageFromError` sites in `src/app/operations/`, `src/components/models/`, `src/hooks/useModelsPage.ts`** — already migrated in sessions 77 + 91. Re-verified by the audit recipe `rg -nU 'setError\(messageFromError' src/ | rg -v 'api-fetch|tests/'` (0 hits).
+- **The `toastError` sites in operations pages** — already migrated in session 90. Re-verified by the audit recipe `rg -nE "showToast\(messageFromError\(" src/` (0 hits in `src/app/operations/`).
+- **The `serverErrorFromCatch` sites in `api/skills/*` + `api/tools/*`** — already migrated in session 127. Re-verified by the `server-error-from-catch-source-patterns.test.ts` (List 3 surface assertion, 0 un-migrated sites).
+- **The `apiFetch + JSON.stringify` sites in `useModelsPage.ts`** (e.g. line 170: `apiFetch(\`/api/models/sync/${action}\`, { method: "POST", body: JSON.stringify({...}) })`) — candidate for the session 131 P-131-2 `apiFetch → safeApiCall` migration, but the migration changes the field accessor (`d.data?.field` → `result.data?.data?.field`) and is a 1-file, 1-site change. Defer to a future List 3 session that explicitly opts in to accessor-shift migrations.
+- **The `safeApiCall<{ data: T }>` envelope-unwrap bug-class sites in `useModelsPage.ts:413`** — same as above: candidate for the `safeApiCallData` helper migration, but the call is in List 3 territory and was deliberately not part of this session's scope (this session is about the source-pattern test, not the safeApiCallData helper).
+
+### 5. Files
+
+- `src/app/api/personalities/route.ts` (MODIFIED) — 1 import extension (`ok` added) + 2 site migrations + 1 `NextResponse` import retained (used at line 17)
+- `src/app/api/tools/route.ts` (MODIFIED) — 1 import extension (`ok` added) + 1 site migration + 1 `NextResponse` import removed (per session 130 P-130-4)
+- `tests/unit/ok-factory-source-patterns.test.ts` (MODIFIED) — 1 production test filter extended (3 new `s.file.includes(...)` clauses) + 1 new self-test (`List 3 filter covers all 6 backing subtrees (session 132 contract)`) + JSDoc history block updated for session 132
+
+Net diff: **2 source files + 1 test file, +112 / -17 lines**
+
+### 6. Verification
+
+- **1654 unit tests pass** (235 suites, +1 new self-test in `ok-factory-source-patterns.test.ts`)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean
+- **`npm run build`** passes
+- **Byte-equivalence audit per session 51 lesson**: `ok({...})` is literally `NextResponse.json({ data: {...} }, { status: 200 })` (per `src/lib/api-response.ts:197`). All 3 migrated sites are 200-locked success responses with `{ data: <T> }` envelopes — byte-equivalent.
+
+### 7. Patterns to take forward
+
+1. **"Filter-scope-mismatch" pitfall (session 130 P-130-1)** — the per-list page set in the mission brief is page-named; the source-pattern test filter is backend-subtree-named. They do not auto-sync. Cross-check at session start with the audit recipe: list all page-named members for the picked list, then `rg -nP` the filter paths in the source-pattern test. If a page-named member has no matching filter path, the scanner is silently blind to that subtree. The session-132 self-test in `ok-factory-source-patterns.test.ts` codifies this check as an automated regression test.
+2. **"Self-test design: substring vs path-based" lesson** — for filter-coverage self-tests, substring checks against the production filter's literal source are more robust than path-based fixture injection. The path-based approach I tried first was a false positive — both `expected.length` and `matched.length` shrunk in lockstep when a clause was removed. Substring checks against a hard-coded `expectedSubtrees` array catch the failure mode correctly.
+3. **"Per-file commit granularity" pattern (session 116 P-2 recall)** — when 2 files both need `ok()` migrations in the same session, commit them separately. The 3 commits this session produced (personalities → tools → test) are each self-consistent: imports updated, no dead imports, `npx tsc --noEmit` clean. The iteration cap can hit between commits without leaving any file in an inconsistent state.
+
+### 8. "Next session should:" block
+
+1. **Pick a different list next session** to spread the refactor surface. List 3 has been hit 10+ times now (sessions 67, 70, 77, 80, 90, 91, 112, 117, 119, 130, 131, 132). **List 1 is the next-ripe surface** — last touched session 129 (3 sessions ago), and the session-129 follow-ups are: (a) the `JobFormModal.tsx:166` inline `err instanceof Error ? err.message : "Unknown error"` site (was deferred from session 91 because the `setErrorFromCaught` helper had only 7 sites — the count is now 9 after session 91, so it's ripe for a 2-consumer → N-consumer promotion), (b) the `useApiData` extension for `URLSearchParams` + pagination in `(main)/sessions/page.tsx` (deferred from sessions 98, 109, 122, 123), and (c) the inline `console.error` redundancy rule from session 131 P-131-4 applied to `(main)/logs/page.tsx` and `(main)/sessions/page.tsx` (3-5 sites). **List 2** is also still ripe — the `api/cron/hardware/route.ts` 4-site dynamic-message migration from session 128 P-2 is still the next byte-equivalent surface. **List 4** is the quietest surface (last touched session 124) but most-ripe for new content discovery (the per-list source-pattern tests are CLOSED for all 4 lists now, so the next List 4 pick needs to find new refactor opportunities OUTSIDE the 4 factory families).
+2. **`setErrorFromCaught` follow-up** — the 7-site count from session 91 is now 9 (the 2 added in `config/[section]/page.tsx` and `config/seed/page.tsx` are migrated in session 91). The 8th site is most likely to appear in List 1 territory (the `JobFormModal.tsx:166` site is the 8th candidate). If a future List 1 pick migrates that site, the `setErrorFromCaught` helper is justified (8+ consumers) and can be promoted to `api-fetch.ts` per session 91's pattern.
+3. **Cross-list project status** — the `ok()` factory migration is now CLOSED for all 4 lists (verified via the per-list source-pattern tests, all 0 un-migrated sites). The next cross-list project is the dynamic-message `serverError` family (session 128 P-1, session 131 P-3) — 5 sites in `api/cron/hardware/route.ts` + 2 sites in `api/orchestration/chat` and 1 in `api/memory/hindsight/route.ts` = 8 dynamic-message sites that the `serverErrorFromCatch` source-pattern scanner intentionally does NOT match. A sister-helper `serverErrorFromError(route, context, error, prefix?)` would close all 8 sites in 1 helper + 1 sister-test. Multi-session sweep.
+4. **`useApiData` extension for `URLSearchParams` + pagination** — `(main)/sessions/page.tsx`'s `loadSessions` is the next candidate. Requires extending the hook to support query params. Defer until the hook shape is stable across logs + sessions.
+5. **`useMissionsPage` decomposition** — 1298+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results" — would need a careful hook-by-hook extraction with state-derivation verification.
+6. **Migrate the inline `apiFetch + JSON.stringify` sites in `useModelsPage.ts`** (e.g. line 170) to the `safeApiCall` helper per session 131 P-131-2 (the accessor shift `d.data?.field` → `result.data?.data?.field` is a byte-equivalent migration with the per-call accessor rewrite). 1-file, 1-2 site change. Defer to a future List 3 session that explicitly opts in to accessor-shift migrations.
+7. **Promote `successMessageForDispatch` to `src/lib/`** when a 2nd consumer appears. Currently 1 consumer (useMissionsPage). List 2 territory.
+
+
+
 ## Earlier Sessions (compressed index)
 
 The full content of these earlier sessions is preserved in the git history of `pr-body.txt` on the `mission/hermes-review-and-refactor` branch. This table summarises each session's headline refactor, scope, and links to the commit + references doc for full details.
