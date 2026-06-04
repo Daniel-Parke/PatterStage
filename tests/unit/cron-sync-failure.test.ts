@@ -13,6 +13,7 @@ import { NextResponse } from "next/server";
 import {
   cronSyncFailureBody,
   cronSyncFailureResponse,
+  logCronSyncFailure,
 } from "@/lib/cron-sync-failure";
 
 describe("cronSyncFailureBody", () => {
@@ -103,5 +104,49 @@ describe("cronSyncFailureResponse", () => {
     const body = await res.json();
     expect(Object.keys(body).sort()).toEqual(["cronPushError", "error"]);
     expect(res.status).toBe(502);
+  });
+});
+
+describe("logCronSyncFailure", () => {
+  // The logCronSyncFailure helper is the side-effect-only companion to
+  // cronSyncFailureResponse — same logApiError call, no NextResponse
+  // produced. Used by sites that need to splice extra body fields into
+  // the 502 (missions/route.ts adds `data: { mission }`, the
+  // mission-promote-handler.ts site returns a plain result object with
+  // a `mission` field). These tests pin the side-effect contract.
+  let consoleSpy: jest.SpyInstance;
+  beforeEach(() => {
+    consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+  });
+  afterEach(() => {
+    consoleSpy.mockRestore();
+  });
+
+  it("returns undefined (no NextResponse produced)", () => {
+    const result = logCronSyncFailure("POST /api/missions", { ok: false, error: "x" });
+    expect(result).toBeUndefined();
+  });
+
+  it("logs the same line as cronSyncFailureResponse for the same inputs", () => {
+    cronSyncFailureResponse("POST /api/missions", { ok: false, error: "hermes down" });
+    const fromResponse = consoleSpy.mock.calls[0][0];
+    consoleSpy.mockClear();
+    logCronSyncFailure("POST /api/missions", { ok: false, error: "hermes down" });
+    const fromLogOnly = consoleSpy.mock.calls[0][0];
+    expect(fromLogOnly).toBe(fromResponse);
+  });
+
+  it("logs the 'unknown' fallback in the console line when push error is missing", () => {
+    logCronSyncFailure("promoteMission", { ok: false });
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[API promoteMission] Error pushJobToHermes: unknown"),
+    );
+  });
+
+  it("logs the underlying error verbatim when push error is present", () => {
+    logCronSyncFailure("promoteMission", { ok: false, error: "hermes timeout" });
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[API promoteMission] Error pushJobToHermes: hermes timeout"),
+    );
   });
 });

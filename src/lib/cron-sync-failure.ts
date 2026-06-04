@@ -14,7 +14,7 @@
 //      (with an extra `data: { mission: ... }` field mixed in)
 //   3. src/lib/mission-promote-handler.ts  — inline 8-line block in promote's cron branch
 //
-// Two helpers are exported:
+// Three helpers are exported:
 //   - `cronSyncFailureResponse(route, pushResult)` returns a NextResponse
 //     ready to be returned from a route handler. Used by the cron/route.ts
 //     sites (no extra body fields needed).
@@ -22,6 +22,12 @@
 //     for callers that need to add extra fields (e.g. the missions POST
 //     site adds `data: { mission: ... }`) before wrapping in
 //     `NextResponse.json(...)` themselves.
+//   - `logCronSyncFailure(route, pushResult)` logs the underlying error
+//     via the canonical `logApiError` shape WITHOUT producing a response.
+//     Use this when the caller needs to splice extra body fields (so
+//     `cronSyncFailureResponse`'s NextResponse is unusable) but still
+//     wants the same console-log line as the cron/route.ts sites. Pairs
+//     with `cronSyncFailureBody` for the response payload.
 //
 // The byte-equivalence contract (per session-51) is preserved exactly: the
 // same status, the same `error` string, the same `cronPushError` fallback
@@ -74,6 +80,30 @@ export function cronSyncFailureResponse(
 ): NextResponse {
   logApiError(route, "pushJobToHermes", new Error(pushResult.error ?? "unknown"));
   return NextResponse.json(cronSyncFailureBody(pushResult), { status: 502 });
+}
+
+/**
+ * Log a `pushJobToHermes` failure via the canonical `logApiError` shape
+ * without producing a response. Use this in callers that need to splice
+ * extra body fields into the 502 (e.g. `data: { mission: ... }`) and
+ * therefore can't return `cronSyncFailureResponse`'s NextResponse
+ * directly — pairing this helper with `cronSyncFailureBody` keeps the
+ * console-log line identical to the cron/route.ts sites and the wire
+ * shape locked to the canonical body. Previously these callers misused
+ * `cronSyncFailureResponse` for its side effect (logging) and discarded
+ * the returned NextResponse, which is misleading — a reader scanning
+ * the call site would expect the response to be returned.
+ *
+ * Byte-equivalent to the inline `logApiError(route, "pushJobToHermes",
+ * new Error(pushResult.error ?? "unknown"))` call embedded in
+ * `cronSyncFailureResponse`. The "?? unknown" fallback matches the
+ * canonical pusher-result error shape.
+ */
+export function logCronSyncFailure(
+  route: string,
+  pushResult: CronSyncResult,
+): void {
+  logApiError(route, "pushJobToHermes", new Error(pushResult.error ?? "unknown"));
 }
 
 /** Exported for tests that want to assert the canonical error string. */
