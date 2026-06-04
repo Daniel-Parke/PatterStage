@@ -3,7 +3,7 @@ import { existsSync, writeFileSync } from "fs";
 import { resolve } from "path";
 
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { logApiError } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import {
   listLogFilesInDir,
   logFileUnderLogsDir,
@@ -13,7 +13,7 @@ import {
 } from "@/lib/log-files";
 import { injectMissingTimestamps } from "@/lib/log-line-format";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest, notFound, ok, serverError } from "@/lib/api-response";
+import { badRequest, notFound, ok } from "@/lib/api-response";
 import type { LogFileMeta } from "@/lib/log-files";
 
 // ── Shared log directory resolution ──────────────────────────
@@ -95,8 +95,7 @@ export async function GET(request: NextRequest) {
       availableLogs,
     });
   } catch (error) {
-    logApiError("GET /api/logs", "reading logs", error);
-    return serverError("Failed to read logs");
+    return serverErrorFromCatch("GET /api/logs", "reading logs", error, "Failed to read logs");
   }
 }
 
@@ -136,7 +135,6 @@ export async function DELETE(request: NextRequest) {
     }
     return ok({ cleared });
   } catch (error) {
-    logApiError("DELETE /api/logs", "deleting log", error);
-    return serverError("Failed to delete logs");
+    return serverErrorFromCatch("DELETE /api/logs", "deleting log", error, "Failed to delete logs");
   }
 }
