@@ -75,6 +75,35 @@ export async function GET(
             finish_reason: string | null; reasoning: string | null; timestamp: number;
           }>;
 
+        // ── In-flight empty-state note ───────────────────────────
+        // When the session exists in state.db but the messages table
+        // is empty AND ended_at is still NULL, the session is in
+        // flight — Hermes has the row but hasn't flushed any messages
+        // yet (the agent loop persists at turn boundaries, and
+        // in-flight sessions may have api_call_count > 0 with no
+        // committed messages). Without a `note` field the frontend
+        // falls through to the generic "No messages in this session"
+        // empty state, which the user reported as confusing — the
+        // session is healthy and live, just not yet flushed. The
+        // existing isSessionStillRunning() helper in src/lib/session-title.ts
+        // pattern-matches the note text ("still running"/"in progress"/
+        // "mid-flight") to drive the refresh-CTA render, so we keep
+        // the same vocabulary.
+        //
+        // Two flavours: cron-spawned sessions get the more specific
+        // "this cron job is still running" wording; everything else
+        // gets a generic "session is in progress" note. The source
+        // discrimination is cheap (sessionRow.source is read-only)
+        // and lets the UI optionally render cron-specific CTAs later.
+        const isInFlight = sessionRow.ended_at === null;
+        const isEmpty = messageRows.length === 0;
+        const inFlightNote =
+          isInFlight && isEmpty
+            ? sessionRow.source === "cron"
+              ? "This cron-spawned session is still running. Messages will appear here as the agent writes them — refresh to check."
+              : "This session is in progress. Messages will appear here as the agent writes them — refresh to check."
+            : undefined;
+
         const messages = messageRows.map((m, i) => {
           let toolCalls = null;
           if (m.tool_calls) {
@@ -103,6 +132,14 @@ export async function GET(
         // `const response = NextResponse.json({ data: buildSessionData({...}) })`
         // because the variable is never modified (no headers, no status override)
         // and the `ok()` factory already wraps the `{ data: ... }` envelope.
+        //
+        // The `note` field is conditionally passed: only present when the
+        // session is in flight (ended_at IS NULL in state.db) and has no
+        // flushed messages yet. For completed sessions or in-flight
+        // sessions with messages, the note is omitted — the messages
+        // themselves are the signal. The frontend's isSessionStillRunning()
+        // helper pattern-matches the note text to decide whether to render
+        // the refresh CTA vs the normal transcript view.
         return ok(
           buildSessionData({
             id: sanitizedId,
@@ -120,6 +157,7 @@ export async function GET(
             // cron job id against the missions table. Lets the detail page
             // render a "Open Mission" link for cron-spawned sessions.
             missionId: lookupMissionIdForCronSession(sanitizedId),
+            ...(inFlightNote ? { note: inFlightNote } : {}),
           }),
         );
       }
