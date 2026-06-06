@@ -67,3 +67,10 @@ pnpm-workspace.yaml
 dogfood-output/
 runtime.log
 *.audit.md
+
+# Hermes Agent scratch written into the project root during LLM sessions.
+# Real Hermes state lives under ~/.hermes/; nothing inside any project repo
+# should be tracked. /workspace/.hermes/ is the upstream agent's own
+# scratch-root convention and is the same shape we see leak in here.
+.hermes/
+/.hermes
