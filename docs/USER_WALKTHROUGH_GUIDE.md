@@ -628,7 +628,7 @@ For the hardware script catalogue (currently just `ch-backup.sh` for Hindsight m
 
 ### Notes
 
-- Memory is provided by **Hindsight**. If Hindsight is unavailable, the HealthBanner explains why. The most common cause is `memory: { provider: "hindsight" }` not being set in `~/.hermes/config.yaml`. After a deploy that strips Hindsight config, see [DEPLOY.md](DEPLOY.md#hindsight-memory--safe-reconnection-after-deploy) for recovery.
+- Memory is provided by **Hindsight**. If Hindsight is unavailable, the HealthBanner explains why. The most common cause is `memory: { provider: "hindsight" }` not being set in `~/.hermes/config.yaml`. After a deploy that strips Hindsight config, see [DEPLOY.md](DEPLOY.md#hindsight-memory----safe-reconnection-after-deploy) for recovery.
 - The `/api/memory/hindsight` route uses an `action` field for `list`, `recall`, `reflect`, `directives`, `mental-models`, `health`, and `count` on GET; `retain`, `create-directive`, `create-model`, `update-directive`, `update-model`, and `refresh-model` on POST. See [API.md](API.md#hindsight-actions).
 
 ---
