@@ -1,30 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
 // Shared parsing utilities for Hindsight memory data
 // ═══════════════════════════════════════════════════════════════
-
-/** Parse the raw Python repr string from the Hindsight API into clean fields */
-export function parseMemoryContent(raw: string): { text: string; type: string; tags: string[] } {
-  const textMatch = raw.match(/'text':\s*'((?:[^'\\]|\\.)*)'/);
-  const typeMatch =
-    raw.match(/'fact_type':\s*'([^']*)'/) || raw.match(/(?:^|[^'])type='([^']*)'/);
-  const tagsMatch =
-    raw.match(/tags=\[(.*?)\]/) || raw.match(/'tags':\s*\[(.*?)\]/);
-  const text = textMatch ? textMatch[1] : raw;
-  const type = typeMatch ? typeMatch[1] : "unknown";
-  const tags = tagsMatch
-    ? tagsMatch[1]
-        .split(",")
-        .map((t) => t.trim().replace(/^'|'$/g, ""))
-        .filter(Boolean)
-    : [];
-  return { text, type, tags };
-}
-
-/** Parse the reflect response Python repr — extract text='...' from the repr string */
-export function parseReflectResponse(raw: string): string {
-  const match = raw.match(/^text='((?:[^'\\]|\\.)*)'/);
-  return match ? match[1] : raw;
-}
+//
+// The direct-HTTP bridge (`@/lib/hindsight-bridge`) returns plain
+// JSON objects — no Python `repr()` strings to parse. The previous
+// `parseMemoryContent` / `parseReflectResponse` regex parsers have
+// been removed because the API no longer sends the data shape they
+// expected (e.g. `text='...'` and `fact_type='observation'`). The
+// MemoryTab and the reflect-result JSX now read the mapped fields
+// directly off the response object. See the prior commit history
+// of this file for the removed helpers.
 
 /**
  * Coerce a string field with a default fallback. Centralises the

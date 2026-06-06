@@ -59,13 +59,17 @@ export default function ChatPage() {
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [model, setModel] = useState(CHAT_DEFAULT_MODEL);
 
-  // Gateway health, models, and agent default — all in one hook
+  // Gateway health, models, and agent default — all in one hook.
+  // `gatewayModelIds` is intentionally NOT destructured here — the
+  // chat dropdown only shows registered models (the registry is the
+  // source of truth). The hook still fetches and exposes the gateway
+  // list internally for the `modelsError` badge when the gateway is
+  // offline, but the chat page no longer surfaces those IDs.
   const {
     online: gatewayOnline,
     agentDefaultModelSet,
     registryModelIds,
     modelLabels,
-    gatewayModelIds,
     modelsError,
     modelsLoading,
   } = useGatewayHealth();
@@ -328,9 +332,18 @@ export default function ChatPage() {
   }, [showToast]);
 
   // ── Models for dropdown ────────────────────────────────────
-  // The `add` closure dedupes via `seen`, so the gateway loop doesn't
-  // need its own `id !== CHAT_DEFAULT_MODEL` guard — that was redundant
-  // (and silently relied on `seen` to do the work anyway).
+  // The Models registry is the source of truth for which models the
+  // agent is allowed to chat with (`/api/models` → `registryModelIds`).
+  // The gateway's own `/v1/models` list reflects whatever upstream
+  // endpoints the gateway happens to be able to route to — those are
+  // NOT user-selectable from the chat UI. Excluding `gatewayModelIds`
+  // here is the same fix the Models page uses (drift detection +
+  // per-row Push/Pull) — the chat page should only ever show models
+  // that have been explicitly registered.
+  //
+  // `CHAT_DEFAULT_MODEL` is always shown first as the fallback when
+  // the registry hasn't loaded yet, and the `seen` set dedupes
+  // everything in the merge.
   const mergedModels = useMemo(() => {
     const seen = new Set<string>();
     const merged: string[] = [];
@@ -341,9 +354,8 @@ export default function ChatPage() {
     };
     add(CHAT_DEFAULT_MODEL);
     for (const id of registryModelIds) add(id);
-    for (const id of gatewayModelIds) add(id);
     return merged;
-  }, [registryModelIds, gatewayModelIds]);
+  }, [registryModelIds]);
 
   const displayModelName = useCallback(
     (id: string) => modelLabels[id] || formatModelName(id),

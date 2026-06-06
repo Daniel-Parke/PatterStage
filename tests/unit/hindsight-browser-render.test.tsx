@@ -93,19 +93,31 @@ describe("HindsightBrowser", () => {
 
   it("renders fact-type badges, read-only tag badges, and relative time", async () => {
     const threeMinAgo = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+    // The modern Hindsight HTTP server returns plain JSON objects
+    // (not Python `repr()` strings). The `mapMemoryItem` bridge
+    // produces `{ id, content, type, tags, created_at, score }` and
+    // the MemoryTab reads those fields directly — see
+    // `tests/unit/memory-tab-render.test.tsx` for the underlying
+    // render contract. This test verifies the end-to-end
+    // HindsightBrowser render: a memory with these fields is
+    // shown to the user with a coloured fact-type badge, the
+    // tag list, the relevance/proof-count label, and a relative
+    // timestamp.
     mockHindsightFetch({
       memories: [
         {
           id: "m1",
-          content:
-            "{'id': 'm1', 'text': 'Alpha note', 'fact_type': 'observation', 'tags': ['org:acme', 'team:eng']}",
+          content: "Alpha note",
+          type: "observation",
+          tags: ["org:acme", "team:eng"],
           created_at: threeMinAgo,
           score: 2,
         },
         {
           id: "m2",
-          content:
-            "{'id': 'm2', 'text': 'World fact', 'fact_type': 'world', 'tags': []}",
+          content: "World fact",
+          type: "world",
+          tags: [],
           created_at: threeMinAgo,
           score: 0.5,
         },
