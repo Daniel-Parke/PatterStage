@@ -18,6 +18,7 @@ Some error responses also include `details` (Zod validation). Handlers must call
 | `/api/agent/personality` | `PUT` | Set personality for one agent profile (Operations → Agents). |
 | `/api/agent/profiles` | `GET`, `POST` | Professional profiles (SQLite source of truth; each row includes `syncStatus` for drift). |
 | `/api/agent/profiles/[id]` | `PUT`, `DELETE` | Update or delete one profile (no `GET` — use list + id). |
+| `/api/agent/profiles/sync/drift` | `GET` | Full drift report (root, named profiles, skills catalog). Returns the per-resource sync state that the drift banner reads. |
 | `/api/agent/profiles/sync/push` | `POST` | Push profile(s) to `HERMES_HOME/profiles/<slug>/` (`{ slug }` or `{ all: true }`). |
 | `/api/agent/profiles/sync/pull` | `POST` | Pull one profile from Hermes disk into DB (`{ slug }` required). |
 | `/api/agents` | `GET` | Inspect running Hermes agent processes (OS-dependent). Not the same as `agent/profiles`. |
@@ -74,9 +75,7 @@ Some error responses also include `details` (Zod validation). Handlers must call
 | Resource | How drift is exposed | Sync routes |
 |----------|----------------------|-------------|
 | **Models** | `GET /api/models/sync/drift` | `POST .../pull`, `POST .../push` |
-| **Profiles** | `syncStatus` on each row from `GET /api/agent/profiles` | `POST /api/agent/profiles/sync/push`, `POST .../pull` |
-
-There is **no** `GET /api/agent/profiles/sync/drift` endpoint.
+| **Profiles** | `GET /api/agent/profiles/sync/drift` for the full report, and `syncStatus` on each row from `GET /api/agent/profiles` for the per-row badge | `POST /api/agent/profiles/sync/push`, `POST .../pull` |
 
 ## RPC-style routes
 
