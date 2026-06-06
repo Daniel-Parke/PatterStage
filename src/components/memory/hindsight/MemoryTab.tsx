@@ -1,12 +1,18 @@
 // ═══════════════════════════════════════════════════════════════
 // Hindsight Memory Tab — Browse and search stored memories
 // ═══════════════════════════════════════════════════════════════
+//
+// Memories are consumed directly from the mapped payload produced by
+// `mapMemoryItem` in `@/lib/hindsight-bridge` — the API route returns
+// `{ content, type, tags, created_at, score, ... }` as plain JSON
+// fields, not a Python `repr()` string. The old `parseMemoryContent`
+// regex parser is no longer used and has been removed.
 
 import { Brain, Clock, Tag } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import { timeAgo } from "@/lib/utils";
-import { parseMemoryContent, hindsightFactTypeBadgeColor } from "./utils";
+import { hindsightFactTypeBadgeColor } from "./utils";
 import type { Memory } from "./types";
 
 interface MemoryTabProps {
@@ -33,7 +39,17 @@ export default function MemoryTab({ memories, loading, loadingInitial }: MemoryT
   return (
     <div className="space-y-3">
       {memories.map((memory, i) => {
-        const { text, type, tags } = parseMemoryContent(memory.content);
+        const text = memory.content ?? "";
+        const type = memory.type ?? "";
+        // Memory.tags is typed as `unknown` on the Memory interface (the
+        // mapped payload from hindsight-bridge keeps the raw value). The
+        // direct-HTTP bridge always returns string[], but defend against
+        // any other shape so a future payload change can't blow up the
+        // page render.
+        const rawTags = memory.tags as unknown;
+        const tags: string[] = Array.isArray(rawTags)
+          ? rawTags.filter((t): t is string => typeof t === "string")
+          : [];
         return (
           <div
             key={memory.id || i}

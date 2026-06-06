@@ -19,7 +19,7 @@ import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { safeApiCall } from "@/lib/api-fetch";
 import { parseOptionalTagsInput, parseTagsInput } from "@/lib/hindsight-tag-input";
-import { parseReflectResponse, stringOr } from "./hindsight/utils";
+import { stringOr } from "./hindsight/utils";
 import type { Tab, Memory, Directive, MentalModel, HealthState } from "./hindsight/types";
 import HealthBanner from "./hindsight/HealthBanner";
 import MemoryTab from "./hindsight/MemoryTab";
@@ -490,7 +490,7 @@ export default function HindsightBrowser() {
             <Sparkles className="w-4 h-4 text-purple-400" />
             <span className="text-sm font-semibold text-purple-300">Reflection</span>
           </div>
-          <p className="text-sm text-white/70 leading-relaxed">{parseReflectResponse(reflectResult)}</p>
+          <p className="text-sm text-white/70 leading-relaxed">{reflectResult}</p>
         </div>
       )}
 
