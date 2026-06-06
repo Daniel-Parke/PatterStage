@@ -5,7 +5,7 @@ Technical reference for Control Hub. Tone elsewhere in this folder is deliberate
 | Document | Description |
 |----------|-------------|
 | [CONTROL_HUB.md](CONTROL_HUB.md) | What this repo is and where to read next |
-| [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) | Operator guide with UI screenshots (dashboard, missions, chat, cron, profiles, …) |
+| [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) | Operator guide: every sidebar page, every common action (dashboard, missions, chat, cron, profiles, skills, tools, personalities, sessions, memory, logs, all Config pages, Story Weaver) |
 | [MISSIONS.md](MISSIONS.md) | Mission board, dispatch, cancellation, templates |
 | [design-tokens.md](design-tokens.md) | UI colour tokens and theme conventions |
 | [API.md](API.md) | REST endpoints |
