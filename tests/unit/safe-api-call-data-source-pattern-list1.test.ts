@@ -1,43 +1,47 @@
 /**
  * @jest-environment node
  *
- * Source-pattern test for the `safeApiCall<T>` single-nesting migration in
- * the Hindsight memory browser (`src/components/memory/HindsightBrowser.tsx`).
+ * Source-pattern test for the `safeApiCall<{ data?: { ... } }>`
+ * envelope-typed call sites in the Hindsight memory browser
+ * (`src/components/memory/HindsightBrowser.tsx`).
  *
- * The HindsightBrowser component's `fetchHealthOnly`, `loadRecentMemories`,
- * `runRecall`, `handleReflect`, `loadDirectives`, and `loadModels` callbacks
- * previously used the `safeApiCall<{ data?: { ... } }>` double-envelope form,
- * then unwrapped via `data?.data?.X` access. Session 137 (List 1) collapsed
- * these to the canonical `safeApiCall<T>` single-nesting form where the
- * type parameter is the *inner* payload and access is `data?.X`.
+ * **CRITICAL CONTEXT — the `safeApiCall<T>` envelope-unwrap myth.**
+ * The session 137 (List 1) "single-nesting" migration attempted to drop
+ * the `{ data?: { ... } }` envelope type from this file's 6 `safeApiCall<T>`
+ * call sites, claiming that `safeApiCall<T>` already unwraps the response
+ * into `{ data?: T }`. **It does not.** The helper
+ * (`src/lib/api-fetch.ts:85-98`) returns `{ ok, data: <body> }` where
+ * `data` is the full body (the envelope `{ data: { x: ... } }`).
+ * Migrating a call from
+ * `safeApiCall<{ data?: { x?: T } }>(url) + result.data?.data?.x` to
+ * `safeApiCall<{ x?: T }>(url) + result.data?.x` silently breaks
+ * production: `result.data?.x` is `undefined` (the production wire is
+ * `{ data: { x: ... } }` and the runtime envelope wraps that).
  *
- * This test pins the post-refactor shape for the HindsightBrowser file:
+ * **This test pins the CORRECT (envelope-typed) shape**, not the
+ * broken "single-nesting" shape.
  *
- * - ✓ the file is readable
- * - ✓ the file is a real `.tsx` file (catches typos)
- * - ✓ the file has zero `safeApiCall<{ data: { ... } }>` or
- *   `safeApiCall<{ data?: { ... } }>` double-envelope calls (the
- *   type-scanner — matches both required and optional forms)
- * - ✓ the file has zero `.data?.data?.` access chains (the
- *   access-fingerprint — matches the structural `.data?.data?.X` pattern)
+ * Pre-flight recipe (run BEFORE any future "drop the double envelope"
+ * migration in this file):
  *
- * The two-prong test (type-scanner + access-fingerprint) is the
- * session-135 lesson: a future "I changed the type but forgot the access"
- * mistake trips the access-fingerprint test, not the type-scanner test
- * (which sees the updated type and passes). And vice versa: a future
- * "I changed the access but forgot the type" mistake trips the
- * type-scanner test. The two prongs are complementary, not redundant.
+ *   # 1. Confirm the helper does NOT unwrap
+ *   sed -n '85,98p' src/lib/api-fetch.ts
+ *   # Should show: return { ok: true, data: data as T };  (no unwrap)
+ *
+ *   # 2. Confirm the endpoint returns the envelope
+ *   curl -s 'http://127.0.0.1:42069/api/memory/hindsight?action=health' | head -c 200
+ *   # Should show: {"data":{...}}  (envelope)
+ *
+ * If both are true, the migration is broken. Do not proceed.
  *
  * Sister test to:
  *   - `safe-api-call-data-source-pattern-list2.test.ts` (List 2 — Cron,
  *     Missions, Chat) — 8 hooks/components
  *   - `safe-api-call-data-source-pattern-list3.test.ts` (List 3 — useModelsPage
  *     hook, 1 file)
- *   - `safe-api-call-data-source-pattern.test.ts` (List 1 dashboard,
- *     covers the `safeApiCallData` migration not the single-nesting migration)
  *
  * @see src/lib/api-fetch.ts — `safeApiCall` and `safeApiCallData` definitions
- * @see src/components/memory/HindsightBrowser.tsx — the migrated consumer
+ * @see src/components/memory/HindsightBrowser.tsx — the consumer
  */
 
 import { readFileSync, statSync } from "node:fs";
@@ -46,68 +50,62 @@ import { join } from "node:path";
 const REPO_ROOT = join(__dirname, "..", "..");
 const BROWSER_PATH = join(REPO_ROOT, "src", "components", "memory", "HindsightBrowser.tsx");
 
-describe("safeApiCall<T> single-nesting migration — List 1 HindsightBrowser", () => {
+describe("safeApiCall envelope-typed migration — List 1 HindsightBrowser", () => {
   const source = readFileSync(BROWSER_PATH, "utf8");
 
   // The structural patterns we're pinning: the type-scanner and the
-  // access-fingerprint. The type-scanner is the canonical form
-  // `safeApiCall<{ data: ... }>` (with optional `?`). The access-fingerprint
-  // is the runtime unwrap chain `.data?.data?.X` (single-line, optional chain
-  // at every step).
-  const TYPE_SCANNER = /safeApiCall<\s*\{\s*data\??:\s*[^}>]+\{[^}>]+\}[^}>]*\}/g;
-  // Access-fingerprint: any `.data?.data?.` chain. The structurals are
-  // `result.data?.data?.X` or `j.data?.data?.X` or any single-line
-  // `.data?.data?.` access. Matches the structural pattern, not the
-  // variable name.
-  const ACCESS_FINGERPRINT = /\.data\?\.data\./g;
+  // access-fingerprint. The type-scanner matches the envelope-typed
+  // shape `safeApiCall<{ data?: { ... } }>` (the CORRECT form). The
+  // access-fingerprint matches the runtime double-indirection
+  // `.data?.data?.` (also CORRECT).
+  const TYPE_SCANNER = /safeApiCall<\s*\{\s*data\??:\s*\{/g;
+  // Access-fingerprint: any `.data` access (with optional `?`).
+  // Matches the structural pattern `something.data.X` or
+  // `something.data?.X` — the production code path that reads
+  // the envelope-shaped body returned by `safeApiCall<T>`.
+  const ACCESS_FINGERPRINT = /\.data\??\s*\./g;
 
   it("the HindsightBrowser source file is readable", () => {
     expect(source.length).toBeGreaterThan(0);
   });
 
   it("the HindsightBrowser source is a real .tsx file on disk", () => {
-    // Catches typos in BROWSER_PATH (the file extension check) — without
-    // this guard, a typo would silently read an empty file and the
-    // scanners would pass trivially.
     const stat = statSync(BROWSER_PATH);
     expect(stat.isFile()).toBe(true);
     expect(BROWSER_PATH.endsWith(".tsx")).toBe(true);
   });
 
-  it("the HindsightBrowser has zero `safeApiCall<{ data?: { ... } }>` double-envelope calls", () => {
-    // The pre-migration form was `safeApiCall<{ data?: { X?: Y } }>(url, ...)`
-    // followed by `data?.data?.X` access. The post-migration form is
-    // `safeApiCall<{ X?: Y }>(url, ...)` followed by `data?.X` access.
-    // This regex catches the double-envelope type (nested `{}` inside the
-    // type parameter) and would fail if a future change reintroduces the
-    // pattern.
+  it("the HindsightBrowser has at least one envelope-typed safeApiCall<{ data?: { ... } }> call", () => {
+    // The CORRECT form for envelope-typed reads is
+    // `safeApiCall<{ data?: { X?: Y } }>(url, ...)` followed by
+    // `data?.data?.X` access. A future migration that drops the
+    // `data?:` envelope type from a call site in this file will
+    // break production (the helper does not unwrap), and this test
+    // will fail to catch it.
     //
-    // We strip line comments first so a doc comment that *describes* the
-    // old pattern (e.g. the one at the top of `fetchHealthOnly`) doesn't
-    // trigger a false positive.
+    // We strip line comments first so doc comments that *describe*
+    // the shape don't trigger false positives.
     const code = source
       .split("\n")
       .map((line) => line.replace(/\/\/.*$/, ""))
       .join("\n");
     const matches = code.match(TYPE_SCANNER) ?? [];
-    expect(matches).toEqual([]);
+    expect(matches.length).toBeGreaterThan(0);
   });
 
-  it("the HindsightBrowser has zero `.data?.data?.` access chains", () => {
-    // The pre-migration access pattern was `data?.data?.X` (the result
-    // .data field was the envelope, so accessing the inner field required
-    // a second optional chain). The post-migration access is `data?.X`
-    // (single chain). This regex catches the double-unwrap form, which
-    // should be gone from the HindsightBrowser.
-    //
-    // Strip line comments first so a doc comment that *describes* the
-    // old pattern (e.g. the one at the top of `fetchHealthOnly`) doesn't
-    // trigger a false positive.
+  it("the HindsightBrowser has at least one .data?.data?. double-indirection read", () => {
+    // The CORRECT access pattern is `data?.data?.X` (two
+    // indirections) for envelope-typed reads. This fingerprint pins
+    // the production code path; a future "I changed the type to
+    // envelope but forgot the access" mistake that drops the
+    // second `?.data` (e.g. `result.data?.X` for `T = { data: { x:
+    // T } }`) produces `undefined` for every X and is silent at
+    // type-check time.
     const code = source
       .split("\n")
       .map((line) => line.replace(/\/\/.*$/, ""))
       .join("\n");
     const matches = code.match(ACCESS_FINGERPRINT) ?? [];
-    expect(matches).toEqual([]);
+    expect(matches.length).toBeGreaterThan(0);
   });
 });

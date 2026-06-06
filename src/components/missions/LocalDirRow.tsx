@@ -42,18 +42,16 @@ export default function LocalDirRow({
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       // The endpoint returns `{ data: { isGitRepo, branches, current } }`.
-      // Drop the redundant `{ data: { ... } }` envelope:
-      // `safeApiCall<T>` already wraps the response as `{ data?: T }`,
-      // so the inner type only needs the inner shape. Byte-equivalent
-      // — the same `{ ok, data?, error? }` envelope is returned, just
-      // without the double-nesting at the call site. The fields are
-      // then read directly as `j.data?.isGitRepo` / etc.
-      safeApiCall<{ isGitRepo: boolean; branches: string[]; current: string | null }>(
+      // `safeApiCall<T>` does NOT unwrap — `data` is the full body —
+      // so the type is the envelope shape and the inner fields are
+      // read via `j.data?.data?.isGitRepo` (two indirections).
+      safeApiCall<{ data?: { isGitRepo: boolean; branches: string[]; current: string | null } }>(
         "/api/fs/git/branches?path=" + encodeURIComponent(p),
       )
         .then((j) => {
           if (j.ok) {
-            setGit(j.data ?? { isGitRepo: false, branches: [], current: null });
+            const inner = j.data?.data;
+            setGit(inner ?? { isGitRepo: false, branches: [], current: null });
           } else {
             setGit({ isGitRepo: false, branches: [], current: null });
           }

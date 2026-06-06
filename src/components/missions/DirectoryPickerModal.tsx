@@ -35,14 +35,12 @@ export default function DirectoryPickerModal({
     setError(null);
     const q = next && next.length > 0 ? "?path=" + encodeURIComponent(next) : "";
     // safeApiCall returns { ok, data: <body> } where <body> is the API
-    // envelope ({ data: { path, parent, entries } }). Drop the
-    // redundant `{ data: { ... } }` envelope: `safeApiCall<T>` already
-    // wraps the response as `{ data?: T }`, so the inner type only
-    // needs the inner shape. Byte-equivalent — the same
-    // `{ ok, data?, error? }` envelope is returned, just without the
-    // double-nesting at the call site. The payload is then read
-    // directly as `j.data?.path` / `j.data?.parent` / `j.data?.entries`.
-    safeApiCall<{ path: string; parent: string | null; entries: Entry[] }>(
+    // envelope ({ data: { path, parent, entries } }). `safeApiCall<T>`
+    // does NOT unwrap — `data` is the full body — so the type is the
+    // envelope shape and the inner fields are read via
+    // `j.data?.data?.path` / `j.data?.data?.parent` /
+    // `j.data?.data?.entries` (two indirections).
+    safeApiCall<{ data?: { path: string; parent: string | null; entries: Entry[] } }>(
       "/api/fs/list" + q,
     )
       .then((j) => {
@@ -50,7 +48,7 @@ export default function DirectoryPickerModal({
           setError(typeof j.error === "string" ? j.error : "Failed to list");
           return;
         }
-        const payload = j.data;
+        const payload = j.data?.data;
         if (payload) {
           setPath(payload.path);
           setParent(payload.parent);
