@@ -13,27 +13,25 @@ describe("ModelPicker defaults", () => {
     global.fetch = jest.fn((url: string | Request) => {
       const u = typeof url === "string" ? url : url.toString();
       if (u.includes("/api/models/defaults")) {
-        // The on-the-wire envelope is `{ data: { defaults: ... } }`, but
-        // the session-135 migration collapsed the double-envelope type
-        // to `safeApiCall<{ defaults?: ApiDefaults }>` and reads
-        // `dRes.data?.defaults` directly. The `safeApiCall<T>` helper
-        // unwraps the envelope before the production code sees it, so
-        // the mock body matches the post-unwrap shape.
+        // The on-the-wire envelope is `{ data: { defaults: ... } }`,
+        // which is exactly what `safeApiCall<T>` returns in `result.data`.
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ defaults: { agent: "reg-2" } }),
+          json: () => Promise.resolve({ data: { defaults: { agent: "reg-2" } } }),
         } as Response);
       }
       if (u.includes("/api/models")) {
         return Promise.resolve({
           ok: true,
-          // See above — post-unwrap shape.
+          // See above — wire envelope shape.
           json: () =>
             Promise.resolve({
-              models: [
-                { id: "reg-1", name: "Older", provider: "p1", modelId: "m1" },
-                { id: "reg-2", name: "AgentDefault", provider: "p2", modelId: "m2" },
-              ],
+              data: {
+                models: [
+                  { id: "reg-1", name: "Older", provider: "p1", modelId: "m1" },
+                  { id: "reg-2", name: "AgentDefault", provider: "p2", modelId: "m2" },
+                ],
+              },
             }),
         } as Response);
       }
@@ -52,22 +50,24 @@ describe("ModelPicker defaults", () => {
     global.fetch = jest.fn((url: string | Request) => {
       const u = typeof url === "string" ? url : url.toString();
       if (u.includes("/api/models/defaults")) {
-        // See above — post-unwrap shape.
+        // See above — wire envelope shape.
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ defaults: { agent: null } }),
+          json: () => Promise.resolve({ data: { defaults: { agent: null } } }),
         } as Response);
       }
       if (u.includes("/api/models")) {
         return Promise.resolve({
           ok: true,
-          // See above — post-unwrap shape.
+          // See above — wire envelope shape.
           json: () =>
             Promise.resolve({
-              models: [
-                { id: "reg-newest", name: "Newest", provider: "pv", modelId: "mv" },
-                { id: "reg-old", name: "Old", provider: "p1", modelId: "m1" },
-              ],
+              data: {
+                models: [
+                  { id: "reg-newest", name: "Newest", provider: "pv", modelId: "mv" },
+                  { id: "reg-old", name: "Old", provider: "p1", modelId: "m1" },
+                ],
+              },
             }),
         } as Response);
       }
@@ -76,7 +76,7 @@ describe("ModelPicker defaults", () => {
 
     render(<ModelPicker modelId="" provider="" onChange={onChange} id="t-model-picker-2" />);
 
-    // ModelPicker uses safeApiCall which returns { ok, data } — auto-fill with first model
+    // ModelPicker uses safeApiCall which returns { ok, data } where data is the full envelope; auto-fill reads result.data?.data?.models[0].
     await waitFor(() => {
       expect(onChange).toHaveBeenCalledWith("mv", "pv");
     });
@@ -86,17 +86,17 @@ describe("ModelPicker defaults", () => {
     global.fetch = jest.fn((url: string | Request) => {
       const u = typeof url === "string" ? url : url.toString();
       if (u.includes("/api/models/defaults")) {
-        // See above — post-unwrap shape.
+        // See above — wire envelope shape.
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ defaults: { agent: null } }),
+          json: () => Promise.resolve({ data: { defaults: { agent: null } } }),
         } as Response);
       }
       if (u.includes("/api/models")) {
         return Promise.resolve({
           ok: true,
-          // See above — post-unwrap shape.
-          json: () => Promise.resolve({ models: [] }),
+          // See above — wire envelope shape.
+          json: () => Promise.resolve({ data: { models: [] } }),
         } as Response);
       }
       return Promise.reject(new Error("unexpected fetch: " + u));
@@ -130,17 +130,17 @@ describe("ModelPicker defaults", () => {
     global.fetch = jest.fn((url: string | Request) => {
       const u = typeof url === "string" ? url : url.toString();
       if (u.includes("/api/models/defaults")) {
-        // See above — post-unwrap shape.
+        // See above — wire envelope shape.
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve({ defaults: { agent: null } }),
+          json: () => Promise.resolve({ data: { defaults: { agent: null } } }),
         } as Response);
       }
       if (u.includes("/api/models")) {
         return Promise.resolve({
           ok: true,
-          // See above — post-unwrap shape.
-          json: () => Promise.resolve({ models: [] }),
+          // See above — wire envelope shape.
+          json: () => Promise.resolve({ data: { models: [] } }),
         } as Response);
       }
       return Promise.reject(new Error("unexpected fetch: " + u));

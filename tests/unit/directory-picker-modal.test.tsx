@@ -31,21 +31,24 @@ describe("DirectoryPickerModal — safeApiCall double-wrap", () => {
   it("renders entries from /api/fs/list envelope without crashing", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      // The on-the-wire envelope is `{ data: { path, parent, entries } }`,
-      // but the session-135 migration collapsed the double-envelope type
-      // to `safeApiCall<{ path, parent, entries }>` and reads
-      // `j.data?.path` directly. The `safeApiCall<T>` helper unwraps
-      // the envelope before the production code sees it, so the mock
-      // body matches the post-unwrap shape.
+      // The on-the-wire envelope is `{ data: { path, parent, entries } }`.
+      // The `safeApiCall<T>` helper does NOT unwrap (see api-fetch.ts:85-98)
+      // — it returns `{ ok, data: <body> }` where `data` is the whole
+      // envelope. The post-fix production code types the call as
+      // `safeApiCall<{ data?: { path, parent, entries } }>` and reads
+      // fields via `j.data?.data?.path` (two indirections). The mock body
+      // therefore matches the on-the-wire envelope shape.
       json: () =>
         Promise.resolve({
-          path: "/home/daniel",
-          parent: null,
-          entries: [
-            { name: "control-hub", isDir: true, isFile: false },
-            { name: "Desktop", isDir: true, isFile: false },
-            { name: "notes.md", isDir: false, isFile: true },
-          ],
+          data: {
+            path: "/home/daniel",
+            parent: null,
+            entries: [
+              { name: "control-hub", isDir: true, isFile: false },
+              { name: "Desktop", isDir: true, isFile: false },
+              { name: "notes.md", isDir: false, isFile: true },
+            ],
+          },
         }),
     });
 
@@ -68,13 +71,16 @@ describe("DirectoryPickerModal — safeApiCall double-wrap", () => {
   it("renders empty state when API returns zero entries (not crash)", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      // See above — the on-the-wire envelope is unwrapped by
-      // `safeApiCall<T>` before the production code sees it.
+      // See above — the on-the-wire envelope is `{ data: { ... } }` and
+      // `safeApiCall<T>` does NOT unwrap, so the mock body matches the
+      // envelope shape.
       json: () =>
         Promise.resolve({
-          path: "/home/daniel/empty",
-          parent: "/home/daniel",
-          entries: [],
+          data: {
+            path: "/home/daniel/empty",
+            parent: "/home/daniel",
+            entries: [],
+          },
         }),
     });
 

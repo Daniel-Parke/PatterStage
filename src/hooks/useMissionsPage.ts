@@ -656,14 +656,11 @@ export function useMissionsPage() {
 
         if (isPromotable) {
           showToast(submitToastForDispatch(newDispatch), "info");
-          // Drop the redundant `{ data?: { ... } }` envelope:
-          // `safeApiCall<T>` already wraps the response as `{ data?: T }`,
-          // so the inner type only needs the inner shape. Byte-equivalent
-          // — `safeApiCall<{ mission?: object }>` returns the same
-          // `{ ok, data?: { mission }, error? }` envelope the old
-          // `safeApiCall<{ data?: { mission?: object } }>` did, just
-          // without the double-nesting at the call site.
-          const { ok, error } = await safeApiCall<{ mission?: object }>("/api/missions", {
+          // The route returns `{ data: { mission: {...} } }` (envelope).
+          // `safeApiCall<T>` does NOT unwrap — `data` is the full body —
+          // so the type is the envelope shape. We only read `ok`/`error`
+          // here, so the inner type is permissive.
+          const { ok, error } = await safeApiCall<{ data?: { mission?: object } }>("/api/missions", {
             method: "POST",
             body: {
               action: "promote",
@@ -694,14 +691,11 @@ export function useMissionsPage() {
 
         setEditingId(null);
 
-        // Drop the redundant `{ data?: { ... } }` envelope:
-        // `safeApiCall<T>` already wraps the response as `{ data?: T }`,
-        // so the inner type only needs the inner shape. Byte-equivalent
-        // — `safeApiCall<{ mission?: { id: string } }>` returns the same
-        // `{ ok, data?: { mission: { id: string } }, error? }` envelope
-        // the old `safeApiCall<{ data?: { mission?: { id: string } } }>`
-        // did, just without the double-nesting at the call site.
-        const result = await safeApiCall<{ mission?: { id: string } }>("/api/missions", {
+        // The route returns `{ data: { mission: { id } } }` (envelope).
+        // `safeApiCall<T>` does NOT unwrap — `data` is the full body —
+        // so the type is the envelope shape and the inner id is read
+        // via `result.data?.data?.mission?.id` (two indirections).
+        const result = await safeApiCall<{ data?: { mission?: { id: string } } }>("/api/missions", {
           method: "POST",
           body: {
             action: "dispatch",
@@ -719,9 +713,9 @@ export function useMissionsPage() {
         if (result.ok) {
           const body = result.data;
           await fetchData();
-          if (body?.mission?.id) {
-            setExpandedId(body.mission.id);
-            void fetchDetail(body.mission.id);
+          if (body?.data?.mission?.id) {
+            setExpandedId(body.data.mission.id);
+            void fetchDetail(body.data.mission.id);
           }
         }
         return;
@@ -729,14 +723,11 @@ export function useMissionsPage() {
 
       showToast(submitToastForDispatch(newDispatch), "info");
 
-      // Drop the redundant `{ data?: { ... } }` envelope:
-      // `safeApiCall<T>` already wraps the response as `{ data?: T }`,
-      // so the inner type only needs the inner shape. Byte-equivalent
-      // — `safeApiCall<{ mission?: { id: string } }>` returns the same
-      // `{ ok, data?: { mission: { id: string } }, error? }` envelope
-      // the old `safeApiCall<{ data?: { mission?: { id: string } } }>`
-      // did, just without the double-nesting at the call site.
-      const { ok, error, data } = await safeApiCall<{ mission?: { id: string } }>("/api/missions", {
+      // The route returns `{ data: { mission: { id } } }` (envelope).
+      // `safeApiCall<T>` does NOT unwrap — `data` is the full body —
+      // so the type is the envelope shape and the inner id is read
+      // via `data.data?.mission?.id` (two indirections).
+      const { ok, error, data } = await safeApiCall<{ data?: { mission?: { id: string } } }>("/api/missions", {
         method: "POST",
         body: {
           action: "dispatch",
@@ -761,9 +752,9 @@ export function useMissionsPage() {
         } else if (newDispatch === "now") {
           const body = data;
           await fetchData();
-          if (body?.mission?.id) {
-            setExpandedId(body.mission.id);
-            void fetchDetail(body.mission.id);
+          if (body?.data?.mission?.id) {
+            setExpandedId(body.data.mission.id);
+            void fetchDetail(body.data.mission.id);
           }
         } else {
           await fetchData();

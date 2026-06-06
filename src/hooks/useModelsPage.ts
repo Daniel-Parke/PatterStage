@@ -426,14 +426,11 @@ export function useModelsPage() {
       const gen = ++fallbackSaveGenRef.current;
       setFallbackConfigSaving(true);
       setFallbackConfigError(null);
-      // Drop the redundant `{ data: { config: ... } }` envelope:
-      // `safeApiCall<T>` already wraps the response as `{ data?: T }`,
-      // so the inner type only needs the inner shape. Byte-equivalent
-      // — `safeApiCall<{ config: FallbackConfig }>` returns the same
-      // `{ ok, data?: { config }, error? }` envelope that the old
-      // `safeApiCall<{ data: { config: FallbackConfig } }>` did, just
-      // without the double-nesting at the call site.
-      const { ok, data: res, error } = await safeApiCall<{ config: FallbackConfig }>(
+      // The route returns `{ data: { config: ... } }` (envelope).
+      // `safeApiCall<T>` does NOT unwrap — `data` is the full body —
+      // so the type is the envelope shape and the inner config is read
+      // via `res?.data?.config` (two indirections).
+      const { ok, data: res, error } = await safeApiCall<{ data?: { config: FallbackConfig } }>(
         "/api/models/fallbacks/config",
         {
           method: "PUT",
@@ -448,7 +445,7 @@ export function useModelsPage() {
         return false;
       }
       setFallbackConfigSaving(false);
-      const saved = res?.config;
+      const saved = res?.data?.config;
       if (!ok || !saved) {
         setFallbackConfigError(error ?? "Failed to save fallback settings");
         return false;

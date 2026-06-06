@@ -219,7 +219,7 @@ describe("useCronJobMutation — handleDelete", () => {
 
 describe("useCronJobMutation — handlePauseAll", () => {
   it("sends a POST with action=pauseAll and shows the success toast", async () => {
-    fetchMock.mockReturnValueOnce(okResponse({ pausedCount: 3 }));
+    fetchMock.mockReturnValueOnce(okResponse({ data: { pausedCount: 3 } }));
     const { result, refetch } = renderMutation();
 
     await act(async () => {
@@ -289,28 +289,22 @@ describe("useCronJobMutation — handlePauseAll", () => {
   });
 
   it("interpolates {count} from the API's pausedCount when showCount is true", async () => {
-    // The API returns `{ data: { pausedCount: 5 } }` and `safeApiCall`
-    // surfaces the whole envelope as `result.data`. After the session-
-    // 123 fix the type is `{ data?: { pausedCount?: number } }` and
-    // `result.data?.data?.pausedCount` reads the actual count —
-    // previously the toast always showed 0 (see list2-session63-
-    // findings.md for the latent-bug history).
+    // The on-the-wire envelope is `{ data: { pausedCount: 5 } }`. The
+    // `safeApiCall<T>` helper does NOT unwrap (see api-fetch.ts:85-98) —
+    // it returns `{ ok, data: <body> }` where `data` is the whole
+    // envelope. The post-fix production code types the call as
+    // `safeApiCall<{ data?: { pausedCount?: number } }>` and reads the
+    // count via `result.data?.data?.pausedCount` (two indirections).
     //
-    // Session 135: the double-envelope was collapsed to
-    // `safeApiCall<{ pausedCount?: number }>` and the access is now
-    // `result.data?.pausedCount` (single indirection). The mock
-    // therefore returns the *inner* payload directly via a raw
-    // `Promise.resolve` (the `okResponse` helper wraps in
-    // `{ data: ... }` to match the on-the-wire envelope shape, but
-    // the post-migration production code reads from the *unwrapped*
-    // payload — i.e. the body after `safeApiCall<T>`'s envelope
-    // unwrap).
-    fetchMock.mockReturnValueOnce(
-      Promise.resolve({
-        ok: true,
-        json: async () => ({ pausedCount: 5 }),
-      }),
-    );
+    // The mock therefore returns the envelope (not the inner payload
+    // directly): the on-the-wire JSON is `{ data: { pausedCount: 5 } }`.
+    // This pins the production code path. The `okResponse` test helper
+    // wraps the arg in `{ data: ... }`, so passing `{ pausedCount: 5 }`
+    // yields the correct wire shape.
+    //
+    // Sister test: `safe-api-call-data-source-pattern-list2.test.ts`
+    // pins the same envelope-typed shape across all 6 List 2 files.
+    fetchMock.mockReturnValueOnce(okResponse({ pausedCount: 5 }));
     const { result } = renderMutation({
       pauseAll: {
         success: "Paused {count} system cron job(s)",

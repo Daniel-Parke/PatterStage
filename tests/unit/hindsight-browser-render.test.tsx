@@ -38,32 +38,40 @@ function mockHindsightFetch(handlers: {
 }) {
   global.fetch = jest.fn(async (input: RequestInfo | URL) => {
     const url = typeof input === "string" ? input : input.toString();
+    // The on-the-wire envelope is `{ data: <inner> }` for every
+    // /api/memory/hindsight action. The `safeApiCall<T>` helper does
+    // NOT unwrap (see api-fetch.ts:85-98) — it returns `{ ok, data:
+    // <body> }` where `data` is the whole envelope. The post-fix
+    // production code in HindsightBrowser types the calls as
+    // `safeApiCall<{ data?: { ... } }>` and reads fields via
+    // `result.data?.data?.x` (two indirections). The mock body
+    // therefore matches the on-the-wire envelope shape.
     if (url.includes("action=health")) {
-      return jsonResponse({ available: true, mode: "ok" }) as unknown as Response;
+      return jsonResponse({ data: { available: true, mode: "ok" } }) as unknown as Response;
     }
     if (url.includes("action=list")) {
       return jsonResponse({
-        memories: handlers.memories ?? [],
+        data: { memories: handlers.memories ?? [] },
       }) as unknown as Response;
     }
     if (url.includes("action=directives")) {
       return jsonResponse({
-        directives: handlers.directives ?? [],
+        data: { directives: handlers.directives ?? [] },
       }) as unknown as Response;
     }
     if (url.includes("action=mental-models")) {
       return jsonResponse({
-        models: handlers.models ?? [],
+        data: { models: handlers.models ?? [] },
       }) as unknown as Response;
     }
     if (url.includes("action=recall")) {
-      return jsonResponse({ memories: [] }) as unknown as Response;
+      return jsonResponse({ data: { memories: [] } }) as unknown as Response;
     }
     if (url.includes("action=reflect")) {
-      return jsonResponse({ response: "text='ok'" }) as unknown as Response;
+      return jsonResponse({ data: { response: "text='ok'" } }) as unknown as Response;
     }
     if (url.startsWith("/api/memory/hindsight") && !url.includes("action=")) {
-      return jsonResponse({ success: true }) as unknown as Response;
+      return jsonResponse({ data: { success: true } }) as unknown as Response;
     }
     throw new Error(`Unmocked fetch: ${url}`);
   }) as typeof global.fetch;
