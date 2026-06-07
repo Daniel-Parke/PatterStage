@@ -1,3 +1,105 @@
+## Session 144 — List 1 (Dashboard, Sessions, Memory, Logs) — `toastError` migration in 4 silent-catch sites
+
+Random pick: **List 1** via `echo $((RANDOM % 4 + 1))` = 1. Pre-audit of the List 1 surface (`src/app/page.tsx` (Dashboard), `src/app/(main)/sessions/page.tsx`, `src/app/(main)/logs/page.tsx`, `src/app/(main)/memory/page.tsx` + `src/components/memory/HindsightBrowser.tsx`) found 4 "feature is not working" sites matching the session 142 P-142-1 silent-error-swallow anti-pattern: the user sees a static "Failed to X" toast/string and the actual error is silently dropped.
+
+### What shipped
+
+**4 sites migrated, +11 / -10 = +1 net LOC, 1 commit (`ff33d61`):**
+
+| # | File | Line | Before | After |
+|---|------|------|--------|-------|
+| 1 | `src/app/page.tsx` | 272 | `catch { showToast("Failed to cancel mission", "error") }` | `catch (err) { toastError(showToast, err, "Failed to cancel mission") }` |
+| 2 | `src/app/page.tsx` | 317 | `catch { showToast("Failed to update cron schedule", "error") }` | `catch (err) { toastError(showToast, err, "Failed to update cron schedule") }` |
+| 3 | `src/app/(main)/logs/page.tsx` | 91 | `catch { setActionMessage("Delete failed (network error)") }` | `catch (err) { setActionMessage(messageFromError(err, "Delete failed (network error)")) }` |
+| 4 | `src/app/(main)/sessions/page.tsx` | 329 | `if (loadError) showToast("Failed to load sessions", "error")` | `if (loadError) showToast(loadError, "error")` |
+
+The dashboard sites use the existing `toastError(showToast, err, fallback)` helper from `@/lib/api-fetch` (composes `messageFromError`). The logs page uses `messageFromError` directly because `setActionMessage` is the page's own `useState` setter (not the `showToast` signature). The sessions page uses `useApiData`'s `loadError` string directly (the hook already applies `setErrorFromCaught` internally, so `loadError` is a real diagnostic string or `null` — the previous "Failed to load sessions" replacement was throwing away the real value).
+
+### The 4-shape error-display taxonomy (new lesson, P-144-1)
+
+Session 142 P-142-1 named 2 helper shapes for the operations/* context. Session 144 found 2 more shapes that don't fit either helper — the full taxonomy:
+
+| Shape | Helper | Example |
+|-------|--------|---------|
+| 1 | `toastError(showToast, err, fallback)` | `src/app/page.tsx:272, 317` |
+| 2 | `setErrorFromCaught(setError, err, fallback)` | (n/a this session) |
+| 3 | `setX(messageFromError(err, fallback))` | `src/app/(main)/logs/page.tsx:91` |
+| 4 | `if (loadError) showToast(loadError, "error")` | `src/app/(main)/sessions/page.tsx:329` |
+
+**Shape 3 — page-local setter that accepts `string | null`:** these consumers don't use `showToast` (no toast UI on the logs page) and don't use a generic `setError`. The migration is `setX(messageFromError(err, fallback))` — import `messageFromError` directly from `@/lib/api-fetch` and call it with the existing page-local setter.
+
+**Shape 4 — consumer of a real-error-string hook:** `useApiData`'s `loadError` is a `string | null` (or null). The hook already calls `setErrorFromCaught` internally. The migration surfaces the real diagnostic without re-wrapping in `messageFromError` (the `?? <fallback>` semantics are wrong here — `loadError` is either a real string or `null`, not possibly-undefined).
+
+### The "useApiData loadError is real" lesson (P-144-2)
+
+`useApiData` (`src/hooks/useApiData.ts:96`) already calls `setErrorFromCaught(setError, err, "Request failed")` internally. The `error: string | null` it exposes is a real diagnostic (or `null`), NOT a generic placeholder. The pre-migration code at `(main)/sessions/page.tsx:328` was:
+
+```ts
+if (loadError) showToast("Failed to load sessions", "error");
+```
+
+This was throwing away the real diagnostic the hook produced. The hook did the work to call `setErrorFromCaught`, but the consumer was replacing the result with a static string. The fix is one line: `if (loadError) showToast(loadError, "error")`. **Anti-pattern:** the comment "we forward to showToast for parity with the previous try/catch" was documenting the wrong invariant — the previous try/catch ALSO threw away the real error, so "parity" was preserving a bug.
+
+**Audit recipe** (cross-list, future-proof):
+
+```bash
+rg -nB 1 'showToast\("Failed to' src/app/ -g "*.tsx" | rg -B 1 'loadError'
+```
+
+Finds consumers of `useApiData` (or any other real-error-string hook) that replace the real value with a static placeholder. The `-B 1` on `loadError` ensures we only catch sites that are in the same useEffect body as the `showToast` call.
+
+### The "did NOT touch the HindsightBrowser double-envelope" lesson (P-144-3)
+
+The umbrella pointer's session-138 reference and `references/session-138-safe-api-call-envelope-unwrap-myth.md` flagged that sessions 133/135/137's "single-nesting" migration was broken (the helper does not unwrap envelopes) and was rolled back by PR #163. The HindsightBrowser's `safeApiCall<{ data?: { ... } }>` + `data?.data?.X` accesses are the **correct** byte-equivalent form for the actual API wire shape `{ data: { ... } }`.
+
+I explicitly did NOT touch those sites. Pre-flight: `sed -n '85,98p' src/lib/api-fetch.ts` confirmed the helper returns `{ ok, data: <body> }` where `data` is the full body (the envelope). The session-141 `safe-api-call-data-source-pattern-list1.test.ts` now pins the correct (envelope-typed) shape. **Rule:** before any "drop the double envelope" migration, read both the helper source and the wire shape. The migration is broken if both are envelope-shaped.
+
+### Behaviour change
+
+Documented per session 142 P-142-1's "feature is not working" exception. Sites 1-3 (dashboard, logs) and site 4 (sessions) all surface the real fetch error to the user instead of a static placeholder. Strict improvement (always-broken → works), not a semantic shift. Each site is a regression target via the `toastError` / `messageFromError` helper unit tests (already in `tests/unit/api-fetch.test.ts`); the `loadError` site is locked by the `useApiData` contract (any change to the hook that re-introduces the static-placeholder smell would need to also update the page consumers, which the source-pattern test pins).
+
+### Verification
+
+- `npx tsc --noEmit` — clean
+- `CI=true npx eslint src/app/page.tsx src/app/(main)/logs/page.tsx src/app/(main)/sessions/page.tsx --max-warnings 0` — clean
+- `npx jest` — **244 suites / 1715 tests pass** (no regressions)
+- `npm run build` — clean
+- `git push origin mission/hermes-review-and-refactor` — succeeded (`3243c41..ff33d61`)
+
+### What was rejected
+
+- Migrating the 5 `safeApiCall<{ data?: { ... } }>` sites in `HindsightBrowser.tsx` to `safeApiCall<{ ... }>` single-nesting. **REJECTED** — the helper does not unwrap; the sites are correct as-is. (The session 137 PR text in pr-body.txt is now stale and should be marked "REVERTED BY PR #163" in a future docs commit.)
+- Migrating the `loadError` toast at `(main)/sessions/page.tsx:328` to `toastError(showToast, err, "Failed to load sessions")`. **REJECTED** — `loadError` is a `string | null`, not a `caught error`. `messageFromError` would treat the string as a non-Error and coerce it to `String(loadError)` which is the same string — no benefit, just indirection.
+- Migrating the 4 List-2 `safeApiCall<{ data?: { ... } }>` sites in `useMissionsPage.ts`/`useMissionsApi.ts`/`useCronJobMutation.ts` to `safeApiCall<{ ... }>`. **REJECTED** — same envelope-unwrap myth; same HindsightBrowser lesson. Plus, those are List 2 territory, not List 1.
+
+### Carryover to next session
+
+The `pr-body.txt` update + PR body update via `gh pr edit` was cut off by the tool-call budget. **Next session should:**
+
+1. Run `git status --porcelain` to confirm clean (the session 144 refactor commit already pushed).
+2. Prepend a "## Session 144" block at the top of `pr-body.txt` documenting the 4-site migration, the 4-shape taxonomy, the `useApiData loadError` lesson, the HindsightBrowser non-touch.
+3. Commit + push the docs commit.
+4. Run `gh pr edit <num> --body-file pr-body.txt` to update the open PR body. If the body is large (likely — 3822 lines as of session 143), use the session 59 `gh api graphql --input` recipe instead.
+
+The carryover is the docs phase only. The refactor is shipped and verified; only the PR body is stale.
+
+### Patterns to take forward
+
+1. **4-shape error-display taxonomy** — `toastError` (shape 1), `setErrorFromCaught` (shape 2), `setX(messageFromError(err, fallback))` (shape 3), `if (loadError) showToast(loadError, "error")` (shape 4). Pick the lightest weight that matches the consumer's setter signature.
+2. **"useApiData loadError is real" audit recipe** — `rg -nB 1 'showToast\("Failed to' src/app/ -g "*.tsx" | rg -B 1 'loadError'` finds consumers throwing away real diagnostics.
+3. **The "did NOT touch the broken migration" discipline** — when an earlier session's PR text is now stale (session 137's HindsightBrowser migration was rolled back by PR #163), do NOT re-apply it. Read the umbrella pointer's CRITICAL references first. The 5 HindsightBrowser sites are correct as-is; the session-141 test pins them.
+4. **Tool-call budget exhaustion at the docs phase is a known failure mode** — see SKILL.md pitfall 18. The mitigation is to prioritize the docs commit (pr-body.txt + push) over the PR body update (`gh pr edit`). The refactor must NEVER be cut off.
+
+### Next session should
+
+Random pick next session: pick AT RANDOM. Session 144 already swept the most actionable List 1 surface; future List 1 picks should re-audit with the current 2-line audit recipe `rg -nB 1 'showToast\("Failed to' src/app/ -g "*.tsx" | rg -B 1 'loadError'` to confirm zero hits, then either pick another list OR find new refactor opportunities outside the `toastError`/`messageFromError`/`setErrorFromCaught` family. Per the session 144 carryover, the next session is also expected to:
+
+1. Complete the carryover docs phase first (per carryover protocol).
+2. Then do 1 small-bore refactor in whatever list gets picked.
+3. End at ≤ 3 commits total per session.
+
+---
+
 ## Session 143 — List 2 (Cron, Missions, Chat) — `applyDisabledChange` helper consolidates 3 sites in `api/cron/hardware/route.ts`
 
 Random pick: **List 2** via `echo $((RANDOM % 4 + 1))` = 2. Pre-audit of the List 2 byte-equivalent surface found the "setDisabled + saveDisabledIds" pair duplicated in 2 PUT sites (toggle-only branch + post-write sync branch) and a structurally identical pair in DELETE (load + delete + save). All three sites collapse to a single `applyDisabledChange(disabledIds, id, enabled)` call.
