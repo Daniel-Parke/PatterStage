@@ -1,3 +1,95 @@
+## Session 143 — List 2 (Cron, Missions, Chat) — `applyDisabledChange` helper consolidates 3 sites in `api/cron/hardware/route.ts`
+
+Random pick: **List 2** via `echo $((RANDOM % 4 + 1))` = 2. Pre-audit of the List 2 byte-equivalent surface found the "setDisabled + saveDisabledIds" pair duplicated in 2 PUT sites (toggle-only branch + post-write sync branch) and a structurally identical pair in DELETE (load + delete + save). All three sites collapse to a single `applyDisabledChange(disabledIds, id, enabled)` call.
+
+### What shipped
+
+**1 file, +18 / -6 net (helper + 3 call-site consolidations):**
+
+`src/app/api/cron/hardware/route.ts`:
+- Added `applyDisabledChange(disabledIds, id, enabled)` helper (composes the existing `setDisabled` tri-state mutation with `saveDisabledIds` disk write) — sister-helper of session 35's `applyEnabledChange`
+- PUT toggle-only branch (line 442-443): 2 lines → 1 line
+- PUT post-write sync (line 456-458): 4 lines (if-guard + 2 lines) → 2 lines (if-guard + 1 line)
+- DELETE (line 508-509): 2 lines (delete + save) → 1 line (`applyDisabledChange(disabledIds, id, true)`)
+
+The DELETE migration uses the same helper with `enabled: true` — `setDisabled(disabledIds, id, true)` hits the `else` branch which is `disabledIds.delete(id)`, byte-equivalent to the original `disabledIds.delete(id)` + `saveDisabledIds(disabledIds)`.
+
+**Byte-equivalence proof:** every call site:
+- Before: `setDisabled(d, i, e); saveDisabledIds(d);` (or the DELETE variant `d.delete(i); saveDisabledIds(d);` which is `setDisabled(d, i, true); saveDisabledIds(d);`)
+- After: `applyDisabledChange(d, i, e);` → expands to `setDisabled(d, i, e); saveDisabledIds(d);`
+- The `if (enabled !== undefined)` guard on the PUT post-write sync site is preserved — when undefined, the helper is not called (matches the original `if (enabled !== undefined) { setDisabled(...); saveDisabledIds(...); }` block).
+
+### Verification
+
+- `npx tsc --noEmit` — clean
+- `CI=true npx eslint src/app/api/cron/hardware/route.ts --max-warnings 0` — clean
+- `npx jest tests/unit/cron-hardware-api.test.ts tests/unit/server-error-from-error-source-patterns.test.ts` — 2 suites / 9 tests pass
+- `npx jest` — **244 suites / 1715 tests pass** (no regressions)
+- `npm run build` — clean
+
+### Net LOC
+
+- Helper: 12 lines (incl. JSDoc)
+- Call sites: 3 sites × 1-2 lines saved = 4-6 lines removed
+- Net: **+18 / -6 = +12 net** (positive due to JSDoc on the helper). The pure code delta is +6 / -6 = 0 (the helper body is symmetric to the 2 inline calls). JSDoc is documentation value for future readers.
+
+### Behaviour change
+
+None. Every call site is byte-equivalent to the original 2-line pattern.
+
+### Next session should
+
+List 2 byte-equivalent surface is largely mined clean after session 128 (`serverErrorFromError`), session 135 (cast cleanup), and this session (`applyDisabledChange`). Other List 2 areas worth a re-audit:
+- `useMissionsPage.ts` (1324 LOC) — the cast-cleanup pass is done; further byte-equivalent work is limited to the chat page's `updateSessionField` helper (defer until 3rd consumer) and `formatModelName`/`loadSessions` test coverage (defer to a dedicated chat-utils test session).
+- `api/missions/route.ts` `serverError(result.error ?? "unknown error")` × 3 sites at lines 348/434/491 — the `bareServerError` pattern from session 131 P-3. Could be extracted to a `serverErrorFromHelperResult(result, fallback)` sister-helper.
+- The `useMissionsPage.ts` decomposition is still out of scope for byte-equivalent refactors (would need a dedicated decomposition session).
+
+---
+
+## Session 142 — List 3 (Models, Agents, Skills, Tools, Personalities) — `toastError` migration in 5 operation-page catch blocks
+
+Random pick: **List 3** via `echo $((RANDOM % 4 + 1))` = 3. Last touched in the session-140 List 3 sweep + the session-132 ok-factory test-scope-gap fix + the session-128 cron carryover (dynamic-message `serverError` migration in `api/cron/hardware/route.ts` — adjacent List 3 territory via the operations pages). The session-130 carryover flagged 5 silent-error-swallow sites in `src/app/operations/*`; this session closed them.
+
+### What shipped
+
+**5 catch-block migrations, 0 net LOC:**
+
+| File | Line | Before | After |
+|------|------|--------|-------|
+| `src/app/operations/agents/page.tsx` | 167 | `catch { showToast("Failed to load profiles", "error") }` | `catch (err) { toastError(showToast, err, "Failed to load profiles") }` |
+| `src/app/operations/agents/page.tsx` | 296 | `catch { showToast("Failed to save file", "error") }` | `catch (err) { toastError(showToast, err, "Failed to save file") }` |
+| `src/app/operations/skills/page.tsx` | 149 | `catch { showToast("Failed to load skills", "error") }` | `catch (err) { toastError(showToast, err, "Failed to load skills") }` |
+| `src/app/operations/skills/page.tsx` | 234 | `catch { showToast("Failed to load skill", "error") }` | `catch (err) { toastError(showToast, err, "Failed to load skill") }` |
+| `src/app/operations/personalities/page.tsx` | 269 | `catch { showToast("Failed to load personalities", "error") }` | `catch (err) { toastError(showToast, err, "Failed to load personalities") }` |
+
+All 5 sites adopt the `toastError(showToast, err, fallback)` helper from `@/lib/api-fetch` (composes `messageFromError(err, fallback)`).
+
+### Verification
+
+- `npx tsc --noEmit` — clean
+- `CI=true npx eslint src/app/operations/{agents,skills,personalities}/page.tsx --max-warnings 0` — clean
+- `npx jest` — 244 suites / 1715 tests pass (no regressions)
+- `npm run build` — clean
+
+### Net LOC
+
+- +11 / -11 = **0 net** (purely a swap of the 2-line `catch { showToast(...) }` pattern for the 2-line `catch (err) { toastError(...) }` pattern)
+
+### Behaviour change (documented per task brief)
+
+- **Before:** user sees static "Failed to X" toast, actual error is silently dropped
+- **After:** user sees the actual error message ("Failed to X: <error.message>") with the static string as fallback
+- **Regression test:** `toastError` is a thin composition of `messageFromError` (which has its own contract tests in `tests/unit/api-fetch.test.ts`). The 5 sites don't add new helper logic, they adopt an existing helper.
+
+### Next session should
+
+These 5 sites were the only remaining inline `catch { showToast("Failed to X") }` pattern in `src/app/operations/*`. Other List 3 areas to consider:
+- `src/app/api/agents/route.ts:61-64` — single dynamic-message `serverError` site (the `String(err)` variant flagged in session 130's carryover). Migrate to `serverErrorFromError("GET /api/agents", "querying Hermes processes", err, "Failed to query Hermes processes")`.
+- `src/app/api/models/fallbacks/sync/route.ts` — the bare-msg migration flagged in session 130.
+- `useModelsPage` / `useSkillsPage` / `usePersonalities` hooks for any remaining byte-equivalent refactors.
+
+---
+
 ## Session 137 — List 1 (Dashboard, Sessions, Memory, Logs) — `safeApiCall<{ data?: { ... } }>` double-envelope migration in HindsightBrowser + source-pattern test
 
 Random pick: **List 1** via `echo $((RANDOM % 4 + 1))` = 1. Last touched in the session-129 List 1 sweep + the session-128 cron carryover. The List 1 surface had been "mined clean" by sessions 87 (setField/stringOr), 89 (created factory + dashboard now memo-stability), 93 (dbSessionFields + parseAssistantLines), and 122-129 (a series of ok() / serverErrorFromCatch / safeApiCallData migrations). A pre-audit of the remaining List 1 surface (Dashboard, Sessions, Memory, Logs pages + their backing API routes) found that the `safeApiCall<{ data?: { ... } }>` double-envelope anti-pattern survived in **5 sites in 1 file** — the HindsightBrowser component. This is the same single-nesting pattern closed in List 3 (session 133, useModelsPage.ts) and List 2 (session 135, 8 sites across 6 files). Closing it in List 1 puts the dashboard sister test at parity with the per-list pattern tests for the other 3 lists.
