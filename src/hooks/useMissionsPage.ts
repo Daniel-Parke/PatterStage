@@ -554,8 +554,10 @@ export function useMissionsPage() {
         }
       }
     } catch (error) {
-      console.error("Failed to load templates:", error);
-      showToast("Failed to load templates", "error");
+      // The toast surfaces the real error to the user; the pre-refactor
+      // `console.error` was redundant dev-only noise duplicating the
+      // same string. Per session 131 P-131-4 console.error-redundancy rule.
+      toastError(showToast, error, "Failed to load templates");
     }
   }, [fetchMissions, fetchTemplates, showToast, loadCategories, applyTemplateToForm]);
 
@@ -850,8 +852,8 @@ export function useMissionsPage() {
           postSuccess();
           void fetchData();
         }
-      } catch {
-        showToast("Failed to save template", "error");
+      } catch (err) {
+        toastError(showToast, err, "Failed to save template");
       } finally {
         setTemplateSaving(false);
       }
