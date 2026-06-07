@@ -42,7 +42,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import AppPageShell from "@/components/layout/AppPageShell";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
-import { safeApiCall, safeApiCallData } from "@/lib/api-fetch";
+import { safeApiCall, safeApiCallData, toastError } from "@/lib/api-fetch";
 import { runMutation } from "@/lib/run-mutation";
 import { toastFromResult } from "@/lib/toast-from-result";
 import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
@@ -269,8 +269,8 @@ export default function Dashboard() {
         // Refresh missions
         const missions = await safeApiCallData<{ missions: MissionBrief[] }>("/api/missions");
         if (missions) setData({ missions: missions.missions || [] });
-      } catch {
-        showToast("Failed to cancel mission", "error");
+      } catch (err) {
+        toastError(showToast, err, "Failed to cancel mission");
       }
     };
     if (!isArmedFor(missionId)) {
@@ -314,8 +314,8 @@ export default function Dashboard() {
         "Schedule updated",
         "Failed to update cron schedule",
       );
-    } catch {
-      showToast("Failed to update cron schedule", "error");
+    } catch (err) {
+      toastError(showToast, err, "Failed to update cron schedule");
     } finally {
       // Revoke optimistic update on failure; refresh on success. The
       // finally block covers all paths (success, !ok return, thrown),
