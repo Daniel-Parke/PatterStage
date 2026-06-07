@@ -4,9 +4,11 @@
 
 import { relative, resolve } from "path";
 import { homedir } from "os";
+import { NextResponse } from "next/server";
 
 import { CH_DATA_DIR } from "@/lib/paths";
 import { getHermesFilesystemRoot } from "@/lib/hermes-home";
+import { badRequest } from "@/lib/api-response";
 
 const PROFILE_PATTERN = /^\.[a-zA-Z0-9][a-zA-Z0-9_-]{0,126}$|^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
 
@@ -70,6 +72,28 @@ export function resolveSafeProfileName(
     return { ok: false, error: "Invalid profile name" };
   }
   return { ok: true, profile };
+}
+
+/**
+ * Resolve a profile id (or null → "default") and return a 400 NextResponse
+ * if it is invalid. The "validation-returns-Response-or-T" pattern from the
+ * `requireMissionId` / `getMissionOrNotFound` helpers in
+ * `src/app/api/missions/route.ts` (session 42). Centralises the 8 inline
+ * `if (!prof.ok) { return badRequest(prof.error); }` copies that the
+ * `agent/profiles/*` and `agent/personality` routes used to repeat.
+ *
+ * Callers check `if (prof instanceof NextResponse) return prof;` to
+ * short-circuit. Success type is `{ profile: string }` — the consumer reads
+ * `prof.profile` after the narrowing check.
+ */
+export function requireSafeProfileName(
+  profileParam: string | null,
+): { profile: string } | NextResponse {
+  const resolved = resolveSafeProfileName(profileParam);
+  if (!resolved.ok) {
+    return badRequest(resolved.error);
+  }
+  return { profile: resolved.profile };
 }
 
 /**

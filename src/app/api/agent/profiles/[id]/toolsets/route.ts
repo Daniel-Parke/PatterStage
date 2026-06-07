@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { methodNotAllowed, ok } from "@/lib/api-response";
+import { badRequest, methodNotAllowed, notFound, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
@@ -16,7 +16,6 @@ import {
   unionToolsetsFromPlatforms,
 } from "@/lib/hermes-toolset-unify";
 import { resolveSafeProfileName } from "@/lib/path-security";
-import { badRequest, notFound } from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
