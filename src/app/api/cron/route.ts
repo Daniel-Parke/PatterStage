@@ -90,14 +90,25 @@ async function applyEnabledChange(
 // ── Helpers ───────────────────────────────────────────────────
 
 function recordToApiJob(job: CronJobRecord) {
-  // Hermes stores schedule as JSON: { kind: "* * * * *" }
-  // CH stores schedule as raw cron string. Normalise both to raw cron for the API.
+  // Two storage formats appear in the wild:
+  //   1. Legacy Hermes JSON: { kind: "0 * * * *", ... }       — kind IS the cron expression
+  //   2. CH JSON-stringified ParsedSchedule:
+  //      { kind: "cron", expr: "0 * * * *", display: "..." } — expr is the cron expression
+  //   3. Raw cron string                                     — already a cron expression
+  // Normalise all three to the raw cron expression for the API consumer.
   let normalizedSchedule: string | null = null;
   if (job.schedule) {
     try {
-      // Try parsing as Hermes JSON format { kind: "..." }
-      const parsed = JSON.parse(job.schedule);
-      normalizedSchedule = typeof parsed.kind === "string" ? parsed.kind : null;
+      const parsed = JSON.parse(job.schedule) as { kind?: unknown; expr?: unknown };
+      if (typeof parsed.kind === "string" && parsed.kind !== "cron" && parsed.kind !== "interval" && parsed.kind !== "once" && parsed.kind !== "invalid") {
+        // Legacy Hermes format: kind field is the cron expression itself
+        normalizedSchedule = parsed.kind;
+      } else if (typeof parsed.expr === "string") {
+        // CH ParsedSchedule format: expr field has the cron expression
+        normalizedSchedule = parsed.expr;
+      } else {
+        normalizedSchedule = null;
+      }
     } catch {
       // Not JSON — treat as raw cron expression
       normalizedSchedule = job.schedule !== "?" ? job.schedule : null;
@@ -105,7 +116,11 @@ function recordToApiJob(job: CronJobRecord) {
   }
 
   const hasValidDisplay = job.schedule_display && job.schedule_display !== "?";
-  const resolvedSchedule = hasValidDisplay ? job.schedule_display : normalizedSchedule;
+  // The API contract: `schedule` is always the canonical cron expression,
+  // `schedule_display` is the human-readable label. Previously the code
+  // returned `schedule_display` in the `schedule` field when a display
+  // string was available, which broke clients that expected cron.
+  const resolvedSchedule = normalizedSchedule;
   const resolvedScheduleDisplay = hasValidDisplay ? job.schedule_display : null;
 
   return {

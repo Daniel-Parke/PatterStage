@@ -18,7 +18,7 @@ import Select from "@/components/ui/Select";
 import { safeApiCall, setErrorFromCaught } from "@/lib/api-fetch";
 import { inputFieldClasses } from "@/lib/theme";
 import { parseSchedule } from "@/lib/utils";
-import CronScheduleInput from "@/components/cron/CronScheduleInput";
+import SchedulePicker from "@/components/schedule/SchedulePicker";
 export interface CronJobFormData {
   id?: string;
   name: string;
@@ -113,20 +113,6 @@ export default function JobFormModal({
     };
   }, [open]);
 
-  // Derive the actual cron expression from the current schedule value (edit mode only).
-  // For raw 5-field cron expressions, show as-is.
-  // For interval shorthand (e.g. "every 5m"), call parseSchedule to normalise to
-  // the canonical display form ("every 5m" → stays "every 5m").
-  const cronExpr = isEdit
-    ? (() => {
-        const trimmed = schedule.trim();
-        if (trimmed.split(/\s+/).length === 5) return trimmed;
-        const p = parseSchedule(trimmed);
-        if (p.kind === "invalid") return trimmed;
-        return (p as { display?: string }).display ?? trimmed;
-      })()
-    : "";
-
   const handleSubmit = async () => {
     if (isEdit) {
       if (!schedule || !prompt) {
@@ -158,13 +144,13 @@ export default function JobFormModal({
         deliver,
         model,
         profile_name,
+        repeat,
       };
 
       if (isEdit) {
         body.id = job!.id;
       } else {
         body.name = name;
-        body.repeat = repeat;
       }
 
       const { ok, error } = await safeApiCall("/api/cron", {
@@ -233,22 +219,11 @@ export default function JobFormModal({
           </div>
         )}
 
-        <CronScheduleInput
+        <SchedulePicker
           value={schedule}
           onChange={setSchedule}
           error={null}
         />
-
-        {/* Cron expression display — shown in edit mode */}
-        {isEdit && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-dark-800 border border-white/5">
-            <span className="text-xs font-medium text-white/40">Cron:</span>
-            <code className="text-xs font-mono text-neon-orange bg-dark-900 px-2 py-0.5 rounded">
-              {cronExpr}
-            </code>
-            <span className="text-xs text-white/30">— base schedule format</span>
-          </div>
-        )}
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-white/70">Prompt</label>
@@ -316,33 +291,33 @@ export default function JobFormModal({
           </select>
         </div>
 
-        {/* Repeat toggle — only shown in create mode */}
-        {!isEdit && (
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <div className="text-sm font-medium text-white/70">Repeat</div>
-              <p className="text-xs text-white/40 mt-0.5">
-                Recurring job vs one-shot
-              </p>
-            </div>
-            <button
-              onClick={() => setRepeat(!repeat)}
-              className={`relative w-10 h-5 rounded-full transition-colors ${
-                repeat
-                  ? "bg-neon-orange/30 border border-neon-orange/50"
-                  : "bg-white/10 border border-white/20"
-              }`}
-            >
-              <div
-                className={`absolute top-0.5 w-4 h-4 rounded-full transition-transform ${
-                  repeat
-                    ? "translate-x-5 bg-neon-orange"
-                    : "translate-x-0.5 bg-white/40"
-                }`}
-              />
-            </button>
+        {/* Repeat toggle — always shown (was previously hidden in edit mode) */}
+        <div className="flex items-center justify-between py-2">
+          <div>
+            <div className="text-sm font-medium text-white/70">Repeat</div>
+            <p className="text-xs text-white/40 mt-0.5">
+              {isEdit
+                ? "Toggle between recurring and one-shot"
+                : "Recurring job vs one-shot"}
+            </p>
           </div>
-        )}
+          <button
+            onClick={() => setRepeat(!repeat)}
+            className={`relative w-10 h-5 rounded-full transition-colors ${
+              repeat
+                ? "bg-neon-orange/30 border border-neon-orange/50"
+                : "bg-white/10 border border-white/20"
+            }`}
+          >
+            <div
+              className={`absolute top-0.5 w-4 h-4 rounded-full transition-transform ${
+                repeat
+                  ? "translate-x-5 bg-neon-orange"
+                  : "translate-x-0.5 bg-white/40"
+              }`}
+            />
+          </button>
+        </div>
       </div>
     </Modal>
   );

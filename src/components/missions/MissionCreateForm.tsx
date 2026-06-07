@@ -4,8 +4,7 @@ import { Send, Save } from "lucide-react";
 
 import Button from "@/components/ui/Button";
 import AutoTextarea from "@/components/ui/AutoTextarea";
-import ScheduleSelector from "@/components/missions/ScheduleSelector";
-import type { ScheduleMode } from "@/components/missions/ScheduleSelector";
+import SchedulePicker from "@/components/schedule/SchedulePicker";
 import LocalDirRow from "@/components/missions/LocalDirRow";
 import AgentRuntimeDefaultsCard from "@/components/missions/AgentRuntimeDefaultsCard";
 import CategoryCombobox, {
@@ -34,7 +33,7 @@ export interface MissionFormState {
   newConstraints: string;
   newDispatch: "save" | "now" | "cron" | "queue";
   newSchedule: string;
-  scheduleType: ScheduleMode;
+  scheduleType: "interval" | "wall-clock" | "post-run";
   scheduleStartTime: string;
   newMissionTime: number;
   newTimeout: number;
@@ -612,13 +611,9 @@ export default function MissionCreateForm({
           The button below runs the selected dispatch mode.
         </p>
         {formState.newDispatch === "cron" && (
-          <ScheduleSelector
+          <SchedulePicker
             value={formState.newSchedule}
             onChange={(s) => setFormField("newSchedule", s)}
-            mode={formState.scheduleType}
-            onModeChange={(m) => setFormField("scheduleType", m)}
-            startTime={formState.scheduleStartTime}
-            onStartTimeChange={(t) => setFormField("scheduleStartTime", t)}
           />
         )}
       </ComposerAccordion>

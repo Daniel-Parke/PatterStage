@@ -26,7 +26,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { StatusDot } from "@/components/ui/Card";
-import IntervalSelector from "@/components/ui/IntervalSelector";
+import SchedulePicker from "@/components/schedule/SchedulePicker";
 import CategoryAccordion from "@/components/ui/CategoryAccordion";
 import {
   groupTemplatesByCategory,
@@ -766,7 +766,7 @@ export default function Dashboard() {
                     <div className="text-xs text-white/80 truncate">{job.name}</div>
                     <div className="flex items-center gap-2 mt-0.5 min-w-0">
                       <div className="flex-shrink-0">
-                        <IntervalSelector
+                        <SchedulePicker
                           value={job.schedule}
                           onChange={(v) => handleCronScheduleChange(job.id, v)}
                           compact

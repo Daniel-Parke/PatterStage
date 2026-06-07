@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 import { Cpu, Loader2 } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
-import CronScheduleInput from "@/components/cron/CronScheduleInput";
+import SchedulePicker from "@/components/schedule/SchedulePicker";
 import { baseInputStyles, inputFieldClasses } from "@/lib/theme";
 import { safeApiCall, setErrorFromCaught } from "@/lib/api-fetch";
 import { HARDWARE_CRON_UI_PRESETS } from "@/lib/hardware-cron";
@@ -208,7 +208,7 @@ export default function SystemCronModal({ open, onClose, onSave, editingJob }: P
           />
         </div>
 
-        <CronScheduleInput
+        <SchedulePicker
           value={schedule}
           onChange={(val) => {
             setSchedule(val);
