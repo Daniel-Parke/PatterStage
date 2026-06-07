@@ -26,7 +26,7 @@ import Modal from "@/components/ui/Modal";
 import {
   getPersonalityEmoji,
 } from "@/lib/personalities";
-import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
+import { apiFetch, setErrorFromCaught, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 
 interface Personality {
@@ -265,8 +265,8 @@ export default function PersonalitiesPage() {
       const displaySection = configData?.data?.display;
       const personalityValue = (displaySection as { personality?: unknown } | null)?.personality;
       setActivePersonality(typeof personalityValue === "string" ? personalityValue : "");
-    } catch {
-      showToast("Failed to load personalities", "error");
+    } catch (err) {
+      toastError(showToast, err, "Failed to load personalities");
     } finally {
       setLoading(false);
     }

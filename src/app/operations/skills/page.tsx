@@ -145,8 +145,8 @@ export default function SkillsPage() {
       // Seed all categories as collapsed on first load
       const cats = Object.keys(d.data.categories || {});
       setCategoryCollapsed(Object.fromEntries(cats.map((c) => [c, true])));
-    } catch {
-      showToast("Failed to load skills", "error");
+    } catch (err) {
+      toastError(showToast, err, "Failed to load skills");
     } finally {
       setLoading(false);
     }
@@ -230,8 +230,8 @@ export default function SkillsPage() {
       const content = d.data?.content || "";
       setEditContent(content);
       setEditOriginal(content);
-    } catch {
-      showToast("Failed to load skill", "error");
+    } catch (err) {
+      toastError(showToast, err, "Failed to load skill");
       closeSkillEditor();
     }
   };
