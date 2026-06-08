@@ -403,7 +403,7 @@ function quoteShellSingle(arg: string): string {
 async function spawnChDeploy(
   unitName: string,
   deployArgs: string[],
-): Promise<{ ok: boolean; error?: string }> {
+): Promise<{ ok: boolean; error?: string; pid?: number }> {
   try {
     execFileSync("bash", ["-n", CH_DEPLOY_SCRIPT], { stdio: "ignore", timeout: 8000 });
   } catch {
@@ -416,102 +416,122 @@ async function spawnChDeploy(
   const command =
     `sleep 1; bash ${quoteShellSingle(CH_DEPLOY_SCRIPT)} ${deployArgs.map(quoteShellSingle).join(" ")}`.trimEnd();
 
-  let spawned: { ok: boolean; error?: string } = { ok: false, error: "no spawn path attempted" };
+  let spawned: { ok: boolean; error?: string; pid?: number } = {
+    ok: false,
+    error: "no spawn path attempted",
+  };
 
-  try {
-    // Clear any stale failed systemd transient unit before spawning
+  // Try systemd-run first. If the binary is missing (e.g. in a Docker
+  // container) it emits an 'error' event asynchronously — attach a
+  // handler so the failure doesn't bubble up as an uncaughtException
+  // in the next-server event loop.
+  const trySpawn = (cmd: string, args: string[]): number | undefined => {
     try {
-      execFileSync("systemctl", ["--user", "reset-failed", `${unitName}.service`], {
-        stdio: "ignore",
-        timeout: 5000,
+      const child = spawn(cmd, args, { detached: true, stdio: "ignore" });
+      // Swallow async errors (ENOENT, EACCES) so they don't crash the
+      // server. We only care whether spawn produced a usable PID.
+      child.on("error", () => {
+        /* surfaced via spawned.ok=false, not via uncaughtException */
       });
+      if (typeof child.pid === "number" && child.pid > 0) {
+        child.unref();
+        return child.pid;
+      }
+      return undefined;
     } catch {
-      // reset-failed fails if unit doesn't exist — that's fine
+      return undefined;
     }
+  };
 
-    const sys = spawn(
-      "systemd-run",
-      [
-        "--user",
-        `--unit=${unitName}`,
-        "--property=Type=oneshot",
-        "bash",
-        "-c",
-        command,
-      ],
-      { detached: true, stdio: "ignore" },
-    );
-    if (typeof sys.pid === "number" && sys.pid > 0) {
-      sys.unref();
-      spawned = { ok: true };
-    }
+  // Clear any stale failed systemd transient unit before spawning (best-effort).
+  try {
+    execFileSync("systemctl", ["--user", "reset-failed", `${unitName}.service`], {
+      stdio: "ignore",
+      timeout: 5000,
+    });
   } catch {
-    // fall through to nohup
+    // reset-failed fails if unit doesn't exist or systemctl is missing — fine
+  }
+
+  // Check whether systemd-run is actually available BEFORE we try to
+  // spawn it. Node's spawn() returns a child with a PID before the
+  // ENOENT for a missing binary surfaces asynchronously — so just
+  // calling spawn("systemd-run", ...) and trusting the PID leads to
+  // the child dying 1ms later and confusing the liveness probe.
+  let systemdRunAvailable = false;
+  try {
+    execFileSync("which", ["systemd-run"], { stdio: "ignore" });
+    systemdRunAvailable = true;
+  } catch {
+    systemdRunAvailable = false;
+  }
+
+  if (systemdRunAvailable) {
+    const sysPid = trySpawn("systemd-run", [
+      "--user",
+      `--unit=${unitName}`,
+      "--property=Type=oneshot",
+      "bash",
+      "-c",
+      command,
+    ]);
+    if (sysPid !== undefined) {
+      spawned = { ok: true, pid: sysPid };
+    }
   }
 
   if (!spawned.ok) {
-    try {
-      const bg = spawn("nohup", ["bash", "-c", command], {
-        detached: true,
-        stdio: "ignore",
-      });
-      if (typeof bg.pid === "number" && bg.pid > 0) {
-        bg.unref();
-        spawned = { ok: true };
-      } else {
-        spawned = { ok: false, error: "nohup spawn returned no pid" };
-      }
-    } catch (err) {
-      return {
-        ok: false,
-        error: `Could not spawn nohup bash: ${err instanceof Error ? err.message : String(err)}`,
-      };
+    // Fall back to nohup. Works in Docker containers and minimal
+    // environments where systemd isn't available.
+    const bgPid = trySpawn("nohup", ["bash", "-c", command]);
+    if (bgPid !== undefined) {
+      spawned = { ok: true, pid: bgPid };
+    } else {
+      spawned = { ok: false, error: "nohup spawn returned no pid" };
     }
   }
 
-  // Post-spawn lock probe — close the silent-failure window.
-  // The script needs a 1s sleep + the systemd/nohup fork latency before it
-  // even attempts to acquire the lock. We give it 3s to either grab the lock
-  // or fail with "Deploy already in progress". If after 3s the lock is still
-  // held by something else, the script will die on its lock-probe — surface
-  // that failure to the caller instead of returning 200 {status:"started"}
-  // and letting the UI spin forever.
-  // NOTE: string concatenation for paths (not path.join) — see Turbopack
-  // NFT tracing issue documented in AGENTS.md.
-  const lockPath = tmpdir() + "/ch-deploy.lock";
-  // The actual lock path is /tmp/ch-deploy.lock (CH_DEPLOY_LOCK_FILE in the
-  // script, which defaults to $HOME/.hermes/logs/ch-deploy.status's sibling).
-  // Probe BOTH possible locations: the deploy script's LOCK_FILE may differ
-  // from tmpdir() in some environments.
-  const candidates = [
-    lockPath,
-    process.env.HOME ? process.env.HOME + "/.hermes/logs/ch-deploy.lock" : "",
-  ].filter(Boolean);
+  if (!spawned.ok) {
+    return spawned;
+  }
 
-  // Wait up to 3s for the spawned script to either acquire the lock or
-  // fail. Poll at 250ms intervals.
-  const deadline = Date.now() + 3000;
-  let acquiredByOurs = false;
-  while (Date.now() < deadline) {
-    let anyHeldByOther = false;
-    for (const p of candidates) {
+  // Post-spawn liveness probe — close the silent-failure window.
+  //
+  // The original bug (2026-06-08): the deploy script died silently
+  // (lock contention, missing tool, etc.) but the API returned
+  // 200 {status:"started"} and the UI spun forever. The user reported
+  // "rebuild button doesn't work" because the new code never made it
+  // to the server.
+  //
+  // The fix: wait briefly for the spawned child to either die
+  // (immediate failure — surface it) or survive (normal operation —
+  // the script is now doing its work in the background, return
+  // success). We do NOT try to grab the deploy lock ourselves because
+  // the script legitimately holds it for the entire duration of the
+  // deploy (often 5-30s); trying to grab it would always fail and
+  // we'd mis-report a successful deploy as a stuck one. Instead, the
+  // probe checks the status file for a terminal `state=failed
+  // phase=lock` write, which is how the script reports a stuck lock.
+  const childPid = spawned.pid;
+  // Wait up to 1.5s for the child to either die or write a failed
+  // status. The script's own `sleep 1` plus a syntax check is ~1.0s;
+  // any child that dies before then was a synchronous spawn failure.
+  const probeDeadlineMs = 1500;
+  const probeStart = Date.now();
+  while (Date.now() - probeStart < probeDeadlineMs) {
+    // If the child has already exited, it died — surface the failure.
+    let childAlive = false;
+    if (typeof childPid === "number") {
       try {
-        // flock -n exits 0 if we acquired the lock, non-zero if it's held.
-        // We use "-c true" so flock exits immediately after acquiring.
-        execFileSync("flock", ["-n", p, "-c", "true"], { stdio: "ignore" });
-        // we got it — try the next candidate
+        // kill -0 is a no-op that returns success iff the process exists.
+        execFileSync("kill", ["-0", String(childPid)], { stdio: "ignore" });
+        childAlive = true;
       } catch {
-        // held by someone else
-        anyHeldByOther = true;
-        break;
+        childAlive = false;
       }
     }
-    if (!anyHeldByOther) {
-      acquiredByOurs = true;
-      break;
-    }
-    // Check the status file: if the script wrote "failed" with "lock" phase,
-    // the deploy aborted. Surface that to the caller.
+    // Check the status file for a terminal failed write by the script.
+    let scriptReportedFailure = false;
     try {
       const statusPath = process.env.HOME
         ? process.env.HOME + "/.hermes/logs/ch-deploy.status"
@@ -519,30 +539,23 @@ async function spawnChDeploy(
       if (statusPath && existsSync(statusPath)) {
         const raw = readFileSync(statusPath, "utf-8");
         if (/^state=failed/m.test(raw) && /^phase=lock/m.test(raw)) {
-          return {
-            ok: false,
-            error:
-              "Deploy already in progress (lock held by another process). Wait for the current deploy to finish or run: lsof -ti:42069 | xargs -r kill -9; rm -f /tmp/ch-deploy.lock",
-          };
+          scriptReportedFailure = true;
         }
       }
     } catch {
       // best-effort
     }
-    // Sleep 250ms then retry
-    await new Promise((r) => setTimeout(r, 250));
+    if (!childAlive || scriptReportedFailure) {
+      const reason = scriptReportedFailure
+        ? "Deploy already in progress (lock held by another process). Wait for the current deploy to finish or run: lsof -ti:42069 | xargs -r kill -9; rm -f /tmp/ch-deploy.lock"
+        : `Deploy script exited immediately (PID ${childPid} no longer alive after ${Date.now() - probeStart}ms). Check ~/.hermes/logs/ch-update.log for the cause.`;
+      return { ok: false, error: reason };
+    }
+    // Child is alive and hasn't reported a failure yet — wait more.
+    await new Promise((r) => setTimeout(r, 200));
   }
 
-  if (!acquiredByOurs) {
-    // Lock never came free within 3s — treat as silent failure.
-    return {
-      ok: false,
-      error:
-        "Deploy script did not acquire the lock within 3s. Another deploy is likely stuck. Check: fuser /tmp/ch-deploy.lock, ls -la /tmp/ch-deploy.lock, and tail ~/.hermes/logs/ch-update.log",
-    };
-  }
-
-  return spawned;
+  return { ok: true, pid: childPid };
 }
 
 function deployScriptMissingResponse(): NextResponse | null {

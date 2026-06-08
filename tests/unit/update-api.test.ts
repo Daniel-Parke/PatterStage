@@ -207,7 +207,11 @@ describe("POST /api/update", () => {
     readOnlyGate = null;
     mockIsDeployInProgress.mockReturnValue(false);
     mockGitForDeploy(mockExecFileSync);
-    mockSpawn.mockReturnValue({ pid: 4242, unref: jest.fn() });
+    mockSpawn.mockReturnValue({
+      pid: 4242,
+      unref: jest.fn(),
+      on: jest.fn(), // for the silent-error handler in spawnChDeploy
+    });
   });
 
   function postReq(body: Record<string, unknown>) {
@@ -293,37 +297,39 @@ describe("POST /api/update", () => {
     expect(flat).toContain("dev");
   });
 
-  // ── Post-spawn lock probe (silent-failure prevention) ───────────
-  // These tests verify the spawn function surfaces lock contention
-  // to the API caller instead of returning 200 {status:"started"}.
+  // ── Post-spawn liveness probe (silent-failure prevention) ───────────
+  // The probe checks the spawned child is still alive ~1.5s after
+  // spawn. If the child died (synchronous spawn failure, lock
+  // contention, etc.) the API returns 500 with a diagnostic error
+  // instead of 200 {status:"started"} and an indefinite UI spinner.
   // Discovered 2026-06-08: the lock could be held by a stuck background
   // process, the script would die silently, and the UI would spin
-  // forever. The new probe waits up to 3s and reports the failure.
+  // forever. The new probe surfaces that failure immediately.
 
-  it("returns 500 when lock is held by another process and flock never succeeds", async () => {
-    // Make flock always fail (lock held) and readFileSync return a fresh
-    // running status (no failed/lock phase so the secondary check doesn't
-    // short-circuit). The probe will poll for 3s and then time out.
+  it("returns 500 when spawned child dies before probe window closes", async () => {
+    // Spawn returns a child with PID 4242, but kill -0 (liveness probe)
+    // throws — simulating the child having exited during the probe.
     mockExecFileSync.mockImplementation((cmd: string, args: string[]) => {
       if (cmd === "bash" && args[0] === "-n") return undefined as unknown as string;
-      if (cmd === "flock") throw new Error("would block");
+      if (cmd === "kill" && args[0] === "-0") throw new Error("No such process");
       if (cmd === "git") return "";
       if (cmd === "systemctl") return "";
       return "";
     });
-    // The spawn will return a valid pid, the lock probe will detect contention
     const { POST } = await import("@/app/api/update/route");
     const res = await POST(postReq({ action: "rebuild" }));
-    // The 3s lock probe times out → returns 500 with diagnostic error
+    // Probe detects dead child, returns 500 with diagnostic
     expect(res.status).toBe(500);
     const body = await res.json();
-    expect(String(body.error)).toMatch(/lock|did not acquire/i);
+    expect(String(body.error)).toMatch(/exited immediately|lock held|already in progress/i);
   }, 10000);
 
-  it("returns 200 when flock succeeds immediately (lock is free)", async () => {
+  it("returns 200 when spawned child stays alive through the probe window", async () => {
+    // Spawn returns a child with PID 4242, kill -0 succeeds — child is
+    // alive. No failed status file. Probe returns 200.
     mockExecFileSync.mockImplementation((cmd: string, args: string[]) => {
       if (cmd === "bash" && args[0] === "-n") return undefined as unknown as string;
-      if (cmd === "flock") return ""; // acquired immediately
+      if (cmd === "kill" && args[0] === "-0") return ""; // child alive
       if (cmd === "git") return "";
       if (cmd === "systemctl") return "";
       return "";
@@ -337,12 +343,12 @@ describe("POST /api/update", () => {
   });
 
   it("returns 500 immediately when status file shows state=failed phase=lock", async () => {
-    // First flock fails (lock held) but readFileSync returns a status
-    // showing the script already wrote state=failed phase=lock. The probe
-    // should surface that immediately without waiting the full 3s.
+    // Child is alive but the status file shows the script already wrote
+    // state=failed phase=lock. The probe should surface that immediately
+    // without waiting the full 1.5s.
     mockExecFileSync.mockImplementation((cmd: string) => {
       if (cmd === "bash") return undefined as unknown as string;
-      if (cmd === "flock") throw new Error("would block");
+      if (cmd === "kill") return ""; // child alive
       if (cmd === "git") return "";
       if (cmd === "systemctl") return "";
       return "";
