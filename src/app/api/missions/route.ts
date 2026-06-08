@@ -107,6 +107,31 @@ function parseCategoryId(
   return { ok: true, value: raw };
 }
 
+/**
+ * Resolve the categoryId field from a request body, returning either the
+ * validated id (`string | null | undefined`) or a 400 NextResponse on
+ * failure. Callers do:
+ *
+ *   const categoryId = parseCategoryIdOrError(categoryIdRaw);
+ *   if (categoryId instanceof NextResponse) return categoryId;
+ *
+ * Composes `parseCategoryId` + the inline `if (!ok) return badRequest(error)`
+ * boilerplate that appeared in 3 POST sites (dispatch, promote, update).
+ * The return shape (`string | null | undefined`) is byte-equivalent to the
+ * pre-refactor `categoryParsed.value` discriminator — same union, same
+ * propagation through the downstream `createMission` / `promoteMission` /
+ * `buildMissionFieldPatch` calls.
+ */
+function parseCategoryIdOrError(
+  raw: unknown,
+): string | null | undefined | NextResponse {
+  const result = parseCategoryId(raw);
+  if (!result.ok) {
+    return badRequest(result.error);
+  }
+  return result.value;
+}
+
 /** Shared fields destructured from mission action body (dispatch/promote/update). */
 interface MissionBodyFields {
   name?: string;
@@ -217,10 +242,8 @@ export async function POST(request: NextRequest) {
         [key: string]: unknown;
       };
 
-      const categoryParsed = parseCategoryId(categoryIdRaw);
-      if (!categoryParsed.ok) {
-        return badRequest(categoryParsed.error);
-      }
+      const categoryId = parseCategoryIdOrError(categoryIdRaw);
+      if (categoryId instanceof NextResponse) return categoryId;
 
       if (!instruction || typeof instruction !== "string" || !instruction.trim()) {
         return badRequest("instruction is required");
@@ -278,7 +301,7 @@ export async function POST(request: NextRequest) {
         missionTimeMinutes,
         timeoutMinutes,
         schedule: scheduleVal,
-        categoryId: categoryParsed.value ?? null,
+        categoryId: categoryId ?? null,
         outputFormat: outputFormat?.trim() || undefined,
         constraints: constraints?.trim() || undefined,
       });
@@ -382,10 +405,8 @@ export async function POST(request: NextRequest) {
         return badRequest("dispatchMode is required");
       }
 
-      const categoryParsed = parseCategoryId(categoryIdRaw);
-      if (!categoryParsed.ok) {
-        return badRequest(categoryParsed.error);
-      }
+      const categoryId = parseCategoryIdOrError(categoryIdRaw);
+      if (categoryId instanceof NextResponse) return categoryId;
 
       if (
         instruction !== undefined &&
@@ -411,7 +432,7 @@ export async function POST(request: NextRequest) {
         profileName,
         missionTimeMinutes,
         timeoutMinutes,
-        categoryId: categoryParsed.value,
+        categoryId,
         outputFormat,
         constraints,
       });
@@ -446,10 +467,8 @@ export async function POST(request: NextRequest) {
       if (existing instanceof NextResponse) return existing;
       const missionIdFinal = existing.id;
 
-      const categoryParsed = parseCategoryId(categoryIdRaw);
-      if (!categoryParsed.ok) {
-        return badRequest(categoryParsed.error);
-      }
+      const categoryId = parseCategoryIdOrError(categoryIdRaw);
+      if (categoryId instanceof NextResponse) return categoryId;
 
       if (existing.status !== "dispatched") {
         return badRequest("Use promote for draft or queued missions; update is for running missions");
@@ -477,7 +496,7 @@ export async function POST(request: NextRequest) {
           outputFormat,
           constraints,
         },
-        categoryParsed.value,
+        categoryId,
       );
 
       const mission = updateMission(missionIdFinal, updates);
