@@ -1,3 +1,57 @@
+## Session 147 — List 2 (Cron, Missions, Chat) + List 4 (Settings) — `setErrorFromCaught`/`toastError` silent-catch sweep + `requireSafeProfileName` helper
+
+Random pick: **List 2** via `echo $((RANDOM % 4 + 1))` = 2. Pre-audit of the List 2 surface found 3 silent-catch sites in the silent-error-swallow family (session 142 P-142-1). The session then extended to List 4 for the new `requireSafeProfileName` helper (path-security.ts:84-103) and adopted it in 6 routes.
+
+### What shipped
+
+**3 commits, 11 files, +140 / -52 = +88 net LOC (3 new helper files, 5 new test blocks):**
+
+| # | Commit | Scope | Files | LOC | Notes |
+|---|--------|-------|-------|-----|-------|
+| 1 | `b0a5d93` | List 2: `setErrorFromCaught`/`toastError` in 3 silent-catch sites | 3 | +12/-9 | `DirectoryPickerModal`, `ModelPicker`, `useMissionsPage` (2 sites) |
+| 2 | `c6441e6` | List 4: `requireSafeProfileName` helper + 1 site migration | 2 | +47/-9 | New helper in `path-security.ts`, 5 new unit tests |
+| 3 | `f8879dc` | List 4: `requireSafeProfileName` adoption in 6 routes + 3 test mocks | 6 | +81/-34 | Migration finalization |
+
+**What was migrated:**
+
+- **List 2 (3 sites):** `src/components/missions/DirectoryPickerModal.tsx`, `src/components/missions/ModelPicker.tsx`, `src/hooks/useMissionsPage.ts` (2 sites). All `.catch(() => setX("Network error"))` patterns → `setErrorFromCaught(setX, err, "Network error")`. Behaviour change: users now see the real fetch error message instead of a static placeholder.
+- **List 4 (7 sites):** `requireSafeProfileName` helper in `src/lib/path-security.ts:84-103` consolidates the 4-line `const slug = name; if (/pattern/.test(slug)) return badRequest(...); if (slug.includes('/')) return badRequest(...); ...` prelude. Adopted in `agent/profiles/route.ts`, `agent/profiles/[id]/route.ts` (×2), `agent/profiles/[id]/toolsets/route.ts` (×2), `personalities/route.ts`, `skills/[name]/toggle/route.ts`, `skills/route.ts` (slug-from-name variant). 5 new unit tests in `tests/unit/path-security.test.ts` cover null input, valid name, path traversal, slashes, leading-hyphen.
+
+**Test mock updates:**
+
+- `tests/unit/profiles-api.test.ts`: added `serverErrorFromCatch` mock (pre-existing Mode E bug from session 147 commit) + `requireSafeProfileName` to `path-security` mock.
+- `tests/unit/skills-toggle-auth.test.ts`: added `requireSafeProfileName` to `path-security` mock.
+
+**Outliers kept inline (per P-147-7):**
+
+- `agent/profiles/[id]/route.ts` keeps `resolveSafeProfileName` for the inner rename branch (consumes the `{ok, profile}` union, not the `{profile}|NextResponse` narrowing shape).
+- `agent/files/[key]/route.ts` (3 callsites) keeps the graceful fallback (`prof.ok ? prof.profile : 'default'`) — doesn't fit the 400-on-invalid helper shape.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `npx eslint`: clean (10 files touched)
+- `npx jest`: 1755/1755 pass (38 in 5 carryover-affected suites)
+
+### What was NOT migrated (follow-up opportunities)
+
+- `useMissionsPage` "Missions are not working" / "Failed to load templates" silent-catches — all migrated this session.
+- 6+ `agent/profiles/*` routes that import `resolveSafeProfileName` (different shape) — out of scope per P-147-7.
+
+### Pitfalls (this session)
+
+- **P-147-1 the "component render-mask" pitfall** — migrating `.catch(() => setX("Failed to Y"))` → `.catch((err) => setErrorFromCaught(setX, err, "Failed to Y"))` in components that gate the displayed text on `models.length === 0`, `loading`, etc. The error is set in state but never surfaces in DOM. **Detection:** read the JSX that consumes the error state before writing the test. **Resolution:** drop the test, rely on the helper's contract test.
+- **P-147-3 `console.error` redundancy as 2-step cleanup** — when the catch has both `console.error` AND `showToast`, drop BOTH and replace with `toastError` (1-line catch).
+- **P-147-5 duplicate-import audit recipe** — most hits from a duplicate-import scan are false positives (one is `import type`); manually inspect to find the real duplicate.
+- **P-147-6 "single helper across N sites" scope risk** — when N>5 call sites, the migration alone can exceed the tool-call budget. Either narrow to proof-of-concept (helper + 2-3 sites) OR commit at the helper-exported state.
+- **P-147-7 per-file import-drop decisions** — audit with `rg -c "oldHelperName" <file>` AFTER migration, special-case files that keep BOTH helpers.
+
+### Next session should
+
+- **List 2** is now mined clean for the `toastError`/`setErrorFromCaught` family. Pick a different surface.
+- **List 4** is mined clean for `requireSafeProfileName` (6 sites migrated, 4 kept inline per P-147-7).
+- The 3 remaining List 4 candidate surfaces (per session-145): (a) `providerSchema` zod v4 widening cast in `api-schemas.ts:21` (eliminates 4 downstream `as HermesProvider` casts), (b) `TASK_TYPES.filter((t) => t !== "agent")` promotion to `AUXILIARY_TASK_TYPES` (3 sites), (c) the `useMissionsPage` "Missions are not working" loadError treatment.
+
 ## Session 144 — List 1 (Dashboard, Sessions, Memory, Logs) — `toastError` migration in 4 silent-catch sites
 
 Random pick: **List 1** via `echo $((RANDOM % 4 + 1))` = 1. Pre-audit of the List 1 surface (`src/app/page.tsx` (Dashboard), `src/app/(main)/sessions/page.tsx`, `src/app/(main)/logs/page.tsx`, `src/app/(main)/memory/page.tsx` + `src/components/memory/HindsightBrowser.tsx`) found 4 "feature is not working" sites matching the session 142 P-142-1 silent-error-swallow anti-pattern: the user sees a static "Failed to X" toast/string and the actual error is silently dropped.
