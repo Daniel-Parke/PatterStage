@@ -1,3 +1,69 @@
+## Session 154 — List 1 (Dashboard, Sessions, Memory, Logs) — drop 9 redundant `as RequestInit` casts in `safeApiCallData`/`safeApiCall` calls
+
+Random pick: **List 1** via `echo $((RANDOM % 4 + 1))` = 1. Last touched in session 144 (toastError migration in 4 silent-catch sites). Session 153's cross-list "mined clean" status table flagged List 1 as MINED CLEAN at the per-list refactor level, but this is a NEW class of refactor that the per-list source-pattern tests do NOT catch — the casts are dead type-system noise, not a recognised pattern.
+
+A pre-audit of the List 1 surface (Dashboard, Sessions, Memory, Logs pages + their backing hooks) found that 9 sites in 2 files were passing `safeApiCallData<T>` and `safeApiCall<T>` an `options` arg with an inline `as RequestInit` cast on an object that was already a valid `RequestInit` subset. Both helpers' signature is `Omit<RequestInit, "body"> & { body?: unknown }` (per `src/lib/api-fetch.ts:151-158` and `src/lib/api-fetch.ts:85-98`), so `signal` and `cache` keys are part of the typed contract — the cast adds zero type safety.
+
+### 1. 9 redundant `as RequestInit` cast removals
+
+| # | File | Line | Before | After |
+|---|------|------|--------|-------|
+| 1 | `src/app/page.tsx` | 207 | `safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store" } as RequestInit)` | `safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store" })` |
+| 2 | `src/app/page.tsx` | 355 | `safeApiCallData<SystemStatus>("/api/status", { signal } as RequestInit)` | `safeApiCallData<SystemStatus>("/api/status", { signal })` |
+| 3 | `src/app/page.tsx` | 356 | `safeApiCallData<Record<string, unknown>>("/api/config", { signal } as RequestInit)` | `safeApiCallData<Record<string, unknown>>("/api/config", { signal })` |
+| 4 | `src/app/page.tsx` | 357 | `safeApiCallData<TemplatesResponseData>("/api/templates", { signal } as RequestInit)` | `safeApiCallData<TemplatesResponseData>("/api/templates", { signal })` |
+| 5 | `src/app/page.tsx` | 358 | `safeApiCallData<CategoriesResponseData>("/api/mission-categories", { signal } as RequestInit)` | `safeApiCallData<CategoriesResponseData>("/api/mission-categories", { signal })` |
+| 6 | `src/app/page.tsx` | 359 | `safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store", signal } as RequestInit)` | `safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store", signal })` |
+| 7 | `src/app/page.tsx` | 360 | `safeApiCallData<AgentsResponseData>("/api/agents", { signal } as RequestInit)` | `safeApiCallData<AgentsResponseData>("/api/agents", { signal })` |
+| 8 | `src/app/page.tsx` | 361 | `safeApiCallData<MissionsResponseData>("/api/missions", { signal } as RequestInit)` | `safeApiCallData<MissionsResponseData>("/api/missions", { signal })` |
+| 9 | `src/app/page.tsx` | 362 | `safeApiCallData<DefaultsResponseData>("/api/models/defaults", { signal } as RequestInit)` | `safeApiCallData<DefaultsResponseData>("/api/models/defaults", { signal })` |
+| 10 | `src/hooks/usePolledUpdates.ts` | 104 | `await safeApiCall(url, { signal } as RequestInit)` | `await safeApiCall(url, { signal })` |
+
+(Adjusted count: 10 sites across 2 files. The earlier "9 sites" in the commit message was a manual recount; the actual diff is 10 lines removed + 10 lines added.)
+
+### 2. The byte-equivalence audit
+
+For every cast removal:
+
+- `safeApiCallData<T>(path, options?): Promise<T | null>` signature is at `src/lib/api-fetch.ts:151-158`. The `options` param is typed `Omit<RequestInit, "body"> & { body?: unknown }`, so the only key NOT in `RequestInit` is `body` (which the helper auto-stringifies). `signal` is on `RequestInit`, `cache` is on `RequestInit`, both are valid keys.
+- `safeApiCall<T>(path, options?): Promise<SafeApiCallResult<T>>` signature is at `src/lib/api-fetch.ts:85-98`. Same shape.
+- The pre-migration form `{ signal } as RequestInit` is a type assertion from `{ signal: AbortSignal }` to `RequestInit`. The cast is provably unnecessary because `{ signal }` is a subset of `RequestInit` (TypeScript's structural typing accepts it without an assertion).
+- The post-migration form `{ signal }` is byte-equivalent at runtime (the cast was a type-only operation, no runtime check) AND byte-equivalent in the type system (TypeScript still infers the param as `Omit<RequestInit, "body"> & { body?: unknown }`).
+
+**Pre-flight verification:** before committing, ran `npx tsc --noEmit` against a temporary sed-modified copy (saved to `/tmp/page.tsx.bak`) — the build is clean both with and without the casts. The casts are dead type-system noise, not latent type errors being suppressed.
+
+### 3. Verification
+
+- `npx tsc --noEmit`: clean (no type errors with or without the casts)
+- `npm run lint`: clean
+- `npx jest`: 246 suites, 1761 tests pass (no test regression — touched files: `tests/unit/use-polled-updates.test.ts` and `tests/unit/safe-api-call-data.test.ts` both still pass)
+
+### 4. Behaviour change
+
+None. The cast was a type-only operation, not a runtime check. Same `{ signal }` object, same `safeApiCallData`/`safeApiCall` invocation, same network call, same response handling.
+
+### 5. Files changed
+
+- `src/app/page.tsx`: 9 lines changed (`{ signal } as RequestInit` → `{ signal }`, and the 2-line `{ cache: "no-store" }` form on lines 207 + 359)
+- `src/hooks/usePolledUpdates.ts`: 1 line changed
+
+### 6. Patterns to take forward
+
+1. **"Dead `as RequestInit` cast" recipe** — when `safeApiCallData<T>` or `safeApiCall<T>` (both signatures `Omit<RequestInit, "body"> & { body?: unknown }`) is called with a `{ signal }` or `{ cache }` or `{ cache, signal }` literal, the `as RequestInit` cast is unnecessary. TypeScript's structural typing accepts the subset directly. Detection recipe: `rg -n "{ signal } as RequestInit|{ cache.*as RequestInit" src/` — the existence of ANY hit is a candidate for removal. Apply to every site uniformly; do not stop at the first clean site.
+2. **"Type-only operation, not runtime check" generalisation** — every `as X` assertion in a function call is a type-only operation. The runtime contract of `safeApiCallData`/`safeApiCall` is determined by the helper's signature, not by the cast at the call site. When the cast's asserted type is a subset of the param's typed contract, the cast is provably redundant. Pre-flight recipe: copy the file to `/tmp/<filename>.bak`, sed-remove the casts, run `npx tsc --noEmit`. If clean, the casts were redundant; restore from `/tmp/<file>.bak` and apply the change with a real `patch` or `write_file`.
+
+### 7. What was rejected
+
+- **Migrating the 6 double-envelope `safeApiCall<{ data?: { ... } }>` sites in `HindsightBrowser.tsx` (lines 95, 109, 135, 170, 204, 297) to `safeApiCallData<T>`.** Per session 138's **CRITICAL safeApiCall envelope-unwrap myth** + session 141's revert, the original `safeApiCall<{ data?: { ... } }>` + `data?.data?.X` form is CORRECT (the helper does NOT unwrap envelopes, the `data?.data?` access is the right shape for reading the inner payload through the envelope). A migration to `safeApiCallData<T>` would change the call-site semantics: `fetchHealthOnly` (line 90-101) reads both the inner `data` AND the `error` from the envelope, so a naive `safeApiCallData` migration would lose the error path. The other 5 sites are similar — each consumes the envelope's `error` field. Out of scope for byte-equivalent refactor; requires careful per-site analysis to determine which `data` field to read post-migration. Defer to a future session that does the per-site analysis.
+- **Migrating the 2 `apiFetch<{ data: { ... } }>` sites in `(main)/sessions/page.tsx` (URL builder at line 312 + filter hook) to `safeApiCallData<T>`.** `apiFetch` (not `safeApiCall`) is the right tool here because the `useApiData` hook already wraps `apiFetch` and unwraps the envelope. The double-envelope `apiFetch<{ data: { ... } }>` is the correct type for the API's wire shape. Out of scope.
+- **The 4 inline `err instanceof Error ? err.message : "<fallback>"` sites that were flagged in the session-152 "next session should" block.** None in List 1 surface (only 1 in operations/personalities/page.tsx, which is List 3 territory). Already searched; no List 1 candidates.
+
+### 8. Next session should
+
+- The 6 `safeApiCall<{ data?: { ... } }>` sites in HindsightBrowser.tsx are the natural next-ripe List 1 surface for `safeApiCallData` migration, but each site needs per-site analysis to determine whether to consume `error` from the envelope (3 sites consume both `data` and `error`, requiring a 2-call pattern: `safeApiCallData<T>` + `safeApiCall` for the error) or only `data` (3 sites consume only `data`, can be a 1-call pattern). The 3 "data only" sites are line 95 (health), line 109 (list), line 297 (mental-models) — these are good candidates for a future session. The 3 "data + error" sites (line 135 recall, 170 reflect, 204 directives) need the 2-call pattern.
+- The "dead `as RequestInit` cast" recipe is now codified — apply it to any new `safeApiCall`/`safeApiCallData` call site going forward. A future lint rule could enforce "no `as RequestInit` on a `{ signal }`/`{ cache }` literal" but that requires a custom rule setup; the manual `rg` recipe is sufficient for now.
+- The mission is approaching end-of-life for byte-equivalent refactor work per session 149 P-7. The next productive work is either (a) test coverage gap closer, (b) documentation drift closer, or (c) a new refactor surface like `useMissionsPage` decomposition (1298+ LOC, biggest hook in the codebase). **All three need user approval** per the session 149 P-7 lesson.
+
 ## Session 152 — List 2 (Cron, Missions, Chat) — `parseCategoryIdOrError` carryover completion
 
 Random pick: continuation of session 151 carryover (List 2). The session 151 reference's "Next session should" block explicitly named this carryover as the next-ripe work, so the rule "If a previous session's 'next session should' block is more specific than the random pick would produce, defer to the prior recommendation" applies (refactor-sweep-mission SKILL.md, step 3 of the 7-step protocol).
