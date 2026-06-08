@@ -1,3 +1,84 @@
+## Session 152 — List 2 (Cron, Missions, Chat) — `parseCategoryIdOrError` carryover completion
+
+Random pick: continuation of session 151 carryover (List 2). The session 151 reference's "Next session should" block explicitly named this carryover as the next-ripe work, so the rule "If a previous session's 'next session should' block is more specific than the random pick would produce, defer to the prior recommendation" applies (refactor-sweep-mission SKILL.md, step 3 of the 7-step protocol).
+
+### What shipped
+
+**1 commit (`b837898`), 2 files, +243 / -15 = +228 net LOC (mostly JSDoc + test file):**
+
+| # | File | LOC | Notes |
+|---|------|-----|-------|
+| 1 | `src/app/api/missions/route.ts` | +34 / -15 = +19 | 3 callsite migrations (9 lines of inline boilerplate → 6 lines of uniform `if (x instanceof NextResponse) return x;`); new helper `parseCategoryIdOrError` at line 125-133; JSDoc block |
+| 2 | `tests/unit/parse-category-id-or-error.test.ts` | +209 (new) | 6 unit tests via `@/app/api/missions/route` POST handler; mocks: `next/server` (real class for `instanceof`), `api-logger` (serverErrorFromCatch), `api-auth` (requireAuth + isChReadOnly), `audit-log`, `mission-repository` (with buildMissionPrompt), `mission-cron-sync`, `sync`, `mission-category-repository` |
+
+### Carryover pickup
+
+Picks up the session 151 carryover: `parseCategoryIdOrError` helper was added (line 125-133 of `src/app/api/missions/route.ts`) and 1 of 3 callsites migrated in session 151 before the tool-call budget hit. This session:
+
+1. Migrated the 2 remaining callsites (promote branch at lines 405-440, update branch at lines 470-503) — same 3-line → 2-line pattern collapse.
+2. Renamed the local discriminant `categoryParsed` → `categoryId` at the 2 newly-migrated sites (Mode C.1 break-point: the old name now has 0 references in user-land scopes; the 3 remaining `parseCategoryId` references are: helper def at 96, JSDoc at 118, and the wrapper at 128).
+3. Added `tests/unit/parse-category-id-or-error.test.ts` with 6 unit tests covering the full return contract.
+
+### 3 new class-level lessons (codified for the umbrella)
+
+#### Lesson 1: "tsc-clean ≠ runtime-clean for route carryovers" — a NEW carryover failure mode
+
+A route carryover can pass `tsc --noEmit` + `eslint` clean and still 500 at runtime when a new test file imports a route via `@/app/api/...`. The TypeScript types check out (the missing export is `undefined` in the mock factory, but `jest.fn()` is typed as `any` so tsc doesn't catch it), but the runtime call crashes with `TypeError: ... is not a function`. The catch block's `serverErrorFromCatch` then returns a 500, which the test mock's `__responses: []` array misses (the mock returns a plain `__is500: true` object that doesn't go through `NextResponse.json`).
+
+**Detection recipe (1 command, runs AFTER the new test file is added but BEFORE asserting the carryover is green):** run the new test file in isolation with `npx jest tests/unit/<new-test>.test.ts` and watch for `TypeError: ... is not a function` in the output. If seen, cross-reference the route's full `@/lib/` import list against the test's `jest.mock` factories — the missing export is in the route's import block but absent from the mock factory.
+
+**The general principle:** `tsc --noEmit` is a TYPE check, not a RUNTIME check. A route carryover's verification must include a test that EXERCISES the route end-to-end. Distinct from modes A/B/C/C.1/D/E/F (which all detect issues at the type-check or build layer).
+
+#### Lesson 2: "Audit all route imports for test-mock coverage" — 9th test-mock pitfall family member
+
+When adding a new test file that imports a route via `@/app/api/<route>/route`, the `jest.mock("@/lib/<module>")` factory must export EVERY function the route calls at runtime, not just the "obviously mutating" ones (`createX`, `updateX`, `deleteX`).
+
+**Pre-flight detection recipe (1 grep + 1 cross-reference):**
+```bash
+# 1. Get the route's full @/lib/ import list
+rg -n "from \"@/lib/" src/app/api/<route>/route.ts | awk -F'from "' '{print $2}' | tr -d '"}' | sort -u > /tmp/route-libs.txt
+# 2. Cross-reference against the jest.mock factories in the new test file
+```
+
+The 8 prior test-mock pitfalls in the union (per session 51): (1) `NextResponse` object-literal vs class, (2) `request.json()` inside main try/catch, (3) `.catch(() => ({}))` body-as-optional, (4) `_request` underscore convention, (5) jest.mock factory sibling-import loss, (6) duplicate-key silent overrides in jest.mock, (7) module-scope `let` reassigned inside `renderHook`, (8) `jest.mock` factory hoisted-reference pitfall. The session 152 addition is distinct in that the failure is at *runtime* (not test setup time) and tsc passes (mock factory's `jest.fn()` is typed as `any`).
+
+#### Lesson 3: "Sibling-subagent shared-file write race"
+
+When a sibling concurrent agent writes to a shared file between this session's `read_file` and `write_file`, the `write_file` tool returns a non-blocking `_warning` like `"... was modified by sibling subagent ... but this agent never read it."`. **Treat the warning as a HARD STOP and re-read the file.** Common race surface: `pr-body.txt` on the mission branch's single worktree (multiple concurrent cron sessions share it). Not fixable with worktrees — `pr-body.txt` is shared by design.
+
+### Mode C.1 break-point detection (post-completion)
+
+After migrating all N callsites of a new helper that replaces a discriminant variable, run the 3-line post-completion verification:
+
+```bash
+# 1. Old discriminant should have 0 user-land references
+rg -c "categoryParsed" src/app/api/missions/route.ts   # expected: 0
+# 2. New helper should be called at all N sites
+rg -c "parseCategoryIdOrError" src/app/api/missions/route.ts   # expected: N
+# 3. Old helper should still be called by the wrapper
+rg -c "parseCategoryId\b" src/app/api/missions/route.ts   # expected: 1 (the wrapper)
+```
+
+If step 1 returns > 0 in a user-land scope, the rename is incomplete. This is the *post-completion* companion to the *pre-migration* 4-line recipe from session 151. Both are needed.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `npx eslint . --max-warnings 0`: clean
+- `npx jest`: 246 suites, 1761 tests pass (up from 245/1755 = +1 suite, +6 tests)
+- `npm run build`: clean
+
+### Behaviour change
+
+None. The helper is pure plumbing: same 400 status, same error strings (`"Category not found"`, `"categoryId must be a string"`), same passthrough values.
+
+### Next session should
+
+- Pick a different list. List 2 has been hit 17+ times; session 151 reference names the open surfaces and they are all OOS for the 1-3 commit budget.
+- The `isChReadOnly()` 6-site consolidation (session 151 "Next session should" #4) is still open but is a behaviour change (canonical vs bare message) — needs explicit user direction.
+- pr-body.txt is now 508+ KB. Future sessions should use the body-compression table pattern (session 137 P-137-1) to keep the rolling body under the 65 KB `gh pr edit --body-file` limit.
+- Re-run the union of 9 test-mock pitfall audit recipes on every route that adopts a new test pattern (the new 9th member is the runtime-imports audit).
+
 ## Session 148 — List 2 (Cron, Missions, Chat) — 2 more silent-catch sites in useMissionsPage
 
 Random pick: continuation of List 2 silent-error-swallow sweep from session 147. Found 2 more sites in `src/hooks/useMissionsPage.ts` matching the session 142 P-142-1 anti-pattern (`catch { showToast(static string) }`).
