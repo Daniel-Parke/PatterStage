@@ -62,6 +62,18 @@ jest.mock("@/lib/paths", () => ({
 
 jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),
+  serverErrorFromCatch: jest.fn(
+    (route: string, context: string, _error: unknown, message: string) => {
+      const { logApiError: log } = jest.requireMock("@/lib/api-logger") as {
+        logApiError: jest.Mock;
+      };
+      log(route, context, _error);
+      const { NextResponse } = jest.requireActual("next/server") as {
+        NextResponse: { json: (b: unknown, i?: { status: number }) => unknown };
+      };
+      return NextResponse.json({ error: message }, { status: 500 });
+    },
+  ),
 }));
 
 jest.mock("@/lib/path-security", () => ({
@@ -70,6 +82,15 @@ jest.mock("@/lib/path-security", () => ({
     if (profile === "default" || profile === "") return { ok: true, profile: "default" };
     if (/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/.test(profile)) return { ok: true, profile };
     return { ok: false, error: "Invalid profile name" };
+  },
+  requireSafeProfileName: (p: string | null) => {
+    const profile = (p || "default").trim();
+    if (profile === "default" || profile === "") return { profile: "default" };
+    if (/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/.test(profile)) return { profile };
+    const { NextResponse } = jest.requireActual("next/server") as {
+      NextResponse: { json: (b: unknown, i?: { status: number }) => unknown };
+    };
+    return NextResponse.json({ error: "Invalid profile name" }, { status: 400 });
   },
 }));
 

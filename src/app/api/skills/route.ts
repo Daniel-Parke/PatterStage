@@ -1,15 +1,15 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest, notFound, ok } from "@/lib/api-response";
+import { notFound, ok } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
 import { safeStat } from "@/lib/fs-stats";
 import { resolveEffectiveDisabledSkills } from "@/lib/effective-disabled-skills";
 import { getProfile } from "@/lib/profiles-repository";
 import { listSkills, deriveCategory } from "@/lib/skills-repository";
 import { skillsRootForProfile } from "@/lib/skills-config";
-import { resolveSafeProfileName } from "@/lib/path-security";
+import { requireSafeProfileName } from "@/lib/path-security";
 import { scanDiskSkillsCatalog } from "@/lib/hermes-profile-sync";
 import { groupByCategory } from "@/lib/skills-grouping";
 import type { Skill } from "@/types/hermes";
@@ -20,10 +20,8 @@ export async function GET(request: NextRequest) {
 
   const profileParam = request.nextUrl.searchParams.get("profile") || "default";
   const refreshFromDisk = request.nextUrl.searchParams.get("refresh") === "1";
-  const prof = resolveSafeProfileName(profileParam);
-  if (!prof.ok) {
-    return badRequest(prof.error);
-  }
+  const prof = requireSafeProfileName(profileParam);
+  if (prof instanceof NextResponse) return prof;
   const profile = prof.profile;
 
   try {

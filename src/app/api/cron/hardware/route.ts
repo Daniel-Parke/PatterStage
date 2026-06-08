@@ -87,6 +87,21 @@ function setDisabled(disabledIds: Set<string>, id: string, enabled: boolean | un
 }
 
 /**
+ * Compose `setDisabled` (mutate the in-memory set) with `saveDisabledIds`
+ * (persist to disk) so PUT's two call sites collapse to a single call.
+ * Byte-equivalent to the inline pair — `setDisabled` is a no-op when
+ * `enabled` is undefined, matching the original call sites.
+ */
+function applyDisabledChange(
+  disabledIds: Set<string>,
+  id: string,
+  enabled: boolean | undefined,
+): void {
+  setDisabled(disabledIds, id, enabled);
+  saveDisabledIds(disabledIds);
+}
+
+/**
  * Return a 400 NextResponse if `command` is set and doesn't run a script
  * under the CH scripts dir. Returns null when the command is acceptable
  * (or undefined — in which case the caller is not editing the command
@@ -424,8 +439,7 @@ export async function PUT(request: NextRequest) {
 
     // Toggle-only: update JSON state, no crontab change
     if (isToggleOnly) {
-      setDisabled(disabledIds, id, enabled);
-      saveDisabledIds(disabledIds);
+      applyDisabledChange(disabledIds, id, enabled);
       return ok({ id, enabled });
     }
 
@@ -436,8 +450,7 @@ export async function PUT(request: NextRequest) {
 
     // Sync disabled state to JSON for this job
     if (enabled !== undefined) {
-      setDisabled(disabledIds, id, enabled);
-      saveDisabledIds(disabledIds);
+      applyDisabledChange(disabledIds, id, enabled);
     }
 
     return ok({ id, schedule, command, name, logFile, enabled });
@@ -493,8 +506,7 @@ export async function DELETE(request: NextRequest) {
 
     // Remove from disabled set if present
     const disabledIds = loadDisabledIds();
-    disabledIds.delete(id);
-    saveDisabledIds(disabledIds);
+    applyDisabledChange(disabledIds, id, true);
 
     return ok({ id });
   } catch (e: unknown) {

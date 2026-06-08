@@ -101,7 +101,7 @@ export function usePolledUpdates<TUpdate>(
       return setInterval(() => {
         if (signal.aborted) return;
         void (async () => {
-          const { data: raw } = await safeApiCall(url, { signal } as RequestInit);
+          const { data: raw } = await safeApiCall(url, { signal });
           if (!raw) return;
           const inner = unwrapPollPath(raw, paths);
           if (!inner) return;

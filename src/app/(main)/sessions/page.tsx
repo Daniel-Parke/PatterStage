@@ -323,9 +323,10 @@ export default function SessionsPage() {
   });
 
   // Surface API errors as a toast. The hook exposes the error string;
-  // we forward to showToast for parity with the previous try/catch.
+  // forward it directly so the user sees the real diagnostic instead
+  // of a generic "Failed to load sessions" placeholder.
   useEffect(() => {
-    if (loadError) showToast("Failed to load sessions", "error");
+    if (loadError) showToast(loadError, "error");
   }, [loadError, showToast]);
 
   // Stable reference for downstream useMemo hooks — prevents unnecessary recomputation

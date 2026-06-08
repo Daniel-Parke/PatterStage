@@ -11,7 +11,7 @@ import {
   getProfile,
 } from "@/lib/profiles-repository";
 import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
-import { resolveSafeProfileName } from "@/lib/path-security";
+import { requireSafeProfileName } from "@/lib/path-security";
 import { serializeJsonArray } from "@/lib/profile-config-builder";
 import { getSkill } from "@/lib/skills-repository";
 
@@ -37,12 +37,10 @@ export async function PUT(
   }
 
   try {
-    const profileResult = resolveSafeProfileName(
+    const profileResult = requireSafeProfileName(
       typeof profileParam === "string" ? profileParam : null,
     );
-    if (!profileResult.ok) {
-      return badRequest(profileResult.error);
-    }
+    if (profileResult instanceof NextResponse) return profileResult;
     const profile = profileResult.profile;
 
     if (!getSkill(name)) {

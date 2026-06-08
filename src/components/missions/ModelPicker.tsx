@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall, setErrorFromCaught } from "@/lib/api-fetch";
 
 /** Minimal shape of a model returned by /api/models. */
 interface ApiModel {
@@ -96,8 +96,8 @@ export default function ModelPicker({
         setModels(list);
         setDefaults(def);
       })
-      .catch(() => {
-        setError("Failed to load models");
+      .catch((err) => {
+        setErrorFromCaught(setError, err, "Failed to load models");
       })
       .finally(() => setLoading(false));
   }, []);

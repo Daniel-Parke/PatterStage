@@ -154,4 +154,5 @@ describe("ModelPicker defaults", () => {
       expect(getByText(/No models registered/)).toBeInTheDocument();
     });
   });
+
 });

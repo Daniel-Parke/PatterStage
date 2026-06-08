@@ -26,7 +26,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { StatusDot } from "@/components/ui/Card";
-import IntervalSelector from "@/components/ui/IntervalSelector";
+import SchedulePicker from "@/components/schedule/SchedulePicker";
 import CategoryAccordion from "@/components/ui/CategoryAccordion";
 import {
   groupTemplatesByCategory,
@@ -42,7 +42,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import AppPageShell from "@/components/layout/AppPageShell";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
-import { safeApiCall, safeApiCallData } from "@/lib/api-fetch";
+import { safeApiCall, safeApiCallData, toastError } from "@/lib/api-fetch";
 import { runMutation } from "@/lib/run-mutation";
 import { toastFromResult } from "@/lib/toast-from-result";
 import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
@@ -204,7 +204,7 @@ export default function Dashboard() {
   const { isArmedFor, arm, confirm } = useTwoStepConfirm({ autoDismissMs: 4000 });
 
   const refreshMonitor = useCallback(async () => {
-    const monitor = await safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store" } as RequestInit);
+    const monitor = await safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store" });
     if (monitor) setData({ monitor });
   }, [setData]);
 
@@ -269,8 +269,8 @@ export default function Dashboard() {
         // Refresh missions
         const missions = await safeApiCallData<{ missions: MissionBrief[] }>("/api/missions");
         if (missions) setData({ missions: missions.missions || [] });
-      } catch {
-        showToast("Failed to cancel mission", "error");
+      } catch (err) {
+        toastError(showToast, err, "Failed to cancel mission");
       }
     };
     if (!isArmedFor(missionId)) {
@@ -314,8 +314,8 @@ export default function Dashboard() {
         "Schedule updated",
         "Failed to update cron schedule",
       );
-    } catch {
-      showToast("Failed to update cron schedule", "error");
+    } catch (err) {
+      toastError(showToast, err, "Failed to update cron schedule");
     } finally {
       // Revoke optimistic update on failure; refresh on success. The
       // finally block covers all paths (success, !ok return, thrown),
@@ -352,14 +352,14 @@ export default function Dashboard() {
         missions,
         defaults,
       ] = await Promise.all([
-        safeApiCallData<SystemStatus>("/api/status", { signal } as RequestInit),
-        safeApiCallData<Record<string, unknown>>("/api/config", { signal } as RequestInit),
-        safeApiCallData<TemplatesResponseData>("/api/templates", { signal } as RequestInit),
-        safeApiCallData<CategoriesResponseData>("/api/mission-categories", { signal } as RequestInit),
-        safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store", signal } as RequestInit),
-        safeApiCallData<AgentsResponseData>("/api/agents", { signal } as RequestInit),
-        safeApiCallData<MissionsResponseData>("/api/missions", { signal } as RequestInit),
-        safeApiCallData<DefaultsResponseData>("/api/models/defaults", { signal } as RequestInit),
+        safeApiCallData<SystemStatus>("/api/status", { signal }),
+        safeApiCallData<Record<string, unknown>>("/api/config", { signal }),
+        safeApiCallData<TemplatesResponseData>("/api/templates", { signal }),
+        safeApiCallData<CategoriesResponseData>("/api/mission-categories", { signal }),
+        safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store", signal }),
+        safeApiCallData<AgentsResponseData>("/api/agents", { signal }),
+        safeApiCallData<MissionsResponseData>("/api/missions", { signal }),
+        safeApiCallData<DefaultsResponseData>("/api/models/defaults", { signal }),
       ]);
 
       if (!signal.aborted) {
@@ -766,7 +766,7 @@ export default function Dashboard() {
                     <div className="text-xs text-white/80 truncate">{job.name}</div>
                     <div className="flex items-center gap-2 mt-0.5 min-w-0">
                       <div className="flex-shrink-0">
-                        <IntervalSelector
+                        <SchedulePicker
                           value={job.schedule}
                           onChange={(v) => handleCronScheduleChange(job.id, v)}
                           compact

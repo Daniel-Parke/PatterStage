@@ -3,7 +3,7 @@ import { renameSync, existsSync } from "fs";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { resolveSafeProfileName } from "@/lib/path-security";
+import { resolveSafeProfileName, requireSafeProfileName } from "@/lib/path-security";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
@@ -26,10 +26,8 @@ export async function PUT(
   if (auth) return auth;
 
   const { id } = await params;
-  const prof = resolveSafeProfileName(id);
-  if (!prof.ok) {
-    return badRequest(prof.error);
-  }
+  const prof = requireSafeProfileName(id);
+  if (prof instanceof NextResponse) return prof;
 
   if (prof.profile === "default") {
     return badRequest("Cannot modify the default profile slug");
@@ -110,10 +108,8 @@ export async function DELETE(
   if (auth) return auth;
 
   const { id } = await params;
-  const prof = resolveSafeProfileName(id);
-  if (!prof.ok) {
-    return badRequest(prof.error);
-  }
+  const prof = requireSafeProfileName(id);
+  if (prof instanceof NextResponse) return prof;
 
   if (prof.profile === "default") {
     return badRequest("Cannot delete the default profile");

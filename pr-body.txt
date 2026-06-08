@@ -1,3 +1,423 @@
+## Session 154 — List 1 (Dashboard, Sessions, Memory, Logs) — drop 9 redundant `as RequestInit` casts in `safeApiCallData`/`safeApiCall` calls
+
+Random pick: **List 1** via `echo $((RANDOM % 4 + 1))` = 1. Last touched in session 144 (toastError migration in 4 silent-catch sites). Session 153's cross-list "mined clean" status table flagged List 1 as MINED CLEAN at the per-list refactor level, but this is a NEW class of refactor that the per-list source-pattern tests do NOT catch — the casts are dead type-system noise, not a recognised pattern.
+
+A pre-audit of the List 1 surface (Dashboard, Sessions, Memory, Logs pages + their backing hooks) found that 9 sites in 2 files were passing `safeApiCallData<T>` and `safeApiCall<T>` an `options` arg with an inline `as RequestInit` cast on an object that was already a valid `RequestInit` subset. Both helpers' signature is `Omit<RequestInit, "body"> & { body?: unknown }` (per `src/lib/api-fetch.ts:151-158` and `src/lib/api-fetch.ts:85-98`), so `signal` and `cache` keys are part of the typed contract — the cast adds zero type safety.
+
+### 1. 9 redundant `as RequestInit` cast removals
+
+| # | File | Line | Before | After |
+|---|------|------|--------|-------|
+| 1 | `src/app/page.tsx` | 207 | `safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store" } as RequestInit)` | `safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store" })` |
+| 2 | `src/app/page.tsx` | 355 | `safeApiCallData<SystemStatus>("/api/status", { signal } as RequestInit)` | `safeApiCallData<SystemStatus>("/api/status", { signal })` |
+| 3 | `src/app/page.tsx` | 356 | `safeApiCallData<Record<string, unknown>>("/api/config", { signal } as RequestInit)` | `safeApiCallData<Record<string, unknown>>("/api/config", { signal })` |
+| 4 | `src/app/page.tsx` | 357 | `safeApiCallData<TemplatesResponseData>("/api/templates", { signal } as RequestInit)` | `safeApiCallData<TemplatesResponseData>("/api/templates", { signal })` |
+| 5 | `src/app/page.tsx` | 358 | `safeApiCallData<CategoriesResponseData>("/api/mission-categories", { signal } as RequestInit)` | `safeApiCallData<CategoriesResponseData>("/api/mission-categories", { signal })` |
+| 6 | `src/app/page.tsx` | 359 | `safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store", signal } as RequestInit)` | `safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store", signal })` |
+| 7 | `src/app/page.tsx` | 360 | `safeApiCallData<AgentsResponseData>("/api/agents", { signal } as RequestInit)` | `safeApiCallData<AgentsResponseData>("/api/agents", { signal })` |
+| 8 | `src/app/page.tsx` | 361 | `safeApiCallData<MissionsResponseData>("/api/missions", { signal } as RequestInit)` | `safeApiCallData<MissionsResponseData>("/api/missions", { signal })` |
+| 9 | `src/app/page.tsx` | 362 | `safeApiCallData<DefaultsResponseData>("/api/models/defaults", { signal } as RequestInit)` | `safeApiCallData<DefaultsResponseData>("/api/models/defaults", { signal })` |
+| 10 | `src/hooks/usePolledUpdates.ts` | 104 | `await safeApiCall(url, { signal } as RequestInit)` | `await safeApiCall(url, { signal })` |
+
+(Adjusted count: 10 sites across 2 files. The earlier "9 sites" in the commit message was a manual recount; the actual diff is 10 lines removed + 10 lines added.)
+
+### 2. The byte-equivalence audit
+
+For every cast removal:
+
+- `safeApiCallData<T>(path, options?): Promise<T | null>` signature is at `src/lib/api-fetch.ts:151-158`. The `options` param is typed `Omit<RequestInit, "body"> & { body?: unknown }`, so the only key NOT in `RequestInit` is `body` (which the helper auto-stringifies). `signal` is on `RequestInit`, `cache` is on `RequestInit`, both are valid keys.
+- `safeApiCall<T>(path, options?): Promise<SafeApiCallResult<T>>` signature is at `src/lib/api-fetch.ts:85-98`. Same shape.
+- The pre-migration form `{ signal } as RequestInit` is a type assertion from `{ signal: AbortSignal }` to `RequestInit`. The cast is provably unnecessary because `{ signal }` is a subset of `RequestInit` (TypeScript's structural typing accepts it without an assertion).
+- The post-migration form `{ signal }` is byte-equivalent at runtime (the cast was a type-only operation, no runtime check) AND byte-equivalent in the type system (TypeScript still infers the param as `Omit<RequestInit, "body"> & { body?: unknown }`).
+
+**Pre-flight verification:** before committing, ran `npx tsc --noEmit` against a temporary sed-modified copy (saved to `/tmp/page.tsx.bak`) — the build is clean both with and without the casts. The casts are dead type-system noise, not latent type errors being suppressed.
+
+### 3. Verification
+
+- `npx tsc --noEmit`: clean (no type errors with or without the casts)
+- `npm run lint`: clean
+- `npx jest`: 246 suites, 1761 tests pass (no test regression — touched files: `tests/unit/use-polled-updates.test.ts` and `tests/unit/safe-api-call-data.test.ts` both still pass)
+
+### 4. Behaviour change
+
+None. The cast was a type-only operation, not a runtime check. Same `{ signal }` object, same `safeApiCallData`/`safeApiCall` invocation, same network call, same response handling.
+
+### 5. Files changed
+
+- `src/app/page.tsx`: 9 lines changed (`{ signal } as RequestInit` → `{ signal }`, and the 2-line `{ cache: "no-store" }` form on lines 207 + 359)
+- `src/hooks/usePolledUpdates.ts`: 1 line changed
+
+### 6. Patterns to take forward
+
+1. **"Dead `as RequestInit` cast" recipe** — when `safeApiCallData<T>` or `safeApiCall<T>` (both signatures `Omit<RequestInit, "body"> & { body?: unknown }`) is called with a `{ signal }` or `{ cache }` or `{ cache, signal }` literal, the `as RequestInit` cast is unnecessary. TypeScript's structural typing accepts the subset directly. Detection recipe: `rg -n "{ signal } as RequestInit|{ cache.*as RequestInit" src/` — the existence of ANY hit is a candidate for removal. Apply to every site uniformly; do not stop at the first clean site.
+2. **"Type-only operation, not runtime check" generalisation** — every `as X` assertion in a function call is a type-only operation. The runtime contract of `safeApiCallData`/`safeApiCall` is determined by the helper's signature, not by the cast at the call site. When the cast's asserted type is a subset of the param's typed contract, the cast is provably redundant. Pre-flight recipe: copy the file to `/tmp/<filename>.bak`, sed-remove the casts, run `npx tsc --noEmit`. If clean, the casts were redundant; restore from `/tmp/<file>.bak` and apply the change with a real `patch` or `write_file`.
+
+### 7. What was rejected
+
+- **Migrating the 6 double-envelope `safeApiCall<{ data?: { ... } }>` sites in `HindsightBrowser.tsx` (lines 95, 109, 135, 170, 204, 297) to `safeApiCallData<T>`.** Per session 138's **CRITICAL safeApiCall envelope-unwrap myth** + session 141's revert, the original `safeApiCall<{ data?: { ... } }>` + `data?.data?.X` form is CORRECT (the helper does NOT unwrap envelopes, the `data?.data?` access is the right shape for reading the inner payload through the envelope). A migration to `safeApiCallData<T>` would change the call-site semantics: `fetchHealthOnly` (line 90-101) reads both the inner `data` AND the `error` from the envelope, so a naive `safeApiCallData` migration would lose the error path. The other 5 sites are similar — each consumes the envelope's `error` field. Out of scope for byte-equivalent refactor; requires careful per-site analysis to determine which `data` field to read post-migration. Defer to a future session that does the per-site analysis.
+- **Migrating the 2 `apiFetch<{ data: { ... } }>` sites in `(main)/sessions/page.tsx` (URL builder at line 312 + filter hook) to `safeApiCallData<T>`.** `apiFetch` (not `safeApiCall`) is the right tool here because the `useApiData` hook already wraps `apiFetch` and unwraps the envelope. The double-envelope `apiFetch<{ data: { ... } }>` is the correct type for the API's wire shape. Out of scope.
+- **The 4 inline `err instanceof Error ? err.message : "<fallback>"` sites that were flagged in the session-152 "next session should" block.** None in List 1 surface (only 1 in operations/personalities/page.tsx, which is List 3 territory). Already searched; no List 1 candidates.
+
+### 8. Next session should
+
+- The 6 `safeApiCall<{ data?: { ... } }>` sites in HindsightBrowser.tsx are the natural next-ripe List 1 surface for `safeApiCallData` migration, but each site needs per-site analysis to determine whether to consume `error` from the envelope (3 sites consume both `data` and `error`, requiring a 2-call pattern: `safeApiCallData<T>` + `safeApiCall` for the error) or only `data` (3 sites consume only `data`, can be a 1-call pattern). The 3 "data only" sites are line 95 (health), line 109 (list), line 297 (mental-models) — these are good candidates for a future session. The 3 "data + error" sites (line 135 recall, 170 reflect, 204 directives) need the 2-call pattern.
+- The "dead `as RequestInit` cast" recipe is now codified — apply it to any new `safeApiCall`/`safeApiCallData` call site going forward. A future lint rule could enforce "no `as RequestInit` on a `{ signal }`/`{ cache }` literal" but that requires a custom rule setup; the manual `rg` recipe is sufficient for now.
+- The mission is approaching end-of-life for byte-equivalent refactor work per session 149 P-7. The next productive work is either (a) test coverage gap closer, (b) documentation drift closer, or (c) a new refactor surface like `useMissionsPage` decomposition (1298+ LOC, biggest hook in the codebase). **All three need user approval** per the session 149 P-7 lesson.
+
+## Session 152 — List 2 (Cron, Missions, Chat) — `parseCategoryIdOrError` carryover completion
+
+Random pick: continuation of session 151 carryover (List 2). The session 151 reference's "Next session should" block explicitly named this carryover as the next-ripe work, so the rule "If a previous session's 'next session should' block is more specific than the random pick would produce, defer to the prior recommendation" applies (refactor-sweep-mission SKILL.md, step 3 of the 7-step protocol).
+
+### What shipped
+
+**1 commit (`b837898`), 2 files, +243 / -15 = +228 net LOC (mostly JSDoc + test file):**
+
+| # | File | LOC | Notes |
+|---|------|-----|-------|
+| 1 | `src/app/api/missions/route.ts` | +34 / -15 = +19 | 3 callsite migrations (9 lines of inline boilerplate → 6 lines of uniform `if (x instanceof NextResponse) return x;`); new helper `parseCategoryIdOrError` at line 125-133; JSDoc block |
+| 2 | `tests/unit/parse-category-id-or-error.test.ts` | +209 (new) | 6 unit tests via `@/app/api/missions/route` POST handler; mocks: `next/server` (real class for `instanceof`), `api-logger` (serverErrorFromCatch), `api-auth` (requireAuth + isChReadOnly), `audit-log`, `mission-repository` (with buildMissionPrompt), `mission-cron-sync`, `sync`, `mission-category-repository` |
+
+### Carryover pickup
+
+Picks up the session 151 carryover: `parseCategoryIdOrError` helper was added (line 125-133 of `src/app/api/missions/route.ts`) and 1 of 3 callsites migrated in session 151 before the tool-call budget hit. This session:
+
+1. Migrated the 2 remaining callsites (promote branch at lines 405-440, update branch at lines 470-503) — same 3-line → 2-line pattern collapse.
+2. Renamed the local discriminant `categoryParsed` → `categoryId` at the 2 newly-migrated sites (Mode C.1 break-point: the old name now has 0 references in user-land scopes; the 3 remaining `parseCategoryId` references are: helper def at 96, JSDoc at 118, and the wrapper at 128).
+3. Added `tests/unit/parse-category-id-or-error.test.ts` with 6 unit tests covering the full return contract.
+
+### 3 new class-level lessons (codified for the umbrella)
+
+#### Lesson 1: "tsc-clean ≠ runtime-clean for route carryovers" — a NEW carryover failure mode
+
+A route carryover can pass `tsc --noEmit` + `eslint` clean and still 500 at runtime when a new test file imports a route via `@/app/api/...`. The TypeScript types check out (the missing export is `undefined` in the mock factory, but `jest.fn()` is typed as `any` so tsc doesn't catch it), but the runtime call crashes with `TypeError: ... is not a function`. The catch block's `serverErrorFromCatch` then returns a 500, which the test mock's `__responses: []` array misses (the mock returns a plain `__is500: true` object that doesn't go through `NextResponse.json`).
+
+**Detection recipe (1 command, runs AFTER the new test file is added but BEFORE asserting the carryover is green):** run the new test file in isolation with `npx jest tests/unit/<new-test>.test.ts` and watch for `TypeError: ... is not a function` in the output. If seen, cross-reference the route's full `@/lib/` import list against the test's `jest.mock` factories — the missing export is in the route's import block but absent from the mock factory.
+
+**The general principle:** `tsc --noEmit` is a TYPE check, not a RUNTIME check. A route carryover's verification must include a test that EXERCISES the route end-to-end. Distinct from modes A/B/C/C.1/D/E/F (which all detect issues at the type-check or build layer).
+
+#### Lesson 2: "Audit all route imports for test-mock coverage" — 9th test-mock pitfall family member
+
+When adding a new test file that imports a route via `@/app/api/<route>/route`, the `jest.mock("@/lib/<module>")` factory must export EVERY function the route calls at runtime, not just the "obviously mutating" ones (`createX`, `updateX`, `deleteX`).
+
+**Pre-flight detection recipe (1 grep + 1 cross-reference):**
+```bash
+# 1. Get the route's full @/lib/ import list
+rg -n "from \"@/lib/" src/app/api/<route>/route.ts | awk -F'from "' '{print $2}' | tr -d '"}' | sort -u > /tmp/route-libs.txt
+# 2. Cross-reference against the jest.mock factories in the new test file
+```
+
+The 8 prior test-mock pitfalls in the union (per session 51): (1) `NextResponse` object-literal vs class, (2) `request.json()` inside main try/catch, (3) `.catch(() => ({}))` body-as-optional, (4) `_request` underscore convention, (5) jest.mock factory sibling-import loss, (6) duplicate-key silent overrides in jest.mock, (7) module-scope `let` reassigned inside `renderHook`, (8) `jest.mock` factory hoisted-reference pitfall. The session 152 addition is distinct in that the failure is at *runtime* (not test setup time) and tsc passes (mock factory's `jest.fn()` is typed as `any`).
+
+#### Lesson 3: "Sibling-subagent shared-file write race"
+
+When a sibling concurrent agent writes to a shared file between this session's `read_file` and `write_file`, the `write_file` tool returns a non-blocking `_warning` like `"... was modified by sibling subagent ... but this agent never read it."`. **Treat the warning as a HARD STOP and re-read the file.** Common race surface: `pr-body.txt` on the mission branch's single worktree (multiple concurrent cron sessions share it). Not fixable with worktrees — `pr-body.txt` is shared by design.
+
+### Mode C.1 break-point detection (post-completion)
+
+After migrating all N callsites of a new helper that replaces a discriminant variable, run the 3-line post-completion verification:
+
+```bash
+# 1. Old discriminant should have 0 user-land references
+rg -c "categoryParsed" src/app/api/missions/route.ts   # expected: 0
+# 2. New helper should be called at all N sites
+rg -c "parseCategoryIdOrError" src/app/api/missions/route.ts   # expected: N
+# 3. Old helper should still be called by the wrapper
+rg -c "parseCategoryId\b" src/app/api/missions/route.ts   # expected: 1 (the wrapper)
+```
+
+If step 1 returns > 0 in a user-land scope, the rename is incomplete. This is the *post-completion* companion to the *pre-migration* 4-line recipe from session 151. Both are needed.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `npx eslint . --max-warnings 0`: clean
+- `npx jest`: 246 suites, 1761 tests pass (up from 245/1755 = +1 suite, +6 tests)
+- `npm run build`: clean
+
+### Behaviour change
+
+None. The helper is pure plumbing: same 400 status, same error strings (`"Category not found"`, `"categoryId must be a string"`), same passthrough values.
+
+### Next session should
+
+- Pick a different list. List 2 has been hit 17+ times; session 151 reference names the open surfaces and they are all OOS for the 1-3 commit budget.
+- The `isChReadOnly()` 6-site consolidation (session 151 "Next session should" #4) is still open but is a behaviour change (canonical vs bare message) — needs explicit user direction.
+- pr-body.txt is now 508+ KB. Future sessions should use the body-compression table pattern (session 137 P-137-1) to keep the rolling body under the 65 KB `gh pr edit --body-file` limit.
+- Re-run the union of 9 test-mock pitfall audit recipes on every route that adopts a new test pattern (the new 9th member is the runtime-imports audit).
+
+## Session 148 — List 2 (Cron, Missions, Chat) — 2 more silent-catch sites in useMissionsPage
+
+Random pick: continuation of List 2 silent-error-swallow sweep from session 147. Found 2 more sites in `src/hooks/useMissionsPage.ts` matching the session 142 P-142-1 anti-pattern (`catch { showToast(static string) }`).
+
+### What shipped
+
+**2 sites migrated, 1 commit (`3417772`), +4 / -4 = 0 net LOC:**
+
+| # | File | Line | Before | After |
+|---|------|------|--------|-------|
+| 1 | `src/hooks/useMissionsPage.ts` | 765 | `catch { showToast("Network error — please try again", "error") }` | `catch (err) { toastError(showToast, err, "Network error — please try again") }` |
+| 2 | `src/hooks/useMissionsPage.ts` | 1062 | `catch { showToast("Network error — could not cancel mission", "error") }` | `catch (err) { toastError(showToast, err, "Network error — could not cancel mission") }` |
+
+Behaviour change: `feature is not working` exception applies — users now see the real fetch error (e.g. "Failed to fetch: ECONNREFUSED") instead of a static placeholder. The `toastError` helper was already imported (session 55) and already used at 2 sibling sites in session 147.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `npx eslint`: clean
+
+### Next session should
+
+- `useMissionsPage` is now **mined clean** of `toastError` migration opportunities (6 sibling sites all migrated across sessions 147 + 148).
+- **List 3** is the next-ripe surface — last touched session 142 (`toastError` in 5 catch blocks). Pre-audit candidate surfaces for the next List 3 pick: (a) any new `catch { showToast(static) }` anti-patterns in `src/app/operations/{models,agents,skills,tools,personalities}/`, (b) `requireSafeProfileName` audit in models/tools/personalities routes (currently only profiles + skills adopted), (c) `useMemo` opportunities in `src/app/operations/{models,agents,skills,tools,personalities}/page.tsx` (per session 51 P-4 + P-5 lessons).
+
+## Session 147 — List 2 (Cron, Missions, Chat) + List 4 (Settings) — `setErrorFromCaught`/`toastError` silent-catch sweep + `requireSafeProfileName` helper
+
+Random pick: **List 2** via `echo $((RANDOM % 4 + 1))` = 2. Pre-audit of the List 2 surface found 3 silent-catch sites in the silent-error-swallow family (session 142 P-142-1). The session then extended to List 4 for the new `requireSafeProfileName` helper (path-security.ts:84-103) and adopted it in 6 routes.
+
+### What shipped
+
+**3 commits, 11 files, +140 / -52 = +88 net LOC (3 new helper files, 5 new test blocks):**
+
+| # | Commit | Scope | Files | LOC | Notes |
+|---|--------|-------|-------|-----|-------|
+| 1 | `b0a5d93` | List 2: `setErrorFromCaught`/`toastError` in 3 silent-catch sites | 3 | +12/-9 | `DirectoryPickerModal`, `ModelPicker`, `useMissionsPage` (2 sites) |
+| 2 | `c6441e6` | List 4: `requireSafeProfileName` helper + 1 site migration | 2 | +47/-9 | New helper in `path-security.ts`, 5 new unit tests |
+| 3 | `f8879dc` | List 4: `requireSafeProfileName` adoption in 6 routes + 3 test mocks | 6 | +81/-34 | Migration finalization |
+
+**What was migrated:**
+
+- **List 2 (3 sites):** `src/components/missions/DirectoryPickerModal.tsx`, `src/components/missions/ModelPicker.tsx`, `src/hooks/useMissionsPage.ts` (2 sites). All `.catch(() => setX("Network error"))` patterns → `setErrorFromCaught(setX, err, "Network error")`. Behaviour change: users now see the real fetch error message instead of a static placeholder.
+- **List 4 (7 sites):** `requireSafeProfileName` helper in `src/lib/path-security.ts:84-103` consolidates the 4-line `const slug = name; if (/pattern/.test(slug)) return badRequest(...); if (slug.includes('/')) return badRequest(...); ...` prelude. Adopted in `agent/profiles/route.ts`, `agent/profiles/[id]/route.ts` (×2), `agent/profiles/[id]/toolsets/route.ts` (×2), `personalities/route.ts`, `skills/[name]/toggle/route.ts`, `skills/route.ts` (slug-from-name variant). 5 new unit tests in `tests/unit/path-security.test.ts` cover null input, valid name, path traversal, slashes, leading-hyphen.
+
+**Test mock updates:**
+
+- `tests/unit/profiles-api.test.ts`: added `serverErrorFromCatch` mock (pre-existing Mode E bug from session 147 commit) + `requireSafeProfileName` to `path-security` mock.
+- `tests/unit/skills-toggle-auth.test.ts`: added `requireSafeProfileName` to `path-security` mock.
+
+**Outliers kept inline (per P-147-7):**
+
+- `agent/profiles/[id]/route.ts` keeps `resolveSafeProfileName` for the inner rename branch (consumes the `{ok, profile}` union, not the `{profile}|NextResponse` narrowing shape).
+- `agent/files/[key]/route.ts` (3 callsites) keeps the graceful fallback (`prof.ok ? prof.profile : 'default'`) — doesn't fit the 400-on-invalid helper shape.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `npx eslint`: clean (10 files touched)
+- `npx jest`: 1755/1755 pass (38 in 5 carryover-affected suites)
+
+### What was NOT migrated (follow-up opportunities)
+
+- `useMissionsPage` "Missions are not working" / "Failed to load templates" silent-catches — all migrated this session.
+- 6+ `agent/profiles/*` routes that import `resolveSafeProfileName` (different shape) — out of scope per P-147-7.
+
+### Pitfalls (this session)
+
+- **P-147-1 the "component render-mask" pitfall** — migrating `.catch(() => setX("Failed to Y"))` → `.catch((err) => setErrorFromCaught(setX, err, "Failed to Y"))` in components that gate the displayed text on `models.length === 0`, `loading`, etc. The error is set in state but never surfaces in DOM. **Detection:** read the JSX that consumes the error state before writing the test. **Resolution:** drop the test, rely on the helper's contract test.
+- **P-147-3 `console.error` redundancy as 2-step cleanup** — when the catch has both `console.error` AND `showToast`, drop BOTH and replace with `toastError` (1-line catch).
+- **P-147-5 duplicate-import audit recipe** — most hits from a duplicate-import scan are false positives (one is `import type`); manually inspect to find the real duplicate.
+- **P-147-6 "single helper across N sites" scope risk** — when N>5 call sites, the migration alone can exceed the tool-call budget. Either narrow to proof-of-concept (helper + 2-3 sites) OR commit at the helper-exported state.
+- **P-147-7 per-file import-drop decisions** — audit with `rg -c "oldHelperName" <file>` AFTER migration, special-case files that keep BOTH helpers.
+
+### Next session should
+
+- **List 2** is now mined clean for the `toastError`/`setErrorFromCaught` family. Pick a different surface.
+- **List 4** is mined clean for `requireSafeProfileName` (6 sites migrated, 4 kept inline per P-147-7).
+- The 3 remaining List 4 candidate surfaces (per session-145): (a) `providerSchema` zod v4 widening cast in `api-schemas.ts:21` (eliminates 4 downstream `as HermesProvider` casts), (b) `TASK_TYPES.filter((t) => t !== "agent")` promotion to `AUXILIARY_TASK_TYPES` (3 sites), (c) the `useMissionsPage` "Missions are not working" loadError treatment.
+
+## Session 144 — List 1 (Dashboard, Sessions, Memory, Logs) — `toastError` migration in 4 silent-catch sites
+
+Random pick: **List 1** via `echo $((RANDOM % 4 + 1))` = 1. Pre-audit of the List 1 surface (`src/app/page.tsx` (Dashboard), `src/app/(main)/sessions/page.tsx`, `src/app/(main)/logs/page.tsx`, `src/app/(main)/memory/page.tsx` + `src/components/memory/HindsightBrowser.tsx`) found 4 "feature is not working" sites matching the session 142 P-142-1 silent-error-swallow anti-pattern: the user sees a static "Failed to X" toast/string and the actual error is silently dropped.
+
+### What shipped
+
+**4 sites migrated, +11 / -10 = +1 net LOC, 1 commit (`ff33d61`):**
+
+| # | File | Line | Before | After |
+|---|------|------|--------|-------|
+| 1 | `src/app/page.tsx` | 272 | `catch { showToast("Failed to cancel mission", "error") }` | `catch (err) { toastError(showToast, err, "Failed to cancel mission") }` |
+| 2 | `src/app/page.tsx` | 317 | `catch { showToast("Failed to update cron schedule", "error") }` | `catch (err) { toastError(showToast, err, "Failed to update cron schedule") }` |
+| 3 | `src/app/(main)/logs/page.tsx` | 91 | `catch { setActionMessage("Delete failed (network error)") }` | `catch (err) { setActionMessage(messageFromError(err, "Delete failed (network error)")) }` |
+| 4 | `src/app/(main)/sessions/page.tsx` | 329 | `if (loadError) showToast("Failed to load sessions", "error")` | `if (loadError) showToast(loadError, "error")` |
+
+The dashboard sites use the existing `toastError(showToast, err, fallback)` helper from `@/lib/api-fetch` (composes `messageFromError`). The logs page uses `messageFromError` directly because `setActionMessage` is the page's own `useState` setter (not the `showToast` signature). The sessions page uses `useApiData`'s `loadError` string directly (the hook already applies `setErrorFromCaught` internally, so `loadError` is a real diagnostic string or `null` — the previous "Failed to load sessions" replacement was throwing away the real value).
+
+### The 4-shape error-display taxonomy (new lesson, P-144-1)
+
+Session 142 P-142-1 named 2 helper shapes for the operations/* context. Session 144 found 2 more shapes that don't fit either helper — the full taxonomy:
+
+| Shape | Helper | Example |
+|-------|--------|---------|
+| 1 | `toastError(showToast, err, fallback)` | `src/app/page.tsx:272, 317` |
+| 2 | `setErrorFromCaught(setError, err, fallback)` | (n/a this session) |
+| 3 | `setX(messageFromError(err, fallback))` | `src/app/(main)/logs/page.tsx:91` |
+| 4 | `if (loadError) showToast(loadError, "error")` | `src/app/(main)/sessions/page.tsx:329` |
+
+**Shape 3 — page-local setter that accepts `string | null`:** these consumers don't use `showToast` (no toast UI on the logs page) and don't use a generic `setError`. The migration is `setX(messageFromError(err, fallback))` — import `messageFromError` directly from `@/lib/api-fetch` and call it with the existing page-local setter.
+
+**Shape 4 — consumer of a real-error-string hook:** `useApiData`'s `loadError` is a `string | null` (or null). The hook already calls `setErrorFromCaught` internally. The migration surfaces the real diagnostic without re-wrapping in `messageFromError` (the `?? <fallback>` semantics are wrong here — `loadError` is either a real string or `null`, not possibly-undefined).
+
+### The "useApiData loadError is real" lesson (P-144-2)
+
+`useApiData` (`src/hooks/useApiData.ts:96`) already calls `setErrorFromCaught(setError, err, "Request failed")` internally. The `error: string | null` it exposes is a real diagnostic (or `null`), NOT a generic placeholder. The pre-migration code at `(main)/sessions/page.tsx:328` was:
+
+```ts
+if (loadError) showToast("Failed to load sessions", "error");
+```
+
+This was throwing away the real diagnostic the hook produced. The hook did the work to call `setErrorFromCaught`, but the consumer was replacing the result with a static string. The fix is one line: `if (loadError) showToast(loadError, "error")`. **Anti-pattern:** the comment "we forward to showToast for parity with the previous try/catch" was documenting the wrong invariant — the previous try/catch ALSO threw away the real error, so "parity" was preserving a bug.
+
+**Audit recipe** (cross-list, future-proof):
+
+```bash
+rg -nB 1 'showToast\("Failed to' src/app/ -g "*.tsx" | rg -B 1 'loadError'
+```
+
+Finds consumers of `useApiData` (or any other real-error-string hook) that replace the real value with a static placeholder. The `-B 1` on `loadError` ensures we only catch sites that are in the same useEffect body as the `showToast` call.
+
+### The "did NOT touch the HindsightBrowser double-envelope" lesson (P-144-3)
+
+The umbrella pointer's session-138 reference and `references/session-138-safe-api-call-envelope-unwrap-myth.md` flagged that sessions 133/135/137's "single-nesting" migration was broken (the helper does not unwrap envelopes) and was rolled back by PR #163. The HindsightBrowser's `safeApiCall<{ data?: { ... } }>` + `data?.data?.X` accesses are the **correct** byte-equivalent form for the actual API wire shape `{ data: { ... } }`.
+
+I explicitly did NOT touch those sites. Pre-flight: `sed -n '85,98p' src/lib/api-fetch.ts` confirmed the helper returns `{ ok, data: <body> }` where `data` is the full body (the envelope). The session-141 `safe-api-call-data-source-pattern-list1.test.ts` now pins the correct (envelope-typed) shape. **Rule:** before any "drop the double envelope" migration, read both the helper source and the wire shape. The migration is broken if both are envelope-shaped.
+
+### Behaviour change
+
+Documented per session 142 P-142-1's "feature is not working" exception. Sites 1-3 (dashboard, logs) and site 4 (sessions) all surface the real fetch error to the user instead of a static placeholder. Strict improvement (always-broken → works), not a semantic shift. Each site is a regression target via the `toastError` / `messageFromError` helper unit tests (already in `tests/unit/api-fetch.test.ts`); the `loadError` site is locked by the `useApiData` contract (any change to the hook that re-introduces the static-placeholder smell would need to also update the page consumers, which the source-pattern test pins).
+
+### Verification
+
+- `npx tsc --noEmit` — clean
+- `CI=true npx eslint src/app/page.tsx src/app/(main)/logs/page.tsx src/app/(main)/sessions/page.tsx --max-warnings 0` — clean
+- `npx jest` — **244 suites / 1715 tests pass** (no regressions)
+- `npm run build` — clean
+- `git push origin mission/hermes-review-and-refactor` — succeeded (`3243c41..ff33d61`)
+
+### What was rejected
+
+- Migrating the 5 `safeApiCall<{ data?: { ... } }>` sites in `HindsightBrowser.tsx` to `safeApiCall<{ ... }>` single-nesting. **REJECTED** — the helper does not unwrap; the sites are correct as-is. (The session 137 PR text in pr-body.txt is now stale and should be marked "REVERTED BY PR #163" in a future docs commit.)
+- Migrating the `loadError` toast at `(main)/sessions/page.tsx:328` to `toastError(showToast, err, "Failed to load sessions")`. **REJECTED** — `loadError` is a `string | null`, not a `caught error`. `messageFromError` would treat the string as a non-Error and coerce it to `String(loadError)` which is the same string — no benefit, just indirection.
+- Migrating the 4 List-2 `safeApiCall<{ data?: { ... } }>` sites in `useMissionsPage.ts`/`useMissionsApi.ts`/`useCronJobMutation.ts` to `safeApiCall<{ ... }>`. **REJECTED** — same envelope-unwrap myth; same HindsightBrowser lesson. Plus, those are List 2 territory, not List 1.
+
+### Carryover to next session
+
+The `pr-body.txt` update + PR body update via `gh pr edit` was cut off by the tool-call budget. **Next session should:**
+
+1. Run `git status --porcelain` to confirm clean (the session 144 refactor commit already pushed).
+2. Prepend a "## Session 144" block at the top of `pr-body.txt` documenting the 4-site migration, the 4-shape taxonomy, the `useApiData loadError` lesson, the HindsightBrowser non-touch.
+3. Commit + push the docs commit.
+4. Run `gh pr edit <num> --body-file pr-body.txt` to update the open PR body. If the body is large (likely — 3822 lines as of session 143), use the session 59 `gh api graphql --input` recipe instead.
+
+The carryover is the docs phase only. The refactor is shipped and verified; only the PR body is stale.
+
+### Patterns to take forward
+
+1. **4-shape error-display taxonomy** — `toastError` (shape 1), `setErrorFromCaught` (shape 2), `setX(messageFromError(err, fallback))` (shape 3), `if (loadError) showToast(loadError, "error")` (shape 4). Pick the lightest weight that matches the consumer's setter signature.
+2. **"useApiData loadError is real" audit recipe** — `rg -nB 1 'showToast\("Failed to' src/app/ -g "*.tsx" | rg -B 1 'loadError'` finds consumers throwing away real diagnostics.
+3. **The "did NOT touch the broken migration" discipline** — when an earlier session's PR text is now stale (session 137's HindsightBrowser migration was rolled back by PR #163), do NOT re-apply it. Read the umbrella pointer's CRITICAL references first. The 5 HindsightBrowser sites are correct as-is; the session-141 test pins them.
+4. **Tool-call budget exhaustion at the docs phase is a known failure mode** — see SKILL.md pitfall 18. The mitigation is to prioritize the docs commit (pr-body.txt + push) over the PR body update (`gh pr edit`). The refactor must NEVER be cut off.
+
+### Next session should
+
+Random pick next session: pick AT RANDOM. Session 144 already swept the most actionable List 1 surface; future List 1 picks should re-audit with the current 2-line audit recipe `rg -nB 1 'showToast\("Failed to' src/app/ -g "*.tsx" | rg -B 1 'loadError'` to confirm zero hits, then either pick another list OR find new refactor opportunities outside the `toastError`/`messageFromError`/`setErrorFromCaught` family. Per the session 144 carryover, the next session is also expected to:
+
+1. Complete the carryover docs phase first (per carryover protocol).
+2. Then do 1 small-bore refactor in whatever list gets picked.
+3. End at ≤ 3 commits total per session.
+
+---
+
+## Session 143 — List 2 (Cron, Missions, Chat) — `applyDisabledChange` helper consolidates 3 sites in `api/cron/hardware/route.ts`
+
+Random pick: **List 2** via `echo $((RANDOM % 4 + 1))` = 2. Pre-audit of the List 2 byte-equivalent surface found the "setDisabled + saveDisabledIds" pair duplicated in 2 PUT sites (toggle-only branch + post-write sync branch) and a structurally identical pair in DELETE (load + delete + save). All three sites collapse to a single `applyDisabledChange(disabledIds, id, enabled)` call.
+
+### What shipped
+
+**1 file, +18 / -6 net (helper + 3 call-site consolidations):**
+
+`src/app/api/cron/hardware/route.ts`:
+- Added `applyDisabledChange(disabledIds, id, enabled)` helper (composes the existing `setDisabled` tri-state mutation with `saveDisabledIds` disk write) — sister-helper of session 35's `applyEnabledChange`
+- PUT toggle-only branch (line 442-443): 2 lines → 1 line
+- PUT post-write sync (line 456-458): 4 lines (if-guard + 2 lines) → 2 lines (if-guard + 1 line)
+- DELETE (line 508-509): 2 lines (delete + save) → 1 line (`applyDisabledChange(disabledIds, id, true)`)
+
+The DELETE migration uses the same helper with `enabled: true` — `setDisabled(disabledIds, id, true)` hits the `else` branch which is `disabledIds.delete(id)`, byte-equivalent to the original `disabledIds.delete(id)` + `saveDisabledIds(disabledIds)`.
+
+**Byte-equivalence proof:** every call site:
+- Before: `setDisabled(d, i, e); saveDisabledIds(d);` (or the DELETE variant `d.delete(i); saveDisabledIds(d);` which is `setDisabled(d, i, true); saveDisabledIds(d);`)
+- After: `applyDisabledChange(d, i, e);` → expands to `setDisabled(d, i, e); saveDisabledIds(d);`
+- The `if (enabled !== undefined)` guard on the PUT post-write sync site is preserved — when undefined, the helper is not called (matches the original `if (enabled !== undefined) { setDisabled(...); saveDisabledIds(...); }` block).
+
+### Verification
+
+- `npx tsc --noEmit` — clean
+- `CI=true npx eslint src/app/api/cron/hardware/route.ts --max-warnings 0` — clean
+- `npx jest tests/unit/cron-hardware-api.test.ts tests/unit/server-error-from-error-source-patterns.test.ts` — 2 suites / 9 tests pass
+- `npx jest` — **244 suites / 1715 tests pass** (no regressions)
+- `npm run build` — clean
+
+### Net LOC
+
+- Helper: 12 lines (incl. JSDoc)
+- Call sites: 3 sites × 1-2 lines saved = 4-6 lines removed
+- Net: **+18 / -6 = +12 net** (positive due to JSDoc on the helper). The pure code delta is +6 / -6 = 0 (the helper body is symmetric to the 2 inline calls). JSDoc is documentation value for future readers.
+
+### Behaviour change
+
+None. Every call site is byte-equivalent to the original 2-line pattern.
+
+### Next session should
+
+List 2 byte-equivalent surface is largely mined clean after session 128 (`serverErrorFromError`), session 135 (cast cleanup), and this session (`applyDisabledChange`). Other List 2 areas worth a re-audit:
+- `useMissionsPage.ts` (1324 LOC) — the cast-cleanup pass is done; further byte-equivalent work is limited to the chat page's `updateSessionField` helper (defer until 3rd consumer) and `formatModelName`/`loadSessions` test coverage (defer to a dedicated chat-utils test session).
+- `api/missions/route.ts` `serverError(result.error ?? "unknown error")` × 3 sites at lines 348/434/491 — the `bareServerError` pattern from session 131 P-3. Could be extracted to a `serverErrorFromHelperResult(result, fallback)` sister-helper.
+- The `useMissionsPage.ts` decomposition is still out of scope for byte-equivalent refactors (would need a dedicated decomposition session).
+
+---
+
+## Session 142 — List 3 (Models, Agents, Skills, Tools, Personalities) — `toastError` migration in 5 operation-page catch blocks
+
+Random pick: **List 3** via `echo $((RANDOM % 4 + 1))` = 3. Last touched in the session-140 List 3 sweep + the session-132 ok-factory test-scope-gap fix + the session-128 cron carryover (dynamic-message `serverError` migration in `api/cron/hardware/route.ts` — adjacent List 3 territory via the operations pages). The session-130 carryover flagged 5 silent-error-swallow sites in `src/app/operations/*`; this session closed them.
+
+### What shipped
+
+**5 catch-block migrations, 0 net LOC:**
+
+| File | Line | Before | After |
+|------|------|--------|-------|
+| `src/app/operations/agents/page.tsx` | 167 | `catch { showToast("Failed to load profiles", "error") }` | `catch (err) { toastError(showToast, err, "Failed to load profiles") }` |
+| `src/app/operations/agents/page.tsx` | 296 | `catch { showToast("Failed to save file", "error") }` | `catch (err) { toastError(showToast, err, "Failed to save file") }` |
+| `src/app/operations/skills/page.tsx` | 149 | `catch { showToast("Failed to load skills", "error") }` | `catch (err) { toastError(showToast, err, "Failed to load skills") }` |
+| `src/app/operations/skills/page.tsx` | 234 | `catch { showToast("Failed to load skill", "error") }` | `catch (err) { toastError(showToast, err, "Failed to load skill") }` |
+| `src/app/operations/personalities/page.tsx` | 269 | `catch { showToast("Failed to load personalities", "error") }` | `catch (err) { toastError(showToast, err, "Failed to load personalities") }` |
+
+All 5 sites adopt the `toastError(showToast, err, fallback)` helper from `@/lib/api-fetch` (composes `messageFromError(err, fallback)`).
+
+### Verification
+
+- `npx tsc --noEmit` — clean
+- `CI=true npx eslint src/app/operations/{agents,skills,personalities}/page.tsx --max-warnings 0` — clean
+- `npx jest` — 244 suites / 1715 tests pass (no regressions)
+- `npm run build` — clean
+
+### Net LOC
+
+- +11 / -11 = **0 net** (purely a swap of the 2-line `catch { showToast(...) }` pattern for the 2-line `catch (err) { toastError(...) }` pattern)
+
+### Behaviour change (documented per task brief)
+
+- **Before:** user sees static "Failed to X" toast, actual error is silently dropped
+- **After:** user sees the actual error message ("Failed to X: <error.message>") with the static string as fallback
+- **Regression test:** `toastError` is a thin composition of `messageFromError` (which has its own contract tests in `tests/unit/api-fetch.test.ts`). The 5 sites don't add new helper logic, they adopt an existing helper.
+
+### Next session should
+
+These 5 sites were the only remaining inline `catch { showToast("Failed to X") }` pattern in `src/app/operations/*`. Other List 3 areas to consider:
+- `src/app/api/agents/route.ts:61-64` — single dynamic-message `serverError` site (the `String(err)` variant flagged in session 130's carryover). Migrate to `serverErrorFromError("GET /api/agents", "querying Hermes processes", err, "Failed to query Hermes processes")`.
+- `src/app/api/models/fallbacks/sync/route.ts` — the bare-msg migration flagged in session 130.
+- `useModelsPage` / `useSkillsPage` / `usePersonalities` hooks for any remaining byte-equivalent refactors.
+
+---
+
 ## Session 137 — List 1 (Dashboard, Sessions, Memory, Logs) — `safeApiCall<{ data?: { ... } }>` double-envelope migration in HindsightBrowser + source-pattern test
 
 Random pick: **List 1** via `echo $((RANDOM % 4 + 1))` = 1. Last touched in the session-129 List 1 sweep + the session-128 cron carryover. The List 1 surface had been "mined clean" by sessions 87 (setField/stringOr), 89 (created factory + dashboard now memo-stability), 93 (dbSessionFields + parseAssistantLines), and 122-129 (a series of ok() / serverErrorFromCatch / safeApiCallData migrations). A pre-audit of the remaining List 1 surface (Dashboard, Sessions, Memory, Logs pages + their backing API routes) found that the `safeApiCall<{ data?: { ... } }>` double-envelope anti-pattern survived in **5 sites in 1 file** — the HindsightBrowser component. This is the same single-nesting pattern closed in List 3 (session 133, useModelsPage.ts) and List 2 (session 135, 8 sites across 6 files). Closing it in List 1 puts the dashboard sister test at parity with the per-list pattern tests for the other 3 lists.

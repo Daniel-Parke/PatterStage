@@ -5,7 +5,7 @@ import { ChevronUp, File, Folder, FolderOpen } from "lucide-react";
 
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
-import { safeApiCall } from "@/lib/api-fetch";
+import { safeApiCall, setErrorFromCaught } from "@/lib/api-fetch";
 
 interface Entry {
   name: string;
@@ -55,7 +55,7 @@ export default function DirectoryPickerModal({
           setEntries(payload.entries ?? []);
         }
       })
-      .catch(() => setError("Network error"))
+      .catch((err) => setErrorFromCaught(setError, err, "Network error"))
       .finally(() => setLoading(false));
   }, []);
 

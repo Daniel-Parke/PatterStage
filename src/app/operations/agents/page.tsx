@@ -163,8 +163,8 @@ export default function BehaviourPage() {
     try {
       const data = await apiFetch("/api/agent/profiles");
       setProfiles(data.data?.profiles || []);
-    } catch {
-      showToast("Failed to load profiles", "error");
+    } catch (err) {
+      toastError(showToast, err, "Failed to load profiles");
     } finally {
       setLoading(false);
     }
@@ -291,9 +291,9 @@ export default function BehaviourPage() {
       showToast(`${editor.fileName} saved`, "success");
       setTimeout(() => setSaveStatus("idle"), 2000);
       await loadProfiles();
-    } catch {
+    } catch (err) {
       setSaveStatus("error");
-      showToast("Failed to save file", "error");
+      toastError(showToast, err, "Failed to save file");
     }
   };
 

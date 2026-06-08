@@ -6,7 +6,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
-import { resolveSafeProfileName } from "@/lib/path-security";
+import { requireSafeProfileName } from "@/lib/path-security";
 
 export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
@@ -23,10 +23,8 @@ export async function PUT(request: NextRequest) {
       return badRequest("Personality is required");
     }
 
-    const prof = resolveSafeProfileName(profile);
-    if (!prof.ok) {
-      return badRequest(prof.error);
-    }
+    const prof = requireSafeProfileName(profile);
+    if (prof instanceof NextResponse) return prof;
 
     // applyProfileOrRootPatch handles default-vs-non-default dispatch,
     // 404 on missing profile, and 500 on push failure — was previously
