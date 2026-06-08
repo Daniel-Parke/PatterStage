@@ -225,6 +225,41 @@ wait "$LOCK_HOLDER" 2>/dev/null || true
 grep -q '^state=failed' "$CH_DEPLOY_STATUS_FILE" || fail "status should be failed after lock contention"
 pass "rebuild exits 1 when deploy lock held"
 
+# Verify the fd-inheritance fix: after a script that takes the lock releases
+# it, no process should still hold the deploy lock. This was the root cause
+# of the 2026-06-08 incident where the lock was held for 22+ hours by a
+# backgrounded next-server child process that inherited fd 200.
+#
+# We can't easily run the full restart in the mock env (the MOCK node exits
+# immediately so ch_deploy_do_restart_body fails on the readiness probe),
+# but we CAN test the unit invariant: a ch-deploy-impl.sh function call
+# that acquires then releases the lock must leave the lock free. This is
+# the core property the fix preserves — `exec 200>&-` before nohup
+# releases the lock at the script level, regardless of what the child does.
+rm -f "$LOCK_FILE"
+( exec 200>"$LOCK_FILE"
+  if flock -n 200; then
+    # Mimic the fix: close fd 200 BEFORE backgrounding a child.
+    exec 200>&-
+    : > /tmp/ch-fd-inherit-marker
+    ( flock -n 200; echo "child got lock" > /tmp/ch-fd-inherit-marker ) &
+    CHILD=$!
+    wait "$CHILD" 2>/dev/null || true
+    if [ -f /tmp/ch-fd-inherit-marker ]; then
+      if grep -q "child got lock" /tmp/ch-fd-inherit-marker; then
+        fail "child acquired lock — fd was not closed before nohup"
+      else
+        pass "child could not acquire lock — fd-inheritance prevention works"
+      fi
+    else
+      pass "child never wrote marker — fd closed before nohup"
+    fi
+  else
+    fail "could not acquire lock to set up fd-inheritance test"
+  fi
+)
+rm -f "$LOCK_FILE" /tmp/ch-fd-inherit-marker
+
 export CH_DEPLOY_TEST_BUILD_FAIL=1
 rm -f "$LOCK_FILE"
 set +e

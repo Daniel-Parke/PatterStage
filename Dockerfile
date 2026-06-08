@@ -47,6 +47,23 @@ COPY --from=builder /app/scripts ./scripts
 
 RUN chown -R nextjs:nodejs /app/scripts
 
+# Ensure $HOME is set AND the directory exists for nextjs (UID 1001).
+# The nextjs user is created via adduser --system, which leaves the
+# passwd entry pointing at /nonexistent with no home directory. Without
+# this, $HOME=/home/nextjs is set but the path doesn't exist, and the
+# nextjs user has no permission to mkdir their own parent — so
+# `mkdir -p $HOME/.hermes/logs` in ch-deploy.sh dies with EACCES.
+# WORKDIR alone is not enough: it only creates /app (which already
+# exists). Discovered 2026-06-08: the post-spawn liveness probe in
+# /api/update surfaced this bug; the previous dev branch's smoke
+# test passed only because the API silently returned 200
+# {status:"started"} without ever verifying the script actually ran.
+RUN mkdir -p /home/nextjs && chown nextjs:nodejs /home/nextjs
+ENV HOME=/home/nextjs
+# WORKDIR is also required so `npm run start:network` (CMD) runs from
+# /app where package.json lives — otherwise the nextjs user's $HOME
+# becomes the implicit workdir and npm can't find package.json.
+WORKDIR /app
 USER nextjs
 EXPOSE 42069
 ENV HOSTNAME=0.0.0.0

@@ -284,7 +284,7 @@ export async function POST(request: NextRequest) {
       const missing = deployScriptMissingResponse();
       if (missing) return missing;
       writeDeployStatusRunning("restart", "restart", "Restart queued…");
-      const spawned = spawnChDeploy("ch-restart", ["restart"]);
+      const spawned = await spawnChDeploy("ch-restart", ["restart"]);
       if (!spawned.ok) {
         return NextResponse.json(
           { error: spawned.error ?? "Failed to start restart" },
@@ -312,7 +312,7 @@ export async function POST(request: NextRequest) {
       }
 
       writeDeployStatusRunning("rebuild", "build", "Rebuild queued…");
-      const spawnedRebuild = spawnChDeploy("ch-rebuild", rebuildArgs);
+      const spawnedRebuild = await spawnChDeploy("ch-rebuild", rebuildArgs);
       if (!spawnedRebuild.ok) {
         logApiError("POST /api/update", "spawn rebuild", new Error(spawnedRebuild.error ?? ""));
         appendAuditLine({
@@ -353,7 +353,7 @@ export async function POST(request: NextRequest) {
       const missing = deployScriptMissingResponse();
       if (missing) return missing;
       writeDeployStatusRunning("update", "git", "Update queued…");
-      const spawnedUpdate = spawnChDeploy("ch-update", ["update", "--branch", updateBranch]);
+      const spawnedUpdate = await spawnChDeploy("ch-update", ["update", "--branch", updateBranch]);
       if (!spawnedUpdate.ok) {
         logApiError("POST /api/update", "spawn update", new Error(spawnedUpdate.error ?? ""));
         appendAuditLine({
@@ -400,10 +400,10 @@ function quoteShellSingle(arg: string): string {
   return "'" + arg.replace(/'/g, "'\"'\"'") + "'";
 }
 
-function spawnChDeploy(
+async function spawnChDeploy(
   unitName: string,
   deployArgs: string[],
-): { ok: boolean; error?: string } {
+): Promise<{ ok: boolean; error?: string; pid?: number }> {
   try {
     execFileSync("bash", ["-n", CH_DEPLOY_SCRIPT], { stdio: "ignore", timeout: 8000 });
   } catch {
@@ -416,55 +416,146 @@ function spawnChDeploy(
   const command =
     `sleep 1; bash ${quoteShellSingle(CH_DEPLOY_SCRIPT)} ${deployArgs.map(quoteShellSingle).join(" ")}`.trimEnd();
 
-  try {
-    // Clear any stale failed systemd transient unit before spawning
-    try {
-      execFileSync("systemctl", ["--user", "reset-failed", `${unitName}.service`], {
-        stdio: "ignore",
-        timeout: 5000,
-      });
-    } catch {
-      // reset-failed fails if unit doesn't exist — that's fine
-    }
-
-    const sys = spawn(
-      "systemd-run",
-      [
-        "--user",
-        `--unit=${unitName}`,
-        "--property=Type=oneshot",
-        "bash",
-        "-c",
-        command,
-      ],
-      { detached: true, stdio: "ignore" },
-    );
-    if (typeof sys.pid === "number" && sys.pid > 0) {
-      sys.unref();
-      return { ok: true };
-    }
-  } catch {
-    // fall through to nohup
-  }
-
-  try {
-    const bg = spawn("nohup", ["bash", "-c", command], {
-      detached: true,
-      stdio: "ignore",
-    });
-    if (typeof bg.pid === "number" && bg.pid > 0) {
-      bg.unref();
-      return { ok: true };
-    }
-  } catch {
-    return { ok: false, error: "Could not spawn nohup bash" };
-  }
-
-  return {
+  let spawned: { ok: boolean; error?: string; pid?: number } = {
     ok: false,
-    error:
-      "Could not start deploy (needs systemd-run or nohup, and bash in PATH; on Windows use WSL/Git Bash)",
+    error: "no spawn path attempted",
   };
+
+  // Try systemd-run first. If the binary is missing (e.g. in a Docker
+  // container) it emits an 'error' event asynchronously — attach a
+  // handler so the failure doesn't bubble up as an uncaughtException
+  // in the next-server event loop.
+  const trySpawn = (cmd: string, args: string[]): number | undefined => {
+    try {
+      const child = spawn(cmd, args, { detached: true, stdio: "ignore" });
+      // Swallow async errors (ENOENT, EACCES) so they don't crash the
+      // server. We only care whether spawn produced a usable PID.
+      child.on("error", () => {
+        /* surfaced via spawned.ok=false, not via uncaughtException */
+      });
+      if (typeof child.pid === "number" && child.pid > 0) {
+        child.unref();
+        return child.pid;
+      }
+      return undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
+  // Clear any stale failed systemd transient unit before spawning (best-effort).
+  try {
+    execFileSync("systemctl", ["--user", "reset-failed", `${unitName}.service`], {
+      stdio: "ignore",
+      timeout: 5000,
+    });
+  } catch {
+    // reset-failed fails if unit doesn't exist or systemctl is missing — fine
+  }
+
+  // Check whether systemd-run is actually available BEFORE we try to
+  // spawn it. Node's spawn() returns a child with a PID before the
+  // ENOENT for a missing binary surfaces asynchronously — so just
+  // calling spawn("systemd-run", ...) and trusting the PID leads to
+  // the child dying 1ms later and confusing the liveness probe.
+  let systemdRunAvailable = false;
+  try {
+    execFileSync("which", ["systemd-run"], { stdio: "ignore" });
+    systemdRunAvailable = true;
+  } catch {
+    systemdRunAvailable = false;
+  }
+
+  if (systemdRunAvailable) {
+    const sysPid = trySpawn("systemd-run", [
+      "--user",
+      `--unit=${unitName}`,
+      "--property=Type=oneshot",
+      "bash",
+      "-c",
+      command,
+    ]);
+    if (sysPid !== undefined) {
+      spawned = { ok: true, pid: sysPid };
+    }
+  }
+
+  if (!spawned.ok) {
+    // Fall back to nohup. Works in Docker containers and minimal
+    // environments where systemd isn't available.
+    const bgPid = trySpawn("nohup", ["bash", "-c", command]);
+    if (bgPid !== undefined) {
+      spawned = { ok: true, pid: bgPid };
+    } else {
+      spawned = { ok: false, error: "nohup spawn returned no pid" };
+    }
+  }
+
+  if (!spawned.ok) {
+    return spawned;
+  }
+
+  // Post-spawn liveness probe — close the silent-failure window.
+  //
+  // The original bug (2026-06-08): the deploy script died silently
+  // (lock contention, missing tool, etc.) but the API returned
+  // 200 {status:"started"} and the UI spun forever. The user reported
+  // "rebuild button doesn't work" because the new code never made it
+  // to the server.
+  //
+  // The fix: wait briefly for the spawned child to either die
+  // (immediate failure — surface it) or survive (normal operation —
+  // the script is now doing its work in the background, return
+  // success). We do NOT try to grab the deploy lock ourselves because
+  // the script legitimately holds it for the entire duration of the
+  // deploy (often 5-30s); trying to grab it would always fail and
+  // we'd mis-report a successful deploy as a stuck one. Instead, the
+  // probe checks the status file for a terminal `state=failed
+  // phase=lock` write, which is how the script reports a stuck lock.
+  const childPid = spawned.pid;
+  // Wait up to 1.5s for the child to either die or write a failed
+  // status. The script's own `sleep 1` plus a syntax check is ~1.0s;
+  // any child that dies before then was a synchronous spawn failure.
+  const probeDeadlineMs = 1500;
+  const probeStart = Date.now();
+  while (Date.now() - probeStart < probeDeadlineMs) {
+    // If the child has already exited, it died — surface the failure.
+    let childAlive = false;
+    if (typeof childPid === "number") {
+      try {
+        // kill -0 is a no-op that returns success iff the process exists.
+        execFileSync("kill", ["-0", String(childPid)], { stdio: "ignore" });
+        childAlive = true;
+      } catch {
+        childAlive = false;
+      }
+    }
+    // Check the status file for a terminal failed write by the script.
+    let scriptReportedFailure = false;
+    try {
+      const statusPath = process.env.HOME
+        ? process.env.HOME + "/.hermes/logs/ch-deploy.status"
+        : "";
+      if (statusPath && existsSync(statusPath)) {
+        const raw = readFileSync(statusPath, "utf-8");
+        if (/^state=failed/m.test(raw) && /^phase=lock/m.test(raw)) {
+          scriptReportedFailure = true;
+        }
+      }
+    } catch {
+      // best-effort
+    }
+    if (!childAlive || scriptReportedFailure) {
+      const reason = scriptReportedFailure
+        ? "Deploy already in progress (lock held by another process). Wait for the current deploy to finish or run: lsof -ti:42069 | xargs -r kill -9; rm -f /tmp/ch-deploy.lock"
+        : `Deploy script exited immediately (PID ${childPid} no longer alive after ${Date.now() - probeStart}ms). Check ~/.hermes/logs/ch-update.log for the cause.`;
+      return { ok: false, error: reason };
+    }
+    // Child is alive and hasn't reported a failure yet — wait more.
+    await new Promise((r) => setTimeout(r, 200));
+  }
+
+  return { ok: true, pid: childPid };
 }
 
 function deployScriptMissingResponse(): NextResponse | null {
