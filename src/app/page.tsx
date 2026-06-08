@@ -204,7 +204,7 @@ export default function Dashboard() {
   const { isArmedFor, arm, confirm } = useTwoStepConfirm({ autoDismissMs: 4000 });
 
   const refreshMonitor = useCallback(async () => {
-    const monitor = await safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store" } as RequestInit);
+    const monitor = await safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store" });
     if (monitor) setData({ monitor });
   }, [setData]);
 
@@ -352,14 +352,14 @@ export default function Dashboard() {
         missions,
         defaults,
       ] = await Promise.all([
-        safeApiCallData<SystemStatus>("/api/status", { signal } as RequestInit),
-        safeApiCallData<Record<string, unknown>>("/api/config", { signal } as RequestInit),
-        safeApiCallData<TemplatesResponseData>("/api/templates", { signal } as RequestInit),
-        safeApiCallData<CategoriesResponseData>("/api/mission-categories", { signal } as RequestInit),
-        safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store", signal } as RequestInit),
-        safeApiCallData<AgentsResponseData>("/api/agents", { signal } as RequestInit),
-        safeApiCallData<MissionsResponseData>("/api/missions", { signal } as RequestInit),
-        safeApiCallData<DefaultsResponseData>("/api/models/defaults", { signal } as RequestInit),
+        safeApiCallData<SystemStatus>("/api/status", { signal }),
+        safeApiCallData<Record<string, unknown>>("/api/config", { signal }),
+        safeApiCallData<TemplatesResponseData>("/api/templates", { signal }),
+        safeApiCallData<CategoriesResponseData>("/api/mission-categories", { signal }),
+        safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store", signal }),
+        safeApiCallData<AgentsResponseData>("/api/agents", { signal }),
+        safeApiCallData<MissionsResponseData>("/api/missions", { signal }),
+        safeApiCallData<DefaultsResponseData>("/api/models/defaults", { signal }),
       ]);
 
       if (!signal.aborted) {
