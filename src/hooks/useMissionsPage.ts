@@ -762,8 +762,8 @@ export function useMissionsPage() {
           await fetchData();
         }
       }
-    } catch {
-      showToast("Network error — please try again", "error");
+    } catch (err) {
+      toastError(showToast, err, "Network error — please try again");
     } finally {
       setDispatching(false);
     }
@@ -1055,11 +1055,11 @@ export function useMissionsPage() {
       } else if (previousMission) {
         restoreMission(previousMission);
       }
-    } catch {
+    } catch (err) {
       if (previousMission) {
         restoreMission(previousMission);
       }
-      showToast("Network error — could not cancel mission", "error");
+      toastError(showToast, err, "Network error — could not cancel mission");
     } finally {
       setCancellingMissionId(null);
     }
