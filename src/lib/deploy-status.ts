@@ -73,12 +73,36 @@ export function readDeployStatus(): DeployStatus {
   try {
     const status = parseStatusFile(readFileSync(path, "utf-8"));
     if (isStaleRunning(status)) {
-      return {
+      const stale: DeployStatus = {
         ...status,
         state: "failed",
         message: "Deploy status stale (timed out) — check ch-restart.log",
         logHint: "ch-restart.log",
+        finishedAt: new Date().toISOString(),
+        exitCode: "1",
       };
+      // Persist the rewrite so subsequent reads see the terminal state.
+      // Without this, isDeployInProgress() (which reads the same file)
+      // would keep reporting "running" until 45 min after the original
+      // startedAt, blocking the user from issuing a new deploy.
+      try {
+        const body = [
+          `state=${stale.state}`,
+          `action=${stale.action}`,
+          `phase=${stale.phase}`,
+          `message=${stale.message.replace(/\n/g, " ")}`,
+          `startedAt=${stale.startedAt}`,
+          `finishedAt=${stale.finishedAt}`,
+          `exitCode=${stale.exitCode}`,
+          `logHint=${stale.logHint}`,
+        ].join("\n");
+        const tmp = path + ".tmp";
+        writeFileSync(tmp, body, "utf-8");
+        renameSync(tmp, path);
+      } catch {
+        // non-fatal — the in-memory return value is still correct
+      }
+      return stale;
     }
     return status;
   } catch {
@@ -96,7 +120,19 @@ export function readDeployStatus(): DeployStatus {
 }
 
 export function isDeployInProgress(): boolean {
-  return readDeployStatus().state === "running";
+  const status = readDeployStatus();
+  if (status.state !== "running") return false;
+  // Honor the stale-running detection. A status file stuck in "running" for
+  // longer than STALE_RUNNING_MS means the deploy script crashed/was killed
+  // and never wrote a terminal state. Without this, a stuck status from a
+  // silent failure (e.g. lock contention with a stuck process) permanently
+  // blocks the user from issuing a new deploy until they manually clear the
+  // status file. See skills/devops/control-hub-scripts "stale deploy lock"
+  // pitfall (discovered 2026-06-08).
+  if (!status.startedAt) return true;
+  const started = Date.parse(status.startedAt);
+  if (Number.isNaN(started)) return true;
+  return Date.now() - started <= STALE_RUNNING_MS;
 }
 
 /** Optimistic status before detached ch-deploy starts (bridges spawn sleep). */

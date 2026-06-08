@@ -292,4 +292,73 @@ describe("POST /api/update", () => {
     expect(flat).toContain("--branch");
     expect(flat).toContain("dev");
   });
+
+  // ── Post-spawn lock probe (silent-failure prevention) ───────────
+  // These tests verify the spawn function surfaces lock contention
+  // to the API caller instead of returning 200 {status:"started"}.
+  // Discovered 2026-06-08: the lock could be held by a stuck background
+  // process, the script would die silently, and the UI would spin
+  // forever. The new probe waits up to 3s and reports the failure.
+
+  it("returns 500 when lock is held by another process and flock never succeeds", async () => {
+    // Make flock always fail (lock held) and readFileSync return a fresh
+    // running status (no failed/lock phase so the secondary check doesn't
+    // short-circuit). The probe will poll for 3s and then time out.
+    mockExecFileSync.mockImplementation((cmd: string, args: string[]) => {
+      if (cmd === "bash" && args[0] === "-n") return undefined as unknown as string;
+      if (cmd === "flock") throw new Error("would block");
+      if (cmd === "git") return "";
+      if (cmd === "systemctl") return "";
+      return "";
+    });
+    // The spawn will return a valid pid, the lock probe will detect contention
+    const { POST } = await import("@/app/api/update/route");
+    const res = await POST(postReq({ action: "rebuild" }));
+    // The 3s lock probe times out → returns 500 with diagnostic error
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(String(body.error)).toMatch(/lock|did not acquire/i);
+  }, 10000);
+
+  it("returns 200 when flock succeeds immediately (lock is free)", async () => {
+    mockExecFileSync.mockImplementation((cmd: string, args: string[]) => {
+      if (cmd === "bash" && args[0] === "-n") return undefined as unknown as string;
+      if (cmd === "flock") return ""; // acquired immediately
+      if (cmd === "git") return "";
+      if (cmd === "systemctl") return "";
+      return "";
+    });
+    const { POST } = await import("@/app/api/update/route");
+    const res = await POST(postReq({ action: "rebuild" }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.data.action).toBe("rebuild");
+    expect(body.data.status).toBe("started");
+  });
+
+  it("returns 500 immediately when status file shows state=failed phase=lock", async () => {
+    // First flock fails (lock held) but readFileSync returns a status
+    // showing the script already wrote state=failed phase=lock. The probe
+    // should surface that immediately without waiting the full 3s.
+    mockExecFileSync.mockImplementation((cmd: string) => {
+      if (cmd === "bash") return undefined as unknown as string;
+      if (cmd === "flock") throw new Error("would block");
+      if (cmd === "git") return "";
+      if (cmd === "systemctl") return "";
+      return "";
+    });
+    // Override the fs mock for this test to return a failed status
+    const fs = await import("fs");
+    (fs.readFileSync as jest.Mock).mockImplementation((p: string) => {
+      if (String(p).includes("ch-deploy.status")) {
+        return "state=failed\nphase=lock\naction=rebuild\nmessage=Deploy already in progress\n";
+      }
+      return "";
+    });
+    const { POST } = await import("@/app/api/update/route");
+    const res = await POST(postReq({ action: "rebuild" }));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(String(body.error)).toMatch(/lock held|already in progress/i);
+  }, 10000);
 });

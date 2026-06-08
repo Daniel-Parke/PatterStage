@@ -284,7 +284,7 @@ export async function POST(request: NextRequest) {
       const missing = deployScriptMissingResponse();
       if (missing) return missing;
       writeDeployStatusRunning("restart", "restart", "Restart queued…");
-      const spawned = spawnChDeploy("ch-restart", ["restart"]);
+      const spawned = await spawnChDeploy("ch-restart", ["restart"]);
       if (!spawned.ok) {
         return NextResponse.json(
           { error: spawned.error ?? "Failed to start restart" },
@@ -312,7 +312,7 @@ export async function POST(request: NextRequest) {
       }
 
       writeDeployStatusRunning("rebuild", "build", "Rebuild queued…");
-      const spawnedRebuild = spawnChDeploy("ch-rebuild", rebuildArgs);
+      const spawnedRebuild = await spawnChDeploy("ch-rebuild", rebuildArgs);
       if (!spawnedRebuild.ok) {
         logApiError("POST /api/update", "spawn rebuild", new Error(spawnedRebuild.error ?? ""));
         appendAuditLine({
@@ -353,7 +353,7 @@ export async function POST(request: NextRequest) {
       const missing = deployScriptMissingResponse();
       if (missing) return missing;
       writeDeployStatusRunning("update", "git", "Update queued…");
-      const spawnedUpdate = spawnChDeploy("ch-update", ["update", "--branch", updateBranch]);
+      const spawnedUpdate = await spawnChDeploy("ch-update", ["update", "--branch", updateBranch]);
       if (!spawnedUpdate.ok) {
         logApiError("POST /api/update", "spawn update", new Error(spawnedUpdate.error ?? ""));
         appendAuditLine({
@@ -400,10 +400,10 @@ function quoteShellSingle(arg: string): string {
   return "'" + arg.replace(/'/g, "'\"'\"'") + "'";
 }
 
-function spawnChDeploy(
+async function spawnChDeploy(
   unitName: string,
   deployArgs: string[],
-): { ok: boolean; error?: string } {
+): Promise<{ ok: boolean; error?: string }> {
   try {
     execFileSync("bash", ["-n", CH_DEPLOY_SCRIPT], { stdio: "ignore", timeout: 8000 });
   } catch {
@@ -415,6 +415,8 @@ function spawnChDeploy(
 
   const command =
     `sleep 1; bash ${quoteShellSingle(CH_DEPLOY_SCRIPT)} ${deployArgs.map(quoteShellSingle).join(" ")}`.trimEnd();
+
+  let spawned: { ok: boolean; error?: string } = { ok: false, error: "no spawn path attempted" };
 
   try {
     // Clear any stale failed systemd transient unit before spawning
@@ -441,30 +443,106 @@ function spawnChDeploy(
     );
     if (typeof sys.pid === "number" && sys.pid > 0) {
       sys.unref();
-      return { ok: true };
+      spawned = { ok: true };
     }
   } catch {
     // fall through to nohup
   }
 
-  try {
-    const bg = spawn("nohup", ["bash", "-c", command], {
-      detached: true,
-      stdio: "ignore",
-    });
-    if (typeof bg.pid === "number" && bg.pid > 0) {
-      bg.unref();
-      return { ok: true };
+  if (!spawned.ok) {
+    try {
+      const bg = spawn("nohup", ["bash", "-c", command], {
+        detached: true,
+        stdio: "ignore",
+      });
+      if (typeof bg.pid === "number" && bg.pid > 0) {
+        bg.unref();
+        spawned = { ok: true };
+      } else {
+        spawned = { ok: false, error: "nohup spawn returned no pid" };
+      }
+    } catch (err) {
+      return {
+        ok: false,
+        error: `Could not spawn nohup bash: ${err instanceof Error ? err.message : String(err)}`,
+      };
     }
-  } catch {
-    return { ok: false, error: "Could not spawn nohup bash" };
   }
 
-  return {
-    ok: false,
-    error:
-      "Could not start deploy (needs systemd-run or nohup, and bash in PATH; on Windows use WSL/Git Bash)",
-  };
+  // Post-spawn lock probe — close the silent-failure window.
+  // The script needs a 1s sleep + the systemd/nohup fork latency before it
+  // even attempts to acquire the lock. We give it 3s to either grab the lock
+  // or fail with "Deploy already in progress". If after 3s the lock is still
+  // held by something else, the script will die on its lock-probe — surface
+  // that failure to the caller instead of returning 200 {status:"started"}
+  // and letting the UI spin forever.
+  // NOTE: string concatenation for paths (not path.join) — see Turbopack
+  // NFT tracing issue documented in AGENTS.md.
+  const lockPath = tmpdir() + "/ch-deploy.lock";
+  // The actual lock path is /tmp/ch-deploy.lock (CH_DEPLOY_LOCK_FILE in the
+  // script, which defaults to $HOME/.hermes/logs/ch-deploy.status's sibling).
+  // Probe BOTH possible locations: the deploy script's LOCK_FILE may differ
+  // from tmpdir() in some environments.
+  const candidates = [
+    lockPath,
+    process.env.HOME ? process.env.HOME + "/.hermes/logs/ch-deploy.lock" : "",
+  ].filter(Boolean);
+
+  // Wait up to 3s for the spawned script to either acquire the lock or
+  // fail. Poll at 250ms intervals.
+  const deadline = Date.now() + 3000;
+  let acquiredByOurs = false;
+  while (Date.now() < deadline) {
+    let anyHeldByOther = false;
+    for (const p of candidates) {
+      try {
+        // flock -n exits 0 if we acquired the lock, non-zero if it's held.
+        // We use "-c true" so flock exits immediately after acquiring.
+        execFileSync("flock", ["-n", p, "-c", "true"], { stdio: "ignore" });
+        // we got it — try the next candidate
+      } catch {
+        // held by someone else
+        anyHeldByOther = true;
+        break;
+      }
+    }
+    if (!anyHeldByOther) {
+      acquiredByOurs = true;
+      break;
+    }
+    // Check the status file: if the script wrote "failed" with "lock" phase,
+    // the deploy aborted. Surface that to the caller.
+    try {
+      const statusPath = process.env.HOME
+        ? process.env.HOME + "/.hermes/logs/ch-deploy.status"
+        : "";
+      if (statusPath && existsSync(statusPath)) {
+        const raw = readFileSync(statusPath, "utf-8");
+        if (/^state=failed/m.test(raw) && /^phase=lock/m.test(raw)) {
+          return {
+            ok: false,
+            error:
+              "Deploy already in progress (lock held by another process). Wait for the current deploy to finish or run: lsof -ti:42069 | xargs -r kill -9; rm -f /tmp/ch-deploy.lock",
+          };
+        }
+      }
+    } catch {
+      // best-effort
+    }
+    // Sleep 250ms then retry
+    await new Promise((r) => setTimeout(r, 250));
+  }
+
+  if (!acquiredByOurs) {
+    // Lock never came free within 3s — treat as silent failure.
+    return {
+      ok: false,
+      error:
+        "Deploy script did not acquire the lock within 3s. Another deploy is likely stuck. Check: fuser /tmp/ch-deploy.lock, ls -la /tmp/ch-deploy.lock, and tail ~/.hermes/logs/ch-update.log",
+    };
+  }
+
+  return spawned;
 }
 
 function deployScriptMissingResponse(): NextResponse | null {

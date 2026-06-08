@@ -239,6 +239,13 @@ ch_deploy_do_restart_body() {
   ch_deploy_log_restart "Starting next-server on $HOST:$deploy_port…"
   rm -f "$PID_FILE"
   ch_deploy_release_lock
+  # CRITICAL: close fd 200 (deploy lock) BEFORE backgrounding next-server.
+  # `nohup ... &` inherits all open file descriptors into the child. If fd 200
+  # stays open in the backgrounded next-server, the kernel refuses to release
+  # the flock when the deploy script exits, permanently wedging the deploy
+  # lock and locking out all future deploy attempts. See "CRITICAL PITFALL:
+  # nohup inherits the lock fd" in skills/devops/control-hub-scripts (2026-05-18).
+  exec 200>&- 2>/dev/null || true
   # Truncate the runtime log on each fresh start so old output doesn't
   # bleed into a new run. The previous run's log is preserved if the
   # user wants it (rotated by the watchdog or backup tooling).
@@ -275,6 +282,11 @@ ch_deploy_do_restart_body() {
 
   if [ "$use_relay" -eq 1 ]; then
     ch_deploy_log_restart "Starting socat relay on ${relay_listen}:${RELAY_PORT} → 127.0.0.1:$deploy_port…"
+    # Close any remaining deploy lock fd in the backgrounded socat child too.
+    # (The ch_deploy_release_lock above already released the flock; this just
+    # ensures socat doesn't keep fd 200 open either, in case the order ever
+    # changes.)
+    exec 200>&- 2>/dev/null || true
     nohup /usr/bin/socat TCP-LISTEN:"$RELAY_PORT",fork,reuseaddr,bind="${relay_listen}" TCP:127.0.0.1:"$deploy_port" \
       >>"$CH_RESTART_LOG" 2>&1 </dev/null &
     local SOCAT_PID=$!
