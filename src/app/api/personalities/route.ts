@@ -8,7 +8,7 @@ import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
 import { listProfiles } from "@/lib/profiles-repository";
 import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
-import { resolveSafeProfileName } from "@/lib/path-security";
+import { requireSafeProfileName } from "@/lib/path-security";
 
 /** Shared upsert logic used by both POST (create) and PUT (update). */
 async function upsertPersonality(request: NextRequest) {
@@ -22,10 +22,8 @@ async function upsertPersonality(request: NextRequest) {
     return badRequest("prompt is required");
   }
 
-  const resolved = resolveSafeProfileName(profile);
-  if (!resolved.ok) {
-    return badRequest(resolved.error);
-  }
+  const resolved = requireSafeProfileName(profile);
+  if (resolved instanceof NextResponse) return resolved;
 
   // applyProfileOrRootPatch handles default-vs-non-default dispatch,
   // 404 on missing profile, and 500 on push failure — was previously

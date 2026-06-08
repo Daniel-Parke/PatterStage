@@ -58,6 +58,11 @@ const mockResolveSafeProfileName = jest.fn(
 
 jest.mock("@/lib/path-security", () => ({
   resolveSafeProfileName: (...args: unknown[]) => mockResolveSafeProfileName(...args),
+  requireSafeProfileName: (param: string | null) => {
+    const r = mockResolveSafeProfileName(param);
+    if (r.ok) return { profile: r.profile };
+    return NextResponse.json({ error: r.error }, { status: 400 });
+  },
 }));
 
 import { NextRequest, NextResponse } from "next/server";

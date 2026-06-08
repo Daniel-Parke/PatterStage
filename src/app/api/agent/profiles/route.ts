@@ -4,7 +4,7 @@ import { existsSync } from "fs";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { safeStat } from "@/lib/fs-stats";
-import { resolveSafeProfileName } from "@/lib/path-security";
+import { requireSafeProfileName } from "@/lib/path-security";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
@@ -155,10 +155,8 @@ export async function POST(request: NextRequest) {
 
     const slug = slugifyDisplayName(name);
 
-    const prof = resolveSafeProfileName(slug);
-    if (!prof.ok) {
-      return badRequest(prof.error);
-    }
+    const prof = requireSafeProfileName(slug);
+    if (prof instanceof NextResponse) return prof;
 
     if (getProfile(slug)) {
       return conflict(`Profile "${slug}" already exists`);

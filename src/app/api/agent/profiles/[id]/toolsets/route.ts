@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { badRequest, methodNotAllowed, notFound, ok } from "@/lib/api-response";
+import { methodNotAllowed, notFound, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
@@ -15,7 +15,7 @@ import {
   platformsDiffer,
   unionToolsetsFromPlatforms,
 } from "@/lib/hermes-toolset-unify";
-import { resolveSafeProfileName } from "@/lib/path-security";
+import { requireSafeProfileName } from "@/lib/path-security";
 
 export async function GET(
   request: NextRequest,
@@ -25,8 +25,8 @@ export async function GET(
   if (auth) return auth;
 
   const { id } = await params;
-  const prof = resolveSafeProfileName(id);
-  if (!prof.ok) return badRequest(prof.error);
+  const prof = requireSafeProfileName(id);
+  if (prof instanceof NextResponse) return prof;
 
   try {
     ensureDb();
@@ -62,8 +62,8 @@ export async function PUT(
   if (auth) return auth;
 
   const { id } = await params;
-  const prof = resolveSafeProfileName(id);
-  if (!prof.ok) return badRequest(prof.error);
+  const prof = requireSafeProfileName(id);
+  if (prof instanceof NextResponse) return prof;
 
   try {
     ensureDb();
