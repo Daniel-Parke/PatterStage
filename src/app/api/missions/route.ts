@@ -31,6 +31,7 @@ import {
 } from "@/lib/mission-cron-sync";
 import { dispatchMissionNow } from "@/lib/mission-dispatch";
 import { buildMissionFieldPatch } from "@/lib/mission-field-updates";
+import { parseMissionBodyFields } from "@/lib/mission-body";
 import { promoteMission } from "@/lib/mission-promote-handler";
 import { runMissionQueueTick } from "@/lib/mission-queue-tick";
 import { ensureSyncLayer } from "@/lib/sync";
@@ -132,50 +133,11 @@ function parseCategoryIdOrError(
   return result.value;
 }
 
-/** Shared fields destructured from mission action body (dispatch/promote/update). */
-interface MissionBodyFields {
-  name?: string;
-  instruction?: string;
-  context?: string;
-  localDirs?: unknown;
-  references?: string[];
-  skills?: string[];
-  suggestedToolsets?: string[];
-  goals?: string[];
-  modelId?: string;
-  provider?: string;
-  profileName?: string;
-  missionTimeMinutes?: number;
-  timeoutMinutes?: number;
-  schedule?: string;
-  categoryId?: string | null;
-  outputFormat?: string;
-  constraints?: string;
-}
+/** Shared fields destructured from mission action body (dispatch/promote/update).
+ *  The implementation lives in @/lib/mission-body so it can be unit-tested. */
+type _MissionBodyFields = import("@/lib/mission-body").MissionBodyFields;
 
-function parseMissionBodyFields(body: Record<string, unknown>): MissionBodyFields {
-  return {
-    name: body.name as string | undefined,
-    instruction: body.instruction as string | undefined,
-    context: body.context as string | undefined,
-    localDirs: body.localDirs,
-    references: body.references as string[] | undefined,
-    skills: body.skills as string[] | undefined,
-    suggestedToolsets: body.suggestedToolsets as string[] | undefined,
-    goals: body.goals as string[] | undefined,
-    modelId: body.modelId as string | undefined,
-    provider: body.provider as string | undefined,
-    profileName: body.profileName as string | undefined,
-    missionTimeMinutes: body.missionTimeMinutes as number | undefined,
-    timeoutMinutes: body.timeoutMinutes as number | undefined,
-    schedule: body.schedule as string | undefined,
-    categoryId: body.categoryId as string | null | undefined,
-    outputFormat: body.outputFormat as string | undefined,
-    constraints: body.constraints as string | undefined,
-  };
-}
-
-// ── GET ───────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);

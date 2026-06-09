@@ -56,6 +56,18 @@ jest.mock("@/lib/llm", () => ({
   callLLM: jest.fn(),
 }));
 
+const mockFindModelByModelId = jest.fn();
+const mockGetDefaultModel = jest.fn();
+jest.mock("@/lib/models-repository", () => ({
+  findModelByModelId: (...args: unknown[]) => mockFindModelByModelId(...args),
+  getDefaultModel: (...args: unknown[]) => mockGetDefaultModel(...args),
+  getModelWithKey: jest.fn(),
+}));
+
+jest.mock("@/lib/credentials-repository", () => ({
+  getCredentialWithKey: jest.fn(),
+}));
+
 afterAll(() => {
   const paths = require("@/lib/paths") as { __TEST_TMP_ROOT__?: string };
   const root = paths.__TEST_TMP_ROOT__;
@@ -64,6 +76,19 @@ afterAll(() => {
 
 beforeEach(() => {
   spawnCalls.length = 0;
+  mockFindModelByModelId.mockReset();
+  mockGetDefaultModel.mockReset();
+  // Default behaviour for this suite: a caller-supplied modelId is in the
+  // registry (the prior test pinned the foreign-value path, which is the
+  // bug this fix closes). Tests that exercise the foreign-value branch
+  // override this.
+  mockFindModelByModelId.mockImplementation((modelId: string) => ({
+    id: `model-${modelId}`,
+    modelId,
+    provider: "anthropic",
+    credentialsId: null,
+  }));
+  mockGetDefaultModel.mockReturnValue(null);
 });
 
 describe("buildHermesChatArgv", () => {
