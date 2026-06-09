@@ -13,6 +13,7 @@ import { needsBaselineRebuild, rebuildToBaseline } from "./db/upgrade";
 import { applyProfilesToolsParityUpgrade } from "./db/apply-profiles-tools-upgrade";
 import { applyMissionRepeatMigration } from "./db/apply-mission-repeat-migration";
 import { applyMissionQueueMigration } from "./db/apply-mission-queue-migration";
+import { applyCronScheduleCanonicalisation } from "./db/apply-cron-schedule-canonicalisation";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -135,6 +136,7 @@ function runMigrations(database: Database.Database): void {
   applyProfilesToolsParityUpgrade(database, migrationsDir);
   applyMissionRepeatMigration(database, migrationsDir);
   applyMissionQueueMigration(database, migrationsDir);
+  applyCronScheduleCanonicalisation(database);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

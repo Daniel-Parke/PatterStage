@@ -57,7 +57,7 @@ export function buildCronUpdatePayload(
   if (updates.state !== undefined) payload.state = String(updates.state);
 
   if (updates.schedule !== undefined) {
-    const scheduleStr = String(updates.schedule);
+    const scheduleStr = String(updates.schedule).trim();
     const parsed = parseSchedule(scheduleStr);
     if (parsed.kind === "invalid") {
       return {
@@ -68,7 +68,12 @@ export function buildCronUpdatePayload(
         ),
       };
     }
-    payload.schedule = JSON.stringify(parsed);
+    // Canonical storage: the raw 5-field cron expression goes into
+    // `schedule`. Storing `JSON.stringify(parsed)` here (the prior
+    // behaviour) wrapped the cron in `{"kind":"cron","expr":"...","display":"..."}`
+    // and the next read/write round-trip with Hermes corrupted the job to
+    // `kind: "invalid"`. See src/lib/cron/write.ts for the full rationale.
+    payload.schedule = scheduleStr;
     payload.schedule_display =
       "display" in parsed
         ? (parsed as { display: string }).display

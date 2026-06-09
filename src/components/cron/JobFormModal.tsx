@@ -222,7 +222,11 @@ export default function JobFormModal({
         <SchedulePicker
           value={schedule}
           onChange={setSchedule}
-          error={null}
+          error={
+            schedule.trim() && parseSchedule(schedule).kind === "invalid"
+              ? (parseSchedule(schedule) as { kind: "invalid"; message: string }).message
+              : null
+          }
         />
 
         <div className="space-y-1.5">

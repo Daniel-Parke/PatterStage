@@ -93,17 +93,52 @@ type HermesJobRowPartial = Omit<CronJobRow, "id" | "updated_at">;
 
 /** Convert a Hermes raw job to a flat row object matching the cron_jobs INSERT/UPDATE shape. */
 function hermesJobToRow(job: HermesJobRaw): HermesJobRowPartial {
-  // Normalize schedule to JSON string
-  // Handle malformed schedules where a raw cron expr was stored as the kind field,
-  // producing {"kind": "* * * * *"} instead of {"kind": "cron", "expr": "* * * * *"}.
-  let scheduleJson: string;
+  // Convert a Hermes-side `job.schedule` (which can be a 5-field cron
+  // string, a JSON-stringified ParsedSchedule, or a structured
+  // `{kind, expr}` object) into the canonical **raw 5-field cron
+  // expression** for storage in the `cron_jobs.schedule` column.
+  //
+  // The CH→Hermes write path uses the same normaliseScheduleObj helper
+  // (see `syncAllJobsToHermes` above), so a round-trip is stable: CH
+  // stores raw cron, Hermes stores `{kind: "cron", expr: "...", display:
+  // "..."}`, the import path below unwraps `expr`, and the next push
+  // re-wraps it. No JSON-stringified-ParsedSchedule ever touches the
+  // SQLite column.
+  let schedule: string;
   if (typeof job.schedule === "string") {
-    scheduleJson = JSON.stringify({ kind: job.schedule });
+    // Try to interpret as a 5-field cron directly. If it looks like a
+    // JSON-stringified ParsedSchedule (legacy CH export), unwrap one
+    // level to get the inner `expr`.
+    const trimmed = job.schedule.trim();
+    if (looksLikeCronExpression(trimmed)) {
+      schedule = trimmed;
+    } else if (trimmed.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(trimmed) as { kind?: string; expr?: string };
+        if (typeof parsed.expr === "string" && parsed.expr.trim()) {
+          schedule = parsed.expr.trim();
+        } else if (typeof parsed.kind === "string" && looksLikeCronExpression(parsed.kind)) {
+          schedule = parsed.kind;
+        } else {
+          schedule = trimmed;
+        }
+      } catch {
+        schedule = trimmed;
+      }
+    } else {
+      schedule = trimmed;
+    }
   } else if (typeof job.schedule === "object" && job.schedule !== null) {
-    const normalised = normaliseScheduleObj(job.schedule as Record<string, unknown>);
-    scheduleJson = JSON.stringify(normalised);
+    const s = job.schedule as { kind?: unknown; expr?: unknown; display?: unknown };
+    if (typeof s.expr === "string" && s.expr.trim()) {
+      schedule = s.expr.trim();
+    } else if (typeof s.kind === "string" && looksLikeCronExpression(s.kind)) {
+      schedule = s.kind;
+    } else {
+      schedule = "";
+    }
   } else {
-    scheduleJson = JSON.stringify({ kind: "unknown" });
+    schedule = "";
   }
 
   // Normalize repeat
@@ -141,7 +176,7 @@ function hermesJobToRow(job: HermesJobRaw): HermesJobRowPartial {
   })();
 
   return {
-    schedule: scheduleJson,
+    schedule,
     repeat_json: repeatJson,
     name: job.name ?? job.id,
     prompt: job.prompt ?? "",
@@ -399,19 +434,54 @@ export async function syncAllJobsToHermes(): Promise<{ ok: boolean; error?: stri
   const allJobs = listCronJobs();
 
   const jobsForPython = allJobs.map((j) => {
-    // j.schedule is a JSON string from SQLite — parse it to an object for Python.
-    // The Python scheduler expects {kind: "cron", expr: "* * * * *"} for cron
-    // expressions, NOT {kind: "* * * * *"}. Detect and correct malformed schedules.
-    let scheduleObj: Record<string, unknown>;
-    try {
-      const parsed = JSON.parse(j.schedule) as Record<string, unknown>;
-      // normaliseScheduleObj handles both clean and corrupted schedule objects:
-      // - clean:    {"kind":"cron","expr":"*/5 * * * *"} → passed through
-      // - corrupted: {"kind":"* * * * *"}                → normalised to {"kind":"cron","expr":"* * * * *"}
-      scheduleObj = normaliseScheduleObj(parsed);
-    } catch {
-      scheduleObj = { kind: j.schedule || "unknown" };
-    }
+    // Canonical storage: `j.schedule` is the raw 5-field cron expression
+    // (e.g. "0 9 * * 1-5"). For legacy rows written before the schedule
+    // canonicalisation fix, it may be a JSON-stringified `ParsedSchedule`
+    // like `{"kind":"cron","expr":"0 9 * * *","display":"0 9 * * *"}` or
+    // the corrupted `{"kind":"invalid","raw":"...","message":"..."}`
+    // shape. Build the `{kind, expr, display}` object Hermes expects,
+    // handling all three cases.
+    const scheduleObj: Record<string, unknown> = (() => {
+      // Fast path: the new canonical form is just a 5-field cron string
+      // that doesn't start with `{`. Bail out without JSON.parse.
+      const trimmed = (j.schedule ?? "").trim();
+      if (trimmed && !trimmed.startsWith("{")) {
+        return normaliseScheduleObj({ kind: trimmed });
+      }
+      // Legacy / corrupted: try to parse as JSON, then re-derive cron
+      // from any nested expr/display/raw field.
+      try {
+        const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+        // Direct expr on the parsed object (the "JSON-stringified
+        // ParsedSchedule" legacy form).
+        if (typeof parsed.expr === "string" && parsed.expr.trim()) {
+          return normaliseScheduleObj({
+            kind: parsed.expr,
+            display: typeof parsed.display === "string" ? parsed.display : undefined,
+          });
+        }
+        // Corrupted: `kind: "invalid"` with `raw` containing a JSON
+        // stringified ParsedSchedule. Unwrap one level.
+        if (parsed.kind === "invalid" && typeof parsed.raw === "string") {
+          try {
+            const inner = JSON.parse(parsed.raw) as Record<string, unknown>;
+            if (typeof inner.expr === "string" && inner.expr.trim()) {
+              return normaliseScheduleObj({
+                kind: inner.expr,
+                display: typeof inner.display === "string" ? inner.display : undefined,
+              });
+            }
+          } catch {
+            // fall through
+          }
+        }
+        // Fall through to the legacy normalisation (handles the
+        // malformed `{"kind": "* * * * *"}` shape).
+        return normaliseScheduleObj(parsed);
+      } catch {
+        return { kind: j.schedule || "unknown" };
+      }
+    })();
     if (j.schedule_display) {
       scheduleObj.display = j.schedule_display;
     }

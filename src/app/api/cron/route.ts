@@ -90,28 +90,61 @@ async function applyEnabledChange(
 // ── Helpers ───────────────────────────────────────────────────
 
 function recordToApiJob(job: CronJobRecord) {
-  // Two storage formats appear in the wild:
-  //   1. Legacy Hermes JSON: { kind: "0 * * * *", ... }       — kind IS the cron expression
-  //   2. CH JSON-stringified ParsedSchedule:
-  //      { kind: "cron", expr: "0 * * * *", display: "..." } — expr is the cron expression
-  //   3. Raw cron string                                     — already a cron expression
-  // Normalise all three to the raw cron expression for the API consumer.
+  // Storage formats in the wild (in priority order):
+  //   1. Raw 5-field cron expression (the new canonical form) — used
+  //      by all rows written by the schedule-canonicalisation fix.
+  //   2. JSON-stringified ParsedSchedule — legacy CH rows. Shape:
+  //        {"kind":"cron","expr":"0 9 * * *","display":"..."}
+  //   3. Corrupted: {"kind":"invalid","raw":"<json-stringified>","message":"..."}
+  //      One level of JSON.parse recovers the expr; this happens after a
+  //      CH↔Hermes round-trip when the row was written before the fix.
+  //   4. Legacy Hermes shape: {"kind": "0 9 * * *", ...} — kind IS the
+  //      cron expression.
+  // Normalise all four to the raw cron expression for the API consumer.
   let normalizedSchedule: string | null = null;
-  if (job.schedule) {
-    try {
-      const parsed = JSON.parse(job.schedule) as { kind?: unknown; expr?: unknown };
-      if (typeof parsed.kind === "string" && parsed.kind !== "cron" && parsed.kind !== "interval" && parsed.kind !== "once" && parsed.kind !== "invalid") {
-        // Legacy Hermes format: kind field is the cron expression itself
-        normalizedSchedule = parsed.kind;
-      } else if (typeof parsed.expr === "string") {
-        // CH ParsedSchedule format: expr field has the cron expression
-        normalizedSchedule = parsed.expr;
-      } else {
-        normalizedSchedule = null;
+  if (job.schedule && job.schedule !== "?") {
+    const trimmed = job.schedule.trim();
+    if (trimmed && !trimmed.startsWith("{")) {
+      // Case 1: raw cron
+      normalizedSchedule = trimmed;
+    } else if (trimmed.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(trimmed) as {
+          kind?: unknown;
+          expr?: unknown;
+          raw?: unknown;
+        };
+        if (typeof parsed.expr === "string" && parsed.expr.trim()) {
+          // Case 2: CH ParsedSchedule
+          normalizedSchedule = parsed.expr.trim();
+        } else if (
+          parsed.kind === "invalid" &&
+          typeof parsed.raw === "string"
+        ) {
+          // Case 3: corrupted — unwrap the inner JSON-stringified
+          // ParsedSchedule to recover the original expr.
+          try {
+            const inner = JSON.parse(parsed.raw) as { expr?: unknown };
+            if (typeof inner.expr === "string" && inner.expr.trim()) {
+              normalizedSchedule = inner.expr.trim();
+            }
+          } catch {
+            // fall through
+          }
+        } else if (
+          typeof parsed.kind === "string" &&
+          parsed.kind !== "cron" &&
+          parsed.kind !== "interval" &&
+          parsed.kind !== "once" &&
+          parsed.kind !== "invalid"
+        ) {
+          // Case 4: legacy Hermes format — kind field is the cron expr
+          normalizedSchedule = parsed.kind;
+        }
+      } catch {
+        // Malformed JSON — fall back to the raw column value
+        normalizedSchedule = trimmed || null;
       }
-    } catch {
-      // Not JSON — treat as raw cron expression
-      normalizedSchedule = job.schedule !== "?" ? job.schedule : null;
     }
   }
 
