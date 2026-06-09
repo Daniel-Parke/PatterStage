@@ -90,12 +90,28 @@ describe("buildCronUpdatePayload", () => {
     const result = buildCronUpdatePayload({ schedule: "*/5 * * * *" });
     expect(result.ok).toBe(true);
     if (!result.ok) throw new Error("expected ok");
-    // schedule becomes a JSON-stringified ParsedSchedule
-    expect(typeof result.payload.schedule).toBe("string");
+    // Canonical storage: the raw 5-field cron expression lives in
+    // `schedule`. Storing a JSON-stringified ParsedSchedule here
+    // (the prior behaviour) broke the CH↔Hermes round-trip and
+    // corrupted the job to `kind: "invalid"`. See
+    // `src/lib/cron/write.ts` for the full rationale.
+    expect(result.payload.schedule).toBe("*/5 * * * *");
     expect(result.payload.schedule_display).toBe("*/5 * * * *");
-    // Round-trip parses to a non-invalid ParsedSchedule
-    const parsed = JSON.parse(result.payload.schedule as string);
-    expect(parsed.kind).not.toBe("invalid");
+  });
+
+  it("trims whitespace from the schedule string", () => {
+    const result = buildCronUpdatePayload({ schedule: "  */5 * * * *  " });
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected ok");
+    expect(result.payload.schedule).toBe("*/5 * * * *");
+  });
+
+  it("derives a human display label for an 'every Nh' shorthand schedule", () => {
+    const result = buildCronUpdatePayload({ schedule: "every 2h" });
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error("expected ok");
+    expect(result.payload.schedule).toBe("every 2h");
+    expect(result.payload.schedule_display).toBe("every 120m");
   });
 
   it("returns 400 on an invalid cron schedule", () => {

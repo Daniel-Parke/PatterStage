@@ -131,17 +131,48 @@ describe("SchedulePicker", () => {
     expect(onChange).toHaveBeenCalledWith("0 9 * * 1-5");
   });
 
-  it("typing a cron expression in the advanced field calls onChange", () => {
+  it("typing a cron expression in the advanced field calls onChange on blur", () => {
     const onChange = jest.fn();
     render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
 
     // Open the advanced section
     fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
 
-    // Find the advanced input (it has the current value as default)
-    const advancedInput = screen.getByDisplayValue("0 */2 * * *");
+    // The advanced input is now a controlled input. Simulate free-form
+    // typing across multiple keystrokes; the input should NOT reset
+    // mid-word (the previous implementation re-mounted the input on
+    // every parent update, making free-form typing impossible).
+    const advancedInput = screen.getByDisplayValue("0 */2 * * *") as HTMLInputElement;
+    fireEvent.change(advancedInput, { target: { value: "0 9 * * 1" } });
+    // The parent should NOT have received onChange yet (commit is on blur).
+    expect(onChange).not.toHaveBeenCalled();
+    // Continue typing — input must not reset.
     fireEvent.change(advancedInput, { target: { value: "0 9 * * 1-5" } });
+    expect(onChange).not.toHaveBeenCalled();
+    // Commit on blur
+    fireEvent.blur(advancedInput);
+    expect(onChange).toHaveBeenCalledWith("0 9 * * 1-5");
+  });
 
+  it("reverts an invalid advanced draft on blur (does not emit onChange)", () => {
+    const onChange = jest.fn();
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
+    fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
+    const advancedInput = screen.getByDisplayValue("0 */2 * * *") as HTMLInputElement;
+    fireEvent.change(advancedInput, { target: { value: "not a cron at all" } });
+    fireEvent.blur(advancedInput);
+    // The invalid draft should NOT propagate to the parent; the
+    // picker silently reverts to the last good value.
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("commits the advanced draft on Enter", () => {
+    const onChange = jest.fn();
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
+    fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
+    const advancedInput = screen.getByDisplayValue("0 */2 * * *") as HTMLInputElement;
+    fireEvent.change(advancedInput, { target: { value: "0 9 * * 1-5" } });
+    fireEvent.keyDown(advancedInput, { key: "Enter" });
     expect(onChange).toHaveBeenCalledWith("0 9 * * 1-5");
   });
 

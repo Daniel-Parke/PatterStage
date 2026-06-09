@@ -134,6 +134,30 @@ export default function SchedulePicker({
     [canonicalCron],
   );
 
+  // Advanced (raw cron) input: local controlled state. The previous
+  // implementation used `defaultValue` + a `key` that reset on every
+  // parent update, which made free-form typing impossible — every
+  // keystroke called `onChange`, which updated the parent `value`,
+  // which changed the `key`, which remounted the input mid-word.
+  //
+  // The fix: hold the in-progress edit in local state, only sync to
+  // the parent when the user blurs the field or presses Enter. That
+  // way the parent only sees a complete cron expression.
+  const [advancedDraft, setAdvancedDraft] = useState<string>(
+    canonicalCron ?? value,
+  );
+  // Re-seed the draft whenever the parent's `value` changes from a
+  // non-advanced source (preset select, custom builder apply, external
+  // API edit). Without this, switching back to advanced would show a
+  // stale draft from the previous edit session.
+  const lastSeededValueRef = useRef<string>(value);
+  useEffect(() => {
+    if (value !== lastSeededValueRef.current) {
+      lastSeededValueRef.current = value;
+      setAdvancedDraft(canonicalCron ?? value);
+    }
+  }, [value, canonicalCron]);
+
   // Custom builder state
   const [customTime, setCustomTime] = useState<string>("09:00");
   const [customDays, setCustomDays] = useState<Set<DayOfWeek>>(() => allDays());
@@ -193,14 +217,33 @@ export default function SchedulePicker({
     setShowCustom(false);
   }, [customTime, customDays, onChange]);
 
-  const handleAdvancedChange = useCallback(
-    (raw: string) => {
-      const trimmed = raw.trim();
-      if (!trimmed) return;
-      onChange(trimmed);
-    },
-    [onChange],
-  );
+  // `handleAdvancedChange` was removed: the advanced input now manages
+  // its own draft state and commits via onBlur (see the controlled
+  // input block below). The old per-keystroke `onChange` handler was
+  // the source of the input-reset bug.
+
+  // Commit the current advanced draft to the parent. Called on blur
+  // and on Enter. Validates with `parseSchedule`; reverts to the
+  // previous canonical value on empty / invalid input so the parent
+  // never sees garbage.
+  const commitAdvancedDraft = useCallback(() => {
+    const trimmed = advancedDraft.trim();
+    if (!trimmed) {
+      setAdvancedDraft(canonicalCron ?? value);
+      return;
+    }
+    const parsed = parseSchedule(trimmed);
+    if (parsed.kind === "invalid") {
+      setAdvancedDraft(canonicalCron ?? value);
+      return;
+    }
+    const emitted =
+      parsed.kind === "cron" && "expr" in parsed ? parsed.expr : trimmed;
+    if (emitted !== value) {
+      onChange(emitted);
+    }
+    setAdvancedDraft(emitted);
+  }, [advancedDraft, canonicalCron, value, onChange]);
 
   const toggleDay = useCallback((d: DayOfWeek) => {
     setCustomDays((prev) => {
@@ -479,9 +522,17 @@ export default function SchedulePicker({
       {showAdvanced && (
         <input
           type="text"
-          defaultValue={canonicalCron ?? value}
-          key={canonicalCron ?? value}
-          onChange={(e) => handleAdvancedChange(e.target.value)}
+          value={advancedDraft}
+          onChange={(e) => setAdvancedDraft(e.target.value)}
+          onBlur={commitAdvancedDraft}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commitAdvancedDraft();
+            } else if (e.key === "Escape") {
+              setAdvancedDraft(canonicalCron ?? value);
+            }
+          }}
           placeholder="e.g. 0 9 * * 1-5"
           className={baseInputStyles}
           spellCheck={false}

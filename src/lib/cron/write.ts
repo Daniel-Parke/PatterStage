@@ -8,14 +8,45 @@ import { parseSchedule } from "../utils";
 import type { CronJobRecord, CronJobRow, CreateCronJobInput, UpdateCronJobInput } from "./types";
 import { getCronJob } from "./read";
 
+/**
+ * Canonical schedule storage helper.
+ *
+ * The `cron_jobs.schedule` column stores the **raw 5-field cron expression**
+ * (or whatever raw schedule string was provided). Wrapping the schedule in
+ * `JSON.stringify({kind, expr, display})` and storing that string causes a
+ * data-corruption cascade on the next read-write round-trip with Hermes —
+ * the Hermes scheduler re-validates schedule fields and the wrapped string
+ * is rejected as `kind: "invalid"`, breaking the job.
+ *
+ * The display label (e.g. "Weekdays at 9am") lives in a separate
+ * `schedule_display` column. `parseSchedule` is still called here to
+ * extract the canonical display value when the input is an "every Nh"
+ * shorthand.
+ */
+export function parseScheduleToDisplay(
+  schedule: string
+): { schedule: string; scheduleDisplay: string } {
+  const parsed = parseSchedule(schedule);
+  return {
+    schedule: schedule.trim(),
+    scheduleDisplay: "display" in parsed ? (parsed.display as string) : schedule.trim(),
+  };
+}
+
+/**
+ * Back-compat: legacy callers (and tests) still expect the `{scheduleJson,
+ * scheduleDisplay}` shape. The new canonical storage is the raw cron
+ * string in `schedule`, not a JSON-stringified `ParsedSchedule`. This
+ * function is kept as a thin adapter so existing call sites compile; the
+ * returned `scheduleJson` is now the raw cron expression.
+ *
+ * @deprecated use `parseScheduleToDisplay` instead.
+ */
 export function parseScheduleToJson(
   schedule: string
 ): { scheduleJson: string; scheduleDisplay: string } {
-  const parsed = parseSchedule(schedule);
-  return {
-    scheduleJson: JSON.stringify(parsed),
-    scheduleDisplay: "display" in parsed ? (parsed.display as string) : schedule,
-  };
+  const { schedule: raw, scheduleDisplay } = parseScheduleToDisplay(schedule);
+  return { scheduleJson: raw, scheduleDisplay };
 }
 
 /** Normalize a raw repeat value (boolean or object) to canonical shape. */
