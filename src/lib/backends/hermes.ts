@@ -56,12 +56,14 @@ export async function resolveMissionModel(input: {
   modelId?: string;
   provider?: string;
 }): Promise<{ modelId: string; provider: string; apiKey: string | null }> {
+  // The Control Hub models registry is the SINGLE SOURCE OF TRUTH for which
+  // model any mission can run on. We always consult the registry before
+  // trusting any caller-supplied value — even when both `modelId` and
+  // `provider` are populated. A foreign modelId (e.g. a string that does not
+  // exist in the `models` table) MUST be rejected; we fall through to the
+  // agent default instead. This closes the historical leak where the
+  // early-return path trusted the supplied pair verbatim.
   const trimmedId = input.modelId?.trim() ?? "";
-  const trimmedProvider = input.provider?.trim() ?? "";
-
-  if (trimmedId && trimmedProvider) {
-    return { modelId: trimmedId, provider: trimmedProvider, apiKey: null };
-  }
 
   if (trimmedId) {
     const model = findModelByModelId(trimmedId);
