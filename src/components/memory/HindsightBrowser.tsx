@@ -18,6 +18,7 @@ import { SearchInput } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { safeApiCall } from "@/lib/api-fetch";
+import { hindsightGet } from "@/lib/hindsight-client";
 import { parseOptionalTagsInput, parseTagsInput } from "@/lib/hindsight-tag-input";
 import { stringOr } from "./hindsight/utils";
 import type { Tab, Memory, Directive, MentalModel, HealthState } from "./hindsight/types";
@@ -88,15 +89,15 @@ export default function HindsightBrowser() {
   // ── Health ───────────────────────────────────────────────
 
   const fetchHealthOnly = useCallback(async () => {
-    // Envelope-typed: the route returns `{ data: HealthState }`,
-    // so the type is `{ data?: HealthState }`. `safeApiCall<T>`
-    // does NOT unwrap — `data` is the full body — so the inner
-    // payload is `result.data?.data`.
-    const { data, error } = await safeApiCall<{ data?: HealthState }>("/api/memory/hindsight?action=health");
-    if (data?.data) {
-      setHealth(data.data);
+    // `hindsightGet` returns the inner payload typed as `T | null`;
+    // `null` covers both error and missing-data cases. On null we
+    // surface a synthesised "unavailable" state so the HealthBanner
+    // has something to render.
+    const inner = await hindsightGet<HealthState>("health");
+    if (inner) {
+      setHealth(inner);
     } else {
-      setHealth({ available: false, mode: "unknown", message: error || "No response" });
+      setHealth({ available: false, mode: "unknown", message: "No response" });
     }
   }, []);
 
@@ -106,13 +107,16 @@ export default function HindsightBrowser() {
     setLoadingInitial(true);
     // Envelope-typed: the route returns
     // `{ data: { memories, mode, error } }`.
-    const { data, error } = await safeApiCall<{ data?: { memories?: Memory[]; mode?: string; error?: string } }>("/api/memory/hindsight?action=list&limit=50");
-    if (error || data?.data?.error) {
+    const inner = await hindsightGet<{ memories?: Memory[]; mode?: string; error?: string }>(
+      "list",
+      { limit: 50 },
+    );
+    if (inner?.error) {
       void fetchHealthOnly();
     } else {
-      setMemories(data?.data?.memories || []);
-      if (data?.data) {
-        setHealth({ available: true, mode: stringOr(data.data.mode, "ok") });
+      setMemories(inner?.memories || []);
+      if (inner) {
+        setHealth({ available: true, mode: stringOr(inner.mode, "ok") });
       }
     }
     setLoadingInitial(false);
@@ -132,19 +136,24 @@ export default function HindsightBrowser() {
     try {
       // Envelope-typed: the route returns
       // `{ data: { memories, available, mode, message, error } }`.
-      const { data, error } = await safeApiCall<{ data?: { memories?: Memory[]; available?: boolean; mode?: string; message?: string; error?: string } }>(`/api/memory/hindsight?action=recall&query=${encodeURIComponent(q)}`);
-      if (error) {
-        showToast(error, "error");
+      const inner = await hindsightGet<{
+        memories?: Memory[];
+        available?: boolean;
+        mode?: string;
+        message?: string;
+        error?: string;
+      }>("recall", { query: q });
+      if (!inner) {
         await fetchHealthOnly();
         return;
       }
-      setMemories(data?.data?.memories || []);
-      const backendSaysDown = data?.data?.available === false || (typeof data?.data?.error === "string" && data.data.error.length > 0);
+      setMemories(inner.memories || []);
+      const backendSaysDown = inner.available === false || (typeof inner.error === "string" && inner.error.length > 0);
       if (!backendSaysDown) {
         setHealth({
           available: true,
-          mode: stringOr(data?.data?.mode, "ok"),
-          message: stringOr(data?.data?.message),
+          mode: stringOr(inner.mode, "ok"),
+          message: stringOr(inner.message),
         });
       } else {
         await fetchHealthOnly();
@@ -167,12 +176,12 @@ export default function HindsightBrowser() {
     setReflecting(true);
     setReflectResult(null);
     // Single-nesting: type param is the inner `{response}` shape.
-    const { data, error } = await safeApiCall<{ data?: { response?: string } }>(`/api/memory/hindsight?action=reflect&query=${encodeURIComponent(search)}`);
+    const inner = await hindsightGet<{ response?: string }>("reflect", { query: search });
     setReflecting(false);
-    if (error) {
-      showToast(error, "error");
+    if (!inner) {
+      showToast("Reflection failed", "error");
     } else {
-      setReflectResult(data?.data?.response || "No reflection generated");
+      setReflectResult(inner.response || "No reflection generated");
     }
   };
 
@@ -201,14 +210,14 @@ export default function HindsightBrowser() {
   const loadDirectives = useCallback(async () => {
     setLoadingDirectives(true);
     // Envelope-typed: the route returns `{ data: { directives, error } }`.
-    const { data, error } = await safeApiCall<{ data?: { directives?: Directive[]; error?: string } }>("/api/memory/hindsight?action=directives");
+    const inner = await hindsightGet<{ directives?: Directive[]; error?: string }>("directives");
     setLoadingDirectives(false);
-    if (error || data?.data?.error) {
-      showToast(error || data?.data?.error || "Failed to load directives", "error");
+    if (inner?.error) {
+      showToast(inner.error, "error");
       setDirectives([]);
       return;
     }
-    setDirectives(data?.data?.directives || []);
+    setDirectives(inner?.directives || []);
   }, [showToast]);
 
   useEffect(() => {
@@ -294,14 +303,14 @@ export default function HindsightBrowser() {
   const loadModels = useCallback(async () => {
     setLoadingModels(true);
     // Envelope-typed: the route returns `{ data: { models, error } }`.
-    const { data, error } = await safeApiCall<{ data?: { models?: MentalModel[]; error?: string } }>("/api/memory/hindsight?action=mental-models");
+    const inner = await hindsightGet<{ models?: MentalModel[]; error?: string }>("mental-models");
     setLoadingModels(false);
-    if (error || data?.data?.error) {
-      showToast(error || data?.data?.error || "Failed to load mental models", "error");
+    if (inner?.error) {
+      showToast(inner.error, "error");
       setMentalModels([]);
       return;
     }
-    setMentalModels(data?.data?.models || []);
+    setMentalModels(inner?.models || []);
   }, [showToast]);
 
   useEffect(() => {

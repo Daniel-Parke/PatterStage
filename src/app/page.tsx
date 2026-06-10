@@ -49,11 +49,11 @@ import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
 import { isMissionActive } from "@/lib/mission-board";
 import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
 import { computeCronJobRowCaption } from "@/lib/cron-row-helpers";
+import { composeTemplateUrl, withCronJobSchedule } from "@/lib/dashboard-helpers";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { useInterval } from "@/hooks/useInterval";
 import { usePolledUpdates } from "@/hooks/usePolledUpdates";
 
-// ── Typed response shapes for each API endpoint ─────────────
 /**
  * Shape of a single template as returned by /api/templates. The dashboard
  * uses the same shape for both the API response and the local state
@@ -72,49 +72,6 @@ export interface TemplateListItem {
   description: string;
   isCustom?: boolean;
 }
-interface TemplatesResponseData { templates: TemplateListItem[]; }
-interface CategoriesResponseData { categories: MissionCategory[]; }
-interface AgentsResponseData { processes: HermesProcess[]; }
-interface MissionsResponseData { missions: MissionBrief[]; }
-interface DefaultsResponseData { defaults: { agent?: string } | null; }
-
-/** Build the missions page URL that opens the compose form prefilled with this template. */
-function composeTemplateUrl(templateId: string): string {
-  return `/orchestration/missions?template=${templateId}&compose=1`;
-}
-
-/**
- * Return a new monitor with the given cron job's schedule field set
- * to `newSchedule`. Used by the dashboard's "update cron schedule"
- * handler to apply the change optimistically before the API call
- * round-trips. The original `monitor` is returned when it is null
- * (defensive — the page already guards against this case via a
- * showToast, but the helper stays safe to call on stale state).
- *
- * Pure function: never mutates the input. The caller passes the
- * current `data.monitor` (or the value of `prev.monitor` if it ever
- * adopts the updater form again) and the helper returns a new
- * `MonitorData` object so the React reference-equality checks
- * downstream see a new monitor object only when the target job
- * actually exists.
- */
-function withCronJobSchedule(
-  monitor: MonitorData | null,
-  jobId: string,
-  newSchedule: string,
-): MonitorData | null {
-  if (!monitor) return monitor;
-  return {
-    ...monitor,
-    cron: {
-      ...monitor.cron,
-      jobs: monitor.cron.jobs.map((job) =>
-        job.id === jobId ? { ...job, schedule: newSchedule } : job,
-      ),
-    },
-  };
-}
-
 // ── Live Clock (isolated re-render) ───────────────────────────
 
 const LiveClock = reactMemo(function LiveClock() {
@@ -354,12 +311,12 @@ export default function Dashboard() {
       ] = await Promise.all([
         safeApiCallData<SystemStatus>("/api/status", { signal }),
         safeApiCallData<Record<string, unknown>>("/api/config", { signal }),
-        safeApiCallData<TemplatesResponseData>("/api/templates", { signal }),
-        safeApiCallData<CategoriesResponseData>("/api/mission-categories", { signal }),
+        safeApiCallData<{ templates: TemplateListItem[] }>("/api/templates", { signal }),
+        safeApiCallData<{ categories: MissionCategory[] }>("/api/mission-categories", { signal }),
         safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store", signal }),
-        safeApiCallData<AgentsResponseData>("/api/agents", { signal }),
-        safeApiCallData<MissionsResponseData>("/api/missions", { signal }),
-        safeApiCallData<DefaultsResponseData>("/api/models/defaults", { signal }),
+        safeApiCallData<{ processes: HermesProcess[] }>("/api/agents", { signal }),
+        safeApiCallData<{ missions: MissionBrief[] }>("/api/missions", { signal }),
+        safeApiCallData<{ defaults: { agent?: string } | null }>("/api/models/defaults", { signal }),
       ]);
 
       if (!signal.aborted) {

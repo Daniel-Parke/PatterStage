@@ -24,7 +24,7 @@ import {
   resolveHermesVenvPython,
 } from "../hermes-package-path";
 import { spawnAsync, formatProcessError } from "../process-utils";
-import { looksLikeCronExpression } from "../schedule/parse-schedule";
+import { looksLikeCronExpression, parseSchedule } from "../schedule/parse-schedule";
 
 import type {
   CronJobRow,
@@ -409,14 +409,98 @@ function buildPythonScript(
 /**
  * Normalise a schedule object to the canonical {kind: "cron", expr: "..."} or
  * {kind: "interval", minutes: N} shape. Handles the common corruption where
- * a raw cron expression is stored as the "kind" field.
+ * a raw cron expression is stored as the "kind" field, AND the interval
+ * shorthand case where `kind` is the human "every 30m" string.
+ *
+ * The Python scheduler's `parse_schedule` accepts a STRING and produces a
+ * structured object — but the CH→Hermes push path skips `parse_schedule`
+ * and writes the object directly. So we must pre-parse here: if `kind` is
+ * an "every Nm / Nh / Nd" string (the only kind of non-cron value that
+ * reaches this function), parse it through the local `parseSchedule` to
+ * extract the interval minutes, and emit the proper `{kind: "interval",
+ * minutes, display}` object the Python scheduler computes `next_run_at`
+ * from.
  */
 function normaliseScheduleObj(sched: Record<string, unknown>): Record<string, unknown> {
   const kind = sched?.kind;
   if (typeof kind === "string" && looksLikeCronExpression(kind)) {
     return { kind: "cron", expr: kind, ...(sched.display ? { display: sched.display } : {}) };
   }
+  // "every Nm / Nh / Nd" shorthand stored as `kind` (the live mission
+  // bug — see reference/cron-schedule-canonicalisation-2026-06-09.md
+  // and reference/cron-interval-shorthand-push-2026-06-10.md).
+  if (typeof kind === "string") {
+    const parsed = parseSchedule(kind);
+    if (parsed.kind === "interval") {
+      return {
+        kind: "interval",
+        minutes: parsed.minutes,
+        ...(sched.display || parsed.display ? { display: sched.display ?? parsed.display } : {}),
+      };
+    }
+  }
   return sched;
+}
+
+/**
+ * Build the structured schedule object that `syncAllJobsToHermes` (and
+ * `hermesJobToRow`, the import path) will hand to the Python scheduler
+ * for a given `cron_jobs.schedule` value. Exported for unit tests so
+ * the push path's contract — the Python scheduler only accepts
+ * `kind ∈ {"cron", "interval", "once", "invalid"}` — can be pinned
+ * without spinning up a real Python subprocess.
+ *
+ * Accepts the same four storage shapes `cron_jobs.schedule` may be in:
+ *  - raw 5-field cron (canonical)
+ *  - "every Nm / Nh / Nd" shorthand (also canonical, per v7)
+ *  - JSON-stringified `ParsedSchedule` (legacy pre-#168)
+ *  - corrupted `{kind: "invalid", raw: "..."}` (legacy pre-#168)
+ *  - and falls through unchanged for unrecognised input (the Python
+ *    scheduler itself will mark it `kind: "invalid"`).
+ */
+export function buildScheduleObjForHermes(
+  schedule: string,
+  scheduleDisplay?: string | null,
+): Record<string, unknown> {
+  const trimmed = (schedule ?? "").trim();
+  let scheduleObj: Record<string, unknown>;
+  if (trimmed && !trimmed.startsWith("{")) {
+    // Canonical (5-field cron or "every Nm / Nh / Nd" shorthand).
+    scheduleObj = normaliseScheduleObj({ kind: trimmed });
+  } else {
+    // Legacy / corrupted: try to parse as JSON.
+    try {
+      const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+      if (typeof parsed.expr === "string" && parsed.expr.trim()) {
+        scheduleObj = normaliseScheduleObj({
+          kind: parsed.expr,
+          display: typeof parsed.display === "string" ? parsed.display : undefined,
+        });
+      } else if (parsed.kind === "invalid" && typeof parsed.raw === "string") {
+        try {
+          const inner = JSON.parse(parsed.raw) as Record<string, unknown>;
+          if (typeof inner.expr === "string" && inner.expr.trim()) {
+            scheduleObj = normaliseScheduleObj({
+              kind: inner.expr,
+              display: typeof inner.display === "string" ? inner.display : undefined,
+            });
+          } else {
+            scheduleObj = normaliseScheduleObj(parsed);
+          }
+        } catch {
+          scheduleObj = normaliseScheduleObj(parsed);
+        }
+      } else {
+        scheduleObj = normaliseScheduleObj(parsed);
+      }
+    } catch {
+      scheduleObj = { kind: schedule || "unknown" };
+    }
+  }
+  if (scheduleDisplay) {
+    scheduleObj.display = scheduleDisplay;
+  }
+  return scheduleObj;
 }
 
 /**
@@ -434,57 +518,15 @@ export async function syncAllJobsToHermes(): Promise<{ ok: boolean; error?: stri
   const allJobs = listCronJobs();
 
   const jobsForPython = allJobs.map((j) => {
-    // Canonical storage: `j.schedule` is the raw 5-field cron expression
-    // (e.g. "0 9 * * 1-5"). For legacy rows written before the schedule
-    // canonicalisation fix, it may be a JSON-stringified `ParsedSchedule`
-    // like `{"kind":"cron","expr":"0 9 * * *","display":"0 9 * * *"}` or
-    // the corrupted `{"kind":"invalid","raw":"...","message":"..."}`
-    // shape. Build the `{kind, expr, display}` object Hermes expects,
-    // handling all three cases.
-    const scheduleObj: Record<string, unknown> = (() => {
-      // Fast path: the new canonical form is just a 5-field cron string
-      // that doesn't start with `{`. Bail out without JSON.parse.
-      const trimmed = (j.schedule ?? "").trim();
-      if (trimmed && !trimmed.startsWith("{")) {
-        return normaliseScheduleObj({ kind: trimmed });
-      }
-      // Legacy / corrupted: try to parse as JSON, then re-derive cron
-      // from any nested expr/display/raw field.
-      try {
-        const parsed = JSON.parse(trimmed) as Record<string, unknown>;
-        // Direct expr on the parsed object (the "JSON-stringified
-        // ParsedSchedule" legacy form).
-        if (typeof parsed.expr === "string" && parsed.expr.trim()) {
-          return normaliseScheduleObj({
-            kind: parsed.expr,
-            display: typeof parsed.display === "string" ? parsed.display : undefined,
-          });
-        }
-        // Corrupted: `kind: "invalid"` with `raw` containing a JSON
-        // stringified ParsedSchedule. Unwrap one level.
-        if (parsed.kind === "invalid" && typeof parsed.raw === "string") {
-          try {
-            const inner = JSON.parse(parsed.raw) as Record<string, unknown>;
-            if (typeof inner.expr === "string" && inner.expr.trim()) {
-              return normaliseScheduleObj({
-                kind: inner.expr,
-                display: typeof inner.display === "string" ? inner.display : undefined,
-              });
-            }
-          } catch {
-            // fall through
-          }
-        }
-        // Fall through to the legacy normalisation (handles the
-        // malformed `{"kind": "* * * * *"}` shape).
-        return normaliseScheduleObj(parsed);
-      } catch {
-        return { kind: j.schedule || "unknown" };
-      }
-    })();
-    if (j.schedule_display) {
-      scheduleObj.display = j.schedule_display;
-    }
+    // The schedule payload is built via buildScheduleObjForHermes,
+    // which handles the four storage shapes (canonical cron, "every
+    // Nm/Nh/Nd" shorthand, JSON-stringified legacy, corrupted
+    // {kind: "invalid", raw: "..."}) and always produces an object
+    // whose `kind` is in the Python scheduler's accepted vocabulary.
+    // See references/cron-schedule-canonicalisation-2026-06-09.md and
+    // references/cron-interval-shorthand-push-2026-06-10.md for the
+    // history of the corruption cascade this helper closes off.
+    const scheduleObj = buildScheduleObjForHermes(j.schedule, j.schedule_display);
     // j.repeat is a parsed object — stringify it for Python's json.loads()
     const repeatObj = j.repeat ?? { times: 1, completed: 0 };
     return {
