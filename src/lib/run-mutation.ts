@@ -52,8 +52,15 @@ export interface RunMutationOptions<TBody extends Record<string, unknown>> {
    * passes; pass `() => !x.name.trim()` to enforce a required field.
    */
   isValid?: () => boolean;
-  /** React state setter to flip busy → true on entry, false on exit (in finally). */
-  busy: BusySetter;
+  /**
+   * React state setter to flip busy → true on entry, false on exit
+   * (in finally). Optional — handlers that don't expose a busy
+   * indicator (e.g. the Hindsight browser's `handleToggleDirective`
+   * which is a single-row icon button with no spinner) can omit
+   * it. The default is a no-op that satisfies the existing
+   * `Dispatch<SetStateAction<boolean>>` contract.
+   */
+  busy?: BusySetter;
   /** Build the request body. Runs after the guard, before the call. */
   build: () => TBody;
   /**
@@ -102,8 +109,12 @@ export async function runMutation<TBody extends Record<string, unknown>>(
   showToast: (msg: string, kind: "success" | "error" | "info") => void,
   opts: RunMutationOptions<TBody>,
 ): Promise<boolean> {
+  // `busy` is optional — handlers that don't expose a loading indicator
+  // (e.g. single-row icon buttons) omit it. Resolve to a no-op so the
+  // try/finally below doesn't need to repeat the optional-chain.
+  const setBusy: BusySetter = opts.busy ?? (() => undefined);
   if (opts.isValid && !opts.isValid()) return false;
-  opts.busy(true);
+  setBusy(true);
   try {
     const body = opts.build();
     const result = await safeApiCall<Record<string, unknown>>(opts.path, {
@@ -122,6 +133,6 @@ export async function runMutation<TBody extends Record<string, unknown>>(
     showToast(opts.errorMsg, "error");
     return false;
   } finally {
-    opts.busy(false);
+    setBusy(false);
   }
 }

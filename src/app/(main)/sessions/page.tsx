@@ -52,6 +52,7 @@ import { useApiData } from "@/hooks/useApiData";
 import { useInterval } from "@/hooks/useInterval";
 import { useStoredBool } from "@/hooks/useStoredBool";
 import { searchSessionsByQuery, isApiNoiseSession } from "@/lib/session-filters";
+import { buildGroupedEntries, type MissionGroup } from "@/lib/sessions-grouping";
 import AppPageShell from "@/components/layout/AppPageShell";
 import type { SessionRecord } from "@/lib/session-repository";
 import type { SessionSource } from "@/lib/session-repository";
@@ -65,83 +66,11 @@ interface SessionsResponse {
   total: number;
 }
 
-interface MissionGroup {
-  kind: "mission";
-  key: string;
-  missionId: string;
-  sessions: SessionRecord[];
-  firstStartedAt: string;
-  lastStartedAt: string;
-  activeCount: number;
-}
-
-interface SingleSession {
-  kind: "session";
-  key: string;
-  session: SessionRecord;
-}
-
-type ListEntry = MissionGroup | SingleSession;
-
 // ── Constants ────────────────────────────────────────────────
 
 const PAGE_SIZE = 50;
 const GROUP_BY_MISSION_STORAGE_KEY = "ch.sessions.groupByMission";
 const HIDE_API_NOISE_STORAGE_KEY = "ch.sessions.hideApiNoise";
-
-// ── Grouping helper ──────────────────────────────────────────
-
-function buildGroupedEntries(
-  sessions: SessionRecord[],
-  groupByMission: boolean,
-): ListEntry[] {
-  if (!groupByMission) {
-    return sessions.map((s) => ({ kind: "session", key: s.id, session: s }));
-  }
-
-  const missionGroups = new Map<string, SessionRecord[]>();
-  const standalone: SessionRecord[] = [];
-
-  for (const s of sessions) {
-    if (s.missionId) {
-      const list = missionGroups.get(s.missionId) ?? [];
-      list.push(s);
-      missionGroups.set(s.missionId, list);
-    } else {
-      standalone.push(s);
-    }
-  }
-
-  const entries: ListEntry[] = [];
-  for (const [missionId, list] of missionGroups.entries()) {
-    // Sort within group: newest first
-    list.sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1));
-    const firstStartedAt = list[list.length - 1].startedAt;
-    const lastStartedAt = list[0].startedAt;
-    const activeCount = list.filter((s) => s.status === "active").length;
-    entries.push({
-      kind: "mission",
-      key: `mission:${missionId}`,
-      missionId,
-      sessions: list,
-      firstStartedAt,
-      lastStartedAt,
-      activeCount,
-    });
-  }
-  for (const s of standalone) {
-    entries.push({ kind: "session", key: s.id, session: s });
-  }
-
-  // Sort entries: mission groups first (by last activity), then standalone
-  entries.sort((a, b) => {
-    const aTime = a.kind === "mission" ? a.lastStartedAt : a.session.startedAt;
-    const bTime = b.kind === "mission" ? b.lastStartedAt : b.session.startedAt;
-    return aTime < bTime ? 1 : -1;
-  });
-
-  return entries;
-}
 
 // ── Components ───────────────────────────────────────────────
 
@@ -337,18 +266,17 @@ export default function SessionsPage() {
   // All known session source types — always show filter buttons regardless of current page contents
   const sources = Object.keys(SOURCE_META) as SessionSource[];
 
-  const searchedSessions = useMemo(
-    () => searchSessionsByQuery(sessions, search),
-    [sessions, search],
-  );
-
-  // Apply "hide API noise" filter (opt-in, default off). Heuristic and
-  // date arithmetic both live in isApiNoiseSession (src/lib/session-filters.ts)
-  // so the predicate is unit-testable without rendering the page.
-  const filteredSessions = useMemo(
-    () => (hideApiNoise ? searchedSessions.filter((s) => !isApiNoiseSession(s)) : searchedSessions),
-    [searchedSessions, hideApiNoise],
-  );
+  // Combined search + "hide API noise" filter. Both passes live in
+  // the same `useMemo` because the noise filter is just a refinement
+  // of the search result (an opt-in second predicate). The merged
+  // shape avoids a 2-step chain of `useMemo`es where the intermediate
+  // `searchedSessions` is only read once. The noise predicate and
+  // search predicate are still pure helpers (searchSessionsByQuery /
+  // isApiNoiseSession) so each one is unit-testable in isolation.
+  const filteredSessions = useMemo(() => {
+    const matched = searchSessionsByQuery(sessions, search);
+    return hideApiNoise ? matched.filter((s) => !isApiNoiseSession(s)) : matched;
+  }, [sessions, search, hideApiNoise]);
 
   const entries = useMemo(
     () => buildGroupedEntries(filteredSessions, groupByMission),

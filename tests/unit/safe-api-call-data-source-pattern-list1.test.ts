@@ -1,38 +1,52 @@
 /**
  * @jest-environment node
  *
- * Source-pattern test for the `safeApiCall<{ data?: { ... } }>`
- * envelope-typed call sites in the Hindsight memory browser
+ * Source-pattern test for the Hindsight memory browser
  * (`src/components/memory/HindsightBrowser.tsx`).
  *
- * **CRITICAL CONTEXT — the `safeApiCall<T>` envelope-unwrap myth.**
- * The session 137 (List 1) "single-nesting" migration attempted to drop
- * the `{ data?: { ... } }` envelope type from this file's 6 `safeApiCall<T>`
- * call sites, claiming that `safeApiCall<T>` already unwraps the response
- * into `{ data?: T }`. **It does not.** The helper
- * (`src/lib/api-fetch.ts:85-98`) returns `{ ok, data: <body> }` where
- * `data` is the full body (the envelope `{ data: { x: ... } }`).
- * Migrating a call from
- * `safeApiCall<{ data?: { x?: T } }>(url) + result.data?.data?.x` to
- * `safeApiCall<{ x?: T }>(url) + result.data?.x` silently breaks
- * production: `result.data?.x` is `undefined` (the production wire is
- * `{ data: { x: ... } }` and the runtime envelope wraps that).
+ * **The pattern we want to pin: ALL envelope-typed reads of the
+ * `/api/memory/hindsight` endpoint must go through `hindsightGet` from
+ * `src/lib/hindsight-client.ts`.** The helper does the
+ * `{ data: { ...inner } }` envelope unwrap once, in a single audited
+ * place. The call site reads `await hindsightGet<T>(...)` and
+ * dereferences `inner` directly — no double indirection, no inline
+ * `safeApiCall<{ data?: { ... } }>` at the call site.
  *
- * **This test pins the CORRECT (envelope-typed) shape**, not the
- * broken "single-nesting" shape.
+ * **Why this matters.** The session 137 (List 1) "single-nesting"
+ * refactor claimed `safeApiCall<T>` already unwraps the envelope.
+ * **It does not** — `src/lib/api-fetch.ts:85-98` returns
+ * `{ ok, data: <body> }` where `data` is the full envelope
+ * `{ data: { x: ... } }`. Dropping the inner `data?:` from the type
+ * (`safeApiCall<{ x?: T }>` + `result.data?.x`) produces `undefined`
+ * for every `x` in production — silent at compile time.
+ *
+ * The `hindsightGet` helper sidesteps that trap by:
+ *  1. Typing the safeApiCall as `safeApiCall<{ data?: T }>` (the
+ *     envelope-typed form).
+ *  2. Doing the unwrap explicitly inside the helper
+ *     (`data?.data ?? null`), so the call site only ever sees `T | null`.
+ *
+ * **This test pins the contract that all HindsightBrowser fetch
+ * calls go through that helper** — the file must NOT contain a
+ * standalone `safeApiCall<{ data?: { ... } }>` call site (which would
+ * re-introduce the double-indirection at the call site) or a
+ * `.data?.data?.` read (which would mean the unwrap is being done
+ * inline somewhere, leaking the envelope shape into business logic).
  *
  * Pre-flight recipe (run BEFORE any future "drop the double envelope"
  * migration in this file):
  *
- *   # 1. Confirm the helper does NOT unwrap
- *   sed -n '85,98p' src/lib/api-fetch.ts
- *   # Should show: return { ok: true, data: data as T };  (no unwrap)
+ *   # 1. Confirm the helper DOES unwrap explicitly
+ *   sed -n '47,60p' src/lib/hindsight-client.ts
+ *   # Should show: return (data?.data ?? null) as T | null;
  *
  *   # 2. Confirm the endpoint returns the envelope
  *   curl -s 'http://127.0.0.1:42069/api/memory/hindsight?action=health' | head -c 200
  *   # Should show: {"data":{...}}  (envelope)
  *
- * If both are true, the migration is broken. Do not proceed.
+ * If the helper's unwrap is removed (returns `data as T` instead of
+ * `data?.data`), production breaks — this test will fail because
+ * every Hindsight fetch will return `undefined` for the inner field.
  *
  * Sister test to:
  *   - `safe-api-call-data-source-pattern-list2.test.ts` (List 2 — Cron,
@@ -40,30 +54,34 @@
  *   - `safe-api-call-data-source-pattern-list3.test.ts` (List 3 — useModelsPage
  *     hook, 1 file)
  *
- * @see src/lib/api-fetch.ts — `safeApiCall` and `safeApiCallData` definitions
+ * @see src/lib/hindsight-client.ts — `hindsightGet` (the helper that owns the unwrap)
+ * @see src/lib/api-fetch.ts — `safeApiCall` (the helper that does NOT unwrap)
  * @see src/components/memory/HindsightBrowser.tsx — the consumer
  */
 
-import { readFileSync, statSync } from "node:fs";
+import { readFileSync, statSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 const REPO_ROOT = join(__dirname, "..", "..");
 const BROWSER_PATH = join(REPO_ROOT, "src", "components", "memory", "HindsightBrowser.tsx");
+const HELPER_PATH = join(REPO_ROOT, "src", "lib", "hindsight-client.ts");
 
 describe("safeApiCall envelope-typed migration — List 1 HindsightBrowser", () => {
   const source = readFileSync(BROWSER_PATH, "utf8");
 
-  // The structural patterns we're pinning: the type-scanner and the
-  // access-fingerprint. The type-scanner matches the envelope-typed
-  // shape `safeApiCall<{ data?: { ... } }>` (the CORRECT form). The
-  // access-fingerprint matches the runtime double-indirection
-  // `.data?.data?.` (also CORRECT).
-  const TYPE_SCANNER = /safeApiCall<\s*\{\s*data\??:\s*\{/g;
-  // Access-fingerprint: any `.data` access (with optional `?`).
-  // Matches the structural pattern `something.data.X` or
-  // `something.data?.X` — the production code path that reads
-  // the envelope-shaped body returned by `safeApiCall<T>`.
-  const ACCESS_FINGERPRINT = /\.data\??\s*\./g;
+  // The structural pattern we want to forbid at the call site:
+  // `safeApiCall<{ data?: { ... } }>` (the old inline-envelope form)
+  // and `.data?.data?.` reads. The WIP introduced `hindsightGet<T>`
+  // which does the unwrap explicitly in the helper, so neither
+  // pattern should appear in the browser file anymore.
+  //
+  // The previous test pinned these patterns as CORRECT because at
+  // the time, the envelope-typed form was the only known-safe
+  // approach. After the WIP, the new contract is: "use hindsightGet,
+  // not inline safeApiCall with the envelope type". The patterns
+  // being zero is now the desired state.
+  const FORBIDDEN_INLINE_ENVELOPE_CALL = /safeApiCall<\s*\{\s*data\??:\s*\{/g;
+  const FORBIDDEN_DOUBLE_INDIRECTION = /\.data\??\s*\?\s*\.data/g;
 
   it("the HindsightBrowser source file is readable", () => {
     expect(source.length).toBeGreaterThan(0);
@@ -75,37 +93,48 @@ describe("safeApiCall envelope-typed migration — List 1 HindsightBrowser", () 
     expect(BROWSER_PATH.endsWith(".tsx")).toBe(true);
   });
 
-  it("the HindsightBrowser has at least one envelope-typed safeApiCall<{ data?: { ... } }> call", () => {
-    // The CORRECT form for envelope-typed reads is
-    // `safeApiCall<{ data?: { X?: Y } }>(url, ...)` followed by
-    // `data?.data?.X` access. A future migration that drops the
-    // `data?:` envelope type from a call site in this file will
-    // break production (the helper does not unwrap), and this test
-    // will fail to catch it.
-    //
-    // We strip line comments first so doc comments that *describe*
-    // the shape don't trigger false positives.
-    const code = source
-      .split("\n")
-      .map((line) => line.replace(/\/\/.*$/, ""))
-      .join("\n");
-    const matches = code.match(TYPE_SCANNER) ?? [];
-    expect(matches.length).toBeGreaterThan(0);
+  it("hindsight-client.ts (the helper that owns the envelope unwrap) exists", () => {
+    expect(existsSync(HELPER_PATH)).toBe(true);
+    const helperSource = readFileSync(HELPER_PATH, "utf8");
+    // The helper must use the envelope-typed form (safeApiCall<{ data?: T }>)
+    // and then explicitly unwrap. If the unwrap is removed, every
+    // Hindsight fetch in the browser returns `undefined` for the
+    // inner field — this is the silent-break guard.
+    expect(helperSource).toMatch(/safeApiCall<\s*\{\s*data\??:\s*T\s*\}>/);
+    expect(helperSource).toMatch(/data\??\s*\.\s*data/);
   });
 
-  it("the HindsightBrowser has at least one .data?.data?. double-indirection read", () => {
-    // The CORRECT access pattern is `data?.data?.X` (two
-    // indirections) for envelope-typed reads. This fingerprint pins
-    // the production code path; a future "I changed the type to
-    // envelope but forgot the access" mistake that drops the
-    // second `?.data` (e.g. `result.data?.X` for `T = { data: { x:
-    // T } }`) produces `undefined` for every X and is silent at
-    // type-check time.
+  it("the HindsightBrowser does NOT use inline safeApiCall<{ data?: { ... } }> at the call site", () => {
+    // The browser should use `hindsightGet<T>(...)` for all envelope
+    // reads. Inline `safeApiCall<{ data?: { ... } }>` at the call
+    // site re-introduces the double-indirection problem.
     const code = source
       .split("\n")
       .map((line) => line.replace(/\/\/.*$/, ""))
       .join("\n");
-    const matches = code.match(ACCESS_FINGERPRINT) ?? [];
-    expect(matches.length).toBeGreaterThan(0);
+    const matches = code.match(FORBIDDEN_INLINE_ENVELOPE_CALL) ?? [];
+    expect(matches).toHaveLength(0);
+  });
+
+  it("the HindsightBrowser does NOT do .data?.data?. double-indirection reads", () => {
+    // All envelope unwraps must happen inside `hindsightGet`. A
+    // `.data?.data?.` read in the browser file means the unwrap is
+    // being done inline somewhere, leaking the envelope shape into
+    // business logic.
+    const code = source
+      .split("\n")
+      .map((line) => line.replace(/\/\/.*$/, ""))
+      .join("\n");
+    const matches = code.match(FORBIDDEN_DOUBLE_INDIRECTION) ?? [];
+    expect(matches).toHaveLength(0);
+  });
+
+  it("the HindsightBrowser imports hindsightGet and uses it for the Hindsight surface", () => {
+    // Belt-and-suspenders: the helper should actually be used. A
+    // browser file that doesn't import hindsightGet is broken
+    // (either it has no Hindsight reads, or it's reaching for the
+    // raw API directly without the unwrap helper).
+    expect(source).toMatch(/import\s*\{[^}]*\bhindsightGet\b[^}]*\}\s*from\s*["']@\/lib\/hindsight-client["']/);
+    expect(source).toMatch(/\bhindsightGet\s*</);
   });
 });
