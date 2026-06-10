@@ -216,4 +216,43 @@ describe("applyCronScheduleCanonicalisation", () => {
     expect(readSchedule(db, "ok2")).toBe("0 9 * * 1-5");
     expect(readSchedule(db, "ok3")).toBe("0 * * * *");
   });
+
+  // ── "every Nm / Nh / Nd" shorthand rewrite (session 2026-06-10) ──
+  // The live "Review & Refactor" mission had `schedule = "every 30m"`
+  // stored verbatim in the DB. The pre-v7 migration treated this as
+  // already-canonical and left it alone, which left the cron in a
+  // broken state (the push path produced `{kind: "every 30m", ...}` in
+  // jobs.json, an invalid `kind` the Python scheduler can't compute
+  // `next_run_at` from). v7 rewrites the shorthand to a 5-field cron.
+  it("rewrites 'every Nm' shorthand to a 5-field cron expression", () => {
+    const db = makeDbStub();
+    insertJob(db, "iv1", "every 30m", "every 30m");
+    const rewritten = applyCronScheduleCanonicalisation(db as unknown as Parameters<typeof applyCronScheduleCanonicalisation>[0]);
+    expect(rewritten).toBe(1);
+    expect(readSchedule(db, "iv1")).toBe("*/30 * * * *");
+  });
+
+  it("rewrites 'every Nh' shorthand to a 5-field cron expression", () => {
+    const db = makeDbStub();
+    insertJob(db, "iv2", "every 2h", "every 2h");
+    const rewritten = applyCronScheduleCanonicalisation(db as unknown as Parameters<typeof applyCronScheduleCanonicalisation>[0]);
+    expect(rewritten).toBe(1);
+    expect(readSchedule(db, "iv2")).toBe("0 */2 * * *");
+  });
+
+  it("rewrites 'every Nd' shorthand to a 5-field cron expression", () => {
+    const db = makeDbStub();
+    insertJob(db, "iv3", "every 1d", "every 1d");
+    const rewritten = applyCronScheduleCanonicalisation(db as unknown as Parameters<typeof applyCronScheduleCanonicalisation>[0]);
+    expect(rewritten).toBe(1);
+    expect(readSchedule(db, "iv3")).toBe("0 0 * * *");
+  });
+
+  it("leaves an unsupported shorthand (e.g. 'every 1w') unchanged", () => {
+    const db = makeDbStub();
+    insertJob(db, "iv4", "every 1w", "every 1w");
+    const rewritten = applyCronScheduleCanonicalisation(db as unknown as Parameters<typeof applyCronScheduleCanonicalisation>[0]);
+    expect(rewritten).toBe(0);
+    expect(readSchedule(db, "iv4")).toBe("every 1w");
+  });
 });

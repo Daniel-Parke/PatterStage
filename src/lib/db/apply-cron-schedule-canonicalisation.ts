@@ -30,8 +30,9 @@
 
 import type Database from "better-sqlite3";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
+import { intervalShorthandToCron } from "@/lib/schedule/parse-schedule";
 
-export const CRON_SCHEDULE_CANONICALISATION_SCHEMA_VERSION = 6;
+export const CRON_SCHEDULE_CANONICALISATION_SCHEMA_VERSION = 7;
 
 interface ScheduleRow {
   id: string;
@@ -61,7 +62,10 @@ function extractRawCron(stored: string): string | null {
 
   // Already canonical: a raw 5-field cron that doesn't start with `{`.
   if (!trimmed.startsWith("{")) {
-    return trimmed;
+    // "every Nm / Nh / Nd" shorthand stored verbatim — convert to a
+    // 5-field cron expression. This is the live-mission bug fix
+    // (mission/hermes-review-and-refactor ref, 2026-06-10).
+    return intervalShorthandToCron(trimmed) ?? trimmed;
   }
 
   // Legacy / corrupted: try to unwrap the JSON-stringified ParsedSchedule.

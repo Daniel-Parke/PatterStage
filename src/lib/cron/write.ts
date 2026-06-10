@@ -4,6 +4,7 @@
 
 import { db, uuid, now } from "../db";
 import { parseSchedule } from "../utils";
+import { intervalShorthandToCron } from "../schedule/parse-schedule";
 
 import type { CronJobRecord, CronJobRow, CreateCronJobInput, UpdateCronJobInput } from "./types";
 import { getCronJob } from "./read";
@@ -11,25 +12,35 @@ import { getCronJob } from "./read";
 /**
  * Canonical schedule storage helper.
  *
- * The `cron_jobs.schedule` column stores the **raw 5-field cron expression**
- * (or whatever raw schedule string was provided). Wrapping the schedule in
- * `JSON.stringify({kind, expr, display})` and storing that string causes a
- * data-corruption cascade on the next read-write round-trip with Hermes —
- * the Hermes scheduler re-validates schedule fields and the wrapped string
- * is rejected as `kind: "invalid"`, breaking the job.
+ * The `cron_jobs.schedule` column stores the raw 5-field cron expression
+ * (e.g. `star-slash-30 * * * *` for "every 30 minutes"). Wrapping the
+ * schedule in `JSON.stringify({kind, expr, display})` and storing that
+ * string causes a data-corruption cascade on the next read-write
+ * round-trip with Hermes — the Hermes scheduler re-validates schedule
+ * fields and the wrapped string is rejected as `kind: "invalid"`,
+ * breaking the job.
  *
- * The display label (e.g. "Weekdays at 9am") lives in a separate
+ * The display label (e.g. "every 30m") lives in a separate
  * `schedule_display` column. `parseSchedule` is still called here to
- * extract the canonical display value when the input is an "every Nh"
- * shorthand.
+ * extract the canonical display value, and `intervalShorthandToCron` is
+ * called to convert user shorthand ("every 30m") to the canonical 5-field
+ * form so the Hermes push path doesn't have to re-parse it.
  */
 export function parseScheduleToDisplay(
   schedule: string
 ): { schedule: string; scheduleDisplay: string } {
-  const parsed = parseSchedule(schedule);
+  const trimmed = schedule.trim();
+  const parsed = parseSchedule(trimmed);
+  // For interval shorthand, canonicalize to a 5-field cron expression so
+  // the column holds the canonical form. Falls back to the raw input if
+  // `intervalShorthandToCron` can't map it (e.g. invalid input).
+  const canonical =
+    parsed.kind === "interval"
+      ? intervalShorthandToCron(trimmed) ?? trimmed
+      : trimmed;
   return {
-    schedule: schedule.trim(),
-    scheduleDisplay: "display" in parsed ? (parsed.display as string) : schedule.trim(),
+    schedule: canonical,
+    scheduleDisplay: "display" in parsed ? (parsed.display as string) : trimmed,
   };
 }
 
