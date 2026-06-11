@@ -14,6 +14,7 @@ import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { backupFile } from "@/lib/fs-helpers";
+import { deepMerge } from "@/lib/deep-merge";
 
 const CACHE_TTL_MS = 15_000; // 15 seconds
 
@@ -180,9 +181,14 @@ export async function PUT(request: NextRequest) {
 
     const config = readCachedConfig();
 
-    // Merge values into section
+    // Merge values into section — deep merge so a patch to a nested
+    // object (e.g. `personalities.default`) preserves sibling keys.
+    // The shallow `{...current, ...values}` form was a regression: any
+    // PUT that touched a nested object wiped its siblings because the
+    // spread replaced the whole nested object. See
+    // `src/lib/deep-merge.ts` for the contract and tests.
     const current = (config[section] as Record<string, unknown>) || {};
-    config[section] = { ...current, ...(values as Record<string, unknown>) };
+    config[section] = deepMerge(current, values as Record<string, unknown>);
 
     // Write back
     const content = dumpYamlConfig(config);

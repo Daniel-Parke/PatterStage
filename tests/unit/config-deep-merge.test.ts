@@ -1,39 +1,16 @@
 /** @jest-environment node */
 
-// ── Bug regression: config PUT shallow merge ──
+// Tests for `deepMerge` in `src/lib/deep-merge.ts`. This was originally
+// a regression-test for a shallow-merge bug in `/api/config` PUT: the
+// pre-fix test inlined a copy of the desired `deepMerge` function in
+// the test file and never exercised the actual route. After the fix
+// (extract `deepMerge` into a real module + wire the route to it),
+// this test imports the real helper so a future refactor that
+// regresses back to a shallow merge fails loudly here.
 
-const mockExistsSync = jest.fn();
-const mockReadFileSync = jest.fn();
-const mockWriteFileSync = jest.fn();
-const mockMkdirSync = jest.fn();
+import { deepMerge } from "@/lib/deep-merge";
 
-jest.mock("fs", () => ({
-  existsSync: mockExistsSync,
-  readFileSync: mockReadFileSync,
-  writeFileSync: mockWriteFileSync,
-  mkdirSync: mockMkdirSync,
-  copyFileSync: jest.fn(),
-}));
-
-// Test deepMerge directly since the route's yaml dependency makes it hard to isolate
-describe("deepMerge — config nested object merge regression", () => {
-  // Inline the deepMerge function to test its behavior
-  function deepMerge(target: Record<string, unknown>, source: Record<string, unknown>): Record<string, unknown> {
-    for (const key of Object.keys(source)) {
-      const srcVal = source[key];
-      const tgtVal = target[key];
-      if (
-        srcVal !== null && typeof srcVal === "object" && !Array.isArray(srcVal) &&
-        tgtVal !== null && typeof tgtVal === "object" && !Array.isArray(tgtVal)
-      ) {
-        deepMerge(tgtVal as Record<string, unknown>, srcVal as Record<string, unknown>);
-      } else {
-        target[key] = srcVal;
-      }
-    }
-    return target;
-  }
-
+describe("deepMerge — config nested object merge", () => {
   it("preserves sibling keys when updating nested object", () => {
     const target = {
       max_turns: 100,
@@ -47,10 +24,17 @@ describe("deepMerge — config nested object merge regression", () => {
       personalities: { default: "NewHermes" },
     };
 
-    const result = deepMerge({ ...target } as Record<string, unknown>, source);
+    const result = deepMerge(
+      { ...target } as Record<string, unknown>,
+      source,
+    );
 
-    expect((result.personalities as Record<string, unknown>).default).toBe("NewHermes");
-    expect((result.personalities as Record<string, unknown>).custom).toBe("MyAgent");
+    expect((result.personalities as Record<string, unknown>).default).toBe(
+      "NewHermes",
+    );
+    expect((result.personalities as Record<string, unknown>).custom).toBe(
+      "MyAgent",
+    );
     expect((result.personalities as Record<string, unknown>).extra).toBe(true);
     expect(result.max_turns).toBe(100);
   });
@@ -92,8 +76,12 @@ describe("deepMerge — config nested object merge regression", () => {
       },
     };
 
-    const result = deepMerge({ ...target } as Record<string, unknown>, source);
-    const l2 = (result.level1 as Record<string, unknown>).level2 as Record<string, unknown>;
+    const result = deepMerge(
+      { ...target } as Record<string, unknown>,
+      source,
+    );
+    const l2 = (result.level1 as Record<string, unknown>)
+      .level2 as Record<string, unknown>;
 
     expect(l2.keep).toBe("this");
     expect(l2.replace).toBe("new");
@@ -108,5 +96,45 @@ describe("deepMerge — config nested object merge regression", () => {
 
     expect(result.existing).toBe("value");
     expect(result.new_key).toBe("new_value");
+  });
+
+  // ── Real-world regression — the original bug shape ────────────
+  // The shallow-merge form was:
+  //   config[section] = { ...current, ...values };
+  // which DROPS sibling keys whenever `values` contains a nested
+  // object. The test below mirrors the /api/config PUT contract:
+  // patch a section with a nested-object edit, and the rest of the
+  // section survives. If anyone reverts to a shallow merge, this
+  // test fails.
+  it("PATCH preserves sibling keys on a nested object (real PUT shape)", () => {
+    const existingSection = {
+      max_turns: 100,
+      verbose: false,
+      personalities: {
+        default: "Hermes",
+        custom: "MyAgent",
+        archived: "Old",
+      },
+    };
+    const incomingPatch = {
+      personalities: { default: "NewHermes" },
+    };
+
+    const next = deepMerge({ ...existingSection }, incomingPatch);
+
+    expect(next.max_turns).toBe(100);
+    expect(next.verbose).toBe(false);
+    // The original bug: `custom` and `archived` would be undefined
+    // because `{...current, ...values}` replaces the whole
+    // `personalities` object with the patch.
+    expect(
+      (next.personalities as Record<string, unknown>).custom,
+    ).toBe("MyAgent");
+    expect(
+      (next.personalities as Record<string, unknown>).archived,
+    ).toBe("Old");
+    expect(
+      (next.personalities as Record<string, unknown>).default,
+    ).toBe("NewHermes");
   });
 });
