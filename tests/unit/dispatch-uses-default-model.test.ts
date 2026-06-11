@@ -81,11 +81,19 @@ beforeEach(() => {
   repo.__findModelByModelId.mockReset();
 });
 
-/** Extract the hermes command line from the bash script body */
+/** Extract the hermes command line from the bash script body.
+ *  The script has two lines that may contain "hermes":
+ *    1. The EXIT trap line: `trap '...hermes_mission_*.trap-helper.sh' EXIT`
+ *    2. The actual hermes invocation: `hermes ${argvStr} ...`
+ *  We want line #2 (the spawn), not the trap. The hermes
+ *  invocation is the first line that starts with `hermes `.
+ */
 function getHermesLine(spawnCall: (typeof spawnCalls)[0]): string | null {
   if (!spawnCall.scriptContent) return null;
   const lines = spawnCall.scriptContent.split("\n");
-  return lines.find((l) => l.includes("hermes")) ?? null;
+  return (
+    lines.find((l) => l.trimStart().startsWith("hermes ")) ?? null
+  );
 }
 
 describe("dispatchMission — registry default fallback", () => {
@@ -100,7 +108,10 @@ describe("dispatchMission — registry default fallback", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
     const backend = new HermesAgentBackend();
-    await backend.dispatchMission({ name: "no model", prompt: "do" });
+    const mission = await backend.dispatchMission({ name: "no model", prompt: "do" });
+    // Phase 1 alone does NOT spawn — phase 2 forks the bash
+    // script and is where the model resolution happens
+    await backend.spawnDispatchedMission(mission.id);
 
     expect(repo.__getDefaultModel).toHaveBeenCalledWith("agent");
     const hermesLine = getHermesLine(spawnCalls[0]);
@@ -133,12 +144,13 @@ describe("dispatchMission — registry default fallback", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
     const backend = new HermesAgentBackend();
-    await backend.dispatchMission({
+    const mission = await backend.dispatchMission({
       name: "explicit",
       prompt: "do",
       modelId: "openai/gpt-5.5-medium",
       provider: "openai",
     });
+    await backend.spawnDispatchedMission(mission.id);
 
     const hermesLine = getHermesLine(spawnCalls[0]);
     expect(hermesLine).toContain("--model openai/gpt-5.5-medium");
@@ -169,12 +181,13 @@ describe("dispatchMission — registry default fallback", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
     const backend = new HermesAgentBackend();
-    await backend.dispatchMission({
+    const mission = await backend.dispatchMission({
       name: "foreign",
       prompt: "do",
       modelId: "deepseek/deepseek-v4-flash",
       provider: "nous",
     });
+    await backend.spawnDispatchedMission(mission.id);
 
     expect(repo.__findModelByModelId).toHaveBeenCalledWith(
       "deepseek/deepseek-v4-flash",
@@ -193,7 +206,8 @@ describe("dispatchMission — registry default fallback", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
     const backend = new HermesAgentBackend();
-    await backend.dispatchMission({ name: "no default", prompt: "do" });
+    const mission = await backend.dispatchMission({ name: "no default", prompt: "do" });
+    await backend.spawnDispatchedMission(mission.id);
 
     const hermesLine = getHermesLine(spawnCalls[0]);
     expect(hermesLine).not.toContain("--model");
@@ -212,10 +226,11 @@ describe("dispatchMission — registry default fallback", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
     const backend = new HermesAgentBackend();
-    await backend.dispatchMission({
+    const mission = await backend.dispatchMission({
       name: "partial",
       prompt: "do",
     });
+    await backend.spawnDispatchedMission(mission.id);
 
     const hermesLine = getHermesLine(spawnCalls[0]);
     expect(hermesLine).toContain("--model anthropic/claude-opus-4");
@@ -237,11 +252,12 @@ describe("dispatchMission — registry default fallback", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
     const backend = new HermesAgentBackend();
-    await backend.dispatchMission({
+    const mission = await backend.dispatchMission({
       name: "model only",
       prompt: "do",
       modelId: "openai/gpt-5.5-medium",
     });
+    await backend.spawnDispatchedMission(mission.id);
 
     expect(repo.__findModelByModelId).toHaveBeenCalledWith("openai/gpt-5.5-medium");
     expect(repo.__getDefaultModel).not.toHaveBeenCalled();

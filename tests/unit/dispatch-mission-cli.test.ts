@@ -146,10 +146,30 @@ describe("buildHermesChatArgv", () => {
   });
 });
 
-describe("HermesAgentBackend.dispatchMission spawn", () => {
+describe("HermesAgentBackend.dispatchMission + spawnDispatchedMission", () => {
+  // Phase 2b of the mission-orphan-recovery refactor split
+  // dispatchMission into two phases:
+  //   1. dispatchMission() — writes the on-disk mission.json
+  //   2. spawnDispatchedMission() — forks the bash script
+  //
+  // These tests exercise BOTH phases in sequence (the same
+  // pattern dispatchMissionNow uses in production) so we still
+  // verify the full CLI invocation path. Tests that want to
+  // exercise only one phase live in their own describe blocks
+  // below.
   it("spawns bash with script path and CH_MISSION_PROMPT env", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
+    const { HermesAgentBackend } = require("@/lib/backends/hermes") as {
+      HermesAgentBackend: new () => {
+        dispatchMission: (input: {
+          name: string;
+          prompt: string;
+          profileName?: string;
+          modelId?: string;
+          provider?: string;
+        }) => Promise<{ id: string; name: string; status: string }>;
+        spawnDispatchedMission: (missionId: string) => Promise<void>;
+      };
+    };
     const backend = new HermesAgentBackend();
 
     const mission = await backend.dispatchMission({
@@ -159,6 +179,11 @@ describe("HermesAgentBackend.dispatchMission spawn", () => {
       modelId: "anthropic/claude-sonnet-4",
       provider: "anthropic",
     });
+    // Phase 1 alone does NOT spawn — verify that contract
+    expect(spawnCalls).toHaveLength(0);
+
+    // Phase 2 forks the bash script
+    await backend.spawnDispatchedMission(mission.id);
 
     expect(spawnCalls).toHaveLength(1);
     const call = spawnCalls[0];
@@ -177,6 +202,9 @@ describe("HermesAgentBackend.dispatchMission spawn", () => {
     expect(call.scriptContent).toContain(".status.json");
     expect(call.scriptContent).toContain(`"successful"`);
     expect(call.scriptContent).toContain(`"failed"`);
+    // The new EXIT trap must also be installed in the script
+    expect(call.scriptContent).toContain("trap ");
+    expect(call.scriptContent).toContain("EXIT");
 
     const env = (call.opts.env as Record<string, string>) ?? {};
     expect(env.HERMES_HOME).toBe("/tmp/hermes-test/profiles/engineering");
@@ -193,14 +221,25 @@ describe("HermesAgentBackend.dispatchMission spawn", () => {
   });
 
   it("dispatches without --model/--provider when not supplied", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
+    const { HermesAgentBackend } = require("@/lib/backends/hermes") as {
+      HermesAgentBackend: new () => {
+        dispatchMission: (input: {
+          name: string;
+          prompt: string;
+        }) => Promise<{ id: string; name: string; status: string }>;
+        spawnDispatchedMission: (missionId: string) => Promise<void>;
+      };
+    };
     const backend = new HermesAgentBackend();
 
-    await backend.dispatchMission({
+    const mission = await backend.dispatchMission({
       name: "Bare mission",
       prompt: "go",
     });
+    // No spawn yet
+    expect(spawnCalls).toHaveLength(0);
+
+    await backend.spawnDispatchedMission(mission.id);
 
     expect(spawnCalls).toHaveLength(1);
     expect(spawnCalls[0].scriptContent).not.toContain("--model");
@@ -211,8 +250,14 @@ describe("HermesAgentBackend.dispatchMission spawn", () => {
   });
 
   it("returns a mission record with status='dispatched'", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { HermesAgentBackend } = require("@/lib/backends/hermes") as any;
+    const { HermesAgentBackend } = require("@/lib/backends/hermes") as {
+      HermesAgentBackend: new () => {
+        dispatchMission: (input: {
+          name: string;
+          prompt: string;
+        }) => Promise<{ id: string; name: string; status: string }>;
+      };
+    };
     const backend = new HermesAgentBackend();
 
     const mission = await backend.dispatchMission({
@@ -223,6 +268,22 @@ describe("HermesAgentBackend.dispatchMission spawn", () => {
     expect(mission.status).toBe("dispatched");
     expect(mission.id).toMatch(/^[0-9a-f-]{36}$/);
     expect(mission.name).toBe("Mission record check");
+  });
+
+  it("spawnDispatchedMission throws if the on-disk mission file is missing", async () => {
+    const { HermesAgentBackend } = require("@/lib/backends/hermes") as {
+      HermesAgentBackend: new () => {
+        spawnDispatchedMission: (missionId: string) => Promise<void>;
+      };
+    };
+    const backend = new HermesAgentBackend();
+
+    // No dispatchMission first — the on-disk file is missing
+    await expect(
+      backend.spawnDispatchedMission("00000000-0000-0000-0000-000000000000"),
+    ).rejects.toThrow(/no on-disk mission file/i);
+    // No spawn happened
+    expect(spawnCalls).toHaveLength(0);
   });
 });
 
