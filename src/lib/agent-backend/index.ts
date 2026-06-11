@@ -15,6 +15,7 @@ export interface MissionCancelResult {
 
 export interface AgentBackend {
   dispatchMission(input: DispatchMissionInput): Promise<Mission>;
+  spawnDispatchedMission(missionId: string): Promise<void>;
   cancelMission(missionId: string): Promise<MissionCancelResult>;
   getMissionStatus(missionId: string): Promise<MissionStatus>;
   getMissionSessionId(missionId: string): Promise<string | null>;

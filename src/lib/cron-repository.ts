@@ -35,4 +35,7 @@ export {
   removeJobFromHermes,
   syncCronWithHermes,
   triggerJobViaGateway,
+  ensureCronHermesSync,
+  scheduleObjMatches,
+  buildScheduleObjForHermes,
 } from "./cron/hermes-sync";

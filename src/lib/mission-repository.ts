@@ -2,8 +2,12 @@
 // mission-repository.ts — Mission CRUD via SQLite
 // ═══════════════════════════════════════════════════════════════
 
+import { existsSync, unlinkSync } from "fs";
+import { join } from "path";
+
 import { db, inTransaction, uuid, now } from "./db";
 import { safeJsonParse } from "./utils";
+import { PATHS } from "./paths";
 import type { Mission, MissionStatus } from "@/lib/agent-backend/types";
 import type { LocalDirEntry } from "@/types/hermes";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
@@ -312,5 +316,35 @@ export function deleteMission(id: string): boolean {
   db()
     .prepare("UPDATE missions SET deleted_at = ? WHERE id = ?")
     .run(ts, id);
+  // Best-effort cleanup of on-disk artifacts. We do this AFTER
+  // the soft-delete so a crash between them leaves the mission
+  // soft-deleted (no longer visible) with orphan on-disk files
+  // that MissionSync's orphan sweep will reconcile on the next
+  // tick. The reverse order (clean disk first, then DB) would
+  // risk a window where the disk is clean but the DB still
+  // shows the mission as live, which would confuse the dashboard.
+  //
+  // Each unlink is best-effort: missing files are expected (the
+  // mission may not have completed enough to create them all,
+  // e.g. a draft that was deleted before dispatch).
+  const artifactFilenames = [
+    `${id}.json`,
+    `${id}.status.json`,
+    `${id}.pid.json`,
+    `${id}.session`,
+    `${id}.output.log`,
+  ];
+  for (const filename of artifactFilenames) {
+    const artifactPath = join(PATHS.missions, filename);
+    if (existsSync(artifactPath)) {
+      try {
+        unlinkSync(artifactPath);
+      } catch {
+        // best-effort — leave the orphan for the next sweep if
+        // we can't unlink now (e.g. permission, race with a
+        // running hermes chat that re-created the file)
+      }
+    }
+  }
   return true;
 }

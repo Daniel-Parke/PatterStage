@@ -94,9 +94,22 @@ describe("backupTimestamp", () => {
     // identical strings. The helper preserves that property (Date.now()
     // is millisecond-granular, and the helper just reformats the same
     // instant).
-    const a = backupTimestamp();
-    const b = backupTimestamp();
-    expect(a).toBe(b);
+    //
+    // We freeze the clock to a fixed instant so the assertion is
+    // deterministic across host speeds. A fast CI runner can call
+    // `new Date()` twice within microseconds of each other and land
+    // in different milliseconds; freezing the clock makes the test
+    // assert the property the comment describes (same instant →
+    // same string) rather than timing luck.
+    const fixedNow = new Date("2026-06-11T11:08:35.585Z").getTime();
+    const dateSpy = jest.spyOn(Date, "now").mockReturnValue(fixedNow);
+    try {
+      const a = backupTimestamp();
+      const b = backupTimestamp();
+      expect(a).toBe(b);
+    } finally {
+      dateSpy.mockRestore();
+    }
   });
 });
 

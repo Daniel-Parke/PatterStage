@@ -31,7 +31,7 @@
 // this guarantees mission sync can never wedge the server.
 // ═══════════════════════════════════════════════════════════════
 
-import { access, constants, readFile, writeFile } from "fs/promises";
+import { access, constants, readdir, readFile, writeFile } from "fs/promises";
 import { join } from "path";
 
 import { listMissions, updateMission } from "@/lib/mission-repository";
@@ -85,14 +85,17 @@ async function readMissionPid(missionId: string): Promise<number | null> {
  * Write a canonical failed status.json for a mission whose process
  * died without writing a completion status.
  */
-async function writeFailedStatus(missionId: string): Promise<void> {
+async function writeFailedStatus(
+  missionId: string,
+  errorMessage: string = "Process terminated without completion",
+): Promise<void> {
   const statusPath = join(PATHS.missions, `${missionId}.status.json`);
   if (await fileExists(statusPath)) return;
   const payload = {
     status: "failed",
     exit_code: null,
     completed_at: new Date().toISOString(),
-    error: "Process terminated without completion",
+    error: errorMessage,
   };
   try {
     await writeFile(statusPath, JSON.stringify(payload) + "\n");
@@ -120,7 +123,35 @@ export class MissionSync implements SyncSource {
         if (!(await fileExists(statusPath))) {
           // No status file yet. Check if the process died.
           const pid = await readMissionPid(mission.id);
-          if (pid !== null && !isPidAlive(pid)) {
+          if (pid === null) {
+            // Both status.json AND pid.json are missing. The bash
+            // script was killed before it could write a terminal
+            // status (SIGKILL, host reboot, manual rm) and the PID
+            // file is also gone. The mission is unrecoverable through
+            // the normal happy path — mark it failed so it does not
+            // stay "dispatched" on the dashboard forever.
+            //
+            // This closes the gap where the dashboard showed
+            // "active" for a mission whose process was already gone
+            // (the original bug fixed by this branch). The
+            // writeFailedStatus() call writes a synthetic status.json
+            // so subsequent sync cycles see a normal "failed"
+            // status.json and the orphan detection is a no-op.
+            await writeFailedStatus(
+              mission.id,
+              "Process state lost (no pid, no status file)",
+            );
+            updateMission(mission.id, { status: "failed" });
+            closeSessionForMission(mission.id, {
+              status: "failed",
+              endedAt: new Date().toISOString(),
+              exitCode: null,
+              error: "Process state lost (no pid, no status file)",
+            });
+            syncedCount++;
+            continue;
+          }
+          if (!isPidAlive(pid)) {
             await writeFailedStatus(mission.id);
             updateMission(mission.id, { status: "failed" });
             // Close the active session row that was pre-registered at
@@ -158,6 +189,56 @@ export class MissionSync implements SyncSource {
           hasErrors = true;
           errors.push(`Failed to read status for ${mission.id}: ${e}`);
         }
+      }
+
+      // ── Disk-only orphan sweep ────────────────────────────────
+      // The DB-iteration loop above only catches missions that have
+      // a row in `missions`. If `deleteMission` (or any manual
+      // cleanup) removed the DB row but left the on-disk artifacts,
+      // the loop never sees the orphan and it sits in
+      // PATHS.missions forever. Walk the directory once per cycle
+      // and reconcile any *.json mission file whose id is not in
+      // the DB (active or soft-deleted).
+      //
+      // Note: we do NOT delete the orphan file itself — downstream
+      // tooling (debugging, log readers) may still want it. We
+      // write a synthetic failed status.json so future cycles
+      // observe it as a normal terminal state.
+      try {
+        const dbIds = new Set(missions.map((m) => m.id));
+        const entries = await readdir(PATHS.missions).catch(() => [] as string[]);
+        for (const entry of entries) {
+          if (!entry.endsWith(".json")) continue;
+          // Skip the companion artifact files (status.json, pid.json)
+          if (entry.endsWith(".status.json")) continue;
+          const id = entry.slice(0, -".json".length);
+          if (dbIds.has(id)) continue;
+
+          // Validate the file is parseable JSON with an id field
+          // before writing a synthetic status — a malformed file
+          // could be from another subsystem and we don't want to
+          // accidentally paper over it.
+          const filePath = join(PATHS.missions, entry);
+          try {
+            const raw = await readFile(filePath, "utf-8");
+            const parsed = JSON.parse(raw) as { id?: unknown };
+            if (typeof parsed.id !== "string") continue;
+          } catch {
+            continue;
+          }
+
+          const statusPath = join(PATHS.missions, `${id}.status.json`);
+          if (!(await fileExists(statusPath))) {
+            await writeFailedStatus(
+              id,
+              "Disk orphan: on-disk mission file has no matching DB row",
+            );
+            syncedCount++;
+          }
+        }
+      } catch (e) {
+        hasErrors = true;
+        errors.push(`Failed disk-only orphan sweep: ${e}`);
       }
 
       // Record sync result in sync_registry

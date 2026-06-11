@@ -47,11 +47,11 @@
 
   "dependencies": {
 
-    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dialog": "^1.1.16",
 
-    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-dropdown-menu": "^2.1.17",
 
-    "@radix-ui/react-tabs": "^1.1.13",
+    "@radix-ui/react-tabs": "^1.1.14",
 
     "@types/js-yaml": "^4.0.9",
 
@@ -65,7 +65,7 @@
 
     "lucide-react": "^1.17.0",
 
-    "next": "16.2.7",
+    "next": "16.2.9",
 
     "react": "19.2.7",
 
@@ -93,7 +93,7 @@
 
     "@types/node": "^20",
 
-    "@types/react": "^19.2.16",
+    "@types/react": "^19.2.17",
 
     "@types/react-dom": "^19",
 
@@ -101,7 +101,7 @@
 
     "eslint": "^9",
 
-    "eslint-config-next": "16.2.7",
+    "eslint-config-next": "16.2.9",
 
     "jest": "^30.3.0",
 

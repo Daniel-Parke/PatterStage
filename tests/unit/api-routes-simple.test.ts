@@ -81,6 +81,21 @@ jest.mock("@/lib/paths", () => ({
 
 jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),
+  // The monitor route's catch block calls `serverErrorFromCatch(...)` and
+  // expects a NextResponse to be returned. The mock must mirror that
+  // contract or the test will see `undefined` and crash on `res.json()`.
+  // Returning a minimal NextResponse-shaped object is enough for the
+  // monitor test, which exercises the happy path (the catch block only
+  // fires on actual errors). The error-path test in api-routes-complex
+  // uses the real `serverErrorFromCatch` via a separate mock strategy.
+  serverErrorFromCatch: jest.fn(
+    (_route: string, _ctx: string, _err: unknown, _msg?: string) => ({
+      status: 500,
+      json: async () => ({ error: "mocked" }),
+    }),
+  ),
+  safeJsonParse: jest.fn(),
+  safeReadJsonFile: jest.fn(),
 }));
 
 jest.mock("@/lib/sessions-api-guard", () => ({
@@ -96,6 +111,15 @@ jest.mock("@/lib/session-repository", () => ({
 
 jest.mock("@/lib/cron-repository", () => ({
   listCronJobs: jest.fn(() => []),
+  // The monitor route fires `ensureCronHermesSync()` (4th-layer
+  // reconciliation) on every hit. The test mocks it to a no-op
+  // resolver so the route's happy path executes without
+  // touching the disk. Production code uses the real
+  // implementation; see tests/unit/cron-hermes-sync-reconciliation.test.ts
+  // for the 4th-layer behaviour coverage.
+  ensureCronHermesSync: jest.fn(() =>
+    Promise.resolve({ attempted: false, repaired: 0, errors: [] }),
+  ),
 }));
 
 import { NextRequest } from "next/server";
