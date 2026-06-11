@@ -49,14 +49,13 @@
  *                      term. Used for "always show the active item
  *                      even when it doesn't match the search" UX
  *                      (e.g. the active personality in the
- *                      Personalities page). The predicate is only
- *                      consulted on a NON-empty search — the empty /
- *                      whitespace-only search branch returns the full
- *                      list (defensive copy) without consulting
- *                      `alwaysMatch`. Pinned by the
- *                      "empty search short-circuits and returns the
- *                      full list (ignores alwaysMatch)" test in
- *                      `tests/unit/list-search.test.ts`.
+ *                      Personalities page). When the search is empty,
+ *                      the predicate is still applied (so an empty
+ *                      search + an "always" predicate returns the
+ *                      always-matching items only when no other items
+ *                      pass — but in practice the page also returns
+ *                      the full list when search is empty, which
+ *                      makes the predicate a no-op in that case).
  * @returns a new array of items matching the search (or alwaysMatch).
  *
  * @example
