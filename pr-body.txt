@@ -1,3 +1,78 @@
+## Session 159 — List 1 (Dashboard, Sessions, Memory, Logs) — close stale `setX(messageFromError)` site in logs page
+
+**Random pick:** List 1 via `echo $((RANDOM % 4 + 1))` = 1. Random pick per the task brief's explicit mandate.
+
+**Outcome:** **1 commit, 1 site migrated, 1 new source-pattern test.** Closed a stale `setX(messageFromError(...))` site at `src/app/(main)/logs/page.tsx:92` that escaped the session 126 closure of the `setError(messageFromError(...))` family. The session 126 audit closed the pattern for `setError` specifically; session 142 introduced a new site in a differently-named setter (`setActionMessage`) that the closure didn't see. Per session 135 P-3 ("mined clean is version-dependent"), a fresh audit found the regression.
+
+### 1. What was shipped (1 commit `8eb1f85`)
+
+| File | Change | Sites |
+|------|--------|-------|
+| `src/app/(main)/logs/page.tsx` | Swap import `messageFromError` → `setErrorFromCaught`; migrate line 92 | 1 |
+| `tests/unit/set-error-from-caught-source-pattern-list1.test.ts` (NEW) | Source-pattern test pinning the "0 inline `setX(messageFromError)` call sites in the logs page" contract | 1 |
+
+**Net source diff:** 2 lines swapped, 0 net LOC change. **Net test diff:** +141 LOC (the new sister test file).
+
+### 2. The migration
+
+**Before (logs/page.tsx:92):**
+```ts
+} catch (err) {
+  setActionMessage(messageFromError(err, "Delete failed (network error)"));
+}
+```
+
+**After (logs/page.tsx:92):**
+```ts
+} catch (err) {
+  setErrorFromCaught(setActionMessage, err, "Delete failed (network error)");
+}
+```
+
+**Byte-equivalence:** `setErrorFromCaught(setX, err, fallback)` is `setX(messageFromError(err, fallback))` by construction (see `src/lib/api-fetch.ts:218-224`). Same string produced, same setter call, same fallback discipline, same exception type.
+
+### 3. Self-test by reverting one site (pre-flight #9)
+
+After writing the source-pattern test, I temporarily reverted the logs page line 92 to the pre-migration form. Result: **2 of 5 tests fail** (the "no inline" test + the "uses helper" test). The other 3 tests pass (file readable, file is .tsx, helper signature unchanged). Re-applying the migration makes all 5 pass. The audit guard works.
+
+### 4. Cross-list "mined clean" status (post-session-159, delta from session 158 P-4)
+
+| List | Last audited | Last pick session | Status | Notes |
+|------|--------------|-------------------|--------|-------|
+| 1 (Dashboard, Sessions, Memory, Logs) | 2026-06-11 | 159 (this) | **MINED CLEAN** | 1 stale `setX(messageFromError)` site closed. Cross-list "setX(messageFromError)" surface now: 1 remaining site in `Sidebar.tsx:313` (layout, NOT in any of the 4 lists) |
+| 2 (Cron, Missions, Chat) | 2026-06-11 | 158 | MINED CLEAN for refactors, 3 OPEN projects | Unchanged from session 158 |
+| 3 (Models, Agents, Skills, Tools, Personalities) | 2026-06-08 | 150 | MINED CLEAN at operations-page level, 2 named OOS surfaces | Unchanged from session 158 |
+| 4 (Settings) | 2026-05-XX | 147 | MOSTLY MINED CLEAN | Unchanged from session 158 |
+
+### 5. "Next session should:"
+
+1. **If List 1 is picked again next, the list is now truly MINED CLEAN** — the only `setX(messageFromError(...))` site was closed this session. Future List 1 picks should expect Mode H (5-tool-call exit) per session 149 P-2.
+2. **If List 3 is picked next, the next-ripe surface is a `setErrorFromCaught-source-pattern-list3.test.ts` sister test** for the 2 `useModelsPage` sites closed in session 126. 5-line source-pattern test, similar shape to the List 1 sister test added this session.
+3. **The mission is at end-of-life for byte-equivalent refactor work** (per session 149 P-7 + session 158 P-4). The session 159 site is the last meaningful single-site migration in the operations pages; future sessions are increasingly likely to hit Mode I (fresh audit returns zero) or pick the open 1-3 surface migrations (hardware-route dynamic-message, model-page decomposition, chat-utils test coverage).
+
+### 6. References
+
+- `references/session-159-list1-set-error-from-caught-stale-site.md` (umbrella skill, NEW) — full session 159 audit + the "stale site" lesson + sister-test pattern + cross-list status table
+- `references/session-158-list2-mode-i1-named-surfaces-oos.md` (umbrella skill) — prior session's cross-list status (delta source)
+- `references/session-149-list1-mode-h-fresh-audit-returns-zero.md` (umbrella skill) — the session that declared List 1 MINED CLEAN (correctly as of 2026-06-08)
+- `references/session-128-list2-silent-catch-sweep-completion.md` (umbrella skill) — canonical `setErrorFromCaught` adoption reference (the family that session 126 closed for `setError` specifically)
+- `references/session-135-list2-cast-cleanup-and-mined-clean-versioning.md` (umbrella skill) — the "mined clean is version-dependent" lesson (P-3) that flagged the regression in this session
+
+### 7. Verification
+
+- `npx tsc --noEmit`: clean
+- `npm run lint`: clean (`--max-warnings 0`)
+- `npm test`: 262 suites, 1876 tests pass (the new sister test adds 1 suite + 5 tests)
+- `npm run build`: clean
+- The new test was run in isolation FIRST per pre-flight #6 + pre-flight #22 (tsc-clean-but-runtime-broken guard). Pass on apply, 2-of-5 fail on revert, pass on re-apply.
+- PR #181: open, mergeable (post-merge with origin/dev), review-required
+
+### 8. Files
+
+- `src/app/(main)/logs/page.tsx` (modified, +1 / -1)
+- `tests/unit/set-error-from-caught-source-pattern-list1.test.ts` (NEW, 6,683 bytes, 5 tests)
+- `~/.hermes/skills/software-development/refactor-sweep-mission/references/session-159-list1-set-error-from-caught-stale-site.md` (NEW, ~7.7 KB)
+
 ## Session 158 — List 2 (Cron, Missions, Chat) — Mode I.1 audit exit: 3 named surfaces OOS for budget
 
 **Random pick:** List 2 via `echo $((RANDOM % 4 + 1))` = 2. Random pick per the task brief's explicit mandate, overriding the session 152 "next session should" recommendation of "pick a different list next time." Per session 152 P-1 #4 explicit exit protocol: "If the random pick lands on List 2 again, follow the session 150 Mode I.1 5-tool-call exit (the list is mined clean for `parseX + discriminator` patterns; no more in-tree candidates)."
