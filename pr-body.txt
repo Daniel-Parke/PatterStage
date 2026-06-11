@@ -1,3 +1,94 @@
+## Session 161 — List 3 (Models, Agents, Skills, Tools, Personalities) — `filterByCaseInsensitiveSubstring` helper + 2-site migration + `scheduleDisplayFromParsed` carryover closure
+
+**Random pick:** List 3 via `echo $((RANDOM % 4 + 1))` = 3. Random pick per the task brief's explicit mandate.
+
+**Outcome:** **2 commits, 2 refactor scopes, 4 files modified + 3 files created, 19 new tests, 2 net new src files.** This session combined a Mode C carryover closure (session 160 left `scheduleDisplayFromParsed` helper added but 3 call sites still inline) with a fresh List 3 audit that found 2 more inline case-insensitive substring-search sites ripe for consolidation.
+
+### 1. Carryover closure — `scheduleDisplayFromParsed` migration (commit `c32e095`)
+
+Session 160 added the `scheduleDisplayFromParsed(parsed, fallback)` helper to `src/lib/schedule/parse-schedule.ts:131` but didn't migrate the 3 call sites (Mode C carryover). Session 161 finishes the migration:
+
+| File | Change | Sites |
+|------|--------|-------|
+| `src/lib/cron/write.ts` | Add import + migrate `parseScheduleToDisplay`'s `scheduleDisplay` field | 1 |
+| `src/app/api/cron/route.ts` | Add import + migrate POST `/api/cron`'s `schedule_display` field | 1 |
+| `src/lib/cron-field-updates.ts` | Add import + migrate `buildCronUpdatePayload`'s schedule branch | 1 |
+
+Each migrated the inline pattern
+```ts
+"display" in parsed ? (parsed as { display: string }).display : <fallback>
+```
+to the helper. The helper is byte-equivalent to the inline form for every reachable input (the `invalid` variant is the only one that takes the fallback branch).
+
+**New test:** `tests/unit/schedule-display-from-parsed.test.ts` (5 tests) — pins the contract that the 4 `ParsedSchedule` variants map to the expected `display` value (interval/cron/once → display, invalid → fallback).
+
+### 2. Fresh List 3 audit — `filterByCaseInsensitiveSubstring` helper + 2-site migration (commit `e6f9337`)
+
+The fresh List 3 audit found 2 sites with the inline case-insensitive substring-search pattern:
+
+- `src/app/operations/skills/page.tsx:56-63` — `filterBySearch(skills, search)` filters by `name` OR `description`
+- `src/app/operations/personalities/page.tsx:331-340` — inline `useMemo` filter that searches `name` OR `prompt`, with an extra `|| p.name === activePersonality` "active personality is always visible" condition
+
+Both migrated to a new generic helper in `src/lib/list-search.ts`:
+
+```ts
+filterByCaseInsensitiveSubstring(
+  items,
+  search,
+  [(p) => p.name, (p) => p.prompt],   // field getters
+  (p) => p.name === activePersonality, // optional alwaysMatch predicate
+);
+```
+
+The helper centralises:
+- The per-search `search.toLowerCase()` call (4 duplications removed across 2 sites)
+- The empty-search pass-through (1 site returned `items` directly, 1 site returned `sortedPersonalities` — both now go through the helper's `[...items]` defensive-copy path)
+- The `|| alwaysMatch` short-circuit (used by the personalities site for the active-personality UX)
+
+**New tests:**
+- `tests/unit/list-search.test.ts` (12 tests) — pins the helper's contract (empty/whitespace search, multi-field OR, case-insensitivity, null/undefined safety, alwaysMatch predicate)
+- `tests/unit/list-search-source-pattern-list3.test.ts` (7 tests) — sister source-pattern test scanning all 6 List 3 pages for the inline `.toLowerCase().includes(` pattern, asserting 0 matches. Self-tested by reverting the skills page: 1 of 7 tests fails as expected.
+
+### 3. What was NOT migrated (per session 150 P-2 "MOSTLY MINED CLEAN with named OOS surfaces" classification)
+
+The case-insensitive substring-search pattern is cross-list (8+ files total). Session 161 closed only the 2 List 3 sites per the picked-list scope. The remaining cross-list sites are deferred to their respective list picks:
+
+| File | List | Pattern |
+|------|------|---------|
+| `src/hooks/useMissionsPage.ts` | 2 | session 150 P-2: case-insensitive substring search family — needs-dedicated-session |
+| `src/app/(main)/logs/page.tsx` | 1 | same |
+| `src/app/orchestration/cron/page.tsx` | 2 | same |
+| `src/components/missions/CategoryCombobox.tsx` | 2 | same |
+| `src/components/ui/ToolsetSelector.tsx` | 3 (shared UI) | same |
+| `src/components/ui/SkillSelector.tsx` | 3 (shared UI) | same |
+
+Each cross-list site needs its own per-list sister-test + per-list session. Future picks of the relevant list should add a sister test for that list's surface.
+
+### 4. Verification
+
+- **All 1900 unit tests pass** (265 suites, +2 new suites with +19 new tests in `list-search.test.ts` and `list-search-source-pattern-list3.test.ts` — net +19 from the session start's 1881)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean
+- **`npm run build`** passes
+- **Byte-equivalence** — both helpers are byte-equivalent to the inline form for every reachable input. The 1 new sister test in the list-3 source-pattern scan guards against regression: temporarily reverting the skills page's `filterBySearch` to the inline form made the test fail (1 of 7); re-applying the migration restored green.
+- **Pre-flight #25 (dead `as RequestInit` cast)** — not applicable (no `as RequestInit` casts in any of the 4 modified files)
+- **Pre-flight #9 (self-test the audit guard by reverting one site)** — verified for the `filterByCaseInsensitiveSubstring` source-pattern test (skills page revert → 1/7 test fails as expected)
+
+### 5. Cross-list "mined clean" status (post-session-161)
+
+| List | Last audited | Last pick session | Status | Notes |
+|------|--------------|-------------------|--------|-------|
+| 1 (Dashboard, Sessions, Memory, Logs) | 2026-06-11 | 159 | **MINED CLEAN** | 1 stale `setX(messageFromError)` site closed; 1 layout site at `Sidebar.tsx:313` remains (out of list scope) |
+| 2 (Cron, Missions, Chat) | 2026-06-11 | 160 | MINED CLEAN for refactors, 3 OPEN projects | Unchanged from session 160 |
+| 3 (Models, Agents, Skills, Tools, Personalities) | 2026-06-12 | **161 (this)** | **MINED CLEAN for case-insensitive substring search family (List 3 surface), 6 cross-list sites still OOS for budget** | 2 List 3 sites migrated to `filterByCaseInsensitiveSubstring`; 6 cross-list sites deferred to per-list picks |
+| 4 (Settings) | 2026-05-XX | 147 | MOSTLY MINED CLEAN | Unchanged from session 160 |
+
+### 6. "Next session should:"
+
+1. **If List 3 is picked again next** (now the 14th pick), the case-insensitive substring-search family is **MINED CLEAN at the List 3 surface** — 2 sites closed + source-pattern test guards against regression. Future List 3 picks should consult the `next-ripe` follow-ups from session 160 P-7 (case-insensitive substring search family cross-list sites for Lists 1/2, "Unknown error" fallback strings UX work, etc.) for productive work.
+2. **If a different list is picked** (1, 2, or 4), the next-ripe surface is the **per-list sister test for the case-insensitive substring-search family** (1 site in `(main)/logs/page.tsx` for List 1; 3+ sites in `useMissionsPage.ts`, `cron/page.tsx`, `CategoryCombobox.tsx` for List 2). The pattern is the same — extract a `filterByCaseInsensitiveSubstring` helper call from the inline `.toLowerCase().includes()` and add a `list-search-source-pattern-list<N>.test.ts` sister test.
+3. **The mission is at end-of-life for byte-equivalent refactor work** (per session 149 P-7, re-confirmed session 160 P-4, re-confirmed session 161). All 4 lists are MINED CLEAN at the per-list surface level. The remaining productive work is either (a) per-list sister tests for the cross-list patterns, (b) a dedicated 2-3 hour session on a named OOS surface (3 candidates across Lists 2 + 2 candidates across List 3), or (c) a new refactor surface not yet on the radar (e.g. `useApiData` extension for `URLSearchParams` + pagination, deferred from sessions 98, 109, 122, 123, 124).
+
 ## Session 159 — List 1 (Dashboard, Sessions, Memory, Logs) — close stale `setX(messageFromError)` site in logs page
 
 **Random pick:** List 1 via `echo $((RANDOM % 4 + 1))` = 1. Random pick per the task brief's explicit mandate.

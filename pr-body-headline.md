@@ -3,6 +3,7 @@
 **Full archive:** `pr-body.txt` at HEAD on the `mission/...` branch.
 
 ## Recent sessions
+- **Session 161** — List 3: `filterByCaseInsensitiveSubstring` helper + 2-site migration (skills + personalities) + `scheduleDisplayFromParsed` carryover closure
 
 ## Session 154 — List 1 (Dashboard, Sessions, Memory, Logs) — drop 9 redundant `as RequestInit` casts in `safeApiCallData`/`safeApiCall` calls
 
