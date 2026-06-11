@@ -28,6 +28,7 @@ import {
 } from "@/lib/personalities";
 import { apiFetch, setErrorFromCaught, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
+import { filterByCaseInsensitiveSubstring } from "@/lib/list-search";
 
 interface Personality {
   name: string;
@@ -328,16 +329,16 @@ export default function PersonalitiesPage() {
     [personalities, activePersonality],
   );
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return sortedPersonalities;
-    const q = search.toLowerCase();
-    return sortedPersonalities.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.prompt.toLowerCase().includes(q) ||
-        p.name === activePersonality,
-    );
-  }, [sortedPersonalities, search, activePersonality]);
+  const filtered = useMemo(
+    () =>
+      filterByCaseInsensitiveSubstring(
+        sortedPersonalities,
+        search,
+        [(p) => p.name, (p) => p.prompt],
+        (p) => p.name === activePersonality,
+      ),
+    [sortedPersonalities, search, activePersonality],
+  );
 
   return (
     <AppPageShell>

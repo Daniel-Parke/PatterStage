@@ -23,6 +23,7 @@ import { apiFetch, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { groupByCategory, titleCaseCategory } from "@/lib/skills-grouping";
 import { pluralise } from "@/lib/utils";
+import { filterByCaseInsensitiveSubstring } from "@/lib/list-search";
 import type { Skill, SkillsData } from "@/types/hermes";
 
 // ── Pure helpers (hoisted outside component) ──────────────────────────────
@@ -54,12 +55,10 @@ function effectiveSkillEnabled(
 }
 
 function filterBySearch(skills: Skill[], search: string) {
-  return skills.filter(
-    (s) =>
-      !search ||
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.description.toLowerCase().includes(search.toLowerCase()),
-  );
+  return filterByCaseInsensitiveSubstring(skills, search, [
+    (s) => s.name,
+    (s) => s.description,
+  ]);
 }
 
 function groupCategories(skills: Skill[]) {
