@@ -54,6 +54,20 @@ beforeAll(() => {
   chmodSync(fakeHermes, 0o755);
 });
 
+// Mock PATHS.missions so writeMissionPidFile inside
+// spawnHermesChatWithStatusCallback lands inside our tmp
+// missionsDir. Without this, on a clean CI runner the real
+// CH_DATA_DIR does not exist (or is not writable) and the
+// `writeFileSync(<id>.pid.json)` inside the spawn helper
+// throws ENOENT, cascading through to the calling test.
+// (On a dev machine with an already-initialised data dir
+// the throw is silent or absent, which is why the tests
+// pass locally but fail on CI.)
+jest.doMock("@/lib/paths", () => {
+  const actual = jest.requireActual("@/lib/paths") as Record<string, unknown>;
+  return { ...actual, PATHS: { ...(actual.PATHS as object), missions: missionsDir } };
+});
+
 afterAll(() => {
   if (tmpRoot && existsSync(tmpRoot)) rmSync(tmpRoot, { recursive: true, force: true });
 });
