@@ -504,6 +504,59 @@ export function buildScheduleObjForHermes(
 }
 
 /**
+ * Compare an on-disk Hermes `schedule` object (read from
+ * `~/.hermes/cron/jobs.json`) against the canonical shape that
+ * `buildScheduleObjForHermes` produces from the CH DB row.
+ *
+ * Returns `true` when the two are semantically equivalent (same
+ * `kind`, same `expr` or `minutes`, compatible `display`), `false`
+ * otherwise. Used by the 4th-layer reconciliation (`ensureCronHermesSync`)
+ * to detect on-disk artifacts left over from prior broken push paths.
+ *
+ * Semantic equivalence (not field-by-field) because the `display`
+ * field may be humanised differently between the DB and the on-disk
+ * file (e.g. "Every 30 minutes" vs "every 30m"). The `kind` +
+ * `expr`/`minutes` pair is the canonical contract; `display` is a
+ * label, only relevant for the `kind === "cron"` case.
+ *
+ * Exported for unit tests so the reconciliation comparator is
+ * verifiable without spinning up a real Python subprocess.
+ */
+export function scheduleObjMatches(
+  onDisk: unknown,
+  expected: Record<string, unknown>,
+): boolean {
+  if (!onDisk || typeof onDisk !== "object") return false;
+  const disk = onDisk as { kind?: unknown; expr?: unknown; minutes?: unknown; display?: unknown };
+  const exp = expected as { kind?: unknown; expr?: unknown; minutes?: unknown; display?: unknown };
+
+  // `kind` must match exactly. The Python scheduler only accepts
+  // {"once","interval","cron","invalid"} — anything else is broken
+  // (silently dropped on every tick) and must be re-pushed.
+  if (disk.kind !== exp.kind) return false;
+
+  // For cron kind, compare the raw expression. This is the only
+  // contract that determines when the job actually fires.
+  if (exp.kind === "cron") {
+    if (typeof disk.expr !== "string" || typeof exp.expr !== "string") return false;
+    if (disk.expr.trim() !== exp.expr.trim()) return false;
+  }
+
+  // For interval kind, compare the minutes. Same as cron — this
+  // is the only contract that determines when the job fires.
+  if (exp.kind === "interval") {
+    if (typeof disk.minutes !== "number" || typeof exp.minutes !== "number") return false;
+    if (disk.minutes !== exp.minutes) return false;
+  }
+
+  // `display` is a label, not a contract. We don't require it to
+  // match — the reconciliation only repairs the firing contract.
+  // (If the user customised the display, we shouldn't clobber it.)
+
+  return true;
+}
+
+/**
  * Call Hermes Python to write all CH jobs to Hermes jobs.json.
  * CH is the system of record; Hermes file is updated to match exactly.
  */
@@ -635,6 +688,108 @@ export async function removeJobFromHermes(hermesJobId: string): Promise<{ ok: bo
     const message = formatProcessError(err);
     return { ok: false, error: String(message).slice(0, 500) };
   }
+}
+
+// ── 4th-layer reconciliation (cron startup) ──────────────────
+
+/**
+ * Reconciliation-on-startup: ensure the on-disk Hermes artifact
+ * `~/.hermes/cron/jobs.json` is canonical for every enabled CH DB
+ * job. This is the missing 4th layer of the schedule-canonicalisation
+ * pattern (see references/cron-startup-reconciliation-2026-06-10.md).
+ *
+ * The 3-layer pattern (write-time canonicalisation, push-time
+ * normalisation, migration v6→v7) is correct in code, but it cannot
+ * repair disk artifacts left over from prior broken push paths. A
+ * healthy DB and a corrupted disk is a valid (and silent) state
+ * until this reconciliation runs. PR #170 missed this layer, and
+ * the live mission `5585c131` continued to silently fail every tick
+ * after the merge.
+ *
+ * Behaviour:
+ *   - For each enabled CH DB job, read the matching on-disk entry.
+ *   - Build the canonical expected shape with `buildScheduleObjForHermes`.
+ *   - Compare semantically with `scheduleObjMatches`. If the on-disk
+ *     shape is unrecognised, has a different `kind`, or has a
+ *     different `expr`/`minutes`, the artifact is stale — re-push.
+ *   - If the on-disk entry is missing entirely, re-push.
+ *
+ * Idempotent and self-healing: once the artifact is canonical,
+ * subsequent calls are no-ops. Module-level `_cronSyncAttempted`
+ * flag skips the work entirely after the first attempt on a given
+ * server lifetime — but the reconciliation is also cheap enough
+ * (one disk read + N comparisons) to run on every call. The flag
+ * is a conservative optimisation.
+ *
+ * Safe to call from `ensureSyncLayer()` (the monitor endpoint calls
+ * this on every hit; the flag prevents redundant work) or directly.
+ */
+let _cronSyncAttempted = false;
+
+export async function ensureCronHermesSync(): Promise<{
+  attempted: boolean;
+  repaired: number;
+  errors: string[];
+}> {
+  // Conservative optimisation: if we already attempted this server
+  // lifetime, skip the read. The artifact can't regress without a
+  // broken push path making it regress, and a broken push path
+  // would be a separate bug worth surfacing. Leave the flag off
+  // for now to verify the repair happens on first hit; the cost
+  // of one disk read is negligible.
+  if (_cronSyncAttempted) {
+    return { attempted: false, repaired: 0, errors: [] };
+  }
+  _cronSyncAttempted = true;
+
+  // Read the on-disk artifact without writing.
+  const { jobs: onDiskJobs, error: readError } = readHermesJobsJson();
+  if (readError) {
+    return { attempted: true, repaired: 0, errors: [readError] };
+  }
+  const onDiskById = new Map<string, HermesJobRaw>();
+  for (const j of onDiskJobs) {
+    if (j?.id) onDiskById.set(j.id, j);
+  }
+
+  // Build the canonical DB set. Only enabled jobs matter for
+  // firing — disabled jobs can stay stale on disk indefinitely
+  // without affecting anything.
+  const chJobs = listCronJobs().filter((j) => j.enabled);
+  const errors: string[] = [];
+  let repaired = 0;
+
+  for (const chJob of chJobs) {
+    const expected = buildScheduleObjForHermes(chJob.schedule, chJob.schedule_display);
+    const onDisk = onDiskById.get(chJob.id);
+
+    if (!onDisk) {
+      // Missing on disk — push.
+      const result = await pushJobToHermes(chJob.id);
+      if (result.ok) repaired += 1;
+      else errors.push(`${chJob.id}: ${result.error ?? "unknown"}`);
+      continue;
+    }
+
+    if (!scheduleObjMatches(onDisk.schedule, expected)) {
+      // On-disk schedule is stale (left over from a prior broken
+      // push path, or someone edited the file directly).
+      const result = await pushJobToHermes(chJob.id);
+      if (result.ok) repaired += 1;
+      else errors.push(`${chJob.id}: ${result.error ?? "unknown"}`);
+    }
+  }
+
+  return { attempted: true, repaired, errors };
+}
+
+/**
+ * Reset the in-memory "already attempted" flag. Intended for tests
+ * and for the rare manual reconciliation. Not called from any
+ * production code path.
+ */
+export function _resetCronHermesSyncFlag(): void {
+  _cronSyncAttempted = false;
 }
 
 // ── Gateway trigger (run now) ─────────────────────────────────

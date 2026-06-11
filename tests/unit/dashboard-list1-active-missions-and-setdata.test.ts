@@ -105,8 +105,16 @@ describe("dashboard List 1 helper adoption (session 106)", () => {
       // ~309, ~341-349, ~399). Specifically, the optimistic-update line must
       // reference `data.monitor` (the closure-captured value) and the
       // `withCronJobSchedule` helper.
+      //
+      // The optimistic-update site is `handleCronScheduleChange` (the dashboard's
+      // cron schedule inline-edit handler). The signature of `withCronJobSchedule`
+      // was extended to also accept the human-readable `scheduleDisplay` so the
+      // optimistic state updates BOTH `schedule` and `schedule_display` in lockstep
+      // with what the server will return on the next /api/monitor poll. The 5th
+      // argument here is `scheduleDisplay` (the parsed `parsed.display` of the
+      // picker's emitted 5-field cron).
       expect(source).toMatch(
-        /setData\(\s*\{\s*monitor:\s*withCronJobSchedule\(data\.monitor,\s*jobId,\s*scheduleDisplay\)\s*,?\s*\}\s*\)/,
+        /setData\(\s*\{\s*monitor:\s*withCronJobSchedule\(data\.monitor,\s*jobId,\s*newSchedule,\s*scheduleDisplay\)\s*,?\s*\}\s*\)/,
       );
     });
 

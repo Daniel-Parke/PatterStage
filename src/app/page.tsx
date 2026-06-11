@@ -256,8 +256,14 @@ export default function Dashboard() {
     // from a React-state updater. The `setData` helper is the canonical
     // partial-state setter (defined at line 179 above); only the `useState`
     // declaration itself uses the raw dispatch setter directly.
+    //
+    // The optimistic update writes BOTH the canonical cron (`schedule`)
+    // and the human label (`schedule_display`). The picker's onChange
+    // contract is a 5-field cron expression (see SchedulePicker JSDoc
+    // line 33), so `newSchedule` is the canonical form; the parsed
+    // `scheduleDisplay` is the label the dashboard renders next to it.
     setData({
-      monitor: withCronJobSchedule(data.monitor, jobId, scheduleDisplay),
+      monitor: withCronJobSchedule(data.monitor, jobId, newSchedule, scheduleDisplay),
     });
 
     try {
