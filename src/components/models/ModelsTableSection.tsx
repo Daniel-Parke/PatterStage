@@ -10,27 +10,7 @@ import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import { TASK_TYPES, type TaskType } from "@/lib/hermes-providers";
 import type { SyncActionResult } from "@/lib/sync-manager";
 
-import type { ApiModel } from "./types";
-
-/**
- * Project an ApiModel row down to the subset of fields the editor form
- * edits. Centralised here so the table row and any future call site
- * (e.g. a context-menu "Edit" action) stay in lockstep with the
- * `ModelEditorRecord` shape — adding a new editable field is a one-line
- * change in `ModelEditor.tsx` plus one line here, instead of touching
- * every call site.
- */
-function toModelEditorRecord(m: ApiModel): ModelEditorRecord {
-  return {
-    id: m.id,
-    name: m.name,
-    provider: m.provider,
-    modelId: m.modelId,
-    baseUrl: m.baseUrl,
-    contextLength: m.contextLength,
-    credentialsId: m.credentialsId,
-  };
-}
+import { type ApiModel, toModelEditorRecord } from "./types";
 
 interface ModelsTableSectionProps {
   models: ApiModel[];

@@ -5,6 +5,7 @@
 // Shared types for the models page. TaskType lives in
 // hermes-providers.ts as the single source of truth.
 
+import type { ModelEditorRecord } from "./ModelEditor";
 import type { TaskType } from "@/lib/hermes-providers";
 
 export interface ApiModel {
@@ -32,4 +33,26 @@ export interface ApiCredential {
 export interface SyncDrift {
   hasDrift: boolean;
   driftDetails: string[];
+}
+
+/**
+ * Project an `ApiModel` row down to the subset of fields the
+ * `ModelEditor` form edits (omits `defaults`, `createdAt`, `updatedAt`).
+ *
+ * Centralised here so the table row and any future call site (e.g. a
+ * context-menu "Edit" action, a bulk-edit, an admin row in another
+ * page) stay in lockstep with the `ModelEditorRecord` shape. Adding a
+ * new editable field is a one-line change in `ModelEditor.tsx` plus
+ * one line here, instead of touching every call site.
+ */
+export function toModelEditorRecord(m: ApiModel): ModelEditorRecord {
+  return {
+    id: m.id,
+    name: m.name,
+    provider: m.provider,
+    modelId: m.modelId,
+    baseUrl: m.baseUrl,
+    contextLength: m.contextLength,
+    credentialsId: m.credentialsId,
+  };
 }

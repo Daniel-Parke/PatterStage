@@ -5,11 +5,35 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { HERMES_PROVIDERS, TASK_TYPES } from "./hermes-providers";
+import { HERMES_PROVIDERS, TASK_TYPES, type TaskType } from "./hermes-providers";
 
 // ── Zod schemas for API request bodies ─────────────────────────
 
 const nonEmpty = z.string().min(1);
+
+/**
+ * Build the `defaults` schema for the Models registry. Each entry is a
+ * task slot (one of `TASK_TYPES`) → boolean (whether the model claims
+ * that slot as a default). The shape used to be hand-listed with 12
+ * `z.boolean().optional()` lines that drifted from the canonical
+ * `TASK_TYPES` array in `hermes-providers.ts`. Deriving it from
+ * `TASK_TYPES` makes the schema a single source of truth: adding a new
+ * task slot is a one-line edit in `hermes-providers.ts`, and the
+ * Models POST/PUT body shape tracks automatically.
+ *
+ * `.strict()` is preserved from the inline form so unknown task-slot
+ * keys are still rejected (e.g. `defaults: { typo: true }` → 400).
+ */
+function buildModelDefaultsSchema(): z.ZodType<Partial<Record<TaskType, boolean>>> {
+  const shape: Record<TaskType, z.ZodOptional<z.ZodBoolean>> = {} as Record<
+    TaskType,
+    z.ZodOptional<z.ZodBoolean>
+  >;
+  for (const taskType of TASK_TYPES) {
+    shape[taskType] = z.boolean().optional();
+  }
+  return z.object(shape).strict();
+}
 
 // ── Models registry ────────────────────────────────────────────
 
@@ -33,22 +57,7 @@ export const providerSchema = z.enum(HERMES_PROVIDERS);
  */
 export const taskTypeSchema = z.enum(TASK_TYPES);
 
-const modelDefaultsSchema = z
-  .object({
-    agent: z.boolean().optional(),
-    hindsight: z.boolean().optional(),
-    compression: z.boolean().optional(),
-    vision: z.boolean().optional(),
-    web_extract: z.boolean().optional(),
-    session_search: z.boolean().optional(),
-    title_generation: z.boolean().optional(),
-    skills_hub: z.boolean().optional(),
-    mcp: z.boolean().optional(),
-    triage_specifier: z.boolean().optional(),
-    approval: z.boolean().optional(),
-    delegation: z.boolean().optional(),
-  })
-  .strict();
+const modelDefaultsSchema = buildModelDefaultsSchema();
 
 export const credentialPostSchema = z.object({
   label: nonEmpty,
