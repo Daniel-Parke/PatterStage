@@ -39,6 +39,13 @@ export function composeTemplateUrl(templateId: string): string {
  * is null (defensive — the page already guards against this case
  * via a showToast, but the helper stays safe to call on stale state).
  *
+ * The optional `scheduleDisplay` parameter is the human-readable label
+ * that the canonical form maps to (e.g. a 30-minute cron expression
+ * maps to "every 30m"). When provided, the helper updates both
+ * fields on the matching job so the optimistic state matches what
+ * the server will return after the next /api/monitor poll. When
+ * omitted, the existing `schedule_display` is preserved.
+ *
  * Pure function: never mutates the input. The caller passes the
  * current `data.monitor` and the helper returns a new `MonitorData`
  * object so the React reference-equality checks downstream see a
@@ -48,6 +55,7 @@ export function withCronJobSchedule(
   monitor: MonitorData | null,
   jobId: string,
   newSchedule: string,
+  scheduleDisplay?: string | null,
 ): MonitorData | null {
   if (!monitor) return monitor;
   return {
@@ -55,7 +63,15 @@ export function withCronJobSchedule(
     cron: {
       ...monitor.cron,
       jobs: monitor.cron.jobs.map((job) =>
-        job.id === jobId ? { ...job, schedule: newSchedule } : job,
+        job.id === jobId
+          ? {
+              ...job,
+              schedule: newSchedule,
+              ...(scheduleDisplay !== undefined
+                ? { schedule_display: scheduleDisplay }
+                : {}),
+            }
+          : job,
       ),
     },
   };
