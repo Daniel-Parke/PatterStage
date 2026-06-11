@@ -20,7 +20,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import AppPageShell from "@/components/layout/AppPageShell";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { safeApiCall, messageFromError } from "@/lib/api-fetch";
+import { safeApiCall, setErrorFromCaught } from "@/lib/api-fetch";
 import { useApiData } from "@/hooks/useApiData";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import type { LogGetData } from "@/app/api/logs/route";
@@ -89,7 +89,7 @@ export default function LogsPage() {
         );
         void refetch();
       } catch (err) {
-        setActionMessage(messageFromError(err, "Delete failed (network error)"));
+        setErrorFromCaught(setActionMessage, err, "Delete failed (network error)");
       }
     });
   }, [deleteArmed, armDelete, confirmDelete, refetch]);
