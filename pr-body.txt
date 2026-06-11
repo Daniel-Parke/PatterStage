@@ -1,3 +1,68 @@
+## Session 158 — List 2 (Cron, Missions, Chat) — Mode I.1 audit exit: 3 named surfaces OOS for budget
+
+**Random pick:** List 2 via `echo $((RANDOM % 4 + 1))` = 2. Random pick per the task brief's explicit mandate, overriding the session 152 "next session should" recommendation of "pick a different list next time." Per session 152 P-1 #4 explicit exit protocol: "If the random pick lands on List 2 again, follow the session 150 Mode I.1 5-tool-call exit (the list is mined clean for `parseX + discriminator` patterns; no more in-tree candidates)."
+
+**Outcome:** **0 commits, 0 refactor code changes.** This is a Mode I.1 exit (per session 150 P-1): the prior List 2 reference (session 152) declared the list MINED CLEAN, and the current session's 5-grep audit found 3 named candidate surfaces — all OOS for the 1-3 commit / 15-min budget per session 150 P-2's 3-class taxonomy (classes 2, 3, and N/A).
+
+### 1. Audit findings (5 grep scans)
+
+| Scan | Result | Verdict |
+|------|--------|---------|
+| A. `err instanceof Error ? err.message` (inline) | 0 sites in List 2 hooks/pages | Mined clean (sessions 91, 96) |
+| B. `logApiError(...)` + `return serverError(STATIC)` | 0 static sites in `api/cron/` and `api/missions/` | Mined clean (session 96) |
+| C. `console.error` in catch blocks (silent failures) | 2 sites in `useMissionsPage.ts` (530, 572) | OOS — needs UX dedup design for 15s polling loop |
+| D. `apiFetch` reads (could be `safeApiCallData`) | 3 + 7 in `useMissionsPage`/`useMissionsApi` | Already audited — preserves throw-on-error at outer try/catch |
+| E. Inline `safeApiCall` + `result.data?.X` access | 0 in List 2 | Already audited (session 141 revert) — current form is correct |
+
+### 2. The 3 named OOS surfaces (full classification in the umbrella reference)
+
+- **Surface A — `isChReadOnly()` 6-site consolidation (List 2):** needs-behaviour-change-exception (UX preference for canonical vs bare message). OOS without explicit user direction. Per session 152 P-1 #5.
+- **Surface B — 4 `safeApiCall<{ data?: { ... } }>` double-envelope sites in useMissionsPage.ts + useMissionsApi.ts + useCronJobMutation.ts (List 2):** NOT a refactor candidate. Per session 138 envelope-unwrap-myth + session 141 revert, the current form is the CORRECT form (the migration to single-nesting is BROKEN — was reverted). The source-pattern test `tests/unit/safe-api-call-data-source-pattern-list2.test.ts` is pinned to enforce the correct form.
+- **Surface C — 2 `console.error` silent-failure sites in `useMissionsPage.ts` (lines 530, 572) — NEW surface, found in session 158 audit:** needs-dedicated-session (UX work). The 5 other `toastError(showToast, error, "...")` call sites in the same file (lines 409, 560, 766, 856, 1062) are the canonical pattern; the 2 `console.error` sites are the asymmetric exceptions. Naive `console.error → toastError` migration would show "Failed to load missions" every 15s during a network outage (user-hostile). The fix needs (a) debounce design OR (b) distinguish user-initiated refresh from polling OR (c) sticky error banner. 2-3 hour UX decision, not 1-commit refactor.
+
+### 3. Cross-list "mined clean" status (post-session-158)
+
+| List | Last audited | Status |
+|------|--------------|--------|
+| 1 (Dashboard, Sessions, Memory, Logs) | 149 | MINED CLEAN |
+| 2 (Cron, Missions, Chat) | 158 (this) | MINED CLEAN for refactors, 3 OPEN projects |
+| 3 (Models, Agents, Skills, Tools, Personalities) | 150 | MINED CLEAN at ops-page level, 2 named OOS surfaces |
+| 4 (Settings) | 147 | MOSTLY MINED CLEAN |
+
+All 4 lists MINED CLEAN at the per-list refactor level. Per session 149 P-7, the mission is at end-of-life for byte-equivalent refactor work.
+
+### 4. Files
+
+- `~/.hermes/skills/software-development/refactor-sweep-mission/references/session-158-list2-mode-i1-named-surfaces-oos.md` (NEW) — canonical session 158 audit + Mode I.1 documentation + 3-surface classification + cross-list status table. Lives in the umbrella skill (not the repo) per the pattern from sessions 149+.
+
+**Net diff:** 0 source files, 0 test files, 0 commit, 0 push, 0 `gh pr edit`. Pure audit exit.
+
+### 5. "Next session should:"
+
+1. **Pick a different list next time** — List 2 has now been hit 18+ times. If the random pick lands on List 2 again, follow this session's Mode I.1 5-tool-call exit (the 3 named surfaces are already classified as OOS in the umbrella reference).
+2. **Surface C (the 2 `console.error` silent-failure sites)** is the next-ripe List 2 work IF the user wants a dedicated UX session. The work is well-scoped (2 sites, 1 file) but needs a UX decision on the debounce/banner pattern BEFORE code lands. Surface A (`isChReadOnly()`) is also open but needs user direction.
+3. **Mission charter migration (per session 149 P-7)** — at this point all 4 lists are mined clean at the per-list operations-page refactor level. The next-iteration goals are: (a) `useMissionsPage` decomposition (1315 LOC, biggest hook in the codebase, 3-5 sessions), (b) `useApiData` extension for `URLSearchParams` + pagination (1-2 sessions), (c) test coverage gap closer (mission charter change, needs user approval), (d) documentation drift closer (mission charter change, needs user approval). Future sessions should expect Mode I.1 exits as the dominant outcome until a charter change is approved.
+4. **The List 1 HindsightBrowser "next session should" from session 154 is stale** (per session 156 P-2) — the file was rewritten in `776cd38` to use `hindsightGet<T>`, the named sites are no longer in their pre-`safeApiCall<{ data?: { ... } }>` shape. Re-audit before acting on session 154's site inventory.
+
+### 6. References
+
+- `references/session-158-list2-mode-i1-named-surfaces-oos.md` (umbrella skill) — full session 158 audit + 3-class classification + cross-list status table + "next-ripe productive work" table
+- `references/session-152-list2-parse-category-id-completion.md` (umbrella skill) — prior List 2 reference, declared list MINED CLEAN
+- `references/session-150-list3-mode-i1-named-surfaces-oos.md` (umbrella skill) — canonical Mode I.1 exit protocol reference
+- `references/session-141-list2-envelope-unwrap-revert.md` (umbrella skill) — the cross-list revert that pinned Surface B to the correct form
+- `references/session-138-safe-api-call-envelope-unwrap-myth.md` (umbrella skill) — the CRITICAL pitfall that flagged the envelope-unwrap bug class
+
+### 7. Verification
+
+- `git status` clean
+- No code changes, no test changes, no commit, no push
+- The umbrella reference is the only artifact written
+- The pr-body writeup is a no-op docs carryover (this entry is the session 158 record)
+
+### 8. Why no `gh pr edit`?
+
+PR #180's body is the session-scoped summary per the protocol. The rolling-PR archive (`pr-body.txt` at branch HEAD) is 541 KB / 4,281 lines — past GitHub's 65,536 char hard limit. Per the form-fallback ladder (`references/pr-body-update-form-fallback-ladder.md`), the next session that wants to push the rolling archive onto a future PR should use the headline-only compressed view (recent N in full + one-line summary of older). The session 158 entry is in this pr-body.txt update; the on-PR body remains the session 155+156 summary.
+
 ## Session 155 — List 4 (Models, HERMES.md, Environment, All Settings) — fix `/api/config` deep-merge bug, derive `modelDefaultsSchema` from `TASK_TYPES`, share `toModelEditorRecord`
 
 Random pick: **List 4** via `echo $((RANDOM % 4 + 1))` = 4. Last touched in List 4: session 124 (serverErrorFromCatch in fs/git/branches). Carryover from session 154's "mined clean is version-dependent" lesson — session 154 flagged List 1 as mined clean, but the dead-`as RequestInit`-cast class was new work the per-list tests didn't catch. Session 155 applies the same lesson to List 4: a hand-listed zod schema + a local helper + a 6-month-silent shallow-merge bug.
