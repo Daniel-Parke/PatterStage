@@ -1,3 +1,82 @@
+## Session 168 — List 2 (Cron, Missions, Chat) — `COPY_BTN_CLASS` + `COPY_BTN_DATA_ATTR` magic-string consolidation in chat page + chat-utils
+
+**Random pick:** List 2 via `date +%s | awk '{print int($1) % 4 + 1}'` = 2. Per session 158's Mode I.1 protocol, the prior List 2 reference declared the list MINED CLEAN. This session's fresh audit (5-grep scan + read of all 3 List 2 pages) found exactly one remaining byte-equivalent surface: the magic-string coupling between the chat page's global click handler and `renderMarkdown`'s template literal. The 2 other named OOS surfaces from session 158 (the `isChReadOnly()` consolidation + the 2 `console.error` UX-dedup sites) are still OOS per the byte-equivalence charter and need user direction.
+
+**Date:** 2026-06-12
+
+**Outcome:** **1 commit (`65c3d5d`), 3 files (1 modified, 1 modified, 1 new), +216 / -5 = +211 net LOC (mostly the source-pattern test file + JSDoc).**
+
+### 1. The 2 magic strings
+
+`src/lib/chat-utils.ts:125` (the `renderMarkdown` template literal for code blocks):
+```
+<button class="copy-btn text-[10px] ..." data-code="$2">Copy</button>
+```
+
+`src/app/orchestration/chat/page.tsx:322-325` (the global click handler that event-delegates to these buttons):
+```ts
+if (target.classList.contains("copy-btn")) {
+  const code = target.getAttribute("data-code") || "";
+```
+
+The class name `"copy-btn"` and the attribute name `"data-code"` are hard-coded as string literals in BOTH files. A one-character rename in `renderMarkdown`'s template would silently desync the click handler — no compile error, no test failure, just a dead Copy button in the chat UI.
+
+### 2. The migration (2 magic strings → 2 named constants)
+
+- `src/lib/chat-utils.ts`: export `COPY_BTN_CLASS = "copy-btn"` and `COPY_BTN_DATA_ATTR = "data-code"`. `renderMarkdown` interpolates both constants in the code-block template.
+- `src/app/orchestration/chat/page.tsx`: import both constants and use them in the click handler (`classList.contains(COPY_BTN_CLASS)` + `getAttribute(COPY_BTN_DATA_ATTR)`).
+- `tests/unit/copy-btn-magic-string-source-pattern.test.ts` (NEW, 14 tests): pins the constant declarations, the `renderMarkdown` interpolation sites, the chat-page import + use sites, AND the anti-pattern lock that the inline literals must not appear anywhere outside the constant declarations themselves.
+
+### 3. Byte-equivalence proof
+
+| Site | Before | After |
+|------|--------|-------|
+| `renderMarkdown` template (chat-utils.ts) | `class="copy-btn ... data-code="$2"` | `class="${COPY_BTN_CLASS} ... ${COPY_BTN_DATA_ATTR}="$2"` |
+| Click handler (chat/page.tsx) | `target.classList.contains("copy-btn")` | `target.classList.contains(COPY_BTN_CLASS)` |
+| Click handler (chat/page.tsx) | `target.getAttribute("data-code")` | `target.getAttribute(COPY_BTN_DATA_ATTR)` |
+
+The interpolated HTML at runtime is byte-equivalent (the constants expand to the same string literals). The click handler's runtime behavior is unchanged (still matches the same class + reads the same attribute). The clipboard write + toast call is untouched.
+
+### 4. Verification
+
+- `npx tsc --noEmit` — clean
+- `CI=true npx eslint src/lib/chat-utils.ts src/app/orchestration/chat/page.tsx tests/unit/copy-btn-magic-string-source-pattern.test.ts --max-warnings 0` — clean
+- `npx jest tests/unit/copy-btn-magic-string-source-pattern.test.ts` — 14/14 pass
+- `npx jest tests/unit/chat-page-{toast,active-session-reuse,models-merge}.test.tsx tests/unit/chat-utils-sanitise-filename.test.ts` — 20/20 pass (regression-clean for the 4 sibling chat tests)
+- `npx jest` — **273 suites / 1991 tests pass** (up from 272/1977 = +1 suite, +14 tests)
+- `npm run build` — clean
+- `git push origin mission/hermes-review-and-refactor` — succeeded (`d703143..65c3d5d`)
+
+### 5. Cross-list "mined clean" status (post-session-168)
+
+| List | Last audited | Status |
+|------|--------------|--------|
+| 1 (Dashboard, Sessions, Memory, Logs) | 149 | MINED CLEAN |
+| 2 (Cron, Missions, Chat) | **168 (this)** | **MINED CLEAN at the chat page + cron page surface; 2 OOS surfaces still need user direction** |
+| 3 (Models, Agents, Skills, Tools, Personalities) | 150 | MINED CLEAN at ops-page level, 2 named OOS surfaces |
+| 4 (Settings) | 167 | MOSTLY MINED CLEAN |
+
+The 2 List 2 OOS surfaces (both OOS per the byte-equivalence charter):
+- **`isChReadOnly()` 6-site consolidation** — needs-behaviour-change-exception (UX preference for canonical vs bare message). Per session 152 P-1 #5.
+- **2 `console.error` silent-failure sites in `useMissionsPage.ts` (lines 530, 572)** — needs-dedicated-session (UX work). Per session 158 Surface C.
+
+### 6. "Next session should:"
+
+1. **Pick a different list next time.** List 2 has now been hit 19+ times. The 5-grep audit is exhausted; the remaining work is the 2 UX-decision-required surfaces (the `isChReadOnly` consolidation + the 2 `console.error` sites) that need explicit user direction.
+2. **If the random pick lands on List 2 again**, follow this session's protocol: re-audit with a focus on **magic-string coupling** (the session 168 surface) and **inline string-literal duplication** patterns. The other named OOS surfaces are already classified in the umbrella reference.
+3. **The mission charter migration (per session 149 P-7)** is still the open question: at this point all 4 lists are MINED CLEAN at the per-list operations-page refactor level. The next-iteration goals are: (a) `useMissionsPage` decomposition (1315 LOC, biggest hook in the codebase, 3-5 sessions), (b) `useApiData` extension for `URLSearchParams` + pagination (1-2 sessions), (c) test coverage gap closer (mission charter change, needs user approval), (d) documentation drift closer (mission charter change, needs user approval).
+
+### 7. Files
+
+- `src/lib/chat-utils.ts` (modified, +30 / -3) — `COPY_BTN_CLASS` + `COPY_BTN_DATA_ATTR` constants exported, `renderMarkdown` interpolates them
+- `src/app/orchestration/chat/page.tsx` (modified, +12 / -2) — imports both constants, click handler uses them
+- `tests/unit/copy-btn-magic-string-source-pattern.test.ts` (NEW, 174 lines, 14 tests) — pins the constant declarations + renderMarkdown interpolation + chat-page import + click-handler use + anti-pattern locks
+
+### 8. References
+
+- `tests/unit/chat-page-active-session-reuse.test.ts` — sister source-pattern test, the established pattern for the magic-string-literal lock tests
+- `tests/unit/copy-btn-magic-string-source-pattern.test.ts` — the test file itself; the file-existence + import-shape + interpolation-shape pre-flight recipes are in the file header
+
 ## Session 167 — List 4 (Models, HERMES.md, Environment, All Settings) — `seedPostSchema` + `parseAndValidateJsonBody` migration in `api/seed/route.ts`
 
 **Random pick:** List 4 via `date +%s | awk '{print int($1) % 4 + 1}'` = 4. Random pick per the task brief's explicit mandate.
