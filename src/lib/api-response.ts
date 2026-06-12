@@ -200,6 +200,7 @@ export function ok<T>(data: T): NextResponse {
 
 /**
  * Convert a `{ ok, error? }` helper result into a 500 NextResponse.
+ *
  * Sister of the catch-block shims in `@/lib/api-logger`
  * (`serverErrorFromCatch` / `serverErrorFromError`), but for the
  * discriminated-union pattern that several route handlers use to
@@ -235,21 +236,6 @@ export function ok<T>(data: T): NextResponse {
  *   preserved verbatim; the caller controls whether to suppress empty
  *   messages at the source rather than hiding them here)
  *
- * **Why not a generic `helperResultToResponse<T>(result, fallback)`**:
- * the helper is intentionally narrow — the 4 sites all use the same
- * `{ ok, error? }` shape, and a more-generic signature would force
- * TypeScript to widen at every call site (the union types in
- * `apply-profile-or-root-patch.ts` would lose their narrow
- * `reason === "push-failed"` discriminant after the helper call).
- * The narrow `{ ok, error? }` parameter keeps the call sites fully
- * typed.
- *
- * **Why not in `@/lib/api-logger`**: the catch-block shims live
- * there because they own the `logApiError` side-effect. This helper
- * has no logging — it is a pure response-shape translation that
- * composes the existing `serverError` factory. `api-response.ts` is
- * the natural home (sibling of `serverError` / `ok` / `created`).
- *
  * @param result - A `{ ok, error? }` discriminated result. The shape
  *   is the minimum that captures the inline pattern; richer unions
  *   (e.g. `ProfileOrRootPatchResult`) are accepted because their
@@ -264,6 +250,22 @@ export function ok<T>(data: T): NextResponse {
  *
  *   // Factory form (post-refactor):
  *   if (!result.ok) return serverErrorFromHelperResult(result, "unknown error");
+ *
+ * @remarks
+ * **Why not a generic `helperResultToResponse<T>(result, fallback)`**:
+ * the helper is intentionally narrow — the 4 sites all use the same
+ * `{ ok, error? }` shape, and a more-generic signature would force
+ * TypeScript to widen at every call site (the union types in
+ * `apply-profile-or-root-patch.ts` would lose their narrow
+ * `reason === "push-failed"` discriminant after the helper call).
+ * The narrow `{ ok, error? }` parameter keeps the call sites fully
+ * typed.
+ *
+ * **Why not in `@/lib/api-logger`**: the catch-block shims live
+ * there because they own the `logApiError` side-effect. This helper
+ * has no logging — it is a pure response-shape translation that
+ * composes the existing `serverError` factory. `api-response.ts` is
+ * the natural home (sibling of `serverError` / `ok` / `created`).
  */
 export function serverErrorFromHelperResult(
   result: { ok: boolean; error?: string | null },
