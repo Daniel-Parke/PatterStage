@@ -18,7 +18,10 @@ import {
   writeManagedFileContent,
   type ManagedFileKey,
 } from "@/lib/agent-file-store";
-import { applyProfileOrRootPatch, assertPatchSucceeded, pushProfileOrRoot, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import {
+  applyProfileOrRootPatchOrFail,
+  pushProfileOrRootOrFail,
+} from "@/lib/apply-profile-or-root-patch";
 import { badRequest, notFound, ok } from "@/lib/api-response";
 import {
   configYamlToColumnValues,
@@ -239,36 +242,40 @@ export async function PUT(
           normalizePlatformToolsets(platformToolsetsFromJson(cols.platformToolsetsJson)),
         );
         writeManagedFileContent(profileSlug, "config", cols.configYaml);
-        // applyProfileOrRootPatch handles default-vs-non-default
-        // dispatch + 404 on missing profile + 500 on push failure —
-        // replaces the if/else update block AND the separate push
-        // block below (2 places, 16 lines total).
+        // applyProfileOrRootPatchOrFail collapses the 4-line
+        // apply+toPatchResponse+assert+return-err dance into 1 call
+        // + 1 instanceof check. Replaces the if/else update block
+        // AND the separate push block below (2 places, 16 lines
+        // total).
         const configPatch = {
           personality: cols.personality,
           disabledSkillsJson: cols.disabledSkillsJson,
           platformToolsetsJson,
           configYaml: cols.configYaml,
         };
-        const result = applyProfileOrRootPatch(
+        const result = applyProfileOrRootPatchOrFail(
           profileSlug,
           configPatch,
           configPatch,
+          "Failed to sync profile to Hermes",
         );
-        const err = toPatchResponse(result, "Failed to sync profile to Hermes");
-        if (err) return err;
-        assertPatchSucceeded(result);
+        if (result instanceof NextResponse) return result;
       }
       else {
         // Non-config managed file (SOUL.md, AGENTS.md, etc.) — write
         // the column-free file body to the managed-files table, then
-        // push. pushProfileOrRoot handles default-vs-non-default
-        // dispatch + 404 + push-fail without doing a no-op DB write
-        // that would bump updated_at.
+        // push. pushProfileOrRootOrFail is the push-only companion
+        // of applyProfileOrRootPatchOrFail — collapses the
+        // push+toPatchResponse+assert+return-err dance into 1 call
+        // + 1 instanceof check. writeManagedFileContent has already
+        // updated the managed-files table; we just need the post-
+        // write push to mirror to Hermes.
         writeManagedFileContent(profileSlug, key as ManagedFileKey, content);
-        const result = pushProfileOrRoot(profileSlug);
-        const err = toPatchResponse(result, "Failed to sync profile to Hermes");
-        if (err) return err;
-        assertPatchSucceeded(result);
+        const result = pushProfileOrRootOrFail(
+          profileSlug,
+          "Failed to sync profile to Hermes",
+        );
+        if (result instanceof NextResponse) return result;
       }
     }
     else {

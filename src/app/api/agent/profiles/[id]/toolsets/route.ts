@@ -5,7 +5,7 @@ import { serverErrorFromCatch } from "@/lib/api-logger";
 import { methodNotAllowed, notFound, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatchOrFail } from "@/lib/apply-profile-or-root-patch";
 import { hydratePlatformToolsetsForSlug } from "@/lib/profiles-repository";
 import {
   normalizePlatformToolsetsFromInput,
@@ -72,17 +72,18 @@ export async function PUT(
     const platformToolsets = normalizePlatformToolsetsFromInput(bodyResult.platformToolsets);
     const platformToolsetsJson = serializeJsonToolsets(platformToolsets);
 
-    // applyProfileOrRootPatch handles default-vs-non-default dispatch,
-    // 404 on missing profile, and 500 on push failure — was previously
-    // a 16-line if/else here.
-    const result = applyProfileOrRootPatch(
+    // applyProfileOrRootPatchOrFail collapses the 4-line
+    // apply+toPatchResponse+assert+return-err dance into 1 call +
+    // 1 instanceof check. Byte-equivalent to the pre-migration shape
+    // (same 404 on not-found, same 500 on push-failed, same
+    // { success: true, profile, platformToolsets } success body).
+    const result = applyProfileOrRootPatchOrFail(
       prof.profile,
       { platformToolsetsJson },
       { platformToolsetsJson },
+      "Failed to sync profile to Hermes",
     );
-    const err = toPatchResponse(result, "Failed to sync profile to Hermes");
-    if (err) return err;
-    assertPatchSucceeded(result);
+    if (result instanceof NextResponse) return result;
 
     return ok({ success: true, profile: result.profile, platformToolsets });
   }

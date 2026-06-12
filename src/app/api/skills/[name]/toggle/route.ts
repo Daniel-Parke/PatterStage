@@ -10,7 +10,7 @@ import {
   getDisabledSkills,
   getProfile,
 } from "@/lib/profiles-repository";
-import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatchOrFail } from "@/lib/apply-profile-or-root-patch";
 import { requireSafeProfileName } from "@/lib/path-security";
 import { serializeJsonArray } from "@/lib/profile-config-builder";
 import { getSkill } from "@/lib/skills-repository";
@@ -65,19 +65,19 @@ export async function PUT(
         ? currentDisabled
         : [...currentDisabled, name].sort();
 
-    // applyProfileOrRootPatch handles default-vs-non-default dispatch
-    // + 500 on push failure. The pre-check above for "Profile not
+    // applyProfileOrRootPatchOrFail collapses the 4-line
+    // apply+toPatchResponse+assert+return-err dance into 1 call +
+    // 1 instanceof check. The pre-check above for "Profile not
     // found" is preserved because getDisabledSkills would silently
     // return [] for a missing profile — we want a real 404 instead.
     const disabledSkillsJson = serializeJsonArray(newDisabled);
-    const result = applyProfileOrRootPatch(
+    const result = applyProfileOrRootPatchOrFail(
       profile,
       { disabledSkillsJson },
       { disabledSkillsJson },
+      "Failed to toggle skill",
     );
-    const err = toPatchResponse(result, "Failed to toggle skill");
-    if (err) return err;
-    assertPatchSucceeded(result);
+    if (result instanceof NextResponse) return result;
 
     return ok({ success: true, skill: name, profile, enabled });
   }
