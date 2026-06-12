@@ -1,3 +1,81 @@
+## Session 170 — List 4 (Models, HERMES.md, Environment, All Settings) — `buildDriftDetails` helper extraction in `/api/models/sync/drift`
+
+**Random pick:** List 4 via `$((RANDOM % 4 + 1))` = 4. Fresh audit (read 4 config pages + 9 List 4 API routes + 5 sync helpers) found the List 4 surface largely **mined clean** of byte-equivalent refactors — `serverErrorFromCatch` (95), `parseAndValidateJsonBody` (167), `commitFallbackChange`, `setErrorFromCaught`/`toastError` (128, 131), and the `useApiData` / `CardLink` patterns are all in place. The single remaining duplication was the 3-site `DriftReport → string[]` transformation in `/api/models/sync/drift/route.ts` (1 if-push + 2 for-pushes).
+
+**Date:** 2026-06-12
+
+**Outcome:** **1 commit (`92d4615`), 3 files (2 modified, 1 new), +39 / -16 net LOC (1 new test file).**
+
+### The 3 migrated sites
+
+- `src/app/api/models/sync/drift/route.ts:20-23` — `if (drift.primaryDiffers) driftDetails.push(\`Primary model drift: DB has "${...}", Hermes has "${...}"\`);`
+- `src/app/api/models/sync/drift/route.ts:25-27` — `for (const m of drift.modelsInHermesNotInDb) driftDetails.push(\`Model "${m.modelId}" (${m.provider}) is in Hermes but not in Control Hub\`);`
+- `src/app/api/models/sync/drift/route.ts:29-31` — `for (const m of drift.modelsInDbNotInHermes) driftDetails.push(\`Model "${m.modelId}" (${m.provider}) is in Control Hub but not pushed to Hermes\`);`
+
+### Helper signature
+
+```ts
+// src/lib/sync-manager.ts:139
+export function buildDriftDetails(drift: DriftReport): string[] {
+  const details: string[] = [];
+  if (drift.primaryDiffers) {
+    details.push(
+      `Primary model drift: DB has "${drift.primaryDiffers.dbModel}", Hermes has "${drift.primaryDiffers.hermesModel}"`,
+    );
+  }
+  for (const m of drift.modelsInHermesNotInDb) {
+    details.push(`Model "${m.modelId}" (${m.provider}) is in Hermes but not in Control Hub`);
+  }
+  for (const m of drift.modelsInDbNotInHermes) {
+    details.push(`Model "${m.modelId}" (${m.provider}) is in Control Hub but not pushed to Hermes`);
+  }
+  return details;
+}
+```
+
+Lives in `sync-manager.ts` (next to `detectConfigDrift`) — the natural home. Pure function: no DB, no fs, no globals, just a `DriftReport → string[]` projection. The route becomes a single line: `const driftDetails = buildDriftDetails(detectConfigDrift());`. The `hasDrift` boolean stays in the route (composed from `driftDetails.length > 0`) — the helper stays "details only" so its return type is unambiguous.
+
+### Tests
+
+**8 new unit tests in `tests/unit/build-drift-details.test.ts`** — pin the contract:
+1. Empty drift report → empty `string[]`
+2. `primaryDiffers` only → 1 string in the primary slot
+3. `modelsInHermesNotInDb` only → N strings in the Hermes-only slot
+4. `modelsInDbNotInHermes` only → N strings in the DB-only slot
+5. All three populated → all 3 sections in canonical order (primary, Hermes-only, DB-only)
+6. Multiple entries in a list section → all entries appended in input order
+7. Multiple entries in the other list section → all entries appended in input order
+8. Exact byte-level string format (regression guard for the `ModelsDriftBanner` UI consumer)
+
+### Out of scope (deferred)
+
+- **Migrating `pushDiff` closure in `api/models/sync/pull/route.ts:32-39` and `api/models/[id]/diff/route.ts:65-67`** — the two `pushDiff` closures have **different shapes** (pull: `(field, before, after) → {diffs, updates}`; diff: `(id, label, detail) → diffs`). Consolidating them would change the function shape, not just the call sites. Left as 1-route local helpers.
+- **`isChReadOnly()` audit in `api/config/route.ts` + `api/models/*` mutation routes** — none of the 9 List 4 API routes call `isChReadOnly()` (only the 5 List 2 cron/admin routes do). Adding the guard would be a **behaviour change** (in read-only mode, the PUTs would start returning 403), which is out of scope for a byte-equivalent refactor sweep.
+- **`/api/models/fallbacks/import` and `/api/models/sync/pull` `existingChain` Set construction** — both build `new Set(chain.map(e => fallbackKey(e.provider, e.modelIdString)))`. The two sites are in different files and the import route has additional logic mixed in. Extracting a `chainKeySet` helper would touch 1-2 sites and the byte-equivalence proof is straightforward but the broader consolidation (e.g. the full `parseFallbackAgentSettingsFromYaml` flow) is a separate design task.
+- **`detectConfigDrift` lib export** — used by 1 caller (the route). Promoting to `@/lib/` is a no-op since it already lives in `src/lib/sync-manager.ts`. Not a refactor.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `CI=true npx eslint . --max-warnings 0`: clean
+- `CI=true npx jest`: **275 suites / 2007 tests pass** (was 274/1999 = +1 suite, +8 tests, matching the 8 new `buildDriftDetails` unit tests)
+- `CI=true npx --yes pnpm@10.33.0 build`: clean
+
+### Behaviour change
+
+None. The route handler's response (`{ hasDrift, driftDetails }`) is byte-equivalent to the pre-refactor inline form. The `string[]` ordering (primary first, then Hermes-only, then DB-only) is preserved exactly, as is the exact text format (including the `:` separator in the primary line and the "but not in / not pushed to" wording in the list lines).
+
+### "Next session should:" block
+
+1. **Random pick next session.** List 4 has been hit 14+ times now (sessions 59, 60, 67, 70, 79, 85, 86, 95, 98, 109, 120, 123, 124, 167, 170). The surface is **mined clean** of byte-equivalent refactors — future List 4 picks need to find new opportunities outside the existing 5 factory families (and the 4 List 4 source-pattern tests in `tests/unit/*-source-patterns-list4.test.ts` are the canonical surface-coverage assertion).
+2. **`isChReadOnly()` audit (List 4)** — the 9 List 4 API routes (config PUT, models POST/PUT/DELETE, models/[id] PUT/DELETE, models/sync/push, models/fallbacks POST/PUT/DELETE/custom/import/reorder/sync/toggle/config PUT) are all **un-guarded** by the read-only check. This is a 9-site, List 4-scope behaviour change (would 403 in read-only mode). **Not byte-equivalent** — requires explicit user direction to opt in.
+3. **`pushDiff` consolidation (cross-list)** — the two `pushDiff` closures in `api/models/sync/pull/route.ts` and `api/models/[id]/diff/route.ts` have different shapes. Would require either (a) a discriminated union accepting both `(field, before, after) | (id, label, detail)` signatures, or (b) splitting into two named helpers (`pushFieldDiff` and `pushLabelDiff`). Defer until a 3rd caller appears.
+4. **`/api/models/fallbacks/import` and `/api/models/sync/pull` `existingChain` Set construction** — 2 sites, different files, different surrounding logic. Defer until a 3rd caller appears (currently 2 in `import/route.ts` GET + POST and 0 in `pull/route.ts` since the `set` isn't built there).
+5. **Body compression (P-137-1)** — `pr-body.txt` is now 619 KB. The session 137 table-format pattern is the right vehicle for the next compression pass. The session-170 entry uses that pattern (a "carryover" row at the bottom + a self-contained session header).
+6. **`detectConfigDrift` lib export is already in the right place** — `@/lib/sync-manager.ts`. No action needed.
+
+---
+
 ## Session 169 — List 3 (Models, Agents, Skills, Tools, Personalities) — `skillFilePath` helper extraction + 5-site migration
 
 **Random pick:** List 3 via `$((RANDOM % 4 + 1))` = 3. Fresh audit (read 3 List 3 ops pages + 9 API routes + 4 sync helpers) found the 1-line `${skillsRoot} + "/" + ${skillKey} + "/SKILL.md"` path-build repeated at 5 sites across 3 files. The `dir + "/SKILL.md"` shape (used in `scanDiskSkillsCatalog`, `pushSkillToHermes`, the `walk()` in `pullSkillFromHermes`, and `api/skills/[...path]`) is a different shape (pre-resolved directory, not root + key) and is explicitly out of scope for this migration.
@@ -5067,6 +5145,10 @@ The full content of these earlier sessions is preserved in the git history of `p
 
 | # | List | Headline | Sites | New tests | Commit | Reference |
 |---|---|---|---|---|---|---|
+| 170 | 4 | `buildDriftDetails` helper extraction in `/api/models/sync/drift` (pure `DriftReport → string[]` projection) + 8 new unit tests | 3 | +8 | `92d4615` | session 170 (above) |
+| 169 | 3 | `skillFilePath` helper extraction + 5-site migration (root + key → SKILL.md) | 5 | +4 | `4c130b9` | session 169 (above) |
+| 168 | 2 | `COPY_BTN_CLASS` + `COPY_BTN_DATA_ATTR` magic-string consolidation in chat page + chat-utils | 2 | 0 (reuse) | `65c3d5d` | session 168 (above) |
+| 167 | 4 | `seedPostSchema` + `parseAndValidateJsonBody` migration in `api/seed/route.ts` | 2 | +1 | `f4e1a4b` | session 167 (above) |
 | 137 | 1 | `safeApiCall<{ data?: { ... } }>` double-envelope migration in HindsightBrowser + source-pattern test | 5 | +4 | session 137 | session 137 |
 | 96 | 2 | `serverErrorFromCatch` 6-site List 2 migration + `setErrorFromCaught` 1-site + `rememberLastCategory` + `handleCloseCreate` (session 95 carryover) | 11 | +7 | session 96 | session 96 |
 | 95 | 4 | `serverErrorFromCatch` helper + 27-site List 4 migration (carryover from session 94) | 27 | +11 | `8b22f34` | session 95 |
