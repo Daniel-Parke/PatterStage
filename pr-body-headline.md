@@ -4,6 +4,34 @@
 
 ## Recent sessions (full detail)
 
+## Session 176 — List 1 (Dashboard, Sessions, Memory, Logs) — `setErrorFromCaught` migration in `src/components/layout/Sidebar.tsx` (close session 159 layout-shared carryover)
+
+### What shipped
+
+1 stale `setX(messageFromError(...))` site in the layout-shared Sidebar migrated to `setErrorFromCaught` + source-pattern test extended with a Sidebar describe block (5 new assertions). The session 159 closure of the `setX(messageFromError(err, "..."))` → `setErrorFromCaught(setX, err, "...")` migration was scoped to the 4 page-local List 1 files and missed the Sidebar (the layout-shared component that wraps every page in Control Hub). The Sidebar is the first component in the "List 1.5" surface category to receive a refactor.
+
+### Why this is byte-equivalent
+
+`setErrorFromCaught(setX, err, fallback)` is literally `setX(messageFromError(err, fallback))` per `src/lib/api-fetch.ts:223` (the helper body). The 4 unit tests in `set-error-from-caught.test.ts` lock this byte-equivalence claim for 6 distinct input shapes (Error, empty Error, string, null, undefined, TypeError). The catch-block's externally observable behaviour is unchanged for every input shape.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `CI=true npx eslint . --max-warnings 0`: clean
+- `npx jest tests/unit/set-error-from-caught-source-pattern-list1.test.ts`: **10/10 pass** (5 pre-existing logs-page assertions + 5 new Sidebar assertions)
+- `npx jest`: **280 suites / 2096 tests pass** (up from 280/2091 = +5 tests in the extended source-pattern file; no regressions)
+- `npm run build`: clean
+
+### Reference doc
+
+Full session writeup: `references/session-176-list1-sidebar-seterrorfromcaught.md` under the `refactor-sweep-mission` skill.
+
+### Next session should
+
+- **Random pick next session.** The List 1 surface is now mined clean at the catch-block / `setErrorFromCaught` scope. The Sidebar carryover from session 159 is closed.
+- **List 2 carryover: `setCategoryError` in `useMissionsPage.ts:389`.** The 2-hop form is structurally identical to the Sidebar site this session closed. Defer to a future List 2 pick.
+- **Layout-shared surface audit (List 1.5+).** The Sidebar is the first component in the "List 1.5" surface category. The other layout-shared components (AppPageShell, PageHeader, MobileHeader, SidebarContext) have NOT been audited for the same catch-block patterns. A future session could run a "layout-shared surface audit" that scans all 4 layout components for stale 2-hop forms.
+
 ## Session 175 — List 1 (Dashboard, Sessions, Memory, Logs) — close session 174 carryover (4 dashboard helpers + safeApiCallData migration in logs)
 
 ### What shipped
