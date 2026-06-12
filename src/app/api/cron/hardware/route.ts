@@ -6,7 +6,7 @@ import { join } from "path";
 import { logApiError, serverErrorFromError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest, notFound, ok, serverError, serviceUnavailable } from "@/lib/api-response";
+import { badRequest, notFound, ok, serverErrorFromHelperResult, serviceUnavailable } from "@/lib/api-response";
 import { toError } from "@/lib/api-fetch";
 import { crontabLineUsesScriptsDir } from "@/lib/hardware-cron";
 import { getChScriptsDir, getChHardwareLogDir, CH_DATA_DIR } from "@/lib/paths";
@@ -360,7 +360,7 @@ export async function POST(request: NextRequest) {
     // single blocking call with no async I/O available for crontab writes).
     const result = writeCrontab(joinCrontabLines(newLines));
     if (!result.ok) {
-      return serverError(result.error ?? "unknown error");
+      return serverErrorFromHelperResult(result, "unknown error");
     }
 
     return ok({ id: entryId, schedule, command, name, logFile });
@@ -445,7 +445,7 @@ export async function PUT(request: NextRequest) {
 
     const result = writeCrontab(joinCrontabLines(newLines));
     if (!result.ok) {
-      return serverError(result.error ?? "unknown error");
+      return serverErrorFromHelperResult(result, "unknown error");
     }
 
     // Sync disabled state to JSON for this job
@@ -501,7 +501,7 @@ export async function DELETE(request: NextRequest) {
 
     const result = writeCrontab(joinCrontabLines(newLines));
     if (!result.ok) {
-      return serverError(result.error ?? "unknown error");
+      return serverErrorFromHelperResult(result, "unknown error");
     }
 
     // Remove from disabled set if present

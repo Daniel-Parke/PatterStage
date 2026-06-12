@@ -197,3 +197,77 @@ export function created<T>(data: T): NextResponse {
 export function ok<T>(data: T): NextResponse {
   return NextResponse.json({ data }, { status: 200 });
 }
+
+/**
+ * Convert a `{ ok, error? }` helper result into a 500 NextResponse.
+ * Sister of the catch-block shims in `@/lib/api-logger`
+ * (`serverErrorFromCatch` / `serverErrorFromError`), but for the
+ * discriminated-union pattern that several route handlers use to
+ * surface domain errors without throwing:
+ *
+ *   function writeCrontab(content: string): { ok: boolean; error?: string } {
+ *     try { ...; return { ok: true }; }
+ *     catch (e) { return { ok: false, error: toError(e).message }; }
+ *   }
+ *
+ *   const result = writeCrontab(joinCrontabLines(newLines));
+ *   if (!result.ok) return serverError(result.error ?? "unknown error");
+ *
+ * The 3 sites in `src/app/api/cron/hardware/route.ts` (POST/PUT/DELETE)
+ * and the 1 site in `src/lib/apply-profile-or-root-patch.ts`
+ * (`toPatchResponse` push-failed branch) all repeat the same
+ * `if (!result.ok) return serverError(result.error ?? <fallback>)`
+ * pattern with byte-identical bodies. The helper extracts the
+ * `result.error ?? fallback` translation so the call site collapses
+ * to:
+ *
+ *   if (!result.ok) return serverErrorFromHelperResult(result, "unknown error");
+ *
+ * and a future change to the empty-error-message discipline (e.g. a
+ * `result.error ?? "unknown error" → "Failed to write crontab: ..."`
+ * enrichment) lands in one place.
+ *
+ * **Byte-equivalent to the inline form** for every input shape:
+ * - `result.error === "msg"` → `serverError("msg")` (status 500, body `{error: "msg"}`)
+ * - `result.error === undefined` → `serverError(fallback)`
+ * - `result.error === null` → `serverError(fallback)`
+ * - `result.error === ""` → `serverError("")` (the empty-Error trap is
+ *   preserved verbatim; the caller controls whether to suppress empty
+ *   messages at the source rather than hiding them here)
+ *
+ * **Why not a generic `helperResultToResponse<T>(result, fallback)`**:
+ * the helper is intentionally narrow — the 4 sites all use the same
+ * `{ ok, error? }` shape, and a more-generic signature would force
+ * TypeScript to widen at every call site (the union types in
+ * `apply-profile-or-root-patch.ts` would lose their narrow
+ * `reason === "push-failed"` discriminant after the helper call).
+ * The narrow `{ ok, error? }` parameter keeps the call sites fully
+ * typed.
+ *
+ * **Why not in `@/lib/api-logger`**: the catch-block shims live
+ * there because they own the `logApiError` side-effect. This helper
+ * has no logging — it is a pure response-shape translation that
+ * composes the existing `serverError` factory. `api-response.ts` is
+ * the natural home (sibling of `serverError` / `ok` / `created`).
+ *
+ * @param result - A `{ ok, error? }` discriminated result. The shape
+ *   is the minimum that captures the inline pattern; richer unions
+ *   (e.g. `ProfileOrRootPatchResult`) are accepted because their
+ *   `push-failed` branch has an `error: string` field.
+ * @param fallback - Static user-facing message used when
+ *   `result.error` is missing/nullish.
+ * @returns A 500 NextResponse with `{ error: result.error ?? fallback }`.
+ *
+ * @example
+ *   // Inline form (pre-refactor):
+ *   if (!result.ok) return serverError(result.error ?? "unknown error");
+ *
+ *   // Factory form (post-refactor):
+ *   if (!result.ok) return serverErrorFromHelperResult(result, "unknown error");
+ */
+export function serverErrorFromHelperResult(
+  result: { ok: boolean; error?: string | null },
+  fallback: string,
+): NextResponse {
+  return serverError(result.error ?? fallback);
+}
