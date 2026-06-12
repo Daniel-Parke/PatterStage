@@ -266,8 +266,22 @@ export default function SkillsPage() {
     try {
       const d = await apiFetch(skillApiUrl(skill.name));
       setSkillContent(d.data?.content || "// No content");
-    } catch {
+    } catch (err) {
+      // Surface the real error to the user via the toast — the inline
+      // "// Failed to load content" placeholder only says "something
+      // broke" without telling the user WHY (e.g. "API returned
+      // invalid JSON (HTTP 500)"). This is the canonical "feature is
+      // not working" exception that session 142 explicitly permits:
+      // users see the real diagnostic message, not a static
+      // placeholder. The inline placeholder is still set so the
+      // expand panel renders a meaningful fallback if the user
+      // dismisses the toast and the panel is still open — `setSkillContent`
+      // is the panel's source of truth, the toast is the
+      // acknowledgement. Pattern mirrors the sibling
+      // `openSkillEditor` (line 232-234) which already uses
+      // `toastError` for the same catch path.
       setSkillContent("// Failed to load content");
+      toastError(showToast, err, "Failed to load skill content");
     }
   };
 
