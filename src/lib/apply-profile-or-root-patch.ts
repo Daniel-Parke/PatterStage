@@ -36,7 +36,7 @@
 
 import { NextResponse } from "next/server";
 
-import { notFound, serverError } from "./api-response";
+import { notFound, serverErrorFromHelperResult } from "./api-response";
 import { updateAgentRoot, type AgentRootPatch } from "./agent-root-repository";
 import { getProfile, updateProfileContent } from "./profiles-repository";
 import { pushProfileToHermes, pushRootToHermes } from "./hermes-profile-sync";
@@ -147,7 +147,7 @@ export function toPatchResponse(
   if (result.reason === "not-found") {
     return notFound("Profile not found");
   }
-  return serverError(result.error ?? fallbackError);
+  return serverErrorFromHelperResult(result, fallbackError);
 }
 
 /**

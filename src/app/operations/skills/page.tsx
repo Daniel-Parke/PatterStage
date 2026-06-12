@@ -23,6 +23,7 @@ import { apiFetch, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { groupByCategory, titleCaseCategory } from "@/lib/skills-grouping";
 import { pluralise } from "@/lib/utils";
+import { filterByCaseInsensitiveSubstring } from "@/lib/list-search";
 import type { Skill, SkillsData } from "@/types/hermes";
 
 // ── Pure helpers (hoisted outside component) ──────────────────────────────
@@ -54,12 +55,10 @@ function effectiveSkillEnabled(
 }
 
 function filterBySearch(skills: Skill[], search: string) {
-  return skills.filter(
-    (s) =>
-      !search ||
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.description.toLowerCase().includes(search.toLowerCase()),
-  );
+  return filterByCaseInsensitiveSubstring(skills, search, [
+    (s) => s.name,
+    (s) => s.description,
+  ]);
 }
 
 function groupCategories(skills: Skill[]) {
@@ -267,8 +266,22 @@ export default function SkillsPage() {
     try {
       const d = await apiFetch(skillApiUrl(skill.name));
       setSkillContent(d.data?.content || "// No content");
-    } catch {
+    } catch (err) {
+      // Surface the real error to the user via the toast — the inline
+      // "// Failed to load content" placeholder only says "something
+      // broke" without telling the user WHY (e.g. "API returned
+      // invalid JSON (HTTP 500)"). This is the canonical "feature is
+      // not working" exception that session 142 explicitly permits:
+      // users see the real diagnostic message, not a static
+      // placeholder. The inline placeholder is still set so the
+      // expand panel renders a meaningful fallback if the user
+      // dismisses the toast and the panel is still open — `setSkillContent`
+      // is the panel's source of truth, the toast is the
+      // acknowledgement. Pattern mirrors the sibling
+      // `openSkillEditor` (line 232-234) which already uses
+      // `toastError` for the same catch path.
       setSkillContent("// Failed to load content");
+      toastError(showToast, err, "Failed to load skill content");
     }
   };
 

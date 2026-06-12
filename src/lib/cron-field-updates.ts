@@ -11,6 +11,7 @@
 
 import { NextResponse } from "next/server";
 import { parseSchedule } from "@/lib/utils";
+import { scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
 import { normalizeRepeat } from "@/lib/cron-repository";
 import type { UpdateCronJobInput } from "@/lib/cron/types";
 
@@ -74,10 +75,7 @@ export function buildCronUpdatePayload(
     // and the next read/write round-trip with Hermes corrupted the job to
     // `kind: "invalid"`. See src/lib/cron/write.ts for the full rationale.
     payload.schedule = scheduleStr;
-    payload.schedule_display =
-      "display" in parsed
-        ? (parsed as { display: string }).display
-        : scheduleStr;
+    payload.schedule_display = scheduleDisplayFromParsed(parsed, scheduleStr);
   }
 
   if (updates.repeat !== undefined) {

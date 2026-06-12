@@ -51,19 +51,25 @@ export default function SystemCronModal({ open, onClose, onSave, editingJob }: P
     setError(null);
     setMetaLoading(true);
     let cancelled = false;
-    void safeApiCall<{ scriptsDir: string; logDir: string }>("/api/cron/hardware/meta", {
-      method: "GET",
-    }).then((result) => {
+    // The route returns `{ data: { scriptsDir, logDir } }` (envelope).
+    // `safeApiCall<T>` does NOT unwrap — `data` is the full body —
+    // so the type is the envelope shape and the inner fields are
+    // read via `result.data?.data?.X` (two indirections).
+    void safeApiCall<{ data?: { scriptsDir: string; logDir: string } }>(
+      "/api/cron/hardware/meta",
+      { method: "GET" },
+    ).then((result) => {
       if (cancelled) return;
       if (!result.ok) {
         setMetaError(result.error ?? `Failed to load system cron paths`);
         setMetaLoading(false);
         return;
       }
-      if (result.data?.scriptsDir) {
+      const inner = result.data?.data;
+      if (inner?.scriptsDir) {
         setMeta({
-          scriptsDir: normalizePathSlashes(result.data.scriptsDir),
-          logDir: normalizePathSlashes(result.data.logDir ?? ""),
+          scriptsDir: normalizePathSlashes(inner.scriptsDir),
+          logDir: normalizePathSlashes(inner.logDir ?? ""),
         });
       } else {
         setMetaError("Failed to load system cron paths");

@@ -3,6 +3,13 @@
 **Full archive:** `pr-body.txt` at HEAD on the `mission/...` branch.
 
 ## Recent sessions
+- **Session 170** — List 4: `buildDriftDetails` helper extraction in `/api/models/sync/drift` (3-site `DriftReport → string[]` projection) + 8 new unit tests. The 2 `pushDiff` closures in `sync/pull` + `[id]/diff` are explicitly NOT consolidatable (different shapes — `(field, before, after)` vs `(id, label, detail)`); `isChReadOnly()` audit is OOS (would be a behaviour change, requires user direction).
+- **Session 169** — List 3: `skillFilePath` helper extraction + 5-site migration (the dir + "/SKILL.md" shape in 4 sites is OOS — different shape, pre-resolved directory)
+- **Session 168** — List 2: `COPY_BTN_CLASS` + `COPY_BTN_DATA_ATTR` magic-string consolidation in chat page + chat-utils (completes the List 2 chat-page surface; 2 UX-decision-required surfaces still OOS per the byte-equivalence charter)
+- **Session 167** — List 4: `seedPostSchema` + `parseAndValidateJsonBody` migration in `api/seed/route.ts` + new source-pattern test (completes the `parseAndValidateJsonBody` adoption sweep on the List 4 API surface)
+- **Session 166** — List 3: `safeApiCallData<{ profiles?: AgentProfile[] }>` migration in `operations/tools/loadProfileSyncStatus` + new source-pattern test pinning the byte-equivalence
+- **Session 163** — List 3: `toastError` migration in `viewSkill` catch + narrow-scope source-pattern test (session 162 carryover closure also committed)
+- **Session 161** — List 3: `filterByCaseInsensitiveSubstring` helper + 2-site migration (skills + personalities) + `scheduleDisplayFromParsed` carryover closure
 
 ## Session 154 — List 1 (Dashboard, Sessions, Memory, Logs) — drop 9 redundant `as RequestInit` casts in `safeApiCallData`/`safeApiCall` calls
 

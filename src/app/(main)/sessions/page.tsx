@@ -47,6 +47,7 @@ import Badge from "@/components/ui/Badge";
 import Pagination from "@/components/ui/Pagination";
 import { useToast } from "@/components/ui/Toast";
 import { LiveDot } from "@/components/ui/LiveDot";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { timeAgo, formatElapsed, pluralise } from "@/lib/utils";
 import { useApiData } from "@/hooks/useApiData";
 import { useInterval } from "@/hooks/useInterval";
@@ -221,7 +222,7 @@ export default function SessionsPage() {
   // Tick state so the live indicator refreshes every second for active sessions
   const [, setNowTick] = useState(0);
   useInterval(() => setNowTick((n) => n + 1), { ms: 1000 });
-  const { showToast, toastElement } = useToast();
+  const { toastElement } = useToast();
 
   // When the source filter changes, jump back to page 0 so the user
   // doesn't see "no results" on a stale page index. We mirror the
@@ -247,16 +248,23 @@ export default function SessionsPage() {
     [page],
   );
 
-  const { data, loading, error: loadError } = useApiData<SessionsResponse>(sessionsUrl, {
+  const { data, loading, error: loadError, refetch } = useApiData<SessionsResponse>(sessionsUrl, {
     urlBuilder: sessionsUrl,
   });
 
-  // Surface API errors as a toast. The hook exposes the error string;
-  // forward it directly so the user sees the real diagnostic instead
-  // of a generic "Failed to load sessions" placeholder.
-  useEffect(() => {
-    if (loadError) showToast(loadError, "error");
-  }, [loadError, showToast]);
+  // Surface API errors as a persistent <LoadErrorBanner> with a Retry
+  // button. The banner is always rendered when `loadError` is non-null —
+  // it's sticky (the empty list state below the banner is now the
+  // "load failed, not catalog empty" state, which is the canonical
+  // disambiguation the umbrella skill's `LoadErrorBanner` pattern
+  // (Pattern #19) was designed for). The Retry button calls
+  // `useApiData`'s `refetch` so the user can re-attempt the fetch
+  // without manually reloading the page.
+  //
+  // Replaces the previous `useEffect(() => showToast(loadError, "error"))`
+  // form (4s toast, no recovery affordance, disappeared on its own
+  // leaving the user staring at a frozen list with a generic "no
+  // results" empty state).
 
   // Stable reference for downstream useMemo hooks — prevents unnecessary recomputation
   // on renders where data hasn't changed. Using data?.sessions as dependency is safe:
@@ -295,6 +303,13 @@ export default function SessionsPage() {
       />
 
       <div className="px-6 py-6">
+        {loadError && (
+          <LoadErrorBanner
+            error={loadError}
+            onRetry={() => void refetch()}
+            hint="The list below may be empty because the load failed — not because there are no sessions to show."
+          />
+        )}
         {/* Search + Source Filter + View Options */}
         <div className="flex flex-col gap-3 mb-6">
           <div className="flex flex-col sm:flex-row gap-3">

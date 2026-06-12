@@ -4,7 +4,7 @@
 
 import { db, uuid, now } from "../db";
 import { parseSchedule } from "../utils";
-import { intervalShorthandToCron } from "../schedule/parse-schedule";
+import { intervalShorthandToCron, scheduleDisplayFromParsed } from "../schedule/parse-schedule";
 
 import type { CronJobRecord, CronJobRow, CreateCronJobInput, UpdateCronJobInput } from "./types";
 import { getCronJob } from "./read";
@@ -40,7 +40,7 @@ export function parseScheduleToDisplay(
       : trimmed;
   return {
     schedule: canonical,
-    scheduleDisplay: "display" in parsed ? (parsed.display as string) : trimmed,
+    scheduleDisplay: scheduleDisplayFromParsed(parsed, trimmed),
   };
 }
 

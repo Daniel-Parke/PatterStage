@@ -102,6 +102,30 @@ export function sessionToCsv(session: ChatSession): string {
 
 // ── HTML/Markdown helpers ───────────────────────────────────────
 
+/**
+ * CSS class the chat page's global click handler matches against to
+ * identify the per-code-block "Copy" button that `renderMarkdown`
+ * injects. Exported so the chat page can import the same string
+ * instead of hard-coding a second copy of the magic literal (the
+ * prior `if (target.classList.contains("copy-btn"))` was a magic
+ * string coupled to `renderMarkdown`'s template — a one-character
+ * rename in one file would silently break the click handler in
+ * the other). Keep in sync with the class string on line 134.
+ */
+export const COPY_BTN_CLASS = "copy-btn";
+
+/**
+ * Data attribute the chat page's click handler reads to recover the
+ * raw code-block content (the `renderMarkdown` template interpolates
+ * the code into both the button's `data-code` attribute AND the
+ * `<code>` element — the click handler reads the attribute to avoid
+ * having to re-decode the displayed text). Same export pattern as
+ * `COPY_BTN_CLASS`: a single source of truth shared by the producer
+ * (`renderMarkdown`) and the consumer (the click handler in
+ * `src/app/orchestration/chat/page.tsx`).
+ */
+export const COPY_BTN_DATA_ATTR = "data-code";
+
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
@@ -118,11 +142,14 @@ function escapeHtml(text: string): string {
 export function renderMarkdown(text: string): string {
   const safe = escapeHtml(text);
 
-  // Code blocks (must come before inline code)
+  // Code blocks (must come before inline code). The button class
+  // string comes from the `COPY_BTN_CLASS` constant — keep the two
+  // sites in sync via the source-pattern test at
+  // `tests/unit/copy-btn-magic-string-source-pattern.test.ts`.
   let html = safe.replace(
     /```(\w*)\n([\s\S]*?)```/g,
-    '<div class="relative group"><div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">' +
-    '<button class="copy-btn text-[10px] font-mono text-white/40 hover:text-white/80 bg-gray-900/80 px-2 py-1 rounded border border-white/10" data-code="$2">Copy</button></div>' +
+    `<div class="relative group"><div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">` +
+    `<button class="${COPY_BTN_CLASS} text-[10px] font-mono text-white/40 hover:text-white/80 bg-gray-900/80 px-2 py-1 rounded border border-white/10" ${COPY_BTN_DATA_ATTR}="$2">Copy</button></div>` +
     '<pre class="bg-gray-900 border border-white/10 rounded-lg p-4 overflow-x-auto text-sm font-mono text-white/80 leading-relaxed my-2"><code>$2</code></pre></div>',
   );
   // Inline code

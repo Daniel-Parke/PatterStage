@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
-import { parseJsonBody } from "@/lib/parse-json-body";
-import { runCatalogSeed, getSeedState, type SeedTarget } from "@/lib/seed/catalog-seed";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import { seedPostSchema } from "@/lib/api-schemas";
+import { runCatalogSeed, getSeedState } from "@/lib/seed/catalog-seed";
 import { importHermesStateFromDisk } from "@/lib/hermes-state-import";
 import { getHermesHome } from "@/lib/hermes-home";
 import { existsSync } from "fs";
@@ -28,23 +29,16 @@ export async function POST(request: NextRequest) {
   if (auth) return auth;
 
   // Hoist body parsing out of the main try/catch so malformed JSON returns
-  // 400 (via parseJsonBody) rather than 500. Body is treated as a record
-  // of optional fields (target/mode/slug/templateId) — all have defaults.
-  const bodyResult = await parseJsonBody(request);
-  if (bodyResult instanceof NextResponse) return bodyResult;
-  const body = bodyResult;
+  // 400 (via parseAndValidateJsonBody → parseJsonBody) rather than 500.
+  // seedPostSchema validates target/mode against the canonical enums and
+  // folds the legacy `id` alias back to `templateId` via .transform() —
+  // previously the route did `body.target as SeedTarget["target"]` with
+  // no validation, so a foreign value would silently reach runCatalogSeed.
+  const parsed = await parseAndValidateJsonBody(request, seedPostSchema);
+  if (parsed instanceof NextResponse) return parsed;
+  const { target = "all", mode = "merge", slug, templateId } = parsed;
 
   try {
-    const target = (body.target as SeedTarget["target"]) ?? "all";
-    const mode = (body.mode as SeedTarget["mode"]) ?? "merge";
-    const slug = typeof body.slug === "string" ? body.slug : undefined;
-    const templateId =
-      typeof body.templateId === "string"
-        ? body.templateId
-        : typeof body.id === "string"
-          ? body.id
-          : undefined;
-
     const hermesHome = getHermesHome();
     const imported = existsSync(hermesHome + "/config.yaml")
       ? importHermesStateFromDisk()

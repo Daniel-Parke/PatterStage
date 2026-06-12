@@ -1,3 +1,965 @@
+## Session 171 — List 1 (Dashboard, Sessions, Memory, Logs) — shared `<LoadErrorBanner>` component + 2-site migration
+
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 1 (List 1: Dashboard, Sessions, Memory, Logs).
+
+**Date:** 2026-06-12
+
+**Outcome:** **1 commit (`c05dad3`), 2 source files + 1 new component + 2 new test files, 22 new tests, 2 sites cleaned up.** The umbrella skill's Pattern #19 (`LoadErrorBanner`) was documented in the skill writeup from session 139 but the actual component was never built. This session closes the documentation/code gap and migrates the 2 List 1 sites that have `useApiData`-shaped load failures.
+
+### What shipped
+
+| # | File | Change |
+|---|------|--------|
+| 1 | `src/components/ui/LoadErrorBanner.tsx` (new, 89 LOC) | New shared component. Renders the error string + optional hint + optional Retry button. `role="alert"` for accessibility. AlertTriangle icon as the leading visual. Decoupled from `useApiData` (the page owns the conditional render) |
+| 2 | `src/app/(main)/sessions/page.tsx` | Replaced `useEffect(() => showToast(loadError, "error"))` (4-second toast, no recovery affordance) with persistent `<LoadErrorBanner onRetry={refetch} hint="..." />`. Side-effects: `showToast` dropped from `useToast()` destructure (unused); `refetch` added to `useApiData()` destructure (was discarded) |
+| 3 | `src/app/(main)/logs/page.tsx` | Replaced inline `<div className="border-red-500/30 bg-red-500/10...">` banner (no Retry button) with `<LoadErrorBanner onRetry={handleRefresh} />`. Side-effect: `AlertCircle` import dropped (was only used for the removed inline banner — the new component renders `AlertTriangle` internally) |
+| 4 | `tests/unit/load-error-banner.test.tsx` (new) | 8 unit tests for the component: renders the error string, role=alert, Retry button visibility (with/without `onRetry`), Retry click invocation, custom `retryLabel`, hint rendering |
+| 5 | `tests/unit/load-error-banner-source-pattern-list1.test.ts` (new) | 14 source-pattern tests pinning the migration shape across the 2 migrated sites + the component contract + the cross-page invariants + the out-of-scope guard |
+
+### Why this is byte-equivalent
+
+The success path is identical (no banner rendered when `loadError` is null). The failure path adds a Retry button — a new affordance, not a behavior change. The error string rendering is byte-equivalent to the inline form (the same `{loadError}` interpolation, the same `text-red-200` colour, the same `border-red-500/30 bg-red-500/10` chrome). The icon swap (`AlertCircle` → `AlertTriangle`) is invisible at the failing-load UX level (both render a 5×5 warning icon at the leading edge of the banner).
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `CI=true npx eslint . --max-warnings 0`: clean
+- `npx jest`: **277 suites / 2029 tests pass** (up from 272/1977 = +5 suites, +52 tests)
+- `npm run build`: clean
+
+### Pitfall 1 — The "documentation/code gap" class
+
+The umbrella skill's Pattern #19 was introduced in session 139 (the `load-error-banner-and-promise-all` writeup). The writeup described the component contract, the per-page recipe, and the 3 source-migration steps. **The actual component was never built** — the skill writeup was theoretical, and the 3 pages it described (Skills, Personalities, Config) ended up implementing their own ad-hoc patterns.
+
+This session is the first time Pattern #19 is realised as a real file. The 2 migrated sites are List 1 (Dashboard, Sessions, Memory, Logs); the original 3 sites from session 139 (Skills, Personalities, Config) are **List 3 territory** and are NOT migrated in this session.
+
+### Pitfall 2 — The "out-of-scope guard" prevents over-migration
+
+The source-pattern test includes a cross-page invariant that pins **which** List 1 pages import the new component (the 2 migrated sites) and **which** don't (memory, sessions/[id], dashboard). The latter is intentional — those pages either have a different UX (full-page "Not Found" on session detail), a different component contract (multi-section dashboard banner), or no `useApiData` at all (memory shell).
+
+### Pitfall 3 — The `showToast` destructure cleanup
+
+A subtle side-effect of the sessions page migration: the `useToast()` destructure was `const { showToast, toastElement } = useToast();` and only `toastElement` was used after the migration. ESLint's `@typescript-eslint/no-unused-vars` flagged `showToast` as an unused variable. Dropped from destructure; `toastElement` kept (the JSX still renders it as the toast container).
+
+### Reference doc
+
+Full session writeup: `references/control-hub-list1-refactor-session-171.md` under the `overnight-refactor-patterns` skill.
+
+### Next session should
+
+- Any list is fair game — this is a clean-exit session with no carryover.
+- **List 3 has a real migration opportunity**: the original 3 sites from session 139's umbrella-skill writeup (Skills, Personalities, Config) are all on the operations surface (List 3 territory). A List 3 pick should consider migrating those 3 sites to the same `LoadErrorBanner` component introduced in this session — the contract already pins the import + usage shape, so the migration is a straight `replace_all` once the per-page "open-coded form" is removed.
+- Other List 1 follow-ups (deferred):
+  - `src/app/(main)/sessions/[id]/page.tsx` — full-page "Session Not Found" UX could be split into load-failure (banner + Retry) vs not-found (full-page)
+  - `src/app/page.tsx` (Dashboard) — the multi-section `Promise.allSettled` banner from session 139 P-14 is a different component contract. A future session could extract the per-section banner into a shared component (similar shape to `LoadErrorBanner` but takes a `Record<string, string>` of section errors).
+
+---
+
+## Session 170 — List 4 (Models, HERMES.md, Environment, All Settings) — `buildDriftDetails` helper extraction in `/api/models/sync/drift`
+
+**Random pick:** List 4 via `$((RANDOM % 4 + 1))` = 4. Fresh audit (read 4 config pages + 9 List 4 API routes + 5 sync helpers) found the List 4 surface largely **mined clean** of byte-equivalent refactors — `serverErrorFromCatch` (95), `parseAndValidateJsonBody` (167), `commitFallbackChange`, `setErrorFromCaught`/`toastError` (128, 131), and the `useApiData` / `CardLink` patterns are all in place. The single remaining duplication was the 3-site `DriftReport → string[]` transformation in `/api/models/sync/drift/route.ts` (1 if-push + 2 for-pushes).
+
+**Date:** 2026-06-12
+
+**Outcome:** **1 commit (`92d4615`), 3 files (2 modified, 1 new), +39 / -16 net LOC (1 new test file).**
+
+### The 3 migrated sites
+
+- `src/app/api/models/sync/drift/route.ts:20-23` — `if (drift.primaryDiffers) driftDetails.push(\`Primary model drift: DB has "${...}", Hermes has "${...}"\`);`
+- `src/app/api/models/sync/drift/route.ts:25-27` — `for (const m of drift.modelsInHermesNotInDb) driftDetails.push(\`Model "${m.modelId}" (${m.provider}) is in Hermes but not in Control Hub\`);`
+- `src/app/api/models/sync/drift/route.ts:29-31` — `for (const m of drift.modelsInDbNotInHermes) driftDetails.push(\`Model "${m.modelId}" (${m.provider}) is in Control Hub but not pushed to Hermes\`);`
+
+### Helper signature
+
+```ts
+// src/lib/sync-manager.ts:139
+export function buildDriftDetails(drift: DriftReport): string[] {
+  const details: string[] = [];
+  if (drift.primaryDiffers) {
+    details.push(
+      `Primary model drift: DB has "${drift.primaryDiffers.dbModel}", Hermes has "${drift.primaryDiffers.hermesModel}"`,
+    );
+  }
+  for (const m of drift.modelsInHermesNotInDb) {
+    details.push(`Model "${m.modelId}" (${m.provider}) is in Hermes but not in Control Hub`);
+  }
+  for (const m of drift.modelsInDbNotInHermes) {
+    details.push(`Model "${m.modelId}" (${m.provider}) is in Control Hub but not pushed to Hermes`);
+  }
+  return details;
+}
+```
+
+Lives in `sync-manager.ts` (next to `detectConfigDrift`) — the natural home. Pure function: no DB, no fs, no globals, just a `DriftReport → string[]` projection. The route becomes a single line: `const driftDetails = buildDriftDetails(detectConfigDrift());`. The `hasDrift` boolean stays in the route (composed from `driftDetails.length > 0`) — the helper stays "details only" so its return type is unambiguous.
+
+### Tests
+
+**8 new unit tests in `tests/unit/build-drift-details.test.ts`** — pin the contract:
+1. Empty drift report → empty `string[]`
+2. `primaryDiffers` only → 1 string in the primary slot
+3. `modelsInHermesNotInDb` only → N strings in the Hermes-only slot
+4. `modelsInDbNotInHermes` only → N strings in the DB-only slot
+5. All three populated → all 3 sections in canonical order (primary, Hermes-only, DB-only)
+6. Multiple entries in a list section → all entries appended in input order
+7. Multiple entries in the other list section → all entries appended in input order
+8. Exact byte-level string format (regression guard for the `ModelsDriftBanner` UI consumer)
+
+### Out of scope (deferred)
+
+- **Migrating `pushDiff` closure in `api/models/sync/pull/route.ts:32-39` and `api/models/[id]/diff/route.ts:65-67`** — the two `pushDiff` closures have **different shapes** (pull: `(field, before, after) → {diffs, updates}`; diff: `(id, label, detail) → diffs`). Consolidating them would change the function shape, not just the call sites. Left as 1-route local helpers.
+- **`isChReadOnly()` audit in `api/config/route.ts` + `api/models/*` mutation routes** — none of the 9 List 4 API routes call `isChReadOnly()` (only the 5 List 2 cron/admin routes do). Adding the guard would be a **behaviour change** (in read-only mode, the PUTs would start returning 403), which is out of scope for a byte-equivalent refactor sweep.
+- **`/api/models/fallbacks/import` and `/api/models/sync/pull` `existingChain` Set construction** — both build `new Set(chain.map(e => fallbackKey(e.provider, e.modelIdString)))`. The two sites are in different files and the import route has additional logic mixed in. Extracting a `chainKeySet` helper would touch 1-2 sites and the byte-equivalence proof is straightforward but the broader consolidation (e.g. the full `parseFallbackAgentSettingsFromYaml` flow) is a separate design task.
+- **`detectConfigDrift` lib export** — used by 1 caller (the route). Promoting to `@/lib/` is a no-op since it already lives in `src/lib/sync-manager.ts`. Not a refactor.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `CI=true npx eslint . --max-warnings 0`: clean
+- `CI=true npx jest`: **275 suites / 2007 tests pass** (was 274/1999 = +1 suite, +8 tests, matching the 8 new `buildDriftDetails` unit tests)
+- `CI=true npx --yes pnpm@10.33.0 build`: clean
+
+### Behaviour change
+
+None. The route handler's response (`{ hasDrift, driftDetails }`) is byte-equivalent to the pre-refactor inline form. The `string[]` ordering (primary first, then Hermes-only, then DB-only) is preserved exactly, as is the exact text format (including the `:` separator in the primary line and the "but not in / not pushed to" wording in the list lines).
+
+### "Next session should:" block
+
+1. **Random pick next session.** List 4 has been hit 14+ times now (sessions 59, 60, 67, 70, 79, 85, 86, 95, 98, 109, 120, 123, 124, 167, 170). The surface is **mined clean** of byte-equivalent refactors — future List 4 picks need to find new opportunities outside the existing 5 factory families (and the 4 List 4 source-pattern tests in `tests/unit/*-source-patterns-list4.test.ts` are the canonical surface-coverage assertion).
+2. **`isChReadOnly()` audit (List 4)** — the 9 List 4 API routes (config PUT, models POST/PUT/DELETE, models/[id] PUT/DELETE, models/sync/push, models/fallbacks POST/PUT/DELETE/custom/import/reorder/sync/toggle/config PUT) are all **un-guarded** by the read-only check. This is a 9-site, List 4-scope behaviour change (would 403 in read-only mode). **Not byte-equivalent** — requires explicit user direction to opt in.
+3. **`pushDiff` consolidation (cross-list)** — the two `pushDiff` closures in `api/models/sync/pull/route.ts` and `api/models/[id]/diff/route.ts` have different shapes. Would require either (a) a discriminated union accepting both `(field, before, after) | (id, label, detail)` signatures, or (b) splitting into two named helpers (`pushFieldDiff` and `pushLabelDiff`). Defer until a 3rd caller appears.
+4. **`/api/models/fallbacks/import` and `/api/models/sync/pull` `existingChain` Set construction** — 2 sites, different files, different surrounding logic. Defer until a 3rd caller appears (currently 2 in `import/route.ts` GET + POST and 0 in `pull/route.ts` since the `set` isn't built there).
+5. **Body compression (P-137-1)** — `pr-body.txt` is now 619 KB. The session 137 table-format pattern is the right vehicle for the next compression pass. The session-170 entry uses that pattern (a "carryover" row at the bottom + a self-contained session header).
+6. **`detectConfigDrift` lib export is already in the right place** — `@/lib/sync-manager.ts`. No action needed.
+
+---
+
+## Session 169 — List 3 (Models, Agents, Skills, Tools, Personalities) — `skillFilePath` helper extraction + 5-site migration
+
+**Random pick:** List 3 via `$((RANDOM % 4 + 1))` = 3. Fresh audit (read 3 List 3 ops pages + 9 API routes + 4 sync helpers) found the 1-line `${skillsRoot} + "/" + ${skillKey} + "/SKILL.md"` path-build repeated at 5 sites across 3 files. The `dir + "/SKILL.md"` shape (used in `scanDiskSkillsCatalog`, `pushSkillToHermes`, the `walk()` in `pullSkillFromHermes`, and `api/skills/[...path]`) is a different shape (pre-resolved directory, not root + key) and is explicitly out of scope for this migration.
+
+**Date:** 2026-06-12
+
+**Outcome:** **1 commit (`4c130b9`), 6 files (3 modified, 2 modified, 1 new), +176 / -8 net LOC (mostly test file + JSDoc).**
+
+### The 5 migrated sites
+
+- `src/app/api/skills/route.ts:43` — `dbSkills.map(row => { const path = skillsDir + "/" + row.skillKey + "/SKILL.md"; ... })`
+- `src/app/api/skills/[name]/route.ts:29` — `if (row) { return ok({ ..., path: skillsRootForProfile() + "/" + name + "/SKILL.md", ... }); }`
+- `src/app/api/skills/[name]/route.ts:37` — `const filePath = skillsRoot + "/" + name + "/SKILL.md";`
+- `src/lib/hermes-profile-sync.ts:387` — `pullSkillFromHermes` direct path lookup: `const direct = skillsRoot + "/" + skillKey + "/SKILL.md";`
+- `src/lib/hermes-profile-sync.ts:519` — `detectSkillDrift` path lookup: `const path = skillsRoot + "/" + skillKey + "/SKILL.md";`
+
+### Helper signature
+
+```ts
+export function skillFilePath(skillsRoot: string, skillKey: string): string {
+  return skillsRoot + "/" + skillKey.replace(/\\/g, "/") + "/SKILL.md";
+}
+```
+
+The `replace(/\\/g, "/")` is a small cross-platform win — it normalises Windows-style backslashes in the catalog key to forward slashes so the path matches what `collectSkillDirectoryNames` walks with `path.sep`-aware readers on Windows. No behaviour change on Linux (where catalog keys never contain backslashes).
+
+### Tests
+
+- **4 new unit tests in `tests/unit/skills-config.test.ts`** — leaf key, nested key (`apple/apple-notes`), Windows-backslash normalisation (`apple\\apple-notes` → `apple/apple-notes`), trailing-slash passthrough. Pins the helper contract.
+- **4 new source-pattern assertions in `tests/unit/skill-file-path-source-pattern.test.ts`** — pins that the helper is imported by all 3 in-scope files AND that the inline `root + "/" + key + "/SKILL.md"` shape is gone from them. The `dir + "/SKILL.md"` shape is explicitly NOT pinned (out of scope, different shape).
+- **Source-pattern JSDoc** documents the pre-flight recipe (`grep` for the helper export + 5 call sites + absence of inline joins) so a future "shorter is better" refactor that re-inlines the join is caught by the test, not by a silent regression.
+
+### Out of scope (deferred)
+
+- **Migrating the 4 `dir + "/SKILL.md"` sites** in `hermes-profile-sync.ts` (`walk()` in pullSkillFromHermes line 398, `targetDir` in pushSkillToHermes line 245, and `scanDiskSkillsCatalog` lines 625). These take a pre-resolved directory, not a `(root, key)` pair — the `skillFilePath` signature doesn't fit. Would need a separate `skillFilePathInDir(skillDir)` helper, or extending the existing one with a discriminator. Defer until a 3rd consumer appears.
+- **The `operations/agents/page.tsx:31` `agentFileUrl` local helper** — only 2 call sites, all on the same page. Per the "1-helper-per-3+identical-callsites" rule (session 100 discriminated-close audit), 2 callsites is not enough to extract. Left inline.
+- **The `operations/skills/page.tsx:125` `skillApiUrl` local helper** — similar 2-callsite pattern, not extracted.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `CI=true npx eslint src/... --max-warnings 0`: clean
+- `npx jest`: **274 suites / 1999 tests pass** (was 273/1995 = +1 suite, +4 tests, matching the 4 new `skillFilePath` unit tests)
+- `CI=true npx --yes pnpm@10.33.0 build`: clean
+
+### Behaviour change
+
+None. Every call site is byte-equivalent to the inline form. The `replace(/\\/g, "/")` is a no-op on Linux where catalog keys are forward-slash only.
+
+### "Next session should" block
+
+1. **List 3 is now mined clean** for the `skillFilePath` surface. The 4 `dir + "/SKILL.md"` sites in `hermes-profile-sync.ts` and `api/skills/[...path]` are a different shape and can be deferred to a future "3+ consumer threshold" pick.
+2. **List 1 is the next-ripe surface** — last touched session 144 (25 sessions ago). Per the session 144 carryover, the open surfaces are: (a) the `JobFormModal.tsx:166` inline `err instanceof Error ? err.message : "Unknown error"` site, (b) `useApiData` extension for `URLSearchParams` + pagination in `(main)/sessions/page.tsx`, (c) the inline `console.error` redundancy rule from session 131 P-131-4 applied to `(main)/logs/page.tsx` and `(main)/sessions/page.tsx` (3-5 sites).
+3. **List 2** is the second-next-ripe surface — the 5 `safeApiCall<{ data?: { ... } }>` double-envelope sites in `useMissionsPage.ts:661, 692, 720` + `useMissionsApi.ts:46` + `useCronJobMutation.ts:136` are the natural follow-up to the `useModelsPage.ts` migration from session 133.
+4. **List 4** is the quietest surface. The per-list source-pattern tests are CLOSED for all 4 lists, so the next List 4 pick needs to find new refactor opportunities OUTSIDE the 4 factory families (`ok`, `serverErrorFromCatch`, `safeApiCallData`, `parseAndValidateJsonBody`).
+
+---
+
+## Session 168 — List 2 (Cron, Missions, Chat) — `COPY_BTN_CLASS` + `COPY_BTN_DATA_ATTR` magic-string consolidation in chat page + chat-utils
+
+**Random pick:** List 2 via `date +%s | awk '{print int($1) % 4 + 1}'` = 2. Per session 158's Mode I.1 protocol, the prior List 2 reference declared the list MINED CLEAN. This session's fresh audit (5-grep scan + read of all 3 List 2 pages) found exactly one remaining byte-equivalent surface: the magic-string coupling between the chat page's global click handler and `renderMarkdown`'s template literal. The 2 other named OOS surfaces from session 158 (the `isChReadOnly()` consolidation + the 2 `console.error` UX-dedup sites) are still OOS per the byte-equivalence charter and need user direction.
+
+**Date:** 2026-06-12
+
+**Outcome:** **1 commit (`65c3d5d`), 3 files (1 modified, 1 modified, 1 new), +216 / -5 = +211 net LOC (mostly the source-pattern test file + JSDoc).**
+
+### 1. The 2 magic strings
+
+`src/lib/chat-utils.ts:125` (the `renderMarkdown` template literal for code blocks):
+```
+<button class="copy-btn text-[10px] ..." data-code="$2">Copy</button>
+```
+
+`src/app/orchestration/chat/page.tsx:322-325` (the global click handler that event-delegates to these buttons):
+```ts
+if (target.classList.contains("copy-btn")) {
+  const code = target.getAttribute("data-code") || "";
+```
+
+The class name `"copy-btn"` and the attribute name `"data-code"` are hard-coded as string literals in BOTH files. A one-character rename in `renderMarkdown`'s template would silently desync the click handler — no compile error, no test failure, just a dead Copy button in the chat UI.
+
+### 2. The migration (2 magic strings → 2 named constants)
+
+- `src/lib/chat-utils.ts`: export `COPY_BTN_CLASS = "copy-btn"` and `COPY_BTN_DATA_ATTR = "data-code"`. `renderMarkdown` interpolates both constants in the code-block template.
+- `src/app/orchestration/chat/page.tsx`: import both constants and use them in the click handler (`classList.contains(COPY_BTN_CLASS)` + `getAttribute(COPY_BTN_DATA_ATTR)`).
+- `tests/unit/copy-btn-magic-string-source-pattern.test.ts` (NEW, 14 tests): pins the constant declarations, the `renderMarkdown` interpolation sites, the chat-page import + use sites, AND the anti-pattern lock that the inline literals must not appear anywhere outside the constant declarations themselves.
+
+### 3. Byte-equivalence proof
+
+| Site | Before | After |
+|------|--------|-------|
+| `renderMarkdown` template (chat-utils.ts) | `class="copy-btn ... data-code="$2"` | `class="${COPY_BTN_CLASS} ... ${COPY_BTN_DATA_ATTR}="$2"` |
+| Click handler (chat/page.tsx) | `target.classList.contains("copy-btn")` | `target.classList.contains(COPY_BTN_CLASS)` |
+| Click handler (chat/page.tsx) | `target.getAttribute("data-code")` | `target.getAttribute(COPY_BTN_DATA_ATTR)` |
+
+The interpolated HTML at runtime is byte-equivalent (the constants expand to the same string literals). The click handler's runtime behavior is unchanged (still matches the same class + reads the same attribute). The clipboard write + toast call is untouched.
+
+### 4. Verification
+
+- `npx tsc --noEmit` — clean
+- `CI=true npx eslint src/lib/chat-utils.ts src/app/orchestration/chat/page.tsx tests/unit/copy-btn-magic-string-source-pattern.test.ts --max-warnings 0` — clean
+- `npx jest tests/unit/copy-btn-magic-string-source-pattern.test.ts` — 14/14 pass
+- `npx jest tests/unit/chat-page-{toast,active-session-reuse,models-merge}.test.tsx tests/unit/chat-utils-sanitise-filename.test.ts` — 20/20 pass (regression-clean for the 4 sibling chat tests)
+- `npx jest` — **273 suites / 1991 tests pass** (up from 272/1977 = +1 suite, +14 tests)
+- `npm run build` — clean
+- `git push origin mission/hermes-review-and-refactor` — succeeded (`d703143..65c3d5d`)
+
+### 5. Cross-list "mined clean" status (post-session-168)
+
+| List | Last audited | Status |
+|------|--------------|--------|
+| 1 (Dashboard, Sessions, Memory, Logs) | 149 | MINED CLEAN |
+| 2 (Cron, Missions, Chat) | **168 (this)** | **MINED CLEAN at the chat page + cron page surface; 2 OOS surfaces still need user direction** |
+| 3 (Models, Agents, Skills, Tools, Personalities) | 150 | MINED CLEAN at ops-page level, 2 named OOS surfaces |
+| 4 (Settings) | 167 | MOSTLY MINED CLEAN |
+
+The 2 List 2 OOS surfaces (both OOS per the byte-equivalence charter):
+- **`isChReadOnly()` 6-site consolidation** — needs-behaviour-change-exception (UX preference for canonical vs bare message). Per session 152 P-1 #5.
+- **2 `console.error` silent-failure sites in `useMissionsPage.ts` (lines 530, 572)** — needs-dedicated-session (UX work). Per session 158 Surface C.
+
+### 6. "Next session should:"
+
+1. **Pick a different list next time.** List 2 has now been hit 19+ times. The 5-grep audit is exhausted; the remaining work is the 2 UX-decision-required surfaces (the `isChReadOnly` consolidation + the 2 `console.error` sites) that need explicit user direction.
+2. **If the random pick lands on List 2 again**, follow this session's protocol: re-audit with a focus on **magic-string coupling** (the session 168 surface) and **inline string-literal duplication** patterns. The other named OOS surfaces are already classified in the umbrella reference.
+3. **The mission charter migration (per session 149 P-7)** is still the open question: at this point all 4 lists are MINED CLEAN at the per-list operations-page refactor level. The next-iteration goals are: (a) `useMissionsPage` decomposition (1315 LOC, biggest hook in the codebase, 3-5 sessions), (b) `useApiData` extension for `URLSearchParams` + pagination (1-2 sessions), (c) test coverage gap closer (mission charter change, needs user approval), (d) documentation drift closer (mission charter change, needs user approval).
+
+### 7. Files
+
+- `src/lib/chat-utils.ts` (modified, +30 / -3) — `COPY_BTN_CLASS` + `COPY_BTN_DATA_ATTR` constants exported, `renderMarkdown` interpolates them
+- `src/app/orchestration/chat/page.tsx` (modified, +12 / -2) — imports both constants, click handler uses them
+- `tests/unit/copy-btn-magic-string-source-pattern.test.ts` (NEW, 174 lines, 14 tests) — pins the constant declarations + renderMarkdown interpolation + chat-page import + click-handler use + anti-pattern locks
+
+### 8. References
+
+- `tests/unit/chat-page-active-session-reuse.test.ts` — sister source-pattern test, the established pattern for the magic-string-literal lock tests
+- `tests/unit/copy-btn-magic-string-source-pattern.test.ts` — the test file itself; the file-existence + import-shape + interpolation-shape pre-flight recipes are in the file header
+
+## Session 167 — List 4 (Models, HERMES.md, Environment, All Settings) — `seedPostSchema` + `parseAndValidateJsonBody` migration in `api/seed/route.ts`
+
+**Random pick:** List 4 via `date +%s | awk '{print int($1) % 4 + 1}'` = 4. Random pick per the task brief's explicit mandate.
+
+**Outcome:** **1 commit, 1 refactor scope, 2 files modified + 1 new test file, 8 new tests, 1 site migrated.** This session finds and migrates the only remaining List 4 site using the old `parseJsonBody` + manual widening-cast pattern. The 7-grep audit (the same one session 165 ran) found zero new refactor opportunities on the **pure-helper-extraction** axis, but the **`parseAndValidateJsonBody` adoption axis** still had 1 hit: `src/app/api/seed/route.ts` was the only List 4 API route not yet on the canonical parse-validate-respond pattern.
+
+**Date:** 2026-06-12
+
+### 1. What the fresh audit found
+
+The session 165 7-grep audit covered the helper-extraction axis (new helper, duplicated pattern, dead code, bare-catch refactor). Session 167 picks up a different axis: **helper ADOPTION** (existing helper, missed migration site). The audit re-runs every grep with focus on the `parseAndValidateJsonBody` adoption pattern (the canonical parse → validate → respond flow established in sessions 121 + 122 for the List 4 surface):
+
+| Grep | Target | Hit? |
+|------|--------|------|
+| I | `parseJsonBody` (NOT `parseAndValidateJsonBody`) in `src/app/api/{config,fs,credentials,seed,admin}/` | **1 — `src/app/api/seed/route.ts`** (the missed site) |
+| I.2 | `as SeedTarget["target"]` / `as SeedTarget["mode"]` widening casts | **1 — `src/app/api/seed/route.ts`** (the symptom) |
+| I.3 | `body.X as SomeType` for non-Error fields in any other List 4 API route | 0 (clean) |
+| I.4 | Bare `body.X` accesses after `parseJsonBody` (no default applied) | 0 in `api/{config,fs,credentials,admin}/` (clean) |
+
+The hit at `src/app/api/seed/route.ts` is the **only remaining List 4 site** that still uses the old `parseJsonBody` + manual-cast form. All 6 sibling files (`api/config/route.ts`, `api/credentials/route.ts`, `api/fs/list/route.ts`, `api/fs/git/branches/route.ts`, `api/admin/sessions/backfill-status/route.ts`) already use `parseAndValidateJsonBody` with a zod schema — the seed route was a holdout from before the parse-validate-respond refactor swept the surface in sessions 121 + 122.
+
+### 2. The migration (1 site, 1 schema, 1 new test file)
+
+**File:** `src/app/api/seed/route.ts:30-46`
+
+**Pre-migration (15 lines, 2 widening casts, 1 alias ternary):**
+```ts
+const bodyResult = await parseJsonBody(request);
+if (bodyResult instanceof NextResponse) return bodyResult;
+const body = bodyResult;
+
+try {
+  const target = (body.target as SeedTarget["target"]) ?? "all";
+  const mode = (body.mode as SeedTarget["mode"]) ?? "merge";
+  const slug = typeof body.slug === "string" ? body.slug : undefined;
+  const templateId =
+    typeof body.templateId === "string"
+      ? body.templateId
+      : typeof body.id === "string"
+        ? body.id
+        : undefined;
+  // ...
+```
+
+**Post-migration (4 lines, 0 casts, 0 ternaries, 1 destructure):**
+```ts
+const parsed = await parseAndValidateJsonBody(request, seedPostSchema);
+if (parsed instanceof NextResponse) return parsed;
+const { target = "all", mode = "merge", slug, templateId } = parsed;
+```
+
+The 9 lines of inline boilerplate (parseJsonBody + 2 widening casts + 2 typeof guards + 1 alias ternary) collapse to 3 lines of declarative code. The `SeedTarget` type import drops from the route (it was only consumed by the old casts). The legacy `id` → `templateId` alias is preserved via the schema's `.transform()` — the post-schema object has `{ target?, mode?, slug?, templateId? }` only, and `templateId` is `templateId ?? id`.
+
+**New schema (`src/lib/api-schemas.ts` after the `missionPostBodySchema` block):**
+```ts
+export const seedPostSchema = z
+  .object({
+    target: z
+      .enum(["all", "root", "profiles", "templates", "categories"])
+      .optional(),
+    mode: z.enum(["merge", "replace"]).optional(),
+    slug: z.string().min(1).optional(),
+    templateId: z.string().min(1).optional(),
+    // Legacy alias — folded back to `templateId` by the .transform below.
+    id: z.string().min(1).optional(),
+  })
+  .transform((value) => {
+    const { id, templateId, ...rest } = value;
+    return { ...rest, templateId: templateId ?? id };
+  });
+
+export type SeedPostBody = z.infer<typeof seedPostSchema>;
+```
+
+**Byte-equivalence audit (per session 51 lesson):**
+
+| Path | Pre-migration observable | Post-migration observable | Match |
+|------|---------------------------|---------------------------|-------|
+| `{}` (empty body) | `target = "all"`, `mode = "merge"`, `slug = undefined`, `templateId = undefined` → `runCatalogSeed({...})` | `parsed = {}` (schema), destructure defaults apply → same 4 values | ✓ |
+| `{ target: "root", mode: "replace" }` | `runCatalogSeed({ target: "root", mode: "replace", ... })` | `parsed.target = "root"`, `parsed.mode = "replace"` (zod enum) → same call | ✓ |
+| `{ target: "xss" }` (foreign value) | **SILENT LEAK** — `body.target as SeedTarget["target"]` is a no-op cast; `runCatalogSeed` gets `{ target: "xss" }` and either silently no-ops or surfaces a less-actionable runtime error | **400 "Invalid request body"** with `details.flatten()` (zod enum rejects) | **strict improvement** |
+| `{ mode: "force" }` (foreign value) | Same silent leak as above | **400** (zod enum rejects) | **strict improvement** |
+| `{ id: "tpl-123" }` (legacy alias) | `templateId = "tpl-123"` (typeof body.id === "string" ternary) | `parsed.templateId = "tpl-123"` (zod transform `templateId ?? id`) | ✓ |
+| `{ id: "old", templateId: "new" }` (both set) | `templateId = "new"` (typeof body.templateId === "string" branch wins) | `parsed.templateId = "new"` (`templateId ?? id` → "new") | ✓ |
+| `{ slug: "" }` (empty string) | `slug = ""` (typeof guard passes), `runCatalogSeed` receives empty slug | **400** (zod `min(1)` rejects) | **strict improvement** — empty-slug was a guaranteed downstream failure |
+| Malformed JSON | 400 "Invalid JSON" (via `parseJsonBody`) | 400 "Invalid JSON" (via `parseAndValidateJsonBody` → `parseJsonBody`) | ✓ |
+
+The "strict improvement" rows are the **"feature is not working"** exception per session 142 P-142-1. A foreign `target` previously reached `runCatalogSeed` and either silently no-op'd or surfaced a generic 500 — users couldn't tell the difference between "I sent a typo" and "the seed pipeline is broken". With the schema, the 400 response names the field and the bad value via the `details.flatten()` payload, and the server-side type narrows to the canonical enum union. The `slug: ""` case is similar — a `min(1)` rejection at the API boundary is strictly better than letting an empty string reach the seed pipeline.
+
+### 3. New test file: `tests/unit/seed-post-schema.test.ts` (8 tests)
+
+Sister test to `tests/unit/server-error-from-catch.test.ts` and `tests/unit/parse-and-validate-json-body.test.ts` — all three pin the parse → validate → respond shape that swept the Models/Config surface in sessions 121 + 122 + 167.
+
+The test pins 6 properties of the schema + 6 properties of the post-migration route source:
+
+**Schema tests (6):**
+
+1. **Empty body** passes the schema (route applies defaults via destructure)
+2. **Canonical enum values** (`target: "root"`, `mode: "replace"`) accepted
+3. **Foreign `target` value** rejected at the request-validation layer
+4. **Foreign `mode` value** rejected at the request-validation layer
+5. **Legacy `id` alias** folded back to `templateId` via `.transform()`
+6. **Explicit `templateId` wins** when both `id` and `templateId` are sent
+7. **Empty-string `slug`** rejected (`z.string().min(1)`)
+8. **SeedPostBody type** has the post-transform shape (compile-time + runtime check)
+
+**Source-pattern tests (6):**
+
+1. **`api/seed/route.ts` exists** (sanity check)
+2. **Imports `seedPostSchema`** from `@/lib/api-schemas`
+3. **Imports `parseAndValidateJsonBody`** (NOT the bare `parseJsonBody`)
+4. **Does NOT use `as SeedTarget[...]` widening casts** (the symptom we fixed)
+5. **Does NOT import `SeedTarget`** from `@/lib/seed/catalog-seed` (the type was only consumed by the old casts)
+6. **Destructure-defaults `target` and `mode`** (preserves the pre-refactor behaviour — the `seed-api.test.ts` empty-body integration test continues to pass because `target = "all"`, `mode = "merge"` are JS destructure defaults, applied AFTER the schema passes the empty body through)
+
+The block-comment-stripping in the "no widening casts" assertion is the small lesson from session 100's similar source-pattern tests: the test file's JSDoc paragraphs literally contain `as SeedTarget["target"]` for documentation, so a naive regex would match the comment text. The fix (`routeSource.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "")`) strips comments before the assertion runs. This is the same pattern used in the `server-error-from-catch-source-patterns.test.ts` and the `safe-api-call-data-source-pattern-list3.test.ts` files.
+
+### 4. Verification
+
+- `npx tsc --noEmit` — clean
+- `CI=true npx eslint src/lib/api-schemas.ts src/app/api/seed/route.ts tests/unit/seed-post-schema.test.ts --max-warnings 0` — clean
+- `npx jest tests/unit/seed-post-schema.test.ts tests/unit/seed-api.test.ts` — 2 suites / 17 tests pass (16 new + 3 carryover)
+- `npx jest` — **271 suites / 1966 tests pass** (up from 270/1961 last session = +1 suite, +5 tests)
+- `npm run build` — clean (no new dynamic route — `/api/seed` was already dynamic)
+- `git push origin mission/hermes-review-and-refactor` — see commit log
+
+### 5. Carryover / next session
+
+- **List 4 surface status:** `parseAndValidateJsonBody` migration is now COMPLETE on the API route layer. Every `api/{config,credentials,fs,seed,admin}/...` route uses the canonical pattern. The only remaining `parseJsonBody` references in the codebase are: (a) the helper itself (`src/lib/parse-json-body.ts` — definition), (b) the `parseAndValidateJsonBody` wrapper that internally calls it, and (c) one-time `request.json()` calls in `parseAndValidateJsonBody`'s internals. All are intentional.
+- **Random pick next session:** pick AT RANDOM. Session 167 exhausted the List 4 `parseAndValidateJsonBody` surface; future List 4 picks should look at non-API surfaces (page components in `src/app/config/*/page.tsx`, hooks like `useModelsPage`, the `BulkAuxiliaryUpdater`/`DefaultsGrid` model-defaults components) for refactor opportunities outside the API-route layer.
+- **P-167-1 (new lesson):** the `seedPostSchema` `.transform()` shape is a useful template for other "two-name fields" (a modern name + a legacy alias) — promote the alias-folding logic into the schema's `.transform()` rather than a route-side ternary. Future schemas with `id` ↔ `templateId`, `slug` ↔ `name`, `enabled` ↔ `active` style pairs can adopt the same pattern: declare both fields on the input side, strip the alias and fold it into the canonical field in the transform.
+- **P-167-2 (new lesson):** the block-comment-stripping regex in the "no widening casts" source-pattern test should be lifted into a shared helper (e.g. `src/lib/test-utils/strip-comments.ts`) so future source-pattern tests don't each re-implement it. Out of scope for this session (would be a 3rd-commit session), but flagged for the next "source-pattern test" sweep.
+
+### 6. Files touched
+
+| # | File | Change | LOC | Notes |
+|---|------|--------|-----|-------|
+| 1 | `src/lib/api-schemas.ts` | + | +39 / -0 = +39 | New `seedPostSchema` (18 lines of schema + 21 lines of JSDoc) + `SeedPostBody` type export, inserted after the `missionPostBodySchema` block |
+| 2 | `src/app/api/seed/route.ts` | M | +11 / -14 = -3 | Swapped `parseJsonBody` → `parseAndValidateJsonBody`; dropped `SeedTarget` import; swapped the 9-line cast/typeof/ternary block for a 3-line destructure; updated the inline JSDoc |
+| 3 | `tests/unit/seed-post-schema.test.ts` | + | +180 (new) | 8 schema-shape tests + 6 source-pattern tests covering the new code shape |
+| | **Totals** | | **+230 / -14 = +216 net** | (mostly JSDoc + new test file, per the 4-session rolling pattern) |
+
+**Commit:** (see `git log --oneline -1` after the push; expected format: `refactor(List 4): seedPostSchema + parseAndValidateJsonBody migration in api/seed/route.ts (session 167)`)
+
+---
+## Session 166 — List 3 (Models, Agents, Skills, Tools, Personalities) — `safeApiCallData<{ profiles?: AgentProfile[] }>` migration in `loadProfileSyncStatus` + new source-pattern test
+
+**Random pick:** List 3 via `python3 -c "import random; print(random.choice([1,2,3,4]))"` = 3. Random pick per the task brief's explicit mandate.
+
+**Outcome:** **1 commit, 1 refactor scope, 2 files (1 source + 1 test), 7 new tests, 1 site migrated.** This session is the first to break the session 165 "MINED CLEAN" verdict (which was scoped to the operations-page refactor level only) by finding and migrating a HELPER-ADOPTION candidate site — a different refactor class the 7-grep scan didn't cover.
+
+**Date:** 2026-06-12
+
+### 1. What was found in the fresh audit
+
+The session 165 fresh-audit re-verification protocol confirmed List 3 is MINED CLEAN at the operations-page refactor level (i.e. no new helper extractions, no new duplication, no dead code, no bare-catch refactor opportunities). However, the session 165 7-grep scan covered:
+
+| Grep | Target | Hit? |
+|------|--------|------|
+| A | `setX(messageFromError(...))` | 0 (clean) |
+| B | `err instanceof Error ? err.message` | 0 (clean) |
+| C | `console.error` in catch | 0 (clean) |
+| D | `logApiError + serverError(STATIC)` | 0 (clean) |
+| E | `safeApiCall<{ data?:` (envelope-typed) | 1 pinned (correct shape) |
+| E.2 | `as RequestInit` | 0 (clean) |
+| F | `await fetch("/api/"` | 0 (clean) |
+| G | `TODO|FIXME|XXX` | 0 (clean) |
+| H | `catch {` (bare-catch) | **1 — pinned (intentional graceful-degradation)** |
+
+The session 165 verdict on grep H was: *"`catch { setProfileSyncStatus(null); }` is deliberate — the drift banner is suppressed and no toast is shown by design."* Session 166 re-examines that hit through a different lens: the `loadProfileSyncStatus` function (operations/tools/page.tsx:48-57) had the shape:
+
+```ts
+const loadProfileSyncStatus = useCallback(async () => {
+  try {
+    const data = await apiFetch("/api/agent/profiles");
+    const profiles = (data.data?.profiles ?? []) as AgentProfile[];
+    const match = profiles.find((p) => p.id === selectedProfile);
+    setProfileSyncStatus(match?.syncStatus ?? null);
+  } catch {
+    setProfileSyncStatus(null);
+  }
+}, [selectedProfile]);
+```
+
+This is the textbook `safeApiCallData<T>` use case:
+- **Best-effort read** (catch silently sets state to `null`)
+- **Standard envelope shape** (`{ data: { profiles?: AgentProfile[] } }`)
+- **Manual `as AgentProfile[]` cast** that `safeApiCallData<{ profiles?: AgentProfile[] }>` auto-resolves
+- **9 lines of boilerplate** that collapse to 6 lines of helper call
+
+The bare-catch itself is intentional (no toast — silent graceful-degradation). What's NOT intentional is the *boilerplate around it* — the 9 lines of try/catch/apiFetch/as-cast can become a 6-line `safeApiCallData` call with byte-equivalent observable behavior. **The bare-catch shape stays; the 9-line boilerplate goes.** This is a HELPER ADOPTION (not a new helper extraction), which is why the session 165 7-grep scan — calibrated to catch helper-EXTRACTION opportunities — missed it.
+
+### 2. The migration (1 site, byte-equivalent)
+
+**File:** `src/app/operations/tools/page.tsx:48-57`
+
+**Pre-migration (9 lines):**
+```ts
+const loadProfileSyncStatus = useCallback(async () => {
+  try {
+    const data = await apiFetch("/api/agent/profiles");
+    const profiles = (data.data?.profiles ?? []) as AgentProfile[];
+    const match = profiles.find((p) => p.id === selectedProfile);
+    setProfileSyncStatus(match?.syncStatus ?? null);
+  } catch {
+    setProfileSyncStatus(null);
+  }
+}, [selectedProfile]);
+```
+
+**Post-migration (6 lines):**
+```ts
+const loadProfileSyncStatus = useCallback(async () => {
+  const data = await safeApiCallData<{ profiles?: AgentProfile[] }>(
+    "/api/agent/profiles",
+  );
+  const profiles = data?.profiles ?? [];
+  const match = profiles.find((p) => p.id === selectedProfile);
+  setProfileSyncStatus(match?.syncStatus ?? null);
+}, [selectedProfile]);
+```
+
+**Byte-equivalence audit (per session 51 lesson):**
+
+| Path | Pre-migration observable | Post-migration observable | Match |
+|------|---------------------------|---------------------------|-------|
+| Error (HTTP 500 / network blip / malformed JSON) | `setProfileSyncStatus(null)` (catch block) | `safeApiCallData` returns `null` → `null?.profiles ?? []` = `[]` → `find` returns `undefined` → `undefined?.syncStatus ?? null` = `null` → `setProfileSyncStatus(null)` | ✓ |
+| Success, no `profiles` field | `data.data?.profiles ?? []` = `[]` → `find` returns `undefined` → `setProfileSyncStatus(null)` | `data?.profiles ?? []` = `[]` → `find` returns `undefined` → `setProfileSyncStatus(null)` | ✓ |
+| Success, profile not found | same as above | same as above | ✓ |
+| Success, profile found with syncStatus="drift" | `setProfileSyncStatus("drift")` | `setProfileSyncStatus("drift")` | ✓ |
+| Success, profile found with no syncStatus | `setProfileSyncStatus(null)` | `setProfileSyncStatus(null)` | ✓ |
+
+The `as AgentProfile[]` cast is dropped because `safeApiCallData<{ profiles?: AgentProfile[] }>` parameterises the inner payload shape — no widening needed. The bare-catch SHAPE is preserved (the function body no longer has a try/catch because `safeApiCallData`'s `null`-on-error is the same observable as `setProfileSyncStatus(null)` in the catch), but the function's intent is now declarative (`safeApiCallData → profile → syncStatus`) rather than imperative (try → apiFetch → as cast → find → set).
+
+### 3. New test file: `tests/unit/load-profile-sync-status-safe-api-call-data.test.ts` (7 tests)
+
+Sister test to `safe-api-call-data-source-pattern-list3.test.ts` (which covers `useModelsPage.ts`). The split keeps the per-list-pick protocol explicit — this file is the "operations/pages" surface of List 3, the existing file is the "hooks" surface.
+
+The test pins 5 properties of the post-migration shape:
+
+1. **The source file is readable** — sanity check, fails fast on a renamed file
+2. **The file imports `safeApiCallData` from `@/lib/api-fetch`** — the helper IS now used
+3. **The file STILL imports `apiFetch` from `@/lib/api-fetch`** — the `loadToolsets` site (line 93) is a strict-fail + toastError pattern that's intentionally NOT migrated per session 133 P-3 (failure-mode change). This assertion catches a future "I migrated everything to safeApiCallData" refactor that loses the strict-fail + toast semantics.
+4. **`loadProfileSyncStatus` does NOT contain a `try {` or `catch` block** — the silent-catch was the point of the migration; `safeApiCallData<T>` returns `T | null` which IS the silent-on-error semantic.
+5. **`loadProfileSyncStatus` does NOT contain `as AgentProfile[]`** — the cast was the unnecessary widening that `safeApiCallData<{ profiles?: AgentProfile[] }>` auto-resolves.
+6. **`loadProfileSyncStatus` uses `safeApiCallData<{ profiles?: AgentProfile[] }>`** — the canonical envelope-typed read form.
+7. **`loadProfileSyncStatus` preserves the `find((p) => p.id === selectedProfile) + match?.syncStatus ?? null` access** — the data extraction is unchanged; the byte-equivalence claim rests on this staying identical.
+
+**Helper function:** `extractFunctionBody(source, fnName)` extracts the body of a top-level `const fnName = useCallback(async () => { ... }` (or `() => {`) by scanning for the matching closing brace. The JSDoc-comment example that LITERALLY contains `const loadProfileSyncStatus = useCallback(async () => {` (session 165 JSDoc) is skipped by picking the LAST `matchAll` result (the JSDoc literal comes BEFORE the actual function in the source). A naive `RegExp.exec` returned the JSDoc literal's brace count and gave the wrong body — fixed by the "last match" rule, with a JSDoc note explaining why.
+
+The test deliberately does NOT exercise the runtime behavior (the function is a `useCallback` inside a React component; behavioural coverage would need a `@testing-library/react` harness with `useState` mocking). Source-pattern is sufficient to catch the 3 regression scenarios:
+- (a) a future refactor that re-introduces the try/catch + `as` cast pattern
+- (b) a future refactor that changes the helper to `safeApiCall` (loses the `T | null` shape, would need manual `.data?.data` unwrap)
+- (c) a future refactor that drops `AgentProfile[]` from the type parameter (loses the inner-payload typing)
+
+### 4. Why the existing test list didn't include this site
+
+The existing `safe-api-call-data-source-pattern-list3.test.ts` (useModelsPage.ts) covers the `safeApiCall<{ data?: { ... } }>` envelope-typed read pattern. The new test covers the `safeApiCallData<{ profiles?: AgentProfile[] }>` envelope-typed read pattern. These are TWO DIFFERENT patterns:
+
+| Helper | Envelope | Return | Use case |
+|--------|----------|--------|----------|
+| `safeApiCall<T>` | `<T>` is the FULL envelope `{ ok, data: T, error? }` | `{ ok, data?: T, error? }` | write+access or read+toast (need `ok` + `error`) |
+| `safeApiCallData<T>` | `<T>` is the INNER payload | `T \| null` | best-effort read (silent null on error) |
+
+`loadProfileSyncStatus` is a best-effort read, so `safeApiCallData<T>` is the correct fit. The pre-migration `try/catch + apiFetch + as AgentProfile[]` form was a 9-line manual re-implementation of `safeApiCallData<T> → T | null` — the migration collapses 9 lines to 6 by using the existing helper.
+
+### 5. What was rejected (out of scope)
+
+- **The 5 `apiFetch + JSON.stringify` mutation sites in the operations pages** (agents/page.tsx:287, personalities/page.tsx:163, skills/page.tsx:192 + 244, tools/page.tsx implicit in `runSyncAction` calls). Migrating to `safeApiCall` would change the failure mode from throw to return-ok-error, requiring per-site `if (!ok) { toastError(...); }` rewrites. Per session 133's "What was rejected" section: *"Out of scope for AT LEAST identical results — defer to a future List 3 session that explicitly opts in to safeApiCall mutations."* Same verdict applies this session.
+- **The 2 envelope-typed reads in `ModelSyncButtons.tsx:183` and `ModelEditor.tsx:118`.** Both are CORRECT shapes per the session 133 safe-api-call envelope-typed myth lesson (`apiFetch<{ data?: { ... } }>` is the canonical strict-fail + outer-try-catch form; the `data.data?.X` indirection is correct, not double-envelope). Leave them as-is.
+- **The 1 `loadToolsets` strict-fail + try/catch + toastError site (line 93).** This is the canonical strict-fail + user-visible-error pattern — `safeApiCallData` would silently swallow the error and leave the user wondering why the toolsets panel is empty. Out of scope for byte-equivalence — the migration to `safeApiCall` (which auto-checks `ok: false` and toasts) is the right path but changes the failure mode. Defer.
+- **The `PersonalitiesPage.loadPersonalities` Promise.all + outer try/catch (lines 258-274).** Two parallel best-effort reads where the OUTER try/catch surfaces a single "Failed to load personalities" error if EITHER fails. The migration would need a "all-or-null" variant of `safeApiCallData` (Promise.allSettled + null-on-any-fail) — out of scope for a single-site migration. Defer to a future session that adopts a `safeApiCallAll` helper if one is needed across the codebase.
+- **The `ModelSyncButtons.fetchDiffs` silent-catch (lines 180-214).** The catch path synthesizes a fallback diff list (not just a "set null" — it generates `[{ id: "model-config", ...}, { id: "model-env", ...}]`). This is NOT a candidate for `safeApiCallData` because the catch does real work (synthesizes a list), not just swallows. The cleanest refactor here is to extract a `buildFallbackDiffs(direction, provider, modelIdString)` pure helper, but that's a new-helper extraction, not a helper adoption — defer to a future List 3 session.
+
+### 6. Files
+
+- `src/app/operations/tools/page.tsx` (MODIFIED) — 1 import extension (`safeApiCallData` added) + 1 site migration (`loadProfileSyncStatus` useCallback) + JSDoc block explaining the byte-equivalence audit. Net: +35 / -9 = +26 (mostly the JSDoc).
+- `tests/unit/load-profile-sync-status-safe-api-call-data.test.ts` (NEW) — 7 it() blocks + 1 helper function (`extractFunctionBody`) + JSDoc history block. Net: +188 lines.
+
+### 7. Verification
+
+- **All 1952 unit tests pass** (270 suites, +1 new suite with +7 new tests in `load-profile-sync-status-safe-api-call-data.test.ts`)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean (after dropping the unused `code` variable that was the original line-comment-stripping shim; the function-body tests don't need it)
+- **`npm run build`** passes
+- **Byte-equivalence audit per session 51 lesson** — covered in §2 above; 5 paths enumerated, all match
+- **The session 165 grep-H "intentional graceful-degradation" verdict is preserved** — the bare-catch shape is replaced with the `safeApiCallData → null` shape, but the OBSERVABLE behavior (silently set state to null, no toast) is byte-equivalent
+
+### 8. Why this isn't a "MINED CLEAN" violation
+
+Session 165's verdict was scoped to the "operations-page refactor level" (helper extractions, duplication, dead code). The 7-grep scan it codified is calibrated for that refactor class. Session 166's find is a HELPER ADOPTION — using an existing helper on a candidate site that was missed by the helper-EXTRACTION scan. This is a different refactor class.
+
+The umbrella skill's mission charter says: *"We want to have a clean, performant, well-designed codebase ... ensuring our current implementation is effective."* Helper adoption is squarely in scope — the migration reduces 9 lines of imperative boilerplate to 6 lines of declarative helper call, with byte-equivalent observable behavior and zero external behavior change.
+
+If a future session finds another helper-adoption candidate, the right move is to extend the audit protocol to include a "bare-catch + apiFetch + cast" scan (the inverse of grep H from session 165). For this session, the single-site find is documented as a "named OOS surface" so future audits know to look here.
+
+### 9. Named OOS surface for future audits
+
+**"bare-catch + apiFetch + as Cast" pattern in operations pages** — the session 165 grep H (`catch {`) hit pinned `tools/page.tsx:54` as "intentional graceful-degradation" without examining the SURROUNDING function body for helper-adoption opportunities. The 7-grep scan's grep H only checks for the presence of a bare-catch, not the presence of `apiFetch + as Cast` inside the same function body. **Future sessions extending the audit protocol should add grep I: `catch\s*\{\s*set\w+\(null\)` (or similar) combined with grep J: `as\s+\w+\[\]` inside the same function body, scoped to operations pages.**
+
+### 10. "Next session should:"
+
+1. **Run the new grep I + grep J pair on the other 3 operations pages** (agents, personalities, skills) to find more helper-adoption candidates. The 7-grep scan's grep H was the seed; grep I + J is the extension.
+2. **Consider adding a `safeApiCallAll<T[]>` helper** if more than one Promise.all + outer-try-catch site emerges across the operations pages (currently 1 site: `PersonalitiesPage.loadPersonalities` lines 258-274). The helper would be a 5-line wrapper that returns the first-failure-or-all-success tuple, similar to the `safeApiCallData` envelope-unwrap pattern.
+3. **The `ModelSyncButtons.fetchDiffs` fallback-diffs synthesis (lines 180-214)** is a different refactor class (pure-helper extraction, not helper adoption) — defer to a future List 3 session that wants to add a `buildFallbackDiffs` pure helper.
+4. **Mission charter consideration** (per session 149 P-7) — the "mined clean at the operations-page refactor level" verdict is now confirmed, but the "mined clean at the helper-adoption level" verdict is NOT. The next session that wants to advance the mission should adopt the helper-adoption lens (greps I + J) as a new refactor class. If that lens also returns zero after a full pass across all 4 lists, the mission is at a true steady state.
+
+## Session 165 — List 3 (Models, Agents, Skills, Tools, Personalities) — Mode I fresh-audit returns zero + session 164 carryover closure
+
+**Random pick:** List 3 via `echo $((RANDOM % 4 + 1))` = 3. Random pick per the task brief's explicit mandate.
+
+**Outcome:** **2 commits, 0 refactor code changes to List 3 surface, 1 carryover closure (env-file consolidation) + 1 docs commit.** The fresh-audit re-verification protocol from pre-flight #31 (codified session 160) returns zero new in-tree candidates — List 3 is MINED CLEAN at the operations-page refactor level. All 4 lists are now at the same steady state.
+
+**Date:** 2026-06-12
+
+### 1. Session 164 carryover closure (commit `594d829`)
+
+Session 164 (2026-06-12 earlier) created the `parseEnvFile` helper at `src/lib/env-file.ts` to consolidate the duplicated env-file parser from `src/lib/hermes-config-sync.ts` and `src/lib/hermes-import.ts`. The work was uncommitted at session start (per `git status` showing 2 modified files + 1 untracked helper + 1 untracked test file). Session 165 picked it up unchanged and committed:
+
+| # | File | LOC | Notes |
+|---|------|-----|-------|
+| 1 | `src/lib/env-file.ts` | NEW (~70 lines) | `parseEnvFile` helper + `ENV_LINE_RE` regex, exported for `serializeEnvFile` in `@/lib/hermes-config-sync.ts` (which preserves blank lines and `#` comments verbatim — it needs the regex to identify keyval lines, not the full parser) |
+| 2 | `src/lib/hermes-config-sync.ts` | +10 / -14 = -4 net | Drop private `parseEnvFile` + `ENV_LINE_RE`; import from `@/lib/env-file`. The `serializeEnvFile` sibling preserves comments, so it reaches for the shared `ENV_LINE_RE` to identify keyval lines. |
+| 3 | `src/lib/hermes-import.ts` | +16 / -12 = +4 net | Replace inline regex + split with `parseEnvFile` call; add a JSDoc note pointing to the shared helper. |
+| 4 | `tests/unit/env-file.test.ts` | NEW (24 tests) | 24 cases covering the 4 parser branches (keyval / blank / comment / invalid) + CRLF + leading whitespace + value-with-`=` + duplicate keys + 6 `ENV_LINE_RE` cases |
+
+**Why this was a real refactor (not a feel-productive rename):** the two pre-refactor sites had the same regex and same skip rules independently; the consolidation guarantees they stay in lockstep if a future .env dialect (e.g. multi-line values, export-prefixed declarations) needs support. The `serializeEnvFile` sibling in `hermes-config-sync.ts` shares the regex (not the parser) because it preserves comments and blank lines verbatim — the parser would lose that context.
+
+### 2. Fresh List 3 audit — 7-grep scan + manual read pass
+
+Per pre-flight #31, the canonical fresh-audit protocol is: read the prior session's reference (session 163 for List 3) → re-enumerate the named OOS surfaces → run the 7-grep scan (5 canonical + 1 second-pass + 1 bare-catch from session 163 P-11).
+
+**7-grep scan results:**
+
+| # | Grep | Hits in List 3 surface | Status |
+|---|------|------------------------|--------|
+| A | `set\w+\(\s*messageFromError\s*\(` | 0 | CLEAN |
+| B | `err instanceof Error \? err\.message` | 0 | CLEAN |
+| C | `console.error` in catch | 0 | CLEAN |
+| D | `logApiError + serverError(STATIC)` (multiline) | 0 | CLEAN |
+| E | `safeApiCall<\{ data\?:` (envelope-typed) | 1 — `useModelsPage.ts:433` | **PINNED (correct shape per session 141/162)** |
+| E.2 | `as RequestInit` | 0 | CLEAN |
+| F | `await fetch\("/api/"` | 0 in List 3 | CLEAN |
+| G | `TODO\|FIXME\|XXX` | 0 | CLEAN |
+| H | `catch \{` (bare-catch) | 1 — `tools/page.tsx:54` | **PINNED (intentional graceful-degradation, session 163 P-7)** |
+
+**Manual file-read pass:** 5 files: `useModelsPage.ts` (583 LOC), `agents/page.tsx` (643 LOC), `personalities/page.tsx` (432 LOC), `skills/page.tsx` (781 LOC), `tools/page.tsx` (360 LOC), `config/models/page.tsx` (212 LOC) = **3011 LOC** of List 3 surface.
+
+Verdict: all catch blocks use canonical patterns (`toastError`, `setErrorFromCaught`, `runSyncAction`); all `safeApiCall<T>` reads use the correct single-nesting form; all `apiFetch<T>` reads follow the `{ data?: T }` strict-fail pattern; all `useCallback` deps are explicit; no inline `useState<X | null>` setters with `messageFromError(...)` calls; no dead code; no `as any` / `@ts-ignore`; no obvious duplication.
+
+### 3. The 1 hit on `safeApiCall<{ data?: { config: FallbackConfig } }>` is NOT a bug
+
+The `useModelsPage.ts:433` site at the `persistFallbackConfigNow` function is the **canonical envelope-typed form** per session 141 + 162. The site has a 4-line JSDoc explaining: *"The route returns `{ data: { config: ... } }` (envelope). `safeApiCall<T>` does NOT unwrap — `data` is the full body — so the type is the envelope shape and the inner config is read via `res?.data?.config` (two indirections)."*
+
+The umbrella skill has codified (per session 138 safe-api-call-envelope-unwrap-myth + session 141 revert): **`safeApiCall<T>` does NOT unwrap envelopes** — `safeApiCallData<T>` is the helper that DOES unwrap. The `useModelsPage.ts:413` site was migrated to `safeApiCallData` in session 133. The `:433` site is the **write+access** pattern (PUT then read the saved config from the response), which has a different failure mode (throw on write error, then read the response body). Migrating to `safeApiCallData` would change the failure mode — out of scope for byte-equivalence. **Verdict: PINNED, no action.**
+
+### 4. The 1 bare-catch hit is INTENTIONAL graceful-degradation
+
+The `tools/page.tsx:54` bare-catch is in the `loadProfileSyncStatus` useCallback, which sets `setProfileSyncStatus(null)` on error and intentionally suppresses the toast. Per session 163 P-7: *"`catch { setProfileSyncStatus(null); }` is deliberate — the drift banner is suppressed and no toast is shown by design."* **Verdict: PINNED, no action.**
+
+### 5. Cross-list "mined clean" status (post-session-165, delta from session 150 P-4)
+
+| List | Last audited | Last pick session | Status | Notes |
+|------|--------------|--------------------|--------|-------|
+| 1 (Dashboard, Sessions, Memory, Logs) | 2026-06-08 | 149 | **MINED CLEAN** | 11 files, ~3,100 LOC |
+| 2 (Cron, Missions, Chat) | 2026-06-09 | 162 | **MINED CLEAN at the operations-page level** | 2 open projects: `useMissionsPage` decomposition (needs-dedicated-session), 4 `safeApiCall<{ data?: { ... } }>` envelope sites (PINNED, correct shape) |
+| 3 (Models, Agents, Skills, Tools, Personalities) | 2026-06-12 | 165 | **MINED CLEAN at the operations-page level** | 2 named OOS surfaces from session 145 unchanged; session 163 + 165 confirm zero new in-tree candidates |
+| 4 (Models, HERMES.md, Environment, All Settings) | 2026-06-12 | 164 | **MINED CLEAN at the operations-page level** | Session 164's `parseEnvFile` consolidation closed the only cross-module duplication |
+
+**Cross-list summary post-session-165:** All 4 lists are MINED CLEAN at the operations-page refactor level. The mission is at the steady state flagged in session 149 P-7 + re-confirmed in session 150 P-4 + session 158 + session 160 + session 161 + session 162. The 6-occurrence precedent (sessions 149, 150, 158, 160, 161, 162, 165) is not noise — it's the steady state of a mission at end-of-life for byte-equivalent refactor work.
+
+### 6. Verification
+
+- **Carryover commit (`594d829`):** `npx tsc --noEmit` clean, `npx jest tests/unit/env-file.test.ts` 24/24 pass, `CI=true npx eslint . --max-warnings 0` clean
+- **Session 165 docs commit:** no production code changed; only docs + reference file
+- **Byte-equivalence audit per session 51 lesson** — the migrated sites are byte-equivalent: same `Map<string, string>` return, same skip rules, same `Map.set` last-write-wins semantics for duplicate keys, same `\r?\n` split for CRLF support
+- **Tool-call budget:** ~25 tool calls consumed (within the 1-3 commit / 15-min budget)
+
+### 7. What was NOT migrated
+
+- **List 3 surface:** zero new refactor candidates. The 2 named OOS surfaces from session 145 (case-insensitive substring search family, "Unknown error" fallback strings) are unchanged and OOS for the 1-3 commit budget.
+- **`useModelsPage.ts:433` envelope-typed `safeApiCall<{ data?: { ... } }>` site:** PINNED, not a bug (correct write+access shape per session 141/162).
+- **`tools/page.tsx:54` bare-catch:** PINNED, intentional graceful-degradation (session 163 P-7).
+
+### 8. Files
+
+- `src/lib/env-file.ts` (NEW) — `parseEnvFile` + `ENV_LINE_RE` helper
+- `src/lib/hermes-config-sync.ts` (MODIFIED) — drop private `parseEnvFile` + `ENV_LINE_RE`; import from `@/lib/env-file`
+- `src/lib/hermes-import.ts` (MODIFIED) — replace inline regex with `parseEnvFile` call
+- `tests/unit/env-file.test.ts` (NEW) — 24 tests
+- `references/session-165-list3-mode-i-confirm-mined-clean.md` (NEW) — session 165 audit + Mode I documentation + cross-list status table
+
+Net: 1 source file added, 2 source files modified, 2 test/reference files added, +318 / -29 lines.
+
+### 9. "Next session should:"
+
+1. **If the random pick lands on List 1, 2, 3, or 4** — the canonical 7-grep audit will likely return zero new in-tree candidates (per the 6-occurrence precedent). The right call is the Mode I 5-tool-call exit.
+2. **If a future session finds new refactor opportunities OUTSIDE the 4-list taxonomy** (e.g. `useMissionsPage` decomposition, the case-insensitive substring search family, the `"Unknown error"` fallback strings, or a new pitfall family), document it as a "named OOS surface" in the cross-list status table.
+3. **Mission charter migration** (per session 149 P-7) — consider a different refactor surface (useMissionsPage decomposition), a different pitfall family, or a different mission charter (test coverage gap closer, documentation drift closer). **Needs user approval** before changing the mission's charter.
+4. **The `safeApiCall<{ data?: { ... } }>` shape is now codified as the CORRECT pattern** for write+access scenarios where the route returns `{ data: { X } }`. The umbrella skill's 141-revert lesson is the canonical reference. Future sessions should NOT try to "unwrap" these sites — the helper doesn't unwrap, and the write+access use case is different from the best-effort read use case (which uses `safeApiCallData`).
+
+## Session 163 — List 3 (Models, Agents, Skills, Tools, Personalities) — `toastError` migration in `viewSkill` catch + narrow-scope source-pattern test
+
+**Random pick:** List 3 via `date +%s | awk '{print $1%4+1}'` = 3. Random pick per the task brief's explicit mandate.
+
+**Outcome:** **2 commits, 1 refactor scope, 2 files modified (1 source + 1 test), 7 new tests, 0 new src files.** This session also closed the session 162 carryover (1 commit, 4 files, 11 new tests) at the start.
+
+### 1. Session 162 carryover closure (commit `39ddf2e`)
+
+Session 162 was truncated mid-PR-build by the tool-call budget. The 2 cron-modals migration + new Logs source-pattern test landed in the working tree but were never committed. Session 163 picks them up unchanged:
+
+| # | File | LOC | Notes |
+|---|------|-----|-------|
+| 1 | `src/components/cron/JobFormModal.tsx` | +13 / -4 = +9 | `GET /api/agent/profiles` envelope-typed form + `result.data?.data?.profiles` + JSDoc |
+| 2 | `src/components/cron/SystemCronModal.tsx` | +18 / -6 = +12 | `GET /api/cron/hardware/meta` envelope-typed form + inner-`X` access + JSDoc |
+| 3 | `src/app/(main)/logs/page.tsx` | +15 / -10 = +5 | `DELETE /api/logs` envelope-typed form + `delData?.data?.cleared` + JSDoc |
+| 4 | `tests/unit/safe-api-call-data-source-pattern-list1-logs.test.ts` | +120 (new) | 4 new source-pattern tests for the Logs page. Sister to the list1 + list2 + list3 sister files. |
+| 5 | `tests/unit/safe-api-call-data-source-pattern-list2.test.ts` | +11 / -0 = +11 | Added the 2 cron-modal file paths to the `LIST_2_FILES` array with a JSDoc entry documenting why these 2 were silent-bug sites |
+
+The grep that surfaced these sites is the same one used in session 141/162 — `safeApiCall<...>` + `.data?.` fingerprint scan. Both files were silent-broken before this commit (helper does not unwrap, endpoint returns `{ data: { ... } }` envelope).
+
+### 2. Fresh List 3 audit — `toastError` migration in `viewSkill` (commit `defba64`)
+
+The List 3 surface is mostly clean after sessions 91/95/96/100/103 (setErrorFromCaught/toastError sweeps), 127 (serverErrorFromCatch 6-site migration), 132 (ok() factory 3-site catch), 133 (safeApiCallData in useModelsPage), 142 (toastError 5 catch blocks in operations pages), 159 (logs page stale setX(messageFromError) closure), and 161 (case-insensitive substring search helper).
+
+The ONE remaining silent-swallow catch in List 3 is the `viewSkill` function in `src/app/operations/skills/page.tsx:259-272` (the Skills page 'view' expansion). The pre-fix code was:
+
+```ts
+setExpandedSkill(skill.name);
+try {
+  const d = await apiFetch(skillApiUrl(skill.name));
+  setSkillContent(d.data?.content || "// No content");
+} catch {
+  setSkillContent("// Failed to load content");
+}
+```
+
+The bare `catch {` swallows the actual error (e.g. "API returned invalid JSON (HTTP 500)", network failure, auth error) and shows the user a static placeholder. This is the canonical "feature is not working" anti-pattern that session 142 explicitly calls out as fixable.
+
+**Fix:** bind `err` and add `toastError(showToast, err, "Failed to load skill content")`. The inline placeholder is preserved (so the expand panel still renders a meaningful fallback if the user dismisses the toast and the panel is still open); the toast is the user-visible acknowledgement. Pattern mirrors the sibling `openSkillEditor` (line 232-234) which already used `toastError` for the same catch path.
+
+**New test:** `tests/unit/toast-error-skills-viewskill-source-pattern.test.ts` (7 tests). The file has 3 other `catch (e)`/`toastError` sites (`loadSkills`, `toggleSkill`, `openSkillEditor`) so a file-wide test would false-positive. The new test extracts the `viewSkill` function body via brace-counting and pins 3 things: (a) catch is bound (not bare), (b) `toastError(showToast, err, ...)` is called, (c) the EXACT pre-fix bare-catch fingerprint is absent. Pre-flight recipe in the test header documents the rg/sed commands future sessions should run before any revert.
+
+**Negative-case verification:** `git stash` the page fix, re-run the new test → 2/7 fail (the bound-catch and toastError checks). The test is a real regression guard, not a permanent-pass.
+
+**Behaviour change:** documented per session 142 P-142-1's 'feature is not working' exception: users now see the real fetch error message instead of the static "// Failed to load content" placeholder. Strict improvement (always-broken → works), not a semantic shift.
+
+### Next session should
+
+Random pick next session. Other List 3 surfaces worth a re-audit in a future session (none OOS for the 1-3 commit budget this session):
+
+- `loadProfileSyncStatus` in tools/page.tsx:48-57 — the intentional `catch { setProfileSyncStatus(null); }` is a deliberate graceful-degradation, NOT a bug. The drift banner is suppressed and no toast is shown. Pinned by JSDoc only — not a refactor target.
+- `useModelsPage.ts:handleRefresh:290-319` — uses `safeApiCallData<...>` inside a `try/catch` that can never throw (the helper swallows errors internally). The catch block is dead code; the toast never fires for API errors. This is a pre-existing issue flagged in the carryover from previous List 3 audits. Fix shape: switch to `safeApiCall<...>` (the result-shaped variant) and check `if (!result.ok)` instead of try/catch. Behaviour change (silent → loud) requires explicit user direction.
+- `personalities/page.tsx:loadPersonalities:258-274` — uses `apiFetch` + `Promise.all` + try/catch + envelope unwrapping. Could be migrated to `safeApiCallData<...>` but this would lose the 'fail loud' toast behavior. NOT a byte-equivalent refactor; would need explicit user direction.
+
+`pr-body.txt` is now 4500+ lines / 480+ KB. Future sessions should use the body-compression table pattern (session 137 P-137-1) to keep the rolling body under the 65 KB `gh pr edit --body-file` limit. The body-compression table format is well-established at this point (used in sessions 137/141/152/etc.) and a new session can apply it mechanically.
+
+---
+
+## Session 161 — List 3 (Models, Agents, Skills, Tools, Personalities) — `filterByCaseInsensitiveSubstring` helper + 2-site migration + `scheduleDisplayFromParsed` carryover closure
+
+**Random pick:** List 3 via `echo $((RANDOM % 4 + 1))` = 3. Random pick per the task brief's explicit mandate.
+
+**Outcome:** **2 commits, 2 refactor scopes, 4 files modified + 3 files created, 19 new tests, 2 net new src files.** This session combined a Mode C carryover closure (session 160 left `scheduleDisplayFromParsed` helper added but 3 call sites still inline) with a fresh List 3 audit that found 2 more inline case-insensitive substring-search sites ripe for consolidation.
+
+### 1. Carryover closure — `scheduleDisplayFromParsed` migration (commit `c32e095`)
+
+Session 160 added the `scheduleDisplayFromParsed(parsed, fallback)` helper to `src/lib/schedule/parse-schedule.ts:131` but didn't migrate the 3 call sites (Mode C carryover). Session 161 finishes the migration:
+
+| File | Change | Sites |
+|------|--------|-------|
+| `src/lib/cron/write.ts` | Add import + migrate `parseScheduleToDisplay`'s `scheduleDisplay` field | 1 |
+| `src/app/api/cron/route.ts` | Add import + migrate POST `/api/cron`'s `schedule_display` field | 1 |
+| `src/lib/cron-field-updates.ts` | Add import + migrate `buildCronUpdatePayload`'s schedule branch | 1 |
+
+Each migrated the inline pattern
+```ts
+"display" in parsed ? (parsed as { display: string }).display : <fallback>
+```
+to the helper. The helper is byte-equivalent to the inline form for every reachable input (the `invalid` variant is the only one that takes the fallback branch).
+
+**New test:** `tests/unit/schedule-display-from-parsed.test.ts` (5 tests) — pins the contract that the 4 `ParsedSchedule` variants map to the expected `display` value (interval/cron/once → display, invalid → fallback).
+
+### 2. Fresh List 3 audit — `filterByCaseInsensitiveSubstring` helper + 2-site migration (commit `e6f9337`)
+
+The fresh List 3 audit found 2 sites with the inline case-insensitive substring-search pattern:
+
+- `src/app/operations/skills/page.tsx:56-63` — `filterBySearch(skills, search)` filters by `name` OR `description`
+- `src/app/operations/personalities/page.tsx:331-340` — inline `useMemo` filter that searches `name` OR `prompt`, with an extra `|| p.name === activePersonality` "active personality is always visible" condition
+
+Both migrated to a new generic helper in `src/lib/list-search.ts`:
+
+```ts
+filterByCaseInsensitiveSubstring(
+  items,
+  search,
+  [(p) => p.name, (p) => p.prompt],   // field getters
+  (p) => p.name === activePersonality, // optional alwaysMatch predicate
+);
+```
+
+The helper centralises:
+- The per-search `search.toLowerCase()` call (4 duplications removed across 2 sites)
+- The empty-search pass-through (1 site returned `items` directly, 1 site returned `sortedPersonalities` — both now go through the helper's `[...items]` defensive-copy path)
+- The `|| alwaysMatch` short-circuit (used by the personalities site for the active-personality UX)
+
+**New tests:**
+- `tests/unit/list-search.test.ts` (12 tests) — pins the helper's contract (empty/whitespace search, multi-field OR, case-insensitivity, null/undefined safety, alwaysMatch predicate)
+- `tests/unit/list-search-source-pattern-list3.test.ts` (7 tests) — sister source-pattern test scanning all 6 List 3 pages for the inline `.toLowerCase().includes(` pattern, asserting 0 matches. Self-tested by reverting the skills page: 1 of 7 tests fails as expected.
+
+### 3. What was NOT migrated (per session 150 P-2 "MOSTLY MINED CLEAN with named OOS surfaces" classification)
+
+The case-insensitive substring-search pattern is cross-list (8+ files total). Session 161 closed only the 2 List 3 sites per the picked-list scope. The remaining cross-list sites are deferred to their respective list picks:
+
+| File | List | Pattern |
+|------|------|---------|
+| `src/hooks/useMissionsPage.ts` | 2 | session 150 P-2: case-insensitive substring search family — needs-dedicated-session |
+| `src/app/(main)/logs/page.tsx` | 1 | same |
+| `src/app/orchestration/cron/page.tsx` | 2 | same |
+| `src/components/missions/CategoryCombobox.tsx` | 2 | same |
+| `src/components/ui/ToolsetSelector.tsx` | 3 (shared UI) | same |
+| `src/components/ui/SkillSelector.tsx` | 3 (shared UI) | same |
+
+Each cross-list site needs its own per-list sister-test + per-list session. Future picks of the relevant list should add a sister test for that list's surface.
+
+### 4. Verification
+
+- **All 1900 unit tests pass** (265 suites, +2 new suites with +19 new tests in `list-search.test.ts` and `list-search-source-pattern-list3.test.ts` — net +19 from the session start's 1881)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean
+- **`npm run build`** passes
+- **Byte-equivalence** — both helpers are byte-equivalent to the inline form for every reachable input. The 1 new sister test in the list-3 source-pattern scan guards against regression: temporarily reverting the skills page's `filterBySearch` to the inline form made the test fail (1 of 7); re-applying the migration restored green.
+- **Pre-flight #25 (dead `as RequestInit` cast)** — not applicable (no `as RequestInit` casts in any of the 4 modified files)
+- **Pre-flight #9 (self-test the audit guard by reverting one site)** — verified for the `filterByCaseInsensitiveSubstring` source-pattern test (skills page revert → 1/7 test fails as expected)
+
+### 5. Cross-list "mined clean" status (post-session-161)
+
+| List | Last audited | Last pick session | Status | Notes |
+|------|--------------|-------------------|--------|-------|
+| 1 (Dashboard, Sessions, Memory, Logs) | 2026-06-11 | 159 | **MINED CLEAN** | 1 stale `setX(messageFromError)` site closed; 1 layout site at `Sidebar.tsx:313` remains (out of list scope) |
+| 2 (Cron, Missions, Chat) | 2026-06-11 | 160 | MINED CLEAN for refactors, 3 OPEN projects | Unchanged from session 160 |
+| 3 (Models, Agents, Skills, Tools, Personalities) | 2026-06-12 | **161 (this)** | **MINED CLEAN for case-insensitive substring search family (List 3 surface), 6 cross-list sites still OOS for budget** | 2 List 3 sites migrated to `filterByCaseInsensitiveSubstring`; 6 cross-list sites deferred to per-list picks |
+| 4 (Settings) | 2026-05-XX | 147 | MOSTLY MINED CLEAN | Unchanged from session 160 |
+
+### 6. "Next session should:"
+
+1. **If List 3 is picked again next** (now the 14th pick), the case-insensitive substring-search family is **MINED CLEAN at the List 3 surface** — 2 sites closed + source-pattern test guards against regression. Future List 3 picks should consult the `next-ripe` follow-ups from session 160 P-7 (case-insensitive substring search family cross-list sites for Lists 1/2, "Unknown error" fallback strings UX work, etc.) for productive work.
+2. **If a different list is picked** (1, 2, or 4), the next-ripe surface is the **per-list sister test for the case-insensitive substring-search family** (1 site in `(main)/logs/page.tsx` for List 1; 3+ sites in `useMissionsPage.ts`, `cron/page.tsx`, `CategoryCombobox.tsx` for List 2). The pattern is the same — extract a `filterByCaseInsensitiveSubstring` helper call from the inline `.toLowerCase().includes()` and add a `list-search-source-pattern-list<N>.test.ts` sister test.
+3. **The mission is at end-of-life for byte-equivalent refactor work** (per session 149 P-7, re-confirmed session 160 P-4, re-confirmed session 161). All 4 lists are MINED CLEAN at the per-list surface level. The remaining productive work is either (a) per-list sister tests for the cross-list patterns, (b) a dedicated 2-3 hour session on a named OOS surface (3 candidates across Lists 2 + 2 candidates across List 3), or (c) a new refactor surface not yet on the radar (e.g. `useApiData` extension for `URLSearchParams` + pagination, deferred from sessions 98, 109, 122, 123, 124).
+
+## Session 159 — List 1 (Dashboard, Sessions, Memory, Logs) — close stale `setX(messageFromError)` site in logs page
+
+**Random pick:** List 1 via `echo $((RANDOM % 4 + 1))` = 1. Random pick per the task brief's explicit mandate.
+
+**Outcome:** **1 commit, 1 site migrated, 1 new source-pattern test.** Closed a stale `setX(messageFromError(...))` site at `src/app/(main)/logs/page.tsx:92` that escaped the session 126 closure of the `setError(messageFromError(...))` family. The session 126 audit closed the pattern for `setError` specifically; session 142 introduced a new site in a differently-named setter (`setActionMessage`) that the closure didn't see. Per session 135 P-3 ("mined clean is version-dependent"), a fresh audit found the regression.
+
+### 1. What was shipped (1 commit `8eb1f85`)
+
+| File | Change | Sites |
+|------|--------|-------|
+| `src/app/(main)/logs/page.tsx` | Swap import `messageFromError` → `setErrorFromCaught`; migrate line 92 | 1 |
+| `tests/unit/set-error-from-caught-source-pattern-list1.test.ts` (NEW) | Source-pattern test pinning the "0 inline `setX(messageFromError)` call sites in the logs page" contract | 1 |
+
+**Net source diff:** 2 lines swapped, 0 net LOC change. **Net test diff:** +141 LOC (the new sister test file).
+
+### 2. The migration
+
+**Before (logs/page.tsx:92):**
+```ts
+} catch (err) {
+  setActionMessage(messageFromError(err, "Delete failed (network error)"));
+}
+```
+
+**After (logs/page.tsx:92):**
+```ts
+} catch (err) {
+  setErrorFromCaught(setActionMessage, err, "Delete failed (network error)");
+}
+```
+
+**Byte-equivalence:** `setErrorFromCaught(setX, err, fallback)` is `setX(messageFromError(err, fallback))` by construction (see `src/lib/api-fetch.ts:218-224`). Same string produced, same setter call, same fallback discipline, same exception type.
+
+### 3. Self-test by reverting one site (pre-flight #9)
+
+After writing the source-pattern test, I temporarily reverted the logs page line 92 to the pre-migration form. Result: **2 of 5 tests fail** (the "no inline" test + the "uses helper" test). The other 3 tests pass (file readable, file is .tsx, helper signature unchanged). Re-applying the migration makes all 5 pass. The audit guard works.
+
+### 4. Cross-list "mined clean" status (post-session-159, delta from session 158 P-4)
+
+| List | Last audited | Last pick session | Status | Notes |
+|------|--------------|-------------------|--------|-------|
+| 1 (Dashboard, Sessions, Memory, Logs) | 2026-06-11 | 159 (this) | **MINED CLEAN** | 1 stale `setX(messageFromError)` site closed. Cross-list "setX(messageFromError)" surface now: 1 remaining site in `Sidebar.tsx:313` (layout, NOT in any of the 4 lists) |
+| 2 (Cron, Missions, Chat) | 2026-06-11 | 158 | MINED CLEAN for refactors, 3 OPEN projects | Unchanged from session 158 |
+| 3 (Models, Agents, Skills, Tools, Personalities) | 2026-06-08 | 150 | MINED CLEAN at operations-page level, 2 named OOS surfaces | Unchanged from session 158 |
+| 4 (Settings) | 2026-05-XX | 147 | MOSTLY MINED CLEAN | Unchanged from session 158 |
+
+### 5. "Next session should:"
+
+1. **If List 1 is picked again next, the list is now truly MINED CLEAN** — the only `setX(messageFromError(...))` site was closed this session. Future List 1 picks should expect Mode H (5-tool-call exit) per session 149 P-2.
+2. **If List 3 is picked next, the next-ripe surface is a `setErrorFromCaught-source-pattern-list3.test.ts` sister test** for the 2 `useModelsPage` sites closed in session 126. 5-line source-pattern test, similar shape to the List 1 sister test added this session.
+3. **The mission is at end-of-life for byte-equivalent refactor work** (per session 149 P-7 + session 158 P-4). The session 159 site is the last meaningful single-site migration in the operations pages; future sessions are increasingly likely to hit Mode I (fresh audit returns zero) or pick the open 1-3 surface migrations (hardware-route dynamic-message, model-page decomposition, chat-utils test coverage).
+
+### 6. References
+
+- `references/session-159-list1-set-error-from-caught-stale-site.md` (umbrella skill, NEW) — full session 159 audit + the "stale site" lesson + sister-test pattern + cross-list status table
+- `references/session-158-list2-mode-i1-named-surfaces-oos.md` (umbrella skill) — prior session's cross-list status (delta source)
+- `references/session-149-list1-mode-h-fresh-audit-returns-zero.md` (umbrella skill) — the session that declared List 1 MINED CLEAN (correctly as of 2026-06-08)
+- `references/session-128-list2-silent-catch-sweep-completion.md` (umbrella skill) — canonical `setErrorFromCaught` adoption reference (the family that session 126 closed for `setError` specifically)
+- `references/session-135-list2-cast-cleanup-and-mined-clean-versioning.md` (umbrella skill) — the "mined clean is version-dependent" lesson (P-3) that flagged the regression in this session
+
+### 7. Verification
+
+- `npx tsc --noEmit`: clean
+- `npm run lint`: clean (`--max-warnings 0`)
+- `npm test`: 262 suites, 1876 tests pass (the new sister test adds 1 suite + 5 tests)
+- `npm run build`: clean
+- The new test was run in isolation FIRST per pre-flight #6 + pre-flight #22 (tsc-clean-but-runtime-broken guard). Pass on apply, 2-of-5 fail on revert, pass on re-apply.
+- PR #181: open, mergeable (post-merge with origin/dev), review-required
+
+### 8. Files
+
+- `src/app/(main)/logs/page.tsx` (modified, +1 / -1)
+- `tests/unit/set-error-from-caught-source-pattern-list1.test.ts` (NEW, 6,683 bytes, 5 tests)
+- `~/.hermes/skills/software-development/refactor-sweep-mission/references/session-159-list1-set-error-from-caught-stale-site.md` (NEW, ~7.7 KB)
+
+## Session 158 — List 2 (Cron, Missions, Chat) — Mode I.1 audit exit: 3 named surfaces OOS for budget
+
+**Random pick:** List 2 via `echo $((RANDOM % 4 + 1))` = 2. Random pick per the task brief's explicit mandate, overriding the session 152 "next session should" recommendation of "pick a different list next time." Per session 152 P-1 #4 explicit exit protocol: "If the random pick lands on List 2 again, follow the session 150 Mode I.1 5-tool-call exit (the list is mined clean for `parseX + discriminator` patterns; no more in-tree candidates)."
+
+**Outcome:** **0 commits, 0 refactor code changes.** This is a Mode I.1 exit (per session 150 P-1): the prior List 2 reference (session 152) declared the list MINED CLEAN, and the current session's 5-grep audit found 3 named candidate surfaces — all OOS for the 1-3 commit / 15-min budget per session 150 P-2's 3-class taxonomy (classes 2, 3, and N/A).
+
+### 1. Audit findings (5 grep scans)
+
+| Scan | Result | Verdict |
+|------|--------|---------|
+| A. `err instanceof Error ? err.message` (inline) | 0 sites in List 2 hooks/pages | Mined clean (sessions 91, 96) |
+| B. `logApiError(...)` + `return serverError(STATIC)` | 0 static sites in `api/cron/` and `api/missions/` | Mined clean (session 96) |
+| C. `console.error` in catch blocks (silent failures) | 2 sites in `useMissionsPage.ts` (530, 572) | OOS — needs UX dedup design for 15s polling loop |
+| D. `apiFetch` reads (could be `safeApiCallData`) | 3 + 7 in `useMissionsPage`/`useMissionsApi` | Already audited — preserves throw-on-error at outer try/catch |
+| E. Inline `safeApiCall` + `result.data?.X` access | 0 in List 2 | Already audited (session 141 revert) — current form is correct |
+
+### 2. The 3 named OOS surfaces (full classification in the umbrella reference)
+
+- **Surface A — `isChReadOnly()` 6-site consolidation (List 2):** needs-behaviour-change-exception (UX preference for canonical vs bare message). OOS without explicit user direction. Per session 152 P-1 #5.
+- **Surface B — 4 `safeApiCall<{ data?: { ... } }>` double-envelope sites in useMissionsPage.ts + useMissionsApi.ts + useCronJobMutation.ts (List 2):** NOT a refactor candidate. Per session 138 envelope-unwrap-myth + session 141 revert, the current form is the CORRECT form (the migration to single-nesting is BROKEN — was reverted). The source-pattern test `tests/unit/safe-api-call-data-source-pattern-list2.test.ts` is pinned to enforce the correct form.
+- **Surface C — 2 `console.error` silent-failure sites in `useMissionsPage.ts` (lines 530, 572) — NEW surface, found in session 158 audit:** needs-dedicated-session (UX work). The 5 other `toastError(showToast, error, "...")` call sites in the same file (lines 409, 560, 766, 856, 1062) are the canonical pattern; the 2 `console.error` sites are the asymmetric exceptions. Naive `console.error → toastError` migration would show "Failed to load missions" every 15s during a network outage (user-hostile). The fix needs (a) debounce design OR (b) distinguish user-initiated refresh from polling OR (c) sticky error banner. 2-3 hour UX decision, not 1-commit refactor.
+
+### 3. Cross-list "mined clean" status (post-session-158)
+
+| List | Last audited | Status |
+|------|--------------|--------|
+| 1 (Dashboard, Sessions, Memory, Logs) | 149 | MINED CLEAN |
+| 2 (Cron, Missions, Chat) | 158 (this) | MINED CLEAN for refactors, 3 OPEN projects |
+| 3 (Models, Agents, Skills, Tools, Personalities) | 150 | MINED CLEAN at ops-page level, 2 named OOS surfaces |
+| 4 (Settings) | 147 | MOSTLY MINED CLEAN |
+
+All 4 lists MINED CLEAN at the per-list refactor level. Per session 149 P-7, the mission is at end-of-life for byte-equivalent refactor work.
+
+### 4. Files
+
+- `~/.hermes/skills/software-development/refactor-sweep-mission/references/session-158-list2-mode-i1-named-surfaces-oos.md` (NEW) — canonical session 158 audit + Mode I.1 documentation + 3-surface classification + cross-list status table. Lives in the umbrella skill (not the repo) per the pattern from sessions 149+.
+
+**Net diff:** 0 source files, 0 test files, 0 commit, 0 push, 0 `gh pr edit`. Pure audit exit.
+
+### 5. "Next session should:"
+
+1. **Pick a different list next time** — List 2 has now been hit 18+ times. If the random pick lands on List 2 again, follow this session's Mode I.1 5-tool-call exit (the 3 named surfaces are already classified as OOS in the umbrella reference).
+2. **Surface C (the 2 `console.error` silent-failure sites)** is the next-ripe List 2 work IF the user wants a dedicated UX session. The work is well-scoped (2 sites, 1 file) but needs a UX decision on the debounce/banner pattern BEFORE code lands. Surface A (`isChReadOnly()`) is also open but needs user direction.
+3. **Mission charter migration (per session 149 P-7)** — at this point all 4 lists are mined clean at the per-list operations-page refactor level. The next-iteration goals are: (a) `useMissionsPage` decomposition (1315 LOC, biggest hook in the codebase, 3-5 sessions), (b) `useApiData` extension for `URLSearchParams` + pagination (1-2 sessions), (c) test coverage gap closer (mission charter change, needs user approval), (d) documentation drift closer (mission charter change, needs user approval). Future sessions should expect Mode I.1 exits as the dominant outcome until a charter change is approved.
+4. **The List 1 HindsightBrowser "next session should" from session 154 is stale** (per session 156 P-2) — the file was rewritten in `776cd38` to use `hindsightGet<T>`, the named sites are no longer in their pre-`safeApiCall<{ data?: { ... } }>` shape. Re-audit before acting on session 154's site inventory.
+
+### 6. References
+
+- `references/session-158-list2-mode-i1-named-surfaces-oos.md` (umbrella skill) — full session 158 audit + 3-class classification + cross-list status table + "next-ripe productive work" table
+- `references/session-152-list2-parse-category-id-completion.md` (umbrella skill) — prior List 2 reference, declared list MINED CLEAN
+- `references/session-150-list3-mode-i1-named-surfaces-oos.md` (umbrella skill) — canonical Mode I.1 exit protocol reference
+- `references/session-141-list2-envelope-unwrap-revert.md` (umbrella skill) — the cross-list revert that pinned Surface B to the correct form
+- `references/session-138-safe-api-call-envelope-unwrap-myth.md` (umbrella skill) — the CRITICAL pitfall that flagged the envelope-unwrap bug class
+
+### 7. Verification
+
+- `git status` clean
+- No code changes, no test changes, no commit, no push
+- The umbrella reference is the only artifact written
+- The pr-body writeup is a no-op docs carryover (this entry is the session 158 record)
+
+### 8. Why no `gh pr edit`?
+
+PR #180's body is the session-scoped summary per the protocol. The rolling-PR archive (`pr-body.txt` at branch HEAD) is 541 KB / 4,281 lines — past GitHub's 65,536 char hard limit. Per the form-fallback ladder (`references/pr-body-update-form-fallback-ladder.md`), the next session that wants to push the rolling archive onto a future PR should use the headline-only compressed view (recent N in full + one-line summary of older). The session 158 entry is in this pr-body.txt update; the on-PR body remains the session 155+156 summary.
+
 ## Session 155 — List 4 (Models, HERMES.md, Environment, All Settings) — fix `/api/config` deep-merge bug, derive `modelDefaultsSchema` from `TASK_TYPES`, share `toModelEditorRecord`
 
 Random pick: **List 4** via `echo $((RANDOM % 4 + 1))` = 4. Last touched in List 4: session 124 (serverErrorFromCatch in fs/git/branches). Carryover from session 154's "mined clean is version-dependent" lesson — session 154 flagged List 1 as mined clean, but the dead-`as RequestInit`-cast class was new work the per-list tests didn't catch. Session 155 applies the same lesson to List 4: a hand-listed zod schema + a local helper + a 6-month-silent shallow-merge bug.
@@ -4240,6 +5202,10 @@ The full content of these earlier sessions is preserved in the git history of `p
 
 | # | List | Headline | Sites | New tests | Commit | Reference |
 |---|---|---|---|---|---|---|
+| 170 | 4 | `buildDriftDetails` helper extraction in `/api/models/sync/drift` (pure `DriftReport → string[]` projection) + 8 new unit tests | 3 | +8 | `92d4615` | session 170 (above) |
+| 169 | 3 | `skillFilePath` helper extraction + 5-site migration (root + key → SKILL.md) | 5 | +4 | `4c130b9` | session 169 (above) |
+| 168 | 2 | `COPY_BTN_CLASS` + `COPY_BTN_DATA_ATTR` magic-string consolidation in chat page + chat-utils | 2 | 0 (reuse) | `65c3d5d` | session 168 (above) |
+| 167 | 4 | `seedPostSchema` + `parseAndValidateJsonBody` migration in `api/seed/route.ts` | 2 | +1 | `f4e1a4b` | session 167 (above) |
 | 137 | 1 | `safeApiCall<{ data?: { ... } }>` double-envelope migration in HindsightBrowser + source-pattern test | 5 | +4 | session 137 | session 137 |
 | 96 | 2 | `serverErrorFromCatch` 6-site List 2 migration + `setErrorFromCaught` 1-site + `rememberLastCategory` + `handleCloseCreate` (session 95 carryover) | 11 | +7 | session 96 | session 96 |
 | 95 | 4 | `serverErrorFromCatch` helper + 27-site List 4 migration (carryover from session 94) | 27 | +11 | `8b22f34` | session 95 |

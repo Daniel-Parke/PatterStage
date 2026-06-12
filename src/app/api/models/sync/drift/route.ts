@@ -5,7 +5,7 @@ import { NextRequest } from "next/server";
 import { ok } from "@/lib/api-response";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { detectConfigDrift } from "@/lib/sync-manager";
+import { buildDriftDetails, detectConfigDrift } from "@/lib/sync-manager";
 import type { SyncDrift } from "@/components/models/types";
 
 export async function GET(request: NextRequest) {
@@ -13,21 +13,7 @@ export async function GET(request: NextRequest) {
   if (auth) return auth;
 
   try {
-    const drift = detectConfigDrift();
-
-    // Transform DriftReport → SyncDrift for the UI
-    const driftDetails: string[] = [];
-    if (drift.primaryDiffers) {
-      driftDetails.push(
-        `Primary model drift: DB has "${drift.primaryDiffers.dbModel}", Hermes has "${drift.primaryDiffers.hermesModel}"`
-      );
-    }
-    for (const m of drift.modelsInHermesNotInDb) {
-      driftDetails.push(`Model "${m.modelId}" (${m.provider}) is in Hermes but not in Control Hub`);
-    }
-    for (const m of drift.modelsInDbNotInHermes) {
-      driftDetails.push(`Model "${m.modelId}" (${m.provider}) is in Control Hub but not pushed to Hermes`);
-    }
+    const driftDetails = buildDriftDetails(detectConfigDrift());
 
     const syncDrift: SyncDrift = {
       hasDrift: driftDetails.length > 0,

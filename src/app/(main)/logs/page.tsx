@@ -10,7 +10,6 @@ import {
   RefreshCw,
   Search,
   ChevronDown,
-  AlertCircle,
   FileText,
   X,
   Play,
@@ -20,7 +19,8 @@ import PageHeader from "@/components/layout/PageHeader";
 import AppPageShell from "@/components/layout/AppPageShell";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { safeApiCall, messageFromError } from "@/lib/api-fetch";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import { safeApiCall, setErrorFromCaught } from "@/lib/api-fetch";
 import { useApiData } from "@/hooks/useApiData";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import type { LogGetData } from "@/app/api/logs/route";
@@ -74,22 +74,25 @@ export default function LogsPage() {
     }
     await confirmDelete(async () => {
       try {
-        const { ok, data: delData, error } = await safeApiCall<{ cleared?: number }>(
-          "/api/logs",
-          { method: "DELETE" },
-        );
+        // The route returns `{ data: { cleared: N } }` (envelope).
+        // `safeApiCall<T>` does NOT unwrap — `data` is the full body —
+        // so the type is the envelope shape and the inner count is read
+        // via `delData?.data?.cleared` (two indirections).
+        const { ok, data: delData, error } = await safeApiCall<{
+          data?: { cleared?: number };
+        }>("/api/logs", { method: "DELETE" });
         if (!ok || error) {
           setActionMessage(error ?? "Delete failed");
           return;
         }
         setActionMessage(
-          typeof delData?.cleared === "number"
-            ? `Cleared ${delData.cleared} log file(s).`
+          typeof delData?.data?.cleared === "number"
+            ? `Cleared ${delData.data.cleared} log file(s).`
             : "Logs cleared.",
         );
         void refetch();
       } catch (err) {
-        setActionMessage(messageFromError(err, "Delete failed (network error)"));
+        setErrorFromCaught(setActionMessage, err, "Delete failed (network error)");
       }
     });
   }, [deleteArmed, armDelete, confirmDelete, refetch]);
@@ -249,10 +252,10 @@ export default function LogsPage() {
 
       <div className="px-6 py-6 flex-1 flex flex-col min-h-0">
         {loadError && (
-          <div className="mb-4 flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-            <div>{loadError}</div>
-          </div>
+          <LoadErrorBanner
+            error={loadError}
+            onRetry={() => void handleRefresh()}
+          />
         )}
         {actionMessage && (
           <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-dark-900/50 px-4 py-2 text-xs font-mono text-white/70">

@@ -20,6 +20,7 @@ import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, created, notFound, ok, serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { parseSchedule } from "@/lib/utils";
+import { scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
 import { buildCronUpdatePayload } from "@/lib/cron-field-updates";
 import { cronSyncFailureResponse } from "@/lib/cron-sync-failure";
 
@@ -359,7 +360,7 @@ export async function POST(request: NextRequest) {
       provider: resolvedProvider,
       base_url: base_url ?? null,
       schedule,
-      schedule_display: "display" in parsedSchedule ? (parsedSchedule as { display: string }).display : schedule,
+      schedule_display: scheduleDisplayFromParsed(parsedSchedule, schedule),
       repeat: repeatObj,
       enabled: true,
       state: "scheduled",

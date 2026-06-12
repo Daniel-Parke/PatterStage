@@ -8,7 +8,7 @@ import { safeStat } from "@/lib/fs-stats";
 import { resolveEffectiveDisabledSkills } from "@/lib/effective-disabled-skills";
 import { getProfile } from "@/lib/profiles-repository";
 import { listSkills, deriveCategory } from "@/lib/skills-repository";
-import { skillsRootForProfile } from "@/lib/skills-config";
+import { skillFilePath, skillsRootForProfile } from "@/lib/skills-config";
 import { requireSafeProfileName } from "@/lib/path-security";
 import { scanDiskSkillsCatalog } from "@/lib/hermes-profile-sync";
 import { groupByCategory } from "@/lib/skills-grouping";
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     const dbSkills = listSkills();
     const dbKeys = new Set(dbSkills.map((s) => s.skillKey));
     const skills: Skill[] = dbSkills.map((row) => {
-      const path = skillsDir + "/" + row.skillKey + "/SKILL.md";
+      const path = skillFilePath(skillsDir, row.skillKey);
       // safeStat returns null if the disk file is missing; fall back
       // to DB row metadata in that case.
       const st = safeStat(path);

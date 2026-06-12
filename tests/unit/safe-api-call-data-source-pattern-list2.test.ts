@@ -67,6 +67,17 @@ const LIST_2_FILES = [
   join(REPO_ROOT, "src", "components", "missions", "DirectoryPickerModal.tsx"),
   join(REPO_ROOT, "src", "components", "missions", "ModelPicker.tsx"),
   join(REPO_ROOT, "src", "components", "missions", "LocalDirRow.tsx"),
+  // Session 162 added the two cron-modal files (the routes return
+  // `ok({...})` which produces `{ data: { ... } }` envelopes):
+  //   - SystemCronModal reads `/api/cron/hardware/meta` for `scriptsDir`/`logDir`
+  //   - JobFormModal reads `/api/agent/profiles` for the profile dropdown
+  // The previous form was `safeApiCall<{ scriptsDir, logDir }>` +
+  // `result.data?.scriptsDir` (single indirection) which is silently
+  // broken — the helper does not unwrap, the read is on the envelope.
+  // Both files now use the canonical envelope-typed form (see
+  // JSDoc comments at the call sites).
+  join(REPO_ROOT, "src", "components", "cron", "SystemCronModal.tsx"),
+  join(REPO_ROOT, "src", "components", "cron", "JobFormModal.tsx"),
 ];
 
 /**

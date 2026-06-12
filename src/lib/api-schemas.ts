@@ -226,6 +226,45 @@ export const missionPostBodySchema = z.discriminatedUnion("action", [
 
 export type MissionPostBody = z.infer<typeof missionPostBodySchema>;
 
+/**
+ * POST /api/seed body shape. All four fields are optional; the
+ * route applies defaults (`target: "all"`, `mode: "merge"`).
+ *
+ * The `id` key is a legacy alias for `templateId` — kept so old
+ * clients / scripts that send `{ id: "..." }` (instead of the
+ * modern `{ templateId: "..." }`) continue to work. The route's
+ * pre-refactor inline form used `typeof body.id === "string" ? body.id`
+ * to fold the alias back to `templateId`; the same logic is preserved
+ * via zod's `.transform()` so the downstream `runCatalogSeed` still
+ * receives a single `templateId` field.
+ *
+ * Pre-refactor the route did `body.target as SeedTarget["target"]`
+ * with no validation, so a foreign value (e.g. `target: "xss"`)
+ * would silently reach `runCatalogSeed` and surface as a less
+ * actionable runtime error. With the schema in place, a 400 with
+ * the `details: error.flatten()` payload is returned at the
+ * request-validation layer — strict improvement, aligned with the
+ * `parseAndValidateJsonBody` migration that swept the rest of the
+ * Models/Config surface in sessions 121 + 122.
+ */
+export const seedPostSchema = z
+  .object({
+    target: z
+      .enum(["all", "root", "profiles", "templates", "categories"])
+      .optional(),
+    mode: z.enum(["merge", "replace"]).optional(),
+    slug: z.string().min(1).optional(),
+    templateId: z.string().min(1).optional(),
+    // Legacy alias — folded back to `templateId` by the .transform below.
+    id: z.string().min(1).optional(),
+  })
+  .transform((value) => {
+    const { id, templateId, ...rest } = value;
+    return { ...rest, templateId: templateId ?? id };
+  });
+
+export type SeedPostBody = z.infer<typeof seedPostSchema>;
+
 // ── Helper ─────────────────────────────────────────────────────
 
 export function zodErrorResponse(error: z.ZodError): NextResponse {

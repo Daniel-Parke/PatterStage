@@ -34,6 +34,7 @@ import { modelKey } from "./model-key";
 import { toError } from "./api-fetch";
 import { backupFile as backupFileShared, ensureDir } from "./fs-helpers";
 import { parseFallbackAgentSettingsFromYaml } from "./fallback-config-yaml";
+import { parseEnvFile, ENV_LINE_RE } from "./env-file";
 import type { FallbackConfigPutInput } from "./fallback-config-schema";
 
 /**
@@ -125,20 +126,15 @@ function backupFile(originalPath: string, backupsDir: string): string | null {
 }
 
 // ── ENV (.env) sync ────────────────────────────────────────────
-
-const ENV_LINE_RE = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/;
-
-function parseEnvFile(content: string): Map<string, string> {
-  const out = new Map<string, string>();
-  for (const raw of content.split(/\r?\n/)) {
-    const line = raw.trim();
-    if (line.length === 0 || line.startsWith("#")) continue;
-    const m = ENV_LINE_RE.exec(line);
-    if (!m) continue;
-    out.set(m[1], m[2]);
-  }
-  return out;
-}
+//
+// `parseEnvFile` and the `ENV_LINE_RE` regex now live in
+// `@/lib/env-file` (shared with `@/lib/hermes-import.ts`). They were
+// promoted from this module's private implementation in session 164
+// because the same parser was duplicated across 2 files. The sibling
+// `serializeEnvFile` (this module) preserves blank lines and `#`
+// comments verbatim, so it can't call `parseEnvFile` directly — it
+// reaches for the shared `ENV_LINE_RE` to identify keyval lines while
+// iterating the raw file content.
 
 function serializeEnvFile(
   prior: Map<string, string>,

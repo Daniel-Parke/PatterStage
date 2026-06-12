@@ -18,7 +18,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
-import { apiFetch, toastError } from "@/lib/api-fetch";
+import { apiFetch, safeApiCallData, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { profileSyncBody } from "@/lib/profile-sync-body";
 import { pluralise } from "@/lib/utils";
@@ -45,15 +45,47 @@ export default function ToolsPage() {
   const [profileSyncStatus, setProfileSyncStatus] = useState<AgentProfile["syncStatus"] | null>(null);
   const { showToast, toastElement } = useToast();
 
+  // loadProfileSyncStatus — fetches the agent-profiles registry and
+  // surfaces the selected profile's syncStatus (drift | error | null).
+  // Best-effort: any error (network blip, 500 from the registry,
+  // malformed JSON) is swallowed and the status is reset to null —
+  // the parent page treats null as "no sync error to surface".
+  //
+  // Migrated to `safeApiCallData<T>` (List 3 Mode I audit, session 166)
+  // from a 9-line try/catch/apiFetch/as-cast form. The pre-migration
+  // shape was:
+  //
+  //   const loadProfileSyncStatus = useCallback(async () => {
+  //     try {
+  //       const data = await apiFetch("/api/agent/profiles");
+  //       const profiles = (data.data?.profiles ?? []) as AgentProfile[];
+  //       const match = profiles.find((p) => p.id === selectedProfile);
+  //       setProfileSyncStatus(match?.syncStatus ?? null);
+  //     } catch {
+  //       setProfileSyncStatus(null);
+  //     }
+  //   }, [selectedProfile]);
+  //
+  // The migrated form is byte-equivalent:
+  //   - Error path: `safeApiCallData<T>` returns `null` on caught error
+  //     (per `src/lib/api-fetch.ts:155-157`), then `null?.profiles ?? []`
+  //     gives `[]`, `find` returns `undefined`, `undefined?.syncStatus ?? null`
+  //     is `null` — same observable result as the pre-migration `catch`
+  //     branch's `setProfileSyncStatus(null)`.
+  //   - Success path: same `find` + same `match?.syncStatus ?? null`
+  //     access. The `as AgentProfile[]` cast is dropped because
+  //     `safeApiCallData<{ profiles?: AgentProfile[] }>` already
+  //     parameterises the inner payload shape (no `as` widening needed).
+  //
+  // The companion test `load-profile-sync-status-safe-api-call-data.test.tsx`
+  // pins the byte-equivalence across both the success and error paths.
   const loadProfileSyncStatus = useCallback(async () => {
-    try {
-      const data = await apiFetch("/api/agent/profiles");
-      const profiles = (data.data?.profiles ?? []) as AgentProfile[];
-      const match = profiles.find((p) => p.id === selectedProfile);
-      setProfileSyncStatus(match?.syncStatus ?? null);
-    } catch {
-      setProfileSyncStatus(null);
-    }
+    const data = await safeApiCallData<{ profiles?: AgentProfile[] }>(
+      "/api/agent/profiles",
+    );
+    const profiles = data?.profiles ?? [];
+    const match = profiles.find((p) => p.id === selectedProfile);
+    setProfileSyncStatus(match?.syncStatus ?? null);
   }, [selectedProfile]);
 
   const loadToolsets = useCallback(async () => {
