@@ -128,15 +128,7 @@ export interface TemplateManagerModalProps {
   templates: MissionTemplate[];
   categories: CategoryLike[];
   categoryFilter: string;
-  onEditTemplate: (
-    t: MissionTemplate & {
-      isCustom?: boolean;
-      instruction?: string;
-      context?: string;
-      dispatchMode?: string;
-      schedule?: string;
-    },
-  ) => void;
+  onEditTemplate: (t: MissionTemplate) => void;
   onDeleteTemplate: (id: string) => void;
   onCreateTemplate: () => void;
 }

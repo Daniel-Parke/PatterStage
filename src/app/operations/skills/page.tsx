@@ -224,6 +224,37 @@ export default function SkillsPage() {
     [data, selectedProfile, showToast],
   );
 
+  // handleToggleSkill — centralises the (skill, fallback) → toggle
+  // dispatch shape used by both the Active and Inactive section
+  // grids. The pre-refactor code inlined the same
+  // `(skill) => toggleSkill(skill.name, effectiveSkillEnabled(skill, toggling, <fallback>))`
+  // callback at 2 sites (the Active section's `onToggleSkill`
+  // prop on line ~414 and the Inactive section's on line ~459).
+  // The 2 sites are byte-equivalent except for the fallback:
+  //   - Active section: uses the default `skill.enabled` (the
+  //     `effectiveSkillEnabled` helper's default param value, so
+  //     the caller doesn't pass a 2nd argument).
+  //   - Inactive section: passes `!skill.enabled` because the
+  //     Inactive grid is the negation of the active state — a
+  //     skill in the Inactive list has `enabled === false`, so the
+  //     "current enabled" that `toggleSkill` reads must be the
+  //     inversion (otherwise the toggle would no-op on the wrong
+  //     current state).
+  // The helper defaults the fallback to `skill.enabled` so the
+  // Active call site is `onToggleSkill={handleToggleSkill}` (no
+  // args) and the Inactive call site is
+  // `onToggleSkill={(skill) => handleToggleSkill(skill, !skill.enabled)}`.
+  // Same byte-equivalent semantics, but the dispatch shape lives
+  // in one place — a future "track toggle analytics" or
+  // "throttle double-clicks" extension lands in one place instead
+  // of having to update 2 inline arrows.
+  const handleToggleSkill = useCallback(
+    (skill: Skill, fallback: boolean = skill.enabled) => {
+      return toggleSkill(skill.name, effectiveSkillEnabled(skill, toggling, fallback));
+    },
+    [toggleSkill, toggling],
+  );
+
   // ── Skill content preview ───────────────────────────────────────────────────
 
   const openSkillEditor = async (skill: Skill) => {
@@ -381,7 +412,7 @@ export default function SkillsPage() {
                   expandedSkill={expandedSkill}
                   skillContent={skillContent}
                   toggling={toggling}
-                  onToggleSkill={(skill) => toggleSkill(skill.name, effectiveSkillEnabled(skill, toggling))}
+                  onToggleSkill={handleToggleSkill}
                   onViewSkill={viewSkill}
                   onEditSkill={openSkillEditor}
                 />
@@ -426,7 +457,7 @@ export default function SkillsPage() {
                   expandedSkill={expandedSkill}
                   skillContent={skillContent}
                   toggling={toggling}
-                  onToggleSkill={(skill) => toggleSkill(skill.name, effectiveSkillEnabled(skill, toggling, !skill.enabled))}
+                  onToggleSkill={(skill) => handleToggleSkill(skill, !skill.enabled)}
                   onViewSkill={viewSkill}
                   onEditSkill={openSkillEditor}
                 />
