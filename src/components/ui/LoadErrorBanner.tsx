@@ -25,17 +25,6 @@
 // any fetch. The page is the source of truth for `refetch`, the banner
 // just invokes it on click. This keeps the component decoupled from any
 // particular data hook.
-//
-// **The page OWNS the conditional render.** The component itself does
-// NOT check for an empty `error` and does NOT short-circuit; it
-// always renders the banner chrome. Pages wrap it as
-//   {loadError && <LoadErrorBanner error={loadError} onRetry={refetch} />}
-// so the success path renders nothing and the failure path renders
-// the banner with the actual error string. Putting the conditional at
-// the call site (vs. inside the component) keeps the component
-// trivially testable — no null-error handling needed in the
-// component, and the "no error, no banner" invariant is one of the
-// easiest things to read off a JSX tree.
 
 "use client";
 
