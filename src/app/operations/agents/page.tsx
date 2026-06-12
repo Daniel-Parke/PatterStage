@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Users, FileText, Save, RotateCcw, Eye, EyeOff,
   Check, AlertCircle, Plus, Trash2,
@@ -52,6 +52,25 @@ export default function BehaviourPage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [syncBusy, setSyncBusy] = useState(false);
+
+  // saveResetTimerRef — handleSave's "auto-clear the saved status
+  // after 2s" setTimeout could fire on an unmounted component if
+  // the user navigates away during the 2-second window. The pre-
+  // fix form was:
+  //   setTimeout(() => setSaveStatus("idle"), 2000);
+  // with no cleanup. Fix: keep a ref to the timer handle + clear
+  // it on unmount + clear any in-flight timer at the start of a
+  // new save (so back-to-back saves don't double-fire and leave
+  // the user with a stale "saved" state).
+  const saveResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (saveResetTimerRef.current) {
+        clearTimeout(saveResetTimerRef.current);
+        saveResetTimerRef.current = null;
+      }
+    };
+  }, []);
 
   // closeDelete — the Delete Profile modal has 3 single-setter
   // close sites that all do the same thing: `() => setDeleteTarget(null)`.
@@ -297,7 +316,18 @@ export default function BehaviourPage() {
       setEditor({ ...editor, original: editor.content });
       setSaveStatus("saved");
       showToast(`${editor.fileName} saved`, "success");
-      setTimeout(() => setSaveStatus("idle"), 2000);
+      // Clear any in-flight save-reset timer from a prior save so
+      // the new save's 2s window is the source of truth (a stale
+      // timer from a previous save could race with this one's
+      // setSaveStatus("saved") and prematurely flip the UI back
+      // to "idle" before the user reads the "Saved!" indicator).
+      if (saveResetTimerRef.current) {
+        clearTimeout(saveResetTimerRef.current);
+      }
+      saveResetTimerRef.current = setTimeout(() => {
+        saveResetTimerRef.current = null;
+        setSaveStatus("idle");
+      }, 2000);
       await loadProfiles();
     } catch (err) {
       setSaveStatus("error");

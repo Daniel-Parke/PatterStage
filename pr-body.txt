@@ -1,3 +1,63 @@
+## Session 184 — List 3 (Models, Agents, Skills, Tools, Personalities) — `closeDelete` 3rd-site migration + `closeSkillEditor` 4th-site migration + `saveResetTimerRef` setTimeout-cleanup pattern in `handleSave`
+
+**Random pick:** `$((RANDOM % 4 + 1))` = 3 (List 3: Models, Agents, Skills, Tools, Personalities).
+
+**Date:** 2026-06-12
+
+**Outcome:** **2 single-setter close-pattern migrations (carryover closure from session 183) + 1 setTimeout-leak fix + 2 source-pattern tests on the List 3 surface.** (a) `closeDelete()` 3rd-site migration in `src/app/operations/agents/page.tsx` — the prior session's "threading a target into a setter-pair callback is over-engineering" rationale was over-conservative, the `closeDelete()` body is just `setDeleteTarget(null)` with no target param needed, so the 3rd site (handleDelete's onSuccess) is byte-equivalent to the 2 modal-close sites. (b) `closeSkillEditor()` 4th-site migration in `src/app/operations/skills/page.tsx` — the saveSkillEdit success path's `setEditingSkill(null)` is now `closeSkillEditor()`. (c) `saveResetTimerRef` + cleanup-effect pattern in `handleSave` — the pre-fix `setTimeout(() => setSaveStatus("idle"), 2000)` had no cleanup, so an unmount during the 2s window would call setState on an unmounted component; the new ref + unmount-cleanup + clear-before-reschedule pattern mirrors the existing `copiedTimerRef` pattern in `operations/personalities/page.tsx:52`. All 2178 jest tests pass (+6 from session 183's 2172) + tsc + eslint + build all green.
+
+### What shipped
+
+| # | File | Change |
+|---|------|--------|
+| 1 | `src/app/operations/agents/page.tsx` | (a) `closeDelete()` 3rd-site migration (line ~261) — the handleDelete onSuccess body's leading `setDeleteTarget(null)` is now `closeDelete()`. The 2-setter conditional block (`if (selectedProfileId === target) { setSelectedProfileId(null); closeEditor(); }`) stays inline (discriminated, not a close). (b) JSDoc on `closeDelete` (lines 56-73) updated to reflect the post-session-183 rationale and the 3-site lockstep. (c) JSDoc on `closeEditor` (lines 76-92) updated from "3-setter success block" → "3-call success block" (the inline `setEditor(null)` is now `closeEditor()`, but the surrounding 2 setters stay inline — same shape, just renames the inner call). (d) New `useRef` import added. (e) New `saveResetTimerRef = useRef<ReturnType<typeof setTimeout> \| null>(null)` + unmount-cleanup `useEffect(() => { return () => { if (ref.current) { clearTimeout(ref.current); ref.current = null; } } }, [])` (lines 55-71) — keeps the in-flight "auto-clear the saved status after 2s" timer referenceable so it can be cleared on unmount + on the start of a back-to-back save. (f) `handleSave` (line ~327) setTimeout call migrated: pre-form `setTimeout(() => setSaveStatus("idle"), 2000)` → post-form `if (saveResetTimerRef.current) { clearTimeout(saveResetTimerRef.current); } saveResetTimerRef.current = setTimeout(() => { saveResetTimerRef.current = null; setSaveStatus("idle"); }, 2000)`. The 2-second delay is preserved, the "set status to idle" intent is preserved, the wire/API call is unchanged. |
+| 2 | `src/app/operations/skills/page.tsx` | `closeSkillEditor()` 4th-site migration — the saveSkillEdit success path's `setEditingSkill(null)` was already migrated to `closeSkillEditor()` (the only change in the file is the JSDoc on the helper was bumped from "3 single-setter close sites" to "4 single-setter close sites" with the 4th site listed as the saveSkillEdit success path). The sibling `if (expandedSkill === editingSkill) setSkillContent(editContent)` is a separate update for the in-page preview, not part of the close — stays inline. |
+| 3 | `tests/unit/close-delete-setter-callback.test.ts` | Updated the existing test to pin the post-session-183 3-site lockstep (was "2 closeDelete() + 1 bare setDeleteTarget(null) in handleDelete success path" → "3 closeDelete() + 0 bare statements"). The anti-A3 assertion (the discriminated 3-call block in handleDelete) is updated to look for `closeDelete\s*\(\s*\)` instead of `setDeleteTarget\s*\(\s*null\s*\)` as the leading call. +1 new test case, all 4/4 pass. |
+| 4 | `tests/unit/agents-page-close-delete-third-site.test.ts` | NEW file (already added in session 183 carryover). Source-pattern test pinning the post-session-183 closeDelete shape: 1 declaration + 3 call sites + 0 inline `setDeleteTarget(null)` setters. 4/4 tests pass. |
+| 5 | `tests/unit/agents-page-save-reset-timer-cleanup.test.ts` | NEW file. Source-pattern test pinning the post-session-184 `saveResetTimerRef` + cleanup-effect shape: (a) ref declared as `useRef<setTimeout\| null>(null)`; (b) cleanup-effect checks the ref + clearTimeout + nulls the ref; (c) handleSave's setTimeout assigns to `saveResetTimerRef.current`; (d) setTimeout body nulls the ref + calls `setSaveStatus("idle")`; (e) back-to-back save safety: clears any in-flight timer before scheduling a new one; (f) negative: no bare `setTimeout(() => setSaveStatus("idle"), 2000)` outside the ref form. 6/6 tests pass. |
+
+### Why this is byte-equivalent (or improves reliability without behavior change)
+
+- **`closeDelete` 3rd-site migration**: the helper body is `setDeleteTarget(null)`. The 3rd site was an inline `setDeleteTarget(null)` — byte-equivalent substitution. The 2-setter conditional block in the same onSuccess body is unchanged (it's a discriminated block, not a close — moving the 2 setters into the helper would require a `target` parameter, which would force a 3-setter discriminated signature that doesn't fit the 2-setter close pattern). Wire/API: zero change. UI: zero change (the modal closes, the editor closes conditionally, the profile list reloads — all preserved exactly).
+- **`closeSkillEditor` 4th-site migration**: the helper body is `setEditingSkill(null)`. The 4th site was an inline `setEditingSkill(null)` — byte-equivalent substitution. The sibling `if (expandedSkill === editingSkill) setSkillContent(editContent)` is a separate update for the in-page preview, not part of the close — stays inline. Wire/API: zero change. UI: zero change (the modal closes, the in-page preview updates conditionally, the toast appears, the editor clears — all preserved exactly).
+- **`saveResetTimerRef` + cleanup pattern**: this is a reliability improvement, not a behavior change for the steady state. The 2-second delay is preserved (2000ms setTimeout). The `setSaveStatus("idle")` call is preserved. The only observable change is:
+  1. **Unmount-during-timer case** (previously: a React "state update on an unmounted component" warning + a wasted re-render cycle; now: silent, no warning, no wasted re-render).
+  2. **Back-to-back-save case** (previously: if the user saved twice within 2 seconds, the FIRST save's timer could fire and prematurely flip the status back to "idle" before the user reads the SECOND save's "Saved!" indicator; now: the new save's handler clears the prior timer, so the 2s window always starts from the most-recent save).
+  
+  Both changes are reliability improvements — the steady-state UI behavior (1 save → "Saved!" badge for 2s → "Save" button) is preserved exactly. The pattern is byte-equivalent to the existing `copiedTimerRef` pattern in `src/app/operations/personalities/page.tsx:52-62` — same useRef + clearTimeout + null-on-fire shape.
+
+### Verification
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint . --max-warnings 0`: clean (0 warnings; was 1 warning on the unused `matches` variable in the new test file, resolved by switching to direct `expect(code).toMatch(...)` calls)
+- `npx jest tests/unit/agents-page-save-reset-timer-cleanup.test.ts`: **6/6 pass** (new file, new test cases)
+- `npx jest tests/unit/close-delete-setter-callback.test.ts`: **4/4 pass** (was 3/3 = +1 new test case for the 3-site lockstep)
+- `npx jest tests/unit/agents-page-close-delete-third-site.test.ts`: **4/4 pass** (new file from session 183 carryover)
+- `npx jest tests/unit/close-edit-setter-callback.test.ts`: **5/5 pass** (unchanged — the existing closeEdit test was already correct, no migration needed)
+- `npx jest`: **292 suites / 2178 tests pass** (up from 291/2172 = +1 suite, +6 tests; no regressions)
+- `CI=true npx --yes pnpm@10.33.0 build`: clean
+
+### Reference doc
+
+No new reference doc — this session is a small-scoped carryover closure + 1 reliability fix, both with the same byte-equivalence shape as the session 100 `closeDelete`/`closeSkillEditor` helper pattern (already documented in the `overnight-refactor-patterns` skill's `setter-pair-callback` reference) and the existing `copiedTimerRef` `useRef + clearTimeout` pattern in `personalities/page.tsx`.
+
+### Carryover resolution
+
+This session started with a Mode B (verified-but-uncommitted) carryover from session 183: 2 production files modified (`agents/page.tsx`, `skills/page.tsx`) + 1 test file extended (`close-delete-setter-callback.test.ts`) + 1 new test file (`agents-page-close-delete-third-site.test.ts`). The session 183 work shipped in the working tree but ran out of tool-call budget before commit/push. This session's first action was to verify (2172 jest tests pass + tsc + eslint + build all green), then commit the carryover as commit `ed8e081` on the `mission/hermes-review-and-refactor` branch, then push to `origin`. After the carryover closure, the session added the `saveResetTimerRef` reliability fix + its source-pattern test as new in-scope work. Standard 4-step commit-when-verified protocol applied: verify → commit → push → docs commit (in progress).
+
+### Next session should
+
+- **Random pick next session.** The List 3 surface is now mined clean at:
+  - The closeDelete/closeSkillEditor/closeEdit/closeCreate 1-setter close pattern (all 4 helper source-pattern tests pass — `close-delete-setter-callback.test.ts`, `close-skill-editor-setter-callback.test.ts`, `close-edit-setter-callback.test.ts`, `close-create-setter-callback.test.ts`)
+  - The saveResetTimerRef + cleanup-effect pattern (new `agents-page-save-reset-timer-cleanup.test.ts` pins the shape)
+  - The `runSyncAction` setBusy/body/method helper pattern (already in `operation-sync-action.ts`, all 4 callers migrated)
+  - The `safeApiCallData` / `setErrorFromCaught` / `serverErrorFromCatch` pattern (sessions 166 / 172 / 182)
+- **Future List 3 work candidates** (deferred, not on the critical path):
+  - **`handlePushAll` / `handlePushOne` / `handleImportDiscovered` / `handlePullAll` / `handlePullOne` in `agents/page.tsx` (lines 121-161)** are inline arrow functions, not useCallback. They're passed to `ProfileSyncBar` (line 352) — making them useCallback would stabilize the reference across renders. The performance impact is negligible (5 inline arrows, not 500) and the panel isn't memoized, so this is a "cosmetic" improvement at best. Defer.
+  - **`handleActivate` in `personalities/page.tsx:298`** doesn't take a busy state (sub-100ms PUT). A double-click race is theoretically possible (two rapid activations could land out of order), but the API call is idempotent (PUT to `/api/config` with `{ section: "display", values: { personality: next } }`) so the worst case is a no-op. Defer.
+  - **`setShowCreate(false)` inline on line 570 of `agents/page.tsx`** is the "soft close" Cancel button (1 setter, no reset) — the JSDoc explicitly documents this as intentional discrimination vs. the 4-setter `closeCreate` callback. Don't migrate.
+
+---
 ## Session 181 — List 2 (Cron, Missions, Chat) — `updateSession` chat-page generalised helper + `dispatchMissionAction` shared call-shape helper + envelope-typed source-pattern test extension (close session 180 carryover)
 
 **Random pick:** `$((RANDOM % 4 + 1))` = 3 (List 3: Models, Agents, Skills, Tools, Personalities).
