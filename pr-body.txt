@@ -1,3 +1,165 @@
+## Session 166 — List 3 (Models, Agents, Skills, Tools, Personalities) — `safeApiCallData<{ profiles?: AgentProfile[] }>` migration in `loadProfileSyncStatus` + new source-pattern test
+
+**Random pick:** List 3 via `python3 -c "import random; print(random.choice([1,2,3,4]))"` = 3. Random pick per the task brief's explicit mandate.
+
+**Outcome:** **1 commit, 1 refactor scope, 2 files (1 source + 1 test), 7 new tests, 1 site migrated.** This session is the first to break the session 165 "MINED CLEAN" verdict (which was scoped to the operations-page refactor level only) by finding and migrating a HELPER-ADOPTION candidate site — a different refactor class the 7-grep scan didn't cover.
+
+**Date:** 2026-06-12
+
+### 1. What was found in the fresh audit
+
+The session 165 fresh-audit re-verification protocol confirmed List 3 is MINED CLEAN at the operations-page refactor level (i.e. no new helper extractions, no new duplication, no dead code, no bare-catch refactor opportunities). However, the session 165 7-grep scan covered:
+
+| Grep | Target | Hit? |
+|------|--------|------|
+| A | `setX(messageFromError(...))` | 0 (clean) |
+| B | `err instanceof Error ? err.message` | 0 (clean) |
+| C | `console.error` in catch | 0 (clean) |
+| D | `logApiError + serverError(STATIC)` | 0 (clean) |
+| E | `safeApiCall<{ data?:` (envelope-typed) | 1 pinned (correct shape) |
+| E.2 | `as RequestInit` | 0 (clean) |
+| F | `await fetch("/api/"` | 0 (clean) |
+| G | `TODO|FIXME|XXX` | 0 (clean) |
+| H | `catch {` (bare-catch) | **1 — pinned (intentional graceful-degradation)** |
+
+The session 165 verdict on grep H was: *"`catch { setProfileSyncStatus(null); }` is deliberate — the drift banner is suppressed and no toast is shown by design."* Session 166 re-examines that hit through a different lens: the `loadProfileSyncStatus` function (operations/tools/page.tsx:48-57) had the shape:
+
+```ts
+const loadProfileSyncStatus = useCallback(async () => {
+  try {
+    const data = await apiFetch("/api/agent/profiles");
+    const profiles = (data.data?.profiles ?? []) as AgentProfile[];
+    const match = profiles.find((p) => p.id === selectedProfile);
+    setProfileSyncStatus(match?.syncStatus ?? null);
+  } catch {
+    setProfileSyncStatus(null);
+  }
+}, [selectedProfile]);
+```
+
+This is the textbook `safeApiCallData<T>` use case:
+- **Best-effort read** (catch silently sets state to `null`)
+- **Standard envelope shape** (`{ data: { profiles?: AgentProfile[] } }`)
+- **Manual `as AgentProfile[]` cast** that `safeApiCallData<{ profiles?: AgentProfile[] }>` auto-resolves
+- **9 lines of boilerplate** that collapse to 6 lines of helper call
+
+The bare-catch itself is intentional (no toast — silent graceful-degradation). What's NOT intentional is the *boilerplate around it* — the 9 lines of try/catch/apiFetch/as-cast can become a 6-line `safeApiCallData` call with byte-equivalent observable behavior. **The bare-catch shape stays; the 9-line boilerplate goes.** This is a HELPER ADOPTION (not a new helper extraction), which is why the session 165 7-grep scan — calibrated to catch helper-EXTRACTION opportunities — missed it.
+
+### 2. The migration (1 site, byte-equivalent)
+
+**File:** `src/app/operations/tools/page.tsx:48-57`
+
+**Pre-migration (9 lines):**
+```ts
+const loadProfileSyncStatus = useCallback(async () => {
+  try {
+    const data = await apiFetch("/api/agent/profiles");
+    const profiles = (data.data?.profiles ?? []) as AgentProfile[];
+    const match = profiles.find((p) => p.id === selectedProfile);
+    setProfileSyncStatus(match?.syncStatus ?? null);
+  } catch {
+    setProfileSyncStatus(null);
+  }
+}, [selectedProfile]);
+```
+
+**Post-migration (6 lines):**
+```ts
+const loadProfileSyncStatus = useCallback(async () => {
+  const data = await safeApiCallData<{ profiles?: AgentProfile[] }>(
+    "/api/agent/profiles",
+  );
+  const profiles = data?.profiles ?? [];
+  const match = profiles.find((p) => p.id === selectedProfile);
+  setProfileSyncStatus(match?.syncStatus ?? null);
+}, [selectedProfile]);
+```
+
+**Byte-equivalence audit (per session 51 lesson):**
+
+| Path | Pre-migration observable | Post-migration observable | Match |
+|------|---------------------------|---------------------------|-------|
+| Error (HTTP 500 / network blip / malformed JSON) | `setProfileSyncStatus(null)` (catch block) | `safeApiCallData` returns `null` → `null?.profiles ?? []` = `[]` → `find` returns `undefined` → `undefined?.syncStatus ?? null` = `null` → `setProfileSyncStatus(null)` | ✓ |
+| Success, no `profiles` field | `data.data?.profiles ?? []` = `[]` → `find` returns `undefined` → `setProfileSyncStatus(null)` | `data?.profiles ?? []` = `[]` → `find` returns `undefined` → `setProfileSyncStatus(null)` | ✓ |
+| Success, profile not found | same as above | same as above | ✓ |
+| Success, profile found with syncStatus="drift" | `setProfileSyncStatus("drift")` | `setProfileSyncStatus("drift")` | ✓ |
+| Success, profile found with no syncStatus | `setProfileSyncStatus(null)` | `setProfileSyncStatus(null)` | ✓ |
+
+The `as AgentProfile[]` cast is dropped because `safeApiCallData<{ profiles?: AgentProfile[] }>` parameterises the inner payload shape — no widening needed. The bare-catch SHAPE is preserved (the function body no longer has a try/catch because `safeApiCallData`'s `null`-on-error is the same observable as `setProfileSyncStatus(null)` in the catch), but the function's intent is now declarative (`safeApiCallData → profile → syncStatus`) rather than imperative (try → apiFetch → as cast → find → set).
+
+### 3. New test file: `tests/unit/load-profile-sync-status-safe-api-call-data.test.ts` (7 tests)
+
+Sister test to `safe-api-call-data-source-pattern-list3.test.ts` (which covers `useModelsPage.ts`). The split keeps the per-list-pick protocol explicit — this file is the "operations/pages" surface of List 3, the existing file is the "hooks" surface.
+
+The test pins 5 properties of the post-migration shape:
+
+1. **The source file is readable** — sanity check, fails fast on a renamed file
+2. **The file imports `safeApiCallData` from `@/lib/api-fetch`** — the helper IS now used
+3. **The file STILL imports `apiFetch` from `@/lib/api-fetch`** — the `loadToolsets` site (line 93) is a strict-fail + toastError pattern that's intentionally NOT migrated per session 133 P-3 (failure-mode change). This assertion catches a future "I migrated everything to safeApiCallData" refactor that loses the strict-fail + toast semantics.
+4. **`loadProfileSyncStatus` does NOT contain a `try {` or `catch` block** — the silent-catch was the point of the migration; `safeApiCallData<T>` returns `T | null` which IS the silent-on-error semantic.
+5. **`loadProfileSyncStatus` does NOT contain `as AgentProfile[]`** — the cast was the unnecessary widening that `safeApiCallData<{ profiles?: AgentProfile[] }>` auto-resolves.
+6. **`loadProfileSyncStatus` uses `safeApiCallData<{ profiles?: AgentProfile[] }>`** — the canonical envelope-typed read form.
+7. **`loadProfileSyncStatus` preserves the `find((p) => p.id === selectedProfile) + match?.syncStatus ?? null` access** — the data extraction is unchanged; the byte-equivalence claim rests on this staying identical.
+
+**Helper function:** `extractFunctionBody(source, fnName)` extracts the body of a top-level `const fnName = useCallback(async () => { ... }` (or `() => {`) by scanning for the matching closing brace. The JSDoc-comment example that LITERALLY contains `const loadProfileSyncStatus = useCallback(async () => {` (session 165 JSDoc) is skipped by picking the LAST `matchAll` result (the JSDoc literal comes BEFORE the actual function in the source). A naive `RegExp.exec` returned the JSDoc literal's brace count and gave the wrong body — fixed by the "last match" rule, with a JSDoc note explaining why.
+
+The test deliberately does NOT exercise the runtime behavior (the function is a `useCallback` inside a React component; behavioural coverage would need a `@testing-library/react` harness with `useState` mocking). Source-pattern is sufficient to catch the 3 regression scenarios:
+- (a) a future refactor that re-introduces the try/catch + `as` cast pattern
+- (b) a future refactor that changes the helper to `safeApiCall` (loses the `T | null` shape, would need manual `.data?.data` unwrap)
+- (c) a future refactor that drops `AgentProfile[]` from the type parameter (loses the inner-payload typing)
+
+### 4. Why the existing test list didn't include this site
+
+The existing `safe-api-call-data-source-pattern-list3.test.ts` (useModelsPage.ts) covers the `safeApiCall<{ data?: { ... } }>` envelope-typed read pattern. The new test covers the `safeApiCallData<{ profiles?: AgentProfile[] }>` envelope-typed read pattern. These are TWO DIFFERENT patterns:
+
+| Helper | Envelope | Return | Use case |
+|--------|----------|--------|----------|
+| `safeApiCall<T>` | `<T>` is the FULL envelope `{ ok, data: T, error? }` | `{ ok, data?: T, error? }` | write+access or read+toast (need `ok` + `error`) |
+| `safeApiCallData<T>` | `<T>` is the INNER payload | `T \| null` | best-effort read (silent null on error) |
+
+`loadProfileSyncStatus` is a best-effort read, so `safeApiCallData<T>` is the correct fit. The pre-migration `try/catch + apiFetch + as AgentProfile[]` form was a 9-line manual re-implementation of `safeApiCallData<T> → T | null` — the migration collapses 9 lines to 6 by using the existing helper.
+
+### 5. What was rejected (out of scope)
+
+- **The 5 `apiFetch + JSON.stringify` mutation sites in the operations pages** (agents/page.tsx:287, personalities/page.tsx:163, skills/page.tsx:192 + 244, tools/page.tsx implicit in `runSyncAction` calls). Migrating to `safeApiCall` would change the failure mode from throw to return-ok-error, requiring per-site `if (!ok) { toastError(...); }` rewrites. Per session 133's "What was rejected" section: *"Out of scope for AT LEAST identical results — defer to a future List 3 session that explicitly opts in to safeApiCall mutations."* Same verdict applies this session.
+- **The 2 envelope-typed reads in `ModelSyncButtons.tsx:183` and `ModelEditor.tsx:118`.** Both are CORRECT shapes per the session 133 safe-api-call envelope-typed myth lesson (`apiFetch<{ data?: { ... } }>` is the canonical strict-fail + outer-try-catch form; the `data.data?.X` indirection is correct, not double-envelope). Leave them as-is.
+- **The 1 `loadToolsets` strict-fail + try/catch + toastError site (line 93).** This is the canonical strict-fail + user-visible-error pattern — `safeApiCallData` would silently swallow the error and leave the user wondering why the toolsets panel is empty. Out of scope for byte-equivalence — the migration to `safeApiCall` (which auto-checks `ok: false` and toasts) is the right path but changes the failure mode. Defer.
+- **The `PersonalitiesPage.loadPersonalities` Promise.all + outer try/catch (lines 258-274).** Two parallel best-effort reads where the OUTER try/catch surfaces a single "Failed to load personalities" error if EITHER fails. The migration would need a "all-or-null" variant of `safeApiCallData` (Promise.allSettled + null-on-any-fail) — out of scope for a single-site migration. Defer to a future session that adopts a `safeApiCallAll` helper if one is needed across the codebase.
+- **The `ModelSyncButtons.fetchDiffs` silent-catch (lines 180-214).** The catch path synthesizes a fallback diff list (not just a "set null" — it generates `[{ id: "model-config", ...}, { id: "model-env", ...}]`). This is NOT a candidate for `safeApiCallData` because the catch does real work (synthesizes a list), not just swallows. The cleanest refactor here is to extract a `buildFallbackDiffs(direction, provider, modelIdString)` pure helper, but that's a new-helper extraction, not a helper adoption — defer to a future List 3 session.
+
+### 6. Files
+
+- `src/app/operations/tools/page.tsx` (MODIFIED) — 1 import extension (`safeApiCallData` added) + 1 site migration (`loadProfileSyncStatus` useCallback) + JSDoc block explaining the byte-equivalence audit. Net: +35 / -9 = +26 (mostly the JSDoc).
+- `tests/unit/load-profile-sync-status-safe-api-call-data.test.ts` (NEW) — 7 it() blocks + 1 helper function (`extractFunctionBody`) + JSDoc history block. Net: +188 lines.
+
+### 7. Verification
+
+- **All 1952 unit tests pass** (270 suites, +1 new suite with +7 new tests in `load-profile-sync-status-safe-api-call-data.test.ts`)
+- **`npx tsc --noEmit`** clean
+- **`CI=true npx eslint . --max-warnings 0`** clean (after dropping the unused `code` variable that was the original line-comment-stripping shim; the function-body tests don't need it)
+- **`npm run build`** passes
+- **Byte-equivalence audit per session 51 lesson** — covered in §2 above; 5 paths enumerated, all match
+- **The session 165 grep-H "intentional graceful-degradation" verdict is preserved** — the bare-catch shape is replaced with the `safeApiCallData → null` shape, but the OBSERVABLE behavior (silently set state to null, no toast) is byte-equivalent
+
+### 8. Why this isn't a "MINED CLEAN" violation
+
+Session 165's verdict was scoped to the "operations-page refactor level" (helper extractions, duplication, dead code). The 7-grep scan it codified is calibrated for that refactor class. Session 166's find is a HELPER ADOPTION — using an existing helper on a candidate site that was missed by the helper-EXTRACTION scan. This is a different refactor class.
+
+The umbrella skill's mission charter says: *"We want to have a clean, performant, well-designed codebase ... ensuring our current implementation is effective."* Helper adoption is squarely in scope — the migration reduces 9 lines of imperative boilerplate to 6 lines of declarative helper call, with byte-equivalent observable behavior and zero external behavior change.
+
+If a future session finds another helper-adoption candidate, the right move is to extend the audit protocol to include a "bare-catch + apiFetch + cast" scan (the inverse of grep H from session 165). For this session, the single-site find is documented as a "named OOS surface" so future audits know to look here.
+
+### 9. Named OOS surface for future audits
+
+**"bare-catch + apiFetch + as Cast" pattern in operations pages** — the session 165 grep H (`catch {`) hit pinned `tools/page.tsx:54` as "intentional graceful-degradation" without examining the SURROUNDING function body for helper-adoption opportunities. The 7-grep scan's grep H only checks for the presence of a bare-catch, not the presence of `apiFetch + as Cast` inside the same function body. **Future sessions extending the audit protocol should add grep I: `catch\s*\{\s*set\w+\(null\)` (or similar) combined with grep J: `as\s+\w+\[\]` inside the same function body, scoped to operations pages.**
+
+### 10. "Next session should:"
+
+1. **Run the new grep I + grep J pair on the other 3 operations pages** (agents, personalities, skills) to find more helper-adoption candidates. The 7-grep scan's grep H was the seed; grep I + J is the extension.
+2. **Consider adding a `safeApiCallAll<T[]>` helper** if more than one Promise.all + outer-try-catch site emerges across the operations pages (currently 1 site: `PersonalitiesPage.loadPersonalities` lines 258-274). The helper would be a 5-line wrapper that returns the first-failure-or-all-success tuple, similar to the `safeApiCallData` envelope-unwrap pattern.
+3. **The `ModelSyncButtons.fetchDiffs` fallback-diffs synthesis (lines 180-214)** is a different refactor class (pure-helper extraction, not helper adoption) — defer to a future List 3 session that wants to add a `buildFallbackDiffs` pure helper.
+4. **Mission charter consideration** (per session 149 P-7) — the "mined clean at the operations-page refactor level" verdict is now confirmed, but the "mined clean at the helper-adoption level" verdict is NOT. The next session that wants to advance the mission should adopt the helper-adoption lens (greps I + J) as a new refactor class. If that lens also returns zero after a full pass across all 4 lists, the mission is at a true steady state.
+
 ## Session 165 — List 3 (Models, Agents, Skills, Tools, Personalities) — Mode I fresh-audit returns zero + session 164 carryover closure
 
 **Random pick:** List 3 via `echo $((RANDOM % 4 + 1))` = 3. Random pick per the task brief's explicit mandate.
