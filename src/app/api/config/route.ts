@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFileSync, writeFileSync, existsSync } from "fs";
-import yaml from "js-yaml";
+import { writeFileSync } from "fs";
 import { z } from "zod";
 
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
@@ -8,76 +7,13 @@ import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { forbidden, ok } from "@/lib/api-response";
-import { db } from "@/lib/db";
+import { readCachedConfig, invalidateConfigCache } from "@/lib/config-cache";
 import { dumpYamlConfig } from "@/lib/hermes-config-sync";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { backupFile } from "@/lib/fs-helpers";
 import { deepMerge } from "@/lib/deep-merge";
-
-const CACHE_TTL_MS = 15_000; // 15 seconds
-
-function readCachedConfig(): Record<string, unknown> {
-  const configPath = getActiveHermesPaths().config;
-
-  // Try meta table cache first — single query for both keys
-  try {
-    const rows = db()
-      .prepare("SELECT key, value FROM meta WHERE key IN ('config.cached_json', 'config.cached_at')")
-      .all() as { key: string; value: string }[];
-
-    const cachedJson = rows.find((r) => r.key === "config.cached_json")?.value;
-    const cachedAt = rows.find((r) => r.key === "config.cached_at")?.value;
-
-    if (cachedJson && cachedAt) {
-      const age = Date.now() - new Date(cachedAt).getTime();
-      if (age < CACHE_TTL_MS) {
-        return JSON.parse(cachedJson) as Record<string, unknown>;
-      }
-    }
-  } catch {
-    // Cache read failed — fall through to filesystem
-  }
-
-  // Cache miss or stale — read from filesystem
-  if (!existsSync(configPath)) {
-    return {};
-  }
-  const content = readFileSync(configPath, "utf-8");
-  let config: Record<string, unknown>;
-  try {
-    config = (yaml.load(content) as Record<string, unknown>) || {};
-  } catch {
-    // YAML parse error — return empty config rather than crashing
-    return {};
-  }
-
-  // Update cache (both keys in a transaction for atomicity)
-  try {
-    const dbInstance = db();
-    const txn = dbInstance.transaction(() => {
-      const stmt = dbInstance.prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)");
-      stmt.run("config.cached_json", JSON.stringify(config));
-      stmt.run("config.cached_at", new Date().toISOString());
-    });
-    txn();
-  } catch {
-    // Cache write failure is non-critical
-  }
-
-  return config;
-}
-
-function invalidateConfigCache(): void {
-  try {
-    db()
-      .prepare("DELETE FROM meta WHERE key IN ('config.cached_json', 'config.cached_at')")
-      .run();
-  } catch {
-    // Cache invalidation failure is non-critical
-  }
-}
 
 // Dynamically derive writable sections from the schema
 // Only YAML sections with editable fields are writable
