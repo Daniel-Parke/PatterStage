@@ -29,6 +29,35 @@ import {
 const LAST_CATEGORY_KEY = "ch-last-mission-category";
 
 /**
+ * Read the legacy `categoryId` field from a `MissionTemplate`.
+ *
+ * The `MissionTemplate` interface (in `src/components/missions/TemplateModals.tsx`)
+ * exposes `category: string` as the canonical category field, but the
+ * legacy backend response shape also carries a `categoryId?: string`
+ * field that 3 call sites in this file (the `applyTemplateToForm` body,
+ * the `fetchData` template-apply path, and the `templateCategoryPills`
+ * `useMemo`) need to read. The structural cast
+ * `(t as MissionTemplate & { categoryId?: string })` was duplicated at
+ * all 3 sites — this helper centralises the cast + read + fallback
+ * discipline so a future "drop the legacy shape" change lands in one
+ * place. The `?? fallback` preserves the original `?? <default>`
+ * semantics at every call site.
+ *
+ * Byte-equivalent to the inline form: same cast, same read, same
+ * `?? <fallback>` fallback. The helper body is literally
+ * `(t as MissionTemplate & { categoryId?: string }).categoryId ?? fallback`.
+ *
+ * Exported for unit testing. Not part of the public hook contract;
+ * the canonical use is the 3 callsites in this file.
+ */
+export function getCategoryIdFromTemplate(
+  t: MissionTemplate,
+  fallback: string | null = null,
+): string | null {
+  return (t as MissionTemplate & { categoryId?: string }).categoryId ?? fallback;
+}
+
+/**
  * Persist the user's last-selected mission category to localStorage.
  * Centralised so the 2 callsites (`setCategoryId` setter + the
  * template-apply path) use the same try/catch+ignore discipline.
@@ -556,7 +585,7 @@ export function useMissionsPage() {
       setNewCategoryId(
         categoryIdOverride !== undefined
           ? categoryIdOverride
-          : (t as MissionTemplate & { categoryId?: string }).categoryId ?? null
+          : getCategoryIdFromTemplate(t)
       );
       const tm = t.timeoutMinutes;
       if (typeof tm === "number" && Number.isFinite(tm)) {
@@ -597,7 +626,7 @@ export function useMissionsPage() {
             (tmpl: MissionTemplate) => tmpl.id === templateId,
           );
           if (t) {
-            const cid = (t as MissionTemplate & { categoryId?: string }).categoryId ?? null;
+            const cid = getCategoryIdFromTemplate(t);
             applyTemplateToForm(t, cid);
             rememberLastCategory(cid);
             setShowCreate(true);
@@ -927,7 +956,14 @@ export function useMissionsPage() {
       : templates.find(
           (t) =>
             t.name === name &&
-            (t as MissionTemplate & { isCustom?: boolean }).isCustom !== false,
+            // `isCustom` is already declared (optional) on the
+            // `MissionTemplate` interface in TemplateModals.tsx:67, so
+            // no structural cast is needed to read it. The prior
+            // `(t as MissionTemplate & { isCustom?: boolean })` was
+            // redundant — `isCustom` is in the type, not in the
+            // legacy backend shape. The `!== false` check is
+            // preserved byte-equivalent.
+            t.isCustom !== false,
         );
 
     if (existingTemplate) {
@@ -1009,13 +1045,7 @@ export function useMissionsPage() {
   }, [templateName, editingTemplateId, templateIcon, templateColor, templateDescription, newInstruction, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, newDispatch, newSchedule, persistTemplate]);
 
   const handleEditTemplate = useCallback(
-    (t: MissionTemplate & {
-      isCustom?: boolean;
-      instruction?: string;
-      context?: string;
-      dispatchMode?: string;
-      schedule?: string;
-    }) => {
+    (t: MissionTemplate) => {
       setEditingTemplateId(t.id);
       setTemplateName(t.name);
       setTemplateDescription(t.description || "");
@@ -1221,9 +1251,7 @@ export function useMissionsPage() {
   const templateCategoryPills = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const t of templates) {
-      const cid =
-        (t as MissionTemplate & { categoryId?: string }).categoryId ??
-        "general";
+      const cid = getCategoryIdFromTemplate(t, "general")!;
       counts[cid] = (counts[cid] ?? 0) + 1;
     }
     return categoryFilterPills(categories, counts, false, 0);
