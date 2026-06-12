@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
-import { safeApiCall, apiFetch, messageFromError, toastError, safeApiCallData } from "@/lib/api-fetch";
+import { safeApiCall, apiFetch, toastError, safeApiCallData, setErrorFromCaught } from "@/lib/api-fetch";
 import { toastFromResult } from "@/lib/toast-from-result";
 import { successMessageForDispatch } from "@/hooks/success-message-for-dispatch";
 import type { LocalDirEntry, Mission } from "@/types/hermes";
@@ -384,10 +384,16 @@ export function useMissionsPage() {
     } catch (error) {
       // The error is already surfaced to the user via (a) the inline
       // `categoriesLoadError` state the page renders and (b) the toast.
-      // The pre-refactor `console.error` was redundant dev-only noise
-      // duplicating the same message.
-      const msg = messageFromError(error, "Failed to load categories");
-      setCategoriesLoadError(msg);
+      // `setErrorFromCaught` composes `messageFromError(error, fallback)`
+      // with the setter so this site reads as one call instead of the
+      // 2-hop `setCategoriesLoadError(messageFromError(error, ...))` form.
+      // This is the List 2 carryover closed in session 178 — same
+      // byte-equivalent migration that closed the 4 List 1 pages
+      // (session 159) and the Sidebar (session 176). The helper
+      // returns the resolved message so the dual-dispatch (state + toast)
+      // stays a single resolve — the same string lands in both the
+      // rendered error and the toast.
+      const msg = setErrorFromCaught(setCategoriesLoadError, error, "Failed to load categories");
       showToast(msg, "error");
     }
   }, [fetchCategories, showToast]);
@@ -527,7 +533,13 @@ export function useMissionsPage() {
       const list = await fetchMissions();
       setMissions(list);
     } catch (error) {
-      console.error("Failed to load missions:", error);
+      // `toastError` is the user-facing surface; the pre-session-178
+      // `console.error` was the only error reporting and the user
+      // saw nothing. Surfaces the same string the sibling
+      // `fetchTemplates` catch block (line 562) reports, and
+      // matches the `loadCategories` site on line 386 — all three
+      // slices in `fetchData` now report failures via toast.
+      toastError(showToast, error, "Failed to load missions");
     }
 
     await loadCategories();
@@ -569,13 +581,20 @@ export function useMissionsPage() {
           if (data) setDetail(data);
         })
         .catch((error) => {
-          console.error("Failed to load mission detail:", error);
+          // The detail panel has no `error` useState to dispatch
+          // through `setErrorFromCaught`, so `toastError` is the
+          // user-facing surface. The pre-session-178 `console.error`
+          // was the only error reporting and the user saw nothing
+          // when expanding a broken mission. Matches the user-
+          // visible contract of `fetchData`'s three slices (lines
+          // 526, 539, 562 — all surface failures via toast).
+          toastError(showToast, error, "Failed to load mission detail");
         })
         .finally(() => {
           if (showLoading) setDetailLoading(false);
         });
     },
-    [fetchMissionDetail],
+    [fetchMissionDetail, showToast],
   );
 
   useEffect(() => {

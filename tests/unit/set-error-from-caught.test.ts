@@ -104,4 +104,53 @@ describe("setErrorFromCaught", () => {
       expect(helperCalls).toEqual(directCalls);
     }
   });
+
+  it("returns the resolved message for dual-dispatch (state + toast) callers", () => {
+    // Session 178 enhancement: the helper now returns the resolved
+    // message so callers that need the same string for both state AND
+    // a side-effect (toast, audit, log) can reuse it without a second
+    // `messageFromError` call. This is the contract the
+    // `useMissionsPage.loadCategories` site relies on (single resolve
+    // → setCategoriesLoadError + showToast both display the same string).
+    const calls: Array<string | null> = [];
+    const setError = (value: string | null) => {
+      calls.push(value);
+    };
+    const result = setErrorFromCaught(setError, new Error("boom"), "fallback");
+    expect(result).toBe("boom");
+    expect(calls).toEqual(["boom"]);
+  });
+
+  it("returns the fallback for an empty Error (matches the setError call)", () => {
+    // Return value mirrors the setError call byte-for-byte.
+    const calls: Array<string | null> = [];
+    const setError = (value: string | null) => {
+      calls.push(value);
+    };
+    const result = setErrorFromCaught(setError, new Error(""), "Save failed");
+    expect(result).toBe("Save failed");
+    expect(calls).toEqual(["Save failed"]);
+  });
+
+  it("return value matches the messageFromError raw result across all input shapes", async () => {
+    // Property: `setErrorFromCaught(s, e, f) === messageFromError(e, f)`.
+    // The helper's return value is a thin wrapper over the same
+    // coercion rule, so the two must be byte-equivalent for every
+    // input shape. This is the single-resolve guarantee that
+    // motivated the return-value enhancement.
+    const { messageFromError } = await import("@/lib/api-fetch");
+    const inputs: Array<[unknown, string]> = [
+      [new Error("a"), "f1"],
+      [new Error(""), "f2"],
+      ["plain string", "f3"],
+      [null, "f4"],
+      [undefined, "f5"],
+      [new TypeError("z"), "f6"],
+    ];
+    for (const [err, fallback] of inputs) {
+      const setError = (_v: string | null) => undefined;
+      const result = setErrorFromCaught(setError, err, fallback);
+      expect(result).toBe(messageFromError(err, fallback));
+    }
+  });
 });

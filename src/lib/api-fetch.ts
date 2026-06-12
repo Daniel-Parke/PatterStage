@@ -210,15 +210,31 @@ type SetErrorFn = (value: string | null) => void;
  * Use `toastError` for showToast-based error reporting and
  * `setErrorFromCaught` for useState-based error reporting.
  *
+ * **Returns the resolved message** so callers that need the same
+ * string for both state AND a side-effect (toast, audit, log) can
+ * reuse it. The single-resolve guarantee eliminates the
+ * `messageFromError(err, X)` + `setError(...)` + `showToast(...)`
+ * 3-call triplet at dual-dispatch sites like `loadCategories` in
+ * `useMissionsPage.ts`, which is exactly the site that motivated
+ * the return-value enhancement (session 178, List 2 carryover).
+ *
  * @example
  *   } catch (err) {
  *     setErrorFromCaught(setError, err, "Failed to load");
+ *   }
+ *
+ * @example Dual-dispatch (state + toast):
+ *   } catch (err) {
+ *     const msg = setErrorFromCaught(setError, err, "Failed to load");
+ *     showToast(msg, "error");
  *   }
  */
 export function setErrorFromCaught(
   setError: SetErrorFn,
   err: unknown,
   fallback: string,
-): void {
-  setError(messageFromError(err, fallback));
+): string {
+  const msg = messageFromError(err, fallback);
+  setError(msg);
+  return msg;
 }

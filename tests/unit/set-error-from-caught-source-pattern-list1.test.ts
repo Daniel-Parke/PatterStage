@@ -130,12 +130,26 @@ describe("setErrorFromCaught envelope migration — List 1 logs page", () => {
     // The helper must take a setter + an unknown + a fallback. If the
     // signature changes (e.g. add a 4th param), this test fails and
     // the migration's byte-equivalence claim needs re-verification.
-    // Tolerate trailing commas (TS formatted style).
+    // Tolerate trailing commas (TS formatted style). Session 178
+    // enhanced the helper to return `string` (was `void`) for
+    // dual-dispatch (state + toast) callers — the return-type
+    // assertion pins that contract.
     expect(helperSource).toMatch(
-      /export\s+function\s+setErrorFromCaught\s*\(\s*setError\s*:\s*SetErrorFn\s*,\s*err\s*:\s*unknown\s*,\s*fallback\s*:\s*string\s*,?\s*\)/,
+      /export\s+function\s+setErrorFromCaught\s*\(\s*setError\s*:\s*SetErrorFn\s*,\s*err\s*:\s*unknown\s*,\s*fallback\s*:\s*string\s*,?\s*\)\s*:\s*string/,
     );
-    // And the body must compose messageFromError with the setter.
-    expect(helperSource).toMatch(/setError\s*\(\s*messageFromError\s*\(\s*err\s*,\s*fallback\s*\)\s*\)/);
+    // And the body must compose messageFromError with the setter
+    // and return the resolved message. The pre-session-178 body
+    // was a single line `setError(messageFromError(err, fallback))`;
+    // session 178 split it into a 3-line `const msg = ...;
+    // setError(msg); return msg;` form to support the dual-dispatch
+    // (state + toast) callers like `useMissionsPage.loadCategories`
+    // that reuse the resolved message in a follow-on `showToast(...)`
+    // call. The assertions below pin the post-session-178 shape.
+    expect(helperSource).toMatch(
+      /const\s+msg\s*=\s*messageFromError\s*\(\s*err\s*,\s*fallback\s*\)/,
+    );
+    expect(helperSource).toMatch(/setError\s*\(\s*msg\s*\)/);
+    expect(helperSource).toMatch(/return\s+msg\s*;?/);
   });
 
   it("the logs page does NOT use `setX(messageFromError(...))` at any call site", () => {
