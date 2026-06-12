@@ -89,15 +89,20 @@ export default function JobFormModal({
     setProfilesLoading(true);
     setError(null);
     let cancelled = false;
-    void safeApiCall<{ profiles?: AgentProfileOption[] }>("/api/agent/profiles", {
-      method: "GET",
-    }).then((result) => {
+    // The route returns `{ data: { profiles: [...] } }` (envelope).
+    // `safeApiCall<T>` does NOT unwrap — `data` is the full body —
+    // so the type is the envelope shape and the inner array is read
+    // via `result.data?.data?.profiles` (two indirections).
+    void safeApiCall<{ data?: { profiles?: AgentProfileOption[] } }>(
+      "/api/agent/profiles",
+      { method: "GET" },
+    ).then((result) => {
       if (cancelled) return;
       if (!result.ok) {
         setProfilesLoading(false);
         return;
       }
-      const raw = result.data?.profiles ?? [];
+      const raw = result.data?.data?.profiles ?? [];
       if (raw.length > 0) {
         setProfiles(
           raw.map((p) => ({

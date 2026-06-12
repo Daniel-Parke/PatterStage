@@ -74,17 +74,20 @@ export default function LogsPage() {
     }
     await confirmDelete(async () => {
       try {
-        const { ok, data: delData, error } = await safeApiCall<{ cleared?: number }>(
-          "/api/logs",
-          { method: "DELETE" },
-        );
+        // The route returns `{ data: { cleared: N } }` (envelope).
+        // `safeApiCall<T>` does NOT unwrap — `data` is the full body —
+        // so the type is the envelope shape and the inner count is read
+        // via `delData?.data?.cleared` (two indirections).
+        const { ok, data: delData, error } = await safeApiCall<{
+          data?: { cleared?: number };
+        }>("/api/logs", { method: "DELETE" });
         if (!ok || error) {
           setActionMessage(error ?? "Delete failed");
           return;
         }
         setActionMessage(
-          typeof delData?.cleared === "number"
-            ? `Cleared ${delData.cleared} log file(s).`
+          typeof delData?.data?.cleared === "number"
+            ? `Cleared ${delData.data.cleared} log file(s).`
             : "Logs cleared.",
         );
         void refetch();
