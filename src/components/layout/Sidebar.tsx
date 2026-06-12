@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 
 import { iconColorMap } from "@/lib/theme";
-import { messageFromError } from "@/lib/api-fetch";
+import { setErrorFromCaught } from "@/lib/api-fetch";
 import {
   mainSections,
   configSettingsPinnedLinks,
@@ -310,7 +310,7 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
         setMessage(runningMessage);
         pollDeployStatusRef.current(action);
       } catch (err: unknown) {
-        setMessage(messageFromError(err, fallbackForDeployMessage(startedMessage)));
+        setErrorFromCaught(setMessage, err, fallbackForDeployMessage(startedMessage));
         setBusy(false);
         if (useBusyRef) busyRef.current = false;
       }

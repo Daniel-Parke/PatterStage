@@ -1,3 +1,80 @@
+## Session 176 — List 1 (Dashboard, Sessions, Memory, Logs) — `setErrorFromCaught` migration in `src/components/layout/Sidebar.tsx` (close session 159 layout-shared carryover)
+
+**Random pick:** `$((RANDOM % 4 + 1))` = 1 (List 1: Dashboard, Sessions, Memory, Logs).
+
+**Date:** 2026-06-12
+
+**Outcome:** **1 stale `setX(messageFromError(...))` site in the layout-shared Sidebar migrated to `setErrorFromCaught` + source-pattern test extended with a Sidebar describe block (5 new assertions). All 2096 jest tests pass + tsc + eslint + build all green.**
+
+### What shipped
+
+| # | File | Change |
+|---|------|--------|
+| 1 | `src/components/layout/Sidebar.tsx` | 1 import swap (`messageFromError` → `setErrorFromCaught`) + 1 catch-block migration at line 313 in the `runDeployAction` callback (shared by `handleUpdate`/`handleRestart`/`doRebuild`). The pre-migration site was `setMessage(messageFromError(err, fallbackForDeployMessage(startedMessage)))`; migrated to `setErrorFromCaught(setMessage, err, fallbackForDeployMessage(startedMessage))`. The other 5+ `setMessage("...")` literal sites (success labels, phase labels, timeouts) are unchanged. |
+| 2 | `tests/unit/set-error-from-caught-source-pattern-list1.test.ts` | Extended with a second `describe()` block ("List 1.5 Sidebar (layout-shared)") that pins the post-migration shape on the Sidebar: (a) zero `setX(messageFromError(...))` sites via generalised regex, (b) positive regex on the import + canonical call shape `setErrorFromCaught(setMessage, err, fallbackForDeployMessage(`, (c) negative regex on the now-unused `messageFromError` import. The pre-existing 5 logs-page assertions are unchanged. JSDoc history block updated with the session 176 entry. |
+| 3 | `pr-body.txt` | Prepended the new session 176 entry. |
+| 4 | `pr-body-headline.md` | Updated headline to add session 176 + bumped the recent-sessions block. |
+| 5 | `references/session-176-list1-sidebar-seterrorfromcaught.md` (new) | The session writeup under the `refactor-sweep-mission` skill. |
+
+### Why this is byte-equivalent
+
+`setErrorFromCaught(setX, err, fallback)` is literally `setX(messageFromError(err, fallback))` per `src/lib/api-fetch.ts:223` (the helper body). The 4 unit tests in `set-error-from-caught.test.ts` lock this byte-equivalence claim for 6 distinct input shapes (Error, empty Error, string, null, undefined, TypeError). The catch-block's externally observable behaviour is unchanged for every input shape. The 4 surrounding lines (`setBusy(false)`, `busyRef.current = false`, `pollDeployStatusRef.current(action)` happy path) are unchanged. The Sidebar's other 5+ `setMessage("...")` literal sites (success labels, phase labels, timeouts) are unchanged. The `fallbackForDeployMessage(startedMessage)` value is unchanged.
+
+### Pitfall 1 — "Layout-shared" components are a new List surface category
+
+The session 159 closure of the `setX(messageFromError(err, "..."))` → `setErrorFromCaught(setX, err, "...")` migration was scoped to the 4 page-local List 1 files. The Sidebar (the layout-shared component that wraps every page in Control Hub) was missed. The pre-migration site `setMessage(messageFromError(err, fallbackForDeployMessage(startedMessage)))` was the only stale carryover in the Sidebar, but it was on the most-shared hot path in the app.
+
+**The general lesson:** the 4-list taxonomy (Dashboard/Sessions/Memory/Logs = List 1, Cron/Missions/Chat = List 2, Models/Agents/Skills/Tools/Personalities = List 3, Models/HERMES.md/Environment/Settings = List 4) covers page-local code. Layout-shared components (Sidebar, AppPageShell, PageHeader, MobileHeader) are the **"List 1.5"** surface — not page-local but page-facing. They share all of List 1's invariants (catch-block patterns, envelope-typed reads, `setErrorFromCaught` setters) but are easy to miss in a per-page scan. **Any future "scan for X pattern across the codebase" recipe should explicitly include or exclude layout components.**
+
+### Pitfall 2 — Pre-flight scanner false positives on success/phase/timeout labels
+
+The Sidebar has 5+ `setMessage("...")` call sites that use string literals (success labels like "Update started…", phase labels from the deploy-state machine, timeouts like "Timed out — check ch-restart.log in Logs"). The pre-flight scan that finds "setX(messageFromError" call sites is intentionally NARROW (`setX(messageFromError`, the 2-hop form), not WIDE (`setX(`, the literal form). Widening the scan would create false positives on every literal setter call. The session 176 test pins the narrow scan explicitly:
+
+```ts
+const FORBIDDEN_INLINE_SETX_MESSAGFROMERROR = /set\w+\(\s*messageFromError\s*\(/g;
+```
+
+**The general lesson:** when auditing for a "2-hop vs 1-hop" pattern, the scanner regex should match the discriminator (the helper call name), not the outer function (the setter). A wide scanner will hit every literal setter call; a narrow scanner hits only the bad pattern.
+
+### Pitfall 3 — `import { messageFromError } from "@/lib/api-fetch"` is now unused in the Sidebar
+
+The post-migration Sidebar has zero `messageFromError` call sites. The `messageFromError` import was removed and replaced with `setErrorFromCaught`. A future "is the import still used?" linter rule would catch a re-introduction of the import without a call site, but the new source-pattern test's "the Sidebar no longer imports messageFromError" assertion pins this invariant in CI.
+
+**The general lesson:** when migrating a call site that was the sole consumer of a helper import, the import must be swapped (or the migration is incomplete). The new test asserts the post-migration import line is present AND the old import line is absent — both halves of the swap are pinned.
+
+### Audit finding — `setX(messageFromError(...))` 2-hop form is now fully closed in src/ user-land
+
+With the Sidebar migration, every `useState<string | null>` setter in user-land that wraps a caught error goes through `setErrorFromCaught`. The only remaining `messageFromError` call sites in src/ are:
+- `src/lib/api-fetch.ts` — the helper itself + its JSDoc example + 1 internal call (`safeApiCall` line 96)
+- `src/lib/cron/hermes-sync.ts` — 1 call inside a `PushResult` builder (not a setter wrapper)
+- `src/lib/memory-providers/holographic.ts` — 3 calls inside error-message builders (string concatenation, not setter wrappers)
+- `src/hooks/useApiData.ts` — JSDoc reference only
+- `src/hooks/useMissionsPage.ts` — 1 setter wrapper (`setCategoryError(messageFromError(...))` line 389) + 2 result-object wrappers
+- `src/hooks/useModelsPage.ts` — 1 JSDoc reference + 2 result-object wrappers
+- `src/app/api/memory/hindsight/route.ts` — 3 calls inside `{ error: messageFromError(...) }` return-value builders (not setter wrappers)
+- `src/components/layout/Sidebar.tsx` — now ZERO calls (this session's migration)
+
+The next carryover is `useMissionsPage.ts:389` (List 2 territory).
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `CI=true npx eslint . --max-warnings 0`: clean
+- `npx jest tests/unit/set-error-from-caught-source-pattern-list1.test.ts`: **10/10 pass** (5 pre-existing logs-page assertions + 5 new Sidebar assertions)
+- `npx jest`: **280 suites / 2096 tests pass** (up from 280/2091 = +5 tests in the extended source-pattern file; no regressions)
+- `npm run build`: clean
+
+### Reference doc
+
+Full session writeup: `references/session-176-list1-sidebar-seterrorfromcaught.md` under the `refactor-sweep-mission` skill.
+
+### Next session should
+
+- **Random pick next session.** The List 1 surface is now mined clean at the catch-block / `setErrorFromCaught` scope. The Sidebar carryover from session 159 is closed.
+- **List 2 carryover: `setCategoryError` in `useMissionsPage.ts:389`.** The 2-hop form is structurally identical to the Sidebar site this session closed. Defer to a future List 2 pick.
+- **Cross-list: extract a "result-object messageFromError" pattern.** The 5 `useMissionsPage.ts` and `useModelsPage.ts` sites that return `{ ... error: messageFromError(err, fallback) }` result objects could be extracted to a `withErrorMessage(result, err, fallback)` helper. Different shape from the setter-wrapper pattern. Defer to a future session that explicitly opts in to the "result-object" pattern.
+- **Layout-shared surface audit (List 1.5+).** The Sidebar is the first component in the "List 1.5" surface category to receive a refactor. The other layout-shared components (AppPageShell, PageHeader, MobileHeader, SidebarContext) have NOT been audited for the same catch-block patterns. A future session could run a "layout-shared surface audit" that scans all 4 layout components for stale 2-hop forms.
+
 ## Session 175 — List 1 (Dashboard, Sessions, Memory, Logs) — close session 174 carryover (4 dashboard helpers + safeApiCallData migration in logs)
 
 **Random pick (session 174):** `date +%Y%m%d | awk '{print $1 % 4 + 1}'` = 1 (List 1: Dashboard, Sessions, Memory, Logs).
