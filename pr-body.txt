@@ -1,3 +1,60 @@
+## Session 171 — List 1 (Dashboard, Sessions, Memory, Logs) — shared `<LoadErrorBanner>` component + 2-site migration
+
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 1 (List 1: Dashboard, Sessions, Memory, Logs).
+
+**Date:** 2026-06-12
+
+**Outcome:** **1 commit (`c05dad3`), 2 source files + 1 new component + 2 new test files, 22 new tests, 2 sites cleaned up.** The umbrella skill's Pattern #19 (`LoadErrorBanner`) was documented in the skill writeup from session 139 but the actual component was never built. This session closes the documentation/code gap and migrates the 2 List 1 sites that have `useApiData`-shaped load failures.
+
+### What shipped
+
+| # | File | Change |
+|---|------|--------|
+| 1 | `src/components/ui/LoadErrorBanner.tsx` (new, 89 LOC) | New shared component. Renders the error string + optional hint + optional Retry button. `role="alert"` for accessibility. AlertTriangle icon as the leading visual. Decoupled from `useApiData` (the page owns the conditional render) |
+| 2 | `src/app/(main)/sessions/page.tsx` | Replaced `useEffect(() => showToast(loadError, "error"))` (4-second toast, no recovery affordance) with persistent `<LoadErrorBanner onRetry={refetch} hint="..." />`. Side-effects: `showToast` dropped from `useToast()` destructure (unused); `refetch` added to `useApiData()` destructure (was discarded) |
+| 3 | `src/app/(main)/logs/page.tsx` | Replaced inline `<div className="border-red-500/30 bg-red-500/10...">` banner (no Retry button) with `<LoadErrorBanner onRetry={handleRefresh} />`. Side-effect: `AlertCircle` import dropped (was only used for the removed inline banner — the new component renders `AlertTriangle` internally) |
+| 4 | `tests/unit/load-error-banner.test.tsx` (new) | 8 unit tests for the component: renders the error string, role=alert, Retry button visibility (with/without `onRetry`), Retry click invocation, custom `retryLabel`, hint rendering |
+| 5 | `tests/unit/load-error-banner-source-pattern-list1.test.ts` (new) | 14 source-pattern tests pinning the migration shape across the 2 migrated sites + the component contract + the cross-page invariants + the out-of-scope guard |
+
+### Why this is byte-equivalent
+
+The success path is identical (no banner rendered when `loadError` is null). The failure path adds a Retry button — a new affordance, not a behavior change. The error string rendering is byte-equivalent to the inline form (the same `{loadError}` interpolation, the same `text-red-200` colour, the same `border-red-500/30 bg-red-500/10` chrome). The icon swap (`AlertCircle` → `AlertTriangle`) is invisible at the failing-load UX level (both render a 5×5 warning icon at the leading edge of the banner).
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `CI=true npx eslint . --max-warnings 0`: clean
+- `npx jest`: **277 suites / 2029 tests pass** (up from 272/1977 = +5 suites, +52 tests)
+- `npm run build`: clean
+
+### Pitfall 1 — The "documentation/code gap" class
+
+The umbrella skill's Pattern #19 was introduced in session 139 (the `load-error-banner-and-promise-all` writeup). The writeup described the component contract, the per-page recipe, and the 3 source-migration steps. **The actual component was never built** — the skill writeup was theoretical, and the 3 pages it described (Skills, Personalities, Config) ended up implementing their own ad-hoc patterns.
+
+This session is the first time Pattern #19 is realised as a real file. The 2 migrated sites are List 1 (Dashboard, Sessions, Memory, Logs); the original 3 sites from session 139 (Skills, Personalities, Config) are **List 3 territory** and are NOT migrated in this session.
+
+### Pitfall 2 — The "out-of-scope guard" prevents over-migration
+
+The source-pattern test includes a cross-page invariant that pins **which** List 1 pages import the new component (the 2 migrated sites) and **which** don't (memory, sessions/[id], dashboard). The latter is intentional — those pages either have a different UX (full-page "Not Found" on session detail), a different component contract (multi-section dashboard banner), or no `useApiData` at all (memory shell).
+
+### Pitfall 3 — The `showToast` destructure cleanup
+
+A subtle side-effect of the sessions page migration: the `useToast()` destructure was `const { showToast, toastElement } = useToast();` and only `toastElement` was used after the migration. ESLint's `@typescript-eslint/no-unused-vars` flagged `showToast` as an unused variable. Dropped from destructure; `toastElement` kept (the JSX still renders it as the toast container).
+
+### Reference doc
+
+Full session writeup: `references/control-hub-list1-refactor-session-171.md` under the `overnight-refactor-patterns` skill.
+
+### Next session should
+
+- Any list is fair game — this is a clean-exit session with no carryover.
+- **List 3 has a real migration opportunity**: the original 3 sites from session 139's umbrella-skill writeup (Skills, Personalities, Config) are all on the operations surface (List 3 territory). A List 3 pick should consider migrating those 3 sites to the same `LoadErrorBanner` component introduced in this session — the contract already pins the import + usage shape, so the migration is a straight `replace_all` once the per-page "open-coded form" is removed.
+- Other List 1 follow-ups (deferred):
+  - `src/app/(main)/sessions/[id]/page.tsx` — full-page "Session Not Found" UX could be split into load-failure (banner + Retry) vs not-found (full-page)
+  - `src/app/page.tsx` (Dashboard) — the multi-section `Promise.allSettled` banner from session 139 P-14 is a different component contract. A future session could extract the per-section banner into a shared component (similar shape to `LoadErrorBanner` but takes a `Record<string, string>` of section errors).
+
+---
+
 ## Session 170 — List 4 (Models, HERMES.md, Environment, All Settings) — `buildDriftDetails` helper extraction in `/api/models/sync/drift`
 
 **Random pick:** List 4 via `$((RANDOM % 4 + 1))` = 4. Fresh audit (read 4 config pages + 9 List 4 API routes + 5 sync helpers) found the List 4 surface largely **mined clean** of byte-equivalent refactors — `serverErrorFromCatch` (95), `parseAndValidateJsonBody` (167), `commitFallbackChange`, `setErrorFromCaught`/`toastError` (128, 131), and the `useApiData` / `CardLink` patterns are all in place. The single remaining duplication was the 3-site `DriftReport → string[]` transformation in `/api/models/sync/drift/route.ts` (1 if-push + 2 for-pushes).
