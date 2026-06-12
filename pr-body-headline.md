@@ -3,6 +3,7 @@
 **Full archive:** `pr-body.txt` at HEAD on the `mission/...` branch.
 
 ## Recent sessions
+- **Session 167** — List 4: `seedPostSchema` + `parseAndValidateJsonBody` migration in `api/seed/route.ts` + new source-pattern test (completes the `parseAndValidateJsonBody` adoption sweep on the List 4 API surface)
 - **Session 166** — List 3: `safeApiCallData<{ profiles?: AgentProfile[] }>` migration in `operations/tools/loadProfileSyncStatus` + new source-pattern test pinning the byte-equivalence
 - **Session 163** — List 3: `toastError` migration in `viewSkill` catch + narrow-scope source-pattern test (session 162 carryover closure also committed)
 - **Session 161** — List 3: `filterByCaseInsensitiveSubstring` helper + 2-site migration (skills + personalities) + `scheduleDisplayFromParsed` carryover closure
