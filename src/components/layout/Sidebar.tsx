@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 
 import { iconColorMap } from "@/lib/theme";
-import { setErrorFromCaught } from "@/lib/api-fetch";
+import { setErrorFromCaught, safeApiCallData } from "@/lib/api-fetch";
 import {
   mainSections,
   configSettingsPinnedLinks,
@@ -212,18 +212,19 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
       if (def && list.includes(def)) return def;
       return list[0] ?? "dev";
     };
-    try {
-      const res = await fetch("/api/update?branches=1");
-      const d = await res.json();
-      const list: string[] =
-        d.data?.branches?.length > 0 ? d.data.branches : ["main", "dev"];
-      setBranches(list);
-      setSelectedBranch(pickBranch(list, d.data?.default));
-    } catch {
-      const fallback = ["main", "dev"];
-      setBranches(fallback);
-      setSelectedBranch(pickBranch(fallback, undefined));
-    }
+    // Envelope-typed: the route returns `{ data: { branches, default } }`.
+    // `safeApiCallData<T>` returns `T | null` (the inner payload directly —
+    // no manual `data?.data` indirection). On error it returns `null` and
+    // falls through to the same `["main", "dev"]` fallback the inline
+    // `try/catch` previously had. The "if data" branch reads the list
+    // and default directly from the unwrapped payload.
+    const data = await safeApiCallData<{ branches: string[]; default: string }>(
+      "/api/update?branches=1",
+    );
+    const list: string[] =
+      data && data.branches.length > 0 ? data.branches : ["main", "dev"];
+    setBranches(list);
+    setSelectedBranch(pickBranch(list, data?.default));
   };
 
   const handleDropdownConfirm = async (branch: string) => {
@@ -235,21 +236,24 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
   const doCheck = async (branch: string) => {
     setCheckState("checking");
     setMessage(null);
-    try {
-      const res = await fetch(`/api/update?branch=${encodeURIComponent(branch)}`);
-      const d = await res.json();
-      if (d.data) {
-        setVersion(d.data);
-        setDeployBranch(branch);
-        setCheckState(d.data.updateAvailable ? "update-available" : "up-to-date");
-      } else {
-        setCheckState("idle");
-        setMessage("Check failed");
-      }
-    } catch {
+    // Envelope-typed: the route returns `{ data: { ...ver, branch } }` where
+    // `ver` is the full `VersionCache` shape (see `api/update/route.ts`).
+    // `safeApiCallData<T>` returns `T | null`; on error the original
+    // inline form set `d.data` to undefined and took the "Check failed"
+    // branch — the helper's `null` return maps to the same branch.
+    // Matches the envelope + safeApiCallData shape used by every other
+    // read-only fetch in this file.
+    const data = await safeApiCallData<VersionInfo & { commitDate: string }>(
+      `/api/update?branch=${encodeURIComponent(branch)}`,
+    );
+    if (!data) {
       setCheckState("idle");
       setMessage("Check failed");
+      return;
     }
+    setVersion(data);
+    setDeployBranch(branch);
+    setCheckState(data.updateAvailable ? "update-available" : "up-to-date");
   };
 
   // ── Deploy actions ──────────────────────────────────────────

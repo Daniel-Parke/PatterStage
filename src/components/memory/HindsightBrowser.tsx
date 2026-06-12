@@ -28,6 +28,7 @@ import DirectivesTab from "./hindsight/DirectivesTab";
 import MentalModelsTab from "./hindsight/MentalModelsTab";
 import { AddMemoryModal, DirectiveModal, MentalModelModal } from "./hindsight/Modals";
 import { runMutation } from "@/lib/run-mutation";
+import { toastFromResult } from "@/lib/toast-from-result";
 import { setField } from "@/lib/set-field";
 
 // ── Default form state ─────────────────────────────────────────
@@ -245,28 +246,30 @@ export default function HindsightBrowser() {
     });
 
   const handleToggleDirective = async (directive: Directive) => {
-    const { ok, error } = await safeApiCall("/api/memory/hindsight", {
+    const result = await safeApiCall("/api/memory/hindsight", {
       method: "POST",
       body: { action: "update-directive", id: directive.id, is_active: !directive.is_active },
     });
-    if (!ok) {
-      showToast(error ?? "Failed to update directive", "error");
-      return;
-    }
-    showToast(directive.is_active ? "Directive deactivated" : "Directive activated", "success");
+    // Dynamic success message (deactivated vs activated) — `toastFromResult`'s
+    // thunk form (`successMsg: () => string`) defers the call so the
+    // directive.is_active state is read at toast time, not at request time.
+    toastFromResult(
+      showToast,
+      result,
+      () => (directive.is_active ? "Directive deactivated" : "Directive activated"),
+      "Failed to update directive",
+    );
+    if (!result.ok) return;
     await loadDirectives();
   };
 
   const handleDeleteDirective = async (id: string) => {
-    const { ok, error } = await safeApiCall("/api/memory/hindsight", {
+    const result = await safeApiCall("/api/memory/hindsight", {
       method: "DELETE",
       body: { type: "directive", id },
     });
-    if (!ok) {
-      showToast(error ?? "Failed to delete directive", "error");
-      return;
-    }
-    showToast("Directive deleted", "success");
+    toastFromResult(showToast, result, "Directive deleted", "Failed to delete directive");
+    if (!result.ok) return;
     setDirectives(prev => prev.filter(d => d.id !== id));
   };
 
@@ -338,30 +341,31 @@ export default function HindsightBrowser() {
 
   const handleRefreshModel = async (id: string) => {
     setRefreshingModelId(id);
-    const { ok, error } = await safeApiCall("/api/memory/hindsight", {
+    const result = await safeApiCall("/api/memory/hindsight", {
       method: "POST",
       body: { action: "refresh-model", id },
     });
-    if (!ok) {
-      showToast(error ?? "Failed to refresh mental model", "error");
+    toastFromResult(
+      showToast,
+      result,
+      "Mental model refresh started",
+      "Failed to refresh mental model",
+    );
+    if (!result.ok) {
       setRefreshingModelId(null);
       return;
     }
-    showToast("Mental model refresh started", "success");
     await loadModels();
     setRefreshingModelId(null);
   };
 
   const handleDeleteModel = async (id: string) => {
-    const { ok, error } = await safeApiCall("/api/memory/hindsight", {
+    const result = await safeApiCall("/api/memory/hindsight", {
       method: "DELETE",
       body: { type: "model", id },
     });
-    if (!ok) {
-      showToast(error ?? "Failed to delete mental model", "error");
-      return;
-    }
-    showToast("Mental model deleted", "success");
+    toastFromResult(showToast, result, "Mental model deleted", "Failed to delete mental model");
+    if (!result.ok) return;
     setMentalModels(prev => prev.filter(m => m.id !== id));
   };
 
