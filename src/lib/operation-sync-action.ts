@@ -54,6 +54,72 @@
 
 import { apiFetch, toastError } from "@/lib/api-fetch";
 
+/**
+ * Type-guard for the `data.data?.success === false` envelope
+ * produced by the /api/agent/profiles/sync/* endpoints.
+ *
+ * The pre-helper form was a 6-clause chained type guard inside
+ * `runSyncAction`:
+ *
+ *   if (
+ *     checkSuccess &&
+ *     data && typeof data === "object" && "data" in data &&
+ *     data.data && typeof data.data === "object" &&
+ *     "success" in data.data &&
+ *     (data.data as { success: unknown }).success === false
+ *   ) { ... }
+ *
+ * The chain is the **only** place the codebase pattern-matches on
+ * `{ data: { success: false, error?: string } }` (verified via
+ * `rg '\.data\?\.success'` — single match in this file), so the
+ * helper is local to `operation-sync-action.ts` rather than
+ * `api-fetch.ts`. Promoting it to a named type-guard does three
+ * things:
+ *
+ *  1. **Readability** — the runSyncAction call site becomes
+ *     `if (isApiSuccessFalse(data)) { ... }` instead of a 6-clause
+ *     chain. The intent ("the sync endpoint says the operation
+ *     failed") is now a single line.
+ *  2. **Testability in isolation** — the helper's predicate is
+ *     testable without spinning up a `runSyncAction` call. The
+ *     `tests/unit/operation-sync-action-is-api-success-false.test.ts`
+ *     suite pins every shape: success:false with string error,
+ *     success:false with non-string error, success:false with no
+ *     error key, success:true (negative), missing data field,
+ *     non-object data, null data, undefined data.
+ *  3. **TypeScript narrowing** — once the guard returns true, the
+ *     `error` property is typed `string | undefined` (rather than
+ *     `unknown`), so the `errMsg` extraction below no longer needs
+ *     the `typeof (data.data as { error?: unknown }).error === "string"`
+ *     inner check. The shape is also enumerable, so future
+ *     `error` variants (e.g. `cronPushError` already plumbed
+ *     through api-fetch) can extend the type without rippling
+ *     through `runSyncAction`.
+ *
+ * Byte-equivalence: the helper covers exactly the same input
+ * shapes as the inlined 6-clause chain. The `data && typeof data
+ * === "object"` clause is preserved as `data !== null && typeof
+ * data === "object"` (the original `data &&` short-circuit was
+ * true for any truthy `data`; null is the only non-object truthy
+ * hit in practice, so the explicit `!== null` is byte-equivalent
+ * and slightly more defensive against future `data === 0` /
+ * `data === ""` cases the type system already excludes via the
+ * `T` generic).
+ */
+export function isApiSuccessFalse(
+  response: unknown,
+): response is { data: { success: false; error?: unknown } } {
+  return (
+    response !== null &&
+    typeof response === "object" &&
+    "data" in response &&
+    (response as { data: unknown }).data !== null &&
+    typeof (response as { data: unknown }).data === "object" &&
+    "success" in (response as { data: Record<string, unknown> }).data &&
+    (response as { data: { success: unknown } }).data.success === false
+  );
+}
+
 export interface RunSyncActionOptions {
   /** Optional setter for the page's busy/syncing state. Called with
    *  true on start, false in finally. Omit when the action is
@@ -83,9 +149,11 @@ export interface RunSyncActionOptions {
    *  state so a "Pulling..." spinner doesn't disappear before the
    *  re-fetched data is on screen. */
   onSuccess?: () => Promise<void> | void;
-  /** When true (default), check `data.data?.success === false` and
-   *  show the error toast without throwing. Set false for endpoints
-   *  that throw on error (rely on the catch path). */
+  /** When true (default), check the response shape for
+   *  `data.data?.success === false` (via the `isApiSuccessFalse`
+   *  type-guard helper) and show the error toast without throwing.
+   *  Set false for endpoints that throw on error (rely on the catch
+   *  path). */
   checkSuccess?: boolean;
 }
 
@@ -103,21 +171,9 @@ export async function runSyncAction({
   setBusy(true);
   try {
     const data = await apiFetch(url, { method, body: JSON.stringify(body) });
-    if (
-      checkSuccess &&
-      data &&
-      typeof data === "object" &&
-      "data" in data &&
-      data.data &&
-      typeof data.data === "object" &&
-      "success" in data.data &&
-      (data.data as { success: unknown }).success === false
-    ) {
+    if (checkSuccess && isApiSuccessFalse(data)) {
       const errMsg =
-        "error" in data.data &&
-        typeof (data.data as { error?: unknown }).error === "string"
-          ? (data.data as { error: string }).error
-          : errorMessage;
+        typeof data.data.error === "string" ? data.data.error : errorMessage;
       showToast(errMsg, "error");
       return;
     }

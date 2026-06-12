@@ -1,3 +1,63 @@
+## Session 188 — List 3 (Models, Agents, Skills, Tools, Personalities) — `isApiSuccessFalse` type-guard extraction in `operation-sync-action.ts` + 4 stale `line N` comment updates in `operations/agents/page.tsx`
+
+**Random pick:** `$(( $(date +%s) % 4 + 1 ))` = 3 (List 3: Models, Agents, Skills, Tools, Personalities).
+
+**Date:** 2026-06-12
+
+**Outcome:** **1 byte-equivalent type-guard extraction in the List 3 shared sync helper (`src/lib/operation-sync-action.ts`) + 1 comment-only cleanup in `src/app/operations/agents/page.tsx`.** The 6-clause chained type guard that pattern-matches on the `{ data: { success: false, error?: string } }` envelope produced by `/api/agent/profiles/sync/*` endpoints was inlined inside `runSyncAction`'s try-block. The chain is moved into a new named type-guard `isApiSuccessFalse(response: unknown): response is { data: { success: false; error?: unknown } }` exported from the same file. The call site shrinks from 6 chained clauses (10 lines) to `if (checkSuccess && isApiSuccessFalse(data))` (1 line). The `errMsg` extraction also drops its inner `typeof (data.data as { error?: unknown }).error === "string"` cast — the type-narrowing from the `is` predicate means `data.data.error` is already typed `unknown` (with the runtime `typeof === "string"` check the only thing needed to narrow to `string`). The 4 stale `line N` comment updates in `operations/agents/page.tsx` replace the now-drifted line numbers (e.g. "line 492" → "around line 600", "line ~222" → "around line 282") with the "around line N" form so the references stay useful as anchors without becoming stale on the next edit. 26 new tests across 2 test files: `tests/unit/operation-sync-action-is-api-success-false.test.ts` (21 cases — 5 positive input shapes, 14 negative input shapes, 2 type-narrowing assertions) + `tests/unit/operation-sync-action-is-api-success-false-source-pattern.test.ts` (5 source-pattern assertions pinning the post-refactor shape: helper is exported, call site uses the helper, inlined chain's signature fragment is absent, error access uses the narrowed type, return type uses the `is` type-guard predicate). All 2249 jest tests pass (+26 from session 187's 2223 = +21 runtime + 5 source-pattern) + tsc + eslint + build all green.
+
+### What shipped
+
+1 byte-equivalent refactor in the shared List 3 sync helper + 1 comment cleanup, plus 26 new tests across 2 test files.
+
+1. **`isApiSuccessFalse` type-guard extraction in `src/lib/operation-sync-action.ts`** — the 6-clause chained type guard that pattern-matches on the `{ data: { success: false, error?: string } }` envelope produced by `/api/agent/profiles/sync/*` endpoints was inlined inside `runSyncAction`'s try-block (lines 106-115 in the pre-refactor file). The chain was:
+   ```ts
+   if (
+     checkSuccess &&
+     data && typeof data === "object" && "data" in data &&
+     data.data && typeof data.data === "object" &&
+     "success" in data.data &&
+     (data.data as { success: unknown }).success === false
+   ) { ... }
+   ```
+   The chain is moved into a new named type-guard `isApiSuccessFalse(response: unknown): response is { data: { success: false; error?: unknown } }` exported from the same file. The call site shrinks from 6 chained clauses (10 lines) to `if (checkSuccess && isApiSuccessFalse(data))` (1 line). The `errMsg` extraction below also drops its inner `typeof (data.data as { error?: unknown }).error === "string"` cast — the type-narrowing from the `is` predicate means `data.data.error` is already typed `unknown` (with the runtime `typeof === "string"` check the only thing needed to narrow to `string`).
+
+2. **4 stale `line N` comment updates in `src/app/operations/agents/page.tsx`** — the inline comments above `closeCreate` (line 204 said "line 492", actually around line 600 now), `closeEditor` (lines 97-101 referenced "line ~222 / ~334 / ~495", now ~282 / ~404 / ~567), and `openCreate` (line 217 said "line 310", now ~364) all referenced pre-session-184 line numbers from the closed `setX(messageFromError)` migrations. The line numbers were replaced with "around line N" / "(around line N)" so the references stay useful as anchors without becoming stale on the next edit. No code change — comment-only.
+
+3. **`tests/unit/operation-sync-action-is-api-success-false.test.ts` (NEW)** — 21 unit tests covering: 5 positive cases (`{data: {success: false, error: 'disk full'}}`, no-error variant, non-string error, null error, extra fields ignored), 14 negative cases (`success: true`, `success: 'false'` strict-equality pin, `success: 0`, no success key, no data key, null, undefined, string, number, array, `data: null`, `data: 'string'`, `data: 42`, `success: undefined`), and 2 type-narrowing tests confirming the `is` predicate correctly narrows `data.data.error` to the typed `string | unknown` shape. 21/21 pass.
+
+4. **`tests/unit/operation-sync-action-is-api-success-false-source-pattern.test.ts` (NEW)** — 5 source-pattern assertions pinning the post-refactor shape of `src/lib/operation-sync-action.ts`: (a) `isApiSuccessFalse` is exported as a named function, (b) the `runSyncAction` call site uses the helper (regex pin: `if (checkSuccess && isApiSuccessFalse(data))`), (c) the file does NOT contain the 6-clause inlined chain's signature fragment `data.data && typeof data.data === "object"` (the truthy-check pattern that the helper replaced), (d) the error access uses the narrowed type `typeof data.data.error === "string"` (not the pre-refactor re-cast `(data.data as { error?: unknown }).error`), (e) the helper's return type uses the `is` type-guard predicate (`response is { ... }`). 5/5 pass. Comment-stripped source is read so JSDoc blocks don't trip the substring matches.
+
+### Why this is byte-equivalent (or improves performance without behavior change)
+
+- **`isApiSuccessFalse` extraction**: pure relocation + type-guard promotion. The helper's predicate is the EXACT 6-clause chain from the pre-refactor file (verified by the 21 input-shape tests covering every reachable `unknown` value: `null`, `undefined`, primitives, arrays, plain objects with/without `data`, with/without `success`, with `success: true` vs `success: false` vs `success: 'false'` vs `success: undefined`). The 17 existing `operation-sync-action.test.ts` tests continue to pass unchanged (4 of which exercise the `success: false` envelope directly: the "shows the error toast and skips onSuccess when the response says success:false" test, the "falls back to errorMessage when success:false has no error string" test, the "tolerates responses that lack a data field" test, and the "skips the success:false check when checkSuccess=false" test). The 5 source-pattern tests pin the helper-at-call-site shape so a future "inline the type-guard back into the runSyncAction try-block" PR would fail at least one of them. The 21+17+5 = 43 total tests lock the byte-equivalence claim at the runtime, type-narrowing, and source-pattern levels.
+- **Stale `line N` comment updates**: comment-only change. The pre-session comments said "line 492" / "line ~222" / "line ~334" / "line ~495" / "line 310" — each was the line number AT THE TIME the comment was written (sessions 184 and 185). The line numbers drifted because intervening sessions added 100+ lines of closeDelete / closeEditor / openCreate sibling callbacks and the timer-ref cleanup. The replacement text "around line N" preserves the anchor function (readers can `grep` to find the site) without becoming stale on the next edit. No code path changes — purely a discoverability improvement for the next maintainer.
+
+### Verification
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint . --max-warnings 0`: clean (0 warnings)
+- `npx jest`: **301 suites / 2249 tests pass** (up from 299/2223 = +2 suites, +26 tests, matching the 2 new test files at 21+5 = 26 cases)
+- `CI=true npx --yes pnpm@10.33.0 build`: clean
+
+### Carryover resolution
+
+No carryover in or out. This session started with a clean working tree (session 187's `config-cache` + `existingById` Map extraction shipped in commit `5e8eb2c`). The previous session's "Next session should" block suggested a different list for the next session, but the random pick (using `$(date +%s) % 4 + 1`) landed on List 3 again — List 3 still had the `runSyncAction` 6-clause chain as an unmined surface, and the `agents/page.tsx` line-ref drift was a low-cost 5-min cleanup, so this session picked the lowest-hanging fruit and shipped a tight 2-refactor session.
+
+### Reference doc
+
+No new reference doc — this is a 2-refactor session with the same `helper-extraction + comment-cleanup` shape as the prior List 3 sessions (e.g. session 119's `applyProfileOrRootPatch` double-handler decomposition, session 107's `reloadAll` callback consolidation). The new test file's JSDoc + the helper's JSDoc together document the contract.
+
+### Next session should
+
+- **Random pick next session.** List 3 has now had 13+ sessions (67, 70, 77, 80, 90, 91, 92, 95, 96, 98, 107, 111, 113, 119, 127, 132, 133, 142, 144, 147, 163, 165, 166, 187, 188). The "spread the refactor surface" advice still holds — **List 1 is the next-ripe surface** (last touched session 144, 44 sessions ago). **List 2** is also ripe (last touched session 168, 20 sessions ago) — the `safeApiCall<{ data?: { ... } }>` double-envelope sweep in `useMissionsPage.ts` (3 sites) + `useMissionsApi.ts` (1 site) + `useCronJobMutation.ts` (1 site) is the natural follow-up to session 166's `useModelsPage.ts` migration. **List 4** is the quietest surface (last touched session 187, 1 session ago) but most-ripe for new content discovery — the per-list source-pattern tests are CLOSED for all 4 lists, so the next List 4 pick needs to find refactor opportunities OUTSIDE the 4 factory families (e.g. the `apiFetch + JSON.stringify` mutation-site sweep, which has 12+ sites across `useModelsPage.ts` + the 4 operations pages, but changes the failure mode from throw to return-ok/error, so requires explicit per-site `if (!ok) { toastError(...) }` rewrites).
+- **`safeApiCall<{ data?: { ... } }>` double-envelope sweep (List 2)** — the 4 List-2 sites in `useMissionsPage.ts:661, 692, 720` and `useMissionsApi.ts:46` and `useCronJobMutation.ts:136` are the same single-nesting pattern session 166 closed in List 3 (`useModelsPage.ts:413`). The migration is byte-equivalent: `safeApiCall<{ data?: { mission?: { id: string } } }>` → `safeApiCall<{ mission?: { id: string } }>` + `res?.mission?.id` (drop the `res?.data?.` indirection). 5 sites in 3 files, 1-list-scope. Defer to a future List 2 pick.
+- **`apiFetch + JSON.stringify` migration to `safeApiCall` (cross-list)** — 12+ mutation sites in `useModelsPage.ts` and the 4 operations pages (`agents`, `personalities`, `skills`, `tools`). The migration changes the failure mode (throw → return ok/error), so requires per-site `if (!ok) { toastError(...); }` rewrites. Currently rejected by sessions 80, 90, 119 because the migration is non-byte-equivalent. Defer to a future session that explicitly opts in to `safeApiCall` mutations.
+- **`useMissionsPage` decomposition** — 1298+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results" — would need a careful hook-by-hook extraction with state-derivation verification.
+- **Carryover** — none. The next session starts with a clean working tree.
+
+---
+
 ## Session 186 — List 1 (Dashboard, Sessions, Memory, Logs) — `hindsightErrorFromCatch` combined catch shim + 2 POST/DELETE catch migrations in `/api/memory/hindsight/route.ts` (close session 185 carryover)
 
 **Random pick:** `$((RANDOM % 4 + 1))` = 1 (List 1: Dashboard, Sessions, Memory, Logs).

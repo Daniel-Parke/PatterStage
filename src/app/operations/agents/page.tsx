@@ -94,11 +94,11 @@ export default function BehaviourPage() {
 
   // closeEditor — the file-editor card has 3 single-setter
   // close sites that all do the same thing: `() => setEditor(null)`.
-  //   1. handleDelete's success path (line ~222) — but only when the
-  //      deleted profile was the one being edited
-  //   2. Profile-button onClick (line ~334) — when switching to a
-  //      different profile
-  //   3. Editor's "Close" button (line ~495)
+  //   1. handleDelete's success path (around line 282) — but only
+  //      when the deleted profile was the one being edited
+  //   2. Profile-button onClick (around line 404) — when switching
+  //      to a different profile
+  //   3. Editor's "Close" button (around line 567)
   // Centralising into a `useCallback` with empty deps (useState
   // setters are stable) keeps the 3 sites in lockstep. The handleDelete
   // site is part of a 3-call success block (`closeDelete();
@@ -201,7 +201,7 @@ export default function BehaviourPage() {
   // both. The pattern mirrors the A3 page-local modal setter-pair
   // callbacks (session 100: `closeAgentModal` / `closeSystemModal`
   // in cron; session 98: `closeComposer` in useMissionsPage).
-  // Note: the modal's Cancel button (line 492) uses a deliberate
+  // Note: the modal's Cancel button (around line 600) uses a deliberate
   // SOFT close (1 setter, no clear) to preserve the user's in-flight
   // form input if they cancel by accident. That is a discriminated
   // pattern, not a duplicate — left inline.
@@ -214,13 +214,14 @@ export default function BehaviourPage() {
 
   // openCreate — sibling of `closeCreate` (session 116 P-7 /
   // session 118 P-7 open/close sibling pattern). The "New Profile"
-  // header button (line 310) was an inline `() => setShowCreate(true)`
-  // arrow, sitting next to the `closeCreate` callback that handles
-  // the close path. Promoting the open to a useCallback sibling
-  // names the page's intent ("open the create modal") and keeps
-  // the open/close pair symmetric so a future "reset form on open"
-  // or "track last-opened create-tab" extension lands in one place.
-  // The deps array lists the stable setter explicitly to satisfy
+  // header button (around line 364) was an inline
+  // `() => setShowCreate(true)` arrow, sitting next to the
+  // `closeCreate` callback that handles the close path. Promoting
+  // the open to a useCallback sibling names the page's intent
+  // ("open the create modal") and keeps the open/close pair
+  // symmetric so a future "reset form on open" or "track last-
+  // opened create-tab" extension lands in one place. The deps
+  // array lists the stable setter explicitly to satisfy
   // `react-hooks/exhaustive-deps` (per session 119 P-3 codebase
   // convention).
   const openCreate = useCallback(
