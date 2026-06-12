@@ -1,3 +1,61 @@
+## Session 169 — List 3 (Models, Agents, Skills, Tools, Personalities) — `skillFilePath` helper extraction + 5-site migration
+
+**Random pick:** List 3 via `$((RANDOM % 4 + 1))` = 3. Fresh audit (read 3 List 3 ops pages + 9 API routes + 4 sync helpers) found the 1-line `${skillsRoot} + "/" + ${skillKey} + "/SKILL.md"` path-build repeated at 5 sites across 3 files. The `dir + "/SKILL.md"` shape (used in `scanDiskSkillsCatalog`, `pushSkillToHermes`, the `walk()` in `pullSkillFromHermes`, and `api/skills/[...path]`) is a different shape (pre-resolved directory, not root + key) and is explicitly out of scope for this migration.
+
+**Date:** 2026-06-12
+
+**Outcome:** **1 commit (`4c130b9`), 6 files (3 modified, 2 modified, 1 new), +176 / -8 net LOC (mostly test file + JSDoc).**
+
+### The 5 migrated sites
+
+- `src/app/api/skills/route.ts:43` — `dbSkills.map(row => { const path = skillsDir + "/" + row.skillKey + "/SKILL.md"; ... })`
+- `src/app/api/skills/[name]/route.ts:29` — `if (row) { return ok({ ..., path: skillsRootForProfile() + "/" + name + "/SKILL.md", ... }); }`
+- `src/app/api/skills/[name]/route.ts:37` — `const filePath = skillsRoot + "/" + name + "/SKILL.md";`
+- `src/lib/hermes-profile-sync.ts:387` — `pullSkillFromHermes` direct path lookup: `const direct = skillsRoot + "/" + skillKey + "/SKILL.md";`
+- `src/lib/hermes-profile-sync.ts:519` — `detectSkillDrift` path lookup: `const path = skillsRoot + "/" + skillKey + "/SKILL.md";`
+
+### Helper signature
+
+```ts
+export function skillFilePath(skillsRoot: string, skillKey: string): string {
+  return skillsRoot + "/" + skillKey.replace(/\\/g, "/") + "/SKILL.md";
+}
+```
+
+The `replace(/\\/g, "/")` is a small cross-platform win — it normalises Windows-style backslashes in the catalog key to forward slashes so the path matches what `collectSkillDirectoryNames` walks with `path.sep`-aware readers on Windows. No behaviour change on Linux (where catalog keys never contain backslashes).
+
+### Tests
+
+- **4 new unit tests in `tests/unit/skills-config.test.ts`** — leaf key, nested key (`apple/apple-notes`), Windows-backslash normalisation (`apple\\apple-notes` → `apple/apple-notes`), trailing-slash passthrough. Pins the helper contract.
+- **4 new source-pattern assertions in `tests/unit/skill-file-path-source-pattern.test.ts`** — pins that the helper is imported by all 3 in-scope files AND that the inline `root + "/" + key + "/SKILL.md"` shape is gone from them. The `dir + "/SKILL.md"` shape is explicitly NOT pinned (out of scope, different shape).
+- **Source-pattern JSDoc** documents the pre-flight recipe (`grep` for the helper export + 5 call sites + absence of inline joins) so a future "shorter is better" refactor that re-inlines the join is caught by the test, not by a silent regression.
+
+### Out of scope (deferred)
+
+- **Migrating the 4 `dir + "/SKILL.md"` sites** in `hermes-profile-sync.ts` (`walk()` in pullSkillFromHermes line 398, `targetDir` in pushSkillToHermes line 245, and `scanDiskSkillsCatalog` lines 625). These take a pre-resolved directory, not a `(root, key)` pair — the `skillFilePath` signature doesn't fit. Would need a separate `skillFilePathInDir(skillDir)` helper, or extending the existing one with a discriminator. Defer until a 3rd consumer appears.
+- **The `operations/agents/page.tsx:31` `agentFileUrl` local helper** — only 2 call sites, all on the same page. Per the "1-helper-per-3+identical-callsites" rule (session 100 discriminated-close audit), 2 callsites is not enough to extract. Left inline.
+- **The `operations/skills/page.tsx:125` `skillApiUrl` local helper** — similar 2-callsite pattern, not extracted.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `CI=true npx eslint src/... --max-warnings 0`: clean
+- `npx jest`: **274 suites / 1999 tests pass** (was 273/1995 = +1 suite, +4 tests, matching the 4 new `skillFilePath` unit tests)
+- `CI=true npx --yes pnpm@10.33.0 build`: clean
+
+### Behaviour change
+
+None. Every call site is byte-equivalent to the inline form. The `replace(/\\/g, "/")` is a no-op on Linux where catalog keys are forward-slash only.
+
+### "Next session should" block
+
+1. **List 3 is now mined clean** for the `skillFilePath` surface. The 4 `dir + "/SKILL.md"` sites in `hermes-profile-sync.ts` and `api/skills/[...path]` are a different shape and can be deferred to a future "3+ consumer threshold" pick.
+2. **List 1 is the next-ripe surface** — last touched session 144 (25 sessions ago). Per the session 144 carryover, the open surfaces are: (a) the `JobFormModal.tsx:166` inline `err instanceof Error ? err.message : "Unknown error"` site, (b) `useApiData` extension for `URLSearchParams` + pagination in `(main)/sessions/page.tsx`, (c) the inline `console.error` redundancy rule from session 131 P-131-4 applied to `(main)/logs/page.tsx` and `(main)/sessions/page.tsx` (3-5 sites).
+3. **List 2** is the second-next-ripe surface — the 5 `safeApiCall<{ data?: { ... } }>` double-envelope sites in `useMissionsPage.ts:661, 692, 720` + `useMissionsApi.ts:46` + `useCronJobMutation.ts:136` are the natural follow-up to the `useModelsPage.ts` migration from session 133.
+4. **List 4** is the quietest surface. The per-list source-pattern tests are CLOSED for all 4 lists, so the next List 4 pick needs to find new refactor opportunities OUTSIDE the 4 factory families (`ok`, `serverErrorFromCatch`, `safeApiCallData`, `parseAndValidateJsonBody`).
+
+---
+
 ## Session 168 — List 2 (Cron, Missions, Chat) — `COPY_BTN_CLASS` + `COPY_BTN_DATA_ATTR` magic-string consolidation in chat page + chat-utils
 
 **Random pick:** List 2 via `date +%s | awk '{print int($1) % 4 + 1}'` = 2. Per session 158's Mode I.1 protocol, the prior List 2 reference declared the list MINED CLEAN. This session's fresh audit (5-grep scan + read of all 3 List 2 pages) found exactly one remaining byte-equivalent surface: the magic-string coupling between the chat page's global click handler and `renderMarkdown`'s template literal. The 2 other named OOS surfaces from session 158 (the `isChReadOnly()` consolidation + the 2 `console.error` UX-dedup sites) are still OOS per the byte-equivalence charter and need user direction.
