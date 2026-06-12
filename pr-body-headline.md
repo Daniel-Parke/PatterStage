@@ -4,6 +4,44 @@
 
 ## Recent sessions (full detail)
 
+## Session 181 — List 2 (Cron, Missions, Chat) — `updateSession` chat-page generalised helper + `dispatchMissionAction` shared call-shape helper + envelope-typed source-pattern test extension (close session 180 carryover)
+
+### What shipped
+
+2 byte-equivalent refactors + 1 source-pattern test extension on the List 2 surface (carryover closure from session 180). The session 180 work shipped in the working tree but ran out of tool-call budget before commit/push; this session's first action was to verify + commit + push.
+
+1. **`updateSession(sessionId, updater)` helper in `src/app/orchestration/chat/page.tsx`** — generalised the `setSessions((prev) => prev.map((s) => s.id === X ? { ...s, ...FIELD } : s))` pattern + `updated_at` stamp. Replaced 2 inline sites (model change in `handleModelChange` + new-session title set in `handleSend`). The pre-existing `updateSessionMessages` is now a 1-line wrapper around the generalised helper — 1 indirect + 2 direct callers, single source of truth.
+
+2. **`dispatchMissionAction(action, body)` helper in `src/hooks/success-message-for-dispatch.ts`** — composes the `safeApiCall<MissionActionResponse>("/api/missions", { method: "POST", body: { action, ...body } })` shape that all 4 action branches in `useMissionsPage.handleCreate` (update / promote / redispatch-completed / dispatch-new) share. The `MissionActionResponse` envelope type is declared once at module level instead of inlined 4 times. Net: 4 × 12-line call blocks → 4 × 4-line helper calls = 32 lines saved.
+
+3. **`tests/unit/safe-api-call-data-source-pattern-list2.test.ts`** — added `success-message-for-dispatch.ts` to the surface (it now owns the envelope-typed call for the 4 sites) and extended the regex to also match the named-type envelope form (`safeApiCall<MissionActionResponse>`) and the helper-call form (`dispatchMissionAction(...)`), so the wire-shape contract is still pinned at exactly one file. +2 new test cases, all 21/21 pass.
+
+4. **`src/app/orchestration/chat/page.tsx` `handleSend` dep array fix** — added `updateSession` to the deps (resolves the `react-hooks/exhaustive-deps` warning that was flagged on the unverified session-180 carryover).
+
+### Why this is byte-equivalent
+
+- **`updateSession` extraction**: the helper body is literally `setSessions((prev) => prev.map((s) => s.id === sessionId ? { ...updater(s), updated_at: Date.now() } : s))` — same setState shape, same `updated_at` stamp, same id discriminator.
+- **`dispatchMissionAction` extraction**: the helper body is literally `safeApiCall<MissionActionResponse>("/api/missions", { method: "POST", body: { action, ...body } })` — same wire call, same envelope type, same `SafeApiCallResult` shape on return. The envelope indirection drops one level at the consumer reads (`result.data?.data?.mission?.id` becomes `result.data?.mission?.id`) — a type-level read change, not a wire-level change.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `CI=true npx eslint . --max-warnings 0`: clean (was 1 warning on the unverified carryover; resolved)
+- `npx jest tests/unit/safe-api-call-data-source-pattern-list2.test.ts`: **21/21 pass** (was 19/19 = +2 new test cases for the helper file in the surface)
+- `npx jest tests/unit/success-message-for-dispatch.test.ts tests/unit/dispatch-mission-cli.test.ts`: **21/21 pass** (unchanged)
+- `npx jest`: **286 suites / 2141 tests pass** (up from 285/2139 = +1 suite, +2 tests; no regressions)
+- `npm run build`: clean
+
+### Reference doc
+
+No new reference doc — this is a 2-refactor session with the same byte-equivalence shape as the session 180 `references/session-180-list2-update-session-and-dispatch-mission-action.md` doc (the work is the closure of that session's carryover).
+
+### Next session should
+
+- **Random pick next session.** The List 2 surface is now mined clean at the catch-block / `setErrorFromCaught` / `serverErrorFromCatch` / `dispatchMissionAction` / `updateSession` scope. Future List 2 refactors require picking a different surface (e.g. the `requireMissionId` + `getMissionOrNotFound` + `requireMissionOrNotFound` triplet in `api/missions/route.ts` could be collapsed into a `*OrFail` combined helper per the session 173 pattern).
+- **List 3 carryover: 2 `useModelsPage.ts` `setX(messageFromError(...))` sites** (lines 107 and 314 per the session 176 audit).
+- **Result-object `messageFromError` pattern.** 3 `useMissionsPage.ts` + 3 `useModelsPage.ts` sites of the same shape — 6 sites across 2 hooks, still below the threshold for extraction.
+
 ## Session 178 — List 2 (Cron, Missions, Chat) — `setErrorFromCaught` carryover + `serverErrorFromCatch` chat-route migration + `setErrorFromCaught` return-value enhancement + 2 silent-catch fixes
 
 ### What shipped
@@ -282,5 +320,5 @@ None. Every call site is byte-equivalent to the inline form. The `replace(/\\/g,
 
 ---
 
-**Total sessions on this PR:** 65 (was 64, +1 for session 178)
-**Full archive size:** 682485 bytes (`pr-body.txt` at branch HEAD, was 667090, +15395 for session 178)
+**Total sessions on this PR:** 66 (was 65, +1 for session 181)
+**Full archive size:** 693407 bytes (`pr-body.txt` at branch HEAD, was 682485, +10922 for session 181)
