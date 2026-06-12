@@ -8,13 +8,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest, ok, serverError } from "@/lib/api-response";
+import { badRequest, ok } from "@/lib/api-response";
 import { getAgentLlmEndpoints } from "@/lib/hermes-agent-runtime";
 import { CHAT_DEFAULT_MODEL } from "@/types/chat";
-import { toError } from "@/lib/api-fetch";
 
 /** Shared gateway fetch — both streaming and non-streaming paths use this. */
 async function fetchGateway(
@@ -78,7 +77,11 @@ export async function POST(request: NextRequest) {
 
     return fetchGateway(apiUrl, gatewayBody, isStreaming);
   } catch (error) {
-    logApiError("chat", "POST /api/orchestration/chat", error);
-    return serverError(toError(error).message);
+    return serverErrorFromCatch(
+      "POST /api/orchestration/chat",
+      "calling gateway",
+      error,
+      "Failed to call gateway",
+    );
   }
 }
