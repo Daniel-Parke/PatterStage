@@ -23,7 +23,7 @@ import {
   buildPartialUpdateBody,
   DIRECTIVE_UPDATE_FIELDS,
   extractListItems,
-  hindsightErrorResponse,
+  hindsightErrorFromCatch,
   MENTAL_MODEL_UPDATE_FIELDS,
 } from "@/lib/hindsight-route-helpers";
 
@@ -399,8 +399,7 @@ export async function POST(request: NextRequest) {
 
     return ok(result);
   } catch (error) {
-    logApiError("POST /api/memory/hindsight", "action", error);
-    return hindsightErrorResponse(error);
+    return hindsightErrorFromCatch("POST /api/memory/hindsight", "action", error);
   }
 }
 
@@ -432,7 +431,6 @@ export async function DELETE(request: NextRequest) {
 
     return ok(result);
   } catch (error) {
-    logApiError("DELETE /api/memory/hindsight", "delete", error);
-    return hindsightErrorResponse(error);
+    return hindsightErrorFromCatch("DELETE /api/memory/hindsight", "delete", error);
   }
 }
