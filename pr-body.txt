@@ -1,3 +1,69 @@
+## Session 173 — List 3 (Models, Agents, Skills, Tools, Personalities) — `*OrFail` combined-helper extraction across 5 routes + per-surface source-pattern scanner
+
+**Random pick:** `$((RANDOM % 4 + 1))` = 3 (List 3: Models, Agents, Skills, Tools, Personalities).
+
+**Date:** 2026-06-12
+
+**Outcome:** **1 source commit (`a68f8fe`), 2 new combined helpers + 6 call-site migrations + 1 source-pattern scanner + 9 new helper tests.** Closes the documented pitfall from session 117 ("extract a `*OrFail` combined helper when 3+ sites repeat the 4-line dance") and proves the pattern on List 3.
+
+### What shipped
+
+| # | File | Change |
+|---|------|--------|
+| 1 | `src/lib/apply-profile-or-root-patch.ts` | Added `applyProfileOrRootPatchOrFail(slug, rootPatch, profilePatch, fallbackError)` and `pushProfileOrRootOrFail(slug, fallbackError)` — both combine `apply/pushProfileOrRoot` + `toPatchResponse` + `assertPatchSucceeded` into one call returning `NextResponse \| { profile: string }`. |
+| 2 | `src/app/api/personalities/route.ts` | 1 apply-site migrated. Dropped the unique-to-this-route redundant `logApiError` call (push failure was already logged via `setProfileSyncStatus` in the underlying push). |
+| 3 | `src/app/api/agent/personality/route.ts` | 1 apply-site migrated. |
+| 4 | `src/app/api/skills/[name]/toggle/route.ts` | 1 apply-site migrated. |
+| 5 | `src/app/api/agent/profiles/[id]/toolsets/route.ts` | 1 apply-site migrated. |
+| 6 | `src/app/api/agent/files/[key]/route.ts` | 2 sites migrated (config branch uses apply variant; non-config branch uses push variant). |
+| 7 | `tests/unit/apply-profile-or-root-patch.test.ts` | +9 tests covering both new helpers across success / not-found / push-failed / byte-equivalence. |
+| 8 | `tests/unit/apply-profile-or-root-patch-or-fail-source-pattern.test.ts` (new, 195 LOC) | Per-surface scanner: 24 source-pattern assertions across 6 sites, pinning the post-migration import shape, call-arg count, `instanceof NextResponse` discriminator, and the absence of the pre-migration `if (err) return err` form. |
+
+### Why this is byte-equivalent
+
+`applyProfileOrRootPatchOrFail` is literally `applyProfileOrRootPatch + toPatchResponse + assertPatchSucceeded + return { profile: result.profile }`. The wire shape is preserved across all 3 paths:
+
+- **Success** → `{ profile: "..." }`, same field read as the prior `result.profile`.
+- **Not-found** → `NextResponse` with 404 + `{ error: "Profile not found" }`.
+- **Push-failed** → `NextResponse` with 500 + either the underlying error string or "Push failed" (set by `pushProfileOrRoot`'s `?? "Push failed"`).
+
+One minor side-effect: the `personalities` route lost a redundant `logApiError` call that was unique to that one route. The push-failed path is still logged via `setProfileSyncStatus` in `pushProfileOrRoot`/`pushRootToHermes`, so the operator-visible diagnostic is preserved.
+
+### Pitfall 1 — `pushProfileOrRoot` substitutes "Push failed" for null errors
+
+`pushProfileOrRoot` (the underlying push function in `apply-profile-or-root-patch.ts:106`) returns `{ ok: false, reason: "push-failed", error: push.error ?? "Push failed" }`. So when the underlying push returns `success: false, error: null`, the inner `pushProfileOrRoot` substitutes "Push failed" before returning. The caller's `fallbackError` is unreachable in the normal push-failed path — the 500 body will always be the underlying error OR "Push failed", never the caller's `fallbackError`. The test that pinned this expected "Failed to toggle skill" but got "Push failed" — the corrected test reflects the real contract.
+
+### Pitfall 2 — Agent/files route has BOTH apply AND push call sites in the same file
+
+`src/app/api/agent/files/[key]/route.ts` is the only file with both variants: the `key === "config"` branch uses `applyProfileOrRootPatchOrFail`; the `else` branch (SOUL.md, AGENTS.md, etc.) uses `pushProfileOrRootOrFail`. The source-pattern test for this file scopes per-branch (e.g. `scopeFragment: "configPatch = {"` for the apply branch, `scopeFragment: "writeManagedFileContent(profileSlug, key as ManagedFileKey, content)"` for the push branch) — otherwise the "exactly one call" assertion matches the wrong variant. Unscoped regex matching will pass tests for the wrong site.
+
+### Pitfall 3 — `personalities` route's unique `logApiError` was redundant
+
+The pre-migration `personalities/route.ts` had an extra `logApiError` call in the push-failed branch that the other 4 sibling sites did NOT have. The call was redundant because the underlying `pushProfileToHermes` / `pushRootToHermes` already log via `setProfileSyncStatus(slug, null, message)`. Migration removed the redundant call. When consolidating, scan sibling sites for the same call shape. If one site has an extra side-effect that the siblings lack, it's usually pre-existing inconsistency, not intentional behavior.
+
+### Pitfall 4 — `assertPatchSucceeded` is a no-op at runtime
+
+`assertPatchSucceeded` is a TypeScript asserts function — it has NO runtime effect, only a compile-time narrowing. The combined helper still calls it (to preserve the existing contract for any direct `toPatchResponse + assertPatchSucceeded` consumers) but a future refactor could drop it from the combined helper entirely if no direct consumers remain. The "narrowing" test (TypeScript reads `result.profile` after `assertPatchSucceeded(result)`) is a compile-time lock, not a runtime test.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `CI=true npx eslint . --max-warnings 0`: clean
+- `npx jest`: **279 suites / 2071 tests pass** (up from 278/2038 = +1 suite, +33 tests)
+- `npm run build`: clean
+
+### Carryover resolution
+
+This session started with a Mode B (verified-but-uncommitted) carryover from the prior session: 5 source files modified + 1 new test file, all green under tsc + eslint + jest + build. The prior session wrote the reference doc (`references/control-hub-list3-or-fail-helper-session-173.md`) but hit the tool-call cap before commit/push. Standard 4-step commit-when-verified protocol applied: verify → commit → push → docs commit.
+
+### Reference doc
+
+Full session writeup: `references/control-hub-list3-or-fail-helper-session-173.md` under the `overnight-refactor-patterns` skill.
+
+### Next session should
+
+- Any list is fair game — this is a clean-exit session with no carryover.
+- The `*OrFail` combined-helper pattern is now proven on List 3 — consider applying the same approach to any other "apply helper + check error + assert + return" dance in the codebase (e.g. the `safeApiCall` + `messageFromError` + manual error-string-construction pattern in some client-side code; the `applyMission + pushMission + handleMissionError` pattern in `src/lib/backends/hermes.ts:555` if it has the same shape).
 ## Session 171 — List 1 (Dashboard, Sessions, Memory, Logs) — shared `<LoadErrorBanner>` component + 2-site migration
 
 **Random pick:** `echo $((RANDOM % 4 + 1))` = 1 (List 1: Dashboard, Sessions, Memory, Logs).
