@@ -55,9 +55,13 @@
 import { apiFetch, toastError } from "@/lib/api-fetch";
 
 export interface RunSyncActionOptions {
-  /** Setter for the page's busy/syncing state. Called with true on
-   *  start, false in finally. */
-  setBusy: (busy: boolean) => void;
+  /** Optional setter for the page's busy/syncing state. Called with
+   *  true on start, false in finally. Omit when the action is
+   *  sub-100ms and no spinner is desired (e.g. operations/
+   *  personalities' handleActivate — switching the active personality
+   *  is a single PUT that returns in tens of milliseconds; showing
+   *  a spinner would be UI noise). The default is a no-op. */
+  setBusy?: (busy: boolean) => void;
   /** Toast helper from useToast(). The `variant` arg matches
    *  `toastError`'s `ShowToastFn` signature (optional "success" |
    *  "error" | "info") so the helper is callable directly. */
@@ -86,7 +90,7 @@ export interface RunSyncActionOptions {
 }
 
 export async function runSyncAction({
-  setBusy,
+  setBusy = () => undefined,
   showToast,
   url,
   method = "POST",

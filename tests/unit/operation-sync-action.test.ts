@@ -203,4 +203,49 @@ describe("runSyncAction", () => {
       expect.objectContaining({ method: "DELETE" }),
     );
   });
+
+  // Session 170: `setBusy` became optional. Callers that want no
+  // spinner (e.g. sub-100ms actions like switching the active
+  // personality) omit the key entirely. The helper's default
+  // `setBusy = () => undefined` is a no-op, so omitting is
+  // byte-equivalent to the prior `setBusy: () => undefined` smell.
+  it("tolerates a missing setBusy (no spinner for sub-100ms actions)", async () => {
+    apiFetch.mockResolvedValue({ data: { success: true } });
+    const showToast = jest.fn();
+    const onSuccess = jest.fn();
+
+    // Strip setBusy from the base options — this is the canonical
+    // "I don't want a spinner" call shape.
+    const { setBusy: _setBusy, ...rest } = baseOptions({ showToast, onSuccess });
+    void _setBusy;
+    await runSyncAction(rest as RunSyncActionOptions);
+
+    expect(showToast).toHaveBeenCalledWith("ok", "success");
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it("default setBusy is a no-op (no throw, no state mutation) when omitted", async () => {
+    // Direct test of the default-fallback behaviour: a missing
+    // setBusy should be filled by a no-op setter that does nothing
+    // visible. We assert by NOT passing setBusy and confirming the
+    // success path runs to completion (no throw, success toast
+    // called, onSuccess invoked).
+    apiFetch.mockResolvedValue({ data: { success: true } });
+    const showToast = jest.fn();
+    const onSuccess = jest.fn();
+
+    const { setBusy: _setBusy, ...rest } = baseOptions({ showToast, onSuccess });
+    void _setBusy;
+    await expect(runSyncAction(rest as RunSyncActionOptions)).resolves.toBeUndefined();
+  });
+
+  it("tolerates a missing setBusy in the failure path (no throw, error toast still shown)", async () => {
+    apiFetch.mockRejectedValue(new Error("network down"));
+    const showToast = jest.fn();
+
+    const { setBusy: _setBusy, ...rest } = baseOptions({ showToast });
+    void _setBusy;
+    await expect(runSyncAction(rest as RunSyncActionOptions)).resolves.toBeUndefined();
+    expect(showToast).toHaveBeenCalledWith("network down", "error");
+  });
 });

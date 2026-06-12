@@ -297,10 +297,11 @@ export default function PersonalitiesPage() {
 
   const handleActivate = (name: string) => {
     const next = activePersonality === name ? "" : name;
-    // No busy state for activation — the no-op setter keeps the helper
-    // happy without adding a UI spinner for a sub-100ms action.
+    // No busy state for activation — activation is a sub-100ms PUT so
+    // showing a spinner would be UI noise. Session 170 made
+    // `runSyncAction`'s `setBusy` parameter optional (defaulting to
+    // a no-op), so this caller simply omits the key.
     return runSyncAction({
-      setBusy: () => undefined,
       showToast,
       url: "/api/config",
       method: "PUT",
