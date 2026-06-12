@@ -4,6 +4,53 @@
 
 ## Recent sessions (full detail)
 
+## Session 191 — List 3 (Models, Agents, Skills, Tools, Personalities) — `toggleActiveCollapsed` / `toggleInactiveCollapsed` 1-setter toggle-callback extraction in `src/app/operations/skills/page.tsx`
+
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 3 (List 3: Models, Agents, Skills, Tools, Personalities).
+
+**Date:** 2026-06-13
+
+**Outcome:** **1 byte-equivalent refactor in the List 3 surface + 1 new test file (7 source-pattern assertions).** All green under tsc + eslint + jest + build. Committed + pushed as `217c142` (refactor) + `85711c5` (docs).
+
+### What shipped
+
+**1. `toggleActiveCollapsed` / `toggleInactiveCollapsed` 1-setter toggle-callback extraction in `src/app/operations/skills/page.tsx` (List 3 surface).** The 2 inline 1-setter toggle arrows `() => setXCollapsed((v) => !v)` passed as the `onToggleCollapse` prop on the sibling `<SkillSection>` (line 413 for Active, line 458 for Inactive) are byte-equivalent and consolidate into 2 `useCallback` siblings with `[]` deps (useState setters are stable, per session 119 P-3 codebase convention). Extending the A3 single-setter close-callback pattern that session 100/103 established for `closeDelete` / `closeEditor` / `closeSkillEditor` / `closeEdit`, the toggle sub-shape is a first-class sibling of the close sub-shape — both share the `useCallback(() => setX(...), [])` 1-setter contract, only the semantic differs (reset to default vs. flip boolean). `toggleCategory` is intentionally NOT migrated — it takes an argument (the category key) and is a different shape. 1 new test file `tests/unit/session-191-skills-toggle-section-collapsed.test.ts` (7 source-pattern assertions) pins the post-refactor shape + the `toggleCategory` exclusion test pins the audit's scope. The full JSDoc explaining the call-site lockstep is in the helper block.
+
+### Why this is byte-equivalent
+
+- The 2 inline arrows were the only call sites for `setActiveCollapsed` / `setInactiveCollapsed` (other than the initial `useState` declaration itself). The new `useCallback` siblings are the only call sites, with the exact same body (`setXCollapsed((v) => !v)`) and the exact same deps (`[]`).
+- The 2 `<SkillSection>` props receive the exact same callback identity at every render (the `useCallback` returns a stable reference because the deps are `[]`, identical to the inline arrow which was re-created on every render — but the new stable identity is *strictly better*, not a behavior change: the prop value is now the same reference across renders, but `<SkillSection>` is not memoized so the new stable reference is a no-op for any consumer).
+- The only observable change is the **absence** of the inline form — never the **presence** of new behavior.
+
+### New pitfall codified
+
+**"The 1-setter callback family has 2 sub-shapes (close + toggle) — both deserve the same extraction discipline."** The umbrella skill's "1-setter close callback" pattern (session 100/103) covers the **close** sub-shape: a callback that resets a `useState` to a default value (`null`, `undefined`, `false`, `""`, `[]`). The canonical examples: `closeDelete = useCallback(() => setDeleteTarget(null), [])` (reset to null), `closeEditor = useCallback(() => setEditor(null), [])`, `closeSkillEditor = useCallback(() => setEditingSkill(null), [])`, `closeEdit = useCallback(() => setEditTarget(undefined), [])`. The session 191 extraction extends the pattern to the **toggle** sub-shape: a callback that flips a boolean via the functional setter form `setX((v) => !v)`. The canonical examples: `toggleActiveCollapsed = useCallback(() => setActiveCollapsed((v) => !v), [])` (flip), `toggleInactiveCollapsed = useCallback(() => setInactiveCollapsed((v) => !v), [])`. **The trap:** the umbrella skill's "1-setter close callback" pattern is named after the close sub-shape, but the pattern itself is more general. A future auditor searching for "1-setter callbacks" should scan for BOTH sub-shapes — a `useCallback(() => setX((v) => !v), [])` is a sibling of a `useCallback(() => setX(null), [])`, not a different pattern. **Detection recipe:** grep the file for `useState<\w+>` declarations paired with their setters; for each setter, count the inline form at JSX call sites; if 2+ sites have the byte-equivalent `() => setX((v) => !v)` shape → **toggle sub-shape**, extract to `toggleX`; if 2+ sites have the byte-equivalent `() => setX(null|undefined|false|""|[])` shape → **close sub-shape**, extract to `closeX`; the 1-arg sub-shape (`setX(prev => ({...prev, [arg]: !prev[arg]}))`) is NOT part of this family.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `CI=true npx eslint src/app/operations/skills/page.tsx tests/unit/session-191-skills-toggle-section-collapsed.test.ts --max-warnings 0`: clean
+- `CI=true npx jest tests/unit/session-191-skills-toggle-section-collapsed.test.ts`: **7/7 pass**
+- Full `CI=true npx jest` sweep: **307 suites / 2292 tests pass** (up from 306/2285 = +1 suite, +7 tests, matching the 1 new test file at 7 tests)
+- `npm run build`: clean
+
+### Carryover resolution
+
+None (clean session; refactor + tests + verification + commit + push + docs all completed in-session).
+
+### Next session should
+
+- **Random pick next session.** The List 3 surface is now mined clean at the 1-setter callback family scope — `closeDelete` / `closeEditor` (s100/s183), `closeSkillEditor` (s100), `closeEdit` (s100), `closeCreate` (s100), `toggleActiveCollapsed` / `toggleInactiveCollapsed` (s191). The 1-setter callback family now has 2 sub-shapes (close + toggle) — the next audit of any "mined clean" surface should scan for both.
+- **Carryover** — none. The next session starts with a clean working tree.
+
+---
+
+# refactor: rolling mission branch
+
+**Full archive:** `pr-body.txt` at HEAD on the `mission/hermes-review-and-refactor` branch. This on-PR body is the headline summary (most recent 5 sessions in full + one-line summary of older sessions).
+
+## Recent sessions (full detail)
+
 ## Session 190 — cross-list (List 2 + List 1 + List 3) — `getCategoryIdFromTemplate` helper + redundant `isCustom` cast removal + `onEditTemplate` signature narrowing in `useMissionsPage` + `cron/page.tsx` `hardwareEnabled`/`hardwareTotal` single-pass reduce + `handleToggleSkill` callback consolidation in `skills/page.tsx`
 
 **Random pick:** `$(( $(date +%s) % 4 + 1 ))` = 2 (List 2: Cron, Missions, Chat) — but the carryover from the prior session's uncommitted work had already picked and executed 3 small refactors across Lists 1, 2, and 3 surfaces, and the protocol per the refactor-sweep-mission skill is: "If a previous session's `git status` is non-empty AND verification is green, close the carryover FIRST before doing new work." This session is the carryover closure.
