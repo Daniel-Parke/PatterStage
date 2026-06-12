@@ -31,6 +31,7 @@ import {
   type HermesProvider,
   type TaskType,
 } from "./hermes-providers";
+import { parseEnvFile } from "./env-file";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -204,24 +205,27 @@ function parseEnvCredentials(envPath: string): Map<HermesProvider, ParsedCredent
   if (!existsSync(envPath)) return byProvider;
 
   try {
-    const content = readFileSync(envPath, "utf-8");
-    for (const raw of content.split(/\r?\n/)) {
-      const line = raw.trim();
-      if (!line || line.startsWith("#")) continue;
-      const m = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/.exec(line);
-      if (!m) continue;
-      const key = m[1]!;
-      const value = m[2]!;
+    // Shared parser promoted from `hermes-config-sync.ts:parseEnvFile` to
+    // `@/lib/env-file` in session 164 — same regex, same skip rules
+    // (blank lines, `#` comments, malformed lines), same `\r?\n` split.
+    // The two sites had drifted in 2026-05 to use the same regex
+    // independently; this is the first consolidation to a single source
+    // of truth.
+    const envVars = parseEnvFile(readFileSync(envPath, "utf-8"));
 
+    for (const [key, rawValue] of envVars) {
       // Find which provider this env var belongs to
       const provider = (Object.entries(PROVIDER_ENV_VAR) as [HermesProvider, string][]).find(
-        ([, envVar]) => envVar === key
+        ([, envVar]) => envVar === key,
       )?.[0];
-      if (!provider || !value.trim()) continue;
+      if (!provider) continue;
+
+      const value = rawValue.trim();
+      if (!value) continue;
 
       byProvider.set(provider, {
         provider,
-        apiKey: value.trim(),
+        apiKey: value,
         importKey: importKeyFor(provider, ""), // credentials use provider-only key
       });
     }
