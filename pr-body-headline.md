@@ -4,6 +4,48 @@
 
 ## Recent sessions (full detail)
 
+## Session 186 — List 1 (Dashboard, Sessions, Memory, Logs) — `hindsightErrorFromCatch` combined catch shim + 2 POST/DELETE catch migrations in `/api/memory/hindsight/route.ts` (close session 185 carryover)
+
+### What shipped
+
+1 byte-equivalent catch-shim extraction in the List 1 surface that brings the 2 POST/DELETE catch sites in `/api/memory/hindsight/route.ts` to parity with the `serverErrorFromCatch` sister-helper family. Also closed the session 185 carryover (the `saveStatusTimerRef` + `copiedTimerRef` timer-cleanup work was uncommitted in the working tree at the start of the session).
+
+1. **`hindsightErrorFromCatch(route, context, error)` helper in `src/lib/hindsight-route-helpers.ts`** — composed of `logApiError(route, context, error)` + `hindsightErrorResponse(error)`. The sister-helper to `serverErrorFromCatch` (in `src/lib/api-logger.ts`) for the hindsight-specific response shape: 500 + `{ data: { available: false, error: msg } }` (the Hindsight client envelope), NOT the plain `{ error: msg }` shape used by `serverError`. The helper's body is literally `logApiError(...) + return hindsightErrorResponse(error)` — same byte-equivalence claim as the `serverErrorFromCatch` family, just with a different response primitive.
+
+2. **`/api/memory/hindsight/route.ts:401-403` (POST) and `:433-435` (DELETE) catch blocks** — both had the canonical 2-line `logApiError + return hindsightErrorResponse(error)` pattern. Collapsed to a single `return hindsightErrorFromCatch(ROUTE, CONTEXT, error)` call. The GET catch block (line 304-316) is intentionally NOT migrated — it has a different response shape (uses `memories: []` and 503 for connection errors), so the inline form is preserved. The pre-existing `logApiError` import stays (GET branch still uses it).
+
+3. **`tests/unit/hindsight-error-from-catch.test.ts`** (NEW) — 11 unit tests (6 shape + 5 byte-equivalence matrix cases mirroring the `server-error-from-catch.test.ts` sister test). Shape cases: response envelope, log line shape, non-Error throw handling, null/undefined throws, empty-Error fallback to "Unknown error", verbatim message preservation. Byte-equivalence cases: Error instance, empty Error, string throw, null throw, TypeError — all verify the helper produces the same status + body + log call as the inline 2-line form. 11/11 pass.
+
+4. **`tests/unit/memory-hindsight-route-hindsight-error-from-catch-source-pattern.test.ts`** (NEW) — 8 source-pattern assertions pinning the post-migration shape: (a) helper is imported, (b) `hindsightErrorResponse` is NOT imported (helper composes the call), (c) POST catch block ends with `return hindsightErrorFromCatch(POST, action, error)`, (d) DELETE catch block ends with `return hindsightErrorFromCatch(DELETE, delete, error)`, (e) no bare `logApiError(POST/...)` in route (helper composes the log), (f) no bare `logApiError(DELETE/...)` in route, (g) no `} catch (error) { return hindsightErrorResponse(` inline form anywhere, (h) GET catch block still uses the inline `logApiError + NextResponse.json({ data: { available: false, ...memories: [] } }, { status: 503|500 })` form (intentional carryover, pinned so a future migrate-everything PR doesn't lose the GET-specific response shape). 8/8 pass.
+
+### Why this is byte-equivalent
+
+- **Helper body**: `hindsightErrorFromCatch(route, context, error)` is literally `logApiError(route, context, error) + return hindsightErrorResponse(error)`. The `hindsightErrorResponse` helper's body (line 178-183 of `hindsight-route-helpers.ts`) is `messageFromError(error, "Unknown error") + NextResponse.json({ data: { available: false, error: message } }, { status: 500 })`. Composed: same log line, same response, same status — character-for-character identical to the pre-migration inline form for every reachable input shape (Error instance, empty Error, string, null, undefined, TypeError). The 5 byte-equivalence matrix cases in `hindsight-error-from-catch.test.ts` lock this claim.
+
+### Verification
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint . --max-warnings 0`: clean (0 warnings)
+- `npx jest tests/unit/hindsight-error-from-catch.test.ts`: **11/11 pass** (new)
+- `npx jest tests/unit/memory-hindsight-route-hindsight-error-from-catch-source-pattern.test.ts`: **8/8 pass** (new)
+- `npx jest`: **296 suites / 2209 tests pass** (up from 294/2190 = +2 suites, +19 tests, matching the 2 new test files at 11+8 = 19 cases)
+- `npm run build`: clean
+
+### Carryover resolution
+
+This session started with a Mode B (verified-but-uncommitted) carryover from session 185: 4 production files modified + 2 new test files, all green under tsc + eslint + jest + build. The session 185 work shipped in the working tree but ran out of tool-call budget before commit/push (per the session 185 closeout doc's "Pre-commit verification of a carryover catches what the original session missed" pitfall). This session's first action was to verify (`git status`, `npx tsc --noEmit`, `CI=true npx jest`), commit (`40ecb41` on the `mission/hermes-review-and-refactor` branch), and push. After the carryover closure, the session added the `hindsightErrorFromCatch` extraction as new in-scope work. Standard 4-step commit-when-verified protocol applied: verify → commit → push → docs commit.
+
+### Reference doc
+
+No new reference doc — this is a 1-refactor session with the same byte-equivalence shape as the `serverErrorFromCatch` family (already documented in the `api-logger.ts` module JSDoc + the `tests/unit/server-error-from-catch.test.ts` test file). The `hindsightErrorFromCatch` helper's own JSDoc (in `hindsight-route-helpers.ts`) cross-references the sister helper + explains the response-shape difference.
+
+### Next session should
+
+- **Random pick next session.** The List 1 surface is now mined clean at the catch-shim + `safeApiCallData` envelope-unwrap + `setErrorFromCaught` scope. The Hindsight POST/DELETE catch blocks are now on the canonical shim; only the GET branch (intentional, different response shape) is left.
+- **Future List 1 work candidates** (deferred): (a) the `lineCount` `parseInt` + `Number.isFinite` + `Math.min(..., 1000) + 200` fallback in `src/app/(main)/logs/page.tsx:232-233` mirrors the `src/app/api/logs/route.ts:52-53` defensive parse — a shared `parseLineCountParam(raw, default)` helper could be extracted, but it's only 2 sites and the form is short; (b) the `safeApiCall` 2-level envelope in `src/app/page.tsx:212` (the dashboard's `handleCancelMission` is the last surviving inline 2-level call) — could be migrated to a typed-envelope helper if a future "all dashboard calls go through one shape" refactor ships.
+
+---
+
 ## Session 185 — List 3 (Models, Agents, Skills, Tools, Personalities) — close 2 `useRef<setTimeout| null>(null)` + cleanup pattern gaps in `config/[section]/page.tsx` and `operations/personalities/page.tsx`
 
 ### What shipped
