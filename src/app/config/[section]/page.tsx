@@ -123,7 +123,20 @@ export default function ConfigSectionPage() {
         setOriginalValues({ ...values });
       }
       setSaveStatus("saved");
-      saveStatusTimerRef.current = setTimeout(() => setSaveStatus("idle"), 2000);
+      // Clear any in-flight save-status timer from a prior save so
+      // the new save's 2s window is the source of truth (a stale
+      // timer from a previous save could race with this one's
+      // setSaveStatus("saved") and prematurely flip the UI back to
+      // "idle" before the user reads the "Saved!" indicator).
+      // Mirrors the saveResetTimerRef pattern in
+      // operations/agents/page.tsx (session 184).
+      if (saveStatusTimerRef.current) {
+        clearTimeout(saveStatusTimerRef.current);
+      }
+      saveStatusTimerRef.current = setTimeout(() => {
+        saveStatusTimerRef.current = null;
+        setSaveStatus("idle");
+      }, 2000);
     } catch (err) {
       setSaveStatus("error");
       setErrorFromCaught(setError, err, "Save failed");

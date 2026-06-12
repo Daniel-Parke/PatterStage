@@ -51,6 +51,21 @@ function PersonalityCard({
 
   const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Cleanup the copied-state timeout on unmount (matches the
+  // copiedTimerRef pattern in components/session/MessageBubble.tsx
+  // and the saveResetTimerRef pattern in operations/agents/page.tsx;
+  // the prior form had only the inline back-to-back cancel and could
+  // fire on an unmounted component if the card was removed during
+  // the 2s window).
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current) {
+        clearTimeout(copiedTimerRef.current);
+        copiedTimerRef.current = null;
+      }
+    };
+  }, []);
+
   const handleCopy = () => {
     if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
     navigator.clipboard.writeText(personality.prompt);
