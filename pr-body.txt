@@ -1,3 +1,57 @@
+## Session 177 — List 1 (Dashboard, Sessions, Memory, Logs) — `withCronJobSchedule` 4th-arg promotion + `scheduleDisplayFromParsed` adoption + Sessions source-pattern tests + Logs `lineCount` NaN guard
+
+**Random pick:** `$((RANDOM % 4 + 1))` = 1 (List 1: Dashboard, Sessions, Memory, Logs).
+
+**Date:** 2026-06-12
+
+**Outcome:** **5 small byte-equivalent cleanups on the List 1 surface: (a) `withCronJobSchedule` 4th-arg promoted from `?` to required, dropping the dead spread-conditional branch; (b) `scheduleDisplayFromParsed` adopted in the dashboard's `handleCronScheduleChange` (replaces the 4-line inline `parsed.kind !== "invalid" ? parsed.display : newSchedule` with a single helper call); (c) new `safe-api-call-data-source-pattern-list1-sessions.test.ts` source-pattern pin for the two Sessions pages; (d) NaN guard on the Logs `lineCount` setter mirroring the API route's existing pattern; (e) new `dashboard-helpers-unit.test.ts` with direct unit coverage for `composeTemplateUrl` + `withCronJobSchedule`. All 2115 jest tests pass (+19 from session 176's 2096) + tsc + eslint + build all green.**
+
+### What shipped
+
+| # | File | Change |
+|---|------|--------|
+| 1 | `src/lib/dashboard-helpers.ts` | `withCronJobSchedule` 4th-arg `scheduleDisplay?: string \| null` → `scheduleDisplay: string \| null`. Spread-conditional body `...(scheduleDisplay !== undefined ? { schedule_display: scheduleDisplay } : {})` → unconditional `schedule_display: scheduleDisplay`. JSDoc rewritten to document the lockstep-update contract (canonical machine form in `schedule`, human label in `schedule_display`, literal `null` for "no human label yet"). |
+| 2 | `src/app/page.tsx` | `handleCronScheduleChange` inline `parsed.kind !== "invalid" ? parsed.display : newSchedule` → `scheduleDisplayFromParsed(parsed, newSchedule)`. New import of `scheduleDisplayFromParsed` from `@/lib/schedule/parse-schedule`. |
+| 3 | `src/app/(main)/logs/page.tsx` | `lineCount` `<select>` onChange gets a NaN guard: `parseInt(e.target.value, 10) + Number.isFinite + Math.min(..., 1000) + 200` default. Mirrors the API route's existing `parseInt + Number.isFinite + Math.min(..., 1000) + 200` shape so the page and the API enforce the same validation. |
+| 4 | `tests/unit/dashboard-helpers-unit.test.ts` (NEW) | 7 tests, 2 describes. Direct unit coverage for `composeTemplateUrl` (URL construction + literal-id contract) and `withCronJobSchedule` (null pass-through, both-fields-update, literal-null-write, input-immutability, no-match pass-through). The "does not mutate the input monitor" assertion is the most important — the helper is called inside a React state-setter callback. |
+| 5 | `tests/unit/safe-api-call-data-source-pattern-list1-sessions.test.ts` (NEW) | 12 tests, 2 describes. Source-pattern pin for the `safeApiCallData` adoption in the two Sessions pages (`src/app/(main)/sessions/page.tsx` + `src/app/(main)/sessions/[id]/page.tsx`). Mirrors the Logs-page (`safe-api-call-data-source-pattern-list1-logs.test.ts`) and HindsightBrowser (`safe-api-call-data-source-pattern-list1.test.ts`) pin tests. |
+| 6 | `references/session-177-list1-dashboard-helpers-and-sessions-source-pattern.md` (new) | The session writeup under the `refactor-sweep-mission` skill. |
+| 7 | `pr-body.txt` | Prepended the new session 177 entry. |
+| 8 | `pr-body-headline.md` | Updated headline to add session 177 + bumped the recent-sessions block. |
+
+Net diff: 5 production/test files changed (3 modified, 2 new) + 1 reference doc + ~125 new lines in the test suite + ~25 lines net removed from the helper. Zero new helper exports.
+
+### Why these are byte-equivalent
+
+- **`withCronJobSchedule` 4th-arg promotion**: the helper's output for any (monitor, jobId, newSchedule, scheduleDisplay) input is identical pre and post refactor. The pre-refactor `...(scheduleDisplay !== undefined ? { schedule_display: scheduleDisplay } : {})` spread wrote `schedule_display: scheduleDisplay` for `string` inputs, and the post-refactor unconditional `schedule_display: scheduleDisplay` writes the same value. The "omitted" branch (where `scheduleDisplay` was `undefined`) is unreachable in the production codebase — the single caller in `src/app/page.tsx` always passes 4 args. **No byte difference** for any reachable input.
+- **`scheduleDisplayFromParsed` adoption**: the helper body is `return "display" in parsed ? (parsed.display as string) : fallback` (line 135 of `src/lib/schedule/parse-schedule.ts`). For the 3 success variants (`interval` / `cron` / `once`), `"display" in parsed` is `true` and the helper returns `parsed.display`. For the `invalid` variant, the helper returns `fallback`. The pre-177 inline form was `parsed.kind !== "invalid" ? parsed.display : newSchedule` — `newSchedule` is the `fallback` argument. **Byte-equivalent** for every reachable input. The `"kind" → "in"` switch is safe because the `invalid` variant is the only one missing the `display` field (the 3 success variants all have it set to a non-empty string per `parseSchedule`'s source).
+- **Logs `lineCount` NaN guard**: for `<option value={100|200|500|1000}>`, `parseInt("100", 10) === 100`, `Number.isFinite(100) && 100 >= 1 && 100 <= 1000` is `true`, `Math.min(100, 1000) === 100`. The 4 reachable inputs pass through byte-for-byte. The fallback `200` only fires for `parseInt` returning `NaN` (empty string, non-numeric input) — none of the 4 current `<option>` values can produce that.
+- **Sessions source-pattern test**: this is a new pin, not a code change. The post-refactor shape (the "adoption" of `useApiData` for envelope-typed reads) is byte-equivalent to the pre-refactor shape (the file already used `useApiData`); the test just locks the post-state.
+- **`dashboard-helpers-unit.test.ts`**: new test file, no production code changes. The helpers' observable behavior was already correct (the dashboard relies on it); the test just adds direct unit coverage.
+
+### Patterns to take forward
+
+1. **"Promote optional arg to required" cleanup pattern.** When a helper has an optional parameter with a single call site that always passes a value, the optional branch is dead code. Promoting to required + using the value unconditionally (with a `null` literal for the "no value" case, if needed) shrinks the helper body by 3-5 lines, eliminates the dead-branch concern, and forces every future caller to consciously decide what to pass. The same pattern is now applicable to other CH helpers — e.g. `composeTemplateUrl(templateId)` could be reviewed for similar 1-caller dead-branch patterns. Defer to a future session that explicitly opts in to the "optional-arg audit" recipe.
+
+2. **"Type-narrowing helpers for discriminated unions" pattern.** The `scheduleDisplayFromParsed(parsed, fallback)` shape is a generic pattern for any discriminated union with a field that's present on N-1 of the N variants. The helper composes `"key" in parsed ? (parsed as { key: T }).key : fallback` so the consumer sees a single `(parsed, fallback) => T` call site. This pattern is also applicable to:
+   - The `lookupMissionIdForCronSession(sessionId)` flow in `src/lib/session-repository.ts` — a future helper `displayLabelFromSessionRecord(record, fallback)` could centralize the title-derivation logic that's currently inlined at 4+ call sites.
+   - The `CronJobRecord` → `CronJobBrief` projection in `src/app/api/monitor/route.ts:25-48` — a helper `toCronJobBrief(job): CronJobBrief` already exists, but a sibling `toSessionBrief(session): SessionBrief` (line 51-59) doesn't follow the same naming convention. Future cleanup: rename + extract both into `src/lib/cron-and-session-briefs.ts` for testability.
+
+3. **"Page mirrors the API's input-validation pattern" rule.** The Logs `lineCount` setter's NaN guard mirrors the API route's existing pattern. This is a generalizable pattern: **any client-side input that's also server-validated should mirror the server's validation shape** so a future change to the input (e.g. `<select>` → `<input type="number">`) doesn't introduce a client-server skew. The same audit could be applied to the Missions page's category filter, the Dashboard's "syncNow" trigger, and any future numeric input on a CH page.
+
+4. **"Source-pattern test for the safeApiCallData adoption is a class-level recipe."** The 3 List 1 source-pattern tests for `safeApiCallData` (Logs, HindsightBrowser, Sessions) form a complete coverage matrix for the envelope-typed read path. A future session could:
+   - Extend the source-pattern tests to other API consumer surfaces (admin, fs, agent, etc.) — these are currently unpinned.
+   - Add a "wraps every route response in `{ data: T }`" source-pattern test on the API side (asserting every route handler uses `ok(...)` / `created(...)` / `badRequest(...)` / etc. — no inline `NextResponse.json({...}, {status:...})` shapes).
+
+5. **"List 1 is mined clean at the catch-block, envelope-unwrap, and dashboard-helper scopes" milestone.** The session 176 closure + this session's tests mean the surface has no outstanding 2-hop catch blocks, no legacy `safeApiCall<{ data?: T }>` sites, and direct unit coverage for the dashboard helpers. Future List 1 refactors would need to pick a new scope (e.g. UI-handler shape, state-derivation memo, type-narrowing audit) — the existing 8 sessions (118, 121, 144, 171, 174, 175, 176, 177) have closed the obvious gaps.
+
+### Next session should
+
+- **Random pick next session.** This session's cleanups are small and targeted (5 files, ~30 lines of production code change) but they close 4 distinct small gaps. The next pick can go to any list — Lists 2, 3, 4 all have open carryover rows in the rolling PR.
+- **List 1 carryover: not applicable.** This session's cleanups close the last in-scope items I could find for the List 1 surface (the `useMissionsPage` `setCategoryError` site is List 2 territory and was already documented in the session 176 ref doc).
+- **Cross-list: extract a "wraps every route response in `{ data: T }`" source-pattern test for the API side.** The 3 List 1 source-pattern tests cover the client side; the server side has no equivalent pin. A future session that explicitly opts in to the "API-shape audit" recipe could ship this scanner.
+- **The Hindsight `isApiNoiseSession` test gap** (not addressed this session) — `src/lib/session-filters.ts:63` defines `isApiNoiseSession(session, now = Date.now())` with a testable `now` parameter, and the 72-LOC test file at `tests/unit/session-filters.test.ts` covers the search predicate. The noise predicate may or may not be covered — verify in a future session and add a `now`-injection test if missing.
+
 ## Session 176 — List 1 (Dashboard, Sessions, Memory, Logs) — `setErrorFromCaught` migration in `src/components/layout/Sidebar.tsx` (close session 159 layout-shared carryover)
 
 **Random pick:** `$((RANDOM % 4 + 1))` = 1 (List 1: Dashboard, Sessions, Memory, Logs).
