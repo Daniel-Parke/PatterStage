@@ -85,6 +85,34 @@ export default function SkillsPage() {
   const [activeCollapsed, setActiveCollapsed] = useState(false);
   const [inactiveCollapsed, setInactiveCollapsed] = useState(true);
 
+  // toggleActiveCollapsed / toggleInactiveCollapsed — the 2 section
+  // collapse headers (Active, Inactive) each have a 1-setter toggle
+  // inline arrow of the form `() => setXCollapsed((v) => !v)` passed
+  // as the `onToggleCollapse` prop on the sibling `<SkillSection>`
+  // (lines 385 + 430). Pre-refactor the inline form was repeated at
+  // both sites with byte-equivalent semantics (a single boolean
+  // flip of the section's `useState` setter, default value
+  // preserved). Extracting to `useCallback` siblings matches the
+  // A3 single-setter close-callback pattern that session 100/103
+  // established for `closeDelete` / `closeEditor` / `closeSkillEditor`
+  // and the `closeEdit` extraction in operations/personalities
+  // (session 100). The deps array is `[]` per session 119 P-3
+  // codebase convention (useState setters are stable). A future
+  // "also reset section search on collapse" or "track which
+  // section is open for keyboard navigation" extension lands in
+  // one place, keeping the 2 call sites in lockstep. The category
+  // collapse toggle (`toggleCategory`, below) takes an argument
+  // (the category key) and is a different shape — left as a
+  // direct arrow, not part of this 1-setter family.
+  const toggleActiveCollapsed = useCallback(
+    () => setActiveCollapsed((v) => !v),
+    [],
+  );
+  const toggleInactiveCollapsed = useCallback(
+    () => setInactiveCollapsed((v) => !v),
+    [],
+  );
+
   const toggleCategory = (cat: string) =>
     setCategoryCollapsed((prev) => ({ ...prev, [cat]: !prev[cat] }));
 
@@ -382,7 +410,7 @@ export default function SkillsPage() {
               count={activeFiltered.length}
               ofTotal={activeSkills.length}
               collapsed={activeCollapsed}
-              onToggleCollapse={() => setActiveCollapsed((v) => !v)}
+              onToggleCollapse={toggleActiveCollapsed}
               search={
                 <SearchInput
                   value={activeSearch}
@@ -427,7 +455,7 @@ export default function SkillsPage() {
               count={inactiveFiltered.length}
               ofTotal={inactiveSkills.length}
               collapsed={inactiveCollapsed}
-              onToggleCollapse={() => setInactiveCollapsed((v) => !v)}
+              onToggleCollapse={toggleInactiveCollapsed}
               search={
                 <SearchInput
                   value={inactiveSearch}
