@@ -102,13 +102,19 @@ export default function SkillsPage() {
   const [editOriginal, setEditOriginal] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
-  // closeSkillEditor — the Edit Skill modal has 3 single-setter
+  // closeSkillEditor — the Edit Skill modal has 4 single-setter
   // close sites that all do the same thing: `() => setEditingSkill(null)`.
   //   1. Modal `onClose` (X-button / overlay click)
   //   2. Modal Cancel button (footer)
   //   3. The load-failure path in openSkillEditor's catch block
+  //      (if the GET to fetch the skill's content fails, dismiss
+  //      the modal rather than leaving it open with empty fields)
+  //   4. saveSkillEdit's success path (dismiss the modal after a
+  //      successful PUT; the conditional `if (expandedSkill ===
+  //      editingSkill) setSkillContent(...)` is a sibling update
+  //      for the in-page preview, not part of the close)
   // Centralising into a `useCallback` with empty deps (useState setters
-  // are stable) keeps the 3 sites in lockstep if a future "clear
+  // are stable) keeps the 4 sites in lockstep if a future "clear
   // editContent on close" or "reset editOriginal" extension lands.
   // This is the A3 single-setter close pattern that session 100's
   // discriminated-close audit established: a 1-setter callback is

@@ -57,18 +57,20 @@ export default function BehaviourPage() {
   // close sites that all do the same thing: `() => setDeleteTarget(null)`.
   //   1. Modal `onClose` (X-button / overlay click)
   //   2. Modal Cancel button (footer)
+  //   3. handleDelete's success path (the unconditional `setDeleteTarget(null)`
+  //      that dismisses the modal after a successful delete; the
+  //      `if (selectedProfileId === target)` block in the same
+  //      `onSuccess` body additionally clears `selectedProfileId`
+  //      and `editor`, but those are conditional on the deleted
+  //      profile being the one currently being edited, so they
+  //      stay inline as direct setters)
   // Centralising into a `useCallback` with empty deps (useState
-  // setters are stable) keeps the 2 sites in lockstep. The 3rd
-  // `setDeleteTarget(null)` site in handleDelete's success path is
-  // NOT migrated — it lives next to the `if (selectedProfileId === target)`
-  // block that also clears `selectedProfileId` and `editor`. Moving
-  // it into the callback would either need to thread the target as
-  // a parameter (changing the signature to `closeDelete(target: string)`)
-  // or accept that the success path's 3-setter block stays inline. The
-  // 3-setter success block is the existing pattern in this page
-  // (handleCreate → closeCreate = 4-setter success block), and threading
-  // a target into a setter-pair callback for one extra call site is
-  // over-engineering. The 2 identical-modal-close sites get the helper.
+  // setters are stable) keeps the 3 sites in lockstep. The pre-session
+  // rationale for not migrating the 3rd site ("threading a target
+  // into a setter-pair callback is over-engineering") was over-
+  // conservative — the `closeDelete()` body is just `setDeleteTarget(null)`
+  // (no target param needed), so the 3rd site is byte-equivalent to
+  // the 2 modal-close sites. Session 183 migrated the 3rd site.
   const closeDelete = useCallback(() => setDeleteTarget(null), []);
 
   // closeEditor — the file-editor card has 3 single-setter
@@ -80,11 +82,11 @@ export default function BehaviourPage() {
   //   3. Editor's "Close" button (line ~495)
   // Centralising into a `useCallback` with empty deps (useState
   // setters are stable) keeps the 3 sites in lockstep. The handleDelete
-  // site is part of a 3-setter success block (`setDeleteTarget(null);
-  // setSelectedProfileId(null); setEditor(null);`), so the inline
+  // site is part of a 3-call success block (`closeDelete();
+  // setSelectedProfileId(null); closeEditor();`), so the inline
   // `setEditor(null)` becomes `closeEditor()` — but the surrounding
-  // 2 setters stay inline. This mirrors the closeDelete pattern: a
-  // pure 1-setter helper extracted, leaving the multi-setter success
+  // 2 calls stay inline. This mirrors the closeDelete pattern: a
+  // pure 1-setter helper extracted, leaving the multi-call success
   // path partially inline (which is the existing pattern in this page
   // for both `closeDelete` and the 4-setter `closeCreate` block).
   const closeEditor = useCallback(() => setEditor(null), []);
@@ -250,7 +252,13 @@ export default function BehaviourPage() {
       successMessage: "Profile deleted",
       errorMessage: "Failed to delete profile",
       onSuccess: async () => {
-        setDeleteTarget(null);
+        // `closeDelete()` dismisses the modal (was inline
+        // `setDeleteTarget(null)`). The 2-setter conditional block
+        // below is gated on `selectedProfileId === target`, so those
+        // setters stay inline (the helper triplet pattern from
+        // session 100 doesn't apply — it's an unrelated 1-setter
+        // closure, not a discriminated close).
+        closeDelete();
         if (selectedProfileId === target) {
           setSelectedProfileId(null);
           closeEditor();
