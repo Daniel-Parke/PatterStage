@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { badRequest, methodNotAllowed, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
 import { listProfiles } from "@/lib/profiles-repository";
-import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatchOrFail } from "@/lib/apply-profile-or-root-patch";
 import { requireSafeProfileName } from "@/lib/path-security";
 
 /** Shared upsert logic used by both POST (create) and PUT (update). */
@@ -25,26 +25,18 @@ async function upsertPersonality(request: NextRequest) {
   const resolved = requireSafeProfileName(profile);
   if (resolved instanceof NextResponse) return resolved;
 
-  // applyProfileOrRootPatch handles default-vs-non-default dispatch,
-  // 404 on missing profile, and 500 on push failure — was previously
-  // a 16-line if/else here.
-  const result = applyProfileOrRootPatch(
+  // applyProfileOrRootPatchOrFail collapses the 4-line
+  // apply+toPatchResponse+assert+return-err dance into 1 call +
+  // 1 instanceof check. Byte-equivalent to the pre-migration shape
+  // (same 404 on not-found, same 500 on push-failed, same
+  // { success: true, name, prompt, source } success body).
+  const result = applyProfileOrRootPatchOrFail(
     resolved.profile,
     { soulMd: prompt },
     { soulMd: prompt },
+    "Failed to sync personality to Hermes",
   );
-  const err = toPatchResponse(result, "Failed to sync personality to Hermes");
-  if (err) {
-    if (!result.ok && result.reason === "push-failed") {
-      logApiError(
-        resolved.profile === "default" ? "pushRootToHermes" : "pushProfileToHermes",
-        `personality push for ${resolved.profile}`,
-        new Error(result.error),
-      );
-    }
-    return err;
-  }
-  assertPatchSucceeded(result);
+  if (result instanceof NextResponse) return result;
 
   return ok({ success: true, name: result.profile, prompt, source: "SOUL.md" });
 }
