@@ -86,17 +86,38 @@ export default function ChatPage() {
 
   // ── Helpers for session state mutation ──────────────────────
 
-  const updateSessionMessages = useCallback(
-    (sessionId: string, updater: (messages: ChatMessage[]) => ChatMessage[]) => {
+  /**
+   * Generalised session-by-id updater. Updates the session matching
+   * `sessionId` by applying the `updater` to its full record, and
+   * stamps `updated_at = Date.now()`. Sessions with a different id
+   * pass through unchanged.
+   *
+   * The 2 remaining inline `setSessions((prev) => prev.map((s) =>
+   * s.id === X ? { ...s, ...FIELD } : s))` sites (model change +
+   * new-session title set) collapse to a single call shape. The
+   * pre-existing `updateSessionMessages` is a 1-line wrapper that
+   * adapts the message-only updater to this generalised form — so the
+   * helper has 2 direct callers (model + title) and 1 indirect caller
+   * (`updateSessionMessages`), with zero external change in semantics.
+   */
+  const updateSession = useCallback(
+    (sessionId: string, updater: (session: ChatSession) => ChatSession) => {
       setSessions((prev) =>
         prev.map((s) =>
           s.id === sessionId
-            ? { ...s, messages: updater(s.messages), updated_at: Date.now() }
+            ? { ...updater(s), updated_at: Date.now() }
             : s,
         ),
       );
     },
     [],
+  );
+
+  const updateSessionMessages = useCallback(
+    (sessionId: string, updater: (messages: ChatMessage[]) => ChatMessage[]) => {
+      updateSession(sessionId, (s) => ({ ...s, messages: updater(s.messages) }));
+    },
+    [updateSession],
   );
 
   // ── Load persisted sessions from localStorage on mount ─────
@@ -160,12 +181,10 @@ export default function ChatPage() {
     (nextModel: string) => {
       setModel(nextModel);
       if (activeSessionId) {
-        setSessions((prev) =>
-          prev.map((s) => (s.id === activeSessionId ? { ...s, model: nextModel } : s)),
-        );
+        updateSession(activeSessionId, (s) => ({ ...s, model: nextModel }));
       }
     },
-    [activeSessionId],
+    [activeSessionId, updateSession],
   );
 
   // ── New chat (creates session immediately) ─────────────────
@@ -271,11 +290,7 @@ export default function ChatPage() {
 
     // If new session, set the title from first message
     if (newSession) {
-      setSessions((prev) =>
-        prev.map((s) =>
-          s.id === targetSessionId ? { ...s, title: text.slice(0, 50) } : s,
-        ),
-      );
+      updateSession(targetSessionId, (s) => ({ ...s, title: text.slice(0, 50) }));
     }
 
     setInput("");
@@ -305,7 +320,7 @@ export default function ChatPage() {
     if (gen === streamGenRef.current) {
       setIsStreaming(false);
     }
-  }, [input, activeSession, model, gatewayOnline, showToast, updateSessionMessages]);
+  }, [input, activeSession, model, gatewayOnline, showToast, updateSession, updateSessionMessages]);
 
   // ── Keyboard shortcuts ─────────────────────────────────────
   const handleKeyDown = useCallback(

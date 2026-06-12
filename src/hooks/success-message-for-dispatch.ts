@@ -27,6 +27,53 @@
 
 export type { DispatchMode } from "@/lib/dispatch-mode";
 import type { DispatchMode } from "@/lib/dispatch-mode";
+import type { SafeApiCallResult } from "@/lib/api-fetch";
+import { safeApiCall } from "@/lib/api-fetch";
+
+/**
+ * Envelope shape for the `/api/missions` POST route. Every action
+ * returns `{ data: { mission: { id: string, ... } } }` on success.
+ * Extracted to a top-level type so the `dispatchMissionAction`
+ * helper in this file can express the response shape without
+ * inlining it 4 times across the call sites in
+ * `useMissionsPage.handleCreate`.
+ */
+export interface MissionActionResponse {
+  data?: { mission?: { id: string } & Record<string, unknown> };
+}
+
+/**
+ * POST a `{ action, ...body }` envelope to `/api/missions` and return
+ * the safe-typed result. The 4 call sites in `useMissionsPage.handleCreate`
+ * (update / promote / redispatch-completed / dispatch-new) all share the
+ * exact same shape: a POST with `{ action, missionId?, name, ...payload }`
+ * and a typed `SafeApiCallResult<MissionActionResponse>` return.
+ *
+ * Centralising the call shape has 3 wins:
+ *  1. The envelope type (`MissionActionResponse`) is declared once
+ *     instead of inlined 4 times.
+ *  2. Future migrations to a different safe-call wrapper (e.g.
+ *     `safeApiCallData`) only need to touch this helper.
+ *  3. The 4 sites collapse to a 4-line call each (action + body + helper
+ *     invocation + destructure) instead of a 12-line call with the
+ *     envelope type and method/body boilerplate.
+ *
+ * Byte-equivalence: the helper body is literally
+ * `safeApiCall<MissionActionResponse>("/api/missions", { method: "POST", body: { action, ...body } })`
+ * — same wire call, same `{ data: { mission: { id } } }` envelope, same
+ * `SafeApiCallResult` shape on return. The 4 callers each spread their
+ * own body shape (e.g. `{ missionId, name, ...dispatchPayload(...) }`)
+ * into the helper — no shape change at the call site.
+ */
+export function dispatchMissionAction(
+  action: "dispatch" | "update" | "promote" | "delete" | "cancel",
+  body: Record<string, unknown>,
+): Promise<SafeApiCallResult<MissionActionResponse>> {
+  return safeApiCall<MissionActionResponse>("/api/missions", {
+    method: "POST",
+    body: { action, ...body },
+  });
+}
 
 /**
  * Resolve the success toast message for a dispatched mission based on
