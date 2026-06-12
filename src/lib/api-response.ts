@@ -200,7 +200,6 @@ export function ok<T>(data: T): NextResponse {
 
 /**
  * Convert a `{ ok, error? }` helper result into a 500 NextResponse.
- *
  * Sister of the catch-block shims in `@/lib/api-logger`
  * (`serverErrorFromCatch` / `serverErrorFromError`), but for the
  * discriminated-union pattern that several route handlers use to
@@ -236,22 +235,6 @@ export function ok<T>(data: T): NextResponse {
  *   preserved verbatim; the caller controls whether to suppress empty
  *   messages at the source rather than hiding them here)
  *
- * @param result - A `{ ok, error? }` discriminated result. The shape
- *   is the minimum that captures the inline pattern; richer unions
- *   (e.g. `ProfileOrRootPatchResult`) are accepted because their
- *   `push-failed` branch has an `error: string` field.
- * @param fallback - Static user-facing message used when
- *   `result.error` is missing/nullish.
- * @returns A 500 NextResponse with `{ error: result.error ?? fallback }`.
- *
- * @example
- *   // Inline form (pre-refactor):
- *   if (!result.ok) return serverError(result.error ?? "unknown error");
- *
- *   // Factory form (post-refactor):
- *   if (!result.ok) return serverErrorFromHelperResult(result, "unknown error");
- *
- * @remarks
  * **Why not a generic `helperResultToResponse<T>(result, fallback)`**:
  * the helper is intentionally narrow — the 4 sites all use the same
  * `{ ok, error? }` shape, and a more-generic signature would force
@@ -266,6 +249,21 @@ export function ok<T>(data: T): NextResponse {
  * has no logging — it is a pure response-shape translation that
  * composes the existing `serverError` factory. `api-response.ts` is
  * the natural home (sibling of `serverError` / `ok` / `created`).
+ *
+ * @param result - A `{ ok, error? }` discriminated result. The shape
+ *   is the minimum that captures the inline pattern; richer unions
+ *   (e.g. `ProfileOrRootPatchResult`) are accepted because their
+ *   `push-failed` branch has an `error: string` field.
+ * @param fallback - Static user-facing message used when
+ *   `result.error` is missing/nullish.
+ * @returns A 500 NextResponse with `{ error: result.error ?? fallback }`.
+ *
+ * @example
+ *   // Inline form (pre-refactor):
+ *   if (!result.ok) return serverError(result.error ?? "unknown error");
+ *
+ *   // Factory form (post-refactor):
+ *   if (!result.ok) return serverErrorFromHelperResult(result, "unknown error");
  */
 export function serverErrorFromHelperResult(
   result: { ok: boolean; error?: string | null },
