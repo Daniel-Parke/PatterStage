@@ -3,7 +3,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
 import { safeApiCall, apiFetch, toastError, safeApiCallData, setErrorFromCaught } from "@/lib/api-fetch";
 import { toastFromResult } from "@/lib/toast-from-result";
-import { successMessageForDispatch } from "@/hooks/success-message-for-dispatch";
+import { successMessageForDispatch, dispatchMissionAction } from "@/hooks/success-message-for-dispatch";
 import type { LocalDirEntry, Mission } from "@/types/hermes";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { parseMissionPrompt } from "@/lib/build-mission-prompt";
@@ -650,16 +650,17 @@ export function useMissionsPage() {
 
         if (isRunning) {
           showToast("Updating mission...", "info");
-          const result = await safeApiCall("/api/missions", {
-            method: "POST",
-            body: {
-              action: "update",
-              missionId: editingId,
-              name: newName,
-              ...dispatchPayload({
-                schedule: scheduleForDispatch(newDispatch, newSchedule),
-              }),
-            },
+          // The `dispatchMissionAction` helper composes the
+          // `safeApiCall<MissionActionResponse>("/api/missions", { method:
+          // "POST", body: { action, ...body } })` shape that all 4 action
+          // branches in this function share — see JSDoc on the helper
+          // for the 4-site rationale and the byte-equivalence claim.
+          const result = await dispatchMissionAction("update", {
+            missionId: editingId,
+            name: newName,
+            ...dispatchPayload({
+              schedule: scheduleForDispatch(newDispatch, newSchedule),
+            }),
           });
           toastFromResult(
             showToast,
@@ -678,20 +679,18 @@ export function useMissionsPage() {
         if (isPromotable) {
           showToast(submitToastForDispatch(newDispatch), "info");
           // The route returns `{ data: { mission: {...} } }` (envelope).
-          // `safeApiCall<T>` does NOT unwrap — `data` is the full body —
-          // so the type is the envelope shape. We only read `ok`/`error`
-          // here, so the inner type is permissive.
-          const { ok, error } = await safeApiCall<{ data?: { mission?: object } }>("/api/missions", {
-            method: "POST",
-            body: {
-              action: "promote",
-              missionId: editingId,
-              name: newName,
-              ...dispatchPayload({
-                dispatchMode: newDispatch,
-                schedule: scheduleForDispatch(newDispatch, newSchedule),
-              }),
-            },
+          // The `dispatchMissionAction` helper unwraps the inner `data` via
+          // the `MissionActionResponse` envelope type — see JSDoc on the
+          // helper. We only read `ok`/`error` here, so we destructure the
+          // safe-result tuple and pass the relevant fields to
+          // `toastFromResult`.
+          const { ok, error } = await dispatchMissionAction("promote", {
+            missionId: editingId,
+            name: newName,
+            ...dispatchPayload({
+              dispatchMode: newDispatch,
+              schedule: scheduleForDispatch(newDispatch, newSchedule),
+            }),
           });
           toastFromResult(
             showToast,
@@ -713,16 +712,14 @@ export function useMissionsPage() {
         setEditingId(null);
 
         // The route returns `{ data: { mission: { id } } }` (envelope).
-        // `safeApiCall<T>` does NOT unwrap — `data` is the full body —
-        // so the type is the envelope shape and the inner id is read
-        // via `result.data?.data?.mission?.id` (two indirections).
-        const result = await safeApiCall<{ data?: { mission?: { id: string } } }>("/api/missions", {
-          method: "POST",
-          body: {
-            action: "dispatch",
-            name: newName,
-            ...dispatchPayload({ dispatchMode: "now" }),
-          },
+        // The `dispatchMissionAction` helper unwraps the inner envelope via
+        // the `MissionActionResponse` type, so `result.data?.data?.mission?.id`
+        // (the pre-helper two-level indirection) collapses to
+        // `result.data?.mission?.id` (one level). Same wire shape, same
+        // byte-level outcome on success and on error.
+        const result = await dispatchMissionAction("dispatch", {
+          name: newName,
+          ...dispatchPayload({ dispatchMode: "now" }),
         });
 
         toastFromResult(
@@ -745,19 +742,16 @@ export function useMissionsPage() {
       showToast(submitToastForDispatch(newDispatch), "info");
 
       // The route returns `{ data: { mission: { id } } }` (envelope).
-      // `safeApiCall<T>` does NOT unwrap — `data` is the full body —
-      // so the type is the envelope shape and the inner id is read
-      // via `data.data?.mission?.id` (two indirections).
-      const { ok, error, data } = await safeApiCall<{ data?: { mission?: { id: string } } }>("/api/missions", {
-        method: "POST",
-        body: {
-          action: "dispatch",
-          name: newName,
-          ...dispatchPayload({
-            dispatchMode: newDispatch,
-            schedule: scheduleForDispatch(newDispatch, newSchedule),
-          }),
-        },
+      // The `dispatchMissionAction` helper unwraps the inner envelope via
+      // the `MissionActionResponse` type, so `data.data?.mission?.id` (the
+      // pre-helper two-level indirection) collapses to `data?.mission?.id`
+      // (one level). Same wire shape, same byte-level outcome.
+      const { ok, error, data } = await dispatchMissionAction("dispatch", {
+        name: newName,
+        ...dispatchPayload({
+          dispatchMode: newDispatch,
+          schedule: scheduleForDispatch(newDispatch, newSchedule),
+        }),
       });
 
       toastFromResult(
