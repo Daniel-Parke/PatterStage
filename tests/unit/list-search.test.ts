@@ -118,6 +118,39 @@ describe("filterByCaseInsensitiveSubstring — generic case-insensitive substrin
     expect(result.map((i) => i.id)).toEqual([1, 3]); // Alpha + Gamma (Delta's "ALPHA" is in description, not in fields list)
   });
 
+  it("empty search short-circuits and returns the full list (ignores alwaysMatch)", () => {
+    // Pinned contract: the helper returns the full list on empty search
+    // WITHOUT consulting `alwaysMatch`. This is intentional — the
+    // empty-search branch is the "no filter applied" UX, which differs
+    // from "filter applied but these items always pass". A future
+    // refactor that makes the empty branch pass through the filter
+    // would change the behaviour of the Personalities page's
+    // `(p) => p.name === activePersonality` alwaysMatch (the active
+    // personality is currently shown alongside the full list on empty
+    // search; making the filter run would still show all items, but a
+    // future caller passing only `alwaysMatch` and no fields would
+    // observe a behaviour change). Pin the short-circuit explicitly.
+    const result = filterByCaseInsensitiveSubstring(
+      items,
+      "",
+      [(i) => i.name, (i) => i.description],
+      (i) => i.id === 4, // Delta "always" — should NOT be the only result on empty search
+    );
+    expect(result.map((i) => i.id)).toEqual([1, 2, 3, 4]);
+  });
+
+  it("whitespace-only search short-circuits the same way as empty", () => {
+    // Mirror of the empty-search test — `search.trim() === ""` triggers
+    // the same return-early branch.
+    const result = filterByCaseInsensitiveSubstring(
+      items,
+      "   \t  ",
+      [(i) => i.name],
+      (i) => i.id === 1, // Alpha "always" — should NOT be the only result
+    );
+    expect(result.map((i) => i.id)).toEqual([1, 2, 3, 4]);
+  });
+
   it("works with a single getter returned as an array literal (List 3 call site pattern)", () => {
     const result = filterByCaseInsensitiveSubstring(items, "second", [
       (i) => i.description,
