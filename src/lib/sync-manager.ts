@@ -115,6 +115,43 @@ export function detectConfigDrift(): DriftReport {
   return { modelsInHermesNotInDb, modelsInDbNotInHermes, primaryDiffers };
 }
 
+// ── Drift → human-readable details (UI surface) ──────────────
+
+/**
+ * Project a `DriftReport` to the flat `string[]` shape consumed by the
+ * `ModelsDriftBanner` component (`{ hasDrift, driftDetails: string[] }`).
+ * Centralises the 3-line "if (X) push string" pattern that the
+ * `/api/models/sync/drift` GET handler used to spell out inline:
+ *
+ *   1. `primaryDiffers` (one-line per diff)
+ *   2. `modelsInHermesNotInDb` (one-line per missing-in-DB model)
+ *   3. `modelsInDbNotInHermes` (one-line per missing-in-Hermes model)
+ *
+ * Order is preserved: primary first, then Hermes-only, then DB-only —
+ * matches the pre-refactor inline order in `route.ts` byte-for-byte.
+ *
+ * The result of `driftDetails.length > 0` is the `hasDrift` flag in the
+ * UI surface; this helper does NOT include that flag (the route composes
+ * `{ hasDrift, driftDetails }` from the array length — that is the
+ * canonical place to centralise the boolean so the helper stays
+ * "details only").
+ */
+export function buildDriftDetails(drift: DriftReport): string[] {
+  const details: string[] = [];
+  if (drift.primaryDiffers) {
+    details.push(
+      `Primary model drift: DB has "${drift.primaryDiffers.dbModel}", Hermes has "${drift.primaryDiffers.hermesModel}"`,
+    );
+  }
+  for (const m of drift.modelsInHermesNotInDb) {
+    details.push(`Model "${m.modelId}" (${m.provider}) is in Hermes but not in Control Hub`);
+  }
+  for (const m of drift.modelsInDbNotInHermes) {
+    details.push(`Model "${m.modelId}" (${m.provider}) is in Control Hub but not pushed to Hermes`);
+  }
+  return details;
+}
+
 // ── Model push ───────────────────────────────────────────────
 
 /**
