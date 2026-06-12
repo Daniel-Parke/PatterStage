@@ -203,5 +203,5 @@ None. Every call site is byte-equivalent to the inline form. The `replace(/\\/g,
 
 ---
 
-**Total sessions on this PR:** 62
-**Full archive size:** 644178 bytes (`pr-body.txt` at branch HEAD)
+**Total sessions on this PR:** 63 (was 62, +1 for session 176)
+**Full archive size:** 656431 bytes (`pr-body.txt` at branch HEAD, was 644178, +12253 for session 176)
