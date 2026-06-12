@@ -20,7 +20,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
-import { safeApiCall, setErrorFromCaught } from "@/lib/api-fetch";
+import { safeApiCallData, setErrorFromCaught } from "@/lib/api-fetch";
 import { useApiData } from "@/hooks/useApiData";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import type { LogGetData } from "@/app/api/logs/route";
@@ -75,19 +75,20 @@ export default function LogsPage() {
     await confirmDelete(async () => {
       try {
         // The route returns `{ data: { cleared: N } }` (envelope).
-        // `safeApiCall<T>` does NOT unwrap — `data` is the full body —
-        // so the type is the envelope shape and the inner count is read
-        // via `delData?.data?.cleared` (two indirections).
-        const { ok, data: delData, error } = await safeApiCall<{
-          data?: { cleared?: number };
-        }>("/api/logs", { method: "DELETE" });
-        if (!ok || error) {
-          setActionMessage(error ?? "Delete failed");
+        // `safeApiCallData<T>` returns `T | null` (the inner payload
+        // directly — no manual `data?.data?.cleared` indirection).
+        // Matches the canonical envelope + safeApiCallData shape
+        // used by every other read-only fetch on the Logs page.
+        const delData = await safeApiCallData<{ cleared?: number }>("/api/logs", {
+          method: "DELETE",
+        });
+        if (!delData) {
+          setActionMessage("Delete failed");
           return;
         }
         setActionMessage(
-          typeof delData?.data?.cleared === "number"
-            ? `Cleared ${delData.data.cleared} log file(s).`
+          typeof delData.cleared === "number"
+            ? `Cleared ${delData.cleared} log file(s).`
             : "Logs cleared.",
         );
         void refetch();
