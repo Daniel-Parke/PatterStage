@@ -78,13 +78,30 @@ describe("safeApiCallData migration — List 1 dashboard", () => {
     expect(matches).toEqual([]);
   });
 
-  it("the dashboard uses safeApiCallData in the initialLoad Promise.all block", () => {
-    // Sanity check: at least 8 safeApiCallData calls (matches the 8
-    // endpoints in the initialLoad Promise.all). The polling and
-    // mutation sites don't use the helper, so 8 is the expected
-    // minimum.
-    const calls = source.match(/safeApiCallData</g) ?? [];
-    expect(calls.length).toBeGreaterThanOrEqual(8);
+  it("the dashboard (and its initial-load helper) uses safeApiCallData for all 8 initial-load endpoints", () => {
+    // Pre-session-174: 8 inline `safeApiCallData` calls in the
+    // dashboard's `initialLoad` Promise.all block. Post-session-174:
+    // those 8 calls live in `loadInitialDashboardData`
+    // (src/lib/dashboard-initial-load.ts). The dashboard itself now
+    // only uses `safeApiCallData` for the 3 polling/mutation sites
+    // (monitor refresh, missions refresh, processes refresh).
+    //
+    // This test pins the migrated shape: the dashboard's 3 inline
+    // calls + the helper's 8 batched calls. The 8-endpoint batched
+    // load lives in the helper (testable in isolation); the 3
+    // inline calls live in the dashboard (one per polling/mutation
+    // site that needs an envelope read).
+    const helperSource = readFileSync(
+      join(REPO_ROOT, "src", "lib", "dashboard-initial-load.ts"),
+      "utf8",
+    );
+    // 8 awaitable calls in the helper's Promise.all (each is on its
+    // own line so the `<` follows the function name directly). 3
+    // awaitable calls in the dashboard's 3 polling/mutation paths.
+    const dashboardExecCalls = source.match(/await\s+safeApiCallData</g) ?? [];
+    const helperExecCalls = helperSource.match(/safeApiCallData</g) ?? [];
+    expect(helperExecCalls.length).toBe(8);
+    expect(dashboardExecCalls.length).toBe(3);
   });
 
   it("the dashboard no longer accesses `.data?.data` (double-unwrap) on safeApiCall results", () => {

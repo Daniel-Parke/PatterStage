@@ -50,6 +50,10 @@ import { isMissionActive } from "@/lib/mission-board";
 import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
 import { computeCronJobRowCaption } from "@/lib/cron-row-helpers";
 import { composeTemplateUrl, withCronJobSchedule } from "@/lib/dashboard-helpers";
+import { dedupErrors } from "@/lib/dashboard-error-dedup";
+import { formatModelSubtitle } from "@/lib/dashboard-model-subtitle";
+import { topNTemplates } from "@/lib/dashboard-top-templates";
+import { loadInitialDashboardData } from "@/lib/dashboard-initial-load";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { useInterval } from "@/hooks/useInterval";
 import { usePolledUpdates } from "@/hooks/usePolledUpdates";
@@ -187,21 +191,13 @@ export default function Dashboard() {
       // Use the DB severity field — reliable, no string matching
       filtered = filtered.filter((e) => e.severity === errorSev);
     }
-    // Dedup: collapse consecutive identical (source, message) pairs into the
-    // most recent occurrence, but keep the count so users see "Api_Server:
-    // Refusing to start (×5)" instead of 5 separate rows. Without this, the
-    // panel can be dominated by repeated gateway reconnect errors that all
-    // log the same line every few minutes.
-    const seen = new Map<string, { err: typeof filtered[number]; count: number }>();
-    for (const e of filtered) {
-      const key = `${e.source}::${e.message}`;
-      const existing = seen.get(key);
-      if (existing) existing.count += 1;
-      else seen.set(key, { err: e, count: 1 });
-    }
-    return Array.from(seen.values()).map(({ err, count }) =>
-      count > 1 ? { ...err, message: `${err.message}  (×${count})` } : err,
-    );
+    // Collapse consecutive identical (source, message) pairs into a
+    // single row with a "(×N)" suffix. The algorithm is in
+    // dedupErrors (src/lib/dashboard-error-dedup.ts) — see that file
+    // for the full rationale (gateway-reconnect errors that log the
+    // same line every few minutes would otherwise dominate the
+    // panel).
+    return dedupErrors(filtered);
   }, [monitor, errorSev]);
 
   // Note: useTwoStepConfirm handles its own unmount cleanup.
@@ -299,43 +295,16 @@ export default function Dashboard() {
     const controller = new AbortController();
     const signal = controller.signal;
 
-    // Batch all initial fetches — single render update. The
-    // `safeApiCallData` helper unwraps the `{ data: T }` envelope in one
-    // step so the destructured tuple holds the inner payload directly
-    // (matches the pre-refactor semantics: `T | null` per endpoint,
-    // identical to `result.data?.data ?? null` from `safeApiCall`).
+    // Batch all initial fetches — single render update. The 8-endpoint
+    // batched fetcher lives in `loadInitialDashboardData`
+    // (src/lib/dashboard-initial-load.ts); the page is responsible
+    // for the `signal.aborted` check + the React state write.
     const initialLoad = async () => {
-      const [
-        status,
-        config,
-        templates,
-        categories,
-        monitor,
-        processes,
-        missions,
-        defaults,
-      ] = await Promise.all([
-        safeApiCallData<SystemStatus>("/api/status", { signal }),
-        safeApiCallData<Record<string, unknown>>("/api/config", { signal }),
-        safeApiCallData<{ templates: TemplateListItem[] }>("/api/templates", { signal }),
-        safeApiCallData<{ categories: MissionCategory[] }>("/api/mission-categories", { signal }),
-        safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store", signal }),
-        safeApiCallData<{ processes: HermesProcess[] }>("/api/agents", { signal }),
-        safeApiCallData<{ missions: MissionBrief[] }>("/api/missions", { signal }),
-        safeApiCallData<{ defaults: { agent?: string } | null }>("/api/models/defaults", { signal }),
-      ]);
+      const { dashboardData, modelsDefaults } = await loadInitialDashboardData({ signal });
 
       if (!signal.aborted) {
-        setRegistryAgentModelLabel(defaults?.defaults?.agent ?? null);
-        setData({
-          status: status ?? null,
-          config: config ?? null,
-          templates: templates?.templates || [],
-          categories: categories?.categories || [],
-          monitor: monitor ?? null,
-          processes: processes?.processes || [],
-          missions: missions?.missions || [],
-        });
+        setRegistryAgentModelLabel(modelsDefaults?.defaults?.agent ?? null);
+        setData(dashboardData);
         setReady(true);
       }
     };
@@ -389,13 +358,11 @@ export default function Dashboard() {
   // Header subtitle: prefer the model written to config.yaml; fall back to
   // the registry's "default agent" (the user has set a default in the
   // Models registry but hasn't yet pushed it to config.yaml); else "-".
+  // The 3-source priority ladder lives in `formatModelSubtitle`
+  // (src/lib/dashboard-model-subtitle.ts) so the rule is
+  // unit-testable in isolation.
   const modelSubtitle = useMemo(
-    () =>
-      diskModel
-        ? `${diskModel}${diskProvider ? ` · ${diskProvider}` : ""}`
-        : registryAgentModelLabel
-          ? `${registryAgentModelLabel} · Models registry (push Bob to write config.yaml)`
-          : "-",
+    () => formatModelSubtitle(diskModel, diskProvider, registryAgentModelLabel),
     [diskModel, diskProvider, registryAgentModelLabel],
   );
   const activeProcesses = useMemo(() => processes.filter((p) => p.status === "running"), [processes]);
@@ -449,15 +416,11 @@ export default function Dashboard() {
     [templates, categories],
   );
 
-  const collapsedTemplateStrip = useMemo(() => {
-    if (templates.length <= 12) return templates;
-    // Custom templates first (true > false), then alphabetical by name
-    const sorted = [...templates].sort((a, b) => {
-      if (a.isCustom !== b.isCustom) return a.isCustom ? -1 : 1;
-      return (a.name || "").localeCompare(b.name || "");
-    });
-    return sorted.slice(0, 12);
-  }, [templates]);
+  // Cap the collapsed template strip to 12 entries (the "Mission
+  // Dispatch" strip's first-paint width). The cap + custom-first /
+  // alphabetical sort lives in `topNTemplates`
+  // (src/lib/dashboard-top-templates.ts).
+  const collapsedTemplateStrip = useMemo(() => topNTemplates(templates), [templates]);
 
   return (
     <AppPageShell variant="scanlines">
