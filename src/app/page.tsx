@@ -33,7 +33,7 @@ import {
   type TemplateLike,
 } from "@/lib/mission-categories";
 import type { MissionCategory } from "@/lib/mission-category-repository";
-import TemplateCard from "@/components/ui/TemplateCard";
+import TemplatePill from "@/components/ui/TemplatePill";
 import { useToast } from "@/components/ui/Toast";
 import type { SystemStatus, AccentColor, MonitorData, HermesProcess, MissionBrief } from "@/types/hermes";
 import { timeAgo, titleCase, parseSchedule } from "@/lib/utils";
@@ -556,15 +556,9 @@ export default function Dashboard() {
           {!dispatchExpanded && (
             <div className="px-4 pb-3 flex flex-wrap gap-1.5">
               {collapsedTemplateStrip.map((t) => (
-                <TemplateCard
+                <TemplatePill
                   key={t.id}
-                  id={t.id}
-                  name={t.name}
-                  icon={t.icon}
-                  color={t.color}
-                  description={t.description}
-                  isCustom={t.isCustom}
-                  compact
+                  t={t}
                   onSelect={() => router.push(composeTemplateUrl(t.id))}
                 />
               ))}
@@ -593,15 +587,9 @@ export default function Dashboard() {
                 >
                   <div className="flex flex-wrap gap-1.5">
                     {group.items.map((t) => (
-                      <TemplateCard
+                      <TemplatePill
                         key={t.id}
-                        id={t.id}
-                        name={t.name ?? t.id}
-                        icon={t.icon ?? "Zap"}
-                        color={t.color ?? "cyan"}
-                        description={t.description ?? ""}
-                        isCustom={t.isCustom}
-                        compact
+                        t={t}
                         onSelect={() => router.push(composeTemplateUrl(t.id))}
                       />
                     ))}
