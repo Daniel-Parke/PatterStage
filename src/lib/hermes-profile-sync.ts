@@ -42,7 +42,7 @@ import {
   disabledSkillsFromJson,
   resolvePlatformToolsets,
 } from "./profile-config-builder";
-import { collectSkillDirectoryNames, skillsRootForProfile } from "./skills-config";
+import { collectSkillDirectoryNames, skillFilePath, skillsRootForProfile } from "./skills-config";
 
 import { loadSeedPlatformToolsets } from "./seed-profile-toolsets";
 import {
@@ -384,7 +384,7 @@ export function pullRootFromHermes(options?: { reconcileDisk?: boolean }): SyncR
 
 export function pullSkillFromHermes(skillKey: string): SyncResult {
   const skillsRoot = globalSkillsRoot();
-  const direct = skillsRoot + "/" + skillKey + "/SKILL.md";
+  const direct = skillFilePath(skillsRoot, skillKey);
   let filePath: string | null = existsSync(direct) ? direct : null;
   if (!filePath) {
     const walk = (dir: string): string | null => {
@@ -516,7 +516,7 @@ export function detectSkillDrift(skillKey: string): SkillDriftEntry {
     return { skillKey, drifted: false, syncError: "not in database" };
   }
   const skillsRoot = globalSkillsRoot();
-  const path = skillsRoot + "/" + skillKey + "/SKILL.md";
+  const path = skillFilePath(skillsRoot, skillKey);
   const disk = fileHash(path);
   const db = contentHash(skill.content);
   return {

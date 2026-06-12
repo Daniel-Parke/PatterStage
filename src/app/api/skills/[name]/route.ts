@@ -10,7 +10,7 @@ import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
 import { getSkill, upsertSkill, parseSkillFrontmatter } from "@/lib/skills-repository";
 import { pushSkillToHermes } from "@/lib/hermes-profile-sync";
-import { skillsRootForProfile } from "@/lib/skills-config";
+import { skillFilePath, skillsRootForProfile } from "@/lib/skills-config";
 
 export async function GET(
   request: NextRequest,
@@ -26,7 +26,7 @@ export async function GET(
     if (row) {
       return ok({
         name,
-        path: skillsRootForProfile() + "/" + name + "/SKILL.md",
+        path: skillFilePath(skillsRootForProfile(), name),
         content: row.content,
         size: row.content.length,
         lastModified: row.updatedAt,
@@ -34,7 +34,7 @@ export async function GET(
     }
 
     const skillsRoot = skillsRootForProfile();
-    const filePath = skillsRoot + "/" + name + "/SKILL.md";
+    const filePath = skillFilePath(skillsRoot, name);
     if (!existsSync(filePath)) {
       return notFound(`Skill not found: ${name}`);
     }
