@@ -1,3 +1,73 @@
+## Session 175 — List 1 (Dashboard, Sessions, Memory, Logs) — close session 174 carryover (4 dashboard helpers + safeApiCallData migration in logs)
+
+**Random pick (session 174):** `date +%Y%m%d | awk '{print $1 % 4 + 1}'` = 1 (List 1: Dashboard, Sessions, Memory, Logs).
+
+**Date:** 2026-06-12
+
+**Outcome:** **Session 174 carryover resolved + 2 pre-existing source-pattern tests updated to pin the new shape. All 2091 jest tests pass + tsc + eslint + build all green.**
+
+### What shipped
+
+| # | File | Change |
+|---|------|--------|
+| 1 | `tests/unit/dashboard-helpers-session-174.test.ts` | Fixed the 2 `topNTemplates` tests that were failing in session 174. The session 174 reference's diagnosis (Jest state-leak / `jest.doMock` scope issue) was wrong; the real cause was that both tests used 4-input arrays, and the helper's no-op fast path returns `[...templates]` for any input of length `≤ 12` (the default `n`), so the sort never ran. New fixtures use 13-input arrays to force the sort path; assertions use plain-node-verified expected outputs. |
+| 2 | `tests/unit/safe-api-call-data-source-pattern.test.ts` | Updated the "≥ 8 inline `safeApiCallData` calls in dashboard" assertion. Post-session-174 the 8 batched-load calls live in `loadInitialDashboardData` (testable in isolation); the dashboard itself only has 3 inline calls (one per polling/mutation site). New assertion: `helperExecCalls.length === 8, dashboardExecCalls.length === 3`. The 2 sister assertions (import line, zero `safeApiCall<{ data?: ... }>` envelope sites, zero `.data?.data` double-unwraps) remain green. |
+| 3 | `tests/unit/safe-api-call-data-source-pattern-list1-logs.test.ts` | Flipped from pinning the pre-migration shape to pinning the post-migration shape. The old test asserted "≥ 1 `safeApiCall<{ data?: { ... } }>` call in logs page" and "≥ 1 `?.data?.X` indirection read" — the session 174 migration to `safeApiCallData<{ cleared?: number }>` deliberately removed both patterns. The rewritten test asserts "≥ 1 `safeApiCallData<{ ... }>` call" and "zero `?.data?.X` indirection reads". The 2 sister assertions (source file readable, .tsx file on disk) remain green. |
+| 4 | `pr-body.txt` | Prepended the new session 175 entry. |
+| 5 | `references/session-175-list1-dashboard-helpers-closeout.md` (new) | The session writeup under the `refactor-sweep-mission` skill. |
+
+### Why this is byte-equivalent
+
+The 3 test-file changes are all PURE test changes — no production code was touched in this session. The 2 `topNTemplates` test fixes update fixtures (more inputs) and expected outputs (verified with plain `node`); the 2 source-pattern test flips update assertions to match the post-migration shape. None of the 5 source files touched in session 174 changed in this session.
+
+### Pitfall 1 — The session-174 diagnosis was wrong, and the test fixtures masked the sort path
+
+The session 174 reference proposed 3 fixes (split the test file, `jest.unmock`, or `jest.requireActual`) for a supposed Jest state-leak issue. All 3 would have worked for a real state-leak issue — but the real issue was the fixtures, not the test scope. **The general lesson:** when a "pure" helper has a fast-path early-return, test fixtures that fit entirely within the fast path can't observe the slow-path behaviour. The fix is to size the fixtures to exceed the fast-path threshold, not to chase a non-existent test-scope bug. **The tell:** the helper under test has an early-return for some input shape, and the test fixture fits entirely within that early-return shape. The Jest test fails with the "input order" output (not a partially-sorted output), and `node -e` of the same sort logic returns the expected output. That's the signature of "fast path eating the test" — not a state leak.
+
+### Pitfall 2 — `localeCompare` puts `""` BEFORE non-empty strings (not after)
+
+The `localeCompare` comparator on `""` vs a non-empty string returns a NEGATIVE number — i.e. `""` sorts FIRST. The session 174 reference noted this as "empty string is 'less than' any non-empty prefix under localeCompare" but the test fixtures in the original commit expected the empty-name entry at the END of the sorted output. The corrected fixtures use 13 inputs with cap 12, so the empty-name entry sorts to position 0 and the cap drops position 12 (a high-alphabetical named entry).
+
+**The general lesson:** any test that asserts a sort output should run a plain-`node` sort of the same fixtures and use the verified output as the expected value. The "expected order" reasoning from the comparator's return value is often wrong by one or two positions.
+
+### Pitfall 3 — The pre-existing `safe-api-call-data-source-pattern-list1-logs.test.ts` was pinning the bug-not-fixed state
+
+The original test asserted "≥ 1 `safeApiCall<{ data?: { ... } }>` call in logs page" and "≥ 1 `?.data?.X` indirection read" — both true before session 174. After session 174 migrated that site to `safeApiCallData<{ cleared?: number }>`, both patterns were GONE — which is the correct post-migration state, but the test now failed. The right fix was to flip the test: assert "≥ 1 `safeApiCallData<{ ... }>` call" (the new envelope-typed shape) and "zero `?.data?.X` indirection reads" (the helper unwraps in one step, so consumers should read `delData.cleared` directly, NOT `delData?.data?.cleared`).
+
+**The general lesson:** source-pattern tests can pin either "the bug exists" (i.e. "≥ 1 of the bad pattern is present") or "the bug is fixed" (i.e. "0 of the bad pattern AND ≥ 1 of the good pattern is present"). When the test is in the first form and a refactor removes the bad pattern, the test FAILS — but the test was wrong, not the refactor. The fix is to flip the test to the second form, with comments explaining the post-migration invariant.
+
+### Pitfall 4 — The pre-existing `safe-api-call-data-source-pattern.test.ts` counted inline calls (not helper calls)
+
+The original assertion "the dashboard uses safeApiCallData in the initialLoad Promise.all block" was counting inline calls in the dashboard source. After session 174, those 8 calls live in the new `loadInitialDashboardData` helper (and the helper is testable in isolation, which is the whole point of the extraction). The dashboard itself now has 3 inline calls (the 3 polling/mutation sites that need an envelope read). The right fix was to count both: 8 helper calls + 3 dashboard calls, with a comment explaining the split.
+
+**The general lesson:** when extracting inline calls into a helper, source-pattern tests that count the calls need to be updated to count BOTH the helper AND the remaining inline calls. The new helper call is the "good migration"; the remaining inline calls are the "still-inline" boundary; the test pins both.
+
+### Audit finding — List 1 is mined clean at the session 174 surfaces
+
+After session 175 (closing 174's carryover), List 1 has:
+- **0** remaining inline 8-endpoint batched fetcher in `src/app/page.tsx` (now in `loadInitialDashboardData`)
+- **0** remaining inline dedup loop (now in `dedupErrors`)
+- **0** remaining inline model-subtitle ternary chain (now in `formatModelSubtitle`)
+- **0** remaining inline top-N sort (now in `topNTemplates`)
+- **0** remaining `safeApiCall<{ data?: { ... } }>` envelope-typed sites in any List 1 surface (the last one in `logs/page.tsx` migrated to `safeApiCallData<{ cleared?: number }>`)
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `CI=true npx eslint . --max-warnings 0`: clean
+- `npx jest`: **280 suites / 2091 tests pass** (up from 279/2071 = +1 suite, +20 tests)
+- `npm run build`: clean
+
+### Reference doc
+
+Full session writeup: `references/session-175-list1-dashboard-helpers-closeout.md` under the `refactor-sweep-mission` skill.
+
+### Next session should
+
+- **Random pick next session** — the List 1 surface is mined clean at the 4-helper + safeApiCallData envelope-unwrap scope. Other surfaces (Lists 2, 3, 4) have open carryover rows in the rolling PR; the next pick can go to any of them.
+- The 3 inline `useEffect` blocks in List 1 are not worth extracting individually (1-page-local, no shared shape). They stay inline.
+- If a future pick lands on List 1, the natural next surfaces are: (a) the per-page `useApiData` extension for paginated sessions (session 144 carryover), (b) the inline `console.error` redundancy rule applied to `(main)/logs/page.tsx` and `(main)/sessions/page.tsx` (session 131 P-131-4 carryover), (c) the chat-utils consolidation in `(main)/sessions/[id]/page.tsx` if it has a 3+ sites repeat pattern.
+
 ## Session 173 — List 3 (Models, Agents, Skills, Tools, Personalities) — `*OrFail` combined-helper extraction across 5 routes + per-surface source-pattern scanner
 
 **Random pick:** `$((RANDOM % 4 + 1))` = 3 (List 3: Models, Agents, Skills, Tools, Personalities).
