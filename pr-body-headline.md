@@ -4,6 +4,39 @@
 
 ## Recent sessions (full detail)
 
+## Session 177 — List 1 (Dashboard, Sessions, Memory, Logs) — `withCronJobSchedule` 4th-arg promotion + `scheduleDisplayFromParsed` adoption + Sessions source-pattern tests + Logs `lineCount` NaN guard
+
+### What shipped
+
+5 small byte-equivalent cleanups on the List 1 surface: (a) `withCronJobSchedule` 4th-arg promoted from `?` to required, dropping the dead spread-conditional branch; (b) `scheduleDisplayFromParsed` adopted in the dashboard's `handleCronScheduleChange` (replaces the 4-line inline `parsed.kind !== "invalid" ? parsed.display : newSchedule` with a single helper call); (c) new `safe-api-call-data-source-pattern-list1-sessions.test.ts` source-pattern pin for the two Sessions pages; (d) NaN guard on the Logs `lineCount` setter mirroring the API route's existing pattern; (e) new `dashboard-helpers-unit.test.ts` with direct unit coverage for `composeTemplateUrl` + `withCronJobSchedule`. The 4-helper side-effect on the Sidebar: zero (the layout-shared component is already clean from session 176).
+
+### Why this is byte-equivalent
+
+- **`withCronJobSchedule`**: the only caller already passes 4 args, so promoting the 4th-arg from `?` to `string | null` is unreachable. The pre/post helper body produces identical output for every reachable input.
+- **`scheduleDisplayFromParsed`**: the helper body is `return "display" in parsed ? (parsed.display as string) : fallback`. The pre-177 inline form was `parsed.kind !== "invalid" ? parsed.display : newSchedule` — same fallback shape, same success-variant behaviour.
+- **Logs `lineCount` guard**: the 4 `<option>` values (100/200/500/1000) all pass the new `Number.isFinite && >= 1 && <= 1000` gates, so the new body is byte-equivalent to `parseInt(e.target.value, 10)` for the current `<select>`. The fallback (200) only fires for empty/non-numeric input.
+- **Sessions source-pattern test**: new pin, no code change. The post-refactor shape (the "adoption" of `useApiData` for envelope-typed reads) was already in place; the test locks the contract.
+- **`dashboard-helpers-unit.test.ts`**: new test file, no production code changes. The helpers' observable behavior was already correct; the test just adds direct unit coverage.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `CI=true npx eslint . --max-warnings 0`: clean
+- `npx jest tests/unit/safe-api-call-data-source-pattern-list1-sessions.test.ts`: **12/12 pass**
+- `npx jest tests/unit/dashboard-helpers-unit.test.ts`: **7/7 pass**
+- `npx jest`: **282 suites / 2115 tests pass** (up from 280/2096 = +2 suites, +19 tests; no regressions)
+- `npm run build`: clean
+
+### Reference doc
+
+Full session writeup: `references/session-177-list1-dashboard-helpers-and-sessions-source-pattern.md` under the `refactor-sweep-mission` skill.
+
+### Next session should
+
+- **Random pick next session.** The List 1 surface is now mined clean at the catch-block / `setErrorFromCaught` / `safeApiCallData` / dashboard-helper / lineCount-guard scopes. Future List 1 refactors would need to pick a new scope (e.g. UI-handler shape, state-derivation memo, type-narrowing audit).
+- **List 2 carryover: `setCategoryError` in `useMissionsPage.ts:389`.** Still open from session 176. Defer to a future List 2 pick.
+- **Cross-list: extract a "wraps every route response in `{ data: T }`" source-pattern test for the API side.** The 3 List 1 source-pattern tests cover the client side; the server side has no equivalent pin. A future session that explicitly opts in to the "API-shape audit" recipe could ship this scanner.
+
 ## Session 176 — List 1 (Dashboard, Sessions, Memory, Logs) — `setErrorFromCaught` migration in `src/components/layout/Sidebar.tsx` (close session 159 layout-shared carryover)
 
 ### What shipped
@@ -203,5 +236,5 @@ None. Every call site is byte-equivalent to the inline form. The `replace(/\\/g,
 
 ---
 
-**Total sessions on this PR:** 63 (was 62, +1 for session 176)
-**Full archive size:** 656431 bytes (`pr-body.txt` at branch HEAD, was 644178, +12253 for session 176)
+**Total sessions on this PR:** 64 (was 63, +1 for session 177)
+**Full archive size:** 667090 bytes (`pr-body.txt` at branch HEAD, was 656431, +10659 for session 177)
