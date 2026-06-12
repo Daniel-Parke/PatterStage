@@ -1,3 +1,97 @@
+## Session 165 — List 3 (Models, Agents, Skills, Tools, Personalities) — Mode I fresh-audit returns zero + session 164 carryover closure
+
+**Random pick:** List 3 via `echo $((RANDOM % 4 + 1))` = 3. Random pick per the task brief's explicit mandate.
+
+**Outcome:** **2 commits, 0 refactor code changes to List 3 surface, 1 carryover closure (env-file consolidation) + 1 docs commit.** The fresh-audit re-verification protocol from pre-flight #31 (codified session 160) returns zero new in-tree candidates — List 3 is MINED CLEAN at the operations-page refactor level. All 4 lists are now at the same steady state.
+
+**Date:** 2026-06-12
+
+### 1. Session 164 carryover closure (commit `594d829`)
+
+Session 164 (2026-06-12 earlier) created the `parseEnvFile` helper at `src/lib/env-file.ts` to consolidate the duplicated env-file parser from `src/lib/hermes-config-sync.ts` and `src/lib/hermes-import.ts`. The work was uncommitted at session start (per `git status` showing 2 modified files + 1 untracked helper + 1 untracked test file). Session 165 picked it up unchanged and committed:
+
+| # | File | LOC | Notes |
+|---|------|-----|-------|
+| 1 | `src/lib/env-file.ts` | NEW (~70 lines) | `parseEnvFile` helper + `ENV_LINE_RE` regex, exported for `serializeEnvFile` in `@/lib/hermes-config-sync.ts` (which preserves blank lines and `#` comments verbatim — it needs the regex to identify keyval lines, not the full parser) |
+| 2 | `src/lib/hermes-config-sync.ts` | +10 / -14 = -4 net | Drop private `parseEnvFile` + `ENV_LINE_RE`; import from `@/lib/env-file`. The `serializeEnvFile` sibling preserves comments, so it reaches for the shared `ENV_LINE_RE` to identify keyval lines. |
+| 3 | `src/lib/hermes-import.ts` | +16 / -12 = +4 net | Replace inline regex + split with `parseEnvFile` call; add a JSDoc note pointing to the shared helper. |
+| 4 | `tests/unit/env-file.test.ts` | NEW (24 tests) | 24 cases covering the 4 parser branches (keyval / blank / comment / invalid) + CRLF + leading whitespace + value-with-`=` + duplicate keys + 6 `ENV_LINE_RE` cases |
+
+**Why this was a real refactor (not a feel-productive rename):** the two pre-refactor sites had the same regex and same skip rules independently; the consolidation guarantees they stay in lockstep if a future .env dialect (e.g. multi-line values, export-prefixed declarations) needs support. The `serializeEnvFile` sibling in `hermes-config-sync.ts` shares the regex (not the parser) because it preserves comments and blank lines verbatim — the parser would lose that context.
+
+### 2. Fresh List 3 audit — 7-grep scan + manual read pass
+
+Per pre-flight #31, the canonical fresh-audit protocol is: read the prior session's reference (session 163 for List 3) → re-enumerate the named OOS surfaces → run the 7-grep scan (5 canonical + 1 second-pass + 1 bare-catch from session 163 P-11).
+
+**7-grep scan results:**
+
+| # | Grep | Hits in List 3 surface | Status |
+|---|------|------------------------|--------|
+| A | `set\w+\(\s*messageFromError\s*\(` | 0 | CLEAN |
+| B | `err instanceof Error \? err\.message` | 0 | CLEAN |
+| C | `console.error` in catch | 0 | CLEAN |
+| D | `logApiError + serverError(STATIC)` (multiline) | 0 | CLEAN |
+| E | `safeApiCall<\{ data\?:` (envelope-typed) | 1 — `useModelsPage.ts:433` | **PINNED (correct shape per session 141/162)** |
+| E.2 | `as RequestInit` | 0 | CLEAN |
+| F | `await fetch\("/api/"` | 0 in List 3 | CLEAN |
+| G | `TODO\|FIXME\|XXX` | 0 | CLEAN |
+| H | `catch \{` (bare-catch) | 1 — `tools/page.tsx:54` | **PINNED (intentional graceful-degradation, session 163 P-7)** |
+
+**Manual file-read pass:** 5 files: `useModelsPage.ts` (583 LOC), `agents/page.tsx` (643 LOC), `personalities/page.tsx` (432 LOC), `skills/page.tsx` (781 LOC), `tools/page.tsx` (360 LOC), `config/models/page.tsx` (212 LOC) = **3011 LOC** of List 3 surface.
+
+Verdict: all catch blocks use canonical patterns (`toastError`, `setErrorFromCaught`, `runSyncAction`); all `safeApiCall<T>` reads use the correct single-nesting form; all `apiFetch<T>` reads follow the `{ data?: T }` strict-fail pattern; all `useCallback` deps are explicit; no inline `useState<X | null>` setters with `messageFromError(...)` calls; no dead code; no `as any` / `@ts-ignore`; no obvious duplication.
+
+### 3. The 1 hit on `safeApiCall<{ data?: { config: FallbackConfig } }>` is NOT a bug
+
+The `useModelsPage.ts:433` site at the `persistFallbackConfigNow` function is the **canonical envelope-typed form** per session 141 + 162. The site has a 4-line JSDoc explaining: *"The route returns `{ data: { config: ... } }` (envelope). `safeApiCall<T>` does NOT unwrap — `data` is the full body — so the type is the envelope shape and the inner config is read via `res?.data?.config` (two indirections)."*
+
+The umbrella skill has codified (per session 138 safe-api-call-envelope-unwrap-myth + session 141 revert): **`safeApiCall<T>` does NOT unwrap envelopes** — `safeApiCallData<T>` is the helper that DOES unwrap. The `useModelsPage.ts:413` site was migrated to `safeApiCallData` in session 133. The `:433` site is the **write+access** pattern (PUT then read the saved config from the response), which has a different failure mode (throw on write error, then read the response body). Migrating to `safeApiCallData` would change the failure mode — out of scope for byte-equivalence. **Verdict: PINNED, no action.**
+
+### 4. The 1 bare-catch hit is INTENTIONAL graceful-degradation
+
+The `tools/page.tsx:54` bare-catch is in the `loadProfileSyncStatus` useCallback, which sets `setProfileSyncStatus(null)` on error and intentionally suppresses the toast. Per session 163 P-7: *"`catch { setProfileSyncStatus(null); }` is deliberate — the drift banner is suppressed and no toast is shown by design."* **Verdict: PINNED, no action.**
+
+### 5. Cross-list "mined clean" status (post-session-165, delta from session 150 P-4)
+
+| List | Last audited | Last pick session | Status | Notes |
+|------|--------------|--------------------|--------|-------|
+| 1 (Dashboard, Sessions, Memory, Logs) | 2026-06-08 | 149 | **MINED CLEAN** | 11 files, ~3,100 LOC |
+| 2 (Cron, Missions, Chat) | 2026-06-09 | 162 | **MINED CLEAN at the operations-page level** | 2 open projects: `useMissionsPage` decomposition (needs-dedicated-session), 4 `safeApiCall<{ data?: { ... } }>` envelope sites (PINNED, correct shape) |
+| 3 (Models, Agents, Skills, Tools, Personalities) | 2026-06-12 | 165 | **MINED CLEAN at the operations-page level** | 2 named OOS surfaces from session 145 unchanged; session 163 + 165 confirm zero new in-tree candidates |
+| 4 (Models, HERMES.md, Environment, All Settings) | 2026-06-12 | 164 | **MINED CLEAN at the operations-page level** | Session 164's `parseEnvFile` consolidation closed the only cross-module duplication |
+
+**Cross-list summary post-session-165:** All 4 lists are MINED CLEAN at the operations-page refactor level. The mission is at the steady state flagged in session 149 P-7 + re-confirmed in session 150 P-4 + session 158 + session 160 + session 161 + session 162. The 6-occurrence precedent (sessions 149, 150, 158, 160, 161, 162, 165) is not noise — it's the steady state of a mission at end-of-life for byte-equivalent refactor work.
+
+### 6. Verification
+
+- **Carryover commit (`594d829`):** `npx tsc --noEmit` clean, `npx jest tests/unit/env-file.test.ts` 24/24 pass, `CI=true npx eslint . --max-warnings 0` clean
+- **Session 165 docs commit:** no production code changed; only docs + reference file
+- **Byte-equivalence audit per session 51 lesson** — the migrated sites are byte-equivalent: same `Map<string, string>` return, same skip rules, same `Map.set` last-write-wins semantics for duplicate keys, same `\r?\n` split for CRLF support
+- **Tool-call budget:** ~25 tool calls consumed (within the 1-3 commit / 15-min budget)
+
+### 7. What was NOT migrated
+
+- **List 3 surface:** zero new refactor candidates. The 2 named OOS surfaces from session 145 (case-insensitive substring search family, "Unknown error" fallback strings) are unchanged and OOS for the 1-3 commit budget.
+- **`useModelsPage.ts:433` envelope-typed `safeApiCall<{ data?: { ... } }>` site:** PINNED, not a bug (correct write+access shape per session 141/162).
+- **`tools/page.tsx:54` bare-catch:** PINNED, intentional graceful-degradation (session 163 P-7).
+
+### 8. Files
+
+- `src/lib/env-file.ts` (NEW) — `parseEnvFile` + `ENV_LINE_RE` helper
+- `src/lib/hermes-config-sync.ts` (MODIFIED) — drop private `parseEnvFile` + `ENV_LINE_RE`; import from `@/lib/env-file`
+- `src/lib/hermes-import.ts` (MODIFIED) — replace inline regex with `parseEnvFile` call
+- `tests/unit/env-file.test.ts` (NEW) — 24 tests
+- `references/session-165-list3-mode-i-confirm-mined-clean.md` (NEW) — session 165 audit + Mode I documentation + cross-list status table
+
+Net: 1 source file added, 2 source files modified, 2 test/reference files added, +318 / -29 lines.
+
+### 9. "Next session should:"
+
+1. **If the random pick lands on List 1, 2, 3, or 4** — the canonical 7-grep audit will likely return zero new in-tree candidates (per the 6-occurrence precedent). The right call is the Mode I 5-tool-call exit.
+2. **If a future session finds new refactor opportunities OUTSIDE the 4-list taxonomy** (e.g. `useMissionsPage` decomposition, the case-insensitive substring search family, the `"Unknown error"` fallback strings, or a new pitfall family), document it as a "named OOS surface" in the cross-list status table.
+3. **Mission charter migration** (per session 149 P-7) — consider a different refactor surface (useMissionsPage decomposition), a different pitfall family, or a different mission charter (test coverage gap closer, documentation drift closer). **Needs user approval** before changing the mission's charter.
+4. **The `safeApiCall<{ data?: { ... } }>` shape is now codified as the CORRECT pattern** for write+access scenarios where the route returns `{ data: { X } }`. The umbrella skill's 141-revert lesson is the canonical reference. Future sessions should NOT try to "unwrap" these sites — the helper doesn't unwrap, and the write+access use case is different from the best-effort read use case (which uses `safeApiCallData`).
+
 ## Session 163 — List 3 (Models, Agents, Skills, Tools, Personalities) — `toastError` migration in `viewSkill` catch + narrow-scope source-pattern test
 
 **Random pick:** List 3 via `date +%s | awk '{print $1%4+1}'` = 3. Random pick per the task brief's explicit mandate.
