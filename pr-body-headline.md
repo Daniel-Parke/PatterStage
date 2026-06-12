@@ -4,6 +4,49 @@
 
 ## Recent sessions (full detail)
 
+## Session 187 — List 4 (Models, HERMES.md, Environment, All Settings) — `config-cache` module extraction + `existingById` Map in `/api/models/import`
+
+### What shipped
+
+2 byte-equivalent refactors in the List 4 surface that reduce coupling and complexity in two hot paths.
+
+1. **`config-cache` module extraction from `/api/config/route.ts`** — the 50-line `readCachedConfig` + `invalidateConfigCache` block (with the 2 cache key string literals `"config.cached_json"` / `"config.cached_at"` repeated 4× across the read + write + invalidate blocks) is moved into a new `src/lib/config-cache.ts` module. The route shrinks from 215 → 151 lines (a 30% reduction). The module exposes 2 functions: `readCachedConfig()` (cache check → filesystem fallback → cache populate) and `invalidateConfigCache()` (clear both keys). All 3 internal `try`/`catch` blocks in the original are preserved with the same swallow-or-fallthrough semantics (cache miss / parse error / write failure / SELECT throw all fall through to the filesystem read).
+
+2. **`existingById` Map in `/api/models/import/route.ts:115-138`** — the credential-link loop did `const model = listModels().find((m) => m.id === modelId)` inside a for-of over `parsed.models`, which is O(N×M) — one full listModels() scan per model in the import. The refactor hoists the listModels() call out of the loop and indexes the rows by id in a `Map<string, ApiModel>`. The Map snapshot is byte-equivalent for this loop's semantics because (a) each `modelId` from `modelKeyToId.get(...)` maps 1:1 to a row in `listModels()` (both originate from the same registry writes), (b) each `modelId` is updated at most once during the loop, (c) the `model.credentialsId !== credId` check on the first (and only) iteration for that id reads the pre-update DB state, which is the only state the comparison needs.
+
+3. **`tests/unit/config-cache.test.ts`** (NEW) — 8 unit tests covering: cache hit returns the stored JSON object (no filesystem read), cache miss falls through to filesystem and re-populates both keys in a single transaction, stale cache (TTL > 15s) is bypassed, `invalidateConfigCache()` removes both keys, missing filesystem file returns `{}` and does not populate the cache (invariant pinned — the early-return path is intentionally cache-free), YAML parse error returns `{}` without crashing, SELECT throw falls through to filesystem (via `jest.isolateModules` + `jest.doMock` to simulate a db.unavailable scenario), and a byte-equivalence check confirming the cache-hit path returns the same shape as the filesystem branch. 8/8 pass.
+
+4. **`tests/unit/api-config-config-cache-source-pattern.test.ts`** (NEW) — 3 source-pattern assertions pinning the post-extraction shape of `/api/config/route.ts`: (a) imports `readCachedConfig` + `invalidateConfigCache` from `@/lib/config-cache`, (b) does NOT import `js-yaml`, `readFileSync`, `existsSync`, or `db()` (the cache module owns those dependencies), (c) the 2 cache key string literals are NOT in the route (they live in the module as `CACHE_KEY_JSON` / `CACHE_KEY_AT`). 3/3 pass.
+
+5. **`tests/unit/models-import-credential-link-map-source-pattern.test.ts`** (NEW) — 3 source-pattern assertions pinning the Map extraction in `/api/models/import/route.ts`: (a) the Map builder `new Map(listModels().map((m) => [m.id, m]))` is present at the canonical position (inside the `if (Object.keys(providerToCredId).length > 0)` block, before the for-of), (b) the loop body uses `existingById.get(modelId)` (not `listModels().find(...)`) — the comment-stripped source is checked so a "listModels().find(...)" reference inside a doc comment doesn't trip the test, (c) exactly 1 `listModels()` call exists in the link block (the Map builder). 3/3 pass.
+
+### Why this is byte-equivalent (or improves performance without behavior change)
+
+- **`config-cache` extraction**: pure relocation. Every call site in the route (GET, PUT) uses the same function signatures and the same try/catch/return shape. The 8 runtime tests verify the same observable behaviour across all 7 reachable input shapes (cache hit, cache miss, stale cache, db throw, missing file, parse error, invalidate-then-read, byte-equivalent on round-trip). The 3 source-pattern tests verify the route no longer owns the cache dependencies. A future "inline the cache back into the route" PR would fail at least one of these 11 tests and force the refactor author to consciously re-add the inline form.
+- **`existingById` Map**: pure performance + readability. The pre-refactor `listModels().find(...)` was an O(N) scan per iteration; the post-refactor `existingById.get(modelId)` is an O(1) Map lookup. The Map is built once before the loop. The `model.credentialsId !== credId` check reads the snapshot — same observable behaviour as the pre-refactor because (a) the same `modelId` is only visited once, (b) the snapshot's `credentialsId` is the pre-update DB state which is the only state the comparison needs. The existing `tests/unit/models-import-api.test.ts` (4 cases including "does not re-link when the model's credentialsId already matches") continues to pass unchanged, locking the byte-equivalence claim.
+
+### Verification
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint . --max-warnings 0`: clean (0 warnings)
+- `npx jest`: **299 suites / 2223 tests pass** (up from 296/2209 = +3 suites, +14 tests, matching the 3 new test files at 8+3+3 = 14 cases)
+- `CI=true npx --yes pnpm@10.33.0 build`: clean
+
+### Carryover resolution
+
+No carryover in or out. This session started with a clean working tree (session 186's `hindsightErrorFromCatch` + 2 POST/DELETE migrations + session 185 closure all shipped cleanly in commit `4c37e95`).
+
+### Reference doc
+
+No new reference doc — this is a 2-refactor session with the same extraction shape as the prior List 4 sessions (e.g. session 70's `loadHermesConfigFromString` extraction). The `config-cache` module's JSDoc + the `tests/unit/config-cache.test.ts` test file together document the contract.
+
+### Next session should
+
+- **Random pick next session.** List 4 has now had 6 sessions (70, 72, 95, 98, 186-adjacent, 187). List 1 has 8+ sessions. List 2 has 10+. List 3 has 5+. The mission brief's "spread the refactor surface" advice still holds.
+- **Future List 4 work candidates** (deferred): (a) the `MANAGED_KEYS` Set in `src/app/api/agent/files/[key]/route.ts:33` is a stringly-typed whitelist (6 keys: `soul, agent, user, memory, config, hermes`). It's intentionally not derived from `getBehaviorFiles()` (which has 7 keys including `env`) because `env` is a security-sensitive excluded case. The 6-key Set is the safer form, but a `isManagedKey(key: string): boolean` helper (with a JSDoc explaining the env exclusion) would make the intent more discoverable. Low priority — the current form is short and commented. (b) The `parseEnvLine` import + per-line rendering in `src/app/config/[section]/page.tsx:258-283` is the only call site — if a 2nd caller appears (e.g. an "Edit .env" page in /config/seed), extract the renderer into a `<EnvFilePreview>` component. Currently 1 site, Rule of Three not met. (c) The `isPlatformToolsetsPreview` special-case in `src/app/config/[section]/page.tsx:60, 72-78, 186, 236-246` is a "this section is special, route through a different API" branch. As more sections get custom load/save behaviour, the section-page might benefit from a per-section override (SectionDef could grow `loadFrom?: (signal) => Promise<Record>` and `saveTo?: (values) => Promise<void>`). Currently 1 override (platform_toolsets), so premature. Defer until a 2nd override appears.
+
+---
+
 ## Session 186 — List 1 (Dashboard, Sessions, Memory, Logs) — `hindsightErrorFromCatch` combined catch shim + 2 POST/DELETE catch migrations in `/api/memory/hindsight/route.ts` (close session 185 carryover)
 
 ### What shipped
@@ -425,5 +468,5 @@ None. Every call site is byte-equivalent to the inline form. The `replace(/\\/g,
 
 ---
 
-**Total sessions on this PR:** 69 (was 68, +1 for session 185)
-**Full archive size:** 711989 bytes (`pr-body.txt` at branch HEAD, was 704871, +7118 for session 185)
+**Total sessions on this PR:** 70 (was 69, +1 for session 187)
+**Full archive size:** TBD (was 720100, pending pr-body.txt append)
