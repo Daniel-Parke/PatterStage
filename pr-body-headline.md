@@ -3,6 +3,7 @@
 **Full archive:** `pr-body.txt` at HEAD on the `mission/...` branch.
 
 ## Recent sessions
+- **Session 168** — List 2: `COPY_BTN_CLASS` + `COPY_BTN_DATA_ATTR` magic-string consolidation in chat page + chat-utils (completes the List 2 chat-page surface; 2 UX-decision-required surfaces still OOS per the byte-equivalence charter)
 - **Session 167** — List 4: `seedPostSchema` + `parseAndValidateJsonBody` migration in `api/seed/route.ts` + new source-pattern test (completes the `parseAndValidateJsonBody` adoption sweep on the List 4 API surface)
 - **Session 166** — List 3: `safeApiCallData<{ profiles?: AgentProfile[] }>` migration in `operations/tools/loadProfileSyncStatus` + new source-pattern test pinning the byte-equivalence
 - **Session 163** — List 3: `toastError` migration in `viewSkill` catch + narrow-scope source-pattern test (session 162 carryover closure also committed)
