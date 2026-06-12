@@ -4,6 +4,46 @@
 
 ## Recent sessions (full detail)
 
+## Session 185 — List 3 (Models, Agents, Skills, Tools, Personalities) — close 2 `useRef<setTimeout| null>(null)` + cleanup pattern gaps in `config/[section]/page.tsx` and `operations/personalities/page.tsx`
+
+### What shipped
+
+2 byte-equivalent reliability fixes in the List 3 surface that bring 2 timer-ref sites to parity with the session 184 canonical shape.
+
+1. **`saveStatusTimerRef` back-to-back pre-cancel in `src/app/config/[section]/page.tsx`** — the pre-existing form had the unmount-cleanup effect but NOT the back-to-back pre-cancel. The timer would fire `setSaveStatus("idle")` 2s after the FIRST save, racing the new save's `setSaveStatus("saved")` and prematurely flipping the UI away from "Saved!" before the user could read the indicator. Added the canonical `if (ref.current) { clearTimeout(ref.current); }` guard before the assignment + nulled the ref inside the timer body (matching the `saveResetTimerRef` pattern in `operations/agents/page.tsx`). The 2-second delay, the `setSaveStatus("idle")` intent, the wire/API call, and the pre-existing unmount-cleanup effect are all preserved unchanged.
+
+2. **`copiedTimerRef` unmount cleanup in `src/app/operations/personalities/page.tsx`** — the pre-existing form had the inline back-to-back pre-cancel but NOT the unmount-cleanup effect. If the `PersonalityCard` was removed from the DOM during the 2s window (e.g. parent re-renders without it, route change, filtering hides the card), the timer would call `setCopied` on an unmounted component (React warning + wasted re-render). Added the canonical `useEffect(() => () => { if (ref.current) { clearTimeout(ref.current); ref.current = null; } }, []);` cleanup effect, matching the `copiedTimerRef` pattern in `components/session/MessageBubble.tsx` and the `saveResetTimerRef` pattern in `operations/agents/page.tsx`. The 2-second delay, the `setCopied(false)` intent, the wire/API call, and the pre-existing back-to-back pre-cancel are all preserved unchanged.
+
+3. **`tests/unit/config-section-save-status-timer-cleanup.test.ts`** (NEW) — 6 test cases pinning the post-migration shape for `saveStatusTimerRef`. Same template as the session 184 `agents-page-save-reset-timer-cleanup.test.ts` (ref declaration, cleanup effect, ref-assigned setTimeout, body nulls + idle, back-to-back pre-cancel, no bare form). 6/6 pass.
+
+4. **`tests/unit/personalities-card-copied-timer-cleanup.test.ts`** (NEW) — 6 test cases pinning the post-migration shape for `copiedTimerRef` in `PersonalityCard`. Same template adapted for the `setCopied(false)` body. 6/6 pass.
+
+### Why this is byte-equivalent (or improves reliability without behavior change)
+
+- **`saveStatusTimerRef` back-to-back pre-cancel**: pure reliability improvement for the back-to-back save case. The `setSaveStatus("saved")` → `setSaveStatus("idle")` 2-second reset window is preserved. The pre-existing unmount cleanup continues to work. The new pre-cancel only fires in the **back-to-back** path (the second `handleSave` invocation), and only the *old* handle is cleared — the new handle is set immediately after. Only observable change: a stale 2s timer from a prior save can no longer prematurely flip the UI back to "idle" before the user reads "Saved!" from the current save.
+- **`copiedTimerRef` unmount cleanup**: pure reliability improvement for the card-unmount case. The `setCopied(true)` → `setCopied(false)` 2-second reset window is preserved. The pre-existing inline back-to-back pre-cancel continues to work. The new unmount effect only fires when the card is being torn down, and it only clears the in-flight timer handle — the user-visible copy is already done (`navigator.clipboard.writeText` ran synchronously before the timer was set).
+
+In both cases, the only observable change is the **absence** of a previously possible bug, never the **presence** of new behavior.
+
+### Verification
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint . --max-warnings 0`: clean (0 warnings)
+- `npx jest tests/unit/config-section-save-status-timer-cleanup.test.ts tests/unit/personalities-card-copied-timer-cleanup.test.ts`: **12/12 pass** (6 + 6)
+- `npx jest`: **294 suites / 2190 tests pass** (up from 291/2172 = +3 suites, +18 tests, matching the 3 new test files at 6 tests each — 1 from session 184, 2 from this session)
+- `CI=true npx --yes pnpm@10.33.0 build`: clean
+
+### Reference doc
+
+Full session writeup: `references/session-185-list3-timer-cleanup-gaps.md` under the `refactor-sweep-mission` skill.
+
+### Next session should
+
+- **Random pick next session.** The List 3 surface is now mined clean at the `useRef<setTimeout| null>(null)` + cleanup pattern scope — `saveResetTimerRef` (s184), `saveStatusTimerRef` (s185), `copiedTimerRef` (s185). The 2-half pattern (unmount cleanup + back-to-back pre-cancel) is now the canonical shape across 3+ files.
+- **Future List 3 work candidates** (deferred): the `useTwoStepConfirm` hook (used by the Sidebar, List 1.5 surface) and `LocalDirRow` (List 2 surface) still have `useRef<setTimeout| null>(null)` patterns — a future session could apply the same 2-half pattern check to those files.
+
+---
+
 ## Session 184 — List 3 (Models, Agents, Skills, Tools, Personalities) — `closeDelete` 3rd-site migration + `closeSkillEditor` 4th-site migration + `saveResetTimerRef` setTimeout-cleanup pattern in `handleSave`
 
 ### What shipped
@@ -343,5 +383,5 @@ None. Every call site is byte-equivalent to the inline form. The `replace(/\\/g,
 
 ---
 
-**Total sessions on this PR:** 68 (was 66, +1 for session 184 + 1 for the now-tracked session 183 + 1 for session 182 + 1 for session 180 + 1 for session 179)
-**Full archive size:** 704871 bytes (`pr-body.txt` at branch HEAD, was 693407, +11464 for session 184)
+**Total sessions on this PR:** 69 (was 68, +1 for session 185)
+**Full archive size:** 711989 bytes (`pr-body.txt` at branch HEAD, was 704871, +7118 for session 185)
