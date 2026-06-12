@@ -37,6 +37,7 @@ import TemplateCard from "@/components/ui/TemplateCard";
 import { useToast } from "@/components/ui/Toast";
 import type { SystemStatus, AccentColor, MonitorData, HermesProcess, MissionBrief } from "@/types/hermes";
 import { timeAgo, titleCase, parseSchedule } from "@/lib/utils";
+import { scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
 import { shellHeaderBarClasses } from "@/lib/theme";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import AppPageShell from "@/components/layout/AppPageShell";
@@ -241,10 +242,13 @@ export default function Dashboard() {
     }
 
     const parsed = parseSchedule(newSchedule);
-    const scheduleDisplay =
-      parsed.kind !== "invalid"
-        ? parsed.display
-        : newSchedule;
+    // `scheduleDisplayFromParsed` (src/lib/schedule/parse-schedule.ts) handles
+    // the type-narrowing concern for the discriminated `ParsedSchedule` union:
+    // the `invalid` variant has no `display` field, so the call site collapses
+    // to a single helper call + a raw-input fallback for the invalid case.
+    // Byte-equivalent to the prior inline `parsed.kind !== "invalid" ?
+    // parsed.display : newSchedule` form.
+    const scheduleDisplay = scheduleDisplayFromParsed(parsed, newSchedule);
 
     // Optimistic local update before the API call so the UI updates immediately.
     // `data.monitor` is in the useCallback deps (line 311 below) so the

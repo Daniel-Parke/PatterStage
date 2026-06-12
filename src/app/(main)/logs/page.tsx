@@ -217,7 +217,21 @@ export default function LogsPage() {
             </button>
             <select
               value={lineCount}
-              onChange={(e) => setLineCount(parseInt(e.target.value, 10))}
+              onChange={(e) => {
+                // Defensive: `parseInt(value, 10)` returns NaN for empty
+                // strings, non-numeric input, or values out of the
+                // <select>'s 100/200/500/1000 range. The API route
+                // (`src/app/api/logs/route.ts`) handles this with
+                // `parseInt(...) + Number.isFinite + Math.min(...,1000) +
+                // 200` default — the page mirrors that shape so a future
+                // change to a number input (or an empty selection) lands
+                // on a stable fallback (200) instead of NaN propagating
+                // to the `useApiData` URL builder. Byte-equivalent for the
+                // current <select> (all 4 options pass the `>= 1` and
+                // `<= 1000` gates).
+                const parsed = parseInt(e.target.value, 10);
+                setLineCount(Number.isFinite(parsed) && parsed >= 1 ? Math.min(parsed, 1000) : 200);
+              }}
               className="bg-dark-900/50 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono appearance-none cursor-pointer outline-none focus:border-neon-cyan/50"
             >
               <option value={100} className="bg-dark-900">100 lines</option>

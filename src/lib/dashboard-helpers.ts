@@ -32,19 +32,23 @@ export function composeTemplateUrl(templateId: string): string {
 }
 
 /**
- * Return a new monitor with the given cron job's `schedule` field
- * set to `newSchedule`. Used by the dashboard's "update cron
- * schedule" handler to apply the change optimistically before the
- * API call round-trips. The original `monitor` is returned when it
- * is null (defensive — the page already guards against this case
- * via a showToast, but the helper stays safe to call on stale state).
+ * Return a new monitor with the given cron job's `schedule` and
+ * `schedule_display` fields updated in lockstep. Used by the
+ * dashboard's "update cron schedule" handler to apply the change
+ * optimistically before the API call round-trips. The original
+ * `monitor` is returned when it is null (defensive — the page
+ * already guards against this case via a showToast, but the helper
+ * stays safe to call on stale state).
  *
- * The optional `scheduleDisplay` parameter is the human-readable label
- * that the canonical form maps to (e.g. a 30-minute cron expression
- * maps to "every 30m"). When provided, the helper updates both
- * fields on the matching job so the optimistic state matches what
- * the server will return after the next /api/monitor poll. When
- * omitted, the existing `schedule_display` is preserved.
+ * `scheduleDisplay` is the human-readable label that the canonical
+ * form maps to (e.g. a 30-minute cron expression maps to "every 30m").
+ * Both fields are updated together so the optimistic state matches
+ * what the server will return after the next /api/monitor poll — the
+ * canonical machine form goes in `schedule`, the human label goes
+ * in `schedule_display` (mirrors the column-pair invariant on the
+ * DB row). A `null` `scheduleDisplay` is treated as "no human label
+ * yet" and the helper writes a literal `null`, leaving the
+ * canonical cron in `schedule` for the picker to render.
  *
  * Pure function: never mutates the input. The caller passes the
  * current `data.monitor` and the helper returns a new `MonitorData`
@@ -55,7 +59,7 @@ export function withCronJobSchedule(
   monitor: MonitorData | null,
   jobId: string,
   newSchedule: string,
-  scheduleDisplay?: string | null,
+  scheduleDisplay: string | null,
 ): MonitorData | null {
   if (!monitor) return monitor;
   return {
@@ -67,9 +71,7 @@ export function withCronJobSchedule(
           ? {
               ...job,
               schedule: newSchedule,
-              ...(scheduleDisplay !== undefined
-                ? { schedule_display: scheduleDisplay }
-                : {}),
+              schedule_display: scheduleDisplay,
             }
           : job,
       ),
