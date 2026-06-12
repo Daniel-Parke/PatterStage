@@ -1054,10 +1054,12 @@ export function useMissionsPage() {
 
   const handleDelete = useCallback(async (id: string) => {
     if (!confirm("Delete this mission and its cron job?")) return;
-    const result = await safeApiCall("/api/missions", {
-      method: "POST",
-      body: { action: "delete", missionId: id },
-    });
+    // Migrated from the inline `safeApiCall("/api/missions", { method: "POST", body: { action: "delete", missionId: id } })`
+    // form to the shared `dispatchMissionAction` helper. The helper's `MissionActionResponse`
+    // envelope type is typed once at the helper, so the call site no longer needs the inline
+    // call shape. The toast + fetchData + setExpandedId(null) post-success flow is preserved
+    // byte-equivalent.
+    const result = await dispatchMissionAction("delete", { missionId: id });
     toastFromResult(showToast, result, "Mission deleted", "Failed to delete mission");
     if (result.ok) {
       if (expandedId === id) setExpandedId(null);
@@ -1089,22 +1091,14 @@ export function useMissionsPage() {
       result: "Cancelled by user",
     }));
 
-    // Shared by both error paths below (API returned ok:false, and the
-    // catch-block network error path). 1-line call to the
-    // `updateMission` helper — the pre-extraction inline form was a
-    // 3-line setMissions((prev) => prev.map(...)) closure. The
-    // helper's id discriminator + setState((prev) => prev.map(...))
-    // shape is exactly what restore needs, so the closure is now a
-    // 1-line passthrough.
-    const restoreMission = (restored: MissionRow) => {
-      updateMission(id, () => restored);
-    };
-
     try {
-      const result = await safeApiCall("/api/missions", {
-        method: "POST",
-        body: { action: "cancel", missionId: id },
-      });
+      // Migrated from the inline `safeApiCall("/api/missions", { method: "POST", body: { action: "cancel", missionId: id } })`
+      // form to the shared `dispatchMissionAction` helper. Same wire call, same envelope
+      // type, same `ok`/`error` fields. The restore-on-failure path (the 2 sites
+      // that used to call the `restoreMission(restored)` 1-line wrapper) now inlines
+      // `updateMission(id, () => restored)` directly — the wrapper was just a closure
+      // capture of the same `id`, and inlining saves a 3-line closure declaration.
+      const result = await dispatchMissionAction("cancel", { missionId: id });
       toastFromResult(
         showToast,
         result,
@@ -1115,11 +1109,11 @@ export function useMissionsPage() {
         await fetchData();
         if (expandedId === id) void fetchDetail(id);
       } else if (previousMission) {
-        restoreMission(previousMission);
+        updateMission(id, () => previousMission);
       }
     } catch (err) {
       if (previousMission) {
-        restoreMission(previousMission);
+        updateMission(id, () => previousMission);
       }
       toastError(showToast, err, "Network error — could not cancel mission");
     } finally {

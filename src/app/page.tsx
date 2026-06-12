@@ -46,6 +46,7 @@ import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/Stat
 import { safeApiCall, safeApiCallData, toastError } from "@/lib/api-fetch";
 import { runMutation } from "@/lib/run-mutation";
 import { toastFromResult } from "@/lib/toast-from-result";
+import { dispatchMissionAction } from "@/hooks/success-message-for-dispatch";
 import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
 import { isMissionActive } from "@/lib/mission-board";
 import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
@@ -209,10 +210,14 @@ export default function Dashboard() {
   const handleCancelMission = useCallback(async (missionId: string, missionName: string) => {
     const doCancel = async () => {
       try {
-        const { ok, error } = await safeApiCall<{ missions: MissionBrief[] }>("/api/missions", {
-          method: "POST",
-          body: { action: "cancel", missionId },
-        });
+        // Migrated from the inline `safeApiCall<{ missions: MissionBrief[] }>("/api/missions", { method: "POST", body: { action: "cancel", missionId } })` form
+        // to the shared `dispatchMissionAction` helper. The pre-migration type
+        // annotation was wrong — the route returns `{ mission, cancel: { accepted, processKillPending } }`,
+        // NOT `{ missions: MissionBrief[] }` (that envelope belongs to the list endpoint, not the
+        // cancel action). The destructure only reads `ok`/`error` so the type mismatch was
+        // invisible at runtime, but it was a maintenance trap. The helper now owns the wire call
+        // and the envelope type. Byte-equivalent at the call site.
+        const { ok, error } = await dispatchMissionAction("cancel", { missionId });
         toastFromResult(
           showToast,
           { ok, error },

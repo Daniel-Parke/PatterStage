@@ -11,13 +11,16 @@
  * applies the same id-discriminator + setMissions((prev) => prev.map
  * ((m) => m.id === X ? updater(m) : m)) shape.
  *
- * The 2 callsites in `useMissionsPage.handleCancel` (the optimistic
- * status flip + the restoreMission closure) collapsed from 3-line
- * inline setMissions blocks to single-line `updateMission(id, ...)`
- * calls. This test pins:
+ * The 3 callsites in `useMissionsPage.handleCancel` (the optimistic
+ * status flip + the 2 restore-on-failure paths in the `!result.ok` and
+ * `catch (err)` branches) collapsed from 3-line inline setMissions
+ * blocks to single-line `updateMission(id, ...)` calls. Earlier
+ * sessions added a `restoreMission(restored)` 1-line closure
+ * (refactored away in session 189 — see `inline updateMission(id, () => previousMission)`
+ * at the 2 restore sites). This test pins:
  *   1. The `updateMission` identifier is defined in the file (positive).
- *   2. The 2 callsites use the canonical `(id, updater)` call shape
- *      (positive — both are in the `handleCancel` body).
+ *   2. The 3 callsites use the canonical `(id, updater)` call shape
+ *      (positive — all 3 are in the `handleCancel` body).
  *   3. No remaining inline `setMissions((prev) =>` pattern with
  *      `m.id === ` discriminator (negative — the helper now owns
  *      the id-discriminator + setState((prev) => prev.map(...))
@@ -59,15 +62,17 @@ describe("useMissionsPage — updateMission helper shape", () => {
     expect(matches?.length).toBe(1);
   });
 
-  it("calls updateMission with the canonical (id, updater) shape at 2 sites (positive)", () => {
-    // Both callsites are inside `handleCancel` (the optimistic status
-    // flip + the restoreMission closure body). A future 3rd
-    // callsite — e.g. for "promote a draft mission's status
-    // optimistically" — should also use the helper, so this test is
-    // a per-callsite count.
+  it("calls updateMission with the canonical (id, updater) shape at 3 sites (positive)", () => {
+    // All 3 callsites are inside `handleCancel` (the optimistic status
+    // flip + the 2 restore-on-failure paths in the `!result.ok` and
+    // `catch (err)` branches). A future 4th callsite — e.g. for
+    // "promote a draft mission's status optimistically" — should
+    // also use the helper, so this test is a per-callsite count.
+    // (Session 189 update: was 2 callsites pre-restoreMission-inlining,
+    // the inline form at the 2 restore sites brought it to 3.)
     const matches = code.match(/updateMission\s*\(\s*id\s*,/g);
     expect(matches).not.toBeNull();
-    expect(matches?.length).toBe(2);
+    expect(matches?.length).toBe(3);
   });
 
   it("does NOT contain a remaining inline setMissions((prev) => prev.map((m) => m.id === ...) form (negative)", () => {
