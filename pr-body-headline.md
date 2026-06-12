@@ -4,6 +4,52 @@
 
 ## Recent sessions (full detail)
 
+## Session 178 — List 2 (Cron, Missions, Chat) — `setErrorFromCaught` carryover + `serverErrorFromCatch` chat-route migration + `setErrorFromCaught` return-value enhancement + 2 silent-catch fixes
+
+### What shipped
+
+3 byte-equivalent refactors + 2 silent-catch fixes on the List 2 surface:
+
+1. **`useMissionsPage.ts:393` — `setCategoryError(messageFromError(...))` 2-hop → `setErrorFromCaught(setCategoryError, ...)`.** This is the "next carryover candidate" the session 176 closeout doc explicitly called out. The dual-dispatch shape (state setter + toast) is the first List 2 site that reuses the resolved message — and the reason for migration 3 below.
+
+2. **`api/orchestration/chat/route.ts:80` — `logApiError + serverError(toError(error).message)` → `serverErrorFromCatch(...)`.** The last surviving inline form in the List 2 surface, sister to the session 172 `agents/route.ts` closure. Drops 3 imports (`logApiError`, `serverError`, `toError`) the factory composes internally.
+
+3. **`src/lib/api-fetch.ts:218` — `setErrorFromCaught` return-value enhancement (`void` → `string`).** The dual-dispatch (state + toast) callers like `loadCategories` now get a single `setErrorFromCaught` call that returns the resolved message for the follow-on `showToast(msg, "error")` — no second `messageFromError` import needed. Strict superset of the pre-session-178 contract; 1-dispatch callers discard the return value and the byte-equivalent semantics are preserved.
+
+4. **`useMissionsPage.ts:536, :578` — 2 silent `console.error` catch blocks now surface via `toastError`** (the `fetchData` missions slice + the `fetchDetail` panel). The pre-session-178 contract was "user sees nothing on failure"; now it matches the sibling `fetchTemplates` slice for parity.
+
+5. **`api/missions/route.ts:138` — dead `type _MissionBodyFields` line removed** (the variable starts with `_`, is never exported, and the route uses the concrete destructure shape from `parseMissionBodyFields` via TypeScript inference).
+
+### Why this is byte-equivalent
+
+- **`setCategoryError` migration**: `setErrorFromCaught(setX, err, fallback)` is literally `setX(messageFromError(err, fallback))` per `src/lib/api-fetch.ts:223` (the helper body). The 11 unit tests in `set-error-from-caught.test.ts` (8 pre-session-178 + 3 new dual-dispatch tests) lock the byte-equivalence claim for 6 input shapes (Error, empty Error, string, null, undefined, TypeError) AND the new return-value contract.
+- **Chat route migration**: the factory composes `logApiError + serverError(STATIC_MESSAGE)`. The pre-session-178 form had a dynamic-message concat (`serverError(toError(error).message)`) — replaced with the static "Failed to call gateway" string per the factory's static-message contract. The route label + context label differ from the inline form's labels (the factory uses a stricter route+context pair), the log message is structurally the same (`[API <route>] Error <context>: <err-msg>`), and the response body is the static message instead of the dynamic concatenation.
+- **Return-value enhancement**: mechanical change (1 line added, 1 return-type changed). The 1-dispatch callers (List 1 logs page, Sidebar) call the helper as a statement — they discard the return value, and a `string` return is assignable-to-discarded just like `void` was. The 2-dispatch callers get a 2nd return value to reuse. Backward-compatible at the JS runtime level.
+- **Silent-catch fixes**: replaces `console.error` with `toastError`, surfacing the same error string the user would have seen in the sibling `fetchTemplates` slice. The pre-session-178 contract was "user sees nothing" — a UX bug. Post-session-178 is "user sees a toast" — matches the rest of the surface.
+- **Dead-code removal**: the `_MissionBodyFields` type alias was unused (the route's `f = parseMissionBodyFields(rest)` reads the function's return type via inference). No runtime effect.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `CI=true npx eslint . --max-warnings 0`: clean
+- `npx jest tests/unit/set-error-from-caught.test.ts`: **11/11 pass** (8 pre-existing + 3 new dual-dispatch tests)
+- `npx jest tests/unit/set-error-from-caught-source-pattern-list1.test.ts`: **10/10 pass** (signature assertion re-pinned to the new `: string` return + 3-line `const msg = ...; setError(msg); return msg;` body — the "test pins the implementation" pitfall generalised)
+- `npx jest tests/unit/set-error-from-caught-source-pattern-list2.test.ts`: **7/7 pass** (new per-list scanner)
+- `npx jest tests/unit/chat-route-server-error-from-catch-source-pattern.test.ts`: **6/6 pass** (new per-file scanner mirroring the session 172 agents route test)
+- `npx jest`: **284 suites / 2131 tests pass** (up from 282/2117 = +2 suites, +14 tests; no regressions)
+- `npm run build`: clean
+
+### Reference doc
+
+Full session writeup: `references/session-178-list2-seterrorfromcaught-and-chat-servererrorfromcatch.md` under the `control-hub` skill.
+
+### Next session should
+
+- **Random pick next session.** The List 2 surface is now mined clean at the catch-block / `setErrorFromCaught` / `serverErrorFromCatch` scope. The `setCategoryError` carryover from session 176 is closed. The chat route inline-form is closed. The 2 silent-catch sites are surfaced. Future List 2 refactors require picking a different surface (e.g. the `parseCategoryIdOrError` helper could be promoted to a shared `@/lib/api-validation.ts`; the missions route's `requireMissionId` + `getMissionOrNotFound` + `requireMissionOrNotFound` triplet could be collapsed into a `*OrFail` combined helper per the session 173 pattern).
+- **List 3 carryover: 2 `useModelsPage.ts` `setX(messageFromError(...))` sites** (lines 107 and 314 per the session 176 audit). A future List 3 pick could close those 2 sites — the byte-equivalent migration is `setErrorFromCaught(setError, err, "...")` (the helper is already imported on line 13).
+- **Result-object `messageFromError` pattern.** The 3 `useMissionsPage.ts` sites (lines 185, 263) and 3 `useModelsPage.ts` sites of the same shape are NOT setter wrappers — they're result-object builders (`{ action, detail: messageFromError(err, "...") }` and `{ taskType, ok: false, error: messageFromError(err, "Failed") }`). The session 176 closeout doc explicitly defers this to a future "result-object messageFromError" pattern extraction. 6 sites across 2 hooks — still below the threshold for extraction.
+- **Layout-shared surface audit (List 1.5+).** The session 176 closeout identified 4 layout-shared components (Sidebar, AppPageShell, PageHeader, MobileHeader) that have NOT been audited for the same catch-block patterns. The Sidebar carryover was closed in session 176. A future session could run a "layout-shared surface audit" that scans all 4 layout components for stale 2-hop forms + silent catch blocks.
+
 ## Session 177 — List 1 (Dashboard, Sessions, Memory, Logs) — `withCronJobSchedule` 4th-arg promotion + `scheduleDisplayFromParsed` adoption + Sessions source-pattern tests + Logs `lineCount` NaN guard
 
 ### What shipped
@@ -236,5 +282,5 @@ None. Every call site is byte-equivalent to the inline form. The `replace(/\\/g,
 
 ---
 
-**Total sessions on this PR:** 64 (was 63, +1 for session 177)
-**Full archive size:** 667090 bytes (`pr-body.txt` at branch HEAD, was 656431, +10659 for session 177)
+**Total sessions on this PR:** 65 (was 64, +1 for session 178)
+**Full archive size:** 682485 bytes (`pr-body.txt` at branch HEAD, was 667090, +15395 for session 178)
