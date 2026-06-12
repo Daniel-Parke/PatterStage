@@ -1,3 +1,61 @@
+## Session 163 — List 3 (Models, Agents, Skills, Tools, Personalities) — `toastError` migration in `viewSkill` catch + narrow-scope source-pattern test
+
+**Random pick:** List 3 via `date +%s | awk '{print $1%4+1}'` = 3. Random pick per the task brief's explicit mandate.
+
+**Outcome:** **2 commits, 1 refactor scope, 2 files modified (1 source + 1 test), 7 new tests, 0 new src files.** This session also closed the session 162 carryover (1 commit, 4 files, 11 new tests) at the start.
+
+### 1. Session 162 carryover closure (commit `39ddf2e`)
+
+Session 162 was truncated mid-PR-build by the tool-call budget. The 2 cron-modals migration + new Logs source-pattern test landed in the working tree but were never committed. Session 163 picks them up unchanged:
+
+| # | File | LOC | Notes |
+|---|------|-----|-------|
+| 1 | `src/components/cron/JobFormModal.tsx` | +13 / -4 = +9 | `GET /api/agent/profiles` envelope-typed form + `result.data?.data?.profiles` + JSDoc |
+| 2 | `src/components/cron/SystemCronModal.tsx` | +18 / -6 = +12 | `GET /api/cron/hardware/meta` envelope-typed form + inner-`X` access + JSDoc |
+| 3 | `src/app/(main)/logs/page.tsx` | +15 / -10 = +5 | `DELETE /api/logs` envelope-typed form + `delData?.data?.cleared` + JSDoc |
+| 4 | `tests/unit/safe-api-call-data-source-pattern-list1-logs.test.ts` | +120 (new) | 4 new source-pattern tests for the Logs page. Sister to the list1 + list2 + list3 sister files. |
+| 5 | `tests/unit/safe-api-call-data-source-pattern-list2.test.ts` | +11 / -0 = +11 | Added the 2 cron-modal file paths to the `LIST_2_FILES` array with a JSDoc entry documenting why these 2 were silent-bug sites |
+
+The grep that surfaced these sites is the same one used in session 141/162 — `safeApiCall<...>` + `.data?.` fingerprint scan. Both files were silent-broken before this commit (helper does not unwrap, endpoint returns `{ data: { ... } }` envelope).
+
+### 2. Fresh List 3 audit — `toastError` migration in `viewSkill` (commit `defba64`)
+
+The List 3 surface is mostly clean after sessions 91/95/96/100/103 (setErrorFromCaught/toastError sweeps), 127 (serverErrorFromCatch 6-site migration), 132 (ok() factory 3-site catch), 133 (safeApiCallData in useModelsPage), 142 (toastError 5 catch blocks in operations pages), 159 (logs page stale setX(messageFromError) closure), and 161 (case-insensitive substring search helper).
+
+The ONE remaining silent-swallow catch in List 3 is the `viewSkill` function in `src/app/operations/skills/page.tsx:259-272` (the Skills page 'view' expansion). The pre-fix code was:
+
+```ts
+setExpandedSkill(skill.name);
+try {
+  const d = await apiFetch(skillApiUrl(skill.name));
+  setSkillContent(d.data?.content || "// No content");
+} catch {
+  setSkillContent("// Failed to load content");
+}
+```
+
+The bare `catch {` swallows the actual error (e.g. "API returned invalid JSON (HTTP 500)", network failure, auth error) and shows the user a static placeholder. This is the canonical "feature is not working" anti-pattern that session 142 explicitly calls out as fixable.
+
+**Fix:** bind `err` and add `toastError(showToast, err, "Failed to load skill content")`. The inline placeholder is preserved (so the expand panel still renders a meaningful fallback if the user dismisses the toast and the panel is still open); the toast is the user-visible acknowledgement. Pattern mirrors the sibling `openSkillEditor` (line 232-234) which already used `toastError` for the same catch path.
+
+**New test:** `tests/unit/toast-error-skills-viewskill-source-pattern.test.ts` (7 tests). The file has 3 other `catch (e)`/`toastError` sites (`loadSkills`, `toggleSkill`, `openSkillEditor`) so a file-wide test would false-positive. The new test extracts the `viewSkill` function body via brace-counting and pins 3 things: (a) catch is bound (not bare), (b) `toastError(showToast, err, ...)` is called, (c) the EXACT pre-fix bare-catch fingerprint is absent. Pre-flight recipe in the test header documents the rg/sed commands future sessions should run before any revert.
+
+**Negative-case verification:** `git stash` the page fix, re-run the new test → 2/7 fail (the bound-catch and toastError checks). The test is a real regression guard, not a permanent-pass.
+
+**Behaviour change:** documented per session 142 P-142-1's 'feature is not working' exception: users now see the real fetch error message instead of the static "// Failed to load content" placeholder. Strict improvement (always-broken → works), not a semantic shift.
+
+### Next session should
+
+Random pick next session. Other List 3 surfaces worth a re-audit in a future session (none OOS for the 1-3 commit budget this session):
+
+- `loadProfileSyncStatus` in tools/page.tsx:48-57 — the intentional `catch { setProfileSyncStatus(null); }` is a deliberate graceful-degradation, NOT a bug. The drift banner is suppressed and no toast is shown. Pinned by JSDoc only — not a refactor target.
+- `useModelsPage.ts:handleRefresh:290-319` — uses `safeApiCallData<...>` inside a `try/catch` that can never throw (the helper swallows errors internally). The catch block is dead code; the toast never fires for API errors. This is a pre-existing issue flagged in the carryover from previous List 3 audits. Fix shape: switch to `safeApiCall<...>` (the result-shaped variant) and check `if (!result.ok)` instead of try/catch. Behaviour change (silent → loud) requires explicit user direction.
+- `personalities/page.tsx:loadPersonalities:258-274` — uses `apiFetch` + `Promise.all` + try/catch + envelope unwrapping. Could be migrated to `safeApiCallData<...>` but this would lose the 'fail loud' toast behavior. NOT a byte-equivalent refactor; would need explicit user direction.
+
+`pr-body.txt` is now 4500+ lines / 480+ KB. Future sessions should use the body-compression table pattern (session 137 P-137-1) to keep the rolling body under the 65 KB `gh pr edit --body-file` limit. The body-compression table format is well-established at this point (used in sessions 137/141/152/etc.) and a new session can apply it mechanically.
+
+---
+
 ## Session 161 — List 3 (Models, Agents, Skills, Tools, Personalities) — `filterByCaseInsensitiveSubstring` helper + 2-site migration + `scheduleDisplayFromParsed` carryover closure
 
 **Random pick:** List 3 via `echo $((RANDOM % 4 + 1))` = 3. Random pick per the task brief's explicit mandate.
