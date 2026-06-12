@@ -35,6 +35,8 @@ import {
   createAssistantMessage,
   toApiMessages,
   streamChatResponse,
+  COPY_BTN_CLASS,
+  COPY_BTN_DATA_ATTR,
 } from "@/lib/chat-utils";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import GatewayBanner from "@/components/chat/GatewayBanner";
@@ -317,11 +319,19 @@ export default function ChatPage() {
   );
 
   // ── Copy code block handler ────────────────────────────────
+  // The button class is matched by name (event delegation — the
+  // `renderMarkdown` helper injects the buttons via
+  // `dangerouslySetInnerHTML`, so per-button React `onClick` props
+  // aren't an option). The class string lives in the
+  // `COPY_BTN_CLASS` constant in `@/lib/chat-utils` so a rename
+  // in one file can't silently desync from the other (the prior
+  // magic-string form was the source-pattern test at
+  // `tests/unit/copy-btn-magic-string-source-pattern.test.ts`).
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (target.classList.contains("copy-btn")) {
-        const code = target.getAttribute("data-code") || "";
+      if (target.classList.contains(COPY_BTN_CLASS)) {
+        const code = target.getAttribute(COPY_BTN_DATA_ATTR) || "";
         navigator.clipboard.writeText(code).then(() => {
           showToast("Code copied", "success");
         });
