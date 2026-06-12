@@ -4,6 +4,54 @@
 
 ## Recent sessions (full detail)
 
+## Session 184 — List 3 (Models, Agents, Skills, Tools, Personalities) — `closeDelete` 3rd-site migration + `closeSkillEditor` 4th-site migration + `saveResetTimerRef` setTimeout-cleanup pattern in `handleSave`
+
+### What shipped
+
+2 single-setter close-pattern migrations (carryover closure from session 183) + 1 setTimeout-leak fix + 2 source-pattern tests on the List 3 surface.
+
+1. **`closeDelete()` 3rd-site migration in `src/app/operations/agents/page.tsx`** — the prior session's "threading a target into a setter-pair callback is over-engineering" rationale was over-conservative; the `closeDelete()` body is just `setDeleteTarget(null)` with no target param needed, so the 3rd site (handleDelete's onSuccess body's leading setter) is byte-equivalent to the 2 modal-close sites. The 2-setter conditional block in the same onSuccess body stays inline (discriminated, not a close). JSDoc on `closeDelete` + `closeEditor` updated to reflect the post-migration shape.
+
+2. **`closeSkillEditor()` 4th-site migration in `src/app/operations/skills/page.tsx`** — the saveSkillEdit success path's `setEditingSkill(null)` is now `closeSkillEditor()`. The sibling `if (expandedSkill === editingSkill) setSkillContent(...)` is a separate update for the in-page preview, not part of the close. JSDoc on the helper bumped from "3 single-setter close sites" to "4 single-setter close sites" with the 4th site listed.
+
+3. **`saveResetTimerRef` + cleanup-effect pattern in `handleSave`** — the pre-fix `setTimeout(() => setSaveStatus("idle"), 2000)` had no cleanup, so an unmount during the 2s window would call setState on an unmounted component. The new `useRef<setTimeout| null>(null)` + unmount-cleanup `useEffect` + clear-before-reschedule pattern mirrors the existing `copiedTimerRef` pattern in `operations/personalities/page.tsx:52`. The 2-second delay is preserved, the `setSaveStatus("idle")` intent is preserved, the wire/API call is unchanged. Steady-state UI is byte-equivalent; the change is a reliability improvement for the unmount-during-timer and back-to-back-save cases.
+
+4. **`tests/unit/close-delete-setter-callback.test.ts`** — updated to pin the post-session-183 3-site lockstep (was "2 closeDelete() + 1 bare setDeleteTarget(null)" → "3 closeDelete() + 0 bare statements"). The anti-A3 assertion (discriminated 3-call block in handleDelete) updated to look for `closeDelete()` as the leading call. +1 new test case, all 4/4 pass.
+
+5. **`tests/unit/agents-page-save-reset-timer-cleanup.test.ts`** (NEW) — source-pattern test pinning the post-session-184 `saveResetTimerRef` + cleanup-effect shape. 6 test cases: (a) ref declared as `useRef<setTimeout| null>(null)`; (b) cleanup-effect checks the ref + clearTimeout + nulls the ref; (c) handleSave's setTimeout assigns to `saveResetTimerRef.current`; (d) setTimeout body nulls the ref + calls `setSaveStatus("idle")`; (e) back-to-back save safety: clears any in-flight timer before scheduling a new one; (f) negative: no bare `setTimeout(() => setSaveStatus("idle"), 2000)` outside the ref form. 6/6 pass.
+
+### Why this is byte-equivalent (or improves reliability without behavior change)
+
+- **`closeDelete` 3rd-site migration**: helper body is `setDeleteTarget(null)`. The 3rd site was an inline `setDeleteTarget(null)` — byte-equivalent substitution. Wire/API/UI: zero change.
+- **`closeSkillEditor` 4th-site migration**: helper body is `setEditingSkill(null)`. The 4th site was an inline `setEditingSkill(null)` — byte-equivalent substitution. Wire/API/UI: zero change.
+- **`saveResetTimerRef` + cleanup pattern**: reliability improvement, not a behavior change for the steady state. 2-second delay preserved, `setSaveStatus("idle")` preserved. Only observable changes are (a) unmount-during-timer no longer warns + no wasted re-render, (b) back-to-back save's 2s window always starts from the most-recent save (no stale-timer race). Pattern is byte-equivalent to the existing `copiedTimerRef` pattern in `personalities/page.tsx:52-62`.
+
+### Verification
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint . --max-warnings 0`: clean (0 warnings)
+- `npx jest tests/unit/agents-page-save-reset-timer-cleanup.test.ts`: **6/6 pass** (new)
+- `npx jest tests/unit/close-delete-setter-callback.test.ts`: **4/4 pass** (+1 test case for the 3-site lockstep)
+- `npx jest tests/unit/agents-page-close-delete-third-site.test.ts`: **4/4 pass** (carryover from session 183)
+- `npx jest tests/unit/close-edit-setter-callback.test.ts`: **5/5 pass** (unchanged)
+- `npx jest`: **292 suites / 2178 tests pass** (up from 291/2172 = +1 suite, +6 tests)
+- `CI=true npx --yes pnpm@10.33.0 build`: clean
+
+### Carryover resolution
+
+This session started with a Mode B (verified-but-uncommitted) carryover from session 183: 2 production files modified + 1 test file extended + 1 new test file, all green under tsc + eslint + jest + build. The session 183 work shipped in the working tree but ran out of tool-call budget before commit/push. This session's first action was to verify, commit (`ed8e081` on the `mission/hermes-review-and-refactor` branch), and push. After the carryover closure, the session added the `saveResetTimerRef` reliability fix + its source-pattern test as new in-scope work. Standard 4-step commit-when-verified protocol applied: verify → commit → push → docs commit.
+
+### Reference doc
+
+No new reference doc — this session is a small-scoped carryover closure + 1 reliability fix, both with the same byte-equivalence shape as the session 100 `closeDelete`/`closeSkillEditor` helper pattern (already documented in the `overnight-refactor-patterns` skill's `setter-pair-callback` reference) and the existing `copiedTimerRef` `useRef + clearTimeout` pattern in `personalities/page.tsx`.
+
+### Next session should
+
+- **Random pick next session.** The List 3 surface is now mined clean at: the closeDelete/closeSkillEditor/closeEdit/closeCreate 1-setter close pattern (all 4 helper source-pattern tests pass), the `saveResetTimerRef` + cleanup-effect pattern (new test pins the shape), the `runSyncAction` setBusy/body/method helper pattern, the `safeApiCallData` / `setErrorFromCaught` / `serverErrorFromCatch` pattern (sessions 166 / 172 / 182).
+- **Future List 3 work candidates** (deferred): (a) `handlePushAll` / `handlePushOne` / `handleImportDiscovered` / `handlePullAll` / `handlePullOne` in `agents/page.tsx` are inline arrows, not useCallback — converting them to useCallback would stabilize references for `ProfileSyncBar` but the perf impact is negligible; (b) `handleActivate` in `personalities/page.tsx:298` could take a busy state to avoid a theoretical double-click race, but the PUT is idempotent so the worst case is a no-op; (c) the `setShowCreate(false)` inline on `agents/page.tsx:570` is the documented "soft close" Cancel — intentionally discriminated from the 4-setter `closeCreate` callback, do not migrate.
+
+---
+
 ## Session 181 — List 2 (Cron, Missions, Chat) — `updateSession` chat-page generalised helper + `dispatchMissionAction` shared call-shape helper + envelope-typed source-pattern test extension (close session 180 carryover)
 
 ### What shipped
@@ -88,38 +136,9 @@ Full session writeup: `references/session-178-list2-seterrorfromcaught-and-chat-
 - **Result-object `messageFromError` pattern.** The 3 `useMissionsPage.ts` sites (lines 185, 263) and 3 `useModelsPage.ts` sites of the same shape are NOT setter wrappers — they're result-object builders (`{ action, detail: messageFromError(err, "...") }` and `{ taskType, ok: false, error: messageFromError(err, "Failed") }`). The session 176 closeout doc explicitly defers this to a future "result-object messageFromError" pattern extraction. 6 sites across 2 hooks — still below the threshold for extraction.
 - **Layout-shared surface audit (List 1.5+).** The session 176 closeout identified 4 layout-shared components (Sidebar, AppPageShell, PageHeader, MobileHeader) that have NOT been audited for the same catch-block patterns. The Sidebar carryover was closed in session 176. A future session could run a "layout-shared surface audit" that scans all 4 layout components for stale 2-hop forms + silent catch blocks.
 
-## Session 177 — List 1 (Dashboard, Sessions, Memory, Logs) — `withCronJobSchedule` 4th-arg promotion + `scheduleDisplayFromParsed` adoption + Sessions source-pattern tests + Logs `lineCount` NaN guard
+## Session 177 — List 1 (Dashboard, Sessions, Memory, Logs) — `withCronJobSchedule` 4th-arg promotion + `scheduleDisplayFromParsed` adoption + Sessions source-pattern tests + Logs `lineCount` NaN guard (full detail archived in `pr-body.txt`)
 
-### What shipped
-
-5 small byte-equivalent cleanups on the List 1 surface: (a) `withCronJobSchedule` 4th-arg promoted from `?` to required, dropping the dead spread-conditional branch; (b) `scheduleDisplayFromParsed` adopted in the dashboard's `handleCronScheduleChange` (replaces the 4-line inline `parsed.kind !== "invalid" ? parsed.display : newSchedule` with a single helper call); (c) new `safe-api-call-data-source-pattern-list1-sessions.test.ts` source-pattern pin for the two Sessions pages; (d) NaN guard on the Logs `lineCount` setter mirroring the API route's existing pattern; (e) new `dashboard-helpers-unit.test.ts` with direct unit coverage for `composeTemplateUrl` + `withCronJobSchedule`. The 4-helper side-effect on the Sidebar: zero (the layout-shared component is already clean from session 176).
-
-### Why this is byte-equivalent
-
-- **`withCronJobSchedule`**: the only caller already passes 4 args, so promoting the 4th-arg from `?` to `string | null` is unreachable. The pre/post helper body produces identical output for every reachable input.
-- **`scheduleDisplayFromParsed`**: the helper body is `return "display" in parsed ? (parsed.display as string) : fallback`. The pre-177 inline form was `parsed.kind !== "invalid" ? parsed.display : newSchedule` — same fallback shape, same success-variant behaviour.
-- **Logs `lineCount` guard**: the 4 `<option>` values (100/200/500/1000) all pass the new `Number.isFinite && >= 1 && <= 1000` gates, so the new body is byte-equivalent to `parseInt(e.target.value, 10)` for the current `<select>`. The fallback (200) only fires for empty/non-numeric input.
-- **Sessions source-pattern test**: new pin, no code change. The post-refactor shape (the "adoption" of `useApiData` for envelope-typed reads) was already in place; the test locks the contract.
-- **`dashboard-helpers-unit.test.ts`**: new test file, no production code changes. The helpers' observable behavior was already correct; the test just adds direct unit coverage.
-
-### Verification
-
-- `npx tsc --noEmit`: clean
-- `CI=true npx eslint . --max-warnings 0`: clean
-- `npx jest tests/unit/safe-api-call-data-source-pattern-list1-sessions.test.ts`: **12/12 pass**
-- `npx jest tests/unit/dashboard-helpers-unit.test.ts`: **7/7 pass**
-- `npx jest`: **282 suites / 2115 tests pass** (up from 280/2096 = +2 suites, +19 tests; no regressions)
-- `npm run build`: clean
-
-### Reference doc
-
-Full session writeup: `references/session-177-list1-dashboard-helpers-and-sessions-source-pattern.md` under the `refactor-sweep-mission` skill.
-
-### Next session should
-
-- **Random pick next session.** The List 1 surface is now mined clean at the catch-block / `setErrorFromCaught` / `safeApiCallData` / dashboard-helper / lineCount-guard scopes. Future List 1 refactors would need to pick a new scope (e.g. UI-handler shape, state-derivation memo, type-narrowing audit).
-- **List 2 carryover: `setCategoryError` in `useMissionsPage.ts:389`.** Still open from session 176. Defer to a future List 2 pick.
-- **Cross-list: extract a "wraps every route response in `{ data: T }`" source-pattern test for the API side.** The 3 List 1 source-pattern tests cover the client side; the server side has no equivalent pin. A future session that explicitly opts in to the "API-shape audit" recipe could ship this scanner.
+- **Session 177** (List 1) — `withCronJobSchedule` 4th-arg promotion + `scheduleDisplayFromParsed` adoption + Sessions source-pattern tests + Logs `lineCount` NaN guard — full detail in `pr-body.txt`. 5 small byte-equivalent cleanups: `withCronJobSchedule` 4th-arg promoted from `?` to required, `scheduleDisplayFromParsed` adopted in the dashboard's `handleCronScheduleChange`, new `safe-api-call-data-source-pattern-list1-sessions.test.ts` + new `dashboard-helpers-unit.test.ts`, NaN guard on Logs `lineCount` setter. 282/2115 tests pass + tsc + eslint + build all green.
 
 ## Session 176 — List 1 (Dashboard, Sessions, Memory, Logs) — `setErrorFromCaught` migration in `src/components/layout/Sidebar.tsx` (close session 159 layout-shared carryover)
 
@@ -260,6 +279,10 @@ None. Every call site is byte-equivalent to the inline form. The `replace(/\\/g,
 
 ## Older sessions (one-line summary)
 
+- **Session 183** (List 2) — docs-only carryover closure for session 182 (the `safeApiCallData` + `toastFromResult` List 1.5/Hindsight migrations). No new refactor work.
+- **Session 182** (List 1.5 + Hindsight) — `safeApiCallData` + `toastFromResult` migrations across the Hindsight browser + List 1.5 source-pattern test extension. 285/2139 tests pass + tsc + eslint + build all green.
+- **Session 180** (List 2) — docs-only carryover closure for the prior session's carryover. No new refactor work.
+- **Session 179** (List 4) — fallback batch SQL loop + row mapper extraction in `src/lib/fallbacks-repository.ts`. 281/2102 tests pass + tsc + eslint + build all green.
 - **Session 168** (List 2) — ## Session 168 — List 2 (Cron, Missions, Chat) — `COPY_BTN_CLASS` + `COPY_BTN_DATA_ATTR` magic-strin
 - **Session 167** (List 4) — ## Session 167 — List 4 (Models, HERMES.md, Environment, All Settings) — `seedPostSchema` + `parseAn
 - **Session 166** (List 3) — ## Session 166 — List 3 (Models, Agents, Skills, Tools, Personalities) — `safeApiCallData<{ profiles
@@ -320,5 +343,5 @@ None. Every call site is byte-equivalent to the inline form. The `replace(/\\/g,
 
 ---
 
-**Total sessions on this PR:** 66 (was 65, +1 for session 181)
-**Full archive size:** 693407 bytes (`pr-body.txt` at branch HEAD, was 682485, +10922 for session 181)
+**Total sessions on this PR:** 68 (was 66, +1 for session 184 + 1 for the now-tracked session 183 + 1 for session 182 + 1 for session 180 + 1 for session 179)
+**Full archive size:** 704871 bytes (`pr-body.txt` at branch HEAD, was 693407, +11464 for session 184)
