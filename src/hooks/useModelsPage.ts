@@ -51,9 +51,19 @@ export function useModelsPage() {
   const fallbackSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fallbackSaveGenRef = useRef(0);
   const pendingFallbackConfigRef = useRef<FallbackConfig | null>(null);
-  const [editingFallbackEntry, setEditingFallbackEntry] = useState<FallbackChainEntry | null>(null);
-  const [editingFallbackUrl, setEditingFallbackUrl] = useState("");
-  const [savingFallbackUrl, setSavingFallbackUrl] = useState(false);
+  // The 3 fallback-edit useState calls (entry / url / saving) are tightly
+  // coupled — they always transition together (open: entry+url set, saving
+  // reset; close: all 3 clear; save: saving flips true→false). Consolidate
+  // into a single state object so the "set 3 fields to 3 different things"
+  // race that was possible with separate useState calls is structurally
+  // impossible. The page-level page.tsx still receives 3 distinct fields
+  // (`editingFallbackEntry`, `editingFallbackUrl`, `savingFallbackUrl`)
+  // so the public surface is unchanged.
+  const [fallbackEdit, setFallbackEdit] = useState<{
+    entry: FallbackChainEntry | null;
+    url: string;
+    saving: boolean;
+  }>({ entry: null, url: "", saving: false });
 
   const { showToast, toastElement } = useToast();
 
@@ -64,11 +74,9 @@ export function useModelsPage() {
       // First, sync models from ~/.hermes/config.yaml — ensures we show
       // live data even if the user changed defaults externally via hermes CLI
       await apiFetch("/api/models/import", { method: "POST" }).catch((err) => {
-        // Verbose form `toError(err).message || String(err)` is the same
-        // as `messageFromError(err, String(err))` — the verbose body is
-        // literally the body of `messageFromError`, with `String(err)` as
-        // the fallback. The helper form is preferred because it has a
-        // name and JSDoc (per the session 90/91 migration carryover).
+        // `messageFromError` falls back to `String(err)` when the caught
+        // value has no `message` — equivalent to the verbose
+        // `toError(err).message || String(err)` form, with a name + JSDoc.
         const msg = messageFromError(err, String(err));
         console.warn("Model auto-import failed — showing cached data:", msg);
       });
@@ -351,36 +359,29 @@ export function useModelsPage() {
     [runFallbackMutation]
   );
 
-  const handleFallbackEdit = useCallback(
-    (entry: FallbackChainEntry) => {
-      setEditingFallbackEntry(entry);
-      setEditingFallbackUrl(entry.overrideBaseUrl || "");
-    },
-    [],
-  );
+  const handleFallbackEdit = useCallback((entry: FallbackChainEntry) => {
+    setFallbackEdit({ entry, url: entry.overrideBaseUrl || "", saving: false });
+  }, []);
 
-  const handleFallbackEditSave = useCallback(
-    async () => {
-      if (!editingFallbackEntry) return;
-      const entry = editingFallbackEntry;
-      const overrideUrl = editingFallbackUrl;
-      setSavingFallbackUrl(true);
-      try {
-        await apiFetch(`/api/models/fallbacks/${encodeURIComponent(entry.id)}`, {
-          method: "PUT",
-          body: JSON.stringify({ overrideBaseUrl: overrideUrl.trim() || null }),
-        });
-        await loadAll();
-        setEditingFallbackEntry(null);
-        showToast("Fallback updated", "success");
-      } catch (err) {
-        toastError(showToast, err, "Update failed");
-      } finally {
-        setSavingFallbackUrl(false);
-      }
-    },
-    [editingFallbackEntry, editingFallbackUrl, loadAll, showToast]
-  );
+  const handleFallbackEditSave = useCallback(async () => {
+    const current = fallbackEdit;
+    if (!current.entry) return;
+    const entry = current.entry;
+    const overrideUrl = current.url;
+    setFallbackEdit((prev) => ({ ...prev, saving: true }));
+    try {
+      await apiFetch(`/api/models/fallbacks/${encodeURIComponent(entry.id)}`, {
+        method: "PUT",
+        body: JSON.stringify({ overrideBaseUrl: overrideUrl.trim() || null }),
+      });
+      await loadAll();
+      setFallbackEdit({ entry: null, url: "", saving: false });
+      showToast("Fallback updated", "success");
+    } catch (err) {
+      toastError(showToast, err, "Update failed");
+      setFallbackEdit((prev) => ({ ...prev, saving: false }));
+    }
+  }, [fallbackEdit, loadAll, showToast]);
 
   const handleFallbackAddFromRegistry = useCallback(
     async (modelId: string) =>
@@ -557,10 +558,19 @@ export function useModelsPage() {
     importingFallback,
     editing,
     setEditing,
-    editingFallbackEntry,
-    editingFallbackUrl,
-    setEditingFallbackUrl,
-    savingFallbackUrl,
+    // Fallback-edit state is consolidated into `fallbackEdit` internally;
+    // expose the 3 fields the page-level consumer reads in their original
+    // shape so the ModelsFallbackSection component contract is unchanged.
+    editingFallbackEntry: fallbackEdit.entry,
+    editingFallbackUrl: fallbackEdit.url,
+    // `setEditingFallbackUrl` is a partial-update shim — the caller only
+    // ever sets the url field (e.g. from the <input> onChange), so the
+    // shim is narrower than `setFallbackEdit` and keeps the
+    // ModelsFallbackSection props interface byte-equivalent to the
+    // pre-refactor form.
+    setEditingFallbackUrl: (url: string) =>
+      setFallbackEdit((prev) => ({ ...prev, url })),
+    savingFallbackUrl: fallbackEdit.saving,
     toastElement,
     handleRefresh,
     handlePush,
@@ -578,6 +588,10 @@ export function useModelsPage() {
     handleFallbackAddCustom,
     handleSyncFallbackToHermes,
     handleImportFallbackFromConfig,
-    setEditingFallbackEntry,
+    // `setEditingFallbackEntry` is a close-modal shim — the consumer
+    // calls it with `null` to dismiss the modal. Equivalent to
+    // `setFallbackEdit({ entry: null, url: "", saving: false })`.
+    setEditingFallbackEntry: (entry: FallbackChainEntry | null) =>
+      setFallbackEdit({ entry, url: entry?.overrideBaseUrl || "", saving: false }),
   };
 }
