@@ -49,6 +49,30 @@ export function rememberLastCategory(id: string | null | undefined): void {
   }
 }
 
+/**
+ * Read the user's last-selected mission category from localStorage.
+ * Mirrors `rememberLastCategory()` — same try/catch+ignore discipline
+ * (failing localStorage reads return `null` and the user-visible
+ * flow continues to work because the in-memory `newCategoryId` state
+ * stays empty; we just won't restore the same category on next mount).
+ *
+ * The 1 callsite (`useEffect` at the showCreate+!editingId guard
+ * inside `useMissionsPage`) previously inlined a 3-line try/catch +
+ * `getItem` + guard. Promoting to a helper here keeps the write and
+ * read paths in lockstep — a future "migrate to a different
+ * storage backend" change lands in both helpers in one place.
+ *
+ * Returns `null` on any failure (storage unavailable, parse error,
+ * key missing). Exported for unit testing.
+ */
+export function readLastCategory(): string | null {
+  try {
+    return localStorage.getItem(LAST_CATEGORY_KEY);
+  } catch {
+    return null;
+  }
+}
+
 function submitToastForDispatch(mode: "save" | "now" | "cron" | "queue"): string {
   if (mode === "save") return "Saving draft...";
   if (mode === "queue") return "Queueing mission...";
@@ -455,6 +479,28 @@ export function useMissionsPage() {
     [deleteCategory, reloadAllData],
   );
 
+  // Generalised mission-by-id updater. Updates the mission matching
+  // `id` by applying the `updater` to its full record. Missions with
+  // a different id pass through unchanged. Mirrors the session 180
+  // `updateSession(sessionId, updater)` helper in the chat page —
+  // same id-discriminator + setState((prev) => prev.map(...)) shape,
+  // same "stays out of the way of the existing direct setters"
+  // contract.
+  //
+  // The 2 remaining inline `setMissions((prev) => prev.map((m) =>
+  // m.id === X ? { ...m, ...FIELD } : m))` sites (cancel optimistic
+  // status flip + cancel restore from snapshot) collapse to a single
+  // call shape. The pre-existing nested `restoreMission` closure
+  // (line ~1048) becomes a 1-line call to the new helper.
+  const updateMission = useCallback(
+    (id: string, updater: (mission: MissionRow) => MissionRow) => {
+      setMissions((prev) =>
+        prev.map((m) => (m.id === id ? updater(m) : m)),
+      );
+    },
+    [],
+  );
+
   const setCategoryId = useCallback((id: string | null) => {
     setNewCategoryId(id);
     rememberLastCategory(id);
@@ -462,12 +508,8 @@ export function useMissionsPage() {
 
   useEffect(() => {
     if (showCreate && !editingId) {
-      try {
-        const last = localStorage.getItem(LAST_CATEGORY_KEY);
-        if (last && !newCategoryId) setNewCategoryId(last);
-      } catch {
-        // ignore
-      }
+      const last = readLastCategory();
+      if (last && !newCategoryId) setNewCategoryId(last);
     }
   }, [showCreate, editingId, newCategoryId]);
 
@@ -1034,21 +1076,28 @@ export function useMissionsPage() {
     const previousMission = missions.find((m) => m.id === id);
     setCancellingMissionId(id);
     showToast("Cancelling mission…", "info");
-    setMissions((prev) =>
-      prev.map((m) =>
-        m.id === id
-          ? { ...m, status: "failed" as const, result: "Cancelled by user" }
-          : m,
-      ),
-    );
+    // Optimistic status flip via the `updateMission(id, updater)`
+    // helper — the same id-discriminator + setMissions((prev) =>
+    // prev.map((m) => m.id === ID ? updater(m) : m)) shape, just
+    // composed once. The updater is intentionally narrow (only the
+    // fields the cancel-flip touches) so a future "also clear
+    // cronJobId" extension lands in the updater, not in a duplicated
+    // inline map call.
+    updateMission(id, (m) => ({
+      ...m,
+      status: "failed" as const,
+      result: "Cancelled by user",
+    }));
 
     // Shared by both error paths below (API returned ok:false, and the
-    // catch-block network error path). Pulled out so the 3-line setter
-    // call doesn't get repeated verbatim.
+    // catch-block network error path). 1-line call to the
+    // `updateMission` helper — the pre-extraction inline form was a
+    // 3-line setMissions((prev) => prev.map(...)) closure. The
+    // helper's id discriminator + setState((prev) => prev.map(...))
+    // shape is exactly what restore needs, so the closure is now a
+    // 1-line passthrough.
     const restoreMission = (restored: MissionRow) => {
-      setMissions((prev) =>
-        prev.map((m) => (m.id === id ? restored : m)),
-      );
+      updateMission(id, () => restored);
     };
 
     try {
@@ -1076,7 +1125,7 @@ export function useMissionsPage() {
     } finally {
       setCancellingMissionId(null);
     }
-  }, [missions, showToast, fetchData, expandedId, fetchDetail]);
+  }, [missions, showToast, fetchData, expandedId, fetchDetail, updateMission]);
 
   const filtered = useMemo(
     () =>
