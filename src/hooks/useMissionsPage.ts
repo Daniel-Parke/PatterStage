@@ -1118,7 +1118,15 @@ export function useMissionsPage() {
   );
 
   const handleDeleteTemplate = useCallback(async (templateId: string) => {
-    if (!confirm("Delete this template?")) return;
+    // The pre-session 207 form had a `window.confirm("Delete this
+    // template?")` pre-confirm guard here — that guard has moved
+    // into the `TemplateRow` leaf sub-component inside
+    // `TemplateModals.tsx` as a per-row
+    // `useTwoStepConfirm({ autoDismissMs: 4000 })` instance, where
+    // the template id is in scope at render time. By the time this
+    // callback is called, the user has already confirmed in the
+    // leaf; this hook is a thin transport wrapper (wire delete +
+    // toast + post-success reload + setShowTemplateManager(false)).
     const result = await safeApiCall("/api/templates", {
       method: "POST",
       body: { action: "delete", templateId },
@@ -1142,12 +1150,15 @@ export function useMissionsPage() {
   }, [applyTemplateToForm, showToast]);
 
   const handleDelete = useCallback(async (id: string) => {
-    if (!confirm("Delete this mission and its cron job?")) return;
     // Migrated from the inline `safeApiCall("/api/missions", { method: "POST", body: { action: "delete", missionId: id } })`
     // form to the shared `dispatchMissionAction` helper. The helper's `MissionActionResponse`
     // envelope type is typed once at the helper, so the call site no longer needs the inline
     // call shape. The toast + fetchData + setExpandedId(null) post-success flow is preserved
-    // byte-equivalent.
+    // byte-equivalent. The pre-session 207 form had a `window.confirm(...)` pre-confirm
+    // guard here — that guard has moved into the `MissionEditorPanel` leaf component as a
+    // per-row `useTwoStepConfirm({ autoDismissMs: 4000 })` instance, where the mission id
+    // is in scope at render time. By the time `handleDelete` is called, the user has
+    // already confirmed in the leaf; this hook is a thin transport wrapper.
     const result = await dispatchMissionAction("delete", { missionId: id });
     toastFromResult(showToast, result, "Mission deleted", "Failed to delete mission");
     if (result.ok) {
@@ -1157,13 +1168,13 @@ export function useMissionsPage() {
   }, [showToast, expandedId, fetchData]);
 
   const handleCancel = useCallback(async (id: string) => {
-    if (
-      !confirm(
-        "Cancel this mission? The running agent (and any subagents) will be stopped, and linked cron jobs will be paused.",
-      )
-    )
-      return;
-
+    // The pre-session 207 form had a `window.confirm(...)` pre-confirm
+    // guard here — that guard has moved into the `MissionEditorPanel`
+    // leaf component as a per-row `useTwoStepConfirm({ autoDismissMs:
+    // 4000 })` instance, where the mission id is in scope at render
+    // time. By the time `handleCancel` is called, the user has already
+    // confirmed in the leaf; this hook is a thin transport wrapper
+    // (optimistic status flip + wire cancel + toast + restore-on-fail).
     const previousMission = missions.find((m) => m.id === id);
     setCancellingMissionId(id);
     showToast("Cancelling mission…", "info");

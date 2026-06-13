@@ -1,3 +1,198 @@
+## Session 208 — List 2 (Cron, Missions, Chat) — `window.confirm` → `useTwoStepConfirm` migration in MissionEditorPanel + TemplateModals (3 per-row sites) + new sister source-pattern test (close List 4 test's documented List 2 carryover)
+
+**Date:** 2026-06-13
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 2 (List 2: Cron, Missions, Chat). Last List 2 pick was session 206 (3 missions-modal close-callbacks promoted to the hook) — different sub-surface (leaf-component per-row confirm vs hook callback), so no rotation bump needed.
+**Status:** committed + pushed.
+
+## What this refactor did
+
+Migrated the 3 per-row `window.confirm(` callsites in the List 2 surface (per the user-stated page set "Cron, Missions, Chat") from the `useMissionsPage` hook to per-row `useTwoStepConfirm({ autoDismissMs: 4000 })` instances owned by the leaf components. The pre-session 207 form had 3 single global `window.confirm` dialogs inside the hook callbacks (`handleDelete` at line 1145 for per-mission delete, `handleCancel` at line 1161 for per-mission cancel, `handleDeleteTemplate` at line 1121 for per-template delete) — a context-free dialog with no per-row armed state. The post-session 208 form mirrors the session 200 + 207 sister pattern that the List 4 Models table + FallbackChainList use: each row's leaf component owns its own `useTwoStepConfirm` instance, so a stale "armed" state from one row cannot accidentally fire when the user clicks a different row's destructive button minutes later. The 1 remaining form-scope `window.confirm` site (the "Overwrite template?" check in `handleSaveAsTemplate` at `useMigrationsPage.ts:1029`) is intentionally NOT migrated — it's a single-button confirm inside the MissionCreateForm Sheet, not a per-row list/table confirm, so the Rule of Three (3+ sites) threshold is not met. The site's logic stays in the hook as a single inline `window.confirm` call. The new sister test `window-confirm-source-patterns-list2.test.ts` documents this 1 EXEMPTION.
+
+This closes the carryover explicitly documented in `tests/unit/window-confirm-source-patterns.test.ts:48-54` (the List 4 sister test's JSDoc says: "the `useMissionsPage.ts:886` site (List 2) is the only remaining `window.confirm` call in the codebase after the session 138 migration... When that migration lands, the sister test for List 2 (`window-confirm-source-patterns-list2.test.ts`) should be added with the same shape"). The line number shifted from 886 to 1121/1145/1161 across intervening refactors, but the carryover intent is the same.
+
+## The 3 per-row migrations
+
+**Site 1 — `useMissionsPage.handleDelete` (line 1145) — per-mission delete in `MissionEditorPanel`.**
+
+Pre-session source (in the hook):
+```ts
+const handleDelete = useCallback(async (id: string) => {
+  if (!confirm("Delete this mission and its cron job?")) return;
+  const result = await dispatchMissionAction("delete", { missionId: id });
+  toastFromResult(showToast, result, "Mission deleted", "Failed to delete mission");
+  if (result.ok) {
+    if (expandedId === id) setExpandedId(null);
+    fetchData();
+  }
+}, [showToast, expandedId, fetchData]);
+```
+
+Post-session source (in the hook, with confirm lifted into the leaf):
+```ts
+const handleDelete = useCallback(async (id: string) => {
+  // The pre-session 207 form had a `window.confirm(...)` pre-confirm
+  // guard here — that guard has moved into the `MissionEditorPanel`
+  // leaf component as a per-row `useTwoStepConfirm({ autoDismissMs:
+  // 4000 })` instance, where the mission id is in scope at render
+  // time. By the time `handleDelete` is called, the user has already
+  // confirmed in the leaf; this hook is a thin transport wrapper.
+  const result = await dispatchMissionAction("delete", { missionId: id });
+  toastFromResult(showToast, result, "Mission deleted", "Failed to delete mission");
+  if (result.ok) {
+    if (expandedId === id) setExpandedId(null);
+    fetchData();
+  }
+}, [showToast, expandedId, fetchData]);
+```
+
+Post-session source (in `MissionEditorPanel.tsx`):
+```tsx
+const deleteConfirm = useTwoStepConfirm({ autoDismissMs: 4000 });
+const handleDeleteClick = () => {
+  if (!deleteConfirm.isArmedFor(mission.id)) {
+    deleteConfirm.arm(mission.id);
+    return;
+  }
+  void deleteConfirm.confirm(() => onDelete(mission.id));
+};
+// JSX:
+<Button
+  variant="ghost"
+  size="sm"
+  onClick={handleDeleteClick}
+  className={
+    deleteConfirm.isArmedFor(mission.id)
+      ? "ring-1 ring-neon-red/60 bg-neon-red/10 text-neon-red"
+      : undefined
+  }
+>
+  <Trash2 className="w-3 h-3" />
+  {deleteConfirm.isArmedFor(mission.id) ? " Confirm?" : ""}
+</Button>
+```
+
+The hook is now a thin transport wrapper. The leaf owns the per-row armed state. The deps array is unchanged (`[showToast, expandedId, fetchData]`).
+
+**Site 2 — `useMissionsPage.handleCancel` (line 1161) — per-mission cancel in `MissionEditorPanel`.**
+
+Same pattern as Site 1, but for the cancel button. The leaf owns a `cancelConfirm = useTwoStepConfirm({ autoDismissMs: 4000 })` instance. The cancel button's `disabled` prop gains `|| cancelConfirm.isArmedFor(mission.id)` (the button is disabled while armed so the user can't click it again — they have to wait for the 4-second auto-dismiss or click a different button). The button label changes from "Cancel" to "Confirm?" when armed. The `cancellingMissionId` busy state (the cancel-in-flight spinner) is preserved (the parent-owned loading indicator that survives both pre- and post-migration).
+
+**Site 3 — `useMissionsPage.handleDeleteTemplate` (line 1121) — per-template delete in `TemplateManagerModal`.**
+
+The pre-session 207 form had the template rows rendered inline inside `TemplateManagerModal`'s `grouped.map(...)` block, with the per-template `<button onClick={() => onDeleteTemplate(t.id)}>` calling the hook callback directly. The post-session form extracts a new `TemplateRow` sub-component (`src/components/missions/TemplateModals.tsx` lines 191-269) that owns its own `useTwoStepConfirm({ autoDismissMs: 4000 })` instance. The hook callback drops the `if (!confirm(...)) return;` guard and becomes a thin transport wrapper.
+
+Post-session source (in the new `TemplateRow` sub-component):
+```tsx
+function TemplateRow({
+  template,
+  onEdit,
+  onDelete,
+}: {
+  template: MissionTemplate;
+  onEdit: (t: MissionTemplate) => void;
+  onDelete: (id: string) => void;
+}) {
+  const deleteConfirm = useTwoStepConfirm({ autoDismissMs: 4000 });
+  const isArmed = deleteConfirm.isArmedFor(template.id);
+  const handleDeleteClick = () => {
+    if (!isArmed) {
+      deleteConfirm.arm(template.id);
+      return;
+    }
+    void deleteConfirm.confirm(() => onDelete(template.id));
+  };
+  return (
+    <div className="flex items-center justify-between p-2.5 rounded-lg border border-white/5 bg-dark-800/30 hover:border-white/10 transition-colors group">
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <div className="text-sm text-white/80 truncate">{template.name}</div>
+        {!template.isCustom && (
+          <span className="text-[9px] font-mono text-white/15 flex-shrink-0">built-in</span>
+        )}
+      </div>
+      {template.isCustom && (
+        <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button onClick={() => onEdit(template)} ... ><Edit3 /></button>
+          <button
+            onClick={handleDeleteClick}
+            className={`p-1.5 rounded transition-colors ${
+              isArmed
+                ? "text-neon-red bg-neon-red/15 ring-1 ring-neon-red/40"
+                : "text-white/40 hover:text-red-400 hover:bg-red-500/10"
+            }`}
+            title={isArmed ? "Click again to confirm" : "Delete"}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+The `TemplateManagerModal` `.map(...)` collapses from 35 lines of inline row JSX to a 6-line `<TemplateRow ... />` binding:
+```tsx
+{group.items.map((t) => (
+  <TemplateRow
+    key={t.id}
+    template={t}
+    onEdit={onEditTemplate}
+    onDelete={onDeleteTemplate}
+  />
+))}
+```
+
+## The new test
+
+`tests/unit/window-confirm-source-patterns-list2.test.ts` (NEW, 3 assertions across 3 describes) is the sister to the List 4 `window-confirm-source-patterns.test.ts` — same file-walker + EXEMPTIONS + scanner pattern, with a per-list filter scope (`src/app/orchestration/`, `src/components/cron/`, `src/components/missions/`, `src/components/chat/`, + 6 per-file `src/hooks/*.ts` covers for the per-file hook surfaces that don't fit the directory-walk shape).
+
+The 3 assertions:
+
+1. **`has zero un-exempted window.confirm( callsites in the List 2 surface`** — finds every `window.confirm(` callsite in the List 2 surface and asserts that the un-exempted count is 0. The 1 EXEMPTION (the form-scope "Overwrite template?" check at `useMissionsPage.ts:1029`) is documented in the `EXEMPTIONS` array with a reason and a 1-line discriminator.
+
+2. **`documents every exemption in EXEMPTIONS`** — every entry in `EXEMPTIONS` must still have a `window.confirm` callsite in its file (the line number may shift across refactors). If the exemption is stale (e.g. someone migrates the form-scope site in a future session), the entry is removed and the EXEMPTIONS array is empty.
+
+3. **`delivers the per-row two-step arm-confirm in the MissionEditorPanel + TemplateRow leaf components`** — pins the post-migration shape:
+   - `MissionEditorPanel.tsx` imports `useTwoStepConfirm` + has exactly 2 instantiations of `useTwoStepConfirm({ autoDismissMs: 4000 })` (one for deleteConfirm, one for cancelConfirm). The 4000ms auto-dismiss is the canonical value that the session 200 + 207 sister migrations use.
+   - `TemplateModals.tsx` imports `useTwoStepConfirm` + has exactly 1 instantiation of `useTwoStepConfirm({ autoDismissMs: 4000 })` (for the `TemplateRow` sub-component).
+   - `useMissionsPage.ts` does NOT import `useTwoStepConfirm` + does NOT instantiate the hook locally (the post-migration "hook is a thin transport wrapper" contract).
+
+A new `stripComments(text: string): string` helper in the test file masks both `//` line comments AND `/* ... */` block comments from the source before the count assertions run, because the JSDoc on the migrated files contains inline references to `useTwoStepConfirm({ autoDismissMs: 4000 })` (e.g. `* Sister to the per-row useTwoStepConfirm({ autoDismissMs: 4000 }) instance`) that would false-positive the count. The List 4 sister test's `findSites` only handles line comments because its use case is matching the `window.confirm(` literal (which is unlikely to appear in JSDoc). The List 2 sister's count assertions need a stricter stripper because the JSDoc actively uses the form to document the post-migration contract.
+
+## Anti-migration guards (what this session did NOT change)
+
+- **Did NOT migrate the form-scope `window.confirm` at `useMissionsPage.ts:1029`** ("Overwrite template?" in `handleSaveAsTemplate`). It's a single-button confirm inside the MissionCreateForm Sheet, not a per-row list/table confirm. The Rule of Three (3+ sites) threshold for the per-row lift is not met. The site's logic stays in the hook as a single inline `window.confirm` call. The EXEMPTIONS entry in the new sister test documents this rationale. If a future migration lifts the entire save flow into a leaf component, the confirm can move with it.
+- **Did NOT add a 2-step confirm for the edit buttons** in `MissionEditorPanel` (lines 288-306) or the per-template edit button in `TemplateRow` (the `<Edit3>` button next to the `<Trash2>`). Edit is non-destructive (it opens a modal, doesn't delete data), so a confirm is over-engineering.
+- **Did NOT add a 2-step confirm for the duplicate button** in `MissionEditorPanel` (lines 278-286). Duplicate is non-destructive (it creates a new mission with `(copy)` suffix, doesn't delete the original), so a confirm is over-engineering.
+- **Did NOT migrate the per-row toggle buttons** (the `InlineToggle` for fallback entries, the `enabled` toggle for cron jobs) — toggles are reversible, so a confirm is over-engineering.
+- **Did NOT touch the `chat/page.tsx` confirm pattern** — the chat page uses a different confirm pattern (toast-based, no dialog) and the sister List 2 test would catch any future re-introduction.
+
+## Sister relationships
+
+- **Session 208 ↔ session 200 (List 4 `window.confirm` → `useTwoStepConfirm` migration in Models table + FallbackChainList)** — the per-row `useTwoStepConfirm({ autoDismissMs: 4000 })` shape and the per-row arm/confirm pattern are the same. Session 200 closed the 2 per-row sites in the List 4 surface; session 208 closes the 3 per-row sites in the List 2 surface. The List 4 + List 2 sister tests together cover the full `window.confirm` audit surface. The List 2 sister test is explicitly mentioned in the List 4 test's JSDoc as the follow-up for the List 2 surface.
+- **Session 208 ↔ session 207 (List 4 shared-component extraction)** — the `PerRowDeleteButton` shared component that session 207 extracted is the same pattern at a higher level: instead of each row component owning its own `useTwoStepConfirm`, the shared component owns one. The List 2 sister migration doesn't extract a shared component because the 2 leaf components (`MissionEditorPanel` and `TemplateRow`) have different shapes (MissionEditorPanel is a per-row expanded panel with 2 distinct per-row actions — delete and cancel; TemplateRow is a flat list row with 1 per-row action — delete). The "Rule of Two for action components" pitfall from session 207 doesn't apply here because the 2 sites are structurally different (different actions, different visual surfaces, different prop contracts).
+- **Session 208 ↔ session 198 (List 2 `dispatchPayload` schedule integration)** — both close small-but-meaty opportunities in the same `useMissionsPage` hook. Session 198 closed the always-the-same-override boilerplate; session 208 closes the per-row confirm inside the hook callbacks. Both are 1-step refactors in the same file, with the same "leaf owns the helper, hook is a thin transport" mental model.
+
+## Verification (full suite)
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint src/hooks/useMissionsPage.ts src/components/missions/MissionEditorPanel.tsx src/components/missions/TemplateModals.tsx tests/unit/window-confirm-source-patterns-list2.test.ts --max-warnings 0`: clean
+- `CI=true npx jest tests/unit/window-confirm-source-patterns-list2.test.ts`: **3/3 pass**
+- Full `CI=true npx jest` sweep: **324 suites / 2449 tests pass** (up from 323/2446 = +1 suite, +3 tests)
+- `npx --yes pnpm@10.33.0 build`: clean (Next.js production build, all routes pre-rendered correctly)
+
+## Reference doc
+
+`references/session-208-list2-window-confirm-mission-editor-and-template-row.md` (the per-session reference for this work). Codifies the 1 new pitfall "per-row confirm inside a hook" Rule of Three threshold + the 1 source-pattern test design lesson "block-comment-stripping in source-pattern tests when the JSDoc uses the form literally" + the 5 anti-migration guards for the form-scope site, the edit/duplicate/toggle buttons, and the chat-page confirm.
+
+## Next session should
+
+- **Random pick next session.** The List 2 surface's 3 per-row `window.confirm` sites are now closed; the 1 form-scope site is documented as out of scope. Candidates worth re-scanning: (a) the `useMissionsPage` `useState` slot count is still ~20 (the `clearMissionFormFields` helper already centralises the form-field resets, but the underlying slots are unchanged — could collapse to a single `useState<MissionFormState>` with a `setFormState` setter if the type signature allows it), (b) the 2 `if (isArmedFor(mission.id))` check + 2 `useTwoStepConfirm` instantiation pattern in `MissionEditorPanel` could collapse to a single `useTwoStepConfirmFor(id: string, options: { confirmLabel: string })` helper if a 3rd per-row action lands in the panel (the helper would own the `isArmedFor` + `confirm` + `arm` + `handleClick` shape), (c) the `dispatchMode` setter in `useMissionsPage` (which also calls `setDispatchAcknowledged(true)` as a side effect, lines 261-264) is a similar 1-setter-with-side-effect pattern — could extract a `setDispatchModeAndAcknowledge` helper if a future setter is added.
+- **Carryover** — none. The next session starts with a clean working tree.
+
+---
+
 ## Session 200 — List 4 (Models, HERMES.md, Environment, All Settings) — `window.confirm` → `useTwoStepConfirm` migration in Models table + FallbackChainList (2-site migration: per-row per-key confirm + `ModelRow` + `FallbackRow` sub-component extraction + test filter scope extension)
 
 **Date:** 2026-06-13
