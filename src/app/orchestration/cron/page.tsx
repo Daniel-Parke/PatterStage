@@ -298,6 +298,21 @@ export default function CronPage() {
     }
   }, [activeTab]);
 
+  // Pause all jobs for whichever tab is currently active. The
+  // tab-conditional inline arrow function used to fill `ActionButtons`'s
+  // `onPauseAll` — symmetric to `openCreateForActiveTab` above. A future
+  // "confirm dialog before pausing" or "toast with paused count" extension
+  // would have to be added in two places (one per tab branch) without
+  // this extraction. Centralising the discriminator here keeps the
+  // two paths in lockstep.
+  const handlePauseAllForActiveTab = useCallback(() => {
+    if (activeTab === "agent") {
+      void agent.handlePauseAll();
+    } else {
+      void hardware.handlePauseAll();
+    }
+  }, [activeTab, agent, hardware]);
+
   useEffect(() => {
     if (activeTab === "system") {
       void loadHardwareJobs();
@@ -377,13 +392,7 @@ export default function CronPage() {
               color={activeTab === "agent" ? "orange" : "cyan"}
               pauseBusy={activeTab === "agent" ? agent.pauseAllBusy : false}
               hasJobs={activeTab === "agent" ? !!agent.data?.total : hardwareTotal > 0}
-              onPauseAll={() => {
-                if (activeTab === "agent") {
-                  void agent.handlePauseAll();
-                } else {
-                  void hardware.handlePauseAll();
-                }
-              }}
+              onPauseAll={handlePauseAllForActiveTab}
               onSync={() => void handleSyncAll()}
               syncing={syncing}
               onCreate={openCreateForActiveTab}
