@@ -17,7 +17,7 @@ import {
 import { SearchInput } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { hindsightGet } from "@/lib/hindsight-client";
+import { hindsightGet, loadHindsightList } from "@/lib/hindsight-client";
 import { hindsightMutate } from "@/lib/hindsight-mutate";
 import { parseOptionalTagsInput, parseTagsInput } from "@/lib/hindsight-tag-input";
 import { stringOr } from "./hindsight/utils";
@@ -208,16 +208,18 @@ export default function HindsightBrowser() {
   // ── Directives ──────────────────────────────────────────
 
   const loadDirectives = useCallback(async () => {
-    setLoadingDirectives(true);
-    // Envelope-typed: the route returns `{ data: { directives, error } }`.
-    const inner = await hindsightGet<{ directives?: Directive[]; error?: string }>("directives");
-    setLoadingDirectives(false);
-    if (inner?.error) {
-      showToast(inner.error, "error");
-      setDirectives([]);
-      return;
-    }
-    setDirectives(inner?.directives || []);
+    // Compose the GET fetch + busy-state toggle + server-error toast
+    // + empty-state reset via the shared `loadHindsightList` helper.
+    // The 5-line pre-form body (setLoading → fetch → setLoading(false)
+    // → error-toast → setX) is now a single helper call — the helper
+    // body matches the pre-form byte-for-byte, so no runtime change.
+    await loadHindsightList<Directive>(
+      "directives",
+      setLoadingDirectives,
+      "directives",
+      setDirectives,
+      showToast,
+    );
   }, [showToast]);
 
   useEffect(() => {
@@ -303,16 +305,15 @@ export default function HindsightBrowser() {
   // ── Mental Models ───────────────────────────────────────
 
   const loadModels = useCallback(async () => {
-    setLoadingModels(true);
-    // Envelope-typed: the route returns `{ data: { models, error } }`.
-    const inner = await hindsightGet<{ models?: MentalModel[]; error?: string }>("mental-models");
-    setLoadingModels(false);
-    if (inner?.error) {
-      showToast(inner.error, "error");
-      setMentalModels([]);
-      return;
-    }
-    setMentalModels(inner?.models || []);
+    // Sister to `loadDirectives` above — same `loadHindsightList`
+    // helper, just with the `mental-models` action + `models` key.
+    await loadHindsightList<MentalModel>(
+      "mental-models",
+      setLoadingModels,
+      "models",
+      setMentalModels,
+      showToast,
+    );
   }, [showToast]);
 
   useEffect(() => {
