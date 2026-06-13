@@ -4,6 +4,47 @@
 
 ## Recent sessions (full detail)
 
+## Session 197 — List 2 (Cron, Missions, Chat) — `prependAndActivateSession` 2-setter helper extraction in `src/app/orchestration/chat/page.tsx` (2-site migration: `handleNewChat` + `handleSend`'s `if (newSession)` branch)
+
+**Date:** 2026-06-13
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 2 (List 2: Cron, Missions, Chat).
+**Outcome:** **1 byte-equivalent refactor in the List 2 surface + 1 new source-pattern test (5 assertions).** Sister to session 196's 1- and 2-setter close-callback extractions (List 4) — same `useCallback` + `[]` deps + page-local shape, same Rule of Two reasoning. The pre-session source had the 2-line pattern `setSessions((prev) => [newSession, ...prev]); setActiveSessionId(newSession.id);` at 2 sites in the chat page (the "New Chat" button handler + the lazy-create-session branch of `handleSend`). Post-session, a single `const prependAndActivateSession = useCallback((newSession: ChatSession) => { setSessions((prev) => [newSession, ...prev]); setActiveSessionId(newSession.id); }, [])` helper sits between `updateSessionMessages` and the load effect. The 2 call sites collapse to `prependAndActivateSession(newSession);` — a 1-line, 1-token swap. The useCallback deps arrays for `handleNewChat` and `handleSend` are extended to include `prependAndActivateSession` (the helper itself is stable via `[]` deps, so the runtime identity is unchanged). The helper body is literally the 2-line sequence with NO logic change, NO try/catch wrapper. Reference doc: `references/session-197-list2-chat-prepend-activate-session-helper.md`.
+
+### What shipped
+
+1 byte-equivalent refactor + 1 new source-pattern test (5 assertions).
+
+1. **`prependAndActivateSession()` page-local useCallback extraction in `src/app/orchestration/chat/page.tsx`** — the pre-session source had the 2-line pattern `setSessions((prev) => [newSession, ...prev]); setActiveSessionId(newSession.id);` at 2 sites (`handleNewChat` line 193–194 + `handleSend`'s `if (newSession)` branch line 275–276). Post-session, a single `useCallback((newSession: ChatSession) => { setSessions((prev) => [newSession, ...prev]); setActiveSessionId(newSession.id); }, [])` helper centralises the 2-setter sequence. The 2 call sites are both `prependAndActivateSession(newSession);` — a 1-line, 1-token swap. The helper body is the EXACT same 2 operations in the EXACT same order. The `useState` setters are stable, so the empty deps array preserves byte-equivalent reference stability.
+
+2. **`tests/unit/chat-page-prepend-activate-session.test.ts` (NEW, 5 source-pattern assertions)** — pins the post-migration shape: (a) helper declaration exists with the exact `useCallback((newSession: ChatSession) => { ... }, [])` signature, (b) empty deps array invariant, (c) both inline 2-line sites migrated (the discriminator: literal `[newSession, ...prev]` form appears EXACTLY once — only in the helper body), (d) `handleNewChat` slice contains the helper call + lacks the inline 2-line form, (e) `handleSend` slice (first 1500 chars) contains the helper call + lacks the inline 2-line form. The test documents 3 anti-migration guards: the `onClick={() => setActiveSessionId(s.id)}` JSX site (1-setter activate-by-id, different shape), the `setActiveSessionId(null)` clear-active site in `handleDeleteSession` (1-setter clear, different shape), and the `setActiveSessionId(saved[0].id)` initial-load site (1-setter initial-load, no `setSessions` companion, different shape). 5/5 pass.
+
+### Why this is byte-equivalent
+
+- The helper body is literally `setSessions((prev) => [newSession, ...prev]); setActiveSessionId(newSession.id);` — the EXACT same 2 operations in the EXACT same order as the pre-session inline form.
+- Both call sites call the helper with the EXACT same argument (`newSession`).
+- No try/catch wrapper is added.
+- The 2-setter sequence has no interleaved state mutations in either pre-session call site — both `setSessions` and `setActiveSessionId` calls were on consecutive lines with no other code between them.
+
+### Verification (full suite)
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint src/app/orchestration/chat/page.tsx tests/unit/chat-page-prepend-activate-session.test.ts --max-warnings 0`: clean
+- `CI=true npx jest tests/unit/chat-page-prepend-activate-session.test.ts`: **5/5 pass**
+- Full `CI=true npx jest` sweep: **316 suites / 2365 tests pass** (up from 315/2360 = +1 suite, +5 tests)
+- `npm run build`: clean
+
+### Reference doc
+
+`references/session-197-list2-chat-prepend-activate-session-helper.md` (the per-session reference for this work). Documents the sister-relationship to session 196's close-callback extractions and the 5 "what this session did NOT touch" candidates (anti-migration guards).
+
+### Next session should
+
+- **Random pick next session.** The List 2 chat-page setter-pair surface is now mined clean of the prepend-and-activate pattern. Candidates worth re-scanning: (a) the `useGatewayHealth.ts` 4 setter slots (single-state setters, not a duplication target), (b) the `chat-utils.ts` `escapeHtml` function (single helper, not a duplication target), (c) the `MissionCreateForm.tsx` 648-line monolith (would benefit from a sub-component split, but that crosses the "byte-equivalent" line).
+- **Carryover** — none. The next session starts with a clean working tree.
+
+---
+
 ## Session 195 — List 1 (Dashboard, Sessions, Memory, Logs) — `hindsightMutate` helper extraction in `HindsightBrowser.tsx` (4-site migration: `handleToggleDirective` / `handleDeleteDirective` / `handleRefreshModel` / `handleDeleteModel`) (close session 190 plan)
 
 **Date:** 2026-06-13
@@ -167,6 +208,7 @@ No new reference doc — this is a 2-refactor session with the same `interface-e
 
 ## Older sessions (one-line summary)
 
+**Session 196** — List 4 — `closeModelEditor` + `closeFallbackModal` + `closeAddCustom` + `closeSyncModal` 1- and 2-setter close-callback extractions across 4 files in the List 4 surface (close session 195 followup)
 **Session 191** — List 3 — `toggleActiveCollapsed` / `toggleInactiveCollapsed` 1-setter toggle-callback extraction in `src/app/operations/skills/page.tsx`
 **Session 190** — cross-list (List 2 + List 1 + List 3) — `getCategoryIdFromTemplate` helper + redundant `isCustom` cast removal + `onEditTemplate` signature narrowing in `useMissionsPage` + `cron/page.tsx` `hardwareEnabled`/`hardwareTotal` single-pass reduce + `handleToggleSkill` callback consolidation in `skills/page.tsx`
 **Session 189** — cross-list (List 2 + List 1 Dashboard) — `dispatchMissionAction` migration in `useMissionsPage.handleDelete` + `useMissionsPage.handleCancel` (2 sites) + `page.tsx.handleCancelMission` (1 site) + inline `restoreMission` closure inlining (close session 181 carryover)
