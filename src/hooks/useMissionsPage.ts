@@ -282,6 +282,22 @@ export function useMissionsPage() {
     [],
   );
 
+  // Builds the JSON payload for `POST /api/missions` (dispatch, promote,
+  // update) from the current form state. The `schedule` field is derived
+  // internally via the canonical `scheduleForDispatch(newDispatch, newSchedule)`
+  // helper from `@/lib/dispatch-mode` — the 3 call sites (update, promote,
+  // dispatch-new) used to pass `schedule: scheduleForDispatch(newDispatch,
+  // newSchedule)` as an override, but the override was always the SAME
+  // expression (mode-aware, dispatch-mode-derived) so the per-call-site
+  // override is pure noise. Centralising the derivation here means:
+  //   1. Call sites drop the `schedule:` override (1-line collapse).
+  //   2. Future dispatch modes that need a different `scheduleForDispatch`
+  //      signature land in one place (this helper), not in 3 call sites.
+  //   3. The 3 call sites that previously had `schedule: <undefined>` for
+  //      non-cron modes (i.e. always — the override is only meaningful
+  //      when mode is "cron") now get the same `schedule: undefined`
+  //      from inside this helper, which JSON.stringify drops from the
+  //      wire payload — byte-equivalent to the pre-refactor override form.
   const dispatchPayload = useCallback(
     (overrides: Record<string, unknown> = {}): Record<string, unknown> => ({
       instruction: newInstruction.trim(),
@@ -295,6 +311,7 @@ export function useMissionsPage() {
       provider: newProvider || undefined,
       missionTimeMinutes: newMissionTime,
       timeoutMinutes: newTimeout,
+      schedule: scheduleForDispatch(newDispatch, newSchedule),
       localDirs: newLocalDirs,
       references: newReferences,
       skills: newSkills,
@@ -304,6 +321,7 @@ export function useMissionsPage() {
     [
       newInstruction, newContext, newOutputFormat, newConstraints, newCategoryId, newGoals,
       newProfile, newModel, newProvider, newMissionTime, newTimeout,
+      newDispatch, newSchedule,
       newLocalDirs, newReferences, newSkills, newToolsets,
     ],
   );
@@ -729,9 +747,7 @@ export function useMissionsPage() {
           const result = await dispatchMissionAction("update", {
             missionId: editingId,
             name: newName,
-            ...dispatchPayload({
-              schedule: scheduleForDispatch(newDispatch, newSchedule),
-            }),
+            ...dispatchPayload(),
           });
           toastFromResult(
             showToast,
@@ -760,7 +776,6 @@ export function useMissionsPage() {
             name: newName,
             ...dispatchPayload({
               dispatchMode: newDispatch,
-              schedule: scheduleForDispatch(newDispatch, newSchedule),
             }),
           });
           toastFromResult(
@@ -821,7 +836,6 @@ export function useMissionsPage() {
         name: newName,
         ...dispatchPayload({
           dispatchMode: newDispatch,
-          schedule: scheduleForDispatch(newDispatch, newSchedule),
         }),
       });
 
