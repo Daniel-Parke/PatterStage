@@ -75,16 +75,14 @@ import { join } from "node:path";
 
 const REPO_ROOT = join(__dirname, "..", "..");
 
-// List 2 surface — the 3 List 2 hooks + the 3 List 2 components
-// that consume envelope-typed `safeApiCall<{ data?: { ... } }>`. Future
-// sessions that add more List 2 files can extend the surface without
-// re-deriving the file list.
-const LIST_2_FILES = [
+// List 2 envelope-typed surface — files that still consume
+// `safeApiCall<{ data?: { ... } }>` (or the named-type equivalent).
+// Future sessions that migrate a file off the envelope form move it
+// from this list to the `LIST_2_MIGRATED_TO_SAFE_DATA` list below.
+const LIST_2_ENVELOPE_FILES = [
   join(REPO_ROOT, "src", "hooks", "useCronJobMutation.ts"),
-  join(REPO_ROOT, "src", "hooks", "useMissionsApi.ts"),
   join(REPO_ROOT, "src", "hooks", "useMissionsPage.ts"),
   join(REPO_ROOT, "src", "components", "missions", "DirectoryPickerModal.tsx"),
-  join(REPO_ROOT, "src", "components", "missions", "ModelPicker.tsx"),
   join(REPO_ROOT, "src", "components", "missions", "LocalDirRow.tsx"),
   // Session 162 added the two cron-modal files (the routes return
   // `ok({...})` which produces `{ data: { ... } }` envelopes):
@@ -105,6 +103,38 @@ const LIST_2_FILES = [
   // is still pinned at exactly one file (the helper) and the
   // `useMissionsPage.ts` test row passes via the helper-call form.
   join(REPO_ROOT, "src", "hooks", "success-message-for-dispatch.ts"),
+];
+
+// List 2 files migrated off the envelope form onto `safeApiCallData<T>`.
+// The migration is byte-equivalent: `safeApiCallData<T>(url)` returns
+// `T | null` (the inner payload), identical to
+// `((await safeApiCall<{ data?: T }>(url)).data?.data ?? null)` (the
+// 2-level indirection). The gate for migration is the catch path —
+// the original call site must not have a non-silent catch (toastError,
+// setErrorFromCaught, re-throw, side-effect) that would be lost by
+// `safeApiCallData`'s "return null on HTTP error" contract. See
+// `references/safeApiCallData-catch-path-byte-equivalence-gate.md`.
+//
+// Session 202 migrated these 2 files:
+//   - `useMissionsApi.ts` createCategory: caller (`handleCreateCategory`)
+//     wraps the result in try/catch with `toastError`, but the
+//     `createCategory` function itself doesn't propagate `ok`/`error`
+//     to the caller — it returns `cat?.id` or `null`. The call site's
+//     `if (cat?.id)` form is identical to the post-migration form
+//     (returns `null` on HTTP error → `if (null?.id)` is `if (undefined)`,
+//     which is the same as the pre-migration `result.data?.data?.category
+//     ?? null` form's `if (null?.id)`).
+//   - `ModelPicker.tsx` load: the call site doesn't read `mRes.ok`/
+//     `dRes.ok` (no .ok gate, no `result.error` read) — it goes to
+//     `.catch(err)` instead. On HTTP error, `safeApiCallData` returns
+//     `null` (not throws), so the `.catch` doesn't fire for HTTP
+//     errors — same as the pre-migration form (the inline form's
+//     `mRes.data?.data?.X ?? fallback` is also non-throwing). On
+//     actual thrown errors (network/parse), `.catch` fires in both
+//     forms. Byte-equivalent.
+const LIST_2_MIGRATED_TO_SAFE_DATA = [
+  join(REPO_ROOT, "src", "hooks", "useMissionsApi.ts"),
+  join(REPO_ROOT, "src", "components", "missions", "ModelPicker.tsx"),
 ];
 
 /**
@@ -129,7 +159,7 @@ const ACCESS_FINGERPRINT = /\.data\??\s*\./g;
 
 describe("safeApiCall envelope-typed migration — List 2 (Cron, Missions, Chat)", () => {
   describe("per-file: safeApiCall<{ data?: { ... } }> envelope-typed shape pinned", () => {
-    for (const filePath of LIST_2_FILES) {
+    for (const filePath of LIST_2_ENVELOPE_FILES) {
       const relPath = filePath.replace(REPO_ROOT + "/", "");
       it(`${relPath} has at least one envelope-typed safeApiCall<{ data?: { ... } }> call`, () => {
         const source = readFileSync(filePath, "utf8");
@@ -207,21 +237,87 @@ describe("safeApiCall envelope-typed migration — List 2 (Cron, Missions, Chat)
     }
   });
 
+  describe("per-file: safeApiCallData<T> migration pinned (files moved off the envelope form)", () => {
+    // The gate (see `references/safeApiCallData-catch-path-byte-equivalence-gate.md`):
+    // a `safeApiCallData` migration is byte-equivalent ONLY when the
+    // call site has no non-silent catch path (toastError, setErrorFromCaught,
+    // re-throw, side-effect) that would be lost by `safeApiCallData`'s
+    // "return null on HTTP error" contract. The 2 migrated sites in
+    // this surface both pass the gate.
+    for (const filePath of LIST_2_MIGRATED_TO_SAFE_DATA) {
+      const relPath = filePath.replace(REPO_ROOT + "/", "");
+      it(`${relPath} imports safeApiCallData (positive)`, () => {
+        // The post-migration import is `safeApiCallData` (not
+        // `safeApiCall`) — the unwrapper helper. A regression that
+        // re-introduces the envelope-typed `safeApiCall` import
+        // would re-introduce the 2-level indirection the migration
+        // was meant to remove.
+        const source = readFileSync(filePath, "utf8");
+        expect(source).toMatch(/import\s*\{[^}]*\bsafeApiCallData\b[^}]*\}\s*from\s*["']@\/lib\/api-fetch["']/);
+      });
+
+      it(`${relPath} does NOT have the literal envelope-typed safeApiCall<{ data?: { ... } }> shape (negative)`, () => {
+        // The pre-migration form was a literal
+        // `safeApiCall<{ data?: { ... } }>` call site. The
+        // post-migration form is `safeApiCallData<T>` which
+        // collapses the envelope into one level. A future
+        // "let me re-add the envelope-typed call" regression
+        // would re-introduce the literal `safeApiCall<{ data?:
+        // {` regex match — fail this test.
+        const source = readFileSync(filePath, "utf8");
+        const code = source
+          .split("\n")
+          .map((line) => line.replace(/\/\/.*$/, ""))
+          .join("\n")
+          .replace(/\/\*[\s\S]*?\*\//g, "");
+        expect(code).not.toMatch(ENVELOPE_TYPE_REGEX);
+      });
+    }
+  });
+
   describe("List 2 surface sanity", () => {
-    it("the file list is non-empty (catches accidental empty list_2_files)", () => {
-      expect(LIST_2_FILES.length).toBeGreaterThan(0);
+    it("the envelope-typed file list is non-empty (catches accidental empty list)", () => {
+      expect(LIST_2_ENVELOPE_FILES.length).toBeGreaterThan(0);
     });
 
-    it("every file in the surface is readable", () => {
-      for (const filePath of LIST_2_FILES) {
+    it("the migrated-to-safe-data file list is non-empty (catches accidental empty list)", () => {
+      // The empty-list check is symmetric: an accidentally-emptied
+      // list is a silent regression (the test would pass with
+      // zero assertions). Both lists must be non-empty for the
+      // surface to be meaningful.
+      expect(LIST_2_MIGRATED_TO_SAFE_DATA.length).toBeGreaterThan(0);
+    });
+
+    it("every envelope-typed file in the surface is readable", () => {
+      for (const filePath of LIST_2_ENVELOPE_FILES) {
         const source = readFileSync(filePath, "utf8");
         expect(source.length).toBeGreaterThan(0);
       }
     });
 
-    it("every file in the surface is a real .ts or .tsx file (catches typos)", () => {
-      for (const filePath of LIST_2_FILES) {
+    it("every migrated-to-safe-data file in the surface is readable", () => {
+      for (const filePath of LIST_2_MIGRATED_TO_SAFE_DATA) {
+        const source = readFileSync(filePath, "utf8");
+        expect(source.length).toBeGreaterThan(0);
+      }
+    });
+
+    it("every file in both surfaces is a real .ts or .tsx file (catches typos)", () => {
+      for (const filePath of LIST_2_ENVELOPE_FILES) {
         expect(filePath).toMatch(/\.tsx?$/);
+      }
+      for (const filePath of LIST_2_MIGRATED_TO_SAFE_DATA) {
+        expect(filePath).toMatch(/\.tsx?$/);
+      }
+    });
+
+    it("envelope and migrated lists do not overlap (a file is either envelope-typed or migrated, not both)", () => {
+      // A file that appears in both lists is a contradiction: it
+      // can't be envelope-typed AND migrated. Catches copy-paste
+      // errors when moving files between lists.
+      const envelopeSet = new Set(LIST_2_ENVELOPE_FILES);
+      for (const filePath of LIST_2_MIGRATED_TO_SAFE_DATA) {
+        expect(envelopeSet.has(filePath)).toBe(false);
       }
     });
   });
