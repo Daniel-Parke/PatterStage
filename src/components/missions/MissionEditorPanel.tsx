@@ -13,6 +13,7 @@ import {
 import { ChevronRight } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { timeAgo, titleCase } from "@/lib/utils";
+import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import type { MissionDetail, MissionRow } from "@/hooks/useMissionsPage";
 import {
   isMissionDraft,
@@ -53,6 +54,48 @@ export default function MissionEditorPanel({
     } catch {
       // ignore
     }
+  };
+
+  // Per-row two-step confirms for the 2 destructive actions exposed
+  // by this panel. The pre-session 207 form did the confirm inside
+  // the `useMissionsPage` hook callbacks (handleDelete + handleCancel)
+  // — a single global `window.confirm` dialog with no per-row
+  // context. Lifting the confirm into the leaf component gives each
+  // expanded-mission row its own armed state so a stale "armed" from
+  // one row cannot accidentally fire when the user clicks a different
+  // row's destructive button minutes later. Mirrors the session 200
+  // per-row `useTwoStepConfirm({ autoDismissMs: 4000 })` shape that
+  // the Models table + FallbackChainList use. The hook callbacks
+  // (`useMissionsPage.handleDelete` / `.handleCancel`) no longer need
+  // to know about confirm-state — that's now owned by the leaf
+  // component, where the mission id is in scope at render time.
+  const deleteConfirm = useTwoStepConfirm({ autoDismissMs: 4000 });
+  const cancelConfirm = useTwoStepConfirm({ autoDismissMs: 4000 });
+
+  // Click handlers for the 2 destructive buttons. Each branches on
+  // whether the per-row key (the mission id) is currently armed: if
+  // not armed, arm; if armed, run the action. Byte-equivalent to the
+  // pre-migration `onClick={() => onDelete(mission.id)}` shape
+  // (the action runs on every click in the pre-migration form,
+  // guarded by `window.confirm` inside the hook) — but with a
+  // styled "Confirm?" state in the leaf and a per-row 4-second
+  // auto-dismiss so an armed state can't outlive the user's intent.
+  // The `cancellingMissionId` busy state for the cancel button is
+  // preserved (the cancel-in-flight spinner is the parent-owned
+  // loading indicator that survives both pre- and post-migration).
+  const handleDeleteClick = () => {
+    if (!deleteConfirm.isArmedFor(mission.id)) {
+      deleteConfirm.arm(mission.id);
+      return;
+    }
+    void deleteConfirm.confirm(() => onDelete(mission.id));
+  };
+  const handleCancelClick = () => {
+    if (!cancelConfirm.isArmedFor(mission.id)) {
+      cancelConfirm.arm(mission.id);
+      return;
+    }
+    void cancelConfirm.confirm(() => onCancel(mission.id));
   };
   return (
     <div className="border-t border-white/10 px-3 py-3 bg-dark-800/30">
@@ -309,25 +352,33 @@ export default function MissionEditorPanel({
                 variant="danger"
                 size="sm"
                 loading={isCancelling}
-                disabled={isCancelling}
-                onClick={() => onCancel(mission.id)}
+                disabled={isCancelling || cancelConfirm.isArmedFor(mission.id)}
+                onClick={handleCancelClick}
               >
-                {!isCancelling ? <StopCircle className="w-3 h-3" /> : null}
+                {!isCancelling && !cancelConfirm.isArmedFor(mission.id) ? (
+                  <StopCircle className="w-3 h-3" />
+                ) : null}
                 {isCancelling
                   ? "Cancelling…"
-                  : mission.status === "dispatched"
-                    ? "Cancel"
-                    : "Remove from queue"}
+                  : cancelConfirm.isArmedFor(mission.id)
+                    ? "Confirm?"
+                    : mission.status === "dispatched"
+                      ? "Cancel"
+                      : "Remove from queue"}
               </Button>
             )}
             <Button
               variant="ghost"
               size="sm"
-              onClick={() =>
-                onDelete(mission.id)
+              onClick={handleDeleteClick}
+              className={
+                deleteConfirm.isArmedFor(mission.id)
+                  ? "ring-1 ring-neon-red/60 bg-neon-red/10 text-neon-red"
+                  : undefined
               }
             >
               <Trash2 className="w-3 h-3" />
+              {deleteConfirm.isArmedFor(mission.id) ? " Confirm?" : ""}
             </Button>
           </div>
         </div>
