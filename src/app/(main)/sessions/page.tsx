@@ -235,6 +235,44 @@ export default function SessionsPage() {
     setPage(0);
   }, [sourceFilter]);
 
+  // Open/close sibling pair for the source filter. The "All" button
+  // (line 327) clears the filter (sets it to `null`); each source button
+  // in the .map() (line 339) sets it to that source. Both paths were
+  // inline `() => setSourceFilter(X)` arrows — promoting to named
+  // useCallback siblings follows the session 116 P-7 / session 118 P-7
+  // pattern. `selectSourceFilter` takes a parameter because the .map()
+  // supplies the source; the `null` path (`clearSourceFilter`) is the
+  // 1-arg "close" sibling. Both callbacks list the stable `useState`
+  // setter explicitly in the deps array to satisfy
+  // `react-hooks/exhaustive-deps`.
+  const clearSourceFilter = useCallback(
+    () => setSourceFilter(null),
+    [setSourceFilter],
+  );
+  const selectSourceFilter = useCallback(
+    (src: SessionSource) => setSourceFilter(src),
+    [setSourceFilter],
+  );
+  // Toggle callbacks for the 2 view-options row buttons (group-by-mission
+  // and hide-api-noise). Both were inline `() => setX(!X)` arrows on the
+  // button onClick props — promoting to named useCallbacks follows the
+  // session 191 sibling pattern (the Skills page's
+  // `toggleActiveCollapsed` / `toggleInactiveCollapsed` pair). We pass
+  // the next boolean to the `useStoredBool` setter rather than calling
+  // the setter with a functional updater — `useStoredBool` returns a
+  // `(v: boolean) => void` setter (not a React `Dispatch`), so the
+  // functional form isn't available. The deps array lists the captured
+  // boolean so the `react-hooks/exhaustive-deps` rule is satisfied
+  // (the setter itself has a stable identity per `key`).
+  const toggleGroupByMission = useCallback(
+    () => setGroupByMission(!groupByMission),
+    [groupByMission, setGroupByMission],
+  );
+  const toggleHideApiNoise = useCallback(
+    () => setHideApiNoise(!hideApiNoise),
+    [hideApiNoise, setHideApiNoise],
+  );
+
   // URL is rebuilt from the current page + source filter. The hook
   // re-fetches on URL change, so a page click or a filter change
   // triggers a single fetch (matches the pre-refactor `loadSessions`
@@ -325,7 +363,7 @@ export default function SessionsPage() {
               <div className="flex items-center gap-2 flex-wrap">
                 <Filter className="w-4 h-4 text-white/30 flex-shrink-0" />
                 <button
-                  onClick={() => setSourceFilter(null)}
+                  onClick={clearSourceFilter}
                   className={`text-xs font-mono px-2 py-1 rounded transition-colors ${
                     !sourceFilter
                       ? "bg-neon-orange/20 text-neon-orange"
@@ -337,7 +375,7 @@ export default function SessionsPage() {
                 {sources.map((src) => (
                   <button
                     key={src}
-                    onClick={() => setSourceFilter(src)}
+                    onClick={() => selectSourceFilter(src)}
                     className={`text-xs font-mono px-2 py-1 rounded transition-colors flex items-center gap-1 ${
                       sourceFilter === src
                         ? "bg-neon-orange/20 text-neon-orange"
@@ -356,7 +394,7 @@ export default function SessionsPage() {
           <div className="flex items-center gap-2 flex-wrap text-[10px] font-mono">
             <button
               type="button"
-              onClick={() => setGroupByMission(!groupByMission)}
+              onClick={toggleGroupByMission}
               className={`flex items-center gap-1 px-2 py-1 rounded transition-colors ${
                 groupByMission
                   ? "bg-neon-green/10 text-neon-green"
@@ -369,7 +407,7 @@ export default function SessionsPage() {
             </button>
             <button
               type="button"
-              onClick={() => setHideApiNoise(!hideApiNoise)}
+              onClick={toggleHideApiNoise}
               className={`flex items-center gap-1 px-2 py-1 rounded transition-colors ${
                 hideApiNoise
                   ? "bg-neon-purple/10 text-neon-purple"

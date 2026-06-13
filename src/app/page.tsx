@@ -159,6 +159,18 @@ export default function Dashboard() {
     () => setDispatchExpanded(true),
     [setDispatchExpanded],
   );
+  // Toggle sibling for the dispatch panel header. The collapsed-strip
+  // header (line 536) calls `() => setDispatchExpanded(!dispatchExpanded)`
+  // inline; promoting to a named useCallback mirrors the open-callback
+  // promotion above (session 116 P-7 / session 118 P-7 sibling pattern).
+  // The deps array lists `dispatchExpanded` so the
+  // `react-hooks/exhaustive-deps` rule is satisfied — `dispatchExpanded`
+  // is a fresh boolean on every state update, so the callback re-creates
+  // only when the panel flips open/closed.
+  const toggleDispatchPanel = useCallback(
+    () => setDispatchExpanded(!dispatchExpanded),
+    [dispatchExpanded],
+  );
   const [errorSev, setErrorSev] = useState<"all" | "error" | "warning">("all");
   const [syncNowBusy, setSyncNowBusy] = useState(false);
   const [registryAgentModelLabel, setRegistryAgentModelLabel] = useState<string | null>(null);
@@ -202,6 +214,17 @@ export default function Dashboard() {
     return dedupErrors(filtered);
   }, [monitor, errorSev]);
 
+  // Severity selector for the Errors panel. Each severity pill in the
+  // .map() calls `() => setErrorSev(sev)` inline (line 791); promoting
+  // to a named useCallback with a parameter mirrors the
+  // `setSourceFilter(src)` / `setActiveLog(log.name)` / `setMissionFilter(id)`
+  // sibling pattern used across the List 1 + List 2 pages. The
+  // `setErrorSev` setter is stable per the `useState` contract, so the
+  // callback's identity is effectively constant per render cycle.
+  const selectSeverity = useCallback(
+    (sev: "all" | "error" | "warning") => setErrorSev(sev),
+    [setErrorSev],
+  );
   // Note: useTwoStepConfirm handles its own unmount cleanup.
   // The original handler had no busy state (the row already shows
   // "Confirm?" via `isArmedFor`), so we keep the original `try/catch`
@@ -533,7 +556,7 @@ export default function Dashboard() {
         {/* ═══ Mission Dispatch Quick Launch ═══ */}
         <div className="rounded-xl border border-neon-cyan/20 bg-dark-900/50 overflow-hidden">
           <button
-            onClick={() => setDispatchExpanded(!dispatchExpanded)}
+            onClick={toggleDispatchPanel}
             className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/[0.02] transition-colors"
           >
             <div className="flex items-center gap-2">
@@ -776,7 +799,7 @@ export default function Dashboard() {
                 {(["all", "error", "warning"] as const).map((sev) => (
                   <button
                     key={sev}
-                    onClick={() => setErrorSev(sev)}
+                    onClick={() => selectSeverity(sev)}
                     className={`text-[10px] font-mono px-1.5 py-0.5 rounded transition-colors ${
                       errorSev === sev ? "bg-red-500/20 text-red-400" : "text-white/30 hover:text-white/60"
                     }`}
