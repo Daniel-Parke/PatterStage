@@ -215,9 +215,15 @@ export function useModelsPage() {
     showToast("Model saved", "success");
   }, [loadAll, showToast]);
 
+  // handleDelete is the post-confirm action — the per-row confirm
+  // guard has already fired (see ModelsTableSection's per-row
+  // useTwoStepConfirm). The pre-refactor form was a single global
+  // `window.confirm` call here, which (a) blocked the JS thread with
+  // a native dialog, (b) had no per-row context, and (c) broke the
+  // project's two-step-confirm convention (see
+  // `tests/unit/window-confirm-source-patterns.test.ts`).
   const handleDelete = useCallback(
     async (model: ApiModel) => {
-      if (!confirm(`Delete model "${model.name}"? This cannot be undone.`)) return;
       try {
         await apiFetch(`/api/models/${encodeURIComponent(model.id)}`, {
           method: "DELETE",
