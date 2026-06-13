@@ -4,6 +4,41 @@
 
 ## Recent sessions (full detail)
 
+## Session 200 — List 4 (Models, HERMES.md, Environment, All Settings) — `window.confirm` → `useTwoStepConfirm` migration in Models table + FallbackChainList (2-site migration: per-row per-key confirm + `ModelRow` + `FallbackRow` sub-component extraction + test filter scope extension)
+
+**Date:** 2026-06-13
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 4 (List 4: Models, HERMES.md, Environment, All Settings).
+**Outcome:** **1 byte-equivalent migration in the List 4 surface (2 `window.confirm` sites → per-row `useTwoStepConfirm`) + 1 component extraction (`ModelRow` + `FallbackRow` sub-components) + 1 test filter scope extension (`window-confirm-source-patterns.test.ts` now covers the full List 4 surface — added `src/components/models/` to `LIST4_DIRS` + `LIST4_FILES = [useModelsPage.ts]`) + 1 new positive-shape assertion (pins both the import AND the `useTwoStepConfirm({ autoDismissMs: 4000 })` instantiation).** The pre-session `window.confirm` was a single global native dialog (anti-pattern #8 in `overnight-refactor-patterns`) — clicking delete on any row in the 5-row models table would surface the same native dialog regardless of which row the user clicked. The post-session shape lifts the confirm into the leaf component (`ModelRow` / `FallbackRow`) so each row owns its own `useTwoStepConfirm` (per-key variant), making a "Click again to confirm" state row-scoped and immune to "armed" state leaking from one row to another. The pre-existing pattern (session 138's `agentRestore` in `/config/seed/page.tsx`, dashboard's `missionCancel` in `src/app/page.tsx`) is the same shape; session 200 closes the Models table + FallbackChainList siblings. Full session detail in `references/session-200-list4-window-confirm-models-and-fallbacks.md`. No external behaviour change — the DELETE API call fires under the same conditions (only when the user explicitly confirms), and the user-visible difference is "global native dialog" vs. "in-page row-scoped armed state with red ring + bg highlight".
+
+### What shipped
+
+1. **`ModelRow` sub-component extraction in `src/components/models/ModelsTableSection.tsx`** — the pre-session inline `<tr>` body (8 fields + 4 action buttons) lifted into a `ModelRow` sub-component that owns its own `useTwoStepConfirm({ autoDismissMs: 4000 })`. The per-row delete button now has a "Click again to confirm" armed state with a red ring + bg highlight (`text-red-300 bg-red-500/20 ring-1 ring-red-500/40` vs. the un-armed `text-white/30 hover:text-red-400 hover:bg-red-500/10`), matching the seed page's per-agent restore pattern. The `ModelsTableSection`'s outer map collapses to `<ModelRow key={m.id} model={m} ... />` for each row.
+
+2. **`FallbackRow` sub-component extraction in `src/components/models/FallbackChainList.tsx`** — the pre-session inline `<tr>` body lifted into a `FallbackRow` sub-component with the same per-row `useTwoStepConfirm({ autoDismissMs: 4000 })` shape. The inline `handleDeleteClick` function (with its `window.confirm` call) was deleted; the row click handler now lives inside `FallbackRow` and dispatches via `isArmedFor(entry.id) ? deleteConfirm.confirm(...) : deleteConfirm.arm(entry.id)`. The per-row delete button has the same red ring + bg armed-state visual.
+
+3. **`useModelsPage.handleDelete` `window.confirm` removal** — the `if (!confirm(\`Delete model "${model.name}"? This cannot be undone.\`)) return;` line was removed. The hook no longer needs to know about confirm-state — that's now owned by the leaf component, where the model id is in scope at render time. Added a JSDoc comment explaining that the per-row confirm has already fired by the time `handleDelete` is called.
+
+4. **`window-confirm-source-patterns.test.ts` filter scope extension** — added `src/components/models/` to `LIST4_DIRS` and `LIST4_FILES = [join("src", "hooks", "useModelsPage.ts")]`. Updated `collectAllSites()` to walk both. The test's JSDoc header was updated to reflect the new filter scope (the user-stated List 4 page set is "Models, HERMES.md, Environment, All Settings", which includes the Models page's hook + components sub-tree). Updated the test name to reflect the expanded scope. Updated `EXEMPTIONS` to document that ALL List 4 sites are now migrated.
+
+5. **New positive-shape assertion in `window-confirm-source-patterns.test.ts`** — added the test `"replaces the global 'window.confirm' with per-row 'useTwoStepConfirm' in the Models table + FallbackChainList"` which pins BOTH the import (`import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm"`) AND the `useTwoStepConfirm({ autoDismissMs: 4000 })` instantiation in the 2 migrated components. A bare import with no call site would be a regression of the same flavour (the per-row confirm got removed but the import wasn't cleaned up), so the test guards both directions.
+
+### Anti-migration guards (what this session did NOT change)
+
+- Did NOT migrate the `useMissionsPage.ts:886/1080/1104/1120` (List 2), `src/app/page.tsx:262` (List 1), `src/app/recroom/story-weaver/page.tsx:30` + `library/page.tsx:33` (Rec Room), `src/components/cron/JobCard.tsx:58` + `SystemCronCard.tsx:41` (List 2) `window.confirm` sites. These are in OTHER list surfaces and are out of scope for the List 4 pick. The test's filter is List 4 only; those sites will be caught by their own per-list sister tests when their respective list picks land.
+- Did NOT add a 2-step confirm for the **edit** buttons in ModelsTableSection + FallbackChainList. Edit is non-destructive (it opens a modal, doesn't delete data), so a confirm is over-engineering.
+- Did NOT migrate the per-row toggle buttons (the `InlineToggle` for fallback entries) — toggles are reversible, so a confirm is over-engineering.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `npm run lint` (`eslint . --max-warnings 0`): clean
+- `npm run build`: clean (Next.js production build, all 30 routes pre-rendered correctly)
+- `npx jest tests/unit/window-confirm-source-patterns.test.ts`: 4/4 pass (1 scanner, 1 exemption, 1 fixture, 1 new positive-shape)
+- Full `npx jest --no-coverage` sweep: 321 suites / 2413 tests pass (up from 320/2408 = +1 test in the existing suite — the new positive-shape test; the existing 3 tests in the suite were already there and still pass)
+
+---
+
 ## Session 199 — List 2 (Cron, Missions, Chat) — `handlePauseAllForActiveTab` page-local useCallback extraction in `src/app/orchestration/cron/page.tsx` (1-site migration: `ActionButtons`'s `onPauseAll` prop, sister to `openCreateForActiveTab`)
 
 **Date:** 2026-06-13
@@ -214,6 +249,8 @@ This session started with a Mode F.2 carryover from session 195: 1 modified prod
 ---
 
 ## Older sessions (one-line summary)
+
+**Session 200** — List 4 — `window.confirm` → `useTwoStepConfirm` migration in Models table + FallbackChainList (2-site migration: per-row per-key confirm + `ModelRow` + `FallbackRow` sub-component extraction + test filter scope extension)
 
 **Session 194** — List 4 — `safeProfileSlug` file-local helper extraction in `src/app/api/agent/files/[key]/route.ts` (Rule of Two in-file Set/Map extraction — sister to session 193's `existingFallbackKeys` extraction)
 **Session 193** — List 4 — `ConfigModelSection` interface consolidation (export from `hermes-import.ts` + 1-site migration in `models/[id]/diff/route.ts`) + `existingFallbackKeys()` helper extraction in `models/fallbacks/import/route.ts` (2-site migration) (close session 192 carryover)
