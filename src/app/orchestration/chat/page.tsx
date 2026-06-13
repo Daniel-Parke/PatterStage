@@ -120,6 +120,27 @@ export default function ChatPage() {
     [updateSession],
   );
 
+  // Prepend a brand-new session to the top of the list and make it the
+  // active session. The 2-line pattern `setSessions((prev) => [newSession,
+  // ...prev]); setActiveSessionId(newSession.id);` appears at 2 sites —
+  // `handleNewChat` (the "New Chat" button) and `handleSend` (the
+  // first-message path that lazily creates a session when there is no
+  // active one yet). Centralising the 2-setter sequence here keeps the
+  // 2 sites in lockstep if a future "also clear the streaming state" or
+  // "also persist a session-created event" extension lands. The
+  // useState setters are stable, so the `useCallback` deps array is
+  // `[]`. Sister to the `closeModelEditor` / `closeFallbackModal` /
+  // `closeAddCustom` / `closeSyncModal` 1- and 2-setter close-callback
+  // extractions in session 196 (List 4) — same Rule of Two + page-local
+  // useCallback shape. The success-then-activate edge (an existing
+  // session is reused, not newly created) is the "no-op" branch of the
+  // helper and is intentionally NOT migrated: `handleSend` only calls
+  // this helper inside its `if (newSession)` branch.
+  const prependAndActivateSession = useCallback((newSession: ChatSession) => {
+    setSessions((prev) => [newSession, ...prev]);
+    setActiveSessionId(newSession.id);
+  }, []);
+
   // ── Load persisted sessions from localStorage on mount ─────
   useEffect(() => {
     const saved = loadSessions();
@@ -190,11 +211,10 @@ export default function ChatPage() {
   // ── New chat (creates session immediately) ─────────────────
   const handleNewChat = useCallback(() => {
     const newSession = createEmptySession(model);
-    setSessions((prev) => [newSession, ...prev]);
-    setActiveSessionId(newSession.id);
+    prependAndActivateSession(newSession);
     setInput("");
     inputRef.current?.focus();
-  }, [model]);
+  }, [model, prependAndActivateSession]);
 
   // ── Delete session ─────────────────────────────────────────
   const handleDeleteSession = useCallback(
@@ -272,8 +292,7 @@ export default function ChatPage() {
     const targetSessionId = existing?.id ?? newSession!.id;
 
     if (newSession) {
-      setSessions((prev) => [newSession, ...prev]);
-      setActiveSessionId(newSession.id);
+      prependAndActivateSession(newSession);
     }
 
     // Create user and assistant messages
@@ -320,7 +339,7 @@ export default function ChatPage() {
     if (gen === streamGenRef.current) {
       setIsStreaming(false);
     }
-  }, [input, activeSession, model, gatewayOnline, showToast, updateSession, updateSessionMessages]);
+  }, [input, activeSession, model, gatewayOnline, showToast, updateSession, updateSessionMessages, prependAndActivateSession]);
 
   // ── Keyboard shortcuts ─────────────────────────────────────
   const handleKeyDown = useCallback(
