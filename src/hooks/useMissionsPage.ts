@@ -799,10 +799,12 @@ export function useMissionsPage() {
 
         // The route returns `{ data: { mission: { id } } }` (envelope).
         // The `dispatchMissionAction` helper unwraps the inner envelope via
-        // the `MissionActionResponse` type, so `result.data?.data?.mission?.id`
+        // the `MissionActionPayload` type, so `result.data?.data?.mission?.id`
         // (the pre-helper two-level indirection) collapses to
         // `result.data?.mission?.id` (one level). Same wire shape, same
-        // byte-level outcome on success and on error.
+        // byte-level outcome on success and on error. See JSDoc on the
+        // helper in `src/hooks/success-message-for-dispatch.ts` for the
+        // 1-level unwrap contract.
         const result = await dispatchMissionAction("dispatch", {
           name: newName,
           ...dispatchPayload({ dispatchMode: "now" }),
@@ -817,9 +819,9 @@ export function useMissionsPage() {
         if (result.ok) {
           const body = result.data;
           await fetchData();
-          if (body?.data?.mission?.id) {
-            setExpandedId(body.data.mission.id);
-            void fetchDetail(body.data.mission.id);
+          if (body?.mission?.id) {
+            setExpandedId(body.mission.id);
+            void fetchDetail(body.mission.id);
           }
         }
         return;
@@ -829,9 +831,11 @@ export function useMissionsPage() {
 
       // The route returns `{ data: { mission: { id } } }` (envelope).
       // The `dispatchMissionAction` helper unwraps the inner envelope via
-      // the `MissionActionResponse` type, so `data.data?.mission?.id` (the
+      // the `MissionActionPayload` type, so `data.data?.mission?.id` (the
       // pre-helper two-level indirection) collapses to `data?.mission?.id`
-      // (one level). Same wire shape, same byte-level outcome.
+      // (one level). Same wire shape, same byte-level outcome. See JSDoc
+      // on the helper in `src/hooks/success-message-for-dispatch.ts` for
+      // the 1-level unwrap contract.
       const { ok, error, data } = await dispatchMissionAction("dispatch", {
         name: newName,
         ...dispatchPayload({
@@ -852,9 +856,9 @@ export function useMissionsPage() {
         } else if (newDispatch === "now") {
           const body = data;
           await fetchData();
-          if (body?.data?.mission?.id) {
-            setExpandedId(body.data.mission.id);
-            void fetchDetail(body.data.mission.id);
+          if (body?.mission?.id) {
+            setExpandedId(body.mission.id);
+            void fetchDetail(body.mission.id);
           }
         } else {
           await fetchData();
