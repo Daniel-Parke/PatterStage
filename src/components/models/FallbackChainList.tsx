@@ -5,11 +5,11 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { ChevronUp, ChevronDown, Plus, Edit3, Trash2 } from "lucide-react";
+import { ChevronUp, ChevronDown, Plus, Edit3 } from "lucide-react";
 import type { FallbackChainEntry } from "@/types/hermes";
 import GlowSurface from "@/components/ui/GlowSurface";
 import { InlineToggle } from "@/components/ui/Input";
-import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
+import PerRowDeleteButton from "@/components/models/PerRowDeleteButton";
 
 interface FallbackChainListProps {
   chain: FallbackChainEntry[];
@@ -35,19 +35,13 @@ interface FallbackRowProps {
 }
 
 /**
- * One row in the fallback chain. Owns its own per-row two-step
- * confirm state (via `useTwoStepConfirm` with the per-key variant)
- * so the delete button can be armed and confirmed independently
- * for each row, with auto-dismiss so a stale "armed" state from
- * one row can't accidentally fire when the user clicks a different
- * row's delete button minutes later.
- *
- * Replaces the pre-refactor `handleDeleteClick` inline
- * `window.confirm` call, which had no per-row context and broke
- * the project's two-step-confirm convention (see
- * `tests/unit/window-confirm-source-patterns.test.ts`). Sister to
- * the per-row delete confirm in `ModelsTableSection.tsx` and the
- * per-agent restore confirm in `/config/seed/page.tsx`.
+ * One row in the fallback chain. The delete button is delegated to
+ * `PerRowDeleteButton` (a shared, per-row arm-confirm component that
+ * also serves `ModelRow` in `ModelsTableSection`) so the armed-state
+ * styling + aria-label shape stays in lockstep across the two
+ * list-style tables. The per-row `useTwoStepConfirm` instance lives
+ * inside the button, so each row owns its own armed state — a stale
+ * arm on one row cannot fire on another.
  */
 function FallbackRow({
   entry,
@@ -59,18 +53,6 @@ function FallbackRow({
   onDelete,
   onEdit,
 }: FallbackRowProps) {
-  const deleteConfirm = useTwoStepConfirm({ autoDismissMs: 4000 });
-
-  const handleDeleteClick = () => {
-    if (deleteConfirm.isArmedFor(entry.id)) {
-      void deleteConfirm.confirm(() => onDelete(entry.id));
-    } else {
-      deleteConfirm.arm(entry.id);
-    }
-  };
-
-  const isArmed = deleteConfirm.isArmedFor(entry.id);
-
   return (
     <tr
       key={entry.id}
@@ -128,26 +110,14 @@ function FallbackRow({
           >
             <Edit3 className="w-3.5 h-3.5" />
           </button>
-          {/* Delete — armed state mirrors the per-agent restore
-              pattern in /config/seed/page.tsx */}
-          <button
-            type="button"
-            onClick={handleDeleteClick}
+          {/* Delete — armed state mirrors the per-row delete pattern
+              in ModelsTableSection (now shared via PerRowDeleteButton) */}
+          <PerRowDeleteButton
+            rowId={entry.id}
+            rowName={entry.modelName}
+            onDelete={() => onDelete(entry.id)}
             disabled={disabled}
-            aria-label={
-              isArmed
-                ? `Click again to confirm removing ${entry.modelName}`
-                : `Delete ${entry.modelName}`
-            }
-            title={isArmed ? "Click again to confirm" : "Delete"}
-            className={`p-1 rounded transition-colors disabled:opacity-50 ${
-              isArmed
-                ? "text-red-300 bg-red-500/20 ring-1 ring-red-500/40"
-                : "text-white/30 hover:text-red-400 hover:bg-red-500/10"
-            }`}
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          />
         </div>
       </td>
     </tr>

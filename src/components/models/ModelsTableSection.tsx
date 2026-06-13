@@ -1,15 +1,15 @@
 "use client";
 
-import { Database, Edit3, Plus, Trash2 } from "lucide-react";
+import { Database, Edit3, Plus } from "lucide-react";
 
 import Button from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/LoadingSpinner";
 import GlowSurface from "@/components/ui/GlowSurface";
 import ModelSyncButtons from "@/components/models/ModelSyncButtons";
+import PerRowDeleteButton from "@/components/models/PerRowDeleteButton";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import { TASK_TYPES, type TaskType } from "@/lib/hermes-providers";
 import type { SyncActionResult } from "@/lib/sync-manager";
-import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 
 import { type ApiModel, toModelEditorRecord } from "./types";
 
@@ -47,19 +47,13 @@ interface ModelRowProps {
 }
 
 /**
- * One row in the models table. Owns its own per-row two-step confirm
- * state (via `useTwoStepConfirm` with the per-key variant) so the
- * delete button can be armed and confirmed independently for each
- * row, with auto-dismiss so a stale "armed" state from one row
- * can't accidentally fire when the user clicks a different row's
- * delete button minutes later.
- *
- * Replaces the pre-refactor single global `window.confirm` guard
- * in `useModelsPage.handleDelete` (which had no per-row context
- * — the prompt was a single dialog, not tied to the row that
- * armed it). The per-row variant matches the pattern established
- * in `/config/seed/page.tsx` `agentRestore` (session 138) and the
- * dashboard's per-mission `useTwoStepConfirm` instance.
+ * One row in the models table. The delete button is delegated to
+ * `PerRowDeleteButton` (a shared, per-row arm-confirm component
+ * that also serves `FallbackRow` in `FallbackChainList`) so the
+ * armed-state styling + aria-label shape stays in lockstep across
+ * the two list-style tables. The per-row `useTwoStepConfirm`
+ * instance lives inside the button, so each row owns its own
+ * armed state — a stale arm on one row cannot fire on another.
  */
 function ModelRow({
   model,
@@ -70,18 +64,6 @@ function ModelRow({
   onPush,
   onPull,
 }: ModelRowProps) {
-  const deleteConfirm = useTwoStepConfirm({ autoDismissMs: 4000 });
-
-  const handleDeleteClick = () => {
-    if (deleteConfirm.isArmedFor(model.id)) {
-      void deleteConfirm.confirm(() => onDelete(model));
-    } else {
-      deleteConfirm.arm(model.id);
-    }
-  };
-
-  const isArmed = deleteConfirm.isArmedFor(model.id);
-
   return (
     <tr
       data-row-id={model.id}
@@ -130,23 +112,12 @@ function ModelRow({
             <Edit3 className="w-3.5 h-3.5" />
           </button>
 
-          <button
-            type="button"
-            onClick={handleDeleteClick}
-            className={`p-1.5 rounded-lg transition-colors ${
-              isArmed
-                ? "text-red-300 bg-red-500/20 ring-1 ring-red-500/40"
-                : "text-white/30 hover:text-red-400 hover:bg-red-500/10"
-            }`}
-            aria-label={
-              isArmed
-                ? `Click again to confirm deleting ${model.name}`
-                : `Delete ${model.name}`
-            }
-            title={isArmed ? "Click again to confirm" : "Delete"}
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          <PerRowDeleteButton
+            rowId={model.id}
+            rowName={model.name}
+            onDelete={() => onDelete(model)}
+            disabled={busyTaskType !== null}
+          />
         </div>
       </td>
     </tr>

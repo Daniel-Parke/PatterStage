@@ -257,27 +257,61 @@ describe("window.confirm → useTwoStepConfirm migration (List 4 surface)", () =
     expect(count('throw new Error("window.confirm is banned");')).toBe(0);
   });
 
-  it("replaces the global `window.confirm` with per-row `useTwoStepConfirm` in the Models table + FallbackChainList", () => {
-    // The Models page hook + the 2 List 4 leaf components must
-    // use the in-page two-step pattern from
-    // `src/hooks/useTwoStepConfirm.ts`. This is a positive-shape
-    // assertion: the scanner above catches a regression (someone
-    // re-introducing `window.confirm`), this test pins the
-    // post-migration pattern (someone removing the per-row
-    // confirm). Both directions are needed for a complete audit.
-    const expectedImporters = [
+  it("delivers the per-row two-step arm-confirm via the shared PerRowDeleteButton component", () => {
+    // The Models page row + the FallbackChainList row both render
+    // a per-row two-step confirm button. The pre-extraction shape
+    // had each row component import `useTwoStepConfirm` directly
+    // and inline the arm-confirm logic + styled button (duplicated
+    // in two places). The post-extraction shape (List 4 session)
+    // moves both to the shared `PerRowDeleteButton` component:
+    //
+    //   1. The shared component is the canonical home of the
+    //      `useTwoStepConfirm({ autoDismissMs: 4000 })` instance.
+    //   2. Both row components import the shared component instead
+    //      of the hook directly.
+    //   3. Neither row component instantiates the hook locally.
+    //
+    // The scanner above catches a regression (someone re-introducing
+    // `window.confirm`), this test pins the post-extraction pattern
+    // (someone removing the per-row confirm OR inlining it back into
+    // the row components instead of the shared component). Both
+    // directions are needed for a complete audit.
+    const sharedPath = join(
+      REPO_ROOT,
+      "src",
+      "components",
+      "models",
+      "PerRowDeleteButton.tsx",
+    );
+    const sharedText = readFileSync(sharedPath, "utf-8");
+    // 1. The shared component owns the per-row hook instance.
+    expect(sharedText).toMatch(
+      /import\s*\{[^}]*\buseTwoStepConfirm\b[^}]*\}\s*from\s*["']@\/hooks\/useTwoStepConfirm["']/,
+    );
+    expect(sharedText).toMatch(
+      /useTwoStepConfirm\s*\(\s*\{\s*autoDismissMs\s*:\s*4000\s*\}\s*\)/,
+    );
+
+    // 2. Both row components import the shared component (not the hook).
+    const rowImporters = [
       join(REPO_ROOT, "src", "components", "models", "ModelsTableSection.tsx"),
       join(REPO_ROOT, "src", "components", "models", "FallbackChainList.tsx"),
     ];
-    for (const file of expectedImporters) {
+    for (const file of rowImporters) {
       const text = readFileSync(file, "utf-8");
-      // The hook must be imported AND instantiated with a
-      // per-key (modelId / entryId) shape. A bare import with no
-      // call site would be a regression of the same flavour
-      // (the per-row confirm got removed but the import
-      // wasn't cleaned up).
-      expect(text).toMatch(/import\s*\{[^}]*\buseTwoStepConfirm\b[^}]*\}\s*from\s*["']@\/hooks\/useTwoStepConfirm["']/);
-      expect(text).toMatch(/useTwoStepConfirm\s*\(\s*\{\s*autoDismissMs\s*:\s*4000\s*\}\s*\)/);
+      expect(text).toMatch(
+        /import\s+PerRowDeleteButton\s+from\s+["']@\/components\/models\/PerRowDeleteButton["']/,
+      );
+    }
+
+    // 3. Neither row component instantiates the hook locally (a
+    //    regression of the inlined form would re-add the import +
+    //    call, breaking the shared-component contract).
+    for (const file of rowImporters) {
+      const text = readFileSync(file, "utf-8");
+      expect(text).not.toMatch(
+        /import\s*\{[^}]*\buseTwoStepConfirm\b[^}]*\}\s*from\s*["']@\/hooks\/useTwoStepConfirm["']/,
+      );
     }
   });
 });

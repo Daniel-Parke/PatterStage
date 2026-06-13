@@ -8,8 +8,9 @@
 
 "use client";
 
-import { ChevronDown, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 import GlowSurface from "@/components/ui/GlowSurface";
+import ModelSelectDropdown from "@/components/models/ModelSelectDropdown";
 
 import {
   AUXILIARY_TASK_TYPES,
@@ -156,26 +157,17 @@ export default function DefaultsGrid({
             </div>
 
             <div className="relative">
-              <select
-                aria-label={`Default model for ${meta.label}`}
+              <ModelSelectDropdown
+                ariaLabel={`Default model for ${meta.label}`}
                 value={selected ?? ""}
                 disabled={isBusy}
-                onChange={(e) => {
-                  const value = e.target.value;
+                tone="card"
+                placeholder="— none —"
+                options={models}
+                onChange={(value) => {
                   void onChange(slot, value === "" ? null : value);
                 }}
-                className="w-full h-9 min-h-9 bg-dark-900/50 border border-white/10 rounded-lg px-3 pr-8 text-sm text-white outline-none transition-colors font-mono appearance-none cursor-pointer focus:border-neon-purple/50 disabled:opacity-50 truncate"
-              >
-                <option value="" className="bg-dark-900">
-                  — none —
-                </option>
-                {models.map((m) => (
-                  <option key={m.id} value={m.id} className="bg-dark-900">
-                    {m.name} ({m.provider}/{m.modelId})
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+              />
             </div>
           </GlowSurface>
         );
