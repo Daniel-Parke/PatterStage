@@ -11,6 +11,38 @@ export type ManagedFileKey =
   | "config"
   | "hermes";
 
+/**
+ * Runtime predicate for the managed-file key set.
+ *
+ * The set is intentionally not derived from `getBehaviorFiles()`
+ * (which has 7 keys including `env`) because `env` is a
+ * security-sensitive excluded case — the .env file is read-only
+ * via the masked-value renderer in
+ * `src/app/config/[section]/page.tsx` and never written through
+ * the managed-files SQLite table. The 6 keys here are the
+ * behavior-file keys that the agent-file-store can read+write
+ * via the `readManagedFileContent` / `writeManagedFileContent`
+ * helpers; `env` (and any future security-sensitive addition)
+ * stays out of the set.
+ *
+ * Exported for use at the API-route boundary (e.g.
+ * `if (isManagedKey(key))` in `/api/agent/files/[key]/route.ts`)
+ * so the route file no longer needs to redeclare the
+ * `new Set<string>([...])` literal — the type-narrowing to
+ * `ManagedFileKey` is preserved by the explicit `as ManagedFileKey`
+ * casts at the read/write call sites.
+ */
+export function isManagedKey(key: string): key is ManagedFileKey {
+  return (
+    key === "soul" ||
+    key === "agent" ||
+    key === "user" ||
+    key === "memory" ||
+    key === "config" ||
+    key === "hermes"
+  );
+}
+
 export function readManagedFileContent(
   profileSlug: string,
   key: ManagedFileKey,

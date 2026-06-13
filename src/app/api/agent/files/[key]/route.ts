@@ -14,6 +14,7 @@ import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
 import { getProfile } from "@/lib/profiles-repository";
 import {
+  isManagedKey,
   readManagedFileContent,
   writeManagedFileContent,
   type ManagedFileKey,
@@ -29,8 +30,6 @@ import {
   serializeJsonToolsets,
 } from "@/lib/profile-config-builder";
 import { normalizePlatformToolsets } from "@/lib/hermes-toolset-normalize";
-
-const MANAGED_KEYS = new Set<string>(["soul", "agent", "user", "memory", "config", "hermes"]);
 
 type FileResponseVariant = {
   content: string;
@@ -137,7 +136,7 @@ export async function GET(
     const prof = resolveSafeProfileName(profile);
     const profileSlug = prof.ok ? prof.profile : "default";
 
-    if (MANAGED_KEYS.has(key)) {
+    if (isManagedKey(key)) {
       const stored = readManagedFileContent(profileSlug, key as ManagedFileKey);
       if (stored) {
         return ok(
@@ -215,7 +214,7 @@ export async function PUT(
     const prof = resolveSafeProfileName(profile);
     const profileSlug = prof.ok ? prof.profile : "default";
 
-    if (profileSlug !== "default" && !getProfile(profileSlug) && MANAGED_KEYS.has(key)) {
+    if (profileSlug !== "default" && !getProfile(profileSlug) && isManagedKey(key)) {
       return notFound("Profile not found");
     }
 
@@ -235,7 +234,7 @@ export async function PUT(
       }
     }
 
-    if (MANAGED_KEYS.has(key)) {
+    if (isManagedKey(key)) {
       if (key === "config") {
         const cols = configYamlToColumnValues(content);
         const platformToolsetsJson = serializeJsonToolsets(
