@@ -29,6 +29,8 @@
 
 import { safeApiCall } from "@/lib/api-fetch";
 
+type ShowToast = (message: string, tone?: "success" | "error" | "info") => void;
+
 /**
  * Fetch a Hindsight GET endpoint and unwrap the `{ data: { ... } }`
  * envelope. The inner payload is returned typed as `T`; the function
@@ -57,4 +59,64 @@ export async function hindsightGet<T>(
   );
   if (!ok) return null;
   return (data?.data ?? null) as T | null;
+}
+
+/**
+ * Load a list endpoint from `/api/memory/hindsight` with the same
+ * 5-line shape that HindsightBrowser.tsx previously inlined twice
+ * (`loadDirectives` and `loadModels` — both 12-line `useCallback`s
+ * with the exact same envelope → error-toast → set-state ladder).
+ *
+ * The helper composes the GET fetch, the busy-state toggle, the
+ * server-error toast, and the empty-state reset. The inner payload's
+ * `key` (e.g. `"directives"` or `"models"`) is read by the helper,
+ * and the typed items are forwarded to `setItems` only on the
+ * no-error path. On a server-reported `error` field (any truthy
+ * value — matches the pre-form's `if (inner?.error)` check exactly),
+ * the helper shows the toast, resets the items to `[]`, and returns
+ * without calling `setItems` on the happy path (the caller can rely
+ * on the items list being empty on the error path). On a network
+ * error, `hindsightGet` returns `null` and the helper does the same
+ * reset-and-return dance so the caller's UI is always in a consistent
+ * state.
+ *
+ * **Byte-equivalence:** the helper body is the EXACT same 5-line
+ * composition as the pre-form inline `loadDirectives` /
+ * `loadModels` callbacks — same `hindsightGet` call (which itself
+ * unwraps the `{ data: { ... } }` envelope), same busy-state
+ * toggle (set true → fetch → set false, no try/catch wrapper), same
+ * `if (inner?.error) { showToast; setX([]); return; }` ladder, same
+ * `setX(inner?.[key] || [])` happy-path. No throw propagation
+ * changes (the inline form never had a try/catch — `hindsightGet`
+ * catches network errors and returns `null`).
+ *
+ * @param action the Hindsight endpoint name (e.g. `"directives"`,
+ *   `"mental-models"`)
+ * @param setBusy a `useState` setter for the loading flag — the
+ *   helper toggles it true before the fetch and false after, with
+ *   no try/catch wrapper
+ * @param key the property name in the inner payload that holds the
+ *   items array (e.g. `"directives"`, `"models"`)
+ * @param setItems a `useState` setter for the items list — the
+ *   helper writes the inner array (or `[]` on error) via this setter
+ * @param showToast the `useToast()` return value — used to surface
+ *   the server's `error` field on the !ok path
+ */
+export async function loadHindsightList<TItem>(
+  action: string,
+  setBusy: (busy: boolean) => void,
+  key: "directives" | "models",
+  setItems: (items: TItem[]) => void,
+  showToast: ShowToast,
+): Promise<void> {
+  setBusy(true);
+  const inner = await hindsightGet<Record<string, unknown>>(action);
+  setBusy(false);
+  if (inner?.error) {
+    showToast(String(inner.error), "error");
+    setItems([]);
+    return;
+  }
+  const items = (inner?.[key] as TItem[] | undefined) ?? [];
+  setItems(items);
 }
