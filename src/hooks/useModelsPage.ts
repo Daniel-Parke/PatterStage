@@ -123,11 +123,24 @@ export function useModelsPage() {
   }, [loadAll]);
 
   /**
-   * Shared helper for the four fallback-chain CRUD handlers (reorder, toggle,
-   * delete, add-from-registry, add-custom). They all do the same thing:
-   * call the API, refetch, toast success; on failure, toast the error.
-   * Edit + config flows have side-effects (closing the modal, optimistic UI)
-   * that don't fit this pattern — those stay as bespoke handlers.
+   * Shared helper for the fallback-chain CRUD handlers (reorder, toggle,
+   * delete, add-from-registry, add-custom, import-from-config). They all
+   * do the same thing: optionally mark a busy state, call the API, refetch,
+   * toast success; on failure, toast the error and still clear the busy
+   * state. Edit + config flows have side-effects (closing the modal,
+   * optimistic UI, debounced save) that don't fit this pattern — those
+   * stay as bespoke handlers.
+   *
+   * The optional `setBusy` parameter mirrors the same pattern that
+   * `runSyncAction` (in `@/lib/operation-sync-action.ts`) uses for the
+   * operations pages: the helper calls `setBusy(true)` at the start of
+   * the mutation and `setBusy(false)` in a `finally` block, so callers
+   * that need a spinner (e.g. `handleImportFallbackFromConfig` setting
+   * `importingFallback` for the "Import" button) get the lifecycle
+   * without duplicating the try/catch/finally boilerplate. Callers that
+   * don't need a spinner (the 5 fallback-chain CRUD handlers) simply
+   * omit the param; the default is a no-op, so their behaviour is
+   * unchanged.
    */
   const runFallbackMutation = useCallback(
     async (
@@ -135,13 +148,18 @@ export function useModelsPage() {
       errorFallback: string,
       url: string,
       init: { method: "POST" | "PUT" | "DELETE"; body?: string },
+      setBusy?: (busy: boolean) => void,
     ): Promise<void> => {
+      const setBusyFn = setBusy ?? (() => undefined);
+      setBusyFn(true);
       try {
         await apiFetch(url, init);
         await loadAll();
         showToast(successMessage, "success");
       } catch (err) {
         toastError(showToast, err, errorFallback);
+      } finally {
+        setBusyFn(false);
       }
     },
     [loadAll, showToast]
@@ -412,21 +430,36 @@ export function useModelsPage() {
   );
 
   // ── handleImportFallbackFromConfig ───────────────────────────────
-
-  const handleImportFallbackFromConfig = useCallback(async () => {
-    setImportingFallback(true);
-    try {
-      await apiFetch("/api/models/fallbacks/import", {
-        method: "POST",
-      });
-      await loadAll();
-      showToast("Fallback config imported from Hermes", "success");
-    } catch (err) {
-      toastError(showToast, err, "Import failed");
-    } finally {
-      setImportingFallback(false);
-    }
-  }, [loadAll, showToast]);
+  //
+  // Migrated to `runFallbackMutation` (which gained an optional
+  // `setBusy` parameter to absorb the importing-fallback busy state).
+  // Pre-refactor: 14 lines of inline `try { apiFetch + loadAll +
+  // showToast } catch { toastError } finally { setImportingFallback
+  // (false) }`. Post-refactor: a single 5-line `runFallbackMutation`
+  // call. The order of operations is byte-equivalent:
+  //   1. `setImportingFallback(true)` (via the setBusy param)
+  //   2. `await apiFetch("/api/models/fallbacks/import", { method: "POST" })`
+  //   3. `await loadAll()` (re-fetch the chain + config + drift)
+  //   4. `showToast("Fallback config imported from Hermes", "success")`
+  //   5. `setImportingFallback(false)` (via the setBusy param, in
+  //      a `finally` block — fires on both success and failure paths)
+  // The error path's `toastError(showToast, err, "Import failed")` is
+  // preserved (the helper's `errorFallback` parameter is wired to it).
+  // `importingFallback` remains in the hook's public return surface
+  // (read by `ModelsFallbackSection.tsx` for the Import button's
+  // busy state) — only the `setImportingFallback(true/false)` call
+  // sites moved into the helper via the `setBusy` adapter.
+  const handleImportFallbackFromConfig = useCallback(
+    () =>
+      runFallbackMutation(
+        "Fallback config imported from Hermes",
+        "Import failed",
+        "/api/models/fallbacks/import",
+        { method: "POST" },
+        setImportingFallback,
+      ),
+    [runFallbackMutation],
+  );
 
   const persistFallbackConfigNow = useCallback(
     async (config: FallbackConfig): Promise<boolean> => {
