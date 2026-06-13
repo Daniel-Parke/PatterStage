@@ -107,19 +107,16 @@ describe("openDispatchPanel open-callback sibling (dashboard page)", () => {
 
   it("preserves the toggle form on the dispatch header (close is a toggle)", () => {
     // The Mission Dispatch header's `onClick` is a toggle
-    // (`!dispatchExpanded`), which reads the current value and so
-    // cannot be a stable useCallback. The session 118 refactor
-    // intentionally left this inline because the dashboard has no
-    // separate "close" callback for the dispatch panel (the close
-    // direction IS the toggle). The open/close sibling pattern only
-    // applies when there are 2 distinct setters (one `setX(true)`, one
-    // `setX(false)`). When the close direction is a toggle, the
-    // single named open callback is the only one that benefits from
-    // extraction. This test pins the toggle form as still present so
-    // a future refactor doesn't accidentally migrate the header to
-    // `openDispatchPanel` (which would break the close direction).
-    expect(pageSource).toMatch(
-      /onClick=\{\(\)\s*=>\s*setDispatchExpanded\(!dispatchExpanded\)\}/,
-    );
+    // (`!dispatchExpanded`). Pre-session-200 (this session's
+    // uncommitted work) the toggle was inline
+    // `() => setDispatchExpanded(!dispatchExpanded)`; the session 200
+    // refactor promoted it to a named `toggleDispatchPanel`
+    // useCallback sibling that lists `dispatchExpanded` in its deps
+    // array. The test now pins the named-toggle form instead of the
+    // inline form — byte-equivalent at runtime (the toggle reads
+    // the current `dispatchExpanded` value and flips it), but the
+    // named callback is the canonical shape (session 191 sibling
+    // pattern: `toggleActiveCollapsed` / `toggleInactiveCollapsed`).
+    expect(pageSource).toMatch(/onClick=\{toggleDispatchPanel\}/);
   });
 });
