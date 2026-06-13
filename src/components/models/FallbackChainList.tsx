@@ -4,11 +4,12 @@
 
 "use client";
 
-import { useState } from "react";
-import { ChevronUp, ChevronDown, Plus, Edit3, Trash2 } from "lucide-react";
+import { useCallback, useState } from "react";
+import { ChevronUp, ChevronDown, Plus, Edit3 } from "lucide-react";
 import type { FallbackChainEntry } from "@/types/hermes";
 import GlowSurface from "@/components/ui/GlowSurface";
 import { InlineToggle } from "@/components/ui/Input";
+import PerRowDeleteButton from "@/components/models/PerRowDeleteButton";
 
 interface FallbackChainListProps {
   chain: FallbackChainEntry[];
@@ -20,6 +21,107 @@ interface FallbackChainListProps {
   onAddFromRegistry: (modelId: string) => void;
   onAddCustom: (modelId: string, provider: string, modelIdString: string, baseUrl?: string) => void;
   disabled?: boolean;
+}
+
+interface FallbackRowProps {
+  entry: FallbackChainEntry;
+  position: number;
+  total: number;
+  disabled: boolean;
+  onReorder: (entryId: string, direction: "up" | "down") => void;
+  onToggle: (entryId: string, enabled: boolean) => void;
+  onDelete: (entryId: string) => void;
+  onEdit: (entry: FallbackChainEntry) => void;
+}
+
+/**
+ * One row in the fallback chain. The delete button is delegated to
+ * `PerRowDeleteButton` (a shared, per-row arm-confirm component that
+ * also serves `ModelRow` in `ModelsTableSection`) so the armed-state
+ * styling + aria-label shape stays in lockstep across the two
+ * list-style tables. The per-row `useTwoStepConfirm` instance lives
+ * inside the button, so each row owns its own armed state — a stale
+ * arm on one row cannot fire on another.
+ */
+function FallbackRow({
+  entry,
+  position,
+  total,
+  disabled,
+  onReorder,
+  onToggle,
+  onDelete,
+  onEdit,
+}: FallbackRowProps) {
+  return (
+    <tr
+      key={entry.id}
+      className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"
+    >
+      <td className="px-3 py-2">
+        <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-mono bg-white/10 text-white/50 rounded">
+          {position + 1}
+        </span>
+      </td>
+      <td className="px-3 py-2">
+        <div className="font-mono text-white truncate max-w-[200px]">
+          {entry.modelName}
+        </div>
+        <div className="text-[10px] font-mono text-white/30 truncate max-w-[200px]">
+          {entry.provider} / {entry.modelIdString}
+        </div>
+      </td>
+      <td className="px-3 py-2 text-center">
+        <InlineToggle
+          value={entry.enabled}
+          onChange={(enabled) => onToggle(entry.id, enabled)}
+          disabled={disabled}
+          color="purple"
+        />
+      </td>
+      <td className="px-3 py-2">
+        <div className="flex items-center justify-end gap-1">
+          {/* Reorder buttons */}
+          <button
+            type="button"
+            onClick={() => onReorder(entry.id, "up")}
+            disabled={disabled || position === 0}
+            title="Move up"
+            className="p-1 rounded text-white/30 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <ChevronUp className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onReorder(entry.id, "down")}
+            disabled={disabled || position === total - 1}
+            title="Move down"
+            className="p-1 rounded text-white/30 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <ChevronDown className="w-3.5 h-3.5" />
+          </button>
+          {/* Edit */}
+          <button
+            type="button"
+            onClick={() => onEdit(entry)}
+            disabled={disabled}
+            title="Edit"
+            className="p-1 rounded text-white/30 hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-50"
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+          </button>
+          {/* Delete — armed state mirrors the per-row delete pattern
+              in ModelsTableSection (now shared via PerRowDeleteButton) */}
+          <PerRowDeleteButton
+            rowId={entry.id}
+            rowName={entry.modelName}
+            onDelete={() => onDelete(entry.id)}
+            disabled={disabled}
+          />
+        </div>
+      </td>
+    </tr>
+  );
 }
 
 interface AddCustomFormProps {
@@ -131,10 +233,17 @@ export default function FallbackChainList({
   const [showRegistryDropdown, setShowRegistryDropdown] = useState(false);
   const [showAddCustom, setShowAddCustom] = useState(false);
 
-  const handleDeleteClick = (id: string) => {
-    if (!confirm("Remove this fallback model?")) return;
-    onDelete(id);
-  };
+  // closeAddCustom — single-setter close-callback for the inline
+  // AddCustomForm. Sister to the close-callbacks extracted in
+  // /config/models/page.tsx + ModelSyncButtons.tsx (session 196) —
+  // same useState-setter stability rationale. The 2 call sites
+  // today are the Cancel button onClick and the post-onConfirm
+  // `setShowAddCustom(false)` bare statement. Extracting keeps
+  // them in lockstep if a future "reset the form fields on close"
+  // or "fire an analytics event" extension lands. The
+  // `setShowRegistryDropdown((v) => !v)` toggle is a different
+  // shape (toggle, not close) and stays inline.
+  const closeAddCustom = useCallback(() => setShowAddCustom(false), []);
 
   const handleAddFromRegistry = (modelId: string) => {
     onAddFromRegistry(modelId);
@@ -164,75 +273,17 @@ export default function FallbackChainList({
             </thead>
             <tbody>
               {sortedChain.map((entry, index) => (
-                <tr
+                <FallbackRow
                   key={entry.id}
-                  className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"
-                >
-                  <td className="px-3 py-2">
-                    <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-mono bg-white/10 text-white/50 rounded">
-                      {index + 1}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="font-mono text-white truncate max-w-[200px]">
-                      {entry.modelName}
-                    </div>
-                    <div className="text-[10px] font-mono text-white/30 truncate max-w-[200px]">
-                      {entry.provider} / {entry.modelIdString}
-                    </div>
-                  </td>
-                  <td className="px-3 py-2 text-center">
-                    <InlineToggle
-                      value={entry.enabled}
-                      onChange={(enabled) => onToggle(entry.id, enabled)}
-                      disabled={disabled}
-                      color="purple"
-                    />
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="flex items-center justify-end gap-1">
-                      {/* Reorder buttons */}
-                      <button
-                        type="button"
-                        onClick={() => onReorder(entry.id, "up")}
-                        disabled={disabled || index === 0}
-                        title="Move up"
-                        className="p-1 rounded text-white/30 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                      >
-                        <ChevronUp className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onReorder(entry.id, "down")}
-                        disabled={disabled || index === sortedChain.length - 1}
-                        title="Move down"
-                        className="p-1 rounded text-white/30 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                      >
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      </button>
-                      {/* Edit */}
-                      <button
-                        type="button"
-                        onClick={() => onEdit(entry)}
-                        disabled={disabled}
-                        title="Edit"
-                        className="p-1 rounded text-white/30 hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-50"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
-                      {/* Delete */}
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteClick(entry.id)}
-                        disabled={disabled}
-                        title="Delete"
-                        className="p-1 rounded text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                  entry={entry}
+                  position={index}
+                  total={sortedChain.length}
+                  disabled={disabled}
+                  onReorder={onReorder}
+                  onToggle={onToggle}
+                  onDelete={onDelete}
+                  onEdit={onEdit}
+                />
               ))}
             </tbody>
           </table>
@@ -244,9 +295,9 @@ export default function FallbackChainList({
         <AddCustomForm
           onConfirm={(name, provider, modelIdString, baseUrl) => {
             void onAddCustom(name, provider, modelIdString, baseUrl);
-            setShowAddCustom(false);
+            closeAddCustom();
           }}
-          onCancel={() => setShowAddCustom(false)}
+          onCancel={closeAddCustom}
         />
       )}
 

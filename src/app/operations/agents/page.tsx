@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Users, FileText, Save, RotateCcw, Eye, EyeOff,
   Check, AlertCircle, Plus, Trash2,
@@ -53,38 +53,59 @@ export default function BehaviourPage() {
   const [deleting, setDeleting] = useState(false);
   const [syncBusy, setSyncBusy] = useState(false);
 
+  // saveResetTimerRef — handleSave's "auto-clear the saved status
+  // after 2s" setTimeout could fire on an unmounted component if
+  // the user navigates away during the 2-second window. The pre-
+  // fix form was:
+  //   setTimeout(() => setSaveStatus("idle"), 2000);
+  // with no cleanup. Fix: keep a ref to the timer handle + clear
+  // it on unmount + clear any in-flight timer at the start of a
+  // new save (so back-to-back saves don't double-fire and leave
+  // the user with a stale "saved" state).
+  const saveResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (saveResetTimerRef.current) {
+        clearTimeout(saveResetTimerRef.current);
+        saveResetTimerRef.current = null;
+      }
+    };
+  }, []);
+
   // closeDelete — the Delete Profile modal has 3 single-setter
   // close sites that all do the same thing: `() => setDeleteTarget(null)`.
   //   1. Modal `onClose` (X-button / overlay click)
   //   2. Modal Cancel button (footer)
+  //   3. handleDelete's success path (the unconditional `setDeleteTarget(null)`
+  //      that dismisses the modal after a successful delete; the
+  //      `if (selectedProfileId === target)` block in the same
+  //      `onSuccess` body additionally clears `selectedProfileId`
+  //      and `editor`, but those are conditional on the deleted
+  //      profile being the one currently being edited, so they
+  //      stay inline as direct setters)
   // Centralising into a `useCallback` with empty deps (useState
-  // setters are stable) keeps the 2 sites in lockstep. The 3rd
-  // `setDeleteTarget(null)` site in handleDelete's success path is
-  // NOT migrated — it lives next to the `if (selectedProfileId === target)`
-  // block that also clears `selectedProfileId` and `editor`. Moving
-  // it into the callback would either need to thread the target as
-  // a parameter (changing the signature to `closeDelete(target: string)`)
-  // or accept that the success path's 3-setter block stays inline. The
-  // 3-setter success block is the existing pattern in this page
-  // (handleCreate → closeCreate = 4-setter success block), and threading
-  // a target into a setter-pair callback for one extra call site is
-  // over-engineering. The 2 identical-modal-close sites get the helper.
+  // setters are stable) keeps the 3 sites in lockstep. The pre-session
+  // rationale for not migrating the 3rd site ("threading a target
+  // into a setter-pair callback is over-engineering") was over-
+  // conservative — the `closeDelete()` body is just `setDeleteTarget(null)`
+  // (no target param needed), so the 3rd site is byte-equivalent to
+  // the 2 modal-close sites. Session 183 migrated the 3rd site.
   const closeDelete = useCallback(() => setDeleteTarget(null), []);
 
   // closeEditor — the file-editor card has 3 single-setter
   // close sites that all do the same thing: `() => setEditor(null)`.
-  //   1. handleDelete's success path (line ~222) — but only when the
-  //      deleted profile was the one being edited
-  //   2. Profile-button onClick (line ~334) — when switching to a
-  //      different profile
-  //   3. Editor's "Close" button (line ~495)
+  //   1. handleDelete's success path (around line 282) — but only
+  //      when the deleted profile was the one being edited
+  //   2. Profile-button onClick (around line 404) — when switching
+  //      to a different profile
+  //   3. Editor's "Close" button (around line 567)
   // Centralising into a `useCallback` with empty deps (useState
   // setters are stable) keeps the 3 sites in lockstep. The handleDelete
-  // site is part of a 3-setter success block (`setDeleteTarget(null);
-  // setSelectedProfileId(null); setEditor(null);`), so the inline
+  // site is part of a 3-call success block (`closeDelete();
+  // setSelectedProfileId(null); closeEditor();`), so the inline
   // `setEditor(null)` becomes `closeEditor()` — but the surrounding
-  // 2 setters stay inline. This mirrors the closeDelete pattern: a
-  // pure 1-setter helper extracted, leaving the multi-setter success
+  // 2 calls stay inline. This mirrors the closeDelete pattern: a
+  // pure 1-setter helper extracted, leaving the multi-call success
   // path partially inline (which is the existing pattern in this page
   // for both `closeDelete` and the 4-setter `closeCreate` block).
   const closeEditor = useCallback(() => setEditor(null), []);
@@ -180,7 +201,7 @@ export default function BehaviourPage() {
   // both. The pattern mirrors the A3 page-local modal setter-pair
   // callbacks (session 100: `closeAgentModal` / `closeSystemModal`
   // in cron; session 98: `closeComposer` in useMissionsPage).
-  // Note: the modal's Cancel button (line 492) uses a deliberate
+  // Note: the modal's Cancel button (around line 600) uses a deliberate
   // SOFT close (1 setter, no clear) to preserve the user's in-flight
   // form input if they cancel by accident. That is a discriminated
   // pattern, not a duplicate — left inline.
@@ -193,13 +214,14 @@ export default function BehaviourPage() {
 
   // openCreate — sibling of `closeCreate` (session 116 P-7 /
   // session 118 P-7 open/close sibling pattern). The "New Profile"
-  // header button (line 310) was an inline `() => setShowCreate(true)`
-  // arrow, sitting next to the `closeCreate` callback that handles
-  // the close path. Promoting the open to a useCallback sibling
-  // names the page's intent ("open the create modal") and keeps
-  // the open/close pair symmetric so a future "reset form on open"
-  // or "track last-opened create-tab" extension lands in one place.
-  // The deps array lists the stable setter explicitly to satisfy
+  // header button (around line 364) was an inline
+  // `() => setShowCreate(true)` arrow, sitting next to the
+  // `closeCreate` callback that handles the close path. Promoting
+  // the open to a useCallback sibling names the page's intent
+  // ("open the create modal") and keeps the open/close pair
+  // symmetric so a future "reset form on open" or "track last-
+  // opened create-tab" extension lands in one place. The deps
+  // array lists the stable setter explicitly to satisfy
   // `react-hooks/exhaustive-deps` (per session 119 P-3 codebase
   // convention).
   const openCreate = useCallback(
@@ -250,7 +272,13 @@ export default function BehaviourPage() {
       successMessage: "Profile deleted",
       errorMessage: "Failed to delete profile",
       onSuccess: async () => {
-        setDeleteTarget(null);
+        // `closeDelete()` dismisses the modal (was inline
+        // `setDeleteTarget(null)`). The 2-setter conditional block
+        // below is gated on `selectedProfileId === target`, so those
+        // setters stay inline (the helper triplet pattern from
+        // session 100 doesn't apply — it's an unrelated 1-setter
+        // closure, not a discriminated close).
+        closeDelete();
         if (selectedProfileId === target) {
           setSelectedProfileId(null);
           closeEditor();
@@ -289,7 +317,18 @@ export default function BehaviourPage() {
       setEditor({ ...editor, original: editor.content });
       setSaveStatus("saved");
       showToast(`${editor.fileName} saved`, "success");
-      setTimeout(() => setSaveStatus("idle"), 2000);
+      // Clear any in-flight save-reset timer from a prior save so
+      // the new save's 2s window is the source of truth (a stale
+      // timer from a previous save could race with this one's
+      // setSaveStatus("saved") and prematurely flip the UI back
+      // to "idle" before the user reads the "Saved!" indicator).
+      if (saveResetTimerRef.current) {
+        clearTimeout(saveResetTimerRef.current);
+      }
+      saveResetTimerRef.current = setTimeout(() => {
+        saveResetTimerRef.current = null;
+        setSaveStatus("idle");
+      }, 2000);
       await loadProfiles();
     } catch (err) {
       setSaveStatus("error");

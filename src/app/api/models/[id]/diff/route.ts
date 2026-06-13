@@ -12,19 +12,13 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { maskKeyHint } from "@/lib/secret-mask";
 import { notFound, ok } from "@/lib/api-response";
+import type { ConfigModelSection } from "@/lib/hermes-import";
 import { z } from "zod";
 
 interface DiffEntry {
   id: string;
   label: string;
   detail: string;
-}
-
-interface ConfigModelSection {
-  default?: string;
-  provider?: string;
-  base_url?: string;
-  context_length?: number;
 }
 
 function readHermesModelSection(): ConfigModelSection | null {

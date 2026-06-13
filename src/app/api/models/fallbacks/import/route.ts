@@ -27,6 +27,19 @@ interface ImportPreview {
   alreadyImported: boolean;
 }
 
+/**
+ * The set of (provider, modelId) keys already in the fallback chain.
+ * Used by both GET (preview) and POST (skip-already-imported) to test
+ * membership in O(1) instead of O(N) `.find()` per chain entry. The
+ * shape is `(provider::modelId)` — see `fallbackKey()` in
+ * `src/lib/model-key.ts` for the string contract.
+ */
+function existingFallbackKeys(): Set<string> {
+  return new Set(
+    listFallbackChain().map((e) => fallbackKey(e.provider, e.modelIdString))
+  );
+}
+
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
@@ -40,10 +53,7 @@ export async function GET(request: NextRequest) {
     }
 
     const preview: ImportPreview[] = [];
-    const existingChain = listFallbackChain();
-    const existingKeys = new Set(
-      existingChain.map((e) => fallbackKey(e.provider, e.modelIdString))
-    );
+    const existingKeys = existingFallbackKeys();
 
     for (const entry of config?.fallback_providers ?? []) {
       if (!entry.provider || !entry.model) continue;
@@ -96,10 +106,7 @@ export async function POST(request: NextRequest) {
     const imported: string[] = [];
     const skipped: string[] = [];
 
-    const existingChain = listFallbackChain();
-    const existingKeys = new Set(
-      existingChain.map((e) => fallbackKey(e.provider, e.modelIdString))
-    );
+    const existingKeys = existingFallbackKeys();
 
     for (let i = 0; i < chain.length; i++) {
       const entry = chain[i];

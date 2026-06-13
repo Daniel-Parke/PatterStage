@@ -133,10 +133,6 @@ function parseCategoryIdOrError(
   return result.value;
 }
 
-/** Shared fields destructured from mission action body (dispatch/promote/update).
- *  The implementation lives in @/lib/mission-body so it can be unit-tested. */
-type _MissionBodyFields = import("@/lib/mission-body").MissionBodyFields;
-
 // ── Helpers ───────────────────────────────────────────────────────
 
 export async function GET(request: NextRequest) {

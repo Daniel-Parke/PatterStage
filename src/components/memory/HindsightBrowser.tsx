@@ -17,8 +17,8 @@ import {
 import { SearchInput } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { safeApiCall } from "@/lib/api-fetch";
-import { hindsightGet } from "@/lib/hindsight-client";
+import { hindsightGet, loadHindsightList } from "@/lib/hindsight-client";
+import { hindsightMutate } from "@/lib/hindsight-mutate";
 import { parseOptionalTagsInput, parseTagsInput } from "@/lib/hindsight-tag-input";
 import { stringOr } from "./hindsight/utils";
 import type { Tab, Memory, Directive, MentalModel, HealthState } from "./hindsight/types";
@@ -208,16 +208,18 @@ export default function HindsightBrowser() {
   // ── Directives ──────────────────────────────────────────
 
   const loadDirectives = useCallback(async () => {
-    setLoadingDirectives(true);
-    // Envelope-typed: the route returns `{ data: { directives, error } }`.
-    const inner = await hindsightGet<{ directives?: Directive[]; error?: string }>("directives");
-    setLoadingDirectives(false);
-    if (inner?.error) {
-      showToast(inner.error, "error");
-      setDirectives([]);
-      return;
-    }
-    setDirectives(inner?.directives || []);
+    // Compose the GET fetch + busy-state toggle + server-error toast
+    // + empty-state reset via the shared `loadHindsightList` helper.
+    // The 5-line pre-form body (setLoading → fetch → setLoading(false)
+    // → error-toast → setX) is now a single helper call — the helper
+    // body matches the pre-form byte-for-byte, so no runtime change.
+    await loadHindsightList<Directive>(
+      "directives",
+      setLoadingDirectives,
+      "directives",
+      setDirectives,
+      showToast,
+    );
   }, [showToast]);
 
   useEffect(() => {
@@ -245,28 +247,30 @@ export default function HindsightBrowser() {
     });
 
   const handleToggleDirective = async (directive: Directive) => {
-    const { ok, error } = await safeApiCall("/api/memory/hindsight", {
-      method: "POST",
-      body: { action: "update-directive", id: directive.id, is_active: !directive.is_active },
-    });
-    if (!ok) {
-      showToast(error ?? "Failed to update directive", "error");
-      return;
-    }
-    showToast(directive.is_active ? "Directive deactivated" : "Directive activated", "success");
+    // Dynamic success message (deactivated vs activated) — `hindsightMutate`
+    // forwards the `successMsg: () => string` thunk to `toastFromResult`
+    // unchanged, so the directive.is_active state is read at toast time,
+    // not at request time. Same semantics as the pre-form inline call.
+    const result = await hindsightMutate(
+      showToast,
+      "POST",
+      { action: "update-directive", id: directive.id, is_active: !directive.is_active },
+      () => (directive.is_active ? "Directive deactivated" : "Directive activated"),
+      "Failed to update directive",
+    );
+    if (!result.ok) return;
     await loadDirectives();
   };
 
   const handleDeleteDirective = async (id: string) => {
-    const { ok, error } = await safeApiCall("/api/memory/hindsight", {
-      method: "DELETE",
-      body: { type: "directive", id },
-    });
-    if (!ok) {
-      showToast(error ?? "Failed to delete directive", "error");
-      return;
-    }
-    showToast("Directive deleted", "success");
+    const result = await hindsightMutate(
+      showToast,
+      "DELETE",
+      { type: "directive", id },
+      "Directive deleted",
+      "Failed to delete directive",
+    );
+    if (!result.ok) return;
     setDirectives(prev => prev.filter(d => d.id !== id));
   };
 
@@ -301,16 +305,15 @@ export default function HindsightBrowser() {
   // ── Mental Models ───────────────────────────────────────
 
   const loadModels = useCallback(async () => {
-    setLoadingModels(true);
-    // Envelope-typed: the route returns `{ data: { models, error } }`.
-    const inner = await hindsightGet<{ models?: MentalModel[]; error?: string }>("mental-models");
-    setLoadingModels(false);
-    if (inner?.error) {
-      showToast(inner.error, "error");
-      setMentalModels([]);
-      return;
-    }
-    setMentalModels(inner?.models || []);
+    // Sister to `loadDirectives` above — same `loadHindsightList`
+    // helper, just with the `mental-models` action + `models` key.
+    await loadHindsightList<MentalModel>(
+      "mental-models",
+      setLoadingModels,
+      "models",
+      setMentalModels,
+      showToast,
+    );
   }, [showToast]);
 
   useEffect(() => {
@@ -338,30 +341,30 @@ export default function HindsightBrowser() {
 
   const handleRefreshModel = async (id: string) => {
     setRefreshingModelId(id);
-    const { ok, error } = await safeApiCall("/api/memory/hindsight", {
-      method: "POST",
-      body: { action: "refresh-model", id },
-    });
-    if (!ok) {
-      showToast(error ?? "Failed to refresh mental model", "error");
+    const result = await hindsightMutate(
+      showToast,
+      "POST",
+      { action: "refresh-model", id },
+      "Mental model refresh started",
+      "Failed to refresh mental model",
+    );
+    if (!result.ok) {
       setRefreshingModelId(null);
       return;
     }
-    showToast("Mental model refresh started", "success");
     await loadModels();
     setRefreshingModelId(null);
   };
 
   const handleDeleteModel = async (id: string) => {
-    const { ok, error } = await safeApiCall("/api/memory/hindsight", {
-      method: "DELETE",
-      body: { type: "model", id },
-    });
-    if (!ok) {
-      showToast(error ?? "Failed to delete mental model", "error");
-      return;
-    }
-    showToast("Mental model deleted", "success");
+    const result = await hindsightMutate(
+      showToast,
+      "DELETE",
+      { type: "model", id },
+      "Mental model deleted",
+      "Failed to delete mental model",
+    );
+    if (!result.ok) return;
     setMentalModels(prev => prev.filter(m => m.id !== id));
   };
 

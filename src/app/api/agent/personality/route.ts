@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { badRequest, ok } from "@/lib/api-response";
 import { requireAuth } from "@/lib/api-auth";
+import { badRequest, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { applyProfileOrRootPatch, assertPatchSucceeded, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatchOrFail } from "@/lib/apply-profile-or-root-patch";
 import { requireSafeProfileName } from "@/lib/path-security";
 
 export async function PUT(request: NextRequest) {
@@ -26,17 +26,18 @@ export async function PUT(request: NextRequest) {
     const prof = requireSafeProfileName(profile);
     if (prof instanceof NextResponse) return prof;
 
-    // applyProfileOrRootPatch handles default-vs-non-default dispatch,
-    // 404 on missing profile, and 500 on push failure — was previously
-    // a 16-line if/else in this handler.
-    const result = applyProfileOrRootPatch(
+    // applyProfileOrRootPatchOrFail collapses the 4-line
+    // apply+toPatchResponse+assert+return-err dance into 1 call +
+    // 1 instanceof check. Byte-equivalent to the pre-migration shape
+    // (same 404 on not-found, same 500 on push-failed, same
+    // { success: true, profile, personality } success body).
+    const result = applyProfileOrRootPatchOrFail(
       prof.profile,
       { personality },
       { personality },
+      "Failed to sync personality to Hermes",
     );
-    const err = toPatchResponse(result, "Failed to sync personality to Hermes");
-    if (err) return err;
-    assertPatchSucceeded(result);
+    if (result instanceof NextResponse) return result;
 
     return ok({ success: true, profile: result.profile, personality });
   }

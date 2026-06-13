@@ -141,22 +141,59 @@ describe("openCategoryManager open-callback sibling (missions page)", () => {
     );
   });
 
-  it("declares closeCategoryManager as a useCallback with stable-setter deps (matching sibling pattern)", () => {
-    // The sibling `closeCategoryManager` must also be a useCallback, matching
-    // the open/close pattern promoted in session 101 for `openAgentCreate` /
-    // `closeAgentModal` in cron/page.tsx. A bare `() => setShowCategoryManager(false)`
-    // arrow would still pass the open-callback test, so this test pins the
-    // close side. The deps array lists the `useState` setter (stable identity
-    // across renders) so the `react-hooks/exhaustive-deps` rule is satisfied
-    // — the callback is still effectively constant per render cycle, just
-    // expressed with the setter explicitly listed. The optional `,?\s*`
-    // before the closing `)` handles the trailing comma between the deps
-    // array and the useCallback's closing paren.
-    const match = pageSource.match(
-      /const\s+closeCategoryManager\s*=\s*useCallback\(\s*\(\s*\)\s*=>\s*setShowCategoryManager\(false\)\s*,\s*(\[[^\]]*\])\s*,?\s*\)/s,
+  it("hook declares closeCategoryManager as a useCallback that calls setShowCategoryManager(false) (sibling of openCategoryManager)", () => {
+    // The sibling `closeCategoryManager` was promoted from the page to
+    // the hook in this session (sister to the existing
+    // `openCategoryManager` callback). The test pins the same
+    // shape as the open callback: `useCallback(() => {
+    // setShowCategoryManager(false); }, [])` with `[]` deps (the
+    // setter is stable, matching the open callback's deps). The page
+    // re-exports it as `const closeCategoryManager = vm.closeCategoryManager;`
+    // so the JSX can reference it without the `vm.` indirection.
+    expect(hookSource).toMatch(
+      /const\s+closeCategoryManager\s*=\s*useCallback\(\s*\(\s*\)\s*=>\s*\{?\s*setShowCategoryManager\(false\)\s*;?\s*\}?\s*,\s*\[[^\]]*\]\s*,?\s*\)/s,
+    );
+  });
+
+  it("hook uses empty deps array for closeCategoryManager (useState setters are stable)", () => {
+    // The setter is stable across renders so `[]` is correct. The
+    // open callback uses the same shape.
+    const match = hookSource.match(
+      /const\s+closeCategoryManager\s*=\s*useCallback\(\s*\(\s*\)\s*=>\s*\{?\s*setShowCategoryManager\(false\)\s*;?\s*\}?\s*,\s*(\[[^\]]*\])\s*,?\s*\)/s,
     );
     expect(match).not.toBeNull();
-    expect(match![1].trim()).toBe("[setShowCategoryManager]");
+    expect(match![1].trim()).toBe("[]");
+  });
+
+  it("hook exposes closeCategoryManager on the returned vm object", () => {
+    // The page destructures `vm.closeCategoryManager` for the
+    // `<CategoryManagerModal>` `onClose` prop. Pin the property is
+    // present in the hook's return-statement shape.
+    expect(hookSource).toMatch(
+      /^\s*closeCategoryManager\s*,?\s*$/m,
+    );
+  });
+
+  it("page re-exports closeCategoryManager from vm (so JSX can reference it without vm. indirection)", () => {
+    // The page does `const closeCategoryManager = vm.closeCategoryManager;`
+    // to lift the helper out of the vm so the JSX in the page
+    // (specifically the `onClose={closeCategoryManager}` prop on
+    // `<CategoryManagerModal>`) doesn't have to use `vm.closeCategoryManager`.
+    // Mirrors the open-callback re-export pattern above.
+    expect(pageSource).toMatch(
+      /const\s+closeCategoryManager\s*=\s*vm\.closeCategoryManager\s*;/,
+    );
+  });
+
+  it("page does NOT have a local closeCategoryManager useCallback declaration (moved to hook)", () => {
+    // The page-local `useCallback(() => setShowCategoryManager(false), [setShowCategoryManager])`
+    // form has been replaced by `const closeCategoryManager = vm.closeCategoryManager;`.
+    // A regression that re-introduces the page-local form would
+    // shadow the hook's callback and break the symmetric open/close
+    // pair pattern.
+    expect(pageSource).not.toMatch(
+      /const\s+closeCategoryManager\s*=\s*useCallback\(\s*\(\s*\)\s*=>\s*setShowCategoryManager\(false\)/,
+    );
   });
 
   it("replaces the inline () => setShowCategoryManager(true) arrow on onManageCategories", () => {

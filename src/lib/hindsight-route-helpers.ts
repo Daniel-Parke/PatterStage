@@ -17,6 +17,7 @@
 
 import { NextResponse } from "next/server";
 import { messageFromError } from "@/lib/api-fetch";
+import { logApiError } from "@/lib/api-logger";
 import type { ApiResponse } from "@/types/hermes";
 
 /**
@@ -155,6 +156,14 @@ export async function deleteByType(
  * catch branches in this route. The GET catch branch has a different
  * body (it includes `memories: []`) and uses 503 for connection
  * errors — see the inline call in the GET handler.
+ *
+ * **Prefer `hindsightErrorFromCatch` for new sites** — this helper
+ * builds the response shape only, the caller still needs to call
+ * `logApiError(route, context, error)` separately. The combined
+ * helper composes both side effects and is the right shape for any
+ * 2-line `logApiError + return hindsightErrorResponse(error)` block
+ * (the canonical List 1 catch pattern, mirroring the session's
+ * `serverErrorFromCatch` family).
  */
 export function hindsightErrorResponse(error: unknown): NextResponse {
   const message = messageFromError(error, "Unknown error");
@@ -162,4 +171,58 @@ export function hindsightErrorResponse(error: unknown): NextResponse {
     { data: { available: false, error: message } },
     { status: 500 },
   );
+}
+
+/**
+ * Combined "log + return hindsightErrorResponse" helper for the
+ * canonical
+ *
+ *   } catch (error) {
+ *     logApiError("POST /api/memory/hindsight", "action", error);
+ *     return hindsightErrorResponse(error);
+ *   }
+ *
+ * pattern repeated at the 2 POST/DELETE catch sites in
+ * `src/app/api/memory/hindsight/route.ts`. Mirrors the
+ * `serverErrorFromCatch` shim in `src/lib/api-logger.ts` —
+ * the same byte-equivalent collapse: same log line
+ *   `[API <route>] Error <context>: <error.message>`
+ * (via `logApiError` + `messageFromError` for the empty-Error trap)
+ * and same response shape (500 + `{ data: { available: false, error: msg } }`).
+ *
+ * **Why this lives in `hindsight-route-helpers.ts`** (not
+ * `api-logger.ts`): the catch-block shim composes two existing
+ * primitives (`logApiError` from `api-logger` + `hindsightErrorResponse`
+ * from this file). The natural home is the file that owns the
+ * response-shape primitive. `api-logger.ts` is the generic catch-shim
+ * family (`serverErrorFromCatch`, `serverErrorFromError`); the
+ * hindsight-specific shim is a sister-helper that targets a different
+ * response shape (the `{ available: false, error: ... }` envelope used
+ * by the Hindsight client, not the plain `{ error: ... }` shape used
+ * by `serverError`). A generic `serverErrorFromCatch` that supports
+ * the hindsight envelope would need a `shape: "default" | "hindsight"`
+ * discriminator — clearer to keep two helper families.
+ *
+ * **Why not also use this for the GET catch branch:** the GET
+ * catch branch has a different body (it includes `memories: []`)
+ * and uses 503 for connection errors — the inline call stays
+ * inline. This helper is for the POST/DELETE catch only.
+ *
+ * @param route - API route name (e.g. "POST /api/memory/hindsight")
+ * @param context - What was being done (e.g. "action")
+ * @param error - The caught error
+ * @returns A 500 NextResponse with `{ data: { available: false, error: msg } }`
+ *
+ * @example
+ *   } catch (error) {
+ *     return hindsightErrorFromCatch("POST /api/memory/hindsight", "action", error);
+ *   }
+ */
+export function hindsightErrorFromCatch(
+  route: string,
+  context: string,
+  error: unknown,
+): NextResponse {
+  logApiError(route, context, error);
+  return hindsightErrorResponse(error);
 }

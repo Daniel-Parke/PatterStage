@@ -39,6 +39,7 @@ import CategoryCombobox, {
   type CategoryOption,
 } from "@/components/missions/CategoryCombobox";
 import LocalDirRow from "@/components/missions/LocalDirRow";
+import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { inputFieldClasses } from "@/lib/theme";
 import {
   groupTemplatesByCategory,
@@ -128,15 +129,7 @@ export interface TemplateManagerModalProps {
   templates: MissionTemplate[];
   categories: CategoryLike[];
   categoryFilter: string;
-  onEditTemplate: (
-    t: MissionTemplate & {
-      isCustom?: boolean;
-      instruction?: string;
-      context?: string;
-      dispatchMode?: string;
-      schedule?: string;
-    },
-  ) => void;
+  onEditTemplate: (t: MissionTemplate) => void;
   onDeleteTemplate: (id: string) => void;
   onCreateTemplate: () => void;
 }
@@ -193,6 +186,87 @@ export interface TemplateEditorModalProps {
   onReferenceInputChange: (v: string) => void;
   newSkills: string[];
   onNewSkillsChange: (v: string[]) => void;
+}
+
+// ── Per-Template Row (owns its own two-step delete confirm) ──
+
+/**
+ * Single template row in the manager modal. The pre-session 207
+ * form had the row rendered inline inside the `grouped.map(...)`
+ * block, with the per-row delete button calling
+ * `onDeleteTemplate(t.id)` directly. The confirm guard
+ * (`if (!confirm("Delete this template?")) return;`) lived inside
+ * the `useMissionsPage.handleDeleteTemplate` hook callback — a
+ * single global `window.confirm` dialog with no per-row context.
+ *
+ * Lifting the confirm into this leaf sub-component gives each
+ * template row its own `useTwoStepConfirm({ autoDismissMs: 4000 })`
+ * instance so a stale "armed" state from one row cannot
+ * accidentally fire when the user clicks a different row's delete
+ * button minutes later. The hook callback
+ * (`useMissionsPage.handleDeleteTemplate`) no longer needs to know
+ * about confirm-state — by the time it is called, the user has
+ * already confirmed in the leaf.
+ *
+ * Sister to the per-row `useTwoStepConfirm` in
+ * `MissionEditorPanel` (delete + cancel for the per-mission
+ * actions) and to the `PerRowDeleteButton` extracted in session
+ * 207 for the Models table + FallbackChainList.
+ */
+function TemplateRow({
+  template,
+  onEdit,
+  onDelete,
+}: {
+  template: MissionTemplate;
+  onEdit: (t: MissionTemplate) => void;
+  onDelete: (id: string) => void;
+}) {
+  const deleteConfirm = useTwoStepConfirm({ autoDismissMs: 4000 });
+  const isArmed = deleteConfirm.isArmedFor(template.id);
+  const handleDeleteClick = () => {
+    if (!isArmed) {
+      deleteConfirm.arm(template.id);
+      return;
+    }
+    void deleteConfirm.confirm(() => onDelete(template.id));
+  };
+  return (
+    <div
+      className="flex items-center justify-between p-2.5 rounded-lg border border-white/5 bg-dark-800/30 hover:border-white/10 transition-colors group"
+    >
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <div className="text-sm text-white/80 truncate">{template.name}</div>
+        {!template.isCustom && (
+          <span className="text-[9px] font-mono text-white/15 flex-shrink-0">
+            built-in
+          </span>
+        )}
+      </div>
+      {template.isCustom && (
+        <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => onEdit(template)}
+            className="p-1.5 rounded text-white/40 hover:text-neon-cyan hover:bg-cyan-500/10 transition-colors"
+            title="Edit"
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={handleDeleteClick}
+            className={`p-1.5 rounded transition-colors ${
+              isArmed
+                ? "text-neon-red bg-neon-red/15 ring-1 ring-neon-red/40"
+                : "text-white/40 hover:text-red-400 hover:bg-red-500/10"
+            }`}
+            title={isArmed ? "Click again to confirm" : "Delete"}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ── Template Manager Modal ─────────────────────────────────────
@@ -261,39 +335,12 @@ export function TemplateManagerModal({
             >
                 <div className="space-y-1.5">
                   {group.items.map((t) => (
-                    <div
+                    <TemplateRow
                       key={t.id}
-                      className="flex items-center justify-between p-2.5 rounded-lg border border-white/5 bg-dark-800/30 hover:border-white/10 transition-colors group"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                        <div className="text-sm text-white/80 truncate">
-                          {t.name}
-                        </div>
-                        {!t.isCustom && (
-                          <span className="text-[9px] font-mono text-white/15 flex-shrink-0">
-                            built-in
-                          </span>
-                        )}
-                      </div>
-                      {t.isCustom && (
-                        <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => onEditTemplate(t)}
-                            className="p-1.5 rounded text-white/40 hover:text-neon-cyan hover:bg-cyan-500/10 transition-colors"
-                            title="Edit"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => onDeleteTemplate(t.id)}
-                            className="p-1.5 rounded text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                      template={t}
+                      onEdit={onEditTemplate}
+                      onDelete={onDeleteTemplate}
+                    />
                   ))}
                 </div>
               </CategoryAccordion>

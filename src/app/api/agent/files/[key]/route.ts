@@ -14,11 +14,15 @@ import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
 import { getProfile } from "@/lib/profiles-repository";
 import {
+  isManagedKey,
   readManagedFileContent,
   writeManagedFileContent,
   type ManagedFileKey,
 } from "@/lib/agent-file-store";
-import { applyProfileOrRootPatch, assertPatchSucceeded, pushProfileOrRoot, toPatchResponse } from "@/lib/apply-profile-or-root-patch";
+import {
+  applyProfileOrRootPatchOrFail,
+  pushProfileOrRootOrFail,
+} from "@/lib/apply-profile-or-root-patch";
 import { badRequest, notFound, ok } from "@/lib/api-response";
 import {
   configYamlToColumnValues,
@@ -26,8 +30,6 @@ import {
   serializeJsonToolsets,
 } from "@/lib/profile-config-builder";
 import { normalizePlatformToolsets } from "@/lib/hermes-toolset-normalize";
-
-const MANAGED_KEYS = new Set<string>(["soul", "agent", "user", "memory", "config", "hermes"]);
 
 type FileResponseVariant = {
   content: string;
@@ -87,6 +89,20 @@ function getBundlePathMap(bundle: ReturnType<typeof buildProfileHermesPathBundle
   };
 }
 
+/**
+ * Resolve `profileParam` to a safe profile slug, falling back to `"default"`
+ * when the input is invalid. Used by the GET + PUT try-blocks after
+ * `resolveFilePath` has already validated the input (so the invalid branch
+ * is unreachable in practice, but the defensive fallback preserves the
+ * pre-refactor behaviour). Centralises the 2-line
+ * `const prof = resolveSafeProfileName(profile); const profileSlug = prof.ok ? prof.profile : "default"`
+ * pattern that was duplicated at GET line 136-137 and PUT line 214-215.
+ */
+function safeProfileSlug(profileParam: string | null): string {
+  const prof = resolveSafeProfileName(profileParam);
+  return prof.ok ? prof.profile : "default";
+}
+
 function resolveFilePath(
   key: string,
   profileParam: string | null,
@@ -131,10 +147,9 @@ export async function GET(
 
   try {
     ensureDb();
-    const prof = resolveSafeProfileName(profile);
-    const profileSlug = prof.ok ? prof.profile : "default";
+    const profileSlug = safeProfileSlug(profile);
 
-    if (MANAGED_KEYS.has(key)) {
+    if (isManagedKey(key)) {
       const stored = readManagedFileContent(profileSlug, key as ManagedFileKey);
       if (stored) {
         return ok(
@@ -209,10 +224,9 @@ export async function PUT(
       return badRequest("Content is required");
     }
 
-    const prof = resolveSafeProfileName(profile);
-    const profileSlug = prof.ok ? prof.profile : "default";
+    const profileSlug = safeProfileSlug(profile);
 
-    if (profileSlug !== "default" && !getProfile(profileSlug) && MANAGED_KEYS.has(key)) {
+    if (profileSlug !== "default" && !getProfile(profileSlug) && isManagedKey(key)) {
       return notFound("Profile not found");
     }
 
@@ -232,43 +246,47 @@ export async function PUT(
       }
     }
 
-    if (MANAGED_KEYS.has(key)) {
+    if (isManagedKey(key)) {
       if (key === "config") {
         const cols = configYamlToColumnValues(content);
         const platformToolsetsJson = serializeJsonToolsets(
           normalizePlatformToolsets(platformToolsetsFromJson(cols.platformToolsetsJson)),
         );
         writeManagedFileContent(profileSlug, "config", cols.configYaml);
-        // applyProfileOrRootPatch handles default-vs-non-default
-        // dispatch + 404 on missing profile + 500 on push failure —
-        // replaces the if/else update block AND the separate push
-        // block below (2 places, 16 lines total).
+        // applyProfileOrRootPatchOrFail collapses the 4-line
+        // apply+toPatchResponse+assert+return-err dance into 1 call
+        // + 1 instanceof check. Replaces the if/else update block
+        // AND the separate push block below (2 places, 16 lines
+        // total).
         const configPatch = {
           personality: cols.personality,
           disabledSkillsJson: cols.disabledSkillsJson,
           platformToolsetsJson,
           configYaml: cols.configYaml,
         };
-        const result = applyProfileOrRootPatch(
+        const result = applyProfileOrRootPatchOrFail(
           profileSlug,
           configPatch,
           configPatch,
+          "Failed to sync profile to Hermes",
         );
-        const err = toPatchResponse(result, "Failed to sync profile to Hermes");
-        if (err) return err;
-        assertPatchSucceeded(result);
+        if (result instanceof NextResponse) return result;
       }
       else {
         // Non-config managed file (SOUL.md, AGENTS.md, etc.) — write
         // the column-free file body to the managed-files table, then
-        // push. pushProfileOrRoot handles default-vs-non-default
-        // dispatch + 404 + push-fail without doing a no-op DB write
-        // that would bump updated_at.
+        // push. pushProfileOrRootOrFail is the push-only companion
+        // of applyProfileOrRootPatchOrFail — collapses the
+        // push+toPatchResponse+assert+return-err dance into 1 call
+        // + 1 instanceof check. writeManagedFileContent has already
+        // updated the managed-files table; we just need the post-
+        // write push to mirror to Hermes.
         writeManagedFileContent(profileSlug, key as ManagedFileKey, content);
-        const result = pushProfileOrRoot(profileSlug);
-        const err = toPatchResponse(result, "Failed to sync profile to Hermes");
-        if (err) return err;
-        assertPatchSucceeded(result);
+        const result = pushProfileOrRootOrFail(
+          profileSlug,
+          "Failed to sync profile to Hermes",
+        );
+        if (result instanceof NextResponse) return result;
       }
     }
     else {

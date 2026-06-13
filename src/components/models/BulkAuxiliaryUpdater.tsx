@@ -11,6 +11,7 @@ import {
   type TaskType,
 } from "@/lib/hermes-providers";
 import { pluralise } from "@/lib/utils";
+import ModelSelectDropdown from "@/components/models/ModelSelectDropdown";
 
 interface BulkAuxiliaryUpdaterProps {
   models: Array<{ id: string; name: string; provider: string; modelId: string }>;
@@ -82,27 +83,18 @@ export default function BulkAuxiliaryUpdater({
       {/* Expanded panel */}
       {expanded && (
         <div className="px-4 pb-4 pt-1 border-t border-white/5 space-y-3">
-          {/* Model selector */}
+          {/* Model selector — shared chrome with DefaultsGrid via ModelSelectDropdown */}
           <div>
             <label className="block text-[10px] font-mono text-white/40 uppercase tracking-widest mb-1">
               Target Model
             </label>
-            <div className="relative">
-              <select
-                value={targetModelId}
-                onChange={(e) => setTargetModelId(e.target.value)}
-                disabled={disabled}
-                className="w-full h-9 min-h-9 bg-dark-800 border border-white/10 rounded-lg px-3 pr-8 text-sm text-white font-mono outline-none cursor-pointer transition-colors hover:border-white/20 focus:border-neon-purple/50 disabled:opacity-50 truncate appearance-none"
-              >
-                <option value="">— Select model —</option>
-                {models.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.provider}/{m.modelId})
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
-            </div>
+            <ModelSelectDropdown
+              value={targetModelId}
+              disabled={disabled}
+              placeholder="— Select model —"
+              options={models}
+              onChange={setTargetModelId}
+            />
           </div>
 
           {/* Mode selector */}

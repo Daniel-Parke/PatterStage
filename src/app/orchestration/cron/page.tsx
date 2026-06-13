@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Clock,
   Plus,
@@ -298,6 +298,21 @@ export default function CronPage() {
     }
   }, [activeTab]);
 
+  // Pause all jobs for whichever tab is currently active. The
+  // tab-conditional inline arrow function used to fill `ActionButtons`'s
+  // `onPauseAll` — symmetric to `openCreateForActiveTab` above. A future
+  // "confirm dialog before pausing" or "toast with paused count" extension
+  // would have to be added in two places (one per tab branch) without
+  // this extraction. Centralising the discriminator here keeps the
+  // two paths in lockstep.
+  const handlePauseAllForActiveTab = useCallback(() => {
+    if (activeTab === "agent") {
+      void agent.handlePauseAll();
+    } else {
+      void hardware.handlePauseAll();
+    }
+  }, [activeTab, agent, hardware]);
+
   useEffect(() => {
     if (activeTab === "system") {
       void loadHardwareJobs();
@@ -330,8 +345,29 @@ export default function CronPage() {
   // ── Derived state ─────────────────────────────────────────
 
   const enabledCount = agent.data?.jobs.filter((j) => j.enabled).length ?? 0;
-  const hardwareEnabled = hardware.jobs.filter((j) => j.enabled).length;
-  const hardwareTotal = hardware.jobs.length;
+  // Single .reduce() pass over `hardware.jobs` instead of two
+  // independent `.filter().length` / `.length` reads. The
+  // `enabled` + `total` pair is derived from the same array, so
+  // a single pass with a named accumulator matches the same-shape
+  // session-188 reduction in `agents/page.tsx` and
+  // `models/import/route.ts`. The `enabled` field is the boolean
+  // flag the hardware cron table uses to gate execution; `total`
+  // is the row count regardless of enabled state. `|| 0` on the
+  // total preserves the original `hardwareTotal || 0` display
+  // fallback for the empty-array case (the page header renders
+  // "System: 0/0" instead of "System: 0/-" when no jobs exist).
+  const { enabled: hardwareEnabled, total: hardwareTotal } = useMemo(
+    () =>
+      hardware.jobs.reduce(
+        (acc, j) => {
+          if (j.enabled) acc.enabled += 1;
+          acc.total += 1;
+          return acc;
+        },
+        { enabled: 0, total: 0 },
+      ),
+    [hardware.jobs],
+  );
   const pageSubtitle = agent.data
     ? `Agent: ${enabledCount}/${agent.data.total}  •  System: ${hardwareEnabled}/${hardwareTotal || 0}`
     : "Scheduled tasks";
@@ -356,13 +392,7 @@ export default function CronPage() {
               color={activeTab === "agent" ? "orange" : "cyan"}
               pauseBusy={activeTab === "agent" ? agent.pauseAllBusy : false}
               hasJobs={activeTab === "agent" ? !!agent.data?.total : hardwareTotal > 0}
-              onPauseAll={() => {
-                if (activeTab === "agent") {
-                  void agent.handlePauseAll();
-                } else {
-                  void hardware.handlePauseAll();
-                }
-              }}
+              onPauseAll={handlePauseAllForActiveTab}
               onSync={() => void handleSyncAll()}
               syncing={syncing}
               onCreate={openCreateForActiveTab}

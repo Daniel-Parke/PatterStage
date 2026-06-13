@@ -37,9 +37,13 @@
  *
  * Plus the per-section editor's components (`src/components/config/`)
  * are reachable from the `[section]` page, so they're in the filter
- * too. The Models page's components live in `src/components/models/`
- * — that subtree is part of the List 3 surface (`ok-factory-source-patterns`
- * test List 3 block), not this test's filter.
+ * too. The Models page's hook (`src/hooks/useModelsPage.ts`) and
+ * its components (in `src/components/models/`) are also in scope —
+ * the user-stated List 4 page set is "Models, HERMES.md,
+ * Environment, All Settings", so the Models page's hook and
+ * component sub-tree are part of the List 4 surface, not the
+ * List 3 surface (which is `Models, Agents, Skills, Tools,
+ * Personalities` — the operations pages).
  *
  * Cross-list extension: the `useMissionsPage.ts:886` site (List 2)
  * is the only remaining `window.confirm` call in the codebase
@@ -57,6 +61,10 @@ const REPO_ROOT = join(__dirname, "..", "..");
 const LIST4_DIRS = [
   join("src", "app", "config"),
   join("src", "components", "config"),
+  join("src", "components", "models"),
+];
+const LIST4_FILES = [
+  join("src", "hooks", "useModelsPage.ts"),
 ];
 
 /**
@@ -70,11 +78,15 @@ const LIST4_DIRS = [
  * tests so future migrations can add entries without restructuring.
  */
 const EXEMPTIONS: ReadonlyArray<{ file: string; line: number; reason: string }> = [
-  // No exemptions as of session 138. The seed page migration closed
-  // the only 2 List 4 sites (the singleton "Restore entire default
-  // catalog" and the per-agent "Restore this agent" list). The
-  // `/config/seed/page.tsx` file should have ZERO `window.confirm`
-  // calls going forward — any new occurrence is a regression.
+  // No exemptions. The seed page migration (session 138) closed
+  // the only 2 List 4 sites in `/config/seed/page.tsx` (the
+  // singleton "Restore entire default catalog" button + the
+  // per-agent "Restore this agent" list), and the Models page +
+  // FallbackChainList migrations closed the remaining 2 List 4
+  // sites (per-model delete in the models table + per-fallback
+  // delete in the chain list). Every List 4 file should have
+  // ZERO `window.confirm` calls going forward — any new
+  // occurrence is a regression.
 ];
 
 /**
@@ -153,18 +165,29 @@ function collectAllSites(): Site[] {
       out.push(...findSites(file));
     }
   }
+  // Walk the per-file LIST4_FILES (currently just
+  // `src/hooks/useModelsPage.ts` — the Models page's hook is a
+  // single file, not a directory, so it doesn't fit the walker's
+  // recursive shape). Joining both surfaces guarantees the test
+  // covers every List 4 file, directory-walked or single-file.
+  for (const file of LIST4_FILES) {
+    const full = join(REPO_ROOT, file);
+    out.push(...findSites(full));
+  }
   return out;
 }
 
 describe("window.confirm → useTwoStepConfirm migration (List 4 surface)", () => {
   const allSites = collectAllSites();
 
-  it("has zero `window.confirm(` callsites in the List 4 surface (src/app/config, src/components/config)", () => {
+  it("has zero `window.confirm(` callsites in the List 4 surface (src/app/config, src/components/config, src/components/models, src/hooks/useModelsPage.ts)", () => {
     // Filter to the migrated surface. The session 138 migration
-    // closed the 2 sites in `/config/seed/page.tsx`; the test
-    // catches the next time a developer adds a new `window.confirm`
-    // call by failing with a clear diagnostic of the offending
-    // file:line.
+    // closed the 2 sites in `/config/seed/page.tsx`; the Models
+    // page + FallbackChainList migrations closed the 2 sites in
+    // `src/components/models/` + `src/hooks/useModelsPage.ts`. The
+    // test catches the next time a developer adds a new
+    // `window.confirm` call to the List 4 surface by failing with
+    // a clear diagnostic of the offending file:line.
     if (allSites.length > 0) {
       const summary = allSites
         .map((s) => `  ${s.file.replace(REPO_ROOT + "/", "")}:${s.line}  ${s.text}`)
@@ -232,5 +255,63 @@ describe("window.confirm → useTwoStepConfirm migration (List 4 surface)", () =
     expect(count(" * Use window.confirm for destructive actions.")).toBe(0);
     // A string-literal mention of the call shape is matched (defensive).
     expect(count('throw new Error("window.confirm is banned");')).toBe(0);
+  });
+
+  it("delivers the per-row two-step arm-confirm via the shared PerRowDeleteButton component", () => {
+    // The Models page row + the FallbackChainList row both render
+    // a per-row two-step confirm button. The pre-extraction shape
+    // had each row component import `useTwoStepConfirm` directly
+    // and inline the arm-confirm logic + styled button (duplicated
+    // in two places). The post-extraction shape (List 4 session)
+    // moves both to the shared `PerRowDeleteButton` component:
+    //
+    //   1. The shared component is the canonical home of the
+    //      `useTwoStepConfirm({ autoDismissMs: 4000 })` instance.
+    //   2. Both row components import the shared component instead
+    //      of the hook directly.
+    //   3. Neither row component instantiates the hook locally.
+    //
+    // The scanner above catches a regression (someone re-introducing
+    // `window.confirm`), this test pins the post-extraction pattern
+    // (someone removing the per-row confirm OR inlining it back into
+    // the row components instead of the shared component). Both
+    // directions are needed for a complete audit.
+    const sharedPath = join(
+      REPO_ROOT,
+      "src",
+      "components",
+      "models",
+      "PerRowDeleteButton.tsx",
+    );
+    const sharedText = readFileSync(sharedPath, "utf-8");
+    // 1. The shared component owns the per-row hook instance.
+    expect(sharedText).toMatch(
+      /import\s*\{[^}]*\buseTwoStepConfirm\b[^}]*\}\s*from\s*["']@\/hooks\/useTwoStepConfirm["']/,
+    );
+    expect(sharedText).toMatch(
+      /useTwoStepConfirm\s*\(\s*\{\s*autoDismissMs\s*:\s*4000\s*\}\s*\)/,
+    );
+
+    // 2. Both row components import the shared component (not the hook).
+    const rowImporters = [
+      join(REPO_ROOT, "src", "components", "models", "ModelsTableSection.tsx"),
+      join(REPO_ROOT, "src", "components", "models", "FallbackChainList.tsx"),
+    ];
+    for (const file of rowImporters) {
+      const text = readFileSync(file, "utf-8");
+      expect(text).toMatch(
+        /import\s+PerRowDeleteButton\s+from\s+["']@\/components\/models\/PerRowDeleteButton["']/,
+      );
+    }
+
+    // 3. Neither row component instantiates the hook locally (a
+    //    regression of the inlined form would re-add the import +
+    //    call, breaking the shared-component contract).
+    for (const file of rowImporters) {
+      const text = readFileSync(file, "utf-8");
+      expect(text).not.toMatch(
+        /import\s*\{[^}]*\buseTwoStepConfirm\b[^}]*\}\s*from\s*["']@\/hooks\/useTwoStepConfirm["']/,
+      );
+    }
   });
 });

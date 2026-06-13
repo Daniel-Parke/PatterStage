@@ -176,3 +176,110 @@ export function assertPatchSucceeded(
     throw new Error("assertPatchSucceeded called on a failed result");
   }
 }
+
+/**
+ * Return shape of `applyProfileOrRootPatchOrFail` — discriminated on
+ * `NextResponse` so the caller can write:
+ *
+ *   const result = applyProfileOrRootPatchOrFail(slug, rootPatch, profilePatch, "Failed to ...");
+ *   if (result instanceof NextResponse) return result;
+ *   // result is { profile: string } here
+ *
+ * The success branch carries only `profile: string` because that's
+ * the only field the existing 5 call sites need after the helper
+ * runs (`result.profile` in the `ok({ ..., profile: result.profile })`
+ * success body). The error branch is the `NextResponse` directly so
+ * `instanceof NextResponse` narrows correctly without a discriminator.
+ */
+export type ProfileOrRootPatchOrFailResult =
+  | { profile: string }
+  | NextResponse;
+
+/**
+ * Apply a profile-or-root patch and produce either the ready-to-return
+ * `NextResponse` (404 on not-found, 500 on push-failed) or the success
+ * payload `{ profile: string }`. Combines `applyProfileOrRootPatch` +
+ * `toPatchResponse` + `assertPatchSucceeded` into a single helper so
+ * the 5 List 3 call sites (personalities, skills/[name]/toggle,
+ * agent/personality, agent/files/[key] x2, agent/profiles/[id]/toolsets)
+ * collapse from:
+ *
+ *   const result = applyProfileOrRootPatch(slug, rootPatch, profilePatch);
+ *   const err = toPatchResponse(result, "Failed to ...");
+ *   if (err) return err;
+ *   assertPatchSucceeded(result);
+ *   return ok({ success: true, profile: result.profile, ... });
+ *
+ * to:
+ *
+ *   const result = applyProfileOrRootPatchOrFail(
+ *     slug, rootPatch, profilePatch, "Failed to ...",
+ *   );
+ *   if (result instanceof NextResponse) return result;
+ *   return ok({ success: true, profile: result.profile, ... });
+ *
+ * Byte-equivalent to the 4-line form:
+ *  - On success: `applyProfileOrRootPatch` returns `{ ok: true, profile }`,
+ *    `toPatchResponse` returns `null`, `assertPatchSucceeded` is a
+ *    no-op. The combined helper returns `{ profile }`. The caller
+ *    still reads `result.profile` — same field, same value, same wire
+ *    body.
+ *  - On not-found: `applyProfileOrRootPatch` returns
+ *    `{ ok: false, reason: "not-found" }`, `toPatchResponse` returns
+ *    `notFound("Profile not found")` (404), `assertPatchSucceeded` is
+ *    not reached. The combined helper returns the same 404 NextResponse
+ *    (caller `return`s it).
+ *  - On push-failed: `applyProfileOrRootPatch` returns
+ *    `{ ok: false, reason: "push-failed", error }`, `toPatchResponse`
+ *    returns `serverErrorFromHelperResult(result, fallback)` (500 with
+ *    either the underlying error or the fallback string), `assertPatchSucceeded`
+ *    is not reached. The combined helper returns the same 500 NextResponse.
+ *
+ * `fallbackError` is the body of the 500 response when the underlying
+ * push didn't supply its own `error` message — same parameter as
+ * `toPatchResponse`, propagated through unchanged.
+ */
+export function applyProfileOrRootPatchOrFail(
+  slug: string,
+  rootPatch: AgentRootPatch,
+  profilePatch: Parameters<typeof updateProfileContent>[1],
+  fallbackError: string,
+): ProfileOrRootPatchOrFailResult {
+  const result = applyProfileOrRootPatch(slug, rootPatch, profilePatch);
+  const err = toPatchResponse(result, fallbackError);
+  if (err) return err;
+  assertPatchSucceeded(result);
+  return { profile: result.profile };
+}
+
+/**
+ * Push-only companion of `applyProfileOrRootPatchOrFail` — combines
+ * `pushProfileOrRoot` + `toPatchResponse` + `assertPatchSucceeded`
+ * into a single helper for routes that have already mutated disk or
+ * the managed-files table and just need the current DB state mirrored
+ * to disk via the same push pipeline. The 1 List 3 call site that
+ * uses this shape is `api/agent/files/[key]/route.ts` for non-config
+ * managed files (SOUL.md, AGENTS.md, etc.) — `writeManagedFileContent`
+ * has already updated the managed-files table, and the route just
+ * needs the post-write push to mirror to Hermes.
+ *
+ * Byte-equivalent to:
+ *   const result = pushProfileOrRoot(slug);
+ *   const err = toPatchResponse(result, fallbackError);
+ *   if (err) return err;
+ *   assertPatchSucceeded(result);
+ *   return { profile: result.profile };
+ *
+ * Same return-type contract as `applyProfileOrRootPatchOrFail`:
+ * `NextResponse | { profile: string }`.
+ */
+export function pushProfileOrRootOrFail(
+  slug: string,
+  fallbackError: string,
+): ProfileOrRootPatchOrFailResult {
+  const result = pushProfileOrRoot(slug);
+  const err = toPatchResponse(result, fallbackError);
+  if (err) return err;
+  assertPatchSucceeded(result);
+  return { profile: result.profile };
+}

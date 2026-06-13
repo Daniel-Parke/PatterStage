@@ -113,6 +113,12 @@ export async function POST(request: NextRequest) {
     // Link credentials to models where provider matches
     let credentialsLinked = 0;
     if (Object.keys(providerToCredId).length > 0) {
+      // Build a model-id → existing-row map once (O(N)) instead of calling
+      // `listModels().find(m => m.id === modelId)` inside the loop, which
+      // was O(N) per model = O(N×M) total. The N models in `parsed.models`
+      // map 1:1 to the M rows from listModels (both originate from the
+      // same registry writes), so a Map lookup is sufficient.
+      const existingById = new Map(listModels().map((m) => [m.id, m]));
       for (const entry of parsed.models) {
         const credId = providerToCredId[entry.provider];
         if (!credId) continue;
@@ -121,7 +127,7 @@ export async function POST(request: NextRequest) {
         // Re-read the existing model once to check whether the link is
         // already in place — avoids a redundant write + audit line.
         try {
-          const model = listModels().find((m) => m.id === modelId);
+          const model = existingById.get(modelId);
           if (model && model.credentialsId !== credId) {
             updateModel(modelId, { credentialsId: credId });
             credentialsLinked++;

@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { StatusDot } from "@/components/ui/Card";
 import CategoryAccordion from "@/components/ui/CategoryAccordion";
-import TemplateCard from "@/components/ui/TemplateCard";
+import TemplatePill from "@/components/ui/TemplatePill";
 import {
   CATEGORY_COLOR_CLASSES,
   resolveCategoryDisplay,
@@ -184,15 +184,9 @@ export default function MissionsList({ vm }: MissionsListProps) {
               >
                 <div className="flex flex-wrap gap-1.5">
                   {group.items.map((t) => (
-                    <TemplateCard
+                    <TemplatePill
                       key={t.id}
-                      id={t.id}
-                      name={t.name}
-                      icon={t.icon}
-                      color={t.color}
-                      description={t.description}
-                      isCustom={t.isCustom}
-                      compact
+                      t={t}
                       onSelect={() => handleTemplateSelect(t)}
                     />
                   ))}

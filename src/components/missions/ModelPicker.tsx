@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { safeApiCall, setErrorFromCaught } from "@/lib/api-fetch";
+import { safeApiCallData, setErrorFromCaught } from "@/lib/api-fetch";
 
 /** Minimal shape of a model returned by /api/models. */
 interface ApiModel {
@@ -81,20 +81,23 @@ export default function ModelPicker({
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
-    // Both endpoints return `{ data: <inner> }`. `safeApiCall<T>`
-    // does NOT unwrap — `data` is the full body — so the type is
-    // the envelope shape and the inner fields are read via
-    // `mRes.data?.data?.models` / `dRes.data?.data?.defaults`
-    // (two indirections).
+    // Both endpoints return `{ data: <inner> }`. `safeApiCallData<T>`
+    // unwraps the envelope internally and returns the inner payload
+    // (`T | null`), so the call site reads `list?.models ?? []` and
+    // `def?.defaults ?? null` (1 level) instead of
+    // `mRes.data?.data?.models` / `dRes.data?.data?.defaults` (2 levels).
+    // The `null` fallback on HTTP error matches the pre-refactor
+    // `mRes.data?.data?.X ?? fallback` form byte-for-byte. The
+    // `.catch` still fires for thrown errors (network/parse failures)
+    // because `safeApiCallData` returns `null` (not throws) on HTTP
+    // error — the byte-equivalent "throw" path is preserved.
     Promise.all([
-      safeApiCall<{ data?: { models?: ApiModel[] } }>("/api/models"),
-      safeApiCall<{ data?: { defaults?: ApiDefaults } }>("/api/models/defaults"),
+      safeApiCallData<{ models?: ApiModel[] }>("/api/models"),
+      safeApiCallData<{ defaults?: ApiDefaults }>("/api/models/defaults"),
     ])
-      .then(([mRes, dRes]) => {
-        const list = mRes.data?.data?.models ?? [];
-        const def = dRes.data?.data?.defaults ?? null;
-        setModels(list);
-        setDefaults(def);
+      .then(([list, def]) => {
+        setModels(list?.models ?? []);
+        setDefaults(def?.defaults ?? null);
       })
       .catch((err) => {
         setErrorFromCaught(setError, err, "Failed to load models");

@@ -85,6 +85,34 @@ export default function SkillsPage() {
   const [activeCollapsed, setActiveCollapsed] = useState(false);
   const [inactiveCollapsed, setInactiveCollapsed] = useState(true);
 
+  // toggleActiveCollapsed / toggleInactiveCollapsed — the 2 section
+  // collapse headers (Active, Inactive) each have a 1-setter toggle
+  // inline arrow of the form `() => setXCollapsed((v) => !v)` passed
+  // as the `onToggleCollapse` prop on the sibling `<SkillSection>`
+  // (lines 385 + 430). Pre-refactor the inline form was repeated at
+  // both sites with byte-equivalent semantics (a single boolean
+  // flip of the section's `useState` setter, default value
+  // preserved). Extracting to `useCallback` siblings matches the
+  // A3 single-setter close-callback pattern that session 100/103
+  // established for `closeDelete` / `closeEditor` / `closeSkillEditor`
+  // and the `closeEdit` extraction in operations/personalities
+  // (session 100). The deps array is `[]` per session 119 P-3
+  // codebase convention (useState setters are stable). A future
+  // "also reset section search on collapse" or "track which
+  // section is open for keyboard navigation" extension lands in
+  // one place, keeping the 2 call sites in lockstep. The category
+  // collapse toggle (`toggleCategory`, below) takes an argument
+  // (the category key) and is a different shape — left as a
+  // direct arrow, not part of this 1-setter family.
+  const toggleActiveCollapsed = useCallback(
+    () => setActiveCollapsed((v) => !v),
+    [],
+  );
+  const toggleInactiveCollapsed = useCallback(
+    () => setInactiveCollapsed((v) => !v),
+    [],
+  );
+
   const toggleCategory = (cat: string) =>
     setCategoryCollapsed((prev) => ({ ...prev, [cat]: !prev[cat] }));
 
@@ -102,13 +130,19 @@ export default function SkillsPage() {
   const [editOriginal, setEditOriginal] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
-  // closeSkillEditor — the Edit Skill modal has 3 single-setter
+  // closeSkillEditor — the Edit Skill modal has 4 single-setter
   // close sites that all do the same thing: `() => setEditingSkill(null)`.
   //   1. Modal `onClose` (X-button / overlay click)
   //   2. Modal Cancel button (footer)
   //   3. The load-failure path in openSkillEditor's catch block
+  //      (if the GET to fetch the skill's content fails, dismiss
+  //      the modal rather than leaving it open with empty fields)
+  //   4. saveSkillEdit's success path (dismiss the modal after a
+  //      successful PUT; the conditional `if (expandedSkill ===
+  //      editingSkill) setSkillContent(...)` is a sibling update
+  //      for the in-page preview, not part of the close)
   // Centralising into a `useCallback` with empty deps (useState setters
-  // are stable) keeps the 3 sites in lockstep if a future "clear
+  // are stable) keeps the 4 sites in lockstep if a future "clear
   // editContent on close" or "reset editOriginal" extension lands.
   // This is the A3 single-setter close pattern that session 100's
   // discriminated-close audit established: a 1-setter callback is
@@ -216,6 +250,37 @@ export default function SkillsPage() {
       }
     },
     [data, selectedProfile, showToast],
+  );
+
+  // handleToggleSkill — centralises the (skill, fallback) → toggle
+  // dispatch shape used by both the Active and Inactive section
+  // grids. The pre-refactor code inlined the same
+  // `(skill) => toggleSkill(skill.name, effectiveSkillEnabled(skill, toggling, <fallback>))`
+  // callback at 2 sites (the Active section's `onToggleSkill`
+  // prop on line ~414 and the Inactive section's on line ~459).
+  // The 2 sites are byte-equivalent except for the fallback:
+  //   - Active section: uses the default `skill.enabled` (the
+  //     `effectiveSkillEnabled` helper's default param value, so
+  //     the caller doesn't pass a 2nd argument).
+  //   - Inactive section: passes `!skill.enabled` because the
+  //     Inactive grid is the negation of the active state — a
+  //     skill in the Inactive list has `enabled === false`, so the
+  //     "current enabled" that `toggleSkill` reads must be the
+  //     inversion (otherwise the toggle would no-op on the wrong
+  //     current state).
+  // The helper defaults the fallback to `skill.enabled` so the
+  // Active call site is `onToggleSkill={handleToggleSkill}` (no
+  // args) and the Inactive call site is
+  // `onToggleSkill={(skill) => handleToggleSkill(skill, !skill.enabled)}`.
+  // Same byte-equivalent semantics, but the dispatch shape lives
+  // in one place — a future "track toggle analytics" or
+  // "throttle double-clicks" extension lands in one place instead
+  // of having to update 2 inline arrows.
+  const handleToggleSkill = useCallback(
+    (skill: Skill, fallback: boolean = skill.enabled) => {
+      return toggleSkill(skill.name, effectiveSkillEnabled(skill, toggling, fallback));
+    },
+    [toggleSkill, toggling],
   );
 
   // ── Skill content preview ───────────────────────────────────────────────────
@@ -345,7 +410,7 @@ export default function SkillsPage() {
               count={activeFiltered.length}
               ofTotal={activeSkills.length}
               collapsed={activeCollapsed}
-              onToggleCollapse={() => setActiveCollapsed((v) => !v)}
+              onToggleCollapse={toggleActiveCollapsed}
               search={
                 <SearchInput
                   value={activeSearch}
@@ -375,7 +440,7 @@ export default function SkillsPage() {
                   expandedSkill={expandedSkill}
                   skillContent={skillContent}
                   toggling={toggling}
-                  onToggleSkill={(skill) => toggleSkill(skill.name, effectiveSkillEnabled(skill, toggling))}
+                  onToggleSkill={handleToggleSkill}
                   onViewSkill={viewSkill}
                   onEditSkill={openSkillEditor}
                 />
@@ -390,7 +455,7 @@ export default function SkillsPage() {
               count={inactiveFiltered.length}
               ofTotal={inactiveSkills.length}
               collapsed={inactiveCollapsed}
-              onToggleCollapse={() => setInactiveCollapsed((v) => !v)}
+              onToggleCollapse={toggleInactiveCollapsed}
               search={
                 <SearchInput
                   value={inactiveSearch}
@@ -420,7 +485,7 @@ export default function SkillsPage() {
                   expandedSkill={expandedSkill}
                   skillContent={skillContent}
                   toggling={toggling}
-                  onToggleSkill={(skill) => toggleSkill(skill.name, effectiveSkillEnabled(skill, toggling, !skill.enabled))}
+                  onToggleSkill={(skill) => handleToggleSkill(skill, !skill.enabled)}
                   onViewSkill={viewSkill}
                   onEditSkill={openSkillEditor}
                 />
