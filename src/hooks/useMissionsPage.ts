@@ -407,14 +407,55 @@ export function useMissionsPage() {
   }, []);
 
   // Open the template manager modal (the "Edit Templates" button in
-  // `MissionsList`). Sibling to the page's `closeTemplateManager` close
-  // callback — same `useCallback` + `[]` deps shape as `openCategoryManager`.
+  // `MissionsList`). Sibling to `closeTemplateManager` (defined below) —
+  // same `useCallback` + `[]` deps shape as the sibling
+  // `openCategoryManager` / `closeCategoryManager` open/close pair.
   // The single inline `() => setShowTemplateManager(true)` arrow that
   // lived at the MissionsList call site is now this named callback.
   // Session 118 promoted this from inline-arrow to named-callback per
   // session 116 P-7.
   const openTemplateManager = useCallback(() => {
     setShowTemplateManager(true);
+  }, []);
+
+  // Close the category manager modal (the `onClose` prop on
+  // `<CategoryManagerModal>` in the page). Sibling to the
+  // `openCategoryManager` callback above — same single-setter +
+  // `useCallback` + `[]` deps shape. Promoted from the page-local
+  // `closeCategoryManager` callback in `missions/page.tsx` so the
+  // open/close pair sits next to each other in the hook's return
+  // value (matching the `openCreate` / `closeComposer` pattern that
+  // session 98 codified). The `useCallback` deps array is `[]` (the
+  // setter is stable). Byte-equivalent to the pre-migration
+  // `useCallback(() => setShowCategoryManager(false), [setShowCategoryManager])`
+  // form (React re-runs the deps check; with no actual deps the
+  // identity is stable across renders).
+  const closeCategoryManager = useCallback(() => {
+    setShowCategoryManager(false);
+  }, []);
+
+  // Close the template manager modal (the `onClose` prop on
+  // `<TemplateManagerModal>` in the page). Sibling to
+  // `openTemplateManager` above — same single-setter + `useCallback` +
+  // `[]` deps shape as `closeCategoryManager`. Promoted from the
+  // page-local `closeTemplateManager` callback in `missions/page.tsx`
+  // for the same open/close-pair grouping reason.
+  const closeTemplateManager = useCallback(() => {
+    setShowTemplateManager(false);
+  }, []);
+
+  // Close the template editor modal in SOFT mode (the `onClose` prop
+  // on `<TemplateEditorModal>` in the page, fired by the X button
+  // or overlay click). Sibling to the editor's HARD-mode
+  // `cancelTemplateEditor` (defined below) which also clears
+  // `editingTemplateId`. Same single-setter + `useCallback` + `[]`
+  // deps shape as `closeCategoryManager` / `closeTemplateManager`.
+  // Promoted from the page-local `closeTemplateEditor` callback in
+  // `missions/page.tsx` for the same open/close-pair grouping reason.
+  // The HARD close is intentionally kept page-local (it would
+  // re-shape the editor's cancel-then-reopen flow if migrated).
+  const closeTemplateEditor = useCallback(() => {
+    setShowTemplateEditor(false);
   }, []);
 
   useEffect(() => {
@@ -1336,6 +1377,7 @@ export function useMissionsPage() {
     showCategoryManager,
     setShowCategoryManager,
     openCategoryManager,
+    closeCategoryManager,
     loadCategories,
     handleCreateCategory,
     handleCreateNewTemplate,
@@ -1357,11 +1399,13 @@ export function useMissionsPage() {
     handleTemplateSelect,
     setShowTemplateManager,
     openTemplateManager,
+    closeTemplateManager,
     showTemplateManager,
     handleEditTemplate,
     handleDeleteTemplate,
     showTemplateEditor,
     setShowTemplateEditor,
+    closeTemplateEditor,
     editingTemplateId,
     setEditingTemplateId,
     templateName,

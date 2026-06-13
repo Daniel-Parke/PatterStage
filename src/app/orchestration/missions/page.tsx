@@ -28,7 +28,6 @@ export default function MissionsPage() {
     editingId,
     templates,
     showTemplateManager,
-    setShowTemplateManager,
     handleEditTemplate,
     handleDeleteTemplate,
     categoryFilter,
@@ -83,7 +82,6 @@ export default function MissionsPage() {
     newCategoryId,
     setCategoryId,
     showCategoryManager,
-    setShowCategoryManager,
     loadCategories,
     handleCreateCategory,
     handleUpdateCategory,
@@ -113,21 +111,24 @@ export default function MissionsPage() {
   // useMissionsPage.ts.
   const handleOpenCreate = vm.openCreate;
 
-  // Three sibling modal close callbacks — each is a single-setter
-  // `() => setShow…(false)` that appears exactly once at the
-  // modal's `onClose` prop. Inlining them is fine, but naming
-  // them keeps the JSX readable and groups the 3 dismissals next
-  // to each other so a future "also reset X state on close"
-  // extension lands in one place. The functions are byte-equivalent
-  // to the inline form: each just calls its setter with `false`.
-  const closeCategoryManager = useCallback(
-    () => setShowCategoryManager(false),
-    [setShowCategoryManager],
-  );
-  const closeTemplateManager = useCallback(
-    () => setShowTemplateManager(false),
-    [setShowTemplateManager],
-  );
+  // The 3 modal close callbacks (`closeCategoryManager`,
+  // `closeTemplateManager`, `closeTemplateEditor`) are now exposed by
+  // the hook as siblings of the 3 corresponding `open*` callbacks
+  // (`openCategoryManager`, `openTemplateManager`, and the editor's
+  // inline open in `handleCreateNewTemplate` / `handleEditTemplate`).
+  // This page-local promotion mirrors the `openCreate` / `closeComposer`
+  // pair that sessions 98 + 114 + 116 + 118 established, and the
+  // `closeCategoryManager` / `openCategoryManager` pair that session
+  // 118 codified. The `cancelTemplateEditor` (2-setter HARD close that
+  // also clears `editingTemplateId`) is intentionally kept page-local
+  // — its 2-setter shape doesn't fit the hook's single-setter close
+  // callback contract. The 3 promoted callbacks are byte-equivalent
+  // to the pre-migration page-local definitions: each is
+  // `useCallback(() => setX(false), [])` (or `[setX]` for the
+  // pre-migration form, which has the same runtime behavior — React
+  // re-checks the deps; `setX` is stable).
+  const closeCategoryManager = vm.closeCategoryManager;
+  const closeTemplateManager = vm.closeTemplateManager;
   // Open sibling for `closeCategoryManager`. The `onManageCategories` prop
   // on `<MissionCreateForm>` previously received an inline `() =>
   // setShowCategoryManager(true)` arrow — promoted to a named callback so
@@ -148,11 +149,13 @@ export default function MissionsPage() {
   // missions modals use — see session-100-list2-cron-modal-setter-pair.md.
   // They are NOT duplicates; they are a deliberate UX discriminator, and
   // a future "migrate to a single setter" PR will break the cancel-then-
-  // reopen flow. Keep them as 2 separate callbacks.
-  const closeTemplateEditor = useCallback(
-    () => setShowTemplateEditor(false),
-    [setShowTemplateEditor],
-  );
+  // reopen flow. Keep them as 2 separate callbacks. The SOFT close is
+  // now exposed by the hook as `vm.closeTemplateEditor` (sibling of the
+  // editor's open paths in `handleCreateNewTemplate` / `handleEditTemplate`),
+  // so the SOFT direction is consistent with the rest of the modal
+  // open/close pair pattern. The HARD cancel direction is the 2-setter
+  // outlier and stays page-local.
+  const closeTemplateEditor = vm.closeTemplateEditor;
   const cancelTemplateEditor = useCallback(() => {
     setShowTemplateEditor(false);
     setEditingTemplateId(null);
