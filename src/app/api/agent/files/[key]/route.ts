@@ -89,6 +89,20 @@ function getBundlePathMap(bundle: ReturnType<typeof buildProfileHermesPathBundle
   };
 }
 
+/**
+ * Resolve `profileParam` to a safe profile slug, falling back to `"default"`
+ * when the input is invalid. Used by the GET + PUT try-blocks after
+ * `resolveFilePath` has already validated the input (so the invalid branch
+ * is unreachable in practice, but the defensive fallback preserves the
+ * pre-refactor behaviour). Centralises the 2-line
+ * `const prof = resolveSafeProfileName(profile); const profileSlug = prof.ok ? prof.profile : "default"`
+ * pattern that was duplicated at GET line 136-137 and PUT line 214-215.
+ */
+function safeProfileSlug(profileParam: string | null): string {
+  const prof = resolveSafeProfileName(profileParam);
+  return prof.ok ? prof.profile : "default";
+}
+
 function resolveFilePath(
   key: string,
   profileParam: string | null,
@@ -133,8 +147,7 @@ export async function GET(
 
   try {
     ensureDb();
-    const prof = resolveSafeProfileName(profile);
-    const profileSlug = prof.ok ? prof.profile : "default";
+    const profileSlug = safeProfileSlug(profile);
 
     if (isManagedKey(key)) {
       const stored = readManagedFileContent(profileSlug, key as ManagedFileKey);
@@ -211,8 +224,7 @@ export async function PUT(
       return badRequest("Content is required");
     }
 
-    const prof = resolveSafeProfileName(profile);
-    const profileSlug = prof.ok ? prof.profile : "default";
+    const profileSlug = safeProfileSlug(profile);
 
     if (profileSlug !== "default" && !getProfile(profileSlug) && isManagedKey(key)) {
       return notFound("Profile not found");
