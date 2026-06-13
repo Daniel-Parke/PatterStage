@@ -17,8 +17,8 @@ import {
 import { SearchInput } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { safeApiCall } from "@/lib/api-fetch";
 import { hindsightGet } from "@/lib/hindsight-client";
+import { hindsightMutate } from "@/lib/hindsight-mutate";
 import { parseOptionalTagsInput, parseTagsInput } from "@/lib/hindsight-tag-input";
 import { stringOr } from "./hindsight/utils";
 import type { Tab, Memory, Directive, MentalModel, HealthState } from "./hindsight/types";
@@ -28,7 +28,6 @@ import DirectivesTab from "./hindsight/DirectivesTab";
 import MentalModelsTab from "./hindsight/MentalModelsTab";
 import { AddMemoryModal, DirectiveModal, MentalModelModal } from "./hindsight/Modals";
 import { runMutation } from "@/lib/run-mutation";
-import { toastFromResult } from "@/lib/toast-from-result";
 import { setField } from "@/lib/set-field";
 
 // ── Default form state ─────────────────────────────────────────
@@ -246,16 +245,14 @@ export default function HindsightBrowser() {
     });
 
   const handleToggleDirective = async (directive: Directive) => {
-    const result = await safeApiCall("/api/memory/hindsight", {
-      method: "POST",
-      body: { action: "update-directive", id: directive.id, is_active: !directive.is_active },
-    });
-    // Dynamic success message (deactivated vs activated) — `toastFromResult`'s
-    // thunk form (`successMsg: () => string`) defers the call so the
-    // directive.is_active state is read at toast time, not at request time.
-    toastFromResult(
+    // Dynamic success message (deactivated vs activated) — `hindsightMutate`
+    // forwards the `successMsg: () => string` thunk to `toastFromResult`
+    // unchanged, so the directive.is_active state is read at toast time,
+    // not at request time. Same semantics as the pre-form inline call.
+    const result = await hindsightMutate(
       showToast,
-      result,
+      "POST",
+      { action: "update-directive", id: directive.id, is_active: !directive.is_active },
       () => (directive.is_active ? "Directive deactivated" : "Directive activated"),
       "Failed to update directive",
     );
@@ -264,11 +261,13 @@ export default function HindsightBrowser() {
   };
 
   const handleDeleteDirective = async (id: string) => {
-    const result = await safeApiCall("/api/memory/hindsight", {
-      method: "DELETE",
-      body: { type: "directive", id },
-    });
-    toastFromResult(showToast, result, "Directive deleted", "Failed to delete directive");
+    const result = await hindsightMutate(
+      showToast,
+      "DELETE",
+      { type: "directive", id },
+      "Directive deleted",
+      "Failed to delete directive",
+    );
     if (!result.ok) return;
     setDirectives(prev => prev.filter(d => d.id !== id));
   };
@@ -341,13 +340,10 @@ export default function HindsightBrowser() {
 
   const handleRefreshModel = async (id: string) => {
     setRefreshingModelId(id);
-    const result = await safeApiCall("/api/memory/hindsight", {
-      method: "POST",
-      body: { action: "refresh-model", id },
-    });
-    toastFromResult(
+    const result = await hindsightMutate(
       showToast,
-      result,
+      "POST",
+      { action: "refresh-model", id },
       "Mental model refresh started",
       "Failed to refresh mental model",
     );
@@ -360,11 +356,13 @@ export default function HindsightBrowser() {
   };
 
   const handleDeleteModel = async (id: string) => {
-    const result = await safeApiCall("/api/memory/hindsight", {
-      method: "DELETE",
-      body: { type: "model", id },
-    });
-    toastFromResult(showToast, result, "Mental model deleted", "Failed to delete mental model");
+    const result = await hindsightMutate(
+      showToast,
+      "DELETE",
+      { type: "model", id },
+      "Mental model deleted",
+      "Failed to delete mental model",
+    );
     if (!result.ok) return;
     setMentalModels(prev => prev.filter(m => m.id !== id));
   };
