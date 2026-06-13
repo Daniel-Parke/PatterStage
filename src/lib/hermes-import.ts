@@ -76,7 +76,13 @@ function importKeyFor(provider: string, modelId: string): string {
 
 // ── Config YAML parser ───────────────────────────────────────
 
-interface ConfigModelSection {
+/**
+ * Shape of the `model:` section of `~/.hermes/config.yaml`. Exported
+ * so consumers (e.g. the diff endpoint) don't redeclare the same
+ * 4-field shape — the snake_case keys are stable on disk and the
+ * field set is the canonical projection of what Hermes writes.
+ */
+export interface ConfigModelSection {
   default?: string;
   provider?: string;
   base_url?: string;
