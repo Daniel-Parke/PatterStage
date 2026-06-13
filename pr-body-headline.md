@@ -4,6 +4,86 @@
 
 ## Recent sessions (full detail)
 
+## Session 206 — List 2 (Cron, Missions, Chat) — 3 missions-modal close-callbacks promoted from `missions/page.tsx` to `useMissionsPage` hook (open/close pair symmetry)
+
+**Date:** 2026-06-13
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `shuf -i 1-4 -n 1` = 2 (List 2: Cron, Missions, Chat). Last List 2 pick was session 203 (`safeApiCallData` migration + surface split) — different sub-surface, so no rotation bump needed.
+**Outcome:** **1 byte-equivalent refactor in the List 2 surface (3 page-local single-setter close-callbacks promoted to the `useMissionsPage` hook as named siblings of the existing `openX` callbacks) + 1 new source-pattern test (20 assertions across 5 describes) + 1 existing test updated (4 new assertions for the close-half of the `openCategoryManager` / `closeCategoryManager` pair).** Pre-session, `missions/page.tsx` had 3 page-local `useCallback(() => setX(false), [setX])` definitions for the `<CategoryManagerModal>`, `<TemplateManagerModal>`, and `<TemplateEditorModal>` `onClose` props. The hook already exposed the 3 corresponding `openX` callbacks as siblings (session 118 added `openCategoryManager` + `openTemplateManager`; the editor's open paths are inlined in `handleCreateNewTemplate` + `handleEditTemplate` with extra state mutations). The open/close pair was asymmetric: the open side lived in the hook, the close side lived in the page, and the only way to find the close was to scroll past the hook's open callback. Post-session, all 3 close callbacks live in the hook alongside their open siblings — `openCategoryManager` + `closeCategoryManager`, `openTemplateManager` + `closeTemplateManager`, editor's inline open + `closeTemplateEditor`. The page re-exports them as `const closeX = vm.closeX;` for JSX ergonomics. The HARD 2-setter `cancelTemplateEditor` (also clears `editingTemplateId`) is intentionally kept page-local — its 2-setter shape doesn't fit the hook's single-setter close-callback contract and migrating it would change the editor's cancel-then-reopen flow (a behavior change, out of scope for "AT LEAST identical results"). All green under tsc + eslint + full jest sweep + build. Committed + pushed as `8fcad01`. Reference doc: `references/session-206-list2-missions-modal-close-callbacks.md`.
+
+### What shipped
+
+3 byte-equivalent callback promotions + 1 new source-pattern test (20 assertions) + 1 existing test updated (4 new assertions).
+
+1. **`closeCategoryManager` promotion to `useMissionsPage` hook** — the pre-session page-local form was:
+   ```tsx
+   const closeCategoryManager = useCallback(
+     () => setShowCategoryManager(false),
+     [setShowCategoryManager],
+   );
+   ```
+   Post-session, the hook declares the named callback next to the existing `openCategoryManager` (session 118):
+   ```tsx
+   const closeCategoryManager = useCallback(() => {
+     setShowCategoryManager(false);
+   }, []);
+   ```
+   The page re-exports it as `const closeCategoryManager = vm.closeCategoryManager;` so the JSX (`<CategoryManagerModal onClose={closeCategoryManager} />`) references it without the `vm.` indirection. The unused `setShowCategoryManager` destructure was removed from the page (the callback's only use of it was inside the page-local `useCallback` body, which is now gone).
+
+2. **`closeTemplateManager` promotion to `useMissionsPage` hook** — same pattern as `closeCategoryManager` (single-setter `useCallback(() => setShowTemplateManager(false), [])`), sibling of the existing `openTemplateManager` (session 118). The page re-exports as `const closeTemplateManager = vm.closeTemplateManager;`. Unused `setShowTemplateManager` destructure removed.
+
+3. **`closeTemplateEditor` (SOFT close) promotion to `useMissionsPage` hook** — sister of `closeCategoryManager` / `closeTemplateManager`. The editor has TWO close paths: `onClose` (X / overlay = single-setter SOFT close) and `onCancel` (Cancel button = 2-setter HARD close that also clears `editingTemplateId`). The SOFT close is byte-equivalent to the other 2 (single-setter), so it migrates cleanly. The HARD 2-setter `cancelTemplateEditor` is intentionally NOT promoted — its 2-setter shape doesn't fit the hook's single-setter close-callback contract. The page re-exports the SOFT close as `const closeTemplateEditor = vm.closeTemplateEditor;` and keeps the HARD cancel local.
+
+4. **`tests/unit/missions-modal-close-callbacks-source-pattern.test.ts` (NEW, 20 assertions across 5 describes)** — pins the post-migration shape with positive + negative assertions for each of the 3 promoted callbacks:
+   - **Per-callback positive (3 × 3 = 9)**: each close callback is declared in the hook as a `useCallback` that calls the right `setShowX(false)` setter; each has `[]` deps; each is exposed on the returned `vm` object.
+   - **Per-callback re-export (3)**: the page does `const closeX = vm.closeX;` for each of the 3 promoted callbacks.
+   - **Per-callback negative (3)**: the page does NOT have a local `useCallback(() => setShowX(false))` form for any of the 3 callbacks (regression guard — a future "moved it back to the page" change would shadow the hook's callback and break the symmetric open/close pair pattern).
+   - **`cancelTemplateEditor` asymmetry (2)**: the page keeps the 2-setter HARD cancel (positive — pin the page-local form); the hook does NOT expose `cancelTemplateEditor` (negative — pin the asymmetry).
+   - **List 2 surface sanity (3)**: the page has no local single-setter `setShowX(false) useCallback` for any of the 3 modals (regression guard for any "promote one but not the others" partial migration); the page still imports `useCallback` (required for the HARD `cancelTemplateEditor`); every file in scope is readable.
+   - 20/20 pass.
+
+5. **`tests/unit/open-category-manager-callback.test.ts` updated (4 new assertions)** — the existing session 118 source-pattern test for the `openCategoryManager` half of the `openCategoryManager` / `closeCategoryManager` pair needed the close half updated. The pre-existing single assertion (`"declares closeCategoryManager as a useCallback with stable-setter deps (matching sibling pattern)"`) checked the page-local form with `[setShowCategoryManager]` deps. Replaced with 4 new assertions that pin the post-migration shape: (a) hook declares `closeCategoryManager` as a `useCallback` that calls `setShowCategoryManager(false)`, (b) hook uses `[]` deps (the setter is stable), (c) hook exposes `closeCategoryManager` on the returned `vm` object, (d) page re-exports `closeCategoryManager` from `vm`, (e) page does NOT have a local `closeCategoryManager` useCallback declaration (negative regression guard). The net test went from 10 assertions to 14 (+4). 14/14 pass.
+
+### Anti-migration guards (what this session did NOT change)
+
+- Did NOT migrate the `cancelTemplateEditor` HARD 2-setter close. The 2-setter shape (`setShowTemplateEditor` + `setEditingTemplateId`) doesn't fit the hook's single-setter close-callback contract, and migrating it would re-shape the editor's cancel-then-reopen flow (a behavior change). The new source-pattern test has an explicit assertion pinning this asymmetry.
+- Did NOT promote the `setShowTemplateEditor(true)` editor-open calls in `handleCreateNewTemplate` (line 1028) and `handleEditTemplate` (line 1074) to a `useCallback`. Both calls have additional state mutations first (`setEditingTemplateId` / `setTemplateName` / etc.) — they don't fit the 1-setter open-callback shape, just like the 4 inlined `setShowCreate(true)` sites that the existing `openCreate` JSDoc already documents as deliberately NOT promoted.
+- Did NOT touch the other 3 List 2 close-callback patterns in the cron page (`closeAgentModal`, `closeSystemModal`, `openCreateForActiveTab`'s sister `handlePauseAllForActiveTab` from session 199). Those are in `src/app/orchestration/cron/page.tsx`, not the missions page, and are already extracted as named page-local `useCallback`s — no further consolidation needed.
+- Did NOT touch the chat page's modal close-callbacks (none exist — the chat page only has open-side callbacks + the `closeComposer`-style `prependAndActivateSession` from session 197, which is a 2-setter open callback, not a close).
+
+### Why this is byte-equivalent
+
+- **`closeCategoryManager` body** — the pre-session form was `() => setShowCategoryManager(false)` (single statement, returned implicitly). The post-session form is `() => { setShowCategoryManager(false); }` (block body with explicit statement). The two are byte-equivalent: both call `setShowCategoryManager(false)` once and return `undefined`. React's `useCallback` treats the `useState` setter reference as stable, so `[]` deps vs `[setShowCategoryManager]` deps has the same runtime effect (the callback identity is stable across renders in both forms).
+- **`closeTemplateManager` body** — same shape as `closeCategoryManager`. Byte-equivalent.
+- **`closeTemplateEditor` body** — same shape. Byte-equivalent.
+- **No try/catch wrapper added** — the helpers just call the setter, no error handling.
+- **No JSDoc / type narrowing changes** — the helpers' `() => void` signature is the same as the inline form's arrow function.
+- **No `onClose` prop contract change** — the prop receives a function that takes no args and returns void — same contract as before. The modal's `onClose` callback fires the same way (with no args, with the same internal "fire on next render" semantics).
+- **`useMissionsPage` hook's return shape is a pure addition** — the 3 new properties (`closeCategoryManager`, `closeTemplateManager`, `closeTemplateEditor`) sit alongside the existing `setShowX` setters + `openX` callbacks + `showX` booleans + state. No removal of any existing return property. The 2 unused setters in the page (`setShowCategoryManager`, `setShowTemplateManager`) were already unused in the page since the only use was inside the page-local close `useCallback` body (now gone) — removing them from the destructure is a cleanup, not a behavior change. `setShowTemplateEditor` is preserved in the destructure (still used by `cancelTemplateEditor`).
+
+### New pitfall codified
+
+**"Close-callback symmetry in open/close pair patterns"** — when a page has a named `openX` callback (either page-local or in a hook) and a page-local `useCallback(() => setX(false), [setX])` close callback, the open/close pair should be symmetric. If the open is in the hook (so a sibling component can reuse it via the `vm` prop), the close should ALSO be in the hook — keeping the pair in the same file makes the next reader's job easier. The discriminator is: ask whether the open and close callbacks share a parent file today. If the open is in a hook and the close is in the page, the page-local close should be promoted. The threshold: 1 site (the page-local close) is enough when a sister open is already in the hook (Rule of Two for open/close pairs, not Rule of Three for duplicate-call-site patterns). The trap: a 2-setter close (e.g. `cancelTemplateEditor`'s HARD close) does NOT fit the hook's single-setter close-callback contract — promote only the 1-setter close. The pre-session JSDoc on `openCategoryManager` (line 400-401) even acknowledged this asymmetry ("defined locally because the close direction needs the inline `setShowCategoryManager` setter"), but the comment was rationalizing an unfulfilled migration — the setter is stable, the close can live in the hook with `[]` deps.
+
+### Verification (full suite)
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint src/hooks/useMissionsPage.ts src/app/orchestration/missions/page.tsx tests/unit/missions-modal-close-callbacks-source-pattern.test.ts tests/unit/open-category-manager-callback.test.ts --max-warnings 0`: clean
+- `CI=true npx jest tests/unit/missions-modal-close-callbacks-source-pattern.test.ts tests/unit/open-category-manager-callback.test.ts`: **34/34 pass** (20 new + 14 existing, the existing 4 unchanged assertions + 4 new + the other 6 unchanged)
+- Full `CI=true npx jest` sweep: **322 suites / 2437 tests pass** (up from 321/2413 = +1 suite, +24 tests: 20 new in the new test file + 4 added to the updated `open-category-manager-callback.test.ts`)
+- `npm run build`: clean (Next.js production build, all routes pre-rendered correctly)
+
+### Reference doc
+
+`references/session-206-list2-missions-modal-close-callbacks.md` (the per-session reference for this work). Codifies the 1 new pitfall ("close-callback symmetry in open/close pair patterns") + the Rule of Two threshold + the 2-setter HARD close anti-migration guard + the 4 source-pattern test design lessons.
+
+### Next session should
+
+- **Random pick next session.** The List 2 surface's open/close pair pattern is now symmetric for the 3 missions modals. The next List 2 pick should look for refactor opportunities OUTSIDE the 4 List 2 cron-page callbacks (which are also symmetric post-session-199), OUTSIDE the dispatchMissionAction / safeApiCallData / safeApiCall<{ data?: { ... } }> surface (post-session-202/203), and OUTSIDE the now-mined 3 missions-modal close-callbacks. Candidates worth re-scanning: (a) the `if (expandedId === id) void fetchDetail(id);` 5-site "sync expanded detail after refresh" pattern in `useMissionsPage.ts` (the 4 branches in `handleCreate` + 1 in `handleCancel` + 1 in `handleDelete` + 1 elsewhere) — a `syncExpandedDetail(id)` helper could collapse all 5 sites to 1 line, (b) the 4 `dispatchMissionAction + toastFromResult + if(ok) { refresh }` post-success sequences in `handleCreate` — the `if (ok) { await fetchData(); if (expandedId === editingId) void fetchDetail(editingId); }` sub-pattern appears 3 times with minor variations, (c) the 4 inlined `setShowCreate(true)` sites in `useMissionsPage` (handleEdit, handleDuplicateMission, handleTemplateSelect, fetchData's template-apply path) — all have additional state mutations first, so they don't fit the `openCreate` 1-setter shape, but the "set editing + populate form + open" sequence is repeated and could collapse to a `populateAndOpenComposer(permutation: 'edit' | 'duplicate' | 'applyTemplate', source?)` helper.
+- **Carryover** — none. The next session starts with a clean working tree.
+
+---
+
 ## Session 200 — List 4 (Models, HERMES.md, Environment, All Settings) — `window.confirm` → `useTwoStepConfirm` migration in Models table + FallbackChainList (2-site migration: per-row per-key confirm + `ModelRow` + `FallbackRow` sub-component extraction + test filter scope extension)
 
 **Date:** 2026-06-13
