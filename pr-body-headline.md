@@ -4,6 +4,105 @@
 
 ## Recent sessions (full detail)
 
+## Session 193 — List 4 (Models, HERMES.md, Environment, All Settings) — `ConfigModelSection` interface consolidation (export from `hermes-import.ts` + 1-site migration in `models/[id]/diff/route.ts`) + `existingFallbackKeys()` helper extraction in `models/fallbacks/import/route.ts` (2-site migration) (close session 192 carryover)
+
+**Date:** 2026-06-13
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 3 (List 3: Models, Agents, Skills, Tools, Personalities).
+**Outcome:** **2 byte-equivalent refactors in the List 4 surface + 2 new test files (6 + 7 = 13 source-pattern assertions).** Both refactors close the prior session's deferred carryover — the carryover was left in a Mode B (verified-but-uncommitted) state at the end of the prior session with `git status` showing 3 modified production files + 2 untracked test files. Per the refactor-sweep-mission skill, the carryover must be closed BEFORE any new work, so this session's "Random pick" is illustrative only — the actual work is the 2 carryover refactors + their 2 test files. All green under tsc + eslint + jest + build. Committed + pushed as `34a8489`.
+
+### What shipped
+
+2 byte-equivalent refactors + 2 new test files (13 source-pattern assertions total).
+
+1. **`ConfigModelSection` interface consolidation across `src/lib/hermes-import.ts` (canonical source) + `src/app/api/models/[id]/diff/route.ts` (consumer)** — the pre-session source had the same 4-field interface `ConfigModelSection { default?, provider?, base_url?, context_length? }` declared in BOTH files. The canonical declaration in `hermes-import.ts` was a local interface (not exported) used internally as the `HermesYamlConfig.model?` field type. The diff route's `readHermesModelSection()` helper had its own identical-shape 7-line `interface ConfigModelSection { ... }` block. Post-session, the canonical declaration is `export interface ConfigModelSection` (with a JSDoc explaining the snake_case stability + 4-field canonical projection), and the diff route has a single `import type { ConfigModelSection } from "@/lib/hermes-import"` line. The local interface block in the diff route is REMOVED (the source-pattern test pins the absence). No runtime change — the `readHermesModelSection()` return type is byte-equivalent (same shape, same name, same field set). The internal usage in `hermes-import.ts` (the `HermesYamlConfig.model?: ConfigModelSection` reference) is unchanged — only the export keyword was added.
+
+2. **`existingFallbackKeys()` helper extraction in `src/app/api/models/fallbacks/import/route.ts`** — the pre-session source had the 3-line pattern `const existingChain = listFallbackChain(); const existingKeys = new Set(existingChain.map((e) => fallbackKey(e.provider, e.modelIdString)));` duplicated in TWO places in the same file: the GET branch (preview) at lines 43-46 and the POST branch (skip-already-imported) at lines 99-102. Post-session, a single `function existingFallbackKeys(): Set<string>` helper sits above the GET handler, returning `new Set(listFallbackChain().map((e) => fallbackKey(e.provider, e.modelIdString)))`. The 2 call sites are both `const existingKeys = existingFallbackKeys();` — a 1-line, 1-token swap. The helper's JSDoc explains the O(1) membership guarantee + the `(provider::modelId)` key shape + the `fallbackKey()` contract reference. No runtime change — both call sites receive the same Set with the same entries; the loop bodies in both branches are byte-equivalent.
+
+3. **`tests/unit/config-model-section-consolidation.test.ts` (NEW, 6 source-pattern assertions)** — pins the post-migration shape across the 2 affected files: (a) `hermes-import.ts` exports the interface (1 export site), (b) `hermes-import.ts` preserves the 4-field shape (default, provider, base_url, context_length), (c) `hermes-import.ts` still uses `ConfigModelSection` as the type of `HermesYamlConfig.model?` (the internal-usage preservation pin), (d) `models/[id]/diff/route.ts` imports the type (1 import site), (e) `models/[id]/diff/route.ts` no longer declares the interface locally (0 `interface ConfigModelSection` blocks), (f) `models/[id]/diff/route.ts` still uses `ConfigModelSection` as the return type of `readHermesModelSection` (the consumer-usage preservation pin). 6/6 pass.
+
+4. **`tests/unit/fallbacks-import-route-existing-fallback-keys-migration.test.ts` (NEW, 7 source-pattern assertions)** — pins the post-migration shape of the route file: (a) helper declaration exists (1 occurrence), (b) JSDoc block on the helper mentions "O(1)" + "provider" + "modelId", (c) GET branch uses the helper (1 call), (d) POST branch uses the helper (1 call), (e) no inline `existingChain = listFallbackChain()` declaration (0 occurrences), (f) no inline `new Set(existingChain.map(` construction (0 occurrences), (g) no inline `fallbackKey(e.provider, e.modelIdString)` outside the helper body (the test splits the source at the helper declaration and asserts the inline form is absent from the rest of the file). 7/7 pass.
+
+### Why this is byte-equivalent
+
+- **`ConfigModelSection` consolidation**: the imported `type` alias is structurally identical to the local interface — same name, same 4 field names, same 4 field types (`string | undefined` for default/provider/base_url, `number | undefined` for context_length), same field order. The diff route's `readHermesModelSection(): ConfigModelSection | null` return type is unchanged (the helper just references the imported alias instead of the local declaration). The `readHermesYamlConfig<Record<string, unknown>>()` call at the top of `readHermesModelSection` is unchanged, the `(config?.model as ConfigModelSection) ?? null` body is unchanged, the call sites of `readHermesModelSection` are unchanged. The 6 source-pattern tests pin all 6 cross-file references (export in source, import in consumer, 4-field shape preservation, internal usage preservation, no local redeclaration, return-type preservation), so a future "rename the type" or "widen the fields" PR would need to update BOTH the source's exported interface and the consumer's import — single source of truth.
+- **`existingFallbackKeys()` extraction**: the helper body is literally `new Set(listFallbackChain().map((e) => fallbackKey(e.provider, e.modelIdString)))` — the EXACT same construction as the pre-session inline form. The 2 call sites receive a Set with the EXACT same entries (the helper invokes `listFallbackChain()` and `fallbackKey()` with the same arguments). The downstream loops (the `for (const entry of config?.fallback_providers ?? [])` in GET, the `for (let i = 0; i < chain.length; i++)` in POST) are unchanged — they read `existingKeys` as a `Set<string>` and use `.has()` for membership, which is the same access pattern as the pre-session code. The 7 source-pattern tests pin the helper-at-call-sites shape, the helper-declaration shape, the JSDoc shape, and the absence of the 3 inline forms (the variable declaration, the Set constructor, the `fallbackKey` call), so a future "inline the helper back into the 2 sites" PR would fail at least one of them.
+
+### New pitfall codified
+
+**"An un-exported canonical interface is a 2-place duplication waiting to be added to."** The `ConfigModelSection` interface in `hermes-import.ts` was the canonical source of truth for the `model:` section of `~/.hermes/config.yaml`, but it was `interface ConfigModelSection` (not `export interface ConfigModelSection`). The diff route's `readHermesModelSection` helper needed the same shape for its return type, so it redeclared the interface locally. The 2 declarations were byte-equivalent at session 193 start, but a future PR that adds a 5th field (e.g. `temperature?: number`) to the canonical would need to update BOTH declarations — and the diff route's local redeclaration is the easy one to forget (the `readHermesModelSection` consumer just needs the same shape as the writer, so the local redeclaration is "in sync by convention" not "in sync by type"). **The fix:** export the canonical interface (`export interface ConfigModelSection`) and have all consumers import the type alias. The type system then enforces single-source-of-truth — a future field addition is propagated to consumers automatically. **Detection recipe:** grep the codebase for non-exported `interface \w+ {` declarations in `src/lib/*.ts` files. For each, check if any other file in `src/app/` declares the same interface name with the same field set (use ripgrep `rg -B1 "interface \w+" src/lib/ src/app/` to find candidate redeclarations). If yes, the canonical is a 2-place duplication — export it and migrate the consumer. **The trap:** a "type alias" (`type Foo = { ... }`) is a STRUCTURAL form, not a nominal form, so the type system would let `type Foo = { ... }` in file A and `interface Foo { ... }` in file B coexist without conflict (they're "the same" only by name, not by identity). Exporting the canonical + migrating the consumer is the only durable fix.
+
+**"An O(N) `.find()` per iteration is a 2-place duplication of an O(1) Set construction."** The `existingFallbackKeys` helper replaces the pattern `existingKeys.has(key)` (O(1) Set membership) with the pattern `existingChain.find(e => fallbackKey(e.provider, e.modelIdString) === key)` (O(N) linear scan per membership check). The pre-session code already used the O(1) Set form — the refactor is purely about the Set CONSTRUCTION (3 lines) being duplicated at 2 sites, not about the lookup itself being slow. **The fix:** extract the Set construction into a single helper, even when the O(1) form is already in use — the helper centralises the data flow (read the chain, project to keys, build the Set) so a future "change the key shape from `provider::modelId` to `provider/modelId`" PR is a 1-line helper body change instead of a 2-site change. **Detection recipe:** grep for `new Set\\(\\.+\\.map\\(` patterns in API route files (each is a candidate for a `xxxKeys()` helper). For each, check if the same construction appears at 2+ sites in the same file (use ripgrep `rg -c "new Set\\(\\.+\\.map\\(" src/app/api/**/*.ts` to find candidate files). If yes, extract. **The trap:** the `new Set(arr.map(...))` pattern is sometimes justified as a "1-time conversion" (e.g. for an immutable snapshot) — the extraction is only worth it when the construction is duplicated at 2+ sites AND the source data is fetched multiple times (e.g. once per route handler in the same file).
+
+### Verification
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint src/app/api/models/[id]/diff/route.ts src/app/api/models/fallbacks/import/route.ts src/lib/hermes-import.ts tests/unit/config-model-section-consolidation.test.ts tests/unit/fallbacks-import-route-existing-fallback-keys-migration.test.ts --max-warnings 0`: clean
+- `CI=true npx jest tests/unit/config-model-section-consolidation.test.ts tests/unit/fallbacks-import-route-existing-fallback-keys-migration.test.ts tests/unit/fallbacks-import-api.test.ts`: **15/15 pass** (6 + 7 new + 2 carryover from fallbacks-import-api)
+- Full `CI=true npx jest` sweep: **311 suites / 2325 tests pass** (up from 309/2312 = +2 suites, +13 tests, matching the 2 new test files at 6+7 = 13 cases)
+- `CI=true npx --yes pnpm@10.33.0 build`: clean
+
+### Carryover resolution
+
+This session started with a Mode B (verified-but-uncommitted) carryover from the prior session: 3 production files modified (`src/app/api/models/[id]/diff/route.ts`, `src/app/api/models/fallbacks/import/route.ts`, `src/lib/hermes-import.ts`) + 2 test files created (`tests/unit/config-model-section-consolidation.test.ts`, `tests/unit/fallbacks-import-route-existing-fallback-keys-migration.test.ts`). The carryover protocol per the refactor-sweep-mission skill is: (1) detect the carryover via `git status` (3 modified + 2 untracked files), (2) run the new test files in isolation FIRST (per pre-flight #6 — also catches Mode J), (3) run the full verification (tsc + eslint + jest + build), (4) commit + push + docs commit atomically. The pre-commit verification surfaced 0 issues — both refactors are mechanical consolidations (interface re-export + helper extraction), the new test files' regex pins are exact, and the carryover was already in a verified-green state when this session started. Standard 4-step commit-when-verified protocol applied: verify → commit → push → docs commit.
+
+### Reference doc
+
+No new reference doc — this is a 2-refactor session with the same `interface-export-consolidation` + `helper-extraction` shape as the prior List 4 sessions (e.g. session 192's `isManagedKey` predicate extraction, session 187's `config-cache` module extraction, session 170's `buildDriftDetails` helper extraction). The new test files' JSDoc + the helper's JSDoc + the exported interface's JSDoc together document the contracts. The 2 pitfall-cofication JSDoc blocks (above) are the "what would trip a future auditor" guides for the 2 refactor families (canonical-interface-export + Set-construction-helper).
+
+### Next session should
+
+- **Random pick next session.** The List 4 surface has now had 8 sessions (70, 72, 95, 98, 121-adjacent, 170, 187, 192, 193). The session 192 + 193 carryovers are now BOTH closed. The other 2 deferred items from session 187 are still open: (a) the `parseEnvLine` + per-line rendering in `src/app/config/[section]/page.tsx:258-283` is still 1 call site — Rule of Three not met, defer; (b) the `isPlatformToolsetsPreview` special-case is still 1 override — premature to add `loadFrom`/`saveTo` to `SectionDef`, defer. The next List 4 pick should look for new refactor opportunities OUTSIDE the 4 factory families (`ok()`, `serverErrorFromCatch`, `setErrorFromCaught`, `parseAndValidateJsonBody`) and outside the now-mined `MANAGED_KEYS` / `config-cache` / `existingById` Map / `ConfigModelSection` / `existingFallbackKeys` surface. Candidates worth re-scanning on a future List 4 pick: the `getBundlePathMap` helper in `agent/files/[key]/route.ts:80-91` (hand-rolls a `Record<string, string>` that maps the same 8 keys to bundle paths that `getBehaviorFiles()` already publishes; could share data with the existing `getBehaviorFiles()` map), the `appendAuditLine` calls across 12+ routes (could benefit from a `routeAuditSuccess(route, resource)` shorthand), the per-route `requireAuth(request)` + early-return pattern (could be a `withAuth` route wrapper — but 12+ sites means a HOC, not a helper, and the codebase has no HOC convention for route handlers; defer). The next List 4 pick is also a good opportunity to scan the per-list source-pattern tests for staleness — the tests were written across sessions 100-150 and the regex pins may need refresh.
+- **Carryover** — none. The next session starts with a clean working tree.
+
+---
+## Session 192 — List 4 (Models, HERMES.md, Environment, All Settings) — `isManagedKey` runtime predicate extraction from `MANAGED_KEYS` Set literal + 3-site migration in `src/app/api/agent/files/[key]/route.ts`
+
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 4 (List 4: Models, HERMES.md, Environment, All Settings).
+
+**Date:** 2026-06-13
+
+**Outcome:** **1 byte-equivalent runtime-predicate extraction in the List 4 surface + 2 new test files (13 unit + 7 source-pattern assertions).** All green under tsc + eslint + jest + build. Committed as `ce91ad5` (refactor + tests).
+
+### What shipped
+
+**1. `isManagedKey(key: string): key is ManagedFileKey` runtime predicate extracted from `src/app/api/agent/files/[key]/route.ts:33`'s local `MANAGED_KEYS = new Set<string>([...])` literal into a new exported helper in `src/lib/agent-file-store.ts`.** The pre-session route had a 6-string `MANAGED_KEYS` Set that duplicated the `ManagedFileKey` union already declared in `agent-file-store.ts:6-13`. The set was hand-rolled inline (6 literal strings in declaration order) — easy to drift from the union if a future PR adds a 7th member. The new helper is a discriminated OR-check (`key === "soul" || ...`) with a `key is ManagedFileKey` type-guard return type, so the downstream `as ManagedFileKey` casts at `readManagedFileContent` / `writeManagedFileContent` call sites are preserved byte-equivalent. The 3 call sites (GET branch's "managed-file hit" check at line 139, PUT's pre-write "profile not found" guard at line 217, PUT's write-branch dispatch at line 237) are all `MANAGED_KEYS.has(key)` → `isManagedKey(key)` — a 1-token swap, no other changes. The `MANAGED_KEYS` Set is removed from the route file (the negative assertion in the source-pattern test pins the absence). The env-exclusion rationale (the reason the helper is NOT derived from `getBehaviorFiles()`) moves into the helper's JSDoc, preserving the discoverability of the security-sensitive design choice that the original line-33 inline comment was guarding.
+
+### Why this is byte-equivalent
+
+- **Helper body**: `isManagedKey(key)` returns `true` for exactly the 6 strings in the `ManagedFileKey` union (`"soul"`, `"agent"`, `"user"`, `"memory"`, `"config"`, `"hermes"`) and `false` for everything else. The 3 migrated call sites see the exact same boolean outcome as the pre-session `MANAGED_KEYS.has(key)` — the Set had those same 6 strings, no more, no less. The 13 unit tests (6 positive + 6 negative + 1 type-guard sanity) exercise every reachable input shape, including the security-sensitive `env` + `auth` exclusions, the case-sensitivity invariant, the prefix-match no-surprise invariant (`"agentx"` is not `"agent"`), and the exhaustive-union coverage check.
+- **Type-guard return type**: `key is ManagedFileKey` is structurally identical to the pre-session `Set<string>.has(key)` return — both are runtime boolean checks. The narrow is the SAME narrow that the pre-session `as ManagedFileKey` cast at the `readManagedFileContent(profileSlug, key as ManagedFileKey)` call site was already performing. The cast stays; the type-guard makes the narrow visible at the `if` branch (good — future readers can see exactly which keys the `if` admits), but the downstream call sites are byte-equivalent.
+- **No call-site logic change**: the 3 `if` branches that consumed `MANAGED_KEYS.has(key)` consumed the same boolean; the bodies of the branches (`readManagedFileContent(...)` for the managed hit, `notFound("Profile not found")` for the pre-write guard, `configYamlToColumnValues(...)` + `applyProfileOrRootPatchOrFail(...)` for the write branch) are byte-equivalent — only the `if` predicate changed. The `MANAGED_KEYS` Set's import-block-only presence is removed; no other imports changed.
+- **JSDoc moved, not lost**: the pre-session `route.ts:33` had a 0-line inline comment explaining the env exclusion (the design rationale lived only in the PR #120 commit message that introduced the Set). The post-session JSDoc on `isManagedKey` reproduces the same rationale in a discoverable form — a future maintainer reading the helper can see why the helper is NOT derived from `getBehaviorFiles()` and which keys are excluded. The content moved, the security guarantee preserved.
+
+### New pitfall codified
+
+**"The `MANAGED_KEYS` Set literal is a 2-place duplication: the type AND the runtime check both encode the same 6-string list."** The `ManagedFileKey` union in `agent-file-store.ts:6-13` is the canonical TYPE (compile-time), and the `MANAGED_KEYS` Set in the route was a parallel RUNTIME representation (hand-rolled 6-string array → `Set`). A future PR that adds a 7th member (e.g. a new behaviour file like `skills: SkillFileKey` for an in-database skills section) would need to update BOTH — the union AND the Set — and the Set is the easy one to forget (it's an `as Set<string>` annotation, not a type-checked constraint). **The fix:** extract the runtime check into a single exported helper co-located with the type, so the union and the runtime predicate are siblings in the same module, and a future "add a 7th key" PR naturally updates both. **Detection recipe:** grep the codebase for `new Set<string>\(\[\s*["']` patterns — each is a candidate for a typed-runtime-predicate extraction. If the Set's elements are also a TypeScript union declared elsewhere, the duplication is 2-place. The "byte-equivalent" claim is the easy part — a Set.has() and a `key === "x" || key === "y" || ...` chain both produce the same boolean for the same inputs; the harder part is preserving the type-guard return type so the downstream call sites don't need new casts. **The trap:** the union IS the source of truth, so a "smart" runtime check like `Array.from(managedKeys as Set<ManagedFileKey>)` would create a circular import or require a third file. The discriminated OR-check is the right form — it's a literal transcription of the union, and the type-guard return type `key is ManagedFileKey` is the static guarantee that the transcribed check is correct.
+
+### Verification
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint . --max-warnings 0`: clean (0 warnings)
+- `CI=true npx jest tests/unit/agent-file-store-is-managed-key.test.ts`: **13/13 pass** (new)
+- `CI=true npx jest tests/unit/agent-files-route-is-managed-key-migration.test.ts`: **7/7 pass** (new)
+- Full `CI=true npx jest` sweep: **309 suites / 2312 tests pass** (up from 307/2292 = +2 suites, +20 tests, matching the 2 new test files at 13+7 = 20 cases)
+- `npm run build`: clean
+
+### Carryover resolution
+
+None (clean session; refactor + tests + verification + commit all completed in-session; the previous session's working tree was clean at the start).
+
+### Reference doc
+
+No new reference doc — this is a 1-refactor session with the same extraction shape as the prior List 4 sessions (e.g. session 187's `config-cache` module extraction, session 167's `seedPostSchema` + `parseAndValidateJsonBody` migration, session 121's `parseAndValidateJsonBody` migration across 15 routes). The new helper's JSDoc + the 2 new test files' JSDoc together document the contract. The pitfall-cofication JSDoc (above) is the "what would trip a future auditor" guide.
+
+### Next session should
+
+- **Random pick next session.** The List 4 surface has now had 7 sessions (70, 72, 95, 98, 121-adjacent, 187, 192). The session 192 deferred work (from session 187's closeout) is now DONE: the `MANAGED_KEYS` Set → `isManagedKey` predicate extraction is shipped, and the env-exclusion rationale is in the helper's JSDoc. The other 2 deferred items from session 187 are still open: (a) the `parseEnvLine` + per-line rendering in `src/app/config/[section]/page.tsx:258-283` is still 1 call site — Rule of Three not met, defer; (b) the `isPlatformToolsetsPreview` special-case is still 1 override — premature to add `loadFrom`/`saveTo` to `SectionDef`, defer. The next List 4 pick should look for new refactor opportunities OUTSIDE the 4 factory families (`ok()`, `serverErrorFromCatch`, `setErrorFromCaught`, `parseAndValidateJsonBody`) and outside the now-mined `MANAGED_KEYS` / `config-cache` / `existingById` Map surface. Candidates worth re-scanning on a future List 4 pick: the `getBundlePathMap` helper in `agent/files/[key]/route.ts:80-91` (hand-rolls a `Record<string, string>` that maps the same 8 keys to bundle paths that `getBehaviorFiles()` already publishes; could share data with the existing `getBehaviorFiles()` map), the `appendAuditLine` calls across 12+ routes (could benefit from a `routeAuditSuccess(route, resource)` shorthand), the per-route `requireAuth(request)` + early-return pattern (could be a `withAuth` route wrapper — but 12+ sites means a HOC, not a helper, and the codebase has no HOC convention for route handlers; defer).
+- **Carryover** — none. The next session starts with a clean working tree.
+
+---
+
 ## Session 191 — List 3 (Models, Agents, Skills, Tools, Personalities) — `toggleActiveCollapsed` / `toggleInactiveCollapsed` 1-setter toggle-callback extraction in `src/app/operations/skills/page.tsx`
 
 **Random pick:** `echo $((RANDOM % 4 + 1))` = 3 (List 3: Models, Agents, Skills, Tools, Personalities).
@@ -167,69 +266,6 @@ No new reference doc — this is the closure of session 181's carryover (`refere
 
 - **Random pick next session.** This session picked List 1 (the next-ripe surface per the session 188 closeout doc's "List 1 is the next-ripe surface" advice), but the 3 refactors shipped in this session are NOT in the List 1 surface proper — they are in `useMissionsPage.ts` (List 2) and `page.tsx` (the Dashboard, List 1) — they were the explicit session 181 carryover that needed closing. The "true" List 1 surface (the `(main)` route group + `page.tsx` + `memory/*` + `logs/*`) is still unmined at the new-work level. The next random-pick List 1 session should look at the Dashboard helpers (`src/app/page.tsx`), the Sessions pages (`src/app/sessions/` + `src/app/sessions/[id]/`), the Memory pages + APIs (`src/app/memory/` + `src/app/api/memory/`), and the Logs page (`src/app/logs/` + `src/app/api/monitor/`) for byte-equivalent refactor candidates. The session 186 `hindsightErrorFromCatch` work touched the only obvious `serverErrorFromCatch`-style site in the memory route — the next List 1 pick should look for a different family of refactor (e.g. `safeApiCall<{ data?: { ... } }>` double-envelope sweep in `sessions/[id]/page.tsx` if any sites exist, or a `useEffect` + `useCallback` consolidation in the Dashboard).
 - **Carryover** — none. The next session starts with a clean working tree.
-
----
-## Session 188 — List 3 (Models, Agents, Skills, Tools, Personalities) — `isApiSuccessFalse` type-guard extraction in `operation-sync-action.ts` + 4 stale `line N` comment updates in `operations/agents/page.tsx`
-
-**Random pick:** `$(( $(date +%s) % 4 + 1 ))` = 3 (List 3: Models, Agents, Skills, Tools, Personalities).
-
-**Date:** 2026-06-12
-
-**Outcome:** **1 byte-equivalent type-guard extraction in the List 3 shared sync helper (`src/lib/operation-sync-action.ts`) + 1 comment-only cleanup in `src/app/operations/agents/page.tsx`.** The 6-clause chained type guard that pattern-matches on the `{ data: { success: false, error?: string } }` envelope produced by `/api/agent/profiles/sync/*` endpoints was inlined inside `runSyncAction`'s try-block. The chain is moved into a new named type-guard `isApiSuccessFalse(response: unknown): response is { data: { success: false; error?: unknown } }` exported from the same file. The call site shrinks from 6 chained clauses (10 lines) to `if (checkSuccess && isApiSuccessFalse(data))` (1 line). The `errMsg` extraction also drops its inner `typeof (data.data as { error?: unknown }).error === "string"` cast — the type-narrowing from the `is` predicate means `data.data.error` is already typed `unknown` (with the runtime `typeof === "string"` check the only thing needed to narrow to `string`). The 4 stale `line N` comment updates in `operations/agents/page.tsx` replace the now-drifted line numbers (e.g. "line 492" → "around line 600", "line ~222" → "around line 282") with the "around line N" form so the references stay useful as anchors without becoming stale on the next edit. 26 new tests across 2 test files: `tests/unit/operation-sync-action-is-api-success-false.test.ts` (21 cases — 5 positive input shapes, 14 negative input shapes, 2 type-narrowing assertions) + `tests/unit/operation-sync-action-is-api-success-false-source-pattern.test.ts` (5 source-pattern assertions pinning the post-refactor shape: helper is exported, call site uses the helper, inlined chain's signature fragment is absent, error access uses the narrowed type, return type uses the `is` type-guard predicate). All 2249 jest tests pass (+26 from session 187's 2223 = +21 runtime + 5 source-pattern) + tsc + eslint + build all green.
-
-### What shipped
-
-1 byte-equivalent refactor in the shared List 3 sync helper + 1 comment cleanup, plus 26 new tests across 2 test files.
-
-1. **`isApiSuccessFalse` type-guard extraction in `src/lib/operation-sync-action.ts`** — the 6-clause chained type guard that pattern-matches on the `{ data: { success: false, error?: string } }` envelope produced by `/api/agent/profiles/sync/*` endpoints was inlined inside `runSyncAction`'s try-block (lines 106-115 in the pre-refactor file). The chain was:
-   ```ts
-   if (
-     checkSuccess &&
-     data && typeof data === "object" && "data" in data &&
-     data.data && typeof data.data === "object" &&
-     "success" in data.data &&
-     (data.data as { success: unknown }).success === false
-   ) { ... }
-   ```
-   The chain is moved into a new named type-guard `isApiSuccessFalse(response: unknown): response is { data: { success: false; error?: unknown } }` exported from the same file. The call site shrinks from 6 chained clauses (10 lines) to `if (checkSuccess && isApiSuccessFalse(data))` (1 line). The `errMsg` extraction below also drops its inner `typeof (data.data as { error?: unknown }).error === "string"` cast — the type-narrowing from the `is` predicate means `data.data.error` is already typed `unknown` (with the runtime `typeof === "string"` check the only thing needed to narrow to `string`).
-
-2. **4 stale `line N` comment updates in `src/app/operations/agents/page.tsx`** — the inline comments above `closeCreate` (line 204 said "line 492", actually around line 600 now), `closeEditor` (lines 97-101 referenced "line ~222 / ~334 / ~495", now ~282 / ~404 / ~567), and `openCreate` (line 217 said "line 310", now ~364) all referenced pre-session-184 line numbers from the closed `setX(messageFromError)` migrations. The line numbers were replaced with "around line N" / "(around line N)" so the references stay useful as anchors without becoming stale on the next edit. No code change — comment-only.
-
-3. **`tests/unit/operation-sync-action-is-api-success-false.test.ts` (NEW)** — 21 unit tests covering: 5 positive cases (`{data: {success: false, error: 'disk full'}}`, no-error variant, non-string error, null error, extra fields ignored), 14 negative cases (`success: true`, `success: 'false'` strict-equality pin, `success: 0`, no success key, no data key, null, undefined, string, number, array, `data: null`, `data: 'string'`, `data: 42`, `success: undefined`), and 2 type-narrowing tests confirming the `is` predicate correctly narrows `data.data.error` to the typed `string | unknown` shape. 21/21 pass.
-
-4. **`tests/unit/operation-sync-action-is-api-success-false-source-pattern.test.ts` (NEW)** — 5 source-pattern assertions pinning the post-refactor shape of `src/lib/operation-sync-action.ts`: (a) `isApiSuccessFalse` is exported as a named function, (b) the `runSyncAction` call site uses the helper (regex pin: `if (checkSuccess && isApiSuccessFalse(data))`), (c) the file does NOT contain the 6-clause inlined chain's signature fragment `data.data && typeof data.data === "object"` (the truthy-check pattern that the helper replaced), (d) the error access uses the narrowed type `typeof data.data.error === "string"` (not the pre-refactor re-cast `(data.data as { error?: unknown }).error`), (e) the helper's return type uses the `is` type-guard predicate (`response is { ... }`). 5/5 pass. Comment-stripped source is read so JSDoc blocks don't trip the substring matches.
-
-### Why this is byte-equivalent (or improves performance without behavior change)
-
-- **`isApiSuccessFalse` extraction**: pure relocation + type-guard promotion. The helper's predicate is the EXACT 6-clause chain from the pre-refactor file (verified by the 21 input-shape tests covering every reachable `unknown` value: `null`, `undefined`, primitives, arrays, plain objects with/without `data`, with/without `success`, with `success: true` vs `success: false` vs `success: 'false'` vs `success: undefined`). The 17 existing `operation-sync-action.test.ts` tests continue to pass unchanged (4 of which exercise the `success: false` envelope directly: the "shows the error toast and skips onSuccess when the response says success:false" test, the "falls back to errorMessage when success:false has no error string" test, the "tolerates responses that lack a data field" test, and the "skips the success:false check when checkSuccess=false" test). The 5 source-pattern tests pin the helper-at-call-site shape so a future "inline the type-guard back into the runSyncAction try-block" PR would fail at least one of them. The 21+17+5 = 43 total tests lock the byte-equivalence claim at the runtime, type-narrowing, and source-pattern levels.
-- **Stale `line N` comment updates**: comment-only change. The pre-session comments said "line 492" / "line ~222" / "line ~334" / "line ~495" / "line 310" — each was the line number AT THE TIME the comment was written (sessions 184 and 185). The line numbers drifted because intervening sessions added 100+ lines of closeDelete / closeEditor / openCreate sibling callbacks and the timer-ref cleanup. The replacement text "around line N" preserves the anchor function (readers can `grep` to find the site) without becoming stale on the next edit. No code path changes — purely a discoverability improvement for the next maintainer.
-
-### Verification
-
-- `npx tsc --noEmit`: clean (0 errors)
-- `CI=true npx eslint . --max-warnings 0`: clean (0 warnings)
-- `npx jest`: **301 suites / 2249 tests pass** (up from 299/2223 = +2 suites, +26 tests, matching the 2 new test files at 21+5 = 26 cases)
-- `CI=true npx --yes pnpm@10.33.0 build`: clean
-
-### Carryover resolution
-
-No carryover in or out. This session started with a clean working tree (session 187's `config-cache` + `existingById` Map extraction shipped in commit `5e8eb2c`). The previous session's "Next session should" block suggested a different list for the next session, but the random pick (using `$(date +%s) % 4 + 1`) landed on List 3 again — List 3 still had the `runSyncAction` 6-clause chain as an unmined surface, and the `agents/page.tsx` line-ref drift was a low-cost 5-min cleanup, so this session picked the lowest-hanging fruit and shipped a tight 2-refactor session.
-
-### Reference doc
-
-No new reference doc — this is a 2-refactor session with the same `helper-extraction + comment-cleanup` shape as the prior List 3 sessions (e.g. session 119's `applyProfileOrRootPatch` double-handler decomposition, session 107's `reloadAll` callback consolidation). The new test file's JSDoc + the helper's JSDoc together document the contract.
-
-### Next session should
-
-- **Random pick next session.** List 3 has now had 13+ sessions (67, 70, 77, 80, 90, 91, 92, 95, 96, 98, 107, 111, 113, 119, 127, 132, 133, 142, 144, 147, 163, 165, 166, 187, 188). The "spread the refactor surface" advice still holds — **List 1 is the next-ripe surface** (last touched session 144, 44 sessions ago). **List 2** is also ripe (last touched session 168, 20 sessions ago) — the `safeApiCall<{ data?: { ... } }>` double-envelope sweep in `useMissionsPage.ts` (3 sites) + `useMissionsApi.ts` (1 site) + `useCronJobMutation.ts` (1 site) is the natural follow-up to session 166's `useModelsPage.ts` migration. **List 4** is the quietest surface (last touched session 187, 1 session ago) but most-ripe for new content discovery — the per-list source-pattern tests are CLOSED for all 4 lists, so the next List 4 pick needs to find refactor opportunities OUTSIDE the 4 factory families (e.g. the `apiFetch + JSON.stringify` mutation-site sweep, which has 12+ sites across `useModelsPage.ts` + the 4 operations pages, but changes the failure mode from throw to return-ok/error, so requires explicit per-site `if (!ok) { toastError(...) }` rewrites).
-- **`safeApiCall<{ data?: { ... } }>` double-envelope sweep (List 2)** — the 4 List-2 sites in `useMissionsPage.ts:661, 692, 720` and `useMissionsApi.ts:46` and `useCronJobMutation.ts:136` are the same single-nesting pattern session 166 closed in List 3 (`useModelsPage.ts:413`). The migration is byte-equivalent: `safeApiCall<{ data?: { mission?: { id: string } } }>` → `safeApiCall<{ mission?: { id: string } }>` + `res?.mission?.id` (drop the `res?.data?.` indirection). 5 sites in 3 files, 1-list-scope. Defer to a future List 2 pick.
-- **`apiFetch + JSON.stringify` migration to `safeApiCall` (cross-list)** — 12+ mutation sites in `useModelsPage.ts` and the 4 operations pages (`agents`, `personalities`, `skills`, `tools`). The migration changes the failure mode (throw → return ok/error), so requires per-site `if (!ok) { toastError(...); }` rewrites. Currently rejected by sessions 80, 90, 119 because the migration is non-byte-equivalent. Defer to a future session that explicitly opts in to `safeApiCall` mutations.
-- **`useMissionsPage` decomposition** — 1298+ LOC, still the biggest hook in the codebase. List 2 territory. Out of scope for "AT LEAST identical results" — would need a careful hook-by-hook extraction with state-derivation verification.
-- **Carryover** — none. The next session starts with a clean working tree.
-
----
-
-
 ## Session 187 — List 4 (Models, HERMES.md, Environment, All Settings) — `config-cache` module extraction + `existingById` Map in `/api/models/import`
 
 ### What shipped
@@ -274,55 +310,11 @@ No new reference doc — this is a 2-refactor session with the same extraction s
 ---
 
 
-## Session 186 — List 1 (Dashboard, Sessions, Memory, Logs) — `hindsightErrorFromCatch` combined catch shim + 2 POST/DELETE catch migrations in `/api/memory/hindsight/route.ts` (close session 185 carryover)
-
-**Random pick:** `$((RANDOM % 4 + 1))` = 1 (List 1: Dashboard, Sessions, Memory, Logs).
-
-**Date:** 2026-06-12
-
-**Outcome:** **1 byte-equivalent catch-shim extraction in the List 1 surface that brings the 2 POST/DELETE catch sites in `/api/memory/hindsight/route.ts` to parity with the `serverErrorFromCatch` sister-helper family.** Also closed the session 185 carryover (the `saveStatusTimerRef` + `copiedTimerRef` timer-cleanup work was uncommitted in the working tree at the start of the session). (a) `hindsightErrorFromCatch(route, context, error)` helper in `src/lib/hindsight-route-helpers.ts` — composed of `logApiError(route, context, error)` + `hindsightErrorResponse(error)`, the sister-helper to `serverErrorFromCatch` (in `src/lib/api-logger.ts`) for the hindsight-specific response shape (500 + `{ data: { available: false, error: msg } }`, NOT the plain `{ error: msg }` shape used by `serverError`). (b) The 2 POST + DELETE catch blocks in `src/app/api/memory/hindsight/route.ts` (lines 401-403, 433-435) collapsed from 2-line `logApiError + return hindsightErrorResponse(error)` to a single `return hindsightErrorFromCatch(ROUTE, CONTEXT, error)` call. The GET catch block intentionally NOT migrated — it has a different response shape (uses `memories: []` and 503 for connection errors). (c) 2 new test files: `tests/unit/hindsight-error-from-catch.test.ts` (11 cases mirroring the `server-error-from-catch.test.ts` sister test, 6 shape + 5 byte-equivalence matrix cases) + `tests/unit/memory-hindsight-route-hindsight-error-from-catch-source-pattern.test.ts` (8 source-pattern assertions pinning the post-migration shape, including the GET-branch intentional carryover). All 2209 jest tests pass (+19 from session 185's 2190 = +11 unit + 8 source-pattern) + tsc + eslint + build all green.
-
-### What shipped
-
-1. **`hindsightErrorFromCatch(route, context, error)` helper in `src/lib/hindsight-route-helpers.ts`** — composed of `logApiError(route, context, error)` + `hindsightErrorResponse(error)`. The sister-helper to `serverErrorFromCatch` (in `src/lib/api-logger.ts`) for the hindsight-specific response shape: 500 + `{ data: { available: false, error: msg } }` (the Hindsight client envelope), NOT the plain `{ error: msg }` shape used by `serverError`. The helper's body is literally `logApiError(...) + return hindsightErrorResponse(error)` — same byte-equivalence claim as the `serverErrorFromCatch` family, just with a different response primitive.
-
-2. **`/api/memory/hindsight/route.ts:401-403` (POST) and `:433-435` (DELETE) catch blocks** — both had the canonical 2-line `logApiError + return hindsightErrorResponse(error)` pattern. Collapsed to a single `return hindsightErrorFromCatch(ROUTE, CONTEXT, error)` call. The GET catch block (line 304-316) is intentionally NOT migrated — it has a different response shape (uses `memories: []` and 503 for connection errors), so the inline form is preserved. The pre-existing `logApiError` import stays (GET branch still uses it).
-
-3. **`tests/unit/hindsight-error-from-catch.test.ts`** (NEW) — 11 unit tests (6 shape + 5 byte-equivalence matrix cases mirroring the `server-error-from-catch.test.ts` sister test). Shape cases: response envelope, log line shape, non-Error throw handling, null/undefined throws, empty-Error fallback to "Unknown error", verbatim message preservation. Byte-equivalence cases: Error instance, empty Error, string throw, null throw, TypeError — all verify the helper produces the same status + body + log call as the inline 2-line form. 11/11 pass.
-
-4. **`tests/unit/memory-hindsight-route-hindsight-error-from-catch-source-pattern.test.ts`** (NEW) — 8 source-pattern assertions pinning the post-migration shape: (a) helper is imported, (b) `hindsightErrorResponse` is NOT imported (helper composes the call), (c) POST catch block ends with `return hindsightErrorFromCatch(POST, action, error)`, (d) DELETE catch block ends with `return hindsightErrorFromCatch(DELETE, delete, error)`, (e) no bare `logApiError(POST/...)` in route (helper composes the log), (f) no bare `logApiError(DELETE/...)` in route, (g) no `} catch (error) { return hindsightErrorResponse(` inline form anywhere, (h) GET catch block still uses the inline `logApiError + NextResponse.json({ data: { available: false, ...memories: [] } }, { status: 503|500 })` form (intentional carryover, pinned so a future migrate-everything PR doesn't lose the GET-specific response shape). 8/8 pass.
-
-### Why this is byte-equivalent
-
-- **Helper body**: `hindsightErrorFromCatch(route, context, error)` is literally `logApiError(route, context, error) + return hindsightErrorResponse(error)`. The `hindsightErrorResponse` helper's body (line 178-183 of `hindsight-route-helpers.ts`) is `messageFromError(error, "Unknown error") + NextResponse.json({ data: { available: false, error: message } }, { status: 500 })`. Composed: same log line, same response, same status — character-for-character identical to the pre-migration inline form for every reachable input shape (Error instance, empty Error, string, null, undefined, TypeError). The 5 byte-equivalence matrix cases in `hindsight-error-from-catch.test.ts` lock this claim.
-
-### Verification
-
-- `npx tsc --noEmit`: clean (0 errors)
-- `CI=true npx eslint . --max-warnings 0`: clean (0 warnings)
-- `npx jest tests/unit/hindsight-error-from-catch.test.ts`: **11/11 pass** (new)
-- `npx jest tests/unit/memory-hindsight-route-hindsight-error-from-catch-source-pattern.test.ts`: **8/8 pass** (new)
-- `npx jest`: **296 suites / 2209 tests pass** (up from 294/2190 = +2 suites, +19 tests, matching the 2 new test files at 11+8 = 19 cases)
-- `npm run build`: clean
-
-### Carryover resolution
-
-This session started with a Mode B (verified-but-uncommitted) carryover from session 185: 4 production files modified + 2 new test files, all green under tsc + eslint + jest + build. The session 185 work shipped in the working tree but ran out of tool-call budget before commit/push (per the session 185 closeout doc's "Pre-commit verification of a carryover catches what the original session missed" pitfall). This session's first action was to verify (`git status`, `npx tsc --noEmit`, `CI=true npx jest`), commit (`40ecb41` on the `mission/hermes-review-and-refactor` branch), and push. After the carryover closure, the session added the `hindsightErrorFromCatch` extraction as new in-scope work. Standard 4-step commit-when-verified protocol applied: verify → commit → push → docs commit.
-
-### Reference doc
-
-No new reference doc — this is a 1-refactor session with the same byte-equivalence shape as the `serverErrorFromCatch` family (already documented in the `api-logger.ts` module JSDoc + the `tests/unit/server-error-from-catch.test.ts` test file). The `hindsightErrorFromCatch` helper's own JSDoc (in `hindsight-route-helpers.ts`) cross-references the sister helper + explains the response-shape difference.
-
-### Next session should
-
-- **Random pick next session.** The List 1 surface is now mined clean at the catch-shim + `safeApiCallData` envelope-unwrap + `setErrorFromCaught` scope. The Hindsight POST/DELETE catch blocks are now on the canonical shim; only the GET branch (intentional, different response shape) is left.
-- **Future List 1 work candidates** (deferred): (a) the `lineCount` `parseInt` + `Number.isFinite` + `Math.min(..., 1000) + 200` fallback in `src/app/(main)/logs/page.tsx:232-233` mirrors the `src/app/api/logs/route.ts:52-53` defensive parse — a shared `parseLineCountParam(raw, default)` helper could be extracted, but it's only 2 sites and the form is short; (b) the `safeApiCall` 2-level envelope in `src/app/page.tsx:212` (the dashboard's `handleCancelMission` is the last surviving inline 2-level call) — could be migrated to a typed-envelope helper if a future "all dashboard calls go through one shape" refactor ships.
-
----
-
 
 ## Older sessions (one-line summary)
 
+**Session 188** — List 3 — `isApiSuccessFalse` type-guard extraction in `operation-sync-action.ts` + 4 stale `line N` comment updates in `operations/agents/page.tsx`
+**Session 186** — List 1 — `hindsightErrorFromCatch` combined catch shim + 2 POST/DELETE catch migrations in `/api/memory/hindsight/route.ts` (close session 185 carryover)
 **Session 185** — List 3 — close 2 `useRef<setTimeout| null>(null)` + cleanup pattern gaps in `config/[section]/page.tsx` and `operations/personalities/page.tsx`
 **Session 184** — List 3 — `closeDelete` 3rd-site migration + `closeSkillEditor` 4th-site migration + `saveResetTimerRef` setTimeout-cleanup pattern in `handleSave`
 **Session 181** — List 2 — `updateSession` chat-page generalised helper + `dispatchMissionAction` shared call-shape helper + envelope-typed source-pattern test extension (close session 180 carryover)
