@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Brain,
   Plus,
@@ -29,6 +29,7 @@ import {
 import { apiFetch, setErrorFromCaught, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { filterByCaseInsensitiveSubstring } from "@/lib/list-search";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 
 interface Personality {
   name: string;
@@ -47,33 +48,16 @@ function PersonalityCard({
   isActive: boolean;
 }) {
   const [textExpanded, setTextExpanded] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Cleanup the copied-state timeout on unmount (matches the
-  // copiedTimerRef pattern in components/session/MessageBubble.tsx
-  // and the saveResetTimerRef pattern in operations/agents/page.tsx;
-  // the prior form had only the inline back-to-back cancel and could
-  // fire on an unmounted component if the card was removed during
-  // the 2s window).
-  useEffect(() => {
-    return () => {
-      if (copiedTimerRef.current) {
-        clearTimeout(copiedTimerRef.current);
-        copiedTimerRef.current = null;
-      }
-    };
-  }, []);
+  // Use the shared `useCopyToClipboard` hook (sister to the
+  // MessageBubble migration in components/session/MessageBubble.tsx)
+  // so the "[copied, setCopied] + useRef<setTimeout> + unmount
+  // cleanup" pattern lives in exactly one place. The 2000ms reset
+  // matches the pre-refactor inline timer (MessageBubble uses 1500ms
+  // — a different value passed via the hook's `resetMs` option).
+  const [copied, copy] = useCopyToClipboard({ resetMs: 2000 });
 
   const handleCopy = () => {
-    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
-    navigator.clipboard.writeText(personality.prompt);
-    setCopied(true);
-    copiedTimerRef.current = setTimeout(() => {
-      copiedTimerRef.current = null;
-      setCopied(false);
-    }, 2000);
+    copy(personality.prompt);
   };
 
   const preview =

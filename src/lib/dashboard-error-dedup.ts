@@ -14,8 +14,6 @@
 // algorithm can be unit-tested without rendering the dashboard, and
 // so the page JSX stays a pure render of the precomputed array.
 
-import type { MonitorData } from "@/types/hermes";
-
 /**
  * Subset of the error item shape the dedup helper needs. The
  * dashboard's `MonitorData.errors` is `Array<MonitorError>` (defined
@@ -64,15 +62,4 @@ export function dedupErrors<T extends DedupableError>(errors: readonly T[]): T[]
   return Array.from(seen.values()).map(({ err, count }) =>
     count > 1 ? ({ ...err, message: `${err.message}  (×${count})` } as T) : err,
   );
-}
-
-/**
- * Type guard: confirm `monitor?.errors` is a non-null array before
- * running `dedupErrors`. The dashboard's `useMemo` for filtered
- * errors already does this dance inline; the helper exists so the
- * `useMemo` body is a one-liner.
- */
-export function dedupMonitorErrors(monitor: MonitorData | null): Array<DedupableError & object> {
-  if (!monitor?.errors) return [];
-  return dedupErrors(monitor.errors);
 }

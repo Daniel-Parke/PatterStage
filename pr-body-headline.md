@@ -2,27 +2,29 @@
 
 **Full archive:** `pr-body.txt` at HEAD on the `mission/hermes-review-and-refactor` branch. This on-PR body is the headline summary (most recent 4 sessions in full + one-line summary of older sessions).
 
-## Followup (June 13, 2026) — Session 208
+## Followup (June 14, 2026) — Session 209
 
 Since PR #183 was opened, one additional session has landed on this branch:
 
-**Session 208 — List 2** — 3 per-row `window.confirm` sites in `useMissionsPage.ts` lifted into the leaf components (`MissionEditorPanel` owns 2 `useTwoStepConfirm` instances for delete + cancel; the new `TemplateRow` sub-component in `TemplateModals.tsx` owns 1 for the per-template delete). The 1 remaining form-scope `window.confirm` site (the "Overwrite template?" check in `handleSaveAsTemplate` at `useMissionsPage.ts:1029`) is intentionally NOT migrated — it's a single-button site inside the MissionCreateForm Sheet, not a per-row list/table confirm, so the Rule of Three (3+ sites) threshold is not met. 1 new source-pattern test (`window-confirm-source-patterns-list2.test.ts`, 3 assertions across 3 describes) + 0 existing test updates. This closes the carryover explicitly documented in `tests/unit/window-confirm-source-patterns.test.ts:48-54` (the List 4 sister test's JSDoc says: "the `useMissionsPage.ts:886` site (List 2) is the only remaining `window.confirm` call in the codebase after the session 138 migration... When that migration lands, the sister test for List 2 (`window-confirm-source-patterns-list2.test.ts`) should be added with the same shape").
+**Session 209 — List 3** — `useCopyToClipboard` hook extraction (NEW: `src/hooks/useCopyToClipboard.ts`) + 2-site migration in `MessageBubble.tsx` (1500ms) and `PersonalityCard` in `operations/personalities/page.tsx` (2000ms). The new hook centralises the 3-ingredient pattern (`useState<boolean>` + `useRef<setTimeout>` + cleanup `useEffect`) that was inlined in 2+ call sites. Plus closure of the 2 uncommitted carryover changes from session 208's tail: the `getMessageRole` migration in `MessageBubble.tsx` and the dead-code removal in `dashboard-error-dedup.ts`.
 
-**No external behaviour change** — the 3 per-row `useTwoStepConfirm({ autoDismissMs: 4000 })` instances replace 3 single global `window.confirm` dialogs with per-row armed states (mirroring the session 200 + 207 sister pattern that the Models table + FallbackChainList use). The hook callbacks (`useMissionsPage.handleDelete`, `.handleCancel`, `.handleDeleteTemplate`) become thin transport wrappers — by the time they are called, the user has already confirmed in the leaf.
+**Source-pattern test rewrite** — `tests/unit/personalities-card-copied-timer-cleanup.test.ts` (the session 185 test that pinned the inlined form) is **REWRITTEN** to become `tests/unit/use-copy-to-clipboard.test.tsx` per the session 195 P-1 supersession rule. The new file: 7 hook unit tests + 8 source-pattern assertions pinning all 3 ingredients (no `useRef`, no `navigator.clipboard.writeText`, correct `resetMs` per call site).
 
-**Tests:** 324 suites / 2449 tests pass (was 323/2446 when PR #183 was opened = +1 suite, +3 tests). `npx tsc --noEmit` clean, `CI=true npx eslint ... --max-warnings 0` clean across all 4 touched files, `npx --yes pnpm@10.33.0 build` clean.
+**No external behaviour change** — both call sites render the same JSX (`<Copy />` ↔ `<Check />` swap) with the same flip-back timing as the pre-refactor inline form. The hook is sync (matches the pre-refactor inline form); the async `try/catch` sister in `MissionPromptPreview` is intentionally NOT migrated (different shape, anti-migration guard).
 
-**Files:** 3 production files (2 modified + 1 new sub-component counted in TemplateModals.tsx), 1 test file (new), 1 reference doc, `pr-body-headline.md` updated. Net: +531 / -50 lines.
+**Tests:** 325 suites / 2474 tests pass (was 324/2449 when PR #183 was opened = +1 suite, +25 tests — the new test file has 15 assertions vs the old 6, so net +9 from the rewrite, plus +16 from the carryover test that already ran in 2449). `npx tsc --noEmit` clean, `CI=true npx eslint ... --max-warnings 0` clean across all 5 touched files, `npx --yes pnpm@10.33.0 build` clean.
 
-**Reference doc:** `references/session-208-list2-window-confirm-mission-editor-and-template-row.md` (codifies the 1 new pitfall "per-row confirm inside a hook" Rule of Three threshold + the 1 source-pattern test design lesson "block-comment-stripping in source-pattern tests when the JSDoc uses the form literally" + the 5 anti-migration guards for the form-scope site, the edit/duplicate/toggle buttons, and the chat-page confirm).
+**Files:** 4 production files (1 new + 3 modified), 1 test file (1 new + 1 deleted), 1 reference doc, `pr-body-headline.md` updated. Net: +296 / -82 lines.
 
-The full session 208 detail (pre-session shape, post-session shape, anti-migration guards, byte-equivalence rationale, verification) is in the `pr-body.txt` archive at HEAD — the `pr-body-headline.md` summary file shows session 208 as the most recent entry.
+**Reference doc:** `references/session-209-list3-use-copy-to-clipboard-hook.md` (codifies the 4 new pitfalls: "test pins all 3 ingredients" + "fake timers for hook unit tests" + "hook signature sync vs async decision" + "@jest-environment mismatch for hook tests").
+
+The full session 209 detail (pre-session shape, post-session shape, anti-migration guards, byte-equivalence rationale, verification) is in the `pr-body.txt` archive at HEAD — the `pr-body-headline.md` summary file shows session 209 as the most recent entry.
 
 ---
 
 ## Recent sessions (full detail)
 
-## Session 207 — List 4 (Models, HERMES.md, Environment, All Settings) — 2 shared-component extractions in `src/components/models/` (per-row delete button + model `<select>`)
+## Session 208 — List 2 (Cron, Missions, Chat) — 3 per-row `window.confirm` sites in `useMissionsPage.ts` lifted into the leaf components (per-row `useTwoStepConfirm` migration)
 
 **Date:** 2026-06-13
 **Branch:** `mission/hermes-review-and-refactor`
