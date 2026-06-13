@@ -4,6 +4,84 @@
 
 ## Recent sessions (full detail)
 
+## Session 207 — List 4 (Models, HERMES.md, Environment, All Settings) — 2 shared-component extractions in `src/components/models/` (per-row delete button + model `<select>`)
+
+**Date:** 2026-06-13
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 4 (List 4: Models, HERMES.md, Environment, All Settings). Last List 4 pick was session 200 (`window.confirm` → `useTwoStepConfirm` migration + `ModelRow` + `FallbackRow` sub-component extraction), so this session closes a follow-up consolidation that session 200 set up but did not finish: the two new row sub-components it created had an **identical** per-row delete button block, and there was a second duplication elsewhere in the same surface that the session 200 audit missed.
+**Outcome:** **2 shared-component extractions in the List 4 surface (`PerRowDeleteButton` consolidating 2 sites + `ModelSelectDropdown` consolidating 2 sites) + 1 new source-pattern test (`model-select-dropdown-source-pattern.test.tsx`, 9 assertions across 2 describes) + 1 existing test updated (`window-confirm-source-patterns.test.ts` "replaces global `window.confirm`" test rewritten to pin the post-extraction shape).** No external behaviour change. The two extractions collapse ~60 lines of duplicated JSX + 1 unused icon import + 1 unused hook import into 2 single-file shared components. All 2446 tests pass (was 2437 = +9 in the new test file; 322 → 323 suites).
+
+### What shipped
+
+1. **`PerRowDeleteButton` shared component (NEW, ~95 lines including JSDoc)** at `src/components/models/PerRowDeleteButton.tsx` — consolidates the **identical** 30-line per-row arm-confirm + armed-state delete button block that was inlined in both `ModelRow` (in `ModelsTableSection.tsx`, lines 75-83 + 133-149 pre-refactor) and `FallbackRow` (in `FallbackChainList.tsx`, lines 64-72 + 133-150 pre-refactor). The two sites were **byte-identical** apart from: (a) `id` field name (`model.id` vs `entry.id`), (b) `name` field name (`model.name` vs `entry.modelName`), (c) the onDelete callback signature (`onDelete(model)` vs `onDelete(entry.id)`). The shared component:
+   - Owns the per-row `useTwoStepConfirm({ autoDismissMs: 4000 })` instance (preserves the per-row "armed state can't leak across rows" property).
+   - Renders the same Trash2 button with the same `text-red-300 bg-red-500/20 ring-1 ring-red-500/40` armed-state ring/bg + `text-white/30 hover:text-red-400 hover:bg-red-500/10` un-armed state.
+   - Uses the same aria-labels: `Click again to confirm deleting ${rowName}` (armed) / `Delete ${rowName}` (un-armed).
+   - Forwards `disabled` so the parent can lock the row during busy state.
+   - Calls `onDelete` on the second click (after `isArmedFor(rowId)` confirms the arm matches this row).
+
+2. **`ModelSelectDropdown` shared component (NEW, ~115 lines including JSDoc)** at `src/components/models/ModelSelectDropdown.tsx` — consolidates the **identical** 19-line `<select>` + `ChevronDown` overlay pattern inlined in both `DefaultsGrid` (per-slot task default picker) and `BulkAuxiliaryUpdater` (target model picker). The two sites were byte-identical apart from: (a) the placeholder text ("— none —" vs "— Select model —"), (b) the background tone (`bg-dark-900/50` per-slot card vs `bg-dark-800` panel), (c) the focus accent colour (always `neon-purple` — verified identical). The shared component:
+   - Exposes a `tone` prop (`"panel"` default = `bg-dark-800`, `"card"` = `bg-dark-900/50`) to handle the two background surfaces.
+   - Renders the model label as `${name} (${provider}/${modelId})` (verified identical in both pre-refactor call sites).
+   - Forwards `ariaLabel` and `title` props so call sites can keep their per-use accessibility hints.
+   - Renders the `ChevronDown` icon with the `absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none` positioning — identical to both pre-refactor call sites.
+
+3. **`ModelsTableSection.tsx` migration** — `ModelRow` no longer imports `useTwoStepConfirm` or `Trash2`. The 12-line per-row delete button block (lines 133-149 pre-refactor) collapses to a 4-line `<PerRowDeleteButton rowId={model.id} rowName={model.name} onDelete={() => onDelete(model)} disabled={busyTaskType !== null} />` binding. The `useTwoStepConfirm` lifecycle moves into the shared component (one place to evolve, not two).
+
+4. **`FallbackChainList.tsx` migration** — `FallbackRow` no longer imports `useTwoStepConfirm` or `Trash2`. The 18-line per-row delete button block (lines 133-150 pre-refactor) collapses to a 4-line `<PerRowDeleteButton rowId={entry.id} rowName={entry.modelName} onDelete={() => onDelete(entry.id)} disabled={disabled} />` binding. Same shape as `ModelRow` — the open/close symmetry for per-row delete confirm now lives in one shared file.
+
+5. **`DefaultsGrid.tsx` migration** — the 19-line `<select>` + chevron block (lines 158-179 pre-refactor) collapses to a 10-line `<ModelSelectDropdown tone="card" placeholder="— none —" options={models} value={selected ?? ""} disabled={isBusy} ariaLabel={\`Default model for ${meta.label}\`} onChange={(value) => void onChange(slot, value === "" ? null : value)} />` binding. The `ChevronDown` import is removed (the icon is now part of the shared component's internal chrome).
+
+6. **`BulkAuxiliaryUpdater.tsx` migration** — the 19-line `<select>` + chevron block (lines 90-105 pre-refactor) collapses to a 7-line `<ModelSelectDropdown value={targetModelId} disabled={disabled} placeholder="— Select model —" options={models} onChange={setTargetModelId} />` binding. The `ChevronDown` import is **kept** (it's still used for the panel's collapse indicator at line 79 — only the select-chevron was removed).
+
+7. **`tests/unit/model-select-dropdown-source-pattern.test.tsx` (NEW, 9 assertions across 2 describes)** — pins the post-extraction shape for `ModelSelectDropdown`:
+   - **shared-component contract (6)**: model label is `${name} (${provider}/${modelId})`; placeholder option has `value=""`; `ariaLabel` is forwarded to the `<select>`; `title` is forwarded; controlled `value` is reflected back; chevron is positioned with `absolute right-2.5 ... pointer-events-none` (so the layout doesn't shift between the two call sites).
+   - **call-site migration (3)**: both `DefaultsGrid.tsx` and `BulkAuxiliaryUpdater.tsx` import the shared component (positive); `DefaultsGrid.tsx` does NOT import `ChevronDown` (the icon is part of the shared component's chrome — `BulkAuxiliaryUpdater.tsx` is exempt because the chevron is still used for the panel's collapse indicator).
+   - 9/9 pass.
+
+8. **`tests/unit/window-confirm-source-patterns.test.ts` updated (1 test rewritten)** — the pre-existing session 200 "replaces the global `window.confirm` with per-row `useTwoStepConfirm` in the Models table + FallbackChainList" test pinned the **pre-extraction** shape: it asserted that `useTwoStepConfirm({ autoDismissMs: 4000 })` was imported and instantiated in **both** `ModelsTableSection.tsx` and `FallbackChainList.tsx`. The post-extraction shape moves the hook instance to the shared `PerRowDeleteButton.tsx`. The test was rewritten to assert the new 3-part contract: (a) the shared component owns the per-row hook instance + import, (b) both row components import the shared component (positive — `import PerRowDeleteButton from ...`), (c) neither row component instantiates the hook locally (negative — `not.toMatch` for the `useTwoStepConfirm` import). The pre-extraction form would now fail the new test, and the post-extraction form passes. 1/1 pass (4/4 total in the file).
+
+### Anti-migration guards (what this session did NOT change)
+
+- **Did NOT migrate the agent-default `<select>` in `ModelsAgentDefaultSection.tsx` (lines 55-72).** That site has a **different** shape: no `relative` wrapper, no `ChevronDown` overlay, different focus colour (`neon-orange` not `neon-purple`), different model label format (`${m.name}` only — no `(${provider}/${modelId})`). Forcing it into `ModelSelectDropdown` would either add a chevron (visible behavior change) or accept a 5-prop API surface with 2 of the 5 props no-op. The session 200 audit correctly identified this as a third call site; this session's audit correctly identified it as a **different** call site, not a duplicate. The JSDoc on `ModelSelectDropdown` documents this exemption explicitly.
+- **Did NOT migrate the `<select>` inside `CredentialPicker.tsx`** (the credential dropdown in `ModelEditor.tsx`) — that site uses a different placeholder text ("+ Create new credential"), has its own `__new__` sentinel-value handling, and has a different focus / background styling. Different shape, not a duplicate.
+- **Did NOT migrate the `<select>` for `.env` line display** in `src/app/config/[section]/page.tsx` — that site is for displaying parsed env lines, not a model picker; completely different domain.
+- **Did NOT touch the per-agent restore confirm** in `src/app/config/seed/page.tsx` (session 200 sister) — that site uses a **different** styling pattern (text + border button, not icon-only + ring), so it's not a candidate for the shared `PerRowDeleteButton`. The 2 useTwoStepConfirm consumers in the seed page stay as-is.
+- **Did NOT touch the per-mission cancel confirm** in `src/app/page.tsx` (session 138 sister) — same as seed page, different styling pattern.
+- **Did NOT touch the "Bulk Set Auxiliaries" expand-collapse chevron** in `BulkAuxiliaryUpdater.tsx` — that's a different `ChevronDown` use (collapse indicator, not select chevron), kept inline.
+
+### Why this is byte-equivalent
+
+- **`PerRowDeleteButton` HTML output** — the shared component renders the **exact same** JSX as the pre-extraction inline forms: `<button type="button" onClick={handleClick} disabled={disabled} className="p-1.5 rounded-lg transition-colors disabled:opacity-50 ${isArmed ? "text-red-300 bg-red-500/20 ring-1 ring-red-500/40" : "text-white/30 hover:text-red-400 hover:bg-red-500/10"}" aria-label={isArmed ? \`Click again to confirm deleting ${rowName}\` : \`Delete ${rowName}\`} title={isArmed ? "Click again to confirm" : "Delete"}><Trash2 className="w-3.5 h-3.5" /></button>`. The only structural difference is that the click handler is defined inside the shared component instead of inside each row's body. The `onDelete` callback is invoked with no arguments (it captures `model` / `entry.id` in the parent via `() => onDelete(model)` / `() => onDelete(entry.id)`).
+- **`ModelSelectDropdown` HTML output** — the shared component renders the **exact same** JSX: a `<div className="relative">` wrapper containing a `<select>` (with the same classes) + an absolutely-positioned `<ChevronDown>` icon. The model label format `${name} (${provider}/${modelId})` is byte-identical. The placeholder `<option value="">— placeholder —</option>` is the only data difference between the two call sites, and the placeholder text is passed in as a prop.
+- **`useTwoStepConfirm` lifecycle is unchanged** — the hook still creates one `useRef<setTimeout>` + one `useState<armedKey | null>` per call site. The only change is that the call site is now inside `PerRowDeleteButton` instead of inside each row component. Per-row isolation is preserved (each row still has its own `useTwoStepConfirm` instance — just inside the shared button component, not the row component).
+- **No JSDoc / type narrowing changes** — the shared components' prop types are minimal and the rendered HTML is identical.
+- **No `disabled` prop behaviour change** — both `disabled={disabled}` and `disabled={busyTaskType !== null}` are forwarded as-is.
+- **No "armed state" / `useState` setter reference change** — the per-row arm/confirm calls are identical (`isArmedFor(rowId) ? confirm(onDelete) : arm(rowId)`); the only difference is that `onDelete` is captured in the parent's JSX instead of inside the row's body.
+
+### New pitfall codified
+
+**"Per-row action component extraction"** — when 2+ table-row components share an **identical** per-row action block (e.g. delete, archive, duplicate) with the same hook instance (`useTwoStepConfirm({ autoDismissMs: 4000 })`) + the same JSX (button + icon + armed-state styling + aria-labels), extract a shared action component (`PerRowDeleteButton`, `PerRowArchiveButton`, etc.) **even if the call site has only 2 consumers**. The pre-extraction form passes the "Rule of Three" test (2 duplicates = wait for a 3rd), but the maintenance cost is asymmetric: any future "armed state visual" tweak (colour, ring, animation) is a 2-file change, not a 1-file change. The discriminator: ask whether the two row components render the **exact same** action button, with the **exact same** hook instance, differing only in the row-specific data (id, name, onDelete callback). If yes, extract. The threshold: 2 sites (Rule of Two for action components, not Rule of Three). The trap: a "similar but not identical" button (e.g. seed page's text+border restore button vs. models' icon-only delete button) is a **different** surface and stays inline. The pre-session `window-confirm-source-patterns.test.ts` test (originally a sister to this session) had the **wrong** assertion for the post-extraction shape — it was pinning the per-row hook instance in the row components, but the new contract pins it in the shared component. The test was rewritten to match the new contract.
+
+### Verification (full suite)
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint src/components/models/PerRowDeleteButton.tsx src/components/models/ModelSelectDropdown.tsx src/components/models/ModelsTableSection.tsx src/components/models/FallbackChainList.tsx src/components/models/DefaultsGrid.tsx src/components/models/BulkAuxiliaryUpdater.tsx tests/unit/model-select-dropdown-source-pattern.test.tsx tests/unit/window-confirm-source-patterns.test.ts --max-warnings 0`: clean
+- `CI=true npx jest tests/unit/model-select-dropdown-source-pattern.test.tsx tests/unit/window-confirm-source-patterns.test.ts`: **13/13 pass** (9 new in the new test file + 4 in the updated existing test file)
+- Full `CI=true npx jest` sweep: **323 suites / 2446 tests pass** (up from 322/2437 = +1 suite, +9 tests: 9 new in the new test file; the rewritten `window-confirm-source-patterns.test.ts` test still has 4 assertions in the same number of `it` blocks, so the count is the same)
+- `npm run build`: clean (Next.js production build, all routes pre-rendered correctly)
+
+### Reference doc
+
+`references/session-207-list4-shared-components.md` (the per-session reference for this work — written next session). Codifies the 1 new pitfall ("per-row action component extraction" — Rule of Two for action components, not Rule of Three) + the 5 anti-migration guards (agent-default select, CredentialPicker select, env-line display, seed-page restore, dashboard mission cancel) + the 3 source-pattern test design lessons (per-shared-component contract tests, per-call-site positive + negative assertions, test-rewrite-when-contract-changes).
+
+### Next session should
+
+- **Random pick next session.** The List 4 surface's two most-duplicated patterns (per-row delete + model select) are now consolidated. Candidates worth re-scanning: (a) the per-row sync icon buttons in `ModelSyncButtons.tsx` (the push/pull arrows are rendered for every model row, but the icon swap + spinner logic is inlined per-button — could collapse to a `ModelSyncIconButton` with `direction="push"|"pull"` prop), (b) the 4 model-list page titles that all render the same `flex items-center gap-2 ... icon text-X/60` header pattern (`ModelsTableSection`, `ModelsAgentDefaultSection`, `ModelsTaskDefaultsSection`, `ModelsFallbackSection`) — could extract a `ModelsSectionHeader` with `icon` + `title` + `iconClass` props, (c) the `saving` + `dirty` + `saveError` triple-state pattern in `FallbackConfigPanel` (lines 32-50 + 133-141 + 152) is the same "save-promise" shape used in `useModelsPage.ts`'s fallback config handlers (lines 432-465) — could extract a `useSaveableConfig` hook.
+- **Carryover** — none. The next session starts with a clean working tree.
+
+---
+
 ## Session 206 — List 2 (Cron, Missions, Chat) — 3 missions-modal close-callbacks promoted from `missions/page.tsx` to `useMissionsPage` hook (open/close pair symmetry)
 
 **Date:** 2026-06-13
