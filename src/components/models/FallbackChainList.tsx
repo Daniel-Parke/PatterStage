@@ -4,7 +4,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { ChevronUp, ChevronDown, Plus, Edit3, Trash2 } from "lucide-react";
 import type { FallbackChainEntry } from "@/types/hermes";
 import GlowSurface from "@/components/ui/GlowSurface";
@@ -131,6 +131,19 @@ export default function FallbackChainList({
   const [showRegistryDropdown, setShowRegistryDropdown] = useState(false);
   const [showAddCustom, setShowAddCustom] = useState(false);
 
+  // closeAddCustom — single-setter close-callback for the inline
+  // AddCustomForm. Sister to the close-callbacks extracted in
+  // /config/models/page.tsx + ModelSyncButtons.tsx (session 196) —
+  // same useState-setter stability rationale. The 2 call sites
+  // today are the Cancel button onClick (line 249) and the
+  // post-onConfirm `setShowAddCustom(false)` bare statement
+  // (line 247). Extracting keeps them in lockstep if a future
+  // "reset the form fields on close" or "fire an analytics event"
+  // extension lands. The `setShowRegistryDropdown((v) => !v)`
+  // toggle is a different shape (toggle, not close) and stays
+  // inline.
+  const closeAddCustom = useCallback(() => setShowAddCustom(false), []);
+
   const handleDeleteClick = (id: string) => {
     if (!confirm("Remove this fallback model?")) return;
     onDelete(id);
@@ -244,9 +257,9 @@ export default function FallbackChainList({
         <AddCustomForm
           onConfirm={(name, provider, modelIdString, baseUrl) => {
             void onAddCustom(name, provider, modelIdString, baseUrl);
-            setShowAddCustom(false);
+            closeAddCustom();
           }}
-          onCancel={() => setShowAddCustom(false)}
+          onCancel={closeAddCustom}
         />
       )}
 

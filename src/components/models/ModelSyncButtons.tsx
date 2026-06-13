@@ -241,6 +241,16 @@ export default function ModelSyncButtons({
     }
   }, [modalState, modelId, onPush, onPull]);
 
+  // closeSyncModal — single-setter close-callback for the SyncModal.
+  // Sister to the close-callbacks extracted in /config/models/page.tsx
+  // (session 196) and FallbackChainList.tsx — same useState-setter
+  // stability rationale. The `<SyncModal onCancel={...}>` binding at
+  // line 281 is the only call site today (1-setter close-callback).
+  // The 2-setter `setModalState({ ...prev, confirming: true })` paths
+  // in handleConfirm are a different shape (2-setter confirm-toggling,
+  // not close) and stay inline.
+  const closeSyncModal = useCallback(() => setModalState(null), []);
+
   return (
     <>
       <div className="flex items-center gap-1">
@@ -278,7 +288,7 @@ export default function ModelSyncButtons({
           diffs={modalState.diffs}
           confirming={modalState.confirming}
           onConfirm={(excluded) => void handleConfirm(excluded)}
-          onCancel={() => setModalState(null)}
+          onCancel={closeSyncModal}
         />
       )}
     </>

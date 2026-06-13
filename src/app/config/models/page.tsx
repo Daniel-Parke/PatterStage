@@ -84,10 +84,30 @@ export default function ModelsPage() {
   // a different shape: it passes a `ModelEditorRecord` (edit mode), not
   // `null` (create mode). Left as a direct binding — it's the canonical
   // "open in edit mode" call, not a duplicate.
-  // The 4th `setEditing` site at line 186 (`onClose={() => setEditing(undefined)}`)
-  // is also a different shape (close vs open) — also left inline.
   // eslint-disable-next-line react-hooks/exhaustive-deps -- useState setters are stable
   const openAddModel = useCallback(() => setEditing(null), []);
+
+  // closeModelEditor — closes the ModelEditor modal. Sister to
+  // `openAddModel`; same useState-setter-stability rationale. The
+  // `<ModelEditor onClose={...}>` binding at line 204 is the only call
+  // site today (1-setter close-callback). Extracting now keeps the page's
+  // callback declarations grouped together (all 3 close-callbacks share
+  // the `react-hooks/exhaustive-deps` disable comment + the JSDoc
+  // "sister to" pattern) so a future "reset the form state on close" or
+  // "fire an analytics event" extension lands in one place.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- useState setters are stable
+  const closeModelEditor = useCallback(() => setEditing(undefined), []);
+
+  // closeFallbackModal — closes the FallbackUrlEditModal. Sister to
+  // `openAddModel` + `closeModelEditor` (same useState-setter stability
+  // rationale). The `onCloseFallbackModal={...}` binding at line 184 is
+  // the only call site today (1-setter close-callback). The setter
+  // `setEditingFallbackEntry` is exposed from `useModelsPage` as a
+  // close-modal shim (it forwards to `setFallbackEdit({ entry: null,
+  // url: "", saving: false })`), so the call site here is the canonical
+  // "dismiss the modal" form, not a partial-update.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- useState setters are stable
+  const closeFallbackModal = useCallback(() => setEditingFallbackEntry(null), []);
 
   return (
     <AppPageShell>
@@ -181,7 +201,7 @@ export default function ModelsPage() {
               onSyncToHermes={handleSyncFallbackToHermes}
               onImportFromConfig={handleImportFallbackFromConfig}
               onFallbackUrlChange={setEditingFallbackUrl}
-              onCloseFallbackModal={() => setEditingFallbackEntry(null)}
+              onCloseFallbackModal={closeFallbackModal}
               onSaveFallbackUrl={handleFallbackEditSave}
             />
 
@@ -201,7 +221,7 @@ export default function ModelsPage() {
         <ModelEditor
           model={editing}
           credentials={credentialOptions}
-          onClose={() => setEditing(undefined)}
+          onClose={closeModelEditor}
           onSaved={handleSaved}
         />
       )}
