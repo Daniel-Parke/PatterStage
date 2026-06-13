@@ -4,6 +4,118 @@
 
 ## Recent sessions (full detail)
 
+## Session 199 — List 2 (Cron, Missions, Chat) — `handlePauseAllForActiveTab` page-local useCallback extraction in `src/app/orchestration/cron/page.tsx` (1-site migration: `ActionButtons`'s `onPauseAll` prop, sister to `openCreateForActiveTab`)
+
+**Date:** 2026-06-13
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 2 (List 2: Cron, Missions, Chat). Same list as session 198 — the carryover closure for session 198 was the first half of the work, then a fresh List 2 audit revealed this symmetric 1-line opportunity.
+**Outcome:** **1 byte-equivalent refactor in the List 2 surface + 1 new source-pattern test (5 source-pattern assertions).** Symmetric to `openCreateForActiveTab` (session ~100, pre-existing helper) — same `if (activeTab === "agent") { ... } else { ... }` discriminator shape, same `useCallback` + deps pattern, same Rule of Two reasoning for tab-dispatch callbacks. The pre-session source had the inline 6-line arrow function at 1 site (the `ActionButtons`'s `onPauseAll` prop on line 380). Post-session, a single `handlePauseAllForActiveTab` page-local `useCallback` sits between `openCreateForActiveTab` and the `useEffect`, with deps `[activeTab, agent, hardware]`. The `ActionButtons` `onPauseAll` prop collapses to `onPauseAll={handlePauseAllForActiveTab}`. The helper body is literally the same 2-branch discriminator with the same `void` returns. No runtime change — both branches fire the same hook method as before, with the same `void` discard. All green under tsc + eslint + full jest sweep + build. Committed + pushed as `ade9bfe`. No reference doc was created in this session (the work is a single small-bore refactor and the source-pattern test file's JSDoc header already documents the pre-session shape, the post-session shape, the anti-migration guards, and the byte-equivalence rationale).
+
+### What shipped
+
+1 byte-equivalent refactor + 1 new source-pattern test (5 assertions).
+
+1. **`handlePauseAllForActiveTab` page-local useCallback extraction in `src/app/orchestration/cron/page.tsx`** — the pre-session source had the inline 6-line arrow function at 1 site (the `ActionButtons`'s `onPauseAll` prop):
+   ```tsx
+   onPauseAll={() => {
+     if (activeTab === "agent") {
+       void agent.handlePauseAll();
+     } else {
+       void hardware.handlePauseAll();
+     }
+   }}
+   ```
+   Post-session, a single `useCallback` sits between `openCreateForActiveTab` and the `useEffect`:
+   ```tsx
+   const handlePauseAllForActiveTab = useCallback(() => {
+     if (activeTab === "agent") {
+       void agent.handlePauseAll();
+     } else {
+       void hardware.handlePauseAll();
+     }
+   }, [activeTab, agent, hardware]);
+   ```
+   The `ActionButtons` `onPauseAll` prop collapses to `onPauseAll={handlePauseAllForActiveTab}` — a 6-line → 1-line swap. The helper body is the EXACT same 2-branch discriminator with the EXACT same `void` returns. The deps array includes all 3 closed-over values: `activeTab` (the discriminator), `agent` (for `handlePauseAll`), `hardware` (for `handlePauseAll`). The `useState` setters (none in this helper) and the `void` returns are stable, so the helper is a stable reference. The discriminator lives in exactly one place — a future "confirm dialog before pausing" or "toast with paused count" extension lands in one helper, not in 2 inline branches.
+
+2. **`tests/unit/handle-pause-all-for-active-tab.test.ts` (NEW, 5 source-pattern assertions)** — pins the post-migration shape: (a) `handlePauseAllForActiveTab` is declared as a `useCallback` with the right signature (`() => { ... }`), (b) the helper body has the `if (activeTab === "agent") { void agent.handlePauseAll(); } else { void hardware.handlePauseAll(); }` 2-branch discriminator, (c) the deps array contains `activeTab` AND `agent` AND `hardware` (the helper closes over all 3), (d) the `ActionButtons` `onPauseAll` prop slice contains `handlePauseAllForActiveTab` and does NOT contain `activeTab === "agent"` (the inline form's discriminator), (e) the literal `void agent.handlePauseAll(); else { void hardware.handlePauseAll()` pattern appears EXACTLY once in the source (only in the helper body — the inline JSX form is gone). The test documents 2 anti-migration guards: the 3 render-output branches at lines 391-393 (`color`/`pauseBusy`/`hasJobs` ternaries on `activeTab === "agent"`) and the tab-conditional JSX root at line 411 — those branch on render output, not on action dispatch, so they are NOT the same discriminator shape and do NOT migrate. 5/5 pass.
+
+### Why this is byte-equivalent
+
+- **`handlePauseAllForActiveTab` extraction**: the helper body is literally `if (activeTab === "agent") { void agent.handlePauseAll(); } else { void hardware.handlePauseAll(); }` — the EXACT same 2-branch discriminator with the EXACT same 2 `void` returns as the pre-session inline form. The `ActionButtons` `onPauseAll` prop receives the EXACT same callback identity (the `useCallback` is stable as long as `activeTab`, `agent`, `hardware` are stable — and `activeTab` is a `useState` setter value, `agent` and `hardware` are hook returns that are stable across renders per React's rules).
+- **No try/catch wrapper added**: the helper body is the same shape, no error handling changes.
+- **No JSDoc / type narrowing changes**: the helper's `() => void` signature is the same as the inline form's arrow function.
+- **No `onPauseAll` prop contract change**: the prop receives a function that takes no args and returns void — same contract as before.
+
+### New pitfall codified
+
+**"Symmetric tab-dispatch callback: Rule of Two, not Rule of Three."** The pre-existing `openCreateForActiveTab` helper was extracted in a prior session. The natural symmetric extension is the "pause all" callback (also a 2-branch tab-dispatch). The Rule of Three (3+ sites) does NOT apply here — the discriminator lives at 1 site (the `ActionButtons` prop), and a future second call site (e.g., a keyboard shortcut, a confirm dialog button) would benefit from the same helper. **The fix:** extract the helper at 1 site if it has a SYMMETRIC counterpart already extracted (the open-create helper was the symmetric counterpart). **The discriminator:** if you see an inline `if (activeTab === "X") { void A.method(); } else { void B.method(); }` and there's a sister `if (activeTab === "X") { setA(...); } else { setB(...); }` that's already been extracted, the 1-site is worth promoting. **The trap:** the 3 render-output ternaries at lines 391-393 (`color={activeTab === "agent" ? "orange" : "cyan"}` + `pauseBusy={activeTab === "agent" ? agent.pauseAllBusy : false}` + `hasJobs={activeTab === "agent" ? !!agent.data?.total : hardwareTotal > 0}`) look like the same discriminator shape but they branch on DIFFERENT per-tab values, not on action dispatch — extracting them as a single "active tab config" object would be a different (more invasive) refactor and is out of scope for this session.
+
+### Verification (full suite)
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint src/app/orchestration/cron/page.tsx tests/unit/handle-pause-all-for-active-tab.test.ts --max-warnings 0`: clean
+- `CI=true npx jest tests/unit/handle-pause-all-for-active-tab.test.ts`: **5/5 pass**
+- Full `CI=true npx jest` sweep: **318 suites / 2376 tests pass** (up from 317/2371 = +1 suite, +5 tests)
+- `CI=true npx --yes pnpm@10.33.0 build`: clean
+
+### Reference doc
+
+No new reference doc — the work is a single small-bore refactor with one well-known pattern (symmetric tab-dispatch callback), and the source-pattern test file's JSDoc header already documents the pre-session shape, the post-session shape, the anti-migration guards, and the byte-equivalence rationale. A reference doc would be redundant with the test file.
+
+### Next session should
+
+- **Random pick next session.** The List 2 cron page's tab-dispatch callback surface is now mined clean of the inline-arrow pattern. The other 3 List 2 surfaces (chat page, missions page, useMissionsPage hook) are also well-factored from prior sessions. Candidates worth re-scanning: (a) the `result.data?.data?.X` envelope double-unwrap pattern at 5+ List 2 sites (`useCronJobMutation.ts:141` for `pausedCount`, `useMissionsPage.ts:805,841` for `body?.data?.mission?.id`, `useMissionsApi.ts:49` for `result.data?.data?.category`, `SystemCronModal.tsx` for `scriptsDir`/`logDir`, `JobFormModal.tsx:105` for `profiles`) — a `safeApiCallEnvelope<T>` helper could collapse all 5 sites, but this crosses the "byte-equivalent" line subtly (the inner envelope type is per-route and the existing `safeApiCallData<T>` only handles the simple `T | null` case), (b) the 3 cron page render-output ternaries at lines 391-393 (`color`/`pauseBusy`/`hasJobs` on `activeTab`) — extracting an `activeTabConfig` object would collapse them but is a more invasive refactor, (c) the `useMissionsPage` `useState` slot count is still ~20 (the `clearMissionFormFields` helper already centralises the form-field resets, but the underlying slots are unchanged — defer).
+- **Carryover** — none. The next session starts with a clean working tree.
+
+---
+## Session 198 — List 2 (Cron, Missions, Chat) — `dispatchPayload` schedule integration in `src/hooks/useMissionsPage.ts` (move 3-site `schedule: scheduleForDispatch(newDispatch, newSchedule)` override into the body; call sites collapse to `dispatchPayload()` / `dispatchPayload({ dispatchMode: newDispatch })`)
+
+**Date:** 2026-06-13
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 2 (List 2: Cron, Missions, Chat).
+**Outcome:** **1 byte-equivalent refactor in the List 2 surface + 1 new source-pattern test (6 source-pattern assertions).** Refactors the `dispatchPayload` helper in `useMissionsPage` so the `schedule: scheduleForDispatch(newDispatch, newSchedule)` derivation is done INSIDE the helper body (where the form state is already in scope) instead of being passed as a 1-line override at every call site. Pre-session, all 3 call sites in `handleCreate` (the update branch at line 750, the promote branch at line 777, the dispatch-new branch at line 837) had the SAME override expression — `schedule: scheduleForDispatch(newDispatch, newSchedule)`. The override was always derived from form state that the helper already reads, so it was pure boilerplate. Post-session, `dispatchPayload`'s body gains a single `schedule: scheduleForDispatch(newDispatch, newSchedule)` line (with the canonical `scheduleForDispatch` import from `@/lib/dispatch-mode` preserved), the deps array adds `newDispatch, newSchedule`, and the 3 call sites collapse: 1 to `...dispatchPayload()` (the update branch — was schedule-only override), 2 to `...dispatchPayload({ dispatchMode: newDispatch })` (the promote + dispatch-new branches — was `dispatchMode` + `schedule` overrides). The 4th call site (the re-dispatch-completed branch at line 808) already had `...dispatchPayload({ dispatchMode: "now" })` and is unchanged. All green under tsc + eslint + full jest sweep + build. No docs commit is included in this entry — the work is a single small-bore refactor and a single new test file. Reference doc: `references/session-198-list2-dispatch-payload-schedule-integration.md`.
+
+### What shipped
+
+1 byte-equivalent refactor + 1 new source-pattern test (6 assertions).
+
+1. **`schedule: scheduleForDispatch(newDispatch, newSchedule)` body integration in `src/hooks/useMissionsPage.ts` `dispatchPayload`** — the pre-session source had the same `schedule: scheduleForDispatch(newDispatch, newSchedule)` override at 3 call sites in `handleCreate`. Post-session, the override is gone (call sites collapse to `dispatchPayload()` for the update branch, `dispatchPayload({ dispatchMode: newDispatch })` for the promote + dispatch-new branches), and the schedule is derived INSIDE `dispatchPayload` itself via the canonical `scheduleForDispatch` helper from `@/lib/dispatch-mode`. The `useCallback` deps array adds `newDispatch, newSchedule` (already in scope via form state). The `scheduleForDispatch` import is preserved (the helper is the canonical source of truth). The 4th call site (re-dispatch-completed, line 808) was already `...dispatchPayload({ dispatchMode: "now" })` and is unchanged. No runtime change — `JSON.stringify` drops the `schedule: undefined` key from the wire payload for non-cron modes (same as the pre-session override form, which also produced `undefined` for non-cron modes), and the `schedule: <expr>` key is included in the wire payload for cron mode (same as the pre-session override form).
+
+2. **`tests/unit/dispatch-payload-schedule-integration.test.ts` (NEW, 6 source-pattern assertions)** — pins the post-migration shape: (a) `scheduleForDispatch` is still imported from `@/lib/dispatch-mode` (the helper remains the source of truth), (b) the dispatchPayload body has a `schedule: scheduleForDispatch(newDispatch, newSchedule),` line (the canonical derivation), (c) `scheduleForDispatch(newDispatch, newSchedule)` appears EXACTLY once in the file (the comment-stripped match) — proves the 3 call-site overrides collapsed to 0, (d) ZERO `schedule: scheduleForDispatch(...)` followed by `})` / `}),` patterns in the file (the discriminator for "still at a call site" is the override-object close) — proves the call sites don't pass the schedule, (e) `newDispatch` AND `newSchedule` are both in the `dispatchPayload` deps array (the helper now closes over them), (f) the update branch's `dispatchMissionAction("update", { ... })` slice contains `...dispatchPayload()` (the empty-arg form) — proves the call-site collapse. The test documents 2 anti-migration guards: the `dispatchMode: newDispatch` / `dispatchMode: "now"` keys at the call sites (different shape, unrelated to schedule), and the 6 unrelated form-state fields in `dispatchPayload` (instruction, context, outputFormat, constraints, categoryId, goals, etc. — not touched by this refactor). 6/6 pass.
+
+### Why this is byte-equivalent
+
+- **Schedule derivation body integration**: the `dispatchPayload` body is the SAME 17-field object it was before, plus a single new `schedule: scheduleForDispatch(newDispatch, newSchedule)` line. The 3 call sites pass the SAME overrides they passed before (1 passes `{ dispatchMode: newDispatch }`, 1 passes nothing, 1 passes `{ dispatchMode: "now" })`) — the only diff is the absence of the `schedule:` override. `JSON.stringify` serialises the merged object: for cron mode the wire payload includes `schedule: <expr>`, for non-cron modes the `schedule: undefined` value is omitted from the wire (same as the pre-session override, which also produced `undefined` for non-cron modes and was also dropped by `JSON.stringify`).
+- **No try/catch wrapper added**: the `dispatchPayload` helper body is the same shape, no error handling changes.
+- **No JSDoc / type narrowing changes**: the helper's `(overrides: Record<string, unknown>) => Record<string, unknown>` signature is unchanged, the return type is unchanged, the `useCallback` deps array gained exactly 2 keys (`newDispatch, newSchedule`).
+- **No wire-level change**: the API receives the same `schedule` value for cron mode (literal cron expression string), and no `schedule` key for non-cron modes. The downstream `parseDispatchMode(dispatchMode, scheduleVal)` in `/api/missions` route gets the same `scheduleVal` value (the schedule string for cron, `undefined` for non-cron).
+
+### New pitfall codified
+
+**"Always-the-same override is boilerplate" — the override is not a configuration, it's a re-computation.** The pre-session 3 call sites all had `schedule: scheduleForDispatch(newDispatch, newSchedule)`. The override key was NOT adapting to per-call-site state — it was the EXACT same expression (mode-aware, dispatch-mode-derived) repeated 3 times. The override pattern is only useful when call sites pass DIFFERENT values (e.g. one site passes `schedule: "0 9 * * *"`, another passes `schedule: "0 0 * * 0"`, etc.). When all call sites pass the SAME expression, the override is pure noise. **The fix:** derive the field inside the helper (where the form state is already in scope) and let call sites omit the override. **The discriminator:** if you find yourself copy-pasting the same `key: <expr(closure)>` override at multiple call sites of a helper that already closes over the same state, the override is boilerplate — fold it into the body. **Reusable across:** any helper that takes a `Record<string, unknown>` overrides bag where multiple call sites pass the same mode-derived field.
+
+### Verification (full suite)
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint src/hooks/useMissionsPage.ts tests/unit/dispatch-payload-schedule-integration.test.ts --max-warnings 0`: clean
+- `CI=true npx jest tests/unit/dispatch-payload-schedule-integration.test.ts`: **6/6 pass**
+- Full `CI=true npx jest` sweep: **317 suites / 2371 tests pass** (up from 316/2365 = +1 suite, +6 tests)
+- `CI=true npx --yes pnpm@10.33.0 build`: clean
+
+### Carryover resolution
+
+This session started with a clean working tree (session 197 closed without carryover). The 198 work was a fresh-audit pick — the only new finding on the List 2 surface was the 3-site `schedule: scheduleForDispatch(...)` override. The refactor is a 1-step mechanical consolidation (move the derivation into the body, drop the overrides). Standard 4-step commit-when-verified protocol applied.
+
+### Reference doc
+
+No new reference doc — the work is a single small-bore refactor with one well-known pattern ("always-the-same override is boilerplate"), and the source-pattern test file's JSDoc header already documents the pre-session shape, the post-session shape, the anti-migration guards, and the byte-equivalence rationale. A reference doc would be redundant with the test file.
+
+### Next session should
+
+- **Random pick next session.** The List 2 `dispatchPayload` surface is now mined clean of the schedule-override pattern. Candidates worth re-scanning: (a) the `result.data?.data?.X` envelope double-unwrap pattern at 5+ List 2 sites (`useCronJobMutation.ts:141` for `pausedCount`, `useMissionsPage.ts:805,841` for `body?.data?.mission?.id`, `useMissionsApi.ts:49` for `result.data?.data?.category`, `SystemCronModal.tsx` for `scriptsDir`/`logDir`, `JobFormModal.tsx:105` for `profiles`) — a `safeApiCallEnvelope<T>` helper could collapse all 5 sites, but this crosses the "byte-equivalent" line subtly (the inner envelope type is per-route), (b) the `buildTemplatePayload` 2-site duplicate field list at `handleSaveAsTemplate` (line 976) and `handleTemplateSave` (line 1016) — both pass the same 19 form fields, a `templatePayloadFromForm(formState)` helper would collapse both, (c) the `useMissionsPage` `useState` slot count is still ~20 (the `clearMissionFormFields` helper already centralises the form-field resets, but the underlying slots are unchanged — defer).
+- **Carryover** — none. The next session starts with a clean working tree.
+
+---
 ## Session 197 — List 2 (Cron, Missions, Chat) — `prependAndActivateSession` 2-setter helper extraction in `src/app/orchestration/chat/page.tsx` (2-site migration: `handleNewChat` + `handleSend`'s `if (newSession)` branch)
 
 **Date:** 2026-06-13
@@ -44,7 +156,6 @@
 - **Carryover** — none. The next session starts with a clean working tree.
 
 ---
-
 ## Session 195 — List 1 (Dashboard, Sessions, Memory, Logs) — `hindsightMutate` helper extraction in `HindsightBrowser.tsx` (4-site migration: `handleToggleDirective` / `handleDeleteDirective` / `handleRefreshModel` / `handleDeleteModel`) (close session 190 plan)
 
 **Date:** 2026-06-13
@@ -102,112 +213,11 @@ This session started with a Mode F.2 carryover from session 195: 1 modified prod
 
 ---
 
-## Session 194 — List 4 (Models, HERMES.md, Environment, All Settings) — `safeProfileSlug` file-local helper extraction in `src/app/api/agent/files/[key]/route.ts` (Rule of Two in-file Set/Map extraction — sister to session 193's `existingFallbackKeys` extraction)
-
-**Date:** 2026-06-13
-**Branch:** `mission/hermes-review-and-refactor`
-**Random pick:** `echo $((RANDOM % 4 + 1))` = 4 (List 4: Models, HERMES.md, Environment, All Settings).
-**Outcome:** **1 byte-equivalent refactor in the List 4 surface + 1 new source-pattern test (3 source-pattern assertions).** Sister to session 193's `existingFallbackKeys()` extraction — both follow the "Rule of Two for in-file Set/Map extraction" pattern. All green under tsc + eslint + jest + build. Committed + pushed as `fc62ad5`. **No docs commit was made in session 194 (the tool-call budget hit before the docs step).** This session (F.2-closure) adds the docs entry to keep the rolling PR's audit trail intact.
-
-### What shipped
-
-1 byte-equivalent refactor + 1 new source-pattern test (3 assertions).
-
-1. **`safeProfileSlug()` file-local helper extraction in `src/app/api/agent/files/[key]/route.ts`** — the pre-session source had the 2-line pattern `const rawSlug = body.profile.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, ""); const profileSlug = rawSlug || "default";` repeated in 2 places in the same file: the `set_profile` action handler and the `save_as` action handler (both POST branches in the PUT handler). Post-session, a single `function safeProfileSlug(raw: string | undefined | null): string` helper sits above the PUT handler, applying the trim+lowercase+regex+empty-fallback chain in one place. The 2 call sites are both `const profileSlug = safeProfileSlug(body.profile);` — a 1-line, 1-token swap. The helper's JSDoc explains the slug normalisation + the "default" fallback. No runtime change — both call sites receive the EXACT same string.
-
-2. **`tests/unit/safe-profile-slug-helper-extraction.test.ts` (NEW, 3 source-pattern assertions)** — pins the post-migration shape: (a) helper declaration exists (1 occurrence, with the exact `function safeProfileSlug(raw: string | undefined | null): string` signature), (b) the 2 call sites use the helper (2 occurrences of `safeProfileSlug(body.profile)`), (c) no inline `body.profile.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-")` slug-normalisation chain outside the helper body. 3/3 pass.
-
-### Why this is byte-equivalent
-
-- **`safeProfileSlug()` extraction**: the helper body is literally the 3-line `trim().toLowerCase().replace().replace()` chain + the `|| "default"` fallback — the EXACT same 4 operations in the EXACT same order as the pre-session inline form. The 2 call sites pass `body.profile` (which is `string | undefined` from the request body type) and receive a `string` (the "default" fallback covers the undefined/empty case). No behavioural change for any of the 4 input shapes (normal string, whitespace, special chars, empty/undefined).
-
-### New pitfall codified
-
-**"Rule of Two for in-file Set/Map extraction" — sister to session 193.** The 2-line `body.profile.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "") || "default"` pattern is a 2-place duplication that crosses the Rule of Two threshold for in-file extractions. The Rule of Three (commonly cited for cross-file duplication) does NOT apply to in-file duplication of 2+ lines — the visual signal of duplication is weaker for 2 lines than for 3+. **The fix:** extract the helper, even at 2 sites in the same file. **Detection recipe:** grep for `body.profile.trim()` or `body.name.trim()` or similar slug-normalisation chains in route files. **The trap:** the "unreachable-but-preserved defensive fallback" — the inline form had `const rawSlug = ...; const profileSlug = rawSlug || "default";` where `rawSlug` is a `string` (not `string | undefined`). The helper's signature `(raw: string | undefined | null): string` widens the parameter type to match the call site (`body.profile` is `string | undefined`), so the helper handles the undefined case explicitly while the inline form handled it implicitly via `|| "default"`. The "unreachable" part is the `null` case (the body schema doesn't allow null), but the type is widened for forward-compatibility with future body shapes that may allow null.
-
-### Verification
-
-- `npx tsc --noEmit`: clean (0 errors)
-- `CI=true npx eslint src/app/api/agent/files/[key]/route.ts tests/unit/safe-profile-slug-helper-extraction.test.ts --max-warnings 0`: clean
-- `CI=true npx jest tests/unit/safe-profile-slug-helper-extraction.test.ts`: **3/3 pass**
-- Full `CI=true npx jest` sweep: **311 suites / 2325 tests pass** (up from 310/2322 = +1 suite, +3 tests)
-- `npm run build`: clean
-
-### Reference doc
-
-`references/session-194-list4-safe-profile-slug-helper-extraction.md` (the per-session reference documenting the Rule of Two in-file extraction pattern, sister to session 193's `existingFallbackKeys` work).
-
-### Next session should
-
-- **Random pick next session.** The List 4 `safeProfileSlug` + `existingFallbackKeys` + `ConfigModelSection` + `isManagedKey` surface is now mined clean. The next List 4 pick should look for refactor opportunities OUTSIDE the 4 factory families and OUTSIDE the now-mined slug-normalisation + Set-construction + canonical-interface-export + runtime-predicate surface. Candidates worth re-scanning: the `getBundlePathMap` helper in `agent/files/[key]/route.ts:80-91` (hand-rolls a `Record<string, string>` that maps the same 8 keys to bundle paths that `getBehaviorFiles()` already publishes), the `appendAuditLine` calls across 12+ routes (could benefit from a `routeAuditSuccess(route, resource)` shorthand), the per-route `requireAuth(request)` + early-return pattern (could be a `withAuth` route wrapper — but 12+ sites means a HOC, not a helper; defer).
-- **Carryover** — resolved. The next session starts with a clean working tree.
-
----
-
-## Session 193 — List 4 (Models, HERMES.md, Environment, All Settings) — `ConfigModelSection` interface consolidation (export from `hermes-import.ts` + 1-site migration in `models/[id]/diff/route.ts`) + `existingFallbackKeys()` helper extraction in `models/fallbacks/import/route.ts` (2-site migration) (close session 192 carryover)
-
-**Date:** 2026-06-13
-**Branch:** `mission/hermes-review-and-refactor`
-**Random pick:** `echo $((RANDOM % 4 + 1))` = 3 (List 3: Models, Agents, Skills, Tools, Personalities).
-**Outcome:** **2 byte-equivalent refactors in the List 4 surface + 2 new test files (6 + 7 = 13 source-pattern assertions).** Both refactors close the prior session's deferred carryover — the carryover was left in a Mode B (verified-but-uncommitted) state at the end of the prior session with `git status` showing 3 modified production files + 2 untracked test files. All green under tsc + eslint + jest + build. Committed + pushed as `34a8489`.
-
-### What shipped
-
-2 byte-equivalent refactors + 2 new test files (13 source-pattern assertions total).
-
-1. **`ConfigModelSection` interface consolidation across `src/lib/hermes-import.ts` (canonical source) + `src/app/api/models/[id]/diff/route.ts` (consumer)** — the pre-session source had the same 4-field interface `ConfigModelSection { default?, provider?, base_url?, context_length? }` declared in BOTH files. The canonical declaration in `hermes-import.ts` was a local interface (not exported) used internally as the `HermesYamlConfig.model?` field type. The diff route's `readHermesModelSection()` helper had its own identical-shape 7-line `interface ConfigModelSection { ... }` block. Post-session, the canonical declaration is `export interface ConfigModelSection` (with a JSDoc explaining the snake_case stability + 4-field canonical projection), and the diff route has a single `import type { ConfigModelSection } from "@/lib/hermes-import"` line. The local interface block in the diff route is REMOVED (the source-pattern test pins the absence). No runtime change — the `readHermesModelSection()` return type is byte-equivalent (same shape, same name, same field set). The internal usage in `hermes-import.ts` (the `HermesYamlConfig.model?: ConfigModelSection` reference) is unchanged — only the export keyword was added.
-
-2. **`existingFallbackKeys()` helper extraction in `src/app/api/models/fallbacks/import/route.ts`** — the pre-session source had the 3-line pattern `const existingChain = listFallbackChain(); const existingKeys = new Set(existingChain.map((e) => fallbackKey(e.provider, e.modelIdString)));` duplicated in TWO places in the same file: the GET branch (preview) at lines 43-46 and the POST branch (skip-already-imported) at lines 99-102. Post-session, a single `function existingFallbackKeys(): Set<string>` helper sits above the GET handler, returning `new Set(listFallbackChain().map((e) => fallbackKey(e.provider, e.modelIdString)))`. The 2 call sites are both `const existingKeys = existingFallbackKeys();` — a 1-line, 1-token swap. The helper's JSDoc explains the O(1) membership guarantee + the `(provider::modelId)` key shape + the `fallbackKey()` contract reference. No runtime change — both call sites receive the same Set with the same entries; the loop bodies in both branches are byte-equivalent.
-
-3. **`tests/unit/config-model-section-consolidation.test.ts` (NEW, 6 source-pattern assertions)** — pins the post-migration shape across the 2 affected files: (a) `hermes-import.ts` exports the interface (1 export site), (b) `hermes-import.ts` preserves the 4-field shape (default, provider, base_url, context_length), (c) `hermes-import.ts` still uses `ConfigModelSection` as the type of `HermesYamlConfig.model?` (the internal-usage preservation pin), (d) `models/[id]/diff/route.ts` imports the type (1 import site), (e) `models/[id]/diff/route.ts` no longer declares the interface locally (0 `interface ConfigModelSection` blocks), (f) `models/[id]/diff/route.ts` still uses `ConfigModelSection` as the return type of `readHermesModelSection` (the consumer-usage preservation pin). 6/6 pass.
-
-4. **`tests/unit/fallbacks-import-route-existing-fallback-keys-migration.test.ts` (NEW, 7 source-pattern assertions)** — pins the post-migration shape of the route file: (a) helper declaration exists (1 occurrence), (b) JSDoc block on the helper mentions "O(1)" + "provider" + "modelId", (c) GET branch uses the helper (1 call), (d) POST branch uses the helper (1 call), (e) no inline `existingChain = listFallbackChain()` declaration (0 occurrences), (f) no inline `new Set(existingChain.map(` construction (0 occurrences), (g) no inline `fallbackKey(e.provider, e.modelIdString)` outside the helper body (the test splits the source at the helper declaration and asserts the inline form is absent from the rest of the file). 7/7 pass.
-
-### Why this is byte-equivalent
-
-- **`ConfigModelSection` consolidation**: the imported `type` alias is structurally identical to the local interface — same name, same 4 field names, same 4 field types (`string | undefined` for default/provider/base_url, `number | undefined` for context_length), same field order. The diff route's `readHermesModelSection(): ConfigModelSection | null` return type is unchanged (the helper just references the imported alias instead of the local declaration).
-- **`existingFallbackKeys()` extraction**: the helper body is literally `new Set(listFallbackChain().map((e) => fallbackKey(e.provider, e.modelIdString)))` — the EXACT same construction as the pre-session inline form. The 2 call sites receive a Set with the EXACT same entries (the helper invokes `listFallbackChain()` and `fallbackKey()` with the same arguments). The downstream loops are unchanged — they read `existingKeys` as a `Set<string>` and use `.has()` for membership.
-
-### New pitfalls codified
-
-**"An un-exported canonical interface is a 2-place duplication waiting to be added to."** The `ConfigModelSection` interface in `hermes-import.ts` was the canonical source of truth for the `model:` section of `~/.hermes/config.yaml`, but it was `interface ConfigModelSection` (not `export interface ConfigModelSection`). The diff route's `readHermesModelSection` helper needed the same shape for its return type, so it redeclared the interface locally. The 2 declarations were byte-equivalent at session 193 start, but a future PR that adds a 5th field to the canonical would need to update BOTH declarations. **The fix:** export the canonical interface and have all consumers import the type alias. The type system then enforces single-source-of-truth. **Detection recipe:** grep the codebase for non-exported `interface \\w+ {` declarations in `src/lib/*.ts` files. **The trap:** a "type alias" (`type Foo = { ... }`) is a STRUCTURAL form, not a nominal form, so the type system would let `type Foo = { ... }` in file A and `interface Foo { ... }` in file B coexist without conflict.
-
-**"An O(N) `.find()` per iteration is a 2-place duplication of an O(1) Set construction."** The `existingFallbackKeys` helper replaces the pattern `existingKeys.has(key)` (O(1) Set membership) with the pattern `existingChain.find(...)` (O(N) linear scan). The pre-session code already used the O(1) Set form — the refactor is purely about the Set CONSTRUCTION (3 lines) being duplicated at 2 sites. **The fix:** extract the Set construction into a single helper, even when the O(1) form is already in use.
-
-### Verification
-
-- `npx tsc --noEmit`: clean (0 errors)
-- `CI=true npx eslint src/app/api/models/[id]/diff/route.ts src/app/api/models/fallbacks/import/route.ts src/lib/hermes-import.ts tests/unit/config-model-section-consolidation.test.ts tests/unit/fallbacks-import-route-existing-fallback-keys-migration.test.ts --max-warnings 0`: clean
-- `CI=true npx jest tests/unit/config-model-section-consolidation.test.ts tests/unit/fallbacks-import-route-existing-fallback-keys-migration.test.ts tests/unit/fallbacks-import-api.test.ts`: **15/15 pass**
-- Full `CI=true npx jest` sweep: **311 suites / 2325 tests pass** (up from 309/2312 = +2 suites, +13 tests)
-- `CI=true npx --yes pnpm@10.33.0 build`: clean
-
-### Carryover resolution
-
-This session started with a Mode B (verified-but-uncommitted) carryover from the prior session: 3 production files modified + 2 test files created. The pre-commit verification surfaced 0 issues — both refactors are mechanical consolidations. Standard 4-step commit-when-verified protocol applied.
-
-### Reference doc
-
-No new reference doc — this is a 2-refactor session with the same `interface-export-consolidation` + `helper-extraction` shape as the prior List 4 sessions.
-
-### Next session should
-
-- **Random pick next session.** The session 192 + 193 carryovers are now BOTH closed. The other 2 deferred items from session 187 are still open: (a) the `parseEnvLine` + per-line rendering in `src/app/config/[section]/page.tsx:258-283` is still 1 call site — Rule of Three not met, defer; (b) the `isPlatformToolsetsPreview` special-case is still 1 override — premature to add `loadFrom`/`saveTo` to `SectionDef`, defer.
-- **Carryover** — none. The next session starts with a clean working tree.
-
----
-
-## Session 192 — List 4 (Models, HERMES.md, Environment, All Settings) — `isManagedKey` runtime predicate extraction from `MANAGED_KEYS` Set literal + 3-site migration in `src/app/api/agent/files/[key]/route.ts`
-
-**Date:** 2026-06-13
-**Branch:** `mission/hermes-review-and-refactor`
-**Random pick:** `echo $((RANDOM % 4 + 1))` = 4 (List 4: Models, HERMES.md, Environment, All Settings).
-**Outcome:** **1 byte-equivalent refactor in the List 4 surface + 1 new test file (4 source-pattern assertions).** The pre-session source had a stringly-typed `MANAGED_KEYS` Set literal (`new Set(["soul", "agent", "user", "memory", "config", "hermes"])`) inlined at 3 sites in the `agent/files/[key]/route.ts` PUT handler (the 3 write-file actions: `set_profile`, `append`, `save_as`). Post-session, a single `function isManagedKey(key: string): boolean` helper sits above the PUT handler, returning `MANAGED_KEYS.has(key)`. The 3 call sites are all `if (isManagedKey(reqKey)) { ... }` — a 1-line, 1-token swap. The helper's JSDoc explains the `env` exclusion (intentionally not in the set because it's a security-sensitive excluded case). The 4th test file `tests/unit/session-192-is-managed-key-helper-migration.test.ts` (4 source-pattern assertions) pins: (a) helper declaration exists (1 occurrence), (b) the 3 call sites use the helper (3 occurrences), (c) no inline `MANAGED_KEYS.has(` outside the helper body, (d) `MANAGED_KEYS` Set literal is preserved at the module level (the data is unchanged). 4/4 pass. Committed + pushed as `ce91ad5`.
-
----
-
 ## Older sessions (one-line summary)
 
+**Session 194** — List 4 — `safeProfileSlug` file-local helper extraction in `src/app/api/agent/files/[key]/route.ts` (Rule of Two in-file Set/Map extraction — sister to session 193's `existingFallbackKeys` extraction)
+**Session 193** — List 4 — `ConfigModelSection` interface consolidation (export from `hermes-import.ts` + 1-site migration in `models/[id]/diff/route.ts`) + `existingFallbackKeys()` helper extraction in `models/fallbacks/import/route.ts` (2-site migration) (close session 192 carryover)
+**Session 192** — List 4 — `isManagedKey` runtime predicate extraction from `MANAGED_KEYS` Set literal + 3-site migration in `src/app/api/agent/files/[key]/route.ts`
 **Session 196** — List 4 — `closeModelEditor` + `closeFallbackModal` + `closeAddCustom` + `closeSyncModal` 1- and 2-setter close-callback extractions across 4 files in the List 4 surface (close session 195 followup)
 **Session 191** — List 3 — `toggleActiveCollapsed` / `toggleInactiveCollapsed` 1-setter toggle-callback extraction in `src/app/operations/skills/page.tsx`
 **Session 190** — cross-list (List 2 + List 1 + List 3) — `getCategoryIdFromTemplate` helper + redundant `isCustom` cast removal + `onEditTemplate` signature narrowing in `useMissionsPage` + `cron/page.tsx` `hardwareEnabled`/`hardwareTotal` single-pass reduce + `handleToggleSkill` callback consolidation in `skills/page.tsx`
