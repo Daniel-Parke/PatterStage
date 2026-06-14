@@ -49,6 +49,7 @@ export function useGame() {
     view: query.data ?? null,
     snapshot: query.data?.snapshot ?? null,
     events: query.data?.events ?? [],
+    owned: query.data?.owned ?? [],
     isLoading: query.isLoading,
     error: query.isError ? (query.error as Error).message : null,
     refetch: () => query.refetch(),

@@ -22,6 +22,8 @@ export interface GameView {
   snapshot: GameSnapshot;
   events: repo.GameEvent[];
   unlockedNow: { id: string; name: string; rarity: string }[];
+  /** Owned cosmetic ids (for the Vault). */
+  owned: string[];
 }
 
 export function loadGameSnapshot(): GameView {
@@ -57,16 +59,17 @@ export function loadGameSnapshot(): GameView {
   }
   repo.updatePlayer({ lastSeenAt: new Date().toISOString() });
 
+  const ownedIds = repo.getOwnedCosmeticIds();
   const snapshot = buildSnapshot({
     metrics,
     player: repo.getPlayerState(),
     unlockedAchievementIds: unlockedIds,
     claimedQuestIds: claimedIds,
-    ownedCosmeticIds: repo.getOwnedCosmeticIds(),
+    ownedCosmeticIds: ownedIds,
     agents,
     bonusXp: repo.getBonusXp(),
   });
-  return { snapshot, events: repo.recentEvents(12), unlockedNow };
+  return { snapshot, events: repo.recentEvents(12), unlockedNow, owned: [...ownedIds] };
 }
 
 export function claimQuestReward(questId: string): { ok: boolean; error?: string; cores?: number; xp?: number } {

@@ -49,6 +49,7 @@ export const APP_NAV_ROUTES: readonly string[] = [
   "/recroom/story-weaver/create",
   "/recroom/story-weaver/library",
   "/recroom/story-weaver/themes",
+  "/recroom/arcade",
   "/sessions",
   "/operations/skills",
 ];

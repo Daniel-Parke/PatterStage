@@ -10,7 +10,7 @@ import {
   ScrollText, Sparkles, Rocket, Volume2, Mic, GitBranch,
   RotateCcw, ShieldCheck, Lock, Code,
   BookOpen, Bot, MessageCircle,
-  AudioLines, Settings2, Network,
+  AudioLines, Settings2, Network, Gamepad2,
 } from "lucide-react";
 
 import type { AccentColor } from "@/types/hermes";
@@ -78,6 +78,7 @@ export const mainSections: SidebarSection[] = [
           { label: "Themes", href: "/recroom/story-weaver/themes" },
         ],
       },
+      { icon: Gamepad2, label: "Arcade", href: "/recroom/arcade", color: "purple" },
     ],
   },
 ];
