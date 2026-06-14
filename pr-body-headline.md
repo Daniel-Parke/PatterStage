@@ -2,7 +2,33 @@
 
 **Full archive:** `pr-body.txt` at HEAD on the `mission/hermes-review-and-refactor` branch. This on-PR body is the headline summary (most recent 4 sessions in full + one-line summary of older sessions).
 
-## Followup (June 14, 2026) — Session 209
+## Followup (June 14, 2026) — Sessions 211 + 212
+
+Since PR #183 was opened, two additional sessions have landed on this branch:
+
+**Session 212 — List 2 (Cron, Missions, Chat)** — `MessageBubble` + `MessageAvatar` extraction (NEW: `src/components/chat/MessageBubble.tsx` + `src/components/chat/MessageAvatar.tsx`). The chat page had grown to 658 lines with the largest inlined JSX block (the 50-line `messages.map` body) and 3 byte-identical 4-line `w-8 h-8 rounded-lg bg-neon-X/20 ...` icon chips (2 in chat/page.tsx, 1 in TypingIndicator.tsx). Both components extracted. The 50-line inline message JSX is gone (replaced with 1-line `<MessageBubble msg={msg} />` call); the 3 inline 4-line avatar chips are gone (replaced with `<MessageAvatar role={...} />` calls). TypingIndicator now delegates the avatar to `MessageAvatar` too. The `AVATAR_ROLE` type is exported so a future "system" or "tool" role forces a compile error in the AVATARS map (exhaustive type discipline).
+
+**Source-pattern test** — `tests/unit/chat-page-message-bubble-avatar-extraction.test.ts` (new, 17 assertions) pins: both new files exist with expected exports, chat page imports `MessageBubble`, chat page no longer imports `Bot`/`User`/`renderMarkdown` (moved/encapsulated), 50-line inline bubble JSX is gone, both inline avatar chips are removed, `TypingIndicator` delegates to `MessageAvatar`, anti-migration guards (renderMarkdown still exported, `Bot`/`User` still imported in `MessageAvatar`, 3-dot bounce still inline).
+
+**Session 211 — List 1 (Dashboard, Sessions, Memory, Logs)** — `Panel` + `PanelHeader` extraction (NEW: `src/components/dashboard/Panel.tsx`) that consolidates the "rounded card with icon-and-label header" shell that 5 of the 6 dashboard panels duplicated verbatim. 5 inline shell copies collapsed into 1-line `<Panel accent="X">` + `<PanelHeader ... />` calls.
+
+**Source-pattern test** — `tests/unit/dashboard-panel-header-extraction.test.ts` (new, 14 assertions) pins: file exists, both exports present, dashboard imports both, all 5 inline shells removed, all 5 inline headers removed, 5 migrated sites use Panel+PanelHeader, Mission Dispatch accordion + process-card grid stay inline (different shapes, anti-migration guards).
+
+**No external behaviour change** for either session — both refactors are byte-equivalent structural extractions. The chat page still renders the same 50-line JSX output (now via `<MessageBubble>`); the dashboard still renders the same 5 panels (now via `<Panel>`/`<PanelHeader>`). The icons move from `lucide-react` imports in the page/indicator to `MessageAvatar` (centralised); the markdown render moves from the page to `MessageBubble` (encapsulated).
+
+**Tests:** 331 suites / 2550 tests pass (was 325/2474 when PR #183 was opened = +6 suites, +76 tests). `npx tsc --noEmit` clean, `npx eslint . --max-warnings 0` clean across all touched files, `npm run build` clean.
+
+**Files (session 212):** 4 production files (2 new + 2 modified), 1 new test file, 1 reference doc. Net: chat page -48 lines, +236 lines across new components (with extensive JSDoc), +234 lines test.
+
+**Files (session 211):** 1 new production file (`Panel.tsx`), 1 new test file, modified `src/app/page.tsx` (5 sites migrated). Net: zero net change in `src/app/page.tsx` LOC (extraction is structural, not reductive).
+
+**Reference docs:** `docs/references/session-211-list1-panel-header-extraction.md` + `docs/references/session-212-list2-message-bubble-avatar-extraction.md`.
+
+The full session 211 + 212 detail (pre-session shape, post-session shape, anti-migration guards, byte-equivalence rationale, verification) is in the `pr-body.txt` archive at HEAD.
+
+---
+
+## Followup (June 13, 2026) — Session 209
 
 Since PR #183 was opened, one additional session has landed on this branch:
 

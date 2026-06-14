@@ -6884,3 +6884,130 @@ This session started with a Mode F.2 carryover: 2 uncommitted-but-verified file 
   - The `navigator.clipboard.writeText` 3 sister sites (MissionPromptPreview, MissionEditorPanel, chat page) — these are different shapes (async try/catch, no "copied" flag, fire-and-forget) and are anti-migration guards. A future "audit the `navigator.clipboard` surface" pick could check that they stay anti-migration guards.
   - The skills page's `SkillCategoryGrid` props (8 props: categories, categoryCollapsed, onToggleCategory, accentColor, enabled, expandedSkill, skillContent, toggling, onToggleSkill, onViewSkill, onEditSkill) — the `enabled` + `accentColor` + `expandedSkill` + `skillContent` + `toggling` + `onViewSkill` + `onEditSkill` props are "section context" that could collapse into a single `sectionContext` object. That crosses the "byte-equivalent" line subtly (props-vs-context), defer.
 - **Carryover** — none. The next session starts with a clean working tree.
+
+---
+
+## Session 211 — List 1 (Dashboard, Sessions, Memory, Logs) — Panel + PanelHeader extraction (5 inline panel shells → 2 components)
+
+**Date:** 2026-06-14
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 1 (List 1: Dashboard, Sessions, Memory, Logs). Last List 1 pick was session 204 (the `loadHindsightList` helper extraction in `hindsight-client`). The Dashboard surface had not been revisited since — multiple Panel-style carryover hooks remained.
+**Status:** committed + pushed (commit `b316ff7`).
+
+### What this refactor did
+
+Extracted 2 new components from `src/app/page.tsx` (the Dashboard page) — `Panel` (outer shell) and `PanelHeader` (icon + label + optional count + right slot) — that consolidate the "rounded card with icon-and-label header" shell that 5 of the 6 dashboard panels duplicated verbatim. Live use site count: 5 (was 5 inline copies). All 5 sites are in `src/app/page.tsx` — no other page in the codebase uses this shell today, but the helper is exported so a future surface (e.g. a redesigned Mission detail page) can pick it up without re-deriving the 5-line shell.
+
+### The 5 migrated sites
+
+| # | Panel | Accent | Count | Right slot |
+|---|-------|--------|-------|------------|
+| 1 | Active Missions | cyan | "(N)" | all-missions link |
+| 2 | Cron Jobs | orange | — | manage link |
+| 3 | Platforms | cyan | — | (none) |
+| 4 | Errors | red | — | severity pills |
+| 5 | Rec Room | purple | — | (none) |
+
+### Shared-class infrastructure
+
+- **`panelBorderClass(accent)`** — centralises the `border-{accent}-500/20` / `border-neon-{accent}/20` mapping that the inline form repeated per site. The `/20` opacity is a static no-hover value distinct from the hover-aware `colorBorderMap` in `theme.ts`.
+- **`iconColorMap` reuse** — the `PanelHeader`'s icon colour uses `iconColorMap` from `theme.ts` (the same map `StatPill` and `MissionStatusBadge` consume). One source of truth for "what colour is the X accent on a dark background".
+
+### Anti-migration guards
+
+- **`Mission Dispatch`** was intentionally NOT migrated — its header is a `<button>` (a click-to-toggle accordion), not the static 4-flex-div header shape. Different shape, not a duplicate.
+- **`process-card grid`** (No Active Processes / per-process card) was intentionally NOT migrated — its outer shell is a `grid`, not a `rounded-xl border`, and it doesn't have a "header bar with icon + label" structure.
+
+### Tests
+
+`tests/unit/dashboard-panel-header-extraction.test.ts` (new, 14 assertions) covers: file exists, both exports present, dashboard imports both, all 5 inline shells removed, all 5 inline headers removed, 5 migrated sites use Panel+PanelHeader, Mission Dispatch accordion stays inline, process-card grid stays inline. Source-pattern style (no full-page render) — the dashboard is 900+ LOC with 8+ API fetches.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `npx eslint src/app/page.tsx src/components/dashboard/Panel.tsx tests/unit/dashboard-panel-header-extraction.test.ts --max-warnings 0`: clean
+- `npx jest tests/unit/dashboard-panel-header-extraction.test.ts`: 14/14 pass
+
+### Files
+
+- `src/components/dashboard/Panel.tsx` (new, 148 lines with JSDoc)
+- `tests/unit/dashboard-panel-header-extraction.test.ts` (new, ~200 lines)
+- `src/app/page.tsx` (modified, 5 sites migrated)
+
+Reference doc: `docs/references/session-211-list1-panel-header-extraction.md`
+
+### Next session should
+
+- **Carryover** — closed. The dashboard Panel extraction was the only List 1 carryover.
+- **Random pick next session** — session 212 free to pick any list.
+
+---
+
+## Session 212 — List 2 (Cron, Missions, Chat) — MessageBubble + MessageAvatar extraction (50-line inline chat bubble JSX + 3 inline avatar chips)
+
+**Date:** 2026-06-14
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 2 (List 2: Cron, Missions, Chat). Last List 2 pick was session 210 (the `loadAndApplyTemplate` helper extraction in `useMissionsPage.ts`). The Chat surface had not been revisited since — the chat page had grown to 658 lines with the largest inlined JSX block (the 50-line `messages.map` body).
+**Status:** committed + pushed (commit `71c6b52`).
+
+### What this refactor did
+
+Extracted 2 new components from the chat surface — `MessageBubble` (per-message row) and `MessageAvatar` (per-message icon chip) — that consolidate the per-message row + per-message avatar chip patterns.
+
+### Extraction 1 — `MessageBubble`
+
+The chat page's 50-line `messages.map((msg) => ...)` body (chat/page.tsx lines 553-602) owned the per-message row inline: alignment div, conditional avatar, `max-w-[70%]` bubble with role-based colour, markdown render (or plain pre-wrap for user messages), HH:MM timestamp footer. All 50 lines moved into a single `<MessageBubble msg={msg} />` call. The component is pure (no internal state) — the chat page owns the streaming state and the `updateSessionMessages` callback.
+
+### Extraction 2 — `MessageAvatar` (3 sites)
+
+The 4-line `w-8 h-8 rounded-lg bg-neon-X/20 ...` icon chip appeared at **3 sites** with byte-identical outer markup, varying only in the icon (`Bot` vs `User`) and the colour token (`neon-purple` vs `neon-cyan`):
+
+| # | Site | Role | Colour | Position |
+|---|------|------|--------|----------|
+| 1 | chat/page.tsx (assistant) | assistant | neon-purple | left of bubble |
+| 2 | chat/page.tsx (user) | user | neon-cyan | right of bubble |
+| 3 | TypingIndicator.tsx | assistant | neon-purple | left of dots |
+
+The new component centralises the role → icon → colour mapping in a single `AVATARS: Record<AVATAR_ROLE, AvatarEntry>` map. Caller passes a `role`; the helper resolves the icon and colour tokens. The `AVATAR_ROLE` type is exported so `MessageBubble` can use it as the union of valid `role` values (exhaustive type discipline — a future "system" or "tool" role forces a compile error in the AVATARS map, prompting the maintainer to add the entry).
+
+### Anti-migration guards
+
+- **Sister site NOT a duplicate target:** `src/components/session/MessageBubble.tsx` renders session-transcript bubbles for the Sessions page with very different semantics (expandable summary, role-coloured background, tool-call rendering, copy-with-feedback, `ROLE_META` icon metadata). The chat-page bubble is intentionally a different component.
+- **`TypingIndicator` is a separate concern.** The "Thinking..." placeholder inside `MessageBubble` is a string literal, not the `TypingIndicator` component. `TypingIndicator` is rendered below the message list, not as a message in it — moving it inside `MessageBubble` would conflate "render one message" with "show an in-flight animation".
+- **The 3-dot bounce animation stays inline in `TypingIndicator`.** It's a focused, 1-site use of a magic animation-delay sequence (`0ms` / `150ms` / `300ms`) that doesn't share structure with anything else in the chat surface.
+
+### Tests
+
+`tests/unit/chat-page-message-bubble-avatar-extraction.test.ts` (new, 17 assertions) covers: both new files exist with expected exports, chat page imports `MessageBubble`, chat page no longer imports `Bot` or `User` from `lucide-react` (moved to `MessageAvatar`), chat page no longer imports `renderMarkdown` (encapsulated in `MessageBubble`), `messages.map` is the 1-line `<MessageBubble ... />` form, both inline avatar chips removed, `TypingIndicator` delegates to `MessageAvatar`, anti-migration guards (renderMarkdown still exported, `Bot`/`User` still imported in `MessageAvatar`, 3-dot bounce still inline).
+
+Source-pattern style (no full-page render) — the chat page requires mocking `useApiData`, `useToast`, `useGatewayHealth`, the `/api/orchestration/chat` streaming endpoint, the localStorage session list, and the AbortController-based streaming lifecycle. The harness would dwarf the invariants being tested.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `npx eslint . --max-warnings 0`: clean
+- `npm run build`: clean
+- `npm test`: **2550/2550 tests pass across 331 suites** (was 2533... pre-existing, +17 from the new test file)
+- All pre-existing chat tests still pass — 39/39 across 6 suites (`chat-page-active-session-reuse`, `chat-page-models-merge`, `chat-page-prepend-activate-session`, `chat-page-toast`, `chat-utils-sanitise-filename`, `copy-btn-magic-string-source-pattern`)
+
+### Files
+
+- `src/app/orchestration/chat/page.tsx` — 658 → 610 lines (-48)
+- `src/components/chat/MessageAvatar.tsx` — new, 92 lines
+- `src/components/chat/MessageBubble.tsx` — new, 110 lines
+- `src/components/chat/TypingIndicator.tsx` — 24 → 38 lines (+14, with JSDoc)
+- `tests/unit/chat-page-message-bubble-avatar-extraction.test.ts` — new, 234 lines
+
+Net: **+236 lines across new components** (with extensive JSDoc explaining extraction rationale) and **-48 lines from chat page**. 50-line inline message JSX gone; 3 inline 4-line avatar chips gone.
+
+Reference doc: `docs/references/session-212-list2-message-bubble-avatar-extraction.md`
+
+### Next session should
+
+- **Random pick next session** — list rotation: List 1 last picked 211, List 2 last picked 212, List 3 last picked 209, List 4 last picked 210. Next pick should rotate.
+- **Candidates for next picks:**
+  - **List 1 (Dashboard carryover):** The `page.tsx` "process-card grid" and "Mission Dispatch" accordion could potentially share a `<CollapsiblePanel>` helper (different shape, defer unless 2+ sites use the accordion pattern).
+  - **List 2 (Missions carryover):** The missions page's `vm` destructure in `missions/page.tsx` has ~50 fields; a future "group vm fields by concern" refactor (e.g. `vm.composer.*` + `vm.templates.*` + `vm.categories.*`) could improve readability but crosses the "byte-equivalent" line (props-vs-namespace).
+  - **List 3 (Operations carryover):** Skills page's `SkillCategoryGrid` has 8 props that could collapse into a single `sectionContext` object — also crosses the byte-equivalent line.
+  - **List 4 (Models carryover):** The `models_dev_cache.json` refresh + `runFallbackMutation` is well-mined; next pick should look for unused exports in `src/lib/fallback-*` or `src/lib/config-schema.ts`.
+- **Carryover** — closed. The chat-surface MessageBubble + MessageAvatar extraction was the only List 2 chat carryover.
