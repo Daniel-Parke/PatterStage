@@ -14,9 +14,9 @@ import Button from "@/components/ui/Button";
 import { LoadingSpinner, ErrorBanner } from "@/components/ui/LoadingSpinner";
 import { getSectionDef, fileKeyForFilePath } from "@/lib/config-schema";
 import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
-import { maskKeyHint } from "@/lib/secret-mask";
 import { parseEnvLine, envLineKey } from "@/lib/env-line";
 import ConfigField from "@/components/config/ConfigField";
+import EnvLineRow from "@/components/config/EnvLineRow";
 
 export default function ConfigSectionPage() {
   const params = useParams();
@@ -272,28 +272,13 @@ export default function ConfigSectionPage() {
               <div className="space-y-2">
                 {fileContent.split("\n").map((line, i) => {
                   const parsed = parseEnvLine(line);
-                  const lineKey = envLineKey(line, i);
-                  if (parsed.kind === "blank" || parsed.kind === "comment") {
-                    return (
-                      <div key={lineKey} className="text-xs text-white/30 font-mono">
-                        {line || "\u00A0"}
-                      </div>
-                    );
-                  }
-                  if (parsed.kind === "invalid") {
-                    return (
-                      <div key={lineKey} className="text-xs font-mono text-white/50">
-                        {parsed.raw}
-                      </div>
-                    );
-                  }
-                  // parsed.kind === "keyval"
                   return (
-                    <div key={lineKey} className="flex items-center gap-2 text-xs font-mono">
-                      <span className="text-neon-cyan w-48 flex-shrink-0 truncate">{parsed.key}</span>
-                      <span className="text-white/50">=</span>
-                      <span className="text-white/30">{maskKeyHint(parsed.value)}</span>
-                    </div>
+                    <EnvLineRow
+                      key={envLineKey(line, i)}
+                      lineKey={envLineKey(line, i)}
+                      parsed={parsed}
+                      raw={line}
+                    />
                   );
                 })}
                 <p className="text-xs text-white/20 mt-4">
