@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/instrumentation.ts",
+    "scripts/**/*.{ts,mjs}",
+    "mock-hermes/server.mjs",
+    "mock-llm/server.mjs",
+    "tests/integration/runtime/*.mjs",
+    "tests/**/*.test.{ts,tsx}"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "scripts/**/*.{ts,mjs}",
+    "mock-hermes/**/*.mjs",
+    "mock-llm/**/*.mjs"
+  ],
+  "ignoreDependencies": ["ts-jest"],
+  "ignoreBinaries": ["python", "crontab", "systemctl", "which", "ps"]
+}
