@@ -88,6 +88,50 @@
     0 0 40px rgb(var(--ch-rgb-neon-orange) / 0.05);
 }
 
+/* ── Motion (transform/opacity only — GPU-friendly) ──────────── */
+@keyframes ch-flame {
+  0%, 100% { transform: scale(1) rotate(-1deg); opacity: 1; }
+  25% { transform: scale(1.08) rotate(2deg); opacity: 0.9; }
+  50% { transform: scale(0.96) rotate(-2deg); opacity: 1; }
+  75% { transform: scale(1.05) rotate(1deg); opacity: 0.95; }
+}
+.animate-flame { animation: ch-flame 1.6s ease-in-out infinite; transform-origin: center bottom; }
+
+@keyframes ch-pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.animate-pulse-glow { animation: ch-pulse-glow 2s ease-in-out infinite; }
+
+@keyframes ch-float-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-float-in { animation: ch-float-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes ch-shimmer {
+  100% { transform: translateX(100%); }
+}
+.animate-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.animate-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(var(--ch-rgb-neon-cyan) / 0.08), transparent);
+  animation: ch-shimmer 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-flame,
+  .animate-pulse-glow,
+  .animate-float-in,
+  .animate-shimmer::after { animation: none; }
+}
+
 /* Variable-driven surface glow (see GlowSurface.tsx); --glow-surface-rgb set inline */
 .glow-surface {
   --glow-surface-alpha: 0.15;
