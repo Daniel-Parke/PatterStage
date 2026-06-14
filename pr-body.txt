@@ -7079,3 +7079,75 @@ Two new source-pattern tests (no full-page render — Hindsight modals require m
 
 - **Random pick next session** — list rotation: List 1 last picked 213, List 2 last picked 212, List 3 last picked 209, List 4 last picked 210. Next pick should rotate (likely 2, 3, or 4).
 - **Carryover** — closed. Both Hindsight extraction targets (input className constants + per-row action buttons) are now in the shared `utils.ts` + `RowActionButtons.tsx` files. A future List 1 pick that revisits the Hindsight surface would need a different angle (e.g. the 3 modal close-callbacks in `Modals.tsx` follow the `closeTemplateManager` / `openTemplateManager` sister pattern from session 206 — same 1-line-`setShowX(false)` shape duplicated 3 times, but the helper is so thin that the extraction gain is marginal).
+
+
+## Session 214 — List 2 (Cron, Missions, Chat) — useMissionsPage dead-state removal (4 useState slots + 2 return-object setters)
+
+**Date:** 2026-06-14
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 2 (List 2: Cron, Missions, Chat). Last List 2 pick was session 212 (`MessageBubble` + `MessageAvatar` extraction in chat). Session 214 picks the Missions side of the same list and closes a tiny dead-state carryover from the prior sessions.
+**Status:** committed + pushed (commit at HEAD on `mission/hermes-review-and-refactor`).
+
+### What this refactor did
+
+Four dead `useState` slots + two dead return-object setters, all in the List 2 Missions surface, removed in one pass:
+
+1. **`scheduleType` useState** in `src/hooks/useMissionsPage.ts` (declared `useState<"interval" | "wall-clock" | "post-run">("interval")`). Never read by any consumer — grep `\.scheduleType` returns 0 hits in `src/` or `tests/`. The `SchedulePicker` consumes only `value` + `onChange` strings.
+2. **`scheduleStartTime` useState** in the same file (declared `useState("00:00")`). Never mutated from `"00:00"`, never read.
+3. **Two matching fields on the `MissionFormState` interface** in `src/components/missions/MissionCreateForm.tsx`. Removed because no consumer destructured `formState.scheduleType` or `formState.scheduleStartTime`.
+4. **Two return-object setters** — `setShowCategoryManager` and `setShowTemplateManager` — removed from the hook's return object. Neither is destructured by the page (the page uses the named `openCategoryManager` / `closeCategoryManager` / `openTemplateManager` / `closeTemplateManager` callbacks instead). The setters are still used internally by the `openX` callbacks (anti-migration guard below).
+
+### Why dead
+
+The two `useState` slots were vestigial from an earlier `MissionCreateForm` design that distinguished between `interval`, `wall-clock`, and `post-run` schedule types. The current `SchedulePicker` is string-driven — it accepts a `value` and an `onChange` callback that updates `newSchedule` — and it derives its display state from the string itself, not from a parallel `scheduleType` discriminator. The `scheduleStartTime` slot was a sibling of the (also-removed) `scheduleType`, both initialised to a default and never touched.
+
+The two return-object setters were exposed in case a consumer needed imperative "open this modal" control. In practice, every consumer reaches for the named `openX` / `closeX` callback pairs. Exposing the raw setters was both unused API surface and a small footgun (they could be called with arbitrary `boolean` values that bypass the intended flow).
+
+### Anti-migration guards
+
+The source-pattern test pins 4 invariants that guard against re-introducing the dead state or over-removing the still-needed code:
+
+- `showCategoryManager` + `showTemplateManager` **state slots** are still declared (the `useState` declarations remain — only the **setters** were removed from the return object).
+- The `openCategoryManager` callback still calls `setShowCategoryManager(true)`, and the `openTemplateManager` callback still calls `setShowTemplateManager(true)` — the setters are still USED internally; they just aren't EXPOSED externally.
+- `setFormField` no longer has entries for the 2 dead fields (it would crash with a `setters[field](value)` call to `undefined` otherwise).
+- `populateFormFromMission` no longer calls `setScheduleType(...)` (only `setNewSchedule` remains in the schedule branch).
+
+### Tests
+
+- `tests/unit/use-missions-page-dead-state-removal.test.ts` (new, 19 assertions across 6 describes) — pins the post-extraction shape: hook no longer declares the 2 useState slots, `formState` no longer exposes them, `setFormField` no longer has entries for them, `populateFormFromMission` no longer calls `setScheduleType`, `MissionFormState` no longer declares the fields, hook's return object no longer exposes `setShowCategoryManager` or `setShowTemplateManager`, the 2 test mock `baseFormState` objects lose the 2 fields, but `showCategoryManager` + `showTemplateManager` state slots remain and the `openX` callbacks still call the setters internally.
+- `tests/unit/window-confirm-source-patterns-list2.test.ts` — line-number update (1100 → 1091) for the `useMissionsPage.ts` "Overwrite template?" site, because the dead-state removal shifts the file by 9 lines.
+
+### Verification
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint src/hooks/useMissionsPage.ts src/components/missions/MissionCreateForm.tsx tests/unit/mission-composer-actions.test.tsx tests/unit/mission-dispatch-gate.test.tsx tests/unit/window-confirm-source-patterns-list2.test.ts tests/unit/use-missions-page-dead-state-removal.test.ts --max-warnings 0`: clean (0 warnings)
+- `CI=true npx jest`: **334 suites / 2602 tests pass** (was 333/2583 after session 213 followup; +1 suite, +19 tests from the new source-pattern test)
+- `npx --yes pnpm@10.33.0 build`: clean
+
+### Files
+
+- `src/hooks/useMissionsPage.ts` — removed 2 useState declarations, 2 formState getter entries, 2 setFormField entries, 2 setScheduleType calls, 2 return-object setters
+- `src/components/missions/MissionCreateForm.tsx` — removed 2 fields from the MissionFormState interface
+- `tests/unit/mission-composer-actions.test.tsx` — removed 2 fields from baseFormState mock
+- `tests/unit/mission-dispatch-gate.test.tsx` — same
+- `tests/unit/window-confirm-source-patterns-list2.test.ts` — line-number update (1100 → 1091)
+- `tests/unit/use-missions-page-dead-state-removal.test.ts` — new, ~285 lines, 19 assertions across 6 describes
+- `docs/references/session-214-list2-use-missions-page-dead-state-removal.md` — new ref doc
+
+Net: **+352 / -20 lines** across 7 files (352 includes the new test + ref doc, 20 is the 2 deleted fields from 4 production files + 2 deleted fields from 2 test mocks + line-number update).
+
+### New pitfalls codified
+
+1. **Audit `formState` getters the same way as `useState` declarations.** When a `useState` is dead, its field is also dead in any shape that exposes it. In this case: the `MissionFormState` interface, the `formState` getter object in the hook, and 2 test `baseFormState` mock objects all had to be updated together.
+2. **The `setFormField` switch table is a single point of failure.** Removing a `useState` slot without also removing its `setFormField` entry would leave an unreachable branch that crashes if ever called. The source-pattern test pins both removals as a pair.
+3. **Return-object setters are often dead.** If a named `openX` / `closeX` callback pair exists, the raw setter is usually a leak. Confirm via `grep "setShow\w*\s*[,}]" src/` style queries before removing — the setter might still be called by the `openX` callback internally.
+4. **Line-number pinning in source-pattern tests is brittle.** The `window-confirm-source-patterns-list2.test.ts` test had to be updated (1100 → 1091) because the dead-state removal shifted the line. In the long run, prefer `expect(source).toMatch(/.../)` with text-anchored patterns over absolute line numbers.
+
+### Reference doc
+
+`docs/references/session-214-list2-use-missions-page-dead-state-removal.md` — the per-session reference for this work. Documents the 4 dead-state slots + 2 dead setters, the anti-migration guards, the byte-equivalence rationale, the verification, and the 4 new pitfalls (P-1 through P-4).
+
+### Next session should
+
+- **Random pick next session.** The List 2 `useMissionsPage` surface is now mined clean of dead state. Candidates worth re-scanning: (a) the `result.data?.data?.X` envelope double-unwrap pattern at 5+ List 2 sites (`useCronJobMutation.ts:141` for `pausedCount`, `useMissionsPage.ts:805,841` for `body?.data?.mission?.id`, `useMissionsApi.ts:49` for `result.data?.data?.category`, `SystemCronModal.tsx` for `scriptsDir`/`logDir`, `JobFormModal.tsx:105` for `profiles`) — a `safeApiCallEnvelope<T>` helper could collapse all 5 sites, but this crosses the "byte-equivalent" line subtly (the inner envelope type is per-route), (b) the `buildTemplatePayload` 2-site duplicate field list at `handleSaveAsTemplate` (line 976) and `handleTemplateSave` (line 1016) — both pass the same 19 form fields, a `templatePayloadFromForm(formState)` helper would collapse both, (c) the `MissionCreateForm.tsx` 648-line monolith (would benefit from a sub-component split, but that crosses the "byte-equivalent" line).
+- **Carryover** — closed. The next session starts with a clean working tree.

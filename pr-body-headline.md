@@ -2,6 +2,33 @@
 
 **Full archive:** `pr-body.txt` at HEAD on the `mission/hermes-review-and-refactor` branch. This on-PR body is the headline summary (most recent 4 sessions in full + one-line summary of older sessions).
 
+## Followup (June 14, 2026) — Session 214
+
+Since the previous session 213 followup, one additional session has landed on this branch:
+
+**Session 214 — List 2 (Cron, Missions, Chat)** — `useMissionsPage` dead-state removal (4 useState slots + 2 return-object setters). A small but precise dead-code cleanup in the Missions surface:
+
+1. **`scheduleType` + `scheduleStartTime` useState slots removed** from `src/hooks/useMissionsPage.ts`. The `scheduleType` slot (`useState<"interval" | "wall-clock" | "post-run">("interval")`) was written 3 times and read 0 times — the `SchedulePicker` is string-driven. The `scheduleStartTime` slot (`useState("00:00")`) was never mutated from its default and never read.
+2. **2 matching fields removed from the `MissionFormState` interface** in `src/components/missions/MissionCreateForm.tsx` — no consumer ever destructured `formState.scheduleType` or `formState.scheduleStartTime`.
+3. **`setShowCategoryManager` + `setShowTemplateManager` removed from the hook's return object**. The page uses the named `openCategoryManager` / `closeCategoryManager` / `openTemplateManager` / `closeTemplateManager` callbacks instead. The setters are still USED internally by the `openX` callbacks (anti-migration guard pinned in the new test).
+4. **`setFormField` no longer has entries for the 2 dead fields** (would otherwise crash with `setters[field](value)` on `undefined`).
+5. **`populateFormFromMission` no longer calls `setScheduleType(...)`** — only `setNewSchedule` remains in the schedule branch.
+6. **2 test `baseFormState` mock objects updated** in `mission-composer-actions.test.tsx` and `mission-dispatch-gate.test.tsx` to drop the 2 fields from the interface shape.
+7. **Line-number update** in `window-confirm-source-patterns-list2.test.ts` (1100 → 1091) for the "Overwrite template?" site, because the dead-state removal shifts the file by 9 lines.
+
+**Source-pattern test** (1 new file, 19 assertions across 6 describes):
+- `tests/unit/use-missions-page-dead-state-removal.test.ts` — pins the post-extraction shape: hook no longer declares the 2 useState slots, `formState` no longer exposes them, `setFormField` no longer has entries for them, `populateFormFromMission` no longer calls `setScheduleType`, `MissionFormState` no longer declares the fields, hook's return object no longer exposes the 2 setters, the 2 test mocks lose the 2 fields. Plus 2 anti-migration guards: the corresponding STATE values (`showCategoryManager`, `showTemplateManager`) are still declared, and the `openX` callbacks still call the setters internally. Plus a source-wide grep assertion: the 2 names are completely absent from `src/`.
+
+**No external behaviour change** — the `SchedulePicker` still updates the schedule string the same way, the modals still open/close the same way, the form fields still render the same way. The 2 dead useState slots no longer trigger re-renders on the (non-existent) state churn.
+
+**Tests:** 334 suites / 2602 tests pass (was 333/2583 after the session 213 followup = +1 suite, +19 tests). `npx tsc --noEmit` clean, `CI=true npx eslint ... --max-warnings 0` clean across all 6 touched files, `npx --yes pnpm@10.33.0 build` clean.
+
+**Reference doc:** `docs/references/session-214-list2-use-missions-page-dead-state-removal.md`.
+
+The full session 214 detail (pre-session shape, post-session shape, anti-migration guards, byte-equivalence rationale, verification, file inventory, 4 new pitfalls) is in the `pr-body.txt` archive at HEAD.
+
+---
+
 ## Followup (June 14, 2026) — Session 213
 
 Since the previous "Sessions 211 + 212" followup, one additional session has landed on this branch:
