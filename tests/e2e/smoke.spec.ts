@@ -22,6 +22,13 @@ test.describe("Smoke", () => {
     ).toBeVisible();
   });
 
+  test("schedules page loads", async ({ page }) => {
+    await page.goto("/orchestration/schedules");
+    await expect(
+      page.getByRole("heading", { name: "Schedules", exact: true })
+    ).toBeVisible();
+  });
+
   test("unknown app route returns 404 (no extra middleware redirect)", async ({
     request,
   }) => {
