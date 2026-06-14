@@ -188,8 +188,6 @@ export function useMissionsPage() {
     "save",
   );
   const [newSchedule, setNewSchedule] = useState("every 5m");
-  const [scheduleType, setScheduleType] = useState<"interval" | "wall-clock" | "post-run">("interval");
-  const [scheduleStartTime, setScheduleStartTime] = useState("00:00");
   const [newMissionTime, setNewMissionTime] = useState(15);
   const [newTimeout, setNewTimeout] = useState(10);
   const [newProfile, setNewProfile] = useState("");
@@ -226,8 +224,6 @@ export function useMissionsPage() {
     newConstraints,
     newDispatch,
     newSchedule,
-    scheduleType,
-    scheduleStartTime,
     newMissionTime,
     newTimeout,
     newProfile,
@@ -263,7 +259,6 @@ export function useMissionsPage() {
           setDispatchAcknowledged(true);
         },
         newSchedule: (v) => setNewSchedule(v),
-        scheduleType: (v) => setScheduleType(v),
         newMissionTime: (v) => setNewMissionTime(v),
         newTimeout: (v) => setNewTimeout(v),
         newProfile: (v) => setNewProfile(v),
@@ -275,7 +270,6 @@ export function useMissionsPage() {
         referenceInput: (v) => setReferenceInput(v),
         newSkills: (v) => setNewSkills(v),
         newToolsets: (v) => setNewToolsets(v),
-        scheduleStartTime: (v) => setScheduleStartTime(v),
       };
       setters[field](value);
     },
@@ -658,6 +652,65 @@ export function useMissionsPage() {
     [setModelAndProvider],
   );
 
+  /**
+   * Apply a template to the form + open the composer in "create" mode.
+   * The 5-line sequence `applyTemplateToForm(t, cid) +
+   * rememberLastCategory(cid) + setShowCreate(true) + showToast("Template
+   * loaded: ${t.name}", "success")` was duplicated at 2 sites:
+   *
+   *   1. `handleTemplateSelect` (the "click a template" path from
+   *      `MissionsList`'s quick-templates UI). This site passes
+   *      `undefined` for the categoryIdOverride and skips
+   *      `rememberLastCategory` (the user picked a template
+   *      interactively; the last-category write is a "fresh start"
+   *      affordance reserved for the deep-link path below).
+   *   2. `fetchData`'s template-apply path (the `?template=<id>`
+   *      deep-link from `/orchestration/missions?template=...`). This
+   *      site passes the explicit `cid` and writes it via
+   *      `rememberLastCategory`, plus it also fires
+   *      `window.history.replaceState(...)` to strip the query param
+   *      so a page refresh doesn't re-apply the template.
+   *
+   * The shared core is the apply+open+toast trio. The site-specific
+   * extensions are passed as `opts` so the helper is the single
+   * source of truth for the "open the composer with a template
+   * loaded" UX, and a future "also reset the dispatch warning" or
+   * "also scroll the form into view" extension lands in one place.
+   *
+   * Byte-equivalent to the pre-refactor inline form: same
+   * `applyTemplateToForm(t, cid)` call (with the same `cid` /
+   * `undefined` discriminator), same `setShowCreate(true)`, same
+   * `showToast(\`Template loaded: ${t.name}\`, "success")` toast.
+   * The `opts` extras (rememberLastCategory, history.replaceState)
+   * are also byte-equivalent to the pre-refactor fetchData path
+   * (same calls, same args). The `templateApplied.current = true`
+   * latch is intentionally NOT in this helper — it is fetchData's
+   * "don't re-apply on the next fetchData()" guard, not part of the
+   * "apply template" UX, so the latch stays in fetchData where the
+   * fetch-result consumer can see it.
+   */
+  const loadAndApplyTemplate = useCallback(
+    (
+      t: MissionTemplate,
+      opts: {
+        /** Persist the template's category as the user's last-used. */
+        rememberCategory?: boolean;
+        /** Strip the `?template=<id>` query param via replaceState. */
+        clearQueryParam?: boolean;
+      } = {},
+    ) => {
+      const cid = getCategoryIdFromTemplate(t);
+      applyTemplateToForm(t, cid);
+      if (opts.rememberCategory) rememberLastCategory(cid);
+      setShowCreate(true);
+      showToast(`Template loaded: ${t.name}`, "success");
+      if (opts.clearQueryParam) {
+        window.history.replaceState({}, "", "/orchestration/missions");
+      }
+    },
+    [applyTemplateToForm, showToast],
+  );
+
   const fetchData = useCallback(async () => {
     try {
       const list = await fetchMissions();
@@ -685,13 +738,25 @@ export function useMissionsPage() {
             (tmpl: MissionTemplate) => tmpl.id === templateId,
           );
           if (t) {
-            const cid = getCategoryIdFromTemplate(t);
-            applyTemplateToForm(t, cid);
-            rememberLastCategory(cid);
-            setShowCreate(true);
+            // The deep-link `?template=<id>` path is the only
+            // `loadAndApplyTemplate` caller that wants
+            // `rememberCategory` + `clearQueryParam` — both side
+            // effects are unique to "I followed a deep link and the
+            // page should remember that category for next time and
+            // strip the now-consumed `?template=` query". The
+            // interactive `handleTemplateSelect` path (a user
+            // clicking a template in the list) does not pass either
+            // option — it just applies + opens. The shared
+            // apply+open+toast trio is consolidated in
+            // `loadAndApplyTemplate`; the `templateApplied.current`
+            // latch stays here because it is the "don't re-apply
+            // on the next `fetchData()`" guard, not part of the
+            // template-apply UX.
+            loadAndApplyTemplate(t, {
+              rememberCategory: true,
+              clearQueryParam: true,
+            });
             templateApplied.current = true;
-            showToast(`Template loaded: ${t.name}`, "success");
-            window.history.replaceState({}, "", "/orchestration/missions");
           }
         }
       }
@@ -701,7 +766,7 @@ export function useMissionsPage() {
       // same string. Per session 131 P-131-4 console.error-redundancy rule.
       toastError(showToast, error, "Failed to load templates");
     }
-  }, [fetchMissions, fetchTemplates, showToast, loadCategories, applyTemplateToForm]);
+  }, [fetchMissions, fetchTemplates, showToast, loadCategories, loadAndApplyTemplate]);
 
   const fetchDetail = useCallback(
     (id: string, showLoading = true) => {
@@ -939,11 +1004,8 @@ export function useMissionsPage() {
     if (typeof m.timeoutMinutes === "number") setNewTimeout(m.timeoutMinutes);
     if (m.schedule) {
       setNewSchedule(m.schedule);
-      const s = m.schedule.trim();
-      setScheduleType(s.includes("*") || /^\d/.test(s) ? "wall-clock" : "interval");
     } else {
       setNewSchedule("every 5m");
-      setScheduleType("interval");
     }
     if (opts.editing) {
       if (m.status === "successful" || m.status === "failed") {
@@ -1065,9 +1127,23 @@ export function useMissionsPage() {
     setTemplateIcon("Zap");
     setTemplateColor("cyan");
     clearMissionFormFields();
-    setShowTemplateManager(false);
+    // `closeTemplateManager` is the hook's stable close-callback for
+    // the template-manager modal (sibling of `openTemplateManager`).
+    // Pre-session-211: this site inlined `setShowTemplateManager
+    // (false)` directly. The 2-1/2 line of code is byte-equivalent
+    // (same `setShowTemplateManager(false)` payload via the callback
+    // body at line 443-445), but the migration keeps the 3 internal
+    // hook call sites consistent with the page's `<TemplateManagerModal
+    // onClose={closeTemplateManager}>` JSX binding — any future
+    // "also clear the template filter" or "also reset template
+    // category" extension added to `closeTemplateManager` lands
+    // here too, automatically. The deps array adds `closeTemplateManager`
+    // (it's a stable `useCallback` with `[]` deps, so the reference
+    // is the same on every render of the hook — adding it is a
+    // correctness no-op but keeps the linter happy).
+    closeTemplateManager();
     setShowTemplateEditor(true);
-  }, [clearMissionFormFields]);
+  }, [closeTemplateManager, clearMissionFormFields]);
 
   const handleTemplateSave = useCallback(async () => {
     if (!templateName.trim()) return;
@@ -1111,10 +1187,21 @@ export function useMissionsPage() {
       setTemplateIcon(t.icon);
       setTemplateColor(t.color);
       applyTemplateToForm(t);
-      setShowTemplateManager(false);
+      // `closeTemplateManager` is the hook's stable close-callback for
+      // the template-manager modal (sister migration to the same
+      // pattern in `handleCreateNewTemplate` above and
+      // `handleDeleteTemplate` below). Pre-session-211: this site
+      // inlined `setShowTemplateManager(false)` directly. The migration
+      // is byte-equivalent (same payload via the callback body at
+      // line 443-445) and keeps the 3 internal hook call sites
+      // consistent with the page's `<TemplateManagerModal onClose={
+      // closeTemplateManager}>` JSX binding. The deps array adds
+      // `closeTemplateManager` (stable `useCallback` with `[]` deps,
+      // so the reference is the same on every render).
+      closeTemplateManager();
       setShowTemplateEditor(true);
     },
-    [applyTemplateToForm],
+    [applyTemplateToForm, closeTemplateManager],
   );
 
   const handleDeleteTemplate = useCallback(async (templateId: string) => {
@@ -1126,7 +1213,7 @@ export function useMissionsPage() {
     // the template id is in scope at render time. By the time this
     // callback is called, the user has already confirmed in the
     // leaf; this hook is a thin transport wrapper (wire delete +
-    // toast + post-success reload + setShowTemplateManager(false)).
+    // toast + post-success reload + closeTemplateManager()).
     const result = await safeApiCall("/api/templates", {
       method: "POST",
       body: { action: "delete", templateId },
@@ -1138,16 +1225,33 @@ export function useMissionsPage() {
       "Failed to delete template",
     );
     if (result.ok) {
-      setShowTemplateManager(false);
+      // `closeTemplateManager` is the hook's stable close-callback
+      // for the template-manager modal (sister migration to the same
+      // pattern in `handleCreateNewTemplate` and `handleEditTemplate`
+      // above). Pre-session-211: this site inlined
+      // `setShowTemplateManager(false)` directly. The migration is
+      // byte-equivalent (same payload via the callback body at line
+      // 443-445) and keeps the 3 internal hook call sites consistent
+      // with the page's `<TemplateManagerModal onClose={
+      // closeTemplateManager}>` JSX binding. The deps array adds
+      // `closeTemplateManager` (stable `useCallback` with `[]` deps,
+      // so the reference is the same on every render).
+      closeTemplateManager();
       fetchData();
     }
-  }, [showToast, fetchData]);
+  }, [showToast, fetchData, closeTemplateManager]);
 
   const handleTemplateSelect = useCallback((t: MissionTemplate) => {
-    applyTemplateToForm(t);
-    setShowCreate(true);
-    showToast(`Template loaded: ${t.name}`, "success");
-  }, [applyTemplateToForm, showToast]);
+    // The interactive "click a template" path: just apply + open +
+    // toast. No `rememberCategory` (the user picked a template
+    // interactively; persisting the category is reserved for the
+    // deep-link path in `fetchData`) and no `clearQueryParam`
+    // (there is no `?template=` query to strip — the user is
+    // already on the bare missions page). The shared apply+open
+    // +toast trio is consolidated in `loadAndApplyTemplate`; see
+    // the helper's JSDoc for the 2-site consolidation rationale.
+    loadAndApplyTemplate(t);
+  }, [loadAndApplyTemplate]);
 
   const handleDelete = useCallback(async (id: string) => {
     // Migrated from the inline `safeApiCall("/api/missions", { method: "POST", body: { action: "delete", missionId: id } })`
@@ -1386,7 +1490,6 @@ export function useMissionsPage() {
     newCategoryId,
     setNewCategoryId,
     showCategoryManager,
-    setShowCategoryManager,
     openCategoryManager,
     closeCategoryManager,
     loadCategories,
@@ -1408,7 +1511,6 @@ export function useMissionsPage() {
     dispatching,
     cancellingMissionId,
     handleTemplateSelect,
-    setShowTemplateManager,
     openTemplateManager,
     closeTemplateManager,
     showTemplateManager,

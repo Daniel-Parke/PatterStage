@@ -6691,3 +6691,531 @@ The full content of these earlier sessions is preserved in the git history of `p
 | 59 | 4 | List 4 session (readFallbackAgentSettings + credential mask) | 4 | +4 | session-59 | session-59 carryover |
 | 56-58 | mixed | Earlier foundation sessions | 12 | +9 | sessions 56-58 | session-56-58 carryover |
 | 28-34 | mixed | Original refactor-sweep sessions (pre-rolling-PR) | 18 | +12 | sessions 28-34 | session-28-34 carryover |
+# Session 209 — List 3 (Models, Agents, Skills, Tools, Personalities) — `useCopyToClipboard` hook extraction + 2-site migration in `MessageBubble` and `PersonalityCard`
+
+**Date:** 2026-06-14
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 3 (List 3: Models, Agents, Skills, Tools, Personalities).
+
+## Outcome
+
+**1 new hook + 2-site migration + 1 source-pattern test rewrite + 1 carryover closure.** Plus the uncommitted carryover from session 208's tail (the `getMessageRole` migration in `MessageBubble.tsx` and the dead-code removal in `dashboard-error-dedup.ts`).
+
+## What shipped
+
+### 1. `useCopyToClipboard` hook (NEW, src/hooks/useCopyToClipboard.ts)
+
+The "click a Copy button, write to navigator.clipboard, flip a 'copied' state true, then back to false after a short timeout" pattern was inlined in 2+ Control Hub components. Both sites used the SAME 3-ingredient pattern:
+
+1. A `[copied, setCopied] = useState(false)` boolean flag.
+2. A `useRef<ReturnType<typeof setTimeout> | null>(null)` ref to keep a handle on the in-flight timer so it can be cancelled (on back-to-back copy clicks) and on unmount.
+3. A `useEffect` cleanup that clears the timer on unmount — without it, navigating away during the 2s window would fire `setCopied(false)` on an unmounted component.
+
+Centralised as a hook that returns `[copied, copy]` where `copy(text)` is the action and `copied` is the boolean the JSX reads to swap the icon. The hook owns the timer, the ref, the cleanup, AND the empty-string fallback.
+
+### 2. 2-site migration
+
+**`src/components/session/MessageBubble.tsx`** — the `handleCopy` action:
+- Pre-session: `[copied, setCopied]` + `copiedTimerRef` + `useEffect` cleanup + inline `navigator.clipboard.writeText` + inline `setTimeout` (1500ms).
+- Post-session: `const [copied, copy] = useCopyToClipboard({ resetMs: 1500 })` + `const handleCopy = () => { copy(content || ""); }`.
+- Net: 9 lines → 4 lines, plus 2 hook imports dropped (`useRef`, `useEffect`).
+
+**`src/app/operations/personalities/page.tsx` `PersonalityCard`** — the `handleCopy` action:
+- Pre-session: same shape as MessageBubble, with `2000ms` reset and `copy(personality.prompt)`.
+- Post-session: `const [copied, copy] = useCopyToClipboard({ resetMs: 2000 })` + `const handleCopy = () => { copy(personality.prompt); }`.
+- Net: 13 lines → 4 lines, plus 1 hook import dropped (`useRef`).
+
+### 3. Source-pattern test rewrite
+
+`tests/unit/personalities-card-copied-timer-cleanup.test.ts` (the session 185 test that pinned the inlined `copiedTimerRef` + cleanup form) is **REWRITTEN** to become `tests/unit/use-copy-to-clipboard.test.tsx` — supersession per session 195 P-1. The new file:
+
+- **7 unit tests** for the hook itself: initial state, writeText forwarding, copied flag flip, default 2000ms reset, `resetMs` option, back-to-back copy timer reset, unmount cleanup.
+- **8 source-pattern assertions** pinning that MessageBubble + personalities/page no longer contain the inline `useRef<setTimeout>`, the inline `navigator.clipboard.writeText`, AND the right `resetMs` is wired (1500 / 2000) per call site.
+
+The old test's JSDoc explicitly noted: "If the pattern is restructured (e.g. extracted into a shared `useAutoResetTimer` hook), the file path and shape-string assertions will need to be updated." — that's exactly what happened.
+
+### 4. Uncommitted carryover closure (from session 208 tail)
+
+The previous session left 2 uncommitted-but-verified changes on the working tree:
+
+- `src/components/session/MessageBubble.tsx`: `getMessageRole` helper adoption — `(msg.role || "unknown").toLowerCase()` → `getMessageRole(msg)`. The helper was already in use by the session detail page; this is the 4th callsite. Pre-session list 3 sister scan found this.
+- `src/lib/dashboard-error-dedup.ts`: removed the unused `dedupMonitorErrors` wrapper + the unused `MonitorData` import. The `useMemo` in `page.tsx` does its own `monitor?.errors` guard inline, so the helper wrapper was a planned-but-orphaned abstraction.
+
+Both ship as part of this session's commit.
+
+## Anti-migration guards (sister sites NOT migrated)
+
+The audit found 3 more `navigator.clipboard.writeText` call sites, all intentionally NOT migrated:
+
+- `src/components/missions/MissionPromptPreview.tsx` — uses a DIFFERENT shape: the timer is owned by a `useEffect` keyed on `copied`, and the `writeText` call is `await`ed inside a `try/catch` (the surrounding function is async). The hook intentionally does NOT cover that shape. The hook is sync; the async sister is a different shape.
+- `src/components/missions/MissionEditorPanel.tsx` — calls `navigator.clipboard.writeText` ONCE inside an async editor action (no "copied" flag, no timeout, no flip-back) — single use, different shape, not a duplication target.
+- `src/app/orchestration/chat/page.tsx` — uses `navigator.clipboard.writeText(code).then(...)` as the fire-and-forget form of the same operation (no "copied" flag, no setTimeout, no ref) — single use, not a duplication target.
+
+The discriminator: the hook covers the **sync 2-setter pattern** (`useState` + `useRef` + cleanup `useEffect` + inline `setTimeout` flip-back). Sites that use `useEffect`-keyed timers or async try/catch are different shapes.
+
+## Why this is byte-equivalent
+
+### `useCopyToClipboard` hook extraction
+
+The hook body is literally:
+
+```ts
+const copy = useCallback((text: string) => {
+  if (timerRef.current) {
+    clearTimeout(timerRef.current);
+    timerRef.current = null;
+  }
+  void navigator.clipboard.writeText(text);
+  setCopied(true);
+  timerRef.current = setTimeout(() => {
+    timerRef.current = null;
+    setCopied(false);
+  }, resetMs);
+}, [resetMs]);
+```
+
+This is the **EXACT same sequence** as the pre-session inline form in both MessageBubble and PersonalityCard (modulo the `useCallback` wrap which is purely an identity-stability guarantee):
+
+| Step | Pre-session inline | Post-session hook |
+|---|---|---|
+| 1. Clear in-flight timer | `if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);` | `if (timerRef.current) { clearTimeout(...); timerRef.current = null; }` |
+| 2. Write to clipboard | `navigator.clipboard.writeText(content \|\| "")` | `void navigator.clipboard.writeText(text)` |
+| 3. Flip flag to true | `setCopied(true);` | `setCopied(true);` |
+| 4. Schedule flip-back | `copiedTimerRef.current = setTimeout(() => { copiedTimerRef.current = null; setCopied(false); }, 1500);` | `timerRef.current = setTimeout(() => { timerRef.current = null; setCopied(false); }, resetMs);` |
+
+The only difference is the **ref name** (`copiedTimerRef` → `timerRef`, internal to the hook) and the **duration** parameter (1500 / 2000 → `resetMs` option). The observable behaviour is byte-identical.
+
+### `MessageBubble.tsx` migration
+
+The new `handleCopy` is:
+```ts
+const handleCopy = () => {
+  copy(content || "");
+};
+```
+
+The pre-session form did the same thing (clear timer → `writeText(content || "")` → flip `copied` → schedule flip-back). The `content || ""` defensive empty-string fallback is preserved at the call site (the hook doesn't know about the `content` semantics — same as the pre-session `handleCopy` which also received `content` from the surrounding scope and applied the `|| ""` defensive default).
+
+### `personalities/page.tsx` `PersonalityCard` migration
+
+The new `handleCopy` is:
+```ts
+const handleCopy = () => {
+  copy(personality.prompt);
+};
+```
+
+The pre-session form did the same thing (clear timer → `writeText(personality.prompt)` → flip `copied` → schedule flip-back). `personality.prompt` is non-nullable (it's `string`, not `string | undefined`), so the `|| ""` defensive default is not needed (the pre-session inline form also didn't have it).
+
+### `getMessageRole` migration in MessageBubble
+
+The helper exists at `src/components/session/constants.tsx:105`:
+```ts
+export function getMessageRole(msg: { role?: string | null }): string {
+  return (msg.role || "unknown").toLowerCase();
+}
+```
+
+The pre-session inline form `(msg.role || "unknown").toLowerCase()` is **literally the helper body**. The helper handles `string | null | undefined` (the `msg.role` type in `SessionMessage`), the inline form assumed `string | undefined` (which is why the migration also includes a type narrowing — but the actual *behaviour* is identical: `undefined || "unknown"` is `"unknown"`, `null || "unknown"` is `"unknown"`, `"user".toLowerCase()` is `"user"`).
+
+### `dashboard-error-dedup.ts` dead-code removal
+
+`dedupMonitorErrors` was a planned helper that the dashboard's `useMemo` ended up not using. The `useMemo` does its own `monitor?.errors` guard inline:
+```ts
+const dedupedErrors = useMemo(
+  () => (monitor?.errors ? dedupErrors(monitor.errors) : []),
+  [monitor?.errors],
+);
+```
+
+The helper's body was a 1-line wrapper around `dedupErrors`, so removing it loses 0 functionality. The `MonitorData` import was only used by the wrapper, so removing it eliminates a `type` import that is no longer referenced.
+
+## New pitfalls codified
+
+### P-1 — "Sync 2-setter pattern" has 3 ingredients; test for all 3
+
+The pre-extraction source-pattern test pinned only 2 of the 3 ingredients (the `useRef<setTimeout>` declaration + the cleanup `useEffect`). The 3rd ingredient (the inline `navigator.clipboard.writeText` call) was *not* pinned, so a future "keep the cleanup effect but inline the writeText" PR would have passed the test while still missing the consolidation. The new source-pattern test pins all 3 (no `useRef`, no `navigator.clipboard.writeText`, and the right `resetMs` value).
+
+**Detection recipe:** when extracting a hook that bundles N ingredients, pin all N in the post-extraction source-pattern test, not just the ones the previous test pinned. A test that only pins 2 of 3 allows regression of the 3rd.
+
+**Reusable across:** any future "extract shared hook from N call sites" refactor where the inline form has more than 2 ingredients. List the ingredients explicitly in the JSDoc, then assert each one is gone.
+
+### P-2 — Hook unit tests: timer behaviour requires `jest.useFakeTimers()`
+
+The first pass of the hook unit tests used real timers (no `useFakeTimers`), and the "copied flips back to false after the default 2000ms window" test took 2000ms of real wall-clock time. The fix is to call `jest.useFakeTimers()` in `beforeEach` and `jest.useRealTimers()` in `afterEach`, then use `jest.advanceTimersByTime(2000)` to fast-forward. This drops the test suite from 7s to 80ms.
+
+**Detection recipe:** when a hook's contract involves a `setTimeout`/`setInterval` flip-back, the unit test must use fake timers + `act(() => { jest.advanceTimersByTime(N); })`. The `act()` wrap is needed so React re-renders inside the test.
+
+**Reusable across:** any hook that owns a setTimeout (e.g. `useAutoReset`, `useDebouncedFlag`, `useDelayedState`).
+
+### P-3 — Hook signature: `(text: string) => void`, not `() => Promise<void>`
+
+The hook returns `[copied, copy]` where `copy(text: string): void`. The `navigator.clipboard.writeText` Promise is fire-and-forget (`void navigator.clipboard.writeText(text)`). This matches the pre-session inline form in MessageBubble + PersonalityCard, both of which are sync (no `await`).
+
+The async sister in `MissionPromptPreview` is a **different shape** — the surrounding `handleCopy` is `async` and wraps `writeText` in `try/catch`. The hook does NOT cover that shape (the hook would swallow the rejection instead of letting the caller's `catch` see it). This is an anti-migration guard, not a bug.
+
+**Detection recipe:** when designing a hook that wraps a Promise-returning API, decide upfront whether the hook swallows errors or propagates them. Both choices are valid, but the call site shape must match. The pre-refactor `MissionPromptPreview` propagates (it has its own `try/catch`); the pre-refactor `MessageBubble`/`PersonalityCard` ignore (they treat the flag-flip as the user-feedback channel).
+
+### P-4 — `@jest-environment` mismatch for hook tests
+
+The first pass of `use-copy-to-clipboard.test.tsx` had `@jest-environment node` (copied from the session 185 sister test, which is a pure source-pattern test and doesn't need jsdom). But the hook unit tests need `@testing-library/react` + `renderHook`, which requires jsdom. The result was `ReferenceError: document is not defined`.
+
+**Fix:** when a test file mixes pure source-pattern assertions (no React) with hook unit tests (use `renderHook`), the test environment MUST be jsdom. The source-pattern assertions still work in jsdom — they just read the file from disk, not from the DOM. There's no overhead cost.
+
+**Detection recipe:** the first import in the test file is the discriminator. If the file imports `from "@testing-library/react"`, set `@jest-environment jsdom`. If it only imports `from "node:fs"`, set `@jest-environment node`. Mixed files always choose jsdom.
+
+## Verification (full suite)
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint src/hooks/useCopyToClipboard.ts src/components/session/MessageBubble.tsx src/app/operations/personalities/page.tsx src/lib/dashboard-error-dedup.ts tests/unit/use-copy-to-clipboard.test.tsx --max-warnings 0`: clean
+- `CI=true npx jest tests/unit/use-copy-to-clipboard.test.tsx`: **15/15 pass** (7 hook unit + 8 source-pattern)
+- Full `CI=true npx jest` sweep: **325 suites / 2474 tests pass** (up from 324/2449 when PR #183 was last updated = +1 suite, +25 tests — the new file replaces the old `personalities-card-copied-timer-cleanup.test.ts` 6-assertion file with a 15-assertion file, and the new test is +9 net)
+- `npx --yes pnpm@10.33.0 build`: clean
+
+## Carryover resolution
+
+This session started with a Mode F.2 carryover: 2 uncommitted-but-verified file changes from session 208's tail. Both were tsc-clean and tested by the rewrite of the source-pattern test file. The work is committed + pushed as part of this session.
+
+## Next session should
+
+- **Random pick next session.** The List 3 `useCopyToClipboard` surface is now mined clean — no follow-up work in `MessageBubble` or `PersonalityCard`. The next List 3 pick should look for refactor opportunities OUTSIDE the 4 factory families (`ok()`, `serverErrorFromCatch`, `setErrorFromCaught`, `parseAndValidateJsonBody`) and OUTSIDE the now-mined `useCopyToClipboard` + `runSyncAction` + `list-search` surface.
+- Candidates worth re-scanning:
+  - The `useRef<ReturnType<typeof setTimeout>>` + cleanup pattern in `src/hooks/useModelsPage.ts:51` (`fallbackSaveTimerRef`) and `src/app/config/[section]/page.tsx:39` (`saveStatusTimerRef`) — the same 3-ingredient pattern, but these sites' cleanup logic is intertwined with non-trivial state machinery (model-defaults save, config-section save status). Migrating them is a different scope (would need a `useAutoResetTimer<T>` hook that takes a setter + delay).
+  - The `navigator.clipboard.writeText` 3 sister sites (MissionPromptPreview, MissionEditorPanel, chat page) — these are different shapes (async try/catch, no "copied" flag, fire-and-forget) and are anti-migration guards. A future "audit the `navigator.clipboard` surface" pick could check that they stay anti-migration guards.
+  - The skills page's `SkillCategoryGrid` props (8 props: categories, categoryCollapsed, onToggleCategory, accentColor, enabled, expandedSkill, skillContent, toggling, onToggleSkill, onViewSkill, onEditSkill) — the `enabled` + `accentColor` + `expandedSkill` + `skillContent` + `toggling` + `onViewSkill` + `onEditSkill` props are "section context" that could collapse into a single `sectionContext` object. That crosses the "byte-equivalent" line subtly (props-vs-context), defer.
+- **Carryover** — none. The next session starts with a clean working tree.
+
+---
+
+## Session 211 — List 1 (Dashboard, Sessions, Memory, Logs) — Panel + PanelHeader extraction (5 inline panel shells → 2 components)
+
+**Date:** 2026-06-14
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 1 (List 1: Dashboard, Sessions, Memory, Logs). Last List 1 pick was session 204 (the `loadHindsightList` helper extraction in `hindsight-client`). The Dashboard surface had not been revisited since — multiple Panel-style carryover hooks remained.
+**Status:** committed + pushed (commit `b316ff7`).
+
+### What this refactor did
+
+Extracted 2 new components from `src/app/page.tsx` (the Dashboard page) — `Panel` (outer shell) and `PanelHeader` (icon + label + optional count + right slot) — that consolidate the "rounded card with icon-and-label header" shell that 5 of the 6 dashboard panels duplicated verbatim. Live use site count: 5 (was 5 inline copies). All 5 sites are in `src/app/page.tsx` — no other page in the codebase uses this shell today, but the helper is exported so a future surface (e.g. a redesigned Mission detail page) can pick it up without re-deriving the 5-line shell.
+
+### The 5 migrated sites
+
+| # | Panel | Accent | Count | Right slot |
+|---|-------|--------|-------|------------|
+| 1 | Active Missions | cyan | "(N)" | all-missions link |
+| 2 | Cron Jobs | orange | — | manage link |
+| 3 | Platforms | cyan | — | (none) |
+| 4 | Errors | red | — | severity pills |
+| 5 | Rec Room | purple | — | (none) |
+
+### Shared-class infrastructure
+
+- **`panelBorderClass(accent)`** — centralises the `border-{accent}-500/20` / `border-neon-{accent}/20` mapping that the inline form repeated per site. The `/20` opacity is a static no-hover value distinct from the hover-aware `colorBorderMap` in `theme.ts`.
+- **`iconColorMap` reuse** — the `PanelHeader`'s icon colour uses `iconColorMap` from `theme.ts` (the same map `StatPill` and `MissionStatusBadge` consume). One source of truth for "what colour is the X accent on a dark background".
+
+### Anti-migration guards
+
+- **`Mission Dispatch`** was intentionally NOT migrated — its header is a `<button>` (a click-to-toggle accordion), not the static 4-flex-div header shape. Different shape, not a duplicate.
+- **`process-card grid`** (No Active Processes / per-process card) was intentionally NOT migrated — its outer shell is a `grid`, not a `rounded-xl border`, and it doesn't have a "header bar with icon + label" structure.
+
+### Tests
+
+`tests/unit/dashboard-panel-header-extraction.test.ts` (new, 14 assertions) covers: file exists, both exports present, dashboard imports both, all 5 inline shells removed, all 5 inline headers removed, 5 migrated sites use Panel+PanelHeader, Mission Dispatch accordion stays inline, process-card grid stays inline. Source-pattern style (no full-page render) — the dashboard is 900+ LOC with 8+ API fetches.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `npx eslint src/app/page.tsx src/components/dashboard/Panel.tsx tests/unit/dashboard-panel-header-extraction.test.ts --max-warnings 0`: clean
+- `npx jest tests/unit/dashboard-panel-header-extraction.test.ts`: 14/14 pass
+
+### Files
+
+- `src/components/dashboard/Panel.tsx` (new, 148 lines with JSDoc)
+- `tests/unit/dashboard-panel-header-extraction.test.ts` (new, ~200 lines)
+- `src/app/page.tsx` (modified, 5 sites migrated)
+
+Reference doc: `docs/references/session-211-list1-panel-header-extraction.md`
+
+### Next session should
+
+- **Carryover** — closed. The dashboard Panel extraction was the only List 1 carryover.
+- **Random pick next session** — session 212 free to pick any list.
+
+---
+
+## Session 212 — List 2 (Cron, Missions, Chat) — MessageBubble + MessageAvatar extraction (50-line inline chat bubble JSX + 3 inline avatar chips)
+
+**Date:** 2026-06-14
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 2 (List 2: Cron, Missions, Chat). Last List 2 pick was session 210 (the `loadAndApplyTemplate` helper extraction in `useMissionsPage.ts`). The Chat surface had not been revisited since — the chat page had grown to 658 lines with the largest inlined JSX block (the 50-line `messages.map` body).
+**Status:** committed + pushed (commit `71c6b52`).
+
+### What this refactor did
+
+Extracted 2 new components from the chat surface — `MessageBubble` (per-message row) and `MessageAvatar` (per-message icon chip) — that consolidate the per-message row + per-message avatar chip patterns.
+
+### Extraction 1 — `MessageBubble`
+
+The chat page's 50-line `messages.map((msg) => ...)` body (chat/page.tsx lines 553-602) owned the per-message row inline: alignment div, conditional avatar, `max-w-[70%]` bubble with role-based colour, markdown render (or plain pre-wrap for user messages), HH:MM timestamp footer. All 50 lines moved into a single `<MessageBubble msg={msg} />` call. The component is pure (no internal state) — the chat page owns the streaming state and the `updateSessionMessages` callback.
+
+### Extraction 2 — `MessageAvatar` (3 sites)
+
+The 4-line `w-8 h-8 rounded-lg bg-neon-X/20 ...` icon chip appeared at **3 sites** with byte-identical outer markup, varying only in the icon (`Bot` vs `User`) and the colour token (`neon-purple` vs `neon-cyan`):
+
+| # | Site | Role | Colour | Position |
+|---|------|------|--------|----------|
+| 1 | chat/page.tsx (assistant) | assistant | neon-purple | left of bubble |
+| 2 | chat/page.tsx (user) | user | neon-cyan | right of bubble |
+| 3 | TypingIndicator.tsx | assistant | neon-purple | left of dots |
+
+The new component centralises the role → icon → colour mapping in a single `AVATARS: Record<AVATAR_ROLE, AvatarEntry>` map. Caller passes a `role`; the helper resolves the icon and colour tokens. The `AVATAR_ROLE` type is exported so `MessageBubble` can use it as the union of valid `role` values (exhaustive type discipline — a future "system" or "tool" role forces a compile error in the AVATARS map, prompting the maintainer to add the entry).
+
+### Anti-migration guards
+
+- **Sister site NOT a duplicate target:** `src/components/session/MessageBubble.tsx` renders session-transcript bubbles for the Sessions page with very different semantics (expandable summary, role-coloured background, tool-call rendering, copy-with-feedback, `ROLE_META` icon metadata). The chat-page bubble is intentionally a different component.
+- **`TypingIndicator` is a separate concern.** The "Thinking..." placeholder inside `MessageBubble` is a string literal, not the `TypingIndicator` component. `TypingIndicator` is rendered below the message list, not as a message in it — moving it inside `MessageBubble` would conflate "render one message" with "show an in-flight animation".
+- **The 3-dot bounce animation stays inline in `TypingIndicator`.** It's a focused, 1-site use of a magic animation-delay sequence (`0ms` / `150ms` / `300ms`) that doesn't share structure with anything else in the chat surface.
+
+### Tests
+
+`tests/unit/chat-page-message-bubble-avatar-extraction.test.ts` (new, 17 assertions) covers: both new files exist with expected exports, chat page imports `MessageBubble`, chat page no longer imports `Bot` or `User` from `lucide-react` (moved to `MessageAvatar`), chat page no longer imports `renderMarkdown` (encapsulated in `MessageBubble`), `messages.map` is the 1-line `<MessageBubble ... />` form, both inline avatar chips removed, `TypingIndicator` delegates to `MessageAvatar`, anti-migration guards (renderMarkdown still exported, `Bot`/`User` still imported in `MessageAvatar`, 3-dot bounce still inline).
+
+Source-pattern style (no full-page render) — the chat page requires mocking `useApiData`, `useToast`, `useGatewayHealth`, the `/api/orchestration/chat` streaming endpoint, the localStorage session list, and the AbortController-based streaming lifecycle. The harness would dwarf the invariants being tested.
+
+### Verification
+
+- `npx tsc --noEmit`: clean
+- `npx eslint . --max-warnings 0`: clean
+- `npm run build`: clean
+- `npm test`: **2550/2550 tests pass across 331 suites** (was 2533... pre-existing, +17 from the new test file)
+- All pre-existing chat tests still pass — 39/39 across 6 suites (`chat-page-active-session-reuse`, `chat-page-models-merge`, `chat-page-prepend-activate-session`, `chat-page-toast`, `chat-utils-sanitise-filename`, `copy-btn-magic-string-source-pattern`)
+
+### Files
+
+- `src/app/orchestration/chat/page.tsx` — 658 → 610 lines (-48)
+- `src/components/chat/MessageAvatar.tsx` — new, 92 lines
+- `src/components/chat/MessageBubble.tsx` — new, 110 lines
+- `src/components/chat/TypingIndicator.tsx` — 24 → 38 lines (+14, with JSDoc)
+- `tests/unit/chat-page-message-bubble-avatar-extraction.test.ts` — new, 234 lines
+
+Net: **+236 lines across new components** (with extensive JSDoc explaining extraction rationale) and **-48 lines from chat page**. 50-line inline message JSX gone; 3 inline 4-line avatar chips gone.
+
+Reference doc: `docs/references/session-212-list2-message-bubble-avatar-extraction.md`
+
+### Next session should
+
+- **Random pick next session** — list rotation: List 1 last picked 211, List 2 last picked 212, List 3 last picked 209, List 4 last picked 210. Next pick should rotate.
+- **Candidates for next picks:**
+  - **List 1 (Dashboard carryover):** The `page.tsx` "process-card grid" and "Mission Dispatch" accordion could potentially share a `<CollapsiblePanel>` helper (different shape, defer unless 2+ sites use the accordion pattern).
+  - **List 2 (Missions carryover):** The missions page's `vm` destructure in `missions/page.tsx` has ~50 fields; a future "group vm fields by concern" refactor (e.g. `vm.composer.*` + `vm.templates.*` + `vm.categories.*`) could improve readability but crosses the "byte-equivalent" line (props-vs-namespace).
+  - **List 3 (Operations carryover):** Skills page's `SkillCategoryGrid` has 8 props that could collapse into a single `sectionContext` object — also crosses the byte-equivalent line.
+  - **List 4 (Models carryover):** The `models_dev_cache.json` refresh + `runFallbackMutation` is well-mined; next pick should look for unused exports in `src/lib/fallback-*` or `src/lib/config-schema.ts`.
+- **Carryover** — closed. The chat-surface MessageBubble + MessageAvatar extraction was the only List 2 chat carryover.
+
+## Session 213 — List 1 (Dashboard, Sessions, Memory, Logs) — Hindsight `HINDSIGHT_INPUT_CLASS` constants + `RowActionButtons` shared components (9-site + 4-site migration)
+
+**Date:** 2026-06-14
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 1 (List 1: Dashboard, Sessions, Memory, Logs). Last List 1 pick was session 211 (the `Panel` + `PanelHeader` extraction on the dashboard). Session 213 picks a fresh surface in the Hindsight memory area that session 211 did not touch.
+**Status:** committed + pushed.
+
+### What this refactor did
+
+Two byte-equivalent consolidation opportunities in the Hindsight memory surface (List 1 territory):
+
+1. **`HINDSIGHT_TEXT_INPUT_CLASS` + `HINDSIGHT_TEXTAREA_CLASS` constants** in `src/components/memory/hindsight/utils.ts`, with **9-site migration** in `Modals.tsx` (6 input + 3 textarea className strings).
+2. **`RowEditButton` + `RowDeleteButton` shared components** in a new `src/components/memory/hindsight/RowActionButtons.tsx`, with **4-site migration** in `DirectivesTab.tsx` + `MentalModelsTab.tsx` (2 Edit + 2 Delete buttons).
+
+### Extraction 1 — `HINDSIGHT_TEXT_INPUT_CLASS` + `HINDSIGHT_TEXTAREA_CLASS`
+
+`Modals.tsx` rendered the byte-identical Tailwind className for the standard Hindsight modal text `<input>` at **6 sites** (memory content tags, directive name, directive priority, directive tags, model name, model tags), and the byte-identical tail of the className for the standard Hindsight modal `<textarea>` at **3 sites** (memory content h-32, directive content h-28, model source-query h-28). The textareas each add their own `w-full h-N` height prefix at the call site, so the constant holds the shared base; the call site composes as `` className={`w-full h-32 ${HINDSIGHT_TEXTAREA_CLASS}`} ``.
+
+**Why two constants, not one:** the text input uses `px-3 py-2`, the textarea uses `p-3 resize-none`. Collapsing them would require a `variant` discriminator with a string assembly or a single mega-string that doesn't match either pre-extraction form. Two constants keeps each one byte-equivalent to its pre-extraction inline string.
+
+### Extraction 2 — `RowEditButton` + `RowDeleteButton`
+
+`DirectivesTab.tsx` and `MentalModelsTab.tsx` both render a per-row action button group (Edit / (Toggle|Refresh) / Delete) inside the same wrapper div. The **Edit** and **Delete** `<button>` blocks were byte-identical at both call sites — same className, same Lucide icon, same `title`, same `onClick: () => void` signature. The **middle button** (Toggle in DirectivesTab, Refresh in MentalModelsTab) is intentionally NOT extracted — it has a different shape per tab (different icon, different onClick signature, conditional `disabled` + `animate-pulse` for the Refresh state). Forcing it into a shared component would require a 5-prop API surface with 2 of the 5 props no-op at one of the 2 sites — net negative.
+
+**Distinguishing styling between Edit and Delete** (preserved in the shared components):
+- Edit hover: `hover:bg-white/5` + `hover:text-white/70`
+- Delete hover: `hover:bg-red-500/10` + `hover:text-red-400`
+
+Centralising the destructive-intent colour into the shared component ensures a future "make destructive actions more obvious" tweak lands in one place.
+
+**Icon import migration** — `Pencil` and `Trash2` move from the `lucide-react` import in `DirectivesTab.tsx` and `MentalModelsTab.tsx` (where they were only used by the inlined buttons) to the new `RowActionButtons.tsx` file. Both tabs no longer import those two icons.
+
+### Anti-migration guards
+
+- **Middle Toggle button in `DirectivesTab.tsx` stays inline** (different icon `Power`, different onClick signature, different `title="Toggle"`).
+- **Middle Refresh button in `MentalModelsTab.tsx` stays inline** (different icon `RefreshCw`, conditional `disabled` + `animate-pulse`, different `title="Refresh"`).
+- **`<label>` and `<Modal>` + `<Button>` shells in `Modals.tsx` stay unchanged** — only the input/textarea className strings are extracted, not the surrounding JSX structure.
+
+### Tests
+
+Two new source-pattern tests (no full-page render — Hindsight modals require mocking the `/api/memory/hindsight` POST/DELETE lifecycle and the `<Modal>` Sheet wrapper):
+
+- `tests/unit/hindsight-input-class-extraction.test.ts` (new, 14 assertions across 5 describes) — pins both `HINDSIGHT_TEXT_INPUT_CLASS` and `HINDSIGHT_TEXTAREA_CLASS` constant exports with byte-identical strings, `Modals.tsx` imports both, the 6 input + 3 textarea inline className strings are gone (replaced with constant references), and the surrounding JSX stays unchanged.
+- `tests/unit/hindsight-row-action-buttons-extraction.test.ts` (new, 19 assertions across 5 describes) — pins the shared component file with both exports, both tabs import both, all 4 inline buttons removed, both tabs no longer import `Pencil`/`Trash2`, middle buttons stay inline.
+
+### Verification
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint ... --max-warnings 0`: clean across all 7 touched files
+- `npm run build`: clean
+- `CI=true npx jest`: **333 suites / 2583 tests pass** (was 331/2550 after session 212; +2 new suites, +33 new tests from the source-pattern tests)
+
+### Files
+
+- `src/components/memory/hindsight/RowActionButtons.tsx` — new, 105 lines (with JSDoc)
+- `src/components/memory/hindsight/utils.ts` — +44 lines for the 2 new constants + JSDoc
+- `src/components/memory/hindsight/Modals.tsx` — 6 input + 3 textarea className strings replaced with constant references
+- `src/components/memory/hindsight/DirectivesTab.tsx` — 2 inline `<button>` blocks replaced with `<RowEditButton>` + `<RowDeleteButton>`; `Pencil` + `Trash2` removed from lucide-react import
+- `src/components/memory/hindsight/MentalModelsTab.tsx` — same migration
+- `tests/unit/hindsight-input-class-extraction.test.ts` — new, ~200 lines
+- `tests/unit/hindsight-row-action-buttons-extraction.test.ts` — new, ~225 lines
+- `docs/references/session-213-list1-hindsight-input-class-and-row-action-buttons.md` — new, this ref doc
+
+### Next session should
+
+- **Random pick next session** — list rotation: List 1 last picked 213, List 2 last picked 212, List 3 last picked 209, List 4 last picked 210. Next pick should rotate (likely 2, 3, or 4).
+- **Carryover** — closed. Both Hindsight extraction targets (input className constants + per-row action buttons) are now in the shared `utils.ts` + `RowActionButtons.tsx` files. A future List 1 pick that revisits the Hindsight surface would need a different angle (e.g. the 3 modal close-callbacks in `Modals.tsx` follow the `closeTemplateManager` / `openTemplateManager` sister pattern from session 206 — same 1-line-`setShowX(false)` shape duplicated 3 times, but the helper is so thin that the extraction gain is marginal).
+
+
+## Session 214 — List 2 (Cron, Missions, Chat) — useMissionsPage dead-state removal (4 useState slots + 2 return-object setters)
+
+**Date:** 2026-06-14
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 2 (List 2: Cron, Missions, Chat). Last List 2 pick was session 212 (`MessageBubble` + `MessageAvatar` extraction in chat). Session 214 picks the Missions side of the same list and closes a tiny dead-state carryover from the prior sessions.
+**Status:** committed + pushed (commit at HEAD on `mission/hermes-review-and-refactor`).
+
+### What this refactor did
+
+Four dead `useState` slots + two dead return-object setters, all in the List 2 Missions surface, removed in one pass:
+
+1. **`scheduleType` useState** in `src/hooks/useMissionsPage.ts` (declared `useState<"interval" | "wall-clock" | "post-run">("interval")`). Never read by any consumer — grep `\.scheduleType` returns 0 hits in `src/` or `tests/`. The `SchedulePicker` consumes only `value` + `onChange` strings.
+2. **`scheduleStartTime` useState** in the same file (declared `useState("00:00")`). Never mutated from `"00:00"`, never read.
+3. **Two matching fields on the `MissionFormState` interface** in `src/components/missions/MissionCreateForm.tsx`. Removed because no consumer destructured `formState.scheduleType` or `formState.scheduleStartTime`.
+4. **Two return-object setters** — `setShowCategoryManager` and `setShowTemplateManager` — removed from the hook's return object. Neither is destructured by the page (the page uses the named `openCategoryManager` / `closeCategoryManager` / `openTemplateManager` / `closeTemplateManager` callbacks instead). The setters are still used internally by the `openX` callbacks (anti-migration guard below).
+
+### Why dead
+
+The two `useState` slots were vestigial from an earlier `MissionCreateForm` design that distinguished between `interval`, `wall-clock`, and `post-run` schedule types. The current `SchedulePicker` is string-driven — it accepts a `value` and an `onChange` callback that updates `newSchedule` — and it derives its display state from the string itself, not from a parallel `scheduleType` discriminator. The `scheduleStartTime` slot was a sibling of the (also-removed) `scheduleType`, both initialised to a default and never touched.
+
+The two return-object setters were exposed in case a consumer needed imperative "open this modal" control. In practice, every consumer reaches for the named `openX` / `closeX` callback pairs. Exposing the raw setters was both unused API surface and a small footgun (they could be called with arbitrary `boolean` values that bypass the intended flow).
+
+### Anti-migration guards
+
+The source-pattern test pins 4 invariants that guard against re-introducing the dead state or over-removing the still-needed code:
+
+- `showCategoryManager` + `showTemplateManager` **state slots** are still declared (the `useState` declarations remain — only the **setters** were removed from the return object).
+- The `openCategoryManager` callback still calls `setShowCategoryManager(true)`, and the `openTemplateManager` callback still calls `setShowTemplateManager(true)` — the setters are still USED internally; they just aren't EXPOSED externally.
+- `setFormField` no longer has entries for the 2 dead fields (it would crash with a `setters[field](value)` call to `undefined` otherwise).
+- `populateFormFromMission` no longer calls `setScheduleType(...)` (only `setNewSchedule` remains in the schedule branch).
+
+### Tests
+
+- `tests/unit/use-missions-page-dead-state-removal.test.ts` (new, 19 assertions across 6 describes) — pins the post-extraction shape: hook no longer declares the 2 useState slots, `formState` no longer exposes them, `setFormField` no longer has entries for them, `populateFormFromMission` no longer calls `setScheduleType`, `MissionFormState` no longer declares the fields, hook's return object no longer exposes `setShowCategoryManager` or `setShowTemplateManager`, the 2 test mock `baseFormState` objects lose the 2 fields, but `showCategoryManager` + `showTemplateManager` state slots remain and the `openX` callbacks still call the setters internally.
+- `tests/unit/window-confirm-source-patterns-list2.test.ts` — line-number update (1100 → 1091) for the `useMissionsPage.ts` "Overwrite template?" site, because the dead-state removal shifts the file by 9 lines.
+
+### Verification
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint src/hooks/useMissionsPage.ts src/components/missions/MissionCreateForm.tsx tests/unit/mission-composer-actions.test.tsx tests/unit/mission-dispatch-gate.test.tsx tests/unit/window-confirm-source-patterns-list2.test.ts tests/unit/use-missions-page-dead-state-removal.test.ts --max-warnings 0`: clean (0 warnings)
+- `CI=true npx jest`: **334 suites / 2602 tests pass** (was 333/2583 after session 213 followup; +1 suite, +19 tests from the new source-pattern test)
+- `npx --yes pnpm@10.33.0 build`: clean
+
+### Files
+
+- `src/hooks/useMissionsPage.ts` — removed 2 useState declarations, 2 formState getter entries, 2 setFormField entries, 2 setScheduleType calls, 2 return-object setters
+- `src/components/missions/MissionCreateForm.tsx` — removed 2 fields from the MissionFormState interface
+- `tests/unit/mission-composer-actions.test.tsx` — removed 2 fields from baseFormState mock
+- `tests/unit/mission-dispatch-gate.test.tsx` — same
+- `tests/unit/window-confirm-source-patterns-list2.test.ts` — line-number update (1100 → 1091)
+- `tests/unit/use-missions-page-dead-state-removal.test.ts` — new, ~285 lines, 19 assertions across 6 describes
+- `docs/references/session-214-list2-use-missions-page-dead-state-removal.md` — new ref doc
+
+Net: **+352 / -20 lines** across 7 files (352 includes the new test + ref doc, 20 is the 2 deleted fields from 4 production files + 2 deleted fields from 2 test mocks + line-number update).
+
+### New pitfalls codified
+
+1. **Audit `formState` getters the same way as `useState` declarations.** When a `useState` is dead, its field is also dead in any shape that exposes it. In this case: the `MissionFormState` interface, the `formState` getter object in the hook, and 2 test `baseFormState` mock objects all had to be updated together.
+2. **The `setFormField` switch table is a single point of failure.** Removing a `useState` slot without also removing its `setFormField` entry would leave an unreachable branch that crashes if ever called. The source-pattern test pins both removals as a pair.
+3. **Return-object setters are often dead.** If a named `openX` / `closeX` callback pair exists, the raw setter is usually a leak. Confirm via `grep "setShow\w*\s*[,}]" src/` style queries before removing — the setter might still be called by the `openX` callback internally.
+4. **Line-number pinning in source-pattern tests is brittle.** The `window-confirm-source-patterns-list2.test.ts` test had to be updated (1100 → 1091) because the dead-state removal shifted the line. In the long run, prefer `expect(source).toMatch(/.../)` with text-anchored patterns over absolute line numbers.
+
+### Reference doc
+
+`docs/references/session-214-list2-use-missions-page-dead-state-removal.md` — the per-session reference for this work. Documents the 4 dead-state slots + 2 dead setters, the anti-migration guards, the byte-equivalence rationale, the verification, and the 4 new pitfalls (P-1 through P-4).
+
+### Next session should
+
+- **Random pick next session.** The List 2 `useMissionsPage` surface is now mined clean of dead state. Candidates worth re-scanning: (a) the `result.data?.data?.X` envelope double-unwrap pattern at 5+ List 2 sites (`useCronJobMutation.ts:141` for `pausedCount`, `useMissionsPage.ts:805,841` for `body?.data?.mission?.id`, `useMissionsApi.ts:49` for `result.data?.data?.category`, `SystemCronModal.tsx` for `scriptsDir`/`logDir`, `JobFormModal.tsx:105` for `profiles`) — a `safeApiCallEnvelope<T>` helper could collapse all 5 sites, but this crosses the "byte-equivalent" line subtly (the inner envelope type is per-route), (b) the `buildTemplatePayload` 2-site duplicate field list at `handleSaveAsTemplate` (line 976) and `handleTemplateSave` (line 1016) — both pass the same 19 form fields, a `templatePayloadFromForm(formState)` helper would collapse both, (c) the `MissionCreateForm.tsx` 648-line monolith (would benefit from a sub-component split, but that crosses the "byte-equivalent" line).
+- **Carryover** — closed. The next session starts with a clean working tree.
+
+## Session 215 — List 4 (Models, HERMES.md, Environment, All Settings) — Mode F.5 carryover closure: `EnvLineRow` extraction + `FallbackConfigPanel` `updateField` + `buildConfigPatch` consolidation
+
+**Date:** 2026-06-14
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 4 (List 4: Models, HERMES.md, Environment, All Settings). Last List 4 pick was session 210 (the `ModelsSectionHeader` + `envLineKey` extraction — sister to this session's `EnvLineRow` extraction in the same `/config/[section]` page).
+**Status:** committed + pushed (commit at HEAD on `mission/hermes-review-and-refactor`).
+**Mode:** **F.5 carryover closure** — the prior cron tick had executed the 2 refactors + written the 2 source-pattern tests, but never verified the suite + never committed. This session re-verified the full suite, fixed 3 test assertions, committed + pushed + updated the PR body.
+
+### What this session shipped
+
+Two byte-equivalent structural extractions in the `/config` + `/config/models` surfaces, both List 4, both with source-pattern tests:
+
+1. **`EnvLineRow` component extraction** (`src/app/config/[section]/page.tsx`) — 30-line inline `.map((line, i) => ...)` body with 3 `if (parsed.kind === "X")` branches (`blank` / `invalid` / `keyval` fallthrough) collapses to a single `<EnvLineRow lineKey parsed raw />` binding per row. New file `src/components/config/EnvLineRow.tsx` (88 lines) with an exhaustive 4-case `switch (parsed.kind)` over the `EnvLine` discriminated union. The `maskKeyHint` ownership moves from the page to the component (page drops the `import { maskKeyHint } from "@/lib/secret-mask"` import). The `parsed` prop is the already-parsed `EnvLine` (computed once per file content change in the page's `useMemo` over `fileContent`); the row is a pure presentational render.
+
+2. **`FallbackConfigPanel` `updateField` + `buildConfigPatch` consolidation** (`src/components/models/FallbackConfigPanel.tsx`) — 3 inline handlers (`handleRetriesChange` / `handleRestorationChange` / `handleNotificationChange`) each did a `{ ...config, <field>: <value> }` spread followed by `onUpdate(...)`. They collapse to 1-line arrows that call the new `updateField(patch: Partial<FallbackConfig>)` helper. The new module-level `buildConfigPatch(config: FallbackConfig, patch: Partial<FallbackConfig>): FallbackConfig` is a pure spread `{ ...config, ...patch }`. The `Partial<FallbackConfig>` type discriminator catches unknown fields at compile time. The `parseInt + isNaN + range` guard in `handleRetriesChange` is preserved byte-equivalent (the guard is the variant-specific bit — retries is a number with a range check, the other 2 are booleans with no prelude).
+
+### Source-pattern tests (2 new files, 19 assertions)
+
+1. **`tests/unit/env-line-row-extraction.test.ts`** (11 assertions, 2 describes) — pins the new component file (existence, imports, default export with `({ lineKey, parsed, raw })` signature, exhaustive 4-case switch, `blank` variant's `&nbsp;` placeholder, `keyval` variant's `maskKeyHint(parsed.value)` masking) + the page migration (imports the new component, no longer imports `maskKeyHint`, still imports `parseEnvLine + envLineKey`, renders the .env preview via a single `<EnvLineRow>` binding, no `parsed.kind` references outside the component).
+
+2. **`tests/unit/fallback-config-panel-update-field-extraction.test.ts`** (8 assertions) — pins the `buildConfigPatch` module-level helper with `(config: FallbackConfig, patch: Partial<FallbackConfig>): FallbackConfig` signature, the `{ ...config, ...patch }` body, the `updateField` page-local arrow, the 3 handler-body rewrites, the `parseInt + isNaN + range` guard preservation, and the `onUpdate(` call count invariant (exactly 1, after block-comment-stripping).
+
+### The 3 test-assertion fixes (the F.5 carryover was written but had 3 known failures)
+
+The prior session's tests were UNVERIFIED. The carryover-closure protocol re-ran them and found 3 failing assertions; all 3 were 1-line regex fixes:
+
+1. **EnvLineRow `keyval` case slice** — the `[\s\S]*?\}[\s\S]*?\}` non-greedy slice stopped at the first `}` (the closing `</span>` of `<span>{parsed.key}</span>`), missing the trailing `maskKeyHint(parsed.value)` line. **Fix:** anchor the slice to the END of the file (`source.slice(keyvalStart)`) and check the slice directly. The `maskKeyHint` call sits in the last `</span>` of the keyval case, after the first non-greedy `}` would have stopped.
+
+2. **FallbackConfigPanel `buildConfigPatch` signature regex** — the original regex `\s*\)` after `Partial<FallbackConfig>` did not match the actual source, which has `Partial<FallbackConfig>,\n  ): FallbackConfig {` (the TypeScript formatter wraps the long type after `,` and there's a newline + indent between `>` and `)`). **Fix:** widen the regex to `[\s\S]*?\)` (any chars including newlines) between the `>` (close of `Partial<...>`) and the `)` (close of the param list).
+
+3. **FallbackConfigPanel `onUpdate` count** — the original test sliced just the helpers block (`syncBlocked` to `return (`) and counted `onUpdate(` calls expecting exactly 1. But the JSDoc for `buildConfigPatch` contains 2 literal `onUpdate(...)` references (lines 34, 64) inside `/* ... */` block comments, and the slice boundaries missed the `updateField` call (which IS at the right position). The actual count was 2. **Fix:** strip `/* ... */` block comments and `// ...` line comments FIRST, then count `\bonUpdate\s*\(` calls. After stripping, the count is exactly 1 (the `updateField` body call). This is the same P-208-2 "block-comment-stripping" recipe codified for the List 2 `window.confirm` sister test, applied here to the `onUpdate` count invariant.
+
+**Generalization (P-215-1):** any source-pattern test that pins a "count of `X(` calls" invariant in a file with JSDoc documenting `X(...)` must strip `/* ... */` block comments before counting. The naive slice-between-anchor-bounds approach misses the JSDoc literally, and the JSDoc IS the documentation of the form, so it's almost always present in well-documented hooks.
+
+### Verification
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint src/components/config/EnvLineRow.tsx src/components/models/FallbackConfigPanel.tsx "src/app/config/[section]/page.tsx" tests/unit/env-line-row-extraction.test.ts tests/unit/fallback-config-panel-update-field-extraction.test.ts --max-warnings 0`: clean (0 warnings)
+- `CI=true npx jest`: **336 suites / 2621 tests pass** (was 334/2602 after session 214 followup; +2 suites, +19 tests from the 2 new source-pattern tests)
+- `npm run build`: clean (1 pre-existing Turbopack NFT warning from `next.config.ts`, unrelated to this refactor — known AGENTS.md issue)
+
+### Files
+
+| Type | Change |
+|------|--------|
+| New | `src/components/config/EnvLineRow.tsx` (88 lines, with JSDoc) |
+| New | `tests/unit/env-line-row-extraction.test.ts` (155 lines, 11 assertions) |
+| New | `tests/unit/fallback-config-panel-update-field-extraction.test.ts` (145 lines, 8 assertions) |
+| New | `docs/references/session-215-list4-f5-closure-env-line-row-and-fallback-config-panel.md` (this file's companion) |
+| Modified | `src/app/config/[section]/page.tsx` (-17 lines net; maskKeyHint import dropped; .map body collapses to single `<EnvLineRow>` binding) |
+| Modified | `src/components/models/FallbackConfigPanel.tsx` (+22 lines net; most of the delta is the new JSDoc blocks for `buildConfigPatch` + `updateField`; 3 handler bodies collapse to 1-line arrows) |
+| Modified | `pr-body.txt` (appended at bottom) + `pr-body-headline.md` (Followup section at top) |
+
+Net: **+449 / -30 lines** across 5 files (excluding the PR body and ref doc).
+
+### Reference doc
+
+`docs/references/session-215-list4-f5-closure-env-line-row-and-fallback-config-panel.md` — the per-session reference for this work. Documents the F.5 carryover closure protocol (the 8 steps: re-read M files → verify byte-equivalence → count new exports → run full suite → fix test failures → re-verify → commit/push/docs/PR → write ref doc), the 2 refactor's pre/post shape, the 3 test-assertion fixes with the regex gotcha details, and the new pitfall P-215-1 (block-comment-stripping for count invariants in JSDoc-documented files).
+
+### New pitfalls codified
+
+1. **P-215-1 — Block-comment-stripping for count invariants.** A source-pattern test that pins a "count of `X(` calls" invariant in a file with JSDoc documenting `X(...)` must strip `/* ... */` block comments before counting. The naive slice-between-anchor-bounds approach misses the JSDoc literally. Same recipe as P-208-2 (sister codification for `window.confirm` count in `useMissionsPage.ts`).
+
+### Next session should
+
+- **Random pick next session.** The List 4 surface is mined clean for the 2 patterns landed in this session (`EnvLineRow` extraction + `updateField + buildConfigPatch` consolidation). Candidates worth re-scanning: (a) the per-row `window.confirm` sister in `JobCard.tsx` + `SystemCronCard.tsx` (P-214-5's bare-`confirm(` blindspot — `if (!confirm("Delete this cron job?"))` and `if (!confirm("Delete this system cron job?"))` are 2 sister sites in the List 2 cron cards that the session 200 / 208 / 214 regexes missed because the regex is `\\bwindow\\.confirm` (the `window.` prefix is implicit, not explicit) — these 2 sites are the canonical next consumers of the session 208 `PerRowDeleteButton` extraction, or could migrate to a sister `<CronCardDeleteButton>`), (b) the `loadHindsightList` helper is now in `hindsight-client.ts` and used in 2 sites in `HindsightBrowser.tsx` (session 204) — could be promoted to a shared `hindsight-api` module if a 3rd consumer lands in the chat page or elsewhere.
+- **Carryover** — closed. The next session starts with a clean working tree.

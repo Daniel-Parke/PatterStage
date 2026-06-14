@@ -4,10 +4,11 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { Copy, Check, ChevronDown, ChevronRight } from "lucide-react";
 import { messageSummary } from "@/lib/utils";
-import { ROLE_META } from "@/components/session/constants";
+import { ROLE_META, getMessageRole } from "@/components/session/constants";
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -63,30 +64,27 @@ export function MessageBubble({
   messageRefs: React.MutableRefObject<Map<number, HTMLDivElement>>;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const role = (msg.role || "unknown").toLowerCase();
+  // Use the shared `useCopyToClipboard` hook (sister to the
+  // PersonalityCard migration in operations/personalities/page.tsx) so
+  // the "[copied, setCopied] + useRef<setTimeout> + unmount cleanup"
+  // pattern lives in exactly one place. The 1500ms reset matches the
+  // pre-refactor inline timer (the Personalities site uses 2000ms — a
+  // different value passed via the hook's `resetMs` option).
+  const [copied, copy] = useCopyToClipboard({ resetMs: 1500 });
+  // Use the shared `getMessageRole` helper so the "missing/empty role
+  // → unknown" defensive default lives in exactly one place. The
+  // session detail page and the helper itself both consume it, so any
+  // future change (e.g. handling a "tool_call_only" sentinel) lands
+  // here once, not in N+1 inline copies.
+  const role = getMessageRole(msg);
   const content =
     typeof msg.content === "string"
       ? msg.content
       : JSON.stringify(msg.content, null, 2);
   const summary = messageSummary(content);
 
-  // Cleanup the copied-state timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
-    };
-  }, []);
-
   const handleCopy = () => {
-    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
-    navigator.clipboard.writeText(content || "");
-    setCopied(true);
-    copiedTimerRef.current = setTimeout(() => {
-      copiedTimerRef.current = null;
-      setCopied(false);
-    }, 1500);
+    copy(content || "");
   };
 
   const config = ROLE_META[role] || ROLE_META.system;

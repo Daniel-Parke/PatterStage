@@ -12,7 +12,7 @@
  *
  * The pre-session 207 form had 4 `window.confirm` calls in the List
  * 2 surface, all in the `useMissionsPage` hook:
- *   - `useMissionsPage.ts:1029` — the "Overwrite template?" check in
+ *   - `useMissionsPage.ts:1091` — the "Overwrite template?" check in
  *     `handleSaveAsTemplate` (form-scope, single-button site — NOT a
  *     per-row confirm; intentionally NOT migrated, see EXEMPTIONS).
  *   - `useMissionsPage.ts:1121` — the per-row "Delete this
@@ -90,7 +90,7 @@ const LIST2_FILES = [
  * The session 208 migration closed the 3 per-row sites
  * (`useMissionsPage.ts:1121`, `useMissionsPage.ts:1145`, and
  * `useMissionsPage.ts:1161`) by lifting the confirm into the leaf
- * components. The form-scope site (`useMissionsPage.ts:1029`,
+ * components. The form-scope site (`useMissionsPage.ts:1091`,
  * "Overwrite template?" in `handleSaveAsTemplate`) is intentionally
  * NOT migrated — it's a single-button confirm inside the
  * MissionCreateForm Sheet, not a per-row list/table confirm, so
@@ -99,7 +99,7 @@ const LIST2_FILES = [
 const EXEMPTIONS: ReadonlyArray<{ file: string; line: number; reason: string }> = [
   {
     file: "src/hooks/useMissionsPage.ts",
-    line: 1029,
+    line: 1091,
     reason:
       "Form-scope 'Overwrite template?' check in `handleSaveAsTemplate` — " +
       "single-button site inside the MissionCreateForm Sheet, NOT a per-row " +

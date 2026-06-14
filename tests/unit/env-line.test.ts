@@ -1,4 +1,4 @@
-import { parseEnvLine } from "@/lib/env-line";
+import { parseEnvLine, envLineKey } from "@/lib/env-line";
 
 describe("parseEnvLine", () => {
   it("returns 'blank' for empty string", () => {
@@ -94,5 +94,50 @@ describe("parseEnvLine", () => {
       key: "KEY",
       value: "value",
     });
+  });
+});
+
+describe("envLineKey", () => {
+  it("prefixes the key with 'env-' followed by the line index", () => {
+    // The index is the second positional segment so React can
+    // distinguish the same raw line at different positions.
+    expect(envLineKey("FOO=bar", 7)).toBe("env-7-FOO-bar");
+  });
+
+  it("replaces non-alphanumeric characters in the prefix with '-'", () => {
+    // Keeps the key safe for React (no whitespace, no specials) while
+    // remaining readable. The raw line passes through after
+    // sanitisation; the index is unaffected.
+    expect(envLineKey("FOO=bar baz", 0)).toBe("env-0-FOO-bar-baz");
+    expect(envLineKey("FOO=bar.baz", 0)).toBe("env-0-FOO-bar-baz");
+  });
+
+  it("truncates the raw line to the first 24 characters", () => {
+    // The cap prevents the key string from growing with arbitrarily
+    // long .env values (e.g. 2-4 KB PEM blobs).
+    const long = "X=" + "y".repeat(40);
+    const result = envLineKey(long, 0);
+    // Format: `env-{i}-{prefix}` where `i` is the index. For i=0 the
+    // prefix is `env-0-` (6 chars: "e", "n", "v", "-", "0", "-") and
+    // the prefix portion of the line is 24 chars — total 30.
+    expect(result.length).toBeLessThanOrEqual(6 + 24);
+    expect(result.startsWith("env-0-X-yyyyyyyyyyyyyyyy")).toBe(true);
+  });
+
+  it("distinguishes two adjacent blank lines", () => {
+    // The index alone is insufficient: two blank lines would
+    // collapse to the same key. The empty prefix collapses too, so
+    // the index is the only differentiator here.
+    expect(envLineKey("", 3)).toBe("env-3-");
+    expect(envLineKey("", 4)).toBe("env-4-");
+    expect(envLineKey("", 3)).not.toBe(envLineKey("", 4));
+  });
+
+  it("distinguishes two identical keyval lines at different positions", () => {
+    // The prefix alone is insufficient: two identical lines would
+    // collapse to the same key. The index is the differentiator.
+    expect(envLineKey("FOO=bar", 1)).toBe("env-1-FOO-bar");
+    expect(envLineKey("FOO=bar", 2)).toBe("env-2-FOO-bar");
+    expect(envLineKey("FOO=bar", 1)).not.toBe(envLineKey("FOO=bar", 2));
   });
 });

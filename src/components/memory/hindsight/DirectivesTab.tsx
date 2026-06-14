@@ -2,11 +2,12 @@
 // Hindsight Directives Tab — Manage agent directives
 // ═══════════════════════════════════════════════════════════════
 
-import { FileText, Plus, Pencil, ToggleRight, ToggleLeft, Trash2, RefreshCw } from "lucide-react";
+import { FileText, Plus, ToggleRight, ToggleLeft, RefreshCw } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import { pluralise } from "@/lib/utils";
+import { RowEditButton, RowDeleteButton } from "./RowActionButtons";
 import type { Directive } from "./types";
 
 interface DirectivesTabProps {
@@ -87,13 +88,7 @@ export default function DirectivesTab({
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={() => onEdit(d)}
-                    className="p-1.5 rounded-lg hover:bg-white/5 text-white/40 hover:text-white/70 transition-colors"
-                    title="Edit"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
+                  <RowEditButton onClick={() => onEdit(d)} />
                   <button
                     onClick={() => onToggle(d)}
                     className="p-1.5 rounded-lg hover:bg-white/5 text-white/40 hover:text-white/70 transition-colors"
@@ -101,13 +96,7 @@ export default function DirectivesTab({
                   >
                     {d.is_active ? <ToggleRight className="w-4 h-4 text-green-400" /> : <ToggleLeft className="w-4 h-4" />}
                   </button>
-                  <button
-                    onClick={() => onDelete(d.id)}
-                    className="p-1.5 rounded-lg hover:bg-red-500/10 text-white/40 hover:text-red-400 transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <RowDeleteButton onClick={() => onDelete(d.id)} />
                 </div>
               </div>
             </div>

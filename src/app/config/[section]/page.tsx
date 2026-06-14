@@ -14,9 +14,9 @@ import Button from "@/components/ui/Button";
 import { LoadingSpinner, ErrorBanner } from "@/components/ui/LoadingSpinner";
 import { getSectionDef, fileKeyForFilePath } from "@/lib/config-schema";
 import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
-import { maskKeyHint } from "@/lib/secret-mask";
-import { parseEnvLine } from "@/lib/env-line";
+import { parseEnvLine, envLineKey } from "@/lib/env-line";
 import ConfigField from "@/components/config/ConfigField";
+import EnvLineRow from "@/components/config/EnvLineRow";
 
 export default function ConfigSectionPage() {
   const params = useParams();
@@ -37,6 +37,23 @@ export default function ConfigSectionPage() {
   const [fileContent, setFileContent] = useState("");
   const [originalFileContent, setOriginalFileContent] = useState("");
   const saveStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // `fileKey` is the URL segment used by `/api/agent/files/[key]`
+  // (it discriminates between `.env` and `hermes.md` file sections).
+  // Pre-refactor: `fileKeyForFilePath(sectionDef.filePath)` was called
+  // twice in separate callbacks (loadConfig + handleSave) — once per
+  // save cycle on the file-section page. Post-refactor: a single
+  // `useMemo` derives `fileKey` from `sectionDef.filePath` once per
+  // page mount (or whenever the `filePath` changes, which only
+  // happens on route change). The 2 callback bodies reuse the
+  // memoized value, so the pure function runs once instead of twice
+  // per save cycle. `useCallback` dep arrays in the 2 callbacks
+  // (loadConfig + handleSave) pick up the `fileKey` reference change
+  // (or don't, if `fileKey` is stable) consistently.
+  const fileKey = useMemo(
+    () => (sectionDef?.filePath ? fileKeyForFilePath(sectionDef.filePath) : null),
+    [sectionDef?.filePath],
+  );
 
   // Cleanup save status timer on unmount
   useEffect(() => {
@@ -63,8 +80,7 @@ export default function ConfigSectionPage() {
     setLoading(true);
     setError(null);
     try {
-      if (isFileSection && sectionDef?.filePath) {
-        const fileKey = fileKeyForFilePath(sectionDef.filePath);
+      if (isFileSection && fileKey) {
         const json = await apiFetch(`/api/agent/files/${fileKey}`, { signal });
         const content = json.data?.content || "";
         setFileContent(content);
@@ -89,7 +105,7 @@ export default function ConfigSectionPage() {
     } finally {
       setLoading(false);
     }
-  }, [sectionId, isFileSection, sectionDef, isPlatformToolsetsPreview]);
+  }, [fileKey, isFileSection, isPlatformToolsetsPreview, sectionId]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -102,8 +118,7 @@ export default function ConfigSectionPage() {
 
     setSaveStatus("saving");
     try {
-      if (isFileSection && sectionDef?.filePath) {
-        const fileKey = fileKeyForFilePath(sectionDef.filePath);
+      if (isFileSection && fileKey) {
         await apiFetch(`/api/agent/files/${fileKey}`, {
           method: "PUT",
           body: JSON.stringify({ content: fileContent, backup: true }),
@@ -141,7 +156,7 @@ export default function ConfigSectionPage() {
       setSaveStatus("error");
       setErrorFromCaught(setError, err, "Save failed");
     }
-  }, [sectionDef, isFileSection, fileContent, sectionId, values]);
+  }, [sectionDef, isFileSection, fileKey, fileContent, sectionId, values]);
 
   const handleReset = useCallback(() => {
     if (isFileSection) {
@@ -257,28 +272,13 @@ export default function ConfigSectionPage() {
               <div className="space-y-2">
                 {fileContent.split("\n").map((line, i) => {
                   const parsed = parseEnvLine(line);
-                  const lineKey = `env-${i}-${line.slice(0, 24).replace(/[^a-zA-Z0-9]/g, "-")}`;
-                  if (parsed.kind === "blank" || parsed.kind === "comment") {
-                    return (
-                      <div key={lineKey} className="text-xs text-white/30 font-mono">
-                        {line || "\u00A0"}
-                      </div>
-                    );
-                  }
-                  if (parsed.kind === "invalid") {
-                    return (
-                      <div key={lineKey} className="text-xs font-mono text-white/50">
-                        {parsed.raw}
-                      </div>
-                    );
-                  }
-                  // parsed.kind === "keyval"
                   return (
-                    <div key={lineKey} className="flex items-center gap-2 text-xs font-mono">
-                      <span className="text-neon-cyan w-48 flex-shrink-0 truncate">{parsed.key}</span>
-                      <span className="text-white/50">=</span>
-                      <span className="text-white/30">{maskKeyHint(parsed.value)}</span>
-                    </div>
+                    <EnvLineRow
+                      key={envLineKey(line, i)}
+                      lineKey={envLineKey(line, i)}
+                      parsed={parsed}
+                      raw={line}
+                    />
                   );
                 })}
                 <p className="text-xs text-white/20 mt-4">

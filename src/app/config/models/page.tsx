@@ -53,6 +53,7 @@ export default function ModelsPage() {
     editingFallbackUrl,
     setEditingFallbackUrl,
     savingFallbackUrl,
+    setEditingFallbackEntry,
     toastElement,
     handleRefresh,
     handlePush,
@@ -70,7 +71,6 @@ export default function ModelsPage() {
     handleFallbackAddCustom,
     handleSyncFallbackToHermes,
     handleImportFallbackFromConfig,
-    setEditingFallbackEntry,
   } = useModelsPage();
 
   // openAddModel — opens the ModelEditor in CREATE mode (`setEditing(null)`).
@@ -97,7 +97,6 @@ export default function ModelsPage() {
   // "fire an analytics event" extension lands in one place.
   // eslint-disable-next-line react-hooks/exhaustive-deps -- useState setters are stable
   const closeModelEditor = useCallback(() => setEditing(undefined), []);
-
   // closeFallbackModal — closes the FallbackUrlEditModal. Sister to
   // `openAddModel` + `closeModelEditor` (same useState-setter stability
   // rationale). The `onCloseFallbackModal={...}` binding at line 184 is

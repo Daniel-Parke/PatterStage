@@ -151,14 +151,59 @@ describe("session-190 useMissionsPage categoryId helper migration", () => {
     expect(applyBlock).not.toBeNull();
   });
 
-  it("fetchData template-apply path uses the helper at the cid line", () => {
-    // The 2nd call site: the `fetchData` template-apply path
-    // computes `const cid = ...;` and passes it to
-    // `applyTemplateToForm` and `rememberLastCategory`. The cast
-    // is now a `getCategoryIdFromTemplate(t)` call (default null).
+  it("fetchData template-apply path uses loadAndApplyTemplate (session 210)", () => {
+    // Session 210 promoted the 5-line `applyTemplateToForm +
+    // rememberLastCategory + setShowCreate + showToast +
+    // window.history.replaceState` sequence out of the
+    // `fetchData` template-apply path and into the shared
+    // `loadAndApplyTemplate(t, opts)` helper. The `if (t) { ... }`
+    // branch in `fetchData` now calls
+    // `loadAndApplyTemplate(t, { rememberCategory: true,
+    // clearQueryParam: true })` + sets the `templateApplied.current`
+    // latch. The `getCategoryIdFromTemplate(t)` call that used to
+    // appear inline in this branch moved into the helper body.
+    // Pin the new shape: the branch must call `loadAndApplyTemplate`
+    // with both opts, must NOT have an inline `const cid =
+    // getCategoryIdFromTemplate(t);` (that lives in the helper now),
+    // and must NOT have a direct `applyTemplateToForm(t, cid)` call
+    // (the helper wraps it). Sister to the `applyTemplateToForm`
+    // helper-shape test above.
     const fetchDataBlock = useMissionsPageSrc.match(
-      /if \(t\) \{\s*const cid = getCategoryIdFromTemplate\(t\);/,
+      /if \(t\) \{[\s\S]*?loadAndApplyTemplate\(t, \{\s*rememberCategory: true,\s*clearQueryParam: true,\s*\}\);[\s\S]*?templateApplied\.current = true;[\s\S]*?\}/,
     );
     expect(fetchDataBlock).not.toBeNull();
+    // The inline `const cid = getCategoryIdFromTemplate(t);` that
+    // used to live in this branch is GONE — the helper now owns the
+    // call. Pin the absence so a future regression that re-inlines
+    // the helper call is caught.
+    expect(useMissionsPageSrc).not.toMatch(
+      /if \(t\) \{\s*const cid = getCategoryIdFromTemplate\(t\);/,
+    );
+    // Same for the direct `applyTemplateToForm(t, cid)` call that
+    // used to be the 1st line of the `if (t) { ... }` body.
+    expect(useMissionsPageSrc).not.toMatch(
+      /if \(t\) \{\s*applyTemplateToForm\(t, cid\);/,
+    );
+  });
+
+  it("handleTemplateSelect uses loadAndApplyTemplate (session 210)", () => {
+    // Sister of the `fetchData` test above. The interactive
+    // "click a template" path collapses to a 1-line
+    // `loadAndApplyTemplate(t)` call (no opts — the user picked
+    // the template interactively, so neither `rememberCategory`
+    // nor `clearQueryParam` apply). Pin the new shape + the
+    // absence of the pre-refactor inline `applyTemplateToForm(t);
+    // setShowCreate(true); showToast(\`Template loaded:
+    // ${t.name}\`, "success")` trio.
+    const handleBlock = useMissionsPageSrc.match(
+      /const handleTemplateSelect = useCallback\(\(t: MissionTemplate\) => \{\s*loadAndApplyTemplate\(t\);\s*\}, \[loadAndApplyTemplate\]\);/,
+    );
+    expect(handleBlock).not.toBeNull();
+    // The pre-refactor trio (applyTemplateToForm + setShowCreate +
+    // showToast for "Template loaded:") is GONE from this
+    // callback. Pin the absence.
+    expect(useMissionsPageSrc).not.toMatch(
+      /const handleTemplateSelect = useCallback\(\(t: MissionTemplate\) => \{\s*applyTemplateToForm\(t\);/,
+    );
   });
 });
