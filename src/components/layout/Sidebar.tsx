@@ -355,15 +355,23 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
     });
   }, [runDeployAction]);
 
-  const clearDeployBusy = () => {
+  const clearDeployBusy = useCallback(() => {
     setUpdating(false);
     setRestarting(false);
     setRebuilding(false);
     busyRef.current = false;
-  };
-  clearDeployBusyRef.current = clearDeployBusy;
+  }, []);
 
-  const pollDeployStatus = (expectedAction: DeployAction) => {
+  // Sync the forward-declared refs (clearDeployBusyRef, pollDeployStatusRef) to
+  // the latest closures. Done in an effect so React's react-hooks/refs rule
+  // doesn't flag ref mutations during render. clearDeployBusy and
+  // pollDeployStatus are useCallback'd above so this effect only runs on mount
+  // and on dep change (stable).
+  useEffect(() => {
+    clearDeployBusyRef.current = clearDeployBusy;
+  }, [clearDeployBusy]);
+
+  const pollDeployStatus = useCallback((expectedAction: DeployAction) => {
     if (pollIntervalRef.current !== null) {
       clearInterval(pollIntervalRef.current);
       pollIntervalRef.current = null;
@@ -437,8 +445,11 @@ function VersionFooter({ collapsed }: { collapsed: boolean }) {
       }
     }, 2000);
     pollIntervalRef.current = interval;
-  };
-  pollDeployStatusRef.current = pollDeployStatus;
+  }, [clearDeployBusy]);
+
+  useEffect(() => {
+    pollDeployStatusRef.current = pollDeployStatus;
+  }, [pollDeployStatus]);
 
   const isBusy = updating || restarting || rebuilding;
 

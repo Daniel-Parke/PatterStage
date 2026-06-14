@@ -5,6 +5,7 @@
 
 import { getAgentLlmEndpoints } from "./hermes-agent-runtime";
 import { getModelWithKey, type ModelWithKey } from "./models-repository";
+import { getGatewayKey } from "./runtime/secrets";
 
 export interface LLMMessage {
   role: "system" | "user" | "assistant";
@@ -204,9 +205,15 @@ async function callGateway(input: CallGatewayInput): Promise<LLMResponse> {
     const timeout = setTimeout(() => controller.abort(), 300_000); // 5 min
 
     try {
+      const gatewayKey = getGatewayKey();
       const resp = await fetch(apiUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          // The Hermes API Server requires a bearer key when API_SERVER_KEY is
+          // set; without this every gateway call 401s once auth is enabled.
+          ...(gatewayKey ? { Authorization: `Bearer ${gatewayKey}` } : {}),
+        },
         body: JSON.stringify({
           model,
           messages,

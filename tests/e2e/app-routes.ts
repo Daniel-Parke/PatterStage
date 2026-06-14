@@ -38,6 +38,7 @@ export const APP_NAV_ROUTES: readonly string[] = [
   "/config/voice",
   "/config/web",
   "/orchestration/cron",
+  "/orchestration/schedules",
   "/orchestration/chat",
   "/logs",
   "/memory",

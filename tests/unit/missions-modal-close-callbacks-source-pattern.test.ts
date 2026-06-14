@@ -76,20 +76,30 @@ const useMissionsPagePath = join(
   "hooks",
   "useMissionsPage.ts",
 );
+// `closeCategoryManager` was extracted into the `useMissionCategories` hook
+// (its declaration lives there now); useMissionsPage still re-exposes it on the
+// vm. The template close callbacks remain in useMissionsPage.
+const useMissionCategoriesPath = join(
+  REPO_ROOT,
+  "src",
+  "hooks",
+  "useMissionCategories.ts",
+);
 
 describe("missions modal close-callbacks promoted to useMissionsPage hook", () => {
   const pageSource = readFileSync(missionsPagePath, "utf-8");
   const hookSource = readFileSync(useMissionsPagePath, "utf-8");
+  const categoriesHookSource = readFileSync(useMissionCategoriesPath, "utf-8");
 
   describe("closeCategoryManager (sibling of openCategoryManager from session 118)", () => {
     it("hook declares closeCategoryManager as a useCallback that calls setShowCategoryManager(false)", () => {
-      expect(hookSource).toMatch(
+      expect(categoriesHookSource).toMatch(
         /const\s+closeCategoryManager\s*=\s*useCallback\(\s*\(\s*\)\s*=>\s*\{?\s*setShowCategoryManager\(false\)\s*;?\s*\}?\s*,\s*\[[^\]]*\]\s*,?\s*\)/s,
       );
     });
 
     it("hook uses empty deps array for closeCategoryManager (useState setters are stable)", () => {
-      const match = hookSource.match(
+      const match = categoriesHookSource.match(
         /const\s+closeCategoryManager\s*=\s*useCallback\(\s*\(\s*\)\s*=>\s*\{?\s*setShowCategoryManager\(false\)\s*;?\s*\}?\s*,\s*(\[[^\]]*\])\s*,?\s*\)/s,
       );
       expect(match).not.toBeNull();

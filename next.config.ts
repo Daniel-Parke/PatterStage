@@ -25,6 +25,12 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react"],
   },
 
+  // Keep the native better-sqlite3 binding external from the server bundle.
+  // The orchestration scheduler now opens the DB at boot (via instrumentation),
+  // not just inside request handlers, so the native module must not be traced
+  // into the bundle.
+  serverExternalPackages: ["better-sqlite3"],
+
   // Allow devices on local network to access dev server (explicit list; no CIDR).
 
   allowedDevOrigins: ["*.local", ...extraOrigins],

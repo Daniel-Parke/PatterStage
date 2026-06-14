@@ -8,7 +8,7 @@ import { join } from "path";
 import { db, inTransaction, uuid, now } from "./db";
 import { safeJsonParse } from "./utils";
 import { PATHS } from "./paths";
-import type { Mission, MissionStatus } from "@/lib/agent-backend/types";
+import type { Mission, MissionStatus } from "@/lib/mission-types";
 import type { LocalDirEntry } from "@/types/hermes";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 

@@ -49,6 +49,7 @@ pnpm-lock.yaml
 pnpm-workspace.yaml
 a.out
 .npmrc
+!/.npmrc
 
 # Vercel
 .vercel
@@ -61,7 +62,7 @@ next-env.d.ts
 a.out
 pnpm-lock.yaml
 pnpm-workspace.yaml
-.npmrc
+!/.npmrc
 
 # Session-scoped audit artifacts (pre-merge dogfood reports, server stdout from local runs)
 dogfood-output/
@@ -74,3 +75,9 @@ runtime.log
 # scratch-root convention and is the same shape we see leak in here.
 .hermes/
 /.hermes
+
+# real-Hermes test harness runtime artifacts
+test-harness/.work/
+
+# Playwright isolated E2E data dir
+tmp/

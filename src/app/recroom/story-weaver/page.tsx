@@ -5,33 +5,41 @@ import { useRouter } from "next/navigation";
 import { BookOpen, Plus, ChevronRight, Sparkles, Library, Users, FileText } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
+import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import StoryCard from "@/components/story-weaver/StoryCard";
+import { safeApiCall } from "@/lib/api-fetch";
 import type { StorySummary } from "@/types/recroom";
 
 export default function StoryWeaverDashboard() {
   const router = useRouter();
   const [stories, setStories] = useState<StorySummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchStories = useCallback(async () => {
-    try {
-      const res = await fetch("/api/stories", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "list" }),
-      });
-      const d = await res.json();
-      setStories(d.data?.stories || []);
-    } catch {} finally { setLoading(false); }
+    setLoading(true);
+    const res = await safeApiCall<{ data?: { stories?: StorySummary[] } }>("/api/stories", {
+      method: "POST",
+      body: { action: "list" },
+    });
+    if (!res.ok) {
+      setError(res.error ?? "Failed to load stories");
+    } else {
+      setError(null);
+      setStories(res.data?.data?.stories ?? []);
+    }
+    setLoading(false);
   }, []);
 
   useEffect(() => { fetchStories(); }, [fetchStories]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this story?")) return;
-    await fetch("/api/stories", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "delete", storyId: id }),
+    const res = await safeApiCall("/api/stories", {
+      method: "POST",
+      body: { action: "delete", storyId: id },
     });
+    if (!res.ok) setError(res.error ?? "Failed to delete story");
     fetchStories();
   };
 
@@ -51,6 +59,8 @@ export default function StoryWeaverDashboard() {
       />
 
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-8 flex-1 w-full">
+        {error && <LoadErrorBanner error={error} onRetry={fetchStories} />}
+
         {/* Stats */}
         <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
           {[

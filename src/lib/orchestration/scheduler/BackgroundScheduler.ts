@@ -1,0 +1,179 @@
+// ═══════════════════════════════════════════════════════════════
+// orchestration/scheduler/BackgroundScheduler.ts
+//
+// Control Hub's traffic-independent background loop. Unlike the read-side
+// sync layer (which historically only ticked when an API route called
+// ensureSyncLayer()), this scheduler is started once per server process by
+// src/instrumentation.ts — so Control Hub-owned scheduling fires even on an
+// idle host with zero inbound HTTP.
+//
+// It reuses the proven SyncScheduler loop (event-loop yielding + per-source
+// timeout race — hardened after the 2026-06-01 outage) and adds a cross-
+// process ownership lease in the `meta` table so that, under `next dev`
+// double module-evaluation or a brief overlap during restart, only one
+// process drives dispatch (gated via isOwner()). Exactly-once dispatch in
+// Phase 4 is further protected by a transactional run-insert guard +
+// Idempotency-Key, so this lease is defence-in-depth, not the sole guard.
+// ═══════════════════════════════════════════════════════════════
+
+import { SyncScheduler } from "@/lib/sync/SyncScheduler";
+import type { SyncSource, SyncResult } from "@/lib/sync/types";
+import { db } from "@/lib/db";
+import { RunSync } from "@/lib/orchestration/RunSync";
+import { reconcileRunsOnBoot } from "@/lib/orchestration/run-reconcile";
+import { ScheduleTickSource } from "./tick";
+
+const META_OWNER_PID = "scheduler_owner_pid";
+const META_HEARTBEAT = "scheduler_heartbeat_at";
+
+/** A heartbeat older than this is treated as a dead owner — the lease is up for grabs. */
+const HEARTBEAT_STALE_MS = 60_000;
+
+function readMeta(key: string): string | null {
+  try {
+    const row = db().prepare("SELECT value FROM meta WHERE key = ?").get(key) as
+      | { value: string }
+      | undefined;
+    return row?.value ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function writeMeta(key: string, value: string): void {
+  try {
+    db()
+      .prepare(
+        "INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+      )
+      .run(key, value);
+  } catch {
+    // Best-effort: never crash server boot on a meta write failure.
+  }
+}
+
+function isPidAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Internal source that refreshes (or re-acquires) the ownership lease each tick. */
+class HeartbeatSource implements SyncSource {
+  readonly name = "scheduler-heartbeat";
+  constructor(private readonly onTick: () => void) {}
+  async sync(): Promise<SyncResult> {
+    this.onTick();
+    return { sourceName: this.name, success: true, syncedCount: 0, durationMs: 0 };
+  }
+}
+
+export class BackgroundScheduler {
+  private readonly inner: SyncScheduler;
+  private started = false;
+  private owner = false;
+
+  constructor() {
+    this.inner = new SyncScheduler();
+  }
+
+  /** Register an orchestration tick source (e.g. the schedule tick added in Phase 4). */
+  registerSource(source: SyncSource): void {
+    this.inner.register(source);
+  }
+
+  /** Whether THIS process currently holds the scheduling lease (gates dispatch). */
+  isOwner(): boolean {
+    return this.owner;
+  }
+
+  /** Start the traffic-independent background loop. Idempotent per process. */
+  start(): void {
+    if (this.started) return;
+    this.started = true;
+
+    this.owner = this.claimOwnership();
+    this.inner.register(new HeartbeatSource(() => this.refreshHeartbeat()));
+    this.inner.start();
+
+    console.log(
+      `[scheduler] BackgroundScheduler started (pid=${process.pid}, owner=${this.owner})`,
+    );
+  }
+
+  stop(): void {
+    this.inner.stop();
+    this.started = false;
+  }
+
+  /** Acquire the lease unless a different, live process holds a fresh one. */
+  private claimOwnership(): boolean {
+    const ownerPidRaw = readMeta(META_OWNER_PID);
+    const heartbeatRaw = readMeta(META_HEARTBEAT);
+    const ownerPid = ownerPidRaw ? Number(ownerPidRaw) : NaN;
+    const heartbeatAt = heartbeatRaw ? Date.parse(heartbeatRaw) : NaN;
+    const heartbeatFresh =
+      Number.isFinite(heartbeatAt) && Date.now() - heartbeatAt < HEARTBEAT_STALE_MS;
+
+    if (
+      Number.isFinite(ownerPid) &&
+      ownerPid !== process.pid &&
+      heartbeatFresh &&
+      isPidAlive(ownerPid)
+    ) {
+      console.warn(
+        `[scheduler] live owner (pid=${ownerPid}) holds the scheduling lease — standing down as follower`,
+      );
+      return false;
+    }
+
+    writeMeta(META_OWNER_PID, String(process.pid));
+    writeMeta(META_HEARTBEAT, new Date().toISOString());
+    return true;
+  }
+
+  private refreshHeartbeat(): void {
+    if (!this.owner) {
+      // Previous owner may have died — try to take over.
+      this.owner = this.claimOwnership();
+      return;
+    }
+    writeMeta(META_HEARTBEAT, new Date().toISOString());
+  }
+}
+
+// ── Singleton ────────────────────────────────────────────────
+
+let _scheduler: BackgroundScheduler | null = null;
+
+export function getBackgroundScheduler(): BackgroundScheduler {
+  if (!_scheduler) _scheduler = new BackgroundScheduler();
+  return _scheduler;
+}
+
+let _ensured = false;
+
+/** Boot the background scheduler once per process. Called from instrumentation. */
+export function ensureBackgroundScheduler(): BackgroundScheduler {
+  const scheduler = getBackgroundScheduler();
+  if (_ensured) return scheduler;
+  _ensured = true;
+
+  // Recover runs left 'started' by a previous process (network-free).
+  try {
+    reconcileRunsOnBoot();
+  } catch (err) {
+    console.warn("[scheduler] boot run-reconcile failed:", err);
+  }
+
+  // Orchestration sources: reconcile active runs, then fire due schedules.
+  // The schedule tick only dispatches when this process holds the lease.
+  scheduler.registerSource(new RunSync());
+  scheduler.registerSource(new ScheduleTickSource(() => scheduler.isOwner()));
+
+  scheduler.start();
+  return scheduler;
+}

@@ -52,10 +52,19 @@ import { join } from "node:path";
 
 const REPO_ROOT = join(__dirname, "..", "..");
 const USE_MISSIONS_PAGE_PATH = join(REPO_ROOT, "src", "hooks", "useMissionsPage.ts");
+// `loadCategories` (the setErrorFromCaught migration site) was extracted into
+// the `useMissionCategories` hook, so the import + call-site assertions target
+// that file now.
+const USE_MISSION_CATEGORIES_PATH = join(REPO_ROOT, "src", "hooks", "useMissionCategories.ts");
 const HELPER_PATH = join(REPO_ROOT, "src", "lib", "api-fetch.ts");
+
+const stripComments = (s: string) =>
+  s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 
 describe("setErrorFromCaught envelope migration — List 2 useMissionsPage hook", () => {
   const rawSource = readFileSync(USE_MISSIONS_PAGE_PATH, "utf8");
+  const categoriesRaw = readFileSync(USE_MISSION_CATEGORIES_PATH, "utf8");
+  const categoriesCodeOnly = stripComments(categoriesRaw);
   // Strip line + block comments before scanning. The post-migration
   // file has a JSDoc-style migration note in the `loadCategories`
   // catch block that literally mentions the old
@@ -113,19 +122,19 @@ describe("setErrorFromCaught envelope migration — List 2 useMissionsPage hook"
     expect(matches).toHaveLength(0);
   });
 
-  it("useMissionsPage imports setErrorFromCaught and uses it for the loadCategories migration", () => {
-    // Belt-and-suspenders: the helper should actually be imported.
-    // A hook that doesn't import setErrorFromCaught is broken
-    // (either the migration was reverted, or the inline form came
-    // back via a copy-paste).
-    expect(rawSource).toMatch(
+  it("useMissionCategories imports setErrorFromCaught and uses it for the loadCategories migration", () => {
+    // Belt-and-suspenders: the helper should actually be imported by the
+    // category hook (where loadCategories now lives). A hook that doesn't
+    // import setErrorFromCaught is broken (either the migration was reverted,
+    // or the inline form came back via a copy-paste).
+    expect(categoriesRaw).toMatch(
       /import\s*\{[^}]*\bsetErrorFromCaught\b[^}]*\}\s*from\s*["']@\/lib\/api-fetch["']/,
     );
     // And the call site uses it with the canonical args. The dual-
     // dispatch shape is `setErrorFromCaught(setCategoriesLoadError, error, "...")`
     // — the helper returns the resolved message for the
     // follow-on showToast(msg, "error") call.
-    expect(codeOnlySource).toMatch(
+    expect(categoriesCodeOnly).toMatch(
       /\bsetErrorFromCaught\s*\(\s*setCategoriesLoadError\s*,\s*error\s*,\s*["']Failed to load categories["']/,
     );
   });

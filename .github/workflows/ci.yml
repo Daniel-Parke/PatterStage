@@ -212,3 +212,23 @@ jobs:
         env:
           CH_DOCKER_TEST_IMAGE: control-hub:ci
           CH_DOCKER_TEST_PORT: "42090"
+
+  # Validates the runtime adapter against the REAL Hermes Agent (official image)
+  # pointed at a deterministic mock LLM. Heavy (~5GB image pull + agent runtime),
+  # so it runs on the dev->prod surface (push to dev/main) + manual dispatch, not
+  # on every PR. Per-PR coverage comes from the fast mock-hermes smoke + the unit
+  # contract tests in build-test-*.
+  real-hermes-integration:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ github.token }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      - name: Real-Hermes integration (contract + full-stack smoke)
+        run: npm run test:e2e-hermes

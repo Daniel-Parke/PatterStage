@@ -44,6 +44,10 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/scripts ./scripts
+# Migration + seed SQL is read at runtime via a cwd-relative path (see
+# resolveMigrationsDir in src/lib/db.ts); the Next bundle does not co-locate
+# these next to __dirname, so copy the source SQL explicitly.
+COPY --from=builder /app/src/lib/db ./src/lib/db
 
 RUN chown -R nextjs:nodejs /app/scripts
 
@@ -59,6 +63,12 @@ RUN chown -R nextjs:nodejs /app/scripts
 # test passed only because the API silently returned 200
 # {status:"started"} without ever verifying the script actually ran.
 RUN mkdir -p /home/nextjs && chown nextjs:nodejs /home/nextjs
+# Data mount points must be writable by the non-root nextjs user. Creating +
+# chowning them here means fresh named volumes mounted at /data/ch and
+# /data/hermes inherit nextjs ownership (Docker seeds empty volumes from the
+# image path), so SQLite can create control-hub.db. Without this the container
+# fails with "unable to open database file".
+RUN mkdir -p /data/ch /data/hermes && chown -R nextjs:nodejs /data
 ENV HOME=/home/nextjs
 # WORKDIR is also required so `npm run start:network` (CMD) runs from
 # /app where package.json lives — otherwise the nextjs user's $HOME

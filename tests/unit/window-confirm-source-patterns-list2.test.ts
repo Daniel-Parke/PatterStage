@@ -99,7 +99,7 @@ const LIST2_FILES = [
 const EXEMPTIONS: ReadonlyArray<{ file: string; line: number; reason: string }> = [
   {
     file: "src/hooks/useMissionsPage.ts",
-    line: 1091,
+    line: 1010,
     reason:
       "Form-scope 'Overwrite template?' check in `handleSaveAsTemplate` — " +
       "single-button site inside the MissionCreateForm Sheet, NOT a per-row " +

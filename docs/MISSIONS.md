@@ -21,7 +21,7 @@ How missions are stored, dispatched, and cancelled. Missions live in SQLite (`mi
 | `save` | Persists a **draft** (`status=queued`, `queued_for_run=0`). Does not spawn Hermes. Shown in the **Drafts** board column. |
 | `queue` | Persists as **queued for run** (`queued_for_run=1`). `MissionQueueSync` dispatches the oldest queued mission when no mission is `dispatched` (single-flight, ~15s tick). |
 | `now` | Creates the mission and dispatches immediately via `dispatchMissionNow()`. |
-| `cron` | Creates a linked `cron_jobs` row, pushes to Hermes, and runs the **first** execution immediately; later runs follow the schedule. |
+| `cron` | Creates a linked Control Hub `schedules` row and runs the **first** execution immediately; later runs are fired by the Control Hub scheduler. |
 
 ### Model resolution at dispatch
 
@@ -79,23 +79,21 @@ Runtime database path: `CH_DATA_DIR/control-hub.db` (default `~/control-hub/data
 
 ## Recurring missions
 
-- Recurring missions link to `cron_jobs` via `cron_job_id`.
-- Updates to prompt, schedule, profile, or model sync through `src/lib/mission-cron-sync.ts` (`syncMissionToCronJob`).
-- Cancel pauses cron; delete removes the linked cron job.
+Recurring runs are **Control Hub-owned schedules** — the agent's `jobs.json` cron is no longer used:
+
+- A `schedules` row links to a mission and holds the canonical schedule, `next_run_at`, `catch_up_policy`, and repeat count. The scheduler tick (`src/lib/orchestration/scheduler/`) selects due rows and dispatches a run via the runtime; **Control Hub owns the timer**.
+- Manage via `/api/schedules` or the **Orchestration → Schedules** page (create, pause/resume, run-now, delete).
+- Restart-safe (recomputed from `next_run_at`, never an in-memory timer) and exactly-once per occurrence (deterministic run-id PK guard + `Idempotency-Key`).
 
 ## Cancellation
 
-When you cancel a **running** mission from the mission board:
+When you cancel a **running** mission, `cancelMissionRun()` (orchestration core):
 
-1. **SQLite** — status becomes `failed` with result `Cancelled by user`.
-2. **Process** — `HermesAgentBackend.cancelMission()` reads `CH_DATA_DIR/missions/<id>.pid.json`, sends `SIGTERM` to the bash wrapper process group, then `SIGKILL` after a short grace period. Fallback: `pkill -f CH_MISSION_ID=<uuid>`.
-3. **Status file** — `missions/<id>.status.json` is written so `MissionSync` matches the UI.
-4. **Session** — linked session row is ended with `failed` when `sessionId` is set.
-5. **Cron** — linked recurring job is paused (same as before).
+1. **Backend** — calls `runtime.stopRun(run_id)` over HTTP (the Hermes API Server's `POST /v1/runs/{id}/stop`). No process signals, no pid files, no `pkill`, no platform restriction.
+2. **SQLite** — the `runs` row becomes `cancelled`; the mission becomes `failed` with result `Cancelled by user`.
+3. **Session** — the linked session row is ended.
 
-Missions use non-interactive `hermes chat -q` (not an interactive TTY), so slash commands like `/stop` do not apply. Stopping the parent OS process matches [Hermes delegation](https://hermes-agent.nousresearch.com/docs/user-guide/features/delegation): interrupting the parent run stops delegated subagents.
-
-**Platforms:** process kill is implemented for **Linux and macOS** only (same as bootstrap scripts). If kill fails, the DB and cron pause still apply; check server logs and `~/.hermes/logs` for details.
+Local run/mission/session state is finalised even if the backend stop call fails, so the board never shows a stuck "running" row.
 
 ## Session closure bridge
 

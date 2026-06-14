@@ -15,7 +15,6 @@ import { EnvSync } from "./sources/EnvSync";
 import { LogSync } from "./sources/LogSync";
 import { ProcessSync } from "./sources/ProcessSync";
 import { MemorySync } from "./sources/MemorySync";
-import { MissionSync } from "./sources/MissionSync";
 import { MissionQueueSync } from "./sources/MissionQueueSync";
 
 // ── Singleton ────────────────────────────────────────────────
@@ -50,7 +49,8 @@ export function ensureSyncLayer(): void {
   scheduler.register(new LogSync());
   scheduler.register(new ProcessSync());
   scheduler.register(new MemorySync());
-  scheduler.register(new MissionSync());
+  // Mission run reconciliation now lives in the orchestration BackgroundScheduler
+  // (RunSync). MissionQueueSync still dispatches queued missions (via the runtime).
   scheduler.register(new MissionQueueSync());
 
   scheduler.start();
