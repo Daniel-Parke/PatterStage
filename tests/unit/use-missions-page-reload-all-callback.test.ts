@@ -3,132 +3,102 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 /**
- * useMissionsPage reloadAllData callback consolidation (List 2 carryover
- * from session 109 / 110 era).
+ * Post-delete reload behaviour for the category concern.
  *
- * Pre-refactor: `handleDeleteCategory` did 3 sequential awaits after
- * `deleteCategory`:
+ * A category delete reassigns its missions to the fallback category, so after
+ * the delete three slices go stale: the category catalog, the missions list,
+ * and the templates. The original `reloadAllData` useCallback in
+ * `useMissionsPage` ran all three in a single `Promise.allSettled([...])`.
  *
- *   await deleteCategory(id, reassignToId);
- *   await loadCategories();
- *   await fetchMissions().then(setMissions);
- *   const loaded = await fetchTemplates();
- *   setTemplates(loaded);
+ * The `useMissionCategories` extraction split this along the cohesion seam:
+ *   - `useMissionsPage` owns `reloadMissionsAndTemplates` — a `Promise.allSettled`
+ *     of the missions + templates slices (the slices the category hook does not
+ *     own) — and injects it into the category hook as `onMissionsReassigned`.
+ *   - `useMissionCategories.handleDeleteCategory` runs `loadCategories()` (own)
+ *     and `onMissionsReassigned()` in parallel via `Promise.allSettled`.
  *
- * Post-refactor: a single `reloadAllData` useCallback consolidates the
- * 3 independent fetches into a parallel `Promise.allSettled([...])`,
- * and `handleDeleteCategory` collapses to a 1-line call. The 3 fetches
- * are independent (no data flows between them) so they can run
- * concurrently, and `Promise.allSettled` keeps the refetch attempt
- * going even if one slice fails.
- *
- * Byte-equivalent at runtime when all 3 succeed (the common case) —
- * each `setX(Y)` fires for the same Y as the inline form. The only
- * observable difference is when one slice fails: previously the
- * unhandled rejection in `fetchMissions().then(setMissions)` would
- * short-circuit the function; now all 3 settle and the user gets a
- * more complete UI. This is strictly more informative, not less.
+ * Net runtime behaviour is unchanged: after a delete all three slices refetch
+ * concurrently, and a single failing slice does not abort the others. This test
+ * pins the new shape so a regression that re-serialises the reload (or drops a
+ * slice) trips here.
  */
-const hookPath = join(
-  __dirname,
-  "..",
-  "..",
-  "src",
-  "hooks",
-  "useMissionsPage.ts"
+const REPO_ROOT = join(__dirname, "..", "..");
+const hookSource = readFileSync(
+  join(REPO_ROOT, "src", "hooks", "useMissionsPage.ts"),
+  "utf-8",
 );
-const source = readFileSync(hookPath, "utf-8");
+const categoriesSource = readFileSync(
+  join(REPO_ROOT, "src", "hooks", "useMissionCategories.ts"),
+  "utf-8",
+);
 
-describe("useMissionsPage reloadAllData callback", () => {
-  it("declares reloadAllData as a useCallback that Promise.allSettles 3 fetches", () => {
-    // Use indexOf + slice to find the full declaration. Pitfall 18
-    // recipe: regex with [\s\S]*? traps at the first }, so anchor on
-    // a known closing marker and slice forward.
-    const startIdx = source.indexOf("const reloadAllData = useCallback(");
+describe("category delete reload (useMissionsPage + useMissionCategories)", () => {
+  it("useMissionsPage declares reloadMissionsAndTemplates as a Promise.allSettled of the 2 owned slices", () => {
+    const startIdx = hookSource.indexOf(
+      "const reloadMissionsAndTemplates = useCallback(",
+    );
     expect(startIdx).toBeGreaterThan(-1);
-    // Closing shape is `}, [fetchMissions, loadCategories, fetchTemplates]);`
-    const afterCallback = source.indexOf(
-      "}, [fetchMissions, loadCategories, fetchTemplates]",
-      startIdx
-    );
-    expect(afterCallback).toBeGreaterThan(startIdx);
-    const closingIdx = source.indexOf("]);", afterCallback);
-    expect(closingIdx).toBeGreaterThan(afterCallback);
-    const fullDeclaration = source.slice(startIdx, closingIdx + 3);
-    // Body contains the 3 fetches and Promise.allSettled
-    expect(fullDeclaration).toMatch(/Promise\.allSettled\(/);
-    expect(fullDeclaration).toMatch(/fetchMissions\(\)\.then\(setMissions\)/);
-    expect(fullDeclaration).toMatch(/loadCategories\(\)/);
-    expect(fullDeclaration).toMatch(/fetchTemplates\(\)\.then\(setTemplates\)/);
+    const closingIdx = hookSource.indexOf("]);", startIdx);
+    expect(closingIdx).toBeGreaterThan(startIdx);
+    const decl = hookSource.slice(startIdx, closingIdx + 3);
+    expect(decl).toMatch(/Promise\.allSettled\(/);
+    expect(decl).toMatch(/fetchMissions\(\)\.then\(setMissions\)/);
+    expect(decl).toMatch(/fetchTemplates\(\)\.then\(setTemplates\)/);
+    // It does NOT reload categories — that slice belongs to the category hook.
+    expect(decl).not.toMatch(/loadCategories\(\)/);
   });
 
-  it("deps array is exactly [fetchMissions, loadCategories, fetchTemplates] (no extras)", () => {
-    // The reloadAllData declaration uses the 3 fetches as deps — no
-    // extras (setMissions/setTemplates are useState setters, stable).
-    const startIdx = source.indexOf("const reloadAllData = useCallback(");
-    const afterCallback = source.indexOf(
-      "}, [fetchMissions, loadCategories, fetchTemplates]",
-      startIdx
+  it("reloadMissionsAndTemplates deps array is exactly [fetchMissions, fetchTemplates]", () => {
+    // Anchor on the deps signature directly — the body's inner
+    // `Promise.allSettled([...]);` would trap a generic `]);` search.
+    const startIdx = hookSource.indexOf(
+      "const reloadMissionsAndTemplates = useCallback(",
     );
-    const closingIdx = source.indexOf("]);", afterCallback);
-    const fullDeclaration = source.slice(startIdx, closingIdx + 3);
-    // Strip comments and the body to extract just the deps line
-    const depsMatch = fullDeclaration.match(
-      /\},\s*\[([^\]]+)\]\s*\)/
-    );
-    expect(depsMatch).not.toBeNull();
-    const deps = depsMatch![1].trim();
-    expect(deps).toBe("fetchMissions, loadCategories, fetchTemplates");
-  });
-
-  it("handleDeleteCategory collapses to a 1-line reloadAllData call", () => {
-    // Pre-refactor: 5-line block (deleteCategory + 3 awaits + 1 fetchTemplates).then)
-    // Post-refactor: 2 lines (deleteCategory + reloadAllData).
-    const startIdx = source.indexOf("const handleDeleteCategory = useCallback(");
     expect(startIdx).toBeGreaterThan(-1);
-    // Find the closing shape: `}, \n    [deleteCategory, reloadAllData]);`
-    // Use a regex that matches the actual whitespace (4-space indent + newline)
-    const afterCallback = source.search(
-      /\},\s*\[deleteCategory, reloadAllData\]/,
-      startIdx
-    );
-    expect(afterCallback).toBeGreaterThan(startIdx);
-    const closingIdx = source.indexOf("]);", afterCallback);
-    expect(closingIdx).toBeGreaterThan(afterCallback);
-    const fullDeclaration = source.slice(startIdx, closingIdx + 3);
-    // The 1-line call to reloadAllData is present
-    expect(fullDeclaration).toMatch(/await\s+reloadAllData\(\)/);
+    expect(
+      hookSource.indexOf("}, [fetchMissions, fetchTemplates]", startIdx),
+    ).toBeGreaterThan(startIdx);
   });
 
-  it("replaces all 3 inline fetch sites inside handleDeleteCategory", () => {
-    // Pre-refactor: handleDeleteCategory had 3 inline fetch sites.
-    // Post-refactor: the only fetch-related call inside handleDeleteCategory
-    // is `await reloadAllData()`. Audit the body to confirm no
-    // `await loadCategories`, `await fetchMissions`, or
-    // `await fetchTemplates` survives inline.
-    const startIdx = source.indexOf("const handleDeleteCategory = useCallback(");
-    const openBrace = source.indexOf("{", startIdx);
-    const closingBrace = source.search(
-      /\},\s*\[deleteCategory, reloadAllData\]/,
-      startIdx
+  it("useMissionsPage injects reloadMissionsAndTemplates as the category hook's onMissionsReassigned", () => {
+    expect(hookSource).toMatch(
+      /onMissionsReassigned:\s*reloadMissionsAndTemplates/,
     );
-    const body = source.slice(openBrace, closingBrace);
-    expect(body).not.toMatch(/await\s+loadCategories\(\)/);
-    expect(body).not.toMatch(/await\s+fetchMissions\(\)/);
-    expect(body).not.toMatch(/await\s+fetchTemplates\(\)/);
   });
 
-  it("preserves the 3 single-slice loadCategories sites (different functions)", () => {
-    // The 3 sites that only reload categories (handleCreateCategory,
-    // handleUpdateCategory, applyTemplateToForm) are NOT touched by
-    // this refactor — they don't reload missions/templates, so
-    // Promise.allSettled would be a behavior change (would reload
-    // more than the original). Lock the inline `await loadCategories()`
-    // form in those 3 sites so a future "migrate everything" PR
-    // doesn't quietly widen them.
-    const inlineLoadCategoriesCount = (
-      source.match(/^\s*await\s+loadCategories\(\);/gm) ?? []
+  it("useMissionCategories.handleDeleteCategory awaits deleteCategory then Promise.allSettles the catalog + reassigned slices", () => {
+    const startIdx = categoriesSource.indexOf(
+      "const handleDeleteCategory = useCallback(",
+    );
+    expect(startIdx).toBeGreaterThan(-1);
+    const closingIdx = categoriesSource.indexOf("]);", startIdx);
+    expect(closingIdx).toBeGreaterThan(startIdx);
+    const decl = categoriesSource.slice(startIdx, closingIdx + 3);
+    expect(decl).toMatch(/await\s+deleteCategory\(id,\s*reassignToId\)/);
+    expect(decl).toMatch(/Promise\.allSettled\(\s*\[\s*loadCategories\(\)/);
+    expect(decl).toMatch(/onMissionsReassigned\(\)/);
+  });
+
+  it("handleDeleteCategory deps array is exactly [deleteCategory, loadCategories, onMissionsReassigned]", () => {
+    // Anchor on the deps signature directly (inner Promise.allSettled trap).
+    const startIdx = categoriesSource.indexOf(
+      "const handleDeleteCategory = useCallback(",
+    );
+    expect(startIdx).toBeGreaterThan(-1);
+    expect(
+      categoriesSource.indexOf(
+        "[deleteCategory, loadCategories, onMissionsReassigned]",
+        startIdx,
+      ),
+    ).toBeGreaterThan(startIdx);
+  });
+
+  it("the single-slice loadCategories sites (create + update) stay category-only", () => {
+    // handleCreateCategory + handleUpdateCategory reload only the catalog —
+    // widening them to the 3-slice reload would be a behaviour change.
+    const inlineLoadCategories = (
+      categoriesSource.match(/^\s*await\s+loadCategories\(\);/gm) ?? []
     ).length;
-    expect(inlineLoadCategoriesCount).toBe(3);
+    expect(inlineLoadCategories).toBe(2);
   });
 });

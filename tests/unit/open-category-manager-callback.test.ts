@@ -80,11 +80,22 @@ const useMissionsPagePath = join(
   "hooks",
   "useMissionsPage.ts",
 );
+// The open/close category-manager callbacks were extracted into the
+// `useMissionCategories` hook. The hook *return* of useMissionsPage still
+// re-exposes them (so the vm shape is unchanged), but their declarations now
+// live in this file.
+const useMissionCategoriesPath = join(
+  REPO_ROOT,
+  "src",
+  "hooks",
+  "useMissionCategories.ts",
+);
 
 describe("openCategoryManager open-callback sibling (missions page)", () => {
   const pageSource = readFileSync(missionsPagePath, "utf-8");
   const listSource = readFileSync(missionsListPath, "utf-8");
   const hookSource = readFileSync(useMissionsPagePath, "utf-8");
+  const categoriesHookSource = readFileSync(useMissionCategoriesPath, "utf-8");
 
   it("hook declares openCategoryManager as a useCallback that calls setShowCategoryManager(true)", () => {
     // Lock the helper body in the hook (where it lives, so the same
@@ -95,7 +106,7 @@ describe("openCategoryManager open-callback sibling (missions page)", () => {
     // body shape is matched. The optional `,?\s*` before the closing
     // `)` handles the trailing comma between `[]` (the deps array)
     // and the useCallback's closing paren.
-    expect(hookSource).toMatch(
+    expect(categoriesHookSource).toMatch(
       /const\s+openCategoryManager\s*=\s*useCallback\(\s*\(\s*\)\s*=>\s*\{?\s*setShowCategoryManager\(true\)\s*;?\s*\}?\s*,\s*\[[^\]]*\]\s*,?\s*\)/s,
     );
   });
@@ -108,7 +119,7 @@ describe("openCategoryManager open-callback sibling (missions page)", () => {
     // Multi-line body shape handled via the `s` flag. The optional
     // `,?\s*` before the closing `)` handles the trailing comma
     // between the deps array and the useCallback's closing paren.
-    const match = hookSource.match(
+    const match = categoriesHookSource.match(
       /const\s+openCategoryManager\s*=\s*useCallback\(\s*\(\s*\)\s*=>\s*\{?\s*setShowCategoryManager\(true\)\s*;?\s*\}?\s*,\s*(\[[^\]]*\])\s*,?\s*\)/s,
     );
     expect(match).not.toBeNull();
@@ -150,7 +161,7 @@ describe("openCategoryManager open-callback sibling (missions page)", () => {
     // setter is stable, matching the open callback's deps). The page
     // re-exports it as `const closeCategoryManager = vm.closeCategoryManager;`
     // so the JSX can reference it without the `vm.` indirection.
-    expect(hookSource).toMatch(
+    expect(categoriesHookSource).toMatch(
       /const\s+closeCategoryManager\s*=\s*useCallback\(\s*\(\s*\)\s*=>\s*\{?\s*setShowCategoryManager\(false\)\s*;?\s*\}?\s*,\s*\[[^\]]*\]\s*,?\s*\)/s,
     );
   });
@@ -158,7 +169,7 @@ describe("openCategoryManager open-callback sibling (missions page)", () => {
   it("hook uses empty deps array for closeCategoryManager (useState setters are stable)", () => {
     // The setter is stable across renders so `[]` is correct. The
     // open callback uses the same shape.
-    const match = hookSource.match(
+    const match = categoriesHookSource.match(
       /const\s+closeCategoryManager\s*=\s*useCallback\(\s*\(\s*\)\s*=>\s*\{?\s*setShowCategoryManager\(false\)\s*;?\s*\}?\s*,\s*(\[[^\]]*\])\s*,?\s*\)/s,
     );
     expect(match).not.toBeNull();

@@ -66,6 +66,10 @@ const HOOK_PATH = path.resolve(
   __dirname,
   "../../src/hooks/useMissionsPage.ts",
 );
+const CATEGORIES_HOOK_PATH = path.resolve(
+  __dirname,
+  "../../src/hooks/useMissionCategories.ts",
+);
 const FORM_PATH = path.resolve(
   __dirname,
   "../../src/components/missions/MissionCreateForm.tsx",
@@ -81,6 +85,7 @@ const GATE_TEST_PATH = path.resolve(
 
 describe("dead-state removal in useMissionsPage (session 214)", () => {
   const hookSource = fs.readFileSync(HOOK_PATH, "utf8");
+  const categoriesHookSource = fs.readFileSync(CATEGORIES_HOOK_PATH, "utf8");
   const formSource = fs.readFileSync(FORM_PATH, "utf8");
   const composerTestSource = fs.readFileSync(COMPOSER_TEST_PATH, "utf8");
   const gateTestSource = fs.readFileSync(GATE_TEST_PATH, "utf8");
@@ -201,8 +206,10 @@ describe("dead-state removal in useMissionsPage (session 214)", () => {
       // Anti-migration guard: the setter is still USED internally
       // (by the `openCategoryManager` callback that does
       // `setShowCategoryManager(true)`). The removal only affects
-      // the return-object exposure, not the internal usage.
-      expect(hookSource).toMatch(/setShowCategoryManager\s*\(\s*true\s*\)/);
+      // the return-object exposure, not the internal usage. The
+      // open/close callbacks now live in the `useMissionCategories`
+      // hook, so the internal use is asserted there.
+      expect(categoriesHookSource).toMatch(/setShowCategoryManager\s*\(\s*true\s*\)/);
     });
 
     it("still uses setShowTemplateManager inside openTemplateManager callback", () => {
@@ -270,17 +277,16 @@ describe("dead-state removal in useMissionsPage (session 214)", () => {
     });
 
     it("showTemplateManager + showCategoryManager state slots are still present", () => {
-      // Anti-migration guard: the corresponding STATE values
-      // (showCategoryManager, showTemplateManager) are still
-      // declared — only the setters were removed from the return.
-      // The state is consumed via the showCategoryManager /
-      // showTemplateManager getters in the return.
-      const useStateSlots = hookSource.match(
-        /const \[\s*(\w+)\s*,\s*(\w+)\s*\]\s*=\s*useState/g,
-      );
-      const declaredValueNames = useStateSlots!.map((m) => m.match(/^\s*const \[\s*(\w+)/)![1]);
-      expect(declaredValueNames).toContain("showCategoryManager");
-      expect(declaredValueNames).toContain("showTemplateManager");
+      // Anti-migration guard: the corresponding STATE values are still
+      // declared — only the setters were removed from the return. The
+      // template-manager state stays in useMissionsPage; the
+      // category-manager state moved to the `useMissionCategories` hook.
+      const slotNames = (source: string) =>
+        (source.match(/const \[\s*(\w+)\s*,\s*(\w+)\s*\]\s*=\s*useState/g) ?? []).map(
+          (m) => m.match(/^\s*const \[\s*(\w+)/)![1],
+        );
+      expect(slotNames(hookSource)).toContain("showTemplateManager");
+      expect(slotNames(categoriesHookSource)).toContain("showCategoryManager");
     });
   });
 });

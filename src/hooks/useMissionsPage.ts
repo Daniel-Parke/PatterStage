@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
-import { safeApiCall, apiFetch, toastError, safeApiCallData, setErrorFromCaught } from "@/lib/api-fetch";
+import { useMissionCategories } from "@/hooks/useMissionCategories";
+import { safeApiCall, apiFetch, toastError, safeApiCallData } from "@/lib/api-fetch";
 import { toastFromResult } from "@/lib/toast-from-result";
 import { successMessageForDispatch, dispatchMissionAction } from "@/hooks/success-message-for-dispatch";
 import type { LocalDirEntry, Mission } from "@/types/hermes";
@@ -15,7 +16,6 @@ import {
   categoryFilterPills,
   groupTemplatesByCategory,
 } from "@/lib/mission-categories";
-import type { ManagedCategory } from "@/components/missions/CategoryManagerModal";
 import { buildTemplatePayload, splitGoals } from "@/lib/mission-form-utils";
 import { scheduleForDispatch } from "@/lib/dispatch-mode";
 import {
@@ -208,12 +208,7 @@ export function useMissionsPage() {
   );
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [missionCategoryFilter, setMissionCategoryFilter] = useState("all");
-  const [categories, setCategories] = useState<ManagedCategory[]>([]);
-  const [categoriesLoadError, setCategoriesLoadError] = useState<string | null>(
-    null,
-  );
   const [newCategoryId, setNewCategoryId] = useState<string | null>(null);
-  const [showCategoryManager, setShowCategoryManager] = useState(false);
 
   const formState: MissionFormState = {
     newName,
@@ -386,20 +381,6 @@ export function useMissionsPage() {
     setShowCreate(true);
   }, []);
 
-  // Open the category manager modal (the "Manage categories" button in
-  // `MissionsList`, plus the `onManageCategories` prop in the page's
-  // `<MissionCreateForm>`). The 2 inline `() => setShowCategoryManager(true)`
-  // arrows that used to live at those call sites are now this single
-  // named callback — the open/close pair is `openCategoryManager` here +
-  // the page's `closeCategoryManager` (defined locally because the close
-  // direction needs the inline `setShowCategoryManager` setter). The
-  // `useCallback` deps array is `[]` (the setter is stable), matching
-  // the sibling `openCreate` and `closeComposer` callbacks. Session 118
-  // promoted this from inline-arrow to named-callback per session 116 P-7.
-  const openCategoryManager = useCallback(() => {
-    setShowCategoryManager(true);
-  }, []);
-
   // Open the template manager modal (the "Edit Templates" button in
   // `MissionsList`). Sibling to `closeTemplateManager` (defined below) —
   // same `useCallback` + `[]` deps shape as the sibling
@@ -410,22 +391,6 @@ export function useMissionsPage() {
   // session 116 P-7.
   const openTemplateManager = useCallback(() => {
     setShowTemplateManager(true);
-  }, []);
-
-  // Close the category manager modal (the `onClose` prop on
-  // `<CategoryManagerModal>` in the page). Sibling to the
-  // `openCategoryManager` callback above — same single-setter +
-  // `useCallback` + `[]` deps shape. Promoted from the page-local
-  // `closeCategoryManager` callback in `missions/page.tsx` so the
-  // open/close pair sits next to each other in the hook's return
-  // value (matching the `openCreate` / `closeComposer` pattern that
-  // session 98 codified). The `useCallback` deps array is `[]` (the
-  // setter is stable). Byte-equivalent to the pre-migration
-  // `useCallback(() => setShowCategoryManager(false), [setShowCategoryManager])`
-  // form (React re-runs the deps check; with no actual deps the
-  // identity is stable across renders).
-  const closeCategoryManager = useCallback(() => {
-    setShowCategoryManager(false);
   }, []);
 
   // Close the template manager modal (the `onClose` prop on
@@ -482,84 +447,38 @@ export function useMissionsPage() {
     return () => controller.abort();
   }, [newProfile]);
 
-  const loadCategories = useCallback(async () => {
-    try {
-      const list = await fetchCategories();
-      setCategories(list);
-      setCategoriesLoadError(null);
-    } catch (error) {
-      // The error is already surfaced to the user via (a) the inline
-      // `categoriesLoadError` state the page renders and (b) the toast.
-      // `setErrorFromCaught` composes `messageFromError(error, fallback)`
-      // with the setter so this site reads as one call instead of the
-      // 2-hop `setCategoriesLoadError(messageFromError(error, ...))` form.
-      // This is the List 2 carryover closed in session 178 — same
-      // byte-equivalent migration that closed the 4 List 1 pages
-      // (session 159) and the Sidebar (session 176). The helper
-      // returns the resolved message so the dual-dispatch (state + toast)
-      // stays a single resolve — the same string lands in both the
-      // rendered error and the toast.
-      const msg = setErrorFromCaught(setCategoriesLoadError, error, "Failed to load categories");
-      showToast(msg, "error");
-    }
-  }, [fetchCategories, showToast]);
-
-  const handleCreateCategory = useCallback(
-    async (name: string, color?: string): Promise<string | null> => {
-      try {
-        const cat = await createCategory(name, color);
-        if (cat?.id) {
-          await loadCategories();
-          showToast(`Category "${name}" created`, "success");
-          return cat.id as string;
-        }
-        showToast("Could not create category", "error");
-      } catch (error) {
-        // `toastError` already shows the user-facing message; the
-        // pre-refactor `console.error` was redundant dev-only noise
-        // duplicating the same string.
-        toastError(showToast, error, "Failed to create category");
-      }
-      return null;
-    },
-    [createCategory, loadCategories, showToast],
-  );
-
-  const handleUpdateCategory = useCallback(
-    async (id: string, patch: { name?: string; color?: string }) => {
-      await updateCategory(id, patch);
-      await loadCategories();
-    },
-    [updateCategory, loadCategories],
-  );
-
-  // Refresh all three data slices (missions + categories + templates) in
-  // parallel. The 3 fetches are independent — none of them passes data
-  // to the others — so they can run concurrently instead of sequentially.
-  // Each fetch has its own per-promise error handling (loadCategories in
-  // its own try/catch, fetchMissions/fetchTemplates in their respective
-  // calling sites), so Promise.allSettled is the right primitive: the
-  // refetch attempt continues even if one slice fails, instead of the
-  // previous "stop on first rejection" behavior (where the rejection
-  // was unhandled in the caller anyway). Byte-equivalent at runtime when
-  // all 3 succeed (the common case); strictly more informative when one
-  // or more fail (the user gets a more complete UI instead of a partial
-  // refetch).
-  const reloadAllData = useCallback(async () => {
+  // Reload the missions + templates slices in parallel. Used as the category
+  // hook's post-delete refresh (a category delete reassigns its missions to the
+  // fallback category, so both slices go stale). Promise.allSettled so one
+  // failing slice doesn't abort the other's refetch.
+  const reloadMissionsAndTemplates = useCallback(async () => {
     await Promise.allSettled([
       fetchMissions().then(setMissions),
-      loadCategories(),
       fetchTemplates().then(setTemplates),
     ]);
-  }, [fetchMissions, loadCategories, fetchTemplates]);
+  }, [fetchMissions, fetchTemplates]);
 
-  const handleDeleteCategory = useCallback(
-    async (id: string, reassignToId: string | null) => {
-      await deleteCategory(id, reassignToId);
-      await reloadAllData();
-    },
-    [deleteCategory, reloadAllData],
-  );
+  // Category-management concern (catalog + CRUD + manager modal). The form's
+  // selected `newCategoryId` stays in this hook (compose state); the category
+  // hook owns the catalog itself.
+  const {
+    categories,
+    categoriesLoadError,
+    showCategoryManager,
+    loadCategories,
+    handleCreateCategory,
+    handleUpdateCategory,
+    handleDeleteCategory,
+    openCategoryManager,
+    closeCategoryManager,
+  } = useMissionCategories({
+    fetchCategories,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    showToast,
+    onMissionsReassigned: reloadMissionsAndTemplates,
+  });
 
   // Generalised mission-by-id updater. Updates the mission matching
   // `id` by applying the `updater` to its full record. Missions with
