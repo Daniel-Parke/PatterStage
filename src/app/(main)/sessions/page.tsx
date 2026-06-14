@@ -59,6 +59,7 @@ import type { SessionRecord } from "@/lib/session-repository";
 import type { SessionSource } from "@/lib/session-repository";
 import { SOURCE_META } from "@/components/session/constants";
 import { formatSessionTitle } from "@/lib/session-title";
+import SessionInsights from "@/components/session/SessionInsights";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -348,6 +349,7 @@ export default function SessionsPage() {
             hint="The list below may be empty because the load failed — not because there are no sessions to show."
           />
         )}
+        <SessionInsights sessions={sessions} />
         {/* Search + Source Filter + View Options */}
         <div className="flex flex-col gap-3 mb-6">
           <div className="flex flex-col sm:flex-row gap-3">
