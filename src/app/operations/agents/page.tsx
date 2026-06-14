@@ -6,6 +6,7 @@ import {
   Check, AlertCircle, Plus, Trash2,
 } from "lucide-react";
 import ProfilesDriftBanner from "@/components/profiles/ProfilesDriftBanner";
+import AgentRosterStrip from "@/components/agents/AgentRosterStrip";
 import ProfileSyncBar from "@/components/profiles/ProfileSyncBar";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -376,6 +377,8 @@ export default function BehaviourPage() {
           <strong className="text-white/60">config.yaml</strong>. Pull imports from Hermes disk into
           SQLite; push writes Control Hub back to disk.
         </p>
+
+        <AgentRosterStrip />
 
         <ProfilesDriftBanner
           driftCount={driftCount}

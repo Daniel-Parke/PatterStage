@@ -19,6 +19,7 @@ import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
+import SkillsInsights from "@/components/skills/SkillsInsights";
 import { apiFetch, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { groupByCategory, titleCaseCategory } from "@/lib/skills-grouping";
@@ -382,6 +383,7 @@ export default function SkillsPage() {
           use <strong className="text-white/60">Operations → Agents → Pull</strong> for that profile
           before toggling skills here.
         </p>
+        {!loading && total > 0 && <SkillsInsights skills={data?.skills ?? []} activeCount={activeSkills.length} />}
         {loading ? (
           <LoadingSpinner text="Loading skills..." />
         ) : total === 0 ? (
