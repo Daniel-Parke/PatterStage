@@ -686,6 +686,65 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
 }
 
 /**
+ * Orphan-sweep cutoffs, in ISO-8601 strings (the format the `?`
+ * placeholders expect). `shortCutoff` is the 5-minute boot-safety
+ * gate (don't close anything started more recently than this — the
+ * agent might still be writing its first message). `longCutoff` is
+ * the 30-minute orphan gate (anything older than this is
+ * unambiguously dead, even if it never produced output).
+ *
+ * The two cutoffs are computed in lockstep from a single `now` so
+ * `previewOrphanSweep` and `closeOrphanedActiveSessions` always
+ * see the same point-in-time. The preview function reads them to
+ * build its dry-run SELECTs; the close function reads them to
+ * build its UPDATE predicates. Keeping the cutoffs in a single
+ * pure helper is what makes the dry-run count match the write
+ * count (the existing `preview === actual` parity test would
+ * catch any drift).
+ */
+export function computeOrphanCutoffs(now: number = Date.now()): {
+  shortCutoff: string;
+  longCutoff: string;
+} {
+  return {
+    shortCutoff: new Date(now - 5 * 60 * 1000).toISOString(),
+    longCutoff: new Date(now - 30 * 60 * 1000).toISOString(),
+  };
+}
+
+/**
+ * Tally a batch of `{ source, status }` rows into the `OrphanSweepResult`
+ * counter object. Pure mutation in place (the function name carries
+ * the `tally` verb; the `OrphanSweepResult` shape is mutated, not
+ * returned). Each row contributes `+1` to `total`, `+1` to
+ * `bySource[source]`, and `+1` to `byNewStatus[status]`.
+ *
+ * The status field is the "new status" the row would receive
+ * (or did receive) — `'completed'` for the (B) age-fallback path,
+ * `'completed'`/`'failed'` for the (A) mission-gated path
+ * depending on the parent mission's status. Source is the
+ * `sessions.source` column (`cli`/`api`/`mission`/`cron`/etc).
+ *
+ * Both `previewOrphanSweep` and `closeOrphanedActiveSessions` call
+ * this with their respective row arrays, so the tally shape stays
+ * byte-equivalent between the dry-run and write paths. The
+ * existing 2x inlined `for (const row of rows) { total++;
+ * bySource[row.source]++; byNewStatus[row.status]++; }` blocks
+ * (one per (A)/(B) path, × 2 functions) collapse to 4 single-line
+ * calls.
+ */
+export function tallyOrphanRows(
+  rows: ReadonlyArray<{ source: string; status: string }>,
+  counters: { total: number; bySource: Record<string, number>; byNewStatus: Record<string, number> },
+): void {
+  for (const row of rows) {
+    counters.total += 1;
+    counters.bySource[row.source] = (counters.bySource[row.source] ?? 0) + 1;
+    counters.byNewStatus[row.status] = (counters.byNewStatus[row.status] ?? 0) + 1;
+  }
+}
+
+/**
  * Preview what the orphan sweep would change, without writing.
  *
  * Counts active sessions that match the close criteria, broken down
@@ -699,10 +758,8 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
 export function previewOrphanSweep(
   database: Database.Database,
 ): OrphanSweepResult {
-  const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-  const bySource: Record<string, number> = {};
-  const byNewStatus: Record<string, number> = {};
-  let total = 0;
+  const { shortCutoff: cutoff, longCutoff } = computeOrphanCutoffs();
+  const counters: OrphanSweepResult = { total: 0, bySource: {}, byNewStatus: {} };
 
   // (A) parent-mission gated: status derived from mission.status
   // (LEFT JOIN so missing/soft-deleted parents are also matched;
@@ -726,19 +783,19 @@ export function previewOrphanSweep(
           AND (m.id IS NULL OR m.deleted_at IS NOT NULL OR m.status != 'dispatched')
       `)
       .all(cutoff) as Array<{ source: string; new_status: string }>;
-    for (const row of rows) {
-      total += 1;
-      bySource[row.source] = (bySource[row.source] ?? 0) + 1;
-      byNewStatus[row.new_status] = (byNewStatus[row.new_status] ?? 0) + 1;
-    }
+    tallyOrphanRows(
+      rows.map((r) => ({ source: r.source, status: r.new_status })),
+      counters,
+    );
   } catch {
     // non-fatal
   }
 
   // (B) age-only fallback for parentless sessions. Same dual-gate
   // logic as closeOrphanedActiveSessions (B): size>0 OR >30-min-old.
+  // Per the tally contract, the (B) path always assigns status='completed',
+  // so the source row is tagged as such before being tallied.
   try {
-    const longCutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     const rows = database
       .prepare(/* sql */ `
         SELECT source
@@ -749,16 +806,15 @@ export function previewOrphanSweep(
           AND (size > 0 OR started_at < ?)
       `)
       .all(cutoff, longCutoff) as Array<{ source: string }>;
-    for (const row of rows) {
-      total += 1;
-      bySource[row.source] = (bySource[row.source] ?? 0) + 1;
-      byNewStatus["completed"] = (byNewStatus["completed"] ?? 0) + 1;
-    }
+    tallyOrphanRows(
+      rows.map((r) => ({ source: r.source, status: "completed" })),
+      counters,
+    );
   } catch {
     // non-fatal
   }
 
-  return { total, bySource, byNewStatus };
+  return counters;
 }
 
 /**
@@ -784,10 +840,8 @@ export function closeOrphanedActiveSessions(
   database: Database.Database,
   options: { log?: boolean } = {},
 ): OrphanSweepResult {
-  const cutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-  const bySource: Record<string, number> = {};
-  const byNewStatus: Record<string, number> = {};
-  let total = 0;
+  const { shortCutoff: cutoff, longCutoff } = computeOrphanCutoffs();
+  const counters: OrphanSweepResult = { total: 0, bySource: {}, byNewStatus: {} };
 
   // (A) Parent-mission gated close. Applies to all sources whose
   // session row carries a mission_id (mission, cron, and any
@@ -848,12 +902,7 @@ export function closeOrphanedActiveSessions(
         RETURNING sessions.source, sessions.status
       `)
       .all(cutoff) as Array<{ source: string; status: string }>;
-
-    for (const row of changedRows) {
-      total += 1;
-      bySource[row.source] = (bySource[row.source] ?? 0) + 1;
-      byNewStatus[row.status] = (byNewStatus[row.status] ?? 0) + 1;
-    }
+    tallyOrphanRows(changedRows, counters);
   } catch {
     // non-fatal — the table layout or FK may not permit the join
   }
@@ -881,7 +930,6 @@ export function closeOrphanedActiveSessions(
   // the noise; only log on first occurrence and on a real shift
   // of >=100. Audit reference: dogfood-output/report.md Issue #3.
   try {
-    const longCutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
     const changedRows = database
       .prepare(/* sql */ `
         UPDATE sessions
@@ -894,27 +942,28 @@ export function closeOrphanedActiveSessions(
         RETURNING source
       `)
       .all(cutoff, longCutoff) as Array<{ source: string }>;
-
-    for (const row of changedRows) {
-      total += 1;
-      bySource[row.source] = (bySource[row.source] ?? 0) + 1;
-      byNewStatus["completed"] = (byNewStatus["completed"] ?? 0) + 1;
-    }
+    // The (B) UPDATE always assigns status='completed' (the SQL has
+    // no CASE branch). Tag each source row as such before tallying
+    // — `tallyOrphanRows` reads `row.status` directly.
+    tallyOrphanRows(
+      changedRows.map((r) => ({ source: r.source, status: "completed" })),
+      counters,
+    );
   } catch {
     // non-fatal
   }
 
   if (options.log !== false) {
-    if (total > 0 && (lastOrphanCloseCount === null || Math.abs(total - lastOrphanCloseCount) >= 100)) {
-      console.log(`[syncHermesSessionsToDb] closed ${total} orphaned active sessions`);
-      lastOrphanCloseCount = total;
-    } else if (total === 0 && lastOrphanCloseCount !== null && lastOrphanCloseCount > 0) {
+    if (counters.total > 0 && (lastOrphanCloseCount === null || Math.abs(counters.total - lastOrphanCloseCount) >= 100)) {
+      console.log(`[syncHermesSessionsToDb] closed ${counters.total} orphaned active sessions`);
+      lastOrphanCloseCount = counters.total;
+    } else if (counters.total === 0 && lastOrphanCloseCount !== null && lastOrphanCloseCount > 0) {
       console.log(`[syncHermesSessionsToDb] orphan session queue drained (was ${lastOrphanCloseCount})`);
       lastOrphanCloseCount = null;
-    } else if (total > 0) {
-      lastOrphanCloseCount = total;
+    } else if (counters.total > 0) {
+      lastOrphanCloseCount = counters.total;
     }
   }
 
-  return { total, bySource, byNewStatus };
+  return counters;
 }
