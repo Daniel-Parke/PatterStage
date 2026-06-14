@@ -2,29 +2,26 @@
 
 **Full archive:** `pr-body.txt` at HEAD on the `mission/hermes-review-and-refactor` branch. This on-PR body is the headline summary (most recent 4 sessions in full + one-line summary of older sessions).
 
-## Followup (June 14, 2026) — Sessions 211 + 212
+## Followup (June 14, 2026) — Session 213
 
-Since PR #183 was opened, two additional sessions have landed on this branch:
+Since the previous "Sessions 211 + 212" followup, one additional session has landed on this branch:
 
-**Session 212 — List 2 (Cron, Missions, Chat)** — `MessageBubble` + `MessageAvatar` extraction (NEW: `src/components/chat/MessageBubble.tsx` + `src/components/chat/MessageAvatar.tsx`). The chat page had grown to 658 lines with the largest inlined JSX block (the 50-line `messages.map` body) and 3 byte-identical 4-line `w-8 h-8 rounded-lg bg-neon-X/20 ...` icon chips (2 in chat/page.tsx, 1 in TypingIndicator.tsx). Both components extracted. The 50-line inline message JSX is gone (replaced with 1-line `<MessageBubble msg={msg} />` call); the 3 inline 4-line avatar chips are gone (replaced with `<MessageAvatar role={...} />` calls). TypingIndicator now delegates the avatar to `MessageAvatar` too. The `AVATAR_ROLE` type is exported so a future "system" or "tool" role forces a compile error in the AVATARS map (exhaustive type discipline).
+**Session 213 — List 1 (Dashboard, Sessions, Memory, Logs)** — Hindsight `HINDSIGHT_INPUT_CLASS` constants + `RowActionButtons` shared components (NEW: `src/components/memory/hindsight/RowActionButtons.tsx`). Two byte-equivalent consolidations in the Hindsight memory surface:
 
-**Source-pattern test** — `tests/unit/chat-page-message-bubble-avatar-extraction.test.ts` (new, 17 assertions) pins: both new files exist with expected exports, chat page imports `MessageBubble`, chat page no longer imports `Bot`/`User`/`renderMarkdown` (moved/encapsulated), 50-line inline bubble JSX is gone, both inline avatar chips are removed, `TypingIndicator` delegates to `MessageAvatar`, anti-migration guards (renderMarkdown still exported, `Bot`/`User` still imported in `MessageAvatar`, 3-dot bounce still inline).
+1. **`HINDSIGHT_TEXT_INPUT_CLASS` + `HINDSIGHT_TEXTAREA_CLASS` constants** (new in `src/components/memory/hindsight/utils.ts`) — eliminated 6 byte-identical text-input Tailwind className strings + 3 byte-identical textarea className tails in `Modals.tsx`. The textareas each compose their own `w-full h-N` height prefix at the call site. Two constants (not one) because the input uses `px-3 py-2` and the textarea uses `p-3 resize-none` — collapsing them would require a variant discriminator and break byte-equivalence.
+2. **`RowEditButton` + `RowDeleteButton` shared components** — eliminated 4 byte-identical `<button>` blocks (2 Edit + 2 Delete) across `DirectivesTab.tsx` and `MentalModelsTab.tsx`. The destructive-intent styling (`hover:bg-red-500/10` + `hover:text-red-400` for Delete) is centralised in the shared component. The middle Toggle/Refresh button in each tab stays inline (different icon, different onClick signature, conditional `disabled` + `animate-pulse` for the Refresh state — anti-migration guard). `Pencil` and `Trash2` icons move from both tabs' `lucide-react` import to the new `RowActionButtons.tsx` file.
 
-**Session 211 — List 1 (Dashboard, Sessions, Memory, Logs)** — `Panel` + `PanelHeader` extraction (NEW: `src/components/dashboard/Panel.tsx`) that consolidates the "rounded card with icon-and-label header" shell that 5 of the 6 dashboard panels duplicated verbatim. 5 inline shell copies collapsed into 1-line `<Panel accent="X">` + `<PanelHeader ... />` calls.
+**Source-pattern tests** (2 new files, 33 assertions):
+- `tests/unit/hindsight-input-class-extraction.test.ts` (14 assertions) — pins both `HINDSIGHT_TEXT_INPUT_CLASS` + `HINDSIGHT_TEXTAREA_CLASS` constant exports with byte-identical strings, `Modals.tsx` imports both, all 9 inline className strings are gone, surrounding JSX (`<label>`, `<Modal>`, `<Button>`) stays unchanged.
+- `tests/unit/hindsight-row-action-buttons-extraction.test.ts` (19 assertions) — pins the shared component file with both exports, both tabs import both, all 4 inline buttons removed, both tabs no longer import `Pencil`/`Trash2`, middle buttons stay inline.
 
-**Source-pattern test** — `tests/unit/dashboard-panel-header-extraction.test.ts` (new, 14 assertions) pins: file exists, both exports present, dashboard imports both, all 5 inline shells removed, all 5 inline headers removed, 5 migrated sites use Panel+PanelHeader, Mission Dispatch accordion + process-card grid stay inline (different shapes, anti-migration guards).
+**No external behaviour change** — both refactors are byte-equivalent structural extractions. The 3 Hindsight modals still render the same 9 inputs/textareas (now via the constants); the 2 tabs still render the same Edit+Toggle+Delete / Edit+Refresh+Delete action groups (now via the shared components). The icon imports move from the tabs to the shared component; the Tailwind class strings move from `Modals.tsx` inline to the constant in `utils.ts`.
 
-**No external behaviour change** for either session — both refactors are byte-equivalent structural extractions. The chat page still renders the same 50-line JSX output (now via `<MessageBubble>`); the dashboard still renders the same 5 panels (now via `<Panel>`/`<PanelHeader>`). The icons move from `lucide-react` imports in the page/indicator to `MessageAvatar` (centralised); the markdown render moves from the page to `MessageBubble` (encapsulated).
+**Tests:** 333 suites / 2583 tests pass (was 331/2550 after the prior followup = +2 suites, +33 tests). `npx tsc --noEmit` clean, `npx eslint ... --max-warnings 0` clean across all 7 touched files, `npm run build` clean.
 
-**Tests:** 331 suites / 2550 tests pass (was 325/2474 when PR #183 was opened = +6 suites, +76 tests). `npx tsc --noEmit` clean, `npx eslint . --max-warnings 0` clean across all touched files, `npm run build` clean.
+**Reference doc:** `docs/references/session-213-list1-hindsight-input-class-and-row-action-buttons.md`.
 
-**Files (session 212):** 4 production files (2 new + 2 modified), 1 new test file, 1 reference doc. Net: chat page -48 lines, +236 lines across new components (with extensive JSDoc), +234 lines test.
-
-**Files (session 211):** 1 new production file (`Panel.tsx`), 1 new test file, modified `src/app/page.tsx` (5 sites migrated). Net: zero net change in `src/app/page.tsx` LOC (extraction is structural, not reductive).
-
-**Reference docs:** `docs/references/session-211-list1-panel-header-extraction.md` + `docs/references/session-212-list2-message-bubble-avatar-extraction.md`.
-
-The full session 211 + 212 detail (pre-session shape, post-session shape, anti-migration guards, byte-equivalence rationale, verification) is in the `pr-body.txt` archive at HEAD.
+The full session 213 detail (pre-session shape, post-session shape, anti-migration guards, byte-equivalence rationale, verification, file inventory) is in the `pr-body.txt` archive at HEAD.
 
 ---
 
@@ -49,6 +46,51 @@ The full session 209 detail (pre-session shape, post-session shape, anti-migrati
 ---
 
 ## Recent sessions (full detail)
+
+## Session 213 — List 1 (Dashboard, Sessions, Memory, Logs) — Hindsight `HINDSIGHT_INPUT_CLASS` constants + `RowActionButtons` shared components
+
+**Date:** 2026-06-14
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 1 (List 1: Dashboard, Sessions, Memory, Logs). Last List 1 pick was session 211 (the `Panel` + `PanelHeader` extraction on the dashboard). Session 213 picks a fresh surface in the Hindsight memory area that session 211 did not touch.
+**Outcome:** **2 byte-equivalent structural extractions in the Hindsight memory surface** — `HINDSIGHT_TEXT_INPUT_CLASS` + `HINDSIGHT_TEXTAREA_CLASS` constants (9-site migration in `Modals.tsx`) + `RowEditButton` + `RowDeleteButton` shared components (4-site migration across `DirectivesTab.tsx` + `MentalModelsTab.tsx`). 2 new source-pattern tests (33 assertions). No external behaviour change.
+
+### What shipped
+
+1. **`HINDSIGHT_TEXT_INPUT_CLASS` + `HINDSIGHT_TEXTAREA_CLASS` constants** (new in `src/components/memory/hindsight/utils.ts`, +44 lines) — 6 byte-identical text-input Tailwind className strings + 3 byte-identical textarea className tails in `Modals.tsx` consolidated. The textareas each compose their own `w-full h-N` height prefix at the call site. Two constants (not one) because the input uses `px-3 py-2` and the textarea uses `p-3 resize-none`.
+
+2. **`RowEditButton` + `RowDeleteButton` shared components** (NEW: `src/components/memory/hindsight/RowActionButtons.tsx`, 105 lines) — 4 byte-identical `<button>` blocks (2 Edit + 2 Delete) across `DirectivesTab.tsx` + `MentalModelsTab.tsx` consolidated. The destructive-intent styling (`hover:bg-red-500/10` + `hover:text-red-400` for Delete) is centralised. The middle Toggle/Refresh button in each tab stays inline (different shape, anti-migration guard). `Pencil` and `Trash2` icons move from both tabs' `lucide-react` import to the new `RowActionButtons.tsx` file.
+
+3. **Source-pattern tests** (2 new files, 33 assertions):
+   - `tests/unit/hindsight-input-class-extraction.test.ts` (14 assertions) — pins both constant exports with byte-identical strings, `Modals.tsx` imports both, all 9 inline className strings are gone, surrounding JSX stays unchanged.
+   - `tests/unit/hindsight-row-action-buttons-extraction.test.ts` (19 assertions) — pins the shared component file with both exports, both tabs import both, all 4 inline buttons removed, both tabs no longer import `Pencil`/`Trash2`, middle buttons stay inline.
+
+### Verification
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint src/components/memory/hindsight/RowActionButtons.tsx src/components/memory/hindsight/DirectivesTab.tsx src/components/memory/hindsight/MentalModelsTab.tsx src/components/memory/hindsight/Modals.tsx src/components/memory/hindsight/utils.ts tests/unit/hindsight-input-class-extraction.test.ts tests/unit/hindsight-row-action-buttons-extraction.test.ts --max-warnings 0`: clean (0 warnings)
+- `npm run build`: clean
+- `CI=true npx jest`: **333 suites / 2583 tests pass** (was 331/2550 after session 212; +2 new suites, +33 new tests from the source-pattern tests)
+
+### Files
+
+| Type | Change |
+|------|--------|
+| New | `src/components/memory/hindsight/RowActionButtons.tsx` (105 lines, with JSDoc) |
+| New | `tests/unit/hindsight-input-class-extraction.test.ts` (~200 lines) |
+| New | `tests/unit/hindsight-row-action-buttons-extraction.test.ts` (~225 lines) |
+| New | `docs/references/session-213-list1-hindsight-input-class-and-row-action-buttons.md` |
+| Modified | `src/components/memory/hindsight/utils.ts` (+44 lines for the 2 new constants + JSDoc) |
+| Modified | `src/components/memory/hindsight/Modals.tsx` (6 input + 3 textarea className strings replaced) |
+| Modified | `src/components/memory/hindsight/DirectivesTab.tsx` (2 inline `<button>` blocks replaced; `Pencil` + `Trash2` removed) |
+| Modified | `src/components/memory/hindsight/MentalModelsTab.tsx` (same migration) |
+
+## Session 212 — List 2 (Cron, Missions, Chat) — `MessageBubble` + `MessageAvatar` extraction
+
+See pr-body.txt for full session 212 detail. Headline: extracted 2 new components from the chat surface — `MessageBubble` (chat page's 50-line `messages.map` body collapsed to 1-line `<MessageBubble msg={msg} />`) and `MessageAvatar` (3 byte-identical 4-line `w-8 h-8 rounded-lg bg-neon-X/20 ...` icon chips consolidated via role-driven `AVATARS` map). `AVATAR_ROLE` type exported for exhaustive type discipline. 17-assertion source-pattern test. 2550/2550 tests pass.
+
+## Session 211 — List 1 (Dashboard, Sessions, Memory, Logs) — `Panel` + `PanelHeader` extraction
+
+See pr-body.txt for full session 211 detail. Headline: extracted `<Panel>` + `<PanelHeader>` from `src/components/dashboard/Panel.tsx` — consolidates the "rounded card with icon-and-label header" shell that 5 of the 6 dashboard panels duplicated verbatim. 14-assertion source-pattern test. 2533/2533 tests pass.
 
 ## Session 208 — List 2 (Cron, Missions, Chat) — 3 per-row `window.confirm` sites in `useMissionsPage.ts` lifted into the leaf components (per-row `useTwoStepConfirm` migration)
 
