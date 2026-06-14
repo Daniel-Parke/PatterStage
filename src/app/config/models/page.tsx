@@ -53,16 +53,7 @@ export default function ModelsPage() {
     editingFallbackUrl,
     setEditingFallbackUrl,
     savingFallbackUrl,
-    // `closeEditingFallbackEntry` is the stable close-callback for the
-    // fallback-edit modal (session 210 P-210-8). It calls the
-    // `setEditingFallbackEntry` shim (also exposed by the hook) with
-    // `null` — the canonical "dismiss the modal" form. Sister to
-    // `openAddModel` + `closeModelEditor` (sister 1-setter close
-    // callbacks) but uses the hook's stable `useCallback` instead of
-    // a page-level `useCallback` wrapper, because the underlying
-    // setter is a function literal (recreated every render of the
-    // hook) rather than a useState dispatch.
-    closeEditingFallbackEntry,
+    setEditingFallbackEntry,
     toastElement,
     handleRefresh,
     handlePush,
@@ -106,6 +97,16 @@ export default function ModelsPage() {
   // "fire an analytics event" extension lands in one place.
   // eslint-disable-next-line react-hooks/exhaustive-deps -- useState setters are stable
   const closeModelEditor = useCallback(() => setEditing(undefined), []);
+  // closeFallbackModal — closes the FallbackUrlEditModal. Sister to
+  // `openAddModel` + `closeModelEditor` (same useState-setter stability
+  // rationale). The `onCloseFallbackModal={...}` binding at line 184 is
+  // the only call site today (1-setter close-callback). The setter
+  // `setEditingFallbackEntry` is exposed from `useModelsPage` as a
+  // close-modal shim (it forwards to `setFallbackEdit({ entry: null,
+  // url: "", saving: false })`), so the call site here is the canonical
+  // "dismiss the modal" form, not a partial-update.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- useState setters are stable
+  const closeFallbackModal = useCallback(() => setEditingFallbackEntry(null), []);
 
   return (
     <AppPageShell>
@@ -199,7 +200,7 @@ export default function ModelsPage() {
               onSyncToHermes={handleSyncFallbackToHermes}
               onImportFromConfig={handleImportFallbackFromConfig}
               onFallbackUrlChange={setEditingFallbackUrl}
-              onCloseFallbackModal={closeEditingFallbackEntry}
+              onCloseFallbackModal={closeFallbackModal}
               onSaveFallbackUrl={handleFallbackEditSave}
             />
 

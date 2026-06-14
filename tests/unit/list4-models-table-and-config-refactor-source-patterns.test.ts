@@ -6,15 +6,14 @@
  *      precomputed `Map<modelId, TaskType[]>` (the useMemo + Map.get
  *      refactor dropped per-render work from O(12N) to O(12 + N)).
  *
- *   2. `useModelsPage.ts` + `models/page.tsx` — wrapper-shim
- *      close-callback pitfall (P-210-8) fix. The pre-refactor page
- *      had a `useCallback(() => setEditingFallbackEntry(null), [])`
- *      wrapper with a misleading "useState setters are stable"
- *      eslint-disable — but `setEditingFallbackEntry` was a function
- *      literal in the hook's return object (recreated every render),
- *      NOT a useState dispatch. The post-refactor hook exposes a
- *      stable `useCallback` `closeEditingFallbackEntry` that the
- *      page uses directly with no wrapper and no eslint-disable.
+ *   2. `useModelsPage.ts` + `models/page.tsx` — stable
+ *      close-callback for the fallback-edit modal. The hook
+ *      exposes `setEditingFallbackEntry` as a function-literal
+ *      close-modal shim (`setFallbackEdit({ entry, url, saving })`
+ *      with `entry: null` to dismiss). The page wraps it in a
+ *      local `useCallback` `closeFallbackModal` (sister to
+ *      `openAddModel` + `closeModelEditor`) and passes that to
+ *      `<ModelsFallbackSection onCloseFallbackModal={...}>`.
  *
  *   3. `config/[section]/page.tsx` — `fileKeyForFilePath` called
  *      twice in separate callbacks (loadConfig + handleSave) →
@@ -84,79 +83,61 @@ describe("List 4 source-pattern refactors (session 210 F.6 carryover closure)", 
     });
   });
 
-  describe("Refactor 2: wrapper-shim close-callback hoist (P-210-8)", () => {
+  describe("Refactor 2: stable close-callback for fallback-edit modal", () => {
     const hookFile = "src/hooks/useModelsPage.ts";
     const pageFile = "src/app/config/models/page.tsx";
 
-    it("useModelsPage defines setEditingFallbackEntry as a useCallback (positive)", () => {
+    it("useModelsPage exposes setEditingFallbackEntry as a close-modal shim (positive)", () => {
       const src = readSource(hookFile);
-      // The pre-refactor form was a function literal in the return
-      // object. The post-refactor form is a useCallback at the top
-      // of the hook body, with the wrapper's body in closure scope.
+      // The shim forwards to `setFallbackEdit({ entry, url, saving })`
+      // with `entry` (which can be null to dismiss). Sister to the
+      // `setEditingFallbackUrl` partial-update shim — both wrap
+      // `setFallbackEdit` to keep the ModelsFallbackSection props
+      // contract byte-equivalent to the pre-consolidation form.
       expect(src).toMatch(
-        /const\s+setEditingFallbackEntry\s*=\s*useCallback\(\s*\(\s*entry\s*:\s*FallbackChainEntry\s*\|\s*null\s*\)\s*=>/,
+        /setEditingFallbackEntry:\s*\(entry:\s*FallbackChainEntry\s*\|\s*null\)\s*=>\s*setFallbackEdit\(\{\s*entry,\s*url:\s*entry\?\.overrideBaseUrl\s*\|\|\s*[\"']{2},\s*saving:\s*false\s*\}\)/,
       );
     });
 
-    it("useModelsPage defines closeEditingFallbackEntryCallback as a useCallback (positive)", () => {
+    it("models page destructures setEditingFallbackEntry from useModelsPage (positive)", () => {
+      const src = readSource(pageFile);
+      // The page picks up the shim from the hook. The destructure line
+      // is the contract — a regression that removes it would force
+      // the page to fall back to the pre-consolidation form.
+      expect(src).toMatch(/setEditingFallbackEntry\s*,/);
+    });
+
+    it("models page declares closeFallbackModal as a useCallback that calls setEditingFallbackEntry(null) (positive)", () => {
+      const src = readSource(pageFile);
+      // The page wraps the shim in a stable useCallback. Sister to
+      // `openAddModel` + `closeModelEditor` (same useState-setter
+      // stability rationale). The `<ModelsFallbackSection
+      // onCloseFallbackModal={...}>` binding at line 184 is the
+      // only call site today.
+      expect(src).toMatch(
+        /const\s+closeFallbackModal\s*=\s*useCallback\(\s*\(\s*\)\s*=>\s*setEditingFallbackEntry\(\s*null\s*\)\s*,\s*\[\s*\]\s*\)/,
+      );
+    });
+
+    it("models page does NOT have a closeEditingFallbackEntryCallback export from the hook (negative)", () => {
+      const src = readSource(pageFile);
+      // The pre-merge (session 210 F.6 carryover closure) form had
+      // the hook expose `closeEditingFallbackEntry` and the page
+      // destructure it directly. The post-merge form has the page
+      // own the close-callback (`closeFallbackModal`) and the hook
+      // expose just the shim (`setEditingFallbackEntry`). Assert
+      // the page-side destructure of the hook's stable
+      // close-callback is gone.
+      expect(src).not.toMatch(/closeEditingFallbackEntry\s*,/);
+    });
+
+    it("useModelsPage does NOT define a closeEditingFallbackEntryCallback wrapper (negative)", () => {
       const src = readSource(hookFile);
-      // The new stable close-callback that the page uses directly.
-      // It calls setEditingFallbackEntry(null) — the canonical
-      // "dismiss" form. The deps list setEditingFallbackEntry so
-      // the reference is fresh.
-      expect(src).toMatch(
-        /const\s+closeEditingFallbackEntryCallback\s*=\s*useCallback\(\s*\(\s*\)\s*=>\s*setEditingFallbackEntry\(\s*null\s*\),\s*\[setEditingFallbackEntry\]/,
-      );
-    });
-
-    it("useModelsPage returns closeEditingFallbackEntry in the surface (positive)", () => {
-      const src = readSource(hookFile);
-      // The hook exposes the new close-callback in its return object.
-      // The exact key in the return is `closeEditingFallbackEntry`
-      // (the page's destructure picks it up as that name).
-      expect(src).toMatch(
-        /closeEditingFallbackEntry:\s*closeEditingFallbackEntryCallback/,
-      );
-    });
-
-    it("models page destructures closeEditingFallbackEntry from useModelsPage (positive)", () => {
-      const src = readSource(pageFile);
-      // The page picks up the new stable close-callback directly
-      // from the hook. The destructure line is the contract — a
-      // regression that removes it would force the page to fall
-      // back to the pre-refactor `useCallback` wrapper.
-      expect(src).toMatch(/closeEditingFallbackEntry\s*,/);
-    });
-
-    it("models page does NOT define a page-level closeFallbackModal useCallback (negative)", () => {
-      const src = readSource(pageFile);
-      // The pre-refactor form was:
-      //   const closeFallbackModal = useCallback(() => setEditingFallbackEntry(null), []);
-      // The post-refactor form deletes this wrapper entirely
-      // (uses the hook's stable closeEditingFallbackEntry instead).
-      // Assert the local wrapper is gone — the page should not
-      // re-introduce the wrapper-shim pitfall.
-      expect(src).not.toMatch(/const\s+closeFallbackModal\s*=\s*useCallback/);
-    });
-
-    it("models page does NOT have the misleading 'useState setters are stable' annotation tied to the fallback shim (negative)", () => {
-      const src = readSource(pageFile);
-      // The pre-refactor page had 3 close-callbacks all with the
-      // same eslint-disable annotation: `openAddModel`,
-      // `closeModelEditor`, `closeFallbackModal`. The
-      // `closeFallbackModal` one was the misleading one (the
-      // function being called was a wrapper, not a useState
-      // dispatch). Post-refactor, only 2 of the 3 annotations
-      // remain (`openAddModel` + `closeModelEditor` — both wrap
-      // vanilla useState dispatches). The 3rd annotation is
-      // GONE because the close-callback moved into the hook.
-      // Count the remaining annotations to confirm the count
-      // dropped from 3 to 2.
-      const matches = src.match(
-        /eslint-disable-next-line react-hooks\/exhaustive-deps -- useState setters are stable/g,
-      );
-      expect(matches).not.toBeNull();
-      expect(matches?.length).toBe(2);
+      // The pre-merge form had the hook own both the shim AND a
+      // stable useCallback wrapper around it. The post-merge form
+      // has the hook own only the shim — the page wraps it
+      // locally. Assert the hook-level wrapper is gone.
+      expect(src).not.toMatch(/const\s+closeEditingFallbackEntryCallback\s*=\s*useCallback/);
     });
   });
 
