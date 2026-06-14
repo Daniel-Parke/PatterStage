@@ -38,6 +38,23 @@ export default function ConfigSectionPage() {
   const [originalFileContent, setOriginalFileContent] = useState("");
   const saveStatusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // `fileKey` is the URL segment used by `/api/agent/files/[key]`
+  // (it discriminates between `.env` and `hermes.md` file sections).
+  // Pre-refactor: `fileKeyForFilePath(sectionDef.filePath)` was called
+  // twice in separate callbacks (loadConfig + handleSave) — once per
+  // save cycle on the file-section page. Post-refactor: a single
+  // `useMemo` derives `fileKey` from `sectionDef.filePath` once per
+  // page mount (or whenever the `filePath` changes, which only
+  // happens on route change). The 2 callback bodies reuse the
+  // memoized value, so the pure function runs once instead of twice
+  // per save cycle. `useCallback` dep arrays in the 2 callbacks
+  // (loadConfig + handleSave) pick up the `fileKey` reference change
+  // (or don't, if `fileKey` is stable) consistently.
+  const fileKey = useMemo(
+    () => (sectionDef?.filePath ? fileKeyForFilePath(sectionDef.filePath) : null),
+    [sectionDef?.filePath],
+  );
+
   // Cleanup save status timer on unmount
   useEffect(() => {
     return () => {
@@ -63,8 +80,7 @@ export default function ConfigSectionPage() {
     setLoading(true);
     setError(null);
     try {
-      if (isFileSection && sectionDef?.filePath) {
-        const fileKey = fileKeyForFilePath(sectionDef.filePath);
+      if (isFileSection && fileKey) {
         const json = await apiFetch(`/api/agent/files/${fileKey}`, { signal });
         const content = json.data?.content || "";
         setFileContent(content);
@@ -89,7 +105,7 @@ export default function ConfigSectionPage() {
     } finally {
       setLoading(false);
     }
-  }, [sectionId, isFileSection, sectionDef, isPlatformToolsetsPreview]);
+  }, [fileKey, isFileSection, isPlatformToolsetsPreview, sectionId]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -102,8 +118,7 @@ export default function ConfigSectionPage() {
 
     setSaveStatus("saving");
     try {
-      if (isFileSection && sectionDef?.filePath) {
-        const fileKey = fileKeyForFilePath(sectionDef.filePath);
+      if (isFileSection && fileKey) {
         await apiFetch(`/api/agent/files/${fileKey}`, {
           method: "PUT",
           body: JSON.stringify({ content: fileContent, backup: true }),
@@ -141,7 +156,7 @@ export default function ConfigSectionPage() {
       setSaveStatus("error");
       setErrorFromCaught(setError, err, "Save failed");
     }
-  }, [sectionDef, isFileSection, fileContent, sectionId, values]);
+  }, [sectionDef, isFileSection, fileKey, fileContent, sectionId, values]);
 
   const handleReset = useCallback(() => {
     if (isFileSection) {

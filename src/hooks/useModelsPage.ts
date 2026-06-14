@@ -528,6 +528,43 @@ export function useModelsPage() {
     return persistFallbackConfigNow(pending);
   }, [fallbackConfig, fallbackConfigDirty, fallbackConfigSaving, persistFallbackConfigNow]);
 
+  // `setEditingFallbackEntry` is a close-modal shim — the consumer
+  // calls it with `null` to dismiss the modal. Equivalent to
+  // `setFallbackEdit({ entry: null, url: "", saving: false })`. Lifted
+  // out of the return-object literal into a `useCallback` so the
+  // close-callback (`closeEditingFallbackEntryCallback` below) can
+  // list it in its deps without capturing a stale reference (the
+  // pre-refactor form was a function literal in the return object,
+  // recreated on every render of the hook — see session 210 P-210-8
+  // wrapper-shim pitfall). The body is identical to the pre-refactor
+  // inline form (byte-equivalent: same `setFallbackEdit` payload
+  // for any given input).
+  const setEditingFallbackEntry = useCallback(
+    (entry: FallbackChainEntry | null) => {
+      setFallbackEdit({ entry, url: entry?.overrideBaseUrl || "", saving: false });
+    },
+    [],
+  );
+
+  // `closeEditingFallbackEntry` is the stable close-callback for the
+  // fallback-edit modal. Sister to `setEditingFallbackEntry` (same
+  // underlying `setFallbackEdit` setter). The page's pre-refactor
+  // form was a `useCallback(() => setEditingFallbackEntry(null), [])`
+  // with an eslint-disable annotation claiming "useState setters are
+  // stable" — but `setEditingFallbackEntry` is a function literal
+  // (recreated on every render), NOT a useState dispatch, so the
+  // annotation is technically wrong (session 210 P-210-8). Exposing
+  // a stable `useCallback` here (with `setEditingFallbackEntry` in
+  // its deps) lets the page use the close-callback directly with no
+  // `useCallback` wrapper and no eslint-disable annotation. The
+  // body's `null` input is the canonical "dismiss the modal" form;
+  // the shim builds the same `{ entry: null, url: "", saving: false }`
+  // payload for that input as the underlying `setFallbackEdit` would.
+  const closeEditingFallbackEntryCallback = useCallback(
+    () => setEditingFallbackEntry(null),
+    [setEditingFallbackEntry],
+  );
+
   const handleSyncFallbackToHermes = useCallback(async () => {
     setSyncingFallback(true);
     try {
@@ -627,10 +664,20 @@ export function useModelsPage() {
     handleFallbackAddCustom,
     handleSyncFallbackToHermes,
     handleImportFallbackFromConfig,
-    // `setEditingFallbackEntry` is a close-modal shim — the consumer
-    // calls it with `null` to dismiss the modal. Equivalent to
-    // `setFallbackEdit({ entry: null, url: "", saving: false })`.
-    setEditingFallbackEntry: (entry: FallbackChainEntry | null) =>
-      setFallbackEdit({ entry, url: entry?.overrideBaseUrl || "", saving: false }),
+    setEditingFallbackEntry,
+    // `closeEditingFallbackEntry` is the stable close-callback for the
+    // fallback-edit modal (session 210 P-210-8 wrapper-shim pitfall fix).
+    // `setEditingFallbackEntry` is the function-literal shim that
+    // (recreated every render of the hook) builds the
+    // `{ entry, url, saving }` payload — NOT a useState dispatch, so
+    // the pre-refactor page-level `useCallback(() => setEditingFallbackEntry
+    // (null), [])` was capturing a stale wrapper reference with a
+    // misleading "useState setters are stable" eslint-disable.
+    // `closeEditingFallbackEntryCallback` is a stable `useCallback`
+    // (defined above the return, with `setEditingFallbackEntry` in its
+    // deps) that calls the shim with the canonical "dismiss" input
+    // (`null`). The page can use it directly with no `useCallback`
+    // wrapper and no eslint-disable.
+    closeEditingFallbackEntry: closeEditingFallbackEntryCallback,
   };
 }

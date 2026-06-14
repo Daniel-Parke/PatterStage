@@ -138,38 +138,47 @@ describe("openAddModel callback (session 103)", () => {
     expect(helperIdMatches.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("declares closeFallbackModal as a useCallback that calls setEditingFallbackEntry(null)", () => {
-    // The close-fallback-modal site (previously inline at line
-    // 184) has been migrated to `closeFallbackModal` in session
-    // 196. The helper body must be `setEditingFallbackEntry(null)`
-    // — the canonical "dismiss the modal" form. The setter is
-    // exposed from `useModelsPage` as a close-modal shim (it
-    // forwards to `setFallbackEdit({ entry: null, url: "",
-    // saving: false })`), so the call site is the canonical
-    // close form, not a partial-update.
-    expect(source).toMatch(
-      /const\s+closeFallbackModal\s*=\s*useCallback\(\s*\(\s*\)\s*=>\s*setEditingFallbackEntry\(\s*null\s*\)\s*,\s*\[\s*\]\s*\)/,
+  it("declares closeEditingFallbackEntry via the hook (not a page-level useCallback)", () => {
+    // The pre-session-210 form had a page-local `closeFallbackModal`
+    // useCallback (`const closeFallbackModal = useCallback(() =>
+    // setEditingFallbackEntry(null), [])`) with a misleading "useState
+    // setters are stable" eslint-disable — but `setEditingFallbackEntry`
+    // is a function literal in the hook's return object (recreated every
+    // render of the hook), NOT a useState dispatch, so the wrapper-shim
+    // close-callback was a code smell (P-210-8). The post-session-210
+    // form moves the close-callback INTO the hook (as a stable
+    // `useCallback` with `setEditingFallbackEntry` in its deps) and the
+    // page destructures it directly with no wrapper. Assert the
+    // page-level `closeFallbackModal` useCallback is GONE — the test
+    // for the post-refactor shape is in
+    // `list4-models-table-and-config-refactor-source-patterns.test.ts`.
+    expect(source).not.toMatch(
+      /const\s+closeFallbackModal\s*=\s*useCallback\(/,
     );
   });
 
-  it("replaces the inline () => setEditingFallbackEntry(null) close site in JSX", () => {
-    // The close-fallback-modal `() => setEditingFallbackEntry(null)`
-    // form lived inline at line 184 before session 196. After
-    // the refactor, the inline form lives ONLY in the helper
-    // declaration (1 occurrence, the closeFallbackModal body).
+  it("consumes closeEditingFallbackEntry from the hook (no inline arrow at JSX site)", () => {
+    // Sister to the openAddModel/closeModelEditor pair — the page
+    // destructures the stable close-callback from useModelsPage and
+    // passes it to the FallbackUrlEditModal's onClose prop directly.
+    // No inline `() => setEditingFallbackEntry(null)` arrow survives in
+    // the page (the only such arrow in the codebase is the one inside
+    // the hook's `closeEditingFallbackEntryCallback` definition).
     const codeOnly = source
       .replace(/\/\*[\s\S]*?\*\//g, "")
       .split("\n")
       .map((l) => l.replace(/\/\/.*$/, ""))
       .join("\n");
 
-    // 1 (the helper body). 0 in JSX.
+    // 0 — the page has no inline `() => setEditingFallbackEntry(null)`
+    // arrow. The 1 occurrence in the codebase is the hook's
+    // `closeEditingFallbackEntryCallback` body.
     const inlineFormMatches =
       codeOnly.match(/\(\s*\)\s*=>\s*setEditingFallbackEntry\(\s*null\s*\)/g) ?? [];
-    expect(inlineFormMatches.length).toBe(1);
+    expect(inlineFormMatches.length).toBe(0);
 
-    // 1 declaration + 1 call site = 2.
-    const helperIdMatches = codeOnly.match(/\bcloseFallbackModal\b/g) ?? [];
+    // 1 declaration + 1 JSX call site = 2.
+    const helperIdMatches = codeOnly.match(/\bcloseEditingFallbackEntry\b/g) ?? [];
     expect(helperIdMatches.length).toBeGreaterThanOrEqual(2);
   });
 

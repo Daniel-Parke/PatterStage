@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Database, Edit3, Plus } from "lucide-react";
 
 import Button from "@/components/ui/Button";
@@ -135,6 +136,31 @@ export default function ModelsTableSection({
   onPush,
   onPull,
 }: ModelsTableSectionProps) {
+  // Precompute the reverse map `modelId → defaulted task slots` once
+  // per render instead of running `TASK_TYPES.filter(...)` inside the
+  // per-row map. Pre-refactor: each row re-walked the 12-slot
+  // `defaults` record (O(12) per row = O(12N) per render). Post-refactor:
+  // single O(12) pass builds a `Map<modelId, TaskType[]>`, and each
+  // row does an O(1) `Map.get(...)`. For a registry of N=50 models
+  // that drops the per-render work from 600 slot-comparisons to 12.
+  // The map's `get()` returns `undefined` for models with no defaulted
+  // slot — the row component treats that as "no badges" (the same as
+  // the pre-refactor `.filter().length === 0` path).
+  const defaultedSlotsByModelId = useMemo(() => {
+    const map = new Map<string, TaskType[]>();
+    for (const slot of TASK_TYPES) {
+      const modelId = defaults[slot];
+      if (modelId === null || modelId === undefined) continue;
+      const existing = map.get(modelId);
+      if (existing) {
+        existing.push(slot);
+      } else {
+        map.set(modelId, [slot]);
+      }
+    }
+    return map;
+  }, [defaults]);
+
   return (
     <section data-section="my-models" className="space-y-4">
       <ModelsSectionHeader icon={Database} title="Models" color="purple" iconTone="muted" />
@@ -170,23 +196,18 @@ export default function ModelsTableSection({
                 </tr>
               </thead>
               <tbody>
-                {models.map((m) => {
-                  const badges = TASK_TYPES.filter(
-                    (slot) => defaults[slot] === m.id,
-                  );
-                  return (
-                    <ModelRow
-                      key={m.id}
-                      model={m}
-                      badges={badges}
-                      busyTaskType={busyTaskType}
-                      onEdit={onEdit}
-                      onDelete={onDelete}
-                      onPush={onPush}
-                      onPull={onPull}
-                    />
-                  );
-                })}
+                {models.map((m) => (
+                  <ModelRow
+                    key={m.id}
+                    model={m}
+                    badges={defaultedSlotsByModelId.get(m.id) ?? []}
+                    busyTaskType={busyTaskType}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onPush={onPush}
+                    onPull={onPull}
+                  />
+                ))}
               </tbody>
             </table>
           </div>
