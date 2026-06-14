@@ -658,6 +658,65 @@ export function useMissionsPage() {
     [setModelAndProvider],
   );
 
+  /**
+   * Apply a template to the form + open the composer in "create" mode.
+   * The 5-line sequence `applyTemplateToForm(t, cid) +
+   * rememberLastCategory(cid) + setShowCreate(true) + showToast("Template
+   * loaded: ${t.name}", "success")` was duplicated at 2 sites:
+   *
+   *   1. `handleTemplateSelect` (the "click a template" path from
+   *      `MissionsList`'s quick-templates UI). This site passes
+   *      `undefined` for the categoryIdOverride and skips
+   *      `rememberLastCategory` (the user picked a template
+   *      interactively; the last-category write is a "fresh start"
+   *      affordance reserved for the deep-link path below).
+   *   2. `fetchData`'s template-apply path (the `?template=<id>`
+   *      deep-link from `/orchestration/missions?template=...`). This
+   *      site passes the explicit `cid` and writes it via
+   *      `rememberLastCategory`, plus it also fires
+   *      `window.history.replaceState(...)` to strip the query param
+   *      so a page refresh doesn't re-apply the template.
+   *
+   * The shared core is the apply+open+toast trio. The site-specific
+   * extensions are passed as `opts` so the helper is the single
+   * source of truth for the "open the composer with a template
+   * loaded" UX, and a future "also reset the dispatch warning" or
+   * "also scroll the form into view" extension lands in one place.
+   *
+   * Byte-equivalent to the pre-refactor inline form: same
+   * `applyTemplateToForm(t, cid)` call (with the same `cid` /
+   * `undefined` discriminator), same `setShowCreate(true)`, same
+   * `showToast(\`Template loaded: ${t.name}\`, "success")` toast.
+   * The `opts` extras (rememberLastCategory, history.replaceState)
+   * are also byte-equivalent to the pre-refactor fetchData path
+   * (same calls, same args). The `templateApplied.current = true`
+   * latch is intentionally NOT in this helper — it is fetchData's
+   * "don't re-apply on the next fetchData()" guard, not part of the
+   * "apply template" UX, so the latch stays in fetchData where the
+   * fetch-result consumer can see it.
+   */
+  const loadAndApplyTemplate = useCallback(
+    (
+      t: MissionTemplate,
+      opts: {
+        /** Persist the template's category as the user's last-used. */
+        rememberCategory?: boolean;
+        /** Strip the `?template=<id>` query param via replaceState. */
+        clearQueryParam?: boolean;
+      } = {},
+    ) => {
+      const cid = getCategoryIdFromTemplate(t);
+      applyTemplateToForm(t, cid);
+      if (opts.rememberCategory) rememberLastCategory(cid);
+      setShowCreate(true);
+      showToast(`Template loaded: ${t.name}`, "success");
+      if (opts.clearQueryParam) {
+        window.history.replaceState({}, "", "/orchestration/missions");
+      }
+    },
+    [applyTemplateToForm, showToast],
+  );
+
   const fetchData = useCallback(async () => {
     try {
       const list = await fetchMissions();
@@ -685,13 +744,25 @@ export function useMissionsPage() {
             (tmpl: MissionTemplate) => tmpl.id === templateId,
           );
           if (t) {
-            const cid = getCategoryIdFromTemplate(t);
-            applyTemplateToForm(t, cid);
-            rememberLastCategory(cid);
-            setShowCreate(true);
+            // The deep-link `?template=<id>` path is the only
+            // `loadAndApplyTemplate` caller that wants
+            // `rememberCategory` + `clearQueryParam` — both side
+            // effects are unique to "I followed a deep link and the
+            // page should remember that category for next time and
+            // strip the now-consumed `?template=` query". The
+            // interactive `handleTemplateSelect` path (a user
+            // clicking a template in the list) does not pass either
+            // option — it just applies + opens. The shared
+            // apply+open+toast trio is consolidated in
+            // `loadAndApplyTemplate`; the `templateApplied.current`
+            // latch stays here because it is the "don't re-apply
+            // on the next `fetchData()`" guard, not part of the
+            // template-apply UX.
+            loadAndApplyTemplate(t, {
+              rememberCategory: true,
+              clearQueryParam: true,
+            });
             templateApplied.current = true;
-            showToast(`Template loaded: ${t.name}`, "success");
-            window.history.replaceState({}, "", "/orchestration/missions");
           }
         }
       }
@@ -701,7 +772,7 @@ export function useMissionsPage() {
       // same string. Per session 131 P-131-4 console.error-redundancy rule.
       toastError(showToast, error, "Failed to load templates");
     }
-  }, [fetchMissions, fetchTemplates, showToast, loadCategories, applyTemplateToForm]);
+  }, [fetchMissions, fetchTemplates, showToast, loadCategories, loadAndApplyTemplate]);
 
   const fetchDetail = useCallback(
     (id: string, showLoading = true) => {
@@ -1180,10 +1251,16 @@ export function useMissionsPage() {
   }, [showToast, fetchData, closeTemplateManager]);
 
   const handleTemplateSelect = useCallback((t: MissionTemplate) => {
-    applyTemplateToForm(t);
-    setShowCreate(true);
-    showToast(`Template loaded: ${t.name}`, "success");
-  }, [applyTemplateToForm, showToast]);
+    // The interactive "click a template" path: just apply + open +
+    // toast. No `rememberCategory` (the user picked a template
+    // interactively; persisting the category is reserved for the
+    // deep-link path in `fetchData`) and no `clearQueryParam`
+    // (there is no `?template=` query to strip — the user is
+    // already on the bare missions page). The shared apply+open
+    // +toast trio is consolidated in `loadAndApplyTemplate`; see
+    // the helper's JSDoc for the 2-site consolidation rationale.
+    loadAndApplyTemplate(t);
+  }, [loadAndApplyTemplate]);
 
   const handleDelete = useCallback(async (id: string) => {
     // Migrated from the inline `safeApiCall("/api/missions", { method: "POST", body: { action: "delete", missionId: id } })`
