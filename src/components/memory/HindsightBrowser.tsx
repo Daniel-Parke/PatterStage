@@ -9,7 +9,7 @@
 
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import {
   Search, Plus, Sparkles, List, FileText,
   Settings, RefreshCw,
@@ -17,7 +17,7 @@ import {
 import { SearchInput } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { hindsightGet, loadHindsightList } from "@/lib/hindsight-client";
+import { hindsightGet, loadHindsightList, filterMemoriesByAge, HINDSIGHT_DEFAULT_MAX_AGE_DAYS } from "@/lib/hindsight-client";
 import { hindsightMutate } from "@/lib/hindsight-mutate";
 import { parseOptionalTagsInput, parseTagsInput } from "@/lib/hindsight-tag-input";
 import { stringOr } from "./hindsight/utils";
@@ -53,6 +53,25 @@ export default function HindsightBrowser() {
   const [activeTab, setActiveTab] = useState<Tab>("memories");
   const [reflectResult, setReflectResult] = useState<string | null>(null);
   const [reflecting, setReflecting] = useState(false);
+  // Stale-fact filter toggle. When false (the default), memories older
+  // than HINDSIGHT_DEFAULT_MAX_AGE_DAYS are hidden in the Memory tab.
+  // The user can override per-tab to surface old knowledge for cleanup
+  // or to investigate a stale fact. See skill
+  // hindsight-memory-configuration/references/session-2026-06-13-corpus-
+  // flood-cleanup.md for the rationale.
+  const [showStaleMemories, setShowStaleMemories] = useState(false);
+  // Apply the age filter to the displayed memories list. The fetched
+  // list (`memories`) is the source of truth; `displayedMemories` is
+  // what the MemoryTab actually renders. The user toggles
+  // `showStaleMemories` to switch between filtered and unfiltered.
+  const displayedMemories = useMemo(
+    () => filterMemoriesByAge(
+      memories,
+      showStaleMemories ? Infinity : HINDSIGHT_DEFAULT_MAX_AGE_DAYS,
+    ),
+    [memories, showStaleMemories],
+  );
+  const hiddenStaleCount = memories.length - displayedMemories.length;
 
   // Add memory modal
   const [showAddModal, setShowAddModal] = useState(false);
@@ -528,7 +547,19 @@ export default function HindsightBrowser() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === "memories" && <MemoryTab memories={memories} loading={loading} loadingInitial={loadingInitial} />}
+      {activeTab === "memories" && (
+        <MemoryTab
+          memories={displayedMemories}
+          loading={loading}
+          loadingInitial={loadingInitial}
+          showStaleToggle={{
+            showStale: showStaleMemories,
+            onToggle: () => setShowStaleMemories((v) => !v),
+            hiddenCount: hiddenStaleCount,
+            thresholdDays: HINDSIGHT_DEFAULT_MAX_AGE_DAYS,
+          }}
+        />
+      )}
       {activeTab === "directives" && (
         <DirectivesTab
           directives={directives} loading={loadingDirectives}
