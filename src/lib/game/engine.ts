@@ -91,6 +91,8 @@ export interface SnapshotInput {
   claimedQuestIds: ReadonlySet<string>;
   ownedCosmeticIds: ReadonlySet<string>;
   agents: AgentMetrics[];
+  /** Bonus account XP from claimed quest/achievement rewards (award ledger). */
+  bonusXp?: number;
 }
 
 const log100 = (v: number, full: number): number =>
@@ -123,12 +125,13 @@ function computeCollection(ownedIds: ReadonlySet<string>): CollectionStat {
 export function buildSnapshot(input: SnapshotInput): GameSnapshot {
   const { metrics: m, player, unlockedAchievementIds, claimedQuestIds, ownedCosmeticIds, agents } = input;
 
-  const xp = computeXp({
-    completedMissions: m.completedMissions,
-    completedRuns: m.completedRuns,
-    stories: m.stories,
-    totalTokens: m.totalTokens,
-  });
+  const xp =
+    computeXp({
+      completedMissions: m.completedMissions,
+      completedRuns: m.completedRuns,
+      stories: m.stories,
+      totalTokens: m.totalTokens,
+    }) + (input.bonusXp ?? 0);
   const level = computeLevel(xp);
   const pool = POOLS[0];
 

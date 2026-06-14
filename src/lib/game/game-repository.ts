@@ -159,6 +159,18 @@ export function recentEvents(limit = 12): GameEvent[] {
   });
 }
 
+/** Bonus account XP granted by claimed quest/achievement rewards (award ledger). */
+export function getBonusXp(): number {
+  try {
+    const row = db()
+      .prepare("SELECT COALESCE(SUM(CAST(json_extract(payload_json, '$.xp') AS INTEGER)), 0) AS v FROM game_events WHERE type = 'award'")
+      .get() as { v: number } | undefined;
+    return Number(row?.v ?? 0);
+  } catch {
+    return 0;
+  }
+}
+
 // ── Agents ───────────────────────────────────────────────────
 
 export interface AgentGameRow {
