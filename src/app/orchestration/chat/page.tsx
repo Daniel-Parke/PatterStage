@@ -11,7 +11,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import {
   MessageCircle, Send, Plus, X, Download,
-  Bot, User, Square,
+  Square,
 } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -27,7 +27,6 @@ import {
   downloadFile,
   sessionToJson,
   sessionToCsv,
-  renderMarkdown,
   formatModelName,
   sanitiseFilename,
   createEmptySession,
@@ -40,6 +39,7 @@ import {
 } from "@/lib/chat-utils";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import GatewayBanner from "@/components/chat/GatewayBanner";
+import MessageBubble from "@/components/chat/MessageBubble";
 import { useGatewayHealth } from "@/hooks/useGatewayHealth";
 
 // ── Event helpers ──────────────────────────────────────────────
@@ -550,55 +550,7 @@ export default function ChatPage() {
                 )}
               </div>
             ) : (
-              messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex gap-3 ${
-                    msg.role === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  {msg.role === "assistant" && (
-                    <div className="w-8 h-8 rounded-lg bg-neon-purple/20 border border-neon-purple/30 flex items-center justify-center shrink-0 mt-1">
-                      <Bot className="w-4 h-4 text-neon-purple" />
-                    </div>
-                  )}
-
-                  <div
-                    className={`max-w-[70%] rounded-xl px-4 py-3 ${
-                      msg.role === "user"
-                        ? "bg-neon-cyan/10 border border-neon-cyan/20 text-white"
-                        : "bg-white/5 border border-white/10 text-white/80"
-                    }`}
-                  >
-                    {msg.role === "assistant" ? (
-                      <div
-                        className="text-sm leading-relaxed prose prose-invert max-w-none"
-                        dangerouslySetInnerHTML={{
-                          __html: msg.content
-                            ? renderMarkdown(msg.content)
-                            : '<span class="text-white/30 italic">Thinking...</span>',
-                        }}
-                      />
-                    ) : (
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                        {msg.content}
-                      </p>
-                    )}
-                    <div className="text-[10px] text-white/20 font-mono mt-1 text-right">
-                      {new Date(msg.timestamp).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
-                  </div>
-
-                  {msg.role === "user" && (
-                    <div className="w-8 h-8 rounded-lg bg-neon-cyan/20 border border-neon-cyan/30 flex items-center justify-center shrink-0 mt-1">
-                      <User className="w-4 h-4 text-neon-cyan" />
-                    </div>
-                  )}
-                </div>
-              ))
+              messages.map((msg) => <MessageBubble key={msg.id} msg={msg} />)
             )}
 
             {isStreaming && messages.length > 0 && !messages[messages.length - 1].content && (
