@@ -49,6 +49,7 @@ pnpm-lock.yaml
 pnpm-workspace.yaml
 a.out
 .npmrc
+!/.npmrc
 
 # Vercel
 .vercel
@@ -61,7 +62,7 @@ next-env.d.ts
 a.out
 pnpm-lock.yaml
 pnpm-workspace.yaml
-.npmrc
+!/.npmrc
 
 # Session-scoped audit artifacts (pre-merge dogfood reports, server stdout from local runs)
 dogfood-output/
