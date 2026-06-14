@@ -4,6 +4,7 @@
 
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
+import { HINDSIGHT_TEXT_INPUT_CLASS, HINDSIGHT_TEXTAREA_CLASS } from "./utils";
 
 // ── Add Memory Modal ───────────────────────────────────────────
 
@@ -31,7 +32,7 @@ export function AddMemoryModal({
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
             placeholder="What should the agent remember?"
-            className="w-full h-32 bg-dark-800 border border-white/10 rounded-lg p-3 text-sm text-white/80 resize-none focus:border-pink-500/50 focus:outline-none"
+            className={`w-full h-32 ${HINDSIGHT_TEXTAREA_CLASS}`}
           />
         </div>
         <div>
@@ -41,7 +42,7 @@ export function AddMemoryModal({
             value={tags}
             onChange={(e) => onTagsChange(e.target.value)}
             placeholder="e.g. user_pref, project, tech"
-            className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:border-pink-500/50 focus:outline-none"
+            className={HINDSIGHT_TEXT_INPUT_CLASS}
           />
         </div>
         <div className="flex justify-end gap-2">
@@ -87,7 +88,7 @@ export function DirectiveModal({
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
             placeholder="e.g. Always cite sources"
-            className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:border-pink-500/50 focus:outline-none"
+            className={HINDSIGHT_TEXT_INPUT_CLASS}
           />
         </div>
         <div>
@@ -96,7 +97,7 @@ export function DirectiveModal({
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
             placeholder="The rule to inject into agent prompts..."
-            className="w-full h-28 bg-dark-800 border border-white/10 rounded-lg p-3 text-sm text-white/80 resize-none focus:border-pink-500/50 focus:outline-none"
+            className={`w-full h-28 ${HINDSIGHT_TEXTAREA_CLASS}`}
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -107,7 +108,7 @@ export function DirectiveModal({
               value={priority}
               onChange={(e) => onPriorityChange(e.target.value)}
               placeholder="0"
-              className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:border-pink-500/50 focus:outline-none"
+              className={HINDSIGHT_TEXT_INPUT_CLASS}
             />
           </div>
           <div>
@@ -117,7 +118,7 @@ export function DirectiveModal({
               value={tags}
               onChange={(e) => onTagsChange(e.target.value)}
               placeholder="e.g. safety, behavior"
-              className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:border-pink-500/50 focus:outline-none"
+              className={HINDSIGHT_TEXT_INPUT_CLASS}
             />
           </div>
         </div>
@@ -165,7 +166,7 @@ export function MentalModelModal({
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
             placeholder="e.g. User Communication Style"
-            className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:border-pink-500/50 focus:outline-none"
+            className={HINDSIGHT_TEXT_INPUT_CLASS}
           />
         </div>
         <div>
@@ -174,7 +175,7 @@ export function MentalModelModal({
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder="e.g. What are Daniel's communication preferences and working style?"
-            className="w-full h-28 bg-dark-800 border border-white/10 rounded-lg p-3 text-sm text-white/80 resize-none focus:border-pink-500/50 focus:outline-none"
+            className={`w-full h-28 ${HINDSIGHT_TEXTAREA_CLASS}`}
           />
           <p className="text-xs text-white/30 mt-1">
             {isEdit
@@ -189,7 +190,7 @@ export function MentalModelModal({
             value={tags}
             onChange={(e) => onTagsChange(e.target.value)}
             placeholder="e.g. user, preferences"
-            className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/80 focus:border-pink-500/50 focus:outline-none"
+            className={HINDSIGHT_TEXT_INPUT_CLASS}
           />
         </div>
         <div className="flex justify-end gap-2">

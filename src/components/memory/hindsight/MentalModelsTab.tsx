@@ -2,11 +2,12 @@
 // Hindsight Mental Models Tab — Cached reflect results
 // ═══════════════════════════════════════════════════════════════
 
-import { Settings, Plus, Pencil, Zap, Trash2, RefreshCw, Clock } from "lucide-react";
+import { Settings, Plus, Zap, RefreshCw, Clock } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import { pluralise, timeAgo } from "@/lib/utils";
+import { RowEditButton, RowDeleteButton } from "./RowActionButtons";
 import type { MentalModel } from "./types";
 
 interface MentalModelsTabProps {
@@ -92,13 +93,7 @@ export default function MentalModelsTab({
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={() => onEdit(m)}
-                    className="p-1.5 rounded-lg hover:bg-white/5 text-white/40 hover:text-white/70 transition-colors"
-                    title="Edit"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
+                  <RowEditButton onClick={() => onEdit(m)} />
                   <button
                     onClick={() => onRefreshModel(m.id)}
                     disabled={refreshingModelId === m.id}
@@ -107,13 +102,7 @@ export default function MentalModelsTab({
                   >
                     <Zap className={`w-4 h-4 ${refreshingModelId === m.id ? "animate-pulse text-yellow-400" : ""}`} />
                   </button>
-                  <button
-                    onClick={() => onDelete(m.id)}
-                    className="p-1.5 rounded-lg hover:bg-red-500/10 text-white/40 hover:text-red-400 transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <RowDeleteButton onClick={() => onDelete(m.id)} />
                 </div>
               </div>
             </div>
