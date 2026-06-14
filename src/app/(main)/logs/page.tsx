@@ -27,6 +27,7 @@ import type { LogGetData } from "@/app/api/logs/route";
 import { formatBytes } from "@/lib/utils";
 import { LogRow } from "@/components/logs/LogRow";
 import { GROUP_ORDER, GROUP_LABELS } from "@/components/logs/constants";
+import LogInsights from "@/components/logs/LogInsights";
 
 type LogData = LogGetData;
 
@@ -393,6 +394,7 @@ export default function LogsPage() {
               )}
             </div>
 
+            {data && <LogInsights lines={allLines} />}
             {loading && !data ? (
               <LoadingSpinner text="Loading logs..." />
             ) : data ? (
