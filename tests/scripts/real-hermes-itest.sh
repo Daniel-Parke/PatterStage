@@ -40,4 +40,44 @@ echo "[itest] ── full-stack smoke (Control Hub → real Hermes) ──"
 CH_URL="http://localhost:${CH_PORT}" HERMES_URL="http://localhost:${H_PORT}" API_SERVER_KEY="${KEY}" \
   node tests/integration/runtime/full-stack-smoke.mjs
 
+echo "[itest] ── DB upgrade path (legacy DB self-migrates on boot) ──"
+# Seed a legacy pre-rewrite DB (schema_version 2, no cron_jobs.workdir, no
+# runs/schedules) into the Control Hub data volume, restart, and assert the
+# server self-migrates: routes that query workdir return 200 instead of
+# "no such column: workdir". Guards the upgrade path the fresh-DB stack skips.
+${COMPOSE} stop control-hub >/dev/null
+${COMPOSE} run --rm --no-deps --entrypoint node control-hub -e '
+  const Database = require("better-sqlite3");
+  const fs = require("fs");
+  const p = "/data/ch/control-hub.db";
+  for (const s of ["", "-wal", "-shm"]) { try { fs.rmSync(p + s); } catch (e) {} }
+  const db = new Database(p);
+  db.exec("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);");
+  db.exec(fs.readFileSync("/app/src/lib/db/migrations/001_baseline.sql", "utf8"));
+  db.pragma("foreign_keys = OFF");
+  db.exec("ALTER TABLE cron_jobs DROP COLUMN workdir");
+  db.exec("DROP TABLE IF EXISTS runs");
+  db.exec("DROP TABLE IF EXISTS schedules");
+  db.prepare("INSERT OR REPLACE INTO meta (key,value) VALUES (?,?)").run("schema_version", "2");
+  db.close();
+  console.log("seeded legacy DB (v2, no workdir/runs/schedules)");
+'
+${COMPOSE} start control-hub >/dev/null
+up=0
+for i in $(seq 1 60); do
+  code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${CH_PORT}/api/status" 2>/dev/null || echo 000)
+  if [ "$code" = "200" ]; then up=1; break; fi
+  sleep 2
+done
+if [ "$up" != "1" ]; then
+  echo "[itest] control-hub did not restart after legacy seed"; ${COMPOSE} logs --tail 40 control-hub; exit 1
+fi
+mcode=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${CH_PORT}/api/missions")
+ccode=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${CH_PORT}/api/cron")
+echo "[itest] post-upgrade: /api/missions=${mcode} /api/cron=${ccode}"
+if [ "$mcode" != "200" ] || [ "$ccode" != "200" ]; then
+  echo "[itest] upgrade FAILED — workdir column likely still missing"; ${COMPOSE} logs --tail 40 control-hub; exit 1
+fi
+echo "[itest] DB upgrade path OK ✅"
+
 echo "[itest] PASSED ✅"

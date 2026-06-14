@@ -15,6 +15,7 @@ import { applyMissionRepeatMigration } from "./db/apply-mission-repeat-migration
 import { applyMissionQueueMigration } from "./db/apply-mission-queue-migration";
 import { applyCronScheduleCanonicalisation } from "./db/apply-cron-schedule-canonicalisation";
 import { applyRunsSchedulesMigration } from "./db/apply-runs-schedules-migration";
+import { applyLegacyColumnRepair } from "./db/apply-legacy-column-repair";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -117,7 +118,12 @@ function resolveMigrationsDir(): string {
   return candidates[0];
 }
 
-function runMigrations(database: Database.Database): void {
+/**
+ * Apply all pending migrations to an open database. Exported so the upgrade
+ * path can be exercised directly in tests (the full applier chain + wiring,
+ * not just individual appliers).
+ */
+export function runMigrations(database: Database.Database): void {
   database.exec(`
     CREATE TABLE IF NOT EXISTS meta (
       key   TEXT PRIMARY KEY,
@@ -157,6 +163,10 @@ function runMigrations(database: Database.Database): void {
   applyMissionQueueMigration(database, migrationsDir);
   applyCronScheduleCanonicalisation(database);
   applyRunsSchedulesMigration(database, migrationsDir);
+  // Catch-up repair for the orphaned 005_cron_workdir + 006_sessions_message_count
+  // column-adds the incremental chain skipped (v5→v7 jump). Runs last so it
+  // repairs already-deployed v8 installs too. Idempotent on fresh DBs.
+  applyLegacyColumnRepair(database);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────
