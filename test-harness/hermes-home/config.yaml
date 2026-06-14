@@ -1,0 +1,24 @@
+# Real-Hermes integration-test fixture (HERMES_HOME). Points Hermes at the
+# mock LLM so agent runs complete deterministically without API keys.
+# Hermes runs a non-interactive config-schema migration over this on boot.
+model:
+  default: mock-model
+  provider: custom
+  base_url: http://mock-llm:8000/v1
+  # Hermes requires >= 64000; the mock LLM ignores it.
+  context_length: 200000
+
+compression:
+  enabled: false
+
+agent:
+  max_turns: 4
+  api_max_retries: 1
+
+terminal:
+  backend: local
+  timeout: 60
+
+memory:
+  memory_enabled: false
+  user_profile_enabled: false

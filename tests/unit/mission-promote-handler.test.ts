@@ -11,10 +11,6 @@ jest.mock("@/lib/cron-repository", () => ({
   deleteCronJob: jest.fn(),
   pushJobToHermes: jest.fn(),
 }));
-jest.mock("@/lib/backends", () => ({
-  agentBackend: { syncMission: jest.fn() },
-}));
-
 const mockDispatchMissionNow = jest.fn().mockResolvedValue({ ok: true });
 const mockRunMissionQueueTick = jest.fn();
 

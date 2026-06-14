@@ -74,3 +74,6 @@ runtime.log
 # scratch-root convention and is the same shape we see leak in here.
 .hermes/
 /.hermes
+
+# real-Hermes test harness runtime artifacts
+test-harness/.work/

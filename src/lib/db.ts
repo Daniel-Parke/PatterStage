@@ -14,6 +14,7 @@ import { applyProfilesToolsParityUpgrade } from "./db/apply-profiles-tools-upgra
 import { applyMissionRepeatMigration } from "./db/apply-mission-repeat-migration";
 import { applyMissionQueueMigration } from "./db/apply-mission-queue-migration";
 import { applyCronScheduleCanonicalisation } from "./db/apply-cron-schedule-canonicalisation";
+import { applyRunsSchedulesMigration } from "./db/apply-runs-schedules-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -98,6 +99,24 @@ function tableExists(database: Database.Database, name: string): boolean {
   return Boolean(row);
 }
 
+/**
+ * Resolve the migrations directory robustly. In the production container the
+ * Next.js server bundle does not co-locate the SQL files next to `__dirname`
+ * (the path.join NFT tracing limitation), so we also probe a cwd-relative
+ * source path that the Dockerfile copies into the image. First candidate that
+ * actually contains the baseline wins.
+ */
+function resolveMigrationsDir(): string {
+  const candidates = [
+    join(__dirname, "db", "migrations"),
+    join(process.cwd(), "src", "lib", "db", "migrations"),
+  ];
+  for (const dir of candidates) {
+    if (existsSync(join(dir, "001_baseline.sql"))) return dir;
+  }
+  return candidates[0];
+}
+
 function runMigrations(database: Database.Database): void {
   database.exec(`
     CREATE TABLE IF NOT EXISTS meta (
@@ -106,7 +125,7 @@ function runMigrations(database: Database.Database): void {
     );
   `);
 
-  const migrationsDir = join(__dirname, "db", "migrations");
+  const migrationsDir = resolveMigrationsDir();
   const baselinePath = join(migrationsDir, "001_baseline.sql");
   const baselineSql = existsSync(baselinePath)
     ? readFileSync(baselinePath, "utf-8")
@@ -137,6 +156,7 @@ function runMigrations(database: Database.Database): void {
   applyMissionRepeatMigration(database, migrationsDir);
   applyMissionQueueMigration(database, migrationsDir);
   applyCronScheduleCanonicalisation(database);
+  applyRunsSchedulesMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

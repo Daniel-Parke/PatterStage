@@ -28,7 +28,7 @@
 import { NextResponse } from "next/server";
 import { getMission } from "@/lib/mission-repository";
 import { enrichMissionCron } from "@/lib/mission-cron-sync";
-import type { Mission } from "@/lib/agent-backend/types";
+import type { Mission } from "@/lib/mission-types";
 
 /**
  * Return a `NextResponse` carrying the enriched mission row under

@@ -110,17 +110,33 @@ if [ "$HERMES_CONFIGURED" = true ]; then
     fi
 
     echo ""
-    if [ -f "$HERMES_HOME/.env" ] && grep -q "API_SERVER_ENABLED=true" "$HERMES_HOME/.env" 2>/dev/null; then
-        echo "✓ Gateway API server already enabled"
-    else
-        echo "Enabling gateway API server for Rec Room..."
-        mkdir -p "$HERMES_HOME"
-        echo "" >> "$HERMES_HOME/.env"
-        echo "# Enable API server for Control Hub Rec Room" >> "$HERMES_HOME/.env"
-        echo "API_SERVER_ENABLED=true" >> "$HERMES_HOME/.env"
-        echo "✓ API server enabled — restart gateway to activate"
-        echo "  Run: systemctl --user restart hermes-gateway  (or: hermes gateway stop && hermes gateway start)"
+    # ── Hermes API Server (required by the Control Hub runtime adapter) ──
+    # The runtime dispatches missions as HTTP runs over the Hermes API Server
+    # and authenticates with a bearer key. We enable the server and share one
+    # key between Hermes (server side) and Control Hub (client side).
+    HERMES_ENV="$HERMES_HOME/.env"
+    mkdir -p "$HERMES_HOME"
+    touch "$HERMES_ENV"
+
+    API_KEY=$(grep -E '^API_SERVER_KEY=' "$HERMES_ENV" 2>/dev/null | tail -1 | cut -d= -f2-)
+    if [ -z "$API_KEY" ]; then
+        API_KEY=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'))")
+        echo "" >> "$HERMES_ENV"
+        echo "# Control Hub runtime — Hermes API Server bearer key" >> "$HERMES_ENV"
+        echo "API_SERVER_KEY=$API_KEY" >> "$HERMES_ENV"
+        echo "✓ Generated Hermes API server key"
     fi
+    if grep -q "API_SERVER_ENABLED=true" "$HERMES_ENV" 2>/dev/null; then
+        echo "✓ Hermes API server already enabled"
+    else
+        echo "API_SERVER_ENABLED=true" >> "$HERMES_ENV"
+        echo "✓ Enabled Hermes API server — restart the gateway to activate"
+        echo "  Run: hermes gateway restart  (or: systemctl --user restart hermes-gateway)"
+    fi
+
+    # Control Hub authenticates to the gateway with the same key.
+    ch_env_set "$ENV_LOCAL" "API_SERVER_KEY" "$API_KEY"
+    echo "✓ Control Hub wired to the Hermes API server (shared API_SERVER_KEY)"
 fi
 
 # ── Data directories ─────────────────────────────────────────

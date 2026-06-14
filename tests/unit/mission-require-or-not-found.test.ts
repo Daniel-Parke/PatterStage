@@ -91,11 +91,9 @@ jest.mock("@/lib/profiles-repository", () => ({
   listProfiles: jest.fn(() => []),
 }));
 
-jest.mock("@/lib/backends", () => ({
-  agentBackend: {
-    cancelMission: jest.fn(() => Promise.resolve({ processKilled: false, error: null })),
-    syncMission: jest.fn(),
-  },
+jest.mock("@/lib/orchestration", () => ({
+  cancelMissionRun: jest.fn(() => Promise.resolve({ ok: true })),
+  dispatchMissionRun: jest.fn(() => Promise.resolve({ ok: true })),
 }));
 
 jest.mock("@/lib/mission-promote-handler", () => ({

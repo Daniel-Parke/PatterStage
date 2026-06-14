@@ -38,10 +38,6 @@ jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 jest.mock("@/lib/api-auth", () => ({ requireAuth: jest.fn(() => null), isChReadOnly: jest.fn(() => false) }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 jest.mock("@/lib/mission-category-repository", () => ({ getCategory: jest.fn() }));
-jest.mock("@/lib/backends", () => ({
-  agentBackend: { syncMission: jest.fn() },
-}));
-
 const mockSyncMissionToCronJob = jest.fn().mockResolvedValue(true);
 
 jest.mock("@/lib/mission-cron-sync", () => ({

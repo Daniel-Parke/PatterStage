@@ -4,6 +4,7 @@ import { SidebarProvider } from "@/components/layout/SidebarContext";
 import Sidebar from "@/components/layout/Sidebar";
 import MobileHeader from "@/components/layout/MobileHeader";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import QueryProvider from "@/components/providers/QueryProvider";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -25,6 +26,7 @@ export default function RootLayout({
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="h-full bg-dark-950 text-white">
+        <QueryProvider>
         <SidebarProvider>
           <div className="h-full flex flex-col lg:flex-row">
             <div className="border-r border-white/10 flex-shrink-0">
@@ -38,6 +40,7 @@ export default function RootLayout({
             </div>
           </div>
         </SidebarProvider>
+        </QueryProvider>
       </body>
     </html>
   );
