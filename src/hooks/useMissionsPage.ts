@@ -1065,9 +1065,23 @@ export function useMissionsPage() {
     setTemplateIcon("Zap");
     setTemplateColor("cyan");
     clearMissionFormFields();
-    setShowTemplateManager(false);
+    // `closeTemplateManager` is the hook's stable close-callback for
+    // the template-manager modal (sibling of `openTemplateManager`).
+    // Pre-session-211: this site inlined `setShowTemplateManager
+    // (false)` directly. The 2-1/2 line of code is byte-equivalent
+    // (same `setShowTemplateManager(false)` payload via the callback
+    // body at line 443-445), but the migration keeps the 3 internal
+    // hook call sites consistent with the page's `<TemplateManagerModal
+    // onClose={closeTemplateManager}>` JSX binding — any future
+    // "also clear the template filter" or "also reset template
+    // category" extension added to `closeTemplateManager` lands
+    // here too, automatically. The deps array adds `closeTemplateManager`
+    // (it's a stable `useCallback` with `[]` deps, so the reference
+    // is the same on every render of the hook — adding it is a
+    // correctness no-op but keeps the linter happy).
+    closeTemplateManager();
     setShowTemplateEditor(true);
-  }, [clearMissionFormFields]);
+  }, [closeTemplateManager, clearMissionFormFields]);
 
   const handleTemplateSave = useCallback(async () => {
     if (!templateName.trim()) return;
@@ -1111,10 +1125,21 @@ export function useMissionsPage() {
       setTemplateIcon(t.icon);
       setTemplateColor(t.color);
       applyTemplateToForm(t);
-      setShowTemplateManager(false);
+      // `closeTemplateManager` is the hook's stable close-callback for
+      // the template-manager modal (sister migration to the same
+      // pattern in `handleCreateNewTemplate` above and
+      // `handleDeleteTemplate` below). Pre-session-211: this site
+      // inlined `setShowTemplateManager(false)` directly. The migration
+      // is byte-equivalent (same payload via the callback body at
+      // line 443-445) and keeps the 3 internal hook call sites
+      // consistent with the page's `<TemplateManagerModal onClose={
+      // closeTemplateManager}>` JSX binding. The deps array adds
+      // `closeTemplateManager` (stable `useCallback` with `[]` deps,
+      // so the reference is the same on every render).
+      closeTemplateManager();
       setShowTemplateEditor(true);
     },
-    [applyTemplateToForm],
+    [applyTemplateToForm, closeTemplateManager],
   );
 
   const handleDeleteTemplate = useCallback(async (templateId: string) => {
@@ -1126,7 +1151,7 @@ export function useMissionsPage() {
     // the template id is in scope at render time. By the time this
     // callback is called, the user has already confirmed in the
     // leaf; this hook is a thin transport wrapper (wire delete +
-    // toast + post-success reload + setShowTemplateManager(false)).
+    // toast + post-success reload + closeTemplateManager()).
     const result = await safeApiCall("/api/templates", {
       method: "POST",
       body: { action: "delete", templateId },
@@ -1138,10 +1163,21 @@ export function useMissionsPage() {
       "Failed to delete template",
     );
     if (result.ok) {
-      setShowTemplateManager(false);
+      // `closeTemplateManager` is the hook's stable close-callback
+      // for the template-manager modal (sister migration to the same
+      // pattern in `handleCreateNewTemplate` and `handleEditTemplate`
+      // above). Pre-session-211: this site inlined
+      // `setShowTemplateManager(false)` directly. The migration is
+      // byte-equivalent (same payload via the callback body at line
+      // 443-445) and keeps the 3 internal hook call sites consistent
+      // with the page's `<TemplateManagerModal onClose={
+      // closeTemplateManager}>` JSX binding. The deps array adds
+      // `closeTemplateManager` (stable `useCallback` with `[]` deps,
+      // so the reference is the same on every render).
+      closeTemplateManager();
       fetchData();
     }
-  }, [showToast, fetchData]);
+  }, [showToast, fetchData, closeTemplateManager]);
 
   const handleTemplateSelect = useCallback((t: MissionTemplate) => {
     applyTemplateToForm(t);
