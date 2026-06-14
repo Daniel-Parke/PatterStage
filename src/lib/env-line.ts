@@ -41,3 +41,27 @@ export function parseEnvLine(line: string): EnvLine {
     .replace(/^["']|["']$/g, "");
   return { kind: "keyval", key, value };
 }
+
+/**
+ * Build a stable React `key` for an .env line at index `i`. The key
+ * combines the line index with a sanitized prefix of the raw line
+ * text so React can identify lines across re-renders — the line
+ * index alone is insufficient (two adjacent blank lines would both
+ * get key `env-3`); the prefix alone is insufficient (two identical
+ * blank lines would collapse). The 24-char prefix limit caps the
+ * string length while still being unique-enough for the typical
+ * 2-4 KB .env preview.
+ *
+ * The non-alphanumeric replacement (`[^a-zA-Z0-9]` → `-`) keeps the
+ * key safe for React's `key` prop (no whitespace, no special chars
+ * that would force React to warn about complex keys).
+ *
+ * Single call site today (`/config/[section]/page.tsx` .env preview),
+ * but co-located with `parseEnvLine` so any future surface that
+ * maps over .env lines (editor, linter, formatter) reuses the
+ * identical key shape — keys from one surface stay stable when
+ * round-tripped through another.
+ */
+export function envLineKey(line: string, i: number): string {
+  return `env-${i}-${line.slice(0, 24).replace(/[^a-zA-Z0-9]/g, "-")}`;
+}

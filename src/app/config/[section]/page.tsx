@@ -15,7 +15,7 @@ import { LoadingSpinner, ErrorBanner } from "@/components/ui/LoadingSpinner";
 import { getSectionDef, fileKeyForFilePath } from "@/lib/config-schema";
 import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
 import { maskKeyHint } from "@/lib/secret-mask";
-import { parseEnvLine } from "@/lib/env-line";
+import { parseEnvLine, envLineKey } from "@/lib/env-line";
 import ConfigField from "@/components/config/ConfigField";
 
 export default function ConfigSectionPage() {
@@ -257,7 +257,7 @@ export default function ConfigSectionPage() {
               <div className="space-y-2">
                 {fileContent.split("\n").map((line, i) => {
                   const parsed = parseEnvLine(line);
-                  const lineKey = `env-${i}-${line.slice(0, 24).replace(/[^a-zA-Z0-9]/g, "-")}`;
+                  const lineKey = envLineKey(line, i);
                   if (parsed.kind === "blank" || parsed.kind === "comment") {
                     return (
                       <div key={lineKey} className="text-xs text-white/30 font-mono">

@@ -4,6 +4,7 @@ import { CheckCircle2, Star } from "lucide-react";
 
 import GlowSurface from "@/components/ui/GlowSurface";
 import BulkAuxiliaryUpdater from "@/components/models/BulkAuxiliaryUpdater";
+import ModelsSectionHeader from "@/components/models/ModelsSectionHeader";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
 import type { TaskType } from "@/lib/hermes-providers";
 
@@ -34,10 +35,7 @@ export default function ModelsAgentDefaultSection({
     : null;
   return (
     <section data-section="agent-default" className="space-y-4">
-      <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider flex items-center gap-2">
-        <Star className="w-4 h-4 text-neon-orange" />
-        Agent Default
-      </h2>
+      <ModelsSectionHeader icon={Star} title="Agent Default" color="orange" />
 
       <GlowSurface accent="orange">
         <div className="rounded-xl border border-neon-orange/20 bg-dark-900/40 p-6">

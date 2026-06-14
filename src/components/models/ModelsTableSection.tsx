@@ -6,6 +6,7 @@ import Button from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/LoadingSpinner";
 import GlowSurface from "@/components/ui/GlowSurface";
 import ModelSyncButtons from "@/components/models/ModelSyncButtons";
+import ModelsSectionHeader from "@/components/models/ModelsSectionHeader";
 import PerRowDeleteButton from "@/components/models/PerRowDeleteButton";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import { TASK_TYPES, type TaskType } from "@/lib/hermes-providers";
@@ -136,10 +137,7 @@ export default function ModelsTableSection({
 }: ModelsTableSectionProps) {
   return (
     <section data-section="my-models" className="space-y-4">
-      <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider flex items-center gap-2">
-        <Database className="w-4 h-4 text-neon-purple/60" />
-        Models
-      </h2>
+      <ModelsSectionHeader icon={Database} title="Models" color="purple" iconTone="muted" />
 
       {models.length === 0 ? (
         <EmptyState
