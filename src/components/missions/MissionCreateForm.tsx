@@ -33,8 +33,6 @@ export interface MissionFormState {
   newConstraints: string;
   newDispatch: "save" | "now" | "cron" | "queue";
   newSchedule: string;
-  scheduleType: "interval" | "wall-clock" | "post-run";
-  scheduleStartTime: string;
   newMissionTime: number;
   newTimeout: number;
   newProfile: string;

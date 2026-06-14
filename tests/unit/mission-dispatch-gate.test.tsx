@@ -15,8 +15,6 @@ const baseFormState: MissionFormState = {
   newConstraints: "",
   newDispatch: "save",
   newSchedule: "every 5m",
-  scheduleType: "interval",
-  scheduleStartTime: "00:00",
   newMissionTime: 15,
   newTimeout: 10,
   newProfile: "",

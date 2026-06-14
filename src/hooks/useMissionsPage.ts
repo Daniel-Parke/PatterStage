@@ -188,8 +188,6 @@ export function useMissionsPage() {
     "save",
   );
   const [newSchedule, setNewSchedule] = useState("every 5m");
-  const [scheduleType, setScheduleType] = useState<"interval" | "wall-clock" | "post-run">("interval");
-  const [scheduleStartTime, setScheduleStartTime] = useState("00:00");
   const [newMissionTime, setNewMissionTime] = useState(15);
   const [newTimeout, setNewTimeout] = useState(10);
   const [newProfile, setNewProfile] = useState("");
@@ -226,8 +224,6 @@ export function useMissionsPage() {
     newConstraints,
     newDispatch,
     newSchedule,
-    scheduleType,
-    scheduleStartTime,
     newMissionTime,
     newTimeout,
     newProfile,
@@ -263,7 +259,6 @@ export function useMissionsPage() {
           setDispatchAcknowledged(true);
         },
         newSchedule: (v) => setNewSchedule(v),
-        scheduleType: (v) => setScheduleType(v),
         newMissionTime: (v) => setNewMissionTime(v),
         newTimeout: (v) => setNewTimeout(v),
         newProfile: (v) => setNewProfile(v),
@@ -275,7 +270,6 @@ export function useMissionsPage() {
         referenceInput: (v) => setReferenceInput(v),
         newSkills: (v) => setNewSkills(v),
         newToolsets: (v) => setNewToolsets(v),
-        scheduleStartTime: (v) => setScheduleStartTime(v),
       };
       setters[field](value);
     },
@@ -1010,11 +1004,8 @@ export function useMissionsPage() {
     if (typeof m.timeoutMinutes === "number") setNewTimeout(m.timeoutMinutes);
     if (m.schedule) {
       setNewSchedule(m.schedule);
-      const s = m.schedule.trim();
-      setScheduleType(s.includes("*") || /^\d/.test(s) ? "wall-clock" : "interval");
     } else {
       setNewSchedule("every 5m");
-      setScheduleType("interval");
     }
     if (opts.editing) {
       if (m.status === "successful" || m.status === "failed") {
@@ -1499,7 +1490,6 @@ export function useMissionsPage() {
     newCategoryId,
     setNewCategoryId,
     showCategoryManager,
-    setShowCategoryManager,
     openCategoryManager,
     closeCategoryManager,
     loadCategories,
@@ -1521,7 +1511,6 @@ export function useMissionsPage() {
     dispatching,
     cancellingMissionId,
     handleTemplateSelect,
-    setShowTemplateManager,
     openTemplateManager,
     closeTemplateManager,
     showTemplateManager,
