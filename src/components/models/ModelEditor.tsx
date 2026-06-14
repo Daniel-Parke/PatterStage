@@ -24,6 +24,7 @@ import { HERMES_PROVIDERS, type HermesProvider } from "@/lib/hermes-providers";
 import CredentialPicker, {
   type CredentialOption,
 } from "@/components/models/CredentialPicker";
+import FieldRow from "@/components/models/FieldRow";
 import { inputFieldClasses } from "@/lib/theme";
 import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
 
@@ -262,8 +263,10 @@ export default function ModelEditor({
           </div>
         )}
 
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-white/70">Name</label>
+        <FieldRow
+          label="Name"
+          description="Display name only — does not need to match the model identifier"
+        >
           <input
             type="text"
             value={form.name}
@@ -271,14 +274,10 @@ export default function ModelEditor({
             placeholder="e.g. Claude Sonnet 4 (production)"
             className={inputFieldClasses("purple")}
           />
-          <p className="text-xs text-white/30 font-mono">
-            Display name only — does not need to match the model identifier
-          </p>
-        </div>
+        </FieldRow>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-white/70">Provider</label>
+          <FieldRow label="Provider">
             <select
               value={form.provider}
               onChange={(e) => {
@@ -293,10 +292,9 @@ export default function ModelEditor({
                 </option>
               ))}
             </select>
-          </div>
+          </FieldRow>
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-white/70">Model ID</label>
+          <FieldRow label="Model ID">
             <input
               type="text"
               value={form.modelId}
@@ -304,15 +302,18 @@ export default function ModelEditor({
               placeholder="anthropic/claude-sonnet-4"
               className={inputFieldClasses("purple")}
             />
-          </div>
+          </FieldRow>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-white/70">
-              Base URL
-              <span className="ml-2 text-xs text-white/30 font-mono">(optional)</span>
-            </label>
+          <FieldRow
+            label={
+              <>
+                Base URL
+                <span className="ml-2 text-xs text-white/30 font-mono">(optional)</span>
+              </>
+            }
+          >
             <input
               type="text"
               value={form.baseUrl}
@@ -320,12 +321,15 @@ export default function ModelEditor({
               placeholder="https://api.anthropic.com/v1"
               className={inputFieldClasses("purple")}
             />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-white/70">
-              Context Length
-              <span className="ml-2 text-xs text-white/30 font-mono">(optional)</span>
-            </label>
+          </FieldRow>
+          <FieldRow
+            label={
+              <>
+                Context Length
+                <span className="ml-2 text-xs text-white/30 font-mono">(optional)</span>
+              </>
+            }
+          >
             <input
               type="number"
               value={form.contextLength}
@@ -334,7 +338,7 @@ export default function ModelEditor({
               min={1000}
               className={inputFieldClasses("purple")}
             />
-          </div>
+          </FieldRow>
         </div>
 
         <CredentialPicker
@@ -349,10 +353,7 @@ export default function ModelEditor({
             <p className="text-xs font-mono text-neon-purple/70 uppercase tracking-widest">
               New credential
             </p>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-white/70">
-                Credential Label
-              </label>
+            <FieldRow label="Credential Label">
               <input
                 type="text"
                 value={form.credentialLabel}
@@ -360,9 +361,11 @@ export default function ModelEditor({
                 placeholder={`${form.provider} key`}
                 className={inputFieldClasses("purple")}
               />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-white/70">API Key</label>
+            </FieldRow>
+            <FieldRow
+              label="API Key"
+              description="Stored plain text in the registry and synced to ~/.hermes/.env so Hermes can read it."
+            >
               <input
                 type="password"
                 autoComplete="off"
@@ -371,11 +374,7 @@ export default function ModelEditor({
                 placeholder={isEdit ? "Leave blank to keep existing" : "sk-..."}
                 className={inputFieldClasses("purple")}
               />
-              <p className="text-xs text-white/30 font-mono">
-                Stored plain text in the registry and synced to ~/.hermes/.env so
-                Hermes can read it.
-              </p>
-            </div>
+            </FieldRow>
           </div>
         )}
       </div>
