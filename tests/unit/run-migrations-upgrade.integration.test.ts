@@ -53,9 +53,9 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
 
     expect(cols(db, "cron_jobs")).toContain("workdir");
     expect(cols(db, "sessions")).toContain("message_count");
-    expect(tableNames(db)).toEqual(expect.arrayContaining(["runs", "schedules"]));
+    expect(tableNames(db)).toEqual(expect.arrayContaining(["runs", "schedules", "game_player", "game_events", "game_agent"]));
     expect(cols(db, "missions")).toContain("run_id");
-    expect(getSchemaVersion(db)).toBe(9);
+    expect(getSchemaVersion(db)).toBe(10);
     // Pre-existing data survived.
     expect(
       (db.prepare("SELECT COUNT(*) c FROM cron_jobs").get() as { c: number }).c,
@@ -74,7 +74,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(9);
+    expect(getSchemaVersion(db)).toBe(10);
     db.close();
   });
 });

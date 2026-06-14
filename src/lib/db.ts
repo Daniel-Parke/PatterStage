@@ -16,6 +16,7 @@ import { applyMissionQueueMigration } from "./db/apply-mission-queue-migration";
 import { applyCronScheduleCanonicalisation } from "./db/apply-cron-schedule-canonicalisation";
 import { applyRunsSchedulesMigration } from "./db/apply-runs-schedules-migration";
 import { applyLegacyColumnRepair } from "./db/apply-legacy-column-repair";
+import { applyGameTablesMigration } from "./db/apply-game-tables-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -167,6 +168,8 @@ export function runMigrations(database: Database.Database): void {
   // column-adds the incremental chain skipped (v5→v7 jump). Runs last so it
   // repairs already-deployed v8 installs too. Idempotent on fresh DBs.
   applyLegacyColumnRepair(database);
+  // Gamification tables (cosmetic-only, additive). Idempotent.
+  applyGameTablesMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────
