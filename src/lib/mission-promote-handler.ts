@@ -12,12 +12,11 @@ import { runMissionQueueTick } from "@/lib/mission-queue-tick";
 import { createCronJob, deleteCronJob, pushJobToHermes } from "@/lib/cron-repository";
 import { syncMissionToCronJob } from "@/lib/mission-cron-sync";
 import { enrichedMission } from "@/lib/mission-response";
-import { agentBackend } from "@/lib/backends";
 import { logApiError } from "@/lib/api-logger";
 import { isMissionDraft, isMissionQueuedForRun } from "@/lib/mission-board";
 import { cronSyncFailureBody, logCronSyncFailure } from "@/lib/cron-sync-failure";
 import { parseDispatchMode } from "@/lib/dispatch-mode";
-import type { Mission } from "@/lib/agent-backend/types";
+import type { Mission } from "@/lib/mission-types";
 
 export interface PromoteMissionInput {
   missionId: string;
@@ -87,7 +86,7 @@ export async function promoteMission(
     return { ok: false, status: 400, error: "schedule is required for cron promote" };
   }
 
-  const { shouldRebuildPrompt, prompt, updates } = buildMissionFieldPatch(
+  const { shouldRebuildPrompt, updates } = buildMissionFieldPatch(
     existing,
     {
       name: input.name,
@@ -132,16 +131,6 @@ export async function promoteMission(
 
   if (shouldSyncCron) {
     await syncMissionToCronJob(input.missionId);
-  }
-
-  if (prompt !== undefined) {
-    try {
-      await agentBackend.syncMission(input.missionId, {
-        prompt: getMission(input.missionId)!.prompt,
-      });
-    } catch (err) {
-      logApiError("promoteMission", "syncMission disk", err);
-    }
   }
 
   if (isCronMode) {

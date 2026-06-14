@@ -12,7 +12,7 @@ import {
 import { removeJobFromHermes } from "@/lib/cron/hermes-sync";
 import { logApiError } from "@/lib/api-logger";
 import { inTransaction } from "@/lib/db";
-import type { Mission } from "@/lib/agent-backend/types";
+import type { Mission } from "@/lib/mission-types";
 
 export interface MissionCronJobBrief {
   id: string;

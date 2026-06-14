@@ -38,7 +38,7 @@ function walkTs(dir: string, out: string[] = []): string[] {
 describe("MissionStatus enum unification", () => {
   it("agent-backend/types.ts exports the canonical four-state enum", () => {
     const src = readFileSync(
-      join(srcRoot, "lib", "agent-backend", "types.ts"),
+      join(srcRoot, "lib", "mission-types.ts"),
       "utf-8"
     );
     expect(src).toContain('"queued"');
@@ -49,7 +49,7 @@ describe("MissionStatus enum unification", () => {
 
   it("agent-backend/types.ts no longer declares the legacy enum members", () => {
     const src = readFileSync(
-      join(srcRoot, "lib", "agent-backend", "types.ts"),
+      join(srcRoot, "lib", "mission-types.ts"),
       "utf-8"
     );
     // The legacy enum used a five-line union starting with "| \"pending\"".
@@ -61,7 +61,7 @@ describe("MissionStatus enum unification", () => {
 
   it("DispatchMissionInput exposes modelId, provider, and profileName", () => {
     const src = readFileSync(
-      join(srcRoot, "lib", "agent-backend", "types.ts"),
+      join(srcRoot, "lib", "mission-types.ts"),
       "utf-8"
     );
     expect(src).toMatch(/profileName\s*\?:/);
@@ -78,16 +78,9 @@ describe("MissionStatus enum unification", () => {
     expect(src).not.toMatch(/VALUES\s*\([^)]*'pending'/);
   });
 
-  it("HermesAgentBackend uses 'dispatched' as the post-dispatch status", () => {
-    const src = readFileSync(
-      join(srcRoot, "lib", "backends", "hermes.ts"),
-      "utf-8"
-    );
-    expect(src).toContain('status: "dispatched"');
-    expect(src).not.toMatch(/status:\s*"pending"/);
-    expect(src).not.toMatch(/status:\s*"running"/);
-    expect(src).not.toMatch(/status:\s*"completed"/);
-    expect(src).not.toMatch(/status:\s*"cancelled"/);
+  it("mission-types.ts MissionStatus has no legacy 'cancelled' member", () => {
+    const src = readFileSync(join(srcRoot, "lib", "mission-types.ts"), "utf-8");
+    expect(src).toMatch(/MissionStatus\s*=\s*"queued"\s*\|\s*"dispatched"\s*\|\s*"successful"\s*\|\s*"failed"/);
   });
 
   it("/api/missions cancel branch maps to 'failed' (no 'cancelled' status)", () => {

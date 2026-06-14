@@ -46,12 +46,15 @@ Quick lookup for Control Hub and Hermes paths. Set values in `.env.local` (creat
 | `CH_READ_ONLY` | `1` — block mutating API routes (503) |
 | `CH_REQUEST_SIGNING_SECRET` | Optional HMAC for selected routes |
 
-## LLM / gateway
+## Runtime / gateway
+
+The runtime adapter (`src/lib/runtime/`) dispatches missions as HTTP **runs** to the Hermes **API Server** and authenticates with a bearer key.
 
 | Variable | Purpose |
 |----------|---------|
-| `HERMES_GATEWAY_URL` | Gateway base for health probes and chat (e.g. `http://127.0.0.1:8642`) |
-| `CONTROL_HUB_LLM_API` | Full chat completions URL or gateway-derived base |
+| `HERMES_GATEWAY_URL` | Hermes API Server base the runtime targets (default `http://127.0.0.1:8642`) — run dispatch, health, chat. |
+| `API_SERVER_KEY` | Bearer key the runtime sends (`Authorization: Bearer …`). **Must match** the gateway's `API_SERVER_KEY` in `{HERMES_HOME}/.env`. `setup.sh` generates one and wires both sides. |
+| `CONTROL_HUB_LLM_API` | Full chat-completions URL or gateway-derived base (alternative to `HERMES_GATEWAY_URL`). |
 
 ## Debug artifact (not read by the app)
 

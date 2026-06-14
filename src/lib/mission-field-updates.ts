@@ -5,8 +5,8 @@
 import { buildMissionPrompt, parseMissionPrompt } from "@/lib/build-mission-prompt";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import type { LocalDirEntry } from "@/types/hermes";
-import type { Mission } from "@/lib/agent-backend/types";
-import type { MissionStatus } from "@/lib/agent-backend/types";
+import type { Mission } from "@/lib/mission-types";
+import type { MissionStatus } from "@/lib/mission-types";
 
 export interface MissionFieldPatchInput {
   name?: string;

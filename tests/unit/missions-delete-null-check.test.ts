@@ -60,14 +60,9 @@ jest.mock("@/lib/api-auth", () => ({
 }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
-jest.mock("@/lib/backends", () => ({
-  agentBackend: {
-    dispatchMission: jest.fn(),
-    pauseMission: jest.fn(),
-    resumeMission: jest.fn(),
-    cancelMission: jest.fn(),
-    getMissionStatus: jest.fn(),
-  },
+jest.mock("@/lib/orchestration", () => ({
+  cancelMissionRun: jest.fn(() => Promise.resolve({ ok: true })),
+  dispatchMissionRun: jest.fn(() => Promise.resolve({ ok: true })),
 }));
 
 jest.mock("@/lib/mission-cron-sync", () => ({

@@ -23,8 +23,8 @@ describe("Baseline — mission settings columns", () => {
     expect(sql).toContain("cron_job_id");
   });
 
-  it("Mission interface has new fields (types.ts)", () => {
-    const p = join(repoRoot, "src", "lib", "agent-backend", "types.ts");
+  it("Mission interface has new fields (mission-types.ts)", () => {
+    const p = join(repoRoot, "src", "lib", "mission-types.ts");
     const content = readFileSync(p, "utf-8");
     expect(content).toContain("modelId?: string");
     expect(content).toContain("provider?: string");

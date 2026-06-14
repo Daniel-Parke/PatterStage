@@ -19,7 +19,6 @@ import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, notFound, ok, serverError, serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
-import { agentBackend } from "@/lib/backends";
 import { createCronJob, deleteCronJob, importHermesJobs, pushJobToHermes } from "@/lib/cron-repository";
 import { getCategory } from "@/lib/mission-category-repository";
 import { listProfiles } from "@/lib/profiles-repository";
@@ -30,6 +29,7 @@ import {
   syncMissionToCronJob,
 } from "@/lib/mission-cron-sync";
 import { dispatchMissionNow } from "@/lib/mission-dispatch";
+import { cancelMissionRun } from "@/lib/orchestration";
 import { buildMissionFieldPatch } from "@/lib/mission-field-updates";
 import { parseMissionBodyFields } from "@/lib/mission-body";
 import { promoteMission } from "@/lib/mission-promote-handler";
@@ -432,7 +432,7 @@ export async function POST(request: NextRequest) {
         return badRequest("Use promote for draft or queued missions; update is for running missions");
       }
 
-      const { shouldRebuildPrompt, prompt, updates } = buildMissionFieldPatch(
+      const { shouldRebuildPrompt, updates } = buildMissionFieldPatch(
         existing,
         {
           status,
@@ -473,14 +473,6 @@ export async function POST(request: NextRequest) {
         await syncMissionToCronJob(missionIdFinal);
       }
 
-      if (prompt !== undefined) {
-        try {
-          await agentBackend.syncMission(missionIdFinal, { prompt: mission.prompt });
-        } catch (err) {
-          logApiError("POST /api/missions", "syncMission disk", err);
-        }
-      }
-
       appendAuditLine({ action: "mission.update", resource: missionIdFinal, ok: true });
       return missionResponse(missionIdFinal);
     }
@@ -517,8 +509,9 @@ export async function POST(request: NextRequest) {
 
       const shouldKillProcess = existingMission.status === "dispatched";
       if (shouldKillProcess) {
-        void agentBackend.cancelMission(cancelId).catch((err: unknown) => {
-          logApiError("POST /api/missions", "cancelMission process kill (background)", err);
+        // Stop the backend run over HTTP (runtime.stopRun) — no pid/signal.
+        void cancelMissionRun(cancelId).catch((err: unknown) => {
+          logApiError("POST /api/missions", "cancelMissionRun (background)", err);
         });
       }
 
