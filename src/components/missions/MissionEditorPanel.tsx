@@ -19,6 +19,7 @@ import {
   isMissionDraft,
   isMissionQueuedForRun,
 } from "@/lib/mission-board";
+import MissionLiveProgress from "@/components/missions/MissionLiveProgress";
 
 export interface MissionEditorPanelProps {
   detail: MissionDetail | null;
@@ -290,6 +291,10 @@ export default function MissionEditorPanel({
                 </div>
               </div>
             </div>
+          )}
+
+          {mission.status === "dispatched" && (
+            <MissionLiveProgress missionId={mission.id} />
           )}
 
           {detail.mission.results && (
