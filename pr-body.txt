@@ -7151,3 +7151,71 @@ Net: **+352 / -20 lines** across 7 files (352 includes the new test + ref doc, 2
 
 - **Random pick next session.** The List 2 `useMissionsPage` surface is now mined clean of dead state. Candidates worth re-scanning: (a) the `result.data?.data?.X` envelope double-unwrap pattern at 5+ List 2 sites (`useCronJobMutation.ts:141` for `pausedCount`, `useMissionsPage.ts:805,841` for `body?.data?.mission?.id`, `useMissionsApi.ts:49` for `result.data?.data?.category`, `SystemCronModal.tsx` for `scriptsDir`/`logDir`, `JobFormModal.tsx:105` for `profiles`) — a `safeApiCallEnvelope<T>` helper could collapse all 5 sites, but this crosses the "byte-equivalent" line subtly (the inner envelope type is per-route), (b) the `buildTemplatePayload` 2-site duplicate field list at `handleSaveAsTemplate` (line 976) and `handleTemplateSave` (line 1016) — both pass the same 19 form fields, a `templatePayloadFromForm(formState)` helper would collapse both, (c) the `MissionCreateForm.tsx` 648-line monolith (would benefit from a sub-component split, but that crosses the "byte-equivalent" line).
 - **Carryover** — closed. The next session starts with a clean working tree.
+
+## Session 215 — List 4 (Models, HERMES.md, Environment, All Settings) — Mode F.5 carryover closure: `EnvLineRow` extraction + `FallbackConfigPanel` `updateField` + `buildConfigPatch` consolidation
+
+**Date:** 2026-06-14
+**Branch:** `mission/hermes-review-and-refactor`
+**Random pick:** `echo $((RANDOM % 4 + 1))` = 4 (List 4: Models, HERMES.md, Environment, All Settings). Last List 4 pick was session 210 (the `ModelsSectionHeader` + `envLineKey` extraction — sister to this session's `EnvLineRow` extraction in the same `/config/[section]` page).
+**Status:** committed + pushed (commit at HEAD on `mission/hermes-review-and-refactor`).
+**Mode:** **F.5 carryover closure** — the prior cron tick had executed the 2 refactors + written the 2 source-pattern tests, but never verified the suite + never committed. This session re-verified the full suite, fixed 3 test assertions, committed + pushed + updated the PR body.
+
+### What this session shipped
+
+Two byte-equivalent structural extractions in the `/config` + `/config/models` surfaces, both List 4, both with source-pattern tests:
+
+1. **`EnvLineRow` component extraction** (`src/app/config/[section]/page.tsx`) — 30-line inline `.map((line, i) => ...)` body with 3 `if (parsed.kind === "X")` branches (`blank` / `invalid` / `keyval` fallthrough) collapses to a single `<EnvLineRow lineKey parsed raw />` binding per row. New file `src/components/config/EnvLineRow.tsx` (88 lines) with an exhaustive 4-case `switch (parsed.kind)` over the `EnvLine` discriminated union. The `maskKeyHint` ownership moves from the page to the component (page drops the `import { maskKeyHint } from "@/lib/secret-mask"` import). The `parsed` prop is the already-parsed `EnvLine` (computed once per file content change in the page's `useMemo` over `fileContent`); the row is a pure presentational render.
+
+2. **`FallbackConfigPanel` `updateField` + `buildConfigPatch` consolidation** (`src/components/models/FallbackConfigPanel.tsx`) — 3 inline handlers (`handleRetriesChange` / `handleRestorationChange` / `handleNotificationChange`) each did a `{ ...config, <field>: <value> }` spread followed by `onUpdate(...)`. They collapse to 1-line arrows that call the new `updateField(patch: Partial<FallbackConfig>)` helper. The new module-level `buildConfigPatch(config: FallbackConfig, patch: Partial<FallbackConfig>): FallbackConfig` is a pure spread `{ ...config, ...patch }`. The `Partial<FallbackConfig>` type discriminator catches unknown fields at compile time. The `parseInt + isNaN + range` guard in `handleRetriesChange` is preserved byte-equivalent (the guard is the variant-specific bit — retries is a number with a range check, the other 2 are booleans with no prelude).
+
+### Source-pattern tests (2 new files, 19 assertions)
+
+1. **`tests/unit/env-line-row-extraction.test.ts`** (11 assertions, 2 describes) — pins the new component file (existence, imports, default export with `({ lineKey, parsed, raw })` signature, exhaustive 4-case switch, `blank` variant's `&nbsp;` placeholder, `keyval` variant's `maskKeyHint(parsed.value)` masking) + the page migration (imports the new component, no longer imports `maskKeyHint`, still imports `parseEnvLine + envLineKey`, renders the .env preview via a single `<EnvLineRow>` binding, no `parsed.kind` references outside the component).
+
+2. **`tests/unit/fallback-config-panel-update-field-extraction.test.ts`** (8 assertions) — pins the `buildConfigPatch` module-level helper with `(config: FallbackConfig, patch: Partial<FallbackConfig>): FallbackConfig` signature, the `{ ...config, ...patch }` body, the `updateField` page-local arrow, the 3 handler-body rewrites, the `parseInt + isNaN + range` guard preservation, and the `onUpdate(` call count invariant (exactly 1, after block-comment-stripping).
+
+### The 3 test-assertion fixes (the F.5 carryover was written but had 3 known failures)
+
+The prior session's tests were UNVERIFIED. The carryover-closure protocol re-ran them and found 3 failing assertions; all 3 were 1-line regex fixes:
+
+1. **EnvLineRow `keyval` case slice** — the `[\s\S]*?\}[\s\S]*?\}` non-greedy slice stopped at the first `}` (the closing `</span>` of `<span>{parsed.key}</span>`), missing the trailing `maskKeyHint(parsed.value)` line. **Fix:** anchor the slice to the END of the file (`source.slice(keyvalStart)`) and check the slice directly. The `maskKeyHint` call sits in the last `</span>` of the keyval case, after the first non-greedy `}` would have stopped.
+
+2. **FallbackConfigPanel `buildConfigPatch` signature regex** — the original regex `\s*\)` after `Partial<FallbackConfig>` did not match the actual source, which has `Partial<FallbackConfig>,\n  ): FallbackConfig {` (the TypeScript formatter wraps the long type after `,` and there's a newline + indent between `>` and `)`). **Fix:** widen the regex to `[\s\S]*?\)` (any chars including newlines) between the `>` (close of `Partial<...>`) and the `)` (close of the param list).
+
+3. **FallbackConfigPanel `onUpdate` count** — the original test sliced just the helpers block (`syncBlocked` to `return (`) and counted `onUpdate(` calls expecting exactly 1. But the JSDoc for `buildConfigPatch` contains 2 literal `onUpdate(...)` references (lines 34, 64) inside `/* ... */` block comments, and the slice boundaries missed the `updateField` call (which IS at the right position). The actual count was 2. **Fix:** strip `/* ... */` block comments and `// ...` line comments FIRST, then count `\bonUpdate\s*\(` calls. After stripping, the count is exactly 1 (the `updateField` body call). This is the same P-208-2 "block-comment-stripping" recipe codified for the List 2 `window.confirm` sister test, applied here to the `onUpdate` count invariant.
+
+**Generalization (P-215-1):** any source-pattern test that pins a "count of `X(` calls" invariant in a file with JSDoc documenting `X(...)` must strip `/* ... */` block comments before counting. The naive slice-between-anchor-bounds approach misses the JSDoc literally, and the JSDoc IS the documentation of the form, so it's almost always present in well-documented hooks.
+
+### Verification
+
+- `npx tsc --noEmit`: clean (0 errors)
+- `CI=true npx eslint src/components/config/EnvLineRow.tsx src/components/models/FallbackConfigPanel.tsx "src/app/config/[section]/page.tsx" tests/unit/env-line-row-extraction.test.ts tests/unit/fallback-config-panel-update-field-extraction.test.ts --max-warnings 0`: clean (0 warnings)
+- `CI=true npx jest`: **336 suites / 2621 tests pass** (was 334/2602 after session 214 followup; +2 suites, +19 tests from the 2 new source-pattern tests)
+- `npm run build`: clean (1 pre-existing Turbopack NFT warning from `next.config.ts`, unrelated to this refactor — known AGENTS.md issue)
+
+### Files
+
+| Type | Change |
+|------|--------|
+| New | `src/components/config/EnvLineRow.tsx` (88 lines, with JSDoc) |
+| New | `tests/unit/env-line-row-extraction.test.ts` (155 lines, 11 assertions) |
+| New | `tests/unit/fallback-config-panel-update-field-extraction.test.ts` (145 lines, 8 assertions) |
+| New | `docs/references/session-215-list4-f5-closure-env-line-row-and-fallback-config-panel.md` (this file's companion) |
+| Modified | `src/app/config/[section]/page.tsx` (-17 lines net; maskKeyHint import dropped; .map body collapses to single `<EnvLineRow>` binding) |
+| Modified | `src/components/models/FallbackConfigPanel.tsx` (+22 lines net; most of the delta is the new JSDoc blocks for `buildConfigPatch` + `updateField`; 3 handler bodies collapse to 1-line arrows) |
+| Modified | `pr-body.txt` (appended at bottom) + `pr-body-headline.md` (Followup section at top) |
+
+Net: **+449 / -30 lines** across 5 files (excluding the PR body and ref doc).
+
+### Reference doc
+
+`docs/references/session-215-list4-f5-closure-env-line-row-and-fallback-config-panel.md` — the per-session reference for this work. Documents the F.5 carryover closure protocol (the 8 steps: re-read M files → verify byte-equivalence → count new exports → run full suite → fix test failures → re-verify → commit/push/docs/PR → write ref doc), the 2 refactor's pre/post shape, the 3 test-assertion fixes with the regex gotcha details, and the new pitfall P-215-1 (block-comment-stripping for count invariants in JSDoc-documented files).
+
+### New pitfalls codified
+
+1. **P-215-1 — Block-comment-stripping for count invariants.** A source-pattern test that pins a "count of `X(` calls" invariant in a file with JSDoc documenting `X(...)` must strip `/* ... */` block comments before counting. The naive slice-between-anchor-bounds approach misses the JSDoc literally. Same recipe as P-208-2 (sister codification for `window.confirm` count in `useMissionsPage.ts`).
+
+### Next session should
+
+- **Random pick next session.** The List 4 surface is mined clean for the 2 patterns landed in this session (`EnvLineRow` extraction + `updateField + buildConfigPatch` consolidation). Candidates worth re-scanning: (a) the per-row `window.confirm` sister in `JobCard.tsx` + `SystemCronCard.tsx` (P-214-5's bare-`confirm(` blindspot — `if (!confirm("Delete this cron job?"))` and `if (!confirm("Delete this system cron job?"))` are 2 sister sites in the List 2 cron cards that the session 200 / 208 / 214 regexes missed because the regex is `\\bwindow\\.confirm` (the `window.` prefix is implicit, not explicit) — these 2 sites are the canonical next consumers of the session 208 `PerRowDeleteButton` extraction, or could migrate to a sister `<CronCardDeleteButton>`), (b) the `loadHindsightList` helper is now in `hindsight-client.ts` and used in 2 sites in `HindsightBrowser.tsx` (session 204) — could be promoted to a shared `hindsight-api` module if a 3rd consumer lands in the chat page or elsewhere.
+- **Carryover** — closed. The next session starts with a clean working tree.
