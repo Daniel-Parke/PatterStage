@@ -120,3 +120,46 @@ export async function loadHindsightList<TItem>(
   const items = (inner?.[key] as TItem[] | undefined) ?? [];
   setItems(items);
 }
+
+// ── Memory age filter (stale-fact TTL substitute) ──────────────
+// Hindsight has no per-fact TTL field, so the UI cannot ask the
+// daemon to "give me facts newer than N days" in a single call. We
+// fetch what the daemon returns (sorted by recency) and filter
+// client-side by `created_at`. Stale facts are hidden by default
+// but the user can override via the "Show stale" toggle in the
+// Memory tab. Default age threshold is 90 days — facts older than
+// that are usually superseded by newer knowledge and add noise to
+// the Memory tab. The threshold is a constant here, not user-
+// configurable, to avoid the UI surface area of an "I forgot I set
+// it to 7 days and now nothing shows" footgun.
+//
+// Added 2026-06-13 as part of the corpus-flood cleanup. See skill
+// hindsight-memory-configuration/references/session-2026-06-13-corpus-
+// flood-cleanup.md for context.
+/** Default age threshold (days) for the Memory tab. Facts older than
+ * this are hidden by default. */
+export const HINDSIGHT_DEFAULT_MAX_AGE_DAYS = 90;
+/** Filter an array of memories by age, using the `created_at`
+ * field on each memory. Memories without a parseable `created_at`
+ * are kept (we can't prove they're stale, so default to showing
+ * them — better to over-show than to silently drop).
+ *
+ * @param memories the array to filter
+ * @param maxAgeDays facts older than this many days are dropped.
+ *   Pass `Infinity` to disable the filter (used by the "Show stale"
+ *   toggle in the UI).
+ */
+export function filterMemoriesByAge<T extends { created_at?: string }>(
+  memories: T[],
+  maxAgeDays: number,
+): T[] {
+  if (!Number.isFinite(maxAgeDays)) return memories;
+  if (maxAgeDays <= 0) return memories;
+  const cutoffMs = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
+  return memories.filter((m) => {
+    if (!m.created_at) return true; // unknown age → keep
+    const t = Date.parse(m.created_at);
+    if (Number.isNaN(t)) return true; // unparseable → keep
+    return t >= cutoffMs;
+  });
+}
