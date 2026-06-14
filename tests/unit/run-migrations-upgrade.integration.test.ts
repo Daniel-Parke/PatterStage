@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 /** @jest-environment node */
 // Exercises the REAL runMigrations() entry point (not just individual appliers)
 // against REAL SQLite, proving the full upgrade-path wiring: a legacy install
