@@ -77,3 +77,6 @@ runtime.log
 
 # real-Hermes test harness runtime artifacts
 test-harness/.work/
+
+# Playwright isolated E2E data dir
+tmp/
