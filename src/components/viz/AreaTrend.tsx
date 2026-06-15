@@ -60,7 +60,7 @@ export default function AreaTrend({
         </linearGradient>
       </defs>
       <path d={completedArea} fill={`url(#${id})`} />
-      <path d={completedLine} fill="none" stroke={neon(color)} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+      <path d={completedLine} fill="none" stroke={neon(color)} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" pathLength={1} className="viz-draw" />
       {hasFailures && (
         <path
           d={linePts((d) => d.failed ?? 0)}

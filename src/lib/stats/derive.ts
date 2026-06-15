@@ -50,6 +50,8 @@ export interface LevelInfo {
   progress: number;
 }
 
+export type AchievementTier = "common" | "rare" | "epic" | "legendary";
+
 export interface Achievement {
   id: string;
   name: string;
@@ -60,6 +62,10 @@ export interface Achievement {
   progress: number; // 0–1
   current: number;
   target: number;
+  /** Rarity tier (curated) — drives the "rarest/most-valuable" showcase. */
+  tier: AchievementTier;
+  /** Points awarded on unlock, derived from tier. */
+  points: number;
 }
 
 /** XP awarded per unit of work. Tuned so a few real missions move the needle. */
@@ -178,6 +184,65 @@ export interface AchievementDef {
   measure: (m: RawMetrics) => number;
 }
 
+/** Points per tier (rarer = more valuable). */
+export const TIER_POINTS: Record<AchievementTier, number> = {
+  common: 10,
+  rare: 25,
+  epic: 50,
+  legendary: 100,
+};
+
+/**
+ * Curated rarity per achievement id. Content-as-data: the "rarest/most-valuable"
+ * showcase ranks by tier (then points, then progress). Anything not listed
+ * defaults to "common" (the easy, target≈1 entry-level achievements).
+ */
+const ACHIEVEMENT_TIER: Record<string, AchievementTier> = {
+  // Legendary — the grindiest milestones
+  legend: "legendary",
+  "epic-scribe": "legendary",
+  marathon: "legendary",
+  "cron-lord": "legendary",
+  "token-tycoon": "legendary",
+  centurion: "legendary",
+  completionist: "legendary",
+  // Epic
+  veteran: "epic",
+  "saga-weaver": "epic",
+  wordsmith: "epic",
+  "skill-architect": "epic",
+  "set-and-forget": "epic",
+  chatterbox: "epic",
+  "token-baron": "epic",
+  unstoppable: "epic",
+  renaissance: "epic",
+  // Rare
+  "field-agent": "rare",
+  dispatcher: "rare",
+  blitz: "rare",
+  resilient: "rare",
+  novelist: "rare",
+  operator: "rare",
+  scriptsmith: "rare",
+  clockwork: "rare",
+  tinkerer: "rare",
+  "model-mechanic": "rare",
+  conversationalist: "rare",
+  "on-a-roll": "rare",
+  polyglot: "rare",
+  shapeshifter: "rare",
+  // Common (default): first-contact, storyteller, automator, first-words,
+  // night-owl, early-bird.
+};
+
+export function achievementTier(id: string): AchievementTier {
+  return ACHIEVEMENT_TIER[id] ?? "common";
+}
+
+export function achievementPoints(id: string): number {
+  return TIER_POINTS[achievementTier(id)];
+}
+
 export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   // ── Missions ──
   { id: "first-contact", name: "First Contact", description: "Complete your first mission", icon: "Rocket", color: "cyan", target: 1, measure: (m) => m.completedMissions },
@@ -239,6 +304,7 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
 export function evaluateAchievements(m: RawMetrics): Achievement[] {
   return ACHIEVEMENT_DEFS.map((def) => {
     const current = def.measure(m);
+    const tier = achievementTier(def.id);
     return {
       id: def.id,
       name: def.name,
@@ -249,6 +315,8 @@ export function evaluateAchievements(m: RawMetrics): Achievement[] {
       target: def.target,
       unlocked: current >= def.target,
       progress: def.target > 0 ? Math.min(1, current / def.target) : 0,
+      tier,
+      points: TIER_POINTS[tier],
     };
   });
 }

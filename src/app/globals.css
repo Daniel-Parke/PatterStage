@@ -128,11 +128,24 @@
   animation: ch-shimmer 2.2s ease-in-out infinite;
 }
 
+/* SVG line draw-in: pair with pathLength={1} on the <path>. Reduced-motion
+   users skip the animation (the line renders fully via the override below). */
+@keyframes viz-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+.viz-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: viz-draw 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-flame,
   .animate-pulse-glow,
   .animate-float-in,
   .animate-shimmer::after { animation: none; }
+  .viz-draw { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; }
 }
 
 /* Variable-driven surface glow (see GlowSurface.tsx); --glow-surface-rgb set inline */

@@ -12,14 +12,14 @@
 
 import { useMemo, type ReactNode } from "react";
 import Link from "next/link";
-import { BarChart3, Trophy, Flame, Sparkles, Activity, CalendarRange, Rocket } from "lucide-react";
+import { BarChart3, Sparkles, Activity, CalendarRange, Rocket } from "lucide-react";
 
 import PageHeader from "@/components/layout/PageHeader";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { AreaTrend, ActivityHeatmap, Donut } from "@/components/viz";
 import { neonAlpha, type NeonColor } from "@/components/viz/colors";
-import { AchievementBadge, LevelBadge, StreakFlame } from "@/components/achievements";
+import { AchievementShowcase, LevelBadge, StreakFlame } from "@/components/achievements";
 import { useStats } from "@/hooks/useStats";
 import { useAnalytics, useAnalyticsTimeseries } from "@/hooks/useAnalytics";
 import type { AnalyticsEventType } from "@/lib/analytics/event-types";
@@ -191,27 +191,8 @@ export default function InsightsPage() {
               <ActivityHeatmap data={stats?.runActivity ?? []} color="green" />
             </Card>
 
-            {/* ── Achievements ── */}
-            <Card>
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-neon-yellow" />
-                  <h2 className="text-xs font-mono uppercase tracking-widest text-white/50">Achievements</h2>
-                </div>
-                <span className="flex items-center gap-1.5 text-xs text-white/40">
-                  {unlocked === achievements.length && achievements.length > 0 && (
-                    <Sparkles className="h-3.5 w-3.5 text-neon-yellow" />
-                  )}
-                  <Flame className="h-3.5 w-3.5 text-neon-orange" />
-                  {unlocked} / {achievements.length} unlocked
-                </span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9">
-                {achievements.map((a) => (
-                  <AchievementBadge key={a.id} achievement={a} />
-                ))}
-              </div>
-            </Card>
+            {/* ── Achievements (compact trophy case; expands to full grid) ── */}
+            <AchievementShowcase achievements={achievements} />
           </>
         )}
       </div>

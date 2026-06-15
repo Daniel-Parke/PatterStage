@@ -59,6 +59,8 @@ export default function Sparkline({
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
+        pathLength={1}
+        className="viz-draw"
       />
     </svg>
   );

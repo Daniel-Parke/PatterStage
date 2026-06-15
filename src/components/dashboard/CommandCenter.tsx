@@ -25,7 +25,7 @@ import { useStats } from "@/hooks/useStats";
 import { useCountUp } from "@/hooks/useCountUp";
 import { AreaTrend, ActivityHeatmap, Donut, Sparkline, ProgressRing } from "@/components/viz";
 import { neon, neonAlpha, type NeonColor } from "@/components/viz/colors";
-import { LevelBadge, StreakFlame, AchievementBadge } from "@/components/achievements";
+import { LevelBadge, StreakFlame, AchievementShowcase } from "@/components/achievements";
 import { useToast } from "@/components/ui/Toast";
 import { useAchievementUnlocks } from "@/hooks/useAchievementUnlocks";
 import type { Achievement } from "@/lib/stats/derive";
@@ -134,7 +134,6 @@ export default function CommandCenter() {
 
   const { missions, runs, level, streak, throughput, runActivity, tokensByDay, achievements, automations } = stats;
   const successPct = Math.round(missions.successRate * 100);
-  const unlocked = achievements.filter((a) => a.unlocked).length;
   const throughputTotal = throughput.reduce((s, p) => s + p.completed, 0);
   const next = automations.nextRun;
 
@@ -255,15 +254,8 @@ export default function CommandCenter() {
         </Card>
       </div>
 
-      {/* ── Achievements ── */}
-      <Card accent="purple">
-        <CardHeader icon={Trophy} label="Achievements" color="purple" right={<span className="font-mono text-xs text-white/40">{unlocked}/{achievements.length}</span>} />
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
-          {achievements.map((a) => (
-            <AchievementBadge key={a.id} achievement={a} />
-          ))}
-        </div>
-      </Card>
+      {/* ── Achievements (compact trophy case; expands to full grid) ── */}
+      <AchievementShowcase achievements={achievements} />
     </section>
   );
 }
