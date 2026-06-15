@@ -36,6 +36,8 @@
 
     "test:e2e": "cross-env PORT=3000 playwright test",
 
+    "screenshots": "cross-env PORT=3477 CAPTURE_SCREENSHOTS=1 playwright test screenshots.spec.ts",
+
     "test:full-install": "python tests/integration/test_full_install_update_process.py --profile smoke --skip-http",
 
     "test:full-install-release": "python tests/integration/test_full_install_update_process.py --profile release --skip-http",

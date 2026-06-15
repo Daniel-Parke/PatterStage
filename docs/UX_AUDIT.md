@@ -10,9 +10,9 @@ Tags: **Impact** (H/M/L) · **Effort** (S/M/L). "Quick win" = H or M impact at S
 
 **Where we are:** a neon-dark "Cherenkov" theme — deep blue-tinted surfaces (`dark-950 #040b12`), five competing neon accents (cyan/purple/pink/green/orange), and `glow-*` box-shadows used liberally. Strong, but louder than the parent brand.
 
-**Where PatterTech sits:** minimal, light, clean, professional, principle-driven — "Technology that stays in your hands", "Principles, not product promises". Generous whitespace, card-based, restrained.
+**Where PatterTech actually sits** (observed from the live WiseWattage / PatterTech site, NI739839): a **dark** theme with a **green primary accent** — a green lightbulb logo + "WiseWattage" wordmark, green CTAs/links, clean card sections, generous whitespace, an Inter-like sans, "© PatterTech Ltd · Belfast". (Note: the *dark + green* reality is the opposite of the "light/minimal" first impression from the text-only homepage scrape.) Control Hub already carries the lineage with the **"PT / Hermes"** mark in the sidebar.
 
-**Hybrid target (agreed):** keep a *refined dark* dashboard surface, but adopt PatterTech's restraint and chrome.
+**Hybrid target (agreed, now sharpened):** Control Hub is *already dark* — so the alignment is mostly **(a) shift the primary accent from cyan → PatterTech green**, **(b) green CTAs/links**, **(c) the restraint already started in P6**, and **(d) the PT lightbulb logo lineage**. This is a smaller, lower-risk change than a light re-skin.
 
 | # | Change | Impact | Effort |
 |---|--------|--------|--------|
