@@ -6,76 +6,42 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, memo as reactMemo } from "react";
+import { useState, useCallback, useMemo, memo as reactMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   // Dashboard icons
   Activity,
   Layers,
-  Globe,
-  AlertTriangle,
-  RefreshCw,
-  CheckCircle2,
   Radio,
-  Rocket,
   ChevronRight,
-  ChevronDown,
   Gamepad2,
   BookOpen,
 } from "lucide-react";
-import { StatusDot } from "@/components/ui/Card";
-import CategoryAccordion from "@/components/ui/CategoryAccordion";
-import {
-  groupTemplatesByCategory,
-  type TemplateLike,
-} from "@/lib/mission-categories";
-import type { MissionCategory } from "@/lib/mission-category-repository";
-import TemplatePill from "@/components/ui/TemplatePill";
 import { useToast } from "@/components/ui/Toast";
-import type { SystemStatus, AccentColor, MonitorData, HermesProcess, MissionBrief } from "@/types/hermes";
-import { timeAgo, titleCase } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
 import { shellHeaderBarClasses } from "@/lib/theme";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import AppPageShell from "@/components/layout/AppPageShell";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
-import { MissionStatusBadge } from "@/components/dashboard/StatusBadge";
 import { Panel, PanelHeader } from "@/components/dashboard/Panel";
 import CommandCenter from "@/components/dashboard/CommandCenter";
-import { safeApiCallData, toastError } from "@/lib/api-fetch";
+import DispatchStrip from "@/components/dashboard/DispatchStrip";
+import ActiveMissionsPanel from "@/components/dashboard/ActiveMissionsPanel";
+import PlatformsPanel from "@/components/dashboard/PlatformsPanel";
+import ErrorsPanel from "@/components/dashboard/ErrorsPanel";
+import ProcessesPanel from "@/components/dashboard/ProcessesPanel";
+import { toastError } from "@/lib/api-fetch";
 import { runMutation } from "@/lib/run-mutation";
 import { toastFromResult } from "@/lib/toast-from-result";
 import { dispatchMissionAction } from "@/hooks/success-message-for-dispatch";
-import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
 import { isMissionActive } from "@/lib/mission-board";
 import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
-import { composeTemplateUrl } from "@/lib/dashboard-helpers";
 import { dedupErrors } from "@/lib/dashboard-error-dedup";
 import { formatModelSubtitle } from "@/lib/dashboard-model-subtitle";
-import { topNTemplates } from "@/lib/dashboard-top-templates";
-import { loadInitialDashboardData } from "@/lib/dashboard-initial-load";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { useInterval } from "@/hooks/useInterval";
-import { usePolledUpdates } from "@/hooks/usePolledUpdates";
+import { useDashboard } from "@/hooks/useDashboard";
 
-/**
- * Shape of a single template as returned by /api/templates. The dashboard
- * uses the same shape for both the API response and the local state
- * slice, so the type is exported as `TemplateListItem` and shared
- * between them (avoids the previous inline `Array<{...}>` duplication
- * at the useState declaration).
- */
-export interface TemplateListItem {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  category: string;
-  categoryId?: string;
-  profile: string;
-  description: string;
-  isCustom?: boolean;
-}
 // ── Live Clock (isolated re-render) ───────────────────────────
 
 const LiveClock = reactMemo(function LiveClock() {
@@ -93,72 +59,35 @@ const LiveClock = reactMemo(function LiveClock() {
   );
 });
 
-// ── Cron job caption span ─────────────────────────────────────
-
 export default function Dashboard() {
-  const [data, setDataFields] = useState<{
-    status: SystemStatus | null;
-    monitor: MonitorData | null;
-    processes: HermesProcess[];
-    missions: MissionBrief[];
-    config: Record<string, unknown> | null;
-    templates: TemplateListItem[];
-    categories: MissionCategory[];
-  }>({
-    status: null,
-    monitor: null,
-    processes: [],
-    missions: [],
-    config: null,
-    templates: [],
-    categories: [],
-  });
-  const { status, monitor, processes, missions, config, templates, categories } =
-    data;
+  // All dashboard data comes from the TanStack Query layer
+  // (src/hooks/useDashboard.ts): three live queries (monitor 10s,
+  // agents 15s, missions 15s) + one static bundle (status / config /
+  // templates / categories / model defaults). `ready` gates the first
+  // paint on the static bundle resolving; the `refetch*` callbacks let
+  // the mutation handlers below re-pull a single surface after an
+  // action instead of hand-merging into local state.
+  const {
+    status,
+    monitor,
+    processes,
+    missions,
+    config,
+    templates,
+    categories,
+    registryAgentModelLabel,
+    ready,
+    refetchMonitor,
+    refetchMissions,
+    refetchProcesses,
+  } = useDashboard();
 
-  const setData = useCallback((partial: Partial<typeof data>) => {
-    setDataFields(prev => ({ ...prev, ...partial }));
-  }, []);
-  const [ready, setReady] = useState(false);
-  const [dispatchExpanded, setDispatchExpanded] = useState(false);
-  // Open-callback sibling for the dispatch panel. The "Mission Dispatch"
-  // header toggles `dispatchExpanded` (line 596) and the "+N more" pill
-  // (line 638) opens it from the collapsed state. Promoting the `() =>
-  // setDispatchExpanded(true)` inline arrow to a named useCallback
-  // follows the same open/close sibling pattern as session 116 P-7
-  // (the missions page's `openCategoryManager` + `closeCategoryManager`,
-  // the cron page's `openAgentCreate` / `openSystemCreate`). The deps
-  // array lists `setDispatchExpanded` so the
-  // `react-hooks/exhaustive-deps` rule is satisfied — the setter is a
-  // stable `useState` reference so the callback is still effectively
-  // constant per render cycle.
-  const openDispatchPanel = useCallback(
-    () => setDispatchExpanded(true),
-    [setDispatchExpanded],
-  );
-  // Toggle sibling for the dispatch panel header. The collapsed-strip
-  // header (line 536) calls `() => setDispatchExpanded(!dispatchExpanded)`
-  // inline; promoting to a named useCallback mirrors the open-callback
-  // promotion above (session 116 P-7 / session 118 P-7 sibling pattern).
-  // The deps array lists `dispatchExpanded` so the
-  // `react-hooks/exhaustive-deps` rule is satisfied — `dispatchExpanded`
-  // is a fresh boolean on every state update, so the callback re-creates
-  // only when the panel flips open/closed.
-  const toggleDispatchPanel = useCallback(
-    () => setDispatchExpanded(!dispatchExpanded),
-    [dispatchExpanded],
-  );
+  // The dispatch panel's collapsed/expanded state + template grouping
+  // now live inside <DispatchStrip/>; the page just hands it templates.
   const [errorSev, setErrorSev] = useState<"all" | "error" | "warning">("all");
   const [syncNowBusy, setSyncNowBusy] = useState(false);
-  const [registryAgentModelLabel, setRegistryAgentModelLabel] = useState<string | null>(null);
   const { showToast, toastElement } = useToast();
-  const router = useRouter();
   const { isArmedFor, arm, confirm } = useTwoStepConfirm({ autoDismissMs: 4000 });
-
-  const refreshMonitor = useCallback(async () => {
-    const monitor = await safeApiCallData<MonitorData>("/api/monitor", { cache: "no-store" });
-    if (monitor) setData({ monitor });
-  }, [setData]);
 
   const handleSyncNow = useCallback(
     () =>
@@ -169,10 +98,10 @@ export default function Dashboard() {
         successMsg: "Background sync completed",
         errorMsg: "Sync failed",
         onSuccess: async () => {
-          await refreshMonitor();
+          await refetchMonitor();
         },
       }),
-    [refreshMonitor, showToast],
+    [refetchMonitor, showToast],
   );
 
   const filteredErrors = useMemo(() => {
@@ -225,9 +154,9 @@ export default function Dashboard() {
           "Failed to cancel mission",
         );
         if (!ok) return;
-        // Refresh missions
-        const missions = await safeApiCallData<{ missions: MissionBrief[] }>("/api/missions");
-        if (missions) setData({ missions: missions.missions || [] });
+        // Re-pull the missions query so the active-missions panel drops
+        // the cancelled row (replaces the old manual fetch + setData).
+        await refetchMissions();
       } catch (err) {
         toastError(showToast, err, "Failed to cancel mission");
       }
@@ -237,75 +166,11 @@ export default function Dashboard() {
       return;
     }
     await confirm(doCancel);
-  }, [showToast, setData, isArmedFor, arm, confirm]);
+  }, [showToast, refetchMissions, isArmedFor, arm, confirm]);
 
   const handleRefreshProcesses = useCallback(async () => {
-    const processes = await safeApiCallData<{ processes: HermesProcess[] }>("/api/agents");
-    if (processes?.processes) {
-      setData({ processes: processes.processes });
-    }
-  }, [setData]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    const signal = controller.signal;
-
-    // Batch all initial fetches — single render update. The 8-endpoint
-    // batched fetcher lives in `loadInitialDashboardData`
-    // (src/lib/dashboard-initial-load.ts); the page is responsible
-    // for the `signal.aborted` check + the React state write.
-    const initialLoad = async () => {
-      const { dashboardData, modelsDefaults } = await loadInitialDashboardData({ signal });
-
-      if (!signal.aborted) {
-        setRegistryAgentModelLabel(modelsDefaults?.defaults?.agent ?? null);
-        setData(dashboardData);
-        setReady(true);
-      }
-    };
-    initialLoad();
-
-    return () => {
-      controller.abort();
-    };
-  }, [setData]);
-
-  // ── Polling — declared as data, not as code ──────────────────────
-  // Three endpoints, three independent cadences, one shared
-  // `setData` merge. The `usePolledUpdates` hook (src/hooks/usePolledUpdates.ts)
-  // registers one `setInterval` per entry, walks the envelope via
-  // `unwrapPollPath`, and forwards the `extract` mapper's result to
-  // `setData`. Returning `null` from `extract` skips the tick.
-  //
-  // The poll array is built inline each render but the hook stores
-  // it in a ref (mirrors `useInterval`'s callback-ref pattern) so the
-  // intervals are not re-armed on every parent re-render.
-  usePolledUpdates<Partial<typeof data>>(setData, [
-    {
-      url: "/api/monitor",
-      ms: 10_000,
-      // /api/monitor is double-wrapped: { data: { data: MonitorData } }
-      paths: ["data"],
-      extract: (inner) => ({ monitor: inner as unknown as MonitorData }),
-    },
-    {
-      url: "/api/agents",
-      ms: 15_000,
-      // /api/agents is single-wrapped: { data: { processes: [...] } }
-      paths: [],
-      extract: (inner) => ({
-        processes: (inner.processes as HermesProcess[] | undefined) ?? [],
-      }),
-    },
-    {
-      url: "/api/missions",
-      ms: 15_000,
-      paths: [],
-      extract: (inner) => ({
-        missions: (inner.missions as MissionBrief[] | undefined) ?? [],
-      }),
-    },
-  ]);
+    await refetchProcesses();
+  }, [refetchProcesses]);
 
   const modelConfig = config?.model as Record<string, unknown> | undefined;
   const diskModel = (modelConfig?.default as string) || "";
@@ -348,22 +213,6 @@ export default function Dashboard() {
     const last7d = countInWindow(recent, RECENT_WINDOW_MS, now);
     return `${active} active · ${last7d} last 7d`;
   }, [monitor?.sessions.recent, now]);
-
-  // Group templates by category for the dispatch section
-  const templateGroups = useMemo(
-    () =>
-      groupTemplatesByCategory(
-        templates as TemplateLike[],
-        categories,
-      ),
-    [templates, categories],
-  );
-
-  // Cap the collapsed template strip to 12 entries (the "Mission
-  // Dispatch" strip's first-paint width). The cap + custom-first /
-  // alphabetical sort lives in `topNTemplates`
-  // (src/lib/dashboard-top-templates.ts).
-  const collapsedTemplateStrip = useMemo(() => topNTemplates(templates), [templates]);
 
   return (
     <AppPageShell variant="scanlines">
@@ -461,296 +310,34 @@ export default function Dashboard() {
         </div>
 
         {/* ═══ Mission Dispatch Quick Launch ═══ */}
-        <div className="rounded-xl border border-neon-cyan/20 bg-dark-900/50 overflow-hidden">
-          <button
-            onClick={toggleDispatchPanel}
-            className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/[0.02] transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <Rocket className="w-4 h-4 text-neon-cyan" />
-              <span className="text-sm font-mono text-white/80">Mission Dispatch</span>
-              <span className="text-[10px] font-mono text-white/25">({templates.length})</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Link
-                href="/orchestration/missions"
-                onClick={(e) => e.stopPropagation()}
-                className="text-[10px] font-mono text-neon-cyan hover:underline flex items-center gap-1"
-              >
-                full control <ChevronRight className="w-3 h-3" />
-              </Link>
-              {dispatchExpanded ? (
-                <ChevronDown className="w-4 h-4 text-white/20" />
-              ) : (
-                <ChevronRight className="w-4 h-4 text-white/20" />
-              )}
-            </div>
-          </button>
+        <DispatchStrip templates={templates} categories={categories} />
 
-          {/* Collapsed: horizontal pill strip */}
-          {!dispatchExpanded && (
-            <div className="px-4 pb-3 flex flex-wrap gap-1.5">
-              {collapsedTemplateStrip.map((t) => (
-                <TemplatePill
-                  key={t.id}
-                  t={t}
-                  onSelect={() => router.push(composeTemplateUrl(t.id))}
-                />
-              ))}
-              {templates.length > 12 && (
-                <button
-                  onClick={openDispatchPanel}
-                  className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-mono text-white/30 hover:text-neon-cyan transition-colors"
-                >
-                  +{templates.length - 12} more
-                </button>
-              )}
-            </div>
-          )}
+        {/* ═══ Active Missions (renders nothing when none are active) ═══ */}
+        <ActiveMissionsPanel
+          missions={activeMissions}
+          onCancel={handleCancelMission}
+          isArmedFor={isArmedFor}
+        />
 
-          {/* Expanded: grouped by category, all compact pills */}
-          {dispatchExpanded && (
-            <div className="px-4 pb-4 space-y-3">
-              {templateGroups.map((group) => (
-                <CategoryAccordion
-                  key={group.categoryId ?? "__none__"}
-                  name={group.label}
-                  count={group.items.length}
-                  color={group.color as AccentColor}
-                  expandable={group.items.length > 6}
-                  defaultOpen={true}
-                >
-                  <div className="flex flex-wrap gap-1.5">
-                    {group.items.map((t) => (
-                      <TemplatePill
-                        key={t.id}
-                        t={t}
-                        onSelect={() => router.push(composeTemplateUrl(t.id))}
-                      />
-                    ))}
-                  </div>
-                </CategoryAccordion>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* ═══ Active Missions ═══ */}
-        {activeMissions.length > 0 && (
-          <Panel accent="cyan">
-            <PanelHeader
-              icon={Rocket}
-              label="Active Missions"
-              accent="cyan"
-              count={`(${activeMissions.length})`}
-              rightSlot={
-                <Link href="/orchestration/missions" className="text-[10px] font-mono text-neon-cyan hover:underline flex items-center gap-1">
-                  all missions <ChevronRight className="w-3 h-3" />
-                </Link>
-              }
-            />
-            <div className="divide-y divide-white/5">
-              {activeMissions
-                .map((m) => (
-                  <div key={m.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-white/[0.02] transition-colors">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <StatusDot
-                        status={m.status === "dispatched" ? "online" : "warning"}
-                        pulse={m.status === "dispatched"}
-                      />
-                      <Link href="/orchestration/missions" className="text-xs text-white/80 truncate hover:text-neon-cyan transition-colors">{m.name}</Link>
-                      <span className="text-[10px] font-mono text-white/30 capitalize">{m.dispatchMode}</span>
-                      {m.latestSession ? (
-                        <Link
-                          href={`/sessions/${m.latestSession.id}`}
-                          className="text-[10px] font-mono text-white/25 hover:text-neon-cyan transition-colors"
-                          title="View session"
-                        >
-                          {m.latestSession.id.slice(-20)}
-                        </Link>
-                      ) : m.status === "dispatched" ? (
-                        <span className="text-[10px] font-mono text-white/15 italic">
-                          Session loading...
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <MissionStatusBadge status={m.status} />
-                      <span className="text-[10px] font-mono text-white/25">{timeAgo(m.createdAt)}</span>
-                      <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCancelMission(m.id, m.name); }}
-                        className={`text-[10px] font-mono transition-colors px-1.5 py-0.5 rounded ${
-                          isArmedFor(m.id)
-                            ? "bg-red-500/20 text-red-400"
-                            : "text-white/20 hover:text-red-400 hover:bg-red-500/10"
-                        }`}
-                        title="Cancel mission"
-                      >
-                        {isArmedFor(m.id) ? "Confirm?" : "Cancel"}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </Panel>
-        )}
-
-        {/* ═══ Three-Panel System Monitor ═══ */}
+        {/* ═══ Two-Panel System Monitor ═══ */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Platforms Panel */}
-          <Panel accent="cyan">
-            <PanelHeader icon={Globe} label="Platforms" accent="cyan" />
-            <div
-              className="px-4 py-3 space-y-2"
-              title="Token present in Hermes .env; gateway must be running for live messaging."
-            >
-              {HERMES_PLATFORMS.map((p) => {
-                const configured = monitor?.gateway.platforms[p.id] ?? false;
-                return (
-                  <div key={p.id} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <StatusDot status={configured ? "online" : "idle"} pulse={configured} />
-                      <span className="text-xs text-white/70 capitalize">{p.id}</span>
-                    </div>
-                    <span className={`text-[10px] font-mono ${configured ? "text-neon-green" : "text-white/25"}`}>
-                      {configured ? "Configured" : "Not configured"}
-                    </span>
-                  </div>
-                );
-              })}
-              {monitor && monitor.gateway.connectedCount === 0 && (
-                <div className="text-[10px] text-white/30 text-center py-2">No platforms configured</div>
-              )}
-            </div>
-            <div className="px-4 py-2 border-t border-white/10 flex items-center justify-between gap-2">
-              <div className="text-[10px] text-white/30 font-mono flex items-center gap-2 min-w-0">
-                <RefreshCw className="w-3 h-3 shrink-0" />
-                {monitor?.sync.lastRun ? (
-                  <>
-                    Sync: {timeAgo(monitor.sync.lastRun)}
-                    {monitor.sync.allSuccessful ? (
-                      <span className="text-neon-green">✓</span>
-                    ) : (
-                      <span className="text-red-400">✗</span>
-                    )}
-                  </>
-                ) : (
-                  <span>Background sync idle</span>
-                )}
-              </div>
-              <button
-                type="button"
-                disabled={syncNowBusy}
-                onClick={() => void handleSyncNow()}
-                className="shrink-0 px-2 py-1 text-[10px] font-mono rounded border border-neon-cyan/30 text-neon-cyan/80 hover:bg-neon-cyan/10 disabled:opacity-50"
-              >
-                {syncNowBusy ? "Syncing…" : "Sync now"}
-              </button>
-            </div>
-          </Panel>
+          <PlatformsPanel
+            monitor={monitor}
+            syncNowBusy={syncNowBusy}
+            onSyncNow={() => void handleSyncNow()}
+          />
+          <ErrorsPanel
+            errors={filteredErrors}
+            severity={errorSev}
+            onSelectSeverity={selectSeverity}
+          />
+        </div>
 
-          {/* Errors Panel */}
-          <Panel accent="red">
-            <PanelHeader
-              icon={AlertTriangle}
-              label="Errors"
-              accent="red"
-              rightSlot={
-                <div className="flex items-center gap-1">
-                  {(["all", "error", "warning"] as const).map((sev) => (
-                    <button
-                      key={sev}
-                      onClick={() => selectSeverity(sev)}
-                      className={`text-[10px] font-mono px-1.5 py-0.5 rounded transition-colors ${
-                        errorSev === sev ? "bg-red-500/20 text-red-400" : "text-white/30 hover:text-white/60"
-                      }`}
-                    >
-                      {titleCase(sev)}
-                    </button>
-                  ))}
-                </div>
-              }
-            />
-            <div className="max-h-48 overflow-y-auto">
-              {filteredErrors.length === 0 && (
-                <div className="px-4 py-6 text-center">
-                  <CheckCircle2 className="w-5 h-5 text-neon-green mx-auto mb-1" />
-                  <div className="text-xs text-neon-green">No recent errors</div>
-                </div>
-              )}
-              {filteredErrors.map((err) => (
-                <div key={`${err.source}-${err.message}`} className="px-4 py-2 border-b border-white/5 last:border-0">
-                  <div className="text-[10px] text-red-400/80 font-mono truncate">{err.message}</div>
-                  <div className="text-[10px] text-white/20 font-mono mt-0.5">
-                    {err.source} {err.timestamp && `· ${err.timestamp}`}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Panel>
-        </div>
         {/* ═══ Running Hermes Processes ═══ */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-mono text-white/40 uppercase tracking-widest flex items-center gap-2">
-              <Radio className="w-3 h-3 text-neon-purple" />
-              Running Hermes Processes
-              <span className="text-[10px] text-white/25 ml-1">({activeProcesses.length} Active)</span>
-            </h2>
-            <RefreshCw
-              className="w-3 h-3 text-white/20 hover:text-white/50 cursor-pointer"
-              onClick={() => { void handleRefreshProcesses(); }}
-            />
-          </div>
-          {processes.length === 0 ? (
-            <div className="rounded-xl border border-neon-purple/20 bg-dark-900/50 p-6 text-center">
-              <Radio className="w-8 h-8 text-white/20 mx-auto mb-2" />
-              <div className="text-xs text-white/30">No Active Processes Detected</div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {processes.map((proc) => (
-                <div key={proc.id} className="rounded-xl border border-neon-purple/20 bg-dark-900/50 p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Radio className={`w-4 h-4 ${proc.status === "running" ? "text-neon-green pulse-glow" : "text-white/30"}`} />
-                      <span className="text-sm text-white/90 font-medium truncate">{proc.name}</span>
-                    </div>
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                      proc.status === "running" ? "bg-neon-green/10 text-neon-green" : "bg-white/5 text-white/30"
-                    }`}>
-                      {titleCase(proc.status)}
-                    </span>
-                  </div>
-                  <div className="space-y-1 text-[10px] font-mono text-white/40">
-                    <div className="flex justify-between">
-                      <span>Type</span>
-                      <span className="text-white/60 capitalize">{proc.type}</span>
-                    </div>
-                    {proc.model !== "unknown" && proc.model !== "gateway" && (
-                      <div className="flex justify-between">
-                        <span>Model</span>
-                        <span className="text-white/60">{proc.model}</span>
-                      </div>
-                    )}
-                    {proc.turns > 0 && (
-                      <div className="flex justify-between">
-                        <span>Turns</span>
-                        <span className="text-white/60">{proc.turns}</span>
-                      </div>
-                    )}
-                    {proc.lastActivity && (
-                      <div className="flex justify-between">
-                        <span>Last activity</span>
-                        <span className="text-white/60">{timeAgo(proc.lastActivity)}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <ProcessesPanel
+          processes={processes}
+          onRefresh={() => void handleRefreshProcesses()}
+        />
 
         {/* ═══ Rec Room ═══ */}
         <Panel accent="purple">

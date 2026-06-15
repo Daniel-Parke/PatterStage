@@ -13,9 +13,9 @@ import {
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { useApiData } from "@/hooks/useApiData";
+import { useSessionDetail } from "@/hooks/useSessionDetail";
 import { ROLE_META, getMessageRole } from "@/components/session/constants";
-import { MessageBubble, type SessionMessage, type SessionData } from "@/components/session/MessageBubble";
+import { MessageBubble, type SessionMessage } from "@/components/session/MessageBubble";
 import { isSessionStillRunning } from "@/lib/session-title";
 
 // ── Page ────────────────────────────────────────────────────
@@ -23,17 +23,11 @@ import { isSessionStillRunning } from "@/lib/session-title";
 export default function SessionDetailPage() {
   const params = useParams();
   const sessionId = params.id as string;
-  // useApiData absorbs the entire useEffect + safeApiCall + setLoading/setError
-  // + AbortController boilerplate that the detail page used to inline. The
-  // hook's `data: T | null` contract is byte-equivalent to the previous
-  // `SessionData | null` local state, and `refetch()` replaces the old
-  // `window.location.reload()` refresh button with an in-page re-fetch
-  // (no full-page reload, no scroll position reset, no flash of the
-  // LoadingSpinner — the hook just sets `loading=true` and merges the
-  // new envelope.data into state).
-  const { data, loading, error, refetch } = useApiData<SessionData>(
-    `/api/sessions/${encodeURIComponent(sessionId)}`,
-  );
+  // useSessionDetail is the TanStack Query data layer for one transcript.
+  // `refetch()` powers the "⟳ Refresh" button for still-running sessions
+  // as a background re-fetch (cached data stays on screen — no full-page
+  // LoadingSpinner flash, no scroll reset).
+  const { data, isLoading: loading, error, refetch } = useSessionDetail(sessionId);
   const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const messageRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
