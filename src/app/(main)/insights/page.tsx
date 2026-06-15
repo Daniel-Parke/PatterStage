@@ -18,7 +18,7 @@ import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { AreaTrend, ActivityHeatmap, Donut } from "@/components/viz";
 import { neonAlpha, type NeonColor } from "@/components/viz/colors";
-import { AchievementBadge, LevelBadge, StreakFlame } from "@/components/game";
+import { AchievementBadge, LevelBadge, StreakFlame } from "@/components/achievements";
 import { useStats } from "@/hooks/useStats";
 import { useAnalytics, useAnalyticsTimeseries } from "@/hooks/useAnalytics";
 import type { AnalyticsEventType } from "@/lib/analytics/event-types";

@@ -8,7 +8,7 @@ import {
   ACHIEVEMENT_DEFS,
   type RawMetrics,
 } from "@/lib/stats/derive";
-import { ICONS } from "@/components/game/AchievementBadge";
+import { ICONS } from "@/components/achievements/AchievementBadge";
 
 const baseMetrics = (over: Partial<RawMetrics> = {}): RawMetrics => ({
   completedMissions: 0,

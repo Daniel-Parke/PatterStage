@@ -25,7 +25,7 @@ import { useStats } from "@/hooks/useStats";
 import { useCountUp } from "@/hooks/useCountUp";
 import { AreaTrend, ActivityHeatmap, Donut, Sparkline, ProgressRing } from "@/components/viz";
 import { neon, neonAlpha, type NeonColor } from "@/components/viz/colors";
-import { LevelBadge, StreakFlame, AchievementBadge } from "@/components/game";
+import { LevelBadge, StreakFlame, AchievementBadge } from "@/components/achievements";
 import { useToast } from "@/components/ui/Toast";
 import { useAchievementUnlocks } from "@/hooks/useAchievementUnlocks";
 import type { Achievement } from "@/lib/stats/derive";
