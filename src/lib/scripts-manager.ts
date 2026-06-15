@@ -13,10 +13,23 @@
 // user-supplied arguments — so there is no command-injection surface.
 // ═══════════════════════════════════════════════════════════════
 
-import { readdirSync, statSync, existsSync, readFileSync, appendFileSync, mkdirSync } from "fs";
+import {
+  readdirSync,
+  statSync,
+  existsSync,
+  readFileSync,
+  appendFileSync,
+  mkdirSync,
+  writeFileSync,
+  unlinkSync,
+  chmodSync,
+} from "fs";
 import { join } from "path";
 import { execFile, exec } from "child_process";
 import { getChScriptsDir, getChHardwareLogDir } from "@/lib/paths";
+
+/** Max script size accepted by the editor write API (256 KB). */
+export const MAX_SCRIPT_BYTES = 256 * 1024;
 
 export interface ScriptFile {
   name: string; // e.g. "ch-backup.sh"
@@ -52,6 +65,79 @@ export function resolveScriptPath(name: string): string | null {
   const abs = join(getChScriptsDir(), name);
   if (!existsSync(abs)) return null;
   return abs;
+}
+
+/**
+ * Validate a script NAME's format (no traversal, no slashes, .sh only) WITHOUT
+ * requiring it to exist — used by create. Returns the would-be absolute path
+ * under the scripts dir, or null when the name is unsafe.
+ */
+export function scriptPathForName(name: string): string | null {
+  if (!name || name.includes("/") || name.includes("\\") || name.includes("..")) return null;
+  if (!name.endsWith(".sh")) return null;
+  // basename sanity: letters, digits, dash, underscore, dot only.
+  if (!/^[A-Za-z0-9._-]+$/.test(name)) return null;
+  return join(getChScriptsDir(), name);
+}
+
+export interface WriteScriptResult {
+  ok: boolean;
+  error?: string;
+  created?: boolean;
+}
+
+/** Read a script's contents, or null if missing / unsafe name. */
+export function readScriptContent(name: string): string | null {
+  const abs = resolveScriptPath(name);
+  if (!abs) return null;
+  return readFileSync(abs, "utf-8");
+}
+
+/**
+ * Create or overwrite a script. Validates the name format + size. On create,
+ * marks it executable. `mode` guards intent: "create" fails if it already
+ * exists; "update" fails if it does not.
+ */
+export function writeScriptContent(
+  name: string,
+  content: string,
+  mode: "create" | "update",
+): WriteScriptResult {
+  const abs = scriptPathForName(name);
+  if (!abs) return { ok: false, error: "Invalid script name (letters, digits, -, _, . and a .sh extension only)" };
+  if (typeof content !== "string") return { ok: false, error: "Missing script content" };
+  if (Buffer.byteLength(content, "utf-8") > MAX_SCRIPT_BYTES) {
+    return { ok: false, error: `Script exceeds the ${Math.round(MAX_SCRIPT_BYTES / 1024)} KB limit` };
+  }
+  const exists = existsSync(abs);
+  if (mode === "create" && exists) return { ok: false, error: "A script with that name already exists" };
+  if (mode === "update" && !exists) return { ok: false, error: "Script not found" };
+  try {
+    mkdirSync(getChScriptsDir(), { recursive: true });
+    writeFileSync(abs, content, { encoding: "utf-8" });
+    if (!exists) {
+      try {
+        chmodSync(abs, 0o755);
+      } catch {
+        /* chmod is best-effort (e.g. on Windows) */
+      }
+    }
+    return { ok: true, created: !exists };
+  } catch (e) {
+    return { ok: false, error: (e as Error).message };
+  }
+}
+
+/** Delete a script. Path-validated; returns false if missing / unsafe. */
+export function deleteScriptFile(name: string): boolean {
+  const abs = resolveScriptPath(name);
+  if (!abs) return false;
+  try {
+    unlinkSync(abs);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function readHostCrontab(): Promise<string> {
