@@ -9,13 +9,14 @@ import { STORY_TEMPLATES } from "@/types/recroom";
 import type { StoryCharacter, CharacterSheet, StoryTheme } from "@/types/recroom";
 import GenerateOverlay from "@/components/story-weaver/GenerateOverlay";
 import { WORD_COUNT_OPTIONS } from "@/components/story-weaver/ReaderSettings";
+import Tags from "@/components/story-weaver/Tags";
+import CharacterCard from "@/components/story-weaver/CharacterCard";
 
 const DEFAULT_GENRES = ["Sci-Fi", "Mystery", "Fantasy", "Romance", "Crime", "Horror", "Adventure", "Historical"];
 const DEFAULT_ERAS = ["Ancient", "Medieval", "Modern", "Near Future", "Far Future", "Timeless"];
 const DEFAULT_MOODS = ["Tense", "Wonder", "Humorous", "Dark", "Hopeful", "Melancholy", "Suspenseful", "Whimsical"];
 const DEFAULT_SETTINGS = ["Space Station", "Medieval Castle", "Modern City", "Underwater", "Forest", "Desert", "Island", "Train"];
 const DRAFT_KEY = "story-weaver-draft";
-const ROLES = ["protagonist", "ally", "antagonist", "supporting", "mystery"];
 
 const EMPTY_CHARACTER: StoryCharacter = { name: "", role: "supporting", description: "" };
 
@@ -31,135 +32,6 @@ interface Draft {
   wordCountRange: string;
   characters: StoryCharacter[];
   savedAt: string;
-}
-
-function Tags({ label, options, selected, onToggle, onAdd }: {
-  label: string; options: string[]; selected: string[];
-  onToggle: (t: string) => void; onAdd: (t: string) => void;
-}) {
-  const [adding, setAdding] = useState(false);
-  const [val, setVal] = useState("");
-  return (
-    <div>
-      <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-1.5">{label}</label>
-      <div className="flex flex-wrap gap-1.5">
-        {options.map((t) => (
-          <button key={t} onClick={() => onToggle(t)}
-            className={`px-2.5 py-1 rounded-md text-[10px] font-mono border transition-all ${
-              selected.includes(t) ? "border-green-500/40 bg-green-500/15 text-green-400" : "border-white/8 text-white/30 hover:text-white/50"
-            }`}>{t}</button>
-        ))}
-        {adding ? (
-          <div className="flex items-center gap-1">
-            <input value={val} onChange={(e) => setVal(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && val.trim()) { onAdd(val.trim()); setVal(""); setAdding(false); } if (e.key === "Escape") setAdding(false); }}
-              className="w-24 bg-dark-800/50 border border-green-500/30 rounded px-2 py-1 text-[10px] font-mono text-white outline-none" autoFocus placeholder="Custom..." />
-            <button onClick={() => { if (val.trim()) { onAdd(val.trim()); setVal(""); setAdding(false); } }} className="p-0.5 text-green-400"><Plus className="w-3 h-3" /></button>
-            <button onClick={() => setAdding(false)} className="p-0.5 text-white/30"><X className="w-3 h-3" /></button>
-          </div>
-        ) : (
-          <button onClick={() => setAdding(true)} className="px-2 py-1 rounded-md text-[10px] font-mono border border-dashed border-white/10 text-white/20 hover:text-white/40">+ Add</button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function CharacterCard({ char, index, onUpdate, onRemove, onSave, saved, expanded, onToggle }: {
-  char: StoryCharacter;
-  index: number;
-  onUpdate: (idx: number, field: keyof StoryCharacter, value: string) => void;
-  onRemove: (idx: number) => void;
-  onSave: (char: StoryCharacter) => void;
-  saved: boolean;
-  expanded: boolean;
-  onToggle: (idx: number) => void;
-}) {
-  const canSave = char.name.trim() && char.description.trim();
-  return (
-    <div className="rounded-lg border border-white/5 bg-dark-800/30 overflow-hidden">
-      {/* Collapsed header — entire row is tappable to expand */}
-      <div className="flex items-center gap-3 p-3 cursor-pointer hover:bg-white/[0.03] min-h-[48px]"
-        onClick={() => onToggle(index)}>
-        <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-mono ${
-          expanded ? "bg-neon-purple/20 text-neon-purple" : "bg-white/5 text-white/30"
-        }`}>
-          {expanded ? "−" : "+"}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold text-white/90 truncate">{char.name || "New Character"}</div>
-          {!expanded && char.description && (
-            <div className="text-[10px] text-white/30 truncate">{char.description}</div>
-          )}
-        </div>
-        <span className="flex-shrink-0 px-2 py-0.5 rounded text-[9px] font-mono border border-white/8 text-white/40">{char.role}</span>
-      </div>
-
-      {/* Expanded content */}
-      {expanded && (
-        <div className="px-3 pb-3 space-y-3 border-t border-white/5 pt-3">
-          {/* Name + Role row */}
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <label className="text-[10px] font-mono text-white/25 uppercase block mb-1">Name</label>
-              <input value={char.name} onChange={(e) => onUpdate(index, "name", e.target.value)}
-                placeholder="Character name..."
-                className="w-full bg-dark-700/30 border border-white/5 rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/15 outline-none font-semibold" />
-            </div>
-            <div className="w-32">
-              <label className="text-[10px] font-mono text-white/25 uppercase block mb-1">Role</label>
-              <select value={char.role} onChange={(e) => onUpdate(index, "role", e.target.value)}
-                className="w-full bg-dark-700/30 border border-white/5 rounded-lg px-3 py-2.5 text-sm text-white outline-none font-mono">
-                {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-              </select>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="text-[10px] font-mono text-white/25 uppercase block mb-1">Description</label>
-            <textarea value={char.description} onChange={(e) => onUpdate(index, "description", e.target.value)}
-              rows={2} placeholder="A brief summary of who they are..."
-              className="w-full bg-dark-700/30 border border-white/5 rounded-lg px-3 py-2.5 text-sm text-white/70 placeholder-white/15 outline-none font-mono resize-y min-h-[60px] leading-relaxed" />
-          </div>
-
-          {/* Detail fields */}
-          {[
-            { field: "personality" as const, label: "Personality Traits", ph: "e.g., Pragmatic, Protective, Stubborn — how they think and react" },
-            { field: "appearance" as const, label: "Appearance", ph: "Physical description — build, features, distinguishing marks" },
-            { field: "backstory" as const, label: "Backstory", ph: "Their history, motivations, what drives them..." },
-            { field: "speechPatterns" as const, label: "Speech Patterns", ph: "How they talk — formal, slang, accent, verbal tics" },
-            { field: "relationships" as const, label: "Relationships", ph: "Connections to other characters — allies, enemies, bonds" },
-          ].map(({ field, label, ph }) => (
-            <div key={field}>
-              <label className="text-[10px] font-mono text-white/25 uppercase block mb-1">{label}</label>
-              <textarea value={char[field] || ""} onChange={(e) => onUpdate(index, field, e.target.value)}
-                rows={2} placeholder={ph}
-                className="w-full bg-dark-700/30 border border-white/5 rounded-lg px-3 py-2.5 text-sm text-white/70 placeholder-white/15 outline-none font-mono resize-y min-h-[60px] leading-relaxed" />
-            </div>
-          ))}
-
-          {/* Action buttons */}
-          <div className="flex items-center gap-2 pt-2 border-t border-white/5">
-            <button onClick={() => onSave(char)} disabled={!canSave}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-mono border transition-all min-h-[40px] ${
-                saved ? "border-green-500/30 bg-green-500/10 text-green-400" :
-                canSave ? "border-green-500/20 text-green-400/60 hover:bg-green-500/10 hover:text-green-400" :
-                "border-white/5 text-white/20 opacity-50"
-              }`}>
-              <Save className="w-3.5 h-3.5" />
-              {saved ? "Saved!" : "Save to Library"}
-            </button>
-            <div className="flex-1" />
-            <button onClick={() => onRemove(index)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-mono border border-red-500/10 text-red-400/40 hover:bg-red-500/10 hover:text-red-400 transition-all min-h-[40px]">
-              <X className="w-3.5 h-3.5" /> Remove
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
 
 export default function CreateStoryPageWrapper() {
