@@ -104,37 +104,6 @@ export const setDefaultPutSchema = z
   })
   .strict();
 
-export const cronPostBodySchema = z.union([
-  z.object({ action: z.literal("pauseAll") }),
-  z.object({
-    name: nonEmpty,
-    schedule: nonEmpty,
-    prompt: nonEmpty,
-    deliver: z.string().optional(),
-    model: z.string().optional(),
-    repeat: z.boolean().optional(),
-    skills: z.array(z.string()).optional(),
-    script: z.union([z.string(), z.null()]).optional(),
-  }),
-]);
-
-export type CronPostBody = z.infer<typeof cronPostBodySchema>;
-
-export const cronPutBodySchema = z.object({
-  id: nonEmpty,
-  action: z.enum(["pause", "resume", "run"]).optional(),
-  name: z.string().optional(),
-  prompt: z.string().optional(),
-  skills: z.array(z.string()).optional(),
-  model: z.string().optional(),
-  deliver: z.string().optional(),
-  enabled: z.boolean().optional(),
-  schedule: z.string().optional(),
-  schedule_display: z.string().optional(),
-});
-
-export type CronPutBody = z.infer<typeof cronPutBodySchema>;
-
 export const missionPostBodySchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create"),
