@@ -66,18 +66,6 @@ jest.mock("@/lib/mission-repository", () => ({
   buildMissionPrompt: jest.fn(),
 }));
 
-jest.mock("@/lib/mission-cron-sync", () => ({
-  enrichMissionCron: jest.fn((m: unknown) => m),
-  pauseMissionCron: jest.fn(),
-  syncMissionToCronJob: jest.fn(),
-  deleteMissionCron: jest.fn(),
-}));
-
-jest.mock("@/lib/cron-repository", () => ({
-  createCronJob: jest.fn(),
-  pushJobToHermes: jest.fn(),
-  deleteCronJob: jest.fn(),
-}));
 
 jest.mock("@/lib/mission-category-repository", () => ({
   getCategory: jest.fn(),

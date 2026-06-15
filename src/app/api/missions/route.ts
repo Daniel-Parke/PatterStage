@@ -19,15 +19,8 @@ import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, notFound, ok, serverError, serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
-import { importHermesJobs } from "@/lib/cron-repository";
 import { getCategory } from "@/lib/mission-category-repository";
 import { listProfiles } from "@/lib/profiles-repository";
-import {
-  deleteMissionCron,
-  enrichMissionCron,
-  pauseMissionCron,
-  syncMissionToCronJob,
-} from "@/lib/mission-cron-sync";
 import { createSchedule, deleteSchedulesForMission } from "@/lib/schedules-repository";
 import { parseSchedule, scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
 import { computeNextRun } from "@/lib/schedule/next-run";
@@ -146,13 +139,11 @@ export async function GET(request: NextRequest) {
   const id = url.searchParams.get("id");
 
   try {
-    // Pull latest cron job execution state from Hermes before reading
-    importHermesJobs();
     if (id) {
       const mission = getMissionOrNotFound(id);
       if (mission instanceof NextResponse) return mission;
       // Mission status is synced in background by MissionSync
-      return ok({ mission: enrichMissionCron(mission) });
+      return ok({ mission });
     }
 
     const categoryIdParam = url.searchParams.get("categoryId");
@@ -162,7 +153,7 @@ export async function GET(request: NextRequest) {
         : categoryIdParam
           ? { categoryId: categoryIdParam }
           : undefined,
-    ).map((m) => enrichMissionCron(m));
+    );
     return ok({ missions });
   } catch (error) {
     return serverErrorFromCatch("GET /api/missions", id ? `mission ${id}` : "listing missions", error, "Failed to load missions");
@@ -417,7 +408,7 @@ export async function POST(request: NextRequest) {
         return badRequest("Use promote for draft or queued missions; update is for running missions");
       }
 
-      const { shouldRebuildPrompt, updates } = buildMissionFieldPatch(
+      const { updates } = buildMissionFieldPatch(
         existing,
         {
           status,
@@ -445,18 +436,6 @@ export async function POST(request: NextRequest) {
       const mission = updateMission(missionIdFinal, updates);
       if (!mission)
         return notFound("Mission not found");
-
-      const shouldSyncCron =
-        mission.cronJobId &&
-        (shouldRebuildPrompt ||
-          schedule !== undefined ||
-          profileName !== undefined ||
-          modelId !== undefined ||
-          provider !== undefined);
-
-      if (shouldSyncCron) {
-        await syncMissionToCronJob(missionIdFinal);
-      }
 
       appendAuditLine({ action: "mission.update", resource: missionIdFinal, ok: true });
       return missionResponse(missionIdFinal);
@@ -490,8 +469,6 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      await pauseMissionCron(cancelId);
-
       const shouldKillProcess = existingMission.status === "dispatched";
       if (shouldKillProcess) {
         // Stop the backend run over HTTP (runtime.stopRun) — no pid/signal.
@@ -502,7 +479,7 @@ export async function POST(request: NextRequest) {
 
       appendAuditLine({ action: "mission.cancel", resource: cancelId, ok: true });
       return ok({
-        mission: enrichMissionCron(mission),
+        mission,
         cancel: {
           accepted: true,
           processKillPending: shouldKillProcess,
@@ -517,10 +494,8 @@ export async function POST(request: NextRequest) {
 
       const missionIdFinal = existing.id;
       // Remove any CH schedule linked to this mission so the scheduler tick
-      // never tries to dispatch a deleted mission. `deleteMissionCron` covers
-      // the legacy cron_jobs bridge for older cron-linked missions.
+      // never tries to dispatch a deleted mission.
       deleteSchedulesForMission(missionIdFinal);
-      await deleteMissionCron(missionIdFinal);
 
       const deleted = deleteMission(missionIdFinal);
       if (!deleted)

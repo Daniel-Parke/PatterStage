@@ -25,7 +25,7 @@ Moving from a pre-runtime `main` install (file/`jobs.json`-era) to the current r
 
 1. **Backup** — `control-hub.db.pre-migrate-*.bak` is written.
 2. **Schema upgrade** — the appliers add the `runs` and `schedules` tables, mission/run columns, and the catch-up repairs; they **drop only the never-shipped-to-`main` `game_*` tables** (the dialed-back gamification). Your `missions`, `models`, `credentials`, `sessions`, `cron_jobs`, and `stories` are preserved.
-3. **Legacy data migration** — recurring missions that were backed by a Hermes cron job become Control Hub `schedules` (mission-linked), firing on the next scheduler tick. The old `cron_jobs` rows are left in place for now (the legacy Cron page is being retired in a later step).
+3. **Legacy data migration** — recurring missions that were backed by a Hermes cron job become Control Hub `schedules` (mission-linked), firing on the next scheduler tick. The old `cron_jobs` rows are left in place (orphaned/backup only); the legacy agent-cron **Cron page + `jobs.json` bridge have been removed** — scheduling lives in Missions.
 
 The proof is `tests/unit/run-migrations-upgrade.integration.test.ts`, which drives the real `runMigrations` against a degraded legacy DB and asserts the schema climbs to 11 **with the seeded mission and cron job still present**.
 

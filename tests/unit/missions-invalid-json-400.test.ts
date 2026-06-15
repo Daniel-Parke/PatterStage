@@ -28,14 +28,6 @@ jest.mock("@/lib/mission-repository", () => ({
   getMission: jest.fn(),
 }));
 
-jest.mock("@/lib/cron-repository", () => ({
-  importHermesJobs: jest.fn(() => ({ imported: [], errors: [] })),
-}));
-
-jest.mock("@/lib/mission-cron-sync", () => ({
-  enrichMissionCron: jest.fn((m: unknown) => m),
-}));
-
 function makeInvalidJsonRequest(url: string) {
   return new NextRequest(url, {
     method: "POST",

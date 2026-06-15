@@ -27,7 +27,6 @@
 
 import { NextResponse } from "next/server";
 import { getMission } from "@/lib/mission-repository";
-import { enrichMissionCron } from "@/lib/mission-cron-sync";
 import type { Mission } from "@/lib/mission-types";
 
 /**
@@ -54,10 +53,7 @@ export function missionResponse(
     // client couldn't distinguish from a valid (but empty) mission.
     return NextResponse.json({ error: "Mission not found" }, { status: 404 });
   }
-  return NextResponse.json(
-    { data: { mission: enrichMissionCron(mission) } },
-    { status },
-  );
+  return NextResponse.json({ data: { mission } }, { status });
 }
 
 /**
@@ -73,7 +69,5 @@ export function missionResponse(
  * (most do, via the `ok: false` result type).
  */
 export function enrichedMission(missionId: string): Mission | undefined {
-  const mission = getMission(missionId);
-  if (!mission) return undefined;
-  return enrichMissionCron(mission);
+  return getMission(missionId) ?? undefined;
 }

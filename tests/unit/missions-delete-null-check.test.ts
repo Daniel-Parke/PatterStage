@@ -65,13 +65,6 @@ jest.mock("@/lib/orchestration", () => ({
   dispatchMissionRun: jest.fn(() => Promise.resolve({ ok: true })),
 }));
 
-jest.mock("@/lib/mission-cron-sync", () => ({
-  enrichMissionCron: jest.fn((m: unknown) => m),
-  syncMissionToCronJob: jest.fn(),
-  pauseMissionCron: jest.fn(),
-  deleteMissionCron: jest.fn(),
-}));
-
 jest.mock("@/lib/schedules-repository", () => ({
   createSchedule: jest.fn(),
   deleteSchedulesForMission: jest.fn(),

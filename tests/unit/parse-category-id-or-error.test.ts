@@ -73,10 +73,6 @@ jest.mock("@/lib/mission-repository", () => ({
     ({ instruction }: { instruction: string }) => instruction,
   ),
 }));
-jest.mock("@/lib/mission-cron-sync", () => ({
-  enrichMissionCron: jest.fn((m: unknown) => m),
-  syncMissionToCronJob: jest.fn(() => Promise.resolve()),
-}));
 jest.mock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
 jest.mock("@/lib/mission-category-repository", () => ({
   getCategory: jest.fn((id: string) =>

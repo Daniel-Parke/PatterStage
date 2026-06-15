@@ -12,40 +12,13 @@ import type { NextRequest } from "next/server";
 
 import { ensureSyncLayer, getSyncScheduler } from "@/lib/sync";
 import { getSystemStat, getSystemStatNumber } from "@/lib/system-repository";
-import { listCronJobs, ensureCronHermesSync } from "@/lib/cron-repository";
 import { listSessions } from "@/lib/session-repository";
-import { serverErrorFromCatch, logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { getGatewayPlatforms, db } from "@/lib/db";
-import type { CronJobBrief, SessionBrief, MonitorData } from "@/types/hermes";
+import type { SessionBrief, MonitorData } from "@/types/hermes";
 
 // ── Helpers ─────────────────────────────────────────────────
-
-/** Convert a CronJobRecord to the brief shape the frontend expects. */
-function toCronJobBrief(
-  job: import("@/lib/cron-repository").CronJobRecord
-): CronJobBrief {
-  // `schedule` is the canonical machine form (raw 5-field cron, or the
-  // legacy "every Nm/Nh/Nd" shorthand) that the schedule-canonicalisation
-  // migration (PRs #168 and #170) guarantees lives in the DB column. The
-  // human label lives in `schedule_display` and is a separate field on
-  // the API response — never fall back to the display string in the
-  // machine field. Returning `schedule_display` in `schedule` (the pre-fix
-  // behaviour) caused the dashboard's SchedulePicker to read the label as
-  // a cron expression and write the label back to the DB on save, making
-  // the dashboard itself a corruption vector.
-  return {
-    id: job.id,
-    name: job.name,
-    state: job.state,
-    enabled: job.enabled,
-    schedule: job.schedule,
-    schedule_display: job.schedule_display ?? null,
-    lastRun: job.last_run_at,
-    nextRun: job.next_run_at,
-    lastStatus: job.last_status,
-  };
-}
 
 /** Convert a SessionRecord to the brief shape the frontend expects. */
 function toSessionBrief(
@@ -67,33 +40,6 @@ export async function GET(request: NextRequest) {
   try {
     // Ensure sync layer is active (idempotent)
     ensureSyncLayer();
-
-    // Fire-and-forget cron reconciliation (4th layer). Self-heals any
-    // on-disk jobs.json artifact left over from prior broken push paths
-    // (see references/cron-startup-reconciliation-2026-06-10.md). Cheap
-    // on a healthy system (one disk read, N comparisons, zero pushes);
-    // expensive only when the artifact is genuinely stale, which is
-    // exactly the failure mode we want to surface. Errors are logged
-    // via logApiError — never block the monitor response on the
-    // reconciliation.
-    void ensureCronHermesSync()
-      .then((result) => {
-        if (result.errors.length > 0) {
-          logApiError(
-            "GET /api/monitor",
-            "ensureCronHermesSync errors",
-            new Error(result.errors.join("; ")),
-          );
-        }
-      })
-      .catch((err: unknown) => {
-        logApiError("GET /api/monitor", "ensureCronHermesSync threw", err);
-      });
-
-    // ── Cron Jobs (from DB) ─────────────────────────────────
-    const allJobs = listCronJobs();
-    const activeJobs = allJobs.filter((j) => j.enabled && j.state !== "completed");
-    const pausedJobs = allJobs.filter((j) => !j.enabled);
 
     // ── Sessions (from DB — recent 5) ───────────────────────
     const { sessions: recentSessions, total: totalSessions } = listSessions({ limit: 5 });
@@ -148,12 +94,6 @@ export async function GET(request: NextRequest) {
     }
 
     const data: MonitorData = {
-      cron: {
-        total: allJobs.length,
-        active: activeJobs.length,
-        paused: pausedJobs.length,
-        jobs: allJobs.map(toCronJobBrief),
-      },
       sessions: {
         total: totalSessions,
         recent: recentSessions.map(toSessionBrief),

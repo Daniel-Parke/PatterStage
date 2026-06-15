@@ -13,7 +13,6 @@ import {
   // Dashboard icons
   Activity,
   Layers,
-  ListTodo,
   Globe,
   AlertTriangle,
   RefreshCw,
@@ -26,7 +25,6 @@ import {
   BookOpen,
 } from "lucide-react";
 import { StatusDot } from "@/components/ui/Card";
-import SchedulePicker from "@/components/schedule/SchedulePicker";
 import CategoryAccordion from "@/components/ui/CategoryAccordion";
 import {
   groupTemplatesByCategory,
@@ -36,24 +34,22 @@ import type { MissionCategory } from "@/lib/mission-category-repository";
 import TemplatePill from "@/components/ui/TemplatePill";
 import { useToast } from "@/components/ui/Toast";
 import type { SystemStatus, AccentColor, MonitorData, HermesProcess, MissionBrief } from "@/types/hermes";
-import { timeAgo, titleCase, parseSchedule } from "@/lib/utils";
-import { scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
+import { timeAgo, titleCase } from "@/lib/utils";
 import { shellHeaderBarClasses } from "@/lib/theme";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import AppPageShell from "@/components/layout/AppPageShell";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
-import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
+import { MissionStatusBadge } from "@/components/dashboard/StatusBadge";
 import { Panel, PanelHeader } from "@/components/dashboard/Panel";
 import CommandCenter from "@/components/dashboard/CommandCenter";
-import { safeApiCall, safeApiCallData, toastError } from "@/lib/api-fetch";
+import { safeApiCallData, toastError } from "@/lib/api-fetch";
 import { runMutation } from "@/lib/run-mutation";
 import { toastFromResult } from "@/lib/toast-from-result";
 import { dispatchMissionAction } from "@/hooks/success-message-for-dispatch";
 import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
 import { isMissionActive } from "@/lib/mission-board";
 import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
-import { computeCronJobRowCaption } from "@/lib/cron-row-helpers";
-import { composeTemplateUrl, withCronJobSchedule } from "@/lib/dashboard-helpers";
+import { composeTemplateUrl } from "@/lib/dashboard-helpers";
 import { dedupErrors } from "@/lib/dashboard-error-dedup";
 import { formatModelSubtitle } from "@/lib/dashboard-model-subtitle";
 import { topNTemplates } from "@/lib/dashboard-top-templates";
@@ -98,27 +94,6 @@ const LiveClock = reactMemo(function LiveClock() {
 });
 
 // ── Cron job caption span ─────────────────────────────────────
-
-/**
- * Tiny presentational component that renders the cron-job caption
- * produced by `computeCronJobRowCaption`. Extracted so the JSX
- * .map() can pass a single prop instead of an IIFE.
- */
-function CronJobCaptionSpan({
-  caption,
-}: {
-  caption: ReturnType<typeof computeCronJobRowCaption> | null;
-}) {
-  if (!caption) return null;
-  return (
-    <span
-      className={`text-xs truncate min-w-0 flex-1 ${caption.colorClass}`}
-      title={caption.text}
-    >
-      {caption.text}
-    </span>
-  );
-}
 
 export default function Dashboard() {
   const [data, setDataFields] = useState<{
@@ -264,60 +239,6 @@ export default function Dashboard() {
     await confirm(doCancel);
   }, [showToast, setData, isArmedFor, arm, confirm]);
 
-  // Update cron job schedule inline
-  const handleCronScheduleChange = useCallback(async (jobId: string, newSchedule: string) => {
-    if (!data.monitor?.cron?.jobs) {
-      showToast("Schedule update unavailable: no monitor data", "error");
-      return;
-    }
-
-    const parsed = parseSchedule(newSchedule);
-    // `scheduleDisplayFromParsed` (src/lib/schedule/parse-schedule.ts) handles
-    // the type-narrowing concern for the discriminated `ParsedSchedule` union:
-    // the `invalid` variant has no `display` field, so the call site collapses
-    // to a single helper call + a raw-input fallback for the invalid case.
-    // Byte-equivalent to the prior inline `parsed.kind !== "invalid" ?
-    // parsed.display : newSchedule` form.
-    const scheduleDisplay = scheduleDisplayFromParsed(parsed, newSchedule);
-
-    // Optimistic local update before the API call so the UI updates immediately.
-    // `data.monitor` is in the useCallback deps (line 311 below) so the
-    // captured value is always fresh — equivalent to reading `prev.monitor`
-    // from a React-state updater. The `setData` helper is the canonical
-    // partial-state setter (defined at line 179 above); only the `useState`
-    // declaration itself uses the raw dispatch setter directly.
-    //
-    // The optimistic update writes BOTH the canonical cron (`schedule`)
-    // and the human label (`schedule_display`). The picker's onChange
-    // contract is a 5-field cron expression (see SchedulePicker JSDoc
-    // line 33), so `newSchedule` is the canonical form; the parsed
-    // `scheduleDisplay` is the label the dashboard renders next to it.
-    setData({
-      monitor: withCronJobSchedule(data.monitor, jobId, newSchedule, scheduleDisplay),
-    });
-
-    try {
-      const { ok, error } = await safeApiCall("/api/cron", {
-        method: "PUT",
-        body: { id: jobId, schedule: newSchedule },
-      });
-      toastFromResult(
-        showToast,
-        { ok, error },
-        "Schedule updated",
-        "Failed to update cron schedule",
-      );
-    } catch (err) {
-      toastError(showToast, err, "Failed to update cron schedule");
-    } finally {
-      // Revoke optimistic update on failure; refresh on success. The
-      // finally block covers all paths (success, !ok return, thrown),
-      // so no inline refreshMonitor() is needed in the success/catch
-      // branches above.
-      void refreshMonitor();
-    }
-  }, [data.monitor, showToast, refreshMonitor, setData]);
-
   const handleRefreshProcesses = useCallback(async () => {
     const processes = await safeApiCallData<{ processes: HermesProcess[] }>("/api/agents");
     if (processes?.processes) {
@@ -405,29 +326,17 @@ export default function Dashboard() {
     [missions],
   );
 
-  // Timestamp for cron scheduling comparisons. We DO NOT compute
+  // Timestamp for session-window comparisons. We DO NOT compute
   // `new Date().getTime()` directly in the render body, because that
   // would make `now` a brand-new number on every render, which in
-  // turn would invalidate the `cronCaptions` and `sessionWindowSubtitle`
-  // `useMemo`s on every render and defeat the entire purpose of the
+  // turn would invalidate the `sessionWindowSubtitle`
+  // `useMemo` on every render and defeat the entire purpose of the
   // memo. Instead, hold `now` in `useState` (initialised once on mount)
-  // and refresh it on a 30-second `useInterval`. The captions stay
+  // and refresh it on a 30-second `useInterval`. The values stay
   // stable for 30-second windows — close enough for a dashboard whose
   // monitor already polls every 10s.
   const [now, setNow] = useState(() => new Date().getTime());
   useInterval(() => setNow(new Date().getTime()), { ms: 30_000 });
-
-  // Per-job caption map: priority-ordered ladder extracted to
-  // computeCronJobRowCaption (src/lib/cron-row-helpers.ts) so the
-  // rules are unit-testable in isolation. The map lets the JSX
-  // .map() do a single lookup per row instead of recomputing.
-  const cronCaptions = useMemo(() => {
-    const map = new Map<string, ReturnType<typeof computeCronJobRowCaption>>();
-    for (const job of monitor?.cron.jobs ?? []) {
-      map.set(job.id, computeCronJobRowCaption(job, now));
-    }
-    return map;
-  }, [monitor?.cron.jobs, now]);
 
   // Sessions stat-pill subtitle: "N active · M last 7d" derived from
   // the 5 most recent sessions exposed by /api/monitor. The full
@@ -496,12 +405,6 @@ export default function Dashboard() {
                 label="Processes"
                 value={activeProcesses.length > 0 ? `${activeProcesses.length} Active` : status?.soulFile ? "Idle" : "Offline"}
                 color={activeProcesses.length > 0 ? "green" : status?.soulFile ? "cyan" : "pink"}
-              />
-              <StatPill
-                icon={ListTodo}
-                label="Cron Jobs"
-                value={`${monitor.cron.active} Active`}
-                color="orange"
               />
               <StatPill
                 icon={Activity}
@@ -665,7 +568,7 @@ export default function Dashboard() {
                         >
                           {m.latestSession.id.slice(-20)}
                         </Link>
-                      ) : m.cronJobId && m.status === "dispatched" ? (
+                      ) : m.status === "dispatched" ? (
                         <span className="text-[10px] font-mono text-white/15 italic">
                           Session loading...
                         </span>
@@ -693,48 +596,7 @@ export default function Dashboard() {
         )}
 
         {/* ═══ Three-Panel System Monitor ═══ */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Cron Jobs Panel */}
-          <Panel accent="orange">
-            <PanelHeader
-              icon={ListTodo}
-              label="Cron Jobs"
-              accent="orange"
-              rightSlot={
-                <Link href="/orchestration/cron" className="text-[10px] font-mono text-neon-orange hover:underline">
-                  manage →
-                </Link>
-              }
-            />
-            <div className="divide-y divide-white/5">
-              {monitor?.cron.jobs.length === 0 && (
-                <div className="px-4 py-6 text-center text-xs text-white/30">No cron jobs</div>
-              )}
-              {monitor?.cron.jobs.map((job) => (
-                <div key={job.id} className="px-4 py-2.5 flex items-center justify-between gap-3 min-w-0">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs text-white/80 truncate">{job.name}</div>
-                    <div className="flex items-center gap-2 mt-0.5 min-w-0">
-                      <div className="flex-shrink-0">
-                        <SchedulePicker
-                          value={job.schedule}
-                          onChange={(v) => handleCronScheduleChange(job.id, v)}
-                          compact
-                        />
-                      </div>
-                      {job.enabled && (
-                        <CronJobCaptionSpan
-                          caption={cronCaptions.get(job.id) ?? null}
-                        />
-                      )}
-                    </div>
-                  </div>
-                  <CronStatusBadge state={job.state} enabled={job.enabled} />
-                </div>
-              ))}
-            </div>
-          </Panel>
-
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Platforms Panel */}
           <Panel accent="cyan">
             <PanelHeader icon={Globe} label="Platforms" accent="cyan" />

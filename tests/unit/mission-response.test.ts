@@ -33,19 +33,11 @@ jest.mock("@/lib/mission-repository", () => ({
   getMission: (id: string) => mockGetMission(id),
 }));
 
-const mockEnrichMissionCron = jest.fn();
-jest.mock("@/lib/mission-cron-sync", () => ({
-  enrichMissionCron: (m: unknown) => mockEnrichMissionCron(m),
-}));
-
 import { missionResponse, enrichedMission } from "@/lib/mission-response";
 
 beforeEach(() => {
   responses.length = 0;
   mockGetMission.mockReset();
-  mockEnrichMissionCron.mockReset();
-  // Default: enrich is identity (callers can override per-test).
-  mockEnrichMissionCron.mockImplementation((m) => m);
 });
 
 describe("missionResponse", () => {
@@ -57,7 +49,6 @@ describe("missionResponse", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual({ data: { mission } });
-    expect(mockEnrichMissionCron).toHaveBeenCalledWith(mission);
   });
 
   it("accepts a custom status (201 for create-style responses)", async () => {
@@ -71,9 +62,7 @@ describe("missionResponse", () => {
 
   it("returns 404 when the mission was deleted between mutation and response", async () => {
     // Guardrail: a race where the mission is deleted after a successful
-    // mutation but before the response shape is built. The pre-refactor
-    // inline form would have returned { mission: undefined } in a 200
-    // body, which the client could not distinguish from a valid mission.
+    // mutation but before the response shape is built.
     mockGetMission.mockReturnValue(undefined);
 
     const res = missionResponse("m1");
@@ -81,39 +70,17 @@ describe("missionResponse", () => {
     const body = await res.json();
     expect(body).toEqual({ error: "Mission not found" });
   });
-
-  it("passes the mission through enrichMissionCron (preserves cron enrichment)", async () => {
-    const mission = { id: "m1", cronJobId: "j1" };
-    const enriched = { id: "m1", cronJobId: "j1", cronJob: { id: "j1" } };
-    mockGetMission.mockReturnValue(mission);
-    mockEnrichMissionCron.mockReturnValue(enriched);
-
-    const res = missionResponse("m1");
-    const body = await res.json();
-    expect(body).toEqual({ data: { mission: enriched } });
-    // The helper calls enrich, not the caller — that's the consolidation.
-    expect(mockEnrichMissionCron).toHaveBeenCalledTimes(1);
-  });
 });
 
 describe("enrichedMission", () => {
-  it("returns the enriched mission when it exists", () => {
+  it("returns the mission when it exists", () => {
     const mission = { id: "m1" };
     mockGetMission.mockReturnValue(mission);
-    const result = enrichedMission("m1");
-    expect(result).toBe(mission);
-    expect(mockEnrichMissionCron).toHaveBeenCalledWith(mission);
+    expect(enrichedMission("m1")).toBe(mission);
   });
 
   it("returns undefined when the mission was deleted (no `!` lie)", () => {
-    // The lib-side helper is used inside result-shaped handlers
-    // (e.g. { ok: true; mission: Mission }) where the caller historically
-    // wrote `enrichMissionCron(getMission(id)!)`. The `!` lies to the
-    // type checker if the mission was deleted. The helper returns
-    // undefined instead, forcing the caller to keep the defensive branch
-    // they would have had to write anyway.
     mockGetMission.mockReturnValue(undefined);
-    const result = enrichedMission("m1");
-    expect(result).toBeUndefined();
+    expect(enrichedMission("m1")).toBeUndefined();
   });
 });

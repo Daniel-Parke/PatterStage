@@ -15,30 +15,6 @@ export interface ApiResponse<T> {
 
 // ── Dashboard ─────────────────────────────────────────────────
 
-export interface CronJobBrief {
-  id: string;
-  name: string;
-  state: string;
-  enabled: boolean;
-  /**
-   * Canonical machine form of the schedule — always a raw 5-field cron
-   * expression. Consumers that need to save or parse the value should
-   * use this field. Consumers that need a human-readable label should
-   * use `schedule_display` instead.
-   */
-  schedule: string;
-  /**
-   * Human-readable schedule label (e.g. "every 30m", "0 9 * * 1-5").
-   * Distinct from `schedule` — the dashboard renders this string to
-   * the user but never treats it as a saveable cron expression.
-   * May be null when the DB row has no stored display label.
-   */
-  schedule_display: string | null;
-  lastRun: string | null;
-  nextRun: string | null;
-  lastStatus: string | null;
-}
-
 export interface SessionBrief {
   id: string;
   modified: string;
@@ -46,12 +22,6 @@ export interface SessionBrief {
 }
 
 export interface MonitorData {
-  cron: {
-    total: number;
-    active: number;
-    paused: number;
-    jobs: CronJobBrief[];
-  };
   sessions: {
     total: number;
     recent: SessionBrief[];

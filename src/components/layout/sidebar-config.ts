@@ -53,7 +53,6 @@ export const mainSections: SidebarSection[] = [
     links: [
       { icon: Rocket, label: "Missions", href: "/orchestration/missions", color: "cyan" },
       { icon: Terminal, label: "Scripts", href: "/orchestration/scripts", color: "cyan" },
-      { icon: ListTodo, label: "Cron", href: "/orchestration/cron", color: "orange" },
       { icon: MessageCircle, label: "Chat", href: "/orchestration/chat", color: "cyan" },
     ],
   },

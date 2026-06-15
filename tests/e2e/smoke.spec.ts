@@ -8,13 +8,6 @@ test.describe("Smoke", () => {
     await expect(title.getByText("HUB", { exact: true })).toBeVisible();
   });
 
-  test("cron page loads", async ({ page }) => {
-    await page.goto("/orchestration/cron");
-    await expect(
-      page.getByRole("heading", { name: "Cron Jobs", exact: true })
-    ).toBeVisible();
-  });
-
   test("missions page loads", async ({ page }) => {
     await page.goto("/orchestration/missions");
     await expect(

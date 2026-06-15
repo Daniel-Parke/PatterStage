@@ -229,14 +229,14 @@ Drop a new `.sh` file into `CH_DATA_DIR/scripts` and it appears automatically.
 ### Notes
 
 - Running execs the script with the Control Hub process's permissions, the same as a crontab entry would — only files directly under `CH_DATA_DIR/scripts` can be run (no traversal, `.sh` only, no shell interpolation).
-- A legacy **Cron** page (Hermes `jobs.json` agent cron) still exists while it is being retired; scheduled *agent* work belongs in **Missions**.
+- The legacy agent-cron **Cron** page (Hermes `jobs.json`) has been **removed** — scheduled *agent* work belongs in **Missions**; existing cron jobs migrate to schedules automatically on update.
 
 For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memory snapshot) and the script-level env vars, see [SYSTEM-CRON.md](SYSTEM-CRON.md).
 
 ### Notes
 
 - Scripts run via the **OS scheduler** (host crontab) — "the OS does work". Scheduled *missions* run via the Control Hub scheduler — "Hermes does work". They are deliberately separate surfaces.
-- A legacy **Cron** page (Hermes `jobs.json` agent cron) still exists while it is being retired; new scheduled agent work belongs in **Missions**, and existing cron jobs are migrated to Control Hub schedules automatically on update (see [MIGRATION.md](MIGRATION.md)).
+- The legacy agent-cron **Cron** page (Hermes `jobs.json`) has been **removed**; new scheduled agent work belongs in **Missions**, and existing cron jobs are migrated to Control Hub schedules automatically on update (see [MIGRATION.md](MIGRATION.md)).
 
 ---
 

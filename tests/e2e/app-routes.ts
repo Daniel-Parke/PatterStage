@@ -37,7 +37,6 @@ export const APP_NAV_ROUTES: readonly string[] = [
   "/config/tts",
   "/config/voice",
   "/config/web",
-  "/orchestration/cron",
   "/orchestration/scripts",
   "/orchestration/chat",
   "/logs",

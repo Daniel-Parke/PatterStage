@@ -28,22 +28,6 @@ test.describe("Missions page", () => {
   });
 });
 
-test.describe("Cron page", () => {
-  test("loads cron jobs list", async ({ page }) => {
-    await page.goto("/orchestration/cron");
-    await expect(
-      page.getByRole("heading", { name: /Cron Jobs/i })
-    ).toBeVisible();
-  });
-
-  test("shows create job button", async ({ page }) => {
-    await page.goto("/orchestration/cron");
-    await expect(
-      page.getByRole("button", { name: /Create|New|Add/i }).first()
-    ).toBeVisible();
-  });
-});
-
 test.describe("Sessions page", () => {
   test("loads sessions list", async ({ page }) => {
     await page.goto("/sessions");

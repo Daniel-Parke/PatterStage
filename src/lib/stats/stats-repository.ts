@@ -213,15 +213,13 @@ export function getDashboardStats(): DashboardStats {
     active: scalar("SELECT COUNT(*) AS v FROM sessions WHERE status = 'active'"),
   };
 
-  // ── automations: schedules (agent missions) + cron scripts (host) ──
+  // ── automations: Control Hub schedules (recurring agent missions) ──
+  // Host scripts (system crontab) are managed on the Scripts page, not counted
+  // in this aggregate — the dashboard's automation signal is the CH scheduler.
   const schedulesTotal = scalar("SELECT COUNT(*) AS v FROM schedules");
   const schedulesEnabled = scalar("SELECT COUNT(*) AS v FROM schedules WHERE enabled = 1");
-  const scriptsTotal = scalar(
-    "SELECT COUNT(*) AS v FROM cron_jobs WHERE script IS NOT NULL AND script != ''",
-  );
-  const scriptsEnabled = scalar(
-    "SELECT COUNT(*) AS v FROM cron_jobs WHERE enabled = 1 AND script IS NOT NULL AND script != ''",
-  );
+  const scriptsTotal = 0;
+  const scriptsEnabled = 0;
   const nextRun = ((): NextRun | null => {
     try {
       const sched = db()
@@ -231,19 +229,7 @@ export function getDashboardStats(): DashboardStats {
              ORDER BY next_run_at ASC LIMIT 1`,
         )
         .get() as { name: string; at: string } | undefined;
-      const script = db()
-        .prepare(
-          `SELECT name, next_run_at AS at FROM cron_jobs
-             WHERE enabled = 1 AND script IS NOT NULL AND script != ''
-               AND next_run_at IS NOT NULL AND next_run_at > datetime('now')
-             ORDER BY next_run_at ASC LIMIT 1`,
-        )
-        .get() as { name: string; at: string } | undefined;
-      const candidates: NextRun[] = [];
-      if (sched) candidates.push({ name: sched.name || "Scheduled mission", at: sched.at, kind: "mission" });
-      if (script) candidates.push({ name: script.name, at: script.at, kind: "script" });
-      candidates.sort((a, b) => a.at.localeCompare(b.at));
-      return candidates[0] ?? null;
+      return sched ? { name: sched.name || "Scheduled mission", at: sched.at, kind: "mission" } : null;
     } catch {
       return null;
     }

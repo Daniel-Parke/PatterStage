@@ -88,7 +88,7 @@ The bootstrap and deploy scripts prompt by default and **skip every prompt** whe
 | **Config → Models / HERMES.md / YAML** | Model registry, environment, Hermes `config.yaml` sections. |
 | **Sidebar (bottom)** | **Check** compares to remote; **Update** pulls, backs up + migrates, rebuilds, and restarts; **Rebuild** builds the current tree and restarts. |
 
-> The legacy **Cron** page (Hermes `jobs.json` agent cron) is being retired — scheduled agent work now lives in **Missions**, and host scripts in **Scripts**. Existing cron jobs are migrated automatically on update (see below).
+> The legacy **Cron** page + Hermes `jobs.json` agent-cron bridge have been **removed** — scheduled agent work lives in **Missions** (recurring missions on the Control Hub scheduler), and host scripts in **Scripts**. Existing cron jobs are migrated to schedules automatically on update (see below).
 
 ---
 

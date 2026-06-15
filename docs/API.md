@@ -24,8 +24,7 @@ Some error responses also include `details` (Zod validation). Handlers must call
 | `/api/agents` | `GET` | Inspect running Hermes agent processes (OS-dependent). Not the same as `agent/profiles`. |
 | `/api/config` | `GET`, `PUT` | Read/update parsed Hermes config content. |
 | `/api/credentials` | `GET`, `POST` | API key credentials (masked list; create via POST). No per-id route. |
-| `/api/cron` | `GET`, `POST`, `PUT`, `DELETE` | Legacy **agent** cron jobs (Hermes `jobs.json`) — being retired in favour of `/api/schedules`. |
-| `/api/cron/hardware` | `GET`, `POST`, `PUT`, `DELETE` | Host **scripts** (system cron) under `CH_SCRIPTS_DIR` / `CH_HARDWARE_LOG_DIR` — powers the Scripts page. |
+| `/api/cron/hardware` | `GET`, `POST`, `PUT`, `DELETE` | Host **scripts** (system cron) under `CH_SCRIPTS_DIR` / `CH_HARDWARE_LOG_DIR` — powers the Scripts page. (The legacy `/api/cron` agent-cron bridge has been removed; recurring agent work uses `/api/schedules`.) |
 | `/api/cron/hardware/meta` | `GET` | `{ scriptsDir, logDir }`. |
 | `/api/scripts` | `GET` | List host script files under `CH_DATA_DIR/scripts` with schedule + last-run (powers the Scripts page). |
 | `/api/scripts/run` | `POST` | Run a script on demand (`{ name }`) — path-validated, no shell. |

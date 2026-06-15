@@ -8,7 +8,6 @@
 
 import { SyncScheduler } from "./SyncScheduler";
 import type { SyncCycleResult } from "./types";
-import { CronSync } from "./sources/CronSync";
 import { SessionSync } from "./sources/SessionSync";
 import { ConfigSync } from "./sources/ConfigSync";
 import { EnvSync } from "./sources/EnvSync";
@@ -42,7 +41,6 @@ export function ensureSyncLayer(): void {
   const scheduler = getSyncScheduler();
 
   // Register all sync sources
-  scheduler.register(new CronSync());
   scheduler.register(new SessionSync());
   scheduler.register(new ConfigSync());
   scheduler.register(new EnvSync());

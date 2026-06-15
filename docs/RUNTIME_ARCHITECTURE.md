@@ -98,4 +98,4 @@ For a **production real Hermes**: enable the API server (`setup.sh` writes `API_
 
 ## What was removed
 
-The bash mission backend (`backends/hermes.ts`), the `agent-backend/` interface, status.json/pid polling (`MissionSync`), and the stdout session-id parsing are gone. The legacy Hermes `jobs.json` cron bridge remains only behind the deprecated **Cron** page; recurring work should use **Schedules**.
+The bash mission backend (`backends/hermes.ts`), the `agent-backend/` interface, status.json/pid polling (`MissionSync`), the stdout session-id parsing, and the legacy Hermes `jobs.json` cron bridge (+ the **Cron** page) are all gone. Recurring work uses **Missions** scheduling (the Control Hub `schedules` scheduler).

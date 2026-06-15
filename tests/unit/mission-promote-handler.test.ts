@@ -2,14 +2,8 @@
 /** @jest-environment node */
 
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
-jest.mock("@/lib/mission-cron-sync", () => ({
-  enrichMissionCron: jest.fn((m: unknown) => m),
-  syncMissionToCronJob: jest.fn(),
-}));
-jest.mock("@/lib/cron-repository", () => ({
-  createCronJob: jest.fn(),
-  deleteCronJob: jest.fn(),
-  pushJobToHermes: jest.fn(),
+jest.mock("@/lib/schedules-repository", () => ({
+  createSchedule: jest.fn(() => ({ id: "sched1" })),
 }));
 const mockDispatchMissionNow = jest.fn().mockResolvedValue({ ok: true });
 const mockRunMissionQueueTick = jest.fn();
