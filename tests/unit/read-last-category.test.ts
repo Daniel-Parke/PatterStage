@@ -17,7 +17,7 @@
  *
  * @jest-environment jsdom
  */
-import { readLastCategory, rememberLastCategory } from "@/hooks/useMissionsPage";
+import { readLastCategory, rememberLastCategory } from "@/lib/mission-composer-utils";
 
 const LAST_CATEGORY_KEY = "ch-last-mission-category";
 
