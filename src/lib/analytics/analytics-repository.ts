@@ -185,6 +185,59 @@ export function countByTypeAndHour(eventType: AnalyticsEventType, sinceDays = 36
   );
 }
 
+/** 24-length array of counts bucketed by hour-of-day across ALL event types. */
+export function countByHourAllTypes(sinceDays = 365): number[] {
+  return safeRead(
+    () => {
+      const rows = db()
+        .prepare(
+          `SELECT CAST(strftime('%H', created_at) AS INTEGER) AS h, COUNT(*) AS c
+           FROM analytics_events WHERE created_at >= datetime('now', ?)
+           GROUP BY h`,
+        )
+        .all(days(sinceDays)) as { h: number; c: number }[];
+      const hours = new Array<number>(24).fill(0);
+      for (const r of rows) if (r.h >= 0 && r.h < 24) hours[r.h] = r.c;
+      return hours;
+    },
+    new Array<number>(24).fill(0),
+  );
+}
+
+export interface DailyTypeCounts {
+  date: string;
+  /** count per event_type for that day */
+  counts: Record<string, number>;
+}
+
+/**
+ * Daily counts per event_type for the last `sinceDays` days (gap-filled).
+ * Powers the per-category stacked area + the success-rate trend (mission
+ * completed vs failed) without N separate queries.
+ */
+export function dailyCountsByType(sinceDays: number): DailyTypeCounts[] {
+  const n = Math.max(1, Math.floor(sinceDays));
+  return safeRead(
+    () => {
+      const rows = db()
+        .prepare(
+          `SELECT date(created_at) AS d, event_type AS t, COUNT(*) AS c
+           FROM analytics_events WHERE created_at >= datetime('now', ?)
+           GROUP BY d, t ORDER BY d`,
+        )
+        .all(days(n)) as { d: string; t: string; c: number }[];
+      const byDate = new Map<string, Record<string, number>>();
+      for (const r of rows) {
+        const rec = byDate.get(r.d) ?? {};
+        rec[r.t] = r.c;
+        byDate.set(r.d, rec);
+      }
+      return lastNDates(n).map((d) => ({ date: d, counts: byDate.get(d) ?? {} }));
+    },
+    lastNDates(n).map((d) => ({ date: d, counts: {} })),
+  );
+}
+
 export interface TopEntity {
   entityId: string;
   count: number;
