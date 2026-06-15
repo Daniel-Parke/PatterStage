@@ -10,37 +10,34 @@
 
 "use client";
 
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { BarChart3, Sparkles, Activity, CalendarRange, Rocket } from "lucide-react";
+import {
+  BarChart3, Sparkles, Activity, CalendarRange, Rocket, Clock,
+  Timer, Coins, Cpu, TrendingUp,
+} from "lucide-react";
 
 import PageHeader from "@/components/layout/PageHeader";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { AreaTrend, ActivityHeatmap, Donut } from "@/components/viz";
+import {
+  AreaTrend, ActivityHeatmap, Donut, RadialActivityClock,
+  DistributionHistogram, TopList, StackedAreaTrend,
+} from "@/components/viz";
 import { neonAlpha, type NeonColor } from "@/components/viz/colors";
 import { AchievementShowcase, LevelBadge, StreakFlame } from "@/components/achievements";
+import { Stagger, StaggerItem } from "@/components/motion";
 import { useStats } from "@/hooks/useStats";
-import { useAnalytics, useAnalyticsTimeseries } from "@/hooks/useAnalytics";
-import type { AnalyticsEventType } from "@/lib/analytics/event-types";
+import { useAnalytics, useAnalyticsTimeseries, useInsights } from "@/hooks/useAnalytics";
+import { categoryForEventType } from "@/lib/analytics/categories";
 
-// Group the 14 event types into 6 readable categories for the breakdown ring.
-const CATEGORY: Record<AnalyticsEventType, { cat: string; color: NeonColor }> = {
-  "mission.dispatched": { cat: "Missions", color: "cyan" },
-  "mission.completed": { cat: "Missions", color: "cyan" },
-  "mission.failed": { cat: "Missions", color: "cyan" },
-  "story.created": { cat: "Stories", color: "purple" },
-  "story.chapter_generated": { cat: "Stories", color: "purple" },
-  "story.completed": { cat: "Stories", color: "purple" },
-  "session.started": { cat: "Sessions", color: "green" },
-  "session.closed": { cat: "Sessions", color: "green" },
-  "schedule.created": { cat: "Automation", color: "orange" },
-  "schedule.fired": { cat: "Automation", color: "orange" },
-  "skill.toggled": { cat: "Config", color: "pink" },
-  "personality.changed": { cat: "Config", color: "pink" },
-  "model.configured": { cat: "Config", color: "pink" },
-  "chat.message_sent": { cat: "Chat", color: "yellow" },
-};
+const RANGES = [7, 30, 90] as const;
+
+function compactNum(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1)}k`;
+  return String(Math.round(n));
+}
 
 function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
@@ -69,9 +66,11 @@ function MetricTile({ label, value, color = "cyan" }: { label: string; value: st
 }
 
 export default function InsightsPage() {
+  const [days, setDays] = useState<number>(30);
   const { stats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useStats();
   const { summary, error: summaryError, refetch: refetchSummary } = useAnalytics();
-  const { points } = useAnalyticsTimeseries(undefined, 30);
+  const { points } = useAnalyticsTimeseries(undefined, days);
+  const { insights, error: insightsError } = useInsights(days);
 
   const totalEvents = useMemo(
     () => Object.values(summary?.totals ?? {}).reduce((a, b) => a + b, 0),
@@ -81,17 +80,22 @@ export default function InsightsPage() {
   const segments = useMemo(() => {
     const byCat = new Map<string, { value: number; color: NeonColor }>();
     for (const [type, count] of Object.entries(summary?.totals ?? {})) {
-      const meta = CATEGORY[type as AnalyticsEventType];
-      if (!meta) continue;
-      const prev = byCat.get(meta.cat);
-      byCat.set(meta.cat, { value: (prev?.value ?? 0) + count, color: meta.color });
+      const cat = categoryForEventType(type);
+      if (!cat) continue;
+      const prev = byCat.get(cat.label);
+      byCat.set(cat.label, { value: (prev?.value ?? 0) + count, color: cat.color });
     }
     return [...byCat.entries()].map(([label, v]) => ({ label, value: v.value, color: v.color }));
   }, [summary]);
 
   const areaData = useMemo(() => points.map((p) => ({ date: p.date, completed: p.value })), [points]);
 
-  const error = statsError ?? summaryError;
+  const estSpend = useMemo(
+    () => (insights?.modelUsage ?? []).reduce((s, m) => s + m.costUsd, 0),
+    [insights],
+  );
+
+  const error = statsError ?? summaryError ?? insightsError;
   const achievements = stats?.achievements ?? [];
   const unlocked = achievements.filter((a) => a.unlocked).length;
 
@@ -102,6 +106,22 @@ export default function InsightsPage() {
         title="Insights"
         subtitle="Interaction analytics & achievements"
         color="cyan"
+        actions={
+          <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-dark-900/60 p-0.5">
+            {RANGES.map((r) => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setDays(r)}
+                className={`rounded-md px-2.5 py-1 text-[11px] font-mono transition-colors ${
+                  days === r ? "bg-neon-cyan/20 text-neon-cyan" : "text-white/40 hover:text-white/70"
+                }`}
+              >
+                {r}d
+              </button>
+            ))}
+          </div>
+        }
       />
 
       <div className="flex-1 space-y-4 overflow-y-auto p-6">
@@ -146,50 +166,128 @@ export default function InsightsPage() {
                   <div className="h-10 w-px bg-white/10" />
                   {stats && <StreakFlame current={stats.streak.current} longest={stats.streak.longest} />}
                 </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                   <MetricTile label="Interactions" value={totalEvents.toLocaleString()} color="cyan" />
-                  <MetricTile label="Active days (30d)" value={String(summary?.activeDays ?? 0)} color="green" />
-                  <MetricTile label="Achievements" value={`${unlocked}/${achievements.length}`} color="yellow" />
-                  <MetricTile label="Longest streak" value={`${stats?.streak.longest ?? 0}d`} color="orange" />
+                  <MetricTile label={`Active days (${days}d)`} value={String(summary?.activeDays ?? 0)} color="green" />
+                  <MetricTile label="Tokens" value={compactNum(stats?.runs.totalTokens ?? 0)} color="yellow" />
+                  <MetricTile label="Est. spend" value={`$${estSpend.toFixed(2)}`} color="pink" />
+                  <MetricTile label="Achievements" value={`${unlocked}/${achievements.length}`} color="orange" />
                 </div>
               </div>
             </Card>
 
-            <div className="grid gap-4 lg:grid-cols-3">
-              {/* ── Activity over time ── */}
-              <Card className="lg:col-span-2">
-                <CardTitle icon={Activity}>Activity — last 30 days</CardTitle>
-                <AreaTrend data={areaData} color="cyan" height={140} />
-              </Card>
-
-              {/* ── Category breakdown ── */}
-              <Card>
-                <CardTitle icon={BarChart3}>By category</CardTitle>
-                <div className="flex items-center gap-4">
-                  <Donut segments={segments} size={120} center={totalEvents.toLocaleString()} centerSub="events" />
-                  <ul className="flex-1 space-y-1.5">
-                    {segments.length === 0 && (
-                      <li className="text-xs text-white/40">No activity recorded yet.</li>
+            <Stagger className="space-y-4">
+              {/* ── Activity by category (stacked) + breakdown ── */}
+              <StaggerItem>
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <Card className="lg:col-span-2">
+                    <CardTitle icon={Activity}>Activity by category — last {days} days</CardTitle>
+                    {insights && insights.categoryDaily.some((d) => Object.values(d.values).some((v) => v > 0)) ? (
+                      <>
+                        <StackedAreaTrend data={insights.categoryDaily} series={insights.categorySeries} height={150} />
+                        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+                          {insights.categorySeries.map((s) => (
+                            <span key={s.key} className="flex items-center gap-1.5 text-[10px] text-white/50">
+                              <span className="h-2 w-2 rounded-sm" style={{ background: neonAlpha(s.color, 90) }} />
+                              {s.label}
+                            </span>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <AreaTrend data={areaData} color="cyan" height={150} />
                     )}
-                    {segments.map((s) => (
-                      <li key={s.label} className="flex items-center justify-between gap-2 text-xs">
-                        <span className="flex items-center gap-2 text-white/70">
-                          <span className="h-2 w-2 rounded-full" style={{ background: neonAlpha(s.color, 90) }} />
-                          {s.label}
-                        </span>
-                        <span className="font-mono text-white/50">{s.value.toLocaleString()}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </Card>
-            </div>
+                  </Card>
 
-            {/* ── Run activity heatmap ── */}
-            <Card>
-              <CardTitle icon={CalendarRange}>Run activity — last 91 days</CardTitle>
-              <ActivityHeatmap data={stats?.runActivity ?? []} color="green" />
-            </Card>
+                  <Card>
+                    <CardTitle icon={BarChart3}>By category (all-time)</CardTitle>
+                    <div className="flex items-center gap-4">
+                      <Donut segments={segments} size={120} center={totalEvents.toLocaleString()} centerSub="events" />
+                      <ul className="flex-1 space-y-1.5">
+                        {segments.length === 0 && (
+                          <li className="text-xs text-white/40">No activity recorded yet.</li>
+                        )}
+                        {segments.map((s) => (
+                          <li key={s.label} className="flex items-center justify-between gap-2 text-xs">
+                            <span className="flex items-center gap-2 text-white/70">
+                              <span className="h-2 w-2 rounded-full" style={{ background: neonAlpha(s.color, 90) }} />
+                              {s.label}
+                            </span>
+                            <span className="font-mono text-white/50">{s.value.toLocaleString()}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </Card>
+                </div>
+              </StaggerItem>
+
+              {/* ── Hour-of-day clock + run-duration distribution + success trend ── */}
+              <StaggerItem>
+                <div className="grid gap-4 lg:grid-cols-3">
+                  <Card>
+                    <CardTitle icon={Clock}>When you work (hour of day)</CardTitle>
+                    <div className="mx-auto h-44 w-44">
+                      <RadialActivityClock hours={insights?.hourOfDay ?? new Array(24).fill(0)} color="cyan" />
+                    </div>
+                  </Card>
+                  <Card>
+                    <CardTitle icon={Timer}>Run duration</CardTitle>
+                    <DistributionHistogram bins={insights?.durationBuckets ?? []} color="purple" height={150} />
+                  </Card>
+                  <Card>
+                    <CardTitle icon={TrendingUp}>Mission success trend</CardTitle>
+                    <AreaTrend data={insights?.successTrend ?? []} color="green" failColor="pink" height={150} />
+                    <div className="mt-2 flex gap-3 text-[10px] text-white/50">
+                      <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-neon-green" />completed</span>
+                      <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-neon-pink" />failed</span>
+                    </div>
+                  </Card>
+                </div>
+              </StaggerItem>
+
+              {/* ── Per-model spend + top missions ── */}
+              <StaggerItem>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <Card>
+                    <CardTitle icon={Cpu}>Tokens by model</CardTitle>
+                    <TopList
+                      color="orange"
+                      rows={(insights?.modelUsage ?? []).map((m) => ({
+                        label: m.model,
+                        value: m.totalTokens,
+                        sub: `$${m.costUsd.toFixed(2)}`,
+                      }))}
+                      format={compactNum}
+                    />
+                  </Card>
+                  <Card>
+                    <CardTitle icon={Rocket}>Top missions</CardTitle>
+                    <TopList
+                      color="cyan"
+                      rows={(insights?.topMissions ?? []).map((m) => ({
+                        label: m.name,
+                        value: m.runs,
+                        sub: `${compactNum(m.totalTokens)} tok`,
+                      }))}
+                      format={(v) => `${v} run${v === 1 ? "" : "s"}`}
+                    />
+                  </Card>
+                </div>
+              </StaggerItem>
+
+              {/* ── Run activity heatmap ── */}
+              <StaggerItem>
+                <Card>
+                  <div className="mb-3 flex items-center gap-2">
+                    <CalendarRange className="h-4 w-4 text-neon-cyan" />
+                    <h2 className="text-xs font-mono uppercase tracking-widest text-white/50">Run activity — last 91 days</h2>
+                    <Coins className="ml-auto h-3.5 w-3.5 text-white/20" />
+                  </div>
+                  <ActivityHeatmap data={stats?.runActivity ?? []} color="green" />
+                </Card>
+              </StaggerItem>
+            </Stagger>
 
             {/* ── Achievements (compact trophy case; expands to full grid) ── */}
             <AchievementShowcase achievements={achievements} />
