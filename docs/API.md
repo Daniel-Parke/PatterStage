@@ -35,7 +35,7 @@ Some error responses also include `details` (Zod validation). Handlers must call
 | `/api/stats` | `GET` | Dashboard analytics aggregate (throughput, mission mix, run activity, tokens, per-agent performance, derived progression). |
 | `/api/fs/git/branches` | `GET` | List git branches for a workspace path. |
 | `/api/fs/list` | `GET` | List directory entries (path-validated). |
-| `/api/gateway/health` | `GET` | Gateway health probe (`/v1/models`). |
+| `/api/gateway/health` | `GET` | Gateway probe → `{ online, authConfigured }`. Any HTTP response (incl. 401/403) ⇒ reachable; 401/403 ⇒ reachable but the `API_SERVER_KEY` is missing/wrong. |
 | `/api/gateway/models` | `GET` | List models from gateway. |
 | `/api/logs` | `GET`, `DELETE` | Read recent Hermes logs; clear/truncate log tail. |
 | `/api/memory` | `GET`, `POST`, `PUT`, `DELETE` | Holographic memory facts. |
@@ -46,14 +46,9 @@ Some error responses also include `details` (Zod validation). Handlers must call
 | `/api/models/[id]` | `GET`, `PUT`, `DELETE` | One model row. |
 | `/api/models/[id]/diff` | `POST` | Diff model row vs Hermes config. |
 | `/api/models/defaults` | `GET`, `PUT` | Default model per task slot. |
-| `/api/models/fallbacks` | `GET`, `POST` | Fallback chain entries. |
+| `/api/models/fallbacks` | `GET`, `POST` | `GET` lists the chain + config; `POST` is an `action`-discriminated mutation (`add` \| `toggle` \| `reorder` \| `custom` \| `import` \| `sync`). |
 | `/api/models/fallbacks/[id]` | `GET`, `PUT`, `DELETE` | One fallback entry. |
 | `/api/models/fallbacks/config` | `GET`, `PUT` | Fallback chain behaviour config. |
-| `/api/models/fallbacks/custom` | `POST` | Add custom (non-registry) fallback. |
-| `/api/models/fallbacks/import` | `GET`, `POST` | `GET` preview; `POST` import from Hermes. |
-| `/api/models/fallbacks/reorder` | `POST` | Reorder fallback chain. |
-| `/api/models/fallbacks/sync` | `POST` | Sync fallbacks to Hermes. |
-| `/api/models/fallbacks/toggle` | `POST` | Enable/disable one fallback entry. |
 | `/api/models/import` | `GET`, `POST` | `GET` preview; `POST` import from Hermes config. |
 | `/api/models/sync/drift` | `GET` | Model drift between DB and Hermes. |
 | `/api/models/sync/pull` | `POST` | Pull models from Hermes into DB. |
@@ -89,15 +84,30 @@ Several routes use **GET for reads** and **POST with an `action` field** for mut
 
 ### `/api/missions` — `POST` body `action`
 
+Each action body lives in its own handler under `src/lib/mission-handlers/*` behind a thin router in the route.
+
 | `action` | Purpose |
 |----------|---------|
-| `dispatch` | Create mission, optional schedule/cron, spawn Hermes agent |
-| `update` | Update mission fields / rebuild prompt |
-| `cancel` | Stop running agent; mark failed with "Cancelled by user" |
-| `delete` | Remove mission and linked cron |
-| `status` | Poll backend status for a mission id |
+| `dispatch` | Create a mission and run it per `dispatchMode` (`save` draft / `queue` / `cron` recurring schedule / immediate) |
+| `promote` | Promote a draft or queued-waiting mission per `dispatchMode` |
+| `update` | Update fields of a **running** mission / rebuild prompt |
+| `cancel` | Stop the backend run; mark failed with "Cancelled by user" |
+| `delete` | Remove the mission and its linked Control Hub schedule |
 
-`GET` supports `?id=` for one mission or list with optional `?categoryId=`.
+`GET` supports `?id=` for one mission (status synced in background) or list with optional `?categoryId=`.
+
+### `/api/models/fallbacks` — `POST` body `action`
+
+| `action` | Purpose |
+|----------|---------|
+| `add` | Add a registry model to the fallback chain |
+| `toggle` | Enable/disable one entry (`entryId`, `enabled`) |
+| `reorder` | Swap an entry up/down (`entryId`, `direction`) |
+| `custom` | Add a custom (non-registry) fallback (`name`, `provider`, `modelIdString`, `baseUrl?`) |
+| `import` | Import the chain from Hermes `config.yaml` |
+| `sync` | Write the enabled chain + behaviour config to Hermes |
+
+`GET` returns the chain entries + behaviour config. Per-entry `GET`/`PUT`/`DELETE` live at `/api/models/fallbacks/[id]`; the behaviour config at `/api/models/fallbacks/config`.
 
 ### `/api/templates` — `POST` body `action`
 

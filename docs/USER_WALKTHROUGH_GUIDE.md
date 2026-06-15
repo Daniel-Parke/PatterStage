@@ -259,7 +259,7 @@ For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memor
 - Active session highlighted with a neon-cyan left border.
 
 **Main area**
-- **GatewayBanner** at the top (when no active session is selected): one of three banners — offline, model-missing (no agent default set), or checking (initial load).
+- **GatewayBanner** at the top (when no active session is selected): one of four banners — **offline** (gateway unreachable), **auth-missing** (gateway up but Control Hub can't authenticate — set `API_SERVER_KEY`), **model-missing** (no agent default set), or **checking** (initial load).
 - **Empty state** when nothing is selected: a large icon, "Chat with your agent" prompt, and short instruction text.
 - **Message thread** when a session is active: user bubbles on the right (neon-cyan tint) and assistant bubbles on the left (neon-purple icon). Assistant messages are markdown-rendered with copy buttons on code blocks. Timestamps in 24-hour format.
 - **TypingIndicator** while the assistant is streaming.
