@@ -61,31 +61,33 @@
   background: rgb(var(--ch-rgb-neon-cyan) / 0.35);
 }
 
-/* Glow effects — legacy classes used across the app */
+/* Glow effects — restrained (PatterTech-hybrid). Softer than the original
+   neon halo: glow reads as a subtle accent on cards, not a light source.
+   Reserve stronger glow for live/active states (pulse-glow). */
 .glow-cyan {
   box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-cyan) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-cyan) / 0.05);
+    0 0 14px rgb(var(--ch-rgb-neon-cyan) / 0.08),
+    0 0 28px rgb(var(--ch-rgb-neon-cyan) / 0.025);
 }
 .glow-purple {
   box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-purple) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-purple) / 0.05);
+    0 0 14px rgb(var(--ch-rgb-neon-purple) / 0.08),
+    0 0 28px rgb(var(--ch-rgb-neon-purple) / 0.025);
 }
 .glow-green {
   box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-green) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-green) / 0.05);
+    0 0 14px rgb(var(--ch-rgb-neon-green) / 0.08),
+    0 0 28px rgb(var(--ch-rgb-neon-green) / 0.025);
 }
 .glow-pink {
   box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-pink) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-pink) / 0.05);
+    0 0 14px rgb(var(--ch-rgb-neon-pink) / 0.08),
+    0 0 28px rgb(var(--ch-rgb-neon-pink) / 0.025);
 }
 .glow-orange {
   box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-orange) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-orange) / 0.05);
+    0 0 14px rgb(var(--ch-rgb-neon-orange) / 0.08),
+    0 0 28px rgb(var(--ch-rgb-neon-orange) / 0.025);
 }
 
 /* ── Motion (transform/opacity only — GPU-friendly) ──────────── */

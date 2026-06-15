@@ -254,6 +254,7 @@ export default function Dashboard() {
                 label="Processes"
                 value={activeProcesses.length > 0 ? `${activeProcesses.length} Active` : status?.soulFile ? "Idle" : "Offline"}
                 color={activeProcesses.length > 0 ? "green" : status?.soulFile ? "cyan" : "pink"}
+                href="/operations/agents"
               />
               <StatPill
                 icon={Activity}
@@ -261,12 +262,14 @@ export default function Dashboard() {
                 value={monitor.sessions.total.toLocaleString()}
                 color="purple"
                 subtitle={sessionWindowSubtitle}
+                href="/sessions"
               />
               <StatPill
                 icon={Layers}
                 label={`Memory · ${monitor.memory.provider || "Not Installed"}`}
                 value={monitor.memory.factCount >= 0 ? `${monitor.memory.factCount} facts` : "0 facts"}
                 color="pink"
+                href="/memory"
               />
             </>
           ) : (

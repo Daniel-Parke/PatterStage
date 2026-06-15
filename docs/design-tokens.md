@@ -54,6 +54,8 @@ TypeScript `AccentColor` in `src/types/hermes.ts` is unchanged: `cyan | purple |
 
 `src/lib/theme.ts` exports `glowSurfaceRgbMap` with **comma-separated RGB triplets** matching the table above for each `AccentColor`. If you change `@theme` neon hexes, update `glowSurfaceRgbMap` in the same PR.
 
+**Restraint (PatterTech-hybrid):** the `.glow-*` box-shadows in `globals.css` are intentionally soft (`14px @ 0.08` + `28px @ 0.025`) so glow reads as a subtle accent, not a light source. Reserve stronger glow + `pulse-glow` for **live/active** states (running process, live session) — not static cards. New surfaces should follow the same restraint (fewer competing accents per screen; cyan is the primary, the other accents are semantic).
+
 ## Form inputs
 
 Prefer `inputFieldClasses(accent)` from `src/lib/theme.ts` (wraps `baseInputStyles` + `focusColorMap`) for text inputs and selects instead of duplicating `bg-dark-*` / `focus:border-*` strings in TSX.

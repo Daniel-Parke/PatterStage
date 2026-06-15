@@ -4,6 +4,8 @@
 // Uses shared theme color maps instead of inline duplication.
 // Import this instead of redefining STAT_COLOR_CLASSES in each page.
 
+import Link from "next/link";
+
 import type { AccentColor } from "@/types/hermes";
 import { iconColorMap } from "@/lib/theme";
 
@@ -11,6 +13,10 @@ import { iconColorMap } from "@/lib/theme";
  * Stat pill for compact metric display — uses theme.ts colors as the single
  * source of truth for border + text styling, so there's only one place to
  * update when accent colours change.
+ *
+ * When `href` is provided the pill becomes a hover-aware link (the dashboard
+ * pills drill into Agents / Sessions / Memory), otherwise it renders as a
+ * static card.
  */
 export function StatPill({
   icon: Icon,
@@ -18,6 +24,7 @@ export function StatPill({
   value,
   color,
   subtitle,
+  href,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
@@ -25,15 +32,16 @@ export function StatPill({
   color: AccentColor;
   /** Optional secondary line below the value (e.g. "12 last 7d"). */
   subtitle?: string;
+  /** When set, the pill is a link to this path (with a hover affordance). */
+  href?: string;
 }) {
   const textColor = iconColorMap[color];
   // Derive border colour from the text colour pattern: replace "text-" with "border-"
   const borderClass = textColor.replace(/^text-/, "border-") + "/20";
+  const base = `rounded-lg border ${borderClass} bg-dark-900/50 px-4 py-3 flex items-center gap-3 min-w-0`;
 
-  return (
-    <div
-      className={`rounded-lg border ${borderClass} bg-dark-900/50 px-4 py-3 flex items-center gap-3 min-w-0`}
-    >
+  const inner = (
+    <>
       <Icon className={`w-4 h-4 opacity-60 flex-shrink-0 ${textColor}`} />
       <div className="min-w-0 flex-1">
         <div className="text-[10px] font-mono text-white/40 uppercase truncate">
@@ -48,8 +56,19 @@ export function StatPill({
           </div>
         )}
       </div>
-    </div>
+    </>
   );
+
+  if (href) {
+    const hoverBorder = textColor.replace(/^text-/, "hover:border-") + "/45";
+    return (
+      <Link href={href} className={`${base} ${hoverBorder} hover:bg-dark-900/70 transition-colors`}>
+        {inner}
+      </Link>
+    );
+  }
+
+  return <div className={base}>{inner}</div>;
 }
 
 /**
