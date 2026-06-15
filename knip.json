@@ -14,6 +14,10 @@
     "mock-hermes/**/*.mjs",
     "mock-llm/**/*.mjs"
   ],
-  "ignoreDependencies": ["ts-jest"],
+  "ignoreDependencies": [
+    "ts-jest",
+    "tailwindcss",
+    "@jest/globals"
+  ],
   "ignoreBinaries": ["python", "crontab", "systemctl", "which", "ps"]
 }

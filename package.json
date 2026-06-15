@@ -24,6 +24,8 @@
 
     "lint": "eslint . --max-warnings 0",
 
+    "lint:knip": "knip --include files,dependencies,unlisted --no-config-hints",
+
     "start:network": "next start -H 0.0.0.0",
 
     "test": "jest",
