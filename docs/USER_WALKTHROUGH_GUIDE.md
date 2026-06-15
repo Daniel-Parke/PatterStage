@@ -12,6 +12,7 @@ The guide is written for the **Junior developer / operator** — every page is d
 
 1. [What Control Hub is](#what-control-hub-is)
 2. [Dashboard](#dashboard)
+   - [Main → Insights](#main--insights)
 3. [Orchestration → Missions](#orchestration--missions)
 4. [Orchestration → Scripts](#orchestration--scripts)
 5. [Orchestration → Chat](#orchestration--chat)
@@ -119,6 +120,38 @@ The dashboard is your **status board**, not the primary place to launch missions
 6. For mission work, go to **Orchestration → Missions**. The dashboard strip is for one-click dispatch of templates; the full composer is on the missions page.
 
 ---
+
+## Main → Insights
+
+**Main → Insights** (`/insights`) is the analytics + achievements view. It reads
+the `analytics_events` interaction log (via `/api/analytics`) plus the dashboard
+stats, so it starts empty and fills in as you use Control Hub.
+
+### What you see
+
+- A **level / streak** header with a headline-metric strip: total interactions,
+  active days (last 30), achievements unlocked (`N / 36`), and the longest streak.
+- **Activity — last 30 days:** an area chart of daily interaction volume.
+- **By category:** a ring that folds the 14 event types into 6 readable buckets
+  (Missions, Stories, Sessions, Automation, Config, Chat).
+- **Run activity — last 91 days:** the GitHub-style contribution heatmap.
+- **Achievements:** the full grid of ~36 badges with progress bars; locked badges
+  show a lock + how close you are.
+
+### Typical use
+
+1. Dispatch a few missions, write a Story Weaver chapter, fire a schedule.
+2. Open **Insights** — the activity chart and category ring update on a 30s cadence,
+  and achievement progress advances (e.g. *Dispatcher*, *Wordsmith*, *Set & Forget*).
+3. Newly-earned achievements pop a 🏆 toast **on the Dashboard** (the Insights grid
+  is read-only and never double-fires the toast).
+
+### Notes
+
+- Events are recorded **server-side** only (there is no public write endpoint), so
+  the numbers reflect real activity and can't be forged from the client.
+- Achievements are **derived live** from your activity — there is no separate save;
+  full reference in [ANALYTICS.md](ANALYTICS.md).
 
 ## Orchestration → Missions
 
