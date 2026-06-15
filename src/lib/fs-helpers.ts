@@ -28,6 +28,7 @@
 // ══════════════════════════════════════════════════════════════════════════════
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { createHash } from "crypto";
 
 /**
  * Create `dir` (recursively) if it doesn't exist. No-op when the
@@ -76,4 +77,29 @@ export function backupFile(originalPath: string, backupsDir: string): string | n
   const target = `${backupsDir}/${base}.${backupTimestamp()}.bak`;
   writeFileSync(target, readFileSync(originalPath, "utf-8"), { encoding: "utf-8" });
   return target;
+}
+
+/**
+ * SHA-256 hex digest of a UTF-8 string. The canonical "is this content
+ * the same as what we have?" primitive used by the profile/root/skill
+ * drift detectors (`hermes-profile-sync.ts`). Promoted here so the hash
+ * is unit-testable and a future second drift consumer can share it.
+ */
+export function contentHash(content: string): string {
+  return createHash("sha256").update(content).digest("hex");
+}
+
+/**
+ * SHA-256 hex digest of a file's UTF-8 content, or `null` when the file
+ * is missing or unreadable (so callers can distinguish "no file" from a
+ * real hash). Byte-equivalent to the pre-extraction private `fileHash`
+ * in `hermes-profile-sync.ts`.
+ */
+export function fileHash(path: string): string | null {
+  if (!existsSync(path)) return null;
+  try {
+    return contentHash(readFileSync(path, "utf-8"));
+  } catch {
+    return null;
+  }
 }
