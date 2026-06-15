@@ -62,7 +62,10 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     expect(tableNames(db)).not.toContain("game_player");
     expect(tableNames(db)).not.toContain("game_events");
     expect(cols(db, "missions")).toContain("run_id");
-    expect(getSchemaVersion(db)).toBe(11);
+    // Analytics interaction log lands via the wired v12 applier (footgun guard:
+    // a .sql file alone is inert — this proves runMigrations actually calls it).
+    expect(tableNames(db)).toContain("analytics_events");
+    expect(getSchemaVersion(db)).toBe(12);
     // Pre-existing data survived the additive upgrade (cron job + mission).
     expect(
       (db.prepare("SELECT COUNT(*) c FROM cron_jobs").get() as { c: number }).c,
@@ -84,7 +87,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(11);
+    expect(getSchemaVersion(db)).toBe(12);
     db.close();
   });
 });

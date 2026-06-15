@@ -17,6 +17,7 @@ import { applyCronScheduleCanonicalisation } from "./db/apply-cron-schedule-cano
 import { applyRunsSchedulesMigration } from "./db/apply-runs-schedules-migration";
 import { applyLegacyColumnRepair } from "./db/apply-legacy-column-repair";
 import { applyDropGameTablesMigration } from "./db/apply-drop-game-tables-migration";
+import { applyAnalyticsEventsMigration } from "./db/apply-analytics-events-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -171,6 +172,9 @@ export function runMigrations(database: Database.Database): void {
   // Gamification dial-back: drop the removed RPG/Gacha game_* tables. Idempotent
   // (no-op on fresh installs; cleans already-migrated dev DBs).
   applyDropGameTablesMigration(database, migrationsDir);
+  // Analytics interaction log (feeds the Insights page + derived achievements).
+  // Idempotent CREATE ... IF NOT EXISTS at schema_version 12.
+  applyAnalyticsEventsMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────
