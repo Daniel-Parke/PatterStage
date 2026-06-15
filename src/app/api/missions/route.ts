@@ -19,7 +19,7 @@ import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, notFound, ok, serverError, serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
-import { createCronJob, deleteCronJob, importHermesJobs, pushJobToHermes } from "@/lib/cron-repository";
+import { importHermesJobs } from "@/lib/cron-repository";
 import { getCategory } from "@/lib/mission-category-repository";
 import { listProfiles } from "@/lib/profiles-repository";
 import {
@@ -28,6 +28,9 @@ import {
   pauseMissionCron,
   syncMissionToCronJob,
 } from "@/lib/mission-cron-sync";
+import { createSchedule, deleteSchedulesForMission } from "@/lib/schedules-repository";
+import { parseSchedule, scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
+import { computeNextRun } from "@/lib/schedule/next-run";
 import { dispatchMissionNow } from "@/lib/mission-dispatch";
 import { cancelMissionRun } from "@/lib/orchestration";
 import { buildMissionFieldPatch } from "@/lib/mission-field-updates";
@@ -35,7 +38,6 @@ import { parseMissionBodyFields } from "@/lib/mission-body";
 import { promoteMission } from "@/lib/mission-promote-handler";
 import { runMissionQueueTick } from "@/lib/mission-queue-tick";
 import { ensureSyncLayer } from "@/lib/sync";
-import { cronSyncFailureBody, logCronSyncFailure } from "@/lib/cron-sync-failure";
 import { missionResponse } from "@/lib/mission-response";
 import { parseDispatchMode } from "@/lib/dispatch-mode";
 
@@ -273,64 +275,45 @@ export async function POST(request: NextRequest) {
       }
 
       if (isCronMode) {
-        // ── Recurring mission: create a cron job + dispatch first run immediately ──
-        // Creating a cron job handles subsequent runs on schedule, but the user
-        // expects the first run to start right away rather than waiting for the
-        // next schedule tick.
+        // ── Recurring mission on the Control Hub scheduler ──
+        // Control Hub owns the timer: a `schedules` row (mission_id FK) is the
+        // source of truth and the scheduler tick (orchestration/scheduler)
+        // dispatches each occurrence via the runtime. There is NO Hermes
+        // jobs.json bridge. The first run is kicked off immediately
+        // (best-effort) so the user sees activity without waiting for the next
+        // tick — the schedule is durable regardless of that run's outcome.
+        const parsedSchedule = parseSchedule(scheduleVal!);
+        if (parsedSchedule.kind === "invalid") {
+          return badRequest(`Unrecognized schedule: ${scheduleVal}`);
+        }
 
         try {
-          const cronJob = createCronJob({
+          const next = computeNextRun(scheduleVal!, new Date());
+          createSchedule({
+            missionId: mission.id,
             name: mission.name,
-            prompt: mission.prompt,
-            skills,
-            model: modelId,
-            provider,
             schedule: scheduleVal!,
-            repeat: { times: null }, // infinite
+            scheduleDisplay: scheduleDisplayFromParsed(parsedSchedule, scheduleVal!),
             enabled: true,
-            state: "scheduled",
-            deliver: "none",
-            profile_name: profileName ?? "default",
-            source: "ch",
+            profileName: profileName ?? mission.profileName ?? null,
+            nextRunAt: next ? next.toISOString() : null,
           });
 
-          // Link mission to cron job
-          updateMission(mission.id, { cronJobId: cronJob.id });
-
-          // Push to Hermes so the scheduler picks it up
-          const pushResult = await pushJobToHermes(cronJob.id);
-          if (!pushResult.ok) {
-            deleteCronJob(cronJob.id);
-            updateMission(mission.id, { cronJobId: null, status: "failed" });
-            appendAuditLine({ action: "mission.cron_dispatch", resource: mission.id, ok: false });
-            // Log via the side-effect-only helper (same console shape as
-            // the cron/route.ts sites) and splice the mission data into
-            // the body before returning the 502.
-            logCronSyncFailure("POST /api/missions", pushResult);
-            return NextResponse.json(
-              {
-                ...cronSyncFailureBody(pushResult),
-                data: { mission: enrichMissionCron(getMission(mission.id)!) },
-              },
-              { status: 502 },
-            );
+          // Immediate first run — best-effort (the schedule fires on the next
+          // tick even if this run fails, e.g. the backend is momentarily down).
+          try {
+            await dispatchMissionNow(mission.id, { profileName, modelId, provider });
+          } catch (err) {
+            logApiError("POST /api/missions", "schedule first-run", err);
           }
 
-          // ── Immediate first-run dispatch ──
-          // `profileName`/`modelId`/`provider` are already correctly typed
-          // as `string | undefined` by the `parseMissionBodyFields`
-          // destructure above, so no inline `as` casts are needed —
-          // `DispatchMissionNowOverrides` from `@/lib/mission-dispatch`
-          // accepts `string | undefined` directly.
-          await dispatchMissionNow(mission.id, { profileName, modelId, provider });
-
-          appendAuditLine({ action: "mission.cron_dispatch", resource: mission.id, ok: true });
+          appendAuditLine({ action: "mission.schedule_dispatch", resource: mission.id, ok: true });
           return missionResponse(mission.id, 201);
         } catch (err) {
-          logApiError("POST /api/missions", "cron dispatch", err);
+          logApiError("POST /api/missions", "schedule dispatch", err);
           updateMission(mission.id, { status: "failed" });
-          appendAuditLine({ action: "mission.cron_dispatch", resource: mission.id, ok: false });
-          return serverError("Failed to create cron job for mission");
+          appendAuditLine({ action: "mission.schedule_dispatch", resource: mission.id, ok: false });
+          return serverError("Failed to schedule mission");
         }
       }
 
@@ -531,6 +514,10 @@ export async function POST(request: NextRequest) {
       if (existing instanceof NextResponse) return existing;
 
       const missionIdFinal = existing.id;
+      // Remove any CH schedule linked to this mission so the scheduler tick
+      // never tries to dispatch a deleted mission. `deleteMissionCron` covers
+      // the legacy cron_jobs bridge for older cron-linked missions.
+      deleteSchedulesForMission(missionIdFinal);
       await deleteMissionCron(missionIdFinal);
 
       const deleted = deleteMission(missionIdFinal);

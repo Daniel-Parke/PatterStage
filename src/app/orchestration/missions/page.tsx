@@ -17,6 +17,7 @@ import {
 import { useMissionsPage } from "@/hooks/useMissionsPage";
 import MissionsList from "@/components/missions/MissionsList";
 import MissionInsights from "@/components/missions/MissionInsights";
+import ScheduledMissions from "@/components/missions/ScheduledMissions";
 import { mapCategories } from "@/lib/mission-form-utils";
 
 export default function MissionsPage() {
@@ -213,6 +214,7 @@ export default function MissionsPage() {
       <div className="max-w-screen-xl mx-auto w-full px-4 sm:px-6">
         <MissionInsights missions={missions} />
         <MissionsList vm={vm} />
+        <ScheduledMissions />
       </div>
 
       <Sheet

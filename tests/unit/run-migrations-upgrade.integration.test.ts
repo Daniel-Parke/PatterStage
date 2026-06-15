@@ -40,6 +40,10 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     db.prepare(
       "INSERT INTO cron_jobs (id, name, schedule) VALUES ('c1','job','0 0 * * *')",
     ).run();
+    // A user mission must survive the upgrade unchanged (existing-main-user data).
+    db.prepare(
+      "INSERT INTO missions (id, name, prompt, status) VALUES ('m1','Legacy Mission','do x','successful')",
+    ).run();
 
     // Simulate a legacy install: strip workdir + runs/schedules, mark it old.
     db.pragma("foreign_keys = OFF");
@@ -53,13 +57,19 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
 
     expect(cols(db, "cron_jobs")).toContain("workdir");
     expect(cols(db, "sessions")).toContain("message_count");
-    expect(tableNames(db)).toEqual(expect.arrayContaining(["runs", "schedules", "game_player", "game_events", "game_agent"]));
+    expect(tableNames(db)).toEqual(expect.arrayContaining(["runs", "schedules"]));
+    // Gamification dial-back: the removed game_* tables must not be present.
+    expect(tableNames(db)).not.toContain("game_player");
+    expect(tableNames(db)).not.toContain("game_events");
     expect(cols(db, "missions")).toContain("run_id");
-    expect(getSchemaVersion(db)).toBe(10);
-    // Pre-existing data survived.
+    expect(getSchemaVersion(db)).toBe(11);
+    // Pre-existing data survived the additive upgrade (cron job + mission).
     expect(
       (db.prepare("SELECT COUNT(*) c FROM cron_jobs").get() as { c: number }).c,
     ).toBe(1);
+    expect(
+      (db.prepare("SELECT name FROM missions WHERE id = 'm1'").get() as { name: string }).name,
+    ).toBe("Legacy Mission");
     db.close();
   });
 
@@ -74,7 +84,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(10);
+    expect(getSchemaVersion(db)).toBe(11);
     db.close();
   });
 });

@@ -38,7 +38,7 @@ export const APP_NAV_ROUTES: readonly string[] = [
   "/config/voice",
   "/config/web",
   "/orchestration/cron",
-  "/orchestration/schedules",
+  "/orchestration/scripts",
   "/orchestration/chat",
   "/logs",
   "/memory",
@@ -49,7 +49,6 @@ export const APP_NAV_ROUTES: readonly string[] = [
   "/recroom/story-weaver/create",
   "/recroom/story-weaver/library",
   "/recroom/story-weaver/themes",
-  "/recroom/arcade",
   "/sessions",
   "/operations/skills",
 ];

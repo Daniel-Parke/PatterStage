@@ -44,7 +44,7 @@ A mission dispatch is a single HTTP **run**: `runtime.submitRun()` returns a `ru
 | Scheduling | Control Hub-owned `schedules` + scheduler tick → runtime. `/api/schedules`. |
 | Model / provider | SQLite registry + `/api/models`, `/api/credentials`; write-through to Hermes `config.yaml` / `.env`. |
 | Config / sessions / memory / gateway / logs / skills / personalities | Hermes-aligned surfaces; sessions/skills/toolsets discovered via the runtime. |
-| Gamification | Cosmetic-only RPG/Gacha layer (Rec Room → Arcade) derived from real usage. `/api/game`; see [GAMIFICATION.md](GAMIFICATION.md). Never gates functionality. |
+| Stats & analytics | `/api/stats` aggregate powers the command-center dashboard (throughput, mission mix, run-activity heatmap, vitals, token usage) + per-entity insight strips + per-agent performance. Light derived progression (level / streak / achievements) presents engagement as stats — never gates functionality. |
 
 ## Testing the whole stack anywhere
 

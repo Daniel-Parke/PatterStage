@@ -72,6 +72,11 @@ jest.mock("@/lib/mission-cron-sync", () => ({
   deleteMissionCron: jest.fn(),
 }));
 
+jest.mock("@/lib/schedules-repository", () => ({
+  createSchedule: jest.fn(),
+  deleteSchedulesForMission: jest.fn(),
+}));
+
 jest.mock("@/lib/mission-repository", () => {
   const getMission = jest.fn();
   const deleteMission = jest.fn();

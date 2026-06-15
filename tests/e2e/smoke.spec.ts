@@ -22,10 +22,10 @@ test.describe("Smoke", () => {
     ).toBeVisible();
   });
 
-  test("schedules page loads", async ({ page }) => {
-    await page.goto("/orchestration/schedules");
+  test("scripts page loads", async ({ page }) => {
+    await page.goto("/orchestration/scripts");
     await expect(
-      page.getByRole("heading", { name: "Schedules", exact: true })
+      page.getByRole("heading", { name: "Scripts", exact: true })
     ).toBeVisible();
   });
 

@@ -17,6 +17,7 @@ import {
   type Achievement,
   type RawMetrics,
 } from "./derive";
+import { getAgentPerformance, type AgentPerformance } from "./agent-stats";
 
 export interface DailyPoint {
   date: string;
@@ -67,6 +68,7 @@ export interface DashboardStats {
   level: LevelInfo;
   streak: { current: number; longest: number };
   achievements: Achievement[];
+  agents: AgentPerformance[];
   throughput: ThroughputPoint[]; // last 30 days
   runActivity: DailyPoint[]; // last 91 days (heatmap)
   tokensByDay: DailyPoint[]; // last 30 days (sparkline)
@@ -303,6 +305,7 @@ export function getDashboardStats(): DashboardStats {
     level,
     streak,
     achievements,
+    agents: getAgentPerformance(),
     throughput: lastNDates(30).map((date) => ({
       date,
       completed: throughputMap.get(date)?.completed ?? 0,

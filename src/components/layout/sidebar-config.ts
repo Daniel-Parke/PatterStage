@@ -10,7 +10,7 @@ import {
   ScrollText, Sparkles, Rocket, Volume2, Mic, GitBranch,
   RotateCcw, ShieldCheck, Lock, Code,
   BookOpen, Bot, MessageCircle,
-  AudioLines, Settings2, Network, Gamepad2,
+  AudioLines, Settings2, Network,
 } from "lucide-react";
 
 import type { AccentColor } from "@/types/hermes";
@@ -52,7 +52,7 @@ export const mainSections: SidebarSection[] = [
     label: "Orchestration",
     links: [
       { icon: Rocket, label: "Missions", href: "/orchestration/missions", color: "cyan" },
-      { icon: Clock, label: "Schedules", href: "/orchestration/schedules", color: "orange" },
+      { icon: Terminal, label: "Scripts", href: "/orchestration/scripts", color: "cyan" },
       { icon: ListTodo, label: "Cron", href: "/orchestration/cron", color: "orange" },
       { icon: MessageCircle, label: "Chat", href: "/orchestration/chat", color: "cyan" },
     ],
@@ -78,7 +78,6 @@ export const mainSections: SidebarSection[] = [
           { label: "Themes", href: "/recroom/story-weaver/themes" },
         ],
       },
-      { icon: Gamepad2, label: "Arcade", href: "/recroom/arcade", color: "purple" },
     ],
   },
 ];

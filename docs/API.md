@@ -24,9 +24,13 @@ Some error responses also include `details` (Zod validation). Handlers must call
 | `/api/agents` | `GET` | Inspect running Hermes agent processes (OS-dependent). Not the same as `agent/profiles`. |
 | `/api/config` | `GET`, `PUT` | Read/update parsed Hermes config content. |
 | `/api/credentials` | `GET`, `POST` | API key credentials (masked list; create via POST). No per-id route. |
-| `/api/cron` | `GET`, `POST`, `PUT`, `DELETE` | Manage **agent** cron jobs (Hermes `jobs.json`). |
-| `/api/cron/hardware` | `GET`, `POST`, `PUT`, `DELETE` | **System** cron under `CH_SCRIPTS_DIR` / `CH_HARDWARE_LOG_DIR`. |
+| `/api/cron` | `GET`, `POST`, `PUT`, `DELETE` | Legacy **agent** cron jobs (Hermes `jobs.json`) — being retired in favour of `/api/schedules`. |
+| `/api/cron/hardware` | `GET`, `POST`, `PUT`, `DELETE` | Host **scripts** (system cron) under `CH_SCRIPTS_DIR` / `CH_HARDWARE_LOG_DIR` — powers the Scripts page. |
 | `/api/cron/hardware/meta` | `GET` | `{ scriptsDir, logDir }`. |
+| `/api/schedules` | `GET`, `POST` | Control Hub-owned recurring missions (the scheduler fires these; no `jobs.json`). |
+| `/api/schedules/[id]` | `PATCH`, `DELETE` | Pause/resume (`{ enabled }`) or delete a schedule. |
+| `/api/schedules/[id]/run` | `POST` | Dispatch a scheduled mission immediately (run-now). |
+| `/api/stats` | `GET` | Dashboard analytics aggregate (throughput, mission mix, run activity, tokens, per-agent performance, derived progression). |
 | `/api/fs/git/branches` | `GET` | List git branches for a workspace path. |
 | `/api/fs/list` | `GET` | List directory entries (path-validated). |
 | `/api/gateway/health` | `GET` | Gateway health probe (`/v1/models`). |

@@ -82,7 +82,7 @@ Runtime database path: `CH_DATA_DIR/control-hub.db` (default `~/control-hub/data
 Recurring runs are **Control Hub-owned schedules** — the agent's `jobs.json` cron is no longer used:
 
 - A `schedules` row links to a mission and holds the canonical schedule, `next_run_at`, `catch_up_policy`, and repeat count. The scheduler tick (`src/lib/orchestration/scheduler/`) selects due rows and dispatches a run via the runtime; **Control Hub owns the timer**.
-- Manage via `/api/schedules` or the **Orchestration → Schedules** page (create, pause/resume, run-now, delete).
+- Manage via `/api/schedules` or the **Scheduled missions** section on the **Orchestration → Missions** page (create, pause/resume, run-now, delete). Old-fashioned **host shell scripts** on a timer live on the separate **Orchestration → Scripts** page (system crontab), not here.
 - Restart-safe (recomputed from `next_run_at`, never an in-memory timer) and exactly-once per occurrence (deterministic run-id PK guard + `Idempotency-Key`).
 
 ## Cancellation

@@ -6,7 +6,7 @@ import {
   Check, AlertCircle, Plus, Trash2,
 } from "lucide-react";
 import ProfilesDriftBanner from "@/components/profiles/ProfilesDriftBanner";
-import AgentRosterStrip from "@/components/agents/AgentRosterStrip";
+import AgentPerformanceStrip from "@/components/agents/AgentPerformanceStrip";
 import ProfileSyncBar from "@/components/profiles/ProfileSyncBar";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -378,7 +378,7 @@ export default function BehaviourPage() {
           SQLite; push writes Control Hub back to disk.
         </p>
 
-        <AgentRosterStrip />
+        <AgentPerformanceStrip />
 
         <ProfilesDriftBanner
           driftCount={driftCount}

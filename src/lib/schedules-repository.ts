@@ -226,3 +226,13 @@ export function deleteSchedule(id: string): boolean {
   const result = db().prepare("DELETE FROM schedules WHERE id = ?").run(id);
   return result.changes > 0;
 }
+
+/**
+ * Remove every schedule linked to a mission. Called when a mission is deleted so
+ * the scheduler tick never tries to dispatch a removed mission. Returns the
+ * number of schedules deleted.
+ */
+export function deleteSchedulesForMission(missionId: string): number {
+  const result = db().prepare("DELETE FROM schedules WHERE mission_id = ?").run(missionId);
+  return result.changes;
+}

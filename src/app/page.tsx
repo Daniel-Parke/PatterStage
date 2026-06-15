@@ -45,7 +45,6 @@ import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { MissionStatusBadge, CronStatusBadge } from "@/components/dashboard/StatusBadge";
 import { Panel, PanelHeader } from "@/components/dashboard/Panel";
 import CommandCenter from "@/components/dashboard/CommandCenter";
-import GamificationBand from "@/components/dashboard/GamificationBand";
 import { safeApiCall, safeApiCallData, toastError } from "@/lib/api-fetch";
 import { runMutation } from "@/lib/run-mutation";
 import { toastFromResult } from "@/lib/toast-from-result";
@@ -486,9 +485,8 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
-        {/* ═══ Gamified Command Center (live stats, gamification, viz) ═══ */}
+        {/* ═══ Command Center (live operational stats + data-viz) ═══ */}
         <CommandCenter />
-        <GamificationBand />
         {/* ═══ Compact Stat Row ═══ */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-w-0">
           {monitor ? (
