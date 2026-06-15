@@ -91,17 +91,6 @@ export function formatElapsed(startedAt: string, now: number = Date.now()): stri
 }
 
 /**
- * Safely format a Unix timestamp as a relative time string.
- * Returns "never" for null, undefined, NaN, or negative values.
- * Use this instead of `timeAgo(new Date(unixTs * 1000).toISOString())`
- * to avoid RangeError when the timestamp is invalid.
- */
-export function safeTimeAgo(unixTs: number | null | undefined): string {
-  if (unixTs == null || typeof unixTs !== "number" || isNaN(unixTs) || unixTs <= 0) return "never";
-  return timeAgo(new Date(unixTs * 1000).toISOString());
-}
-
-/**
  * Format bytes as human-readable size string
  */
 export function formatBytes(bytes: number): string {
@@ -149,20 +138,6 @@ export function truncate(str: string, maxLen: number): string {
  */
 export function pluralise(count: number): "" | "s" {
   return count !== 1 ? "s" : "";
-}
-
-/**
- * Debounce a function call
- */
-export function debounce<T extends (...args: unknown[]) => void>(
-  fn: T,
-  delay: number
-): (...args: Parameters<T>) => void {
-  let timer: ReturnType<typeof setTimeout>;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), delay);
-  };
 }
 
 // ── Session Message Summary ────────────────────────────────────
