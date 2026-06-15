@@ -94,8 +94,8 @@ beforeEach(() => {
 
 describe("POST /api/models/fallbacks/sync", () => {
   it("persists config from body before syncing to Hermes", async () => {
-    const { POST } = await import("@/app/api/models/fallbacks/sync/route");
-    const res = (await POST(makeRequest({ config: { apiMaxRetries: 5 } }))) as {
+    const { POST } = await import("@/app/api/models/fallbacks/route");
+    const res = (await POST(makeRequest({ action: "sync", config: { apiMaxRetries: 5 } }))) as {
       status: number;
       json: () => Promise<unknown>;
     };
@@ -116,8 +116,8 @@ describe("POST /api/models/fallbacks/sync", () => {
 
   it("syncs from SQLite when body has no config", async () => {
     mockGetFallbackConfig.mockReturnValue({ ...BASE_CONFIG, apiMaxRetries: 2 });
-    const { POST } = await import("@/app/api/models/fallbacks/sync/route");
-    const res = (await POST(makeRequest({}))) as { status: number; json: () => Promise<unknown> };
+    const { POST } = await import("@/app/api/models/fallbacks/route");
+    const res = (await POST(makeRequest({ action: "sync" }))) as { status: number; json: () => Promise<unknown> };
 
     expect(res.status).toBe(200);
     expect(mockUpdateFallbackConfigBatch).not.toHaveBeenCalled();
@@ -127,8 +127,8 @@ describe("POST /api/models/fallbacks/sync", () => {
   });
 
   it("returns 400 for invalid body", async () => {
-    const { POST } = await import("@/app/api/models/fallbacks/sync/route");
-    const res = (await POST(makeRequest({ config: { apiMaxRetries: 99 } }))) as {
+    const { POST } = await import("@/app/api/models/fallbacks/route");
+    const res = (await POST(makeRequest({ action: "sync", config: { apiMaxRetries: 99 } }))) as {
       status: number;
     };
     expect(res.status).toBe(400);
@@ -139,8 +139,8 @@ describe("POST /api/models/fallbacks/sync", () => {
     mockSyncEnabled.mockImplementation(() => {
       throw new Error("config.yaml api_max_retries mismatch");
     });
-    const { POST } = await import("@/app/api/models/fallbacks/sync/route");
-    const res = (await POST(makeRequest({ config: { apiMaxRetries: 5 } }))) as {
+    const { POST } = await import("@/app/api/models/fallbacks/route");
+    const res = (await POST(makeRequest({ action: "sync", config: { apiMaxRetries: 5 } }))) as {
       status: number;
       json: () => Promise<unknown>;
     };

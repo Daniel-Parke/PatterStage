@@ -1,9 +1,15 @@
 // ═══════════════════════════════════════════════════════════════
-// /api/models/fallbacks/import — GET preview / POST import fallbacks from Hermes config.yaml
+// fallback-import.ts — import the fallback chain from Hermes config.yaml
 // ═══════════════════════════════════════════════════════════════
-import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
-import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+//
+// The heavy body of the former POST /api/models/fallbacks/import route,
+// extracted so the consolidated /api/models/fallbacks route's action
+// switch stays readable. Reads config.yaml's fallback_providers, upserts
+// each as a model, adds it to the chain, and pushes the enabled chain
+// to Hermes.
+
+import { NextResponse } from "next/server";
+
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
 import {
@@ -18,76 +24,15 @@ import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
 import { readHermesYamlConfig } from "@/lib/hermes-config-sync";
 import { notFound, ok } from "@/lib/api-response";
 import { fallbackKey } from "@/lib/model-key";
-import { z } from "zod";
 
-interface ImportPreview {
-  provider: string;
-  model: string;
-  baseUrl: string | null;
-  alreadyImported: boolean;
-}
-
-/**
- * The set of (provider, modelId) keys already in the fallback chain.
- * Used by both GET (preview) and POST (skip-already-imported) to test
- * membership in O(1) instead of O(N) `.find()` per chain entry. The
- * shape is `(provider::modelId)` — see `fallbackKey()` in
- * `src/lib/model-key.ts` for the string contract.
- */
+/** The (provider, modelId) keys already in the fallback chain. */
 function existingFallbackKeys(): Set<string> {
   return new Set(
-    listFallbackChain().map((e) => fallbackKey(e.provider, e.modelIdString))
+    listFallbackChain().map((e) => fallbackKey(e.provider, e.modelIdString)),
   );
 }
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
-  try {
-    const config = readHermesYamlConfig<{
-      fallback_providers?: Array<{ provider?: string; model?: string; base_url?: string }>;
-    }>();
-    if (!config) {
-      return ok({ fallbacks: [], imported: false });
-    }
-
-    const preview: ImportPreview[] = [];
-    const existingKeys = existingFallbackKeys();
-
-    for (const entry of config?.fallback_providers ?? []) {
-      if (!entry.provider || !entry.model) continue;
-      preview.push({
-        provider: entry.provider,
-        model: entry.model,
-        baseUrl: entry.base_url?.trim() || null,
-        alreadyImported: existingKeys.has(fallbackKey(entry.provider, entry.model)),
-      });
-    }
-
-    return ok({ fallbacks: preview });
-  } catch (error) {
-    return serverErrorFromCatch(
-      "GET /api/models/fallbacks/import",
-      "previewing import",
-      error,
-      "Failed to preview import",
-    );
-  }
-}
-
-// POST body is optional: callers can pass { overwrite?: boolean } or empty.
-const importPostSchema = z
-  .object({ overwrite: z.boolean().optional() })
-  .strict();
-
-export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
-  const parsed = await parseAndValidateJsonBody(request, importPostSchema);
-  if (parsed instanceof NextResponse) return parsed;
-
+export function importFallbacksFromHermesYaml(overwrite: boolean): NextResponse {
   try {
     const config = readHermesYamlConfig<{
       fallback_providers?: Array<{ provider?: string; model?: string; base_url?: string }>;
@@ -113,7 +58,7 @@ export async function POST(request: NextRequest) {
       if (!entry.provider || !entry.model) continue;
 
       const key = fallbackKey(entry.provider, entry.model);
-      if (existingKeys.has(key) && !parsed.overwrite) {
+      if (existingKeys.has(key) && !overwrite) {
         skipped.push(key);
         continue;
       }
@@ -156,7 +101,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     return serverErrorFromCatch(
-      "POST /api/models/fallbacks/import",
+      "POST /api/models/fallbacks { action: import }",
       "importing fallbacks",
       error,
       "Failed to import fallbacks",
