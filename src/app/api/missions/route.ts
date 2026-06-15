@@ -289,7 +289,7 @@ export async function POST(request: NextRequest) {
 
         try {
           const next = computeNextRun(scheduleVal!, new Date());
-          createSchedule({
+          const schedule = createSchedule({
             missionId: mission.id,
             name: mission.name,
             schedule: scheduleVal!,
@@ -301,8 +301,10 @@ export async function POST(request: NextRequest) {
 
           // Immediate first run — best-effort (the schedule fires on the next
           // tick even if this run fails, e.g. the backend is momentarily down).
+          // Pass scheduleId so this first run is linked to its schedule (the
+          // run row's schedule_id), matching scheduler-fired runs.
           try {
-            await dispatchMissionNow(mission.id, { profileName, modelId, provider });
+            await dispatchMissionNow(mission.id, { profileName, modelId, provider, scheduleId: schedule.id });
           } catch (err) {
             logApiError("POST /api/missions", "schedule first-run", err);
           }

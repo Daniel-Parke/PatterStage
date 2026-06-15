@@ -16,6 +16,8 @@ export interface DispatchMissionNowOverrides {
   profileName?: string;
   modelId?: string;
   provider?: string;
+  /** Link the run to a schedule (the recurring-mission first run). */
+  scheduleId?: string;
 }
 
 export interface DispatchMissionNowResult {
@@ -47,6 +49,6 @@ export async function dispatchMissionNow(
     });
   }
 
-  const result = await dispatchMissionRun(missionId);
+  const result = await dispatchMissionRun(missionId, { scheduleId: overrides.scheduleId });
   return { ok: result.ok, sessionId: result.sessionId };
 }

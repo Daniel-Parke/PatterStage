@@ -10,7 +10,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { listActiveRuns, updateRun, type RunRecord } from "@/lib/runs-repository";
-import { updateMission } from "@/lib/mission-repository";
+import { updateMission, getMission } from "@/lib/mission-repository";
 import { closeSessionForMission } from "@/lib/session-repository";
 import { runtime } from "@/lib/runtime";
 import { now } from "@/lib/db";
@@ -19,6 +19,35 @@ import { RuntimeRequestError, type RunStatus } from "@/lib/runtime/types";
 /** Map a terminal run status onto the mission status enum (no 'cancelled'). */
 function missionStatusFor(runStatus: RunStatus): "successful" | "failed" {
   return runStatus === "completed" ? "successful" : "failed";
+}
+
+// ── Stuck-run deadlines (self-healing single-flight) ──────────────
+// A run stuck in 'started' keeps its mission 'dispatched', which blocks the
+// single-flight gate (hasDispatchedMission) and therefore the scheduler + queue.
+// To self-heal we fail runs that are clearly stuck:
+//   • backend UNREACHABLE past the deadline (the gateway-down case) → fail;
+//   • backend still reports 'started' past a DECLARED timeout → fail (enforce it).
+// An untimed mission the backend still reports running is left alone (the user
+// chose no timeout; it isn't "stuck", just long).
+const GRACE_MINUTES = 5;
+const DEFAULT_MAX_RUN_MINUTES = Math.max(10, Number(process.env.CH_RUN_MAX_MINUTES) || 120);
+
+function parseTs(s: string): number {
+  const hasTz = s.endsWith("Z") || /[+-]\d\d:\d\d$/.test(s);
+  return Date.parse(hasTz ? s : `${s}Z`);
+}
+
+function ageMinutes(run: RunRecord): number {
+  const start = parseTs(run.submittedAt);
+  return Number.isFinite(start) ? (Date.now() - start) / 60_000 : 0;
+}
+
+/** The mission's declared max runtime in minutes, if any (timeout wins). */
+function declaredTimeoutMinutes(missionId: string | null): number | null {
+  if (!missionId) return null;
+  const m = getMission(missionId);
+  const t = m?.timeoutMinutes ?? m?.missionTimeMinutes;
+  return typeof t === "number" && t > 0 ? t : null;
 }
 
 /**
@@ -53,9 +82,23 @@ async function reconcileOne(run: RunRecord): Promise<boolean> {
     return true;
   }
 
+  const age = ageMinutes(run);
+  const declared = declaredTimeoutMinutes(run.missionId);
+
   try {
     const result = await runtime.getRun(run.runId, run.profileName ?? undefined);
-    if (result.status === "started") return false; // still running
+    if (result.status === "started") {
+      // Enforce a DECLARED timeout even if the backend still reports running, so
+      // a runaway mission can't hold the single-flight gate forever.
+      if (declared !== null && age > declared + GRACE_MINUTES) {
+        await runtime.stopRun(run.runId, run.profileName ?? undefined).catch(() => {});
+        const msg = `run exceeded its ${declared}m timeout`;
+        updateRun(run.id, { status: "failed", error: msg });
+        finalizeMissionForRun(run.missionId, "failed", msg);
+        return true;
+      }
+      return false; // still running, within its window
+    }
 
     updateRun(run.id, {
       status: result.status,
@@ -73,7 +116,17 @@ async function reconcileOne(run: RunRecord): Promise<boolean> {
       finalizeMissionForRun(run.missionId, "failed", "backend lost the run");
       return true;
     }
-    // Transient (gateway down, timeout) — leave active and retry next tick.
+    // Transient (gateway down / timeout). Self-heal: if the run is older than its
+    // deadline, the backend has been unreachable past the point we'd expect a
+    // result — fail it so the mission clears and the scheduler isn't blocked.
+    const cap = declared ?? DEFAULT_MAX_RUN_MINUTES;
+    if (age > cap + GRACE_MINUTES) {
+      const msg = "backend unreachable past the run deadline";
+      updateRun(run.id, { status: "failed", error: msg });
+      finalizeMissionForRun(run.missionId, "failed", msg);
+      return true;
+    }
+    // Otherwise leave active and retry next tick.
     return false;
   }
 }
