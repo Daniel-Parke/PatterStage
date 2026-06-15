@@ -16,7 +16,7 @@ import {
 } from "@/lib/mission-categories";
 import type { MissionTemplate } from "./types";
 
-export interface TemplateManagerModalProps {
+interface TemplateManagerModalProps {
   open: boolean;
   onClose: () => void;
   templates: MissionTemplate[];

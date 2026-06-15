@@ -70,7 +70,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   RefreshCw,
 };
 
-export interface TemplateEditorModalProps {
+interface TemplateEditorModalProps {
   open: boolean;
   onClose: () => void;
   onCancel: () => void;

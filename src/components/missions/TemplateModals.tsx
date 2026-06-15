@@ -6,11 +6,5 @@
 // ═══════════════════════════════════════════════════════════════
 
 export type { MissionTemplate } from "./templates/types";
-export {
-  TemplateManagerModal,
-  type TemplateManagerModalProps,
-} from "./templates/TemplateManagerModal";
-export {
-  TemplateEditorModal,
-  type TemplateEditorModalProps,
-} from "./templates/TemplateEditorModal";
+export { TemplateManagerModal } from "./templates/TemplateManagerModal";
+export { TemplateEditorModal } from "./templates/TemplateEditorModal";
