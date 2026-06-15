@@ -56,7 +56,7 @@ control-hub/
 
 │   │   │   ├── config/             # Config YAML CRUD
 
-│   │   │   ├── cron/               # Cron job management
+│   │   │   ├── cron/hardware/      # Host scripts (system cron) — Scripts page
 
 │   │   │   ├── sessions/           # Session browser
 
@@ -74,7 +74,7 @@ control-hub/
 
 │   │   ├── (main)/                 # sessions, memory, logs (route group — no /main URL prefix)
 
-│   │   ├── orchestration/          # cron, missions, chat
+│   │   ├── orchestration/          # missions, scripts, chat
 
 │   │   ├── operations/             # agents, skills, tools, personalities
 
@@ -348,7 +348,7 @@ Control Hub is a command centre, not a file manager. The operator opens the dash
 
 §
 
-**Sidebar sections:** Main (Dashboard, Sessions, Memory, Logs) | Orchestration (Cron, Missions, Chat) | Operations (Agents, Skills, Tools, Personalities) | Rec Room (Story Weaver) | Config (Models, Seed, HERMES.md, Environment + YAML sections). Gateway health appears on the dashboard and in Orchestration → Chat (no separate Gateway page).
+**Sidebar sections:** Main (Dashboard, Insights, Sessions, Memory, Logs) | Orchestration (Missions, Scripts, Chat) | Operations (Agents, Skills, Tools, Personalities) | Rec Room (Story Weaver) | Config (Models, HERMES.md, Environment + YAML sections incl. a `Cron` config-section). Gateway health appears on the dashboard and in Orchestration → Chat (no separate Gateway page). The agent-cron **Cron page** was removed — recurring agent work lives in Missions, host scripts in Scripts.
 
 **Profiles:** SQLite `agent_profiles` is source of truth; push/pull/drift on Operations → Agents mirrors Config → Models sync. See [docs/CATALOG_AND_PROFILES.md](docs/CATALOG_AND_PROFILES.md). Per-profile Hermes toolsets: [docs/TOOLS_AND_MISSIONS.md](docs/TOOLS_AND_MISSIONS.md).
 

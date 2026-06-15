@@ -5,7 +5,7 @@ How Control Hub keeps your data across upgrades, and what happens when an existi
 ## How migrations work
 
 - **One source of truth.** All schema migrations live in **`runMigrations()`** (`src/lib/db.ts`) — a hand-wired chain of idempotent, version-gated appliers (`src/lib/db/apply-*.ts`) plus the SQL in `src/lib/db/migrations/`. The running app applies them at first DB open (`getDb()`), and the **`db:migrate`** script (`scripts/tooling/migrate-db.ts`) runs the **exact same** chain. They can never drift.
-- **`schema_version`.** Stored in the `meta` table. Fresh installs apply `001_baseline.sql` (the full current schema, `schema_version 3`); existing installs climb through the upgrade-only appliers to the current head (**`schema_version 11`**). Both end with an equivalent schema.
+- **`schema_version`.** Stored in the `meta` table. Fresh installs apply `001_baseline.sql` (the full current schema, `schema_version 3`); existing installs climb through the upgrade-only appliers to the current head (**`schema_version 12`**). Both end with an equivalent schema.
 - **Idempotent.** Re-running migrations is always safe — appliers gate on the stored version and no-op when already applied.
 - **Backed up first.** Every migration through `setup.sh`, `ch-deploy.sh update|rebuild`, or `ch-migrate.sh` snapshots `control-hub.db` → **`control-hub.db.pre-migrate-<timestamp>.bak`** under `CH_DATA_DIR` before touching anything.
 

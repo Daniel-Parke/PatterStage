@@ -68,7 +68,7 @@ Full table: **[ENV_REFERENCE.md](ENV_REFERENCE.md)**.
 | Script | What it backs up | When to use |
 |--------|------------------|-------------|
 | [`scripts/bootstrap/backup-hermes-config.sh`](../scripts/bootstrap/backup-hermes-config.sh) | Entire `CH_DATA_DIR` tree (SQLite, missions, templates, stories) | Manual operator backup before risky changes |
-| [`scripts/hardware/ch-backup.sh`](../scripts/hardware/ch-backup.sh) | Hindsight memory JSON via `hindsight_bridge.py` under `$HERMES_HOME` | System cron preset; wired in UI under Orchestration → Cron |
+| [`scripts/hardware/ch-backup.sh`](../scripts/hardware/ch-backup.sh) | Hindsight memory JSON via `hindsight_bridge.py` under `$HERMES_HOME` | System cron preset; wired in UI under Orchestration → Scripts |
 
 `ch-backup.sh` is copied into `CH_DATA_DIR/scripts` during setup when missing. `backup-hermes-config.sh` is not scheduled by Control Hub.
 

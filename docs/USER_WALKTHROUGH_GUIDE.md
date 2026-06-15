@@ -77,9 +77,8 @@ The dashboard is your **status board**, not the primary place to launch missions
 - **ONLINE** status dot (green) when the dashboard's own `/api/status` is responsive; otherwise **OFFLINE**.
 - Subtitle showing the active model, read from `~/.hermes/config.yaml` first and from the Models registry as a fallback. If the registry disagrees, a hint suggests "push Bob to write config.yaml".
 
-**Compact stat row (four pills)**
+**Compact stat row (three pills)**
 - **Processes** — number of active Hermes processes. Shows "N Active" when there is at least one agent running, "Idle" when no agents are running, and "Offline" when the agent detector is unreachable.
-- **Cron Jobs** — count of enabled agent cron jobs from the most recent `/api/monitor` snapshot.
 - **Sessions** — total session count plus "N active · M last 7d" to summarise recent activity.
 - **Memory** — fact count and provider name (Holographic, Hindsight, or whatever the active backend is).
 
@@ -97,8 +96,7 @@ The dashboard is your **status board**, not the primary place to launch missions
 - One row per active mission: status dot, name, dispatch mode badge, last session id (links to transcript), status badge, "X ago" timestamp, and a **Cancel** button with a two-step confirm.
 - Empty mid-mission rows show "Session loading…" until the first session record arrives.
 
-**Three-panel system monitor**
-- **Cron Jobs panel** — every job, with an inline `IntervalSelector` for the schedule, a caption span showing "in 3m", "running 2m", etc., and a `CronStatusBadge` indicating the state.
+**Two-panel system monitor**
 - **Platforms panel** — one row per configured Hermes platform with a status dot, a "Configured" or "Not configured" label, and a background-sync line ("Sync: 5m ago ✓") with a "Sync now" button.
 - **Errors panel** — pill filter for All / Error / Warning, deduplicated by source and message with a "(×N)" suffix on repeats.
 

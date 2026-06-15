@@ -11,7 +11,7 @@ Path and environment variables (`HERMES_HOME`, `CH_DATA_DIR`, `PORT`, install fl
 | Path | Purpose |
 |------|---------|
 | `HERMES_HOME` (default `~/.hermes`) | `config.yaml`, `.env`, cron, sessions, skills, profiles |
-| `{HERMES_HOME}/hermes-agent/` | Hermes Python package + `venv/bin/python3` (cron bridge, backups) |
+| `{HERMES_HOME}/hermes-agent/` | Hermes Python package + `venv/bin/python3` (Hindsight/backup scripts) |
 
 After bootstrap/setup, [`scripts/tooling/discover-agents.mjs`](../scripts/tooling/discover-agents.mjs) writes **`CH_DATA_DIR/hermes-detection.json`** for operator debugging only (the app does not read it at runtime).
 
@@ -21,7 +21,7 @@ After bootstrap/setup, [`scripts/tooling/discover-agents.mjs`](../scripts/toolin
 
 2. **Backup/sync jobs** should include `CH_DATA_DIR` alongside `HERMES_HOME`.
 
-3. **Cron** — Hermes scheduler reads `{HERMES_HOME}/cron/jobs.json`; Control Hub pushes via `{HERMES_HOME}/hermes-agent/venv/bin/python3`.
+3. **Scheduling** — recurring missions are **Control Hub-owned** (the `schedules` table + built-in scheduler); Control Hub no longer writes the legacy Hermes `{HERMES_HOME}/cron/jobs.json` agent-cron bridge. That file is only *read* when present, to give cron-sourced agent sessions human-friendly titles (`session-title-server.ts`).
 
 4. **Config and behaviour files** Hermes reads must exist under the resolved `HERMES_HOME` for that profile.
 
