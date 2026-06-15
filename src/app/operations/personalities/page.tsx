@@ -30,6 +30,7 @@ import { apiFetch, setErrorFromCaught, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { filterByCaseInsensitiveSubstring } from "@/lib/list-search";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import PersonalitiesInsights from "@/components/personalities/PersonalitiesInsights";
 
 interface Personality {
   name: string;
@@ -350,6 +351,8 @@ export default function PersonalitiesPage() {
       />
 
       <div className="max-w-4xl mx-auto px-6 py-6">
+        {!loading && <PersonalitiesInsights personalities={personalities} activeName={activePersonality} />}
+
         {activePersonality && (
           <p className="text-xs font-mono text-neon-cyan/80 mb-4">
             Active: <span className="text-white">{activePersonality}</span>

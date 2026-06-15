@@ -500,6 +500,7 @@ ch_deploy_dispatch_update() {
   while [ "${1:-}" ]; do
     case "${1}" in
       --restart-only) CH_DEPLOY_RESTART_ONLY=true ; shift ;;
+      --yes | -y) export CH_ASSUME_YES=1 ; shift ;;
       --branch)
         CH_DEPLOY_BRANCH="${2:-}"
         shift 2
@@ -507,6 +508,15 @@ ch_deploy_dispatch_update() {
       *) shift ;;
     esac
   done
+  # A full update does `git reset --hard origin/<branch>` and discards local
+  # changes. Warn a human first; the dashboard spawns this non-interactively
+  # (no TTY) so ch_confirm auto-proceeds on the safe default. Pass --yes to skip.
+  if [ "$CH_DEPLOY_RESTART_ONLY" = false ]; then
+    if ! ch_confirm "Update resets this checkout to origin/${CH_DEPLOY_BRANCH} and discards local changes. Continue?" "Y"; then
+      ch_info "Update cancelled — no changes made."
+      exit 0
+    fi
+  fi
   ch_deploy_run_update
 }
 
