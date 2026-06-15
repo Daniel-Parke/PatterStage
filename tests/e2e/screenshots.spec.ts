@@ -21,6 +21,7 @@ const OUT = join(process.cwd(), "docs", "images");
 
 const SHOTS: Array<{ path: string; file: string }> = [
   { path: "/", file: "dashboard.png" },
+  { path: "/insights", file: "insights.png" },
   { path: "/orchestration/missions", file: "missions-board.png" },
   { path: "/orchestration/chat", file: "chat.png" },
   { path: "/operations/agents", file: "agent-profiles.png" },
