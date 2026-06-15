@@ -59,13 +59,3 @@ export async function runFullSync(): Promise<SyncCycleResult> {
   const scheduler = getSyncScheduler();
   return scheduler.forceSync();
 }
-
-/** Get the current scheduler (for read-only access). */
-export function getScheduler(): SyncScheduler | null {
-  return _scheduler;
-}
-
-/** Check if sync layer has been initialized. */
-export function isSyncLayerInitialized(): boolean {
-  return _initialized;
-}

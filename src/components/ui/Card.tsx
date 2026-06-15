@@ -73,26 +73,3 @@ export function StatusDot({
   );
 }
 
-// ── Stat Card (dashboard style) ────────────────────────────────
-export function StatCard({
-  icon: Icon,
-  label,
-  value,
-  status = "online",
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-  status?: "online" | "warning" | "error" | "idle";
-}) {
-  return (
-    <Card hover>
-      <div className="flex items-center justify-between mb-2">
-        <Icon className="w-4 h-4 text-white/40" />
-        <StatusDot status={status} pulse />
-      </div>
-      <div className="text-2xl font-bold font-mono text-white">{value}</div>
-      <div className="text-xs text-white/40 mt-1">{label}</div>
-    </Card>
-  );
-}

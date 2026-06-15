@@ -6,17 +6,9 @@
 // framework-agnostic AgentRuntime adapter in src/lib/runtime/.
 // ═══════════════════════════════════════════════════════════════
 
-export {
-  BackgroundScheduler,
-  getBackgroundScheduler,
-  ensureBackgroundScheduler,
-} from "./scheduler/BackgroundScheduler";
-
-export { dispatchMissionRun, cancelMissionRun, type DispatchResult } from "./dispatch";
-export {
-  reconcileActiveRuns,
-  reconcileRunsOnBoot,
-  finalizeMissionForRun,
-} from "./run-reconcile";
-export { RunSync } from "./RunSync";
-export { runSchedulerTick, ScheduleTickSource } from "./scheduler/tick";
+// Consumed via this barrel; the rest of the orchestration internals
+// (BackgroundScheduler, RunSync, scheduler tick, boot reconcile) are imported
+// directly from their source modules by the server bootstrap.
+export { ensureBackgroundScheduler } from "./scheduler/BackgroundScheduler";
+export { dispatchMissionRun, cancelMissionRun } from "./dispatch";
+export { reconcileActiveRuns } from "./run-reconcile";

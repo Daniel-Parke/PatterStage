@@ -37,7 +37,7 @@ const typeConfig = {
   },
 };
 
-export default function Toast({
+function Toast({
   message,
   type = "success",
   duration = 4000,

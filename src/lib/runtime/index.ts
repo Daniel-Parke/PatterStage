@@ -8,13 +8,6 @@
 // ═══════════════════════════════════════════════════════════════
 
 export * from "./types";
-export { HermesRuntime, type HermesRuntimeOptions } from "./HermesRuntime";
-export {
-  resolveEndpoint,
-  DEFAULT_PROFILE,
-  type RuntimeEndpoint,
-} from "./endpoint-registry";
-export { getGatewayKey, maskKey } from "./secrets";
 
 import { HermesRuntime } from "./HermesRuntime";
 import type { AgentRuntime } from "./types";

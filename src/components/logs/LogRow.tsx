@@ -9,7 +9,7 @@ import { LEVEL_TEXT_CLASS } from "./constants";
 /**
  * Highlight search term matches within text.
  */
-export function highlightText(text: string, searchTerm: string): ReactNode {
+function highlightText(text: string, searchTerm: string): ReactNode {
   if (!searchTerm) return text;
   const idx = text.toLowerCase().indexOf(searchTerm.toLowerCase());
   if (idx === -1) return text;

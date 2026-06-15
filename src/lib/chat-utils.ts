@@ -29,17 +29,17 @@ export function saveSessions(sessions: ChatSession[]): void {
   }
 }
 
-// ── ID generation ───────────────────────────────────────────────
+// ── ID generation (module-internal) ─────────────────────────────
 
-export function generateId(prefix: string): string {
+function generateId(prefix: string): string {
   return `${prefix}_${Math.random().toString(36).slice(2, 10)}_${Date.now()}`;
 }
 
-export function generateMessageId(): string {
+function generateMessageId(): string {
   return generateId("msg");
 }
 
-export function generateSessionId(): string {
+function generateSessionId(): string {
   return generateId("session");
 }
 
