@@ -172,6 +172,10 @@ Next.js static files (favicon, `robots.txt`, etc.) go in a `public/` directory a
 
 - **Security** — whitelist body fields in PUT handlers (no mass assignment), validate paths with `path.resolve()` + `startsWith()`
 
+- **Large action-router routes split into per-action modules** — a thin `route.ts` dispatches on `action` to handlers under `src/lib/{mission,story}-handlers/*` (+ a `shared.ts` for pure helpers). See `mission-handlers/` and `story-handlers/`.
+
+- **Read-only data hooks wrap `useApiResource`** (`src/hooks/useApiResource.ts`) — a generic TanStack-Query + `{ data }`-envelope helper; each domain hook (`useStats` / `useSessions` / `useLogs` / `useConfig` / `useAnalytics`) is a thin wrapper that keeps its own public field name. Hooks with mutations (`useSchedules`) or multi-query bundles (`useDashboard`) stay bespoke — don't force them onto the generic.
+
 §
 
 ## Shared Utilities
