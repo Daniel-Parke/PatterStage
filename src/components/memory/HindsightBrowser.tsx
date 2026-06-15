@@ -23,6 +23,7 @@ import { parseOptionalTagsInput, parseTagsInput } from "@/lib/hindsight-tag-inpu
 import { stringOr } from "./hindsight/utils";
 import type { Tab, Memory, Directive, MentalModel, HealthState } from "./hindsight/types";
 import HealthBanner from "./hindsight/HealthBanner";
+import MemoryInsights from "@/components/memory/MemoryInsights";
 import MemoryTab from "./hindsight/MemoryTab";
 import DirectivesTab from "./hindsight/DirectivesTab";
 import MentalModelsTab from "./hindsight/MentalModelsTab";
@@ -513,6 +514,9 @@ export default function HindsightBrowser() {
           Add Memory
         </Button>
       </div>
+
+      {/* Memory insights — fresh/stale fact mix + tags for the loaded set */}
+      {!loadingInitial && <MemoryInsights memories={memories} hiddenStaleCount={hiddenStaleCount} />}
 
       {/* Reflect Result */}
       {reflectResult && (
