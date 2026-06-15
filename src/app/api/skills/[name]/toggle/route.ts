@@ -14,6 +14,7 @@ import { applyProfileOrRootPatchOrFail } from "@/lib/apply-profile-or-root-patch
 import { requireSafeProfileName } from "@/lib/path-security";
 import { serializeJsonArray } from "@/lib/profile-config-builder";
 import { getSkill } from "@/lib/skills-repository";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 export async function PUT(
   request: NextRequest,
@@ -79,6 +80,12 @@ export async function PUT(
     );
     if (result instanceof NextResponse) return result;
 
+    recordEvent("skill.toggled", {
+      entityType: "skill",
+      entityId: name,
+      profile,
+      metadata: { enabled },
+    });
     return ok({ success: true, skill: name, profile, enabled });
   }
   catch (error) {

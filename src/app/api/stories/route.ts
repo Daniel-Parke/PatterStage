@@ -16,6 +16,7 @@ import {
   updateStory,
   deleteStory,
 } from "@/lib/story-repository";
+import { recordEvent } from "@/lib/analytics/record-event";
 import type { StoryArc as StoryArcType, ChapterOutline } from "@/types/recroom";
 
 function safeArc(arc: unknown): StoryArcType | undefined {
@@ -168,6 +169,7 @@ async function handleCreate(body: Record<string, unknown>): Promise<NextResponse
     masterPrompt,
     chapters: [],
   });
+  recordEvent("story.created", { entityType: "story", entityId: draft.id });
 
   try {
     // Step 1: Generate Story Arc + Chapter 1
@@ -397,6 +399,14 @@ async function handleGenerateChapter(body: Record<string, unknown>): Promise<Nex
       status: allComplete ? "complete" : "active",
     });
 
+    recordEvent("story.chapter_generated", {
+      entityType: "story",
+      entityId: storyId as string,
+      metadata: { chapter: nextNum },
+    });
+    if (allComplete) {
+      recordEvent("story.completed", { entityType: "story", entityId: storyId as string });
+    }
     return NextResponse.json({ data: { chapter: nextNum, content, story: updated } });
   } catch (err) {
     const updatedChapters = [...story.chapters];

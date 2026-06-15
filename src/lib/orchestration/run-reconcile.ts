@@ -15,6 +15,7 @@ import { closeSessionForMission } from "@/lib/session-repository";
 import { runtime } from "@/lib/runtime";
 import { now } from "@/lib/db";
 import { RuntimeRequestError, type RunStatus } from "@/lib/runtime/types";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 /** Map a terminal run status onto the mission status enum (no 'cancelled'). */
 function missionStatusFor(runStatus: RunStatus): "successful" | "failed" {
@@ -73,12 +74,31 @@ export function finalizeMissionForRun(
   });
 }
 
+/**
+ * Finalize a run terminally AND record the analytics event. Used only by the
+ * live reconcile path (a real terminal transition), NOT by reconcileRunsOnBoot
+ * — boot recovery re-fails interrupted runs and must not double-count events.
+ */
+function finalizeAndRecord(run: RunRecord, runStatus: RunStatus, resultText: string | null): void {
+  finalizeMissionForRun(run.missionId, runStatus, resultText);
+  recordEvent(runStatus === "completed" ? "mission.completed" : "mission.failed", {
+    entityType: "mission",
+    entityId: run.missionId ?? undefined,
+    profile: run.profileName ?? null,
+  });
+  recordEvent("session.closed", {
+    entityType: "session",
+    entityId: run.sessionId ?? run.missionId ?? undefined,
+    profile: run.profileName ?? null,
+  });
+}
+
 /** Poll one active run and write any terminal transition. Returns true if it advanced. */
 async function reconcileOne(run: RunRecord): Promise<boolean> {
   // Never got a backend id — submit failed/crashed mid-flight.
   if (!run.runId) {
     updateRun(run.id, { status: "failed", error: "run was never submitted to the backend" });
-    finalizeMissionForRun(run.missionId, "failed", "run was never submitted to the backend");
+    finalizeAndRecord(run, "failed", "run was never submitted to the backend");
     return true;
   }
 
@@ -94,7 +114,7 @@ async function reconcileOne(run: RunRecord): Promise<boolean> {
         await runtime.stopRun(run.runId, run.profileName ?? undefined).catch(() => {});
         const msg = `run exceeded its ${declared}m timeout`;
         updateRun(run.id, { status: "failed", error: msg });
-        finalizeMissionForRun(run.missionId, "failed", msg);
+        finalizeAndRecord(run, "failed", msg);
         return true;
       }
       return false; // still running, within its window
@@ -107,13 +127,13 @@ async function reconcileOne(run: RunRecord): Promise<boolean> {
       error: result.error ?? null,
       sessionId: result.sessionId ?? undefined,
     });
-    finalizeMissionForRun(run.missionId, result.status, result.output ?? result.error ?? null);
+    finalizeAndRecord(run, result.status, result.output ?? result.error ?? null);
     return true;
   } catch (err) {
     // 404 → the backend no longer knows this run; treat as terminal failure.
     if (err instanceof RuntimeRequestError && err.status === 404) {
       updateRun(run.id, { status: "failed", error: "backend no longer has this run (404)" });
-      finalizeMissionForRun(run.missionId, "failed", "backend lost the run");
+      finalizeAndRecord(run, "failed", "backend lost the run");
       return true;
     }
     // Transient (gateway down / timeout). Self-heal: if the run is older than its

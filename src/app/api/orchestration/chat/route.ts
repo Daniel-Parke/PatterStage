@@ -14,6 +14,7 @@ import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, ok } from "@/lib/api-response";
 import { getAgentLlmEndpoints } from "@/lib/hermes-agent-runtime";
 import { CHAT_DEFAULT_MODEL } from "@/types/chat";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 /** Shared gateway fetch — both streaming and non-streaming paths use this. */
 async function fetchGateway(
@@ -66,6 +67,10 @@ export async function POST(request: NextRequest) {
       return badRequest("messages array is required");
     }
     const isStreaming = stream !== false; // default to streaming
+    recordEvent("chat.message_sent", {
+      entityType: "chat",
+      metadata: { model: model || CHAT_DEFAULT_MODEL },
+    });
     const { apiUrl } = getAgentLlmEndpoints();
 
     const gatewayBody = {

@@ -20,6 +20,7 @@ import { runtime } from "@/lib/runtime";
 import { uuid, now } from "@/lib/db";
 import { messageFromError } from "@/lib/api-fetch";
 import { logApiError } from "@/lib/api-logger";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 export interface DispatchResult {
   ok: boolean;
@@ -76,6 +77,16 @@ export async function dispatchMissionRun(
       status: handle.status,
     });
     updateMission(missionId, { status: "dispatched", sessionId: resolvedSession });
+    recordEvent("mission.dispatched", {
+      entityType: "mission",
+      entityId: missionId,
+      profile: mission.profileName ?? null,
+    });
+    recordEvent("session.started", {
+      entityType: "session",
+      entityId: resolvedSession,
+      profile: mission.profileName ?? null,
+    });
     return { ok: true, runId, backendRunId: handle.runId, sessionId: resolvedSession };
   } catch (err) {
     const message = messageFromError(err, "dispatch failed");
