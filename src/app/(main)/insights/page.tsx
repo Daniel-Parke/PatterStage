@@ -11,7 +11,8 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
-import { BarChart3, Trophy, Flame, Sparkles, Activity, CalendarRange } from "lucide-react";
+import Link from "next/link";
+import { BarChart3, Trophy, Flame, Sparkles, Activity, CalendarRange, Rocket } from "lucide-react";
 
 import PageHeader from "@/components/layout/PageHeader";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
@@ -119,6 +120,24 @@ export default function InsightsPage() {
           <LoadingSpinner text="Loading insights…" />
         ) : (
           <>
+            {/* ── First-run nudge (analytics start empty) ── */}
+            {!error && stats && totalEvents === 0 && (
+              <div className="rounded-2xl border border-neon-cyan/20 bg-dark-900/60 p-6 text-center" style={{ boxShadow: `0 0 24px ${neonAlpha("cyan", 6)}` }}>
+                <Sparkles className="mx-auto h-6 w-6 text-neon-cyan" />
+                <h2 className="mt-2 text-sm font-semibold text-white/85">No activity yet</h2>
+                <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-white/50">
+                  Dispatch a mission, write a Story Weaver chapter, or fire a schedule — your
+                  interaction analytics and achievements will start filling in here.
+                </p>
+                <Link
+                  href="/orchestration/missions"
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-neon-cyan/40 px-3 py-1.5 text-xs font-mono text-neon-cyan transition-colors hover:bg-neon-cyan/10"
+                >
+                  <Rocket className="h-3.5 w-3.5" /> Go to Missions
+                </Link>
+              </div>
+            )}
+
             {/* ── Level / streak / headline metrics ── */}
             <Card>
               <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
