@@ -11,6 +11,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { ChevronDown, Clock, AlertCircle, Calendar, X } from "lucide-react";
 import { baseInputStyles } from "@/lib/theme";
 import { parseSchedule } from "@/lib/schedule/parse-schedule";
+import { computeNextRun } from "@/lib/schedule/next-run";
 import { describeSchedule } from "@/lib/schedule/types";
 import {
   SCHEDULE_PRESETS,
@@ -133,6 +134,22 @@ export default function SchedulePicker({
     () => (canonicalCron ? findPresetByValue(canonicalCron) : null),
     [canonicalCron],
   );
+
+  // Preview the next few fire times so the user can sanity-check a cron
+  // before saving. Reuses the same dependency-free evaluator the scheduler
+  // tick uses (src/lib/schedule/next-run.ts), so the preview matches reality.
+  const nextRuns = useMemo(() => {
+    if (!canonicalCron) return [] as Date[];
+    const out: Date[] = [];
+    let from = new Date();
+    for (let i = 0; i < 3; i++) {
+      const next = computeNextRun(canonicalCron, from);
+      if (!next) break;
+      out.push(next);
+      from = next;
+    }
+    return out;
+  }, [canonicalCron]);
 
   // Advanced (raw cron) input: local controlled state. The previous
   // implementation used `defaultValue` + a `key` that reset on every
@@ -502,11 +519,32 @@ export default function SchedulePicker({
         </div>
       )}
 
-      {/* Read-only canonical cron display */}
+      {/* Read-only canonical cron display + next-run preview */}
       {canonicalCron && (
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-dark-800/50 border border-white/5">
-          <span className="text-[10px] text-white/40 font-mono shrink-0">Cron:</span>
-          <code className="text-xs font-mono text-neon-orange truncate">{canonicalCron}</code>
+        <div className="rounded-lg bg-dark-800/50 border border-white/5 px-3 py-1.5 space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-white/40 font-mono shrink-0">Cron:</span>
+            <code className="text-xs font-mono text-neon-orange truncate">{canonicalCron}</code>
+          </div>
+          {nextRuns.length > 0 && (
+            <div className="flex items-start gap-2">
+              <span className="text-[10px] text-white/40 font-mono shrink-0 mt-px">Next:</span>
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                {nextRuns.map((d, i) => (
+                  <span key={i} className="text-[10px] font-mono text-white/55">
+                    {d.toLocaleString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
