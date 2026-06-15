@@ -6,10 +6,25 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { HERMES_PROVIDERS, TASK_TYPES, type TaskType } from "./hermes-providers";
+import { ANALYTICS_EVENT_TYPES } from "./analytics/event-types";
 
 // ── Zod schemas for API request bodies ─────────────────────────
 
 const nonEmpty = z.string().min(1);
+
+/**
+ * Query schema for GET /api/analytics/timeseries. `days` is clamped 1–365 to
+ * bound the `datetime('now','-N days')` interpolation in the repository (the
+ * only place a request value reaches a SQL interval), and `bucket` is a
+ * forward-compatible enum (only "day" today).
+ */
+export const analyticsTimeseriesQuerySchema = z
+  .object({
+    type: z.enum(ANALYTICS_EVENT_TYPES).optional(),
+    days: z.coerce.number().int().min(1).max(365).default(30),
+    bucket: z.enum(["day"]).default("day"),
+  })
+  .strict();
 
 /**
  * Build the `defaults` schema for the Models registry. Each entry is a
