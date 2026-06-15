@@ -6,28 +6,26 @@ Tags: **Impact** (H/M/L) · **Effort** (S/M/L). "Quick win" = H or M impact at S
 
 ---
 
-## 1. Branding alignment — PatterTech "hybrid"
+## 1. Branding alignment — PatterTech = deep-space Cherenkov
 
-**Where we are:** a neon-dark "Cherenkov" theme — deep blue-tinted surfaces (`dark-950 #040b12`), five competing neon accents (cyan/purple/pink/green/orange), and `glow-*` box-shadows used liberally. Strong, but louder than the parent brand.
+> **Correction (supersedes the earlier P6 note).** A previous pass mistook **WiseWattage** — a *venture* of PatterTech (the homepage serves it from `/ventures/wisewattage.png`) — for the parent brand, and recommended shifting the accent cyan → WiseWattage green. That was wrong, and it was never shipped into the UI (P6 only softened glow). **PatterTech's own brand is the [Cherenkov Radiation palette](https://www.color-hex.com/color-palette/1022135) + a deep-space aesthetic** (confirmed by the owner). WiseWattage's green/lightbulb identity belongs to that product, not to Control Hub.
 
-**Where PatterTech actually sits** (observed from the live WiseWattage / PatterTech site, NI739839): a **dark** theme with a **green primary accent** — a green lightbulb logo + "WiseWattage" wordmark, green CTAs/links, clean card sections, generous whitespace, an Inter-like sans, "© PatterTech Ltd · Belfast". (Note: the *dark + green* reality is the opposite of the "light/minimal" first impression from the text-only homepage scrape.) Control Hub already carries the lineage with the **"PT / Hermes"** mark in the sidebar.
+**Where we are = where we should be.** Control Hub's neon-dark "Cherenkov" theme — deep blue-tinted surfaces (`dark-950 #040b12`), a cyan primary, and restrained `glow-*` — *is already on-brand.* The job is **precision and polish**, not a recolour.
 
-**Hybrid target (agreed, now sharpened):** Control Hub is *already dark* — so the alignment is mostly **(a) shift the primary accent from cyan → PatterTech green**, **(b) green CTAs/links**, **(c) the restraint already started in P6**, and **(d) the PT lightbulb logo lineage**. This is a smaller, lower-risk change than a light re-skin.
+**The palette (locked):** Cherenkov ramp `#33ddff · #00bfff · #00a1e6 · #008bd1 · #0071c2` (registered as `--color-cherenkov-100…500`), primary cyan `#00bfff`, complement Sparrow's-Fire `#ff6622` (the `orange` accent slot). Voice is accessible/principled/understated — *"Technology that is accessible to all" · "Let's build something worth owning."*
 
 | # | Change | Impact | Effort |
 |---|--------|--------|--------|
-| B1 | **Consolidate the accent palette.** Demote cyan to *the* primary; reserve purple/green/orange/pink for **semantic** roles only (orchestration / success / warning / danger). Stop using 5 accents decoratively on one screen. | H | M |
-| B2 | **Dial back glow.** Halve `.glow-*` intensity and `GlowSurface` alpha; keep glow for *active/live* states only (pulsing process, live session), not static cards. | H | S |
+| B1 | **Keep cyan as *the* primary; use the Cherenkov ramp for depth.** Reserve purple/green/pink/orange for **semantic** roles only (orchestration / success / heat / danger). Stop using 5 accents decoratively on one screen — lean on the cyan→deep-blue ramp for gradients/hierarchy instead. | H | M |
+| B2 | **Glow = luminescence, not floodlight.** `.glow-*` stays soft on static cards; the "reactor core" pulse is reserved for *live/active* states (running process, live session). ✅ done in P6, recalibrated in Q1. | H | S |
 | B3 | **Increase whitespace + vertical rhythm.** Standardise section spacing (`space-y-6`), card padding, and the 10px micro-label scale; let panels breathe. | M | M |
 | B4 | **Tighten typography.** Inter is already the sans — define a clear H1/H2/section-label/body ladder; reduce the all-caps + mono-everywhere density (mono for data/IDs only). | M | M |
-| B5 | **Brand chrome.** A wordmark/logo slot in the sidebar brand row + dashboard header + mobile header, ready for the PatterTech logo. Add a small "by PatterTech" footer line. | H | S |
-| B6 | **Light-mode option (future).** A proper light theme would align closest to PatterTech; staged behind the brand-token swap, not this pass. | M | L |
+| B5 | **Brand chrome.** Keep the **"PT / Hermes"** mark in the sidebar brand row; the logo slot (sidebar + dashboard + mobile header) is ready to drop a supplied PatterTech logo. | M | S |
 
-**Brand-asset checklist (needed from PatterTech to finish):**
-- [ ] Logo (SVG preferred + PNG fallback), light + dark variants.
-- [ ] Primary brand hex + neutral ramp (we keep `#00bfff` as a stand-in until provided).
-- [ ] Heading + body font families (and licence).
-- [ ] Any tagline/wordmark lockup to use in the sidebar.
+**Brand-asset checklist (palette is now settled; only chrome is outstanding):**
+- [x] Primary + neutral palette — the Cherenkov ramp above (no longer a stand-in).
+- [ ] Official PatterTech logo (SVG + PNG), for the sidebar/dashboard logo slot.
+- [ ] Confirm heading + body fonts (Inter assumed for both today).
 - [ ] Tone-of-voice notes for microcopy (empty states, errors, CTAs).
 
 ---

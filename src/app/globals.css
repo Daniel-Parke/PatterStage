@@ -16,7 +16,7 @@
   --color-neon-purple: #8b5cff;
   --color-neon-pink: #e879f9;
   --color-neon-green: #a3ff12;
-  --color-neon-orange: #ff9f1c;
+  --color-neon-orange: #ff6622;
   --color-neon-yellow: #facc15;
 
   /* Blue-tinted surfaces */
@@ -41,7 +41,7 @@
   --ch-rgb-neon-purple: 139, 92, 255;
   --ch-rgb-neon-green: 163, 255, 18;
   --ch-rgb-neon-pink: 232, 121, 249;
-  --ch-rgb-neon-orange: 255, 159, 28;
+  --ch-rgb-neon-orange: 255, 102, 34;
   --ch-rgb-cherenkov-glow: 51, 221, 255;
 }
 
@@ -61,9 +61,10 @@
   background: rgb(var(--ch-rgb-neon-cyan) / 0.35);
 }
 
-/* Glow effects — restrained (PatterTech-hybrid). Softer than the original
-   neon halo: glow reads as a subtle accent on cards, not a light source.
-   Reserve stronger glow for live/active states (pulse-glow). */
+/* Glow effects — restrained, deep-space Cherenkov. Glow reads as a subtle
+   luminescence on cards, not a flat light source; the brand's "reactor core"
+   signature lives in the stronger pulse-glow / glow-surface reserved for
+   live/active states (running process, live session). */
 .glow-cyan {
   box-shadow:
     0 0 14px rgb(var(--ch-rgb-neon-cyan) / 0.08),
