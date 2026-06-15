@@ -22,6 +22,12 @@ const CONFIG_URL = "/api/config";
 export interface GatewayHealth {
   /** Whether the Hermes Gateway is reachable */
   online: boolean | null;
+  /**
+   * Whether Control Hub can authenticate to the gateway. `false` means the
+   * gateway is reachable but rejected our bearer key (missing/wrong
+   * API_SERVER_KEY); `null` during initial load.
+   */
+  authConfigured: boolean | null;
   /** Whether both registry and disk have an agent default model set */
   agentDefaultModelSet: boolean | null;
   /** Model IDs from the registry catalog */
@@ -59,6 +65,7 @@ export function useGatewayHealth(): GatewayHealth & {
   refetchModels: () => Promise<void>;
 } {
   const [online, setOnline] = useState<boolean | null>(null);
+  const [authConfigured, setAuthConfigured] = useState<boolean | null>(null);
   const [agentDefaultModelSet, setAgentDefaultModelSet] = useState<boolean | null>(null);
   const [registryModelIds, setRegistryModelIds] = useState<string[]>([]);
   const [modelLabels, setModelLabels] = useState<Record<string, string>>({});
@@ -73,10 +80,13 @@ export function useGatewayHealth(): GatewayHealth & {
   // as offline — byte-equivalent to the pre-refactor
   // `result.ok ? result.data?.online === true : false` shape.
   const checkOnline = useCallback(async () => {
-    const data = await safeApiCallData<{ online: boolean }>(GATEWAY_HEALTH_URL, {
-      signal: AbortSignal.timeout(3000),
-    });
+    const data = await safeApiCallData<{ online: boolean; authConfigured?: boolean }>(
+      GATEWAY_HEALTH_URL,
+      { signal: AbortSignal.timeout(3000) },
+    );
     setOnline(data?.online === true);
+    // Only meaningful when reachable; null when the probe failed entirely.
+    setAuthConfigured(data?.online === true ? data?.authConfigured !== false : null);
   }, []);
 
   // ── Check agent default model setup ─────────────────────────
@@ -170,6 +180,7 @@ export function useGatewayHealth(): GatewayHealth & {
 
   return {
     online,
+    authConfigured,
     agentDefaultModelSet,
     registryModelIds,
     modelLabels,

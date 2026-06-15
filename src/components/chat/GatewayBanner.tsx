@@ -12,7 +12,7 @@
 
 import { AlertTriangle, Loader2 } from "lucide-react";
 
-type GatewayStatus = "offline" | "model-missing" | "checking";
+type GatewayStatus = "offline" | "auth-missing" | "model-missing" | "checking";
 
 interface GatewayBannerProps {
   status: GatewayStatus;
@@ -47,6 +47,14 @@ const COPY: Record<
     body:
       "The Hermes Gateway (port 8642) is not responding. " +
       "Start it with: {code}hermes gateway start{/code}",
+  },
+  "auth-missing": {
+    tone: "orange",
+    title: "Gateway up — Control Hub can't authenticate",
+    body:
+      "The gateway is reachable but rejected Control Hub's request (401). " +
+      "Set {code}API_SERVER_KEY{/code} in {code}~/.hermes/.env{/code}, mirror it " +
+      "into {code}~/control-hub/.env.local{/code}, and restart Control Hub.",
   },
   "model-missing": {
     tone: "orange",

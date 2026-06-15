@@ -69,6 +69,7 @@ export default function ChatPage() {
   // offline, but the chat page no longer surfaces those IDs.
   const {
     online: gatewayOnline,
+    authConfigured: gatewayAuthConfigured,
     agentDefaultModelSet,
     registryModelIds,
     modelLabels,
@@ -522,9 +523,14 @@ export default function ChatPage() {
             {!hasActiveSession && messages.length === 0 && (
               <>
                 {gatewayOnline === false && <GatewayBanner status="offline" />}
-                {gatewayOnline !== false && agentDefaultModelSet === false && (
-                  <GatewayBanner status="model-missing" />
+                {gatewayOnline === true && gatewayAuthConfigured === false && (
+                  <GatewayBanner status="auth-missing" />
                 )}
+                {gatewayOnline !== false &&
+                  gatewayAuthConfigured !== false &&
+                  agentDefaultModelSet === false && (
+                    <GatewayBanner status="model-missing" />
+                  )}
                 {gatewayOnline === null && <GatewayBanner status="checking" />}
               </>
             )}
