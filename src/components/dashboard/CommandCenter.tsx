@@ -8,7 +8,7 @@
 // and an achievements shelf. Drops into the dashboard as <CommandCenter />.
 // ═══════════════════════════════════════════════════════════════
 
-import type { ReactNode } from "react";
+import { useCallback, type ReactNode } from "react";
 import {
   Activity,
   CheckCircle2,
@@ -26,6 +26,9 @@ import { useCountUp } from "@/hooks/useCountUp";
 import { AreaTrend, ActivityHeatmap, Donut, Sparkline, ProgressRing } from "@/components/viz";
 import { neon, neonAlpha, type NeonColor } from "@/components/viz/colors";
 import { LevelBadge, StreakFlame, AchievementBadge } from "@/components/game";
+import { useToast } from "@/components/ui/Toast";
+import { useAchievementUnlocks } from "@/hooks/useAchievementUnlocks";
+import type { Achievement } from "@/lib/stats/derive";
 
 function fmtNum(n: number): string {
   return Math.round(n).toLocaleString();
@@ -113,6 +116,17 @@ function Skeleton() {
 
 export default function CommandCenter() {
   const { stats, isLoading } = useStats();
+  // The dashboard is always-on, so CommandCenter is the SOLE owner of the
+  // achievement-unlock toast (the Insights grid renders read-only). First poll
+  // seeds silently; each id fires once.
+  const { showToast, toastElement } = useToast();
+  useAchievementUnlocks(
+    stats?.achievements,
+    useCallback(
+      (a: Achievement) => showToast(`🏆 Achievement unlocked — ${a.name}`, "success"),
+      [showToast],
+    ),
+  );
 
   if (!stats) {
     return isLoading ? <Skeleton /> : null;
@@ -126,6 +140,7 @@ export default function CommandCenter() {
 
   return (
     <section className="space-y-4">
+      {toastElement}
       {/* ── Hero ── */}
       <Card accent="cyan" className="relative overflow-hidden">
         <div
