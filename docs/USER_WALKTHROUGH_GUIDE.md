@@ -208,28 +208,28 @@ This replaced the separate "Schedules" page — scheduling now lives with the mi
 
 ## Orchestration → Scripts
 
-The **Scripts** page schedules old-fashioned **host shell scripts** on the system crontab — backups, cleanups, health checks — separate from agent missions. (Scheduling *agent* work is done from the Missions composer's **Schedule** mode; see the [Scheduled missions](#scheduled-missions) note above.) It uses `useSystemCronJobs()` and `/api/cron/hardware`; the bash scripts ship under `scripts/hardware/` and are copied into `CH_DATA_DIR/scripts` during `setup.sh` if missing.
+The **Scripts** page is a file-aware manager for **host shell scripts** under `CH_DATA_DIR/scripts` — backups, cleanups, health checks — separate from agent missions. (Scheduling *agent* work is done from the Missions composer's **Schedule** mode; see the [Scheduled missions](#scheduled-missions) note above.) It reads the script files (`/api/scripts`), cross-references the host crontab for each one's schedule, runs them on demand, and tails their logs. The bundled `ch-backup.sh` ships under `scripts/hardware/` and is copied into `CH_DATA_DIR/scripts` during `setup.sh`.
 
 ### What you see
 
-**Header actions**
-- **Pause all** — pauses every script (only when at least one exists).
-- **Sync** — re-reads the host crontab (POST `action=sync`) and refreshes the list.
-- **+ New Script** — opens the create modal.
+A row per `.sh` file in `CH_DATA_DIR/scripts`, each showing **name · size · schedule (or "not scheduled") · last run**, with actions:
+- **Run now** — execs the script server-side (path-validated, no shell) and appends output to its log.
+- **Logs** — opens a modal tailing the script's log under `CH_HARDWARE_LOG_DIR`.
+- **Schedule** — puts the script on the host crontab (a 5-field cron); once scheduled it shows the cadence and an **Unschedule** action.
+- **Refresh** — re-reads the files + crontab.
 
-**List**
-- Search box that filters by name and schedule.
-- Per-script card (`SystemCronCard`): enable/disable toggle, **Edit**, and **Delete** (two-step confirm).
-- Empty state with a "Create Script" call-to-action.
-
-**Modal** — `SystemCronModal`
-- Name, command (path-validated to live under `CH_DATA_DIR/scripts`), schedule (interval `every 5m`, ISO one-shot, or 5/6-field cron).
+Drop a new `.sh` file into `CH_DATA_DIR/scripts` and it appears automatically.
 
 ### Typical use
 
-1. **+ New Script**, give it a name, command, and schedule.
-2. Enable/disable, edit, or delete entries as needed.
-3. Use **Sync** after editing the host crontab directly, so the UI catches up.
+1. Drop or edit a script under `CH_DATA_DIR/scripts` (e.g. `ch-backup.sh`).
+2. **Run now** to test it; check **Logs** for output.
+3. **Schedule** it with a cron expression so the host runs it on a timer (or **Unschedule** to stop).
+
+### Notes
+
+- Running execs the script with the Control Hub process's permissions, the same as a crontab entry would — only files directly under `CH_DATA_DIR/scripts` can be run (no traversal, `.sh` only, no shell interpolation).
+- A legacy **Cron** page (Hermes `jobs.json` agent cron) still exists while it is being retired; scheduled *agent* work belongs in **Missions**.
 
 For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memory snapshot) and the script-level env vars, see [SYSTEM-CRON.md](SYSTEM-CRON.md).
 
