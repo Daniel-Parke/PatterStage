@@ -119,7 +119,7 @@ export function buildChapterPrompt(
     `Title: ${outline.title}\nPurpose: ${outline.purpose}\n` +
     `Key Beats: ${outline.keyBeats.join("; ")}\nEmotional Tone: ${outline.emotionalTone}` +
     (outline.setupForNext ? `\nSetup for Next: ${outline.setupForNext}` : "") +
-    "\n\nWrite Chapter ${outline.number} now. Return ONLY prose."
+    `\n\nWrite Chapter ${outline.number} now. Return ONLY prose.`
   );
   return parts.join("\n");
 }

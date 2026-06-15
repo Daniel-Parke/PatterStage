@@ -6,7 +6,9 @@ import {
   getChapterCount,
   safeArc,
   buildMasterPrompt,
+  buildChapterPrompt,
 } from "@/lib/story-handlers/shared";
+import type { StoryArc, ChapterOutline } from "@/types/recroom";
 
 describe("getChapterCount", () => {
   it.each([
@@ -68,5 +70,37 @@ describe("buildMasterPrompt", () => {
   });
   it("handles no characters", () => {
     expect(buildMasterPrompt({ premise: "x" })).toContain("(none specified)");
+  });
+});
+
+describe("buildChapterPrompt", () => {
+  const arc = {
+    storyArc: "A tense rescue",
+    fixedPlotPoints: [],
+    characterArcs: [],
+    worldRules: [],
+    themes: [],
+    chapterOutlines: [],
+  } as unknown as StoryArc;
+  const outline: ChapterOutline = {
+    number: 3,
+    title: "The Descent",
+    purpose: "Rising action",
+    keyBeats: ["enter the cave", "find the map"],
+    emotionalTone: "Tense",
+  };
+
+  it("interpolates the chapter number (regression: was a literal ${outline.number})", () => {
+    const p = buildChapterPrompt("MASTER", arc, "summary so far", "prev chapter text", outline);
+    expect(p).toContain("Write Chapter 3 now. Return ONLY prose.");
+    expect(p).not.toContain("${outline.number}");
+  });
+
+  it("includes the arc, rolling summary, previous chapter, and outline sections", () => {
+    const p = buildChapterPrompt("MASTER", arc, "summary so far", "prev chapter text", outline);
+    expect(p).toContain("===STORY ARC===");
+    expect(p).toContain("===NARRATIVE SO FAR===");
+    expect(p).toContain("===PREVIOUS CHAPTER===");
+    expect(p).toContain("Key Beats: enter the cave; find the map");
   });
 });

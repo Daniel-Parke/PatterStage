@@ -25,6 +25,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { Panel, PanelHeader } from "@/components/dashboard/Panel";
 import CommandCenter from "@/components/dashboard/CommandCenter";
+import { FadeIn } from "@/components/motion";
 import DispatchStrip from "@/components/dashboard/DispatchStrip";
 import ActiveMissionsPanel from "@/components/dashboard/ActiveMissionsPanel";
 import PlatformsPanel from "@/components/dashboard/PlatformsPanel";
@@ -243,8 +244,6 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
-        {/* ═══ Command Center (live operational stats + data-viz) ═══ */}
-        <CommandCenter />
         {/* ═══ Compact Stat Row ═══ */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-w-0">
           {monitor ? (
@@ -350,6 +349,11 @@ export default function Dashboard() {
             <span className="text-sm font-mono text-white/60">Story Weaver</span>
           </Link>
         </Panel>
+
+        {/* ═══ Command Center (operator stats + data-viz) — below the live monitor ═══ */}
+        <FadeIn>
+          <CommandCenter />
+        </FadeIn>
       </div>
       )}
     </AppPageShell>
