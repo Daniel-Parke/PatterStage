@@ -17,8 +17,25 @@ export interface RawMetrics {
   scriptsEnabled: number;
   longestStreak: number;
   currentStreak: number;
-  /** Hours (0–23, local) at which runs completed — for the "night owl" badge. */
+  /** Hours (0–23, UTC) at which runs completed — for night-owl / early-bird. */
   completionHours: number[];
+  // ── interaction-event-derived (analytics_events; 0 on a fresh/pre-v12 DB) ──
+  dispatchedMissions: number;
+  /** Busiest single day's mission dispatches — for the "blitz" badge. */
+  maxMissionsInADay: number;
+  chaptersGenerated: number;
+  storiesCompleted: number;
+  sessionsStarted: number;
+  schedulesCreated: number;
+  schedulesFired: number;
+  skillToggles: number;
+  personalityChanges: number;
+  modelConfigs: number;
+  chatMessages: number;
+  /** Distinct agent profiles seen across events — for "polyglot". */
+  distinctProfiles: number;
+  /** Distinct event types ever recorded — for the breadth ladder. */
+  distinctEventTypes: number;
 }
 
 export interface LevelInfo {
@@ -151,7 +168,7 @@ export function computeStreaks(
   return { current, longest: Math.max(longest, current) };
 }
 
-const ACHIEVEMENT_DEFS: Array<{
+export interface AchievementDef {
   id: string;
   name: string;
   description: string;
@@ -159,18 +176,64 @@ const ACHIEVEMENT_DEFS: Array<{
   color: string;
   target: number;
   measure: (m: RawMetrics) => number;
-}> = [
+}
+
+export const ACHIEVEMENT_DEFS: AchievementDef[] = [
+  // ── Missions ──
   { id: "first-contact", name: "First Contact", description: "Complete your first mission", icon: "Rocket", color: "cyan", target: 1, measure: (m) => m.completedMissions },
   { id: "field-agent", name: "Field Agent", description: "Complete 10 missions", icon: "Target", color: "green", target: 10, measure: (m) => m.completedMissions },
   { id: "veteran", name: "Veteran", description: "Complete 100 missions", icon: "Medal", color: "purple", target: 100, measure: (m) => m.completedMissions },
-  { id: "on-a-roll", name: "On A Roll", description: "Maintain a 7-day streak", icon: "Flame", color: "orange", target: 7, measure: (m) => m.longestStreak },
-  { id: "unstoppable", name: "Unstoppable", description: "Maintain a 30-day streak", icon: "Zap", color: "yellow", target: 30, measure: (m) => m.longestStreak },
-  { id: "token-baron", name: "Token Baron", description: "Burn 1M tokens", icon: "Coins", color: "yellow", target: 1_000_000, measure: (m) => m.totalTokens },
-  { id: "token-tycoon", name: "Token Tycoon", description: "Burn 10M tokens", icon: "Gem", color: "pink", target: 10_000_000, measure: (m) => m.totalTokens },
+  { id: "legend", name: "Legend", description: "Complete 500 missions", icon: "Crown", color: "yellow", target: 500, measure: (m) => m.completedMissions },
+  { id: "dispatcher", name: "Dispatcher", description: "Dispatch 50 mission runs", icon: "Send", color: "cyan", target: 50, measure: (m) => m.dispatchedMissions },
+  { id: "blitz", name: "Blitz", description: "Dispatch 5 missions in a single day", icon: "Gauge", color: "orange", target: 5, measure: (m) => m.maxMissionsInADay },
+  { id: "resilient", name: "Resilient", description: "Weather 10 failed missions", icon: "ShieldCheck", color: "green", target: 10, measure: (m) => m.failedMissions },
+
+  // ── Stories ──
+  { id: "storyteller", name: "Storyteller", description: "Weave your first story", icon: "BookOpen", color: "pink", target: 1, measure: (m) => m.stories },
+  { id: "novelist", name: "Novelist", description: "Weave 10 stories", icon: "Library", color: "pink", target: 10, measure: (m) => m.stories },
+  { id: "saga-weaver", name: "Saga Weaver", description: "Complete 5 stories", icon: "BookCheck", color: "purple", target: 5, measure: (m) => m.storiesCompleted },
+  { id: "wordsmith", name: "Wordsmith", description: "Generate 25 chapters", icon: "PenLine", color: "cyan", target: 25, measure: (m) => m.chaptersGenerated },
+  { id: "epic-scribe", name: "Epic Scribe", description: "Generate 100 chapters", icon: "Feather", color: "yellow", target: 100, measure: (m) => m.chaptersGenerated },
+
+  // ── Sessions ──
+  { id: "operator", name: "Operator", description: "Start 25 agent sessions", icon: "MessagesSquare", color: "cyan", target: 25, measure: (m) => m.sessionsStarted },
+  { id: "marathon", name: "Marathon", description: "Start 250 agent sessions", icon: "Infinity", color: "purple", target: 250, measure: (m) => m.sessionsStarted },
+
+  // ── Automation ──
   { id: "automator", name: "Automator", description: "Run a scheduled mission or script", icon: "Bot", color: "cyan", target: 1, measure: (m) => m.schedulesEnabled + m.scriptsEnabled },
   { id: "scriptsmith", name: "Scriptsmith", description: "Automate 5 scripts on a timer", icon: "Terminal", color: "green", target: 5, measure: (m) => m.scriptsEnabled },
-  { id: "storyteller", name: "Storyteller", description: "Weave a story", icon: "BookOpen", color: "pink", target: 1, measure: (m) => m.stories },
+  { id: "clockwork", name: "Clockwork", description: "Create 5 schedules", icon: "Timer", color: "cyan", target: 5, measure: (m) => m.schedulesCreated },
+  { id: "set-and-forget", name: "Set & Forget", description: "Fire 50 scheduled runs", icon: "Repeat", color: "green", target: 50, measure: (m) => m.schedulesFired },
+  { id: "cron-lord", name: "Cron Lord", description: "Fire 500 scheduled runs", icon: "CalendarClock", color: "yellow", target: 500, measure: (m) => m.schedulesFired },
+
+  // ── Skills & config ──
+  { id: "tinkerer", name: "Tinkerer", description: "Toggle 10 skills", icon: "ToggleRight", color: "cyan", target: 10, measure: (m) => m.skillToggles },
+  { id: "skill-architect", name: "Skill Architect", description: "Toggle 50 skills", icon: "SlidersHorizontal", color: "purple", target: 50, measure: (m) => m.skillToggles },
+  { id: "shapeshifter", name: "Shapeshifter", description: "Change personality 5 times", icon: "Users", color: "pink", target: 5, measure: (m) => m.personalityChanges },
+  { id: "model-mechanic", name: "Model Mechanic", description: "Configure models 10 times", icon: "Cpu", color: "orange", target: 10, measure: (m) => m.modelConfigs },
+
+  // ── Chat ──
+  { id: "first-words", name: "First Words", description: "Send your first chat message", icon: "Mic", color: "cyan", target: 1, measure: (m) => m.chatMessages },
+  { id: "conversationalist", name: "Conversationalist", description: "Send 100 chat messages", icon: "MessageCircle", color: "green", target: 100, measure: (m) => m.chatMessages },
+  { id: "chatterbox", name: "Chatterbox", description: "Send 1,000 chat messages", icon: "Megaphone", color: "pink", target: 1000, measure: (m) => m.chatMessages },
+
+  // ── Tokens ──
+  { id: "token-baron", name: "Token Baron", description: "Burn 1M tokens", icon: "Coins", color: "yellow", target: 1_000_000, measure: (m) => m.totalTokens },
+  { id: "token-tycoon", name: "Token Tycoon", description: "Burn 10M tokens", icon: "Gem", color: "pink", target: 10_000_000, measure: (m) => m.totalTokens },
+
+  // ── Streaks ──
+  { id: "on-a-roll", name: "On A Roll", description: "Maintain a 7-day streak", icon: "Flame", color: "orange", target: 7, measure: (m) => m.longestStreak },
+  { id: "unstoppable", name: "Unstoppable", description: "Maintain a 30-day streak", icon: "Zap", color: "yellow", target: 30, measure: (m) => m.longestStreak },
+  { id: "centurion", name: "Centurion", description: "Maintain a 100-day streak", icon: "Trophy", color: "yellow", target: 100, measure: (m) => m.longestStreak },
+
+  // ── Time of day ──
   { id: "night-owl", name: "Night Owl", description: "Finish a run between midnight and 5am", icon: "Moon", color: "purple", target: 1, measure: (m) => (m.completionHours.some((h) => h >= 0 && h < 5) ? 1 : 0) },
+  { id: "early-bird", name: "Early Bird", description: "Finish a run between 5am and 9am", icon: "Sunrise", color: "orange", target: 1, measure: (m) => (m.completionHours.some((h) => h >= 5 && h < 9) ? 1 : 0) },
+
+  // ── Breadth ──
+  { id: "polyglot", name: "Polyglot", description: "Use 3 different agent profiles", icon: "Boxes", color: "cyan", target: 3, measure: (m) => m.distinctProfiles },
+  { id: "renaissance", name: "Renaissance", description: "Trigger 8 different event types", icon: "Compass", color: "green", target: 8, measure: (m) => m.distinctEventTypes },
+  { id: "completionist", name: "Completionist", description: "Trigger all 14 event types", icon: "Sparkles", color: "yellow", target: 14, measure: (m) => m.distinctEventTypes },
 ];
 
 export function evaluateAchievements(m: RawMetrics): Achievement[] {

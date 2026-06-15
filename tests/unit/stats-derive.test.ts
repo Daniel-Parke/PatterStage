@@ -5,8 +5,10 @@ import {
   computeStreaks,
   evaluateAchievements,
   successRate,
+  ACHIEVEMENT_DEFS,
   type RawMetrics,
 } from "@/lib/stats/derive";
+import { ICONS } from "@/components/game/AchievementBadge";
 
 const baseMetrics = (over: Partial<RawMetrics> = {}): RawMetrics => ({
   completedMissions: 0,
@@ -19,6 +21,19 @@ const baseMetrics = (over: Partial<RawMetrics> = {}): RawMetrics => ({
   longestStreak: 0,
   currentStreak: 0,
   completionHours: [],
+  dispatchedMissions: 0,
+  maxMissionsInADay: 0,
+  chaptersGenerated: 0,
+  storiesCompleted: 0,
+  sessionsStarted: 0,
+  schedulesCreated: 0,
+  schedulesFired: 0,
+  skillToggles: 0,
+  personalityChanges: 0,
+  modelConfigs: 0,
+  chatMessages: 0,
+  distinctProfiles: 0,
+  distinctEventTypes: 0,
   ...over,
 });
 
@@ -95,6 +110,54 @@ describe("evaluateAchievements", () => {
   it("unlocks night-owl only for an early-morning completion", () => {
     expect(evaluateAchievements(baseMetrics({ completionHours: [14] })).find((x) => x.id === "night-owl")?.unlocked).toBe(false);
     expect(evaluateAchievements(baseMetrics({ completionHours: [3] })).find((x) => x.id === "night-owl")?.unlocked).toBe(true);
+  });
+  it("splits the time-of-day badges (night-owl vs early-bird) by hour window", () => {
+    const am6 = evaluateAchievements(baseMetrics({ completionHours: [6] }));
+    expect(am6.find((x) => x.id === "early-bird")?.unlocked).toBe(true);
+    expect(am6.find((x) => x.id === "night-owl")?.unlocked).toBe(false);
+  });
+  it("starts every achievement locked at zero metrics", () => {
+    const all = evaluateAchievements(baseMetrics());
+    expect(all.every((a) => !a.unlocked && a.progress === 0)).toBe(true);
+  });
+  it("respects tiered ladders (field-agent before veteran before legend)", () => {
+    const at10 = evaluateAchievements(baseMetrics({ completedMissions: 10 }));
+    expect(at10.find((x) => x.id === "field-agent")?.unlocked).toBe(true);
+    expect(at10.find((x) => x.id === "veteran")?.unlocked).toBe(false);
+    expect(at10.find((x) => x.id === "legend")?.unlocked).toBe(false);
+  });
+  it("clamps progress at 1 when the metric exceeds the target", () => {
+    const a = evaluateAchievements(baseMetrics({ completedMissions: 25 })).find((x) => x.id === "field-agent");
+    expect(a?.progress).toBe(1);
+  });
+  it.each([
+    ["blitz", { maxMissionsInADay: 5 }],
+    ["dispatcher", { dispatchedMissions: 50 }],
+    ["chatterbox", { chatMessages: 1000 }],
+    ["cron-lord", { schedulesFired: 500 }],
+    ["polyglot", { distinctProfiles: 3 }],
+    ["completionist", { distinctEventTypes: 14 }],
+  ])("unlocks the event-derived achievement %s at its threshold", (id, over) => {
+    const a = evaluateAchievements(baseMetrics(over as Partial<RawMetrics>)).find((x) => x.id === id);
+    expect(a?.unlocked).toBe(true);
+  });
+});
+
+describe("ACHIEVEMENT_DEFS catalogue integrity", () => {
+  it("has ~36 achievements with unique ids and positive targets", () => {
+    expect(ACHIEVEMENT_DEFS.length).toBeGreaterThanOrEqual(36);
+    const ids = ACHIEVEMENT_DEFS.map((d) => d.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ACHIEVEMENT_DEFS.every((d) => d.target > 0 && d.name && d.description)).toBe(true);
+  });
+  it("every icon is registered in AchievementBadge.ICONS (no silent Medal fallback)", () => {
+    const missing = ACHIEVEMENT_DEFS.filter((d) => !(d.icon in ICONS)).map((d) => `${d.id}:${d.icon}`);
+    expect(missing).toEqual([]);
+  });
+  it("uses only the supported neon accent colours", () => {
+    const allowed = new Set(["cyan", "purple", "pink", "green", "orange", "yellow"]);
+    const bad = ACHIEVEMENT_DEFS.filter((d) => !allowed.has(d.color)).map((d) => `${d.id}:${d.color}`);
+    expect(bad).toEqual([]);
   });
 });
 

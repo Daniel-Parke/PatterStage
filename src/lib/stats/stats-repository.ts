@@ -18,6 +18,14 @@ import {
   type RawMetrics,
 } from "./derive";
 import { getAgentPerformance, type AgentPerformance } from "./agent-stats";
+import {
+  countByType,
+  maxCountInSingleDay,
+  distinctProfileCount,
+  distinctEventTypeCount,
+  distinctActiveDays,
+} from "@/lib/analytics/analytics-repository";
+import type { AnalyticsEventType } from "@/lib/analytics/event-types";
 
 export interface DailyPoint {
   date: string;
@@ -262,6 +270,15 @@ export function getDashboardStats(): DashboardStats {
     // table missing — leave throughput empty
   }
 
+  // ── interaction events (analytics_events) feed the expanded achievements ──
+  // Defensive reads → 0 / [] on a fresh or pre-v12 DB, so achievements simply
+  // start unlocked-at-0 rather than erroring.
+  const evt = countByType();
+  const evtCount = (t: AnalyticsEventType): number => evt[t] ?? 0;
+  // Fold event-active days into the streak set so chat/story/skill-only days
+  // (with no run completion) still keep the daily streak alive.
+  for (const d of distinctActiveDays()) activeDates.add(d);
+
   // ── streak + level + achievements ──
   const today = dayStr(new Date());
   const streak = computeStreaks(activeDates, today);
@@ -276,6 +293,20 @@ export function getDashboardStats(): DashboardStats {
     longestStreak: streak.longest,
     currentStreak: streak.current,
     completionHours,
+    // event-derived (table-fallback where the count predates the event log)
+    dispatchedMissions: evtCount("mission.dispatched"),
+    maxMissionsInADay: maxCountInSingleDay("mission.dispatched"),
+    chaptersGenerated: evtCount("story.chapter_generated"),
+    storiesCompleted: evtCount("story.completed"),
+    sessionsStarted: Math.max(evtCount("session.started"), sessions.total),
+    schedulesCreated: Math.max(evtCount("schedule.created"), schedulesTotal),
+    schedulesFired: evtCount("schedule.fired"),
+    skillToggles: evtCount("skill.toggled"),
+    personalityChanges: evtCount("personality.changed"),
+    modelConfigs: evtCount("model.configured"),
+    chatMessages: evtCount("chat.message_sent"),
+    distinctProfiles: distinctProfileCount(),
+    distinctEventTypes: distinctEventTypeCount(),
   };
   const level = computeLevel(computeXp(raw));
   const achievements = evaluateAchievements(raw);
