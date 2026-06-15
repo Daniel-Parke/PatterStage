@@ -9,32 +9,29 @@ import { toastFromResult } from "@/lib/toast-from-result";
 import { successMessageForDispatch, dispatchMissionAction } from "@/hooks/success-message-for-dispatch";
 import type { Mission } from "@/types/hermes";
 import type { MissionTemplate } from "@/components/missions/TemplateModals";
-import {
-  categoryFilterPills,
-  groupTemplatesByCategory,
-} from "@/lib/mission-categories";
 import { buildTemplatePayload } from "@/lib/mission-form-utils";
 import {
-  isMissionActive,
   isMissionDraft,
   isMissionQueuedForRun,
-  missionBoardColumn,
 } from "@/lib/mission-board";
 import {
   getCategoryIdFromTemplate,
   rememberLastCategory,
 } from "@/lib/mission-composer-utils";
+import {
+  filterMissions,
+  computeMissionCounts,
+  computeMissionCategoryPills,
+  computeTemplateCategoryPills,
+  filterGroupedTemplates,
+  submitToastForDispatch,
+} from "@/lib/mission-filters";
 
 // getCategoryIdFromTemplate / rememberLastCategory / readLastCategory moved
 // to src/lib/mission-composer-utils.ts (shared by useMissionComposer + this
-// hook, imported above).
-
-function submitToastForDispatch(mode: "save" | "now" | "cron" | "queue"): string {
-  if (mode === "save") return "Saving draft...";
-  if (mode === "queue") return "Queueing mission...";
-  if (mode === "cron") return "Scheduling mission...";
-  return "Dispatching mission...";
-}
+// hook, imported above). The pure board/category selectors (filterMissions,
+// computeMissionCounts, *CategoryPills, filterGroupedTemplates) and the
+// dispatch-toast copy live in src/lib/mission-filters.ts.
 
 export type MissionRow = Mission & {
   cronJob?: {
@@ -891,95 +888,30 @@ export function useMissionsPage() {
   }, [missions, showToast, fetchData, expandedId, fetchDetail, updateMission]);
 
   const filtered = useMemo(
-    () =>
-      missions.filter((m) => {
-        if (filter !== "all") {
-          const column = missionBoardColumn(m);
-          if (filter !== column) return false;
-        }
-        if (missionCategoryFilter !== "all") {
-          if (missionCategoryFilter === "__uncategorized__") {
-            if (m.categoryId) return false;
-          } else if (m.categoryId !== missionCategoryFilter) {
-            return false;
-          }
-        }
-        if (
-          search &&
-          !m.name.toLowerCase().includes(search.toLowerCase()) &&
-          !m.prompt.toLowerCase().includes(search.toLowerCase())
-        )
-          return false;
-        return true;
-      }),
+    () => filterMissions(missions, { filter, missionCategoryFilter, search }),
     [missions, filter, search, missionCategoryFilter],
   );
 
-  // Single .reduce() pass over `missions` instead of 5 separate
-  // .filter().length passes. The 5 buckets match the original
-  // `missions.filter(predicate).length` shape VERBATIM — including the
-  // non-mutually-exclusive nature of (a) `active` vs (b) `queued`.
-  // Per the source in src/lib/mission-board.ts:
-  //   isMissionActive       = status==="dispatched" || queuedForRun===true
-  //   isMissionQueuedForRun = status==="queued" && queuedForRun===true
-  // So a `status:"queued" && queuedForRun:true` mission increments BOTH
-  // `active` AND `queued` — the same as the original 5 independent
-  // .filter().length passes. We can't use `else if` to make them
-  // mutually exclusive without changing observable counts. Independent
-  // `if` branches are required to preserve the original semantics. The
-  // named keys + per-branch increment match the previous shape
-  // verbatim, so consumers (MissionsList) see no change in totals.
-  const missionCounts = useMemo(
-    () =>
-      missions.reduce(
-        (acc, m) => {
-          if (isMissionActive(m)) acc.active += 1;
-          if (m.status === "successful") acc.completed += 1;
-          if (m.status === "failed") acc.failed += 1;
-          if (isMissionDraft(m)) acc.drafts += 1;
-          if (isMissionQueuedForRun(m)) acc.queued += 1;
-          return acc;
-        },
-        { active: 0, completed: 0, failed: 0, drafts: 0, queued: 0 },
-      ),
-    [missions],
+  // Counts are a single .reduce() pass (see computeMissionCounts) whose 5
+  // buckets are intentionally NON-mutually-exclusive — a `status:"queued"
+  // && queuedForRun:true` mission increments both `active` and `queued`,
+  // matching the original 5 independent .filter().length passes.
+  const missionCounts = useMemo(() => computeMissionCounts(missions), [missions]);
+
+  const templateCategoryPills = useMemo(
+    () => computeTemplateCategoryPills(templates, categories),
+    [templates, categories],
   );
 
-  const templateCategoryPills = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const t of templates) {
-      const cid = getCategoryIdFromTemplate(t, "general")!;
-      counts[cid] = (counts[cid] ?? 0) + 1;
-    }
-    return categoryFilterPills(categories, counts, false, 0);
-  }, [templates, categories]);
+  const missionCategoryPills = useMemo(
+    () => computeMissionCategoryPills(missions, categories),
+    [missions, categories],
+  );
 
-  const missionCategoryPills = useMemo(() => {
-    const counts: Record<string, number> = {};
-    let uncategorized = 0;
-    for (const m of missions) {
-      if (!m.categoryId) {
-        uncategorized += 1;
-      } else {
-        counts[m.categoryId] = (counts[m.categoryId] ?? 0) + 1;
-      }
-    }
-    return categoryFilterPills(categories, counts, true, uncategorized);
-  }, [missions, categories]);
-
-  const filteredGrouped = useMemo(() => {
-    const grouped = groupTemplatesByCategory(
-      templates as Array<MissionTemplate & { categoryId?: string }>,
-      categories,
-    );
-    if (categoryFilter === "all") return grouped;
-    return grouped.filter((g) => {
-      if (categoryFilter === "__uncategorized__") {
-        return g.categoryId === null;
-      }
-      return g.categoryId === categoryFilter;
-    });
-  }, [templates, categoryFilter, categories]);
+  const filteredGrouped = useMemo(
+    () => filterGroupedTemplates(templates, categories, categoryFilter),
+    [templates, categoryFilter, categories],
+  );
 
   return {
     toastElement,
