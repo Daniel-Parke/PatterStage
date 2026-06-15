@@ -6,7 +6,7 @@
 // reads from the DB.
 // ═══════════════════════════════════════════════════════════════
 
-import { syncHermesSessionsToDb } from "@/lib/session-repository";
+import { syncHermesSessionsToDb } from "@/lib/session-sync";
 import { logApiError } from "@/lib/api-logger";
 import { db } from "@/lib/db";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";

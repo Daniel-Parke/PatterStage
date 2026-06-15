@@ -63,6 +63,11 @@ jest.mock("@/lib/session-repository", () => ({
   getSession: jest.fn(),
   listSessions: jest.fn(() => ({ sessions: [], total: 0 })),
   estimateSessionSize: jest.fn(() => 0),
+}));
+
+// lookupMissionIdForCronSession moved to session-sync (the route imports it
+// from there); the in-flight-note tests only need it to no-op.
+jest.mock("@/lib/session-sync", () => ({
   lookupMissionIdForCronSession: jest.fn(() => null),
 }));
 

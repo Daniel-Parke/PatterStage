@@ -8,7 +8,8 @@ import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { badRequest, notFound, ok, payloadTooLarge } from "@/lib/api-response";
 import { safeStat } from "@/lib/fs-stats";
-import { getSession, estimateSessionSize, lookupMissionIdForCronSession } from "@/lib/session-repository";
+import { getSession, estimateSessionSize } from "@/lib/session-repository";
+import { lookupMissionIdForCronSession } from "@/lib/session-sync";
 import { PATHS } from "@/lib/paths";
 import {
   getMaxSessionFileBytes,
