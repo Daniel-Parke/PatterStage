@@ -176,6 +176,10 @@ Next.js static files (favicon, `robots.txt`, etc.) go in a `public/` directory a
 
 - **Read-only data hooks wrap `useApiResource`** (`src/hooks/useApiResource.ts`) — a generic TanStack-Query + `{ data }`-envelope helper; each domain hook (`useStats` / `useSessions` / `useLogs` / `useConfig` / `useAnalytics`) is a thin wrapper that keeps its own public field name. Hooks with mutations (`useSchedules`) or multi-query bundles (`useDashboard`) stay bespoke — don't force them onto the generic.
 
+- **Big page = page-core hook + render shell** — when a page/component grows past ~600 lines, lift its stateful core into a `use<Page>` hook and leave the `.tsx` as a render shell (e.g. `useMissionsPage` / `useModelsPage` / `useChatPage`, and `HindsightBrowser`'s three per-tab hooks). Move logic **verbatim** — preserve every dependency array and effect guard byte-for-byte. Pure derivations (board filters, cron resolution, skill grouping) go to a sibling `lib/*` module so they're unit-testable (`mission-filters.ts`, `schedule/picker-resolver.ts`, `skills-page-helpers.ts`). Self-contained presentational subcomponents move to `components/<area>/` (the Sidebar / skills-card precedent).
+
+- **Prefer composable helpers over route wrappers / base classes** — API routes use the standalone `requireAuth` / `parseAndValidateJsonBody` / `serverErrorFromCatch` helpers, NOT a `withApiRoute` HOF (the 67 routes are too heterogeneous — action-routers, custom status codes, streaming — so a wrapper would invert control flow and create a two-pattern split). Likewise there is **no** base-repository class or unified `createSyncModule` — the repos/sync modules are only ~20% genericizable, so we extract targeted helpers (`fs-helpers.ts`, `db/build-update.ts`) instead. Add abstractions only when they remove genuine duplication without hiding the underlying SQL/HTTP.
+
 §
 
 ## Shared Utilities
