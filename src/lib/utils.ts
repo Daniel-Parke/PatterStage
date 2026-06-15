@@ -181,11 +181,6 @@ export function messageSummary(content: string | undefined): string {
   return trimmed + (firstNonEmpty.length > 120 || hasMoreContent ? "..." : "");
 }
 
-// Re-exports from schedule module
-export { parseSchedule } from "@/lib/schedule/parse-schedule";
-export type { ParsedSchedule } from "@/lib/schedule/types";
-export { describeSchedule, parseCronExpression } from "@/lib/schedule/types";
-
 // ── Model Defaults ───────────────────────────────────────────
 
 import { TASK_TYPES, type TaskType } from "@/lib/hermes-providers";
