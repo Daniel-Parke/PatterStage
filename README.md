@@ -79,7 +79,8 @@ The bootstrap and deploy scripts prompt by default and **skip every prompt** whe
 
 | Sidebar area | What to do there |
 |--------------|------------------|
-| **Dashboard** | One-glance situational awareness: analytics, active missions, health, sync. |
+| **Dashboard** | One-glance situational awareness: analytics, active missions, health, sync. Earns **achievements** as you work. |
+| **Main → Insights** | Interaction analytics + achievements: activity over time, per-category breakdown, streaks, and the full achievement grid ([details](docs/ANALYTICS.md)). |
 | **Orchestration → Missions** | Compose, dispatch, **schedule**, and **cancel** missions ([details](docs/MISSIONS.md)). The **Scheduled missions** section lists recurring missions with pause/resume/run-now. |
 | **Orchestration → Scripts** | Host shell scripts on a timer (system crontab) — backups, cleanups, health checks. |
 | **Orchestration → Chat** | Gateway-backed chat (separate from mission dispatch). |
@@ -147,6 +148,7 @@ App pages live under `src/app/`; API routes under `src/app/api/`. Orchestration 
 - **Contributing & branches:** [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
 - **Testing & CI:** [docs/TESTING.md](docs/TESTING.md)
 - **REST API:** [docs/API.md](docs/API.md)
+- **Analytics & achievements:** [docs/ANALYTICS.md](docs/ANALYTICS.md)
 - **Agent rules & repo tree:** [AGENTS.md](AGENTS.md)
 
 ---
