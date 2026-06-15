@@ -156,6 +156,33 @@ async function main() {
     `god-route immediate dispatch set status=dispatched (got ${nowMission?.status})`,
   );
 
+  // ── 8. Analytics pipeline + derived achievements (Phase Q3) ──
+  // The actions above emit recordEvent() at the real action points; assert the
+  // analytics_events log + /api/analytics + the derived achievements reflect
+  // them — i.e. the whole pipeline works against the real Hermes runtime.
+  console.log("8. Analytics events + achievements");
+  const analytics = await req("GET", `${CH}/api/analytics`);
+  const totals = analytics.data?.data?.analytics?.totals ?? {};
+  check(analytics.status === 200, "/api/analytics responds");
+  check((totals["mission.dispatched"] ?? 0) >= 1, `mission.dispatched recorded (${totals["mission.dispatched"] ?? 0})`);
+  check((totals["mission.completed"] ?? 0) >= 1, `mission.completed recorded (${totals["mission.completed"] ?? 0})`);
+  check((totals["session.started"] ?? 0) >= 1, `session.started recorded (${totals["session.started"] ?? 0})`);
+  check((totals["schedule.created"] ?? 0) >= 1, `schedule.created recorded (${totals["schedule.created"] ?? 0})`);
+
+  const ts = await req("GET", `${CH}/api/analytics/timeseries?type=mission.dispatched&days=7`);
+  check(
+    ts.status === 200 && Array.isArray(ts.data?.data?.timeseries) && ts.data.data.timeseries.length === 7,
+    "timeseries returns a gap-filled 7-day series",
+  );
+  const badQuery = await req("GET", `${CH}/api/analytics/timeseries?days=9999`);
+  check(badQuery.status === 400, "timeseries rejects an out-of-range days param (400)");
+
+  const stats = await req("GET", `${CH}/api/stats`);
+  const achievements = stats.data?.data?.stats?.achievements ?? [];
+  const firstContact = achievements.find((a) => a.id === "first-contact");
+  check(achievements.length >= 36, `expanded achievement catalogue present (${achievements.length})`);
+  check(Boolean(firstContact?.unlocked), "first-contact achievement unlocked after a completed mission");
+
   finish();
 }
 

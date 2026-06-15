@@ -283,8 +283,13 @@ export function getDashboardStats(): DashboardStats {
   const today = dayStr(new Date());
   const streak = computeStreaks(activeDates, today);
   const raw: RawMetrics = {
-    completedMissions: successful,
-    failedMissions: failed,
+    // Floor the mission-count metrics with the append-only event totals so the
+    // "completed N missions" achievements are MONOTONIC — a mission that gets
+    // re-dispatched flips the live table status back to 'dispatched', which would
+    // otherwise un-earn first-contact/field-agent/etc. (surfaced by the
+    // real-Hermes smoke). max(event, table) also keeps pre-event-log history.
+    completedMissions: Math.max(evtCount("mission.completed"), successful),
+    failedMissions: Math.max(evtCount("mission.failed"), failed),
     completedRuns: runs.completed,
     totalTokens,
     stories,
