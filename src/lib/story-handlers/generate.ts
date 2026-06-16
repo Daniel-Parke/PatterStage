@@ -40,7 +40,15 @@ export async function handleGenerateChapter(body: Record<string, unknown>): Prom
     keyBeats: [`Key event for chapter ${nextNum}`], emotionalTone: "Engaging",
   };
 
-  const prevChapter = nextNum > 1 ? story.chapterContents[String(nextNum - 1)] ?? null : null;
+  // Continuity: feed the last up-to-2 chapters (not just the previous one) so
+  // voice, tense, and freshly-established facts carry forward cleanly.
+  const recentChapters: { number: number; content: string }[] = [];
+  for (const n of [nextNum - 2, nextNum - 1]) {
+    if (n >= 1) {
+      const content = story.chapterContents[String(n)];
+      if (content) recentChapters.push({ number: n, content });
+    }
+  }
 
   const arc = safeArc(story.storyArc);
   if (!arc) return NextResponse.json({ error: "Story arc not found" }, { status: 400 });
@@ -50,8 +58,9 @@ export async function handleGenerateChapter(body: Record<string, unknown>): Prom
     story.masterPrompt ?? "",
     arc,
     story.rollingSummary ?? null,
-    prevChapter,
-    chapterOutline
+    recentChapters,
+    chapterOutline,
+    story.chapters.length,
   );
 
   try {

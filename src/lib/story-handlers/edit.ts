@@ -11,7 +11,7 @@ import { callLLM } from "@/lib/llm";
 import { getStory, updateStory } from "@/lib/story-repository";
 import type { ChapterOutline } from "@/types/recroom";
 
-import { safeArc, validateChapterOutput } from "./shared";
+import { safeArc, validateChapterOutput, focusArcForChapter } from "./shared";
 
 export async function handleEditChapter(body: Record<string, unknown>): Promise<NextResponse> {
   const { storyId, chapterNumber, editPrompt } = body;
@@ -34,14 +34,15 @@ export async function handleEditChapter(body: Record<string, unknown>): Promise<
     number: chNum, title: story.chapters[chIdx].title, purpose: "Continue", keyBeats: [], emotionalTone: "Engaging",
   };
 
+  const arcText = arc ? focusArcForChapter(arc, chNum, story.chapters.length) : "(no arc)";
   const editSystem = getStoryPrompt("chapter");
   const editUser = [
     "===EDIT INSTRUCTIONS===", editPrompt as string, "",
     "===EXISTING CHAPTER===", existingChapter, "",
     "===MASTER PROMPT===", story.masterPrompt ?? "", "",
-    "===STORY ARC===", JSON.stringify(arc, null, 2), "",
+    "===STORY ARC (focused for this chapter)===", arcText, "",
     "===CHAPTER OUTLINE===", `Title: ${outline.title}\nPurpose: ${outline.purpose}`,
-    "", "Rewrite this chapter. Return ONLY prose.",
+    "", "Rewrite this chapter, preserving continuity and the fixed plot points above. Return ONLY prose.",
   ].join("\n");
 
   try {

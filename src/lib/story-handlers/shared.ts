@@ -103,23 +103,90 @@ export function buildMasterPrompt(config: Record<string, unknown>): string {
   ].join("\n");
 }
 
+/**
+ * Render an arc view focused on ONE chapter, instead of dumping the whole arc
+ * JSON. Surfaces: the throughline + themes/world-rules; the fixed plot points
+ * that MUST occur in this chapter (filtered by `fixedPlotPoint.chapter`); the
+ * next 1-2 upcoming points to foreshadow (not resolve); and each character's
+ * arc with a "how far through" hint derived from chapter N of the total. This
+ * is what conditions the model on where the story should be right now.
+ */
+export function focusArcForChapter(
+  arc: StoryArcType,
+  chapterNumber: number,
+  totalChapters: number,
+): string {
+  const parts: string[] = [];
+  parts.push("Throughline: " + (arc.storyArc || "(unspecified)"));
+  if (arc.themes?.length) parts.push("Themes: " + arc.themes.join(", "));
+  if (arc.worldRules?.length) parts.push("World Rules: " + arc.worldRules.join("; "));
+
+  const points = Array.isArray(arc.fixedPlotPoints) ? arc.fixedPlotPoints : [];
+  const thisChapter = points.filter((p) => p.chapter === chapterNumber);
+  parts.push("");
+  parts.push("FIXED PLOT POINTS THAT MUST OCCUR IN THIS CHAPTER:");
+  if (thisChapter.length) {
+    for (const p of thisChapter) {
+      parts.push(`- ${p.event}${p.setup ? ` (setup: ${p.setup})` : ""}`);
+    }
+  } else {
+    parts.push("- (none mandated — advance the throughline toward the next fixed point)");
+  }
+
+  const upcoming = points
+    .filter((p) => p.chapter > chapterNumber)
+    .sort((a, b) => a.chapter - b.chapter)
+    .slice(0, 2);
+  if (upcoming.length) {
+    parts.push("");
+    parts.push("UPCOMING (foreshadow only — do NOT resolve these yet):");
+    for (const p of upcoming) parts.push(`- [Ch ${p.chapter}] ${p.event}`);
+  }
+
+  if (arc.characterArcs?.length) {
+    const pct = totalChapters > 0 ? Math.round((chapterNumber / totalChapters) * 100) : 0;
+    parts.push("");
+    parts.push(`CHARACTER ARCS (by chapter ${chapterNumber} of ${totalChapters}, ~${pct}% through):`);
+    for (const c of arc.characterArcs) {
+      parts.push(`- ${c.name}: ${c.journey} (start: ${c.startingState} → end: ${c.endingState})`);
+    }
+  }
+  return parts.join("\n");
+}
+
 export function buildChapterPrompt(
   masterPrompt: string,
   storyArc: StoryArcType,
   rollingSummary: string | null,
-  previousChapter: string | null,
+  recentChapters: { number: number; content: string }[],
   outline: ChapterOutline,
+  totalChapters: number,
 ): string {
   const parts: string[] = [];
   parts.push("===MASTER PROMPT===\n" + masterPrompt);
-  parts.push("\n===STORY ARC===\n" + JSON.stringify(storyArc, null, 2));
+  parts.push(
+    "\n===STORY ARC (focused for this chapter)===\n" +
+      focusArcForChapter(storyArc, outline.number, totalChapters),
+  );
   if (rollingSummary) { parts.push("\n===NARRATIVE SO FAR===\n" + rollingSummary); }
-  if (previousChapter) { parts.push("\n===PREVIOUS CHAPTER===\n" + previousChapter); }
+  if (recentChapters.length) {
+    parts.push("\n===RECENT CHAPTERS (match the established voice, tense, and facts)===");
+    for (const ch of recentChapters) {
+      parts.push(`--- Chapter ${ch.number} ---\n${ch.content}`);
+    }
+  }
   parts.push("\n===CHAPTER OUTLINE===\n" +
     `Title: ${outline.title}\nPurpose: ${outline.purpose}\n` +
     `Key Beats: ${outline.keyBeats.join("; ")}\nEmotional Tone: ${outline.emotionalTone}` +
-    (outline.setupForNext ? `\nSetup for Next: ${outline.setupForNext}` : "") +
-    `\n\nWrite Chapter ${outline.number} now. Return ONLY prose.`
+    (outline.setupForNext ? `\nSetup for Next: ${outline.setupForNext}` : ""),
+  );
+  parts.push(
+    "\n===CHECKLIST (verify before you finish)===\n" +
+      "- Address every Key Beat listed above.\n" +
+      "- Make every fixed plot point for THIS chapter actually happen on the page.\n" +
+      "- Keep continuity with the recent chapters (names, tense, established facts).\n" +
+      "- Do not resolve upcoming plot points early.\n" +
+      `\nWrite Chapter ${outline.number} now. Return ONLY prose.`,
   );
   return parts.join("\n");
 }

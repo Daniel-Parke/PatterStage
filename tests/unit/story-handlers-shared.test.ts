@@ -7,6 +7,7 @@ import {
   safeArc,
   buildMasterPrompt,
   buildChapterPrompt,
+  focusArcForChapter,
 } from "@/lib/story-handlers/shared";
 import type { StoryArc, ChapterOutline } from "@/types/recroom";
 
@@ -73,10 +74,53 @@ describe("buildMasterPrompt", () => {
   });
 });
 
+describe("focusArcForChapter", () => {
+  const arc = {
+    storyArc: "A tense rescue",
+    fixedPlotPoints: [
+      { chapter: 3, event: "the bridge collapses", setup: "rope frays" },
+      { chapter: 5, event: "the betrayal is revealed" },
+      { chapter: 2, event: "they enter the valley" },
+    ],
+    characterArcs: [{ name: "Ada", startingState: "naive", journey: "learns to lead", endingState: "commander" }],
+    worldRules: ["magic costs memory"],
+    themes: ["sacrifice"],
+    chapterOutlines: [],
+  } as unknown as StoryArc;
+
+  it("surfaces ONLY this chapter's fixed plot points as mandatory", () => {
+    const text = focusArcForChapter(arc, 3, 6);
+    expect(text).toContain("FIXED PLOT POINTS THAT MUST OCCUR IN THIS CHAPTER:");
+    expect(text).toContain("the bridge collapses (setup: rope frays)");
+    // The chapter-5 point is NOT in the mandatory section (it's upcoming).
+    const mandatorySection = text.slice(
+      text.indexOf("MUST OCCUR IN THIS CHAPTER:"),
+      text.indexOf("UPCOMING"),
+    );
+    expect(mandatorySection).not.toContain("the betrayal is revealed");
+  });
+
+  it("lists upcoming points as foreshadow-only", () => {
+    const text = focusArcForChapter(arc, 3, 6);
+    expect(text).toContain("UPCOMING (foreshadow only");
+    expect(text).toContain("[Ch 5] the betrayal is revealed");
+  });
+
+  it("notes how far through each character arc should be by this chapter", () => {
+    const text = focusArcForChapter(arc, 3, 6);
+    expect(text).toContain("by chapter 3 of 6, ~50% through");
+    expect(text).toContain("Ada: learns to lead (start: naive → end: commander)");
+  });
+
+  it("states there are no mandated points when none target this chapter", () => {
+    expect(focusArcForChapter(arc, 4, 6)).toContain("none mandated");
+  });
+});
+
 describe("buildChapterPrompt", () => {
   const arc = {
     storyArc: "A tense rescue",
-    fixedPlotPoints: [],
+    fixedPlotPoints: [{ chapter: 3, event: "the bridge collapses" }],
     characterArcs: [],
     worldRules: [],
     themes: [],
@@ -91,16 +135,31 @@ describe("buildChapterPrompt", () => {
   };
 
   it("interpolates the chapter number (regression: was a literal ${outline.number})", () => {
-    const p = buildChapterPrompt("MASTER", arc, "summary so far", "prev chapter text", outline);
+    const p = buildChapterPrompt("MASTER", arc, "summary so far", [], outline, 6);
     expect(p).toContain("Write Chapter 3 now. Return ONLY prose.");
     expect(p).not.toContain("${outline.number}");
   });
 
-  it("includes the arc, rolling summary, previous chapter, and outline sections", () => {
-    const p = buildChapterPrompt("MASTER", arc, "summary so far", "prev chapter text", outline);
-    expect(p).toContain("===STORY ARC===");
+  it("includes the focused arc, summary, recent chapters, outline, and checklist", () => {
+    const p = buildChapterPrompt(
+      "MASTER",
+      arc,
+      "summary so far",
+      [
+        { number: 1, content: "chapter one text" },
+        { number: 2, content: "chapter two text" },
+      ],
+      outline,
+      6,
+    );
+    expect(p).toContain("===STORY ARC (focused for this chapter)===");
     expect(p).toContain("===NARRATIVE SO FAR===");
-    expect(p).toContain("===PREVIOUS CHAPTER===");
+    expect(p).toContain("===RECENT CHAPTERS");
+    expect(p).toContain("--- Chapter 1 ---");
+    expect(p).toContain("--- Chapter 2 ---");
     expect(p).toContain("Key Beats: enter the cave; find the map");
+    expect(p).toContain("===CHECKLIST (verify before you finish)===");
+    // The chapter's mandated fixed point is surfaced in the focused arc.
+    expect(p).toContain("the bridge collapses");
   });
 });
