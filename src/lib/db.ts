@@ -18,6 +18,7 @@ import { applyRunsSchedulesMigration } from "./db/apply-runs-schedules-migration
 import { applyLegacyColumnRepair } from "./db/apply-legacy-column-repair";
 import { applyDropGameTablesMigration } from "./db/apply-drop-game-tables-migration";
 import { applyAnalyticsEventsMigration } from "./db/apply-analytics-events-migration";
+import { applyChatMigration } from "./db/apply-chat-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -175,6 +176,9 @@ export function runMigrations(database: Database.Database): void {
   // Analytics interaction log (feeds the Insights page + derived achievements).
   // Idempotent CREATE ... IF NOT EXISTS at schema_version 12.
   applyAnalyticsEventsMigration(database, migrationsDir);
+  // Agent-chat persistence (server-side conversations + messages, mapped to
+  // Hermes sessions). Idempotent CREATE ... IF NOT EXISTS at schema_version 13.
+  applyChatMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────
