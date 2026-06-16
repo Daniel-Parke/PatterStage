@@ -7,6 +7,7 @@ Technical reference for Control Hub. Tone elsewhere in this folder is deliberate
 | [CONTROL_HUB.md](CONTROL_HUB.md) | What this repo is and where to read next |
 | [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) | Operator guide: every sidebar page, every common action (dashboard, missions + scheduling, scripts, chat, agents + performance, skills, tools, personalities, sessions, memory, logs, all Config pages, Story Weaver) |
 | [MISSIONS.md](MISSIONS.md) | Mission board, dispatch, cancellation, templates |
+| [CHAT.md](CHAT.md) | Agent chat: server-persisted conversations, run-event streaming, tools + HITL approvals, Agent/Fast modes |
 | [design-tokens.md](design-tokens.md) | UI colour tokens and theme conventions |
 | [API.md](API.md) | REST endpoints |
 | [ANALYTICS.md](ANALYTICS.md) | Interaction event log, `/api/analytics`, achievements, and the Insights page |

@@ -372,3 +372,11 @@ Control Hub is a command centre, not a file manager. The operator opens the dash
 
 - **Mobile:** `MobileHeader` intentionally uses `--ch-mobile-header-min-height` (3rem), shorter than desktop `--ch-shell-header-min-height` (5rem).
 
+§
+
+- **Data viz:** Hand-rolled SVG only (no Recharts/visx) — the primitives live in `@/components/viz` (`Sparkline`, `AreaTrend`, `Donut`, `ProgressRing`, `ActivityHeatmap`, `RadialActivityClock`, `StackedAreaTrend`, `DistributionHistogram`, `BulletGauge`, `TopList`) and take a `NeonColor`. Keep charts fast: animate entrance via the `.viz-draw` class (stroke-dashoffset, gated on `prefers-reduced-motion`), not per-datum physics. Pure scale/path math goes in `viz/geometry.ts` so it's unit-testable.
+
+§
+
+- **Motion:** Use the reduced-motion-safe wrappers in `@/components/motion` (`FadeIn`, `Reveal`, `Stagger`/`StaggerItem`, `Collapse`, `useReducedMotionSafe`) — they centralise `prefers-reduced-motion`. Reserve Motion for **interaction-level** UI (page/section reveal, card stagger, expand/collapse); keep it **off** dense, frequently-repolling surfaces (the live dashboard panels) where a stagger on every poll would be jarring.
+

@@ -77,6 +77,7 @@ export default function Dashboard() {
     templates,
     categories,
     registryAgentModelLabel,
+    sessionTrend,
     ready,
     refetchMonitor,
     refetchMissions,
@@ -262,6 +263,8 @@ export default function Dashboard() {
                 color="purple"
                 subtitle={sessionWindowSubtitle}
                 href="/sessions"
+                trend={sessionTrend}
+                trendColor="purple"
               />
               <StatPill
                 icon={Layers}

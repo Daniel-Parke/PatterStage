@@ -8,6 +8,8 @@ import Link from "next/link";
 
 import type { AccentColor } from "@/types/hermes";
 import { iconColorMap } from "@/lib/theme";
+import Sparkline from "@/components/viz/Sparkline";
+import type { NeonColor } from "@/components/viz/colors";
 
 /**
  * Stat pill for compact metric display — uses theme.ts colors as the single
@@ -25,6 +27,8 @@ export function StatPill({
   color,
   subtitle,
   href,
+  trend,
+  trendColor = "cyan",
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
@@ -34,6 +38,10 @@ export function StatPill({
   subtitle?: string;
   /** When set, the pill is a link to this path (with a hover affordance). */
   href?: string;
+  /** Optional trailing trend series — renders a compact sparkline on the right. */
+  trend?: number[];
+  /** Sparkline accent (defaults to cyan). */
+  trendColor?: NeonColor;
 }) {
   const textColor = iconColorMap[color];
   // Derive border colour from the text colour pattern: replace "text-" with "border-"
@@ -56,6 +64,16 @@ export function StatPill({
           </div>
         )}
       </div>
+      {trend && trend.length > 1 && (
+        <Sparkline
+          data={trend}
+          color={trendColor}
+          width={52}
+          height={28}
+          strokeWidth={1.5}
+          className="flex-shrink-0 self-center opacity-70"
+        />
+      )}
     </>
   );
 

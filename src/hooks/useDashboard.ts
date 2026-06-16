@@ -72,6 +72,14 @@ async function fetchMissions(): Promise<MissionBrief[]> {
   return res.data?.data?.missions ?? [];
 }
 
+/** A 14-day session-activity series for the Sessions stat-pill sparkline. */
+async function fetchSessionTrend(): Promise<number[]> {
+  const data = await safeApiCallData<{ timeseries: { date: string; value: number }[] }>(
+    "/api/analytics/timeseries?type=session.started&days=14",
+  );
+  return (data?.timeseries ?? []).map((p) => p.value);
+}
+
 // ── Static bundle (status / config / templates / categories / defaults) ──
 //
 // The non-live slices load once. We reuse the existing batch fetcher
@@ -110,6 +118,8 @@ export interface UseDashboardResult {
   templates: DashboardTemplate[];
   categories: MissionCategory[];
   registryAgentModelLabel: string | null;
+  /** 14-day session-activity counts for the Sessions pill sparkline. */
+  sessionTrend: number[];
   /** True once the static bundle has resolved (gates first paint). */
   ready: boolean;
   refetchMonitor: () => Promise<unknown>;
@@ -141,6 +151,12 @@ export function useDashboard(): UseDashboardResult {
     queryFn: fetchStatic,
     staleTime: Infinity,
   });
+  const sessionTrendQuery = useQuery({
+    queryKey: ["dashboard", "session-trend"],
+    queryFn: fetchSessionTrend,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
 
   return {
     status: staticQuery.data?.status ?? null,
@@ -151,6 +167,7 @@ export function useDashboard(): UseDashboardResult {
     templates: staticQuery.data?.templates ?? [],
     categories: staticQuery.data?.categories ?? [],
     registryAgentModelLabel: staticQuery.data?.registryAgentModelLabel ?? null,
+    sessionTrend: sessionTrendQuery.data ?? [],
     ready: !staticQuery.isLoading,
     refetchMonitor: () => monitorQuery.refetch(),
     refetchMissions: () => missionsQuery.refetch(),
