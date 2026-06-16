@@ -183,6 +183,59 @@ async function main() {
   check(achievements.length >= 36, `expanded achievement catalogue present (${achievements.length})`);
   check(Boolean(firstContact?.unlocked), "first-contact achievement unlocked after a completed mission");
 
+  // ── 9. Agent chat over the runtime (Phase S5) ─────────────
+  // A chat conversation is mapped to a Hermes session; a user turn becomes a
+  // real run. Drive the full surface: create → send → reconcile → load, and
+  // assert the assistant turn finalizes (self-heals) from the run output.
+  console.log("9. Agent chat over the runtime");
+  const conv = await req("POST", `${CH}/api/chat`, { title: "Smoke chat" });
+  const conversationId = conv.data?.data?.conversation?.id;
+  check(conv.status === 201 && Boolean(conversationId), `chat conversation created (${conversationId ?? "none"})`);
+  if (conversationId) {
+    check(
+      typeof conv.data?.data?.conversation?.sessionId === "string" && conv.data.data.conversation.sessionId.length > 0,
+      "conversation mapped to a Hermes session",
+    );
+    const sendMsg = await req("POST", `${CH}/api/chat/${conversationId}/messages`, {
+      content: "Hello agent",
+      mode: "agent",
+    });
+    const chatRunId = sendMsg.data?.data?.runId;
+    check(sendMsg.status === 200 && Boolean(chatRunId), `chat turn dispatched a run (${chatRunId ?? "none"})`);
+
+    const chatDone = await pollUntil(async () => {
+      await req("POST", `${CH}/api/runs/reconcile`);
+      const r = await req("GET", `${CH}/api/runs/${chatRunId}`);
+      const status = r.data?.data?.run?.status;
+      return status && status !== "started" ? r.data.data.run : null;
+    });
+    check(chatDone?.status === "completed", `chat run completed (status=${chatDone?.status})`);
+
+    // GET self-heals any still-streaming assistant turn from the run row.
+    const loaded = await req("GET", `${CH}/api/chat/${conversationId}`);
+    const msgs = loaded.data?.data?.messages ?? [];
+    const userMsg = msgs.find((m) => m.role === "user");
+    const assistantMsg = msgs.find((m) => m.role === "assistant");
+    check(userMsg?.content === "Hello agent", "user message persisted");
+    check(
+      assistantMsg?.status === "complete" && typeof assistantMsg?.content === "string" && assistantMsg.content.length > 0,
+      `assistant turn finalized from the run (status=${assistantMsg?.status})`,
+    );
+
+    const chatAnalytics = await req("GET", `${CH}/api/analytics`);
+    const chatTotals = chatAnalytics.data?.data?.analytics?.totals ?? {};
+    check((chatTotals["chat.message_sent"] ?? 0) >= 1, `chat.message_sent recorded (${chatTotals["chat.message_sent"] ?? 0})`);
+
+    // The conversation must appear in the list, and delete must cascade.
+    const list = await req("GET", `${CH}/api/chat`);
+    check(
+      Array.isArray(list.data?.data?.conversations) && list.data.data.conversations.some((c) => c.id === conversationId),
+      "conversation appears in the list",
+    );
+    const del = await req("DELETE", `${CH}/api/chat/${conversationId}`);
+    check(del.status === 200 && del.data?.data?.deleted === true, "conversation deleted");
+  }
+
   finish();
 }
 
