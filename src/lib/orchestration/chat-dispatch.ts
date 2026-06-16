@@ -121,6 +121,45 @@ export async function dispatchChatTurn(
 }
 
 /**
+ * Append a turn for the "Fast (raw model)" mode: persist the user message and a
+ * `streaming` assistant placeholder WITHOUT submitting an agent run. The client
+ * streams the reply from the raw gateway (/api/orchestration/chat) and finalizes
+ * the placeholder via PATCH. No tools, no run row — just a model completion that
+ * still lands in the conversation's history.
+ */
+export function appendFastTurn(
+  conversationId: string,
+  text: string,
+): ChatTurnResult {
+  const conversation = getConversation(conversationId);
+  if (!conversation) return { ok: false, error: "conversation not found" };
+
+  const userMessage = createMessage({
+    conversationId,
+    role: "user",
+    content: text,
+    status: "complete",
+  });
+  const assistantMessage = createMessage({
+    conversationId,
+    role: "assistant",
+    content: "",
+    status: "streaming",
+  });
+  recordEvent("chat.message_sent", {
+    entityType: "chat",
+    entityId: conversationId,
+    profile: conversation.profileName ?? null,
+    metadata: { model: conversation.model ?? undefined, mode: "fast" },
+  });
+  return {
+    ok: true,
+    userMessageId: userMessage.id,
+    assistantMessageId: assistantMessage.id,
+  };
+}
+
+/**
  * Self-heal: finalize any assistant messages still `pending`/`streaming` whose
  * underlying run has reached a terminal state (e.g. the client disconnected
  * mid-stream). The background RunSync writes the run's output/usage onto the run

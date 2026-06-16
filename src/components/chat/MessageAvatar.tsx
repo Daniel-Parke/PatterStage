@@ -36,7 +36,7 @@
 // background + border, the same `flex items-center justify-center
 // shrink-0 mt-1` layout, the same `w-4 h-4 text-neon-X` icon.
 
-import { Bot, User } from "lucide-react";
+import { Bot, User, Cog } from "lucide-react";
 import type { ChatMessage } from "@/types/chat";
 
 /**
@@ -70,6 +70,12 @@ const AVATARS: Record<AVATAR_ROLE, AvatarEntry> = {
     iconClass: "text-neon-cyan",
     bgClass: "bg-neon-cyan/20",
     borderClass: "border-neon-cyan/30",
+  },
+  system: {
+    Icon: Cog,
+    iconClass: "text-neon-yellow",
+    bgClass: "bg-neon-yellow/20",
+    borderClass: "border-neon-yellow/30",
   },
 };
 

@@ -1,56 +1,100 @@
 // ═══════════════════════════════════════════════════════════════
-// useChatPage — the Chat page's stateful core (sessions + streaming).
-// Extracted verbatim from app/orchestration/chat/page.tsx so the page
-// component is a thin render shell (mirrors useMissionsPage/useModelsPage).
-// Every dependency array, ref, and effect guard is preserved byte-for-byte.
+// useChatPage — stateful core of the server-persisted agent chat.
+//
+// Conversations live on the server (chat-repository). A turn is sent via
+// POST /api/chat/[id]/messages; in "agent" mode the reply streams from the
+// run-event SSE (/api/runs/[runId]/events) — rendering deltas, reasoning,
+// tool cards, and HITL approvals — and is finalized via PATCH. "Fast" mode
+// streams a raw model reply from the gateway. An assistant turn is never left
+// as a stuck "Thinking…" placeholder: empty/aborted/failed runs resolve to an
+// explicit terminal status.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useToast } from "@/components/ui/Toast";
-import { CHAT_DEFAULT_MODEL, CHAT_MAX_SESSIONS } from "@/types/chat";
-import type { ChatMessage, ChatSession } from "@/types/chat";
+import { CHAT_DEFAULT_MODEL, CHAT_DEFAULT_MODE } from "@/types/chat";
+import type { ChatConversation, ChatMessage, ChatMode, ToolCall } from "@/types/chat";
 import {
-  loadSessions,
-  saveSessions,
-  downloadFile,
-  sessionToJson,
-  sessionToCsv,
-  sanitiseFilename,
-  createEmptySession,
-  createUserMessage,
-  createAssistantMessage,
+  fetchConversations,
+  fetchConversation,
+  createConversationApi,
+  deleteConversationApi,
+  sendMessageApi,
+  finalizeMessageApi,
+  stopRunApi,
+  resolveApprovalApi,
   toApiMessages,
   streamChatResponse,
+  openRunEventStream,
+  classifyRunEvent,
+  extractDelta,
+  extractReasoning,
+  extractCompletedOutput,
+  extractRunError,
+  parseToolEvent,
+  mergeToolCall,
+  conversationToJson,
+  conversationToCsv,
+  sanitiseFilename,
+  downloadFile,
   COPY_BTN_CLASS,
   COPY_BTN_DATA_ATTR,
 } from "@/lib/chat-utils";
 import { useGatewayHealth } from "@/hooks/useGatewayHealth";
 
-// ── Event helpers ──────────────────────────────────────────────
-
-/** Stop click bubbling for inline button-on-button handlers. */
 const stopEvent = (e?: React.MouseEvent) => e?.stopPropagation();
 
+let localSeq = 0;
+function localId(): string {
+  return `local_${Date.now()}_${localSeq++}`;
+}
+function localMessage(
+  conversationId: string,
+  role: ChatMessage["role"],
+  content: string,
+  status: ChatMessage["status"],
+): ChatMessage {
+  const ts = new Date().toISOString();
+  return {
+    id: localId(),
+    conversationId,
+    role,
+    content,
+    reasoning: null,
+    toolCalls: null,
+    runId: null,
+    status,
+    error: null,
+    createdAt: ts,
+    updatedAt: ts,
+  };
+}
+
+interface PendingApproval {
+  runId: string;
+  toolName: string;
+}
+
 export function useChatPage() {
-  // `toastElement` is the portal-rendered toast UI — without rendering it
-  // in the JSX (just below the closing `</div>` of the page body), every
-  // `showToast(...)` call would be silent. Both the destructure and the
-  // render are required.
   const { showToast, toastElement } = useToast();
 
-  // Sessions — initialized from localStorage
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<ChatConversation[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [mode, setMode] = useState<ChatMode>(CHAT_DEFAULT_MODE);
   const [model, setModel] = useState(CHAT_DEFAULT_MODEL);
+  const [pendingApproval, setPendingApproval] = useState<PendingApproval | null>(null);
 
-  // Gateway health, models, and agent default — all in one hook.
-  // `gatewayModelIds` is intentionally NOT destructured here — the
-  // chat dropdown only shows registered models (the registry is the
-  // source of truth). The hook still fetches and exposes the gateway
-  // list internally for the `modelsError` badge when the gateway is
-  // offline, but the chat page no longer surfaces those IDs.
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const esRef = useRef<EventSource | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const streamGenRef = useRef(0);
+
   const {
     online: gatewayOnline,
     authConfigured: gatewayAuthConfigured,
@@ -61,272 +105,356 @@ export function useChatPage() {
     modelsLoading,
   } = useGatewayHealth();
 
-  // Current messages
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [input, setInput] = useState("");
-  const [isStreaming, setIsStreaming] = useState(false);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const streamGenRef = useRef(0);
-
-  // ── Helpers for session state mutation ──────────────────────
-
-  /**
-   * Generalised session-by-id updater. Updates the session matching
-   * `sessionId` by applying the `updater` to its full record, and
-   * stamps `updated_at = Date.now()`. Sessions with a different id
-   * pass through unchanged.
-   *
-   * The 2 remaining inline `setSessions((prev) => prev.map((s) =>
-   * s.id === X ? { ...s, ...FIELD } : s))` sites (model change +
-   * new-session title set) collapse to a single call shape. The
-   * pre-existing `updateSessionMessages` is a 1-line wrapper that
-   * adapts the message-only updater to this generalised form — so the
-   * helper has 2 direct callers (model + title) and 1 indirect caller
-   * (`updateSessionMessages`), with zero external change in semantics.
-   */
-  const updateSession = useCallback(
-    (sessionId: string, updater: (session: ChatSession) => ChatSession) => {
-      setSessions((prev) =>
-        prev.map((s) =>
-          s.id === sessionId
-            ? { ...updater(s), updated_at: Date.now() }
-            : s,
-        ),
-      );
+  // ── Local message helpers ───────────────────────────────────
+  const updateLocalMessage = useCallback(
+    (id: string, patch: Partial<ChatMessage>) => {
+      setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)));
     },
     [],
   );
 
-  const updateSessionMessages = useCallback(
-    (sessionId: string, updater: (messages: ChatMessage[]) => ChatMessage[]) => {
-      updateSession(sessionId, (s) => ({ ...s, messages: updater(s.messages) }));
-    },
-    [updateSession],
-  );
-
-  // Prepend a brand-new session to the top of the list and make it the
-  // active session. The 2-line pattern `setSessions((prev) => [newSession,
-  // ...prev]); setActiveSessionId(newSession.id);` appears at 2 sites —
-  // `handleNewChat` (the "New Chat" button) and `handleSend` (the
-  // first-message path that lazily creates a session when there is no
-  // active one yet). Centralising the 2-setter sequence here keeps the
-  // 2 sites in lockstep if a future "also clear the streaming state" or
-  // "also persist a session-created event" extension lands. The
-  // useState setters are stable, so the `useCallback` deps array is
-  // `[]`. Sister to the `closeModelEditor` / `closeFallbackModal` /
-  // `closeAddCustom` / `closeSyncModal` 1- and 2-setter close-callback
-  // extractions in session 196 (List 4) — same Rule of Two + page-local
-  // useCallback shape. The success-then-activate edge (an existing
-  // session is reused, not newly created) is the "no-op" branch of the
-  // helper and is intentionally NOT migrated: `handleSend` only calls
-  // this helper inside its `if (newSession)` branch.
-  const prependAndActivateSession = useCallback((newSession: ChatSession) => {
-    setSessions((prev) => [newSession, ...prev]);
-    setActiveSessionId(newSession.id);
+  const closeStream = useCallback(() => {
+    esRef.current?.close();
+    esRef.current = null;
+    abortRef.current?.abort();
+    abortRef.current = null;
   }, []);
 
-  // ── Load persisted sessions from localStorage on mount ─────
-  useEffect(() => {
-    const saved = loadSessions();
-    if (saved.length > 0) {
-      setSessions(saved);
-      setActiveSessionId(saved[0].id);
-    }
+  // ── Load conversations on mount ─────────────────────────────
+  const loadConversations = useCallback(async () => {
+    const list = await fetchConversations();
+    setConversations(list);
+    return list;
   }, []);
 
-  // ── Persist sessions to localStorage on every change ─────────
-  // The `if (sessions.length === 0) return;` guard is load-bearing: on
-  // first mount the loadSessions effect above populates `sessions`
-  // asynchronously (next tick), so the *very first* render of this effect
-  // sees `sessions = []`. Without the guard, we'd overwrite localStorage
-  // with `[]` before the load effect ran, wiping persisted data. After
-  // the first save, sessions is non-empty, so the guard is a no-op and
-  // every subsequent change (create/delete/rename/stream delta) is
-  // persisted normally.
   useEffect(() => {
-    if (sessions.length === 0) return;
-    saveSessions(sessions);
-  }, [sessions]);
+    void (async () => {
+      const list = await loadConversations();
+      if (list.length > 0) setActiveId(list[0].id);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // ── Restore per-session model when switching sessions ────────
-  // The previous dependency `[activeSessionId, activeSession]` re-fired this
-  // effect on EVERY session mutation (including message updates), because
-  // `activeSession` is a fresh object reference each time `sessions` changes.
-  // The effect is a no-op when the model is unchanged, but the call itself
-  // still ran setModel() on every streamed delta. Narrowing the dependency
-  // to the actual field we read (the model) keeps the call to once per
-  // session switch + once per explicit model change.
-  // NOTE: the previous code used `useMemo` here, but that subtly changed
-  // the auto-scroll effect's dependency stability (see session 94 for
-  // the full analysis). Reverted to the original inline `find` so the
-  // downstream `messages` `useMemo` re-fires on every render — matching
-  // the pre-session-94 scroll behavior exactly. The remaining inline
-  // `sessions.find` site (this line) is the canonical `activeSession`
-  // derivation; the 2 other `sessions.find` call sites that used to
-  // exist (the JSX empty-state title and `handleSend`'s `existing`
-  // lookup) now reuse this `activeSession` value directly. Promoting
-  // THIS line to a `useMemo` would be a behavior change (scroll effect
-  // dependency stability), not a byte-equivalent rename.
-  const activeSession = sessions.find((s) => s.id === activeSessionId);
-  const activeSessionModel = activeSession?.model;
-  const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);
+  // ── Load the active conversation's messages when it changes ──
   useEffect(() => {
-    if (activeSessionModel !== undefined) {
-      setModel(activeSessionModel || CHAT_DEFAULT_MODEL);
+    if (!activeId) {
+      setMessages([]);
+      return;
     }
-  }, [activeSessionId, activeSessionModel]);
+    let cancelled = false;
+    void (async () => {
+      const loaded = await fetchConversation(activeId);
+      if (cancelled || !loaded) return;
+      setMessages(loaded.messages);
+      setModel(loaded.conversation.model || CHAT_DEFAULT_MODEL);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeId]);
 
-  // Auto-scroll on new messages (only when current session's messages change)
+  // Auto-scroll on new/updated messages.
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // ── Model change ────────────────────────────────────────────
-  const handleModelChange = useCallback(
-    (nextModel: string) => {
-      setModel(nextModel);
-      if (activeSessionId) {
-        updateSession(activeSessionId, (s) => ({ ...s, model: nextModel }));
-      }
-    },
-    [activeSessionId, updateSession],
-  );
+  // Cleanup any live stream on unmount.
+  useEffect(() => closeStream, [closeStream]);
 
-  // ── New chat (creates session immediately) ─────────────────
-  const handleNewChat = useCallback(() => {
-    const newSession = createEmptySession(model);
-    prependAndActivateSession(newSession);
+  const refreshActiveConversation = useCallback(async () => {
+    if (!activeId) return;
+    const loaded = await fetchConversation(activeId);
+    if (loaded) setMessages(loaded.messages);
+  }, [activeId]);
+
+  // ── New conversation ────────────────────────────────────────
+  const handleNewChat = useCallback(async () => {
+    closeStream();
+    const conversation = await createConversationApi({ title: "New Chat", model });
+    if (!conversation) {
+      showToast("Failed to start a new conversation", "error");
+      return;
+    }
+    setConversations((prev) => [conversation, ...prev]);
+    setActiveId(conversation.id);
+    setMessages([]);
     setInput("");
     inputRef.current?.focus();
-  }, [model, prependAndActivateSession]);
+  }, [closeStream, model, showToast]);
 
-  // ── Delete session ─────────────────────────────────────────
-  const handleDeleteSession = useCallback(
-    (id: string, e?: React.MouseEvent) => {
-      stopEvent(e);
-      abortControllerRef.current?.abort();
-      // We can't call `setActiveSessionId` directly inside the
-      // `setSessions` updater — React disallows setState-during-setState
-      // (the updater is supposed to be a pure function of `prev`). Using
-      // `flushSync` would force a sync flush and is even more invasive, so
-      // we just compute the next-id eagerly from the current `sessions`
-      // snapshot and call both setters synchronously outside the updater.
-      // This is byte-equivalent to the old `setTimeout(..., 0)` trick
-      // (which was the same thing — defer the setState to escape the
-      // updater scope) but without the microtask deferral.
-      setSessions((prev) => prev.filter((s) => s.id !== id));
-      if (id === activeSessionId) {
-        const remaining = sessions.filter((s) => s.id !== id);
-        setActiveSessionId(remaining.length > 0 ? remaining[0].id : null);
-      }
-      showToast("Session deleted", "success");
+  const handleSelectConversation = useCallback(
+    (id: string) => {
+      if (id === activeId) return;
+      closeStream();
+      setIsStreaming(false);
+      setPendingApproval(null);
+      setActiveId(id);
     },
-    [activeSessionId, sessions, showToast],
+    [activeId, closeStream],
   );
 
-  // ── Download session ───────────────────────────────────────
-  const handleDownloadSession = useCallback(
-    (s: ChatSession, format: "json" | "csv", e?: React.MouseEvent) => {
+  // ── Delete conversation ─────────────────────────────────────
+  const handleDeleteConversation = useCallback(
+    async (id: string, e?: React.MouseEvent) => {
       stopEvent(e);
-      // Filename slug via the shared `sanitiseFilename` helper (was an
-      // inline `replace(/[^a-zA-Z0-9_-]/g, "_")` regex). The helper lives
-      // in `@/lib/chat-utils` next to `sessionToJson` / `sessionToCsv` so
-      // any future "export as Markdown / PDF" feature can reuse it.
-      const safeTitle = sanitiseFilename(s.title);
-      const timestamp = Date.now();
+      if (id === activeId) closeStream();
+      const { ok, error } = await deleteConversationApi(id);
+      if (!ok) {
+        showToast(error || "Failed to delete conversation", "error");
+        return;
+      }
+      setConversations((prev) => {
+        const remaining = prev.filter((c) => c.id !== id);
+        if (id === activeId) setActiveId(remaining.length > 0 ? remaining[0].id : null);
+        return remaining;
+      });
+      showToast("Conversation deleted", "success");
+    },
+    [activeId, closeStream, showToast],
+  );
+
+  // ── Download conversation ───────────────────────────────────
+  const handleDownloadConversation = useCallback(
+    (conversation: ChatConversation, format: "json" | "csv", e?: React.MouseEvent) => {
+      stopEvent(e);
+      const safeTitle = sanitiseFilename(conversation.title);
+      const ts = Date.now();
       if (format === "json") {
-        downloadFile(sessionToJson(s), `${safeTitle}_${timestamp}.json`, "application/json");
-        showToast("Session exported as JSON", "success");
+        downloadFile(conversationToJson(conversation, messages), `${safeTitle}_${ts}.json`, "application/json");
+        showToast("Conversation exported as JSON", "success");
       } else {
-        downloadFile(sessionToCsv(s), `${safeTitle}_${timestamp}.csv`, "text/csv");
-        showToast("Session exported as CSV", "success");
+        downloadFile(conversationToCsv(messages), `${safeTitle}_${ts}.csv`, "text/csv");
+        showToast("Conversation exported as CSV", "success");
       }
     },
-    [showToast],
+    [messages, showToast],
   );
 
-  // ── Send message ───────────────────────────────────────────
+  // ── Stream an agent run's events into the assistant message ──
+  const streamAgentRun = useCallback(
+    (conversationId: string, runId: string, assistantId: string, gen: number) => {
+      const acc = { content: "", reasoning: "", tools: [] as ToolCall[] };
+      let finalized = false;
+
+      const finalize = (
+        status: ChatMessage["status"],
+        content: string,
+        error?: string,
+      ) => {
+        if (finalized || gen !== streamGenRef.current) return;
+        finalized = true;
+        esRef.current?.close();
+        esRef.current = null;
+        updateLocalMessage(assistantId, {
+          content,
+          status,
+          error: error ?? null,
+          reasoning: acc.reasoning || null,
+          toolCalls: acc.tools.length > 0 ? acc.tools : null,
+        });
+        setIsStreaming(false);
+        setPendingApproval(null);
+        void finalizeMessageApi(conversationId, assistantId, {
+          content,
+          reasoning: acc.reasoning || undefined,
+          toolCalls: acc.tools.length > 0 ? acc.tools : undefined,
+          status,
+          error: error ?? undefined,
+        });
+        void loadConversations();
+      };
+
+      const es = openRunEventStream(runId, (type, data) => {
+        if (gen !== streamGenRef.current) return;
+        switch (classifyRunEvent(type)) {
+          case "delta": {
+            const d = extractDelta(data);
+            if (d) {
+              acc.content += d;
+              updateLocalMessage(assistantId, { content: acc.content, status: "streaming" });
+            }
+            break;
+          }
+          case "reasoning": {
+            const r = extractReasoning(data);
+            if (r) {
+              acc.reasoning += r;
+              updateLocalMessage(assistantId, { reasoning: acc.reasoning });
+            }
+            break;
+          }
+          case "tool": {
+            const tc = parseToolEvent(type, data);
+            acc.tools = mergeToolCall(acc.tools, tc);
+            updateLocalMessage(assistantId, { toolCalls: [...acc.tools] });
+            if (tc.status === "approval_required") {
+              setPendingApproval({ runId, toolName: tc.name });
+            }
+            break;
+          }
+          case "completed":
+            finalize("complete", acc.content || extractCompletedOutput(data));
+            break;
+          case "failed":
+            finalize("failed", acc.content, extractRunError(data));
+            break;
+          case "cancelled":
+            finalize("cancelled", acc.content || "");
+            break;
+          case "done":
+            finalize("complete", acc.content);
+            break;
+          default:
+            break;
+        }
+      });
+      esRef.current = es;
+      es.onerror = () => {
+        if (finalized || gen !== streamGenRef.current) return;
+        // The proxy closes the socket after "done"; if we haven't finalized, the
+        // run may still be completing — reconcile from the server (it self-heals
+        // the message from the run row) rather than guessing a failure.
+        es.close();
+        esRef.current = null;
+        setIsStreaming(false);
+        finalized = true;
+        window.setTimeout(() => {
+          if (gen === streamGenRef.current) void refreshActiveConversation();
+        }, 1500);
+      };
+    },
+    [updateLocalMessage, loadConversations, refreshActiveConversation],
+  );
+
+  // ── Send ────────────────────────────────────────────────────
   const handleSend = useCallback(async () => {
     const text = input.trim();
     if (!text) return;
-
-    // Abort any existing stream
-    abortControllerRef.current?.abort();
-    const gen = ++streamGenRef.current;
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    // Don't send if gateway is confirmed offline
     if (gatewayOnline === false) {
       showToast("Gateway is offline — start it with: hermes gateway start", "error");
       return;
     }
 
-    // Resolve the target session — creating one on demand if there is no
-    // active session yet. The `existing` lookup decides (a) whether we
-    // need to insert a brand-new session and (b) what prior-message
-    // history to send to the API (empty for new sessions, full history
-    // for existing ones). The top-level `activeSession` (line 134) is
-    // already the same `sessions.find` — reusing it is byte-equivalent
-    // (the prior `activeSessionId ? find : undefined` ternary collapses
-    // to `activeSession ?? undefined`, which is the same when activeSession
-    // is already undefined for the null-id case).
-    const existing = activeSession;
-    const newSession = !existing ? createEmptySession(model) : undefined;
-    const targetSessionId = existing?.id ?? newSession!.id;
+    closeStream();
+    const gen = ++streamGenRef.current;
 
-    if (newSession) {
-      prependAndActivateSession(newSession);
+    // Ensure a conversation exists.
+    let conversationId = activeId;
+    if (!conversationId) {
+      const conversation = await createConversationApi({ title: text.slice(0, 50), model });
+      if (!conversation) {
+        showToast("Failed to start a new conversation", "error");
+        return;
+      }
+      conversationId = conversation.id;
+      setConversations((prev) => [conversation, ...prev]);
+      setActiveId(conversation.id);
+      setMessages([]);
     }
 
-    // Create user and assistant messages
-    const userMessage = createUserMessage(text);
-    const assistantMessage = createAssistantMessage();
-    const assistantId = assistantMessage.id;
-
-    // Optimistically add messages
-    updateSessionMessages(targetSessionId, (prev) => [
-      ...prev,
-      userMessage,
-      assistantMessage,
-    ]);
-
-    // If new session, set the title from first message
-    if (newSession) {
-      updateSession(targetSessionId, (s) => ({ ...s, title: text.slice(0, 50) }));
-    }
-
+    // Optimistic local user + assistant placeholder.
+    const userMsg = localMessage(conversationId, "user", text, "complete");
+    const assistantMsg = localMessage(conversationId, "assistant", "", "streaming");
+    setMessages((prev) => [...prev, userMsg, assistantMsg]);
+    const priorMessages = messages;
     setInput("");
     setIsStreaming(true);
 
-    // Build API messages (existing sessions include full history; new
-    // sessions send only the new user message). `existing` was the lookup
-    // we did above, so its `messages` field is the authoritative history.
-    const priorMessages = existing?.messages ?? [];
-    const apiMessages = toApiMessages(priorMessages, text);
+    const send = await sendMessageApi(conversationId, text, mode);
+    if (gen !== streamGenRef.current) return; // superseded
+    if (!send.ok || !send.result) {
+      updateLocalMessage(assistantMsg.id, {
+        status: "failed",
+        error: send.error || "Failed to send message",
+      });
+      setIsStreaming(false);
+      showToast(send.error || "Failed to send message", "error");
+      return;
+    }
 
-    // Stream the response (errors handled via onError callback)
-    await streamChatResponse(
-      apiMessages,
-      model,
-      controller,
-      (delta) => {
-        updateSessionMessages(targetSessionId!, (prev) =>
-          prev.map((m) =>
-            m.id === assistantId ? { ...m, content: m.content + delta } : m,
-          ),
-        );
-      },
-      (errMsg) => showToast(errMsg, "error"),
+    // Adopt the server-assigned ids so finalize PATCH + run-events target the
+    // real rows.
+    const { runId, assistantMessageId, userMessageId } = send.result;
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.id === userMsg.id) return { ...m, id: userMessageId };
+        if (m.id === assistantMsg.id) return { ...m, id: assistantMessageId, runId: runId ?? null };
+        return m;
+      }),
     );
 
-    if (gen === streamGenRef.current) {
+    if (mode === "agent" && runId) {
+      streamAgentRun(conversationId, runId, assistantMessageId, gen);
+    } else {
+      // Fast mode — stream a raw model reply from the gateway.
+      const controller = new AbortController();
+      abortRef.current = controller;
+      const acc = { content: "" };
+      await streamChatResponse(
+        toApiMessages(priorMessages, text),
+        model,
+        controller,
+        (delta) => {
+          if (gen !== streamGenRef.current) return;
+          acc.content += delta;
+          updateLocalMessage(assistantMessageId, { content: acc.content, status: "streaming" });
+        },
+        (errMsg) => showToast(errMsg, "error"),
+      );
+      if (gen !== streamGenRef.current) return;
+      const status = acc.content ? "complete" : "failed";
+      updateLocalMessage(assistantMessageId, {
+        content: acc.content,
+        status,
+        error: acc.content ? null : "No response",
+      });
       setIsStreaming(false);
+      abortRef.current = null;
+      void finalizeMessageApi(conversationId, assistantMessageId, { content: acc.content, status });
+      void loadConversations();
     }
-  }, [input, activeSession, model, gatewayOnline, showToast, updateSession, updateSessionMessages, prependAndActivateSession]);
+  }, [
+    input,
+    activeId,
+    messages,
+    mode,
+    model,
+    gatewayOnline,
+    closeStream,
+    showToast,
+    updateLocalMessage,
+    streamAgentRun,
+    loadConversations,
+  ]);
 
-  // ── Keyboard shortcuts ─────────────────────────────────────
+  // ── Stop the active run ─────────────────────────────────────
+  const handleStop = useCallback(async () => {
+    streamGenRef.current++; // supersede any in-flight stream callbacks
+    closeStream();
+    setIsStreaming(false);
+    setPendingApproval(null);
+    if (activeId) {
+      await stopRunApi(activeId);
+      await refreshActiveConversation();
+    }
+  }, [activeId, closeStream, refreshActiveConversation]);
+
+  // ── Resolve a tool approval (HITL) ──────────────────────────
+  const handleApproval = useCallback(
+    async (approved: boolean) => {
+      if (!activeId || !pendingApproval) return;
+      const { ok, error } = await resolveApprovalApi(activeId, pendingApproval.runId, approved);
+      if (!ok) {
+        showToast(error || "Failed to resolve approval", "error");
+        return;
+      }
+      setPendingApproval(null);
+      showToast(approved ? "Tool approved" : "Tool denied", "success");
+    },
+    [activeId, pendingApproval, showToast],
+  );
+
+  // ── Keyboard ────────────────────────────────────────────────
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -337,36 +465,24 @@ export function useChatPage() {
     [handleSend],
   );
 
-  // ── Copy code block handler ────────────────────────────────
-  // The button class is matched by name (event delegation — the
-  // `renderMarkdown` helper injects the buttons via
-  // `dangerouslySetInnerHTML`, so per-button React `onClick` props
-  // aren't an option). The class string lives in the
-  // `COPY_BTN_CLASS` constant in `@/lib/chat-utils` so a rename
-  // in one file can't silently desync from the other (the prior
-  // magic-string form was the source-pattern test at
-  // `tests/unit/copy-btn-magic-string-source-pattern.test.ts`).
+  const handleModelChange = useCallback((next: string) => setModel(next), []);
+  const handleModeChange = useCallback((next: ChatMode) => setMode(next), []);
+
+  // ── Copy-code-block delegation (renderMarkdown injects the buttons) ──
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (target.classList.contains(COPY_BTN_CLASS)) {
         const code = target.getAttribute(COPY_BTN_DATA_ATTR) || "";
-        navigator.clipboard.writeText(code).then(() => {
-          showToast("Code copied", "success");
-        });
+        void navigator.clipboard.writeText(code).then(() => showToast("Code copied", "success"));
       }
     };
     document.addEventListener("click", handler);
     return () => document.removeEventListener("click", handler);
   }, [showToast]);
 
-  // Only show sessions with messages in the sidebar
-  const sessionList = useMemo(
-    () => sessions.filter((s) => s.messages.length > 0).slice(0, CHAT_MAX_SESSIONS),
-    [sessions],
-  );
-
-  const hasActiveSession = activeSession !== undefined;
+  const activeConversation = conversations.find((c) => c.id === activeId);
+  const hasActiveConversation = activeConversation !== undefined;
 
   return {
     toastElement,
@@ -377,15 +493,18 @@ export function useChatPage() {
     modelLabels,
     modelsLoading,
     modelsError,
-    // sessions
-    sessionList,
-    activeSession,
-    activeSessionId,
-    setActiveSessionId,
-    hasActiveSession,
+    // mode toggle
+    mode,
+    handleModeChange,
+    // conversations
+    conversations,
+    activeConversation,
+    activeId,
+    hasActiveConversation,
+    handleSelectConversation,
     handleNewChat,
-    handleDeleteSession,
-    handleDownloadSession,
+    handleDeleteConversation,
+    handleDownloadConversation,
     // gateway banners
     gatewayOnline,
     gatewayAuthConfigured,
@@ -393,12 +512,14 @@ export function useChatPage() {
     // messages + streaming
     messages,
     isStreaming,
+    pendingApproval,
+    handleApproval,
     messagesEndRef,
     inputRef,
     input,
     setInput,
     handleKeyDown,
     handleSend,
-    abortControllerRef,
+    handleStop,
   };
 }
