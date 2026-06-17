@@ -70,7 +70,7 @@
 
     "@types/js-yaml": "^4.0.9",
 
-    "better-sqlite3": "^12.8.0",
+    "better-sqlite3": "^12.11.1",
 
     "class-variance-authority": "^0.7.1",
 
