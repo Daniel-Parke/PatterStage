@@ -6,6 +6,7 @@
 export const APP_NAV_ROUTES: readonly string[] = [
   "/",
   "/insights",
+  "/benchmarks",
   "/operations/agents",
   "/operations/tools",
   "/config",

@@ -236,6 +236,60 @@ async function main() {
     check(del.status === 200 && del.data?.data?.deleted === true, "conversation deleted");
   }
 
+  // ── 10. Benchmark run over the runtime (agent target) ─────
+  // Drive the headless benchmark engine end-to-end: list suites → start an
+  // agent run against the default profile → poll to terminal → assert the
+  // summary + per-item results + the benchmark.* analytics landed. Scores are
+  // irrelevant here (the mock agent won't match answer keys) — this proves the
+  // pipeline (submitRun → grade → aggregate → persist) works against real Hermes.
+  console.log("10. Benchmark engine over the runtime");
+  const suitesRes = await req("GET", `${CH}/api/benchmarks/suites`);
+  const suites = suitesRes.data?.data?.suites ?? [];
+  check(suitesRes.status === 200 && suites.length >= 1, `benchmark suites listed (${suites.length})`);
+  const profilesRes = await req("GET", `${CH}/api/agent/profiles`);
+  const benchProfile = profilesRes.data?.data?.profiles?.[0]?.id;
+  check(Boolean(benchProfile), `agent profile available for benchmark (${benchProfile ?? "none"})`);
+
+  if (suites.length >= 1 && benchProfile) {
+    const startBench = await req("POST", `${CH}/api/benchmarks/runs`, {
+      suiteKey: suites[0].key,
+      mode: "single",
+      targetKind: "agent",
+      targetRef: benchProfile,
+      repeats: 1,
+    });
+    const benchRunId = startBench.data?.data?.run?.id;
+    check(startBench.status === 201 && Boolean(benchRunId), `benchmark run started (${benchRunId ?? "none"})`);
+
+    if (benchRunId) {
+      const benchDone = await pollUntil(
+        async () => {
+          const r = await req("GET", `${CH}/api/benchmarks/runs/${benchRunId}`);
+          const status = r.data?.data?.run?.status;
+          return status && status !== "pending" && status !== "running" ? r.data.data : null;
+        },
+        { tries: 120, delayMs: 1000 },
+      );
+      check(benchDone?.run?.status === "completed", `benchmark run completed (status=${benchDone?.run?.status})`);
+      check(
+        benchDone?.run?.summary != null && typeof benchDone.run.summary.overallRating === "number",
+        `benchmark summary computed (rating=${benchDone?.run?.summary?.overallRating})`,
+      );
+      check((benchDone?.run?.summary?.itemsRun ?? 0) >= 1, `benchmark scored items (${benchDone?.run?.summary?.itemsRun ?? 0})`);
+      check(Array.isArray(benchDone?.results) && benchDone.results.length >= 1, `per-item results persisted (${benchDone?.results?.length ?? 0})`);
+
+      const benchAnalytics = await req("GET", `${CH}/api/analytics`);
+      const benchTotals = benchAnalytics.data?.data?.analytics?.totals ?? {};
+      check((benchTotals["benchmark.completed"] ?? 0) >= 1, `benchmark.completed recorded (${benchTotals["benchmark.completed"] ?? 0})`);
+
+      const board = await req("GET", `${CH}/api/benchmarks/leaderboard?suite=${suites[0].key}`);
+      check(
+        board.status === 200 && Array.isArray(board.data?.data?.entries) && board.data.data.entries.some((e) => e.targetRef === benchProfile),
+        "agent appears on the benchmark leaderboard",
+      );
+    }
+  }
+
   finish();
 }
 

@@ -19,6 +19,7 @@ import { applyLegacyColumnRepair } from "./db/apply-legacy-column-repair";
 import { applyDropGameTablesMigration } from "./db/apply-drop-game-tables-migration";
 import { applyAnalyticsEventsMigration } from "./db/apply-analytics-events-migration";
 import { applyChatMigration } from "./db/apply-chat-migration";
+import { applyBenchmarksMigration } from "./db/apply-benchmarks-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -179,6 +180,9 @@ export function runMigrations(database: Database.Database): void {
   // Agent-chat persistence (server-side conversations + messages, mapped to
   // Hermes sessions). Idempotent CREATE ... IF NOT EXISTS at schema_version 13.
   applyChatMigration(database, migrationsDir);
+  // Agent benchmarking runs + per-item results (feeds the Agent Rating axis +
+  // leaderboard). Idempotent CREATE ... IF NOT EXISTS at schema_version 14.
+  applyBenchmarksMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

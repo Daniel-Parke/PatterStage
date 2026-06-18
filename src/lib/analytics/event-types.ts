@@ -24,6 +24,9 @@ export const ANALYTICS_EVENT_TYPES = [
   "schedule.fired",
   "chat.message_sent",
   "model.configured",
+  "benchmark.started",
+  "benchmark.completed",
+  "benchmark.failed",
 ] as const;
 
 export type AnalyticsEventType = (typeof ANALYTICS_EVENT_TYPES)[number];
@@ -38,4 +41,5 @@ export type AnalyticsEntityType =
   | "personality"
   | "schedule"
   | "chat"
-  | "model";
+  | "model"
+  | "benchmark";

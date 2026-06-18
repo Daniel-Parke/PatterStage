@@ -69,7 +69,11 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     expect(tableNames(db)).toEqual(
       expect.arrayContaining(["chat_conversations", "chat_messages"]),
     );
-    expect(getSchemaVersion(db)).toBe(13);
+    // Benchmark tables land via the wired v14 applier (same footgun guard).
+    expect(tableNames(db)).toEqual(
+      expect.arrayContaining(["benchmark_runs", "benchmark_item_results"]),
+    );
+    expect(getSchemaVersion(db)).toBe(14);
     // Pre-existing data survived the additive upgrade (cron job + mission).
     expect(
       (db.prepare("SELECT COUNT(*) c FROM cron_jobs").get() as { c: number }).c,
@@ -91,7 +95,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(13);
+    expect(getSchemaVersion(db)).toBe(14);
     db.close();
   });
 });

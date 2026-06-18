@@ -9,6 +9,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { useCallback, type ReactNode } from "react";
+import Link from "next/link";
 import {
   Activity,
   CheckCircle2,
@@ -22,10 +23,11 @@ import {
   CalendarClock,
 } from "lucide-react";
 import { useStats } from "@/hooks/useStats";
+import { useLeaderboard } from "@/hooks/useBenchmarks";
 import { useCountUp } from "@/hooks/useCountUp";
 import { AreaTrend, ActivityHeatmap, Donut, Sparkline, ProgressRing } from "@/components/viz";
 import { neon, neonAlpha, type NeonColor } from "@/components/viz/colors";
-import { LevelBadge, StreakFlame, AchievementShowcase } from "@/components/achievements";
+import { LevelBadge, StreakFlame, AchievementShowcase, AgentRatingBadge } from "@/components/achievements";
 import { useToast } from "@/components/ui/Toast";
 import { useAchievementUnlocks } from "@/hooks/useAchievementUnlocks";
 import type { Achievement } from "@/lib/stats/derive";
@@ -116,6 +118,9 @@ function Skeleton() {
 
 export default function CommandCenter() {
   const { stats, isLoading } = useStats();
+  // Agent Rating axis (distinct from operator XP): show the top-rated agent.
+  const { entries: leaderboard } = useLeaderboard();
+  const topAgent = leaderboard[0] ?? null;
   // The dashboard is always-on, so CommandCenter is the SOLE owner of the
   // achievement-unlock toast (the Insights grid renders read-only). First poll
   // seeds silently; each id fires once.
@@ -151,6 +156,13 @@ export default function CommandCenter() {
             <LevelBadge level={level} color="cyan" />
             <div className="h-10 w-px bg-white/10" />
             <StreakFlame current={streak.current} longest={streak.longest} />
+            <div className="hidden h-10 w-px bg-white/10 lg:block" />
+            <Link href="/benchmarks" className="hidden transition hover:opacity-90 lg:block" title="Agent Rating — open Benchmarks">
+              <AgentRatingBadge
+                rating={topAgent?.rating ?? null}
+                label={topAgent ? topAgent.targetLabel : "Agent Rating"}
+              />
+            </Link>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <StatTile icon={Activity} label="Active Runs" value={runs.active} color="green" />
