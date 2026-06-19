@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import ProfilesDriftBanner from "@/components/profiles/ProfilesDriftBanner";
 import AgentPerformanceStrip from "@/components/agents/AgentPerformanceStrip";
+import AgentBenchmarkPanel from "@/components/agents/AgentBenchmarkPanel";
 import ProfileSyncBar from "@/components/profiles/ProfileSyncBar";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -474,6 +475,11 @@ export default function BehaviourPage() {
                       Delete profile
                     </Button>
                   )}
+                </div>
+
+                {/* Capability: experience level + Agent Rating + stat radar. */}
+                <div className="p-4 border-b border-white/10">
+                  <AgentBenchmarkPanel key={selectedProfile.id} profileId={selectedProfile.id} />
                 </div>
 
                 <div className="p-4 border-b border-white/10">
