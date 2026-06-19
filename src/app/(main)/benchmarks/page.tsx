@@ -351,6 +351,18 @@ export default function BenchmarksPage() {
           />
         ) : null}
 
+        {/* Empty-catalog guidance — toggled on but nothing seeded to equip. */}
+        {aug.skills && catalog.skills.length === 0 ? (
+          <p className="mt-2 text-[11px] text-white/30">
+            No seed skills available yet — the bundled skill pack hasn&apos;t been seeded.
+          </p>
+        ) : null}
+        {aug.tools && catalog.tools.length === 0 ? (
+          <p className="mt-2 text-[11px] text-white/30">
+            No seed tool bundles available yet — the tool catalog hasn&apos;t been seeded.
+          </p>
+        ) : null}
+
         <div className="mt-4 flex items-center gap-3">
           <button
             onClick={runComparison}
