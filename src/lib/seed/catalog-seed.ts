@@ -14,6 +14,10 @@ import {
   platformToolsetsFromJson,
 } from "../profile-config-builder";
 import { upsertCatalogTemplate, getCatalogTemplate } from "../catalog-template-repository";
+import { upsertSkill, getSkill } from "../skills-repository";
+import { upsertToolBundle, getToolBundle } from "../tool-catalog-repository";
+import { upsertMemoryFact } from "../memory-catalog-repository";
+import { pushSkillToHermes } from "../hermes-profile-sync";
 import { db } from "../db";
 import { CH_DATA_DIR } from "../paths";
 import { pushProfileToHermes, pushAllProfiles, pushRootToHermes } from "../hermes-profile-sync";
@@ -35,6 +39,9 @@ function resolveRepoRoot(): string {
 
 const REPO_ROOT = resolveRepoRoot();
 const PROFILES_MANIFEST = join(REPO_ROOT, "data/seed/profiles/manifest.json");
+const SKILLS_MANIFEST = join(REPO_ROOT, "data/seed/skills/manifest.json");
+const TOOLS_MANIFEST = join(REPO_ROOT, "data/seed/tools/manifest.json");
+const MEMORIES_MANIFEST = join(REPO_ROOT, "data/seed/memories/manifest.json");
 const TEMPLATE_PACK = join(
   REPO_ROOT,
   "data/seed/template-packs/control-hub-professional-v1.json",
@@ -43,7 +50,7 @@ const TEMPLATE_PACK = join(
 export type SeedMode = "merge" | "replace";
 
 export interface SeedTarget {
-  target: "all" | "root" | "profiles" | "templates" | "categories";
+  target: "all" | "root" | "profiles" | "templates" | "categories" | "skills" | "tools" | "memories";
   slug?: string;
   templateId?: string;
   mode: SeedMode;
@@ -57,6 +64,9 @@ export interface SeedResult {
   root: number;
   templates: number;
   categories: number;
+  skills: number;
+  tools: number;
+  memories: number;
   pushed: number;
 }
 
@@ -269,6 +279,113 @@ function seedProfiles(mode: SeedMode, slugFilter?: string): number {
   return count;
 }
 
+interface SkillManifestEntry {
+  skillKey: string;
+  displayName: string;
+  description: string;
+  category: string;
+}
+interface SkillManifest {
+  version: string;
+  skills: SkillManifestEntry[];
+}
+
+/**
+ * Seed the canonical "standard" skill pack (source='bundled') so a fresh install
+ * has a fair-test default set the user can toggle on/off in benchmarks. Merge
+ * mode preserves any existing skill of the same key (user edits win).
+ */
+function seedSkills(mode: SeedMode): number {
+  if (!existsSync(SKILLS_MANIFEST)) return 0;
+  const manifest = JSON.parse(readFileSync(SKILLS_MANIFEST, "utf-8")) as SkillManifest;
+  let count = 0;
+  for (const entry of manifest.skills) {
+    if (mode === "merge" && getSkill(entry.skillKey)) continue;
+    const contentPath = join(REPO_ROOT, "data/seed/skills", entry.skillKey, "SKILL.md");
+    const content = existsSync(contentPath) ? readFileSync(contentPath, "utf-8") : "";
+    upsertSkill({
+      skillKey: entry.skillKey,
+      displayName: entry.displayName,
+      description: entry.description,
+      category: entry.category,
+      content,
+      source: "bundled",
+    });
+    // Push to the Hermes global skills dir so the AGENTIC path can execute it.
+    try {
+      pushSkillToHermes(entry.skillKey);
+    } catch {
+      // best-effort — Hermes may be absent on a CH-only setup
+    }
+    count += 1;
+  }
+  return count;
+}
+
+interface ToolManifestEntry {
+  toolKey: string;
+  displayName: string;
+  description: string;
+  category: string;
+  toolsetIds: string[];
+}
+
+/** Seed the canonical default TOOL bundles (source='bundled'); merge preserves edits. */
+function seedTools(mode: SeedMode): number {
+  if (!existsSync(TOOLS_MANIFEST)) return 0;
+  try {
+    const manifest = JSON.parse(readFileSync(TOOLS_MANIFEST, "utf-8")) as { version: string; tools: ToolManifestEntry[] };
+    let count = 0;
+    for (const entry of manifest.tools) {
+      const seedKey = `ch.tool.${entry.toolKey}`;
+      if (mode === "merge" && getToolBundle(entry.toolKey)) continue;
+      upsertToolBundle({
+        toolKey: entry.toolKey,
+        displayName: entry.displayName,
+        description: entry.description,
+        toolsetIds: entry.toolsetIds,
+        category: entry.category,
+        source: "bundled",
+        seedKey,
+      });
+      count += 1;
+    }
+    return count;
+  } catch {
+    // tool_catalog may not exist yet (pre-v16 / minimal schema) — skip gracefully.
+    return 0;
+  }
+}
+
+interface MemoryManifestEntry {
+  seedKey: string;
+  category: string;
+  content: string;
+}
+
+/** Seed the canonical default MEMORY facts (source='bundled'); idempotent by seed_key. */
+function seedMemories(mode: SeedMode): number {
+  if (!existsSync(MEMORIES_MANIFEST)) return 0;
+  void mode; // accepted for signature parity; upsert is idempotent by seed_key
+  try {
+    const manifest = JSON.parse(readFileSync(MEMORIES_MANIFEST, "utf-8")) as { version: string; facts: MemoryManifestEntry[] };
+    let count = 0;
+    for (const fact of manifest.facts) {
+      upsertMemoryFact({
+        content: fact.content,
+        category: fact.category,
+        source: "bundled",
+        seedKey: fact.seedKey,
+      });
+      count += 1;
+    }
+    return count;
+  } catch {
+    // seed_memory_facts may not exist yet (pre-v16 / minimal schema) — skip.
+    return 0;
+  }
+}
+
 function seedTemplates(mode: SeedMode, idFilter?: string): number {
   if (!existsSync(TEMPLATE_PACK)) {
     console.warn(`catalog-seed: missing ${TEMPLATE_PACK}`);
@@ -339,12 +456,24 @@ export function runCatalogSeed(options: SeedTarget): SeedResult {
   let root = 0;
   let templates = 0;
   let categories = 0;
+  let skills = 0;
+  let tools = 0;
+  let memories = 0;
 
   if (options.target === "all" || options.target === "root") {
     root = seedRoot(mode, options.confirmOverride);
   }
   if (options.target === "all" || options.target === "categories") {
     categories = seedCategories(mode);
+  }
+  if (options.target === "all" || options.target === "skills") {
+    skills = seedSkills(mode);
+  }
+  if (options.target === "all" || options.target === "tools") {
+    tools = seedTools(mode);
+  }
+  if (options.target === "all" || options.target === "memories") {
+    memories = seedMemories(mode);
   }
   if (options.target === "all" || options.target === "profiles") {
     profiles = seedProfiles(mode, options.slug);
@@ -369,9 +498,33 @@ export function runCatalogSeed(options: SeedTarget): SeedResult {
     if (r.success) pushed = 1;
   }
 
-  const result: SeedResult = { root, profiles, templates, categories, pushed };
+  const result: SeedResult = { root, profiles, templates, categories, skills, tools, memories, pushed };
   writeSeedState(result);
   return result;
+}
+
+/**
+ * Idempotent one-time boot seed so a fresh DEPLOY (Docker / any non-installer
+ * start) has the full catalog — professional profiles, the Baseline agent, the
+ * bundled skill pack (+ Hermes push), tool bundles, and memory facts — without
+ * the operator running the installer's seed step. Gated by a `meta` flag so it
+ * runs once. Best-effort: never throws into boot.
+ */
+export function ensureCatalogSeededOnce(): SeedResult | null {
+  try {
+    ensureDb();
+    const row = db().prepare("SELECT value FROM meta WHERE key = 'catalog_seeded'").get() as
+      | { value: string }
+      | undefined;
+    if (row) return null;
+    const result = runCatalogSeed({ target: "all", mode: "merge" });
+    db()
+      .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('catalog_seeded', ?)")
+      .run(new Date().toISOString());
+    return result;
+  } catch {
+    return null;
+  }
 }
 
 export function getSeedState(): Record<string, unknown> | null {

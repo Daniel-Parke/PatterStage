@@ -13,12 +13,14 @@
 // fraction across its repeats (computed in summarize()).
 // ═══════════════════════════════════════════════════════════════
 
+import type { ItemMetrics } from "./metrics";
 import type {
   BenchmarkDomain,
   BenchmarkSummary,
   ConsistencyExtract,
   DomainScore,
   Grader,
+  Stat,
 } from "./types";
 import { BENCHMARK_DOMAINS } from "./types";
 
@@ -213,6 +215,15 @@ export interface ResultForAgg {
   score: number | null;
   /** Canonical answer (used by consistency agreement). */
   canonical: string | null;
+  // ── extra signals for the JRPG stat engine (stats.ts) ──
+  /** Which content stats this item informs (+weight). */
+  statTags?: Partial<Record<Stat, number>>;
+  /** Wall-clock latency for this (item,repeat). */
+  latencyMs?: number | null;
+  /** Whether this execution errored / timed out (feeds Fortitude). */
+  errored?: boolean;
+  /** Agentic trajectory metrics (tool calls, recovery, steps); null brain-only. */
+  metrics?: ItemMetrics | null;
 }
 
 /** Per-domain weight in the overall Agent Rating (equal by default). */

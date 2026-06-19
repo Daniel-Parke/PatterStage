@@ -12,7 +12,19 @@
 // so historical runs stay reproducible.
 // ═══════════════════════════════════════════════════════════════
 
-import type { BenchmarkItem, BenchmarkSuite } from "../types";
+import type { BenchmarkDomain, BenchmarkItem, BenchmarkSuite, Stat } from "../types";
+
+// Default content-stat contributions per domain (Speed + Fortitude are universal
+// and computed from run metadata, so they are not tagged here). Applied to each
+// item unless it sets its own `statTags`.
+const DOMAIN_STAT_DEFAULTS: Record<BenchmarkDomain, Partial<Record<Stat, number>>> = {
+  maths: { intelligence: 1 },
+  logic: { intelligence: 1 },
+  reasoning: { intelligence: 0.7, wisdom: 0.3 },
+  instruction: { wisdom: 1, strength: 0.3 },
+  needle: { intelligence: 0.6, wisdom: 0.4 },
+  consistency: {},
+};
 
 /**
  * Build a long "log" haystack with a single planted fact, varying its position
@@ -208,5 +220,6 @@ export const coreCapabilitiesV1: BenchmarkSuite = {
   version: "1.0.0",
   description:
     "Deterministic, auto-gradable probe across maths, logic, multi-step reasoning, instruction-following, needle-in-a-haystack retrieval, and self-consistency.",
-  items,
+  // Apply per-domain content-stat tags unless the item set its own.
+  items: items.map((it) => ({ ...it, statTags: it.statTags ?? DOMAIN_STAT_DEFAULTS[it.domain] })),
 };

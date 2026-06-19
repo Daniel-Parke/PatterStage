@@ -12,8 +12,10 @@
 import { db, inTransaction, now, uuid } from "@/lib/db";
 import type {
   BenchmarkDomain,
+  BenchmarkExecMode,
   BenchmarkItemResult,
   BenchmarkRun,
+  BenchmarkRunConfig,
   BenchmarkRunStatus,
   BenchmarkSummary,
   BenchmarkTargetKind,
@@ -32,6 +34,13 @@ interface RunRow {
   seed: string | null;
   status: string;
   pair_id: string | null;
+  model_id: string | null;
+  model_label: string | null;
+  exec_mode: string | null;
+  used_skills: number | null;
+  used_tools: number | null;
+  used_memory: number | null;
+  config_json: string | null;
   summary_json: string | null;
   error: string | null;
   started_at: string | null;
@@ -56,6 +65,9 @@ interface ResultRow {
   input_tokens: number | null;
   output_tokens: number | null;
   cost_usd: number | null;
+  skills_used_json: string | null;
+  tools_used_json: string | null;
+  memory_used: number | null;
   created_at: string;
 }
 
@@ -77,6 +89,29 @@ function parseDetail(raw: string | null): Record<string, unknown> | null {
   }
 }
 
+function parseConfig(raw: string | null): BenchmarkRunConfig | null {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as BenchmarkRunConfig;
+  } catch {
+    return null;
+  }
+}
+
+function parseStringArray(raw: string | null): string[] | null {
+  if (!raw) return null;
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? (v as string[]) : null;
+  } catch {
+    return null;
+  }
+}
+
+function toBool(v: number | null): boolean | null {
+  return v === null ? null : v === 1;
+}
+
 function rowToRun(row: RunRow | undefined): BenchmarkRun | null {
   if (!row) return null;
   return {
@@ -90,6 +125,13 @@ function rowToRun(row: RunRow | undefined): BenchmarkRun | null {
     seed: row.seed,
     status: row.status as BenchmarkRunStatus,
     pairId: row.pair_id,
+    modelId: row.model_id,
+    modelLabel: row.model_label,
+    execMode: (row.exec_mode as BenchmarkExecMode | null) ?? null,
+    usedSkills: toBool(row.used_skills),
+    usedTools: toBool(row.used_tools),
+    usedMemory: toBool(row.used_memory),
+    config: parseConfig(row.config_json),
     summary: parseSummary(row.summary_json),
     error: row.error,
     startedAt: row.started_at,
@@ -116,6 +158,9 @@ function rowToResult(row: ResultRow): BenchmarkItemResult {
     inputTokens: row.input_tokens,
     outputTokens: row.output_tokens,
     costUsd: row.cost_usd,
+    skillsUsed: parseStringArray(row.skills_used_json),
+    toolsUsed: parseStringArray(row.tools_used_json),
+    memoryUsed: toBool(row.memory_used),
     createdAt: row.created_at,
   };
 }
@@ -131,17 +176,29 @@ export interface CreateBenchmarkRunInput {
   repeats: number;
   seed?: string | null;
   pairId?: string | null;
+  // (Agent + LLM) unit + augmentation
+  modelId?: string | null;
+  modelLabel?: string | null;
+  execMode?: BenchmarkExecMode | null;
+  usedSkills?: boolean | null;
+  usedTools?: boolean | null;
+  usedMemory?: boolean | null;
+  config?: BenchmarkRunConfig | null;
 }
 
 export function createBenchmarkRun(input: CreateBenchmarkRunInput): BenchmarkRun {
   const id = uuid();
   const ts = now();
+  const bit = (b: boolean | null | undefined): number | null =>
+    b === null || b === undefined ? null : b ? 1 : 0;
   db()
     .prepare(
       `INSERT INTO benchmark_runs
          (id, suite_key, suite_version, target_kind, target_ref, target_label,
-          repeats, seed, status, pair_id, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)`,
+          repeats, seed, status, pair_id,
+          model_id, model_label, exec_mode, used_skills, used_tools, used_memory, config_json,
+          created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       id,
@@ -153,6 +210,13 @@ export function createBenchmarkRun(input: CreateBenchmarkRunInput): BenchmarkRun
       input.repeats,
       input.seed ?? null,
       input.pairId ?? null,
+      input.modelId ?? null,
+      input.modelLabel ?? null,
+      input.execMode ?? null,
+      bit(input.usedSkills),
+      bit(input.usedTools),
+      bit(input.usedMemory),
+      input.config ? JSON.stringify(input.config) : null,
       ts,
       ts,
     );
@@ -174,6 +238,11 @@ export interface InsertItemResultInput {
   inputTokens?: number | null;
   outputTokens?: number | null;
   costUsd?: number | null;
+  skillsUsed?: string[] | null;
+  toolsUsed?: string[] | null;
+  memoryUsed?: boolean | null;
+  /** Per-item trajectory metrics blob (see benchmarks/metrics.ts). */
+  metrics?: object | null;
 }
 
 export function insertItemResult(input: InsertItemResultInput): void {
@@ -182,8 +251,9 @@ export function insertItemResult(input: InsertItemResultInput): void {
       `INSERT INTO benchmark_item_results
          (id, benchmark_run_id, item_id, domain, repeat_index, input_run_id,
           raw_output, score, passed, grader, grader_detail_json,
-          latency_ms, input_tokens, output_tokens, cost_usd, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          latency_ms, input_tokens, output_tokens, cost_usd,
+          skills_used_json, tools_used_json, memory_used, metrics_json, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(
       uuid(),
@@ -201,6 +271,10 @@ export function insertItemResult(input: InsertItemResultInput): void {
       input.inputTokens ?? null,
       input.outputTokens ?? null,
       input.costUsd ?? null,
+      input.skillsUsed ? JSON.stringify(input.skillsUsed) : null,
+      input.toolsUsed ? JSON.stringify(input.toolsUsed) : null,
+      input.memoryUsed === null || input.memoryUsed === undefined ? null : input.memoryUsed ? 1 : 0,
+      input.metrics ? JSON.stringify(input.metrics) : null,
       now(),
     );
 }

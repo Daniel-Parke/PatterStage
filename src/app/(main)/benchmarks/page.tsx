@@ -14,13 +14,16 @@ import { Trophy, Swords, Play, Square, Bot, Cpu, Share2, Medal } from "lucide-re
 
 import PageHeader from "@/components/layout/PageHeader";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import StatRadar from "@/components/viz/StatRadar";
 import { useApiResource } from "@/hooks/useApiResource";
-import { useSuites, useBenchmarkRuns, useBenchmarkRun, useLeaderboard } from "@/hooks/useBenchmarks";
+import { useSuites, useBenchmarkRuns, useBenchmarkRun, useLeaderboard, useBenchmarkCatalog } from "@/hooks/useBenchmarks";
 import { safeApiCall, safeApiCallData } from "@/lib/api-fetch";
 import { useToast } from "@/components/ui/Toast";
-import { BENCHMARK_DOMAINS, DOMAIN_LABELS, type BenchmarkRun } from "@/lib/benchmarks/types";
+import { STATS, STAT_LABELS, STAT_BLURB, type BenchmarkRun, type StatCard } from "@/lib/benchmarks/types";
 import type { AgentProfile } from "@/types/hermes";
 import type { ModelRecord } from "@/lib/models-repository";
+
+type Aug = { skills: boolean; tools: boolean; memory: boolean };
 
 // ── small helpers ────────────────────────────────────────────
 
@@ -45,6 +48,24 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
   return <div className={`rounded-2xl border border-white/10 bg-dark-900/60 p-4 ${className}`}>{children}</div>;
 }
 
+/** Brain + augmentation chips for one side of a comparison. */
+function UnitChips({ run }: { run: BenchmarkRun | undefined }) {
+  if (!run) return null;
+  return (
+    <div className="mt-1 flex flex-wrap items-center justify-center gap-1">
+      <span className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] text-white/50">{run.modelLabel ?? "brain"}</span>
+      {run.usedSkills ? <Chip label="skills" /> : null}
+      {run.usedTools ? <Chip label="tools" /> : null}
+      {run.usedMemory ? <Chip label="memory" /> : null}
+      {run.execMode === "model" ? <span className="text-[10px] text-white/30">brain only</span> : null}
+    </div>
+  );
+}
+
+function Chip({ label }: { label: string }) {
+  return <span className="rounded bg-neon-cyan/10 px-1.5 py-0.5 text-[10px] text-neon-cyan">{label}</span>;
+}
+
 function RatingPill({ run, label }: { run: BenchmarkRun | undefined; label: string }) {
   const rating = run?.summary?.overallRating ?? null;
   return (
@@ -63,30 +84,31 @@ function RatingPill({ run, label }: { run: BenchmarkRun | undefined; label: stri
       <div className={`text-[11px] font-mono ${statusTone(run?.status ?? "pending")}`}>
         {run?.status ?? "—"}
       </div>
+      <UnitChips run={run} />
     </div>
   );
 }
 
-/** Per-domain comparison bars (agent cyan, model muted). */
-function DomainBars({ agent, model }: { agent?: BenchmarkRun; model?: BenchmarkRun }) {
-  const score = (run: BenchmarkRun | undefined, domain: string): number | null => {
-    const d = run?.summary?.domains.find((x) => x.domain === domain);
-    return d ? d.score : null;
+/** 6-stat JRPG card comparison (agent cyan vs baseline muted). */
+function StatBars({ agent, model }: { agent?: BenchmarkRun; model?: BenchmarkRun }) {
+  const stat = (run: BenchmarkRun | undefined, key: string): number | null => {
+    const s = run?.summary?.stats as Record<string, number> | undefined;
+    return s && typeof s[key] === "number" ? s[key] : null;
   };
-  const present = BENCHMARK_DOMAINS.filter((d) => score(agent, d) !== null || score(model, d) !== null);
-  if (present.length === 0) return null;
+  const any = STATS.some((s) => stat(agent, s) !== null || stat(model, s) !== null);
+  if (!any) return null;
   return (
     <div className="space-y-3">
-      {present.map((domain) => {
-        const a = score(agent, domain);
-        const m = score(model, domain);
+      {STATS.map((s) => {
+        const a = stat(agent, s);
+        const m = stat(model, s);
         return (
-          <div key={domain}>
+          <div key={s} title={STAT_BLURB[s]}>
             <div className="mb-1 flex items-center justify-between text-[11px]">
-              <span className="text-white/60">{DOMAIN_LABELS[domain]}</span>
+              <span className="text-white/60">{STAT_LABELS[s]}</span>
               <span className="font-mono text-white/40">
-                {a !== null ? `${Math.round(a * 100)}` : "—"}
-                {model ? ` vs ${m !== null ? Math.round(m * 100) : "—"}` : ""}
+                {a !== null ? a : "—"}
+                {model ? ` vs ${m !== null ? m : "—"}` : ""}
               </span>
             </div>
             <div className="space-y-1">
@@ -100,12 +122,13 @@ function DomainBars({ agent, model }: { agent?: BenchmarkRun; model?: BenchmarkR
   );
 }
 
+/** Bar value is 0–100 (stat scale). */
 function Bar({ value, color }: { value: number | null; color: string }) {
   return (
     <div className="h-2 w-full overflow-hidden rounded-full bg-white/5">
       <div
         className="h-full rounded-full transition-all"
-        style={{ width: `${Math.round((value ?? 0) * 100)}%`, background: color }}
+        style={{ width: `${Math.round(value ?? 0)}%`, background: color }}
       />
     </div>
   );
@@ -136,6 +159,11 @@ export default function BenchmarksPage() {
   const [profileId, setProfileId] = useState("");
   const [modelId, setModelId] = useState("");
   const [repeats, setRepeats] = useState(3);
+  const [aug, setAug] = useState<Aug>({ skills: true, tools: true, memory: true });
+  const [selSkills, setSelSkills] = useState<string[] | null>(null); // null = all
+  const [selTools, setSelTools] = useState<string[] | null>(null); // null = all
+  const [baselineMode, setBaselineMode] = useState<"brain" | "model">("brain");
+  const { catalog } = useBenchmarkCatalog();
   const [activePairId, setActivePairId] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
 
@@ -160,8 +188,12 @@ export default function BenchmarksPage() {
   const doneUnits = agentDetail.detail?.results.length ?? 0;
 
   async function runComparison() {
-    if (!effectiveSuite || !effectiveProfile || !effectiveModel) {
-      showToast("Pick a suite, an agent profile, and a baseline model.", "error");
+    if (!effectiveSuite || !effectiveProfile) {
+      showToast("Pick a suite and an agent profile.", "error");
+      return;
+    }
+    if (baselineMode === "model" && !effectiveModel) {
+      showToast("Pick a baseline model (or switch the baseline to brain-only).", "error");
       return;
     }
     setStarting(true);
@@ -175,8 +207,18 @@ export default function BenchmarksPage() {
         repeats,
         agentProfile: effectiveProfile,
         agentLabel: profile?.name ?? effectiveProfile,
-        modelRef: effectiveModel,
-        modelLabel: model?.name ?? effectiveModel,
+        augmentation: {
+          skills: aug.skills,
+          tools: aug.tools,
+          memory: aug.memory,
+          // Explicit per-component selection (null = all of the catalog).
+          selectedSkills: aug.skills ? (selSkills ?? catalog.skills.map((s) => s.key)) : [],
+          selectedTools: aug.tools ? (selTools ?? catalog.tools.map((t) => t.key)) : [],
+        },
+        // Baseline: same agent brain-only by default, or a chosen registry model.
+        ...(baselineMode === "model"
+          ? { modelRef: effectiveModel, modelLabel: model?.name ?? effectiveModel }
+          : {}),
       },
     });
     setStarting(false);
@@ -231,7 +273,7 @@ export default function BenchmarksPage() {
       <PageHeader
         icon={Trophy}
         title="Benchmarks"
-        subtitle="Measure your agent's capability and compare it against a bare-model baseline."
+        subtitle="Benchmark your agent (its LLM + skills/tools/memory) against a brain-only baseline — a JRPG stat card."
         color="purple"
       />
 
@@ -254,11 +296,20 @@ export default function BenchmarksPage() {
               ))}
             </Select>
           </Field>
-          <Field label="Baseline model">
-            <Select value={effectiveModel} onChange={setModelId}>
-              {models.length === 0 ? <option value="">No models configured</option> : null}
+          <Field label="Baseline">
+            <Select
+              value={baselineMode === "brain" ? "brain" : effectiveModel}
+              onChange={(v) => {
+                if (v === "brain") setBaselineMode("brain");
+                else {
+                  setBaselineMode("model");
+                  setModelId(v);
+                }
+              }}
+            >
+              <option value="brain">Brain-only (same brain)</option>
               {models.map((m) => (
-                <option key={m.id} value={m.id}>{m.name}</option>
+                <option key={m.id} value={m.id}>vs {m.name}</option>
               ))}
             </Select>
           </Field>
@@ -270,10 +321,40 @@ export default function BenchmarksPage() {
             </Select>
           </Field>
         </div>
+
+        {/* Agent augmentation — toggle off for a brain-only (reliable) run */}
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <span className="text-[11px] uppercase tracking-wider text-white/40">Agent augmentation</span>
+          <Toggle label="Skills" on={aug.skills} onChange={(v) => setAug((a) => ({ ...a, skills: v }))} />
+          <Toggle label="Tools" on={aug.tools} onChange={(v) => setAug((a) => ({ ...a, tools: v }))} />
+          <Toggle label="Memory" on={aug.memory} onChange={(v) => setAug((a) => ({ ...a, memory: v }))} />
+          <span className="text-[11px] text-white/30">
+            {aug.skills || aug.tools || aug.memory ? "agentic run (uses Hermes)" : "brain-only (fast, reliable)"}
+          </span>
+        </div>
+
+        {/* Per-component selection — pick exactly which seed skills / tools to equip */}
+        {aug.skills && catalog.skills.length > 0 ? (
+          <ChipSelect
+            label="Skills"
+            options={catalog.skills.map((s) => ({ key: s.key, label: s.displayName }))}
+            selected={selSkills}
+            onToggle={(key) => setSelSkills((cur) => toggleKey(cur, key, catalog.skills.map((s) => s.key)))}
+          />
+        ) : null}
+        {aug.tools && catalog.tools.length > 0 ? (
+          <ChipSelect
+            label="Tools"
+            options={catalog.tools.map((t) => ({ key: t.key, label: t.displayName }))}
+            selected={selTools}
+            onToggle={(key) => setSelTools((cur) => toggleKey(cur, key, catalog.tools.map((t) => t.key)))}
+          />
+        ) : null}
+
         <div className="mt-4 flex items-center gap-3">
           <button
             onClick={runComparison}
-            disabled={starting || models.length === 0}
+            disabled={starting}
             className="inline-flex items-center gap-2 rounded-xl border border-neon-cyan/40 bg-neon-cyan/10 px-4 py-2 text-sm font-medium text-neon-cyan transition hover:bg-neon-cyan/20 disabled:opacity-40"
           >
             <Swords className="h-4 w-4" />
@@ -286,9 +367,6 @@ export default function BenchmarksPage() {
             <Share2 className="h-4 w-4" />
             Export agent card
           </button>
-          {models.length === 0 ? (
-            <span className="text-[11px] text-white/40">Add a model in Config → Models to enable the baseline.</span>
-          ) : null}
         </div>
       </Card>
 
@@ -319,7 +397,7 @@ export default function BenchmarksPage() {
             ) : null}
           </div>
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-[auto_1fr]">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-[auto_auto_1fr]">
             <div className="flex items-center justify-center gap-6">
               <RatingPill run={agentRun} label="Agent" />
               <div className="flex flex-col items-center">
@@ -333,8 +411,14 @@ export default function BenchmarksPage() {
               </div>
               <RatingPill run={modelRun} label="Baseline" />
             </div>
+            <div className="flex items-center justify-center">
+              <StatRadar
+                card={(agentRun?.summary?.stats as StatCard | undefined) ?? null}
+                compare={(modelRun?.summary?.stats as StatCard | undefined) ?? null}
+              />
+            </div>
             <div>
-              <DomainBars agent={agentRun} model={modelRun} />
+              <StatBars agent={agentRun} model={modelRun} />
               <div className="mt-3 flex items-center gap-4 text-[11px] text-white/40">
                 <span className="flex items-center gap-1"><Bot className="h-3 w-3 text-neon-cyan" /> Agent</span>
                 <span className="flex items-center gap-1"><Cpu className="h-3 w-3" /> Baseline</span>
@@ -360,8 +444,8 @@ export default function BenchmarksPage() {
                   <span className="w-5 text-center font-mono text-xs text-white/40">{e.rank}</span>
                   <Bot className="h-4 w-4 text-neon-cyan" />
                   <span className="text-sm text-white/80">{e.targetLabel}</span>
-                  {e.rating?.bestDomain ? (
-                    <span className="text-[11px] text-white/30">best: {e.rating.bestDomain.domain}</span>
+                  {e.rating?.bestStat ? (
+                    <span className="text-[11px] text-white/30">best: {e.rating.bestStat.stat}</span>
                   ) : null}
                 </span>
                 <span className="font-mono text-sm font-bold" style={{ color: e.rating ? ratingColor(e.rating.rating) : "rgba(255,255,255,0.3)" }}>
@@ -431,5 +515,59 @@ function Select({ value, onChange, children }: { value: string; onChange: (v: st
     >
       {children}
     </select>
+  );
+}
+
+/** Toggle one key in a (null = all) selection set, materialising from `all` first. */
+function toggleKey(cur: string[] | null, key: string, all: string[]): string[] {
+  const base = cur ?? all;
+  return base.includes(key) ? base.filter((k) => k !== key) : [...base, key];
+}
+
+function ChipSelect({
+  label,
+  options,
+  selected,
+  onToggle,
+}: {
+  label: string;
+  options: { key: string; label: string }[];
+  selected: string[] | null;
+  onToggle: (key: string) => void;
+}) {
+  const isActive = (key: string) => selected === null || selected.includes(key);
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2 pl-1">
+      <span className="text-[10px] uppercase tracking-wider text-white/25">{label}</span>
+      {options.map((o) => (
+        <button
+          key={o.key}
+          type="button"
+          onClick={() => onToggle(o.key)}
+          className={`rounded-md border px-2 py-0.5 text-[11px] transition ${
+            isActive(o.key)
+              ? "border-neon-cyan/40 bg-neon-cyan/10 text-neon-cyan"
+              : "border-white/10 text-white/35 hover:text-white/60"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!on)}
+      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] transition ${
+        on ? "border-neon-cyan/40 bg-neon-cyan/10 text-neon-cyan" : "border-white/10 text-white/40 hover:text-white/70"
+      }`}
+    >
+      <span className={`h-2 w-2 rounded-full ${on ? "bg-neon-cyan" : "bg-white/20"}`} />
+      {label}
+    </button>
   );
 }

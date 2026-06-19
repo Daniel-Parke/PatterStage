@@ -20,6 +20,9 @@ import { applyDropGameTablesMigration } from "./db/apply-drop-game-tables-migrat
 import { applyAnalyticsEventsMigration } from "./db/apply-analytics-events-migration";
 import { applyChatMigration } from "./db/apply-chat-migration";
 import { applyBenchmarksMigration } from "./db/apply-benchmarks-migration";
+import { applyBenchmarkConfigMigration } from "./db/apply-benchmark-config-migration";
+import { applyBenchmarkCatalogMigration } from "./db/apply-benchmark-catalog-migration";
+import { applyBenchGatewaysMigration } from "./db/apply-bench-gateways-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -183,6 +186,15 @@ export function runMigrations(database: Database.Database): void {
   // Agent benchmarking runs + per-item results (feeds the Agent Rating axis +
   // leaderboard). Idempotent CREATE ... IF NOT EXISTS at schema_version 14.
   applyBenchmarksMigration(database, migrationsDir);
+  // (Agent + LLM) unit + augmentation tags on benchmark runs/results.
+  // Additive ALTER ADD COLUMN, per-statement guarded, at schema_version 15.
+  applyBenchmarkConfigMigration(database, migrationsDir);
+  // Central fair-test catalog: tool_catalog + seed_memory_facts.
+  // Idempotent CREATE ... IF NOT EXISTS at schema_version 16.
+  applyBenchmarkCatalogMigration(database, migrationsDir);
+  // Ephemeral benchmark gateway tracking + per-item metrics_json.
+  // Idempotent CREATE + guarded ALTER at schema_version 17.
+  applyBenchGatewaysMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

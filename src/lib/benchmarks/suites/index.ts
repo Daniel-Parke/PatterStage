@@ -8,8 +8,9 @@
 
 import type { BenchmarkSuite, BenchmarkDomain } from "../types";
 import { coreCapabilitiesV1 } from "./core-capabilities-v1";
+import { reasoningDepthV1 } from "./reasoning-depth-v1";
 
-export const SUITES: BenchmarkSuite[] = [coreCapabilitiesV1];
+export const SUITES: BenchmarkSuite[] = [coreCapabilitiesV1, reasoningDepthV1];
 
 export function getSuite(key: string): BenchmarkSuite | undefined {
   return SUITES.find((s) => s.key === key);

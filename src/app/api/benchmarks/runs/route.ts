@@ -20,11 +20,23 @@ import { startBenchmarkRun, startComparePair } from "@/lib/benchmarks/executor";
 import { getSuite } from "@/lib/benchmarks/suites";
 import type { BenchmarkRunStatus, BenchmarkTargetKind } from "@/lib/benchmarks/types";
 
+const augmentationSchema = z
+  .object({
+    skills: z.boolean(),
+    tools: z.boolean(),
+    memory: z.boolean(),
+    selectedSkills: z.array(z.string()).nullable(),
+    selectedTools: z.array(z.string()).nullable(),
+  })
+  .partial();
+
 const runCreateSchema = z
   .object({
     suiteKey: z.string().min(1),
     mode: z.enum(["single", "compare"]).default("single"),
     repeats: z.number().int().min(1).max(10).optional(),
+    // augmentation toggles (agent targets) — default all on (use the profile's config)
+    augmentation: augmentationSchema.optional(),
     // single
     targetKind: z.enum(["agent", "model"]).optional(),
     targetRef: z.string().min(1).optional(),
@@ -67,14 +79,15 @@ export async function POST(request: NextRequest) {
 
   try {
     if (parsed.mode === "compare") {
-      if (!parsed.agentProfile || !parsed.modelRef) {
-        return badRequest("compare mode requires agentProfile and modelRef");
+      if (!parsed.agentProfile) {
+        return badRequest("compare mode requires agentProfile");
       }
       const pair = startComparePair({
         suiteKey: parsed.suiteKey,
         agentProfile: parsed.agentProfile,
         agentLabel: parsed.agentLabel,
-        modelRef: parsed.modelRef,
+        augmentation: parsed.augmentation,
+        modelRef: parsed.modelRef ?? null,
         modelLabel: parsed.modelLabel,
         repeats: parsed.repeats,
       });
@@ -94,6 +107,7 @@ export async function POST(request: NextRequest) {
       targetKind: parsed.targetKind,
       targetRef: parsed.targetRef,
       targetLabel: parsed.targetLabel,
+      augmentation: parsed.augmentation,
       repeats: parsed.repeats,
     });
     return created({ run });

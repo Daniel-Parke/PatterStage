@@ -11,8 +11,9 @@
 import { NextRequest } from "next/server";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, badRequest, notFound } from "@/lib/api-response";
-import { getProfile } from "@/lib/profiles-repository";
-import { agentRatingForProfile } from "@/lib/benchmarks/rating";
+import { getProfileOrRoot } from "@/lib/profiles-repository";
+import { agentRatingForProfile, holisticStatCard } from "@/lib/benchmarks/rating";
+import { agentExperienceForProfile } from "@/lib/stats/agent-experience";
 import { getSuite, listSuiteMeta } from "@/lib/benchmarks/suites";
 
 function safeCount(json: string): number {
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
   if (suiteKey && !getSuite(suiteKey)) return badRequest("Unknown suite");
 
   try {
-    const profile = getProfile(slug);
+    const profile = getProfileOrRoot(slug);
     if (!profile) return notFound("Profile not found");
 
     // ── strict allowlist — no md content, no secrets ──
@@ -50,6 +51,11 @@ export async function GET(request: NextRequest) {
         platformToolsetCount: safeCount(profile.platformToolsetsJson),
       },
       agentRating: agentRatingForProfile(slug, suiteKey),
+      holistic: holisticStatCard(slug),
+      experience: (() => {
+        const xp = agentExperienceForProfile(slug);
+        return xp ? { level: xp.level.level, title: xp.level.title, xp: xp.xp } : null;
+      })(),
       note: "Contains no user data, memory, prompts, or credentials.",
     };
     return ok({ card });

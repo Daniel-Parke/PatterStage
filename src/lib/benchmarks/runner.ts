@@ -16,7 +16,7 @@
 // fails the run fast (a setup problem, not a capability result).
 // ═══════════════════════════════════════════════════════════════
 
-import { runtime, RuntimeEndpointError } from "@/lib/runtime";
+import { runtime, RuntimeEndpointError, RuntimeRequestError } from "@/lib/runtime";
 import { callLLM } from "@/lib/llm";
 import { estimateCost } from "@/lib/analytics/model-cost";
 import { recordEvent } from "@/lib/analytics/record-event";
@@ -26,8 +26,36 @@ import {
   updateBenchmarkRun,
 } from "./benchmarks-repository";
 import { gradeOutput, summarize, type ResultForAgg } from "./score";
+import { computeStatCard, ratingFromStatCard } from "./stats";
+import {
+  newTrajectory,
+  accumulateRunEvent,
+  finalizeItemMetrics,
+  type ItemMetrics,
+} from "./metrics";
 import { getSuite } from "./suites";
+import { createBenchAgent, teardownBenchAgent, type BenchAgentSpec } from "./bench-agent";
+import { ensureBenchGateway, gatewaySpawnAvailable } from "@/lib/runtime/gateway-manager";
+import { logApiError } from "@/lib/api-logger";
 import type { BenchmarkItem, BenchmarkRun } from "./types";
+
+/**
+ * Map a run's augmentation toggles to an ephemeral fair-test agent spec. ON
+ * layers inherit the base profile's own config; OFF layers are stripped — so
+ * the agentic run actually omits what's toggled off. (Per-component SELECTION
+ * of specific seed skills/tools is wired from the builder UI later.)
+ */
+function specFromRun(run: BenchmarkRun): BenchAgentSpec {
+  const aug = run.config?.augmentation ?? { skills: true, tools: true, memory: true };
+  return {
+    base: run.targetRef,
+    // Explicit per-component selection wins; else the boolean (on → inherit base,
+    // off → strip).
+    skills: aug.selectedSkills ?? (aug.skills ? null : []),
+    tools: aug.selectedTools ?? (aug.tools ? null : []),
+    memory: aug.memory,
+  };
+}
 
 export class BenchmarkCancelledError extends Error {
   constructor() {
@@ -53,6 +81,8 @@ interface ExecOutcome {
   inputTokens: number | null;
   outputTokens: number | null;
   error: string | null;
+  /** Trajectory metrics (agentic path); null for brain-only. */
+  metrics: ItemMetrics | null;
 }
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -65,6 +95,7 @@ function abortIf(signal?: AbortSignal): void {
 
 async function executeAgent(
   run: BenchmarkRun,
+  profileSlug: string,
   item: BenchmarkItem,
   repeatIndex: number,
   opts: ExecuteBenchmarkOptions,
@@ -72,51 +103,110 @@ async function executeAgent(
   const perItemTimeoutMs = opts.perItemTimeoutMs ?? 120_000;
   const pollIntervalMs = opts.pollIntervalMs ?? 1000;
   // Fresh, unique session per (item, repeat) → no cross-item/-repeat bleed.
+  // `profileSlug` is the EPHEMERAL fair-test agent assembled from the toggled
+  // components (so skills/tools/memory toggles actually apply), not the user's
+  // standing profile.
   const tag = `${run.id}_${item.id}_${repeatIndex}`;
-  const handle = await runtime.submitRun({
-    input: item.prompt,
-    idempotencyKey: `bench_${tag}`,
-    profileName: run.targetRef,
-    sessionId: `bench-${tag}`,
-  });
+  // Hermes caps concurrent runs (HTTP 429). Retry submit with backoff so a busy
+  // gateway doesn't score the item zero.
+  let handle: Awaited<ReturnType<typeof runtime.submitRun>> | null = null;
+  for (let attempt = 0; attempt < 6; attempt++) {
+    abortIf(opts.signal);
+    try {
+      handle = await runtime.submitRun({
+        input: item.prompt,
+        idempotencyKey: `bench_${tag}`,
+        profileName: profileSlug,
+        sessionId: `bench-${tag}`,
+      });
+      break;
+    } catch (err) {
+      if (err instanceof RuntimeRequestError && err.status === 429 && attempt < 5) {
+        await sleep(2000 * (attempt + 1));
+        continue;
+      }
+      throw err;
+    }
+  }
+  if (!handle) throw new Error("submitRun did not return a handle");
+
+  // Capture the TRAJECTORY (tool calls, recovery, steps) from the event stream
+  // in parallel with polling. SSE is best-effort UX-only data — polling remains
+  // the source of truth for terminal status — so a stream failure never fails
+  // the item; it only leaves the metrics thinner.
+  const traj = newTrajectory();
+  let streaming = true;
+  const runId = handle.runId;
+  const streamTask = (async () => {
+    try {
+      for await (const ev of runtime.streamRunEvents(runId, profileSlug)) {
+        if (!streaming) break;
+        accumulateRunEvent(traj, ev.type, ev.data);
+      }
+    } catch {
+      // best-effort; polling is authoritative
+    }
+  })();
 
   const start = Date.now();
+  const finish = (over: Omit<ExecOutcome, "metrics">, completed: boolean): ExecOutcome => {
+    streaming = false;
+    void streamTask; // detach; the generator stops on the next iteration
+    return {
+      ...over,
+      metrics: finalizeItemMetrics(traj, {
+        latencyMs: over.latencyMs,
+        completed,
+        errored: Boolean(over.error),
+      }),
+    };
+  };
+
   while (Date.now() - start < perItemTimeoutMs) {
     abortIf(opts.signal);
-    const r = await runtime.getRun(handle.runId, run.targetRef);
+    const r = await runtime.getRun(handle.runId, profileSlug);
     if (r.status !== "started") {
-      return {
-        output: r.output ?? "",
-        inputRunId: handle.runId,
-        latencyMs: Date.now() - start,
-        inputTokens: r.usage?.inputTokens ?? null,
-        outputTokens: r.usage?.outputTokens ?? null,
-        error: r.status === "failed" ? (r.error ?? "run failed") : null,
-      };
+      return finish(
+        {
+          output: r.output ?? "",
+          inputRunId: handle.runId,
+          latencyMs: Date.now() - start,
+          inputTokens: r.usage?.inputTokens ?? null,
+          outputTokens: r.usage?.outputTokens ?? null,
+          error: r.status === "failed" ? (r.error ?? "run failed") : null,
+        },
+        r.status === "completed",
+      );
     }
     await sleep(pollIntervalMs);
   }
   try {
-    await runtime.stopRun(handle.runId, run.targetRef);
+    await runtime.stopRun(handle.runId, profileSlug);
   } catch {
     // best-effort
   }
-  return {
-    output: "",
-    inputRunId: handle.runId,
-    latencyMs: Date.now() - start,
-    inputTokens: null,
-    outputTokens: null,
-    error: "timed out",
-  };
+  return finish(
+    {
+      output: "",
+      inputRunId: handle.runId,
+      latencyMs: Date.now() - start,
+      inputTokens: null,
+      outputTokens: null,
+      error: "timed out",
+    },
+    false,
+  );
 }
 
 async function executeModel(run: BenchmarkRun, item: BenchmarkItem): Promise<ExecOutcome> {
   const start = Date.now();
+  // Brain-only path: call the run's RESOLVED model directly (reliable). For an
+  // agent target this is the profile's own LLM with no skills/tools/memory; for
+  // a model target it's the chosen registry model. Falls back to the raw model
+  // string when no registry id resolved.
   const resp = await callLLM([{ role: "user", content: item.prompt }], {
-    modelId: run.targetRef,
-    // Low temperature for a fair, comparable baseline (the agent path uses the
-    // profile's own settings — this only governs the bare-model baseline).
+    modelId: run.modelId ?? (run.targetKind === "model" ? run.targetRef : undefined),
+    model: run.config?.modelString ?? undefined,
     temperature: 0.2,
     maxTokens: 1024,
   });
@@ -127,6 +217,7 @@ async function executeModel(run: BenchmarkRun, item: BenchmarkItem): Promise<Exe
     inputTokens: resp.usage?.promptTokens ?? null,
     outputTokens: resp.usage?.completionTokens ?? null,
     error: null,
+    metrics: null, // brain-only has no agentic trajectory
   };
 }
 
@@ -186,6 +277,37 @@ export async function executeBenchmarkRun(
     metadata: { suite: run.suiteKey, version: run.suiteVersion, targetKind: run.targetKind, repeats: run.repeats },
   });
 
+  // Agentic runs go through an EPHEMERAL fair-test agent assembled from the
+  // toggled components (so the toggles actually apply); brain-only runs don't.
+  const agentic = run.execMode ? run.execMode === "agentic" : run.targetKind === "agent";
+  let benchSlug: string | null = null;
+  // Whether the toggled config is actually served by a dedicated gateway. When
+  // false (no local hermes binary), the agentic run falls back to the shared
+  // default gateway and exercises the default agent — surfaced honestly so the
+  // result isn't mistaken for a true fair test.
+  let togglesApplied = false;
+  if (agentic) {
+    try {
+      benchSlug = createBenchAgent(runId, specFromRun(run));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      updateBenchmarkRun(runId, {
+        status: "failed",
+        error: `failed to assemble benchmark agent: ${message}`,
+        completedAt: new Date().toISOString(),
+      });
+      recordEvent("benchmark.failed", { entityType: "benchmark", entityId: runId, profile: run.targetRef, metadata: { reason: message } });
+      return;
+    }
+    // Spawn a dedicated gateway serving exactly this ephemeral profile so the
+    // skills/tools/memory toggles actually apply to the agentic run. Best-effort:
+    // a null result means we route to the shared default gateway instead.
+    if (gatewaySpawnAvailable()) {
+      const gw = await ensureBenchGateway(benchSlug, { runId, signal: opts.signal });
+      togglesApplied = gw !== null;
+    }
+  }
+
   const tasks: Task[] = [];
   for (const item of suite.items) {
     for (let r = 0; r < run.repeats; r++) tasks.push({ item, repeatIndex: r });
@@ -199,18 +321,22 @@ export async function executeBenchmarkRun(
   // below (a plain `let` would be narrowed to `null` and break `instanceof`).
   const state: { fatal: Error | null } = { fatal: null };
 
-  await pool(tasks, opts.concurrency ?? 3, async ({ item, repeatIndex }) => {
+  // Agentic runs consume Hermes concurrency (max ~10); keep them low so a
+  // compare pair (two runs) can't trip the 429 limit. Brain-only is just LLM calls.
+  const concurrency = opts.concurrency ?? (agentic ? 2 : 4);
+  await pool(tasks, concurrency, async ({ item, repeatIndex }) => {
     if (state.fatal) return;
     try {
       abortIf(opts.signal);
-      const outcome =
-        run.targetKind === "agent"
-          ? await executeAgent(run, item, repeatIndex, opts)
-          : await executeModel(run, item);
+      // Route by execution mode: 'agentic' = full Hermes run against the
+      // ephemeral fair-test agent; 'model' = brain-only callLLM.
+      const outcome = agentic && benchSlug
+        ? await executeAgent(run, benchSlug, item, repeatIndex, opts)
+        : await executeModel(run, item);
 
       const grade = gradeOutput(item.grader, outcome.output);
       const cost = estimateCost(
-        run.targetKind === "model" ? run.targetRef : null,
+        run.config?.modelString ?? run.modelLabel ?? (run.targetKind === "model" ? run.targetRef : null),
         outcome.inputTokens ?? 0,
         outcome.outputTokens ?? 0,
       );
@@ -233,6 +359,10 @@ export async function executeBenchmarkRun(
         inputTokens: outcome.inputTokens,
         outputTokens: outcome.outputTokens,
         costUsd: cost,
+        // ACTUAL tool usage from the trajectory (empty when the tool layer was
+        // toggled off — the proof a fair-test toggle truly applied).
+        toolsUsed: outcome.metrics ? outcome.metrics.distinctTools : null,
+        metrics: outcome.metrics ?? null,
       });
 
       agg.push({
@@ -240,6 +370,10 @@ export async function executeBenchmarkRun(
         itemId: item.id,
         score: outcome.error ? 0 : grade.score,
         canonical: outcome.error ? null : grade.canonical,
+        statTags: item.statTags,
+        latencyMs: outcome.latencyMs,
+        errored: Boolean(outcome.error),
+        metrics: outcome.metrics ?? null,
       });
     } catch (err) {
       if (err instanceof BenchmarkCancelledError) {
@@ -264,28 +398,57 @@ export async function executeBenchmarkRun(
         grader: item.grader.kind,
         graderDetail: { error: message },
       });
-      agg.push({ domain: item.domain, itemId: item.id, score: item.grader.kind === "consistency" ? null : 0, canonical: null });
+      agg.push({
+        domain: item.domain,
+        itemId: item.id,
+        score: item.grader.kind === "consistency" ? null : 0,
+        canonical: null,
+        statTags: item.statTags,
+        latencyMs: null,
+        errored: true,
+        metrics: null,
+      });
     }
   });
 
   const finishedAt = new Date().toISOString();
+  const teardown = () => {
+    if (benchSlug) {
+      try {
+        teardownBenchAgent(benchSlug);
+      } catch (e) {
+        logApiError("benchmarks.teardown", benchSlug, e);
+      }
+    }
+  };
 
   if (state.fatal instanceof BenchmarkCancelledError) {
+    teardown();
     updateBenchmarkRun(runId, { status: "cancelled", completedAt: finishedAt });
     recordEvent("benchmark.failed", { entityType: "benchmark", entityId: runId, profile: run.targetRef, metadata: { reason: "cancelled" } });
     return;
   }
   if (state.fatal) {
+    teardown();
     const message = state.fatal.message;
     updateBenchmarkRun(runId, { status: "failed", error: message, completedAt: finishedAt });
     recordEvent("benchmark.failed", { entityType: "benchmark", entityId: runId, profile: run.targetRef, metadata: { reason: message } });
     return;
   }
 
+  teardown();
   const summary = summarize(agg, run.repeats, {
     totalCostUsd: totalCost,
     avgLatencyMs: latencyCount > 0 ? Math.round(latencySum / latencyCount) : undefined,
   });
+  // The JRPG stat card is the headline; overall rating is its mean.
+  const statResult = computeStatCard(agg);
+  summary.stats = statResult.card;
+  summary.errorRate = statResult.errorRate;
+  summary.overallRating = ratingFromStatCard(statResult.card);
+  // Record whether the agentic run truly served the toggled config (dedicated
+  // gateway) or fell back to the shared default agent — so the UI can be honest.
+  if (agentic) summary.togglesApplied = togglesApplied;
   updateBenchmarkRun(runId, { status: "completed", completedAt: finishedAt, summary });
   recordEvent("benchmark.completed", {
     entityType: "benchmark",

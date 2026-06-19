@@ -8,12 +8,14 @@ import { useApiResource } from "./useApiResource";
 import type { BenchmarkRun, BenchmarkItemResult } from "@/lib/benchmarks/types";
 import type { SuiteMeta } from "@/lib/benchmarks/suites";
 import type { AgentRating } from "@/lib/benchmarks/rating";
+import type { AgentExperience } from "@/lib/stats/agent-experience";
 
 export interface LeaderboardEntry {
   rank: number;
   targetRef: string;
   targetLabel: string;
   rating: AgentRating | null;
+  experience: AgentExperience | null;
   ratedAt: string | null;
 }
 
@@ -60,6 +62,35 @@ export function useBenchmarkRun(id: string | null) {
     },
   );
   return { detail: id ? r.data : null, isLoading: r.isLoading, error: r.error };
+}
+
+export interface CatalogSkill {
+  key: string;
+  displayName: string;
+  description: string;
+  category: string;
+}
+export interface CatalogTool {
+  key: string;
+  displayName: string;
+  description: string;
+  toolsetIds: string[];
+  category: string;
+}
+export interface BenchmarkCatalog {
+  skills: CatalogSkill[];
+  tools: CatalogTool[];
+  memoryFactCount: number;
+}
+
+/** The fair-test seed catalog (toggleable skills / tool bundles / memory facts). */
+export function useBenchmarkCatalog() {
+  const r = useApiResource<BenchmarkCatalog>(["benchmark-catalog"], "/api/benchmarks/catalog", {
+    select: (p) => (p as { catalog?: BenchmarkCatalog } | null)?.catalog,
+    fallback: { skills: [], tools: [], memoryFactCount: 0 },
+    staleTime: 60_000,
+  });
+  return { catalog: r.data ?? { skills: [], tools: [], memoryFactCount: 0 }, isLoading: r.isLoading };
 }
 
 /** Local Agent-Rating leaderboard for a suite (defaults to the first suite). */

@@ -12,6 +12,7 @@ import { ok, badRequest } from "@/lib/api-response";
 import { listLeaderboard } from "@/lib/benchmarks/benchmarks-repository";
 import { ratingFromRun } from "@/lib/benchmarks/rating";
 import { getSuite, listSuiteMeta } from "@/lib/benchmarks/suites";
+import { agentExperienceForProfile } from "@/lib/stats/agent-experience";
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,6 +24,7 @@ export async function GET(request: NextRequest) {
       targetRef: run.targetRef,
       targetLabel: run.targetLabel ?? run.targetRef,
       rating: ratingFromRun(run),
+      experience: agentExperienceForProfile(run.targetRef),
       ratedAt: run.completedAt,
     }));
     return ok({ suiteKey, entries });

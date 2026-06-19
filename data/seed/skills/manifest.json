@@ -1,0 +1,29 @@
+{
+  "version": "1.0.0",
+  "skills": [
+    {
+      "skillKey": "web-research",
+      "displayName": "Web Research",
+      "description": "Search, gather, and synthesise information from the web with citations.",
+      "category": "research"
+    },
+    {
+      "skillKey": "code-review",
+      "displayName": "Code Review",
+      "description": "Review diffs and code for correctness, security, and clarity.",
+      "category": "engineering"
+    },
+    {
+      "skillKey": "summarize",
+      "displayName": "Summarize",
+      "description": "Condense long content into faithful, structured summaries.",
+      "category": "writing"
+    },
+    {
+      "skillKey": "step-plan",
+      "displayName": "Step Planner",
+      "description": "Break a goal into an ordered, verifiable plan before acting.",
+      "category": "reasoning"
+    }
+  ]
+}

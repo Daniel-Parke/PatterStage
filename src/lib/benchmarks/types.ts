@@ -38,6 +38,37 @@ export const DOMAIN_LABELS: Record<BenchmarkDomain, string> = {
   consistency: "Consistency",
 };
 
+// ── JRPG stat card (the capability headline) ──
+// Derived from benchmark results. STR/DEX/INT/WIS are content-driven (items
+// tag which they inform); SPEED + FORTITUDE are UNIVERSAL — computed from every
+// run's latency/completion/error metadata regardless of content. Designed to
+// scale: hundreds of niche suites just tag contributions and merge into one card.
+
+export type Stat = "strength" | "dexterity" | "intelligence" | "wisdom" | "fortitude" | "speed";
+
+export const STATS: Stat[] = ["strength", "dexterity", "intelligence", "wisdom", "fortitude", "speed"];
+
+export const STAT_LABELS: Record<Stat, string> = {
+  strength: "Strength",
+  dexterity: "Dexterity",
+  intelligence: "Intelligence",
+  wisdom: "Wisdom",
+  fortitude: "Fortitude",
+  speed: "Speed",
+};
+
+export const STAT_BLURB: Record<Stat, string> = {
+  strength: "Gets the job done — completes and passes tasks",
+  dexterity: "Versatile across many different task types",
+  intelligence: "Raw reasoning / model intelligence",
+  wisdom: "Applies intelligence well (instructions, judgment)",
+  fortitude: "Sustains hard tasks, recovers from failures",
+  speed: "Fast start→finish (lightly quality-weighted)",
+};
+
+/** 0–100 per stat. */
+export type StatCard = Record<Stat, number>;
+
 // ── Graders (deterministic; LLM-as-judge added in a later phase) ──
 
 export type GraderKind =
@@ -110,6 +141,13 @@ export interface BenchmarkItem {
   /** The instruction/prompt sent to the target. */
   prompt: string;
   grader: Grader;
+  /**
+   * Which content stats this item informs (+weight). Only STR/DEX/INT/WIS are
+   * tagged here; SPEED + FORTITUDE are universal (from run metadata). Untagged
+   * items still feed Strength (completion) + Dexterity (breadth) + the
+   * universal stats — they just don't add to Intelligence/Wisdom.
+   */
+  statTags?: Partial<Record<Stat, number>>;
   meta?: Record<string, unknown>;
 }
 
@@ -132,6 +170,27 @@ export type BenchmarkRunStatus =
 
 export type BenchmarkTargetKind = "agent" | "model";
 
+/** How a run actually executed: brain-only (callLLM) vs full agentic (Hermes). */
+export type BenchmarkExecMode = "model" | "agentic";
+
+/** Which augmentation layers were enabled for a run (the "body" on the brain). */
+export interface AugmentationConfig {
+  skills: boolean;
+  tools: boolean;
+  memory: boolean;
+  /** Specific bundled skill keys to equip (overrides the boolean; [] = none). */
+  selectedSkills?: string[] | null;
+  /** Specific tool-bundle keys to equip (overrides the boolean; [] = none). */
+  selectedTools?: string[] | null;
+}
+
+/** Resolved configuration recorded on a run (parsed from config_json). */
+export interface BenchmarkRunConfig {
+  augmentation: AugmentationConfig;
+  /** Provider model string of the brain (display/cost). */
+  modelString?: string | null;
+}
+
 export interface DomainScore {
   domain: BenchmarkDomain;
   itemCount: number;
@@ -142,7 +201,7 @@ export interface DomainScore {
 }
 
 export interface BenchmarkSummary {
-  /** 0..100 composite Agent Rating (domain-weighted mean × 100). */
+  /** 0..100 composite Agent Rating (mean of the 6 stats when present, else domain-weighted). */
   overallRating: number;
   /** 0..1 mean item score across all domains. */
   meanScore: number;
@@ -150,9 +209,20 @@ export interface BenchmarkSummary {
   variance: number;
   itemsRun: number;
   repeats: number;
+  /** The 6-stat JRPG card (the headline). */
+  stats?: StatCard;
+  /** Per-domain detail (internal grouping behind the stats). */
   domains: DomainScore[];
+  /** Fraction of (item,repeat) executions that errored/timed-out. */
+  errorRate?: number;
   totalCostUsd?: number;
   avgLatencyMs?: number;
+  /**
+   * Agentic runs only: true when a dedicated gateway served the toggled config
+   * (a true fair test), false when it fell back to the shared default agent
+   * (no local hermes binary). Undefined for brain-only runs.
+   */
+  togglesApplied?: boolean;
 }
 
 export interface BenchmarkRun {
@@ -167,6 +237,17 @@ export interface BenchmarkRun {
   status: BenchmarkRunStatus;
   /** Groups an agent+model compare pair so the report can show the delta. */
   pairId: string | null;
+  // ── the (Agent + LLM) unit + augmentation tags (migration 015) ──
+  /** Registry model id of the brain this run used. */
+  modelId: string | null;
+  /** Display label for the brain. */
+  modelLabel: string | null;
+  /** Brain-only (callLLM) vs full agentic (Hermes). */
+  execMode: BenchmarkExecMode | null;
+  usedSkills: boolean | null;
+  usedTools: boolean | null;
+  usedMemory: boolean | null;
+  config: BenchmarkRunConfig | null;
   summary: BenchmarkSummary | null;
   error: string | null;
   startedAt: string | null;
@@ -191,5 +272,10 @@ export interface BenchmarkItemResult {
   inputTokens: number | null;
   outputTokens: number | null;
   costUsd: number | null;
+  /** Skills observed/active for this item (tags, not exhaustive). */
+  skillsUsed: string[] | null;
+  /** Tools observed/active for this item (tags, not exhaustive). */
+  toolsUsed: string[] | null;
+  memoryUsed: boolean | null;
   createdAt: string;
 }

@@ -157,10 +157,11 @@ export default function CommandCenter() {
             <div className="h-10 w-px bg-white/10" />
             <StreakFlame current={streak.current} longest={streak.longest} />
             <div className="hidden h-10 w-px bg-white/10 lg:block" />
-            <Link href="/benchmarks" className="hidden transition hover:opacity-90 lg:block" title="Agent Rating — open Benchmarks">
+            <Link href="/benchmarks" className="hidden transition hover:opacity-90 lg:block" title="Agent Level + Rating — open Benchmarks">
               <AgentRatingBadge
                 rating={topAgent?.rating ?? null}
-                label={topAgent ? topAgent.targetLabel : "Agent Rating"}
+                experience={topAgent?.experience ? { level: topAgent.experience.level.level, title: topAgent.experience.level.title } : null}
+                label={topAgent ? topAgent.targetLabel : "Agent"}
               />
             </Link>
           </div>

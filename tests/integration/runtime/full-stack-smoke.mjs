@@ -251,15 +251,19 @@ async function main() {
   check(Boolean(benchProfile), `agent profile available for benchmark (${benchProfile ?? "none"})`);
 
   if (suites.length >= 1 && benchProfile) {
+    // Brain-only (augmentation off) → the reliable callLLM path → deterministic
+    // for the smoke. Records the resolved brain + exec_mode (the v2 unit).
     const startBench = await req("POST", `${CH}/api/benchmarks/runs`, {
       suiteKey: suites[0].key,
       mode: "single",
       targetKind: "agent",
       targetRef: benchProfile,
+      augmentation: { skills: false, tools: false, memory: false },
       repeats: 1,
     });
     const benchRunId = startBench.data?.data?.run?.id;
     check(startBench.status === 201 && Boolean(benchRunId), `benchmark run started (${benchRunId ?? "none"})`);
+    check(startBench.data?.data?.run?.execMode === "model", `brain-only run records exec_mode=model (${startBench.data?.data?.run?.execMode})`);
 
     if (benchRunId) {
       const benchDone = await pollUntil(

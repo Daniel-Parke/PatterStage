@@ -73,7 +73,18 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     expect(tableNames(db)).toEqual(
       expect.arrayContaining(["benchmark_runs", "benchmark_item_results"]),
     );
-    expect(getSchemaVersion(db)).toBe(14);
+    // The (Agent + LLM) unit columns land via the wired v15 ALTER applier.
+    expect(cols(db, "benchmark_runs")).toContain("model_id");
+    expect(cols(db, "benchmark_runs")).toContain("exec_mode");
+    expect(cols(db, "benchmark_item_results")).toContain("memory_used");
+    // The fair-test catalog tables land via the wired v16 applier.
+    expect(tableNames(db)).toEqual(
+      expect.arrayContaining(["tool_catalog", "seed_memory_facts"]),
+    );
+    // The benchmark gateway tracking table + per-item metrics land via v17.
+    expect(tableNames(db)).toContain("bench_gateways");
+    expect(cols(db, "benchmark_item_results")).toContain("metrics_json");
+    expect(getSchemaVersion(db)).toBe(17);
     // Pre-existing data survived the additive upgrade (cron job + mission).
     expect(
       (db.prepare("SELECT COUNT(*) c FROM cron_jobs").get() as { c: number }).c,
@@ -95,7 +106,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(14);
+    expect(getSchemaVersion(db)).toBe(17);
     db.close();
   });
 });

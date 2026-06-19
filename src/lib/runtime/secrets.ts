@@ -9,13 +9,19 @@
 // a Control Hub restart.
 // ═══════════════════════════════════════════════════════════════
 
+import { getBenchGatewayKey } from "./gateway-manager";
+
 /**
  * Resolve the bearer key for a profile's gateway. Returns null when no key is
  * configured (the caller then sends an unauthenticated request, which a
  * key-required gateway will reject with 401 — surfaced clearly to the user).
  */
-export function getGatewayKey(_profileName?: string): string | null {
-  // Phase 2: per-profile lookup (agent_profiles.api_key_ref -> credential/secret).
+export function getGatewayKey(profileName?: string): string | null {
+  // Ephemeral benchmark gateways carry their own generated key.
+  if (profileName) {
+    const benchKey = getBenchGatewayKey(profileName);
+    if (benchKey) return benchKey;
+  }
   const key = process.env.API_SERVER_KEY?.trim();
   return key && key.length > 0 ? key : null;
 }

@@ -11,7 +11,7 @@
 
 import ProgressRing from "@/components/viz/ProgressRing";
 import { type NeonColor } from "@/components/viz/colors";
-import { DOMAIN_LABELS } from "@/lib/benchmarks/types";
+import { STAT_LABELS } from "@/lib/benchmarks/types";
 import type { AgentRating } from "@/lib/benchmarks/rating";
 
 function ratingNeon(rating: number): NeonColor {
@@ -23,9 +23,12 @@ function ratingNeon(rating: number): NeonColor {
 
 export default function AgentRatingBadge({
   rating,
+  experience,
   label,
 }: {
   rating: AgentRating | null;
+  /** Agent Experience Level (growth axis), shown alongside the capability rating. */
+  experience?: { level: number; title: string } | null;
   label?: string;
 }) {
   const color: NeonColor = rating ? ratingNeon(rating.rating) : "cyan";
@@ -41,17 +44,17 @@ export default function AgentRatingBadge({
       />
       <div className="min-w-0">
         <div className="truncate font-mono text-sm font-semibold text-white">
-          {label ?? (rating ? rating.suiteKey : "Agent Rating")}
+          {label ?? (rating ? rating.suiteKey : "Agent")}
         </div>
+        {experience ? (
+          <div className="text-[11px] text-neon-purple">
+            Lv {experience.level} · {experience.title}
+          </div>
+        ) : null}
         {rating ? (
-          <>
-            <div className="text-[11px] text-white/40">
-              best: {rating.bestDomain ? DOMAIN_LABELS[rating.bestDomain.domain] : "—"}
-            </div>
-            <div className="text-[11px] text-white/40">
-              {rating.repeats}× · {rating.domains.length} domains
-            </div>
-          </>
+          <div className="text-[11px] text-white/40">
+            best: {rating.bestStat ? STAT_LABELS[rating.bestStat.stat] : "—"} · {rating.modelLabel ?? "—"}
+          </div>
         ) : (
           <div className="text-[11px] text-white/40">Run a benchmark to rate this agent</div>
         )}
