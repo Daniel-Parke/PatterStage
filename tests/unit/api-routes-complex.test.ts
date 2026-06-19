@@ -94,20 +94,6 @@ jest.mock("@/lib/sessions-api-guard", () => ({
 
 import { NextRequest } from "next/server";
 
-describe("GET /api/cron", () => {
-  beforeEach(() => jest.clearAllMocks());
-
-  it("returns list of cron jobs", async () => {
-    const { GET } = await import("@/app/api/cron/route");
-    const req = new NextRequest("http://localhost/api/cron");
-    const res = await GET(req as unknown as Request);
-    const data = await res.json();
-
-    expect(res.status).toBe(200);
-    expect(data.data.jobs).toHaveLength(0);
-  });
-});
-
 describe("GET /api/tools", () => {
   beforeEach(() => jest.clearAllMocks());
 

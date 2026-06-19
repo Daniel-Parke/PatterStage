@@ -26,13 +26,13 @@ export interface StoryTemplate {
 
 // ── Story Arc (immutable plot contract) ───────────────────────
 
-export interface FixedPlotPoint {
+interface FixedPlotPoint {
   chapter: number;
   event: string;
   setup?: string;
 }
 
-export interface CharacterArc {
+interface CharacterArc {
   name: string;
   startingState: string;
   journey: string;

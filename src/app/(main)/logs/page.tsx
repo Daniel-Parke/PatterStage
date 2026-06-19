@@ -21,14 +21,12 @@ import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { safeApiCallData, setErrorFromCaught } from "@/lib/api-fetch";
-import { useApiData } from "@/hooks/useApiData";
+import { useLogs } from "@/hooks/useLogs";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
-import type { LogGetData } from "@/app/api/logs/route";
 import { formatBytes } from "@/lib/utils";
 import { LogRow } from "@/components/logs/LogRow";
 import { GROUP_ORDER, GROUP_LABELS } from "@/components/logs/constants";
-
-type LogData = LogGetData;
+import LogInsights from "@/components/logs/LogInsights";
 
 export default function LogsPage() {
   const [activeLog, setActiveLog] = useState("agent");
@@ -46,25 +44,18 @@ export default function LogsPage() {
   const { isArmed: deleteArmed, arm: armDelete, confirm: confirmDelete, cancel: cancelDelete } =
     useTwoStepConfirm({ autoDismissMs: 0 });
 
-  const logUrl = useMemo(
-    () => `/api/logs?name=${encodeURIComponent(activeLog)}&lines=${lineCount}`,
-    [activeLog, lineCount],
+  // Auto-refresh is owned by the query: a 5s `refetchInterval` gated by
+  // the `autoRefresh` toggle (src/hooks/useLogs.ts). The reactive log
+  // name + line count live in the query key, so switching files or line
+  // counts refetches. `isLoading` drives the first-load full-page
+  // spinner; `isFetching` (any in-flight fetch on top of cached data)
+  // drives the "Refresh" button spinner.
+  const { data, isLoading: loading, isFetching, error: loadError, refetch } = useLogs(
+    activeLog,
+    lineCount,
+    { autoRefresh },
   );
-
-  // Auto-refresh is owned by the hook: 5s polling loop, gated by the
-  // `autoRefresh` toggle. Eliminates the previous `useInterval` +
-  // `setRefreshing` + `useEffect` micro-state trio. `loading` is
-  // exposed by the hook for the button's "Refresh" affordance, but
-  // we only show the spinner once we already have data (matches the
-  // pre-refactor UX: the very first load shows a full-page spinner,
-  // a background refresh shows the button spinner).
-  const { data, loading, error: loadError, refetch } = useApiData<LogData>(logUrl, {
-    refreshIntervalMs: 5000,
-    refreshEnabled: autoRefresh,
-  });
-  // Mirrors the pre-refactor `refreshing` derivation: button spinner
-  // only shows when a refresh runs on top of already-loaded data.
-  const refreshing = !!data && loading;
+  const refreshing = !!data && isFetching;
 
   const handleDeleteAllLogs = useCallback(async () => {
     if (!deleteArmed) {
@@ -226,7 +217,7 @@ export default function LogsPage() {
                 // 200` default — the page mirrors that shape so a future
                 // change to a number input (or an empty selection) lands
                 // on a stable fallback (200) instead of NaN propagating
-                // to the `useApiData` URL builder. Byte-equivalent for the
+                // into the `useLogs` query key. Byte-equivalent for the
                 // current <select> (all 4 options pass the `>= 1` and
                 // `<= 1000` gates).
                 const parsed = parseInt(e.target.value, 10);
@@ -393,6 +384,7 @@ export default function LogsPage() {
               )}
             </div>
 
+            {data && <LogInsights lines={allLines} />}
             {loading && !data ? (
               <LoadingSpinner text="Loading logs..." />
             ) : data ? (

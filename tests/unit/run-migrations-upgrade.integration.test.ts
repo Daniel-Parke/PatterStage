@@ -40,6 +40,10 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     db.prepare(
       "INSERT INTO cron_jobs (id, name, schedule) VALUES ('c1','job','0 0 * * *')",
     ).run();
+    // A user mission must survive the upgrade unchanged (existing-main-user data).
+    db.prepare(
+      "INSERT INTO missions (id, name, prompt, status) VALUES ('m1','Legacy Mission','do x','successful')",
+    ).run();
 
     // Simulate a legacy install: strip workdir + runs/schedules, mark it old.
     db.pragma("foreign_keys = OFF");
@@ -54,12 +58,40 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     expect(cols(db, "cron_jobs")).toContain("workdir");
     expect(cols(db, "sessions")).toContain("message_count");
     expect(tableNames(db)).toEqual(expect.arrayContaining(["runs", "schedules"]));
+    // Gamification dial-back: the removed game_* tables must not be present.
+    expect(tableNames(db)).not.toContain("game_player");
+    expect(tableNames(db)).not.toContain("game_events");
     expect(cols(db, "missions")).toContain("run_id");
-    expect(getSchemaVersion(db)).toBe(9);
-    // Pre-existing data survived.
+    // Analytics interaction log lands via the wired v12 applier (footgun guard:
+    // a .sql file alone is inert — this proves runMigrations actually calls it).
+    expect(tableNames(db)).toContain("analytics_events");
+    // Agent-chat tables land via the wired v13 applier (same footgun guard).
+    expect(tableNames(db)).toEqual(
+      expect.arrayContaining(["chat_conversations", "chat_messages"]),
+    );
+    // Benchmark tables land via the wired v14 applier (same footgun guard).
+    expect(tableNames(db)).toEqual(
+      expect.arrayContaining(["benchmark_runs", "benchmark_item_results"]),
+    );
+    // The (Agent + LLM) unit columns land via the wired v15 ALTER applier.
+    expect(cols(db, "benchmark_runs")).toContain("model_id");
+    expect(cols(db, "benchmark_runs")).toContain("exec_mode");
+    expect(cols(db, "benchmark_item_results")).toContain("memory_used");
+    // The fair-test catalog tables land via the wired v16 applier.
+    expect(tableNames(db)).toEqual(
+      expect.arrayContaining(["tool_catalog", "seed_memory_facts"]),
+    );
+    // The benchmark gateway tracking table + per-item metrics land via v17.
+    expect(tableNames(db)).toContain("bench_gateways");
+    expect(cols(db, "benchmark_item_results")).toContain("metrics_json");
+    expect(getSchemaVersion(db)).toBe(17);
+    // Pre-existing data survived the additive upgrade (cron job + mission).
     expect(
       (db.prepare("SELECT COUNT(*) c FROM cron_jobs").get() as { c: number }).c,
     ).toBe(1);
+    expect(
+      (db.prepare("SELECT name FROM missions WHERE id = 'm1'").get() as { name: string }).name,
+    ).toBe("Legacy Mission");
     db.close();
   });
 
@@ -74,7 +106,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(9);
+    expect(getSchemaVersion(db)).toBe(17);
     db.close();
   });
 });

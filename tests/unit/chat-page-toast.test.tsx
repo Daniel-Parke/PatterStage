@@ -75,12 +75,10 @@ jest.mock("@/components/chat/GatewayBanner", () => ({
 // ── Hook mocks (avoid timers, fetch, localStorage) ─────────────
 jest.mock("@/hooks/useGatewayHealth", () => ({
   useGatewayHealth: () => ({
-    // offline → the send path emits the "Gateway is offline" toast.
-    // That's the easiest toast path to trigger in a unit test (the
-    // success-path toasts require a session in the sidebar, which
-    // requires a session with at least one message — see the page's
-    // `sessionList` filter).
+    // offline → the send path emits the "Gateway is offline" toast before any
+    // network call. That's the easiest toast path to trigger in a unit test.
     online: false,
+    authConfigured: true,
     agentDefaultModelSet: false,
     registryModelIds: [],
     modelLabels: {},
@@ -90,45 +88,38 @@ jest.mock("@/hooks/useGatewayHealth", () => ({
   }),
 }));
 
-// ── chat-utils mock: stable factories, in-memory localStorage ──
-jest.mock("@/lib/chat-utils", () => {
-  let idCounter = 0;
-  return {
-    loadSessions: () => [],
-    saveSessions: jest.fn(),
-    downloadFile: jest.fn(),
-    sessionToJson: () => "{}",
-    sessionToCsv: () => "",
-    renderMarkdown: (s: string) => s,
-    formatModelName: (id: string) => id,
-    sanitiseFilename: (title: string) => title.replace(/[^a-zA-Z0-9_-]/g, "_"),
-    createEmptySession: (model: string) => ({
-      id: `sess_${++idCounter}`,
-      title: "New Chat",
-      messages: [],
-      model,
-      created_at: 1,
-      updated_at: 1,
-    }),
-    createUserMessage: (content: string) => ({
-      id: `msg_${++idCounter}`,
-      role: "user" as const,
-      content,
-      timestamp: 1,
-    }),
-    createAssistantMessage: (content = "") => ({
-      id: `msg_${++idCounter}`,
-      role: "assistant" as const,
-      content,
-      timestamp: 1,
-    }),
-    toApiMessages: (messages: { role: string; content: string }[], newText: string) => [
-      ...messages.map((m) => ({ role: m.role, content: m.content })),
-      { role: "user", content: newText },
-    ],
-    streamChatResponse: jest.fn().mockResolvedValue(true),
-  };
-});
+// ── chat-utils mock: the server-API surface the hook imports ──
+jest.mock("@/lib/chat-utils", () => ({
+  fetchConversations: jest.fn().mockResolvedValue([]),
+  fetchConversation: jest.fn().mockResolvedValue(null),
+  createConversationApi: jest.fn().mockResolvedValue(null),
+  deleteConversationApi: jest.fn().mockResolvedValue({ ok: true }),
+  sendMessageApi: jest.fn().mockResolvedValue({ ok: true, result: { userMessageId: "u", assistantMessageId: "a" } }),
+  finalizeMessageApi: jest.fn().mockResolvedValue(undefined),
+  stopRunApi: jest.fn().mockResolvedValue({ ok: true }),
+  resolveApprovalApi: jest.fn().mockResolvedValue({ ok: true }),
+  openRunEventStream: jest.fn(() => ({ close: jest.fn() })),
+  classifyRunEvent: () => "ignore",
+  extractDelta: () => "",
+  extractReasoning: () => "",
+  extractCompletedOutput: () => "",
+  extractRunError: () => "run failed",
+  parseToolEvent: () => ({ name: "tool", status: "invoked" }),
+  mergeToolCall: (l: unknown[]) => l,
+  toApiMessages: (messages: { role: string; content: string }[], newText: string) => [
+    ...messages.map((m) => ({ role: m.role, content: m.content })),
+    { role: "user", content: newText },
+  ],
+  streamChatResponse: jest.fn().mockResolvedValue(true),
+  conversationToJson: () => "{}",
+  conversationToCsv: () => "",
+  sanitiseFilename: (title: string) => title.replace(/[^a-zA-Z0-9_-]/g, "_"),
+  downloadFile: jest.fn(),
+  renderMarkdown: (s: string) => s,
+  formatModelName: (id: string) => id,
+  COPY_BTN_CLASS: "copy-btn",
+  COPY_BTN_DATA_ATTR: "data-code",
+}));
 
 // ── Toast mock: capture the rendered toast element by id ────────
 // We want the *real* useToast hook so we can prove the chat page

@@ -96,6 +96,37 @@ export function getProfile(slug: string): AgentProfileRow | null {
   return row ? rowToProfile(row) : null;
 }
 
+/**
+ * Resolve a profile by slug, treating "default" as the root agent (Bob), which
+ * lives in `agent_root` (a singleton), NOT in `agent_profiles`. Use this anywhere
+ * that must work for the default agent too (benchmarking, agent-card) — plain
+ * getProfile("default") returns null and is a recurring footgun.
+ */
+export function getProfileOrRoot(slug: string): AgentProfileRow | null {
+  if (slug === "default" || slug === "") {
+    const root = getAgentRoot();
+    return {
+      slug: "default",
+      displayName: root.displayName,
+      description: root.description,
+      personality: root.personality,
+      configYaml: root.configYaml,
+      soulMd: root.soulMd,
+      agentsMd: root.agentsMd,
+      userMd: root.userMd,
+      memoryMd: root.memoryMd,
+      disabledSkillsJson: root.disabledSkillsJson,
+      platformToolsetsJson: root.platformToolsetsJson,
+      seedKey: null,
+      syncedAt: root.syncedAt,
+      syncError: root.syncError,
+      createdAt: root.updatedAt,
+      updatedAt: root.updatedAt,
+    };
+  }
+  return getProfile(slug);
+}
+
 export function getProfileBySeedKey(seedKey: string): AgentProfileRow | null {
   const row = db()
     .prepare(`SELECT ${SELECT_COLS} FROM agent_profiles WHERE seed_key = ?`)

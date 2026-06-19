@@ -8,21 +8,24 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { ChevronDown, Clock, AlertCircle, Calendar, X } from "lucide-react";
+import { ChevronDown, Clock, AlertCircle, Calendar } from "lucide-react";
 import { baseInputStyles } from "@/lib/theme";
 import { parseSchedule } from "@/lib/schedule/parse-schedule";
+import { computeNextRun } from "@/lib/schedule/next-run";
 import { describeSchedule } from "@/lib/schedule/types";
 import {
-  SCHEDULE_PRESETS,
   findPresetByValue,
   buildWeeklyCron,
   parseDayOfWeek,
   allDays,
-  DOW_LABELS,
   type DayOfWeek,
   type SchedulePreset,
-  type SchedulePresetGroup,
 } from "@/lib/schedule/presets";
+import {
+  resolveToCron,
+  groupSchedulePresets,
+} from "@/lib/schedule/picker-resolver";
+import { CustomScheduleBuilder } from "@/components/schedule/CustomScheduleBuilder";
 
 export type ScheduleMode = "interval" | "wall-clock" | "weekly" | "post-run";
 
@@ -43,73 +46,8 @@ export interface SchedulePickerProps {
   mode?: ScheduleMode;
 }
 
-const GROUP_ORDER: SchedulePresetGroup[] = ["Interval", "Daily", "Weekly", "Monthly"];
-
-/**
- * Resolve a raw value (any supported format) to a canonical 5-field cron expression.
- * Returns null if the value doesn't parse to something usable.
- */
-function resolveToCron(raw: string): string | null {
-  if (!raw) return null;
-  const trimmed = raw.trim();
-  if (!trimmed) return null;
-
-  // 1. Plain 5-field cron
-  if (trimmed.split(/\s+/).length >= 5) return trimmed;
-
-  // 2. JSON-serialised ParsedSchedule (what the DB stores)
-  if (trimmed.startsWith("{")) {
-    try {
-      const parsed = JSON.parse(trimmed) as { kind?: string; expr?: string; display?: string };
-      if (parsed.kind === "cron" && typeof parsed.expr === "string") {
-        return parsed.expr;
-      }
-      if (parsed.kind === "interval" && typeof parsed.display === "string") {
-        // Re-parse the display field (e.g. "every 2h")
-        const re = parseSchedule(parsed.display);
-        if (re.kind === "cron" && "expr" in re) return re.expr;
-        if (re.kind === "interval") {
-          // Convert minutes to a cron expression: pick a sensible hour interval
-          const m = re.minutes;
-          if (m % 60 === 0) return `0 */${m / 60} * * *`;
-          if (m % (24 * 60) === 0) return `0 0 */${m / (24 * 60)} * *`;
-          if (60 % m === 0) return `*/${m} * * * *`;
-        }
-      }
-    } catch {
-      // fall through
-    }
-  }
-
-  // 3. "every Nh/Nm/Nd" shorthand
-  const parsed = parseSchedule(trimmed);
-  if (parsed.kind === "interval") {
-    const m = parsed.minutes;
-    if (m % 60 === 0) return `0 */${m / 60} * * *`;
-    if (m % (24 * 60) === 0) return `0 0 */${m / (24 * 60)} * *`;
-    if (60 % m === 0) return `*/${m} * * * *`;
-  }
-  if (parsed.kind === "cron" && "expr" in parsed) {
-    return parsed.expr;
-  }
-
-  return null;
-}
-
-// ── Grouped preset list (used for rendering) ─────────────────
-
-function useGroupedPresets() {
-  return useMemo(() => {
-    const groups: Record<SchedulePresetGroup, SchedulePreset[]> = {
-      Interval: [],
-      Daily: [],
-      Weekly: [],
-      Monthly: [],
-    };
-    for (const p of SCHEDULE_PRESETS) groups[p.group].push(p);
-    return GROUP_ORDER.map((g) => ({ group: g, items: groups[g] }));
-  }, []);
-}
+// resolveToCron / previewCron / groupSchedulePresets moved to
+// src/lib/schedule/picker-resolver.ts (pure + unit-tested).
 
 // ── Main component ───────────────────────────────────────────
 
@@ -133,6 +71,22 @@ export default function SchedulePicker({
     () => (canonicalCron ? findPresetByValue(canonicalCron) : null),
     [canonicalCron],
   );
+
+  // Preview the next few fire times so the user can sanity-check a cron
+  // before saving. Reuses the same dependency-free evaluator the scheduler
+  // tick uses (src/lib/schedule/next-run.ts), so the preview matches reality.
+  const nextRuns = useMemo(() => {
+    if (!canonicalCron) return [] as Date[];
+    const out: Date[] = [];
+    let from = new Date();
+    for (let i = 0; i < 3; i++) {
+      const next = computeNextRun(canonicalCron, from);
+      if (!next) break;
+      out.push(next);
+      from = next;
+    }
+    return out;
+  }, [canonicalCron]);
 
   // Advanced (raw cron) input: local controlled state. The previous
   // implementation used `defaultValue` + a `key` that reset on every
@@ -158,10 +112,11 @@ export default function SchedulePicker({
     }
   }, [value, canonicalCron]);
 
-  // Custom builder state
+  // Custom builder state. `customTime`/`customDays` are read here (Apply +
+  // unrecognised-cron seeding); the frequency select is builder-local and
+  // lives inside CustomScheduleBuilder.
   const [customTime, setCustomTime] = useState<string>("09:00");
   const [customDays, setCustomDays] = useState<Set<DayOfWeek>>(() => allDays());
-  const [customFrequency, setCustomFrequency] = useState<string>("60");
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -197,7 +152,7 @@ export default function SchedulePicker({
     }
   }, [canonicalCron, matchedPreset, compact]);
 
-  const groups = useGroupedPresets();
+  const groups = useMemo(() => groupSchedulePresets(), []);
 
   const handlePresetSelect = useCallback(
     (preset: SchedulePreset) => {
@@ -380,133 +335,44 @@ export default function SchedulePicker({
 
       {/* Custom builder */}
       {showCustom && (
-        <div className="rounded-lg border border-white/10 bg-dark-800/50 p-3 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-white/60">Custom schedule</span>
-            <button
-              type="button"
-              onClick={() => setShowCustom(false)}
-              className="text-white/30 hover:text-white/60"
-              aria-label="Close custom builder"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-[10px] text-white/40 font-mono block mb-1">
-                Frequency
-              </label>
-              <select
-                value={customFrequency}
-                onChange={(e) => setCustomFrequency(e.target.value)}
-                disabled={disabled}
-                className={baseInputStyles}
-              >
-                <option value="1">Every 1 minute</option>
-                <option value="5">Every 5 minutes</option>
-                <option value="10">Every 10 minutes</option>
-                <option value="15">Every 15 minutes</option>
-                <option value="20">Every 20 minutes</option>
-                <option value="30">Every 30 minutes</option>
-                <option value="60">Every 1 hour</option>
-                <option value="120">Every 2 hours</option>
-                <option value="180">Every 3 hours</option>
-                <option value="360">Every 6 hours</option>
-                <option value="720">Every 12 hours</option>
-                <option value="1440">Every 1 day</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-[10px] text-white/40 font-mono block mb-1">
-                Time of day
-              </label>
-              <input
-                type="time"
-                value={customTime}
-                onChange={(e) => setCustomTime(e.target.value)}
-                disabled={disabled}
-                className={baseInputStyles}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[10px] text-white/40 font-mono block mb-1.5">
-              Days of week
-            </label>
-            <div className="flex gap-1.5 flex-wrap">
-              {DOW_LABELS.map((label, idx) => {
-                const d = idx as DayOfWeek;
-                const checked = customDays.has(d);
-                return (
-                  <button
-                    key={d}
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => toggleDay(d)}
-                    aria-pressed={checked}
-                    className={`px-2.5 py-1 rounded-md text-xs font-mono transition-colors ${
-                      checked
-                        ? "bg-neon-orange/20 text-neon-orange border border-neon-orange/40"
-                        : "bg-white/5 text-white/40 border border-white/10 hover:text-white/60"
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="flex gap-2 mt-2">
-              <button
-                type="button"
-                onClick={() => setCustomDays(allDays())}
-                disabled={disabled}
-                className="text-[10px] text-white/40 hover:text-white/70 font-mono"
-              >
-                All days
-              </button>
-              <button
-                type="button"
-                onClick={() => setCustomDays(new Set([1, 2, 3, 4, 5]))}
-                disabled={disabled}
-                className="text-[10px] text-white/40 hover:text-white/70 font-mono"
-              >
-                Weekdays
-              </button>
-              <button
-                type="button"
-                onClick={() => setCustomDays(new Set())}
-                disabled={disabled}
-                className="text-[10px] text-white/40 hover:text-white/70 font-mono"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between gap-2 pt-1">
-            <div className="text-[10px] text-white/30 font-mono">
-              Preview: <code className="text-neon-orange">{previewCron(customTime, customDays)}</code>
-            </div>
-            <button
-              type="button"
-              onClick={handleCustomApply}
-              disabled={disabled}
-              className="px-3 py-1.5 rounded-md bg-neon-orange/20 text-neon-orange border border-neon-orange/40 text-xs font-mono hover:bg-neon-orange/30 disabled:opacity-50"
-            >
-              Apply
-            </button>
-          </div>
-        </div>
+        <CustomScheduleBuilder
+          customTime={customTime}
+          setCustomTime={setCustomTime}
+          customDays={customDays}
+          setCustomDays={setCustomDays}
+          toggleDay={toggleDay}
+          disabled={disabled}
+          onApply={handleCustomApply}
+          onClose={() => setShowCustom(false)}
+        />
       )}
 
-      {/* Read-only canonical cron display */}
+      {/* Read-only canonical cron display + next-run preview */}
       {canonicalCron && (
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-dark-800/50 border border-white/5">
-          <span className="text-[10px] text-white/40 font-mono shrink-0">Cron:</span>
-          <code className="text-xs font-mono text-neon-orange truncate">{canonicalCron}</code>
+        <div className="rounded-lg bg-dark-800/50 border border-white/5 px-3 py-1.5 space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-white/40 font-mono shrink-0">Cron:</span>
+            <code className="text-xs font-mono text-neon-orange truncate">{canonicalCron}</code>
+          </div>
+          {nextRuns.length > 0 && (
+            <div className="flex items-start gap-2">
+              <span className="text-[10px] text-white/40 font-mono shrink-0 mt-px">Next:</span>
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                {nextRuns.map((d, i) => (
+                  <span key={i} className="text-[10px] font-mono text-white/55">
+                    {d.toLocaleString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -549,14 +415,4 @@ export default function SchedulePicker({
       )}
     </div>
   );
-}
-
-// ── Helpers ───────────────────────────────────────────────────
-
-/** Build a preview cron expression for the custom builder's "Preview" label. */
-function previewCron(time: string, days: ReadonlySet<DayOfWeek>): string {
-  const [hhStr, mmStr] = time.split(":");
-  const hh = parseInt(hhStr ?? "0", 10);
-  const mm = parseInt(mmStr ?? "0", 10);
-  return buildWeeklyCron(days, Number.isFinite(hh) ? hh : 0, Number.isFinite(mm) ? mm : 0);
 }

@@ -1,0 +1,35 @@
+// ═══════════════════════════════════════════════════════════════
+// apply-benchmark-catalog-migration.ts
+//
+// Creates the tool_catalog + seed_memory_facts tables (see
+// 016_benchmark_catalog.sql) — the central fair-test catalog. Idempotent
+// (CREATE ... IF NOT EXISTS), version-guarded at schema_version 16, wired LAST
+// in runMigrations. See [[db-migration-applier-footgun]].
+// ═══════════════════════════════════════════════════════════════
+
+import type Database from "better-sqlite3";
+import { existsSync, readFileSync } from "fs";
+import { join } from "path";
+import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
+
+export const BENCHMARK_CATALOG_SCHEMA_VERSION = 16;
+
+export function applyBenchmarkCatalogMigration(
+  database: Database.Database,
+  migrationsDir: string,
+): number {
+  const current = getSchemaVersion(database);
+  if (current >= BENCHMARK_CATALOG_SCHEMA_VERSION) return current;
+
+  const path = join(migrationsDir, "016_benchmark_catalog.sql");
+  if (existsSync(path)) {
+    try {
+      database.exec(readFileSync(path, "utf-8"));
+    } catch {
+      // CREATE ... IF NOT EXISTS is idempotent; ignore partial-apply races.
+    }
+  }
+
+  setSchemaVersion(database, BENCHMARK_CATALOG_SCHEMA_VERSION);
+  return BENCHMARK_CATALOG_SCHEMA_VERSION;
+}

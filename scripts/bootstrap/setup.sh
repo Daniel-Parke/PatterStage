@@ -232,11 +232,16 @@ if [ "$HERMES_CONFIGURED" = true ] && [ -f "$HERMES_HOME/hindsight/config.json" 
   fi
 fi
 
-# ── Database migrate + catalog seed ───────────────────────────
+# ── Database backup + migrate (schema + legacy data) + catalog seed ──
 echo ""
-echo "Applying database migrations…"
-CH_DATA_DIR="$CH_DATA_ROOT" npm run db:migrate
-echo "✓ Migrations applied"
+echo "Backing up + applying database migrations…"
+# shellcheck source=../lib/ch-log.sh
+source "$SCRIPT_DIR/../lib/ch-log.sh"
+# shellcheck source=../lib/ch-migrate.sh
+source "$SCRIPT_DIR/../lib/ch-migrate.sh"
+if ! ch_migrate_run "$REPO_ROOT" "$CH_DATA_ROOT"; then
+  echo "⚠  Database migration reported issues (a backup was retained) — see output above"
+fi
 
 if [ -f "$HERMES_HOME/config.yaml" ]; then
   echo "Importing existing Hermes state into Control Hub SQLite…"

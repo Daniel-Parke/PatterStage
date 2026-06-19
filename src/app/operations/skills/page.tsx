@@ -5,74 +5,32 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  FileText, ToggleRight, ToggleLeft, X, ChevronDown, ChevronRight,
-  Edit3, Save, RotateCcw, type LucideIcon,
-} from "lucide-react";
+import { FileText, ToggleRight, ToggleLeft, Edit3, Save, RotateCcw } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { SearchInput } from "@/components/ui/Input";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
-import Badge from "@/components/ui/Badge";
-import Card from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
+import SkillsInsights from "@/components/skills/SkillsInsights";
+import { SkillSection } from "@/components/skills/SkillSection";
+import { SkillCategoryGrid } from "@/components/skills/SkillCategoryGrid";
 import { apiFetch, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
-import { groupByCategory, titleCaseCategory } from "@/lib/skills-grouping";
+import {
+  effectiveSkillEnabled,
+  filterBySearch,
+  groupCategories,
+} from "@/lib/skills-page-helpers";
 import { pluralise } from "@/lib/utils";
-import { filterByCaseInsensitiveSubstring } from "@/lib/list-search";
 import type { Skill, SkillsData } from "@/types/hermes";
 
-// ── Pure helpers (hoisted outside component) ──────────────────────────────
-
-// effectiveSkillEnabled — the "effective" enabled state of a skill
-// after applying any pending optimistic toggle. The inline form
-// `toggling[skill.name] ?? skill.enabled` was repeated at 3 sites
-// in this file (line 141 inside the active/inactive split, line
-// 341 for the Active section's onToggleSkill, line 386 for the
-// Inactive section's onToggleSkill). The pattern is the canonical
-// "pending override of server state" idiom — a Record<string, T>
-// of in-flight mutations with a fallback to the server's last-
-// known value. The 3 sites are byte-equivalent (same `??` short-
-// circuit, same `boolean` return) so the helper is a true rename,
-// not a behavior change. The 2 onToggleSkill sites use slightly
-// different fallbacks (`?? skill.enabled` vs `?? !skill.enabled`)
-// because the Inactive section is the negation of the active
-// state — but the helper itself takes the fallback as a parameter
-// so both sites compose correctly.
-//
-// Inlined at call sites was the old comment on line 30; the helper
-// exists now and the misleading comment is removed.
-function effectiveSkillEnabled(
-  skill: Skill,
-  pending: Record<string, boolean>,
-  fallback: boolean = skill.enabled,
-): boolean {
-  return pending[skill.name] ?? fallback;
-}
-
-function filterBySearch(skills: Skill[], search: string) {
-  return filterByCaseInsensitiveSubstring(skills, search, [
-    (s) => s.name,
-    (s) => s.description,
-  ]);
-}
-
-function groupCategories(skills: Skill[]) {
-  // Case-insensitive grouping. The helper handles the
-  // "Creative" vs "creative" case-mismatch class of bug found in
-  // the 2026-06-01 audit (Issue #2 in dogfood-output/report.md).
-  // Display name is the title-cased first item's original case, so
-  // the page keeps a polished display label even when the underlying
-  // values vary in case.
-  return groupByCategory(skills, "Other").map(([key, items]) => ({
-    category: titleCaseCategory(items[0].category) || titleCaseCategory(key),
-    skills: items.sort((x, y) => x.name.localeCompare(y.name)),
-  }));
-}
+// Presentational subcomponents (SkillSection / SkillCategoryGrid / SkillCard /
+// CategoryLabel) live in src/components/skills/. The pure derivations
+// (effectiveSkillEnabled / filterBySearch / groupCategories) live in
+// src/lib/skills-page-helpers.ts.
 
 export default function SkillsPage() {
   const [data, setData] = useState<SkillsData | null>(null);
@@ -382,6 +340,7 @@ export default function SkillsPage() {
           use <strong className="text-white/60">Operations → Agents → Pull</strong> for that profile
           before toggling skills here.
         </p>
+        {!loading && total > 0 && <SkillsInsights skills={data?.skills ?? []} activeCount={activeSkills.length} />}
         {loading ? (
           <LoadingSpinner text="Loading skills..." />
         ) : total === 0 ? (
@@ -538,309 +497,5 @@ export default function SkillsPage() {
         />
       </Modal>
     </AppPageShell>
-  );
-}
-
-// ── CategoryLabel ───────────────────────────────────────────────────────────────
-
-interface CategoryLabelProps {
-  category: string;
-  count: number;
-  accentColor: string;
-  collapsed: boolean;
-  onToggle: () => void;
-}
-
-function CategoryLabel({ category, count, accentColor, collapsed, onToggle }: CategoryLabelProps) {
-  return (
-    <button
-      onClick={onToggle}
-      className="w-full flex items-center gap-2 group cursor-pointer py-0.5"
-      title={collapsed ? `Expand ${category}` : `Collapse ${category}`}
-    >
-      <ChevronRight
-        className={`w-3 h-3 flex-shrink-0 text-white/20 group-hover:text-white/50 transition-all ${
-          collapsed ? "" : "rotate-90"
-        }`}
-      />
-      <span className={`text-[10px] font-mono font-semibold uppercase tracking-widest ${accentColor}`}>
-        {category}
-      </span>
-      <span className={`text-[10px] font-mono ${accentColor}`}>
-        ({count})
-      </span>
-      <div className={`h-px flex-1 bg-gradient-to-r from-white/10 to-transparent ${accentColor.replace(/\/\d+$/, "/5")}`} />
-    </button>
-  );
-}
-
-// ── SkillCategoryGrid — shared rendering for a filtered skill list ─────────
-
-interface SkillCategoryGridProps {
-  categories: Array<{ category: string; skills: Skill[] }>;
-  categoryCollapsed: Record<string, boolean>;
-  onToggleCategory: (cat: string) => void;
-  accentColor: string;
-  enabled: boolean;
-  expandedSkill: string | null;
-  skillContent: string;
-  toggling: Record<string, boolean>;
-  onToggleSkill: (skill: Skill) => void;
-  onViewSkill: (skill: Skill) => void;
-  onEditSkill: (skill: Skill) => void;
-}
-
-function SkillCategoryGrid({
-  categories,
-  categoryCollapsed,
-  onToggleCategory,
-  accentColor,
-  enabled,
-  expandedSkill,
-  skillContent,
-  toggling,
-  onToggleSkill,
-  onViewSkill,
-  onEditSkill,
-}: SkillCategoryGridProps) {
-  return (
-    <div className="space-y-5">
-      {categories.map(({ category, skills }) => {
-        const isCollapsed = categoryCollapsed[category];
-        return (
-          <div key={category}>
-            <CategoryLabel
-              category={category}
-              count={skills.length}
-              accentColor={accentColor}
-              collapsed={isCollapsed}
-              onToggle={() => onToggleCategory(category)}
-            />
-            {!isCollapsed && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
-                {skills.map((skill) => (
-                  <SkillCard
-                    key={skill.name}
-                    skill={skill}
-                    enabled={enabled}
-                    isExpanded={expandedSkill === skill.name}
-                    isPending={skill.name in toggling}
-                    onToggle={() => onToggleSkill(skill)}
-                    onView={() => onViewSkill(skill)}
-                    onEdit={() => onEditSkill(skill)}
-                    expandedContent={
-                      expandedSkill === skill.name ? skillContent : undefined
-                    }
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── SkillSection ──────────────────────────────────────────────────────────────
-
-interface SkillSectionProps {
-  title: string;
-  icon: LucideIcon;
-  iconColor: string;
-  count: number;
-  ofTotal: number;
-  collapsed: boolean;
-  onToggleCollapse: () => void;
-  search: React.ReactNode;
-  children: React.ReactNode;
-}
-
-function SkillSection({
-  title,
-  icon: Icon,
-  iconColor,
-  count,
-  ofTotal,
-  collapsed,
-  onToggleCollapse,
-  search,
-  children,
-}: SkillSectionProps) {
-  return (
-    <div>
-      {/* Section header */}
-      <button
-        onClick={onToggleCollapse}
-        className="w-full flex items-center justify-between mb-3 px-4 py-2.5 rounded-xl border border-white/10 bg-dark-900/40 hover:bg-dark-900/80 hover:border-white/20 transition-all cursor-pointer group"
-      >
-        <div className="flex items-center gap-2.5">
-          <Icon className={`w-4 h-4 ${iconColor}`} />
-          <span className="text-sm font-semibold text-white/80">{title}</span>
-          <Badge color={count > 0 ? "green" : "gray"} size="sm">
-            {count}
-            {count !== ofTotal ? `/${ofTotal}` : ""}
-          </Badge>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-white/25 group-hover:text-white/40 transition-colors">
-            {collapsed ? "expand" : "collapse"}
-          </span>
-          <ChevronRight
-            className={`w-4 h-4 text-white/30 group-hover:text-white/60 transition-all ${
-              collapsed ? "" : "rotate-90"
-            }`}
-          />
-        </div>
-      </button>
-
-      {/* Collapsible body */}
-      {!collapsed && (
-        <div className="space-y-3">
-          {/* Section search */}
-          <div className="max-w-xs">{search}</div>
-
-          {/* Skill cards */}
-          {children}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── SkillCard ────────────────────────────────────────────────────────────────
-
-interface SkillCardProps {
-  skill: Skill;
-  enabled: boolean;
-  isExpanded: boolean;
-  isPending: boolean;
-  onToggle: () => void;
-  onView: () => void;
-  onEdit: () => void;
-  expandedContent?: string;
-}
-
-function SkillCard({
-  skill,
-  enabled,
-  isExpanded,
-  isPending,
-  onToggle,
-  onView,
-  onEdit,
-  expandedContent,
-}: SkillCardProps) {
-  return (
-    <Card
-      className={`relative overflow-hidden transition-all border-white/10 ${
-        isPending ? "ring-1 ring-neon-green/30" : ""
-      }`}
-      glow={enabled ? "green" : undefined}
-      padding="none"
-    >
-      {/* Left accent bar */}
-      <div
-        className={`absolute left-0 top-0 bottom-0 w-0.5 rounded-l-xl ${
-          enabled ? "bg-neon-green" : "bg-white/20"
-        }`}
-      />
-
-      <div className="p-3 pl-4">
-        {/* Header row */}
-        <div className="flex items-start justify-between gap-2 mb-1.5">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-mono font-semibold text-white/80 truncate">
-                {skill.name}
-              </span>
-              {isPending && (
-                <Badge color="green" size="sm">
-                  Updating...
-                </Badge>
-              )}
-            </div>
-            <p className="text-[10px] text-white/30 font-mono mt-0.5">
-              {skill.category}
-            </p>
-          </div>
-
-          {/* Toggle */}
-          <button
-            onClick={onToggle}
-            disabled={isPending}
-            className="flex-shrink-0 mt-0.5 disabled:opacity-40"
-            title={enabled ? "Disable skill" : "Enable skill"}
-          >
-            {enabled ? (
-              <ToggleRight className="w-7 h-7 text-neon-green" />
-            ) : (
-              <ToggleLeft className="w-7 h-7 text-white/20" />
-            )}
-          </button>
-        </div>
-
-        {/* Description */}
-        <p
-          className="text-xs text-white/40 leading-relaxed line-clamp-2 mb-3"
-          title={skill.description}
-        >
-          {skill.description}
-        </p>
-
-        {/* Footer row */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {enabled ? (
-              <span className="inline-flex items-center gap-1 text-[10px] text-neon-green/70">
-                <span className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse" />
-                Active
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-[10px] text-white/30">
-                <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
-                Inactive
-              </span>
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={onEdit}
-            className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border border-white/10 text-white/30 hover:border-neon-green/30 hover:text-neon-green transition-all"
-          >
-            <Edit3 className="w-3 h-3" /> Edit
-          </button>
-          <button
-            type="button"
-            onClick={onView}
-            className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border transition-all ${
-              isExpanded
-                ? "border-white/20 text-white/50 bg-white/5"
-                : "border-white/10 text-white/30 hover:border-white/20 hover:text-white/60"
-            }`}
-          >
-            {isExpanded ? (
-              <>
-                <X className="w-3 h-3" /> Hide
-              </>
-            ) : (
-              <>
-                <ChevronDown className="w-3 h-3" /> View
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* Expanded content */}
-        {isExpanded && (
-          <div className="mt-3 pt-3 border-t border-white/5">
-            <pre className="text-[11px] text-white/50 font-mono whitespace-pre-wrap max-h-48 overflow-auto leading-relaxed">
-              {expandedContent ?? "// Loading..."}
-            </pre>
-          </div>
-        )}
-      </div>
-    </Card>
   );
 }

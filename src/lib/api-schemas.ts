@@ -6,10 +6,25 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { HERMES_PROVIDERS, TASK_TYPES, type TaskType } from "./hermes-providers";
+import { ANALYTICS_EVENT_TYPES } from "./analytics/event-types";
 
 // ── Zod schemas for API request bodies ─────────────────────────
 
 const nonEmpty = z.string().min(1);
+
+/**
+ * Query schema for GET /api/analytics/timeseries. `days` is clamped 1–365 to
+ * bound the `datetime('now','-N days')` interpolation in the repository (the
+ * only place a request value reaches a SQL interval), and `bucket` is a
+ * forward-compatible enum (only "day" today).
+ */
+export const analyticsTimeseriesQuerySchema = z
+  .object({
+    type: z.enum(ANALYTICS_EVENT_TYPES).optional(),
+    days: z.coerce.number().int().min(1).max(365).default(30),
+    bucket: z.enum(["day"]).default("day"),
+  })
+  .strict();
 
 /**
  * Build the `defaults` schema for the Models registry. Each entry is a
@@ -103,88 +118,6 @@ export const setDefaultPutSchema = z
     modelId: z.string().nullable(),
   })
   .strict();
-
-/** Hermes-style schedule object (minimal contract for tests and validation). */
-export const hermesScheduleObjectSchema = z
-  .object({
-    kind: z.string(),
-    minutes: z.number().optional(),
-    expr: z.string().optional(),
-    run_at: z.string().optional(),
-    display: z.string().optional(),
-  })
-  .passthrough();
-
-/** Single persisted cron job shape aligned with Hermes `jobs.json` entries. */
-export const hermesCronJobRecordSchema = z
-  .object({
-    id: nonEmpty,
-    name: nonEmpty,
-    prompt: z.string(),
-    skills: z.array(z.string()),
-    model: z.string(),
-    schedule: z.union([hermesScheduleObjectSchema, z.string()]),
-    schedule_display: z.string().optional(),
-    repeat: z.union([
-      z.object({
-        times: z.number().nullable(),
-        completed: z.number(),
-      }),
-      z.boolean(),
-    ]),
-    enabled: z.boolean(),
-    state: z.string().optional(),
-    deliver: z.string().optional(),
-    script: z.string().nullable().optional(),
-    created_at: z.string().optional(),
-    next_run_at: z.string().nullable().optional(),
-    last_run_at: z.string().nullable().optional(),
-    last_status: z.string().nullable().optional(),
-    mission_id: z.string().optional(),
-    provider: z.string().optional(),
-    base_url: z.string().optional(),
-    profile: z.string().optional(),
-    timeout: z.number().optional(),
-  })
-  .passthrough();
-
-export const hermesJobsFileSchema = z.object({
-  jobs: z.array(hermesCronJobRecordSchema),
-  updated_at: z.string().optional(),
-});
-
-export type HermesJobsFile = z.infer<typeof hermesJobsFileSchema>;
-
-export const cronPostBodySchema = z.union([
-  z.object({ action: z.literal("pauseAll") }),
-  z.object({
-    name: nonEmpty,
-    schedule: nonEmpty,
-    prompt: nonEmpty,
-    deliver: z.string().optional(),
-    model: z.string().optional(),
-    repeat: z.boolean().optional(),
-    skills: z.array(z.string()).optional(),
-    script: z.union([z.string(), z.null()]).optional(),
-  }),
-]);
-
-export type CronPostBody = z.infer<typeof cronPostBodySchema>;
-
-export const cronPutBodySchema = z.object({
-  id: nonEmpty,
-  action: z.enum(["pause", "resume", "run"]).optional(),
-  name: z.string().optional(),
-  prompt: z.string().optional(),
-  skills: z.array(z.string()).optional(),
-  model: z.string().optional(),
-  deliver: z.string().optional(),
-  enabled: z.boolean().optional(),
-  schedule: z.string().optional(),
-  schedule_display: z.string().optional(),
-});
-
-export type CronPutBody = z.infer<typeof cronPutBodySchema>;
 
 export const missionPostBodySchema = z.discriminatedUnion("action", [
   z.object({

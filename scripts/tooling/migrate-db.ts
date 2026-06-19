@@ -1,0 +1,118 @@
+#!/usr/bin/env npx tsx
+/**
+ * Apply ALL Control Hub SQLite migrations to the runtime database (CH_DATA_DIR).
+ *
+ * Single source of truth: this delegates to `getDb()` → `runMigrations()` in
+ * src/lib/db.ts — the exact applier chain the app runs at boot — so
+ * `npm run db:migrate` and the running app can never drift. This replaces the
+ * old partial migrate-db.mjs that stopped at schema_version 3 and relied on the
+ * app to silently finish the chain at first boot (the migration-applier
+ * footgun). Idempotent.
+ *
+ * Usage:
+ *   npm run db:migrate
+ *   npx tsx scripts/tooling/migrate-db.ts
+ * Reads CH_DATA_DIR from env or .env.local (falls back to ~/control-hub/data).
+ */
+
+import Database from "better-sqlite3";
+import { readFileSync, existsSync, mkdirSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+import { homedir } from "os";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(__dirname, "..", "..");
+
+function loadEnvLocal(): void {
+  const envPath = join(ROOT, ".env.local");
+  if (!existsSync(envPath)) return;
+  const text = readFileSync(envPath, "utf-8");
+  for (const line of text.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let val = trimmed.slice(eq + 1).trim();
+    if (
+      (val.startsWith('"') && val.endsWith('"')) ||
+      (val.startsWith("'") && val.endsWith("'"))
+    ) {
+      val = val.slice(1, -1);
+    }
+    if (!process.env[key]) process.env[key] = val;
+  }
+}
+
+/** Peek the stored schema_version with a throwaway read-only connection. */
+function readSchemaVersion(dbPath: string): number {
+  if (!existsSync(dbPath)) return 0;
+  try {
+    const probe = new Database(dbPath, { readonly: true });
+    const row = probe
+      .prepare("SELECT value FROM meta WHERE key = 'schema_version'")
+      .get() as { value?: string } | undefined;
+    probe.close();
+    return row?.value ? parseInt(row.value, 10) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+async function main(): Promise<void> {
+  loadEnvLocal();
+  const dataDir = (
+    process.env.CH_DATA_DIR ||
+    process.env.CONTROL_HUB_DATA_DIR ||
+    join(homedir(), "control-hub", "data")
+  ).replace(/[/\\]+$/, "");
+  process.env.CH_DATA_DIR = dataDir;
+  if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
+
+  const dbPath = join(dataDir, "control-hub.db");
+  console.log(`Database: ${dbPath}`);
+
+  const before = readSchemaVersion(dbPath);
+  console.log(`schema_version before: ${before}`);
+
+  // Dynamic import AFTER CH_DATA_DIR is set — db.ts resolves the data dir at
+  // import time (via paths.ts). getDb() opens the connection and runs the full
+  // applier chain (runMigrations), exactly as the app does at boot.
+  const { getDb, runMigrations } = await import("../../src/lib/db");
+  const database = getDb();
+
+  const versionOf = (): number => {
+    const row = database
+      .prepare("SELECT value FROM meta WHERE key = 'schema_version'")
+      .get() as { value?: string } | undefined;
+    return row?.value ? parseInt(row.value, 10) : 0;
+  };
+
+  // Converge to the terminal schema version. On a brand-new DB, runMigrations
+  // applies the baseline (the full current schema, schema_version 3) and returns
+  // early; the upgrade-only appliers (→ 11) run on the next pass. The app reaches
+  // this across boot, but a standalone migrator should finish in one invocation —
+  // so re-run until the version stops advancing (idempotent; capped).
+  let last = versionOf();
+  for (let i = 0; i < 5; i++) {
+    runMigrations(database);
+    const next = versionOf();
+    if (next === last) break;
+    last = next;
+  }
+
+  const after = versionOf();
+  console.log(`schema_version after: ${after}`);
+  console.log(
+    after > before
+      ? `✓ Migrated schema_version ${before} → ${after}`
+      : `✓ Already at schema_version ${after}`,
+  );
+  console.log("Done.");
+}
+
+main().catch((err) => {
+  console.error("Migration failed:", err);
+  process.exit(1);
+});

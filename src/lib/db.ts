@@ -16,6 +16,13 @@ import { applyMissionQueueMigration } from "./db/apply-mission-queue-migration";
 import { applyCronScheduleCanonicalisation } from "./db/apply-cron-schedule-canonicalisation";
 import { applyRunsSchedulesMigration } from "./db/apply-runs-schedules-migration";
 import { applyLegacyColumnRepair } from "./db/apply-legacy-column-repair";
+import { applyDropGameTablesMigration } from "./db/apply-drop-game-tables-migration";
+import { applyAnalyticsEventsMigration } from "./db/apply-analytics-events-migration";
+import { applyChatMigration } from "./db/apply-chat-migration";
+import { applyBenchmarksMigration } from "./db/apply-benchmarks-migration";
+import { applyBenchmarkConfigMigration } from "./db/apply-benchmark-config-migration";
+import { applyBenchmarkCatalogMigration } from "./db/apply-benchmark-catalog-migration";
+import { applyBenchGatewaysMigration } from "./db/apply-bench-gateways-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -167,6 +174,27 @@ export function runMigrations(database: Database.Database): void {
   // column-adds the incremental chain skipped (v5→v7 jump). Runs last so it
   // repairs already-deployed v8 installs too. Idempotent on fresh DBs.
   applyLegacyColumnRepair(database);
+  // Gamification dial-back: drop the removed RPG/Gacha game_* tables. Idempotent
+  // (no-op on fresh installs; cleans already-migrated dev DBs).
+  applyDropGameTablesMigration(database, migrationsDir);
+  // Analytics interaction log (feeds the Insights page + derived achievements).
+  // Idempotent CREATE ... IF NOT EXISTS at schema_version 12.
+  applyAnalyticsEventsMigration(database, migrationsDir);
+  // Agent-chat persistence (server-side conversations + messages, mapped to
+  // Hermes sessions). Idempotent CREATE ... IF NOT EXISTS at schema_version 13.
+  applyChatMigration(database, migrationsDir);
+  // Agent benchmarking runs + per-item results (feeds the Agent Rating axis +
+  // leaderboard). Idempotent CREATE ... IF NOT EXISTS at schema_version 14.
+  applyBenchmarksMigration(database, migrationsDir);
+  // (Agent + LLM) unit + augmentation tags on benchmark runs/results.
+  // Additive ALTER ADD COLUMN, per-statement guarded, at schema_version 15.
+  applyBenchmarkConfigMigration(database, migrationsDir);
+  // Central fair-test catalog: tool_catalog + seed_memory_facts.
+  // Idempotent CREATE ... IF NOT EXISTS at schema_version 16.
+  applyBenchmarkCatalogMigration(database, migrationsDir);
+  // Ephemeral benchmark gateway tracking + per-item metrics_json.
+  // Idempotent CREATE + guarded ALTER at schema_version 17.
+  applyBenchGatewaysMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

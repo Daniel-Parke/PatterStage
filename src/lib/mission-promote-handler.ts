@@ -9,12 +9,12 @@ import {
 import { buildMissionFieldPatch } from "@/lib/mission-field-updates";
 import { dispatchMissionNow } from "@/lib/mission-dispatch";
 import { runMissionQueueTick } from "@/lib/mission-queue-tick";
-import { createCronJob, deleteCronJob, pushJobToHermes } from "@/lib/cron-repository";
-import { syncMissionToCronJob } from "@/lib/mission-cron-sync";
+import { createSchedule } from "@/lib/schedules-repository";
+import { parseSchedule, scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
+import { computeNextRun } from "@/lib/schedule/next-run";
 import { enrichedMission } from "@/lib/mission-response";
 import { logApiError } from "@/lib/api-logger";
 import { isMissionDraft, isMissionQueuedForRun } from "@/lib/mission-board";
-import { cronSyncFailureBody, logCronSyncFailure } from "@/lib/cron-sync-failure";
 import { parseDispatchMode } from "@/lib/dispatch-mode";
 import type { Mission } from "@/lib/mission-types";
 
@@ -86,7 +86,7 @@ export async function promoteMission(
     return { ok: false, status: 400, error: "schedule is required for cron promote" };
   }
 
-  const { shouldRebuildPrompt, updates } = buildMissionFieldPatch(
+  const { updates } = buildMissionFieldPatch(
     existing,
     {
       name: input.name,
@@ -121,65 +121,41 @@ export async function promoteMission(
     return { ok: false, status: 404, error: "Mission not found" };
   }
 
-  const shouldSyncCron =
-    mission.cronJobId &&
-    (shouldRebuildPrompt ||
-      input.schedule !== undefined ||
-      input.profileName !== undefined ||
-      input.modelId !== undefined ||
-      input.provider !== undefined);
-
-  if (shouldSyncCron) {
-    await syncMissionToCronJob(input.missionId);
-  }
-
   if (isCronMode) {
+    // Recurring promote → a Control Hub `schedules` row (the scheduler fires it);
+    // no legacy cron_jobs / jobs.json. Mirrors the dispatch cron branch.
+    const parsed = parseSchedule(input.schedule!);
+    if (parsed.kind === "invalid") {
+      return { ok: false, status: 400, error: `Unrecognized schedule: ${input.schedule}` };
+    }
     try {
       const current = getMission(input.missionId)!;
-      if (current.cronJobId) {
-        await syncMissionToCronJob(input.missionId);
-      } else {
-        const cronJob = createCronJob({
-          name: current.name,
-          prompt: current.prompt,
-          skills: current.skills ?? [],
-          model: current.modelId ?? undefined,
-          provider: current.provider ?? undefined,
-          schedule: input.schedule!,
-          repeat: { times: null },
-          enabled: true,
-          state: "scheduled",
-          deliver: "none",
-          profile_name: current.profileName ?? "default",
-          source: "ch",
-        });
-        updateMission(input.missionId, { cronJobId: cronJob.id, schedule: input.schedule });
-        const pushResult = await pushJobToHermes(cronJob.id);
-        if (!pushResult.ok) {
-          deleteCronJob(cronJob.id);
-          updateMission(input.missionId, { cronJobId: null, status: "failed" });
-          // Log via the side-effect-only helper (same console shape as
-          // the cron/route.ts sites) and splice the mission into the
-          // result body before returning.
-          logCronSyncFailure("promoteMission", pushResult);
-          return {
-            ok: false,
-            status: 502,
-            ...cronSyncFailureBody(pushResult),
-            mission: enrichedMission(input.missionId)!,
-          };
-        }
-      }
-
-      await dispatchMissionNow(input.missionId, {
-        profileName: input.profileName,
-        modelId: input.modelId,
-        provider: input.provider,
+      const next = computeNextRun(input.schedule!, new Date());
+      const schedule = createSchedule({
+        missionId: input.missionId,
+        name: current.name,
+        schedule: input.schedule!,
+        scheduleDisplay: scheduleDisplayFromParsed(parsed, input.schedule!),
+        enabled: true,
+        profileName: input.profileName ?? current.profileName ?? null,
+        nextRunAt: next ? next.toISOString() : null,
       });
+
+      // Best-effort first run, linked to the schedule.
+      try {
+        await dispatchMissionNow(input.missionId, {
+          profileName: input.profileName,
+          modelId: input.modelId,
+          provider: input.provider,
+          scheduleId: schedule.id,
+        });
+      } catch (err) {
+        logApiError("promoteMission", "schedule first-run", err);
+      }
     } catch (err) {
-      logApiError("promoteMission", "cron promote", err);
+      logApiError("promoteMission", "schedule promote", err);
       updateMission(input.missionId, { status: "failed" });
-      return { ok: false, status: 500, error: "Failed to promote mission to cron" };
+      return { ok: false, status: 500, error: "Failed to schedule mission" };
     }
 
     return { ok: true, mission: enrichedMission(input.missionId)! };

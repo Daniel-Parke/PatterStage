@@ -14,6 +14,7 @@ import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { listSchedules, createSchedule } from "@/lib/schedules-repository";
 import { parseSchedule } from "@/lib/schedule/parse-schedule";
 import { computeNextRun } from "@/lib/schedule/next-run";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 const scheduleCreateSchema = z
   .object({
@@ -58,6 +59,11 @@ export async function POST(request: NextRequest) {
       repeatTimes: parsed.repeatTimes ?? null,
       profileName: parsed.profileName ?? null,
       nextRunAt: next ? next.toISOString() : null,
+    });
+    recordEvent("schedule.created", {
+      entityType: "schedule",
+      entityId: schedule.id,
+      profile: schedule.profileName,
     });
     return created({ schedule });
   } catch (error) {

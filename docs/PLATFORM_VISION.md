@@ -44,10 +44,11 @@ A mission dispatch is a single HTTP **run**: `runtime.submitRun()` returns a `ru
 | Scheduling | Control Hub-owned `schedules` + scheduler tick → runtime. `/api/schedules`. |
 | Model / provider | SQLite registry + `/api/models`, `/api/credentials`; write-through to Hermes `config.yaml` / `.env`. |
 | Config / sessions / memory / gateway / logs / skills / personalities | Hermes-aligned surfaces; sessions/skills/toolsets discovered via the runtime. |
+| Stats & analytics | `/api/stats` aggregate powers the command-center dashboard (throughput, mission mix, run-activity heatmap, vitals, token usage) + per-entity insight strips + per-agent performance. Light derived progression (level / streak / achievements) presents engagement as stats — never gates functionality. |
 
 ## Testing the whole stack anywhere
 
-`docker compose up --build` runs Control Hub against a **mock Hermes API Server** (`mock-hermes/`) — no real agent or API keys needed. The end-to-end smoke test (`npm run test:e2e-runtime`) drives mission → run → reconcile, schedules, and cancel through the real HTTP surface. For a real agent, point `HERMES_GATEWAY_URL` at a running `hermes gateway` (API server enabled) and drop the mock service.
+`docker compose up --build` runs Control Hub against a **mock Hermes API Server** (`mock-hermes/`) — no real agent or API keys needed. The fast smoke (`npm run test:e2e-runtime`) drives mission → run → reconcile, schedules, and cancel through the real HTTP surface. For higher fidelity, **`npm run test:e2e-hermes`** brings up the **real** Hermes Agent (official image, pinned digest) + a mock LLM and validates 18 contract points, a full-stack smoke, and a DB upgrade-path step — this local run is the **merge gate** for runtime/DB changes. For a real agent in dev, point `HERMES_GATEWAY_URL` at a running `hermes gateway` (API server enabled).
 
 ## Security
 

@@ -7,6 +7,7 @@ import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { applyProfileOrRootPatchOrFail } from "@/lib/apply-profile-or-root-patch";
 import { requireSafeProfileName } from "@/lib/path-security";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
@@ -39,6 +40,11 @@ export async function PUT(request: NextRequest) {
     );
     if (result instanceof NextResponse) return result;
 
+    recordEvent("personality.changed", {
+      entityType: "personality",
+      entityId: result.profile,
+      profile: result.profile,
+    });
     return ok({ success: true, profile: result.profile, personality });
   }
   catch (error) {

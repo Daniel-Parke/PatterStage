@@ -1,6 +1,6 @@
 # System cron — Hindsight backup
 
-Control Hub ships one host-level cron script: **`ch-backup.sh`** (Hindsight snapshot). During [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh), the script is copied into **`CH_DATA_DIR/scripts`** when missing (see [`getChScriptsDir()`](../src/lib/paths.ts)). Register jobs from **Cron → System**; each crontab line must invoke a script under that directory ([`POST /api/cron/hardware`](../src/app/api/cron/hardware/route.ts)).
+Control Hub ships one host-level cron script: **`ch-backup.sh`** (Hindsight snapshot). During [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh), the script is copied into **`CH_DATA_DIR/scripts`** when missing (see [`getChScriptsDir()`](../src/lib/paths.ts)). Register jobs from the **Orchestration → Scripts** page; each crontab line must invoke a script under that directory ([`POST /api/cron/hardware`](../src/app/api/cron/hardware/route.ts)).
 
 Preset label and filename: [`src/lib/hardware-cron.ts`](../src/lib/hardware-cron.ts) (`HARDWARE_CRON_UI_PRESETS`). Log output defaults to **`CH_HARDWARE_LOG_DIR`** (`CH_DATA_DIR/logs`).
 

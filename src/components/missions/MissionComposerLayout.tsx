@@ -11,27 +11,6 @@ export function ComposerFieldLabel({ children }: { children: ReactNode }) {
   );
 }
 
-export function ComposerSectionHeading({
-  title,
-  description,
-}: {
-  title: string;
-  description?: string;
-}) {
-  return (
-    <div className="pt-6 first:pt-0 border-t border-white/10 first:border-t-0">
-      <h3 className="text-xs font-mono text-white/50 uppercase tracking-widest">
-        {title}
-      </h3>
-      {description && (
-        <p className="text-xs text-white/30 font-mono mt-1 leading-relaxed">
-          {description}
-        </p>
-      )}
-    </div>
-  );
-}
-
 const ACCENT_BORDER: Record<string, string> = {
   cyan: "border-l-neon-cyan/50",
   purple: "border-l-neon-purple/50",

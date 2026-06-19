@@ -23,6 +23,7 @@ import ModelsAgentDefaultSection from "@/components/models/ModelsAgentDefaultSec
 import ModelsDriftBanner from "@/components/models/ModelsDriftBanner";
 import ModelsFallbackSection from "@/components/models/ModelsFallbackSection";
 import ModelsTableSection from "@/components/models/ModelsTableSection";
+import ModelInsights from "@/components/models/ModelInsights";
 import ModelsTaskDefaultsSection from "@/components/models/ModelsTaskDefaultsSection";
 import { pluralise } from "@/lib/utils";
 import { useModelsPage } from "@/hooks/useModelsPage";
@@ -157,6 +158,7 @@ export default function ModelsPage() {
           <LoadingSpinner text="Loading models..." />
         ) : (
           <>
+            <ModelInsights models={models} credentialCount={credentials.length} />
             <ModelsTableSection
               models={models}
               defaults={defaults}

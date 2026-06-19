@@ -31,6 +31,7 @@ import {
   expandUnifiedToAllPlatforms,
   unionToolsetsFromPlatforms,
 } from "@/lib/hermes-toolset-unify";
+import ToolsInsights from "@/components/tools/ToolsInsights";
 
 export default function ToolsPage() {
   const [selectedProfile, setSelectedProfile] = useState("default");
@@ -300,6 +301,10 @@ export default function ToolsPage() {
             <code className="text-white/40">hermes tools</code> on disk.
           </p>
         </div>
+
+        {!loadingToolsets && (
+          <ToolsInsights total={HERMES_CONFIGURABLE_TOOLSETS.length} enabled={enabledCount} />
+        )}
 
         <div className="rounded-xl border border-neon-orange/20 bg-neon-orange/5 p-4 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-start gap-4">

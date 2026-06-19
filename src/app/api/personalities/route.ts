@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { badRequest, methodNotAllowed, ok } from "@/lib/api-response";
+import { badRequest, methodNotAllowed, notFound, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
@@ -16,7 +16,14 @@ async function upsertPersonality(request: NextRequest) {
   const bodyResult = await parseJsonBody(request);
   if (bodyResult instanceof NextResponse) return bodyResult;
   const body = bodyResult;
-  const profile = typeof body.profile === "string" ? body.profile : "default";
+  // Require an EXPLICIT profile. Never silently fall back to "default" — that
+  // would overwrite Bob's SOUL.md whenever the field is missing or a typo, a
+  // data-loss footgun. A "personality" IS a profile's SOUL identity, so the
+  // target profile must already exist (created on the Agents page).
+  if (typeof body.profile !== "string" || !body.profile.trim()) {
+    return badRequest("profile is required — the agent profile whose SOUL identity to set");
+  }
+  const profile = body.profile.trim();
   const prompt = typeof body.prompt === "string" ? body.prompt : "";
   if (!prompt.trim()) {
     return badRequest("prompt is required");
@@ -24,6 +31,12 @@ async function upsertPersonality(request: NextRequest) {
 
   const resolved = requireSafeProfileName(profile);
   if (resolved instanceof NextResponse) return resolved;
+
+  // The profile must already exist (the "default" root, or a created profile).
+  // We do NOT create profiles here.
+  if (resolved.profile !== "default" && !listProfiles().some((p) => p.slug === resolved.profile)) {
+    return notFound(`Unknown profile '${resolved.profile}' — create it on the Agents page first`);
+  }
 
   // applyProfileOrRootPatchOrFail collapses the 4-line
   // apply+toPatchResponse+assert+return-err dance into 1 call +

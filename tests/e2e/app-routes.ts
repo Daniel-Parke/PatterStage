@@ -5,6 +5,8 @@
  */
 export const APP_NAV_ROUTES: readonly string[] = [
   "/",
+  "/insights",
+  "/benchmarks",
   "/operations/agents",
   "/operations/tools",
   "/config",
@@ -37,8 +39,7 @@ export const APP_NAV_ROUTES: readonly string[] = [
   "/config/tts",
   "/config/voice",
   "/config/web",
-  "/orchestration/cron",
-  "/orchestration/schedules",
+  "/orchestration/scripts",
   "/orchestration/chat",
   "/logs",
   "/memory",

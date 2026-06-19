@@ -48,6 +48,10 @@ COPY --from=builder /app/scripts ./scripts
 # resolveMigrationsDir in src/lib/db.ts); the Next bundle does not co-locate
 # these next to __dirname, so copy the source SQL explicitly.
 COPY --from=builder /app/src/lib/db ./src/lib/db
+# Seed catalog data (profiles, skills, tools, memories, template packs) is read
+# at runtime by the one-time boot seed (ensureCatalogSeededOnce) — without it a
+# fresh deploy can't seed the benchmark catalog. cwd-relative, like the SQL above.
+COPY --from=builder /app/data/seed ./data/seed
 
 RUN chown -R nextjs:nodejs /app/scripts
 

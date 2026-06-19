@@ -118,13 +118,13 @@ beforeEach(() => {
 
 describe("POST /api/models/fallbacks/import", () => {
   it("imports agent settings from config.yaml into SQLite before re-sync", async () => {
-    const { POST } = await import("@/app/api/models/fallbacks/import/route");
+    const { POST } = await import("@/app/api/models/fallbacks/route");
     const req = new (jest.requireMock("next/server").NextRequest as new (
       url: string,
       init?: RequestInit,
     ) => unknown)("http://localhost/api/models/fallbacks/import", {
       method: "POST",
-      body: JSON.stringify({}),
+      body: JSON.stringify({ action: "import" }),
     });
     const res = (await POST(req)) as { status: number };
     expect(res.status).toBe(200);
@@ -142,13 +142,13 @@ describe("POST /api/models/fallbacks/import", () => {
     const missingRoot = join(tmpdir(), `ch-fb-missing-${Date.now()}`);
     mkdirSync(missingRoot, { recursive: true });
     fakeRoot = missingRoot;
-    const { POST } = await import("@/app/api/models/fallbacks/import/route");
+    const { POST } = await import("@/app/api/models/fallbacks/route");
     const req = new (jest.requireMock("next/server").NextRequest as new (
       url: string,
       init?: RequestInit,
     ) => unknown)("http://localhost/api/models/fallbacks/import", {
       method: "POST",
-      body: JSON.stringify({}),
+      body: JSON.stringify({ action: "import" }),
     });
     const res = (await POST(req)) as { status: number };
     expect(res.status).toBe(404);

@@ -38,7 +38,7 @@ TypeScript `AccentColor` in `src/types/hermes.ts` is unchanged: `cyan | purple |
 | `purple` | `#8b5cff` | 139, 92, 255 | Blue-violet / orchestration |
 | `green` | `#a3ff12` | 163, 255, 18 | Success / online / electric lime |
 | `pink` | `#e879f9` | 232, 121, 249 | Cool magenta–fuchsia |
-| `orange` | `#ff9f1c` | 255, 159, 28 | Warning / heat / amber accent |
+| `orange` | `#ff6622` | 255, 102, 34 | Heat / Cherenkov complement (Sparrow's Fire) accent |
 | `neon-yellow` (non-AccentColor) | `#facc15` | 250, 204, 21 | Crown / leader highlights |
 
 ## Layer D — Semantic status (Tailwind utilities)
@@ -53,6 +53,8 @@ TypeScript `AccentColor` in `src/types/hermes.ts` is unchanged: `cyan | purple |
 ## Glow / TS parity
 
 `src/lib/theme.ts` exports `glowSurfaceRgbMap` with **comma-separated RGB triplets** matching the table above for each `AccentColor`. If you change `@theme` neon hexes, update `glowSurfaceRgbMap` in the same PR.
+
+**Restraint (deep-space Cherenkov):** the `.glow-*` box-shadows in `globals.css` are intentionally soft (`14px @ 0.08` + `28px @ 0.025`) so glow reads as a subtle luminescence, not a flat light source. The brand's "reactor core" signature lives in the stronger `pulse-glow` + `glow-surface` reserved for **live/active** states (running process, live session) — not static cards. New surfaces follow the same discipline: cyan (Cherenkov) is *the* primary; the other accents (purple/green/pink/orange) are semantic, not decorative — keep few competing accents per screen.
 
 ## Form inputs
 

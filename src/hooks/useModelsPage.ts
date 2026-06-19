@@ -355,8 +355,8 @@ export function useModelsPage() {
       runFallbackMutation(
         "Fallback chain reordered",
         "Reorder failed",
-        "/api/models/fallbacks/reorder",
-        { method: "POST", body: JSON.stringify({ entryId, direction }) },
+        "/api/models/fallbacks",
+        { method: "POST", body: JSON.stringify({ action: "reorder", entryId, direction }) },
       ),
     [runFallbackMutation]
   );
@@ -366,8 +366,8 @@ export function useModelsPage() {
       runFallbackMutation(
         enabled ? "Fallback model enabled" : "Fallback model disabled",
         "Toggle failed",
-        "/api/models/fallbacks/toggle",
-        { method: "POST", body: JSON.stringify({ entryId, enabled }) },
+        "/api/models/fallbacks",
+        { method: "POST", body: JSON.stringify({ action: "toggle", entryId, enabled }) },
       ),
     [runFallbackMutation]
   );
@@ -413,7 +413,7 @@ export function useModelsPage() {
         "Fallback model added from registry",
         "Add failed",
         "/api/models/fallbacks",
-        { method: "POST", body: JSON.stringify({ modelId }) },
+        { method: "POST", body: JSON.stringify({ action: "add", modelId }) },
       ),
     [runFallbackMutation]
   );
@@ -423,8 +423,8 @@ export function useModelsPage() {
       runFallbackMutation(
         "Custom fallback model added",
         "Add failed",
-        "/api/models/fallbacks/custom",
-        { method: "POST", body: JSON.stringify({ name, provider, modelIdString, baseUrl }) },
+        "/api/models/fallbacks",
+        { method: "POST", body: JSON.stringify({ action: "custom", name, provider, modelIdString, baseUrl }) },
       ),
     [runFallbackMutation]
   );
@@ -454,8 +454,8 @@ export function useModelsPage() {
       runFallbackMutation(
         "Fallback config imported from Hermes",
         "Import failed",
-        "/api/models/fallbacks/import",
-        { method: "POST" },
+        "/api/models/fallbacks",
+        { method: "POST", body: JSON.stringify({ action: "import" }) },
         setImportingFallback,
       ),
     [runFallbackMutation],
@@ -544,9 +544,9 @@ export function useModelsPage() {
           config: FallbackConfig;
           configPath?: string;
         };
-      }>("/api/models/fallbacks/sync", {
+      }>("/api/models/fallbacks", {
         method: "POST",
-        body: JSON.stringify({ config: fallbackConfig }),
+        body: JSON.stringify({ action: "sync", config: fallbackConfig }),
       });
 
       const payload = res.data;

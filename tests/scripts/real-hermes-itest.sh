@@ -43,8 +43,9 @@ CH_URL="http://localhost:${CH_PORT}" HERMES_URL="http://localhost:${H_PORT}" API
 echo "[itest] ── DB upgrade path (legacy DB self-migrates on boot) ──"
 # Seed a legacy pre-rewrite DB (schema_version 2, no cron_jobs.workdir, no
 # runs/schedules) into the Control Hub data volume, restart, and assert the
-# server self-migrates: routes that query workdir return 200 instead of
-# "no such column: workdir". Guards the upgrade path the fresh-DB stack skips.
+# server self-migrates: /api/schedules returns 200 (it needs the `schedules`
+# table the legacy seed dropped — restored by migration 009 on the v2→latest
+# upgrade). Guards the upgrade path the fresh-DB stack skips.
 ${COMPOSE} stop control-hub >/dev/null
 ${COMPOSE} run --rm --no-deps --entrypoint node control-hub -e '
   const Database = require("better-sqlite3");
@@ -72,11 +73,14 @@ done
 if [ "$up" != "1" ]; then
   echo "[itest] control-hub did not restart after legacy seed"; ${COMPOSE} logs --tail 40 control-hub; exit 1
 fi
+# /api/cron was removed with the legacy cron page (Phase M); assert /api/schedules
+# instead — it requires the `schedules` table the legacy seed dropped, so a 200
+# proves the v2→latest migration restored the runs/schedules schema.
 mcode=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${CH_PORT}/api/missions")
-ccode=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${CH_PORT}/api/cron")
-echo "[itest] post-upgrade: /api/missions=${mcode} /api/cron=${ccode}"
-if [ "$mcode" != "200" ] || [ "$ccode" != "200" ]; then
-  echo "[itest] upgrade FAILED — workdir column likely still missing"; ${COMPOSE} logs --tail 40 control-hub; exit 1
+scode=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${CH_PORT}/api/schedules")
+echo "[itest] post-upgrade: /api/missions=${mcode} /api/schedules=${scode}"
+if [ "$mcode" != "200" ] || [ "$scode" != "200" ]; then
+  echo "[itest] upgrade FAILED — runs/schedules migration likely incomplete"; ${COMPOSE} logs --tail 40 control-hub; exit 1
 fi
 echo "[itest] DB upgrade path OK ✅"
 

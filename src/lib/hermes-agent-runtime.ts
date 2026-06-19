@@ -7,20 +7,8 @@ import { getHermesHome } from "./hermes-home";
 import { buildHermesPathBundle, type HermesPathBundle } from "./hermes-paths";
 
 export type { HermesPathBundle };
-export {
-  getHermesDefaultRoot,
-  getHermesDefaultRootFromHome,
-  resolveProfileHermesHome,
-  buildProfileHermesPathBundle,
-  readHermesActiveProfile,
-  isProfileHermesHome,
-} from "./hermes-profile-paths";
-export {
-  getHermesAgentPackageDir,
-  expectedHermesVenvPythonPath,
-  resolveHermesAgentPackage,
-  resolveHermesVenvPython,
-} from "./hermes-package-path";
+// (Redundant re-exports of hermes-profile-paths / hermes-package-path helpers
+// were removed — consumers import those directly from their source modules.)
 
 /** Resolved paths for the local Hermes install. */
 export function getActiveHermesPaths(): HermesPathBundle {

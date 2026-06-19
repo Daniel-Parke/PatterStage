@@ -27,6 +27,12 @@ source "$CH_SCRIPTS_ROOT/lib/ch-env.sh"
 # shellcheck source=ch-deploy-status.sh
 source "$CH_SCRIPTS_ROOT/lib/ch-deploy-status.sh"
 
+# shellcheck source=ch-log.sh
+source "$CH_SCRIPTS_ROOT/lib/ch-log.sh"
+
+# shellcheck source=ch-migrate.sh
+source "$CH_SCRIPTS_ROOT/lib/ch-migrate.sh"
+
 LOCK_FILE="${TMPDIR:-/tmp}/ch-deploy.lock"
 LOG_FILE="$HOME/.hermes/logs/ch-update.log"
 CH_RESTART_LOG="$HOME/.hermes/logs/ch-restart.log"
@@ -351,8 +357,9 @@ ch_deploy_cmd_rebuild() {
   ch_deploy_npm_install_if_needed "rebuild"
   ch_deploy_run_build "rebuild"
 
-  ch_deploy_log_restart "Running database migrations…"
-  "$NPM_BIN" run db:migrate >>"$CH_BUILD_LOG" 2>&1 || ch_deploy_log_restart "WARNING: db:migrate failed"
+  ch_deploy_log_restart "Backing up + migrating database (schema + legacy data)…"
+  CH_NPM_BIN="$NPM_BIN" CH_ASSUME_YES=1 ch_migrate_run "$CH_APP_DIR" "${CH_DATA_DIR:-$HOME/control-hub/data}" >>"$CH_BUILD_LOG" 2>&1 ||
+    ch_deploy_log_restart "WARNING: database migration reported issues (backup retained) — see ch-build.log"
   if command -v npx &>/dev/null; then
     local HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
     if [ -f "$HERMES_HOME/config.yaml" ]; then
@@ -425,9 +432,9 @@ ch_deploy_run_update() {
     fi
     ch_deploy_log_update "Build successful"
 
-    ch_deploy_log_update "Running database migrations…"
-    if ! "$NPM_BIN" run db:migrate >>"$LOG_FILE" 2>&1; then
-      ch_deploy_log_update "WARNING: db:migrate failed — see ch-update.log"
+    ch_deploy_log_update "Backing up + migrating database (schema + legacy data)…"
+    if ! CH_NPM_BIN="$NPM_BIN" CH_ASSUME_YES=1 ch_migrate_run "$APP_DIR" "${CH_DATA_DIR:-$HOME/control-hub/data}" >>"$LOG_FILE" 2>&1; then
+      ch_deploy_log_update "WARNING: database migration reported issues (backup retained) — see ch-update.log"
     fi
 
     local HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
@@ -493,6 +500,7 @@ ch_deploy_dispatch_update() {
   while [ "${1:-}" ]; do
     case "${1}" in
       --restart-only) CH_DEPLOY_RESTART_ONLY=true ; shift ;;
+      --yes | -y) export CH_ASSUME_YES=1 ; shift ;;
       --branch)
         CH_DEPLOY_BRANCH="${2:-}"
         shift 2
@@ -500,6 +508,15 @@ ch_deploy_dispatch_update() {
       *) shift ;;
     esac
   done
+  # A full update does `git reset --hard origin/<branch>` and discards local
+  # changes. Warn a human first; the dashboard spawns this non-interactively
+  # (no TTY) so ch_confirm auto-proceeds on the safe default. Pass --yes to skip.
+  if [ "$CH_DEPLOY_RESTART_ONLY" = false ]; then
+    if ! ch_confirm "Update resets this checkout to origin/${CH_DEPLOY_BRANCH} and discards local changes. Continue?" "Y"; then
+      ch_info "Update cancelled — no changes made."
+      exit 0
+    fi
+  fi
   ch_deploy_run_update
 }
 

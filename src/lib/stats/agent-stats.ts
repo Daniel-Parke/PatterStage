@@ -1,0 +1,164 @@
+// ═══════════════════════════════════════════════════════════════
+// stats/agent-stats.ts — per-agent performance, derived from real activity
+//
+// Real metrics only (no RPG/combat framing): runs, mission success, tokens,
+// average run duration, plus a skills/toolsets count per profile. Read-only and
+// defensive — a partially-populated DB (no runs yet) yields zeros, not errors.
+// Powers the AgentPerformanceStrip on the Agents page via /api/stats.
+// ═══════════════════════════════════════════════════════════════
+
+import { db } from "@/lib/db";
+
+export interface AgentPerformance {
+  slug: string;
+  name: string;
+  personality?: string;
+  /** Total runs dispatched under this profile. */
+  runs: number;
+  missionsCompleted: number;
+  missionsFailed: number;
+  totalTokens: number;
+  /** Mean wall-clock seconds for completed runs (0 if none). */
+  avgDurationSec: number;
+  /** Active (not-disabled) skills available to the profile. */
+  skills: number;
+  /** Platform toolsets configured for the profile. */
+  toolsets: number;
+}
+
+function num(v: unknown): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+function scalar(sql: string, ...p: unknown[]): number {
+  try {
+    return num((db().prepare(sql).get(...p) as { v: number } | undefined)?.v);
+  } catch {
+    return 0;
+  }
+}
+function parseTotalTokens(raw: string | null): number {
+  if (!raw) return 0;
+  try {
+    const o = JSON.parse(raw) as { inputTokens?: number; outputTokens?: number; totalTokens?: number };
+    return num(o.totalTokens) || num(o.inputTokens) + num(o.outputTokens);
+  } catch {
+    return 0;
+  }
+}
+function jsonLen(raw: string | null): number {
+  if (!raw) return 0;
+  try {
+    const v = JSON.parse(raw);
+    if (Array.isArray(v)) return v.length;
+    if (v && typeof v === "object") return Object.keys(v).length;
+  } catch {
+    /* ignore */
+  }
+  return 0;
+}
+
+interface RunAgg {
+  runs: number;
+  tokens: number;
+  durSum: number;
+  durCount: number;
+}
+
+/** Aggregate runs per profile (the core of an agent's performance). */
+function runsByProfile(): Map<string, RunAgg> {
+  const out = new Map<string, RunAgg>();
+  let rows: Array<{ profile_name: string | null; status: string; usage_json: string | null; submitted_at: string; completed_at: string | null }> = [];
+  try {
+    rows = db()
+      .prepare("SELECT profile_name, status, usage_json, submitted_at, completed_at FROM runs")
+      .all() as typeof rows;
+  } catch {
+    return out;
+  }
+  for (const r of rows) {
+    const key = r.profile_name && r.profile_name.trim() ? r.profile_name : "default";
+    const a = out.get(key) ?? { runs: 0, tokens: 0, durSum: 0, durCount: 0 };
+    a.runs++;
+    a.tokens += parseTotalTokens(r.usage_json);
+    if (r.status === "completed" && r.completed_at && r.submitted_at) {
+      const d = (Date.parse(`${r.completed_at}Z`) - Date.parse(`${r.submitted_at}Z`)) / 1000;
+      if (Number.isFinite(d) && d >= 0 && d < 86_400) {
+        a.durSum += d;
+        a.durCount++;
+      }
+    }
+    out.set(key, a);
+  }
+  return out;
+}
+
+function missionsByProfile(): Map<string, { completed: number; failed: number }> {
+  const out = new Map<string, { completed: number; failed: number }>();
+  try {
+    const rows = db()
+      .prepare(
+        "SELECT COALESCE(profile_name, profile_id, 'default') AS p, status, COUNT(*) c FROM missions WHERE deleted_at IS NULL GROUP BY p, status",
+      )
+      .all() as Array<{ p: string; status: string; c: number }>;
+    for (const r of rows) {
+      const key = r.p && r.p.trim() ? r.p : "default";
+      const e = out.get(key) ?? { completed: 0, failed: 0 };
+      if (r.status === "successful") e.completed += r.c;
+      else if (r.status === "failed") e.failed += r.c;
+      out.set(key, e);
+    }
+  } catch {
+    /* table missing */
+  }
+  return out;
+}
+
+/**
+ * Per-agent performance for every configured profile (default + named),
+ * sorted by run volume (most-active first). Agents with no activity are
+ * still listed (zeros) so newly-created profiles are visible.
+ */
+export function getAgentPerformance(): AgentPerformance[] {
+  const runsAgg = runsByProfile();
+  const missionsAgg = missionsByProfile();
+  const totalSkills = scalar("SELECT COUNT(*) AS v FROM skills");
+  const agents: AgentPerformance[] = [];
+
+  const push = (slug: string, name: string, personality: string | undefined, disabledSkills: string | null, toolsets: string | null) => {
+    const r = runsAgg.get(slug) ?? { runs: 0, tokens: 0, durSum: 0, durCount: 0 };
+    const m = missionsAgg.get(slug) ?? { completed: 0, failed: 0 };
+    agents.push({
+      slug,
+      name,
+      personality,
+      runs: r.runs,
+      missionsCompleted: m.completed,
+      missionsFailed: m.failed,
+      totalTokens: r.tokens,
+      avgDurationSec: r.durCount > 0 ? Math.round(r.durSum / r.durCount) : 0,
+      skills: Math.max(0, totalSkills - jsonLen(disabledSkills)),
+      toolsets: jsonLen(toolsets),
+    });
+  };
+
+  try {
+    const root = db()
+      .prepare("SELECT display_name, personality, disabled_skills, platform_toolsets FROM agent_root WHERE id = 1")
+      .get() as { display_name: string; personality: string; disabled_skills: string; platform_toolsets: string } | undefined;
+    if (root) {
+      push("default", root.display_name || "Bob", root.personality, root.disabled_skills, root.platform_toolsets);
+    }
+    const profiles = db()
+      .prepare("SELECT slug, display_name, personality, disabled_skills, platform_toolsets FROM agent_profiles")
+      .all() as Array<{ slug: string; display_name: string; personality: string; disabled_skills: string; platform_toolsets: string }>;
+    for (const p of profiles) {
+      push(p.slug, p.display_name || p.slug, p.personality, p.disabled_skills, p.platform_toolsets);
+    }
+  } catch {
+    /* profiles table missing — return whatever we have */
+  }
+
+  agents.sort((a, b) => b.runs - a.runs || a.name.localeCompare(b.name));
+  return agents;
+}

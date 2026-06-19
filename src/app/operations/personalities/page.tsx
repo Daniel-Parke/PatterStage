@@ -30,6 +30,7 @@ import { apiFetch, setErrorFromCaught, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { filterByCaseInsensitiveSubstring } from "@/lib/list-search";
 import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
+import PersonalitiesInsights from "@/components/personalities/PersonalitiesInsights";
 
 interface Personality {
   name: string;
@@ -143,7 +144,7 @@ function EditPersonalityModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [name, setName] = useState(personality?.name || "");
+  const [name] = useState(personality?.name || "");
   const [prompt, setPrompt] = useState(personality?.prompt || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -203,16 +204,15 @@ function EditPersonalityModal({
         )}
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-white/70">Personality Name</label>
+          <label className="text-sm font-medium text-white/70">Agent Profile</label>
           <input
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. pirate, teacher, creative"
-            className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-neon-purple/50 transition-colors font-mono"
+            readOnly
+            className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/60 outline-none font-mono opacity-70 cursor-not-allowed"
           />
           <p className="text-xs text-white/30 font-mono">
-            Lowercase identifier — used in config.yaml and CLI personality switch
+            The profile whose SOUL.md voice this is — create profiles on the Agents page
           </p>
         </div>
 
@@ -344,36 +344,31 @@ export default function PersonalitiesPage() {
     <AppPageShell>
       <PageHeader
         title="Personalities"
-        subtitle="Hermes identities are SOUL.md files. Edit profile identity from Agents or this page."
+        subtitle="A personality is a profile's SOUL.md voice. Edit an existing profile's identity here; create profiles on the Agents page."
         icon={Brain}
         color="purple"
       />
 
       <div className="max-w-4xl mx-auto px-6 py-6">
+        {!loading && <PersonalitiesInsights personalities={personalities} activeName={activePersonality} />}
+
         {activePersonality && (
           <p className="text-xs font-mono text-neon-cyan/80 mb-4">
             Active: <span className="text-white">{activePersonality}</span>
           </p>
         )}
 
-        {/* Toolbar */}
+        {/* Toolbar — no "New": a personality IS a profile's identity, so new
+            ones come from creating a profile on the Agents page. */}
         <div className="flex items-center gap-3 mb-6">
           <div className="flex-1">
             <SearchInput
               value={search}
               onChange={setSearch}
-              placeholder="Search personalities..."
+              placeholder="Search profiles..."
               accentColor="purple"
             />
           </div>
-          <Button
-            variant="primary"
-            color="purple"
-            icon={Plus}
-            onClick={() => setEditTarget(null)}
-          >
-            New
-          </Button>
         </div>
 
         {/* Content */}

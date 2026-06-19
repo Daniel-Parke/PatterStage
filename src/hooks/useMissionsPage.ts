@@ -2,112 +2,36 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
 import { useMissionCategories } from "@/hooks/useMissionCategories";
-import { safeApiCall, apiFetch, toastError, safeApiCallData } from "@/lib/api-fetch";
+import { useMissionTemplatesState } from "@/hooks/useMissionTemplatesState";
+import { useMissionComposer } from "@/hooks/useMissionComposer";
+import { safeApiCall, toastError } from "@/lib/api-fetch";
 import { toastFromResult } from "@/lib/toast-from-result";
 import { successMessageForDispatch, dispatchMissionAction } from "@/hooks/success-message-for-dispatch";
-import type { LocalDirEntry, Mission } from "@/types/hermes";
-import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
-import { parseMissionPrompt } from "@/lib/build-mission-prompt";
-import { unionToolsetsFromPlatforms } from "@/lib/hermes-toolset-unify";
-import type { PlatformToolsets } from "@/lib/profile-config-builder";
-import type { MissionFormState } from "@/components/missions/MissionCreateForm";
+import type { Mission } from "@/types/hermes";
 import type { MissionTemplate } from "@/components/missions/TemplateModals";
+import { buildTemplatePayload } from "@/lib/mission-form-utils";
 import {
-  categoryFilterPills,
-  groupTemplatesByCategory,
-} from "@/lib/mission-categories";
-import { buildTemplatePayload, splitGoals } from "@/lib/mission-form-utils";
-import { scheduleForDispatch } from "@/lib/dispatch-mode";
-import {
-  isMissionActive,
   isMissionDraft,
   isMissionQueuedForRun,
-  missionBoardColumn,
 } from "@/lib/mission-board";
+import {
+  getCategoryIdFromTemplate,
+  rememberLastCategory,
+} from "@/lib/mission-composer-utils";
+import {
+  filterMissions,
+  computeMissionCounts,
+  computeMissionCategoryPills,
+  computeTemplateCategoryPills,
+  filterGroupedTemplates,
+  submitToastForDispatch,
+} from "@/lib/mission-filters";
 
-/** localStorage key for the most recently selected mission category */
-const LAST_CATEGORY_KEY = "ch-last-mission-category";
-
-/**
- * Read the legacy `categoryId` field from a `MissionTemplate`.
- *
- * The `MissionTemplate` interface (in `src/components/missions/TemplateModals.tsx`)
- * exposes `category: string` as the canonical category field, but the
- * legacy backend response shape also carries a `categoryId?: string`
- * field that 3 call sites in this file (the `applyTemplateToForm` body,
- * the `fetchData` template-apply path, and the `templateCategoryPills`
- * `useMemo`) need to read. The structural cast
- * `(t as MissionTemplate & { categoryId?: string })` was duplicated at
- * all 3 sites — this helper centralises the cast + read + fallback
- * discipline so a future "drop the legacy shape" change lands in one
- * place. The `?? fallback` preserves the original `?? <default>`
- * semantics at every call site.
- *
- * Byte-equivalent to the inline form: same cast, same read, same
- * `?? <fallback>` fallback. The helper body is literally
- * `(t as MissionTemplate & { categoryId?: string }).categoryId ?? fallback`.
- *
- * Exported for unit testing. Not part of the public hook contract;
- * the canonical use is the 3 callsites in this file.
- */
-export function getCategoryIdFromTemplate(
-  t: MissionTemplate,
-  fallback: string | null = null,
-): string | null {
-  return (t as MissionTemplate & { categoryId?: string }).categoryId ?? fallback;
-}
-
-/**
- * Persist the user's last-selected mission category to localStorage.
- * Centralised so the 2 callsites (`setCategoryId` setter + the
- * template-apply path) use the same try/catch+ignore discipline.
- * Failing localStorage writes (quota, private-mode, disabled) are
- * silently ignored — the user-visible flow continues to work because
- * the in-memory `newCategoryId` state has already been set; we just
- * won't restore the same category on next mount.
- *
- * Exported for unit testing. Not part of the public hook contract;
- * the canonical use is the 2 callsites in this file.
- */
-export function rememberLastCategory(id: string | null | undefined): void {
-  if (!id) return;
-  try {
-    localStorage.setItem(LAST_CATEGORY_KEY, id);
-  } catch {
-    // localStorage full or unavailable — silently ignore
-  }
-}
-
-/**
- * Read the user's last-selected mission category from localStorage.
- * Mirrors `rememberLastCategory()` — same try/catch+ignore discipline
- * (failing localStorage reads return `null` and the user-visible
- * flow continues to work because the in-memory `newCategoryId` state
- * stays empty; we just won't restore the same category on next mount).
- *
- * The 1 callsite (`useEffect` at the showCreate+!editingId guard
- * inside `useMissionsPage`) previously inlined a 3-line try/catch +
- * `getItem` + guard. Promoting to a helper here keeps the write and
- * read paths in lockstep — a future "migrate to a different
- * storage backend" change lands in both helpers in one place.
- *
- * Returns `null` on any failure (storage unavailable, parse error,
- * key missing). Exported for unit testing.
- */
-export function readLastCategory(): string | null {
-  try {
-    return localStorage.getItem(LAST_CATEGORY_KEY);
-  } catch {
-    return null;
-  }
-}
-
-function submitToastForDispatch(mode: "save" | "now" | "cron" | "queue"): string {
-  if (mode === "save") return "Saving draft...";
-  if (mode === "queue") return "Queueing mission...";
-  if (mode === "cron") return "Scheduling mission...";
-  return "Dispatching mission...";
-}
+// getCategoryIdFromTemplate / rememberLastCategory / readLastCategory moved
+// to src/lib/mission-composer-utils.ts (shared by useMissionComposer + this
+// hook, imported above). The pure board/category selectors (filterMissions,
+// computeMissionCounts, *CategoryPills, filterGroupedTemplates) and the
+// dispatch-toast copy live in src/lib/mission-filters.ts.
 
 export type MissionRow = Mission & {
   cronJob?: {
@@ -166,191 +90,87 @@ export function useMissionsPage() {
   const templateApplied = useRef(false);
   const expandedIdRef = useRef<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [showTemplateEditor, setShowTemplateEditor] = useState(false);
-  const [showTemplateManager, setShowTemplateManager] = useState(false);
-  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(
-    null,
-  );
-  const [templateName, setTemplateName] = useState("");
-  const [templateDescription, setTemplateDescription] = useState("");
-  const [templateIcon, setTemplateIcon] = useState("Zap");
-  const [templateColor, setTemplateColor] = useState("cyan");
-  const [templateSaving, setTemplateSaving] = useState(false);
 
-  const [newName, setNewName] = useState("");
-  const [newInstruction, setNewInstruction] = useState("");
-  const [newContext, setNewContext] = useState("");
-  const [newGoals, setNewGoals] = useState("");
-  const [newOutputFormat, setNewOutputFormat] = useState("");
-  const [newConstraints, setNewConstraints] = useState("");
-  const [dispatchAcknowledged, setDispatchAcknowledged] = useState(false);
-  const [newDispatch, setNewDispatch] = useState<"save" | "now" | "cron" | "queue">(
-    "save",
-  );
-  const [newSchedule, setNewSchedule] = useState("every 5m");
-  const [newMissionTime, setNewMissionTime] = useState(15);
-  const [newTimeout, setNewTimeout] = useState(10);
-  const [newProfile, setNewProfile] = useState("");
-  const [newModel, setNewModel] = useState("");
-  const [newProvider, setNewProvider] = useState("");
-  const [newLocalDirs, setNewLocalDirs] = useState<LocalDirEntry[]>([]);
-  const [localDirDraft, setLocalDirDraft] = useState<LocalDirEntry>({
-    path: "",
-    branch: null,
-  });
-  const [newReferences, setNewReferences] = useState<string[]>([]);
-  const [newSkills, setNewSkills] = useState<string[]>([]);
-  const [newToolsets, setNewToolsets] = useState<string[]>([]);
-  const [referenceInput, setReferenceInput] = useState("");
+  // Template editor/manager UI state lives in its own container hook
+  // (src/hooks/useMissionTemplatesState.ts); destructured here so the
+  // template handlers + the public return shape are unchanged.
+  const {
+    showTemplateEditor,
+    setShowTemplateEditor,
+    showTemplateManager,
+    editingTemplateId,
+    setEditingTemplateId,
+    templateName,
+    setTemplateName,
+    templateDescription,
+    setTemplateDescription,
+    templateIcon,
+    setTemplateIcon,
+    templateColor,
+    setTemplateColor,
+    templateSaving,
+    setTemplateSaving,
+    openTemplateManager,
+    closeTemplateManager,
+    closeTemplateEditor,
+  } = useMissionTemplatesState();
+
+  // Composer form state (every `new*` field) + its setters, the typed
+  // field-setter map, the dispatch payload builder, the two form-
+  // population helpers, and the three composer-local effects live in
+  // their own container hook (src/hooks/useMissionComposer.ts). It's
+  // destructured here so every handler body that reads `newName`/
+  // `dispatchPayload`/etc. and the public return shape are unchanged.
+  // showCreate/editingId are passed in so the visibility-gated effects
+  // (last-category restore, default-agent autofill) can read them.
+  const {
+    newName,
+    newInstruction, setNewInstruction,
+    newContext, setNewContext,
+    newGoals, setNewGoals,
+    newOutputFormat, setNewOutputFormat,
+    newConstraints, setNewConstraints,
+    dispatchAcknowledged, setDispatchAcknowledged,
+    newDispatch, setNewDispatch,
+    newSchedule,
+    newMissionTime, setNewMissionTime,
+    newTimeout, setNewTimeout,
+    newProfile, setNewProfile,
+    newModel, setNewModel,
+    newProvider, setNewProvider,
+    newLocalDirs, setNewLocalDirs,
+    localDirDraft, setLocalDirDraft,
+    newReferences, setNewReferences,
+    newSkills, setNewSkills,
+    newToolsets,
+    referenceInput, setReferenceInput,
+    newCategoryId, setNewCategoryId,
+    formState,
+    setFormField,
+    dispatchPayload,
+    setModelAndProvider,
+    setCategoryId,
+    clearMissionFormFields,
+    applyTemplateToForm,
+    populateFormFromMission,
+  } = useMissionComposer({ showCreate, editingId });
+
   const [dispatching, setDispatching] = useState(false);
   const [cancellingMissionId, setCancellingMissionId] = useState<string | null>(
     null,
   );
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [missionCategoryFilter, setMissionCategoryFilter] = useState("all");
-  const [newCategoryId, setNewCategoryId] = useState<string | null>(null);
-
-  const formState: MissionFormState = {
-    newName,
-    newInstruction,
-    newContext,
-    newGoals,
-    newOutputFormat,
-    newConstraints,
-    newDispatch,
-    newSchedule,
-    newMissionTime,
-    newTimeout,
-    newProfile,
-    newModel,
-    newProvider,
-    newLocalDirs,
-    localDirDraft,
-    newReferences,
-    referenceInput,
-    newSkills,
-    newToolsets,
-  };
-
-  // Typed map from form field → setter. The mapped type
-  // `{ [P in keyof MissionFormState]: (v: MissionFormState[P]) => void }`
-  // preserves each setter's per-field parameter type, so calling
-  // `setters[field](value)` requires no `as` cast — replacing the prior
-  // `Record<..., (v: union-of-everything) => void>` shape that lost types
-  // and forced `(v as string)`, `(v as string[])`, etc. everywhere.
-  // `newDispatch` has a side effect (also acknowledges the dispatch warning),
-  // so it gets a custom wrapper.
-  const setFormField = useCallback(
-    <K extends keyof MissionFormState>(field: K, value: MissionFormState[K]) => {
-      const setters: { [P in keyof MissionFormState]: (v: MissionFormState[P]) => void } = {
-        newName: (v) => setNewName(v),
-        newInstruction: (v) => setNewInstruction(v),
-        newContext: (v) => setNewContext(v),
-        newGoals: (v) => setNewGoals(v),
-        newOutputFormat: (v) => setNewOutputFormat(v),
-        newConstraints: (v) => setNewConstraints(v),
-        newDispatch: (v) => {
-          setNewDispatch(v);
-          setDispatchAcknowledged(true);
-        },
-        newSchedule: (v) => setNewSchedule(v),
-        newMissionTime: (v) => setNewMissionTime(v),
-        newTimeout: (v) => setNewTimeout(v),
-        newProfile: (v) => setNewProfile(v),
-        newModel: (v) => setNewModel(v),
-        newProvider: (v) => setNewProvider(v),
-        newLocalDirs: (v) => setNewLocalDirs(v),
-        localDirDraft: (v) => setLocalDirDraft(v),
-        newReferences: (v) => setNewReferences(v),
-        referenceInput: (v) => setReferenceInput(v),
-        newSkills: (v) => setNewSkills(v),
-        newToolsets: (v) => setNewToolsets(v),
-      };
-      setters[field](value);
-    },
-    [],
-  );
-
-  // Builds the JSON payload for `POST /api/missions` (dispatch, promote,
-  // update) from the current form state. The `schedule` field is derived
-  // internally via the canonical `scheduleForDispatch(newDispatch, newSchedule)`
-  // helper from `@/lib/dispatch-mode` — the 3 call sites (update, promote,
-  // dispatch-new) used to pass `schedule: scheduleForDispatch(newDispatch,
-  // newSchedule)` as an override, but the override was always the SAME
-  // expression (mode-aware, dispatch-mode-derived) so the per-call-site
-  // override is pure noise. Centralising the derivation here means:
-  //   1. Call sites drop the `schedule:` override (1-line collapse).
-  //   2. Future dispatch modes that need a different `scheduleForDispatch`
-  //      signature land in one place (this helper), not in 3 call sites.
-  //   3. The 3 call sites that previously had `schedule: <undefined>` for
-  //      non-cron modes (i.e. always — the override is only meaningful
-  //      when mode is "cron") now get the same `schedule: undefined`
-  //      from inside this helper, which JSON.stringify drops from the
-  //      wire payload — byte-equivalent to the pre-refactor override form.
-  const dispatchPayload = useCallback(
-    (overrides: Record<string, unknown> = {}): Record<string, unknown> => ({
-      instruction: newInstruction.trim(),
-      context: newContext.trim() || undefined,
-      outputFormat: newOutputFormat.trim() || undefined,
-      constraints: newConstraints.trim() || undefined,
-      categoryId: newCategoryId,
-      goals: splitGoals(newGoals),
-      profileName: newProfile || undefined,
-      modelId: newModel || undefined,
-      provider: newProvider || undefined,
-      missionTimeMinutes: newMissionTime,
-      timeoutMinutes: newTimeout,
-      schedule: scheduleForDispatch(newDispatch, newSchedule),
-      localDirs: newLocalDirs,
-      references: newReferences,
-      skills: newSkills,
-      suggestedToolsets: newToolsets,
-      ...overrides,
-    }),
-    [
-      newInstruction, newContext, newOutputFormat, newConstraints, newCategoryId, newGoals,
-      newProfile, newModel, newProvider, newMissionTime, newTimeout,
-      newDispatch, newSchedule,
-      newLocalDirs, newReferences, newSkills, newToolsets,
-    ],
-  );
-
-  // `newModel` and `newProvider` are always set together (a model id
-  // implies its provider). Centralise the pair so callers don't have to
-  // remember to update both, and so the inline `onModelChange` handler
-  // in the page stays a one-liner.
-  const setModelAndProvider = useCallback(
-    (modelId: string, provider: string) => {
-      setNewModel(modelId);
-      setNewProvider(provider);
-    },
-    [],
-  );
-
-  // Clears the mission-creation form fields shared between resetForm and
-  // handleCreateNewTemplate. Does NOT touch the dispatch-acknowledgement flag
-  // or the visibility of the create sheet — callers decide those.
-  const clearMissionFormFields = useCallback(() => {
-    setNewName("");
-    setNewInstruction("");
-    setNewContext("");
-    setNewGoals("");
-    setNewOutputFormat("");
-    setNewConstraints("");
-    setModelAndProvider("", "");
-    setNewLocalDirs([]);
-    setLocalDirDraft({ path: "", branch: null });
-    setNewReferences([]);
-    setNewSkills([]);
-    setNewToolsets([]);
-  }, [setModelAndProvider]);
 
   const resetForm = useCallback(() => {
     clearMissionFormFields();
     setDispatchAcknowledged(false);
     setNewDispatch("save");
     setShowCreate(false);
-  }, [clearMissionFormFields]);
+    // setDispatchAcknowledged + setNewDispatch are stable composer-hook
+    // setters (listed to satisfy exhaustive-deps now that they're
+    // destructured, not local useState setters the linter auto-exempts).
+  }, [clearMissionFormFields, setDispatchAcknowledged, setNewDispatch]);
 
   // Close the create/edit mission composer. The same `setEditingId(null)`
   // + `setShowCreate(false)` pair appears at 3 sites — the 2 success
@@ -380,72 +200,6 @@ export function useMissionsPage() {
   const openCreate = useCallback(() => {
     setShowCreate(true);
   }, []);
-
-  // Open the template manager modal (the "Edit Templates" button in
-  // `MissionsList`). Sibling to `closeTemplateManager` (defined below) —
-  // same `useCallback` + `[]` deps shape as the sibling
-  // `openCategoryManager` / `closeCategoryManager` open/close pair.
-  // The single inline `() => setShowTemplateManager(true)` arrow that
-  // lived at the MissionsList call site is now this named callback.
-  // Session 118 promoted this from inline-arrow to named-callback per
-  // session 116 P-7.
-  const openTemplateManager = useCallback(() => {
-    setShowTemplateManager(true);
-  }, []);
-
-  // Close the template manager modal (the `onClose` prop on
-  // `<TemplateManagerModal>` in the page). Sibling to
-  // `openTemplateManager` above — same single-setter + `useCallback` +
-  // `[]` deps shape as `closeCategoryManager`. Promoted from the
-  // page-local `closeTemplateManager` callback in `missions/page.tsx`
-  // for the same open/close-pair grouping reason.
-  const closeTemplateManager = useCallback(() => {
-    setShowTemplateManager(false);
-  }, []);
-
-  // Close the template editor modal in SOFT mode (the `onClose` prop
-  // on `<TemplateEditorModal>` in the page, fired by the X button
-  // or overlay click). Sibling to the editor's HARD-mode
-  // `cancelTemplateEditor` (defined below) which also clears
-  // `editingTemplateId`. Same single-setter + `useCallback` + `[]`
-  // deps shape as `closeCategoryManager` / `closeTemplateManager`.
-  // Promoted from the page-local `closeTemplateEditor` callback in
-  // `missions/page.tsx` for the same open/close-pair grouping reason.
-  // The HARD close is intentionally kept page-local (it would
-  // re-shape the editor's cancel-then-reopen flow if migrated).
-  const closeTemplateEditor = useCallback(() => {
-    setShowTemplateEditor(false);
-  }, []);
-
-  useEffect(() => {
-    if (!newProfile) return;
-    const controller = new AbortController();
-    const slug = encodeURIComponent(newProfile);
-    Promise.all([
-      apiFetch<{ data: { skills?: Array<{ name: string; enabled: boolean }> } }>(`/api/skills?profile=${slug}`, { signal: controller.signal }),
-      apiFetch<{ data: { platformToolsets?: PlatformToolsets } }>(`/api/agent/profiles/${slug}/toolsets`, { signal: controller.signal }),
-    ])
-      .then(([skillsResult, toolsetsResult]) => {
-        const enabled = new Set(
-          (skillsResult.data?.skills ?? [])
-            .filter((s) => s.enabled)
-            .map((s) => s.name),
-        );
-        const toolsetIds = new Set(
-          unionToolsetsFromPlatforms(
-            toolsetsResult.data?.platformToolsets ?? {},
-          ),
-        );
-        setNewSkills((prev) => prev.filter((s) => enabled.has(s)));
-        setNewToolsets((prev) => prev.filter((t) => toolsetIds.has(t)));
-      })
-      .catch((err) => {
-        if (err instanceof Error && err.name !== "AbortError") {
-          console.warn("[useMissionsPage] failed to load profile skills/toolsets:", err.message);
-        }
-      });
-    return () => controller.abort();
-  }, [newProfile]);
 
   // Reload the missions + templates slices in parallel. Used as the category
   // hook's post-delete refresh (a category delete reassigns its missions to the
@@ -500,75 +254,6 @@ export function useMissionsPage() {
       );
     },
     [],
-  );
-
-  const setCategoryId = useCallback((id: string | null) => {
-    setNewCategoryId(id);
-    rememberLastCategory(id);
-  }, []);
-
-  useEffect(() => {
-    if (showCreate && !editingId) {
-      const last = readLastCategory();
-      if (last && !newCategoryId) setNewCategoryId(last);
-    }
-  }, [showCreate, editingId, newCategoryId]);
-
-  // ── Shared form population helpers ─────────────────────────────────
-
-  /**
-   * Populate form state from a mission template.
-   * Used by handleTemplateSelect, handleTemplateEdit, and fetchData.
-   *
-   * The 5 inline `(t as MissionTemplate & { X?: Y })` casts that used to
-   * wrap reads of `outputFormat`, `constraints`, `localDirs`, `references`,
-   * `suggestedToolsets`, and `timeoutMinutes` were redundant: those fields
-   * are already declared (as optional) on the `MissionTemplate` interface
-   * in `src/components/missions/TemplateModals.tsx`. The `categoryId`
-   * read is the only one that genuinely needs a cast — `MissionTemplate`
-   * exposes `category: string`, not `categoryId: string`, so the legacy
-   * backend response shape (`{ categoryId }`) needs a one-off structural
-   * cast to read the id.
-   */
-  const applyTemplateToForm = useCallback(
-    (
-      t: MissionTemplate & {
-        instruction?: string;
-        context?: string;
-        dispatchMode?: string;
-        schedule?: string;
-        name?: string;
-      },
-      categoryIdOverride?: string | null,
-    ) => {
-      setNewName(t.name ?? "");
-      setNewInstruction(t.instruction || "");
-      setNewContext(t.context || "");
-      setNewGoals((t.goals || []).join("\n"));
-      setNewOutputFormat(t.outputFormat ?? "");
-      setNewConstraints(t.constraints ?? "");
-      setNewProfile(t.profile || "");
-      setModelAndProvider(t.defaultModel || "", t.defaultProvider || "");
-      setNewLocalDirs(normalizeLocalDirsInput(t.localDirs));
-      setLocalDirDraft({ path: "", branch: null });
-      setNewReferences(t.references ?? []);
-      setNewSkills(t.suggestedSkills || []);
-      setNewToolsets(t.suggestedToolsets ?? []);
-      setNewCategoryId(
-        categoryIdOverride !== undefined
-          ? categoryIdOverride
-          : getCategoryIdFromTemplate(t)
-      );
-      const tm = t.timeoutMinutes;
-      if (typeof tm === "number" && Number.isFinite(tm)) {
-        setNewTimeout(tm);
-      }
-      if (t.dispatchMode) {
-        setNewDispatch(t.dispatchMode as "save" | "now" | "cron" | "queue");
-      }
-      if (t.schedule) setNewSchedule(t.schedule);
-    },
-    [setModelAndProvider],
   );
 
   /**
@@ -896,51 +581,6 @@ export function useMissionsPage() {
     }
   }, [newName, newInstruction, editingId, dispatchAcknowledged, dispatching, showToast, newDispatch, newSchedule, missions, dispatchPayload, fetchData, resetForm, fetchDetail, expandedId, closeComposer]);
 
-  // ── Shared form population helpers ─────────────────────────────────
-
-  /**
-   * Populate form state from a mission.
-   * Used by both handleEdit (in-place edit) and handleDuplicateMission.
-   */
-  const populateFormFromMission = useCallback(
-    (m: MissionRow, opts: { editing: boolean; namePrefix?: string }) => {
-    const parsed = parseMissionPrompt(m.prompt);
-    setNewName(opts.namePrefix ? `${m.name} ${opts.namePrefix}` : m.name);
-    setNewInstruction(parsed.instruction);
-    setNewContext(parsed.context);
-    setNewOutputFormat(m.outputFormat ?? parsed.outputFormat ?? "");
-    setNewConstraints(m.constraints ?? parsed.constraints ?? "");
-    setNewGoals(m.goals?.join("\n") ?? "");
-    setDispatchAcknowledged(opts.editing);
-    setNewLocalDirs(normalizeLocalDirsInput(m.localDirs));
-    setLocalDirDraft({ path: "", branch: null });
-    setNewReferences(m.references ?? []);
-    setNewSkills(m.skills ?? []);
-    setNewCategoryId(m.categoryId ?? null);
-    setModelAndProvider(m.modelId || m.model || "", m.provider || "");
-    if (m.profileName) setNewProfile(m.profileName);
-    if (typeof m.missionTimeMinutes === "number") setNewMissionTime(m.missionTimeMinutes);
-    if (typeof m.timeoutMinutes === "number") setNewTimeout(m.timeoutMinutes);
-    if (m.schedule) {
-      setNewSchedule(m.schedule);
-    } else {
-      setNewSchedule("every 5m");
-    }
-    if (opts.editing) {
-      if (m.status === "successful" || m.status === "failed") {
-        setNewDispatch("now");
-      } else if (isMissionQueuedForRun(m)) {
-        setNewDispatch("queue");
-      } else if (m.status === "queued") {
-        setNewDispatch("save");
-      } else if (m.cronJobId) {
-        setNewDispatch("cron");
-      } else if (m.status === "dispatched") {
-        setNewDispatch("now");
-      }
-    }
-  }, [setModelAndProvider]);
-
   // ── Mission handlers ───────────────────────────────────────────────
 
   const handleEdit = useCallback((m: MissionRow) => {
@@ -955,7 +595,7 @@ export function useMissionsPage() {
     setNewDispatch("save");
     setShowCreate(true);
     showToast("Mission duplicated as draft", "success");
-  }, [populateFormFromMission, showToast]);
+  }, [populateFormFromMission, showToast, setNewDispatch]);
 
   const persistTemplate = useCallback(
     async (payload: Record<string, unknown>, postSuccess: () => void) => {
@@ -982,7 +622,10 @@ export function useMissionsPage() {
         setTemplateSaving(false);
       }
     },
-    [showToast, fetchData],
+    // setTemplateSaving is a stable container-hook setter (listed to
+    // satisfy exhaustive-deps now that it's destructured, not a local
+    // useState setter the linter auto-exempts).
+    [showToast, fetchData, setTemplateSaving],
   );
 
   const handleSaveAsTemplate = useCallback(async () => {
@@ -1037,7 +680,7 @@ export function useMissionsPage() {
     });
 
     await persistTemplate(payload, () => setEditingTemplateId(null));
-  }, [newInstruction, newName, editingTemplateId, templates, templateIcon, templateColor, templateDescription, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, persistTemplate]);
+  }, [newInstruction, newName, editingTemplateId, templates, templateIcon, templateColor, templateDescription, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, persistTemplate, setEditingTemplateId]);
 
   const handleCreateNewTemplate = useCallback(() => {
     setEditingTemplateId(null);
@@ -1062,7 +705,7 @@ export function useMissionsPage() {
     // correctness no-op but keeps the linter happy).
     closeTemplateManager();
     setShowTemplateEditor(true);
-  }, [closeTemplateManager, clearMissionFormFields]);
+  }, [closeTemplateManager, clearMissionFormFields, setEditingTemplateId, setTemplateName, setTemplateDescription, setTemplateIcon, setTemplateColor, setShowTemplateEditor]);
 
   const handleTemplateSave = useCallback(async () => {
     if (!templateName.trim()) return;
@@ -1096,7 +739,7 @@ export function useMissionsPage() {
       setShowTemplateEditor(false);
       setEditingTemplateId(null);
     });
-  }, [templateName, editingTemplateId, templateIcon, templateColor, templateDescription, newInstruction, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, newDispatch, newSchedule, persistTemplate]);
+  }, [templateName, editingTemplateId, templateIcon, templateColor, templateDescription, newInstruction, newContext, newOutputFormat, newConstraints, newGoals, newLocalDirs, newReferences, newSkills, newToolsets, newProfile, newModel, newProvider, newTimeout, newCategoryId, newDispatch, newSchedule, persistTemplate, setShowTemplateEditor, setEditingTemplateId]);
 
   const handleEditTemplate = useCallback(
     (t: MissionTemplate) => {
@@ -1120,7 +763,7 @@ export function useMissionsPage() {
       closeTemplateManager();
       setShowTemplateEditor(true);
     },
-    [applyTemplateToForm, closeTemplateManager],
+    [applyTemplateToForm, closeTemplateManager, setEditingTemplateId, setTemplateName, setTemplateDescription, setTemplateIcon, setTemplateColor, setShowTemplateEditor],
   );
 
   const handleDeleteTemplate = useCallback(async (templateId: string) => {
@@ -1245,137 +888,30 @@ export function useMissionsPage() {
   }, [missions, showToast, fetchData, expandedId, fetchDetail, updateMission]);
 
   const filtered = useMemo(
-    () =>
-      missions.filter((m) => {
-        if (filter !== "all") {
-          const column = missionBoardColumn(m);
-          if (filter !== column) return false;
-        }
-        if (missionCategoryFilter !== "all") {
-          if (missionCategoryFilter === "__uncategorized__") {
-            if (m.categoryId) return false;
-          } else if (m.categoryId !== missionCategoryFilter) {
-            return false;
-          }
-        }
-        if (
-          search &&
-          !m.name.toLowerCase().includes(search.toLowerCase()) &&
-          !m.prompt.toLowerCase().includes(search.toLowerCase())
-        )
-          return false;
-        return true;
-      }),
+    () => filterMissions(missions, { filter, missionCategoryFilter, search }),
     [missions, filter, search, missionCategoryFilter],
   );
 
-  // Single .reduce() pass over `missions` instead of 5 separate
-  // .filter().length passes. The 5 buckets match the original
-  // `missions.filter(predicate).length` shape VERBATIM — including the
-  // non-mutually-exclusive nature of (a) `active` vs (b) `queued`.
-  // Per the source in src/lib/mission-board.ts:
-  //   isMissionActive       = status==="dispatched" || queuedForRun===true
-  //   isMissionQueuedForRun = status==="queued" && queuedForRun===true
-  // So a `status:"queued" && queuedForRun:true` mission increments BOTH
-  // `active` AND `queued` — the same as the original 5 independent
-  // .filter().length passes. We can't use `else if` to make them
-  // mutually exclusive without changing observable counts. Independent
-  // `if` branches are required to preserve the original semantics. The
-  // named keys + per-branch increment match the previous shape
-  // verbatim, so consumers (MissionsList) see no change in totals.
-  const missionCounts = useMemo(
-    () =>
-      missions.reduce(
-        (acc, m) => {
-          if (isMissionActive(m)) acc.active += 1;
-          if (m.status === "successful") acc.completed += 1;
-          if (m.status === "failed") acc.failed += 1;
-          if (isMissionDraft(m)) acc.drafts += 1;
-          if (isMissionQueuedForRun(m)) acc.queued += 1;
-          return acc;
-        },
-        { active: 0, completed: 0, failed: 0, drafts: 0, queued: 0 },
-      ),
-    [missions],
+  // Counts are a single .reduce() pass (see computeMissionCounts) whose 5
+  // buckets are intentionally NON-mutually-exclusive — a `status:"queued"
+  // && queuedForRun:true` mission increments both `active` and `queued`,
+  // matching the original 5 independent .filter().length passes.
+  const missionCounts = useMemo(() => computeMissionCounts(missions), [missions]);
+
+  const templateCategoryPills = useMemo(
+    () => computeTemplateCategoryPills(templates, categories),
+    [templates, categories],
   );
 
-  useEffect(() => {
-    if (!showCreate || editingId) return;
-    if (newModel.trim()) return;
+  const missionCategoryPills = useMemo(
+    () => computeMissionCategoryPills(missions, categories),
+    [missions, categories],
+  );
 
-    const controller = new AbortController();
-    void (async () => {
-      try {
-        // Both endpoints return `{ data: <inner> }`. `safeApiCallData`
-        // unwraps the envelope directly so `defaults?.defaults?.agent`
-        // and `models?.models` read the actual payloads. The pre-
-        // refactor code read the envelope and the agent-default auto-
-        // fill was always a no-op (the values were on
-        // `result.data.data`, not `result.data`). This is the same
-        // "feature is not working" fix applied to `useGatewayHealth`
-        // and `useCronJobMutation` in this session.
-        const [defaults, models] = await Promise.all([
-          safeApiCallData<{ defaults?: { agent?: string | null } }>(
-            "/api/models/defaults",
-            { signal: controller.signal },
-          ),
-          safeApiCallData<{ models?: Array<{ id: string; modelId: string; provider: string }> }>(
-            "/api/models",
-            { signal: controller.signal },
-          ),
-        ]);
-        if (!defaults || !models) return;
-
-        const agentRegistryId = defaults.defaults?.agent;
-        if (!agentRegistryId) return;
-
-        const match = models.models?.find((m) => m.id === agentRegistryId);
-        if (!match) return;
-
-        setModelAndProvider(match.modelId, match.provider);
-      } catch {
-        /* aborted or network */
-      }
-    })();
-
-    return () => controller.abort();
-  }, [showCreate, editingId, newModel, setModelAndProvider]);
-
-  const templateCategoryPills = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const t of templates) {
-      const cid = getCategoryIdFromTemplate(t, "general")!;
-      counts[cid] = (counts[cid] ?? 0) + 1;
-    }
-    return categoryFilterPills(categories, counts, false, 0);
-  }, [templates, categories]);
-
-  const missionCategoryPills = useMemo(() => {
-    const counts: Record<string, number> = {};
-    let uncategorized = 0;
-    for (const m of missions) {
-      if (!m.categoryId) {
-        uncategorized += 1;
-      } else {
-        counts[m.categoryId] = (counts[m.categoryId] ?? 0) + 1;
-      }
-    }
-    return categoryFilterPills(categories, counts, true, uncategorized);
-  }, [missions, categories]);
-
-  const filteredGrouped = useMemo(() => {
-    const grouped = groupTemplatesByCategory(
-      templates as Array<MissionTemplate & { categoryId?: string }>,
-      categories,
-    );
-    if (categoryFilter === "all") return grouped;
-    return grouped.filter((g) => {
-      if (categoryFilter === "__uncategorized__") {
-        return g.categoryId === null;
-      }
-      return g.categoryId === categoryFilter;
-    });
-  }, [templates, categoryFilter, categories]);
+  const filteredGrouped = useMemo(
+    () => filterGroupedTemplates(templates, categories, categoryFilter),
+    [templates, categoryFilter, categories],
+  );
 
   return {
     toastElement,

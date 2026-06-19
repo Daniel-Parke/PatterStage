@@ -23,7 +23,7 @@
  * discipline — the inline form used `??` (not `||`), and the helper
  * preserves that.
  */
-import { getCategoryIdFromTemplate } from "@/hooks/useMissionsPage";
+import { getCategoryIdFromTemplate } from "@/lib/mission-composer-utils";
 import type { MissionTemplate } from "@/components/missions/TemplateModals";
 
 function makeTemplate(overrides: Partial<MissionTemplate> = {}): MissionTemplate {

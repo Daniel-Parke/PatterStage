@@ -20,6 +20,7 @@ import { hasDispatchedMission } from "@/lib/mission-repository";
 import { computeNextRun } from "@/lib/schedule/next-run";
 import { dispatchMissionRun } from "@/lib/orchestration/dispatch";
 import { logApiError } from "@/lib/api-logger";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 /** Occurrences more than this late are treated as catch-up (post-downtime). */
 const CATCH_UP_GRACE_MS = 120_000;
@@ -108,6 +109,13 @@ async function fireSchedule(sched: ScheduleRecord, nowDate: Date): Promise<boole
     result.ok ? "dispatched" : `error: ${result.error ?? "unknown"}`,
     true,
   );
+  if (result.ok) {
+    recordEvent("schedule.fired", {
+      entityType: "schedule",
+      entityId: sched.id,
+      profile: sched.profileName,
+    });
+  }
   return result.ok;
 }
 

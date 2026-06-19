@@ -12,8 +12,9 @@ The guide is written for the **Junior developer / operator** — every page is d
 
 1. [What Control Hub is](#what-control-hub-is)
 2. [Dashboard](#dashboard)
+   - [Main → Insights](#main--insights)
 3. [Orchestration → Missions](#orchestration--missions)
-4. [Orchestration → Cron](#orchestration--cron)
+4. [Orchestration → Scripts](#orchestration--scripts)
 5. [Orchestration → Chat](#orchestration--chat)
 6. [Operations → Agents](#operations--agents)
 7. [Operations → Skills](#operations--skills)
@@ -43,7 +44,7 @@ The guide is written for the **Junior developer / operator** — every page is d
 
 **Hermes Agent** runs on your machine: it executes tools, delegates sub-tasks to subagents, talks to chat platforms, and stores config under `~/.hermes/`.
 
-**Control Hub** is the **web dashboard** for that install. You use it to see health at a glance, dispatch missions, manage cron, browse sessions, tune models, and edit agent behaviour — without living in the terminal.
+**Control Hub** is the **web dashboard** for that install. You use it to see health at a glance, dispatch missions, schedule recurring work, run host scripts, browse sessions, tune models, and edit agent behaviour — without living in the terminal.
 
 Control Hub is **a Next.js app** that talks to a SQLite database under `~/control-hub/data` and to the active Hermes install under `~/.hermes`. Everything you can do in the dashboard, you can also do through a REST API — see [API.md](API.md). The dashboard never bypasses the API to write files on disk directly, so the data path is auditable.
 
@@ -54,7 +55,7 @@ Control Hub is **a Next.js app** that talks to a SQLite database under `~/contro
 | Section | Purpose |
 |---------|---------|
 | **Main** | Overview, sessions, memory, logs |
-| **Orchestration** | Cron, missions, gateway chat |
+| **Orchestration** | Missions (one-off + recurring), Scripts (host cron), gateway chat |
 | **Operations** | Agent profiles, skills, tools, personalities |
 | **Rec Room** | Story Weaver (interactive fiction) |
 | **Config** | Models, HERMES.md, environment, YAML sections |
@@ -76,9 +77,8 @@ The dashboard is your **status board**, not the primary place to launch missions
 - **ONLINE** status dot (green) when the dashboard's own `/api/status` is responsive; otherwise **OFFLINE**.
 - Subtitle showing the active model, read from `~/.hermes/config.yaml` first and from the Models registry as a fallback. If the registry disagrees, a hint suggests "push Bob to write config.yaml".
 
-**Compact stat row (four pills)**
+**Compact stat row (three pills)**
 - **Processes** — number of active Hermes processes. Shows "N Active" when there is at least one agent running, "Idle" when no agents are running, and "Offline" when the agent detector is unreachable.
-- **Cron Jobs** — count of enabled agent cron jobs from the most recent `/api/monitor` snapshot.
 - **Sessions** — total session count plus "N active · M last 7d" to summarise recent activity.
 - **Memory** — fact count and provider name (Holographic, Hindsight, or whatever the active backend is).
 
@@ -96,8 +96,7 @@ The dashboard is your **status board**, not the primary place to launch missions
 - One row per active mission: status dot, name, dispatch mode badge, last session id (links to transcript), status badge, "X ago" timestamp, and a **Cancel** button with a two-step confirm.
 - Empty mid-mission rows show "Session loading…" until the first session record arrives.
 
-**Three-panel system monitor**
-- **Cron Jobs panel** — every job, with an inline `IntervalSelector` for the schedule, a caption span showing "in 3m", "running 2m", etc., and a `CronStatusBadge` indicating the state.
+**Two-panel system monitor**
 - **Platforms panel** — one row per configured Hermes platform with a status dot, a "Configured" or "Not configured" label, and a background-sync line ("Sync: 5m ago ✓") with a "Sync now" button.
 - **Errors panel** — pill filter for All / Error / Warning, deduplicated by source and message with a "(×N)" suffix on repeats.
 
@@ -119,6 +118,38 @@ The dashboard is your **status board**, not the primary place to launch missions
 6. For mission work, go to **Orchestration → Missions**. The dashboard strip is for one-click dispatch of templates; the full composer is on the missions page.
 
 ---
+
+## Main → Insights
+
+**Main → Insights** (`/insights`) is the analytics + achievements view. It reads
+the `analytics_events` interaction log (via `/api/analytics`) plus the dashboard
+stats, so it starts empty and fills in as you use Control Hub.
+
+### What you see
+
+- A **level / streak** header with a headline-metric strip: total interactions,
+  active days (last 30), achievements unlocked (`N / 36`), and the longest streak.
+- **Activity — last 30 days:** an area chart of daily interaction volume.
+- **By category:** a ring that folds the 14 event types into 6 readable buckets
+  (Missions, Stories, Sessions, Automation, Config, Chat).
+- **Run activity — last 91 days:** the GitHub-style contribution heatmap.
+- **Achievements:** the full grid of ~36 badges with progress bars; locked badges
+  show a lock + how close you are.
+
+### Typical use
+
+1. Dispatch a few missions, write a Story Weaver chapter, fire a schedule.
+2. Open **Insights** — the activity chart and category ring update on a 30s cadence,
+  and achievement progress advances (e.g. *Dispatcher*, *Wordsmith*, *Set & Forget*).
+3. Newly-earned achievements pop a 🏆 toast **on the Dashboard** (the Insights grid
+  is read-only and never double-fires the toast).
+
+### Notes
+
+- Events are recorded **server-side** only (there is no public write endpoint), so
+  the numbers reflect real activity and can't be forged from the client.
+- Achievements are **derived live** from your activity — there is no separate save;
+  full reference in [ANALYTICS.md](ANALYTICS.md).
 
 ## Orchestration → Missions
 
@@ -160,7 +191,7 @@ The mission board is where you **compose, dispatch, schedule, and cancel** agent
 - **Copy prompt** — copy the assembled agent prompt to the clipboard.
 - **Duplicate** — clone the mission as a new draft.
 - **Edit** — re-open the composer for the existing mission (the form title becomes "Edit Mission" or "Re-Dispatch: <name>" depending on status).
-- **Delete** — two-step confirm; removes the mission and any linked cron job.
+- **Delete** — two-step confirm; removes the mission and any linked schedule (or legacy cron job).
 - **Cancel** — two-step confirm; stops the running agent. Works for **running** and **queued** missions. The UI updates immediately; the underlying `hermes chat` process is stopped in the background.
 
 **Composer sheet (opens for new / edit / re-dispatch / template-apply)**
@@ -175,8 +206,8 @@ The composer is the full form. It is organised into five sections, each collapsi
 6. **Dispatch footer** — four actions:
    - **Save draft** — `dispatchMode: save`. Persists as a draft in the **Draft** column.
    - **Queue** — `dispatchMode: queue`. Persists as queued for run; the worker will pick it up.
-   - **Run now** — `dispatchMode: now`. Creates the mission and dispatches immediately via `dispatchMissionNow()`.
-   - **Schedule** — `dispatchMode: cron`. Creates a linked `cron_jobs` row, pushes to Hermes, and runs the first execution immediately; later runs follow the schedule.
+   - **Run now** — `dispatchMode: now`. Creates the mission and dispatches immediately via `dispatchMissionNow()` (an HTTP run on the runtime).
+   - **Schedule** — `dispatchMode: cron`. Creates a Control Hub **`schedules`** row (mission-linked) that the built-in scheduler fires — there is no Hermes `jobs.json` bridge. The first run starts immediately; later runs follow the schedule. Recurring missions appear in the **Scheduled missions** section below the board.
 
 The composer also has a **Save as Template** button that stores the current form as a reusable custom template in the templates table.
 
@@ -198,60 +229,45 @@ For mission lifecycle details (single-flight queue, model resolution, cancel sig
 - "Re-Dispatch" opens the same composer with the existing fields; choosing a dispatch mode creates a brand-new mission id (not an in-place update of the completed one).
 - Promoting a draft or queued mission uses `action: "promote"` on `POST /api/missions` — the route the API uses depends on the mission's current status, and the UI handles this for you.
 
+### Scheduled missions
+
+Below the board is the **Scheduled missions** section — the recurring agent work that the Control Hub scheduler fires (no Hermes `jobs.json`). Each row shows **name · cadence · next run · last status** with **Pause/Resume**, **Run now**, and **Delete**. New recurring missions land here automatically when you dispatch with **Schedule**; you can also put an existing saved mission on a timer with **Schedule a mission** (pick the mission, a cadence like `every 30m` or `0 9 * * *`, and a catch-up policy). Deleting a mission removes its schedule.
+
+This replaced the separate "Schedules" page — scheduling now lives with the missions it drives.
+
 ---
 
-## Orchestration → Cron
+## Orchestration → Scripts
 
-![Cron jobs](images/cron-jobs.png)
-
-The Cron page manages **agent** cron jobs (stored in Hermes `jobs.json` and synced by Control Hub) and **system** cron jobs (hardware scripts under `CH_DATA_DIR/scripts`). Both kinds live in the same UI but on different tabs.
+The **Scripts** page is a file-aware manager for **host shell scripts** under `CH_DATA_DIR/scripts` — backups, cleanups, health checks — separate from agent missions. (Scheduling *agent* work is done from the Missions composer's **Schedule** mode; see the [Scheduled missions](#scheduled-missions) note above.) It reads the script files (`/api/scripts`), cross-references the host crontab for each one's schedule, runs them on demand, and tails their logs. The bundled `ch-backup.sh` ships under `scripts/hardware/` and is copied into `CH_DATA_DIR/scripts` during `setup.sh`.
 
 ### What you see
 
-**Tabs**
-- **Agent** (orange) — uses `useCronJobs()` and calls `/api/cron`.
-- **System** (cyan) — uses `useSystemCronJobs()` and calls `/api/cron/hardware`. Hardware scripts are the bash scripts that ship under `scripts/hardware/` and get copied into `CH_DATA_DIR/scripts` during `setup.sh` if missing.
+A row per `.sh` file in `CH_DATA_DIR/scripts`, each showing **name · size · schedule (or "not scheduled") · last run**, with actions:
+- **Run now** — execs the script server-side (path-validated, no shell) and appends output to its log.
+- **Logs** — opens a modal tailing the script's log under `CH_HARDWARE_LOG_DIR`.
+- **Schedule** — puts the script on the host crontab (a 5-field cron); once scheduled it shows the cadence and an **Unschedule** action.
+- **Refresh** — re-reads the files + crontab.
 
-**Header (per active tab)**
-- Tab switcher.
-- **Pause all** — pauses every job on the active tab (only when at least one job exists).
-- **Sync Jobs** — POSTs to the tab's API with `action=sync` and refreshes both lists.
-- **+ New Job** — opens the create modal for the active tab.
-
-**List features (both tabs)**
-- Search box that filters by name, schedule, and prompt (agent) or by name and command (system).
-- Empty state with a "Create <tab> Job" call-to-action.
-
-**Per-job card (agent)** — `JobCard` component
-- Toggle enable / disable (calls `PUT /api/cron`).
-- **Run now** (▶) — POSTs `action=run` to `/api/cron` to trigger an immediate execution.
-- **Edit** — opens the `JobFormModal` for that job.
-- **Delete** — two-step confirm.
-
-**Per-job card (system)** — `SystemCronCard` component
-- Toggle enable / disable (calls `PUT /api/cron/hardware`).
-- **Edit** — opens the `SystemCronModal` for that entry.
-- **Delete** — two-step confirm.
-- (No Run now — system cron is OS-scheduled; you can trigger by hand on the host.)
-
-**Modals**
-- `JobFormModal` — name, schedule selector (interval / wall-clock / post-run), prompt, target (e.g. `cli`), and the schedule preview.
-- `SystemCronModal` — name, command (path-validated to live under `CH_DATA_DIR/scripts`), schedule.
+Drop a new `.sh` file into `CH_DATA_DIR/scripts` and it appears automatically.
 
 ### Typical use
 
-1. Pick the right tab. **Agent** for jobs that should run inside Hermes; **System** for hardware-level jobs that call scripts on the host.
-2. Create or edit a job. Schedule expressions support interval (e.g. `every 5m`), ISO one-shots, and five- or six-field cron strings.
-3. Use **Sync Jobs** after editing `jobs.json` on the host, so the UI catches up.
-4. Link recurring missions from the mission composer (the **Schedule** dispatch mode) — cancel on the mission board pauses the linked cron.
-
-For the hardware script catalogue (currently just `ch-backup.sh` for Hindsight memory snapshot) and the script-level env vars, see [SYSTEM-CRON.md](SYSTEM-CRON.md).
+1. Drop or edit a script under `CH_DATA_DIR/scripts` (e.g. `ch-backup.sh`).
+2. **Run now** to test it; check **Logs** for output.
+3. **Schedule** it with a cron expression so the host runs it on a timer (or **Unschedule** to stop).
 
 ### Notes
 
-- `parseSchedule` in `src/lib/utils.ts` is the canonical schedule parser. Invalid input is rejected on user-facing routes.
-- Recurring jobs use `repeat.times: null` for "run forever" — matching Hermes' canonical form.
-- System cron is intentionally separated from agent cron: agent cron is "Hermes does work"; system cron is "the OS does work". The "Sync Jobs" button covers both, so use it whenever the host has changed.
+- Running execs the script with the Control Hub process's permissions, the same as a crontab entry would — only files directly under `CH_DATA_DIR/scripts` can be run (no traversal, `.sh` only, no shell interpolation).
+- The legacy agent-cron **Cron** page (Hermes `jobs.json`) has been **removed** — scheduled *agent* work belongs in **Missions**; existing cron jobs migrate to schedules automatically on update.
+
+For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memory snapshot) and the script-level env vars, see [SYSTEM-CRON.md](SYSTEM-CRON.md).
+
+### Notes
+
+- Scripts run via the **OS scheduler** (host crontab) — "the OS does work". Scheduled *missions* run via the Control Hub scheduler — "Hermes does work". They are deliberately separate surfaces.
+- The legacy agent-cron **Cron** page (Hermes `jobs.json`) has been **removed**; new scheduled agent work belongs in **Missions**, and existing cron jobs are migrated to Control Hub schedules automatically on update (see [MIGRATION.md](MIGRATION.md)).
 
 ---
 
@@ -274,7 +290,7 @@ For the hardware script catalogue (currently just `ch-backup.sh` for Hindsight m
 - Active session highlighted with a neon-cyan left border.
 
 **Main area**
-- **GatewayBanner** at the top (when no active session is selected): one of three banners — offline, model-missing (no agent default set), or checking (initial load).
+- **GatewayBanner** at the top (when no active session is selected): one of four banners — **offline** (gateway unreachable), **auth-missing** (gateway up but Control Hub can't authenticate — set `API_SERVER_KEY`), **model-missing** (no agent default set), or **checking** (initial load).
 - **Empty state** when nothing is selected: a large icon, "Chat with your agent" prompt, and short instruction text.
 - **Message thread** when a session is active: user bubbles on the right (neon-cyan tint) and assistant bubbles on the left (neon-purple icon). Assistant messages are markdown-rendered with copy buttons on code blocks. Timestamps in 24-hour format.
 - **TypingIndicator** while the assistant is streaming.
@@ -313,6 +329,9 @@ For the hardware script catalogue (currently just `ch-backup.sh` for Hindsight m
 **Header**
 - Subtitle: "N profiles configured".
 - **+ New Profile** button — opens a modal with name, description, and a "clone from" select (Default / Bob, or any other profile).
+
+**Agent performance strip**
+- Above the profiles, a per-agent analytics strip shows each agent's **real** usage — runs · mission success% · tokens · average run time — derived from `/api/stats` (`src/lib/stats/agent-stats.ts`). It surfaces how each profile is actually performing; agents with no activity yet are omitted.
 
 **Drift banners (when applicable)**
 - **ProfilesDriftBanner** — shows when any profile has `syncStatus="drift"` or `"error"`, with a single **Push all** action.
@@ -1112,9 +1131,9 @@ The three buttons at the bottom of the sidebar — **Update**, **Restart**, and 
 
 ### Schedule recurring work
 
-1. In the composer, choose **Schedule** and enter a schedule (e.g. `every 5m`).
-2. Dispatch; a linked cron job is created (visible under **Cron**).
-3. Cancel from the mission board pauses the cron job; delete removes both.
+1. In the composer, choose **Schedule** and enter a schedule (e.g. `every 5m` or `0 9 * * *`).
+2. Dispatch; a Control Hub schedule is created, visible in the **Scheduled missions** section on the Missions page.
+3. Pause/resume or run-now from that section; deleting the mission removes its schedule.
 
 ### Switch agent profile for one job
 

@@ -8,13 +8,6 @@ test.describe("Smoke", () => {
     await expect(title.getByText("HUB", { exact: true })).toBeVisible();
   });
 
-  test("cron page loads", async ({ page }) => {
-    await page.goto("/orchestration/cron");
-    await expect(
-      page.getByRole("heading", { name: "Cron Jobs", exact: true })
-    ).toBeVisible();
-  });
-
   test("missions page loads", async ({ page }) => {
     await page.goto("/orchestration/missions");
     await expect(
@@ -22,10 +15,10 @@ test.describe("Smoke", () => {
     ).toBeVisible();
   });
 
-  test("schedules page loads", async ({ page }) => {
-    await page.goto("/orchestration/schedules");
+  test("scripts page loads", async ({ page }) => {
+    await page.goto("/orchestration/scripts");
     await expect(
-      page.getByRole("heading", { name: "Schedules", exact: true })
+      page.getByRole("heading", { name: "Scripts", exact: true })
     ).toBeVisible();
   });
 

@@ -25,7 +25,7 @@ import { db } from "@/lib/db";
 import {
   closeOrphanedActiveSessions,
   previewOrphanSweep,
-} from "@/lib/session-repository";
+} from "@/lib/session-sync";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";

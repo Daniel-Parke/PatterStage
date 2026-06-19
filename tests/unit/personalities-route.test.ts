@@ -36,6 +36,12 @@ jest.mock("@/lib/path-security", () => ({
     if (/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/.test(profile)) return { ok: true, profile };
     return { ok: false, error: "Invalid profile name" };
   }),
+  // The route uses requireSafeProfileName — return { profile } for any sane name.
+  requireSafeProfileName: jest.fn((name: string) => ({ profile: name.trim() })),
+}));
+
+jest.mock("@/lib/apply-profile-or-root-patch", () => ({
+  applyProfileOrRootPatchOrFail: jest.fn((profile: string) => ({ profile })),
 }));
 
 describe("POST /api/personalities — invalid JSON body handling", () => {
@@ -67,6 +73,43 @@ describe("PUT /api/personalities — invalid JSON body handling", () => {
     expect(res.status).toBe(400);
     const body = await res.json();
     expect(body.error).toMatch(/invalid json/i);
+  });
+});
+
+describe("POST /api/personalities — profile safety (no silent default overwrite)", () => {
+  async function post(body: unknown) {
+    const { POST } = await import("@/app/api/personalities/route");
+    const req = new NextRequest("http://localhost/api/personalities", {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: { "content-type": "application/json" },
+    });
+    return POST(req);
+  }
+
+  it("returns 400 when profile is missing (must not default to 'default')", async () => {
+    const res = await post({ prompt: "You are a pirate" });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toMatch(/profile is required/i);
+  });
+
+  it("returns 400 when profile is blank", async () => {
+    const res = await post({ profile: "   ", prompt: "You are a pirate" });
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 404 for an unknown profile (never writes default SOUL.md)", async () => {
+    // listProfiles() is mocked to [] above, so any non-default profile is unknown.
+    const res = await post({ profile: "ghost", prompt: "You are a ghost" });
+    expect(res.status).toBe(404);
+    const body = await res.json();
+    expect(body.error).toMatch(/unknown profile/i);
+  });
+
+  it("accepts an explicit existing profile (default)", async () => {
+    const res = await post({ profile: "default", prompt: "You are Bob" });
+    expect(res.status).toBe(200);
   });
 });
 

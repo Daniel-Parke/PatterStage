@@ -16,7 +16,7 @@
   --color-neon-purple: #8b5cff;
   --color-neon-pink: #e879f9;
   --color-neon-green: #a3ff12;
-  --color-neon-orange: #ff9f1c;
+  --color-neon-orange: #ff6622;
   --color-neon-yellow: #facc15;
 
   /* Blue-tinted surfaces */
@@ -41,7 +41,7 @@
   --ch-rgb-neon-purple: 139, 92, 255;
   --ch-rgb-neon-green: 163, 255, 18;
   --ch-rgb-neon-pink: 232, 121, 249;
-  --ch-rgb-neon-orange: 255, 159, 28;
+  --ch-rgb-neon-orange: 255, 102, 34;
   --ch-rgb-cherenkov-glow: 51, 221, 255;
 }
 
@@ -61,31 +61,91 @@
   background: rgb(var(--ch-rgb-neon-cyan) / 0.35);
 }
 
-/* Glow effects — legacy classes used across the app */
+/* Glow effects — restrained, deep-space Cherenkov. Glow reads as a subtle
+   luminescence on cards, not a flat light source; the brand's "reactor core"
+   signature lives in the stronger pulse-glow / glow-surface reserved for
+   live/active states (running process, live session). */
 .glow-cyan {
   box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-cyan) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-cyan) / 0.05);
+    0 0 14px rgb(var(--ch-rgb-neon-cyan) / 0.08),
+    0 0 28px rgb(var(--ch-rgb-neon-cyan) / 0.025);
 }
 .glow-purple {
   box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-purple) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-purple) / 0.05);
+    0 0 14px rgb(var(--ch-rgb-neon-purple) / 0.08),
+    0 0 28px rgb(var(--ch-rgb-neon-purple) / 0.025);
 }
 .glow-green {
   box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-green) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-green) / 0.05);
+    0 0 14px rgb(var(--ch-rgb-neon-green) / 0.08),
+    0 0 28px rgb(var(--ch-rgb-neon-green) / 0.025);
 }
 .glow-pink {
   box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-pink) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-pink) / 0.05);
+    0 0 14px rgb(var(--ch-rgb-neon-pink) / 0.08),
+    0 0 28px rgb(var(--ch-rgb-neon-pink) / 0.025);
 }
 .glow-orange {
   box-shadow:
-    0 0 20px rgb(var(--ch-rgb-neon-orange) / 0.15),
-    0 0 40px rgb(var(--ch-rgb-neon-orange) / 0.05);
+    0 0 14px rgb(var(--ch-rgb-neon-orange) / 0.08),
+    0 0 28px rgb(var(--ch-rgb-neon-orange) / 0.025);
+}
+
+/* ── Motion (transform/opacity only — GPU-friendly) ──────────── */
+@keyframes ch-flame {
+  0%, 100% { transform: scale(1) rotate(-1deg); opacity: 1; }
+  25% { transform: scale(1.08) rotate(2deg); opacity: 0.9; }
+  50% { transform: scale(0.96) rotate(-2deg); opacity: 1; }
+  75% { transform: scale(1.05) rotate(1deg); opacity: 0.95; }
+}
+.animate-flame { animation: ch-flame 1.6s ease-in-out infinite; transform-origin: center bottom; }
+
+@keyframes ch-pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.animate-pulse-glow { animation: ch-pulse-glow 2s ease-in-out infinite; }
+
+@keyframes ch-float-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-float-in { animation: ch-float-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes ch-shimmer {
+  100% { transform: translateX(100%); }
+}
+.animate-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.animate-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(var(--ch-rgb-neon-cyan) / 0.08), transparent);
+  animation: ch-shimmer 2.2s ease-in-out infinite;
+}
+
+/* SVG line draw-in: pair with pathLength={1} on the <path>. Reduced-motion
+   users skip the animation (the line renders fully via the override below). */
+@keyframes viz-draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+.viz-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: viz-draw 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-flame,
+  .animate-pulse-glow,
+  .animate-float-in,
+  .animate-shimmer::after { animation: none; }
+  .viz-draw { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; }
 }
 
 /* Variable-driven surface glow (see GlowSurface.tsx); --glow-surface-rgb set inline */

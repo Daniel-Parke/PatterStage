@@ -21,7 +21,7 @@ import {
   computeOrphanCutoffs,
   tallyOrphanRows,
   type OrphanSweepResult,
-} from "@/lib/session-repository";
+} from "@/lib/session-sync";
 
 describe("computeOrphanCutoffs", () => {
   it("returns shortCutoff = now - 5min and longCutoff = now - 30min (ISO-8601)", () => {

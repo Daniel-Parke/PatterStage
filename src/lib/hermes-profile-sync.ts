@@ -10,10 +10,9 @@ import {
   rmSync,
   statSync,
 } from "fs";
-import { createHash } from "crypto";
 
 import { atomicWriteFile, finalizeRootConfigOnDisk } from "./hermes-config-sync";
-import { backupTimestamp, ensureDir } from "./fs-helpers";
+import { backupTimestamp, ensureDir, fileHash, contentHash } from "./fs-helpers";
 import { messageFromError } from "./api-fetch";
 import { getHermesDefaultRoot } from "./hermes-profile-paths";
 import { resolveProfileHermesHome } from "./hermes-profile-paths";
@@ -102,21 +101,6 @@ export interface DiscoveredProfile {
   slug: string;
   path: string;
   inDatabase: boolean;
-}
-
-function fileHash(path: string): string | null {
-  if (!existsSync(path)) return null;
-  try {
-    const content = readFileSync(path, "utf-8");
-    return createHash("sha256").update(content).digest("hex");
-  }
-  catch {
-    return null;
-  }
-}
-
-function contentHash(content: string): string {
-  return createHash("sha256").update(content).digest("hex");
 }
 
 function ensureProfileDirs(root: string): void {

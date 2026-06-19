@@ -21,4 +21,15 @@ export async function register(): Promise<void> {
   // Orchestration scheduler host (Control Hub-owned scheduling + run reconcile).
   const { ensureBackgroundScheduler } = await import("@/lib/orchestration");
   ensureBackgroundScheduler();
+
+  // Zero-config deploy: seed the catalog (profiles, Baseline agent, bundled
+  // skills + Hermes push, tool/memory catalogs) once if the installer's seed
+  // step never ran. Idempotent + gated by a meta flag.
+  const { ensureCatalogSeededOnce } = await import("@/lib/seed/catalog-seed");
+  ensureCatalogSeededOnce();
+
+  // Benchmark run recovery: fail runs left 'running' by a crashed process and
+  // re-kick any that were created but never started.
+  const { recoverBenchmarkRuns } = await import("@/lib/benchmarks/executor");
+  recoverBenchmarkRuns();
 }

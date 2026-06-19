@@ -2,9 +2,10 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ChevronLeft, ChevronRight, BookOpen, Sparkles, Loader2, X, RefreshCw, PenLine, PlayCircle, AlertTriangle } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, BookMarked, Sparkles, Loader2, X, RefreshCw, PenLine, PlayCircle, AlertTriangle } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import ChapterList from "@/components/story-weaver/ChapterList";
+import StoryBiblePanel from "@/components/story-weaver/StoryBiblePanel";
 import GenerateOverlay from "@/components/story-weaver/GenerateOverlay";
 import ReaderSettings, { loadSettings, DEFAULT_SETTINGS, FONTS, THEMES, WORD_COUNT_OPTIONS, type ReadingSettings } from "@/components/story-weaver/ReaderSettings";
 
@@ -42,6 +43,7 @@ export default function StoryReaderPage() {
   const [currentChapter, setCurrentChapter] = useState(1);
   const [generating, setGenerating] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [bibleOpen, setBibleOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Edit chapter state
@@ -328,6 +330,14 @@ export default function StoryReaderPage() {
         </div>
       )}
 
+      {/* Story Bible — read-only view of the predetermined arc */}
+      <StoryBiblePanel
+        storyArc={story.storyArc}
+        rollingSummary={story.rollingSummary}
+        open={bibleOpen}
+        onClose={() => setBibleOpen(false)}
+      />
+
       {/* Progress overlay for continue and edit */}
       <GenerateOverlay
         title={story?.title || "Story"}
@@ -482,6 +492,12 @@ export default function StoryReaderPage() {
                 <span className="hidden md:inline">Retry</span>
               </button>
             )}
+            <button onClick={() => setBibleOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-neon-purple/20 text-xs font-bold text-neon-purple/80 hover:text-neon-purple hover:bg-neon-purple/10 transition-colors min-w-[44px] min-h-[44px] justify-center"
+              title="Story Bible — arc, plot points & character journeys">
+              <BookMarked className="w-4 h-4" />
+              <span className="hidden md:inline">Bible</span>
+            </button>
             <button onClick={() => setSidebarOpen(!sidebarOpen)}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-xs font-bold text-white/70 hover:text-white hover:bg-white/5 transition-colors min-w-[44px] min-h-[44px] justify-center"
               title={sidebarOpen ? "Hide Chapters" : "Show Chapters"}>

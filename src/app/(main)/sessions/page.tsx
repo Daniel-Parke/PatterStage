@@ -27,7 +27,7 @@
 
 "use client";
 
-import { useCallback, useState, useEffect, useMemo, useRef } from "react";
+import { useCallback, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Clock,
@@ -49,7 +49,7 @@ import { useToast } from "@/components/ui/Toast";
 import { LiveDot } from "@/components/ui/LiveDot";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { timeAgo, formatElapsed, pluralise } from "@/lib/utils";
-import { useApiData } from "@/hooks/useApiData";
+import { useSessions } from "@/hooks/useSessions";
 import { useInterval } from "@/hooks/useInterval";
 import { useStoredBool } from "@/hooks/useStoredBool";
 import { searchSessionsByQuery, isApiNoiseSession } from "@/lib/session-filters";
@@ -59,13 +59,7 @@ import type { SessionRecord } from "@/lib/session-repository";
 import type { SessionSource } from "@/lib/session-repository";
 import { SOURCE_META } from "@/components/session/constants";
 import { formatSessionTitle } from "@/lib/session-title";
-
-// ── Types ────────────────────────────────────────────────────
-
-interface SessionsResponse {
-  sessions: SessionRecord[];
-  total: number;
-}
+import SessionInsights from "@/components/session/SessionInsights";
 
 // ── Constants ────────────────────────────────────────────────
 
@@ -224,17 +218,6 @@ export default function SessionsPage() {
   useInterval(() => setNowTick((n) => n + 1), { ms: 1000 });
   const { toastElement } = useToast();
 
-  // When the source filter changes, jump back to page 0 so the user
-  // doesn't see "no results" on a stale page index. We mirror the
-  // filter into a ref so the `urlBuilder` closure can read the
-  // freshest value without invalidating the `useApiData` URL callback
-  // (which would trigger an extra fetch on the same page transition).
-  const sourceFilterRef = useRef(sourceFilter);
-  useEffect(() => {
-    sourceFilterRef.current = sourceFilter;
-    setPage(0);
-  }, [sourceFilter]);
-
   // Open/close sibling pair for the source filter. The "All" button
   // (line 327) clears the filter (sets it to `null`); each source button
   // in the .map() (line 339) sets it to that source. Both paths were
@@ -245,14 +228,19 @@ export default function SessionsPage() {
   // 1-arg "close" sibling. Both callbacks list the stable `useState`
   // setter explicitly in the deps array to satisfy
   // `react-hooks/exhaustive-deps`.
-  const clearSourceFilter = useCallback(
-    () => setSourceFilter(null),
-    [setSourceFilter],
-  );
-  const selectSourceFilter = useCallback(
-    (src: SessionSource) => setSourceFilter(src),
-    [setSourceFilter],
-  );
+  // Both filter callbacks also reset to page 0 so the user doesn't land
+  // on a stale page index with "no results" after narrowing the filter.
+  // (Previously a `useEffect` watched `sourceFilter` to reset the page;
+  // folding the reset into the setters keeps `sourceFilter` + `page` in
+  // the query key changing together — one refetch per filter change.)
+  const clearSourceFilter = useCallback(() => {
+    setSourceFilter(null);
+    setPage(0);
+  }, [setSourceFilter, setPage]);
+  const selectSourceFilter = useCallback((src: SessionSource) => {
+    setSourceFilter(src);
+    setPage(0);
+  }, [setSourceFilter, setPage]);
   // Toggle callbacks for the 2 view-options row buttons (group-by-mission
   // and hide-api-noise). Both were inline `() => setX(!X)` arrows on the
   // button onClick props — promoting to named useCallbacks follows the
@@ -273,22 +261,14 @@ export default function SessionsPage() {
     [hideApiNoise, setHideApiNoise],
   );
 
-  // URL is rebuilt from the current page + source filter. The hook
-  // re-fetches on URL change, so a page click or a filter change
-  // triggers a single fetch (matches the pre-refactor `loadSessions`
-  // behaviour: 1 fetch per state change, no extra renders).
-  const sessionsUrl = useCallback(
-    () => {
-      const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(page * PAGE_SIZE) });
-      if (sourceFilterRef.current) params.set("source", sourceFilterRef.current);
-      return `/api/sessions?${params}`;
-    },
-    [page],
+  // page + sourceFilter live in the query key (src/hooks/useSessions.ts),
+  // so a page click or filter change triggers exactly one fetch and a
+  // cached page re-displays instantly.
+  const { data, isLoading: loading, error: loadError, refetch } = useSessions(
+    page,
+    sourceFilter,
+    PAGE_SIZE,
   );
-
-  const { data, loading, error: loadError, refetch } = useApiData<SessionsResponse>(sessionsUrl, {
-    urlBuilder: sessionsUrl,
-  });
 
   // Surface API errors as a persistent <LoadErrorBanner> with a Retry
   // button. The banner is always rendered when `loadError` is non-null —
@@ -296,7 +276,7 @@ export default function SessionsPage() {
   // "load failed, not catalog empty" state, which is the canonical
   // disambiguation the umbrella skill's `LoadErrorBanner` pattern
   // (Pattern #19) was designed for). The Retry button calls
-  // `useApiData`'s `refetch` so the user can re-attempt the fetch
+  // `useSessions`'s `refetch` so the user can re-attempt the fetch
   // without manually reloading the page.
   //
   // Replaces the previous `useEffect(() => showToast(loadError, "error"))`
@@ -348,6 +328,7 @@ export default function SessionsPage() {
             hint="The list below may be empty because the load failed — not because there are no sessions to show."
           />
         )}
+        <SessionInsights sessions={sessions} />
         {/* Search + Source Filter + View Options */}
         <div className="flex flex-col gap-3 mb-6">
           <div className="flex flex-col sm:flex-row gap-3">

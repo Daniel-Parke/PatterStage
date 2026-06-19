@@ -109,19 +109,6 @@ jest.mock("@/lib/session-repository", () => ({
   listSessions: jest.fn(() => ({ sessions: [], total: 0 })),
 }));
 
-jest.mock("@/lib/cron-repository", () => ({
-  listCronJobs: jest.fn(() => []),
-  // The monitor route fires `ensureCronHermesSync()` (4th-layer
-  // reconciliation) on every hit. The test mocks it to a no-op
-  // resolver so the route's happy path executes without
-  // touching the disk. Production code uses the real
-  // implementation; see tests/unit/cron-hermes-sync-reconciliation.test.ts
-  // for the 4th-layer behaviour coverage.
-  ensureCronHermesSync: jest.fn(() =>
-    Promise.resolve({ attempted: false, repaired: 0, errors: [] }),
-  ),
-}));
-
 import { NextRequest } from "next/server";
 
 describe("GET /api/status", () => {
@@ -237,7 +224,6 @@ describe("GET /api/monitor", () => {
 
     expect(res.status).toBe(200);
     expect(data.data).toBeDefined();
-    expect(data.data.cron).toBeDefined();
     expect(data.data.memory).toBeDefined();
     expect(data.data.sync).toBeDefined();
     expect(data.data.sync.lastRun === null || typeof data.data.sync.lastRun === "string").toBe(true);

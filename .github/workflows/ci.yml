@@ -60,6 +60,8 @@ jobs:
         run: npm run prebuild
       - name: ESLint
         run: npm run lint
+      - name: Knip (no new dead files / dependency drift)
+        run: npm run lint:knip
       - uses: ./.github/actions/forbid-hermes-paths-in-api
       - name: TypeScript (tsc --noEmit)
         run: npx tsc --noEmit -p tsconfig.json

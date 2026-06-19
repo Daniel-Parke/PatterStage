@@ -2,14 +2,14 @@
 // Hindsight Memory Browser — Browse, search, and store memories
 // ═══════════════════════════════════════════════════════════════
 // Memories are fetched only when the user clicks Recall (action=recall), not on mount.
-// Sub-components extracted for maintainability:
-//   - MemoryTab, DirectivesTab, MentalModelsTab
-//   - HealthBanner, AddMemoryModal, DirectiveModal, MentalModelModal
+// The three tab concerns are owned by their own hooks (useHindsightMemories /
+// useHindsightDirectives / useHindsightModels in ./hindsight/); this file is the
+// layout shell that wires them to the already-extracted tab + modal components.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState } from "react";
 import {
   Search, Plus, Sparkles, List, FileText,
   Settings, RefreshCw,
@@ -17,465 +17,96 @@ import {
 import { SearchInput } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { hindsightGet, loadHindsightList, filterMemoriesByAge, HINDSIGHT_DEFAULT_MAX_AGE_DAYS } from "@/lib/hindsight-client";
-import { hindsightMutate } from "@/lib/hindsight-mutate";
-import { parseOptionalTagsInput, parseTagsInput } from "@/lib/hindsight-tag-input";
-import { stringOr } from "./hindsight/utils";
-import type { Tab, Memory, Directive, MentalModel, HealthState } from "./hindsight/types";
+import { HINDSIGHT_DEFAULT_MAX_AGE_DAYS } from "@/lib/hindsight-client";
+import type { Tab } from "./hindsight/types";
 import HealthBanner from "./hindsight/HealthBanner";
+import MemoryInsights from "@/components/memory/MemoryInsights";
 import MemoryTab from "./hindsight/MemoryTab";
 import DirectivesTab from "./hindsight/DirectivesTab";
 import MentalModelsTab from "./hindsight/MentalModelsTab";
 import { AddMemoryModal, DirectiveModal, MentalModelModal } from "./hindsight/Modals";
-import { runMutation } from "@/lib/run-mutation";
 import { setField } from "@/lib/set-field";
-
-// ── Default form state ─────────────────────────────────────────
-//
-// The directive + mental-model modals all reset to these blank
-// values on initial open, on close, and on successful save. Pulling
-// them into module constants means a future "I added a `description`
-// field to the directive modal" lands in one place — the inline form
-// literal was previously duplicated 3x per modal (6 sites total) and
-// the session-35 lesson was that those 6 sites tend to drift.
-const EMPTY_DIR_FORM = { name: "", content: "", priority: "0", tags: "" };
-type DirForm = typeof EMPTY_DIR_FORM;
-
-const EMPTY_MODEL_FORM = { name: "", query: "", tags: "" };
-type ModelForm = typeof EMPTY_MODEL_FORM;
-
+import { useHindsightMemories } from "./hindsight/useHindsightMemories";
+import { useHindsightDirectives } from "./hindsight/useHindsightDirectives";
+import { useHindsightModels } from "./hindsight/useHindsightModels";
 
 export default function HindsightBrowser() {
-  const [memories, setMemories] = useState<Memory[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingInitial, setLoadingInitial] = useState(true);
-  const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<Tab>("memories");
-  const [reflectResult, setReflectResult] = useState<string | null>(null);
-  const [reflecting, setReflecting] = useState(false);
-  // Stale-fact filter toggle. When false (the default), memories older
-  // than HINDSIGHT_DEFAULT_MAX_AGE_DAYS are hidden in the Memory tab.
-  // The user can override per-tab to surface old knowledge for cleanup
-  // or to investigate a stale fact. See skill
-  // hindsight-memory-configuration/references/session-2026-06-13-corpus-
-  // flood-cleanup.md for the rationale.
-  const [showStaleMemories, setShowStaleMemories] = useState(false);
-  // Apply the age filter to the displayed memories list. The fetched
-  // list (`memories`) is the source of truth; `displayedMemories` is
-  // what the MemoryTab actually renders. The user toggles
-  // `showStaleMemories` to switch between filtered and unfiltered.
-  const displayedMemories = useMemo(
-    () => filterMemoriesByAge(
-      memories,
-      showStaleMemories ? Infinity : HINDSIGHT_DEFAULT_MAX_AGE_DAYS,
-    ),
-    [memories, showStaleMemories],
-  );
-  const hiddenStaleCount = memories.length - displayedMemories.length;
-
-  // Add memory modal
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newContent, setNewContent] = useState("");
-  const [newTags, setNewTags] = useState("");
-  const [adding, setAdding] = useState(false);
-
-  // Health
-  const [health, setHealth] = useState<HealthState | null>(null);
-
-  // Directives state
-  const [directives, setDirectives] = useState<Directive[]>([]);
-  const [loadingDirectives, setLoadingDirectives] = useState(false);
-  const [showDirectiveModal, setShowDirectiveModal] = useState(false);
-  const [dirForm, setDirForm] = useState<DirForm>(EMPTY_DIR_FORM);
-  const [creatingDirective, setCreatingDirective] = useState(false);
-  const [editingDirective, setEditingDirective] = useState<Directive | null>(null);
-  const [editDirForm, setEditDirForm] = useState<DirForm>(EMPTY_DIR_FORM);
-  const [savingDirective, setSavingDirective] = useState(false);
-
-  // Mental models state
-  const [mentalModels, setMentalModels] = useState<MentalModel[]>([]);
-  const [loadingModels, setLoadingModels] = useState(false);
-  const [showModelModal, setShowModelModal] = useState(false);
-  const [modelForm, setModelForm] = useState<ModelForm>(EMPTY_MODEL_FORM);
-  const [creatingModel, setCreatingModel] = useState(false);
-  const [editingModel, setEditingModel] = useState<MentalModel | null>(null);
-  const [editModelForm, setEditModelForm] = useState<ModelForm>(EMPTY_MODEL_FORM);
-  const [savingModel, setSavingModel] = useState(false);
-  const [refreshingModelId, setRefreshingModelId] = useState<string | null>(null);
-
   const { showToast, toastElement } = useToast();
+  const [activeTab, setActiveTab] = useState<Tab>("memories");
 
-  // ── Health ───────────────────────────────────────────────
+  const {
+    memories,
+    loading,
+    loadingInitial,
+    search,
+    setSearch,
+    reflectResult,
+    reflecting,
+    showStaleMemories,
+    setShowStaleMemories,
+    displayedMemories,
+    hiddenStaleCount,
+    showAddModal,
+    newContent,
+    setNewContent,
+    newTags,
+    setNewTags,
+    adding,
+    health,
+    fetchHealthOnly,
+    loadRecentMemories,
+    runRecall,
+    handleRefreshMemories,
+    handleReflect,
+    handleAdd,
+    openAddModal,
+    closeAddModal,
+  } = useHindsightMemories(showToast);
 
-  const fetchHealthOnly = useCallback(async () => {
-    // `hindsightGet` returns the inner payload typed as `T | null`;
-    // `null` covers both error and missing-data cases. On null we
-    // surface a synthesised "unavailable" state so the HealthBanner
-    // has something to render.
-    const inner = await hindsightGet<HealthState>("health");
-    if (inner) {
-      setHealth(inner);
-    } else {
-      setHealth({ available: false, mode: "unknown", message: "No response" });
-    }
-  }, []);
+  const {
+    directives,
+    loadingDirectives,
+    showDirectiveModal,
+    dirForm,
+    setDirForm,
+    creatingDirective,
+    editingDirective,
+    editDirForm,
+    setEditDirForm,
+    savingDirective,
+    loadDirectives,
+    openDirectiveModal,
+    closeDirectiveModal,
+    closeEditDirective,
+    openEditDirective,
+    handleCreateDirective,
+    handleToggleDirective,
+    handleDeleteDirective,
+    handleSaveDirective,
+  } = useHindsightDirectives(showToast, activeTab);
 
-  // ── Memories ────────────────────────────────────────────
-
-  const loadRecentMemories = useCallback(async () => {
-    setLoadingInitial(true);
-    // Envelope-typed: the route returns
-    // `{ data: { memories, mode, error } }`.
-    const inner = await hindsightGet<{ memories?: Memory[]; mode?: string; error?: string }>(
-      "list",
-      { limit: 50 },
-    );
-    if (inner?.error) {
-      void fetchHealthOnly();
-    } else {
-      setMemories(inner?.memories || []);
-      if (inner) {
-        setHealth({ available: true, mode: stringOr(inner.mode, "ok") });
-      }
-    }
-    setLoadingInitial(false);
-  }, [fetchHealthOnly]);
-
-  useEffect(() => {
-    void loadRecentMemories();
-  }, [loadRecentMemories]);
-
-  const runRecall = useCallback(async () => {
-    const q = search.trim();
-    if (!q) {
-      showToast("Enter a search query first", "info");
-      return;
-    }
-    setLoading(true);
-    try {
-      // Envelope-typed: the route returns
-      // `{ data: { memories, available, mode, message, error } }`.
-      const inner = await hindsightGet<{
-        memories?: Memory[];
-        available?: boolean;
-        mode?: string;
-        message?: string;
-        error?: string;
-      }>("recall", { query: q });
-      if (!inner) {
-        await fetchHealthOnly();
-        return;
-      }
-      setMemories(inner.memories || []);
-      const backendSaysDown = inner.available === false || (typeof inner.error === "string" && inner.error.length > 0);
-      if (!backendSaysDown) {
-        setHealth({
-          available: true,
-          mode: stringOr(inner.mode, "ok"),
-          message: stringOr(inner.message),
-        });
-      } else {
-        await fetchHealthOnly();
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [search, showToast, fetchHealthOnly]);
-
-  const handleRefreshMemories = () => {
-    if (search.trim()) {
-      void runRecall();
-    } else {
-      void loadRecentMemories();
-    }
-  };
-
-  const handleReflect = async () => {
-    if (!search.trim()) return;
-    setReflecting(true);
-    setReflectResult(null);
-    // Single-nesting: type param is the inner `{response}` shape.
-    const inner = await hindsightGet<{ response?: string }>("reflect", { query: search });
-    setReflecting(false);
-    if (!inner) {
-      showToast("Reflection failed", "error");
-    } else {
-      setReflectResult(inner.response || "No reflection generated");
-    }
-  };
-
-  const handleAdd = () =>
-    runMutation(showToast, {
-      isValid: () => newContent.trim().length > 0,
-      busy: setAdding,
-      build: () => ({
-        content: newContent,
-        tags: parseOptionalTagsInput(newTags),
-      }),
-      path: "/api/memory/hindsight",
-      successMsg: "Memory stored",
-      errorMsg: "Failed to store memory",
-      onSuccess: async () => {
-        setShowAddModal(false);
-        setNewContent("");
-        setNewTags("");
-        if (search.trim()) await runRecall();
-        else await loadRecentMemories();
-      },
-    });
-
-  // ── Directives ──────────────────────────────────────────
-
-  const loadDirectives = useCallback(async () => {
-    // Compose the GET fetch + busy-state toggle + server-error toast
-    // + empty-state reset via the shared `loadHindsightList` helper.
-    // The 5-line pre-form body (setLoading → fetch → setLoading(false)
-    // → error-toast → setX) is now a single helper call — the helper
-    // body matches the pre-form byte-for-byte, so no runtime change.
-    await loadHindsightList<Directive>(
-      "directives",
-      setLoadingDirectives,
-      "directives",
-      setDirectives,
-      showToast,
-    );
-  }, [showToast]);
-
-  useEffect(() => {
-    if (activeTab === "directives") void loadDirectives();
-  }, [activeTab, loadDirectives]);
-
-  const handleCreateDirective = () =>
-    runMutation(showToast, {
-      isValid: () => dirForm.name.trim().length > 0 && dirForm.content.trim().length > 0,
-      busy: setCreatingDirective,
-      build: () => ({
-        action: "create-directive",
-        name: dirForm.name,
-        content: dirForm.content,
-        priority: parseInt(dirForm.priority) || 0,
-        tags: parseOptionalTagsInput(dirForm.tags),
-      }),
-      path: "/api/memory/hindsight",
-      successMsg: "Directive created",
-      errorMsg: "Failed to create directive",
-      onSuccess: async () => {
-        closeDirectiveModal();
-        await loadDirectives();
-      },
-    });
-
-  const handleToggleDirective = async (directive: Directive) => {
-    // Dynamic success message (deactivated vs activated) — `hindsightMutate`
-    // forwards the `successMsg: () => string` thunk to `toastFromResult`
-    // unchanged, so the directive.is_active state is read at toast time,
-    // not at request time. Same semantics as the pre-form inline call.
-    const result = await hindsightMutate(
-      showToast,
-      "POST",
-      { action: "update-directive", id: directive.id, is_active: !directive.is_active },
-      () => (directive.is_active ? "Directive deactivated" : "Directive activated"),
-      "Failed to update directive",
-    );
-    if (!result.ok) return;
-    await loadDirectives();
-  };
-
-  const handleDeleteDirective = async (id: string) => {
-    const result = await hindsightMutate(
-      showToast,
-      "DELETE",
-      { type: "directive", id },
-      "Directive deleted",
-      "Failed to delete directive",
-    );
-    if (!result.ok) return;
-    setDirectives(prev => prev.filter(d => d.id !== id));
-  };
-
-  const openEditDirective = (d: Directive) => {
-    setEditingDirective(d);
-    setEditDirForm({ name: d.name, content: d.content, priority: String(d.priority), tags: d.tags.join(", ") });
-  };
-
-  const handleSaveDirective = () => {
-    if (!editingDirective) return false;
-    return runMutation(showToast, {
-      isValid: () => editDirForm.name.trim().length > 0 && editDirForm.content.trim().length > 0,
-      busy: setSavingDirective,
-      build: () => ({
-        action: "update-directive",
-        id: editingDirective.id,
-        name: editDirForm.name,
-        content: editDirForm.content,
-        priority: parseInt(editDirForm.priority) || 0,
-        tags: parseTagsInput(editDirForm.tags),
-      }),
-      path: "/api/memory/hindsight",
-      successMsg: "Directive updated",
-      errorMsg: "Failed to update directive",
-      onSuccess: async () => {
-        setEditingDirective(null);
-        await loadDirectives();
-      },
-    });
-  };
-
-  // ── Mental Models ───────────────────────────────────────
-
-  const loadModels = useCallback(async () => {
-    // Sister to `loadDirectives` above — same `loadHindsightList`
-    // helper, just with the `mental-models` action + `models` key.
-    await loadHindsightList<MentalModel>(
-      "mental-models",
-      setLoadingModels,
-      "models",
-      setMentalModels,
-      showToast,
-    );
-  }, [showToast]);
-
-  useEffect(() => {
-    if (activeTab === "mental-models") void loadModels();
-  }, [activeTab, loadModels]);
-
-  const handleCreateModel = () =>
-    runMutation(showToast, {
-      isValid: () => modelForm.name.trim().length > 0 && modelForm.query.trim().length > 0,
-      busy: setCreatingModel,
-      build: () => ({
-        action: "create-model",
-        name: modelForm.name,
-        query: modelForm.query,
-        tags: parseOptionalTagsInput(modelForm.tags),
-      }),
-      path: "/api/memory/hindsight",
-      successMsg: "Mental model created (generating in background)",
-      errorMsg: "Failed to create mental model",
-      onSuccess: async () => {
-        closeModelModal();
-        await loadModels();
-      },
-    });
-
-  const handleRefreshModel = async (id: string) => {
-    setRefreshingModelId(id);
-    const result = await hindsightMutate(
-      showToast,
-      "POST",
-      { action: "refresh-model", id },
-      "Mental model refresh started",
-      "Failed to refresh mental model",
-    );
-    if (!result.ok) {
-      setRefreshingModelId(null);
-      return;
-    }
-    await loadModels();
-    setRefreshingModelId(null);
-  };
-
-  const handleDeleteModel = async (id: string) => {
-    const result = await hindsightMutate(
-      showToast,
-      "DELETE",
-      { type: "model", id },
-      "Mental model deleted",
-      "Failed to delete mental model",
-    );
-    if (!result.ok) return;
-    setMentalModels(prev => prev.filter(m => m.id !== id));
-  };
-
-  const openEditModel = (m: MentalModel) => {
-    setEditingModel(m);
-    setEditModelForm({ name: m.name, query: m.source_query, tags: m.tags.join(", ") });
-  };
-
-  // Open/close sibling pairs for the 3 modals (AddMemory, Directive,
-  // MentalModel). The X/overlay close paths were inline `() =>
-  // setShowX(false)` arrows (line 475, 480, 491, 501, 511); the open
-  // paths were inline `() => setShowX(true)` arrows on the trigger
-  // buttons (line 419, 461, 468) and on the `onCreateClick` prop of
-  // DirectivesTab + MentalModelsTab. Promoting all 5 to named
-  // useCallback-wrapped callbacks follows the session 116 P-7 /
-  // session 118 P-7 open/close sibling pattern, and the 2 close
-  // callbacks that ALSO reset a sibling state (Directive: `setDirForm(
-  // EMPTY_DIR_FORM)`; MentalModel: `setModelForm(EMPTY_MODEL_FORM)`)
-  // collapse to a single named callback. The deps array lists the
-  // setters explicitly to satisfy `react-hooks/exhaustive-deps`.
-  const openAddModal = useCallback(
-    () => setShowAddModal(true),
-    [setShowAddModal],
-  );
-  const closeAddModal = useCallback(
-    () => setShowAddModal(false),
-    [setShowAddModal],
-  );
-  const openDirectiveModal = useCallback(
-    () => setShowDirectiveModal(true),
-    [setShowDirectiveModal],
-  );
-  const closeDirectiveModal = useCallback(() => {
-    setShowDirectiveModal(false);
-    setDirForm(EMPTY_DIR_FORM);
-  }, [setShowDirectiveModal]);
-  const openModelModal = useCallback(
-    () => setShowModelModal(true),
-    [setShowModelModal],
-  );
-  const closeModelModal = useCallback(() => {
-    setShowModelModal(false);
-    setModelForm(EMPTY_MODEL_FORM);
-  }, [setShowModelModal]);
-
-  // Close callbacks for the 2 EDIT modals (the create modals' open
-  // paths were the 3 `onCreateClick` props above; the edit modals
-  // are opened by `openEditDirective` / `openEditModel` which are
-  // already named). The 2 inline `() => setEditingX(null)` arrows on
-  // the edit modals' `onClose` props (line 528, 548) are promoted
-  // to useCallback-wrapped named callbacks for consistency with the
-  // create-modals' close paths. The "set to null" is the canonical
-  // close — no extra form-reset (the form is only used during
-  // edit, and the next `openEditX` call overwrites it).
-  const closeEditDirective = useCallback(
-    () => setEditingDirective(null),
-    [setEditingDirective],
-  );
-  const closeEditModel = useCallback(
-    () => setEditingModel(null),
-    [setEditingModel],
-  );
-
-  // Field setters for the directive + mental-model modals. Each modal
-  // exposes 3-4 separate `onNameChange` / `onContentChange` / etc. props
-  // and the inline setter body is the same shape every time. The shared
-  // `setField` helper (src/lib/set-field.ts) builds a partial-update
-  // setter for one key, so the JSX collapses to
-  // `onNameChange={setField(setDirForm, "name")}`. 14 call sites
-  // (create/edit for both modals) share the same helper.
-
-  const handleSaveModel = () => {
-    if (!editingModel) return false;
-    return runMutation(showToast, {
-      isValid: () => editModelForm.name.trim().length > 0,
-      busy: setSavingModel,
-      build: () => ({
-        action: "update-model",
-        id: editingModel.id,
-        name: editModelForm.name,
-        query: editModelForm.query || undefined,
-        tags: parseTagsInput(editModelForm.tags),
-      }),
-      path: "/api/memory/hindsight",
-      successMsg: "Mental model updated",
-      errorMsg: "Failed to update mental model",
-      onSuccess: async () => {
-        setEditingModel(null);
-        await loadModels();
-      },
-    });
-  };
+  const {
+    mentalModels,
+    loadingModels,
+    showModelModal,
+    modelForm,
+    setModelForm,
+    creatingModel,
+    editingModel,
+    editModelForm,
+    setEditModelForm,
+    savingModel,
+    refreshingModelId,
+    loadModels,
+    openModelModal,
+    closeModelModal,
+    closeEditModel,
+    openEditModel,
+    handleCreateModel,
+    handleRefreshModel,
+    handleDeleteModel,
+    handleSaveModel,
+  } = useHindsightModels(showToast, activeTab);
 
   // ── Render ──
 
@@ -513,6 +144,9 @@ export default function HindsightBrowser() {
           Add Memory
         </Button>
       </div>
+
+      {/* Memory insights — fresh/stale fact mix + tags for the loaded set */}
+      {!loadingInitial && <MemoryInsights memories={memories} hiddenStaleCount={hiddenStaleCount} />}
 
       {/* Reflect Result */}
       {reflectResult && (

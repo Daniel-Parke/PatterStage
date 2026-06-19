@@ -226,3 +226,37 @@ export function deleteSchedule(id: string): boolean {
   const result = db().prepare("DELETE FROM schedules WHERE id = ?").run(id);
   return result.changes > 0;
 }
+
+/**
+ * Remove every schedule linked to a mission. Called when a mission is deleted so
+ * the scheduler tick never tries to dispatch a removed mission. Returns the
+ * number of schedules deleted.
+ */
+export function deleteSchedulesForMission(missionId: string): number {
+  const result = db().prepare("DELETE FROM schedules WHERE mission_id = ?").run(missionId);
+  return result.changes;
+}
+
+/**
+ * Record an out-of-band (manual "run now") dispatch on a schedule: stamp
+ * last_run_* WITHOUT advancing next_run_at or the repeat counter (the cadence is
+ * unchanged by a manual run). Used by POST /api/schedules/[id]/run; the final
+ * status is reconciled later via runs.schedule_id by the run-reconcile tick.
+ */
+export function recordScheduleRun(
+  id: string,
+  fields: { lastRunId: string | null; lastRunAt: string; lastStatus: string | null },
+): ScheduleRecord | null {
+  const { sql, values } = buildUpdate(
+    {
+      last_run_id: fields.lastRunId,
+      last_run_at: fields.lastRunAt,
+      last_status: fields.lastStatus,
+    },
+    { now: now() },
+  );
+  inTransaction(() => {
+    db().prepare(`UPDATE schedules SET ${sql} WHERE id = ?`).run(...values, id);
+  });
+  return getSchedule(id);
+}

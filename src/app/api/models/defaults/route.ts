@@ -12,6 +12,7 @@ import { appendAuditLine } from "@/lib/audit-log";
 import { setDefaultPutSchema } from "@/lib/api-schemas";
 import { notFound, ok } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
+import { recordEvent } from "@/lib/analytics/record-event";
 
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);
@@ -46,6 +47,11 @@ export async function PUT(request: NextRequest) {
       action: "model.default.set",
       resource: `${parsed.taskType}=${parsed.modelId ?? "null"}`,
       ok: true,
+    });
+    recordEvent("model.configured", {
+      entityType: "model",
+      entityId: parsed.modelId ?? parsed.taskType,
+      metadata: { taskType: parsed.taskType },
     });
     return ok({ defaults });
   } catch (error) {
