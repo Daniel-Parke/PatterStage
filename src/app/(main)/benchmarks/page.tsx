@@ -494,6 +494,13 @@ export default function BenchmarksPage() {
                   <span className="text-white/30">· {r.suiteKey} v{r.suiteVersion}</span>
                 </span>
                 <span className="flex items-center gap-3">
+                  {r.execMode === "agentic" && r.summary ? (
+                    r.summary.togglesApplied === false ? (
+                      <AlertTriangle className="h-3.5 w-3.5 text-neon-orange/70" aria-label="fell back to default agent" />
+                    ) : r.summary.togglesApplied ? (
+                      <ShieldCheck className="h-3.5 w-3.5 text-neon-green/70" aria-label="fair test (dedicated gateway)" />
+                    ) : null
+                  ) : null}
                   <span className={`font-mono text-[11px] ${statusTone(r.status)}`}>{r.status}</span>
                   <span
                     className="font-mono text-sm font-bold"
