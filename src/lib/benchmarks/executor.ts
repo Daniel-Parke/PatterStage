@@ -226,11 +226,8 @@ export function recoverBenchmarkRuns(): void {
   } catch (err) {
     logApiError("benchmarks.recover", "sweep-gateways", err);
   }
-  try {
-    sweepBenchAgents();
-  } catch (err) {
-    logApiError("benchmarks.recover", "sweep", err);
-  }
+  // Async best-effort: removing each ephemeral profile dir retries briefly.
+  void sweepBenchAgents().catch((err) => logApiError("benchmarks.recover", "sweep", err));
   let active: BenchmarkRun[] = [];
   try {
     active = listActiveBenchmarkRuns();

@@ -152,23 +152,14 @@ function isHermesGatewayPid(pid: number): boolean {
 }
 
 function killPid(pid: number): void {
+  // Bench gateways are disposable — SIGKILL immediately so the teardown that
+  // follows can remove the profile dir without racing a graceful shutdown.
   if (!isHermesGatewayPid(pid)) return;
   try {
-    process.kill(pid, "SIGTERM");
+    process.kill(pid, "SIGKILL");
   } catch {
     /* already gone */
   }
-  const t = setTimeout(() => {
-    if (isHermesGatewayPid(pid)) {
-      try {
-        process.kill(pid, "SIGKILL");
-      } catch {
-        /* gone */
-      }
-    }
-  }, 2000);
-  // Don't keep the event loop alive for the escalation timer.
-  (t as unknown as { unref?: () => void }).unref?.();
 }
 
 function persist(gw: BenchGateway): void {

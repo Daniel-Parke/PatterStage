@@ -58,7 +58,9 @@
 
     "test:e2e-runtime": "node tests/integration/runtime/full-stack-smoke.mjs",
 
-    "test:e2e-hermes": "bash tests/scripts/real-hermes-itest.sh"
+    "test:e2e-hermes": "bash tests/scripts/real-hermes-itest.sh",
+
+    "test:e2e-bench-gateway": "bash tests/scripts/bench-gateway-itest.sh"
 
   },
 

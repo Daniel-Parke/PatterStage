@@ -412,10 +412,10 @@ export async function executeBenchmarkRun(
   });
 
   const finishedAt = new Date().toISOString();
-  const teardown = () => {
+  const teardown = async () => {
     if (benchSlug) {
       try {
-        teardownBenchAgent(benchSlug);
+        await teardownBenchAgent(benchSlug);
       } catch (e) {
         logApiError("benchmarks.teardown", benchSlug, e);
       }
@@ -423,20 +423,20 @@ export async function executeBenchmarkRun(
   };
 
   if (state.fatal instanceof BenchmarkCancelledError) {
-    teardown();
+    await teardown();
     updateBenchmarkRun(runId, { status: "cancelled", completedAt: finishedAt });
     recordEvent("benchmark.failed", { entityType: "benchmark", entityId: runId, profile: run.targetRef, metadata: { reason: "cancelled" } });
     return;
   }
   if (state.fatal) {
-    teardown();
+    await teardown();
     const message = state.fatal.message;
     updateBenchmarkRun(runId, { status: "failed", error: message, completedAt: finishedAt });
     recordEvent("benchmark.failed", { entityType: "benchmark", entityId: runId, profile: run.targetRef, metadata: { reason: message } });
     return;
   }
 
-  teardown();
+  await teardown();
   const summary = summarize(agg, run.repeats, {
     totalCostUsd: totalCost,
     avgLatencyMs: latencyCount > 0 ? Math.round(latencySum / latencyCount) : undefined,

@@ -10,7 +10,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Trophy, Swords, Play, Square, Bot, Cpu, Share2, Medal } from "lucide-react";
+import { Trophy, Swords, Play, Square, Bot, Cpu, Share2, Medal, ShieldCheck, AlertTriangle } from "lucide-react";
 
 import PageHeader from "@/components/layout/PageHeader";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
@@ -425,6 +425,22 @@ export default function BenchmarksPage() {
               </div>
             </div>
           </div>
+
+          {/* Honesty: did the agentic run truly serve the toggled config, or
+              fall back to the shared default agent (no local Hermes gateway)? */}
+          {agentRun?.execMode === "agentic" && agentRun?.summary ? (
+            agentRun.summary.togglesApplied === false ? (
+              <p className="mt-4 flex items-center gap-2 rounded-lg border border-neon-orange/30 bg-neon-orange/5 px-3 py-2 text-[11px] text-neon-orange/90">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                Agentic run fell back to the shared default agent — no local Hermes was available to spawn a per-profile gateway, so the skill/tool/memory toggles were not applied.
+              </p>
+            ) : (
+              <p className="mt-4 flex items-center gap-2 text-[11px] text-neon-green/80">
+                <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                Fair test — a dedicated gateway served exactly the toggled config.
+              </p>
+            )
+          ) : null}
         </Card>
       ) : null}
 

@@ -9,7 +9,7 @@
 // it down. Orphans from a crash are swept on boot.
 // ═══════════════════════════════════════════════════════════════
 
-import { rmSync } from "fs";
+import { existsSync, rmSync } from "fs";
 import { getProfileOrRoot, upsertProfile, deleteProfile, listProfiles } from "@/lib/profiles-repository";
 import { configYamlToColumnValues, disabledSkillsFromJson } from "@/lib/profile-config-builder";
 import { listSkills } from "@/lib/skills-repository";
@@ -128,7 +128,7 @@ export function createBenchAgent(runId: string, spec: BenchAgentSpec): string {
 }
 
 /** Delete an ephemeral benchmark profile (gateway + CH DB + Hermes dir). No-op for non-bench slugs. */
-export function teardownBenchAgent(slug: string): void {
+export async function teardownBenchAgent(slug: string): Promise<void> {
   if (!isBenchAgent(slug)) return;
   // Kill the dedicated gateway first so nothing holds the profile dir open.
   try {
@@ -141,15 +141,22 @@ export function teardownBenchAgent(slug: string): void {
   } catch {
     // already gone
   }
-  try {
-    rmSync(resolveProfileHermesHome(slug), { recursive: true, force: true });
-  } catch {
-    // Hermes dir may not exist
+  // A just-killed gateway can still be releasing its HERMES_HOME, so a single
+  // rmSync can race and leave the dir behind. Retry briefly until it's gone.
+  const home = resolveProfileHermesHome(slug);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      rmSync(home, { recursive: true, force: true });
+      if (!existsSync(home)) return;
+    } catch {
+      // retry
+    }
+    await new Promise((r) => setTimeout(r, 150));
   }
 }
 
 /** Boot-time sweep: remove any ephemeral benchmark profiles left by a crash. */
-export function sweepBenchAgents(): void {
+export async function sweepBenchAgents(): Promise<void> {
   let profiles: ReturnType<typeof listProfiles> = [];
   try {
     profiles = listProfiles();
@@ -157,6 +164,6 @@ export function sweepBenchAgents(): void {
     return;
   }
   for (const p of profiles) {
-    if (isBenchAgent(p.slug)) teardownBenchAgent(p.slug);
+    if (isBenchAgent(p.slug)) await teardownBenchAgent(p.slug);
   }
 }
