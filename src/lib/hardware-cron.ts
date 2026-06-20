@@ -5,11 +5,21 @@
 
 import { homedir } from "os";
 
+import { isWindows } from "@/lib/platform";
+
 /**
- * UI labels + filenames for hardware cron presets.
- * Ship matching files under `scripts/hardware/` (`scripts/bootstrap/setup.sh` copies into CH_DATA_DIR/scripts).
+ * UI labels + filenames for hardware cron presets. Ship matching files under
+ * `scripts/hardware/` (setup copies them into CH_DATA_DIR/scripts). The
+ * Hindsight backup is a bash + Linux service, so it's offered on Unix only;
+ * the cross-platform `.mjs` utilities are always available to schedule by name.
  */
-export const HARDWARE_CRON_UI_PRESETS = [{ label: "Backup", file: "ps-backup.sh" }] as const;
+export const HARDWARE_CRON_UI_PRESETS: readonly { label: string; file: string }[] = isWindows
+  ? [
+      { label: "DB backup", file: "ps-db-backup.mjs" },
+      { label: "Health check", file: "ps-health-check.mjs" },
+      { label: "Log rotate", file: "ps-log-rotate.mjs" },
+    ]
+  : [{ label: "Backup", file: "ps-backup.sh" }];
 
 /** Filenames only (single source of truth with HARDWARE_CRON_UI_PRESETS). */
 export const HARDWARE_CRON_PRESET_SCRIPT_FILES: readonly string[] =

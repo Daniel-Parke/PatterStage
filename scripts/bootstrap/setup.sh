@@ -153,7 +153,7 @@ mkdir -p "$PS_DATA_ROOT/audit" 2>/dev/null || true
 mkdir -p "$PS_DATA_ROOT/scripts" 2>/dev/null || true
 mkdir -p "$PS_DATA_ROOT/logs" 2>/dev/null || true
 if [ -d "$REPO_ROOT/scripts/hardware" ]; then
-    for f in "$REPO_ROOT/scripts/hardware"/*.sh; do
+    for f in "$REPO_ROOT/scripts/hardware"/*.sh "$REPO_ROOT/scripts/hardware"/*.mjs; do
         [ -f "$f" ] || continue
         base=$(basename "$f")
         if [ ! -f "$PS_DATA_ROOT/scripts/$base" ]; then
