@@ -26,6 +26,7 @@ import {
   updateBenchmarkRun,
 } from "./benchmarks-repository";
 import { gradeOutput, summarize, type ResultForAgg } from "./score";
+import { gradeWithJudge } from "./score-judge";
 import { computeStatCard, ratingFromStatCard } from "./stats";
 import {
   newTrajectory,
@@ -385,7 +386,12 @@ export async function executeBenchmarkRun(
         : await executeModel(run, item);
 
       if (outcome.error) errorReasons.push(outcome.error);
-      const grade = gradeOutput(item.grader, outcome.output);
+      // Judge-graded items are scored by a strong model (async, IO); everything
+      // else uses the pure grader. A judge failure throws → recorded as errored.
+      const grade =
+        item.grader.kind === "judge" && !outcome.error
+          ? await gradeWithJudge(item, outcome.output)
+          : gradeOutput(item.grader, outcome.output);
       const cost = estimateCost(
         run.config?.modelString ?? run.modelLabel ?? (run.targetKind === "model" ? run.targetRef : null),
         outcome.inputTokens ?? 0,
@@ -496,6 +502,7 @@ export async function executeBenchmarkRun(
   // The JRPG stat card is the headline; overall rating is its mean.
   const statResult = computeStatCard(agg);
   summary.stats = statResult.card;
+  summary.statSamples = statResult.samples;
   summary.errorRate = statResult.errorRate;
   summary.overallRating = ratingFromStatCard(statResult.card);
   // Record whether the agentic run truly served the toggled config (dedicated

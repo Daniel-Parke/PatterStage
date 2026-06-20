@@ -7,6 +7,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 export { Field } from "./Field";
+export { Input, Textarea } from "./Input";
 export { Select, type SelectOption } from "./Select";
 export { Toggle } from "./Toggle";
 export { ChipGroup, type ChipOption } from "./ChipGroup";

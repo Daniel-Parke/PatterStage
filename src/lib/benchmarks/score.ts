@@ -240,6 +240,11 @@ export function gradeOutput(grader: Grader, output: string): GradeResult {
       // Score is deferred to aggregation (modal agreement across repeats).
       return { score: null, passed: null, canonical, detail: { extract: grader.extract, canonical } };
     }
+    case "judge": {
+      // Judge graders are scored asynchronously by score-judge.gradeWithJudge;
+      // the runner routes them there. This is only a safe fallback.
+      return { score: null, passed: null, canonical: null, detail: { deferred: "judge" } };
+    }
   }
 }
 
@@ -271,6 +276,8 @@ export const DOMAIN_WEIGHTS: Record<BenchmarkDomain, number> = {
   instruction: 1,
   needle: 1,
   consistency: 1,
+  honesty: 1,
+  safety: 1,
 };
 
 function mean(xs: number[]): number {

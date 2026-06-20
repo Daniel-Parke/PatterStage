@@ -106,7 +106,13 @@ function StatBars({ agent, model }: { agent?: BenchmarkRun; model?: BenchmarkRun
         return (
           <div key={s} title={STAT_BLURB[s]}>
             <div className="mb-1 flex items-center justify-between text-[11px]">
-              <span className="text-white/60">{STAT_LABELS[s]}</span>
+              <span className="text-white/60">
+                {STAT_LABELS[s]}
+                {(() => {
+                  const n = (agent?.summary?.statSamples as Record<string, number> | undefined)?.[s];
+                  return typeof n === "number" ? <span className="ml-1.5 text-white/25" title={`backed by ${n} item${n === 1 ? "" : "s"}`}>n={n}</span> : null;
+                })()}
+              </span>
               <span className="font-mono text-white/40">
                 {a !== null ? a : "—"}
                 {model ? ` vs ${m !== null ? m : "—"}` : ""}

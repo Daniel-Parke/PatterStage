@@ -21,6 +21,7 @@ function idealAnswer(grader: Grader): string | null {
       return JSON.stringify(Object.fromEntries((grader.requiredKeys ?? []).map((k) => [k, 1])));
     case "regex":
     case "consistency":
+    case "judge":
       return null; // not deterministically derivable here
   }
 }
