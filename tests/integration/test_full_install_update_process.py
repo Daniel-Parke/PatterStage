@@ -317,7 +317,7 @@ class Harness:
     def seed_fresh(self, container: str) -> None:
         self.docker_exec(
             container,
-            "rm -rf /root/.hermes /root/control-hub/data /tmp/chdata /tmp/ch-hub-bare.git "
+            "rm -rf /root/.hermes /root/control-hub/data /root/patterstage/data /tmp/chdata /tmp/ch-hub-bare.git "
             "/tmp/ch-install-harness 2>/dev/null || true\n"
             "mkdir -p /root\n",
         )
@@ -376,7 +376,9 @@ class Harness:
             "cd /workspace\n"
             "npm ci\n"
             "HERMES_HOME=/tmp/ch-prebuild-no-push npm run prebuild\n"
-            f"cp -f data/control-hub.db '{dr}/control-hub.db'\n",
+            # prebuild now emits patterstage.db; seed it under the LEGACY name so
+            # the scenario simulates a pre-rename install that the update migrates.
+            f"cp -f data/patterstage.db '{dr}/control-hub.db'\n",
         )
 
     def seed_both(self, container: str, *, rich_hermes: bool) -> None:
@@ -404,6 +406,10 @@ class Harness:
             f"cd '{r}' && find . -type f ! -path './logs/*' "
             f"! -path './hermes-detection.json' "
             f"! -path './control-hub.db' "
+            f"! -path './patterstage.db' "
+            f"! -path './patterstage.db-wal' ! -path './patterstage.db-shm' "
+            f"! -path './control-hub.db-wal' ! -path './control-hub.db-shm' "
+            f"! -name '*.pre-migrate-*' ! -name '*.pre-baseline-*' "
             f"! -path './seed-state.json' | LC_ALL=C sort | xargs -r sha256sum\n",
             workdir="/",
         )
@@ -569,7 +575,23 @@ test -s /root/.hermes/profiles/qa/AGENTS.md
         self.docker_exec(
             container,
             f"set -e\n"
-            f'test -s "{data_root}/control-hub.db"\n',
+            f'test -s "{data_root}/patterstage.db" || test -s "{data_root}/control-hub.db"\n',
+            workdir="/",
+        )
+
+    def assert_rename_migrated(self, container: str, data_root: str) -> None:
+        """After `ps-deploy update`, the legacy control-hub.db is renamed to
+        patterstage.db in place and .env.local CH_* keys become PS_*."""
+        dr = data_root.replace("'", "'\"'\"'")
+        self.docker_exec(
+            container,
+            "set -e\n"
+            f"test -s '{dr}/patterstage.db'\n"
+            f"test ! -f '{dr}/control-hub.db'\n"
+            "grep -q '^PS_RENAMED=1' /workspace/.env.local\n"
+            "grep -q '^PS_DATA_DIR=' /workspace/.env.local\n"
+            "if grep -q '^CH_DATA_DIR=' /workspace/.env.local; then "
+            "echo 'CH_DATA_DIR not rewritten to PS_DATA_DIR' >&2; exit 1; fi\n",
             workdir="/",
         )
 
@@ -926,11 +948,14 @@ test -f scripts/.harness-marker
             self.assert_updated_to_origin_dev(c)
 
             manifest_after = self.manifest_data_dir(c, data_root)
-            schema_after = self.sqlite_schema_version(c, f"{data_root}/control-hub.db")
+            # The update auto-migrates control-hub.db -> patterstage.db in place
+            # and rewrites .env.local CH_* -> PS_* (idempotent, marker recorded).
+            self.assert_rename_migrated(c, data_root)
+            schema_after = self.sqlite_schema_version(c, f"{data_root}/patterstage.db")
 
             if manifest_before != manifest_after:
                 raise AssertionError(
-                    "CH_DATA_DIR manifest changed after update; possible data loss",
+                    "data dir manifest changed after update; possible data loss",
                 )
             if schema_after < schema_before:
                 raise AssertionError("schema_version regressed")
@@ -964,8 +989,8 @@ test -f scripts/.harness-marker
             manifest_after = self.manifest_data_dir(c, data_root)
             if manifest_before != manifest_after:
                 raise AssertionError("CH_DATA_DIR user files changed after update")
-            self.assert_agent_profiles_seeded(c, f"{data_root}/control-hub.db")
-            self.assert_seed_qa_disk_matches_db(c, f"{data_root}/control-hub.db")
+            self.assert_agent_profiles_seeded(c, f"{data_root}/patterstage.db")
+            self.assert_seed_qa_disk_matches_db(c, f"{data_root}/patterstage.db")
         finally:
             self._rm_container(c)
 
