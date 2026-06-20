@@ -203,21 +203,43 @@ async function executeModel(run: BenchmarkRun, item: BenchmarkItem): Promise<Exe
   // Brain-only path: call the run's RESOLVED model directly (reliable). For an
   // agent target this is the profile's own LLM with no skills/tools/memory; for
   // a model target it's the chosen registry model. Falls back to the raw model
-  // string when no registry id resolved.
-  const resp = await callLLM([{ role: "user", content: item.prompt }], {
-    modelId: run.modelId ?? (run.targetKind === "model" ? run.targetRef : undefined),
-    model: run.config?.modelString ?? undefined,
-    temperature: 0.2,
-    maxTokens: 1024,
-  });
+  // string when no registry id resolved. Retry once on a transient error/empty
+  // so one flaky response doesn't false-zero the item; an exhausted retry
+  // returns an ERRORED outcome (recorded as an error, never crashes the pool).
+  let lastError = "model returned no output";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const resp = await callLLM([{ role: "user", content: item.prompt }], {
+        modelId: run.modelId ?? (run.targetKind === "model" ? run.targetRef : undefined),
+        model: run.config?.modelString ?? undefined,
+        temperature: 0.2,
+        maxTokens: 1024,
+      });
+      if (resp.content && resp.content.trim().length > 0) {
+        return {
+          output: resp.content,
+          inputRunId: null,
+          latencyMs: Date.now() - start,
+          inputTokens: resp.usage?.promptTokens ?? null,
+          outputTokens: resp.usage?.completionTokens ?? null,
+          error: null,
+          metrics: null, // brain-only has no agentic trajectory
+        };
+      }
+      lastError = "model returned empty output";
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : String(err);
+    }
+    if (attempt === 0) await sleep(800);
+  }
   return {
-    output: resp.content,
+    output: "",
     inputRunId: null,
     latencyMs: Date.now() - start,
-    inputTokens: resp.usage?.promptTokens ?? null,
-    outputTokens: resp.usage?.completionTokens ?? null,
-    error: null,
-    metrics: null, // brain-only has no agentic trajectory
+    inputTokens: null,
+    outputTokens: null,
+    error: lastError,
+    metrics: null,
   };
 }
 
@@ -308,12 +330,40 @@ export async function executeBenchmarkRun(
     }
   }
 
+  // Pre-flight canary (brain-only path): one trivial call to confirm the chosen
+  // brain actually responds with non-empty output BEFORE running the whole
+  // suite. Catches "the model is misconfigured / returns empty / errors" fast
+  // and fails with a clear reason, instead of silently scoring every item zero.
+  if (!agentic) {
+    let canaryError: string | null = null;
+    try {
+      const probe = await callLLM([{ role: "user", content: "Reply with the single word: OK" }], {
+        modelId: run.modelId ?? (run.targetKind === "model" ? run.targetRef : undefined),
+        model: run.config?.modelString ?? undefined,
+        temperature: 0,
+        maxTokens: 16,
+      });
+      if (!probe.content || probe.content.trim().length === 0) {
+        canaryError = "the model returned empty output";
+      }
+    } catch (err) {
+      canaryError = err instanceof Error ? err.message : String(err);
+    }
+    if (canaryError) {
+      const reason = `brain "${run.modelLabel ?? run.modelId ?? run.targetRef}" not responding — ${canaryError}. Check the model endpoint / registry config.`;
+      updateBenchmarkRun(runId, { status: "failed", error: reason, completedAt: new Date().toISOString() });
+      recordEvent("benchmark.failed", { entityType: "benchmark", entityId: runId, profile: run.targetRef, metadata: { reason } });
+      return;
+    }
+  }
+
   const tasks: Task[] = [];
   for (const item of suite.items) {
     for (let r = 0; r < run.repeats; r++) tasks.push({ item, repeatIndex: r });
   }
 
   const agg: ResultForAgg[] = [];
+  const errorReasons: string[] = [];
   let totalCost = 0;
   let latencySum = 0;
   let latencyCount = 0;
@@ -334,6 +384,7 @@ export async function executeBenchmarkRun(
         ? await executeAgent(run, benchSlug, item, repeatIndex, opts)
         : await executeModel(run, item);
 
+      if (outcome.error) errorReasons.push(outcome.error);
       const grade = gradeOutput(item.grader, outcome.output);
       const cost = estimateCost(
         run.config?.modelString ?? run.modelLabel ?? (run.targetKind === "model" ? run.targetRef : null),
@@ -388,6 +439,7 @@ export async function executeBenchmarkRun(
       }
       // Any other per-item error → record a zero and keep going.
       const message = err instanceof Error ? err.message : String(err);
+      errorReasons.push(message);
       insertItemResult({
         benchmarkRunId: runId,
         itemId: item.id,
@@ -449,11 +501,33 @@ export async function executeBenchmarkRun(
   // Record whether the agentic run truly served the toggled config (dedicated
   // gateway) or fell back to the shared default agent — so the UI can be honest.
   if (agentic) summary.togglesApplied = togglesApplied;
+
+  // Honest failure: when (nearly) every item errored/timed-out, this isn't a
+  // low score — the run FAILED. Mark it failed with the dominant reason instead
+  // of presenting a misleading "completed, rating 4" card (only Speed populated).
+  if (statResult.errorRate >= 0.99 && agg.length > 0) {
+    const reason = topReason(errorReasons) ?? "every item errored or timed out";
+    updateBenchmarkRun(runId, { status: "failed", error: `run failed — ${reason}`, completedAt: finishedAt, summary });
+    recordEvent("benchmark.failed", { entityType: "benchmark", entityId: runId, profile: run.targetRef, metadata: { reason, errorRate: statResult.errorRate } });
+    return;
+  }
+
   updateBenchmarkRun(runId, { status: "completed", completedAt: finishedAt, summary });
   recordEvent("benchmark.completed", {
     entityType: "benchmark",
     entityId: runId,
     profile: run.targetRef,
-    metadata: { rating: summary.overallRating, meanScore: summary.meanScore, itemsRun: summary.itemsRun },
+    metadata: { rating: summary.overallRating, meanScore: summary.meanScore, itemsRun: summary.itemsRun, errorRate: summary.errorRate },
   });
+}
+
+/** Most frequent error reason in a list (for a clear failed-run message). */
+function topReason(reasons: string[]): string | null {
+  if (reasons.length === 0) return null;
+  const counts = new Map<string, number>();
+  for (const r of reasons) counts.set(r, (counts.get(r) ?? 0) + 1);
+  let best: string | null = null;
+  let bestN = 0;
+  for (const [r, n] of counts) if (n > bestN) { best = r; bestN = n; }
+  return best;
 }

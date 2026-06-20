@@ -189,6 +189,12 @@ export interface BenchmarkRunConfig {
   augmentation: AugmentationConfig;
   /** Provider model string of the brain (display/cost). */
   modelString?: string | null;
+  /**
+   * Role within a compare pair. The baseline of a "same brain, brain-only"
+   * comparison is itself a `targetKind:"agent"` run, so the pair MUST be
+   * classified by this role, not by targetKind. Absent on legacy/single runs.
+   */
+  pairRole?: "agent" | "baseline" | null;
 }
 
 export interface DomainScore {

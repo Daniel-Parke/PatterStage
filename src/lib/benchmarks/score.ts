@@ -63,6 +63,38 @@ export function canonicalExact(s: string, caseSensitive = false): string {
   return t;
 }
 
+/** Chain-of-thought wrappers many models emit before the real answer. */
+const REASONING_BLOCK = /<(think|thinking|reasoning|scratchpad|reflection)>[\s\S]*?<\/\1>/gi;
+
+/**
+ * Strip reasoning/CoT wrappers so the grader scores the FINAL answer, not the
+ * model's working. Reasoning models (and agentic transcripts) routinely wrap
+ * their thinking in <think>…</think> or trail a long preamble; without this the
+ * graders see the wrong text and a correct answer scores 0.
+ */
+export function stripReasoning(s: string): string {
+  return s.replace(REASONING_BLOCK, " ").replace(/\s+\n/g, "\n").trim();
+}
+
+/**
+ * If the output explicitly marks its final answer, return just that span. Covers
+ * `<answer>…</answer>`, "Final answer: …", "Answer: …". Returns null when no
+ * marker is present (caller falls back to the whole reasoning-stripped output).
+ */
+export function extractAnswerSpan(s: string): string | null {
+  const tag = s.match(/<answer>\s*([\s\S]*?)\s*<\/answer>/i);
+  if (tag) return tag[1].trim() || null;
+  const marker = s.match(/(?:final\s+answer|answer)\s*[:\-]\s*([\s\S]+)/i);
+  if (marker) return marker[1].trim() || null;
+  return null;
+}
+
+/** The text a grader should score: the marked answer span, else reasoning-stripped. */
+export function gradableText(output: string): string {
+  const cleaned = stripReasoning(output);
+  return extractAnswerSpan(cleaned) ?? cleaned;
+}
+
 /** Last number in the text (handles "the answer is 42." and "1,234.5"). */
 export function extractNumber(s: string): number | null {
   const cleaned = s.replace(/(\d),(?=\d{3}\b)/g, "$1");
@@ -132,19 +164,24 @@ function extractCanonical(extract: ConsistencyExtract, output: string, choices?:
 // ── Grade one (item, repeat) output ──────────────────────────
 
 export function gradeOutput(grader: Grader, output: string): GradeResult {
+  // Score the FINAL answer, not the model's reasoning. json_schema keeps the raw
+  // output (tryParseJson handles fenced blocks itself). An empty result is
+  // flagged (distinct from a wrong answer) so the run UX can tell them apart.
+  const text = grader.kind === "json_schema" ? output : gradableText(output);
+  const isEmpty = text.trim().length === 0;
   switch (grader.kind) {
     case "exact": {
       // Strict (format-compliance): trim + collapse whitespace + optional case
       // fold only — no punctuation stripping, so "READY." fails "READY".
-      const got = normalizeText(output, grader.caseSensitive);
+      const got = normalizeText(text, grader.caseSensitive);
       const exp = normalizeText(grader.expected, grader.caseSensitive);
       const passed = got === exp;
-      return { score: passed ? 1 : 0, passed, canonical: got, detail: { expected: exp, got } };
+      return { score: passed ? 1 : 0, passed, canonical: got, detail: { expected: exp, got, empty: isEmpty } };
     }
     case "numeric": {
-      const got = extractNumber(output);
+      const got = extractNumber(text);
       if (got === null) {
-        return { score: 0, passed: false, canonical: null, detail: { reason: "no number found" } };
+        return { score: 0, passed: false, canonical: null, detail: { reason: isEmpty ? "empty output" : "no number found", empty: isEmpty } };
       }
       const tol = grader.tolerance ?? 1e-6;
       const diff = Math.abs(got - grader.expected);
@@ -158,13 +195,13 @@ export function gradeOutput(grader: Grader, output: string): GradeResult {
       };
     }
     case "mcq": {
-      const got = extractMcq(output, grader.choices);
+      const got = extractMcq(text, grader.choices);
       const exp = grader.expected.toUpperCase();
       const passed = got === exp;
-      return { score: passed ? 1 : 0, passed, canonical: got, detail: { expected: exp, got } };
+      return { score: passed ? 1 : 0, passed, canonical: got, detail: { expected: exp, got, empty: isEmpty } };
     }
     case "contains": {
-      const hay = normalizeText(output, grader.caseSensitive);
+      const hay = normalizeText(text, grader.caseSensitive);
       const present = grader.needles.map((n) => ({
         needle: n,
         found: hay.includes(normalizeText(n, grader.caseSensitive)),
@@ -182,7 +219,7 @@ export function gradeOutput(grader: Grader, output: string): GradeResult {
     case "regex": {
       let passed = false;
       try {
-        passed = new RegExp(grader.pattern, grader.flags).test(output);
+        passed = new RegExp(grader.pattern, grader.flags).test(text);
       } catch {
         // invalid pattern → fail closed
       }
@@ -199,7 +236,7 @@ export function gradeOutput(grader: Grader, output: string): GradeResult {
       return { score: passed ? 1 : 0, passed, canonical: null, detail: { requiredKeys: req, missing } };
     }
     case "consistency": {
-      const canonical = extractCanonical(grader.extract, output, grader.choices);
+      const canonical = extractCanonical(grader.extract, text, grader.choices);
       // Score is deferred to aggregation (modal agreement across repeats).
       return { score: null, passed: null, canonical, detail: { extract: grader.extract, canonical } };
     }
