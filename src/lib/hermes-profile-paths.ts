@@ -5,7 +5,7 @@
 
 import { existsSync, readFileSync } from "fs";
 import { homedir } from "os";
-import { basename, join, relative, resolve } from "path";
+import { basename, isAbsolute, join, relative, resolve } from "path";
 
 import { buildHermesPathBundle, normPath, type HermesPathBundle } from "./hermes-paths";
 import { getHermesHome } from "./hermes-home";
@@ -17,7 +17,10 @@ function isPathUnderRoot(absolutePath: string, root: string): boolean {
   const C = resolve(absolutePath);
   if (C === R) return true;
   const rel = relative(R, C);
-  return rel !== "" && !rel.startsWith("..") && !rel.includes("..");
+  // On Windows, `relative` across different drives returns an absolute path
+  // (e.g. relative("C:\\..\\.hermes", "D:\\opt\\data") -> "D:\\opt\\data"),
+  // which has no ".." — guard against treating that as "under root".
+  return rel !== "" && !isAbsolute(rel) && !rel.startsWith("..") && !rel.includes("..");
 }
 
 /**
