@@ -15,6 +15,7 @@ Technical reference for PatterStage. Tone elsewhere in this folder is deliberate
 | [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md) | Profile `platform_toolsets`, Tools UI, mission tool hints |
 | [ENV_REFERENCE.md](ENV_REFERENCE.md) | Environment variables, dual DB paths, install flags |
 | [DEPLOY.md](DEPLOY.md) | Deploy, **`ps-deploy`**, TLS, Docker, ports, scripts layout |
+| [CROSS_PLATFORM.md](CROSS_PLATFORM.md) | Windows · macOS · Linux: support matrix, Windows install/update, host scheduling (cron vs Task Scheduler), bundled `.mjs` scripts |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Development workflow and standards |
 | [TESTING.md](TESTING.md) | Jest, Playwright, CI, and navigation-matrix upkeep |
 | [SYSTEM-CRON.md](SYSTEM-CRON.md) | Scripts page + host cron presets (`scripts/hardware/`), including Hindsight backup |
