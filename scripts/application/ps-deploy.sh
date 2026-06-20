@@ -1,25 +1,17 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════
-# PatterStage — unified deploy entrypoint (CLI + dashboard spawn)
+# PatterStage — deploy entrypoint (thin wrapper, Unix CLI)
 #
-# Usage:
 #   bash scripts/application/ps-deploy.sh update [--restart-only] [--branch NAME]
 #   bash scripts/application/ps-deploy.sh restart
 #   bash scripts/application/ps-deploy.sh rebuild [--branch NAME]
 #
-# Loads PS_* / HERMES_HOME from .env.local via scripts/lib/ps-dotenv-local.sh.
+# The deploy logic is now cross-platform Node (scripts/tooling/ps-deploy.mjs),
+# which the in-app Update/Rebuild/Restart buttons spawn directly on every OS.
+# This wrapper just forwards, so the CLI, the ch-deploy.sh shim, and
+# ps-relocate.sh keep working on Unix.
 # ═══════════════════════════════════════════════════════════════
-
 set -euo pipefail
 
-export PS_APPLICATION_DIR
-PS_APPLICATION_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export PS_SCRIPTS_ROOT
-PS_SCRIPTS_ROOT="$(cd "$PS_APPLICATION_DIR/.." && pwd)"
-export PS_APP_DIR
-PS_APP_DIR="$(cd "$PS_SCRIPTS_ROOT/.." && pwd)"
-
-# shellcheck source=../lib/ps-deploy-impl.sh
-source "$PS_SCRIPTS_ROOT/lib/ps-deploy-impl.sh"
-
-ps_deploy_main "$@"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+exec node "$DIR/../tooling/ps-deploy.mjs" "$@"

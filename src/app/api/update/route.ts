@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { execFileSync, execSync } from "child_process";
+import { execFileSync } from "child_process";
 import { existsSync, writeFileSync, readFileSync, unlinkSync } from "fs";
 import { tmpdir } from "os";
 
@@ -29,7 +29,9 @@ import { spawnChDeploy } from "@/lib/deploy-spawn";
 // CH_UPDATE_GIT_BRANCH (default dev) — remote tracking branch for deploy.
 
 const APP_DIR = process.cwd();
-const CH_DEPLOY_SCRIPT = APP_DIR + "/scripts/application/ps-deploy.sh";
+// Cross-platform Node deploy runner (Windows/macOS/Linux). The bash
+// scripts/application/ps-deploy.sh is now a thin wrapper around this.
+const CH_DEPLOY_SCRIPT = APP_DIR + "/scripts/tooling/ps-deploy.mjs";
 const CACHE_FILE = tmpdir() + "/ch-version-cache.json";
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -43,24 +45,28 @@ const MAX_REMOTE_BRANCHES = 50;
 
 function listRemoteBranches(): string[] {
   try {
-    // Ensure we have the latest remote refs
-    execSync("git fetch origin --quiet 2>/dev/null", {
+    // Ensure we have the latest remote refs (execFileSync: no shell, so no
+    // "2>/dev/null" — which breaks on Windows cmd; stderr is dropped via stdio).
+    execFileSync("git", ["fetch", "origin", "--quiet"], {
       cwd: APP_DIR,
       timeout: 15000,
+      stdio: ["ignore", "ignore", "ignore"],
     });
 
     // Get remote branches
-    const rawRemote = execSync("git branch -r --format='%(refname:short)'", {
+    const rawRemote = execFileSync("git", ["branch", "-r", "--format=%(refname:short)"], {
       cwd: APP_DIR,
       encoding: "utf-8",
       timeout: 10000,
+      stdio: ["ignore", "pipe", "ignore"],
     });
 
     // Get local branches — only include branches that exist locally (active/checked-out)
-    const rawLocal = execSync("git branch --format='%(refname:short)'", {
+    const rawLocal = execFileSync("git", ["branch", "--format=%(refname:short)"], {
       cwd: APP_DIR,
       encoding: "utf-8",
       timeout: 10000,
+      stdio: ["ignore", "pipe", "ignore"],
     });
     const localSet = new Set<string>();
     for (const line of rawLocal.split("\n")) {
@@ -87,10 +93,11 @@ function listRemoteBranches(): string[] {
     // Always include UPDATE_BRANCH even if never checked out locally
     if (!seen.has(UPDATE_BRANCH)) {
       try {
-        execSync(`git ls-remote --heads origin ${UPDATE_BRANCH} 2>/dev/null`, {
+        execFileSync("git", ["ls-remote", "--heads", "origin", UPDATE_BRANCH], {
           cwd: APP_DIR,
           encoding: "utf-8",
           timeout: 10000,
+          stdio: ["ignore", "pipe", "ignore"],
         });
         out.push(UPDATE_BRANCH);
       } catch {
@@ -400,7 +407,7 @@ export async function POST(request: NextRequest) {
 function deployScriptMissingResponse(): NextResponse | null {
   if (!existsSync(CH_DEPLOY_SCRIPT)) {
     return NextResponse.json(
-      { error: "Deploy script missing (scripts/application/ps-deploy.sh)" },
+      { error: "Deploy runner missing (scripts/tooling/ps-deploy.mjs)" },
       { status: 500 }
     );
   }

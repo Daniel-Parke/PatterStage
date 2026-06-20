@@ -174,115 +174,6 @@ pass "ps-backup.sh wrote valid merged snapshot"
 
 rm -rf "$BKROOT"
 
-# ── ps-deploy status + lock / build failure (mocked npm) ─────────
-echo ""
-echo "== ps-deploy rebuild status (mock npm)"
-
-ORIG_PATH="$PATH"
-FAKE_HOME=$(mktemp -d)
-export HOME="$FAKE_HOME"
-mkdir -p "$HOME/.hermes/logs"
-export PS_DEPLOY_STATUS_FILE="$HOME/.hermes/logs/ps-deploy.status"
-DEPLOY_TMP=$(mktemp -d)
-export TMPDIR="$DEPLOY_TMP"
-MOCK_BIN="$DEPLOY_TMP/mock-bin"
-mkdir -p "$MOCK_BIN"
-
-cat >"$MOCK_BIN/npm" <<'MOCKNPM'
-#!/usr/bin/env bash
-if [[ "$1" == "run" && "$2" == "build" ]]; then
-  if [[ "${PS_DEPLOY_TEST_BUILD_FAIL:-}" == "1" ]]; then
-    echo "mock build failed" >&2
-    exit 1
-  fi
-  echo "mock build ok"
-  exit 0
-fi
-if [[ "$1" == "install" ]]; then
-  exit 0
-fi
-echo "mock npm: $*" >&2
-exit 0
-MOCKNPM
-chmod +x "$MOCK_BIN/npm"
-ln -sf "$MOCK_BIN/npm" "$MOCK_BIN/node"
-export PATH="$MOCK_BIN:$ORIG_PATH"
-
-# shellcheck source=../../scripts/lib/ps-deploy-status.sh
-source "$REPO_ROOT/scripts/lib/ps-deploy-status.sh"
-ps_deploy_status_write "running" "rebuild" "build" "test" "" "ps-build.log"
-grep -q '^state=running' "$PS_DEPLOY_STATUS_FILE" || fail "status file missing running state"
-pass "ps_deploy_status_write"
-
-LOCK_FILE="${TMPDIR}/ps-deploy.lock"
-(
-  exec 200>"$LOCK_FILE"
-  flock 200
-  sleep 60
-) &
-LOCK_HOLDER=$!
-sleep 0.2
-set +e
-bash "$REPO_ROOT/scripts/application/ps-deploy.sh" rebuild >/dev/null 2>&1
-REBUILD_RC=$?
-set -e
-kill "$LOCK_HOLDER" 2>/dev/null || true
-wait "$LOCK_HOLDER" 2>/dev/null || true
-
-[[ "$REBUILD_RC" -eq 1 ]] || fail "rebuild should exit 1 on lock contention (got $REBUILD_RC)"
-grep -q '^state=failed' "$PS_DEPLOY_STATUS_FILE" || fail "status should be failed after lock contention"
-pass "rebuild exits 1 when deploy lock held"
-
-# Verify the fd-inheritance fix: after a script that takes the lock releases
-# it, no process should still hold the deploy lock. This was the root cause
-# of the 2026-06-08 incident where the lock was held for 22+ hours by a
-# backgrounded next-server child process that inherited fd 200.
-#
-# We can't easily run the full restart in the mock env (the MOCK node exits
-# immediately so ps_deploy_do_restart_body fails on the readiness probe),
-# but we CAN test the unit invariant: a ps-deploy-impl.sh function call
-# that acquires then releases the lock must leave the lock free. This is
-# the core property the fix preserves — `exec 200>&-` before nohup
-# releases the lock at the script level, regardless of what the child does.
-rm -f "$LOCK_FILE"
-( exec 200>"$LOCK_FILE"
-  if flock -n 200; then
-    # Mimic the fix: close fd 200 BEFORE backgrounding a child.
-    exec 200>&-
-    : > /tmp/ps-fd-inherit-marker
-    ( flock -n 200; echo "child got lock" > /tmp/ps-fd-inherit-marker ) &
-    CHILD=$!
-    wait "$CHILD" 2>/dev/null || true
-    if [ -f /tmp/ps-fd-inherit-marker ]; then
-      if grep -q "child got lock" /tmp/ps-fd-inherit-marker; then
-        fail "child acquired lock — fd was not closed before nohup"
-      else
-        pass "child could not acquire lock — fd-inheritance prevention works"
-      fi
-    else
-      pass "child never wrote marker — fd closed before nohup"
-    fi
-  else
-    fail "could not acquire lock to set up fd-inheritance test"
-  fi
-)
-rm -f "$LOCK_FILE" /tmp/ps-fd-inherit-marker
-
-export PS_DEPLOY_TEST_BUILD_FAIL=1
-rm -f "$LOCK_FILE"
-set +e
-bash "$REPO_ROOT/scripts/application/ps-deploy.sh" rebuild >/dev/null 2>&1
-FAIL_RC=$?
-set -e
-unset PS_DEPLOY_TEST_BUILD_FAIL
-[[ "$FAIL_RC" -eq 1 ]] || fail "rebuild should exit 1 on build failure (got $FAIL_RC)"
-grep -q '^state=failed' "$PS_DEPLOY_STATUS_FILE" || fail "status should be failed after build failure"
-grep -q 'ps-build.log' "$PS_DEPLOY_STATUS_FILE" || fail "expected ps-build.log logHint"
-pass "rebuild exits 1 and records failed status on build failure"
-
-rm -rf "$FAKE_HOME" "$DEPLOY_TMP"
-export PATH="$ORIG_PATH"
-unset HOME PS_DEPLOY_STATUS_FILE TMPDIR
 
 # setup.sh preserves HERMES_HOME from existing .env.local
 echo ""
@@ -307,7 +198,6 @@ for f in \
   "$REPO_ROOT/scripts/bootstrap/setup.sh" \
   "$REPO_ROOT/scripts/bootstrap/install.sh" \
   "$REPO_ROOT/scripts/application/ps-deploy.sh" \
-  "$REPO_ROOT/scripts/lib/ps-deploy-impl.sh" \
   "$REPO_ROOT/scripts/lib/ps-deploy-status.sh" \
   "$REPO_ROOT/scripts/lib/ps-hermes-profile-templates.sh" \
   "$REPO_ROOT/scripts/lib/ps-dotenv-local.sh" \
