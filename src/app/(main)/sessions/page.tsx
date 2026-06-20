@@ -1,13 +1,13 @@
 // ═══════════════════════════════════════════════════════════════
 // Session History — Unified view of all agent sessions
 //
-// Control Hub is the source of truth. Sessions born from missions
+// PatterStage is the source of truth. Sessions born from missions
 // and cron jobs are written directly to the DB. Hermes CLI
 // sessions are synced from ~/.hermes/<profile>/sessions/ on
 // every page load via the /api/sessions endpoint.
 //
 // Sources: cli (Hermes interactive), cron (scheduled jobs),
-//         mission (Control Hub dispatch), api (direct API calls)
+//         mission (PatterStage dispatch), api (direct API calls)
 //
 // UX features layered on top of the raw session list (June 2026):
 //   - "Group by mission" toggle collapses sessions with the same

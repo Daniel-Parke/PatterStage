@@ -50,11 +50,11 @@ const COPY: Record<
   },
   "auth-missing": {
     tone: "orange",
-    title: "Gateway up — Control Hub can't authenticate",
+    title: "Gateway up — PatterStage can't authenticate",
     body:
-      "The gateway is reachable but rejected Control Hub's request (401). " +
+      "The gateway is reachable but rejected PatterStage's request (401). " +
       "Set {code}API_SERVER_KEY{/code} in {code}~/.hermes/.env{/code}, mirror it " +
-      "into {code}~/control-hub/.env.local{/code}, and restart Control Hub.",
+      "into {code}~/control-hub/.env.local{/code}, and restart PatterStage.",
   },
   "model-missing": {
     tone: "orange",

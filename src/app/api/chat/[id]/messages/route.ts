@@ -2,7 +2,7 @@
 // POST /api/chat/[id]/messages — send a user turn → agent run.
 // Body: { content }. Persists the user message, submits a run over the
 // conversation's Hermes session (dispatchChatTurn), and returns the
-// Control Hub runId — the client opens GET /api/runs/[runId]/events to
+// PatterStage runId — the client opens GET /api/runs/[runId]/events to
 // stream the reply live.
 // ═══════════════════════════════════════════════════════════════
 

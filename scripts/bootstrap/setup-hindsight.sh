@@ -1,9 +1,9 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-# Control Hub — Hindsight Memory Provider Setup
+# PatterStage — Hindsight Memory Provider Setup
 # ═══════════════════════════════════════════════════════════════
 # Installs and configures Hindsight memory with PostgreSQL backend.
-# Run this on an existing Control Hub installation.
+# Run this on an existing PatterStage installation.
 #
 # Usage:
 #   bash scripts/bootstrap/setup-hindsight.sh
@@ -23,7 +23,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 # ── Wire-only mode ───────────────────────────────────────────
 # When --wire-only is passed, skip PostgreSQL / server / systemd
-# setup and only update config.yaml + sync to Control Hub SQLite.
+# setup and only update config.yaml + sync to PatterStage SQLite.
 WIRE_ONLY=false
 if [ "${1:-}" = "--wire-only" ]; then
     WIRE_ONLY=true
@@ -259,8 +259,8 @@ else
     echo "    provider: hindsight"
 fi
 
-# ── Step 6b: Sync to Control Hub SQLite ─────────────────────
-step "Step 6b: Syncing to Control Hub SQLite"
+# ── Step 6b: Sync to PatterStage SQLite ─────────────────────
+step "Step 6b: Syncing to PatterStage SQLite"
 CH_DATA_DIR="${CH_DATA_DIR:-$HOME/control-hub/data}"
 CH_DB="$CH_DATA_DIR/control-hub.db"
 if [ -f "$CH_DB" ]; then
@@ -280,10 +280,10 @@ if os.path.exists(db_path):
     print('ok')
 " 2>/dev/null && ok "SQLite agent_root.config_yaml synced" || warn "SQLite sync failed — may need hermes migrate first"
     else
-        warn "python3 not found — cannot sync to Control Hub SQLite"
+        warn "python3 not found — cannot sync to PatterStage SQLite"
     fi
 else
-    info "Control Hub database not found at $CH_DB — SQLite sync skipped"
+    info "PatterStage database not found at $CH_DB — SQLite sync skipped"
     echo "  SQLite sync will happen on next deploy update via seed-catalog"
 fi
 

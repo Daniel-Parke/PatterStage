@@ -1,8 +1,8 @@
 # ═══════════════════════════════════════════════════════════════
-# Combined Control Hub + Hermes image (BD4)
+# Combined PatterStage + Hermes image (BD4)
 #
 # The standard 3-container real-Hermes stack runs Hermes as a SEPARATE
-# container, so Control Hub can't spawn per-profile gateways there (no hermes
+# container, so PatterStage can't spawn per-profile gateways there (no hermes
 # binary reachable). This image co-locates CH with the Hermes binary so the
 # benchmark gateway manager (src/lib/runtime/gateway-manager.ts) can be driven
 # end-to-end: CH spawns an ephemeral `hermes gateway` per bench profile and an
@@ -13,7 +13,7 @@
 # ═══════════════════════════════════════════════════════════════
 ARG HERMES_IMAGE=nousresearch/hermes-agent@sha256:47d80115ce62603fa0cab8af2b8d1816c5e800fbae851f7e66608435cfbb76f7
 
-# ── Build Control Hub with the image's own Node 22 ──────────────
+# ── Build PatterStage with the image's own Node 22 ──────────────
 FROM ${HERMES_IMAGE} AS builder
 USER root
 WORKDIR /build

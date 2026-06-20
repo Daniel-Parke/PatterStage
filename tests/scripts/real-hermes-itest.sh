@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Real-Hermes integration gate: bring up Control Hub + the REAL Hermes Agent +
+# Real-Hermes integration gate: bring up PatterStage + the REAL Hermes Agent +
 # a mock LLM, run the contract-conformance + full-stack smoke tests against the
 # stack, then tear down. This is the merge gate for runtime changes.
 set -euo pipefail
@@ -21,7 +21,7 @@ ${COMPOSE} down -v >/dev/null 2>&1 || true
 echo "[itest] building + starting real-Hermes stack (first run pulls a ~5GB image)…"
 ${COMPOSE} up -d --build
 
-echo "[itest] waiting for Control Hub (depends on real Hermes being healthy)…"
+echo "[itest] waiting for PatterStage (depends on real Hermes being healthy)…"
 up=0
 for i in $(seq 1 150); do
   code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${CH_PORT}/api/status" 2>/dev/null || echo 000)
@@ -36,13 +36,13 @@ echo "[itest] ── contract conformance (raw real Hermes API server) ──"
 HERMES_URL="http://localhost:${H_PORT}" API_SERVER_KEY="${KEY}" \
   node tests/integration/runtime/hermes-contract.mjs
 
-echo "[itest] ── full-stack smoke (Control Hub → real Hermes) ──"
+echo "[itest] ── full-stack smoke (PatterStage → real Hermes) ──"
 CH_URL="http://localhost:${CH_PORT}" HERMES_URL="http://localhost:${H_PORT}" API_SERVER_KEY="${KEY}" \
   node tests/integration/runtime/full-stack-smoke.mjs
 
 echo "[itest] ── DB upgrade path (legacy DB self-migrates on boot) ──"
 # Seed a legacy pre-rewrite DB (schema_version 2, no cron_jobs.workdir, no
-# runs/schedules) into the Control Hub data volume, restart, and assert the
+# runs/schedules) into the PatterStage data volume, restart, and assert the
 # server self-migrates: /api/schedules returns 200 (it needs the `schedules`
 # table the legacy seed dropped — restored by migration 009 on the v2→latest
 # upgrade). Guards the upgrade path the fresh-DB stack skips.

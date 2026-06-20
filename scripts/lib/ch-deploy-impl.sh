@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════
-# Control Hub — deploy implementation (sourced by application/ch-deploy.sh)
+# PatterStage — deploy implementation (sourced by application/ch-deploy.sh)
 #
 # Expects exports from ch-deploy.sh:
 #   CH_APPLICATION_DIR  scripts/application
@@ -465,7 +465,7 @@ ch_deploy_run_update() {
     if ! grep -q "API_SERVER_ENABLED=true" "$HERMES_HOME/.env" 2>/dev/null; then
       ch_deploy_log_update "Enabling API_SERVER_ENABLED=true in ~/.hermes/.env for Story Weaver…"
       echo "" >>"$HERMES_HOME/.env"
-      echo "# Enable API server for Control Hub Rec Room (added by ch-deploy)" >>"$HERMES_HOME/.env"
+      echo "# Enable API server for PatterStage Rec Room (added by ch-deploy)" >>"$HERMES_HOME/.env"
       echo "API_SERVER_ENABLED=true" >>"$HERMES_HOME/.env"
     fi
     ch_deploy_log_update "Restarting Hermes gateway…"

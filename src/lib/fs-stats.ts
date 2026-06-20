@@ -2,7 +2,7 @@
 // fs-stats — safe statSync() helpers for fs metadata
 // ══════════════════════════════════════════════════════════════════════════════
 //
-// statSync() throws if the file is missing or unreadable. Many Control Hub
+// statSync() throws if the file is missing or unreadable. Many PatterStage
 // routes want a permissive read (e.g. "size + lastModified or zero/null")
 // for optional-on-disk files (skill files that may not have been pushed
 // to disk yet, profile files that may be missing, etc.). The same `try

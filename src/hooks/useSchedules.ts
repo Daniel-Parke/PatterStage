@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// useSchedules — TanStack Query data layer for Control Hub-owned schedules
+// useSchedules — TanStack Query data layer for PatterStage-owned schedules
 //
 // Demonstrates the new client data layer: shared cache + dedup + invalidation
 // over the existing safeApiCall fetcher (no ad-hoc fetch-in-useEffect). The

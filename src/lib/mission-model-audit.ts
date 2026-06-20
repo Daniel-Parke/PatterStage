@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // mission-model-audit.ts — discover and fixup mission rows whose
-// `model_id` is no longer in the Control Hub models registry.
+// `model_id` is no longer in the PatterStage models registry.
 //
 // Background: prior to the registry-enforcement fix (2026-06-09), a
 // mission could be dispatched with any caller-supplied `modelId`,

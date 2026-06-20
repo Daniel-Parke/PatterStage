@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════
-# Load selected keys from Control Hub .env.local into the environment.
+# Load selected keys from PatterStage .env.local into the environment.
 # Only exports lines that look like KEY=value for safe, known keys — no arbitrary shell.
 # ═══════════════════════════════════════════════════════════════
 

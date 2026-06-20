@@ -23,7 +23,7 @@ export interface GatewayHealth {
   /** Whether the Hermes Gateway is reachable */
   online: boolean | null;
   /**
-   * Whether Control Hub can authenticate to the gateway. `false` means the
+   * Whether PatterStage can authenticate to the gateway. `false` means the
    * gateway is reachable but rejected our bearer key (missing/wrong
    * API_SERVER_KEY); `null` during initial load.
    */

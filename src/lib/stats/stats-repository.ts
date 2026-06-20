@@ -221,7 +221,7 @@ export function getDashboardStats(): DashboardStats {
     active: scalar("SELECT COUNT(*) AS v FROM sessions WHERE status = 'active'"),
   };
 
-  // ── automations: Control Hub schedules (recurring agent missions) ──
+  // ── automations: PatterStage schedules (recurring agent missions) ──
   // Host scripts (system crontab) are managed on the Scripts page, not counted
   // in this aggregate — the dashboard's automation signal is the CH scheduler.
   const schedulesTotal = scalar("SELECT COUNT(*) AS v FROM schedules");

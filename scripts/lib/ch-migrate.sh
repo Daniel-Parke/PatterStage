@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════
-# Control Hub — DB backup + full migration library
+# PatterStage — DB backup + full migration library
 #
 # Sourced by scripts/maintenance/ch-migrate.sh (interactive) and the deploy
 # implementation (scripts/lib/ch-deploy-impl.sh, unattended). Provides the one

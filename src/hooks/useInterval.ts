@@ -2,7 +2,7 @@
 // useInterval — Declarative setInterval wrapper for React
 // ═══════════════════════════════════════════════════════════════
 //
-// Multiple Control Hub pages run a `setInterval` for polling or
+// Multiple PatterStage pages run a `setInterval` for polling or
 // live-tick re-renders. The pattern is identical in every one:
 //
 //   useEffect(() => {

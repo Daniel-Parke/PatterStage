@@ -57,7 +57,7 @@ function scaffoldProfile(entry) {
     writeFileSync(
       agentsPath,
       agentsHeader(entry.slug) +
-        "You operate within the Control Hub and Hermes ecosystem.\n§\nFollow project conventions and document outcomes clearly.\n",
+        "You operate within the PatterStage and Hermes ecosystem.\n§\nFollow project conventions and document outcomes clearly.\n",
       "utf-8",
     );
   }

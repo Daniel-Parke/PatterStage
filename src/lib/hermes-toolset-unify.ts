@@ -48,7 +48,7 @@ export function platformsDiffer(toolsets: PlatformToolsets): {
   return { diverged: true, platforms: keys };
 }
 
-/** Fan the same toolset list to every Control Hub platform key (Hermes "configure all"). */
+/** Fan the same toolset list to every PatterStage platform key (Hermes "configure all"). */
 export function expandUnifiedToAllPlatforms(enabledIds: string[]): PlatformToolsets {
   const list = sortedUnique(enabledIds);
   const out: PlatformToolsets = {};

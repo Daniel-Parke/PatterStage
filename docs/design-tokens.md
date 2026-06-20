@@ -1,4 +1,4 @@
-# Control Hub — design tokens
+# PatterStage — design tokens
 
 Reference for the Cherenkov-forward palette, semantic colours, and how TypeScript maps to CSS. Use this when adding UI so new screens match the rest of the app.
 

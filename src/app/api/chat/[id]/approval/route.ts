@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // POST /api/chat/[id]/approval — resolve a tool-use approval (HITL).
-// Body: { runId, approved, note? }. Maps the Control Hub run id to the
+// Body: { runId, approved, note? }. Maps the PatterStage run id to the
 // backend run id and forwards the decision to runtime.resolveApproval —
 // the agent then either runs or skips the gated tool.
 // ═══════════════════════════════════════════════════════════════

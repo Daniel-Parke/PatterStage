@@ -6,7 +6,7 @@
 // gateway is offline. Empty (NOT a hardcoded fallback list) so the
 // chat UI doesn't accidentally surface unrelated upstream models
 // (e.g. "deepseek/deepseek-v4-flash") as user-selectable options
-// that aren't in the Control Hub Models registry.
+// that aren't in the PatterStage Models registry.
 // ═══════════════════════════════════════════════════════════════
 
 import { logApiError } from "@/lib/api-logger";

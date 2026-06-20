@@ -1,4 +1,4 @@
-# Control Hub — keep docker build context small and free of secrets
+# PatterStage — keep docker build context small and free of secrets
 .git
 .github
 .next

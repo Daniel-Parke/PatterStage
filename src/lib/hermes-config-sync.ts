@@ -84,7 +84,7 @@ export function loadHermesConfigFromString(content: string): HermesConfig {
 }
 
 /**
- * Serialize a value to YAML using the canonical Control Hub options:
+ * Serialize a value to YAML using the canonical PatterStage options:
  *   - `lineWidth: -1` — no automatic line wrapping; long strings/URLs stay on
  *     one line (matches the historical hand-edited config.yaml style)
  *   - `noRefs: true` — never emit YAML anchors/aliases (`&a001` / `*a001`),
@@ -335,7 +335,7 @@ export function readHermesConfigModels(): Map<string, HermesConfigModelEntry> {
  *  See `AUXILIARY_TASK_TYPES` in `@/lib/hermes-providers` (canonical). */
 
 /**
- * Read ~/.hermes/config.yaml, set `model.*` from Control Hub DB's default
+ * Read ~/.hermes/config.yaml, set `model.*` from PatterStage DB's default
  * `agent` model and `auxiliary.<task>.{model, provider, base_url, api_key}`
  * for each of the 11 auxiliary slots, then write back atomically with a
  * pre-write backup.
@@ -436,9 +436,9 @@ export function finalizeRootConfigOnDisk(): FinalizeRootConfigResult {
 // ── Combined helper used by API routes ─────────────────────────
 
 /**
- * Re-apply the full Control Hub DB state to Hermes. Called after every
+ * Re-apply the full PatterStage DB state to Hermes. Called after every
  * model/credential mutation so the on-disk Hermes config stays in lock
- * step with the Control Hub DB.
+ * step with the PatterStage DB.
  */
 export function syncAllToHermes(): { envBackup: string | null; configBackup: string | null } {
   // .env writes happen per-provider, but here we don't have a single

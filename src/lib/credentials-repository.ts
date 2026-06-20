@@ -68,7 +68,7 @@ function toWithKey(row: CredentialRow): CredentialWithKey {
 
 /**
  * Compute a safe display hint for an API key. Mirrors the existing
- * convention used elsewhere in Control Hub (e.g. `sk-...abcd`).
+ * convention used elsewhere in PatterStage (e.g. `sk-...abcd`).
  */
 export function buildKeyHint(apiKey: string): string {
   const trimmed = apiKey.trim();

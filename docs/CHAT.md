@@ -1,4 +1,4 @@
-# Control Hub — Agent Chat
+# PatterStage — Agent Chat
 
 The Chat page (`/orchestration/chat`) is a real conversation with your Hermes
 agent: it runs over the same agent runtime as Missions, so the assistant can use
@@ -27,7 +27,7 @@ Conversations are server-side, not localStorage:
   (`session_id`) for memory continuity; stores `profile_name`, `model`, and
   `previous_response_id` (multi-turn).
 - **`chat_messages`** — user/assistant turns. An assistant turn is linked to the
-  Control Hub **run** that produced it (`run_id`) and carries `reasoning`,
+  PatterStage **run** that produced it (`run_id`) and carries `reasoning`,
   `tool_calls_json`, and a `status` (`pending → streaming → complete | failed |
   cancelled`).
 
@@ -42,7 +42,7 @@ Migration: `013_chat.sql` + `apply-chat-migration.ts`, wired into
 2. `POST /api/chat/[id]/messages` → persist the user message, then
    `dispatchChatTurn` mirrors `dispatchMissionRun`: `createRun` →
    `runtime.submitRun({ input, sessionId, previousResponseId, profileName })` →
-   `attachBackendRun`. Returns the **Control Hub run id**.
+   `attachBackendRun`. Returns the **PatterStage run id**.
 3. The client opens **`GET /api/runs/[runId]/events`** (the shared SSE proxy) and
    renders events: `message.delta` → reply, `reasoning.*` → a collapsible
    "Reasoning" panel, `tool.*` → tool-call cards, `tool.approval_required` → an

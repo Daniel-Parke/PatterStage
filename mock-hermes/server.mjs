@@ -2,7 +2,7 @@
 // mock-hermes/server.mjs — a zero-dependency stand-in for the Hermes
 // API Server (https://hermes-agent.nousresearch.com/docs/user-guide/features/api-server)
 //
-// Implements just enough of the contract for Control Hub end-to-end tests
+// Implements just enough of the contract for PatterStage end-to-end tests
 // without a real agent, models, or API keys:
 //   GET  /health, /v1/health, /health/detailed
 //   GET  /v1/capabilities, /v1/models, /v1/skills, /v1/toolsets

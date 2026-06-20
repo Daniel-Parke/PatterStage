@@ -3,7 +3,7 @@
 # Hermes Config Backup Script
 # ═══════════════════════════════════════════════════════════════
 # Backs up your Hermes agent configuration, skills, memory, and
-# Control Hub data to a portable directory or git repo.
+# PatterStage data to a portable directory or git repo.
 #
 # Usage:
 #   bash scripts/bootstrap/backup-hermes-config.sh [target_dir]
@@ -76,8 +76,8 @@ if [ -d "$HERMES_HOME/skills" ]; then
     echo "  ✓ skills/ ($SKILL_COUNT skills)"
 fi
 
-# 6. Control Hub data (default ~/control-hub/data; legacy ~/.hermes/control-hub/data)
-echo "Backing up Control Hub data..."
+# 6. PatterStage data (default ~/control-hub/data; legacy ~/.hermes/control-hub/data)
+echo "Backing up PatterStage data..."
 CH_DATA_ROOT="${CH_DATA_DIR:-$HOME/control-hub/data}"
 backup_ch_data() {
     local SRC="$1"

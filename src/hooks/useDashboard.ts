@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// useDashboard — TanStack Query data layer for the Control Hub home
+// useDashboard — TanStack Query data layer for the PatterStage home
 // ═══════════════════════════════════════════════════════════════
 //
 // Replaces the dashboard's legacy data plumbing (the one-shot

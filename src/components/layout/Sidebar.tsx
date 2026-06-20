@@ -82,11 +82,13 @@ export default function Sidebar() {
             </div>
           </div>
           {!collapsed && (
-            <div>
-              <div className="text-sm font-bold tracking-tight">
-                <span className="text-neon-cyan">PT</span>
-                <span className="text-white/40 mx-0.5">/</span>
-                <span className="text-white">Hermes</span>
+            <div className="leading-tight">
+              <div className="text-sm font-bold tracking-tight text-white">
+                PatterStage
+              </div>
+              <div className="text-[10px] text-white/45 mt-0.5">
+                The Stage is{" "}
+                <span className="font-bold text-neon-cyan text-glow-cyan">Yours</span>
               </div>
             </div>
           )}

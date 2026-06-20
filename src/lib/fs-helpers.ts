@@ -19,7 +19,7 @@
 //
 // Promoted from `hermes-config-sync.ts` (where `ensureDir`,
 // `backupTimestamp`, and `backupFile` were private module-local
-// helpers) in session 85 (List 4 refactor) so every Control Hub
+// helpers) in session 85 (List 4 refactor) so every PatterStage
 // module can reach for the canonical versions.
 //
 // Keep this module tiny and dependency-free (fs only). Heavier

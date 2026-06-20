@@ -1,6 +1,6 @@
-# Control Hub — Analytics & Achievements
+# PatterStage — Analytics & Achievements
 
-How Control Hub logs meaningful interactions, turns them into achievements, and
+How PatterStage logs meaningful interactions, turns them into achievements, and
 surfaces them on the **Insights** page (`/insights`). Added in Phase Q3.
 
 ## 1. The event log (`analytics_events`)

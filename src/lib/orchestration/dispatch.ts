@@ -24,7 +24,7 @@ import { recordEvent } from "@/lib/analytics/record-event";
 
 export interface DispatchResult {
   ok: boolean;
-  /** Control Hub-owned run id (the Idempotency-Key sent to the backend). */
+  /** PatterStage-owned run id (the Idempotency-Key sent to the backend). */
   runId?: string;
   /** Backend-assigned run id. */
   backendRunId?: string;

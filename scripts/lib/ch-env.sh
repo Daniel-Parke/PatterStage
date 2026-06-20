@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════
-# Control Hub — shared .env.local helpers (sourced by setup.sh / install)
+# PatterStage — shared .env.local helpers (sourced by setup.sh / install)
 # ═══════════════════════════════════════════════════════════════
 
 # Set KEY=value in a dotenv file (removes prior KEY= lines, appends one).
@@ -31,13 +31,13 @@ ch_hermes_default_root() {
   fi
 }
 
-# Operator banner: single canonical Hermes layout for Control Hub.
+# Operator banner: single canonical Hermes layout for PatterStage.
 ch_print_hermes_install_paths() {
   local hm="${HERMES_HOME:-$HOME/.hermes}"
   local root
   root="$(ch_hermes_default_root "$hm")"
   echo ""
-  echo "Control Hub uses Hermes at: $hm"
+  echo "PatterStage uses Hermes at: $hm"
   echo "  (default: $HOME/.hermes)"
   echo "Agent package: $root/hermes-agent"
   if [ -d "${HOME}/.local/share/hermes-agent" ]; then
@@ -128,7 +128,7 @@ ch_kill_tcp_listeners_on_port() {
   done
 }
 
-# Stop Control Hub server + optional socat relay. $1 = app root directory.
+# Stop PatterStage server + optional socat relay. $1 = app root directory.
 ch_stop_control_hub() {
   local app_dir="$1"
   local env_file="${app_dir}/.env.local"

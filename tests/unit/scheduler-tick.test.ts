@@ -1,7 +1,7 @@
 /** @jest-environment node */
 
 /**
- * Tests for the Control Hub-owned scheduler tick
+ * Tests for the PatterStage-owned scheduler tick
  * (src/lib/orchestration/scheduler/tick.ts). The tick's branches (ownership,
  * orphan, catch-up, single-flight, exactly-once claim, dispatch, exhausted
  * repeats) are driven by mocking the repository + runs + mission + dispatch

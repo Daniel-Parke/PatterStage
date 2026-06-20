@@ -1,8 +1,8 @@
-# Control Hub — User walkthrough
+# PatterStage — User walkthrough
 
-This guide is the **operator manual** for Control Hub. It describes every area of the web app and how to use it day to day. It is for **operators** who already installed Hermes and Control Hub (see [README](../README.md)). For REST API details and deployment, use the [documentation index](README.md).
+This guide is the **operator manual** for PatterStage. It describes every area of the web app and how to use it day to day. It is for **operators** who already installed Hermes and PatterStage (see [README](../README.md)). For REST API details and deployment, use the [documentation index](README.md).
 
-The guide is written for the **Junior developer / operator** — every page is documented, every common action has a "Typical use" walkthrough, and "Notes" call out non-obvious behaviour. If you have not used Control Hub before, read the "What Control Hub is" section and the "Dashboard" section first, then jump to the page you need.
+The guide is written for the **Junior developer / operator** — every page is documented, every common action has a "Typical use" walkthrough, and "Notes" call out non-obvious behaviour. If you have not used PatterStage before, read the "What PatterStage is" section and the "Dashboard" section first, then jump to the page you need.
 
 **How this guide is organised:** one section per sidebar entry, in the order you see them in the app. Cross-references to the sibling technical docs ([MISSIONS.md](MISSIONS.md), [DEPLOY.md](DEPLOY.md), [API.md](API.md), [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md), [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md), [MIGRATION.md](MIGRATION.md), [ENV_REFERENCE.md](ENV_REFERENCE.md), [TESTING.md](TESTING.md), [SYSTEM-CRON.md](SYSTEM-CRON.md), [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md), [CONTROL_HUB.md](CONTROL_HUB.md)) are made inline.
 
@@ -10,7 +10,7 @@ The guide is written for the **Junior developer / operator** — every page is d
 
 ## Table of contents
 
-1. [What Control Hub is](#what-control-hub-is)
+1. [What PatterStage is](#what-patterstage-is)
 2. [Dashboard](#dashboard)
    - [Main → Insights](#main--insights)
 3. [Orchestration → Missions](#orchestration--missions)
@@ -40,15 +40,15 @@ The guide is written for the **Junior developer / operator** — every page is d
 
 ---
 
-## What Control Hub is
+## What PatterStage is
 
 **Hermes Agent** runs on your machine: it executes tools, delegates sub-tasks to subagents, talks to chat platforms, and stores config under `~/.hermes/`.
 
-**Control Hub** is the **web dashboard** for that install. You use it to see health at a glance, dispatch missions, schedule recurring work, run host scripts, browse sessions, tune models, and edit agent behaviour — without living in the terminal.
+**PatterStage** is the **web dashboard** for that install. You use it to see health at a glance, dispatch missions, schedule recurring work, run host scripts, browse sessions, tune models, and edit agent behaviour — without living in the terminal.
 
-Control Hub is **a Next.js app** that talks to a SQLite database under `~/control-hub/data` and to the active Hermes install under `~/.hermes`. Everything you can do in the dashboard, you can also do through a REST API — see [API.md](API.md). The dashboard never bypasses the API to write files on disk directly, so the data path is auditable.
+PatterStage is **a Next.js app** that talks to a SQLite database under `~/control-hub/data` and to the active Hermes install under `~/.hermes`. Everything you can do in the dashboard, you can also do through a REST API — see [API.md](API.md). The dashboard never bypasses the API to write files on disk directly, so the data path is auditable.
 
-**Why a separate app and not just a CLI?** Some things are easier in a UI: a session transcript with markdown rendering, a kanban mission board, a per-profile drift banner, a per-row Push/Pull on model records. Control Hub is the place to drive those workflows.
+**Why a separate app and not just a CLI?** Some things are easier in a UI: a session transcript with markdown rendering, a kanban mission board, a per-profile drift banner, a per-row Push/Pull on model records. PatterStage is the place to drive those workflows.
 
 **The sidebar groups features into five sections:**
 
@@ -60,13 +60,13 @@ Control Hub is **a Next.js app** that talks to a SQLite database under `~/contro
 | **Rec Room** | Story Weaver (interactive fiction) |
 | **Config** | Models, HERMES.md, environment, YAML sections |
 
-At the bottom of the sidebar are three deploy buttons — **Update**, **Restart**, and **Rebuild** — that talk to the host's `ch-deploy.sh` and rebuild the running Control Hub process. See [Sidebar deploy buttons](#sidebar-deploy-buttons-update--rebuild--restart) and [DEPLOY.md](DEPLOY.md).
+At the bottom of the sidebar are three deploy buttons — **Update**, **Restart**, and **Rebuild** — that talk to the host's `ch-deploy.sh` and rebuild the running PatterStage process. See [Sidebar deploy buttons](#sidebar-deploy-buttons-update--rebuild--restart) and [DEPLOY.md](DEPLOY.md).
 
 ---
 
 ## Dashboard
 
-![Control Hub dashboard](images/dashboard.png)
+![PatterStage dashboard](images/dashboard.png)
 
 The dashboard is your **status board**, not the primary place to launch missions. It is meant to answer "what is happening on this machine right now?" at a glance, and to give you one-click access into the deeper pages. Polls `/api/monitor` every 10 seconds, `/api/agents` every 15 seconds, and `/api/missions` every 15 seconds.
 
@@ -110,7 +110,7 @@ The dashboard is your **status board**, not the primary place to launch missions
 
 ### Typical use
 
-1. Open Control Hub after install and confirm **ONLINE** is showing, the model name matches what you expect, and Hermes paths resolve.
+1. Open PatterStage after install and confirm **ONLINE** is showing, the model name matches what you expect, and Hermes paths resolve.
 2. Glance at the four stat pills; if Memory shows 0 and you expected facts, see [Main → Memory](#main--memory) to investigate.
 3. Check **Running Hermes Processes** if a mission feels stuck — the list tells you what is actually executing.
 4. Use **Sync now** on the Platforms panel when you have changed Hermes config outside the UI (via `hermes config edit` on the host, for example). Otherwise the next 5-minute background sync will pick it up.
@@ -123,7 +123,7 @@ The dashboard is your **status board**, not the primary place to launch missions
 
 **Main → Insights** (`/insights`) is the analytics + achievements view. It reads
 the `analytics_events` interaction log (via `/api/analytics`) plus the dashboard
-stats, so it starts empty and fills in as you use Control Hub.
+stats, so it starts empty and fills in as you use PatterStage.
 
 ### What you see
 
@@ -207,7 +207,7 @@ The composer is the full form. It is organised into five sections, each collapsi
    - **Save draft** — `dispatchMode: save`. Persists as a draft in the **Draft** column.
    - **Queue** — `dispatchMode: queue`. Persists as queued for run; the worker will pick it up.
    - **Run now** — `dispatchMode: now`. Creates the mission and dispatches immediately via `dispatchMissionNow()` (an HTTP run on the runtime).
-   - **Schedule** — `dispatchMode: cron`. Creates a Control Hub **`schedules`** row (mission-linked) that the built-in scheduler fires — there is no Hermes `jobs.json` bridge. The first run starts immediately; later runs follow the schedule. Recurring missions appear in the **Scheduled missions** section below the board.
+   - **Schedule** — `dispatchMode: cron`. Creates a PatterStage **`schedules`** row (mission-linked) that the built-in scheduler fires — there is no Hermes `jobs.json` bridge. The first run starts immediately; later runs follow the schedule. Recurring missions appear in the **Scheduled missions** section below the board.
 
 The composer also has a **Save as Template** button that stores the current form as a reusable custom template in the templates table.
 
@@ -231,7 +231,7 @@ For mission lifecycle details (single-flight queue, model resolution, cancel sig
 
 ### Scheduled missions
 
-Below the board is the **Scheduled missions** section — the recurring agent work that the Control Hub scheduler fires (no Hermes `jobs.json`). Each row shows **name · cadence · next run · last status** with **Pause/Resume**, **Run now**, and **Delete**. New recurring missions land here automatically when you dispatch with **Schedule**; you can also put an existing saved mission on a timer with **Schedule a mission** (pick the mission, a cadence like `every 30m` or `0 9 * * *`, and a catch-up policy). Deleting a mission removes its schedule.
+Below the board is the **Scheduled missions** section — the recurring agent work that the PatterStage scheduler fires (no Hermes `jobs.json`). Each row shows **name · cadence · next run · last status** with **Pause/Resume**, **Run now**, and **Delete**. New recurring missions land here automatically when you dispatch with **Schedule**; you can also put an existing saved mission on a timer with **Schedule a mission** (pick the mission, a cadence like `every 30m` or `0 9 * * *`, and a catch-up policy). Deleting a mission removes its schedule.
 
 This replaced the separate "Schedules" page — scheduling now lives with the missions it drives.
 
@@ -259,15 +259,15 @@ Drop a new `.sh` file into `CH_DATA_DIR/scripts` and it appears automatically.
 
 ### Notes
 
-- Running execs the script with the Control Hub process's permissions, the same as a crontab entry would — only files directly under `CH_DATA_DIR/scripts` can be run (no traversal, `.sh` only, no shell interpolation).
+- Running execs the script with the PatterStage process's permissions, the same as a crontab entry would — only files directly under `CH_DATA_DIR/scripts` can be run (no traversal, `.sh` only, no shell interpolation).
 - The legacy agent-cron **Cron** page (Hermes `jobs.json`) has been **removed** — scheduled *agent* work belongs in **Missions**; existing cron jobs migrate to schedules automatically on update.
 
 For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memory snapshot) and the script-level env vars, see [SYSTEM-CRON.md](SYSTEM-CRON.md).
 
 ### Notes
 
-- Scripts run via the **OS scheduler** (host crontab) — "the OS does work". Scheduled *missions* run via the Control Hub scheduler — "Hermes does work". They are deliberately separate surfaces.
-- The legacy agent-cron **Cron** page (Hermes `jobs.json`) has been **removed**; new scheduled agent work belongs in **Missions**, and existing cron jobs are migrated to Control Hub schedules automatically on update (see [MIGRATION.md](MIGRATION.md)).
+- Scripts run via the **OS scheduler** (host crontab) — "the OS does work". Scheduled *missions* run via the PatterStage scheduler — "Hermes does work". They are deliberately separate surfaces.
+- The legacy agent-cron **Cron** page (Hermes `jobs.json`) has been **removed**; new scheduled agent work belongs in **Missions**, and existing cron jobs are migrated to PatterStage schedules automatically on update (see [MIGRATION.md](MIGRATION.md)).
 
 ---
 
@@ -290,7 +290,7 @@ For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memor
 - Active session highlighted with a neon-cyan left border.
 
 **Main area**
-- **GatewayBanner** at the top (when no active session is selected): one of four banners — **offline** (gateway unreachable), **auth-missing** (gateway up but Control Hub can't authenticate — set `API_SERVER_KEY`), **model-missing** (no agent default set), or **checking** (initial load).
+- **GatewayBanner** at the top (when no active session is selected): one of four banners — **offline** (gateway unreachable), **auth-missing** (gateway up but PatterStage can't authenticate — set `API_SERVER_KEY`), **model-missing** (no agent default set), or **checking** (initial load).
 - **Empty state** when nothing is selected: a large icon, "Chat with your agent" prompt, and short instruction text.
 - **Message thread** when a session is active: user bubbles on the right (neon-cyan tint) and assistant bubbles on the left (neon-purple icon). Assistant messages are markdown-rendered with copy buttons on code blocks. Timestamps in 24-hour format.
 - **TypingIndicator** while the assistant is streaming.
@@ -322,7 +322,7 @@ For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memor
 
 ![Agent profiles](images/agent-profiles.png)
 
-**Operations → Agents** is the agent-profile editor. It lists **professional profiles** (QA, SWE, DevOps, Data Scientist, Creative Lead, Support, DevOps Engineer) plus the default **Bob** persona, and lets you edit each profile's behaviour files, push and pull between Control Hub SQLite and `HERMES_HOME/profiles/`, and clone / delete profiles.
+**Operations → Agents** is the agent-profile editor. It lists **professional profiles** (QA, SWE, DevOps, Data Scientist, Creative Lead, Support, DevOps Engineer) plus the default **Bob** persona, and lets you edit each profile's behaviour files, push and pull between PatterStage SQLite and `HERMES_HOME/profiles/`, and clone / delete profiles.
 
 ### What you see
 
@@ -370,7 +370,7 @@ For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memor
 
 ### Notes
 
-- Control Hub SQLite is the **source of truth** for profiles; Hermes disk is the **runtime mirror**. Push and pull keep them in sync. The data flow and sync contract are in [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md).
+- PatterStage SQLite is the **source of truth** for profiles; Hermes disk is the **runtime mirror**. Push and pull keep them in sync. The data flow and sync contract are in [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md).
 - **Import discovered** scans `HERMES_HOME/profiles/` and imports any directories that are not yet in SQLite. Useful after a manual `cp -r` on the host.
 - Bob lives in the `agent_root` SQLite row, not in `agent_profiles`. Sync uses `root: true` on push / pull. The UI shows Bob as the "Default" profile with `id: "default"`.
 
@@ -445,7 +445,7 @@ For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memor
 - **Save & push toolsets** — PUT `/api/agent/profiles/<id>/toolsets`, then pushes. This is the "I edited in the UI and want it on disk" action.
 
 **Banners (conditional)**
-- **Drift banner** when `syncStatus="drift"` on the selected profile: "Toolset policy on disk differs from Control Hub. Pull imports disk into SQLite; Save & push or Push writes canonical config.yaml to ~/.hermes."
+- **Drift banner** when `syncStatus="drift"` on the selected profile: "Toolset policy on disk differs from PatterStage. Pull imports disk into SQLite; Save & push or Push writes canonical config.yaml to ~/.hermes."
 - **Sync-error banner** when `syncStatus="error"`.
 - **Platforms diverged banner** when different platforms have different toolset configs on disk (rare; usually means you hand-edited `config.yaml` for one platform only).
 
@@ -516,7 +516,7 @@ For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memor
 
 ## Main → Sessions
 
-**Main → Sessions** is the unified session history. It reads from the Control Hub SQLite `sessions` table, which is populated by the dispatcher when missions are created and by the recurring sync that pulls CLI / cron / api sessions from `~/.hermes/<profile>/sessions/`. Pagination is 50 per page.
+**Main → Sessions** is the unified session history. It reads from the PatterStage SQLite `sessions` table, which is populated by the dispatcher when missions are created and by the recurring sync that pulls CLI / cron / api sessions from `~/.hermes/<profile>/sessions/`. Pagination is 50 per page.
 
 ### What you see
 
@@ -687,7 +687,7 @@ For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memor
 
 ### Notes
 
-- Log files are read-only from the dashboard. You cannot tail a non-Hermes log without restarting Control Hub.
+- Log files are read-only from the dashboard. You cannot tail a non-Hermes log without restarting PatterStage.
 - The two-step confirm on **Delete All** matters: it removes the underlying files. There is no undo.
 
 ---
@@ -759,13 +759,13 @@ For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memor
 1. **+ Add Model** and attach API credentials.
 2. Set **Agent default** for mission and chat runs.
 3. Configure the **Fallback chain** for resilience, then **Sync to Hermes** so `config.yaml` matches.
-4. Use **Import from config** when Hermes was edited outside Control Hub.
+4. Use **Import from config** when Hermes was edited outside PatterStage.
 
 ### Notes
 
 - The Models registry is the **source of truth** for credentials and defaults. `~/.hermes/config.yaml` is the runtime target. **Sync to Hermes** (or `ch-deploy.sh update` at deploy time) keeps them aligned.
 - The "agent default" in this page is what mission dispatch and chat sessions fall back to when no model is set on the mission or chat session. The Models registry's agent default takes precedence over the bare `config.yaml` `model.default` field.
-- After **Push Bob** (root), Control Hub runs `finalizeRootConfigOnDisk()` so `model.*` and `auxiliary.*` from the Models registry are re-applied to `~/.hermes/config.yaml` and stored back in `agent_root.config_yaml`. This prevents a chat session from wiping the model block.
+- After **Push Bob** (root), PatterStage runs `finalizeRootConfigOnDisk()` so `model.*` and `auxiliary.*` from the Models registry are re-applied to `~/.hermes/config.yaml` and stored back in `agent_root.config_yaml`. This prevents a chat session from wiping the model block.
 
 ---
 
@@ -1095,7 +1095,7 @@ For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memor
 
 ## Sidebar deploy buttons (Update / Rebuild / Restart)
 
-The three buttons at the bottom of the sidebar — **Update**, **Restart**, and **Rebuild** — talk to the host's `ch-deploy.sh` and rebuild / restart the running Control Hub process. The full deployment story is in [DEPLOY.md](DEPLOY.md); this section is the user-side walkthrough.
+The three buttons at the bottom of the sidebar — **Update**, **Restart**, and **Rebuild** — talk to the host's `ch-deploy.sh` and rebuild / restart the running PatterStage process. The full deployment story is in [DEPLOY.md](DEPLOY.md); this section is the user-side walkthrough.
 
 ### What you see
 
@@ -1132,7 +1132,7 @@ The three buttons at the bottom of the sidebar — **Update**, **Restart**, and 
 ### Schedule recurring work
 
 1. In the composer, choose **Schedule** and enter a schedule (e.g. `every 5m` or `0 9 * * *`).
-2. Dispatch; a Control Hub schedule is created, visible in the **Scheduled missions** section on the Missions page.
+2. Dispatch; a PatterStage schedule is created, visible in the **Scheduled missions** section on the Missions page.
 3. Pause/resume or run-now from that section; deleting the mission removes its schedule.
 
 ### Switch agent profile for one job

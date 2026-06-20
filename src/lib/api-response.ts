@@ -2,7 +2,7 @@
 // api-response — small NextResponse factory helpers
 // ══════════════════════════════════════════════════════════════════════════════
 //
-// Most Control Hub API routes validate their inputs at the top of the
+// Most PatterStage API routes validate their inputs at the top of the
 // handler and bail out with a 4xx + a single error message. The
 // `return NextResponse.json({ error: msg }, { status: <code> })` pattern
 // appeared 50+ times across just List 4 (models, config, agent/files,
@@ -104,7 +104,7 @@ export function payloadTooLarge(error: string): NextResponse {
  * Return a 503 Service Unavailable with the given error message. Use
  * in route handlers when a downstream service (DB, sync layer,
  * migration state) is in a state that doesn't allow the request, OR
- * when the Control Hub is in read-only mode and the request is a
+ * when the PatterStage is in read-only mode and the request is a
  * write. Sibling of the rest of the factory set — same body shape,
  * different status code.
  *

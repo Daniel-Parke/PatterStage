@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // runtime/types.ts — Framework-agnostic agent runtime contract
 //
-// AgentRuntime is the single seam between Control Hub's orchestration core
+// AgentRuntime is the single seam between PatterStage's orchestration core
 // and whatever actually executes work (Hermes today; LangGraph/others later).
 // It is modelled on async "run" semantics: submit a run, poll/stream its
 // progress, stop it, resolve approvals. NOTHING Hermes-specific (CLI flags,
@@ -39,7 +39,7 @@ export interface RunSubmit {
   /** The instruction/prompt text for this run (the mission's built prompt). */
   input: string;
   /**
-   * Control Hub-owned run id. Used as the Idempotency-Key so a duplicated
+   * PatterStage-owned run id. Used as the Idempotency-Key so a duplicated
    * submit (e.g. double scheduler tick) is coalesced backend-side.
    */
   idempotencyKey: string;
@@ -142,7 +142,7 @@ export interface SessionInfo {
 // ── The runtime contract ─────────────────────────────────────
 
 /**
- * The one seam Control Hub orchestration depends on. A concrete backend
+ * The one seam PatterStage orchestration depends on. A concrete backend
  * (HermesRuntime) implements every method over its transport. `profile`
  * selects which agent/persona endpoint to target (each Hermes profile is a
  * separate gateway process on its own port/key).

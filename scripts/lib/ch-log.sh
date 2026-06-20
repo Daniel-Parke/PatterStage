@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════
-# Control Hub — shared logging + prompt helpers
+# PatterStage — shared logging + prompt helpers
 #
 # Source this in any script for consistent, colourful output and a single
 # interactivity convention. Destructive operations should print a plan, then

@@ -1,6 +1,6 @@
 # How this repo works
 
-I maintain Control Hub solo. This is not a corporate handbook—it is how I want collaboration to feel. I welcome all feedback, please reach out to me any any time.
+I maintain PatterStage solo. This is not a corporate handbook—it is how I want collaboration to feel. I welcome all feedback, please reach out to me any any time.
 
 ## The short version
 

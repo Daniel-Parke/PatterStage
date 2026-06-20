@@ -7,7 +7,7 @@
  * The probe hits the gateway's `/v1/models`. A thrown/timed-out fetch means
  * the gateway is genuinely down (`online: false`). ANY HTTP response — including
  * a 401/403 — proves the gateway answered, so it's reachable (`online: true`);
- * a 401/403 specifically means the gateway is up but Control Hub couldn't
+ * a 401/403 specifically means the gateway is up but PatterStage couldn't
  * authenticate (`authConfigured: false`), which the chat page renders as an
  * actionable "set API_SERVER_KEY" banner instead of a misleading "offline".
  */

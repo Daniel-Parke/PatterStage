@@ -4,11 +4,11 @@
 #
 # Hermes root: HERMES_HOME (default ~/.hermes). Profiles live under
 #   $HERMES_HOME/profiles/<name>/
-# Control Hub data (CH_DATA_DIR) is never used for profile paths here.
+# PatterStage data (CH_DATA_DIR) is never used for profile paths here.
 # ═══════════════════════════════════════════════════════════════
 
 # Ordered list (must match data/seed/profiles/manifest.json).
-# Slugs must match data/seed/profiles/manifest.json (Control Hub DB is source of truth).
+# Slugs must match data/seed/profiles/manifest.json (PatterStage DB is source of truth).
 CH_BUNDLED_PROFILE_LIST=(
   qa
   swe

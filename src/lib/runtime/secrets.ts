@@ -6,7 +6,7 @@
 // masked in logs. Today the key comes from the environment; Phase 2 will
 // resolve a per-profile key via the profile's `api_key_ref` (each Hermes
 // profile gateway can have its own key), with rotation that does not require
-// a Control Hub restart.
+// a PatterStage restart.
 // ═══════════════════════════════════════════════════════════════
 
 import { getBenchGatewayKey } from "./gateway-manager";

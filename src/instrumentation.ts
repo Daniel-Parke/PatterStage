@@ -2,8 +2,8 @@
 // instrumentation.ts — Next.js server boot hook
 //
 // register() runs once when the Next.js server process starts (next start /
-// next dev), BEFORE any request is handled. We use it to boot Control Hub's
-// traffic-independent background loops so that the Control Hub-owned scheduler
+// next dev), BEFORE any request is handled. We use it to boot PatterStage's
+// traffic-independent background loops so that the PatterStage-owned scheduler
 // fires on schedule even on a fully idle host — the previous design only
 // ticked when an API route happened to call ensureSyncLayer(), which meant a
 // scheduled mission at 03:00 on an idle box would never run.
@@ -18,7 +18,7 @@ export async function register(): Promise<void> {
   const { ensureSyncLayer } = await import("@/lib/sync");
   ensureSyncLayer();
 
-  // Orchestration scheduler host (Control Hub-owned scheduling + run reconcile).
+  // Orchestration scheduler host (PatterStage-owned scheduling + run reconcile).
   const { ensureBackgroundScheduler } = await import("@/lib/orchestration");
   ensureBackgroundScheduler();
 

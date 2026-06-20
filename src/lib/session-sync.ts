@@ -107,7 +107,7 @@ function readHermesSessionsFromStateDb(): HermesSessionRow[] {
 }
 
 /**
- * Build a set of all mission IDs from Control Hub's missions table.
+ * Build a set of all mission IDs from PatterStage's missions table.
  * Includes soft-deleted missions — the FK constraint only checks id existence,
  * not deleted_at. Used to filter session mission_ids so we never insert
  * a mission_id that would violate the FK.
@@ -124,7 +124,7 @@ function buildValidMissionIdSet(): Set<string> {
 }
 
 /**
- * Build a map of Hermes job ID -> Control Hub mission UUID.
+ * Build a map of Hermes job ID -> PatterStage mission UUID.
  *
  * Correct join path:
  *   Hermes job ID (e.g. "9514116b5b0d")
@@ -154,7 +154,7 @@ function buildMissionIdByJobId(): Map<string, string> {
 }
 
 /**
- * Look up the Control-Hub mission id for a single Hermes cron job id.
+ * Look up the PatterStage mission id for a single Hermes cron job id.
  *
  * Used by the per-session detail API (`/api/sessions/[id]`) to surface
  * an "Open Mission" link on the transcript page for cron-spawned sessions
@@ -188,7 +188,7 @@ export function lookupMissionIdForHermesJob(hermesJobId: string): string | null 
 }
 
 /**
- * Best-effort lookup of the Control-Hub mission id for a cron-spawned
+ * Best-effort lookup of the PatterStage mission id for a cron-spawned
  * session. The session id has the form `cron_<job-uuid>_<date>_<time>`;
  * the job uuid resolves to cron_jobs.id, which resolves to missions.id
  * via the missions.cron_job_id FK. Returns null for non-cron sessions
@@ -208,7 +208,7 @@ export function lookupMissionIdForCronSession(sessionId: string): string | null 
  * Sync Hermes sessions into the sessions table.
  *
  * Reads session metadata from Hermes's state.db (v0.14+).
- * Upserts so Control Hub has a unified view of all agent activity.
+ * Upserts so PatterStage has a unified view of all agent activity.
  *
  * For cron sessions, derives mission_id by matching the embedded
  * job ID in the session title against cron_jobs.hermes_job_id,

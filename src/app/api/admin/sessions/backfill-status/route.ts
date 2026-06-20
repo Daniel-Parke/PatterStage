@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   if (dryRun === false && isChReadOnly()) {
     return serviceUnavailable(
-      "Control Hub is in read-only mode (set CH_READ_ONLY=false to allow backfill writes)"
+      "PatterStage is in read-only mode (set CH_READ_ONLY=false to allow backfill writes)"
     );
   }
 

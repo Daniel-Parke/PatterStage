@@ -16,7 +16,7 @@ async function pollUntil(fn, { tries = 120, delay = 2000 } = {}) { for (let i = 
 async function main() {
   console.log(`\nBaseline-fix verify @ ${CH}\n`);
   const up = await pollUntil(async () => { try { const r = await fetch(`${CH}/api/benchmarks/suites`); return r.status === 200 ? r : null; } catch { return null; } }, { tries: 90, delay: 2000 });
-  check(Boolean(up), "Control Hub up");
+  check(Boolean(up), "PatterStage up");
   if (!up) return finish();
 
   const suites = (await req("GET", `${CH}/api/benchmarks/suites`)).data?.data?.suites ?? [];

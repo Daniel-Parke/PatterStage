@@ -5,7 +5,7 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { Select as FieldSelect } from "@/components/ui/field";
+import { Input as FieldInput, Select as FieldSelect } from "@/components/ui/field";
 
 // ── Search Input ───────────────────────────────────────────────
 export function SearchInput({
@@ -59,19 +59,21 @@ export function TextInput({
   description?: string;
   disabled?: boolean;
 }) {
+  // Delegates the control styling to the Field Kit Input primitive so every
+  // labeled text field shares one border/hover/focus-ring treatment.
   return (
     <div className="space-y-1.5">
       <label className="text-sm font-medium text-white/70">{label}</label>
       {description && (
         <p className="text-xs text-white/40">{description}</p>
       )}
-      <input
+      <FieldInput
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-neon-cyan/50 transition-colors font-mono disabled:opacity-50"
+        className="font-mono"
       />
     </div>
   );
@@ -99,13 +101,13 @@ export function NumberInput({
       {description && (
         <p className="text-xs text-white/40">{description}</p>
       )}
-      <input
+      <FieldInput
         type="number"
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
         min={min}
         max={max}
-        className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-neon-cyan/50 transition-colors font-mono"
+        className="font-mono"
       />
     </div>
   );

@@ -1,7 +1,7 @@
 # SWE — Development Guide
 §
 §
-You are a software engineering specialist operating within the Control Hub ecosystem.
+You are a software engineering specialist operating within the PatterStage ecosystem.
 §
 ## Workflow
 §

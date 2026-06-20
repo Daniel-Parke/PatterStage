@@ -5,14 +5,14 @@ Need help? Here is how to get unstuck without shouting into the void.
 ## Hermes Agent vs this repo
 
 - **[Hermes Agent](https://github.com/NousResearch/hermes-agent)** is the upstream runtime (gateways, tools, agent loop).
-- **This repo** is **Control Hub**—the dashboard and APIs I ship on top of your local Hermes install.
+- **This repo** is **PatterStage**—the dashboard and APIs I ship on top of your local Hermes install.
 
-If the agent itself misbehaves on Discord or in a CLI session, Hermes docs and channels are usually the right place. If the Control Hub UI, REST routes, `CH_DATA_DIR`, or this repo's CI is wrong, you are in the right place.
+If the agent itself misbehaves on Discord or in a CLI session, Hermes docs and channels are usually the right place. If the PatterStage UI, REST routes, `CH_DATA_DIR`, or this repo's CI is wrong, you are in the right place.
 
-## Getting help with Control Hub
+## Getting help with PatterStage
 
 1. **Docs first** — [documentation index](README.md), then [CONTROL_HUB.md](CONTROL_HUB.md), [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md), and [DEPLOY.md](DEPLOY.md).
-2. **Bug or feature** — [open an issue](https://github.com/Daniel-Parke/hermes-control-hub/issues) with steps to reproduce or a clear use case. Screenshots help.
+2. **Bug or feature** — [open an issue](https://github.com/Daniel-Parke/PatterStage/issues) with steps to reproduce or a clear use case. Screenshots help.
 3. **You want to contribute** — [CONTRIBUTING.md](CONTRIBUTING.md) and [TESTING.md](TESTING.md).
 
 I maintain this in my spare cycles; the more specific your report, the faster I can fix it.

@@ -104,7 +104,7 @@ const { writeFileSync } = await import("fs");
 writeFileSync(outPath, JSON.stringify(doc, null, 2), "utf8");
 
 console.log(
-  `Control Hub uses Hermes at: ${home} (defaultRoot: ${defaultRoot}, valid: ${isValidHermesRoot})`
+  `PatterStage uses Hermes at: ${home} (defaultRoot: ${defaultRoot}, valid: ${isValidHermesRoot})`
 );
 console.log(`Agent package: ${canonicalAgentPackage}`);
 if (hermesAgentPath) {

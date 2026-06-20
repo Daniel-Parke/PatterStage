@@ -8,7 +8,7 @@
  * and `anthropic/claude-sonnet-4`) whenever the gateway was offline
  * or returned a non-2xx. The chat page's `mergedModels` hook then
  * surfaced those phantom IDs as user-selectable options, even
- * though they were not in the Control Hub Models registry.
+ * though they were not in the PatterStage Models registry.
  *
  * The fix is: when the gateway is unreachable or returns a non-2xx,
  * the route returns `{ data: { models: [] } }`. The chat page

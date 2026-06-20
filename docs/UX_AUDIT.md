@@ -1,4 +1,4 @@
-# Control Hub — UX & Branding Audit
+# PatterStage — UX & Branding Audit
 
 A prioritized catalogue of interactivity / clarity / "fun & useful" improvements across the app, plus the **PatterTech-hybrid** branding-alignment assessment and the **brand-asset checklist** needed to finish the visual alignment.
 
@@ -8,9 +8,9 @@ Tags: **Impact** (H/M/L) · **Effort** (S/M/L). "Quick win" = H or M impact at S
 
 ## 1. Branding alignment — PatterTech = deep-space Cherenkov
 
-> **Correction (supersedes the earlier P6 note).** A previous pass mistook **WiseWattage** — a *venture* of PatterTech (the homepage serves it from `/ventures/wisewattage.png`) — for the parent brand, and recommended shifting the accent cyan → WiseWattage green. That was wrong, and it was never shipped into the UI (P6 only softened glow). **PatterTech's own brand is the [Cherenkov Radiation palette](https://www.color-hex.com/color-palette/1022135) + a deep-space aesthetic** (confirmed by the owner). WiseWattage's green/lightbulb identity belongs to that product, not to Control Hub.
+> **Correction (supersedes the earlier P6 note).** A previous pass mistook **WiseWattage** — a *venture* of PatterTech (the homepage serves it from `/ventures/wisewattage.png`) — for the parent brand, and recommended shifting the accent cyan → WiseWattage green. That was wrong, and it was never shipped into the UI (P6 only softened glow). **PatterTech's own brand is the [Cherenkov Radiation palette](https://www.color-hex.com/color-palette/1022135) + a deep-space aesthetic** (confirmed by the owner). WiseWattage's green/lightbulb identity belongs to that product, not to PatterStage.
 
-**Where we are = where we should be.** Control Hub's neon-dark "Cherenkov" theme — deep blue-tinted surfaces (`dark-950 #040b12`), a cyan primary, and restrained `glow-*` — *is already on-brand.* The job is **precision and polish**, not a recolour.
+**Where we are = where we should be.** PatterStage's neon-dark "Cherenkov" theme — deep blue-tinted surfaces (`dark-950 #040b12`), a cyan primary, and restrained `glow-*` — *is already on-brand.* The job is **precision and polish**, not a recolour.
 
 **The palette (locked):** Cherenkov ramp `#33ddff · #00bfff · #00a1e6 · #008bd1 · #0071c2` (registered as `--color-cherenkov-100…500`), primary cyan `#00bfff`, complement Sparrow's-Fire `#ff6622` (the `orange` accent slot). Voice is accessible/principled/understated — *"Technology that is accessible to all" · "Let's build something worth owning."*
 

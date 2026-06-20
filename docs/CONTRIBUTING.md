@@ -25,7 +25,7 @@ That is it. No secret handshake.
 
 - **TypeScript strict** — no `any`, no `@ts-ignore` without a fight.
 - **API shape** — routes return `{ data?, error? }`.
-- **Mutating routes** — respect `CH_READ_ONLY`, deploy gates (`CH_ENABLE_DEPLOY_API`), and signing where implemented (`src/lib/api-auth.ts`). There is no global API-key wall; run Control Hub on a network you trust or put your own proxy in front.
+- **Mutating routes** — respect `CH_READ_ONLY`, deploy gates (`CH_ENABLE_DEPLOY_API`), and signing where implemented (`src/lib/api-auth.ts`). There is no global API-key wall; run PatterStage on a network you trust or put your own proxy in front.
 - **Paths** — validate filesystem writes under allowed roots; do not bypass the API to poke Hermes disk by hand from new code.
 - **Do not commit junk** — `.next`, `coverage`, `test-results`, SQLite DBs, logs, `.env` with real keys.
 

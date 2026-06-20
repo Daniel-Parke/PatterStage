@@ -4,7 +4,7 @@
 //
 // Creates a mission from the composer payload and runs it according to
 // the dispatch mode: save (draft), queue (queued-for-run), cron
-// (recurring on the Control Hub scheduler), or immediate. Extracted
+// (recurring on the PatterStage scheduler), or immediate. Extracted
 // from the /api/missions route god-file.
 
 import { NextResponse } from "next/server";
@@ -65,7 +65,7 @@ export async function handleDispatchMission(
     constraints: constraints ?? "",
   });
 
-  // Resolve profile slug from Control Hub registry (matches Hermes --profile <slug>).
+  // Resolve profile slug from PatterStage registry (matches Hermes --profile <slug>).
   let resolvedProfileId: string | undefined;
   const profileKey = profileName ?? profileId;
   if (profileKey) {
@@ -115,8 +115,8 @@ export async function handleDispatchMission(
   }
 
   if (isCronMode) {
-    // ── Recurring mission on the Control Hub scheduler ──
-    // Control Hub owns the timer: a `schedules` row (mission_id FK) is the
+    // ── Recurring mission on the PatterStage scheduler ──
+    // PatterStage owns the timer: a `schedules` row (mission_id FK) is the
     // source of truth and the scheduler tick (orchestration/scheduler)
     // dispatches each occurrence via the runtime. There is NO Hermes
     // jobs.json bridge. The first run is kicked off immediately

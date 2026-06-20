@@ -1,4 +1,4 @@
-title = "Control Hub gitleaks config"
+title = "PatterStage gitleaks config"
 
 [allowlist]
 description = "Synthetic API key strings in unit/integration tests"

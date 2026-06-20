@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # BD4 merge gate: build the combined CH+Hermes image, bring the stack up, and
-# prove the benchmark gateway manager end-to-end — Control Hub spawns a
+# prove the benchmark gateway manager end-to-end — PatterStage spawns a
 # per-profile `hermes gateway`, an agentic run completes through it, and the
 # ephemeral profile is torn down. KEEP_STACK=1 leaves the stack running.
 set -euo pipefail

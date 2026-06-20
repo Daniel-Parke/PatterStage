@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
-// orchestration/index.ts — Control Hub orchestration core (public surface)
+// orchestration/index.ts — PatterStage orchestration core (public surface)
 //
-// Owns the mission lifecycle, run reconciliation, and the Control Hub-owned
+// Owns the mission lifecycle, run reconciliation, and the PatterStage-owned
 // scheduler. Hermes (and any future backend) is reached only through the
 // framework-agnostic AgentRuntime adapter in src/lib/runtime/.
 // ═══════════════════════════════════════════════════════════════

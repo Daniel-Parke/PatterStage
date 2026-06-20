@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // schedule/next-run.ts — compute the next fire time for a schedule
 //
-// Control Hub owns scheduling, so it must compute "when does this fire next"
+// PatterStage owns scheduling, so it must compute "when does this fire next"
 // itself (the agent's jobs.json scheduler is gone). Dependency-free: a small
 // 5-field cron evaluator (minute hour day-of-month month day-of-week) plus
 // interval and one-shot handling, reusing parseSchedule() for classification.

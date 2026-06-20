@@ -100,7 +100,7 @@ export async function safeApiCall<T = unknown>(
 /**
  * Safe API call that unwraps the `{ data: T }` envelope in one step.
  *
- * Every Control Hub API route returns `{ data: T }` (or `{ data: T, error?: string }`).
+ * Every PatterStage API route returns `{ data: T }` (or `{ data: T, error?: string }`).
  * `safeApiCall<T>` returns the raw envelope as `{ ok, data: T, error? }` so the
  * caller is responsible for picking the right envelope field. When the
  * caller only needs the inner `data` field (the most common case for

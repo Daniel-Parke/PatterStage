@@ -4,7 +4,7 @@
 // The chat analogue of dispatch.ts (dispatchMissionRun). A user message becomes
 // an HTTP run via runtime.submitRun(), threaded onto the conversation's Hermes
 // session for memory continuity. The assistant turn is pre-inserted as a
-// `pending` row linked to the Control Hub run id, so the live run-event stream
+// `pending` row linked to the PatterStage run id, so the live run-event stream
 // (/api/runs/[id]/events) and the background RunSync reconcile can both resolve
 // it. Mirrors the createRun → submitRun → attachBackendRun → recordEvent pattern.
 // ═══════════════════════════════════════════════════════════════
@@ -28,7 +28,7 @@ import { recordEvent } from "@/lib/analytics/record-event";
 
 export interface ChatTurnResult {
   ok: boolean;
-  /** Control Hub-owned run id (the Idempotency-Key; also the SSE stream id). */
+  /** PatterStage-owned run id (the Idempotency-Key; also the SSE stream id). */
   runId?: string;
   userMessageId?: string;
   assistantMessageId?: string;

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Control Hub — release-confidence install/update harness (Docker, local-only).
+PatterStage — release-confidence install/update harness (Docker, local-only).
 
 Runs isolated scenarios against your **current working tree copy**: ``scripts/bootstrap/setup.sh``,
 ``scripts/bootstrap/install.sh`` (bootstrap + ``--in-repo``), ``scripts/application/ch-deploy.sh update``,

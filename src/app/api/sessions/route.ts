@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // /api/sessions — Unified session registry
 //
-// Control Hub is the source of truth for ALL agent sessions.
+// PatterStage is the source of truth for ALL agent sessions.
 // Hermes session files on disk are synced into the DB on every
 // GET. Agent-native sessions (mission, cron) are written
 // directly by the dispatch pipeline.
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
   if (auth) return auth;
 
   if (isChReadOnly()) {
-    return serviceUnavailable("Control Hub is in read-only mode");
+    return serviceUnavailable("PatterStage is in read-only mode");
   }
 
   const bodyResult = await parseJsonBody(request);

@@ -132,7 +132,7 @@ export default function InsightsPage() {
               refetchStats();
               refetchSummary();
             }}
-            hint="Analytics start empty and fill in as you use Control Hub."
+            hint="Analytics start empty and fill in as you use PatterStage."
           />
         )}
 

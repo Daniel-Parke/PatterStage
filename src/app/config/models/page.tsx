@@ -145,7 +145,7 @@ export default function ModelsPage() {
 
       <div className="max-w-6xl mx-auto px-6 py-6 w-full flex-1 space-y-10">
         <p className="text-xs text-white/40 font-mono border border-white/10 rounded-lg p-3 bg-dark-900/50">
-          Control Hub stores mission defaults and the model registry here. Hermes chat/gateway
+          PatterStage stores mission defaults and the model registry here. Hermes chat/gateway
           runtime defaults live in each profile&apos;s <strong className="text-white/60">config.yaml</strong>{" "}
           (imported via Operations → Agents pull, or <code className="text-white/50">hermes model</code>).
           Seeds never set <code className="text-white/50">model.default</code>.

@@ -1,10 +1,10 @@
-# Full Control Hub stack with a mock Hermes API Server — runs anywhere with
+# Full PatterStage stack with a mock Hermes API Server — runs anywhere with
 # Docker, no real agent / API keys required. Great for trying the app and for
 # end-to-end tests of the orchestration core (missions → HTTP runs → reconcile,
-# Control Hub-owned schedules).
+# PatterStage-owned schedules).
 #
 #   docker compose up --build
-#   # Control Hub:  http://localhost:42069
+#   # PatterStage:  http://localhost:42069
 #   # then, against the running stack:
 #   CH_URL=http://localhost:42069 API_SERVER_KEY=change-me-local-dev \
 #     node tests/integration/runtime/full-stack-smoke.mjs

@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 /**
- * Apply ALL Control Hub SQLite migrations to the runtime database (CH_DATA_DIR).
+ * Apply ALL PatterStage SQLite migrations to the runtime database (CH_DATA_DIR).
  *
  * Single source of truth: this delegates to `getDb()` → `runMigrations()` in
  * src/lib/db.ts — the exact applier chain the app runs at boot — so
@@ -90,10 +90,10 @@ async function main(): Promise<void> {
   };
 
   // Converge to the terminal schema version. On a brand-new DB, runMigrations
-  // applies the baseline (the full current schema, schema_version 3) and returns
-  // early; the upgrade-only appliers (→ 11) run on the next pass. The app reaches
-  // this across boot, but a standalone migrator should finish in one invocation —
-  // so re-run until the version stops advancing (idempotent; capped).
+  // applies the baseline (the full current schema) and returns early; the
+  // upgrade-only appliers run on subsequent passes. The app reaches the terminal
+  // version across boot, but a standalone migrator should finish in one
+  // invocation — so re-run until the version stops advancing (idempotent; capped).
   let last = versionOf();
   for (let i = 0; i < 5; i++) {
     runMigrations(database);

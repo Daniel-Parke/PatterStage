@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════
-# Control Hub — PORT selection + CH_ALLOWED_DEV_ORIGINS (sourced after ch-env.sh)
+# PatterStage — PORT selection + CH_ALLOWED_DEV_ORIGINS (sourced after ch-env.sh)
 # ═══════════════════════════════════════════════════════════════
 
 ch_auto_pick_port() {
@@ -29,7 +29,7 @@ ch_resolve_port_interactive() {
   local chosen=""
   while true; do
     echo ""
-    echo "Control Hub will listen on a TCP port (Next.js PORT)."
+    echo "PatterStage will listen on a TCP port (Next.js PORT)."
     echo "  • Press Enter for auto: first free port in 42069–42100 (auto-selected if no input)."
     echo "  • Or type a port 1–65535 (1024–65535 suggested; <1024 may need root)."
     read -r -p "Port [Enter = auto]: " reply

@@ -11,7 +11,7 @@
 
 - **Patch** (`1.0.x`): documentation-only or additive optional fields ignored by older readers.
 - **Minor** (`1.x.0`): new optional fields; maintain backward compatibility for existing files.
-- **Major** (`x.0.0`): breaking shape changes; provide migration notes and a migration window in Control Hub release notes.
+- **Major** (`x.0.0`): breaking shape changes; provide migration notes and a migration window in PatterStage release notes.
 
 ## Generated JSON Schema
 

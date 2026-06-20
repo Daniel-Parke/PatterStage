@@ -1,4 +1,4 @@
-# Control Hub — production image (Next.js)
+# PatterStage — production image (Next.js)
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
 RUN apt-get update \

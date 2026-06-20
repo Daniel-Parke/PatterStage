@@ -1,21 +1,21 @@
 # Environment reference
 
-Quick lookup for Control Hub and Hermes paths. Set values in `.env.local` (created by `scripts/bootstrap/setup.sh`) or export them before `npm run start`.
+Quick lookup for PatterStage and Hermes paths. Set values in `.env.local` (created by `scripts/bootstrap/setup.sh`) or export them before `npm run start`.
 
 ## Naming
 
 | Name | Meaning |
 |------|---------|
-| Git repo clone | `hermes-control-hub` (this repository) |
+| Git repo clone | `PatterStage` (this repository) |
 | Default install directory | `~/control-hub` (bootstrap scripts) |
-| npm package | `control-hub` |
+| npm package | `patterstage` |
 
 ## Core paths
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `HERMES_HOME` | `~/.hermes` | Hermes data root: `config.yaml`, profiles, cron, sessions, skills. Python package at `{HERMES_HOME}/hermes-agent/`. (`AGENT_HOME` is accepted as a deprecated alias in code.) |
-| `CH_DATA_DIR` / `CONTROL_HUB_DATA_DIR` | `~/control-hub/data` | Control Hub SQLite, missions JSON, templates, stories, hardware scripts |
+| `CH_DATA_DIR` / `CONTROL_HUB_DATA_DIR` | `~/control-hub/data` | PatterStage SQLite, missions JSON, templates, stories, hardware scripts |
 | `CH_SCRIPTS_DIR` | `{CH_DATA_DIR}/scripts` | System cron script prefix (must match crontab entries) |
 | `CH_HARDWARE_LOG_DIR` | `{CH_DATA_DIR}/logs` | Hardware cron log output |
 | `PORT` | `42069` (or first free in 42069–42100 at setup) | Next.js listen port |
@@ -64,4 +64,4 @@ After setup or `ch-deploy update`, `scripts/tooling/discover-agents.mjs` writes 
 
 - [DEPLOY.md](DEPLOY.md) — `ch-deploy`, Docker, TLS
 - [MIGRATION.md](MIGRATION.md) — data directory moves, schema v3
-- [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md) — Hermes + Control Hub path checklist
+- [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md) — Hermes + PatterStage path checklist

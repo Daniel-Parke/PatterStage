@@ -1,6 +1,6 @@
-# Control Hub — this repository
+# PatterStage — this repository
 
-Control Hub is the **Next.js control plane** in this repo: a command-centre UI for [Hermes Agent](https://github.com/NousResearch/hermes-agent). One codebase—dashboard analytics, missions + scheduling, host scripts, sessions, memory tools, model registry, and REST APIs under `src/app/api/`. Agent execution is handed to Hermes over its HTTP API Server through a single runtime adapter (`src/lib/runtime/`); the Control Hub-owned scheduler (`src/lib/orchestration/`) owns "when does this run". If you want screenshots and "what do I click?", start with [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md); this page is the map of technical docs.
+PatterStage is the **Next.js control plane** in this repo: a command-centre UI for [Hermes Agent](https://github.com/NousResearch/hermes-agent). One codebase—dashboard analytics, missions + scheduling, host scripts, sessions, memory tools, model registry, and REST APIs under `src/app/api/`. Agent execution is handed to Hermes over its HTTP API Server through a single runtime adapter (`src/lib/runtime/`); the PatterStage-owned scheduler (`src/lib/orchestration/`) owns "when does this run". If you want screenshots and "what do I click?", start with [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md); this page is the map of technical docs.
 
 ## Where to read next
 
@@ -19,6 +19,6 @@ Control Hub is the **Next.js control plane** in this repo: a command-centre UI f
 | Testing (Jest + Playwright) | [TESTING.md](TESTING.md) |
 | Schema / mission & template types | [schema/SCHEMA_VERSIONING.md](schema/SCHEMA_VERSIONING.md) and [schema/CHANGELOG.md](schema/CHANGELOG.md) (`src/lib/schema/`) |
 
-Control Hub data lives under **`CH_DATA_DIR`** (`src/lib/paths.ts`). The local Hermes install is resolved from **`HERMES_HOME`** / **`AGENT_HOME`** (default `~/.hermes`) via `getActiveHermesPaths()` / `getActiveHermesHome()` in `src/lib/hermes-agent-runtime.ts`. System cron uses **`CH_SCRIPTS_DIR`** / **`CH_HARDWARE_LOG_DIR`** (defaults under `CH_DATA_DIR`). Bootstrap and deploy shells live under **`scripts/`** (`bootstrap/`, `application/ch-deploy.sh`, `tooling/`, …) — see **[DEPLOY.md](DEPLOY.md)**.
+PatterStage data lives under **`CH_DATA_DIR`** (`src/lib/paths.ts`). The local Hermes install is resolved from **`HERMES_HOME`** / **`AGENT_HOME`** (default `~/.hermes`) via `getActiveHermesPaths()` / `getActiveHermesHome()` in `src/lib/hermes-agent-runtime.ts`. System cron uses **`CH_SCRIPTS_DIR`** / **`CH_HARDWARE_LOG_DIR`** (defaults under `CH_DATA_DIR`). Bootstrap and deploy shells live under **`scripts/`** (`bootstrap/`, `application/ch-deploy.sh`, `tooling/`, …) — see **[DEPLOY.md](DEPLOY.md)**.
 
 **Browser E2E:** Playwright specs under `tests/e2e/` include a navigation matrix aligned with the sidebar (`tests/e2e/app-routes.ts`—keep in sync when `src/components/layout/sidebar-config.ts` changes). See [TESTING.md](TESTING.md).

@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // /api/missions — Mission CRUD + dispatch (SQLite)
 // ═══════════════════════════════════════════════════════════════
-// Missions are stored in Control Hub SQLite. Dispatch is handled
+// Missions are stored in PatterStage SQLite. Dispatch is handled
 // by the Hermes backend for mission execution.
 //
 // This route is a thin auth + parse + router: each POST action
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
   if (isChReadOnly()) {
-    return serviceUnavailable("Control Hub is in read-only mode");
+    return serviceUnavailable("PatterStage is in read-only mode");
   }
 
   ensureSyncLayer();

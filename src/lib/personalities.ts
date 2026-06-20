@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // Shared Personality Constants — used by both Agents & Personalities pages
-// Shared Personality Emoji constants for Control Hub UI.
+// Shared Personality Emoji constants for PatterStage UI.
 // PERSONALITIES, PersonalityName, and PERSONALITY_COLORS were removed
 // as they were unused and represented stale documentation.
 

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-/** Semantic version of the mission JSON contract (Control Hub + Hermes file on disk). */
+/** Semantic version of the mission JSON contract (PatterStage + Hermes file on disk). */
 export const MISSION_SCHEMA_VERSION = "1.0.0" as const;
 
 export const missionStatusSchema = z.enum([

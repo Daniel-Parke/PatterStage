@@ -53,7 +53,7 @@ describe("buildDriftDetails", () => {
       ],
     };
     expect(buildDriftDetails(drift)).toEqual([
-      'Model "claude-3-5-sonnet" (anthropic) is in Hermes but not in Control Hub',
+      'Model "claude-3-5-sonnet" (anthropic) is in Hermes but not in PatterStage',
     ]);
   });
 
@@ -65,7 +65,7 @@ describe("buildDriftDetails", () => {
       ],
     };
     expect(buildDriftDetails(drift)).toEqual([
-      'Model "gpt-4o" (openai) is in Control Hub but not pushed to Hermes',
+      'Model "gpt-4o" (openai) is in PatterStage but not pushed to Hermes',
     ]);
   });
 
@@ -81,8 +81,8 @@ describe("buildDriftDetails", () => {
     };
     expect(buildDriftDetails(drift)).toEqual([
       'Primary model drift: DB has "openai/gpt-4o", Hermes has "openai/gpt-4o-mini"',
-      'Model "claude-3-5-sonnet" (anthropic) is in Hermes but not in Control Hub',
-      'Model "gpt-4o" (openai) is in Control Hub but not pushed to Hermes',
+      'Model "claude-3-5-sonnet" (anthropic) is in Hermes but not in PatterStage',
+      'Model "gpt-4o" (openai) is in PatterStage but not pushed to Hermes',
     ]);
   });
 
@@ -96,9 +96,9 @@ describe("buildDriftDetails", () => {
       ],
     };
     expect(buildDriftDetails(drift)).toEqual([
-      'Model "model-a" (prov-a) is in Hermes but not in Control Hub',
-      'Model "model-b" (prov-b) is in Hermes but not in Control Hub',
-      'Model "model-c" (prov-c) is in Hermes but not in Control Hub',
+      'Model "model-a" (prov-a) is in Hermes but not in PatterStage',
+      'Model "model-b" (prov-b) is in Hermes but not in PatterStage',
+      'Model "model-c" (prov-c) is in Hermes but not in PatterStage',
     ]);
   });
 
@@ -111,8 +111,8 @@ describe("buildDriftDetails", () => {
       ],
     };
     expect(buildDriftDetails(drift)).toEqual([
-      'Model "x" (px) is in Control Hub but not pushed to Hermes',
-      'Model "y" (py) is in Control Hub but not pushed to Hermes',
+      'Model "x" (px) is in PatterStage but not pushed to Hermes',
+      'Model "y" (py) is in PatterStage but not pushed to Hermes',
     ]);
   });
 
@@ -141,8 +141,8 @@ describe("buildDriftDetails", () => {
       ],
     };
     expect(buildDriftDetails(drift2)).toEqual([
-      'Model "h" (ph) is in Hermes but not in Control Hub',
-      'Model "d" (pd) is in Control Hub but not pushed to Hermes',
+      'Model "h" (ph) is in Hermes but not in PatterStage',
+      'Model "d" (pd) is in PatterStage but not pushed to Hermes',
     ]);
   });
 });

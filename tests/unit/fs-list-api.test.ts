@@ -74,7 +74,7 @@ describe("GET /api/fs/list", () => {
   it("rejects paths outside the allowed workspace policy", async () => {
     mockResolveAllowed.mockReturnValue({
       ok: false,
-      error: "Path must be under your home directory, Control Hub data, or a registered agent root",
+      error: "Path must be under your home directory, PatterStage data, or a registered agent root",
     });
 
     const { GET } = await import("@/app/api/fs/list/route");

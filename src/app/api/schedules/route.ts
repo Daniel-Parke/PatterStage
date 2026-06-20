@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
-// /api/schedules — Control Hub-owned recurring schedules
+// /api/schedules — PatterStage-owned recurring schedules
 //
-// The scheduler (orchestration/scheduler) fires these; Control Hub owns the
+// The scheduler (orchestration/scheduler) fires these; PatterStage owns the
 // timer (no Hermes jobs.json). GET lists, POST creates with Zod validation.
 // ═══════════════════════════════════════════════════════════════
 

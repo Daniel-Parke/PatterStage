@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // MissionLiveProgress — live SSE output for a running mission
 //
-// Self-contained: resolves the mission's current Control Hub run id (polling
+// Self-contained: resolves the mission's current PatterStage run id (polling
 // briefly until dispatch has created it), then streams agent output via the
 // validated RunProgress + /api/runs/[id]/events chain. Renders nothing until a
 // run exists, so it is safe to drop into the detail panel unconditionally for

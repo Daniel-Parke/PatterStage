@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // session-repository.ts — Unified session registry (CRUD)
 //
-// Control Hub is the source of truth for ALL agent sessions.
+// PatterStage is the source of truth for ALL agent sessions.
 // Hermes session files on disk are synced into this table on every
 // sessions API call. Agent-native sessions (mission dispatch, cron)
 // are written here directly.

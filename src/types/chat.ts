@@ -30,7 +30,7 @@ export interface ChatMessage {
   content: string;
   reasoning?: string | null;
   toolCalls?: ToolCall[] | null;
-  /** Control Hub run id backing an assistant turn (agent mode); null in fast mode. */
+  /** PatterStage run id backing an assistant turn (agent mode); null in fast mode. */
   runId?: string | null;
   status: ChatMessageStatus;
   error?: string | null;

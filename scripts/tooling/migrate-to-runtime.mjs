@@ -2,7 +2,7 @@
 // ═══════════════════════════════════════════════════════════════
 // migrate-to-runtime.mjs — one-time forward migration to the runtime core
 //
-// Converts legacy Hermes-cron-backed recurring missions into Control Hub-owned
+// Converts legacy Hermes-cron-backed recurring missions into PatterStage-owned
 // `schedules`, and fails any mission left "dispatched" by the old bash backend
 // (no `runs` row). Dry-run by default; pass --apply to write. Idempotent:
 // missions that already have a schedule are skipped.
@@ -42,7 +42,7 @@ const tableExists = (name) =>
   Boolean(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?").get(name));
 
 if (!tableExists("schedules")) {
-  console.error("schedules table is missing — start Control Hub once so migrations run, then re-run.");
+  console.error("schedules table is missing — start PatterStage once so migrations run, then re-run.");
   process.exit(1);
 }
 

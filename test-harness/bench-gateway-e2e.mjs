@@ -3,7 +3,7 @@
 // in-app, against the combined CH+Hermes image (docker-compose.bench-gateway).
 //
 // Unlike the brain-only smoke, this drives an AGENTIC run with augmentation ON,
-// which makes Control Hub spawn a dedicated `hermes gateway` for the ephemeral
+// which makes PatterStage spawn a dedicated `hermes gateway` for the ephemeral
 // fair-test profile and route the run there. We assert:
 //   1. the run records exec_mode = agentic,
 //   2. it completes (the spawned gateway actually served it),
@@ -61,7 +61,7 @@ async function main() {
       return null;
     }
   }, { tries: 90, delayMs: 2000 });
-  check(Boolean(up), "Control Hub is up and serving the benchmarks API");
+  check(Boolean(up), "PatterStage is up and serving the benchmarks API");
   if (!up) return finish();
 
   const suitesRes = await req("GET", `${CH}/api/benchmarks/suites`);

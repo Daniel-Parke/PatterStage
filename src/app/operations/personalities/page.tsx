@@ -405,7 +405,7 @@ export default function PersonalitiesPage() {
           </h3>
           <ul className="space-y-1.5 text-xs text-white/40 font-mono">
             <li>• Hermes identity is stored in SOUL.md for Bob and each profile</li>
-            <li>• Control Hub stores SOUL.md in SQLite and pushes it to Hermes on save</li>
+            <li>• PatterStage stores SOUL.md in SQLite and pushes it to Hermes on save</li>
             <li>• config.yaml is used for runtime policy such as skills.disabled and platform_toolsets</li>
           </ul>
         </div>

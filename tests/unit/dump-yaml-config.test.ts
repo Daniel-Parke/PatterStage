@@ -37,7 +37,7 @@ describe("dumpYamlConfig", () => {
 
   it("emits no YAML anchors or aliases for repeated objects (noRefs: true)", () => {
     // The same object referenced twice would normally emit `&a001` and `*a001`
-    // anchors. The Control Hub config.yaml style never uses these — the pre-
+    // anchors. The PatterStage config.yaml style never uses these — the pre-
     // refactor form had `noRefs: true` and the helper must preserve that.
     const shared = { provider: "openai", model: "gpt-4o" };
     const value = { primary: shared, secondary: shared };

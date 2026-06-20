@@ -36,7 +36,7 @@ export interface BenchGateway {
   key: string;
 }
 
-/** Fast path: live gateways owned by THIS Control Hub process. */
+/** Fast path: live gateways owned by THIS PatterStage process. */
 const registry = new Map<string, BenchGateway>();
 
 // ── Capability detection (resolve the hermes binary) ─────────────
@@ -272,7 +272,7 @@ export async function ensureBenchGateway(
       API_SERVER_KEY: key,
     };
     // Hermes refuses to run the gateway as root by default (root-owned state).
-    // Only when Control Hub itself is root do we opt in.
+    // Only when PatterStage itself is root do we opt in.
     if (typeof process.getuid === "function" && process.getuid() === 0) {
       env.HERMES_ALLOW_ROOT_GATEWAY = "1";
     }
@@ -332,7 +332,7 @@ export function killBenchGateway(slug: string): void {
   }
 }
 
-/** Boot sweep: kill gateways left running by a crashed Control Hub. */
+/** Boot sweep: kill gateways left running by a crashed PatterStage. */
 export function sweepOrphanBenchGateways(): void {
   let rows: Array<{ pid: number | null }> = [];
   try {

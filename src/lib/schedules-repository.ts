@@ -1,9 +1,9 @@
 // ═══════════════════════════════════════════════════════════════
-// schedules-repository.ts — Control Hub-owned scheduler state
+// schedules-repository.ts — PatterStage-owned scheduler state
 //
 // A `schedule` row is the source of truth for "when should this mission run".
 // The scheduler tick (orchestration/scheduler) reads due rows by next_run_at
-// and dispatches a run via the runtime — Control Hub owns the timer, the agent
+// and dispatches a run via the runtime — PatterStage owns the timer, the agent
 // does NOT (no Hermes jobs.json). Restart-safe: due work is recomputed from
 // next_run_at, never an in-memory timer.
 // ═══════════════════════════════════════════════════════════════

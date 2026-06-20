@@ -1,6 +1,6 @@
 # Documentation index
 
-Technical reference for Control Hub. Tone elsewhere in this folder is deliberately plain—I maintain the project solo and would rather you get accurate answers than corporate filler.
+Technical reference for PatterStage. Tone elsewhere in this folder is deliberately plain—I maintain the project solo and would rather you get accurate answers than corporate filler.
 
 | Document | Description |
 |----------|-------------|

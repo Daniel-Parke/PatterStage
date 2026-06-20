@@ -34,7 +34,7 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
 export async function PUT(request: NextRequest, ctx: Ctx) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  if (isChReadOnly()) return serviceUnavailable("Control Hub is in read-only mode");
+  if (isChReadOnly()) return serviceUnavailable("PatterStage is in read-only mode");
 
   const { name } = await ctx.params;
   const body = await parseJsonBody(request);
@@ -55,7 +55,7 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
 export async function DELETE(request: NextRequest, ctx: Ctx) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  if (isChReadOnly()) return serviceUnavailable("Control Hub is in read-only mode");
+  if (isChReadOnly()) return serviceUnavailable("PatterStage is in read-only mode");
 
   const { name } = await ctx.params;
   try {

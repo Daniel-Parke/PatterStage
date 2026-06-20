@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
 }
 
 // DELETE is not supported — personalities are profile SOUL.md identities
-// and cannot be individually deleted from Control Hub. Delete the profile instead.
+// and cannot be individually deleted from PatterStage. Delete the profile instead.
 export async function DELETE() {
   return methodNotAllowed(
     "Individual personalities cannot be deleted — delete the profile instead"

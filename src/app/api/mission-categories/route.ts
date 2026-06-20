@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "mission_categories table is missing — restart Control Hub or run npm run db:migrate",
+            "mission_categories table is missing — restart PatterStage or run npm run db:migrate",
           migrationRequired: true,
           schemaVersion: health.schemaVersion,
         },

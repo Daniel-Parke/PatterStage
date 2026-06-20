@@ -6,7 +6,7 @@
 // is active, then delegates to the appropriate implementation.
 //
 // Supported providers:
-//   - hindsight: Control Hub `/api/memory/hindsight` makes direct HTTP calls to the Hindsight HTTP server (port 9177)
+//   - hindsight: PatterStage `/api/memory/hindsight` makes direct HTTP calls to the Hindsight HTTP server (port 9177)
 //   - none: Graceful degradation when no provider configured
 
 import { readFileSync, existsSync } from "fs";

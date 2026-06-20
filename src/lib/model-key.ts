@@ -19,7 +19,7 @@
 // — different second field name because the fallback chain stores
 // the model identifier as `modelIdString` (the literal model name in
 // the upstream provider's vocabulary, e.g. "gpt-4o") rather than
-// `modelId` (Control Hub's internal model_id column).
+// `modelId` (PatterStage's internal model_id column).
 //
 // Each site was a 1-line template literal, but the same composite-key
 // contract is repeated 7 times — bugs of the form "I added a

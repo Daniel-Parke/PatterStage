@@ -2,7 +2,7 @@
 # ═══════════════════════════════════════════════════════════════
 # ch-disk-report.sh — disk usage snapshot (read-only)
 # ═══════════════════════════════════════════════════════════════
-# Reports filesystem usage + the size of the Control Hub + Hermes data
+# Reports filesystem usage + the size of the PatterStage + Hermes data
 # directories. Safe: reads only, writes nothing.
 #
 # Environment (defaults in parentheses):

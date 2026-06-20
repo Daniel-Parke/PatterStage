@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════
-# Control Hub — unified deploy entrypoint (CLI + dashboard spawn)
+# PatterStage — unified deploy entrypoint (CLI + dashboard spawn)
 #
 # Usage:
 #   bash scripts/application/ch-deploy.sh update [--restart-only] [--branch NAME]

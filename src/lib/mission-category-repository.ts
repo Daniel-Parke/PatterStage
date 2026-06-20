@@ -84,7 +84,7 @@ export function hasMissionCategoriesTable(): boolean {
 export function listCategories(): MissionCategory[] {
   if (!hasMissionCategoriesTable()) {
     throw new Error(
-      "mission_categories table is missing — run database migrations (restart Control Hub or npm run db:migrate)",
+      "mission_categories table is missing — run database migrations (restart PatterStage or npm run db:migrate)",
     );
   }
   const rows = db()

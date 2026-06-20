@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // apply-runs-schedules-migration.ts
 //
-// Adds the Control Hub-owned `schedules` + `runs` tables and the
+// Adds the PatterStage-owned `schedules` + `runs` tables and the
 // per-profile gateway columns / missions.run_id. The CREATE TABLEs live in
 // 009_runs_schedules.sql (idempotent); column adds are done here because
 // SQLite ALTER TABLE has no IF NOT EXISTS. Safe to run repeatedly.

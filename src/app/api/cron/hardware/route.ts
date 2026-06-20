@@ -113,7 +113,7 @@ function rejectIfBadScriptsCommand(command: string | undefined): NextResponse | 
   const scriptsDir = getChScriptsDir();
   if (!crontabLineUsesScriptsDir(command, scriptsDir)) {
     return badRequest(
-      `Command must run a script under ${scriptsDir} (Control Hub hardware cron scripts directory).`,
+      `Command must run a script under ${scriptsDir} (PatterStage hardware cron scripts directory).`,
     );
   }
   return null;
@@ -162,9 +162,9 @@ function parseCrontabLine(
     command.split(" ")[0]?.split("/").pop() ||
     "unknown";
 
-  // Name from script: ch-backup → Control Hub Backup
+  // Name from script: ch-backup → PatterStage Backup
   const name = scriptName
-    .replace(/^ch-/, "Control Hub ")
+    .replace(/^ch-/, "PatterStage ")
     .replace(/-/g, " ")
     .replace(/\.sh$/, "")
     .replace(/\b\w/g, (c) => c.toUpperCase());
@@ -267,7 +267,7 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
   if (isChReadOnly()) {
-    return serviceUnavailable("Control Hub is in read-only mode");
+    return serviceUnavailable("PatterStage is in read-only mode");
   }
 
   try {
@@ -296,7 +296,7 @@ export async function POST(request: NextRequest) {
 
     // ── Sync action ───────────────────────────────────────────────────
     // Re-read crontab and return all detected hardware cron jobs.
-    // This picks up any jobs added or modified outside Control Hub.
+    // This picks up any jobs added or modified outside PatterStage.
     if ((body as Record<string, unknown>).action === "sync") {
       const { jobs } = await readAndParseCrontab();
       return ok({ jobs, total: jobs.length });
@@ -373,7 +373,7 @@ export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
   if (isChReadOnly()) {
-    return serviceUnavailable("Control Hub is in read-only mode");
+    return serviceUnavailable("PatterStage is in read-only mode");
   }
 
   try {
@@ -463,7 +463,7 @@ export async function DELETE(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
   if (isChReadOnly()) {
-    return serviceUnavailable("Control Hub is in read-only mode");
+    return serviceUnavailable("PatterStage is in read-only mode");
   }
 
   try {

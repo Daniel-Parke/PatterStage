@@ -21,15 +21,15 @@ How missions are stored, dispatched, and cancelled. Missions live in SQLite (`mi
 | `save` | Persists a **draft** (`status=queued`, `queued_for_run=0`). Does not spawn Hermes. Shown in the **Drafts** board column. |
 | `queue` | Persists as **queued for run** (`queued_for_run=1`). `MissionQueueSync` dispatches the oldest queued mission when no mission is `dispatched` (single-flight, ~15s tick). |
 | `now` | Creates the mission and dispatches immediately via `dispatchMissionNow()`. |
-| `cron` | Creates a linked Control Hub `schedules` row and runs the **first** execution immediately; later runs are fired by the Control Hub scheduler. |
+| `cron` | Creates a linked PatterStage `schedules` row and runs the **first** execution immediately; later runs are fired by the PatterStage scheduler. |
 
 ### Model resolution at dispatch
 
-`resolveMissionModel()` in `src/lib/backends/hermes.ts`:
+The models registry (`models` table) is the **single source of truth** for what any mission can run on. `parseMissionBodyFields()` in `src/lib/mission-body.ts` validates the request body:
 
-- If both `modelId` and `provider` are sent → used as-is.
-- If only `modelId` is sent → provider (and API key when configured) are resolved from the models registry (`findModelByModelId`).
-- If neither is sent → the registry **agent** default from `model_defaults` is used.
+- `modelId` is checked against the registry via `findModelByModelId()`. A foreign `modelId` (not in the table) is **silently dropped**.
+- `provider` is **never trusted from the body** — it is derived from the registry row at dispatch time (and stripped whenever the `modelId` was dropped, to keep `missions.provider` consistent).
+- If no valid `modelId` survives, the dispatch path falls through to `getDefaultModel("agent")` (the registry **agent** default).
 
 The composer pre-fills the agent default model from `GET /api/models/defaults` when opening a new mission.
 
@@ -65,7 +65,7 @@ Dashboard **active** count includes `dispatched` missions and queued-for-run mis
 
 Runtime database path: `CH_DATA_DIR/control-hub.db` (default `~/control-hub/data/control-hub.db`).
 
-1. After deploying new code, **restart** the Control Hub process so `getDb()` runs pending migrations.
+1. After deploying new code, **restart** the PatterStage process so `getDb()` runs pending migrations.
 2. `npm run build` alone does **not** migrate your live DB (prebuild only touches `repo/data/`).
 3. If the UI shows “No categories loaded”, on the host run:
 
@@ -79,9 +79,9 @@ Runtime database path: `CH_DATA_DIR/control-hub.db` (default `~/control-hub/data
 
 ## Recurring missions
 
-Recurring runs are **Control Hub-owned schedules** — the agent's `jobs.json` cron is no longer used:
+Recurring runs are **PatterStage-owned schedules** — the agent's `jobs.json` cron is no longer used:
 
-- A `schedules` row links to a mission and holds the canonical schedule, `next_run_at`, `catch_up_policy`, and repeat count. The scheduler tick (`src/lib/orchestration/scheduler/`) selects due rows and dispatches a run via the runtime; **Control Hub owns the timer**.
+- A `schedules` row links to a mission and holds the canonical schedule, `next_run_at`, `catch_up_policy`, and repeat count. The scheduler tick (`src/lib/orchestration/scheduler/`) selects due rows and dispatches a run via the runtime; **PatterStage owns the timer**.
 - Manage via `/api/schedules` or the **Scheduled missions** section on the **Orchestration → Missions** page (create, pause/resume, run-now, delete). Old-fashioned **host shell scripts** on a timer live on the separate **Orchestration → Scripts** page (system crontab), not here.
 - Restart-safe (recomputed from `next_run_at`, never an in-memory timer) and exactly-once per occurrence (deterministic run-id PK guard + `Idempotency-Key`).
 
@@ -97,11 +97,11 @@ Local run/mission/session state is finalised even if the backend stop call fails
 
 ## Session closure bridge
 
-Every mission dispatch pre-registers a `sessions` row with `status="active"` before spawning Hermes (see `src/lib/mission-dispatch.ts`). The mission lifecycle and the session lifecycle therefore need to stay in lockstep — otherwise the Sessions page shows a "live" pulsing dot on rows whose mission is already `successful` or `failed` days ago.
+Every mission dispatch pre-registers a `sessions` row with `status="active"` before submitting the run (see `src/lib/orchestration/dispatch.ts`). The mission lifecycle and the session lifecycle therefore need to stay in lockstep — otherwise the Sessions page shows a "live" pulsing dot on rows whose mission is already `successful` or `failed` days ago.
 
 The bridge is `closeSessionForMission(missionId, updates)` in `src/lib/session-repository.ts`, called from two places:
 
-1. **`MissionSync.sync()`** — when the on-disk `<id>.status.json` says `successful`/`failed`, the sync updates the mission row and the session row in the same iteration. The orphan branch (process died without writing status.json) does the same with `status="failed"`, `error="Process terminated without completion"`.
+1. **`reconcileActiveRuns()`** (`src/lib/orchestration/run-reconcile.ts`, on the 15s background tick via `RunSync`) — polls each non-terminal run with `runtime.getRun()`. When the backend reports a terminal state (completed/failed/cancelled), or a stuck run passes its deadline, it writes the terminal state to the run, mission, and session rows in the same pass. This replaced the old `MissionSync` / `status.json` polling.
 2. **Admin backfill** — `POST /api/admin/sessions/backfill-status` with `{"dryRun": false}` runs the same logic for any pre-existing stuck rows. The matching `dryRun: true` returns counts without writing. Default is `dryRun: true` for safety.
 
 The recurring orphan-sweep in `syncHermesSessionsToDb` (every 15s sync tick) also calls `closeOrphanedActiveSessions()` to catch any sessions the mission-side bridge missed — it has two paths:

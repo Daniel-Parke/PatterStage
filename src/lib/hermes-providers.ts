@@ -8,7 +8,7 @@
 // Mirrors the `--provider` choices in
 //   hermes-agent/hermes_cli/main.py (chat_parser.add_argument)
 // plus auxiliary-only providers documented in the user guide. Adding a
-// new provider here is the only file change needed to teach Control Hub
+// new provider here is the only file change needed to teach PatterStage
 // about it.
 
 /**

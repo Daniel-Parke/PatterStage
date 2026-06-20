@@ -2,7 +2,7 @@
 /**
  * @jest-environment node
  *
- * Tests for the Control Hub-owned scheduler state repository
+ * Tests for the PatterStage-owned scheduler state repository
  * (src/lib/schedules-repository.ts), driven against a real in-memory
  * SQLite DB seeded with the baseline schema. `@/lib/db` is mocked so the
  * repo's `db()` calls hit the test DB; `inTransaction` is stubbed to run

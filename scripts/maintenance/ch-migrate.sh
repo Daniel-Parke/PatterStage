@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════
-# Control Hub — database migration entrypoint
+# PatterStage — database migration entrypoint
 #
-# Backs up your Control Hub database, applies ALL schema migrations (the same
+# Backs up your PatterStage database, applies ALL schema migrations (the same
 # applier chain the app runs at boot), and migrates legacy data (recurring cron
-# jobs → Control Hub schedules). Safe to run repeatedly (idempotent). Your data
+# jobs → PatterStage schedules). Safe to run repeatedly (idempotent). Your data
 # is never lost — a pre-migration backup is always written first.
 #
 # Usage:
@@ -40,7 +40,7 @@ ch_load_control_hub_env_local "$REPO_ROOT"
 DATA_DIR="${CH_DATA_DIR:-$HOME/control-hub/data}"
 
 echo ""
-ch_info "Control Hub database migration"
+ch_info "PatterStage database migration"
 ch_dim   "  Data directory : $DATA_DIR"
 ch_dim   "  Plan           : backup → schema migrations → legacy data migration"
 ch_dim   "  Your existing database is backed up before anything changes."

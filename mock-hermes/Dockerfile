@@ -1,5 +1,5 @@
 # Mock Hermes API Server — a zero-dependency stand-in for end-to-end testing
-# Control Hub without a real agent, models, or API keys. Swap for a real
+# PatterStage without a real agent, models, or API keys. Swap for a real
 # `hermes gateway` (API_SERVER_ENABLED=true) by pointing HERMES_GATEWAY_URL
 # at it and removing this service from docker-compose.
 FROM node:20-bookworm-slim

@@ -122,7 +122,7 @@ export async function promoteMission(
   }
 
   if (isCronMode) {
-    // Recurring promote → a Control Hub `schedules` row (the scheduler fires it);
+    // Recurring promote → a PatterStage `schedules` row (the scheduler fires it);
     // no legacy cron_jobs / jobs.json. Mirrors the dispatch cron branch.
     const parsed = parseSchedule(input.schedule!);
     if (parsed.kind === "invalid") {

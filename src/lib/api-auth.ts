@@ -70,11 +70,11 @@ export function requireNotReadOnly(context?: string): NextResponse | null {
   if (!isChReadOnly()) return null;
   if (!context) {
     return serviceUnavailable(
-      "Control Hub is in read-only mode (set CH_READ_ONLY=true to allow writes)."
+      "PatterStage is in read-only mode (set CH_READ_ONLY=true to allow writes)."
     );
   }
   return serviceUnavailable(
-    `Control Hub is in read-only mode — ${context}`,
+    `PatterStage is in read-only mode — ${context}`,
   );
 }
 

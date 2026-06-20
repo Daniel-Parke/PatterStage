@@ -1,6 +1,6 @@
 # Runtime architecture
 
-How Control Hub executes and schedules agent work after the runtime rewrite. The short version: **Hermes is a remote HTTP service**, Control Hub owns orchestration and scheduling, and a single adapter is the only seam to the backend.
+How PatterStage executes and schedules agent work after the runtime rewrite. The short version: **Hermes is a remote HTTP service**, PatterStage owns orchestration and scheduling, and a single adapter is the only seam to the backend.
 
 ## Layers
 
@@ -45,9 +45,9 @@ A dispatch is one HTTP **run**:
 
 The whole app routes through this: the missions god-route and the queue both call `dispatchMissionNow`, which delegates to `dispatchMissionRun`.
 
-## Control Hub-owned scheduler
+## PatterStage-owned scheduler
 
-The timer lives in Control Hub, not the agent.
+The timer lives in PatterStage, not the agent.
 
 - A `schedules` row holds the canonical schedule, `next_run_at`, `catch_up_policy`, and repeat count.
 - `BackgroundScheduler` is started by `src/instrumentation.ts` at server boot, so it ticks **independent of HTTP traffic** (an idle host still fires schedules). It reuses the outage-hardened `SyncScheduler` loop and a `meta`-table ownership lease.
@@ -67,7 +67,7 @@ Manage via `/api/schedules` or **Orchestration → Schedules**.
 A zero-dependency **mock Hermes API Server** (`mock-hermes/server.mjs`) implements the contract (runs/sessions/chat/discovery/health) so the platform runs end-to-end with no real agent or API keys.
 
 ```bash
-docker compose up --build           # Control Hub + mock Hermes
+docker compose up --build           # PatterStage + mock Hermes
 CH_URL=http://localhost:42069 node tests/integration/runtime/full-stack-smoke.mjs
 # or locally:
 npm run mock-hermes &               # :8642
@@ -77,7 +77,7 @@ npm run test:e2e-runtime
 
 ### Real-Hermes integration gate (validated)
 
-`docker-compose.real-hermes.yml` runs Control Hub against the **actual Hermes Agent** (official `nousresearch/hermes-agent` image, API server enabled) pointed at a deterministic **mock LLM** (`mock-llm/`) — real Hermes machinery, no API keys/cost. Swap the mock for a real local model via `HERMES_LLM_BASE_URL`.
+`docker-compose.real-hermes.yml` runs PatterStage against the **actual Hermes Agent** (official `nousresearch/hermes-agent` image, API server enabled) pointed at a deterministic **mock LLM** (`mock-llm/`) — real Hermes machinery, no API keys/cost. Swap the mock for a real local model via `HERMES_LLM_BASE_URL`.
 
 ```bash
 npm run test:e2e-hermes      # build stack, run contract + smoke against REAL Hermes, tear down
@@ -98,4 +98,4 @@ For a **production real Hermes**: enable the API server (`setup.sh` writes `API_
 
 ## What was removed
 
-The bash mission backend (`backends/hermes.ts`), the `agent-backend/` interface, status.json/pid polling (`MissionSync`), the stdout session-id parsing, and the legacy Hermes `jobs.json` cron bridge (+ the **Cron** page) are all gone. Recurring work uses **Missions** scheduling (the Control Hub `schedules` scheduler).
+The bash mission backend (`backends/hermes.ts`), the `agent-backend/` interface, status.json/pid polling (`MissionSync`), the stdout session-id parsing, and the legacy Hermes `jobs.json` cron bridge (+ the **Cron** page) are all gone. Recurring work uses **Missions** scheduling (the PatterStage `schedules` scheduler).

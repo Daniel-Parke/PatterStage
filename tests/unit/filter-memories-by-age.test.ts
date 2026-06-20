@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 //
 // Added 2026-06-13 as part of the corpus-flood cleanup. The Memory
-// tab in Control Hub uses this to hide facts older than 90 days by
+// tab in PatterStage uses this to hide facts older than 90 days by
 // default, with a "Show stale" toggle to override. The unit tests
 // pin the contract: cutoff math, missing/unparseable dates, edge
 // values (Infinity = disabled, 0 = pass-through), and the exact

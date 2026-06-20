@@ -46,7 +46,7 @@ export interface SessionData {
    */
   note?: string;
   /**
-   * Control-Hub mission id for sessions spawned by the dispatch pipeline.
+   * PatterStage mission id for sessions spawned by the dispatch pipeline.
    * The detail page links to the mission page when this is present.
    */
   missionId?: string | null;

@@ -1,4 +1,4 @@
-// Playwright global setup: give E2E an isolated, fresh Control Hub data dir so
+// Playwright global setup: give E2E an isolated, fresh PatterStage data dir so
 // runs are deterministic and independent of the developer's working DB.
 import { rmSync } from "fs";
 import { join } from "path";

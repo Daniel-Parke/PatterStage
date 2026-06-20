@@ -1,10 +1,10 @@
 // ═══════════════════════════════════════════════════════════════
 // orchestration/scheduler/BackgroundScheduler.ts
 //
-// Control Hub's traffic-independent background loop. Unlike the read-side
+// PatterStage's traffic-independent background loop. Unlike the read-side
 // sync layer (which historically only ticked when an API route called
 // ensureSyncLayer()), this scheduler is started once per server process by
-// src/instrumentation.ts — so Control Hub-owned scheduling fires even on an
+// src/instrumentation.ts — so PatterStage-owned scheduling fires even on an
 // idle host with zero inbound HTTP.
 //
 // It reuses the proven SyncScheduler loop (event-loop yielding + per-source

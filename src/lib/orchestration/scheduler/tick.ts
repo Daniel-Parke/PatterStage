@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// orchestration/scheduler/tick.ts — the Control Hub-owned scheduler tick
+// orchestration/scheduler/tick.ts — the PatterStage-owned scheduler tick
 //
 // Replaces the Hermes jobs.json scheduler entirely. Each tick: select due
 // schedules (next_run_at <= now), claim each occurrence with a DETERMINISTIC

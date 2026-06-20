@@ -2,7 +2,7 @@
 // mission-handlers/delete.ts — POST /api/missions { action: "delete" }
 // ═══════════════════════════════════════════════════════════════
 //
-// Deletes a mission and removes any Control Hub schedule linked to it
+// Deletes a mission and removes any PatterStage schedule linked to it
 // so the scheduler tick never tries to dispatch a deleted mission.
 // Extracted from the /api/missions route.
 

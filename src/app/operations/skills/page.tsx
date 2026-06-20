@@ -347,7 +347,7 @@ export default function SkillsPage() {
           <EmptyState
             icon={FileText}
             title="No skills in catalog"
-            description="Import the global skills tree from ~/.hermes/skills into Control Hub SQLite, then push to sync disk."
+            description="Import the global skills tree from ~/.hermes/skills into PatterStage SQLite, then push to sync disk."
             action={
               <Button
                 variant="primary"

@@ -1,7 +1,7 @@
 /** @jest-environment node */
 
 /**
- * Tests for the schedule-string parser used by the Control Hub-owned
+ * Tests for the schedule-string parser used by the PatterStage-owned
  * scheduler (src/lib/schedule/parse-schedule.ts). Pure functions — no DB.
  */
 

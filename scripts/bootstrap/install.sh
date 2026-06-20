@@ -1,8 +1,8 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-# Control Hub — Install Script
+# PatterStage — Install Script
 # ═══════════════════════════════════════════════════════════════
-# One-command installer for Control Hub (Hermes Control Hub OSS).
+# One-command installer for PatterStage (OSS control plane for the Hermes Agent).
 # Handles fresh install, re-install, optional Hermes bootstrap (two-pass), and Hindsight.
 #
 # Usage:
@@ -24,7 +24,7 @@
 #   HERMES_HOME — override Hermes root (default $HOME/.hermes); optional Hermes profile step requires config.yaml there
 #
 # Hermes two-pass: if you choose to install Hermes when prompted, this script runs the official
-# installer and `hermes setup`, then exits — run install.sh again to finish Control Hub setup.
+# installer and `hermes setup`, then exits — run install.sh again to finish PatterStage setup.
 #
 # Override: INSTALL_DIR=/path/to/hub bash scripts/bootstrap/install.sh
 # Git branch for initial clone only: BRANCH=dev (default). Ongoing deploy pulls use
@@ -40,7 +40,7 @@ while [ "${1:-}" = "--in-repo" ]; do
     shift
 done
 
-REPO_URL="${REPO_URL:-https://github.com/Daniel-Parke/hermes-control-hub.git}"
+REPO_URL="${REPO_URL:-https://github.com/Daniel-Parke/PatterStage.git}"
 INSTALL_DIR="${INSTALL_DIR:-$HOME/control-hub}"
 BRANCH="${BRANCH:-dev}"
 
@@ -74,7 +74,7 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib" && pwd)/ch-env.sh"
 
 echo ""
 echo "╔══════════════════════════════════════════╗"
-echo "║   Control Hub — Installer                 ║"
+echo "║   PatterStage — Installer                 ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
 ch_print_hermes_install_paths
@@ -159,7 +159,7 @@ if ! hermes_cli_ok; then
                 echo "════════════════════════════════════════════════════════════"
                 echo "  Next: open a new terminal if \`hermes\` is not on PATH, then run:"
                 echo "    bash $(basename "$SCRIPT_PATH")"
-                echo "  (from your Control Hub repo or re-download install.sh)"
+                echo "  (from your PatterStage repo or re-download install.sh)"
                 echo "  Full path hint: $SCRIPT_PATH"
                 echo "════════════════════════════════════════════════════════════"
                 exit 0
@@ -193,7 +193,7 @@ if ! hermes_cli_ok; then
             ok "Hermes install step finished."
             echo ""
             echo "════════════════════════════════════════════════════════════"
-            echo "  Re-run this script to finish Control Hub setup:"
+            echo "  Re-run this script to finish PatterStage setup:"
             echo "    bash scripts/bootstrap/install.sh --in-repo"
             echo "    # or: bash scripts/bootstrap/setup.sh"
             echo "  (from your repo clone, or the path you used to start the installer)"
@@ -254,7 +254,7 @@ fi
 
 # ── Clone Repository ─────────────────────────────────────────
 echo ""
-info "Cloning Control Hub..."
+info "Cloning PatterStage..."
 if ! git clone --branch "$BRANCH" --single-branch "$REPO_URL" "$INSTALL_DIR" 2>&1; then
     fail "Clone failed. Check your internet connection and try again."
 fi
@@ -266,7 +266,7 @@ if hermes_cli_ok && [ -f "$HERMES_HOME/config.yaml" ]; then
         info "Enabling gateway API server for Rec Room..."
         mkdir -p "$HERMES_HOME"
         echo "" >> "$HERMES_HOME/.env"
-        echo "# Enable API server for Control Hub Rec Room" >> "$HERMES_HOME/.env"
+        echo "# Enable API server for PatterStage Rec Room" >> "$HERMES_HOME/.env"
         echo "API_SERVER_ENABLED=true" >> "$HERMES_HOME/.env"
         ok "API server enabled in ~/.hermes/.env"
     else
@@ -322,7 +322,7 @@ else
                 ;;
             *)
                 echo ""
-                info "Optional: install Control Hub bundled Hermes profile templates under $HERMES_HOME/profiles/"
+                info "Optional: install PatterStage bundled Hermes profile templates under $HERMES_HOME/profiles/"
                 echo "  Existing SOUL.md and AGENTS.md files are never overwritten."
                 read -r -p "Install bundled profile templates now? [y/N]: " REPLY_PROFILES
                 echo ""

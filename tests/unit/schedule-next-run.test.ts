@@ -1,4 +1,4 @@
-// Pure-logic tests for the Control Hub scheduler next-fire computation
+// Pure-logic tests for the PatterStage scheduler next-fire computation
 // (cron evaluator, interval, one-shot, and the DOM/DOW combination rule).
 
 import { computeNextRun, nextCronAfter } from "@/lib/schedule/next-run";

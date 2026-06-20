@@ -13,7 +13,7 @@ import { runScriptFile } from "@/lib/scripts-manager";
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  if (isChReadOnly()) return serviceUnavailable("Control Hub is in read-only mode");
+  if (isChReadOnly()) return serviceUnavailable("PatterStage is in read-only mode");
 
   const bodyResult = await parseJsonBody(request);
   if (bodyResult instanceof NextResponse) return bodyResult;

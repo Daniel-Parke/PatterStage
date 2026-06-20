@@ -32,7 +32,7 @@ export interface MissionBodyFields {
 /**
  * Parse a mission action body into a typed shape.
  *
- * `modelId` is validated against the Control Hub models registry. The
+ * `modelId` is validated against the PatterStage models registry. The
  * registry is the SINGLE SOURCE OF TRUTH for which model any mission can
  * run on — no caller-supplied value (including one that pairs `modelId`
  * with a `provider`) is permitted to reach the dispatch path unless it

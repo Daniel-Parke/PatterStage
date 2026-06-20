@@ -17,7 +17,7 @@ export default function Error({
 }) {
   useEffect(() => {
     // Log the error for debugging but don't display raw messages
-    console.error("Control Hub error boundary caught:", error);
+    console.error("PatterStage error boundary caught:", error);
   }, [error]);
 
   return (

@@ -1,4 +1,4 @@
-# Real-Hermes integration stack: Control Hub + the REAL Hermes Agent + a mock LLM.
+# Real-Hermes integration stack: PatterStage + the REAL Hermes Agent + a mock LLM.
 # Validates the runtime adapter against the actual Hermes API Server (v0.16) with
 # zero API keys/cost. Swap the mock LLM for a real local model by setting
 # HERMES_LLM_BASE_URL (config.yaml reads it) and pointing it at e.g. Ollama.

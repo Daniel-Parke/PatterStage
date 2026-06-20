@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════
-# ch-db-backup.sh — snapshot the Control Hub SQLite DB + rotate
+# ch-db-backup.sh — snapshot the PatterStage SQLite DB + rotate
 # ═══════════════════════════════════════════════════════════════
 # Copies control-hub.db to a timestamped backup and prunes old backups.
 # Uses the SQLite .backup command when available (consistent online copy),

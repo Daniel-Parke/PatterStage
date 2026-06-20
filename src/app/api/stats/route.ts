@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // GET /api/stats — dashboard + gamification stats
 //
-// One read-only aggregate over the Control Hub DB. Powers the command-center
+// One read-only aggregate over the PatterStage DB. Powers the command-center
 // dashboard (vitals, throughput, activity heatmap, streak/level, achievements).
 // ═══════════════════════════════════════════════════════════════
 

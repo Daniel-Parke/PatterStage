@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // GET /api/missions/[id]/run — the latest run for a mission
 //
-// Lets the mission board resolve a running mission's Control Hub run id so it
+// Lets the mission board resolve a running mission's PatterStage run id so it
 // can stream live progress via /api/runs/[id]/events.
 // ═══════════════════════════════════════════════════════════════
 

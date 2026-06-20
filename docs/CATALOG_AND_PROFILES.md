@@ -1,6 +1,6 @@
 # Catalog and professional profiles
 
-Control Hub SQLite is the **source of truth** for agent profiles (including Bob), the global skills catalog, and per-profile policy (`disabled_skills`, `platform_toolsets`). Hermes disk is a **runtime mirror** updated via push/pull sync (same contract as Config → Models).
+PatterStage SQLite is the **source of truth** for agent profiles (including Bob), the global skills catalog, and per-profile policy (`disabled_skills`, `platform_toolsets`). Hermes disk is a **runtime mirror** updated via push/pull sync (same contract as Config → Models).
 
 ## Data flow
 
@@ -36,11 +36,11 @@ Bob is stored in the **`agent_root`** singleton (`id = 1`), not `agent_profiles`
 - **Content:** `skills` table → pushed to `~/.hermes/skills/`
 - **Denylist:** `disabled_skills` JSON on each profile / `agent_root` → merged into `config.yaml` as `skills.disabled` (Hermes native mode)
 - **Platform denylist:** `skills.platform_disabled` is preserved when found in config YAML
-- **No per-profile mirrors:** `profiles/<slug>/skills/` is not populated by Control Hub or profile create
+- **No per-profile mirrors:** `profiles/<slug>/skills/` is not populated by PatterStage or profile create
 
 ## Personality / identity
 
-Hermes identity is `SOUL.md`. Control Hub stores root/profile SOUL content in SQLite and pushes it to the Hermes mirror. Do not write identity text to `agent.personality` or `agent.personalities` in `config.yaml`; config is for runtime policy such as `skills.disabled`, `platform_toolsets`, and `agent.max_turns`.
+Hermes identity is `SOUL.md`. PatterStage stores root/profile SOUL content in SQLite and pushes it to the Hermes mirror. Do not write identity text to `agent.personality` or `agent.personalities` in `config.yaml`; config is for runtime policy such as `skills.disabled`, `platform_toolsets`, and `agent.max_turns`.
 
 ## Tools
 
@@ -73,7 +73,7 @@ Seed state: `CH_DATA_DIR/seed-state.json`.
 
 **Operations → Agents:** drift banner, push/pull all, per-profile push/pull (including Bob).
 
-**Models:** separate `GET/POST /api/models/sync/*` routes. Seeds do **not** set `model.default`. After **Push Bob** (root), Control Hub runs `finalizeRootConfigOnDisk()` so `model.*` / `auxiliary.*` from the Models registry are re-applied to `~/.hermes/config.yaml` and stored back in `agent_root.config_yaml` (prevents chat wiping the model block).
+**Models:** separate `GET/POST /api/models/sync/*` routes. Seeds do **not** set `model.default`. After **Push Bob** (root), PatterStage runs `finalizeRootConfigOnDisk()` so `model.*` / `auxiliary.*` from the Models registry are re-applied to `~/.hermes/config.yaml` and stored back in `agent_root.config_yaml` (prevents chat wiping the model block).
 
 ## Bootstrap / update order
 

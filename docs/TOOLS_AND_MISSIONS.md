@@ -4,7 +4,7 @@
 
 Hermes controls which tools are available per platform via `platform_toolsets` in each profile's `config.yaml`. See [Hermes configuration — platform toolsets](https://hermes-agent.nousresearch.com/docs/user-guide/configuration).
 
-Control Hub stores toolsets in SQLite (`agent_profiles.platform_toolsets`, `agent_root.platform_toolsets`) and mirrors them to disk on **push**.
+PatterStage stores toolsets in SQLite (`agent_profiles.platform_toolsets`, `agent_root.platform_toolsets`) and mirrors them to disk on **push**.
 
 | Surface | Action |
 |---------|--------|
@@ -31,6 +31,6 @@ npx tsx scripts/tooling/import-hermes-state.ts   # when ~/.hermes exists
 npm run db:seed
 ```
 
-Then open **Operations → Tools**, select each profile, **Pull from Hermes** if you edited toolsets with `hermes tools`, or confirm seeded toolsets appear. **Save & push** when editing in Control Hub.
+Then open **Operations → Tools**, select each profile, **Pull from Hermes** if you edited toolsets with `hermes tools`, or confirm seeded toolsets appear. **Save & push** when editing in PatterStage.
 
 Schema version after this release: **3** (`002_profiles_tools_parity.sql` on upgrade; squashed `001_baseline.sql` on fresh install).

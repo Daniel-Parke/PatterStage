@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 /**
- * Seed Control Hub professional catalog into SQLite and push profiles to Hermes.
+ * Seed PatterStage professional catalog into SQLite and push profiles to Hermes.
  * Usage: npx tsx scripts/tooling/seed-catalog.ts [--merge|--replace]
  */
 

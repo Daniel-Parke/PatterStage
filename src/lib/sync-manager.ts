@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// sync-manager.ts — Push/Pull orchestration between Control Hub
+// sync-manager.ts — Push/Pull orchestration between PatterStage
 //                      and Hermes config files
 // ═══════════════════════════════════════════════════════════════
 
@@ -144,10 +144,10 @@ export function buildDriftDetails(drift: DriftReport): string[] {
     );
   }
   for (const m of drift.modelsInHermesNotInDb) {
-    details.push(`Model "${m.modelId}" (${m.provider}) is in Hermes but not in Control Hub`);
+    details.push(`Model "${m.modelId}" (${m.provider}) is in Hermes but not in PatterStage`);
   }
   for (const m of drift.modelsInDbNotInHermes) {
-    details.push(`Model "${m.modelId}" (${m.provider}) is in Control Hub but not pushed to Hermes`);
+    details.push(`Model "${m.modelId}" (${m.provider}) is in PatterStage but not pushed to Hermes`);
   }
   return details;
 }
@@ -189,7 +189,7 @@ export function pushModelToHermes(modelId: string): SyncActionResult {
   }
 }
 
-// ── Credential push (Control Hub → Hermes .env) ──────────────
+// ── Credential push (PatterStage → Hermes .env) ──────────────
 
 /**
  * Push a credential (provider + apiKey) to the Hermes .env file.

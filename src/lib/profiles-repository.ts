@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// profiles-repository.ts — Agent profiles in Control Hub SQLite
+// profiles-repository.ts — Agent profiles in PatterStage SQLite
 // ═══════════════════════════════════════════════════════════════
 
 import { db, inTransaction, now } from "./db";

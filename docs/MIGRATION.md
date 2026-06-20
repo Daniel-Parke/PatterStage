@@ -1,6 +1,23 @@
-# Control Hub — Migrations & Upgrades
+# PatterStage — Migrations & Upgrades
 
-How Control Hub keeps your data across upgrades, and what happens when an existing install moves to a newer version. If something here doesn't match what you see on disk, open an issue with your paths and `CH_DATA_DIR`.
+How PatterStage keeps your data across upgrades, and what happens when an existing install moves to a newer version. If something here doesn't match what you see on disk, open an issue with your paths and `CH_DATA_DIR`.
+
+## Repository renamed: `hermes-control-hub` → `PatterStage`
+
+This project was renamed from **`hermes-control-hub`** to **`PatterStage`** (GitHub: `Daniel-Parke/hermes-control-hub` → `Daniel-Parke/PatterStage`). **Nothing breaks** — here is exactly why, and the one optional step for existing clones and forks.
+
+- **Your history, clones, and forks are safe.** A GitHub repository rename never rewrites history and never deletes anything. GitHub keeps a **permanent redirect** from the old name to the new one that covers the web UI, the API, *and* git itself (`clone` / `fetch` / `pull` / `push`). An existing clone still pointing at `…/hermes-control-hub.git` keeps working unchanged — git is transparently redirected. Forks stay linked to this repo and are unaffected.
+- **Optional (recommended) housekeeping — repoint your remote** so you don't rely on the redirect forever:
+
+  ```bash
+  git remote set-url origin https://github.com/Daniel-Parke/PatterStage.git
+  git remote -v   # confirm it now shows PatterStage
+  ```
+
+  Forks: do the same for your fork's URL, and update any `upstream` remote that tracks this repo.
+- **The only way the redirect breaks:** if a *new* repository named `hermes-control-hub` is ever created under `Daniel-Parke`, GitHub drops the redirect (the new repo claims the path). That name is intentionally left unused.
+- **Operational identifiers are unchanged.** The rename was brand-only. The data directory (`~/control-hub/data`, `CH_DATA_DIR`), database file (`control-hub.db`), env vars (`CH_*`), deploy script (`scripts/application/ch-deploy.sh`), and systemd unit names are **identical** — pulling this change does not touch your data, config, or services.
+- **Renaming a local folder affects no one.** Git identifies remotes by URL, not by the directory you cloned into, so renaming your local checkout folder has zero effect on you or anyone who forked/cloned.
 
 ## How migrations work
 
@@ -17,7 +34,7 @@ bash scripts/maintenance/ch-migrate.sh --yes  # unattended (used by the dashboar
 npm run db:migrate                            # schema only (the applier chain), no backup/legacy step
 ```
 
-`ch-migrate.sh` (and the deploy paths that call it) do three things in order: **backup → schema migration → legacy-data migration** (`scripts/tooling/migrate-to-runtime.mjs --apply`, which converts recurring Hermes cron jobs into Control Hub `schedules` and fails any mission left "dispatched" by the old bash backend).
+`ch-migrate.sh` (and the deploy paths that call it) do three things in order: **backup → schema migration → legacy-data migration** (`scripts/tooling/migrate-to-runtime.mjs --apply`, which converts recurring Hermes cron jobs into PatterStage `schedules` and fails any mission left "dispatched" by the old bash backend).
 
 ## Upgrading from `main` (the runtime cutover)
 
@@ -25,13 +42,13 @@ Moving from a pre-runtime `main` install (file/`jobs.json`-era) to the current r
 
 1. **Backup** — `control-hub.db.pre-migrate-*.bak` is written.
 2. **Schema upgrade** — the appliers add the `runs` and `schedules` tables, mission/run columns, and the catch-up repairs; they **drop only the never-shipped-to-`main` `game_*` tables** (the dialed-back gamification). Your `missions`, `models`, `credentials`, `sessions`, `cron_jobs`, and `stories` are preserved.
-3. **Legacy data migration** — recurring missions that were backed by a Hermes cron job become Control Hub `schedules` (mission-linked), firing on the next scheduler tick. The old `cron_jobs` rows are left in place (orphaned/backup only); the legacy agent-cron **Cron page + `jobs.json` bridge have been removed** — scheduling lives in Missions.
+3. **Legacy data migration** — recurring missions that were backed by a Hermes cron job become PatterStage `schedules` (mission-linked), firing on the next scheduler tick. The old `cron_jobs` rows are left in place (orphaned/backup only); the legacy agent-cron **Cron page + `jobs.json` bridge have been removed** — scheduling lives in Missions.
 
 The proof is `tests/unit/run-migrations-upgrade.integration.test.ts`, which drives the real `runMigrations` against a degraded legacy DB and asserts the schema climbs to 11 **with the seeded mission and cron job still present**.
 
 ### If a database can't be migrated in place
 
-For a database too old or corrupted to upgrade incrementally, Control Hub falls back to a **baseline rebuild**: it backs up the DB to `control-hub.db.pre-baseline-<timestamp>`, recreates it from `001_baseline.sql`, and re-imports the preserved tables. Anything that couldn't be carried over **remains in that backup**, and the migration prints a loud **WARNING** pointing at it. Nothing is silently discarded — review the backup before deleting it.
+For a database too old or corrupted to upgrade incrementally, PatterStage falls back to a **baseline rebuild**: it backs up the DB to `control-hub.db.pre-baseline-<timestamp>`, recreates it from `001_baseline.sql`, and re-imports the preserved tables. Anything that couldn't be carried over **remains in that backup**, and the migration prints a loud **WARNING** pointing at it. Nothing is silently discarded — review the backup before deleting it.
 
 **Preserved on a baseline rebuild:** `credentials`, `models`, `model_defaults`, `model_fallbacks`, `fallback_config`, `missions`, `cron_jobs`, `sessions`, `stories`, `sync_registry`, `gateway_platforms`.
 
@@ -46,7 +63,7 @@ Hermes/Hindsight memory backups are separate (`scripts/hardware/ch-backup.sh`). 
 
 ## Data directory & paths
 
-- Control Hub data lives under **`CH_DATA_DIR`** (default `$HOME/control-hub/data`). The older `$HERMES_HOME/control-hub/data` default is no longer used — set `CH_DATA_DIR` if your data is elsewhere.
+- PatterStage data lives under **`CH_DATA_DIR`** (default `$HOME/control-hub/data`). The older `$HERMES_HOME/control-hub/data` default is no longer used — set `CH_DATA_DIR` if your data is elsewhere.
 - Hermes lives at **`HERMES_HOME`** (default `~/.hermes`), package at `~/.hermes/hermes-agent/`.
 - Full path/env reference: [ENV_REFERENCE.md](ENV_REFERENCE.md).
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════
-# ch-log-rotate.sh — gzip + prune Control Hub hardware-script logs
+# ch-log-rotate.sh — gzip + prune PatterStage hardware-script logs
 # ═══════════════════════════════════════════════════════════════
 # Compresses *.log files older than 1 day in the hardware log dir and
 # deletes compressed logs older than the retention window. Safe: only

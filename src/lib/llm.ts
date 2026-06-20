@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // llm.ts — Configurable LLM endpoint for Story Weaver and other
-// agent-agnostic LLM calls made by Control Hub.
+// agent-agnostic LLM calls made by PatterStage.
 // ═══════════════════════════════════════════════════════════════
 
 import { getAgentLlmEndpoints } from "./hermes-agent-runtime";

@@ -1,16 +1,16 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-# Control Hub — Setup Script
+# PatterStage — Setup Script
 # ═══════════════════════════════════════════════════════════════
 # Run after cloning the repository (golden path for developers / in-repo install).
 #
 # Usage:
-#   cd control-hub
+#   cd PatterStage
 #   bash scripts/bootstrap/setup.sh
 #
 # Prerequisites:
 #   - Node.js 20+ (matches CI)
-#   - Hermes optional: without ~/.hermes/config.yaml you get a standalone Control Hub
+#   - Hermes optional: without ~/.hermes/config.yaml you get a standalone PatterStage
 #     (missions/cron tied to Hermes paths will be limited until Hermes is installed).
 #
 # Environment:
@@ -34,7 +34,7 @@ source "$SCRIPT_DIR/../lib/ch-dotenv-local.sh"
 source "$SCRIPT_DIR/../lib/ch-port.sh"
 
 echo "╔══════════════════════════════════════════╗"
-echo "║       Control Hub — Setup               ║"
+echo "║       PatterStage — Setup               ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
 
@@ -110,10 +110,10 @@ if [ "$HERMES_CONFIGURED" = true ]; then
     fi
 
     echo ""
-    # ── Hermes API Server (required by the Control Hub runtime adapter) ──
+    # ── Hermes API Server (required by the PatterStage runtime adapter) ──
     # The runtime dispatches missions as HTTP runs over the Hermes API Server
     # and authenticates with a bearer key. We enable the server and share one
-    # key between Hermes (server side) and Control Hub (client side).
+    # key between Hermes (server side) and PatterStage (client side).
     HERMES_ENV="$HERMES_HOME/.env"
     mkdir -p "$HERMES_HOME"
     touch "$HERMES_ENV"
@@ -122,7 +122,7 @@ if [ "$HERMES_CONFIGURED" = true ]; then
     if [ -z "$API_KEY" ]; then
         API_KEY=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'))")
         echo "" >> "$HERMES_ENV"
-        echo "# Control Hub runtime — Hermes API Server bearer key" >> "$HERMES_ENV"
+        echo "# PatterStage runtime — Hermes API Server bearer key" >> "$HERMES_ENV"
         echo "API_SERVER_KEY=$API_KEY" >> "$HERMES_ENV"
         echo "✓ Generated Hermes API server key"
     fi
@@ -134,9 +134,9 @@ if [ "$HERMES_CONFIGURED" = true ]; then
         echo "  Run: hermes gateway restart  (or: systemctl --user restart hermes-gateway)"
     fi
 
-    # Control Hub authenticates to the gateway with the same key.
+    # PatterStage authenticates to the gateway with the same key.
     ch_env_set "$ENV_LOCAL" "API_SERVER_KEY" "$API_KEY"
-    echo "✓ Control Hub wired to the Hermes API server (shared API_SERVER_KEY)"
+    echo "✓ PatterStage wired to the Hermes API server (shared API_SERVER_KEY)"
 fi
 
 # ── Data directories ─────────────────────────────────────────
@@ -164,7 +164,7 @@ fi
 if [ "$HERMES_CONFIGURED" = true ]; then
     mkdir -p "$HERMES_HOME/logs"
 fi
-echo "✓ Control Hub data directories created at $CH_DATA_ROOT"
+echo "✓ PatterStage data directories created at $CH_DATA_ROOT"
 
 # ── Discover local Hermes install (hermes-detection.json) ───
 if command -v node &>/dev/null && [ -f "$REPO_ROOT/scripts/tooling/discover-agents.mjs" ]; then
@@ -244,14 +244,14 @@ if ! ch_migrate_run "$REPO_ROOT" "$CH_DATA_ROOT"; then
 fi
 
 if [ -f "$HERMES_HOME/config.yaml" ]; then
-  echo "Importing existing Hermes state into Control Hub SQLite…"
+  echo "Importing existing Hermes state into PatterStage SQLite…"
   if CH_DATA_DIR="$CH_DATA_ROOT" HERMES_HOME="$HERMES_HOME" npx tsx "$REPO_ROOT/scripts/tooling/import-hermes-state.ts"; then
     echo "✓ Hermes state imported (root, profiles, skills)"
   else
     echo "⚠  Hermes state import failed — run: npx tsx scripts/tooling/import-hermes-state.ts"
   fi
 else
-  echo "ℹ  Hermes config not found — seeding Control Hub defaults only"
+  echo "ℹ  Hermes config not found — seeding PatterStage defaults only"
 fi
 
 RUN_CATALOG_SEED=true
@@ -272,7 +272,7 @@ fi
 if [ "$RUN_CATALOG_SEED" = true ]; then
   echo "Seeding professional catalog (merge)…"
   if npx tsx "$REPO_ROOT/scripts/tooling/seed-catalog.ts" --merge; then
-    echo "✓ Catalog seeded (profiles + templates in Control Hub; pushed to HERMES_HOME when ready)"
+    echo "✓ Catalog seeded (profiles + templates in PatterStage; pushed to HERMES_HOME when ready)"
   else
     echo "⚠  Catalog seed failed — run: npx tsx scripts/tooling/seed-catalog.ts --merge"
   fi
@@ -293,7 +293,7 @@ echo "╔═══════════════════════�
 echo "║       Setup Complete!                    ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
-echo "PORT (Control Hub):     $CH_PORT_DISPLAY"
+echo "PORT (PatterStage):     $CH_PORT_DISPLAY"
 echo "CH_DATA_DIR:            $CH_DATA_ROOT"
 echo "HERMES_HOME:            $HERMES_HOME"
 echo "Hermes integrated:     $HERMES_CONFIGURED"

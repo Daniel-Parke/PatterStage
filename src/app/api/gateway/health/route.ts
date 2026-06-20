@@ -10,7 +10,7 @@ import { ok } from "@/lib/api-response";
 
 /**
  * GET /api/gateway/health — Check if the Hermes Gateway is reachable AND
- * whether Control Hub can authenticate to it.
+ * whether PatterStage can authenticate to it.
  *
  * `online`: any HTTP response (incl. 401/403) proves the gateway answered →
  * reachable. Only a thrown/timed-out fetch means offline.

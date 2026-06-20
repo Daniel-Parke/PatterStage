@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stop the Control Hub Next.js server (and optional socat relay).
+# Stop the PatterStage Next.js server (and optional socat relay).
 # PORT comes from env, .env.local, or the default 42069.
 #
 # Usage: bash scripts/bootstrap/stop.sh [--help]
@@ -11,7 +11,7 @@ CH_SCRIPTS_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 case "${1:-}" in
   -h | --help)
     echo "Usage: bash scripts/bootstrap/stop.sh"
-    echo "Stops Control Hub listeners on PORT (env / .env.local / 42069)."
+    echo "Stops PatterStage listeners on PORT (env / .env.local / 42069)."
     exit 0
     ;;
 esac
@@ -31,6 +31,6 @@ if [ -z "$PORT" ] && [ -f "$APP_DIR/.env.local" ]; then
 fi
 PORT="${PORT:-42069}"
 
-ch_step "Stopping Control Hub listeners on port $PORT…"
+ch_step "Stopping PatterStage listeners on port $PORT…"
 ch_stop_control_hub "$APP_DIR"
-ch_ok "Stopped Control Hub listeners on port $PORT"
+ch_ok "Stopped PatterStage listeners on port $PORT"

@@ -29,7 +29,7 @@ Some error responses also include `details` (Zod validation). Handlers must call
 | `/api/scripts` | `GET` | List host script files under `CH_DATA_DIR/scripts` with schedule + last-run (powers the Scripts page). |
 | `/api/scripts/run` | `POST` | Run a script on demand (`{ name }`) — path-validated, no shell. |
 | `/api/scripts/logs` | `GET` | Tail a script's log (`?name=&lines=`). |
-| `/api/schedules` | `GET`, `POST` | Control Hub-owned recurring missions (the scheduler fires these; no `jobs.json`). |
+| `/api/schedules` | `GET`, `POST` | PatterStage-owned recurring missions (the scheduler fires these; no `jobs.json`). |
 | `/api/schedules/[id]` | `PATCH`, `DELETE` | Pause/resume (`{ enabled }`) or delete a schedule. |
 | `/api/schedules/[id]/run` | `POST` | Dispatch a scheduled mission immediately (run-now). |
 | `/api/stats` | `GET` | Dashboard analytics aggregate (throughput, mission mix, run activity, tokens, per-agent performance, derived progression + the ~36 achievements). |
@@ -94,7 +94,7 @@ Each action body lives in its own handler under `src/lib/mission-handlers/*` beh
 | `promote` | Promote a draft or queued-waiting mission per `dispatchMode` |
 | `update` | Update fields of a **running** mission / rebuild prompt |
 | `cancel` | Stop the backend run; mark failed with "Cancelled by user" |
-| `delete` | Remove the mission and its linked Control Hub schedule |
+| `delete` | Remove the mission and its linked PatterStage schedule |
 
 `GET` supports `?id=` for one mission (status synced in background) or list with optional `?categoryId=`.
 

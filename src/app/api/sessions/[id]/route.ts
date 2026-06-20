@@ -154,7 +154,7 @@ export async function GET(
             created: sessionRow.started_at
               ? new Date(sessionRow.started_at * 1000).toISOString()
               : null,
-            // Look up the Control-Hub mission id by matching the embedded
+            // Look up the PatterStage mission id by matching the embedded
             // cron job id against the missions table. Lets the detail page
             // render a "Open Mission" link for cron-spawned sessions.
             missionId: lookupMissionIdForCronSession(sanitizedId),
@@ -239,7 +239,7 @@ export async function GET(
         new Error("PayloadTooLarge")
       );
       return payloadTooLarge(
-        "Session file is too large to load in Control Hub (max " +
+        "Session file is too large to load in PatterStage (max " +
           Math.round(maxBytes / (1024 * 1024)) +
           " MB)."
       );

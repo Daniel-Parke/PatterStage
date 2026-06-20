@@ -1,12 +1,18 @@
-# Control Hub (for Hermes Agent)
+# PatterStage
 
-Control Hub is a **web control plane and orchestrator** for the [Hermes Agent](https://hermes-agent.nousresearch.com/docs/getting-started/installation). Hermes runs your agents on the machine; Control Hub gives you a dashboard to **dispatch missions, schedule recurring work, run host scripts, browse sessions and memory, manage models and profiles, and edit Hermes config** — without living in the terminal.
+**The Stage is _Yours._**
 
-It owns its own state (SQLite under `CH_DATA_DIR`) and talks to the agent over Hermes' **HTTP API Server** through a single runtime adapter. There are no bash wrappers or `jobs.json` cron bridges: a mission is an HTTP **run**, and "when does this run" is a Control Hub-owned **schedule**.
+PatterStage is a **web control plane and orchestrator** for the [Hermes Agent](https://hermes-agent.nousresearch.com/docs/getting-started/installation). Hermes runs your agents on the machine; PatterStage gives you a dashboard to **dispatch missions, schedule recurring work, run host scripts, browse sessions and memory, manage models and profiles, and edit Hermes config** — without living in the terminal.
 
-![Control Hub dashboard](docs/images/dashboard.png)
+It owns its own state (SQLite under `CH_DATA_DIR`) and talks to the agent over Hermes' **HTTP API Server** through a single runtime adapter. There are no bash wrappers or `jobs.json` cron bridges: a mission is an HTTP **run**, and "when does this run" is a PatterStage-owned **schedule**.
 
-**Docs:** [Doc index](docs/README.md) · [Platform vision](docs/PLATFORM_VISION.md) · [Control Hub overview](docs/CONTROL_HUB.md) · [Runtime architecture](docs/RUNTIME_ARCHITECTURE.md) · [Missions](docs/MISSIONS.md) · [User walkthrough](docs/USER_WALKTHROUGH_GUIDE.md) · [Deploy](docs/DEPLOY.md) · [Migration](docs/MIGRATION.md)
+![PatterStage dashboard](docs/images/dashboard.png)
+
+> A [PatterTech](https://www.pattertech.com) venture.
+
+**Docs:** [Doc index](docs/README.md) · [Platform vision](docs/PLATFORM_VISION.md) · [PatterStage overview](docs/CONTROL_HUB.md) · [Runtime architecture](docs/RUNTIME_ARCHITECTURE.md) · [Missions](docs/MISSIONS.md) · [User walkthrough](docs/USER_WALKTHROUGH_GUIDE.md) · [Deploy](docs/DEPLOY.md) · [Migration](docs/MIGRATION.md)
+
+> **Renamed:** this repo was `hermes-control-hub` and is now `PatterStage`. Existing clones and forks keep working via GitHub's automatic redirect — optionally run `git remote set-url origin https://github.com/Daniel-Parke/PatterStage.git` to repoint. Full details: [docs/MIGRATION.md](docs/MIGRATION.md#repository-renamed-hermes-control-hub--patterstage).
 
 ---
 
@@ -15,7 +21,7 @@ It owns its own state (SQLite under `CH_DATA_DIR`) and talks to the agent over H
 | Area | What you get |
 |------|--------------|
 | **Dashboard** | Live operational analytics — throughput, success rate, token usage, a 13-week run-activity heatmap, mission mix, vitals, and at-a-glance health. Lightweight progression flair (level / streak / milestones) derived from real activity — never gates anything. |
-| **Missions** | Compose, dispatch, track, and **cancel** agent missions as HTTP runs. One-off or **recurring** (a mission's "Schedule" mode creates a Control Hub schedule that the built-in scheduler fires). |
+| **Missions** | Compose, dispatch, track, and **cancel** agent missions as HTTP runs. One-off or **recurring** (a mission's "Schedule" mode creates a PatterStage schedule that the built-in scheduler fires). |
 | **Scripts** | Schedule old-fashioned **host shell scripts** on the system crontab (backups, cleanups, health checks) — separate from agent missions. |
 | **Chat** | Gateway-backed chat, separate from mission dispatch. |
 | **Sessions & Memory** | Browse transcripts; view the configured memory provider (Hindsight or none). |
@@ -33,7 +39,7 @@ How the pieces fit together: [docs/RUNTIME_ARCHITECTURE.md](docs/RUNTIME_ARCHITE
 |-------------|--------|
 | **Linux or macOS** | Bootstrap/deploy scripts are bash. No Windows runtime support. |
 | **Node.js 20+** | Matches [CI](.github/workflows/ci.yml). On macOS install Xcode Command Line Tools if `npm install` fails building native modules. |
-| **Hermes Agent** | [Install Hermes](https://hermes-agent.nousresearch.com/docs/getting-started/installation) for full missions, runs, and gateway features. Control Hub can start without it, but agent paths stay limited until `~/.hermes` is configured. The runtime needs Hermes' **API Server** enabled (the installer/setup does this for you). |
+| **Hermes Agent** | [Install Hermes](https://hermes-agent.nousresearch.com/docs/getting-started/installation) for full missions, runs, and gateway features. PatterStage can start without it, but agent paths stay limited until `~/.hermes` is configured. The runtime needs Hermes' **API Server** enabled (the installer/setup does this for you). |
 | **git** | For clone-based install and the in-app updater. |
 
 ---
@@ -42,10 +48,10 @@ How the pieces fit together: [docs/RUNTIME_ARCHITECTURE.md](docs/RUNTIME_ARCHITE
 
 1. **Install Hermes Agent** on the same machine (link above) and run `hermes setup` if prompted.
 
-2. **Get Control Hub** (installs to `~/control-hub` by default, or use an existing clone):
+2. **Get PatterStage** (installs to `~/control-hub` by default, or use an existing clone):
    ```bash
-   git clone https://github.com/Daniel-Parke/hermes-control-hub.git
-   cd hermes-control-hub
+   git clone https://github.com/Daniel-Parke/PatterStage.git
+   cd PatterStage
    bash scripts/bootstrap/install.sh --in-repo
    ```
    Fresh machine without a clone yet: `bash scripts/bootstrap/install.sh` (clones to `~/control-hub`, then runs setup).
@@ -56,7 +62,7 @@ How the pieces fit together: [docs/RUNTIME_ARCHITECTURE.md](docs/RUNTIME_ARCHITE
    ```
    The URL is `http://127.0.0.1:<PORT>/` — `PORT` is written to `.env.local` during setup (usually **42069–42100**).
 
-4. **Catalog seeds during setup** — six professional agent profiles + mission templates land in Control Hub SQLite automatically, and are pushed to `~/.hermes/profiles/` when `HERMES_HOME` is ready. You don't need Config → Seed on a first install.
+4. **Catalog seeds during setup** — six professional agent profiles + mission templates land in PatterStage SQLite automatically, and are pushed to `~/.hermes/profiles/` when `HERMES_HOME` is ready. You don't need Config → Seed on a first install.
 
 ### Non-interactive install (VPS / CI / unattended)
 
@@ -89,7 +95,7 @@ The bootstrap and deploy scripts prompt by default and **skip every prompt** whe
 | **Config → Models / HERMES.md / YAML** | Model registry, environment, Hermes `config.yaml` sections. |
 | **Sidebar (bottom)** | **Check** compares to remote; **Update** pulls, backs up + migrates, rebuilds, and restarts; **Rebuild** builds the current tree and restarts. |
 
-> The legacy **Cron** page + Hermes `jobs.json` agent-cron bridge have been **removed** — scheduled agent work lives in **Missions** (recurring missions on the Control Hub scheduler), and host scripts in **Scripts**. Existing cron jobs are migrated to schedules automatically on update (see below).
+> The legacy **Cron** page + Hermes `jobs.json` agent-cron bridge have been **removed** — scheduled agent work lives in **Missions** (recurring missions on the PatterStage scheduler), and host scripts in **Scripts**. Existing cron jobs are migrated to schedules automatically on update (see below).
 
 ---
 
@@ -98,7 +104,7 @@ The bootstrap and deploy scripts prompt by default and **skip every prompt** whe
 | Location | Holds |
 |----------|--------|
 | **`~/.hermes`** (`HERMES_HOME`) | Hermes data: `config.yaml`, `profiles/`, sessions, the agent package (`~/.hermes/hermes-agent/`). |
-| **`~/control-hub/data`** (`CH_DATA_DIR`, default) | Control Hub SQLite (`control-hub.db`), missions, templates, stories, logs — not committed to git. |
+| **`~/control-hub/data`** (`CH_DATA_DIR`, default) | PatterStage SQLite (`control-hub.db`), missions, templates, stories, logs — not committed to git. |
 
 Set `CH_DATA_DIR` / `HERMES_HOME` in `.env.local` for non-default paths. Full reference: [docs/ENV_REFERENCE.md](docs/ENV_REFERENCE.md).
 
@@ -115,7 +121,7 @@ bash scripts/application/ch-deploy.sh restart    # restart the server only
 bash scripts/maintenance/ch-migrate.sh           # database migration only (interactive; --yes to skip prompts)
 ```
 
-**Your data is migrated, not wiped.** Every update/migration **backs up `control-hub.db` first** (`control-hub.db.pre-migrate-<timestamp>.bak` under `CH_DATA_DIR`), then applies the full schema migration (the same applier chain the app runs at boot) and converts legacy recurring cron jobs into Control Hub schedules. The schema change is additive — existing missions, models, sessions, and credentials are preserved. If a database is ever too old/incompatible to upgrade in place, it is rebuilt from baseline with preserved tables re-imported, and anything that couldn't be carried over **remains in the backup with a logged warning** — nothing is silently lost. Details: [docs/MIGRATION.md](docs/MIGRATION.md).
+**Your data is migrated, not wiped.** Every update/migration **backs up `control-hub.db` first** (`control-hub.db.pre-migrate-<timestamp>.bak` under `CH_DATA_DIR`), then applies the full schema migration (the same applier chain the app runs at boot) and converts legacy recurring cron jobs into PatterStage schedules. The schema change is additive — existing missions, models, sessions, and credentials are preserved. If a database is ever too old/incompatible to upgrade in place, it is rebuilt from baseline with preserved tables re-imported, and anything that couldn't be carried over **remains in the backup with a logged warning** — nothing is silently lost. Details: [docs/MIGRATION.md](docs/MIGRATION.md).
 
 See [docs/DEPLOY.md](docs/DEPLOY.md) for Docker, TLS, ports, and the LAN relay.
 

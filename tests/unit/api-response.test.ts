@@ -202,11 +202,11 @@ describe("payloadTooLarge", () => {
 
   it("preserves the exact error message including dynamic numbers", async () => {
     const res = payloadTooLarge(
-      "Session file is too large to load in Control Hub (max 10 MB).",
+      "Session file is too large to load in PatterStage (max 10 MB).",
     );
     const body = await res.json();
     expect(body.error).toBe(
-      "Session file is too large to load in Control Hub (max 10 MB).",
+      "Session file is too large to load in PatterStage (max 10 MB).",
     );
   });
 
@@ -225,18 +225,18 @@ describe("serviceUnavailable", () => {
   });
 
   it("body is { error: <message> }", async () => {
-    const res = serviceUnavailable("Control Hub is in read-only mode");
+    const res = serviceUnavailable("PatterStage is in read-only mode");
     const body = await res.json();
-    expect(body).toEqual({ error: "Control Hub is in read-only mode" });
+    expect(body).toEqual({ error: "PatterStage is in read-only mode" });
   });
 
   it("preserves the exact error message including newlines and special chars", async () => {
     const res = serviceUnavailable(
-      "migration_required — restart Control Hub or run npm run db:migrate",
+      "migration_required — restart PatterStage or run npm run db:migrate",
     );
     const body = await res.json();
     expect(body.error).toBe(
-      "migration_required — restart Control Hub or run npm run db:migrate",
+      "migration_required — restart PatterStage or run npm run db:migrate",
     );
   });
 

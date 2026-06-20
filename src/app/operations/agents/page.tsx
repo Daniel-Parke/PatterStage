@@ -377,7 +377,7 @@ export default function BehaviourPage() {
           Agent identity lives in <strong className="text-white/60">SOUL.md</strong>. Runtime policy
           (skills.disabled, platform_toolsets, model blocks) is in each profile&apos;s{" "}
           <strong className="text-white/60">config.yaml</strong>. Pull imports from Hermes disk into
-          SQLite; push writes Control Hub back to disk.
+          SQLite; push writes PatterStage back to disk.
         </p>
 
         <AgentPerformanceStrip />

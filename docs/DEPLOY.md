@@ -1,4 +1,4 @@
-# Deploying Control Hub
+# Deploying PatterStage
 
 How I run this in production and on a home LAN—ports, scripts, Docker, and the deploy buttons in the sidebar. Read [CONTRIBUTING.md](CONTRIBUTING.md) if you are changing deploy behaviour itself.
 
@@ -59,7 +59,7 @@ Full table: **[ENV_REFERENCE.md](ENV_REFERENCE.md)**.
 | Variable | Purpose |
 |----------|---------|
 | `HERMES_HOME` / `AGENT_HOME` | Hermes install root. Defaults to `~/.hermes`. |
-| `CH_DATA_DIR` | Control Hub data root (default `~/control-hub/data`). |
+| `CH_DATA_DIR` | PatterStage data root (default `~/control-hub/data`). |
 | `CH_SCRIPTS_DIR` / `CH_HARDWARE_LOG_DIR` | Hardware cron script prefix and logs (default `CH_DATA_DIR/scripts` and `CH_DATA_DIR/logs`). |
 | `CH_READ_ONLY` | Set to `1` for read-only UI/API. |
 
@@ -70,9 +70,9 @@ Full table: **[ENV_REFERENCE.md](ENV_REFERENCE.md)**.
 | [`scripts/bootstrap/backup-hermes-config.sh`](../scripts/bootstrap/backup-hermes-config.sh) | Entire `CH_DATA_DIR` tree (SQLite, missions, templates, stories) | Manual operator backup before risky changes |
 | [`scripts/hardware/ch-backup.sh`](../scripts/hardware/ch-backup.sh) | Hindsight memory JSON via `hindsight_bridge.py` under `$HERMES_HOME` | System cron preset; wired in UI under Orchestration → Scripts |
 
-`ch-backup.sh` is copied into `CH_DATA_DIR/scripts` during setup when missing. `backup-hermes-config.sh` is not scheduled by Control Hub.
+`ch-backup.sh` is copied into `CH_DATA_DIR/scripts` during setup when missing. `backup-hermes-config.sh` is not scheduled by PatterStage.
 
-Run Control Hub where you trust the network, or place it behind your own reverse proxy and access controls. **`CH_REQUEST_SIGNING_SECRET`** can optionally protect specific flows (see `src/lib/api-auth.ts`).
+Run PatterStage where you trust the network, or place it behind your own reverse proxy and access controls. **`CH_REQUEST_SIGNING_SECRET`** can optionally protect specific flows (see `src/lib/api-auth.ts`).
 
 ## Docker
 
@@ -93,7 +93,7 @@ The production image includes the full **`scripts/`** tree (and `bash`, `git`, `
 
 **CI / local smoke:** after `docker build`, run **`npm run test:docker-deploy-smoke`** (or `bash tests/scripts/docker-deploy-api-smoke.sh`) — waits for the app, **`GET /api/update?branch=dev`**, **`POST` restart**, then checks the server still answers **`/`**.
 
-Mount `CH_DATA_DIR` (and optionally `CH_SCRIPTS_DIR` / `CH_HARDWARE_LOG_DIR` if you keep hardware cron scripts outside the data tree) so the active Hermes install and Control Hub state match the host.
+Mount `CH_DATA_DIR` (and optionally `CH_SCRIPTS_DIR` / `CH_HARDWARE_LOG_DIR` if you keep hardware cron scripts outside the data tree) so the active Hermes install and PatterStage state match the host.
 
 ## Database migrate + professional catalog seed
 
@@ -102,7 +102,7 @@ After **`npm run build`**, **`setup.sh`**, and **`ch-deploy update` / `rebuild`*
 1. **`npm run db:migrate`** — SQLite migrations on `CH_DATA_DIR/control-hub.db`
 2. **`npm run db:seed`** — upsert categories, catalog templates, and `agent_profiles`, then push profiles to **`HERMES_HOME/profiles/<slug>/`**
 
-Control Hub SQLite is the **source of truth** for professional profiles; Hermes disk is the **runtime target** for missions/cron. Restore defaults at **Config → Seed** (`/config/seed`).
+PatterStage SQLite is the **source of truth** for professional profiles; Hermes disk is the **runtime target** for missions/cron. Restore defaults at **Config → Seed** (`/config/seed`).
 
 Shipped seeds: **`data/seed/profiles/`**, **`data/seed/template-packs/control-hub-professional-v1.json`**. Optional install-only bash copy from **`data/seed/profiles/`**: [`scripts/lib/ch-hermes-profile-templates.sh`](../scripts/lib/ch-hermes-profile-templates.sh) (`INSTALL_HERMES_PROFILE_TEMPLATES=yes` on non-interactive `install.sh`).
 
@@ -124,7 +124,7 @@ wired after the initial import.
 - **`setup.sh`** now checks for existing Hindsight config and runs
   `setup-hindsight.sh --wire-only` before `import-hermes-state.ts`, ensuring the
   SQLite capture includes the Hindsight wiring.
-- **`setup-hindsight.sh`** now syncs the updated config.yaml to the Control Hub
+- **`setup-hindsight.sh`** now syncs the updated config.yaml to the PatterStage
   SQLite `agent_root` row after every config modification.
 
 ### Recovery (after a deploy stripped the config)

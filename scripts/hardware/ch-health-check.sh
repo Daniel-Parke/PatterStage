@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════
-# ch-health-check.sh — probe Control Hub + Hermes gateway health
+# ch-health-check.sh — probe PatterStage + Hermes gateway health
 # ═══════════════════════════════════════════════════════════════
-# Curls the Control Hub status endpoint and the Hermes gateway health
+# Curls the PatterStage status endpoint and the Hermes gateway health
 # endpoint and prints a compact OK/FAIL summary. Read-only. Exits non-zero
-# if the Control Hub itself is unreachable (useful as a cron heartbeat).
+# if the PatterStage itself is unreachable (useful as a cron heartbeat).
 #
 # Environment (defaults in parentheses):
 #   CH_URL        (http://127.0.0.1:${PORT:-3000})
@@ -30,7 +30,7 @@ probe() {
 }
 
 rc=0
-probe "Control Hub" "$CH_URL/api/status" || rc=1
+probe "PatterStage" "$CH_URL/api/status" || rc=1
 probe "Gateway" "$GATEWAY_URL/health" || true   # gateway being down is informational
 
 log "health check complete (rc=$rc)"

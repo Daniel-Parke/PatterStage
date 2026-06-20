@@ -162,7 +162,7 @@ export async function reconcileActiveRuns(): Promise<number> {
 }
 
 /**
- * Boot recovery. Runs that were 'started' when Control Hub stopped are still
+ * Boot recovery. Runs that were 'started' when PatterStage stopped are still
  * tracked by the backend (HTTP runs survive a CH restart), so we just fail the
  * ones that never got a backend id; the rest are picked up by the next
  * reconcile tick. Network-free and safe to call at server boot.
@@ -174,9 +174,9 @@ export function reconcileRunsOnBoot(): { failed: number } {
     if (!run.runId) {
       updateRun(run.id, {
         status: "failed",
-        error: "Control Hub restarted before the run was submitted",
+        error: "PatterStage restarted before the run was submitted",
       });
-      finalizeMissionForRun(run.missionId, "failed", "interrupted by a Control Hub restart");
+      finalizeMissionForRun(run.missionId, "failed", "interrupted by a PatterStage restart");
       failed += 1;
     }
   }

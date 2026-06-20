@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // full-stack-smoke.mjs — end-to-end test of the new orchestration core
-// against a running Control Hub + mock Hermes API Server.
+// against a running PatterStage + mock Hermes API Server.
 //
 // Drives the REAL HTTP surface: create mission → dispatch (HTTP run) →
 // reconcile → assert completion; schedule create + immediate run; cancel.
@@ -51,7 +51,7 @@ async function pollUntil(fn, { tries = 20, delayMs = 500 } = {}) {
 }
 
 async function main() {
-  console.log(`\nControl Hub: ${CH}\nMock Hermes: ${HERMES}\n`);
+  console.log(`\nPatterStage: ${CH}\nMock Hermes: ${HERMES}\n`);
 
   // ── 0. Both services are up ───────────────────────────────
   console.log("0. Health");
@@ -65,12 +65,12 @@ async function main() {
       return null;
     }
   });
-  check(Boolean(chHealth), "Control Hub /api/status reachable");
+  check(Boolean(chHealth), "PatterStage /api/status reachable");
 
-  // ── 1. Gateway reachability through Control Hub ───────────
+  // ── 1. Gateway reachability through PatterStage ───────────
   console.log("1. Gateway wiring");
   const gw = await req("GET", `${CH}/api/gateway/health`);
-  check(gw.status === 200, "Control Hub /api/gateway/health responds");
+  check(gw.status === 200, "PatterStage /api/gateway/health responds");
 
   // ── 2. Create a draft mission (no spawn) ──────────────────
   console.log("2. Create mission draft");

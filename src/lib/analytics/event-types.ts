@@ -8,7 +8,7 @@
 // on event_type; the taxonomy is enforced at this TypeScript boundary).
 // ═══════════════════════════════════════════════════════════════
 
-/** Every meaningful Control Hub interaction we log to analytics_events. */
+/** Every meaningful PatterStage interaction we log to analytics_events. */
 export const ANALYTICS_EVENT_TYPES = [
   "mission.dispatched",
   "mission.completed",

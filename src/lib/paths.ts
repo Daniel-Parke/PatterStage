@@ -1,12 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
-// paths.ts — Control Hub data directories (CH_DATA_DIR only)
+// paths.ts — PatterStage data directories (CH_DATA_DIR only)
 // ═══════════════════════════════════════════════════════════════
 // Hermes install paths: use getActiveHermesPaths() / getActiveHermesHome()
 // from @/lib/hermes-agent-runtime (active agent registry).
 
 import { homedir } from "os";
 
-// ── Control Hub data root ───────────────────────────────────────
+// ── PatterStage data root ───────────────────────────────────────
 function normalizeDirPath(dir: string): string {
   return dir.replace(/[/\\]+$/, "");
 }
@@ -21,7 +21,7 @@ export function getChDataDir(): string {
 
 export const CH_DATA_DIR = getChDataDir();
 
-/** Hardware cron scripts (Control Hub–managed; never under Hermes home). */
+/** Hardware cron scripts (PatterStage–managed; never under Hermes home). */
 export function getChScriptsDir(): string {
   const raw = process.env.CH_SCRIPTS_DIR;
   if (raw && String(raw).trim()) {
@@ -39,7 +39,7 @@ export function getChHardwareLogDir(): string {
   return CH_DATA_DIR + "/logs";
 }
 
-// ── Control Hub–owned paths only ─────────────────────────────────
+// ── PatterStage–owned paths only ─────────────────────────────────
 
 export const PATHS = {
   controlHubDb: CH_DATA_DIR + "/control-hub.db",

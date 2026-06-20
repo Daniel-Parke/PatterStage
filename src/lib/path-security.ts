@@ -53,7 +53,7 @@ export function resolveAllowedWorkspacePath(
   }
   return {
     ok: false,
-    error: "Path must be under your home directory, Control Hub data, or the Hermes install root",
+    error: "Path must be under your home directory, PatterStage data, or the Hermes install root",
   };
 }
 

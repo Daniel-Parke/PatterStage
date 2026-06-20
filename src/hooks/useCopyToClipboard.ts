@@ -5,7 +5,7 @@
 //
 // The "click a Copy button, write to navigator.clipboard, flip a
 // 'copied' state true, then back to false after a short timeout"
-// pattern was inlined in 2+ Control Hub components:
+// pattern was inlined in 2+ PatterStage components:
 //
 //   - src/components/session/MessageBubble.tsx (handleCopy, 1500ms)
 //   - src/app/operations/personalities/page.tsx (PersonalityCard

@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // POST /api/chat/[id]/stop — stop the conversation's in-flight run.
-// Body: { runId? } (Control Hub run id; defaults to the latest active
+// Body: { runId? } (PatterStage run id; defaults to the latest active
 // assistant turn). Stops the backend run over HTTP, then finalizes the
 // local run + message as cancelled so the UI never shows a stuck turn.
 // ═══════════════════════════════════════════════════════════════

@@ -1,5 +1,5 @@
 /**
- * Hermes-compatible schedule parsing for Control Hub.
+ * Hermes-compatible schedule parsing for PatterStage.
  * Supports interval, cron, and ISO one-shot formats used with Hermes `jobs.json`.
  */
 

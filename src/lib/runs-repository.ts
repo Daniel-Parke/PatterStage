@@ -2,7 +2,7 @@
 // runs-repository.ts — CRUD for agent runs (replaces pid/status-file IPC)
 //
 // A `run` row tracks one agent execution from submit → terminal. `id` is the
-// Control Hub-owned id (also the Idempotency-Key sent to the backend); the
+// PatterStage-owned id (also the Idempotency-Key sent to the backend); the
 // backend's own id is stored in `run_id`. Run state is reconciled by polling
 // the runtime (see orchestration/RunSync), never by reading status.json files.
 // ═══════════════════════════════════════════════════════════════
@@ -79,7 +79,7 @@ function rowToRun(row: RunRow | undefined): RunRecord | null {
 // ── Create ───────────────────────────────────────────────────
 
 export interface CreateRunInput {
-  /** Control Hub-owned run id (also used as the Idempotency-Key). */
+  /** PatterStage-owned run id (also used as the Idempotency-Key). */
   id: string;
   missionId?: string | null;
   scheduleId?: string | null;

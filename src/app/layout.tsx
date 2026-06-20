@@ -11,7 +11,7 @@ const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const jetbrainsMono = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Control Hub | Agent Dashboard",
+  title: "PatterStage | Agent Dashboard",
   description: "Monitor, update, and control your AI agent",
 };
 

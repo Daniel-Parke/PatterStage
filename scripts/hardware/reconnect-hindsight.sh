@@ -6,7 +6,7 @@
 # Run this after a deploy update that may have stripped the
 # Hindsight memory configuration from ~/.hermes/config.yaml.
 # It re-wires the memory: and plugins:hindsight: sections and
-# syncs the result to the Control Hub SQLite database so
+# syncs the result to the PatterStage SQLite database so
 # subsequent pushes preserve it.
 #
 # Usage:
@@ -87,10 +87,10 @@ print('ok')
     fi
 fi
 
-# ── Sync to Control Hub SQLite ────────────────────────────
+# ── Sync to PatterStage SQLite ────────────────────────────
 CH_DB="$CH_DATA_DIR/control-hub.db"
 if [ -f "$CH_DB" ]; then
-    info "Syncing to Control Hub SQLite..."
+    info "Syncing to PatterStage SQLite..."
     if command -v python3 &>/dev/null; then
         python3 -c "
 import os, sqlite3
@@ -111,7 +111,7 @@ if os.path.exists(db_path) and os.path.exists(config_path):
         warn "python3 not found — SQLite sync skipped"
     fi
 else
-    info "Control Hub database not found at $CH_DB — SQLite sync skipped"
+    info "PatterStage database not found at $CH_DB — SQLite sync skipped"
     echo "  SQLite sync will happen on the next deploy update."
 fi
 

@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// ScheduledMissions — recurring agent missions on the Control Hub scheduler
+// ScheduledMissions — recurring agent missions on the PatterStage scheduler
 //
 // Folded into the Missions page (replaces the standalone Schedules page). The
 // scheduler tick (orchestration/scheduler) fires these via the runtime — CH

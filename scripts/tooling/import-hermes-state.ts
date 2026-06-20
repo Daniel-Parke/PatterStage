@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 /**
- * Import Hermes disk state into Control Hub SQLite (profiles, root, skills).
+ * Import Hermes disk state into PatterStage SQLite (profiles, root, skills).
  * Usage: npx tsx scripts/tooling/import-hermes-state.ts [--pull]
  */
 

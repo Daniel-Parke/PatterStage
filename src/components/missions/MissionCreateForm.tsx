@@ -316,7 +316,7 @@ export default function MissionCreateForm({
       {(categoriesLoadError || categories.length === 0) && (
         <p className="text-xs font-mono text-neon-orange/80 bg-neon-orange/5 border border-neon-orange/20 rounded-lg px-3 py-2">
           {categoriesLoadError ??
-            "No categories loaded — run npm run db:migrate or restart Control Hub, then"}{" "}
+            "No categories loaded — run npm run db:migrate or restart PatterStage, then"}{" "}
           {onRetryCategories && (
             <button
               type="button"
