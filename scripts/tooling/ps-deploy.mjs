@@ -255,6 +255,14 @@ export async function resolvePort() {
 async function restartBody() {
   const port = await resolvePort();
   const host = process.env.PS_NEXT_BIND_HOST || "0.0.0.0";
+  // Grace before we tear down the listener. On a bare `restart`, the HTTP
+  // request that spawned us is being served BY the very server on `port`;
+  // deploy-spawn (src/lib/deploy-spawn.ts) probes our liveness for ~2s before
+  // returning 200 {started}. Wait past that window so the caller's response
+  // flushes first — otherwise killByPort drops the connection mid-response and
+  // the client sees HTTP 000. (For update/rebuild the build already took far
+  // longer than this, so it's a negligible no-op there.)
+  await new Promise((r) => setTimeout(r, 3000));
   log("ps-restart.log", `Stopping listeners on port ${port}…`);
   killByPort(port);
   // also kill the recorded server pid if still alive

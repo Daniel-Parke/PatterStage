@@ -3,9 +3,8 @@ import { test, expect } from "@playwright/test";
 test.describe("Smoke", () => {
   test("dashboard loads", async ({ page }) => {
     await page.goto("/");
-    const title = page.locator("h1").filter({ hasText: "CONTROL" });
-    await expect(title).toBeVisible();
-    await expect(title.getByText("HUB", { exact: true })).toBeVisible();
+    // App shell + brand rendered (sidebar brand is present on every page).
+    await expect(page.getByText("PatterStage").first()).toBeVisible();
   });
 
   test("missions page loads", async ({ page }) => {

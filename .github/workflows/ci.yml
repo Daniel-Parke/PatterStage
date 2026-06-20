@@ -170,6 +170,16 @@ jobs:
           node-version: "20"
           cache: npm
           cache-dependency-path: package-lock.json
+      - name: Modern node-gyp (recognise the runner's Visual Studio)
+        # The native dep (better-sqlite3) has no prebuilt binary for the
+        # runner's exact Node, so it compiles from source — but the bundled
+        # node-gyp 10.1.0 can't parse the runner's VS 2022/2025 version and
+        # bails with "unknown version undefined". A current node-gyp detects it
+        # and uses the C++ workload that ships on windows-latest.
+        shell: bash
+        run: |
+          npm install -g node-gyp@latest
+          npm config set node_gyp "$(npm root -g)/node-gyp/bin/node-gyp.js"
       - name: Install dependencies (with cache reset retry)
         shell: bash
         run: |
@@ -274,8 +284,8 @@ jobs:
       - name: Dashboard deploy API — restart smoke (Docker)
         run: bash tests/scripts/docker-deploy-api-smoke.sh
         env:
-          CH_DOCKER_TEST_IMAGE: control-hub:ci
-          CH_DOCKER_TEST_PORT: "42090"
+          PS_DOCKER_TEST_IMAGE: control-hub:ci
+          PS_DOCKER_TEST_PORT: "42090"
 
   # Validates the runtime adapter against the REAL Hermes Agent (official image)
   # pointed at a deterministic mock LLM. Heavy (~5GB image pull + agent runtime),

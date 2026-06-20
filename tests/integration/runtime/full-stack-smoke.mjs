@@ -6,11 +6,12 @@
 // reconcile → assert completion; schedule create + immediate run; cancel.
 // Zero dependencies (global fetch). Exits non-zero on any failed assertion.
 //
-// Env: CH_URL (default http://127.0.0.1:41234), HERMES_URL
-// (default http://127.0.0.1:8642), API_SERVER_KEY (optional bearer).
+// Env: PS_URL (default http://127.0.0.1:41234; CH_URL still honoured for
+// back-compat), HERMES_URL (default http://127.0.0.1:8642), API_SERVER_KEY
+// (optional bearer).
 // ═══════════════════════════════════════════════════════════════
 
-const CH = process.env.CH_URL || "http://127.0.0.1:41234";
+const CH = process.env.PS_URL || process.env.CH_URL || "http://127.0.0.1:41234";
 const HERMES = process.env.HERMES_URL || "http://127.0.0.1:8642";
 
 let failures = 0;

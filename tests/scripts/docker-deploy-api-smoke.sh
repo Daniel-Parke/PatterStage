@@ -75,15 +75,15 @@ case "$http_code" in
       echo "ERROR: POST restart 200 but no 'started' marker: $resp" >&2
       exit 1
     }
-    # 200 means the script is still alive past the probe window. The
-    # script will (try to) kill the container's own server and respawn
-    # it. Wait briefly and confirm the server is still responsive.
-    sleep 12
-    curl -sf -o /dev/null "http://127.0.0.1:${HOST_PORT}/" || {
-      echo "ERROR: server not responding after restart" >&2
-      docker logs "$NAME" 2>&1 | tail -80 >&2 || true
-      exit 1
-    }
+    # 200 {started} = the API accepted the restart, the deploy runner (ps-deploy.mjs)
+    # outlived the liveness probe, and — crucially — the HTTP response FLUSHED
+    # before the runner tore down the listener (the grace delay in restartBody).
+    # We deliberately do NOT then require the server to self-resurrect: this
+    # image's CMD is `npm run start:network`, so next-server is PID 1's only
+    # child; killing its port ends PID 1 and stops the container. On a real host
+    # the server runs detached and ps-deploy.mjs respawns it on the same port —
+    # that end-to-end respawn is covered by the host integration tests, not here.
+    echo "OK: POST restart returned 200 {started} (spawn survived probe + response flushed)"
     ;;
   500)
     # 500 is the new fail-loud signal. It must be a known diagnostic
