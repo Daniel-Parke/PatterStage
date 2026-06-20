@@ -36,7 +36,7 @@ const DEFAULT_GATEWAY = "http://127.0.0.1:8642";
  * LLM chat URL and gateway base for health probes — from env or default config.
  */
 export function getAgentLlmEndpoints(): { apiUrl: string; gatewayBase: string } {
-  const envApi = process.env.CONTROL_HUB_LLM_API?.trim();
+  const envApi = (process.env.PS_LLM_API || process.env.CONTROL_HUB_LLM_API)?.trim();
   const envGateway =
     envApi && envApi.includes("/v1/chat/completions")
       ? envApi.replace(/\/v1\/chat\/completions\/?$/, "")

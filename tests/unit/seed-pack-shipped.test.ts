@@ -5,7 +5,7 @@ const repoRoot = join(__dirname, "..", "..");
 const manifestPath = join(repoRoot, "data/seed/profiles/manifest.json");
 const packPath = join(
   repoRoot,
-  "data/seed/template-packs/control-hub-professional-v1.json",
+  "data/seed/template-packs/patterstage-professional-v1.json",
 );
 
 describe("shipped professional catalog (data/seed)", () => {

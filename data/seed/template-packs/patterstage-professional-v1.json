@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
-  "id": "control-hub-professional-v1",
-  "name": "Control Hub Professional",
+  "id": "patterstage-professional-v1",
+  "name": "PatterStage Professional",
   "version": "1.0.0",
   "templates": [
     {
@@ -20,7 +20,7 @@
         "Document assumptions and verification steps"
       ],
       "outputFormat": "Structured markdown: Summary, Changes, Verification, Follow-ups (if any).",
-      "constraints": "Do not bypass Control Hub APIs for state changes. Run tests/build when touching application code.",
+      "constraints": "Do not bypass PatterStage APIs for state changes. Run tests/build when touching application code.",
       "suggestedSkills": ["github/git-workflow", "software-development/code-review"],
       "suggestedToolsets": ["terminal", "file", "web"],
       "localDirs": [],
@@ -44,7 +44,7 @@
         "Document assumptions and verification steps"
       ],
       "outputFormat": "Structured markdown: Summary, Changes, Verification, Follow-ups (if any).",
-      "constraints": "Do not bypass Control Hub APIs for state changes. Run tests/build when touching application code.",
+      "constraints": "Do not bypass PatterStage APIs for state changes. Run tests/build when touching application code.",
       "suggestedSkills": ["testing/pytest", "software-development/debugging"],
       "suggestedToolsets": ["terminal", "file", "code_execution"],
       "localDirs": [],
@@ -68,7 +68,7 @@
         "Document assumptions and verification steps"
       ],
       "outputFormat": "Structured markdown: Summary, Changes, Verification, Follow-ups (if any).",
-      "constraints": "Do not bypass Control Hub APIs for state changes. Run tests/build when touching application code.",
+      "constraints": "Do not bypass PatterStage APIs for state changes. Run tests/build when touching application code.",
       "suggestedSkills": ["github/git-workflow", "software-development/implementation"],
       "suggestedToolsets": ["terminal", "file", "hermes-cli"],
       "localDirs": [],
@@ -92,7 +92,7 @@
         "Document assumptions and verification steps"
       ],
       "outputFormat": "Structured markdown: Summary, Changes, Verification, Follow-ups (if any).",
-      "constraints": "Do not bypass Control Hub APIs for state changes. Run tests/build when touching application code.",
+      "constraints": "Do not bypass PatterStage APIs for state changes. Run tests/build when touching application code.",
       "suggestedSkills": ["github/code-review", "software-development/static-analysis"],
       "suggestedToolsets": ["terminal", "file", "web"],
       "localDirs": [],
@@ -116,7 +116,7 @@
         "Document assumptions and verification steps"
       ],
       "outputFormat": "Structured markdown: Summary, Changes, Verification, Follow-ups (if any).",
-      "constraints": "Do not bypass Control Hub APIs for state changes. Run tests/build when touching application code.",
+      "constraints": "Do not bypass PatterStage APIs for state changes. Run tests/build when touching application code.",
       "suggestedSkills": ["devops/deployments", "devops/verification"],
       "suggestedToolsets": ["terminal", "cronjob", "hermes-cli"],
       "localDirs": [],
@@ -140,7 +140,7 @@
         "Document assumptions and verification steps"
       ],
       "outputFormat": "Structured markdown: Summary, Changes, Verification, Follow-ups (if any).",
-      "constraints": "Do not bypass Control Hub APIs for state changes. Run tests/build when touching application code.",
+      "constraints": "Do not bypass PatterStage APIs for state changes. Run tests/build when touching application code.",
       "suggestedSkills": ["devops/security-audit", "devops/cicd"],
       "suggestedToolsets": ["terminal", "hermes-cli", "cronjob"],
       "localDirs": [],
@@ -164,7 +164,7 @@
         "Document assumptions and verification steps"
       ],
       "outputFormat": "Structured markdown: Summary, Changes, Verification, Follow-ups (if any).",
-      "constraints": "Do not bypass Control Hub APIs for state changes. Run tests/build when touching application code.",
+      "constraints": "Do not bypass PatterStage APIs for state changes. Run tests/build when touching application code.",
       "suggestedSkills": ["data-science/exploration", "data-science/forecasting"],
       "suggestedToolsets": ["code_execution", "terminal", "file"],
       "localDirs": [],
@@ -188,7 +188,7 @@
         "Document assumptions and verification steps"
       ],
       "outputFormat": "Structured markdown: Summary, Changes, Verification, Follow-ups (if any).",
-      "constraints": "Do not bypass Control Hub APIs for state changes. Run tests/build when touching application code.",
+      "constraints": "Do not bypass PatterStage APIs for state changes. Run tests/build when touching application code.",
       "suggestedSkills": ["research/web-research", "productivity/synthesis"],
       "suggestedToolsets": ["web", "hermes-cli"],
       "localDirs": [],
@@ -212,7 +212,7 @@
         "Document assumptions and verification steps"
       ],
       "outputFormat": "Structured markdown: Summary, Changes, Verification, Follow-ups (if any).",
-      "constraints": "Do not bypass Control Hub APIs for state changes. Run tests/build when touching application code.",
+      "constraints": "Do not bypass PatterStage APIs for state changes. Run tests/build when touching application code.",
       "suggestedSkills": ["creative/copywriting", "creative/brand-voice"],
       "suggestedToolsets": ["web", "image_gen"],
       "localDirs": [],
@@ -236,7 +236,7 @@
         "Document assumptions and verification steps"
       ],
       "outputFormat": "Structured markdown: Summary, Changes, Verification, Follow-ups (if any).",
-      "constraints": "Do not bypass Control Hub APIs for state changes. Run tests/build when touching application code.",
+      "constraints": "Do not bypass PatterStage APIs for state changes. Run tests/build when touching application code.",
       "suggestedSkills": ["testing/regression", "software-development/test-generation"],
       "suggestedToolsets": ["terminal", "code_execution", "file"],
       "localDirs": [],
@@ -260,7 +260,7 @@
         "Document assumptions and verification steps"
       ],
       "outputFormat": "Structured markdown: Summary, Changes, Verification, Follow-ups (if any).",
-      "constraints": "Do not bypass Control Hub APIs for state changes. Run tests/build when touching application code.",
+      "constraints": "Do not bypass PatterStage APIs for state changes. Run tests/build when touching application code.",
       "suggestedSkills": ["support/triage", "productivity/runbook"],
       "suggestedToolsets": ["terminal", "web", "clarify"],
       "localDirs": [],
@@ -284,7 +284,7 @@
         "Document assumptions and verification steps"
       ],
       "outputFormat": "Structured markdown: Summary, Changes, Verification, Follow-ups (if any).",
-      "constraints": "Do not bypass Control Hub APIs for state changes. Run tests/build when touching application code.",
+      "constraints": "Do not bypass PatterStage APIs for state changes. Run tests/build when touching application code.",
       "suggestedSkills": ["maintenance/dependency-update", "software-development/refactor"],
       "suggestedToolsets": ["terminal", "file", "hermes-cli"],
       "localDirs": [],

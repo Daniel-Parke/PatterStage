@@ -34,7 +34,7 @@ const CACHE_FILE = tmpdir() + "/ch-version-cache.json";
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 const UPDATE_BRANCH = sanitizeGitBranch(
-  process.env.CH_UPDATE_GIT_BRANCH || "dev"
+  process.env.PS_UPDATE_GIT_BRANCH || process.env.CH_UPDATE_GIT_BRANCH || "dev"
 );
 
 // ── Branch listing ──────────────────────────────────────────────
@@ -285,7 +285,7 @@ export async function POST(request: NextRequest) {
       const missing = deployScriptMissingResponse();
       if (missing) return missing;
       writeDeployStatusRunning("restart", "restart", "Restart queued…");
-      const spawned = await spawnChDeploy(CH_DEPLOY_SCRIPT, "ch-restart", ["restart"]);
+      const spawned = await spawnChDeploy(CH_DEPLOY_SCRIPT, "ps-restart", ["restart"]);
       if (!spawned.ok) {
         return NextResponse.json(
           { error: spawned.error ?? "Failed to start restart" },
@@ -313,7 +313,7 @@ export async function POST(request: NextRequest) {
       }
 
       writeDeployStatusRunning("rebuild", "build", "Rebuild queued…");
-      const spawnedRebuild = await spawnChDeploy(CH_DEPLOY_SCRIPT, "ch-rebuild", rebuildArgs);
+      const spawnedRebuild = await spawnChDeploy(CH_DEPLOY_SCRIPT, "ps-rebuild", rebuildArgs);
       if (!spawnedRebuild.ok) {
         logApiError("POST /api/update", "spawn rebuild", new Error(spawnedRebuild.error ?? ""));
         appendAuditLine({
@@ -354,7 +354,7 @@ export async function POST(request: NextRequest) {
       const missing = deployScriptMissingResponse();
       if (missing) return missing;
       writeDeployStatusRunning("update", "git", "Update queued…");
-      const spawnedUpdate = await spawnChDeploy(CH_DEPLOY_SCRIPT, "ch-update", ["update", "--branch", updateBranch]);
+      const spawnedUpdate = await spawnChDeploy(CH_DEPLOY_SCRIPT, "ps-update", ["update", "--branch", updateBranch]);
       if (!spawnedUpdate.ok) {
         logApiError("POST /api/update", "spawn update", new Error(spawnedUpdate.error ?? ""));
         appendAuditLine({

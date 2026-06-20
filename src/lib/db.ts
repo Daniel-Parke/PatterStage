@@ -1,12 +1,13 @@
 // ═══════════════════════════════════════════════════════════════
 // db.ts — SQLite connection + migration runner
-// Database: ~/control-hub/data/control-hub.db
+// Database: ~/patterstage/data/patterstage.db
+//   (legacy fallback: ~/control-hub/data/control-hub.db until migrated)
 // ═══════════════════════════════════════════════════════════════
 
 import Database, { type Database as _DatabaseType } from "better-sqlite3";
 import { join } from "path";
 import { existsSync, readFileSync } from "fs";
-import { CH_DATA_DIR } from "./paths";
+import { CH_DATA_DIR, getDbPath } from "./paths";
 import { getSchemaVersion, setSchemaVersion } from "./db-schema";
 import { ensureDir } from "./fs-helpers";
 import { needsBaselineRebuild, rebuildToBaseline } from "./db/upgrade";
@@ -29,7 +30,7 @@ import { applyBenchGatewaysMigration } from "./db/apply-bench-gateways-migration
 const dataDir = CH_DATA_DIR;
 ensureDir(dataDir);
 
-const DB_PATH = join(dataDir, "control-hub.db");
+const DB_PATH = getDbPath(dataDir);
 
 // ── Connection factory ─────────────────────────────────────────
 

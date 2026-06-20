@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
   const importDiscovered = booleanFlag(body, "importDiscovered");
   const reconcileDisk =
     booleanFlag(body, "reconcileDisk") ||
-    process.env.CH_PULL_RECONCILE_DISK === "1";
+    (process.env.PS_PULL_RECONCILE_DISK || process.env.CH_PULL_RECONCILE_DISK) === "1";
 
   try {
     ensureDb();

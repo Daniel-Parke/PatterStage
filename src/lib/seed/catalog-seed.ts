@@ -44,7 +44,7 @@ const TOOLS_MANIFEST = join(REPO_ROOT, "data/seed/tools/manifest.json");
 const MEMORIES_MANIFEST = join(REPO_ROOT, "data/seed/memories/manifest.json");
 const TEMPLATE_PACK = join(
   REPO_ROOT,
-  "data/seed/template-packs/control-hub-professional-v1.json",
+  "data/seed/template-packs/patterstage-professional-v1.json",
 );
 
 export type SeedMode = "merge" | "replace";
@@ -443,7 +443,7 @@ function writeSeedState(result: SeedResult): void {
   ensureDir(dir);
   const state = {
     lastRun: new Date().toISOString(),
-    catalogVersion: "control-hub-professional-v1",
+    catalogVersion: "patterstage-professional-v1",
     ...result,
   };
   writeFileSync(dir + "/seed-state.json", JSON.stringify(state, null, 2));

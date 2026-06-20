@@ -13,7 +13,7 @@ function firstEnvFlag(keys: string[]): string | undefined {
 }
 
 export function isDeployApiEnabled(): boolean {
-  const raw = firstEnvFlag(["CH_ENABLE_DEPLOY_API"]);
+  const raw = firstEnvFlag(["PS_ENABLE_DEPLOY_API", "CH_ENABLE_DEPLOY_API"]);
   const value = raw?.toLowerCase();
   if (value === "1" || value === "true" || value === "yes") return true;
   if (value === "0" || value === "false" || value === "no") return false;
@@ -21,7 +21,7 @@ export function isDeployApiEnabled(): boolean {
 }
 
 export function isChReadOnly(): boolean {
-  const raw = firstEnvFlag(["CH_READ_ONLY"]);
+  const raw = firstEnvFlag(["PS_READ_ONLY", "CH_READ_ONLY"]);
   const value = raw?.toLowerCase();
   return value === "1" || value === "true";
 }
@@ -35,10 +35,10 @@ export function getCorrelationId(request: NextRequest): string {
 }
 
 export function requireSignedRequest(request: NextRequest): NextResponse | null {
-  const secret = process.env.CH_REQUEST_SIGNING_SECRET || "";
+  const secret = firstEnvFlag(["PS_REQUEST_SIGNING_SECRET", "CH_REQUEST_SIGNING_SECRET"]) || "";
   if (!secret) return null;
-  const ts = request.headers.get("x-ch-ts") || "";
-  const sig = request.headers.get("x-ch-signature") || "";
+  const ts = request.headers.get("x-ps-ts") || request.headers.get("x-ch-ts") || "";
+  const sig = request.headers.get("x-ps-signature") || request.headers.get("x-ch-signature") || "";
   if (!ts || !sig) {
     return NextResponse.json({ error: "Missing signature headers" }, { status: 401 });
   }

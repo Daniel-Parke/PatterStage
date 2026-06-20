@@ -31,7 +31,10 @@ function missionStatusFor(runStatus: RunStatus): "successful" | "failed" {
 // An untimed mission the backend still reports running is left alone (the user
 // chose no timeout; it isn't "stuck", just long).
 const GRACE_MINUTES = 5;
-const DEFAULT_MAX_RUN_MINUTES = Math.max(10, Number(process.env.CH_RUN_MAX_MINUTES) || 120);
+const DEFAULT_MAX_RUN_MINUTES = Math.max(
+  10,
+  Number(process.env.PS_RUN_MAX_MINUTES || process.env.CH_RUN_MAX_MINUTES) || 120,
+);
 
 function parseTs(s: string): number {
   const hasTz = s.endsWith("Z") || /[+-]\d\d:\d\d$/.test(s);

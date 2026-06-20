@@ -24,7 +24,7 @@
     {
       "seedKey": "ch.mem.default-suite",
       "category": "benchmark",
-      "content": "The default benchmark suite shipped with Control Hub is named Core Capabilities."
+      "content": "The default benchmark suite shipped with PatterStage is named Core Capabilities."
     }
   ]
 }

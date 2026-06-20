@@ -1,13 +1,13 @@
 # Professional catalog seeds (shipped with PatterStage)
 
-Source files for the catalog that `seed-catalog.ts` loads into SQLite. This directory is **version-controlled**; your live database lives under `CH_DATA_DIR` (typically `~/control-hub/data`), not here.
+Source files for the catalog that `seed-catalog.ts` loads into SQLite. This directory is **version-controlled**; your live database lives under `PS_DATA_DIR` (typically `~/patterstage/data`), not here.
 
 | Path | Purpose |
 |------|---------|
 | `agent-root/` | Bob, the default local Hermes agent (`SOUL.md`, `AGENTS.md`, `HERMES.md`, memories, `config.yaml`) |
 | `profiles/manifest.json` | Six professional agent profiles |
 | `profiles/<slug>/` | `SOUL.md`, `AGENTS.md`, `config.yaml` per profile |
-| `template-packs/control-hub-professional-v1.json` | Mission templates for the composer |
+| `template-packs/patterstage-professional-v1.json` | Mission templates for the composer |
 
 ## Apply seeds
 

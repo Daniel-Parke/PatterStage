@@ -19,7 +19,7 @@ const PROFILES_ROOT = join(SEED_ROOT, "profiles");
 const PACK_PATH = join(
   SEED_ROOT,
   "template-packs",
-  "control-hub-professional-v1.json",
+  "patterstage-professional-v1.json",
 );
 
 function agentsHeader(slug) {
