@@ -63,6 +63,10 @@ When you add or change sidebar links in [`src/components/layout/sidebar-config.t
 - **[`ci.yml`](../.github/workflows/ci.yml)** — lint, types, tests + coverage, build, E2E smoke (Ubuntu), build+test (macOS), shell script tests, Docker deploy smoke.
 - **[`gitleaks.yml`](../.github/workflows/gitleaks.yml)** — please do not commit API keys. I will be grumpy.
 
+## License
+
+By contributing, you agree your contributions are licensed under the [Apache License 2.0](../LICENSE) (see [NOTICE](../NOTICE)). The Patter names and the visual identity under [`branding/`](../branding/) are reserved trademarks — they are **not** covered by that license. See [TRADEMARK.md](../TRADEMARK.md).
+
 ## Where to look
 
 | Topic | Doc |

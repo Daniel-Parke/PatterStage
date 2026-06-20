@@ -187,6 +187,8 @@ Professional seeds: `data/seed/`. Full layout + flags: [docs/DEPLOY.md](docs/DEP
 
 ---
 
-## License
+## License & trademarks
 
-[MIT](LICENSE)
+Source code and technical documentation in this repository are licensed under the [Apache License 2.0](LICENSE). See also [NOTICE](NOTICE).
+
+The names **Patter**, **PatterStage**, **PatterTech**, and related marks, plus the official visual identity in [`branding/`](branding/), are **not** part of that license. See [TRADEMARK.md](TRADEMARK.md). If you distribute a modified version, see [REBRANDING.md](REBRANDING.md).
