@@ -68,6 +68,14 @@ jest.mock("@/lib/deploy-status", () => ({
   tailLogHint: (...args: unknown[]) => mockTailLogHint(...args),
 }));
 
+// The detached spawn + liveness probe lives in @/lib/deploy-spawn and is
+// unit-tested in deploy-spawn-probe.test.ts. Mock it here so these tests
+// focus on the route's concerns (gating, dispatch, status writes).
+const mockSpawnChDeploy = jest.fn();
+jest.mock("@/lib/deploy-spawn", () => ({
+  spawnChDeploy: (...args: unknown[]) => mockSpawnChDeploy(...args),
+}));
+
 function getReq(url: string): { url: string } {
   return { url };
 }
@@ -207,11 +215,8 @@ describe("POST /api/update", () => {
     readOnlyGate = null;
     mockIsDeployInProgress.mockReturnValue(false);
     mockGitForDeploy(mockExecFileSync);
-    mockSpawn.mockReturnValue({
-      pid: 4242,
-      unref: jest.fn(),
-      on: jest.fn(), // for the silent-error handler in spawnChDeploy
-    });
+    mockSpawnChDeploy.mockReset();
+    mockSpawnChDeploy.mockResolvedValue({ ok: true, pid: 4242 });
   });
 
   function postReq(body: Record<string, unknown>) {
@@ -240,8 +245,11 @@ describe("POST /api/update", () => {
     expect(res.status).toBe(503);
   });
 
-  it("returns 500 when spawn yields no pid", async () => {
-    mockSpawn.mockReturnValue({ pid: undefined, unref: jest.fn() });
+  it("returns 500 when the deploy fails to start", async () => {
+    mockSpawnChDeploy.mockResolvedValue({
+      ok: false,
+      error: "nohup spawn returned no pid",
+    });
     const { POST } = await import("@/app/api/update/route");
     const res = await POST(postReq({ action: "restart" }));
     expect(res.status).toBe(500);
@@ -270,7 +278,7 @@ describe("POST /api/update", () => {
     expect(res.status).toBe(409);
     const body = await res.json();
     expect(String(body.error)).toMatch(/in progress/i);
-    expect(mockSpawn).not.toHaveBeenCalled();
+    expect(mockSpawnChDeploy).not.toHaveBeenCalled();
   });
 
   it("POST rebuild spawns without --branch when branch omitted", async () => {
@@ -282,7 +290,7 @@ describe("POST /api/update", () => {
       "build",
       expect.stringMatching(/queued/i),
     );
-    const spawnArgs = mockSpawn.mock.calls[0];
+    const spawnArgs = mockSpawnChDeploy.mock.calls[0];
     const flat = JSON.stringify(spawnArgs);
     expect(flat).toContain("rebuild");
     expect(flat).not.toContain("--branch");
@@ -292,48 +300,45 @@ describe("POST /api/update", () => {
     const { POST } = await import("@/app/api/update/route");
     const res = await POST(postReq({ action: "rebuild", branch: "dev" }));
     expect(res.status).toBe(200);
-    const flat = JSON.stringify(mockSpawn.mock.calls[0]);
+    const flat = JSON.stringify(mockSpawnChDeploy.mock.calls[0]);
     expect(flat).toContain("--branch");
     expect(flat).toContain("dev");
   });
 
-  // ── Post-spawn liveness probe (silent-failure prevention) ───────────
-  // The probe checks the spawned child is still alive ~1.5s after
-  // spawn. If the child died (synchronous spawn failure, lock
-  // contention, etc.) the API returns 500 with a diagnostic error
-  // instead of 200 {status:"started"} and an indefinite UI spinner.
-  // Discovered 2026-06-08: the lock could be held by a stuck background
-  // process, the script would die silently, and the UI would spin
-  // forever. The new probe surfaces that failure immediately.
+  // ── Probe failures are surfaced as 500 by the route ─────────────
+  // The deep liveness-probe behaviour (systemd unit vs. nohup PID, status
+  // file as source of truth) lives in src/lib/deploy-spawn.ts and is
+  // unit-tested in deploy-spawn-probe.test.ts. Here we only assert the route
+  // turns a probe failure into a 500 and a healthy start into a 200.
 
-  it("returns 500 when spawned child dies before probe window closes", async () => {
-    // Spawn returns a child with PID 4242, but kill -0 (liveness probe)
-    // throws — simulating the child having exited during the probe.
-    mockExecFileSync.mockImplementation((cmd: string, args: string[]) => {
-      if (cmd === "bash" && args[0] === "-n") return undefined as unknown as string;
-      if (cmd === "kill" && args[0] === "-0") throw new Error("No such process");
-      if (cmd === "git") return "";
-      if (cmd === "systemctl") return "";
-      return "";
+  it("returns 500 when the deploy exits immediately", async () => {
+    mockSpawnChDeploy.mockResolvedValue({
+      ok: false,
+      error:
+        "Deploy script exited immediately (PID 4242 no longer alive after 215ms). Check ~/.hermes/logs/ch-update.log for the cause.",
     });
     const { POST } = await import("@/app/api/update/route");
     const res = await POST(postReq({ action: "rebuild" }));
-    // Probe detects dead child, returns 500 with diagnostic
     expect(res.status).toBe(500);
     const body = await res.json();
-    expect(String(body.error)).toMatch(/exited immediately|lock held|already in progress/i);
-  }, 10000);
+    expect(String(body.error)).toMatch(/exited immediately/i);
+  });
 
-  it("returns 200 when spawned child stays alive through the probe window", async () => {
-    // Spawn returns a child with PID 4242, kill -0 succeeds — child is
-    // alive. No failed status file. Probe returns 200.
-    mockExecFileSync.mockImplementation((cmd: string, args: string[]) => {
-      if (cmd === "bash" && args[0] === "-n") return undefined as unknown as string;
-      if (cmd === "kill" && args[0] === "-0") return ""; // child alive
-      if (cmd === "git") return "";
-      if (cmd === "systemctl") return "";
-      return "";
+  it("returns 500 with the lock message on lock contention", async () => {
+    mockSpawnChDeploy.mockResolvedValue({
+      ok: false,
+      error:
+        "Deploy already in progress (lock held by another process). Wait for the current deploy to finish or run: rm -f /tmp/ch-deploy.lock",
     });
+    const { POST } = await import("@/app/api/update/route");
+    const res = await POST(postReq({ action: "rebuild" }));
+    expect(res.status).toBe(500);
+    const body = await res.json();
+    expect(String(body.error)).toMatch(/lock held|already in progress/i);
+  });
+
+  it("returns 200 when the deploy starts cleanly", async () => {
+    mockSpawnChDeploy.mockResolvedValue({ ok: true, pid: 4242 });
     const { POST } = await import("@/app/api/update/route");
     const res = await POST(postReq({ action: "rebuild" }));
     expect(res.status).toBe(200);
@@ -341,30 +346,4 @@ describe("POST /api/update", () => {
     expect(body.data.action).toBe("rebuild");
     expect(body.data.status).toBe("started");
   });
-
-  it("returns 500 immediately when status file shows state=failed phase=lock", async () => {
-    // Child is alive but the status file shows the script already wrote
-    // state=failed phase=lock. The probe should surface that immediately
-    // without waiting the full 1.5s.
-    mockExecFileSync.mockImplementation((cmd: string) => {
-      if (cmd === "bash") return undefined as unknown as string;
-      if (cmd === "kill") return ""; // child alive
-      if (cmd === "git") return "";
-      if (cmd === "systemctl") return "";
-      return "";
-    });
-    // Override the fs mock for this test to return a failed status
-    const fs = await import("fs");
-    (fs.readFileSync as jest.Mock).mockImplementation((p: string) => {
-      if (String(p).includes("ch-deploy.status")) {
-        return "state=failed\nphase=lock\naction=rebuild\nmessage=Deploy already in progress\n";
-      }
-      return "";
-    });
-    const { POST } = await import("@/app/api/update/route");
-    const res = await POST(postReq({ action: "rebuild" }));
-    expect(res.status).toBe(500);
-    const body = await res.json();
-    expect(String(body.error)).toMatch(/lock held|already in progress/i);
-  }, 10000);
 });
