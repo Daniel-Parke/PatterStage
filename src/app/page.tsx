@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// Dashboard - Control Hub Home (Redesigned)
+// Dashboard - PatterStage Home (Redesigned)
 // ═══════════════════════════════════════════════════════════════
 // Lean operational overview. No nav cards, no fake terminals.
 // One-glance situational awareness → one-click actions.
@@ -221,9 +221,16 @@ export default function Dashboard() {
       {/* Top Bar */}
       <div className={`${shellHeaderBarClasses} sticky top-0 z-30 justify-between gap-4 w-full`}>
         <div>
-          <h1 className="text-xl font-bold tracking-tight">
-            <span className="text-neon-cyan text-glow-cyan">CONTROL</span>{" "}
-            <span className="text-white/70">HUB</span>
+          {/* Agent Framework + Model details. The app/brand identity
+              ("PatterStage · The Stage is Yours") lives in the far-left
+              Sidebar logo — we don't repeat it here. This header names the
+              active agent framework (Hermes today — the sole AgentRuntime
+              implementation, see src/lib/runtime/types.ts) plus the model. */}
+          <h1 className="text-xl font-bold tracking-tight flex items-baseline gap-2">
+            <span className="text-neon-cyan text-glow-cyan">Hermes</span>
+            <span className="hidden sm:inline text-[10px] font-normal font-mono text-white/40 uppercase tracking-wider">
+              Agent Framework
+            </span>
           </h1>
           <p className="text-xs text-white/40 font-mono">{modelSubtitle}</p>
         </div>
