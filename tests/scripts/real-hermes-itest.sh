@@ -7,7 +7,7 @@ cd "$(dirname "$0")/../.."
 
 PROJECT="${COMPOSE_PROJECT:-hermes-realtest}"
 COMPOSE="docker compose -f docker-compose.real-hermes.yml -p ${PROJECT}"
-CH_PORT="${PORT:-42069}"
+PS_PORT="${PORT:-42069}"
 H_PORT="${HERMES_PORT:-8642}"
 KEY="hermes-real-itest-key"
 
@@ -24,7 +24,7 @@ ${COMPOSE} up -d --build
 echo "[itest] waiting for PatterStage (depends on real Hermes being healthy)…"
 up=0
 for i in $(seq 1 150); do
-  code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${CH_PORT}/api/status" 2>/dev/null || echo 000)
+  code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/status" 2>/dev/null || echo 000)
   if [ "$code" = "200" ]; then up=1; echo "[itest] control-hub up after ~$((i*2))s"; break; fi
   sleep 2
 done
@@ -37,7 +37,7 @@ HERMES_URL="http://localhost:${H_PORT}" API_SERVER_KEY="${KEY}" \
   node tests/integration/runtime/hermes-contract.mjs
 
 echo "[itest] ── full-stack smoke (PatterStage → real Hermes) ──"
-CH_URL="http://localhost:${CH_PORT}" HERMES_URL="http://localhost:${H_PORT}" API_SERVER_KEY="${KEY}" \
+PS_URL="http://localhost:${PS_PORT}" HERMES_URL="http://localhost:${H_PORT}" API_SERVER_KEY="${KEY}" \
   node tests/integration/runtime/full-stack-smoke.mjs
 
 echo "[itest] ── DB upgrade path (legacy DB self-migrates on boot) ──"
@@ -66,7 +66,7 @@ ${COMPOSE} run --rm --no-deps --entrypoint node control-hub -e '
 ${COMPOSE} start control-hub >/dev/null
 up=0
 for i in $(seq 1 60); do
-  code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${CH_PORT}/api/status" 2>/dev/null || echo 000)
+  code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/status" 2>/dev/null || echo 000)
   if [ "$code" = "200" ]; then up=1; break; fi
   sleep 2
 done
@@ -76,8 +76,8 @@ fi
 # /api/cron was removed with the legacy cron page (Phase M); assert /api/schedules
 # instead — it requires the `schedules` table the legacy seed dropped, so a 200
 # proves the v2→latest migration restored the runs/schedules schema.
-mcode=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${CH_PORT}/api/missions")
-scode=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${CH_PORT}/api/schedules")
+mcode=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/missions")
+scode=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/schedules")
 echo "[itest] post-upgrade: /api/missions=${mcode} /api/schedules=${scode}"
 if [ "$mcode" != "200" ] || [ "$scode" != "200" ]; then
   echo "[itest] upgrade FAILED — runs/schedules migration likely incomplete"; ${COMPOSE} logs --tail 40 control-hub; exit 1

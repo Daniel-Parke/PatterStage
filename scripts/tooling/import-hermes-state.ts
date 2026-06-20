@@ -43,13 +43,13 @@ function applyHermesHomeArg(): void {
 async function main(): Promise<void> {
   loadEnvLocal();
   applyHermesHomeArg();
-  if (!process.env.CH_DATA_DIR) {
-    process.env.CH_DATA_DIR = join(homedir(), "control-hub", "data");
+  if (!process.env.PS_DATA_DIR && !process.env.CH_DATA_DIR && !process.env.CONTROL_HUB_DATA_DIR) {
+    process.env.PS_DATA_DIR = join(homedir(), "patterstage", "data");
   }
 
   const hermesHome = process.env.HERMES_HOME || join(homedir(), ".hermes");
   console.log(`HERMES_HOME=${hermesHome}`);
-  console.log(`CH_DATA_DIR=${process.env.CH_DATA_DIR}`);
+  console.log(`PS_DATA_DIR=${process.env.PS_DATA_DIR || process.env.CH_DATA_DIR}`);
 
   const pull = process.argv.includes("--pull");
 

@@ -35,8 +35,8 @@ function loadEnvLocal(): void {
 
 async function main(): Promise<void> {
   loadEnvLocal();
-  if (!process.env.CH_DATA_DIR) {
-    process.env.CH_DATA_DIR = join(homedir(), "control-hub", "data");
+  if (!process.env.PS_DATA_DIR && !process.env.CH_DATA_DIR && !process.env.CONTROL_HUB_DATA_DIR) {
+    process.env.PS_DATA_DIR = join(homedir(), "patterstage", "data");
   }
 
   const hermesHome = (process.env.HERMES_HOME || join(homedir(), ".hermes")).replace(

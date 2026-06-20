@@ -63,11 +63,12 @@ function readSchemaVersion(dbPath: string): number {
 async function main(): Promise<void> {
   loadEnvLocal();
   const dataDir = (
+    process.env.PS_DATA_DIR ||
     process.env.CH_DATA_DIR ||
     process.env.CONTROL_HUB_DATA_DIR ||
-    join(homedir(), "control-hub", "data")
+    join(homedir(), "patterstage", "data")
   ).replace(/[/\\]+$/, "");
-  process.env.CH_DATA_DIR = dataDir;
+  process.env.PS_DATA_DIR = dataDir;
   if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
 
   const dbPath = join(dataDir, "control-hub.db");

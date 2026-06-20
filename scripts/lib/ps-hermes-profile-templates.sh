@@ -4,12 +4,12 @@
 #
 # Hermes root: HERMES_HOME (default ~/.hermes). Profiles live under
 #   $HERMES_HOME/profiles/<name>/
-# PatterStage data (CH_DATA_DIR) is never used for profile paths here.
+# PatterStage data (PS_DATA_DIR) is never used for profile paths here.
 # ═══════════════════════════════════════════════════════════════
 
 # Ordered list (must match data/seed/profiles/manifest.json).
 # Slugs must match data/seed/profiles/manifest.json (PatterStage DB is source of truth).
-CH_BUNDLED_PROFILE_LIST=(
+PS_BUNDLED_PROFILE_LIST=(
   qa
   swe
   devops
@@ -18,18 +18,18 @@ CH_BUNDLED_PROFILE_LIST=(
   support
 )
 
-ch_resolve_hermes_home() {
+ps_resolve_hermes_home() {
   export HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
 }
 
-ch_hermes_config_present() {
+ps_hermes_config_present() {
   [ -f "$HERMES_HOME/config.yaml" ]
 }
 
-# Optional hook: define ch_profiles_log() before calling install/sync to integrate with caller logging.
+# Optional hook: define ps_profiles_log() before calling install/sync to integrate with caller logging.
 _ch_profiles_emit() {
-  if declare -F ch_profiles_log >/dev/null 2>&1; then
-    ch_profiles_log "$@"
+  if declare -F ps_profiles_log >/dev/null 2>&1; then
+    ps_profiles_log "$@"
   else
     echo "$@"
   fi
@@ -40,14 +40,14 @@ _ch_hermes_cli_ok() {
 }
 
 # Install mode: create missing profile dirs; copy SOUL.md / AGENTS.md / auth.json only if destination missing.
-ch_bundled_profiles_install() {
+ps_bundled_profiles_install() {
   local repo_root="$1"
   local templates="$repo_root/data/seed/profiles"
   local profile profile_dir
 
-  ch_resolve_hermes_home
+  ps_resolve_hermes_home
 
-  for profile in "${CH_BUNDLED_PROFILE_LIST[@]}"; do
+  for profile in "${PS_BUNDLED_PROFILE_LIST[@]}"; do
     profile_dir="$HERMES_HOME/profiles/$profile"
 
     if [ ! -d "$profile_dir" ]; then

@@ -6,9 +6,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
-IMAGE="${CH_DOCKER_TEST_IMAGE:-control-hub:api-smoke}"
-NAME="${CH_DOCKER_TEST_NAME:-ch-api-smoke-$$}"
-HOST_PORT="${CH_DOCKER_TEST_PORT:-42090}"
+IMAGE="${PS_DOCKER_TEST_IMAGE:-control-hub:api-smoke}"
+NAME="${PS_DOCKER_TEST_NAME:-ps-api-smoke-$$}"
+HOST_PORT="${PS_DOCKER_TEST_PORT:-42090}"
 
 if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
   docker build -f Dockerfile -t "$IMAGE" "$ROOT"
@@ -23,7 +23,7 @@ docker run -d --name "$NAME" \
   -p "${HOST_PORT}:42069" \
   -e PORT=42069 \
   -e NODE_ENV=production \
-  -e CH_ENABLE_DEPLOY_API=true \
+  -e PS_ENABLE_DEPLOY_API=true \
   "$IMAGE"
 
 ready=0
@@ -56,18 +56,18 @@ resp=""
 #
 # Why we don't wait + re-probe the server: the Docker image does NOT ship
 # the .git directory (it's stripped from the runner stage to keep the
-# image small), so ch-deploy.sh's git-aware paths can't actually succeed
+# image small), so ps-deploy.sh's git-aware paths can't actually succeed
 # in this image. The original smoke test only "worked" because the API
 # used to return 200 {status:"started"} without ever verifying the script
 # ran. The new probe correctly rejects that case. The contract we test
 # here is the API's probe behavior, not the deploy script's end-to-end
 # success (which is covered by the in-repo integration tests on dev).
-http_code="$(curl -s -o /tmp/ch-api-smoke-resp.$$.body -w '%{http_code}' \
+http_code="$(curl -s -o /tmp/ps-api-smoke-resp.$$.body -w '%{http_code}' \
   -X POST "http://127.0.0.1:${HOST_PORT}/api/update" \
   -H "Content-Type: application/json" \
   -d '{"action":"restart"}' || true)"
-resp="$(cat /tmp/ch-api-smoke-resp.$$.body 2>/dev/null || echo '')"
-rm -f /tmp/ch-api-smoke-resp.$$.body
+resp="$(cat /tmp/ps-api-smoke-resp.$$.body 2>/dev/null || echo '')"
+rm -f /tmp/ps-api-smoke-resp.$$.body
 
 case "$http_code" in
   200)

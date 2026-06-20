@@ -14,7 +14,7 @@
 #     bash scripts/bootstrap/setup.sh
 #
 # Environment (non-interactive / CI / VPS):
-#   CH_INSTALL_NONINTERACTIVE=1  or  CI=1
+#   PS_INSTALL_NONINTERACTIVE=1  or  CI=1
 #     Requires either a working `hermes` on PATH, or:
 #     INSTALL_HERMES=yes   — run upstream Hermes install + `hermes setup`, then exit (re-run this script after)
 #     INSTALL_HERMES=no    — continue without Hermes CLI (limited profile/gateway steps)
@@ -28,7 +28,7 @@
 #
 # Override: INSTALL_DIR=/path/to/hub bash scripts/bootstrap/install.sh
 # Git branch for initial clone only: BRANCH=dev (default). Ongoing deploy pulls use
-# CH_UPDATE_GIT_BRANCH in .env.local (see scripts/application/ch-deploy.sh), not BRANCH.
+# PS_UPDATE_GIT_BRANCH in .env.local (see scripts/application/ps-deploy.sh), not BRANCH.
 # Prerequisites: Node.js 20+, git. Hermes recommended (see prompts). macOS and Linux only.
 # ═══════════════════════════════════════════════════════════════
 
@@ -63,21 +63,21 @@ hermes_cli_ok() {
 }
 
 noninteractive() {
-  [[ "${CI:-}" == "1" || "${CH_INSTALL_NONINTERACTIVE:-}" == "1" ]]
+  [[ "${CI:-}" == "1" || "${PS_INSTALL_NONINTERACTIVE:-}" == "1" ]]
 }
 
 HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
 HERMES_INSTALL_URL="https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh"
 
-# shellcheck source=../lib/ch-env.sh
-source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib" && pwd)/ch-env.sh"
+# shellcheck source=../lib/ps-env.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../lib" && pwd)/ps-env.sh"
 
 echo ""
 echo "╔══════════════════════════════════════════╗"
 echo "║   PatterStage — Installer                 ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
-ch_print_hermes_install_paths
+ps_print_hermes_install_paths
 
 if [ "$IN_REPO" = true ]; then
     if ! command -v node &>/dev/null; then
@@ -87,14 +87,14 @@ if [ "$IN_REPO" = true ]; then
     cd "$SCRIPT_REPO_ROOT"
     bash scripts/bootstrap/setup.sh
 
-    # shellcheck source=../lib/ch-dotenv-local.sh
-    source "$SCRIPT_REPO_ROOT/scripts/lib/ch-dotenv-local.sh"
-    ch_load_control_hub_env_local "$SCRIPT_REPO_ROOT"
-    # shellcheck source=../lib/ch-hermes-profile-templates.sh
-    source "$SCRIPT_REPO_ROOT/scripts/lib/ch-hermes-profile-templates.sh"
-    ch_resolve_hermes_home
+    # shellcheck source=../lib/ps-dotenv-local.sh
+    source "$SCRIPT_REPO_ROOT/scripts/lib/ps-dotenv-local.sh"
+    ps_load_patterstage_env_local "$SCRIPT_REPO_ROOT"
+    # shellcheck source=../lib/ps-hermes-profile-templates.sh
+    source "$SCRIPT_REPO_ROOT/scripts/lib/ps-hermes-profile-templates.sh"
+    ps_resolve_hermes_home
 
-    if ! ch_hermes_config_present; then
+    if ! ps_hermes_config_present; then
         info "Skipping optional Hermes profile templates (no $HERMES_HOME/config.yaml). Run Hermes setup, then re-run install or apply templates from data/seed/profiles/."
     else
         run_profile_templates=false
@@ -128,8 +128,8 @@ if [ "$IN_REPO" = true ]; then
             esac
         fi
         if [ "$run_profile_templates" = true ]; then
-            ch_profiles_log() { info "$*"; }
-            ch_bundled_profiles_install "$SCRIPT_REPO_ROOT"
+            ps_profiles_log() { info "$*"; }
+            ps_bundled_profiles_install "$SCRIPT_REPO_ROOT"
             ok "Bundled Hermes profile templates installed (missing files only)."
         fi
     fi
@@ -291,15 +291,15 @@ if [ ! -f "scripts/bootstrap/setup.sh" ]; then
 fi
 bash scripts/bootstrap/setup.sh
 
-# shellcheck source=lib/ch-dotenv-local.sh
-source "$INSTALL_DIR/scripts/lib/ch-dotenv-local.sh"
-ch_load_control_hub_env_local "$INSTALL_DIR"
-# shellcheck source=lib/ch-hermes-profile-templates.sh
-source "$INSTALL_DIR/scripts/lib/ch-hermes-profile-templates.sh"
-ch_resolve_hermes_home
+# shellcheck source=lib/ps-dotenv-local.sh
+source "$INSTALL_DIR/scripts/lib/ps-dotenv-local.sh"
+ps_load_patterstage_env_local "$INSTALL_DIR"
+# shellcheck source=lib/ps-hermes-profile-templates.sh
+source "$INSTALL_DIR/scripts/lib/ps-hermes-profile-templates.sh"
+ps_resolve_hermes_home
 
 # ── Optional: bundled Hermes profile templates ───────────────
-if ! ch_hermes_config_present; then
+if ! ps_hermes_config_present; then
     info "Skipping optional Hermes profile templates (no $HERMES_HOME/config.yaml). Re-run install after Hermes setup, or set HERMES_HOME in .env.local if Hermes lives elsewhere."
 else
     run_profile_templates=false
@@ -333,8 +333,8 @@ else
         esac
     fi
     if [ "$run_profile_templates" = true ]; then
-        ch_profiles_log() { info "$*"; }
-        ch_bundled_profiles_install "$INSTALL_DIR"
+        ps_profiles_log() { info "$*"; }
+        ps_bundled_profiles_install "$INSTALL_DIR"
         ok "Bundled Hermes profile templates installed (missing files only)."
     fi
 fi
@@ -403,14 +403,14 @@ echo "╔═══════════════════════�
 echo "║   Installation Complete!                  ║"
 echo "╚══════════════════════════════════════════╝"
 echo ""
-CH_DONE_PORT="(see .env.local PORT)"
+PS_DONE_PORT="(see .env.local PORT)"
 if [ -f "$INSTALL_DIR/.env.local" ]; then
-    CH_DONE_PORT="$(grep -E '^PORT=' "$INSTALL_DIR/.env.local" | tail -n1 | sed 's/^PORT=//' | tr -d '\r')"
+    PS_DONE_PORT="$(grep -E '^PORT=' "$INSTALL_DIR/.env.local" | tail -n1 | sed 's/^PORT=//' | tr -d '\r')"
 fi
 echo "Start the server:"
 echo "  cd $INSTALL_DIR"
 echo "  npm run start:network"
 echo ""
-echo "Listen port: $CH_DONE_PORT  →  http://127.0.0.1:${CH_DONE_PORT}/"
+echo "Listen port: $PS_DONE_PORT  →  http://127.0.0.1:${PS_DONE_PORT}/"
 echo ""
 ok "Install complete. Start the server with: cd $INSTALL_DIR && npm run start:network"

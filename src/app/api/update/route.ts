@@ -19,9 +19,9 @@ import { spawnChDeploy } from "@/lib/deploy-spawn";
 // Update API — Version Check + Update + Restart
 // ═══════════════════════════════════════════════════════════════
 // GET  /api/update                       → check for updates
-// POST /api/update { action: "update" }  → spawn scripts/application/ch-deploy.sh update (gated)
+// POST /api/update { action: "update" }  → spawn scripts/application/ps-deploy.sh update (gated)
 // POST /api/update { action: "rebuild" } → build current tree + restart (optional branch checkout)
-// GET  /api/update?deploy=1            → deploy status from ch-deploy.status
+// GET  /api/update?deploy=1            → deploy status from ps-deploy.status
 // POST /api/update { action: "restart" } → restart only (gated)
 //
 // CH_ENABLE_DEPLOY_API=true required for POST.
@@ -29,7 +29,7 @@ import { spawnChDeploy } from "@/lib/deploy-spawn";
 // CH_UPDATE_GIT_BRANCH (default dev) — remote tracking branch for deploy.
 
 const APP_DIR = process.cwd();
-const CH_DEPLOY_SCRIPT = APP_DIR + "/scripts/application/ch-deploy.sh";
+const CH_DEPLOY_SCRIPT = APP_DIR + "/scripts/application/ps-deploy.sh";
 const CACHE_FILE = tmpdir() + "/ch-version-cache.json";
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -359,7 +359,7 @@ export async function POST(request: NextRequest) {
         logApiError("POST /api/update", "spawn update", new Error(spawnedUpdate.error ?? ""));
         appendAuditLine({
           action: "deploy.update",
-          resource: "ch-deploy",
+          resource: "ps-deploy",
           ok: false,
           correlationId,
         });
@@ -400,7 +400,7 @@ export async function POST(request: NextRequest) {
 function deployScriptMissingResponse(): NextResponse | null {
   if (!existsSync(CH_DEPLOY_SCRIPT)) {
     return NextResponse.json(
-      { error: "Deploy script missing (scripts/application/ch-deploy.sh)" },
+      { error: "Deploy script missing (scripts/application/ps-deploy.sh)" },
       { status: 500 }
     );
   }

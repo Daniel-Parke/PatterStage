@@ -21,11 +21,22 @@ export interface DeployStatus {
   logHint: string;
 }
 
-const DEPLOY_STATUS_BASENAME = "ch-deploy.status";
+const DEPLOY_STATUS_BASENAME = "ps-deploy.status";
+const LEGACY_DEPLOY_STATUS_BASENAME = "ch-deploy.status";
 const STALE_RUNNING_MS = 45 * 60 * 1000;
 
+/** Canonical (write) path for the deploy status file. */
 function deployStatusPath(): string {
   return getActiveHermesPaths().logs + "/" + DEPLOY_STATUS_BASENAME;
+}
+
+/** Read path: prefer the new ps- file; fall back to a legacy ch- file written
+ *  by a pre-rename deploy still in flight during the first update. */
+function deployStatusReadPath(): string {
+  const p = deployStatusPath();
+  if (existsSync(p)) return p;
+  const legacy = getActiveHermesPaths().logs + "/" + LEGACY_DEPLOY_STATUS_BASENAME;
+  return existsSync(legacy) ? legacy : p;
 }
 
 function parseStatusFile(raw: string): DeployStatus {
@@ -57,7 +68,7 @@ function isStaleRunning(status: DeployStatus): boolean {
 }
 
 export function readDeployStatus(): DeployStatus {
-  const path = deployStatusPath();
+  const path = deployStatusReadPath();
   if (!existsSync(path)) {
     return {
       state: "idle",
@@ -76,8 +87,8 @@ export function readDeployStatus(): DeployStatus {
       const stale: DeployStatus = {
         ...status,
         state: "failed",
-        message: "Deploy status stale (timed out) — check ch-restart.log",
-        logHint: "ch-restart.log",
+        message: "Deploy status stale (timed out) — check ps-restart.log",
+        logHint: "ps-restart.log",
         finishedAt: new Date().toISOString(),
         exitCode: "1",
       };

@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// deploy-spawn.ts — spawn ch-deploy.sh detached + verify it started
+// deploy-spawn.ts — spawn ps-deploy.sh detached + verify it started
 // ═══════════════════════════════════════════════════════════════
 // Extracted from src/app/api/update/route.ts so the liveness-probe logic
 // is unit-testable without spawning real processes or waiting on real
@@ -23,7 +23,7 @@ function quoteShellSingle(arg: string): string {
 }
 
 /**
- * Spawn `bash ch-deploy.sh <args>` fully detached so it outlives the
+ * Spawn `bash ps-deploy.sh <args>` fully detached so it outlives the
  * next-server process that started it. Returns once the deploy has been
  * confirmed to have started (or to have failed immediately).
  *
@@ -135,7 +135,7 @@ export async function spawnChDeploy(
 //    under <unit>.service. That false positive is what this design fixes.
 //
 // Strategy: the deploy script is the source of truth. It writes state=running
-// early and state=failed/state=success terminally (ch-deploy.status). We fail
+// early and state=failed/state=success terminally (ps-deploy.status). We fail
 // fast only on an *explicit* failure signal:
 //   - status file state=failed (either path), or
 //   - systemd unit ActiveState=failed (systemd path).
@@ -178,10 +178,10 @@ export async function probeDeployLiveness(
       return {
         ok: false,
         error:
-          "Deploy already in progress (lock held by another process). Wait for the current deploy to finish or run: rm -f /tmp/ch-deploy.lock",
+          "Deploy already in progress (lock held by another process). Wait for the current deploy to finish or run: rm -f /tmp/ps-deploy.lock",
       };
     }
-    const log = status.logHint || "ch-update.log";
+    const log = status.logHint || "ps-update.log";
     return {
       ok: false,
       error: `Deploy script failed early — ${status.message || "see logs"}. Check ~/.hermes/logs/${log} for the cause.`,
@@ -202,7 +202,7 @@ export async function probeDeployLiveness(
       if (active === "active" || active === "activating") everActive = true;
     } else if (typeof childPid === "number") {
       if (!deps.isPidAlive(childPid)) {
-        const log = deps.readStatus().logHint || "ch-update.log";
+        const log = deps.readStatus().logHint || "ps-update.log";
         return {
           ok: false,
           error: `Deploy script exited immediately (PID ${childPid} no longer alive after ${deps.now() - probeStart}ms). Check ~/.hermes/logs/${log} for the cause.`,
@@ -217,7 +217,7 @@ export async function probeDeployLiveness(
   // and the script never reported success, systemd-run failed to register the
   // transient unit — surface it rather than claim a successful start.
   if (usedSystemd && !everActive && deps.readStatus().state !== "success") {
-    const log = deps.readStatus().logHint || "ch-update.log";
+    const log = deps.readStatus().logHint || "ps-update.log";
     return {
       ok: false,
       error: `Deploy did not start (systemd unit ${unitName}.service never became active). Check ~/.hermes/logs/${log} or run: systemctl --user status ${unitName}.service`,

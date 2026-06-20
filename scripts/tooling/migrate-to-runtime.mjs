@@ -25,15 +25,19 @@ import { randomUUID } from "node:crypto";
 const argv = process.argv.slice(2);
 const apply = argv.includes("--apply");
 const dbFlag = argv.indexOf("--db");
-const dbPath =
-  dbFlag !== -1
-    ? argv[dbFlag + 1]
-    : process.env.CH_DATA_DIR
-      ? join(process.env.CH_DATA_DIR, "control-hub.db")
-      : join(homedir(), "control-hub", "data", "control-hub.db");
+const dataRoot =
+  process.env.PS_DATA_DIR ||
+  process.env.CH_DATA_DIR ||
+  process.env.CONTROL_HUB_DATA_DIR ||
+  join(homedir(), "patterstage", "data");
+const dbInRoot = (dir) =>
+  !existsSync(join(dir, "patterstage.db")) && existsSync(join(dir, "control-hub.db"))
+    ? join(dir, "control-hub.db")
+    : join(dir, "patterstage.db");
+const dbPath = dbFlag !== -1 ? argv[dbFlag + 1] : dbInRoot(dataRoot);
 
 if (!dbPath || !existsSync(dbPath)) {
-  console.error(`control-hub.db not found at: ${dbPath}\nPass --db <path> or set CH_DATA_DIR.`);
+  console.error(`database not found at: ${dbPath}\nPass --db <path> or set PS_DATA_DIR.`);
   process.exit(1);
 }
 

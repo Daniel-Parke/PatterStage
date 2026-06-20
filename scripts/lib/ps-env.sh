@@ -4,7 +4,7 @@
 # ═══════════════════════════════════════════════════════════════
 
 # Set KEY=value in a dotenv file (removes prior KEY= lines, appends one).
-ch_env_set() {
+ps_env_set() {
   local file="$1"
   local key="$2"
   local val="$3"
@@ -20,7 +20,7 @@ ch_env_set() {
 }
 
 # Default Hermes root from HERMES_HOME (profile-as-home → grandparent).
-ch_hermes_default_root() {
+ps_hermes_default_root() {
   local h="${1:-${HERMES_HOME:-$HOME/.hermes}}"
   if [[ "$(basename "$(dirname "$h")")" == "profiles" ]]; then
     dirname "$(dirname "$h")"
@@ -32,10 +32,10 @@ ch_hermes_default_root() {
 }
 
 # Operator banner: single canonical Hermes layout for PatterStage.
-ch_print_hermes_install_paths() {
+ps_print_hermes_install_paths() {
   local hm="${HERMES_HOME:-$HOME/.hermes}"
   local root
-  root="$(ch_hermes_default_root "$hm")"
+  root="$(ps_hermes_default_root "$hm")"
   echo ""
   echo "PatterStage uses Hermes at: $hm"
   echo "  (default: $HOME/.hermes)"
@@ -46,7 +46,7 @@ ch_print_hermes_install_paths() {
 }
 
 # Print PORT value from .env.local or empty.
-ch_env_read_port() {
+ps_env_read_port() {
   local file="$1"
   [ -f "$file" ] || return 1
   local line
@@ -57,8 +57,8 @@ ch_env_read_port() {
   printf '%s' "$line"
 }
 
-# Build CH_ALLOWED_DEV_ORIGINS for next.config (comma-separated full origins).
-ch_build_allowed_dev_origins() {
+# Build PS_ALLOWED_DEV_ORIGINS for next.config (comma-separated full origins).
+ps_build_allowed_dev_origins() {
   local port="$1"
   local origins="http://localhost:${port},http://127.0.0.1:${port}"
   local ips
@@ -74,7 +74,7 @@ ch_build_allowed_dev_origins() {
 # True if something is listening on TCP port (this host).
 # Always returns 0 (in-use / true) or 1 (free / false) regardless of
 # whether the underlying command (ss/lsof) succeeds or fails.
-ch_tcp_port_in_use() {
+ps_tcp_port_in_use() {
   local p="$1"
   if command -v ss &>/dev/null; then
     if ss -ltn "sport = :$p" 2>/dev/null | grep -q LISTEN; then
@@ -96,7 +96,7 @@ ch_tcp_port_in_use() {
 }
 
 # Print unique PIDs listening on TCP port (one per line). Portable (no grep -oP).
-ch_pids_on_tcp_port() {
+ps_pids_on_tcp_port() {
   local port="$1"
   local p line
   if command -v ss &>/dev/null; then
@@ -120,28 +120,28 @@ ch_pids_on_tcp_port() {
 }
 
 # Kill all processes listening on TCP port (best-effort).
-ch_kill_tcp_listeners_on_port() {
+ps_kill_tcp_listeners_on_port() {
   local port="$1"
   local p
-  for p in $(ch_pids_on_tcp_port "$port" | sort -u); do
+  for p in $(ps_pids_on_tcp_port "$port" | sort -u); do
     kill -9 "$p" 2>/dev/null || true
   done
 }
 
 # Stop PatterStage server + optional socat relay. $1 = app root directory.
-ch_stop_control_hub() {
+ps_stop_patterstage() {
   local app_dir="$1"
   local env_file="${app_dir}/.env.local"
   local port="${PORT:-}"
   if [ -z "$port" ] && [ -f "$env_file" ]; then
-    port="$(ch_env_read_port "$env_file" 2>/dev/null || true)"
+    port="$(ps_env_read_port "$env_file" 2>/dev/null || true)"
   fi
   port="${port:-42069}"
 
-  ch_kill_tcp_listeners_on_port "$port"
+  ps_kill_tcp_listeners_on_port "$port"
 
-  local socat_pid_file="${HOME}/.hermes/logs/ch-socat.pid"
-  local server_pid_file="${HOME}/.hermes/logs/ch-server.pid"
+  local socat_pid_file="${HOME}/.hermes/logs/ps-socat.pid"
+  local server_pid_file="${HOME}/.hermes/logs/ps-server.pid"
   local old_pid
 
   old_pid="$(cat "$server_pid_file" 2>/dev/null || true)"
@@ -157,12 +157,12 @@ ch_stop_control_hub() {
   rm -f "$socat_pid_file"
 
   local use_relay=0
-  case "${CH_SOCAT_RELAY:-}" in 1 | yes | YES | true | True) use_relay=1 ;; esac
-  if [ -n "${CH_SOCAT_BIND:-}" ]; then
+  case "${PS_SOCAT_RELAY:-}" in 1 | yes | YES | true | True) use_relay=1 ;; esac
+  if [ -n "${PS_SOCAT_BIND:-}" ]; then
     use_relay=1
   fi
   if [ "$use_relay" -eq 1 ]; then
-    local relay_port="${CH_SOCAT_RELAY_PORT:-42069}"
-    ch_kill_tcp_listeners_on_port "$relay_port"
+    local relay_port="${PS_SOCAT_RELAY_PORT:-42069}"
+    ps_kill_tcp_listeners_on_port "$relay_port"
   fi
 }

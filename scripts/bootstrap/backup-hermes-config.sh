@@ -78,7 +78,7 @@ fi
 
 # 6. PatterStage data (default ~/control-hub/data; legacy ~/.hermes/control-hub/data)
 echo "Backing up PatterStage data..."
-CH_DATA_ROOT="${CH_DATA_DIR:-$HOME/control-hub/data}"
+PS_DATA_ROOT="${PS_DATA_DIR:-$HOME/control-hub/data}"
 backup_ch_data() {
     local SRC="$1"
     local LABEL="$2"
@@ -95,8 +95,8 @@ backup_ch_data() {
     TEMPLATE_COUNT=$(find "$TARGET/control-hub/data/templates" -name "*.json" 2>/dev/null | wc -l)
     echo "  ✓ $LABEL ($MISSION_COUNT missions, $TEMPLATE_COUNT templates)"
 }
-if [ -d "$CH_DATA_ROOT" ]; then
-    backup_ch_data "$CH_DATA_ROOT" "control-hub data ($CH_DATA_ROOT)"
+if [ -d "$PS_DATA_ROOT" ]; then
+    backup_ch_data "$PS_DATA_ROOT" "control-hub data ($PS_DATA_ROOT)"
 elif [ -d "$HERMES_HOME/control-hub/data" ]; then
     backup_ch_data "$HERMES_HOME/control-hub/data" "control-hub data (legacy under HERMES_HOME)"
 fi

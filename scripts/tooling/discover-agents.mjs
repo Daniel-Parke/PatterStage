@@ -12,7 +12,7 @@ function normalizeDir(d) {
 }
 
 function getChDataDir() {
-  const raw = process.env.CH_DATA_DIR || process.env.CONTROL_HUB_DATA_DIR;
+  const raw = process.env.PS_DATA_DIR || process.env.CH_DATA_DIR || process.env.CONTROL_HUB_DATA_DIR;
   if (raw && String(raw).trim()) return normalizeDir(String(raw).trim());
   return normalizeDir(join(homedir(), "control-hub", "data"));
 }

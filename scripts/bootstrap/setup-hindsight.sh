@@ -261,15 +261,15 @@ fi
 
 # ── Step 6b: Sync to PatterStage SQLite ─────────────────────
 step "Step 6b: Syncing to PatterStage SQLite"
-CH_DATA_DIR="${CH_DATA_DIR:-$HOME/control-hub/data}"
-CH_DB="$CH_DATA_DIR/control-hub.db"
-if [ -f "$CH_DB" ]; then
+PS_DATA_DIR="${PS_DATA_DIR:-$HOME/control-hub/data}"
+PS_DB="$PS_DATA_DIR/control-hub.db"
+if [ -f "$PS_DB" ]; then
     if command -v python3 &>/dev/null; then
         python3 -c "
 import json, os, sqlite3
-ch_dir = os.environ.get('CH_DATA_DIR', os.path.expanduser('~/control-hub/data'))
+ps_dir = os.environ.get('PS_DATA_DIR', os.path.expanduser('~/control-hub/data'))
 hermes_home = os.environ.get('HERMES_HOME', os.path.expanduser('~/.hermes'))
-db_path = os.path.join(ch_dir, 'control-hub.db')
+db_path = os.path.join(ps_dir, 'control-hub.db')
 if os.path.exists(db_path):
     with open(os.path.join(hermes_home, 'config.yaml')) as f:
         config_yaml = f.read()
@@ -283,7 +283,7 @@ if os.path.exists(db_path):
         warn "python3 not found — cannot sync to PatterStage SQLite"
     fi
 else
-    info "PatterStage database not found at $CH_DB — SQLite sync skipped"
+    info "PatterStage database not found at $PS_DB — SQLite sync skipped"
     echo "  SQLite sync will happen on next deploy update via seed-catalog"
 fi
 
@@ -381,13 +381,13 @@ echo "Services:"
 echo "  Hindsight: sudo systemctl status hindsight"
 echo "  PostgreSQL: sudo systemctl status postgresql"
 echo ""
-CH_WEB_PORT="${CONTROL_HUB_PORT:-3000}"
+PS_WEB_PORT="${CONTROL_HUB_PORT:-3000}"
 if [ -f "$REPO_ROOT/.env.local" ]; then
   _p="$(grep -E '^PORT=' "$REPO_ROOT/.env.local" 2>/dev/null | tail -n1 | sed 's/^PORT=//' | tr -d '\r')"
-  [ -n "$_p" ] && CH_WEB_PORT="$_p"
+  [ -n "$_p" ] && PS_WEB_PORT="$_p"
 fi
 echo "Dashboard:"
-echo "  Memory page at http://localhost:${CH_WEB_PORT}/memory"
+echo "  Memory page at http://localhost:${PS_WEB_PORT}/memory"
 echo ""
 echo "Useful commands:"
 echo "  sudo systemctl restart hindsight    # Restart server"

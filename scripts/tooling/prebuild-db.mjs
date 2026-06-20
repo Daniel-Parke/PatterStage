@@ -132,7 +132,7 @@ const seedCatalog = spawnSync(
   {
     cwd: ROOT,
     stdio: "inherit",
-    env: { ...process.env, CH_DATA_DIR: DB_DIR },
+    env: { ...process.env, PS_DATA_DIR: DB_DIR },
     shell: process.platform === "win32",
   },
 );

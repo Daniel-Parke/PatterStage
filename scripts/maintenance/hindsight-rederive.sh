@@ -18,7 +18,7 @@
 #
 # Prerequisites:
 #   - Hindsight daemon running on http://127.0.0.1:9177
-#   - Daemon's LLM path is healthy (ch-watchdog confirms this)
+#   - Daemon's LLM path is healthy (ps-watchdog confirms this)
 #   - The bank has been consolidated (daemon worker queue empty)
 #
 # Cost: ~30-90 seconds of LLM time on the reflect call.
@@ -67,7 +67,7 @@ archive_count=$(curl -sS --max-time 10 "$BASE/v1/default/banks/$ARCHIVE_BANK/mem
 echo "  Archive currently has $archive_count facts"
 if [ "$archive_count" -lt 100 ]; then
     echo "  WARNING: archive is nearly empty. Run this only after the"
-    echo "  archive retain has completed (check ch-watchdog logs)."
+    echo "  archive retain has completed (check ps-watchdog logs)."
     if [ "$DRY_RUN" = false ]; then
         read -p "  Continue anyway? (y/N) " -n 1 -r
         echo
