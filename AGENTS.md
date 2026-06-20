@@ -9,7 +9,7 @@ Extends `~/.hermes/AGENTS.md` (base instructions). This file adds project-specif
 ## Development Environment
 
 ```bash
-cd ~/control-hub
+cd ~/patterstage
 npm run dev     # Start dev server (PORT from .env.local; setup.sh defaults 42069–42100)
 npm run build   # Production build
 npm run start   # Start production server
@@ -62,7 +62,7 @@ control-hub/
 │   │   ├── hermes-home.ts          # HERMES_HOME resolution
 │   │   ├── hermes-agent-runtime.ts # Active Hermes paths + gateway URLs
 │   │   ├── api-fetch.ts            # Shared client fetch helper
-│   │   ├── deploy-spawn.ts         # Detached ch-deploy spawn + liveness probe
+│   │   ├── deploy-spawn.ts         # Detached ps-deploy spawn + liveness probe
 │   │   ├── schema/                 # Mission + template Zod schemas (+ JSON schema)
 │   │   ├── config-schema.ts        # Config section definitions
 │   │   ├── theme.ts, utils.ts, …
@@ -74,7 +74,7 @@ control-hub/
 │   ├── integration/                # Docker install/update + runtime harness
 │   ├── jest.setup.ts
 │   └── __mocks__/better-sqlite3.cjs
-├── scripts/                        # bootstrap/, application/ch-deploy.sh, lib/, tooling/, hardware/, maintenance/
+├── scripts/                        # bootstrap/, application/ps-deploy.sh, lib/, tooling/, hardware/, maintenance/
 ├── docs/                           # Technical documentation index → docs/README.md
 ├── next.config.ts                  # Next.js config
 └── package.json
@@ -106,7 +106,7 @@ Next.js static files (favicon, `robots.txt`, etc.) go in a `public/` directory a
 
 - `src/lib/utils.ts` — `parseSchedule()`, `messageSummary()`, `timeAgo()`, `timeUntil()`, `formatBytes()`
 - `src/lib/api-logger.ts` — `logApiError()`, `safeJsonParse()`, `safeReadJsonFile()`
-- `src/lib/paths.ts` — `PATHS` (PatterStage–owned dirs), `CH_DATA_DIR`, `getChScriptsDir()`, `getChHardwareLogDir()`
+- `src/lib/paths.ts` — `PATHS` (PatterStage–owned dirs), `PS_DATA_DIR`, `getChScriptsDir()`, `getChHardwareLogDir()`
 - `src/lib/hermes-agent-runtime.ts` — `getActiveHermesPaths()`, `getActiveHermesHome()`, `getAgentLlmEndpoints()`
 - `src/lib/hermes-home.ts` — `getHermesHome()` (env-first; default `~/.hermes`)
 - `src/lib/models-repository.ts` — `getDefaultModel()`, `getModel()`, `getModelWithKey()`, `setDefaultModel()`, `listModels()` (SQLite registry)
@@ -121,7 +121,7 @@ The agent is authenticated with GitHub via `$GITHUB_TOKEN` (set in `~/.hermes/.e
 
 ```bash
 # Before starting work
-cd ~/control-hub
+cd ~/patterstage
 git checkout dev
 git pull origin dev
 
@@ -145,13 +145,13 @@ gh pr create --title "type: description" --body "What changed and why." --base d
 
 ## Deployment
 
-The deploy entrypoint is `scripts/application/ch-deploy.sh` (also driven by the `POST /api/update` UI button):
+The deploy entrypoint is `scripts/application/ps-deploy.sh` (also driven by the `POST /api/update` UI button):
 
 - **`restart`** — no git/build; stops the port and restarts next-server
 - **`rebuild`** — build current tree + restart (optional `--branch` = local checkout only, no pull)
-- **`update`** — pull `CH_UPDATE_GIT_BRANCH`, install deps if needed, build, `seed-catalog.ts --merge`, restart
+- **`update`** — pull `PS_UPDATE_GIT_BRANCH`, install deps if needed, build, `seed-catalog.ts --merge`, restart
 
-Status is written to `~/.hermes/logs/ch-deploy.status`; logs to `ch-update.log` / `ch-build.log` / `ch-restart.log`. The deploy is spawned detached (systemd `--user` transient unit, or `nohup` fallback) and verified by the liveness probe in `src/lib/deploy-spawn.ts` — which watches the systemd **unit** (not the launcher PID) and the status file. `CH_*` / `HERMES_HOME` come from `.env.local`.
+Status is written to `~/.hermes/logs/ps-deploy.status`; logs to `ps-update.log` / `ps-build.log` / `ps-restart.log`. The deploy is spawned detached (systemd `--user` transient unit, or `nohup` fallback) and verified by the liveness probe in `src/lib/deploy-spawn.ts` — which watches the systemd **unit** (not the launcher PID) and the status file. `PS_*` / `HERMES_HOME` come from `.env.local`.
 
 When manually restarting from inside the Hermes agent terminal, use the terminal tool with `background=true` — **never** `nohup ... &`, which causes the Hermes terminal's pipe-inheritance deadlock. `-H 0.0.0.0` is required for LAN access. See the `npm-service-restart` skill.
 
@@ -160,7 +160,7 @@ When manually restarting from inside the Hermes agent terminal, use the terminal
 - `scripts/bootstrap/install.sh` — Bootstrap clone + setup, or `--in-repo`; optional `INSTALL_HERMES_PROFILE_TEMPLATES` (see header)
 - `scripts/bootstrap/setup.sh` — Post-clone setup (PORT + `.env.local`, npm install, build, migrate, seed)
 - `scripts/bootstrap/setup-hindsight.sh` — Optional Hindsight memory provider (PostgreSQL + pgvector + systemd unit)
-- Scripts layout (bootstrap vs lib vs tooling vs `ch-deploy`): [docs/DEPLOY.md](docs/DEPLOY.md)
+- Scripts layout (bootstrap vs lib vs tooling vs `ps-deploy`): [docs/DEPLOY.md](docs/DEPLOY.md)
 
 ## Design Philosophy
 

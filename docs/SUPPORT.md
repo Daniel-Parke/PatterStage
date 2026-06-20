@@ -7,7 +7,7 @@ Need help? Here is how to get unstuck without shouting into the void.
 - **[Hermes Agent](https://github.com/NousResearch/hermes-agent)** is the upstream runtime (gateways, tools, agent loop).
 - **This repo** is **PatterStage**—the dashboard and APIs I ship on top of your local Hermes install.
 
-If the agent itself misbehaves on Discord or in a CLI session, Hermes docs and channels are usually the right place. If the PatterStage UI, REST routes, `CH_DATA_DIR`, or this repo's CI is wrong, you are in the right place.
+If the agent itself misbehaves on Discord or in a CLI session, Hermes docs and channels are usually the right place. If the PatterStage UI, REST routes, `PS_DATA_DIR`, or this repo's CI is wrong, you are in the right place.
 
 ## Getting help with PatterStage
 

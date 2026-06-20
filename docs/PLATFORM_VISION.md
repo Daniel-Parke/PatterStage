@@ -10,7 +10,7 @@ flowchart TB
   API[API routes]
   ORCH[Orchestration core\nmissions · scheduler · run tracker]
   RT[AgentRuntime adapter]
-  CH[(CH_DATA_DIR SQLite)]
+  CH[(PS_DATA_DIR SQLite)]
   H[Hermes API Server :8642]
   UI --> API
   API --> ORCH
@@ -21,7 +21,7 @@ flowchart TB
 
 - **Orchestration core** (`src/lib/orchestration/`) owns the mission lifecycle, the **PatterStage-owned scheduler**, and run reconciliation. It is framework-agnostic.
 - **Runtime adapter** (`src/lib/runtime/`) is the one seam to a backend. `AgentRuntime` is modelled on async run semantics (submit / poll / stream / stop / approve + discovery); `HermesRuntime` implements it over the Hermes **API Server** (`API_SERVER_ENABLED=true`, default `http://127.0.0.1:8642`, bearer auth). Swapping in another framework means implementing `AgentRuntime` — nothing above the seam changes.
-- **PatterStage state** lives under **`CH_DATA_DIR`** (SQLite: missions, **runs**, **schedules**, models, credentials, profiles, sessions, templates, stories). The **Hermes install** (`HERMES_HOME`) is touched only for config Hermes reads from files (`config.yaml` / `.env` / profile files), behind one write-back module with drift detection.
+- **PatterStage state** lives under **`PS_DATA_DIR`** (SQLite: missions, **runs**, **schedules**, models, credentials, profiles, sessions, templates, stories). The **Hermes install** (`HERMES_HOME`) is touched only for config Hermes reads from files (`config.yaml` / `.env` / profile files), behind one write-back module with drift detection.
 
 ## Scheduling — PatterStage owns the timer
 

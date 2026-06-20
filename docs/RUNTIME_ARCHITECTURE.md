@@ -68,7 +68,7 @@ A zero-dependency **mock Hermes API Server** (`mock-hermes/server.mjs`) implemen
 
 ```bash
 docker compose up --build           # PatterStage + mock Hermes
-CH_URL=http://localhost:42069 node tests/integration/runtime/full-stack-smoke.mjs
+PS_URL=http://localhost:42069 node tests/integration/runtime/full-stack-smoke.mjs
 # or locally:
 npm run mock-hermes &               # :8642
 HERMES_GATEWAY_URL=http://127.0.0.1:8642 API_SERVER_KEY=dev npm start

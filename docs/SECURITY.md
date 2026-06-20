@@ -42,7 +42,7 @@ I aim for **coordinated disclosure**: fix first, then a short public note (chang
 ## If you run PatterStage yourself
 
 - Bind to trusted networks or put a reverse proxy with auth in front.
-- Set `CH_READ_ONLY=1` on instances that should not mutate config.
+- Set `PS_READ_ONLY=1` on instances that should not mutate config.
 - Rotate keys if you think they leaked; check `~/.hermes/logs` and deploy logs for accidental echo.
 
 Thanks for helping keep installs safe.

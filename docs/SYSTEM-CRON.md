@@ -1,14 +1,14 @@
 # System cron — Hindsight backup
 
-PatterStage ships one host-level cron script: **`ch-backup.sh`** (Hindsight snapshot). During [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh), the script is copied into **`CH_DATA_DIR/scripts`** when missing (see [`getChScriptsDir()`](../src/lib/paths.ts)). Register jobs from the **Orchestration → Scripts** page; each crontab line must invoke a script under that directory ([`POST /api/cron/hardware`](../src/app/api/cron/hardware/route.ts)).
+PatterStage ships one host-level cron script: **`ps-backup.sh`** (Hindsight snapshot). During [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh), the script is copied into **`PS_DATA_DIR/scripts`** when missing (see [`getChScriptsDir()`](../src/lib/paths.ts)). Register jobs from the **Orchestration → Scripts** page; each crontab line must invoke a script under that directory ([`POST /api/cron/hardware`](../src/app/api/cron/hardware/route.ts)).
 
-Preset label and filename: [`src/lib/hardware-cron.ts`](../src/lib/hardware-cron.ts) (`HARDWARE_CRON_UI_PRESETS`). Log output defaults to **`CH_HARDWARE_LOG_DIR`** (`CH_DATA_DIR/logs`).
+Preset label and filename: [`src/lib/hardware-cron.ts`](../src/lib/hardware-cron.ts) (`HARDWARE_CRON_UI_PRESETS`). Log output defaults to **`PS_HARDWARE_LOG_DIR`** (`PS_DATA_DIR/logs`).
 
 | Preset | File | Purpose |
 |--------|------|---------|
-| Backup | `ch-backup.sh` | Hindsight snapshot via [`hindsight_bridge.py`](https://github.com/NousResearch/hermes-agent/blob/main/scripts/hindsight_bridge.py) (`list`, `directives`, `mental-models`), merged with **`jq`**, written under `HINDSIGHT_BACKUP_DIR`, rotated by age. Requires a running Hindsight HTTP server ([Hermes Memory / Hindsight](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory)). |
+| Backup | `ps-backup.sh` | Hindsight snapshot via [`hindsight_bridge.py`](https://github.com/NousResearch/hermes-agent/blob/main/scripts/hindsight_bridge.py) (`list`, `directives`, `mental-models`), merged with **`jq`**, written under `HINDSIGHT_BACKUP_DIR`, rotated by age. Requires a running Hindsight HTTP server ([Hermes Memory / Hindsight](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory)). |
 
-## `ch-backup.sh` environment
+## `ps-backup.sh` environment
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -21,10 +21,10 @@ Preset label and filename: [`src/lib/hardware-cron.ts`](../src/lib/hardware-cron
 
 **Dependencies:** `bash`, `jq`, and Hermes venv Python at `$HERMES_HOME/hermes-agent/venv/bin/python3` (or `.venv`).
 
-**Suggested schedule:** `0 1 * * *` (daily 01:00) with stderr appended under `CH_HARDWARE_LOG_DIR`:
+**Suggested schedule:** `0 1 * * *` (daily 01:00) with stderr appended under `PS_HARDWARE_LOG_DIR`:
 
 ```cron
-0 1 * * * LOG_DIR=$HOME/control-hub/data/logs $HOME/control-hub/data/scripts/ch-backup.sh >> $HOME/control-hub/data/logs/ch-backup.log 2>&1
+0 1 * * * LOG_DIR=$HOME/patterstage/data/logs $HOME/patterstage/data/scripts/ps-backup.sh >> $HOME/patterstage/data/logs/ps-backup.log 2>&1
 ```
 
-Replace paths with your `CH_DATA_DIR` if set. The System Cron UI builds the same `>> …log 2>&1` suffix.
+Replace paths with your `PS_DATA_DIR` if set. The System Cron UI builds the same `>> …log 2>&1` suffix.

@@ -4,7 +4,7 @@
 
 PatterStage is a **web control plane and orchestrator** for the [Hermes Agent](https://hermes-agent.nousresearch.com/docs/getting-started/installation). Hermes runs your agents on the machine; PatterStage gives you a dashboard to **dispatch missions, schedule recurring work, run host scripts, browse sessions and memory, manage models and profiles, and edit Hermes config** — without living in the terminal.
 
-It owns its own state (SQLite under `CH_DATA_DIR`) and talks to the agent over Hermes' **HTTP API Server** through a single runtime adapter. There are no bash wrappers or `jobs.json` cron bridges: a mission is an HTTP **run**, and "when does this run" is a PatterStage-owned **schedule**.
+It owns its own state (SQLite under `PS_DATA_DIR`) and talks to the agent over Hermes' **HTTP API Server** through a single runtime adapter. There are no bash wrappers or `jobs.json` cron bridges: a mission is an HTTP **run**, and "when does this run" is a PatterStage-owned **schedule**.
 
 ![PatterStage dashboard](docs/images/dashboard.png)
 
@@ -48,13 +48,13 @@ How the pieces fit together: [docs/RUNTIME_ARCHITECTURE.md](docs/RUNTIME_ARCHITE
 
 1. **Install Hermes Agent** on the same machine (link above) and run `hermes setup` if prompted.
 
-2. **Get PatterStage** (installs to `~/control-hub` by default, or use an existing clone):
+2. **Get PatterStage** (installs to `~/patterstage` by default, or use an existing clone):
    ```bash
    git clone https://github.com/Daniel-Parke/PatterStage.git
    cd PatterStage
    bash scripts/bootstrap/install.sh --in-repo
    ```
-   Fresh machine without a clone yet: `bash scripts/bootstrap/install.sh` (clones to `~/control-hub`, then runs setup).
+   Fresh machine without a clone yet: `bash scripts/bootstrap/install.sh` (clones to `~/patterstage`, then runs setup).
 
 3. **Start the server** and open the dashboard:
    ```bash
@@ -70,12 +70,12 @@ The bootstrap and deploy scripts prompt by default and **skip every prompt** whe
 
 | Flag / env | Effect |
 |------------|--------|
-| `CH_INSTALL_NONINTERACTIVE=1` or `CI=1` | Skip all install/setup prompts (use the env vars below for the choices). |
+| `PS_INSTALL_NONINTERACTIVE=1` or `CI=1` | Skip all install/setup prompts (use the env vars below for the choices). |
 | `INSTALL_HERMES=yes\|no` | Install upstream Hermes then exit (re-run after), or continue without it. |
 | `INSTALL_HINDSIGHT=yes\|no` | Set up the Hindsight memory provider, or skip. |
 | `INSTALL_HERMES_PROFILE_TEMPLATES=yes\|no` | Copy bundled profile files (catalog seed is the main path). |
-| `CH_SETUP_SKIP_CATALOG_SEED=1` | Skip the professional catalog seed. |
-| `--yes` / `CH_ASSUME_YES=1` | Skip confirmation prompts on maintenance scripts (migrate, etc.). |
+| `PS_SETUP_SKIP_CATALOG_SEED=1` | Skip the professional catalog seed. |
+| `--yes` / `PS_ASSUME_YES=1` | Skip confirmation prompts on maintenance scripts (migrate, etc.). |
 
 ---
 
@@ -104,9 +104,9 @@ The bootstrap and deploy scripts prompt by default and **skip every prompt** whe
 | Location | Holds |
 |----------|--------|
 | **`~/.hermes`** (`HERMES_HOME`) | Hermes data: `config.yaml`, `profiles/`, sessions, the agent package (`~/.hermes/hermes-agent/`). |
-| **`~/control-hub/data`** (`CH_DATA_DIR`, default) | PatterStage SQLite (`control-hub.db`), missions, templates, stories, logs — not committed to git. |
+| **`~/patterstage/data`** (`PS_DATA_DIR`, default) | PatterStage SQLite (`patterstage.db`), missions, templates, stories, logs — not committed to git. |
 
-Set `CH_DATA_DIR` / `HERMES_HOME` in `.env.local` for non-default paths. Full reference: [docs/ENV_REFERENCE.md](docs/ENV_REFERENCE.md).
+Set `PS_DATA_DIR` / `HERMES_HOME` in `.env.local` for non-default paths. Full reference: [docs/ENV_REFERENCE.md](docs/ENV_REFERENCE.md).
 
 ---
 
@@ -115,13 +115,13 @@ Set `CH_DATA_DIR` / `HERMES_HOME` in `.env.local` for non-default paths. Full re
 Use the sidebar **Check → Update → Rebuild** buttons, or on the server:
 
 ```bash
-bash scripts/application/ch-deploy.sh update    # pull → backup + migrate DB → build → restart
-bash scripts/application/ch-deploy.sh rebuild    # build current tree (no git pull) → migrate → restart
-bash scripts/application/ch-deploy.sh restart    # restart the server only
-bash scripts/maintenance/ch-migrate.sh           # database migration only (interactive; --yes to skip prompts)
+bash scripts/application/ps-deploy.sh update    # pull → backup + migrate DB → build → restart
+bash scripts/application/ps-deploy.sh rebuild    # build current tree (no git pull) → migrate → restart
+bash scripts/application/ps-deploy.sh restart    # restart the server only
+bash scripts/maintenance/ps-migrate.sh           # database migration only (interactive; --yes to skip prompts)
 ```
 
-**Your data is migrated, not wiped.** Every update/migration **backs up `control-hub.db` first** (`control-hub.db.pre-migrate-<timestamp>.bak` under `CH_DATA_DIR`), then applies the full schema migration (the same applier chain the app runs at boot) and converts legacy recurring cron jobs into PatterStage schedules. The schema change is additive — existing missions, models, sessions, and credentials are preserved. If a database is ever too old/incompatible to upgrade in place, it is rebuilt from baseline with preserved tables re-imported, and anything that couldn't be carried over **remains in the backup with a logged warning** — nothing is silently lost. Details: [docs/MIGRATION.md](docs/MIGRATION.md).
+**Your data is migrated, not wiped.** Every update/migration **backs up `patterstage.db` first** (`patterstage.db.pre-migrate-<timestamp>.bak` under `PS_DATA_DIR`), then applies the full schema migration (the same applier chain the app runs at boot) and converts legacy recurring cron jobs into PatterStage schedules. The schema change is additive — existing missions, models, sessions, and credentials are preserved. If a database is ever too old/incompatible to upgrade in place, it is rebuilt from baseline with preserved tables re-imported, and anything that couldn't be carried over **remains in the backup with a logged warning** — nothing is silently lost. Details: [docs/MIGRATION.md](docs/MIGRATION.md).
 
 See [docs/DEPLOY.md](docs/DEPLOY.md) for Docker, TLS, ports, and the LAN relay.
 
@@ -136,7 +136,7 @@ See [docs/DEPLOY.md](docs/DEPLOY.md) for Docker, TLS, ports, and the LAN relay.
 | **Schedules / scripts not firing** | The scheduler boots with the server (`src/instrumentation.ts`); confirm the server is running and check Main → Logs. |
 | **Catalog seed warning during setup** | Run `npx tsx scripts/tooling/seed-catalog.ts --merge` or use Config → Seed. |
 | **Cancel didn't stop the agent** | See [Missions → Cancellation](docs/MISSIONS.md); cancellation stops the backend run over HTTP. |
-| **Optional LAN relay (`CH_SOCAT_RELAY`)** | On macOS: `brew install socat`. See [docs/DEPLOY.md](docs/DEPLOY.md). |
+| **Optional LAN relay (`PS_SOCAT_RELAY`)** | On macOS: `brew install socat`. See [docs/DEPLOY.md](docs/DEPLOY.md). |
 
 ---
 
@@ -165,10 +165,10 @@ App pages live under `src/app/`; API routes under `src/app/api/`. Orchestration 
 |--------|------|
 | `scripts/bootstrap/install.sh` | Clone + setup, or `--in-repo`; optional Hermes/Hindsight install. |
 | `scripts/bootstrap/setup.sh` | `.env.local`, PORT, deps, build, **backup + migrate**, catalog seed. |
-| `scripts/application/ch-deploy.sh` | `update` \| `rebuild` \| `restart` (UI-spawned; status-JSON + logs). |
-| `scripts/maintenance/ch-migrate.sh` | Backup + full DB migration (schema + legacy data); interactive, `--yes` to skip. |
+| `scripts/application/ps-deploy.sh` | `update` \| `rebuild` \| `restart` (UI-spawned; status-JSON + logs). |
+| `scripts/maintenance/ps-migrate.sh` | Backup + full DB migration (schema + legacy data); interactive, `--yes` to skip. |
 | `scripts/bootstrap/stop.sh` | Stop listeners on `PORT`. |
-| `scripts/lib/ch-log.sh` | Shared logging + prompt helpers (`ch_info/ok/warn/err` + `ch_confirm`). |
+| `scripts/lib/ps-log.sh` | Shared logging + prompt helpers (`ps_info/ok/warn/err` + `ps_confirm`). |
 
 Professional seeds: `data/seed/`. Full layout + flags: [docs/DEPLOY.md](docs/DEPLOY.md).
 

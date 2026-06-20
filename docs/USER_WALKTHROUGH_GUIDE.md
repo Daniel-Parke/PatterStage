@@ -46,7 +46,7 @@ The guide is written for the **Junior developer / operator** — every page is d
 
 **PatterStage** is the **web dashboard** for that install. You use it to see health at a glance, dispatch missions, schedule recurring work, run host scripts, browse sessions, tune models, and edit agent behaviour — without living in the terminal.
 
-PatterStage is **a Next.js app** that talks to a SQLite database under `~/control-hub/data` and to the active Hermes install under `~/.hermes`. Everything you can do in the dashboard, you can also do through a REST API — see [API.md](API.md). The dashboard never bypasses the API to write files on disk directly, so the data path is auditable.
+PatterStage is **a Next.js app** that talks to a SQLite database under `~/patterstage/data` and to the active Hermes install under `~/.hermes`. Everything you can do in the dashboard, you can also do through a REST API — see [API.md](API.md). The dashboard never bypasses the API to write files on disk directly, so the data path is auditable.
 
 **Why a separate app and not just a CLI?** Some things are easier in a UI: a session transcript with markdown rendering, a kanban mission board, a per-profile drift banner, a per-row Push/Pull on model records. PatterStage is the place to drive those workflows.
 
@@ -60,7 +60,7 @@ PatterStage is **a Next.js app** that talks to a SQLite database under `~/contro
 | **Rec Room** | Story Weaver (interactive fiction) |
 | **Config** | Models, HERMES.md, environment, YAML sections |
 
-At the bottom of the sidebar are three deploy buttons — **Update**, **Restart**, and **Rebuild** — that talk to the host's `ch-deploy.sh` and rebuild the running PatterStage process. See [Sidebar deploy buttons](#sidebar-deploy-buttons-update--rebuild--restart) and [DEPLOY.md](DEPLOY.md).
+At the bottom of the sidebar are three deploy buttons — **Update**, **Restart**, and **Rebuild** — that talk to the host's `ps-deploy.sh` and rebuild the running PatterStage process. See [Sidebar deploy buttons](#sidebar-deploy-buttons-update--rebuild--restart) and [DEPLOY.md](DEPLOY.md).
 
 ---
 
@@ -239,30 +239,30 @@ This replaced the separate "Schedules" page — scheduling now lives with the mi
 
 ## Orchestration → Scripts
 
-The **Scripts** page is a file-aware manager for **host shell scripts** under `CH_DATA_DIR/scripts` — backups, cleanups, health checks — separate from agent missions. (Scheduling *agent* work is done from the Missions composer's **Schedule** mode; see the [Scheduled missions](#scheduled-missions) note above.) It reads the script files (`/api/scripts`), cross-references the host crontab for each one's schedule, runs them on demand, and tails their logs. The bundled `ch-backup.sh` ships under `scripts/hardware/` and is copied into `CH_DATA_DIR/scripts` during `setup.sh`.
+The **Scripts** page is a file-aware manager for **host shell scripts** under `PS_DATA_DIR/scripts` — backups, cleanups, health checks — separate from agent missions. (Scheduling *agent* work is done from the Missions composer's **Schedule** mode; see the [Scheduled missions](#scheduled-missions) note above.) It reads the script files (`/api/scripts`), cross-references the host crontab for each one's schedule, runs them on demand, and tails their logs. The bundled `ps-backup.sh` ships under `scripts/hardware/` and is copied into `PS_DATA_DIR/scripts` during `setup.sh`.
 
 ### What you see
 
-A row per `.sh` file in `CH_DATA_DIR/scripts`, each showing **name · size · schedule (or "not scheduled") · last run**, with actions:
+A row per `.sh` file in `PS_DATA_DIR/scripts`, each showing **name · size · schedule (or "not scheduled") · last run**, with actions:
 - **Run now** — execs the script server-side (path-validated, no shell) and appends output to its log.
-- **Logs** — opens a modal tailing the script's log under `CH_HARDWARE_LOG_DIR`.
+- **Logs** — opens a modal tailing the script's log under `PS_HARDWARE_LOG_DIR`.
 - **Schedule** — puts the script on the host crontab (a 5-field cron); once scheduled it shows the cadence and an **Unschedule** action.
 - **Refresh** — re-reads the files + crontab.
 
-Drop a new `.sh` file into `CH_DATA_DIR/scripts` and it appears automatically.
+Drop a new `.sh` file into `PS_DATA_DIR/scripts` and it appears automatically.
 
 ### Typical use
 
-1. Drop or edit a script under `CH_DATA_DIR/scripts` (e.g. `ch-backup.sh`).
+1. Drop or edit a script under `PS_DATA_DIR/scripts` (e.g. `ps-backup.sh`).
 2. **Run now** to test it; check **Logs** for output.
 3. **Schedule** it with a cron expression so the host runs it on a timer (or **Unschedule** to stop).
 
 ### Notes
 
-- Running execs the script with the PatterStage process's permissions, the same as a crontab entry would — only files directly under `CH_DATA_DIR/scripts` can be run (no traversal, `.sh` only, no shell interpolation).
+- Running execs the script with the PatterStage process's permissions, the same as a crontab entry would — only files directly under `PS_DATA_DIR/scripts` can be run (no traversal, `.sh` only, no shell interpolation).
 - The legacy agent-cron **Cron** page (Hermes `jobs.json`) has been **removed** — scheduled *agent* work belongs in **Missions**; existing cron jobs migrate to schedules automatically on update.
 
-For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memory snapshot) and the script-level env vars, see [SYSTEM-CRON.md](SYSTEM-CRON.md).
+For the bundled host-script catalogue (e.g. `ps-backup.sh` for a Hindsight memory snapshot) and the script-level env vars, see [SYSTEM-CRON.md](SYSTEM-CRON.md).
 
 ### Notes
 
@@ -763,7 +763,7 @@ For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memor
 
 ### Notes
 
-- The Models registry is the **source of truth** for credentials and defaults. `~/.hermes/config.yaml` is the runtime target. **Sync to Hermes** (or `ch-deploy.sh update` at deploy time) keeps them aligned.
+- The Models registry is the **source of truth** for credentials and defaults. `~/.hermes/config.yaml` is the runtime target. **Sync to Hermes** (or `ps-deploy.sh update` at deploy time) keeps them aligned.
 - The "agent default" in this page is what mission dispatch and chat sessions fall back to when no model is set on the mission or chat session. The Models registry's agent default takes precedence over the bare `config.yaml` `model.default` field.
 - After **Push Bob** (root), PatterStage runs `finalizeRootConfigOnDisk()` so `model.*` and `auxiliary.*` from the Models registry are re-applied to `~/.hermes/config.yaml` and stored back in `agent_root.config_yaml`. This prevents a chat session from wiping the model block.
 
@@ -815,7 +815,7 @@ For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memor
 ### What you see
 
 **Pre-run banner**
-- Reminder: if `~/.hermes` exists, run `npx tsx scripts/tooling/import-hermes-state.ts` (or `setup.sh` / `ch-deploy.sh`) **before** merge seed — merge never overwrites imported Bob / profiles.
+- Reminder: if `~/.hermes` exists, run `npx tsx scripts/tooling/import-hermes-state.ts` (or `setup.sh` / `ps-deploy.sh`) **before** merge seed — merge never overwrites imported Bob / profiles.
 
 **Reseed all section**
 - **Restore entire default catalog** — two-step confirm; replaces Bob + all bundled profiles + templates + categories.
@@ -841,8 +841,8 @@ For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memor
 
 ### Notes
 
-- Seed state is tracked at `CH_DATA_DIR/seed-state.json` so re-seeding is idempotent.
-- Catalog seeding happens automatically during `setup.sh` and on `ch-deploy update`. The "Last run" timestamp is updated by either.
+- Seed state is tracked at `PS_DATA_DIR/seed-state.json` so re-seeding is idempotent.
+- Catalog seeding happens automatically during `setup.sh` and on `ps-deploy update`. The "Last run" timestamp is updated by either.
 
 ---
 
@@ -1095,12 +1095,12 @@ For the bundled host-script catalogue (e.g. `ch-backup.sh` for a Hindsight memor
 
 ## Sidebar deploy buttons (Update / Rebuild / Restart)
 
-The three buttons at the bottom of the sidebar — **Update**, **Restart**, and **Rebuild** — talk to the host's `ch-deploy.sh` and rebuild / restart the running PatterStage process. The full deployment story is in [DEPLOY.md](DEPLOY.md); this section is the user-side walkthrough.
+The three buttons at the bottom of the sidebar — **Update**, **Restart**, and **Rebuild** — talk to the host's `ps-deploy.sh` and rebuild / restart the running PatterStage process. The full deployment story is in [DEPLOY.md](DEPLOY.md); this section is the user-side walkthrough.
 
 ### What you see
 
-- **Check** — compares the local checkout to the remote `dev` (or whichever branch `CH_UPDATE_GIT_BRANCH` is set to) and shows a "behind" / "in sync" indicator.
-- **Update** — `POST /api/update` with `action: "update"`. Fetches + resets to `origin/<CH_UPDATE_GIT_BRANCH>`, runs `npm install` if lockfiles changed, runs `npm run build`, restarts.
+- **Check** — compares the local checkout to the remote `dev` (or whichever branch `PS_UPDATE_GIT_BRANCH` is set to) and shows a "behind" / "in sync" indicator.
+- **Update** — `POST /api/update` with `action: "update"`. Fetches + resets to `origin/<PS_UPDATE_GIT_BRANCH>`, runs `npm install` if lockfiles changed, runs `npm run build`, restarts.
 - **Rebuild** — `POST /api/update` with `action: "rebuild"`. Builds the current working tree (no `git pull` / reset). Use this when you have local-only changes you want to deploy.
 - **Restart** — `POST /api/update` with `action: "restart"`. Stops whatever is on `PORT` and starts `next start -H 0.0.0.0`.
 
@@ -1113,9 +1113,9 @@ The three buttons at the bottom of the sidebar — **Update**, **Restart**, and 
 
 ### Notes
 
-- All three require `CH_ENABLE_DEPLOY_API=1` to be set in `.env.local`. Otherwise the route returns 403.
+- All three require `PS_ENABLE_DEPLOY_API=1` to be set in `.env.local`. Otherwise the route returns 403.
 - The sidebar polls `GET /api/update?deploy=1` while a deploy is in progress; the message in the sidebar updates as the deploy moves through `state: success` or `failed`.
-- Status file: `~/.hermes/logs/ch-deploy.status`. Logs: `ch-build.log`, `ch-restart.log`, `ch-update.log` (also listed under **Logs**).
+- Status file: `~/.hermes/logs/ps-deploy.status`. Logs: `ps-build.log`, `ps-restart.log`, `ps-update.log` (also listed under **Logs**).
 - Concurrent deploys return **409** from the API and exit 1 from the script.
 
 ---

@@ -1,6 +1,6 @@
 # Missions
 
-How missions are stored, dispatched, and cancelled. Missions live in SQLite (`missions` table) with optional JSON overlays under `CH_DATA_DIR/missions/`.
+How missions are stored, dispatched, and cancelled. Missions live in SQLite (`missions` table) with optional JSON overlays under `PS_DATA_DIR/missions/`.
 
 ## Prompt model
 
@@ -63,7 +63,7 @@ Dashboard **active** count includes `dispatched` missions and queued-for-run mis
 
 ### Database migrations (operator)
 
-Runtime database path: `CH_DATA_DIR/control-hub.db` (default `~/control-hub/data/control-hub.db`).
+Runtime database path: `PS_DATA_DIR/patterstage.db` (default `~/patterstage/data/patterstage.db`).
 
 1. After deploying new code, **restart** the PatterStage process so `getDb()` runs pending migrations.
 2. `npm run build` alone does **not** migrate your live DB (prebuild only touches `repo/data/`).
@@ -73,7 +73,7 @@ Runtime database path: `CH_DATA_DIR/control-hub.db` (default `~/control-hub/data
    npm run db:migrate
    ```
 
-   Ensure `CH_DATA_DIR` in `.env.local` matches where the server stores data, then restart.
+   Ensure `PS_DATA_DIR` in `.env.local` matches where the server stores data, then restart.
 
 4. Create categories from **Manage categories** (missions page) or the category combobox in the composer.
 

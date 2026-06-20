@@ -24,9 +24,9 @@ Some error responses also include `details` (Zod validation). Handlers must call
 | `/api/agents` | `GET` | Inspect running Hermes agent processes (OS-dependent). Not the same as `agent/profiles`. |
 | `/api/config` | `GET`, `PUT` | Read/update parsed Hermes config content. |
 | `/api/credentials` | `GET`, `POST` | API key credentials (masked list; create via POST). No per-id route. |
-| `/api/cron/hardware` | `GET`, `POST`, `PUT`, `DELETE` | Host **scripts** (system cron) under `CH_SCRIPTS_DIR` / `CH_HARDWARE_LOG_DIR` — powers the Scripts page. (The legacy `/api/cron` agent-cron bridge has been removed; recurring agent work uses `/api/schedules`.) |
+| `/api/cron/hardware` | `GET`, `POST`, `PUT`, `DELETE` | Host **scripts** (system cron) under `PS_SCRIPTS_DIR` / `PS_HARDWARE_LOG_DIR` — powers the Scripts page. (The legacy `/api/cron` agent-cron bridge has been removed; recurring agent work uses `/api/schedules`.) |
 | `/api/cron/hardware/meta` | `GET` | `{ scriptsDir, logDir }`. |
-| `/api/scripts` | `GET` | List host script files under `CH_DATA_DIR/scripts` with schedule + last-run (powers the Scripts page). |
+| `/api/scripts` | `GET` | List host script files under `PS_DATA_DIR/scripts` with schedule + last-run (powers the Scripts page). |
 | `/api/scripts/run` | `POST` | Run a script on demand (`{ name }`) — path-validated, no shell. |
 | `/api/scripts/logs` | `GET` | Tail a script's log (`?name=&lines=`). |
 | `/api/schedules` | `GET`, `POST` | PatterStage-owned recurring missions (the scheduler fires these; no `jobs.json`). |
@@ -71,7 +71,7 @@ Some error responses also include `details` (Zod validation). Handlers must call
 | `/api/templates` | `GET`, `POST` | Mission templates; mutations via `action` on `POST`. |
 | `/api/tools` | `GET` | Read-only Hermes toolset ID catalog. `POST` returns **410** (writes not supported). |
 | `/api/agent/profiles/[id]/toolsets` | `GET`, `PUT` | Read or update `platform_toolsets` for a profile (`default` = agent root). `GET` hydrates from DB → yaml → seed and may persist normalized JSON. `PUT` saves and pushes to Hermes disk. |
-| `/api/update` | `GET`, `POST` | Deploy: compare branches, branch list, deploy status; `POST` `restart` \| `rebuild` \| `update`. Requires `CH_ENABLE_DEPLOY_API`. |
+| `/api/update` | `GET`, `POST` | Deploy: compare branches, branch list, deploy status; `POST` `restart` \| `rebuild` \| `update`. Requires `PS_ENABLE_DEPLOY_API`. |
 
 ## Drift and sync
 
@@ -166,12 +166,12 @@ Each action body lives in its own handler under `src/lib/mission-handlers/*` beh
 
 ## System cron notes
 
-Managed crontab lines must run a script **under** `scriptsDir` (default `CH_DATA_DIR/scripts`). `POST`/`PUT` reject any other command path. Preset scripts ship in repo **`scripts/hardware/`**; **`scripts/bootstrap/setup.sh`** copies any missing `*.sh` into `CH_DATA_DIR/scripts` during setup. See **[SYSTEM-CRON.md](SYSTEM-CRON.md)**.
+Managed crontab lines must run a script **under** `scriptsDir` (default `PS_DATA_DIR/scripts`). `POST`/`PUT` reject any other command path. Preset scripts ship in repo **`scripts/hardware/`**; **`scripts/bootstrap/setup.sh`** copies any missing `*.sh` into `PS_DATA_DIR/scripts` during setup. See **[SYSTEM-CRON.md](SYSTEM-CRON.md)**.
 
 ## Auth and safety notes
 
-- **`CH_READ_ONLY`** blocks writes (503) on routes that call `requireAuth()` from `@/lib/api-auth.ts`.
+- **`PS_READ_ONLY`** blocks writes (503) on routes that call `requireAuth()` from `@/lib/api-auth.ts`.
 - Not all mutating routes use `requireAuth` (e.g. some `memory` and `personalities` writes).
-- Deploy actions (`/api/update` `POST`) require `CH_ENABLE_DEPLOY_API`.
-- Optional signed requests: `CH_REQUEST_SIGNING_SECRET`.
+- Deploy actions (`/api/update` `POST`) require `PS_ENABLE_DEPLOY_API`.
+- Optional signed requests: `PS_REQUEST_SIGNING_SECRET`.
 - Correlation IDs: `x-correlation-id` or `x-request-id`.

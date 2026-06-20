@@ -14,7 +14,7 @@ Technical reference for PatterStage. Tone elsewhere in this folder is deliberate
 | [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md) | Seed pack, SQLite catalog, Hermes profile sync |
 | [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md) | Profile `platform_toolsets`, Tools UI, mission tool hints |
 | [ENV_REFERENCE.md](ENV_REFERENCE.md) | Environment variables, dual DB paths, install flags |
-| [DEPLOY.md](DEPLOY.md) | Deploy, **`ch-deploy`**, TLS, Docker, ports, scripts layout |
+| [DEPLOY.md](DEPLOY.md) | Deploy, **`ps-deploy`**, TLS, Docker, ports, scripts layout |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Development workflow and standards |
 | [TESTING.md](TESTING.md) | Jest, Playwright, CI, and navigation-matrix upkeep |
 | [SYSTEM-CRON.md](SYSTEM-CRON.md) | Scripts page + host cron presets (`scripts/hardware/`), including Hindsight backup |
@@ -41,9 +41,9 @@ npm run generate:schema-json
 ## Scripts and deploy
 
 - **`scripts/bootstrap/`** — install, setup, stop, Hindsight bootstrap.
-- **`scripts/application/ch-deploy.sh`** — unified **`update`** / **`restart`** / **`rebuild`** for CLI and **`POST /api/update`** (backs up + migrates the DB on update/rebuild).
-- **`scripts/maintenance/ch-migrate.sh`** — backup + full DB migration (schema + legacy data); interactive, `--yes` to skip prompts.
+- **`scripts/application/ps-deploy.sh`** — unified **`update`** / **`restart`** / **`rebuild`** for CLI and **`POST /api/update`** (backs up + migrates the DB on update/rebuild).
+- **`scripts/maintenance/ps-migrate.sh`** — backup + full DB migration (schema + legacy data); interactive, `--yes` to skip prompts.
 - **`scripts/tooling/`** — DB migrate (`migrate-db.ts` → `runMigrations`), runtime data migration, agent discovery, JSON Schema emit.
-- **`scripts/lib/`** (shared bash incl. `ch-log.sh` logging/prompt helpers + `ch-migrate.sh`), **`scripts/hardware/`** (host cron presets), **`data/seed/`** (catalog).
+- **`scripts/lib/`** (shared bash incl. `ps-log.sh` logging/prompt helpers + `ps-migrate.sh`), **`scripts/hardware/`** (host cron presets), **`data/seed/`** (catalog).
 
 Details: **[DEPLOY.md](DEPLOY.md)**.

@@ -56,9 +56,9 @@ The `/api/tools` route exposes a **read-only catalog** of known Hermes toolset I
 | **Replace** | Re-apply seed SQL/content for the selected target. |
 | **CLI** | `npm run db:seed` → `scripts/tooling/import-hermes-state.ts` (when Hermes exists), then `scripts/tooling/seed-catalog.ts --merge` |
 | **Import disk** | `npx tsx scripts/tooling/import-hermes-state.ts` |
-| **Deploy** | `ch-deploy update` runs migrations, imports Hermes state when `HERMES_HOME/config.yaml` exists, then runs `seed-catalog.ts --merge` |
+| **Deploy** | `ps-deploy update` runs migrations, imports Hermes state when `HERMES_HOME/config.yaml` exists, then runs `seed-catalog.ts --merge` |
 
-Seed state: `CH_DATA_DIR/seed-state.json`.
+Seed state: `PS_DATA_DIR/seed-state.json`.
 
 ## Sync API
 
@@ -81,7 +81,7 @@ Seed state: `CH_DATA_DIR/seed-state.json`.
 2. Run `npm run db:migrate`.
 3. Import disk state with `npx tsx scripts/tooling/import-hermes-state.ts`.
 4. Seed missing defaults with `npx tsx scripts/tooling/seed-catalog.ts --merge`.
-5. Run `npx tsx scripts/tooling/ensure-hermes-model-sync.ts` when `model_defaults.agent` is set (also runs on `ch-deploy update` / bootstrap `setup.sh`).
+5. Run `npx tsx scripts/tooling/ensure-hermes-model-sync.ts` when `model_defaults.agent` is set (also runs on `ps-deploy update` / bootstrap `setup.sh`).
 6. Push only when the operator explicitly requests sync, or when replace-mode seed is used.
 
 ## Schema
