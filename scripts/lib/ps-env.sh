@@ -19,6 +19,21 @@ ps_env_set() {
   mv "$tmp" "$file"
 }
 
+# Resolve the PatterStage data dir. Explicit env wins (PS_ → CH_ →
+# CONTROL_HUB_); otherwise prefer ~/patterstage/data but fall back to a
+# pre-existing ~/control-hub/data so an un-migrated install keeps reading its
+# data. Mirrors getPsDataDir() in src/lib/paths.ts.
+ps_data_dir() {
+  if [ -n "${PS_DATA_DIR:-}" ]; then printf '%s' "$PS_DATA_DIR"; return; fi
+  if [ -n "${CH_DATA_DIR:-}" ]; then printf '%s' "$CH_DATA_DIR"; return; fi
+  if [ -n "${CONTROL_HUB_DATA_DIR:-}" ]; then printf '%s' "$CONTROL_HUB_DATA_DIR"; return; fi
+  if [ ! -d "$HOME/patterstage/data" ] && [ -d "$HOME/control-hub/data" ]; then
+    printf '%s' "$HOME/control-hub/data"
+  else
+    printf '%s' "$HOME/patterstage/data"
+  fi
+}
+
 # Default Hermes root from HERMES_HOME (profile-as-home → grandparent).
 ps_hermes_default_root() {
   local h="${1:-${HERMES_HOME:-$HOME/.hermes}}"

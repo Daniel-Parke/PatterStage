@@ -37,7 +37,7 @@ source "$REPO_ROOT/scripts/lib/ps-dotenv-local.sh"
 source "$REPO_ROOT/scripts/lib/ps-migrate.sh"
 
 ps_load_patterstage_env_local "$REPO_ROOT"
-DATA_DIR="${PS_DATA_DIR:-$HOME/control-hub/data}"
+DATA_DIR="${PS_DATA_DIR:-${CH_DATA_DIR:-${CONTROL_HUB_DATA_DIR:-$( [ ! -d "$HOME/patterstage/data" ] && [ -d "$HOME/control-hub/data" ] && echo "$HOME/control-hub/data" || echo "$HOME/patterstage/data" )}}}"
 
 echo ""
 ps_info "PatterStage database migration"

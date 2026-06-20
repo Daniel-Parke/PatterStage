@@ -261,7 +261,7 @@ fi
 
 # ── Step 6b: Sync to PatterStage SQLite ─────────────────────
 step "Step 6b: Syncing to PatterStage SQLite"
-PS_DATA_DIR="${PS_DATA_DIR:-$HOME/control-hub/data}"
+PS_DATA_DIR="${PS_DATA_DIR:-${CH_DATA_DIR:-${CONTROL_HUB_DATA_DIR:-$( [ ! -d "$HOME/patterstage/data" ] && [ -d "$HOME/control-hub/data" ] && echo "$HOME/control-hub/data" || echo "$HOME/patterstage/data" )}}}"
 PS_DB="$PS_DATA_DIR/control-hub.db"
 if [ -f "$PS_DB" ]; then
     if command -v python3 &>/dev/null; then

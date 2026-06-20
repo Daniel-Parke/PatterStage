@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-PS_DATA_DIR="${PS_DATA_DIR:-${CONTROL_HUB_DATA_DIR:-$HOME/control-hub/data}}"
+PS_DATA_DIR="${PS_DATA_DIR:-${CH_DATA_DIR:-${CONTROL_HUB_DATA_DIR:-$( [ ! -d "$HOME/patterstage/data" ] && [ -d "$HOME/control-hub/data" ] && echo "$HOME/control-hub/data" || echo "$HOME/patterstage/data" )}}}"
 HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
 
 log() { echo "[$(date -Iseconds 2>/dev/null || date)] $*"; }

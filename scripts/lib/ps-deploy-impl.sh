@@ -33,6 +33,9 @@ source "$PS_SCRIPTS_ROOT/lib/ps-log.sh"
 # shellcheck source=ps-migrate.sh
 source "$PS_SCRIPTS_ROOT/lib/ps-migrate.sh"
 
+# shellcheck source=ps-rename-migrate.sh
+source "$PS_SCRIPTS_ROOT/lib/ps-rename-migrate.sh"
+
 LOCK_FILE="${TMPDIR:-/tmp}/ps-deploy.lock"
 LOG_FILE="$HOME/.hermes/logs/ps-update.log"
 PS_RESTART_LOG="$HOME/.hermes/logs/ps-restart.log"
@@ -358,7 +361,7 @@ ps_deploy_cmd_rebuild() {
   ps_deploy_run_build "rebuild"
 
   ps_deploy_log_restart "Backing up + migrating database (schema + legacy data)…"
-  PS_NPM_BIN="$NPM_BIN" PS_ASSUME_YES=1 ps_migrate_run "$PS_APP_DIR" "${PS_DATA_DIR:-$HOME/control-hub/data}" >>"$PS_BUILD_LOG" 2>&1 ||
+  PS_NPM_BIN="$NPM_BIN" PS_ASSUME_YES=1 ps_migrate_run "$PS_APP_DIR" "$(ps_data_dir)" >>"$PS_BUILD_LOG" 2>&1 ||
     ps_deploy_log_restart "WARNING: database migration reported issues (backup retained) — see ps-build.log"
   if command -v npx &>/dev/null; then
     local HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
@@ -432,8 +435,11 @@ ps_deploy_run_update() {
     fi
     ps_deploy_log_update "Build successful"
 
+    ps_deploy_log_update "Applying PatterStage rename migration (DB + .env.local)…"
+    ps_rename_migrate "$(ps_data_dir)" "$APP_DIR" >>"$LOG_FILE" 2>&1 || ps_deploy_log_update "rename migration: nothing to do"
+
     ps_deploy_log_update "Backing up + migrating database (schema + legacy data)…"
-    if ! PS_NPM_BIN="$NPM_BIN" PS_ASSUME_YES=1 ps_migrate_run "$APP_DIR" "${PS_DATA_DIR:-$HOME/control-hub/data}" >>"$LOG_FILE" 2>&1; then
+    if ! PS_NPM_BIN="$NPM_BIN" PS_ASSUME_YES=1 ps_migrate_run "$APP_DIR" "$(ps_data_dir)" >>"$LOG_FILE" 2>&1; then
       ps_deploy_log_update "WARNING: database migration reported issues (backup retained) — see ps-update.log"
     fi
 
@@ -476,7 +482,7 @@ ps_deploy_run_update() {
     fi
   fi
 
-  local PS_DATA_ROOT="${PS_DATA_DIR:-$HOME/control-hub/data}"
+  local PS_DATA_ROOT="$(ps_data_dir)"
   mkdir -p "$PS_DATA_ROOT/scripts" "$PS_DATA_ROOT/logs"
   if command -v node &>/dev/null; then
     PS_DATA_DIR="$PS_DATA_ROOT" node "$PS_SCRIPTS_ROOT/tooling/discover-agents.mjs" >>"$LOG_FILE" 2>&1 ||

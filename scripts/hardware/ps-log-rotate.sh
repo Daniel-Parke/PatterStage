@@ -13,7 +13,7 @@
 
 set -euo pipefail
 
-PS_DATA_DIR="${PS_DATA_DIR:-${CONTROL_HUB_DATA_DIR:-$HOME/control-hub/data}}"
+PS_DATA_DIR="${PS_DATA_DIR:-${CH_DATA_DIR:-${CONTROL_HUB_DATA_DIR:-$( [ ! -d "$HOME/patterstage/data" ] && [ -d "$HOME/control-hub/data" ] && echo "$HOME/control-hub/data" || echo "$HOME/patterstage/data" )}}}"
 LOG_DIR="${PS_HARDWARE_LOG_DIR:-$PS_DATA_DIR/logs}"
 RETENTION="${PS_LOG_RETENTION_DAYS:-30}"
 

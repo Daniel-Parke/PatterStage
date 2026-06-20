@@ -67,7 +67,7 @@ if ! ps_noninteractive_install; then
         echo ""
     fi
     if [[ "${ADVANCED:-}" =~ ^[Yy]$ ]]; then
-        read -r -p "PS_DATA_DIR [${PS_DATA_DIR:-$HOME/control-hub/data}]: " in_data
+        read -r -p "PS_DATA_DIR [${PS_DATA_DIR:-${CH_DATA_DIR:-${CONTROL_HUB_DATA_DIR:-$( [ ! -d "$HOME/patterstage/data" ] && [ -d "$HOME/control-hub/data" ] && echo "$HOME/control-hub/data" || echo "$HOME/patterstage/data" )}}}]: " in_data
         echo ""
         if [ -n "${in_data// /}" ]; then
             export PS_DATA_DIR="${in_data// /}"
@@ -142,7 +142,7 @@ fi
 # ── Data directories ─────────────────────────────────────────
 echo ""
 echo "Creating data directories..."
-PS_DATA_ROOT="${PS_DATA_DIR:-$HOME/control-hub/data}"
+PS_DATA_ROOT="${PS_DATA_DIR:-${CH_DATA_DIR:-${CONTROL_HUB_DATA_DIR:-$( [ ! -d "$HOME/patterstage/data" ] && [ -d "$HOME/control-hub/data" ] && echo "$HOME/control-hub/data" || echo "$HOME/patterstage/data" )}}}"
 mkdir -p "$PS_DATA_ROOT/missions"
 mkdir -p "$PS_DATA_ROOT/templates"
 mkdir -p "$PS_DATA_ROOT/operations"

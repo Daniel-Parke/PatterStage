@@ -78,7 +78,7 @@ fi
 
 # 6. PatterStage data (default ~/control-hub/data; legacy ~/.hermes/control-hub/data)
 echo "Backing up PatterStage data..."
-PS_DATA_ROOT="${PS_DATA_DIR:-$HOME/control-hub/data}"
+PS_DATA_ROOT="${PS_DATA_DIR:-${CH_DATA_DIR:-${CONTROL_HUB_DATA_DIR:-$( [ ! -d "$HOME/patterstage/data" ] && [ -d "$HOME/control-hub/data" ] && echo "$HOME/control-hub/data" || echo "$HOME/patterstage/data" )}}}"
 backup_ch_data() {
     local SRC="$1"
     local LABEL="$2"

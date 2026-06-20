@@ -6,7 +6,7 @@
 # Handles fresh install, re-install, optional Hermes bootstrap (two-pass), and Hindsight.
 #
 # Usage:
-#   Bootstrap (clones to INSTALL_DIR, default ~/control-hub):
+#   Bootstrap (clones to INSTALL_DIR, default ~/patterstage):
 #     bash path/to/scripts/bootstrap/install.sh
 #   Already cloned this repo (runs setup only):
 #     bash scripts/bootstrap/install.sh --in-repo
@@ -41,7 +41,7 @@ while [ "${1:-}" = "--in-repo" ]; do
 done
 
 REPO_URL="${REPO_URL:-https://github.com/Daniel-Parke/PatterStage.git}"
-INSTALL_DIR="${INSTALL_DIR:-$HOME/control-hub}"
+INSTALL_DIR="${INSTALL_DIR:-$HOME/patterstage}"
 BRANCH="${BRANCH:-dev}"
 
 SCRIPT_PATH="${BASH_SOURCE[0]:-$0}"
