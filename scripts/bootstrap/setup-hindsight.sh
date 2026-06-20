@@ -290,6 +290,31 @@ fi
 # ── Step 7: Systemd Service ──────────────────────────────────
 if [ "$WIRE_ONLY" = false ]; then
 step "Step 7: Systemd service"
+
+# Canonical install path for the Hindsight daemon. We pin the binary the
+# unit will execute to the live venv at $HERMES_HOME/hermes-agent/venv/
+# (the one setup-hindsight.sh installs into). We do NOT trust any other
+# path — historically, `~/.local/share/hermes-agent/venv/bin/hindsight-embed`
+# was written to /etc/systemd/system/hindsight.service by a different
+# (older) installer and produced 203/EXEC restart loops every 10s that
+# thrashed the host. Verified on 2026-06-19 after a multi-hour device
+# freeze incident.
+HS_VENV="$HERMES_HOME/hermes-agent/venv"
+HS_BIN="$HS_VENV/bin/hindsight-api"
+if [ ! -x "$HS_BIN" ]; then
+    fail "Hindsight binary not found at $HS_BIN — re-run setup-hindsight.sh from the top so the venv is populated (Step 4), or install with: $HS_VENV/bin/python -m pip install hindsight-all"
+fi
+
+# Load LLM + DB env vars from the profile env file before exec'ing the
+# daemon. Without this, the daemon raises
+# "ValueError: LLM API key is required. Set HINDSIGHT_API_LLM_API_KEY
+# environment variable." at startup because hindsight-api reads LLM
+# config from os.environ, not from ~/.hermes/hindsight/config.json.
+HS_ENV="$HERMES_HOME/profiles/hermes.env"
+if [ ! -f "$HS_ENV" ]; then
+    warn "$HS_ENV not found — daemon will fail with 'LLM API key is required' on start. Create it before the next watchdog tick."
+fi
+
 sudo tee /etc/systemd/system/hindsight.service > /dev/null << EOF
 [Unit]
 Description=Hindsight Memory Server
@@ -299,12 +324,14 @@ Requires=postgresql.service
 [Service]
 Type=simple
 User=$USER
-WorkingDirectory=$HERMES_HOME
-ExecStart=$VENV_PYTHON $HERMES_HOME/scripts/hindsight_server.py
+WorkingDirectory=$HS_VENV
+EnvironmentFile=$HS_ENV
+ExecStart=$HS_BIN --daemon --idle-timeout 0 --port 9177
 Restart=on-failure
 RestartSec=10
 StandardOutput=append:$HERMES_HOME/logs/hindsight.log
 StandardError=append:$HERMES_HOME/logs/hindsight.log
+TimeoutStartSec=90
 
 [Install]
 WantedBy=multi-user.target
@@ -313,7 +340,7 @@ EOF
 mkdir -p "$HERMES_HOME/logs"
 sudo systemctl daemon-reload
 sudo systemctl enable hindsight
-sudo systemctl start hindsight
+sudo systemctl restart hindsight
 ok "Systemd service created and started"
 
 # ── Step 8: Verify ───────────────────────────────────────────
