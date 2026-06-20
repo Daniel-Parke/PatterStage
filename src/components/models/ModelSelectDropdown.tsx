@@ -48,7 +48,7 @@
 
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { Select } from "@/components/ui/field";
 
 export interface ModelSelectOption {
   id: string;
@@ -67,18 +67,17 @@ interface ModelSelectDropdownProps {
   ariaLabel?: string;
   /** Optional `title` for hover tooltip. */
   title?: string;
-  /** Background tone variant — `dark-800` (the default) matches the
-   *  "panel" tone used by FallbackConfigPanel + BulkAuxiliaryUpdater;
-   *  `dark-900/50` matches the per-slot card tone used by
-   *  DefaultsGrid. Default is "panel". */
+  /** Retained for call-site compatibility; the Field Kit Select owns the
+   *  consistent on-brand styling now (tone is no longer applied). */
   tone?: "panel" | "card";
 }
 
-const TONE_CLASSES: Record<NonNullable<ModelSelectDropdownProps["tone"]>, string> = {
-  panel: "bg-dark-800",
-  card: "bg-dark-900/50",
-};
-
+/**
+ * The shared model picker. Routes through the unified Field Kit `Select` so all
+ * model dropdowns (per-slot defaults, bulk updater, fallbacks) get one
+ * consistent, keyboard-accessible, on-brand dropdown instead of the OS-native
+ * control. A leading empty option preserves the "— none —" choice.
+ */
 export default function ModelSelectDropdown({
   options,
   value,
@@ -87,26 +86,20 @@ export default function ModelSelectDropdown({
   disabled = false,
   ariaLabel,
   title,
-  tone = "panel",
 }: ModelSelectDropdownProps) {
   return (
-    <div className="relative">
-      <select
+    <div title={title}>
+      <Select
+        ariaLabel={ariaLabel ?? placeholder}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
         disabled={disabled}
-        aria-label={ariaLabel}
-        title={title}
-        className={`w-full h-9 min-h-9 ${TONE_CLASSES[tone]} border border-white/10 rounded-lg px-3 pr-8 text-sm text-white font-mono outline-none cursor-pointer transition-colors hover:border-white/20 focus:border-neon-purple/50 disabled:opacity-50 truncate appearance-none`}
-      >
-        <option value="">{placeholder}</option>
-        {options.map((m) => (
-          <option key={m.id} value={m.id} className="bg-dark-900">
-            {m.name} ({m.provider}/{m.modelId})
-          </option>
-        ))}
-      </select>
-      <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+        placeholder={placeholder}
+        options={[
+          { value: "", label: placeholder },
+          ...options.map((m) => ({ value: m.id, label: m.name, hint: `${m.provider}/${m.modelId}` })),
+        ]}
+      />
     </div>
   );
 }
