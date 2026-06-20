@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as fs from "fs";
-import { exec, execSync } from "child_process";
 import { join } from "path";
 
 import { logApiError, serverErrorFromError } from "@/lib/api-logger";
 import { requireAuth, isChReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, notFound, ok, serverErrorFromHelperResult, serviceUnavailable } from "@/lib/api-response";
-import { toError } from "@/lib/api-fetch";
 import { crontabLineUsesScriptsDir } from "@/lib/hardware-cron";
+import { getHostScheduler } from "@/lib/host-scheduler";
 import { getChScriptsDir, getChHardwareLogDir, CH_DATA_DIR } from "@/lib/paths";
 
 /**
@@ -53,18 +52,17 @@ function saveDisabledIds(ids: Set<string>): void {
 
 // ── Parse / serialise helpers ───────────────────────────────────
 
+const SCRIPT_EXT_RE = /\.(?:sh|mjs|cjs|js|ps1|bat|cmd)$/i;
+
 /**
- * Extract the script basename (e.g. "ch-backup.sh") from a command string,
- * or empty string if the command does not invoke a ch-* script.
- *
- * Used by both `parseCrontabLine` (read) and the POST handler (write) to
- * derive a stable entry ID from the command body. The match anchors on
- * `/ch-` so we don't pick up other paths in the command (env vars,
- * redirected log file paths, etc.).
+ * Extract the script basename (e.g. "ps-backup.mjs") from a command string, or
+ * empty string if the command invokes no host script. Anchors on a path token
+ * ending in a known script extension (any separator) so it doesn't pick up env
+ * vars or the redirected log path.
  */
 function extractScriptName(command: string): string {
-  const m = command.match(/(\S+\/ch-[^\s]+)/);
-  return m ? m[1].split("/").pop()! : "";
+  const m = command.match(/(\S+[/\\][^/\\\s]+\.(?:sh|mjs|cjs|js|ps1|bat|cmd))\b/i);
+  return m ? m[1].split(/[/\\]/).pop()! : "";
 }
 
 /**
@@ -158,15 +156,15 @@ function parseCrontabLine(
   // Extract script name for ID and display name
   const scriptName = extractScriptName(command);
   const id =
-    scriptName.replace(/\.sh$/, "") ||
-    command.split(" ")[0]?.split("/").pop() ||
+    scriptName.replace(SCRIPT_EXT_RE, "") ||
+    command.split(" ")[0]?.split(/[/\\]/).pop() ||
     "unknown";
 
-  // Name from script: ch-backup → PatterStage Backup
+  // Name from script: ps-backup → PatterStage Backup
   const name = scriptName
-    .replace(/^ch-/, "PatterStage ")
+    .replace(/^(?:ps|ch)-/, "PatterStage ")
+    .replace(SCRIPT_EXT_RE, "")
     .replace(/-/g, " ")
-    .replace(/\.sh$/, "")
     .replace(/\b\w/g, (c) => c.toUpperCase());
 
   return { id, raw: trimmed, schedule, command, logFile, name, enabled: true };
@@ -187,25 +185,15 @@ function serialiseLine(
 
 // ── Read / write crontab ───────────────────────────────────────
 
+// Cross-platform: crontab on Unix, Task Scheduler (schtasks) on Windows. The
+// scheduler presents the managed jobs as crontab-format text either way, so the
+// parse/serialise logic below is unchanged. See src/lib/host-scheduler.ts.
 function readCrontab(): Promise<string> {
-  return new Promise<string>((resolve) => {
-    exec("crontab -l", { encoding: "utf-8" }, (error, stdout) => {
-      resolve(error ? "" : (stdout as string));
-    });
-  });
+  return getHostScheduler().readRaw();
 }
 
-function writeCrontab(content: string): { ok: boolean; error?: string } {
-  const tmpFile = `/tmp/ch-crontab-${Date.now()}.txt`;
-  try {
-    fs.writeFileSync(tmpFile, content + "\n", { mode: 0o600 });
-    execSync(`crontab ${tmpFile}`, { encoding: "utf-8" });
-    fs.unlinkSync(tmpFile);
-    return { ok: true };
-  } catch (e: unknown) {
-    try { fs.unlinkSync(tmpFile); } catch { /* ignore */ }
-    return { ok: false, error: toError(e).message };
-  }
+function writeCrontab(content: string): Promise<{ ok: boolean; error?: string }> {
+  return getHostScheduler().writeRaw(content);
 }
 
 /**
@@ -287,6 +275,7 @@ export async function POST(request: NextRequest) {
         if (parsed) {
           jobIds.push(parsed.id);
           disabledIds.add(parsed.id);
+          await getHostScheduler().setEnabled(parsed.id, false);
         }
       }
 
@@ -328,7 +317,7 @@ export async function POST(request: NextRequest) {
 
     // Check if this script already has an entry (replace if so)
     const scriptName = extractScriptName(command);
-    const entryId = scriptName.replace(/\.sh$/, "") || "hw";
+    const entryId = scriptName.replace(SCRIPT_EXT_RE, "") || "hw";
 
     const logDir = getChHardwareLogDir();
     const newLine = serialiseLine(schedule, command, logFile || `${logDir}/${entryId}.log`);
@@ -358,7 +347,7 @@ export async function POST(request: NextRequest) {
 
     // Write crontab synchronously (execSync is acceptable here — it is a
     // single blocking call with no async I/O available for crontab writes).
-    const result = writeCrontab(joinCrontabLines(newLines));
+    const result = await writeCrontab(joinCrontabLines(newLines));
     if (!result.ok) {
       return serverErrorFromHelperResult(result, "unknown error");
     }
@@ -437,13 +426,15 @@ export async function PUT(request: NextRequest) {
     const badCmd = rejectIfBadScriptsCommand(command);
     if (badCmd) return badCmd;
 
-    // Toggle-only: update JSON state, no crontab change
+    // Toggle-only: update JSON state (UI). On Windows also enable/disable the
+    // scheduled task; no-op on Unix where the JSON is the source of truth.
     if (isToggleOnly) {
+      await getHostScheduler().setEnabled(id, enabled!);
       applyDisabledChange(disabledIds, id, enabled);
       return ok({ id, enabled });
     }
 
-    const result = writeCrontab(joinCrontabLines(newLines));
+    const result = await writeCrontab(joinCrontabLines(newLines));
     if (!result.ok) {
       return serverErrorFromHelperResult(result, "unknown error");
     }
@@ -499,7 +490,7 @@ export async function DELETE(request: NextRequest) {
       return notFound(`Hardware cron job '${id}' not found`);
     }
 
-    const result = writeCrontab(joinCrontabLines(newLines));
+    const result = await writeCrontab(joinCrontabLines(newLines));
     if (!result.ok) {
       return serverErrorFromHelperResult(result, "unknown error");
     }

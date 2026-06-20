@@ -25,11 +25,24 @@ import {
   chmodSync,
 } from "fs";
 import { join } from "path";
-import { execFile, exec } from "child_process";
+import { execFile } from "child_process";
 import { getChScriptsDir, getChHardwareLogDir } from "@/lib/paths";
+import { interpreterFor } from "@/lib/platform";
+import { getHostScheduler } from "@/lib/host-scheduler";
 
 /** Max script size accepted by the editor write API (256 KB). */
 export const MAX_SCRIPT_BYTES = 256 * 1024;
+
+/** Script types we list, run, and schedule. node (.mjs) is the cross-platform
+ *  default; .sh runs where bash is present, .ps1/.bat/.cmd on Windows. */
+export const ALLOWED_SCRIPT_EXTS = [".sh", ".mjs", ".cjs", ".js", ".ps1", ".bat", ".cmd"] as const;
+function hasAllowedExt(name: string): boolean {
+  const lower = name.toLowerCase();
+  return ALLOWED_SCRIPT_EXTS.some((e) => lower.endsWith(e));
+}
+function stripScriptExt(name: string): string {
+  return name.replace(/\.(sh|mjs|cjs|js|ps1|bat|cmd)$/i, "");
+}
 
 export interface ScriptFile {
   name: string; // e.g. "ch-backup.sh"
@@ -49,7 +62,7 @@ export interface RunScriptResult {
 }
 
 function logPathFor(name: string): string {
-  return join(getChHardwareLogDir(), `${name.replace(/\.sh$/, "")}.log`);
+  return join(getChHardwareLogDir(), `${stripScriptExt(name)}.log`);
 }
 
 /**
@@ -61,7 +74,7 @@ export function resolveScriptPath(name: string): string | null {
   // The string checks alone prevent traversal: a name with no slash, no
   // backslash and no ".." cannot escape the scripts dir. .sh only.
   if (!name || name.includes("/") || name.includes("\\") || name.includes("..")) return null;
-  if (!name.endsWith(".sh")) return null;
+  if (!hasAllowedExt(name)) return null;
   const abs = join(getChScriptsDir(), name);
   if (!existsSync(abs)) return null;
   return abs;
@@ -74,7 +87,7 @@ export function resolveScriptPath(name: string): string | null {
  */
 export function scriptPathForName(name: string): string | null {
   if (!name || name.includes("/") || name.includes("\\") || name.includes("..")) return null;
-  if (!name.endsWith(".sh")) return null;
+  if (!hasAllowedExt(name)) return null;
   // basename sanity: letters, digits, dash, underscore, dot only.
   if (!/^[A-Za-z0-9._-]+$/.test(name)) return null;
   return join(getChScriptsDir(), name);
@@ -141,9 +154,8 @@ export function deleteScriptFile(name: string): boolean {
 }
 
 function readHostCrontab(): Promise<string> {
-  return new Promise((res) => {
-    exec("crontab -l", { encoding: "utf-8" }, (e, out) => res(e ? "" : String(out)));
-  });
+  // Cross-platform: crontab on Unix, schtasks-backed text on Windows.
+  return getHostScheduler().readRaw();
 }
 
 /** Map script basename → its 5-field cron schedule from the host crontab. */
@@ -170,7 +182,7 @@ export async function listScriptFiles(): Promise<ScriptFile[]> {
   const dir = getChScriptsDir();
   if (!existsSync(dir)) return [];
   const schedules = parseScheduleMap(await readHostCrontab());
-  const files = readdirSync(dir).filter((f) => f.endsWith(".sh")).sort();
+  const files = readdirSync(dir).filter(hasAllowedExt).sort();
   return files.map((name) => {
     const abs = join(dir, name);
     const st = statSync(abs);
@@ -203,8 +215,14 @@ export function runScriptFile(name: string): Promise<RunScriptResult> {
     } catch {
       /* logging is best-effort */
     }
-    // No shell, no user args — bash executes the validated script path only.
-    execFile("/bin/bash", [abs], { timeout: 10 * 60_000, maxBuffer: 8 * 1024 * 1024 }, (err, stdout, stderr) => {
+    // Resolve the interpreter by extension + OS (node/.sh-bash/PowerShell/cmd).
+    const interp = interpreterFor(abs);
+    if (!interp) {
+      res({ ok: false, exitCode: null, error: `No interpreter available for this script type on ${process.platform}`, logFile });
+      return;
+    }
+    // No shell, no user args — the resolved interpreter runs the validated path only.
+    execFile(interp.cmd, interp.args, { timeout: 10 * 60_000, maxBuffer: 8 * 1024 * 1024 }, (err, stdout, stderr) => {
       try {
         appendFileSync(logFile, `${stdout ?? ""}${stderr ?? ""}`);
       } catch {
