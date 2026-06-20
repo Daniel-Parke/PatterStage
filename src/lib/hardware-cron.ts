@@ -3,6 +3,8 @@
  * Scripts must live under getChScriptsDir() (see paths.ts).
  */
 
+import { homedir } from "os";
+
 /**
  * UI labels + filenames for hardware cron presets.
  * Ship matching files under `scripts/hardware/` (`scripts/bootstrap/setup.sh` copies into CH_DATA_DIR/scripts).
@@ -14,8 +16,12 @@ export const HARDWARE_CRON_PRESET_SCRIPT_FILES: readonly string[] =
   HARDWARE_CRON_UI_PRESETS.map((p) => p.file);
 
 export function expandHomeInString(value: string): string {
-  const home = process.env.HOME || "";
-  return value.replace(/\$HOME\b/g, home).replace(/\$\{HOME\}/g, home);
+  // os.homedir() resolves USERPROFILE on Windows; $HOME is not set there.
+  const home = homedir();
+  return value
+    .replace(/\$HOME\b/g, home)
+    .replace(/\$\{HOME\}/g, home)
+    .replace(/%USERPROFILE%/gi, home);
 }
 
 /** Normalise for comparison: forward slashes, no trailing slash. */
