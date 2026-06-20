@@ -167,19 +167,19 @@ jobs:
           token: ${{ github.token }}
       - uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Modern node-gyp (recognise the runner's Visual Studio)
-        # The native dep (better-sqlite3) has no prebuilt binary for the
-        # runner's exact Node, so it compiles from source — but the bundled
-        # node-gyp 10.1.0 can't parse the runner's VS 2022/2025 version and
-        # bails with "unknown version undefined". A current node-gyp detects it
-        # and uses the C++ workload that ships on windows-latest.
+        # If better-sqlite3 compiles from source, Node 20's bundled node-gyp 10.1
+        # can't parse the runner's VS 2022/2025 ("unknown version undefined").
+        # This job runs on Node 22 (newer toolchain; usually a prebuilt binary so
+        # no compile at all), and overrides node-gyp via the env var npm honours
+        # — npm has no `node_gyp` config key, and node-gyp@latest needs Node 22+.
         shell: bash
         run: |
           npm install -g node-gyp@latest
-          npm config set node_gyp "$(npm root -g)/node-gyp/bin/node-gyp.js"
+          echo "npm_config_node_gyp=$(npm root -g)/node-gyp/bin/node-gyp.js" >> "$GITHUB_ENV"
       - name: Install dependencies (with cache reset retry)
         shell: bash
         run: |
