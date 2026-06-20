@@ -23,7 +23,7 @@ import { randomBytes } from "crypto";
 import { accessSync, constants, existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { delimiter, join } from "path";
 import { db } from "@/lib/db";
-import { resolveProfileHermesHome } from "@/lib/hermes-profile-paths";
+import { resolveProfileHermesHome, getHermesDefaultRootFromHome } from "@/lib/hermes-profile-paths";
 import { logApiError } from "@/lib/api-logger";
 
 export interface BenchGateway {
@@ -107,21 +107,77 @@ function randomKey(): string {
 function writeGatewayEnv(home: string, port: number, key: string): void {
   mkdirSync(home, { recursive: true });
   const envPath = join(home, ".env");
-  const kept: string[] = [];
-  if (existsSync(envPath)) {
-    for (const line of readFileSync(envPath, "utf-8").split(/\r?\n/)) {
-      if (/^\s*API_SERVER_(ENABLED|HOST|PORT|KEY)\s*=/.test(line)) continue;
-      if (line.trim().length === 0) continue;
-      kept.push(line);
+  // key -> full line (last write wins). We override only the API_SERVER_* vars;
+  // everything else (provider keys, model/provider selection) is INHERITED so
+  // the spawned gateway has a working inference provider — the ephemeral bench
+  // profile dir has no .env of its own, and a gateway with no provider config
+  // errors every item ("No inference provider configured").
+  const kept = new Map<string, string>();
+  const absorb = (text: string) => {
+    for (const line of text.split(/\r?\n/)) {
+      const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=/);
+      if (!m) continue;
+      if (/^API_SERVER_(ENABLED|HOST|PORT|KEY)$/.test(m[1])) continue;
+      kept.set(m[1], line);
     }
+  };
+  // Inherit the install root's provider/credential config first…
+  try {
+    const rootEnv = join(getHermesDefaultRootFromHome(home), ".env");
+    if (rootEnv !== envPath && existsSync(rootEnv)) absorb(readFileSync(rootEnv, "utf-8"));
+  } catch {
+    // no root env to inherit
   }
+  // …then this profile's own .env (if any) takes precedence.
+  if (existsSync(envPath)) absorb(readFileSync(envPath, "utf-8"));
+
   const block = [
     "API_SERVER_ENABLED=true",
     "API_SERVER_HOST=127.0.0.1",
     `API_SERVER_PORT=${port}`,
     `API_SERVER_KEY=${key}`,
   ];
-  writeFileSync(envPath, [...kept, ...block].join("\n") + "\n", { mode: 0o600 });
+  writeFileSync(envPath, [...kept.values(), ...block].join("\n") + "\n", { mode: 0o600 });
+}
+
+/** Extract a top-level YAML block (`key:` and its indented body) from `yaml`. */
+function extractTopLevelBlock(yaml: string, key: string): string | null {
+  const lines = yaml.split(/\r?\n/);
+  const out: string[] = [];
+  let inBlock = false;
+  for (const line of lines) {
+    if (!inBlock) {
+      if (new RegExp(`^${key}\\s*:`).test(line)) {
+        inBlock = true;
+        out.push(line);
+      }
+      continue;
+    }
+    // A new top-level key (non-indented, non-empty) ends the block.
+    if (/^\S/.test(line)) break;
+    out.push(line);
+  }
+  return out.length ? out.join("\n").replace(/\s+$/, "") : null;
+}
+
+/**
+ * Ensure the bench profile's config.yaml has a `model:` block. The ephemeral
+ * profile inherits only skills/tools/memory; without a model the spawned gateway
+ * has no inference provider and errors every item. Inherit the install root's
+ * model/provider selection (it isn't layered automatically into a profile home).
+ */
+function ensureGatewayModel(home: string): void {
+  try {
+    const cfgPath = join(home, "config.yaml");
+    const cfg = existsSync(cfgPath) ? readFileSync(cfgPath, "utf-8") : "";
+    if (/^model\s*:/m.test(cfg)) return; // already has a model selection
+    const rootCfg = join(getHermesDefaultRootFromHome(home), "config.yaml");
+    if (rootCfg === cfgPath || !existsSync(rootCfg)) return;
+    const block = extractTopLevelBlock(readFileSync(rootCfg, "utf-8"), "model");
+    if (block) writeFileSync(cfgPath, `${block}\n${cfg}`, { mode: 0o600 });
+  } catch {
+    // best-effort — a missing model surfaces as an honest run failure anyway
+  }
 }
 
 async function waitForHealth(base: string, timeoutMs: number, signal?: AbortSignal): Promise<boolean> {
@@ -204,6 +260,7 @@ export async function ensureBenchGateway(
     const port = await allocPort();
     const key = randomKey();
     writeGatewayEnv(home, port, key);
+    ensureGatewayModel(home);
 
     const env: NodeJS.ProcessEnv = {
       ...process.env,
