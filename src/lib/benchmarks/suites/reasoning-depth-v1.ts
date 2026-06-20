@@ -16,6 +16,8 @@ const DOMAIN_STAT_DEFAULTS: Record<BenchmarkDomain, Partial<Record<Stat, number>
   instruction: { wisdom: 1, strength: 0.3 },
   needle: { intelligence: 0.6, wisdom: 0.4 },
   consistency: {},
+  honesty: { wisdom: 1 },
+  safety: { wisdom: 1 },
 };
 
 const items: BenchmarkItem[] = [

@@ -14,6 +14,7 @@ import { Trophy, Swords, Play, Square, Bot, Cpu, Share2, Medal, ShieldCheck, Ale
 
 import PageHeader from "@/components/layout/PageHeader";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import { Field, Select, Toggle, ChipGroup } from "@/components/ui/field";
 import StatRadar from "@/components/viz/StatRadar";
 import { useApiResource } from "@/hooks/useApiResource";
 import { useSuites, useBenchmarkRuns, useBenchmarkRun, useLeaderboard, useBenchmarkCatalog } from "@/hooks/useBenchmarks";
@@ -105,7 +106,13 @@ function StatBars({ agent, model }: { agent?: BenchmarkRun; model?: BenchmarkRun
         return (
           <div key={s} title={STAT_BLURB[s]}>
             <div className="mb-1 flex items-center justify-between text-[11px]">
-              <span className="text-white/60">{STAT_LABELS[s]}</span>
+              <span className="text-white/60">
+                {STAT_LABELS[s]}
+                {(() => {
+                  const n = (agent?.summary?.statSamples as Record<string, number> | undefined)?.[s];
+                  return typeof n === "number" ? <span className="ml-1.5 text-white/25" title={`backed by ${n} item${n === 1 ? "" : "s"}`}>n={n}</span> : null;
+                })()}
+              </span>
               <span className="font-mono text-white/40">
                 {a !== null ? a : "—"}
                 {model ? ` vs ${m !== null ? m : "—"}` : ""}
@@ -176,8 +183,24 @@ export default function BenchmarksPage() {
     () => runs.filter((r) => r.pairId && r.pairId === activePairId),
     [runs, activePairId],
   );
-  const agentRun = pairRuns.find((r) => r.targetKind === "agent");
-  const modelRun = pairRuns.find((r) => r.targetKind === "model");
+  // Classify the pair by ROLE, not targetKind: a "same brain, brain-only"
+  // baseline is itself a targetKind:"agent" run, so the old targetKind lookup
+  // never found it (Baseline "—"). Prefer the persisted pairRole; fall back to
+  // execMode/targetKind for legacy runs created before the role was recorded.
+  const { agentRun, modelRun } = useMemo(() => {
+    const byRole = (role: "agent" | "baseline") =>
+      pairRuns.find((r) => r.config?.pairRole === role);
+    const agent =
+      byRole("agent") ??
+      pairRuns.find((r) => r.execMode === "agentic") ??
+      pairRuns.find((r) => r.targetKind === "agent") ??
+      pairRuns[0];
+    const model =
+      byRole("baseline") ??
+      pairRuns.find((r) => r.targetKind === "model") ??
+      pairRuns.find((r) => r.id !== agent?.id);
+    return { agentRun: agent, modelRun: model };
+  }, [pairRuns]);
 
   // Live progress for in-flight runs (item counts).
   const agentDetail = useBenchmarkRun(agentRun && agentRun.status === "running" ? agentRun.id : null);
@@ -283,21 +306,24 @@ export default function BenchmarksPage() {
       <Card>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Suite">
-            <Select value={effectiveSuite} onChange={setSuiteKey}>
-              {suites.map((s) => (
-                <option key={s.key} value={s.key}>{s.name} v{s.version} · {s.itemCount} items</option>
-              ))}
-            </Select>
+            <Select
+              ariaLabel="Suite"
+              value={effectiveSuite}
+              onChange={setSuiteKey}
+              options={suites.map((s) => ({ value: s.key, label: `${s.name} v${s.version}`, hint: `${s.itemCount} items` }))}
+            />
           </Field>
           <Field label="Agent profile">
-            <Select value={effectiveProfile} onChange={setProfileId}>
-              {profiles.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </Select>
+            <Select
+              ariaLabel="Agent profile"
+              value={effectiveProfile}
+              onChange={setProfileId}
+              options={profiles.map((p) => ({ value: p.id, label: p.name }))}
+            />
           </Field>
           <Field label="Baseline">
             <Select
+              ariaLabel="Baseline"
               value={baselineMode === "brain" ? "brain" : effectiveModel}
               onChange={(v) => {
                 if (v === "brain") setBaselineMode("brain");
@@ -306,28 +332,28 @@ export default function BenchmarksPage() {
                   setModelId(v);
                 }
               }}
-            >
-              <option value="brain">Brain-only (same brain)</option>
-              {models.map((m) => (
-                <option key={m.id} value={m.id}>vs {m.name}</option>
-              ))}
-            </Select>
+              options={[
+                { value: "brain", label: "Brain-only (same brain)" },
+                ...models.map((m) => ({ value: m.id, label: `vs ${m.name}` })),
+              ]}
+            />
           </Field>
           <Field label="Repeats">
-            <Select value={String(repeats)} onChange={(v) => setRepeats(Number(v))}>
-              {[1, 3, 5].map((n) => (
-                <option key={n} value={n}>{n}×</option>
-              ))}
-            </Select>
+            <Select
+              ariaLabel="Repeats"
+              value={String(repeats)}
+              onChange={(v) => setRepeats(Number(v))}
+              options={[1, 3, 5].map((n) => ({ value: String(n), label: `${n}×` }))}
+            />
           </Field>
         </div>
 
         {/* Agent augmentation — toggle off for a brain-only (reliable) run */}
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <span className="text-[11px] uppercase tracking-wider text-white/40">Agent augmentation</span>
-          <Toggle label="Skills" on={aug.skills} onChange={(v) => setAug((a) => ({ ...a, skills: v }))} />
-          <Toggle label="Tools" on={aug.tools} onChange={(v) => setAug((a) => ({ ...a, tools: v }))} />
-          <Toggle label="Memory" on={aug.memory} onChange={(v) => setAug((a) => ({ ...a, memory: v }))} />
+          <Toggle label="Skills" checked={aug.skills} onChange={(v) => setAug((a) => ({ ...a, skills: v }))} />
+          <Toggle label="Tools" checked={aug.tools} onChange={(v) => setAug((a) => ({ ...a, tools: v }))} />
+          <Toggle label="Memory" checked={aug.memory} onChange={(v) => setAug((a) => ({ ...a, memory: v }))} />
           <span className="text-[11px] text-white/30">
             {aug.skills || aug.tools || aug.memory ? "agentic run (uses Hermes)" : "brain-only (fast, reliable)"}
           </span>
@@ -335,20 +361,24 @@ export default function BenchmarksPage() {
 
         {/* Per-component selection — pick exactly which seed skills / tools to equip */}
         {aug.skills && catalog.skills.length > 0 ? (
-          <ChipSelect
-            label="Skills"
-            options={catalog.skills.map((s) => ({ key: s.key, label: s.displayName }))}
-            selected={selSkills}
-            onToggle={(key) => setSelSkills((cur) => toggleKey(cur, key, catalog.skills.map((s) => s.key)))}
-          />
+          <div className="mt-2 pl-1">
+            <ChipGroup
+              label="Skills"
+              options={catalog.skills.map((s) => ({ key: s.key, label: s.displayName }))}
+              selected={selSkills}
+              onChange={setSelSkills}
+            />
+          </div>
         ) : null}
         {aug.tools && catalog.tools.length > 0 ? (
-          <ChipSelect
-            label="Tools"
-            options={catalog.tools.map((t) => ({ key: t.key, label: t.displayName }))}
-            selected={selTools}
-            onToggle={(key) => setSelTools((cur) => toggleKey(cur, key, catalog.tools.map((t) => t.key)))}
-          />
+          <div className="mt-2 pl-1">
+            <ChipGroup
+              label="Tools"
+              options={catalog.tools.map((t) => ({ key: t.key, label: t.displayName }))}
+              selected={selTools}
+              onChange={setSelTools}
+            />
+          </div>
         ) : null}
 
         {/* Empty-catalog guidance — toggled on but nothing seeded to equip. */}
@@ -437,6 +467,24 @@ export default function BenchmarksPage() {
               </div>
             </div>
           </div>
+
+          {/* Honest failure: a run where (nearly) every item errored is a
+              FAILURE, not a low score — surface the reason, not a misleading card. */}
+          {[agentRun, modelRun].map((r) =>
+            r?.status === "failed" ? (
+              <p key={`fail-${r.id}`} className="mt-4 flex items-start gap-2 rounded-lg border border-neon-pink/30 bg-neon-pink/5 px-3 py-2 text-[11px] text-neon-pink/90">
+                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                <span>
+                  <strong>{r.config?.pairRole === "baseline" ? "Baseline" : "Agent"} run failed:</strong>{" "}
+                  {r.error ?? "every item errored or timed out"}
+                </span>
+              </p>
+            ) : r?.status === "completed" && (r.summary?.errorRate ?? 0) > 0.2 ? (
+              <p key={`partial-${r.id}`} className="mt-2 text-[11px] text-neon-orange/80">
+                {Math.round((r.summary?.errorRate ?? 0) * 100)}% of {r.config?.pairRole === "baseline" ? "baseline" : "agent"} items errored/timed-out — scores are partial.
+              </p>
+            ) : null,
+          )}
 
           {/* Honesty: did the agentic run truly serve the toggled config, or
               fall back to the shared default agent (no local Hermes gateway)? */}
@@ -530,79 +578,3 @@ export default function BenchmarksPage() {
   );
 }
 
-// ── tiny form primitives ─────────────────────────────────────
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-[11px] uppercase tracking-wider text-white/40">{label}</span>
-      {children}
-    </label>
-  );
-}
-
-function Select({ value, onChange, children }: { value: string; onChange: (v: string) => void; children: React.ReactNode }) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-lg border border-white/10 bg-dark-900/80 px-3 py-2 text-sm text-white/90 outline-none focus:border-neon-cyan/40"
-    >
-      {children}
-    </select>
-  );
-}
-
-/** Toggle one key in a (null = all) selection set, materialising from `all` first. */
-function toggleKey(cur: string[] | null, key: string, all: string[]): string[] {
-  const base = cur ?? all;
-  return base.includes(key) ? base.filter((k) => k !== key) : [...base, key];
-}
-
-function ChipSelect({
-  label,
-  options,
-  selected,
-  onToggle,
-}: {
-  label: string;
-  options: { key: string; label: string }[];
-  selected: string[] | null;
-  onToggle: (key: string) => void;
-}) {
-  const isActive = (key: string) => selected === null || selected.includes(key);
-  return (
-    <div className="mt-2 flex flex-wrap items-center gap-2 pl-1">
-      <span className="text-[10px] uppercase tracking-wider text-white/25">{label}</span>
-      {options.map((o) => (
-        <button
-          key={o.key}
-          type="button"
-          onClick={() => onToggle(o.key)}
-          className={`rounded-md border px-2 py-0.5 text-[11px] transition ${
-            isActive(o.key)
-              ? "border-neon-cyan/40 bg-neon-cyan/10 text-neon-cyan"
-              : "border-white/10 text-white/35 hover:text-white/60"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function Toggle({ label, on, onChange }: { label: string; on: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!on)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] transition ${
-        on ? "border-neon-cyan/40 bg-neon-cyan/10 text-neon-cyan" : "border-white/10 text-white/40 hover:text-white/70"
-      }`}
-    >
-      <span className={`h-2 w-2 rounded-full ${on ? "bg-neon-cyan" : "bg-white/20"}`} />
-      {label}
-    </button>
-  );
-}

@@ -14,6 +14,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
 import Badge from "@/components/ui/Badge";
 import Modal from "@/components/ui/Modal";
+import { Field, Input, Select } from "@/components/ui/field";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import type { AgentProfile, ProfileFile } from "@/types/hermes";
@@ -622,39 +623,33 @@ export default function BehaviourPage() {
           }
         >
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm text-white/50 mb-1">Name</label>
-              <input
+            <Field label="Name">
+              <Input
                 type="text"
                 value={createName}
                 onChange={(e) => setCreateName(e.target.value)}
                 placeholder="e.g. Research Assistant"
-                className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-purple-500/50 focus:outline-none"
               />
-            </div>
-            <div>
-              <label className="block text-sm text-white/50 mb-1">Description</label>
-              <input
+            </Field>
+            <Field label="Description">
+              <Input
                 type="text"
                 value={createDescription}
                 onChange={(e) => setCreateDescription(e.target.value)}
                 placeholder="e.g. Academic research and analysis"
-                className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-purple-500/50 focus:outline-none"
               />
-            </div>
-            <div>
-              <label className="block text-sm text-white/50 mb-1">Clone From</label>
-              <select
+            </Field>
+            <Field label="Clone From">
+              <Select
+                ariaLabel="Clone from profile"
                 value={createCloneFrom}
-                onChange={(e) => setCreateCloneFrom(e.target.value)}
-                className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-purple-500/50 focus:outline-none"
-              >
-                <option value="default">Default (Bob)</option>
-                {profiles.filter(p => !p.isDefault).map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </div>
+                onChange={setCreateCloneFrom}
+                options={[
+                  { value: "default", label: "Default (Bob)" },
+                  ...profiles.filter((p) => !p.isDefault).map((p) => ({ value: p.id, label: p.name })),
+                ]}
+              />
+            </Field>
           </div>
         </Modal>
 

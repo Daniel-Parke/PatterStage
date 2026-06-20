@@ -3,6 +3,7 @@
 import { CheckCircle2, Star } from "lucide-react";
 
 import GlowSurface from "@/components/ui/GlowSurface";
+import { Select } from "@/components/ui/field";
 import BulkAuxiliaryUpdater from "@/components/models/BulkAuxiliaryUpdater";
 import ModelsSectionHeader from "@/components/models/ModelsSectionHeader";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
@@ -51,23 +52,16 @@ export default function ModelsAgentDefaultSection({
                 Default Model
               </label>
               <div className="flex items-center gap-3 flex-wrap">
-                <select
-                  className="flex-shrink-0 w-full max-w-xs bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-white font-mono text-sm h-9 min-w-0 focus:outline-none focus:border-neon-orange/50 transition-colors truncate appearance-none"
-                  value={defaults.agent ?? ""}
-                  onChange={(e) => {
-                    const val = e.target.value || null;
-                    void onSetDefault("agent", val);
-                  }}
-                  disabled={busyTaskType === "agent"}
-                  title="Primary model used for all agent missions"
-                >
-                  <option value="">— None —</option>
-                  {modelOptions.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="w-full max-w-xs shrink-0" title="Primary model used for all agent missions">
+                  <Select
+                    ariaLabel="Default agent model"
+                    value={defaults.agent ?? ""}
+                    onChange={(v) => void onSetDefault("agent", v || null)}
+                    disabled={busyTaskType === "agent"}
+                    placeholder="— None —"
+                    options={[{ value: "", label: "— None —" }, ...modelOptions.map((m) => ({ value: m.id, label: m.name }))]}
+                  />
+                </div>
 
                 {activeModel && (
                   <div className="min-w-0 flex-1">

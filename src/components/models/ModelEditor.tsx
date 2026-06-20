@@ -25,7 +25,7 @@ import CredentialPicker, {
   type CredentialOption,
 } from "@/components/models/CredentialPicker";
 import FieldRow from "@/components/models/FieldRow";
-import { inputFieldClasses } from "@/lib/theme";
+import { Input, Select } from "@/components/ui/field";
 import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
 
 /**
@@ -267,40 +267,33 @@ export default function ModelEditor({
           label="Name"
           description="Display name only — does not need to match the model identifier"
         >
-          <input
+          <Input
             type="text"
             value={form.name}
             onChange={(e) => update("name", e.target.value)}
             placeholder="e.g. Claude Sonnet 4 (production)"
-            className={inputFieldClasses("purple")}
           />
         </FieldRow>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FieldRow label="Provider">
-            <select
+            <Select
+              ariaLabel="Provider"
               value={form.provider}
-              onChange={(e) => {
-                update("provider", e.target.value as HermesProvider);
+              onChange={(v) => {
+                update("provider", v as HermesProvider);
                 update("credentialsId", null);
               }}
-              className={`${inputFieldClasses("purple")} appearance-none cursor-pointer`}
-            >
-              {HERMES_PROVIDERS.map((p) => (
-                <option key={p} value={p} className="bg-dark-900">
-                  {p}
-                </option>
-              ))}
-            </select>
+              options={HERMES_PROVIDERS.map((p) => ({ value: p, label: p }))}
+            />
           </FieldRow>
 
           <FieldRow label="Model ID">
-            <input
+            <Input
               type="text"
               value={form.modelId}
               onChange={(e) => update("modelId", e.target.value)}
               placeholder="anthropic/claude-sonnet-4"
-              className={inputFieldClasses("purple")}
             />
           </FieldRow>
         </div>
@@ -314,12 +307,11 @@ export default function ModelEditor({
               </>
             }
           >
-            <input
+            <Input
               type="text"
               value={form.baseUrl}
               onChange={(e) => update("baseUrl", e.target.value)}
               placeholder="https://api.anthropic.com/v1"
-              className={inputFieldClasses("purple")}
             />
           </FieldRow>
           <FieldRow
@@ -330,13 +322,12 @@ export default function ModelEditor({
               </>
             }
           >
-            <input
+            <Input
               type="number"
               value={form.contextLength}
               onChange={(e) => update("contextLength", e.target.value)}
               placeholder="200000"
               min={1000}
-              className={inputFieldClasses("purple")}
             />
           </FieldRow>
         </div>
@@ -354,25 +345,23 @@ export default function ModelEditor({
               New credential
             </p>
             <FieldRow label="Credential Label">
-              <input
+              <Input
                 type="text"
                 value={form.credentialLabel}
                 onChange={(e) => update("credentialLabel", e.target.value)}
                 placeholder={`${form.provider} key`}
-                className={inputFieldClasses("purple")}
               />
             </FieldRow>
             <FieldRow
               label="API Key"
               description="Stored plain text in the registry and synced to ~/.hermes/.env so Hermes can read it."
             >
-              <input
+              <Input
                 type="password"
                 autoComplete="off"
                 value={form.apiKey}
                 onChange={(e) => update("apiKey", e.target.value)}
                 placeholder={isEdit ? "Leave blank to keep existing" : "sk-..."}
-                className={inputFieldClasses("purple")}
               />
             </FieldRow>
           </div>

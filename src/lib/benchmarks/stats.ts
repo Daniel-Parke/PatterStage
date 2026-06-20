@@ -87,6 +87,23 @@ export interface StatResult {
   card: StatCard;
   /** Overall fraction of executions that errored/timed-out. */
   errorRate: number;
+  /** How many items back each stat (the confidence signal — more = more stable). */
+  samples: Record<Stat, number>;
+}
+
+/** Count the items backing each stat (for the confidence/"n=" surface). */
+function countSamples(items: ItemAgg[]): Record<Stat, number> {
+  const domains = new Set(items.map((i) => i.domain));
+  const tagged = (s: Stat) => items.filter((i) => (i.statTags[s] ?? 0) > 0).length;
+  return {
+    intelligence: tagged("intelligence"),
+    wisdom: tagged("wisdom"),
+    // Strength/Speed/Fortitude are universal (every item); Dexterity is breadth.
+    strength: items.length,
+    speed: items.length,
+    fortitude: items.length,
+    dexterity: domains.size,
+  };
 }
 
 export function computeStatCard(results: ResultForAgg[]): StatResult {
@@ -95,6 +112,7 @@ export function computeStatCard(results: ResultForAgg[]): StatResult {
     return {
       card: { strength: 0, dexterity: 0, intelligence: 0, wisdom: 0, fortitude: 0, speed: 0 },
       errorRate: 0,
+      samples: { strength: 0, dexterity: 0, intelligence: 0, wisdom: 0, fortitude: 0, speed: 0 },
     };
   }
 
@@ -162,6 +180,7 @@ export function computeStatCard(results: ResultForAgg[]): StatResult {
       speed: pct(tagged("speed", speed)),
     },
     errorRate,
+    samples: countSamples(items),
   };
 }
 

@@ -18,7 +18,10 @@ export type BenchmarkDomain =
   | "reasoning"
   | "instruction"
   | "needle"
-  | "consistency";
+  | "consistency"
+  // Judge-graded (LLM-as-judge) domains.
+  | "honesty"
+  | "safety";
 
 export const BENCHMARK_DOMAINS: BenchmarkDomain[] = [
   "maths",
@@ -27,6 +30,8 @@ export const BENCHMARK_DOMAINS: BenchmarkDomain[] = [
   "instruction",
   "needle",
   "consistency",
+  "honesty",
+  "safety",
 ];
 
 export const DOMAIN_LABELS: Record<BenchmarkDomain, string> = {
@@ -36,6 +41,8 @@ export const DOMAIN_LABELS: Record<BenchmarkDomain, string> = {
   instruction: "Instruction-following",
   needle: "Needle-in-a-haystack",
   consistency: "Consistency",
+  honesty: "Honesty / calibration",
+  safety: "Safety / refusal",
 };
 
 // ── JRPG stat card (the capability headline) ──
@@ -78,7 +85,8 @@ export type GraderKind =
   | "contains"
   | "regex"
   | "json_schema"
-  | "consistency";
+  | "consistency"
+  | "judge";
 
 /** How a consistency item extracts a canonical answer from each repeat. */
 export type ConsistencyExtract = "mcq" | "numeric" | "normalized";
@@ -123,6 +131,21 @@ export interface ConsistencyGrader {
   /** Allowed choice labels when `extract === "mcq"`. */
   choices?: string[];
 }
+/**
+ * LLM-as-judge: a strong model scores the RESPONSE against a criterion-separated
+ * rubric (0..1). For subjective/open-ended/safety/honesty items that no
+ * deterministic grader can score. Graded async (score-judge.ts), out of the
+ * pure path. A judge failure is recorded as an ERROR (never a false zero).
+ */
+export interface JudgeGrader {
+  kind: "judge";
+  /** The rubric the judge applies (what a good answer must do). */
+  criteria: string;
+  /** Optional reference/ideal answer to ground the judgement. */
+  reference?: string;
+  /** Pass threshold on the 0..1 judge score (default 0.6). */
+  passThreshold?: number;
+}
 
 export type Grader =
   | ExactGrader
@@ -131,7 +154,8 @@ export type Grader =
   | ContainsGrader
   | RegexGrader
   | JsonSchemaGrader
-  | ConsistencyGrader;
+  | ConsistencyGrader
+  | JudgeGrader;
 
 // ── Suite + item definitions (code, not DB) ──
 
@@ -189,6 +213,12 @@ export interface BenchmarkRunConfig {
   augmentation: AugmentationConfig;
   /** Provider model string of the brain (display/cost). */
   modelString?: string | null;
+  /**
+   * Role within a compare pair. The baseline of a "same brain, brain-only"
+   * comparison is itself a `targetKind:"agent"` run, so the pair MUST be
+   * classified by this role, not by targetKind. Absent on legacy/single runs.
+   */
+  pairRole?: "agent" | "baseline" | null;
 }
 
 export interface DomainScore {
@@ -211,6 +241,8 @@ export interface BenchmarkSummary {
   repeats: number;
   /** The 6-stat JRPG card (the headline). */
   stats?: StatCard;
+  /** How many items back each stat (confidence — more = more stable). */
+  statSamples?: Partial<Record<Stat, number>>;
   /** Per-domain detail (internal grouping behind the stats). */
   domains: DomainScore[];
   /** Fraction of (item,repeat) executions that errored/timed-out. */

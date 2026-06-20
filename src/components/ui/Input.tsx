@@ -5,6 +5,7 @@
 "use client";
 
 import { Search } from "lucide-react";
+import { Select as FieldSelect } from "@/components/ui/field";
 
 // ── Search Input ───────────────────────────────────────────────
 export function SearchInput({
@@ -181,47 +182,34 @@ export function InlineToggle({
 
 // ── Select ─────────────────────────────────────────────────────
 
-const selectFocusColorMap: Record<string, string> = {
-  cyan: "focus:border-neon-cyan/50",
-  purple: "focus:border-neon-purple/50",
-  green: "focus:border-neon-green/50",
-  pink: "focus:border-neon-pink/50",
-  orange: "focus:border-neon-orange/50",
-};
-
 export function Select({
   label,
   value,
   onChange,
   options,
   description,
-  color = "cyan",
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   options: string[];
   description?: string;
+  /** Retained for call-site compatibility; the Field Kit owns the accent now. */
   color?: string;
 }) {
-  const focusClass = selectFocusColorMap[color] || selectFocusColorMap.cyan;
+  // Delegates to the unified Field Kit Select (custom, keyboard-accessible,
+  // on-brand) so every config/settings dropdown matches the rest of the product
+  // instead of falling back to the OS-native control.
   return (
     <div className="space-y-1.5">
       <label className="text-sm font-medium text-white/70">{label}</label>
-      {description && (
-        <p className="text-xs text-white/40">{description}</p>
-      )}
-      <select
+      {description && <p className="text-xs text-white/40">{description}</p>}
+      <FieldSelect
+        ariaLabel={label}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none transition-colors font-mono appearance-none cursor-pointer ${focusClass}`}
-      >
-        {options.map((opt) => (
-          <option key={opt} value={opt} className="bg-dark-900">
-            {opt}
-          </option>
-        ))}
-      </select>
+        onChange={onChange}
+        options={options.map((opt) => ({ value: opt, label: opt }))}
+      />
     </div>
   );
 }

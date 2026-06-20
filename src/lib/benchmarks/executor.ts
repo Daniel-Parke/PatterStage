@@ -73,6 +73,8 @@ export interface StartBenchmarkInput {
   pairId?: string | null;
   /** Agent targets only: which augmentation layers to enable (default all on). */
   augmentation?: Partial<AugmentationConfig>;
+  /** Role within a compare pair (so the report classifies by role, not targetKind). */
+  pairRole?: "agent" | "baseline" | null;
 }
 
 /**
@@ -103,7 +105,7 @@ function resolveTarget(input: StartBenchmarkInput): Omit<CreateBenchmarkRunInput
       usedSkills: false,
       usedTools: false,
       usedMemory: false,
-      config: { augmentation: aug, modelString: m?.modelId ?? null },
+      config: { augmentation: aug, modelString: m?.modelId ?? null, pairRole: input.pairRole ?? null },
     };
   }
 
@@ -124,7 +126,7 @@ function resolveTarget(input: StartBenchmarkInput): Omit<CreateBenchmarkRunInput
   };
   const anyAug = aug.skills || aug.tools || aug.memory;
   const execMode: BenchmarkExecMode = anyAug ? "agentic" : "model";
-  const config: BenchmarkRunConfig = { augmentation: aug, modelString: ctx.modelString };
+  const config: BenchmarkRunConfig = { augmentation: aug, modelString: ctx.modelString, pairRole: input.pairRole ?? null };
   return {
     ...base,
     targetLabel: input.targetLabel ?? ctx.displayName,
@@ -184,7 +186,11 @@ export function startComparePair(input: CompareInput): {
     augmentation: input.augmentation,
     repeats,
     pairId,
+    pairRole: "agent",
   });
+  // The baseline is the brain alone. When it's the SAME agent brain-only it is
+  // still a targetKind:"agent" run, so `pairRole` (not targetKind) is what the
+  // report uses to tell agent from baseline.
   const model = input.modelRef
     ? startBenchmarkRun({
         suiteKey: input.suiteKey,
@@ -193,6 +199,7 @@ export function startComparePair(input: CompareInput): {
         targetLabel: input.modelLabel ?? input.modelRef,
         repeats,
         pairId,
+        pairRole: "baseline",
       })
     : startBenchmarkRun({
         suiteKey: input.suiteKey,
@@ -202,6 +209,7 @@ export function startComparePair(input: CompareInput): {
         augmentation: { skills: false, tools: false, memory: false },
         repeats,
         pairId,
+        pairRole: "baseline",
       });
   return { pairId, agent, model };
 }
