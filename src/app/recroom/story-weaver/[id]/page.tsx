@@ -461,7 +461,7 @@ export default function StoryReaderPage() {
 
       {/* Reader Header */}
       <div className="sticky top-0 lg:top-0 z-30 border-b border-white/10 bg-dark-950/95 backdrop-blur-xl flex-shrink-0">
-        <div className="flex items-center justify-between px-3 md:px-6 min-h-[var(--ch-shell-header-min-height)]">
+        <div className="flex items-center justify-between px-3 md:px-6 min-h-[var(--ps-shell-header-min-height)]">
           <button onClick={() => router.push("/recroom/story-weaver")}
             className="p-2.5 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center">
             <ChevronLeft className="w-5 h-5" />

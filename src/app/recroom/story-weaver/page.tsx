@@ -80,7 +80,7 @@ export default function StoryWeaverDashboard() {
         {/* Actions */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <button onClick={() => router.push("/recroom/story-weaver/create")}
-            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-neon-purple/30 bg-neon-purple/10 text-sm font-mono text-neon-purple hover:bg-neon-purple/20 transition-all shadow-[0_0_20px_rgb(var(--ch-rgb-neon-purple)_/_0.1)]">
+            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-neon-purple/30 bg-neon-purple/10 text-sm font-mono text-neon-purple hover:bg-neon-purple/20 transition-all shadow-[0_0_20px_rgb(var(--ps-rgb-neon-purple)_/_0.1)]">
             <Plus className="w-4 h-4" /> Create
           </button>
           <button onClick={() => router.push("/recroom/story-weaver/library")}

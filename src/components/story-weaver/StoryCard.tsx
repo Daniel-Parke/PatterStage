@@ -21,7 +21,7 @@ export default function StoryCard({ story, onRead, onDelete }: StoryCardProps) {
   return (
     <div
       onClick={() => onRead(story.id)}
-      className="rounded-xl border border-neon-purple/15 bg-dark-900/50 p-5 hover:border-neon-purple/30 hover:shadow-[0_0_15px_rgb(var(--ch-rgb-neon-purple)_/_0.06)] transition-all cursor-pointer group flex flex-col">
+      className="rounded-xl border border-neon-purple/15 bg-dark-900/50 p-5 hover:border-neon-purple/30 hover:shadow-[0_0_15px_rgb(var(--ps-rgb-neon-purple)_/_0.06)] transition-all cursor-pointer group flex flex-col">
       <div className="flex items-start justify-between mb-3">
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-white/90 truncate">{story.title}</h3>

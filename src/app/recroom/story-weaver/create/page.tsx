@@ -544,7 +544,7 @@ function CreateStoryPage() {
 
         {/* Create Button */}
         <button onClick={handleCreate} disabled={!premise.trim() || generating}
-          className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-neon-purple/30 bg-neon-purple/10 text-base font-mono text-neon-purple hover:bg-neon-purple/20 transition-all disabled:opacity-30 shadow-[0_0_20px_rgb(var(--ch-rgb-neon-purple)_/_0.1)]">
+          className="w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-neon-purple/30 bg-neon-purple/10 text-base font-mono text-neon-purple hover:bg-neon-purple/20 transition-all disabled:opacity-30 shadow-[0_0_20px_rgb(var(--ps-rgb-neon-purple)_/_0.1)]">
           <Sparkles className="w-5 h-5" /> Begin Writing
         </button>
       </div>

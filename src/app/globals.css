@@ -35,14 +35,14 @@
 
 /* Shell + RGB mirrors for effects (keep aligned with @theme / docs/design-tokens.md) */
 :root {
-  --ch-shell-header-min-height: 5rem;
-  --ch-mobile-header-min-height: 3rem;
-  --ch-rgb-neon-cyan: 0, 191, 255;
-  --ch-rgb-neon-purple: 139, 92, 255;
-  --ch-rgb-neon-green: 163, 255, 18;
-  --ch-rgb-neon-pink: 232, 121, 249;
-  --ch-rgb-neon-orange: 255, 102, 34;
-  --ch-rgb-cherenkov-glow: 51, 221, 255;
+  --ps-shell-header-min-height: 5rem;
+  --ps-mobile-header-min-height: 3rem;
+  --ps-rgb-neon-cyan: 0, 191, 255;
+  --ps-rgb-neon-purple: 139, 92, 255;
+  --ps-rgb-neon-green: 163, 255, 18;
+  --ps-rgb-neon-pink: 232, 121, 249;
+  --ps-rgb-neon-orange: 255, 102, 34;
+  --ps-rgb-cherenkov-glow: 51, 221, 255;
 }
 
 /* Scrollbar styling */
@@ -58,7 +58,7 @@
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgb(var(--ch-rgb-neon-cyan) / 0.35);
+  background: rgb(var(--ps-rgb-neon-cyan) / 0.35);
 }
 
 /* Glow effects — restrained, deep-space Cherenkov. Glow reads as a subtle
@@ -67,28 +67,28 @@
    live/active states (running process, live session). */
 .glow-cyan {
   box-shadow:
-    0 0 14px rgb(var(--ch-rgb-neon-cyan) / 0.08),
-    0 0 28px rgb(var(--ch-rgb-neon-cyan) / 0.025);
+    0 0 14px rgb(var(--ps-rgb-neon-cyan) / 0.08),
+    0 0 28px rgb(var(--ps-rgb-neon-cyan) / 0.025);
 }
 .glow-purple {
   box-shadow:
-    0 0 14px rgb(var(--ch-rgb-neon-purple) / 0.08),
-    0 0 28px rgb(var(--ch-rgb-neon-purple) / 0.025);
+    0 0 14px rgb(var(--ps-rgb-neon-purple) / 0.08),
+    0 0 28px rgb(var(--ps-rgb-neon-purple) / 0.025);
 }
 .glow-green {
   box-shadow:
-    0 0 14px rgb(var(--ch-rgb-neon-green) / 0.08),
-    0 0 28px rgb(var(--ch-rgb-neon-green) / 0.025);
+    0 0 14px rgb(var(--ps-rgb-neon-green) / 0.08),
+    0 0 28px rgb(var(--ps-rgb-neon-green) / 0.025);
 }
 .glow-pink {
   box-shadow:
-    0 0 14px rgb(var(--ch-rgb-neon-pink) / 0.08),
-    0 0 28px rgb(var(--ch-rgb-neon-pink) / 0.025);
+    0 0 14px rgb(var(--ps-rgb-neon-pink) / 0.08),
+    0 0 28px rgb(var(--ps-rgb-neon-pink) / 0.025);
 }
 .glow-orange {
   box-shadow:
-    0 0 14px rgb(var(--ch-rgb-neon-orange) / 0.08),
-    0 0 28px rgb(var(--ch-rgb-neon-orange) / 0.025);
+    0 0 14px rgb(var(--ps-rgb-neon-orange) / 0.08),
+    0 0 28px rgb(var(--ps-rgb-neon-orange) / 0.025);
 }
 
 /* ── Motion (transform/opacity only — GPU-friendly) ──────────── */
@@ -124,7 +124,7 @@
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgb(var(--ch-rgb-neon-cyan) / 0.08), transparent);
+  background: linear-gradient(90deg, transparent, rgb(var(--ps-rgb-neon-cyan) / 0.08), transparent);
   animation: ch-shimmer 2.2s ease-in-out infinite;
 }
 
@@ -175,10 +175,10 @@
 }
 
 .text-glow-cyan {
-  text-shadow: 0 0 10px rgb(var(--ch-rgb-neon-cyan) / 0.55);
+  text-shadow: 0 0 10px rgb(var(--ps-rgb-neon-cyan) / 0.55);
 }
 .text-glow-purple {
-  text-shadow: 0 0 10px rgb(var(--ch-rgb-neon-purple) / 0.55);
+  text-shadow: 0 0 10px rgb(var(--ps-rgb-neon-purple) / 0.55);
 }
 
 /* Animated gradient border */
@@ -216,8 +216,8 @@
     0deg,
     transparent,
     transparent 2px,
-    rgb(var(--ch-rgb-cherenkov-glow) / 0.015) 2px,
-    rgb(var(--ch-rgb-cherenkov-glow) / 0.015) 4px
+    rgb(var(--ps-rgb-cherenkov-glow) / 0.015) 2px,
+    rgb(var(--ps-rgb-cherenkov-glow) / 0.015) 4px
   );
   pointer-events: none;
 }
@@ -243,8 +243,8 @@
 /* Grid background */
 .grid-bg {
   background-image:
-    linear-gradient(rgb(var(--ch-rgb-neon-cyan) / 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(var(--ch-rgb-neon-cyan) / 0.03) 1px, transparent 1px);
+    linear-gradient(rgb(var(--ps-rgb-neon-cyan) / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--ps-rgb-neon-cyan) / 0.03) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 

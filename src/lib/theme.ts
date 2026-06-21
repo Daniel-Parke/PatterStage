@@ -4,9 +4,9 @@
 
 import type { AccentColor } from "@/types/hermes";
 
-/** Aligns main-column top bar with Sidebar brand row (`--ch-shell-header-min-height` in globals.css). */
+/** Aligns main-column top bar with Sidebar brand row (`--ps-shell-header-min-height` in globals.css). */
 export const shellHeaderBarClasses =
-  "border-b border-white/10 bg-dark-900/50 backdrop-blur-xl min-h-[var(--ch-shell-header-min-height)] flex items-center px-6";
+  "border-b border-white/10 bg-dark-900/50 backdrop-blur-xl min-h-[var(--ps-shell-header-min-height)] flex items-center px-6";
 
 type ColorEntry = string;
 
@@ -50,7 +50,7 @@ export const colorBorderMap: Record<AccentColor, ColorEntry> = makeMap((c) => {
   const hoverOpacity = isBaseColor(c) ? "70" : "60";
   const shadowRgb = isBaseColor(c)
     ? ({ red: "239,68,68", blue: "96,165,250", yellow: "250,204,21" } as Record<string, string>)[c]
-    : `var(--ch-rgb-${token})`;
+    : `var(--ps-rgb-${token})`;
   return `border-${token}/${opacity} hover:border-${token}/${hoverOpacity} hover:shadow-[0_0_20px_rgb(${shadowRgb}_/_0.12)]`;
 });
 
