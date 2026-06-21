@@ -87,6 +87,48 @@ npm: `npm run test:full-install` (smoke + `--skip-http`), `npm run test:full-ins
 
 **Non-interactive default:** Plain `docker exec` still uses env vars (`INSTALL_HINDSIGHT=no`, `PS_INSTALL_NONINTERACTIVE=1`, etc.). Base image: [`docker/TestHarness.dockerfile`](../docker/TestHarness.dockerfile). CRLF in `*.sh` is normalized on the copied workspace for Linux bash.
 
+## Live smoke against a Hermes (mock or real) — cross-platform
+
+Two zero-dependency Node runners drive PatterStage's real HTTP surface against a running stack. They work the same on **Linux, macOS, and Windows** (pure `fetch`):
+
+| Runner | npm | Covers |
+|--------|-----|--------|
+| [`full-stack-smoke.mjs`](../tests/integration/runtime/full-stack-smoke.mjs) | `test:e2e-runtime` | Missions, schedules, cancel, chat, analytics, benchmarks |
+| [`composer-smoke.mjs`](../tests/integration/runtime/composer-smoke.mjs) | `test:smoke-composer` | Composer (dispatch → HIL gate → approve → advance) + Deep Research |
+
+### Against the mock Hermes (offline, any OS)
+
+```bash
+npm run mock-hermes                       # terminal 1 — stand-in API server on :8642
+HERMES_GATEWAY_URL=http://127.0.0.1:8642 PS_SEARCH_PROVIDER=none npm run dev   # terminal 2
+PS_URL=http://127.0.0.1:3000 npm run test:smoke-composer   # terminal 3
+```
+
+`PS_SEARCH_PROVIDER=none` keeps Deep Research fully offline (no live web search). On a **fresh** `PS_DATA_DIR`, run `PS_DATA_DIR=<dir> npm run db:migrate` once before starting the server (the boot-time Composer seed needs the schema present).
+
+### Against a real local Hermes
+
+PatterStage talks to Hermes **only** through its HTTP API Server (the gateway) + a bearer key, so enable that first:
+
+1. In the Hermes agent's `.env` (e.g. `~/.hermes/.env`), set `API_SERVER_ENABLED=true` and an `API_SERVER_KEY=<key>`, and start the gateway (it listens on `:8642`). Verify: `curl http://127.0.0.1:8642/health`.
+2. Point PatterStage at it via `HERMES_GATEWAY_URL` + `API_SERVER_KEY` (must match), then run a smoke:
+
+**bash (Linux/macOS/WSL):**
+```bash
+export HERMES_GATEWAY_URL=http://127.0.0.1:8642 API_SERVER_KEY=<key>
+npm run dev
+PS_URL=http://127.0.0.1:3000 npm run test:smoke-composer
+```
+
+**PowerShell (Windows):**
+```powershell
+$env:HERMES_GATEWAY_URL = "http://127.0.0.1:8642"; $env:API_SERVER_KEY = "<key>"
+npm run dev
+$env:PS_URL = "http://127.0.0.1:3000"; npm run test:smoke-composer
+```
+
+The runners exit non-zero on any failed assertion. CI is unchanged — it runs the mock smoke on all three OSes plus the Ubuntu Docker real-Hermes job; the runners above are the manual path for validating a real (or Windows) Hermes.
+
 ## Continuous integration
 
 Primary pipeline: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — Ubuntu (`shell-custom-scripts`, install, `prebuild`, ESLint with **`--max-warnings 0`**, Hermes-path grep gate, `tsc`, Jest coverage, build, Playwright smoke with `PLAYWRIGHT_SMOKE=1`) plus macOS build/test, E2E smoke on Ubuntu, and a **`docker-image`** job that runs **`docker build -f Dockerfile .`** then **`tests/scripts/docker-deploy-api-smoke.sh`** (GET version check + POST restart + HTTP still up) so the production image and dashboard deploy path do not silently rot. The **`build-test-*`** jobs use separate named steps (ESLint, TypeScript, unit tests, build) so the first failing step is obvious in the Actions UI. Actions use **`actions/checkout@v5`** and **`actions/setup-node@v5`** (action runtime on Node 24 per upstream; app build still uses `node-version: "20"` in the workflow).

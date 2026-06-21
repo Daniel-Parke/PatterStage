@@ -65,6 +65,12 @@ function viewRun(run) {
   if (run.status === "started" && Date.now() >= run.completeAt) {
     run.status = "completed";
     run.output = `Mock Hermes completed run for input: ${String(run.input).slice(0, 80)}`;
+    // Composer assessing stages instruct the agent to end with a structured
+    // verdict (see stage-prompt.ts). Emit a PASS so on_pass routing exercises
+    // deterministically in the Composer smoke; ordinary runs are unaffected.
+    if (String(run.input).toUpperCase().includes("VERDICT")) {
+      run.output += "\n\nVERDICT: PASS\nREASONS: mock stage passed";
+    }
     run.usage = { input_tokens: 42, output_tokens: 84, total_tokens: 126 };
   }
   return {
