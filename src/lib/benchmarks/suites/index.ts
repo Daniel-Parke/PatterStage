@@ -11,8 +11,9 @@ import { coreCapabilitiesV1 } from "./core-capabilities-v1";
 import { reasoningDepthV1 } from "./reasoning-depth-v1";
 import { appliedCapabilitiesV1 } from "./applied-capabilities-v1";
 import { judgementV1 } from "./judgement-v1";
+import { frontierV1 } from "./frontier-v1";
 
-export const SUITES: BenchmarkSuite[] = [coreCapabilitiesV1, reasoningDepthV1, appliedCapabilitiesV1, judgementV1];
+export const SUITES: BenchmarkSuite[] = [coreCapabilitiesV1, reasoningDepthV1, appliedCapabilitiesV1, judgementV1, frontierV1];
 
 export function getSuite(key: string): BenchmarkSuite | undefined {
   return SUITES.find((s) => s.key === key);

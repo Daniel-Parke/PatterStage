@@ -25,8 +25,22 @@ import {
   insertItemResult,
   updateBenchmarkRun,
 } from "./benchmarks-repository";
+import { getModel, findModelByModelId } from "@/lib/models-repository";
 import { gradeOutput, summarize, type ResultForAgg } from "./score";
 import { gradeWithJudge } from "./score-judge";
+
+/**
+ * The judge model for LLM-as-judge items. Independent of the model under test
+ * to avoid self-grading bias: set `PS_BENCH_JUDGE_MODEL` to a strong model's
+ * registry id or provider model string. Unset → gradeWithJudge falls back to
+ * the agent default (which may be the model being benchmarked — noted as a
+ * limitation in the docs).
+ */
+function resolveJudgeModelId(): string | undefined {
+  const ref = process.env.PS_BENCH_JUDGE_MODEL?.trim();
+  if (!ref) return undefined;
+  return getModel(ref)?.id ?? findModelByModelId(ref)?.id ?? undefined;
+}
 import { computeStatCard, ratingFromStatCard } from "./stats";
 import {
   newTrajectory,
@@ -390,7 +404,7 @@ export async function executeBenchmarkRun(
       // else uses the pure grader. A judge failure throws → recorded as errored.
       const grade =
         item.grader.kind === "judge" && !outcome.error
-          ? await gradeWithJudge(item, outcome.output)
+          ? await gradeWithJudge(item, outcome.output, { judgeModelId: resolveJudgeModelId() })
           : gradeOutput(item.grader, outcome.output);
       const cost = estimateCost(
         run.config?.modelString ?? run.modelLabel ?? (run.targetKind === "model" ? run.targetRef : null),

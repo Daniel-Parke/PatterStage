@@ -122,7 +122,7 @@ export interface JudgeGrader {
   criteria: string;
   /** Optional reference/ideal answer to ground the judgement. */
   reference?: string;
-  /** Pass threshold on the 0..1 judge score (default 0.6). */
+  /** Pass threshold on the 0..1 judge score (default 0.75). */
   passThreshold?: number;
 }
 

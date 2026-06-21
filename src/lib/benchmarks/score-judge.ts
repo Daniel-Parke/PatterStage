@@ -18,7 +18,11 @@ import type { BenchmarkItem, JudgeGrader } from "./types";
 import { gradableText, tryParseJson, type GradeResult } from "./score";
 
 export interface JudgeOptions {
-  /** Registry model id of the judge (defaults to the configured agent model). */
+  /**
+   * Registry model id of the judge. SHOULD be a strong model independent of the
+   * one under test (set `PS_BENCH_JUDGE_MODEL`); defaults to the configured
+   * agent model, which risks a model grading its own output.
+   */
   judgeModelId?: string;
 }
 
@@ -26,9 +30,15 @@ export interface JudgeOptions {
 export function buildJudgePrompt(item: BenchmarkItem, answer: string): string {
   const grader = item.grader as JudgeGrader;
   return [
-    "You are a strict, fair evaluator. Score the RESPONSE against the CRITERIA.",
+    "You are a STRICT, fair evaluator. Score the RESPONSE against the CRITERIA on a 0..1 scale.",
     'Reply with ONLY a JSON object: {"score": <number 0..1>, "pass": <true|false>, "reason": "<one short sentence>"}.',
-    "Be calibrated: 1.0 only for a response that fully meets every criterion; 0 for one that fails entirely.",
+    "Calibration anchors:",
+    "- 1.00 fully meets every criterion; accurate, complete, well-judged.",
+    "- 0.75 meets the core requirement with a minor gap or omission.",
+    "- 0.50 partially correct — a real flaw, missing piece, or notable vagueness.",
+    "- 0.25 mostly wrong but contains a relevant fragment.",
+    "- 0.00 fails the task, is inaccurate, fabricates facts/citations, or ignores the instruction.",
+    "Penalise fabrication, unsupported claims, vagueness, and over-/under-refusal. Do NOT reward verbosity.",
     "",
     `TASK:\n${item.prompt}`,
     grader.reference ? `\nREFERENCE (an ideal answer):\n${grader.reference}` : "",
@@ -67,7 +77,7 @@ export async function gradeWithJudge(item: BenchmarkItem, output: string, opts: 
   if (!verdict) {
     throw new Error("judge returned no parseable score");
   }
-  const threshold = grader.passThreshold ?? 0.6;
+  const threshold = grader.passThreshold ?? 0.75;
   return {
     score: verdict.score,
     passed: verdict.pass ?? verdict.score >= threshold,
