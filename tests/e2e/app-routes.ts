@@ -45,6 +45,7 @@ export const APP_NAV_ROUTES: readonly string[] = [
   "/logs",
   "/memory",
   "/orchestration/missions",
+  "/orchestration/composer",
   "/operations/personalities",
   "/recroom/story-weaver",
   "/recroom/story-weaver/characters",
