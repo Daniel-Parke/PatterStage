@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     // ── strict allowlist — no md content, no secrets ──
     const card = {
-      schema: "ch.agent-card.v1",
+      schema: "ps.agent-card.v1",
       generatedAt: new Date().toISOString(),
       profile: {
         slug: profile.slug,

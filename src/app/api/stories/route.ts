@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { handleCreate } from "@/lib/story-handlers/create";
@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Unknown action: " + action }, { status: 400 });
     }
   } catch (err) {
-    logApiError("POST /api/stories", "request", err);
-    return NextResponse.json({ error: "Request failed" }, { status: 500 });
+    return serverErrorFromCatch("POST /api/stories", "request", err, "Request failed");
   }
 }

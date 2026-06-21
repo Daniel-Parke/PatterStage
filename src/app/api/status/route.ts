@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 
 import { ensureSyncLayer } from "@/lib/sync";
 import { getSystemStat, getSystemStatNumber } from "@/lib/system-repository";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 
 export async function GET() {
   try {
@@ -32,10 +32,6 @@ export async function GET() {
       },
     });
   } catch (error) {
-    logApiError("GET /api/status", "reading system status", error);
-    return NextResponse.json(
-      { error: "Failed to read system status" },
-      { status: 500 }
-    );
+    return serverErrorFromCatch("GET /api/status", "reading system status", error, "Failed to read system status");
   }
 }

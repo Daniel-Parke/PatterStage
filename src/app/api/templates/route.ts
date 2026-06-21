@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { existsSync, readFileSync, writeFileSync, readdirSync, unlinkSync } from "fs";
 import { parseTemplatePackManifestV1 } from "@/lib/schema";
 import { zodErrorResponse } from "@/lib/api-schemas";
-import { logApiError } from "@/lib/api-logger";
+import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDir } from "@/lib/fs-helpers";
 import { ensureDb } from "@/lib/db";
@@ -204,8 +204,7 @@ export async function GET() {
 
     return NextResponse.json(response);
   } catch (err) {
-    logApiError("GET /api/templates", "listing templates", err);
-    return NextResponse.json({ error: "Failed to list templates" }, { status: 500 });
+    return serverErrorFromCatch("GET /api/templates", "listing templates", err, "Failed to list templates");
   }
 }
 
@@ -418,7 +417,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: "Unknown action" }, { status: 400 });
   } catch (err) {
-    logApiError("POST /api/templates", "processing request", err);
-    return NextResponse.json({ error: "Failed to process request" }, { status: 500 });
+    return serverErrorFromCatch("POST /api/templates", "processing request", err, "Failed to process request");
   }
 }
