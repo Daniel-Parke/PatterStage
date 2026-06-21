@@ -13,13 +13,15 @@ PatterStage already owns a hardened, restart-safe, single-flight, idempotent exe
 A **workflow** is a reusable graph definition; a **run** is one execution; a **node-run** is one stage execution (= one agent run). Tables (schema v21, [`021_composer.sql`](../src/lib/db/migrations/021_composer.sql)):
 
 - `composer_workflows` — definition (name, key, version).
-- `composer_nodes` — stages: `kind` (review/validate/research/plan/implement/test/…), `gate` (`hil` | `auto`), `is_start`, `is_terminal`.
-- `composer_edges` — transitions: `condition` (`always` | `on_pass` | `on_fail` | `on_approve` | `on_reject`). A **loop** is simply an edge back to an earlier node (e.g. `on_fail`).
-- `composer_runs` — execution state: `status`, `current_node_id`, `context_json` (accumulating outputs).
+- `composer_nodes` — stages: `kind` (review/validate/`research`/`group`/plan/implement/test/…), `gate` (`hil` | `auto`), `is_start`, `is_terminal`, `config_json` (per-kind config + the canvas position under `_ui:{x,y}`).
+- `composer_edges` — transitions: `condition` (`always` | `on_pass` | `on_fail` | `on_approve` | `on_reject` | a custom **`on_<outcome>`** branch label). A **loop** is simply an edge back to an earlier node (e.g. `on_fail`).
+- `composer_runs` — execution state: `status`, `current_node_id`, `context_json`, and `parent_node_run_id` (set when a `group` node spawned this run as a nested sub-workflow — schema v26).
 - `composer_node_runs` — one per stage execution: `attempt` (increments on loop re-entry), `run_id` (→ `runs`), `output`, `verdict_json`.
 - `composer_approvals` — HIL decisions (accept/reject/review/add_feature).
 
-`runs.composer_node_run_id` links an agent run back to its stage so [reconcile](RUNTIME_ARCHITECTURE.md) can branch.
+`runs.composer_node_run_id` links an agent run back to its stage so [reconcile](RUNTIME_ARCHITECTURE.md) can branch. Two stage kinds run something other than an agent: a **`research`** node drives a [Deep Research](DEEP_RESEARCH.md) run (linked via `research_runs.composer_node_run_id`, schema v25), and a **`group`** node runs a referenced sub-workflow as a nested `composer_run` (linked via `composer_runs.parent_node_run_id`, schema v26) — both settled by the engine when their linked run terminates.
+
+**Conditional branching:** a stage can emit `OUTCOME: <label>` in its output; the engine then follows an `on_<label>` edge if one exists (else falls back to `on_pass`/`on_fail`). This lets a node fan out to >2 paths (e.g. a triage stage → `on_implement_fix` / `on_further_research` / `on_write_report`).
 
 The default **"Software Delivery"** workflow is seeded on boot ([`schema.ts`](../src/lib/composer/schema.ts)): review → validate → research → hypothesise → plan **(HIL)** → build-tests → implement → test → documentation → PR **(HIL)** → unit/integration/acceptance → final-assessment → update-PR **(HIL)** → done, with `on_fail` loop-backs (test→implement, final-assessment→implement, plan→review-on-reject).
 
@@ -33,21 +35,30 @@ The engine ([`engine.ts`](../src/lib/composer/engine.ts)) advances a run one ste
 
 Single-flight (one stage in flight per run), idempotent run ids (`cn_<nodeRunId>`), and the scheduler ownership lease make it restart-safe and exactly-once.
 
+`research`/`group` stages create no agent `runs` row; the engine settles them in-process (`settleResearchNode` / `settleGroupNode`) from their linked run, with the `ComposerTick` as the cross-restart backstop. `group` nesting is guarded against recursion (a workflow referencing an ancestor in its run chain) and a depth cap.
+
+## Building workflows (the node canvas)
+
+The **Build** tab on the Composer page is a drag-and-drop node editor ([`WorkflowCanvas.tsx`](../src/components/composer/WorkflowCanvas.tsx), [react-flow](https://reactflow.dev)): drag stage kinds from the palette onto the board, drag handle → handle to connect them, and click a node/edge to edit just its details in the inspector (kind, HIL gate, start/terminal, a `research` query or a `group`'s sub-workflow). The whole graph is saved atomically; node positions persist in `config._ui`, and [dagre](https://github.com/dagrejs/dagre) auto-lays-out workflows that have none. Pure converters in [`canvas-graph.ts`](../src/lib/composer/canvas-graph.ts) map the DB graph ↔ the canvas. The **Run** tab renders the same board in read-only "live" mode ([`WorkflowRunCanvas.tsx`](../src/components/composer/WorkflowRunCanvas.tsx)) — nodes light up by status, the active pathway electrifies, and HIL gates prompt in-canvas.
+
+> react-flow needs a measured viewport; both canvases are loaded client-only via `next/dynamic({ ssr: false })`.
+
 ## API
 
 All gated by `PS_COMPOSER` (on by default; `PS_COMPOSER=0` makes them return `503`).
 
 | Method + path | Purpose |
 |---|---|
-| `GET /api/composer/workflows` | List workflow definitions |
+| `GET /api/composer/workflows` · `POST` | List / create a workflow (whole-graph def) |
+| `GET/PUT/DELETE /api/composer/workflows/[id]` | Read graph / replace whole graph / delete (blocked while a run is active) |
 | `GET /api/composer/runs` | List runs |
 | `POST /api/composer/runs` | Start a run `{ workflowId \| workflowKey, input }` |
 | `GET /api/composer/runs/[id]` | Run + node-runs + workflow graph |
 | `GET /api/composer/runs/[id]/events` | Live SSE (`{ run, nodeRuns }`) — see [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md) |
 | `POST /api/composer/runs/[id]/nodes/[nodeId]/approve` | Resolve a HIL gate `{ action, note? }` |
 
-The **DeepResearch → Composer** handoff (`POST /api/laboratory/research/[id]/launch`) seeds a Software Delivery run from a completed research report — see [DEEP_RESEARCH.md](DEEP_RESEARCH.md).
+Deep Research is a Composer **node kind** (`research`), not a separate launcher — orchestrate research as one stage of a workflow. See [DEEP_RESEARCH.md](DEEP_RESEARCH.md).
 
 ## Verification
 
-`npx tsc --noEmit && npm run lint && npm test && npm run build`. The engine test ([`composer-engine.test.ts`](../tests/unit/composer-engine.test.ts)) walks a PASS path, a HIL accept, and a FAIL loop-back. With a live Hermes + `PS_COMPOSER=1`, launch the seeded workflow from a feature request and watch the live pipeline, approve/reject a gate, and force a FAIL to see the loop-back.
+`npx tsc --noEmit && npm run lint && npm test && npm run build`. Engine/graph tests: [`composer-engine.test.ts`](../tests/unit/composer-engine.test.ts) (PASS path, HIL accept, FAIL loop-back), [`composer-builder.test.ts`](../tests/unit/composer-builder.test.ts) (whole-graph save + `OUTCOME` branch routing), [`composer-research-node.test.ts`](../tests/unit/composer-research-node.test.ts) and [`composer-group-node.test.ts`](../tests/unit/composer-group-node.test.ts) (research/group settle + recursion guard), and [`composer-canvas-graph.test.ts`](../tests/unit/composer-canvas-graph.test.ts) (canvas ↔ def converters). With a live Hermes + `PS_COMPOSER=1`, build a workflow on the canvas, launch it, watch the live board, approve/reject a gate, and force a FAIL to see the loop-back.

@@ -35,6 +35,10 @@ Hermes API Server  :8642  (API_SERVER_ENABLED=true, bearer auth)
 
 Auth: `Authorization: Bearer ${API_SERVER_KEY}` (resolved in `runtime/secrets.ts`). Endpoints are resolved per profile in `runtime/endpoint-registry.ts` (each Hermes profile is its own gateway process/port; Phase-1 default resolves all to the configured gateway). Swap in another backend by implementing `AgentRuntime` and changing the `runtime` binding in `runtime/index.ts` — nothing above the seam changes.
 
+### The DB is the source of truth
+
+PatterStage's SQLite DB is authoritative for models, profiles, memory config, and the active framework; the Hermes config/profile files are a **downstream projection** written from the DB. `importHermesStateFromDisk` is the one path that reads Hermes → DB, and it is **idempotent + explicit**: guarded by `isHermesStateAlreadyImported`, run only on first setup or an explicit `--pull`, and never at boot — so the DB is never silently overwritten. A parallel **`FrameworkAdapter`** seam ([`src/lib/frameworks/`](../src/lib/frameworks/)) records the active agent framework + its home in the DB-owned `frameworks` registry (Hermes is impl #1); add a `case` + adapter to support a second framework. (Memory has the analogous [`MemoryProvider`](MEMORY.md) seam.)
+
 ## Mission runs (no bash)
 
 A dispatch is one HTTP **run**:

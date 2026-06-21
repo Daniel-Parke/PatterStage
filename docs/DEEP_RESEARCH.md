@@ -37,7 +37,9 @@ Every step (plan/search/visit/reason/synthesize) is persisted to `research_steps
 | `POST /api/laboratory/research` | Start `{ query, modelId? }` |
 | `GET /api/laboratory/research/[id]` | Run + steps |
 | `GET /api/laboratory/research/[id]/events` | Live SSE (`{ run, steps }`) |
-| `POST /api/laboratory/research/[id]/launch` | Seed a [Composer](COMPOSER.md) workflow from the report (needs `PS_COMPOSER`) |
+| `GET /api/laboratory/research/[id]/export` | Standalone interactive HTML report (`Content-Disposition: inline` — opens in the browser; the UI also offers Download) |
+
+Research is also a **Composer node kind** (`research`) — orchestrate it as one stage of a workflow rather than launching a workflow from a report. See [COMPOSER.md](COMPOSER.md).
 
 ## Verification
 
