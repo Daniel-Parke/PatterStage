@@ -9,6 +9,7 @@ import { db, inTransaction, uuid, now } from "./db";
 import { isTaskType, type TaskType } from "./hermes-providers";
 import { getCredentialWithKey } from "./credentials-repository";
 import { emptyModelDefaults } from "./utils";
+import { inferApiStyle, normalizeApiStyle, type ApiStyle } from "./llm-endpoint";
 // ── Public types ────────────────────────────────────────────────
 
 export interface ModelDefaults {
@@ -34,6 +35,12 @@ export interface ModelRecord {
   baseUrl: string | null;
   contextLength: number | null;
   credentialsId: string | null;
+  /**
+   * Wire protocol for the direct-provider path: "openai" (`/chat/completions`)
+   * or "anthropic" (`/v1/messages`). Null ⇒ inferred from provider/baseUrl at
+   * call time (see {@link inferApiStyle}).
+   */
+  apiStyle: ApiStyle | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -57,6 +64,8 @@ export interface CreateModelInput {
   baseUrl?: string | null;
   contextLength?: number | null;
   credentialsId?: string | null;
+  /** Direct-provider wire protocol; null/omitted ⇒ inferred at call time. */
+  apiStyle?: ApiStyle | null;
   /** Optional default-slot flags (post-migration, writes to model_defaults). */
   defaults?: ModelDefaultFlags;
 }
@@ -68,6 +77,8 @@ export interface UpdateModelInput {
   baseUrl?: string | null;
   contextLength?: number | null;
   credentialsId?: string | null;
+  /** Direct-provider wire protocol; null/omitted ⇒ inferred at call time. */
+  apiStyle?: ApiStyle | null;
   /** Optional default-slot flags (post-migration, writes to model_defaults). */
   defaults?: ModelDefaultFlags;
 }
@@ -87,6 +98,7 @@ interface ModelRow {
   base_url: string | null;
   context_length: number | null;
   credentials_id: string | null;
+  api_style: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -100,6 +112,7 @@ function rowToModel(row: ModelRow): ModelRecord {
     baseUrl: row.base_url,
     contextLength: row.context_length,
     credentialsId: row.credentials_id,
+    apiStyle: normalizeApiStyle(row.api_style),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -196,8 +209,8 @@ export function createModel(input: CreateModelInput): ModelRecord {
     .prepare(
       `INSERT INTO models (
          id, name, provider, model_id, base_url, context_length, credentials_id,
-         created_at, updated_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+         api_style, created_at, updated_at
+       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       id,
@@ -207,6 +220,7 @@ export function createModel(input: CreateModelInput): ModelRecord {
       input.baseUrl ?? null,
       input.contextLength ?? null,
       input.credentialsId ?? null,
+      input.apiStyle ?? inferApiStyle(input.provider, input.baseUrl ?? null),
       ts,
       ts
     );
@@ -262,6 +276,10 @@ export function updateModel(id: string, input: UpdateModelInput): ModelRecord | 
     if (input.credentialsId !== undefined) {
       sets.push("credentials_id = ?");
       vals.push(input.credentialsId);
+    }
+    if (input.apiStyle !== undefined) {
+      sets.push("api_style = ?");
+      vals.push(input.apiStyle);
     }
 
     vals.push(id);
@@ -356,11 +374,16 @@ export function upsertModel(input: {
     .prepare("SELECT id FROM models WHERE provider = ? AND model_id = ? LIMIT 1")
     .get(input.provider, input.modelId) as { id: string } | undefined;
 
+  const apiStyle = inferApiStyle(input.provider, input.baseUrl);
+
   if (existing) {
-    // Update existing row (preserve credentials_id)
+    // Update existing row (preserve credentials_id + a user-set api_style:
+    // COALESCE only fills it when still NULL).
     db()
-      .prepare("UPDATE models SET name = ?, base_url = ?, updated_at = ? WHERE id = ?")
-      .run(input.name, input.baseUrl, ts, existing.id);
+      .prepare(
+        "UPDATE models SET name = ?, base_url = ?, api_style = COALESCE(api_style, ?), updated_at = ? WHERE id = ?"
+      )
+      .run(input.name, input.baseUrl, apiStyle, ts, existing.id);
 
     // Validate all task types upfront — failures are programmer errors
     // in internal callers, not user input, so throw rather than silently skip.

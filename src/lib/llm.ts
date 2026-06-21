@@ -6,6 +6,14 @@
 import { getAgentLlmEndpoints } from "./hermes-agent-runtime";
 import { getModelWithKey, type ModelWithKey } from "./models-repository";
 import { getGatewayKey } from "./runtime/secrets";
+import { buildDirectRequest, inferApiStyle, type ApiStyle } from "./llm-endpoint";
+
+/**
+ * Fast-fail timeout for the direct-provider path. A misconfigured endpoint
+ * (wrong baseUrl / api_style) should surface in seconds, not hang the UI for
+ * minutes — the resilient gateway path keeps its own longer retry budget.
+ */
+const DIRECT_PROVIDER_TIMEOUT_MS = 45_000;
 
 export interface LLMMessage {
   role: "system" | "user" | "assistant";
@@ -117,6 +125,7 @@ export async function callLLM(
       model: resolved.modelId,
       baseUrl: resolved.baseUrl,
       apiKey: resolved.apiKey,
+      apiStyle: resolved.apiStyle ?? inferApiStyle(resolved.provider, resolved.baseUrl),
     });
   }
 
@@ -150,36 +159,67 @@ interface CallGatewayInput extends CallParams {
 interface CallDirectInput extends CallParams {
   baseUrl: string;
   apiKey: string;
+  apiStyle: ApiStyle;
 }
 
 async function callDirectProvider(input: CallDirectInput): Promise<LLMResponse> {
-  const url = input.baseUrl.replace(/\/$/, "") + "/chat/completions";
+  const req = buildDirectRequest({
+    baseUrl: input.baseUrl,
+    apiKey: input.apiKey,
+    model: input.model,
+    messages: input.messages,
+    temperature: input.temperature,
+    maxTokens: input.maxTokens,
+    style: input.apiStyle,
+  });
+
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 300_000);
+  const timeout = setTimeout(() => controller.abort(), DIRECT_PROVIDER_TIMEOUT_MS);
 
   try {
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${input.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: input.model,
-        messages: input.messages,
-        temperature: input.temperature,
-        max_tokens: input.maxTokens,
-      }),
-      signal: controller.signal,
-    });
+    let resp: Response;
+    try {
+      resp = await fetch(req.url, {
+        method: "POST",
+        headers: req.headers,
+        body: req.body,
+        signal: controller.signal,
+      });
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        throw new Error(
+          `LLM provider timed out after ${Math.round(DIRECT_PROVIDER_TIMEOUT_MS / 1000)}s — ` +
+            `check the model's base URL / API style (endpoint / registry config).`
+        );
+      }
+      throw err;
+    }
 
     if (!resp.ok) {
+      const detail = (await resp.text().catch(() => "")).trim();
       throw new Error(
-        `LLM provider error ${resp.status}: ${resp.statusText}`
+        `LLM provider error ${resp.status}: ${detail ? detail.slice(0, 200) : resp.statusText}`
       );
     }
 
     const data = await resp.json();
+
+    // Anthropic-style: { content: [{ text }], usage: { input_tokens, output_tokens } }
+    if (input.apiStyle === "anthropic") {
+      const blocks = Array.isArray(data?.content) ? (data.content as { text?: string }[]) : [];
+      const content = blocks.map((b) => b?.text ?? "").join("").trim();
+      const u = data?.usage as { input_tokens?: number; output_tokens?: number } | undefined;
+      const usage = u
+        ? {
+            promptTokens: u.input_tokens ?? 0,
+            completionTokens: u.output_tokens ?? 0,
+            totalTokens: (u.input_tokens ?? 0) + (u.output_tokens ?? 0),
+          }
+        : undefined;
+      return { content, model: data?.model ?? input.model, usage };
+    }
+
+    // OpenAI-compatible: { choices: [{ message: { content } }], usage }
     return {
       content: data.choices?.[0]?.message?.content?.trim() ?? "",
       model: data.model ?? input.model,

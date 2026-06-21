@@ -30,6 +30,7 @@ import { applyRetireMissionPhasesMigration } from "./db/apply-retire-mission-pha
 import { applyComposerMigration } from "./db/apply-composer-migration";
 import { applyMemoryProvidersMigration } from "./db/apply-memory-providers-migration";
 import { applyResearchOptionsMigration } from "./db/apply-research-options-migration";
+import { applyModelsApiStyleMigration } from "./db/apply-models-api-style-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -234,6 +235,9 @@ export function runMigrations(database: Database.Database): void {
   applyMemoryProvidersMigration(database, migrationsDir);
   // Deep Research run config + saved presets. Guarded ALTER + CREATE at v23.
   applyResearchOptionsMigration(database, migrationsDir);
+  // Direct-provider wire protocol per model (openai|anthropic). Guarded ALTER
+  // + idempotent NULL-only repair at v24.
+  applyModelsApiStyleMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────
