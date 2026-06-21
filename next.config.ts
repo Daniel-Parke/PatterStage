@@ -1,9 +1,10 @@
 import type { NextConfig } from "next";
 
 // Comma-separated full origins (scheme + host + port). scripts/bootstrap/setup.sh generates
-// CH_ALLOWED_DEV_ORIGINS for your chosen PORT (localhost, 127.0.0.1, LAN IPv4s).
+// PS_ALLOWED_DEV_ORIGINS for your chosen PORT (localhost, 127.0.0.1, LAN IPv4s).
+// CH_ALLOWED_DEV_ORIGINS is the legacy alias, kept for already-provisioned installs.
 
-const extraOrigins = (process.env.CH_ALLOWED_DEV_ORIGINS || "")
+const extraOrigins = (process.env.PS_ALLOWED_DEV_ORIGINS || process.env.CH_ALLOWED_DEV_ORIGINS || "")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean)
@@ -34,6 +35,15 @@ const nextConfig: NextConfig = {
   // Allow devices on local network to access dev server (explicit list; no CIDR).
 
   allowedDevOrigins: ["*.local", ...extraOrigins],
+
+  // Benchmarks + Insights moved under the Laboratory section. Keep the old
+  // top-level URLs working (bookmarks, external links) via permanent redirects.
+  async redirects() {
+    return [
+      { source: "/benchmarks", destination: "/laboratory/benchmarks", permanent: true },
+      { source: "/insights", destination: "/laboratory/insights", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

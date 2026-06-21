@@ -75,7 +75,7 @@ export default function AgentBenchmarkPanel({ profileId }: { profileId: string }
       ) : (
         <p className="mt-3 text-[11px] text-white/40">
           No benchmark yet —{" "}
-          <a href="/benchmarks" className="text-neon-cyan hover:underline">
+          <a href="/laboratory/benchmarks" className="text-neon-cyan hover:underline">
             run one →
           </a>{" "}
           to earn a stat card.

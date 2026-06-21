@@ -43,8 +43,6 @@ export const mainSections: SidebarSection[] = [
     label: "Main",
     links: [
       { icon: Zap, label: "Dashboard", href: "/", color: "cyan" },
-      { icon: BarChart3, label: "Insights", href: "/insights", color: "green" },
-      { icon: Trophy, label: "Benchmarks", href: "/benchmarks", color: "purple" },
       { icon: Clock, label: "Sessions", href: "/sessions", color: "orange" },
       { icon: Database, label: "Memory", href: "/memory", color: "pink" },
       { icon: ScrollText, label: "Logs", href: "/logs", color: "cyan" },
@@ -65,6 +63,13 @@ export const mainSections: SidebarSection[] = [
       { icon: FileText, label: "Skills", href: "/operations/skills", color: "green" },
       { icon: Wrench, label: "Tools", href: "/operations/tools", color: "purple" },
       { icon: Sparkles, label: "Personalities", href: "/operations/personalities", color: "purple" },
+    ],
+  },
+  {
+    label: "Laboratory",
+    links: [
+      { icon: BarChart3, label: "Insights", href: "/laboratory/insights", color: "green" },
+      { icon: Trophy, label: "Benchmarks", href: "/laboratory/benchmarks", color: "purple" },
     ],
   },
   {
