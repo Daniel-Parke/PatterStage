@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Cpu, Loader2, X, ChevronDown, Search } from "lucide-react";
-import type { Skill } from "@/types/hermes";
 import { pluralise } from "@/lib/utils";
+import { useProfileSkills } from "@/hooks/useProfileAttachables";
 
 interface SkillSelectorProps {
   value: string[];
@@ -19,27 +19,10 @@ export default function SkillSelector({
   max = 10,
 }: SkillSelectorProps) {
   const [open, setOpen] = useState(false);
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { data: skillsData, isLoading: loading } = useProfileSkills(profileId);
+  const skills = skillsData ?? [];
   const [search, setSearch] = useState("");
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    fetch(
-      `/api/skills?profile=${encodeURIComponent(profileId ?? "default")}`,
-      { signal: controller.signal }
-    )
-      .then((r) => r.json())
-      .then((d) => {
-        const raw = (d.data?.skills ?? []) as Skill[];
-        setSkills(raw.filter((s) => s.enabled));
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-    return () => controller.abort();
-  }, [profileId]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {

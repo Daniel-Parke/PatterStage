@@ -1,36 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { safeApiCallData, setErrorFromCaught } from "@/lib/api-fetch";
-
-/** Minimal shape of a model returned by /api/models. */
-interface ApiModel {
-  id: string;
-  name: string;
-  provider: string;
-  modelId: string;
-  baseUrl: string | null;
-  contextLength: number | null;
-  credentialsId: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-/** Shape of defaults returned by /api/models/defaults. */
-interface ApiDefaults {
-  agent: string | null;
-  hindsight: string | null;
-  compression: string | null;
-  vision: string | null;
-  web_extract: string | null;
-  session_search: string | null;
-  title_generation: string | null;
-  skills_hub: string | null;
-  mcp: string | null;
-  triage_specifier: string | null;
-  approval: string | null;
-  delegation: string | null;
-}
+import { useEffect, useMemo, useRef } from "react";
+import { useModels, useModelDefaults } from "@/hooks/useModels";
 
 interface ModelPickerProps {
   /** Hermes CLI model id (e.g. anthropic/claude-sonnet-4). */
@@ -61,10 +32,10 @@ export default function ModelPicker({
   id = "mission-model-picker",
   helperPlacement = "below",
 }: ModelPickerProps) {
-  const [models, setModels] = useState<ApiModel[]>([]);
-  const [defaults, setDefaults] = useState<ApiDefaults | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: modelsData, isLoading: modelsLoading, error } = useModels();
+  const { data: defaults, isLoading: defaultsLoading } = useModelDefaults();
+  const models = useMemo(() => modelsData ?? [], [modelsData]);
+  const loading = modelsLoading || defaultsLoading;
   const didAutoFill = useRef(false);
   const onChangeRef = useRef(onChange);
 
@@ -77,37 +48,6 @@ export default function ModelPicker({
       didAutoFill.current = false;
     }
   }, [modelId, provider]);
-
-  const load = useCallback(() => {
-    setLoading(true);
-    setError(null);
-    // Both endpoints return `{ data: <inner> }`. `safeApiCallData<T>`
-    // unwraps the envelope internally and returns the inner payload
-    // (`T | null`), so the call site reads `list?.models ?? []` and
-    // `def?.defaults ?? null` (1 level) instead of
-    // `mRes.data?.data?.models` / `dRes.data?.data?.defaults` (2 levels).
-    // The `null` fallback on HTTP error matches the pre-refactor
-    // `mRes.data?.data?.X ?? fallback` form byte-for-byte. The
-    // `.catch` still fires for thrown errors (network/parse failures)
-    // because `safeApiCallData` returns `null` (not throws) on HTTP
-    // error — the byte-equivalent "throw" path is preserved.
-    Promise.all([
-      safeApiCallData<{ models?: ApiModel[] }>("/api/models"),
-      safeApiCallData<{ defaults?: ApiDefaults }>("/api/models/defaults"),
-    ])
-      .then(([list, def]) => {
-        setModels(list?.models ?? []);
-        setDefaults(def?.defaults ?? null);
-      })
-      .catch((err) => {
-        setErrorFromCaught(setError, err, "Failed to load models");
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
 
   const selectedValue = (() => {
     const m = models.find((x) => x.modelId === modelId && x.provider === provider);

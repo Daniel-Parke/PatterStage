@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */
 
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 import ToolsetSelector from "@/components/ui/ToolsetSelector";
 
 describe("ToolsetSelector", () => {
@@ -27,7 +28,7 @@ describe("ToolsetSelector", () => {
 
   it("loads toolsets for profile and allows selection", async () => {
     const onChange = jest.fn();
-    render(<ToolsetSelector value={[]} onChange={onChange} profileId="creative-lead" max={5} />);
+    renderWithQuery(<ToolsetSelector value={[]} onChange={onChange} profileId="creative-lead" max={5} />);
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(

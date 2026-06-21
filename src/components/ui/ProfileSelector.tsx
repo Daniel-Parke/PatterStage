@@ -2,13 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { User, ChevronDown, Loader2 } from "lucide-react";
-
-interface Profile {
-  id: string;
-  name: string;
-  description: string;
-  isDefault?: boolean;
-}
+import { useProfiles } from "@/hooks/useProfiles";
 
 interface ProfileSelectorProps {
   value: string;
@@ -27,36 +21,9 @@ export default function ProfileSelector({
   subtitle = "inline",
 }: ProfileSelectorProps) {
   const [open, setOpen] = useState(false);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [fetched, setFetched] = useState(false);
+  const { data: profilesData, isLoading: loading } = useProfiles();
+  const profiles = profilesData ?? [];
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    fetch("/api/agent/profiles", { signal: controller.signal })
-      .then((r) => r.json())
-      .then((d) => {
-        const raw = d.data?.profiles ?? [];
-        if (raw.length > 0) {
-          const live: Profile[] = raw.map((p: Record<string, unknown>) => ({
-            id: p.id as string,
-            name: p.name as string,
-            description: (p.description as string) || "",
-            isDefault: (p.isDefault as boolean) ?? false,
-          }));
-          setProfiles(live);
-          setFetched(true);
-        }
-      })
-      .catch(() => {})
-      .finally(() => {
-        setLoading(false);
-      });
-
-    return () => controller.abort();
-  }, []);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -77,7 +44,7 @@ export default function ProfileSelector({
         className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-white/60 hover:border-neon-purple/50 hover:text-neon-purple transition-colors relative"
         title={selected?.name ?? "Select profile"}
       >
-        {loading && !fetched ? (
+        {loading ? (
           <Loader2 className="w-3 h-3 animate-spin" />
         ) : (
           <User className="w-3 h-3" />
@@ -136,7 +103,7 @@ export default function ProfileSelector({
         className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white hover:border-white/30 transition-colors"
       >
         <div className="flex items-center gap-2 min-w-0">
-          {loading && !fetched ? (
+          {loading ? (
             <Loader2 className="w-4 h-4 text-neon-purple animate-spin flex-shrink-0" />
           ) : (
             <User className="w-4 h-4 text-neon-purple flex-shrink-0" />

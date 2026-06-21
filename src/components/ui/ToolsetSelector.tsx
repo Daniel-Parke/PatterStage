@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Wrench, Loader2, X, ChevronDown, Search } from "lucide-react";
-import { unionToolsetsFromPlatforms } from "@/lib/hermes-toolset-unify";
 import { toolsetCatalogLabel } from "@/lib/hermes-toolset-catalog";
 import { pluralise } from "@/lib/utils";
-import type { PlatformToolsets } from "@/lib/profile-config-builder";
+import { useProfileToolsets } from "@/hooks/useProfileAttachables";
 
 interface ToolsetSelectorProps {
   value: string[];
@@ -21,27 +20,10 @@ export default function ToolsetSelector({
   max = 10,
 }: ToolsetSelectorProps) {
   const [open, setOpen] = useState(false);
-  const [available, setAvailable] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { data: availableData, isLoading: loading } = useProfileToolsets(profileId);
+  const available = availableData ?? [];
   const [search, setSearch] = useState("");
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    const slug = profileId ?? "default";
-    fetch(`/api/agent/profiles/${encodeURIComponent(slug)}/toolsets`, {
-      signal: controller.signal,
-    })
-      .then((r) => r.json())
-      .then((d) => {
-        const toolsets = (d.data?.platformToolsets ?? {}) as PlatformToolsets;
-        setAvailable(unionToolsetsFromPlatforms(toolsets));
-      })
-      .catch(() => setAvailable([]))
-      .finally(() => setLoading(false));
-    return () => controller.abort();
-  }, [profileId]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {

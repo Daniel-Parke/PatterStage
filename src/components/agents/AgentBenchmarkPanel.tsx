@@ -8,24 +8,9 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
 import { Sparkles, Trophy } from "lucide-react";
 import StatRadar from "@/components/viz/StatRadar";
-import { apiFetch } from "@/lib/api-fetch";
-import type { StatCard } from "@/lib/benchmarks/types";
-
-interface Holistic {
-  card: StatCard;
-  rating: number;
-  suites: number;
-  bestStat?: { stat: string; value: number } | null;
-}
-
-interface AgentCard {
-  agentRating: { rating: number; bestStat?: { stat: string } | null } | null;
-  holistic: Holistic | null;
-  experience: { level: number; title: string; xp: number } | null;
-}
+import { useAgentCard } from "@/hooks/useAgentCard";
 
 function ratingColor(r: number): string {
   if (r >= 80) return "var(--color-neon-green)";
@@ -36,28 +21,9 @@ function ratingColor(r: number): string {
 }
 
 export default function AgentBenchmarkPanel({ profileId }: { profileId: string }) {
-  const [card, setCard] = useState<AgentCard | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: card, isLoading } = useAgentCard(profileId);
 
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    apiFetch(`/api/benchmarks/agent-card?profile=${encodeURIComponent(profileId)}`)
-      .then((d) => {
-        if (active) setCard((d.data?.card as AgentCard) ?? null);
-      })
-      .catch(() => {
-        if (active) setCard(null);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [profileId]);
-
-  if (loading) {
+  if (isLoading) {
     return <div className="font-mono text-[11px] text-white/30">Loading capability…</div>;
   }
   if (!card) return null;

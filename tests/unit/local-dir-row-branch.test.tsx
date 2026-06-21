@@ -1,6 +1,7 @@
 /** @jest-environment jsdom */
 
-import { act, render, waitFor } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
+import { renderWithQuery } from "../helpers/render-with-query";
 import LocalDirRow from "@/components/missions/LocalDirRow";
 
 jest.mock("@/components/missions/DirectoryPickerModal", () => ({
@@ -40,7 +41,7 @@ describe("LocalDirRow branch UI", () => {
 
   it("hides branch select until repo is git; defaults select to API current", async () => {
     const onChange = jest.fn();
-    const { container, rerender } = render(
+    const { container, rerender } = renderWithQuery(
       <LocalDirRow mode="draft" entry={{ path: "", branch: null }} onChange={onChange} />,
     );
 

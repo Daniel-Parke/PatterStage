@@ -24,6 +24,8 @@ export interface UseApiResourceOptions<T> {
   errorMessage?: string;
   refetchInterval?: number | false;
   staleTime?: number;
+  /** When false, the query is disabled (no fetch) and `data` stays null. */
+  enabled?: boolean;
 }
 
 export function useApiResource<T>(
@@ -45,6 +47,7 @@ export function useApiResource<T>(
     },
     refetchInterval: opts.refetchInterval,
     staleTime: opts.staleTime,
+    enabled: opts.enabled,
   });
   return {
     data: query.data ?? null,

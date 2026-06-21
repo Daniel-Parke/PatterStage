@@ -1,18 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { FolderOpen, Plus, Trash2 } from "lucide-react";
 
 import type { LocalDirEntry } from "@/types/hermes";
-import { safeApiCall } from "@/lib/api-fetch";
+import { useGitBranches } from "@/hooks/useGitBranches";
 
 import DirectoryPickerModal from "./DirectoryPickerModal";
-
-interface GitBranchesData {
-  isGitRepo: boolean;
-  branches: string[];
-  current: string | null;
-}
 
 interface LocalDirRowProps {
   mode: "draft" | "saved";
@@ -30,37 +24,7 @@ export default function LocalDirRow({
   onDelete,
 }: LocalDirRowProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [git, setGit] = useState<GitBranchesData | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    const p = entry.path.trim();
-    if (!p) {
-      setGit(null);
-      return;
-    }
-    if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => {
-      // The endpoint returns `{ data: { isGitRepo, branches, current } }`.
-      // `safeApiCall<T>` does NOT unwrap — `data` is the full body —
-      // so the type is the envelope shape and the inner fields are
-      // read via `j.data?.data?.isGitRepo` (two indirections).
-      safeApiCall<{ data?: { isGitRepo: boolean; branches: string[]; current: string | null } }>(
-        "/api/fs/git/branches?path=" + encodeURIComponent(p),
-      )
-        .then((j) => {
-          if (j.ok) {
-            const inner = j.data?.data;
-            setGit(inner ?? { isGitRepo: false, branches: [], current: null });
-          } else {
-            setGit({ isGitRepo: false, branches: [], current: null });
-          }
-        });
-    }, 400);
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [entry.path]);
+  const git = useGitBranches(entry.path);
 
   const branchValue =
     entry.branch !== undefined && entry.branch !== null && entry.branch !== ""
