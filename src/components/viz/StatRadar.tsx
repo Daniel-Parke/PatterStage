@@ -8,7 +8,7 @@
 // agent-vs-baseline comparison. Pure SVG, no deps; theme via CSS variables.
 // ═══════════════════════════════════════════════════════════════
 
-import { STATS, STAT_LABELS, type Stat, type StatCard } from "@/lib/benchmarks/types";
+import { STATS, type Stat, type StatCard } from "@/lib/benchmarks/types";
 
 const SHORT: Record<Stat, string> = {
   strength: "STR",
@@ -98,20 +98,5 @@ export default function StatRadar({
         </text>
       )}
     </svg>
-  );
-}
-
-/** A compact legend mapping the short codes to full stat names. */
-export function StatRadarLegend({ card }: { card: StatCard | null }) {
-  if (!card) return null;
-  return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
-      {STATS.map((s) => (
-        <div key={s} className="flex items-center justify-between gap-2">
-          <span className="text-white/50">{STAT_LABELS[s]}</span>
-          <span className="font-mono text-white/80">{card[s]}</span>
-        </div>
-      ))}
-    </div>
   );
 }

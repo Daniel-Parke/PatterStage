@@ -18,7 +18,7 @@ import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 export type MemoryProviderType = "holographic" | "hindsight" | "none";
 
 /** A single memory fact from any provider */
-export interface MemoryFact {
+interface MemoryFact {
   id: number;
   content: string;
   category: string;
@@ -29,7 +29,7 @@ export interface MemoryFact {
 }
 
 /** Memory bank info (Holographic-specific but generic enough) */
-export interface MemoryBank {
+interface MemoryBank {
   bank_name: string;
   fact_count: number;
   updated_at: string;
@@ -45,78 +45,6 @@ export interface MemoryReadResult {
   message?: string;
   entities?: number;
   banks?: MemoryBank[];
-}
-
-/** Response from adding a fact */
-export interface MemoryAddResult {
-  success: boolean;
-  fact?: MemoryFact;
-  error?: string;
-}
-
-/** Response from updating a fact */
-export interface MemoryUpdateResult {
-  success: boolean;
-  id?: number;
-  error?: string;
-}
-
-/** Response from deleting a fact */
-export interface MemoryDeleteResult {
-  success: boolean;
-  id?: number;
-  error?: string;
-}
-
-/** Provider health status */
-export interface MemoryProviderHealth {
-  available: boolean;
-  provider: MemoryProviderType;
-  message: string;
-  factCount?: number;
-  dbSize?: number;
-}
-
-/** Fact input for adding */
-export interface FactInput {
-  content: string;
-  category?: string;
-  tags?: string;
-  trust_score?: number;
-}
-
-/** Fact input for updating */
-export interface FactUpdateInput {
-  id: number;
-  content?: string;
-  category?: string;
-  tags?: string;
-  trust_score?: number;
-}
-
-/** Memory provider interface — all providers must implement this */
-export interface MemoryProvider {
-  /** Provider type identifier */
-  readonly type: MemoryProviderType;
-
-  /** Check if this provider is available and healthy */
-  healthCheck(): Promise<MemoryProviderHealth>;
-
-  /** Read facts with optional search/filter */
-  readFacts(options?: {
-    search?: string;
-    category?: string;
-    limit?: number;
-  }): Promise<MemoryReadResult>;
-
-  /** Add a new fact */
-  addFact(input: FactInput): Promise<MemoryAddResult>;
-
-  /** Update an existing fact */
-  updateFact(input: FactUpdateInput): Promise<MemoryUpdateResult>;
-
-  /** Delete a fact by ID */
-  deleteFact(id: number): Promise<MemoryDeleteResult>;
 }
 
 // ── Provider Factory ───────────────────────────────────────────────
@@ -148,43 +76,6 @@ function getConfiguredProvider(): MemoryProviderType {
   } catch {
     return "none";
   }
-}
-
-/** Null provider for when no memory system is configured */
-const nullProvider: MemoryProvider = {
-  type: "none",
-  async healthCheck() {
-    return {
-      available: false,
-      provider: "none",
-      message: "No memory provider configured. Run hermes memory setup to configure one.",
-    };
-  },
-  async readFacts() {
-    return {
-      facts: [],
-      total: 0,
-      dbSize: 0,
-      available: false,
-      provider: "none",
-      message: "No memory provider configured.",
-    };
-  },
-  async addFact() {
-    return { success: false, error: "No memory provider configured" };
-  },
-  async updateFact() {
-    return { success: false, error: "No memory provider configured" };
-  },
-  async deleteFact() {
-    return { success: false, error: "No memory provider configured" };
-  },
-};
-
-/** Get the active memory provider based on config */
-export function getMemoryProvider(): MemoryProvider {
-  // All providers except holographic use nullProvider — facts managed via agent tools
-  return nullProvider;
 }
 
 /** Get the configured provider type without instantiating */

@@ -8,7 +8,6 @@
 
 export { Field } from "./Field";
 export { Input, Textarea } from "./Input";
-export { Select, type SelectOption } from "./Select";
+export { Select } from "./Select";
 export { Toggle } from "./Toggle";
-export { ChipGroup, type ChipOption } from "./ChipGroup";
-export { SegmentedControl } from "./SegmentedControl";
+export { ChipGroup } from "./ChipGroup";

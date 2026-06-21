@@ -1,6 +1,6 @@
 import { neonAlpha, type NeonColor } from "./colors";
 
-export interface HeatPoint {
+interface HeatPoint {
   date: string; // YYYY-MM-DD
   value: number;
 }

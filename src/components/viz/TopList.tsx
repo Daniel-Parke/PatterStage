@@ -1,6 +1,6 @@
 import { neon, neonAlpha, type NeonColor } from "./colors";
 
-export interface TopListRow {
+interface TopListRow {
   label: string;
   value: number;
   /** Optional secondary value shown muted (e.g. token count). */

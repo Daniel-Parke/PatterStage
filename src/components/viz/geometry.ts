@@ -14,20 +14,6 @@ export function polarPoint(
   return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
 }
 
-/** SVG arc path between two angles at radius r (clockwise). */
-export function arcPath(
-  cx: number,
-  cy: number,
-  r: number,
-  startDeg: number,
-  endDeg: number,
-): string {
-  const start = polarPoint(cx, cy, r, endDeg);
-  const end = polarPoint(cx, cy, r, startDeg);
-  const largeArc = endDeg - startDeg <= 180 ? 0 : 1;
-  return `M ${start.x.toFixed(2)} ${start.y.toFixed(2)} A ${r} ${r} 0 ${largeArc} 0 ${end.x.toFixed(2)} ${end.y.toFixed(2)}`;
-}
-
 /**
  * Round a max value up to a "nice" axis bound (1/2/5 × 10ⁿ). Returns 1 for
  * non-positive input so charts never divide by zero.
