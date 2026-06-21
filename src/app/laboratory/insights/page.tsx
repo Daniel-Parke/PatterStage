@@ -14,7 +14,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   BarChart3, Sparkles, Activity, CalendarRange, Rocket, Clock,
-  Timer, Coins, Cpu, TrendingUp,
+  Timer, Coins, Cpu, TrendingUp, Info,
 } from "lucide-react";
 
 import PageHeader from "@/components/layout/PageHeader";
@@ -47,11 +47,16 @@ function Card({ children, className = "" }: { children: ReactNode; className?: s
   );
 }
 
-function CardTitle({ icon: Icon, children }: { icon: React.ComponentType<{ className?: string }>; children: ReactNode }) {
+function CardTitle({ icon: Icon, hint, children }: { icon: React.ComponentType<{ className?: string }>; hint?: string; children: ReactNode }) {
   return (
     <div className="mb-3 flex items-center gap-2">
       <Icon className="h-4 w-4 text-neon-cyan" />
       <h2 className="text-xs font-mono uppercase tracking-widest text-white/50">{children}</h2>
+      {hint ? (
+        <span title={hint} aria-label={hint} className="ml-0.5 cursor-help text-white/25 transition-colors hover:text-white/60">
+          <Info className="h-3 w-3" />
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -181,7 +186,7 @@ export default function InsightsPage() {
               <StaggerItem>
                 <div className="grid gap-4 lg:grid-cols-3">
                   <Card className="lg:col-span-2">
-                    <CardTitle icon={Activity}>Activity by category — last {days} days</CardTitle>
+                    <CardTitle icon={Activity} hint="Daily volume of recorded events per category over the selected range. Colours match the legend below.">Activity by category — last {days} days</CardTitle>
                     {insights && insights.categoryDaily.some((d) => Object.values(d.values).some((v) => v > 0)) ? (
                       <>
                         <StackedAreaTrend data={insights.categoryDaily} series={insights.categorySeries} height={150} />
@@ -200,7 +205,7 @@ export default function InsightsPage() {
                   </Card>
 
                   <Card>
-                    <CardTitle icon={BarChart3}>By category (all-time)</CardTitle>
+                    <CardTitle icon={BarChart3} hint="All-time share of recorded interaction events, grouped by category.">By category (all-time)</CardTitle>
                     <div className="flex items-center gap-4">
                       <Donut segments={segments} size={120} center={totalEvents.toLocaleString()} centerSub="events" />
                       <ul className="flex-1 space-y-1.5">
@@ -226,17 +231,17 @@ export default function InsightsPage() {
               <StaggerItem>
                 <div className="grid gap-4 lg:grid-cols-3">
                   <Card>
-                    <CardTitle icon={Clock}>When you work (hour of day)</CardTitle>
+                    <CardTitle icon={Clock} hint="Which hours of the day you are most active (all-time). A longer spoke = more activity in that hour.">When you work (hour of day)</CardTitle>
                     <div className="mx-auto h-44 w-44">
                       <RadialActivityClock hours={insights?.hourOfDay ?? new Array(24).fill(0)} color="cyan" />
                     </div>
                   </Card>
                   <Card>
-                    <CardTitle icon={Timer}>Run duration</CardTitle>
+                    <CardTitle icon={Timer} hint="How long agent runs take, bucketed (e.g. <5s, 5–15s, …). Taller bars = more runs in that range.">Run duration</CardTitle>
                     <DistributionHistogram bins={insights?.durationBuckets ?? []} color="purple" height={150} />
                   </Card>
                   <Card>
-                    <CardTitle icon={TrendingUp}>Mission success trend</CardTitle>
+                    <CardTitle icon={TrendingUp} hint="Completed vs failed missions per day over the selected range.">Mission success trend</CardTitle>
                     <AreaTrend data={insights?.successTrend ?? []} color="green" failColor="pink" height={150} />
                     <div className="mt-2 flex gap-3 text-[10px] text-white/50">
                       <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-neon-green" />completed</span>
@@ -250,7 +255,7 @@ export default function InsightsPage() {
               <StaggerItem>
                 <div className="grid gap-4 lg:grid-cols-2">
                   <Card>
-                    <CardTitle icon={Cpu}>Tokens by model</CardTitle>
+                    <CardTitle icon={Cpu} hint="Total tokens used per model over the range, with estimated cost.">Tokens by model</CardTitle>
                     <TopList
                       color="orange"
                       rows={(insights?.modelUsage ?? []).map((m) => ({
@@ -262,7 +267,7 @@ export default function InsightsPage() {
                     />
                   </Card>
                   <Card>
-                    <CardTitle icon={Rocket}>Top missions</CardTitle>
+                    <CardTitle icon={Rocket} hint="Your most-run missions over the range, by number of runs.">Top missions</CardTitle>
                     <TopList
                       color="cyan"
                       rows={(insights?.topMissions ?? []).map((m) => ({
