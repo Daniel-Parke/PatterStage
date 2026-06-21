@@ -17,7 +17,9 @@ export default function PersonalitiesInsights({
     const avg = lengths.length ? Math.round(lengths.reduce((a, b) => a + b, 0) / lengths.length) : 0;
     return {
       total: personalities.length,
-      active: personalities.some((p) => p.name === activeName) ? 1 : 0,
+      // One personality is active at a time; count it whenever an active name is
+      // set (a strict name-in-list match mis-reported 0 on a slug/case mismatch).
+      active: activeName && activeName.trim().length > 0 ? 1 : 0,
       avg,
       longest: lengths.length ? Math.max(...lengths) : 0,
     };

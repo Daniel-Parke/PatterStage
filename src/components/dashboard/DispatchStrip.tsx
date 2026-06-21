@@ -61,7 +61,12 @@ export default function DispatchStrip({ templates, categories }: DispatchStripPr
         <div className="flex items-center gap-2">
           <Rocket className="w-4 h-4 text-neon-cyan" />
           <span className="text-sm font-mono text-white/80">Mission Dispatch</span>
-          <span className="text-[10px] font-mono text-white/25">({templates.length})</span>
+          <span
+            className="text-[10px] font-mono text-white/25"
+            title="Mission templates you can launch from here"
+          >
+            {templates.length} templates
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <Link

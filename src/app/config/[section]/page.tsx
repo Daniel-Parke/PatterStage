@@ -5,7 +5,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Save, Check, RotateCcw, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import AppPageShell from "@/components/layout/AppPageShell";
@@ -18,10 +18,22 @@ import { parseEnvLine, envLineKey } from "@/lib/env-line";
 import ConfigField from "@/components/config/ConfigField";
 import EnvLineRow from "@/components/config/EnvLineRow";
 
+/** Common typo/alias redirects to the real config routes. */
+const SECTION_ALIASES: Record<string, string> = {
+  model: "/config/models",
+};
+
 export default function ConfigSectionPage() {
   const params = useParams();
+  const router = useRouter();
   const sectionId = params.section as string;
   const sectionDef = getSectionDef(sectionId);
+
+  // Redirect known aliases (e.g. the singular /config/model → /config/models).
+  const aliasTarget = !sectionDef ? SECTION_ALIASES[sectionId] : undefined;
+  useEffect(() => {
+    if (aliasTarget) router.replace(aliasTarget);
+  }, [aliasTarget, router]);
   const isFileSection = sectionDef?.type === "file";
 
   const [values, setValues] = useState<Record<string, unknown>>({});
@@ -174,15 +186,17 @@ export default function ConfigSectionPage() {
     return (
       <div className="min-h-screen bg-dark-950 grid-bg flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-white mb-2">
-            Unknown Config Section
-          </h2>
-          <p className="text-white/40 font-mono mb-4">
-            Section &quot;{sectionId}&quot; not found
-          </p>
-          <Link href="/config" className="text-neon-cyan text-sm font-mono hover:underline">
-            ← Back to Config
-          </Link>
+          {aliasTarget ? (
+            <p className="text-white/40 font-mono">Redirecting…</p>
+          ) : (
+            <>
+              <h2 className="text-xl font-bold text-white mb-2">Unknown Config Section</h2>
+              <p className="text-white/40 font-mono mb-4">Section &quot;{sectionId}&quot; not found</p>
+              <Link href="/config" className="text-neon-cyan text-sm font-mono hover:underline">
+                ← Back to Config
+              </Link>
+            </>
+          )}
         </div>
       </div>
     );
