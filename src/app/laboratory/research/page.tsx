@@ -15,6 +15,8 @@ import { Telescope, Loader2, Send } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useResearchRuns, useResearchRun } from "@/hooks/useDeepResearch";
+import { useEventStream } from "@/hooks/useEventStream";
+import type { ResearchRun, ResearchStep } from "@/lib/laboratory/deep-research/types";
 
 const STATUS_COLOR: Record<string, string> = {
   pending: "text-white/40",
@@ -30,7 +32,12 @@ export default function DeepResearchPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const { data: runs, refetch } = useResearchRuns();
-  const { data: detail } = useResearchRun(selectedId);
+  // Hybrid live: SSE pushes deltas; useApiResource polling is the fallback.
+  const { data: polled } = useResearchRun(selectedId);
+  const { data: live } = useEventStream<{ run: ResearchRun; steps: ResearchStep[] }>(
+    selectedId ? `/api/laboratory/research/${selectedId}/events` : null,
+  );
+  const detail = live ?? polled;
 
   async function start() {
     const q = query.trim();
