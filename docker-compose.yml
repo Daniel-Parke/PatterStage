@@ -13,14 +13,14 @@
 # host, delete the `mock-hermes` service + the `depends_on` block below, and set
 # HERMES_GATEWAY_URL to your gateway (e.g. http://host.docker.internal:8642).
 services:
-  control-hub:
+  patterstage:
     build: .
     ports:
       - "${PORT:-42069}:${PORT:-42069}"
     environment:
       PORT: "${PORT:-42069}"
       HERMES_HOME: /data/hermes
-      CH_DATA_DIR: /data/ch
+      PS_DATA_DIR: /data/ch
       # Point the runtime adapter at the (mock) Hermes API Server.
       HERMES_GATEWAY_URL: "${HERMES_GATEWAY_URL:-http://mock-hermes:8642}"
       API_SERVER_KEY: "${API_SERVER_KEY:-change-me-local-dev}"

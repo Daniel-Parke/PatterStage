@@ -25,11 +25,11 @@ echo "[itest] waiting for PatterStage (depends on real Hermes being healthy)…"
 up=0
 for i in $(seq 1 150); do
   code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/status" 2>/dev/null || echo 000)
-  if [ "$code" = "200" ]; then up=1; echo "[itest] control-hub up after ~$((i*2))s"; break; fi
+  if [ "$code" = "200" ]; then up=1; echo "[itest] patterstage up after ~$((i*2))s"; break; fi
   sleep 2
 done
 if [ "$up" != "1" ]; then
-  echo "[itest] control-hub did not come up"; ${COMPOSE} ps; ${COMPOSE} logs --tail 50 hermes control-hub; exit 1
+  echo "[itest] patterstage did not come up"; ${COMPOSE} ps; ${COMPOSE} logs --tail 50 hermes patterstage; exit 1
 fi
 
 echo "[itest] ── contract conformance (raw real Hermes API server) ──"
@@ -46,8 +46,8 @@ echo "[itest] ── DB upgrade path (legacy DB self-migrates on boot) ──"
 # server self-migrates: /api/schedules returns 200 (it needs the `schedules`
 # table the legacy seed dropped — restored by migration 009 on the v2→latest
 # upgrade). Guards the upgrade path the fresh-DB stack skips.
-${COMPOSE} stop control-hub >/dev/null
-${COMPOSE} run --rm --no-deps --entrypoint node control-hub -e '
+${COMPOSE} stop patterstage >/dev/null
+${COMPOSE} run --rm --no-deps --entrypoint node patterstage -e '
   const Database = require("better-sqlite3");
   const fs = require("fs");
   const p = "/data/ch/control-hub.db";
@@ -63,7 +63,7 @@ ${COMPOSE} run --rm --no-deps --entrypoint node control-hub -e '
   db.close();
   console.log("seeded legacy DB (v2, no workdir/runs/schedules)");
 '
-${COMPOSE} start control-hub >/dev/null
+${COMPOSE} start patterstage >/dev/null
 up=0
 for i in $(seq 1 60); do
   code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/status" 2>/dev/null || echo 000)
@@ -71,7 +71,7 @@ for i in $(seq 1 60); do
   sleep 2
 done
 if [ "$up" != "1" ]; then
-  echo "[itest] control-hub did not restart after legacy seed"; ${COMPOSE} logs --tail 40 control-hub; exit 1
+  echo "[itest] patterstage did not restart after legacy seed"; ${COMPOSE} logs --tail 40 patterstage; exit 1
 fi
 # /api/cron was removed with the legacy cron page (Phase M); assert /api/schedules
 # instead — it requires the `schedules` table the legacy seed dropped, so a 200
@@ -80,7 +80,7 @@ mcode=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/
 scode=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/schedules")
 echo "[itest] post-upgrade: /api/missions=${mcode} /api/schedules=${scode}"
 if [ "$mcode" != "200" ] || [ "$scode" != "200" ]; then
-  echo "[itest] upgrade FAILED — runs/schedules migration likely incomplete"; ${COMPOSE} logs --tail 40 control-hub; exit 1
+  echo "[itest] upgrade FAILED — runs/schedules migration likely incomplete"; ${COMPOSE} logs --tail 40 patterstage; exit 1
 fi
 echo "[itest] DB upgrade path OK ✅"
 

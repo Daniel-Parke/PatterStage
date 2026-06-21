@@ -46,11 +46,11 @@ services:
       retries: 18
       start_period: 30s
 
-  control-hub:
+  patterstage:
     build: .
     environment:
       PORT: "42069"
-      CH_DATA_DIR: /data/ch
+      PS_DATA_DIR: /data/ch
       HERMES_HOME: /data/hermes
       HERMES_GATEWAY_URL: http://hermes:8642
       API_SERVER_KEY: hermes-real-itest-key

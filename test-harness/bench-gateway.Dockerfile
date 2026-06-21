@@ -31,7 +31,7 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=42069 \
     HOSTNAME=0.0.0.0 \
-    CH_DATA_DIR=/data/ch \
+    PS_DATA_DIR=/data/ch \
     HERMES_HOME=/data/hermes \
     HERMES_BIN=/opt/hermes/.venv/bin/hermes
 

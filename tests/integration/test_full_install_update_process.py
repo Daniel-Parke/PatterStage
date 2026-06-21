@@ -39,7 +39,7 @@ import time
 from pathlib import Path
 from typing import Callable
 
-IMAGE_TAG = "ch-control-hub-fulltest:latest"
+IMAGE_TAG = "patterstage-fulltest:latest"
 DOCKERFILE_REL = Path("docker/TestHarness.dockerfile")
 
 DEFAULT_HERMES_INSTALL_URL = (

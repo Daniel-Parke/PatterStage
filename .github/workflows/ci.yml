@@ -280,11 +280,11 @@ jobs:
         with:
           token: ${{ github.token }}
       - name: Build production Docker image
-        run: docker build -f Dockerfile -t control-hub:ci .
+        run: docker build -f Dockerfile -t patterstage:ci .
       - name: Dashboard deploy API — restart smoke (Docker)
         run: bash tests/scripts/docker-deploy-api-smoke.sh
         env:
-          PS_DOCKER_TEST_IMAGE: control-hub:ci
+          PS_DOCKER_TEST_IMAGE: patterstage:ci
           PS_DOCKER_TEST_PORT: "42090"
 
   # Validates the runtime adapter against the REAL Hermes Agent (official image)

@@ -25,7 +25,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Runtime tools for scripts/application/ch-deploy.sh (same entrypoint as POST /api/update).
+# Runtime tools for scripts/application/ps-deploy.sh (same entrypoint as POST /api/update).
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     bash \
@@ -60,7 +60,7 @@ RUN chown -R nextjs:nodejs /app/scripts
 # passwd entry pointing at /nonexistent with no home directory. Without
 # this, $HOME=/home/nextjs is set but the path doesn't exist, and the
 # nextjs user has no permission to mkdir their own parent — so
-# `mkdir -p $HOME/.hermes/logs` in ch-deploy.sh dies with EACCES.
+# `mkdir -p $HOME/.hermes/logs` in ps-deploy.sh dies with EACCES.
 # WORKDIR alone is not enough: it only creates /app (which already
 # exists). Discovered 2026-06-08: the post-spawn liveness probe in
 # /api/update surfaced this bug; the previous dev branch's smoke
@@ -70,7 +70,7 @@ RUN mkdir -p /home/nextjs && chown nextjs:nodejs /home/nextjs
 # Data mount points must be writable by the non-root nextjs user. Creating +
 # chowning them here means fresh named volumes mounted at /data/ch and
 # /data/hermes inherit nextjs ownership (Docker seeds empty volumes from the
-# image path), so SQLite can create control-hub.db. Without this the container
+# image path), so SQLite can create patterstage.db. Without this the container
 # fails with "unable to open database file".
 RUN mkdir -p /data/ch /data/hermes && chown -R nextjs:nodejs /data
 ENV HOME=/home/nextjs

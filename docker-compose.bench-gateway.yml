@@ -14,13 +14,13 @@ services:
       context: .
       dockerfile: mock-llm/Dockerfile
 
-  control-hub-bench:
+  patterstage-bench:
     build:
       context: .
       dockerfile: test-harness/bench-gateway.Dockerfile
     environment:
       PORT: "42069"
-      CH_DATA_DIR: /data/ch
+      PS_DATA_DIR: /data/ch
       HERMES_HOME: /data/hermes
       API_SERVER_KEY: hermes-real-itest-key
       # Default-gateway fallback URL (used only when no bench gateway is live).

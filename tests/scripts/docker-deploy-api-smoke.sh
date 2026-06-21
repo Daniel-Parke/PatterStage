@@ -6,7 +6,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
-IMAGE="${PS_DOCKER_TEST_IMAGE:-control-hub:api-smoke}"
+IMAGE="${PS_DOCKER_TEST_IMAGE:-patterstage:api-smoke}"
 NAME="${PS_DOCKER_TEST_NAME:-ps-api-smoke-$$}"
 HOST_PORT="${PS_DOCKER_TEST_PORT:-42090}"
 

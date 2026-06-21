@@ -16,8 +16,8 @@ Profile templates are validated via `ch-hermes-profile-templates.sh` (install-on
 From repo root on a machine with Docker (Linux CI, Docker Desktop, WSL):
 
 ```bash
-docker build -f Dockerfile -t control-hub:ci .
-CH_DOCKER_TEST_IMAGE=control-hub:ci bash tests/scripts/docker-deploy-api-smoke.sh
+docker build -f Dockerfile -t patterstage:ci .
+PS_DOCKER_TEST_IMAGE=patterstage:ci bash tests/scripts/docker-deploy-api-smoke.sh
 ```
 
 Builds the image if missing, runs a container, hits **`GET /api/update?branch=dev`** and **`POST /api/update` `{ action: restart }`**, then verifies **`/`** still responds. Does **not** run `git pull` / rebuild (no `.git` in the default image).

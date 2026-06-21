@@ -4,7 +4,7 @@
 # profiles inherit a working LLM provider + API-server key, then start CH.
 set -e
 
-mkdir -p "${CH_DATA_DIR:-/data/ch}" "${HERMES_HOME:-/data/hermes}"
+mkdir -p "${PS_DATA_DIR:-/data/ch}" "${HERMES_HOME:-/data/hermes}"
 
 # Only seed once so restarts keep any CH-written profile state.
 if [ ! -f "${HERMES_HOME}/config.yaml" ]; then
