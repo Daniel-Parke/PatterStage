@@ -17,10 +17,17 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { Field, Textarea, Select } from "@/components/ui/field";
+import dynamic from "next/dynamic";
+
 import ComposerGatePrompt from "@/components/composer/ComposerGatePrompt";
 import WorkflowPipeline from "@/components/composer/WorkflowPipeline";
-import WorkflowBuilder from "@/components/composer/WorkflowBuilder";
 import { safeApiCall } from "@/lib/api-fetch";
+
+// react-flow needs the DOM — load the canvas client-only.
+const WorkflowCanvas = dynamic(() => import("@/components/composer/WorkflowCanvas"), {
+  ssr: false,
+  loading: () => <div className="h-[640px] animate-pulse rounded-xl border border-white/10 bg-dark-900/40" />,
+});
 import { useComposerWorkflows, useComposerRuns, useComposerRun } from "@/hooks/useComposer";
 import { useProfiles } from "@/hooks/useProfiles";
 import { useEventStream } from "@/hooks/useEventStream";
@@ -143,7 +150,7 @@ export default function ComposerPage() {
       </div>
 
       {mode === "build" ? (
-        <WorkflowBuilder workflows={workflows ?? []} onSaved={() => void refetchWorkflows()} />
+        <WorkflowCanvas workflows={workflows ?? []} onSaved={() => void refetchWorkflows()} />
       ) : (
         <>
       {/* Launch form */}
