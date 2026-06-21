@@ -21,14 +21,6 @@ export function getActiveHermesHome(): string {
   return getActiveHermesPaths().root;
 }
 
-/** Returns the Hermes home directory or throws if not configured. */
-export function getHermesHomeOrThrow(): string {
-  const home = getHermesHome();
-  if (!home) {
-    throw new Error("No Hermes install found — set HERMES_HOME or AGENT_HOME");
-  }
-  return home;
-}
 
 const DEFAULT_GATEWAY = "http://127.0.0.1:8642";
 

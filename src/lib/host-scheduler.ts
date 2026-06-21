@@ -221,8 +221,3 @@ export function getHostScheduler(): HostScheduler {
   if (!cached) cached = isWindows ? new SchtasksScheduler() : new CrontabScheduler();
   return cached;
 }
-
-/** Test seam: reset the cached singleton. */
-export function _resetHostSchedulerForTest(): void {
-  cached = null;
-}

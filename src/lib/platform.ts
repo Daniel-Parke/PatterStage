@@ -159,10 +159,6 @@ export function pidsOnPort(port: number): number[] {
   return [...out];
 }
 
-/** Force-kill everything listening on a TCP port (best-effort). */
-export function killByPort(port: number): void {
-  for (const pid of pidsOnPort(port)) killPid(pid, { tree: true });
-}
 
 // ── Host-script interpreter selection ───────────────────────────
 

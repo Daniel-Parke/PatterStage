@@ -72,8 +72,3 @@ export function sessionsRateLimitResponse(
     { status: 429 }
   );
 }
-
-/** Test-only: clear sliding windows. */
-export function resetSessionsApiRateLimitForTests(): void {
-  windowHits.clear();
-}

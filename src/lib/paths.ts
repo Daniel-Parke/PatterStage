@@ -88,29 +88,3 @@ export const PATHS = {
   psHardwareLogs: getPsHardwareLogDir(),
 } as const;
 
-// ── YAML config reader (generic; used on arbitrary YAML content) ─
-
-import * as yaml from "js-yaml";
-
-export function getConfigValue(content: string, dottedKey: string): string {
-  try {
-    const parsed = yaml.load(content) as Record<string, unknown>;
-    const keys = dottedKey.split(".");
-    let current: unknown = parsed;
-    for (const key of keys) {
-      if (typeof current !== "object" || current === null) return "";
-      current = (current as Record<string, unknown>)[key];
-    }
-    return typeof current === "string" ? current : current != null ? String(current) : "";
-  } catch {
-    return "";
-  }
-}
-
-// ── Discord home channel ───────────────────────────────────────
-
-export function getDiscordHomeChannel(envContent: string): string {
-  const match = envContent.match(/^DISCORD_HOME_CHANNEL=(.+)$/m);
-  if (match) return match[1].trim().replace(/^['"]|['"]$/g, "");
-  return "";
-}

@@ -25,11 +25,3 @@ export function getGatewayKey(profileName?: string): string | null {
   const key = process.env.API_SERVER_KEY?.trim();
   return key && key.length > 0 ? key : null;
 }
-
-/** Mask a key for logs/diagnostics — never log the raw value. */
-export function maskKey(key: string | null | undefined): string {
-  if (!key) return "(none)";
-  const trimmed = key.trim();
-  if (trimmed.length <= 8) return "****";
-  return `${trimmed.slice(0, 4)}…${trimmed.slice(-4)}`;
-}
