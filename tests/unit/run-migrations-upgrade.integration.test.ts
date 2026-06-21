@@ -91,7 +91,12 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     expect(tableNames(db)).not.toContain("mission_phases");
     expect(tableNames(db)).not.toContain("mission_phase_actions");
     expect(tableNames(db)).not.toContain("mission_approvals");
-    expect(getSchemaVersion(db)).toBe(20);
+    // Composer graph tables land via the wired v21 applier.
+    expect(tableNames(db)).toEqual(
+      expect.arrayContaining(["composer_workflows", "composer_nodes", "composer_edges", "composer_runs", "composer_node_runs", "composer_approvals"]),
+    );
+    expect(cols(db, "runs")).toContain("composer_node_run_id");
+    expect(getSchemaVersion(db)).toBe(21);
     // Pre-existing data survived the additive upgrade (cron job + mission).
     expect(
       (db.prepare("SELECT COUNT(*) c FROM cron_jobs").get() as { c: number }).c,
@@ -113,7 +118,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(20);
+    expect(getSchemaVersion(db)).toBe(21);
     db.close();
   });
 });

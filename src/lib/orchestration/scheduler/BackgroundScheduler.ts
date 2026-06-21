@@ -21,6 +21,7 @@ import type { SyncSource, SyncResult } from "@/lib/sync/types";
 import { db } from "@/lib/db";
 import { RunSync } from "@/lib/orchestration/RunSync";
 import { reconcileRunsOnBoot } from "@/lib/orchestration/run-reconcile";
+import { ensureDefaultComposerWorkflows } from "@/lib/composer/seed";
 import { ScheduleTickSource } from "./tick";
 
 const META_OWNER_PID = "scheduler_owner_pid";
@@ -167,6 +168,13 @@ export function ensureBackgroundScheduler(): BackgroundScheduler {
     reconcileRunsOnBoot();
   } catch (err) {
     console.warn("[scheduler] boot run-reconcile failed:", err);
+  }
+
+  // Seed the built-in Composer workflow(s) (idempotent).
+  try {
+    ensureDefaultComposerWorkflows();
+  } catch (err) {
+    console.warn("[scheduler] composer seed failed:", err);
   }
 
   // Orchestration sources: reconcile active runs, then fire due schedules.
