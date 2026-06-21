@@ -433,21 +433,6 @@ export function finalizeRootConfigOnDisk(): FinalizeRootConfigResult {
   return { appliedModelDefaults, backupPath };
 }
 
-// ── Combined helper used by API routes ─────────────────────────
-
-/**
- * Re-apply the full PatterStage DB state to Hermes. Called after every
- * model/credential mutation so the on-disk Hermes config stays in lock
- * step with the PatterStage DB.
- */
-export function syncAllToHermes(): { envBackup: string | null; configBackup: string | null } {
-  // .env writes happen per-provider, but here we don't have a single
-  // credential — the calling route is responsible for the env write
-  // when a credential mutates. This helper only refreshes config.yaml.
-  const { backupPath } = syncDefaultsToHermesConfig();
-  return { envBackup: null, configBackup: backupPath };
-}
-
 // ── Single model sync to Hermes config ─────────────────────
 
 /**

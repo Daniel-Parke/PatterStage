@@ -34,17 +34,6 @@ export const BENCHMARK_DOMAINS: BenchmarkDomain[] = [
   "safety",
 ];
 
-export const DOMAIN_LABELS: Record<BenchmarkDomain, string> = {
-  maths: "Maths",
-  logic: "Logic",
-  reasoning: "Reasoning",
-  instruction: "Instruction-following",
-  needle: "Needle-in-a-haystack",
-  consistency: "Consistency",
-  honesty: "Honesty / calibration",
-  safety: "Safety / refusal",
-};
-
 // ── JRPG stat card (the capability headline) ──
 // Derived from benchmark results. STR/DEX/INT/WIS are content-driven (items
 // tag which they inform); SPEED + FORTITUDE are UNIVERSAL — computed from every
@@ -77,16 +66,6 @@ export const STAT_BLURB: Record<Stat, string> = {
 export type StatCard = Record<Stat, number>;
 
 // ── Graders (deterministic; LLM-as-judge added in a later phase) ──
-
-export type GraderKind =
-  | "exact"
-  | "numeric"
-  | "mcq"
-  | "contains"
-  | "regex"
-  | "json_schema"
-  | "consistency"
-  | "judge";
 
 /** How a consistency item extracts a canonical answer from each repeat. */
 export type ConsistencyExtract = "mcq" | "numeric" | "normalized";

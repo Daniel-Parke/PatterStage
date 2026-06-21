@@ -54,7 +54,3 @@ export function resolveEffectiveDisabledSkills(
 
   return new Set(normalizeDisabledSkillKeys(fromDb, catalogKeys));
 }
-
-export function catalogKeysForSkillsRoot(): string[] {
-  return collectSkillDirectoryNames(skillsRootForProfile());
-}

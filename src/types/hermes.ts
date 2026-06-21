@@ -86,14 +86,6 @@ export interface SystemStatus {
   timestamp: string;
 }
 
-export interface FileData {
-  content: string;
-  name: string;
-  description: string;
-  exists: boolean;
-  size: number;
-}
-
 // ── Skills ─────────────────────────────────────────────────────
 
 export interface Skill {
@@ -112,25 +104,6 @@ export interface SkillsData {
   total: number;
   categoryCount: number;
   profile: string;
-}
-
-// ── Sessions ───────────────────────────────────────────────────
-
-export interface Session {
-  id: string;
-  filename: string;
-  title: string;
-  size: number;
-  created: string;
-  modified: string;
-  messageCount: number;
-  model: string;
-  source: string;
-}
-
-export interface SessionsData {
-  sessions: Session[];
-  total: number;
 }
 
 // ── Agent Profiles ────────────────────────────────────────────
@@ -159,10 +132,6 @@ export interface AgentProfile {
   syncStatus?: "synced" | "drift" | "error";
   syncedAt?: string | null;
   syncError?: string | null;
-}
-
-export interface ProfilesData {
-  profiles: AgentProfile[];
 }
 
 // ── Mission ─────────────────────────────────────────────────
@@ -203,17 +172,6 @@ export interface LocalDirEntry {
   branch: string | null;
 }
 
-// ── Credentials ───────────────────────────────────────────────
-
-export interface Credential {
-  id: string;
-  name: string;
-  provider?: string;
-  keyLastFour?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 // ── Fallback Chain ────────────────────────────────────────────
 
 export interface FallbackChainEntry {
@@ -233,17 +191,6 @@ export interface FallbackConfig {
   restorePrimaryOnFallback: boolean;
   fallbackNotification: boolean;
   apiMaxRetries: number;
-}
-
-// ── System Cron ────────────────────────────────────────────
-
-export interface SystemCronJob {
-  id: string;
-  name: string;
-  schedule: string;
-  enabled: boolean;
-  command: string;
-  logFile?: string;
 }
 
 // ── Accent Color ───────────────────────────────────────────────

@@ -292,13 +292,6 @@ export function buildConfigYaml(parts: ProfileConfigParts): string {
   return lines.join("\n") + "\n";
 }
 
-/** Update disabled list inside existing yaml while preserving other keys. */
-export function patchDisabledSkillsInYaml(content: string, disabled: string[]): string {
-  const parts = parseConfigYaml(content);
-  parts.disabledSkills = [...disabled].sort();
-  return buildConfigYaml(parts);
-}
-
 /** Pull: parse yaml into column-friendly values. */
 export function configYamlToColumnValues(
   content: string,

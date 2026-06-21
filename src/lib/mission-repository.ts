@@ -80,7 +80,6 @@ function rowToMission(row: MissionRow | undefined): Mission | null {
 // ── Prompt builder (delegates to shared utility) ───────────────
 // Keeps the stored prompt complete (used by both dispatch and cron).
 
-export type { BuildPromptOptions } from "@/lib/build-mission-prompt";
 export { buildMissionPrompt } from "@/lib/build-mission-prompt";
 
 // ── CRUD ─────────────────────────────────────────────────────

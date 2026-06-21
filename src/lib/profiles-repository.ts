@@ -8,7 +8,6 @@ import {
   disabledSkillsFromJson,
   parseConfigYaml,
   resolvePlatformToolsets,
-  serializeJsonArray,
   serializeJsonToolsets,
   type PlatformToolsets,
   type PlatformToolsetsSource,
@@ -321,12 +320,6 @@ export function updateProfileContent(
     disabledSkillsJson: patch.disabledSkillsJson ?? existing.disabledSkillsJson,
     platformToolsetsJson: patch.platformToolsetsJson ?? existing.platformToolsetsJson,
     seedKey: existing.seedKey,
-  });
-}
-
-export function setProfileDisabledSkills(slug: string, disabled: string[]): AgentProfileRow | null {
-  return updateProfileContent(slug, {
-    disabledSkillsJson: serializeJsonArray(disabled),
   });
 }
 

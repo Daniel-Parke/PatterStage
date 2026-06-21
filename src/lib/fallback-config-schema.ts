@@ -69,7 +69,4 @@ export const fallbackActionSchema = z.discriminatedUnion("action", [
   }),
 ]);
 
-export type FallbackAction = z.infer<typeof fallbackActionSchema>;
-
 export type FallbackConfigPutInput = z.infer<typeof fallbackConfigPutSchema>;
-export type FallbackEntryPut = z.infer<typeof fallbackEntryPutSchema>;

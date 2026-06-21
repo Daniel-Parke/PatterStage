@@ -3,7 +3,6 @@
 // Mirrors upstream hermes_constants.get_default_hermes_root()
 // ═══════════════════════════════════════════════════════════════
 
-import { existsSync, readFileSync } from "fs";
 import { homedir } from "os";
 import { basename, isAbsolute, join, relative, resolve } from "path";
 
@@ -65,21 +64,6 @@ export function getHermesDefaultRoot(): string {
     return NATIVE_HERMES_HOME;
   }
   return getHermesDefaultRootFromHome(String(envHome).trim());
-}
-
-/**
- * Read sticky default profile name from `active_profile` (Hermes CLI).
- */
-export function readHermesActiveProfile(defaultRoot?: string): string | null {
-  const root = defaultRoot ?? getHermesDefaultRoot();
-  const path = join(root, "active_profile");
-  if (!existsSync(path)) return null;
-  try {
-    const name = readFileSync(path, "utf-8").trim();
-    return name && name !== "default" ? name : null;
-  } catch {
-    return null;
-  }
 }
 
 /**

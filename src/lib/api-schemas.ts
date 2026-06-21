@@ -80,14 +80,6 @@ export const credentialPostSchema = z.object({
   apiKey: nonEmpty,
 });
 
-export const credentialPutSchema = z
-  .object({
-    label: z.string().min(1).optional(),
-    provider: providerSchema.optional(),
-    apiKey: z.string().optional(),
-  })
-  .strict();
-
 export const modelPostSchema = z.object({
   name: nonEmpty,
   provider: providerSchema,
@@ -118,46 +110,6 @@ export const setDefaultPutSchema = z
     modelId: z.string().nullable(),
   })
   .strict();
-
-export const missionPostBodySchema = z.discriminatedUnion("action", [
-  z.object({
-    action: z.literal("create"),
-    name: z.string().optional(),
-    prompt: z.string().optional(),
-    goals: z.array(z.string()).optional(),
-    skills: z.array(z.string()).optional(),
-    model: z.string().optional(),
-    profile: z.string().optional(),
-    missionTimeMinutes: z.number().optional(),
-    timeoutMinutes: z.number().optional(),
-    schedule: z.string().optional(),
-    dispatchMode: z.enum(["save", "now", "cron"]).optional(),
-    templateId: z.string().optional(),
-    base_url: z.string().optional(),
-  }),
-  z.object({
-    action: z.literal("delete"),
-    missionId: nonEmpty,
-  }),
-  z.object({
-    action: z.literal("cancel"),
-    missionId: nonEmpty,
-  }),
-  z.object({
-    action: z.literal("update"),
-    missionId: nonEmpty,
-    name: z.string().optional(),
-    prompt: z.string().optional(),
-    goals: z.array(z.string()).optional(),
-    skills: z.array(z.string()).optional(),
-    profile: z.string().optional(),
-    missionTimeMinutes: z.number().optional(),
-    timeoutMinutes: z.number().optional(),
-    schedule: z.string().optional(),
-  }),
-]);
-
-export type MissionPostBody = z.infer<typeof missionPostBodySchema>;
 
 /**
  * POST /api/seed body shape. All four fields are optional; the
@@ -195,8 +147,6 @@ export const seedPostSchema = z
     const { id, templateId, ...rest } = value;
     return { ...rest, templateId: templateId ?? id };
   });
-
-export type SeedPostBody = z.infer<typeof seedPostSchema>;
 
 // ── Helper ─────────────────────────────────────────────────────
 

@@ -146,10 +146,3 @@ export const LOADING_MESSAGES = [
   "Architecting your story...", "Plot points crystallising...", "World rules taking shape...",
   "Character arcs emerging...", "The story bible forms...",
 ];
-
-export const CHAPTER_STATUSES: Record<string, string> = {
-  pending: "Waiting for its moment...",
-  writing: "The muse is visiting...",
-  complete: "The ink is still wet.",
-  failed: "Fighting writer's block...",
-};
