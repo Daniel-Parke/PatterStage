@@ -48,8 +48,12 @@ export interface DeepResearchDeps {
   onStep: (step: ResearchStepRecord) => void;
   /** Registry model id, or undefined = Hermes default (callLLM resolves it). */
   modelId?: string;
-  /** Search/visit/reason iterations (default 3). */
+  /** Search/visit/reason iterations — research DEPTH (default 3). */
   maxRounds?: number;
+  /** Search results requested per query — research BREADTH (default 6). */
+  resultsPerQuery?: number;
+  /** Top pages visited+read per round (default 2). */
+  visitsPerRound?: number;
 }
 
 export interface DeepResearchResult {
@@ -81,6 +85,8 @@ export async function runDeepResearch(
 ): Promise<DeepResearchResult> {
   const modelId = deps.modelId;
   const maxRounds = Math.max(1, deps.maxRounds ?? 3);
+  const resultsPerQuery = Math.max(1, deps.resultsPerQuery ?? 6);
+  const visitsPerRound = Math.max(0, deps.visitsPerRound ?? VISIT_PER_ROUND);
 
   // 1. Plan
   const plan = await deps.llm(
@@ -103,7 +109,7 @@ export async function runDeepResearch(
 
     let results: SearchResult[] = [];
     try {
-      results = await deps.search.search(q, 6);
+      results = await deps.search.search(q, resultsPerQuery);
     } catch {
       results = [];
     }
@@ -118,7 +124,7 @@ export async function runDeepResearch(
     }
 
     const visited: VisitedPage[] = [];
-    for (const r of results.slice(0, VISIT_PER_ROUND)) {
+    for (const r of results.slice(0, visitsPerRound)) {
       const page = await deps.visit(r.url);
       if (page) {
         visited.push(page);

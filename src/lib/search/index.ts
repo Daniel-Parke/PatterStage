@@ -18,11 +18,17 @@ export const nullSearchProvider: SearchProvider = {
   },
 };
 
-export function resolveSearchProvider(): SearchProvider {
-  const which = (process.env.PS_SEARCH_PROVIDER ?? "").trim().toLowerCase();
+/**
+ * Resolve the search provider. An explicit `override` (chosen per-run in the
+ * Deep Research UI) wins; otherwise fall back to env (PS_SEARCH_PROVIDER /
+ * PS_SEARXNG_URL). Unknown names fall through to the free DuckDuckGo default.
+ */
+export function resolveSearchProvider(override?: string): SearchProvider {
+  const which = (override ?? process.env.PS_SEARCH_PROVIDER ?? "").trim().toLowerCase();
   const searxngUrl = (process.env.PS_SEARXNG_URL ?? "").trim();
 
   if (which === "none") return nullSearchProvider;
+  if (which === "duckduckgo") return duckduckgoProvider;
   if (which === "searxng" && searxngUrl) return searxngProvider(searxngUrl);
   if (!which && searxngUrl) return searxngProvider(searxngUrl); // auto-prefer local when configured
   return duckduckgoProvider; // free zero-config default

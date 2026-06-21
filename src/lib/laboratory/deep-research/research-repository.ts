@@ -6,8 +6,15 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { db, uuid, now } from "@/lib/db";
-import { parseStringArrayOrEmpty } from "@/lib/db/parse-json";
-import type { ResearchRun, ResearchStatus, ResearchStep, ResearchStepKind } from "./types";
+import { parseStringArrayOrEmpty, parseJson } from "@/lib/db/parse-json";
+import type {
+  ResearchConfig,
+  ResearchPreset,
+  ResearchRun,
+  ResearchStatus,
+  ResearchStep,
+  ResearchStepKind,
+} from "./types";
 
 interface RunRow {
   id: string;
@@ -15,6 +22,7 @@ interface RunRow {
   status: string;
   provider: string | null;
   model_id: string | null;
+  config_json: string | null;
   report: string | null;
   error: string | null;
   created_at: string;
@@ -39,6 +47,7 @@ function rowToRun(row: RunRow): ResearchRun {
     status: row.status as ResearchStatus,
     provider: row.provider,
     modelId: row.model_id,
+    config: parseJson<ResearchConfig>(row.config_json),
     report: row.report,
     error: row.error,
     createdAt: row.created_at,
@@ -59,13 +68,25 @@ function rowToStep(row: StepRow): ResearchStep {
   };
 }
 
-export function createResearchRun(input: { query: string; modelId?: string | null }): ResearchRun {
+export function createResearchRun(input: {
+  query: string;
+  modelId?: string | null;
+  config?: ResearchConfig | null;
+}): ResearchRun {
   const id = uuid();
   db()
     .prepare(
-      "INSERT INTO research_runs (id, query, status, model_id, created_at) VALUES (?, ?, 'pending', ?, ?)",
+      `INSERT INTO research_runs (id, query, status, model_id, provider, config_json, created_at)
+       VALUES (?, ?, 'pending', ?, ?, ?, ?)`,
     )
-    .run(id, input.query, input.modelId ?? null, now());
+    .run(
+      id,
+      input.query,
+      input.modelId ?? null,
+      input.config?.searchProvider ?? null,
+      input.config ? JSON.stringify(input.config) : null,
+      now(),
+    );
   return getResearchRun(id)!;
 }
 
@@ -132,4 +153,43 @@ export function listResearchSteps(runId: string): ResearchStep[] {
     .prepare("SELECT * FROM research_steps WHERE run_id = ? ORDER BY position ASC")
     .all(runId) as StepRow[];
   return rows.map(rowToStep);
+}
+
+// ── Saved presets ───────────────────────────────────────────────
+
+interface PresetRow {
+  id: string;
+  name: string;
+  config_json: string;
+  created_at: string;
+}
+
+function rowToPreset(row: PresetRow): ResearchPreset {
+  return {
+    id: row.id,
+    name: row.name,
+    config: parseJson<ResearchConfig>(row.config_json) ?? {},
+    createdAt: row.created_at,
+  };
+}
+
+export function listResearchPresets(): ResearchPreset[] {
+  const rows = db()
+    .prepare("SELECT * FROM research_presets ORDER BY created_at DESC")
+    .all() as PresetRow[];
+  return rows.map(rowToPreset);
+}
+
+export function createResearchPreset(name: string, config: ResearchConfig): ResearchPreset {
+  const id = uuid();
+  db()
+    .prepare("INSERT INTO research_presets (id, name, config_json, created_at) VALUES (?, ?, ?, ?)")
+    .run(id, name, JSON.stringify(config), now());
+  return rowToPreset(
+    db().prepare("SELECT * FROM research_presets WHERE id = ?").get(id) as PresetRow,
+  );
+}
+
+export function deleteResearchPreset(id: string): void {
+  db().prepare("DELETE FROM research_presets WHERE id = ?").run(id);
 }

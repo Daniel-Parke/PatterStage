@@ -13,20 +13,24 @@ import { messageFromError } from "@/lib/api-fetch";
 import { runDeepResearch, defaultLlm, defaultVisit } from "./engine";
 import { resolveSearchProvider } from "./search";
 import { insertResearchStep, updateResearchRun } from "./research-repository";
+import type { ResearchConfig } from "./types";
 
 export async function runResearchJob(
   runId: string,
   query: string,
-  modelId?: string | null,
+  config?: ResearchConfig | null,
 ): Promise<void> {
   updateResearchRun(runId, { status: "running" });
   let position = 0;
   try {
     const result = await runDeepResearch(query, {
       llm: defaultLlm,
-      search: resolveSearchProvider(),
+      search: resolveSearchProvider(config?.searchProvider),
       visit: defaultVisit,
-      modelId: modelId ?? undefined,
+      modelId: config?.modelId ?? undefined,
+      maxRounds: config?.rounds,
+      resultsPerQuery: config?.resultsPerQuery,
+      visitsPerRound: config?.visitsPerRound,
       onStep: (step) => {
         insertResearchStep({
           runId,

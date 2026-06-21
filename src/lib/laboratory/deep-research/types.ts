@@ -11,18 +11,42 @@ export type ResearchStatus = "pending" | "running" | "completed" | "failed" | "c
 
 export type ResearchStepKind = "plan" | "search" | "visit" | "reason" | "synthesize";
 
+/** User-chosen options for a research run (depth/breadth/model/provider). */
+export interface ResearchConfig {
+  /** Registry model id, or null = the Hermes default. */
+  modelId?: string | null;
+  /** Search backend: duckduckgo | searxng | none. */
+  searchProvider?: string;
+  /** Research DEPTH — search/reason iterations (1–8). */
+  rounds?: number;
+  /** Research BREADTH — search results per query (1–12). */
+  resultsPerQuery?: number;
+  /** Top pages read per round (0–6). */
+  visitsPerRound?: number;
+}
+
 export interface ResearchRun {
   id: string;
   query: string;
   status: ResearchStatus;
-  /** Search backend used (serper | tavily | brave | searxng | none). */
+  /** Search backend used (duckduckgo | searxng | none). */
   provider: string | null;
   /** Registry model id used for inference, or null = the Hermes default. */
   modelId: string | null;
+  /** The options the run was launched with (model/provider/depth/breadth). */
+  config: ResearchConfig | null;
   report: string | null;
   error: string | null;
   createdAt: string;
   completedAt: string | null;
+}
+
+/** A saved, reusable Deep Research configuration. */
+export interface ResearchPreset {
+  id: string;
+  name: string;
+  config: ResearchConfig;
+  createdAt: string;
 }
 
 export interface ResearchStep {

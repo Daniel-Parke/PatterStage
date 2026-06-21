@@ -29,6 +29,7 @@ import { applyDeepResearchMigration } from "./db/apply-deep-research-migration";
 import { applyRetireMissionPhasesMigration } from "./db/apply-retire-mission-phases-migration";
 import { applyComposerMigration } from "./db/apply-composer-migration";
 import { applyMemoryProvidersMigration } from "./db/apply-memory-providers-migration";
+import { applyResearchOptionsMigration } from "./db/apply-research-options-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -231,6 +232,8 @@ export function runMigrations(database: Database.Database): void {
   // PatterStage-owned memory provider config (host/port/bank in the DB, not in
   // Hermes files). Idempotent CREATE + seed at schema_version 22.
   applyMemoryProvidersMigration(database, migrationsDir);
+  // Deep Research run config + saved presets. Guarded ALTER + CREATE at v23.
+  applyResearchOptionsMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

@@ -16,10 +16,20 @@ import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { createResearchRun, listResearchRuns } from "@/lib/laboratory/deep-research/research-repository";
 import { runResearchJob } from "@/lib/laboratory/deep-research/run-job";
 
+const configSchema = z
+  .object({
+    modelId: z.string().min(1).optional(),
+    searchProvider: z.enum(["duckduckgo", "searxng", "none"]).optional(),
+    rounds: z.number().int().min(1).max(8).optional(),
+    resultsPerQuery: z.number().int().min(1).max(12).optional(),
+    visitsPerRound: z.number().int().min(0).max(6).optional(),
+  })
+  .strict();
+
 const startSchema = z
   .object({
     query: z.string().min(3).max(2000),
-    modelId: z.string().min(1).optional(),
+    config: configSchema.optional(),
   })
   .strict();
 
@@ -41,9 +51,10 @@ export async function POST(request: NextRequest) {
 
   try {
     ensureDb();
-    const run = createResearchRun({ query: parsed.query, modelId: parsed.modelId ?? null });
+    const config = parsed.config ?? {};
+    const run = createResearchRun({ query: parsed.query, modelId: config.modelId ?? null, config });
     // Fire-and-forget: the engine runs in the background; the page polls.
-    void runResearchJob(run.id, parsed.query, parsed.modelId ?? null);
+    void runResearchJob(run.id, parsed.query, config);
     return created({ run });
   } catch (error) {
     return serverErrorFromCatch("POST /api/laboratory/research", "start", error, "Failed to start research run");

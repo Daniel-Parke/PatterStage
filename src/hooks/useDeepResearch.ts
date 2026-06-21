@@ -6,7 +6,15 @@
 "use client";
 
 import { useApiResource } from "./useApiResource";
-import type { ResearchRun, ResearchStep } from "@/lib/laboratory/deep-research/types";
+import type { ResearchPreset, ResearchRun, ResearchStep } from "@/lib/laboratory/deep-research/types";
+
+/** Saved Deep Research presets. */
+export function useResearchPresets() {
+  return useApiResource<ResearchPreset[]>(["research-presets"], "/api/laboratory/research/presets", {
+    select: (payload) => (payload as { presets?: ResearchPreset[] } | undefined)?.presets,
+    fallback: [],
+  });
+}
 
 /** Recent research runs. Polls so pending → completed transitions surface. */
 export function useResearchRuns(refetchInterval: number | false = 4000) {
