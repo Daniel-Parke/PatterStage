@@ -156,6 +156,9 @@
 }
 .ps-rail-done { background: rgb(74 222 128 / 0.45); }
 
+/* Active edge on the live run canvas (react-flow): cyan glow on the stroke. */
+.ps-edge-glow .react-flow__edge-path { filter: drop-shadow(0 0 3px rgb(34 211 238 / 0.7)); }
+
 /* Electrified routing chip — the edge the live run is leaving / traversing. */
 @keyframes ps-electrify {
   0%, 100% { box-shadow: 0 0 0 0 rgb(34 211 238 / 0); }

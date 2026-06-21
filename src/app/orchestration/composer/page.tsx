@@ -20,13 +20,16 @@ import { Field, Textarea, Select } from "@/components/ui/field";
 import dynamic from "next/dynamic";
 
 import ComposerGatePrompt from "@/components/composer/ComposerGatePrompt";
-import WorkflowPipeline from "@/components/composer/WorkflowPipeline";
 import { safeApiCall } from "@/lib/api-fetch";
 
-// react-flow needs the DOM — load the canvas client-only.
+// react-flow needs the DOM — load the canvases client-only.
 const WorkflowCanvas = dynamic(() => import("@/components/composer/WorkflowCanvas"), {
   ssr: false,
   loading: () => <div className="h-[640px] animate-pulse rounded-xl border border-white/10 bg-dark-900/40" />,
+});
+const WorkflowRunCanvas = dynamic(() => import("@/components/composer/WorkflowRunCanvas"), {
+  ssr: false,
+  loading: () => <div className="h-[560px] animate-pulse rounded-xl border border-white/10 bg-dark-900/40" />,
 });
 import { useComposerWorkflows, useComposerRuns, useComposerRun } from "@/hooks/useComposer";
 import { useProfiles } from "@/hooks/useProfiles";
@@ -220,7 +223,7 @@ export default function ComposerPage() {
                   {run.status}
                 </div>
               </div>
-              <WorkflowPipeline
+              <WorkflowRunCanvas
                 graph={graph}
                 latestNodeRun={latestNodeRun}
                 currentNodeId={run.currentNodeId}
