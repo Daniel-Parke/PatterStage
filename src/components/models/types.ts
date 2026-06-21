@@ -7,6 +7,7 @@
 
 import type { ModelEditorRecord } from "./ModelEditor";
 import type { TaskType } from "@/lib/hermes-providers";
+import type { ApiStyle } from "@/lib/llm-endpoint";
 
 export interface ApiModel {
   id: string;
@@ -16,6 +17,8 @@ export interface ApiModel {
   baseUrl: string | null;
   contextLength: number | null;
   credentialsId: string | null;
+  /** Direct-provider wire protocol (openai | anthropic); null ⇒ inferred at call time. */
+  apiStyle: ApiStyle | null;
   defaults: Record<TaskType, string | null>;
   createdAt: string;
   updatedAt: string;
