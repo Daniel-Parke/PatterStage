@@ -49,10 +49,24 @@ export function getDb(): Database.Database {
   _db.pragma("foreign_keys = ON");
   _db.pragma("busy_timeout = 5000");
 
-  // Run migrations
+  // Run migrations to convergence. A brand-new DB applies the baseline (v3) and
+  // returns early; the incremental appliers (v4→) only run on the *next* pass.
+  // Loop here — exactly like `npm run db:migrate` — so a single getDb() reaches
+  // the terminal schema version, instead of leaving a fresh DB half-migrated for
+  // the whole process (the old "across boot" footgun: a first boot on an empty
+  // PS_DATA_DIR would 500 with "no such table: composer_workflows"). The appliers
+  // are idempotent + version-guarded, so the steady state is a cheap no-op pass.
+  // runMigrations may reopen `_db` (baseline rebuild), so re-read it each pass.
   runMigrations(_db);
+  let last = getSchemaVersion(_db);
+  for (let i = 0; i < 8; i++) {
+    runMigrations(_db!);
+    const next = getSchemaVersion(_db!);
+    if (next === last) break;
+    last = next;
+  }
 
-  return _db;
+  return _db!;
 }
 
 /** Alias — most code uses db() not getDb() */

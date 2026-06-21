@@ -426,8 +426,13 @@ async function cmdUpdate(branch, restartOnly) {
 
   if (!restartOnly) {
     log("ps-update.log", `Fetching origin/${branch}…`);
-    gitOk(["fetch", "origin", branch, "--quiet"]);
-    gitOk(["checkout", branch, "--quiet"]);
+    // A failed fetch must abort: otherwise `reset --hard origin/<branch>` resets
+    // to the STALE local ref and we'd report "update complete" while running old
+    // code. (Offline, bad remote, or missing branch all surface here.)
+    if (!gitOk(["fetch", "origin", branch, "--quiet"]))
+      fail("update", "git", `git fetch origin ${branch} failed (offline or branch missing?) — not updating`, 1, "ps-update.log");
+    if (!gitOk(["checkout", branch, "--quiet"]))
+      fail("update", "git", `git checkout ${branch} failed`, 1, "ps-update.log");
     if (!gitOk(["reset", "--hard", `origin/${branch}`, "--quiet"])) fail("update", "git", "git reset failed", 1, "ps-update.log");
     log("ps-update.log", "Code updated.");
     await runBuildAndMigrate("update", "ps-update.log", null);

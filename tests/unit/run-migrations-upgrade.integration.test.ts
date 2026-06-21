@@ -107,6 +107,39 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     db.close();
   });
 
+  it("a truly fresh DB needs convergence: one pass stops at baseline, the getDb loop reaches terminal", () => {
+    // A brand-new PS_DATA_DIR: empty DB, no baseline, no meta. runMigrations
+    // applies the baseline (v3) and returns early — the incremental appliers
+    // (v4→) only run on subsequent passes. getDb() loops to convergence so a
+    // single first boot reaches the terminal schema; this guards that contract
+    // (regression for "no such table: composer_workflows" on first boot).
+    const db = new Database(":memory:");
+    db.pragma("foreign_keys = ON");
+
+    runMigrations(db); // pass 1 — baseline only
+    expect(getSchemaVersion(db)).toBe(3);
+    expect(tableNames(db)).not.toContain("composer_workflows");
+
+    // Replicate the getDb() convergence loop.
+    let last = getSchemaVersion(db);
+    for (let i = 0; i < 8; i++) {
+      runMigrations(db);
+      const next = getSchemaVersion(db);
+      if (next === last) break;
+      last = next;
+    }
+    expect(getSchemaVersion(db)).toBe(21);
+    expect(tableNames(db)).toEqual(
+      expect.arrayContaining([
+        "composer_workflows",
+        "benchmark_runs",
+        "research_runs",
+        "analytics_events",
+      ]),
+    );
+    db.close();
+  });
+
   it("is idempotent — a second runMigrations on the upgraded DB is a no-op", () => {
     const db = new Database(":memory:");
     db.pragma("foreign_keys = ON");

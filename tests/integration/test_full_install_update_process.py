@@ -86,6 +86,8 @@ def _release_scenarios(*, include_hermes_upstream: bool) -> list[str]:
     s = _smoke_scenarios(include_hermes_upstream=False)
     s.extend(
         [
+            "restart",
+            "rebuild",
             "install_bootstrap",
             "install_in_repo",
             "update_preserves_user_data",
@@ -201,6 +203,11 @@ class Harness:
             dirs_exist_ok=True,
             ignore=_ignore,
         )
+        # Never leak the developer's local env into the Linux container — the
+        # container writes its own .env.local during setup. Otherwise a host
+        # Windows PS_DATA_DIR / HERMES_HOME pollutes the run (paths like
+        # `C:\Users\...` become literal dir names inside the container).
+        (dest / ".env.local").unlink(missing_ok=True)
         self._normalize_shell_lf(dest)
 
     def _normalize_shell_lf(self, workspace: Path) -> None:
@@ -376,9 +383,12 @@ class Harness:
             "cd /workspace\n"
             "npm ci\n"
             "HERMES_HOME=/tmp/ch-prebuild-no-push npm run prebuild\n"
-            # prebuild now emits patterstage.db; seed it under the LEGACY name so
-            # the scenario simulates a pre-rename install that the update migrates.
-            f"cp -f data/patterstage.db '{dr}/control-hub.db'\n",
+            # prebuild emits patterstage.db on a clean tree, but falls back to an
+            # existing control-hub.db (the repo may ship one) — copy whichever it
+            # produced, seeded under the LEGACY name so the scenario simulates a
+            # pre-rename install that the update migrates.
+            f"cp -f data/patterstage.db '{dr}/control-hub.db' 2>/dev/null || "
+            f"cp -f data/control-hub.db '{dr}/control-hub.db'\n",
         )
 
     def seed_both(self, container: str, *, rich_hermes: bool) -> None:
@@ -900,6 +910,68 @@ test -f scripts/.harness-marker
         finally:
             self._rm_container(c)
 
+    def run_deploy_lifecycle(self, container: str, action: str) -> None:
+        """Run `ch-deploy.sh <restart|rebuild>` and assert the server came back.
+
+        ps-deploy.mjs spawns a detached next-server then blocks on its own
+        readiness probe (GET /api/status), exiting 0 only when the fresh server
+        answers — so a 0 exit already proves the lifecycle. We additionally
+        confirm the status file reports success for this action and the recorded
+        server PID is alive + answering, then stop the detached server. HERMES_HOME
+        is pinned to a clean container path so the status/PID files are isolated.
+        """
+        script = f"""
+set -e
+cd /workspace
+export HERMES_HOME=/root/.hermes
+mkdir -p "$HERMES_HOME/logs"
+PORT=$(grep -E '^PORT=' /workspace/.env.local | tail -n1 | sed 's/^PORT=//' | tr -d '\\r')
+export PORT="${{PORT:-42069}}"
+bash scripts/application/ch-deploy.sh {action}
+STATUS="$HERMES_HOME/logs/ps-deploy.status"
+test -f "$STATUS" || {{ echo "no ps-deploy.status after {action}" >&2; exit 1; }}
+grep -q 'state=success' "$STATUS" || {{ echo "deploy {action} not success:" >&2; cat "$STATUS" >&2; exit 1; }}
+grep -q 'action={action}' "$STATUS" || {{ echo "status action mismatch:" >&2; cat "$STATUS" >&2; exit 1; }}
+PIDFILE="$HERMES_HOME/logs/ps-server.pid"
+test -f "$PIDFILE" || {{ echo "no ps-server.pid after {action}" >&2; exit 1; }}
+SPID=$(cat "$PIDFILE")
+kill -0 "$SPID" 2>/dev/null || {{ echo "spawned server pid $SPID not alive" >&2; exit 1; }}
+curl -sf -o /dev/null "http://127.0.0.1:${{PORT}}/api/status" || {{ echo "server not answering /api/status" >&2; exit 1; }}
+kill "$SPID" 2>/dev/null || true
+echo "[harness] {action} lifecycle OK (pid $SPID on port $PORT)"
+"""
+        self.docker_exec(
+            container,
+            script,
+            env={"CI": "1", "CH_INSTALL_NONINTERACTIVE": "1", "HERMES_HOME": "/root/.hermes"},
+        )
+
+    def scenario_restart(self) -> None:
+        """setup → `ps-deploy restart` spawns a server that answers /api/status."""
+        ws = self.temp_workspace()
+        c = self.start_container("restart")
+        try:
+            self.docker_cp_workspace(c, ws)
+            self.seed_fresh(c)
+            self.run_setup(c)
+            self.assert_paths(c)
+            self.run_deploy_lifecycle(c, "restart")
+        finally:
+            self._rm_container(c)
+
+    def scenario_rebuild(self) -> None:
+        """setup → `ps-deploy rebuild` rebuilds + restarts; server answers."""
+        ws = self.temp_workspace()
+        c = self.start_container("rebuild")
+        try:
+            self.docker_cp_workspace(c, ws)
+            self.seed_fresh(c)
+            self.run_setup(c)
+            self.assert_paths(c)
+            self.run_deploy_lifecycle(c, "rebuild")
+        finally:
+            self._rm_container(c)
+
     def scenario_install_bootstrap(self) -> None:
         ws = self.temp_workspace()
         c = self.start_container("install-bootstrap")
@@ -1165,6 +1237,8 @@ exit [lindex $result 3]
             "dashboard": self.scenario_dashboard,
             "both": self.scenario_both,
             "update": self.scenario_update,
+            "restart": self.scenario_restart,
+            "rebuild": self.scenario_rebuild,
             "install_bootstrap": self.scenario_install_bootstrap,
             "install_in_repo": self.scenario_install_in_repo,
             "update_preserves_user_data": self.scenario_update_preserves_user_data,
@@ -1304,6 +1378,8 @@ def _valid_scenario_ids() -> frozenset[str]:
             "dashboard",
             "both",
             "update",
+            "restart",
+            "rebuild",
             "install_bootstrap",
             "install_in_repo",
             "update_preserves_user_data",
