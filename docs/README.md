@@ -6,7 +6,10 @@ Technical reference for PatterStage. Tone elsewhere in this folder is deliberate
 |----------|-------------|
 | [PATTERSTAGE.md](PATTERSTAGE.md) | What this repo is and where to read next |
 | [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) | Operator guide: every sidebar page, every common action (dashboard, missions + scheduling, scripts, chat, agents + performance, skills, tools, personalities, sessions, memory, logs, all Config pages, Story Weaver) |
-| [MISSIONS.md](MISSIONS.md) | Mission board, dispatch, cancellation, templates |
+| [MISSIONS.md](MISSIONS.md) | Mission board, dispatch, cancellation, templates (simple single/recurring runs) |
+| [COMPOSER.md](COMPOSER.md) | Composer: the graph orchestrator — multi-stage workflows with loops + HIL gates |
+| [LABORATORY.md](LABORATORY.md) | Laboratory section: Insights, Benchmarks, Deep Research |
+| [DEEP_RESEARCH.md](DEEP_RESEARCH.md) | Native iterative web research (provider-flexible, free/local-first search) |
 | [CHAT.md](CHAT.md) | Agent chat: server-persisted conversations, run-event streaming, tools + HITL approvals, Agent/Fast modes |
 | [design-tokens.md](design-tokens.md) | UI colour tokens and theme conventions |
 | [API.md](API.md) | REST endpoints |

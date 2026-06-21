@@ -58,6 +58,14 @@ The runtime adapter (`src/lib/runtime/`) dispatches missions as HTTP **runs** to
 | `API_SERVER_KEY` | Bearer key the runtime sends (`Authorization: Bearer …`). **Must match** the gateway's `API_SERVER_KEY` in `{HERMES_HOME}/.env`. `setup.sh` generates one and wires both sides. |
 | `PS_LLM_API` / `CONTROL_HUB_LLM_API` | Full chat-completions URL or gateway-derived base (alternative to `HERMES_GATEWAY_URL`). |
 
+## Laboratory + Composer (feature flags + search)
+
+| Variable | Purpose |
+|----------|---------|
+| `PS_COMPOSER` | `1` — enable the [Composer](COMPOSER.md) graph orchestrator (engine + API + UI). Off by default. |
+| `PS_SEARCH_PROVIDER` | Search backend for [Deep Research](DEEP_RESEARCH.md): `duckduckgo` (default, free/no-key), `searxng`, or `none`. |
+| `PS_SEARXNG_URL` | Base URL of a self-hosted SearXNG instance (fully local search). When set without `PS_SEARCH_PROVIDER`, SearXNG is auto-preferred. |
+
 ## Debug artifact (not read by the app)
 
 After setup or `ps-deploy update`, `scripts/tooling/discover-agents.mjs` writes **`PS_DATA_DIR/hermes-detection.json`** (version 3) with `valid`, `hermesHome`, `defaultRoot`, `canonicalAgentPackage`, `legacyInstallDetected`, and related fields. Use it to verify path resolution on the host; the Next.js app does not load this file at runtime.

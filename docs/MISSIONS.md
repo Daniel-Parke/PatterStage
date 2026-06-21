@@ -2,6 +2,8 @@
 
 How missions are stored, dispatched, and cancelled. Missions live in SQLite (`missions` table) with optional JSON overlays under `PS_DATA_DIR/missions/`.
 
+> Missions are intentionally **simple** — a single or recurring agent task (think "cron for AI agents"). For methodical, **multi-stage** workflows with conditional branches, loop-backs, and human-in-the-loop gates, use **[Composer](COMPOSER.md)** (a separate orchestrator). Missions are not phased.
+
 ## Prompt model
 
 - The UI sends **raw** fields (`instruction`, `context`, `goals`, `outputFormat`, `constraints`, dirs, refs, skills, suggested toolsets) on dispatch/update.

@@ -96,6 +96,14 @@ npm run test:e2e-hermes      # build stack, run contract + smoke against REAL He
 
 For a **production real Hermes**: enable the API server (`setup.sh` writes `API_SERVER_ENABLED=true` + a shared `API_SERVER_KEY` into `~/.hermes/.env`), run `hermes gateway`, and point `HERMES_GATEWAY_URL` at it.
 
+## Composer rides the same substrate
+
+[Composer](COMPOSER.md) (the graph orchestrator) reuses this layer rather than adding a second one. Each Composer **stage** is an ordinary agent run (linked via `runs.composer_node_run_id`); a `ComposerTickSource` joins `RunSync` + `ScheduleTickSource` on the `BackgroundScheduler` (gated by the ownership lease + the `composer` flag); and `reconcileOne` is **polymorphic** — it branches on `composer_node_run_id` to finalize a stage (parse its verdict, merge context) and advance the graph, otherwise it finalizes a mission. This is why we did **not** adopt LangGraph: it would bolt a second durable/checkpoint model onto the restart-safe, single-flight, idempotent substrate we already hardened. We added only the graph control-flow layer.
+
+## Live updates: polling + SSE
+
+Durable state is always the DB; **polling is authoritative** (it drives reconcile and survives reconnect/restart/multi-tab). **SSE is the live-richness layer** (`src/lib/sse/event-stream.ts` + `useEventStream`): because PatterStage can run multiple processes, the stream bridges via the shared DB — it polls a snapshot of the authoritative rows and pushes deltas, closing on a terminal snapshot or disconnect. If SSE drops, `useApiResource` polling keeps the view correct. Used by Composer (`…/runs/[id]/events`) and Deep Research (`…/research/[id]/events`).
+
 ## What was removed
 
 The bash mission backend (`backends/hermes.ts`), the `agent-backend/` interface, status.json/pid polling (`MissionSync`), the stdout session-id parsing, and the legacy Hermes `jobs.json` cron bridge (+ the **Cron** page) are all gone. Recurring work uses **Missions** scheduling (the PatterStage `schedules` scheduler).
