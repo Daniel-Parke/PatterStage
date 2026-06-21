@@ -169,19 +169,6 @@ export function deleteFallbackEntry(id: string): boolean {
   return true;
 }
 
-/** Reorder a batch of entries by setting their position. */
-export function reorderFallbackChain(positionMap: { id: string; position: number }[]): FallbackEntryRecord[] {
-  const ts = now();
-  inTransaction(() => {
-    for (const { id, position } of positionMap) {
-      db()
-        .prepare("UPDATE model_fallbacks SET position = ?, updated_at = ? WHERE id = ?")
-        .run(position, ts, id);
-    }
-  });
-  return listFallbackChain();
-}
-
 // ── Fallback Behaviour Config ─────────────────────────────────
 
 interface ConfigRow {

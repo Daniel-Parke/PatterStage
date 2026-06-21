@@ -153,8 +153,3 @@ export function upsertCatalogTemplate(
     );
   return getCatalogTemplate(row.id)!;
 }
-
-export function deleteCatalogTemplate(id: string): boolean {
-  const result = db().prepare("DELETE FROM catalog_templates WHERE id = ?").run(id);
-  return result.changes > 0;
-}

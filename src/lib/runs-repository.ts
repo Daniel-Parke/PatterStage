@@ -110,11 +110,6 @@ export function getRun(id: string): RunRecord | null {
   return rowToRun(row);
 }
 
-export function getRunByBackendId(runId: string): RunRecord | null {
-  const row = db().prepare("SELECT * FROM runs WHERE run_id = ?").get(runId) as RunRow | undefined;
-  return rowToRun(row);
-}
-
 export function getLatestRunForMission(missionId: string): RunRecord | null {
   const row = db()
     .prepare("SELECT * FROM runs WHERE mission_id = ? ORDER BY submitted_at DESC LIMIT 1")

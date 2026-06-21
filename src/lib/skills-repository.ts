@@ -105,11 +105,6 @@ export function upsertSkill(input: UpsertSkillInput): SkillRow {
   return getSkill(input.skillKey)!;
 }
 
-export function deleteSkill(skillKey: string): boolean {
-  const result = db().prepare("DELETE FROM skills WHERE skill_key = ?").run(skillKey);
-  return result.changes > 0;
-}
-
 export function setSkillSyncStatus(
   skillKey: string,
   syncedAt: string | null,

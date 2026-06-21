@@ -9,44 +9,7 @@
 
 import { db, now, uuid } from "./db";
 
-export type MemorySource = "bundled" | "custom";
-
-export interface MemoryFact {
-  id: string;
-  content: string;
-  category: string;
-  source: MemorySource;
-  seedKey: string | null;
-}
-
-interface DbRow {
-  id: string;
-  content: string;
-  category: string;
-  source: string;
-  seed_key: string | null;
-}
-
-function rowToFact(row: DbRow): MemoryFact {
-  return {
-    id: row.id,
-    content: row.content,
-    category: row.category,
-    source: row.source as MemorySource,
-    seedKey: row.seed_key,
-  };
-}
-
-export function listMemoryFacts(): MemoryFact[] {
-  try {
-    const rows = db()
-      .prepare("SELECT * FROM seed_memory_facts ORDER BY created_at ASC")
-      .all() as DbRow[];
-    return rows.map(rowToFact);
-  } catch {
-    return [];
-  }
-}
+type MemorySource = "bundled" | "custom";
 
 export function countMemoryFacts(): number {
   try {
