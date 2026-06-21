@@ -54,7 +54,7 @@ const COPY: Record<
     body:
       "The gateway is reachable but rejected PatterStage's request (401). " +
       "Set {code}API_SERVER_KEY{/code} in {code}~/.hermes/.env{/code}, mirror it " +
-      "into {code}~/control-hub/.env.local{/code}, and restart PatterStage.",
+      "into {code}~/patterstage/.env.local{/code}, and restart PatterStage.",
   },
   "model-missing": {
     tone: "orange",

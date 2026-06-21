@@ -47,7 +47,7 @@ test.describe("Sessions page", () => {
     }
     const id = sessions[0].id;
     await page.goto(`/sessions/${encodeURIComponent(id)}`);
-    await expect(page.getByTestId("ch-app-shell")).toBeVisible();
+    await expect(page.getByTestId("ps-app-shell")).toBeVisible();
     await expect(page.locator("main")).toBeVisible({ timeout: 30_000 });
   });
 });
@@ -58,7 +58,7 @@ test.describe("Chat page", () => {
     await expect(
       page.getByRole("heading", { name: "Chat", exact: true })
     ).toBeVisible();
-    await expect(page.getByTestId("ch-app-shell")).toBeVisible();
+    await expect(page.getByTestId("ps-app-shell")).toBeVisible();
   });
 });
 
@@ -105,7 +105,7 @@ test.describe("Skills page", () => {
       waitUntil: "domcontentloaded",
     });
     expect(detailRes?.status() ?? 0).toBeLessThan(500);
-    await expect(page.getByTestId("ch-app-shell")).toBeVisible();
+    await expect(page.getByTestId("ps-app-shell")).toBeVisible();
     await expect(page.locator("h1").first()).toBeVisible({ timeout: 30_000 });
   });
 });

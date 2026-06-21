@@ -127,7 +127,7 @@ export default function ConfigSeedPage() {
               <strong className="text-amber-200/80">Import before seed:</strong> if{" "}
               <code className="text-white/50">~/.hermes</code> exists, run{" "}
               <code className="text-white/50">npx tsx scripts/tooling/import-hermes-state.ts</code>{" "}
-              (or use setup/ch-deploy) before merge seed. Merge never overwrites imported Bob or
+              (or use setup/ps-deploy) before merge seed. Merge never overwrites imported Bob or
               seeded profiles with existing content.
             </p>
 

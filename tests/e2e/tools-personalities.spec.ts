@@ -4,7 +4,7 @@ test.describe("Tools and Personalities", () => {
   test("Hermes toolsets page loads with sync actions", async ({ page }) => {
     await page.goto("/operations/tools");
     await expect(page.getByRole("heading", { name: "Hermes Toolsets" })).toBeVisible();
-    await expect(page.getByTestId("ch-app-shell")).toBeVisible();
+    await expect(page.getByTestId("ps-app-shell")).toBeVisible();
     await expect(page.getByRole("button", { name: /Pull from Hermes/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /Push to Hermes/i })).toBeVisible();
   });
@@ -23,6 +23,6 @@ test.describe("Tools and Personalities", () => {
     await expect(
       page.getByRole("heading", { name: "Personalities", exact: true }),
     ).toBeVisible();
-    await expect(page.getByTestId("ch-app-shell")).toBeVisible();
+    await expect(page.getByTestId("ps-app-shell")).toBeVisible();
   });
 });

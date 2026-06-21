@@ -6,7 +6,7 @@ test.describe("Story Weaver", () => {
     await expect(page.getByRole("heading", { name: "Story Weaver" })).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByTestId("ch-app-shell")).toBeVisible();
+    await expect(page.getByTestId("ps-app-shell")).toBeVisible();
   });
 
   test("library loads", async ({ page }) => {

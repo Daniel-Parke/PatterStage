@@ -36,7 +36,7 @@ function main(): void {
         $schema: "https://json-schema.org/draft/2020-12/schema",
         title: "MissionV1",
         description:
-          "Mission record under CH_DATA_DIR/missions/{id}.json. Generated from missionV1Schema (Zod).",
+          "Mission record under PS_DATA_DIR/missions/{id}.json. Generated from missionV1Schema (Zod).",
         ...mission,
       },
       null,

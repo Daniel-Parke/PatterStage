@@ -15,7 +15,7 @@
 // makes the change visible in the admin UI immediately.
 //
 // Auth: requires an authenticated session, like every other admin
-// route. Read-only mode (CH_READ_ONLY=true) blocks the write path;
+// route. Read-only mode (PS_READ_ONLY=true) blocks the write path;
 // dry-run is allowed in read-only mode for inspection.
 // ═══════════════════════════════════════════════════════════════
 
@@ -26,7 +26,7 @@ import {
   closeOrphanedActiveSessions,
   previewOrphanSweep,
 } from "@/lib/session-sync";
-import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { requireAuth, isReadOnly } from "@/lib/api-auth";
 import { serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { logApiError } from "@/lib/api-logger";
@@ -43,9 +43,9 @@ export async function POST(request: NextRequest) {
   }
   const dryRun = body.dryRun !== false; // default to dry-run for safety
 
-  if (dryRun === false && isChReadOnly()) {
+  if (dryRun === false && isReadOnly()) {
     return serviceUnavailable(
-      "PatterStage is in read-only mode (set CH_READ_ONLY=false to allow backfill writes)"
+      "PatterStage is in read-only mode (set PS_READ_ONLY=false to allow backfill writes)"
     );
   }
 

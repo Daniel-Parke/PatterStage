@@ -29,7 +29,7 @@ const PROBE_POLL_MS = 200;
  * @param scriptPath absolute path to ps-deploy.mjs
  * @param _label     action label (kept for call-site compatibility)
  */
-export async function spawnChDeploy(
+export async function spawnDeploy(
   scriptPath: string,
   _label: string,
   deployArgs: string[],

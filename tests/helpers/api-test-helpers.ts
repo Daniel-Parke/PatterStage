@@ -105,7 +105,7 @@ export function setupRouteMocks() {
     requireAuth: jest.fn(() => null),
     requireNotReadOnly: jest.fn(() => null),
     requireSignedRequest: jest.fn(() => null),
-    isChReadOnly: jest.fn(() => false),
+    isReadOnly: jest.fn(() => false),
   }));
 
   jest.mock("@/lib/parse-json-body", () => ({

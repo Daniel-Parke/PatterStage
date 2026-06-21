@@ -28,7 +28,7 @@ export function appendAuditLine(entry: {
         ts: new Date().toISOString(),
         ...entry,
       }) + "\n";
-    appendFileSync(PATHS.auditLog + "/ch-audit.log", line, "utf-8");
+    appendFileSync(PATHS.auditLog + "/ps-audit.log", line, "utf-8");
   } catch {
     // never throw from audit
   }

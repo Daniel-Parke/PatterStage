@@ -3,7 +3,7 @@ import * as fs from "fs";
 import { join } from "path";
 
 import { logApiError, serverErrorFromError } from "@/lib/api-logger";
-import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { requireAuth, isReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, notFound, ok, serverErrorFromHelperResult, serviceUnavailable } from "@/lib/api-response";
 import { crontabLineUsesScriptsDir } from "@/lib/hardware-cron";
@@ -25,7 +25,7 @@ import { getPsScriptsDir, getPsHardwareLogDir, PS_DATA_DIR } from "@/lib/paths";
  *   {min} {hour} {dom} {mon} {dow} HOME={homedir} {cmd} >> {log} 2>&1
  *
  * We identify our managed entries by their script path prefix:
- *   CH_SCRIPTS_DIR (default: PS_DATA_DIR/scripts)
+ *   PS_SCRIPTS_DIR (default: PS_DATA_DIR/scripts)
  */
 
 const DISABLED_STATE_FILE = join(PS_DATA_DIR, ".disabled_hardware_crons.json");
@@ -254,7 +254,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  if (isChReadOnly()) {
+  if (isReadOnly()) {
     return serviceUnavailable("PatterStage is in read-only mode");
   }
 
@@ -361,7 +361,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  if (isChReadOnly()) {
+  if (isReadOnly()) {
     return serviceUnavailable("PatterStage is in read-only mode");
   }
 
@@ -453,7 +453,7 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  if (isChReadOnly()) {
+  if (isReadOnly()) {
     return serviceUnavailable("PatterStage is in read-only mode");
   }
 

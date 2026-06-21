@@ -8,7 +8,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { requireAuth, isReadOnly } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
@@ -34,7 +34,7 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
 export async function PUT(request: NextRequest, ctx: Ctx) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  if (isChReadOnly()) return serviceUnavailable("PatterStage is in read-only mode");
+  if (isReadOnly()) return serviceUnavailable("PatterStage is in read-only mode");
 
   const { name } = await ctx.params;
   const body = await parseJsonBody(request);
@@ -55,7 +55,7 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
 export async function DELETE(request: NextRequest, ctx: Ctx) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  if (isChReadOnly()) return serviceUnavailable("PatterStage is in read-only mode");
+  if (isReadOnly()) return serviceUnavailable("PatterStage is in read-only mode");
 
   const { name } = await ctx.params;
   try {

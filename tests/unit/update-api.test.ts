@@ -73,7 +73,7 @@ jest.mock("@/lib/deploy-status", () => ({
 // focus on the route's concerns (gating, dispatch, status writes).
 const mockSpawnChDeploy = jest.fn();
 jest.mock("@/lib/deploy-spawn", () => ({
-  spawnChDeploy: (...args: unknown[]) => mockSpawnChDeploy(...args),
+  spawnDeploy: (...args: unknown[]) => mockSpawnChDeploy(...args),
 }));
 
 function getReq(url: string): { url: string } {

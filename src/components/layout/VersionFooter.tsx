@@ -177,7 +177,7 @@ export function VersionFooter({ collapsed }: { collapsed: boolean }) {
     if (busyRef.current) return;
     return runDeployAction({
       action: "restart",
-      startedMessage: "Restart requested (~/.hermes/logs/ch-restart.log)…",
+      startedMessage: "Restart requested (~/.hermes/logs/ps-restart.log)…",
       runningMessage: "Restarting server…",
       setBusy: setRestarting,
       useBusyRef: true,
@@ -278,7 +278,7 @@ export function VersionFooter({ collapsed }: { collapsed: boolean }) {
             pollIntervalRef.current = null;
             if (!isMountedRef.current) return;
             clearDeployBusy();
-            setMessage("Timed out — check ch-restart.log in Logs");
+            setMessage("Timed out — check ps-restart.log in Logs");
           }
         }
       }, 2000);

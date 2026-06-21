@@ -52,7 +52,7 @@ jest.mock("next/server", () => {
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 jest.mock("@/lib/api-auth", () => ({
   requireAuth: jest.fn(() => null),
-  isChReadOnly: jest.fn(() => false),
+  isReadOnly: jest.fn(() => false),
 }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 

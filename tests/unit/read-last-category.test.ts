@@ -19,7 +19,7 @@
  */
 import { readLastCategory, rememberLastCategory } from "@/lib/mission-composer-utils";
 
-const LAST_CATEGORY_KEY = "ch-last-mission-category";
+const LAST_CATEGORY_KEY = "ps-last-mission-category";
 
 beforeEach(() => {
   localStorage.clear();

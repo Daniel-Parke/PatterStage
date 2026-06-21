@@ -34,7 +34,7 @@ export default function RootLayout({
             </div>
             <div className="flex-1 flex flex-col min-h-screen min-w-0">
               <MobileHeader />
-              <main className="flex-1 overflow-y-auto" data-testid="ch-app-shell">
+              <main className="flex-1 overflow-y-auto" data-testid="ps-app-shell">
                 <ErrorBoundary>{children}</ErrorBoundary>
               </main>
             </div>

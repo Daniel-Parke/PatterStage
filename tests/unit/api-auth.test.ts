@@ -74,7 +74,7 @@ describe("requireNotReadOnly", () => {
     expect(res?.status).toBe(503);
     const body = await res?.json();
     expect(body.error).toBe(
-      "PatterStage is in read-only mode (set CH_READ_ONLY=true to allow writes).",
+      "PatterStage is in read-only mode (set PS_READ_ONLY=true to allow writes).",
     );
   });
 
@@ -94,7 +94,7 @@ describe("requireNotReadOnly", () => {
     expect(res?.status).toBe(503);
     const body = await res?.json();
     expect(body.error).toBe(
-      "PatterStage is in read-only mode (set CH_READ_ONLY=true to allow writes).",
+      "PatterStage is in read-only mode (set PS_READ_ONLY=true to allow writes).",
     );
   });
 });

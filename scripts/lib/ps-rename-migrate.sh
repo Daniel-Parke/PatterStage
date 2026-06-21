@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════
-# PatterStage — one-time in-place rename migration (Control Hub → PatterStage)
+# PatterStage — one-time in-place rename migration (PatterStage → PatterStage)
 #
 # Sourced by the deploy implementation and run once before ps_migrate_run on
 # `update`. Idempotent and safe: it renames the DB file in place and rewrites

@@ -20,7 +20,7 @@ export function isDeployApiEnabled(): boolean {
   return process.env.NODE_ENV !== "production";
 }
 
-export function isChReadOnly(): boolean {
+export function isReadOnly(): boolean {
   const raw = firstEnvFlag(["PS_READ_ONLY", "CH_READ_ONLY"]);
   const value = raw?.toLowerCase();
   return value === "1" || value === "true";
@@ -58,7 +58,7 @@ export function requireSignedRequest(request: NextRequest): NextResponse | null 
 
 /**
  * Guard for write endpoints. Returns a 503 NextResponse (to be returned
- * from the route handler) if the control hub is in read-only mode, or
+ * from the route handler) if PatterStage is in read-only mode, or
  * `null` if writes are allowed.
  *
  * Optional `context` is appended to the default message as a
@@ -67,10 +67,10 @@ export function requireSignedRequest(request: NextRequest): NextResponse | null 
  * message including the env-var hint is used.
  */
 export function requireNotReadOnly(context?: string): NextResponse | null {
-  if (!isChReadOnly()) return null;
+  if (!isReadOnly()) return null;
   if (!context) {
     return serviceUnavailable(
-      "PatterStage is in read-only mode (set CH_READ_ONLY=true to allow writes)."
+      "PatterStage is in read-only mode (set PS_READ_ONLY=true to allow writes)."
     );
   }
   return serviceUnavailable(
@@ -81,7 +81,7 @@ export function requireNotReadOnly(context?: string): NextResponse | null {
 export function requireDeployApiEnabled(): NextResponse | null {
   if (isDeployApiEnabled()) return null;
   return NextResponse.json(
-    { error: "Deploy API disabled. Set CH_ENABLE_DEPLOY_API=true to allow update/restart." },
+    { error: "Deploy API disabled. Set PS_ENABLE_DEPLOY_API=true to allow update/restart." },
     { status: 403 }
   );
 }
@@ -91,7 +91,7 @@ export function requireDeployApiEnabled(): NextResponse | null {
  * Returns a NextResponse (to return) if write access is denied, or null if allowed.
  *
  * NOTE: Despite the name, this function does NOT perform authentication — it only
- * checks the read-only env flag (CH_READ_ONLY). The `_request` parameter is
+ * checks the read-only env flag (PS_READ_ONLY). The `_request` parameter is
  * intentionally ignored. For new code, prefer the explicit `requireNotReadOnly()`
  * or the dedicated signed-request check `requireSignedRequest()`.
  *

@@ -96,9 +96,9 @@ backup_ch_data() {
     echo "  ✓ $LABEL ($MISSION_COUNT missions, $TEMPLATE_COUNT templates)"
 }
 if [ -d "$PS_DATA_ROOT" ]; then
-    backup_ch_data "$PS_DATA_ROOT" "control-hub data ($PS_DATA_ROOT)"
+    backup_ch_data "$PS_DATA_ROOT" "PatterStage data ($PS_DATA_ROOT)"
 elif [ -d "$HERMES_HOME/control-hub/data" ]; then
-    backup_ch_data "$HERMES_HOME/control-hub/data" "control-hub data (legacy under HERMES_HOME)"
+    backup_ch_data "$HERMES_HOME/control-hub/data" "PatterStage data (legacy under HERMES_HOME)"
 fi
 
 # 7. Channel directory

@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { requireAuth, isReadOnly } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
@@ -13,7 +13,7 @@ import { runScriptFile } from "@/lib/scripts-manager";
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  if (isChReadOnly()) return serviceUnavailable("PatterStage is in read-only mode");
+  if (isReadOnly()) return serviceUnavailable("PatterStage is in read-only mode");
 
   const bodyResult = await parseJsonBody(request);
   if (bodyResult instanceof NextResponse) return bodyResult;

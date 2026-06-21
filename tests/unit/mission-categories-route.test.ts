@@ -90,7 +90,7 @@ function clearResponses() {
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 jest.mock("@/lib/api-auth", () => ({
   requireAuth: jest.fn(() => null),
-  isChReadOnly: jest.fn(() => false),
+  isReadOnly: jest.fn(() => false),
 }));
 
 const mockEnsureDb = jest.fn();

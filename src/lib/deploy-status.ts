@@ -138,7 +138,7 @@ export function isDeployInProgress(): boolean {
   // and never wrote a terminal state. Without this, a stuck status from a
   // silent failure (e.g. lock contention with a stuck process) permanently
   // blocks the user from issuing a new deploy until they manually clear the
-  // status file. See skills/devops/control-hub-scripts "stale deploy lock"
+  // status file. See skills/devops/patterstage-scripts "stale deploy lock"
   // pitfall (discovered 2026-06-08).
   if (!status.startedAt) return true;
   const started = Date.parse(status.startedAt);
@@ -146,7 +146,7 @@ export function isDeployInProgress(): boolean {
   return Date.now() - started <= STALE_RUNNING_MS;
 }
 
-/** Optimistic status before detached ch-deploy starts (bridges spawn sleep). */
+/** Optimistic status before detached ps-deploy starts (bridges spawn sleep). */
 export function writeDeployStatusRunning(
   action: string,
   phase: string,
@@ -165,7 +165,7 @@ export function writeDeployStatusRunning(
       `startedAt=${startedAt}`,
       "finishedAt=",
       "exitCode=",
-      "logHint=ch-restart.log",
+      "logHint=ps-restart.log",
     ].join("\n");
     writeFileSync(tmp, body, "utf-8");
     renameSync(tmp, path);

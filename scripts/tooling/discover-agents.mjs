@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Detect the local Hermes install and write CH_DATA_DIR/hermes-detection.json.
+ * Detect the local Hermes install and write PS_DATA_DIR/hermes-detection.json.
  * Canonical layout: HERMES_HOME (default ~/.hermes) + HERMES_HOME/hermes-agent/
  */
 import { existsSync, mkdirSync, readdirSync } from "fs";

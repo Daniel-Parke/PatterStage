@@ -6,7 +6,7 @@ test.describe("Config section editors", () => {
     test(`config shell ${path}`, async ({ page }) => {
       const res = await page.goto(path, { waitUntil: "domcontentloaded" });
       expect(res?.status() ?? 0).toBeLessThan(500);
-      await expect(page.getByTestId("ch-app-shell")).toBeVisible();
+      await expect(page.getByTestId("ps-app-shell")).toBeVisible();
       if (path === "/config") {
         await expect(
           page.getByRole("heading", { name: "Configuration", exact: true })

@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth, isChReadOnly } from "@/lib/api-auth";
+import { requireAuth, isReadOnly } from "@/lib/api-auth";
 import { badRequest, created, notFound, ok, serviceUnavailable } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import {
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
 
-  if (isChReadOnly()) {
+  if (isReadOnly()) {
     return serviceUnavailable("PatterStage is in read-only mode");
   }
 

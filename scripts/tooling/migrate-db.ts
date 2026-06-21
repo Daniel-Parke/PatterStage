@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 /**
- * Apply ALL PatterStage SQLite migrations to the runtime database (CH_DATA_DIR).
+ * Apply ALL PatterStage SQLite migrations to the runtime database (PS_DATA_DIR).
  *
  * Single source of truth: this delegates to `getDb()` → `runMigrations()` in
  * src/lib/db.ts — the exact applier chain the app runs at boot — so
@@ -12,7 +12,7 @@
  * Usage:
  *   npm run db:migrate
  *   npx tsx scripts/tooling/migrate-db.ts
- * Reads CH_DATA_DIR from env or .env.local (falls back to ~/control-hub/data).
+ * Reads PS_DATA_DIR from env or .env.local (falls back to ~/control-hub/data).
  */
 
 import Database from "better-sqlite3";
@@ -77,7 +77,7 @@ async function main(): Promise<void> {
   const before = readSchemaVersion(dbPath);
   console.log(`schema_version before: ${before}`);
 
-  // Dynamic import AFTER CH_DATA_DIR is set — db.ts resolves the data dir at
+  // Dynamic import AFTER PS_DATA_DIR is set — db.ts resolves the data dir at
   // import time (via paths.ts). getDb() opens the connection and runs the full
   // applier chain (runMigrations), exactly as the app does at boot.
   const { getDb, runMigrations } = await import("../../src/lib/db");

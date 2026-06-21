@@ -45,7 +45,7 @@ function stripScriptExt(name: string): string {
 }
 
 export interface ScriptFile {
-  name: string; // e.g. "ch-backup.sh"
+  name: string; // e.g. "ps-backup.sh"
   path: string; // absolute path under the scripts dir (for crontab scheduling)
   size: number;
   modified: string; // ISO mtime of the script file

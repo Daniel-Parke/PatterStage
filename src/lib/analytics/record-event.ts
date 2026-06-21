@@ -7,7 +7,7 @@
 // insert is logged and swallowed, never surfaced to the dispatch/route logic.
 // ═══════════════════════════════════════════════════════════════
 
-import { isChReadOnly } from "../api-auth";
+import { isReadOnly } from "../api-auth";
 import { logApiError } from "../api-logger";
 import { insertEvent } from "./analytics-repository";
 import type { AnalyticsEventType, AnalyticsEntityType } from "./event-types";
@@ -28,7 +28,7 @@ export interface RecordEventOptions {
  */
 export function recordEvent(type: AnalyticsEventType, opts: RecordEventOptions = {}): void {
   try {
-    if (isChReadOnly()) return;
+    if (isReadOnly()) return;
     insertEvent({
       eventType: type,
       entityType: opts.entityType ?? null,
