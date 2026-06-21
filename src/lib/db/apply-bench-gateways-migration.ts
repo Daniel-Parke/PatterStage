@@ -14,7 +14,7 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 
-export const BENCH_GATEWAYS_SCHEMA_VERSION = 17;
+const BENCH_GATEWAYS_SCHEMA_VERSION = 17;
 
 export function applyBenchGatewaysMigration(
   database: Database.Database,

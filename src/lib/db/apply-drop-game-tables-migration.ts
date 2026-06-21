@@ -14,7 +14,7 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 
-export const DROP_GAME_TABLES_SCHEMA_VERSION = 11;
+const DROP_GAME_TABLES_SCHEMA_VERSION = 11;
 
 export function applyDropGameTablesMigration(database: Database.Database, migrationsDir: string): number {
   const current = getSchemaVersion(database);

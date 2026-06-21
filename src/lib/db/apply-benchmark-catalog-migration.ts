@@ -12,7 +12,7 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 
-export const BENCHMARK_CATALOG_SCHEMA_VERSION = 16;
+const BENCHMARK_CATALOG_SCHEMA_VERSION = 16;
 
 export function applyBenchmarkCatalogMigration(
   database: Database.Database,

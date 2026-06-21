@@ -1,10 +1,8 @@
 import { z } from "zod";
 
-export const TEMPLATE_PACK_SCHEMA_VERSION = "1.0.0" as const;
-
 const accentSchema = z.enum(["cyan", "purple", "green", "pink", "orange"]);
 
-export const templatePackEntrySchema = z.object({
+const templatePackEntrySchema = z.object({
   id: z.string().min(1),
   name: z.string(),
   icon: z.string(),

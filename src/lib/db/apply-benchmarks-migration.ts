@@ -13,7 +13,7 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 
-export const BENCHMARKS_SCHEMA_VERSION = 14;
+const BENCHMARKS_SCHEMA_VERSION = 14;
 
 export function applyBenchmarksMigration(
   database: Database.Database,

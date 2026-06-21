@@ -12,7 +12,7 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 
-export const RUNS_SCHEDULES_SCHEMA_VERSION = 8;
+const RUNS_SCHEDULES_SCHEMA_VERSION = 8;
 
 function columnExists(database: Database.Database, table: string, column: string): boolean {
   const rows = database.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
