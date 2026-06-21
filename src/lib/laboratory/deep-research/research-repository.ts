@@ -72,12 +72,14 @@ export function createResearchRun(input: {
   query: string;
   modelId?: string | null;
   config?: ResearchConfig | null;
+  /** Set when a Composer "research" node spawned this run (links it back). */
+  composerNodeRunId?: string | null;
 }): ResearchRun {
   const id = uuid();
   db()
     .prepare(
-      `INSERT INTO research_runs (id, query, status, model_id, provider, config_json, created_at)
-       VALUES (?, ?, 'pending', ?, ?, ?, ?)`,
+      `INSERT INTO research_runs (id, query, status, model_id, provider, config_json, composer_node_run_id, created_at)
+       VALUES (?, ?, 'pending', ?, ?, ?, ?, ?)`,
     )
     .run(
       id,
@@ -85,6 +87,7 @@ export function createResearchRun(input: {
       input.modelId ?? null,
       input.config?.searchProvider ?? null,
       input.config ? JSON.stringify(input.config) : null,
+      input.composerNodeRunId ?? null,
       now(),
     );
   return getResearchRun(id)!;
@@ -92,6 +95,16 @@ export function createResearchRun(input: {
 
 export function getResearchRun(id: string): ResearchRun | null {
   const row = db().prepare("SELECT * FROM research_runs WHERE id = ?").get(id) as RunRow | undefined;
+  return row ? rowToRun(row) : null;
+}
+
+/** The latest research run spawned by a given Composer node-run (settle seam). */
+export function getResearchRunByComposerNodeRunId(nodeRunId: string): ResearchRun | null {
+  const row = db()
+    .prepare(
+      "SELECT * FROM research_runs WHERE composer_node_run_id = ? ORDER BY created_at DESC LIMIT 1",
+    )
+    .get(nodeRunId) as RunRow | undefined;
   return row ? rowToRun(row) : null;
 }
 

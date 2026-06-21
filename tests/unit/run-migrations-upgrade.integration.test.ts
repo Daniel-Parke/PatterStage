@@ -108,7 +108,10 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     // models.api_style (direct-provider wire protocol) lands via the wired v24
     // applier; MiniMax's /anthropic base is repaired to the anthropic protocol.
     expect(cols(db, "models")).toContain("api_style");
-    expect(getSchemaVersion(db)).toBe(24);
+    // research_runs.composer_node_run_id (research-as-Composer-node link) lands
+    // via the wired v25 applier.
+    expect(cols(db, "research_runs")).toContain("composer_node_run_id");
+    expect(getSchemaVersion(db)).toBe(25);
     // Pre-existing data survived the additive upgrade (cron job + mission).
     expect(
       (db.prepare("SELECT COUNT(*) c FROM cron_jobs").get() as { c: number }).c,
@@ -140,7 +143,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
       if (next === last) break;
       last = next;
     }
-    expect(getSchemaVersion(db)).toBe(24);
+    expect(getSchemaVersion(db)).toBe(25);
     expect(tableNames(db)).toEqual(
       expect.arrayContaining([
         "composer_workflows",
@@ -163,7 +166,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(24);
+    expect(getSchemaVersion(db)).toBe(25);
     db.close();
   });
 });

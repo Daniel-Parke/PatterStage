@@ -3,16 +3,17 @@
 //
 // Rendered markdown with clickable [n] citations → a numbered Sources panel,
 // plus a collapsible plan→search→reason→synthesize timeline and actions
-// (copy, download standalone HTML, launch as a Composer workflow).
+// (copy, open/download the standalone HTML report). Deep Research is also a
+// Composer "research" node kind — Composer orchestrates research, not the
+// reverse, so there is no "launch as Composer" action here.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, Download, GitBranch, Loader2 } from "lucide-react";
+import { Check, Copy, Download, Loader2 } from "lucide-react";
 
 import Button from "@/components/ui/Button";
-import { safeApiCall } from "@/lib/api-fetch";
 import { renderReportHtml } from "@/lib/laboratory/deep-research/markdown";
 import { collectSources, renderSourcesHtml } from "@/lib/laboratory/deep-research/report";
 import type { ResearchRun, ResearchStep } from "@/lib/laboratory/deep-research/types";
@@ -52,8 +53,6 @@ const SOURCES =
 
 export default function ResearchReport({ run, steps }: { run: ResearchRun; steps: ResearchStep[] }) {
   const [copied, setCopied] = useState(false);
-  const [launching, setLaunching] = useState(false);
-  const [launchMsg, setLaunchMsg] = useState("");
 
   const sources = collectSources(steps);
 
@@ -62,17 +61,6 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
     await navigator.clipboard.writeText(run.report);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
-  }
-
-  async function launchAsComposer() {
-    setLaunching(true);
-    setLaunchMsg("");
-    try {
-      const res = await safeApiCall(`/api/laboratory/research/${run.id}/launch`, { method: "POST" });
-      setLaunchMsg(res.ok ? "Launched a Composer workflow from this report." : res.error ?? "Launch failed");
-    } finally {
-      setLaunching(false);
-    }
   }
 
   return (
@@ -89,10 +77,6 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
               <Download className="h-4 w-4" /> Export HTML
             </Button>
           </a>
-          <Button variant="secondary" color="purple" size="sm" loading={launching} onClick={() => void launchAsComposer()}>
-            {!launching ? <GitBranch className="h-4 w-4" /> : null} Launch as Composer
-          </Button>
-          {launchMsg ? <span className="text-xs text-white/40">{launchMsg}</span> : null}
         </div>
       ) : null}
 

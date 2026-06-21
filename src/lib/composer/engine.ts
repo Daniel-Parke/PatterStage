@@ -13,6 +13,7 @@ import { now } from "@/lib/db";
 import { logApiError } from "@/lib/api-logger";
 import type { RunStatus } from "@/lib/runtime/types";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { getResearchRunByComposerNodeRunId } from "@/lib/laboratory/deep-research/research-repository";
 import { parseVerdict } from "./verdict";
 import { dispatchComposerNode } from "./dispatch";
 import {
@@ -35,6 +36,17 @@ import type {
 
 const TERMINAL_RUN_STATUSES = new Set(["completed", "failed", "cancelled", "awaiting_approval"]);
 
+/**
+ * Max wall-clock a "research" node-run may stay running before it is force-
+ * failed. Research runs execute in-process (not via the resumable agent
+ * backend), so a server restart mid-research would otherwise wedge the workflow.
+ */
+const RESEARCH_NODE_CAP_MINUTES = 20;
+
+function minutesSince(iso: string): number {
+  return (Date.now() - new Date(iso).getTime()) / 60000;
+}
+
 /** Highest-attempt node-run for a node within a run (the current execution). */
 function latestNodeRun(composerRunId: string, nodeId: string): ComposerNodeRun | null {
   const all = listNodeRuns(composerRunId).filter((nr) => nr.nodeId === nodeId);
@@ -48,6 +60,61 @@ function approvalSince(composerRunId: string, nodeId: string, sinceIso: string):
     (a) => a.nodeId === nodeId && a.createdAt >= sinceIso,
   );
   return matches.length ? matches[matches.length - 1] : null;
+}
+
+/**
+ * Write a terminal outcome onto a "research" node-run (status + verdict) and
+ * merge its report into the run's context — the research analogue of
+ * finalizeComposerNodeRun (which is driven by the agent-run reconcile path).
+ */
+function applyResearchOutcome(
+  node: ComposerNode,
+  nodeRun: ComposerNodeRun,
+  status: "completed" | "failed",
+  output: string | null,
+  error: string | null,
+): void {
+  const verdict =
+    status === "failed"
+      ? { pass: false, reasons: [error ?? "research stage failed"], suggestions: [] }
+      : parseVerdict(output, node.kind);
+
+  updateNodeRun(nodeRun.id, { status, output, verdict, error, completedAt: now() });
+
+  if (output) {
+    const run = getComposerRun(nodeRun.composerRunId);
+    if (run) {
+      const context = { ...(run.context ?? {}), [node.key]: output };
+      updateComposerRun(nodeRun.composerRunId, { context });
+    }
+  }
+}
+
+/**
+ * Settle a running "research" node-run from its linked research run. Returns
+ * true once the node-run has reached a terminal state (so the caller can route),
+ * false while research is still in flight. Force-fails past the cap so an
+ * interrupted research run can't wedge the workflow.
+ */
+function settleResearchNode(node: ComposerNode, nodeRun: ComposerNodeRun): boolean {
+  const research = getResearchRunByComposerNodeRunId(nodeRun.id);
+  if (!research) {
+    applyResearchOutcome(node, nodeRun, "failed", null, "research run was never created");
+    return true;
+  }
+  if (research.status === "completed") {
+    applyResearchOutcome(node, nodeRun, "completed", research.report, null);
+    return true;
+  }
+  if (research.status === "failed") {
+    applyResearchOutcome(node, nodeRun, "failed", null, research.error ?? "research failed");
+    return true;
+  }
+  if (minutesSince(nodeRun.startedAt ?? nodeRun.createdAt) > RESEARCH_NODE_CAP_MINUTES) {
+    applyResearchOutcome(node, nodeRun, "failed", null, "research stage exceeded the max runtime");
+    return true;
+  }
+  return false; // still researching
 }
 
 export type NextStep =
@@ -133,14 +200,22 @@ export async function advanceComposerRun(composerRunId: string): Promise<void> {
     return;
   }
 
-  const current = latestNodeRun(composerRunId, node.id);
+  let current = latestNodeRun(composerRunId, node.id);
   if (!current) {
     // Node not started yet → dispatch it.
     await dispatchComposerNode(composerRunId, node.id);
     return;
   }
-  if (current.status === "pending" || current.status === "running") {
-    return; // in flight — wait for reconcile
+  if (current.status === "pending") return; // dispatched, not yet running
+  if (current.status === "running") {
+    // "research" nodes run in-process (not via the agent reconcile path), so
+    // settle them here from their linked research run. Agent stage-runs wait
+    // for reconcile to write their terminal state.
+    if (node.kind === "research" && settleResearchNode(node, current)) {
+      current = latestNodeRun(composerRunId, node.id)!;
+    } else {
+      return; // in flight — wait
+    }
   }
 
   // The current node's run is terminal.

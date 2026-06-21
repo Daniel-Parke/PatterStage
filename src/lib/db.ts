@@ -31,6 +31,7 @@ import { applyComposerMigration } from "./db/apply-composer-migration";
 import { applyMemoryProvidersMigration } from "./db/apply-memory-providers-migration";
 import { applyResearchOptionsMigration } from "./db/apply-research-options-migration";
 import { applyModelsApiStyleMigration } from "./db/apply-models-api-style-migration";
+import { applyResearchComposerLinkMigration } from "./db/apply-research-composer-link-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -238,6 +239,9 @@ export function runMigrations(database: Database.Database): void {
   // Direct-provider wire protocol per model (openai|anthropic). Guarded ALTER
   // + idempotent NULL-only repair at v24.
   applyModelsApiStyleMigration(database, migrationsDir);
+  // Link a Deep Research run to the Composer node-run that spawned it (the
+  // "research" node kind). Guarded ALTER at v25.
+  applyResearchComposerLinkMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────
