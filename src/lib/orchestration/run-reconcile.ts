@@ -16,6 +16,7 @@ import { runtime } from "@/lib/runtime";
 import { now } from "@/lib/db";
 import { RuntimeRequestError, type RunStatus } from "@/lib/runtime/types";
 import { recordEvent } from "@/lib/analytics/record-event";
+import { finalizeComposerNodeRun, advanceComposerRun } from "@/lib/composer/engine";
 
 /** Map a terminal run status onto the mission status enum (no 'cancelled'). */
 function missionStatusFor(runStatus: RunStatus): "successful" | "failed" {
@@ -96,8 +97,56 @@ function finalizeAndRecord(run: RunRecord, runStatus: RunStatus, resultText: str
   });
 }
 
+/** Finalize a terminal Composer stage-run + advance its workflow graph. */
+async function finalizeComposerStage(
+  run: RunRecord,
+  status: RunStatus,
+  output: string | null,
+  error: string | null,
+): Promise<void> {
+  updateRun(run.id, { status, output, error });
+  const composerRunId = finalizeComposerNodeRun(run.id, status, output, error);
+  if (composerRunId) await advanceComposerRun(composerRunId);
+}
+
+/** Reconcile a run that executes a Composer stage (branch of reconcileOne). */
+async function reconcileComposerRun(run: RunRecord): Promise<boolean> {
+  if (!run.runId) {
+    await finalizeComposerStage(run, "failed", null, "stage was never submitted to the backend");
+    return true;
+  }
+  const age = ageMinutes(run);
+  const cap = DEFAULT_MAX_RUN_MINUTES + GRACE_MINUTES;
+  try {
+    const result = await runtime.getRun(run.runId, run.profileName ?? undefined);
+    if (result.status === "started") {
+      if (age > cap) {
+        await runtime.stopRun(run.runId, run.profileName ?? undefined).catch(() => {});
+        await finalizeComposerStage(run, "failed", null, "stage exceeded the max runtime");
+        return true;
+      }
+      return false;
+    }
+    await finalizeComposerStage(run, result.status, result.output ?? null, result.error ?? null);
+    return true;
+  } catch (err) {
+    if (err instanceof RuntimeRequestError && err.status === 404) {
+      await finalizeComposerStage(run, "failed", null, "backend no longer has this stage run (404)");
+      return true;
+    }
+    if (age > cap) {
+      await finalizeComposerStage(run, "failed", null, "backend unreachable past the stage deadline");
+      return true;
+    }
+    return false; // transient — retry next tick
+  }
+}
+
 /** Poll one active run and write any terminal transition. Returns true if it advanced. */
 async function reconcileOne(run: RunRecord): Promise<boolean> {
+  // Composer stage-runs advance a workflow graph, not a mission.
+  if (run.composerNodeRunId) return reconcileComposerRun(run);
+
   // Never got a backend id — submit failed/crashed mid-flight.
   if (!run.runId) {
     updateRun(run.id, { status: "failed", error: "run was never submitted to the backend" });

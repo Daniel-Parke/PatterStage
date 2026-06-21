@@ -16,6 +16,8 @@ export interface RunRecord {
   runId: string | null;
   missionId: string | null;
   scheduleId: string | null;
+  /** Set when this run executes a Composer stage (graph orchestrator), else null. */
+  composerNodeRunId: string | null;
   profileName: string | null;
   sessionId: string | null;
   status: RunStatus;
@@ -32,6 +34,7 @@ interface RunRow {
   run_id: string | null;
   mission_id: string | null;
   schedule_id: string | null;
+  composer_node_run_id: string | null;
   profile_name: string | null;
   session_id: string | null;
   status: string;
@@ -64,6 +67,7 @@ function rowToRun(row: RunRow | undefined): RunRecord | null {
     runId: row.run_id,
     missionId: row.mission_id,
     scheduleId: row.schedule_id,
+    composerNodeRunId: row.composer_node_run_id,
     profileName: row.profile_name,
     sessionId: row.session_id,
     status: row.status as RunStatus,
@@ -83,6 +87,7 @@ export interface CreateRunInput {
   id: string;
   missionId?: string | null;
   scheduleId?: string | null;
+  composerNodeRunId?: string | null;
   profileName?: string | null;
 }
 
@@ -96,10 +101,18 @@ export function createRun(input: CreateRunInput): boolean {
   const result = db()
     .prepare(
       `INSERT OR IGNORE INTO runs
-         (id, mission_id, schedule_id, profile_name, status, submitted_at, updated_at)
-       VALUES (?, ?, ?, ?, 'started', ?, ?)`,
+         (id, mission_id, schedule_id, composer_node_run_id, profile_name, status, submitted_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 'started', ?, ?)`,
     )
-    .run(input.id, input.missionId ?? null, input.scheduleId ?? null, input.profileName ?? null, ts, ts);
+    .run(
+      input.id,
+      input.missionId ?? null,
+      input.scheduleId ?? null,
+      input.composerNodeRunId ?? null,
+      input.profileName ?? null,
+      ts,
+      ts,
+    );
   return result.changes > 0;
 }
 

@@ -22,6 +22,7 @@ import { db } from "@/lib/db";
 import { RunSync } from "@/lib/orchestration/RunSync";
 import { reconcileRunsOnBoot } from "@/lib/orchestration/run-reconcile";
 import { ensureDefaultComposerWorkflows } from "@/lib/composer/seed";
+import { ComposerTickSource } from "@/lib/composer/scheduler/composer-tick";
 import { ScheduleTickSource } from "./tick";
 
 const META_OWNER_PID = "scheduler_owner_pid";
@@ -181,6 +182,8 @@ export function ensureBackgroundScheduler(): BackgroundScheduler {
   // The schedule tick only dispatches when this process holds the lease.
   scheduler.registerSource(new RunSync());
   scheduler.registerSource(new ScheduleTickSource(() => scheduler.isOwner()));
+  // Composer graph orchestrator (no-op until the `composer` flag is on).
+  scheduler.registerSource(new ComposerTickSource(() => scheduler.isOwner()));
 
   scheduler.start();
   return scheduler;
