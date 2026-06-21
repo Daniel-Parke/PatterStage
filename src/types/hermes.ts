@@ -51,6 +51,12 @@ export interface MonitorData {
     allSuccessful: boolean;
     sourceStatuses: Record<string, string>;
   };
+  /** The active agent framework (DB-owned registry). */
+  framework?: {
+    type: string;
+    name: string;
+    available: boolean;
+  };
 }
 
 export interface HermesProcess {

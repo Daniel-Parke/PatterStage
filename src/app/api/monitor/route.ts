@@ -16,6 +16,7 @@ import { listSessions } from "@/lib/session-repository";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { getGatewayPlatforms, db } from "@/lib/db";
+import { getActiveFramework } from "@/lib/frameworks";
 import type { SessionBrief, MonitorData } from "@/types/hermes";
 
 // ── Helpers ─────────────────────────────────────────────────
@@ -71,6 +72,15 @@ export async function GET(request: NextRequest) {
     const configPresent = getSystemStat("config.present") === "true";
     const soulPresent = getSystemStat("config.soul_present") === "true";
 
+    // ── Active agent framework (DB-owned registry) ──────────
+    let framework: MonitorData["framework"];
+    try {
+      const fw = getActiveFramework().info();
+      framework = { type: fw.type, name: fw.name, available: fw.available };
+    } catch {
+      framework = undefined;
+    }
+
     // ── Sync Status ─────────────────────────────────────────
     const scheduler = getSyncScheduler();
     let lastSync: string | null = null;
@@ -113,6 +123,7 @@ export async function GET(request: NextRequest) {
         configPresent,
         soulPresent,
       },
+      framework,
       sync: {
         lastRun: lastSync,
         allSuccessful,

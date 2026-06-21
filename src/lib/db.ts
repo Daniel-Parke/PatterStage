@@ -33,6 +33,7 @@ import { applyResearchOptionsMigration } from "./db/apply-research-options-migra
 import { applyModelsApiStyleMigration } from "./db/apply-models-api-style-migration";
 import { applyResearchComposerLinkMigration } from "./db/apply-research-composer-link-migration";
 import { applyComposerGroupLinkMigration } from "./db/apply-composer-group-link-migration";
+import { applyFrameworksMigration } from "./db/apply-frameworks-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -246,6 +247,9 @@ export function runMigrations(database: Database.Database): void {
   // Link a nested sub-workflow run to the "group" node-run that spawned it.
   // Guarded ALTER at v26.
   applyComposerGroupLinkMigration(database, migrationsDir);
+  // DB-owned agent-framework registry (Hermes today) — the FrameworkAdapter
+  // seam. CREATE + seed at v27.
+  applyFrameworksMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────
