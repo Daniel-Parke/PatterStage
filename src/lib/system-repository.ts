@@ -30,24 +30,6 @@ export function setSystemStat(key: string, value: string): void {
 
 // ── Batch ────────────────────────────────────────────────────
 
-/** Get multiple system stats at once using a single query. Returns a map of key → value. */
-export function getMultipleStats(keys: string[]): Record<string, string | null> {
-  if (keys.length === 0) return {};
-  const placeholders = keys.map(() => "?").join(", ");
-  const rows = db()
-    .prepare(`SELECT key, value FROM meta WHERE key IN (${placeholders})`)
-    .all(...keys) as Array<{ key: string; value: string }>;
-
-  const result: Record<string, string | null> = {};
-  for (const key of keys) {
-    result[key] = null;
-  }
-  for (const row of rows) {
-    result[row.key] = row.value;
-  }
-  return result;
-}
-
 /** Set multiple system stats in a single transaction. */
 export function setMultipleStats(entries: Record<string, string>): void {
   const database = db();
@@ -72,19 +54,7 @@ export function getSystemStatNumber(key: string, defaultVal = 0): number {
   return isNaN(n) ? defaultVal : n;
 }
 
-/** Set a numeric system stat. */
-export function setSystemStatNumber(key: string, value: number): void {
-  setSystemStat(key, String(value));
-}
-
 // ── Boolean helpers ──────────────────────────────────────────
-
-/** Get a system stat as a boolean. Returns `defaultVal` if unset. */
-export function getSystemStatBoolean(key: string, defaultVal = false): boolean {
-  const val = getSystemStat(key);
-  if (val === null) return defaultVal;
-  return val === "true" || val === "1";
-}
 
 /** Set a boolean system stat. */
 export function setSystemStatBoolean(key: string, value: boolean): void {
