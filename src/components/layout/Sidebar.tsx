@@ -14,6 +14,7 @@ import { ChevronRight, ChevronLeft, Terminal, Settings } from "lucide-react";
 
 import { useSidebar } from "./SidebarContext";
 import { iconColorMap } from "@/lib/theme";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { mainSections, configSettingsPinnedLinks, configGroups } from "./sidebar-config";
 import type { SidebarLink } from "./sidebar-config";
 import { VersionFooter } from "./VersionFooter";
@@ -28,7 +29,15 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const { mobileOpen, setMobileOpen } = useSidebar();
+  const { data: flags } = useFeatureFlags();
   const closeMobile = useCallback(() => setMobileOpen(false), [setMobileOpen]);
+
+  // Flags default ON: hide a link only when its flag is explicitly disabled,
+  // so the nav never flashes while flags load (or if the fetch fails).
+  const linkVisible = useCallback(
+    (link: SidebarLink) => !link.featureFlag || flags?.[link.featureFlag] !== false,
+    [flags],
+  );
 
   const renderLink = useCallback(
     (link: SidebarLink) => {
@@ -105,7 +114,7 @@ export default function Sidebar() {
                 {section.label}
               </div>
             )}
-            {section.links.map(renderLink)}
+            {section.links.filter(linkVisible).map(renderLink)}
           </div>
         ))}
 

@@ -62,7 +62,7 @@ The runtime adapter (`src/lib/runtime/`) dispatches missions as HTTP **runs** to
 
 | Variable | Purpose |
 |----------|---------|
-| `PS_COMPOSER` | `1` — enable the [Composer](COMPOSER.md) graph orchestrator (engine + API + UI). Off by default. |
+| `PS_COMPOSER` | **Default ON.** Set to `0` (or `false`/`no`/`off`) to disable the [Composer](COMPOSER.md) graph orchestrator — its sidebar link is hidden, the page 404s, and the engine + API go dormant. Any other value (unset / `1` / `true`) keeps it enabled. |
 | `PS_SEARCH_PROVIDER` | Search backend for [Deep Research](DEEP_RESEARCH.md): `duckduckgo` (default, free/no-key), `searxng`, or `none`. |
 | `PS_SEARXNG_URL` | Base URL of a self-hosted SearXNG instance (fully local search). When set without `PS_SEARCH_PROVIDER`, SearXNG is auto-preferred. |
 

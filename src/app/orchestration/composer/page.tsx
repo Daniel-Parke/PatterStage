@@ -97,9 +97,8 @@ export default function ComposerPage() {
       />
 
       {disabled ? (
-        <div className="rounded-2xl border border-neon-yellow/30 bg-neon-yellow/[0.06] p-4 text-sm text-white/70">
-          Composer is disabled. Set <span className="font-mono text-neon-yellow">PS_COMPOSER=1</span> in the
-          environment and restart to enable workflows.
+        <div className="rounded-2xl border border-neon-pink/30 bg-neon-pink/[0.06] p-4 text-sm text-white/70">
+          Failed to load workflows. Check the server logs and try again.
         </div>
       ) : null}
 

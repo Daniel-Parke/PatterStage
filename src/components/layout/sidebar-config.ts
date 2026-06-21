@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import type { AccentColor } from "@/types/hermes";
+import type { FeatureFlag } from "@/lib/feature-flags";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -23,6 +24,8 @@ export interface SidebarLink {
   href: string;
   color: AccentColor;
   subLinks?: { label: string; href: string }[];
+  /** When set, the link is hidden while that feature flag is disabled. */
+  featureFlag?: FeatureFlag;
 }
 
 export interface SidebarSection {
@@ -52,7 +55,7 @@ export const mainSections: SidebarSection[] = [
     label: "Orchestration",
     links: [
       { icon: Rocket, label: "Missions", href: "/orchestration/missions", color: "cyan" },
-      { icon: Workflow, label: "Composer", href: "/orchestration/composer", color: "purple" },
+      { icon: Workflow, label: "Composer", href: "/orchestration/composer", color: "purple", featureFlag: "composer" },
       { icon: Terminal, label: "Scripts", href: "/orchestration/scripts", color: "cyan" },
       { icon: MessageCircle, label: "Chat", href: "/orchestration/chat", color: "cyan" },
     ],

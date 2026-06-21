@@ -2,7 +2,7 @@
 
 Composer is PatterStage's **graph orchestrator**: it runs a methodical, multi-stage workflow where each stage is an agent run, stages are connected by **conditional + looping edges**, and selected stages pause at **human-in-the-loop (HIL) gates**. It is separate from [Missions](MISSIONS.md) — Missions stay simple (single/recurring "cron for AI agents"); Composer is for orchestrated processes like "feature request → … → PR".
 
-It ships behind a flag: set `PS_COMPOSER=1` (see [ENV_REFERENCE.md](ENV_REFERENCE.md)) and restart. Nav: **Orchestration → Composer**.
+It is **on by default**; set `PS_COMPOSER=0` (see [ENV_REFERENCE.md](ENV_REFERENCE.md)) and restart to disable it (the sidebar link hides and the page 404s). Nav: **Orchestration → Composer**.
 
 ## Why a custom engine (not LangGraph/Temporal)
 
@@ -35,7 +35,7 @@ Single-flight (one stage in flight per run), idempotent run ids (`cn_<nodeRunId>
 
 ## API
 
-All gated by `PS_COMPOSER`.
+All gated by `PS_COMPOSER` (on by default; `PS_COMPOSER=0` makes them return `503`).
 
 | Method + path | Purpose |
 |---|---|
