@@ -7,7 +7,7 @@
 import Database, { type Database as _DatabaseType } from "better-sqlite3";
 import { join } from "path";
 import { existsSync, readFileSync } from "fs";
-import { CH_DATA_DIR, getDbPath } from "./paths";
+import { PS_DATA_DIR, getDbPath } from "./paths";
 import { getSchemaVersion, setSchemaVersion } from "./db-schema";
 import { ensureDir } from "./fs-helpers";
 import { needsBaselineRebuild, rebuildToBaseline } from "./db/upgrade";
@@ -27,7 +27,7 @@ import { applyBenchGatewaysMigration } from "./db/apply-bench-gateways-migration
 
 // ── Ensure data directory exists ───────────────────────────────
 
-const dataDir = CH_DATA_DIR;
+const dataDir = PS_DATA_DIR;
 ensureDir(dataDir);
 
 const DB_PATH = getDbPath(dataDir);

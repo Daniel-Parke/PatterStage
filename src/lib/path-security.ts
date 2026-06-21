@@ -6,7 +6,7 @@ import { relative, resolve } from "path";
 import { homedir } from "os";
 import { NextResponse } from "next/server";
 
-import { CH_DATA_DIR } from "@/lib/paths";
+import { PS_DATA_DIR } from "@/lib/paths";
 import { getHermesFilesystemRoot } from "@/lib/hermes-home";
 import { badRequest } from "@/lib/api-response";
 
@@ -24,7 +24,7 @@ function isPathUnderRoot(absolutePath: string, root: string): boolean {
 }
 
 /**
- * Workspace paths must resolve under home, CH_DATA_DIR, or any registered Hermes root.
+ * Workspace paths must resolve under home, PS_DATA_DIR, or any registered Hermes root.
  */
 export function resolveAllowedWorkspacePath(
   input: string
@@ -45,7 +45,7 @@ export function resolveAllowedWorkspacePath(
   } catch {
     return { ok: false, error: "Invalid path" };
   }
-  const roots = [homedir(), CH_DATA_DIR, getHermesFilesystemRoot()];
+  const roots = [homedir(), PS_DATA_DIR, getHermesFilesystemRoot()];
   for (const root of roots) {
     if (isPathUnderRoot(abs, root)) {
       return { ok: true, absolute: abs };

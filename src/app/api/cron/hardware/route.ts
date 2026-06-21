@@ -8,7 +8,7 @@ import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, notFound, ok, serverErrorFromHelperResult, serviceUnavailable } from "@/lib/api-response";
 import { crontabLineUsesScriptsDir } from "@/lib/hardware-cron";
 import { getHostScheduler } from "@/lib/host-scheduler";
-import { getChScriptsDir, getChHardwareLogDir, CH_DATA_DIR } from "@/lib/paths";
+import { getPsScriptsDir, getPsHardwareLogDir, PS_DATA_DIR } from "@/lib/paths";
 
 /**
  * Hardware Cron API — System crontab management
@@ -25,10 +25,10 @@ import { getChScriptsDir, getChHardwareLogDir, CH_DATA_DIR } from "@/lib/paths";
  *   {min} {hour} {dom} {mon} {dow} HOME={homedir} {cmd} >> {log} 2>&1
  *
  * We identify our managed entries by their script path prefix:
- *   CH_SCRIPTS_DIR (default: CH_DATA_DIR/scripts)
+ *   CH_SCRIPTS_DIR (default: PS_DATA_DIR/scripts)
  */
 
-const DISABLED_STATE_FILE = join(CH_DATA_DIR, ".disabled_hardware_crons.json");
+const DISABLED_STATE_FILE = join(PS_DATA_DIR, ".disabled_hardware_crons.json");
 
 /** Load the set of disabled hardware cron job IDs */
 function loadDisabledIds(): Set<string> {
@@ -108,7 +108,7 @@ function applyDisabledChange(
  */
 function rejectIfBadScriptsCommand(command: string | undefined): NextResponse | null {
   if (command === undefined) return null;
-  const scriptsDir = getChScriptsDir();
+  const scriptsDir = getPsScriptsDir();
   if (!crontabLineUsesScriptsDir(command, scriptsDir)) {
     return badRequest(
       `Command must run a script under ${scriptsDir} (PatterStage hardware cron scripts directory).`,
@@ -136,7 +136,7 @@ function parseCrontabLine(
 
   if (!trimmed || trimmed.startsWith("#")) return null;
 
-  if (!crontabLineUsesScriptsDir(trimmed, getChScriptsDir())) return null;
+  if (!crontabLineUsesScriptsDir(trimmed, getPsScriptsDir())) return null;
 
   const parts = trimmed.split(/\s+/);
   if (parts.length < 6) return null;
@@ -319,7 +319,7 @@ export async function POST(request: NextRequest) {
     const scriptName = extractScriptName(command);
     const entryId = scriptName.replace(SCRIPT_EXT_RE, "") || "hw";
 
-    const logDir = getChHardwareLogDir();
+    const logDir = getPsHardwareLogDir();
     const newLine = serialiseLine(schedule, command, logFile || `${logDir}/${entryId}.log`);
     const newLines: string[] = [];
     let replaced = false;

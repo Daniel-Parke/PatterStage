@@ -3,7 +3,7 @@
 //   GET    → { name, content }
 //   PUT    → upsert contents ({ content })  (create when new, else update)
 //   DELETE → remove the script
-// All path-validated under CH_DATA_DIR/scripts (scripts-manager). Writes are
+// All path-validated under PS_DATA_DIR/scripts (scripts-manager). Writes are
 // blocked in read-only mode. Powers the in-app script editor + examples gallery.
 // ═══════════════════════════════════════════════════════════════
 

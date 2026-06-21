@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { logApiError } from "@/lib/api-logger";
 import { ok, serverError } from "@/lib/api-response";
-import { getChHardwareLogDir, getChScriptsDir } from "@/lib/paths";
+import { getPsHardwareLogDir, getPsScriptsDir } from "@/lib/paths";
 import { toError } from "@/lib/api-fetch";
 
 /**
@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
   if (auth) return auth;
   try {
     return ok({
-      scriptsDir: getChScriptsDir(),
-      logDir: getChHardwareLogDir(),
+      scriptsDir: getPsScriptsDir(),
+      logDir: getPsHardwareLogDir(),
     });
   } catch (e: unknown) {
     logApiError("GET /api/cron/hardware/meta", "paths", e);

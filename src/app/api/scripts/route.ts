@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// GET /api/scripts — list host script files under CH_DATA_DIR/scripts
+// GET /api/scripts — list host script files under PS_DATA_DIR/scripts
 // with each file's schedule (host crontab) + last-run hint.
 // Scheduling CRUD stays on /api/cron/hardware; running + logs are siblings here.
 // ═══════════════════════════════════════════════════════════════

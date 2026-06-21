@@ -19,7 +19,7 @@ import { upsertToolBundle, getToolBundle } from "../tool-catalog-repository";
 import { upsertMemoryFact } from "../memory-catalog-repository";
 import { pushSkillToHermes } from "../hermes-profile-sync";
 import { db } from "../db";
-import { CH_DATA_DIR } from "../paths";
+import { PS_DATA_DIR } from "../paths";
 import { pushProfileToHermes, pushAllProfiles, pushRootToHermes } from "../hermes-profile-sync";
 import { getAgentRoot, updateAgentRoot } from "../agent-root-repository";
 import { ensureDir } from "../fs-helpers";
@@ -439,7 +439,7 @@ function seedTemplates(mode: SeedMode, idFilter?: string): number {
 }
 
 function writeSeedState(result: SeedResult): void {
-  const dir = CH_DATA_DIR;
+  const dir = PS_DATA_DIR;
   ensureDir(dir);
   const state = {
     lastRun: new Date().toISOString(),
@@ -528,7 +528,7 @@ export function ensureCatalogSeededOnce(): SeedResult | null {
 }
 
 export function getSeedState(): Record<string, unknown> | null {
-  const path = CH_DATA_DIR + "/seed-state.json";
+  const path = PS_DATA_DIR + "/seed-state.json";
   if (!existsSync(path)) return null;
   try {
     return JSON.parse(readFileSync(path, "utf-8")) as Record<string, unknown>;

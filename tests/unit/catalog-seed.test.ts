@@ -32,8 +32,8 @@ jest.mock("@/lib/hermes-profile-sync", () => ({
 }));
 
 jest.mock("@/lib/paths", () => ({
-  CH_DATA_DIR: join(repoRoot, "data"),
-  PATHS: { controlHubDb: join(repoRoot, "data/control-hub.db") },
+  PS_DATA_DIR: join(repoRoot, "data"),
+  PATHS: { patterStageDb: join(repoRoot, "data/control-hub.db") },
 }));
 
 beforeEach(() => {

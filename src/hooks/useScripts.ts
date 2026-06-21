@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// useScripts — host script files (CH_DATA_DIR/scripts) via /api/scripts
+// useScripts — host script files (PS_DATA_DIR/scripts) via /api/scripts
 //
 // File-aware view for the Scripts page: list files + schedule + last run, run a
 // script on demand, and fetch its log. Scheduling itself stays on the System-cron

@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// Scripts — host shell scripts under CH_DATA_DIR/scripts
+// Scripts — host shell scripts under PS_DATA_DIR/scripts
 //
 // File-aware manager: every *.sh file an operator drops under the scripts dir
 // appears here with its schedule (host crontab), last run, and actions —
@@ -231,7 +231,7 @@ export default function ScriptsPage() {
       <div className="px-6 py-6">
         <p className="mb-5 max-w-3xl font-mono text-xs text-white/40">
           Drop a <span className="text-white/60">.sh</span> file under{" "}
-          <span className="text-white/60">CH_DATA_DIR/scripts</span> and it appears here — backups, cleanups, health
+          <span className="text-white/60">PS_DATA_DIR/scripts</span> and it appears here — backups, cleanups, health
           checks. Scheduling agent work is on the{" "}
           <a href="/orchestration/missions" className="text-neon-cyan hover:underline">Missions</a> page.
         </p>
@@ -245,7 +245,7 @@ export default function ScriptsPage() {
             <EmptyState
               icon={Terminal}
               title="No scripts yet"
-              description="Create one with “New script”, install an example below, or drop a .sh file under CH_DATA_DIR/scripts."
+              description="Create one with “New script”, install an example below, or drop a .sh file under PS_DATA_DIR/scripts."
             />
           </div>
         ) : (

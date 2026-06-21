@@ -20,7 +20,7 @@ export const BASELINE_SCHEMA_VERSION = 3;
 
 const SCHEMA_VERSION_KEY = "schema_version";
 
-/** Mission precedence: JSON files in CH_DATA_DIR/missions override SQLite export on same id. */
+/** Mission precedence: JSON files in PS_DATA_DIR/missions override SQLite export on same id. */
 export const MISSION_JSON_OVERLAY_WINS = true;
 
 interface MissionRow {

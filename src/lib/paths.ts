@@ -4,11 +4,9 @@
 // Hermes install paths: use getActiveHermesPaths() / getActiveHermesHome()
 // from @/lib/hermes-agent-runtime (active agent registry).
 //
-// Canonical env vars are PS_* (PatterStage). The legacy CH_* / CONTROL_HUB_*
-// names are still read as fallbacks so existing installs keep working before
-// they migrate. The internal symbol `CH_DATA_DIR` keeps its historical name
-// (it's an internal abbreviation, not a user-facing identifier; renaming it
-// would churn ~14 importers for no behavioural change).
+// Canonical env vars and exported symbols are PS_* (PatterStage). The legacy
+// CH_* / CONTROL_HUB_* env-var names are still read as fallbacks (below) so
+// existing installs keep working before they migrate.
 
 import { homedir } from "os";
 import { existsSync } from "fs";
@@ -45,10 +43,7 @@ export function getPsDataDir(): string {
   return next;
 }
 
-/** Back-compat alias for the historical name. */
-export const getChDataDir = getPsDataDir;
-
-export const CH_DATA_DIR = getPsDataDir();
+export const PS_DATA_DIR = getPsDataDir();
 
 /**
  * Resolve the SQLite DB path inside a data dir: prefer patterstage.db, but
@@ -56,7 +51,7 @@ export const CH_DATA_DIR = getPsDataDir();
  * rename is an optimisation (done by the update migration), not a correctness
  * requirement.
  */
-export function getDbPath(dir: string = CH_DATA_DIR): string {
+export function getDbPath(dir: string = PS_DATA_DIR): string {
   const next = dir + "/patterstage.db";
   const legacy = dir + "/control-hub.db";
   if (!existsSync(next) && existsSync(legacy)) return legacy;
@@ -64,31 +59,33 @@ export function getDbPath(dir: string = CH_DATA_DIR): string {
 }
 
 /** Hardware cron scripts (PatterStage–managed; never under Hermes home). */
-export function getChScriptsDir(): string {
+export function getPsScriptsDir(): string {
+  // PS_SCRIPTS_DIR is canonical; CH_SCRIPTS_DIR is a legacy back-compat alias.
   const raw = readEnv("PS_SCRIPTS_DIR", "CH_SCRIPTS_DIR");
   if (raw) return normalizeDirPath(raw);
-  return CH_DATA_DIR + "/scripts";
+  return PS_DATA_DIR + "/scripts";
 }
 
-/** Hardware cron logs and hub-local log artifacts. */
-export function getChHardwareLogDir(): string {
+/** Hardware cron logs and PatterStage-local log artifacts. */
+export function getPsHardwareLogDir(): string {
+  // PS_HARDWARE_LOG_DIR is canonical; CH_HARDWARE_LOG_DIR is a legacy alias.
   const raw = readEnv("PS_HARDWARE_LOG_DIR", "CH_HARDWARE_LOG_DIR");
   if (raw) return normalizeDirPath(raw);
-  return CH_DATA_DIR + "/logs";
+  return PS_DATA_DIR + "/logs";
 }
 
 // ── PatterStage–owned paths only ─────────────────────────────────
 
 export const PATHS = {
   patterStageDb: getDbPath(),
-  missions: CH_DATA_DIR + "/missions",
-  templates: CH_DATA_DIR + "/templates",
-  stories: CH_DATA_DIR + "/stories",
-  recroom: CH_DATA_DIR + "/recroom",
-  workspaces: CH_DATA_DIR + "/workspaces",
-  auditLog: CH_DATA_DIR + "/audit",
-  chScripts: getChScriptsDir(),
-  chHardwareLogs: getChHardwareLogDir(),
+  missions: PS_DATA_DIR + "/missions",
+  templates: PS_DATA_DIR + "/templates",
+  stories: PS_DATA_DIR + "/stories",
+  recroom: PS_DATA_DIR + "/recroom",
+  workspaces: PS_DATA_DIR + "/workspaces",
+  auditLog: PS_DATA_DIR + "/audit",
+  psScripts: getPsScriptsDir(),
+  psHardwareLogs: getPsHardwareLogDir(),
 } as const;
 
 // ── YAML config reader (generic; used on arbitrary YAML content) ─

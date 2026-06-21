@@ -1,6 +1,6 @@
 /**
  * Hardware cron — path checks for crontab lines and API commands.
- * Scripts must live under getChScriptsDir() (see paths.ts).
+ * Scripts must live under getPsScriptsDir() (see paths.ts).
  */
 
 import { homedir } from "os";
@@ -9,7 +9,7 @@ import { isWindows } from "@/lib/platform";
 
 /**
  * UI labels + filenames for hardware cron presets. Ship matching files under
- * `scripts/hardware/` (setup copies them into CH_DATA_DIR/scripts). The
+ * `scripts/hardware/` (setup copies them into PS_DATA_DIR/scripts). The
  * Hindsight backup is a bash + Linux service, so it's offered on Unix only;
  * the cross-platform `.mjs` utilities are always available to schedule by name.
  */

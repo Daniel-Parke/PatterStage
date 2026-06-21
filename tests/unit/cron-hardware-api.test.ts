@@ -25,9 +25,9 @@ jest.mock("@/lib/hardware-cron", () => ({
 }));
 
 jest.mock("@/lib/paths", () => ({
-  CH_DATA_DIR: "/tmp/ch-data",
-  getChScriptsDir: () => "/tmp/ch-data/scripts",
-  getChHardwareLogDir: () => "/tmp/ch-data/logs",
+  PS_DATA_DIR: "/tmp/ch-data",
+  getPsScriptsDir: () => "/tmp/ch-data/scripts",
+  getPsHardwareLogDir: () => "/tmp/ch-data/logs",
 }));
 
 import { GET } from "@/app/api/cron/hardware/route";

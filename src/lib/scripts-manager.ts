@@ -1,14 +1,14 @@
 // ═══════════════════════════════════════════════════════════════
-// scripts-manager.ts — host script files under CH_DATA_DIR/scripts
+// scripts-manager.ts — host script files under PS_DATA_DIR/scripts
 //
 // Powers the Scripts page's file-aware view: list the *.sh files an operator
-// has dropped under getChScriptsDir(), cross-reference the host crontab for each
+// has dropped under getPsScriptsDir(), cross-reference the host crontab for each
 // file's schedule, run a script on demand (path-validated, no shell), and tail
-// its log under getChHardwareLogDir(). Scheduling itself stays with the existing
+// its log under getPsHardwareLogDir(). Scheduling itself stays with the existing
 // /api/cron/hardware crontab manager.
 //
 // SECURITY: every operation resolves the script to an absolute path that MUST
-// live directly under getChScriptsDir() (no traversal, no slashes, .sh only).
+// live directly under getPsScriptsDir() (no traversal, no slashes, .sh only).
 // Execution uses execFile("/bin/bash", [absPath]) — no shell string, no
 // user-supplied arguments — so there is no command-injection surface.
 // ═══════════════════════════════════════════════════════════════
@@ -26,7 +26,7 @@ import {
 } from "fs";
 import { join } from "path";
 import { execFile } from "child_process";
-import { getChScriptsDir, getChHardwareLogDir } from "@/lib/paths";
+import { getPsScriptsDir, getPsHardwareLogDir } from "@/lib/paths";
 import { interpreterFor } from "@/lib/platform";
 import { getHostScheduler } from "@/lib/host-scheduler";
 
@@ -62,7 +62,7 @@ export interface RunScriptResult {
 }
 
 function logPathFor(name: string): string {
-  return join(getChHardwareLogDir(), `${stripScriptExt(name)}.log`);
+  return join(getPsHardwareLogDir(), `${stripScriptExt(name)}.log`);
 }
 
 /**
@@ -75,7 +75,7 @@ export function resolveScriptPath(name: string): string | null {
   // backslash and no ".." cannot escape the scripts dir. .sh only.
   if (!name || name.includes("/") || name.includes("\\") || name.includes("..")) return null;
   if (!hasAllowedExt(name)) return null;
-  const abs = join(getChScriptsDir(), name);
+  const abs = join(getPsScriptsDir(), name);
   if (!existsSync(abs)) return null;
   return abs;
 }
@@ -90,7 +90,7 @@ export function scriptPathForName(name: string): string | null {
   if (!hasAllowedExt(name)) return null;
   // basename sanity: letters, digits, dash, underscore, dot only.
   if (!/^[A-Za-z0-9._-]+$/.test(name)) return null;
-  return join(getChScriptsDir(), name);
+  return join(getPsScriptsDir(), name);
 }
 
 export interface WriteScriptResult {
@@ -126,7 +126,7 @@ export function writeScriptContent(
   if (mode === "create" && exists) return { ok: false, error: "A script with that name already exists" };
   if (mode === "update" && !exists) return { ok: false, error: "Script not found" };
   try {
-    mkdirSync(getChScriptsDir(), { recursive: true });
+    mkdirSync(getPsScriptsDir(), { recursive: true });
     writeFileSync(abs, content, { encoding: "utf-8" });
     if (!exists) {
       try {
@@ -179,7 +179,7 @@ function parseScheduleMap(crontab: string): Map<string, string> {
 
 /** List the *.sh files under the scripts dir, with schedule + last-run hints. */
 export async function listScriptFiles(): Promise<ScriptFile[]> {
-  const dir = getChScriptsDir();
+  const dir = getPsScriptsDir();
   if (!existsSync(dir)) return [];
   const schedules = parseScheduleMap(await readHostCrontab());
   const files = readdirSync(dir).filter(hasAllowedExt).sort();
@@ -210,7 +210,7 @@ export function runScriptFile(name: string): Promise<RunScriptResult> {
     }
     const logFile = logPathFor(name);
     try {
-      mkdirSync(getChHardwareLogDir(), { recursive: true });
+      mkdirSync(getPsHardwareLogDir(), { recursive: true });
       appendFileSync(logFile, `\n===== run ${new Date().toISOString()} =====\n`);
     } catch {
       /* logging is best-effort */

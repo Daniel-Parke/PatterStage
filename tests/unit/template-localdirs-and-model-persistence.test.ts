@@ -17,11 +17,11 @@ jest.mock("@/lib/audit-log", () => ({
 }));
 
 jest.mock("@/lib/paths", () => ({
-  CH_DATA_DIR: "/tmp/ch-data",
+  PS_DATA_DIR: "/tmp/ch-data",
   PATHS: {
     templates: "/tmp/test-templates",
     missions: "/tmp/ch-data/missions",
-    controlHubDb: "/tmp/ch-data/control-hub.db",
+    patterStageDb: "/tmp/ch-data/control-hub.db",
     stories: "/tmp/ch-data/stories",
     recroom: "/tmp/ch-data/recroom",
     workspaces: "/tmp/ch-data/workspaces",
@@ -29,8 +29,8 @@ jest.mock("@/lib/paths", () => ({
     chScripts: "/tmp/ch-data/scripts",
     chHardwareLogs: "/tmp/ch-data/logs",
   },
-  getChScriptsDir: () => "/tmp/ch-data/scripts",
-  getChHardwareLogDir: () => "/tmp/ch-data/logs",
+  getPsScriptsDir: () => "/tmp/ch-data/scripts",
+  getPsHardwareLogDir: () => "/tmp/ch-data/logs",
 }));
 
 jest.mock("@/lib/schema", () => ({

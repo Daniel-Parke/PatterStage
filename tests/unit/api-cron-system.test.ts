@@ -31,9 +31,9 @@ jest.mock("@/lib/host-scheduler", () => ({
 }));
 
 jest.mock("@/lib/paths", () => ({
-  CH_DATA_DIR: "/tmp/ch-data",
-  getChScriptsDir: () => "/tmp/ch-data/scripts",
-  getChHardwareLogDir: () => "/tmp/ch-data/logs",
+  PS_DATA_DIR: "/tmp/ch-data",
+  getPsScriptsDir: () => "/tmp/ch-data/scripts",
+  getPsHardwareLogDir: () => "/tmp/ch-data/logs",
 }));
 
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));

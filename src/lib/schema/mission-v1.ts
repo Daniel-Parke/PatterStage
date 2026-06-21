@@ -13,7 +13,7 @@ export const missionStatusSchema = z.enum([
 export const dispatchModeSchema = z.enum(["save", "now", "cron", "queue"]);
 
 /**
- * Mission record as persisted under CH_DATA_DIR/missions/{id}.json.
+ * Mission record as persisted under PS_DATA_DIR/missions/{id}.json.
  * Forward-compatible fields may appear under `extensions` and must be ignored by validators.
  */
 export const missionV1Schema = z

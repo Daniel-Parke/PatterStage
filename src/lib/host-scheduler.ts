@@ -13,7 +13,7 @@ import { exec, execSync, execFileSync } from "child_process";
 import { isWindows, tmpDir, interpreterFor } from "@/lib/platform";
 import { cronToSchtasks } from "@/lib/cron-to-schtasks";
 import { crontabLineUsesScriptsDir } from "@/lib/hardware-cron";
-import { getChScriptsDir, CH_DATA_DIR } from "@/lib/paths";
+import { getPsScriptsDir, PS_DATA_DIR } from "@/lib/paths";
 
 export interface HostScheduler {
   /** The managed schedule as crontab-format text (one job per line). */
@@ -56,8 +56,8 @@ class CrontabScheduler implements HostScheduler {
 // ── Windows: Task Scheduler (schtasks) ──────────────────────────
 
 const TASK_PREFIX = "PatterStage";
-const SIDE_CAR = () => join(CH_DATA_DIR, ".schtasks-cron.json");
-const LAUNCHER_DIR = () => join(getChScriptsDir(), ".schtasks");
+const SIDE_CAR = () => join(PS_DATA_DIR, ".schtasks-cron.json");
+const LAUNCHER_DIR = () => join(getPsScriptsDir(), ".schtasks");
 
 interface SideJob {
   id: string;
@@ -76,7 +76,7 @@ function readSidecar(): Record<string, SideJob> {
 }
 function writeSidecar(jobs: Record<string, SideJob>): void {
   try {
-    mkdirSync(CH_DATA_DIR, { recursive: true });
+    mkdirSync(PS_DATA_DIR, { recursive: true });
     writeFileSync(SIDE_CAR(), JSON.stringify(jobs, null, 2));
   } catch {
     /* best-effort */
@@ -87,7 +87,7 @@ function writeSidecar(jobs: Record<string, SideJob>): void {
 function parseManaged(line: string): Omit<SideJob, "name"> | null {
   const t = line.trim();
   if (!t || t.startsWith("#")) return null;
-  if (!crontabLineUsesScriptsDir(t, getChScriptsDir())) return null;
+  if (!crontabLineUsesScriptsDir(t, getPsScriptsDir())) return null;
   const parts = t.split(/\s+/);
   if (parts.length < 6) return null;
   const schedule = parts.slice(0, 5).join(" ");

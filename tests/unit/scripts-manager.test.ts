@@ -5,8 +5,8 @@
 // non-.sh names must be rejected (so run-now can never reach an arbitrary file).
 
 jest.mock("@/lib/paths", () => ({
-  getChScriptsDir: () => "/data/scripts",
-  getChHardwareLogDir: () => "/data/logs",
+  getPsScriptsDir: () => "/data/scripts",
+  getPsHardwareLogDir: () => "/data/logs",
 }));
 
 const existsSync = jest.fn(() => true);

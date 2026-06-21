@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════════════
 // POST /api/scripts/run — run a host script on demand ({ name }).
-// Path-validated under CH_DATA_DIR/scripts; no shell, no user args.
+// Path-validated under PS_DATA_DIR/scripts; no shell, no user args.
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
