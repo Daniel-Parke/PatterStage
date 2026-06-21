@@ -11,6 +11,7 @@ Technical reference for PatterStage. Tone elsewhere in this folder is deliberate
 | [LABORATORY.md](LABORATORY.md) | Laboratory section: Insights, Benchmarks, Deep Research |
 | [DEEP_RESEARCH.md](DEEP_RESEARCH.md) | Native iterative web research (provider-flexible, free/local-first search) |
 | [CHAT.md](CHAT.md) | Agent chat: server-persisted conversations, run-event streaming, tools + HITL approvals, Agent/Fast modes |
+| [MEMORY.md](MEMORY.md) | Agent long-term memory (Hindsight): how it connects, the mock, Docker + native setup |
 | [design-tokens.md](design-tokens.md) | UI colour tokens and theme conventions |
 | [API.md](API.md) | REST endpoints |
 | [ANALYTICS.md](ANALYTICS.md) | Interaction event log, `/api/analytics`, achievements, and the Insights page |

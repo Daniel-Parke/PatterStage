@@ -346,9 +346,13 @@ echo "  Memory Provider Setup (Optional)"
 echo "════════════════════════════════════════════════════════════"
 echo ""
 echo "  Hindsight provides long-term memory with semantic search"
-echo "  using a knowledge graph. Requires PostgreSQL + ~2GB disk."
+echo "  using a knowledge graph (Postgres + pgvector)."
 echo ""
-echo "  If your Hermes memory provider already differs, see docs: PATTERSTAGE.md,"
+echo "  Two ways to run it:"
+echo "    • Docker  — cross-platform (Linux/macOS/Windows), no host Postgres/Python."
+echo "    • Native  — Linux only (apt + systemd), runs on the Hermes agent venv."
+echo ""
+echo "  If your Hermes memory provider already differs, see docs: MEMORY.md,"
 echo "  HERMES_CONFIG_INTEGRATION.md — this script will not overwrite your config."
 echo ""
 
@@ -361,11 +365,19 @@ if [ -f "$HERMES_HOME/hindsight/config.json" ]; then
 fi
 
 if [ "$HINDSIGHT_ALREADY" = false ]; then
+    HS_SETUP="$INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh"
     if noninteractive; then
         case "${INSTALL_HINDSIGHT:-auto}" in
+            docker|DOCKER)
+                if [ -f "$HS_SETUP" ]; then
+                    bash "$HS_SETUP" --docker || warn "Hindsight (Docker) setup encountered issues"
+                else
+                    warn "setup-hindsight.sh not found — skipping"
+                fi
+                ;;
             yes|YES|1|true|True)
-                if [ -f "$INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh" ]; then
-                    bash "$INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh" || warn "Hindsight setup encountered issues"
+                if [ -f "$HS_SETUP" ]; then
+                    bash "$HS_SETUP" || warn "Hindsight setup encountered issues"
                 else
                     warn "setup-hindsight.sh not found — skipping"
                 fi
@@ -374,27 +386,44 @@ if [ "$HINDSIGHT_ALREADY" = false ]; then
                 info "Skipping Hindsight (INSTALL_HINDSIGHT=no)"
                 ;;
             *)
-                info "Skipping Hindsight prompt (non-interactive). Set INSTALL_HINDSIGHT=yes|no to control."
+                info "Skipping Hindsight prompt (non-interactive). Set INSTALL_HINDSIGHT=docker|yes|no to control."
                 ;;
         esac
     else
-        read -p "  Set up Hindsight memory? [y/N]: " -n 1 -r SETUP_HINDSIGHT
+        # Native path is apt + systemd (Linux-only); Docker works everywhere.
+        echo "  Set up Hindsight memory?"
+        echo "    [d] Docker (cross-platform)   [n] Native (Linux)   [s] Skip"
+        read -p "  Choice [d/n/s]: " -n 1 -r SETUP_HINDSIGHT
         echo ""
-        if [[ $SETUP_HINDSIGHT =~ ^[Yy]$ ]]; then
-            echo ""
-            if [ -f "$INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh" ]; then
-                bash "$INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh" || {
-                    warn "Hindsight setup encountered issues"
-                    echo "  You can retry later with: bash $INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh"
-                }
-            else
-                warn "setup-hindsight.sh not found — skipping Hindsight setup"
-                echo "  Set up later with: bash $INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh"
-            fi
-        else
-            info "Skipping Hindsight — set up later with:"
-            echo "  bash $INSTALL_DIR/scripts/bootstrap/setup-hindsight.sh"
-        fi
+        case "$SETUP_HINDSIGHT" in
+            d|D)
+                echo ""
+                if [ -f "$HS_SETUP" ]; then
+                    bash "$HS_SETUP" --docker || {
+                        warn "Hindsight (Docker) setup encountered issues"
+                        echo "  Retry later: bash $HS_SETUP --docker"
+                    }
+                else
+                    warn "setup-hindsight.sh not found — skipping"
+                fi
+                ;;
+            n|N|y|Y)
+                echo ""
+                if [ -f "$HS_SETUP" ]; then
+                    bash "$HS_SETUP" || {
+                        warn "Hindsight setup encountered issues"
+                        echo "  Retry later: bash $HS_SETUP"
+                    }
+                else
+                    warn "setup-hindsight.sh not found — skipping"
+                fi
+                ;;
+            *)
+                info "Skipping Hindsight — set up later with:"
+                echo "  bash $HS_SETUP --docker   # cross-platform"
+                echo "  bash $HS_SETUP            # native (Linux)"
+                ;;
+        esac
     fi
 fi
 

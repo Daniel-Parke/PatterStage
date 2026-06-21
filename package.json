@@ -56,6 +56,8 @@
 
     "mock-hermes": "node mock-hermes/server.mjs",
 
+    "mock-hindsight": "node mock-hindsight/server.mjs",
+
     "mock-llm": "node mock-llm/server.mjs",
 
     "test:e2e-runtime": "node tests/integration/runtime/full-stack-smoke.mjs",

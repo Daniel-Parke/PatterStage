@@ -4,6 +4,7 @@
     "src/instrumentation.ts",
     "scripts/**/*.{ts,mjs}",
     "mock-hermes/server.mjs",
+    "mock-hindsight/server.mjs",
     "mock-llm/server.mjs",
     "tests/integration/runtime/*.mjs",
     "tests/**/*.test.{ts,tsx}"
@@ -12,6 +13,7 @@
     "src/**/*.{ts,tsx}",
     "scripts/**/*.{ts,mjs}",
     "mock-hermes/**/*.mjs",
+    "mock-hindsight/**/*.mjs",
     "mock-llm/**/*.mjs"
   ],
   "ignoreDependencies": [
