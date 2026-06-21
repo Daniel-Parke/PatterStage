@@ -8,6 +8,7 @@ import { Brain } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import AppPageShell from "@/components/layout/AppPageShell";
 import HindsightBrowser from "@/components/memory/HindsightBrowser";
+import MemoryProviderSettings from "@/components/memory/MemoryProviderSettings";
 
 export default function MemoryPage() {
   return (
@@ -18,7 +19,8 @@ export default function MemoryPage() {
         subtitle="Knowledge graph memory with semantic search"
         color="pink"
       />
-      <div className="px-6 py-6">
+      <div className="space-y-6 px-6 py-6">
+        <MemoryProviderSettings />
         <HindsightBrowser />
       </div>
     </AppPageShell>

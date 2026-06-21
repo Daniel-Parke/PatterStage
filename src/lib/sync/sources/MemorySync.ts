@@ -10,34 +10,9 @@ import { existsSync, statSync } from "fs";
 import Database from "better-sqlite3";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 import { setMultipleStats, setSystemStatBoolean } from "@/lib/system-repository";
-import { getMemoryProviderType } from "@/lib/memory-providers";
+import { getMemoryProviderType, getActiveMemoryProvider } from "@/lib/memory-providers";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
-
-const HINDSIGHT_BASE_URL = "http://localhost:9177/v1/default/banks";
-const DEFAULT_BANK = "hermes";
-
-/**
- * Probe the running Hindsight server. `available` means the server answered
- * (so it IS installed/running, even with 0 facts) — we do NOT rely on the
- * Hermes config.yaml `memory.provider` value, which is frequently blank while
- * Hindsight is configured in its own ~/.hermes/hindsight/config.json. This is
- * the dashboard-tile honesty fix (Phase 1 replaces this with the provider
- * registry + DB-owned config).
- */
-async function fetchHindsightStats(): Promise<{ available: boolean; total: number }> {
-  try {
-    const res = await fetch(
-      `${HINDSIGHT_BASE_URL}/${DEFAULT_BANK}/memories/list?limit=1`,
-      { signal: AbortSignal.timeout(3000) }
-    );
-    if (!res.ok) return { available: false, total: 0 };
-    const data = (await res.json()) as { total?: number };
-    return { available: true, total: data.total ?? 0 };
-  } catch {
-    return { available: false, total: 0 };
-  }
-}
 
 /** Get fact count from local SQLite (holographic provider). */
 function getHolographicFactCount(): number {
@@ -91,13 +66,14 @@ export class MemorySync implements SyncSource {
         factCount = getHolographicFactCount();
         dbSize = getMemoryDbSize();
       } else {
-        // hindsight OR none: probe the running Hindsight server directly so a
-        // blank config.yaml `memory.provider` doesn't hide a live install.
-        const hs = await fetchHindsightStats();
+        // hindsight OR none: probe the active provider (DB-owned endpoint)
+        // directly so a blank config.yaml `memory.provider` doesn't hide a live
+        // install, and so a custom host/port set in /config/memory is honoured.
+        const hs = await getActiveMemoryProvider().stats();
         if (hs.available) {
           provider = "Hindsight";
-          dbSize = "In-agent";
-          factCount = hs.total;
+          dbSize = hs.dbSize ?? "In-agent";
+          factCount = hs.factCount;
         }
       }
 

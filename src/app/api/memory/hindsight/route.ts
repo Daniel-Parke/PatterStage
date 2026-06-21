@@ -12,6 +12,7 @@ import { logApiError } from "@/lib/api-logger";
 import { messageFromError } from "@/lib/api-fetch";
 import { requireAuth } from "@/lib/api-auth";
 import { badRequest, ok } from "@/lib/api-response";
+import { getActiveMemoryProvider, getActiveMemoryConfig } from "@/lib/memory-providers";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import {
   mapMemoryItem,
@@ -48,13 +49,15 @@ export function isHindsightConnectionError(error: unknown): boolean {
   );
 }
 
-// ── Constants ────────────────────────────────────────────────
+// ── DB-owned endpoint/bank ───────────────────────────────────
+// Host/port/bank come from the active provider config (see /config/memory) —
+// no more hardcoded localhost:9177 / "hermes". The provider's request()
+// preserves the error-message shape isHindsightConnectionError matches.
 
-const HINDSIGHT_BASE_URL = "http://localhost:9177";
-const DEFAULT_BANK = "hermes";
-const DEFAULT_TIMEOUT_MS = 15_000;
-
-// ── Direct HTTP helpers ──────────────────────────────────────
+/** The configured default bank (overridable per request via ?bank=). */
+function defaultBank(): string {
+  return getActiveMemoryConfig().config.bank;
+}
 
 interface ApiOptions {
   method?: string;
@@ -64,26 +67,9 @@ interface ApiOptions {
 
 async function requestWithTimeout<T = Record<string, unknown>>(
   path: string,
-  { method = "GET", body, timeoutMs = DEFAULT_TIMEOUT_MS }: ApiOptions = {},
+  opts: ApiOptions = {},
 ): Promise<T> {
-  const url = `${HINDSIGHT_BASE_URL}${path}`;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  const init: RequestInit = { method, signal: controller.signal };
-  if (body) {
-    init.headers = { "Content-Type": "application/json" };
-    init.body = JSON.stringify(body);
-  }
-  try {
-    const res = await fetch(url, init);
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`Hindsight ${method} ${path}: ${res.status} ${text}`);
-    }
-    return (await res.json()) as T;
-  } finally {
-    clearTimeout(timer);
-  }
+  return getActiveMemoryProvider().request<T>(path, opts);
 }
 
 // ── Action handlers ──────────────────────────────────────────
@@ -261,7 +247,7 @@ export async function GET(request: NextRequest) {
   const action = request.nextUrl.searchParams.get("action") || "list";
   const query = request.nextUrl.searchParams.get("query") || undefined;
   const budget = request.nextUrl.searchParams.get("budget") || undefined;
-  const bank = request.nextUrl.searchParams.get("bank") || DEFAULT_BANK;
+  const bank = request.nextUrl.searchParams.get("bank") || defaultBank();
   const limitStr = request.nextUrl.searchParams.get("limit") || undefined;
   const limit = limitStr ? parseInt(limitStr, 10) : undefined;
 
@@ -340,7 +326,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const action = body.action || "retain";
-    const bank = body.bank || DEFAULT_BANK;
+    const bank = body.bank || defaultBank();
 
     let result: Record<string, unknown>;
 
@@ -412,7 +398,7 @@ export async function DELETE(request: NextRequest) {
   const body = bodyResult;
 
   try {
-    const { type, id, bank = DEFAULT_BANK } = body as {
+    const { type, id, bank = defaultBank() } = body as {
       type?: string;
       id?: string;
       bank?: string;

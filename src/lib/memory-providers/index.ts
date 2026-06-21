@@ -12,10 +12,16 @@
 import { readFileSync, existsSync } from "fs";
 import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 
-// ── Shared Types (inlined from former ./types.ts) ─────────────────
-
-/** Supported memory provider types */
-export type MemoryProviderType = "holographic" | "hindsight" | "none";
+// The pluggable provider interface + DB-owned config + active-provider resolver.
+import type { MemoryProviderType } from "./types";
+export type { MemoryProviderType, MemoryProvider, MemoryProviderConfig } from "./types";
+export { getActiveMemoryProvider } from "./registry";
+export {
+  getActiveMemoryConfig,
+  getActiveMemoryProviderRow,
+  listMemoryProviders,
+  updateMemoryProvider,
+} from "./repository";
 
 /** A single memory fact from any provider */
 interface MemoryFact {

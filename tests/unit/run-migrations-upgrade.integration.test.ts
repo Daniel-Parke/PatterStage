@@ -96,7 +96,13 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
       expect.arrayContaining(["composer_workflows", "composer_nodes", "composer_edges", "composer_runs", "composer_node_runs", "composer_approvals"]),
     );
     expect(cols(db, "runs")).toContain("composer_node_run_id");
-    expect(getSchemaVersion(db)).toBe(21);
+    // PatterStage-owned memory provider config lands via the wired v22 applier,
+    // seeded with the default Hindsight row.
+    expect(tableNames(db)).toContain("memory_providers");
+    expect(
+      (db.prepare("SELECT COUNT(*) c FROM memory_providers WHERE type='hindsight'").get() as { c: number }).c,
+    ).toBe(1);
+    expect(getSchemaVersion(db)).toBe(22);
     // Pre-existing data survived the additive upgrade (cron job + mission).
     expect(
       (db.prepare("SELECT COUNT(*) c FROM cron_jobs").get() as { c: number }).c,
@@ -128,7 +134,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
       if (next === last) break;
       last = next;
     }
-    expect(getSchemaVersion(db)).toBe(21);
+    expect(getSchemaVersion(db)).toBe(22);
     expect(tableNames(db)).toEqual(
       expect.arrayContaining([
         "composer_workflows",
@@ -151,7 +157,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(21);
+    expect(getSchemaVersion(db)).toBe(22);
     db.close();
   });
 });

@@ -1,9 +1,9 @@
 /**
  * @jest-environment node
  *
- * MemorySync must report a LIVE Hindsight as installed even when the Hermes
- * config.yaml `memory.provider` is blank (the dashboard-tile honesty fix). It
- * probes the running server directly rather than trusting the YAML value.
+ * MemorySync must report a LIVE memory provider as installed even when the
+ * Hermes config.yaml `memory.provider` is blank (the dashboard-tile honesty
+ * fix). It probes the active provider (DB-owned endpoint) directly.
  */
 
 const mockSetMultipleStats = jest.fn();
@@ -13,22 +13,21 @@ jest.mock("@/lib/system-repository", () => ({
   setSystemStatBoolean: (...a: unknown[]) => mockSetSystemStatBoolean(...a),
 }));
 
-// config.yaml says "none" — the blank-provider case the old code mishandled.
-jest.mock("@/lib/memory-providers", () => ({ getMemoryProviderType: () => "none" }));
+let providerStats: { available: boolean; factCount: number; dbSize?: string };
+// config.yaml says "none" — the blank-provider case the old code mishandled —
+// but the active provider (Hindsight via DB config) is what actually decides.
+jest.mock("@/lib/memory-providers", () => ({
+  getMemoryProviderType: () => "none",
+  getActiveMemoryProvider: () => ({ stats: async () => providerStats }),
+}));
 jest.mock("@/lib/hermes-agent-runtime", () => ({ getActiveHermesPaths: () => ({ memoryDb: "/nope/memory.db" }) }));
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 
 import { MemorySync } from "@/lib/sync/sources/MemorySync";
 
-const originalFetch = globalThis.fetch;
-const mockFetch = jest.fn();
 beforeEach(() => {
   mockSetMultipleStats.mockReset();
   mockSetSystemStatBoolean.mockReset();
-  globalThis.fetch = mockFetch as unknown as typeof fetch;
-});
-afterAll(() => {
-  globalThis.fetch = originalFetch;
 });
 
 function statsOf() {
@@ -36,25 +35,23 @@ function statsOf() {
 }
 
 describe("MemorySync — honest tile", () => {
-  it("reports Hindsight installed + fact count when the server answers (provider blank)", async () => {
-    mockFetch.mockResolvedValueOnce(
-      new Response(JSON.stringify({ total: 17638 }), { status: 200 }),
-    );
+  it("reports the provider installed + fact count when it answers (config blank)", async () => {
+    providerStats = { available: true, factCount: 17638, dbSize: "In-agent" };
     await new MemorySync().sync();
     expect(statsOf()["memory.provider"]).toBe("Hindsight");
     expect(statsOf()["memory.fact_count"]).toBe("17638");
     expect(mockSetSystemStatBoolean).toHaveBeenCalledWith("memory.available", true);
   });
 
-  it("reports a healthy-but-empty Hindsight as installed (available, 0 facts)", async () => {
-    mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ total: 0 }), { status: 200 }));
+  it("reports a healthy-but-empty provider as installed (available, 0 facts)", async () => {
+    providerStats = { available: true, factCount: 0 };
     await new MemorySync().sync();
     expect(statsOf()["memory.provider"]).toBe("Hindsight");
     expect(mockSetSystemStatBoolean).toHaveBeenCalledWith("memory.available", true);
   });
 
-  it("reports Not Installed when the server is unreachable", async () => {
-    mockFetch.mockRejectedValueOnce(new Error("ECONNREFUSED"));
+  it("reports Not Installed when the provider is unreachable", async () => {
+    providerStats = { available: false, factCount: 0 };
     await new MemorySync().sync();
     expect(statsOf()["memory.provider"]).toBe("Not Installed");
     expect(mockSetSystemStatBoolean).toHaveBeenCalledWith("memory.available", false);

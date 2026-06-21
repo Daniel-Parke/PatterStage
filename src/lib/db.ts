@@ -28,6 +28,7 @@ import { applyMissionPhasesMigration } from "./db/apply-mission-phases-migration
 import { applyDeepResearchMigration } from "./db/apply-deep-research-migration";
 import { applyRetireMissionPhasesMigration } from "./db/apply-retire-mission-phases-migration";
 import { applyComposerMigration } from "./db/apply-composer-migration";
+import { applyMemoryProvidersMigration } from "./db/apply-memory-providers-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -227,6 +228,9 @@ export function runMigrations(database: Database.Database): void {
   // Composer graph orchestrator: workflows/nodes/edges/runs/node_runs/approvals
   // + runs.composer_node_run_id. Idempotent CREATE + guarded ALTER at v21.
   applyComposerMigration(database, migrationsDir);
+  // PatterStage-owned memory provider config (host/port/bank in the DB, not in
+  // Hermes files). Idempotent CREATE + seed at schema_version 22.
+  applyMemoryProvidersMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

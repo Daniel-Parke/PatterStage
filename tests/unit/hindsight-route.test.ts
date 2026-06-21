@@ -13,7 +13,8 @@ import { NextRequest } from "next/server";
 import { GET, POST, DELETE } from "@/app/api/memory/hindsight/route";
 
 const BASE = "http://localhost/api/memory/hindsight";
-const HS = "http://localhost:9177/v1/default/banks/hermes";
+// Endpoint is the DB-owned default (host 127.0.0.1, port 9177, bank hermes).
+const HS = "http://127.0.0.1:9177/v1/default/banks/hermes";
 
 const mockFetch = jest.fn();
 const originalFetch = globalThis.fetch;
@@ -65,7 +66,7 @@ describe("GET /api/memory/hindsight", () => {
   it("action=health reports availability + status", async () => {
     mockFetch.mockResolvedValueOnce(jsonResponse({ ok: true, status: "healthy" }));
     const data = await dataOf(await GET(new NextRequest(`${BASE}?action=health`)));
-    expect(mockFetch.mock.calls[0][0]).toBe("http://localhost:9177/health");
+    expect(mockFetch.mock.calls[0][0]).toBe("http://127.0.0.1:9177/health");
     expect(data).toEqual({ available: true, mode: "external", status: "healthy" });
   });
 
