@@ -4,7 +4,7 @@
 -- real if Hermes actually serves that config. Hermes serves one profile per
 -- gateway, so the benchmark gateway manager spawns a short-lived `hermes
 -- gateway run` process bound to the ephemeral __bench_<runId> profile on its own
--- port. This table tracks the live process so a crashed Control Hub can kill the
+-- port. This table tracks the live process so a crashed PatterStage can kill the
 -- orphaned gateway on next boot (the in-memory registry is the fast path).
 CREATE TABLE IF NOT EXISTS bench_gateways (
   slug       TEXT PRIMARY KEY,      -- ephemeral profile slug (__bench_<runId>)

@@ -45,7 +45,7 @@ describe("SkillDetailPage — defensive path handling", () => {
     // URL-encoded slash in the URL lands here as a single string with
     // a literal slash inside. Pre-fix this crashed the render with
     // 'Something went wrong' (the global error boundary).
-    mockUseParams.mockReturnValue({ path: "software-development/control-hub" });
+    mockUseParams.mockReturnValue({ path: "software-development/patterstage" });
 
     render(<SkillDetailPage />);
 
@@ -82,7 +82,7 @@ describe("SkillDetailPage — defensive path handling", () => {
   });
 
   it("renders the loading state initially for a well-formed path", () => {
-    mockUseParams.mockReturnValue({ path: ["software-development", "control-hub"] });
+    mockUseParams.mockReturnValue({ path: ["software-development", "patterstage"] });
     // Return a never-resolving promise so we stay in the loading state.
     mockApiFetch.mockReturnValue(new Promise(() => {}));
 

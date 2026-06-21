@@ -1,6 +1,6 @@
 -- ============================================================
 -- 012_analytics_events.sql — interaction event log (analytics + achievements)
--- Append-only log of meaningful Control Hub interactions (missions dispatched,
+-- Append-only log of meaningful PatterStage interactions (missions dispatched,
 -- stories written, schedules fired, …). Feeds the Insights page and the
 -- derived achievements. `event_type` is validated in TypeScript (recordEvent),
 -- NOT via a SQL CHECK — a CHECK would force a migration per new event type and

@@ -44,7 +44,7 @@ describe("DirectoryPickerModal — safeApiCall double-wrap", () => {
             path: "/home/daniel",
             parent: null,
             entries: [
-              { name: "control-hub", isDir: true, isFile: false },
+              { name: "patterstage", isDir: true, isFile: false },
               { name: "Desktop", isDir: true, isFile: false },
               { name: "notes.md", isDir: false, isFile: true },
             ],
@@ -62,7 +62,7 @@ describe("DirectoryPickerModal — safeApiCall double-wrap", () => {
 
     // Entries render (regression: previously crashed because setEntries(undefined))
     await waitFor(() => {
-      expect(screen.getByText("control-hub")).toBeInTheDocument();
+      expect(screen.getByText("patterstage")).toBeInTheDocument();
     });
     expect(screen.getByText("Desktop")).toBeInTheDocument();
     expect(screen.getByText("notes.md")).toBeInTheDocument();

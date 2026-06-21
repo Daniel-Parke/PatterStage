@@ -348,7 +348,7 @@ echo ""
 echo "  Hindsight provides long-term memory with semantic search"
 echo "  using a knowledge graph. Requires PostgreSQL + ~2GB disk."
 echo ""
-echo "  If your Hermes memory provider already differs, see docs: CONTROL_HUB.md,"
+echo "  If your Hermes memory provider already differs, see docs: PATTERSTAGE.md,"
 echo "  HERMES_CONFIG_INTEGRATION.md — this script will not overwrite your config."
 echo ""
 

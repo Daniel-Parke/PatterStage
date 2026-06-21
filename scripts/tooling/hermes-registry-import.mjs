@@ -243,7 +243,10 @@ if (isMain) {
   const { join: joinPath, dirname } = await import("path");
   const { fileURLToPath: toPath } = await import("url");
   const scriptDir = dirname(toPath(import.meta.url));
-  const defaultDb = joinPath(scriptDir, "..", "..", "data", "control-hub.db");
+  const dataDir = joinPath(scriptDir, "..", "..", "data");
+  const nextDb = joinPath(dataDir, "patterstage.db");
+  const legacyDb = joinPath(dataDir, "control-hub.db");
+  const defaultDb = !existsSync(nextDb) && existsSync(legacyDb) ? legacyDb : nextDb;
   const dbPath = process.argv[2] ?? defaultDb;
 
   if (!existsSync(dbPath)) {

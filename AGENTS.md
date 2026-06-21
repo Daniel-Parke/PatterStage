@@ -106,7 +106,7 @@ Next.js static files (favicon, `robots.txt`, etc.) go in a `public/` directory a
 
 - `src/lib/utils.ts` — `parseSchedule()`, `messageSummary()`, `timeAgo()`, `timeUntil()`, `formatBytes()`
 - `src/lib/api-logger.ts` — `logApiError()`, `safeJsonParse()`, `safeReadJsonFile()`
-- `src/lib/paths.ts` — `PATHS` (PatterStage–owned dirs), `PS_DATA_DIR`, `getChScriptsDir()`, `getChHardwareLogDir()`
+- `src/lib/paths.ts` — `PATHS` (PatterStage–owned dirs), `PS_DATA_DIR`, `getPsScriptsDir()`, `getPsHardwareLogDir()`
 - `src/lib/hermes-agent-runtime.ts` — `getActiveHermesPaths()`, `getActiveHermesHome()`, `getAgentLlmEndpoints()`
 - `src/lib/hermes-home.ts` — `getHermesHome()` (env-first; default `~/.hermes`)
 - `src/lib/models-repository.ts` — `getDefaultModel()`, `getModel()`, `getModelWithKey()`, `setDefaultModel()`, `listModels()` (SQLite registry)

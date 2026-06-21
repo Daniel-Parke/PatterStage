@@ -11,7 +11,7 @@ function normalizeDir(d) {
   return String(d || "").replace(/[/\\]+$/, "");
 }
 
-function getChDataDir() {
+function getPsDataDir() {
   const raw = process.env.PS_DATA_DIR || process.env.CH_DATA_DIR || process.env.CONTROL_HUB_DATA_DIR;
   if (raw && String(raw).trim()) return normalizeDir(String(raw).trim());
   return normalizeDir(join(homedir(), "control-hub", "data"));
@@ -82,7 +82,7 @@ if (existsSync(profilesDir)) {
   }
 }
 
-const outDir = getChDataDir();
+const outDir = getPsDataDir();
 mkdirSync(outDir, { recursive: true });
 const outPath = join(outDir, "hermes-detection.json");
 const doc = {

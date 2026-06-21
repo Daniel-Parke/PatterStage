@@ -18,7 +18,7 @@ import {
 } from "@/lib/hardware-cron";
 
 describe("system-cron path helpers", () => {
-  const scriptsDir = "/home/zoe/control-hub/data/scripts";
+  const scriptsDir = "/home/zoe/patterstage/data/scripts";
 
   beforeEach(() => {
     mockHome = "/home/zoe";
@@ -32,8 +32,8 @@ describe("system-cron path helpers", () => {
   it("crontabLineUsesScriptsDir resolves $HOME (from os.homedir) and matches", () => {
     mockHome = "/home/zoe";
     const line =
-      "*/5 * * * * $HOME/control-hub/data/scripts/ps-backup.sh >> /tmp/x.log 2>&1";
-    expect(crontabLineUsesScriptsDir(line, "/home/zoe/control-hub/data/scripts")).toBe(true);
+      "*/5 * * * * $HOME/patterstage/data/scripts/ps-backup.sh >> /tmp/x.log 2>&1";
+    expect(crontabLineUsesScriptsDir(line, "/home/zoe/patterstage/data/scripts")).toBe(true);
   });
 
   it("crontabLineUsesScriptsDir is false for ~/.hermes/scripts paths", () => {

@@ -1,6 +1,6 @@
 # System cron — Hindsight backup
 
-PatterStage ships one host-level cron script: **`ps-backup.sh`** (Hindsight snapshot). During [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh), the script is copied into **`PS_DATA_DIR/scripts`** when missing (see [`getChScriptsDir()`](../src/lib/paths.ts)). Register jobs from the **Orchestration → Scripts** page; each crontab line must invoke a script under that directory ([`POST /api/cron/hardware`](../src/app/api/cron/hardware/route.ts)).
+PatterStage ships one host-level cron script: **`ps-backup.sh`** (Hindsight snapshot). During [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh), the script is copied into **`PS_DATA_DIR/scripts`** when missing (see [`getPsScriptsDir()`](../src/lib/paths.ts)). Register jobs from the **Orchestration → Scripts** page; each crontab line must invoke a script under that directory ([`POST /api/cron/hardware`](../src/app/api/cron/hardware/route.ts)).
 
 Preset label and filename: [`src/lib/hardware-cron.ts`](../src/lib/hardware-cron.ts) (`HARDWARE_CRON_UI_PRESETS`). Log output defaults to **`PS_HARDWARE_LOG_DIR`** (`PS_DATA_DIR/logs`).
 

@@ -5,7 +5,7 @@
 -- conversations, each mapped to a Hermes session (for agent memory /
 -- multi-turn continuity). One `chat_conversations` row per thread;
 -- `chat_messages` holds the user/assistant turns. An assistant turn is
--- linked to the Control Hub run that produced it (`run_id`) so the live
+-- linked to the PatterStage run that produced it (`run_id`) so the live
 -- run-event stream and getRun() finalisation can reconcile it.
 --
 -- `role`/`status` are validated in TypeScript (chat-repository), NOT via

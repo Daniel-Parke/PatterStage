@@ -1,5 +1,5 @@
 -- ============================================================
--- 009_runs_schedules.sql — Control Hub-owned runs + scheduler
+-- 009_runs_schedules.sql — PatterStage-owned runs + scheduler
 -- Adds the `schedules` (CH owns the timer) and `runs` (HTTP run
 -- lifecycle, replacing pid/status-file IPC) tables. Column adds to
 -- missions/agent_profiles are applied in TS (columnExists-guarded).

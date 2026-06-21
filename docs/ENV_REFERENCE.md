@@ -56,7 +56,7 @@ The runtime adapter (`src/lib/runtime/`) dispatches missions as HTTP **runs** to
 |----------|---------|
 | `HERMES_GATEWAY_URL` | Hermes API Server base the runtime targets (default `http://127.0.0.1:8642`) — run dispatch, health, chat. |
 | `API_SERVER_KEY` | Bearer key the runtime sends (`Authorization: Bearer …`). **Must match** the gateway's `API_SERVER_KEY` in `{HERMES_HOME}/.env`. `setup.sh` generates one and wires both sides. |
-| `CONTROL_HUB_LLM_API` | Full chat-completions URL or gateway-derived base (alternative to `HERMES_GATEWAY_URL`). |
+| `PS_LLM_API` / `CONTROL_HUB_LLM_API` | Full chat-completions URL or gateway-derived base (alternative to `HERMES_GATEWAY_URL`). |
 
 ## Debug artifact (not read by the app)
 

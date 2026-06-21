@@ -1,7 +1,7 @@
 -- ============================================================
 -- 016_benchmark_catalog.sql — central catalog for fair-test seed components
 --
--- The benchmark "source of truth" lives in the Control Hub DB, independent of
+-- The benchmark "source of truth" lives in the PatterStage DB, independent of
 -- any user or agent: bundled Skills already live in `skills` (source='bundled');
 -- this adds the two missing pillars so a fair test can toggle them:
 --   • tool_catalog       — canonical default TOOL bundles (sets of Hermes toolset ids)

@@ -1,5 +1,5 @@
 -- ============================================================
--- control-hub.db — Baseline Schema (v1)
+-- patterstage.db — Baseline Schema (v1)
 -- Single migration replacing the historical 001–032 chain.
 -- ============================================================
 
@@ -163,7 +163,7 @@ CREATE INDEX idx_sessions_mission_id   ON sessions(mission_id);
 CREATE INDEX idx_sessions_agent_source ON sessions(agent_type, source);
 CREATE INDEX idx_sessions_started_at   ON sessions(started_at DESC);
 
--- ── schedules (Control Hub-owned scheduler — replaces Hermes jobs.json) ──
+-- ── schedules (PatterStage-owned scheduler — replaces Hermes jobs.json) ──
 -- The "when to run" decision lives HERE, not in the agent. The scheduler tick
 -- computes due rows from next_run_at and dispatches a run via the runtime.
 CREATE TABLE schedules (
@@ -190,7 +190,7 @@ CREATE INDEX idx_schedules_next_run ON schedules(next_run_at) WHERE enabled = 1;
 CREATE INDEX idx_schedules_mission  ON schedules(mission_id);
 
 -- ── runs (one agent execution; replaces pid/status-file IPC) ──
--- id is the Control Hub-owned run id (also the Idempotency-Key); run_id is the
+-- id is the PatterStage-owned run id (also the Idempotency-Key); run_id is the
 -- backend's id. Reconciled by polling the runtime, not status.json files.
 CREATE TABLE runs (
   id           TEXT PRIMARY KEY,
@@ -279,7 +279,7 @@ CREATE UNIQUE INDEX idx_mission_categories_name
 CREATE UNIQUE INDEX idx_mission_categories_seed_key
   ON mission_categories(seed_key) WHERE seed_key IS NOT NULL;
 
--- ── agent_profiles (Control Hub source of truth) ─────────────
+-- ── agent_profiles (PatterStage source of truth) ─────────────
 CREATE TABLE agent_profiles (
   slug            TEXT PRIMARY KEY,
   display_name    TEXT NOT NULL,
