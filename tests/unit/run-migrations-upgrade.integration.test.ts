@@ -111,7 +111,9 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     // research_runs.composer_node_run_id (research-as-Composer-node link) lands
     // via the wired v25 applier.
     expect(cols(db, "research_runs")).toContain("composer_node_run_id");
-    expect(getSchemaVersion(db)).toBe(25);
+    // composer_runs.parent_node_run_id (group sub-workflow link) lands via v26.
+    expect(cols(db, "composer_runs")).toContain("parent_node_run_id");
+    expect(getSchemaVersion(db)).toBe(26);
     // Pre-existing data survived the additive upgrade (cron job + mission).
     expect(
       (db.prepare("SELECT COUNT(*) c FROM cron_jobs").get() as { c: number }).c,
@@ -143,7 +145,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
       if (next === last) break;
       last = next;
     }
-    expect(getSchemaVersion(db)).toBe(25);
+    expect(getSchemaVersion(db)).toBe(26);
     expect(tableNames(db)).toEqual(
       expect.arrayContaining([
         "composer_workflows",
@@ -166,7 +168,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(25);
+    expect(getSchemaVersion(db)).toBe(26);
     db.close();
   });
 });

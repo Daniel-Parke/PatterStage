@@ -9,6 +9,7 @@ import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
 import { applyDeepResearchMigration } from "@/lib/db/apply-deep-research-migration";
 import { applyResearchOptionsMigration } from "@/lib/db/apply-research-options-migration";
 import { applyResearchComposerLinkMigration } from "@/lib/db/apply-research-composer-link-migration";
+import { applyComposerGroupLinkMigration } from "@/lib/db/apply-composer-group-link-migration";
 
 let testDb: import("better-sqlite3").Database | null = null;
 
@@ -67,6 +68,7 @@ beforeEach(() => {
   applyComposerMigration(testDb, migrationsDir); // v21: composer tables
   applyResearchOptionsMigration(testDb, migrationsDir); // v23: research_runs.config_json
   applyResearchComposerLinkMigration(testDb, migrationsDir); // v25: link column
+  applyComposerGroupLinkMigration(testDb, migrationsDir); // v26: composer_runs.parent_node_run_id
   mockSubmit.mockReset();
   mockRunResearchJob.mockClear();
 });

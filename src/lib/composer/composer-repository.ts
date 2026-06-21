@@ -29,7 +29,7 @@ import type {
 interface WorkflowRow { id: string; key: string | null; name: string; description: string; version: number; created_at: string; updated_at: string; }
 interface NodeRow { id: string; workflow_id: string; key: string; label: string; kind: string; gate: string; is_start: number; is_terminal: number; config_json: string | null; pos: number; }
 interface EdgeRow { id: string; workflow_id: string; from_node_id: string; to_node_id: string; condition: string; label: string | null; }
-interface RunRow { id: string; workflow_id: string; status: string; current_node_id: string | null; input: string | null; context_json: string | null; profile_name: string | null; error: string | null; created_at: string; updated_at: string; completed_at: string | null; }
+interface RunRow { id: string; workflow_id: string; status: string; current_node_id: string | null; input: string | null; context_json: string | null; profile_name: string | null; error: string | null; parent_node_run_id: string | null; created_at: string; updated_at: string; completed_at: string | null; }
 interface NodeRunRow { id: string; composer_run_id: string; node_id: string; attempt: number; status: string; run_id: string | null; input: string | null; output: string | null; verdict_json: string | null; error: string | null; started_at: string | null; completed_at: string | null; created_at: string; }
 interface ApprovalRow { id: string; composer_run_id: string; node_id: string; action: string; approved: number; note: string | null; decided_by: string; created_at: string; }
 
@@ -43,7 +43,7 @@ function rowToEdge(r: EdgeRow): ComposerEdge {
   return { id: r.id, workflowId: r.workflow_id, fromNodeId: r.from_node_id, toNodeId: r.to_node_id, condition: r.condition as EdgeCondition, label: r.label };
 }
 function rowToRun(r: RunRow): ComposerRun {
-  return { id: r.id, workflowId: r.workflow_id, status: r.status as ComposerRunStatus, currentNodeId: r.current_node_id, input: r.input, context: parseJson<Record<string, unknown>>(r.context_json), profileName: r.profile_name, error: r.error, createdAt: r.created_at, updatedAt: r.updated_at, completedAt: r.completed_at };
+  return { id: r.id, workflowId: r.workflow_id, status: r.status as ComposerRunStatus, currentNodeId: r.current_node_id, input: r.input, context: parseJson<Record<string, unknown>>(r.context_json), profileName: r.profile_name, error: r.error, parentNodeRunId: r.parent_node_run_id ?? null, createdAt: r.created_at, updatedAt: r.updated_at, completedAt: r.completed_at };
 }
 function rowToNodeRun(r: NodeRunRow): ComposerNodeRun {
   return { id: r.id, composerRunId: r.composer_run_id, nodeId: r.node_id, attempt: r.attempt, status: r.status as NodeRunStatus, runId: r.run_id, input: r.input, output: r.output, verdict: parseJson<NodeVerdict>(r.verdict_json), error: r.error, startedAt: r.started_at, completedAt: r.completed_at, createdAt: r.created_at };
@@ -202,13 +202,19 @@ export function workflowHasActiveRuns(workflowId: string): boolean {
 }
 
 // ── Runs ─────────────────────────────────────────────────────────
-export function createComposerRun(input: { workflowId: string; input?: string | null; profileName?: string | null; context?: Record<string, unknown> | null; currentNodeId?: string | null }): ComposerRun {
+export function createComposerRun(input: { workflowId: string; input?: string | null; profileName?: string | null; context?: Record<string, unknown> | null; currentNodeId?: string | null; parentNodeRunId?: string | null }): ComposerRun {
   const id = uuid();
   const ts = now();
-  db().prepare(`INSERT INTO composer_runs (id, workflow_id, status, current_node_id, input, context_json, profile_name, created_at, updated_at)
-                VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?)`)
-    .run(id, input.workflowId, input.currentNodeId ?? null, input.input ?? null, input.context ? JSON.stringify(input.context) : null, input.profileName ?? null, ts, ts);
+  db().prepare(`INSERT INTO composer_runs (id, workflow_id, status, current_node_id, input, context_json, profile_name, parent_node_run_id, created_at, updated_at)
+                VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)`)
+    .run(id, input.workflowId, input.currentNodeId ?? null, input.input ?? null, input.context ? JSON.stringify(input.context) : null, input.profileName ?? null, input.parentNodeRunId ?? null, ts, ts);
   return getComposerRun(id)!;
+}
+
+/** The latest sub-workflow run spawned by a given "group" node-run (settle seam). */
+export function getComposerRunByParentNodeRunId(nodeRunId: string): ComposerRun | null {
+  const row = db().prepare("SELECT * FROM composer_runs WHERE parent_node_run_id = ? ORDER BY created_at DESC LIMIT 1").get(nodeRunId) as RunRow | undefined;
+  return row ? rowToRun(row) : null;
 }
 
 export function getComposerRun(id: string): ComposerRun | null {

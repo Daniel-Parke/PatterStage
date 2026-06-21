@@ -6,6 +6,7 @@
 import { join } from "path";
 import { execBaselineSchema } from "../helpers/baseline-db";
 import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
+import { applyComposerGroupLinkMigration } from "@/lib/db/apply-composer-group-link-migration";
 import {
   createComposerRun,
   createNodeRun,
@@ -43,6 +44,7 @@ beforeEach(() => {
   testDb.pragma("foreign_keys = ON");
   execBaselineSchema(testDb); // missions + runs, schema_version 3
   applyComposerMigration(testDb, migrationsDir); // composer tables + runs column
+  applyComposerGroupLinkMigration(testDb, migrationsDir); // composer_runs.parent_node_run_id (v26)
 });
 
 afterEach(() => {

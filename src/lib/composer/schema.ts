@@ -96,6 +96,8 @@ export interface ComposerRun {
   context: Record<string, unknown> | null;
   profileName: string | null;
   error: string | null;
+  /** Set when a "group" node spawned this run as a nested sub-workflow. */
+  parentNodeRunId: string | null;
   createdAt: string;
   updatedAt: string;
   completedAt: string | null;

@@ -6,6 +6,7 @@
 import { join } from "path";
 import { execBaselineSchema } from "../helpers/baseline-db";
 import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
+import { applyComposerGroupLinkMigration } from "@/lib/db/apply-composer-group-link-migration";
 
 let testDb: import("better-sqlite3").Database | null = null;
 jest.mock("@/lib/db", () => {
@@ -60,6 +61,7 @@ beforeEach(() => {
   testDb.pragma("foreign_keys = ON");
   execBaselineSchema(testDb);
   applyComposerMigration(testDb, migrationsDir);
+  applyComposerGroupLinkMigration(testDb, migrationsDir);
 });
 afterEach(() => {
   testDb?.close();

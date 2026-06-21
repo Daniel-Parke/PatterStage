@@ -18,7 +18,9 @@ import { parseVerdict } from "./verdict";
 import { dispatchComposerNode } from "./dispatch";
 import {
   getComposerRun,
+  getComposerRunByParentNodeRunId,
   getNode,
+  getNodeRun,
   getNodeRunByRunId,
   getOutgoingEdges,
   getStartNode,
@@ -117,6 +119,61 @@ function settleResearchNode(node: ComposerNode, nodeRun: ComposerNodeRun): boole
   return false; // still researching
 }
 
+/**
+ * Settle a running "group" node-run from its linked sub-workflow run. The child
+ * is a durable ComposerRun (survives restarts, advances via the tick), so no
+ * cap is needed — we simply wait for it to terminate. On completion the child's
+ * accumulated context is merged into the parent under the node key.
+ */
+function settleGroupNode(node: ComposerNode, nodeRun: ComposerNodeRun): boolean {
+  const child = getComposerRunByParentNodeRunId(nodeRun.id);
+  if (!child) {
+    applyGroupOutcome(node, nodeRun, "failed", null, "sub-workflow run was never created");
+    return true;
+  }
+  if (child.status === "completed") {
+    applyGroupOutcome(node, nodeRun, "completed", child, null);
+    return true;
+  }
+  if (child.status === "failed" || child.status === "cancelled") {
+    applyGroupOutcome(node, nodeRun, "failed", child, child.error ?? "sub-workflow failed");
+    return true;
+  }
+  return false; // sub-workflow still in flight (incl. its own HIL gate)
+}
+
+function applyGroupOutcome(
+  node: ComposerNode,
+  nodeRun: ComposerNodeRun,
+  status: "completed" | "failed",
+  child: { context: Record<string, unknown> | null } | null,
+  error: string | null,
+): void {
+  const output = status === "completed" ? "Sub-workflow completed." : null;
+  const verdict =
+    status === "failed"
+      ? { pass: false, reasons: [error ?? "sub-workflow failed"], suggestions: [] }
+      : parseVerdict(output, node.kind);
+
+  updateNodeRun(nodeRun.id, { status, output, verdict, error, completedAt: now() });
+
+  if (status === "completed") {
+    const run = getComposerRun(nodeRun.composerRunId);
+    if (run) {
+      const context = { ...(run.context ?? {}), [node.key]: child?.context ?? {} };
+      updateComposerRun(nodeRun.composerRunId, { context });
+    }
+  }
+}
+
+/** When a run terminates, nudge the parent group node-run's run to settle now. */
+function nudgeParentRun(composerRunId: string): void {
+  const run = getComposerRun(composerRunId);
+  if (!run?.parentNodeRunId) return;
+  const parentNodeRun = getNodeRun(run.parentNodeRunId);
+  if (parentNodeRun) void advanceComposerRun(parentNodeRun.composerRunId);
+}
+
 export type NextStep =
   | { kind: "node"; nodeId: string }
   | { kind: "complete" }
@@ -165,16 +222,19 @@ async function applyNext(
 ): Promise<void> {
   if (next.kind === "complete") {
     updateComposerRun(composerRunId, { status: "completed", completedAt: now() });
+    nudgeParentRun(composerRunId); // if this is a sub-workflow, settle its group stage
     return;
   }
   if (next.kind === "fail") {
     updateComposerRun(composerRunId, { status: "failed", error: next.error, completedAt: now() });
+    nudgeParentRun(composerRunId);
     return;
   }
   // Reaching a terminal node ends the run — the end-marker runs no agent.
   const target = getNode(next.nodeId);
   if (target?.isTerminal) {
     updateComposerRun(composerRunId, { status: "completed", currentNodeId: next.nodeId, completedAt: now() });
+    nudgeParentRun(composerRunId);
     return;
   }
   // Route to the next node (a loop-back gets a fresh attempt). Carry the prior
@@ -217,10 +277,13 @@ export async function advanceComposerRun(composerRunId: string): Promise<void> {
   }
   if (current.status === "pending") return; // dispatched, not yet running
   if (current.status === "running") {
-    // "research" nodes run in-process (not via the agent reconcile path), so
-    // settle them here from their linked research run. Agent stage-runs wait
-    // for reconcile to write their terminal state.
-    if (node.kind === "research" && settleResearchNode(node, current)) {
+    // "research" + "group" nodes don't run via the agent reconcile path, so
+    // settle them here from their linked research/sub-workflow run. Agent
+    // stage-runs wait for reconcile to write their terminal state.
+    if (
+      (node.kind === "research" && settleResearchNode(node, current)) ||
+      (node.kind === "group" && settleGroupNode(node, current))
+    ) {
       current = latestNodeRun(composerRunId, node.id)!;
     } else {
       return; // in flight — wait

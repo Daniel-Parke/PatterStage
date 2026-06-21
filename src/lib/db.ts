@@ -32,6 +32,7 @@ import { applyMemoryProvidersMigration } from "./db/apply-memory-providers-migra
 import { applyResearchOptionsMigration } from "./db/apply-research-options-migration";
 import { applyModelsApiStyleMigration } from "./db/apply-models-api-style-migration";
 import { applyResearchComposerLinkMigration } from "./db/apply-research-composer-link-migration";
+import { applyComposerGroupLinkMigration } from "./db/apply-composer-group-link-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -242,6 +243,9 @@ export function runMigrations(database: Database.Database): void {
   // Link a Deep Research run to the Composer node-run that spawned it (the
   // "research" node kind). Guarded ALTER at v25.
   applyResearchComposerLinkMigration(database, migrationsDir);
+  // Link a nested sub-workflow run to the "group" node-run that spawned it.
+  // Guarded ALTER at v26.
+  applyComposerGroupLinkMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────
