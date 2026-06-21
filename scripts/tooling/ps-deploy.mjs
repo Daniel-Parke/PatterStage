@@ -30,18 +30,41 @@ const APP_DIR = join(SCRIPTS_ROOT, "..");
 function normDir(d) {
   return d.replace(/[/\\]+$/, "");
 }
+function dirHasDb(d) {
+  return existsSync(join(d, "patterstage.db")) || existsSync(join(d, "control-hub.db"));
+}
+// Mirrors src/lib/paths.ts (resolveDataDir/getDbPath). Keep in lockstep: an
+// explicit env var wins; else a dir that already holds a populated DB beats
+// creating/opening an empty one (the case-sensitive ~/PatterStage vs
+// ~/patterstage race); when both DB names exist, prefer the larger (populated).
 export function resolveDataDir() {
   const raw = process.env.PS_DATA_DIR || process.env.CH_DATA_DIR || process.env.CONTROL_HUB_DATA_DIR;
   if (raw && raw.trim()) return normDir(raw.trim());
-  const next = normDir(join(homedir(), "patterstage", "data"));
-  const legacy = normDir(join(homedir(), "control-hub", "data"));
-  if (!existsSync(next) && existsSync(legacy)) return legacy;
-  return next;
+  const home = homedir();
+  const candidates = [
+    normDir(join(home, "PatterStage", "data")),
+    normDir(join(home, "patterstage", "data")),
+    normDir(join(home, "control-hub", "data")),
+  ];
+  return (
+    candidates.find(dirHasDb) ??
+    candidates.find((d) => existsSync(d)) ??
+    normDir(join(home, "patterstage", "data"))
+  );
 }
 export function resolveDbPath(dir) {
   const next = join(dir, "patterstage.db");
   const legacy = join(dir, "control-hub.db");
-  if (!existsSync(next) && existsSync(legacy)) return legacy;
+  const nextEx = existsSync(next);
+  const legEx = existsSync(legacy);
+  if (nextEx && legEx) {
+    try {
+      return statSync(legacy).size > statSync(next).size ? legacy : next;
+    } catch {
+      return next;
+    }
+  }
+  if (!nextEx && legEx) return legacy;
   return next;
 }
 function hermesHome() {

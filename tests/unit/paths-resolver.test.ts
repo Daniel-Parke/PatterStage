@@ -6,7 +6,7 @@ import { mkdtempSync, writeFileSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
-import { readEnv, getPsDataDir, getDbPath } from "@/lib/paths";
+import { readEnv, getPsDataDir, getDbPath, resolveDataDir } from "@/lib/paths";
 
 const ENV_KEYS = ["PS_DATA_DIR", "CH_DATA_DIR", "CONTROL_HUB_DATA_DIR"] as const;
 
@@ -61,6 +61,35 @@ describe("paths resolver", () => {
     });
   });
 
+  describe("resolveDataDir discovery (no env var set)", () => {
+    const home = "/home/u";
+    const UPPER = "/home/u/PatterStage/data";
+    const LOWER = "/home/u/patterstage/data";
+    const LEGACY = "/home/u/control-hub/data";
+
+    it("prefers a dir with a populated DB over an empty one (the case-sensitivity race)", () => {
+      // Lowercase dir exists but empty; uppercase dir has the real DB.
+      const hasDb = (d: string) => d === UPPER;
+      const exists = (d: string) => d === UPPER || d === LOWER;
+      expect(resolveDataDir(home, hasDb, exists)).toBe(UPPER);
+    });
+
+    it("uses an existing dir when none have a DB yet", () => {
+      const hasDb = () => false;
+      const exists = (d: string) => d === LOWER;
+      expect(resolveDataDir(home, hasDb, exists)).toBe(LOWER);
+    });
+
+    it("falls back to the lowercase default when nothing exists (fresh install)", () => {
+      expect(resolveDataDir(home, () => false, () => false)).toBe(LOWER);
+    });
+
+    it("legacy control-hub dir with a DB wins over a fresh default", () => {
+      const hasDb = (d: string) => d === LEGACY;
+      expect(resolveDataDir(home, hasDb, (d) => d === LEGACY)).toBe(LEGACY);
+    });
+  });
+
   describe("getDbPath", () => {
     let dir: string;
     beforeEach(() => {
@@ -80,6 +109,11 @@ describe("paths resolver", () => {
     });
     it("falls back to legacy control-hub.db when only it exists (un-migrated)", () => {
       writeFileSync(join(dir, "control-hub.db"), "");
+      expect(getDbPath(dir)).toBe(dir + "/control-hub.db");
+    });
+    it("prefers the populated DB when a stale empty patterstage.db shadows a real control-hub.db", () => {
+      writeFileSync(join(dir, "patterstage.db"), ""); // empty stale file
+      writeFileSync(join(dir, "control-hub.db"), "x".repeat(4096)); // populated
       expect(getDbPath(dir)).toBe(dir + "/control-hub.db");
     });
   });

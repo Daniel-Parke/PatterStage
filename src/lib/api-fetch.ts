@@ -72,7 +72,7 @@ export async function apiFetch<T = any>(
  * without try/catch at every call site.
  *
  * @example
- *   const { ok, error } = await safeApiCall("/api/cron", { method: "POST", body: { action: "sync" } });
+ *   const { ok, error } = await safeApiCall("/api/schedules", { method: "POST", body: { missionId, schedule } });
  *   if (!ok) showToast(error!, "error");
  */
 /** Return shape of `safeApiCall` — used by `runMutation` consumers to read fields beyond ok/error. */

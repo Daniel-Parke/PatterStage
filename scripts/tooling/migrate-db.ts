@@ -19,7 +19,6 @@ import Database from "better-sqlite3";
 import { readFileSync, existsSync, mkdirSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
-import { homedir } from "os";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..", "..");
@@ -62,16 +61,16 @@ function readSchemaVersion(dbPath: string): number {
 
 async function main(): Promise<void> {
   loadEnvLocal();
-  const dataDir = (
-    process.env.PS_DATA_DIR ||
-    process.env.CH_DATA_DIR ||
-    process.env.CONTROL_HUB_DATA_DIR ||
-    join(homedir(), "patterstage", "data")
-  ).replace(/[/\\]+$/, "");
+  // Single source of truth: reuse the app's resolver (respects PS_DATA_DIR env,
+  // else discovers an existing populated data dir). Replaces the old hardcoded
+  // lowercase ~/patterstage/data + control-hub.db, which on a case-sensitive
+  // install could create/migrate the WRONG (or an empty) database.
+  const { getPsDataDir, getDbPath } = await import("../../src/lib/paths");
+  const dataDir = getPsDataDir();
   process.env.PS_DATA_DIR = dataDir;
   if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
 
-  const dbPath = join(dataDir, "control-hub.db");
+  const dbPath = getDbPath(dataDir);
   console.log(`Database: ${dbPath}`);
 
   const before = readSchemaVersion(dbPath);

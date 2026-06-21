@@ -14,6 +14,16 @@
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
+  // Loud warning if we may be reading the wrong (emptier) DB than a sibling data
+  // dir — e.g. an empty ~/patterstage/data shadowing a populated ~/PatterStage.
+  try {
+    const { shadowedDataWarning } = await import("@/lib/paths");
+    const warning = shadowedDataWarning();
+    if (warning) console.warn(`[paths] ${warning}`);
+  } catch {
+    /* non-fatal diagnostic */
+  }
+
   // Read-side sync layer (config / env / logs / sessions / memory drift sources).
   const { ensureSyncLayer } = await import("@/lib/sync");
   ensureSyncLayer();

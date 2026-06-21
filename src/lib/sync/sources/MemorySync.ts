@@ -17,18 +17,25 @@ import type { SyncSource, SyncResult } from "@/lib/sync/types";
 const HINDSIGHT_BASE_URL = "http://localhost:9177/v1/default/banks";
 const DEFAULT_BANK = "hermes";
 
-/** Get fact count from Hindsight server via direct HTTP call. */
-async function fetchHindsightFactCount(): Promise<number> {
+/**
+ * Probe the running Hindsight server. `available` means the server answered
+ * (so it IS installed/running, even with 0 facts) — we do NOT rely on the
+ * Hermes config.yaml `memory.provider` value, which is frequently blank while
+ * Hindsight is configured in its own ~/.hermes/hindsight/config.json. This is
+ * the dashboard-tile honesty fix (Phase 1 replaces this with the provider
+ * registry + DB-owned config).
+ */
+async function fetchHindsightStats(): Promise<{ available: boolean; total: number }> {
   try {
     const res = await fetch(
       `${HINDSIGHT_BASE_URL}/${DEFAULT_BANK}/memories/list?limit=1`,
       { signal: AbortSignal.timeout(3000) }
     );
-    if (!res.ok) return 0;
+    if (!res.ok) return { available: false, total: 0 };
     const data = (await res.json()) as { total?: number };
-    return data.total ?? 0;
+    return { available: true, total: data.total ?? 0 };
   } catch {
-    return 0;
+    return { available: false, total: 0 };
   }
 }
 
@@ -77,15 +84,21 @@ export class MemorySync implements SyncSource {
 
       let factCount = 0;
       let dbSize = "N/A";
-      let provider = providerType === "none" ? "Not Installed" : providerType;
+      let provider = "Not Installed";
 
       if (providerType === "holographic") {
+        provider = "Holographic";
         factCount = getHolographicFactCount();
         dbSize = getMemoryDbSize();
-      } else if (providerType === "hindsight") {
-        provider = "Hindsight (embedded)";
-        dbSize = "In-agent";
-        factCount = await fetchHindsightFactCount();
+      } else {
+        // hindsight OR none: probe the running Hindsight server directly so a
+        // blank config.yaml `memory.provider` doesn't hide a live install.
+        const hs = await fetchHindsightStats();
+        if (hs.available) {
+          provider = "Hindsight";
+          dbSize = "In-agent";
+          factCount = hs.total;
+        }
       }
 
       // Write to meta table
@@ -94,7 +107,7 @@ export class MemorySync implements SyncSource {
         "memory.db_size": dbSize,
         "memory.provider": provider,
       });
-      setSystemStatBoolean("memory.available", factCount > 0);
+      setSystemStatBoolean("memory.available", provider !== "Not Installed");
 
       return {
         sourceName: this.name,
