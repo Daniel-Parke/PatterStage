@@ -10,7 +10,7 @@ import {
   ScrollText, Sparkles, Rocket, Volume2, Mic, GitBranch,
   RotateCcw, ShieldCheck, Lock, Code,
   BookOpen, Bot, MessageCircle,
-  AudioLines, Settings2, Network, BarChart3, Trophy,
+  AudioLines, Settings2, Network, BarChart3, Trophy, Telescope,
 } from "lucide-react";
 
 import type { AccentColor } from "@/types/hermes";
@@ -70,6 +70,7 @@ export const mainSections: SidebarSection[] = [
     links: [
       { icon: BarChart3, label: "Insights", href: "/laboratory/insights", color: "green" },
       { icon: Trophy, label: "Benchmarks", href: "/laboratory/benchmarks", color: "purple" },
+      { icon: Telescope, label: "Deep Research", href: "/laboratory/research", color: "cyan" },
     ],
   },
   {

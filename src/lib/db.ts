@@ -25,6 +25,7 @@ import { applyBenchmarkConfigMigration } from "./db/apply-benchmark-config-migra
 import { applyBenchmarkCatalogMigration } from "./db/apply-benchmark-catalog-migration";
 import { applyBenchGatewaysMigration } from "./db/apply-bench-gateways-migration";
 import { applyMissionPhasesMigration } from "./db/apply-mission-phases-migration";
+import { applyDeepResearchMigration } from "./db/apply-deep-research-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -201,6 +202,9 @@ export function runMigrations(database: Database.Database): void {
   // _approvals tables + additive missions/runs columns. Idempotent CREATE +
   // guarded ALTER at schema_version 18. V1 missions unaffected.
   applyMissionPhasesMigration(database, migrationsDir);
+  // Native DeepResearch (Laboratory): research_runs + research_steps.
+  // Idempotent CREATE ... IF NOT EXISTS at schema_version 19.
+  applyDeepResearchMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

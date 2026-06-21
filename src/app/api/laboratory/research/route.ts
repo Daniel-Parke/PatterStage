@@ -1,0 +1,51 @@
+// ═══════════════════════════════════════════════════════════════
+// /api/laboratory/research — list + start native DeepResearch runs
+//
+// GET  — recent research runs.
+// POST — start a run: create the row, kick off the engine async (fire-and-
+//        forget), return the pending run. The page polls GET /[id] for steps.
+// ═══════════════════════════════════════════════════════════════
+
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { requireAuth } from "@/lib/api-auth";
+import { serverErrorFromCatch } from "@/lib/api-logger";
+import { ok, created } from "@/lib/api-response";
+import { ensureDb } from "@/lib/db";
+import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
+import { createResearchRun, listResearchRuns } from "@/lib/laboratory/deep-research/research-repository";
+import { runResearchJob } from "@/lib/laboratory/deep-research/run-job";
+
+const startSchema = z
+  .object({
+    query: z.string().min(3).max(2000),
+    modelId: z.string().min(1).optional(),
+  })
+  .strict();
+
+export async function GET() {
+  try {
+    ensureDb();
+    return ok({ runs: listResearchRuns() });
+  } catch (error) {
+    return serverErrorFromCatch("GET /api/laboratory/research", "list", error, "Failed to list research runs");
+  }
+}
+
+export async function POST(request: NextRequest) {
+  const auth = requireAuth(request);
+  if (auth) return auth;
+
+  const parsed = await parseAndValidateJsonBody(request, startSchema);
+  if (parsed instanceof NextResponse) return parsed;
+
+  try {
+    ensureDb();
+    const run = createResearchRun({ query: parsed.query, modelId: parsed.modelId ?? null });
+    // Fire-and-forget: the engine runs in the background; the page polls.
+    void runResearchJob(run.id, parsed.query, parsed.modelId ?? null);
+    return created({ run });
+  } catch (error) {
+    return serverErrorFromCatch("POST /api/laboratory/research", "start", error, "Failed to start research run");
+  }
+}

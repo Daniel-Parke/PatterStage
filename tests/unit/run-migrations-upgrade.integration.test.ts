@@ -90,7 +90,9 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     );
     expect(cols(db, "missions")).toEqual(expect.arrayContaining(["version", "current_phase_id"]));
     expect(cols(db, "runs")).toContain("phase_action_id");
-    expect(getSchemaVersion(db)).toBe(18);
+    // Native DeepResearch tables land via the wired v19 applier.
+    expect(tableNames(db)).toEqual(expect.arrayContaining(["research_runs", "research_steps"]));
+    expect(getSchemaVersion(db)).toBe(19);
     // Pre-existing data survived the additive upgrade (cron job + mission).
     expect(
       (db.prepare("SELECT COUNT(*) c FROM cron_jobs").get() as { c: number }).c,
@@ -112,7 +114,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(18);
+    expect(getSchemaVersion(db)).toBe(19);
     db.close();
   });
 });
