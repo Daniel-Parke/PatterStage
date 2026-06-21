@@ -4,7 +4,7 @@ Extends `~/.hermes/AGENTS.md` (base instructions). This file adds project-specif
 
 > **Always read `~/.hermes/AGENTS.md` first.** It contains the universal rules, execution loop, and repository structure that apply to all agents.
 
-> **For architecture, design rules, and current state, load the `control-hub` skill** and the docs index at [docs/README.md](docs/README.md).
+> **For architecture, design rules, and current state, load the `patterstage` skill** and the docs index at [docs/README.md](docs/README.md).
 
 ## Development Environment
 
@@ -24,7 +24,7 @@ PatterStage is the **single source of truth for orchestration and scheduling**; 
 ## Project Structure
 
 ```
-control-hub/
+patterstage/
 ├── src/
 │   ├── app/
 │   │   ├── api/                    # REST API routes ({ data?, error? } envelope)

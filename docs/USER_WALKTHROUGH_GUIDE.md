@@ -4,7 +4,7 @@ This guide is the **operator manual** for PatterStage. It describes every area o
 
 The guide is written for the **Junior developer / operator** — every page is documented, every common action has a "Typical use" walkthrough, and "Notes" call out non-obvious behaviour. If you have not used PatterStage before, read the "What PatterStage is" section and the "Dashboard" section first, then jump to the page you need.
 
-**How this guide is organised:** one section per sidebar entry, in the order you see them in the app. Cross-references to the sibling technical docs ([MISSIONS.md](MISSIONS.md), [DEPLOY.md](DEPLOY.md), [API.md](API.md), [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md), [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md), [MIGRATION.md](MIGRATION.md), [ENV_REFERENCE.md](ENV_REFERENCE.md), [TESTING.md](TESTING.md), [SYSTEM-CRON.md](SYSTEM-CRON.md), [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md), [CONTROL_HUB.md](CONTROL_HUB.md)) are made inline.
+**How this guide is organised:** one section per sidebar entry, in the order you see them in the app. Cross-references to the sibling technical docs ([MISSIONS.md](MISSIONS.md), [DEPLOY.md](DEPLOY.md), [API.md](API.md), [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md), [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md), [MIGRATION.md](MIGRATION.md), [ENV_REFERENCE.md](ENV_REFERENCE.md), [TESTING.md](TESTING.md), [SYSTEM-CRON.md](SYSTEM-CRON.md), [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md), [PATTERSTAGE.md](PATTERSTAGE.md)) are made inline.
 
 ---
 
@@ -1208,7 +1208,7 @@ The three buttons at the bottom of the sidebar — **Update**, **Restart**, and 
 | Topic | Document |
 |-------|----------|
 | Install & quick start | [README.md](../README.md) |
-| Architecture map | [CONTROL_HUB.md](CONTROL_HUB.md) |
+| Architecture map | [PATTERSTAGE.md](PATTERSTAGE.md) |
 | Mission prompts & cancel | [MISSIONS.md](MISSIONS.md) |
 | Profiles & catalog seed | [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md) |
 | Toolsets & mission tool hints | [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md) |

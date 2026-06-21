@@ -4,7 +4,7 @@ Technical reference for PatterStage. Tone elsewhere in this folder is deliberate
 
 | Document | Description |
 |----------|-------------|
-| [CONTROL_HUB.md](CONTROL_HUB.md) | What this repo is and where to read next |
+| [PATTERSTAGE.md](PATTERSTAGE.md) | What this repo is and where to read next |
 | [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) | Operator guide: every sidebar page, every common action (dashboard, missions + scheduling, scripts, chat, agents + performance, skills, tools, personalities, sessions, memory, logs, all Config pages, Story Weaver) |
 | [MISSIONS.md](MISSIONS.md) | Mission board, dispatch, cancellation, templates |
 | [CHAT.md](CHAT.md) | Agent chat: server-persisted conversations, run-event streaming, tools + HITL approvals, Agent/Fast modes |

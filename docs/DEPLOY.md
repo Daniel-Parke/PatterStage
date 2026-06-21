@@ -134,7 +134,7 @@ wired after the initial import.
 If the Memory page shows 0 facts or "Not Installed" after a deploy:
 
 ```bash
-cd /path/to/control-hub
+cd /path/to/patterstage
 bash scripts/hardware/reconnect-hindsight.sh
 ```
 

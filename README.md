@@ -10,7 +10,7 @@ It owns its own state (SQLite under `PS_DATA_DIR`) and talks to the agent over H
 
 > A [PatterTech](https://www.pattertech.com) venture.
 
-**Docs:** [Doc index](docs/README.md) · [Platform vision](docs/PLATFORM_VISION.md) · [PatterStage overview](docs/CONTROL_HUB.md) · [Runtime architecture](docs/RUNTIME_ARCHITECTURE.md) · [Missions](docs/MISSIONS.md) · [User walkthrough](docs/USER_WALKTHROUGH_GUIDE.md) · [Cross-platform](docs/CROSS_PLATFORM.md) · [Deploy](docs/DEPLOY.md) · [Migration](docs/MIGRATION.md)
+**Docs:** [Doc index](docs/README.md) · [Platform vision](docs/PLATFORM_VISION.md) · [PatterStage overview](docs/PATTERSTAGE.md) · [Runtime architecture](docs/RUNTIME_ARCHITECTURE.md) · [Missions](docs/MISSIONS.md) · [User walkthrough](docs/USER_WALKTHROUGH_GUIDE.md) · [Cross-platform](docs/CROSS_PLATFORM.md) · [Deploy](docs/DEPLOY.md) · [Migration](docs/MIGRATION.md)
 
 > **Renamed:** this repo was `hermes-control-hub` and is now `PatterStage`. Existing clones and forks keep working via GitHub's automatic redirect — optionally run `git remote set-url origin https://github.com/Daniel-Parke/PatterStage.git` to repoint. Full details: [docs/MIGRATION.md](docs/MIGRATION.md#repository-renamed-hermes-control-hub--patterstage).
 
