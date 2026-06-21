@@ -22,7 +22,7 @@ It owns its own state (SQLite under `PS_DATA_DIR`) and talks to the agent over H
 |------|--------------|
 | **Dashboard** | Live operational analytics — throughput, success rate, token usage, a 13-week run-activity heatmap, mission mix, vitals, and at-a-glance health. Lightweight progression flair (level / streak / milestones) derived from real activity — never gates anything. |
 | **Missions** | Compose, dispatch, track, and **cancel** agent missions as HTTP runs. One-off or **recurring** (a mission's "Schedule" mode creates a PatterStage schedule that the built-in scheduler fires). |
-| **Scripts** | Schedule **host scripts** on the OS scheduler — `crontab` on Linux/macOS, **Task Scheduler** on Windows (backups, cleanups, health checks) — separate from agent missions. The bundled scripts are cross-platform Node (`.mjs`). |
+| **Scripts** | Schedule **host scripts** in the user `crontab` (Linux/macOS; Windows via WSL2) — backups, cleanups, health checks — separate from agent missions. The bundled scripts are cross-platform Node (`.mjs`). |
 | **Chat** | Gateway-backed chat, separate from mission dispatch. |
 | **Sessions & Memory** | Browse transcripts; view the configured memory provider (Hindsight or none). |
 | **Agents / Skills / Tools / Personalities** | Profile-aware configuration + a per-agent **performance** view (runs · success% · tokens · avg duration). |
@@ -37,7 +37,7 @@ How the pieces fit together: [docs/RUNTIME_ARCHITECTURE.md](docs/RUNTIME_ARCHITE
 
 | Requirement | Notes |
 |-------------|--------|
-| **Linux, macOS, or Windows** | PatterStage runs on all three (Hermes is cross-platform; the link to it is pure HTTP). Linux/macOS use the bash installer; Windows uses `install.ps1` / `node scripts\bootstrap\setup.mjs`. See [Cross-platform](docs/CROSS_PLATFORM.md). |
+| **Linux** (or macOS for dev) | PatterStage is **Linux-first** — the supported/tested target (and the [PatterOS](https://github.com/Daniel-Parke/PatterOS) home); macOS works for development. On **Windows, use WSL2 (Ubuntu)**. See [Cross-platform](docs/CROSS_PLATFORM.md). |
 | **Node.js 20+** | Matches [CI](.github/workflows/ci.yml). On macOS install Xcode Command Line Tools if `npm install` fails building native modules. |
 | **Hermes Agent** | [Install Hermes](https://hermes-agent.nousresearch.com/docs/getting-started/installation) for full missions, runs, and gateway features. PatterStage can start without it, but agent paths stay limited until `~/.hermes` is configured. The runtime needs Hermes' **API Server** enabled (the installer/setup does this for you). |
 | **git** | For clone-based install and the in-app updater. |
@@ -56,7 +56,7 @@ How the pieces fit together: [docs/RUNTIME_ARCHITECTURE.md](docs/RUNTIME_ARCHITE
    ```
    Fresh machine without a clone yet: `bash scripts/bootstrap/install.sh` (clones to `~/patterstage`, then runs setup).
 
-   **Windows** (PowerShell) — fresh machine: `iex (irm https://raw.githubusercontent.com/Daniel-Parke/PatterStage/dev/install.ps1)`; from an existing clone: `powershell -ExecutionPolicy Bypass -File install.ps1 -InRepo` (or just `node scripts\bootstrap\setup.mjs`). See [Cross-platform](docs/CROSS_PLATFORM.md).
+   **Windows** — run under **WSL2 (Ubuntu)**: `wsl --install -d Ubuntu` (one-time, elevated PowerShell), then open Ubuntu and follow the Linux steps above. See [Cross-platform](docs/CROSS_PLATFORM.md).
 
 3. **Start the server** and open the dashboard:
    ```bash

@@ -151,60 +151,16 @@ jobs:
             npm run build
           }
 
-  build-test-windows:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-        id: checkout1
-        continue-on-error: true
-        with:
-          token: ${{ github.token }}
-      - name: Checkout repository (retry)
-        if: steps.checkout1.outcome != 'success'
-        uses: actions/checkout@v5
-        with:
-          token: ${{ github.token }}
-      - uses: actions/setup-node@v5
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: package-lock.json
-      - name: Modern node-gyp (recognise the runner's Visual Studio)
-        # If better-sqlite3 compiles from source, Node 20's bundled node-gyp 10.1
-        # can't parse the runner's VS 2022/2025 ("unknown version undefined").
-        # This job runs on Node 22 (newer toolchain; usually a prebuilt binary so
-        # no compile at all), and overrides node-gyp via the env var npm honours
-        # — npm has no `node_gyp` config key, and node-gyp@latest needs Node 22+.
-        shell: bash
-        run: |
-          npm install -g node-gyp@latest
-          echo "npm_config_node_gyp=$(npm root -g)/node-gyp/bin/node-gyp.js" >> "$GITHUB_ENV"
-      - name: Install dependencies (with cache reset retry)
-        shell: bash
-        run: |
-          npm ci || (npm cache clean --force && npm ci)
-      - name: Run database migrations
-        run: npm run prebuild
-      - name: ESLint
-        run: npm run lint
-      - name: TypeScript (tsc --noEmit)
-        run: npx tsc --noEmit -p tsconfig.json
-      - name: Unit tests with coverage
-        run: npm run test:coverage
-      - name: Next.js production build
-        run: npm run build
-
-  # Cross-platform operational smoke: the OS-seam primitives (detached spawn
-  # survival, port probing, process kill) + a bundled hardware .mjs, on all three
-  # OSes. No app build / no Hermes, so it's fast and isolates platform behaviour.
+  # Operational smoke: the OS-seam primitives (detached spawn
+  # survival, port probing, process kill) + a bundled hardware .mjs, on Linux +
+  # macOS. No app build / no Hermes, so it's fast and isolates platform behaviour.
   boot-smoke:
     name: boot-smoke (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5

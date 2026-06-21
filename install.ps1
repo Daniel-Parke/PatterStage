@@ -1,58 +1,22 @@
 # ===============================================================
-# PatterStage - Windows installer (PowerShell). The native-Windows
-# counterpart to scripts/bootstrap/install.sh. Bootstraps only: verifies
-# Node + Git, clones (or updates), then hands off to the cross-platform
-# scripts/bootstrap/setup.mjs which does all the real work.
-#
-#   iex (irm https://raw.githubusercontent.com/Daniel-Parke/PatterStage/dev/install.ps1)
-#   # or, from an existing clone:
-#   powershell -ExecutionPolicy Bypass -File install.ps1 -InRepo
+# PatterStage targets Linux. On Windows, run it under WSL2 (Ubuntu) — the same
+# environment as production and as PatterOS. There is no native-Windows install
+# path; this stub only points the way. See docs/CROSS_PLATFORM.md.
 # ===============================================================
-[CmdletBinding()]
-param(
-  [string]$InstallDir = (Join-Path $HOME 'patterstage'),
-  [string]$Repo = 'https://github.com/Daniel-Parke/PatterStage.git',
-  [string]$Branch = 'dev',
-  [switch]$InRepo
-)
-$ErrorActionPreference = 'Stop'
-
-function Require-Command($name, $hint) {
-  if (-not (Get-Command $name -ErrorAction SilentlyContinue)) {
-    Write-Error "$name not found. $hint"
-    exit 1
-  }
-}
-
-Write-Host '=== PatterStage - Windows Installer ==='
-
-Require-Command node 'Install Node.js 20+ from https://nodejs.org'
-Require-Command git  'Install Git from https://git-scm.com'
-
-$nodeMajor = [int]((node -v).TrimStart('v').Split('.')[0])
-if ($nodeMajor -lt 20) { Write-Error "Node.js 20+ required (found $(node -v))"; exit 1 }
-Write-Host "OK  Node.js $(node -v)"
-
-if ($InRepo) {
-  $repoRoot = (Get-Location).Path
-} elseif (Test-Path $InstallDir) {
-  Write-Host "Updating existing clone at $InstallDir"
-  Set-Location $InstallDir
-  git fetch origin $Branch --quiet
-  git checkout $Branch --quiet
-  git reset --hard "origin/$Branch" --quiet
-  $repoRoot = $InstallDir
-} else {
-  Write-Host "Cloning PatterStage -> $InstallDir"
-  git clone --branch $Branch $Repo $InstallDir
-  Set-Location $InstallDir
-  $repoRoot = $InstallDir
-}
-
-Write-Host 'Running setup...'
-node (Join-Path $repoRoot 'scripts\bootstrap\setup.mjs')
-
 Write-Host ''
-Write-Host 'Done. Start PatterStage:'
-Write-Host "  cd $repoRoot"
-Write-Host '  npm run start:network'
+Write-Host 'PatterStage targets Linux. On Windows, use WSL2 (Ubuntu):'
+Write-Host ''
+Write-Host '  1) Install WSL2 (one-time, from an elevated PowerShell):'
+Write-Host '       wsl --install -d Ubuntu'
+Write-Host '     Reboot if prompted, then open the "Ubuntu" app.'
+Write-Host ''
+Write-Host '  2) Inside Ubuntu, install PatterStage:'
+Write-Host '       git clone https://github.com/Daniel-Parke/PatterStage.git'
+Write-Host '       cd PatterStage'
+Write-Host '       bash scripts/bootstrap/install.sh --in-repo'
+Write-Host '       npm run start:network'
+Write-Host ''
+Write-Host '  WSL2 forwards localhost, so open the dashboard from Windows at the'
+Write-Host '  URL setup prints (e.g. http://127.0.0.1:42069/).'
+Write-Host ''
+Write-Host 'Details: docs/CROSS_PLATFORM.md'

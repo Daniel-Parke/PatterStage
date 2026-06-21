@@ -2,7 +2,7 @@
 
 How I run this in production and on a home LAN—ports, scripts, Docker, and the deploy buttons in the sidebar. Read [CONTRIBUTING.md](CONTRIBUTING.md) if you are changing deploy behaviour itself.
 
-> **Cross-platform:** deploy/self-update (`ps-deploy`) runs on Windows, macOS, and Linux — the implementation is one Node program ([`scripts/tooling/ps-deploy.mjs`](../scripts/tooling/ps-deploy.mjs)); the bash `ps-deploy.sh` is a thin wrapper. Windows installs via `install.ps1` / `node scripts\bootstrap\setup.mjs`. See [CROSS_PLATFORM.md](CROSS_PLATFORM.md).
+> **Platforms:** PatterStage is **Linux-first** (the supported/tested target; also macOS for development). Deploy/self-update (`ps-deploy`) is one Node program ([`scripts/tooling/ps-deploy.mjs`](../scripts/tooling/ps-deploy.mjs)); the bash `ps-deploy.sh` is a thin wrapper. On Windows, run under **WSL2 (Ubuntu)**. See [CROSS_PLATFORM.md](CROSS_PLATFORM.md).
 
 ## Host and port
 
