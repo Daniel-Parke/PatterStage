@@ -321,6 +321,49 @@ export function listLeaderboard(suiteKey: string): BenchmarkRun[] {
     .sort((a, b) => (b.summary?.overallRating ?? -1) - (a.summary?.overallRating ?? -1));
 }
 
+/**
+ * A distinct agent SETUP (profile + model + exec mode + augmentation), with its
+ * best benchmark rating — the local "database of agent configurations" users can
+ * compare + clone. Best-rated run per unique setup signature, ranked descending.
+ */
+export interface AgentSetup {
+  profileRef: string;
+  profileLabel: string;
+  modelId: string | null;
+  execMode: string | null;
+  augmentation: { skills: boolean; tools: boolean; memory: boolean } | null;
+  bestRating: number;
+  runId: string;
+  completedAt: string | null;
+}
+
+export function listAgentSetups(suiteKey: string): AgentSetup[] {
+  const runs = listBenchmarkRuns({ targetKind: "agent", status: "completed" }).filter(
+    (r) => r.suiteKey === suiteKey && r.summary,
+  );
+  const best = new Map<string, AgentSetup>();
+  for (const r of runs) {
+    const a = r.config?.augmentation ?? null;
+    const aug = a ? { skills: a.skills, tools: a.tools, memory: a.memory } : null;
+    const sig = `${r.targetRef}|${r.modelId ?? ""}|${r.execMode ?? ""}|s${aug?.skills ? 1 : 0}t${aug?.tools ? 1 : 0}m${aug?.memory ? 1 : 0}`;
+    const rating = r.summary!.overallRating;
+    const existing = best.get(sig);
+    if (!existing || rating > existing.bestRating) {
+      best.set(sig, {
+        profileRef: r.targetRef,
+        profileLabel: r.targetLabel ?? r.targetRef,
+        modelId: r.modelId,
+        execMode: r.execMode,
+        augmentation: aug,
+        bestRating: rating,
+        runId: r.id,
+        completedAt: r.completedAt,
+      });
+    }
+  }
+  return [...best.values()].sort((x, y) => y.bestRating - x.bestRating);
+}
+
 /** Latest completed run for a target (drives the Agent Rating + leaderboard). */
 export function latestCompletedRun(
   targetKind: BenchmarkTargetKind,

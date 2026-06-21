@@ -10,14 +10,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Trophy, Swords, Play, Square, Bot, Cpu, Share2, Medal, ShieldCheck, AlertTriangle } from "lucide-react";
+import { Trophy, Swords, Play, Square, Bot, Cpu, Share2, Medal, ShieldCheck, AlertTriangle, Boxes, Copy } from "lucide-react";
 
 import PageHeader from "@/components/layout/PageHeader";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
+import Button from "@/components/ui/Button";
 import { Field, Select, Toggle, ChipGroup } from "@/components/ui/field";
 import StatRadar from "@/components/viz/StatRadar";
 import { useApiResource } from "@/hooks/useApiResource";
-import { useSuites, useBenchmarkRuns, useBenchmarkRun, useLeaderboard, useBenchmarkCatalog } from "@/hooks/useBenchmarks";
+import { useSuites, useBenchmarkRuns, useBenchmarkRun, useLeaderboard, useBenchmarkCatalog, useBenchmarkSetups } from "@/hooks/useBenchmarks";
+import type { AgentSetupEntry } from "@/hooks/useBenchmarks";
 import { safeApiCall, safeApiCallData } from "@/lib/api-fetch";
 import { useToast } from "@/components/ui/Toast";
 import { STATS, STAT_LABELS, STAT_BLURB, type BenchmarkRun, type StatCard } from "@/lib/benchmarks/types";
@@ -178,6 +180,7 @@ export default function BenchmarksPage() {
   const effectiveSuite = suiteKey || suites[0]?.key || "";
   const effectiveProfile = profileId || profiles[0]?.id || "";
   const effectiveModel = modelId || models[0]?.id || "";
+  const { setups } = useBenchmarkSetups(effectiveSuite || undefined);
 
   const pairRuns = useMemo(
     () => runs.filter((r) => r.pairId && r.pairId === activePairId),
@@ -209,6 +212,16 @@ export default function BenchmarksPage() {
     return meta ? meta.itemCount * (agentRun?.repeats ?? repeats) : 0;
   }, [suites, agentRun, effectiveSuite, repeats]);
   const doneUnits = agentDetail.detail?.results.length ?? 0;
+
+  /** Clone a ranked setup into the launch form (profile + augmentation + suite). */
+  function cloneSetup(s: AgentSetupEntry) {
+    setProfileId(s.profileRef);
+    if (s.augmentation) setAug({ skills: s.augmentation.skills, tools: s.augmentation.tools, memory: s.augmentation.memory });
+    setSelSkills(null);
+    setSelTools(null);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    showToast(`Cloned "${s.profileLabel}" setup into the form — review + run.`, "info");
+  }
 
   async function runComparison() {
     if (!effectiveSuite || !effectiveProfile) {
@@ -520,6 +533,11 @@ export default function BenchmarksPage() {
                   <span className="w-5 text-center font-mono text-xs text-white/40">{e.rank}</span>
                   <Bot className="h-4 w-4 text-neon-cyan" />
                   <span className="text-sm text-white/80">{e.targetLabel}</span>
+                  {e.experience ? (
+                    <span className="rounded bg-neon-purple/10 px-1.5 py-0.5 text-[10px] font-mono text-neon-purple/90" title={`${e.experience.xp} XP`}>
+                      Lv{e.experience.level.level} · {e.experience.level.title}
+                    </span>
+                  ) : null}
                   {e.rating?.bestStat ? (
                     <span className="text-[11px] text-white/30">best: {e.rating.bestStat.stat}</span>
                   ) : null}
@@ -530,6 +548,61 @@ export default function BenchmarksPage() {
               </li>
             ))}
           </ol>
+        )}
+      </Card>
+
+      {/* ── Agent setups (the local config database) ── */}
+      <Card>
+        <h2 className="mb-1 flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-white/50">
+          <Boxes className="h-4 w-4 text-neon-green" /> Agent setups
+          <span className="text-white/25">· best-rated configurations</span>
+        </h2>
+        <p className="mb-3 text-[11px] text-white/30">
+          Distinct profile + model + augmentation combos ranked by their best benchmark. Clone one to re-run it.
+        </p>
+        {setups.length === 0 ? (
+          <p className="text-sm text-white/40">No setups yet. Run a comparison to record one.</p>
+        ) : (
+          <ul className="space-y-2">
+            {setups.map((s: AgentSetupEntry) => (
+              <li
+                key={s.runId}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-dark-900/40 px-3 py-2"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="w-5 text-center font-mono text-xs text-white/40">{s.rank}</span>
+                  <Bot className="h-4 w-4 text-neon-cyan" />
+                  <span className="text-sm text-white/85">{s.profileLabel}</span>
+                  {s.experience ? (
+                    <span className="rounded bg-neon-purple/10 px-1.5 py-0.5 text-[10px] font-mono text-neon-purple/90">
+                      Lv{s.experience.level.level}
+                    </span>
+                  ) : null}
+                  {s.augmentation ? (
+                    <span className="flex items-center gap-1 text-[10px] font-mono text-white/40">
+                      {(["skills", "tools", "memory"] as const).map((k) => (
+                        <span
+                          key={k}
+                          className={s.augmentation![k] ? "text-neon-green/80" : "text-white/20 line-through"}
+                        >
+                          {k}
+                        </span>
+                      ))}
+                    </span>
+                  ) : null}
+                  {s.modelId ? <span className="text-[10px] font-mono text-white/25">· {s.modelId}</span> : null}
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-sm font-bold" style={{ color: ratingColor(s.bestRating) }}>
+                    {s.bestRating}
+                  </span>
+                  <Button variant="ghost" color="cyan" size="sm" onClick={() => cloneSetup(s)}>
+                    <Copy className="h-3.5 w-3.5" /> Clone
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
       </Card>
 

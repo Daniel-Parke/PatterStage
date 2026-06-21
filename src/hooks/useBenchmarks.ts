@@ -19,6 +19,36 @@ export interface LeaderboardEntry {
   ratedAt: string | null;
 }
 
+/** A ranked agent setup (profile + model + augmentation) in the local config DB. */
+export interface AgentSetupEntry {
+  rank: number;
+  profileRef: string;
+  profileLabel: string;
+  modelId: string | null;
+  execMode: string | null;
+  augmentation: { skills: boolean; tools: boolean; memory: boolean } | null;
+  bestRating: number;
+  runId: string;
+  completedAt: string | null;
+  experience: AgentExperience | null;
+}
+
+/** Ranked distinct agent setups for a suite (the local config database). */
+export function useBenchmarkSetups(suiteKey?: string) {
+  const qs = suiteKey ? `?suite=${encodeURIComponent(suiteKey)}` : "";
+  const r = useApiResource<AgentSetupEntry[]>(
+    ["benchmark-setups", suiteKey ?? "default"],
+    `/api/benchmarks/setups${qs}`,
+    {
+      select: (p) => (p as { setups?: AgentSetupEntry[] } | null)?.setups,
+      fallback: [],
+      refetchInterval: 10_000,
+      staleTime: 5_000,
+    },
+  );
+  return { setups: r.data ?? [], isLoading: r.isLoading, error: r.error };
+}
+
 /** Client-safe suite catalogue (no prompts/answers). */
 export function useSuites() {
   const r = useApiResource<SuiteMeta[]>(["benchmark-suites"], "/api/benchmarks/suites", {
