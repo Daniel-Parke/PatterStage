@@ -10,7 +10,7 @@
 import { now } from "@/lib/db";
 import { logApiError } from "@/lib/api-logger";
 import { messageFromError } from "@/lib/api-fetch";
-import { runDeepResearch, defaultLlm } from "./engine";
+import { runDeepResearch, defaultLlm, defaultVisit } from "./engine";
 import { resolveSearchProvider } from "./search";
 import { insertResearchStep, updateResearchRun } from "./research-repository";
 
@@ -25,6 +25,7 @@ export async function runResearchJob(
     const result = await runDeepResearch(query, {
       llm: defaultLlm,
       search: resolveSearchProvider(),
+      visit: defaultVisit,
       modelId: modelId ?? undefined,
       onStep: (step) => {
         insertResearchStep({

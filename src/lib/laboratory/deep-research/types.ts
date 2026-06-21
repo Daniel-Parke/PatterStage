@@ -36,19 +36,5 @@ export interface ResearchStep {
   createdAt: string;
 }
 
-/** One web search hit. */
-export interface SearchResult {
-  title: string;
-  url: string;
-  snippet: string;
-}
-
-/**
- * Pluggable search backend. Implementations: serper/tavily/brave (cloud) or
- * searxng (self-hosted = fully local). The null provider returns [] so the
- * engine runs LLM-only when no search is configured.
- */
-export interface SearchProvider {
-  readonly name: string;
-  search(query: string, limit?: number): Promise<SearchResult[]>;
-}
+// Search contracts live in the shared search module (reused beyond research).
+export type { SearchResult, SearchProvider, VisitedPage } from "@/lib/search/types";
