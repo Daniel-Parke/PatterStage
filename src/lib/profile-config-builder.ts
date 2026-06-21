@@ -12,6 +12,7 @@ import {
 } from "./skills-config";
 import { normalizePlatformToolsets } from "./hermes-toolset-normalize";
 import { dumpYamlConfig } from "./hermes-config-sync";
+import { parseStringArrayOrEmpty } from "./db/parse-json";
 
 export type PlatformToolsets = Record<string, string[]>;
 
@@ -79,15 +80,6 @@ function isPreservedTopLevelLine(trimmed: string): boolean {
   return PRESERVED_TOP_LEVEL_KEYS.some((key) => trimmed === `${key}:` || trimmed.startsWith(`${key}:`));
 }
 
-function parseJsonArray(raw: string): string[] {
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((x): x is string => typeof x === "string");
-  } catch {
-    return [];
-  }
-}
 
 function parseJsonToolsets(raw: string): PlatformToolsets {
   try {
@@ -318,7 +310,7 @@ export function configYamlToColumnValues(
 }
 
 export function disabledSkillsFromJson(raw: string): string[] {
-  return parseJsonArray(raw);
+  return parseStringArrayOrEmpty(raw);
 }
 
 export function platformToolsetsFromJson(raw: string): PlatformToolsets {

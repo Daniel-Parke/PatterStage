@@ -10,6 +10,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { db, inTransaction, now, uuid } from "@/lib/db";
+import { parseJson, parseStringArray, parseBool } from "@/lib/db/parse-json";
 import type {
   BenchmarkDomain,
   BenchmarkExecMode,
@@ -71,47 +72,6 @@ interface ResultRow {
   created_at: string;
 }
 
-function parseSummary(raw: string | null): BenchmarkSummary | null {
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as BenchmarkSummary;
-  } catch {
-    return null;
-  }
-}
-
-function parseDetail(raw: string | null): Record<string, unknown> | null {
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-function parseConfig(raw: string | null): BenchmarkRunConfig | null {
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as BenchmarkRunConfig;
-  } catch {
-    return null;
-  }
-}
-
-function parseStringArray(raw: string | null): string[] | null {
-  if (!raw) return null;
-  try {
-    const v = JSON.parse(raw);
-    return Array.isArray(v) ? (v as string[]) : null;
-  } catch {
-    return null;
-  }
-}
-
-function toBool(v: number | null): boolean | null {
-  return v === null ? null : v === 1;
-}
-
 function rowToRun(row: RunRow | undefined): BenchmarkRun | null {
   if (!row) return null;
   return {
@@ -128,11 +88,11 @@ function rowToRun(row: RunRow | undefined): BenchmarkRun | null {
     modelId: row.model_id,
     modelLabel: row.model_label,
     execMode: (row.exec_mode as BenchmarkExecMode | null) ?? null,
-    usedSkills: toBool(row.used_skills),
-    usedTools: toBool(row.used_tools),
-    usedMemory: toBool(row.used_memory),
-    config: parseConfig(row.config_json),
-    summary: parseSummary(row.summary_json),
+    usedSkills: parseBool(row.used_skills),
+    usedTools: parseBool(row.used_tools),
+    usedMemory: parseBool(row.used_memory),
+    config: parseJson<BenchmarkRunConfig>(row.config_json),
+    summary: parseJson<BenchmarkSummary>(row.summary_json),
     error: row.error,
     startedAt: row.started_at,
     completedAt: row.completed_at,
@@ -153,14 +113,14 @@ function rowToResult(row: ResultRow): BenchmarkItemResult {
     score: row.score,
     passed: row.passed === null ? null : row.passed === 1,
     grader: row.grader,
-    graderDetail: parseDetail(row.grader_detail_json),
+    graderDetail: parseJson<Record<string, unknown>>(row.grader_detail_json),
     latencyMs: row.latency_ms,
     inputTokens: row.input_tokens,
     outputTokens: row.output_tokens,
     costUsd: row.cost_usd,
     skillsUsed: parseStringArray(row.skills_used_json),
     toolsUsed: parseStringArray(row.tools_used_json),
-    memoryUsed: toBool(row.memory_used),
+    memoryUsed: parseBool(row.memory_used),
     createdAt: row.created_at,
   };
 }
