@@ -84,7 +84,13 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     // The benchmark gateway tracking table + per-item metrics land via v17.
     expect(tableNames(db)).toContain("bench_gateways");
     expect(cols(db, "benchmark_item_results")).toContain("metrics_json");
-    expect(getSchemaVersion(db)).toBe(17);
+    // Mission V2 multi-phase foundation lands via the wired v18 applier.
+    expect(tableNames(db)).toEqual(
+      expect.arrayContaining(["mission_phases", "mission_phase_actions", "mission_approvals"]),
+    );
+    expect(cols(db, "missions")).toEqual(expect.arrayContaining(["version", "current_phase_id"]));
+    expect(cols(db, "runs")).toContain("phase_action_id");
+    expect(getSchemaVersion(db)).toBe(18);
     // Pre-existing data survived the additive upgrade (cron job + mission).
     expect(
       (db.prepare("SELECT COUNT(*) c FROM cron_jobs").get() as { c: number }).c,
@@ -106,7 +112,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(17);
+    expect(getSchemaVersion(db)).toBe(18);
     db.close();
   });
 });

@@ -24,6 +24,7 @@ import { applyBenchmarksMigration } from "./db/apply-benchmarks-migration";
 import { applyBenchmarkConfigMigration } from "./db/apply-benchmark-config-migration";
 import { applyBenchmarkCatalogMigration } from "./db/apply-benchmark-catalog-migration";
 import { applyBenchGatewaysMigration } from "./db/apply-bench-gateways-migration";
+import { applyMissionPhasesMigration } from "./db/apply-mission-phases-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -196,6 +197,10 @@ export function runMigrations(database: Database.Database): void {
   // Ephemeral benchmark gateway tracking + per-item metrics_json.
   // Idempotent CREATE + guarded ALTER at schema_version 17.
   applyBenchGatewaysMigration(database, migrationsDir);
+  // Mission V2 multi-phase foundation: mission_phases / _phase_actions /
+  // _approvals tables + additive missions/runs columns. Idempotent CREATE +
+  // guarded ALTER at schema_version 18. V1 missions unaffected.
+  applyMissionPhasesMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────
