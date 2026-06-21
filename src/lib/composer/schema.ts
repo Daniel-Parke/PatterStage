@@ -79,6 +79,12 @@ export interface NodeVerdict {
   pass: boolean;
   reasons: string[];
   suggestions: string[];
+  /**
+   * Optional branch label a stage emits (`OUTCOME: <x>`) to choose among many
+   * downstream paths beyond pass/fail — the engine follows an `on_<x>` edge when
+   * present. Lets a node fan out (e.g. no_action / further_research / write_report).
+   */
+  outcome?: string;
 }
 
 export interface ComposerRun {

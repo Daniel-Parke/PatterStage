@@ -134,7 +134,16 @@ export function resolveNext(
   let cond: string;
   if (approval) cond = approval.approved ? "on_approve" : "on_reject";
   else if (nodeRun.status === "failed" || nodeRun.verdict?.pass === false) cond = "on_fail";
-  else cond = "on_pass";
+  else {
+    // A successful stage may choose among many branches via OUTCOME: <x> →
+    // follow an `on_<x>` edge when one exists; otherwise fall back to on_pass.
+    const outcome = nodeRun.verdict?.outcome;
+    if (outcome) {
+      const branch = edges.find((e) => e.condition === `on_${outcome}`);
+      if (branch) return { kind: "node", nodeId: branch.toNodeId };
+    }
+    cond = "on_pass";
+  }
 
   let edge = edges.find((e) => e.condition === cond);
   if (!edge && (cond === "on_pass" || cond === "on_approve")) {

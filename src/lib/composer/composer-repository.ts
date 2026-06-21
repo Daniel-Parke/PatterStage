@@ -143,6 +143,64 @@ export function getOutgoingEdges(nodeId: string): ComposerEdge[] {
   return rows.map(rowToEdge);
 }
 
+// ── Workflow mutation (the builder saves the whole graph atomically) ──
+
+/**
+ * Replace a workflow's whole graph (name/description + all nodes + edges) in one
+ * transaction, bumping its version. The structured builder holds the graph in
+ * state and PUTs it wholesale — atomic, with no partial-edit races.
+ */
+export function replaceWorkflowGraph(workflowId: string, input: WorkflowDef): ComposerWorkflowGraph | null {
+  if (!getWorkflow(workflowId)) return null;
+  const def = workflowDefSchema.parse(input); // applies defaults + validates
+  return inTransaction(() => {
+    const ts = now();
+    // node-runs reference nodes (no cascade) — clear this workflow's run history
+    // first so the structural replace can drop the old nodes. The API blocks
+    // edits while runs are active, so only completed history is cleared.
+    db().prepare("DELETE FROM composer_runs WHERE workflow_id = ?").run(workflowId); // cascades node_runs + approvals
+    db().prepare("DELETE FROM composer_nodes WHERE workflow_id = ?").run(workflowId); // edges cascade
+    db().prepare("UPDATE composer_workflows SET name = ?, description = ?, version = version + 1, updated_at = ? WHERE id = ?")
+      .run(def.name, def.description, ts, workflowId);
+
+    const nodeIdByKey = new Map<string, string>();
+    def.nodes.forEach((n, i) => {
+      const id = uuid();
+      nodeIdByKey.set(n.key, id);
+      db().prepare(`INSERT INTO composer_nodes (id, workflow_id, key, label, kind, gate, is_start, is_terminal, config_json, pos, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+        .run(id, workflowId, n.key, n.label, n.kind, n.gate, n.isStart ? 1 : 0, n.isTerminal ? 1 : 0, n.config ? JSON.stringify(n.config) : null, i, ts);
+    });
+    for (const e of def.edges) {
+      const from = nodeIdByKey.get(e.from);
+      const to = nodeIdByKey.get(e.to);
+      if (!from || !to) throw new Error(`edge references unknown node: ${e.from} -> ${e.to}`);
+      db().prepare("INSERT INTO composer_edges (id, workflow_id, from_node_id, to_node_id, condition, label, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
+        .run(uuid(), workflowId, from, to, e.condition, e.label ?? null, ts);
+    }
+    return getWorkflowGraph(workflowId)!;
+  });
+}
+
+export function deleteWorkflow(id: string): boolean {
+  if (!getWorkflow(id)) return false;
+  inTransaction(() => {
+    // Delete runs first (cascades node_runs + approvals) so the workflow delete
+    // (which cascades nodes + edges) doesn't hit the runs→workflow FK.
+    db().prepare("DELETE FROM composer_runs WHERE workflow_id = ?").run(id);
+    db().prepare("DELETE FROM composer_workflows WHERE id = ?").run(id); // cascades nodes + edges
+  });
+  return true;
+}
+
+/** Whether a workflow has any non-terminal runs (block destructive edits). */
+export function workflowHasActiveRuns(workflowId: string): boolean {
+  const row = db()
+    .prepare("SELECT COUNT(*) AS c FROM composer_runs WHERE workflow_id = ? AND status IN ('pending','running','awaiting_approval')")
+    .get(workflowId) as { c: number };
+  return row.c > 0;
+}
+
 // ── Runs ─────────────────────────────────────────────────────────
 export function createComposerRun(input: { workflowId: string; input?: string | null; profileName?: string | null; context?: Record<string, unknown> | null; currentNodeId?: string | null }): ComposerRun {
   const id = uuid();

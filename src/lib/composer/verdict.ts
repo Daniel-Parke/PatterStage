@@ -7,7 +7,9 @@
 //   VERDICT: PASS            (or FAIL)
 //   REASONS: a; b; c         (optional)
 //   SUGGESTIONS: x; y        (optional)
-// Non-assessing stages have no verdict — they simply proceed (pass = true).
+//   OUTCOME: further_research (optional — a branch label; routes on_<label>)
+// Non-assessing stages have no verdict — they simply proceed (pass = true),
+// unless they emit an OUTCOME marker to choose a branch.
 // ═══════════════════════════════════════════════════════════════
 
 import type { NodeVerdict } from "./schema";
@@ -45,13 +47,16 @@ export function parseVerdict(output: string | null, kind: string): NodeVerdict |
   const verdictM = text.match(/VERDICT:\s*(PASS|FAIL)/i);
   const reasonsM = text.match(/REASONS?:\s*(.+)/i);
   const suggM = text.match(/SUGGESTIONS?:\s*(.+)/i);
+  const outcomeM = text.match(/(?:OUTCOME|ROUTE):\s*([A-Za-z0-9_-]+)/i);
 
-  if (!verdictM && !isAssessingKind(kind)) return null;
+  // No verdict, no branch label, and a non-assessing stage → just proceed.
+  if (!verdictM && !outcomeM && !isAssessingKind(kind)) return null;
 
   const pass = verdictM ? verdictM[1].toUpperCase() === "PASS" : true;
   return {
     pass,
     reasons: splitList(reasonsM?.[1]),
     suggestions: splitList(suggM?.[1]),
+    ...(outcomeM ? { outcome: outcomeM[1].toLowerCase() } : {}),
   };
 }
