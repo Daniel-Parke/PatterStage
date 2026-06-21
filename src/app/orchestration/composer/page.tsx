@@ -19,6 +19,7 @@ import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { Field, Textarea, Select } from "@/components/ui/field";
 import ComposerGatePrompt from "@/components/composer/ComposerGatePrompt";
 import WorkflowPipeline from "@/components/composer/WorkflowPipeline";
+import WorkflowBuilder from "@/components/composer/WorkflowBuilder";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useComposerWorkflows, useComposerRuns, useComposerRun } from "@/hooks/useComposer";
 import { useProfiles } from "@/hooks/useProfiles";
@@ -44,6 +45,7 @@ const STATUS_FILTERS = [
 ];
 
 export default function ComposerPage() {
+  const [mode, setMode] = useState<"run" | "build">("run");
   const [input, setInput] = useState("");
   const [workflowId, setWorkflowId] = useState<string>("");
   const [profileName, setProfileName] = useState<string>("");
@@ -52,7 +54,7 @@ export default function ComposerPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [gateBusy, setGateBusy] = useState(false);
 
-  const { data: workflows, error: workflowsError } = useComposerWorkflows();
+  const { data: workflows, error: workflowsError, refetch: refetchWorkflows } = useComposerWorkflows();
   const { data: runs, refetch } = useComposerRuns();
   const { data: profiles } = useProfiles();
   const { data: detail } = useComposerRun(selectedId);
@@ -124,6 +126,26 @@ export default function ComposerPage() {
 
       {workflowsError ? <LoadErrorBanner error={workflowsError} /> : null}
 
+      {/* Run / Build tabs */}
+      <div className="flex gap-1 border-b border-white/10">
+        {(["run", "build"] as const).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => setMode(m)}
+            className={`-mb-px border-b-2 px-3 py-2 text-xs font-mono uppercase tracking-widest transition ${
+              mode === m ? "border-neon-cyan text-neon-cyan" : "border-transparent text-white/40 hover:text-white/70"
+            }`}
+          >
+            {m === "run" ? "Run" : "Build"}
+          </button>
+        ))}
+      </div>
+
+      {mode === "build" ? (
+        <WorkflowBuilder workflows={workflows ?? []} onSaved={() => void refetchWorkflows()} />
+      ) : (
+        <>
       {/* Launch form */}
       <Card padding="md" glow="cyan">
         <Field label="Feature request / bug report" htmlFor="composer-input">
@@ -209,6 +231,8 @@ export default function ComposerPage() {
           )}
         </Card>
       </div>
+        </>
+      )}
     </div>
   );
 }

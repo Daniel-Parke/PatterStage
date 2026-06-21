@@ -21,6 +21,18 @@ export function useComposerWorkflows() {
   });
 }
 
+/** One workflow's full graph (nodes + edges) — the builder loads + edits this. */
+export function useComposerWorkflowGraph(id: string | null) {
+  return useApiResource<ComposerWorkflowGraph>(
+    ["composer-workflow-graph", id ?? "none"],
+    `/api/composer/workflows/${id ?? ""}`,
+    {
+      select: (p) => (p as { workflow?: ComposerWorkflowGraph } | undefined)?.workflow,
+      enabled: Boolean(id),
+    },
+  );
+}
+
 export function useComposerRuns(refetchInterval: number | false = 4000) {
   return useApiResource<ComposerRun[]>(["composer-runs"], "/api/composer/runs", {
     select: (p) => (p as { runs?: ComposerRun[] } | undefined)?.runs,

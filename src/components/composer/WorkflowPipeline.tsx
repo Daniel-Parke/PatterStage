@@ -61,14 +61,25 @@ export default function WorkflowPipeline({
         const isCurrent = currentNodeId === node.id;
         const outgoing = graph.edges.filter((e) => e.fromNodeId === node.id);
 
+        // The connector to the next node is "active" (cyan energy flow) when this
+        // stage is running or the next stage is the one in flight, "done" (solid
+        // green) once this stage has completed, otherwise a faint static rail.
+        const nextIsCurrent = nodes[idx + 1]?.id === currentNodeId;
+        const railClass =
+          status === "running" || nextIsCurrent
+            ? "ps-rail-flow w-0.5"
+            : status === "completed"
+              ? "ps-rail-done w-0.5"
+              : "bg-white/10 w-px";
+
         return (
           <li key={node.id} className="relative pl-7">
             {/* Rail + node marker */}
             {idx < nodes.length - 1 ? (
-              <span className="absolute left-[9px] top-5 h-full w-px bg-white/10" aria-hidden />
+              <span className={`absolute left-[9px] top-5 h-full ${railClass}`} aria-hidden />
             ) : null}
             <span
-              className={`absolute left-1 top-3 h-3.5 w-3.5 rounded-full ring-2 ring-dark-900 ${DOT_BG[status] ?? "bg-white/20"} ${isCurrent ? "animate-pulse" : ""}`}
+              className={`absolute left-1 top-3 h-3.5 w-3.5 rounded-full ring-2 ring-dark-900 ${DOT_BG[status] ?? "bg-white/20"} ${isCurrent ? "animate-pulse shadow-[0_0_10px_2px_rgb(34_211_238/0.6)]" : ""}`}
               aria-hidden
             />
 
@@ -112,10 +123,14 @@ export default function WorkflowPipeline({
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {outgoing.map((e) => {
                     const loop = (posOf.get(e.toNodeId) ?? 0) < node.pos;
+                    // The run is poised to leave the current node (its stage is
+                    // done, incl. a HIL gate awaiting approval) — electrify its
+                    // outgoing routes so the live decision point stands out.
+                    const live = isCurrent && status === "completed";
                     return (
                       <span
                         key={e.id}
-                        className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-mono ${loop ? "bg-neon-pink/10 text-neon-pink/80" : "bg-white/5 text-white/40"}`}
+                        className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-mono ${loop ? "bg-neon-pink/10 text-neon-pink/80" : "bg-white/5 text-white/40"} ${live ? "ps-electrified ring-1 ring-neon-cyan/40" : ""}`}
                         title={e.label ?? undefined}
                       >
                         {COND_LABEL[e.condition as EdgeCondition] ?? e.condition} {loop ? "↺" : "→"}{" "}

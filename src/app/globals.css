@@ -140,12 +140,37 @@
   animation: viz-draw 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+/* Composer active-pathway "flow": cyan energy dashes travelling down a vertical
+   connector so the live route through a workflow reads as electrified. */
+@keyframes ps-rail-flow {
+  to { background-position: 0 12px; }
+}
+.ps-rail-flow {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgb(34 211 238 / 0.95) 0 3px,
+    transparent 3px 9px
+  );
+  animation: ps-rail-flow 0.5s linear infinite;
+  box-shadow: 0 0 5px rgb(34 211 238 / 0.6);
+}
+.ps-rail-done { background: rgb(74 222 128 / 0.45); }
+
+/* Electrified routing chip — the edge the live run is leaving / traversing. */
+@keyframes ps-electrify {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(34 211 238 / 0); }
+  50% { box-shadow: 0 0 9px 1px rgb(34 211 238 / 0.55); }
+}
+.ps-electrified { animation: ps-electrify 1.1s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   .animate-flame,
   .animate-pulse-glow,
   .animate-float-in,
+  .ps-electrified,
   .animate-shimmer::after { animation: none; }
   .viz-draw { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; }
+  .ps-rail-flow { animation: none; }
 }
 
 /* Variable-driven surface glow (see GlowSurface.tsx); --glow-surface-rgb set inline */
