@@ -100,7 +100,7 @@ export function requireSafeProfileName(
  * Validates skill URL segments: no empty, ".", "..", or separators.
  * Returns the joined relative path under the skills root, or null if invalid.
  */
-export function safeSkillRelativePath(segments: string[]): string | null {
+function safeSkillRelativePath(segments: string[]): string | null {
   if (segments.length === 0) return null;
   for (const seg of segments) {
     if (

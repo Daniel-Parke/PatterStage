@@ -84,14 +84,14 @@ export function buildPartialUpdateBody<TUpdates extends Record<string, unknown>>
 }
 
 /** Pass-through field builder for `buildPartialUpdateBody`. */
-export const copyField: UpdateBodyBuilder<string> = (raw) => [String(raw), raw];
+const copyField: UpdateBodyBuilder<string> = (raw) => [String(raw), raw];
 
 /**
  * Convert a string-or-boolean value into a real boolean. Used by the
  * directive PATCH which expects a typed `is_active` boolean, not the
  * string the client sends.
  */
-export const boolFromString: UpdateBodyBuilder<string> = (raw) => [
+const boolFromString: UpdateBodyBuilder<string> = (raw) => [
   "is_active",
   String(raw) === "true",
 ];
@@ -118,28 +118,6 @@ export const MENTAL_MODEL_UPDATE_FIELDS = {
   query: copyField,
   // tags handled separately (normalizeTags transform)
 };
-
-/**
- * Dispatch a directive/model delete to the right Hindsight endpoint.
- * Throws if `type` is unknown so the route's 500 catch is exercised
- * (a malformed `type` is a programmer error, not a user error).
- */
-export async function deleteByType(
-  type: "directive" | "model",
-  bank: string,
-  id: string,
-  hitter: {
-    deleteDirective: (bank: string, id: string) => Promise<unknown>;
-    deleteMentalModel: (bank: string, id: string) => Promise<unknown>;
-  },
-): Promise<{ success: true; id: string; type: "directive" | "model" }> {
-  if (type === "directive") {
-    await hitter.deleteDirective(bank, id);
-  } else {
-    await hitter.deleteMentalModel(bank, id);
-  }
-  return { success: true, id, type };
-}
 
 // ── Error envelope ────────────────────────────────────────────────────
 //

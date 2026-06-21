@@ -202,7 +202,7 @@ export interface UpsertProfileInput {
   seedKey?: string | null;
 }
 
-export function resolvedPlatformToolsetsForProfile(row: AgentProfileRow): PlatformToolsets {
+function resolvedPlatformToolsetsForProfile(row: AgentProfileRow): PlatformToolsets {
   return resolvePlatformToolsets(
     row.platformToolsetsJson,
     row.configYaml,

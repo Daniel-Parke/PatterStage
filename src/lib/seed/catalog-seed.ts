@@ -47,7 +47,7 @@ const TEMPLATE_PACK = join(
   "data/seed/template-packs/patterstage-professional-v1.json",
 );
 
-export type SeedMode = "merge" | "replace";
+type SeedMode = "merge" | "replace";
 
 export interface SeedTarget {
   target: "all" | "root" | "profiles" | "templates" | "categories" | "skills" | "tools" | "memories";

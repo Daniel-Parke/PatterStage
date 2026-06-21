@@ -8,10 +8,10 @@
 // "fast" mode.
 // ═══════════════════════════════════════════════════════════════
 
-export type ChatRole = "user" | "assistant" | "system";
+type ChatRole = "user" | "assistant" | "system";
 
 /** pending → streaming → complete | failed | cancelled. */
-export type ChatMessageStatus = "pending" | "streaming" | "complete" | "failed" | "cancelled";
+type ChatMessageStatus = "pending" | "streaming" | "complete" | "failed" | "cancelled";
 
 /** "agent" = real run (tools + memory); "fast" = raw model completion. */
 export type ChatMode = "agent" | "fast";

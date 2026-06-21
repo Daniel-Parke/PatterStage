@@ -205,7 +205,7 @@ export async function resolveApprovalApi(
 // ── Run-event SSE (agent mode) ──────────────────────────────────
 
 /** Named SSE events the run-event proxy (/api/runs/[id]/events) emits. */
-export const RUN_SSE_EVENT_NAMES = [
+const RUN_SSE_EVENT_NAMES = [
   "open",
   "message.delta",
   "reasoning.available",

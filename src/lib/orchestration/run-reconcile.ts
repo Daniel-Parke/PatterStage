@@ -58,7 +58,7 @@ function declaredTimeoutMinutes(missionId: string | null): number | null {
  * Apply a terminal run state to the linked mission + session. Idempotent:
  * safe if the mission/session were already closed.
  */
-export function finalizeMissionForRun(
+function finalizeMissionForRun(
   missionId: string | null,
   runStatus: RunStatus,
   resultText: string | null,

@@ -32,7 +32,7 @@ export interface CreateCredentialInput {
   apiKey: string;
 }
 
-export interface UpdateCredentialInput {
+interface UpdateCredentialInput {
   label?: string;
   provider?: string;
   /** Provide to rotate; omit to keep existing. */

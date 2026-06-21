@@ -69,7 +69,7 @@ export interface Achievement {
 }
 
 /** XP awarded per unit of work. Tuned so a few real missions move the needle. */
-export const XP = {
+const XP = {
   perCompletedMission: 100,
   perCompletedRun: 25,
   perStory: 150,

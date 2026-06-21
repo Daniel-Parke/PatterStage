@@ -2,7 +2,7 @@
  * Parse plain-text log lines into timestamp, level, and message for aligned display.
  */
 
-export type ParsedLogLevel = "error" | "warn" | "info" | "debug" | "unknown";
+type ParsedLogLevel = "error" | "warn" | "info" | "debug" | "unknown";
 
 export interface ParsedLogLine {
   timestamp: string | null;

@@ -5,7 +5,7 @@
 import { closeSync, existsSync, openSync, readFileSync, readdirSync, readSync, statSync } from "fs";
 import { relative, resolve } from "path";
 
-export const MAX_LOG_BASENAME_LEN = 128;
+const MAX_LOG_BASENAME_LEN = 128;
 
 export type LogFileGroup = "core" | "system" | "other";
 

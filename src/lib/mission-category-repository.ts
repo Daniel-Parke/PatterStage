@@ -49,7 +49,7 @@ function rowToCategory(row: CategoryRow): MissionCategory {
   };
 }
 
-export function slugifyCategoryName(name: string): string {
+function slugifyCategoryName(name: string): string {
   const base = name
     .trim()
     .toLowerCase()
@@ -68,7 +68,7 @@ function uniqueCategoryId(baseSlug: string): string {
   return candidate;
 }
 
-export function hasMissionCategoriesTable(): boolean {
+function hasMissionCategoriesTable(): boolean {
   try {
     const row = db()
       .prepare(
@@ -81,7 +81,7 @@ export function hasMissionCategoriesTable(): boolean {
   }
 }
 
-export function listCategories(): MissionCategory[] {
+function listCategories(): MissionCategory[] {
   if (!hasMissionCategoriesTable()) {
     throw new Error(
       "mission_categories table is missing — run database migrations (restart PatterStage or npm run db:migrate)",
@@ -102,7 +102,7 @@ export function getCategory(id: string): MissionCategory | null {
   return row ? rowToCategory(row) : null;
 }
 
-export function getCategoryByName(name: string): MissionCategory | null {
+function getCategoryByName(name: string): MissionCategory | null {
   const row = db()
     .prepare("SELECT * FROM mission_categories WHERE lower(name) = lower(?)")
     .get(name.trim()) as CategoryRow | undefined;
@@ -216,7 +216,7 @@ export function updateCategory(
   return getCategory(id);
 }
 
-export function reassignMissionsCategory(
+function reassignMissionsCategory(
   fromId: string,
   toId: string | null,
 ): void {
@@ -227,7 +227,7 @@ export function reassignMissionsCategory(
     .run(toId, now(), fromId);
 }
 
-export function reassignTemplatesCategory(
+function reassignTemplatesCategory(
   fromId: string,
   toId: string | null,
 ): void {

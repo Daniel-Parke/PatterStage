@@ -11,9 +11,8 @@
 //
 // Behaviour:
 // - safeStat(path) → { size, mtime } | null    (returns null on any error)
-// - safeStatMtime(path) → string | null        (returns ISO mtime or null)
 //
-// Both helpers swallow all errors (no logging) because every call site
+// The helper swallows all errors (no logging) because every call site
 // treats a missing file as a normal, expected case (e.g. fall back to
 // in-DB metadata). If a call site needs the underlying error for
 // debugging, it should call statSync directly with its own logging.
@@ -37,13 +36,4 @@ export function safeStat(path: string): FileStat | null {
   } catch {
     return null;
   }
-}
-
-/**
- * Permissive statSync that returns just the ISO mtime, or `null` on
- * failure. Convenience wrapper for call sites that only need the
- * timestamp (e.g. "lastModified" UI fields).
- */
-export function safeStatMtime(path: string): string | null {
-  return safeStat(path)?.mtime ?? null;
 }

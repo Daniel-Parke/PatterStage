@@ -85,7 +85,7 @@ export interface RootDriftEntry {
   syncError: string | null;
 }
 
-export interface SkillDriftEntry {
+interface SkillDriftEntry {
   skillKey: string;
   drifted: boolean;
   syncError: string | null;
@@ -494,7 +494,7 @@ export function detectRootDrift(): RootDriftEntry {
   };
 }
 
-export function detectSkillDrift(skillKey: string): SkillDriftEntry {
+function detectSkillDrift(skillKey: string): SkillDriftEntry {
   const skill = getSkill(skillKey);
   if (!skill) {
     return { skillKey, drifted: false, syncError: "not in database" };
@@ -510,7 +510,7 @@ export function detectSkillDrift(skillKey: string): SkillDriftEntry {
   };
 }
 
-export function detectAllProfileDrift(): ProfileDriftEntry[] {
+function detectAllProfileDrift(): ProfileDriftEntry[] {
   return listProfiles().map((p) => detectProfileDrift(p.slug));
 }
 

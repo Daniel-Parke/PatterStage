@@ -9,7 +9,7 @@
 
 import { db, now } from "./db";
 
-export type ToolSource = "bundled" | "custom";
+type ToolSource = "bundled" | "custom";
 
 export interface ToolBundle {
   toolKey: string;

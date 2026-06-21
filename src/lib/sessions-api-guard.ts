@@ -23,7 +23,7 @@ function maxRatePerWindow(): number {
   return Number.isFinite(n) && n > 0 ? n : DEFAULT_RATE_MAX;
 }
 
-export function getSessionsApiClientKey(request: NextRequest): string {
+function getSessionsApiClientKey(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
     const first = forwarded.split(",")[0]?.trim();
@@ -37,7 +37,7 @@ export function getSessionsApiClientKey(request: NextRequest): string {
 /**
  * Records this request and returns true if the client should be throttled.
  */
-export function sessionsApiRateLimitExceeded(request: NextRequest): boolean {
+function sessionsApiRateLimitExceeded(request: NextRequest): boolean {
   const key = getSessionsApiClientKey(request);
   const now = Date.now();
   const max = maxRatePerWindow();

@@ -31,7 +31,7 @@ export function isProfileHermesHome(home: string): boolean {
 }
 
 /** Profile segment when `home` is `.../profiles/<name>`, else null. */
-export function getProfileNameFromHermesHome(home: string): string | null {
+function getProfileNameFromHermesHome(home: string): string | null {
   if (!isProfileHermesHome(home)) return null;
   return basename(normPath(home));
 }

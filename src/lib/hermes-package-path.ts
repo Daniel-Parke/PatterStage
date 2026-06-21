@@ -22,7 +22,7 @@ export function getHermesAgentPackageDir(hermesHome?: string): string {
 }
 
 /** Human-readable expected venv path for error messages. */
-export function expectedHermesVenvPythonPath(hermesHome?: string): string {
+function expectedHermesVenvPythonPath(hermesHome?: string): string {
   return join(getHermesAgentPackageDir(hermesHome), "venv", "bin", "python3");
 }
 

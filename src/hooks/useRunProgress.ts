@@ -11,9 +11,9 @@
 
 import { useEffect, useState } from "react";
 
-export type RunProgressStatus = "idle" | "connecting" | "streaming" | "done" | "error";
+type RunProgressStatus = "idle" | "connecting" | "streaming" | "done" | "error";
 
-export interface RunProgressEvent {
+interface RunProgressEvent {
   type: string;
   data: unknown;
 }

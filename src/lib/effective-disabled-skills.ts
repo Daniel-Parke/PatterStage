@@ -13,7 +13,7 @@ import { getDisabledSkills } from "./profiles-repository";
 import { listSkills } from "./skills-repository";
 
 /** Union of SQLite catalog keys and on-disk skill directory paths. */
-export function listCatalogSkillKeys(): string[] {
+function listCatalogSkillKeys(): string[] {
   const keys = new Set<string>();
   for (const row of listSkills()) {
     keys.add(row.skillKey);

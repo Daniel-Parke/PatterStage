@@ -17,7 +17,7 @@
 // parseToolEvent.
 // ═══════════════════════════════════════════════════════════════
 
-export type ToolStatus = "invoked" | "completed" | "failed" | "approval_required";
+type ToolStatus = "invoked" | "completed" | "failed" | "approval_required";
 
 type RunEventKind = "tool" | "reasoning" | "delta" | "other";
 
@@ -55,7 +55,7 @@ function parseTool(type: string, data: unknown): { name: string; status: ToolSta
   return { name, status };
 }
 
-export interface ToolEventLog {
+interface ToolEventLog {
   name: string;
   status: ToolStatus;
 }

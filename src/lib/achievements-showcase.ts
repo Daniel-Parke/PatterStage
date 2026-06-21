@@ -7,7 +7,7 @@
 import type { Achievement, AchievementTier } from "@/lib/stats/derive";
 
 /** Rarity ordering (legendary is rarest/most valuable). */
-export const TIER_RANK: Record<AchievementTier, number> = {
+const TIER_RANK: Record<AchievementTier, number> = {
   legendary: 4,
   epic: 3,
   rare: 2,

@@ -16,10 +16,10 @@
 import type { SessionRecord } from "@/lib/session-repository";
 
 /** Threshold (in bytes) below which an api-source session is considered "noise". */
-export const API_NOISE_MAX_BYTES = 1024;
+const API_NOISE_MAX_BYTES = 1024;
 
 /** Age (in milliseconds) below which a short-lived session is considered "noise". */
-export const API_NOISE_MAX_AGE_MS = 60_000;
+const API_NOISE_MAX_AGE_MS = 60_000;
 
 /**
  * Free-text search across a session's title, id, profile, and mission

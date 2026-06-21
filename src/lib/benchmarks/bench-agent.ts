@@ -21,11 +21,11 @@ import { logApiError } from "@/lib/api-logger";
 
 const BENCH_PREFIX = "__bench_";
 
-export function benchAgentSlug(runId: string): string {
+function benchAgentSlug(runId: string): string {
   return (BENCH_PREFIX + runId).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 60);
 }
 
-export function isBenchAgent(slug: string): boolean {
+function isBenchAgent(slug: string): boolean {
   return slug.startsWith(BENCH_PREFIX);
 }
 

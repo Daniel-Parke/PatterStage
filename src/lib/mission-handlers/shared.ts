@@ -17,7 +17,7 @@ import { getMission } from "@/lib/mission-repository";
 import { getCategory } from "@/lib/mission-category-repository";
 import { badRequest, notFound } from "@/lib/api-response";
 
-export function resolveMissionId(body: Record<string, unknown>): string | undefined {
+function resolveMissionId(body: Record<string, unknown>): string | undefined {
   return (body.id ?? body.missionId) as string | undefined;
 }
 
@@ -59,7 +59,7 @@ export function requireMissionOrNotFound(
   return getMissionOrNotFound(id);
 }
 
-export function parseCategoryId(
+function parseCategoryId(
   raw: unknown,
 ): { ok: true; value: string | null | undefined } | { ok: false; error: string } {
   if (raw === undefined) return { ok: true, value: undefined };

@@ -12,7 +12,7 @@ function firstEnvFlag(keys: string[]): string | undefined {
   return undefined;
 }
 
-export function isDeployApiEnabled(): boolean {
+function isDeployApiEnabled(): boolean {
   const raw = firstEnvFlag(["PS_ENABLE_DEPLOY_API", "CH_ENABLE_DEPLOY_API"]);
   const value = raw?.toLowerCase();
   if (value === "1" || value === "true" || value === "yes") return true;

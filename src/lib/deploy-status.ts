@@ -8,7 +8,7 @@ function deployStatusDir(): string {
   return dirname(deployStatusPath());
 }
 
-export type DeployState = "idle" | "running" | "success" | "failed";
+type DeployState = "idle" | "running" | "success" | "failed";
 
 export interface DeployStatus {
   state: DeployState;

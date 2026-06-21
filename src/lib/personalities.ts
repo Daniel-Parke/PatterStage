@@ -4,7 +4,7 @@
 // PERSONALITIES, PersonalityName, and PERSONALITY_COLORS were removed
 // as they were unused and represented stale documentation.
 
-export const PERSONALITY_EMOJIS: Record<string, string> = {
+const PERSONALITY_EMOJIS: Record<string, string> = {
   catgirl: "🐱",
   concise: "📌",
   creative: "🎨",

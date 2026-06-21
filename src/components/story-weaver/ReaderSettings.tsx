@@ -53,7 +53,7 @@ export function loadSettings(): ReadingSettings {
   return { ...DEFAULT_SETTINGS };
 }
 
-export function saveSettings(s: ReadingSettings) {
+function saveSettings(s: ReadingSettings) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch {}
 }
 

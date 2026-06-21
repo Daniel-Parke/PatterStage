@@ -35,14 +35,14 @@ import { parseEnvFile } from "./env-file";
 
 // ── Types ────────────────────────────────────────────────────
 
-export interface ParsedCredential {
+interface ParsedCredential {
   provider: HermesProvider;
   apiKey: string;
   /** Stable key used for upsert — SHA-256 of provider + first 8 hex chars */
   importKey: string;
 }
 
-export interface ParsedModel {
+interface ParsedModel {
   /**
    * Stable key used for upsert — SHA-256(provider + model_id), first 16 hex.
    * Used to detect "same model, already imported" across runs.

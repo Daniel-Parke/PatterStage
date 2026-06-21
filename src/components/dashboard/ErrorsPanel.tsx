@@ -14,7 +14,7 @@ import { Panel, PanelHeader } from "@/components/dashboard/Panel";
 import { titleCase } from "@/lib/utils";
 import type { MonitorData } from "@/types/hermes";
 
-export type ErrorSeverity = "all" | "error" | "warning";
+type ErrorSeverity = "all" | "error" | "warning";
 
 export interface ErrorsPanelProps {
   /** The filtered + deduped error rows to render. */

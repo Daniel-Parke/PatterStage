@@ -14,7 +14,7 @@ import type { ReactNode } from "react";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 /** `true` when the user prefers reduced motion (treat null as false). */
-export function useReducedMotionSafe(): boolean {
+function useReducedMotionSafe(): boolean {
   return useReducedMotion() ?? false;
 }
 
@@ -37,23 +37,6 @@ export function FadeIn({ children, className, delay = 0, y = 8 }: MotionBoxProps
       initial={{ opacity: 0, y }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay, ease: EASE }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-/** Reveal on scroll-into-view (once). No-op under reduced motion. */
-export function Reveal({ children, className, y = 12 }: MotionBoxProps) {
-  const reduce = useReducedMotionSafe();
-  if (reduce) return <div className={className}>{children}</div>;
-  return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.45, ease: EASE }}
     >
       {children}
     </motion.div>

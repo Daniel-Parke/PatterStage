@@ -149,7 +149,7 @@ export class BackgroundScheduler {
 
 let _scheduler: BackgroundScheduler | null = null;
 
-export function getBackgroundScheduler(): BackgroundScheduler {
+function getBackgroundScheduler(): BackgroundScheduler {
   if (!_scheduler) _scheduler = new BackgroundScheduler();
   return _scheduler;
 }

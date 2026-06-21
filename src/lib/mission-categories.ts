@@ -79,7 +79,7 @@ export function categoryFilterPills(
   return out;
 }
 
-export function groupByCategoryId<T>(
+function groupByCategoryId<T>(
   items: T[],
   getCategoryId: (item: T) => string | null | undefined,
   categories: CategoryLike[] | MissionCategory[],
@@ -138,7 +138,7 @@ export interface TemplateLike {
   isCustom?: boolean;
 }
 
-export function getTemplateCategoryId(t: TemplateLike): string | null {
+function getTemplateCategoryId(t: TemplateLike): string | null {
   if (t.categoryId) return t.categoryId;
   if (t.category) {
     const slug = t.category

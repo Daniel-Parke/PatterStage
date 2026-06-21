@@ -10,7 +10,7 @@
 import type { MissionTemplate } from "@/components/missions/TemplateModals";
 
 /** localStorage key for the most recently selected mission category */
-export const LAST_CATEGORY_KEY = "ps-last-mission-category";
+const LAST_CATEGORY_KEY = "ps-last-mission-category";
 
 /**
  * Read the legacy `categoryId` field from a `MissionTemplate`.

@@ -27,7 +27,7 @@ import {
 } from "@/lib/schedule/picker-resolver";
 import { CustomScheduleBuilder } from "@/components/schedule/CustomScheduleBuilder";
 
-export type ScheduleMode = "interval" | "wall-clock" | "weekly" | "post-run";
+type ScheduleMode = "interval" | "wall-clock" | "weekly" | "post-run";
 
 export interface SchedulePickerProps {
   /** Current schedule value — accepts 5-field cron, "every Nh" shorthand, or JSON-serialised ParsedSchedule. */

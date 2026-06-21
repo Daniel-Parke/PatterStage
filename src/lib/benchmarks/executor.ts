@@ -35,7 +35,7 @@ import type {
 const inflight = new Map<string, AbortController>();
 
 /** Fire-and-forget execution; resolves immediately, runs in the background. */
-export function kickBenchmarkRun(runId: string): void {
+function kickBenchmarkRun(runId: string): void {
   if (inflight.has(runId)) return;
   const controller = new AbortController();
   inflight.set(runId, controller);

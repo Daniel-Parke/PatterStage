@@ -61,7 +61,7 @@ export interface DashboardTemplate {
  * can be called as `setData({...result})` after the Promise.all
  * resolves.
  */
-export interface InitialDashboardData {
+interface InitialDashboardData {
   status: SystemStatus | null;
   config: Record<string, unknown> | null;
   templates: DashboardTemplate[];

@@ -269,7 +269,7 @@ export interface ResultForAgg {
 }
 
 /** Per-domain weight in the overall Agent Rating (equal by default). */
-export const DOMAIN_WEIGHTS: Record<BenchmarkDomain, number> = {
+const DOMAIN_WEIGHTS: Record<BenchmarkDomain, number> = {
   maths: 1,
   logic: 1,
   reasoning: 1,

@@ -70,41 +70,41 @@ export type StatCard = Record<Stat, number>;
 /** How a consistency item extracts a canonical answer from each repeat. */
 export type ConsistencyExtract = "mcq" | "numeric" | "normalized";
 
-export interface ExactGrader {
+interface ExactGrader {
   kind: "exact";
   expected: string;
   caseSensitive?: boolean;
 }
-export interface NumericGrader {
+interface NumericGrader {
   kind: "numeric";
   expected: number;
   /** Absolute tolerance (default 1e-6), or relative when `relative` is true. */
   tolerance?: number;
   relative?: boolean;
 }
-export interface McqGrader {
+interface McqGrader {
   kind: "mcq";
   expected: string;
   /** Allowed choice labels (default A–E). */
   choices?: string[];
 }
-export interface ContainsGrader {
+interface ContainsGrader {
   kind: "contains";
   /** All needles must appear in the output to fully pass. */
   needles: string[];
   caseSensitive?: boolean;
 }
-export interface RegexGrader {
+interface RegexGrader {
   kind: "regex";
   pattern: string;
   flags?: string;
 }
-export interface JsonSchemaGrader {
+interface JsonSchemaGrader {
   kind: "json_schema";
   /** Top-level keys that must be present for a pass. */
   requiredKeys?: string[];
 }
-export interface ConsistencyGrader {
+interface ConsistencyGrader {
   kind: "consistency";
   extract: ConsistencyExtract;
   /** Allowed choice labels when `extract === "mcq"`. */

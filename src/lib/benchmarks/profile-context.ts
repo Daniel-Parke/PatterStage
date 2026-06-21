@@ -59,7 +59,7 @@ function rowForSlug(slug: string): ConfigRow | null {
 }
 
 /** Pull a usable model string out of the config.yaml `model:` block (string or object). */
-export function modelStringFromPreserved(model: unknown): string | null {
+function modelStringFromPreserved(model: unknown): string | null {
   if (typeof model === "string") return model.trim() || null;
   if (model && typeof model === "object") {
     const o = model as Record<string, unknown>;

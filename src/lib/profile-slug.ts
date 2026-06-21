@@ -1,5 +1,5 @@
 /** Hermes-compatible profile slug (lowercase). Matches hermes_cli profiles._PROFILE_ID_RE. */
-export const PROFILE_SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
+const PROFILE_SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 
 export function isValidProfileSlug(slug: string): boolean {
   return PROFILE_SLUG_PATTERN.test(slug.trim());

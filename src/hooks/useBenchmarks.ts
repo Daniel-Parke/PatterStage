@@ -64,13 +64,13 @@ export function useBenchmarkRun(id: string | null) {
   return { detail: id ? r.data : null, isLoading: r.isLoading, error: r.error };
 }
 
-export interface CatalogSkill {
+interface CatalogSkill {
   key: string;
   displayName: string;
   description: string;
   category: string;
 }
-export interface CatalogTool {
+interface CatalogTool {
   key: string;
   displayName: string;
   description: string;

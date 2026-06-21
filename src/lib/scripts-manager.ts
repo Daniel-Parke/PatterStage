@@ -31,11 +31,11 @@ import { interpreterFor } from "@/lib/platform";
 import { getHostScheduler } from "@/lib/host-scheduler";
 
 /** Max script size accepted by the editor write API (256 KB). */
-export const MAX_SCRIPT_BYTES = 256 * 1024;
+const MAX_SCRIPT_BYTES = 256 * 1024;
 
 /** Script types we list, run, and schedule. node (.mjs) is the cross-platform
  *  default; .sh runs where bash is present, .ps1/.bat/.cmd on Windows. */
-export const ALLOWED_SCRIPT_EXTS = [".sh", ".mjs", ".cjs", ".js", ".ps1", ".bat", ".cmd"] as const;
+const ALLOWED_SCRIPT_EXTS = [".sh", ".mjs", ".cjs", ".js", ".ps1", ".bat", ".cmd"] as const;
 function hasAllowedExt(name: string): boolean {
   const lower = name.toLowerCase();
   return ALLOWED_SCRIPT_EXTS.some((e) => lower.endsWith(e));

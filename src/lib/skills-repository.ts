@@ -4,7 +4,7 @@
 
 import { db, now } from "./db";
 
-export type SkillSource = "bundled" | "custom" | "hub";
+type SkillSource = "bundled" | "custom" | "hub";
 
 export interface SkillRow {
   skillKey: string;

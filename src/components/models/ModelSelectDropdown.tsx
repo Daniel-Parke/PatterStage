@@ -50,7 +50,7 @@
 
 import { Select } from "@/components/ui/field";
 
-export interface ModelSelectOption {
+interface ModelSelectOption {
   id: string;
   name: string;
   provider: string;

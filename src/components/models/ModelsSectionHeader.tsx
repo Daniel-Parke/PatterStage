@@ -41,7 +41,7 @@ import type { LucideIcon } from "lucide-react";
 import type { AccentColor } from "@/types/hermes";
 import { iconColorMap } from "@/lib/theme";
 
-export type ModelsSectionHeaderTone = "full" | "muted";
+type ModelsSectionHeaderTone = "full" | "muted";
 
 export interface ModelsSectionHeaderProps {
   /** Lucide icon component reference (matches CONFIG_SECTIONS pattern). */

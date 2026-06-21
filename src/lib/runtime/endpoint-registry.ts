@@ -14,7 +14,7 @@ import { getAgentLlmEndpoints } from "@/lib/hermes-agent-runtime";
 import { getGatewayKey } from "./secrets";
 import { getBenchGatewayEndpoint } from "./gateway-manager";
 
-export const DEFAULT_PROFILE = "default";
+const DEFAULT_PROFILE = "default";
 
 export interface RuntimeEndpoint {
   profileName: string;

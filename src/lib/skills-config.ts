@@ -270,7 +270,7 @@ export function normalizeDisabledSkillKeys(
 /**
  * Effective denylist: explicit disabled + allowlist mode (installed − enabled).
  */
-export function computeEffectiveDisabledNames(
+function computeEffectiveDisabledNames(
   parsed: ParsedSkillsDisabled,
   catalogKeys: readonly string[],
 ): string[] {

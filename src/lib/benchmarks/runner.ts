@@ -58,7 +58,7 @@ function specFromRun(run: BenchmarkRun): BenchAgentSpec {
   };
 }
 
-export class BenchmarkCancelledError extends Error {
+class BenchmarkCancelledError extends Error {
   constructor() {
     super("benchmark run cancelled");
     this.name = "BenchmarkCancelledError";

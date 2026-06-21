@@ -7,7 +7,7 @@
  * Generates the structured story arc AND Chapter 1 in a single LLM call.
  * Output format: ===ARC=== JSON block, then ===CHAPTER 1=== prose block.
  */
-export const STORY_ARC_AND_CHAPTER_PROMPT = `You are a skilled novelist and story architect. You will create a detailed story arc and write the first chapter.
+const STORY_ARC_AND_CHAPTER_PROMPT = `You are a skilled novelist and story architect. You will create a detailed story arc and write the first chapter.
 
 YOUR RESPONSE MUST HAVE TWO SECTIONS IN THIS EXACT FORMAT:
 
@@ -44,7 +44,7 @@ WRITING QUALITY STANDARDS:
  * Chapter generation prompt — used for ALL chapters.
  * Receives: master prompt + story bible + rolling summary + previous chapter + chapter outline.
  */
-export const CHAPTER_PROMPT = `You are a skilled novelist writing a chapter of a story.
+const CHAPTER_PROMPT = `You are a skilled novelist writing a chapter of a story.
 
 You are writing toward FIXED PLOT POINTS defined in the story bible. You must not deviate from these — they are the contract. Your creative freedom is in HOW you write, not WHAT happens.
 
@@ -82,7 +82,7 @@ Return ONLY the chapter text. Pure prose, nothing else. No preamble, no "Here is
  * Summary prompt — updates the rolling narrative summary after each chapter.
  * Flexible length: 5 lines for simple stories, 20+ for complex ones.
  */
-export const SUMMARY_PROMPT = `You are a story archivist maintaining a rolling narrative summary. Update the summary to include the new chapter's events.
+const SUMMARY_PROMPT = `You are a story archivist maintaining a rolling narrative summary. Update the summary to include the new chapter's events.
 
 This summary is used as context for writing future chapters. It must capture EVERYTHING important that has happened so far.
 

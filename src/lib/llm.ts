@@ -39,7 +39,7 @@ export interface LLMResponse {
  * Thrown when the Hermes Gateway is unreachable.
  * Provides a user-facing message with actionable steps.
  */
-export class GatewayUnavailableError extends Error {
+class GatewayUnavailableError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "GatewayUnavailableError";

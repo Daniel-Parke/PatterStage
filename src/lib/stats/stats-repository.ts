@@ -27,16 +27,16 @@ import {
 } from "@/lib/analytics/analytics-repository";
 import type { AnalyticsEventType } from "@/lib/analytics/event-types";
 
-export interface DailyPoint {
+interface DailyPoint {
   date: string;
   value: number;
 }
-export interface ThroughputPoint {
+interface ThroughputPoint {
   date: string;
   completed: number;
   failed: number;
 }
-export interface NextRun {
+interface NextRun {
   name: string;
   at: string;
   kind: "mission" | "script";

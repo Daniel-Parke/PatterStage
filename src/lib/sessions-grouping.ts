@@ -29,7 +29,7 @@ export interface MissionGroup {
 }
 
 /** A single session card rendered as its own row. */
-export interface SingleSession {
+interface SingleSession {
   kind: "session";
   key: string;
   session: SessionRecord;

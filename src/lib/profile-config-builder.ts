@@ -16,7 +16,7 @@ import { dumpYamlConfig } from "./hermes-config-sync";
 export type PlatformToolsets = Record<string, string[]>;
 
 /** Top-level config.yaml keys managed outside skills/platform_toolsets. */
-export const PRESERVED_TOP_LEVEL_KEYS = [
+const PRESERVED_TOP_LEVEL_KEYS = [
   "model",
   "auxiliary",
   "fallback_providers",

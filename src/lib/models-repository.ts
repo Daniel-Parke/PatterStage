@@ -42,7 +42,7 @@ export interface ModelWithKey extends ModelRecord {
   apiKey: string | null;
 }
 
-export type ModelDefaultFlags = Partial<Record<TaskType, boolean>>;
+type ModelDefaultFlags = Partial<Record<TaskType, boolean>>;
 
 /**
  * Default slot flags — used at the API level to declare which task

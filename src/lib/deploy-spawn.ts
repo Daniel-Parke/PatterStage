@@ -60,7 +60,7 @@ export interface DeployProbeDeps {
   sleep: (ms: number) => Promise<void>;
 }
 
-export const defaultProbeDeps: DeployProbeDeps = {
+const defaultProbeDeps: DeployProbeDeps = {
   readStatus: () => readDeployStatus(),
   isPidAlive,
   now: () => Date.now(),
@@ -116,6 +116,6 @@ export async function probeDeployLiveness(
 }
 
 /** True iff the process exists. Cross-platform (delegates to platform.ts). */
-export function isPidAlive(pid: number): boolean {
+function isPidAlive(pid: number): boolean {
   return platformIsPidAlive(pid);
 }

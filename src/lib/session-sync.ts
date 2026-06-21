@@ -168,7 +168,7 @@ function buildMissionIdByJobId(): Map<string, string> {
  * unavailable, or when no mission has been registered for the job
  * (the detail page just doesn't render a Mission link in that case).
  */
-export function lookupMissionIdForHermesJob(hermesJobId: string): string | null {
+function lookupMissionIdForHermesJob(hermesJobId: string): string | null {
   if (!hermesJobId) return null;
   try {
     const row = db()

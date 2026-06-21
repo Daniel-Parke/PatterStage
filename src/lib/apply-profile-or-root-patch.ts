@@ -60,7 +60,7 @@ export type ProfileOrRootPatchResult =
  * only want to update the overlapping fields can pass the same object
  * to both — TypeScript will narrow as needed.
  */
-export function applyProfileOrRootPatch(
+function applyProfileOrRootPatch(
   slug: string,
   rootPatch: AgentRootPatch,
   profilePatch: Parameters<typeof updateProfileContent>[1],
@@ -103,7 +103,7 @@ export function applyProfileOrRootPatch(
  * Returns the same union as `applyProfileOrRootPatch` so callers can
  * share a single 404/500 switch.
  */
-export function pushProfileOrRoot(slug: string): ProfileOrRootPatchResult {
+function pushProfileOrRoot(slug: string): ProfileOrRootPatchResult {
   if (slug === "default") {
     const push = pushRootToHermes();
     if (!push.success) {

@@ -19,7 +19,7 @@ export function getSuite(key: string): BenchmarkSuite | undefined {
 }
 
 /** Per-domain item counts for a suite (for UI summaries; no answers leaked). */
-export function domainCounts(suite: BenchmarkSuite): Partial<Record<BenchmarkDomain, number>> {
+function domainCounts(suite: BenchmarkSuite): Partial<Record<BenchmarkDomain, number>> {
   const out: Partial<Record<BenchmarkDomain, number>> = {};
   for (const item of suite.items) {
     out[item.domain] = (out[item.domain] ?? 0) + 1;
@@ -37,7 +37,7 @@ export interface SuiteMeta {
   domainCounts: Partial<Record<BenchmarkDomain, number>>;
 }
 
-export function suiteMeta(suite: BenchmarkSuite): SuiteMeta {
+function suiteMeta(suite: BenchmarkSuite): SuiteMeta {
   return {
     key: suite.key,
     name: suite.name,
