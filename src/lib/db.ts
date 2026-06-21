@@ -26,6 +26,7 @@ import { applyBenchmarkCatalogMigration } from "./db/apply-benchmark-catalog-mig
 import { applyBenchGatewaysMigration } from "./db/apply-bench-gateways-migration";
 import { applyMissionPhasesMigration } from "./db/apply-mission-phases-migration";
 import { applyDeepResearchMigration } from "./db/apply-deep-research-migration";
+import { applyRetireMissionPhasesMigration } from "./db/apply-retire-mission-phases-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -205,6 +206,9 @@ export function runMigrations(database: Database.Database): void {
   // Native DeepResearch (Laboratory): research_runs + research_steps.
   // Idempotent CREATE ... IF NOT EXISTS at schema_version 19.
   applyDeepResearchMigration(database, migrationsDir);
+  // Retire the superseded Mission-V2 phase foundation (replaced by Composer).
+  // Drops the mission_phases tables + columns at schema_version 20.
+  applyRetireMissionPhasesMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

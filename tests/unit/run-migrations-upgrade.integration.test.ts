@@ -84,15 +84,14 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     // The benchmark gateway tracking table + per-item metrics land via v17.
     expect(tableNames(db)).toContain("bench_gateways");
     expect(cols(db, "benchmark_item_results")).toContain("metrics_json");
-    // Mission V2 multi-phase foundation lands via the wired v18 applier.
-    expect(tableNames(db)).toEqual(
-      expect.arrayContaining(["mission_phases", "mission_phase_actions", "mission_approvals"]),
-    );
-    expect(cols(db, "missions")).toEqual(expect.arrayContaining(["version", "current_phase_id"]));
-    expect(cols(db, "runs")).toContain("phase_action_id");
     // Native DeepResearch tables land via the wired v19 applier.
     expect(tableNames(db)).toEqual(expect.arrayContaining(["research_runs", "research_steps"]));
-    expect(getSchemaVersion(db)).toBe(19);
+    // The superseded Mission-V2 phase tables (created by v18) are dropped by the
+    // v20 retirement migration — Composer replaces them.
+    expect(tableNames(db)).not.toContain("mission_phases");
+    expect(tableNames(db)).not.toContain("mission_phase_actions");
+    expect(tableNames(db)).not.toContain("mission_approvals");
+    expect(getSchemaVersion(db)).toBe(20);
     // Pre-existing data survived the additive upgrade (cron job + mission).
     expect(
       (db.prepare("SELECT COUNT(*) c FROM cron_jobs").get() as { c: number }).c,
@@ -114,7 +113,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(19);
+    expect(getSchemaVersion(db)).toBe(20);
     db.close();
   });
 });
