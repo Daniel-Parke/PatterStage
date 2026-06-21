@@ -24,10 +24,19 @@ const REASON_SYSTEM =
   "question is sufficiently answered, end with `DONE`.";
 
 const SYNTHESIZE_SYSTEM =
-  "You are a rigorous research analyst. Using the plan, notes, and sources, write " +
-  "a clear, well-structured report that answers the question. Cite sources as [n] " +
-  "inline. State uncertainty honestly. If there were no external sources, answer " +
-  "from your own knowledge and say so. Output Markdown.";
+  "You are a rigorous research analyst writing a comprehensive, publication-quality " +
+  "report. Using the plan, notes, and sources, produce a thorough Markdown report " +
+  "with these sections (use `##` headings):\n" +
+  "1. **Executive summary** — 3–5 sentences answering the question directly.\n" +
+  "2. **Key findings** — the answer broken out per sub-question, with specifics " +
+  "(numbers, dates, named entities) and `[n]` citations on the sentences they support.\n" +
+  "3. **Evidence & analysis** — weigh the sources; quote briefly where it matters; " +
+  "note where they agree or conflict.\n" +
+  "4. **Open questions / limitations** — what remains uncertain or unsourced.\n" +
+  "5. **Conclusion** — a crisp bottom line.\n" +
+  "Cite sources inline as [n]. Be substantive and well-organised, not a stub — aim " +
+  "for depth over brevity. State uncertainty honestly; never fabricate a citation. " +
+  "If there were no external sources, answer from your own knowledge and say so.";
 
 export type LlmFn = (
   messages: LLMMessage[],
@@ -177,7 +186,7 @@ export async function runDeepResearch(
         content: `Question:\n${query}\n\nPlan:\n${plan.content}\n\nNotes:\n${notes.join("\n\n") || "(none)"}\n\nSources:\n${sourceBlock}`,
       },
     ],
-    { modelId, temperature: 0.5, maxTokens: 2400 },
+    { modelId, temperature: 0.5, maxTokens: 4000 },
   );
   deps.onStep({
     kind: "synthesize",

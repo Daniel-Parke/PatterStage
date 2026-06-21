@@ -11,7 +11,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, Download, Loader2 } from "lucide-react";
+import { Check, Copy, Download, ExternalLink, Loader2 } from "lucide-react";
 
 import Button from "@/components/ui/Button";
 import { renderReportHtml } from "@/lib/laboratory/deep-research/markdown";
@@ -31,6 +31,13 @@ const STEP_COLOR: Record<string, string> = {
   visit: "text-neon-green",
   reason: "text-neon-yellow",
   synthesize: "text-neon-pink",
+};
+const STEP_DOT: Record<string, string> = {
+  plan: "bg-neon-purple",
+  search: "bg-neon-cyan",
+  visit: "bg-neon-green",
+  reason: "bg-neon-yellow",
+  synthesize: "bg-neon-pink",
 };
 
 const PROSE =
@@ -72,9 +79,14 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             {copied ? "Copied" : "Copy"}
           </Button>
-          <a href={`/api/laboratory/research/${run.id}/export`} download>
+          <a href={`/api/laboratory/research/${run.id}/export`} target="_blank" rel="noopener noreferrer">
+            <Button variant="secondary" color="cyan" size="sm">
+              <ExternalLink className="h-4 w-4" /> View report
+            </Button>
+          </a>
+          <a href={`/api/laboratory/research/${run.id}/export`} download={`research-${run.id.slice(0, 8)}.html`}>
             <Button variant="secondary" color="green" size="sm">
-              <Download className="h-4 w-4" /> Export HTML
+              <Download className="h-4 w-4" /> Download
             </Button>
           </a>
         </div>
@@ -99,30 +111,55 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
         </div>
       ) : null}
 
-      {/* Timeline */}
+      {/* Timeline — a flowing plan → search → read → reason → synthesize stepper.
+          While the run is live the rail "electrifies" and a working head pulses. */}
       {steps.length ? (
         <div>
           <h3 className="mb-2 text-[11px] font-mono uppercase tracking-widest text-white/40">
             Research timeline
           </h3>
-          <ol className="space-y-2">
-            {steps.map((s) => (
-              <li key={s.id} className="rounded-lg border border-white/10 bg-dark-900/40">
-                <details>
-                  <summary className="cursor-pointer list-none px-3 py-2 text-xs">
-                    <span className={`font-mono uppercase tracking-wider ${STEP_COLOR[s.kind] ?? "text-white/60"}`}>
-                      {STEP_LABEL[s.kind] ?? s.kind}
-                    </span>
-                    {s.input ? <span className="ml-2 text-white/40">{s.input.slice(0, 70)}</span> : null}
-                  </summary>
-                  {s.output ? (
-                    <pre className="max-h-60 overflow-y-auto whitespace-pre-wrap px-3 pb-3 text-[11px] text-white/50">
-                      {s.output}
-                    </pre>
+          <ol className="relative space-y-2">
+            {steps.map((s, i) => {
+              const running = run.status === "running";
+              const isLast = i === steps.length - 1;
+              const active = running && isLast;
+              const showRail = !isLast || running;
+              return (
+                <li key={s.id} className="relative pl-7">
+                  {showRail ? (
+                    <span
+                      className={`absolute left-[9px] top-5 h-full ${active ? "ps-rail-flow w-0.5" : "w-px bg-white/10"}`}
+                      aria-hidden
+                    />
                   ) : null}
-                </details>
+                  <span
+                    className={`absolute left-1 top-3 h-3.5 w-3.5 rounded-full ring-2 ring-dark-900 ${STEP_DOT[s.kind] ?? "bg-white/30"} ${active ? "animate-pulse" : ""}`}
+                    aria-hidden
+                  />
+                  <details open={active} className="rounded-lg border border-white/10 bg-dark-900/40">
+                    <summary className="cursor-pointer list-none px-3 py-2 text-xs">
+                      <span className={`font-mono uppercase tracking-wider ${STEP_COLOR[s.kind] ?? "text-white/60"}`}>
+                        {STEP_LABEL[s.kind] ?? s.kind}
+                      </span>
+                      {s.input ? <span className="ml-2 text-white/40">{s.input.slice(0, 70)}</span> : null}
+                    </summary>
+                    {s.output ? (
+                      <pre className="max-h-60 overflow-y-auto whitespace-pre-wrap px-3 pb-3 text-[11px] text-white/50">
+                        {s.output}
+                      </pre>
+                    ) : null}
+                  </details>
+                </li>
+              );
+            })}
+            {run.status === "running" ? (
+              <li className="relative pl-7">
+                <span className="absolute left-1 top-1.5 h-3.5 w-3.5 animate-pulse rounded-full bg-neon-cyan/60 ring-2 ring-dark-900" aria-hidden />
+                <span className="inline-flex items-center gap-2 text-xs text-white/40">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> working…
+                </span>
               </li>
-            ))}
+            ) : null}
           </ol>
         </div>
       ) : null}
