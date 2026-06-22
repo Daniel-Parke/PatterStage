@@ -131,6 +131,13 @@ export default function ConfigSeedPage() {
               seeded profiles with existing content.
             </p>
 
+            <p className="text-xs text-white/40 font-mono border border-neon-purple/20 rounded-lg p-3 bg-neon-purple/5">
+              <strong className="text-neon-purple/80">About Bob:</strong> Bob is your local default
+              agent — the one missions and chat use when no profile is chosen. The shipped catalog
+              below is the seed source; restoring it re-creates Bob and the professional pack if
+              they are missing, but it never replaces a Bob you have already imported or customised.
+            </p>
+
             <section className="border border-neon-cyan/30 rounded-xl p-6 bg-dark-900/80">
               <h2 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
                 <RotateCcw className="w-5 h-5 text-neon-cyan" />

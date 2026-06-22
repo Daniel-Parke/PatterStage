@@ -14,7 +14,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   BarChart3, Sparkles, Activity, CalendarRange, Rocket, Clock,
-  Timer, Coins, Cpu, TrendingUp, Info,
+  Timer, Cpu, TrendingUp, Info,
 } from "lucide-react";
 
 import PageHeader from "@/components/layout/PageHeader";
@@ -287,7 +287,16 @@ export default function InsightsPage() {
                   <div className="mb-3 flex items-center gap-2">
                     <CalendarRange className="h-4 w-4 text-neon-cyan" />
                     <h2 className="text-xs font-mono uppercase tracking-widest text-white/50">Run activity — last 91 days</h2>
-                    <Coins className="ml-auto h-3.5 w-3.5 text-white/20" />
+                    {(() => {
+                      const pts = stats?.runActivity ?? [];
+                      const activeDays = pts.filter((p) => p.value > 0).length;
+                      const totalRuns = pts.reduce((sum, p) => sum + p.value, 0);
+                      return (
+                        <span className="ml-auto text-[10px] font-mono text-white/30" title="Days with at least one run · total runs in the window">
+                          {activeDays} active {activeDays === 1 ? "day" : "days"} · {totalRuns} run{totalRuns === 1 ? "" : "s"}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <ActivityHeatmap data={stats?.runActivity ?? []} color="green" />
                 </Card>
