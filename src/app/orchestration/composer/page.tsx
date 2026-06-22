@@ -36,7 +36,7 @@ const WorkflowRunCanvas = dynamic(() => import("@/components/composer/WorkflowRu
 import { useComposerWorkflows, useComposerRuns, useComposerRun } from "@/hooks/useComposer";
 import { useProfiles } from "@/hooks/useProfiles";
 import { useEventStream } from "@/hooks/useEventStream";
-import type { ApprovalAction, ComposerNodeRun, ComposerRun } from "@/lib/composer/schema";
+import type { ComposerNodeRun, ComposerRun } from "@/lib/composer/schema";
 
 /** A short, human-readable title from a run's raw input (first line, no markdown #). */
 function runTitle(input: string | null): string {
@@ -125,13 +125,13 @@ export default function ComposerPage() {
     }
   }
 
-  async function decideGate(action: ApprovalAction) {
+  async function decideGate(action: "accept" | "reject", note?: string) {
     if (!run || !run.currentNodeId || gateBusy) return;
     setGateBusy(true);
     try {
       await safeApiCall(`/api/composer/runs/${run.id}/nodes/${run.currentNodeId}/approve`, {
         method: "POST",
-        body: { action },
+        body: { action, note },
       });
     } finally {
       setGateBusy(false);
