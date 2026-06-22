@@ -11,6 +11,7 @@
 
 import { now } from "@/lib/db";
 import { logApiError } from "@/lib/api-logger";
+import { captureArtifactOnce } from "@/lib/artifacts-repository";
 import type { RunStatus } from "@/lib/runtime/types";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { getResearchRunByComposerNodeRunId } from "@/lib/laboratory/deep-research/research-repository";
@@ -246,6 +247,32 @@ function describeStageFailure(node: ComposerNode, nodeRun: ComposerNodeRun, cond
   return `${node.label} ${verb} and the workflow has no recovery path from here.`;
 }
 
+/** Capture a completed top-level Composer run's final stage output as an
+ *  artifact (idempotent; best-effort). Nested sub-workflow runs are skipped —
+ *  the parent run's deliverable is the one users care about. */
+function captureComposerArtifact(composerRunId: string, fromNodeRun: ComposerNodeRun): void {
+  try {
+    const output = fromNodeRun.output;
+    if (!output || output.trim().length === 0) return;
+    const run = getComposerRun(composerRunId);
+    if (!run || run.parentNodeRunId) return;
+    const title =
+      (run.input ?? "").split("\n").map((l) => l.trim()).find((l) => l.length > 0) ?? "Composer result";
+    captureArtifactOnce({
+      sourceKind: "composer",
+      sourceRunId: composerRunId,
+      sourceNodeId: fromNodeRun.id,
+      name: title.length > 80 ? `${title.slice(0, 80)}…` : title,
+      description: "Composer run output",
+      mimeType: "text/markdown",
+      content: output,
+      tags: ["composer"],
+    });
+  } catch (err) {
+    logApiError("composer.captureArtifact", composerRunId, err);
+  }
+}
+
 async function applyNext(
   composerRunId: string,
   fromNodeRun: ComposerNodeRun,
@@ -253,6 +280,7 @@ async function applyNext(
 ): Promise<void> {
   if (next.kind === "complete") {
     updateComposerRun(composerRunId, { status: "completed", completedAt: now() });
+    captureComposerArtifact(composerRunId, fromNodeRun);
     nudgeParentRun(composerRunId); // if this is a sub-workflow, settle its group stage
     return;
   }
@@ -265,6 +293,7 @@ async function applyNext(
   const target = getNode(next.nodeId);
   if (target?.isTerminal) {
     updateComposerRun(composerRunId, { status: "completed", currentNodeId: next.nodeId, completedAt: now() });
+    captureComposerArtifact(composerRunId, fromNodeRun);
     nudgeParentRun(composerRunId);
     return;
   }

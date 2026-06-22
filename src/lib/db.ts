@@ -34,6 +34,7 @@ import { applyModelsApiStyleMigration } from "./db/apply-models-api-style-migrat
 import { applyResearchComposerLinkMigration } from "./db/apply-research-composer-link-migration";
 import { applyComposerGroupLinkMigration } from "./db/apply-composer-group-link-migration";
 import { applyFrameworksMigration } from "./db/apply-frameworks-migration";
+import { applyArtifactsMigration } from "./db/apply-artifacts-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -250,6 +251,8 @@ export function runMigrations(database: Database.Database): void {
   // DB-owned agent-framework registry (Hermes today) — the FrameworkAdapter
   // seam. CREATE + seed at v27.
   applyFrameworksMigration(database, migrationsDir);
+  // Unified artifacts registry (agent-produced deliverables). CREATE at v28.
+  applyArtifactsMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

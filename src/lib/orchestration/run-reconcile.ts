@@ -17,6 +17,8 @@ import { now } from "@/lib/db";
 import { RuntimeRequestError, type RunStatus } from "@/lib/runtime/types";
 import { recordEvent } from "@/lib/analytics/record-event";
 import { finalizeComposerNodeRun, advanceComposerRun } from "@/lib/composer/engine";
+import { captureArtifactOnce } from "@/lib/artifacts-repository";
+import { logApiError } from "@/lib/api-logger";
 
 /** Map a terminal run status onto the mission status enum (no 'cancelled'). */
 function missionStatusFor(runStatus: RunStatus): "successful" | "failed" {
@@ -85,6 +87,23 @@ function finalizeMissionForRun(
  */
 function finalizeAndRecord(run: RunRecord, runStatus: RunStatus, resultText: string | null): void {
   finalizeMissionForRun(run.missionId, runStatus, resultText);
+  // Capture a completed mission's output as an artifact (idempotent, best-effort).
+  if (runStatus === "completed" && run.missionId && resultText && resultText.trim().length > 0) {
+    try {
+      const mission = getMission(run.missionId);
+      captureArtifactOnce({
+        sourceKind: "mission",
+        sourceRunId: run.id,
+        name: mission?.name ?? "Mission output",
+        description: "Mission run output",
+        mimeType: "text/markdown",
+        content: resultText,
+        tags: ["mission"],
+      });
+    } catch (err) {
+      logApiError("mission.captureArtifact", run.id, err);
+    }
+  }
   recordEvent(runStatus === "completed" ? "mission.completed" : "mission.failed", {
     entityType: "mission",
     entityId: run.missionId ?? undefined,

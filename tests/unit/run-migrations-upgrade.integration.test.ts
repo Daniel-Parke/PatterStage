@@ -119,7 +119,9 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     expect(
       (db.prepare("SELECT COUNT(*) c FROM frameworks WHERE type='hermes'").get() as { c: number }).c,
     ).toBe(1);
-    expect(getSchemaVersion(db)).toBe(27);
+    // The unified artifacts registry lands via the wired v28 applier.
+    expect(tableNames(db)).toContain("artifacts");
+    expect(getSchemaVersion(db)).toBe(28);
     // Pre-existing data survived the additive upgrade (cron job + mission).
     expect(
       (db.prepare("SELECT COUNT(*) c FROM cron_jobs").get() as { c: number }).c,
@@ -151,7 +153,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
       if (next === last) break;
       last = next;
     }
-    expect(getSchemaVersion(db)).toBe(27);
+    expect(getSchemaVersion(db)).toBe(28);
     expect(tableNames(db)).toEqual(
       expect.arrayContaining([
         "composer_workflows",
@@ -174,7 +176,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(27);
+    expect(getSchemaVersion(db)).toBe(28);
     db.close();
   });
 });

@@ -13,6 +13,7 @@ import { messageFromError } from "@/lib/api-fetch";
 import { runDeepResearch, defaultLlm, defaultVisit } from "./engine";
 import { resolveSearchProvider } from "./search";
 import { insertResearchStep, updateResearchRun } from "./research-repository";
+import { captureArtifactOnce } from "@/lib/artifacts-repository";
 import type { ResearchConfig } from "./types";
 
 export async function runResearchJob(
@@ -48,6 +49,21 @@ export async function runResearchJob(
       provider: result.provider,
       completedAt: now(),
     });
+    // Capture the report as an artifact (idempotent; best-effort — never fail
+    // the run on a capture error).
+    try {
+      captureArtifactOnce({
+        sourceKind: "research",
+        sourceRunId: runId,
+        name: query.trim().length > 80 ? `${query.trim().slice(0, 80)}…` : query.trim() || "Research report",
+        description: "Deep Research report",
+        mimeType: "text/markdown",
+        content: result.report,
+        tags: ["report", "research"],
+      });
+    } catch (capErr) {
+      logApiError("deep-research.captureArtifact", runId, capErr);
+    }
   } catch (err) {
     logApiError("deep-research.runResearchJob", runId, err);
     updateResearchRun(runId, {
