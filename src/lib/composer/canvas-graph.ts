@@ -160,6 +160,8 @@ export function validateCanvas(state: CanvasState): string[] {
   const errors: string[] = [];
   if (state.nodes.length === 0) errors.push("Add at least one stage.");
   if (state.nodes.some((n) => !n.data.label.trim())) errors.push("Every stage needs a label.");
+  if (state.nodes.some((n) => n.data.label.trim() === "New stage"))
+    errors.push('Rename the placeholder "New stage" stage(s) before saving.');
   const ids = new Set(state.nodes.map((n) => n.id));
   for (const e of state.edges) {
     if (e.source && !ids.has(e.source)) errors.push(`A route starts from an unknown stage.`);
