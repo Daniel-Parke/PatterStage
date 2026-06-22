@@ -12,6 +12,7 @@ import { RefreshCw, AlertTriangle, Check, Hammer, Power } from "lucide-react";
 import { setErrorFromCaught, safeApiCallData } from "@/lib/api-fetch";
 import { sanitizeGitBranch } from "@/lib/git-branch";
 import { fallbackForDeployMessage } from "@/lib/deploy-action-fallback";
+import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { BranchDropdown } from "./BranchDropdown";
 
 /** The three deploy actions supported by POST /api/update. */
@@ -195,6 +196,18 @@ export function VersionFooter({ collapsed }: { collapsed: boolean }) {
     });
   }, [runDeployAction]);
 
+  // Rebuild + Restart take the app down — require a second click to confirm
+  // (two-step, auto-dismissing) rather than firing on a single mis-click.
+  const { isArmedFor, arm, confirm } = useTwoStepConfirm({ autoDismissMs: 4000 });
+  const onRebuildClick = useCallback(() => {
+    if (isArmedFor("rebuild")) void confirm(doRebuild);
+    else arm("rebuild");
+  }, [isArmedFor, confirm, arm, doRebuild]);
+  const onRestartClick = useCallback(() => {
+    if (isArmedFor("restart")) void confirm(handleRestart);
+    else arm("restart");
+  }, [isArmedFor, confirm, arm, handleRestart]);
+
   const clearDeployBusy = useCallback(() => {
     setUpdating(false);
     setRestarting(false);
@@ -332,22 +345,22 @@ export function VersionFooter({ collapsed }: { collapsed: boolean }) {
             </button>
           )}
 
-          {/* Rebuild */}
+          {/* Rebuild (two-step confirm) */}
           <button
-            onClick={() => doRebuild()}
+            onClick={onRebuildClick}
             disabled={isBusy}
-            className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
-            title={message || "Rebuild App"}
+            className={`p-1.5 rounded-lg transition-colors ${isArmedFor("rebuild") ? "text-neon-orange bg-orange-500/10" : "text-white/30 hover:text-white/60 hover:bg-white/5"}`}
+            title={isArmedFor("rebuild") ? "Click again to confirm rebuild" : (message || "Rebuild App")}
           >
             <Hammer className={`w-3.5 h-3.5 flex-shrink-0 ${rebuilding ? "animate-spin" : ""}`} />
           </button>
 
-          {/* Restart */}
+          {/* Restart (two-step confirm) */}
           <button
-            onClick={handleRestart}
+            onClick={onRestartClick}
             disabled={isBusy}
-            className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-            title={message || "Restart App"}
+            className={`p-1.5 rounded-lg transition-colors ${isArmedFor("restart") ? "text-red-400 bg-red-500/10" : "text-white/30 hover:text-red-400 hover:bg-red-500/10"}`}
+            title={isArmedFor("restart") ? "Click again to confirm restart" : (message || "Restart App")}
           >
             <Power className={`w-3.5 h-3.5 flex-shrink-0 ${restarting ? "animate-spin" : ""}`} />
           </button>
@@ -428,32 +441,32 @@ export function VersionFooter({ collapsed }: { collapsed: boolean }) {
         <div className="flex gap-1.5">
           <button
             type="button"
-            title="npm run build + restart (current checkout)"
-            onClick={() => doRebuild()}
+            title={isArmedFor("rebuild") ? "Click again to confirm — rebuilds + restarts the app" : "npm run build + restart (current checkout)"}
+            onClick={onRebuildClick}
             disabled={isBusy}
             className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-mono transition-colors disabled:opacity-50 ${
-              rebuilding
+              rebuilding || isArmedFor("rebuild")
                 ? "bg-neon-purple/20 border border-neon-purple/30 text-neon-purple/90"
                 : "bg-neon-purple/10 border border-neon-purple/20 text-neon-purple hover:bg-neon-purple/20"
             }`}
           >
             <Hammer className={`w-3.5 h-3.5 flex-shrink-0 ${rebuilding ? "animate-spin" : ""}`} />
-            Rebuild
+            {isArmedFor("rebuild") ? "Confirm?" : "Rebuild"}
           </button>
 
           <button
             type="button"
-            title="Restart next-server only (no build)"
-            onClick={handleRestart}
+            title={isArmedFor("restart") ? "Click again to confirm — restarts the server" : "Restart next-server only (no build)"}
+            onClick={onRestartClick}
             disabled={isBusy}
             className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-mono transition-colors disabled:opacity-50 ${
-              restarting
+              restarting || isArmedFor("restart")
                 ? "bg-red-500/20 border border-red-500/30 text-red-300"
                 : "bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20"
             }`}
           >
             <Power className={`w-3.5 h-3.5 flex-shrink-0 ${restarting ? "animate-spin" : ""}`} />
-            Restart
+            {isArmedFor("restart") ? "Confirm?" : "Restart"}
           </button>
         </div>
       </div>
