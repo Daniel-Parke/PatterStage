@@ -136,6 +136,25 @@ export function updateResearchRun(id: string, input: UpdateResearchRunInput): Re
   return getResearchRun(id);
 }
 
+/**
+ * Watchdog: fail standalone research runs stuck in `running` past a deadline.
+ * runResearchJob is fire-and-forget, so a process crash mid-research would
+ * otherwise leave a row `running` forever (the page spinning indefinitely).
+ * Each engine LLM call has its own fast-fail timeout, so a legitimate run can't
+ * hang this long — anything older is interrupted. Returns the count failed.
+ * (Composer-driven research nodes are capped separately by the engine.)
+ */
+export function failStuckResearchRuns(maxMinutes = 30): number {
+  const cutoff = new Date(Date.now() - maxMinutes * 60_000).toISOString();
+  const res = db()
+    .prepare(
+      `UPDATE research_runs SET status = 'failed', error = ?, completed_at = ?
+       WHERE status = 'running' AND created_at < ?`,
+    )
+    .run("Research run was interrupted or exceeded the maximum runtime.", now(), cutoff);
+  return res.changes;
+}
+
 export function insertResearchStep(input: {
   runId: string;
   position: number;

@@ -42,4 +42,15 @@ export async function register(): Promise<void> {
   // re-kick any that were created but never started.
   const { recoverBenchmarkRuns } = await import("@/lib/benchmarks/executor");
   recoverBenchmarkRuns();
+
+  // Deep Research recovery: fail standalone research runs left 'running' by a
+  // crashed/restarted process (fire-and-forget jobs have no in-process resume),
+  // so the page doesn't spin forever on an interrupted run.
+  try {
+    const { failStuckResearchRuns } = await import("@/lib/laboratory/deep-research/research-repository");
+    const failed = failStuckResearchRuns();
+    if (failed > 0) console.warn(`[deep-research] failed ${failed} stuck research run(s) on boot`);
+  } catch {
+    /* non-fatal recovery */
+  }
 }

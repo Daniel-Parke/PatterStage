@@ -211,7 +211,6 @@ export default function ModelsPage() {
               modelOptions={modelOptions}
               busyTaskType={busyTaskType}
               onChange={handleSetDefault}
-              onSetAllAux={handleBulkAuxiliaryChange}
             />
 
           </>

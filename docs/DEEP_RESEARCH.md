@@ -27,7 +27,7 @@ Configure via `PS_SEARCH_PROVIDER` / `PS_SEARXNG_URL` (see [ENV_REFERENCE.md](EN
 2. **Rounds** (budgeted, default 3): **search** the current query → **visit** the top sources → **reason** over the evidence + prior notes; the model emits `NEXT QUERY:` to continue or `DONE` to stop.
 3. **Synthesize** — a cited Markdown report from the plan, notes, and deduped sources.
 
-Every step (plan/search/visit/reason/synthesize) is persisted to `research_steps` (schema v19) so the page can replay/stream it. The run is fire-and-forget ([`run-job.ts`](../src/lib/laboratory/deep-research/run-job.ts)); the page streams via SSE (`GET /api/laboratory/research/[id]/events`) with `useApiResource` polling as the fallback.
+Every step (plan/search/visit/reason/synthesize) is persisted to `research_steps` (schema v19) so the page can replay/stream it. The run is fire-and-forget ([`run-job.ts`](../src/lib/laboratory/deep-research/run-job.ts)); the page streams via SSE (`GET /api/laboratory/research/[id]/events`) with `useApiResource` polling as the fallback. Because the job is fire-and-forget, a crashed/restarted process would leave a run stuck `running` — boot recovery (`failStuckResearchRuns`, wired in [`instrumentation.ts`](../src/instrumentation.ts)) fails standalone runs left running past a deadline so the page doesn't spin forever.
 
 ## API
 

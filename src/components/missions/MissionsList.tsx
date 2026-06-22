@@ -40,7 +40,6 @@ export interface MissionsListProps {
 export default function MissionsList({ vm }: MissionsListProps) {
   const {
     missions,
-    missionCounts,
     showCreate,
     filter,
     setFilter,
@@ -77,24 +76,8 @@ export default function MissionsList({ vm }: MissionsListProps) {
 
   return (
     <div className="w-full max-w-none px-6 py-6">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: "Total", value: missions.length, border: "border-white/10", text: "text-white" },
-          { label: "Active", value: missionCounts.active, border: "border-neon-orange/20", text: "text-neon-orange" },
-          { label: "Completed", value: missionCounts.completed, border: "border-neon-green/20", text: "text-neon-green" },
-          { label: "Failed", value: missionCounts.failed, border: "border-red-500/20", text: "text-red-400" },
-        ].map((stat) => (
-          <div key={stat.label} className={`rounded-lg border ${stat.border} bg-dark-900/50 p-4`}>
-            <div className={`text-[10px] font-mono ${stat.text} uppercase`}>
-              {stat.label}
-            </div>
-            <div className={`text-xl font-bold font-mono ${stat.text}`}>
-              {stat.value}
-            </div>
-          </div>
-        ))}
-      </div>
-
+      {/* The status summary (Total / Active / Done / Failed) is rendered once by
+          <MissionInsights> above this list — no duplicate tile row here. */}
       {!showCreate && (
         <div className="mb-6" data-testid="missions-quick-templates">
           <div className="flex flex-wrap justify-between items-start gap-4 mb-3">

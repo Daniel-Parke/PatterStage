@@ -8,12 +8,10 @@
 
 "use client";
 
-import { Zap } from "lucide-react";
 import GlowSurface from "@/components/ui/GlowSurface";
 import ModelSelectDropdown from "@/components/models/ModelSelectDropdown";
 
 import {
-  AUXILIARY_TASK_TYPES,
   TASK_TYPES,
   type TaskType,
 } from "@/lib/hermes-providers";
@@ -29,7 +27,6 @@ export interface DefaultsGridProps {
   defaults: Record<TaskType, string | null>;
   models: DefaultsModelOption[];
   onChange: (taskType: TaskType, modelId: string | null) => void | Promise<void>;
-  onSetAllAux?: (taskTypes: TaskType[], targetModelId: string) => void | Promise<void>;
   busyTaskType?: TaskType | null;
 }
 
@@ -93,7 +90,6 @@ export default function DefaultsGrid({
   defaults,
   models,
   onChange,
-  onSetAllAux,
   busyTaskType = null,
 }: DefaultsGridProps) {
 
@@ -103,7 +99,6 @@ export default function DefaultsGrid({
         const meta = SLOT_META[slot];
         const selected = defaults[slot];
         const isBusy = busyTaskType === slot;
-        const isAux = slot !== "agent";
         const modelForSlot = selected ? models.find((m) => m.id === selected) : null;
 
         return (
@@ -122,30 +117,10 @@ export default function DefaultsGrid({
             )}
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
+                {/* Per-slot "set all aux" shortcut removed — the section-level
+                    Bulk auxiliary updater is the single control for that. */}
                 <div className="text-sm font-semibold text-white flex items-center gap-2">
                   {meta.label}
-                  {isAux && onSetAllAux && modelForSlot && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!onSetAllAux || !selected) return;
-                        // Apply to all OTHER auxiliary slots — the current
-                        // slot already has this value, so we skip it to
-                        // avoid an extra (no-op) PUT + Hermes write-through.
-                        // AUXILIARY_TASK_TYPES is the canonical 11-slot list;
-                        // we exclude the current one inline.
-                        const others = AUXILIARY_TASK_TYPES.filter((t) => t !== slot);
-                        if (others.length > 0) {
-                          void onSetAllAux(others, selected);
-                        }
-                      }}
-                      disabled={isBusy}
-                      className="p-0.5 rounded text-neon-purple/40 hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                      title={`Set all auxiliary slots to ${modelForSlot.name}`}
-                    >
-                      <Zap className="w-3 h-3" />
-                    </button>
-                  )}
                 </div>
                 <p className="text-xs text-white/30 font-mono mt-0.5 truncate">
                   {meta.description}

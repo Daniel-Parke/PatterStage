@@ -12,7 +12,6 @@ interface ModelsTaskDefaultsSectionProps {
   modelOptions: DefaultsModelOption[];
   busyTaskType: TaskType | null;
   onChange: (taskType: TaskType, modelId: string | null) => Promise<void>;
-  onSetAllAux: (taskTypes: TaskType[], targetModelId: string) => Promise<void>;
 }
 
 export default function ModelsTaskDefaultsSection({
@@ -20,7 +19,6 @@ export default function ModelsTaskDefaultsSection({
   modelOptions,
   busyTaskType,
   onChange,
-  onSetAllAux,
 }: ModelsTaskDefaultsSectionProps) {
   return (
     <section data-section="defaults" className="space-y-4">
@@ -29,7 +27,6 @@ export default function ModelsTaskDefaultsSection({
         defaults={defaults}
         models={modelOptions}
         onChange={onChange}
-        onSetAllAux={onSetAllAux}
         busyTaskType={busyTaskType}
       />
     </section>
