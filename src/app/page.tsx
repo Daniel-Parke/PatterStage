@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Gamepad2,
   BookOpen,
+  AlertTriangle,
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { timeAgo } from "@/lib/utils";
@@ -254,6 +255,20 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+        {/* Malformed config.yaml — one actionable alert (ConfigSync sets the
+            stat; the sync no longer spams the log). */}
+        {monitor?.system?.configYamlError ? (
+          <div className="flex items-start gap-3 rounded-xl border border-neon-orange/40 bg-neon-orange/10 px-4 py-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-neon-orange" />
+            <div className="min-w-0 text-xs">
+              <p className="font-semibold text-neon-orange">Hermes config.yaml cannot be parsed</p>
+              <p className="mt-0.5 break-words font-mono text-neon-orange/70">{monitor.system.configYamlError}</p>
+              <p className="mt-1 text-white/40">
+                Config + profile syncs are paused until this is fixed. Edit <code className="text-white/60">~/.hermes/config.yaml</code> to correct the YAML.
+              </p>
+            </div>
+          </div>
+        ) : null}
         {/* ═══ Compact Stat Row ═══ */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-w-0">
           {monitor ? (

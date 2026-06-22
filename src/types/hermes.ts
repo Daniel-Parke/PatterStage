@@ -45,6 +45,8 @@ export interface MonitorData {
     uptime: string;
     configPresent: boolean;
     soulPresent: boolean;
+    /** Set when config.yaml is present but fails to parse (malformed YAML). */
+    configYamlError?: string | null;
   };
   sync: {
     lastRun: string | null;

@@ -29,6 +29,12 @@ async function fileExists(path: string): Promise<boolean> {
   }
 }
 
+// The config.yaml parse error recurs on every 15s sync tick while the file
+// stays malformed. Track the last-seen message so we log it ONCE per distinct
+// error instead of ~4×/min forever (mirrors session-sync's orphan-log
+// suppression). Reset when the config parses cleanly again.
+let lastYamlErrorSignature: string | null = null;
+
 export class ConfigSync implements SyncSource {
   readonly name = "config";
 
@@ -46,6 +52,7 @@ export class ConfigSync implements SyncSource {
           "config.memory_provider": "",
           "config.default_model": "",
           "config.soul_present": soulPresent,
+          "config.yaml_error": "",
         });
         return {
           sourceName: this.name,
@@ -66,7 +73,18 @@ export class ConfigSync implements SyncSource {
       try {
         cfg = yaml.load(raw) as Record<string, unknown>;
       } catch (yamlErr) {
-        logApiError("ConfigSync", "yaml.load failed (non-fatal — config is malformed)", yamlErr);
+        const message = yamlErr instanceof Error ? yamlErr.message : String(yamlErr);
+        // Log once per distinct error (no per-tick spam).
+        if (message !== lastYamlErrorSignature) {
+          logApiError("ConfigSync", "yaml.load failed (non-fatal — config is malformed)", yamlErr);
+          lastYamlErrorSignature = message;
+        }
+        // Surface the malformed-config state so the dashboard can show ONE
+        // actionable alert (the file exists but cannot be parsed).
+        setMultipleStats({
+          "config.present": "true",
+          "config.yaml_error": message,
+        });
         return {
           sourceName: this.name,
           success: true,
@@ -74,6 +92,8 @@ export class ConfigSync implements SyncSource {
           durationMs: Math.round(performance.now() - start),
         };
       }
+      // Parsed cleanly — clear any prior malformed-config alert + log gate.
+      lastYamlErrorSignature = null;
 
       // Memory provider
       const mem = cfg.memory;
@@ -100,6 +120,7 @@ export class ConfigSync implements SyncSource {
         "config.memory_provider": memoryProvider,
         "config.default_model": defaultModel,
         "config.soul_present": soulPresent,
+        "config.yaml_error": "",
       });
 
       return {

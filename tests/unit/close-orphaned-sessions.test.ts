@@ -288,6 +288,59 @@ describe("closeOrphanedActiveSessions — age-fallback path", () => {
   });
 });
 
+// ── Resurrection guard (active↔closed churn fix) ──────────────────
+//
+// The Hermes-session upsert in syncHermesSessionsToDb must NOT reset a
+// locally-closed session back to 'active' when Hermes still reports
+// end_reason: null (excluded.status = 'active'). Without the guard the
+// orphan sweep re-closes the same rows every 15s tick forever. This block
+// pins the exact ON CONFLICT status CASE used by the upsert.
+describe("Hermes-session upsert — resurrection guard", () => {
+  let tdb: TestDatabase;
+  beforeEach(() => { tdb = makeTestDatabase(); });
+  afterEach(() => { tdb.close(); });
+
+  // Mirror of the upsert's status clause in src/lib/session-sync.ts. Keep in
+  // lockstep with that statement.
+  function upsertHermesStatus(id: string, incomingStatus: string): void {
+    tdb.db.prepare(/* sql */ `
+      INSERT INTO sessions (id, agent_type, source, size, started_at, status)
+      VALUES (?, 'hermes', 'cli', 0, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        status = CASE
+                   WHEN excluded.status = 'active'
+                        AND sessions.status IN ('completed', 'failed', 'cancelled')
+                     THEN sessions.status
+                   ELSE excluded.status
+                 END
+    `).run(id, isoMinutesAgo(10), incomingStatus);
+  }
+  const statusOf = (id: string) =>
+    (tdb.db.prepare("SELECT status FROM sessions WHERE id = ?").get(id) as { status: string }).status;
+
+  it("does NOT resurrect a locally-closed session to 'active'", () => {
+    seedSession(tdb.db, { id: "s1", source: "cli", status: "completed", startedMinutesAgo: 10 });
+    upsertHermesStatus("s1", "active"); // Hermes still reports end_reason: null
+    expect(statusOf("s1")).toBe("completed");
+
+    seedSession(tdb.db, { id: "s2", source: "cli", status: "failed", startedMinutesAgo: 10 });
+    upsertHermesStatus("s2", "active");
+    expect(statusOf("s2")).toBe("failed");
+  });
+
+  it("still lets a real terminal end_reason close an active session", () => {
+    seedSession(tdb.db, { id: "s1", source: "cli", status: "active", startedMinutesAgo: 10 });
+    upsertHermesStatus("s1", "completed"); // end_reason: stop → excluded.status='completed'
+    expect(statusOf("s1")).toBe("completed");
+  });
+
+  it("leaves a genuinely-active session active", () => {
+    seedSession(tdb.db, { id: "s1", source: "cli", status: "active", startedMinutesAgo: 1 });
+    upsertHermesStatus("s1", "active");
+    expect(statusOf("s1")).toBe("active");
+  });
+});
+
 describe("previewOrphanSweep", () => {
   let tdb: TestDatabase;
   beforeEach(() => { tdb = makeTestDatabase(); });

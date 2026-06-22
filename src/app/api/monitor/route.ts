@@ -71,6 +71,9 @@ export async function GET(request: NextRequest) {
     // ── System Info (from meta table) ───────────────────────
     const configPresent = getSystemStat("config.present") === "true";
     const soulPresent = getSystemStat("config.soul_present") === "true";
+    // Non-empty when ConfigSync last failed to parse config.yaml (the file is
+    // malformed). Surfaced as a single dashboard alert instead of log spam.
+    const configYamlError = getSystemStat("config.yaml_error") || null;
 
     // ── Active agent framework (DB-owned registry) ──────────
     let framework: MonitorData["framework"];
@@ -122,6 +125,7 @@ export async function GET(request: NextRequest) {
         uptime: getSystemStat("system.uptime") ?? "N/A", // Synced by ProcessSync from /proc/uptime
         configPresent,
         soulPresent,
+        configYamlError,
       },
       framework,
       sync: {

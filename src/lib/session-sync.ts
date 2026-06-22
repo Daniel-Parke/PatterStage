@@ -286,7 +286,18 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
       size          = excluded.size,
       started_at    = excluded.started_at,
       ended_at      = COALESCE(excluded.ended_at, ended_at),
-      status        = excluded.status,
+      -- A session we've already closed locally (orphan sweep or a real
+      -- end_reason) must NOT be resurrected to 'active' just because Hermes
+      -- still reports end_reason: null. Without this guard the orphan sweep
+      -- re-closes the same rows every 15s tick forever (active↔closed churn +
+      -- write amplification). A real terminal end_reason (excluded.status is
+      -- then 'completed'/'failed', not 'active') still flows through.
+      status        = CASE
+                         WHEN excluded.status = 'active'
+                              AND sessions.status IN ('completed', 'failed', 'cancelled')
+                           THEN sessions.status
+                         ELSE excluded.status
+                       END,
       exit_code     = COALESCE(excluded.exit_code, exit_code),
       message_count = COALESCE(excluded.message_count, message_count)
   `);
