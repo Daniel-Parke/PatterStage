@@ -20,6 +20,14 @@ const DRAFT_KEY = "story-weaver-draft";
 
 const EMPTY_CHARACTER: StoryCharacter = { name: "", role: "supporting", description: "" };
 
+/** Auto-title an untitled story from its premise (first ~6 words) instead of the
+ *  generic "Untitled Story", so the library doesn't fill with indistinguishable rows. */
+function deriveTitleFromPremise(premise: string): string {
+  const words = premise.trim().split(/\s+/).slice(0, 6).join(" ").replace(/[.,;:!?]+$/, "");
+  if (!words) return "Untitled Story";
+  return words.length > 60 ? `${words.slice(0, 60)}…` : words;
+}
+
 interface Draft {
   title: string;
   premise: string;
@@ -280,13 +288,14 @@ function CreateStoryPage() {
     setGenStoryId(null);
     setGenError(null);
 
+    const finalTitle = title.trim() || deriveTitleFromPremise(premise);
     try {
       const res = await fetch("/api/stories", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "create",
-          title: title || "Untitled Story",
-          config: { title: title || "Untitled Story", premise, genre: genres.join(", "), era, setting, mood: moods, pov, length, characters, wordCountRange },
+          title: finalTitle,
+          config: { title: finalTitle, premise, genre: genres.join(", "), era, setting, mood: moods, pov, length, characters, wordCountRange },
         }),
       });
       const d = await res.json();

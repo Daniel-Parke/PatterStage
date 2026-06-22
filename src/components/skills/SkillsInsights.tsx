@@ -26,10 +26,10 @@ export default function SkillsInsights({ skills, activeCount }: { skills: Array<
         centerSub: "skills",
       }}
       tiles={[
-        { icon: FileText, label: "Total", value: s.total, color: "cyan" },
-        { icon: Check, label: "Active", value: s.active, color: "green" },
-        { icon: Power, label: "Inactive", value: s.inactive, color: "orange" },
-        { icon: Layers, label: "Categories", value: s.categories, color: "purple" },
+        { icon: FileText, label: "Total", value: s.total, color: "cyan", hint: "Skills available to the selected profile — not the full installed catalog." },
+        { icon: Check, label: "Active", value: s.active, color: "green", hint: "Skills currently enabled for this profile." },
+        { icon: Power, label: "Inactive", value: s.inactive, color: "orange", hint: "Available to the profile but not currently enabled (Total − Active)." },
+        { icon: Layers, label: "Categories", value: s.categories, color: "purple", hint: "Distinct skill categories in this profile." },
       ]}
       ring={{
         value: s.total > 0 ? s.active / s.total : 0,
