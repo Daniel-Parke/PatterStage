@@ -105,7 +105,7 @@ describe("formatModelSubtitle", () => {
 
   it("falls back to the registry label when disk is empty", () => {
     expect(formatModelSubtitle("", "", "claude-3-5-sonnet")).toBe(
-      "claude-3-5-sonnet · Models registry (push Bob to write config.yaml)",
+      "claude-3-5-sonnet · registry default (not yet applied)",
     );
   });
 

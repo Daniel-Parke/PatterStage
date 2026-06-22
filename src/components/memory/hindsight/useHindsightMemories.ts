@@ -50,6 +50,9 @@ export function useHindsightMemories(showToast: ShowToast) {
 
   // Health
   const [health, setHealth] = useState<HealthState | null>(null);
+  // Real store size (from the list endpoint's `total`), distinct from the
+  // loaded page (`memories.length`) — so the UI can show "N of TOTAL".
+  const [totalFacts, setTotalFacts] = useState<number | null>(null);
 
   const fetchHealthOnly = useCallback(async () => {
     // `hindsightGet` returns the inner payload typed as `T | null`;
@@ -66,7 +69,7 @@ export function useHindsightMemories(showToast: ShowToast) {
     setLoadingInitial(true);
     // Envelope-typed: the route returns
     // `{ data: { memories, mode, error } }`.
-    const inner = await hindsightGet<{ memories?: Memory[]; mode?: string; error?: string }>(
+    const inner = await hindsightGet<{ memories?: Memory[]; total?: number; mode?: string; error?: string }>(
       "list",
       { limit: 50 },
     );
@@ -74,6 +77,7 @@ export function useHindsightMemories(showToast: ShowToast) {
       void fetchHealthOnly();
     } else {
       setMemories(inner?.memories || []);
+      setTotalFacts(typeof inner?.total === "number" ? inner.total : null);
       if (inner) {
         setHealth({ available: true, mode: stringOr(inner.mode, "ok") });
       }
@@ -186,6 +190,7 @@ export function useHindsightMemories(showToast: ShowToast) {
     setNewTags,
     adding,
     health,
+    totalFacts,
     fetchHealthOnly,
     loadRecentMemories,
     runRecall,

@@ -21,7 +21,7 @@
  * will use. Returns one of:
  *
  *   - `"<model>"` or `"<model> · <provider>"` when `diskModel` is set
- *   - `"<registryLabel> · Models registry (push Bob to write config.yaml)"`
+ *   - `"<registryLabel> · registry default (not yet applied)"`
  *     when the disk is empty but the registry has a default
  *   - `"-"` when neither is set
  *
@@ -37,7 +37,7 @@
  *   formatModelSubtitle("gpt-4o", "openai", null)
  *   // => "gpt-4o · openai"
  *   formatModelSubtitle("", "", "claude-3-5-sonnet")
- *   // => "claude-3-5-sonnet · Models registry (push Bob to write config.yaml)"
+ *   // => "claude-3-5-sonnet · registry default (not yet applied)"
  *   formatModelSubtitle("", "", null)
  *   // => "-"
  */
@@ -50,7 +50,7 @@ export function formatModelSubtitle(
     return diskProvider ? `${diskModel} · ${diskProvider}` : diskModel;
   }
   if (registryLabel) {
-    return `${registryLabel} · Models registry (push Bob to write config.yaml)`;
+    return `${registryLabel} · registry default (not yet applied)`;
   }
   return "-";
 }

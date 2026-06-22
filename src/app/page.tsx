@@ -22,6 +22,7 @@ import { timeAgo } from "@/lib/utils";
 import { shellHeaderBarClasses } from "@/lib/theme";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import AppPageShell from "@/components/layout/AppPageShell";
+import PageTitle from "@/components/layout/PageTitle";
 import { StatPill, StatPillSkeleton } from "@/components/dashboard/StatPill";
 import { Panel, PanelHeader } from "@/components/dashboard/Panel";
 import CommandCenter from "@/components/dashboard/CommandCenter";
@@ -218,6 +219,7 @@ export default function Dashboard() {
 
   return (
     <AppPageShell variant="scanlines">
+      <PageTitle title="Dashboard" />
       {/* Top Bar */}
       <div className={`${shellHeaderBarClasses} sticky top-0 z-30 justify-between gap-4 w-full`}>
         <div>

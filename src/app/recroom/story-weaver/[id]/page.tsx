@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, BookOpen, BookMarked, Sparkles, Loader2, X, RefreshCw, PenLine, PlayCircle, AlertTriangle } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
+import PageTitle from "@/components/layout/PageTitle";
 import ChapterList from "@/components/story-weaver/ChapterList";
 import StoryBiblePanel from "@/components/story-weaver/StoryBiblePanel";
 import GenerateOverlay from "@/components/story-weaver/GenerateOverlay";
@@ -321,6 +322,7 @@ export default function StoryReaderPage() {
 
   return (
     <AppPageShell variant="scanlines" className="flex flex-col">
+      <PageTitle title={story?.title || "Story Weaver"} />
       {/* Error banner — rendered above the overlay so it is always visible */}
       {error && (
         <div className="fixed top-0 left-0 right-0 z-[70] bg-red-500/10 border-b border-red-500/20 px-4 py-2 flex items-center gap-2">

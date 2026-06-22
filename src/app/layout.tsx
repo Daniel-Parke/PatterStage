@@ -11,7 +11,10 @@ const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const jetbrainsMono = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PatterStage | Agent Dashboard",
+  // Per-page titles are set client-side by <PageTitle> (most pages are client
+  // components and can't export their own metadata); this template/default is
+  // the SSR baseline before that effect runs.
+  title: { default: "PatterStage", template: "%s · PatterStage" },
   description: "Monitor, update, and control your AI agent",
 };
 

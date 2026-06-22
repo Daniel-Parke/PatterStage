@@ -4,62 +4,34 @@
 
 /** @jest-environment node */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "fs";
+import { mkdirSync, readFileSync, writeFileSync, rmSync } from "fs";
 import { join } from "path";
 
+// Hermetic: point the deploy-status module at a throwaway temp logs dir, so
+// the test never reads/writes the real ~/.hermes/logs files. (The old version
+// wrote $HOME/.hermes/logs/ch-deploy.status and assumed the module resolved
+// the same path + preferred the legacy basename — both false once a real
+// ps-deploy.status exists on the machine, which made this test flaky.)
+jest.mock("@/lib/hermes-agent-runtime", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const os = require("os");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const fs = require("fs");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const path = require("path");
+  const logs = fs.mkdtempSync(path.join(os.tmpdir(), "ps-deploy-status-test-"));
+  return { __TEST_LOGS_DIR: logs, getActiveHermesPaths: () => ({ logs }) };
+});
+
 describe("deploy-status: isDeployInProgress + stale-running persistence", () => {
-  // We can't easily mock getActiveHermesPaths() without a complex setup,
-  // so we test the exported helpers via a direct file write. The deploy
-  // status path is set via getActiveHermesPaths().logs which is an env-
-  // dependent global. We test the public contract by:
-  //   1. Reading the current behavior with no status file
-  //   2. Reading the current behavior with a fresh-running status
-  //   3. Reading the current behavior with a stale-running status
-  //
-  // The "fresh" and "stale" semantics are observable via the HTTP /api/update
-  // poll path. Since the path resolves dynamically, we instead test the
-  // underlying predicate logic by reading the real status file location.
-
-  // We use a local copy of the deploy-status module to avoid the singleton
-  // status file. Strategy: import the module, then mutate the global by
-  // writing a status file in the real path the module reads.
-  //
-  // For these tests, we rely on a known-isolated path: write the status
-  // file in $HOME/.hermes/logs/ch-deploy.status, which is the real
-  // production path. We'll snapshot the file before, restore after.
-
-  let realStatusBackup: string | null = null;
-  let realStatusExisted = false;
-  const realPath = join(
-    process.env.HOME || "/tmp",
-    ".hermes",
-    "logs",
-    "ch-deploy.status",
-  );
-
-  beforeAll(() => {
-    if (existsSync(realPath)) {
-      realStatusExisted = true;
-      realStatusBackup = readFileSync(realPath, "utf-8");
-    }
-  });
-
-  afterAll(() => {
-    if (realStatusExisted && realStatusBackup !== null) {
-      writeFileSync(realPath, realStatusBackup);
-    } else {
-      try {
-        rmSync(realPath, { force: true });
-      } catch {
-        // best-effort
-      }
-    }
-  });
+  // The module's canonical (write + preferred-read) file is ps-deploy.status.
+  const logsDir = (jest.requireMock("@/lib/hermes-agent-runtime") as { __TEST_LOGS_DIR: string }).__TEST_LOGS_DIR;
+  const realPath = join(logsDir, "ps-deploy.status");
 
   beforeEach(() => {
-    mkdirSync(join(process.env.HOME || "/tmp", ".hermes", "logs"), {
-      recursive: true,
-    });
+    mkdirSync(logsDir, { recursive: true });
+    rmSync(realPath, { force: true });
+    rmSync(join(logsDir, "ch-deploy.status"), { force: true });
   });
 
   function writeStatus(state: string, startedAt: string): void {

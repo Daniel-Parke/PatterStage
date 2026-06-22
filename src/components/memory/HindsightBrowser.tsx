@@ -53,6 +53,7 @@ export default function HindsightBrowser() {
     setNewTags,
     adding,
     health,
+    totalFacts,
     fetchHealthOnly,
     loadRecentMemories,
     runRecall,
@@ -146,7 +147,7 @@ export default function HindsightBrowser() {
       </div>
 
       {/* Memory insights — fresh/stale fact mix + tags for the loaded set */}
-      {!loadingInitial && <MemoryInsights memories={memories} hiddenStaleCount={hiddenStaleCount} />}
+      {!loadingInitial && <MemoryInsights memories={memories} hiddenStaleCount={hiddenStaleCount} totalFacts={totalFacts} />}
 
       {/* Reflect Result */}
       {reflectResult && (

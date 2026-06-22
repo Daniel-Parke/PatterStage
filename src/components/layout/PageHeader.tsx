@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import type { AccentColor } from "@/types/hermes";
 import { shellHeaderBarClasses, iconColorMap } from "@/lib/theme";
 import { StatusDot } from "@/components/ui/Card";
+import PageTitle from "@/components/layout/PageTitle";
 
 interface PageHeaderProps {
   icon: React.ComponentType<{ className?: string }>;
@@ -36,6 +37,7 @@ export default function PageHeader({
     <header
       className={`${shellHeaderBarClasses} sticky top-0 z-30 justify-between gap-4 w-full`}
     >
+      <PageTitle title={title} />
       <div className="flex items-center gap-4 min-w-0">
         {backHref && (
           <>
