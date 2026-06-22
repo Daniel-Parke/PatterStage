@@ -79,6 +79,8 @@ export interface ParsedSessionQuery {
   source?: SessionSource;
   /** Undefined when the key is missing; the string value otherwise (empty string for `?missionId=`). */
   missionId?: string;
+  /** Free-text search over the full table (title / id / profile / mission). */
+  search?: string;
   limit: number;
   offset: number;
   id?: string;
@@ -102,5 +104,7 @@ export function parseSessionQuery(req: NextRequest): ParsedSessionQuery {
     missionIdParam === null ? undefined : missionIdParam;
   const limit = Math.min(parseInt(u.searchParams.get("limit") ?? "50", 10), 100);
   const offset = parseInt(u.searchParams.get("offset") ?? "0", 10);
-  return { agentType, source, missionId, limit, offset, id };
+  const searchParam = u.searchParams.get("search")?.trim();
+  const search = searchParam ? searchParam : undefined;
+  return { agentType, source, missionId, search, limit, offset, id };
 }

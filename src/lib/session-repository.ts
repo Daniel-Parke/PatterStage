@@ -75,6 +75,8 @@ export interface ListSessionsOptions {
   agentType?: AgentType;
   source?: SessionSource;
   missionId?: string | null;
+  /** Free-text search over title / id / profile / mission (case-insensitive). */
+  search?: string;
   limit?: number;
   offset?: number;
   /**
@@ -256,7 +258,7 @@ export function listSessions(opts: ListSessionsOptions = {}): {
   sessions: SessionRecord[];
   total: number;
 } {
-  const { agentType, source, missionId, limit = 50, offset = 0, syncIfActive = false } = opts;
+  const { agentType, source, missionId, search, limit = 50, offset = 0, syncIfActive = false } = opts;
 
   // Optional one-shot sync from Hermes' state.db. Catches the currently-active
   // session before the periodic 15s sync cycle would have updated it. Wrapped
@@ -285,6 +287,19 @@ export function listSessions(opts: ListSessionsOptions = {}): {
   if (missionId !== undefined) {
     conditions.push(missionId === null ? "mission_id IS NULL" : "mission_id = ?");
     if (missionId !== null) params.push(missionId);
+  }
+
+  // Server-side free-text search over the full table (not just the loaded page).
+  // Mirrors sessionMatchesQuery's fields; LIKE is ASCII case-insensitive in
+  // SQLite. Escape the user's % / _ so they match literally.
+  const trimmedSearch = search?.trim();
+  if (trimmedSearch) {
+    const escaped = trimmedSearch.replace(/[\\%_]/g, (c) => `\\${c}`);
+    const like = `%${escaped}%`;
+    conditions.push(
+      "(title LIKE ? ESCAPE '\\' OR id LIKE ? ESCAPE '\\' OR profile_name LIKE ? ESCAPE '\\' OR mission_id LIKE ? ESCAPE '\\')",
+    );
+    params.push(like, like, like, like);
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";

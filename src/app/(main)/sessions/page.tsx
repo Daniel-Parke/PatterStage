@@ -27,7 +27,7 @@
 
 "use client";
 
-import { useCallback, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Clock,
@@ -52,7 +52,7 @@ import { timeAgo, formatElapsed, pluralise } from "@/lib/utils";
 import { useSessions } from "@/hooks/useSessions";
 import { useInterval } from "@/hooks/useInterval";
 import { useStoredBool } from "@/hooks/useStoredBool";
-import { searchSessionsByQuery, isApiNoiseSession } from "@/lib/session-filters";
+import { isApiNoiseSession } from "@/lib/session-filters";
 import { buildGroupedEntries, type MissionGroup } from "@/lib/sessions-grouping";
 import AppPageShell from "@/components/layout/AppPageShell";
 import type { SessionRecord } from "@/lib/session-repository";
@@ -211,6 +211,15 @@ export default function SessionsPage() {
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<SessionSource | null>(null);
   const [page, setPage] = useState(0);
+  // Search runs SERVER-SIDE over the full table (not just the loaded page), so a
+  // term that matches a session deep in the 35k+ history is actually found.
+  // Debounce so each keystroke doesn't fire a query; reset to page 0 on change.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+  useEffect(() => { setPage(0); }, [debouncedSearch]);
   const [groupByMission, setGroupByMission] = useStoredBool(GROUP_BY_MISSION_STORAGE_KEY, true);
   const [hideApiNoise, setHideApiNoise] = useStoredBool(HIDE_API_NOISE_STORAGE_KEY, false);
   // Tick state so the live indicator refreshes every second for active sessions
@@ -268,6 +277,7 @@ export default function SessionsPage() {
     page,
     sourceFilter,
     PAGE_SIZE,
+    debouncedSearch,
   );
 
   // Surface API errors as a persistent <LoadErrorBanner> with a Retry
@@ -292,17 +302,11 @@ export default function SessionsPage() {
   // All known session source types — always show filter buttons regardless of current page contents
   const sources = Object.keys(SOURCE_META) as SessionSource[];
 
-  // Combined search + "hide API noise" filter. Both passes live in
-  // the same `useMemo` because the noise filter is just a refinement
-  // of the search result (an opt-in second predicate). The merged
-  // shape avoids a 2-step chain of `useMemo`es where the intermediate
-  // `searchedSessions` is only read once. The noise predicate and
-  // search predicate are still pure helpers (searchSessionsByQuery /
-  // isApiNoiseSession) so each one is unit-testable in isolation.
+  // Search is now applied server-side (full table), so the loaded page only
+  // needs the opt-in "hide API noise" refinement (a pure, unit-tested predicate).
   const filteredSessions = useMemo(() => {
-    const matched = searchSessionsByQuery(sessions, search);
-    return hideApiNoise ? matched.filter((s) => !isApiNoiseSession(s)) : matched;
-  }, [sessions, search, hideApiNoise]);
+    return hideApiNoise ? sessions.filter((s) => !isApiNoiseSession(s)) : sessions;
+  }, [sessions, hideApiNoise]);
 
   const entries = useMemo(
     () => buildGroupedEntries(filteredSessions, groupByMission),
@@ -345,6 +349,7 @@ export default function SessionsPage() {
                 <Filter className="w-4 h-4 text-white/30 flex-shrink-0" />
                 <button
                   onClick={clearSourceFilter}
+                  aria-pressed={!sourceFilter}
                   className={`text-xs font-mono px-2 py-1 rounded transition-colors ${
                     !sourceFilter
                       ? "bg-neon-orange/20 text-neon-orange"
@@ -357,6 +362,7 @@ export default function SessionsPage() {
                   <button
                     key={src}
                     onClick={() => selectSourceFilter(src)}
+                    aria-pressed={sourceFilter === src}
                     className={`text-xs font-mono px-2 py-1 rounded transition-colors flex items-center gap-1 ${
                       sourceFilter === src
                         ? "bg-neon-orange/20 text-neon-orange"
@@ -376,6 +382,7 @@ export default function SessionsPage() {
             <button
               type="button"
               onClick={toggleGroupByMission}
+              aria-pressed={groupByMission}
               className={`flex items-center gap-1 px-2 py-1 rounded transition-colors ${
                 groupByMission
                   ? "bg-neon-green/10 text-neon-green"
@@ -389,6 +396,7 @@ export default function SessionsPage() {
             <button
               type="button"
               onClick={toggleHideApiNoise}
+              aria-pressed={hideApiNoise}
               className={`flex items-center gap-1 px-2 py-1 rounded transition-colors ${
                 hideApiNoise
                   ? "bg-neon-purple/10 text-neon-purple"
@@ -424,10 +432,9 @@ export default function SessionsPage() {
         ) : (
           <>
             <div className="text-xs text-white/30 font-mono mb-3">
-              Showing {entries.length} {groupByMission ? "entries" : "sessions"}
-              {search || hideApiNoise
-                ? ` · ${filteredSessions.length} of ${sessions.length} on this page match your filter`
-                : ` of ${data?.total ?? 0} total`}
+              Showing {entries.length} {groupByMission ? "entries" : "sessions"} of{" "}
+              {data?.total ?? 0} {debouncedSearch ? "matching" : "total"}
+              {hideApiNoise ? " · API noise hidden" : ""}
             </div>
             <div className="grid gap-3">
               {entries.map((entry) =>

@@ -54,6 +54,7 @@ export async function GET(request: NextRequest) {
       agentType: q.agentType,
       source: q.source,
       missionId: q.missionId,
+      search: q.search,
       limit: q.limit,
       offset: q.offset,
       // Force an immediate sync from state.db so the active session shows

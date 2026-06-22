@@ -20,15 +20,22 @@ export function useSessions(
   page: number,
   source: SessionSource | null,
   pageSize: number,
+  search?: string,
 ) {
   const params = new URLSearchParams({
     limit: String(pageSize),
     offset: String(page * pageSize),
   });
   if (source) params.set("source", source);
-  return useApiResource<SessionsResponse>(["sessions", page, source], `/api/sessions?${params}`, {
-    select: (p) => p as SessionsResponse | undefined,
-    fallback: { sessions: [], total: 0 },
-    errorMessage: "Failed to load sessions",
-  });
+  const trimmed = search?.trim();
+  if (trimmed) params.set("search", trimmed);
+  return useApiResource<SessionsResponse>(
+    ["sessions", page, source, trimmed ?? ""],
+    `/api/sessions?${params}`,
+    {
+      select: (p) => p as SessionsResponse | undefined,
+      fallback: { sessions: [], total: 0 },
+      errorMessage: "Failed to load sessions",
+    },
+  );
 }

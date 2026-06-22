@@ -128,6 +128,17 @@ describe("parseSessionQuery", () => {
     const result = parseSessionQuery(makeRequest("missionId=mission-abc"));
     expect(result.missionId).toBe("mission-abc");
   });
+
+  it("parses a trimmed search term", () => {
+    expect(parseSessionQuery(makeRequest("search=hydrogen")).search).toBe("hydrogen");
+    expect(parseSessionQuery(makeRequest("search=%20%20spaced%20%20")).search).toBe("spaced");
+  });
+
+  it("treats a missing or blank search as undefined", () => {
+    expect(parseSessionQuery(makeRequest("")).search).toBeUndefined();
+    expect(parseSessionQuery(makeRequest("search=")).search).toBeUndefined();
+    expect(parseSessionQuery(makeRequest("search=%20%20")).search).toBeUndefined();
+  });
 });
 
 describe("triggerSyncOnce", () => {
