@@ -77,6 +77,28 @@ describe("chat-repository", () => {
     expect(loaded?.messages[1]).toMatchObject({ role: "assistant", status: "pending" });
   });
 
+  it("auto-titles an untitled conversation from its first user message", () => {
+    const c = repo.createConversation(); // defaults to "New Chat"
+    repo.createMessage({ conversationId: c.id, role: "user", content: "# Add a dark-mode toggle\nmore detail" });
+    expect(repo.getConversation(c.id)?.title).toBe("Add a dark-mode toggle");
+    // A second user message does not rename it.
+    repo.createMessage({ conversationId: c.id, role: "user", content: "another message" });
+    expect(repo.getConversation(c.id)?.title).toBe("Add a dark-mode toggle");
+  });
+
+  it("does not auto-title a conversation that already has a title", () => {
+    const c = repo.createConversation({ title: "My thread" });
+    repo.createMessage({ conversationId: c.id, role: "user", content: "hello there" });
+    expect(repo.getConversation(c.id)?.title).toBe("My thread");
+  });
+
+  it("deriveConversationTitle strips markdown + truncates long lines", () => {
+    expect(repo.deriveConversationTitle("hi")).toBe("hi");
+    expect(repo.deriveConversationTitle("\n\n## Heading here\nbody")).toBe("Heading here");
+    expect(repo.deriveConversationTitle("x".repeat(60))).toHaveLength(49); // 48 chars + ellipsis
+    expect(repo.deriveConversationTitle("   ")).toBe("New Chat");
+  });
+
   it("updates an assistant message (streaming content + reasoning + tool calls + status)", () => {
     const c = repo.createConversation();
     const m = repo.createMessage({

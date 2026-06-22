@@ -11,6 +11,20 @@
 import { db, inTransaction, now, uuid } from "./db";
 import { buildUpdate } from "./db/build-update";
 
+/** Placeholder title a conversation gets until its first user message names it. */
+export const DEFAULT_CONVERSATION_TITLE = "New Chat";
+
+/**
+ * Derive a short, distinguishable conversation title from the first user
+ * message (first non-empty line, markdown heading marker stripped, ~48 chars).
+ */
+export function deriveConversationTitle(content: string): string {
+  const firstLine = content.split("\n").map((l) => l.trim()).find((l) => l.length > 0) ?? "";
+  const cleaned = firstLine.replace(/^#+\s*/, "");
+  if (!cleaned) return DEFAULT_CONVERSATION_TITLE;
+  return cleaned.length > 48 ? `${cleaned.slice(0, 48)}…` : cleaned;
+}
+
 export type ChatRole = "user" | "assistant" | "system";
 /** pending → streaming → complete | failed | cancelled (validated here, not in SQL). */
 export type ChatMessageStatus = "pending" | "streaming" | "complete" | "failed" | "cancelled";
@@ -141,7 +155,7 @@ export function createConversation(input: CreateConversationInput = {}): ChatCon
     )
     .run(
       id,
-      input.title ?? "New Chat",
+      input.title ?? DEFAULT_CONVERSATION_TITLE,
       input.sessionId ?? null,
       input.profileName ?? null,
       input.model ?? null,
@@ -238,6 +252,14 @@ export function createMessage(input: CreateMessageInput): ChatMessage {
   db()
     .prepare("UPDATE chat_conversations SET updated_at = ? WHERE id = ?")
     .run(ts, input.conversationId);
+  // Auto-title an untitled conversation from its first user message, so the
+  // sidebar shows something distinguishable instead of a row of "New Chat".
+  if (input.role === "user" && (input.content ?? "").trim().length > 0) {
+    const convo = getConversation(input.conversationId);
+    if (convo && convo.title === DEFAULT_CONVERSATION_TITLE) {
+      updateConversation(input.conversationId, { title: deriveConversationTitle(input.content!) });
+    }
+  }
   return getMessage(id)!;
 }
 
