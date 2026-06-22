@@ -26,7 +26,7 @@
 //     component is a pure presentational render.
 
 import type { EnvLine } from "@/lib/env-line";
-import { maskKeyHint } from "@/lib/secret-mask";
+import { maskEnvValue } from "@/lib/secret-mask";
 
 interface EnvLineRowProps {
   /** Stable React key for the parent's `.map(...)` callback. */
@@ -81,7 +81,7 @@ export default function EnvLineRow({ lineKey, parsed, raw }: EnvLineRowProps) {
             {parsed.key}
           </span>
           <span className="text-white/50">=</span>
-          <span className="text-white/30">{maskKeyHint(parsed.value)}</span>
+          <span className="text-white/30">{maskEnvValue(parsed.key, parsed.value)}</span>
         </div>
       );
   }

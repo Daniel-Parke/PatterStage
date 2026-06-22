@@ -170,6 +170,18 @@ export function useChatPage() {
   // ── New conversation ────────────────────────────────────────
   const handleNewChat = useCallback(async () => {
     closeStream();
+    // Reuse an existing blank "New Chat" instead of creating a duplicate.
+    // Sending a message auto-titles the conversation, so a still-"New Chat"
+    // entry is an unused blank one — and creating a second collides on the
+    // session title (invalid_title). Just switch to the existing blank.
+    const existingBlank = conversations.find((c) => c.title === "New Chat");
+    if (existingBlank) {
+      setActiveId(existingBlank.id);
+      setMessages([]);
+      setInput("");
+      inputRef.current?.focus();
+      return;
+    }
     const conversation = await createConversationApi({ title: "New Chat", model });
     if (!conversation) {
       showToast("Failed to start a new conversation", "error");
@@ -180,7 +192,7 @@ export function useChatPage() {
     setMessages([]);
     setInput("");
     inputRef.current?.focus();
-  }, [closeStream, model, showToast]);
+  }, [closeStream, conversations, model, showToast]);
 
   const handleSelectConversation = useCallback(
     (id: string) => {

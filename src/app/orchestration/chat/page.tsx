@@ -9,7 +9,7 @@
 
 "use client";
 
-import { MessageCircle, Send, Plus, X, Download, Square } from "lucide-react";
+import { MessageCircle, Send, Plus, X, Download, Square, Check } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
@@ -21,6 +21,7 @@ import { ChatModelSelector } from "@/components/chat/ChatModelSelector";
 import { ChatModeToggle } from "@/components/chat/ChatModeToggle";
 import ApprovalPrompt from "@/components/chat/ApprovalPrompt";
 import { useChatPage } from "@/hooks/useChatPage";
+import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 
 export default function ChatPage() {
   const {
@@ -56,6 +57,10 @@ export default function ChatPage() {
     handleSend,
     handleStop,
   } = useChatPage();
+
+  // Two-step confirm for the per-conversation delete (destructive — AGENTS.md
+  // requires a confirmation). First click arms; second click within 3s deletes.
+  const deleteConfirm = useTwoStepConfirm({ autoDismissMs: 3000 });
 
   const lastMessage = messages[messages.length - 1];
   const showTyping =
@@ -131,11 +136,20 @@ export default function ChatPage() {
                         </div>
                       </div>
                       <button
-                        onClick={(e) => void handleDeleteConversation(c.id, e)}
-                        className="w-7 h-7 flex items-center justify-center rounded hover:bg-neon-red/20 hover:text-neon-red text-white/30"
-                        title="Delete conversation"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          if (!deleteConfirm.isArmedFor(c.id)) deleteConfirm.arm(c.id);
+                          else void deleteConfirm.confirm(() => handleDeleteConversation(c.id));
+                        }}
+                        className={`w-7 h-7 flex items-center justify-center rounded text-white/30 ${
+                          deleteConfirm.isArmedFor(c.id)
+                            ? "bg-neon-red/20 text-neon-red"
+                            : "hover:bg-neon-red/20 hover:text-neon-red"
+                        }`}
+                        title={deleteConfirm.isArmedFor(c.id) ? "Click again to confirm delete" : "Delete conversation"}
                       >
-                        <X className="w-4 h-4" />
+                        {deleteConfirm.isArmedFor(c.id) ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
                       </button>
                     </div>
                   </div>

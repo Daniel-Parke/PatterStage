@@ -4,7 +4,7 @@
 // Both /api/config (model.api_key + auxiliary.<task>.api_key) and
 // /api/models/import (credential keyHint) use these primitives.
 
-import { maskApiKey, maskKeyHint } from "@/lib/secret-mask";
+import { maskApiKey, maskKeyHint, maskEnvValue, isFullyMaskedEnvName } from "@/lib/secret-mask";
 
 describe("maskApiKey", () => {
   it("masks long keys as first 4 + •••• + last 4", () => {
@@ -48,5 +48,30 @@ describe("maskKeyHint", () => {
 
   it("masks 9-char keys with '...'", () => {
     expect(maskKeyHint("123456789")).toBe("1234...6789");
+  });
+});
+
+describe("maskEnvValue — password/secret names are fully hidden", () => {
+  it("fully masks passwords, secrets, tokens, and private keys (no first/last hint)", () => {
+    expect(maskEnvValue("SUDO_PASSWORD", "hunter2hunter2")).toBe("••••••••");
+    expect(maskEnvValue("DB_PASS", "supersecretpw")).toBe("••••••••");
+    expect(maskEnvValue("CLIENT_SECRET", "abcdef123456")).toBe("••••••••");
+    expect(maskEnvValue("GITHUB_TOKEN", "ghp_abcdef123456")).toBe("••••••••");
+    expect(maskEnvValue("SSH_PRIVATE_KEY", "-----BEGIN KEY-----xyz")).toBe("••••••••");
+  });
+
+  it("keeps the first4…last4 hint for API keys and other non-secret names", () => {
+    expect(maskEnvValue("OPENAI_API_KEY", "sk-abcdef1234")).toBe("sk-a...1234");
+    expect(maskEnvValue("HERMES_BASE_URL", "abcdefghijkl")).toBe("abcd...ijkl");
+  });
+
+  it("classifies sensitive names case-insensitively", () => {
+    expect(isFullyMaskedEnvName("sudo_password")).toBe(true);
+    expect(isFullyMaskedEnvName("PassPhrase")).toBe(true);
+    expect(isFullyMaskedEnvName("OPENAI_API_KEY")).toBe(false);
+  });
+
+  it("returns empty string for an empty value", () => {
+    expect(maskEnvValue("SUDO_PASSWORD", "")).toBe("");
   });
 });

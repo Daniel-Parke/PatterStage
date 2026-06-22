@@ -15,3 +15,26 @@ export function maskApiKey(key: string): string {
 export function maskKeyHint(key: string): string {
   return key.length > 8 ? `${key.slice(0, 4)}...${key.slice(-4)}` : "••••";
 }
+
+// Env var names whose value must be FULLY hidden in the read-only .env preview —
+// passwords, secrets, tokens, and private keys, where revealing even the first/
+// last few chars leaks meaningful credential material. API keys are deliberately
+// NOT in this set: their first4…last4 hint helps identify WHICH key is set
+// without exposing a usable secret (a long random API key isn't reconstructable
+// from 8 of its chars; a short password might be).
+const FULLY_MASKED_ENV_NAME = /(pass(word|phrase)?|secret|token|priv(ate)?[_-]?key)/i;
+
+/** Whether an .env var name should have its value fully hidden (no hint). */
+export function isFullyMaskedEnvName(name: string): boolean {
+  return FULLY_MASKED_ENV_NAME.test(name);
+}
+
+/**
+ * Mask an .env value for the read-only preview. Password/secret/token/private-key
+ * names are fully hidden; everything else keeps the first4…last4 hint so the user
+ * can confirm a value is set without it being exposed.
+ */
+export function maskEnvValue(name: string, value: string): string {
+  if (!value) return "";
+  return isFullyMaskedEnvName(name) ? "••••••••" : maskKeyHint(value);
+}
