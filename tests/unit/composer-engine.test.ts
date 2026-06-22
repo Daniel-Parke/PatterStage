@@ -36,6 +36,7 @@ import {
   updateComposerRun,
 } from "@/lib/composer/composer-repository";
 import { advanceComposerRun, finalizeComposerNodeRun, resolveNext } from "@/lib/composer/engine";
+import { dispatchComposerNode } from "@/lib/composer/dispatch";
 import type { ComposerNodeRun } from "@/lib/composer/schema";
 
 const mockSubmit = runtime.submitRun as jest.Mock;
@@ -170,6 +171,42 @@ describe("composer engine", () => {
     expect(failed.status).toBe("failed");
     expect(failed.error).toMatch(/exceeded 5 attempts/i);
     expect(maxAttemptForNode(run.id, aNode.id)).toBeLessThanOrEqual(5); // capped, not unbounded
+  });
+
+  it("pauses for clarification on a vague objective, then resumes on an answer", async () => {
+    const wf = createWorkflowFromDef({
+      key: "clarify-wf",
+      name: "Clarify",
+      nodes: [
+        { key: "ask", label: "Ask", kind: "review", gate: "auto" as const, isStart: true },
+        { key: "done", label: "Done", kind: "custom", gate: "auto" as const, isTerminal: true },
+      ],
+      edges: [{ from: "ask", to: "done", condition: "on_pass" }],
+    });
+    const run = createComposerRun({ workflowId: wf.id, input: "Hydrogen Report" });
+    await advanceComposerRun(run.id); // dispatch 'ask'
+
+    // 'ask' can't proceed → asks the user a question instead of dead-ending.
+    await finishStage(run.id, "Too vague.\nOUTCOME: needs_clarification\nQUESTION: What subject and length?");
+    const paused = getComposerRun(run.id)!;
+    expect(paused.status).toBe("awaiting_approval");
+    expect((paused.context?.__clarify as { question?: string }).question).toMatch(/subject and length/i);
+
+    // Simulate the /clarify route: enrich the objective, clear the marker, re-run 'ask'.
+    const askNode = getWorkflowGraph(wf.id)!.nodes.find((n) => n.key === "ask")!;
+    const ctx = { ...(paused.context ?? {}) };
+    delete (ctx as Record<string, unknown>).__clarify;
+    updateComposerRun(run.id, {
+      status: "running",
+      input: `${paused.input}\n\n## Clarification\nA 500-word report on hydrogen energy.`,
+      context: ctx,
+      currentNodeId: askNode.id,
+    });
+    await dispatchComposerNode(run.id, askNode.id);
+
+    // 'ask' now passes with the clarified objective → completes.
+    await finishStage(run.id, "Clear now.\nVERDICT: PASS");
+    expect(getComposerRun(run.id)!.status).toBe("completed");
   });
 
   it("resolveNext routes by approval then verdict", () => {

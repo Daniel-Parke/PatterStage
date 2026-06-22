@@ -85,6 +85,12 @@ export interface NodeVerdict {
    * present. Lets a node fan out (e.g. no_action / further_research / write_report).
    */
   outcome?: string;
+  /**
+   * A question for the user, emitted with `OUTCOME: needs_clarification` when a
+   * stage can't proceed because the objective is too vague — the engine pauses
+   * the run for an answer instead of dead-ending (interactive clarification).
+   */
+  question?: string;
 }
 
 export interface ComposerRun {

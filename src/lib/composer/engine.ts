@@ -348,6 +348,23 @@ export async function advanceComposerRun(composerRunId: string): Promise<void> {
   }
 
   // The current node's run is terminal.
+
+  // Interactive clarification: a stage that can't proceed on a too-vague
+  // objective asks the user a question (OUTCOME: needs_clarification + QUESTION)
+  // instead of dead-ending. Pause for an answer — reusing the awaiting_approval
+  // paused state + a `__clarify` context marker (no new run status needed). The
+  // /clarify route appends the answer and re-dispatches this stage.
+  if (current.verdict?.outcome === "needs_clarification") {
+    const question =
+      current.verdict.question?.trim() ||
+      `"${node.label}" needs more detail to proceed — please clarify your objective.`;
+    updateComposerRun(composerRunId, {
+      status: "awaiting_approval",
+      context: { ...(run.context ?? {}), __clarify: { nodeId: node.id, question } },
+    });
+    return;
+  }
+
   if (node.gate === "hil") {
     const approval = approvalSince(composerRunId, node.id, current.completedAt ?? current.createdAt);
     if (!approval) {

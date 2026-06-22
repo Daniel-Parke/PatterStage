@@ -88,6 +88,10 @@ export function buildStagePrompt(
       "VERDICT: PASS or FAIL",
       "REASONS: <semicolon-separated reasons, only if FAIL>",
       "SUGGESTIONS: <semicolon-separated concrete suggestions, only if FAIL>",
+      "",
+      "If the objective is too vague or missing essential detail to proceed at all, do NOT guess or fail — ask the user one question instead, ending with:",
+      "OUTCOME: needs_clarification",
+      "QUESTION: <one specific question that would unblock you>",
     );
   }
 

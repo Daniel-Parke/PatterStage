@@ -48,6 +48,7 @@ export function parseVerdict(output: string | null, kind: string): NodeVerdict |
   const reasonsM = text.match(/REASONS?:\s*(.+)/i);
   const suggM = text.match(/SUGGESTIONS?:\s*(.+)/i);
   const outcomeM = text.match(/(?:OUTCOME|ROUTE):\s*([A-Za-z0-9_-]+)/i);
+  const questionM = text.match(/QUESTION:\s*(.+)/i);
 
   // No verdict, no branch label, and a non-assessing stage → just proceed.
   if (!verdictM && !outcomeM && !isAssessingKind(kind)) return null;
@@ -58,5 +59,6 @@ export function parseVerdict(output: string | null, kind: string): NodeVerdict |
     reasons: splitList(reasonsM?.[1]),
     suggestions: splitList(suggM?.[1]),
     ...(outcomeM ? { outcome: outcomeM[1].toLowerCase() } : {}),
+    ...(questionM ? { question: questionM[1].trim() } : {}),
   };
 }

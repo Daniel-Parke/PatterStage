@@ -23,6 +23,8 @@ A **workflow** is a reusable graph definition; a **run** is one execution; a **n
 
 **Conditional branching:** a stage can emit `OUTCOME: <label>` in its output; the engine then follows an `on_<label>` edge if one exists (else falls back to `on_pass`/`on_fail`). This lets a node fan out to >2 paths (e.g. a triage stage → `on_implement_fix` / `on_further_research` / `on_write_report`).
 
+**Interactive clarification:** instead of dead-ending on a too-vague objective, an assessing stage can emit `OUTCOME: needs_clarification` + a `QUESTION:` line. The engine pauses the run (reusing the `awaiting_approval` state + a `__clarify` context marker — no extra status/migration) and the Run UI asks the question; the answer (`POST …/clarify`) enriches the objective and re-runs the asking stage (bounded by the per-node attempt cap). This is Anthropic's "interactive discussion to clarify the task".
+
 The default **"Software Delivery"** workflow is seeded on boot ([`schema.ts`](../src/lib/composer/schema.ts)): review → validate → research → hypothesise → plan **(HIL)** → build-tests → implement → test → documentation → PR **(HIL)** → unit/integration/acceptance → final-assessment → update-PR **(HIL)** → done, with `on_fail` loop-backs (test→implement, final-assessment→implement, plan→review-on-reject) and `on_fail` **forward-recovery** on the best-effort enrichment stages (research→hypothesise, hypothesise→plan) so a transient search/LLM blip doesn't dead-end the run. The forward-recovery edges are back-filled idempotently into older seeded workflows ([`seed.ts`](../src/lib/composer/seed.ts)).
 
 ## Engine
@@ -57,7 +59,8 @@ All gated by `PS_COMPOSER` (on by default; `PS_COMPOSER=0` makes them return `50
 | `POST /api/composer/runs` | Start a run `{ workflowId \| workflowKey, input }` |
 | `GET /api/composer/runs/[id]` | Run + node-runs + workflow graph |
 | `GET /api/composer/runs/[id]/events` | Live SSE (`{ run, nodeRuns }`) — see [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md) |
-| `POST /api/composer/runs/[id]/nodes/[nodeId]/approve` | Resolve a HIL gate `{ action, note? }` |
+| `POST /api/composer/runs/[id]/nodes/[nodeId]/approve` | Resolve a HIL gate `{ action: accept\|reject, note? }` |
+| `POST /api/composer/runs/[id]/clarify` | Answer a stage's clarification question `{ answer }` |
 
 Deep Research is a Composer **node kind** (`research`), not a separate launcher — orchestrate research as one stage of a workflow. See [DEEP_RESEARCH.md](DEEP_RESEARCH.md).
 

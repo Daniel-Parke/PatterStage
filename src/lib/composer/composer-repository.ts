@@ -235,18 +235,21 @@ export function listActiveComposerRuns(): ComposerRun[] {
 export interface UpdateComposerRunInput {
   status?: ComposerRunStatus;
   currentNodeId?: string | null;
+  /** The run objective — enriched in place when the user answers a clarification. */
+  input?: string | null;
   context?: Record<string, unknown> | null;
   error?: string | null;
   completedAt?: string | null;
 }
-export function updateComposerRun(id: string, input: UpdateComposerRunInput): ComposerRun | null {
+export function updateComposerRun(id: string, patch: UpdateComposerRunInput): ComposerRun | null {
   const sets: string[] = ["updated_at = ?"];
   const vals: unknown[] = [now()];
-  if (input.status !== undefined) { sets.push("status = ?"); vals.push(input.status); }
-  if (input.currentNodeId !== undefined) { sets.push("current_node_id = ?"); vals.push(input.currentNodeId); }
-  if (input.context !== undefined) { sets.push("context_json = ?"); vals.push(input.context ? JSON.stringify(input.context) : null); }
-  if (input.error !== undefined) { sets.push("error = ?"); vals.push(input.error); }
-  if (input.completedAt !== undefined) { sets.push("completed_at = ?"); vals.push(input.completedAt); }
+  if (patch.status !== undefined) { sets.push("status = ?"); vals.push(patch.status); }
+  if (patch.currentNodeId !== undefined) { sets.push("current_node_id = ?"); vals.push(patch.currentNodeId); }
+  if (patch.input !== undefined) { sets.push("input = ?"); vals.push(patch.input); }
+  if (patch.context !== undefined) { sets.push("context_json = ?"); vals.push(patch.context ? JSON.stringify(patch.context) : null); }
+  if (patch.error !== undefined) { sets.push("error = ?"); vals.push(patch.error); }
+  if (patch.completedAt !== undefined) { sets.push("completed_at = ?"); vals.push(patch.completedAt); }
   db().prepare(`UPDATE composer_runs SET ${sets.join(", ")} WHERE id = ?`).run(...vals, id);
   return getComposerRun(id);
 }

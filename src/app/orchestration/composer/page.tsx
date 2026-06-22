@@ -19,6 +19,7 @@ import { Select } from "@/components/ui/field";
 import dynamic from "next/dynamic";
 
 import ComposerGatePrompt from "@/components/composer/ComposerGatePrompt";
+import ComposerClarifyPrompt from "@/components/composer/ComposerClarifyPrompt";
 import ComposerNodeRunDetail from "@/components/composer/ComposerNodeRunDetail";
 import ComposerRunForm from "@/components/composer/ComposerRunForm";
 import { safeApiCall } from "@/lib/api-fetch";
@@ -138,6 +139,16 @@ export default function ComposerPage() {
     }
   }
 
+  async function submitClarification(answer: string) {
+    if (!run || gateBusy) return;
+    setGateBusy(true);
+    try {
+      await safeApiCall(`/api/composer/runs/${run.id}/clarify`, { method: "POST", body: { answer } });
+    } finally {
+      setGateBusy(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
       <PageHeader
@@ -250,11 +261,19 @@ export default function ComposerPage() {
                 onSelectNode={setSelectedNodeKey}
                 gate={
                   run.status === "awaiting_approval" && run.currentNodeId ? (
-                    <ComposerGatePrompt
-                      nodeLabel={graph.nodes.find((n) => n.id === run.currentNodeId)?.label ?? "stage"}
-                      busy={gateBusy}
-                      onAction={decideGate}
-                    />
+                    run.context?.__clarify ? (
+                      <ComposerClarifyPrompt
+                        question={String((run.context.__clarify as { question?: string }).question ?? "Please clarify your objective.")}
+                        busy={gateBusy}
+                        onSubmit={(answer) => void submitClarification(answer)}
+                      />
+                    ) : (
+                      <ComposerGatePrompt
+                        nodeLabel={graph.nodes.find((n) => n.id === run.currentNodeId)?.label ?? "stage"}
+                        busy={gateBusy}
+                        onAction={decideGate}
+                      />
+                    )
                   ) : null
                 }
               />
