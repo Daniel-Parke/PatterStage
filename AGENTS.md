@@ -41,8 +41,9 @@ patterstage/
 │   │   │   ├── update/             # Deploy API (update/rebuild/restart)
 │   │   │   └── ...                 # Other endpoints
 │   │   ├── page.tsx                # Dashboard
-│   │   ├── (main)/                 # insights, sessions, memory, logs, benchmarks (route group — no /main prefix)
-│   │   ├── orchestration/          # missions, scripts, chat
+│   │   ├── (main)/                 # sessions, memory, logs (route group — no /main prefix)
+│   │   ├── laboratory/             # insights, benchmarks, deep research, artifacts
+│   │   ├── orchestration/          # missions, scripts, chat, composer
 │   │   ├── operations/             # agents, skills, tools, personalities
 │   │   ├── config/                 # Config editor + models hub
 │   │   ├── recroom/story-weaver/   # Story Weaver

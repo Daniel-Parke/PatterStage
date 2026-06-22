@@ -7,8 +7,11 @@ import StatStrip from "@/components/viz/StatStrip";
 /** Skills overview — active/inactive mix + category count for the selected profile. */
 export default function SkillsInsights({ skills, activeCount }: { skills: Array<{ category?: string }>; activeCount: number }) {
   const s = useMemo(() => {
+    // Normalize case so "creative"/"Creative" count as ONE category — matching
+    // the case-insensitive grouping (groupByCategory lowercases its key). Without
+    // this the count overstated categories vs the chips actually rendered.
     const cats = new Set<string>();
-    for (const sk of skills) if (sk.category) cats.add(sk.category);
+    for (const sk of skills) if (sk.category) cats.add(sk.category.toLowerCase());
     return { total: skills.length, active: activeCount, inactive: Math.max(0, skills.length - activeCount), categories: cats.size };
   }, [skills, activeCount]);
 

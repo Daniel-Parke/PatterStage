@@ -206,7 +206,9 @@ export default function DeepResearchPage() {
                     onClick={() => setSelectedId(r.id)}
                     className={`w-full rounded-lg px-2 py-2 text-left text-xs transition hover:bg-white/5 ${selectedId === r.id ? "bg-white/5" : ""}`}
                   >
-                    <div className="truncate text-white/80">{r.query}</div>
+                    <div className="truncate text-white/80">
+                      {(r.query.split("\n").find((l) => l.trim()) ?? r.query).trim()}
+                    </div>
                     <div className={`mt-0.5 font-mono uppercase ${STATUS_COLOR[r.status] ?? "text-white/40"}`}>
                       {r.status}
                     </div>

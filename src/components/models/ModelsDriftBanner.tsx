@@ -20,7 +20,7 @@ export default function ModelsDriftBanner({
       <AlertTriangle className="w-4 h-4 text-neon-orange/60 flex-shrink-0" />
       <div className="flex-1 min-w-0">
         <span className="text-xs font-mono text-neon-orange/80">
-          Config drift detected
+          Model config drift — database and Hermes disk differ
         </span>
         {drift.driftDetails && drift.driftDetails.length > 0 && (
           <div className="mt-1 text-[10px] font-mono text-white/30">
