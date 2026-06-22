@@ -22,6 +22,7 @@ import {
   getComposerRun,
   getNode,
   getNodeRun,
+  getStartNode,
   getWorkflow,
   getWorkflowByKey,
   maxAttemptForNode,
@@ -159,7 +160,10 @@ export async function dispatchComposerNode(
   if (node.kind === "group") return dispatchGroupNode(run, node);
 
   const attempt = maxAttemptForNode(composerRunId, nodeId) + 1;
-  const prompt = buildStagePrompt(node, run, { priorFailure: opts.priorFailure ?? null });
+  // A workflow's domain framing lives on its start node's config (default neutral).
+  const startConfig = getStartNode(run.workflowId)?.config;
+  const framing = typeof startConfig?.framing === "string" ? startConfig.framing : null;
+  const prompt = buildStagePrompt(node, run, { priorFailure: opts.priorFailure ?? null, framing });
   const nodeRun = createNodeRun({ composerRunId, nodeId, attempt, input: prompt });
 
   // PatterStage-owned run id (also the Idempotency-Key); idempotent insert.

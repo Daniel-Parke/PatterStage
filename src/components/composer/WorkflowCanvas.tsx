@@ -353,6 +353,9 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
             <h3 className="text-[10px] font-mono uppercase tracking-widest text-white/40">Stage</h3>
             <Field label="Label"><Input value={node.data.label} onChange={(e) => patchNode(node.id, { label: e.target.value })} /></Field>
             <Field label="Kind"><Select value={node.data.kind} onChange={(v) => patchNode(node.id, { kind: v })} options={KIND_OPTIONS} /></Field>
+            <Field label="Instruction (optional override)">
+              <Textarea rows={2} value={String(node.data.config?.instruction ?? "")} onChange={(e) => patchNodeConfig(node.id, "instruction", e.target.value)} placeholder="overrides the default prompt for this stage kind" />
+            </Field>
             {node.data.kind === "research" ? (
               <Field label="Research query (optional)"><Input value={String(node.data.config?.query ?? "")} onChange={(e) => patchNodeConfig(node.id, "query", e.target.value)} placeholder="defaults to the run input" /></Field>
             ) : null}
@@ -373,6 +376,7 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
                     <Field label="Examples (one per line)">
                       <Textarea rows={3} value={(spec.examples ?? []).join("\n")} onChange={(e) => setSpec({ examples: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) })} placeholder="click-to-fill example objectives" />
                     </Field>
+                    <Field label="Domain framing (optional)"><Input value={String(node.data.config?.framing ?? "")} onChange={(e) => patchNodeConfig(node.id, "framing", e.target.value)} placeholder="e.g. software / research / data" /></Field>
                   </div>
                 );
               })()

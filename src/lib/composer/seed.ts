@@ -54,22 +54,25 @@ function ensureRecoveryEdges(): void {
 }
 
 /**
- * Idempotently back-fill the seeded workflow's input contract onto its start
- * node so older installs (created before the contract shipped) get the guided
- * Run-form labels/examples without losing run history.
+ * Idempotently back-fill the seeded workflow's start-node config (input
+ * contract + "software" framing) onto older installs created before those
+ * shipped — without losing run history. Each key is ensured independently so a
+ * partial upgrade (e.g. inputSpec from H1 but not framing) is completed.
  */
-function ensureSoftwareDeliveryInputSpec(): void {
+function ensureSoftwareDeliveryStartConfig(): void {
   const wf = getWorkflowByKey(SOFTWARE_DELIVERY_WORKFLOW_KEY);
   if (!wf) return;
   const nodes = listWorkflowNodes(wf.id);
   const start = nodes.find((n) => n.isStart) ?? nodes.find((n) => n.key === "review");
   if (!start) return;
-  const config = (start.config ?? {}) as Record<string, unknown>;
-  if (config.inputSpec) return; // already present — no-op
-  const merged = { ...config, inputSpec: SOFTWARE_DELIVERY_INPUT_SPEC };
+  const config = { ...((start.config ?? {}) as Record<string, unknown>) };
+  let changed = false;
+  if (!config.inputSpec) { config.inputSpec = SOFTWARE_DELIVERY_INPUT_SPEC; changed = true; }
+  if (!config.framing) { config.framing = "software"; changed = true; }
+  if (!changed) return;
   db()
     .prepare("UPDATE composer_nodes SET config_json = ? WHERE id = ?")
-    .run(JSON.stringify(merged), start.id);
+    .run(JSON.stringify(config), start.id);
 }
 
 /** Idempotently ensure the default Composer workflow(s) exist. */
@@ -78,5 +81,5 @@ export function ensureDefaultComposerWorkflows(): void {
     createWorkflowFromDef(DEFAULT_SOFTWARE_DELIVERY_WORKFLOW);
   }
   ensureRecoveryEdges();
-  ensureSoftwareDeliveryInputSpec();
+  ensureSoftwareDeliveryStartConfig();
 }

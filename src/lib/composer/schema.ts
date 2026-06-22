@@ -210,7 +210,7 @@ export const DEFAULT_SOFTWARE_DELIVERY_WORKFLOW: WorkflowDef = {
   description:
     "Methodical feature/bug pipeline: prepare → implement → verify, with HIL gates and FAIL loop-backs.",
   nodes: [
-    { key: "review", label: "Review", kind: "review", gate: "auto", isStart: true, config: { inputSpec: SOFTWARE_DELIVERY_INPUT_SPEC } },
+    { key: "review", label: "Review", kind: "review", gate: "auto", isStart: true, config: { inputSpec: SOFTWARE_DELIVERY_INPUT_SPEC, framing: "software" } },
     { key: "validate_prep", label: "Validate", kind: "validate", gate: "auto" },
     { key: "research", label: "Research", kind: "research", gate: "auto" },
     { key: "hypothesise", label: "Hypothesise", kind: "hypothesise", gate: "auto" },

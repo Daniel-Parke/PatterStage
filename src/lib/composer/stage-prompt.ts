@@ -43,14 +43,21 @@ function formatContext(context: Record<string, unknown> | null): string {
 export function buildStagePrompt(
   node: ComposerNode,
   run: ComposerRun,
-  opts: { priorFailure?: NodeVerdict | null } = {},
+  opts: { priorFailure?: NodeVerdict | null; framing?: string | null } = {},
 ): string {
   const objective = run.input?.trim() || "(no objective provided)";
-  const instruction = STAGE_INSTRUCTIONS[node.kind] ?? STAGE_INSTRUCTIONS.custom;
+  // A node may override its kind's default instruction (lets a research/writing
+  // workflow describe its own stages without inventing new kinds).
+  const override = typeof node.config?.instruction === "string" ? node.config.instruction.trim() : "";
+  const instruction = override || STAGE_INSTRUCTIONS[node.kind] || STAGE_INSTRUCTIONS.custom;
+  // A workflow may declare a domain word ("software" / "research" / "data") on
+  // its start node's `config.framing`; default is neutral so a non-software
+  // workflow isn't told it's doing "software".
+  const framing = typeof opts.framing === "string" && opts.framing.trim() ? `${opts.framing.trim()} ` : "";
   const ctx = formatContext(run.context);
 
   const lines: string[] = [
-    "You are executing ONE stage of a methodical, multi-stage software workflow run by an orchestrator.",
+    `You are executing ONE stage of a methodical, multi-stage ${framing}workflow run by an orchestrator.`,
     "",
     "## Overall objective",
     objective,
