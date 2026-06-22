@@ -82,6 +82,8 @@ function Chip({ label }: { label: string }) {
 
 function RatingPill({ run, label }: { run: BenchmarkRun | undefined; label: string }) {
   const rating = run?.summary?.overallRating ?? null;
+  const errorRate = run?.summary?.errorRate ?? 0;
+  const completePct = run?.summary ? Math.round((1 - errorRate) * 100) : null;
   return (
     <div className="flex flex-col items-center gap-1">
       <div className="text-[11px] uppercase tracking-wider text-white/40">{label}</div>
@@ -98,6 +100,11 @@ function RatingPill({ run, label }: { run: BenchmarkRun | undefined; label: stri
       <div className={`text-[11px] font-mono ${statusTone(run?.status ?? "pending")}`}>
         {run?.status ?? "—"}
       </div>
+      {completePct !== null && completePct < 100 ? (
+        <div className={`text-[10px] font-mono ${errorRate > 0.2 ? "text-neon-orange/80" : "text-white/30"}`}>
+          {completePct}% completed
+        </div>
+      ) : null}
       <UnitChips run={run} />
     </div>
   );
@@ -314,6 +321,11 @@ export default function BenchmarksPage() {
     agentRun?.summary && modelRun?.summary
       ? agentRun.summary.overallRating - modelRun.summary.overallRating
       : null;
+  // The Δ is only meaningful when BOTH runs actually completed their items —
+  // a baseline that errored/timed-out on many items scores artificially low,
+  // inflating the Δ. Flag that so the headline isn't read as real uplift.
+  const deltaReliable =
+    (agentRun?.summary?.errorRate ?? 0) <= 0.2 && (modelRun?.summary?.errorRate ?? 0) <= 0.2;
 
   const inFlight = pairRuns.some((r) => r.status === "running" || r.status === "pending");
 
@@ -487,10 +499,22 @@ export default function BenchmarksPage() {
                 <span className="text-[11px] uppercase tracking-wider text-white/30">Δ</span>
                 <span
                   className="font-mono text-lg font-bold"
-                  style={{ color: delta === null ? "rgba(255,255,255,0.3)" : delta >= 0 ? "var(--color-neon-green)" : "var(--color-neon-pink)" }}
+                  title={
+                    !deltaReliable
+                      ? "Comparison unreliable — a run errored/timed-out on many items, so the Δ is inflated. Re-run for a fair comparison."
+                      : undefined
+                  }
+                  style={{
+                    color: delta === null || !deltaReliable
+                      ? "rgba(255,255,255,0.35)"
+                      : delta >= 0 ? "var(--color-neon-green)" : "var(--color-neon-pink)",
+                  }}
                 >
-                  {delta === null ? "—" : `${delta >= 0 ? "+" : ""}${delta}`}
+                  {delta === null ? "—" : `${delta >= 0 ? "+" : ""}${delta}${!deltaReliable ? "*" : ""}`}
                 </span>
+                {delta !== null && !deltaReliable ? (
+                  <span className="mt-0.5 text-[9px] text-neon-orange/70">partial</span>
+                ) : null}
               </div>
               <RatingPill run={modelRun} label="Baseline" />
             </div>

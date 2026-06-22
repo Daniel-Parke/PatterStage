@@ -31,6 +31,14 @@ export interface LLMOptions {
    * to the Hermes Gateway path.
    */
   modelId?: string;
+  /**
+   * Override the direct-provider fast-fail timeout (ms). Interactive callers
+   * keep the snappy 45s default; benchmark brain-only runs pass the agent's
+   * per-item budget (~120s) so a slow provider isn't unfairly timed out —
+   * the agentic path gets that budget via the gateway, so the baseline must
+   * get it too for a fair comparison.
+   */
+  timeoutMs?: number;
 }
 
 export interface LLMResponse {
@@ -105,6 +113,7 @@ export async function callLLM(
     maxTokens = 4096,
     model: optModel,
     modelId,
+    timeoutMs,
   } = opts;
 
   let resolved: ModelWithKey | null = null;
@@ -126,6 +135,7 @@ export async function callLLM(
       baseUrl: resolved.baseUrl,
       apiKey: resolved.apiKey,
       apiStyle: resolved.apiStyle ?? inferApiStyle(resolved.provider, resolved.baseUrl),
+      timeoutMs,
     });
   }
 
@@ -160,6 +170,8 @@ interface CallDirectInput extends CallParams {
   baseUrl: string;
   apiKey: string;
   apiStyle: ApiStyle;
+  /** Optional fast-fail override (ms); defaults to DIRECT_PROVIDER_TIMEOUT_MS. */
+  timeoutMs?: number;
 }
 
 async function callDirectProvider(input: CallDirectInput): Promise<LLMResponse> {
@@ -173,8 +185,9 @@ async function callDirectProvider(input: CallDirectInput): Promise<LLMResponse> 
     style: input.apiStyle,
   });
 
+  const timeoutMs = input.timeoutMs ?? DIRECT_PROVIDER_TIMEOUT_MS;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), DIRECT_PROVIDER_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     let resp: Response;
@@ -188,7 +201,7 @@ async function callDirectProvider(input: CallDirectInput): Promise<LLMResponse> 
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
         throw new Error(
-          `LLM provider timed out after ${Math.round(DIRECT_PROVIDER_TIMEOUT_MS / 1000)}s — ` +
+          `LLM provider timed out after ${Math.round(timeoutMs / 1000)}s — ` +
             `check the model's base URL / API style (endpoint / registry config).`
         );
       }

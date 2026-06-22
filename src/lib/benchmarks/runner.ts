@@ -213,22 +213,33 @@ async function executeAgent(
   );
 }
 
+/**
+ * Brain-only direct-provider budget. The agentic path gets ~120s/item via the
+ * gateway (with retries); the baseline must get the SAME budget or it times out
+ * on a slow/rate-limited provider and the agent-vs-baseline Δ measures transport
+ * resilience, not augmentation. (Interactive callLLM keeps its snappy default.)
+ */
+const MODEL_BENCHMARK_TIMEOUT_MS = 120_000;
+
 async function executeModel(run: BenchmarkRun, item: BenchmarkItem): Promise<ExecOutcome> {
   const start = Date.now();
   // Brain-only path: call the run's RESOLVED model directly (reliable). For an
   // agent target this is the profile's own LLM with no skills/tools/memory; for
   // a model target it's the chosen registry model. Falls back to the raw model
-  // string when no registry id resolved. Retry once on a transient error/empty
+  // string when no registry id resolved. Retry twice on a transient error/empty
   // so one flaky response doesn't false-zero the item; an exhausted retry
   // returns an ERRORED outcome (recorded as an error, never crashes the pool).
   let lastError = "model returned no output";
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const resp = await callLLM([{ role: "user", content: item.prompt }], {
         modelId: run.modelId ?? (run.targetKind === "model" ? run.targetRef : undefined),
         model: run.config?.modelString ?? undefined,
         temperature: 0.2,
         maxTokens: 1024,
+        // Match the agent's per-item budget so the baseline isn't unfairly
+        // timed out on the 45s interactive default.
+        timeoutMs: MODEL_BENCHMARK_TIMEOUT_MS,
       });
       if (resp.content && resp.content.trim().length > 0) {
         return {
@@ -245,7 +256,7 @@ async function executeModel(run: BenchmarkRun, item: BenchmarkItem): Promise<Exe
     } catch (err) {
       lastError = err instanceof Error ? err.message : String(err);
     }
-    if (attempt === 0) await sleep(800);
+    if (attempt < 2) await sleep(800 * (attempt + 1));
   }
   return {
     output: "",

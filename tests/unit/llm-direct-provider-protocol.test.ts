@@ -93,6 +93,32 @@ describe("callLLM direct-provider protocol", () => {
     expect(url).toBe("https://api.minimax.io/anthropic/v1/messages");
   });
 
+  it("honors a custom timeoutMs in the fast-fail message (benchmark parity)", async () => {
+    const repo = require("@/lib/models-repository") as { __getModelWithKey: jest.Mock };
+    repo.__getModelWithKey.mockReturnValue(modelRow({}));
+    const abortErr = new Error("aborted");
+    abortErr.name = "AbortError";
+    fetchMock.mockRejectedValueOnce(abortErr);
+
+    const { callLLM } = require("@/lib/llm") as typeof import("@/lib/llm");
+    await expect(
+      callLLM([{ role: "user", content: "ping" }], { modelId: "mm", timeoutMs: 120_000 }),
+    ).rejects.toThrow(/timed out after 120s/);
+  });
+
+  it("defaults to the 45s fast-fail timeout when no override is given", async () => {
+    const repo = require("@/lib/models-repository") as { __getModelWithKey: jest.Mock };
+    repo.__getModelWithKey.mockReturnValue(modelRow({}));
+    const abortErr = new Error("aborted");
+    abortErr.name = "AbortError";
+    fetchMock.mockRejectedValueOnce(abortErr);
+
+    const { callLLM } = require("@/lib/llm") as typeof import("@/lib/llm");
+    await expect(
+      callLLM([{ role: "user", content: "ping" }], { modelId: "mm" }),
+    ).rejects.toThrow(/timed out after 45s/);
+  });
+
   it("surfaces the provider's response body in the error on a non-ok status", async () => {
     const repo = require("@/lib/models-repository") as { __getModelWithKey: jest.Mock };
     repo.__getModelWithKey.mockReturnValue(modelRow({}));
