@@ -148,6 +148,30 @@ describe("composer engine", () => {
     expect(failed.error).not.toContain("no recovery path");
   });
 
+  it("stops a runaway loop at the per-node attempt cap", async () => {
+    const wf = createWorkflowFromDef(SMALL);
+    const graph = getWorkflowGraph(wf.id)!;
+    const aNode = graph.nodes.find((n) => n.key === "a")!;
+    const run = createComposerRun({ workflowId: wf.id, input: "x" });
+    await advanceComposerRun(run.id); // dispatch 'a' (attempt 1)
+
+    // Loop forever in principle: 'a' proceeds to 'check', 'check' always FAILs
+    // and loops back to 'a'. The guardrail must stop it.
+    for (let i = 0; i < 25; i++) {
+      if (getComposerRun(run.id)!.status === "failed") break;
+      const nr = runningNodeRun(run.id);
+      const key = graph.nodes.find((n) => n.id === nr.nodeId)!.key;
+      const output = key === "check" ? "broken\nVERDICT: FAIL\nREASONS: still wrong" : "did a";
+      finalizeComposerNodeRun(nr.runId!, "completed", output, null);
+      await advanceComposerRun(run.id);
+    }
+
+    const failed = getComposerRun(run.id)!;
+    expect(failed.status).toBe("failed");
+    expect(failed.error).toMatch(/exceeded 5 attempts/i);
+    expect(maxAttemptForNode(run.id, aNode.id)).toBeLessThanOrEqual(5); // capped, not unbounded
+  });
+
   it("resolveNext routes by approval then verdict", () => {
     const wf = createWorkflowFromDef(SMALL);
     const graph = getWorkflowGraph(wf.id)!;

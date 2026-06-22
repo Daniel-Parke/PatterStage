@@ -27,6 +27,7 @@ import {
   listActiveComposerRuns,
   listComposerApprovals,
   listNodeRuns,
+  maxAttemptForNode,
   updateComposerRun,
   updateNodeRun,
 } from "./composer-repository";
@@ -44,6 +45,23 @@ const TERMINAL_RUN_STATUSES = new Set(["completed", "failed", "cancelled", "awai
  * backend), so a server restart mid-research would otherwise wedge the workflow.
  */
 const RESEARCH_NODE_CAP_MINUTES = 20;
+
+/**
+ * Loop guardrails (best practice: "maximum iteration limits + stopping
+ * conditions by default"). The engine has no other bound on cycles, so without
+ * these a `test → implement → test` loop could run forever.
+ *  - Per-node attempt cap: how many times a single stage may (re)run in a run,
+ *    overridable per node via `config.maxAttempts`.
+ *  - Per-run total-step cap: a backstop on the total number of stage executions.
+ */
+const MAX_NODE_ATTEMPTS = 5;
+const MAX_TOTAL_STEPS = 100;
+
+/** Per-node attempt cap, honoring an optional `config.maxAttempts` override. */
+function nodeMaxAttempts(node: ComposerNode | null): number {
+  const v = node?.config?.maxAttempts;
+  return typeof v === "number" && v >= 1 ? Math.floor(v) : MAX_NODE_ATTEMPTS;
+}
 
 function minutesSince(iso: string): number {
   return (Date.now() - new Date(iso).getTime()) / 60000;
@@ -250,6 +268,20 @@ async function applyNext(
     nudgeParentRun(composerRunId);
     return;
   }
+  // Loop guardrail: cap re-attempts per node so a stage that keeps failing
+  // (or a tight cycle) stops gracefully instead of looping forever.
+  const cap = nodeMaxAttempts(target);
+  if (maxAttemptForNode(composerRunId, next.nodeId) >= cap) {
+    const reasons = (fromNodeRun.verdict?.reasons ?? []).map((r) => r.trim()).filter(Boolean);
+    const why = reasons.length ? `: ${reasons.join("; ")}` : "";
+    updateComposerRun(composerRunId, {
+      status: "failed",
+      error: `${target?.label ?? "Stage"} exceeded ${cap} attempts without passing${why} — stopped to avoid an unbounded loop.`,
+      completedAt: now(),
+    });
+    nudgeParentRun(composerRunId);
+    return;
+  }
   // Route to the next node (a loop-back gets a fresh attempt). Carry the prior
   // failure's reasons/suggestions so a re-run knows what to fix.
   updateComposerRun(composerRunId, { currentNodeId: next.nodeId });
@@ -261,6 +293,18 @@ async function applyNext(
 export async function advanceComposerRun(composerRunId: string): Promise<void> {
   let run = getComposerRun(composerRunId);
   if (!run || TERMINAL_RUN_STATUSES.has(run.status)) return;
+
+  // Loop guardrail (backstop): cap the total stage executions per run so a
+  // pathological cycle that slips past the per-node cap can't run forever.
+  if (listNodeRuns(composerRunId).length >= MAX_TOTAL_STEPS) {
+    updateComposerRun(composerRunId, {
+      status: "failed",
+      error: `This run hit the maximum of ${MAX_TOTAL_STEPS} stage executions and was stopped to avoid an unbounded loop.`,
+      completedAt: now(),
+    });
+    nudgeParentRun(composerRunId);
+    return;
+  }
 
   if (run.status === "pending") {
     const start = getStartNode(run.workflowId);

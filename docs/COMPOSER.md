@@ -33,7 +33,7 @@ The engine ([`engine.ts`](../src/lib/composer/engine.ts)) advances a run one ste
 2. **Reconcile** finalizes the stage-run, parses a **verdict** (`VERDICT: PASS|FAIL` + reasons/suggestions, [`verdict.ts`](../src/lib/composer/verdict.ts)) for assessing stages, and merges output into the run's context.
 3. **Route**: auto gate → follow `on_pass`/`on_fail`; HIL gate → set `awaiting_approval` and wait. A `fail`/`reject` with no recovery edge fails the run with a **readable error** (the stage label + its verdict reasons, e.g. `"Review failed: the goal is too vague"`) rather than an opaque code; reaching a terminal node completes it. **Loop-backs** dispatch the target node with a fresh `attempt` and the prior failure injected into the prompt.
 
-Single-flight (one stage in flight per run), idempotent run ids (`cn_<nodeRunId>`), and the scheduler ownership lease make it restart-safe and exactly-once.
+Single-flight (one stage in flight per run), idempotent run ids (`cn_<nodeRunId>`), and the scheduler ownership lease make it restart-safe and exactly-once. **Loop guardrails** bound cycles (best practice — "maximum iteration limits by default"): a per-node attempt cap (default 5, overridable per node via `config.maxAttempts`) and a per-run total-step backstop stop a runaway loop gracefully with a readable error instead of running forever.
 
 `research`/`group` stages create no agent `runs` row; the engine settles them in-process (`settleResearchNode` / `settleGroupNode`) from their linked run, with the `ComposerTick` as the cross-restart backstop. `group` nesting is guarded against recursion (a workflow referencing an ancestor in its run chain) and a depth cap.
 
