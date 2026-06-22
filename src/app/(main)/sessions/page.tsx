@@ -424,8 +424,10 @@ export default function SessionsPage() {
         ) : (
           <>
             <div className="text-xs text-white/30 font-mono mb-3">
-              Showing {entries.length} {groupByMission ? "entries" : "sessions"} of{" "}
-              {data?.total ?? 0} total
+              Showing {entries.length} {groupByMission ? "entries" : "sessions"}
+              {search || hideApiNoise
+                ? ` · ${filteredSessions.length} of ${sessions.length} on this page match your filter`
+                : ` of ${data?.total ?? 0} total`}
             </div>
             <div className="grid gap-3">
               {entries.map((entry) =>

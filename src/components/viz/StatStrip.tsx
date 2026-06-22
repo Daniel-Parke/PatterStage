@@ -19,6 +19,8 @@ export interface StatTileSpec {
   suffix?: string;
   /** Format large values as 1.2k / 3.4M. */
   compact?: boolean;
+  /** Optional hover tooltip clarifying exactly what the number counts. */
+  hint?: string;
 }
 
 function compactNum(n: number): string {
@@ -27,12 +29,13 @@ function compactNum(n: number): string {
   return String(Math.round(n));
 }
 
-function Tile({ icon: Icon, label, value, color, suffix, compact }: StatTileSpec) {
+function Tile({ icon: Icon, label, value, color, suffix, compact, hint }: StatTileSpec) {
   const n = useCountUp(value);
   return (
     <div
       className="rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2"
       style={{ boxShadow: `inset 0 0 16px ${neonAlpha(color, 5)}` }}
+      title={hint}
     >
       <div className="flex items-center gap-1.5">
         <Icon className="h-3 w-3" style={{ color: neon(color) }} />

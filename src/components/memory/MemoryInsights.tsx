@@ -57,7 +57,7 @@ export default function MemoryInsights({
           { icon: Brain, label: "Facts", value: realTotal ?? s.total, color: "pink" },
           { icon: Clock, label: "Fresh", value: s.fresh, color: "green" },
           { icon: Archive, label: "Stale", value: s.stale, color: "orange" },
-          { icon: Tag, label: "Tags", value: s.tags, color: "purple" },
+          { icon: Tag, label: "Distinct tags", value: s.tags, color: "purple", hint: "Number of unique tag labels across the sampled facts — not the number of tagged facts." },
         ]}
         ring={{
           value: s.total > 0 ? s.fresh / s.total : 0,
