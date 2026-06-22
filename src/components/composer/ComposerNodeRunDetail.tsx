@@ -9,8 +9,11 @@
 
 "use client";
 
+import { useState } from "react";
+import { Save, Check } from "lucide-react";
 import Sheet from "@/components/ui/Sheet";
 import { timeAgo } from "@/lib/utils";
+import { safeApiCall } from "@/lib/api-fetch";
 import type { ComposerNode, ComposerNodeRun } from "@/lib/composer/schema";
 
 const STATUS_TEXT: Record<string, string> = {
@@ -42,6 +45,26 @@ export default function ComposerNodeRunDetail({
   const subtitle = node
     ? `${node.kind} · ${node.gate === "hil" ? "human gate" : "auto"}`
     : undefined;
+
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  async function saveAsArtifact() {
+    if (!nodeRun?.output || saveState !== "idle") return;
+    setSaveState("saving");
+    const res = await safeApiCall("/api/artifacts", {
+      method: "POST",
+      body: {
+        sourceKind: "composer",
+        sourceRunId: nodeRun.composerRunId,
+        sourceNodeId: nodeRun.id,
+        name: `${node?.label ?? "Stage"} output`,
+        description: "Saved from a Composer stage",
+        mimeType: "text/markdown",
+        content: nodeRun.output,
+        tags: ["composer", "saved"],
+      },
+    });
+    setSaveState(res.ok ? "saved" : "idle");
+  }
 
   return (
     <Sheet open={open} onClose={onClose} title={node?.label ?? "Stage"} subtitle={subtitle}>
@@ -108,7 +131,17 @@ export default function ComposerNodeRunDetail({
 
             {nodeRun.output ? (
               <div className="space-y-2">
-                <Label>Output</Label>
+                <div className="flex items-center justify-between gap-2">
+                  <Label>Output</Label>
+                  <button
+                    type="button"
+                    onClick={() => void saveAsArtifact()}
+                    disabled={saveState !== "idle"}
+                    className="inline-flex items-center gap-1 rounded border border-white/10 px-2 py-0.5 text-[10px] font-mono text-white/50 transition hover:border-neon-orange/40 hover:text-neon-orange disabled:opacity-60"
+                  >
+                    {saveState === "saved" ? <><Check className="h-3 w-3" /> Saved</> : <><Save className="h-3 w-3" /> {saveState === "saving" ? "Saving…" : "Save as artifact"}</>}
+                  </button>
+                </div>
                 <pre className="max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-lg border border-white/10 bg-dark-900/60 px-3 py-2 text-xs leading-relaxed text-white/70">
                   {nodeRun.output}
                 </pre>
