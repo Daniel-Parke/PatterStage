@@ -7,33 +7,47 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { getMemoryProviderType } from "@/lib/memory-providers";
+import { getActiveMemoryProvider, getMemoryProviderType } from "@/lib/memory-providers";
 import { requireAuth } from "@/lib/api-auth";
 import { badRequest, ok } from "@/lib/api-response";
 import type { MemoryReadResult } from "@/lib/memory-providers";
 
 // ── GET — Memory status ──────────────────────────────────────
-// Hindsight: dormant status (facts managed via agent tools)
-// None: tell the user to run `hermes memory setup`
+// Resolves the provider the SAME way MemorySync + /api/monitor do — by probing
+// the DB-owned active provider — instead of the old config.yaml regex parse,
+// which returned "none" (provider unset / malformed YAML) while Hindsight was
+// live with thousands of facts. That mismatch was the three-endpoint drift the
+// QA report flagged; now all three agree.
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
-  const providerType = getMemoryProviderType();
 
-  if (providerType === "none") {
+  // Holographic reports from its local DB; everything else probes the live
+  // provider over HTTP (the registry defaults to Hindsight).
+  if (getMemoryProviderType() === "holographic") {
     return ok<MemoryReadResult>({
-      facts: [], total: 0, dbSize: 0, available: false, provider: "none",
-      message: "No memory provider configured. Run: hermes memory setup",
+      facts: [], total: 0, dbSize: 0, available: true, provider: "holographic",
+      message: "Holographic memory is active.",
     });
   }
 
-  // hindsight (or unexpected future provider) — dormant/read-only
+  try {
+    const stats = await getActiveMemoryProvider().stats();
+    if (stats.available) {
+      return ok<MemoryReadResult>({
+        facts: [], total: stats.factCount, dbSize: 0, available: true, provider: "hindsight",
+        message:
+          "Hindsight memory is active. Facts are managed through agent tools: " +
+          "hindsight_retain (store), hindsight_recall (search), hindsight_reflect (reason).",
+      });
+    }
+  } catch {
+    /* unreachable — fall through to the not-configured response */
+  }
+
   return ok<MemoryReadResult>({
-    facts: [], total: 0, dbSize: 0,
-    available: true, provider: "hindsight",
-    message:
-      "Hindsight memory is active. Facts are managed through agent tools: " +
-      "hindsight_retain (store), hindsight_recall (search), hindsight_reflect (reason).",
+    facts: [], total: 0, dbSize: 0, available: false, provider: "none",
+    message: "No memory provider configured or reachable. Run: hermes memory setup",
   });
 }
 

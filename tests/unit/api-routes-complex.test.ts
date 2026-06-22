@@ -69,6 +69,14 @@ jest.mock("@/lib/api-auth", () => ({
   requireAuth: jest.fn(() => null),
 }));
 
+// /api/memory now probes the DB-owned active provider (like MemorySync) instead
+// of regex-parsing config.yaml. Mock the provider so the GET test controls stats.
+const mockMemoryStats = jest.fn();
+jest.mock("@/lib/memory-providers", () => ({
+  getMemoryProviderType: jest.fn(() => "hindsight"),
+  getActiveMemoryProvider: jest.fn(() => ({ stats: mockMemoryStats })),
+}));
+
 jest.mock("@/lib/audit-log", () => ({
   appendAuditLine: jest.fn(),
 }));
@@ -200,15 +208,28 @@ describe("GET /api/templates", () => {
 describe("GET /api/memory", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("returns memory data with provider info", async () => {
-    mockExistsSync.mockReturnValue(false);
+  it("reports a live Hindsight install from the provider probe (not config.yaml)", async () => {
+    mockMemoryStats.mockResolvedValue({ available: true, factCount: 17638 });
 
     const { GET } = await import("@/app/api/memory/route");
     const res = await GET();
     const data = await res.json();
 
     expect(res.status).toBe(200);
-    expect(data.data).toBeDefined();
-    expect(data.data.provider).toBeDefined();
+    expect(data.data.provider).toBe("hindsight");
+    expect(data.data.available).toBe(true);
+    expect(data.data.total).toBe(17638);
+  });
+
+  it("reports 'none' when the provider is unreachable", async () => {
+    mockMemoryStats.mockResolvedValue({ available: false, factCount: 0 });
+
+    const { GET } = await import("@/app/api/memory/route");
+    const res = await GET();
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.data.provider).toBe("none");
+    expect(data.data.available).toBe(false);
   });
 });
