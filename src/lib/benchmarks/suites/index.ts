@@ -6,14 +6,17 @@
 // a run still matches, so a run is reproducible against its suite version).
 // ═══════════════════════════════════════════════════════════════
 
-import type { BenchmarkSuite, BenchmarkDomain } from "../types";
+import type { BenchmarkSuite, BenchmarkDomain, SuiteDifficulty } from "../types";
 import { coreCapabilitiesV1 } from "./core-capabilities-v1";
 import { reasoningDepthV1 } from "./reasoning-depth-v1";
 import { appliedCapabilitiesV1 } from "./applied-capabilities-v1";
 import { judgementV1 } from "./judgement-v1";
 import { frontierV1 } from "./frontier-v1";
 
-export const SUITES: BenchmarkSuite[] = [coreCapabilitiesV1, reasoningDepthV1, appliedCapabilitiesV1, judgementV1, frontierV1];
+// Frontier first: it's the default/headline suite. Its adversarial + LLM-judged
+// items discriminate a weak model honestly (an all-deterministic easy suite lets
+// a mediocre model score in the 90s). Core Capabilities is now the quick smoke.
+export const SUITES: BenchmarkSuite[] = [frontierV1, coreCapabilitiesV1, reasoningDepthV1, appliedCapabilitiesV1, judgementV1];
 
 export function getSuite(key: string): BenchmarkSuite | undefined {
   return SUITES.find((s) => s.key === key);
@@ -34,6 +37,9 @@ export interface SuiteMeta {
   name: string;
   version: string;
   description: string;
+  difficulty: SuiteDifficulty;
+  /** Number of items graded by the LLM judge (quality, not just pass/fail). */
+  judgedItemCount: number;
   itemCount: number;
   domainCounts: Partial<Record<BenchmarkDomain, number>>;
 }
@@ -44,6 +50,8 @@ function suiteMeta(suite: BenchmarkSuite): SuiteMeta {
     name: suite.name,
     version: suite.version,
     description: suite.description,
+    difficulty: suite.difficulty ?? "standard",
+    judgedItemCount: suite.items.filter((it) => it.grader.kind === "judge").length,
     itemCount: suite.items.length,
     domainCounts: domainCounts(suite),
   };

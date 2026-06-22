@@ -154,11 +154,16 @@ export interface BenchmarkItem {
   meta?: Record<string, unknown>;
 }
 
+/** How hard a suite is — surfaced in the picker so a score is read in context. */
+export type SuiteDifficulty = "smoke" | "standard" | "frontier";
+
 export interface BenchmarkSuite {
   key: string;
   name: string;
   version: string;
   description: string;
+  /** Difficulty tier (defaults to "standard" when unset). */
+  difficulty?: SuiteDifficulty;
   items: BenchmarkItem[];
 }
 

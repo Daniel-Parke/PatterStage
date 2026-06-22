@@ -65,6 +65,7 @@ The runtime adapter (`src/lib/runtime/`) dispatches missions as HTTP **runs** to
 | `PS_COMPOSER` | **Default ON.** Set to `0` (or `false`/`no`/`off`) to disable the [Composer](COMPOSER.md) graph orchestrator — its sidebar link is hidden, the page 404s, and the engine + API go dormant. Any other value (unset / `1` / `true`) keeps it enabled. |
 | `PS_SEARCH_PROVIDER` | Search backend for [Deep Research](DEEP_RESEARCH.md): `duckduckgo` (default, free/no-key), `searxng`, or `none`. |
 | `PS_SEARXNG_URL` | Base URL of a self-hosted SearXNG instance (fully local search). When set without `PS_SEARCH_PROVIDER`, SearXNG is auto-preferred. |
+| `PS_BENCH_JUDGE_MODEL` | Model-registry id (or provider model id) used as the **independent LLM judge** for quality-graded Benchmark items. Set this to a strong model so the judge isn't the model under test (self-grading inflates scores). Unset → the judge falls back to the agent's own model. The default **Frontier** suite leans on deterministic adversarial items so it still discriminates even when self-graded. |
 
 ## Debug artifact (not read by the app)
 

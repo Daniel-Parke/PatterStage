@@ -220,8 +220,9 @@ export const coreCapabilitiesV1: BenchmarkSuite = {
   key: "core-capabilities",
   name: "Core Capabilities",
   version: "1.0.0",
+  difficulty: "smoke",
   description:
-    "Deterministic, auto-gradable probe across maths, logic, multi-step reasoning, instruction-following, needle-in-a-haystack retrieval, and self-consistency.",
+    "A quick smoke test: deterministic, auto-graded basics across maths, logic, instruction-following, retrieval and self-consistency. Fast to run and easy — even mid-tier models score high here, so use Frontier to actually discriminate quality.",
   // Apply per-domain content-stat tags unless the item set its own.
   items: items.map((it) => ({ ...it, statTags: it.statTags ?? DOMAIN_STAT_DEFAULTS[it.domain] })),
 };

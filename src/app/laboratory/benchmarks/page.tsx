@@ -37,6 +37,17 @@ function ratingColor(rating: number): string {
   return "var(--color-neon-orange)";
 }
 
+const DIFFICULTY_LABEL: Record<string, string> = {
+  smoke: "Quick smoke",
+  standard: "Standard",
+  frontier: "Frontier (hard)",
+};
+const DIFFICULTY_TONE: Record<string, string> = {
+  smoke: "text-white/50 border-white/15",
+  standard: "text-neon-cyan border-neon-cyan/30",
+  frontier: "text-neon-purple border-neon-purple/40",
+};
+
 function statusTone(status: string): string {
   switch (status) {
     case "completed": return "text-neon-green";
@@ -149,7 +160,6 @@ export default function BenchmarksPage() {
   const { showToast, toastElement } = useToast();
   const { suites } = useSuites();
   const { runs, error: runsError } = useBenchmarkRuns();
-  const { entries: leaderboard } = useLeaderboard();
 
   const profilesR = useApiResource<AgentProfile[]>(["agent-profiles-lite"], "/api/agent/profiles", {
     select: (p) => (p as { profiles?: AgentProfile[] } | null)?.profiles,
@@ -181,6 +191,10 @@ export default function BenchmarksPage() {
   const effectiveProfile = profileId || profiles[0]?.id || "";
   const effectiveModel = modelId || models[0]?.id || "";
   const { setups } = useBenchmarkSetups(effectiveSuite || undefined);
+  // Leaderboard is per-suite — match the selected suite so it isn't confusingly
+  // empty when the board defaults to a suite the user hasn't run yet.
+  const { entries: leaderboard } = useLeaderboard(effectiveSuite || undefined);
+  const selectedSuiteMeta = suites.find((s) => s.key === effectiveSuite) ?? null;
 
   const pairRuns = useMemo(
     () => runs.filter((r) => r.pairId && r.pairId === activePairId),
@@ -323,7 +337,11 @@ export default function BenchmarksPage() {
               ariaLabel="Suite"
               value={effectiveSuite}
               onChange={setSuiteKey}
-              options={suites.map((s) => ({ value: s.key, label: `${s.name} v${s.version}`, hint: `${s.itemCount} items` }))}
+              options={suites.map((s) => ({
+                value: s.key,
+                label: `${s.name} v${s.version}`,
+                hint: `${DIFFICULTY_LABEL[s.difficulty] ?? s.difficulty} · ${s.itemCount} items${s.judgedItemCount > 0 ? ` · ${s.judgedItemCount} judged` : ""}`,
+              }))}
             />
           </Field>
           <Field label="Agent profile">
@@ -360,6 +378,16 @@ export default function BenchmarksPage() {
             />
           </Field>
         </div>
+
+        {/* Selected-suite context so a score is read against the suite's difficulty */}
+        {selectedSuiteMeta ? (
+          <div className="mt-3 flex items-start gap-2 rounded-lg border border-white/10 bg-dark-950/40 px-3 py-2">
+            <span className={`mt-0.5 shrink-0 rounded border px-1.5 py-0.5 text-[10px] font-mono uppercase tracking-wider ${DIFFICULTY_TONE[selectedSuiteMeta.difficulty] ?? "text-white/50 border-white/15"}`}>
+              {DIFFICULTY_LABEL[selectedSuiteMeta.difficulty] ?? selectedSuiteMeta.difficulty}
+            </span>
+            <p className="text-[11px] leading-relaxed text-white/45">{selectedSuiteMeta.description}</p>
+          </div>
+        ) : null}
 
         {/* Agent augmentation — toggle off for a brain-only (reliable) run */}
         <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -524,7 +552,9 @@ export default function BenchmarksPage() {
           <span className="text-white/25">· {leaderboard[0]?.rating?.suiteKey ?? effectiveSuite}</span>
         </h2>
         {leaderboard.length === 0 ? (
-          <p className="text-sm text-white/40">No rated agents yet. Run a comparison to put an agent on the board.</p>
+          <p className="text-sm text-white/40">
+            No rated agents for <span className="text-white/60">{selectedSuiteMeta?.name ?? effectiveSuite}</span> yet — the board is per-suite. Run a comparison on this suite to put an agent on it.
+          </p>
         ) : (
           <ol className="space-y-1">
             {leaderboard.map((e) => (
