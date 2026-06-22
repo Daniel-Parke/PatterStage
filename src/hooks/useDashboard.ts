@@ -103,7 +103,9 @@ async function fetchStatic(): Promise<DashboardStatic> {
     config: dashboardData.config,
     templates: dashboardData.templates,
     categories: dashboardData.categories,
-    registryAgentModelLabel: modelsDefaults?.defaults?.agent ?? null,
+    // Prefer the RESOLVED model name; never fall back to the raw uuid in
+    // `defaults.agent` (that's what showed "af00a9df-…" in the subtitle).
+    registryAgentModelLabel: modelsDefaults?.agentModelLabel ?? null,
   };
 }
 

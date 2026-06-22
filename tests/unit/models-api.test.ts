@@ -64,12 +64,14 @@ jest.mock("@/lib/models-repository", () => {
   const deleteModel = jest.fn();
   const getModelDefaults = jest.fn();
   const setDefaultModel = jest.fn();
+  const getDefaultModel = jest.fn();
   return {
     listModels, getModel, createModel, updateModel, deleteModel,
-    getModelDefaults, setDefaultModel,
+    getModelDefaults, setDefaultModel, getDefaultModel,
     __listModels: listModels, __getModel: getModel, __createModel: createModel,
     __updateModel: updateModel, __deleteModel: deleteModel,
     __getModelDefaults: getModelDefaults, __setDefaultModel: setDefaultModel,
+    __getDefaultModel: getDefaultModel,
   };
 });
 
@@ -303,11 +305,14 @@ describe("/api/models/defaults", () => {
     );
   }
 
-  it("GET returns the defaults object", async () => {
+  it("GET returns the defaults object + a resolved agent model label", async () => {
     repo.__getModelDefaults.mockReturnValue({ agent: "m_1", hindsight: null });
+    repo.__getDefaultModel.mockReturnValue({ id: "m_1", name: "MiniMax-M3", modelId: "MiniMax-M3" });
     const res = await getDefaults();
     expect(res.status).toBe(200);
-    expect((res.body.data as { defaults: Record<string, unknown> }).defaults.agent).toBe("m_1");
+    const body = res.body.data as { defaults: Record<string, unknown>; agentModelLabel: string | null };
+    expect(body.defaults.agent).toBe("m_1"); // raw uuid retained for the Models UI
+    expect(body.agentModelLabel).toBe("MiniMax-M3"); // friendly name for the dashboard subtitle
   });
 
   it("PUT sets a default and audits", async () => {

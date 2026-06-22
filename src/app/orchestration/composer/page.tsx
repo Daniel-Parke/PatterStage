@@ -230,11 +230,21 @@ export default function ComposerPage() {
 
         {/* Pipeline detail */}
         <Card padding="md">
-          {!run || !graph ? (
+          {!selectedId ? (
+            // Nothing selected yet — the genuine empty state.
             <div className="flex h-[420px] flex-col items-center justify-center gap-2 text-center">
               <GitBranch className="h-6 w-6 text-white/15" />
               <p className="text-sm text-white/50">Select a run to watch it live</p>
               <p className="text-xs text-white/30">Stages light up as they run — click any stage for its details.</p>
+            </div>
+          ) : !run || !graph ? (
+            // A run IS selected but its graph is still loading — show a skeleton,
+            // never the "select a run" empty state (that read as "click did nothing").
+            <div className="flex h-[420px] items-center justify-center rounded-xl border border-white/10 bg-dark-900/40">
+              <div className="flex flex-col items-center gap-2 text-center">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/15 border-t-neon-cyan" />
+                <p className="text-xs text-white/40">Loading run…</p>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">

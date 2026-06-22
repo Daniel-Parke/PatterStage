@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
 
-import { getModelDefaults, setDefaultModel } from "@/lib/models-repository";
+import { getDefaultModel, getModelDefaults, setDefaultModel } from "@/lib/models-repository";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
@@ -19,7 +19,14 @@ export async function GET(request: NextRequest) {
   if (auth) return auth;
 
   try {
-    return ok({ defaults: getModelDefaults() });
+    // `defaults` carries registry UUIDs (the Models UI needs them to know which
+    // model each slot points at). `agentModelLabel` is the RESOLVED display name
+    // for the agent slot, so the dashboard subtitle shows "MiniMax-M3", not a uuid.
+    const agentDefault = getDefaultModel("agent");
+    return ok({
+      defaults: getModelDefaults(),
+      agentModelLabel: agentDefault ? (agentDefault.name || agentDefault.modelId) : null,
+    });
   } catch (error) {
     return serverErrorFromCatch(
       "GET /api/models/defaults",

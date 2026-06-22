@@ -31,11 +31,25 @@ function extractTimestamp(line: string): string {
   return match ? match[1] : "";
 }
 
-/** Determine severity from a log line. */
-function detectSeverity(line: string): string {
-  if (/\bCRITICAL\b/i.test(line)) return "critical";
-  if (/\bERROR\b/i.test(line)) return "error";
-  if (/\bWARN(?:ING)?\b/i.test(line)) return "warning";
+/** Determine severity from a log line.
+ *
+ * The log LEVEL is a prefix field, so whichever level keyword appears FIRST in
+ * the line wins — a "WARNING … (payment error)" line is a WARNING, not an
+ * ERROR (the body text mentioning "error" must not upgrade it). The old version
+ * tested ERROR before WARNING regardless of position, flooding the Errors panel
+ * with red chips for transient provider WARNINGs. */
+export function detectSeverity(line: string): string {
+  const firstIndex = (re: RegExp): number => {
+    const m = re.exec(line);
+    return m ? m.index : Infinity;
+  };
+  const crit = firstIndex(/\bCRITICAL\b/i);
+  const err = firstIndex(/\bERROR\b/i);
+  const warn = firstIndex(/\bWARN(?:ING)?\b/i);
+  const earliest = Math.min(crit, err, warn);
+  if (earliest === Infinity) return "error"; // collected via "failed" with no explicit level
+  if (earliest === crit) return "critical";
+  if (earliest === warn) return "warning";
   return "error";
 }
 

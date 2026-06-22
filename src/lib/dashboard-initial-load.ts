@@ -98,8 +98,9 @@ export interface ModelsDefaults {
 export interface InitialLoadResult {
   /** The merged slice for `setData({...result.dashboardData})`. */
   dashboardData: InitialDashboardData;
-  /** The Models-registry defaults (read by the header subtitle). */
-  modelsDefaults: { defaults: ModelsDefaults | null } | null;
+  /** The Models-registry defaults (read by the header subtitle). `agentModelLabel`
+   *  is the resolved agent-slot model NAME (not a uuid). */
+  modelsDefaults: { defaults: ModelsDefaults | null; agentModelLabel?: string | null } | null;
 }
 
 /**
@@ -134,7 +135,7 @@ export async function loadInitialDashboardData(
     safeApiCallData<MonitorData>("/api/monitor", { cache: cache ?? "no-store", signal }),
     safeApiCallData<{ processes: HermesProcess[] }>("/api/agents", { signal }),
     safeApiCallData<{ missions: MissionBrief[] }>("/api/missions", { signal }),
-    safeApiCallData<{ defaults: ModelsDefaults | null }>("/api/models/defaults", { signal }),
+    safeApiCallData<{ defaults: ModelsDefaults | null; agentModelLabel?: string | null }>("/api/models/defaults", { signal }),
   ]);
 
   return {

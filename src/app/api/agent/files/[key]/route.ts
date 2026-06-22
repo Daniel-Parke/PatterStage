@@ -47,6 +47,12 @@ type FileResponseVariant = {
  * `lastModified: undefined` is omitted from the payload (matching the
  * original shape where the "missing file" branch had no `lastModified`
  * field at all).
+ *
+ * Returns the INNER payload (not `{ data: payload }`): the callers wrap it
+ * with `ok()`, which adds the single `{ data }` envelope. (A prior version
+ * returned `{ data }` here AND was passed to `ok()`, double-wrapping into
+ * `{ data: { data: {...} } }` — the config-section editor read `json.data.content`
+ * and got undefined → blank HERMES.md/.env editors + a false drift warning.)
  */
 function buildFileResponse(
   resolved: { path: string; name: string; description: string },
@@ -72,7 +78,7 @@ function buildFileResponse(
   if (variant.lastModified !== undefined) {
     data.lastModified = variant.lastModified;
   }
-  return { data };
+  return data;
 }
 
 /** Build a path lookup map from a Hermes path bundle. */
