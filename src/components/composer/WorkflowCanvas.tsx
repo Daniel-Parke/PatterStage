@@ -35,7 +35,7 @@ import "@xyflow/react/dist/style.css";
 import { Save, Trash2, Wand2 } from "lucide-react";
 
 import Button from "@/components/ui/Button";
-import { Field, Input, Select, Toggle } from "@/components/ui/field";
+import { Field, Input, Select, Textarea, Toggle } from "@/components/ui/field";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useComposerWorkflowGraph } from "@/hooks/useComposer";
 import {
@@ -360,6 +360,22 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
               <Field label="Sub-workflow">
                 <Select value={String(node.data.config?.workflowRef ?? "")} onChange={(v) => patchNodeConfig(node.id, "workflowRef", v)} options={workflowOptions} placeholder="pick a workflow…" />
               </Field>
+            ) : null}
+            {node.data.isStart ? (
+              (() => {
+                const spec = (node.data.config?.inputSpec ?? {}) as { objectiveLabel?: string; objectiveHint?: string; examples?: string[] };
+                const setSpec = (patch: Partial<typeof spec>) => patchNodeConfig(node.id, "inputSpec", { ...spec, ...patch });
+                return (
+                  <div className="space-y-2 rounded-lg border border-neon-cyan/20 bg-dark-950/40 p-2">
+                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-neon-cyan/70">Workflow input (Run form)</h4>
+                    <Field label="Objective label"><Input value={spec.objectiveLabel ?? ""} onChange={(e) => setSpec({ objectiveLabel: e.target.value })} placeholder="e.g. Research question" /></Field>
+                    <Field label="Hint / placeholder"><Input value={spec.objectiveHint ?? ""} onChange={(e) => setSpec({ objectiveHint: e.target.value })} placeholder="shown inside the input box" /></Field>
+                    <Field label="Examples (one per line)">
+                      <Textarea rows={3} value={(spec.examples ?? []).join("\n")} onChange={(e) => setSpec({ examples: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean) })} placeholder="click-to-fill example objectives" />
+                    </Field>
+                  </div>
+                );
+              })()
             ) : null}
             <div className="flex flex-wrap gap-2">
               <Toggle label="HIL gate" checked={node.data.gate === "hil"} onChange={(c) => patchNode(node.id, { gate: c ? "hil" : "auto" })} />

@@ -21,7 +21,7 @@ import {
   updateNodeRun,
 } from "@/lib/composer/composer-repository";
 import { ensureDefaultComposerWorkflows } from "@/lib/composer/seed";
-import { DEFAULT_SOFTWARE_DELIVERY_WORKFLOW, SOFTWARE_DELIVERY_WORKFLOW_KEY } from "@/lib/composer/schema";
+import { DEFAULT_SOFTWARE_DELIVERY_WORKFLOW, SOFTWARE_DELIVERY_WORKFLOW_KEY, getInputSpec } from "@/lib/composer/schema";
 
 let testDb: import("better-sqlite3").Database | null = null;
 
@@ -70,6 +70,41 @@ describe("composer-repository", () => {
     const finalNode = graph.nodes.find((n) => n.key === "final_assessment")!;
     const outs = getOutgoingEdges(finalNode.id);
     expect(outs.map((e) => e.condition).sort()).toEqual(["on_fail", "on_pass"]);
+  });
+
+  it("seeds the Software-Delivery input contract on the start node", () => {
+    ensureDefaultComposerWorkflows();
+    const wf = getWorkflowByKey(SOFTWARE_DELIVERY_WORKFLOW_KEY)!;
+    const spec = getInputSpec(getWorkflowGraph(wf.id)!);
+    expect(spec.objectiveLabel).toBe("Feature request / bug report");
+    expect(spec.examples.length).toBeGreaterThan(0);
+  });
+
+  it("getInputSpec falls back to a generic default when the start node has no contract", () => {
+    const wf = createWorkflowFromDef({
+      key: "no-spec",
+      name: "No spec",
+      nodes: [{ key: "a", label: "A", kind: "custom", gate: "auto", isStart: true }],
+      edges: [],
+    });
+    expect(getInputSpec(wf).objectiveLabel).toBe("Objective");
+  });
+
+  it("back-fills the input contract onto an older seeded workflow (idempotent)", () => {
+    // Simulate a pre-contract install: the seeded workflow without inputSpec.
+    const oldDef = {
+      ...DEFAULT_SOFTWARE_DELIVERY_WORKFLOW,
+      nodes: DEFAULT_SOFTWARE_DELIVERY_WORKFLOW.nodes.map((n) => (n.isStart ? { ...n, config: undefined } : n)),
+    };
+    createWorkflowFromDef(oldDef);
+    const wfId = getWorkflowByKey(SOFTWARE_DELIVERY_WORKFLOW_KEY)!.id;
+    expect(getInputSpec(getWorkflowGraph(wfId)!).objectiveLabel).toBe("Objective"); // default
+
+    ensureDefaultComposerWorkflows(); // back-fills the contract
+    ensureDefaultComposerWorkflows(); // idempotent
+
+    const after = getWorkflowGraph(getWorkflowByKey(SOFTWARE_DELIVERY_WORKFLOW_KEY)!.id)!;
+    expect(getInputSpec(after).objectiveLabel).toBe("Feature request / bug report");
   });
 
   it("back-fills the recovery edges into an older seeded workflow (idempotent)", () => {

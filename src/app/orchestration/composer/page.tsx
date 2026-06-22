@@ -10,17 +10,17 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { GitBranch, Play } from "lucide-react";
+import { GitBranch } from "lucide-react";
 
 import PageHeader from "@/components/layout/PageHeader";
 import Card from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
-import { Field, Textarea, Select } from "@/components/ui/field";
+import { Select } from "@/components/ui/field";
 import dynamic from "next/dynamic";
 
 import ComposerGatePrompt from "@/components/composer/ComposerGatePrompt";
 import ComposerNodeRunDetail from "@/components/composer/ComposerNodeRunDetail";
+import ComposerRunForm from "@/components/composer/ComposerRunForm";
 import { safeApiCall } from "@/lib/api-fetch";
 import { timeAgo } from "@/lib/utils";
 
@@ -88,7 +88,6 @@ export default function ComposerPage() {
   const nodeRuns = live?.nodeRuns ?? detail?.nodeRuns ?? [];
   const graph = detail?.graph ?? null;
 
-  const workflowOptions = (workflows ?? []).map((w) => ({ value: w.id, label: w.name }));
   const profileOptions = [
     { value: "", label: "Default profile" },
     ...(profiles ?? []).map((p) => ({ value: p.name, label: p.name })),
@@ -170,29 +169,19 @@ export default function ComposerPage() {
         <WorkflowCanvas workflows={workflows ?? []} onSaved={() => void refetchWorkflows()} />
       ) : (
         <>
-      {/* Launch form */}
-      <Card padding="md" glow="cyan">
-        <Field label="Feature request / bug report" htmlFor="composer-input">
-          <Textarea
-            id="composer-input"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            rows={3}
-            placeholder="e.g. Add a dark-mode toggle to the settings page, persisted per user."
-          />
-        </Field>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-          <Field label="Workflow">
-            <Select value={activeWorkflowId} onChange={setWorkflowId} options={workflowOptions} placeholder="Workflow…" />
-          </Field>
-          <Field label="Agent profile">
-            <Select value={profileName} onChange={setProfileName} options={profileOptions} />
-          </Field>
-          <Button variant="primary" color="cyan" loading={submitting} onClick={() => void start()} disabled={input.trim().length < 3}>
-            {!submitting ? <Play className="h-4 w-4" /> : null} Run workflow
-          </Button>
-        </div>
-      </Card>
+      {/* Launch form — self-describing per the selected workflow's input contract */}
+      <ComposerRunForm
+        workflows={workflows ?? []}
+        activeWorkflowId={activeWorkflowId}
+        onWorkflowChange={setWorkflowId}
+        profileOptions={profileOptions}
+        profileName={profileName}
+        onProfileChange={setProfileName}
+        input={input}
+        onInputChange={setInput}
+        submitting={submitting}
+        onRun={() => void start()}
+      />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px_1fr]">
         {/* Runs list */}

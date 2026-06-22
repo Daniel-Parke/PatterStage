@@ -12,7 +12,11 @@ import {
   listWorkflowEdges,
   listWorkflowNodes,
 } from "./composer-repository";
-import { DEFAULT_SOFTWARE_DELIVERY_WORKFLOW, SOFTWARE_DELIVERY_WORKFLOW_KEY } from "./schema";
+import {
+  DEFAULT_SOFTWARE_DELIVERY_WORKFLOW,
+  SOFTWARE_DELIVERY_INPUT_SPEC,
+  SOFTWARE_DELIVERY_WORKFLOW_KEY,
+} from "./schema";
 
 /**
  * Recovery edges added after the seeded workflow first shipped. Applied
@@ -49,10 +53,30 @@ function ensureRecoveryEdges(): void {
   }
 }
 
+/**
+ * Idempotently back-fill the seeded workflow's input contract onto its start
+ * node so older installs (created before the contract shipped) get the guided
+ * Run-form labels/examples without losing run history.
+ */
+function ensureSoftwareDeliveryInputSpec(): void {
+  const wf = getWorkflowByKey(SOFTWARE_DELIVERY_WORKFLOW_KEY);
+  if (!wf) return;
+  const nodes = listWorkflowNodes(wf.id);
+  const start = nodes.find((n) => n.isStart) ?? nodes.find((n) => n.key === "review");
+  if (!start) return;
+  const config = (start.config ?? {}) as Record<string, unknown>;
+  if (config.inputSpec) return; // already present — no-op
+  const merged = { ...config, inputSpec: SOFTWARE_DELIVERY_INPUT_SPEC };
+  db()
+    .prepare("UPDATE composer_nodes SET config_json = ? WHERE id = ?")
+    .run(JSON.stringify(merged), start.id);
+}
+
 /** Idempotently ensure the default Composer workflow(s) exist. */
 export function ensureDefaultComposerWorkflows(): void {
   if (!getWorkflowByKey(SOFTWARE_DELIVERY_WORKFLOW_KEY)) {
     createWorkflowFromDef(DEFAULT_SOFTWARE_DELIVERY_WORKFLOW);
   }
   ensureRecoveryEdges();
+  ensureSoftwareDeliveryInputSpec();
 }

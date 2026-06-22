@@ -156,8 +156,53 @@ export const workflowDefSchema = z.object({
 /** Input shape (what you author) — defaults are applied by `workflowDefSchema.parse`. */
 export type WorkflowDef = z.input<typeof workflowDefSchema>;
 
+// ── Workflow input contract (per-workflow Run form) ──────────────
+// A workflow declares what objective it expects from the user, so the Run form
+// is self-describing instead of a hardcoded "Feature request / bug report" box.
+// Stored on the START node's `config.inputSpec` (round-trips as JSON — no
+// migration). Mirrors Dify/n8n "start node input variables".
+export const inputSpecSchema = z.object({
+  /** Label above the objective box (e.g. "Research question"). */
+  objectiveLabel: z.string().min(1).default("Objective"),
+  /** Placeholder / hint inside the box. */
+  objectiveHint: z.string().default(""),
+  /** 1-3 click-to-fill example objectives. */
+  examples: z.array(z.string()).default([]),
+});
+export type WorkflowInputSpec = z.infer<typeof inputSpecSchema>;
+
+const DEFAULT_INPUT_SPEC: WorkflowInputSpec = {
+  objectiveLabel: "Objective",
+  objectiveHint: "Describe what you want this workflow to accomplish — be specific about the subject, scope, and what 'done' looks like.",
+  examples: [],
+};
+
+/**
+ * Resolve the Run form's input contract for a workflow: the start node's
+ * `config.inputSpec`, safe-parsed, falling back to a sensible generic default so
+ * the form is never blank or broken for older/custom workflows.
+ */
+export function getInputSpec(graph: ComposerWorkflowGraph): WorkflowInputSpec {
+  const start =
+    graph.nodes.find((n) => n.isStart) ??
+    [...graph.nodes].sort((a, b) => a.pos - b.pos)[0];
+  const parsed = inputSpecSchema.safeParse(start?.config?.inputSpec);
+  return parsed.success ? parsed.data : DEFAULT_INPUT_SPEC;
+}
+
 // ── Seeded default: the whiteboard "Software Delivery" pipeline ───
 export const SOFTWARE_DELIVERY_WORKFLOW_KEY = "software-delivery-v1";
+
+/** The seeded Software-Delivery workflow's input contract (kept here so seed + back-fill share it). */
+export const SOFTWARE_DELIVERY_INPUT_SPEC: WorkflowInputSpec = {
+  objectiveLabel: "Feature request / bug report",
+  objectiveHint: "e.g. Add a dark-mode toggle to the settings page, persisted per user.",
+  examples: [
+    "Add a dark-mode toggle to the settings page, persisted per user.",
+    "Fix the N+1 query loading the dashboard sessions list.",
+    "Add CSV export to the benchmarks results table.",
+  ],
+};
 
 export const DEFAULT_SOFTWARE_DELIVERY_WORKFLOW: WorkflowDef = {
   key: SOFTWARE_DELIVERY_WORKFLOW_KEY,
@@ -165,7 +210,7 @@ export const DEFAULT_SOFTWARE_DELIVERY_WORKFLOW: WorkflowDef = {
   description:
     "Methodical feature/bug pipeline: prepare → implement → verify, with HIL gates and FAIL loop-backs.",
   nodes: [
-    { key: "review", label: "Review", kind: "review", gate: "auto", isStart: true },
+    { key: "review", label: "Review", kind: "review", gate: "auto", isStart: true, config: { inputSpec: SOFTWARE_DELIVERY_INPUT_SPEC } },
     { key: "validate_prep", label: "Validate", kind: "validate", gate: "auto" },
     { key: "research", label: "Research", kind: "research", gate: "auto" },
     { key: "hypothesise", label: "Hypothesise", kind: "hypothesise", gate: "auto" },
