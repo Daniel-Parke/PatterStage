@@ -134,7 +134,7 @@ function RunCanvasInner({
   }, [graph, latestNodeRun, currentNodeId]);
 
   return (
-    <div className="relative h-[560px] w-full overflow-hidden rounded-xl border border-white/10 bg-dark-950/60">
+    <div className="relative h-[68vh] min-h-[560px] w-full overflow-hidden rounded-xl border border-white/10 bg-dark-950/60">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -144,6 +144,8 @@ function RunCanvasInner({
         elementsSelectable={false}
         onNodeClick={(_, node) => onSelectNode?.(node.id)}
         fitView
+        fitViewOptions={{ padding: 0.18, minZoom: 0.3, maxZoom: 1 }}
+        minZoom={0.2}
         proOptions={{ hideAttribution: true }}
       >
         <Background color="#1e293b" gap={18} />

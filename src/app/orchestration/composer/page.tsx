@@ -9,8 +9,8 @@
 
 "use client";
 
-import { useMemo, useState } from "react";
-import { GitBranch } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { GitBranch, Plus } from "lucide-react";
 
 import PageHeader from "@/components/layout/PageHeader";
 import Card from "@/components/ui/Card";
@@ -75,6 +75,9 @@ export default function ComposerPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [gateBusy, setGateBusy] = useState(false);
   const [selectedNodeKey, setSelectedNodeKey] = useState<string | null>(null);
+  // When a run is selected the launch form collapses to a compact bar to free the
+  // vertical space; "New run" re-expands it.
+  const [forceForm, setForceForm] = useState(false);
 
   const { data: workflows, error: workflowsError, refetch: refetchWorkflows } = useComposerWorkflows();
   const { data: runs, refetch } = useComposerRuns();
@@ -98,6 +101,31 @@ export default function ComposerPage() {
     [runs, statusFilter],
   );
 
+  const launchOpen = forceForm || !selectedId;
+
+  // Deep-link / restore the selected workflow + run from the URL (?workflow=&runId=)
+  // so reloads and shared links land on the same view. Uses history API directly to
+  // avoid the useSearchParams Suspense requirement.
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const w = sp.get("workflow");
+    const r = sp.get("runId");
+    if (w) setWorkflowId(w);
+    if (r) setSelectedId(r);
+  }, []);
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    if (activeWorkflowId) sp.set("workflow", activeWorkflowId); else sp.delete("workflow");
+    if (selectedId) sp.set("runId", selectedId); else sp.delete("runId");
+    const qs = sp.toString();
+    window.history.replaceState(null, "", qs ? `?${qs}` : window.location.pathname);
+  }, [activeWorkflowId, selectedId]);
+
+  function selectRun(id: string) {
+    setSelectedId(id);
+    setForceForm(false);
+  }
+
   function latestNodeRun(nodeId: string): ComposerNodeRun | null {
     const all = nodeRuns.filter((nr) => nr.nodeId === nodeId);
     return all.length ? all.reduce((a, b) => (b.attempt >= a.attempt ? b : a)) : null;
@@ -119,6 +147,7 @@ export default function ComposerPage() {
       if (id) {
         setInput("");
         setSelectedId(id);
+        setForceForm(false); // collapse the launch form onto the new run
         await refetch();
       }
     } finally {
@@ -180,19 +209,36 @@ export default function ComposerPage() {
         <WorkflowCanvas workflows={workflows ?? []} onSaved={() => void refetchWorkflows()} />
       ) : (
         <>
-      {/* Launch form — self-describing per the selected workflow's input contract */}
-      <ComposerRunForm
-        workflows={workflows ?? []}
-        activeWorkflowId={activeWorkflowId}
-        onWorkflowChange={setWorkflowId}
-        profileOptions={profileOptions}
-        profileName={profileName}
-        onProfileChange={setProfileName}
-        input={input}
-        onInputChange={setInput}
-        submitting={submitting}
-        onRun={() => void start()}
-      />
+      {/* Launch form — self-describing per the selected workflow's input contract.
+          Collapses to a compact bar once a run is selected to free vertical space. */}
+      {launchOpen ? (
+        <ComposerRunForm
+          workflows={workflows ?? []}
+          activeWorkflowId={activeWorkflowId}
+          onWorkflowChange={setWorkflowId}
+          profileOptions={profileOptions}
+          profileName={profileName}
+          onProfileChange={setProfileName}
+          input={input}
+          onInputChange={setInput}
+          submitting={submitting}
+          onRun={() => void start()}
+        />
+      ) : (
+        <Card padding="sm">
+          <button
+            type="button"
+            onClick={() => setForceForm(true)}
+            className="flex w-full items-center gap-2 px-1 py-1 text-left text-sm text-white/60 transition hover:text-neon-cyan"
+          >
+            <Plus className="h-4 w-4" />
+            New run
+            <span className="ml-auto truncate text-xs text-white/30">
+              {workflows?.find((w) => w.id === activeWorkflowId)?.name ?? ""}
+            </span>
+          </button>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px_1fr]">
         {/* Runs list */}
@@ -213,7 +259,7 @@ export default function ComposerPage() {
                 <li key={r.id}>
                   <button
                     type="button"
-                    onClick={() => setSelectedId(r.id)}
+                    onClick={() => selectRun(r.id)}
                     className={`w-full rounded-lg px-2 py-2 text-left text-xs transition hover:bg-white/5 ${selectedId === r.id ? "bg-white/5" : ""}`}
                   >
                     <div className="truncate text-white/80">{runTitle(r.input)}</div>
@@ -232,7 +278,7 @@ export default function ComposerPage() {
         <Card padding="md">
           {!selectedId ? (
             // Nothing selected yet — the genuine empty state.
-            <div className="flex h-[420px] flex-col items-center justify-center gap-2 text-center">
+            <div className="flex h-[60vh] min-h-[420px] flex-col items-center justify-center gap-2 text-center">
               <GitBranch className="h-6 w-6 text-white/15" />
               <p className="text-sm text-white/50">Select a run to watch it live</p>
               <p className="text-xs text-white/30">Stages light up as they run — click any stage for its details.</p>
@@ -240,7 +286,7 @@ export default function ComposerPage() {
           ) : !run || !graph ? (
             // A run IS selected but its graph is still loading — show a skeleton,
             // never the "select a run" empty state (that read as "click did nothing").
-            <div className="flex h-[420px] items-center justify-center rounded-xl border border-white/10 bg-dark-900/40">
+            <div className="flex h-[60vh] min-h-[420px] items-center justify-center rounded-xl border border-white/10 bg-dark-900/40">
               <div className="flex flex-col items-center gap-2 text-center">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/15 border-t-neon-cyan" />
                 <p className="text-xs text-white/40">Loading run…</p>
