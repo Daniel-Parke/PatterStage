@@ -82,7 +82,8 @@ function runsByProfile(): Map<string, RunAgg> {
     a.runs++;
     a.tokens += parseTotalTokens(r.usage_json);
     if (r.status === "completed" && r.completed_at && r.submitted_at) {
-      const d = (Date.parse(`${r.completed_at}Z`) - Date.parse(`${r.submitted_at}Z`)) / 1000;
+      // Timestamps are ISO-8601 with a 'Z'; appending another 'Z' → NaN → no avg.
+      const d = (Date.parse(r.completed_at) - Date.parse(r.submitted_at)) / 1000;
       if (Number.isFinite(d) && d >= 0 && d < 86_400) {
         a.durSum += d;
         a.durCount++;

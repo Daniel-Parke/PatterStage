@@ -194,7 +194,8 @@ export function getDashboardStats(): DashboardStats {
       activeDates.add(day);
       completionHours.push(num(r.completed_at.slice(11, 13)));
       if (r.submitted_at) {
-        const dur = (Date.parse(`${r.completed_at}Z`) - Date.parse(`${r.submitted_at}Z`)) / 1000;
+        // Timestamps are ISO-8601 with a 'Z'; appending another 'Z' → NaN → avg 0.
+        const dur = (Date.parse(r.completed_at) - Date.parse(r.submitted_at)) / 1000;
         if (Number.isFinite(dur) && dur >= 0 && dur < 86_400) {
           durSum += dur;
           durCount++;

@@ -55,7 +55,9 @@ export function getRunDurationBuckets(sinceDays = 90): HistogramBin[] {
       )
       .all(days(sinceDays)) as { submitted_at: string; completed_at: string }[];
     const durations = rows.map(
-      (r) => (Date.parse(`${r.completed_at}Z`) - Date.parse(`${r.submitted_at}Z`)) / 1000,
+      // submitted_at/completed_at are ISO-8601 with a 'Z' (now() = toISOString());
+      // appending another 'Z' made Date.parse return NaN → an all-zero histogram.
+      (r) => (Date.parse(r.completed_at) - Date.parse(r.submitted_at)) / 1000,
     );
     return bucketDurations(durations);
   }, bucketDurations([]));
