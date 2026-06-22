@@ -208,11 +208,24 @@ export function resolveNext(
   }
   if (!edge) {
     if (cond === "on_fail" || cond === "on_reject") {
-      return { kind: "fail", error: "stage failed with no recovery path" };
+      return { kind: "fail", error: describeStageFailure(node, nodeRun, cond) };
     }
     return { kind: "complete" };
   }
   return { kind: "node", nodeId: edge.toNodeId };
+}
+
+/**
+ * Build a human-readable run error for a stage that failed/was rejected with no
+ * recovery edge — surfaces the stage label + the verdict's reasons instead of
+ * the opaque "stage failed with no recovery path", so the UI can show WHY.
+ */
+function describeStageFailure(node: ComposerNode, nodeRun: ComposerNodeRun, cond: string): string {
+  const verb = cond === "on_reject" ? "was rejected" : "failed";
+  const reasons = (nodeRun.verdict?.reasons ?? []).map((r) => r.trim()).filter(Boolean);
+  if (reasons.length) return `${node.label} ${verb}: ${reasons.join("; ")}`;
+  if (nodeRun.error) return `${node.label} ${verb}: ${nodeRun.error}`;
+  return `${node.label} ${verb} and the workflow has no recovery path from here.`;
 }
 
 async function applyNext(

@@ -20,7 +20,9 @@ import { Field, Textarea, Select } from "@/components/ui/field";
 import dynamic from "next/dynamic";
 
 import ComposerGatePrompt from "@/components/composer/ComposerGatePrompt";
+import ComposerNodeRunDetail from "@/components/composer/ComposerNodeRunDetail";
 import { safeApiCall } from "@/lib/api-fetch";
+import { timeAgo } from "@/lib/utils";
 
 // react-flow needs the DOM — load the canvases client-only.
 const WorkflowCanvas = dynamic(() => import("@/components/composer/WorkflowCanvas"), {
@@ -35,6 +37,14 @@ import { useComposerWorkflows, useComposerRuns, useComposerRun } from "@/hooks/u
 import { useProfiles } from "@/hooks/useProfiles";
 import { useEventStream } from "@/hooks/useEventStream";
 import type { ApprovalAction, ComposerNodeRun, ComposerRun } from "@/lib/composer/schema";
+
+/** A short, human-readable title from a run's raw input (first line, no markdown #). */
+function runTitle(input: string | null): string {
+  const firstLine = (input ?? "").split("\n").map((l) => l.trim()).find((l) => l.length > 0) ?? "";
+  const cleaned = firstLine.replace(/^#+\s*/, "");
+  if (!cleaned) return "(no input)";
+  return cleaned.length > 60 ? `${cleaned.slice(0, 60)}…` : cleaned;
+}
 
 const STATUS_COLOR: Record<string, string> = {
   pending: "text-white/40",
@@ -63,6 +73,7 @@ export default function ComposerPage() {
   const [submitting, setSubmitting] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [gateBusy, setGateBusy] = useState(false);
+  const [selectedNodeKey, setSelectedNodeKey] = useState<string | null>(null);
 
   const { data: workflows, error: workflowsError, refetch: refetchWorkflows } = useComposerWorkflows();
   const { data: runs, refetch } = useComposerRuns();
@@ -91,6 +102,9 @@ export default function ComposerPage() {
     const all = nodeRuns.filter((nr) => nr.nodeId === nodeId);
     return all.length ? all.reduce((a, b) => (b.attempt >= a.attempt ? b : a)) : null;
   }
+
+  const selectedNode = selectedNodeKey && graph ? graph.nodes.find((n) => n.key === selectedNodeKey) ?? null : null;
+  const selectedNodeRun = selectedNode ? latestNodeRun(selectedNode.id) : null;
 
   async function start() {
     const text = input.trim();
@@ -202,8 +216,11 @@ export default function ComposerPage() {
                     onClick={() => setSelectedId(r.id)}
                     className={`w-full rounded-lg px-2 py-2 text-left text-xs transition hover:bg-white/5 ${selectedId === r.id ? "bg-white/5" : ""}`}
                   >
-                    <div className="truncate text-white/80">{r.input ?? "(no input)"}</div>
-                    <div className={`mt-0.5 font-mono uppercase ${STATUS_COLOR[r.status] ?? "text-white/40"}`}>{r.status}</div>
+                    <div className="truncate text-white/80">{runTitle(r.input)}</div>
+                    <div className="mt-0.5 flex items-center justify-between gap-2 font-mono text-[10px] uppercase">
+                      <span className={STATUS_COLOR[r.status] ?? "text-white/40"}>{r.status}</span>
+                      <span className="normal-case text-white/30">{timeAgo(r.createdAt)}</span>
+                    </div>
                   </button>
                 </li>
               ))}
@@ -214,19 +231,34 @@ export default function ComposerPage() {
         {/* Pipeline detail */}
         <Card padding="md">
           {!run || !graph ? (
-            <p className="text-xs text-white/30">Select a run to watch its pipeline.</p>
+            <div className="flex h-[420px] flex-col items-center justify-center gap-2 text-center">
+              <GitBranch className="h-6 w-6 text-white/15" />
+              <p className="text-sm text-white/50">Select a run to watch it live</p>
+              <p className="text-xs text-white/30">Stages light up as they run — click any stage for its details.</p>
+            </div>
           ) : (
             <div className="space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="truncate text-sm text-white/85">{run.input}</div>
-                <div className={`shrink-0 font-mono text-[11px] uppercase ${STATUS_COLOR[run.status] ?? "text-white/40"}`}>
-                  {run.status}
+              <div className="flex items-start justify-between gap-3 rounded-lg border border-white/10 bg-dark-900/40 px-3 py-2.5">
+                <div className="min-w-0">
+                  <div className="truncate text-sm text-white/85">{runTitle(run.input)}</div>
+                  {run.error ? (
+                    <p className="mt-1 text-xs text-neon-pink">{run.error}</p>
+                  ) : (
+                    <p className="mt-1 text-[11px] text-white/30">Click a stage for its verdict & output</p>
+                  )}
+                </div>
+                <div className="shrink-0 text-right">
+                  <div className={`font-mono text-[11px] uppercase ${STATUS_COLOR[run.status] ?? "text-white/40"}`}>
+                    {run.status}
+                  </div>
+                  <div className="mt-0.5 text-[10px] text-white/30">{timeAgo(run.createdAt)}</div>
                 </div>
               </div>
               <WorkflowRunCanvas
                 graph={graph}
                 latestNodeRun={latestNodeRun}
                 currentNodeId={run.currentNodeId}
+                onSelectNode={setSelectedNodeKey}
                 gate={
                   run.status === "awaiting_approval" && run.currentNodeId ? (
                     <ComposerGatePrompt
@@ -241,6 +273,12 @@ export default function ComposerPage() {
           )}
         </Card>
       </div>
+      <ComposerNodeRunDetail
+        open={selectedNode != null}
+        onClose={() => setSelectedNodeKey(null)}
+        node={selectedNode}
+        nodeRun={selectedNodeRun}
+      />
         </>
       )}
     </div>

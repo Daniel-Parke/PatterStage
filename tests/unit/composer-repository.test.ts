@@ -72,6 +72,29 @@ describe("composer-repository", () => {
     expect(outs.map((e) => e.condition).sort()).toEqual(["on_fail", "on_pass"]);
   });
 
+  it("back-fills the recovery edges into an older seeded workflow (idempotent)", () => {
+    // Simulate an install seeded BEFORE the recovery edges shipped: same key,
+    // but the research/hypothesise on_fail edges stripped out.
+    const oldDef = {
+      ...DEFAULT_SOFTWARE_DELIVERY_WORKFLOW,
+      edges: DEFAULT_SOFTWARE_DELIVERY_WORKFLOW.edges.filter((e) => e.condition !== "on_fail" || (e.from !== "research" && e.from !== "hypothesise")),
+    };
+    const seeded = createWorkflowFromDef(oldDef);
+    const research = seeded.nodes.find((n) => n.key === "research")!;
+    expect(getOutgoingEdges(research.id).some((e) => e.condition === "on_fail")).toBe(false);
+
+    ensureDefaultComposerWorkflows(); // back-fills the recovery edges
+    ensureDefaultComposerWorkflows(); // idempotent — no duplicates
+
+    const wf = getWorkflowByKey(SOFTWARE_DELIVERY_WORKFLOW_KEY)!;
+    const graph = getWorkflowGraph(wf.id)!;
+    const researchOut = getOutgoingEdges(graph.nodes.find((n) => n.key === "research")!.id);
+    const onFail = researchOut.filter((e) => e.condition === "on_fail");
+    expect(onFail).toHaveLength(1);
+    expect(graph.nodes.find((n) => n.id === onFail[0].toNodeId)!.key).toBe("hypothesise");
+    expect(getOutgoingEdges(graph.nodes.find((n) => n.key === "hypothesise")!.id).filter((e) => e.condition === "on_fail")).toHaveLength(1);
+  });
+
   it("re-creating a keyed workflow bumps the version and replaces the graph", () => {
     const g1 = createWorkflowFromDef({ key: "k", name: "W", nodes: [{ key: "a", label: "A", kind: "custom", gate: "auto", isStart: true }], edges: [] });
     expect(g1.version).toBe(1);

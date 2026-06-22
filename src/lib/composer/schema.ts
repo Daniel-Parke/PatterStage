@@ -186,7 +186,11 @@ export const DEFAULT_SOFTWARE_DELIVERY_WORKFLOW: WorkflowDef = {
     { from: "review", to: "validate_prep" },
     { from: "validate_prep", to: "research" },
     { from: "research", to: "hypothesise" },
+    // Research + hypothesise are best-effort enrichment — a transient failure
+    // (e.g. a search/LLM blip) routes FORWARD rather than dead-ending the run.
+    { from: "research", to: "hypothesise", condition: "on_fail", label: "skip research" },
     { from: "hypothesise", to: "plan" },
+    { from: "hypothesise", to: "plan", condition: "on_fail", label: "continue" },
     { from: "plan", to: "build_tests", condition: "on_approve" },
     { from: "plan", to: "review", condition: "on_reject", label: "rework" },
     { from: "build_tests", to: "implement" },

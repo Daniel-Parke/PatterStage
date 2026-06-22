@@ -14,8 +14,6 @@ import {
   ReactFlow,
   ReactFlowProvider,
   Background,
-  Controls,
-  MiniMap,
   Handle,
   Position,
   type Node,
@@ -49,19 +47,23 @@ interface LiveNodeData extends Record<string, unknown> {
   isCurrent: boolean;
   status: string;
   verdictPass: boolean | null;
+  attempt: number;
+  hasRun: boolean;
 }
 type LiveNode = Node<LiveNodeData, "live">;
 
 function LiveNodeView({ data }: NodeProps<LiveNode>) {
   return (
     <div
-      className={`min-w-[150px] rounded-lg border bg-dark-900/90 px-3 py-2 shadow-lg backdrop-blur ${STATUS_BORDER[data.status] ?? "border-white/15"} ${data.isCurrent ? "ring-1 ring-neon-cyan/60 shadow-[0_0_12px_2px_rgb(34_211_238/0.4)]" : ""}`}
+      title={data.hasRun ? "Click for stage details" : undefined}
+      className={`min-w-[150px] rounded-lg border bg-dark-900/90 px-3 py-2 shadow-lg backdrop-blur transition-colors ${STATUS_BORDER[data.status] ?? "border-white/15"} ${data.isCurrent ? "ring-1 ring-neon-cyan/60 shadow-[0_0_12px_2px_rgb(34_211_238/0.4)]" : ""} ${data.hasRun ? "cursor-pointer hover:border-white/40" : "cursor-default"}`}
     >
       <Handle type="target" position={Position.Top} className="!h-2 !w-2 !border-0 !bg-white/40" />
       <div className="flex items-center gap-1.5">
         <span className={`h-2 w-2 rounded-full ${STATUS_DOT[data.status] ?? "bg-white/25"} ${data.isCurrent ? "animate-pulse" : ""}`} />
         <span className="truncate text-sm text-white/90">{data.label}</span>
         {data.gate === "hil" ? <span className="rounded bg-neon-yellow/15 px-1 text-[8px] font-mono text-neon-yellow">HIL</span> : null}
+        {data.attempt > 1 ? <span className="ml-auto rounded bg-white/10 px-1 text-[8px] font-mono text-white/50">×{data.attempt}</span> : null}
       </div>
       <div className="mt-0.5 flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-wider text-white/30">
         <span>{data.kind}</span>
@@ -80,11 +82,13 @@ function RunCanvasInner({
   latestNodeRun,
   currentNodeId,
   gate,
+  onSelectNode,
 }: {
   graph: ComposerWorkflowGraph;
   latestNodeRun: (nodeId: string) => ComposerNodeRun | null;
   currentNodeId: string | null;
   gate?: ReactNode;
+  onSelectNode?: (nodeKey: string) => void;
 }) {
   const { nodes, edges } = useMemo(() => {
     const canvas = graphToCanvas(graph);
@@ -107,6 +111,8 @@ function RunCanvasInner({
           isCurrent: currentNodeId === n.id,
           status: nr?.status ?? "pending",
           verdictPass: nr?.verdict ? nr.verdict.pass : null,
+          attempt: nr?.attempt ?? 1,
+          hasRun: nr != null,
         },
       };
     });
@@ -136,12 +142,11 @@ function RunCanvasInner({
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={false}
+        onNodeClick={(_, node) => onSelectNode?.(node.id)}
         fitView
         proOptions={{ hideAttribution: true }}
       >
         <Background color="#1e293b" gap={18} />
-        <Controls showInteractive={false} className="!bg-dark-900 !border-white/10" />
-        <MiniMap pannable zoomable className="!bg-dark-900" maskColor="rgba(0,0,0,0.6)" nodeColor="#334155" />
       </ReactFlow>
       {gate ? <div className="absolute right-3 top-3 z-10 w-72 rounded-lg border border-white/10 bg-dark-900/90 p-3 backdrop-blur">{gate}</div> : null}
     </div>
@@ -153,6 +158,7 @@ export default function WorkflowRunCanvas(props: {
   latestNodeRun: (nodeId: string) => ComposerNodeRun | null;
   currentNodeId: string | null;
   gate?: ReactNode;
+  onSelectNode?: (nodeKey: string) => void;
 }) {
   return (
     <ReactFlowProvider>

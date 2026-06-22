@@ -23,7 +23,7 @@ A **workflow** is a reusable graph definition; a **run** is one execution; a **n
 
 **Conditional branching:** a stage can emit `OUTCOME: <label>` in its output; the engine then follows an `on_<label>` edge if one exists (else falls back to `on_pass`/`on_fail`). This lets a node fan out to >2 paths (e.g. a triage stage → `on_implement_fix` / `on_further_research` / `on_write_report`).
 
-The default **"Software Delivery"** workflow is seeded on boot ([`schema.ts`](../src/lib/composer/schema.ts)): review → validate → research → hypothesise → plan **(HIL)** → build-tests → implement → test → documentation → PR **(HIL)** → unit/integration/acceptance → final-assessment → update-PR **(HIL)** → done, with `on_fail` loop-backs (test→implement, final-assessment→implement, plan→review-on-reject).
+The default **"Software Delivery"** workflow is seeded on boot ([`schema.ts`](../src/lib/composer/schema.ts)): review → validate → research → hypothesise → plan **(HIL)** → build-tests → implement → test → documentation → PR **(HIL)** → unit/integration/acceptance → final-assessment → update-PR **(HIL)** → done, with `on_fail` loop-backs (test→implement, final-assessment→implement, plan→review-on-reject) and `on_fail` **forward-recovery** on the best-effort enrichment stages (research→hypothesise, hypothesise→plan) so a transient search/LLM blip doesn't dead-end the run. The forward-recovery edges are back-filled idempotently into older seeded workflows ([`seed.ts`](../src/lib/composer/seed.ts)).
 
 ## Engine
 
@@ -31,7 +31,7 @@ The engine ([`engine.ts`](../src/lib/composer/engine.ts)) advances a run one ste
 
 1. **Start** the current node → `dispatchComposerNode` builds a stage prompt ([`stage-prompt.ts`](../src/lib/composer/stage-prompt.ts), kind-specific + accumulated context + any loop-back failure reasons) and submits an agent run.
 2. **Reconcile** finalizes the stage-run, parses a **verdict** (`VERDICT: PASS|FAIL` + reasons/suggestions, [`verdict.ts`](../src/lib/composer/verdict.ts)) for assessing stages, and merges output into the run's context.
-3. **Route**: auto gate → follow `on_pass`/`on_fail`; HIL gate → set `awaiting_approval` and wait. A `fail`/`reject` with no recovery edge fails the run; reaching a terminal node completes it. **Loop-backs** dispatch the target node with a fresh `attempt` and the prior failure injected into the prompt.
+3. **Route**: auto gate → follow `on_pass`/`on_fail`; HIL gate → set `awaiting_approval` and wait. A `fail`/`reject` with no recovery edge fails the run with a **readable error** (the stage label + its verdict reasons, e.g. `"Review failed: the goal is too vague"`) rather than an opaque code; reaching a terminal node completes it. **Loop-backs** dispatch the target node with a fresh `attempt` and the prior failure injected into the prompt.
 
 Single-flight (one stage in flight per run), idempotent run ids (`cn_<nodeRunId>`), and the scheduler ownership lease make it restart-safe and exactly-once.
 
@@ -39,7 +39,7 @@ Single-flight (one stage in flight per run), idempotent run ids (`cn_<nodeRunId>
 
 ## Building workflows (the node canvas)
 
-The **Build** tab on the Composer page is a drag-and-drop node editor ([`WorkflowCanvas.tsx`](../src/components/composer/WorkflowCanvas.tsx), [react-flow](https://reactflow.dev)): drag stage kinds from the palette onto the board, drag handle → handle to connect them, and click a node/edge to edit just its details in the inspector (kind, HIL gate, start/terminal, a `research` query or a `group`'s sub-workflow). The whole graph is saved atomically; node positions persist in `config._ui`, and [dagre](https://github.com/dagrejs/dagre) auto-lays-out workflows that have none. Pure converters in [`canvas-graph.ts`](../src/lib/composer/canvas-graph.ts) map the DB graph ↔ the canvas. The **Run** tab renders the same board in read-only "live" mode ([`WorkflowRunCanvas.tsx`](../src/components/composer/WorkflowRunCanvas.tsx)) — nodes light up by status, the active pathway electrifies, and HIL gates prompt in-canvas.
+The **Build** tab on the Composer page is a drag-and-drop node editor ([`WorkflowCanvas.tsx`](../src/components/composer/WorkflowCanvas.tsx), [react-flow](https://reactflow.dev)): drag stage kinds from the palette onto the board, drag handle → handle to connect them, and click a node/edge to edit just its details in the inspector (kind, HIL gate, start/terminal, a `research` query or a `group`'s sub-workflow). The whole graph is saved atomically; node positions persist in `config._ui`, and [dagre](https://github.com/dagrejs/dagre) auto-lays-out workflows that have none. Pure converters in [`canvas-graph.ts`](../src/lib/composer/canvas-graph.ts) map the DB graph ↔ the canvas. The **Run** tab renders the same board in read-only "live" mode ([`WorkflowRunCanvas.tsx`](../src/components/composer/WorkflowRunCanvas.tsx)) — nodes light up by status, the active pathway electrifies, and HIL gates prompt in-canvas. **Click any stage** for a side-panel ([`ComposerNodeRunDetail.tsx`](../src/components/composer/ComposerNodeRunDetail.tsx)) with its verdict (pass + reasons + suggestions), error, and raw output.
 
 > react-flow needs a measured viewport; both canvases are loaded client-only via `next/dynamic({ ssr: false })`.
 

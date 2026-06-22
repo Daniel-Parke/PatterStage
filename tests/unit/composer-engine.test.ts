@@ -122,6 +122,32 @@ describe("composer engine", () => {
     expect(getComposerRun(run.id)!.status).toBe("running");
   });
 
+  it("fails with a readable error (label + reasons) when a stage dead-ends", async () => {
+    const wf = createWorkflowFromDef({
+      key: "deadend-wf",
+      name: "Deadend",
+      nodes: [
+        { key: "a", label: "A", kind: "custom", gate: "auto" as const, isStart: true },
+        { key: "assess", label: "Assess", kind: "validate", gate: "auto" as const },
+        { key: "done", label: "Done", kind: "custom", gate: "auto" as const, isTerminal: true },
+      ],
+      edges: [
+        { from: "a", to: "assess", condition: "always" },
+        { from: "assess", to: "done", condition: "on_pass" },
+        // no on_fail edge from 'assess' → a FAIL dead-ends the run
+      ],
+    });
+    const run = createComposerRun({ workflowId: wf.id, input: "x" });
+    await advanceComposerRun(run.id); // dispatch 'a'
+    await finishStage(run.id, "did a"); // → 'assess'
+    await finishStage(run.id, "nope\nVERDICT: FAIL\nREASONS: the goal is too vague");
+
+    const failed = getComposerRun(run.id)!;
+    expect(failed.status).toBe("failed");
+    expect(failed.error).toBe("Assess failed: the goal is too vague");
+    expect(failed.error).not.toContain("no recovery path");
+  });
+
   it("resolveNext routes by approval then verdict", () => {
     const wf = createWorkflowFromDef(SMALL);
     const graph = getWorkflowGraph(wf.id)!;
