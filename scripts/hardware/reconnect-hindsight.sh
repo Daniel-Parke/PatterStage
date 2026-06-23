@@ -88,15 +88,15 @@ print('ok')
 fi
 
 # ── Sync to PatterStage SQLite ────────────────────────────
-PS_DB="$PS_DATA_DIR/control-hub.db"
+# Prefer the canonical patterstage.db; fall back to a legacy control-hub.db — mirrors getDbPath() in src/lib/paths.ts.
+PS_DB="$( [ ! -f "$PS_DATA_DIR/patterstage.db" ] && [ -f "$PS_DATA_DIR/control-hub.db" ] && echo "$PS_DATA_DIR/control-hub.db" || echo "$PS_DATA_DIR/patterstage.db" )"
 if [ -f "$PS_DB" ]; then
     info "Syncing to PatterStage SQLite..."
     if command -v python3 &>/dev/null; then
-        python3 -c "
+        PS_DB="$PS_DB" python3 -c "
 import os, sqlite3
-ps_dir = os.environ.get('PS_DATA_DIR', os.path.expanduser('~/control-hub/data'))
 hermes_home = os.environ.get('HERMES_HOME', os.path.expanduser('~/.hermes'))
-db_path = os.path.join(ps_dir, 'control-hub.db')
+db_path = os.environ['PS_DB']
 config_path = os.path.join(hermes_home, 'config.yaml')
 if os.path.exists(db_path) and os.path.exists(config_path):
     with open(config_path) as f:

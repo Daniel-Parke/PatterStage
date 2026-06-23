@@ -295,14 +295,14 @@ fi
 # ── Step 6b: Sync to PatterStage SQLite ─────────────────────
 step "Step 6b: Syncing to PatterStage SQLite"
 PS_DATA_DIR="${PS_DATA_DIR:-${CH_DATA_DIR:-${CONTROL_HUB_DATA_DIR:-$( [ ! -d "$HOME/patterstage/data" ] && [ -d "$HOME/control-hub/data" ] && echo "$HOME/control-hub/data" || echo "$HOME/patterstage/data" )}}}"
-PS_DB="$PS_DATA_DIR/control-hub.db"
+# Prefer the canonical patterstage.db; fall back to a legacy control-hub.db (un-migrated install) — mirrors getDbPath() in src/lib/paths.ts.
+PS_DB="$( [ ! -f "$PS_DATA_DIR/patterstage.db" ] && [ -f "$PS_DATA_DIR/control-hub.db" ] && echo "$PS_DATA_DIR/control-hub.db" || echo "$PS_DATA_DIR/patterstage.db" )"
 if [ -f "$PS_DB" ]; then
     if command -v python3 &>/dev/null; then
-        python3 -c "
+        PS_DB="$PS_DB" python3 -c "
 import json, os, sqlite3
-ps_dir = os.environ.get('PS_DATA_DIR', os.path.expanduser('~/control-hub/data'))
 hermes_home = os.environ.get('HERMES_HOME', os.path.expanduser('~/.hermes'))
-db_path = os.path.join(ps_dir, 'control-hub.db')
+db_path = os.environ['PS_DB']
 if os.path.exists(db_path):
     with open(os.path.join(hermes_home, 'config.yaml')) as f:
         config_yaml = f.read()

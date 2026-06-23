@@ -64,8 +64,12 @@ import SessionInsights from "@/components/session/SessionInsights";
 // ── Constants ────────────────────────────────────────────────
 
 const PAGE_SIZE = 50;
-const GROUP_BY_MISSION_STORAGE_KEY = "ch.sessions.groupByMission";
-const HIDE_API_NOISE_STORAGE_KEY = "ch.sessions.hideApiNoise";
+// Storage keys use the `ps.*` prefix; the legacy `ch.*` keys (pre-rename) are
+// migrated forward once via useStoredBool's legacyKey param so saved prefs survive.
+const GROUP_BY_MISSION_STORAGE_KEY = "ps.sessions.groupByMission";
+const GROUP_BY_MISSION_LEGACY_KEY = "ch.sessions.groupByMission";
+const HIDE_API_NOISE_STORAGE_KEY = "ps.sessions.hideApiNoise";
+const HIDE_API_NOISE_LEGACY_KEY = "ch.sessions.hideApiNoise";
 
 // ── Components ───────────────────────────────────────────────
 
@@ -220,8 +224,8 @@ export default function SessionsPage() {
     return () => clearTimeout(t);
   }, [search]);
   useEffect(() => { setPage(0); }, [debouncedSearch]);
-  const [groupByMission, setGroupByMission] = useStoredBool(GROUP_BY_MISSION_STORAGE_KEY, true);
-  const [hideApiNoise, setHideApiNoise] = useStoredBool(HIDE_API_NOISE_STORAGE_KEY, false);
+  const [groupByMission, setGroupByMission] = useStoredBool(GROUP_BY_MISSION_STORAGE_KEY, true, GROUP_BY_MISSION_LEGACY_KEY);
+  const [hideApiNoise, setHideApiNoise] = useStoredBool(HIDE_API_NOISE_STORAGE_KEY, false, HIDE_API_NOISE_LEGACY_KEY);
   // Tick state so the live indicator refreshes every second for active sessions
   const [, setNowTick] = useState(0);
   useInterval(() => setNowTick((n) => n + 1), { ms: 1000 });
