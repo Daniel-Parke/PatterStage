@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { RotateCcw, Database, Bot, ListTodo } from "lucide-react";
+import { RotateCcw, Database, Bot, ListTodo, Trash2 } from "lucide-react";
 
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
@@ -102,6 +102,45 @@ export default function ConfigSeedPage() {
   const reseedAll = useTwoStepConfirm({ autoDismissMs: 0 });
   const agentRestore = useTwoStepConfirm({ autoDismissMs: 4000 });
 
+  // ── Clean dev/test data ──
+  // First click scans (GET) and shows exactly what would be removed; second
+  // click confirms the delete. Conservative server-side pattern (see
+  // clean-dev-data.ts) — only "Testy"/"Test …"/"Untitled Story" names.
+  const cleanConfirm = useTwoStepConfirm({ autoDismissMs: 0 });
+  const [cleanPreview, setCleanPreview] = useState<{
+    workflows: { id: string; label: string }[];
+    stories: { id: string; label: string }[];
+    missions: { id: string; label: string }[];
+  } | null>(null);
+  const cleanTotal = cleanPreview
+    ? cleanPreview.workflows.length + cleanPreview.stories.length + cleanPreview.missions.length
+    : 0;
+
+  const armClean = async () => {
+    setError(null);
+    try {
+      const res = await apiFetch("/api/seed/clean");
+      setCleanPreview(res.data?.preview ?? null);
+      cleanConfirm.arm();
+    } catch (e) {
+      setErrorFromCaught(setError, e, "Failed to scan for test data");
+    }
+  };
+  const runClean = async () => {
+    setBusy("clean");
+    setError(null);
+    try {
+      await apiFetch("/api/seed/clean", { method: "POST" });
+      cleanConfirm.cancel();
+      setCleanPreview(null);
+      await load();
+    } catch (e) {
+      setErrorFromCaught(setError, e, "Clean failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <AppPageShell>
       <PageHeader
@@ -179,6 +218,63 @@ export default function ConfigSeedPage() {
                   Last run: {state.lastRun}
                 </p>
               ) : null}
+            </section>
+
+            <section className="border border-neon-orange/20 rounded-xl p-6 bg-neon-orange/5">
+              <h2 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                <Trash2 className="w-5 h-5 text-neon-orange" />
+                Clean dev / test data
+              </h2>
+              <p className="text-sm text-white/60 mb-4">
+                Removes obvious throwaway artifacts — workflows, stories, and missions whose names
+                start with <code className="text-white/50">Testy</code>, <code className="text-white/50">Test …</code>, or{" "}
+                <code className="text-white/50">Untitled Story</code>. Agent profiles are never touched.
+                {" "}First click scans; second click confirms.
+              </p>
+
+              {cleanConfirm.isArmed && cleanPreview ? (
+                cleanTotal === 0 ? (
+                  <p className="text-xs font-mono text-white/40 mb-3">No test data found — nothing to remove.</p>
+                ) : (
+                  <div className="text-xs font-mono text-white/50 mb-3 rounded-lg border border-white/10 bg-dark-900/50 p-3 space-y-1 max-h-48 overflow-auto">
+                    {[
+                      ["Workflows", cleanPreview.workflows],
+                      ["Stories", cleanPreview.stories],
+                      ["Missions", cleanPreview.missions],
+                    ].map(([label, items]) =>
+                      (items as { id: string; label: string }[]).length > 0 ? (
+                        <div key={label as string}>
+                          <span className="text-white/30 uppercase tracking-wider">{label as string}:</span>{" "}
+                          {(items as { id: string; label: string }[]).map((i) => i.label).join(", ")}
+                        </div>
+                      ) : null,
+                    )}
+                  </div>
+                )
+              ) : null}
+
+              <button
+                type="button"
+                disabled={isBusy}
+                onClick={
+                  cleanConfirm.isArmed
+                    ? (cleanTotal === 0 ? () => cleanConfirm.cancel() : () => void runClean())
+                    : () => void armClean()
+                }
+                className={
+                  cleanConfirm.isArmed && cleanTotal > 0
+                    ? "px-4 py-2 rounded-lg bg-red-500/20 text-red-300 border border-red-500/40 hover:bg-red-500/30 font-mono text-sm disabled:opacity-50"
+                    : "px-4 py-2 rounded-lg bg-neon-orange/15 text-neon-orange border border-neon-orange/30 hover:bg-neon-orange/25 font-mono text-sm disabled:opacity-50"
+                }
+              >
+                {busy === "clean"
+                  ? "Cleaning…"
+                  : cleanConfirm.isArmed
+                    ? cleanTotal === 0
+                      ? "Dismiss"
+                      : `Remove ${cleanTotal} item${cleanTotal === 1 ? "" : "s"}`
+                    : "Scan for test data"}
+              </button>
             </section>
 
             <section>
