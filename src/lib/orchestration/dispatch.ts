@@ -76,7 +76,10 @@ export async function dispatchMissionRun(
       sessionId: resolvedSession,
       status: handle.status,
     });
-    updateMission(missionId, { status: "dispatched", sessionId: resolvedSession });
+    // Clear any prior run's result so a re-dispatched mission doesn't display
+    // stale output (e.g. an old LLM monologue) while the new run is in flight —
+    // the reconcile path writes the fresh result on completion. (QA #9/#43)
+    updateMission(missionId, { status: "dispatched", sessionId: resolvedSession, result: null });
     recordEvent("mission.dispatched", {
       entityType: "mission",
       entityId: missionId,

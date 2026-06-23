@@ -47,6 +47,8 @@ export interface DashboardStats {
   missions: {
     total: number;
     queued: number;
+    /** status='queued' but not queued_for_run — saved drafts, kept distinct from the live queue. */
+    draft: number;
     dispatched: number;
     successful: number;
     failed: number;
@@ -141,15 +143,25 @@ function scalar(sql: string, ...params: unknown[]): number {
 
 export function getDashboardStats(): DashboardStats {
   // ── missions ──
+  // A status='queued' mission is only really IN the dispatch queue when
+  // queued_for_run=1; otherwise it's a saved draft. Split them so the Mission
+  // Mix "Queued" slice matches the header count (which excludes drafts) — the
+  // QA "phantom Queued" mismatch.
   const m = countBy("missions", "WHERE deleted_at IS NULL");
   const successful = num(m.successful);
   const failed = num(m.failed);
+  const dispatched = num(m.dispatched);
+  const draft = scalar(
+    "SELECT COUNT(*) AS v FROM missions WHERE deleted_at IS NULL AND status='queued' AND COALESCE(queued_for_run,0)=0",
+  );
+  const queued = Math.max(0, num(m.queued) - draft);
   const missions = {
-    queued: num(m.queued),
-    dispatched: num(m.dispatched),
+    queued,
+    draft,
+    dispatched,
     successful,
     failed,
-    total: num(m.queued) + num(m.dispatched) + successful + failed,
+    total: queued + draft + dispatched + successful + failed,
     successRate: successRate(successful, failed),
   };
 

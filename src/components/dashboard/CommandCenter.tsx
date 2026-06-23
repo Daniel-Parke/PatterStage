@@ -219,6 +219,7 @@ export default function CommandCenter() {
                 { label: "Failed", value: missions.failed, color: "pink" },
                 { label: "Dispatched", value: missions.dispatched, color: "yellow" },
                 { label: "Queued", value: missions.queued, color: "cyan" },
+                { label: "Draft", value: missions.draft, color: "purple" },
               ]}
               center={missions.total}
               centerSub="missions"
@@ -229,6 +230,7 @@ export default function CommandCenter() {
                 { label: "Failed", value: missions.failed, color: "pink" as NeonColor },
                 { label: "Dispatched", value: missions.dispatched, color: "yellow" as NeonColor },
                 { label: "Queued", value: missions.queued, color: "cyan" as NeonColor },
+                { label: "Draft", value: missions.draft, color: "purple" as NeonColor },
               ].map((s) => (
                 <div key={s.label} className="flex items-center gap-2">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ background: neon(s.color), boxShadow: `0 0 6px ${neonAlpha(s.color, 60)}` }} />

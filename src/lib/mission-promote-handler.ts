@@ -116,7 +116,9 @@ export async function promoteMission(
     updates.queuedForRun = true;
   }
 
-  const mission = updateMission(input.missionId, updates);
+  // Re-activating a mission clears any stale result from a previous run so the
+  // queued/dispatched mission doesn't surface old output. (QA #9/#43)
+  const mission = updateMission(input.missionId, { ...updates, result: null });
   if (!mission) {
     return { ok: false, status: 404, error: "Mission not found" };
   }

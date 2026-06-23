@@ -6,6 +6,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 
 import { db, inTransaction, now } from "./db";
 import { PATHS } from "./paths";
+import { listCatalogTemplates } from "./catalog-template-repository";
 
 export interface MissionCategory {
   id: string;
@@ -119,29 +120,42 @@ export function countMissionsInCategory(categoryId: string): number {
 }
 
 export function countTemplatesInCategory(categoryId: string): number {
-  const dir = PATHS.templates;
-  if (!existsSync(dir)) return 0;
   let count = 0;
-  for (const file of readdirSync(dir)) {
-    if (!file.endsWith(".json")) continue;
-    try {
-      const raw = JSON.parse(
-        readFileSync(dir + "/" + file, "utf-8"),
-      ) as Record<string, unknown>;
-      const cid = raw.categoryId ?? raw.category_id;
-      if (typeof cid === "string" && cid === categoryId) {
-        count += 1;
-        continue;
+
+  // Built-in catalog templates live in the DB. /api/templates resolves each to
+  // `categoryId ?? "general"` — count them the SAME way so the categories API
+  // agrees with the dashboard breakdown. (Previously this only scanned disk
+  // custom templates, so every built-in template was invisible to the count —
+  // the "general: 1, everything else: 0" mismatch the QA flagged.)
+  for (const t of listCatalogTemplates()) {
+    const cid = t.categoryId ?? "general";
+    if (cid === categoryId) count += 1;
+  }
+
+  // Custom templates are stored as JSON on disk.
+  const dir = PATHS.templates;
+  if (existsSync(dir)) {
+    for (const file of readdirSync(dir)) {
+      if (!file.endsWith(".json")) continue;
+      try {
+        const raw = JSON.parse(
+          readFileSync(dir + "/" + file, "utf-8"),
+        ) as Record<string, unknown>;
+        const cid = raw.categoryId ?? raw.category_id;
+        if (typeof cid === "string" && cid === categoryId) {
+          count += 1;
+          continue;
+        }
+        const legacy = raw.category;
+        if (
+          typeof legacy === "string" &&
+          slugifyCategoryName(legacy) === categoryId
+        ) {
+          count += 1;
+        }
+      } catch {
+        // skip invalid files
       }
-      const legacy = raw.category;
-      if (
-        typeof legacy === "string" &&
-        slugifyCategoryName(legacy) === categoryId
-      ) {
-        count += 1;
-      }
-    } catch {
-      // skip invalid files
     }
   }
   return count;

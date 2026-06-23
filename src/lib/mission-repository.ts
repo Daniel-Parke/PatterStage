@@ -185,7 +185,7 @@ export function updateMission(
   updates: {
     name?: string;
     status?: MissionStatus;
-    result?: string;
+    result?: string | null;
     sessionId?: string;
     prompt?: string;
     localDirs?: LocalDirEntry[] | string[];
