@@ -298,12 +298,20 @@ function CreateStoryPage() {
           config: { title: finalTitle, premise, genre: genres.join(", "), era, setting, mood: moods, pov, length, characters, wordCountRange },
         }),
       });
-      const d = await res.json();
-      if (d.error) throw new Error(d.error);
+      const d = await res.json().catch(() => null);
+      // Surface EVERY failure mode so "Begin Writing" can never silently do
+      // nothing: an HTTP error, an error payload, or a success shape missing
+      // the new story id all now raise a visible error instead of navigating
+      // to /story-weaver/undefined.
+      if (!res.ok || !d || d.error) {
+        throw new Error((d && d.error) || `Story creation failed (HTTP ${res.status})`);
+      }
+      const newId = d.data?.id;
+      if (!newId) throw new Error("Story was created but no id was returned");
 
       localStorage.removeItem(DRAFT_KEY);
       setHasDraft(false);
-      setGenStoryId(d.data.id);
+      setGenStoryId(newId);
       setGenDone(true);
     } catch (err) {
       setGenerating(false);
