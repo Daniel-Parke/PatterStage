@@ -152,7 +152,7 @@ export default function ModelsPage() {
         </p>
         {error && <ErrorBanner message={error} />}
 
-        {drift && <ModelsDriftBanner drift={drift} onSyncNow={handleRefresh} />}
+        {drift && <ModelsDriftBanner drift={drift} onSyncNow={handleRefresh} syncing={refreshing} />}
 
         {loading ? (
           <LoadingSpinner text="Loading models..." />

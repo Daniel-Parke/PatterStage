@@ -209,7 +209,7 @@ export default function CommandCenter() {
         </Card>
 
         <Card accent="purple">
-          <CardHeader icon={Award} label="Mission mix" />
+          <CardHeader icon={Award} label="Mission mix · all-time" />
           <div className="flex items-center gap-4">
             <Donut
               size={120}

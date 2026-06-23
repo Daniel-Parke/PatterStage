@@ -74,6 +74,7 @@ export default function ReaderSettings({ settings, onChange }: {
       {/* Toggle Button */}
       <button onClick={() => setOpen(!open)}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-mono text-white/50 hover:text-white/70 hover:bg-white/5 transition-colors"
+        aria-label="Reading settings (font, size, theme)"
         title="Reading settings">
         <span className="text-sm">Aa</span>
         <Settings className="w-3.5 h-3.5" />

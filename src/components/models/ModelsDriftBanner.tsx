@@ -7,11 +7,15 @@ import type { SyncDrift } from "./types";
 interface ModelsDriftBannerProps {
   drift: SyncDrift;
   onSyncNow: () => void;
+  /** True while a sync is in flight — shows a persistent busy state on the button
+   *  (the success toast is transient, so this is the non-transient signal). */
+  syncing?: boolean;
 }
 
 export default function ModelsDriftBanner({
   drift,
   onSyncNow,
+  syncing = false,
 }: ModelsDriftBannerProps) {
   if (!drift.hasDrift) return null;
 
@@ -30,10 +34,11 @@ export default function ModelsDriftBanner({
       </div>
       <button
         type="button"
+        disabled={syncing}
         onClick={() => void onSyncNow()}
-        className="px-3 py-1 text-[10px] font-mono text-neon-orange/70 hover:text-neon-orange bg-neon-orange/10 hover:bg-neon-orange/20 rounded-lg transition-colors"
+        className="px-3 py-1 text-[10px] font-mono text-neon-orange/70 hover:text-neon-orange bg-neon-orange/10 hover:bg-neon-orange/20 rounded-lg transition-colors disabled:opacity-50"
       >
-        Sync Now
+        {syncing ? "Syncing…" : "Sync Now"}
       </button>
     </div>
   );

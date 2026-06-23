@@ -592,7 +592,7 @@ export default function BenchmarksPage() {
                       Lv{e.experience.level.level} · {e.experience.level.title}
                     </span>
                   ) : null}
-                  {e.rating?.bestStat ? (
+                  {e.rating?.bestStat?.stat ? (
                     <span className="text-[11px] text-white/30">best: {e.rating.bestStat.stat}</span>
                   ) : null}
                 </span>

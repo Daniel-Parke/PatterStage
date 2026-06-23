@@ -424,7 +424,9 @@ export default function BehaviourPage() {
                     <Users
                       className={`w-4 h-4 ${profile.isDefault ? "text-cyan-400" : "text-purple-400"}`}
                     />
-                    <span className="font-semibold text-white text-sm truncate">{profile.name}</span>
+                    <span className="font-semibold text-white text-sm truncate">
+                      {profile.isDefault ? profile.name.replace(/\s*\(local default\)\s*$/i, "") : profile.name}
+                    </span>
                     {profile.isDefault && <Badge color="cyan" size="sm">Local default</Badge>}
                     {profile.syncStatus === "drift" && (
                       <Badge color="orange" size="sm">Drift</Badge>

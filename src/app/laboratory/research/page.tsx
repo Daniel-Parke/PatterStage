@@ -185,9 +185,14 @@ export default function DeepResearchPage() {
               <Save className="h-4 w-4" /> Save
             </Button>
           </div>
-          <Button variant="primary" color="cyan" loading={submitting} onClick={() => void start()} disabled={query.trim().length < 3}>
-            {!submitting ? <Send className="h-4 w-4" /> : null} Start research
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            <Button variant="primary" color="cyan" loading={submitting} onClick={() => void start()} disabled={query.trim().length < 3}>
+              {!submitting ? <Send className="h-4 w-4" /> : null} Start research
+            </Button>
+            {query.trim().length < 3 ? (
+              <p className="text-[11px] text-white/35">Enter a research question (≥ 3 characters) to start.</p>
+            ) : null}
+          </div>
         </div>
       </Card>
 
