@@ -21,14 +21,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         id: checkout1
         continue-on-error: true
         with:
           token: ${{ github.token }}
       - name: Checkout repository (retry)
         if: steps.checkout1.outcome != 'success'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           token: ${{ github.token }}
       - name: Hermes profile helpers + dotenv (isolated /tmp HERMES_HOME)
@@ -38,14 +38,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         id: checkout1
         continue-on-error: true
         with:
           token: ${{ github.token }}
       - name: Checkout repository (retry)
         if: steps.checkout1.outcome != 'success'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           token: ${{ github.token }}
       - uses: actions/setup-node@v5
@@ -80,14 +80,14 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         id: checkout1
         continue-on-error: true
         with:
           token: ${{ github.token }}
       - name: Checkout repository (retry)
         if: steps.checkout1.outcome != 'success'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           token: ${{ github.token }}
       - uses: actions/setup-node@v5
@@ -163,14 +163,14 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         id: checkout1
         continue-on-error: true
         with:
           token: ${{ github.token }}
       - name: Checkout repository (retry)
         if: steps.checkout1.outcome != 'success'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           token: ${{ github.token }}
       - uses: actions/setup-node@v5
@@ -183,14 +183,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         id: checkout1
         continue-on-error: true
         with:
           token: ${{ github.token }}
       - name: Checkout repository (retry)
         if: steps.checkout1.outcome != 'success'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           token: ${{ github.token }}
       - uses: actions/setup-node@v5
@@ -225,14 +225,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         id: checkout1
         continue-on-error: true
         with:
           token: ${{ github.token }}
       - name: Checkout repository (retry)
         if: steps.checkout1.outcome != 'success'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           token: ${{ github.token }}
       - name: Build production Docker image
@@ -254,7 +254,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           token: ${{ github.token }}
       - uses: actions/setup-node@v5
