@@ -82,7 +82,7 @@
 
     "better-sqlite3": "^12.11.1",
 
-    "js-yaml": "^4.2.0",
+    "js-yaml": "^5.1.0",
 
     "lucide-react": "^1.20.0",
 
