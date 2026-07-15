@@ -48,7 +48,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           token: ${{ github.token }}
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: npm
@@ -90,7 +90,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           token: ${{ github.token }}
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: npm
@@ -173,7 +173,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           token: ${{ github.token }}
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: "20"
       - name: Cross-platform operational smoke
@@ -193,7 +193,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           token: ${{ github.token }}
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: npm
@@ -257,7 +257,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           token: ${{ github.token }}
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: "20"
       - name: Real-Hermes integration (contract + full-stack smoke)
