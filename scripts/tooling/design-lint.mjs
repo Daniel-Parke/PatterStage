@@ -92,6 +92,21 @@ const RULES = [
     pattern: /readAuthToken|tokenMatches|ps_session/,
   },
   {
+    id: "module-registry-stays-pure",
+    law: "src/lib/modules/ is imported by the e2e route matrix (plain node) as well as the sidebar (client React). It must not pull in React, lucide, next or the database, or the route matrix stops loading and the boundary it defines becomes unenforceable (ADR-0005).",
+    files: (f) => f.startsWith("src/lib/modules/"),
+    pattern:
+      /^\s*import\s[^;]*\sfrom\s+["'](?:react|react-dom|lucide-react|next(?:\/[\w-]+)?|better-sqlite3|@\/lib\/db)["']/,
+  },
+  {
+    id: "core-imports-no-module",
+    law: "Core may not import a module; modules import core (ADR-0005). A boundary an agent can cross without a red build does not exist.",
+    files: (f) =>
+      (f.startsWith("src/lib/") || f.startsWith("src/components/layout/")) &&
+      !f.startsWith("src/lib/modules/"),
+    pattern: /from\s+["']@\/modules\//,
+  },
+  {
     id: "no-em-dash",
     law: "Voice law: no em-dashes. A hard E004 error in the EOS check, and these files are headed for a compiled seed.",
     files: (f) => f.startsWith("docs/") && f.endsWith(".md"),
