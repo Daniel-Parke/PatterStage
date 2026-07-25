@@ -77,7 +77,7 @@ const RULES = [
       !f.startsWith("src/lib/runtime/") &&
       !f.startsWith("src/lib/frameworks/") &&
       !/src\/lib\/hermes-[a-z-]+\.ts$/.test(f),
-    pattern: /getActiveHermesPaths|HERMES_HOME|\.hermes\//,
+    pattern: /getActiveHermesPaths|getAgentLlmEndpoints|HERMES_HOME|\.hermes\//,
   },
   {
     id: "no-unsanitised-html",

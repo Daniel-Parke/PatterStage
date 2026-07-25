@@ -12,7 +12,7 @@ import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, ok } from "@/lib/api-response";
-import { getAgentLlmEndpoints } from "@/lib/hermes-agent-runtime";
+import { getAgentGateway } from "@/lib/runtime/gateway";
 import { CHAT_DEFAULT_MODEL } from "@/types/chat";
 import { recordEvent } from "@/lib/analytics/record-event";
 
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       entityType: "chat",
       metadata: { model: model || CHAT_DEFAULT_MODEL },
     });
-    const { apiUrl } = getAgentLlmEndpoints();
+    const { chatCompletionsUrl: apiUrl } = getAgentGateway();
 
     const gatewayBody = {
       model: model || CHAT_DEFAULT_MODEL,

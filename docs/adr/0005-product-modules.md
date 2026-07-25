@@ -152,11 +152,29 @@ Hermes at all, and it splits into two very different halves:
    Measured: `hermes-agent-runtime` core importers 14 → 6, and the
    `hermes-outside-adapter` lint 45 → 26.
 
-   The six that remain are honest: `behavior-files` (needs eight Hermes-specific
-   file paths), `ConfigSync` (SOUL.md), `session-title-server`
-   (`getActiveHermesHome`), and three that want `getAgentLlmEndpoints`: gateway
-   URLs, which belong behind the runtime port rather than the workspace one, and
-   are the next slice.
+   `src/lib/runtime/gateway.ts` finished the job. Four sites wanted
+   `getAgentLlmEndpoints`, and not one of them used any Hermes knowledge beyond
+   the URL it returned: an OpenAI-compatible chat endpoint is the most
+   framework-neutral thing in the system, and it counted against the claim
+   purely because of which file the constant lived in. `AgentGateway` is two
+   fields, `baseUrl` and `chatCompletionsUrl`. `endpoint-registry` keeps its
+   per-profile routing (including the ephemeral benchmark gateways) layered on
+   top.
+
+   That is the port complete: **what the agent does** (`AgentRuntime`), **where
+   its files are** (`AgentWorkspace`), **where it answers** (`AgentGateway`).
+
+   Measured: `hermes-agent-runtime` core importers 14 → **5**, and two of those
+   five ARE the port files, which are meant to know. Genuine core coupling is
+   **three** files, and each is honest: `behavior-files` (needs eight
+   Hermes-specific file paths), `ConfigSync` (SOUL.md), `session-title-server`
+   (`getActiveHermesHome`). `hermes-outside-adapter` in design-lint fell 45 → 26
+   and now also fails on `getAgentLlmEndpoints`, so the new seam is a red build
+   rather than a convention.
+
+   What remains before the directory move is not path or gateway coupling but
+   the Hermes-shaped surfaces themselves (config sync, profiles, toolsets),
+   which move with the module rather than ahead of it.
 
 Ordering: (1) first, because it is nearly free and shrinks the problem; then (2)
 site by site, watching `hermes-outside-adapter` in design-lint fall from its

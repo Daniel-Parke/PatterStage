@@ -2,17 +2,16 @@
 // gateway-client.ts — Shared Hermes gateway HTTP helpers
 // ═══════════════════════════════════════════════════════════════
 
-import { getAgentLlmEndpoints } from "./hermes-agent-runtime";
+import { getAgentGateway } from "./runtime/gateway";
 import { getGatewayKey } from "./runtime/secrets";
 
 /**
- * Build a full URL under the configured Hermes gateway base.
+ * Build a full URL under the configured agent gateway base.
  */
 export function gatewayUrl(path: string): string {
-  const { gatewayBase } = getAgentLlmEndpoints();
-  const base = gatewayBase.replace(/\/$/, "");
+  const { baseUrl } = getAgentGateway();
   const suffix = path.startsWith("/") ? path : `/${path}`;
-  return `${base}${suffix}`;
+  return `${baseUrl}${suffix}`;
 }
 
 /**

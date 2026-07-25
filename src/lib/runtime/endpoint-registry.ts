@@ -3,14 +3,14 @@
 //
 // A Hermes gateway serves exactly one profile. This registry is the ONE place
 // that maps a profile name to a concrete {baseUrl, apiKey}. Most profiles
-// resolve to the single configured default gateway (env / getAgentLlmEndpoints).
+// resolve to the single configured default gateway (getAgentGateway, in gateway.ts).
 // EXCEPTION: ephemeral benchmark profiles (__bench_<runId>) get their own
 // short-lived gateway spawned by the benchmark gateway manager on a dedicated
 // port/key — so an agentic benchmark actually exercises the toggled config. When
 // such a gateway is live for the profile, route there; otherwise fall back.
 // ═══════════════════════════════════════════════════════════════
 
-import { getAgentLlmEndpoints } from "@/lib/hermes-agent-runtime";
+import { getAgentGateway } from "./gateway";
 import { getGatewayKey } from "./secrets";
 import { getBenchGatewayEndpoint } from "./gateway-manager";
 
@@ -35,7 +35,6 @@ export function resolveEndpoint(profileName?: string): RuntimeEndpoint {
     return { profileName: name, baseUrl: bench.baseUrl.replace(/\/+$/, ""), apiKey: bench.apiKey };
   }
 
-  const { gatewayBase } = getAgentLlmEndpoints();
-  const baseUrl = gatewayBase.replace(/\/+$/, "");
+  const { baseUrl } = getAgentGateway();
   return { profileName: name, baseUrl, apiKey: getGatewayKey(name) };
 }

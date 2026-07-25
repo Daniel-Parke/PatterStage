@@ -3,7 +3,7 @@
 // agent-agnostic LLM calls made by PatterStage.
 // ═══════════════════════════════════════════════════════════════
 
-import { getAgentLlmEndpoints } from "./hermes-agent-runtime";
+import { getAgentGateway } from "./runtime/gateway";
 import { getModelWithKey, type ModelWithKey } from "./models-repository";
 import { getGatewayKey } from "./runtime/secrets";
 import { buildDirectRequest, inferApiStyle, type ApiStyle } from "./llm-endpoint";
@@ -67,11 +67,11 @@ class GatewayUnavailableError extends Error {
  * with a descriptive message if the gateway is not responding.
  */
 async function probeGatewayHealth(): Promise<void> {
-  const { gatewayBase } = getAgentLlmEndpoints();
+  const { baseUrl } = getAgentGateway();
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
-    const resp = await fetch(gatewayBase + "/health", {
+    const resp = await fetch(baseUrl + "/health", {
       signal: controller.signal,
     });
     clearTimeout(timeout);
@@ -143,7 +143,7 @@ export async function callLLM(
   const gatewayModel =
     resolved?.modelId ?? optModel ?? "hermes";
 
-  const { apiUrl } = getAgentLlmEndpoints();
+  const { chatCompletionsUrl: apiUrl } = getAgentGateway();
 
   await probeGatewayHealth();
   return callGateway({
