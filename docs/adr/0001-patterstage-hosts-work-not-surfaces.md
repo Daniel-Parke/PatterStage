@@ -2,12 +2,12 @@
 summary: PatterStage is the estate's operator console; it hosts other products' work, never their user interfaces
 type: decision
 tags: [arch, product]
-status: proposed
+status: accepted
 ---
 
 # ADR-0001 · PatterStage hosts work, not surfaces
 
-**Status:** proposed — needs Daniel's recorded approval.
+**Status:** accepted by Daniel, 2026-07-25.
 **Date:** 2026-07-25.
 
 ## Context

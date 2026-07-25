@@ -2,12 +2,12 @@
 summary: PatterStage keeps its run engine; the estate's shared asset is the contract, not the implementation
 type: decision
 tags: [arch, delivery]
-status: proposed
+status: accepted
 ---
 
 # ADR-0002 · Run-engine ownership
 
-**Status:** proposed — needs Daniel's recorded approval. Supersedes
+**Status:** accepted by Daniel, 2026-07-25. Supersedes
 `PatterTech_EOS/estate/repos.yaml` lines 88-90 on adoption.
 **Date:** 2026-07-25.
 

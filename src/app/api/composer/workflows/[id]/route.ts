@@ -16,6 +16,7 @@ import { ensureDb } from "@/lib/db";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import {
+  WorkflowHistoryWouldBeLost,
   deleteWorkflow,
   getWorkflowGraph,
   replaceWorkflowGraph,
@@ -55,13 +56,28 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
   const parsed = await parseAndValidateJsonBody(request, workflowDefSchema);
   if (parsed instanceof NextResponse) return parsed;
 
+  // Structural saves destroy completed run history (node-runs reference nodes
+  // with no cascade). The repository refuses unless the caller has said so.
+  const discardRunHistory = request.nextUrl.searchParams.get("discardRunHistory") === "1";
+
   try {
     ensureDb();
     if (!getWorkflowGraph(id)) return notFound("Workflow not found");
     if (workflowHasActiveRuns(id)) return badRequest(ACTIVE_EDIT_MSG);
-    const workflow = replaceWorkflowGraph(id, parsed);
+    const workflow = replaceWorkflowGraph(id, parsed, { discardRunHistory });
     return ok({ workflow });
   } catch (error) {
+    if (error instanceof WorkflowHistoryWouldBeLost) {
+      // 409: the client can resolve this by confirming, so it is not a 400.
+      return NextResponse.json(
+        {
+          error: error.message,
+          runCount: error.runCount,
+          confirmWith: "?discardRunHistory=1",
+        },
+        { status: 409 },
+      );
+    }
     return serverErrorFromCatch("PUT /api/composer/workflows/[id]", `id=${id}`, error, "Failed to save workflow");
   }
 }

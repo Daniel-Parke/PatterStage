@@ -245,10 +245,32 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
     try {
       const body = canvasToWorkflowDef(name, state);
       const isNew = selectedWorkflowId === NEW;
-      const res = await safeApiCall<{ data?: { workflow?: { id: string } } }>(
-        isNew ? "/api/composer/workflows" : `/api/composer/workflows/${selectedWorkflowId}`,
+      const putUrl = (confirmed: boolean) =>
+        `/api/composer/workflows/${selectedWorkflowId}${confirmed ? "?discardRunHistory=1" : ""}`;
+
+      let res = await safeApiCall<{ data?: { workflow?: { id: string } } }>(
+        isNew ? "/api/composer/workflows" : putUrl(false),
         { method: isNew ? "POST" : "PUT", body },
       );
+
+      // 409: saving would delete this workflow's completed run history. That used
+      // to happen silently on every structural edit, including a rename. Ask.
+      if (!res.ok && res.status === 409) {
+        const runCount = (res.body as { runCount?: number } | undefined)?.runCount ?? 0;
+        const proceed = window.confirm(
+          `Saving this workflow will permanently delete ${runCount} completed run${runCount === 1 ? "" : "s"}, ` +
+            `including their stage outputs and approvals.\n\nSave anyway?`,
+        );
+        if (!proceed) {
+          setMessage("Not saved — run history kept.");
+          return;
+        }
+        res = await safeApiCall<{ data?: { workflow?: { id: string } } }>(putUrl(true), {
+          method: "PUT",
+          body,
+        });
+      }
+
       if (res.ok) {
         setMessage("Saved.");
         onSaved();

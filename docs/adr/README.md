@@ -9,9 +9,11 @@ itself. Do not build on a proposed ADR without saying that is what you are doing
 
 | ADR | Decision | Status |
 |-----|----------|--------|
-| [0001](0001-patterstage-hosts-work-not-surfaces.md) | PatterStage hosts work, not surfaces | proposed |
-| [0002](0002-run-engine-ownership.md) | PatterStage keeps its run engine; the shared asset is the contract | proposed |
-| [0003](0003-shared-kit-distribution.md) | One shared repo for agnostic layers; vendor the design kit by copy-in first | proposed |
+| [0001](0001-patterstage-hosts-work-not-surfaces.md) | PatterStage hosts work, not surfaces | accepted |
+| [0002](0002-run-engine-ownership.md) | PatterStage keeps its run engine; the shared asset is the contract | accepted |
+| [0003](0003-shared-kit-distribution.md) | One shared repo for agnostic layers; vendor the design kit by copy-in first | accepted |
+| [0004](0004-brain-and-body.md) | The LLM is the Brain, the framework is the Body; progression measures the Body | accepted |
+| [0005](0005-product-modules.md) | Product surfaces plug in through one ProductModule seam; Rec Room proves it | accepted |
 
 ## Relationship to the EOS
 

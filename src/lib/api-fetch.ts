@@ -60,10 +60,28 @@ export async function apiFetch<T = any>(
       typeof json.cronPushError === "string" && json.cronPushError.trim()
         ? json.cronPushError
         : null;
-    throw new Error(push ? `${base}: ${push}` : base);
+    throw new ApiError(push ? `${base}: ${push}` : base, res.status, json);
   }
 
   return json;
+}
+
+/**
+ * A non-2xx response, carrying the status and the parsed body.
+ *
+ * Callers used to get only a message string, which is enough to show a toast but
+ * not enough to *act* on a status. A 409 that a user can resolve by confirming
+ * is not the same as a 500, and telling them apart required parsing the prose.
+ */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly body: unknown,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
 }
 
 /**
@@ -80,6 +98,10 @@ export type SafeApiCallResult<T = unknown> = {
   ok: boolean;
   data?: T;
   error?: string;
+  /** HTTP status when the call reached the server. Absent on a network failure. */
+  status?: number;
+  /** Parsed error body, so a caller can read fields the message does not carry. */
+  body?: unknown;
 };
 
 export async function safeApiCall<T = unknown>(
@@ -93,6 +115,16 @@ export async function safeApiCall<T = unknown>(
     });
     return { ok: true, data: data as T };
   } catch (e) {
+    if (e instanceof ApiError) {
+      // messageFromError, not e.message: a server that answers `{ error: "" }`
+      // must still produce a non-empty toast.
+      return {
+        ok: false,
+        error: messageFromError(e, "Request failed"),
+        status: e.status,
+        body: e.body,
+      };
+    }
     return { ok: false, error: messageFromError(e, "Request failed") };
   }
 }

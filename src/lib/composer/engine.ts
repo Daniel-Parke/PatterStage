@@ -394,7 +394,14 @@ export async function advanceComposerRun(composerRunId: string): Promise<void> {
     return;
   }
 
-  if (node.gate === "hil") {
+  // A stage that FAILED is not eligible for approval. The gate branch used to run
+  // first, so `resolveNext` saw an approval and routed `on_approve` — meaning a
+  // human clicking Accept on a crashed stage could carry the run to "completed"
+  // with no artifact behind it. A failed stage routes on_fail whatever the gate
+  // says; there is nothing for a human to approve.
+  const stageFailed = current.status === "failed" || current.verdict?.pass === false;
+
+  if (node.gate === "hil" && !stageFailed) {
     const approval = approvalSince(composerRunId, node.id, current.completedAt ?? current.createdAt);
     if (!approval) {
       updateComposerRun(composerRunId, { status: "awaiting_approval" });

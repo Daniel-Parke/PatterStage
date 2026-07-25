@@ -7,6 +7,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { VisitedPage } from "./types";
+import { checkUrlSafe } from "./url-guard";
 
 function htmlToText(html: string): string {
   return html
@@ -27,15 +28,45 @@ function htmlToText(html: string): string {
     .trim();
 }
 
+/** Redirect hops to follow. Each one is re-checked against the SSRF guard. */
+const MAX_REDIRECTS = 4;
+
 export async function visitPage(url: string, maxChars = 6000): Promise<VisitedPage | null> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12_000);
   try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; PatterStage/1.0)" },
-    });
-    if (!res.ok) return null;
+    // SSRF guard. These URLs come from search-engine HTML, so they are
+    // attacker-influenceable; without this the server would fetch the Hermes
+    // gateway on localhost, cloud metadata, or the operator's LAN, and hand the
+    // body to an LLM that writes it into a report.
+    let current = url;
+    let res: Response | null = null;
+
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      const verdict = await checkUrlSafe(current);
+      if (!verdict.ok) return null;
+
+      // Manual redirects: a public URL that 302s to 127.0.0.1 would otherwise
+      // walk straight past the check above.
+      res = await fetch(verdict.url, {
+        signal: controller.signal,
+        redirect: "manual",
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; PatterStage/1.0)" },
+      });
+
+      // Positively identify a redirect rather than "not a success", so a
+      // response with an unexpected/absent status is treated as terminal
+      // instead of sending us round the loop chasing a Location header.
+      const isRedirect = res.status >= 300 && res.status < 400;
+      if (!isRedirect) break;
+
+      const location = res.headers.get("location");
+      if (!location) return null;
+      current = new URL(location, verdict.url).toString();
+      res = null;
+    }
+
+    if (!res || !res.ok) return null;
     const contentType = res.headers.get("content-type") ?? "";
     if (!contentType.includes("text/html") && !contentType.includes("text/plain")) return null;
 

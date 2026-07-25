@@ -6,6 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type { SearchProvider, SearchResult } from "./types";
+import { checkUrlShape } from "./url-guard";
 
 const ENDPOINT = "https://html.duckduckgo.com/html/";
 
@@ -55,6 +56,11 @@ export const duckduckgoProvider: SearchProvider = {
       while ((m = re.exec(html)) !== null && results.length < limit) {
         const url = unwrapHref(m[1]);
         if (!url.startsWith("http")) continue;
+        // Drop internal/loopback targets at PARSE time, not just at fetch time.
+        // The `uddg=` parameter is redirect data we do not control, and filtering
+        // only when visiting would still surface e.g. http://127.0.0.1:8642 as a
+        // numbered citation in the report's Sources panel.
+        if (!checkUrlShape(url).ok) continue;
         const title = stripTags(m[2]);
         const after = html.slice(m.index, m.index + 2000);
         const snippetM = after.match(/class="result__snippet"[^>]*>([\s\S]*?)<\/a>/);

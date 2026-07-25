@@ -2,12 +2,12 @@
 summary: One shared repo for the estate's agnostic layers; PatterStage vendors the design kit by copy-in first
 type: decision
 tags: [arch, web, brand]
-status: proposed
+status: accepted
 ---
 
 # ADR-0003 · Shared kit distribution
 
-**Status:** proposed — needs Daniel's recorded approval. Part 2 is an estate-level
+**Status:** accepted by Daniel, 2026-07-25. Part 2 is an estate-level
 change and needs its own EOS decision before it is executed.
 **Date:** 2026-07-25.
 

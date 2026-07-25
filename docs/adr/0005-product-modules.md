@@ -1,0 +1,81 @@
+---
+summary: Product surfaces plug in through one ProductModule seam; Rec Room is the first tenant and the proof
+type: decision
+tags: [arch, product]
+status: accepted
+---
+
+# ADR-0005 · Product modules
+
+**Status:** accepted by Daniel, 2026-07-25.
+**Date:** 2026-07-25.
+
+## Context
+
+ADR-0001 says PatterStage hosts other products' *work*. It does not yet say how
+anything plugs in, and today the answer is: it does not. Adding a surface means
+editing a hardcoded 165-line array in `src/components/layout/sidebar-config.ts`,
+mirroring it by hand into `tests/e2e/app-routes.ts`, hand-writing a migration
+applier into a 26-call chain in `db.ts`, and creating an app-router subtree. The
+2026-07 review scored readiness to host a second product at 3/10, and named the
+absence of an extension point as the blocker.
+
+Rec Room is the right place to fix this. The owner's intent is that it is "a place
+to pursue creative endeavours while your Agent is working", with Story Weaver the
+first of many applications. That makes it a genuine second product inside the
+repo, owned by us, and safe to break, which is exactly what a seam needs in order to
+be proven rather than asserted. A seam with one tenant is scaffolding; a seam that
+carries a real product is a contract.
+
+## Decision
+
+**One `ProductModule` contract. Every surface is a module, including the ones that
+exist today.**
+
+A module declares:
+
+| Field | Purpose |
+|---|---|
+| `id`, `title`, `icon`, `accent` | Identity |
+| `nav` | Its sidebar entries. The sidebar is **derived** from the registry, and so is the e2e route matrix; the hand-mirrored copy goes. |
+| `routes` | Its app-router segment |
+| `jobKinds` | Work it can register with the scheduler, per ADR-0001 |
+| `migrations` | Its own schema, applied by the shared runner rather than a bespoke applier |
+| `health` | An optional probe surfaced on the console |
+| `enabled` | A feature flag, so a module can ship dark |
+
+Rules:
+
+1. **The core never imports a module.** Modules import core. This is enforced by a
+   lint rule, not by convention, because the review found that a boundary an agent
+   can cross without a red build does not exist.
+2. **A module owns its own tables**, prefixed, and never reads another module's.
+3. **Cross-module communication goes through the job model or MCP**, never a direct
+   import. This is the same rule the estate applies to PatterStack.
+4. `hermes`, `rec-room` and `laboratory` become modules. The console verbs
+   (found, commission, gate, watch) stay in core.
+
+Rec Room is built first and is the acceptance test: if adding Story Weaver's
+successor does not require touching core, the seam works.
+
+## Consequences
+
+- The sidebar, the e2e route matrix and the migration chain all become derived
+  from one registry, removing three sources of hand-mirrored drift the review
+  found.
+- Story Weaver is rebuilt on the seam rather than patched: its dead Characters and
+  Themes pages, its unthrottled generation loop and its forked design system are
+  fixed in the rebuild rather than carried across.
+- The Hermes surface becoming a module is what finally makes the
+  framework-agnostic claim testable: a boundary lint can then assert that nothing
+  outside `modules/hermes/` knows the Hermes filesystem layout.
+- PatterStudio and the EOS plug in later through the same contract, without any of
+  their UI entering this repo.
+
+## Alternatives rejected
+
+- **Build the contract with no tenant.** An untested seam is the `frameworks`
+  registry again: 205 lines, one read-only consumer, a config field nothing reads.
+- **Rebuild Story Weaver in place and generalise later.** The owner asked for the
+  module contract, and it is cheaper to extract a seam while writing the second
+  product than to retrofit it afterwards.

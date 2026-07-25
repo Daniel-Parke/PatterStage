@@ -150,14 +150,51 @@ export function getOutgoingEdges(nodeId: string): ComposerEdge[] {
  * transaction, bumping its version. The structured builder holds the graph in
  * state and PUTs it wholesale — atomic, with no partial-edit races.
  */
-export function replaceWorkflowGraph(workflowId: string, input: WorkflowDef): ComposerWorkflowGraph | null {
+/** How many completed runs a structural edit would destroy. */
+export function countWorkflowRuns(workflowId: string): number {
+  const row = db()
+    .prepare("SELECT COUNT(*) AS n FROM composer_runs WHERE workflow_id = ?")
+    .get(workflowId) as { n: number } | undefined;
+  return row?.n ?? 0;
+}
+
+export class WorkflowHistoryWouldBeLost extends Error {
+  constructor(readonly runCount: number) {
+    super(
+      `Saving this workflow would delete ${runCount} completed run(s) of it, including their stage outputs and approvals.`,
+    );
+    this.name = "WorkflowHistoryWouldBeLost";
+  }
+}
+
+/**
+ * Replace a workflow's whole graph.
+ *
+ * `composer_node_runs.node_id` references `composer_nodes` with no cascade, so
+ * the structural replace cannot drop the old nodes while run history points at
+ * them — and the original implementation resolved that by silently deleting
+ * every run of the workflow. Renaming one stage destroyed the entire audit
+ * trail, with no warning and no undo.
+ *
+ * Until node rows are versioned rather than replaced (the real fix: history
+ * keeps pointing at the node version it ran against), this refuses to run when
+ * history exists. `discardRunHistory` is the caller's explicit, informed consent.
+ */
+export function replaceWorkflowGraph(
+  workflowId: string,
+  input: WorkflowDef,
+  opts: { discardRunHistory?: boolean } = {},
+): ComposerWorkflowGraph | null {
   if (!getWorkflow(workflowId)) return null;
   const def = workflowDefSchema.parse(input); // applies defaults + validates
+
+  const runCount = countWorkflowRuns(workflowId);
+  if (runCount > 0 && !opts.discardRunHistory) {
+    throw new WorkflowHistoryWouldBeLost(runCount);
+  }
+
   return inTransaction(() => {
     const ts = now();
-    // node-runs reference nodes (no cascade) — clear this workflow's run history
-    // first so the structural replace can drop the old nodes. The API blocks
-    // edits while runs are active, so only completed history is cleared.
     db().prepare("DELETE FROM composer_runs WHERE workflow_id = ?").run(workflowId); // cascades node_runs + approvals
     db().prepare("DELETE FROM composer_nodes WHERE workflow_id = ?").run(workflowId); // edges cascade
     db().prepare("UPDATE composer_workflows SET name = ?, description = ?, version = version + 1, updated_at = ? WHERE id = ?")

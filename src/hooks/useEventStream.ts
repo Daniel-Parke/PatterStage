@@ -16,6 +16,16 @@ export function useEventStream<T>(url: string | null): { data: T | null; connect
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
+    // Drop the previous subscription's payload IMMEDIATELY on any url change.
+    //
+    // Without this, `data` kept the old stream's snapshot until the new stream
+    // pushed its first frame. Callers prefer the stream over their fetched copy
+    // (`live?.run ?? detail?.run`), so selecting a different Composer run showed
+    // the PREVIOUS run's stages — and the HIL Accept button posted to
+    // `run.id` taken from that stale payload, approving a node on the wrong run.
+    setData(null);
+    setConnected(false);
+
     if (!url || typeof window === "undefined" || typeof EventSource === "undefined") return;
     const es = new EventSource(url);
     es.onopen = () => setConnected(true);

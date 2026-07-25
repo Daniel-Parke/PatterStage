@@ -38,25 +38,60 @@ function splitList(raw: string | undefined): string[] {
 }
 
 /**
+ * The verdict marker, refusing the instruction template.
+ *
+ * The stage prompt tells the model to end with "VERDICT: PASS or FAIL". A plain
+ * /VERDICT:\s*(PASS|FAIL)/ matches that sentence and captures PASS, so a model
+ * that echoed its own instructions instead of judging anything scored a pass.
+ * The lookahead rejects the template while still accepting a real verdict
+ * followed by other text.
+ */
+const VERDICT_RE = /VERDICT:\s*(PASS|FAIL)\b(?!\s*(?:or|\/)\s*(?:PASS|FAIL)\b)/i;
+
+/**
  * Parse a verdict from stage output. Returns null when the stage is
  * non-assessing AND no explicit marker is present (→ the engine treats it as a
  * pass). A failed run (no output) should be handled by the caller (pass=false).
+ *
+ * An ASSESSING stage that emits no verdict FAILS. It used to pass: `pass` fell
+ * back to `true` whenever the marker was absent, so a test stage that ran out of
+ * tokens, returned prose, or crashed into an empty string was indistinguishable
+ * from one that had actually verified something. A gate that cannot tell those
+ * apart is not a gate — the whole point of an assessing stage is that it has to
+ * say so explicitly.
  */
 export function parseVerdict(output: string | null, kind: string): NodeVerdict | null {
   const text = output ?? "";
-  const verdictM = text.match(/VERDICT:\s*(PASS|FAIL)/i);
+  const verdictM = text.match(VERDICT_RE);
   const reasonsM = text.match(/REASONS?:\s*(.+)/i);
   const suggM = text.match(/SUGGESTIONS?:\s*(.+)/i);
   const outcomeM = text.match(/(?:OUTCOME|ROUTE):\s*([A-Za-z0-9_-]+)/i);
   const questionM = text.match(/QUESTION:\s*(.+)/i);
+  const assessing = isAssessingKind(kind);
 
   // No verdict, no branch label, and a non-assessing stage → just proceed.
-  if (!verdictM && !outcomeM && !isAssessingKind(kind)) return null;
+  if (!verdictM && !outcomeM && !assessing) return null;
 
-  const pass = verdictM ? verdictM[1].toUpperCase() === "PASS" : true;
+  // An assessing stage that asked a clarifying question has not failed; it is
+  // waiting. The engine pauses on the outcome before it looks at `pass`.
+  const awaitingClarification = outcomeM?.[1].toLowerCase() === "needs_clarification";
+
+  let pass: boolean;
+  let reasons = splitList(reasonsM?.[1]);
+  if (verdictM) {
+    pass = verdictM[1].toUpperCase() === "PASS";
+  } else if (assessing && !awaitingClarification) {
+    pass = false;
+    if (reasons.length === 0) {
+      reasons = ["The stage did not report a verdict, so its result cannot be trusted."];
+    }
+  } else {
+    pass = true;
+  }
+
   return {
     pass,
-    reasons: splitList(reasonsM?.[1]),
+    reasons,
     suggestions: splitList(suggM?.[1]),
     ...(outcomeM ? { outcome: outcomeM[1].toLowerCase() } : {}),
     ...(questionM ? { question: questionM[1].trim() } : {}),
