@@ -176,6 +176,83 @@ Hermes at all, and it splits into two very different halves:
    the Hermes-shaped surfaces themselves (config sync, profiles, toolsets),
    which move with the module rather than ahead of it.
 
+## The move itself: measured, staged, and 12 edges from done
+
+"The directory move is now mechanical" was wrong, and it is worth recording why
+so the mistake is not repeated. That claim was measured on `hermes-agent-runtime`
+alone, which had 3 core importers. Across all twelve files the real figure was
+**25 importer edges over 22 distinct core files**. A blind `git mv` would have
+created 25 `core-imports-no-module` violations.
+
+Three plans were drafted for the move under different lenses and an adversarial
+pass found **all three red-build**, every time for the same reason: a hermes file
+moved while a core file still imported it. So the ordering rule is topological,
+not file-count: **a file moves only once every core importer of it is resolved.**
+
+Landed so far, each slice independently gate-green:
+
+| slice | what | edges |
+|---|---|---|
+| prep | two free deletions, one port repoint, two neutral extractions | 25 → 21 |
+| 1 | the 5 zero-importer files, module created | 21 → 21 |
+| 2 | 6 co-travellers + `config-sync` | 21 → 14 |
+| 3 | the 2 Hermes-subject components | 14 → **12** |
+
+Two mechanisms make an incremental move safe:
+
+- **A transitional exemption that deletes itself.** A partial move makes the
+  files still in `src/lib` import `@/modules/hermes`, which the rule forbids. So
+  `src/lib/hermes-*.ts` is exempt while the move is in flight. A temporary
+  exemption nobody must remove is a permanent one, so design-lint **fails the
+  build the moment `src/lib` holds no `hermes-*.ts` file**, naming the clauses to
+  delete.
+- **A baseline discipline for re-keying.** The baseline keys on file path, so
+  moving a file with debt makes it look new. Every move verifies the delta
+  against HEAD: keys may be re-keyed at the same count, and **no surviving file
+  may gain a violation**. Slice 2 shrank it 924 → 922 honestly (behavior-files'
+  two violations became legitimately exempt inside the adapter); slice 3 was a
+  1-for-1 re-key at 922.
+
+Two findings worth keeping. `sortedUnique`-style toolset algebra was being
+recomputed client-side in two hooks when the route already returned the same
+union as `unifiedEnabled`. Deleting the duplicates removed both hooks' only
+Hermes imports and one redundant fan-in. And `getActiveHermesPaths().root` is
+literally `getHermesHome()`, so `AgentWorkspace.root` already covered
+`path-security`'s allowlist with no new seam.
+
+### The last 12 edges are decisions, not moves
+
+Each needs an owner ruling, and they are recorded as open questions rather than
+guessed:
+
+1. **Does the `hermes` module own `agent_profiles`?** Rule 2 above says a module
+   owns its tables, and every content column of that table (`config_yaml`,
+   `soul_md`, `agents_md`, `user_md`, `memory_md`, `disabled_skills`,
+   `platform_toolsets`) mirrors a Hermes file. If yes, `profiles-repository`,
+   `profile-config-builder` and `skills-config` travel. If no, core needs a
+   neutral profile shape. This is 4 of the 12 edges plus a cascade.
+2. **Benchmarks.** `bench-agent` is 2 edges, and the original plan's open
+   question ("do you actually use it to make decisions?") is still unanswered.
+3. **Vendor naming inside PatterStage's OWN schema.** `sessions.agent_type`
+   stores the literal `'hermes'`, `hermes_md` is a column, `cron_jobs` has
+   `hermes_job_id`. Core reads and writes all three, so even a perfect file move
+   leaves a grep of core finding "hermes". Renaming is a migration plus a data
+   rewrite. Until that is decided, the boundary claim must be stated as
+   "no core file knows the Hermes *filesystem or protocol*", not "core contains
+   no reference to Hermes".
+4. **`src/types/hermes.ts`.** 59 importers, and its exports are `ApiResponse`,
+   `Mission`, `LocalDirEntry`, `AccentColor`: PatterStage's own types, none of
+   them Hermes. The most misleading filename in the repo. A rename is mechanical
+   but touches 59 files.
+
+Decided without asking, because neither is a real fork: `providerSchema` keeps
+`z.enum(HERMES_PROVIDERS)` and `api-schemas.ts` carries a written pragma. The
+reviewed alternative was to widen it to `z.string().min(1)` and relocate the
+guard into one route, which would have weakened validation on every other caller
+to buy a boundary: an unrequested behaviour change, so it was rejected.
+`ToolsetSelector` likewise stays put with a pragma rather than trading a static
+label lookup for an async fetch.
+
 Ordering: (1) first, because it is nearly free and shrinks the problem; then (2)
 site by site, watching `hermes-outside-adapter` in design-lint fall from its
 baselined 45; then the directory move, which by then is mechanical.
