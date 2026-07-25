@@ -5,7 +5,7 @@
 // buildMissionPromptHuman, and parseMissionPrompt in sync.
 
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
-import type { LocalDirEntry } from "@/types/hermes";
+import type { LocalDirEntry } from "@/types/console";
 
 // ── Build options ──────────────────────────────────────────────
 

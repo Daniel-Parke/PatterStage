@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { db, inTransaction, uuid, now } from "./db";
-import type { FallbackConfig } from "@/types/hermes";
+import type { FallbackConfig } from "@/types/console";
 
 export interface FallbackEntryRecord {
   id: string;

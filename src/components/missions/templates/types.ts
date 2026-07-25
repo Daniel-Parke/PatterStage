@@ -2,7 +2,7 @@
 // the manager + editor modals and the lib/hook consumers can import it
 // without pulling in either modal's component tree.
 
-import type { LocalDirEntry } from "@/types/hermes";
+import type { LocalDirEntry } from "@/types/console";
 
 export interface MissionTemplate {
   id: string;

@@ -7,7 +7,7 @@
 "use client";
 
 import { useApiResource } from "./useApiResource";
-import type { Skill } from "@/types/hermes";
+import type { Skill } from "@/types/console";
 
 /** Enabled skills available to attach for a profile (defaults to "default"). */
 export function useProfileSkills(profileId?: string) {

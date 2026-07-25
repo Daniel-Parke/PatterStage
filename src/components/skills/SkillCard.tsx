@@ -4,7 +4,7 @@
 import { ToggleRight, ToggleLeft, X, ChevronDown, Edit3 } from "lucide-react";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
-import type { Skill } from "@/types/hermes";
+import type { Skill } from "@/types/console";
 
 export interface SkillCardProps {
   skill: Skill;

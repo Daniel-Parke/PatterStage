@@ -17,7 +17,7 @@ import Modal from "@/components/ui/Modal";
 import { Field, Input, Select } from "@/components/ui/field";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
-import type { AgentProfile, ProfileFile } from "@/types/hermes";
+import type { AgentProfile, ProfileFile } from "@/types/console";
 import { apiFetch, toastError } from "@/lib/api-fetch";
 import { profileSyncBody } from "@/lib/profile-sync-body";
 import { runSyncAction } from "@/lib/operation-sync-action";

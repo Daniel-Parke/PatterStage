@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FolderOpen, Plus, Trash2 } from "lucide-react";
 
-import type { LocalDirEntry } from "@/types/hermes";
+import type { LocalDirEntry } from "@/types/console";
 import { useGitBranches } from "@/hooks/useGitBranches";
 
 import DirectoryPickerModal from "./DirectoryPickerModal";

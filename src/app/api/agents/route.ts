@@ -9,7 +9,7 @@ import { db } from "@/lib/db";
 import { ensureSyncLayer } from "@/lib/sync";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
-import type { HermesProcess } from "@/types/hermes";
+import type { HermesProcess } from "@/types/console";
 
 export async function GET() {
   try {

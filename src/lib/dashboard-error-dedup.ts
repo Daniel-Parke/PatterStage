@@ -17,7 +17,7 @@
 /**
  * Subset of the error item shape the dedup helper needs. The
  * dashboard's `MonitorData.errors` is `Array<MonitorError>` (defined
- * in `@/types/hermes`); we accept any object with the two fields
+ * in `@/types/console`); we accept any object with the two fields
  * the algorithm reads, and pass the original record through (so
  * extra fields like `timestamp` survive the merge).
  */

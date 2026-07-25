@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 import { glowSurfaceRgbMap } from "@/lib/theme";
 
 export interface GlowSurfaceProps {

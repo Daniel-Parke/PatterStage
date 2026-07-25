@@ -6,7 +6,7 @@
 
 import { useCallback, useState } from "react";
 import { ChevronUp, ChevronDown, Plus, Edit3 } from "lucide-react";
-import type { FallbackChainEntry } from "@/types/hermes";
+import type { FallbackChainEntry } from "@/types/console";
 import GlowSurface from "@/components/ui/GlowSurface";
 import { InlineToggle } from "@/components/ui/Input";
 import PerRowDeleteButton from "@/components/models/PerRowDeleteButton";

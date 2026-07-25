@@ -12,7 +12,7 @@ import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
 import { Panel, PanelHeader } from "@/components/dashboard/Panel";
 import { titleCase } from "@/lib/utils";
-import type { MonitorData } from "@/types/hermes";
+import type { MonitorData } from "@/types/console";
 
 type ErrorSeverity = "all" | "error" | "warning";
 

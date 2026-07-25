@@ -7,7 +7,7 @@ import {
   filterBySearch,
   groupCategories,
 } from "@/lib/skills-page-helpers";
-import type { Skill } from "@/types/hermes";
+import type { Skill } from "@/types/console";
 
 const skill = (over: Partial<Skill> = {}): Skill =>
   ({

@@ -2,7 +2,7 @@
 // Badge Component — Tags, status indicators, labels
 // ═══════════════════════════════════════════════════════════════
 
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 
 interface BadgeProps {
   children: React.ReactNode;

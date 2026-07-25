@@ -8,7 +8,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
-import type { AgentProfile } from "@/types/hermes";
+import type { AgentProfile } from "@/types/console";
 
 interface SeedState {
   lastRun?: string;

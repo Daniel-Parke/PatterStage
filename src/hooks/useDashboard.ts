@@ -45,7 +45,7 @@ import type {
   MonitorData,
   HermesProcess,
   MissionBrief,
-} from "@/types/hermes";
+} from "@/types/console";
 
 // ── Live fetchers (throw on hard failure so Query keeps last-good) ──
 //

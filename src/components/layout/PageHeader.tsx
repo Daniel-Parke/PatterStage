@@ -4,7 +4,7 @@
 
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 import { shellHeaderBarClasses, iconColorMap } from "@/lib/theme";
 import { StatusDot } from "@/components/ui/Card";
 import PageTitle from "@/components/layout/PageTitle";

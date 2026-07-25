@@ -1,7 +1,7 @@
 import { listFallbackChain, getFallbackConfig } from "@/lib/fallbacks-repository";
 import { syncFallbacksToHermesConfig } from "./config-sync";
 import { appendAuditLine } from "@/lib/audit-log";
-import type { FallbackConfig } from "@/types/hermes";
+import type { FallbackConfig } from "@/types/console";
 
 export function syncEnabledFallbackChainToHermes(
   config: FallbackConfig

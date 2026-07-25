@@ -5,7 +5,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "ghost" | "danger";

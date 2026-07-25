@@ -30,7 +30,7 @@ import {
   Wrench,
   Zap,
 } from "lucide-react";
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 
 export interface FieldDef {
   key: string;

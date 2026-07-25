@@ -25,7 +25,7 @@ import {
   groupCategories,
 } from "@/lib/skills-page-helpers";
 import { pluralise } from "@/lib/utils";
-import type { Skill, SkillsData } from "@/types/hermes";
+import type { Skill, SkillsData } from "@/types/console";
 
 // Presentational subcomponents (SkillSection / SkillCategoryGrid / SkillCard /
 // CategoryLabel) live in src/components/skills/. The pure derivations

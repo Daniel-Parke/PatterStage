@@ -5,7 +5,7 @@
 import os from "os";
 import { isAbsolute, resolve } from "path";
 
-import type { LocalDirEntry } from "@/types/hermes";
+import type { LocalDirEntry } from "@/types/console";
 
 /**
  * Expand a leading "~" in a path to the user's home directory.

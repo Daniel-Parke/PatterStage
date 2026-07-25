@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 import { iconColorMap } from "@/lib/theme";
 import Sparkline from "@/components/viz/Sparkline";
 import type { NeonColor } from "@/components/viz/colors";

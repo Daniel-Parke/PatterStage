@@ -16,7 +16,7 @@ import { StatusDot } from "@/components/ui/Card";
 import { Panel, PanelHeader } from "@/components/dashboard/Panel";
 import { MissionStatusBadge } from "@/components/dashboard/StatusBadge";
 import { timeAgo } from "@/lib/utils";
-import type { MissionBrief } from "@/types/hermes";
+import type { MissionBrief } from "@/types/console";
 
 export interface ActiveMissionsPanelProps {
   /** The active (queued/dispatched) missions to list. */

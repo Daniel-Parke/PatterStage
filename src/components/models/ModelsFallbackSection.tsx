@@ -5,7 +5,7 @@ import FallbackChainList from "@/components/models/FallbackChainList";
 import FallbackConfigPanel from "@/components/models/FallbackConfigPanel";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
 import type { TaskType } from "@/lib/models/task-types";
-import type { FallbackChainEntry, FallbackConfig } from "@/types/hermes";
+import type { FallbackChainEntry, FallbackConfig } from "@/types/console";
 
 import FallbackUrlEditModal from "@/components/models/FallbackUrlEditModal";
 

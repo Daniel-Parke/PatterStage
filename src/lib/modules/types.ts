@@ -17,7 +17,7 @@
 // written: it had lost /laboratory/artifacts entirely.
 // ═══════════════════════════════════════════════════════════════
 
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 import type { FeatureFlag } from "@/lib/feature-flags";
 
 /**

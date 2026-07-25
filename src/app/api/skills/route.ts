@@ -12,7 +12,7 @@ import { skillFilePath, skillsRootForProfile } from "@/lib/skills-config";
 import { requireSafeProfileName } from "@/lib/path-security";
 import { scanDiskSkillsCatalog } from "@/lib/hermes-profile-sync";
 import { groupByCategory } from "@/lib/skills-grouping";
-import type { Skill } from "@/types/hermes";
+import type { Skill } from "@/types/console";
 
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);

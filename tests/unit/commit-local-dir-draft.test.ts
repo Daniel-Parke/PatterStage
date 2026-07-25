@@ -17,7 +17,7 @@
  *     the end (insertion order, not sort order)
  */
 import { commitLocalDirDraft } from "@/lib/local-dir-entry";
-import type { LocalDirEntry } from "@/types/hermes";
+import type { LocalDirEntry } from "@/types/console";
 
 describe("local-dir-entry — commitLocalDirDraft", () => {
   it("returns null for an empty draft path", () => {

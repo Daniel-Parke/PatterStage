@@ -17,7 +17,7 @@ import {
   ComposerAccordion,
   ComposerFieldLabel,
 } from "@/components/missions/MissionComposerLayout";
-import type { LocalDirEntry } from "@/types/hermes";
+import type { LocalDirEntry } from "@/types/console";
 import { commitLocalDirDraft } from "@/lib/local-dir-entry";
 import {
   isMissionDraft,

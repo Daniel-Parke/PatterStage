@@ -12,7 +12,7 @@ import { useMemo } from "react";
 import { Radio, RefreshCw } from "lucide-react";
 
 import { timeAgo, titleCase } from "@/lib/utils";
-import type { HermesProcess } from "@/types/hermes";
+import type { HermesProcess } from "@/types/console";
 
 export interface ProcessesPanelProps {
   processes: HermesProcess[];

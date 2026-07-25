@@ -2,7 +2,7 @@
 // Mission Form Utilities — Shared helpers for mission form state
 // ═══════════════════════════════════════════════════════════════
 
-import type { LocalDirEntry } from "@/types/hermes";
+import type { LocalDirEntry } from "@/types/console";
 import type { ManagedCategory } from "@/components/missions/CategoryManagerModal";
 
 /** Split newline-delimited goals string into non-empty array. */

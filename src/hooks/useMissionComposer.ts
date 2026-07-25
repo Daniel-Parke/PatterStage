@@ -22,7 +22,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 import { apiFetch, safeApiCallData } from "@/lib/api-fetch";
-import type { LocalDirEntry, Mission } from "@/types/hermes";
+import type { LocalDirEntry, Mission } from "@/types/console";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { parseMissionPrompt } from "@/lib/build-mission-prompt";
 import type { MissionFormState } from "@/components/missions/MissionCreateForm";

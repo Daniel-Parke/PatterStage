@@ -2,7 +2,7 @@
 // Card Component
 // ═══════════════════════════════════════════════════════════════
 
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 import GlowSurface from "@/components/ui/GlowSurface";
 
 interface CardProps {

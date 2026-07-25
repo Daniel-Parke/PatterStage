@@ -17,7 +17,7 @@ import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { getGatewayPlatforms, db } from "@/lib/db";
 import { getActiveFramework } from "@/lib/frameworks";
-import type { SessionBrief, MonitorData } from "@/types/hermes";
+import type { SessionBrief, MonitorData } from "@/types/console";
 
 // ── Helpers ─────────────────────────────────────────────────
 

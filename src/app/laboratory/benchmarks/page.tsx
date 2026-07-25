@@ -23,7 +23,7 @@ import type { AgentSetupEntry } from "@/hooks/useBenchmarks";
 import { safeApiCall, safeApiCallData } from "@/lib/api-fetch";
 import { useToast } from "@/components/ui/Toast";
 import { STATS, STAT_LABELS, STAT_BLURB, type BenchmarkRun, type StatCard } from "@/lib/benchmarks/types";
-import type { AgentProfile } from "@/types/hermes";
+import type { AgentProfile } from "@/types/console";
 import type { ModelRecord } from "@/lib/models-repository";
 
 type Aug = { skills: boolean; tools: boolean; memory: boolean };

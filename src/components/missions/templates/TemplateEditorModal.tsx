@@ -21,7 +21,7 @@ import CategoryCombobox, {
 } from "@/components/missions/CategoryCombobox";
 import LocalDirRow from "@/components/missions/LocalDirRow";
 import { inputFieldClasses } from "@/lib/theme";
-import type { LocalDirEntry } from "@/types/hermes";
+import type { LocalDirEntry } from "@/types/console";
 import { commitLocalDirDraft } from "@/lib/local-dir-entry";
 
 // ── Icon / colour pickers (module-local) ───────────────────────

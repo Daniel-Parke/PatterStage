@@ -1,5 +1,18 @@
 // ═══════════════════════════════════════════════════════════════
-// PatterStage — Hermes Data Types
+// types/console.ts — PatterStage's own console types
+//
+// Renamed from types/hermes.ts, which was the most misleading filename in the
+// repo: it had 60 importers and its exports are PatterStage's HTTP envelope
+// (ApiResponse), its domain records (Mission, AgentProfile, Skill), and its
+// design tokens (AccentColor). None of that is Hermes. The old name made a grep
+// for "hermes" in core return 60 false positives and made the
+// framework-agnostic claim look far more broken than it was
+// (docs/adr/0005-product-modules.md).
+//
+// One export IS framework-specific and stays deliberately: `HermesProcess`
+// describes what ProcessSync observes in `ps aux`, so it is named after the
+// thing it actually is. Visible coupling beats a neutral-sounding alias, the
+// same rule ConfigSync established.
 // ═══════════════════════════════════════════════════════════════
 
 // ── API Response Envelope ──────────────────────────────────────

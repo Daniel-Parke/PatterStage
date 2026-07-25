@@ -7,7 +7,7 @@
 
 import { groupByCategory, titleCaseCategory } from "@/lib/skills-grouping";
 import { filterByCaseInsensitiveSubstring } from "@/lib/list-search";
-import type { Skill } from "@/types/hermes";
+import type { Skill } from "@/types/console";
 
 /**
  * The "effective" enabled state of a skill after applying any pending

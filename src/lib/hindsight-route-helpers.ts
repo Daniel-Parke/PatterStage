@@ -18,7 +18,7 @@
 import { NextResponse } from "next/server";
 import { messageFromError } from "@/lib/api-fetch";
 import { logApiError } from "@/lib/api-logger";
-import type { ApiResponse } from "@/types/hermes";
+import type { ApiResponse } from "@/types/console";
 
 /**
  * Unwrap a list-style Hindsight response into a plain array.

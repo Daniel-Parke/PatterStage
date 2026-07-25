@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { ChevronDown } from "lucide-react";
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 import { focusColorMap } from "@/lib/theme";
 
 interface SelectOption {

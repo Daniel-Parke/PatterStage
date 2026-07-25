@@ -6,7 +6,7 @@
 // used across the mission repository, API, and orchestration layers.
 // ═══════════════════════════════════════════════════════════════
 
-import type { LocalDirEntry } from "@/types/hermes";
+import type { LocalDirEntry } from "@/types/console";
 
 // ── Mission ────────────────────────────────────────────────────
 //

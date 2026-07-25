@@ -38,7 +38,7 @@
 // Sidebar, TemplateCard, etc.
 
 import type { LucideIcon } from "lucide-react";
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 import { iconColorMap } from "@/lib/theme";
 
 type ModelsSectionHeaderTone = "full" | "muted";

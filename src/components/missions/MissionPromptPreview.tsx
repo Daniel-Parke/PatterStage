@@ -6,7 +6,7 @@ import {
   buildMissionPrompt,
   buildMissionPromptHuman,
 } from "@/lib/build-mission-prompt";
-import type { LocalDirEntry } from "@/types/hermes";
+import type { LocalDirEntry } from "@/types/console";
 
 export type PromptPreviewMode = "human" | "ai";
 

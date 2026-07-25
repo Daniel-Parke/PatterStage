@@ -1,6 +1,6 @@
 "use client";
 
-import type { FallbackChainEntry } from "@/types/hermes";
+import type { FallbackChainEntry } from "@/types/console";
 
 interface FallbackUrlEditModalProps {
   entry: FallbackChainEntry | null;

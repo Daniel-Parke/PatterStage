@@ -13,7 +13,7 @@ import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { pluralise } from "@/lib/utils";
 import { iconColorMap, colorBorderMap, badgeBgMap } from "@/lib/theme";
 import { useConfig } from "@/hooks/useConfig";
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 
 // ── Category definitions (mirrors sidebar groups) ─────────
 interface CategoryDef {

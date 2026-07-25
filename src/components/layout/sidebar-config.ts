@@ -21,7 +21,7 @@ import {
   FileStack,
 } from "lucide-react";
 
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 import type { FeatureFlag } from "@/lib/feature-flags";
 import { MODULES } from "@/lib/modules/registry";
 import type { IconName, NavLink as ModuleNavLink } from "@/lib/modules/types";

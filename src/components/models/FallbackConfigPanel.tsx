@@ -5,7 +5,7 @@
 "use client";
 
 import { RefreshCw, Upload, Info } from "lucide-react";
-import type { FallbackConfig } from "@/types/hermes";
+import type { FallbackConfig } from "@/types/console";
 
 interface FallbackConfigPanelProps {
   config: FallbackConfig;

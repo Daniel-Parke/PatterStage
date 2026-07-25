@@ -9,7 +9,7 @@ import { db, inTransaction, uuid, now } from "./db";
 import { safeJsonParse } from "./utils";
 import { PATHS } from "./paths";
 import type { Mission, MissionStatus } from "@/lib/mission-types";
-import type { LocalDirEntry } from "@/types/hermes";
+import type { LocalDirEntry } from "@/types/console";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 
 // ── Row shape ─────────────────────────────────────────────────

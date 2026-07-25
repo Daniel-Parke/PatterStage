@@ -3,7 +3,7 @@
 // is private to the grid, so it's co-located here.
 
 import { ChevronRight } from "lucide-react";
-import type { Skill } from "@/types/hermes";
+import type { Skill } from "@/types/console";
 import { SkillCard } from "@/components/skills/SkillCard";
 
 interface CategoryLabelProps {

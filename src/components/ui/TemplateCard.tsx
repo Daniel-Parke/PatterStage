@@ -8,7 +8,7 @@ import { Search, Bug, GitPullRequest, Wrench, PenTool, Zap,
   TestTube, ShieldAlert, Gauge, BookOpen, RefreshCw, FlaskConical,
   Sparkles, Clock } from "lucide-react";
 import { iconColorMap } from "@/lib/theme";
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Search, Bug, GitPullRequest, Wrench, PenTool, Zap,

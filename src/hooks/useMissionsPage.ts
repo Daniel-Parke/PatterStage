@@ -7,7 +7,7 @@ import { useMissionComposer } from "@/hooks/useMissionComposer";
 import { safeApiCall, toastError } from "@/lib/api-fetch";
 import { toastFromResult } from "@/lib/toast-from-result";
 import { successMessageForDispatch, dispatchMissionAction } from "@/hooks/success-message-for-dispatch";
-import type { Mission } from "@/types/hermes";
+import type { Mission } from "@/types/console";
 import type { MissionTemplate } from "@/components/missions/TemplateModals";
 import { buildTemplatePayload } from "@/lib/mission-form-utils";
 import {

@@ -24,7 +24,7 @@ import {
 } from "@/lib/hermes-profile-sync";
 import { slugifyDisplayName } from "@/lib/profile-slug";
 import { buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
-import type { AgentProfile, ProfileFile } from "@/types/hermes";
+import type { AgentProfile, ProfileFile } from "@/types/console";
 import { badRequest, conflict, ok, serverError } from "@/lib/api-response";
 
 const PROFILE_FILE_DEFS = [

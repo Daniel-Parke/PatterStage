@@ -16,7 +16,7 @@ import {
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
 import { type TaskType } from "@/lib/models/task-types";
-import type { FallbackChainEntry, FallbackConfig } from "@/types/hermes";
+import type { FallbackChainEntry, FallbackConfig } from "@/types/console";
 import type { SyncActionResult } from "@/lib/models/sync-result";
 import { emptyModelDefaults, pluralise } from "@/lib/utils";
 

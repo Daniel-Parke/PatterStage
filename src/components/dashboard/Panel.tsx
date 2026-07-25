@@ -47,7 +47,7 @@
 // static-header shape.
 
 import type { ReactNode } from "react";
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 import { iconColorMap } from "@/lib/theme";
 
 /**

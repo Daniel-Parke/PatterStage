@@ -2,7 +2,7 @@
 // Shared Theme Constants — Single Source of Truth
 // ═══════════════════════════════════════════════════════════════
 
-import type { AccentColor } from "@/types/hermes";
+import type { AccentColor } from "@/types/console";
 
 /** Aligns main-column top bar with Sidebar brand row (`--ps-shell-header-min-height` in globals.css). */
 export const shellHeaderBarClasses =
