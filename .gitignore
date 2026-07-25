@@ -81,3 +81,8 @@ test-harness/.work/
 
 # Playwright isolated E2E data dir
 tmp/
+
+# Agent/editor session config. .claude/launch.json was committed by accident in
+# 32bb881 (a `git add -A` sweep); it is a local dev-server preview config, not
+# project state. Kept on disk, out of the repo.
+.claude/

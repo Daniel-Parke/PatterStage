@@ -176,7 +176,7 @@ Hermes at all, and it splits into two very different halves:
    the Hermes-shaped surfaces themselves (config sync, profiles, toolsets),
    which move with the module rather than ahead of it.
 
-## The move itself: measured, staged, and 12 edges from done
+## The move itself: measured, staged, COMPLETE
 
 "The directory move is now mechanical" was wrong, and it is worth recording why
 so the mistake is not repeated. That claim was measured on `hermes-agent-runtime`
@@ -196,7 +196,10 @@ Landed so far, each slice independently gate-green:
 | prep | two free deletions, one port repoint, two neutral extractions | 25 → 21 |
 | 1 | the 5 zero-importer files, module created | 21 → 21 |
 | 2 | 6 co-travellers + `config-sync` | 21 → 14 |
-| 3 | the 2 Hermes-subject components | 14 → **12** |
+| 3 | the 2 Hermes-subject components | 14 → 12 |
+| 4 | agent_profiles and its codecs, 9 files | 12 → 6 |
+| 5 | the last 6 edges, then the final 3 files | 6 → **1** |
+| 6 | catalog-seed split along its two owners | **1** |
 
 Two mechanisms make an incremental move safe:
 
@@ -220,42 +223,95 @@ Hermes imports and one redundant fan-in. And `getActiveHermesPaths().root` is
 literally `getHermesHome()`, so `AgentWorkspace.root` already covered
 `path-security`'s allowlist with no new seam.
 
-### The last 12 edges are decisions, not moves
+### How the last 12 edges resolved
 
-Each needs an owner ruling, and they are recorded as open questions rather than
-guessed:
+They were decisions, not moves, and the owner ruled on the four that were his:
 
-1. **Does the `hermes` module own `agent_profiles`?** Rule 2 above says a module
-   owns its tables, and every content column of that table (`config_yaml`,
-   `soul_md`, `agents_md`, `user_md`, `memory_md`, `disabled_skills`,
-   `platform_toolsets`) mirrors a Hermes file. If yes, `profiles-repository`,
-   `profile-config-builder` and `skills-config` travel. If no, core needs a
-   neutral profile shape. This is 4 of the 12 edges plus a cascade.
-2. **Benchmarks.** `bench-agent` is 2 edges, and the original plan's open
-   question ("do you actually use it to make decisions?") is still unanswered.
-3. **Vendor naming inside PatterStage's OWN schema.** `sessions.agent_type`
-   stores the literal `'hermes'`, `hermes_md` is a column, `cron_jobs` has
-   `hermes_job_id`. Core reads and writes all three, so even a perfect file move
-   leaves a grep of core finding "hermes". Renaming is a migration plus a data
-   rewrite. Until that is decided, the boundary claim must be stated as
-   "no core file knows the Hermes *filesystem or protocol*", not "core contains
-   no reference to Hermes".
-4. **`src/types/hermes.ts`.** 59 importers, and its exports are `ApiResponse`,
-   `Mission`, `LocalDirEntry`, `AccentColor`: PatterStage's own types, none of
-   them Hermes. The most misleading filename in the repo. A rename is mechanical
-   but touches 59 files.
+1. **The `hermes` module owns `agent_profiles`** (ruled yes). Every content column
+   of that table mirrors a Hermes file, so rule 2 applies. Nine files travelled:
+   `profiles-repository`, `profile-config-builder`, `skills-config`,
+   `agent-file-store`, `seed-profile-toolsets`, plus `toolset-normalize`,
+   `profile-sync`, `profile-paths` and the framework adapter.
 
-Decided without asking, because neither is a real fork: `providerSchema` keeps
-`z.enum(HERMES_PROVIDERS)` and `api-schemas.ts` carries a written pragma. The
-reviewed alternative was to widen it to `z.string().min(1)` and relocate the
-guard into one route, which would have weakened validation on every other caller
-to buy a boundary: an unrequested behaviour change, so it was rejected.
-`ToolsetSelector` likewise stays put with a pragma rather than trading a static
-label lookup for an async fetch.
+   Core kept one honest question and it needed two fields. Mission dispatch
+   resolved what the operator typed by scanning `listProfiles()` for a
+   slug-or-displayName match: a framework-neutral question answered by reading a
+   17-column row. `src/lib/agents/roster.ts` exposes `AgentRosterEntry`
+   {slug, displayName} through the composition root. Deliberately NOT a re-export
+   of `AgentProfileRow`, which would be the module's table wearing a neutral name.
+2. **Benchmarks were deleted** (see docs/adr/0004, amended). `bench-agent`'s 2
+   edges went with them.
+3. **Schema-level vendor naming: partially done, and I overruled part of it.** The
+   owner ruled "rename now in a migration". On measuring each object, only ONE was
+   a naming problem and it needed no migration: `sessions.agent_type` already had
+   a neutral column name, and the coupling was core supplying the literal
+   `"hermes"` as its default. `AgentType` is now `FrameworkType` and the default
+   comes from the frameworks layer.
 
-Ordering: (1) first, because it is nearly free and shrinks the problem; then (2)
-site by site, watching `hermes-outside-adapter` in design-lint fall from its
-baselined 45; then the directory move, which by then is mechanical.
+   `hermes_md` (the contents of Hermes' HERMES.md) and `cron_jobs.hermes_job_id`
+   (a Hermes cron job id) were NOT renamed, and this is flagged for the owner to
+   overrule. Renaming them to `agent_md` / `external_job_id` would make accurate
+   names inaccurate, for a migration against a live database, for a net loss of
+   clarity. A column that stores a vendor's file should say so, which is the same
+   rule the ConfigSync precedent set.
+4. **`src/types/hermes.ts` renamed to `src/types/console.ts`** (ruled yes). 60
+   importers, none of its exports Hermes-anything: `ApiResponse`, `Mission`,
+   `AccentColor`. A grep for "hermes" in core was returning 60 false positives
+   from one file. `HermesProcess` kept its name on purpose: it describes what
+   `ps aux` shows.
+
+The remaining six closed on their own merits, not by pragma:
+`session-title-server` and `ConfigSync` through two new ServerModule
+capabilities; `credentials-repository` by moving a guard that asked Hermes "do
+you have an env var for this?" to mean "is this OAuth-only?" out to the
+composition point that asks it; `ModelEditor` by prop injection; and
+`ToolsetSelector` by a hook over `/api/tools`, which its sibling hook already
+called. `ToolsetSelector` had been pencilled in for a pragma; the hook turned out
+cheaper than the exception.
+
+### Where it landed
+
+`src/lib` holds **zero** `hermes-*.ts` files. `src/modules/hermes/` holds 30
+across `lib/`, `handlers/`, `components/`, `sync/` and `server.ts`. **25 edges
+became 1.**
+
+That one is deliberate: `api-schemas.ts` imports `HERMES_PROVIDERS` behind a
+pragma with a written reason. Moving the list into core would be worse, not
+better: its own comment says the first fourteen entries must stay in lock-step
+with the agent CLI's `--provider` choices, so relocating it would keep the
+coupling and make it invisible, which is the failure this boundary exists to
+prevent. The reviewed alternative, widening `providerSchema` to `z.string()`,
+weakens validation for every caller to buy a boundary.
+
+**Three composition points**, all named in one place so none is undeclared:
+`modules/server.ts` (module capability), `frameworks/registry.ts` (framework id to
+adapter) and `src/lib/runtime/` (the port, whose files already said in their own
+headers that they are the one file that knows the answer comes from Hermes).
+`core-imports-no-module` and `hermes-outside-adapter` now agree on which directory
+is the adapter layer instead of each having its own idea.
+
+**The transitional exemption deleted itself**, as designed. On the last move
+design-lint failed with "the hermes module move is COMPLETE, so delete its
+transitional exemption", naming the clauses. Both are gone along with the guard
+that removed them.
+
+**`catalog-seed` was split last**, and only after the rest: it had two owners and
+always did, so the line had to be decided rather than moved. Core keeps the
+orchestration, the once-only meta flag and its own catalogs; the module gets
+`seedAgentCatalog` and `publishSkill`. The `skills` table stays core and only the
+write-through crosses. Writing its test caught a regression introduced in the same
+change: moving a try/catch into the module had left core's call bare, so a
+throwing module would have killed the boot seed.
+
+### What the claim is now, stated precisely
+
+**No core file knows the Hermes filesystem or protocol**, and a lint rule fails
+the build if one starts to. That is testable and true.
+
+It is NOT "core contains no reference to Hermes". `sessions.agent_type` still
+stores `'hermes'` as a framework id (legitimately: it IS the id), and `hermes_md`
+and `hermes_job_id` remain as column names describing genuinely Hermes-specific
+data. Those are open on the owner's ruling above.
 
 Doing the move first would produce a module that only looks separated, which is
 the `frameworks` registry mistake this ADR exists to avoid repeating.
