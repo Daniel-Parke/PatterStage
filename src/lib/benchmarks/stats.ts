@@ -184,7 +184,44 @@ export function computeStatCard(results: ResultForAgg[]): StatResult {
   };
 }
 
-/** Overall rating from a stat card: the mean of the 6 stats (0–100). */
+/**
+ * The five stats that describe CAPABILITY. `speed` is deliberately absent.
+ *
+ * ADR-0004: a number that describes the Body must not move when you swap the
+ * Brain for a faster one. `speed` is `latencyScore(ms)` — pure wall-clock — so
+ * blending it into the headline meant a quicker model looked more capable, and
+ * the leaderboard ranked on that. Fortitude stays: it is completion-vs-error
+ * rate, which is reliability, not haste.
+ */
+const CAPABILITY_STATS: Stat[] = [
+  "strength",
+  "dexterity",
+  "intelligence",
+  "wisdom",
+  "fortitude",
+];
+
+/**
+ * Capability rating from a stat card: the mean of the five capability stats
+ * (0–100). This is the headline number and the leaderboard's sort key.
+ */
+export function capabilityFromStatCard(card: StatCard): number {
+  return Math.round(mean(CAPABILITY_STATS.map((s) => card[s])));
+}
+
+/**
+ * The operational columns, reported ALONGSIDE capability and never folded into
+ * it. Speed is the 0–100 latency score already on the card.
+ */
+export function operationalFromStatCard(card: StatCard): { speed: number } {
+  return { speed: card.speed };
+}
+
+/**
+ * @deprecated Blends latency into capability. Use {@link capabilityFromStatCard}
+ * and report {@link operationalFromStatCard} separately. Kept only so a stored
+ * historical `overallRating` can still be explained.
+ */
 export function ratingFromStatCard(card: StatCard): number {
   return Math.round(mean(Object.values(card)));
 }

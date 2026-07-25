@@ -1,7 +1,14 @@
 /** @jest-environment node */
 // Pure JRPG stat engine (benchmarks/stats.ts).
 
-import { computeStatCard, ratingFromStatCard, mergeStatCards } from "@/lib/benchmarks/stats";
+import {
+  computeStatCard,
+  ratingFromStatCard,
+  capabilityFromStatCard,
+  operationalFromStatCard,
+  mergeStatCards,
+} from "@/lib/benchmarks/stats";
+import type { StatCard } from "@/lib/benchmarks/types";
 import type { ResultForAgg } from "@/lib/benchmarks/score";
 import type { StatCard } from "@/lib/benchmarks/types";
 
@@ -88,5 +95,44 @@ describe("mergeStatCards + ratingFromStatCard", () => {
 
   it("merges to null for an empty list", () => {
     expect(mergeStatCards([])).toBeNull();
+  });
+});
+
+// ── ADR-0004: capability must not move when only the Brain's speed changes ──
+describe("capabilityFromStatCard", () => {
+  const card = (over: Partial<StatCard> = {}): StatCard => ({
+    strength: 70,
+    dexterity: 70,
+    intelligence: 90,
+    wisdom: 50,
+    fortitude: 80,
+    speed: 60,
+    ...over,
+  });
+
+  it("excludes speed from the headline number", () => {
+    // mean of the five capability stats, NOT all six
+    expect(capabilityFromStatCard(card())).toBe(Math.round((70 + 70 + 90 + 50 + 80) / 5));
+  });
+
+  it("is unchanged when latency changes from worst to best", () => {
+    const slow = capabilityFromStatCard(card({ speed: 0 }));
+    const fast = capabilityFromStatCard(card({ speed: 100 }));
+    expect(slow).toBe(fast);
+  });
+
+  it("still moves when real capability changes", () => {
+    expect(capabilityFromStatCard(card({ intelligence: 10 }))).toBeLessThan(
+      capabilityFromStatCard(card({ intelligence: 90 })),
+    );
+  });
+
+  it("reports latency separately rather than hiding it", () => {
+    expect(operationalFromStatCard(card({ speed: 42 }))).toEqual({ speed: 42 });
+  });
+
+  it("the deprecated blended rating is measurably different", () => {
+    // Kept only to explain historical stored values; must not equal capability.
+    expect(ratingFromStatCard(card({ speed: 0 }))).not.toBe(capabilityFromStatCard(card({ speed: 0 })));
   });
 });

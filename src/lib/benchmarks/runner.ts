@@ -41,7 +41,7 @@ function resolveJudgeModelId(): string | undefined {
   if (!ref) return undefined;
   return getModel(ref)?.id ?? findModelByModelId(ref)?.id ?? undefined;
 }
-import { computeStatCard, ratingFromStatCard } from "./stats";
+import { computeStatCard, capabilityFromStatCard } from "./stats";
 import {
   newTrajectory,
   accumulateRunEvent,
@@ -529,7 +529,8 @@ export async function executeBenchmarkRun(
   summary.stats = statResult.card;
   summary.statSamples = statResult.samples;
   summary.errorRate = statResult.errorRate;
-  summary.overallRating = ratingFromStatCard(statResult.card);
+  // ADR-0004: capability only, so a faster Brain does not read as more capable.
+  summary.overallRating = capabilityFromStatCard(statResult.card);
   // Record whether the agentic run truly served the toggled config (dedicated
   // gateway) or fell back to the shared default agent — so the UI can be honest.
   if (agentic) summary.togglesApplied = togglesApplied;

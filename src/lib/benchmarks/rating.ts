@@ -10,7 +10,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { latestCompletedRun, listBenchmarkRuns } from "./benchmarks-repository";
-import { mergeStatCards, ratingFromStatCard } from "./stats";
+import { mergeStatCards, capabilityFromStatCard } from "./stats";
 import type { BenchmarkRun, DomainScore, Stat, StatCard } from "./types";
 
 export interface AgentRating {
@@ -105,7 +105,8 @@ export function holisticStatCard(profileRef: string): HolisticStatCard | null {
   const { best, worst } = bestWorstStat(merged);
   return {
     card: merged,
-    rating: ratingFromStatCard(merged),
+    // ADR-0004: capability only. Latency lives in card.speed, reported beside it.
+    rating: capabilityFromStatCard(merged),
     suites: latestPerSuite.size,
     bestStat: best,
     worstStat: worst,
