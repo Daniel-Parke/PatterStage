@@ -7,7 +7,7 @@ jest.mock("@/lib/api-auth", () => ({
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 jest.mock("@/lib/db", () => ({ ensureDb: jest.fn() }));
 
-const mockHydrate = jest.fn(() => ({
+const mockHydrate = jest.fn((..._a: unknown[]) => ({
   toolsets: { cli: ["hermes-cli"], discord: ["hermes-discord"] },
   source: "database" as const,
   platformToolsetsJson: '{"cli":["hermes-cli"],"discord":["hermes-discord"]}',
@@ -15,9 +15,9 @@ const mockHydrate = jest.fn(() => ({
 
 const mockUpdateProfile = jest.fn();
 const mockUpdateRoot = jest.fn();
-const mockGetProfile = jest.fn(() => ({ slug: "qa" }));
-const mockPushProfile = jest.fn(() => ({ success: true, slug: "qa", backupPath: null, error: null }));
-const mockPushRoot = jest.fn(() => ({ success: true, slug: "default", backupPath: null, error: null }));
+const mockGetProfile = jest.fn((..._a: unknown[]) => ({ slug: "qa" }));
+const mockPushProfile = jest.fn((..._a: unknown[]) => ({ success: true, slug: "qa", backupPath: null, error: null }));
+const mockPushRoot = jest.fn((..._a: unknown[]) => ({ success: true, slug: "default", backupPath: null, error: null }));
 
 jest.mock("@/lib/profiles-repository", () => ({
   hydratePlatformToolsetsForSlug: (...args: unknown[]) => mockHydrate(...args),

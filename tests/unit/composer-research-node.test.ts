@@ -28,7 +28,7 @@ jest.mock("@/lib/runtime", () => ({
 }));
 // Never resolves: the test drives settling by updating the research run directly
 // (so no real LLM/search work happens and the .finally() advance can't race).
-const mockRunResearchJob = jest.fn(() => new Promise<void>(() => {}));
+const mockRunResearchJob = jest.fn((..._a: unknown[]) => new Promise<void>(() => {}));
 jest.mock("@/lib/laboratory/deep-research/run-job", () => ({
   runResearchJob: (...a: unknown[]) => mockRunResearchJob(...a),
 }));

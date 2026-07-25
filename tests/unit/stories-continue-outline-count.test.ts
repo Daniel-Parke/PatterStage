@@ -53,7 +53,6 @@ jest.mock("@/modules/rec-room/lib/prompts", () => ({
 
 jest.mock("@/lib/api-auth", () => ({
   requireAuth: jest.fn(() => null),
-  requireAuth: jest.fn(() => null),
 }));
 
 // Mock story-repository (NOT stories-repository - the file is story-repository.ts)

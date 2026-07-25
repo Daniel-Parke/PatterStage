@@ -6,13 +6,13 @@ jest.mock("@/lib/api-auth", () => ({
 
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 
-const mockImportHermesState = jest.fn(() => null);
+const mockImportHermesState = jest.fn((..._a: unknown[]) => null);
 
 jest.mock("@/lib/hermes-state-import", () => ({
   importHermesStateFromDisk: (...args: unknown[]) => mockImportHermesState(...args),
 }));
 
-const mockRunCatalogSeed = jest.fn(() => ({
+const mockRunCatalogSeed = jest.fn((..._a: unknown[]) => ({
   profiles: 6,
   templates: 12,
   categories: 6,

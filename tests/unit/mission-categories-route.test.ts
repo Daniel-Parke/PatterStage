@@ -94,7 +94,7 @@ jest.mock("@/lib/api-auth", () => ({
 }));
 
 const mockEnsureDb = jest.fn();
-const mockGetSchemaHealth = jest.fn(() => ({
+const mockGetSchemaHealth = jest.fn((..._a: unknown[]) => ({
   hasMissionCategoriesTable: true,
   schemaVersion: 1,
 }));

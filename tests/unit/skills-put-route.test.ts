@@ -23,7 +23,7 @@ jest.mock("@/lib/audit-log", () => ({
   appendAuditLine: jest.fn(),
 }));
 
-const mockRequireAuth = jest.fn(() => null);
+const mockRequireAuth = jest.fn((..._a: unknown[]) => null);
 
 jest.mock("@/lib/api-auth", () => ({
   requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
@@ -47,7 +47,7 @@ jest.mock("@/lib/skills-repository", () => ({
   getSkill: jest.fn(),
 }));
 
-const mockPushSkillToHermes = jest.fn(() => ({ success: true }));
+const mockPushSkillToHermes = jest.fn((..._a: unknown[]) => ({ success: true }));
 jest.mock("@/lib/hermes-profile-sync", () => ({
   pushSkillToHermes: (...args: unknown[]) => mockPushSkillToHermes(...args),
 }));

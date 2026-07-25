@@ -10,10 +10,10 @@ jest.mock("@/lib/api-logger", () => ({
 }));
 jest.mock("@/lib/db", () => ({ ensureDb: jest.fn() }));
 
-const mockPushProfile = jest.fn(() => ({ success: true, slug: "qa", backupPath: null, error: null }));
-const mockPushAll = jest.fn(() => [{ success: true, slug: "qa", backupPath: null, error: null }]);
-const mockPullProfile = jest.fn(() => ({ success: true, slug: "qa", backupPath: null, error: null }));
-const mockDetectDrift = jest.fn(() => [{ slug: "qa", drifted: false, fields: [], syncError: null }]);
+const mockPushProfile = jest.fn((..._a: unknown[]) => ({ success: true, slug: "qa", backupPath: null, error: null }));
+const mockPushAll = jest.fn((..._a: unknown[]) => [{ success: true, slug: "qa", backupPath: null, error: null }]);
+const mockPullProfile = jest.fn((..._a: unknown[]) => ({ success: true, slug: "qa", backupPath: null, error: null }));
+const mockDetectDrift = jest.fn((..._a: unknown[]) => [{ slug: "qa", drifted: false, fields: [], syncError: null }]);
 
 jest.mock("@/lib/hermes-profile-sync", () => ({
   pushProfileToHermes: (...args: unknown[]) => mockPushProfile(...args),

@@ -39,7 +39,7 @@ jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
-const mockRequireAuth = jest.fn(() => null);
+const mockRequireAuth = jest.fn((..._a: unknown[]) => null);
 
 jest.mock("@/lib/api-auth", () => ({
   requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
