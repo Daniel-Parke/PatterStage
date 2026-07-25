@@ -61,7 +61,7 @@ describe("composer-repository", () => {
     expect(wf).not.toBeNull();
     const graph = getWorkflowGraph(wf!.id)!;
     expect(graph.nodes).toHaveLength(DEFAULT_SOFTWARE_DELIVERY_WORKFLOW.nodes.length);
-    expect(graph.edges).toHaveLength(DEFAULT_SOFTWARE_DELIVERY_WORKFLOW.edges.length);
+    expect(graph.edges).toHaveLength(DEFAULT_SOFTWARE_DELIVERY_WORKFLOW.edges!.length);
 
     const start = getStartNode(wf!.id)!;
     expect(start.key).toBe("review");
@@ -112,7 +112,7 @@ describe("composer-repository", () => {
     // but the research/hypothesise on_fail edges stripped out.
     const oldDef = {
       ...DEFAULT_SOFTWARE_DELIVERY_WORKFLOW,
-      edges: DEFAULT_SOFTWARE_DELIVERY_WORKFLOW.edges.filter((e) => e.condition !== "on_fail" || (e.from !== "research" && e.from !== "hypothesise")),
+      edges: DEFAULT_SOFTWARE_DELIVERY_WORKFLOW.edges!.filter((e) => e.condition !== "on_fail" || (e.from !== "research" && e.from !== "hypothesise")),
     };
     const seeded = createWorkflowFromDef(oldDef);
     const research = seeded.nodes.find((n) => n.key === "research")!;

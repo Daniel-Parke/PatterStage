@@ -134,7 +134,9 @@ describe("setField", () => {
     // @ts-expect-error — "missing" is not in Form
     setField<Form>(setter, "missing");
     // The test simply asserts the valid call was recorded; the
-    // @ts-expect-error comments are the type-level assertion.
+    // ts-expect-error comments above are the type-level assertion.
+    // (Do NOT let a prose line begin with the directive spelling: TypeScript
+    // reads it as a real directive and silently suppresses the next line.)
     expect(setter).toHaveBeenCalledTimes(1);
   });
 });

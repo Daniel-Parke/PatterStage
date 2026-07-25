@@ -10,7 +10,6 @@ import {
 } from "@/lib/benchmarks/stats";
 import type { StatCard } from "@/lib/benchmarks/types";
 import type { ResultForAgg } from "@/lib/benchmarks/score";
-import type { StatCard } from "@/lib/benchmarks/types";
 
 function r(over: Partial<ResultForAgg>): ResultForAgg {
   return {

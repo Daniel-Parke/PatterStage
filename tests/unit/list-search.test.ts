@@ -87,9 +87,9 @@ describe("filterByCaseInsensitiveSubstring — generic case-insensitive substrin
 
   it("treats null and undefined field values as non-matches (no throw)", () => {
     const sparse: Item[] = [
-      { name: null, description: "with null name" },
-      { name: undefined as unknown as string, description: "with undefined name" },
-      { name: "Found", description: null },
+      { id: 1, name: null, description: "with null name" },
+      { id: 2, name: undefined as unknown as string, description: "with undefined name" },
+      { id: 3, name: "Found", description: null },
     ];
     const result = filterByCaseInsensitiveSubstring(sparse, "found", [
       (i) => i.name,

@@ -23,7 +23,7 @@ jest.mock("@/lib/audit-log", () => ({
   appendAuditLine: jest.fn(),
 }));
 
-const mockRequireAuth = jest.fn((..._a: unknown[]) => null);
+const mockRequireAuth = jest.fn((..._a: unknown[]): NextResponse | null => null);
 
 jest.mock("@/lib/api-auth", () => ({
   requireAuth: (...args: unknown[]) => mockRequireAuth(...args),
@@ -53,6 +53,7 @@ jest.mock("@/lib/hermes-profile-sync", () => ({
 }));
 
 import { NextRequest, NextResponse } from "next/server";
+import type { NextResponse } from "next/server";
 
 describe("PUT /api/skills/[name]", () => {
   beforeEach(() => {

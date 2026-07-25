@@ -17,6 +17,8 @@ function ach(id: string, unlocked: boolean): Achievement {
     progress: unlocked ? 1 : 0,
     current: unlocked ? 1 : 0,
     target: 1,
+    tier: "common",
+    points: 10,
   };
 }
 

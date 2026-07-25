@@ -25,6 +25,7 @@ const baseFormState: MissionFormState = {
   newReferences: [],
   referenceInput: "",
   newSkills: [],
+  newToolsets: [],
 };
 
 describe("MissionComposerActions dispatch gate", () => {

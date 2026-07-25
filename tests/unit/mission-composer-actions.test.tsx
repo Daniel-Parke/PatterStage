@@ -31,6 +31,9 @@ const baseFormState: MissionFormState = {
   newReferences: [],
   referenceInput: "",
   newSkills: [],
+  newOutputFormat: "",
+  newConstraints: "",
+  newToolsets: [],
 };
 
 describe("dispatch modes", () => {

@@ -71,9 +71,9 @@ function setFetch(map: Record<string, FetchResponseInit>) {
 // Default fallback responses used across tests
 function defaultFallbacks() {
   return {
-    "/api/models/sync/drift": { data: null },
-    "/api/models/fallbacks": { data: { chain: [], config: { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 } } },
-    "/api/models/fallbacks/config": { data: { config: { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 } } },
+    "/api/models/sync/drift": { body: { data: null } },
+    "/api/models/fallbacks": { body: { data: { chain: [], config: { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 } } } },
+    "/api/models/fallbacks/config": { body: { data: { config: { restorePrimaryOnFallback: true, fallbackNotification: false, apiMaxRetries: 2 } } } },
   } as Record<string, FetchResponseInit>;
 }
 
