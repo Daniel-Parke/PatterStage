@@ -21,6 +21,7 @@ import {
 } from "fs";
 import * as yaml from "js-yaml";
 
+import { dumpYamlConfig } from "./yaml-config";
 import { getActiveHermesPaths } from "./hermes-agent-runtime";
 import { envVarForProvider, isHermesProvider, type HermesProvider } from "./hermes-providers";
 import { AUXILIARY_TASK_TYPES } from "./models/task-types";
@@ -77,22 +78,6 @@ export function readHermesYamlConfig<T = Record<string, unknown>>(): T | null {
 export function loadHermesConfigFromString(content: string): HermesConfig {
   if (!content) return {};
   return (yaml.load(content) as HermesConfig) ?? {};
-}
-
-/**
- * Serialize a value to YAML using the canonical PatterStage options:
- *   - `lineWidth: -1` — no automatic line wrapping; long strings/URLs stay on
- *     one line (matches the historical hand-edited config.yaml style)
- *   - `noRefs: true` — never emit YAML anchors/aliases (`&a001` / `*a001`),
- *     even when the same object is referenced twice in the input
- *
- * Single source of truth for `yaml.dump(..., { lineWidth: -1, noRefs: true })`
- * which was duplicated across 5 sites (3 in this module, 1 in
- * `src/app/api/config/route.ts`, 1 in `src/lib/profile-config-builder.ts`).
- * Byte-equivalent to the inline form for every reachable input — same string.
- */
-export function dumpYamlConfig(value: unknown): string {
-  return yaml.dump(value, { lineWidth: -1, noRefs: true });
 }
 
 /**

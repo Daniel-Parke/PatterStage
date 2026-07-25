@@ -7,7 +7,7 @@
 
 import { useState, useCallback } from "react";
 import { ArrowDownToLine, ArrowUpToLine, X, Loader2 } from "lucide-react";
-import type { SyncActionResult } from "@/lib/sync-manager";
+import type { SyncActionResult } from "@/lib/models/sync-result";
 import { pluralise } from "@/lib/utils";
 import { apiFetch } from "@/lib/api-fetch";
 

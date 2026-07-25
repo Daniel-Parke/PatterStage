@@ -17,11 +17,8 @@ import { messageFromError } from "@/lib/api-fetch";
 
 // ── Types ────────────────────────────────────────────────────
 
-export interface SyncActionResult {
-  success: boolean;
-  backupPath: string | null;
-  details: Array<{ action: string; detail: string }>;
-}
+import type { SyncActionResult } from "./models/sync-result";
+export type { SyncActionResult };
 
 export interface DriftReport {
   modelsInHermesNotInDb: Array<{ name: string; provider: string; modelId: string }>;

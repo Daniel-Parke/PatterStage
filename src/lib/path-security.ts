@@ -7,7 +7,7 @@ import { homedir } from "os";
 import { NextResponse } from "next/server";
 
 import { PS_DATA_DIR } from "@/lib/paths";
-import { getHermesFilesystemRoot } from "@/lib/hermes-home";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { badRequest } from "@/lib/api-response";
 
 const PROFILE_PATTERN = /^\.[a-zA-Z0-9][a-zA-Z0-9_-]{0,126}$|^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
@@ -45,7 +45,7 @@ export function resolveAllowedWorkspacePath(
   } catch {
     return { ok: false, error: "Invalid path" };
   }
-  const roots = [homedir(), PS_DATA_DIR, getHermesFilesystemRoot()];
+  const roots = [homedir(), PS_DATA_DIR, getAgentWorkspace().root];
   for (const root of roots) {
     if (isPathUnderRoot(abs, root)) {
       return { ok: true, absolute: abs };
@@ -53,7 +53,7 @@ export function resolveAllowedWorkspacePath(
   }
   return {
     ok: false,
-    error: "Path must be under your home directory, PatterStage data, or the Hermes install root",
+    error: "Path must be under your home directory, PatterStage data, or the agent install root",
   };
 }
 

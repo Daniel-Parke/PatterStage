@@ -7,8 +7,6 @@
 "use client";
 
 import { useApiResource } from "./useApiResource";
-import { unionToolsetsFromPlatforms } from "@/lib/hermes-toolset-unify";
-import type { PlatformToolsets } from "@/lib/profile-config-builder";
 import type { Skill } from "@/types/hermes";
 
 /** Enabled skills available to attach for a profile (defaults to "default"). */
@@ -34,11 +32,12 @@ export function useProfileToolsets(profileId?: string) {
     ["profile-toolsets", slug],
     `/api/agent/profiles/${encodeURIComponent(slug)}/toolsets`,
     {
-      select: (payload) => {
-        const toolsets = (payload as { platformToolsets?: PlatformToolsets } | undefined)
-          ?.platformToolsets;
-        return toolsets ? unionToolsetsFromPlatforms(toolsets) : undefined;
-      },
+      // The route already unions across platforms server-side and returns it as
+      // `unifiedEnabled` (api/agent/profiles/[id]/toolsets/route.ts:42). Reading
+      // it instead of recomputing drops a duplicated implementation of the same
+      // fan-in, and with it this hook's only two Hermes imports.
+      select: (payload) =>
+        (payload as { unifiedEnabled?: string[] } | undefined)?.unifiedEnabled,
       fallback: [],
     },
   );

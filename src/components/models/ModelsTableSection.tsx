@@ -11,7 +11,7 @@ import ModelsSectionHeader from "@/components/models/ModelsSectionHeader";
 import PerRowDeleteButton from "@/components/models/PerRowDeleteButton";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import { TASK_TYPES, type TaskType } from "@/lib/models/task-types";
-import type { SyncActionResult } from "@/lib/sync-manager";
+import type { SyncActionResult } from "@/lib/models/sync-result";
 
 import { type ApiModel, toModelEditorRecord } from "./types";
 

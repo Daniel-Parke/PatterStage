@@ -8,7 +8,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { forbidden, ok } from "@/lib/api-response";
 import { readCachedConfig, invalidateConfigCache } from "@/lib/config-cache";
-import { dumpYamlConfig } from "@/lib/hermes-config-sync";
+import { dumpYamlConfig } from "@/lib/yaml-config";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";

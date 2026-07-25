@@ -25,8 +25,6 @@ import { apiFetch, safeApiCallData } from "@/lib/api-fetch";
 import type { LocalDirEntry, Mission } from "@/types/hermes";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { parseMissionPrompt } from "@/lib/build-mission-prompt";
-import { unionToolsetsFromPlatforms } from "@/lib/hermes-toolset-unify";
-import type { PlatformToolsets } from "@/lib/profile-config-builder";
 import type { MissionFormState } from "@/components/missions/MissionCreateForm";
 import type { MissionTemplate } from "@/components/missions/TemplateModals";
 import { splitGoals } from "@/lib/mission-form-utils";
@@ -205,7 +203,7 @@ export function useMissionComposer({ showCreate, editingId }: UseMissionComposer
     const slug = encodeURIComponent(newProfile);
     Promise.all([
       apiFetch<{ data: { skills?: Array<{ name: string; enabled: boolean }> } }>(`/api/skills?profile=${slug}`, { signal: controller.signal }),
-      apiFetch<{ data: { platformToolsets?: PlatformToolsets } }>(`/api/agent/profiles/${slug}/toolsets`, { signal: controller.signal }),
+      apiFetch<{ data: { unifiedEnabled?: string[] } }>(`/api/agent/profiles/${slug}/toolsets`, { signal: controller.signal }),
     ])
       .then(([skillsResult, toolsetsResult]) => {
         const enabled = new Set(
@@ -213,11 +211,9 @@ export function useMissionComposer({ showCreate, editingId }: UseMissionComposer
             .filter((s) => s.enabled)
             .map((s) => s.name),
         );
-        const toolsetIds = new Set(
-          unionToolsetsFromPlatforms(
-            toolsetsResult.data?.platformToolsets ?? {},
-          ),
-        );
+        // `unifiedEnabled` is the same union, computed server-side by the route
+        // (api/agent/profiles/[id]/toolsets/route.ts:42).
+        const toolsetIds = new Set(toolsetsResult.data?.unifiedEnabled ?? []);
         setNewSkills((prev) => prev.filter((s) => enabled.has(s)));
         setNewToolsets((prev) => prev.filter((t) => toolsetIds.has(t)));
       })

@@ -10,12 +10,20 @@ describe("ToolsetSelector", () => {
       Promise.resolve({
         ok: true,
         json: () =>
+          // Mirrors the real GET /api/agent/profiles/[id]/toolsets body
+          // (route.ts:38-45). `unifiedEnabled` is the server-side union that
+          // useProfileToolsets now reads instead of recomputing it client-side;
+          // the stub carries both fields exactly as the route does.
           Promise.resolve({
             data: {
+              profile: "creative-lead",
               platformToolsets: {
                 cli: ["hermes-cli", "web"],
                 discord: ["hermes-discord"],
               },
+              unifiedEnabled: ["hermes-cli", "hermes-discord", "web"],
+              platformsDiverged: true,
+              divergedPlatforms: ["cli", "discord"],
             },
           }),
       } as Response),
