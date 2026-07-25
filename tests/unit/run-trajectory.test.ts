@@ -7,7 +7,7 @@ import {
   finalizeItemMetrics,
   aggregateMetrics,
   type ItemMetrics,
-} from "@/lib/benchmarks/metrics";
+} from "@/lib/runtime/run-trajectory";
 
 describe("benchmarks/metrics — trajectory accumulation", () => {
   it("counts tool invocations, completions, failures and distinct tools", () => {

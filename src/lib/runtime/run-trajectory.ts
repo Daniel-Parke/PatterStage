@@ -1,5 +1,23 @@
 // ═══════════════════════════════════════════════════════════════
-// benchmarks/metrics.ts — trajectory metrics from a run's event stream
+// runtime/run-trajectory.ts — what an agent actually DID, from its event stream
+//
+// Lifted out of src/lib/benchmarks/metrics.ts, ahead of that subsystem being
+// deleted. It is the only code in the repo that records an agent's trajectory
+// rather than its output: the `runs` table has no trajectory column, so a
+// finished mission or Composer stage yields final text and token counts and
+// nothing else. Written for a benchmark harness, needed by every run.
+//
+// Kept 100% covered on the way across (tests/unit/run-trajectory.test.ts).
+//
+// The event classifier below duplicates chat-utils.classifyRunEvent /
+// parseToolEvent, and that duplication is DELIBERATE, not an oversight: the
+// original author's note said "self-contained on purpose (no chat-UI deps) so it
+// stays a pure, trivially unit-tested module", and chat-utils pulls in
+// @/lib/api-fetch, which a server-side accumulator should not depend on.
+// Deduping means extracting the shared taxonomy into a third module that both
+// import; until someone does that, the two must be kept in step by hand -- the
+// status ladder and the ["name","tool","tool_name"] key preference are the parts
+// that must not drift.
 //
 // Modern agent evaluation grades the TRAJECTORY, not just the final answer:
 // which tools were called, whether failed calls recovered, how many steps were

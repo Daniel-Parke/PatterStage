@@ -47,7 +47,7 @@ import {
   accumulateRunEvent,
   finalizeItemMetrics,
   type ItemMetrics,
-} from "./metrics";
+} from "@/lib/runtime/run-trajectory";
 import { getSuite } from "./suites";
 import { createBenchAgent, teardownBenchAgent, type BenchAgentSpec } from "./bench-agent";
 import { ensureBenchGateway, gatewaySpawnAvailable } from "@/lib/runtime/gateway-manager";

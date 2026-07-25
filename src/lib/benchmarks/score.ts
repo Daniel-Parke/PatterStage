@@ -13,7 +13,7 @@
 // fraction across its repeats (computed in summarize()).
 // ═══════════════════════════════════════════════════════════════
 
-import type { ItemMetrics } from "./metrics";
+import type { ItemMetrics } from "@/lib/runtime/run-trajectory";
 import type {
   BenchmarkDomain,
   BenchmarkSummary,

@@ -4,7 +4,7 @@
 
 import { computeStatCard } from "@/lib/benchmarks/stats";
 import type { ResultForAgg } from "@/lib/benchmarks/score";
-import type { ItemMetrics } from "@/lib/benchmarks/metrics";
+import type { ItemMetrics } from "@/lib/runtime/run-trajectory";
 
 const baseMetrics = (over: Partial<ItemMetrics>): ItemMetrics => ({
   toolInvocations: 0,

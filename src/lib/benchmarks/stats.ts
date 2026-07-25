@@ -16,7 +16,7 @@
 
 import type { BenchmarkDomain, Stat, StatCard } from "./types";
 import { modalAgreement, type ResultForAgg } from "./score";
-import { aggregateMetrics, type ItemMetrics } from "./metrics";
+import { aggregateMetrics, type ItemMetrics } from "@/lib/runtime/run-trajectory";
 
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const pct = (x: number) => Math.round(clamp01(x) * 100);

@@ -68,6 +68,20 @@ export interface DeepResearchDeps {
 export interface DeepResearchResult {
   report: string;
   provider: string;
+  /** How many search calls were attempted across every round. */
+  searchAttempts: number;
+  /**
+   * How many of those THREW. A search that legitimately returns zero results is
+   * not a failure; a search provider that is down or misconfigured is.
+   *
+   * The caller uses this to refuse to mark a run `completed`. Without it, every
+   * search failure collapsed to `results = []`, the synthesis prompt fell back
+   * to "(no external sources - answer from model knowledge)", and a total search
+   * outage shipped a confident, cited-looking report indistinguishable from a
+   * real one. The honest-failure stance is borrowed from the benchmark runner,
+   * which failed a whole run rather than score it zero when everything errored.
+   */
+  searchFailures: number;
 }
 
 const VISIT_PER_ROUND = 2;
@@ -110,6 +124,8 @@ export async function runDeepResearch(
   const notes: string[] = [];
   const allSources: SearchResult[] = [];
   let nextQuery: string | null = firstQuery(plan.content, query);
+  let searchAttempts = 0;
+  let searchFailures = 0;
 
   // 2. Iterate
   for (let round = 0; round < maxRounds && nextQuery; round++) {
@@ -117,9 +133,13 @@ export async function runDeepResearch(
     nextQuery = null;
 
     let results: SearchResult[] = [];
+    searchAttempts += 1;
     try {
       results = await deps.search.search(q, resultsPerQuery);
     } catch {
+      // Still swallowed HERE so one bad round does not abort the whole run, but
+      // counted so the caller can tell "nothing found" from "search is down".
+      searchFailures += 1;
       results = [];
     }
     if (results.length > 0) {
@@ -195,7 +215,7 @@ export async function runDeepResearch(
     sources: sources.map((r) => r.url),
   });
 
-  return { report: synth.content, provider: deps.search.name };
+  return { report: synth.content, provider: deps.search.name, searchAttempts, searchFailures };
 }
 
 /** The real inference fn — callLLM, so local/cloud/Hermes-default all work. */

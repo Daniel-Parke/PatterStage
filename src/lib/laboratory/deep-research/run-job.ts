@@ -43,10 +43,28 @@ export async function runResearchJob(
         });
       },
     });
+    // Honest failure, borrowed from the benchmark runner's stance that a run
+    // where everything errored is a FAILED run, not a low score. Every search
+    // throwing collapsed to zero sources, the synthesis prompt fell back to
+    // "answer from model knowledge", and this line then marked it `completed` --
+    // so a total search outage shipped a confident, cited-looking report that an
+    // operator could not tell from a real one.
+    //
+    // Zero results is NOT this case: a search that legitimately found nothing
+    // still completes, and the report says so.
+    const searchDown = result.searchAttempts > 0 && result.searchFailures === result.searchAttempts;
     updateResearchRun(runId, {
-      status: "completed",
+      status: searchDown ? "failed" : "completed",
       report: result.report,
       provider: result.provider,
+      ...(searchDown
+        ? {
+            error:
+              `Search provider unavailable: all ${result.searchAttempts} search ` +
+              `attempt(s) failed. The report below was written without any external ` +
+              `sources, so its claims are ungrounded.`,
+          }
+        : {}),
       completedAt: now(),
     });
     // Capture the report as an artifact (idempotent; best-effort — never fail
