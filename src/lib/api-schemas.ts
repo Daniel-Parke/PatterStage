@@ -5,7 +5,22 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { HERMES_PROVIDERS } from "./hermes-providers";
+// The last core->module edge in the repo, and it is deliberate.
+//
+// The obvious "fix" is to move the provider list into core as PatterStage's own
+// supported-provider registry. That would be WORSE. The list's own comment says
+// its first fourteen entries must stay in lock-step with the agent CLI's
+// --provider choices, so the coupling is real; moving the list would keep the
+// coupling and make it invisible, which is the failure mode this whole boundary
+// exists to prevent.
+//
+// The other reviewed option was widening providerSchema to z.string().min(1) and
+// relocating the guard into one route. That weakens validation on every other
+// caller to buy a boundary, which is a product change nobody asked for.
+//
+// So the edge stays, visible and gated. See docs/adr/0005-product-modules.md.
+// design-lint-disable-next-line core-imports-no-module -- the provider list is genuinely the agent CLI's; moving it to core would hide the coupling rather than remove it
+import { HERMES_PROVIDERS } from "@/modules/hermes/lib/providers";
 import { TASK_TYPES, type TaskType } from "./models/task-types";
 import { ANALYTICS_EVENT_TYPES } from "./analytics/event-types";
 

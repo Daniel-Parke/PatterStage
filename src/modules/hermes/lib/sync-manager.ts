@@ -11,7 +11,7 @@ import {
   readHermesConfigModels,
   readHermesYamlConfig,
 } from "./config-sync";
-import { isHermesProvider, type HermesProvider } from "@/lib/hermes-providers";
+import { isHermesProvider, type HermesProvider } from "./providers";
 import { modelKey } from "@/lib/model-key";
 import { messageFromError } from "@/lib/api-fetch";
 

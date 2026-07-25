@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFileSync } from "fs";
 import { z } from "zod";
 
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { getActiveHermesPaths } from "@/modules/hermes/lib/agent-runtime";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";

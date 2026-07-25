@@ -27,7 +27,7 @@ import { join } from "path";
 
 import { db } from "./db";
 import { getAgentWorkspace } from "./runtime/workspace";
-import { loadCronJobsMap } from "./session-title-server";
+import { SERVER_MODULES } from "./modules/server";
 import { parseCronSessionId, cronJobIdFromSessionId } from "./session-title";
 import { estimateSessionSize, type SessionStatus } from "./session-repository";
 
@@ -251,7 +251,13 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
   const validMissionIds = buildValidMissionIdSet();
   const database = db();
   ensureMessageCountColumn(database);
-  const cronJobsById = loadCronJobsMap();
+  // Cron-job names come from whichever module keeps them; Hermes stores them in
+  // its own cron/jobs.json. Titling degrades to the first 8 chars of the job id
+  // when no module supplies them, so an empty map is a valid answer, not a
+  // failure (see formatSessionTitle).
+  const cronJobsById = new Map(
+    SERVER_MODULES.flatMap((m) => [...(m.loadAgentCronJobs?.() ?? [])]),
+  );
 
   // ── Step 1: Clean up stale mission_id references ─────────────
   // NULL out mission_ids that point to soft-deleted or missing missions

@@ -48,7 +48,7 @@ export function setupFsMocks() {
 
 /**
  * @deprecated jest.mock inside a function is not hoisted — do not use for new tests.
- * Prefer top-of-file `jest.mock("@/lib/hermes-agent-runtime", ...)` and `jest.mock("@/lib/paths", ...)`.
+ * Prefer top-of-file `jest.mock("@/modules/hermes/lib/agent-runtime", ...)` and `jest.mock("@/lib/paths", ...)`.
  */
 export function setupRouteMocks() {
   const root = "/tmp/test-hermes";
@@ -67,7 +67,7 @@ export function setupRouteMocks() {
     cronJobs: root + "/cron/jobs.json",
     memoryDb: root + "/memory_store.db",
   };
-  jest.mock("@/lib/hermes-agent-runtime", () => ({
+  jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
     getActiveHermesPaths: () => hp,
     getActiveHermesHome: () => root,
     getAgentLlmEndpoints: () => ({

@@ -22,8 +22,8 @@ import {
 import * as yaml from "js-yaml";
 
 import { dumpYamlConfig } from "@/lib/yaml-config";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { envVarForProvider, isHermesProvider, type HermesProvider } from "@/lib/hermes-providers";
+import { getActiveHermesPaths } from "./agent-runtime";
+import { envVarForProvider, isHermesProvider, type HermesProvider } from "./providers";
 import { AUXILIARY_TASK_TYPES } from "@/lib/models/task-types";
 import { updateAgentRoot } from "@/lib/agent-root-repository";
 import { getModelDefaults, getModel } from "@/lib/models-repository";

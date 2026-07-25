@@ -76,10 +76,10 @@ const RULES = [
       f.startsWith("src/") &&
       !f.startsWith("src/lib/runtime/") &&
       !f.startsWith("src/lib/frameworks/") &&
-      // The module is the adapter now. This is the destination the filename
-      // exemption below was standing in for.
-      !f.startsWith("src/modules/hermes/") &&
-      !/src\/lib\/hermes-[a-z-]+\.ts$/.test(f),
+      // The module IS the adapter now, which is what the old
+      // `src/lib/hermes-*.ts` filename exemption was standing in for. That
+      // exemption is gone: src/lib holds no such file.
+      !f.startsWith("src/modules/hermes/"),
     pattern: /getActiveHermesPaths|getAgentLlmEndpoints|HERMES_HOME|\.hermes\//,
   },
   {
@@ -113,24 +113,23 @@ const RULES = [
     // by definition a place where a neutral id becomes a concrete implementation.
     // A boundary needs designated crossing points; an undeclared one is a hole.
     //
-    // TRANSITIONAL: src/lib/hermes-*.ts is exempt while the hermes module move is
-    // in progress. Those files are moving INTO the module, so an edge from one of
-    // them to @/modules/hermes is a step toward the boundary rather than a breach
-    // of it. Without this, the move could only land as one 22-file commit that is
-    // unverifiable until the end. `assertTransitionalExemptionStillNeeded()` below
-    // deletes the exemption for us: it fails the build the moment src/lib holds no
-    // hermes-*.ts file, so this cannot outlive the migration.
+    // src/lib/runtime/ is the THIRD, and it is the port. workspace.ts and
+    // gateway.ts each say in their own header that they are the one file that
+    // knows the answer comes from Hermes; that is what a port binding is. This
+    // rule and `hermes-outside-adapter` above now agree on which directory is the
+    // adapter layer, rather than each having its own idea.
+    //
     // Covers src/ EXCEPT app/ (routing, may delegate), modules/ (the modules
-    // themselves) and the two composition roots. Previously an enumerated prefix
-    // list that left src/instrumentation.ts -- the boot path -- outside the rule
-    // entirely, so core could have imported a module there with a green build.
+    // themselves) and the three composition points. Previously an enumerated
+    // prefix list that left src/instrumentation.ts -- the boot path -- outside the
+    // rule entirely, so core could have imported a module there on a green build.
     files: (f) =>
       f.startsWith("src/") &&
       !f.startsWith("src/app/") &&
       !f.startsWith("src/modules/") &&
       !f.startsWith("src/lib/modules/") &&
-      f !== "src/lib/frameworks/registry.ts" &&
-      !/^src\/lib\/hermes-[a-z-]+\.ts$/.test(f),
+      !f.startsWith("src/lib/runtime/") &&
+      f !== "src/lib/frameworks/registry.ts",
     pattern: /from\s+["']@\/modules\//,
   },
   {
@@ -218,26 +217,6 @@ if (mode === "--report") {
     if (entries.length > 12) console.log(`    ... and ${entries.length - 12} more files`);
   }
   process.exit(0);
-}
-
-// ── The transitional exemption deletes itself ─────────────────────────────
-//
-// `core-imports-no-module` exempts src/lib/hermes-*.ts while the hermes module
-// move is in flight. A temporary exemption nobody is forced to remove is a
-// permanent one, so this fails the build the moment the last hermes-*.ts file
-// leaves src/lib. The error message says exactly which lines to delete.
-{
-  const stragglers = readdirSync("src/lib").filter((f) => /^hermes-[a-z-]+\.ts$/.test(f));
-  if (stragglers.length === 0) {
-    console.error(
-      "design-lint: the hermes module move is COMPLETE, so delete its transitional exemption.\n\n" +
-        "  src/lib holds no hermes-*.ts file any more, which means the\n" +
-        "  `!/^src\\/lib\\/hermes-[a-z-]+\\.ts$/` clause in `core-imports-no-module`\n" +
-        "  (and this whole guard block) now exempt nothing and only weaken the rule.\n" +
-        "  Remove both, then re-run.",
-    );
-    process.exit(1);
-  }
 }
 
 const baseline = existsSync(BASELINE_PATH)

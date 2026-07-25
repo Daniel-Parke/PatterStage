@@ -34,7 +34,7 @@ const testHermesPaths = {
   memoryDb: testHermesRoot + "/memory_store.db",
 };
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: jest.fn(() => testHermesPaths),
   getActiveHermesHome: jest.fn(() => testHermesRoot),
   getAgentLlmEndpoints: jest.fn(() => ({

@@ -11,7 +11,7 @@ import { methodNotAllowed, ok } from "@/lib/api-response";
 import {
   HERMES_CONFIGURABLE_TOOLSETS,
   HERMES_PLATFORMS,
-} from "@/lib/hermes-toolset-catalog";
+} from "@/modules/hermes/lib/toolset-catalog";
 
 // The GET handler is a pure constant read — `ok()` cannot throw and
 // the two catalog constants are statically imported. The 7-line

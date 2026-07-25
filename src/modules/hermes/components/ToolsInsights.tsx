@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { Wrench, Check, Power, Layers } from "lucide-react";
 import StatStrip from "@/components/viz/StatStrip";
-import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
+import { HERMES_PLATFORMS } from "../lib/toolset-catalog";
 
 /**
  * Toolsets overview for the selected profile — enabled/disabled mix out

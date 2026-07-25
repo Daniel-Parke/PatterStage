@@ -27,6 +27,9 @@ import ModelInsights from "@/components/models/ModelInsights";
 import ModelsTaskDefaultsSection from "@/components/models/ModelsTaskDefaultsSection";
 import { pluralise } from "@/lib/utils";
 import { useModelsPage } from "@/hooks/useModelsPage";
+// app/ may consult a module; the editor component may not, so the provider list
+// is injected from here (ADR-0005).
+import { HERMES_PROVIDERS } from "@/modules/hermes/lib/providers";
 
 export default function ModelsPage() {
   const {
@@ -221,6 +224,7 @@ export default function ModelsPage() {
         <ModelEditor
           model={editing}
           credentials={credentialOptions}
+          providers={HERMES_PROVIDERS}
           onClose={closeModelEditor}
           onSaved={handleSaved}
         />

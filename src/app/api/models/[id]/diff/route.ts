@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { getModelWithKey } from "@/lib/models-repository";
 import { readHermesYamlConfig } from "@/modules/hermes/lib/config-sync";
-import { envVarForProvider, isHermesProvider } from "@/lib/hermes-providers";
+import { envVarForProvider, isHermesProvider } from "@/modules/hermes/lib/providers";
 import { requireAuth } from "@/lib/api-auth";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { maskKeyHint } from "@/lib/secret-mask";

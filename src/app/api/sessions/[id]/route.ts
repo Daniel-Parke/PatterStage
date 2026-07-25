@@ -3,7 +3,7 @@ import Database from "better-sqlite3";
 import { existsSync, readFileSync, statSync } from "fs";
 import { basename, join } from "path";
 
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { getActiveHermesPaths } from "@/modules/hermes/lib/agent-runtime";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { badRequest, notFound, ok, payloadTooLarge } from "@/lib/api-response";

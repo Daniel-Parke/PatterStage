@@ -29,7 +29,7 @@ jest.mock("@/lib/db", () => {
   };
 });
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: () => {
     const root = (global as { __FAKE_HERMES_ROOT__?: string }).__FAKE_HERMES_ROOT__!;
     return {

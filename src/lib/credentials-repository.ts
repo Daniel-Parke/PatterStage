@@ -7,7 +7,6 @@
 // Listing endpoints expose only `keyHint`, never `apiKey`.
 
 import { db, inTransaction, uuid, now } from "./db";
-import { envVarForProvider, type HermesProvider } from "./hermes-providers";
 
 // ── Public types ────────────────────────────────────────────────
 
@@ -196,13 +195,9 @@ export interface UpsertCredentialResult {
  * never creates duplicate credential rows.
  */
 export function upsertCredential(input: {
-  provider: HermesProvider;
+  provider: string;
   apiKey: string;
 }): UpsertCredentialResult | null {
-  // OAuth-only providers have no API key — skip silently.
-  if (!envVarForProvider(input.provider)) {
-    return null;
-  }
 
   const existing = db()
     .prepare("SELECT id, api_key FROM credentials WHERE provider = ?")

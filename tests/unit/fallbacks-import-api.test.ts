@@ -88,7 +88,7 @@ jest.mock("@/lib/models-repository", () => ({
 
 let fakeRoot: string;
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: () => ({
     root: fakeRoot,
     config: join(fakeRoot, "config.yaml"),

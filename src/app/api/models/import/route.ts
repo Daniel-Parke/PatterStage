@@ -15,6 +15,7 @@ import { parseHermesConfig } from "@/modules/hermes/lib/config-import";
 import { modelKey } from "@/lib/model-key";
 import { upsertModel, updateModel, listModels } from "@/lib/models-repository";
 import { upsertCredential } from "@/lib/credentials-repository";
+import { envVarForProvider } from "@/modules/hermes/lib/providers";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { toError } from "@/lib/api-fetch";
@@ -99,6 +100,11 @@ export async function POST(request: NextRequest) {
     // Build provider → credentialId map from upsert results
     const providerToCredId: Record<string, string> = {};
     for (const cred of parsed.credentials) {
+      // OAuth-only providers have no API key to store. Hermes signals that with an
+      // empty env-var name, so the question is Hermes' to answer and it is asked
+      // HERE, at the composition point, rather than inside the core credentials
+      // repository -- which was inferring "OAuth-only" from a vendor lookup table.
+      if (!envVarForProvider(cred.provider)) continue;
       try {
         const result = upsertCredential({ provider: cred.provider, apiKey: cred.apiKey });
         if (result) {

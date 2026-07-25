@@ -20,7 +20,6 @@ import {
 
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
-import { HERMES_PROVIDERS, type HermesProvider } from "@/lib/hermes-providers";
 import CredentialPicker, {
   type CredentialOption,
 } from "@/components/models/CredentialPicker";
@@ -46,13 +45,23 @@ interface ModelEditorProps {
   /** When null, the modal is in create mode. */
   model: ModelEditorRecord | null;
   credentials: CredentialOption[];
+  /**
+   * Provider ids for the dropdown, supplied by the page.
+   *
+   * Injected rather than imported: the models registry is core (llm.ts and the
+   * mission body read it), but the LIST of providers is the agent framework's --
+   * its own comment says it must stay in lock-step with the agent CLI's
+   * `--provider` choices. The page is app/ and may consult the module; this
+   * component may not.
+   */
+  providers: readonly string[];
   onClose: () => void;
   onSaved: () => void;
 }
 
 interface FormState {
   name: string;
-  provider: HermesProvider;
+  provider: string;
   modelId: string;
   baseUrl: string;
   contextLength: string;
@@ -64,7 +73,7 @@ interface FormState {
 function initialFormState(model: ModelEditorRecord | null): FormState {
   return {
     name: model?.name ?? "",
-    provider: ((model?.provider as HermesProvider) ?? "anthropic"),
+    provider: model?.provider ?? "anthropic",
     modelId: model?.modelId ?? "",
     baseUrl: model?.baseUrl ?? "",
     contextLength:
@@ -119,6 +128,7 @@ function parseOptionalStringField(
 export default function ModelEditor({
   model,
   credentials,
+  providers,
   onClose,
   onSaved,
 }: ModelEditorProps) {
@@ -281,10 +291,10 @@ export default function ModelEditor({
               ariaLabel="Provider"
               value={form.provider}
               onChange={(v) => {
-                update("provider", v as HermesProvider);
+                update("provider", v);
                 update("credentialsId", null);
               }}
-              options={HERMES_PROVIDERS.map((p) => ({ value: p, label: p }))}
+              options={providers.map((p) => ({ value: p, label: p }))}
             />
           </FieldRow>
 

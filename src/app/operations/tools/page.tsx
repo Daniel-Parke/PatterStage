@@ -26,7 +26,7 @@ import type { PlatformToolsets } from "@/modules/hermes/lib/profile-config-build
 import type { AgentProfile } from "@/types/console";
 import {
   HERMES_CONFIGURABLE_TOOLSETS,
-} from "@/lib/hermes-toolset-catalog";
+} from "@/modules/hermes/lib/toolset-catalog";
 import {
   expandUnifiedToAllPlatforms,
   unionToolsetsFromPlatforms,

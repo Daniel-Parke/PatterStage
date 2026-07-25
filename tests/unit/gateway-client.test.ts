@@ -20,7 +20,7 @@ describe("gateway-client", () => {
 
   it("getAgentLlmEndpoints uses CONTROL_HUB_LLM_API for chat URL", async () => {
     process.env.CONTROL_HUB_LLM_API = "http://10.0.0.5:8642/v1/chat/completions";
-    const { getAgentLlmEndpoints } = await import("@/lib/hermes-agent-runtime");
+    const { getAgentLlmEndpoints } = await import("@/modules/hermes/lib/agent-runtime");
     const { apiUrl, gatewayBase } = getAgentLlmEndpoints();
     expect(apiUrl).toBe("http://10.0.0.5:8642/v1/chat/completions");
     expect(gatewayBase).toBe("http://10.0.0.5:8642");

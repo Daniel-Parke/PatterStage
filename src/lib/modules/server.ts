@@ -47,6 +47,24 @@ export interface ServerModule {
    * operator typed. See src/lib/agents/roster.ts.
    */
   listAgentRoster?: () => import("@/lib/agents/roster").AgentRosterEntry[];
+  /**
+   * Read-side sync sources this module contributes to the SyncScheduler.
+   *
+   * Core owns the SyncSource contract and the scheduler; a module owns the
+   * sources that read ITS store. ConfigSync parses a Hermes config.yaml schema
+   * and probes SOUL.md, so it is the module's, not core's. The four sources that
+   * only needed FILE PATHS stayed in core, because AgentWorkspace already
+   * covers those neutrally.
+   */
+  syncSources?: () => import("@/lib/sync/types").SyncSource[];
+  /**
+   * The agent's recurring-job records, keyed by job id, for session titling.
+   *
+   * Returns a core-owned type (CronJobEntry: id + optional name), so nothing of
+   * the framework's own schema crosses. Session titling degrades gracefully
+   * without it, which is why it is optional in every sense.
+   */
+  loadAgentCronJobs?: () => Map<string, import("@/lib/session-title").CronJobEntry>;
 }
 
 export const SERVER_MODULES: readonly ServerModule[] = [recRoomServerModule, hermesServerModule];

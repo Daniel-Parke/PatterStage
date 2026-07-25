@@ -20,7 +20,7 @@ jest.mock("@/lib/memory-providers", () => ({
   getMemoryProviderType: () => "none",
   getActiveMemoryProvider: () => ({ stats: async () => providerStats }),
 }));
-jest.mock("@/lib/hermes-agent-runtime", () => ({ getActiveHermesPaths: () => ({ memoryDb: "/nope/memory.db" }) }));
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({ getActiveHermesPaths: () => ({ memoryDb: "/nope/memory.db" }) }));
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 
 import { MemorySync } from "@/lib/sync/sources/MemorySync";

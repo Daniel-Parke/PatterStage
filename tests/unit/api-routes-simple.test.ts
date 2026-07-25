@@ -38,7 +38,7 @@ jest.mock("@/lib/system-repository", () => ({
   getSystemStatBoolean: jest.fn(() => false),
 }));
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: jest.fn(() => ({
     root: "/tmp/test-hermes",
     env: "/tmp/test-hermes/.env",

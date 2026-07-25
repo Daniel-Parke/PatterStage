@@ -67,7 +67,7 @@ import { tmpdir } from "os";
 const tempDir = mkdtempSync(join(tmpdir(), "config-cache-test-"));
 const fakeConfigPath = join(tempDir, "config.yaml");
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: () => ({
     config: fakeConfigPath,
     backups: join(tempDir, "backups"),

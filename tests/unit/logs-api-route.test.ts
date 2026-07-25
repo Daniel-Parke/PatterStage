@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 /** @jest-environment node */
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: () => ({ logs: "/tmp/hermes-logs-test" }),
 }));
 

@@ -20,7 +20,7 @@ jest.mock("fs", () => ({
   renameSync: jest.fn(),
 }));
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesHome: jest.fn(() => "/tmp/test-hermes"),
   getActiveHermesPaths: jest.fn(() => ({
     root: "/tmp/test-hermes",

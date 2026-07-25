@@ -12,7 +12,7 @@ import { join } from "path";
 // wrote $HOME/.hermes/logs/ch-deploy.status and assumed the module resolved
 // the same path + preferred the legacy basename — both false once a real
 // ps-deploy.status exists on the machine, which made this test flaky.)
-jest.mock("@/lib/hermes-agent-runtime", () => {
+jest.mock("@/modules/hermes/lib/agent-runtime", () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const os = require("os");
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -25,7 +25,7 @@ jest.mock("@/lib/hermes-agent-runtime", () => {
 
 describe("deploy-status: isDeployInProgress + stale-running persistence", () => {
   // The module's canonical (write + preferred-read) file is ps-deploy.status.
-  const logsDir = (jest.requireMock("@/lib/hermes-agent-runtime") as { __TEST_LOGS_DIR: string }).__TEST_LOGS_DIR;
+  const logsDir = (jest.requireMock("@/modules/hermes/lib/agent-runtime") as { __TEST_LOGS_DIR: string }).__TEST_LOGS_DIR;
   const realPath = join(logsDir, "ps-deploy.status");
 
   beforeEach(() => {

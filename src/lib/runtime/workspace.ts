@@ -19,7 +19,7 @@
 // Hermes bundle wearing a different name.
 // ═══════════════════════════════════════════════════════════════
 
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { getActiveHermesPaths } from "@/modules/hermes/lib/agent-runtime";
 
 /** The parts of an agent's on-disk workspace that PatterStage core cares about. */
 export interface AgentWorkspace {

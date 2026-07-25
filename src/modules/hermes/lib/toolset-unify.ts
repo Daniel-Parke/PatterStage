@@ -2,7 +2,7 @@
 // hermes-toolset-unify.ts — Unified per-profile toolset helpers
 // ═══════════════════════════════════════════════════════════════
 
-import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
+import { HERMES_PLATFORMS } from "./toolset-catalog";
 import type { PlatformToolsets } from "./profile-config-builder";
 
 /** Sort + dedupe an array of strings. */

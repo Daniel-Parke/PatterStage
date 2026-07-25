@@ -14,7 +14,7 @@
 // Core depends on THIS; only this file knows the answer comes from Hermes.
 // ═══════════════════════════════════════════════════════════════
 
-import { getAgentLlmEndpoints } from "@/lib/hermes-agent-runtime";
+import { getAgentLlmEndpoints } from "@/modules/hermes/lib/agent-runtime";
 
 /** The agent's inference gateway. */
 export interface AgentGateway {

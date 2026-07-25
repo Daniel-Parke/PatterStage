@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { readFileSync, existsSync, readdirSync, statSync } from "fs";
 
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { getActiveHermesPaths } from "@/modules/hermes/lib/agent-runtime";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { resolveSkillDirUnderRoot } from "@/lib/path-security";
 import { parseSkillFrontmatter, stripSkillFrontmatter } from "@/lib/skills-repository";

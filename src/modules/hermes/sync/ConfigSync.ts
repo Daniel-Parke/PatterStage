@@ -15,7 +15,7 @@
 import { access, constants } from "fs/promises";
 import { readFile } from "fs/promises";
 import yaml from "js-yaml";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { getActiveHermesPaths } from "../lib/agent-runtime";
 import { setMultipleStats } from "@/lib/system-repository";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";

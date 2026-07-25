@@ -86,6 +86,7 @@ describe("ModelEditor", () => {
       <ModelEditor
         model={null}
         credentials={[]}
+        providers={["anthropic", "openrouter", "openai"]}
         onClose={onClose}
         onSaved={onSaved}
       />
@@ -135,6 +136,7 @@ describe("ModelEditor", () => {
       <ModelEditor
         model={null}
         credentials={[ANTHROPIC_KEY]}
+        providers={["anthropic", "openrouter", "openai"]}
         onClose={jest.fn()}
         onSaved={onSaved}
       />
@@ -184,6 +186,7 @@ describe("ModelEditor", () => {
       <ModelEditor
         model={existing}
         credentials={[ANTHROPIC_KEY]}
+        providers={["anthropic", "openrouter", "openai"]}
         onClose={jest.fn()}
         onSaved={onSaved}
       />

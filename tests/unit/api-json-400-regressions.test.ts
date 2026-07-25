@@ -31,7 +31,7 @@ jest.mock("@/lib/sync", () => ({
   ensureSyncLayer: jest.fn(),
 }));
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: jest.fn(() => ({ logs: "/tmp/non-existent" })),
 }));
 

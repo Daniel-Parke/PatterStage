@@ -12,11 +12,11 @@
 import { mkdtempSync, readFileSync, writeFileSync, existsSync, readdirSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { HERMES_PROVIDERS, PROVIDER_ENV_VAR } from "@/lib/hermes-providers";
+import { HERMES_PROVIDERS, PROVIDER_ENV_VAR } from "@/modules/hermes/lib/providers";
 
 let fakeRoot: string;
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: () => {
     const root = (global as { __FAKE_HERMES_ROOT__?: string }).__FAKE_HERMES_ROOT__!;
     return {

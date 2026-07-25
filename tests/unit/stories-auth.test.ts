@@ -12,7 +12,7 @@ jest.mock("fs", () => ({
   unlinkSync: jest.fn(),
 }));
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getAgentLlmEndpoints: jest.fn(() => ({
     apiUrl: "http://127.0.0.1:9/v1/chat/completions",
     gatewayBase: "http://127.0.0.1:9",

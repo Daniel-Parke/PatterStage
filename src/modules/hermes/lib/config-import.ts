@@ -23,8 +23,8 @@ import { createHash } from "crypto";
 import { existsSync, readFileSync } from "fs";
 import * as yaml from "js-yaml";
 
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
-import { PROVIDER_ENV_VAR, isHermesProvider, type HermesProvider } from "@/lib/hermes-providers";
+import { getActiveHermesPaths } from "./agent-runtime";
+import { PROVIDER_ENV_VAR, isHermesProvider, type HermesProvider } from "./providers";
 import { TASK_TYPES, type TaskType } from "@/lib/models/task-types";
 import { parseEnvFile } from "@/lib/env-file";
 

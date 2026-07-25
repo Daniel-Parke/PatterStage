@@ -24,7 +24,7 @@ jest.mock("fs", () => ({
   mkdirSync: mockMkdirSync,
 }));
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesPaths: jest.fn(() => ({
     root: "/tmp/test-hermes",
     config: "/tmp/test-hermes/config.yaml",

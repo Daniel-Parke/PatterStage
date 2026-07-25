@@ -11,7 +11,7 @@ jest.mock("fs", () => ({
   statSync: mockStatSync,
 }));
 
-jest.mock("@/lib/hermes-agent-runtime", () => ({
+jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
   getActiveHermesHome: jest.fn(() => "/tmp/test-hermes"),
 }));
 

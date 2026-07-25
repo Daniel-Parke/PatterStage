@@ -12,7 +12,7 @@ import { Globe, RefreshCw } from "lucide-react";
 
 import { StatusDot } from "@/components/ui/Card";
 import { Panel, PanelHeader } from "@/components/dashboard/Panel";
-import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
+import { HERMES_PLATFORMS } from "../lib/toolset-catalog";
 import { timeAgo } from "@/lib/utils";
 import type { MonitorData } from "@/types/console";
 

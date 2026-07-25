@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Wrench, Loader2, X, ChevronDown, Search } from "lucide-react";
-import { toolsetCatalogLabel } from "@/lib/hermes-toolset-catalog";
+import { useToolsetCatalog } from "@/hooks/useToolsetCatalog";
 import { pluralise } from "@/lib/utils";
 import { useProfileToolsets } from "@/hooks/useProfileAttachables";
 
@@ -19,6 +19,7 @@ export default function ToolsetSelector({
   profileId,
   max = 10,
 }: ToolsetSelectorProps) {
+  const { toolsetLabel } = useToolsetCatalog();
   const [open, setOpen] = useState(false);
   const { data: availableData, isLoading: loading } = useProfileToolsets(profileId);
   const available = availableData ?? [];
@@ -73,7 +74,7 @@ export default function ToolsetSelector({
               key={id}
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-neon-orange/10 border border-neon-orange/20 text-xs font-mono text-neon-orange/80"
             >
-              {toolsetCatalogLabel(id)}
+              {toolsetLabel(id)}
               <button type="button" onClick={() => remove(id)} className="hover:text-white">
                 <X className="w-3 h-3" />
               </button>
@@ -121,7 +122,7 @@ export default function ToolsetSelector({
                   }}
                   className="w-full text-left px-2 py-1.5 rounded text-xs font-mono text-white/70 hover:bg-white/5"
                 >
-                  {toolsetCatalogLabel(id)}
+                  {toolsetLabel(id)}
                   <span className="text-white/25 ml-1">({id})</span>
                 </button>
               ))

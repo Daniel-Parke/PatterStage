@@ -10,8 +10,12 @@
 
 import type { ServerModule } from "@/lib/modules/server";
 import type { AgentRosterEntry } from "@/lib/agents/roster";
+import type { SyncSource } from "@/lib/sync/types";
+import type { CronJobEntry } from "@/lib/session-title";
 
 import { listProfiles } from "./lib/profiles-repository";
+import { loadCronJobsMap } from "./lib/cron-jobs";
+import { ConfigSync } from "./sync/ConfigSync";
 
 export const hermesServerModule: ServerModule = {
   id: "hermes",
@@ -26,4 +30,16 @@ export const hermesServerModule: ServerModule = {
    */
   listAgentRoster: (): AgentRosterEntry[] =>
     listProfiles().map((p) => ({ slug: p.slug, displayName: p.displayName || p.slug })),
+
+  /**
+   * ConfigSync only. The other four read-side sources stayed in core because they
+   * needed file PATHS, which AgentWorkspace already gives them neutrally. This one
+   * parses a Hermes config.yaml schema (memory.provider, model.default and its
+   * string shorthand), handles a duplicate-key quirk specific to that file, and
+   * probes SOUL.md. That is protocol knowledge, not a path.
+   */
+  syncSources: (): SyncSource[] => [new ConfigSync()],
+
+  /** Hermes' own cron/jobs.json, projected to the core-owned CronJobEntry. */
+  loadAgentCronJobs: (): Map<string, CronJobEntry> => loadCronJobsMap(),
 };
