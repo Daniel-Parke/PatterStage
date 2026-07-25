@@ -10,9 +10,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type Database from "better-sqlite3";
-import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
+import { execMigrationFile } from "./apply-sql";
 
 const MISSION_PHASES_SCHEMA_VERSION = 18;
 
@@ -23,14 +23,7 @@ export function applyMissionPhasesMigration(
   const current = getSchemaVersion(database);
   if (current >= MISSION_PHASES_SCHEMA_VERSION) return current;
 
-  const path = join(migrationsDir, "018_mission_phases.sql");
-  if (existsSync(path)) {
-    try {
-      database.exec(readFileSync(path, "utf-8"));
-    } catch {
-      // CREATE ... IF NOT EXISTS is idempotent; ignore partial-apply races.
-    }
-  }
+  execMigrationFile(database, join(migrationsDir, "018_mission_phases.sql"));
 
   // Additive column adds. Each guarded independently: ADD COLUMN throws if the
   // column already exists, which must not skip setSchemaVersion below.

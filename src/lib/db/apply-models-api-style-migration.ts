@@ -8,9 +8,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type Database from "better-sqlite3";
-import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
+import { execMigrationFile } from "./apply-sql";
 
 const MODELS_API_STYLE_SCHEMA_VERSION = 24;
 
@@ -21,14 +21,7 @@ export function applyModelsApiStyleMigration(
   const current = getSchemaVersion(database);
   if (current >= MODELS_API_STYLE_SCHEMA_VERSION) return current;
 
-  const path = join(migrationsDir, "024_models_api_style.sql");
-  if (existsSync(path)) {
-    try {
-      database.exec(readFileSync(path, "utf-8"));
-    } catch {
-      // marker file is a no-op; ignore.
-    }
-  }
+  execMigrationFile(database, join(migrationsDir, "024_models_api_style.sql"));
 
   try {
     database.exec("ALTER TABLE models ADD COLUMN api_style TEXT");

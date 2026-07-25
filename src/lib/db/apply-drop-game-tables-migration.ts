@@ -10,9 +10,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type Database from "better-sqlite3";
-import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
+import { execMigrationFile } from "./apply-sql";
 
 const DROP_GAME_TABLES_SCHEMA_VERSION = 11;
 
@@ -20,14 +20,7 @@ export function applyDropGameTablesMigration(database: Database.Database, migrat
   const current = getSchemaVersion(database);
   if (current >= DROP_GAME_TABLES_SCHEMA_VERSION) return current;
 
-  const path = join(migrationsDir, "011_drop_game_tables.sql");
-  if (existsSync(path)) {
-    try {
-      database.exec(readFileSync(path, "utf-8"));
-    } catch {
-      // DROP ... IF EXISTS is idempotent; ignore partial-apply races.
-    }
-  }
+  execMigrationFile(database, join(migrationsDir, "011_drop_game_tables.sql"));
 
   setSchemaVersion(database, DROP_GAME_TABLES_SCHEMA_VERSION);
   return DROP_GAME_TABLES_SCHEMA_VERSION;

@@ -7,9 +7,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type Database from "better-sqlite3";
-import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
+import { execMigrationFile } from "./apply-sql";
 
 const RESEARCH_OPTIONS_SCHEMA_VERSION = 23;
 
@@ -20,14 +20,7 @@ export function applyResearchOptionsMigration(
   const current = getSchemaVersion(database);
   if (current >= RESEARCH_OPTIONS_SCHEMA_VERSION) return current;
 
-  const path = join(migrationsDir, "023_research_options.sql");
-  if (existsSync(path)) {
-    try {
-      database.exec(readFileSync(path, "utf-8"));
-    } catch {
-      // CREATE ... IF NOT EXISTS is idempotent; ignore partial-apply races.
-    }
-  }
+  execMigrationFile(database, join(migrationsDir, "023_research_options.sql"));
 
   try {
     database.exec("ALTER TABLE research_runs ADD COLUMN config_json TEXT");

@@ -9,9 +9,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type Database from "better-sqlite3";
-import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
+import { execMigrationFile } from "./apply-sql";
 
 const RETIRE_MISSION_PHASES_SCHEMA_VERSION = 20;
 
@@ -22,14 +22,7 @@ export function applyRetireMissionPhasesMigration(
   const current = getSchemaVersion(database);
   if (current >= RETIRE_MISSION_PHASES_SCHEMA_VERSION) return current;
 
-  const path = join(migrationsDir, "020_retire_mission_phases.sql");
-  if (existsSync(path)) {
-    try {
-      database.exec(readFileSync(path, "utf-8"));
-    } catch {
-      // DROP TABLE IF EXISTS is idempotent; ignore races.
-    }
-  }
+  execMigrationFile(database, join(migrationsDir, "020_retire_mission_phases.sql"));
 
   // Best-effort column removals. Harmless if unsupported / already dropped.
   for (const stmt of [

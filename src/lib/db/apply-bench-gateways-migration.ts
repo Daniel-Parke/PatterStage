@@ -10,9 +10,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type Database from "better-sqlite3";
-import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
+import { execMigrationFile } from "./apply-sql";
 
 const BENCH_GATEWAYS_SCHEMA_VERSION = 17;
 
@@ -23,14 +23,7 @@ export function applyBenchGatewaysMigration(
   const current = getSchemaVersion(database);
   if (current >= BENCH_GATEWAYS_SCHEMA_VERSION) return current;
 
-  const path = join(migrationsDir, "017_bench_gateways.sql");
-  if (existsSync(path)) {
-    try {
-      database.exec(readFileSync(path, "utf-8"));
-    } catch {
-      // CREATE ... IF NOT EXISTS is idempotent; ignore partial-apply races.
-    }
-  }
+  execMigrationFile(database, join(migrationsDir, "017_bench_gateways.sql"));
 
   // Per-item trajectory metrics blob. Guarded independently: ADD COLUMN throws
   // if the column already exists, which must not skip setSchemaVersion below.

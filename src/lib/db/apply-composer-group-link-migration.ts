@@ -8,9 +8,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type Database from "better-sqlite3";
-import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
+import { execMigrationFile } from "./apply-sql";
 
 const COMPOSER_GROUP_LINK_SCHEMA_VERSION = 26;
 
@@ -21,14 +21,7 @@ export function applyComposerGroupLinkMigration(
   const current = getSchemaVersion(database);
   if (current >= COMPOSER_GROUP_LINK_SCHEMA_VERSION) return current;
 
-  const path = join(migrationsDir, "026_composer_group_link.sql");
-  if (existsSync(path)) {
-    try {
-      database.exec(readFileSync(path, "utf-8"));
-    } catch {
-      // marker file is a no-op; ignore.
-    }
-  }
+  execMigrationFile(database, join(migrationsDir, "026_composer_group_link.sql"));
 
   try {
     database.exec("ALTER TABLE composer_runs ADD COLUMN parent_node_run_id TEXT");

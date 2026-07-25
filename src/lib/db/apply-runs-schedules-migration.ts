@@ -8,9 +8,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type Database from "better-sqlite3";
-import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
+import { execMigrationFile } from "./apply-sql";
 
 const RUNS_SCHEDULES_SCHEMA_VERSION = 8;
 
@@ -43,14 +43,7 @@ export function applyRunsSchedulesMigration(
     return current;
   }
 
-  const path = join(migrationsDir, "009_runs_schedules.sql");
-  if (existsSync(path)) {
-    try {
-      database.exec(readFileSync(path, "utf-8"));
-    } catch {
-      // CREATE ... IF NOT EXISTS is idempotent; ignore partial-apply errors.
-    }
-  }
+  execMigrationFile(database, join(migrationsDir, "009_runs_schedules.sql"));
 
   addColumnIfMissing(database, "missions", "run_id", "run_id TEXT");
   addColumnIfMissing(database, "agent_profiles", "gateway_host", "gateway_host TEXT");

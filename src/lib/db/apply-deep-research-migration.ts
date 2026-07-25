@@ -7,9 +7,9 @@
 // ═══════════════════════════════════════════════════════════════
 
 import type Database from "better-sqlite3";
-import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
+import { execMigrationFile } from "./apply-sql";
 
 const DEEP_RESEARCH_SCHEMA_VERSION = 19;
 
@@ -20,14 +20,7 @@ export function applyDeepResearchMigration(
   const current = getSchemaVersion(database);
   if (current >= DEEP_RESEARCH_SCHEMA_VERSION) return current;
 
-  const path = join(migrationsDir, "019_deep_research.sql");
-  if (existsSync(path)) {
-    try {
-      database.exec(readFileSync(path, "utf-8"));
-    } catch {
-      // CREATE ... IF NOT EXISTS is idempotent; ignore partial-apply races.
-    }
-  }
+  execMigrationFile(database, join(migrationsDir, "019_deep_research.sql"));
 
   setSchemaVersion(database, DEEP_RESEARCH_SCHEMA_VERSION);
   return DEEP_RESEARCH_SCHEMA_VERSION;
