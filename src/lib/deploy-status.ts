@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, renameSync, writeFileSync } from "fs";
 import { dirname } from "path";
 
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { ensureDir } from "@/lib/fs-helpers";
 
 function deployStatusDir(): string {
@@ -27,7 +27,7 @@ const STALE_RUNNING_MS = 45 * 60 * 1000;
 
 /** Canonical (write) path for the deploy status file. */
 function deployStatusPath(): string {
-  return getActiveHermesPaths().logs + "/" + DEPLOY_STATUS_BASENAME;
+  return getAgentWorkspace().logs + "/" + DEPLOY_STATUS_BASENAME;
 }
 
 /** Read path: prefer the new ps- file; fall back to a legacy ch- file written
@@ -35,7 +35,7 @@ function deployStatusPath(): string {
 function deployStatusReadPath(): string {
   const p = deployStatusPath();
   if (existsSync(p)) return p;
-  const legacy = getActiveHermesPaths().logs + "/" + LEGACY_DEPLOY_STATUS_BASENAME;
+  const legacy = getAgentWorkspace().logs + "/" + LEGACY_DEPLOY_STATUS_BASENAME;
   return existsSync(legacy) ? legacy : p;
 }
 
@@ -177,7 +177,7 @@ export function writeDeployStatusRunning(
 export function tailLogHint(logHint: string, maxLines = 20): string[] {
   if (!logHint) return [];
   const base = logHint.replace(/\.log$/i, "");
-  const path = getActiveHermesPaths().logs + "/" + base + ".log";
+  const path = getAgentWorkspace().logs + "/" + base + ".log";
   if (!existsSync(path)) return [];
   try {
     const lines = readFileSync(path, "utf-8").split("\n");

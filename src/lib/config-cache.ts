@@ -28,7 +28,7 @@
 import { existsSync, readFileSync } from "fs";
 import yaml from "js-yaml";
 
-import { getActiveHermesPaths } from "./hermes-agent-runtime";
+import { getAgentWorkspace } from "./runtime/workspace";
 import { db } from "./db";
 
 const CACHE_TTL_MS = 15_000; // 15 seconds
@@ -97,7 +97,7 @@ export function readCachedConfig(): Record<string, unknown> {
   const cached = readConfigCache();
   if (cached) return cached;
 
-  const configPath = getActiveHermesPaths().config;
+  const configPath = getAgentWorkspace().config;
 
   if (!existsSync(configPath)) {
     return {};

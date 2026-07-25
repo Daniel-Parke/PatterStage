@@ -26,7 +26,7 @@ import { existsSync } from "fs";
 import { join } from "path";
 
 import { db } from "./db";
-import { getActiveHermesPaths } from "./hermes-agent-runtime";
+import { getAgentWorkspace } from "./runtime/workspace";
 import { loadCronJobsMap } from "./session-title-server";
 import { parseCronSessionId, cronJobIdFromSessionId } from "./session-title";
 import { estimateSessionSize, type SessionStatus } from "./session-repository";
@@ -65,7 +65,7 @@ function hermesStatusFromEndReason(
 }
 
 function readHermesSessionsFromStateDb(): HermesSessionRow[] {
-  const root = getActiveHermesPaths().root;
+  const root = getAgentWorkspace().root;
   const stateDbPath = join(root, "state.db");
   if (!existsSync(stateDbPath)) return [];
 

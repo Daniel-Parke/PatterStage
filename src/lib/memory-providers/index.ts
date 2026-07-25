@@ -10,7 +10,7 @@
 //   - none: Graceful degradation when no provider configured
 
 import { readFileSync, existsSync } from "fs";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
 
 // The pluggable provider interface + DB-owned config + active-provider resolver.
 import type { MemoryProviderType } from "./types";
@@ -58,7 +58,7 @@ export interface MemoryReadResult {
 /** Parse the memory provider from config.yaml */
 function getConfiguredProvider(): MemoryProviderType {
   try {
-    const configPath = getActiveHermesPaths().config;
+    const configPath = getAgentWorkspace().config;
     if (!existsSync(configPath)) return "none";
 
     const content = readFileSync(configPath, "utf-8");

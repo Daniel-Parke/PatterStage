@@ -7,7 +7,7 @@
 
 import { access, constants } from "fs/promises";
 import { readFile } from "fs/promises";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { db } from "@/lib/db";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
@@ -38,7 +38,7 @@ export class EnvSync implements SyncSource {
   async sync(): Promise<SyncResult> {
     const start = performance.now();
     try {
-      const envPath = getActiveHermesPaths().env;
+      const envPath = getAgentWorkspace().env;
       let envExists = false;
       try {
         await access(envPath, constants.F_OK);

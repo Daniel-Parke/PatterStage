@@ -134,10 +134,29 @@ Hermes at all, and it splits into two very different halves:
    actually live in `components/models`; the grep had picked up neighbouring
    import lines. The conclusion held only because the counts were re-measured
    per-file before acting.
-2. **Path coupling, which is the real job.** `getActiveHermesPaths` in 7 core
-   modules is the framework-agnostic claim failing out loud: orchestration and
-   sync code knows where Hermes keeps its files. Each site goes behind the
-   `AgentRuntime` port or an `AgentWorkspace` accessor before the module can move.
+2. **Path coupling, the real job. FIRST PASS DONE.** `getActiveHermesPaths` was
+   called in thirteen core modules: orchestration and sync code knew where Hermes
+   keeps its files, and a grep could prove the framework-agnostic claim false.
+
+   `src/lib/runtime/workspace.ts` is the missing half of the port. `AgentRuntime`
+   covers what the agent DOES; `AgentWorkspace` covers where its files are, in
+   five neutral fields (root, logs, config, env, memoryDb). Nine core modules now
+   depend on that instead of on Hermes.
+
+   It is deliberately narrow. `HermesPathBundle` has 19 fields and core only ever
+   needed five; a neutral interface mirroring all nineteen would just be the
+   Hermes bundle wearing a different name. `ConfigSync` was reverted to importing
+   Hermes directly, because it genuinely needs `SOUL.md`. Leaving that coupling
+   visible is better than smuggling a Hermes concept into a neutral type.
+
+   Measured: `hermes-agent-runtime` core importers 14 → 6, and the
+   `hermes-outside-adapter` lint 45 → 26.
+
+   The six that remain are honest: `behavior-files` (needs eight Hermes-specific
+   file paths), `ConfigSync` (SOUL.md), `session-title-server`
+   (`getActiveHermesHome`), and three that want `getAgentLlmEndpoints`: gateway
+   URLs, which belong behind the runtime port rather than the workspace one, and
+   are the next slice.
 
 Ordering: (1) first, because it is nearly free and shrinks the problem; then (2)
 site by site, watching `hermes-outside-adapter` in design-lint fall from its

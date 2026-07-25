@@ -8,7 +8,7 @@
 
 import { existsSync, statSync } from "fs";
 import Database from "better-sqlite3";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { setMultipleStats, setSystemStatBoolean } from "@/lib/system-repository";
 import { getMemoryProviderType, getActiveMemoryProvider } from "@/lib/memory-providers";
 import { logApiError } from "@/lib/api-logger";
@@ -17,7 +17,7 @@ import type { SyncSource, SyncResult } from "@/lib/sync/types";
 /** Get fact count from local SQLite (holographic provider). */
 function getHolographicFactCount(): number {
   try {
-    const dbPath = getActiveHermesPaths().memoryDb;
+    const dbPath = getAgentWorkspace().memoryDb;
     if (!existsSync(dbPath)) return 0;
 
     const memDb = new Database(dbPath, { readonly: true });
@@ -37,7 +37,7 @@ function getHolographicFactCount(): number {
 /** Get memory database file size. */
 function getMemoryDbSize(): string {
   try {
-    const dbPath = getActiveHermesPaths().memoryDb;
+    const dbPath = getAgentWorkspace().memoryDb;
     if (!existsSync(dbPath)) return "N/A";
     const stats = statSync(dbPath);
     const sizeKB = Math.round(stats.size / 1024);

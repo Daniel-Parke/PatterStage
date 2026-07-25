@@ -8,7 +8,7 @@
 
 import { exec } from "child_process";
 import { access, constants, readFile } from "fs/promises";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { db, now } from "@/lib/db";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
@@ -81,7 +81,7 @@ export class ProcessSync implements SyncSource {
         // Check .env for platform labels
         let platformLabel = "Gateway";
         try {
-          const H = getActiveHermesPaths();
+          const H = getAgentWorkspace();
           const envPath = H.env;
           let envExists = false;
           try {

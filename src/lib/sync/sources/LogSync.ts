@@ -18,7 +18,7 @@ import { createReadStream, statSync } from "fs";
 import { access, constants } from "fs/promises";
 import { join } from "path";
 import { createInterface } from "readline";
-import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { db, now } from "@/lib/db";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
@@ -109,7 +109,7 @@ export class LogSync implements SyncSource {
   async sync(): Promise<SyncResult> {
     const start = performance.now();
     try {
-      const H = getActiveHermesPaths();
+      const H = getAgentWorkspace();
       const logDir = H.logs;
 
       // Read from both gateway.log and errors.log in parallel — each
