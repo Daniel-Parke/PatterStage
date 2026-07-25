@@ -34,6 +34,9 @@ interface StoryState {
   updatedAt?: string;
 }
 
+/** Stop auto-generating after this many consecutive failures. */
+const MAX_AUTO_FAILURES = 3;
+
 export default function StoryReaderPage() {
   const router = useRouter();
   const params = useParams();
@@ -65,6 +68,8 @@ export default function StoryReaderPage() {
   const [continueWordCount, setContinueWordCount] = useState("standard");
 
   const contentRef = useRef<HTMLDivElement>(null);
+  /** Consecutive auto-generate failures. A ref: bumping it must not re-run the effect. */
+  const autoFailuresRef = useRef(0);
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.innerWidth >= 1024) {
@@ -119,16 +124,34 @@ export default function StoryReaderPage() {
         body: JSON.stringify({ action: "generate-chapter", storyId }),
       });
       const d = await res.json();
-      if (d.data?.story) setStory(d.data.story as StoryState);
-      else if (d.error) setError(d.error);
+      if (d.data?.story) {
+        autoFailuresRef.current = 0; // progress: re-arm auto-generation
+        setStory(d.data.story as StoryState);
+      } else if (d.error) {
+        autoFailuresRef.current += 1;
+        setError(d.error);
+      }
     } catch (e) {
+      autoFailuresRef.current += 1;
       setError(e instanceof Error ? e.message : "Generation failed");
     } finally { setGenerating(false); }
   }, [story, storyId]);
 
-  // Auto-generate next pending chapter
+  /**
+   * Auto-generate the next pending chapter.
+   *
+   * This effect had no failure ceiling. A failed generate returns `{ error }`
+   * with NO story, so `story` kept its pending chapter while `generating` flipped
+   * back to false — re-firing the effect, calling the LLM again, forever. A
+   * server that is down or a model that is rejecting the prompt turned a single
+   * click into an unbounded billed retry loop.
+   *
+   * Consecutive failures are counted in a ref (not state, so incrementing it
+   * cannot itself re-trigger the effect). Any successful chapter re-arms it.
+   */
   useEffect(() => {
     if (!story || generating) return;
+    if (autoFailuresRef.current >= MAX_AUTO_FAILURES) return;
     const firstPending = story.chapters?.find((c: Chapter) => c.status === "pending");
     const anyWriting = story.chapters?.some((c: Chapter) => c.status === "writing");
     if (firstPending && !anyWriting) {
@@ -136,9 +159,14 @@ export default function StoryReaderPage() {
     }
   }, [story, story?.chapters, generating, generateNext]);
 
+  const autoPaused = autoFailuresRef.current >= MAX_AUTO_FAILURES;
+
   // Retry a failed chapter
   const retryChapter = useCallback(async (chapterNumber: number) => {
     setError(null);
+    // A deliberate retry re-arms auto-generation: the operator has decided the
+    // cause is fixed, so the failure ceiling starts again from zero.
+    autoFailuresRef.current = 0;
     setGenerating(true);
     try {
       const res = await fetch("/api/stories", {
@@ -327,7 +355,18 @@ export default function StoryReaderPage() {
       {error && (
         <div className="fixed top-0 left-0 right-0 z-[70] bg-red-500/10 border-b border-red-500/20 px-4 py-2 flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
-          <span className="text-xs text-red-300 flex-1">{error}</span>
+          <span className="text-xs text-red-300 flex-1">
+            {error}
+            {autoPaused && (
+              <>
+                {" "}
+                <strong className="font-semibold">
+                  Auto-generation paused after {MAX_AUTO_FAILURES} consecutive failures.
+                </strong>{" "}
+                Use Retry on the chapter once the cause is fixed.
+              </>
+            )}
+          </span>
           <button onClick={() => setError(null)} className="text-red-400/50 hover:text-red-400"><X className="w-4 h-4" /></button>
         </div>
       )}
