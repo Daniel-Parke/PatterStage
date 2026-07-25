@@ -62,13 +62,13 @@ async function main() {
   console.log("0. Health");
   const health = await pollUntil(async () => {
     try {
-      const r = await req("GET", `${PS}/api/status`);
+      const r = await req("GET", `${PS}/api/health`);
       return r.status === 200 ? r : null;
     } catch {
       return null;
     }
   }, { tries: 30, delayMs: 1000 });
-  check(Boolean(health), "PatterStage /api/status reachable");
+  check(Boolean(health), "PatterStage /api/health reachable");
   if (!health) return finish();
 
   // ── 1. Composer: dispatch → HIL gate → approve → advance ──

@@ -38,3 +38,29 @@ export function maskEnvValue(name: string, value: string): string {
   if (!value) return "";
   return isFullyMaskedEnvName(name) ? "••••••••" : maskKeyHint(value);
 }
+
+/**
+ * Mask every value in a whole `.env` body, preserving comments, blank lines and
+ * key order.
+ *
+ * This exists because masking used to happen ONLY in a React component
+ * (EnvLineRow), while `GET /api/agent/files/env` returned the raw file — so
+ * every API key, bot token and password left the server in plaintext to anyone
+ * who called the endpoint instead of loading the page. Masking belongs on the
+ * server: the client is not a security boundary.
+ */
+export function maskEnvFileContent(content: string): string {
+  return content
+    .split("\n")
+    .map((line) => {
+      const eq = line.indexOf("=");
+      if (!line.trim() || line.trim().startsWith("#") || eq < 0) return line;
+      const key = line.slice(0, eq).trim();
+      const value = line
+        .slice(eq + 1)
+        .trim()
+        .replace(/^["']|["']$/g, "");
+      return `${key}=${maskEnvValue(key, value)}`;
+    })
+    .join("\n");
+}

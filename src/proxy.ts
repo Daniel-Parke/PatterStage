@@ -1,0 +1,159 @@
+// ═══════════════════════════════════════════════════════════════
+// proxy.ts — the ONE authentication + CSRF + read-only boundary
+//
+// Next 16 renamed `middleware` to `proxy` and runs it on the Node.js runtime,
+// so this file can read the token file directly. It runs before every route.
+//
+// Why here and not in route handlers: `requireAuth()` in src/lib/api-auth.ts
+// never authenticated anything (it only checked the read-only flag), so all 100
+// API routes were open to anyone who could reach the port — and `npm run
+// start:network` binds 0.0.0.0. A boundary that each new route has to remember
+// to opt into is not a boundary. This one cannot be forgotten.
+//
+// Three checks, in order:
+//   1. read-only     — PS_READ_ONLY rejects unsafe METHODS (not, as before,
+//                      whichever handlers happened to call the guard).
+//   2. authentication — Bearer token or the ps_session cookie.
+//   3. CSRF          — a cookie-authenticated unsafe request must be same-origin,
+//                      so a page you visit cannot drive your control plane.
+// ═══════════════════════════════════════════════════════════════
+
+import { NextResponse, type NextRequest } from "next/server";
+
+import {
+  SESSION_COOKIE,
+  TOKEN_QUERY_PARAM,
+  getAuthMode,
+  readAuthToken,
+  tokenMatches,
+} from "@/lib/auth-token";
+import { readEnv } from "@/lib/paths";
+
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+/**
+ * Reachable without a token. Deliberately tiny: a liveness probe the deploy
+ * runner and container health checks need before a token can be presented.
+ * `/api/status` is NOT here — it reports real system state.
+ */
+const PUBLIC_PATHS = new Set(["/api/health"]);
+
+function isReadOnly(): boolean {
+  const raw = readEnv("PS_READ_ONLY", "CH_READ_ONLY")?.toLowerCase();
+  return raw === "1" || raw === "true";
+}
+
+function isApiPath(pathname: string): boolean {
+  return pathname.startsWith("/api/");
+}
+
+function unauthorized(request: NextRequest): NextResponse {
+  if (isApiPath(request.nextUrl.pathname)) {
+    return NextResponse.json(
+      {
+        error:
+          "Unauthorized. Send 'Authorization: Bearer <token>' — the token is in PS_DATA_DIR/auth-token and is printed in the server log at boot.",
+      },
+      { status: 401 },
+    );
+  }
+  return new NextResponse(
+    `<!doctype html><meta charset="utf-8"><title>PatterStage — token required</title>` +
+      `<body style="font:16px/1.6 system-ui;max-width:34rem;margin:12vh auto;padding:0 1.5rem;background:#05080d;color:#eaf2f8">` +
+      `<h1 style="font-size:1.4rem">PatterStage needs your access token</h1>` +
+      `<p>Open the URL printed in the server log at startup, or append <code>?${TOKEN_QUERY_PARAM}=&lt;token&gt;</code> to this address once.</p>` +
+      `<p>The token lives in <code>PS_DATA_DIR/auth-token</code>.</p></body>`,
+    { status: 401, headers: { "content-type": "text/html; charset=utf-8" } },
+  );
+}
+
+/**
+ * Same-origin test for cookie-authenticated writes. `Sec-Fetch-Site` is sent by
+ * every current browser and is the reliable signal; the Origin host comparison
+ * is the fallback for clients that omit it.
+ */
+function isSameOrigin(request: NextRequest): boolean {
+  const site = request.headers.get("sec-fetch-site");
+  if (site) return site === "same-origin" || site === "none";
+
+  const origin = request.headers.get("origin");
+  if (!origin) return true; // non-browser client; the bearer path covers it
+  try {
+    return new URL(origin).host === request.headers.get("host");
+  } catch {
+    return false;
+  }
+}
+
+export function proxy(request: NextRequest): NextResponse {
+  const { pathname } = request.nextUrl;
+  const isSafe = SAFE_METHODS.has(request.method);
+
+  if (PUBLIC_PATHS.has(pathname)) return NextResponse.next();
+
+  // 1. Read-only mode rejects writes by METHOD. The old per-route guards also
+  //    fired on ~35 GET handlers, which 503'd the read-only UI it was meant to
+  //    enable; enforcing here means read-only actually reads.
+  if (!isSafe && isReadOnly()) {
+    return NextResponse.json(
+      { error: "PatterStage is in read-only mode (unset PS_READ_ONLY to allow writes)." },
+      { status: 503 },
+    );
+  }
+
+  if (getAuthMode() === "none") return NextResponse.next();
+
+  const expected = readAuthToken();
+  if (!expected) {
+    // Fail CLOSED. A missing token file means boot has not minted one yet; the
+    // alternative (allow everything) is how this app shipped an RCE.
+    return NextResponse.json(
+      { error: "PatterStage has no access token configured yet. Restart the server to mint one." },
+      { status: 503 },
+    );
+  }
+
+  // 2a. One-time hand-off: ?ps_token=<token> on a navigation exchanges the
+  //     token for an httpOnly cookie, then redirects to strip it from the URL
+  //     (and from the browser history / referrer).
+  const handoff = request.nextUrl.searchParams.get(TOKEN_QUERY_PARAM);
+  if (handoff && isSafe) {
+    if (!tokenMatches(handoff, expected)) return unauthorized(request);
+    const clean = request.nextUrl.clone();
+    clean.searchParams.delete(TOKEN_QUERY_PARAM);
+    const response = NextResponse.redirect(clean);
+    response.cookies.set(SESSION_COOKIE, expected, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      secure: request.nextUrl.protocol === "https:",
+    });
+    return response;
+  }
+
+  // 2b. Bearer beats cookie: a bearer request is not CSRF-able, so it skips (3).
+  const bearer = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  if (bearer) {
+    return tokenMatches(bearer, expected) ? NextResponse.next() : unauthorized(request);
+  }
+
+  const cookie = request.cookies.get(SESSION_COOKIE)?.value;
+  if (!tokenMatches(cookie, expected)) return unauthorized(request);
+
+  // 3. Cookie-authenticated writes must be same-origin.
+  if (!isSafe && !isSameOrigin(request)) {
+    return NextResponse.json(
+      { error: "Cross-origin write rejected." },
+      { status: 403 },
+    );
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  // Everything except Next's own static output and the favicon. API routes are
+  // deliberately INCLUDED — they are the surface that matters.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+};

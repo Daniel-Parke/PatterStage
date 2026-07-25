@@ -24,7 +24,7 @@ ${COMPOSE} up -d --build
 echo "[itest] waiting for PatterStage (depends on real Hermes being healthy)…"
 up=0
 for i in $(seq 1 150); do
-  code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/status" 2>/dev/null || echo 000)
+  code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/health" 2>/dev/null || echo 000)
   if [ "$code" = "200" ]; then up=1; echo "[itest] patterstage up after ~$((i*2))s"; break; fi
   sleep 2
 done
@@ -66,7 +66,7 @@ ${COMPOSE} run --rm --no-deps --entrypoint node patterstage -e '
 ${COMPOSE} start patterstage >/dev/null
 up=0
 for i in $(seq 1 60); do
-  code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/status" 2>/dev/null || echo 000)
+  code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/health" 2>/dev/null || echo 000)
   if [ "$code" = "200" ]; then up=1; break; fi
   sleep 2
 done

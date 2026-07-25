@@ -14,6 +14,28 @@
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
+  // Access token: mint one on first boot so an existing install that predates
+  // authentication is not locked out, and print the hand-off URL the way a
+  // self-hosted tool should. src/proxy.ts enforces it on every request.
+  try {
+    const { ensureAuthToken, getAuthMode, getAuthTokenPath, TOKEN_QUERY_PARAM } =
+      await import("@/lib/auth-token");
+    if (getAuthMode() === "none") {
+      console.warn(
+        "[auth] PS_AUTH_MODE=none — every endpoint is UNAUTHENTICATED. Only correct behind your own access control.",
+      );
+    } else {
+      const token = ensureAuthToken();
+      const port = process.env.PORT ?? "3000";
+      console.info(
+        `[auth] Open PatterStage at http://127.0.0.1:${port}/?${TOKEN_QUERY_PARAM}=${token}\n` +
+          `[auth] Token file: ${getAuthTokenPath()}`,
+      );
+    }
+  } catch (error) {
+    console.error("[auth] could not establish an access token", error);
+  }
+
   // Loud warning if we may be reading the wrong (emptier) DB than a sibling data
   // dir — e.g. an empty ~/patterstage/data shadowing a populated ~/PatterStage.
   try {

@@ -24,6 +24,7 @@ import {
   pushProfileOrRootOrFail,
 } from "@/lib/apply-profile-or-root-patch";
 import { badRequest, notFound, ok } from "@/lib/api-response";
+import { maskEnvFileContent } from "@/lib/secret-mask";
 import {
   configYamlToColumnValues,
   platformToolsetsFromJson,
@@ -180,7 +181,11 @@ export async function GET(
       );
     }
 
-    const content = readFileSync(resolved.path, "utf-8");
+    const raw = readFileSync(resolved.path, "utf-8");
+    // Secrets are masked HERE, not in the React component that used to be the
+    // only thing masking them. `size` stays the real on-disk size so the UI can
+    // still tell an empty file from a populated one.
+    const content = key === "env" ? maskEnvFileContent(raw) : raw;
     // File confirmed to exist above; safeStat never null.
     const stats = safeStat(resolved.path)!;
     return ok(
@@ -218,6 +223,15 @@ export async function PUT(
   }
   if ("error" in resolved) {
     return badRequest(resolved.error);
+  }
+  if (key === "env") {
+    // GET now returns MASKED values, so writing the response back would replace
+    // real keys with "abcd…wxyz". The UI has always declared this editor
+    // read-only ("Edit .env directly on the server for security"); this makes
+    // the API agree with it. Credentials are managed via /api/credentials.
+    return badRequest(
+      ".env is read-only through this API — its values are masked. Manage keys via the Models/credentials surface or edit the file on the server.",
+    );
   }
 
   try {

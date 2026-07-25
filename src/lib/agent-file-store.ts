@@ -16,10 +16,13 @@ export type ManagedFileKey =
  *
  * The set is intentionally not derived from `getBehaviorFiles()`
  * (which has 7 keys including `env`) because `env` is a
- * security-sensitive excluded case — the .env file is read-only
- * via the masked-value renderer in
- * `src/app/config/[section]/page.tsx` and never written through
- * the managed-files SQLite table. The 6 keys here are the
+ * security-sensitive excluded case — the .env file is masked
+ * server-side in `GET /api/agent/files/[key]` (see
+ * `maskEnvFileContent`), rejected by that route's PUT, and never
+ * written through the managed-files SQLite table. (Until the
+ * security hotfix this comment claimed the read-only-ness came
+ * from a React renderer; it did not — the API returned the raw
+ * file to any caller.) The 6 keys here are the
  * behavior-file keys that the agent-file-store can read+write
  * via the `readManagedFileContent` / `writeManagedFileContent`
  * helpers; `env` (and any future security-sensitive addition)

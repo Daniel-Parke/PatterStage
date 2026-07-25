@@ -23,7 +23,7 @@ async function probe(name, url) {
   return false;
 }
 
-const psOk = await probe("PatterStage", `${PS_URL}/api/status`);
+const psOk = await probe("PatterStage", `${PS_URL}/api/health`);
 await probe("Gateway", `${GATEWAY_URL}/health`); // gateway down is informational
 const rc = psOk ? 0 : 1;
 log(`health check complete (rc=${rc})`);

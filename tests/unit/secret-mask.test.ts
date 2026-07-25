@@ -4,7 +4,47 @@
 // Both /api/config (model.api_key + auxiliary.<task>.api_key) and
 // /api/models/import (credential keyHint) use these primitives.
 
-import { maskApiKey, maskKeyHint, maskEnvValue, isFullyMaskedEnvName } from "@/lib/secret-mask";
+import {
+  maskApiKey,
+  maskKeyHint,
+  maskEnvValue,
+  maskEnvFileContent,
+  isFullyMaskedEnvName,
+} from "@/lib/secret-mask";
+
+describe("maskEnvFileContent", () => {
+  // Regression: GET /api/agent/files/env used to return the raw ~/.hermes/.env
+  // to any caller. Masking existed only in a React component, so anything that
+  // called the API instead of loading the page got every key in plaintext.
+  it("masks values while preserving structure", () => {
+    const raw = [
+      "# keys",
+      "",
+      "OPENAI_API_KEY=sk-verylongsecretvalue1234",
+      'DISCORD_TOKEN="tok-abcdefghijklmnop"',
+      "HERMES_PASSWORD=hunter2hunter2",
+      "PORT=42069",
+    ].join("\n");
+
+    const masked = maskEnvFileContent(raw);
+
+    expect(masked).not.toContain("verylongsecretvalue");
+    expect(masked).not.toContain("abcdefghijklmnop");
+    expect(masked).not.toContain("hunter2hunter2");
+    expect(masked).toContain("# keys");
+    expect(masked).toContain("OPENAI_API_KEY=sk-v...1234");
+    // password/token names are fully hidden — no first4/last4 hint at all
+    expect(masked).toContain("HERMES_PASSWORD=••••••••");
+    expect(masked).toContain("DISCORD_TOKEN=••••••••");
+    expect(masked.split("\n")).toHaveLength(6);
+  });
+
+  it("leaves comments, blanks and non-assignments alone", () => {
+    expect(maskEnvFileContent("# just a comment")).toBe("# just a comment");
+    expect(maskEnvFileContent("")).toBe("");
+    expect(maskEnvFileContent("NOT_AN_ASSIGNMENT")).toBe("NOT_AN_ASSIGNMENT");
+  });
+});
 
 describe("maskApiKey", () => {
   it("masks long keys as first 4 + •••• + last 4", () => {

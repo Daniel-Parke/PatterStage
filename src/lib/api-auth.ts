@@ -3,6 +3,7 @@ import { createHmac, randomUUID, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { serviceUnavailable } from "@/lib/api-response";
+import { getAuthMode } from "@/lib/auth-token";
 
 function firstEnvFlag(keys: string[]): string | undefined {
   for (const key of keys) {
@@ -87,18 +88,40 @@ export function requireDeployApiEnabled(): NextResponse | null {
 }
 
 /**
- * Combined write-access guard: checks the read-only mode flag.
- * Returns a NextResponse (to return) if write access is denied, or null if allowed.
+ * Refuse an endpoint that can cause host-level side effects (writing a script
+ * that will later be executed, installing a crontab line) when authentication
+ * has been switched off with `PS_AUTH_MODE=none`.
  *
- * NOTE: Despite the name, this function does NOT perform authentication — it only
- * checks the read-only env flag (PS_READ_ONLY). The `_request` parameter is
- * intentionally ignored. For new code, prefer the explicit `requireNotReadOnly()`
- * or the dedicated signed-request check `requireSignedRequest()`.
+ * With authentication on (the default), these endpoints are fine: the operator
+ * holding the token already has shell access to the machine running the server,
+ * so an authenticated script editor is a feature, not an escalation. With
+ * authentication off, the same endpoints are an unauthenticated RCE, which is
+ * exactly how this application shipped before `src/proxy.ts` existed.
+ */
+export function requireAuthenticatedHostWrites(): NextResponse | null {
+  if (getAuthMode() !== "none") return null;
+  return NextResponse.json(
+    {
+      error:
+        "Host-affecting writes are disabled while PS_AUTH_MODE=none. Re-enable the access token to edit or schedule scripts.",
+    },
+    { status: 403 },
+  );
+}
+
+/**
+ * Write-access guard: checks the read-only mode flag ONLY.
  *
- * Historical: this helper was originally named `requireAuth` because every route
- * that called it was also a write route, so the read-only check was sufficient.
- * The misnomer persists across ~30 call sites; renaming to `requireWriteAccess()`
- * is a separate, larger refactor (deferred).
+ * ⚠️ This function does NOT authenticate. Authentication lives in `src/proxy.ts`
+ * and is enforced on every request before a handler runs — it cannot be
+ * forgotten by a new route, which is the whole point. These per-route calls are
+ * now redundant defence-in-depth for the read-only flag; do not treat the
+ * presence of this call as evidence that a route is protected.
+ *
+ * Historical: the name dates from when every caller was a write route. It is
+ * kept only to avoid churning ~30 call sites in a security hotfix; the rename to
+ * `requireWriteAccess()` and the deletion of the redundant calls happen when the
+ * read-only check moves wholly into the proxy.
  */
 export function requireAuth(_request: NextRequest): NextResponse | null {
   return requireNotReadOnly();

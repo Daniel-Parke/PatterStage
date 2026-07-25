@@ -30,7 +30,7 @@ probe() {
 }
 
 rc=0
-probe "PatterStage" "$PS_URL/api/status" || rc=1
+probe "PatterStage" "$PS_URL/api/health" || rc=1
 probe "Gateway" "$GATEWAY_URL/health" || true   # gateway being down is informational
 
 log "health check complete (rc=$rc)"

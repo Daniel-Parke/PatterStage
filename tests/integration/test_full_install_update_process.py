@@ -914,7 +914,7 @@ test -f scripts/.harness-marker
         """Run `ch-deploy.sh <restart|rebuild>` and assert the server came back.
 
         ps-deploy.mjs spawns a detached next-server then blocks on its own
-        readiness probe (GET /api/status), exiting 0 only when the fresh server
+        readiness probe (GET /api/health), exiting 0 only when the fresh server
         answers — so a 0 exit already proves the lifecycle. We additionally
         confirm the status file reports success for this action and the recorded
         server PID is alive + answering, then stop the detached server. HERMES_HOME
@@ -936,7 +936,7 @@ PIDFILE="$HERMES_HOME/logs/ps-server.pid"
 test -f "$PIDFILE" || {{ echo "no ps-server.pid after {action}" >&2; exit 1; }}
 SPID=$(cat "$PIDFILE")
 kill -0 "$SPID" 2>/dev/null || {{ echo "spawned server pid $SPID not alive" >&2; exit 1; }}
-curl -sf -o /dev/null "http://127.0.0.1:${{PORT}}/api/status" || {{ echo "server not answering /api/status" >&2; exit 1; }}
+curl -sf -o /dev/null "http://127.0.0.1:${{PORT}}/api/health" || {{ echo "server not answering /api/health" >&2; exit 1; }}
 kill "$SPID" 2>/dev/null || true
 echo "[harness] {action} lifecycle OK (pid $SPID on port $PORT)"
 """
@@ -947,7 +947,7 @@ echo "[harness] {action} lifecycle OK (pid $SPID on port $PORT)"
         )
 
     def scenario_restart(self) -> None:
-        """setup → `ps-deploy restart` spawns a server that answers /api/status."""
+        """setup → `ps-deploy restart` spawns a server that answers /api/health."""
         ws = self.temp_workspace()
         c = self.start_container("restart")
         try:

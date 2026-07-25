@@ -8,7 +8,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, isReadOnly } from "@/lib/api-auth";
+import { requireAuth, requireAuthenticatedHostWrites, isReadOnly } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
@@ -34,6 +34,10 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
 export async function PUT(request: NextRequest, ctx: Ctx) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  // Written content is executed later by /api/scripts/run and by cron, so this
+  // route must never be reachable without authentication.
+  const hostWrites = requireAuthenticatedHostWrites();
+  if (hostWrites) return hostWrites;
   if (isReadOnly()) return serviceUnavailable("PatterStage is in read-only mode");
 
   const { name } = await ctx.params;
@@ -55,6 +59,8 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
 export async function DELETE(request: NextRequest, ctx: Ctx) {
   const auth = requireAuth(request);
   if (auth) return auth;
+  const hostWrites = requireAuthenticatedHostWrites();
+  if (hostWrites) return hostWrites;
   if (isReadOnly()) return serviceUnavailable("PatterStage is in read-only mode");
 
   const { name } = await ctx.params;

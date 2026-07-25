@@ -60,13 +60,13 @@ async function main() {
   check(hermesHealth.status === 200 && hermesHealth.data.status === "ok", "mock Hermes /health ok");
   const chHealth = await pollUntil(async () => {
     try {
-      const r = await req("GET", `${CH}/api/status`);
+      const r = await req("GET", `${CH}/api/health`);
       return r.status === 200 ? r : null;
     } catch {
       return null;
     }
   });
-  check(Boolean(chHealth), "PatterStage /api/status reachable");
+  check(Boolean(chHealth), "PatterStage /api/health reachable");
 
   // ── 1. Gateway reachability through PatterStage ───────────
   console.log("1. Gateway wiring");
