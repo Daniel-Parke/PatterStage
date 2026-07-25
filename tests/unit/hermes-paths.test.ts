@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import { buildHermesPathBundle } from "@/lib/hermes-paths";
+import { buildHermesPathBundle } from "@/modules/hermes/lib/paths";
 
 describe("buildHermesPathBundle", () => {
   it("normalizes trailing slashes and builds expected paths", () => {

@@ -3,8 +3,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { homedir } from "os";
-import { getHermesHome } from "./hermes-home";
-import { buildHermesPathBundle, type HermesPathBundle } from "./hermes-paths";
+import { getHermesHome } from "@/modules/hermes/lib/home";
+import { buildHermesPathBundle, type HermesPathBundle } from "@/modules/hermes/lib/paths";
 
 export type { HermesPathBundle };
 // (Redundant re-exports of hermes-profile-paths helpers

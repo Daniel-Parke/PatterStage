@@ -2,8 +2,8 @@
 // hermes-toolset-unify.ts — Unified per-profile toolset helpers
 // ═══════════════════════════════════════════════════════════════
 
-import { HERMES_PLATFORMS } from "./hermes-toolset-catalog";
-import type { PlatformToolsets } from "./profile-config-builder";
+import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
+import type { PlatformToolsets } from "@/lib/profile-config-builder";
 
 /** Sort + dedupe an array of strings. */
 export function sortedUnique(ids: string[]): string[] {

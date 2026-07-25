@@ -12,7 +12,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { maskKeyHint } from "@/lib/secret-mask";
 import { notFound, ok } from "@/lib/api-response";
-import type { ConfigModelSection } from "@/lib/hermes-import";
+import type { ConfigModelSection } from "@/modules/hermes/lib/config-import";
 import { z } from "zod";
 
 interface DiffEntry {

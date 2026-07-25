@@ -5,7 +5,7 @@
 // Store compact lists: dedupe per platform; drop entries subsumed by hermes-cli.
 
 import type { PlatformToolsets } from "./profile-config-builder";
-import { sortedUnique } from "./hermes-toolset-unify";
+import { sortedUnique } from "@/modules/hermes/lib/toolset-unify";
 
 /** Toolset names commonly expanded when hermes-cli is saved from `hermes tools`. */
 const HERMES_CLI_SUBSUMED = new Set([

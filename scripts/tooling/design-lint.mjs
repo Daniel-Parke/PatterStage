@@ -76,6 +76,9 @@ const RULES = [
       f.startsWith("src/") &&
       !f.startsWith("src/lib/runtime/") &&
       !f.startsWith("src/lib/frameworks/") &&
+      // The module is the adapter now. This is the destination the filename
+      // exemption below was standing in for.
+      !f.startsWith("src/modules/hermes/") &&
       !/src\/lib\/hermes-[a-z-]+\.ts$/.test(f),
     pattern: /getActiveHermesPaths|getAgentLlmEndpoints|HERMES_HOME|\.hermes\//,
   },
@@ -103,9 +106,18 @@ const RULES = [
     law: "Core may not import a module; modules import core (ADR-0005). Reach module capability through the composition root, src/lib/modules/server.ts, which is the ONE file exempt from this rule. A boundary an agent can cross without a red build does not exist.",
     // src/lib/modules/ is the seam itself: registry.ts declares nav, server.ts is
     // the composition root. Everything else in core is bound by the rule.
+    //
+    // TRANSITIONAL: src/lib/hermes-*.ts is exempt while the hermes module move is
+    // in progress. Those files are moving INTO the module, so an edge from one of
+    // them to @/modules/hermes is a step toward the boundary rather than a breach
+    // of it. Without this, the move could only land as one 22-file commit that is
+    // unverifiable until the end. `assertTransitionalExemptionStillNeeded()` below
+    // deletes the exemption for us: it fails the build the moment src/lib holds no
+    // hermes-*.ts file, so this cannot outlive the migration.
     files: (f) =>
       (f.startsWith("src/lib/") || f.startsWith("src/components/layout/")) &&
-      !f.startsWith("src/lib/modules/"),
+      !f.startsWith("src/lib/modules/") &&
+      !/^src\/lib\/hermes-[a-z-]+\.ts$/.test(f),
     pattern: /from\s+["']@\/modules\//,
   },
   {
@@ -193,6 +205,26 @@ if (mode === "--report") {
     if (entries.length > 12) console.log(`    ... and ${entries.length - 12} more files`);
   }
   process.exit(0);
+}
+
+// ── The transitional exemption deletes itself ─────────────────────────────
+//
+// `core-imports-no-module` exempts src/lib/hermes-*.ts while the hermes module
+// move is in flight. A temporary exemption nobody is forced to remove is a
+// permanent one, so this fails the build the moment the last hermes-*.ts file
+// leaves src/lib. The error message says exactly which lines to delete.
+{
+  const stragglers = readdirSync("src/lib").filter((f) => /^hermes-[a-z-]+\.ts$/.test(f));
+  if (stragglers.length === 0) {
+    console.error(
+      "design-lint: the hermes module move is COMPLETE, so delete its transitional exemption.\n\n" +
+        "  src/lib holds no hermes-*.ts file any more, which means the\n" +
+        "  `!/^src\\/lib\\/hermes-[a-z-]+\\.ts$/` clause in `core-imports-no-module`\n" +
+        "  (and this whole guard block) now exempt nothing and only weaken the rule.\n" +
+        "  Remove both, then re-run.",
+    );
+    process.exit(1);
+  }
 }
 
 const baseline = existsSync(BASELINE_PATH)

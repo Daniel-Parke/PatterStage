@@ -11,7 +11,7 @@
 
 import { NextRequest } from "next/server";
 
-import { parseHermesConfig } from "@/lib/hermes-import";
+import { parseHermesConfig } from "@/modules/hermes/lib/config-import";
 import { modelKey } from "@/lib/model-key";
 import { upsertModel, updateModel, listModels } from "@/lib/models-repository";
 import { upsertCredential } from "@/lib/credentials-repository";

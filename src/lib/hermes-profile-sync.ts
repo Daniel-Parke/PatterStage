@@ -16,7 +16,7 @@ import { backupTimestamp, ensureDir, fileHash, contentHash } from "./fs-helpers"
 import { messageFromError } from "./api-fetch";
 import { getHermesDefaultRoot } from "./hermes-profile-paths";
 import { resolveProfileHermesHome } from "./hermes-profile-paths";
-import { buildHermesPathBundle } from "./hermes-paths";
+import { buildHermesPathBundle } from "@/modules/hermes/lib/paths";
 import {
   getAgentRoot,
   setAgentRootSyncStatus,
@@ -31,7 +31,7 @@ import {
   setProfileSyncStatus,
   updateProfileContent,
 } from "./profiles-repository";
-import { unionToolsetsFromPlatforms } from "./hermes-toolset-unify";
+import { unionToolsetsFromPlatforms } from "@/modules/hermes/lib/toolset-unify";
 import {
   buildConfigYaml,
   configYamlToColumnValues,

@@ -4,11 +4,11 @@ import {
   importDiscoveredProfile,
   pullRootFromHermes,
   type SyncResult,
-} from "./hermes-profile-sync";
-import { ensureDb, db } from "./db";
-import { isProfilesToolsParityComplete } from "./db/profiles-tools-parity-ensure";
-import { getHermesDefaultRoot } from "./hermes-profile-paths";
-import { getAgentRoot } from "./agent-root-repository";
+} from "@/lib/hermes-profile-sync";
+import { ensureDb, db } from "@/lib/db";
+import { isProfilesToolsParityComplete } from "@/lib/db/profiles-tools-parity-ensure";
+import { getHermesDefaultRoot } from "@/lib/hermes-profile-paths";
+import { getAgentRoot } from "@/lib/agent-root-repository";
 import { existsSync } from "fs";
 
 function assertProfilesToolsSchemaReady(): void {

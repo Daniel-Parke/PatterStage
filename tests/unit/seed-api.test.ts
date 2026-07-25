@@ -8,7 +8,7 @@ jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 
 const mockImportHermesState = jest.fn((..._a: unknown[]) => null);
 
-jest.mock("@/lib/hermes-state-import", () => ({
+jest.mock("@/modules/hermes/lib/state-import", () => ({
   importHermesStateFromDisk: (...args: unknown[]) => mockImportHermesState(...args),
 }));
 

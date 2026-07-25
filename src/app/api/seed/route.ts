@@ -6,8 +6,8 @@ import { ok } from "@/lib/api-response";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { seedPostSchema } from "@/lib/api-schemas";
 import { runCatalogSeed, getSeedState } from "@/lib/seed/catalog-seed";
-import { importHermesStateFromDisk } from "@/lib/hermes-state-import";
-import { getHermesHome } from "@/lib/hermes-home";
+import { importHermesStateFromDisk } from "@/modules/hermes/lib/state-import";
+import { getHermesHome } from "@/modules/hermes/lib/home";
 import { existsSync } from "fs";
 
 export async function GET() {

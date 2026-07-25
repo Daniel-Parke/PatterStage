@@ -6,8 +6,8 @@
 import { homedir } from "os";
 import { basename, isAbsolute, join, relative, resolve } from "path";
 
-import { buildHermesPathBundle, normPath, type HermesPathBundle } from "./hermes-paths";
-import { getHermesHome } from "./hermes-home";
+import { buildHermesPathBundle, normPath, type HermesPathBundle } from "@/modules/hermes/lib/paths";
+import { getHermesHome } from "@/modules/hermes/lib/home";
 
 const NATIVE_HERMES_HOME = join(homedir(), ".hermes");
 

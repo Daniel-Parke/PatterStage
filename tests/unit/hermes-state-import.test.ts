@@ -64,7 +64,7 @@ afterEach(() => {
 
 describe("importHermesStateFromDisk", () => {
   it("skips re-import when catalog and Bob soul already populated", async () => {
-    const { importHermesStateFromDisk } = await import("@/lib/hermes-state-import");
+    const { importHermesStateFromDisk } = await import("@/modules/hermes/lib/state-import");
     const { importAllSkillsFromDisk } = await import("@/lib/hermes-profile-sync");
 
     const result = importHermesStateFromDisk();
@@ -74,7 +74,7 @@ describe("importHermesStateFromDisk", () => {
   });
 
   it("forces import when force option is set", async () => {
-    const { importHermesStateFromDisk } = await import("@/lib/hermes-state-import");
+    const { importHermesStateFromDisk } = await import("@/modules/hermes/lib/state-import");
     const { importAllSkillsFromDisk } = await import("@/lib/hermes-profile-sync");
 
     importHermesStateFromDisk({ force: true });
@@ -84,7 +84,7 @@ describe("importHermesStateFromDisk", () => {
 
   it("throws when agent_root table is missing (migrate required)", async () => {
     testDb?.exec("DROP TABLE IF EXISTS agent_root");
-    const { importHermesStateFromDisk } = await import("@/lib/hermes-state-import");
+    const { importHermesStateFromDisk } = await import("@/modules/hermes/lib/state-import");
 
     expect(() => importHermesStateFromDisk({ force: true })).toThrow(/npm run db:migrate/);
   });

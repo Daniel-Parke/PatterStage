@@ -76,7 +76,7 @@ const mockParsedConfig = {
   credentials: [] as Array<{ provider: string; apiKey: string }>,
   details: [] as string[],
 };
-jest.mock("@/lib/hermes-import", () => ({
+jest.mock("@/modules/hermes/lib/config-import", () => ({
   parseHermesConfig: () => mockParsedConfig,
 }));
 

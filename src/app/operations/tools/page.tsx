@@ -30,7 +30,7 @@ import {
 import {
   expandUnifiedToAllPlatforms,
   unionToolsetsFromPlatforms,
-} from "@/lib/hermes-toolset-unify";
+} from "@/modules/hermes/lib/toolset-unify";
 import ToolsInsights from "@/components/tools/ToolsInsights";
 
 export default function ToolsPage() {
