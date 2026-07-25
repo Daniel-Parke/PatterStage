@@ -24,7 +24,7 @@
 
     "start": "next start",
 
-    "lint": "eslint . --max-warnings 0",
+    "lint": "node scripts/tooling/check-agent-files.mjs && eslint . --max-warnings 0",
 
     "lint:knip": "knip --include files,dependencies,unlisted --no-config-hints",
 

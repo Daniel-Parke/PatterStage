@@ -157,7 +157,8 @@ App pages live under `src/app/`; API routes under `src/app/api/`. Orchestration 
 - **Testing & CI:** [docs/TESTING.md](docs/TESTING.md)
 - **REST API:** [docs/API.md](docs/API.md)
 - **Analytics & achievements:** [docs/ANALYTICS.md](docs/ANALYTICS.md)
-- **Agent rules & repo tree:** [AGENTS.md](AGENTS.md)
+- **Agent entry point:** [AGENTS.md](AGENTS.md) · **repo tree & conventions:** [docs/REPO_GUIDE.md](docs/REPO_GUIDE.md)
+- **Decisions:** [docs/adr/](docs/adr/)
 
 ---
 
