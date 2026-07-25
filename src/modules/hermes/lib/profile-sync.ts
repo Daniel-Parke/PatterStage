@@ -12,17 +12,17 @@ import {
 } from "fs";
 
 import { atomicWriteFile, finalizeRootConfigOnDisk } from "@/modules/hermes/lib/config-sync";
-import { backupTimestamp, ensureDir, fileHash, contentHash } from "./fs-helpers";
-import { messageFromError } from "./api-fetch";
-import { getHermesDefaultRoot } from "./hermes-profile-paths";
-import { resolveProfileHermesHome } from "./hermes-profile-paths";
+import { backupTimestamp, ensureDir, fileHash, contentHash } from "@/lib/fs-helpers";
+import { messageFromError } from "@/lib/api-fetch";
+import { getHermesDefaultRoot } from "./profile-paths";
+import { resolveProfileHermesHome } from "./profile-paths";
 import { buildHermesPathBundle } from "@/modules/hermes/lib/paths";
 import {
   getAgentRoot,
   setAgentRootSyncStatus,
   updateAgentRoot,
   type AgentRootRow,
-} from "./agent-root-repository";
+} from "@/lib/agent-root-repository";
 import {
   assembleConfigYamlForProfile,
   getProfile,
@@ -50,10 +50,10 @@ import {
   parseSkillFrontmatter,
   setSkillSyncStatus,
   upsertSkill,
-} from "./skills-repository";
+} from "@/lib/skills-repository";
 import { upsertProfile } from "./profiles-repository";
-import { isValidProfileSlug } from "./profile-slug";
-import { now } from "./db";
+import { isValidProfileSlug } from "@/lib/profile-slug";
+import { now } from "@/lib/db";
 
 const PROFILE_SUBDIRS = [
   "memories",

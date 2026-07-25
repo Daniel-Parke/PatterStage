@@ -6,21 +6,49 @@ import { existsSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
 import { ensureDb } from "../db";
-import { upsertProfile, getProfileBySeedKey } from "../profiles-repository";
+
+// ═══════════════════════════════════════════════════════════════
+// WHY THIS FILE CROSSES THE BOUNDARY (and what to do about it)
+//
+// agent_profiles belongs to the hermes module (owner ruling 2026-07-25, ADR-0005
+// rule 2), so the four imports below are core-imports-no-module violations. They
+// carry a pragma rather than being fixed, and that is a deliberate deferral, not
+// an oversight.
+//
+// The reason is that this file has two owners and always did. One operation --
+// "set up my install" -- seeds PatterStage's OWN catalogs (catalog_templates,
+// skills, tool_catalog, seed_memory_facts, agent_root) AND the hermes module's
+// agent profiles, AND pushes the result to the Hermes filesystem. Splitting it
+// means deciding where the boundary falls inside a single 530-line idempotent
+// operation with a shared seed-state flag, which is a design decision with a
+// wrong answer available, not a mechanical move.
+//
+// The shape it should take: ServerModule gains a seedAgentProfiles capability,
+// this file keeps the core catalogs and calls the module through the composition
+// root the way mission dispatch now reaches the agent roster
+// (src/lib/agents/roster.ts). Until then the coupling is visible and gated here,
+// which is strictly better than a silent green build.
+// ═══════════════════════════════════════════════════════════════
+
+// design-lint-disable-next-line core-imports-no-module -- see WHY THIS FILE CROSSES THE BOUNDARY above
+import { upsertProfile, getProfileBySeedKey } from "@/modules/hermes/lib/profiles-repository";
 import {
   configYamlToColumnValues,
   extractPreservedSections,
   isEmptyPlatformToolsets,
   platformToolsetsFromJson,
-} from "../profile-config-builder";
+  // design-lint-disable-next-line core-imports-no-module -- see WHY THIS FILE CROSSES THE BOUNDARY above
+} from "@/modules/hermes/lib/profile-config-builder";
 import { upsertCatalogTemplate, getCatalogTemplate } from "../catalog-template-repository";
 import { upsertSkill, getSkill } from "../skills-repository";
 import { upsertToolBundle, getToolBundle } from "../tool-catalog-repository";
 import { upsertMemoryFact } from "../memory-catalog-repository";
-import { pushSkillToHermes } from "../hermes-profile-sync";
+// design-lint-disable-next-line core-imports-no-module -- see WHY THIS FILE CROSSES THE BOUNDARY above
+import { pushSkillToHermes } from "@/modules/hermes/lib/profile-sync";
 import { db } from "../db";
 import { PS_DATA_DIR } from "../paths";
-import { pushProfileToHermes, pushAllProfiles, pushRootToHermes } from "../hermes-profile-sync";
+// design-lint-disable-next-line core-imports-no-module -- see WHY THIS FILE CROSSES THE BOUNDARY above
+import { pushProfileToHermes, pushAllProfiles, pushRootToHermes } from "@/modules/hermes/lib/profile-sync";
 import { getAgentRoot, updateAgentRoot } from "../agent-root-repository";
 import { ensureDir } from "../fs-helpers";
 

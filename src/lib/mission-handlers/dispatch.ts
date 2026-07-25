@@ -18,7 +18,7 @@ import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { logApiError } from "@/lib/api-logger";
 import { badRequest, serverError } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
-import { listProfiles } from "@/lib/profiles-repository";
+import { resolveAgentSlug } from "@/lib/agents/roster";
 import { createSchedule } from "@/lib/schedules-repository";
 import { parseSchedule, scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
 import { computeNextRun } from "@/lib/schedule/next-run";
@@ -69,21 +69,13 @@ export async function handleDispatchMission(
   let resolvedProfileId: string | undefined;
   const profileKey = profileName ?? profileId;
   if (profileKey) {
-    if (profileKey === "default") {
-      resolvedProfileId = "default";
-    } else {
-      try {
-        const profiles = listProfiles();
-        const match = profiles.find(
-          (p) =>
-            p.slug === profileKey ||
-            p.displayName === profileKey,
-        );
-        resolvedProfileId = match?.slug ?? profileKey;
-      } catch {
-        resolvedProfileId = profileKey;
-      }
-    }
+    // The operator may have typed a slug or a display name. Resolution goes
+    // through the neutral roster, not the module table: agent_profiles belongs
+    // to the hermes module now (ADR-0005 rule 2), and the two fields dispatch
+    // needs are framework-neutral. resolveAgentSlug returns the key unchanged
+    // when nothing matches, preserving the previous pass-through behaviour, and
+    // swallows a broken store internally so this path cannot be taken down by it.
+    resolvedProfileId = resolveAgentSlug(profileKey);
   }
 
   const mission = createMission({

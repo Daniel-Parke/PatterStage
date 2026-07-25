@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { dirname } from "path";
 
-import { resolveProfileHermesHome, buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
+import { resolveProfileHermesHome, buildProfileHermesPathBundle } from "@/modules/hermes/lib/profile-paths";
 import { getBehaviorFiles } from "@/modules/hermes/lib/behavior-files";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
@@ -12,13 +12,13 @@ import { resolveSafeProfileName } from "@/lib/path-security";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
-import { getProfile } from "@/lib/profiles-repository";
+import { getProfile } from "@/modules/hermes/lib/profiles-repository";
 import {
   isManagedKey,
   readManagedFileContent,
   writeManagedFileContent,
   type ManagedFileKey,
-} from "@/lib/agent-file-store";
+} from "@/modules/hermes/lib/agent-file-store";
 import {
   applyProfileOrRootPatchOrFail,
   pushProfileOrRootOrFail,
@@ -29,8 +29,8 @@ import {
   configYamlToColumnValues,
   platformToolsetsFromJson,
   serializeJsonToolsets,
-} from "@/lib/profile-config-builder";
-import { normalizePlatformToolsets } from "@/lib/hermes-toolset-normalize";
+} from "@/modules/hermes/lib/profile-config-builder";
+import { normalizePlatformToolsets } from "@/modules/hermes/lib/toolset-normalize";
 
 type FileResponseVariant = {
   content: string;

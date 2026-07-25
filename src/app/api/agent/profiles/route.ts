@@ -13,7 +13,7 @@ import {
   upsertProfile,
   getProfile,
   defaultConfigYaml,
-} from "@/lib/profiles-repository";
+} from "@/modules/hermes/lib/profiles-repository";
 import { getAgentRoot } from "@/lib/agent-root-repository";
 import {
   pushProfileToHermes,
@@ -21,9 +21,9 @@ import {
   detectRootDrift,
   countProfileSkills,
   countProfileToolsets,
-} from "@/lib/hermes-profile-sync";
+} from "@/modules/hermes/lib/profile-sync";
 import { slugifyDisplayName } from "@/lib/profile-slug";
-import { buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
+import { buildProfileHermesPathBundle } from "@/modules/hermes/lib/profile-paths";
 import type { AgentProfile, ProfileFile } from "@/types/console";
 import { badRequest, conflict, ok, serverError } from "@/lib/api-response";
 

@@ -19,7 +19,7 @@ const mockGetProfile = jest.fn((..._a: unknown[]) => ({ slug: "qa" }));
 const mockPushProfile = jest.fn((..._a: unknown[]) => ({ success: true, slug: "qa", backupPath: null, error: null }));
 const mockPushRoot = jest.fn((..._a: unknown[]) => ({ success: true, slug: "default", backupPath: null, error: null }));
 
-jest.mock("@/lib/profiles-repository", () => ({
+jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   hydratePlatformToolsetsForSlug: (...args: unknown[]) => mockHydrate(...args),
   getProfile: (...args: unknown[]) => mockGetProfile(...args),
   updateProfileContent: (...args: unknown[]) => mockUpdateProfile(...args),
@@ -29,7 +29,7 @@ jest.mock("@/lib/agent-root-repository", () => ({
   updateAgentRoot: (...args: unknown[]) => mockUpdateRoot(...args),
 }));
 
-jest.mock("@/lib/hermes-profile-sync", () => ({
+jest.mock("@/modules/hermes/lib/profile-sync", () => ({
   pushProfileToHermes: (...args: unknown[]) => mockPushProfile(...args),
   pushRootToHermes: (...args: unknown[]) => mockPushRoot(...args),
 }));

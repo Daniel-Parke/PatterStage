@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from "fs";
 
-import { buildProfileHermesPathBundle } from "./hermes-profile-paths";
+import { buildProfileHermesPathBundle } from "./profile-paths";
 
 export interface ParsedSkillsDisabled {
   disabledNames: Set<string>;

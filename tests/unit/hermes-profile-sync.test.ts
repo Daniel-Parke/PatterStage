@@ -25,8 +25,8 @@ jest.mock("@/lib/db", () => {
   };
 });
 
-jest.mock("@/lib/hermes-profile-paths", () => {
-  const actual = jest.requireActual("@/lib/hermes-profile-paths") as typeof import("@/lib/hermes-profile-paths");
+jest.mock("@/modules/hermes/lib/profile-paths", () => {
+  const actual = jest.requireActual("@/modules/hermes/lib/profile-paths") as typeof import("@/modules/hermes/lib/profile-paths");
   return {
     ...actual,
     getHermesDefaultRoot: () => hermesRoot,
@@ -52,12 +52,12 @@ afterEach(() => {
 
 describe("hermes-profile-sync", () => {
   it("push writes SOUL.md and pull reads it back", () => {
-    const { upsertProfile } = require("@/lib/profiles-repository") as typeof import("@/lib/profiles-repository");
+    const { upsertProfile } = require("@/modules/hermes/lib/profiles-repository") as typeof import("@/modules/hermes/lib/profiles-repository");
     const {
       pushProfileToHermes,
       pullProfileFromHermes,
       detectProfileDrift,
-    } = require("@/lib/hermes-profile-sync") as typeof import("@/lib/hermes-profile-sync");
+    } = require("@/modules/hermes/lib/profile-sync") as typeof import("@/modules/hermes/lib/profile-sync");
 
     upsertProfile({
       slug: "qa",
@@ -78,13 +78,13 @@ describe("hermes-profile-sync", () => {
 
     const pull = pullProfileFromHermes("qa");
     expect(pull.success).toBe(true);
-    const { getProfile } = require("@/lib/profiles-repository") as typeof import("@/lib/profiles-repository");
+    const { getProfile } = require("@/modules/hermes/lib/profiles-repository") as typeof import("@/modules/hermes/lib/profiles-repository");
     expect(getProfile("qa")?.soulMd).toBe("# On disk");
   });
 
   it("pushAllProfiles onlyMissing skips profiles with existing SOUL on disk", () => {
-    const { upsertProfile } = require("@/lib/profiles-repository") as typeof import("@/lib/profiles-repository");
-    const { pushAllProfiles } = require("@/lib/hermes-profile-sync") as typeof import("@/lib/hermes-profile-sync");
+    const { upsertProfile } = require("@/modules/hermes/lib/profiles-repository") as typeof import("@/modules/hermes/lib/profiles-repository");
+    const { pushAllProfiles } = require("@/modules/hermes/lib/profile-sync") as typeof import("@/modules/hermes/lib/profile-sync");
 
     const soulPath = join(hermesRoot, "profiles", "qa", "SOUL.md");
     const agentsPath = join(hermesRoot, "profiles", "qa", "AGENTS.md");
@@ -106,11 +106,11 @@ describe("hermes-profile-sync", () => {
   });
 
   it("pull normalizes granular cli toolsets into compact hermes-cli", () => {
-    const { upsertProfile, getProfile } = require("@/lib/profiles-repository") as typeof import("@/lib/profiles-repository");
+    const { upsertProfile, getProfile } = require("@/modules/hermes/lib/profiles-repository") as typeof import("@/modules/hermes/lib/profiles-repository");
     const {
       pullProfileFromHermes,
       detectProfileDrift,
-    } = require("@/lib/hermes-profile-sync") as typeof import("@/lib/hermes-profile-sync");
+    } = require("@/modules/hermes/lib/profile-sync") as typeof import("@/modules/hermes/lib/profile-sync");
 
     const profileDir = join(hermesRoot, "profiles", "bob");
     mkdirSync(profileDir, { recursive: true });

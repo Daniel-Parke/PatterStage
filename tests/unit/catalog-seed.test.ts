@@ -26,7 +26,7 @@ jest.mock("@/lib/db", () => {
   };
 });
 
-jest.mock("@/lib/hermes-profile-sync", () => ({
+jest.mock("@/modules/hermes/lib/profile-sync", () => ({
   pushProfileToHermes: jest.fn(() => ({ success: true, slug: "qa", backupPath: null, error: null })),
   pushAllProfiles: jest.fn(() => [{ success: true, slug: "qa", backupPath: null, error: null }]),
 }));
@@ -53,7 +53,7 @@ afterEach(() => {
 describe("runCatalogSeed", () => {
   (hasSeedPack ? it : it.skip)("merge seeds profiles and templates idempotently", () => {
     const { runCatalogSeed } = require("@/lib/seed/catalog-seed") as typeof import("@/lib/seed/catalog-seed");
-    const { listProfiles } = require("@/lib/profiles-repository") as typeof import("@/lib/profiles-repository");
+    const { listProfiles } = require("@/modules/hermes/lib/profiles-repository") as typeof import("@/modules/hermes/lib/profiles-repository");
 
     const first = runCatalogSeed({ target: "all", mode: "merge" });
     expect(first.profiles).toBeGreaterThanOrEqual(6);

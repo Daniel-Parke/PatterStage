@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { getActiveFrameworkConfig } from "./repository";
-import { HermesAdapter } from "./hermes-adapter";
+import { HermesAdapter } from "@/modules/hermes/lib/framework-adapter";
 import type { FrameworkAdapter } from "./types";
 
 /** The active agent-framework adapter (defaults to Hermes). */

@@ -22,7 +22,7 @@ import { apiFetch, safeApiCallData, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { profileSyncBody } from "@/lib/profile-sync-body";
 import { pluralise } from "@/lib/utils";
-import type { PlatformToolsets } from "@/lib/profile-config-builder";
+import type { PlatformToolsets } from "@/modules/hermes/lib/profile-config-builder";
 import type { AgentProfile } from "@/types/console";
 import {
   HERMES_CONFIGURABLE_TOOLSETS,

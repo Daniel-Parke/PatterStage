@@ -38,8 +38,8 @@ import { NextResponse } from "next/server";
 
 import { notFound, serverErrorFromHelperResult } from "@/lib/api-response";
 import { updateAgentRoot, type AgentRootPatch } from "@/lib/agent-root-repository";
-import { getProfile, updateProfileContent } from "@/lib/profiles-repository";
-import { pushProfileToHermes, pushRootToHermes } from "@/lib/hermes-profile-sync";
+import { getProfile, updateProfileContent } from "../lib/profiles-repository";
+import { pushProfileToHermes, pushRootToHermes } from "../lib/profile-sync";
 
 /**
  * Outcome of `applyProfileOrRootPatch`. Discriminated by `ok` so the

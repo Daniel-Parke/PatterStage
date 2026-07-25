@@ -19,12 +19,12 @@ jest.mock("@/lib/agent-root-repository", () => ({
   updateAgentRoot: jest.fn(),
 }));
 
-jest.mock("@/lib/profiles-repository", () => ({
+jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   listProfiles: jest.fn(() => []),
   updateProfileContent: jest.fn(() => true),
 }));
 
-jest.mock("@/lib/hermes-profile-sync", () => ({
+jest.mock("@/modules/hermes/lib/profile-sync", () => ({
   pushProfileToHermes: jest.fn(() => ({ success: true })),
   pushRootToHermes: jest.fn(() => ({ success: true })),
 }));

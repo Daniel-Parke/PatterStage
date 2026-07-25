@@ -75,7 +75,7 @@ jest.mock("@/lib/local-dir-entry", () => ({
   normalizeLocalDirsInput: jest.fn((d) => d ?? []),
 }));
 
-jest.mock("@/lib/profiles-repository", () => ({
+jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   listProfiles: jest.fn(() => []),
 }));
 

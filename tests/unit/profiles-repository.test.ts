@@ -41,7 +41,7 @@ describe("profiles-repository", () => {
       getProfile,
       getProfileBySeedKey,
       listProfiles,
-    } = require("@/lib/profiles-repository") as typeof import("@/lib/profiles-repository");
+    } = require("@/modules/hermes/lib/profiles-repository") as typeof import("@/modules/hermes/lib/profiles-repository");
 
     upsertProfile({
       slug: "qa",
@@ -66,7 +66,7 @@ describe("profiles-repository", () => {
       updateProfileContent,
       setProfileSyncStatus,
       getProfile,
-    } = require("@/lib/profiles-repository") as typeof import("@/lib/profiles-repository");
+    } = require("@/modules/hermes/lib/profiles-repository") as typeof import("@/modules/hermes/lib/profiles-repository");
 
     upsertProfile({ slug: "swe", displayName: "SWE", seedKey: "ch.prof.swe" });
     updateProfileContent("swe", { soulMd: "# Updated" });
@@ -80,7 +80,7 @@ describe("profiles-repository", () => {
 
   it("deletes a profile", () => {
     const { upsertProfile, deleteProfile, getProfile } =
-      require("@/lib/profiles-repository") as typeof import("@/lib/profiles-repository");
+      require("@/modules/hermes/lib/profiles-repository") as typeof import("@/modules/hermes/lib/profiles-repository");
 
     upsertProfile({ slug: "devops", displayName: "DevOps" });
     deleteProfile("devops");
@@ -89,9 +89,9 @@ describe("profiles-repository", () => {
 
   it("assembleConfigYamlForProfile keeps toolsets when platform_toolsets json is empty", () => {
     const { upsertProfile, getProfile, assembleConfigYamlForProfile } =
-      require("@/lib/profiles-repository") as typeof import("@/lib/profiles-repository");
+      require("@/modules/hermes/lib/profiles-repository") as typeof import("@/modules/hermes/lib/profiles-repository");
     const { buildConfigYaml } =
-      require("@/lib/profile-config-builder") as typeof import("@/lib/profile-config-builder");
+      require("@/modules/hermes/lib/profile-config-builder") as typeof import("@/modules/hermes/lib/profile-config-builder");
 
     const configYaml = buildConfigYaml({
       personality: "technical",

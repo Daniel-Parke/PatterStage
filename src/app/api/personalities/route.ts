@@ -6,7 +6,7 @@ import { badRequest, methodNotAllowed, notFound, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
-import { listProfiles } from "@/lib/profiles-repository";
+import { listProfiles } from "@/modules/hermes/lib/profiles-repository";
 import { applyProfileOrRootPatchOrFail } from "@/modules/hermes/handlers/profile-patch";
 import { requireSafeProfileName } from "@/lib/path-security";
 

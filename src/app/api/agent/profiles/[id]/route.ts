@@ -12,9 +12,9 @@ import {
   renameProfileSlug,
   deleteProfile,
   updateProfileContent,
-} from "@/lib/profiles-repository";
-import { pushProfileToHermes, removeProfileFromDisk } from "@/lib/hermes-profile-sync";
-import { resolveProfileHermesHome } from "@/lib/hermes-profile-paths";
+} from "@/modules/hermes/lib/profiles-repository";
+import { pushProfileToHermes, removeProfileFromDisk } from "@/modules/hermes/lib/profile-sync";
+import { resolveProfileHermesHome } from "@/modules/hermes/lib/profile-paths";
 import { slugifyDisplayName } from "@/lib/profile-slug";
 import { badRequest, conflict, notFound, ok, serverError } from "@/lib/api-response";
 

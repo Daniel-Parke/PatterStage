@@ -19,11 +19,11 @@ jest.mock("@/lib/db", () => ({
   ensureDb: () => undefined,
 }));
 
-jest.mock("@/lib/hermes-profile-paths", () => ({
+jest.mock("@/modules/hermes/lib/profile-paths", () => ({
   getHermesDefaultRoot: () => "/nonexistent-hermes",
 }));
 
-jest.mock("@/lib/hermes-profile-sync", () => ({
+jest.mock("@/modules/hermes/lib/profile-sync", () => ({
   importAllSkillsFromDisk: jest.fn(() => [{ success: true, slug: "skill-a", backupPath: null, error: null }]),
   pullRootFromHermes: jest.fn(() => ({ success: true, slug: "default", backupPath: null, error: null })),
   discoverLocalProfiles: jest.fn(() => []),
@@ -65,7 +65,7 @@ afterEach(() => {
 describe("importHermesStateFromDisk", () => {
   it("skips re-import when catalog and Bob soul already populated", async () => {
     const { importHermesStateFromDisk } = await import("@/modules/hermes/lib/state-import");
-    const { importAllSkillsFromDisk } = await import("@/lib/hermes-profile-sync");
+    const { importAllSkillsFromDisk } = await import("@/modules/hermes/lib/profile-sync");
 
     const result = importHermesStateFromDisk();
 
@@ -75,7 +75,7 @@ describe("importHermesStateFromDisk", () => {
 
   it("forces import when force option is set", async () => {
     const { importHermesStateFromDisk } = await import("@/modules/hermes/lib/state-import");
-    const { importAllSkillsFromDisk } = await import("@/lib/hermes-profile-sync");
+    const { importAllSkillsFromDisk } = await import("@/modules/hermes/lib/profile-sync");
 
     importHermesStateFromDisk({ force: true });
 

@@ -144,7 +144,7 @@ jest.mock("@/lib/agent-root-repository", () => ({
   })),
 }));
 
-jest.mock("@/lib/profiles-repository", () => ({
+jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   listProfiles: jest.fn(() =>
     [...store.values()].map((r) => ({
       slug: r.slug,
@@ -201,7 +201,7 @@ jest.mock("@/lib/profiles-repository", () => ({
   defaultConfigYaml: jest.fn((p: string) => `agent:\n  personality: ${p}\nskills:\n  enabled: []\n`),
 }));
 
-jest.mock("@/lib/hermes-profile-sync", () => ({
+jest.mock("@/modules/hermes/lib/profile-sync", () => ({
   pushProfileToHermes: jest.fn(() => ({ success: true, slug: "", backupPath: null, error: null })),
   detectProfileDrift: jest.fn(() => ({ slug: "", drifted: false, fields: [], syncError: null })),
   detectRootDrift: jest.fn(() => ({ drifted: false, fields: [], syncError: null })),
@@ -209,7 +209,7 @@ jest.mock("@/lib/hermes-profile-sync", () => ({
   countProfileToolsets: jest.fn(() => 0),
 }));
 
-jest.mock("@/lib/hermes-profile-paths", () => ({
+jest.mock("@/modules/hermes/lib/profile-paths", () => ({
   buildProfileHermesPathBundle: jest.fn((slug: string) => ({
     soul: `/tmp/test-hermes/profiles/${slug}/SOUL.md`,
     agents: `/tmp/test-hermes/profiles/${slug}/AGENTS.md`,

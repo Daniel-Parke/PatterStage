@@ -140,12 +140,12 @@ jest.mock("@/lib/agent-root-repository", () => ({
   updateAgentRoot: jest.fn(),
 }));
 
-jest.mock("@/lib/profiles-repository", () => ({
+jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   getProfile: jest.fn(),
   updateProfileContent: jest.fn(),
 }));
 
-jest.mock("@/lib/hermes-profile-sync", () => ({
+jest.mock("@/modules/hermes/lib/profile-sync", () => ({
   pushProfileToHermes: jest.fn(),
   pushRootToHermes: jest.fn(),
 }));
@@ -155,8 +155,8 @@ jest.mock("@/lib/api-response", () => {
   return actual;
 });
 
-import { getProfile, updateProfileContent } from "@/lib/profiles-repository";
-import { pushProfileToHermes, pushRootToHermes } from "@/lib/hermes-profile-sync";
+import { getProfile, updateProfileContent } from "@/modules/hermes/lib/profiles-repository";
+import { pushProfileToHermes, pushRootToHermes } from "@/modules/hermes/lib/profile-sync";
 
 const mockGetProfile = getProfile as jest.MockedFunction<typeof getProfile>;
 const mockUpdateProfileContent = updateProfileContent as jest.MockedFunction<typeof updateProfileContent>;

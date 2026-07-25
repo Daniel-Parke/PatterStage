@@ -4,10 +4,10 @@ import {
   importDiscoveredProfile,
   pullRootFromHermes,
   type SyncResult,
-} from "@/lib/hermes-profile-sync";
+} from "./profile-sync";
 import { ensureDb, db } from "@/lib/db";
 import { isProfilesToolsParityComplete } from "@/lib/db/profiles-tools-parity-ensure";
-import { getHermesDefaultRoot } from "@/lib/hermes-profile-paths";
+import { getHermesDefaultRoot } from "./profile-paths";
 import { getAgentRoot } from "@/lib/agent-root-repository";
 import { existsSync } from "fs";
 

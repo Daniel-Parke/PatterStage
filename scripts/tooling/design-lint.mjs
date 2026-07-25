@@ -107,6 +107,12 @@ const RULES = [
     // src/lib/modules/ is the seam itself: registry.ts declares nav, server.ts is
     // the composition root. Everything else in core is bound by the rule.
     //
+    // src/lib/frameworks/registry.ts is the SECOND composition root, and naming it
+    // is more honest than pretending there is only one. It maps a framework id to
+    // its adapter -- `case "hermes": return new HermesAdapter(config)` -- which is
+    // by definition a place where a neutral id becomes a concrete implementation.
+    // A boundary needs designated crossing points; an undeclared one is a hole.
+    //
     // TRANSITIONAL: src/lib/hermes-*.ts is exempt while the hermes module move is
     // in progress. Those files are moving INTO the module, so an edge from one of
     // them to @/modules/hermes is a step toward the boundary rather than a breach
@@ -114,9 +120,16 @@ const RULES = [
     // unverifiable until the end. `assertTransitionalExemptionStillNeeded()` below
     // deletes the exemption for us: it fails the build the moment src/lib holds no
     // hermes-*.ts file, so this cannot outlive the migration.
+    // Covers src/ EXCEPT app/ (routing, may delegate), modules/ (the modules
+    // themselves) and the two composition roots. Previously an enumerated prefix
+    // list that left src/instrumentation.ts -- the boot path -- outside the rule
+    // entirely, so core could have imported a module there with a green build.
     files: (f) =>
-      (f.startsWith("src/lib/") || f.startsWith("src/components/layout/")) &&
+      f.startsWith("src/") &&
+      !f.startsWith("src/app/") &&
+      !f.startsWith("src/modules/") &&
       !f.startsWith("src/lib/modules/") &&
+      f !== "src/lib/frameworks/registry.ts" &&
       !/^src\/lib\/hermes-[a-z-]+\.ts$/.test(f),
     pattern: /from\s+["']@\/modules\//,
   },

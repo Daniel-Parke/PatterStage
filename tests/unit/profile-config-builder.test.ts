@@ -6,7 +6,7 @@ import {
   disabledSkillsFromJson,
   parseConfigYaml,
   resolvePlatformToolsets,
-} from "@/lib/profile-config-builder";
+} from "@/modules/hermes/lib/profile-config-builder";
 
 describe("profile-config-builder", () => {
   it("round-trips disabled skills and toolsets", () => {

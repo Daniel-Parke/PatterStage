@@ -6,11 +6,11 @@ import { methodNotAllowed, notFound, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { applyProfileOrRootPatchOrFail } from "@/modules/hermes/handlers/profile-patch";
-import { hydratePlatformToolsetsForSlug } from "@/lib/profiles-repository";
+import { hydratePlatformToolsetsForSlug } from "@/modules/hermes/lib/profiles-repository";
 import {
   normalizePlatformToolsetsFromInput,
   serializeJsonToolsets,
-} from "@/lib/profile-config-builder";
+} from "@/modules/hermes/lib/profile-config-builder";
 import {
   platformsDiffer,
   unionToolsetsFromPlatforms,

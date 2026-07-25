@@ -14,7 +14,7 @@
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
-import { listProfiles } from "@/lib/profiles-repository";
+import { listProfiles } from "@/modules/hermes/lib/profiles-repository";
 import { agentExperienceForProfile } from "@/lib/stats/agent-experience";
 
 export async function GET() {

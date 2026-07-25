@@ -9,8 +9,8 @@ import { safeStat } from "@/lib/fs-stats";
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
 import { getSkill, upsertSkill, parseSkillFrontmatter } from "@/lib/skills-repository";
-import { pushSkillToHermes } from "@/lib/hermes-profile-sync";
-import { skillFilePath, skillsRootForProfile } from "@/lib/skills-config";
+import { pushSkillToHermes } from "@/modules/hermes/lib/profile-sync";
+import { skillFilePath, skillsRootForProfile } from "@/modules/hermes/lib/skills-config";
 
 export async function GET(
   request: NextRequest,

@@ -15,7 +15,7 @@ const mockPushAll = jest.fn((..._a: unknown[]) => [{ success: true, slug: "qa", 
 const mockPullProfile = jest.fn((..._a: unknown[]) => ({ success: true, slug: "qa", backupPath: null, error: null }));
 const mockDetectDrift = jest.fn((..._a: unknown[]) => [{ slug: "qa", drifted: false, fields: [], syncError: null }]);
 
-jest.mock("@/lib/hermes-profile-sync", () => ({
+jest.mock("@/modules/hermes/lib/profile-sync", () => ({
   pushProfileToHermes: (...args: unknown[]) => mockPushProfile(...args),
   pushAllProfiles: (...args: unknown[]) => mockPushAll(...args),
   pullProfileFromHermes: (...args: unknown[]) => mockPullProfile(...args),

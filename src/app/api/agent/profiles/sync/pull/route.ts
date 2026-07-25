@@ -6,7 +6,7 @@ import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { parseOptionalJsonBody } from "@/lib/parse-optional-json-body";
 import { booleanFlag, stringFlag } from "@/lib/parse-bag-flags";
-import { listProfiles } from "@/lib/profiles-repository";
+import { listProfiles } from "@/modules/hermes/lib/profiles-repository";
 import {
   pullProfileFromHermes,
   pullRootFromHermes,
@@ -14,7 +14,7 @@ import {
   importAllSkillsFromDisk,
   discoverLocalProfiles,
   importDiscoveredProfile,
-} from "@/lib/hermes-profile-sync";
+} from "@/modules/hermes/lib/profile-sync";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);

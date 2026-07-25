@@ -4,7 +4,7 @@ import { ok } from "@/lib/api-response";
 import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
-import { detectFullDrift } from "@/lib/hermes-profile-sync";
+import { detectFullDrift } from "@/modules/hermes/lib/profile-sync";
 
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);

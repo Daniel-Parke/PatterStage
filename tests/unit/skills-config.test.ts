@@ -7,7 +7,7 @@ import {
   normalizeDisabledSkillKeys,
   parseSkillsDisabledFromYaml,
   skillFilePath,
-} from "@/lib/skills-config";
+} from "@/modules/hermes/lib/skills-config";
 
 describe("parseSkillsDisabledFromYaml", () => {
   it("returns empty disabled lists when skills section has no disabled key", () => {

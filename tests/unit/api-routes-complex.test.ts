@@ -91,7 +91,7 @@ jest.mock("@/lib/agent-root-repository", () => ({
   })),
 }));
 
-jest.mock("@/lib/profiles-repository", () => ({
+jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   getDisabledSkills: jest.fn(() => []),
   getProfile: jest.fn(() => null),
 }));

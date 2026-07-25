@@ -2,7 +2,7 @@
 // profiles-repository.ts — Agent profiles in PatterStage SQLite
 // ═══════════════════════════════════════════════════════════════
 
-import { db, inTransaction, now } from "./db";
+import { db, inTransaction, now } from "@/lib/db";
 import {
   buildConfigYaml,
   disabledSkillsFromJson,
@@ -13,8 +13,8 @@ import {
   type PlatformToolsetsSource,
 } from "./profile-config-builder";
 import { loadSeedPlatformToolsets } from "./seed-profile-toolsets";
-import { normalizePlatformToolsets } from "./hermes-toolset-normalize";
-import { getAgentRoot, updateAgentRoot } from "./agent-root-repository";
+import { normalizePlatformToolsets } from "./toolset-normalize";
+import { getAgentRoot, updateAgentRoot } from "@/lib/agent-root-repository";
 
 export interface AgentProfileRow {
   slug: string;

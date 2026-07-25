@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { HERMES_PLATFORMS } from "@/lib/hermes-toolset-catalog";
-import type { PlatformToolsets } from "@/lib/profile-config-builder";
+import type { PlatformToolsets } from "./profile-config-builder";
 
 /** Sort + dedupe an array of strings. */
 export function sortedUnique(ids: string[]): string[] {

@@ -10,9 +10,9 @@ import {
   normalizeDisabledSkillKeys,
   parseSkillsDisabledFromYaml,
 } from "./skills-config";
-import { normalizePlatformToolsets } from "./hermes-toolset-normalize";
+import { normalizePlatformToolsets } from "./toolset-normalize";
 import { dumpYamlConfig } from "@/lib/yaml-config";
-import { parseStringArrayOrEmpty } from "./db/parse-json";
+import { parseStringArrayOrEmpty } from "@/lib/db/parse-json";
 
 export type PlatformToolsets = Record<string, string[]>;
 

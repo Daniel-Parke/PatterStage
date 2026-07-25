@@ -28,7 +28,7 @@
  * which pins the route's migration to the new helper.
  */
 
-import { isManagedKey, type ManagedFileKey } from "@/lib/agent-file-store";
+import { isManagedKey, type ManagedFileKey } from "@/modules/hermes/lib/agent-file-store";
 
 describe("isManagedKey runtime predicate", () => {
   describe("positive cases — the 6 managed keys", () => {

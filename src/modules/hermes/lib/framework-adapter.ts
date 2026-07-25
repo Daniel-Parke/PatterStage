@@ -8,8 +8,8 @@
 
 import { existsSync } from "fs";
 import { join } from "path";
-import { getHermesDefaultRoot } from "@/lib/hermes-profile-paths";
-import type { FrameworkAdapter, FrameworkConfig, FrameworkInfo } from "./types";
+import { getHermesDefaultRoot } from "./profile-paths";
+import type { FrameworkAdapter, FrameworkConfig, FrameworkInfo } from "@/lib/frameworks/types";
 
 export class HermesAdapter implements FrameworkAdapter {
   readonly type = "hermes";

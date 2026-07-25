@@ -18,6 +18,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { recRoomServerModule } from "@/modules/rec-room/server";
+import { hermesServerModule } from "@/modules/hermes/server";
 
 /** A dev-data record a module owns, for the "clean dev data" tool. */
 export interface DevDataRecord {
@@ -37,9 +38,18 @@ export interface ServerModule {
   listDevData?: () => DevDataRecord[];
   /** Delete one of its own records by id. */
   deleteDevData?: (id: string) => void;
+  /**
+   * Agents this module can dispatch work to, as {slug, displayName}.
+   *
+   * Two fields, not the module row. agent_profiles belongs to the hermes module
+   * (ADR-0005 rule 2) and its 17 columns are mostly a vendor file cache; core
+   * only ever needs to know WHICH agents exist so it can resolve what the
+   * operator typed. See src/lib/agents/roster.ts.
+   */
+  listAgentRoster?: () => import("@/lib/agents/roster").AgentRosterEntry[];
 }
 
-export const SERVER_MODULES: readonly ServerModule[] = [recRoomServerModule];
+export const SERVER_MODULES: readonly ServerModule[] = [recRoomServerModule, hermesServerModule];
 
 export function getServerModule(id: string): ServerModule | undefined {
   return SERVER_MODULES.find((m) => m.id === id);

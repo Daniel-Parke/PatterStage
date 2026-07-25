@@ -1,6 +1,6 @@
 // Maps behaviour file keys ↔ SQLite (agent_profiles / agent_root)
 
-import { getAgentRoot, updateAgentRoot } from "./agent-root-repository";
+import { getAgentRoot, updateAgentRoot } from "@/lib/agent-root-repository";
 import { getProfile, updateProfileContent } from "./profiles-repository";
 
 export type ManagedFileKey =

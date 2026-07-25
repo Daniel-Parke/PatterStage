@@ -12,7 +12,7 @@ import {
   pushRootToHermes,
   pushAllSkillsToHermes,
   pushSkillToHermes,
-} from "@/lib/hermes-profile-sync";
+} from "@/modules/hermes/lib/profile-sync";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);

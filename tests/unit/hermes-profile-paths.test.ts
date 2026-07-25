@@ -7,7 +7,7 @@ import {
   getHermesDefaultRoot,
   isProfileHermesHome,
   resolveProfileHermesHome,
-} from "@/lib/hermes-profile-paths";
+} from "@/modules/hermes/lib/profile-paths";
 
 const native = join(homedir(), ".hermes");
 

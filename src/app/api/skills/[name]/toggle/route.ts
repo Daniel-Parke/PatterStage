@@ -9,10 +9,10 @@ import { getAgentRoot } from "@/lib/agent-root-repository";
 import {
   getDisabledSkills,
   getProfile,
-} from "@/lib/profiles-repository";
+} from "@/modules/hermes/lib/profiles-repository";
 import { applyProfileOrRootPatchOrFail } from "@/modules/hermes/handlers/profile-patch";
 import { requireSafeProfileName } from "@/lib/path-security";
-import { serializeJsonArray } from "@/lib/profile-config-builder";
+import { serializeJsonArray } from "@/modules/hermes/lib/profile-config-builder";
 import { getSkill } from "@/lib/skills-repository";
 import { recordEvent } from "@/lib/analytics/record-event";
 
