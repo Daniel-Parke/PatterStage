@@ -58,7 +58,7 @@ jest.mock("@/lib/fallbacks-repository", () => ({
   updateFallbackConfigBatch: (...args: unknown[]) => mockUpdateFallbackConfigBatch(...args),
 }));
 
-jest.mock("@/lib/fallback-sync-helpers", () => ({
+jest.mock("@/modules/hermes/lib/fallback-sync", () => ({
   syncEnabledFallbackChainToHermes: (...args: unknown[]) => mockSyncEnabled(...args),
 }));
 

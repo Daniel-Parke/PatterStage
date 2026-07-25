@@ -40,7 +40,7 @@ jest.mock("@/lib/path-security", () => ({
   requireSafeProfileName: jest.fn((name: string) => ({ profile: name.trim() })),
 }));
 
-jest.mock("@/lib/apply-profile-or-root-patch", () => ({
+jest.mock("@/modules/hermes/handlers/profile-patch", () => ({
   applyProfileOrRootPatchOrFail: jest.fn((profile: string) => ({ profile })),
 }));
 

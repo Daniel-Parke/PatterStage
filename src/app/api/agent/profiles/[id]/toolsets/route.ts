@@ -5,7 +5,7 @@ import { serverErrorFromCatch } from "@/lib/api-logger";
 import { methodNotAllowed, notFound, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { applyProfileOrRootPatchOrFail } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatchOrFail } from "@/modules/hermes/handlers/profile-patch";
 import { hydratePlatformToolsetsForSlug } from "@/lib/profiles-repository";
 import {
   normalizePlatformToolsetsFromInput,

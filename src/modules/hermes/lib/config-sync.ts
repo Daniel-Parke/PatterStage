@@ -21,18 +21,18 @@ import {
 } from "fs";
 import * as yaml from "js-yaml";
 
-import { dumpYamlConfig } from "./yaml-config";
-import { getActiveHermesPaths } from "./hermes-agent-runtime";
-import { envVarForProvider, isHermesProvider, type HermesProvider } from "./hermes-providers";
-import { AUXILIARY_TASK_TYPES } from "./models/task-types";
-import { updateAgentRoot } from "./agent-root-repository";
-import { getModelDefaults, getModel } from "./models-repository";
-import { modelKey } from "./model-key";
-import { toError } from "./api-fetch";
-import { backupFile as backupFileShared, ensureDir } from "./fs-helpers";
-import { parseFallbackAgentSettingsFromYaml } from "./fallback-config-yaml";
-import { parseEnvFile, ENV_LINE_RE } from "./env-file";
-import type { FallbackConfigPutInput } from "./fallback-config-schema";
+import { dumpYamlConfig } from "@/lib/yaml-config";
+import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
+import { envVarForProvider, isHermesProvider, type HermesProvider } from "@/lib/hermes-providers";
+import { AUXILIARY_TASK_TYPES } from "@/lib/models/task-types";
+import { updateAgentRoot } from "@/lib/agent-root-repository";
+import { getModelDefaults, getModel } from "@/lib/models-repository";
+import { modelKey } from "@/lib/model-key";
+import { toError } from "@/lib/api-fetch";
+import { backupFile as backupFileShared, ensureDir } from "@/lib/fs-helpers";
+import { parseFallbackAgentSettingsFromYaml } from "@/lib/fallback-config-yaml";
+import { parseEnvFile, ENV_LINE_RE } from "@/lib/env-file";
+import type { FallbackConfigPutInput } from "@/lib/fallback-config-schema";
 
 /**
  * Read `~/.hermes/config.yaml` and return the parsed YAML object, or

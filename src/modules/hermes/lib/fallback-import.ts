@@ -20,8 +20,8 @@ import {
 } from "@/lib/fallbacks-repository";
 import { parseFallbackAgentSettingsFromYaml } from "@/lib/fallback-config-yaml";
 import { upsertModel } from "@/lib/models-repository";
-import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
-import { readHermesYamlConfig } from "@/lib/hermes-config-sync";
+import { syncEnabledFallbackChainToHermes } from "./fallback-sync";
+import { readHermesYamlConfig } from "./config-sync";
 import { notFound, ok } from "@/lib/api-response";
 import { fallbackKey } from "@/lib/model-key";
 

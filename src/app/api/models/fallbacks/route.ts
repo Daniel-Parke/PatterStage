@@ -24,8 +24,8 @@ import {
   updateFallbackConfigBatch,
 } from "@/lib/fallbacks-repository";
 import { fallbackActionSchema } from "@/lib/fallback-config-schema";
-import { commitFallbackChange, syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
-import { importFallbacksFromHermesYaml } from "@/lib/fallback-import";
+import { commitFallbackChange, syncEnabledFallbackChainToHermes } from "@/modules/hermes/lib/fallback-sync";
+import { importFallbacksFromHermesYaml } from "@/modules/hermes/lib/fallback-import";
 import { inTransaction } from "@/lib/db";
 import { created, notFound, ok, serverError } from "@/lib/api-response";
 

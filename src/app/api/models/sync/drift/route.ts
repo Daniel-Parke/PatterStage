@@ -5,7 +5,7 @@ import { NextRequest } from "next/server";
 import { ok } from "@/lib/api-response";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { buildDriftDetails, detectConfigDrift } from "@/lib/sync-manager";
+import { buildDriftDetails, detectConfigDrift } from "@/modules/hermes/lib/sync-manager";
 import type { SyncDrift } from "@/components/models/types";
 
 export async function GET(request: NextRequest) {

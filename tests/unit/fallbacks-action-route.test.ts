@@ -29,11 +29,11 @@ jest.mock("@/lib/fallbacks-repository", () => ({
   getFallbackConfig: (...a: unknown[]) => getFallbackConfig(...a),
   updateFallbackConfigBatch: (...a: unknown[]) => updateFallbackConfigBatch(...a),
 }));
-jest.mock("@/lib/fallback-sync-helpers", () => ({
+jest.mock("@/modules/hermes/lib/fallback-sync", () => ({
   commitFallbackChange: (...a: unknown[]) => commitFallbackChange(...a),
   syncEnabledFallbackChainToHermes: (...a: unknown[]) => syncEnabledFallbackChainToHermes(...a),
 }));
-jest.mock("@/lib/fallback-import", () => ({
+jest.mock("@/modules/hermes/lib/fallback-import", () => ({
   importFallbacksFromHermesYaml: (...a: unknown[]) => importFallbacksFromHermesYaml(...a),
 }));
 jest.mock("@/lib/api-auth", () => ({ requireAuth: () => null }));

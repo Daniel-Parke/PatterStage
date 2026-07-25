@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { pushModelToHermes, pushCredential } from "@/lib/sync-manager";
+import { pushModelToHermes, pushCredential } from "@/modules/hermes/lib/sync-manager";
 import { getModelWithKey } from "@/lib/models-repository";
 import { ok } from "@/lib/api-response";
 import { z } from "zod";

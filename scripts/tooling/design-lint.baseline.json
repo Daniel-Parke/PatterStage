@@ -10,7 +10,6 @@
   "hermes-outside-adapter::src/components/chat/GatewayBanner.tsx": 2,
   "hermes-outside-adapter::src/components/layout/VersionFooter.tsx": 1,
   "hermes-outside-adapter::src/components/models/ModelEditor.tsx": 1,
-  "hermes-outside-adapter::src/lib/behavior-files.ts": 2,
   "hermes-outside-adapter::src/lib/db/profiles-tools-parity-ensure.ts": 1,
   "hermes-outside-adapter::src/lib/deploy-spawn.ts": 2,
   "hermes-outside-adapter::src/lib/seed/catalog-seed.ts": 1,

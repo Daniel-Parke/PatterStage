@@ -10,7 +10,7 @@ import {
   getDisabledSkills,
   getProfile,
 } from "@/lib/profiles-repository";
-import { applyProfileOrRootPatchOrFail } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatchOrFail } from "@/modules/hermes/handlers/profile-patch";
 import { requireSafeProfileName } from "@/lib/path-security";
 import { serializeJsonArray } from "@/lib/profile-config-builder";
 import { getSkill } from "@/lib/skills-repository";

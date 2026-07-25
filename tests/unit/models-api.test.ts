@@ -51,7 +51,7 @@ jest.mock("@/lib/parse-json-body", () => {
   };
 });
 
-jest.mock("@/lib/hermes-config-sync", () => ({
+jest.mock("@/modules/hermes/lib/config-sync", () => ({
   syncDefaultsToHermesConfig: jest.fn(() => ({ backupPath: null })),
   syncCredentialToHermesEnv: jest.fn(() => ({ backupPath: null })),
   removeCredentialFromHermesEnv: jest.fn(() => ({ backupPath: null })),
@@ -78,7 +78,7 @@ jest.mock("@/lib/models-repository", () => {
 
 
 // Mock the sync-manager for any push/pull imports
-jest.mock("@/lib/sync-manager", () => ({
+jest.mock("@/modules/hermes/lib/sync-manager", () => ({
   pushModelToHermes: jest.fn(() => ({ success: true, backupPath: null, details: [] })),
   pushCredential: jest.fn(() => ({ success: true, backupPath: null, details: [] })),
   pushCredentialToHermesEnv: jest.fn(() => ({ success: true, backupPath: null, details: [] })),
@@ -87,7 +87,7 @@ jest.mock("@/lib/sync-manager", () => ({
 }));
 
 // Mock hermes-config-sync for sync functions used in routes
-jest.mock("@/lib/hermes-config-sync", () => ({
+jest.mock("@/modules/hermes/lib/config-sync", () => ({
   syncDefaultsToHermesConfig: jest.fn(() => ({ backupPath: null })),
   syncCredentialToHermesEnv: jest.fn(() => ({ backupPath: null })),
   removeCredentialFromHermesEnv: jest.fn(() => ({ backupPath: null })),

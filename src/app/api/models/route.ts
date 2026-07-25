@@ -13,7 +13,7 @@ import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { modelPostSchema } from "@/lib/api-schemas";
 import { created, ok } from "@/lib/api-response";
-import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
+import { syncDefaultsToHermesConfig } from "@/modules/hermes/lib/config-sync";
 
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);

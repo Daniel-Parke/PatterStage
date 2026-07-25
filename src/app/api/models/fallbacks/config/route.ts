@@ -8,7 +8,7 @@ import { serverErrorFromCatch } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
 import { getFallbackConfig, updateFallbackConfigBatch } from "@/lib/fallbacks-repository";
 import { fallbackConfigPutSchema } from "@/lib/fallback-config-schema";
-import { syncEnabledFallbackChainToHermes } from "@/lib/fallback-sync-helpers";
+import { syncEnabledFallbackChainToHermes } from "@/modules/hermes/lib/fallback-sync";
 import { ok } from "@/lib/api-response";
 
 export async function GET(request: NextRequest) {

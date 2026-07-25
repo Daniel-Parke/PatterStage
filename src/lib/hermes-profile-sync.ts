@@ -11,7 +11,7 @@ import {
   statSync,
 } from "fs";
 
-import { atomicWriteFile, finalizeRootConfigOnDisk } from "./hermes-config-sync";
+import { atomicWriteFile, finalizeRootConfigOnDisk } from "@/modules/hermes/lib/config-sync";
 import { backupTimestamp, ensureDir, fileHash, contentHash } from "./fs-helpers";
 import { messageFromError } from "./api-fetch";
 import { getHermesDefaultRoot } from "./hermes-profile-paths";

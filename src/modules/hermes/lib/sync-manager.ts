@@ -3,21 +3,21 @@
 //                      and Hermes config files
 // ═══════════════════════════════════════════════════════════════
 
-import { getModel, listModels, getModelDefaults } from "./models-repository";
-import { getCredentialWithKey } from "./credentials-repository";
+import { getModel, listModels, getModelDefaults } from "@/lib/models-repository";
+import { getCredentialWithKey } from "@/lib/credentials-repository";
 import {
   syncSingleModelToHermesConfig,
   syncCredentialToHermesEnv,
   readHermesConfigModels,
   readHermesYamlConfig,
-} from "./hermes-config-sync";
-import { isHermesProvider, type HermesProvider } from "./hermes-providers";
-import { modelKey } from "./model-key";
+} from "./config-sync";
+import { isHermesProvider, type HermesProvider } from "@/lib/hermes-providers";
+import { modelKey } from "@/lib/model-key";
 import { messageFromError } from "@/lib/api-fetch";
 
 // ── Types ────────────────────────────────────────────────────
 
-import type { SyncActionResult } from "./models/sync-result";
+import type { SyncActionResult } from "@/lib/models/sync-result";
 export type { SyncActionResult };
 
 export interface DriftReport {

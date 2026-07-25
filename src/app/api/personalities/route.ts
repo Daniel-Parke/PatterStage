@@ -7,7 +7,7 @@ import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
 import { listProfiles } from "@/lib/profiles-repository";
-import { applyProfileOrRootPatchOrFail } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatchOrFail } from "@/modules/hermes/handlers/profile-patch";
 import { requireSafeProfileName } from "@/lib/path-security";
 
 /** Shared upsert logic used by both POST (create) and PUT (update). */

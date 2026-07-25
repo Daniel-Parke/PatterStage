@@ -3,7 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from "fs";
 import { dirname } from "path";
 
 import { resolveProfileHermesHome, buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
-import { getBehaviorFiles } from "@/lib/behavior-files";
+import { getBehaviorFiles } from "@/modules/hermes/lib/behavior-files";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { safeStat } from "@/lib/fs-stats";
@@ -22,7 +22,7 @@ import {
 import {
   applyProfileOrRootPatchOrFail,
   pushProfileOrRootOrFail,
-} from "@/lib/apply-profile-or-root-patch";
+} from "@/modules/hermes/handlers/profile-patch";
 import { badRequest, notFound, ok } from "@/lib/api-response";
 import { maskEnvFileContent } from "@/lib/secret-mask";
 import {

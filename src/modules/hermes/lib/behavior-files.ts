@@ -1,5 +1,5 @@
 // Shared behavior file definitions — paths follow active Hermes install
-import { getActiveHermesPaths } from "./hermes-agent-runtime";
+import { getActiveHermesPaths } from "@/lib/hermes-agent-runtime";
 
 export type BehaviorFileEntry = {
   name: string;

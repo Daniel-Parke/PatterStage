@@ -1,16 +1,16 @@
 import { existsSync, readFileSync } from "fs";
 
-import { getAgentRoot } from "./agent-root-repository";
-import { buildProfileHermesPathBundle } from "./hermes-profile-paths";
+import { getAgentRoot } from "@/lib/agent-root-repository";
+import { buildProfileHermesPathBundle } from "@/lib/hermes-profile-paths";
 import {
   collectSkillDirectoryNames,
   computeEffectiveDisabledFromYaml,
   normalizeDisabledSkillKeys,
   skillsRootForProfile,
-} from "./skills-config";
-import { disabledSkillsFromJson } from "./profile-config-builder";
-import { getDisabledSkills } from "./profiles-repository";
-import { listSkills } from "./skills-repository";
+} from "@/lib/skills-config";
+import { disabledSkillsFromJson } from "@/lib/profile-config-builder";
+import { getDisabledSkills } from "@/lib/profiles-repository";
+import { listSkills } from "@/lib/skills-repository";
 
 /** Union of SQLite catalog keys and on-disk skill directory paths. */
 function listCatalogSkillKeys(): string[] {

@@ -10,7 +10,7 @@ import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { modelPutSchema } from "@/lib/api-schemas";
 import { notFound, ok } from "@/lib/api-response";
-import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
+import { syncDefaultsToHermesConfig } from "@/modules/hermes/lib/config-sync";
 
 interface Ctx {
   params: Promise<{ id: string }>;

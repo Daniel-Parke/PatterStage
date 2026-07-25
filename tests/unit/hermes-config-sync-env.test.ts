@@ -48,7 +48,7 @@ afterEach(() => {
 
 describe("syncCredentialToHermesEnv", () => {
   it("writes <PROVIDER>_API_KEY when no .env exists", () => {
-    const { syncCredentialToHermesEnv } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { syncCredentialToHermesEnv } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     syncCredentialToHermesEnv({ provider: "anthropic", apiKey: "sk-ant-secret" });
 
     const envContent = readFileSync(join(fakeRoot, ".env"), "utf-8");
@@ -67,7 +67,7 @@ describe("syncCredentialToHermesEnv", () => {
     ].join("\n");
     writeFileSync(join(fakeRoot, ".env"), original);
 
-    const { syncCredentialToHermesEnv } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { syncCredentialToHermesEnv } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     syncCredentialToHermesEnv({ provider: "anthropic", apiKey: "sk-new-anthropic" });
 
     const env = readFileSync(join(fakeRoot, ".env"), "utf-8");
@@ -80,7 +80,7 @@ describe("syncCredentialToHermesEnv", () => {
 
   it("creates a backup of the original file before writing", () => {
     writeFileSync(join(fakeRoot, ".env"), "OPENROUTER_API_KEY=sk-or-original\n");
-    const { syncCredentialToHermesEnv } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { syncCredentialToHermesEnv } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     const result = syncCredentialToHermesEnv({ provider: "openrouter", apiKey: "sk-new" });
     expect(result.backupPath).not.toBeNull();
     const backups = readdirSync(join(fakeRoot, "backups"));
@@ -90,14 +90,14 @@ describe("syncCredentialToHermesEnv", () => {
   });
 
   it("rejects unknown provider names", () => {
-    const { syncCredentialToHermesEnv } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { syncCredentialToHermesEnv } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     expect(() =>
       syncCredentialToHermesEnv({ provider: "not-a-provider" as never, apiKey: "x" })
     ).toThrow(/Unknown provider/);
   });
 
   it("every Hermes provider with an env var routes to its mapped env var", () => {
-    const { syncCredentialToHermesEnv } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { syncCredentialToHermesEnv } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     const oauthOnly = new Set(["nous"]);
     for (const provider of HERMES_PROVIDERS) {
       if (oauthOnly.has(provider)) continue;
@@ -110,14 +110,14 @@ describe("syncCredentialToHermesEnv", () => {
   });
 
   it("rejects OAuth-only providers (e.g. nous) with a clear error", () => {
-    const { syncCredentialToHermesEnv } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { syncCredentialToHermesEnv } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     expect(() =>
       syncCredentialToHermesEnv({ provider: "nous", apiKey: "x" })
     ).toThrow(/uses OAuth/);
   });
 
   it("atomic write does not leave a tmp file behind on success", () => {
-    const { syncCredentialToHermesEnv } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { syncCredentialToHermesEnv } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     syncCredentialToHermesEnv({ provider: "anthropic", apiKey: "sk-x" });
     const dirEntries = readdirSync(fakeRoot);
     const tmpFiles = dirEntries.filter((e) => e.includes(".tmp-"));
@@ -136,7 +136,7 @@ describe("removeCredentialFromHermesEnv", () => {
         "",
       ].join("\n")
     );
-    const { removeCredentialFromHermesEnv } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { removeCredentialFromHermesEnv } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     removeCredentialFromHermesEnv("openrouter");
 
     const env = readFileSync(join(fakeRoot, ".env"), "utf-8");
@@ -146,7 +146,7 @@ describe("removeCredentialFromHermesEnv", () => {
   });
 
   it("is a no-op when .env does not exist", () => {
-    const { removeCredentialFromHermesEnv } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { removeCredentialFromHermesEnv } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     const result = removeCredentialFromHermesEnv("anthropic");
     expect(result.backupPath).toBeNull();
   });

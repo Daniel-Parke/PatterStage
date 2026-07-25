@@ -11,7 +11,7 @@ import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { setDefaultPutSchema } from "@/lib/api-schemas";
 import { notFound, ok } from "@/lib/api-response";
-import { syncDefaultsToHermesConfig } from "@/lib/hermes-config-sync";
+import { syncDefaultsToHermesConfig } from "@/modules/hermes/lib/config-sync";
 import { recordEvent } from "@/lib/analytics/record-event";
 
 export async function GET(request: NextRequest) {

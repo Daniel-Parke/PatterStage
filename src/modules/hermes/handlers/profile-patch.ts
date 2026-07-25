@@ -36,10 +36,10 @@
 
 import { NextResponse } from "next/server";
 
-import { notFound, serverErrorFromHelperResult } from "./api-response";
-import { updateAgentRoot, type AgentRootPatch } from "./agent-root-repository";
-import { getProfile, updateProfileContent } from "./profiles-repository";
-import { pushProfileToHermes, pushRootToHermes } from "./hermes-profile-sync";
+import { notFound, serverErrorFromHelperResult } from "@/lib/api-response";
+import { updateAgentRoot, type AgentRootPatch } from "@/lib/agent-root-repository";
+import { getProfile, updateProfileContent } from "@/lib/profiles-repository";
+import { pushProfileToHermes, pushRootToHermes } from "@/lib/hermes-profile-sync";
 
 /**
  * Outcome of `applyProfileOrRootPatch`. Discriminated by `ok` so the

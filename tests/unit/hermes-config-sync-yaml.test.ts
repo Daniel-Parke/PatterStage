@@ -80,7 +80,7 @@ describe("syncFallbacksToHermesConfig", () => {
       yaml.dump({ agent: { api_max_retries: 2 } }),
       "utf-8",
     );
-    const { syncFallbacksToHermesConfig } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { syncFallbacksToHermesConfig } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
 
     syncFallbacksToHermesConfig([], { apiMaxRetries: 5 });
 
@@ -95,7 +95,7 @@ describe("syncFallbacksToHermesConfig", () => {
 describe("syncDefaultsToHermesConfig", () => {
   it("writes model.default + provider + base_url + empty api_key when agent default is set", () => {
     const { createModel, setDefaultModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
-    const { syncDefaultsToHermesConfig } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { syncDefaultsToHermesConfig } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
 
     const m = createModel({
       name: "Sonnet",
@@ -121,7 +121,7 @@ describe("syncDefaultsToHermesConfig", () => {
 
   it("writes auxiliary slots for each is_default_<task> = 1", () => {
     const { createModel, setDefaultModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
-    const { syncDefaultsToHermesConfig } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { syncDefaultsToHermesConfig } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
 
     const fast = createModel({ name: "fast", provider: "openai", modelId: "openai/gpt-5" });
     setDefaultModel("compression", fast.id);
@@ -151,7 +151,7 @@ describe("syncDefaultsToHermesConfig", () => {
     writeFileSync(join(fakeRoot, "config.yaml"), original);
 
     const { createModel, setDefaultModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
-    const { syncDefaultsToHermesConfig } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { syncDefaultsToHermesConfig } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     const m = createModel({ name: "M", provider: "anthropic", modelId: "anthropic/claude-sonnet-4" });
     setDefaultModel("agent", m.id);
 
@@ -173,7 +173,7 @@ describe("syncDefaultsToHermesConfig", () => {
     writeFileSync(join(fakeRoot, "config.yaml"), original);
 
     const { createModel, setDefaultModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
-    const { syncDefaultsToHermesConfig } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { syncDefaultsToHermesConfig } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     const m = createModel({ name: "M", provider: "anthropic", modelId: "x" });
     setDefaultModel("agent", m.id);
 
@@ -185,7 +185,7 @@ describe("syncDefaultsToHermesConfig", () => {
 
   it("does not produce legacy compression.summary_* keys", () => {
     const { createModel, setDefaultModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
-    const { syncDefaultsToHermesConfig } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { syncDefaultsToHermesConfig } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     const m = createModel({ name: "M", provider: "anthropic", modelId: "x" });
     setDefaultModel("compression", m.id);
 
@@ -196,7 +196,7 @@ describe("syncDefaultsToHermesConfig", () => {
   });
 
   it("is a no-op for slots that have no default set", () => {
-    const { syncDefaultsToHermesConfig } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { syncDefaultsToHermesConfig } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     syncDefaultsToHermesConfig();
     expect(existsSync(join(fakeRoot, "config.yaml"))).toBe(true);
     const text = readFileSync(join(fakeRoot, "config.yaml"), "utf-8");
@@ -208,7 +208,7 @@ describe("syncDefaultsToHermesConfig", () => {
 describe("finalizeRootConfigOnDisk", () => {
   it("refreshes agent_root.config_yaml with model section after sync", () => {
     const { createModel, setDefaultModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
-    const { finalizeRootConfigOnDisk } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { finalizeRootConfigOnDisk } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     const { getAgentRoot } = require("@/lib/agent-root-repository") as typeof import("@/lib/agent-root-repository");
 
     writeFileSync(

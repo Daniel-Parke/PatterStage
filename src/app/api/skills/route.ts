@@ -5,7 +5,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { notFound, ok } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
 import { safeStat } from "@/lib/fs-stats";
-import { resolveEffectiveDisabledSkills } from "@/lib/effective-disabled-skills";
+import { resolveEffectiveDisabledSkills } from "@/modules/hermes/lib/effective-disabled-skills";
 import { getProfile } from "@/lib/profiles-repository";
 import { listSkills, deriveCategory } from "@/lib/skills-repository";
 import { skillFilePath, skillsRootForProfile } from "@/lib/skills-config";

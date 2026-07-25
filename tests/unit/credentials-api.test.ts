@@ -44,7 +44,7 @@ jest.mock("@/lib/api-auth", () => ({
   requireAuth: jest.fn(() => null),
 }));
 
-jest.mock("@/lib/hermes-config-sync", () => ({
+jest.mock("@/modules/hermes/lib/config-sync", () => ({
   syncDefaultsToHermesConfig: jest.fn(() => ({ backupPath: null })),
   syncCredentialToHermesEnv: jest.fn(() => ({ backupPath: null })),
   removeCredentialFromHermesEnv: jest.fn(() => ({ backupPath: null })),
@@ -131,7 +131,7 @@ describe("/api/credentials", () => {
     // isHermesProvider() guard. This test locks the contract: any future
     // change that re-widens the type or re-introduces the guard is
     // caught here.
-    const configSync = require("@/lib/hermes-config-sync") as {
+    const configSync = require("@/modules/hermes/lib/config-sync") as {
       syncCredentialToHermesEnv: jest.Mock;
     };
     repo.__createCredential.mockReturnValue(SAMPLE);

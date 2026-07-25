@@ -7,7 +7,7 @@ import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { getFallbackEntry, updateFallbackEntry, deleteFallbackEntry } from "@/lib/fallbacks-repository";
 import { fallbackEntryPutSchema } from "@/lib/fallback-config-schema";
-import { commitFallbackChange } from "@/lib/fallback-sync-helpers";
+import { commitFallbackChange } from "@/modules/hermes/lib/fallback-sync";
 import { notFound, ok } from "@/lib/api-response";
 
 export async function GET(

@@ -29,7 +29,7 @@ import {
   pushProfileOrRootOrFail,
   toPatchResponse,
   type ProfileOrRootPatchResult,
-} from "@/lib/apply-profile-or-root-patch";
+} from "@/modules/hermes/handlers/profile-patch";
 
 describe("toPatchResponse", () => {
   it("returns null on success", () => {

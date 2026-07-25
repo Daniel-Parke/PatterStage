@@ -5,7 +5,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { badRequest, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
-import { applyProfileOrRootPatchOrFail } from "@/lib/apply-profile-or-root-patch";
+import { applyProfileOrRootPatchOrFail } from "@/modules/hermes/handlers/profile-patch";
 import { requireSafeProfileName } from "@/lib/path-security";
 import { recordEvent } from "@/lib/analytics/record-event";
 

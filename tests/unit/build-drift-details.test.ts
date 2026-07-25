@@ -21,8 +21,8 @@
  *   7. Exact string format (pinned byte-for-byte)
  */
 
-import { buildDriftDetails } from "@/lib/sync-manager";
-import type { DriftReport } from "@/lib/sync-manager";
+import { buildDriftDetails } from "@/modules/hermes/lib/sync-manager";
+import type { DriftReport } from "@/modules/hermes/lib/sync-manager";
 
 const emptyDrift: DriftReport = {
   modelsInHermesNotInDb: [],

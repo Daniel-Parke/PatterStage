@@ -47,7 +47,7 @@ afterEach(() => {
 
 describe("atomicWriteFile rollback", () => {
   it("does not leave a tmp file when the rename fails", () => {
-    const { atomicWriteFile } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { atomicWriteFile } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     // Spy on fs.renameSync and force a failure inside the same require graph.
     const fs = require("fs") as typeof import("fs");
     const orig = fs.renameSync;
@@ -69,7 +69,7 @@ describe("atomicWriteFile rollback", () => {
   });
 
   it("cleans up tmpfile even if writeFileSync throws on the staged file", () => {
-    const { atomicWriteFile } = require("@/lib/hermes-config-sync") as typeof import("@/lib/hermes-config-sync");
+    const { atomicWriteFile } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
     const fs = require("fs") as typeof import("fs");
 
     const target = join(fakeRoot, "config.yaml");
