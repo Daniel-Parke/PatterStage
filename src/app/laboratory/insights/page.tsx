@@ -25,7 +25,7 @@ import {
   DistributionHistogram, TopList, StackedAreaTrend,
 } from "@/components/viz";
 import { neonAlpha, type NeonColor } from "@/components/viz/colors";
-import { AchievementShowcase, LevelBadge, StreakFlame } from "@/components/achievements";
+import { AchievementShowcase, StreakFlame } from "@/components/achievements";
 import { Stagger, StaggerItem } from "@/components/motion";
 import { useStats } from "@/hooks/useStats";
 import { useAnalytics, useAnalyticsTimeseries, useInsights } from "@/hooks/useAnalytics";
@@ -163,12 +163,13 @@ export default function InsightsPage() {
               </div>
             )}
 
-            {/* ── Level / streak / headline metrics ── */}
+            {/* ── Streak / headline metrics ──
+                ADR-0004: the global operator LevelBadge is gone. A level belongs
+                to a Body (an agent profile), not to the person clicking; each
+                agent's level is on the Benchmarks leaderboard beside its rating. */}
             <Card>
               <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
                 <div className="flex items-center gap-5">
-                  {stats && <LevelBadge level={stats.level} color="cyan" />}
-                  <div className="h-10 w-px bg-white/10" />
                   {stats && <StreakFlame current={stats.streak.current} longest={stats.streak.longest} />}
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">

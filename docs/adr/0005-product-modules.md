@@ -58,6 +58,43 @@ Rules:
 Rec Room is built first and is the acceptance test: if adding Story Weaver's
 successor does not require touching core, the seam works.
 
+## Physical layout, reviewed against Next.js 16
+
+Reviewed 2026-07-25 against the App Router project-structure documentation,
+because "move surfaces into `src/modules/<id>/`" sounded like it might fight the
+framework. It does not. Next.js is explicitly **unopinionated** here, and the
+first strategy the docs name is *"Store project files outside of `app`: stores
+all application code in shared folders in the root of your project and keeps the
+`app` directory purely for routing purposes."* That is exactly this ADR.
+
+The one hard constraint is that a route is only a route when `page.tsx`,
+`route.ts` or `layout.tsx` sits at the matching path under `app/`. So:
+
+```
+src/app/orchestration/composer/page.tsx     routing only, delegates
+src/modules/core/composer/                  the actual page, logic, data access
+```
+
+Rules:
+
+- **`app/` holds routing files and nothing else.** Each `page.tsx` is a thin
+  shell that renders a component the module exports. `route.ts` handlers likewise
+  delegate to a module handler.
+- **A module owns its components, hooks, lib and data access.** Cross-module
+  reads go through the job model or MCP (ADR-0001), never a direct import.
+- Two other sanctioned tools are deliberately NOT used, and it is worth saying
+  why so nobody adds them later thinking they were forgotten:
+  - *Colocation / private folders* (`app/blog/_components/`) is idiomatic for
+    route-local UI, but it scatters a module's code across the route tree, which
+    is precisely what makes a boundary lint impossible to write.
+  - *Route groups* (`(folder)`) organise URLs, not ownership. The repo already
+    uses one, `(main)`, and that stays; mirroring module ids into route groups
+    would restate the registry in the filesystem and let the two disagree.
+- The move is **incremental**: a module is migrated when it is next worked on,
+  not in one sweep. The boundary lint starts in report-only mode and gains teeth
+  per module, because a rule that red-builds the whole tree on day one is a rule
+  that gets deleted.
+
 ## Consequences
 
 - The sidebar, the e2e route matrix and the migration chain all become derived

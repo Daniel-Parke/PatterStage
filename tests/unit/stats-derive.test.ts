@@ -1,6 +1,5 @@
 /** @jest-environment node */
 import {
-  computeXp,
   computeLevel,
   computeStreaks,
   evaluateAchievements,
@@ -36,27 +35,6 @@ const baseMetrics = (over: Partial<RawMetrics> = {}): RawMetrics => ({
   distinctProfiles: 0,
   distinctEventTypes: 0,
   ...over,
-});
-
-describe("computeXp", () => {
-  it("sums weighted work into XP", () => {
-    expect(computeXp({ completedMissions: 2, completedRuns: 4, totalTokens: 5000 })).toBe(
-      2 * 100 + 4 * 25 + 5, // 200 + 100 + 5
-    );
-  });
-  it("is zero for no work", () => {
-    expect(computeXp({ completedMissions: 0, completedRuns: 0, totalTokens: 0 })).toBe(0);
-  });
-
-  // ADR-0004: the Body's record measures the Body. Writing interactive fiction
-  // used to award 150 XP per story, so the operator's level rose by doing
-  // something that says nothing about any agent.
-  it("ignores Rec Room activity entirely", () => {
-    const work = { completedMissions: 1, completedRuns: 0, totalTokens: 0 };
-    const withStories = { ...work, stories: 12, chaptersGenerated: 99 };
-    expect(computeXp(withStories)).toBe(computeXp(work));
-    expect(computeXp(withStories)).toBe(100);
-  });
 });
 
 describe("computeLevel", () => {

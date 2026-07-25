@@ -8,12 +8,9 @@
 
 import { db } from "@/lib/db";
 import {
-  computeXp,
-  computeLevel,
   computeStreaks,
   evaluateAchievements,
   successRate,
-  type LevelInfo,
   type Achievement,
   type RawMetrics,
 } from "./derive";
@@ -75,7 +72,6 @@ export interface DashboardStats {
   };
   stories: number;
   errors24h: number;
-  level: LevelInfo;
   streak: { current: number; longest: number };
   achievements: Achievement[];
   agents: AgentPerformance[];
@@ -326,7 +322,6 @@ export function getDashboardStats(): DashboardStats {
     distinctProfiles: distinctProfileCount(),
     distinctEventTypes: distinctEventTypeCount(),
   };
-  const level = computeLevel(computeXp(raw));
   const achievements = evaluateAchievements(raw);
 
   return {
@@ -337,7 +332,6 @@ export function getDashboardStats(): DashboardStats {
     automations: { schedulesTotal, schedulesEnabled, scriptsTotal, scriptsEnabled, nextRun },
     stories,
     errors24h,
-    level,
     streak,
     achievements,
     agents: getAgentPerformance(),

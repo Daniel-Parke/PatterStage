@@ -68,22 +68,6 @@ export interface Achievement {
   points: number;
 }
 
-/**
- * XP awarded per unit of work. Tuned so a few real missions move the needle.
- *
- * Writing interactive fiction is NOT here. It used to be (`perStory: 150`), so
- * the operator's level rose by writing stories, which says nothing about an
- * agent. ADR-0004 draws the line: progression measures the Body — the profile,
- * skills, tools, memory and workflows built up around the model — and creative
- * work in the Rec Room does not touch that record. Rec Room keeps its own
- * achievements (scope: "recroom" below); it just does not feed this number.
- */
-const XP = {
-  perCompletedMission: 100,
-  perCompletedRun: 25,
-  perThousandTokens: 1,
-} as const;
-
 const LEVEL_TITLES = [
   "Initiate",
   "Operator",
@@ -96,15 +80,6 @@ const LEVEL_TITLES = [
   "Mastermind",
   "Singularity",
 ] as const;
-
-/** Total XP from raw work counts. See the note on XP: no Rec Room activity. */
-export function computeXp(m: Pick<RawMetrics, "completedMissions" | "completedRuns" | "totalTokens">): number {
-  return Math.round(
-    m.completedMissions * XP.perCompletedMission +
-      m.completedRuns * XP.perCompletedRun +
-      (m.totalTokens / 1000) * XP.perThousandTokens,
-  );
-}
 
 /**
  * Triangular level curve: level L starts at cumulative XP 50·L·(L−1), so each

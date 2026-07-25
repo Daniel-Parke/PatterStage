@@ -27,7 +27,7 @@ import { useLeaderboard } from "@/hooks/useBenchmarks";
 import { useCountUp } from "@/hooks/useCountUp";
 import { AreaTrend, ActivityHeatmap, Donut, Sparkline, ProgressRing } from "@/components/viz";
 import { neon, neonAlpha, type NeonColor } from "@/components/viz/colors";
-import { LevelBadge, StreakFlame, AchievementShowcase, AgentRatingBadge } from "@/components/achievements";
+import { StreakFlame, AchievementShowcase, AgentRatingBadge } from "@/components/achievements";
 import { useToast } from "@/components/ui/Toast";
 import { useAchievementUnlocks } from "@/hooks/useAchievementUnlocks";
 import type { Achievement } from "@/lib/stats/derive";
@@ -137,7 +137,7 @@ export default function CommandCenter() {
     return isLoading ? <Skeleton /> : null;
   }
 
-  const { missions, runs, level, streak, throughput, runActivity, tokensByDay, achievements, automations } = stats;
+  const { missions, runs, streak, throughput, runActivity, tokensByDay, achievements, automations } = stats;
   const successPct = Math.round(missions.successRate * 100);
   const throughputTotal = throughput.reduce((s, p) => s + p.completed, 0);
   const next = automations.nextRun;
@@ -152,12 +152,14 @@ export default function CommandCenter() {
           style={{ background: neonAlpha("cyan", 8) }}
         />
         <div className="relative flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
+          {/* ADR-0004: the single global operator LevelBadge that stood here is
+              gone. It measured the operator fiddling, not an agent developing,
+              and it rose when you wrote fiction. The agent's own record (the
+              Body's level, next to its rating) is the honest version. */}
           <div className="flex items-center gap-5">
-            <LevelBadge level={level} color="cyan" />
-            <div className="h-10 w-px bg-white/10" />
             <StreakFlame current={streak.current} longest={streak.longest} />
             <div className="hidden h-10 w-px bg-white/10 lg:block" />
-            <Link href="/laboratory/benchmarks" className="hidden transition hover:opacity-90 lg:block" title="Agent Level + Rating — open Benchmarks">
+            <Link href="/laboratory/benchmarks" className="transition hover:opacity-90" title="Agent Level + Rating — open Benchmarks">
               <AgentRatingBadge
                 rating={topAgent?.rating ?? null}
                 experience={topAgent?.experience ? { level: topAgent.experience.level.level, title: topAgent.experience.level.title } : null}
