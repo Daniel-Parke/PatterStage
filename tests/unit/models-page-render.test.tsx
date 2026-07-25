@@ -9,7 +9,7 @@ import "@testing-library/jest-dom";
 import { render, screen, waitFor, within } from "@testing-library/react";
 
 import ModelsPage from "@/app/config/models/page";
-import { TASK_TYPES } from "@/lib/hermes-providers";
+import { TASK_TYPES } from "@/lib/models/task-types";
 
 interface FetchResponseInit {
   body: unknown;

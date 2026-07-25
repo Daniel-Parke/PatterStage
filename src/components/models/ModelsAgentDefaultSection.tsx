@@ -7,7 +7,7 @@ import { Select } from "@/components/ui/field";
 import BulkAuxiliaryUpdater from "@/components/models/BulkAuxiliaryUpdater";
 import ModelsSectionHeader from "@/components/models/ModelsSectionHeader";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
-import type { TaskType } from "@/lib/hermes-providers";
+import type { TaskType } from "@/lib/models/task-types";
 
 import type { ApiModel } from "./types";
 

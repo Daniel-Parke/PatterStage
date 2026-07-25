@@ -11,10 +11,7 @@
 import GlowSurface from "@/components/ui/GlowSurface";
 import ModelSelectDropdown from "@/components/models/ModelSelectDropdown";
 
-import {
-  TASK_TYPES,
-  type TaskType,
-} from "@/lib/hermes-providers";
+import { TASK_TYPES, type TaskType } from "@/lib/models/task-types";
 
 export interface DefaultsModelOption {
   id: string;

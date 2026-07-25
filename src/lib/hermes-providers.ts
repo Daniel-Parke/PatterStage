@@ -12,43 +12,6 @@
 // about it.
 
 /**
- * Task slots in the models registry. Mirrors the 12
- * `is_default_<task>` columns in migration 006_models_credentials.sql.
- * `agent` is the primary mission model; the remaining 11 are Hermes
- * auxiliary slots (config.yaml `auxiliary.<task>.*`).
- */
-export const TASK_TYPES = [
-  "agent",
-  "hindsight",
-  "compression",
-  "vision",
-  "web_extract",
-  "session_search",
-  "title_generation",
-  "skills_hub",
-  "mcp",
-  "triage_specifier",
-  "approval",
-  "delegation",
-] as const;
-
-export type TaskType = (typeof TASK_TYPES)[number];
-
-/**
- * The 11 auxiliary task slots (everything except the primary `agent` slot).
- * Mirrors the `auxiliary.<task>.*` section of ~/.hermes/config.yaml.
- *
- * Exported as a single source of truth so callers don't independently
- * compute `TASK_TYPES.filter((t) => t !== "agent")` (which was duplicated
- * in `BulkAuxiliaryUpdater.tsx` and `hermes-config-sync.ts` as of 2026-06-02).
- * The type predicate `t is Exclude<TaskType, "agent">` narrows the result
- * to a precise tuple, preserving literal types and avoiding `as` casts.
- */
-export const AUXILIARY_TASK_TYPES = TASK_TYPES.filter(
-  (t): t is Exclude<TaskType, "agent"> => t !== "agent"
-);
-
-/**
  * Hermes-recognised inference providers. The first 14 must stay in
  * lock-step with the `hermes chat --provider` argparse `choices=[...]`
  * list (excluding "auto"). Auxiliary-only providers from the user-guide
@@ -120,9 +83,6 @@ export function isHermesProvider(provider: string): provider is HermesProvider {
   return (HERMES_PROVIDERS as readonly string[]).includes(provider);
 }
 
-export function isTaskType(value: unknown): value is TaskType {
-  return typeof value === "string" && (TASK_TYPES as readonly string[]).includes(value);
-}
 
 /**
  * Returns the env var name for a given provider, or null if the provider

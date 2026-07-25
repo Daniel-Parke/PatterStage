@@ -10,7 +10,7 @@ import ModelSyncButtons from "@/components/models/ModelSyncButtons";
 import ModelsSectionHeader from "@/components/models/ModelsSectionHeader";
 import PerRowDeleteButton from "@/components/models/PerRowDeleteButton";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
-import { TASK_TYPES, type TaskType } from "@/lib/hermes-providers";
+import { TASK_TYPES, type TaskType } from "@/lib/models/task-types";
 import type { SyncActionResult } from "@/lib/sync-manager";
 
 import { type ApiModel, toModelEditorRecord } from "./types";

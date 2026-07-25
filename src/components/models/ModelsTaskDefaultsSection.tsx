@@ -5,7 +5,7 @@ import { Settings } from "lucide-react";
 import DefaultsGrid from "@/components/models/DefaultsGrid";
 import ModelsSectionHeader from "@/components/models/ModelsSectionHeader";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
-import type { TaskType } from "@/lib/hermes-providers";
+import type { TaskType } from "@/lib/models/task-types";
 
 interface ModelsTaskDefaultsSectionProps {
   defaults: Record<TaskType, string | null>;

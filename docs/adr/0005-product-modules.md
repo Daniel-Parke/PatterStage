@@ -104,7 +104,7 @@ the opposite, and the numbers say why. Core importers, excluding other
 | file | core importers | note |
 |---|---|---|
 | `hermes-agent-runtime` | 14 | `getActiveHermesPaths` is 7 of them |
-| `hermes-providers` | 14 | **mostly TYPES**: `TaskType`, `DefaultsModelOption`, `ModelEditorRecord`, `TASK_TYPES` |
+| `hermes-providers` | 10 → **4** | done, see below |
 | `hermes-profile-paths` | 5 | |
 | `hermes-config-sync` | 4 | app-heavy (7 route importers) |
 | `hermes-profile-sync` | 3 | app-heavy (8) |
@@ -120,11 +120,20 @@ the opposite, and the numbers say why. Core importers, excluding other
 that makes the module mean anything. The work is removing the reason core imports
 Hermes at all, and it splits into two very different halves:
 
-1. **Type coupling, which is cheap.** `hermes-providers`' 14 importers are
-   dominated by types and one constant list. That is shared vocabulary, not
-   Hermes behaviour, and it belongs in core contracts (later, the shared
-   contracts package of ADR-0003). Moving it costs almost nothing and removes the
-   single largest importer count.
+1. **Vocabulary coupling, which is cheap. DONE.** Eight of `hermes-providers`'
+   ten core importers wanted only `TaskType` / `TASK_TYPES`, and those name
+   PatterStage's OWN columns, the 12 `is_default_<task>` fields in migration
+   006. They mirror Hermes' auxiliary slots, but mirroring is not ownership: a
+   second framework would map onto these slots rather than replace them. Moved to
+   `src/lib/models/task-types.ts` (core). Core importers fell 10 → 4, and the
+   four that remain are real Hermes knowledge: the provider list, the type, and
+   the env-var lookup.
+
+   Worth recording how this was nearly got wrong: a first pass with `grep -B3`
+   attributed `DefaultsModelOption` and `ModelEditorRecord` to this file. Both
+   actually live in `components/models`; the grep had picked up neighbouring
+   import lines. The conclusion held only because the counts were re-measured
+   per-file before acting.
 2. **Path coupling, which is the real job.** `getActiveHermesPaths` in 7 core
    modules is the framework-agnostic claim failing out loud: orchestration and
    sync code knows where Hermes keeps its files. Each site goes behind the

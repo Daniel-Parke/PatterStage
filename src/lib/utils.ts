@@ -158,7 +158,7 @@ export function messageSummary(content: string | undefined): string {
 
 // ── Model Defaults ───────────────────────────────────────────
 
-import { TASK_TYPES, type TaskType } from "@/lib/hermes-providers";
+import { TASK_TYPES, type TaskType } from "@/lib/models/task-types";
 
 /**
  * Empty task-defaults map — initialises all 12 slots to null.

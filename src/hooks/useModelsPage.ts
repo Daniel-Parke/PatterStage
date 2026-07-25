@@ -15,7 +15,7 @@ import {
 } from "@/lib/api-fetch";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
-import { type TaskType } from "@/lib/hermes-providers";
+import { type TaskType } from "@/lib/models/task-types";
 import type { FallbackChainEntry, FallbackConfig } from "@/types/hermes";
 import type { SyncActionResult } from "@/lib/sync-manager";
 import { emptyModelDefaults, pluralise } from "@/lib/utils";

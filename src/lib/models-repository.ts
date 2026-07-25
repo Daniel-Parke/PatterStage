@@ -6,7 +6,7 @@
 // Defaults are stored in the model_defaults table keyed on task_type.
 
 import { db, inTransaction, uuid, now } from "./db";
-import { isTaskType, type TaskType } from "./hermes-providers";
+import { isTaskType, type TaskType } from "./models/task-types";
 import { getCredentialWithKey } from "./credentials-repository";
 import { emptyModelDefaults } from "./utils";
 import { inferApiStyle, normalizeApiStyle, type ApiStyle } from "./llm-endpoint";

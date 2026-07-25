@@ -3,10 +3,10 @@
 // ═══════════════════════════════════════════════════════════════
 //
 // Shared types for the models page. TaskType lives in
-// hermes-providers.ts as the single source of truth.
+// models/task-types.ts as the single source of truth.
 
 import type { ModelEditorRecord } from "./ModelEditor";
-import type { TaskType } from "@/lib/hermes-providers";
+import type { TaskType } from "@/lib/models/task-types";
 import type { ApiStyle } from "@/lib/llm-endpoint";
 
 export interface ApiModel {

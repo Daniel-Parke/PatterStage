@@ -6,10 +6,7 @@
 
 import { useState, useCallback } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import {
-  AUXILIARY_TASK_TYPES,
-  type TaskType,
-} from "@/lib/hermes-providers";
+import { AUXILIARY_TASK_TYPES, type TaskType } from "@/lib/models/task-types";
 import { pluralise } from "@/lib/utils";
 import ModelSelectDropdown from "@/components/models/ModelSelectDropdown";
 

@@ -5,7 +5,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { HERMES_PROVIDERS, TASK_TYPES, type TaskType } from "./hermes-providers";
+import { HERMES_PROVIDERS } from "./hermes-providers";
+import { TASK_TYPES, type TaskType } from "./models/task-types";
 import { ANALYTICS_EVENT_TYPES } from "./analytics/event-types";
 
 // ── Zod schemas for API request bodies ─────────────────────────

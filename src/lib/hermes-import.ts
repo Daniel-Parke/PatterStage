@@ -24,13 +24,8 @@ import { existsSync, readFileSync } from "fs";
 import * as yaml from "js-yaml";
 
 import { getActiveHermesPaths } from "./hermes-agent-runtime";
-import {
-  PROVIDER_ENV_VAR,
-  isHermesProvider,
-  TASK_TYPES,
-  type HermesProvider,
-  type TaskType,
-} from "./hermes-providers";
+import { PROVIDER_ENV_VAR, isHermesProvider, type HermesProvider } from "./hermes-providers";
+import { TASK_TYPES, type TaskType } from "./models/task-types";
 import { parseEnvFile } from "./env-file";
 
 // ── Types ────────────────────────────────────────────────────

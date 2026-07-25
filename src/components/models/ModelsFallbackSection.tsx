@@ -4,7 +4,7 @@ import CollapsibleSection from "@/components/ui/CollapsibleSection";
 import FallbackChainList from "@/components/models/FallbackChainList";
 import FallbackConfigPanel from "@/components/models/FallbackConfigPanel";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
-import type { TaskType } from "@/lib/hermes-providers";
+import type { TaskType } from "@/lib/models/task-types";
 import type { FallbackChainEntry, FallbackConfig } from "@/types/hermes";
 
 import FallbackUrlEditModal from "@/components/models/FallbackUrlEditModal";
