@@ -11,7 +11,6 @@ function sig(over: Partial<AgentExperienceSignals> = {}): AgentExperienceSignals
     skillsEnabled: 0,
     toolsetCount: 0,
     memoryFacts: 0,
-    benchmarksCompleted: 0,
     ...over,
   };
 }

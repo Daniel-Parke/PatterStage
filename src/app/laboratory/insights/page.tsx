@@ -166,7 +166,7 @@ export default function InsightsPage() {
             {/* ── Streak / headline metrics ──
                 ADR-0004: the global operator LevelBadge is gone. A level belongs
                 to a Body (an agent profile), not to the person clicking; each
-                agent's level is on the Benchmarks leaderboard beside its rating. */}
+                agent's level is on the Agents page, beside what it accumulated. */}
             <Card>
               <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
                 <div className="flex items-center gap-5">

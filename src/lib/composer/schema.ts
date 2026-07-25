@@ -206,7 +206,7 @@ export const SOFTWARE_DELIVERY_INPUT_SPEC: WorkflowInputSpec = {
   examples: [
     "Add a dark-mode toggle to the settings page, persisted per user.",
     "Fix the N+1 query loading the dashboard sessions list.",
-    "Add CSV export to the benchmarks results table.",
+    "Add CSV export to the missions results table.",
   ],
 };
 

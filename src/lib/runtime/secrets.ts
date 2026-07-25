@@ -9,19 +9,17 @@
 // a PatterStage restart.
 // ═══════════════════════════════════════════════════════════════
 
-import { getBenchGatewayKey } from "./gateway-manager";
-
 /**
  * Resolve the bearer key for a profile's gateway. Returns null when no key is
  * configured (the caller then sends an unauthenticated request, which a
  * key-required gateway will reject with 401 — surfaced clearly to the user).
+ *
+ * `profileName` is retained but no longer consulted: it existed so ephemeral
+ * benchmark gateways could present their own generated key, and that subsystem is
+ * gone (docs/adr/0004). Keeping the parameter means a genuine per-profile key
+ * scheme has somewhere to land without a signature change at 30-odd call sites.
  */
-export function getGatewayKey(profileName?: string): string | null {
-  // Ephemeral benchmark gateways carry their own generated key.
-  if (profileName) {
-    const benchKey = getBenchGatewayKey(profileName);
-    if (benchKey) return benchKey;
-  }
+export function getGatewayKey(_profileName?: string): string | null {
   const key = process.env.API_SERVER_KEY?.trim();
   return key && key.length > 0 ? key : null;
 }

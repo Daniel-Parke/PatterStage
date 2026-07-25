@@ -1,8 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
 // stats/agent-experience.ts — the Agent Experience Level (a 3rd axis)
 //
-// Distinct from Operator XP (how much the USER operates, derive.ts) and the
-// Agent Stat Card (capability from benchmarks). Experience measures how much an
+// Distinct from Operator XP (how much the USER operates, derive.ts). Experience
+// measures how much an
 // AGENT has GROWN from being run — its accumulated activity plus its expanding
 // footprint of skills, tools and memory. Reuses the operator level-curve
 // machinery (computeLevel) so the badge/ring components work unchanged, but is
@@ -30,11 +30,14 @@ export interface AgentExperienceSignals {
   toolsetCount: number;
   /** Semantic-memory facts grown (0 when the provider count is unavailable). */
   memoryFacts: number;
-  /** Benchmarks completed (a minor input — capability is the stat card's job). */
-  benchmarksCompleted: number;
 }
 
-/** XP weights — usage + footprint dominate; benchmarks are a small bonus. */
+/**
+ * XP weights: usage + footprint. `perBenchmark: 30` was removed with the
+ * benchmark subsystem (docs/adr/0004). It read benchmark_runs through scalar(),
+ * which try/catches to 0, so leaving it would have kept every Agent Level
+ * computing with a silently missing term.
+ */
 export const AGENT_XP = {
   perRun: 40,
   perThousandTokens: 0.5,
@@ -42,7 +45,6 @@ export const AGENT_XP = {
   perSkill: 80,
   perToolset: 50,
   perMemoryFact: 5,
-  perBenchmark: 30,
 } as const;
 
 export function computeAgentXp(s: AgentExperienceSignals): number {
@@ -52,8 +54,7 @@ export function computeAgentXp(s: AgentExperienceSignals): number {
       s.activeDays * AGENT_XP.perActiveDay +
       s.skillsEnabled * AGENT_XP.perSkill +
       s.toolsetCount * AGENT_XP.perToolset +
-      s.memoryFacts * AGENT_XP.perMemoryFact +
-      s.benchmarksCompleted * AGENT_XP.perBenchmark,
+      s.memoryFacts * AGENT_XP.perMemoryFact,
   );
 }
 
@@ -103,10 +104,6 @@ export function agentExperienceForProfile(slug: string): AgentExperience | null 
     "SELECT COUNT(DISTINCT date(completed_at)) AS v FROM runs WHERE profile_name = ? AND status = 'completed'",
     slug,
   );
-  const benchmarksCompleted = scalar(
-    "SELECT COUNT(*) AS v FROM benchmark_runs WHERE target_ref = ? AND status = 'completed'",
-    slug,
-  );
 
   const signals: AgentExperienceSignals = {
     runsCompleted: perf.runs,
@@ -115,7 +112,6 @@ export function agentExperienceForProfile(slug: string): AgentExperience | null 
     skillsEnabled: perf.skills,
     toolsetCount: perf.toolsets,
     memoryFacts: 0, // provider-side; surfaced when a count API lands (BB6)
-    benchmarksCompleted,
   };
   const xp = computeAgentXp(signals);
   return { slug, level: computeAgentLevel(xp), xp, signals };

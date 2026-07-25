@@ -145,7 +145,6 @@ const laboratoryModule: ProductModule = {
       label: "Laboratory",
       links: [
         { icon: "BarChart3", label: "Insights", href: "/laboratory/insights", color: "green" },
-        { icon: "Trophy", label: "Benchmarks", href: "/laboratory/benchmarks", color: "purple" },
         { icon: "Telescope", label: "Deep Research", href: "/laboratory/research", color: "cyan" },
         { icon: "FileStack", label: "Artifacts", href: "/laboratory/artifacts", color: "orange" },
       ],

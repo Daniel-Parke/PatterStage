@@ -7,6 +7,14 @@
 // COLUMN is not idempotent, so each statement runs in its own try/catch — a
 // duplicate-column error on a partially-applied DB is swallowed and the rest
 // still apply. See [[db-migration-applier-footgun]].
+//
+// VESTIGIAL as of the benchmark deletion (docs/adr/0004-brain-and-body.md).
+// Adds columns to benchmark_runs, which nothing reads or writes.
+// The feature is gone; this applier is NOT. schema_version is a strictly
+// increasing chain to 29, so deleting a migration in the middle would renumber
+// every later one and break every existing database. It stays as a no-op-shaped
+// version bump, and the tables stay permanently empty. That is a schema-history
+// tax on the decision, not a sign the feature is coming back.
 // ═══════════════════════════════════════════════════════════════
 
 import type Database from "better-sqlite3";

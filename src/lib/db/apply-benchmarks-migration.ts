@@ -6,6 +6,14 @@
 // runMigrations at schema_version 14 so it lands on fresh installs and
 // already-migrated DBs alike. See [[db-migration-applier-footgun]] — a .sql
 // file is inert without a version-guarded applier wired into runMigrations().
+//
+// VESTIGIAL as of the benchmark deletion (docs/adr/0004-brain-and-body.md).
+// Creates benchmark_runs + benchmark_item_results, which nothing reads or writes.
+// The feature is gone; this applier is NOT. schema_version is a strictly
+// increasing chain to 29, so deleting a migration in the middle would renumber
+// every later one and break every existing database. It stays as a no-op-shaped
+// version bump, and the tables stay permanently empty. That is a schema-history
+// tax on the decision, not a sign the feature is coming back.
 // ═══════════════════════════════════════════════════════════════
 
 import type Database from "better-sqlite3";

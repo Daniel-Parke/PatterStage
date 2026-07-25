@@ -51,6 +51,8 @@ From which:
    - *Capability gained*: benchmark movement **with the Brain held constant**, so
      the delta reflects the Body. A benchmark run that changed model is not
      evidence of learning and must not be counted as such.
+     **DEFERRED, 2026-07-25, and see the amendment below: this input has no
+     implementation. Progression ships on two of three.**
    - *Equipment acquired*: memory facts retained, skills enabled, tools wired,
      workflows authored.
 4. **Every displayed number names its subject.** A figure describes the Brain, the
@@ -60,12 +62,89 @@ From which:
    Rec Room is not the Body learning anything. Rec Room may keep its own separate
    progression if that is fun; it does not touch the agent's record.
 
+## Amendment, 2026-07-25: the capability axis has no implementation
+
+Accepted by Daniel the same day this ADR was, after the benchmark subsystem was
+investigated rather than assumed. **Progression ships on two of its three inputs.
+Do not read decision 3 above as describing working software.**
+
+Two measurements decided it.
+
+**Nobody had ever run it.** `benchmark_runs = 0` in every database on the machine,
+including the live one at schema v29 carrying `runs=22`, `sessions=35`,
+`missions=16`, `skills=178` and five weeks of real history. Not cleanup: the run
+row is inserted before execution starts and nothing deletes from that table. No
+`__bench_` profile was ever written to disk. `runner.ts` was 0 of 188 lines
+covered.
+
+**And the content could not have served this ADR anyway.** All 94 items span eight
+closed-book domains: maths, reasoning, logic, instruction-following, consistency,
+safety, honesty, needle-retrieval. Not one requires a tool, a skill, a file, the
+web, or memory. Yet 522 lines of ephemeral-profile and spawned-gateway machinery
+existed solely to make the skills/tools/memory toggles genuinely apply.
+
+Skills, tools and memory cannot change the answer to "What is 15% of 240?" So the
+delta this ADR asks for -- movement with the Brain held constant, so the change
+reflects the Body -- was **zero by construction**. One suite file even claimed its
+items "discriminate between a bare model and a configured agent". They could not.
+
+That is why the code was deleted rather than fixed: the machinery and the content
+were mismatched, and the content is the half that has to be rewritten. Keeping
+6.5k lines as a placeholder for content that must be replaced is the expensive
+option.
+
+**What the capability axis needs, when someone builds it:** items that FAIL without
+a tool, a skill, or a memory fact. A task that cannot be answered from the model's
+weights is the only kind whose movement means the Body improved. That is new
+content plus a much smaller runner, and it is not scheduled.
+
+Two defects are recorded so a rebuild does not reproduce them. The judge defaulted
+to `getDefaultModel("agent")`, so absent explicit configuration a model graded its
+own output, on 14 items. And per-repeat spread was never reported, so a run with
+one repeat sat on the same leaderboard as a run with ten. The lifted grader in
+`src/lib/llm-judge.ts` requires an explicit judge model with no fallback, which
+closes the first.
+
+Four mechanisms were lifted into core before the delete, because each solved a
+problem the product still has and the harness was the only place it was solved:
+
+| lifted to | what it was solving |
+|---|---|
+| `runtime/run-trajectory.ts` | the only record of what an agent DID, not what it output |
+| `HermesRuntime.submitRun` | a 429 is "come back", and every real caller was treating it as failure |
+| `llm-judge.ts` | grading by an independent model, with calibrated anchors |
+| `llm-output.ts` | reading a final answer, not the model's deliberation |
+
+The last two fixed live defects on the way past: Composer was reading verdicts out
+of `<think>` blocks, and Deep Research marked a total search outage `completed`.
+
 ## Consequences
 
 - `src/lib/stats/derive.ts` and `stats-repository.ts` are rebuilt around a
   per-profile record. The dashboard stops querying the `stories` table.
-- The benchmark rating splits: a capability score (Body, Brain fixed) and
-  operational columns (latency, cost, tokens) reported alongside, never blended.
+- ~~The benchmark rating splits: a capability score (Body, Brain fixed) and
+  operational columns (latency, cost, tokens) reported alongside, never blended.~~
+  **Superseded by the amendment: there is no rating to split.** The latency-blend
+  defect this line was written to fix had in fact already been fixed in `5d3268c`
+  before the subsystem was deleted, so the review finding that prompted it was
+  stale when quoted.
+- The dashboard hero and the Agents page show the agent's **level** and the signals
+  behind it (`AgentLevelBadge`, `AgentGrowthPanel`), each row a thing the agent did
+  or was given. Decision 4 above is satisfiable there in a way it never was for the
+  six-axis stat card, whose axes came from hand-picked domain weights with no
+  stated basis.
+- `agent-experience.ts` loses its `perBenchmark: 30` XP term. It read
+  `benchmark_runs` through a helper that try/catches to zero, so leaving it would
+  have kept every Agent Level computing with a silently missing input.
+- Migrations 014, 015 and 017 stay, annotated as vestigial. `schema_version` is a
+  strictly increasing chain, so `benchmark_runs`, `benchmark_item_results` and
+  `bench_gateways` remain as permanently empty tables in every database. A
+  schema-history tax on the decision, not a sign the feature is returning.
+- **What the owner loses, stated plainly:** there is now no way in the product to
+  compare two models, or two agent configurations, on a fixed task set. Nothing
+  else does head-to-head evaluation. The question "did adding those 12 skills
+  help?" is unanswerable until a Body-sensitive suite exists -- though it was
+  equally unanswerable before, because the suite was closed-book.
 - `agent-experience.ts` levels stay as a concept but are re-derived from the three
   inputs above and attached to a profile.
 - The vocabulary is binding in the UI. "Agent" alone is ambiguous and should be

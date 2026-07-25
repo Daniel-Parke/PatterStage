@@ -6,6 +6,12 @@
 // (CREATE ... IF NOT EXISTS), version-guarded at schema_version 16, wired LAST
 // in runMigrations. See [[db-migration-applier-footgun]].
 // ═══════════════════════════════════════════════════════════════
+//
+// NOT vestigial, despite the name. tool_catalog and seed_memory_facts outlived
+// the benchmark subsystem that introduced them: they are now owned by
+// src/lib/seed/catalog-seed.ts and src/lib/memory-catalog-repository.ts. Only the
+// filename still says benchmark.
+// ═══════════════════════════════════════════════════════════════
 
 import type Database from "better-sqlite3";
 import { join } from "path";

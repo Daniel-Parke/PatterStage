@@ -23,11 +23,11 @@ import {
   CalendarClock,
 } from "lucide-react";
 import { useStats } from "@/hooks/useStats";
-import { useLeaderboard } from "@/hooks/useBenchmarks";
+import { useAgentExperience } from "@/hooks/useAgentExperience";
 import { useCountUp } from "@/hooks/useCountUp";
 import { AreaTrend, ActivityHeatmap, Donut, Sparkline, ProgressRing } from "@/components/viz";
 import { neon, neonAlpha, type NeonColor } from "@/components/viz/colors";
-import { StreakFlame, AchievementShowcase, AgentRatingBadge } from "@/components/achievements";
+import { StreakFlame, AchievementShowcase, AgentLevelBadge } from "@/components/achievements";
 import { useToast } from "@/components/ui/Toast";
 import { useAchievementUnlocks } from "@/hooks/useAchievementUnlocks";
 import type { Achievement } from "@/lib/stats/derive";
@@ -119,8 +119,8 @@ function Skeleton() {
 export default function CommandCenter() {
   const { stats, isLoading } = useStats();
   // Agent Rating axis (distinct from operator XP): show the top-rated agent.
-  const { entries: leaderboard } = useLeaderboard();
-  const topAgent = leaderboard[0] ?? null;
+  const { entries: agentsByGrowth } = useAgentExperience();
+  const topAgent = agentsByGrowth[0] ?? null;
   // The dashboard is always-on, so CommandCenter is the SOLE owner of the
   // achievement-unlock toast (the Insights grid renders read-only). First poll
   // seeds silently; each id fires once.
@@ -159,10 +159,9 @@ export default function CommandCenter() {
           <div className="flex items-center gap-5">
             <StreakFlame current={streak.current} longest={streak.longest} />
             <div className="hidden h-10 w-px bg-white/10 lg:block" />
-            <Link href="/laboratory/benchmarks" className="transition hover:opacity-90" title="Agent Level + Rating — open Benchmarks">
-              <AgentRatingBadge
-                rating={topAgent?.rating ?? null}
-                experience={topAgent?.experience ? { level: topAgent.experience.level.level, title: topAgent.experience.level.title } : null}
+            <Link href="/operations/agents" className="transition hover:opacity-90" title="Agent Level — open Agents">
+              <AgentLevelBadge
+                experience={topAgent ? topAgent.experience.level : null}
                 label={topAgent ? topAgent.targetLabel : "Agent"}
               />
             </Link>

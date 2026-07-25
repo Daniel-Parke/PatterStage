@@ -38,12 +38,6 @@ const TYPE_TO_KEY: Record<AnalyticsEventType, string> = {
   "personality.changed": "config",
   "model.configured": "config",
   "chat.message_sent": "chat",
-  // Benchmarks are a separate axis (Agent Rating), not operator engagement —
-  // they map to a key with no rendered category, so categoryForEventType()
-  // returns null and they stay out of the Insights engagement donut.
-  "benchmark.started": "benchmarks",
-  "benchmark.completed": "benchmarks",
-  "benchmark.failed": "benchmarks",
 };
 
 const KEY_TO_CATEGORY = new Map(EVENT_CATEGORIES.map((c) => [c.key, c]));
