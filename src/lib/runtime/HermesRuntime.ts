@@ -33,6 +33,26 @@ import {
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
+/**
+ * Sleep that rejects the moment `signal` aborts, instead of finishing the wait
+ * first. A plain `setTimeout` promise would make a cancelled mission sit out the
+ * remaining backoff before noticing.
+ */
+function sleepAbortable(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal?.aborted) return reject(signal.reason);
+    const t = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    function onAbort() {
+      clearTimeout(t);
+      reject(signal!.reason);
+    }
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
+}
+
 export interface HermesRuntimeOptions {
   /** Override fetch (tests inject a mock). Defaults to global fetch. */
   fetchImpl?: typeof fetch;
@@ -190,19 +210,62 @@ export class HermesRuntime implements AgentRuntime {
     return (await res.json()) as T;
   }
 
+  /**
+   * POST /v1/runs, retrying only on 429.
+   *
+   * Linear backoff (2s, 4s, 6s) over 4 attempts, so the worst case adds 12s
+   * before surfacing the 429 to the caller. Deliberately linear and short: a
+   * long exponential budget would let a queued mission sit past the point where
+   * the operator would rather see the error.
+   *
+   * Aborts immediately if the caller's signal fires, including mid-sleep, so a
+   * cancelled mission does not keep waiting on a gateway it no longer needs.
+   * Any non-429 error propagates on the first attempt: a 400 or a 500 will not
+   * become a 200 by asking again.
+   */
+  private async submitWithBackoff(
+    input: RunSubmit,
+    body: Record<string, unknown>,
+  ): Promise<HermesRunDto> {
+    const MAX_ATTEMPTS = 4;
+    for (let attempt = 0; ; attempt++) {
+      input.signal?.throwIfAborted();
+      try {
+        return await this.fetchJson<HermesRunDto>(input.profileName, "/v1/runs", {
+          method: "POST",
+          body,
+          idempotencyKey: input.idempotencyKey,
+          sessionId: input.sessionId,
+          sessionKey: input.sessionKey,
+          signal: input.signal,
+        });
+      } catch (err) {
+        const busy = err instanceof RuntimeRequestError && err.status === 429;
+        if (!busy || attempt >= MAX_ATTEMPTS - 1) throw err;
+        await sleepAbortable(2000 * (attempt + 1), input.signal);
+      }
+    }
+  }
+
   async submitRun(input: RunSubmit): Promise<RunHandle> {
     const body: Record<string, unknown> = { input: input.input };
     if (input.instructions) body.instructions = input.instructions;
     if (input.sessionId) body.session_id = input.sessionId;
     if (input.previousResponseId) body.previous_response_id = input.previousResponseId;
 
-    const json = await this.fetchJson<HermesRunDto>(input.profileName, "/v1/runs", {
-      method: "POST",
-      body,
-      idempotencyKey: input.idempotencyKey,
-      sessionId: input.sessionId,
-      sessionKey: input.sessionKey,
-    });
+    // A gateway at its concurrency cap answers 429, which is "come back", not
+    // "this failed". Every caller was treating it as failure: composer/dispatch
+    // wrote the node-run failed, which the engine routes as on_fail and which
+    // burns one of MAX_NODE_ATTEMPTS, so a busy gateway was indistinguishable
+    // from a stage that produced a bad verdict. orchestration/dispatch failed
+    // the mission and closed its session outright. Only the benchmark runner
+    // retried, because a harness cannot tolerate a false zero -- and it is the
+    // one caller nobody has ever run.
+    //
+    // Retrying here is safe precisely because submitRun is idempotent: the
+    // Idempotency-Key is PatterStage's own run id, so a coalesced duplicate is
+    // already the documented contract of this method.
+    const json = await this.submitWithBackoff(input, body);
     const runId = json.run_id ?? json.id;
     if (!runId) {
       throw new RuntimeRequestError("submitRun: gateway returned no run_id", 502);

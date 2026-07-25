@@ -12,6 +12,7 @@
 // unless they emit an OUTCOME marker to choose a branch.
 // ═══════════════════════════════════════════════════════════════
 
+import { stripReasoning } from "@/lib/llm-output";
 import type { NodeVerdict } from "./schema";
 
 /** Stage kinds that emit a PASS/FAIL verdict (drive conditional routing). */
@@ -61,7 +62,12 @@ const VERDICT_RE = /VERDICT:\s*(PASS|FAIL)\b(?!\s*(?:or|\/)\s*(?:PASS|FAIL)\b)/i
  * say so explicitly.
  */
 export function parseVerdict(output: string | null, kind: string): NodeVerdict | null {
-  const text = output ?? "";
+  // Strip <think>/<reasoning>/<scratchpad> blocks BEFORE looking for any marker.
+  // A verdict a model weighed inside its own deliberation was never concluded,
+  // and reading one out of there routed on_pass for a stage that said FAIL.
+  // Applies to every marker below, not just VERDICT: an OUTCOME the model was
+  // only considering must not steer the graph either.
+  const text = stripReasoning(output ?? "");
   const verdictM = text.match(VERDICT_RE);
   const reasonsM = text.match(/REASONS?:\s*(.+)/i);
   const suggM = text.match(/SUGGESTIONS?:\s*(.+)/i);

@@ -53,6 +53,12 @@ export interface RunSubmit {
   instructions?: string;
   /** Optional multi-turn continuation handle. */
   previousResponseId?: string;
+  /**
+   * Optional cancellation. Aborts the submit itself and, importantly, any 429
+   * backoff the adapter is waiting out, so a cancelled caller stops immediately
+   * rather than sitting out the remaining retry budget.
+   */
+  signal?: AbortSignal;
 }
 
 /** Returned immediately on submit, before the run completes. */
