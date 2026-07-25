@@ -31,7 +31,6 @@ Config: [`jest.config.js`](../jest.config.js) at repo root. Coverage thresholds 
 
 ### Hermes pathing (unit)
 
-- [`tests/unit/hermes-package-path.test.ts`](../tests/unit/hermes-package-path.test.ts) — canonical `{HERMES_HOME}/hermes-agent` resolution and venv path errors.
 - [`tests/unit/hermes-profile-paths.test.ts`](../tests/unit/hermes-profile-paths.test.ts) — `getHermesDefaultRoot()`, `resolveProfileHermesHome()` (standard, profile subdir, profile-as-home, Docker root).
 - [`tests/unit/dispatch-mission-cli.test.ts`](../tests/unit/dispatch-mission-cli.test.ts) — mission dispatch sets `HERMES_HOME` on subprocess env for non-default profiles.
 

@@ -7,7 +7,7 @@ import { getHermesHome } from "./hermes-home";
 import { buildHermesPathBundle, type HermesPathBundle } from "./hermes-paths";
 
 export type { HermesPathBundle };
-// (Redundant re-exports of hermes-profile-paths / hermes-package-path helpers
+// (Redundant re-exports of hermes-profile-paths helpers
 // were removed — consumers import those directly from their source modules.)
 
 /** Resolved paths for the local Hermes install. */

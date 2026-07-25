@@ -95,6 +95,48 @@ Rules:
   per module, because a rule that red-builds the whole tree on day one is a rule
   that gets deleted.
 
+## The hermes module: measured, not guessed
+
+`rec-room` moved in one commit because nothing in core imported it. `hermes` is
+the opposite, and the numbers say why. Core importers, excluding other
+`hermes-*` files and excluding `app/` (which is routing and may delegate):
+
+| file | core importers | note |
+|---|---|---|
+| `hermes-agent-runtime` | 14 | `getActiveHermesPaths` is 7 of them |
+| `hermes-providers` | 14 | **mostly TYPES**: `TaskType`, `DefaultsModelOption`, `ModelEditorRecord`, `TASK_TYPES` |
+| `hermes-profile-paths` | 5 | |
+| `hermes-config-sync` | 4 | app-heavy (7 route importers) |
+| `hermes-profile-sync` | 3 | app-heavy (8) |
+| `hermes-toolset-catalog` | 3 | |
+| `hermes-toolset-unify` | 2 | |
+| `hermes-toolset-normalize` | 2 | |
+| `hermes-home` | 1 | |
+| `hermes-paths` | 0 | but imported by three `hermes-*` files that stay |
+| `hermes-import`, `hermes-state-import` | 0 | app-only consumers |
+
+**So moving the directory is not the work.** A file move would create roughly 45
+`core-imports-no-module` violations, and baselining them would defeat the rule
+that makes the module mean anything. The work is removing the reason core imports
+Hermes at all, and it splits into two very different halves:
+
+1. **Type coupling, which is cheap.** `hermes-providers`' 14 importers are
+   dominated by types and one constant list. That is shared vocabulary, not
+   Hermes behaviour, and it belongs in core contracts (later, the shared
+   contracts package of ADR-0003). Moving it costs almost nothing and removes the
+   single largest importer count.
+2. **Path coupling, which is the real job.** `getActiveHermesPaths` in 7 core
+   modules is the framework-agnostic claim failing out loud: orchestration and
+   sync code knows where Hermes keeps its files. Each site goes behind the
+   `AgentRuntime` port or an `AgentWorkspace` accessor before the module can move.
+
+Ordering: (1) first, because it is nearly free and shrinks the problem; then (2)
+site by site, watching `hermes-outside-adapter` in design-lint fall from its
+baselined 45; then the directory move, which by then is mechanical.
+
+Doing the move first would produce a module that only looks separated, which is
+the `frameworks` registry mistake this ADR exists to avoid repeating.
+
 ## Consequences
 
 - The sidebar, the e2e route matrix and the migration chain all become derived
