@@ -62,18 +62,26 @@ describe("toPatchResponse", () => {
     expect(body.error).toBe("yaml parse error");
   });
 
-  it("falls back to the supplied error message when push-failed has no error", async () => {
+  it("passes an empty error through verbatim, because suppressing it is the producer's job", async () => {
+    // Companion to api-response-server-error-from-helper-result.test.ts,
+    // which rules that the factory must never rewrite a caller's wire output.
+    // The guard against an empty message lives at the producer instead — see
+    // the pushProfileOrRoot test below.
+    //
+    // The previous version of this test constructed `{ ok: false, reason:
+    // "push-failed" }` with no `error` at all, which the union forbids: it
+    // asserted a fallback on a state that cannot exist. Type-checking the
+    // tests is what surfaced that.
     const result: ProfileOrRootPatchResult = {
       ok: false,
       reason: "push-failed",
+      error: "",
     };
-    // When `error` is missing the helper must NOT crash on `result.error`
-    // and must use the caller's fallback string.
     const res = toPatchResponse(result, "Failed to toggle skill");
     expect(res).not.toBeNull();
     expect(res!.status).toBe(500);
     const body = await res!.json();
-    expect(body.error).toBe("Failed to toggle skill");
+    expect(body.error).toBe("");
   });
 });
 
@@ -198,7 +206,7 @@ describe("applyProfileOrRootPatchOrFail", () => {
       createdAt: "2026-01-01",
       updatedAt: "2026-01-01",
     });
-    mockUpdateProfileContent.mockReturnValue(true);
+    mockUpdateProfileContent.mockReturnValue({ slug: "qa" } as ReturnType<typeof updateProfileContent>);
     mockPushProfileToHermes.mockReturnValue({ success: true, slug: "qa", backupPath: null, error: null });
 
     const result = applyProfileOrRootPatchOrFail(
@@ -322,6 +330,26 @@ describe("pushProfileOrRootOrFail", () => {
     expect(result).toBeInstanceOf(NextResponse);
     const res = result as NextResponse;
     expect(res.status).toBe(404);
+  });
+
+  it("never emits an empty 500 body when the push reports a message-less failure", async () => {
+    // `new Error().message` is "", and a sync helper that surfaces it
+    // unguarded produced a 500 with an empty body: the response factory
+    // passes "" through verbatim by design, so the guard has to be here.
+    // Was `push.error ?? "Push failed"`, which only catches null.
+    mockPushRootToHermes.mockReturnValue({
+      success: false,
+      slug: "default",
+      backupPath: null,
+      error: "",
+    });
+
+    const result = pushProfileOrRootOrFail("default", "Failed to sync");
+
+    expect(result).toBeInstanceOf(NextResponse);
+    const res = result as NextResponse;
+    expect(res.status).toBe(500);
+    await expect(res.json()).resolves.toEqual({ error: "Push failed" });
   });
 
   it("returns a 500 NextResponse on push-failed", () => {

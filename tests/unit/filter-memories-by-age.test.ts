@@ -79,7 +79,7 @@ describe("filterMemoriesByAge", () => {
   });
 
   it("keeps memories with no created_at (unknown age is not stale)", () => {
-    const memories = [
+    const memories: { id: string; content: string; created_at?: string }[] = [
       { id: "no-date", content: "x" }, // no created_at
       make("recent", 1),
     ];

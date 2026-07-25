@@ -24,7 +24,7 @@
 
     "start": "next start",
 
-    "lint": "node scripts/tooling/check-agent-files.mjs && node scripts/tooling/design-lint.mjs && eslint . --max-warnings 0",
+    "lint": "node scripts/tooling/check-agent-files.mjs && node scripts/tooling/design-lint.mjs && eslint . --max-warnings 0 && npm run typecheck:tests",
     "lint:design": "node scripts/tooling/design-lint.mjs --report",
     "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
 

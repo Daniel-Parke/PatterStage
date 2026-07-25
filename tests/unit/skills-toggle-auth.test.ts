@@ -57,7 +57,7 @@ const mockResolveSafeProfileName = jest.fn(
 );
 
 jest.mock("@/lib/path-security", () => ({
-  resolveSafeProfileName: (...args: unknown[]) => mockResolveSafeProfileName(...args),
+  resolveSafeProfileName: (param: string | null) => mockResolveSafeProfileName(param),
   requireSafeProfileName: (param: string | null) => {
     const r = mockResolveSafeProfileName(param);
     if (r.ok) return { profile: r.profile };
@@ -66,7 +66,6 @@ jest.mock("@/lib/path-security", () => ({
 }));
 
 import { NextRequest, NextResponse } from "next/server";
-import type { NextResponse } from "next/server";
 
 describe("PUT /api/skills/[name]/toggle", () => {
   beforeEach(() => {

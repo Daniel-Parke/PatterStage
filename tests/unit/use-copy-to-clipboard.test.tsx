@@ -50,7 +50,8 @@ import { renderHook, act } from "@testing-library/react";
 
 // Mock the clipboard so jsdom doesn't have to.
 const writeTextMock = jest.fn(async (_text: string) => undefined);
-const originalClipboard = (navigator as { clipboard?: { writeText: typeof writeTextMock } }).clipboard;
+const originalClipboard = (navigator as unknown as { clipboard?: { writeText: typeof writeTextMock } })
+  .clipboard;
 beforeAll(() => {
   Object.defineProperty(navigator, "clipboard", {
     value: { writeText: writeTextMock },

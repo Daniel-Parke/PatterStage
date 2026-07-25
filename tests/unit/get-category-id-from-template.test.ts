@@ -73,7 +73,7 @@ describe("getCategoryIdFromTemplate", () => {
 
   it("returns null when categoryId is explicitly null and fallback is null", () => {
     const t = makeTemplate();
-    (t as MissionTemplate & { categoryId?: string }).categoryId = null;
+    (t as MissionTemplate & { categoryId?: string | null }).categoryId = null;
     // `null` IS a "missing" sentinel under `??`, so the fallback fires.
     expect(getCategoryIdFromTemplate(t, "general")).toBe("general");
     expect(getCategoryIdFromTemplate(t)).toBeNull();

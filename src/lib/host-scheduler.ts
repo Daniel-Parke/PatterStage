@@ -39,7 +39,12 @@ class CrontabScheduler implements HostScheduler {
       execSync(`crontab ${tmp}`, { encoding: "utf-8" });
       return { ok: true };
     } catch (e) {
-      return { ok: false, error: (e as Error).message };
+      // `new Error().message` is "", and a thrown non-Error coerces to no
+      // message at all. serverErrorFromHelperResult passes an empty error
+      // through verbatim by design, so suppressing it is this producer's job:
+      // without the guard, a message-less crontab failure reached the operator
+      // as a 500 with an empty body.
+      return { ok: false, error: (e as Error)?.message || "crontab write failed" };
     } finally {
       try {
         unlinkSync(tmp);

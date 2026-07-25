@@ -100,16 +100,14 @@ jest.mock("@/lib/sessions-api-guard", () => ({
   sessionsRateLimitResponse: jest.fn(() => null),
 }));
 
-import { NextRequest } from "next/server";
 import { mockRequest } from "../helpers/api-test-helpers";
 
 describe("GET /api/tools", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("returns Hermes toolset catalog", async () => {
-    const request = new NextRequest("http://localhost/api/tools");
     const { GET } = await import("@/app/api/tools/route");
-    const res = await GET(request);
+    const res = await GET();
     const data = await res.json();
 
     expect(res.status).toBe(200);

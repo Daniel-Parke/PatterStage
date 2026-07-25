@@ -24,7 +24,7 @@ jest.mock("next/server", () => ({
   // in the `parseJsonBody` call site. Static `json()` factory keeps the
   // existing call sites' usage (`NextResponse.json(data, init)`) intact.
   NextResponse: class NextResponse {
-    status: number;
+    status = 200;
     private _data: unknown;
     static json(data: unknown, init?: ResponseInit): NextResponse {
       const status = init?.status ?? 200;

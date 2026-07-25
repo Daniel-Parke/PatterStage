@@ -271,5 +271,9 @@ export function serverErrorFromHelperResult(
   result: { ok: boolean; error?: string | null },
   fallback: string,
 ): NextResponse {
+  // `??`, deliberately: an empty-string error is passed through verbatim so
+  // this factory never rewrites a caller's wire output. Suppressing an empty
+  // message is the PRODUCER's job — see HostScheduler.writeRaw and
+  // pushProfileOrRoot, both of which guard `(e as Error).message` being "".
   return serverError(result.error ?? fallback);
 }

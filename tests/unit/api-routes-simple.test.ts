@@ -1,7 +1,7 @@
 /** @jest-environment node */
 
 const mockDb = {
-  prepare: jest.fn(() => ({
+  prepare: jest.fn((_sql: string) => ({
     get: jest.fn(),
     all: jest.fn(),
     run: jest.fn(),
@@ -201,22 +201,21 @@ describe("GET /api/monitor", () => {
     ]);
 
     // Mock DB reads
+    const stmt = (rows: unknown[]) => ({
+      get: jest.fn(() => rows[0]),
+      all: jest.fn(() => rows),
+      run: jest.fn(),
+    });
     mockDb.prepare.mockImplementation((sql: string) => {
       if (sql.includes("SELECT platform, enabled")) {
-        return {
-          all: jest.fn(() => [
-            { platform: "discord", enabled: 1, bot_token_present: 1 },
-          ]),
-        };
+        return stmt([{ platform: "discord", enabled: 1, bot_token_present: 1 }]);
       }
       if (sql.includes("SELECT source, message, timestamp")) {
-        return {
-          all: jest.fn(() => [
-            { source: "gateway", message: "test error", timestamp: "2026-05-15T00:00:00" },
-          ]),
-        };
+        return stmt([
+          { source: "gateway", message: "test error", timestamp: "2026-05-15T00:00:00" },
+        ]);
       }
-      return { all: jest.fn(() => []) };
+      return stmt([]);
     });
 
     const { GET } = await import("@/app/api/monitor/route");

@@ -107,7 +107,7 @@ function pushProfileOrRoot(slug: string): ProfileOrRootPatchResult {
   if (slug === "default") {
     const push = pushRootToHermes();
     if (!push.success) {
-      return { ok: false, reason: "push-failed", error: push.error ?? "Push failed" };
+      return { ok: false, reason: "push-failed", error: push.error || "Push failed" };
     }
     return { ok: true, profile: slug };
   }
@@ -116,7 +116,7 @@ function pushProfileOrRoot(slug: string): ProfileOrRootPatchResult {
   }
   const push = pushProfileToHermes(slug);
   if (!push.success) {
-    return { ok: false, reason: "push-failed", error: push.error ?? "Push failed" };
+    return { ok: false, reason: "push-failed", error: push.error || "Push failed" };
   }
   return { ok: true, profile: slug };
 }

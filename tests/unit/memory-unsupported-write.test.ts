@@ -28,7 +28,7 @@ jest.mock("@/lib/memory-providers", () => ({
   getMemoryProviderType: jest.fn(() => "hindsight"),
 }));
 
-const requireAuthMock = jest.fn((): Response | null => null);
+const requireAuthMock = jest.fn((_req: NextRequest): Response | null => null);
 jest.mock("@/lib/api-auth", () => ({
   requireAuth: (req: NextRequest): Response | null => requireAuthMock(req),
 }));

@@ -122,7 +122,7 @@ describe("composer branch routing (OUTCOME)", () => {
     const done = g.nodes.find((n) => n.key === "done")!;
 
     const withOutcome = (o: string) =>
-      ({ status: "completed", verdict: { pass: true, reasons: [], suggestions: [], outcome: o } }) as ComposerNodeRun;
+      ({ status: "completed", verdict: { pass: true, reasons: [], suggestions: [], outcome: o } }) as unknown as ComposerNodeRun;
 
     expect(resolveNext(triage, withOutcome("implement_fix"), null)).toEqual({ kind: "node", nodeId: fix.id });
     // Unknown outcome → on_pass edge (triage → done).

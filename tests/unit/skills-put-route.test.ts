@@ -47,13 +47,14 @@ jest.mock("@/lib/skills-repository", () => ({
   getSkill: jest.fn(),
 }));
 
-const mockPushSkillToHermes = jest.fn((..._a: unknown[]) => ({ success: true }));
+const mockPushSkillToHermes = jest.fn(
+  (..._a: unknown[]): { success: boolean; error?: string } => ({ success: true }),
+);
 jest.mock("@/lib/hermes-profile-sync", () => ({
   pushSkillToHermes: (...args: unknown[]) => mockPushSkillToHermes(...args),
 }));
 
 import { NextRequest, NextResponse } from "next/server";
-import type { NextResponse } from "next/server";
 
 describe("PUT /api/skills/[name]", () => {
   beforeEach(() => {

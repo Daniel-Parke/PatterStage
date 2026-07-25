@@ -22,7 +22,7 @@ const mockFetch = jest.fn(
   }
 );
 
-global.fetch = mockFetch;
+global.fetch = mockFetch as unknown as typeof fetch;
 
 jest.mock("next/server", () => ({
   NextRequest: class NextRequest {

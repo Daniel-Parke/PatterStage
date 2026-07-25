@@ -18,10 +18,20 @@ const FIXED_NOW = new Date("2026-06-02T12:00:00Z").getTime();
 function makeSession(overrides: Partial<SessionRecord> = {}): SessionRecord {
   return {
     id: "00000000-0000-0000-0000-000000000000",
+    agentType: "hermes",
     source: "cli",
-    status: "completed",
-    startedAt: "2026-06-02T11:59:00Z",
+    missionId: null,
+    profileName: null,
+    modelId: null,
+    provider: null,
+    title: null,
     size: 100,
+    startedAt: "2026-06-02T11:59:00Z",
+    endedAt: null,
+    status: "completed",
+    exitCode: null,
+    error: null,
+    messageCount: null,
     ...overrides,
   };
 }

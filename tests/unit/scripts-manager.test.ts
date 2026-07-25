@@ -11,7 +11,7 @@ jest.mock("@/lib/paths", () => ({
 
 const existsSync = jest.fn(() => true);
 jest.mock("fs", () => ({
-  existsSync: (...a: unknown[]) => existsSync(...a),
+  existsSync: () => existsSync(),
   readdirSync: jest.fn(() => []),
   statSync: jest.fn(),
   readFileSync: jest.fn(),
