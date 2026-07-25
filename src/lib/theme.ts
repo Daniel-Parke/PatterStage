@@ -12,50 +12,85 @@ type ColorEntry = string;
 
 const ALL_COLORS: AccentColor[] = ["cyan", "purple", "green", "pink", "orange", "red", "blue", "yellow"];
 
-/**
- * Canonical colour token names — single source of truth.
- * Each colour's Tailwind token suffix (e.g. "neon-cyan" → used in `text-neon-cyan`, `bg-neon-cyan/10`, etc.).
- * Non-neon colours ("red", "blue", "yellow") use their bare Tailwind name.
- */
-const COLOR_TOKENS: Record<AccentColor, string> = {
-  cyan: "neon-cyan", purple: "neon-purple", green: "neon-green",
-  pink: "neon-pink", orange: "neon-orange", red: "red", blue: "blue", yellow: "yellow",
-} as const;
-
-/**
- * Text-colour suffix per accent. "red"/"blue"/"yellow" use Tailwind's 400 weight
- * for readability on dark backgrounds; neon colours use their bare name.
- */
-const COLOR_TEXT: Record<AccentColor, string> = {
-  cyan: "neon-cyan", purple: "neon-purple", green: "neon-green",
-  pink: "neon-pink", orange: "neon-orange", red: "red-400", blue: "blue-400", yellow: "yellow-400",
-} as const;
-
-/** Whether a colour is one of the three Tailwind base colours (not neon). */
-function isBaseColor(c: AccentColor): boolean {
-  return c === "red" || c === "blue" || c === "yellow";
-}
-
 function makeMap<T>(fn: (c: AccentColor) => T): Record<AccentColor, T> {
   return Object.fromEntries(ALL_COLORS.map((c) => [c, fn(c)])) as Record<AccentColor, T>;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// The accent maps below are written out LITERALLY, one class per entry.
+//
+// They used to be generated with template literals (`text-${COLOR_TEXT[c]}`).
+// Tailwind scans source statically and cannot evaluate an expression, so a
+// generated class only reached the stylesheet when some unrelated file happened
+// to spell out the same literal. Two measured consequences on this tree:
+//
+//  • `hover:border-neon-cyan/60` and `focus:border-neon-*/50` produced ZERO CSS
+//    rules. The border and focus-ring variants simply did not exist. A missing
+//    focus ring is an accessibility defect (WCAG 2.4.7), not a cosmetic one.
+//  • `border-red/40` was never a valid class at all: the token map gave bare
+//    "red", and Tailwind has red-400/red-500, not `red`.
+//
+// The base/hover classes are also split into separate maps rather than one long
+// string. The combined string previously ended in
+// `hover:shadow-[0_0_20px_rgb(var(--ps-rgb-neon-cyan)_/_0.12)]`, and that
+// malformed candidate took its well-formed neighbours down with it — splitting
+// them is what actually made the hover and focus classes appear. The dead
+// shadow is dropped rather than resurrected; it never rendered.
+//
+// `scripts/tooling/design-lint.mjs` (rule `no-template-literal-tailwind`) fails
+// the build if the pattern returns. Keep these literal.
+// ═══════════════════════════════════════════════════════════════
+
 // ── Icon Color Map ────────────────────────────────────────────
-export const iconColorMap: Record<AccentColor, ColorEntry> = makeMap((c) => `text-${COLOR_TEXT[c]}`);
+export const iconColorMap: Record<AccentColor, ColorEntry> = {
+  cyan: "text-neon-cyan",
+  purple: "text-neon-purple",
+  green: "text-neon-green",
+  pink: "text-neon-pink",
+  orange: "text-neon-orange",
+  red: "text-red-400",
+  blue: "text-blue-400",
+  yellow: "text-yellow-400",
+};
 
 // ── Border Color Map (for hover effects) — token-aligned ─────
-export const colorBorderMap: Record<AccentColor, ColorEntry> = makeMap((c) => {
-  const token = COLOR_TOKENS[c];
-  const opacity = isBaseColor(c) ? "40" : "30";
-  const hoverOpacity = isBaseColor(c) ? "70" : "60";
-  const shadowRgb = isBaseColor(c)
-    ? ({ red: "239,68,68", blue: "96,165,250", yellow: "250,204,21" } as Record<string, string>)[c]
-    : `var(--ps-rgb-${token})`;
-  return `border-${token}/${opacity} hover:border-${token}/${hoverOpacity} hover:shadow-[0_0_20px_rgb(${shadowRgb}_/_0.12)]`;
-});
+const BORDER_BASE: Record<AccentColor, ColorEntry> = {
+  cyan: "border-neon-cyan/30",
+  purple: "border-neon-purple/30",
+  green: "border-neon-green/30",
+  pink: "border-neon-pink/30",
+  orange: "border-neon-orange/30",
+  red: "border-red-400/40",
+  blue: "border-blue-400/40",
+  yellow: "border-yellow-400/40",
+};
+
+const BORDER_HOVER: Record<AccentColor, ColorEntry> = {
+  cyan: "hover:border-neon-cyan/60",
+  purple: "hover:border-neon-purple/60",
+  green: "hover:border-neon-green/60",
+  pink: "hover:border-neon-pink/60",
+  orange: "hover:border-neon-orange/60",
+  red: "hover:border-red-400/70",
+  blue: "hover:border-blue-400/70",
+  yellow: "hover:border-yellow-400/70",
+};
+
+export const colorBorderMap: Record<AccentColor, ColorEntry> = makeMap(
+  (c) => `${BORDER_BASE[c]} ${BORDER_HOVER[c]}`,
+);
 
 // ── Focus Ring Color (for inputs/selects) ─────────────────────
-export const focusColorMap: Record<AccentColor, ColorEntry> = makeMap((c) => `focus:border-${COLOR_TOKENS[c]}/50`);
+export const focusColorMap: Record<AccentColor, ColorEntry> = {
+  cyan: "focus:border-neon-cyan/50",
+  purple: "focus:border-neon-purple/50",
+  green: "focus:border-neon-green/50",
+  pink: "focus:border-neon-pink/50",
+  orange: "focus:border-neon-orange/50",
+  red: "focus:border-red-400/50",
+  blue: "focus:border-blue-400/50",
+  yellow: "focus:border-yellow-400/50",
+};
 
 /** RGB triplets for `rgb(var(--glow-surface-rgb) / …)` */
 const GLOW_RGBS: Record<AccentColor, string> = {
@@ -67,10 +102,16 @@ const GLOW_RGBS: Record<AccentColor, string> = {
 export const glowSurfaceRgbMap: Record<AccentColor, ColorEntry> = makeMap((c) => GLOW_RGBS[c]);
 
 // ── Badge Background Color ────────────────────────────────────
-export const badgeBgMap: Record<AccentColor, ColorEntry> = makeMap((c) => {
-  const suffix = isBaseColor(c) ? `${COLOR_TOKENS[c]}-500` : COLOR_TOKENS[c];
-  return `bg-${suffix}/10`;
-});
+export const badgeBgMap: Record<AccentColor, ColorEntry> = {
+  cyan: "bg-neon-cyan/10",
+  purple: "bg-neon-purple/10",
+  green: "bg-neon-green/10",
+  pink: "bg-neon-pink/10",
+  orange: "bg-neon-orange/10",
+  red: "bg-red-500/10",
+  blue: "bg-blue-500/10",
+  yellow: "bg-yellow-500/10",
+};
 
 // ── Base Input Styles ─────────────────────────────────────────
 export const baseInputStyles =

@@ -179,7 +179,12 @@ function QuickLinkCard({
       color={color}
       footer={
         <span
-          className={`text-[10px] font-mono ${iconColorMap[color]}/60 ${badgeBgMap[color]}/5 px-1.5 py-0.5 rounded`}
+          // iconColorMap/badgeBgMap are already complete classes. Appending a
+          // further "/60" and "/5" built `text-neon-cyan/60` (never generated,
+          // because it is interpolated) and `bg-neon-cyan/10/5` (not a valid
+          // class at all), so this badge rendered with no colour and no
+          // background. Use the maps as they are.
+          className={`text-[10px] font-mono ${iconColorMap[color]} ${badgeBgMap[color]} px-1.5 py-0.5 rounded`}
         >
           {badge}
         </span>

@@ -66,18 +66,26 @@ import { iconColorMap } from "@/lib/theme";
  * Centralised here so a future "we want the panel border to be
  * more visible" tweak lands in one place.
  */
+// Literal classes only — Tailwind cannot see an interpolated one, so
+// `border-${accent}-500/20` produced no border at all. See src/lib/theme.ts.
 function panelBorderClass(accent: AccentColor): string {
   switch (accent) {
     case "red":
+      return "border-red-500/20";
     case "blue":
+      return "border-blue-500/20";
     case "yellow":
-      return `border-${accent}-500/20`;
+      return "border-yellow-500/20";
     case "cyan":
+      return "border-neon-cyan/20";
     case "purple":
+      return "border-neon-purple/20";
     case "green":
+      return "border-neon-green/20";
     case "pink":
+      return "border-neon-pink/20";
     case "orange":
-      return `border-neon-${accent}/20`;
+      return "border-neon-orange/20";
   }
 }
 
