@@ -16,6 +16,7 @@ import type { CronJobEntry } from "@/lib/session-title";
 import { listProfiles } from "./lib/profiles-repository";
 import { loadCronJobsMap } from "./lib/cron-jobs";
 import { ConfigSync } from "./sync/ConfigSync";
+import { seedAgentCatalog, publishSkill } from "./lib/seed-agent-catalog";
 
 export const hermesServerModule: ServerModule = {
   id: "hermes",
@@ -42,4 +43,10 @@ export const hermesServerModule: ServerModule = {
 
   /** Hermes' own cron/jobs.json, projected to the core-owned CronJobEntry. */
   loadAgentCronJobs: (): Map<string, CronJobEntry> => loadCronJobsMap(),
+
+  /** agent_profiles + agent_root from the bundled seed pack, then pushed to disk. */
+  seedAgentCatalog,
+
+  /** Write a seeded core skill through to the Hermes global skills dir. */
+  publishSkill,
 };

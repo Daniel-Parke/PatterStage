@@ -12,7 +12,6 @@
   "hermes-outside-adapter::src/components/models/ModelEditor.tsx": 1,
   "hermes-outside-adapter::src/lib/db/profiles-tools-parity-ensure.ts": 1,
   "hermes-outside-adapter::src/lib/deploy-spawn.ts": 2,
-  "hermes-outside-adapter::src/lib/seed/catalog-seed.ts": 1,
   "no-em-dash::docs/adr/0001-patterstage-hosts-work-not-surfaces.md": 3,
   "no-em-dash::docs/adr/0002-run-engine-ownership.md": 1,
   "no-em-dash::docs/adr/0003-shared-kit-distribution.md": 3,

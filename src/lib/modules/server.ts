@@ -65,6 +65,23 @@ export interface ServerModule {
    * without it, which is why it is optional in every sense.
    */
   loadAgentCronJobs?: () => Map<string, import("@/lib/session-title").CronJobEntry>;
+  /**
+   * Seed this module's own rows from the bundled data/seed pack, and write them
+   * through to wherever the module keeps its files.
+   *
+   * Core owns the seed ORCHESTRATION (what runs, in what order, the once-only
+   * meta flag, the recorded state) and its own catalogs. A module owns the half
+   * that touches its tables.
+   */
+  seedAgentCatalog?: (
+    opts: import("@/modules/hermes/lib/seed-agent-catalog").AgentSeedOptions,
+  ) => import("@/modules/hermes/lib/seed-agent-catalog").AgentSeedResult;
+  /**
+   * Write an already-seeded CORE skill through to the module, so the agentic
+   * path can execute it. The skills table stays core; only the publish is the
+   * module's.
+   */
+  publishSkill?: (skillKey: string) => void;
 }
 
 export const SERVER_MODULES: readonly ServerModule[] = [recRoomServerModule, hermesServerModule];
