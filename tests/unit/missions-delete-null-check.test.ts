@@ -8,6 +8,7 @@
  * This test suite documents current behavior.
  */
 
+import type { NextRequest } from "next/server";
 jest.mock("next/server", () => {
   // NextResponse as a real class so `bodyResult instanceof NextResponse`
   // (used by parseJsonBody's callsite) works. See session-37 findings.
@@ -105,7 +106,7 @@ async function postRoute(body: Record<string, unknown>) {
     headers: new Headers({ "content-type": "application/json" }),
     body: JSON.stringify(body),
     json: async () => body,
-  } as unknown as Request;
+  } as unknown as NextRequest;
   return route.POST(req) as unknown as { status: number; json(): Promise<Record<string, unknown>> };
 }
 

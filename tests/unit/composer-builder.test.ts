@@ -128,7 +128,7 @@ describe("composer branch routing (OUTCOME)", () => {
     // Unknown outcome → on_pass edge (triage → done).
     expect(resolveNext(triage, withOutcome("nonsense"), null)).toEqual({ kind: "node", nodeId: done.id });
     // No outcome → on_pass (backward-compatible with existing workflows).
-    const plain = { status: "completed", verdict: { pass: true, reasons: [], suggestions: [] } } as ComposerNodeRun;
+    const plain = { status: "completed", verdict: { pass: true, reasons: [], suggestions: [] } } as unknown as ComposerNodeRun;
     expect(resolveNext(triage, plain, null)).toEqual({ kind: "node", nodeId: done.id });
   });
 });

@@ -215,8 +215,8 @@ describe("composer engine", () => {
     const check = graph.nodes.find((n) => n.key === "check")!;
     const gate = graph.nodes.find((n) => n.key === "gate")!;
 
-    const failRun = { status: "completed", verdict: { pass: false, reasons: [], suggestions: [] } } as ComposerNodeRun;
-    const passRun = { status: "completed", verdict: { pass: true, reasons: [], suggestions: [] } } as ComposerNodeRun;
+    const failRun = { status: "completed", verdict: { pass: false, reasons: [], suggestions: [] } } as unknown as ComposerNodeRun;
+    const passRun = { status: "completed", verdict: { pass: true, reasons: [], suggestions: [] } } as unknown as ComposerNodeRun;
     expect(resolveNext(check, failRun, null)).toEqual({ kind: "node", nodeId: graph.nodes.find((n) => n.key === "a")!.id });
     expect(resolveNext(check, passRun, null)).toEqual({ kind: "node", nodeId: gate.id });
 

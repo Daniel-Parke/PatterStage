@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 /** @jest-environment node */
 
+import type { NextRequest } from "next/server";
 jest.mock("next/server", () => ({
   // NextRequest must be a real class (not a plain object literal) so the
   // `parseJsonBody` caller can use `instanceof` on NextResponse — see
@@ -94,7 +95,7 @@ describe("/api/credentials", () => {
       method: "POST",
       headers: new Headers({ "content-type": "application/json" }),
       json: async () => body,
-    } as unknown as Request;
+    } as unknown as NextRequest;
     return (route.POST(req) as Promise<{ status: number; json: () => Promise<unknown> }>).then(
       async (r) => ({ status: r.status, body: (await r.json()) as Record<string, unknown> })
     );
@@ -178,7 +179,7 @@ describe("/api/credentials", () => {
       method: "POST",
       headers: new Headers({ "content-type": "application/json" }),
       json: async () => { throw new SyntaxError("Unexpected token"); },
-    } as unknown as Request;
+    } as unknown as NextRequest;
     const res = await (route.POST(req) as Promise<{ status: number; json: () => Promise<unknown> }>);
     expect(res.status).toBe(400);
     const body = (await res.json()) as Record<string, unknown>;

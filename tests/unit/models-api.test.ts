@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 /** @jest-environment node */
 
+import type { NextRequest } from "next/server";
 jest.mock("next/server", () => ({
   NextRequest: class NextRequest {
     url: string;
@@ -132,7 +133,7 @@ const SAMPLE_MODEL = {
 };
 
 function makeRequest(url: string, method?: string, body?: unknown) {
-  return new (jest.requireMock("next/server").NextRequest as new (url: string, init?: RequestInit) => unknown)(
+  return new (jest.requireMock("next/server").NextRequest as new (url: string, init?: RequestInit) => NextRequest)(
     url,
     {
       method: method ?? "GET",

@@ -42,13 +42,13 @@ function setFetch(map: Record<string, FetchResponseInit>) {
       if (url.startsWith(k)) return jsonResponse(map[k] as FetchResponseInit) as unknown as Response;
     }
     if (url.includes("/api/models/sync/drift")) {
-      return jsonResponse({ data: null }) as unknown as Response;
+      return jsonResponse({ body: { data: null } }) as unknown as Response;
     }
     if (url.includes("/api/models/fallbacks")) {
-      return jsonResponse({ data: { chain: [], config: null } }) as unknown as Response;
+      return jsonResponse({ body: { data: { chain: [], config: null } } }) as unknown as Response;
     }
     if (url.includes("/api/models/import")) {
-      return jsonResponse({ data: { modelsImported: 0 } }) as unknown as Response;
+      return jsonResponse({ body: { data: { modelsImported: 0 } } }) as unknown as Response;
     }
     throw new Error(`Unmatched fetch: ${url}`);
   }) as typeof global.fetch;

@@ -1,5 +1,6 @@
 /** @jest-environment node */
 
+import type { NextRequest } from "next/server";
 jest.mock("next/server", () => ({
   NextRequest: class NextRequest {
     url: string;
@@ -65,7 +66,7 @@ function makeRequest(body?: unknown) {
   return new (jest.requireMock("next/server").NextRequest as new (
     url: string,
     init?: RequestInit,
-  ) => unknown)("http://localhost/api/models/fallbacks/sync", {
+  ) => NextRequest)("http://localhost/api/models/fallbacks/sync", {
     method: "POST",
     headers: body ? new Headers({ "content-type": "application/json" }) : undefined,
     body: body !== undefined ? JSON.stringify(body) : undefined,

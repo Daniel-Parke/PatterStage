@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import * as yaml from "js-yaml";
+import type { NextRequest } from "next/server";
 
 jest.mock("next/server", () => ({
   NextRequest: class NextRequest {
@@ -122,7 +123,7 @@ describe("POST /api/models/fallbacks/import", () => {
     const req = new (jest.requireMock("next/server").NextRequest as new (
       url: string,
       init?: RequestInit,
-    ) => unknown)("http://localhost/api/models/fallbacks/import", {
+    ) => NextRequest)("http://localhost/api/models/fallbacks/import", {
       method: "POST",
       body: JSON.stringify({ action: "import" }),
     });
@@ -146,7 +147,7 @@ describe("POST /api/models/fallbacks/import", () => {
     const req = new (jest.requireMock("next/server").NextRequest as new (
       url: string,
       init?: RequestInit,
-    ) => unknown)("http://localhost/api/models/fallbacks/import", {
+    ) => NextRequest)("http://localhost/api/models/fallbacks/import", {
       method: "POST",
       body: JSON.stringify({ action: "import" }),
     });
