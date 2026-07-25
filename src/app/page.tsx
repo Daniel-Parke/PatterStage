@@ -30,7 +30,7 @@ import CommandCenter from "@/components/dashboard/CommandCenter";
 import { FadeIn } from "@/components/motion";
 import DispatchStrip from "@/components/dashboard/DispatchStrip";
 import ActiveMissionsPanel from "@/components/dashboard/ActiveMissionsPanel";
-import PlatformsPanel from "@/components/dashboard/PlatformsPanel";
+import PlatformsPanel from "@/modules/hermes/components/PlatformsPanel";
 import ErrorsPanel from "@/components/dashboard/ErrorsPanel";
 import ProcessesPanel from "@/components/dashboard/ProcessesPanel";
 import { toastError } from "@/lib/api-fetch";

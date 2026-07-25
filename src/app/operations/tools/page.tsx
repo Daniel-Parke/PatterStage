@@ -31,7 +31,7 @@ import {
   expandUnifiedToAllPlatforms,
   unionToolsetsFromPlatforms,
 } from "@/modules/hermes/lib/toolset-unify";
-import ToolsInsights from "@/components/tools/ToolsInsights";
+import ToolsInsights from "@/modules/hermes/components/ToolsInsights";
 
 export default function ToolsPage() {
   const [selectedProfile, setSelectedProfile] = useState("default");
