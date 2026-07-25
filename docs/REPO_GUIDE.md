@@ -9,12 +9,28 @@ is being retired by the rebuild, it says so rather than pretending.
 ## Development environment
 
 ```bash
-npm run dev     # dev server (PORT from .env.local)
-npm run build   # production build
-npm run start   # production server
-npm run lint    # eslint --max-warnings 0 + the repo's own checks
-npm test        # jest
+npm run dev              # dev server (PORT from .env.local)
+npm run build            # production build
+npm run start            # production server
+npm run lint             # agent-files check + design-lint + eslint --max-warnings 0
+npm test                 # jest
+npm run lint:design      # the design-law debt, by rule
+npm run typecheck:tests  # type-check tests/ too (not yet gated, see below)
 ```
+
+### Gates
+
+- **`check-agent-files`** keeps `AGENTS.md` under the 40-line router cap and
+  `CLAUDE.md` byte-identical, counting lines the way `eos_check.py` does.
+- **`design-lint`** enforces the laws this repo kept breaking, against a
+  **shrink-only baseline** in `scripts/tooling/design-lint.baseline.json`: today's
+  violations are allowed, anything new fails. Never run `--update-baseline` to
+  silence a new violation. Escape a single line with
+  `// design-lint-disable-next-line <rule> -- <reason>`; the reason is required.
+- **`typecheck:tests`** is not in the lint gate yet. 73 errors remain, mostly
+  `jest.mock` factories whose argument lists no longer match the function they
+  replace, which is exactly the drift that made the suite unable to catch
+  refactors. Move it into `lint` when it reaches zero.
 
 On first boot an access token is minted into `PS_DATA_DIR/auth-token` and the
 sign-in URL is printed to the log. See [SECURITY.md](SECURITY.md).

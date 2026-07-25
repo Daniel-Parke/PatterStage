@@ -101,6 +101,7 @@ jest.mock("@/lib/sessions-api-guard", () => ({
 }));
 
 import { NextRequest } from "next/server";
+import { mockRequest } from "../helpers/api-test-helpers";
 
 describe("GET /api/tools", () => {
   beforeEach(() => jest.clearAllMocks());
@@ -128,7 +129,7 @@ describe("GET /api/config", () => {
     );
 
     const { GET } = await import("@/app/api/config/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -147,7 +148,7 @@ describe("GET /api/config", () => {
     );
 
     const { GET } = await import("@/app/api/config/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     // The original keys must NOT appear in the response.
@@ -212,7 +213,7 @@ describe("GET /api/memory", () => {
     mockMemoryStats.mockResolvedValue({ available: true, factCount: 17638 });
 
     const { GET } = await import("@/app/api/memory/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -225,7 +226,7 @@ describe("GET /api/memory", () => {
     mockMemoryStats.mockResolvedValue({ available: false, factCount: 0 });
 
     const { GET } = await import("@/app/api/memory/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     expect(res.status).toBe(200);

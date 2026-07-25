@@ -222,6 +222,7 @@ jest.mock("@/lib/hermes-profile-paths", () => ({
 }));
 
 import { NextRequest } from "next/server";
+import { mockRequest } from "../helpers/api-test-helpers";
 
 function makeRequest(url: string, method: string = "GET", body?: unknown) {
   return new NextRequest(url, {
@@ -247,7 +248,7 @@ describe("GET /api/agent/profiles", () => {
     mockReaddirSync.mockReturnValue([]);
 
     const { GET } = await import("@/app/api/agent/profiles/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -275,7 +276,7 @@ describe("GET /api/agent/profiles", () => {
     });
 
     const { GET } = await import("@/app/api/agent/profiles/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     expect(res.status).toBe(200);
@@ -317,7 +318,7 @@ describe("GET /api/agent/profiles", () => {
     });
 
     const { GET } = await import("@/app/api/agent/profiles/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     const qa = data.data.profiles.find((p: { id: string }) => p.id === "qa");
@@ -344,7 +345,7 @@ describe("GET /api/agent/profiles", () => {
     });
 
     const { GET } = await import("@/app/api/agent/profiles/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     const swe = data.data.profiles.find((p: { id: string }) => p.id === "swe");

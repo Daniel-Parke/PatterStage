@@ -68,7 +68,7 @@ beforeEach(() => {
 describe("GET /api/cron/hardware/meta", () => {
   it("returns scriptsDir and logDir from paths", async () => {
     const { GET } = await import("@/app/api/cron/hardware/meta/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     expect(res.status).toBe(200);
     const body = (await res.json()) as { data?: { scriptsDir: string; logDir: string } };
     expect(body.data?.scriptsDir).toBe("/tmp/ch-data/scripts");
@@ -80,7 +80,7 @@ describe("GET /api/cron/hardware", () => {
   it("returns jobs whose commands run scripts under the scripts dir", async () => {
     mockCrontab = "*/10 * * * * /tmp/ch-data/scripts/ps-backup.mjs >> /tmp/ch-data/logs/ps-backup.log 2>&1\n";
     const { GET } = await import("@/app/api/cron/hardware/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     expect(res.status).toBe(200);
     const body = (await res.json()) as { data?: { jobs: Array<{ id: string; name: string }>; total: number } };
     expect(body.data?.total).toBe(1);
@@ -91,7 +91,7 @@ describe("GET /api/cron/hardware", () => {
   it("ignores crontab lines outside the scripts dir", async () => {
     mockCrontab = "*/10 * * * * /home/user/.hermes/scripts/ps-backup.mjs >> /tmp/x.log 2>&1\n";
     const { GET } = await import("@/app/api/cron/hardware/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const body = (await res.json()) as { data?: { total: number; jobs: unknown[] } };
     expect(body.data?.total).toBe(0);
     expect(body.data?.jobs).toEqual([]);

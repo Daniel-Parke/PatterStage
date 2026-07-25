@@ -110,6 +110,7 @@ jest.mock("@/lib/session-repository", () => ({
 }));
 
 import { NextRequest } from "next/server";
+import { mockRequest } from "../helpers/api-test-helpers";
 
 describe("GET /api/status", () => {
   beforeEach(() => jest.clearAllMocks());
@@ -219,7 +220,7 @@ describe("GET /api/monitor", () => {
     });
 
     const { GET } = await import("@/app/api/monitor/route");
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     const data = await res.json();
 
     expect(res.status).toBe(200);

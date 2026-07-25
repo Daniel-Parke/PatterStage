@@ -31,10 +31,11 @@ jest.mock("@/lib/paths", () => ({
 }));
 
 import { GET } from "@/app/api/cron/hardware/route";
+import { mockRequest } from "../helpers/api-test-helpers";
 
 describe("GET /api/cron/hardware", () => {
   it("returns job list shape", async () => {
-    const res = await GET();
+    const res = await GET(mockRequest("http://127.0.0.1/api/test"));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.data).toBeDefined();

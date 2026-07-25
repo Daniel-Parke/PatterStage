@@ -26,6 +26,7 @@
 
     "lint": "node scripts/tooling/check-agent-files.mjs && node scripts/tooling/design-lint.mjs && eslint . --max-warnings 0",
     "lint:design": "node scripts/tooling/design-lint.mjs --report",
+    "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
 
     "lint:knip": "knip --include files,dependencies,unlisted --no-config-hints",
 
