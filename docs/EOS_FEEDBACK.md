@@ -87,10 +87,77 @@ place, `src/proxy.ts`), and the walk had nothing to say about it.
 mode, CSRF posture and the fail-closed default were all decided in this repo with
 no doctrine to argue against. They may be right; nothing checked.
 
-**Draft fix, for the harvest to judge.** Either an auth wargame exists and the
-index is stale, or the corpus has a hole where its own scale rule points. If the
-latter, the first question is the one PatterStage had to answer alone: *where is
-authentication enforced, and what proves a route cannot be added without it?*
+**Draft fix, for the harvest to judge.** The corpus has a hole where its own scale
+rule points. `WALK_ORDER.md` prescribes the remedy for a fork with no wargame: file
+a draft using the wargame template, with the venture's ruling as its first worked
+entry. That draft is below as **WG-DRAFT-001**, and PatterStage records it in the
+lock-book under that id until the harvest assigns a real module number.
+
+---
+
+### WG-DRAFT-001: Where is authentication enforced, and what proves a route cannot be added without it?
+
+> Drafted by PatterStage at Session 0 because the `auth` trigger names no wargame.
+> Module: probably architecture (it is a structural question, not a devops one).
+> Tags: `arch auth security`.
+
+**The question.** A venture with auth has to decide not whether to authenticate
+but *where the decision lives*. The choice is invisible while the surface is small
+and becomes irreversible once it is not: every route added after the pattern is set
+inherits it silently, including the ones added by an agent at 2am.
+
+**It depends on**
+
+- Whether routes are added by hand, by an agent, or by a generator.
+- Whether the framework offers a single interception point that cannot be bypassed.
+- Whether a route with no explicit check is safe (deny by default) or exposed
+  (allow by default).
+- Whether the venture can afford a test per route, or needs a structural guarantee.
+
+**Options**
+
+- **A. Per-route checks.** Each handler calls a guard. Honest and local; a reader
+  sees the check where the work happens. Fails open: a route with no call is a
+  public route, and nothing distinguishes "deliberately public" from "forgotten".
+- **B. One interception point.** A single middleware, proxy or filter authenticates
+  every request before dispatch, with an explicit allowlist for the public few.
+  Fails closed. Costs one choke point that must not be bypassable, and a reader of
+  a handler cannot see that it is protected.
+- **C. Typed route constructor.** Routes cannot be declared except through a
+  factory that takes an auth policy as a required argument, so an unprotected route
+  is a compile error. Strongest guarantee; costs a framework-shaped abstraction and
+  fights any router that discovers routes from the filesystem.
+
+**Decision rule.** Any venture whose routes are added by agents, or whose framework
+discovers routes from the filesystem: **B**, with the public allowlist named in one
+place and a lint rule forbidding auth logic inside handlers. A venture with a small
+fixed route set added only by hand may take A if every route has a test asserting
+its status when unauthenticated. Take C only where the router is already
+constructor-based; do not reshape a filesystem router to reach it. Never mix A and
+B: a per-route check inside a B system teaches readers that routes without one are
+unprotected by choice, which is how the forgotten route becomes invisible.
+
+**Default.** B.
+
+**Worked ruling: PatterStage (2026-07, argued).** **B.** Next.js discovers routes
+from the filesystem and agents add them, so the rule's first clause fires twice
+over. Enforced in `src/proxy.ts` (Next 16 renamed `middleware` to `proxy`), which
+authenticates every request, fails closed when no token is configured, checks
+same-origin on cookie writes, and enforces read-only by HTTP method.
+`/api/health` is the sole allowlisted path.
+
+The prohibition is real rather than aspirational: `design-lint`'s
+`no-auth-in-route-handler` rule fails the build on `readAuthToken`, `tokenMatches`
+or `ps_session` appearing anywhere under `src/app/api/`, and `CLAUDE.md` carries
+the matching standing instruction.
+
+This venture is the reason the wargame is worth writing. Before 2026-07 PatterStage
+was A in form and nothing in substance: `requireAuth()` was a misnamed read-only
+flag check, 114 call sites believed they were authenticated, and the result was an
+unauthenticated remote-code-execution chain reachable from the LAN (fixed in
+`7004f2c`). The failure mode was not a missing check in one route; it was that **A
+gives you no way to tell the difference between a route that is deliberately public
+and one where somebody forgot.**
 
 ## EOS-FB-003 · A walk cannot be audited later, because the trigger set is never recorded
 
@@ -114,6 +181,41 @@ triggers name it, so it should have been argued.
 as the wargame index tags, written at phase B and immutable thereafter. `eos_check`
 can then mechanically assert the rule the doctrine already states: no wargame whose
 tags intersect the trigger set is marked inherited.
+
+## Corrections to this file's own walk (second corrective pass)
+
+Recorded rather than silently fixed, because a feedback file that quietly repairs
+itself is no more checkable than the walk it is criticising.
+
+**The 20-ruling stop condition was crossed by eleven, and the walk continued.**
+`WALK_ORDER.md` says stop and re-run WG-EOS-001. Session 0 did re-run it, found
+neither diagnosis applied (EOS-FB-001), and the operator ruled: proceed and file
+the defect. That is a **deliberate deviation from a stop condition**, not an
+oversight, and it belongs in the lock-book's deviations section as well as here.
+
+**Three factual errors in the first corrective pass, found by its own verifier and
+confirmed by measurement.** None moved a ruling; all three degraded checkability,
+which is the property the whole exercise depends on:
+
+- WG-WEB-014 claimed `docs/images/insights.png` is "126 KB, the largest of the
+  seven". Measured: it is 87,869 bytes and fifth by size. The 126 KB file is
+  `skills-manager.png`, which **is** cited (`docs/USER_WALKTHROUGH_GUIDE.md:381`).
+  The load-bearing claim survives unchanged: `insights.png` is referenced by no
+  document, only by the generator that produces it.
+- WG-ARCH-005 claimed `generate:schema-json` "appears in exactly two places in the
+  whole tree". It appears in six. The substantive claim survives: none of the six
+  is a CI step or a test, so the committed JSON schemas can lag their Zod source
+  silently.
+- Reference slips: 49 `CREATE TABLE` statements, not 45; `install.ps1` is 22 lines
+  at the repository root, not 23 under `scripts/bootstrap/`; the registry entry is
+  titled `Hermes` (`Operations` is a nav-group label); `docs/images/` totals 688 KB.
+
+**One contradiction the pass introduced and this one closes.** The reconciliation
+ruled WG-WEB-011 to C, which decides the bloom tier, but WG-WEB-005 was left
+carrying an open fork offering three options of which that ruling had already
+killed two. WG-WEB-005 is amended to full C and its fork withdrawn: a fork whose
+options have been eliminated by a prerequisite ruling is not a decision the
+operator should be asked to make.
 
 ## EOS-FB-004 · No stack profile covers a local-first app with an embedded database
 
