@@ -23,6 +23,7 @@ import {
   handleSyncTitles,
   handleDelete,
 } from "@/lib/story-handlers/crud";
+import { handleCharacters, handleThemes } from "@/lib/story-handlers/library";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);
@@ -43,6 +44,9 @@ export async function POST(request: NextRequest) {
       case "extend":            return handleExtend(body);
       case "continue":          return handleContinue(body);
       case "update":            return handleUpdate(body);
+      // The reusable library the Characters/Themes pages have always posted to.
+      case "characters":        return handleCharacters(body);
+      case "themes":            return handleThemes(body);
       case "sync-titles":       return handleSyncTitles(body);
       case "delete":            return handleDelete(body);
       default:

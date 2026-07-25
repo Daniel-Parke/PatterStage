@@ -35,6 +35,7 @@ import { applyResearchComposerLinkMigration } from "./db/apply-research-composer
 import { applyComposerGroupLinkMigration } from "./db/apply-composer-group-link-migration";
 import { applyFrameworksMigration } from "./db/apply-frameworks-migration";
 import { applyArtifactsMigration } from "./db/apply-artifacts-migration";
+import { applyRecroomLibraryMigration } from "./db/apply-recroom-library-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -253,6 +254,9 @@ export function runMigrations(database: Database.Database): void {
   applyFrameworksMigration(database, migrationsDir);
   // Unified artifacts registry (agent-produced deliverables). CREATE at v28.
   applyArtifactsMigration(database, migrationsDir);
+
+  // Story Weaver reusable character + theme library. CREATE at v29.
+  applyRecroomLibraryMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────
