@@ -6,7 +6,7 @@
 import { NextResponse } from "next/server";
 
 import { callLLM } from "@/lib/llm";
-import { listStories, getStory, updateStory, deleteStory } from "@/lib/story-repository";
+import { listStories, getStory, updateStory, deleteStory } from "@/modules/rec-room/lib/story-repository";
 
 import { safeArc } from "./shared";
 

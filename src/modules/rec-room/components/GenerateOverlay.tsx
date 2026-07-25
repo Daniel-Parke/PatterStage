@@ -2,7 +2,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { Sparkles, CheckCircle2 } from "lucide-react";
-import { LOADING_MESSAGES } from "@/lib/story-weaver/prompts";
+import { LOADING_MESSAGES } from "@/modules/rec-room/lib/prompts";
 
 interface GenerateOverlayProps {
   title: string;

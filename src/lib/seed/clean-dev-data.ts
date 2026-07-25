@@ -11,7 +11,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { listWorkflows, deleteWorkflow } from "@/lib/composer/composer-repository";
-import { listStories, deleteStory } from "@/lib/story-repository";
+import { SERVER_MODULES } from "@/lib/modules/server";
 import { listMissions, deleteMission } from "@/lib/mission-repository";
 
 const TEST_NAME = /^(testy?\b|test[\s_-]|untitled story\b)/i;
@@ -37,9 +37,12 @@ export function previewDevDataCleanup(): DevDataCleanupReport {
     workflows: listWorkflows()
       .filter((w) => isTestName(w.name))
       .map((w) => ({ id: w.id, label: w.name })),
-    stories: listStories()
-      .filter((s) => isTestName(s.title))
-      .map((s) => ({ id: s.id, label: s.title })),
+    // Module-owned records come through the composition root, so core never
+    // imports a module (ADR-0005). The "looks like a test artifact" policy
+    // stays here; the module only says what it owns.
+    stories: SERVER_MODULES.flatMap((m) => m.listDevData?.() ?? []).filter((r) =>
+      isTestName(r.label),
+    ),
     missions: listMissions()
       .filter((m) => isTestName(m.name))
       .map((m) => ({ id: m.id, label: m.name })),
@@ -55,7 +58,9 @@ export interface DevDataCleanupResult {
 export function cleanDevData(): DevDataCleanupResult {
   const removed = previewDevDataCleanup();
   for (const w of removed.workflows) deleteWorkflow(w.id);
-  for (const s of removed.stories) deleteStory(s.id);
+  for (const s of removed.stories) {
+    for (const m of SERVER_MODULES) m.deleteDevData?.(s.id);
+  }
   for (const m of removed.missions) deleteMission(m.id);
   const counts = {
     workflows: removed.workflows.length,

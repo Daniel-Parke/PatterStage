@@ -2,7 +2,7 @@
 // story-repository.ts — Story CRUD via SQLite
 // ═══════════════════════════════════════════════════════════════
 
-import { db, inTransaction, uuid, now } from "./db";
+import { db, inTransaction, uuid, now } from "@/lib/db";
 
 export interface Story {
   id: string;

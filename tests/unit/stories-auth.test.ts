@@ -40,7 +40,7 @@ jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
-jest.mock("@/lib/story-weaver/prompts", () => ({
+jest.mock("@/modules/rec-room/lib/prompts", () => ({
   getStoryPrompt: jest.fn(() => "system prompt"),
 }));
 

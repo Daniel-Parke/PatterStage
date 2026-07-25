@@ -30,7 +30,7 @@ import {
   listThemes,
   updateCharacter,
   updateTheme,
-} from "@/lib/story-weaver/library-repository";
+} from "@/modules/rec-room/lib/library-repository";
 
 const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 

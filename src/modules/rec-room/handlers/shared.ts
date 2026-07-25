@@ -6,7 +6,7 @@
 // length→chapter-count map.
 // ═══════════════════════════════════════════════════════════════
 
-import type { StoryArc as StoryArcType, ChapterOutline } from "@/types/recroom";
+import type { StoryArc as StoryArcType, ChapterOutline } from "@/modules/rec-room/types";
 
 export function safeArc(arc: unknown): StoryArcType | undefined {
   // Handle JSON string stored in DB (common for SQLite JSON columns)

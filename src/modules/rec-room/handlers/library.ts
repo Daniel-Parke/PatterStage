@@ -28,7 +28,7 @@ import {
   updateTheme,
   type CharacterInput,
   type ThemeInput,
-} from "@/lib/story-weaver/library-repository";
+} from "@/modules/rec-room/lib/library-repository";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 
 const str = (v: unknown): string => (typeof v === "string" ? v : "");

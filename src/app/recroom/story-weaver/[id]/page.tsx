@@ -5,10 +5,10 @@ import { useRouter, useParams } from "next/navigation";
 import { ChevronLeft, ChevronRight, BookOpen, BookMarked, Sparkles, Loader2, X, RefreshCw, PenLine, PlayCircle, AlertTriangle } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageTitle from "@/components/layout/PageTitle";
-import ChapterList from "@/components/story-weaver/ChapterList";
-import StoryBiblePanel from "@/components/story-weaver/StoryBiblePanel";
-import GenerateOverlay from "@/components/story-weaver/GenerateOverlay";
-import ReaderSettings, { loadSettings, DEFAULT_SETTINGS, FONTS, THEMES, WORD_COUNT_OPTIONS, type ReadingSettings } from "@/components/story-weaver/ReaderSettings";
+import ChapterList from "@/modules/rec-room/components/ChapterList";
+import StoryBiblePanel from "@/modules/rec-room/components/StoryBiblePanel";
+import GenerateOverlay from "@/modules/rec-room/components/GenerateOverlay";
+import ReaderSettings, { loadSettings, DEFAULT_SETTINGS, FONTS, THEMES, WORD_COUNT_OPTIONS, type ReadingSettings } from "@/modules/rec-room/components/ReaderSettings";
 
 interface Chapter {
   number: number;

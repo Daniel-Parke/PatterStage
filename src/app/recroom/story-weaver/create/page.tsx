@@ -5,12 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Sparkles, Plus, X, Save, FolderOpen, Users, Trash2 } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
-import { STORY_TEMPLATES } from "@/types/recroom";
-import type { StoryCharacter, CharacterSheet, StoryTheme } from "@/types/recroom";
-import GenerateOverlay from "@/components/story-weaver/GenerateOverlay";
-import { WORD_COUNT_OPTIONS } from "@/components/story-weaver/ReaderSettings";
-import Tags from "@/components/story-weaver/Tags";
-import CharacterCard from "@/components/story-weaver/CharacterCard";
+import { STORY_TEMPLATES } from "@/modules/rec-room/types";
+import type { StoryCharacter, CharacterSheet, StoryTheme } from "@/modules/rec-room/types";
+import GenerateOverlay from "@/modules/rec-room/components/GenerateOverlay";
+import { WORD_COUNT_OPTIONS } from "@/modules/rec-room/components/ReaderSettings";
+import Tags from "@/modules/rec-room/components/Tags";
+import CharacterCard from "@/modules/rec-room/components/CharacterCard";
 
 const DEFAULT_GENRES = ["Sci-Fi", "Mystery", "Fantasy", "Romance", "Crime", "Horror", "Adventure", "Historical"];
 const DEFAULT_ERAS = ["Ancient", "Medieval", "Modern", "Near Future", "Far Future", "Timeless"];

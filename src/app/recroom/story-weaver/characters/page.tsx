@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Plus, X, Save, Trash2, Edit2, Users, Loader2 } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
-import type { CharacterSheet } from "@/types/recroom";
+import type { CharacterSheet } from "@/modules/rec-room/types";
 
 const ROLES = ["protagonist", "ally", "antagonist", "supporting", "mystery", "mentor", "trickster", "guardian"];
 const ROLE_COLORS: Record<string, string> = {

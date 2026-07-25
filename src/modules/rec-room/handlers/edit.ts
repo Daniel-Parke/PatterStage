@@ -6,10 +6,10 @@
 import { NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
-import { getStoryPrompt } from "@/lib/story-weaver/prompts";
+import { getStoryPrompt } from "@/modules/rec-room/lib/prompts";
 import { callLLM } from "@/lib/llm";
-import { getStory, updateStory } from "@/lib/story-repository";
-import type { ChapterOutline } from "@/types/recroom";
+import { getStory, updateStory } from "@/modules/rec-room/lib/story-repository";
+import type { ChapterOutline } from "@/modules/rec-room/types";
 
 import { safeArc, validateChapterOutput, focusArcForChapter } from "./shared";
 

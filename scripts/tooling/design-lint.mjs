@@ -100,7 +100,9 @@ const RULES = [
   },
   {
     id: "core-imports-no-module",
-    law: "Core may not import a module; modules import core (ADR-0005). A boundary an agent can cross without a red build does not exist.",
+    law: "Core may not import a module; modules import core (ADR-0005). Reach module capability through the composition root, src/lib/modules/server.ts, which is the ONE file exempt from this rule. A boundary an agent can cross without a red build does not exist.",
+    // src/lib/modules/ is the seam itself: registry.ts declares nav, server.ts is
+    // the composition root. Everything else in core is bound by the rule.
     files: (f) =>
       (f.startsWith("src/lib/") || f.startsWith("src/components/layout/")) &&
       !f.startsWith("src/lib/modules/"),

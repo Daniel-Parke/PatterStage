@@ -9,21 +9,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { handleCreate } from "@/lib/story-handlers/create";
+import { handleCreate } from "@/modules/rec-room/handlers/create";
 import {
   handleGenerateChapter,
   handleRetryChapter,
   handleRewriteChapter,
-} from "@/lib/story-handlers/generate";
-import { handleEditChapter, handleExtend, handleContinue } from "@/lib/story-handlers/edit";
+} from "@/modules/rec-room/handlers/generate";
+import { handleEditChapter, handleExtend, handleContinue } from "@/modules/rec-room/handlers/edit";
 import {
   handleList,
   handleLoad,
   handleUpdate,
   handleSyncTitles,
   handleDelete,
-} from "@/lib/story-handlers/crud";
-import { handleCharacters, handleThemes } from "@/lib/story-handlers/library";
+} from "@/modules/rec-room/handlers/crud";
+import { handleCharacters, handleThemes } from "@/modules/rec-room/handlers/library";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus, X, Save, Trash2, Edit2, FileText, Loader2, ArrowRight } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
-import type { StoryTheme } from "@/types/recroom";
+import type { StoryTheme } from "@/modules/rec-room/types";
 
 const EMPTY_THEME: Omit<StoryTheme, "id" | "createdAt" | "updatedAt"> = {
   name: "", premise: "", genre: [], era: "", setting: "", mood: [], notes: "",

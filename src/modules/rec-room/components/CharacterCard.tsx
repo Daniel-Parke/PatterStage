@@ -5,7 +5,7 @@
 "use client";
 
 import { Save, X } from "lucide-react";
-import type { StoryCharacter } from "@/types/recroom";
+import type { StoryCharacter } from "@/modules/rec-room/types";
 
 const ROLES = ["protagonist", "ally", "antagonist", "supporting", "mystery"];
 

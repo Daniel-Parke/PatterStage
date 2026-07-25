@@ -8,7 +8,7 @@ import { BookOpen, Sparkles, Clock, CheckCircle2, Loader2, BookMarked, Trash2 } 
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { timeAgo } from "@/lib/utils";
-import type { StorySummary } from "@/types/recroom";
+import type { StorySummary } from "@/modules/rec-room/types";
 
 export default function LibraryPage() {
   const router = useRouter();

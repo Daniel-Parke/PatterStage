@@ -10,7 +10,7 @@
 "use client";
 
 import { X, BookMarked, MapPin, Users, ListOrdered, Sparkles } from "lucide-react";
-import { safeArc } from "@/lib/story-handlers/shared";
+import { safeArc } from "@/modules/rec-room/handlers/shared";
 
 function Section({
   icon: Icon,

@@ -6,9 +6,9 @@ import { BookOpen, Plus, ChevronRight, Sparkles, Library, Users, FileText } from
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
-import StoryCard from "@/components/story-weaver/StoryCard";
+import StoryCard from "@/modules/rec-room/components/StoryCard";
 import { safeApiCall } from "@/lib/api-fetch";
-import type { StorySummary } from "@/types/recroom";
+import type { StorySummary } from "@/modules/rec-room/types";
 
 export default function StoryWeaverDashboard() {
   const router = useRouter();

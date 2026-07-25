@@ -10,7 +10,7 @@ import { randomUUID } from "crypto";
 
 import { db, now } from "@/lib/db";
 import { parseStringArrayOrEmpty } from "@/lib/db/parse-json";
-import type { CharacterSheet, StoryTheme } from "@/types/recroom";
+import type { CharacterSheet, StoryTheme } from "@/modules/rec-room/types";
 
 // ── Characters ─────────────────────────────────────────────────
 

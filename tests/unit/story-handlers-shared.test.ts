@@ -8,8 +8,8 @@ import {
   buildMasterPrompt,
   buildChapterPrompt,
   focusArcForChapter,
-} from "@/lib/story-handlers/shared";
-import type { StoryArc, ChapterOutline } from "@/types/recroom";
+} from "@/modules/rec-room/handlers/shared";
+import type { StoryArc, ChapterOutline } from "@/modules/rec-room/types";
 
 describe("getChapterCount", () => {
   it.each([
