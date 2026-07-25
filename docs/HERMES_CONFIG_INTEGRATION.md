@@ -4,7 +4,7 @@ If you also use a separate **`hermes-config`** repo (dotfiles, extra scripts), k
 
 ## How PatterStage resolves paths
 
-Path and environment variables (`HERMES_HOME`, `PS_DATA_DIR`, `PORT`, install flags) are documented in **[ENV_REFERENCE.md](ENV_REFERENCE.md)**. Code: `getHermesHome()` in [`src/lib/hermes-home.ts`](../src/lib/hermes-home.ts), `getActiveHermesPaths()` in [`src/lib/hermes-agent-runtime.ts`](../src/lib/hermes-agent-runtime.ts), profile helpers in [`src/lib/hermes-profile-paths.ts`](../src/lib/hermes-profile-paths.ts).
+Path and environment variables (`HERMES_HOME`, `PS_DATA_DIR`, `PORT`, install flags) are documented in **[ENV_REFERENCE.md](ENV_REFERENCE.md)**. Code: `getHermesHome()` in [`src/modules/hermes/lib/home.ts`](../src/modules/hermes/lib/home.ts), `getActiveHermesPaths()` in [`src/modules/hermes/lib/agent-runtime.ts`](../src/modules/hermes/lib/agent-runtime.ts), profile helpers in [`src/modules/hermes/lib/profile-paths.ts`](../src/modules/hermes/lib/profile-paths.ts).
 
 **Canonical layout:**
 

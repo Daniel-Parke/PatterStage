@@ -1,184 +1,93 @@
 {
-
   "name": "patterstage",
-
   "version": "0.1.0",
-
   "private": true,
-
   "license": "Apache-2.0",
-
   "scripts": {
-
     "dev": "next dev",
-
     "dev:network": "next dev -H 0.0.0.0",
-
     "prebuild": "node scripts/tooling/prebuild-db.mjs",
-
     "db:migrate": "npx tsx scripts/tooling/migrate-db.ts",
-
     "db:seed": "npx tsx scripts/tooling/import-hermes-state.ts && npx tsx scripts/tooling/seed-catalog.ts --merge",
-
     "build": "next build",
-
     "start": "next start",
-
-    "lint": "node scripts/tooling/check-agent-files.mjs && node scripts/tooling/design-lint.mjs && eslint . --max-warnings 0 && npm run typecheck:tests",
+    "lint": "node scripts/tooling/check-agent-files.mjs && node scripts/tooling/check-doc-links.mjs && node scripts/tooling/design-lint.mjs && eslint . --max-warnings 0 && npm run typecheck:tests",
     "lint:design": "node scripts/tooling/design-lint.mjs --report",
     "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
-
     "lint:knip": "knip --include files,dependencies,unlisted --no-config-hints",
-
     "start:network": "next start -H 0.0.0.0",
-
     "test": "jest",
-
     "test:watch": "jest --watch",
-
     "test:coverage": "jest --coverage",
-
     "test:e2e": "cross-env PORT=3000 playwright test",
-
     "screenshots": "cross-env PORT=3477 CAPTURE_SCREENSHOTS=1 playwright test screenshots.spec.ts",
-
     "test:full-install": "python tests/integration/test_full_install_update_process.py --profile smoke --skip-http",
-
     "test:full-install-release": "python tests/integration/test_full_install_update_process.py --profile release --skip-http",
-
     "test:full-install-hermes": "python tests/integration/test_full_install_update_process.py --profile release --skip-http --with-real-hermes-install",
-
     "test:docker-deploy-smoke": "bash tests/scripts/docker-deploy-api-smoke.sh",
-
     "discover-hermes": "node scripts/tooling/discover-agents.mjs",
-
     "generate:schema-json": "npx tsx scripts/tooling/generate-json-schema.ts",
-
     "seed-pack": "node scripts/tooling/generate-seed-pack.mjs",
-
     "mock-hermes": "node mock-hermes/server.mjs",
-
     "mock-hindsight": "node mock-hindsight/server.mjs",
-
     "mock-llm": "node mock-llm/server.mjs",
-
     "test:e2e-runtime": "node tests/integration/runtime/full-stack-smoke.mjs",
-
     "test:smoke-composer": "node tests/integration/runtime/composer-smoke.mjs",
-
     "test:e2e-hermes": "bash tests/scripts/real-hermes-itest.sh",
-
     "test:e2e-bench-gateway": "bash tests/scripts/bench-gateway-itest.sh"
-
   },
-
   "dependencies": {
-
     "@dagrejs/dagre": "^3.0.0",
-
     "@tanstack/react-query": "^5.101.0",
-
     "@types/js-yaml": "^4.0.9",
-
     "@xyflow/react": "^12.11.0",
-
     "better-sqlite3": "^12.11.1",
-
     "js-yaml": "^4.2.0",
-
     "lucide-react": "^1.20.0",
-
     "motion": "^12.40.0",
-
     "next": "16.2.9",
-
     "react": "19.2.7",
-
     "react-dom": "19.2.7",
-
     "zod": "^4.3.6"
-
   },
-
   "devDependencies": {
-
     "@playwright/test": "^1.61.0",
-
     "@tailwindcss/postcss": "^4.3.1",
-
     "@testing-library/jest-dom": "^6.9.1",
-
     "@testing-library/react": "^16.3.2",
-
     "@types/better-sqlite3": "^7.6.13",
-
     "@types/jest": "^30.0.0",
-
     "@types/node": "^20.19.43",
-
     "@types/react": "^19.2.17",
-
     "@types/react-dom": "^19",
-
     "cross-env": "^7.0.3",
-
     "eslint": "^9",
-
     "eslint-config-next": "16.2.9",
-
     "jest": "^30.3.0",
-
     "jest-environment-jsdom": "^30.3.0",
-
     "knip": "^6.16.1",
-
     "tailwindcss": "^4.3.1",
-
     "ts-jest": "^29.4.11",
-
     "tsx": "^4.22.4",
-
     "typescript": "^5"
-
   },
-
   "pnpm": {
-
     "onlyBuiltDependencies": [
-
       "better-sqlite3",
-
       "esbuild",
-
       "sharp",
-
       "unrs-resolver"
-
     ]
-
   },
-
   "overrides": {
-
     "@typescript-eslint/typescript-estree": {
-
       "brace-expansion": "5.0.4"
-
     },
-
     "glob": {
-
       "brace-expansion": "2.0.2"
-
     },
-
     "minimatch@3.1.5": {
-
       "brace-expansion": "1.1.14"
-
     }
-
   }
-
 }
-

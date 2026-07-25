@@ -32,7 +32,6 @@ Config: [`jest.config.js`](../jest.config.js) at repo root. Coverage thresholds 
 ### Hermes pathing (unit)
 
 - [`tests/unit/hermes-profile-paths.test.ts`](../tests/unit/hermes-profile-paths.test.ts) — `getHermesDefaultRoot()`, `resolveProfileHermesHome()` (standard, profile subdir, profile-as-home, Docker root).
-- [`tests/unit/dispatch-mission-cli.test.ts`](../tests/unit/dispatch-mission-cli.test.ts) — mission dispatch sets `HERMES_HOME` on subprocess env for non-default profiles.
 
 ### SQLite baseline upgrade tests
 
@@ -66,7 +65,7 @@ npm run test:e2e
 
 ## Local release-confidence harness (Docker)
 
-**Local-only** heavy integration: [`tests/integration/test_full_install_update_process.py`](../tests/integration/test_full_install_update_process.py) builds an ephemeral image, runs scenarios in throwaway containers, and deletes them afterward. It exercises [`scripts/bootstrap/install.sh`](../scripts/bootstrap/install.sh) (bootstrap clone via `file://` bare repo + [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh)), [`scripts/bootstrap/install.sh --in-repo`](../scripts/bootstrap/install.sh), [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh), and [`scripts/application/ps-deploy.sh update`](../scripts/application/ps-deploy.sh), with runtime-generated markers under `PS_DATA_DIR` and `HERMES_HOME`. This is **not** part of CI—run it manually before releases. Complements [`tests/scripts/run-shell-custom-tests.sh`](tests/scripts/run-shell-custom-tests.sh).
+**Local-only** heavy integration: [`tests/integration/test_full_install_update_process.py`](../tests/integration/test_full_install_update_process.py) builds an ephemeral image, runs scenarios in throwaway containers, and deletes them afterward. It exercises [`scripts/bootstrap/install.sh`](../scripts/bootstrap/install.sh) (bootstrap clone via `file://` bare repo + [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh)), [`scripts/bootstrap/install.sh --in-repo`](../scripts/bootstrap/install.sh), [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh), and [`scripts/application/ps-deploy.sh update`](../scripts/application/ps-deploy.sh), with runtime-generated markers under `PS_DATA_DIR` and `HERMES_HOME`. This is **not** part of CI—run it manually before releases. Complements [`tests/scripts/run-shell-custom-tests.sh`](../tests/scripts/run-shell-custom-tests.sh).
 
 **Prerequisites:** Docker daemon running; Python 3 (stdlib only).
 

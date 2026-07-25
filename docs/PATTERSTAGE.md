@@ -19,6 +19,6 @@ PatterStage is the **Next.js control plane** in this repo: a command-centre UI f
 | Testing (Jest + Playwright) | [TESTING.md](TESTING.md) |
 | Schema / mission & template types | [schema/SCHEMA_VERSIONING.md](schema/SCHEMA_VERSIONING.md) and [schema/CHANGELOG.md](schema/CHANGELOG.md) (`src/lib/schema/`) |
 
-PatterStage data lives under **`PS_DATA_DIR`** (`src/lib/paths.ts`). The local Hermes install is resolved from **`HERMES_HOME`** / **`AGENT_HOME`** (default `~/.hermes`) via `getActiveHermesPaths()` / `getActiveHermesHome()` in `src/lib/hermes-agent-runtime.ts`. System cron uses **`PS_SCRIPTS_DIR`** / **`PS_HARDWARE_LOG_DIR`** (defaults under `PS_DATA_DIR`). Bootstrap and deploy shells live under **`scripts/`** (`bootstrap/`, `application/ps-deploy.sh`, `tooling/`, …) — see **[DEPLOY.md](DEPLOY.md)**.
+PatterStage data lives under **`PS_DATA_DIR`** (`src/lib/paths.ts`). The local Hermes install is resolved from **`HERMES_HOME`** / **`AGENT_HOME`** (default `~/.hermes`) via `getActiveHermesPaths()` / `getActiveHermesHome()` in `src/modules/hermes/lib/agent-runtime.ts`. System cron uses **`PS_SCRIPTS_DIR`** / **`PS_HARDWARE_LOG_DIR`** (defaults under `PS_DATA_DIR`). Bootstrap and deploy shells live under **`scripts/`** (`bootstrap/`, `application/ps-deploy.sh`, `tooling/`, …) — see **[DEPLOY.md](DEPLOY.md)**.
 
 **Browser E2E:** Playwright specs under `tests/e2e/` include a navigation matrix aligned with the sidebar (`tests/e2e/app-routes.ts`—keep in sync when `src/components/layout/sidebar-config.ts` changes). See [TESTING.md](TESTING.md).
