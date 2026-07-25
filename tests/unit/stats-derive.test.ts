@@ -6,6 +6,7 @@ import {
   evaluateAchievements,
   successRate,
   ACHIEVEMENT_DEFS,
+  achievementScope,
   type RawMetrics,
 } from "@/lib/stats/derive";
 import { ICONS } from "@/components/achievements/AchievementBadge";
@@ -39,12 +40,22 @@ const baseMetrics = (over: Partial<RawMetrics> = {}): RawMetrics => ({
 
 describe("computeXp", () => {
   it("sums weighted work into XP", () => {
-    expect(computeXp({ completedMissions: 2, completedRuns: 4, stories: 1, totalTokens: 5000 })).toBe(
-      2 * 100 + 4 * 25 + 1 * 150 + 5, // 200 + 100 + 150 + 5
+    expect(computeXp({ completedMissions: 2, completedRuns: 4, totalTokens: 5000 })).toBe(
+      2 * 100 + 4 * 25 + 5, // 200 + 100 + 5
     );
   });
   it("is zero for no work", () => {
-    expect(computeXp({ completedMissions: 0, completedRuns: 0, stories: 0, totalTokens: 0 })).toBe(0);
+    expect(computeXp({ completedMissions: 0, completedRuns: 0, totalTokens: 0 })).toBe(0);
+  });
+
+  // ADR-0004: the Body's record measures the Body. Writing interactive fiction
+  // used to award 150 XP per story, so the operator's level rose by doing
+  // something that says nothing about any agent.
+  it("ignores Rec Room activity entirely", () => {
+    const work = { completedMissions: 1, completedRuns: 0, totalTokens: 0 };
+    const withStories = { ...work, stories: 12, chaptersGenerated: 99 };
+    expect(computeXp(withStories)).toBe(computeXp(work));
+    expect(computeXp(withStories)).toBe(100);
   });
 });
 
@@ -167,5 +178,32 @@ describe("successRate", () => {
   });
   it("computes the fraction", () => {
     expect(successRate(3, 1)).toBe(0.75);
+  });
+});
+
+// ── ADR-0004: Brain vs Body ──────────────────────────────────────────────
+describe("achievement scope", () => {
+  it("marks the story achievements as Rec Room, not agent progression", () => {
+    const recroom = ACHIEVEMENT_DEFS.filter((d) => achievementScope(d) === "recroom");
+    expect(recroom.map((d) => d.id).sort()).toEqual([
+      "epic-scribe",
+      "novelist",
+      "saga-weaver",
+      "storyteller",
+      "wordsmith",
+    ]);
+  });
+
+  it("defaults everything else to the agent record", () => {
+    const agent = ACHIEVEMENT_DEFS.filter((d) => achievementScope(d) === "agent");
+    expect(agent.length).toBeGreaterThan(20);
+    // No agent achievement may be measured from a Rec Room counter.
+    const recroomKeys = ["stories", "storiesCompleted", "chaptersGenerated"] as const;
+    for (const def of agent) {
+      for (const key of recroomKeys) {
+        const probe = baseMetrics({ [key]: 10_000 });
+        expect(def.measure(probe)).toBe(def.measure(baseMetrics()));
+      }
+    }
   });
 });

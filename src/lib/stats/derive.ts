@@ -68,11 +68,19 @@ export interface Achievement {
   points: number;
 }
 
-/** XP awarded per unit of work. Tuned so a few real missions move the needle. */
+/**
+ * XP awarded per unit of work. Tuned so a few real missions move the needle.
+ *
+ * Writing interactive fiction is NOT here. It used to be (`perStory: 150`), so
+ * the operator's level rose by writing stories, which says nothing about an
+ * agent. ADR-0004 draws the line: progression measures the Body — the profile,
+ * skills, tools, memory and workflows built up around the model — and creative
+ * work in the Rec Room does not touch that record. Rec Room keeps its own
+ * achievements (scope: "recroom" below); it just does not feed this number.
+ */
 const XP = {
   perCompletedMission: 100,
   perCompletedRun: 25,
-  perStory: 150,
   perThousandTokens: 1,
 } as const;
 
@@ -89,12 +97,11 @@ const LEVEL_TITLES = [
   "Singularity",
 ] as const;
 
-/** Total XP from raw work counts. */
-export function computeXp(m: Pick<RawMetrics, "completedMissions" | "completedRuns" | "stories" | "totalTokens">): number {
+/** Total XP from raw work counts. See the note on XP: no Rec Room activity. */
+export function computeXp(m: Pick<RawMetrics, "completedMissions" | "completedRuns" | "totalTokens">): number {
   return Math.round(
     m.completedMissions * XP.perCompletedMission +
       m.completedRuns * XP.perCompletedRun +
-      m.stories * XP.perStory +
       (m.totalTokens / 1000) * XP.perThousandTokens,
   );
 }
@@ -174,6 +181,16 @@ export function computeStreaks(
   return { current, longest: Math.max(longest, current) };
 }
 
+/**
+ * Which record an achievement belongs to (ADR-0004).
+ *
+ * `agent` describes the Body: work it completed, capability it gained,
+ * equipment it accumulated. `recroom` is creative activity in the Rec Room —
+ * still worth celebrating, but it is the operator having fun, not an agent
+ * learning anything, so it is counted separately and never feeds agent XP.
+ */
+export type AchievementScope = "agent" | "recroom";
+
 export interface AchievementDef {
   id: string;
   name: string;
@@ -182,6 +199,12 @@ export interface AchievementDef {
   color: string;
   target: number;
   measure: (m: RawMetrics) => number;
+  /** Defaults to "agent" when omitted. */
+  scope?: AchievementScope;
+}
+
+export function achievementScope(def: AchievementDef): AchievementScope {
+  return def.scope ?? "agent";
 }
 
 /** Points per tier (rarer = more valuable). */
@@ -254,11 +277,11 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   { id: "resilient", name: "Resilient", description: "Weather 10 failed missions", icon: "ShieldCheck", color: "green", target: 10, measure: (m) => m.failedMissions },
 
   // ── Stories ──
-  { id: "storyteller", name: "Storyteller", description: "Weave your first story", icon: "BookOpen", color: "pink", target: 1, measure: (m) => m.stories },
-  { id: "novelist", name: "Novelist", description: "Weave 10 stories", icon: "Library", color: "pink", target: 10, measure: (m) => m.stories },
-  { id: "saga-weaver", name: "Saga Weaver", description: "Complete 5 stories", icon: "BookCheck", color: "purple", target: 5, measure: (m) => m.storiesCompleted },
-  { id: "wordsmith", name: "Wordsmith", description: "Generate 25 chapters", icon: "PenLine", color: "cyan", target: 25, measure: (m) => m.chaptersGenerated },
-  { id: "epic-scribe", name: "Epic Scribe", description: "Generate 100 chapters", icon: "Feather", color: "yellow", target: 100, measure: (m) => m.chaptersGenerated },
+  { id: "storyteller", name: "Storyteller", description: "Weave your first story", icon: "BookOpen", color: "pink", target: 1, measure: (m) => m.stories, scope: "recroom" },
+  { id: "novelist", name: "Novelist", description: "Weave 10 stories", icon: "Library", color: "pink", target: 10, measure: (m) => m.stories, scope: "recroom" },
+  { id: "saga-weaver", name: "Saga Weaver", description: "Complete 5 stories", icon: "BookCheck", color: "purple", target: 5, measure: (m) => m.storiesCompleted, scope: "recroom" },
+  { id: "wordsmith", name: "Wordsmith", description: "Generate 25 chapters", icon: "PenLine", color: "cyan", target: 25, measure: (m) => m.chaptersGenerated, scope: "recroom" },
+  { id: "epic-scribe", name: "Epic Scribe", description: "Generate 100 chapters", icon: "Feather", color: "yellow", target: 100, measure: (m) => m.chaptersGenerated, scope: "recroom" },
 
   // ── Sessions ──
   { id: "operator", name: "Operator", description: "Start 25 agent sessions", icon: "MessagesSquare", color: "cyan", target: 25, measure: (m) => m.sessionsStarted },
