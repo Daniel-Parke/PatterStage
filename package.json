@@ -42,7 +42,7 @@
     "@types/js-yaml": "^4.0.9",
     "@xyflow/react": "^12.11.0",
     "better-sqlite3": "^12.11.1",
-    "js-yaml": "^4.2.0",
+    "js-yaml": "^5.2.2",
     "lucide-react": "^1.20.0",
     "motion": "^12.40.0",
     "next": "16.2.9",
