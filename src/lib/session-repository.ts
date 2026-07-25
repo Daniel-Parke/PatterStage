@@ -16,10 +16,20 @@
 
 import { db, uuid, now } from "./db";
 import { syncHermesSessionsToDb } from "./session-sync";
+import { getActiveFrameworkConfig } from "./frameworks/repository";
+import type { FrameworkType } from "./frameworks/types";
 
 // ── Types ───────────────────────────────────────────────────
 
-export type AgentType = "hermes";
+/**
+ * Which agent framework ran a session. This is the framework's registry id, so
+ * it is `FrameworkType` rather than a one-member union hardcoding the vendor:
+ * `sessions.agent_type` already had a neutral COLUMN name, and the coupling was
+ * entirely in core supplying the literal `"hermes"` as its default. The literal
+ * now lives only in the frameworks layer, which is the adapter
+ * (docs/adr/0005-product-modules.md).
+ */
+export type AgentType = FrameworkType;
 export type SessionSource = "cli" | "cron" | "mission" | "api";
 export type SessionStatus = "active" | "completed" | "failed";
 
@@ -148,7 +158,7 @@ export function createSession(input: CreateSessionInput): SessionRecord {
     )
   `).run(
     id,
-    input.agentType ?? "hermes",
+    input.agentType ?? getActiveFrameworkConfig().type,
     input.source,
     input.missionId ?? null,
     input.profileName ?? null,

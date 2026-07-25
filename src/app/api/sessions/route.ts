@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
         return badRequest("source is required");
       }
       const session = createSession({
-        agentType: body.agentType ?? "hermes",
+        agentType: body.agentType,
         source: body.source,
         missionId: body.missionId,
         profileName: body.profileName,
