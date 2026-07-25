@@ -1,60 +1,14 @@
 /**
- * Flat list of app paths mirrored from `src/components/layout/sidebar-config.ts`
- * (main sections, operations, Rec Room sub-links, sidebar config index, and config groups).
- * Keep in sync when navigation changes.
+ * App paths, DERIVED from the module registry (ADR-0005).
+ *
+ * This was a hand-maintained list with a "keep in sync when navigation changes"
+ * comment on top. It had already drifted: /laboratory/artifacts was missing, so
+ * the navigation matrix silently stopped covering a whole page. Deriving it
+ * removes the class of bug rather than the instance.
  */
-export const APP_NAV_ROUTES: readonly string[] = [
-  "/",
-  "/laboratory/insights",
-  "/laboratory/benchmarks",
-  "/laboratory/research",
-  "/operations/agents",
-  "/operations/tools",
-  "/config",
-  "/config/agent",
-  "/config/approvals",
-  "/config/browser",
-  "/config/checkpoints",
-  "/config/code_execution",
-  "/config/compression",
-  "/config/cron",
-  "/config/delegation",
-  "/config/discord",
-  "/config/display",
-  "/config/env",
-  "/config/hermes_md",
-  "/config/human_delay",
-  "/config/logging",
-  "/config/memory",
-  "/config/models",
-  "/config/seed",
-  "/config/platform_toolsets",
-  "/config/privacy",
-  "/config/security",
-  "/config/session_reset",
-  "/config/skills",
-  "/config/smart_model_routing",
-  "/config/streaming",
-  "/config/stt",
-  "/config/terminal",
-  "/config/tts",
-  "/config/voice",
-  "/config/web",
-  "/orchestration/scripts",
-  "/orchestration/chat",
-  "/logs",
-  "/memory",
-  "/orchestration/missions",
-  "/orchestration/composer",
-  "/operations/personalities",
-  "/recroom/story-weaver",
-  "/recroom/story-weaver/characters",
-  "/recroom/story-weaver/create",
-  "/recroom/story-weaver/library",
-  "/recroom/story-weaver/themes",
-  "/sessions",
-  "/operations/skills",
-];
+import { allModuleRoutes } from "../../src/lib/modules/registry";
+
+export const APP_NAV_ROUTES: readonly string[] = allModuleRoutes();
 
 /** Config hub and YAML/file-backed section editors (subset of `APP_NAV_ROUTES`). */
 export const CONFIG_SECTION_ROUTES: readonly string[] = APP_NAV_ROUTES.filter(
