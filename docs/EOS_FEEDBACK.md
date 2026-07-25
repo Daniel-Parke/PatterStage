@@ -114,3 +114,49 @@ triggers name it, so it should have been argued.
 as the wargame index tags, written at phase B and immutable thereafter. `eos_check`
 can then mechanically assert the rule the doctrine already states: no wargame whose
 tags intersect the trigger set is marked inherited.
+
+## EOS-FB-004 · No stack profile covers a local-first app with an embedded database
+
+**Hit at:** phase D preparation, filling the lock-book's `stack:` pin.
+
+**What happened.** `registry/stacks/` offers exactly three profiles, and PatterStage
+matches none of them:
+
+| profile | what it is | why it does not fit |
+|---|---|---|
+| 01 `web-static` | Next.js static export, for marketing and editorial sites | PatterStage has server state, auth, and 100 API routes |
+| 02 `fastapi-postgres` | FastAPI on Postgres, for APIs and services | no Python, no Postgres, no separate service |
+| 03 `fullstack-app` | Next.js front on a FastAPI back, one typed seam, Postgres underneath | the front half fits; there is no back half, and the database is embedded |
+
+PatterStage is a Next.js application with an **embedded** database
+(better-sqlite3, a file under the user's data directory), **no separate backend
+service**, and **no hosting** at all: the user runs it on their own machine.
+
+**Why this is a gap and not a mis-fit.** Every existing profile assumes a deployed
+service with a network boundary between a front end and a data store. The whole
+class of local-first, single-binary-ish applications is unrepresented, and that
+class is not exotic: it is what a desktop tool, a CLI with a web UI, or any
+sovereignty-first product looks like.
+
+The pins a stack profile is supposed to supply (the contract seam, the gate set,
+the deploy shape) either do not apply or invert. There is no seam between front and
+back because there is no back. The deploy target is the user's machine, so the
+"hosting" pin is the install path instead. The gate set is closer to profile 03's
+than to 01's, but its Postgres and Alembic rows are dead.
+
+**Cost to this venture.** The `stack:` pin in the lock-book header cannot be filled
+honestly from the registry. Session 0 either names a profile that is wrong in its
+load-bearing half, or leaves the pin unfilled and fails the seed check.
+
+**Draft fix, for the harvest.** A fourth profile, `STACK-local-app`: a Next.js (or
+equivalent) application with an embedded database, distributed as a repository plus
+an install script or a packaged binary, deployed by the user rather than to a
+server. Its distinguishing pins are the install path, the migration story for a
+database the maintainer never sees, and backup and restore as a **user** duty
+rather than an ops duty.
+
+This matters beyond PatterStage. The operator's stated reason for wanting a
+seed-pack generator was that *"our users will have many more projects and use cases
+than ourselves which may not be covered in our PatterTech_EOS yet"*. This is the
+first concrete instance of exactly that, found by the estate's own second venture
+rather than by a stranger.
