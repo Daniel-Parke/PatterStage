@@ -248,12 +248,19 @@ They were decisions, not moves, and the owner ruled on the four that were his:
    `"hermes"` as its default. `AgentType` is now `FrameworkType` and the default
    comes from the frameworks layer.
 
-   `hermes_md` (the contents of Hermes' HERMES.md) and `cron_jobs.hermes_job_id`
-   (a Hermes cron job id) were NOT renamed, and this is flagged for the owner to
-   overrule. Renaming them to `agent_md` / `external_job_id` would make accurate
-   names inaccurate, for a migration against a live database, for a net loss of
-   clarity. A column that stores a vendor's file should say so, which is the same
-   rule the ConfigSync precedent set.
+   I initially declined to rename `hermes_md` and `cron_jobs.hermes_job_id`, on
+   the grounds that both names were ACCURATE (they hold a Hermes file's contents
+   and a Hermes-minted job id) and the ConfigSync precedent says visible coupling
+   beats a neutral-sounding alias. **The owner reaffirmed the ruling and both were
+   renamed in migration 030**, to `framework_md` and `external_job_id`.
+
+   The counter-argument stands on its own and is worth recording: PatterStage owns
+   these tables, and a schema that names one vendor makes the second one a special
+   case forever. The ConfigSync precedent is about not inventing a neutral type to
+   hide a real dependency; a column in PatterStage's own table is not that.
+
+   `framework_md` rather than `agent_md` because `agents_md` (AGENTS.md) already
+   exists and two columns one character apart is a defect waiting to happen.
 4. **`src/types/hermes.ts` renamed to `src/types/console.ts`** (ruled yes). 60
    importers, none of its exports Hermes-anything: `ApiResponse`, `Mission`,
    `AccentColor`. A grep for "hermes" in core was returning 60 false positives
@@ -308,10 +315,16 @@ throwing module would have killed the boot seed.
 **No core file knows the Hermes filesystem or protocol**, and a lint rule fails
 the build if one starts to. That is testable and true.
 
-It is NOT "core contains no reference to Hermes". `sessions.agent_type` still
-stores `'hermes'` as a framework id (legitimately: it IS the id), and `hermes_md`
-and `hermes_job_id` remain as column names describing genuinely Hermes-specific
-data. Those are open on the owner's ruling above.
+The schema no longer names the vendor either, as of migration 030. The one
+remaining occurrence is `sessions.agent_type` storing the VALUE `'hermes'`, which
+is legitimate and stays: it is the framework's registry id, and core no longer
+supplies it as a hardcoded literal (it comes from the frameworks layer).
+
+What the claim still does NOT cover, stated so nobody mistakes the boundary for
+more than it is: `app/` may import a module by design, the `hermes` word survives
+in user-visible surfaces that name real Hermes files (the `/config/hermes_md`
+route, `agent-file-store`'s `"hermes"` file key), and `tests/` is outside the lint
+rule entirely.
 
 Doing the move first would produce a module that only looks separated, which is
 the `frameworks` registry mistake this ADR exists to avoid repeating.
