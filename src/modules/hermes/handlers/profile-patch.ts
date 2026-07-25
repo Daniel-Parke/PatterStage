@@ -56,7 +56,7 @@ export type ProfileOrRootPatchResult =
  *
  * The two patches are passed separately because the two repository
  * types have slightly different shapes (e.g. `AgentRootPatch` has a
- * `hermesMd` field that `ProfileContentPatch` does not). Callers that
+ * `frameworkMd` field that `ProfileContentPatch` does not). Callers that
  * only want to update the overlapping fields can pass the same object
  * to both — TypeScript will narrow as needed.
  */

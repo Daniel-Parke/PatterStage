@@ -82,7 +82,7 @@ function readProfileFiles(slug: string): { soulMd: string; agentsMd: string; con
 function readRootSeedFiles(): {
   soulMd: string;
   agentsMd: string;
-  hermesMd: string;
+  frameworkMd: string;
   userMd: string;
   memoryMd: string;
   configYaml: string;
@@ -92,7 +92,7 @@ function readRootSeedFiles(): {
   return {
     soulMd: read(base + "/SOUL.md"),
     agentsMd: read(base + "/AGENTS.md"),
-    hermesMd: read(base + "/HERMES.md"),
+    frameworkMd: read(base + "/HERMES.md"),
     userMd: read(base + "/memories/USER.md"),
     memoryMd: read(base + "/memories/MEMORY.md"),
     configYaml: read(base + "/config.yaml"),
@@ -106,7 +106,7 @@ function seedRoot(mode: SeedMode, confirmOverride = false): number {
   const hasExistingContent = Boolean(
     root.soulMd.trim() ||
       root.agentsMd.trim() ||
-      root.hermesMd.trim() ||
+      root.frameworkMd.trim() ||
       root.configYaml.trim() ||
       root.userMd.trim() ||
       root.memoryMd.trim(),
@@ -150,7 +150,7 @@ function seedRoot(mode: SeedMode, confirmOverride = false): number {
     configYaml: cols.configYaml,
     soulMd: files.soulMd,
     agentsMd: files.agentsMd,
-    hermesMd: files.hermesMd,
+    frameworkMd: files.frameworkMd,
     userMd: files.userMd,
     memoryMd: files.memoryMd,
     disabledSkillsJson: cols.disabledSkillsJson,

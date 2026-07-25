@@ -58,7 +58,7 @@ export function readManagedFileContent(
       user: { content: row.userMd },
       memory: { content: row.memoryMd },
       config: { content: row.configYaml },
-      hermes: { content: row.hermesMd },
+      hermes: { content: row.frameworkMd },
     };
     const entry = map[key];
     if (!entry) return null;
@@ -91,7 +91,7 @@ export function writeManagedFileContent(
     else if (key === "user") patch.userMd = content;
     else if (key === "memory") patch.memoryMd = content;
     else if (key === "config") patch.configYaml = content;
-    else if (key === "hermes") patch.hermesMd = content;
+    else if (key === "hermes") patch.frameworkMd = content;
     else return false;
     updateAgentRoot(patch);
     return true;

@@ -128,7 +128,7 @@ function buildValidMissionIdSet(): Set<string> {
  *
  * Correct join path:
  *   Hermes job ID (e.g. "9514116b5b0d")
- *     -> cron_jobs.hermes_job_id = job ID
+ *     -> cron_jobs.external_job_id = job ID
  *     -> cron_jobs.id = cron_job UUID
  *     -> missions.cron_job_id = cron_jobs.id (FK to cron_jobs)
  *     -> missions.id = mission UUID
@@ -138,14 +138,14 @@ function buildMissionIdByJobId(): Map<string, string> {
   try {
     const rows = db()
       .prepare(`
-        SELECT m.id AS mission_id, c.hermes_job_id
+        SELECT m.id AS mission_id, c.external_job_id
         FROM missions m
         JOIN cron_jobs c ON c.id = m.cron_job_id
-        WHERE c.hermes_job_id IS NOT NULL AND c.hermes_job_id != ''
+        WHERE c.external_job_id IS NOT NULL AND c.external_job_id != ''
       `)
-      .all() as Array<{ mission_id: string; hermes_job_id: string }>;
+      .all() as Array<{ mission_id: string; external_job_id: string }>;
     for (const row of rows) {
-      missionIdByJobId.set(row.hermes_job_id, row.mission_id);
+      missionIdByJobId.set(row.external_job_id, row.mission_id);
     }
   } catch {
     // table structure may differ — non-fatal
@@ -162,24 +162,24 @@ function buildMissionIdByJobId(): Map<string, string> {
  *
  * Companion to `buildMissionIdByJobId` (bulk version used during the
  * 15s sessions sync). Both use the same join path:
- *   cron_jobs.hermes_job_id → cron_jobs.id → missions.cron_job_id → missions.id
+ *   cron_jobs.external_job_id → cron_jobs.id → missions.cron_job_id → missions.id
  *
  * Returns null when the job id is missing/empty, when the DB is
  * unavailable, or when no mission has been registered for the job
  * (the detail page just doesn't render a Mission link in that case).
  */
-function lookupMissionIdForHermesJob(hermesJobId: string): string | null {
-  if (!hermesJobId) return null;
+function lookupMissionIdForHermesJob(externalJobId: string): string | null {
+  if (!externalJobId) return null;
   try {
     const row = db()
       .prepare(
         `SELECT m.id AS mission_id
          FROM missions m
          JOIN cron_jobs c ON c.id = m.cron_job_id
-         WHERE c.hermes_job_id = ?
+         WHERE c.external_job_id = ?
          LIMIT 1`,
       )
-      .get(hermesJobId) as { mission_id: string } | undefined;
+      .get(externalJobId) as { mission_id: string } | undefined;
     return row?.mission_id ?? null;
   } catch {
     // DB unavailable or schema differs — non-fatal
@@ -211,7 +211,7 @@ export function lookupMissionIdForCronSession(sessionId: string): string | null 
  * Upserts so PatterStage has a unified view of all agent activity.
  *
  * For cron sessions, derives mission_id by matching the embedded
- * job ID in the session title against cron_jobs.hermes_job_id,
+ * job ID in the session title against cron_jobs.external_job_id,
  * then resolving to missions.id via the missions.cron_job_id FK.
  *
  * Completed sessions in Hermes are updated to "completed"/"failed"

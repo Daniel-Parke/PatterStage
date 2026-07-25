@@ -36,6 +36,7 @@ import { applyComposerGroupLinkMigration } from "./db/apply-composer-group-link-
 import { applyFrameworksMigration } from "./db/apply-frameworks-migration";
 import { applyArtifactsMigration } from "./db/apply-artifacts-migration";
 import { applyRecroomLibraryMigration } from "./db/apply-recroom-library-migration";
+import { applyNeutralColumnNames } from "./db/apply-neutral-column-names";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -257,6 +258,10 @@ export function runMigrations(database: Database.Database): void {
 
   // Story Weaver reusable character + theme library. CREATE at v29.
   applyRecroomLibraryMigration(database, migrationsDir);
+
+  // agent_root.framework_md -> framework_md, cron_jobs.external_job_id ->
+  // external_job_id. RENAME at v30.
+  applyNeutralColumnNames(database);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

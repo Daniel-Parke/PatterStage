@@ -198,8 +198,8 @@ export function pushRootToHermes(): SyncResult {
     writeWithBackup(bundle.config, configYaml, backupsDir);
     writeWithBackup(bundle.soul, row.soulMd, backupsDir);
     writeWithBackup(bundle.agents, row.agentsMd, backupsDir);
-    if (existsSync(bundle.hermes) || row.hermesMd) {
-      writeWithBackup(bundle.hermes, row.hermesMd, backupsDir);
+    if (existsSync(bundle.hermes) || row.frameworkMd) {
+      writeWithBackup(bundle.hermes, row.frameworkMd, backupsDir);
     }
     writeWithBackup(bundle.userMemory, row.userMd || "# User\n", backupsDir);
     writeWithBackup(bundle.agentMemory, row.memoryMd || "# Memory\n", backupsDir);
@@ -349,7 +349,7 @@ export function pullRootFromHermes(options?: { reconcileDisk?: boolean }): SyncR
     };
     if (existsSync(bundle.soul)) patch.soulMd = readFileSync(bundle.soul, "utf-8");
     if (existsSync(bundle.agents)) patch.agentsMd = readFileSync(bundle.agents, "utf-8");
-    if (existsSync(bundle.hermes)) patch.hermesMd = readFileSync(bundle.hermes, "utf-8");
+    if (existsSync(bundle.hermes)) patch.frameworkMd = readFileSync(bundle.hermes, "utf-8");
     if (existsSync(bundle.userMemory)) patch.userMd = readFileSync(bundle.userMemory, "utf-8");
     if (existsSync(bundle.agentMemory)) patch.memoryMd = readFileSync(bundle.agentMemory, "utf-8");
     updateAgentRoot(patch);
@@ -479,7 +479,7 @@ export function detectRootDrift(): RootDriftEntry {
   }
   if (fileHash(bundle.soul) !== contentHash(row.soulMd)) fields.push("SOUL.md");
   if (fileHash(bundle.agents) !== contentHash(row.agentsMd)) fields.push("AGENTS.md");
-  if (existsSync(bundle.hermes) && fileHash(bundle.hermes) !== contentHash(row.hermesMd)) {
+  if (existsSync(bundle.hermes) && fileHash(bundle.hermes) !== contentHash(row.frameworkMd)) {
     fields.push("HERMES.md");
   }
   if (fileHash(bundle.userMemory) !== contentHash(row.userMd || "# User\n")) fields.push("USER.md");

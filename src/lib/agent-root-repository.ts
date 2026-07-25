@@ -12,7 +12,7 @@ export interface AgentRootRow {
   configYaml: string;
   soulMd: string;
   agentsMd: string;
-  hermesMd: string;
+  frameworkMd: string;
   userMd: string;
   memoryMd: string;
   disabledSkillsJson: string;
@@ -30,7 +30,7 @@ interface DbRow {
   config_yaml: string;
   soul_md: string;
   agents_md: string;
-  hermes_md: string;
+  framework_md: string;
   user_md: string;
   memory_md: string;
   disabled_skills: string;
@@ -42,7 +42,7 @@ interface DbRow {
 
 const SELECT_COLS = `
   id, display_name, description, personality, config_yaml,
-  soul_md, agents_md, hermes_md, user_md, memory_md,
+  soul_md, agents_md, framework_md, user_md, memory_md,
   disabled_skills, platform_toolsets, synced_at, sync_error, updated_at
 `;
 
@@ -55,7 +55,7 @@ function rowToAgentRoot(row: DbRow): AgentRootRow {
     configYaml: row.config_yaml,
     soulMd: row.soul_md,
     agentsMd: row.agents_md,
-    hermesMd: row.hermes_md,
+    frameworkMd: row.framework_md,
     userMd: row.user_md,
     memoryMd: row.memory_md,
     disabledSkillsJson: row.disabled_skills,
@@ -88,7 +88,7 @@ export interface AgentRootPatch {
   configYaml?: string;
   soulMd?: string;
   agentsMd?: string;
-  hermesMd?: string;
+  frameworkMd?: string;
   userMd?: string;
   memoryMd?: string;
   disabledSkillsJson?: string;
@@ -107,7 +107,7 @@ export function updateAgentRoot(patch: AgentRootPatch): AgentRootRow {
         config_yaml = ?,
         soul_md = ?,
         agents_md = ?,
-        hermes_md = ?,
+        framework_md = ?,
         user_md = ?,
         memory_md = ?,
         disabled_skills = ?,
@@ -122,7 +122,7 @@ export function updateAgentRoot(patch: AgentRootPatch): AgentRootRow {
       patch.configYaml ?? existing.configYaml,
       patch.soulMd ?? existing.soulMd,
       patch.agentsMd ?? existing.agentsMd,
-      patch.hermesMd ?? existing.hermesMd,
+      patch.frameworkMd ?? existing.frameworkMd,
       patch.userMd ?? existing.userMd,
       patch.memoryMd ?? existing.memoryMd,
       patch.disabledSkillsJson ?? existing.disabledSkillsJson,

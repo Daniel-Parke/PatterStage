@@ -34,7 +34,7 @@ jest.mock("@/lib/agent-root-repository", () => ({
   getAgentRoot: jest.fn(() => ({
     soulMd: "existing soul",
     agentsMd: "",
-    hermesMd: "",
+    frameworkMd: "",
     configYaml: "",
     userMd: "",
     memoryMd: "",

@@ -120,11 +120,21 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
       (db.prepare("SELECT COUNT(*) c FROM frameworks WHERE type='hermes'").get() as { c: number }).c,
     ).toBe(1);
     // The unified artifacts registry lands via the wired v28 applier; the
-    // Story Weaver character/theme library is v29 and is the current terminal.
+    // Story Weaver character/theme library is v29; the vendor-name renames are
+    // v30 and are the current terminal.
     expect(tableNames(db)).toContain("artifacts");
     expect(tableNames(db)).toContain("story_characters");
     expect(tableNames(db)).toContain("story_themes");
-    expect(getSchemaVersion(db)).toBe(29);
+    expect(getSchemaVersion(db)).toBe(30);
+
+    // v30 renamed two vendor-named columns in tables PatterStage owns. This is
+    // the only DESTRUCTIVE-shaped migration in the chain (a rename, not an add),
+    // so the upgrade path asserts both the new names and the absence of the old.
+    expect(cols(db, "agent_root")).toContain("framework_md");
+    expect(cols(db, "agent_root")).not.toContain("hermes_md");
+    expect(cols(db, "cron_jobs")).toContain("external_job_id");
+    expect(cols(db, "cron_jobs")).not.toContain("hermes_job_id");
+
     // Pre-existing data survived the additive upgrade (cron job + mission).
     expect(
       (db.prepare("SELECT COUNT(*) c FROM cron_jobs").get() as { c: number }).c,
@@ -156,7 +166,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
       if (next === last) break;
       last = next;
     }
-    expect(getSchemaVersion(db)).toBe(29);
+    expect(getSchemaVersion(db)).toBe(30);
     expect(tableNames(db)).toEqual(
       expect.arrayContaining([
         "composer_workflows",
@@ -179,7 +189,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(29);
+    expect(getSchemaVersion(db)).toBe(30);
     db.close();
   });
 });

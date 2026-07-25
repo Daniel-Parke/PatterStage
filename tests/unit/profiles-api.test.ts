@@ -133,7 +133,7 @@ jest.mock("@/lib/agent-root-repository", () => ({
     configYaml: "skills:\n  disabled: []\n",
     soulMd: "",
     agentsMd: "",
-    hermesMd: "",
+    frameworkMd: "",
     userMd: "",
     memoryMd: "",
     disabledSkillsJson: "[]",
