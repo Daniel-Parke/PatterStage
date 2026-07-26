@@ -224,17 +224,27 @@ jobs:
     # but a cold GitHub runner has no layer cache at all.
     timeout-minutes: 45
     steps:
+      # fetch-depth: 0 is REQUIRED here, unlike every other job in this file.
+      #
+      # The update scenario copies the workspace into a container, then runs
+      # `git clone --bare .` against it and pushes to the clone, so the harness
+      # can exercise `ps-deploy.sh update` against a real origin. actions/checkout
+      # defaults to a depth-1 shallow clone, and you cannot clone from a shallow
+      # repository. The other four scenarios never touch git, which is exactly
+      # why the first CI run passed 4 of 5 and failed only on update.
       - name: Checkout repository
         uses: actions/checkout@v5
         id: checkout1
         continue-on-error: true
         with:
           token: ${{ github.token }}
+          fetch-depth: 0
       - name: Checkout repository (retry)
         if: steps.checkout1.outcome != 'success'
         uses: actions/checkout@v5
         with:
           token: ${{ github.token }}
+          fetch-depth: 0
       # No node/npm setup step: everything happens inside the containers, which
       # is the point. The runner supplies Docker and a stdlib-only Python 3.
       - name: Fresh install + update, in throwaway containers
