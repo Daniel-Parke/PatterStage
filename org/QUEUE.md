@@ -204,7 +204,28 @@ Operator-independent work rides above anything waiting on an answer.
   [ ] its "not intended for CI" disclaimer struck · [ ] docker-image demoted out
   of PR-required checks · [ ] DEPLOY.md cut to one supported model
 - done when: a change that breaks a fresh install cannot merge.
-- blocked-by: WO-0002 (the harness runs a build that currently fetches fonts).
+- unblocked 2026-07-26: WO-0002 landed, so `setup.sh`'s build no longer reaches
+  the network. The stated dependency is discharged.
+- REWRITE NEEDED, found on inspection 2026-07-26. Two of the four acceptance
+  items are not repository files and cannot be done by an agent or by any commit:
+  "wired into CI as a PR gate" and "docker-image demoted out of PR-required
+  checks" are GitHub **branch-protection settings**, configured in repo settings,
+  not in `ci.yml`. A workflow file can add a job; only branch protection decides
+  which jobs block a merge. Branch protection is confirmed active on this repo,
+  because a force-push was refused earlier in this session. So the row as written
+  cannot reach DONE from inside the repo.
+- split it: the committable half is a new `install-harness` job in `ci.yml`,
+  striking the "not intended for CI" disclaimer in the harness docstring
+  (`tests/integration/test_full_install_update_process.py:12`) and at
+  `docs/TESTING.md:68`, and cutting `docs/DEPLOY.md` to one supported model. The
+  owner's half is two clicks in branch protection: add `install-harness` to the
+  required set, remove `docker-image` from it.
+- and it needs a first run observed before it is made required. Docker is not
+  available on the operator's machine right now, so the harness could not be
+  executed locally to prove it passes network-free after WO-0002. A required
+  check that fails for an environmental reason is worse than no check, so the job
+  lands non-required, its first CI run is read, and only then does it block
+  merges. That order is the whole point of WG-DEL-004.
 
 ### WO-0012 · Run the full end-to-end suite on main
 - type: FIX · tier: T2 · priority: P2 · status: ready
