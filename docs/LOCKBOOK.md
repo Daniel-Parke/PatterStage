@@ -138,6 +138,13 @@ because the whole point of this section is that it cannot quietly stop being tru
   `src/lib/db.ts` is baselined rather than exempted, because two of its six sites
   are `sqlite_master` plumbing but `getGatewayPlatforms()` is a repository
   function in the connection file. WO-0003.
+- **One reading register, dark-first, no exception.** WG-WEB-001 (A). The
+  Story Weaver reader offers two page tints, `dark` and `black`, and `pageTheme`
+  is typed to exactly those, so a third is a compile error rather than an
+  addition nobody argued. The palette is `--ps-reader-*` in globals.css, not hex
+  in the component. WO-0005. A light or sepia register is a fork: it needs a
+  dated deviation, a budgeted second QC surface, and palettes minted in
+  `@pattertech/ui`.
 - **One writer per fact, and the config cache is a cache.** WG-ARCH-003 (B for
   the config read). Every write of `config.yaml` goes through
   `writeHermesConfigFile`, which invalidates the read cache in the same call, so

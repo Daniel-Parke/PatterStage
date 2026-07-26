@@ -8,7 +8,14 @@ export interface ReadingSettings {
   fontFamily: string;
   lineHeight: number;     // 1.2-2.5
   brightness: number;     // 0.4-1.0
-  pageTheme: "dark" | "black" | "sepia" | "light";
+  /**
+   * One reading register, two page tints (WG-WEB-001: dark-first, no exception).
+   * `sepia` and `light` were removed in WO-0005. A saved setting naming either
+   * one is normalised back to `dark` by `loadSettings`, so an existing reader's
+   * stored preference degrades to the supported register instead of leaving the
+   * picker with nothing selected.
+   */
+  pageTheme: "dark" | "black";
 }
 
 export const DEFAULT_SETTINGS: ReadingSettings = {
@@ -27,11 +34,33 @@ export const FONTS = [
   { name: "Inter", label: "Inter", family: "var(--font-inter), system-ui, sans-serif" },
 ];
 
-export const THEMES: Record<string, { bg: string; text: string; panel: string; accent: string }> = {
-  dark:   { bg: "#0f0d0b", text: "#e8dcc8", panel: "#1a1816", accent: "#a855f7" },
-  black:  { bg: "#000000", text: "#cccccc", panel: "#111111", accent: "#a855f7" },
-  sepia:  { bg: "#1c1812", text: "#d4c5a0", panel: "#252018", accent: "#8b6914" },
-  light:  { bg: "#f5f0e8", text: "#2c2c2c", panel: "#e8e0d4", accent: "#7c3aed" },
+/**
+ * The reading register, as tokens rather than literals. The hex lives once, in
+ * globals.css, where the design-lint law says colour belongs; these are the
+ * var() handles. `rule` is the panel border, shared by both tints, and it
+ * replaces a `pageTheme === "light"` conditional in the reader that had no
+ * remaining branch once the light theme went.
+ *
+ * The values move to the vendored @pattertech/ui kit under WO-0017.
+ */
+export const THEMES: Record<
+  ReadingSettings["pageTheme"],
+  { bg: string; text: string; panel: string; accent: string; rule: string }
+> = {
+  dark: {
+    bg: "var(--ps-reader-dark-bg)",
+    text: "var(--ps-reader-dark-text)",
+    panel: "var(--ps-reader-dark-panel)",
+    accent: "var(--ps-reader-accent)",
+    rule: "var(--ps-reader-rule)",
+  },
+  black: {
+    bg: "var(--ps-reader-black-bg)",
+    text: "var(--ps-reader-black-text)",
+    panel: "var(--ps-reader-black-panel)",
+    accent: "var(--ps-reader-accent)",
+    rule: "var(--ps-reader-rule)",
+  },
 };
 
 export const WORD_COUNT_OPTIONS: Array<{ id: string; label: string }> = [
@@ -48,9 +77,24 @@ const STORAGE_KEY = "story-weaver-reader-settings";
 export function loadSettings(): ReadingSettings {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
+    if (saved) return normaliseSettings({ ...DEFAULT_SETTINGS, ...JSON.parse(saved) });
   } catch {}
   return { ...DEFAULT_SETTINGS };
+}
+
+/**
+ * Bring a stored setting back into the supported range.
+ *
+ * localStorage outlives the code that wrote it. A reader who chose `sepia` or
+ * `light` before WO-0005 still has that string on disk, and the reader page's
+ * `THEMES[pageTheme] || THEMES.dark` fallback would render correctly while the
+ * picker showed nothing selected, because no tile matches. Normalising at the
+ * load boundary means an unsupported value is corrected once rather than
+ * defended against at every read.
+ */
+function normaliseSettings(settings: ReadingSettings): ReadingSettings {
+  if (settings.pageTheme in THEMES) return settings;
+  return { ...settings, pageTheme: DEFAULT_SETTINGS.pageTheme };
 }
 
 function saveSettings(s: ReadingSettings) {

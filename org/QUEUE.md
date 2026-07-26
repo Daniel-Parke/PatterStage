@@ -87,14 +87,37 @@ Operator-independent work rides above anything waiting on an answer.
 - done when: no file's Hermes knowledge is licensed by a number.
 
 ### WO-0005 · Delete the dead reading themes
-- type: FIX · tier: T1 · priority: P2 · status: ready
+- type: FIX · tier: T1 · priority: P2 · status: DONE · session: session-1-2026-07-26
 - warrant: WG-WEB-001 (A, dark-first, no exception). The `light` and `sepia`
   reader themes are a second register nobody ruled.
-- acceptance: [ ] `light` and `sepia` removed from THEMES in
+- acceptance: [x] `light` and `sepia` removed from THEMES in
   `src/modules/rec-room/components/ReaderSettings.tsx` and their picker tiles ·
-  [ ] the two `pageTheme === "light"` conditional hexes removed from the story
-  reader · [ ] `dark`/`black` held as tokens rather than hex
+  [x] the two `pageTheme === "light"` conditional hexes removed from the story
+  reader · [x] `dark`/`black` held as tokens rather than hex
 - done when: the no-raw-colour-in-tsx baseline has shrunk and one register remains.
+- built: the picker tiles needed no separate deletion, being generated from
+  `Object.entries(THEMES)`. The eight remaining values moved to `--ps-reader-*`
+  in globals.css and the component now holds `var()` handles, so the hex lives
+  once. `pageTheme` narrowed to `"dark" | "black"`, which makes a fifth theme a
+  type error rather than a silent addition. The two `pageTheme === "light"`
+  conditionals became `theme.rule`, a shared token, since neither had a branch
+  left.
+- baseline: 926 to 920. `no-raw-colour-in-tsx` on ReaderSettings.tsx cleared
+  entirely (4 to 0, key removed) and the reader page went 4 to 2. The surviving 2
+  are chapter-status colours, which are separate debt and not this row's.
+- migration: a reader whose localStorage holds `sepia` or `light` is normalised
+  back to `dark` at the load boundary. Without that the page would have rendered
+  correctly through its `|| THEMES.dark` fallback while the picker showed nothing
+  selected, because no tile matches.
+- verified: not by assertion. The values are byte-identical to the originals, so
+  this is a move rather than a restyle, and the chain was checked end to end,
+  hex in globals.css, into the emitted stylesheet under .next, back to the
+  var() references, with zero undefined and zero dead tokens. A mistyped custom
+  property renders transparent and fails silently, which is the whole reason
+  `no-ch-custom-properties` exists.
+- note: two user-facing reading themes are gone. Restoring either is a fork
+  needing a dated deviation, a budgeted second QC surface, and palettes minted
+  in `@pattertech/ui`, never in globals.css or a module.
 - note: a light reading register is a fork, not a bug fix. It needs a dated
   deviation, a budgeted second QC surface, and palettes minted in
   `@pattertech/ui`, never in globals.css or a module.

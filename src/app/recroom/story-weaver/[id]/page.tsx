@@ -303,6 +303,10 @@ export default function StoryReaderPage() {
     if (window.innerWidth < 768) setSidebarOpen(false);
   };
 
+  // The `|| THEMES.dark` is unreachable through `loadSettings`, which normalises an
+  // unsupported stored value (a pre-WO-0005 `sepia` or `light`) back to dark. It
+  // stays as the runtime guard for any other path that hands this component a
+  // settings object, because a missing theme here would render an unstyled page.
   const theme = THEMES[settings.pageTheme] || THEMES.dark;
   const fontObj = FONTS.find(f => f.name === settings.fontFamily) || FONTS[0];
 
@@ -579,7 +583,7 @@ export default function StoryReaderPage() {
             {chapterContent ? (
               <div className="max-w-3xl mx-auto px-6 md:px-16 py-8 md:py-10">
                 <div id="chapter-top" className="flex items-center justify-between mb-8 pb-4 border-b scroll-mt-16" style={{
-                  borderColor: settings.pageTheme === "light" ? "#d4ccc0" : "#2a2520",
+                  borderColor: theme.rule,
                 }}>
                   <h2 style={{
                     color: theme.text,
@@ -642,7 +646,7 @@ export default function StoryReaderPage() {
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between px-4 md:px-6 py-3 border-t flex-shrink-0" style={{ borderColor: settings.pageTheme === "light" ? "#d4ccc0" : "#2a2520", background: theme.panel }}>
+          <div className="flex items-center justify-between px-4 md:px-6 py-3 border-t flex-shrink-0" style={{ borderColor: theme.rule, background: theme.panel }}>
             <button onClick={() => setCurrentChapter(Math.max(1, currentChapter - 1))}
               disabled={currentChapter <= 1}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-xs font-mono disabled:opacity-20 min-h-[44px] max-w-[45%] truncate"

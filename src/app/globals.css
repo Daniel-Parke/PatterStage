@@ -43,6 +43,26 @@
   --ps-rgb-neon-pink: 232, 121, 249;
   --ps-rgb-neon-orange: 255, 102, 34;
   --ps-rgb-cherenkov-glow: 51, 221, 255;
+
+  /* Story Weaver reading register (WG-WEB-001: dark-first, one register, no
+     exception; WO-0005). Two page tints, dark and black, and nothing else. The
+     `light` and `sepia` themes were removed: a light reading register is a fork
+     of the design system, not a setting, and it needs a dated deviation and a
+     second QC surface before it can exist.
+
+     Held here rather than as hex in the component so the values are tokens the
+     lint can see. They belong in the vendored @pattertech/ui kit; that move is
+     WO-0017, and this is the interim home the design-lint law already names
+     (globals.css @theme + src/lib/theme.ts). */
+  --ps-reader-dark-bg: #0f0d0b;
+  --ps-reader-dark-text: #e8dcc8;
+  --ps-reader-dark-panel: #1a1816;
+  --ps-reader-black-bg: #000000;
+  --ps-reader-black-text: #cccccc;
+  --ps-reader-black-panel: #111111;
+  /* Both registers share the console accent and the panel rule. */
+  --ps-reader-accent: #a855f7;
+  --ps-reader-rule: #2a2520;
 }
 
 /* Scrollbar styling */
