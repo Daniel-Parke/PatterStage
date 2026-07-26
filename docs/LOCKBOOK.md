@@ -101,11 +101,119 @@ sitting and notes it in the worklog or queue.
 
 ## Structural contracts (things future edits must not break)
 
-- Authentication is enforced ONCE, in src/proxy.ts, and never in a route handler (WG-DRAFT-001, ruled B; design-lint no-auth-in-route-handler makes it a red build). Core never imports a module; module capability is reached through one of three named composition points, src/lib/modules/server.ts, src/lib/frameworks/registry.ts and src/lib/runtime/ (ADR-0005; design-lint core-imports-no-module). AGENTS.md stays within 40 lines and CLAUDE.md is byte-identical (check-agent-files.mjs). The design-lint baseline shrinks and never grows. Every relative link in docs/ resolves (check-doc-links.mjs). Migration history is a record, not a description: historical migrations are never edited, and schema_version is a strictly increasing chain.
+Distilled from the argued rulings. Each line is a consequence a future edit must
+respect, with the ruling that produced it and the mechanism that enforces it. A
+contract with no mechanism is marked **unenforced** and carries its queue item,
+because the whole point of this section is that it cannot quietly stop being true.
+
+**Enforced today, in `npm run lint`:**
+
+- **Authentication is enforced once, in `src/proxy.ts`, and never in a route
+  handler.** WG-DRAFT-001 (B). `design-lint no-auth-in-route-handler` fails the
+  build on `readAuthToken`, `tokenMatches` or `ps_session` under `src/app/api/`.
+  The prohibition exists because the alternative gives no way to distinguish a
+  route that is deliberately public from one where somebody forgot, which is
+  exactly how this repo shipped an unauthenticated RCE chain before 2026-07.
+- **Core never imports a module.** ADR-0005, WG-ARCH-001. Module capability is
+  reached through one of three named composition points, `src/lib/modules/server.ts`,
+  `src/lib/frameworks/registry.ts` and `src/lib/runtime/`. Enforced by
+  `core-imports-no-module`. One exception exists, in `src/lib/api-schemas.ts`,
+  behind a pragma with a written reason.
+- **`AGENTS.md` stays within 40 lines and `CLAUDE.md` is byte-identical.**
+  `check-agent-files.mjs`.
+- **Every relative link in `docs/` resolves.** `check-doc-links.mjs`. A stale link
+  reads as verified, which is worse than no link.
+- **The design-lint baseline shrinks and never grows.** Re-keying a file's debt at
+  the same count is permitted; a surviving file gaining a violation is not.
+- **Migration history is a record, not a description.** Historical migrations are
+  never edited, `schema_version` is a strictly increasing chain, and a migration
+  that fails does not bump the version.
+- **The test suite is type-checked.** `typecheck:tests` at zero, in the gate. A
+  test that lies about a real signature is a red build.
+
+**Ruled and NOT yet enforced.** Each carries its queue item; none may be quietly
+dropped:
+
+- **Persistence goes through the repository layer.** WG-ARCH-002 (B). Unmet: 19
+  files hold 49 `.prepare(` sites outside it. → WO-0003.
+- **No file's knowledge of the agent framework is licensed by a number.**
+  WG-ARCH-001 (B). Unmet: `hermes-outside-adapter` is baselined at 21 crossings.
+  → WO-0004.
+- **A move must be provable output-neutral before it is made.** WG-ARCH-006 (B).
+  Unmet: no canary exists, which is why WG-ARCH-001 cannot rule C. → WO-0008.
+- **Contracts that leave the repo are gated.** WG-ARCH-005 (B for departing
+  artefacts). Unmet: `generate:schema-json` runs in no gate. → WO-0007.
+- **No table grows without bound.** WG-ARCH-008 (A with C's seam, ruled by the
+  operator). Unmet: `analytics_events` and `chat_messages` are append-only with no
+  expiry column. → WO-0009, ordered after WO-0010.
+- **Recorded growth survives the deletion of the history it came from.**
+  WG-ARCH-003 (C for the per-Body record), ADR-0004. Unmet: progression is
+  recomputed from raw history. → WO-0010.
+- **A dispatched unit is rebuildable, not merely re-failable.** WG-ARCH-004 (A with
+  B's seam). Unmet: boot recovery marks interrupted work failed rather than
+  rebuilding it, and the LLM spend it consumed is unrecoverable. → WO-0008 and
+  WO-0014.
+- **A fresh install is a gate.** WG-OPS-002 (A, the native host install). Unmet:
+  the install harness is not in CI, and it carries a "not intended for CI"
+  disclaimer. → WO-0011. This is death #1 in the brief and the gate the adopted
+  scope put on everything else.
+- **The suite that exists is the suite that runs.** WG-DEL-002 (B). Unmet: CI runs
+  smoke-only, so 38 of 42 Playwright tests never execute on a pull request.
+  → WO-0012.
+- **A gate never retries.** WG-DEL-004 (C, determinism first). Unmet: retries and a
+  font warmup are wired into `ci.yml`. → WO-0002, ordered first.
+- **Unattended work cannot spend past a number the operator set.** WG-OPS-004.
+  Unmet: no figure is recorded and no pause exists. → WO-0014. This one is the
+  operator's own standing rule, "No spend without my approval", so it is a
+  contract before it is a feature.
+
+**Design contracts, deferred to first build.** WG-WEB-001 rules one register,
+dark-first, no exception; WG-WEB-009 one registered module-to-accent map of four
+entries; WG-WEB-010 the house trio. None can be enforced before the semantic token
+layer exists, and today 32 appearance-named primitives stand where it should be.
+The deferral is dated to the first-build lock-in, not open-ended.
 
 ## Deviations from doctrine
 
-None, or one entry each: the doctrine deviated from, the trigger that
-justifies it, the wargame that argued it (a draft wargame in
-docs/EOS_FEEDBACK.md if none exists), and the operator's approval.
-Deviations are harvested as contrary rulings.
+Two, both deliberate, both with the operator's ruling recorded.
+
+**1. The walk exceeded `WALK_ORDER.md`'s twenty-ruling stop condition, and
+continued.**
+
+- Doctrine deviated from: `WALK_ORDER.md`, "A walk running past twenty rulings
+  means the trigger set is wrong (too broad) or the venture is bigger than its
+  scale ruling; stop and re-run WG-EOS-001 before continuing."
+- Trigger that justifies it: PatterStage's triggers activate all six wargame
+  modules, giving 31 phase-C rulings. WG-EOS-001 was re-run as instructed and
+  neither diagnosis applied: the trigger set is not too broad (every module is
+  genuinely present) and the venture is not bigger than M (every L trigger is
+  silent). The alarm is arithmetically unreachable for any web venture with server
+  state, and its only prescribed remedy, re-ruling scale upward, pulls in more
+  modules.
+- Wargame that argued it: no wargame covers it. Filed as **EOS-FB-001** with the
+  arithmetic and a draft replacement rule (budget per module, alarm at four
+  modules).
+- Operator's approval: ruled "proceed at 31, file the defect, and draft the fix".
+
+**2. The `stack:` pin names no registry profile.**
+
+- Doctrine deviated from: the lock-book header's `stack:` pin, which expects a
+  profile from `registry/stacks/`.
+- Trigger that justifies it: none of the three profiles describes PatterStage. 01
+  `web-static` has no server state; 02 `fastapi-postgres` has no Python or
+  Postgres here; 03 `fullstack-app` assumes a FastAPI back and Postgres underneath
+  when there is no back half at all and the database is embedded. Every existing
+  profile assumes a deployed service with a network boundary between a front end
+  and a data store.
+- Wargame that argued it: none exists. Filed as **EOS-FB-004** with a draft fourth
+  profile, `STACK-local-app`, whose distinguishing pins are the install path, the
+  migration story for a database the maintainer never sees, and backup and restore
+  as a user duty rather than an ops duty.
+- Operator's approval: pending at phase E. The pin is filled honestly as
+  `local-app (authored, pending a registry profile)` rather than falsely naming a
+  profile that is wrong in its load-bearing half.
+
+**Not a deviation, recorded so it is not mistaken for one.** `WG-DRAFT-001` is a
+draft wargame rather than a deviation: the `auth` trigger names no wargame in the
+corpus (EOS-FB-002), so PatterStage drafted one and ruled against it. The
+prescribed remedy was followed rather than departed from.

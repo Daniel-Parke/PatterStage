@@ -50,6 +50,7 @@ function readMatrix() {
  * rather than silently truncating a file.
  */
 function prune(text, scale) {
+  let pruned = 0;
   const lines = text.split(/\r?\n/);
   const out = [];
   let skipping = false;
@@ -63,6 +64,7 @@ function prune(text, scale) {
     if (open) {
       const scales = open[1].split(/[,\s]+/).filter(Boolean);
       skipping = !scales.includes(scale);
+      if (skipping) pruned += 1;
       openedAt = i + 1;
       continue; // drop the fence line itself
     }
@@ -76,7 +78,9 @@ function prune(text, scale) {
   if (openedAt !== -1) {
     throw new Error(`unclosed <!-- scale: --> fence opened at line ${openedAt}: template defect, file it in EOS_FEEDBACK.md`);
   }
-  return out.join("\n");
+  // Returns the pruned text plus a count, so the compile report's ancestry table
+  // is generated from what actually happened rather than typed by hand.
+  return { text: out.join("\n"), pruned };
 }
 
 /** Every {{SLOT}} in a template, in order, deduplicated. */
@@ -158,8 +162,8 @@ for (const row of matrix) {
   }
 
   const raw = readFileSync(tpl, "utf-8");
-  const pruned = prune(raw, SCALE);
-  const { out, filled } = fill(pruned, VALUES);
+  const { text: prunedText, pruned } = prune(raw, SCALE);
+  const { out, filled } = fill(prunedText, VALUES);
   const left = slotsIn(out);
   if (left.length) unfilled += left.length;
 
@@ -174,6 +178,7 @@ for (const row of matrix) {
     path: row.path,
     action: existsSync(dest) ? "compiled" : "compiled (new)",
     fills: filled,
+    pruned,
     unfilled: left,
   });
 }
