@@ -228,9 +228,11 @@ Operator-independent work rides above anything waiting on an answer.
   it fetches `dev` from a local bare repo and runs the real deploy script, so the
   update path is covered and not just the first install.
 - committable half DONE:
-  [x] `install-harness` job added to `ci.yml`, running the same invocation that
-  passed locally, with a 45 minute timeout because a cold GitHub runner has no
-  layer cache and this machine reused one ·
+  [x] `install-harness` job added to `ci.yml`, with a 45 minute timeout because
+  a cold GitHub runner has no layer cache and this machine reused one. Scoped to
+  four of the five scenarios: `update` fails on CI only and the cause is not yet
+  known, so it is excluded with a written reason and WO-0019 owns it. The four
+  still cover death #1, which is a stranger's FIRST install failing ·
   [x] the "not intended for CI" disclaimer struck in the harness docstring and
   in `docs/TESTING.md`, each replaced with what is now true and why it changed ·
   [x] `docs/DEPLOY.md` cut to one supported model, with the Docker section
@@ -243,6 +245,28 @@ Operator-independent work rides above anything waiting on an answer.
   Read one green CI run first. A required check that fails for an environmental
   reason is worse than no check, and that order is the whole point of
   WG-DEL-004.
+
+### WO-0019 · The install harness's update scenario fails on CI only
+- type: FIX · tier: T2 · priority: P2 · status: ready
+- warrant: WG-OPS-002. The update path is half of what "the install path is a
+  gate" means, and CI currently gates only the first install.
+- symptom: `fatal: not in a git directory` from the FIRST git command in the
+  update scenario's setup block, so `/workspace` inside the container has no
+  `.git`. The other four scenarios never touch git and pass identically on both
+  machines. Locally the full five pass in 570s; on CI it is 4 of 5, twice.
+- what has been RULED OUT, so nobody repeats it: `.git` is not in the harness's
+  `COPY_IGNORE_DIR_NAMES`, and `shutil.copytree` therefore copies it;
+  `docker cp <workspace>/.` copies dotfiles; and `fetch-depth: 0` on the
+  checkout changed nothing, so the shallow-clone theory was WRONG. That was my
+  first hypothesis and it cost a CI cycle to disprove.
+- next step: put a diagnostic in the job before theorising again. `ls -la
+  /workspace/.git` inside the container, plus `git status` on the runner before
+  the copy, will say in one run whether `.git` leaves the runner, survives the
+  copytree, or survives the docker cp. Three candidates, one cheap experiment.
+- acceptance: [ ] cause identified from evidence, not inference · [ ] `update`
+  restored to the CI scenario list · [ ] the exclusion comment in `ci.yml`
+  removed
+- done when: CI runs the same five scenarios that pass locally.
 
 ### WO-0018 · CI is red on dev, and has been since the security hotfix
 - type: FIX · tier: T2 · priority: P0 · status: ready
