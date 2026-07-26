@@ -39,6 +39,13 @@ branch-protection settings, which no session can do.
 
 ## Flags for the operator
 
+- **CI is red on `dev` and has been since the security hotfix.** WO-0018, filed
+  P0. `e2e-smoke` fails 3 of 4 because the auth middleware fails closed and the
+  Playwright harness never mints a token, so every request gets 503.
+  `docker-image` also fails and is not yet diagnosed. Read that row before
+  trusting any earlier "gate green" in this repo's history: every one of them
+  meant lint, tsc, jest and build on the operator's machine, and CI status was
+  never checked.
 - **Sign Session 0, phase E.** The H1 to H5 rubric, the cold-start test and the
   signature in `docs/COMPILE_REPORT.md`, then a row in the EOS
   `registry/PROJECTS.md`. Nobody who wrote the seed can judge it, which is the
@@ -69,9 +76,12 @@ names, alone.
   Closed since the seed compiled: WO-0002 (fonts vendored, CI retries gone),
   WO-0003 (`sql-outside-repository` lint rule), WO-0005 (one reading register),
   WO-0006 (config cache invalidation), WO-0011 committable half, Q-002 folded.
-- last_verified: `npm run lint` (check-agent-files, check-doc-links, design-lint,
-  eslint, typecheck:tests), `tsc --noEmit`, 2285 jest tests, `next build`, and
-  `eos_check.py --seed` clean on the seed files. 2026-07-26.
+- last_verified: LOCALLY, 2026-07-26: `npm run lint` (check-agent-files,
+  check-doc-links, design-lint, eslint, typecheck:tests), `tsc --noEmit`, 2285
+  jest tests, `next build`, `eos_check.py --seed` clean on the seed files, and
+  the install harness at 5 of 5 scenarios under Docker 29.4.1.
+  **CI is a different answer: red.** See WO-0018. A local green is necessary and
+  has never been sufficient, and this repo learned that the expensive way.
 - next_action: the operator signs Session 0 phase E, then a fresh session runs
   WO-0001 GENESIS-LITE per the EOS launcher. Its output re-orders this queue,
   so do not start queue items below it first.

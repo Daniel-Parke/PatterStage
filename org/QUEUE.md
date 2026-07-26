@@ -244,6 +244,34 @@ Operator-independent work rides above anything waiting on an answer.
   reason is worse than no check, and that order is the whole point of
   WG-DEL-004.
 
+### WO-0018 · CI is red on dev, and has been since the security hotfix
+- type: FIX · tier: T2 · priority: P0 · status: ready
+- warrant: WG-DEL-004 and the constitution's "never weaken, skip or delete a
+  failing check". A gate that is red and unwatched is not a gate.
+- found: 2026-07-26, by finally reading CI rather than the local gate. Every
+  "gate green" reported in session 1 meant lint, tsc, jest and build on this
+  machine. CI status was never checked once. Runs `30199845212` and
+  `30199608664` were already failing before any of this session's work.
+- defect 1, `e2e-smoke`, 3 of 4 tests failing. The S1 auth hotfix fails closed:
+  `src/proxy.ts:112` returns **503** when no token file exists. The Playwright
+  harness runs against a wiped `CH_DATA_DIR` (`playwright.config.ts` sets
+  `CH_DATA_DIR=tmp/e2e-data`, global-setup wipes it) and never mints or sends a
+  token, so every request gets 503. Hence "missions page loads" and "scripts
+  page loads" find no heading, and "unknown app route returns 404" receives 503.
+  The tests are correct; the harness has no credentials.
+- do NOT fix this by setting `PS_AUTH_MODE=none` and moving on. That makes the
+  suite green while permanently un-testing the most security-critical code in
+  the repo, and this app already shipped an unauthenticated RCE once. Mint a
+  token in global-setup and carry it, so the E2E suite exercises the real path,
+  and keep one test that asserts an unauthenticated request is refused.
+- defect 2, `docker-image`, failing. Not yet diagnosed.
+- acceptance: [ ] `e2e-smoke` green with auth genuinely exercised · [ ] one test
+  proving an unauthenticated request is refused · [ ] `docker-image` diagnosed
+  and either fixed or removed with a reason · [ ] the local gate documented as
+  NOT a substitute for CI
+- done when: CI on dev is green and its status is checked before any session
+  claims a gate passed.
+
 ### WO-0012 · Run the full end-to-end suite on main
 - type: FIX · tier: T2 · priority: P2 · status: ready
 - warrant: WG-DEL-002 (B). CI runs smoke-only, so 38 of 42 Playwright tests never
