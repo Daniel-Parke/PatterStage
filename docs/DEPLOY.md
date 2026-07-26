@@ -1,6 +1,12 @@
 # Deploying PatterStage
 
-How I run this in production and on a home LAN—ports, scripts, Docker, and the deploy buttons in the sidebar. Read [CONTRIBUTING.md](CONTRIBUTING.md) if you are changing deploy behaviour itself.
+How I run this in production and on a home LAN: ports, scripts, and the deploy buttons in the sidebar. Read [CONTRIBUTING.md](CONTRIBUTING.md) if you are changing deploy behaviour itself.
+
+> **There is one supported deployment model: the native host install.** WG-OPS-002
+> ruled A, one model, and a second one costs a second install path to test, a
+> second set of instructions to keep true, and a second way for a stranger's
+> first hour to fail. The container below is **not** a deployment model. It is the
+> CI parity rig and the image the update path is tested against.
 
 > **Platforms:** PatterStage is **Linux-first** (the supported/tested target; also macOS for development). Deploy/self-update (`ps-deploy`) is one Node program ([`scripts/tooling/ps-deploy.mjs`](../scripts/tooling/ps-deploy.mjs)); the bash `ps-deploy.sh` is a thin wrapper. On Windows, run under **WSL2 (Ubuntu)**. See [CROSS_PLATFORM.md](CROSS_PLATFORM.md).
 
@@ -76,11 +82,22 @@ Full table: **[ENV_REFERENCE.md](ENV_REFERENCE.md)**.
 
 Run PatterStage where you trust the network, or place it behind your own reverse proxy and access controls. **`PS_REQUEST_SIGNING_SECRET`** can optionally protect specific flows (see `src/lib/api-auth.ts`).
 
-## Docker
+## Docker, the CI parity rig
 
-**Primary workflow:** `npm run build`, `npm run start:network` (or `ps-deploy.sh`), and sidebar deploy on a host with Node 20+. You do not need Docker for day-to-day use.
+**This is not a way to deploy PatterStage.** The supported model is the native
+host install: `bash scripts/bootstrap/install.sh`, then `npm run start:network`
+(or `ps-deploy.sh`) and sidebar deploy, on a host with Node 20+. If you are
+reading this to work out how to run the app, you are in the wrong section, and
+[the install path](../README.md) is the one to follow.
 
-**Docker is optional** for operators who want a container (`docker-compose.yml` below) and **required in CI** only: every PR builds [`Dockerfile`](../Dockerfile) and runs [`tests/scripts/docker-deploy-api-smoke.sh`](../tests/scripts/docker-deploy-api-smoke.sh) so the production image and `POST /api/update` restart path stay valid.
+What the container is for: it gives CI a clean machine to prove the image builds
+and the `POST /api/update` restart path still works, and it gives the install
+harness ([`tests/integration/test_full_install_update_process.py`](../tests/integration/test_full_install_update_process.py))
+throwaway hosts to install onto. Both are testing tools.
+
+Running it yourself is unsupported rather than forbidden. Nothing stops you, the
+commands below work, and if it breaks in a way the native install does not, that
+is a bug worth reporting but not one that blocks a release.
 
 ```bash
 docker compose build

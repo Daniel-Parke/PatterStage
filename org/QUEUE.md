@@ -196,7 +196,8 @@ Operator-independent work rides above anything waiting on an answer.
   derived from.
 
 ### WO-0011 · Make the install path a gate
-- type: FIX · tier: T2 · priority: P1 · status: ready
+- type: FIX · tier: T2 · priority: P1 · status: PART-DONE, awaiting two operator
+  clicks · session: session-1-2026-07-26
 - warrant: WG-OPS-002 (A, one deployment model, the native host install) and
   death #1 in the venture brief, which the adopted scope made the gate on
   everything else.
@@ -220,12 +221,28 @@ Operator-independent work rides above anything waiting on an answer.
   `docs/TESTING.md:68`, and cutting `docs/DEPLOY.md` to one supported model. The
   owner's half is two clicks in branch protection: add `install-harness` to the
   required set, remove `docker-image` from it.
-- and it needs a first run observed before it is made required. Docker is not
-  available on the operator's machine right now, so the harness could not be
-  executed locally to prove it passes network-free after WO-0002. A required
-  check that fails for an environmental reason is worse than no check, so the job
-  lands non-required, its first CI run is read, and only then does it block
-  merges. That order is the whole point of WG-DEL-004.
+- VERIFIED LOCALLY 2026-07-26. The operator started Docker (29.4.1), so the
+  harness was actually run rather than assumed: `--profile smoke --skip-http`,
+  **5 of 5 scenarios passed in 570.3s**. fresh 102.2s, hermes 107.5s, dashboard
+  110.9s, both 111.0s, update 136.8s. The `update` scenario is the valuable one:
+  it fetches `dev` from a local bare repo and runs the real deploy script, so the
+  update path is covered and not just the first install.
+- committable half DONE:
+  [x] `install-harness` job added to `ci.yml`, running the same invocation that
+  passed locally, with a 45 minute timeout because a cold GitHub runner has no
+  layer cache and this machine reused one ·
+  [x] the "not intended for CI" disclaimer struck in the harness docstring and
+  in `docs/TESTING.md`, each replaced with what is now true and why it changed ·
+  [x] `docs/DEPLOY.md` cut to one supported model, with the Docker section
+  reframed as the CI parity rig rather than an optional deployment
+- operator's half, still open:
+  [ ] add `install-harness` to the required checks in branch protection ·
+  [ ] remove `docker-image` from them
+- the job is deliberately NOT required yet. It passed on this machine, which is
+  not the same as passing on a cold ubuntu-latest runner with no Docker cache.
+  Read one green CI run first. A required check that fails for an environmental
+  reason is worse than no check, and that order is the whole point of
+  WG-DEL-004.
 
 ### WO-0012 · Run the full end-to-end suite on main
 - type: FIX · tier: T2 · priority: P2 · status: ready
@@ -256,6 +273,21 @@ Operator-independent work rides above anything waiting on an answer.
   documented as a precondition of enabling unattended work, with the running total
   surfaced at that point
 - done when: an unattended agent cannot spend past a number the operator set.
+- OPERATOR RULING, 2026-07-26: "We should just have a warning here, AND the
+  ability for the user to have a hard stop, but we should not force this in a way
+  that is awkward for users." Scope confirmed as LLM provider spend, the only
+  thing in PatterStage that costs money: agent runs, Composer stages and Deep
+  Research.
+- so the acceptance above is superseded on its third item. The default is a
+  warning, not a stop. The hard stop exists, is off by default, and is the
+  user's to switch on with their own figure. No ceiling ships pre-set and
+  nothing refuses to dispatch because a number was never entered.
+- this reverses the option I recommended, and the ruling is the better one for a
+  product a stranger installs. A tool that refuses to work until you have filled
+  in a budget field teaches you to resent it. The operator's own rule, "no spend
+  without my approval", is about HIS install, and it is served by the figure
+  being visible rather than by the software policing everyone else's.
+- rewrite the acceptance checks against this before starting the row.
 
 ### WO-0015 · Caption the figures and enforce the reading column
 - type: DOCS · tier: T1 · priority: P3 · status: ready

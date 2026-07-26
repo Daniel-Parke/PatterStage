@@ -204,6 +204,42 @@ jobs:
           PORT: "3000"
           PLAYWRIGHT_SMOKE: "1"
 
+  # A fresh install is a gate (WG-OPS-002 ruled A, the native host install; death
+  # #1 in the venture brief). This harness installs PatterStage from scratch into
+  # throwaway containers and then runs the update path, which is the one journey
+  # every single user takes and the one nothing else in CI covered.
+  #
+  # It could only be wired in once WO-0002 vendored the fonts: setup.sh runs
+  # `npm run build`, and that build used to fetch from fonts.googleapis.com, so
+  # this job would have been a network flake wearing a gate's clothing.
+  #
+  # NOT YET REQUIRED. It reports but blocks nothing until a first green run on
+  # real CI hardware has been read, then it goes into branch protection. A
+  # required check that fails for an environmental reason is worse than no check.
+  # Verified locally against Docker 29.4.1 before landing; see the WO-0011 row.
+  install-harness:
+    runs-on: ubuntu-latest
+    # Generous: the harness builds an image and installs Node + the full
+    # dependency tree inside each throwaway container. Well under this locally,
+    # but a cold GitHub runner has no layer cache at all.
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        id: checkout1
+        continue-on-error: true
+        with:
+          token: ${{ github.token }}
+      - name: Checkout repository (retry)
+        if: steps.checkout1.outcome != 'success'
+        uses: actions/checkout@v5
+        with:
+          token: ${{ github.token }}
+      # No node/npm setup step: everything happens inside the containers, which
+      # is the point. The runner supplies Docker and a stdlib-only Python 3.
+      - name: Fresh install + update, in throwaway containers
+        run: python3 tests/integration/test_full_install_update_process.py --profile smoke --skip-http
+
   docker-image:
     runs-on: ubuntu-latest
     steps:

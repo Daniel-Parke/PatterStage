@@ -63,9 +63,11 @@ npm run test:e2e
 
 [`tests/e2e/app-routes.ts`](../tests/e2e/app-routes.ts) lists every path exercised by the navigation matrix. **`src/components/layout/sidebar-config.ts`** includes a comment: when you add or change sidebar `href` values, update `app-routes.ts` so E2E stays aligned.
 
-## Local release-confidence harness (Docker)
+## Install harness (Docker): a gate, not a ritual
 
-**Local-only** heavy integration: [`tests/integration/test_full_install_update_process.py`](../tests/integration/test_full_install_update_process.py) builds an ephemeral image, runs scenarios in throwaway containers, and deletes them afterward. It exercises [`scripts/bootstrap/install.sh`](../scripts/bootstrap/install.sh) (bootstrap clone via `file://` bare repo + [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh)), [`scripts/bootstrap/install.sh --in-repo`](../scripts/bootstrap/install.sh), [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh), and [`scripts/application/ps-deploy.sh update`](../scripts/application/ps-deploy.sh), with runtime-generated markers under `PS_DATA_DIR` and `HERMES_HOME`. This is **not** part of CI—run it manually before releases. Complements [`tests/scripts/run-shell-custom-tests.sh`](../tests/scripts/run-shell-custom-tests.sh).
+**Runs in CI.** The `install-harness` job runs `--profile smoke --skip-http` on every push and pull request. WG-OPS-002 ruled the native host install the one supported deployment model, and a stranger's first install failing is death #1 in the venture brief, so this is gated rather than remembered (WO-0011). It was marked "not part of CI" while `setup.sh`'s build fetched fonts over the network; WO-0002 vendored them, so it is deterministic now.
+
+Locally it is also the release-confidence run: [`tests/integration/test_full_install_update_process.py`](../tests/integration/test_full_install_update_process.py) builds an ephemeral image, runs scenarios in throwaway containers, and deletes them afterward. It exercises [`scripts/bootstrap/install.sh`](../scripts/bootstrap/install.sh) (bootstrap clone via `file://` bare repo + [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh)), [`scripts/bootstrap/install.sh --in-repo`](../scripts/bootstrap/install.sh), [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh), and [`scripts/application/ps-deploy.sh update`](../scripts/application/ps-deploy.sh), with runtime-generated markers under `PS_DATA_DIR` and `HERMES_HOME`. Complements [`tests/scripts/run-shell-custom-tests.sh`](../tests/scripts/run-shell-custom-tests.sh).
 
 **Prerequisites:** Docker daemon running; Python 3 (stdlib only).
 

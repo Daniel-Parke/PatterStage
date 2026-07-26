@@ -180,10 +180,14 @@ dropped:
   B's seam). Unmet: boot recovery marks interrupted work failed rather than
   rebuilding it, and the LLM spend it consumed is unrecoverable. → WO-0008 and
   WO-0014.
-- **A fresh install is a gate.** WG-OPS-002 (A, the native host install). Unmet:
-  the install harness is not in CI, and it carries a "not intended for CI"
-  disclaimer. → WO-0011. This is death #1 in the brief and the gate the adopted
-  scope put on everything else.
+- **A fresh install is a gate.** WG-OPS-002 (A, the native host install). Death
+  #1 in the brief. Partly met: the `install-harness` job runs the harness on
+  every push and pull request, the disclaimer is struck, and `docs/DEPLOY.md`
+  now names one supported deployment model with the container demoted to the CI
+  parity rig. Proven locally at 5 of 5 scenarios in 570s before landing.
+  Outstanding, and NOT doable from inside the repository: the job is not yet in
+  branch protection's required set and `docker-image` has not been removed from
+  it, so a broken install still cannot block a merge. → WO-0011, operator's half.
 - **The suite that exists is the suite that runs.** WG-DEL-002 (B). Unmet: CI runs
   smoke-only, so 38 of 42 Playwright tests never execute on a pull request.
   → WO-0012.

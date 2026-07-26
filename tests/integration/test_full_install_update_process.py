@@ -7,9 +7,21 @@ Runs isolated scenarios against your **current working tree copy**: ``scripts/bo
 optional upstream Hermes installer, with runtime-generated user data under ``CH_DATA_DIR`` and Hermes profile
 markers. Ephemeral ``git`` state lives **inside the container** only.
 
-**Manual verification (required before releases):** run
-``python tests/integration/test_full_install_update_process.py --profile release`` with Docker
-up, read full logs + final summary, fix failures until exit 0. Not intended for CI.
+**This runs in CI.** The ``install-harness`` job in ``.github/workflows/ci.yml``
+runs ``--profile smoke --skip-http`` on every push and pull request. WG-OPS-002
+ruled the native host install the one supported deployment model, and death #1 in
+the venture brief is a stranger's first install failing, so the install path is a
+gate rather than a pre-release ritual (WO-0011).
+
+It was previously marked "not intended for CI". That was true while
+``setup.sh``'s ``npm run build`` fetched fonts from the network, which would have
+made this job a network flake wearing a gate's clothing. WO-0002 vendored the
+fonts, so the build is deterministic and the disclaimer no longer holds.
+
+**Manual verification (still worth doing before releases):** run
+``python tests/integration/test_full_install_update_process.py --profile release``
+with Docker up, read full logs + final summary, fix failures until exit 0. CI runs
+the smoke profile; ``release`` covers the fuller matrix that CI does not.
 
 Non-interactive paths use env flags documented in ``scripts/bootstrap/install.sh`` and
 ``scripts/lib/ch-deploy-impl.sh``. Optional ``--with-interactive`` appends TTY-driven scenarios
