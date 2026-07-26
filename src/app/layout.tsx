@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { SidebarProvider } from "@/components/layout/SidebarContext";
 import Sidebar from "@/components/layout/Sidebar";
 import MobileHeader from "@/components/layout/MobileHeader";
@@ -7,8 +7,26 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import QueryProvider from "@/components/providers/QueryProvider";
 import "./globals.css";
 
-const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
-const jetbrainsMono = JetBrains_Mono({ variable: "--font-mono", subsets: ["latin"] });
+// Vendored, not fetched (WG-DEL-004, ruled C: determinism first). These were
+// next/font/google, which made `next build` reach fonts.googleapis.com and made CI
+// carry a font warmup plus a whole-build retry to survive the flake. The files are
+// committed under src/app/fonts/; re-run scripts/tooling/vendor-fonts.mjs only to
+// add or update a family.
+//
+// Both are variable fonts, so one file covers the whole weight range the app used
+// to request from the CSS API.
+const inter = localFont({
+  src: "./fonts/Inter.woff2",
+  variable: "--font-inter",
+  weight: "100 900",
+  display: "swap",
+});
+const jetbrainsMono = localFont({
+  src: "./fonts/JetBrainsMono.woff2",
+  variable: "--font-mono",
+  weight: "100 800",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   // Per-page titles are set client-side by <PageTitle> (most pages are client

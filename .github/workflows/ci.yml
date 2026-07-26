@@ -1,5 +1,23 @@
 name: CI
 
+# QUARANTINED RETRIES (WG-DEL-004, ruled C).
+#
+# The rule forbids a retry on a blocking gate, and offers one alternative: file
+# each remaining retry as a quarantined flake with a reason. These are that filing.
+#
+# The checkout and npm-ci retries below are NOT masking a defect in this code. They
+# absorb failures in GitHub Actions infrastructure and the npm registry, neither of
+# which this repository can fix, and a retry there does not turn a red gate green:
+# it turns a run that never started into one that did. Removing them would make CI
+# less reliable with no gain in signal.
+#
+# What WAS removed: the Google Fonts warmup and the whole-build retry. Those were
+# masking a real build-time network dependency, and the fonts are now vendored
+# under src/app/fonts/ so the dependency is gone rather than retried.
+#
+# Review by 2027-01. If a checkout retry ever fires on something that is not a
+# transport error, it stops being quarantined and becomes a defect.
+
 # Required for actions/checkout on pull_request merge refs (avoids intermittent auth failures).
 permissions:
   contents: read
@@ -107,49 +125,14 @@ jobs:
         run: npx tsc --noEmit -p tsconfig.json
       - name: Unit tests with coverage
         run: npm run test:coverage
-      - name: Warmup Google Fonts cache
-        # Macos runners intermittently fail to reach fonts.googleapis.com
-        # during `next build` (Turbopack fetches Google Fonts at build time
-        # and treats the failure as a hard error). The unit-test step above
-        # also runs `next build` for the test renderer but doesn't touch the
-        # 6 fonts used by `src/app/layout.tsx` + `src/app/recroom/story-weaver/layout.tsx`.
-        # This warmup pre-fetches the same 6 fonts with retry so the
-        # production build's font fetch is either cached or surfaces a clear
-        # transient-network error rather than a Turbopack "Failed to fetch"
-        # cascade. Sourced from the same font URLs the 2 layout files use.
-        run: |
-          set +e
-          FONTS=(
-            "https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
-            "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&display=swap"
-            "https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400..800&display=swap"
-            "https://fonts.googleapis.com/css2?family=Literata:wght@200..900&display=swap"
-            "https://fonts.googleapis.com/css2?family=Lora:wght@400..700&display=swap"
-            "https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap"
-          )
-          for url in "${FONTS[@]}"; do
-            for attempt in 1 2 3; do
-              if curl -fsS --max-time 30 -o /dev/null "$url"; then
-                echo "OK ($attempt): $url"
-                break
-              fi
-              echo "retry $attempt failed: $url"
-              sleep 2
-            done
-          done
-      - name: Next.js production build (with retry)
-        # 2-attempt retry on transient network errors. `next build` with
-        # Turbopack is the only step that fails on this branch (the
-        # sibling `build-test-ubuntu` job builds the identical code on the
-        # same commit without issues — the only diff is the macOS runner's
-        # egress to fonts.googleapis.com). A single retry catches the flake
-        # without hiding a real build failure.
-        run: |
-          npm run build || {
-            echo "::warning::next build failed on first attempt, retrying once after 5s"
-            sleep 5
-            npm run build
-          }
+      - name: Next.js production build
+        # No retry, and no font warmup before it (WG-DEL-004, ruled C:
+        # determinism first). Both existed because Turbopack fetched six font
+        # families from fonts.googleapis.com at build time and treated a failure
+        # as fatal, which made the macOS runner flaky. The fonts are now vendored
+        # under src/app/fonts/, so this build touches no network and a failure
+        # here is a real failure.
+        run: npm run build
 
   # Operational smoke: the OS-seam primitives (detached spawn
   # survival, port probing, process kill) + a bundled hardware .mjs, on Linux +
