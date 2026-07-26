@@ -12,7 +12,16 @@ export default defineConfig({
   globalSetup: "./tests/e2e/global-setup.ts",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  // Zero retries, unconditionally (WG-DEL-004, ruled C: determinism first).
+  //
+  // A retry on a blocking gate converts a real intermittent failure into a green
+  // run, and the failure that got retried away is the one worth knowing about. CI
+  // used to allow one, so a test that passed on the second attempt reported the
+  // same as a test that passed on the first.
+  //
+  // A test that needs a retry is a flake, and a flake gets quarantined with an
+  // owner and a deadline, not tolerated at the gate.
+  retries: 0,
   reporter: process.env.CI ? "github" : "list",
   projects: [
     {
@@ -22,7 +31,10 @@ export default defineConfig({
   ],
   use: {
     baseURL,
-    trace: "on-first-retry",
+    // retain-on-failure, not on-first-retry: with retries at 0 there is no first
+    // retry, so the old value would have produced a trace for nothing. A failure
+    // now always leaves the artefact needed to diagnose it.
+    trace: "retain-on-failure",
   },
   webServer: {
     // Force -p so E2E matches baseURL even when .env.local sets a different PORT.
