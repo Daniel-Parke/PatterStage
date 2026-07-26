@@ -169,7 +169,7 @@ inherited rulings never count as promotion evidence.
 
 That rule is only checkable against the venture's trigger set. But no seed file
 records the trigger set in the vocabulary the rule uses. `VENTURE_BRIEF.tpl.md` has
-a `{{TRIGGERS}}` slot in prose; the lock-book records rulings, not triggers. So a
+a triggers slot (double-brace TRIGGERS) in prose; the lock-book records rulings, not triggers. So a
 later reader cannot verify that an `inherited` ruling was legitimately inherited.
 
 **Cost to this venture:** the audit found exactly one inherited ruling
@@ -262,3 +262,52 @@ seed-pack generator was that *"our users will have many more projects and use ca
 than ourselves which may not be covered in our PatterTech_EOS yet"*. This is the
 first concrete instance of exactly that, found by the estate's own second venture
 rather than by a stranger.
+
+## EOS-FB-005 · The seed check walks the whole repository, including node_modules
+
+**Hit at:** phase E, the first `eos_check.py --seed` run.
+
+**What happened.** `python tools/eos_check.py --seed <venture>` reported **1137
+errors**. Filtering out `node_modules/` leaves **64**. So **94% of the output was
+about vendored dependencies** the venture did not write and cannot fix.
+
+```
+1137 errors total
+1073 in node_modules/       (94%)
+  63 E002 no front-matter   (mostly the app's own pre-existing docs)
+   1 E008 unfilled slot     (a real finding, and ours)
+```
+
+**Two separate defects, and the second is the interesting one.**
+
+**1. It walks `node_modules/`.** Mechanical, and cheap to fix: the walker needs the
+same skip list every other tool in this repo already has. Until then the check's
+output is unusable on any venture with a JavaScript dependency tree, which is every
+web venture the EOS is meant to serve.
+
+**2. It does not distinguish a SEED file from a REPO file.** This one is a design
+question, not a bug. `E002` fired on 63 markdown files: the app's own documentation
+(`docs/API.md`, `docs/TESTING.md`, `docs/DEPLOY.md`), its branding assets, its
+`README.md`, its `TRADEMARK.md`, and the seed-pack content under `data/seed/` which
+is *deliberately* front-matter-free because it is copied verbatim into an agent's
+own directory.
+
+`--seed` is documented as checking a *compiled seed*. `SCALE_MATRIX.md` states
+exactly which 18 files that is at scale M. But the check tests every `.md` in the
+tree, so a venture is penalised for having documentation that predates its Session 0
+and for shipping template content that must not carry front-matter.
+
+**What it costs.** The one genuine finding in 1137 lines was a slot-syntax
+violation of ours in this very file, and it took a filtered grep to see it. A gate
+whose signal-to-noise is 1:1136 does not get run twice.
+
+**Draft fix.** `--seed` should check the matrix's file list and nothing else,
+deriving it from `SCALE_MATRIX.md` the way a compiler does, plus the add-on files
+the lock-book's `addons:` names. A separate `--repo` mode already exists for
+whole-tree conventions; that is where a front-matter sweep belongs, with a skip
+list and an opt-out for directories that ship verbatim content.
+
+**Credit where due:** the one real error it found was real. `COMPILE.md` says a
+compiled file must contain no slot syntax "anywhere, including inside code spans",
+and this file had quoted a template slot as prose. The rule is right and the check
+caught it.

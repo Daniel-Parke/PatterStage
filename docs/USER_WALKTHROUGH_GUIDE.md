@@ -1,3 +1,9 @@
+---
+summary: PatterStage operator manual, every surface and how the machinery behind it works
+type: guide
+tags: [docs, operator]
+---
+
 # PatterStage — User walkthrough
 
 This guide is the **operator manual** for PatterStage. It describes every area of the web app and how to use it day to day. It is for **operators** who already installed Hermes and PatterStage (see [README](../README.md)). For REST API details and deployment, use the [documentation index](README.md).
@@ -63,6 +69,211 @@ PatterStage is **a Next.js app** that talks to a SQLite database under `~/patter
 At the bottom of the sidebar are three deploy buttons — **Update**, **Restart**, and **Rebuild** — that talk to the host's `ps-deploy.sh` and rebuild the running PatterStage process. See [Sidebar deploy buttons](#sidebar-deploy-buttons-update--rebuild--restart) and [DEPLOY.md](DEPLOY.md).
 
 ---
+
+---
+
+## First run, and how you get in
+
+PatterStage has **one operator: you.** There is no signup, no user table, no roles.
+
+On first boot it mints a random token into `PS_DATA_DIR/auth-token` at file mode
+0600 and prints a URL containing `?ps_token=…`. Opening that URL exchanges the
+token for an httpOnly cookie and immediately redirects to strip the token from the
+address bar, so it never sits in your browser history.
+
+Three ways to authenticate, all the same token:
+
+| how | when to use it |
+|---|---|
+| `?ps_token=…` once, then the cookie | normal browser use |
+| `Authorization: Bearer <token>` | scripts, curl, another machine |
+| `PS_AUTH_MODE=none` | ONLY on a machine nobody else can reach |
+
+**It fails closed.** No token configured means no access, not open access. Before
+July 2026 this was the opposite: the app had no authentication at all, `requireAuth()`
+was a misnamed read-only-flag check, and anyone on your LAN could write a script
+file and then execute it. If you ever see a route other than `/api/health` answer
+without a token, that is a bug worth reporting loudly.
+
+**Read-only mode.** `PS_READ_ONLY=1` blocks writes by HTTP **method**, not by route.
+Every GET keeps working, so the UI stays fully browsable. That distinction matters:
+the older per-route version returned 503 from 35 GET handlers and bricked the very
+mode it was meant to make safe.
+
+---
+
+## How it works behind the scenes
+
+You do not need this section to use PatterStage. Read it when something behaves
+unexpectedly and you want to know where to look.
+
+### The shape of it
+
+```
+your browser
+     │
+     ▼
+src/proxy.ts ......... authenticates EVERY request, fails closed
+     │
+     ▼
+src/app/ ............. routing only. Pages and route handlers are thin
+     │                 shells that delegate; almost no logic lives here.
+     ▼
+src/lib/ ............. core. The console's own logic: jobs, schedules,
+     │                 runs, the four verbs, the database.
+     ├─► src/lib/runtime/ ..... THE PORT. The only place that knows an
+     │                          agent framework exists.
+     └─► src/modules/ ........ product modules. hermes/ and rec-room/.
+                               Core never imports these; it reaches them
+                               through one of three composition points.
+```
+
+**The rule that keeps this honest:** core may not import a module. It is enforced
+by a lint rule, not by convention, because a boundary you can cross without a red
+build does not exist. Exactly one exception remains in the whole repository, and it
+carries a written reason explaining why moving the code would make things worse.
+
+### The port: Brain and Body
+
+PatterStage talks to your agent through three small interfaces, and **only these
+three files know it is Hermes**:
+
+- **`AgentRuntime`**: what the agent *does*: submit a run, poll it, stream it,
+  stop it, approve a gate.
+- **`AgentWorkspace`**: where its *files* are: root, logs, config, env, memory.
+- **`AgentGateway`**: where it *answers*: the base URL and the chat endpoint.
+
+The vocabulary matters and it is deliberate. The **Brain** is the LLM: you select
+it, and it never grows. The **Body** is everything you build up over time, the
+profile, skills, tools, memory. When PatterStage shows an agent's level, it is
+measuring the Body. Swapping to a stronger model raises throughput, not level, and
+the two are reported separately on purpose.
+
+### Where your data lives
+
+One SQLite file under `PS_DATA_DIR`, currently at schema version 30 with 49 tables.
+Nothing leaves your machine except the calls your agent makes to whichever model
+provider you configured.
+
+- **`missions`, `schedules`, `runs`**: the work. A mission is what you asked for;
+  a schedule decides when; a run is one execution.
+- **`sessions`**: one row per agent session, synced from the agent's own store.
+- **`agent_profiles`, `agent_root`**: your agent's configuration, mirrored from
+  its files so the UI can edit them.
+- **`credentials`**: API keys. **Stored in plaintext today.** They are on your own
+  machine behind file permissions, but this is worth knowing rather than assuming.
+- **`analytics_events`, `chat_messages`**: append-only and currently **unbounded**.
+  A retention window is ruled and queued (WO-0009) but not yet implemented.
+
+**Migrations run forward only.** There is no down-migration, which is why the
+update script backs up the database *before* migrating: the backup is the rollback.
+A migration that fails does not record itself as applied, so a half-applied schema
+cannot be silently remembered as complete.
+
+### How work actually runs
+
+1. You commission a mission. It lands in `missions` with a status.
+2. A schedule (or an immediate dispatch) makes it due.
+3. The scheduler claims it with a **deterministic occurrence id** used as a primary
+   key. That is the exactly-once guarantee: two ticks racing produce the same id,
+   and the second insert simply fails.
+4. `AgentRuntime.submitRun` sends it to the gateway. If the gateway is at capacity
+   and answers 429, the adapter **retries** rather than treating it as failure -
+   before July 2026 a busy gateway looked identical to a stage that produced a bad
+   verdict.
+5. Progress streams back over SSE. Runs are recovered from `next_run_at` on boot
+   rather than from in-memory timers, so a restart does not lose scheduled work.
+
+### The Composer, and why its gates are strict
+
+A **workflow** is a graph: nodes are stages, edges are `on_pass` / `on_fail` /
+named outcomes. Some stages are *assessing* stages, which must state a verdict.
+
+Four things it now refuses to do, each of which it used to do silently:
+
+- A stage with **no** `VERDICT:` marker **fails**. It used to pass, so a stage that
+  ran out of tokens was indistinguishable from one that verified something.
+- A verdict inside a `<think>` block **does not count.** A reasoning model that
+  weighed "VERDICT: PASS" while concluding FAIL used to route `on_pass`.
+- A human gate on a **failed** stage routes `on_fail`, not `on_approve`.
+- Editing a workflow no longer silently deletes every run it ever had.
+
+### The gates you inherit
+
+`npm run lint` runs five checks, and they are the repo's actual law:
+
+| check | what it stops |
+|---|---|
+| `check-agent-files` | `AGENTS.md` over 40 lines, or `CLAUDE.md` drifting from it |
+| `check-doc-links` | a link in `docs/` pointing at a file that does not exist |
+| `design-lint` | 10 rules on a **shrink-only** baseline: it may fall, never rise |
+| `eslint` | zero warnings tolerated |
+| `typecheck:tests` | a test that lies about a real function signature |
+
+Then `tsc`, `jest` (2,279 tests), and `next build`.
+
+**The shrink-only baseline is the important idea.** Turning ten design rules on
+against a large codebase produces hundreds of failures, and a gate that is red on
+day one gets deleted rather than fixed. So today's violations are recorded and
+allowed; anything **new** fails. The number can only go down.
+
+---
+
+## What changed in the July 2026 rebuild
+
+Read this if you used PatterStage before and something has moved.
+
+**Security, and this one was serious.** The app had no authentication whatsoever.
+From your LAN, unauthenticated, an attacker could write a script file and then
+execute it. Also fixed: a crontab allowlist that checked substrings rather than
+resolving paths, your `.env` served in plaintext over HTTP, and a fetcher that
+would retrieve any URL a search result pointed at including `127.0.0.1`.
+
+**Silent-failure bugs.** Every migration applier swallowed exceptions and then
+recorded the migration as applied. The four Composer defects above. A stale event
+stream that could approve a gate **on the wrong run**.
+
+**Benchmarks were deleted**, and the reason is worth knowing: the tables had zero
+rows in every database, it had never been run once, and all 94 items were
+closed-book, so skills, tools and memory could not move the number it claimed to
+measure. Four mechanisms were rescued into core first, including the trajectory
+recorder (the only thing that captures what an agent *did* rather than what it
+output) and the 429 retry.
+
+**The agent surface became a module.** Everything Hermes-shaped now lives in
+`src/modules/hermes/`. This is what makes "framework-agnostic" checkable instead of
+aspirational: a lint rule can now assert that nothing outside that directory knows
+the Hermes filesystem.
+
+**Gamification survived, honestly.** The agent's level is real, it counts
+completed runs, active days, skills, toolsets, memory facts. The *capability rating*
+is gone, because it was computed from content that could not measure capability. The
+Agents page now shows every input behind the level, so no number makes a claim it
+cannot support.
+
+**Two columns were renamed** in migration 030: `hermes_md` → `framework_md`,
+`cron_jobs.hermes_job_id` → `external_job_id`.
+
+---
+
+## Governance: the `org/` directory
+
+New in July 2026, and it will look odd if you are not expecting it. PatterStage now
+governs itself with the PatterTech EOS at scale **M**:
+
+- **`docs/VENTURE_BRIEF.md`**: what this is, who it serves, and the three cheapest
+  ways it dies. Written from the operator's own words.
+- **`docs/LOCKBOOK.md`**: 33 rulings, and the structural contracts a future edit
+  must not break. Split into what is *enforced* and what is *ruled but not yet
+  enforced*, so the difference is visible.
+- **`org/QUEUE.md`**: the work, ordered. 17 items, each tracing to a ruling the
+  code does not yet meet.
+- **`org/QUESTIONS.md`**: three open questions, recorded rather than guessed at.
+- **`docs/EOS_FEEDBACK.md`**: five defects PatterStage found in the EOS itself.
+
+If a rule in `docs/LOCKBOOK.md` and the code disagree, the lock-book is the
+intention and the code is the bug.
+
 
 ## Dashboard
 
