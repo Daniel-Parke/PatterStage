@@ -100,14 +100,33 @@ Operator-independent work rides above anything waiting on an answer.
   `@pattertech/ui`, never in globals.css or a module.
 
 ### WO-0006 · Close the config-cache invalidation gap
-- type: FIX · tier: T1 · priority: P2 · status: ready
+- type: FIX · tier: T1 · priority: P2 · status: DONE · session: session-1-2026-07-26
 - warrant: WG-ARCH-003 (B for the config read). Only PatterStage's own PUT
   invalidates the cache, so the agent and any hand edit to config.yaml are a
   second writer with the 15s TTL as sole owner.
-- acceptance: [ ] `invalidateConfigCache` called from
+- acceptance: [x] `invalidateConfigCache` called from
   `syncDefaultsToHermesConfig`, `syncSingleModelToHermesConfig`,
   `syncFallbacksToHermesConfig` and `finalizeRootConfigOnDisk`
 - done when: the TTL is a backstop rather than the owner of correctness.
+- built: one helper, `writeHermesConfigFile`, rather than the four calls the row
+  asked for. An enumerated list of writers is how this gap opened, so the
+  invalidation is attached to the act of writing config.yaml instead. Three call
+  sites route through it; `finalizeRootConfigOnDisk` is covered by construction,
+  because it writes by calling `syncDefaultsToHermesConfig`. A fifth writer
+  inherits the behaviour without anyone remembering it.
+- not folded into `atomicWriteFile`, which also writes `.env`: a generic file
+  writer should not know which caches exist. A test pins that boundary, so
+  pushing the invalidation further down turns the build red.
+- proved: 6 tests in `tests/unit/config-cache-invalidation.test.ts`, end-to-end
+  against real in-memory SQLite so the cache genuinely writes and reads `meta`
+  rows. Removing the invalidation fails exactly the four writer tests and leaves
+  the two control tests green, which is what makes them evidence rather than
+  decoration. The controls are: a warm cache still serves stale content for a
+  direct hand edit to config.yaml, which is what the TTL remains the backstop
+  for, and an `.env` write does not clear the config cache.
+- note: the hand-edit path is unchanged and still waits up to 15s. That is the
+  TTL doing the job it was designed for, and closing it needs a file watcher,
+  which is a different decision than this row.
 
 ### WO-0007 · Gate the schemas that leave the repo
 - type: FIX · tier: T2 · priority: P2 · status: ready

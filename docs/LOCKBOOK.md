@@ -138,6 +138,14 @@ because the whole point of this section is that it cannot quietly stop being tru
   `src/lib/db.ts` is baselined rather than exempted, because two of its six sites
   are `sqlite_master` plumbing but `getGatewayPlatforms()` is a repository
   function in the connection file. WO-0003.
+- **One writer per fact, and the config cache is a cache.** WG-ARCH-003 (B for
+  the config read). Every write of `config.yaml` goes through
+  `writeHermesConfigFile`, which invalidates the read cache in the same call, so
+  the 15s TTL is a backstop rather than the owner of correctness. Pinned by
+  `tests/unit/config-cache-invalidation.test.ts`, including a test that the
+  invalidation stays OUT of `atomicWriteFile`, which also writes `.env`. A direct
+  hand edit to `config.yaml` still waits for the TTL, which is what a TTL is for.
+  WO-0006.
 - **A gate never retries.** WG-DEL-004 (C, determinism first). Playwright is at
   `retries: 0` unconditionally, and the six font families are vendored under
   `next/font/local` so the build reaches no network. The `checkout` and `npm ci`

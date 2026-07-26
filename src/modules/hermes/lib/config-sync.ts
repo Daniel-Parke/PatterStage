@@ -22,6 +22,7 @@ import {
 import * as yaml from "js-yaml";
 
 import { dumpYamlConfig } from "@/lib/yaml-config";
+import { invalidateConfigCache } from "@/lib/config-cache";
 import { getActiveHermesPaths } from "./agent-runtime";
 import { envVarForProvider, isHermesProvider, type HermesProvider } from "./providers";
 import { AUXILIARY_TASK_TYPES } from "@/lib/models/task-types";
@@ -100,6 +101,33 @@ export function atomicWriteFile(targetPath: string, content: string): void {
     }
     throw err;
   }
+}
+
+/**
+ * Write config.yaml and drop the read cache in the same breath.
+ *
+ * WG-ARCH-003 rules B for the config read: one writer, or an invalidation every
+ * writer must call. Before this existed only `PUT /api/config` invalidated, so
+ * every other path left the 15s TTL as the sole owner of correctness. Push a
+ * model and read it back inside that window and you saw the old value.
+ *
+ * Why a helper rather than a call at each site: WO-0006 named four writers, and
+ * an enumerated list is precisely how the gap opened. Routing the write through
+ * one function attaches invalidation to the ACT of writing config.yaml, so a
+ * fifth writer inherits it. `finalizeRootConfigOnDisk` is already covered that
+ * way, since it writes by calling `syncDefaultsToHermesConfig`.
+ *
+ * Deliberately NOT folded into `atomicWriteFile`: that also writes `.env`, and a
+ * generic file writer should not know which caches exist.
+ *
+ * Invalidate rather than repopulate. A write is rare and a stale entry is the
+ * failure mode worth removing; re-reading costs one yaml.parse on the next GET.
+ * If the invalidation throws it is swallowed inside `invalidateConfigCache`,
+ * which leaves the TTL as the backstop it was always meant to be.
+ */
+function writeHermesConfigFile(configPath: string, serialized: string): void {
+  atomicWriteFile(configPath, serialized);
+  invalidateConfigCache();
 }
 
 function backupFile(originalPath: string, backupsDir: string): string | null {
@@ -384,7 +412,7 @@ export function syncDefaultsToHermesConfig(): { backupPath: string | null } {
   }
 
   const serialized = dumpYamlConfig(config);
-  atomicWriteFile(configPath, serialized);
+  writeHermesConfigFile(configPath, serialized);
 
   return { backupPath };
 }
@@ -442,7 +470,7 @@ export function syncSingleModelToHermesConfig(modelId: string): { backupPath: st
   }
 
   const serialized = dumpYamlConfig(config);
-  atomicWriteFile(configPath, serialized);
+  writeHermesConfigFile(configPath, serialized);
 
   return { backupPath };
 }
@@ -552,7 +580,7 @@ export function syncFallbacksToHermesConfig(
   yamlConfig.agent = agentSection;
 
   const serialized = dumpYamlConfig(yamlConfig);
-  atomicWriteFile(configPath, serialized);
+  writeHermesConfigFile(configPath, serialized);
 
   assertFallbackAgentSettingsWritten(configPath, {
     apiMaxRetries: config.apiMaxRetries,
