@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// hermes-profile-paths.ts — Default root + per-profile HERMES_HOME
+// profile-paths.ts — Default root + per-profile HERMES_HOME
 // Mirrors upstream hermes_constants.get_default_hermes_root()
 // ═══════════════════════════════════════════════════════════════
 

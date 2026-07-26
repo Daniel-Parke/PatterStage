@@ -163,7 +163,7 @@ import { TASK_TYPES, type TaskType } from "@/lib/models/task-types";
 /**
  * Empty task-defaults map — initialises all 12 slots to null.
  * Client-safe (no DB dependency), shared between server and UI.
- * Uses TASK_TYPES from hermes-providers as the single source of truth.
+ * Uses TASK_TYPES from `@/lib/models/task-types` as the single source of truth.
  */
 export function emptyModelDefaults(): Record<TaskType, string | null> {
   return TASK_TYPES.reduce<Record<TaskType, string | null>>(

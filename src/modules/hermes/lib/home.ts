@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// hermes-home.ts — Local Hermes install path resolution
+// home.ts — Local Hermes install path resolution
 // ═══════════════════════════════════════════════════════════════
 //
 // Resolves the local Hermes agent filesystem root from environment

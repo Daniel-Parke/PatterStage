@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// frameworks/hermes-adapter.ts — FrameworkAdapter impl #1 (Hermes)
+// framework-adapter.ts — FrameworkAdapter impl #1 (Hermes)
 //
 // Wraps the existing Hermes path resolution behind the FrameworkAdapter seam.
 // Home comes from the DB config override, else the default Hermes root;

@@ -2,7 +2,7 @@
 // paths.ts — PatterStage data directories + env resolution
 // ═══════════════════════════════════════════════════════════════
 // Hermes install paths: use getActiveHermesPaths() / getActiveHermesHome()
-// from @/lib/hermes-agent-runtime (active agent registry).
+// from @/modules/hermes/lib/agent-runtime (active agent registry).
 //
 // Canonical env vars and exported symbols are PS_* (PatterStage). The legacy
 // CH_* / CONTROL_HUB_* env-var names are still read as fallbacks (below) so

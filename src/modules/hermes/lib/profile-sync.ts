@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// hermes-profile-sync.ts — Push/pull profiles, root, skills to Hermes disk
+// profile-sync.ts — Push/pull profiles, root, skills to Hermes disk
 // ═══════════════════════════════════════════════════════════════
 
 import {

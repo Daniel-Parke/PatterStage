@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// hermes-config-sync.ts — Write-through to ~/.hermes/.env + config.yaml
+// config-sync.ts — Write-through to ~/.hermes/.env + config.yaml
 // ═══════════════════════════════════════════════════════════════
 //
 // Without this module, `hermes chat --model X` would fail because
@@ -137,7 +137,7 @@ function backupFile(originalPath: string, backupsDir: string): string | null {
 // ── ENV (.env) sync ────────────────────────────────────────────
 //
 // `parseEnvFile` and the `ENV_LINE_RE` regex now live in
-// `@/lib/env-file` (shared with `@/lib/hermes-import.ts`). They were
+// `@/lib/env-file` (shared with `@/modules/hermes/lib/config-import.ts`). They were
 // promoted from this module's private implementation in session 164
 // because the same parser was duplicated across 2 files. The sibling
 // `serializeEnvFile` (this module) preserves blank lines and `#`
@@ -341,7 +341,7 @@ export function readHermesConfigModels(): Map<string, HermesConfigModelEntry> {
 }
 
 /** Auxiliary slots written through to `auxiliary.<task>.*`.
- *  See `AUXILIARY_TASK_TYPES` in `@/lib/hermes-providers` (canonical). */
+ *  See `AUXILIARY_TASK_TYPES` in `@/lib/models/task-types` (canonical). */
 
 /**
  * Read ~/.hermes/config.yaml, set `model.*` from PatterStage DB's default

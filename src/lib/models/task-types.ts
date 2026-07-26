@@ -6,7 +6,7 @@
 // but mirroring is not ownership — the registry is ours, and a second agent
 // framework would map onto these slots rather than replace them.
 //
-// Extracted from hermes-providers.ts, where they sat next to genuinely
+// Extracted from modules/hermes/lib/providers.ts, where they sat next to genuinely
 // Hermes-specific things (the provider list and its env-var map). That made
 // eight core modules import a `hermes-*` file to say the word "agent", which
 // counted against the framework-agnostic claim without any Hermes coupling
@@ -40,7 +40,7 @@ export type TaskType = (typeof TASK_TYPES)[number];
  *
  * A single source of truth so callers don't independently compute
  * `TASK_TYPES.filter((t) => t !== "agent")` — which was duplicated in
- * `BulkAuxiliaryUpdater.tsx` and `hermes-config-sync.ts` as of 2026-06-02.
+ * `BulkAuxiliaryUpdater.tsx` and `modules/hermes/lib/config-sync.ts` as of 2026-06-02.
  * The type predicate narrows to a precise tuple, preserving literal types.
  */
 export const AUXILIARY_TASK_TYPES = TASK_TYPES.filter(

@@ -347,7 +347,7 @@ export function setDefaultModel(taskType: TaskType, modelId: string | null): Mod
   return getModelDefaults();
 }
 
-// ── Upsert (used by hermes-import.ts) ─────────────────────────
+// ── Upsert (used by modules/hermes/lib/config-import.ts) ─────────────────────────
 
 /**
  * Idempotent upsert for imported models from Hermes config.yaml.

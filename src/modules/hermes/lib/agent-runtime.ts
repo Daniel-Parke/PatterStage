@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// hermes-agent-runtime.ts — Active Hermes install + paths
+// agent-runtime.ts — Active Hermes install + paths
 // ═══════════════════════════════════════════════════════════════
 
 import { homedir } from "os";
@@ -7,7 +7,7 @@ import { getHermesHome } from "@/modules/hermes/lib/home";
 import { buildHermesPathBundle, type HermesPathBundle } from "@/modules/hermes/lib/paths";
 
 export type { HermesPathBundle };
-// (Redundant re-exports of hermes-profile-paths helpers
+// (Redundant re-exports of profile-paths helpers
 // were removed — consumers import those directly from their source modules.)
 
 /** Resolved paths for the local Hermes install. */

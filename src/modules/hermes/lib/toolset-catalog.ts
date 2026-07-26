@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// hermes-toolset-catalog.ts — Known Hermes toolset IDs for PatterStage UI
+// toolset-catalog.ts — Known Hermes toolset IDs for PatterStage UI
 // ═══════════════════════════════════════════════════════════════
 // Mirrors hermes-agent configurable toolsets (not runtime-expanded tool names).
 

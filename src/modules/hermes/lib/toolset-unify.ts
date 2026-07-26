@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// hermes-toolset-unify.ts — Unified per-profile toolset helpers
+// toolset-unify.ts — Unified per-profile toolset helpers
 // ═══════════════════════════════════════════════════════════════
 
 import { HERMES_PLATFORMS } from "./toolset-catalog";

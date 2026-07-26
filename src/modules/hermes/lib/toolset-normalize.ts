@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// hermes-toolset-normalize.ts — Canonical platform_toolsets shapes
+// toolset-normalize.ts — Canonical platform_toolsets shapes
 // ═══════════════════════════════════════════════════════════════
 // Hermes CLI may persist granular toolset IDs alongside hermes-cli.
 // Store compact lists: dedupe per platform; drop entries subsumed by hermes-cli.

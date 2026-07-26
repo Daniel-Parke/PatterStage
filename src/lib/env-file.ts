@@ -8,10 +8,10 @@
 // code that needs the full key→value table.
 //
 // Pre-refactor, this exact logic was duplicated in two places:
-//   1. `src/lib/hermes-config-sync.ts` `parseEnvFile()` (private) — used
+//   1. `src/modules/hermes/lib/config-sync.ts` `parseEnvFile()` (private) — used
 //      by `syncCredentialToHermesEnv` and `removeCredentialFromHermesEnv`
 //      to read the prior env state before merging new keys in.
-//   2. `src/lib/hermes-import.ts` `parseEnvCredentials()` (inline regex
+//   2. `src/modules/hermes/lib/config-import.ts` `parseEnvCredentials()` (inline regex
 //      inside a try/catch) — used to discover which `<PROVIDER>_API_KEY`
 //      lines exist in `~/.hermes/.env` during the registry-import flow.
 //
@@ -28,7 +28,7 @@
  * the value can strip quotes themselves; the sibling `env-line.ts`
  * `parseEnvLine` does this for the UI preview).
  *
- * Exported for `serializeEnvFile` in `@/lib/hermes-config-sync.ts` which
+ * Exported for `serializeEnvFile` in `@/modules/hermes/lib/config-sync.ts` which
  * needs to identify keyval lines while iterating the raw file (it
  * preserves comments and blank lines, so it can't just call
  * `parseEnvFile` and lose the surrounding context).
@@ -48,7 +48,7 @@ export const ENV_LINE_RE = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/;
  *
  * Newline handling: splits on `\r?\n` so both Unix (`\n`) and Windows
  * (`\r\n`) line endings are accepted. The pre-refactor inline code in
- * `hermes-config-sync.ts` and `hermes-import.ts` both used the same
+ * `modules/hermes/lib/config-sync.ts` and `modules/hermes/lib/config-import.ts` both used the same
  * `\r?\n` split, preserved here byte-for-byte.
  *
  * @param content - The full file content. Empty string returns an empty Map.

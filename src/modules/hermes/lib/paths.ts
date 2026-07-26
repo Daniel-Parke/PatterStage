@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// hermes-paths.ts — Hermes filesystem layout from a single root
+// paths.ts — Hermes filesystem layout from a single root
 // ═══════════════════════════════════════════════════════════════
 
 /** Trailing-slash-normalise a directory path. Exported for reuse. */

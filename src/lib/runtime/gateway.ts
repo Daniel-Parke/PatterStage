@@ -5,7 +5,7 @@
 // DOES; AgentWorkspace covers where its files ARE; AgentGateway covers where
 // its inference endpoint IS.
 //
-// Four core sites called getAgentLlmEndpoints() from hermes-agent-runtime to
+// Four core sites called getAgentLlmEndpoints() from modules/hermes/lib/agent-runtime to
 // get a URL, and not one of them used any Hermes knowledge beyond that URL —
 // an OpenAI-compatible chat endpoint is the most framework-neutral thing in
 // the whole system. It counted against the framework-agnostic claim purely

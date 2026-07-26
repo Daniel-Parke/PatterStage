@@ -1,8 +1,8 @@
 // ═══════════════════════════════════════════════════════════════
-// hermes-import.ts — Read Hermes config + .env, produce upsert objects
+// config-import.ts — Read Hermes config + .env, produce upsert objects
 // ═══════════════════════════════════════════════════════════════
 //
-// This is the companion to hermes-config-sync.ts (which writes registry
+// This is the companion to modules/hermes/lib/config-sync.ts (which writes registry
 // state → Hermes files). This module reads Hermes files → registry.
 //
 // Sources read:
@@ -206,7 +206,7 @@ function parseEnvCredentials(envPath: string): Map<HermesProvider, ParsedCredent
   if (!existsSync(envPath)) return byProvider;
 
   try {
-    // Shared parser promoted from `hermes-config-sync.ts:parseEnvFile` to
+    // Shared parser promoted from `modules/hermes/lib/config-sync.ts:parseEnvFile` to
     // `@/lib/env-file` in session 164 — same regex, same skip rules
     // (blank lines, `#` comments, malformed lines), same `\r?\n` split.
     // The two sites had drifted in 2026-05 to use the same regex

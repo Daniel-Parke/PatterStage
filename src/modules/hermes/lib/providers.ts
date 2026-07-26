@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// hermes-providers.ts — Authoritative provider list and env-var map
+// providers.ts — Authoritative provider list and env-var map
 // ═══════════════════════════════════════════════════════════════
 //
 // Single source of truth for which providers Hermes accepts and the
@@ -49,7 +49,7 @@ export type HermesProvider = (typeof HERMES_PROVIDERS)[number];
 
 /**
  * Per-provider environment variable used by Hermes to read the API key.
- * Used by hermes-config-sync.ts (PR 5) when writing credentials to
+ * Used by modules/hermes/lib/config-sync.ts (PR 5) when writing credentials to
  * ~/.hermes/.env.
  */
 export const PROVIDER_ENV_VAR: Record<HermesProvider, string> = {

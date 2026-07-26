@@ -47,9 +47,9 @@ export const analyticsTimeseriesQuerySchema = z
  * task slot (one of `TASK_TYPES`) → boolean (whether the model claims
  * that slot as a default). The shape used to be hand-listed with 12
  * `z.boolean().optional()` lines that drifted from the canonical
- * `TASK_TYPES` array in `hermes-providers.ts`. Deriving it from
+ * `TASK_TYPES` array in `@/lib/models/task-types`. Deriving it from
  * `TASK_TYPES` makes the schema a single source of truth: adding a new
- * task slot is a one-line edit in `hermes-providers.ts`, and the
+ * task slot is a one-line edit in `@/lib/models/task-types`, and the
  * Models POST/PUT body shape tracks automatically.
  *
  * `.strict()` is preserved from the inline form so unknown task-slot
@@ -70,7 +70,7 @@ function buildModelDefaultsSchema(): z.ZodType<Partial<Record<TaskType, boolean>
 
 /**
  * Provider name validated against the canonical list in
- * src/lib/hermes-providers.ts. Adding a new provider is a single edit
+ * src/modules/hermes/lib/providers.ts. Adding a new provider is a single edit
  * to that file.
  *
  * Inferred as `HermesProvider` (a literal union) so consumers like

@@ -2,7 +2,8 @@
 // runtime/HermesRuntime.ts — AgentRuntime over the Hermes API Server
 //
 // Typed HTTP client for the Hermes API Server (:8642). Replaces the old
-// CLI-subprocess + bash/PID/status-file backend (src/lib/backends/hermes.ts):
+// CLI-subprocess + bash/PID/status-file backend (the since-deleted
+// src/lib/backends/hermes.ts, named here for git archaeology, not to be found):
 // runs are submitted/polled/stopped over HTTP, so there is no bash, no signal
 // handling, and no filesystem IPC. `fetchImpl` and endpoint resolution are
 // injectable for unit testing without a live gateway or DB.

@@ -3,7 +3,7 @@
 // ══════════════════════════════════════════════════════════════════════════════
 //
 // Three primitives that were previously duplicated (or hoisted as
-// private helpers in `hermes-config-sync.ts`):
+// private helpers in `modules/hermes/lib/config-sync.ts`):
 //
 //   - `ensureDir(dir)`         — `mkdir -p` without throwing on existing dir
 //   - `backupTimestamp()`      — filesystem-safe ISO-8601 timestamp suffix
@@ -17,14 +17,14 @@
 // 3+ times. The "copy-to-timestamped-backup" pattern appeared in 3+
 // places (2 in lib + 1 in app/api/agent/files).
 //
-// Promoted from `hermes-config-sync.ts` (where `ensureDir`,
+// Promoted from `modules/hermes/lib/config-sync.ts` (where `ensureDir`,
 // `backupTimestamp`, and `backupFile` were private module-local
 // helpers) in session 85 (List 4 refactor) so every PatterStage
 // module can reach for the canonical versions.
 //
 // Keep this module tiny and dependency-free (fs only). Heavier
 // file-orchestration (e.g. atomic write + rollback) belongs in
-// `hermes-config-sync.ts` / `hermes-profile-sync.ts`.
+// `modules/hermes/lib/config-sync.ts` / `modules/hermes/lib/profile-sync.ts`.
 // ══════════════════════════════════════════════════════════════════════════════
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
@@ -34,7 +34,7 @@ import { createHash } from "crypto";
  * Create `dir` (recursively) if it doesn't exist. No-op when the
  * directory is already present. Matches the pre-refactor inline
  * `if (!existsSync(dir)) mkdirSync(dir, { recursive: true })` pattern
- * byte-for-byte (and the private `ensureDir` in `hermes-config-sync.ts`
+ * byte-for-byte (and the private `ensureDir` in `modules/hermes/lib/config-sync.ts`
  * that this helper replaces).
  */
 export function ensureDir(dir: string): void {
@@ -49,8 +49,9 @@ export function ensureDir(dir: string): void {
  * platform. Format: `2026-06-03T12-34-56-789Z`.
  *
  * The 3 pre-refactor inline call sites (`config/route.ts`,
- * `agent/files/[key]/route.ts`, `hermes-profile-sync.ts`) and the
- * private `backupTimestamp()` in `hermes-config-sync.ts` all use the
+ * `agent/files/[key]/route.ts`, `modules/hermes/lib/profile-sync.ts`) and a
+ * private `backupTimestamp()` that used to live in
+ * `modules/hermes/lib/config-sync.ts` all used the
  * same `new Date().toISOString().replace(/[:.]/g, "-")` expression —
  * this helper preserves that exact behaviour (including the millisecond
  * precision trailing-Z). Two calls within the same millisecond return
@@ -67,7 +68,7 @@ export function backupTimestamp(): string {
  * backup needed" from "backup failed").
  *
  * Mirrors the pre-refactor private `backupFile()` in
- * `hermes-config-sync.ts` byte-for-byte: same `<basename>.<ts>.bak`
+ * `modules/hermes/lib/config-sync.ts` byte-for-byte: same `<basename>.<ts>.bak`
  * naming, same UTF-8 read+write, same null-on-missing-source.
  */
 export function backupFile(originalPath: string, backupsDir: string): string | null {
@@ -82,7 +83,7 @@ export function backupFile(originalPath: string, backupsDir: string): string | n
 /**
  * SHA-256 hex digest of a UTF-8 string. The canonical "is this content
  * the same as what we have?" primitive used by the profile/root/skill
- * drift detectors (`hermes-profile-sync.ts`). Promoted here so the hash
+ * drift detectors (`modules/hermes/lib/profile-sync.ts`). Promoted here so the hash
  * is unit-testable and a future second drift consumer can share it.
  */
 export function contentHash(content: string): string {
@@ -93,7 +94,7 @@ export function contentHash(content: string): string {
  * SHA-256 hex digest of a file's UTF-8 content, or `null` when the file
  * is missing or unreadable (so callers can distinguish "no file" from a
  * real hash). Byte-equivalent to the pre-extraction private `fileHash`
- * in `hermes-profile-sync.ts`.
+ * in `modules/hermes/lib/profile-sync.ts`.
  */
 export function fileHash(path: string): string | null {
   if (!existsSync(path)) return null;

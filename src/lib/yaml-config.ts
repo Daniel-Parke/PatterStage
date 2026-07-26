@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════════
 // yaml-config.ts — the canonical YAML dump options (CORE)
 //
-// Extracted from hermes-config-sync.ts for the hermes module move
+// Extracted from modules/hermes/lib/config-sync.ts for the hermes module move
 // (docs/adr/0005-product-modules.md). The function knows no path, no key and
 // nothing about Hermes; its own docstring already called these "the canonical
 // PatterStage YAML options", and two of its five call sites were never Hermes

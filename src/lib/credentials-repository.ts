@@ -96,7 +96,7 @@ export function getCredential(id: string): CredentialSummary | null {
 
 /**
  * Reads a credential including the plaintext API key. Internal use only —
- * never expose this from a list/GET API. Used by hermes-config-sync.ts
+ * never expose this from a list/GET API. Used by modules/hermes/lib/config-sync.ts
  * and the LLM dispatch path.
  */
 export function getCredentialWithKey(id: string): CredentialWithKey | null {
@@ -175,7 +175,7 @@ export function deleteCredential(id: string): boolean {
   return result.changes > 0;
 }
 
-// ── Upsert (used by hermes-import.ts / prebuild-db.mjs) ────────
+// ── Upsert (used by modules/hermes/lib/config-import.ts / prebuild-db.mjs) ────────
 
 export interface UpsertCredentialResult {
   id: string;
@@ -191,7 +191,7 @@ export interface UpsertCredentialResult {
  * login).
  *
  * Credentials are matched by `provider` (unique constraint).
- * Used by hermes-import.ts so re-importing the same .env
+ * Used by modules/hermes/lib/config-import.ts so re-importing the same .env
  * never creates duplicate credential rows.
  */
 export function upsertCredential(input: {
