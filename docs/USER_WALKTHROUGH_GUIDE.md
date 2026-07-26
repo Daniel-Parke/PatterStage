@@ -206,7 +206,7 @@ Four things it now refuses to do, each of which it used to do silently:
 |---|---|
 | `check-agent-files` | `AGENTS.md` over 40 lines, or `CLAUDE.md` drifting from it |
 | `check-doc-links` | a link in `docs/` pointing at a file that does not exist |
-| `design-lint` | 10 rules on a **shrink-only** baseline: it may fall, never rise |
+| `design-lint` | 11 rules on a **shrink-only** baseline: it may fall, never rise |
 | `eslint` | zero warnings tolerated |
 | `typecheck:tests` | a test that lies about a real function signature |
 

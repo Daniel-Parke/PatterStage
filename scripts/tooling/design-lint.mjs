@@ -13,7 +13,7 @@
 // A rule that is not a red build does not exist.
 //
 // ── The baseline ────────────────────────────────────────────────────────────
-// Turning ten rules on against 79k lines produces hundreds of failures, and a
+// Turning eleven rules on against 79k lines produces hundreds of failures, and a
 // gate that is red on day one gets deleted rather than fixed. So violations that
 // exist TODAY are recorded in design-lint.baseline.json and allowed; the gate
 // fails on anything NEW, and on any file whose count grows. The baseline only
@@ -131,6 +131,48 @@ const RULES = [
       !f.startsWith("src/lib/runtime/") &&
       f !== "src/lib/frameworks/registry.ts",
     pattern: /from\s+["']@\/modules\//,
+  },
+  {
+    id: "sql-outside-repository",
+    law: "SQL belongs to the repository layer. A prepared statement in a route handler, a sync source or a stats calculator makes the table shape a public interface, so a column rename becomes an archaeology exercise instead of one file's problem (WG-ARCH-002, ruled B).",
+    // Exempt: any *repository*.ts under src/ (a module's own repository is still
+    // the repository layer -- forcing module SQL into src/lib would break the
+    // ADR-0005 boundary to satisfy this one), src/lib/db/ (the migration chain and
+    // its plumbing), and src/lib/db-schema.ts by name.
+    //
+    // db-schema.ts is named rather than globbed because its own header says why it
+    // sits outside src/lib/db/: migrations import it, and being outside means the
+    // global @/lib/db Jest mock does not intercept it. That is a real constraint,
+    // not an accident, so it gets a named exemption instead of a wider glob.
+    //
+    // src/lib/db.ts is deliberately NOT exempt, and its 6 sites are baselined.
+    // Two are sqlite_master probes and two are the migration runner's own exec,
+    // which are genuine plumbing -- but getGatewayPlatforms() at :99 is a
+    // repository function that happens to live in the connection file, and a
+    // wholesale exemption would license it forever. The target state is db.ts
+    // moving to src/lib/db/index.ts, which keeps every `@/lib/db` import byte
+    // identical; that move waits on WO-0008's output canary, because WG-ARCH-006
+    // rules that a move is proved output-neutral before it is made.
+    files: (f) =>
+      f.startsWith("src/") &&
+      (f.endsWith(".ts") || f.endsWith(".tsx")) &&
+      !/repository/i.test(f) &&
+      !f.startsWith("src/lib/db/") &&
+      f !== "src/lib/db-schema.ts",
+    // `.prepare(` needs no receiver: nothing else in the codebase has that method,
+    // and the chained form (`getDb()\n  .prepare(...)`) still puts it on its own
+    // line. `.exec(` DOES need one, because RegExp.prototype.exec is everywhere --
+    // 5 of the 10 .exec( sites in src/ are regex matching.
+    //
+    // Known gap, stated rather than papered over: the .exec( half only sees the
+    // receivers actually used for SQL today. `fresh.exec(sql)` in src/lib/db/
+    // upgrade.ts would slip past on name alone if that file were not already
+    // exempt. Closing it properly needs a parser, which WG-WEB-013 rules out
+    // (dependency-free). The .prepare( half, which is 52 of the 57 sites, has no
+    // such gap -- and an ALTER TABLE run outside the migration chain
+    // (session-sync.ts:240) is exactly the bypass worth catching.
+    pattern:
+      /\.prepare\s*\(|(?:\bdb\(\)|\bgetDb\(\)|\bdatabase\b|\bthis\.db\b)\s*\.\s*exec\s*\(/,
   },
   {
     id: "no-em-dash",

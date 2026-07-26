@@ -43,13 +43,36 @@ Operator-independent work rides above anything waiting on an answer.
 - done when: no gate in ci.yml retries, and a red run means a real failure.
 
 ### WO-0003 · Make the repository seam a contract instead of a claim
-- type: FIX · tier: T2 · priority: P1 · status: ready
+- type: FIX · tier: T2 · priority: P1 · status: DONE · session: session-1-2026-07-26
 - warrant: WG-ARCH-002 (B, and B is not met). 19 files hold 49 `.prepare(` sites
   outside the repository layer, so the seam is documented and unenforced.
-- acceptance: [ ] a design-lint rule forbids `.prepare(` outside
-  `src/lib/**/*repository*.ts` and `src/lib/db/` · [ ] baselined at today's count,
-  shrink-only · [ ] the rule is in `npm run lint`
+- acceptance: [x] a design-lint rule, `sql-outside-repository`, forbids `.prepare(`
+  outside a `*repository*.ts`, `src/lib/db/` or `src/lib/db-schema.ts` ·
+  [x] baselined at today's count, shrink-only · [x] the rule is in `npm run lint`
+  (design-lint already runs there, so a new rule is gated the moment it lands)
 - done when: the 49 can only shrink, and a new bypass fails the build.
+- measured: 19 files, **57** sites, not 49. Three corrections, all recorded rather
+  than quietly adopted. (1) The row's 49 came from raw grep, which counts
+  `.prepare(` on comment lines; design-lint skips those, taking it to 48. (2) The
+  row's stated exemption, `src/lib/**/*repository*.ts`, contradicts its own
+  warrant, which says "the 25 repositories" and so must include the three under
+  `src/modules/`. Exempting only `src/lib` would push a module's SQL into core to
+  satisfy this rule and break ADR-0005 to do it, so repositories are exempt
+  wherever they live. (3) +9 sites because the rule also covers a db-receiver
+  `.exec(`. `session-sync.ts:240` runs `ALTER TABLE sessions ADD COLUMN` outside
+  the migration chain entirely, and `catalog-seed.ts` execs raw SQL. A rule that
+  waves those through is not a contract, and "a new bypass fails the build" is the
+  row's own done-when.
+- note: `.exec(` is receiver-anchored because `RegExp.prototype.exec` accounts for
+  5 of the 10 `.exec(` sites in `src/`. That leaves one gap, stated in the rule
+  header: an arbitrarily-named connection variable escapes the `.exec(` half.
+  Closing it needs a parser, which WG-WEB-013 rules out. The `.prepare(` half,
+  52 of the 57 sites, has no such gap.
+- proved: nine probes, each planting a violation and running the real gate. New
+  `.prepare(` fails; a pragma with a reason passes; a pragma **without** a reason
+  fails; the same SQL inside a repository or `src/lib/db/` passes; `RegExp.exec`
+  is not flagged; `db().exec("ALTER TABLE ...")` is; and a file already baselined
+  at 13 fails at 14, which is the case the lock-book names.
 
 ### WO-0004 · Name the 21 boundary crossings instead of counting them
 - type: FIX · tier: T2 · priority: P2 · status: ready

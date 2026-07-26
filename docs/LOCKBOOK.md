@@ -130,12 +130,24 @@ because the whole point of this section is that it cannot quietly stop being tru
   that fails does not bump the version.
 - **The test suite is type-checked.** `typecheck:tests` at zero, in the gate. A
   test that lies about a real signature is a red build.
+- **Persistence goes through the repository layer.** WG-ARCH-002 (B), whose own
+  remedy was a shrink-only counter. `design-lint sql-outside-repository` fails the
+  build on `.prepare(`, and on a db-receiver `.exec(`, anywhere under `src/`
+  outside a `*repository*.ts`, `src/lib/db/` or `src/lib/db-schema.ts`. Baselined
+  2026-07-26 at 19 files and 57 sites, which is the debt and may only fall.
+  `src/lib/db.ts` is baselined rather than exempted, because two of its six sites
+  are `sqlite_master` plumbing but `getGatewayPlatforms()` is a repository
+  function in the connection file. WO-0003.
+- **A gate never retries.** WG-DEL-004 (C, determinism first). Playwright is at
+  `retries: 0` unconditionally, and the six font families are vendored under
+  `next/font/local` so the build reaches no network. The `checkout` and `npm ci`
+  retries survive as quarantined flakes with a written reason and a 2027-01
+  review, which is the alternative the ruling itself offers: they absorb GitHub
+  and npm registry failures rather than defects in this code. WO-0002.
 
 **Ruled and NOT yet enforced.** Each carries its queue item; none may be quietly
 dropped:
 
-- **Persistence goes through the repository layer.** WG-ARCH-002 (B). Unmet: 19
-  files hold 49 `.prepare(` sites outside it. → WO-0003.
 - **No file's knowledge of the agent framework is licensed by a number.**
   WG-ARCH-001 (B). Unmet: `hermes-outside-adapter` is baselined at 21 crossings.
   → WO-0004.
@@ -160,8 +172,6 @@ dropped:
 - **The suite that exists is the suite that runs.** WG-DEL-002 (B). Unmet: CI runs
   smoke-only, so 38 of 42 Playwright tests never execute on a pull request.
   → WO-0012.
-- **A gate never retries.** WG-DEL-004 (C, determinism first). Unmet: retries and a
-  font warmup are wired into `ci.yml`. → WO-0002, ordered first.
 - **Unattended work cannot spend past a number the operator set.** WG-OPS-004.
   Unmet: no figure is recorded and no pause exists. → WO-0014. This one is the
   operator's own standing rule, "No spend without my approval", so it is a
