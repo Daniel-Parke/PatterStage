@@ -237,14 +237,16 @@ Operator-independent work rides above anything waiting on an answer.
   in `docs/TESTING.md`, each replaced with what is now true and why it changed ·
   [x] `docs/DEPLOY.md` cut to one supported model, with the Docker section
   reframed as the CI parity rig rather than an optional deployment
-- operator's half, still open:
+- GREEN ON CI, run `30226331826`, 2026-07-26. That is the run the operator was
+  waiting for, and it took three attempts to get: the first two failed on the
+  `update` scenario and are recorded on WO-0019 rather than glossed over.
+- operator's half, now unblocked and still open:
   [ ] add `install-harness` to the required checks in branch protection ·
-  [ ] remove `docker-image` from them
-- the job is deliberately NOT required yet. It passed on this machine, which is
-  not the same as passing on a cold ubuntu-latest runner with no Docker cache.
-  Read one green CI run first. A required check that fails for an environmental
-  reason is worse than no check, and that order is the whole point of
-  WG-DEL-004.
+  [ ] remove `docker-image` from them, which is separately failing (WO-0018)
+- caution on the second click: removing `docker-image` from the required set is
+  what WG-OPS-002 asks for, and it also stops a currently-failing job blocking
+  merges. Do not let that become the reason `docker-image` is never fixed. It
+  has a queue row.
 
 ### WO-0019 · The install harness's update scenario fails on CI only
 - type: FIX · tier: T2 · priority: P2 · status: ready

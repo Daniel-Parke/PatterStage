@@ -184,7 +184,7 @@ dropped:
   #1 in the brief. Partly met: the `install-harness` job runs the harness on
   every push and pull request, the disclaimer is struck, and `docs/DEPLOY.md`
   now names one supported deployment model with the container demoted to the CI
-  parity rig. Proven locally at 5 of 5 scenarios in 570s before landing.
+  parity rig. Green on CI at run 30226331826, four scenarios; the fifth (update) fails on CI only and is WO-0019.
   Outstanding, and NOT doable from inside the repository: the job is not yet in
   branch protection's required set and `docker-image` has not been removed from
   it, so a broken install still cannot block a merge. → WO-0011, operator's half.
