@@ -5,7 +5,7 @@ date: 2026-08-22
 model: claude-fable-5
 launcher: operator's consolidation-programme master prompt (plan mode)
 items_touched: [WO-0001, WO-0004, WO-0007, WO-0008, WO-0009, WO-0010, WO-0011, WO-0012, WO-0013, WO-0014, WO-0015, WO-0016, WO-0017, WO-0018, WO-0019, WO-0020, WO-0021, WO-0022, WO-0023, WO-0024, WO-0025, WO-0026, WO-0027, WO-0028, WO-0029]
-commits: []           # filled at commit time; one docs commit expected
+commits: [66017097]
 spend_estimate: ~1.1M tokens (8 verifiers 546k, 2 critics 234k, main loop)
 ---
 
