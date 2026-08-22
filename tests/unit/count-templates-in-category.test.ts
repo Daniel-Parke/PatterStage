@@ -12,7 +12,7 @@ let testDb: import("better-sqlite3").Database | null = null;
 // Lightweight db mock — avoid loading the real db.ts (which resolves a DB path
 // at import). mission-category-repository only needs db/inTransaction/now.
 jest.mock("@/lib/db", () => ({
-  db: () => testDb!,
+  getDb: () => testDb!,
   inTransaction: <T,>(fn: () => T) => testDb!.transaction(fn)(),
   now: () => new Date().toISOString(),
 }));

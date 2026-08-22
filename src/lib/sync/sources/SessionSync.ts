@@ -8,7 +8,7 @@
 
 import { syncHermesSessionsToDb } from "@/lib/session-sync";
 import { logApiError } from "@/lib/api-logger";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 
 export class SessionSync implements SyncSource {
@@ -20,7 +20,7 @@ export class SessionSync implements SyncSource {
       const result = syncHermesSessionsToDb();
 
       // Record sync status in sync_registry
-      db().prepare(/* sql */ `
+      getDb().prepare(/* sql */ `
         INSERT OR REPLACE INTO sync_registry (source_name, last_synced_at, status, synced_count, error)
         VALUES (?, datetime('now'), 'ok', ?, NULL)
       `).run(this.name, result.synced);
@@ -40,7 +40,7 @@ export class SessionSync implements SyncSource {
 
       // Record failure in sync_registry
       try {
-        db().prepare(/* sql */ `
+        getDb().prepare(/* sql */ `
           INSERT OR REPLACE INTO sync_registry (source_name, last_synced_at, status, synced_count, error)
           VALUES (?, datetime('now'), 'error', 0, ?)
         `).run(this.name, String(err));

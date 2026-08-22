@@ -25,7 +25,7 @@ import Database from "better-sqlite3";
 import { existsSync } from "fs";
 import { join } from "path";
 
-import { db } from "./db";
+import { getDb } from "./db";
 import { getAgentWorkspace } from "./runtime/workspace";
 import { SERVER_MODULES } from "./modules/server";
 import { parseCronSessionId, cronJobIdFromSessionId } from "./session-title";
@@ -114,7 +114,7 @@ function readHermesSessionsFromStateDb(): HermesSessionRow[] {
  */
 function buildValidMissionIdSet(): Set<string> {
   try {
-    const rows = db()
+    const rows = getDb()
       .prepare("SELECT id FROM missions")
       .all() as Array<{ id: string }>;
     return new Set(rows.map((r) => r.id));
@@ -136,7 +136,7 @@ function buildValidMissionIdSet(): Set<string> {
 function buildMissionIdByJobId(): Map<string, string> {
   const missionIdByJobId = new Map<string, string>();
   try {
-    const rows = db()
+    const rows = getDb()
       .prepare(`
         SELECT m.id AS mission_id, c.external_job_id
         FROM missions m
@@ -171,7 +171,7 @@ function buildMissionIdByJobId(): Map<string, string> {
 function lookupMissionIdForHermesJob(externalJobId: string): string | null {
   if (!externalJobId) return null;
   try {
-    const row = db()
+    const row = getDb()
       .prepare(
         `SELECT m.id AS mission_id
          FROM missions m
@@ -249,7 +249,7 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
   const hermesSessions = readHermesSessionsFromStateDb();
   const missionIdByJobId = buildMissionIdByJobId();
   const validMissionIds = buildValidMissionIdSet();
-  const database = db();
+  const database = getDb();
   ensureMessageCountColumn(database);
   // Cron-job names come from whichever module keeps them; Hermes stores them in
   // its own cron/jobs.json. Titling degrades to the first 8 chars of the job id

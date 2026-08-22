@@ -13,7 +13,7 @@ import { upsertCatalogTemplate, getCatalogTemplate } from "../catalog-template-r
 import { upsertSkill, getSkill } from "../skills-repository";
 import { upsertToolBundle, getToolBundle } from "../tool-catalog-repository";
 import { upsertMemoryFact } from "../memory-catalog-repository";
-import { db } from "../db";
+import { getDb } from "../db";
 import { PS_DATA_DIR } from "../paths";
 import { ensureDir } from "../fs-helpers";
 
@@ -86,10 +86,10 @@ function seedCategories(mode: SeedMode): number {
   if (!existsSync(sqlPath)) return 0;
   const sql = readFileSync(sqlPath, "utf-8");
   if (mode === "replace") {
-    db().exec("DELETE FROM mission_categories WHERE seed_key IS NOT NULL");
+    getDb().exec("DELETE FROM mission_categories WHERE seed_key IS NOT NULL");
   }
-  db().exec(sql);
-  const row = db()
+  getDb().exec(sql);
+  const row = getDb()
     .prepare("SELECT COUNT(*) AS c FROM mission_categories WHERE seed_key IS NOT NULL")
     .get() as { c: number } | undefined;
   return row?.c ?? 0;
@@ -342,12 +342,12 @@ export function runCatalogSeed(options: SeedTarget): SeedResult {
 export function ensureCatalogSeededOnce(): SeedResult | null {
   try {
     ensureDb();
-    const row = db().prepare("SELECT value FROM meta WHERE key = 'catalog_seeded'").get() as
+    const row = getDb().prepare("SELECT value FROM meta WHERE key = 'catalog_seeded'").get() as
       | { value: string }
       | undefined;
     if (row) return null;
     const result = runCatalogSeed({ target: "all", mode: "merge" });
-    db()
+    getDb()
       .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('catalog_seeded', ?)")
       .run(new Date().toISOString());
     return result;

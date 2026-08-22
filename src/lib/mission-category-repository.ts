@@ -4,7 +4,7 @@
 
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "fs";
 
-import { db, inTransaction, now } from "./db";
+import { getDb, inTransaction, now } from "./db";
 import { PATHS } from "./paths";
 import { listCatalogTemplates } from "./catalog-template-repository";
 
@@ -71,7 +71,7 @@ function uniqueCategoryId(baseSlug: string): string {
 
 function hasMissionCategoriesTable(): boolean {
   try {
-    const row = db()
+    const row = getDb()
       .prepare(
         "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'mission_categories'",
       )
@@ -88,7 +88,7 @@ function listCategories(): MissionCategory[] {
       "mission_categories table is missing — run database migrations (restart PatterStage or npm run db:migrate)",
     );
   }
-  const rows = db()
+  const rows = getDb()
     .prepare(
       "SELECT * FROM mission_categories ORDER BY sort_order ASC, lower(name) ASC",
     )
@@ -97,21 +97,21 @@ function listCategories(): MissionCategory[] {
 }
 
 export function getCategory(id: string): MissionCategory | null {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT * FROM mission_categories WHERE id = ?")
     .get(id) as CategoryRow | undefined;
   return row ? rowToCategory(row) : null;
 }
 
 function getCategoryByName(name: string): MissionCategory | null {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT * FROM mission_categories WHERE lower(name) = lower(?)")
     .get(name.trim()) as CategoryRow | undefined;
   return row ? rowToCategory(row) : null;
 }
 
 export function countMissionsInCategory(categoryId: string): number {
-  const row = db()
+  const row = getDb()
     .prepare(
       "SELECT COUNT(*) AS c FROM missions WHERE deleted_at IS NULL AND category_id = ?",
     )
@@ -177,12 +177,12 @@ export function createCategory(data: {
     data.color && ALLOWED_COLORS.has(data.color) ? data.color : "cyan";
   const id = uniqueCategoryId(slugifyCategoryName(name));
   const ts = now();
-  const maxOrder = db()
+  const maxOrder = getDb()
     .prepare("SELECT COALESCE(MAX(sort_order), -1) AS m FROM mission_categories")
     .get() as { m: number };
   const sortOrder = (maxOrder.m ?? -1) + 1;
 
-  db()
+  getDb()
     .prepare(
       `INSERT INTO mission_categories (id, name, color, sort_order, seed_key, created_at, updated_at)
        VALUES (?, ?, ?, ?, NULL, ?, ?)`,
@@ -223,7 +223,7 @@ export function updateCategory(
   }
 
   vals.push(id);
-  db()
+  getDb()
     .prepare(`UPDATE mission_categories SET ${sets.join(", ")} WHERE id = ?`)
     .run(...vals);
 
@@ -234,7 +234,7 @@ function reassignMissionsCategory(
   fromId: string,
   toId: string | null,
 ): void {
-  db()
+  getDb()
     .prepare(
       "UPDATE missions SET category_id = ?, updated_at = ? WHERE category_id = ? AND deleted_at IS NULL",
     )
@@ -292,7 +292,7 @@ export function deleteCategory(
     });
   }
 
-  db().prepare("DELETE FROM mission_categories WHERE id = ?").run(id);
+  getDb().prepare("DELETE FROM mission_categories WHERE id = ?").run(id);
   return true;
 }
 
@@ -312,11 +312,11 @@ VALUES
 /** Seed system categories when the table exists but has no rows. */
 export function ensureDefaultCategories(): void {
   if (!hasMissionCategoriesTable()) return;
-  const row = db()
+  const row = getDb()
     .prepare("SELECT COUNT(*) AS c FROM mission_categories")
     .get() as { c: number };
   if ((row.c ?? 0) > 0) return;
-  db().exec(DEFAULT_CATEGORY_SEED_SQL);
+  getDb().exec(DEFAULT_CATEGORY_SEED_SQL);
 }
 
 function resolveTemplateCategoryIdWithoutDb(

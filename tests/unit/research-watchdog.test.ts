@@ -15,7 +15,7 @@ let testDb: import("better-sqlite3").Database | null = null;
 jest.mock("@/lib/db", () => {
   const actualCrypto = jest.requireActual("crypto") as typeof import("crypto");
   return {
-    db: () => testDb!,
+    getDb: () => testDb!,
     inTransaction: <T,>(fn: () => T) => testDb!.transaction(fn)(),
     uuid: () => actualCrypto.randomUUID(),
     now: () => new Date().toISOString(),

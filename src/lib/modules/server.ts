@@ -85,7 +85,3 @@ export interface ServerModule {
 }
 
 export const SERVER_MODULES: readonly ServerModule[] = [recRoomServerModule, hermesServerModule];
-
-export function getServerModule(id: string): ServerModule | undefined {
-  return SERVER_MODULES.find((m) => m.id === id);
-}

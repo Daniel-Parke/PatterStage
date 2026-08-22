@@ -10,4 +10,3 @@ export { Field } from "./Field";
 export { Input, Textarea } from "./Input";
 export { Select } from "./Select";
 export { Toggle } from "./Toggle";
-export { ChipGroup } from "./ChipGroup";

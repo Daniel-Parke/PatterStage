@@ -7,18 +7,9 @@
 // to retrieve. See [[phase-b-benchmarking]].
 // ═══════════════════════════════════════════════════════════════
 
-import { db, now, uuid } from "./db";
+import { getDb, now, uuid } from "./db";
 
 type MemorySource = "bundled" | "custom";
-
-export function countMemoryFacts(): number {
-  try {
-    const row = db().prepare("SELECT COUNT(*) AS c FROM seed_memory_facts").get() as { c: number } | undefined;
-    return row?.c ?? 0;
-  } catch {
-    return 0;
-  }
-}
 
 export interface UpsertMemoryFactInput {
   content: string;
@@ -31,17 +22,17 @@ export interface UpsertMemoryFactInput {
 export function upsertMemoryFact(input: UpsertMemoryFactInput): void {
   // Idempotent by seed_key when provided (the unique index enforces it).
   if (input.seedKey) {
-    const existing = db()
+    const existing = getDb()
       .prepare("SELECT id FROM seed_memory_facts WHERE seed_key = ?")
       .get(input.seedKey) as { id: string } | undefined;
     if (existing) {
-      db()
+      getDb()
         .prepare("UPDATE seed_memory_facts SET content = ?, category = ? WHERE seed_key = ?")
         .run(input.content, input.category ?? "", input.seedKey);
       return;
     }
   }
-  db()
+  getDb()
     .prepare(
       `INSERT INTO seed_memory_facts (id, content, category, source, seed_key, created_at)
        VALUES (?, ?, ?, ?, ?, ?)`,

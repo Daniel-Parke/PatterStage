@@ -29,7 +29,7 @@ let transactionCallCount = 0;
 let allReturn: Array<{ key: string; value: string }> = [];
 
 jest.mock("@/lib/db", () => ({
-  db: () => ({
+  getDb: () => ({
     prepare: (sql: string) => {
       prepareCallCount++;
       return {
@@ -196,7 +196,7 @@ describe("config-cache — List 4 extraction (session 187)", () => {
     // throwing prepare to exercise the throw path end-to-end.
     jest.isolateModules(() => {
       jest.doMock("@/lib/db", () => ({
-        db: () => ({
+        getDb: () => ({
           prepare: () => ({
             run: () => ({}),
             all: () => {

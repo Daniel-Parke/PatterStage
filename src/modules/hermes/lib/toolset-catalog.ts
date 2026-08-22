@@ -50,7 +50,3 @@ export const HERMES_CONFIGURABLE_TOOLSETS: HermesToolsetDef[] = [
   { id: "session_search", label: "Session search", description: "Search past sessions" },
   { id: "messaging", label: "Messaging", description: "Cross-platform send_message" },
 ];
-
-export function toolsetCatalogLabel(id: string): string {
-  return HERMES_CONFIGURABLE_TOOLSETS.find((entry) => entry.id === id)?.label ?? id;
-}

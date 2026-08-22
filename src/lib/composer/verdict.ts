@@ -16,7 +16,7 @@ import { stripReasoning } from "@/lib/llm-output";
 import type { NodeVerdict } from "./schema";
 
 /** Stage kinds that emit a PASS/FAIL verdict (drive conditional routing). */
-export const ASSESSING_KINDS = new Set<string>([
+const ASSESSING_KINDS = new Set<string>([
   "validate",
   "test",
   "unit_test",

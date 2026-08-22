@@ -15,7 +15,7 @@ import { applyRecroomLibraryMigration } from "@/lib/db/apply-recroom-library-mig
 let testDb: import("better-sqlite3").Database | null = null;
 
 jest.mock("@/lib/db", () => ({
-  db: () => testDb!,
+  getDb: () => testDb!,
   now: () => new Date().toISOString(),
   ensureDb: () => undefined,
 }));

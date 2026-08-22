@@ -7,7 +7,7 @@
 // Powers the AgentPerformanceStrip on the Agents page via /api/stats.
 // ═══════════════════════════════════════════════════════════════
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export interface AgentPerformance {
   slug: string;
@@ -32,7 +32,7 @@ function num(v: unknown): number {
 }
 function scalar(sql: string, ...p: unknown[]): number {
   try {
-    return num((db().prepare(sql).get(...p) as { v: number } | undefined)?.v);
+    return num((getDb().prepare(sql).get(...p) as { v: number } | undefined)?.v);
   } catch {
     return 0;
   }
@@ -70,7 +70,7 @@ function runsByProfile(): Map<string, RunAgg> {
   const out = new Map<string, RunAgg>();
   let rows: Array<{ profile_name: string | null; status: string; usage_json: string | null; submitted_at: string; completed_at: string | null }> = [];
   try {
-    rows = db()
+    rows = getDb()
       .prepare("SELECT profile_name, status, usage_json, submitted_at, completed_at FROM runs")
       .all() as typeof rows;
   } catch {
@@ -97,7 +97,7 @@ function runsByProfile(): Map<string, RunAgg> {
 function missionsByProfile(): Map<string, { completed: number; failed: number }> {
   const out = new Map<string, { completed: number; failed: number }>();
   try {
-    const rows = db()
+    const rows = getDb()
       .prepare(
         "SELECT COALESCE(profile_name, profile_id, 'default') AS p, status, COUNT(*) c FROM missions WHERE deleted_at IS NULL GROUP BY p, status",
       )
@@ -144,13 +144,13 @@ export function getAgentPerformance(): AgentPerformance[] {
   };
 
   try {
-    const root = db()
+    const root = getDb()
       .prepare("SELECT display_name, personality, disabled_skills, platform_toolsets FROM agent_root WHERE id = 1")
       .get() as { display_name: string; personality: string; disabled_skills: string; platform_toolsets: string } | undefined;
     if (root) {
       push("default", root.display_name || "Bob", root.personality, root.disabled_skills, root.platform_toolsets);
     }
-    const profiles = db()
+    const profiles = getDb()
       .prepare("SELECT slug, display_name, personality, disabled_skills, platform_toolsets FROM agent_profiles")
       .all() as Array<{ slug: string; display_name: string; personality: string; disabled_skills: string; platform_toolsets: string }>;
     for (const p of profiles) {

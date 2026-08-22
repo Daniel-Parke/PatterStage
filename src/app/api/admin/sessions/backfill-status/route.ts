@@ -21,7 +21,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import {
   closeOrphanedActiveSessions,
   previewOrphanSweep,
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const database = db();
+    const database = getDb();
     const result = dryRun
       ? previewOrphanSweep(database)
       : closeOrphanedActiveSessions(database, { log: false });

@@ -16,7 +16,7 @@
 
 export type ApiStyle = "openai" | "anthropic";
 
-export interface EndpointMessage {
+interface EndpointMessage {
   role: "system" | "user" | "assistant";
   content: string;
 }

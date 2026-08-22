@@ -40,7 +40,7 @@ jest.mock("@/lib/tool-catalog-repository", () => ({
 jest.mock("@/lib/memory-catalog-repository", () => ({ upsertMemoryFact: jest.fn() }));
 jest.mock("@/lib/db", () => ({
   ensureDb: jest.fn(),
-  db: jest.fn(() => ({
+  getDb: jest.fn(() => ({
     exec: jest.fn(),
     prepare: jest.fn(() => ({ get: () => ({ c: 0 }), run: jest.fn(), all: () => [] })),
   })),

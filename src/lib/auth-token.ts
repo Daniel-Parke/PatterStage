@@ -16,7 +16,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { randomBytes, timingSafeEqual } from "crypto";
-import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "fs";
+import { chmodSync, mkdirSync, readFileSync, statSync, writeFileSync } from "fs";
 
 import { PS_DATA_DIR, readEnv } from "@/lib/paths";
 
@@ -98,9 +98,4 @@ export function tokenMatches(supplied: string | null | undefined, expected: stri
   const b = Buffer.from(expected);
   if (a.length !== b.length) return false;
   return timingSafeEqual(a, b);
-}
-
-/** True when a token file is already present (used by setup to stay idempotent). */
-export function authTokenExists(): boolean {
-  return Boolean(readEnv("PS_AUTH_TOKEN")) || existsSync(getAuthTokenPath());
 }

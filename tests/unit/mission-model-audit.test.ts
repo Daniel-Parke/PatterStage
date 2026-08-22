@@ -10,7 +10,7 @@ function loadRealBetterSqlite3(): typeof import("better-sqlite3") {
 }
 
 jest.mock("@/lib/db", () => ({
-  db: () => testDb!,
+  getDb: () => testDb!,
   ensureDb: () => undefined,
   now: () => "2026-01-01T00:00:00.000Z",
 }));

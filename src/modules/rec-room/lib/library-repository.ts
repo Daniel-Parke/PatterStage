@@ -8,7 +8,7 @@
 
 import { randomUUID } from "crypto";
 
-import { db, now } from "@/lib/db";
+import { getDb, now } from "@/lib/db";
 import { parseStringArrayOrEmpty } from "@/lib/db/parse-json";
 import type { CharacterSheet, StoryTheme } from "@/modules/rec-room/types";
 
@@ -50,7 +50,7 @@ function rowToCharacter(row: CharacterRow): CharacterSheet {
 export type CharacterInput = Omit<CharacterSheet, "id" | "createdAt" | "updatedAt">;
 
 export function listCharacters(): CharacterSheet[] {
-  const rows = db()
+  const rows = getDb()
     .prepare(
       `SELECT * FROM story_characters WHERE deleted_at IS NULL ORDER BY name COLLATE NOCASE ASC`,
     )
@@ -59,7 +59,7 @@ export function listCharacters(): CharacterSheet[] {
 }
 
 export function getCharacter(id: string): CharacterSheet | null {
-  const row = db()
+  const row = getDb()
     .prepare(`SELECT * FROM story_characters WHERE id = ? AND deleted_at IS NULL`)
     .get(id) as CharacterRow | undefined;
   return row ? rowToCharacter(row) : null;
@@ -68,7 +68,7 @@ export function getCharacter(id: string): CharacterSheet | null {
 export function createCharacter(input: CharacterInput): CharacterSheet {
   const id = randomUUID();
   const ts = now();
-  db()
+  getDb()
     .prepare(
       `INSERT INTO story_characters
          (id, name, role, description, personality, backstory, appearance,
@@ -95,7 +95,7 @@ export function createCharacter(input: CharacterInput): CharacterSheet {
 export function updateCharacter(id: string, input: CharacterInput): CharacterSheet | null {
   const existing = getCharacter(id);
   if (!existing) return null;
-  db()
+  getDb()
     .prepare(
       `UPDATE story_characters
           SET name = ?, role = ?, description = ?, personality = ?, backstory = ?,
@@ -120,7 +120,7 @@ export function updateCharacter(id: string, input: CharacterInput): CharacterShe
 }
 
 export function deleteCharacter(id: string): boolean {
-  const res = db()
+  const res = getDb()
     .prepare(`UPDATE story_characters SET deleted_at = ? WHERE id = ? AND deleted_at IS NULL`)
     .run(now(), id);
   return res.changes > 0;
@@ -159,14 +159,14 @@ function rowToTheme(row: ThemeRow): StoryTheme {
 export type ThemeInput = Omit<StoryTheme, "id" | "createdAt" | "updatedAt">;
 
 export function listThemes(): StoryTheme[] {
-  const rows = db()
+  const rows = getDb()
     .prepare(`SELECT * FROM story_themes WHERE deleted_at IS NULL ORDER BY name COLLATE NOCASE ASC`)
     .all() as ThemeRow[];
   return rows.map(rowToTheme);
 }
 
-export function getTheme(id: string): StoryTheme | null {
-  const row = db()
+function getTheme(id: string): StoryTheme | null {
+  const row = getDb()
     .prepare(`SELECT * FROM story_themes WHERE id = ? AND deleted_at IS NULL`)
     .get(id) as ThemeRow | undefined;
   return row ? rowToTheme(row) : null;
@@ -175,7 +175,7 @@ export function getTheme(id: string): StoryTheme | null {
 export function createTheme(input: ThemeInput): StoryTheme {
   const id = randomUUID();
   const ts = now();
-  db()
+  getDb()
     .prepare(
       `INSERT INTO story_themes
          (id, name, premise, genre, era, setting, mood, notes, created_at, updated_at)
@@ -199,7 +199,7 @@ export function createTheme(input: ThemeInput): StoryTheme {
 export function updateTheme(id: string, input: ThemeInput): StoryTheme | null {
   const existing = getTheme(id);
   if (!existing) return null;
-  db()
+  getDb()
     .prepare(
       `UPDATE story_themes
           SET name = ?, premise = ?, genre = ?, era = ?, setting = ?, mood = ?,
@@ -221,7 +221,7 @@ export function updateTheme(id: string, input: ThemeInput): StoryTheme | null {
 }
 
 export function deleteTheme(id: string): boolean {
-  const res = db()
+  const res = getDb()
     .prepare(`UPDATE story_themes SET deleted_at = ? WHERE id = ? AND deleted_at IS NULL`)
     .run(now(), id);
   return res.changes > 0;

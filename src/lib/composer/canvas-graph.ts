@@ -14,7 +14,7 @@ import dagre from "@dagrejs/dagre";
 import type { ComposerWorkflowGraph, NodeGate, WorkflowDef } from "./schema";
 
 /** A node on the canvas (field names match react-flow's Node). */
-export interface CanvasNode {
+interface CanvasNode {
   id: string; // = composer node key
   position: { x: number; y: number };
   data: {
@@ -29,7 +29,7 @@ export interface CanvasNode {
 }
 
 /** An edge on the canvas (field names match react-flow's Edge). */
-export interface CanvasEdge {
+interface CanvasEdge {
   id: string;
   source: string; // from key
   target: string; // to key

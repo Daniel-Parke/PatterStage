@@ -8,7 +8,7 @@
 // next_run_at, never an in-memory timer.
 // ═══════════════════════════════════════════════════════════════
 
-import { db, inTransaction, uuid, now } from "./db";
+import { getDb, inTransaction, uuid, now } from "./db";
 import { buildUpdate } from "./db/build-update";
 
 export type CatchUpPolicy = "fire_once" | "skip";
@@ -93,7 +93,7 @@ export function createSchedule(input: CreateScheduleInput): ScheduleRecord {
   const id = uuid();
   const ts = now();
   inTransaction(() => {
-    db()
+    getDb()
       .prepare(
         `INSERT INTO schedules
            (id, mission_id, name, schedule, schedule_display, enabled, catch_up_policy,
@@ -121,19 +121,19 @@ export function createSchedule(input: CreateScheduleInput): ScheduleRecord {
 // ── Read ─────────────────────────────────────────────────────
 
 export function getSchedule(id: string): ScheduleRecord | null {
-  const row = db().prepare("SELECT * FROM schedules WHERE id = ?").get(id) as ScheduleRow | undefined;
+  const row = getDb().prepare("SELECT * FROM schedules WHERE id = ?").get(id) as ScheduleRow | undefined;
   return rowToSchedule(row);
 }
 
 export function listSchedules(): ScheduleRecord[] {
-  const rows = db()
+  const rows = getDb()
     .prepare("SELECT * FROM schedules ORDER BY created_at DESC")
     .all() as ScheduleRow[];
   return rows.map(rowToSchedule).filter((s): s is ScheduleRecord => s !== null);
 }
 
 export function getScheduleForMission(missionId: string): ScheduleRecord | null {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT * FROM schedules WHERE mission_id = ? ORDER BY created_at DESC LIMIT 1")
     .get(missionId) as ScheduleRow | undefined;
   return rowToSchedule(row);
@@ -141,7 +141,7 @@ export function getScheduleForMission(missionId: string): ScheduleRecord | null 
 
 /** Enabled schedules whose next_run_at is due at or before `asOf` (ISO). */
 export function getDueSchedules(asOf: string): ScheduleRecord[] {
-  const rows = db()
+  const rows = getDb()
     .prepare(
       `SELECT * FROM schedules
         WHERE enabled = 1
@@ -182,7 +182,7 @@ export function updateSchedule(
     { now: now() },
   );
   inTransaction(() => {
-    db().prepare(`UPDATE schedules SET ${sql} WHERE id = ?`).run(...values, id);
+    getDb().prepare(`UPDATE schedules SET ${sql} WHERE id = ?`).run(...values, id);
   });
   return getSchedule(id);
 }
@@ -217,13 +217,13 @@ export function advanceSchedule(
     { now: ts },
   );
   inTransaction(() => {
-    db().prepare(`UPDATE schedules SET ${sql} WHERE id = ?`).run(...values, id);
+    getDb().prepare(`UPDATE schedules SET ${sql} WHERE id = ?`).run(...values, id);
   });
   return getSchedule(id);
 }
 
 export function deleteSchedule(id: string): boolean {
-  const result = db().prepare("DELETE FROM schedules WHERE id = ?").run(id);
+  const result = getDb().prepare("DELETE FROM schedules WHERE id = ?").run(id);
   return result.changes > 0;
 }
 
@@ -233,7 +233,7 @@ export function deleteSchedule(id: string): boolean {
  * number of schedules deleted.
  */
 export function deleteSchedulesForMission(missionId: string): number {
-  const result = db().prepare("DELETE FROM schedules WHERE mission_id = ?").run(missionId);
+  const result = getDb().prepare("DELETE FROM schedules WHERE mission_id = ?").run(missionId);
   return result.changes;
 }
 
@@ -256,7 +256,7 @@ export function recordScheduleRun(
     { now: now() },
   );
   inTransaction(() => {
-    db().prepare(`UPDATE schedules SET ${sql} WHERE id = ?`).run(...values, id);
+    getDb().prepare(`UPDATE schedules SET ${sql} WHERE id = ?`).run(...values, id);
   });
   return getSchedule(id);
 }

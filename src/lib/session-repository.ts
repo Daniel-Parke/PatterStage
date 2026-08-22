@@ -14,7 +14,7 @@
 // Schema: src/lib/db/migrations/009_sessions.sql
 // ═══════════════════════════════════════════════════════════════
 
-import { db, uuid, now } from "./db";
+import { getDb, uuid, now } from "./db";
 import { syncHermesSessionsToDb } from "./session-sync";
 import { getActiveFrameworkConfig } from "./frameworks/repository";
 import type { FrameworkType } from "./frameworks/types";
@@ -147,7 +147,7 @@ function rowToSession(row: SessionRow | undefined): SessionRecord | null {
 export function createSession(input: CreateSessionInput): SessionRecord {
   const id = uuid();
   const startedAt = input.startedAt ?? now();
-  const database = db();
+  const database = getDb();
   database.prepare(/* sql */ `
     INSERT INTO sessions (
       id, agent_type, source, mission_id, profile_name,
@@ -204,7 +204,7 @@ export function updateSession(id: string, updates: UpdateSessionInput): SessionR
   if (sets.length === 0) return getSession(id);
 
   vals.push(id);
-  db().prepare(`UPDATE sessions SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
+  getDb().prepare(`UPDATE sessions SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
   return getSession(id);
 }
 
@@ -238,7 +238,7 @@ export function closeSessionForMission(
     error: string | null;
   },
 ): string | null {
-  const database = db();
+  const database = getDb();
   const row = database
     .prepare(
       `SELECT id FROM sessions
@@ -258,7 +258,7 @@ export function closeSessionForMission(
 }
 
 export function getSession(id: string): SessionRecord | null {
-  const row = db().prepare("SELECT * FROM sessions WHERE id = ?").get(id) as
+  const row = getDb().prepare("SELECT * FROM sessions WHERE id = ?").get(id) as
     | SessionRow
     | undefined;
   return rowToSession(row);
@@ -313,7 +313,7 @@ export function listSessions(opts: ListSessionsOptions = {}): {
   }
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
-  const database = db();
+  const database = getDb();
   const total = (
     database
       .prepare(`SELECT COUNT(*) as c FROM sessions ${where}`)

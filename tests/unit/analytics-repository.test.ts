@@ -3,7 +3,7 @@
  * @jest-environment node
  *
  * analytics-repository against a real in-memory SQLite DB (baseline + the v12
- * analytics_events migration). `@/lib/db` is mocked so the repo's db() hits the
+ * analytics_events migration). `@/lib/db` is mocked so the repo's getDb() hits the
  * test DB and inTransaction runs the callback directly.
  */
 import type Database from "better-sqlite3";
@@ -57,7 +57,7 @@ describe("analytics-repository", () => {
     jest.resetModules();
     jest.doMock("@/lib/db", () => {
       const actual = jest.requireActual("@/lib/db");
-      return { ...actual, db: () => tdb.db, inTransaction: (fn: () => unknown) => fn() };
+      return { ...actual, getDb: () => tdb.db, inTransaction: (fn: () => unknown) => fn() };
     });
     repo = require("@/lib/analytics/analytics-repository") as typeof AnalyticsRepo;
   });

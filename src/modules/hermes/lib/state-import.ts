@@ -5,14 +5,14 @@ import {
   pullRootFromHermes,
   type SyncResult,
 } from "./profile-sync";
-import { ensureDb, db } from "@/lib/db";
+import { ensureDb, getDb } from "@/lib/db";
 import { isProfilesToolsParityComplete } from "@/lib/db/profiles-tools-parity-ensure";
 import { getHermesDefaultRoot } from "./profile-paths";
 import { getAgentRoot } from "@/lib/agent-root-repository";
 import { existsSync } from "fs";
 
 function assertProfilesToolsSchemaReady(): void {
-  if (!isProfilesToolsParityComplete(db())) {
+  if (!isProfilesToolsParityComplete(getDb())) {
     throw new Error(
       "Database schema is not at v3 (missing agent_root or skills). Run: npm run db:migrate",
     );
@@ -28,7 +28,7 @@ export interface HermesStateImportResult {
 function isHermesStateAlreadyImported(): boolean {
   const root = getAgentRoot();
   const skillCount = (
-    db().prepare("SELECT COUNT(*) AS c FROM skills").get() as { c: number } | undefined
+    getDb().prepare("SELECT COUNT(*) AS c FROM skills").get() as { c: number } | undefined
   )?.c ?? 0;
   return skillCount > 0 && root.soulMd.trim().length > 0;
 }

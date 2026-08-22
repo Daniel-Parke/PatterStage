@@ -7,7 +7,7 @@
 // the runtime (see orchestration/RunSync), never by reading status.json files.
 // ═══════════════════════════════════════════════════════════════
 
-import { db, inTransaction, now } from "./db";
+import { getDb, inTransaction, now } from "./db";
 import { buildUpdate } from "./db/build-update";
 import type { RunStatus, RunUsage } from "@/lib/runtime/types";
 
@@ -98,7 +98,7 @@ export interface CreateRunInput {
  */
 export function createRun(input: CreateRunInput): boolean {
   const ts = now();
-  const result = db()
+  const result = getDb()
     .prepare(
       `INSERT OR IGNORE INTO runs
          (id, mission_id, schedule_id, composer_node_run_id, profile_name, status, submitted_at, updated_at)
@@ -119,12 +119,12 @@ export function createRun(input: CreateRunInput): boolean {
 // ── Read ─────────────────────────────────────────────────────
 
 export function getRun(id: string): RunRecord | null {
-  const row = db().prepare("SELECT * FROM runs WHERE id = ?").get(id) as RunRow | undefined;
+  const row = getDb().prepare("SELECT * FROM runs WHERE id = ?").get(id) as RunRow | undefined;
   return rowToRun(row);
 }
 
 export function getLatestRunForMission(missionId: string): RunRecord | null {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT * FROM runs WHERE mission_id = ? ORDER BY submitted_at DESC LIMIT 1")
     .get(missionId) as RunRow | undefined;
   return rowToRun(row);
@@ -132,7 +132,7 @@ export function getLatestRunForMission(missionId: string): RunRecord | null {
 
 /** All non-terminal runs (the reconcile loop polls these). */
 export function listActiveRuns(): RunRecord[] {
-  const rows = db()
+  const rows = getDb()
     .prepare("SELECT * FROM runs WHERE status = 'started' ORDER BY submitted_at ASC")
     .all() as RunRow[];
   return rows.map(rowToRun).filter((r): r is RunRecord => r !== null);
@@ -154,7 +154,7 @@ export function attachBackendRun(
     { now: now() },
   );
   inTransaction(() => {
-    db().prepare(`UPDATE runs SET ${sql} WHERE id = ?`).run(...values, id);
+    getDb().prepare(`UPDATE runs SET ${sql} WHERE id = ?`).run(...values, id);
   });
   return getRun(id);
 }
@@ -185,7 +185,7 @@ export function updateRun(
     { now: ts },
   );
   inTransaction(() => {
-    db().prepare(`UPDATE runs SET ${sql} WHERE id = ?`).run(...values, id);
+    getDb().prepare(`UPDATE runs SET ${sql} WHERE id = ?`).run(...values, id);
   });
   return getRun(id);
 }

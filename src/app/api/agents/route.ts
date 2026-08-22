@@ -5,7 +5,7 @@
 // instead of running execSync on every request.
 // ═══════════════════════════════════════════════════════════════
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { ensureSyncLayer } from "@/lib/sync";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
@@ -17,7 +17,7 @@ export async function GET() {
     ensureSyncLayer();
 
     // Read from the agent_processes table
-    const rows = db()
+    const rows = getDb()
       .prepare(
         "SELECT id, type, name, status, pid, model, turns, last_activity, last_seen_at FROM agent_processes ORDER BY type, name"
       )

@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "dev:network": "next dev -H 0.0.0.0",
@@ -14,7 +17,7 @@
     "lint": "node scripts/tooling/check-agent-files.mjs && node scripts/tooling/check-doc-links.mjs && node scripts/tooling/design-lint.mjs && eslint . --max-warnings 0 && npm run typecheck:tests",
     "lint:design": "node scripts/tooling/design-lint.mjs --report",
     "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",
-    "lint:knip": "knip --include files,dependencies,unlisted --no-config-hints",
+    "lint:knip": "knip --include files,dependencies,unlisted,unresolved,exports,types,duplicates,binaries --no-config-hints",
     "start:network": "next start -H 0.0.0.0",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -28,6 +31,12 @@
     "discover-hermes": "node scripts/tooling/discover-agents.mjs",
     "generate:schema-json": "npx tsx scripts/tooling/generate-json-schema.ts",
     "seed-pack": "node scripts/tooling/generate-seed-pack.mjs",
+    "canary": "node scripts/tooling/output-canary.mjs",
+    "canary:check": "node scripts/tooling/output-canary.mjs --check",
+    "canary:snapshot": "node scripts/tooling/output-canary.mjs --out",
+    "canary:assert": "node scripts/tooling/output-canary.mjs --assert",
+    "canary:bless": "node scripts/tooling/output-canary.mjs --write-golden",
+    "canary:move-neutral": "node scripts/tooling/output-canary.mjs --assert-move-neutral",
     "mock-hermes": "node mock-hermes/server.mjs",
     "mock-hindsight": "node mock-hindsight/server.mjs",
     "mock-llm": "node mock-llm/server.mjs",

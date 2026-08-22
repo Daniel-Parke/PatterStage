@@ -10,18 +10,17 @@
 import { z } from "zod";
 
 // ── Enums ────────────────────────────────────────────────────────
-export const nodeGateSchema = z.enum(["hil", "auto"]);
+const nodeGateSchema = z.enum(["hil", "auto"]);
 export type NodeGate = z.infer<typeof nodeGateSchema>;
 
-export const edgeConditionSchema = z.enum([
-  "always",
-  "on_pass",
-  "on_fail",
-  "on_approve",
-  "on_reject",
-]);
 /** Edge guard. Open string so workflows can add custom conditions later. */
-export type EdgeCondition = z.infer<typeof edgeConditionSchema> | (string & {});
+export type EdgeCondition =
+  | "always"
+  | "on_pass"
+  | "on_fail"
+  | "on_approve"
+  | "on_reject"
+  | (string & {});
 
 export type ComposerRunStatus =
   | "pending"
@@ -137,7 +136,7 @@ export interface ComposerApproval {
 }
 
 // ── Workflow definition (used to create/seed a workflow graph) ───
-export const nodeDefSchema = z.object({
+const nodeDefSchema = z.object({
   key: z.string().min(1),
   label: z.string().min(1),
   kind: z.string().default("custom"),
@@ -146,7 +145,7 @@ export const nodeDefSchema = z.object({
   isTerminal: z.boolean().optional(),
   config: z.record(z.string(), z.unknown()).optional(),
 });
-export const edgeDefSchema = z.object({
+const edgeDefSchema = z.object({
   from: z.string().min(1), // node key
   to: z.string().min(1), // node key
   condition: z.string().default("always"),
@@ -167,7 +166,7 @@ export type WorkflowDef = z.input<typeof workflowDefSchema>;
 // is self-describing instead of a hardcoded "Feature request / bug report" box.
 // Stored on the START node's `config.inputSpec` (round-trips as JSON — no
 // migration). Mirrors Dify/n8n "start node input variables".
-export const inputSpecSchema = z.object({
+const inputSpecSchema = z.object({
   /** Label above the objective box (e.g. "Research question"). */
   objectiveLabel: z.string().min(1).default("Objective"),
   /** Placeholder / hint inside the box. */

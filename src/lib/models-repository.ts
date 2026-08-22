@@ -5,7 +5,7 @@
 // Drives mission dispatch, generic LLM calls, and the Hindsight bridge.
 // Defaults are stored in the model_defaults table keyed on task_type.
 
-import { db, inTransaction, uuid, now } from "./db";
+import { getDb, inTransaction, uuid, now } from "./db";
 import { isTaskType, type TaskType } from "./models/task-types";
 import { getCredentialWithKey } from "./credentials-repository";
 import { emptyModelDefaults } from "./utils";
@@ -121,14 +121,14 @@ function rowToModel(row: ModelRow): ModelRecord {
 // ── Read ───────────────────────────────────────────────────────
 
 export function listModels(): ModelRecord[] {
-  const rows = db()
+  const rows = getDb()
     .prepare("SELECT * FROM models ORDER BY created_at DESC")
     .all() as ModelRow[];
   return rows.map(rowToModel);
 }
 
 export function getModel(id: string): ModelRecord | null {
-  const row = db().prepare("SELECT * FROM models WHERE id = ?").get(id) as ModelRow | undefined;
+  const row = getDb().prepare("SELECT * FROM models WHERE id = ?").get(id) as ModelRow | undefined;
   return row ? rowToModel(row) : null;
 }
 
@@ -149,7 +149,7 @@ export function findModelByModelId(modelId: string): ModelRecord | null {
   const trimmed = modelId.trim();
   if (!trimmed) return null;
 
-  const rows = db()
+  const rows = getDb()
     .prepare("SELECT * FROM models WHERE model_id = ?")
     .all(trimmed) as ModelRow[];
 
@@ -171,7 +171,7 @@ export function getDefaultModel(taskType: TaskType): ModelRecord | null {
   if (!isTaskType(taskType)) {
     throw new Error(`Unknown task type: ${taskType}`);
   }
-  const row = db()
+  const row = getDb()
     .prepare(
       `SELECT m.* FROM models m INNER JOIN model_defaults d ON m.id = d.model_id WHERE d.task_type = ? LIMIT 1`
     )
@@ -182,7 +182,7 @@ export function getDefaultModel(taskType: TaskType): ModelRecord | null {
 export function getModelDefaults(): ModelDefaults {
   const defaults = emptyModelDefaults();
   
-  const rows = db()
+  const rows = getDb()
     .prepare("SELECT task_type, model_id FROM model_defaults")
     .all() as { task_type: string; model_id: string | null }[];
   
@@ -205,7 +205,7 @@ export function createModel(input: CreateModelInput): ModelRecord {
   const id = uuid();
   const ts = now();
 
-  db()
+  getDb()
     .prepare(
       `INSERT INTO models (
          id, name, provider, model_id, base_url, context_length, credentials_id,
@@ -230,10 +230,10 @@ export function createModel(input: CreateModelInput): ModelRecord {
   if (input.defaults && Object.values(input.defaults).some(Boolean)) {
     for (const [slot, isDefault] of Object.entries(input.defaults)) {
       if (isDefault && isTaskType(slot)) {
-        db()
+        getDb()
           .prepare("DELETE FROM model_defaults WHERE task_type = ?")
           .run(slot);
-        db()
+        getDb()
           .prepare("INSERT INTO model_defaults (id, task_type, model_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
           .run(uuid(), slot, id, ts, ts);
       }
@@ -283,17 +283,17 @@ export function updateModel(id: string, input: UpdateModelInput): ModelRecord | 
     }
 
     vals.push(id);
-    db().prepare(`UPDATE models SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
+    getDb().prepare(`UPDATE models SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
 
     // Process default-slot flags
     if (input.defaults) {
       for (const [slot, isDefault] of Object.entries(input.defaults)) {
         if (!isTaskType(slot)) continue;
-        db()
+        getDb()
           .prepare("DELETE FROM model_defaults WHERE task_type = ?")
           .run(slot);
         if (isDefault) {
-          db()
+          getDb()
             .prepare("INSERT INTO model_defaults (id, task_type, model_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
             .run(uuid(), slot, id, ts, ts);
         }
@@ -305,12 +305,12 @@ export function updateModel(id: string, input: UpdateModelInput): ModelRecord | 
 }
 
 export function deleteModel(id: string): boolean {
-  const exists = db().prepare("SELECT 1 FROM models WHERE id = ?").get(id);
+  const exists = getDb().prepare("SELECT 1 FROM models WHERE id = ?").get(id);
   if (!exists) return false;
 
   inTransaction(() => {
-    db().prepare("DELETE FROM models WHERE id = ?").run(id);
-    db().prepare("DELETE FROM model_defaults WHERE model_id = ?").run(id);
+    getDb().prepare("DELETE FROM models WHERE id = ?").run(id);
+    getDb().prepare("DELETE FROM model_defaults WHERE model_id = ?").run(id);
   });
   return true;
 }
@@ -332,13 +332,13 @@ export function setDefaultModel(taskType: TaskType, modelId: string | null): Mod
 
   inTransaction(() => {
     // Remove existing default for this task_type
-    db()
+    getDb()
       .prepare("DELETE FROM model_defaults WHERE task_type = ?")
       .run(taskType);
 
     // Insert new default if modelId provided
     if (modelId) {
-      db()
+      getDb()
         .prepare("INSERT INTO model_defaults (id, task_type, model_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)")
         .run(uuid(), taskType, modelId, ts, ts);
     }
@@ -370,7 +370,7 @@ export function upsertModel(input: {
   const ts = now();
 
   // Match by (provider, model_id) — import_key column may not exist
-  const existing = db()
+  const existing = getDb()
     .prepare("SELECT id FROM models WHERE provider = ? AND model_id = ? LIMIT 1")
     .get(input.provider, input.modelId) as { id: string } | undefined;
 
@@ -379,7 +379,7 @@ export function upsertModel(input: {
   if (existing) {
     // Update existing row (preserve credentials_id + a user-set api_style:
     // COALESCE only fills it when still NULL).
-    db()
+    getDb()
       .prepare(
         "UPDATE models SET name = ?, base_url = ?, api_style = COALESCE(api_style, ?), updated_at = ? WHERE id = ?"
       )
@@ -404,7 +404,7 @@ export function upsertModel(input: {
   // Insert new row
   const id = uuid();
 
-  db()
+  getDb()
     .prepare(
       `INSERT INTO models (
          id, name, provider, model_id, base_url, context_length, credentials_id,

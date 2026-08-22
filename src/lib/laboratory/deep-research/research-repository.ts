@@ -5,7 +5,7 @@
 // runs and replay each run's steps. See 019_deep_research.sql.
 // ═══════════════════════════════════════════════════════════════
 
-import { db, uuid, now } from "@/lib/db";
+import { getDb, uuid, now } from "@/lib/db";
 import { parseStringArrayOrEmpty, parseJson } from "@/lib/db/parse-json";
 import type {
   ResearchConfig,
@@ -76,7 +76,7 @@ export function createResearchRun(input: {
   composerNodeRunId?: string | null;
 }): ResearchRun {
   const id = uuid();
-  db()
+  getDb()
     .prepare(
       `INSERT INTO research_runs (id, query, status, model_id, provider, config_json, composer_node_run_id, created_at)
        VALUES (?, ?, 'pending', ?, ?, ?, ?, ?)`,
@@ -94,13 +94,13 @@ export function createResearchRun(input: {
 }
 
 export function getResearchRun(id: string): ResearchRun | null {
-  const row = db().prepare("SELECT * FROM research_runs WHERE id = ?").get(id) as RunRow | undefined;
+  const row = getDb().prepare("SELECT * FROM research_runs WHERE id = ?").get(id) as RunRow | undefined;
   return row ? rowToRun(row) : null;
 }
 
 /** The latest research run spawned by a given Composer node-run (settle seam). */
 export function getResearchRunByComposerNodeRunId(nodeRunId: string): ResearchRun | null {
-  const row = db()
+  const row = getDb()
     .prepare(
       "SELECT * FROM research_runs WHERE composer_node_run_id = ? ORDER BY created_at DESC LIMIT 1",
     )
@@ -109,7 +109,7 @@ export function getResearchRunByComposerNodeRunId(nodeRunId: string): ResearchRu
 }
 
 export function listResearchRuns(limit = 50): ResearchRun[] {
-  const rows = db()
+  const rows = getDb()
     .prepare("SELECT * FROM research_runs ORDER BY created_at DESC LIMIT ?")
     .all(Math.max(1, Math.floor(limit))) as RunRow[];
   return rows.map(rowToRun);
@@ -132,7 +132,7 @@ export function updateResearchRun(id: string, input: UpdateResearchRunInput): Re
   if (input.error !== undefined) { sets.push("error = ?"); vals.push(input.error); }
   if (input.completedAt !== undefined) { sets.push("completed_at = ?"); vals.push(input.completedAt); }
   if (sets.length === 0) return getResearchRun(id);
-  db().prepare(`UPDATE research_runs SET ${sets.join(", ")} WHERE id = ?`).run(...vals, id);
+  getDb().prepare(`UPDATE research_runs SET ${sets.join(", ")} WHERE id = ?`).run(...vals, id);
   return getResearchRun(id);
 }
 
@@ -146,7 +146,7 @@ export function updateResearchRun(id: string, input: UpdateResearchRunInput): Re
  */
 export function failStuckResearchRuns(maxMinutes = 30): number {
   const cutoff = new Date(Date.now() - maxMinutes * 60_000).toISOString();
-  const res = db()
+  const res = getDb()
     .prepare(
       `UPDATE research_runs SET status = 'failed', error = ?, completed_at = ?
        WHERE status = 'running' AND created_at < ?`,
@@ -163,7 +163,7 @@ export function insertResearchStep(input: {
   output: string | null;
   sources: string[];
 }): void {
-  db()
+  getDb()
     .prepare(
       `INSERT INTO research_steps (id, run_id, position, kind, input, output, sources_json, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -181,7 +181,7 @@ export function insertResearchStep(input: {
 }
 
 export function listResearchSteps(runId: string): ResearchStep[] {
-  const rows = db()
+  const rows = getDb()
     .prepare("SELECT * FROM research_steps WHERE run_id = ? ORDER BY position ASC")
     .all(runId) as StepRow[];
   return rows.map(rowToStep);
@@ -206,7 +206,7 @@ function rowToPreset(row: PresetRow): ResearchPreset {
 }
 
 export function listResearchPresets(): ResearchPreset[] {
-  const rows = db()
+  const rows = getDb()
     .prepare("SELECT * FROM research_presets ORDER BY created_at DESC")
     .all() as PresetRow[];
   return rows.map(rowToPreset);
@@ -214,14 +214,14 @@ export function listResearchPresets(): ResearchPreset[] {
 
 export function createResearchPreset(name: string, config: ResearchConfig): ResearchPreset {
   const id = uuid();
-  db()
+  getDb()
     .prepare("INSERT INTO research_presets (id, name, config_json, created_at) VALUES (?, ?, ?, ?)")
     .run(id, name, JSON.stringify(config), now());
   return rowToPreset(
-    db().prepare("SELECT * FROM research_presets WHERE id = ?").get(id) as PresetRow,
+    getDb().prepare("SELECT * FROM research_presets WHERE id = ?").get(id) as PresetRow,
   );
 }
 
 export function deleteResearchPreset(id: string): void {
-  db().prepare("DELETE FROM research_presets WHERE id = ?").run(id);
+  getDb().prepare("DELETE FROM research_presets WHERE id = ?").run(id);
 }

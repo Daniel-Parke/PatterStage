@@ -2,7 +2,7 @@
 // agent-root-repository.ts — Bob / default agent at HERMES_HOME root
 // ═══════════════════════════════════════════════════════════════
 
-import { db, now } from "./db";
+import { getDb, now } from "./db";
 
 export interface AgentRootRow {
   id: number;
@@ -67,11 +67,11 @@ function rowToAgentRoot(row: DbRow): AgentRootRow {
 }
 
 export function getAgentRoot(): AgentRootRow {
-  const row = db()
+  const row = getDb()
     .prepare(`SELECT ${SELECT_COLS} FROM agent_root WHERE id = 1`)
     .get() as DbRow | undefined;
   if (!row) {
-    db()
+    getDb()
       .prepare(
         `INSERT INTO agent_root (id, display_name, description) VALUES (1, 'Bob', 'Main agent')`,
       )
@@ -98,7 +98,7 @@ export interface AgentRootPatch {
 export function updateAgentRoot(patch: AgentRootPatch): AgentRootRow {
   const existing = getAgentRoot();
   const ts = now();
-  db()
+  getDb()
     .prepare(
       `UPDATE agent_root SET
         display_name = ?,
@@ -133,7 +133,7 @@ export function updateAgentRoot(patch: AgentRootPatch): AgentRootRow {
 }
 
 export function setAgentRootSyncStatus(syncedAt: string | null, syncError: string | null): void {
-  db()
+  getDb()
     .prepare("UPDATE agent_root SET synced_at = ?, sync_error = ?, updated_at = ? WHERE id = 1")
     .run(syncedAt, syncError, now());
 }

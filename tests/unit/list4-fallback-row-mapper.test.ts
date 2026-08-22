@@ -37,7 +37,7 @@ const FALLBACK_ROW = {
 };
 
 jest.mock("@/lib/db", () => ({
-  db: () => ({
+  getDb: () => ({
     prepare: (sql: string) => ({
       all: () => {
         allCalls.push({ sql });

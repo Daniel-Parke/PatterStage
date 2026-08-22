@@ -73,7 +73,7 @@ export async function apiFetch<T = any>(
  * not enough to *act* on a status. A 409 that a user can resolve by confirming
  * is not the same as a 500, and telling them apart required parsing the prose.
  */
-export class ApiError extends Error {
+class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number,

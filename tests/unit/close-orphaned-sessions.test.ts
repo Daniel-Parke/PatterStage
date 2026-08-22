@@ -12,11 +12,11 @@
  *
  * Both functions take a `Database` as their first argument, so we
  * can drive them with a real in-memory SQLite DB seeded with the
- * baseline schema. No mocking of `db()` required.
+ * baseline schema. No mocking of `getDb()` required.
  *
  * Plus: `closeSessionForMission()` — the bridge that `MissionSync`
  * uses to close a session row in lockstep with a mission status
- * transition. This function uses the global `db()` singleton, so
+ * transition. This function uses the global `getDb()` singleton, so
  * the bridge tests mock `@/lib/db` to redirect calls to the
  * in-memory DB.
  */
@@ -369,7 +369,7 @@ describe("previewOrphanSweep", () => {
 
 // ── closeSessionForMission tests ──────────────────────────────────
 //
-// This function uses the global `db()` singleton, so the bridge
+// This function uses the global `getDb()` singleton, so the bridge
 // tests mock `@/lib/db` to redirect the singleton to the in-memory
 // DB. Each test owns its own mock + DB so the bridge tests can run
 // in parallel safely.
@@ -378,11 +378,11 @@ describe("closeSessionForMission — the MissionSync bridge", () => {
 
   beforeEach(() => {
     tdb = makeTestDatabase();
-    // Replace the global db() singleton for the duration of this test
+    // Replace the global getDb() singleton for the duration of this test
     jest.resetModules();
     jest.doMock("@/lib/db", () => {
       const actual = jest.requireActual("@/lib/db");
-      return { ...actual, db: () => tdb.db };
+      return { ...actual, getDb: () => tdb.db };
     });
   });
 

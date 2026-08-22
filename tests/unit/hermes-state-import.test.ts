@@ -15,7 +15,7 @@ jest.mock("fs", () => {
 let testDb: import("better-sqlite3").Database | null = null;
 
 jest.mock("@/lib/db", () => ({
-  db: () => testDb!,
+  getDb: () => testDb!,
   ensureDb: () => undefined,
 }));
 

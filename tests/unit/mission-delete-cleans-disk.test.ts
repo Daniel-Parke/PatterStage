@@ -63,7 +63,7 @@ beforeEach(() => {
     const actual = jest.requireActual("@/lib/db") as Record<string, unknown>;
     return {
       ...actual,
-      db: () => testDb,
+      getDb: () => testDb,
       inTransaction: (fn: () => unknown) => fn(),
     };
   });

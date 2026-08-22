@@ -171,14 +171,6 @@ export interface AgentRuntime {
   createSession(input: SessionCreate, profile?: string): Promise<SessionInfo>;
 }
 
-/** Raised when a run is submitted for a profile with no reachable gateway. */
-export class RuntimeEndpointError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "RuntimeEndpointError";
-  }
-}
-
 /** Raised on a non-2xx response from the backend transport. */
 export class RuntimeRequestError extends Error {
   constructor(

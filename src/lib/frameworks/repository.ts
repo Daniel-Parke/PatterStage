@@ -47,7 +47,7 @@ export function listFrameworks(): FrameworkRow[] {
 }
 
 /** The active framework row, or null if none is active. */
-export function getActiveFrameworkRow(): FrameworkRow | null {
+function getActiveFrameworkRow(): FrameworkRow | null {
   ensureDb();
   const r = getDb()
     .prepare("SELECT * FROM frameworks WHERE is_active = 1 ORDER BY id LIMIT 1")

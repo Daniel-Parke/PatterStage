@@ -29,7 +29,7 @@ import { existsSync, readFileSync } from "fs";
 import yaml from "js-yaml";
 
 import { getAgentWorkspace } from "./runtime/workspace";
-import { db } from "./db";
+import { getDb } from "./db";
 
 const CACHE_TTL_MS = 15_000; // 15 seconds
 
@@ -44,7 +44,7 @@ const CACHE_KEY_AT = "config.cached_at";
  */
 function readConfigCache(): Record<string, unknown> | null {
   try {
-    const rows = db()
+    const rows = getDb()
       .prepare(
         `SELECT key, value FROM meta WHERE key IN (?, ?)`,
       )
@@ -73,7 +73,7 @@ function readConfigCache(): Record<string, unknown> | null {
  */
 function writeConfigCache(config: Record<string, unknown>): void {
   try {
-    const dbInstance = db();
+    const dbInstance = getDb();
     const txn = dbInstance.transaction(() => {
       const stmt = dbInstance.prepare(
         "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
@@ -123,7 +123,7 @@ export function readCachedConfig(): Record<string, unknown> {
  */
 export function invalidateConfigCache(): void {
   try {
-    db()
+    getDb()
       .prepare(`DELETE FROM meta WHERE key IN (?, ?)`)
       .run(CACHE_KEY_JSON, CACHE_KEY_AT);
   } catch {

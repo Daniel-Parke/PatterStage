@@ -2,7 +2,7 @@
 // profiles-repository.ts — Agent profiles in PatterStage SQLite
 // ═══════════════════════════════════════════════════════════════
 
-import { db, inTransaction, now } from "@/lib/db";
+import { getDb, inTransaction, now } from "@/lib/db";
 import {
   buildConfigYaml,
   disabledSkillsFromJson,
@@ -82,52 +82,21 @@ const SELECT_COLS = `
 `;
 
 export function listProfiles(): AgentProfileRow[] {
-  const rows = db()
+  const rows = getDb()
     .prepare(`SELECT ${SELECT_COLS} FROM agent_profiles ORDER BY display_name COLLATE NOCASE`)
     .all() as DbRow[];
   return rows.map(rowToProfile);
 }
 
 export function getProfile(slug: string): AgentProfileRow | null {
-  const row = db()
+  const row = getDb()
     .prepare(`SELECT ${SELECT_COLS} FROM agent_profiles WHERE slug = ?`)
     .get(slug) as DbRow | undefined;
   return row ? rowToProfile(row) : null;
 }
 
-/**
- * Resolve a profile by slug, treating "default" as the root agent (Bob), which
- * lives in `agent_root` (a singleton), NOT in `agent_profiles`. Use this anywhere
- * that must work for the default agent too (benchmarking, agent-card) — plain
- * getProfile("default") returns null and is a recurring footgun.
- */
-export function getProfileOrRoot(slug: string): AgentProfileRow | null {
-  if (slug === "default" || slug === "") {
-    const root = getAgentRoot();
-    return {
-      slug: "default",
-      displayName: root.displayName,
-      description: root.description,
-      personality: root.personality,
-      configYaml: root.configYaml,
-      soulMd: root.soulMd,
-      agentsMd: root.agentsMd,
-      userMd: root.userMd,
-      memoryMd: root.memoryMd,
-      disabledSkillsJson: root.disabledSkillsJson,
-      platformToolsetsJson: root.platformToolsetsJson,
-      seedKey: null,
-      syncedAt: root.syncedAt,
-      syncError: root.syncError,
-      createdAt: root.updatedAt,
-      updatedAt: root.updatedAt,
-    };
-  }
-  return getProfile(slug);
-}
-
 export function getProfileBySeedKey(seedKey: string): AgentProfileRow | null {
-  const row = db()
+  const row = getDb()
     .prepare(`SELECT ${SELECT_COLS} FROM agent_profiles WHERE seed_key = ?`)
     .get(seedKey) as DbRow | undefined;
   return row ? rowToProfile(row) : null;
@@ -247,7 +216,7 @@ export function upsertProfile(input: UpsertProfileInput): AgentProfileRow {
       extraYamlLines: parsed.extraYamlLines,
     });
   }
-  db()
+  getDb()
     .prepare(
       `INSERT INTO agent_profiles (
         slug, display_name, description, personality, config_yaml,
@@ -329,7 +298,7 @@ export function renameProfileSlug(oldSlug: string, newSlug: string): AgentProfil
   if (getProfile(newSlug)) return null;
 
   return inTransaction(() => {
-    db()
+    getDb()
       .prepare(
         `INSERT INTO agent_profiles (
           slug, display_name, description, personality, config_yaml,
@@ -341,14 +310,14 @@ export function renameProfileSlug(oldSlug: string, newSlug: string): AgentProfil
         FROM agent_profiles WHERE slug = ?`,
       )
       .run(newSlug, now(), oldSlug);
-    db().prepare("DELETE FROM agent_profiles WHERE slug = ?").run(oldSlug);
+    getDb().prepare("DELETE FROM agent_profiles WHERE slug = ?").run(oldSlug);
     return getProfile(newSlug);
   });
 }
 
 export function deleteProfile(slug: string): boolean {
   if (slug === "default") return false;
-  const result = db().prepare("DELETE FROM agent_profiles WHERE slug = ?").run(slug);
+  const result = getDb().prepare("DELETE FROM agent_profiles WHERE slug = ?").run(slug);
   return result.changes > 0;
 }
 
@@ -357,7 +326,7 @@ export function setProfileSyncStatus(
   syncedAt: string | null,
   syncError: string | null,
 ): void {
-  db()
+  getDb()
     .prepare(
       "UPDATE agent_profiles SET synced_at = ?, sync_error = ?, updated_at = ? WHERE slug = ?",
     )

@@ -35,7 +35,7 @@ jest.mock("@/lib/models-repository", () => ({
 }));
 jest.mock("@/lib/api-auth", () => ({ requireAuth: () => null, requireNotReadOnly: () => null }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/db", () => ({ ensureDb: jest.fn(), db: jest.fn() }));
+jest.mock("@/lib/db", () => ({ ensureDb: jest.fn(), getDb: jest.fn() }));
 
 import { NextRequest } from "next/server";
 

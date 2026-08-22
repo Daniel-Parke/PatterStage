@@ -8,7 +8,7 @@
 // getRun() finalisation can reconcile it. See 013_chat.sql.
 // ═══════════════════════════════════════════════════════════════
 
-import { db, inTransaction, now, uuid } from "./db";
+import { getDb, inTransaction, now, uuid } from "./db";
 import { buildUpdate } from "./db/build-update";
 
 /** Placeholder title a conversation gets until its first user message names it. */
@@ -147,7 +147,7 @@ export interface CreateConversationInput {
 export function createConversation(input: CreateConversationInput = {}): ChatConversation {
   const id = input.id ?? uuid();
   const ts = now();
-  db()
+  getDb()
     .prepare(
       `INSERT INTO chat_conversations
          (id, title, session_id, profile_name, model, previous_response_id, created_at, updated_at)
@@ -167,7 +167,7 @@ export function createConversation(input: CreateConversationInput = {}): ChatCon
 }
 
 export function getConversation(id: string): ChatConversation | null {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT * FROM chat_conversations WHERE id = ?")
     .get(id) as ConversationRow | undefined;
   return rowToConversation(row);
@@ -175,7 +175,7 @@ export function getConversation(id: string): ChatConversation | null {
 
 /** Conversations, most-recently-updated first. */
 export function listConversations(limit = 100): ChatConversation[] {
-  const rows = db()
+  const rows = getDb()
     .prepare("SELECT * FROM chat_conversations ORDER BY updated_at DESC LIMIT ?")
     .all(limit) as ConversationRow[];
   return rows.map(rowToConversation).filter((c): c is ChatConversation => c !== null);
@@ -207,14 +207,14 @@ export function updateConversation(
     { now: now() },
   );
   inTransaction(() => {
-    db().prepare(`UPDATE chat_conversations SET ${sql} WHERE id = ?`).run(...values, id);
+    getDb().prepare(`UPDATE chat_conversations SET ${sql} WHERE id = ?`).run(...values, id);
   });
   return getConversation(id);
 }
 
 export function deleteConversation(id: string): boolean {
   // chat_messages cascade via the FK ON DELETE CASCADE.
-  const result = db().prepare("DELETE FROM chat_conversations WHERE id = ?").run(id);
+  const result = getDb().prepare("DELETE FROM chat_conversations WHERE id = ?").run(id);
   return result.changes > 0;
 }
 
@@ -232,7 +232,7 @@ export interface CreateMessageInput {
 export function createMessage(input: CreateMessageInput): ChatMessage {
   const id = input.id ?? uuid();
   const ts = now();
-  db()
+  getDb()
     .prepare(
       `INSERT INTO chat_messages
          (id, conversation_id, role, content, run_id, status, created_at, updated_at)
@@ -249,7 +249,7 @@ export function createMessage(input: CreateMessageInput): ChatMessage {
       ts,
     );
   // Touch the parent conversation so the sidebar re-sorts.
-  db()
+  getDb()
     .prepare("UPDATE chat_conversations SET updated_at = ? WHERE id = ?")
     .run(ts, input.conversationId);
   // Auto-title an untitled conversation from its first user message, so the
@@ -264,21 +264,21 @@ export function createMessage(input: CreateMessageInput): ChatMessage {
 }
 
 export function getMessage(id: string): ChatMessage | null {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT * FROM chat_messages WHERE id = ?")
     .get(id) as MessageRow | undefined;
   return rowToMessage(row);
 }
 
 export function getMessageByRunId(runId: string): ChatMessage | null {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT * FROM chat_messages WHERE run_id = ? ORDER BY created_at DESC LIMIT 1")
     .get(runId) as MessageRow | undefined;
   return rowToMessage(row);
 }
 
 export function getMessages(conversationId: string): ChatMessage[] {
-  const rows = db()
+  const rows = getDb()
     .prepare("SELECT * FROM chat_messages WHERE conversation_id = ? ORDER BY created_at ASC")
     .all(conversationId) as MessageRow[];
   return rows.map(rowToMessage).filter((m): m is ChatMessage => m !== null);
@@ -312,7 +312,7 @@ export function updateMessage(
     { now: now() },
   );
   inTransaction(() => {
-    db().prepare(`UPDATE chat_messages SET ${sql} WHERE id = ?`).run(...values, id);
+    getDb().prepare(`UPDATE chat_messages SET ${sql} WHERE id = ?`).run(...values, id);
   });
   return getMessage(id);
 }

@@ -12,7 +12,7 @@ let testDb: import("better-sqlite3").Database | null = null;
 
 jest.mock("@/lib/db", () => {
   const actual = jest.requireActual("@/lib/db") as typeof import("@/lib/db");
-  return { ...actual, db: () => testDb! };
+  return { ...actual, getDb: () => testDb! };
 });
 
 import { listSessions } from "@/lib/session-repository";

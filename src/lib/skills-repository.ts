@@ -2,7 +2,7 @@
 // skills-repository.ts — Global skills catalog in SQLite
 // ═══════════════════════════════════════════════════════════════
 
-import { db, now } from "./db";
+import { getDb, now } from "./db";
 
 type SkillSource = "bundled" | "custom" | "hub";
 
@@ -53,14 +53,14 @@ function rowToSkill(row: DbRow): SkillRow {
 }
 
 export function listSkills(): SkillRow[] {
-  const rows = db()
+  const rows = getDb()
     .prepare(`SELECT ${SELECT_COLS} FROM skills ORDER BY skill_key COLLATE NOCASE`)
     .all() as DbRow[];
   return rows.map(rowToSkill);
 }
 
 export function getSkill(skillKey: string): SkillRow | null {
-  const row = db()
+  const row = getDb()
     .prepare(`SELECT ${SELECT_COLS} FROM skills WHERE skill_key = ?`)
     .get(skillKey) as DbRow | undefined;
   return row ? rowToSkill(row) : null;
@@ -78,7 +78,7 @@ export interface UpsertSkillInput {
 export function upsertSkill(input: UpsertSkillInput): SkillRow {
   const ts = now();
   const existing = getSkill(input.skillKey);
-  db()
+  getDb()
     .prepare(
       `INSERT INTO skills (
         skill_key, display_name, description, category, content, source,
@@ -110,7 +110,7 @@ export function setSkillSyncStatus(
   syncedAt: string | null,
   syncError: string | null,
 ): void {
-  db()
+  getDb()
     .prepare(
       "UPDATE skills SET synced_at = ?, sync_error = ?, updated_at = ? WHERE skill_key = ?",
     )

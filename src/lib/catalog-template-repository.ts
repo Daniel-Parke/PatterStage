@@ -2,7 +2,7 @@
 // catalog-template-repository.ts — Seeded mission templates in SQLite
 // ═══════════════════════════════════════════════════════════════
 
-import { db, now } from "./db";
+import { getDb, now } from "./db";
 import { parseStringArrayOrEmpty } from "./db/parse-json";
 
 export interface CatalogTemplateRow {
@@ -74,14 +74,14 @@ function rowToTemplate(row: DbRow): CatalogTemplateRow {
 }
 
 export function listCatalogTemplates(): CatalogTemplateRow[] {
-  const rows = db()
+  const rows = getDb()
     .prepare("SELECT * FROM catalog_templates ORDER BY name COLLATE NOCASE")
     .all() as DbRow[];
   return rows.map(rowToTemplate);
 }
 
 export function getCatalogTemplate(id: string): CatalogTemplateRow | null {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT * FROM catalog_templates WHERE id = ?")
     .get(id) as DbRow | undefined;
   return row ? rowToTemplate(row) : null;
@@ -91,7 +91,7 @@ export function upsertCatalogTemplate(
   row: CatalogTemplateRow & { seedKey?: string | null },
 ): CatalogTemplateRow {
   const ts = now();
-  db()
+  getDb()
     .prepare(
       `INSERT INTO catalog_templates (
         id, seed_key, name, icon, color, category_id, profile_slug, description,

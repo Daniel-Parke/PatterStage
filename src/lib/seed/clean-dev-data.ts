@@ -16,7 +16,7 @@ import { listMissions, deleteMission } from "@/lib/mission-repository";
 
 const TEST_NAME = /^(testy?\b|test[\s_-]|untitled story\b)/i;
 
-export interface DevDataItem {
+interface DevDataItem {
   id: string;
   label: string;
 }

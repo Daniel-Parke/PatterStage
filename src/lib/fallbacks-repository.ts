@@ -2,7 +2,7 @@
 // fallbacks-repository.ts — CRUD for the global fallback chain
 // ═══════════════════════════════════════════════════════════════
 
-import { db, inTransaction, uuid, now } from "./db";
+import { getDb, inTransaction, uuid, now } from "./db";
 import type { FallbackConfig } from "@/types/console";
 
 export interface FallbackEntryRecord {
@@ -79,7 +79,7 @@ function rowToFallbackEntry(r: FallbackRow): FallbackEntryRecord {
  *  Custom entries (no FK) return with denormalised data.
  */
 export function listFallbackChain(): FallbackEntryRecord[] {
-  const rows = db()
+  const rows = getDb()
     .prepare(`${FALLBACK_JOIN_SELECT} ORDER BY f.position ASC`)
     .all() as FallbackRow[];
   return rows.map(rowToFallbackEntry);
@@ -87,7 +87,7 @@ export function listFallbackChain(): FallbackEntryRecord[] {
 
 /** Get a single fallback entry. */
 export function getFallbackEntry(id: string): FallbackEntryRecord | null {
-  const row = db()
+  const row = getDb()
     .prepare(`${FALLBACK_JOIN_SELECT} WHERE f.id = ?`)
     .get(id) as FallbackRow | undefined;
   if (!row) return null;
@@ -98,14 +98,14 @@ export function getFallbackEntry(id: string): FallbackEntryRecord | null {
 export function addFallbackEntry(input: CreateFallbackInput): FallbackEntryRecord {
   const ts = now();
   const id = uuid();
-  const maxPos = db()
+  const maxPos = getDb()
     .prepare("SELECT COALESCE(MAX(position), 0) AS mx FROM model_fallbacks")
     .get() as { mx: number };
   const position = input.position ?? maxPos.mx + 1;
   // Default to enabled (1) unless explicitly set to false
   const enabled = input.enabled !== false ? 1 : 0;
 
-  db().prepare(
+  getDb().prepare(
     `INSERT INTO model_fallbacks (id, model_id, position, enabled, override_base_url, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?)`
   ).run(id, input.modelId, position, enabled, input.overrideBaseUrl ?? null, ts, ts);
@@ -144,7 +144,7 @@ export function updateFallbackEntry(id: string, input: UpdateFallbackInput): Fal
   if (input.overrideBaseUrl !== undefined) { sets.push("override_base_url = ?"); vals.push(input.overrideBaseUrl); }
 
   vals.push(id);
-  db().prepare(`UPDATE model_fallbacks SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
+  getDb().prepare(`UPDATE model_fallbacks SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
   return getFallbackEntry(id);
 }
 
@@ -159,9 +159,9 @@ export function deleteFallbackEntry(id: string): boolean {
   if (!entry) return false;
 
   inTransaction(() => {
-    db().prepare("DELETE FROM model_fallbacks WHERE id = ?").run(id);
+    getDb().prepare("DELETE FROM model_fallbacks WHERE id = ?").run(id);
     // Reposition entries that were after the deleted one
-    db().prepare(
+    getDb().prepare(
       "UPDATE model_fallbacks SET position = position - 1 WHERE position > ?"
     ).run(entry.position);
   });
@@ -177,7 +177,7 @@ interface ConfigRow {
 }
 
 export function getFallbackConfig(): FallbackConfig {
-  const rows = db()
+  const rows = getDb()
     .prepare("SELECT key, value FROM fallback_config")
     .all() as ConfigRow[];
 
@@ -197,13 +197,13 @@ export function updateFallbackConfigBatch(updates: {
   apiMaxRetries?: number;
 }): FallbackConfig {
   // The pre-refactor form was 3 hand-listed `if (X !== undefined) {
-  // db().prepare(...).run(KEY, String(X)) }` blocks — same SQL string,
+  // getDb().prepare(...).run(KEY, String(X)) }` blocks — same SQL string,
   // same `.run(key, stringified-value)` shape. The loop collapses them
   // to a single prepared statement (better-sqlite3 caches by SQL text,
   // so reuse is a wash but the byte-for-byte wire shape is preserved).
   // `getFallbackConfig` at the end is unchanged (it re-reads all rows
   // and returns the full object, so a partial batch is safe).
-  const stmt = db().prepare(
+  const stmt = getDb().prepare(
     "INSERT OR REPLACE INTO fallback_config (key, value) VALUES (?, ?)"
   );
   const entries: Array<[string, unknown]> = [

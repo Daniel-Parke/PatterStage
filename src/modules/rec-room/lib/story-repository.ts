@@ -2,7 +2,7 @@
 // story-repository.ts — Story CRUD via SQLite
 // ═══════════════════════════════════════════════════════════════
 
-import { db, inTransaction, uuid, now } from "@/lib/db";
+import { getDb, inTransaction, uuid, now } from "@/lib/db";
 
 export interface Story {
   id: string;
@@ -65,7 +65,7 @@ function rowToStory(row: StoryRow | undefined): Story | null {
 // ── CRUD ─────────────────────────────────────────────────────
 
 export function listStories(): Story[] {
-  const rows = db()
+  const rows = getDb()
     .prepare(
       "SELECT * FROM stories WHERE deleted_at IS NULL ORDER BY created_at DESC"
     )
@@ -74,7 +74,7 @@ export function listStories(): Story[] {
 }
 
 export function getStory(id: string): Story | null {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT * FROM stories WHERE id = ?")
     .get(id) as StoryRow | undefined;
   return rowToStory(row);
@@ -93,7 +93,7 @@ export function createStory(data: {
   const ts = now();
 
   inTransaction(() => {
-    db()
+    getDb()
       .prepare(
         `INSERT INTO stories
            (id, title, config, master_prompt, story_arc, rolling_summary,
@@ -129,7 +129,7 @@ export function updateStory(
   const merged: Story = { ...existing, ...updates, updatedAt: ts };
 
   inTransaction(() => {
-    db()
+    getDb()
       .prepare(
         `UPDATE stories SET
            title = ?, config = ?, master_prompt = ?, story_arc = ?,
@@ -159,7 +159,7 @@ export function deleteStory(id: string): boolean {
   const existing = getStory(id);
   if (!existing) return false;
   const ts = now();
-  db()
+  getDb()
     .prepare("UPDATE stories SET deleted_at = ? WHERE id = ?")
     .run(ts, id);
   return true;

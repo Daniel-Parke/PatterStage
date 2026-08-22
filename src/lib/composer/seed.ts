@@ -5,7 +5,7 @@
 // (keyed, so re-running is a no-op). Called from the orchestration boot path.
 // ═══════════════════════════════════════════════════════════════
 
-import { db, uuid, now } from "@/lib/db";
+import { getDb, uuid, now } from "@/lib/db";
 import {
   createWorkflowFromDef,
   getWorkflowByKey,
@@ -45,7 +45,7 @@ function ensureRecoveryEdges(): void {
       (e) => e.fromNodeId === from && e.toNodeId === to && e.condition === re.condition,
     );
     if (exists) continue;
-    db()
+    getDb()
       .prepare(
         "INSERT INTO composer_edges (id, workflow_id, from_node_id, to_node_id, condition, label, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
       )
@@ -70,7 +70,7 @@ function ensureSoftwareDeliveryStartConfig(): void {
   if (!config.inputSpec) { config.inputSpec = SOFTWARE_DELIVERY_INPUT_SPEC; changed = true; }
   if (!config.framing) { config.framing = "software"; changed = true; }
   if (!changed) return;
-  db()
+  getDb()
     .prepare("UPDATE composer_nodes SET config_json = ? WHERE id = ?")
     .run(JSON.stringify(config), start.id);
 }

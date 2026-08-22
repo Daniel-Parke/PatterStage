@@ -9,7 +9,7 @@
 import { exec } from "child_process";
 import { access, constants, readFile } from "fs/promises";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
-import { db, now } from "@/lib/db";
+import { getDb, now } from "@/lib/db";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 
@@ -152,7 +152,7 @@ export class ProcessSync implements SyncSource {
       }
 
       // ── Write to DB ───────────────────────────────────────
-      const database = db();
+      const database = getDb();
       const timestamp = now();
 
       // Clear stale entries first
@@ -189,7 +189,7 @@ export class ProcessSync implements SyncSource {
           const hours = Math.floor(uptimeSeconds / 3600);
           const minutes = Math.floor((uptimeSeconds % 3600) / 60);
           const uptimeStr = `${hours}h ${minutes}m`;
-          db()
+          getDb()
             .prepare(
               "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)"
             )

@@ -38,7 +38,7 @@ const prepareSpy = jest.fn((sql: string) => ({
 }));
 
 jest.mock("@/lib/db", () => ({
-  db: () => ({
+  getDb: () => ({
     prepare: prepareSpy,
     transaction: (fn: () => unknown) => fn,
   }),
@@ -80,7 +80,7 @@ describe("updateFallbackConfigBatch — List 4 SQL loop refactor", () => {
 
     // Return value is a FallbackConfig-shaped object (the real
     // getFallbackConfig returns the defaults object since the
-    // mocked db().prepare().all() returns []).
+    // mocked getDb().prepare().all() returns []).
     expect(result).toEqual(
       expect.objectContaining({
         restorePrimaryOnFallback: expect.any(Boolean),

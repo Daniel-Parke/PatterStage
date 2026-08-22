@@ -36,7 +36,7 @@ export type IconName =
   | "AudioLines" | "Mic" | "Volume2" | "GitBranch"
   | "ListTodo" | "Network" | "Settings2";
 
-export interface NavSubLink {
+interface NavSubLink {
   label: string;
   href: string;
 }
@@ -51,13 +51,13 @@ export interface NavLink {
   subLinks?: NavSubLink[];
 }
 
-export interface NavSection {
+interface NavSection {
   label: string;
   links: NavLink[];
 }
 
 /** A collapsible group in the Config tree. */
-export interface ConfigGroup {
+interface ConfigGroup {
   label: string;
   defaultOpen?: boolean;
   links: NavLink[];

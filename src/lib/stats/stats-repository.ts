@@ -6,7 +6,7 @@
 // partially-populated DB (fresh install, no runs yet) yields zeros, not errors.
 // ═══════════════════════════════════════════════════════════════
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import {
   computeStreaks,
   evaluateAchievements,
@@ -118,7 +118,7 @@ function parseTokens(raw: string | null): { input: number; output: number; total
 
 function countBy(table: string, where = ""): Record<string, number> {
   try {
-    const rows = db()
+    const rows = getDb()
       .prepare(`SELECT status, COUNT(*) AS c FROM ${table} ${where} GROUP BY status`)
       .all() as Array<{ status: string; c: number }>;
     const out: Record<string, number> = {};
@@ -130,7 +130,7 @@ function countBy(table: string, where = ""): Record<string, number> {
 }
 function scalar(sql: string, ...params: unknown[]): number {
   try {
-    const row = db().prepare(sql).get(...params) as { v: number } | undefined;
+    const row = getDb().prepare(sql).get(...params) as { v: number } | undefined;
     return num(row?.v);
   } catch {
     return 0;
@@ -164,7 +164,7 @@ export function getDashboardStats(): DashboardStats {
   // ── runs (90-day window, aggregated in JS for robust token parsing) ──
   const runRows = (() => {
     try {
-      return db()
+      return getDb()
         .prepare(
           `SELECT status, usage_json, submitted_at, completed_at
              FROM runs WHERE submitted_at >= datetime('now', '-91 days')`,
@@ -239,7 +239,7 @@ export function getDashboardStats(): DashboardStats {
   const scriptsEnabled = 0;
   const nextRun = ((): NextRun | null => {
     try {
-      const sched = db()
+      const sched = getDb()
         .prepare(
           `SELECT name, next_run_at AS at FROM schedules
              WHERE enabled = 1 AND next_run_at IS NOT NULL AND next_run_at > datetime('now')
@@ -260,7 +260,7 @@ export function getDashboardStats(): DashboardStats {
   // ── mission throughput (terminal missions / day, last 30) ──
   const throughputMap = new Map<string, { completed: number; failed: number }>();
   try {
-    const rows = db()
+    const rows = getDb()
       .prepare(
         `SELECT date(updated_at) AS d, status, COUNT(*) AS c FROM missions
            WHERE deleted_at IS NULL AND status IN ('successful','failed')

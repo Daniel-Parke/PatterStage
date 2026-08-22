@@ -5,7 +5,7 @@
 // engine (ComposerTick + dispatch + reconcile) and the API build on these.
 // ═══════════════════════════════════════════════════════════════
 
-import { db, inTransaction, uuid, now } from "@/lib/db";
+import { getDb, inTransaction, uuid, now } from "@/lib/db";
 import { parseJson, parseBool } from "@/lib/db/parse-json";
 import { workflowDefSchema } from "./schema";
 import type {
@@ -63,24 +63,24 @@ export function createWorkflowFromDef(input: WorkflowDef): ComposerWorkflowGraph
     let workflowId = uuid();
     let version = 1;
     if (def.key) {
-      const existing = db().prepare("SELECT id, version FROM composer_workflows WHERE key = ?").get(def.key) as { id: string; version: number } | undefined;
+      const existing = getDb().prepare("SELECT id, version FROM composer_workflows WHERE key = ?").get(def.key) as { id: string; version: number } | undefined;
       if (existing) {
         workflowId = existing.id;
         version = existing.version + 1;
-        db().prepare("DELETE FROM composer_nodes WHERE workflow_id = ?").run(workflowId); // edges cascade
-        db().prepare("UPDATE composer_workflows SET name = ?, description = ?, version = ?, updated_at = ? WHERE id = ?").run(def.name, def.description, version, ts, workflowId);
+        getDb().prepare("DELETE FROM composer_nodes WHERE workflow_id = ?").run(workflowId); // edges cascade
+        getDb().prepare("UPDATE composer_workflows SET name = ?, description = ?, version = ?, updated_at = ? WHERE id = ?").run(def.name, def.description, version, ts, workflowId);
       } else {
-        db().prepare("INSERT INTO composer_workflows (id, key, name, description, version, created_at, updated_at) VALUES (?, ?, ?, ?, 1, ?, ?)").run(workflowId, def.key, def.name, def.description, ts, ts);
+        getDb().prepare("INSERT INTO composer_workflows (id, key, name, description, version, created_at, updated_at) VALUES (?, ?, ?, ?, 1, ?, ?)").run(workflowId, def.key, def.name, def.description, ts, ts);
       }
     } else {
-      db().prepare("INSERT INTO composer_workflows (id, key, name, description, version, created_at, updated_at) VALUES (?, NULL, ?, ?, 1, ?, ?)").run(workflowId, def.name, def.description, ts, ts);
+      getDb().prepare("INSERT INTO composer_workflows (id, key, name, description, version, created_at, updated_at) VALUES (?, NULL, ?, ?, 1, ?, ?)").run(workflowId, def.name, def.description, ts, ts);
     }
 
     const nodeIdByKey = new Map<string, string>();
     def.nodes.forEach((n, i) => {
       const id = uuid();
       nodeIdByKey.set(n.key, id);
-      db().prepare(`INSERT INTO composer_nodes (id, workflow_id, key, label, kind, gate, is_start, is_terminal, config_json, pos, created_at)
+      getDb().prepare(`INSERT INTO composer_nodes (id, workflow_id, key, label, kind, gate, is_start, is_terminal, config_json, pos, created_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
         .run(id, workflowId, n.key, n.label, n.kind, n.gate, n.isStart ? 1 : 0, n.isTerminal ? 1 : 0, n.config ? JSON.stringify(n.config) : null, i, ts);
     });
@@ -88,7 +88,7 @@ export function createWorkflowFromDef(input: WorkflowDef): ComposerWorkflowGraph
       const from = nodeIdByKey.get(e.from);
       const to = nodeIdByKey.get(e.to);
       if (!from || !to) throw new Error(`edge references unknown node: ${e.from} -> ${e.to}`);
-      db().prepare("INSERT INTO composer_edges (id, workflow_id, from_node_id, to_node_id, condition, label, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      getDb().prepare("INSERT INTO composer_edges (id, workflow_id, from_node_id, to_node_id, condition, label, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
         .run(uuid(), workflowId, from, to, e.condition, e.label ?? null, ts);
     }
     return getWorkflowGraph(workflowId)!;
@@ -96,27 +96,27 @@ export function createWorkflowFromDef(input: WorkflowDef): ComposerWorkflowGraph
 }
 
 export function getWorkflow(id: string): ComposerWorkflow | null {
-  const row = db().prepare("SELECT * FROM composer_workflows WHERE id = ?").get(id) as WorkflowRow | undefined;
+  const row = getDb().prepare("SELECT * FROM composer_workflows WHERE id = ?").get(id) as WorkflowRow | undefined;
   return row ? rowToWorkflow(row) : null;
 }
 
 export function getWorkflowByKey(key: string): ComposerWorkflow | null {
-  const row = db().prepare("SELECT * FROM composer_workflows WHERE key = ?").get(key) as WorkflowRow | undefined;
+  const row = getDb().prepare("SELECT * FROM composer_workflows WHERE key = ?").get(key) as WorkflowRow | undefined;
   return row ? rowToWorkflow(row) : null;
 }
 
 export function listWorkflows(): ComposerWorkflow[] {
-  const rows = db().prepare("SELECT * FROM composer_workflows ORDER BY name COLLATE NOCASE").all() as WorkflowRow[];
+  const rows = getDb().prepare("SELECT * FROM composer_workflows ORDER BY name COLLATE NOCASE").all() as WorkflowRow[];
   return rows.map(rowToWorkflow);
 }
 
 export function listWorkflowNodes(workflowId: string): ComposerNode[] {
-  const rows = db().prepare("SELECT * FROM composer_nodes WHERE workflow_id = ? ORDER BY pos ASC").all(workflowId) as NodeRow[];
+  const rows = getDb().prepare("SELECT * FROM composer_nodes WHERE workflow_id = ? ORDER BY pos ASC").all(workflowId) as NodeRow[];
   return rows.map(rowToNode);
 }
 
 export function listWorkflowEdges(workflowId: string): ComposerEdge[] {
-  const rows = db().prepare("SELECT * FROM composer_edges WHERE workflow_id = ?").all(workflowId) as EdgeRow[];
+  const rows = getDb().prepare("SELECT * FROM composer_edges WHERE workflow_id = ?").all(workflowId) as EdgeRow[];
   return rows.map(rowToEdge);
 }
 
@@ -127,19 +127,19 @@ export function getWorkflowGraph(id: string): ComposerWorkflowGraph | null {
 }
 
 export function getNode(id: string): ComposerNode | null {
-  const row = db().prepare("SELECT * FROM composer_nodes WHERE id = ?").get(id) as NodeRow | undefined;
+  const row = getDb().prepare("SELECT * FROM composer_nodes WHERE id = ?").get(id) as NodeRow | undefined;
   return row ? rowToNode(row) : null;
 }
 
 /** The workflow's start node (is_start = 1; falls back to lowest pos). */
 export function getStartNode(workflowId: string): ComposerNode | null {
-  const row = db().prepare("SELECT * FROM composer_nodes WHERE workflow_id = ? ORDER BY is_start DESC, pos ASC LIMIT 1").get(workflowId) as NodeRow | undefined;
+  const row = getDb().prepare("SELECT * FROM composer_nodes WHERE workflow_id = ? ORDER BY is_start DESC, pos ASC LIMIT 1").get(workflowId) as NodeRow | undefined;
   return row ? rowToNode(row) : null;
 }
 
 /** Outgoing edges from a node (the engine picks one by matching the guard). */
 export function getOutgoingEdges(nodeId: string): ComposerEdge[] {
-  const rows = db().prepare("SELECT * FROM composer_edges WHERE from_node_id = ?").all(nodeId) as EdgeRow[];
+  const rows = getDb().prepare("SELECT * FROM composer_edges WHERE from_node_id = ?").all(nodeId) as EdgeRow[];
   return rows.map(rowToEdge);
 }
 
@@ -151,8 +151,8 @@ export function getOutgoingEdges(nodeId: string): ComposerEdge[] {
  * state and PUTs it wholesale — atomic, with no partial-edit races.
  */
 /** How many completed runs a structural edit would destroy. */
-export function countWorkflowRuns(workflowId: string): number {
-  const row = db()
+function countWorkflowRuns(workflowId: string): number {
+  const row = getDb()
     .prepare("SELECT COUNT(*) AS n FROM composer_runs WHERE workflow_id = ?")
     .get(workflowId) as { n: number } | undefined;
   return row?.n ?? 0;
@@ -195,16 +195,16 @@ export function replaceWorkflowGraph(
 
   return inTransaction(() => {
     const ts = now();
-    db().prepare("DELETE FROM composer_runs WHERE workflow_id = ?").run(workflowId); // cascades node_runs + approvals
-    db().prepare("DELETE FROM composer_nodes WHERE workflow_id = ?").run(workflowId); // edges cascade
-    db().prepare("UPDATE composer_workflows SET name = ?, description = ?, version = version + 1, updated_at = ? WHERE id = ?")
+    getDb().prepare("DELETE FROM composer_runs WHERE workflow_id = ?").run(workflowId); // cascades node_runs + approvals
+    getDb().prepare("DELETE FROM composer_nodes WHERE workflow_id = ?").run(workflowId); // edges cascade
+    getDb().prepare("UPDATE composer_workflows SET name = ?, description = ?, version = version + 1, updated_at = ? WHERE id = ?")
       .run(def.name, def.description, ts, workflowId);
 
     const nodeIdByKey = new Map<string, string>();
     def.nodes.forEach((n, i) => {
       const id = uuid();
       nodeIdByKey.set(n.key, id);
-      db().prepare(`INSERT INTO composer_nodes (id, workflow_id, key, label, kind, gate, is_start, is_terminal, config_json, pos, created_at)
+      getDb().prepare(`INSERT INTO composer_nodes (id, workflow_id, key, label, kind, gate, is_start, is_terminal, config_json, pos, created_at)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
         .run(id, workflowId, n.key, n.label, n.kind, n.gate, n.isStart ? 1 : 0, n.isTerminal ? 1 : 0, n.config ? JSON.stringify(n.config) : null, i, ts);
     });
@@ -212,7 +212,7 @@ export function replaceWorkflowGraph(
       const from = nodeIdByKey.get(e.from);
       const to = nodeIdByKey.get(e.to);
       if (!from || !to) throw new Error(`edge references unknown node: ${e.from} -> ${e.to}`);
-      db().prepare("INSERT INTO composer_edges (id, workflow_id, from_node_id, to_node_id, condition, label, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      getDb().prepare("INSERT INTO composer_edges (id, workflow_id, from_node_id, to_node_id, condition, label, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
         .run(uuid(), workflowId, from, to, e.condition, e.label ?? null, ts);
     }
     return getWorkflowGraph(workflowId)!;
@@ -224,15 +224,15 @@ export function deleteWorkflow(id: string): boolean {
   inTransaction(() => {
     // Delete runs first (cascades node_runs + approvals) so the workflow delete
     // (which cascades nodes + edges) doesn't hit the runs→workflow FK.
-    db().prepare("DELETE FROM composer_runs WHERE workflow_id = ?").run(id);
-    db().prepare("DELETE FROM composer_workflows WHERE id = ?").run(id); // cascades nodes + edges
+    getDb().prepare("DELETE FROM composer_runs WHERE workflow_id = ?").run(id);
+    getDb().prepare("DELETE FROM composer_workflows WHERE id = ?").run(id); // cascades nodes + edges
   });
   return true;
 }
 
 /** Whether a workflow has any non-terminal runs (block destructive edits). */
 export function workflowHasActiveRuns(workflowId: string): boolean {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT COUNT(*) AS c FROM composer_runs WHERE workflow_id = ? AND status IN ('pending','running','awaiting_approval')")
     .get(workflowId) as { c: number };
   return row.c > 0;
@@ -242,7 +242,7 @@ export function workflowHasActiveRuns(workflowId: string): boolean {
 export function createComposerRun(input: { workflowId: string; input?: string | null; profileName?: string | null; context?: Record<string, unknown> | null; currentNodeId?: string | null; parentNodeRunId?: string | null }): ComposerRun {
   const id = uuid();
   const ts = now();
-  db().prepare(`INSERT INTO composer_runs (id, workflow_id, status, current_node_id, input, context_json, profile_name, parent_node_run_id, created_at, updated_at)
+  getDb().prepare(`INSERT INTO composer_runs (id, workflow_id, status, current_node_id, input, context_json, profile_name, parent_node_run_id, created_at, updated_at)
                 VALUES (?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)`)
     .run(id, input.workflowId, input.currentNodeId ?? null, input.input ?? null, input.context ? JSON.stringify(input.context) : null, input.profileName ?? null, input.parentNodeRunId ?? null, ts, ts);
   return getComposerRun(id)!;
@@ -250,22 +250,22 @@ export function createComposerRun(input: { workflowId: string; input?: string | 
 
 /** The latest sub-workflow run spawned by a given "group" node-run (settle seam). */
 export function getComposerRunByParentNodeRunId(nodeRunId: string): ComposerRun | null {
-  const row = db().prepare("SELECT * FROM composer_runs WHERE parent_node_run_id = ? ORDER BY created_at DESC LIMIT 1").get(nodeRunId) as RunRow | undefined;
+  const row = getDb().prepare("SELECT * FROM composer_runs WHERE parent_node_run_id = ? ORDER BY created_at DESC LIMIT 1").get(nodeRunId) as RunRow | undefined;
   return row ? rowToRun(row) : null;
 }
 
 export function getComposerRun(id: string): ComposerRun | null {
-  const row = db().prepare("SELECT * FROM composer_runs WHERE id = ?").get(id) as RunRow | undefined;
+  const row = getDb().prepare("SELECT * FROM composer_runs WHERE id = ?").get(id) as RunRow | undefined;
   return row ? rowToRun(row) : null;
 }
 
 export function listComposerRuns(limit = 50): ComposerRun[] {
-  const rows = db().prepare("SELECT * FROM composer_runs ORDER BY created_at DESC LIMIT ?").all(Math.max(1, Math.floor(limit))) as RunRow[];
+  const rows = getDb().prepare("SELECT * FROM composer_runs ORDER BY created_at DESC LIMIT ?").all(Math.max(1, Math.floor(limit))) as RunRow[];
   return rows.map(rowToRun);
 }
 
 export function listActiveComposerRuns(): ComposerRun[] {
-  const rows = db().prepare("SELECT * FROM composer_runs WHERE status IN ('pending','running','awaiting_approval') ORDER BY created_at ASC").all() as RunRow[];
+  const rows = getDb().prepare("SELECT * FROM composer_runs WHERE status IN ('pending','running','awaiting_approval') ORDER BY created_at ASC").all() as RunRow[];
   return rows.map(rowToRun);
 }
 
@@ -287,7 +287,7 @@ export function updateComposerRun(id: string, patch: UpdateComposerRunInput): Co
   if (patch.context !== undefined) { sets.push("context_json = ?"); vals.push(patch.context ? JSON.stringify(patch.context) : null); }
   if (patch.error !== undefined) { sets.push("error = ?"); vals.push(patch.error); }
   if (patch.completedAt !== undefined) { sets.push("completed_at = ?"); vals.push(patch.completedAt); }
-  db().prepare(`UPDATE composer_runs SET ${sets.join(", ")} WHERE id = ?`).run(...vals, id);
+  getDb().prepare(`UPDATE composer_runs SET ${sets.join(", ")} WHERE id = ?`).run(...vals, id);
   return getComposerRun(id);
 }
 
@@ -295,31 +295,31 @@ export function updateComposerRun(id: string, patch: UpdateComposerRunInput): Co
 export function createNodeRun(input: { composerRunId: string; nodeId: string; attempt?: number; input?: string | null }): ComposerNodeRun {
   const id = uuid();
   const ts = now();
-  db().prepare(`INSERT INTO composer_node_runs (id, composer_run_id, node_id, attempt, status, input, started_at, created_at)
+  getDb().prepare(`INSERT INTO composer_node_runs (id, composer_run_id, node_id, attempt, status, input, started_at, created_at)
                 VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)`)
     .run(id, input.composerRunId, input.nodeId, input.attempt ?? 1, input.input ?? null, ts, ts);
   return getNodeRun(id)!;
 }
 
 export function getNodeRun(id: string): ComposerNodeRun | null {
-  const row = db().prepare("SELECT * FROM composer_node_runs WHERE id = ?").get(id) as NodeRunRow | undefined;
+  const row = getDb().prepare("SELECT * FROM composer_node_runs WHERE id = ?").get(id) as NodeRunRow | undefined;
   return row ? rowToNodeRun(row) : null;
 }
 
 /** Find the node-run that owns a given agent run id (reconcile branch). */
 export function getNodeRunByRunId(runId: string): ComposerNodeRun | null {
-  const row = db().prepare("SELECT * FROM composer_node_runs WHERE run_id = ?").get(runId) as NodeRunRow | undefined;
+  const row = getDb().prepare("SELECT * FROM composer_node_runs WHERE run_id = ?").get(runId) as NodeRunRow | undefined;
   return row ? rowToNodeRun(row) : null;
 }
 
 export function listNodeRuns(composerRunId: string): ComposerNodeRun[] {
-  const rows = db().prepare("SELECT * FROM composer_node_runs WHERE composer_run_id = ? ORDER BY created_at ASC").all(composerRunId) as NodeRunRow[];
+  const rows = getDb().prepare("SELECT * FROM composer_node_runs WHERE composer_run_id = ? ORDER BY created_at ASC").all(composerRunId) as NodeRunRow[];
   return rows.map(rowToNodeRun);
 }
 
 /** Latest attempt count for a node within a run (for loop re-entry). */
 export function maxAttemptForNode(composerRunId: string, nodeId: string): number {
-  const row = db().prepare("SELECT COALESCE(MAX(attempt), 0) AS a FROM composer_node_runs WHERE composer_run_id = ? AND node_id = ?").get(composerRunId, nodeId) as { a: number };
+  const row = getDb().prepare("SELECT COALESCE(MAX(attempt), 0) AS a FROM composer_node_runs WHERE composer_run_id = ? AND node_id = ?").get(composerRunId, nodeId) as { a: number };
   return row.a;
 }
 
@@ -341,7 +341,7 @@ export function updateNodeRun(id: string, input: UpdateNodeRunInput): ComposerNo
   if (input.error !== undefined) { sets.push("error = ?"); vals.push(input.error); }
   if (input.completedAt !== undefined) { sets.push("completed_at = ?"); vals.push(input.completedAt); }
   if (sets.length === 0) return getNodeRun(id);
-  db().prepare(`UPDATE composer_node_runs SET ${sets.join(", ")} WHERE id = ?`).run(...vals, id);
+  getDb().prepare(`UPDATE composer_node_runs SET ${sets.join(", ")} WHERE id = ?`).run(...vals, id);
   return getNodeRun(id);
 }
 
@@ -349,13 +349,13 @@ export function updateNodeRun(id: string, input: UpdateNodeRunInput): ComposerNo
 export function recordComposerApproval(input: { composerRunId: string; nodeId: string; action: ApprovalAction; note?: string | null; decidedBy?: string }): ComposerApproval {
   const id = uuid();
   const approved = input.action === "accept" || input.action === "add_feature";
-  db().prepare(`INSERT INTO composer_approvals (id, composer_run_id, node_id, action, approved, note, decided_by, created_at)
+  getDb().prepare(`INSERT INTO composer_approvals (id, composer_run_id, node_id, action, approved, note, decided_by, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
     .run(id, input.composerRunId, input.nodeId, input.action, approved ? 1 : 0, input.note ?? null, input.decidedBy ?? "user", now());
-  return rowToApproval(db().prepare("SELECT * FROM composer_approvals WHERE id = ?").get(id) as ApprovalRow);
+  return rowToApproval(getDb().prepare("SELECT * FROM composer_approvals WHERE id = ?").get(id) as ApprovalRow);
 }
 
 export function listComposerApprovals(composerRunId: string): ComposerApproval[] {
-  const rows = db().prepare("SELECT * FROM composer_approvals WHERE composer_run_id = ? ORDER BY created_at ASC").all(composerRunId) as ApprovalRow[];
+  const rows = getDb().prepare("SELECT * FROM composer_approvals WHERE composer_run_id = ? ORDER BY created_at ASC").all(composerRunId) as ApprovalRow[];
   return rows.map(rowToApproval);
 }

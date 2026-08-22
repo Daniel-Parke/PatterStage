@@ -15,7 +15,7 @@
 //      to the agent default rather than re-using the foreign value.
 // ═══════════════════════════════════════════════════════════════
 
-import { db } from "./db";
+import { getDb } from "./db";
 
 export interface ForeignMissionModelRow {
   id: string;
@@ -33,7 +33,7 @@ export interface ForeignMissionModelRow {
  * highest-relevance orphans at the top.
  */
 export function auditForeignMissionModelRows(): ForeignMissionModelRow[] {
-  return db()
+  return getDb()
     .prepare(
       `SELECT m.id, m.name, m.model_id, m.provider, m.status, m.updated_at
          FROM missions m
@@ -60,7 +60,7 @@ export function fixupForeignMissionModelRows(): number {
   // SQLite, even when the audit form of the same query finds them — a
   // well-known quirk of the SQLite UPDATE planner. `NOT IN` is
   // unambiguous and matches what the audit function returns.
-  const result = db()
+  const result = getDb()
     .prepare(
       `UPDATE missions
           SET model_id = NULL, provider = NULL

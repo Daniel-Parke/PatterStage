@@ -18,7 +18,7 @@
 
 import { SyncScheduler } from "@/lib/sync/SyncScheduler";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { RunSync } from "@/lib/orchestration/RunSync";
 import { reconcileRunsOnBoot } from "@/lib/orchestration/run-reconcile";
 import { ensureDefaultComposerWorkflows } from "@/lib/composer/seed";
@@ -33,7 +33,7 @@ const HEARTBEAT_STALE_MS = 60_000;
 
 function readMeta(key: string): string | null {
   try {
-    const row = db().prepare("SELECT value FROM meta WHERE key = ?").get(key) as
+    const row = getDb().prepare("SELECT value FROM meta WHERE key = ?").get(key) as
       | { value: string }
       | undefined;
     return row?.value ?? null;
@@ -44,7 +44,7 @@ function readMeta(key: string): string | null {
 
 function writeMeta(key: string, value: string): void {
   try {
-    db()
+    getDb()
       .prepare(
         "INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
       )

@@ -4,7 +4,7 @@
  *
  * Tests for the agent-chat persistence repository (src/lib/chat-repository.ts),
  * driven against a real in-memory SQLite DB seeded with the baseline schema +
- * the v13 chat migration. `@/lib/db` is mocked so the repo's `db()` calls hit
+ * the v13 chat migration. `@/lib/db` is mocked so the repo's `getDb()` calls hit
  * the test DB; `inTransaction` is stubbed to run the callback directly.
  */
 import type Database from "better-sqlite3";
@@ -46,7 +46,7 @@ describe("chat-repository", () => {
       const actual = jest.requireActual("@/lib/db");
       return {
         ...actual,
-        db: () => tdb.db,
+        getDb: () => tdb.db,
         inTransaction: (fn: () => unknown) => fn(),
       };
     });

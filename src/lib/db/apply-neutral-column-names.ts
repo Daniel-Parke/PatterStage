@@ -32,6 +32,11 @@
 import type Database from "better-sqlite3";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 
+/**
+ * @public Reserved for T-0016, which ties the migration head constant to this
+ * value. T-0007 deleted the rest of the dead exports and deliberately left this
+ * one standing, so the widened knip gate can still land at zero in the meantime.
+ */
 export const NEUTRAL_COLUMN_NAMES_SCHEMA_VERSION = 30;
 
 function columnExists(database: Database.Database, table: string, column: string): boolean {

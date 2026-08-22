@@ -50,7 +50,7 @@ export function listMemoryProviders(): MemoryProviderRow[] {
 }
 
 /** The active provider row, or null if none is active. */
-export function getActiveMemoryProviderRow(): MemoryProviderRow | null {
+function getActiveMemoryProviderRow(): MemoryProviderRow | null {
   ensureDb();
   const r = getDb()
     .prepare("SELECT * FROM memory_providers WHERE is_active = 1 ORDER BY id LIMIT 1")

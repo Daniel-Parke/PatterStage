@@ -227,6 +227,11 @@ export function syncCredentialToHermesEnv(input: SyncCredentialInput): { backupP
  * Used when a credential is deleted — we can only target the env var
  * tied to the credential's provider; if multiple credentials share the
  * same provider, the caller (PR 7) must repick a winner before calling.
+ *
+ * @public Kept exported for tests/unit/hermes-config-sync-env.test.ts, which
+ * reaches it through `require("@/modules/hermes/lib/config-sync")`. knip does
+ * not follow a path-aliased `require()`, so it reports this as unused;
+ * deleting it would break that suite.
  */
 export function removeCredentialFromHermesEnv(provider: HermesProvider): { backupPath: string | null } {
   if (!isHermesProvider(provider)) {

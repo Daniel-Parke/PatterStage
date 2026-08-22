@@ -7,7 +7,7 @@
 // owned — independent of any user/agent. See [[phase-b-benchmarking]].
 // ═══════════════════════════════════════════════════════════════
 
-import { db, now } from "./db";
+import { getDb, now } from "./db";
 
 type ToolSource = "bundled" | "custom";
 
@@ -52,34 +52,13 @@ function rowToBundle(row: DbRow): ToolBundle {
   };
 }
 
-export function listToolBundles(): ToolBundle[] {
-  try {
-    const rows = db()
-      .prepare("SELECT * FROM tool_catalog ORDER BY tool_key COLLATE NOCASE")
-      .all() as DbRow[];
-    return rows.map(rowToBundle);
-  } catch {
-    return [];
-  }
-}
-
 export function getToolBundle(toolKey: string): ToolBundle | null {
   try {
-    const row = db().prepare("SELECT * FROM tool_catalog WHERE tool_key = ?").get(toolKey) as DbRow | undefined;
+    const row = getDb().prepare("SELECT * FROM tool_catalog WHERE tool_key = ?").get(toolKey) as DbRow | undefined;
     return row ? rowToBundle(row) : null;
   } catch {
     return null;
   }
-}
-
-/** Resolve a set of tool-bundle keys into a de-duplicated list of toolset ids. */
-export function resolveToolsetIds(toolKeys: string[]): string[] {
-  const out = new Set<string>();
-  for (const key of toolKeys) {
-    const b = getToolBundle(key);
-    if (b) for (const id of b.toolsetIds) out.add(id);
-  }
-  return [...out];
 }
 
 export interface UpsertToolBundleInput {
@@ -94,7 +73,7 @@ export interface UpsertToolBundleInput {
 
 export function upsertToolBundle(input: UpsertToolBundleInput): void {
   const ts = now();
-  db()
+  getDb()
     .prepare(
       `INSERT INTO tool_catalog (tool_key, display_name, description, toolset_ids, category, source, seed_key, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)

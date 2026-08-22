@@ -13,7 +13,6 @@ const mockDb = {
 };
 
 jest.mock("@/lib/db", () => ({
-  db: jest.fn(() => mockDb),
   getDb: jest.fn(() => mockDb),
   ensureDb: jest.fn(),
   now: jest.fn(() => "2026-05-15T00:00:00.000Z"),

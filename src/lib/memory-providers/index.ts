@@ -14,11 +14,10 @@ import { getAgentWorkspace } from "@/lib/runtime/workspace";
 
 // The pluggable provider interface + DB-owned config + active-provider resolver.
 import type { MemoryProviderType } from "./types";
-export type { MemoryProviderType, MemoryProvider, MemoryProviderConfig } from "./types";
+export type { MemoryProviderType } from "./types";
 export { getActiveMemoryProvider } from "./registry";
 export {
   getActiveMemoryConfig,
-  getActiveMemoryProviderRow,
   listMemoryProviders,
   updateMemoryProvider,
 } from "./repository";

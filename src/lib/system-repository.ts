@@ -7,13 +7,13 @@
 // read from the DB instead of performing filesystem operations.
 // ═══════════════════════════════════════════════════════════════
 
-import { db } from "./db";
+import { getDb } from "./db";
 
 // ── Read ─────────────────────────────────────────────────────
 
 /** Get a single system stat from the `meta` table. Returns null if unset. */
 export function getSystemStat(key: string): string | null {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT value FROM meta WHERE key = ?")
     .get(key) as { value: string } | undefined;
   return row?.value ?? null;
@@ -23,7 +23,7 @@ export function getSystemStat(key: string): string | null {
 
 /** Set a single system stat in the `meta` table. Upserts if key exists. */
 function setSystemStat(key: string, value: string): void {
-  db()
+  getDb()
     .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
     .run(key, value);
 }
@@ -32,7 +32,7 @@ function setSystemStat(key: string, value: string): void {
 
 /** Set multiple system stats in a single transaction. */
 export function setMultipleStats(entries: Record<string, string>): void {
-  const database = db();
+  const database = getDb();
   const stmt = database.prepare(
     "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)"
   );

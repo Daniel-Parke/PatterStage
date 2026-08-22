@@ -16,7 +16,7 @@ docker run --rm -v "$(pwd)":/work -w /work bash:5 bash tests/scripts/run-shell-c
 
 Exit code **0** = all checks passed.
 
-Profile templates are validated via `ch-hermes-profile-templates.sh` (install-only). **`ch-deploy update`** runs `seed-catalog.ts --merge` instead of the legacy `CH_UPDATE_SYNC_*` gate.
+Profile templates are validated via `scripts/lib/ps-hermes-profile-templates.sh` (install-only). **`ps-deploy update`** runs `seed-catalog.ts --merge` instead of the legacy `CH_UPDATE_SYNC_*` gate.
 
 ## Docker — dashboard restart smoke
 

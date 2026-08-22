@@ -53,7 +53,7 @@ async function main(): Promise<void> {
 
   const pull = process.argv.includes("--pull");
 
-  const { importHermesStateFromDisk } = await import("../../src/lib/hermes-state-import");
+  const { importHermesStateFromDisk } = await import("../../src/modules/hermes/lib/state-import");
   const result = importHermesStateFromDisk(pull ? { force: true } : undefined);
 
   console.log(

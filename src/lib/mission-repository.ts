@@ -5,7 +5,7 @@
 import { existsSync, unlinkSync } from "fs";
 import { join } from "path";
 
-import { db, inTransaction, uuid, now } from "./db";
+import { getDb, inTransaction, uuid, now } from "./db";
 import { safeJsonParse } from "./utils";
 import { PATHS } from "./paths";
 import type { Mission, MissionStatus } from "@/lib/mission-types";
@@ -86,7 +86,7 @@ export { buildMissionPrompt } from "@/lib/build-mission-prompt";
 
 /** Oldest mission waiting for background queue dispatch. */
 export function getNextQueuedMission(): Mission | null {
-  const row = db()
+  const row = getDb()
     .prepare(
       `SELECT * FROM missions
        WHERE deleted_at IS NULL
@@ -101,7 +101,7 @@ export function getNextQueuedMission(): Mission | null {
 
 /** True if any mission is currently running (dispatched). */
 export function hasDispatchedMission(): boolean {
-  const row = db()
+  const row = getDb()
     .prepare(
       `SELECT 1 FROM missions
        WHERE deleted_at IS NULL AND status = 'dispatched'
@@ -124,14 +124,14 @@ export function listMissions(opts?: { categoryId?: string | null }): Mission[] {
     }
   }
   sql += " ORDER BY created_at DESC";
-  const rows = db()
+  const rows = getDb()
     .prepare(sql)
     .all(...params) as MissionRow[];
   return rows.map(rowToMission).filter(Boolean) as Mission[];
 }
 
 export function getMission(id: string): Mission | null {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT * FROM missions WHERE id = ?")
     .get(id) as MissionRow | undefined;
   return rowToMission(row);
@@ -166,7 +166,7 @@ export function createMission(data: {
   const goals = JSON.stringify(data.goals ?? []);
 
   inTransaction(() => {
-    db()
+    getDb()
       .prepare(
         `INSERT INTO missions (id, name, prompt, profile_id, status, created_at, updated_at, local_dirs, references_, skills, suggested_toolsets, goals, model_id, provider, profile_name, mission_time_minutes, timeout_minutes, schedule, cron_job_id, category_id, output_format, constraints)
          VALUES (?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -300,7 +300,7 @@ export function updateMission(
     }
 
     vals.push(id);
-    db()
+    getDb()
       .prepare(`UPDATE missions SET ${sets.join(", ")} WHERE id = ?`)
       .run(...vals);
   });
@@ -312,7 +312,7 @@ export function deleteMission(id: string): boolean {
   const existing = getMission(id);
   if (!existing) return false;
   const ts = now();
-  db()
+  getDb()
     .prepare("UPDATE missions SET deleted_at = ? WHERE id = ?")
     .run(ts, id);
   // Best-effort cleanup of on-disk artifacts. We do this AFTER

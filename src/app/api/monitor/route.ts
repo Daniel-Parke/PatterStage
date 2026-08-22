@@ -15,7 +15,7 @@ import { getSystemStat, getSystemStatNumber } from "@/lib/system-repository";
 import { listSessions } from "@/lib/session-repository";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { getGatewayPlatforms, db } from "@/lib/db";
+import { getGatewayPlatforms, getDb } from "@/lib/db";
 import { getActiveFramework } from "@/lib/frameworks";
 import type { SessionBrief, MonitorData } from "@/types/console";
 
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     const memoryProvider = getSystemStat("memory.provider") ?? "Not Installed";
 
     // ── Recent Errors (from DB) ─────────────────────────────
-    const recentErrors = db()
+    const recentErrors = getDb()
       .prepare(
         "SELECT source, message, timestamp, severity FROM error_log_entries ORDER BY timestamp DESC LIMIT 10"
       )

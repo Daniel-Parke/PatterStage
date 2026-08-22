@@ -21,5 +21,18 @@
     "tailwindcss",
     "@jest/globals"
   ],
-  "ignoreBinaries": ["python", "crontab", "systemctl", "which", "ps"]
+  "ignoreBinaries": [
+    "python",
+    "crontab",
+    "systemctl",
+    "which",
+    "ps",
+    "sqlite3",
+    "tasklist",
+    "taskkill",
+    "netstat",
+    "ss",
+    "lsof",
+    "where"
+  ]
 }

@@ -12,7 +12,7 @@
 // unit-tested; agentExperienceForProfile reads the per-agent signals.
 // ═══════════════════════════════════════════════════════════════
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { computeLevel, type LevelInfo } from "./derive";
 import { getAgentPerformance } from "./agent-stats";
 
@@ -87,7 +87,7 @@ export interface AgentExperience {
 
 function scalar(sql: string, ...params: unknown[]): number {
   try {
-    const row = db().prepare(sql).get(...params) as { v: number } | undefined;
+    const row = getDb().prepare(sql).get(...params) as { v: number } | undefined;
     const n = Number(row?.v);
     return Number.isFinite(n) ? n : 0;
   } catch {

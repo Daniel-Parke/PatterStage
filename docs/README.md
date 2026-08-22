@@ -31,6 +31,7 @@ Technical reference for PatterStage. Tone elsewhere in this folder is deliberate
 | [CROSS_PLATFORM.md](CROSS_PLATFORM.md) | Windows · macOS · Linux: support matrix, Windows install/update, host scheduling (cron vs Task Scheduler), bundled `.mjs` scripts |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Development workflow and standards |
 | [TESTING.md](TESTING.md) | Jest, Playwright, CI, and navigation-matrix upkeep |
+| [OUTPUT_CANARY.md](OUTPUT_CANARY.md) | The output canary: what it hashes, proving a move neutral, re-blessing the golden |
 | [SYSTEM-CRON.md](SYSTEM-CRON.md) | Scripts page + host cron presets (`scripts/hardware/`), including Hindsight backup |
 | [SUPPORT.md](SUPPORT.md) | Where to get help; upstream vs this repo |
 | [SECURITY.md](SECURITY.md) | Vulnerability reporting |

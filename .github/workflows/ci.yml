@@ -78,6 +78,12 @@ jobs:
         run: npm run prebuild
       - name: ESLint
         run: npm run lint
+      # The output canary (WO-0008). Blocking, and cheap: it reads files and
+      # runs the seed-pack validator, no build required. It fails when the URL
+      # surface, next.config's redirects, the seed pack or a generated artefact
+      # changed without the golden being re-blessed in the same commit.
+      - name: Output canary (contract surfaces)
+        run: npm run canary:check
       - name: Knip (no new dead files / dependency drift)
         run: npm run lint:knip
       - uses: ./.github/actions/forbid-hermes-paths-in-api
@@ -87,6 +93,20 @@ jobs:
         run: npm run test:coverage
       - name: Next.js production build
         run: npm run build
+      # The rendered surface, which only exists once the build has run: the
+      # normalised HTML of all 27 prerendered routes plus the build's own route
+      # list and redirects. It is NOT held against a committed golden, because
+      # it moves whenever any page's markup moves and a golden nobody can read
+      # is a golden everybody re-blesses blind. It is recorded so a move can be
+      # compared against the run before it.
+      - name: Output canary (rendered surfaces, recorded)
+        run: npm run canary -- --out output-canary-report.json
+      - name: Upload output canary report
+        uses: actions/upload-artifact@v4
+        with:
+          name: output-canary-report
+          path: output-canary-report.json
+          if-no-files-found: warn
       - name: Upload coverage HTML
         uses: actions/upload-artifact@v4
         with:

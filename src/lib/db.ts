@@ -78,9 +78,6 @@ export function getDb(): Database.Database {
   return _db!;
 }
 
-/** Alias — most code uses db() not getDb() */
-export const db = getDb;
-
 /** Result row from gateway_platforms table */
 interface GatewayPlatformRow {
   platform: string;
@@ -107,10 +104,10 @@ export function getGatewayPlatforms(): GatewayPlatformRow[] {
 
 /**
  * Wrap `fn` in a SQLite transaction. Commits on success, rolls back on throw.
- * shorthand for `db().transaction(fn)()`.
+ * shorthand for `getDb().transaction(fn)()`.
  */
 export function inTransaction<T>(fn: () => T): T {
-  const database = db();
+  const database = getDb();
   return database.transaction(fn)();
 }
 
@@ -277,7 +274,7 @@ let _bootstrapped = false;
 export function ensureDb(): void {
   if (_bootstrapped) return;
   _bootstrapped = true;
-  db(); // forces open + migrate
+  getDb(); // forces open + migrate
 }
 
 export interface SchemaHealth {

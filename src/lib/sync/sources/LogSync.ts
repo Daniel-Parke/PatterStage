@@ -19,7 +19,7 @@ import { access, constants } from "fs/promises";
 import { join } from "path";
 import { createInterface } from "readline";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
-import { db, now } from "@/lib/db";
+import { getDb, now } from "@/lib/db";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 
@@ -153,7 +153,7 @@ export class LogSync implements SyncSource {
       });
 
       const ingestedAt = now();
-      const database = db();
+      const database = getDb();
       const insert = database.prepare(
         `INSERT INTO error_log_entries (source, message, timestamp, severity, ingested_at)
          VALUES (?, ?, ?, ?, ?)`

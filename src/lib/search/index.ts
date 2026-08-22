@@ -34,5 +34,5 @@ export function resolveSearchProvider(override?: string): SearchProvider {
   return duckduckgoProvider; // free zero-config default
 }
 
-export type { SearchProvider, SearchResult, VisitedPage } from "./types";
+export type { SearchProvider } from "./types";
 export { visitPage } from "./visit";

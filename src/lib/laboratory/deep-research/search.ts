@@ -5,4 +5,4 @@
 // future tools). This thin re-export keeps DeepResearch's imports stable.
 // ═══════════════════════════════════════════════════════════════
 
-export { resolveSearchProvider, nullSearchProvider, visitPage } from "@/lib/search";
+export { resolveSearchProvider } from "@/lib/search";

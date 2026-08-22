@@ -20,16 +20,6 @@ export function parseJson<T>(raw: string | null | undefined): T | null {
 }
 
 /**
- * Parse a JSON string array. Returns null on missing/malformed input.
- * Does NOT filter element types — use when the column is trusted to hold
- * strings (mirrors the prior `parseStringArray` in benchmarks-repository).
- */
-export function parseStringArray(raw: string | null | undefined): string[] | null {
-  const v = parseJson<unknown>(raw);
-  return Array.isArray(v) ? (v as string[]) : null;
-}
-
-/**
  * Parse a JSON string array, filtering to strings. Returns [] on
  * missing/malformed input (mirrors the prior `parseJsonArray` in
  * catalog-template-repository / profile-config-builder).

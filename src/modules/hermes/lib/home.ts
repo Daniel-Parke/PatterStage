@@ -22,8 +22,3 @@ export function getHermesHome(): string {
   }
   return DEFAULT_HERMES_HOME;
 }
-
-/** Alias for path allowlist checks. */
-export function getHermesFilesystemRoot(): string {
-  return getHermesHome();
-}

@@ -6,7 +6,7 @@
 // app-level encryption per the user-models-registry design constraints).
 // Listing endpoints expose only `keyHint`, never `apiKey`.
 
-import { db, inTransaction, uuid, now } from "./db";
+import { getDb, inTransaction, uuid, now } from "./db";
 
 // ── Public types ────────────────────────────────────────────────
 
@@ -68,6 +68,11 @@ function toWithKey(row: CredentialRow): CredentialWithKey {
 /**
  * Compute a safe display hint for an API key. Mirrors the existing
  * convention used elsewhere in PatterStage (e.g. `sk-...abcd`).
+ *
+ * @public Kept exported for tests/unit/credentials-repository.test.ts, which
+ * reaches it through `require("@/lib/credentials-repository")`. knip does not
+ * follow a path-aliased `require()`, so it reports this as unused; deleting it
+ * would break that suite.
  */
 export function buildKeyHint(apiKey: string): string {
   const trimmed = apiKey.trim();
@@ -81,14 +86,20 @@ export function buildKeyHint(apiKey: string): string {
 // ── CRUD ───────────────────────────────────────────────────────
 
 export function listCredentials(): CredentialSummary[] {
-  const rows = db()
+  const rows = getDb()
     .prepare("SELECT * FROM credentials ORDER BY created_at DESC")
     .all() as CredentialRow[];
   return rows.map(toSummary);
 }
 
+/**
+ * @public Kept exported for tests/unit/credentials-repository.test.ts, which
+ * reaches it through `require("@/lib/credentials-repository")`. knip does not
+ * follow a path-aliased `require()`, so it reports this as unused; deleting it
+ * would break that suite.
+ */
 export function getCredential(id: string): CredentialSummary | null {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT * FROM credentials WHERE id = ?")
     .get(id) as CredentialRow | undefined;
   return row ? toSummary(row) : null;
@@ -100,7 +111,7 @@ export function getCredential(id: string): CredentialSummary | null {
  * and the LLM dispatch path.
  */
 export function getCredentialWithKey(id: string): CredentialWithKey | null {
-  const row = db()
+  const row = getDb()
     .prepare("SELECT * FROM credentials WHERE id = ?")
     .get(id) as CredentialRow | undefined;
   return row ? toWithKey(row) : null;
@@ -122,7 +133,7 @@ export function createCredential(input: CreateCredentialInput): CredentialSummar
   const hint = buildKeyHint(input.apiKey);
 
   inTransaction(() => {
-    db()
+    getDb()
       .prepare(
         `INSERT INTO credentials (id, label, provider, api_key, key_hint, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?)`
@@ -133,11 +144,17 @@ export function createCredential(input: CreateCredentialInput): CredentialSummar
   return getCredential(id)!;
 }
 
+/**
+ * @public Kept exported for tests/unit/credentials-repository.test.ts, which
+ * reaches it through `require("@/lib/credentials-repository")`. knip does not
+ * follow a path-aliased `require()`, so it reports this as unused; deleting it
+ * would break that suite.
+ */
 export function updateCredential(
   id: string,
   input: UpdateCredentialInput
 ): CredentialSummary | null {
-  const existing = db()
+  const existing = getDb()
     .prepare("SELECT * FROM credentials WHERE id = ?")
     .get(id) as CredentialRow | undefined;
   if (!existing) return null;
@@ -164,14 +181,14 @@ export function updateCredential(
   vals.push(id);
 
   inTransaction(() => {
-    db().prepare(`UPDATE credentials SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
+    getDb().prepare(`UPDATE credentials SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
   });
 
   return getCredential(id);
 }
 
 export function deleteCredential(id: string): boolean {
-  const result = db().prepare("DELETE FROM credentials WHERE id = ?").run(id);
+  const result = getDb().prepare("DELETE FROM credentials WHERE id = ?").run(id);
   return result.changes > 0;
 }
 
@@ -199,7 +216,7 @@ export function upsertCredential(input: {
   apiKey: string;
 }): UpsertCredentialResult | null {
 
-  const existing = db()
+  const existing = getDb()
     .prepare("SELECT id, api_key FROM credentials WHERE provider = ?")
     .get(input.provider) as { id: string; api_key: string } | undefined;
 
@@ -208,7 +225,7 @@ export function upsertCredential(input: {
 
   if (existing) {
     if (existing.api_key !== input.apiKey) {
-      db()
+      getDb()
         .prepare(
           "UPDATE credentials SET api_key = ?, key_hint = ?, updated_at = ? WHERE id = ?"
         )
@@ -219,7 +236,7 @@ export function upsertCredential(input: {
 
   const id = uuid();
   inTransaction(() => {
-    db()
+    getDb()
       .prepare(
         `INSERT INTO credentials (id, label, provider, api_key, key_hint, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?)`

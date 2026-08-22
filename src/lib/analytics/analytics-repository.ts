@@ -7,7 +7,7 @@
 // not errors — same discipline as stats-repository.ts.
 // ═══════════════════════════════════════════════════════════════
 
-import { db, inTransaction, uuid } from "../db";
+import { getDb, inTransaction, uuid } from "../db";
 import type { AnalyticsEventType, AnalyticsEntityType } from "./event-types";
 
 export interface InsertEventInput {
@@ -21,7 +21,7 @@ export interface InsertEventInput {
 /** Append one event. created_at uses the column DEFAULT (datetime('now')). */
 export function insertEvent(input: InsertEventInput): void {
   inTransaction(() => {
-    db()
+    getDb()
       .prepare(
         `INSERT INTO analytics_events (id, event_type, entity_type, entity_id, profile, metadata_json)
          VALUES (?, ?, ?, ?, ?, ?)`,
@@ -73,7 +73,7 @@ export function countByType(): Record<string, number> {
   return safeRead(
     () =>
       groupCounts(
-        db()
+        getDb()
           .prepare(`SELECT event_type, COUNT(*) AS c FROM analytics_events GROUP BY event_type`)
           .all() as { event_type: string; c: number }[],
       ),
@@ -86,7 +86,7 @@ export function countByTypeSince(sinceDays: number): Record<string, number> {
   return safeRead(
     () =>
       groupCounts(
-        db()
+        getDb()
           .prepare(
             `SELECT event_type, COUNT(*) AS c FROM analytics_events
              WHERE created_at >= datetime('now', ?) GROUP BY event_type`,
@@ -116,7 +116,7 @@ export function timeseries(
         typeClause = " AND event_type = ?";
         params.push(eventType);
       }
-      const rows = db()
+      const rows = getDb()
         .prepare(
           `SELECT date(created_at) AS d, COUNT(*) AS c FROM analytics_events
            WHERE created_at >= datetime('now', ?)${typeClause}
@@ -135,7 +135,7 @@ export function distinctActiveDays(sinceDays?: number): string[] {
   return safeRead(() => {
     if (sinceDays && sinceDays > 0) {
       return (
-        db()
+        getDb()
           .prepare(
             `SELECT DISTINCT date(created_at) AS d FROM analytics_events
              WHERE created_at >= datetime('now', ?) ORDER BY d`,
@@ -144,7 +144,7 @@ export function distinctActiveDays(sinceDays?: number): string[] {
       ).map((r) => r.d);
     }
     return (
-      db()
+      getDb()
         .prepare(`SELECT DISTINCT date(created_at) AS d FROM analytics_events ORDER BY d`)
         .all() as { d: string }[]
     ).map((r) => r.d);
@@ -154,7 +154,7 @@ export function distinctActiveDays(sinceDays?: number): string[] {
 /** The busiest single day's count for an event type (e.g. "5 missions in a day"). */
 export function maxCountInSingleDay(eventType: AnalyticsEventType, sinceDays = 365): number {
   return safeRead(() => {
-    const row = db()
+    const row = getDb()
       .prepare(
         `SELECT MAX(c) AS m FROM (
            SELECT COUNT(*) AS c FROM analytics_events
@@ -170,7 +170,7 @@ export function maxCountInSingleDay(eventType: AnalyticsEventType, sinceDays = 3
 export function countByTypeAndHour(eventType: AnalyticsEventType, sinceDays = 365): number[] {
   return safeRead(
     () => {
-      const rows = db()
+      const rows = getDb()
         .prepare(
           `SELECT CAST(strftime('%H', created_at) AS INTEGER) AS h, COUNT(*) AS c
            FROM analytics_events WHERE event_type = ? AND created_at >= datetime('now', ?)
@@ -189,7 +189,7 @@ export function countByTypeAndHour(eventType: AnalyticsEventType, sinceDays = 36
 export function countByHourAllTypes(sinceDays = 365): number[] {
   return safeRead(
     () => {
-      const rows = db()
+      const rows = getDb()
         .prepare(
           `SELECT CAST(strftime('%H', created_at) AS INTEGER) AS h, COUNT(*) AS c
            FROM analytics_events WHERE created_at >= datetime('now', ?)
@@ -219,7 +219,7 @@ export function dailyCountsByType(sinceDays: number): DailyTypeCounts[] {
   const n = Math.max(1, Math.floor(sinceDays));
   return safeRead(
     () => {
-      const rows = db()
+      const rows = getDb()
         .prepare(
           `SELECT date(created_at) AS d, event_type AS t, COUNT(*) AS c
            FROM analytics_events WHERE created_at >= datetime('now', ?)
@@ -248,7 +248,7 @@ export function topEntities(eventType: AnalyticsEventType, limit = 5): TopEntity
   return safeRead(
     () =>
       (
-        db()
+        getDb()
           .prepare(
             `SELECT entity_id AS id, COUNT(*) AS c FROM analytics_events
              WHERE event_type = ? AND entity_id IS NOT NULL
@@ -264,7 +264,7 @@ export function topEntities(eventType: AnalyticsEventType, limit = 5): TopEntity
 export function distinctProfileCount(eventType?: AnalyticsEventType): number {
   return safeRead(() => {
     if (eventType) {
-      const row = db()
+      const row = getDb()
         .prepare(
           `SELECT COUNT(DISTINCT profile) AS c FROM analytics_events
            WHERE event_type = ? AND profile IS NOT NULL`,
@@ -272,7 +272,7 @@ export function distinctProfileCount(eventType?: AnalyticsEventType): number {
         .get(eventType) as { c: number } | undefined;
       return row?.c ?? 0;
     }
-    const row = db()
+    const row = getDb()
       .prepare(`SELECT COUNT(DISTINCT profile) AS c FROM analytics_events WHERE profile IS NOT NULL`)
       .get() as { c: number } | undefined;
     return row?.c ?? 0;
@@ -282,7 +282,7 @@ export function distinctProfileCount(eventType?: AnalyticsEventType): number {
 /** Number of distinct event types ever recorded — feeds the "explorer" breadth ladder. */
 export function distinctEventTypeCount(): number {
   return safeRead(() => {
-    const row = db()
+    const row = getDb()
       .prepare(`SELECT COUNT(DISTINCT event_type) AS c FROM analytics_events`)
       .get() as { c: number } | undefined;
     return row?.c ?? 0;

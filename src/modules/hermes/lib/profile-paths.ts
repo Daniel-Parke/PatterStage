@@ -40,7 +40,7 @@ function getProfileNameFromHermesHome(home: string): string | null {
  * Root Hermes directory from an explicit home path (profile-as-home or install root).
  * Mirrors upstream hermes_constants.get_default_hermes_root().
  */
-export function getHermesDefaultRootFromHome(home: string): string {
+function getHermesDefaultRootFromHome(home: string): string {
   const envPath = resolve(normPath(home));
 
   if (isPathUnderRoot(envPath, NATIVE_HERMES_HOME)) {

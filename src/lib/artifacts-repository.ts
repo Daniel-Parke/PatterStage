@@ -7,11 +7,11 @@
 // See 028_artifacts.sql.
 // ═══════════════════════════════════════════════════════════════
 
-import { db, uuid, now } from "@/lib/db";
+import { getDb, uuid, now } from "@/lib/db";
 import { parseStringArrayOrEmpty } from "@/lib/db/parse-json";
 
 export type ArtifactSourceKind = "research" | "composer" | "mission" | "chat" | "manual";
-export type ArtifactContentType = "inline" | "file_path" | "url";
+type ArtifactContentType = "inline" | "file_path" | "url";
 
 export interface Artifact {
   id: string;
@@ -88,7 +88,7 @@ export function createArtifact(input: CreateArtifactInput): Artifact {
   const ts = now();
   const content = input.content ?? null;
   const sizeBytes = content ? Buffer.byteLength(content, "utf8") : 0;
-  db()
+  getDb()
     .prepare(
       `INSERT INTO artifacts
          (id, source_kind, source_run_id, source_node_id, name, description,
@@ -115,7 +115,7 @@ export function createArtifact(input: CreateArtifactInput): Artifact {
 }
 
 export function getArtifact(id: string): Artifact | null {
-  const row = db().prepare("SELECT * FROM artifacts WHERE id = ?").get(id) as ArtifactRow | undefined;
+  const row = getDb().prepare("SELECT * FROM artifacts WHERE id = ?").get(id) as ArtifactRow | undefined;
   return row ? rowToArtifact(row) : null;
 }
 
@@ -133,7 +133,7 @@ export function listArtifacts(filter: ListArtifactsFilter = {}): ArtifactSummary
   if (filter.sourceRunId) { where.push("source_run_id = ?"); vals.push(filter.sourceRunId); }
   const clause = where.length ? `WHERE ${where.join(" AND ")}` : "";
   const limit = Math.max(1, Math.min(500, Math.floor(filter.limit ?? 200)));
-  const rows = db()
+  const rows = getDb()
     .prepare(
       `SELECT id, source_kind, source_run_id, source_node_id, name, description,
               mime_type, content_type, file_path, url, size_bytes, tags_json, created_at
@@ -147,7 +147,7 @@ export function listArtifacts(filter: ListArtifactsFilter = {}): ArtifactSummary
 }
 
 export function deleteArtifact(id: string): boolean {
-  const res = db().prepare("DELETE FROM artifacts WHERE id = ?").run(id);
+  const res = getDb().prepare("DELETE FROM artifacts WHERE id = ?").run(id);
   return res.changes > 0;
 }
 
@@ -158,10 +158,10 @@ export function hasArtifactForSource(
   sourceNodeId?: string | null,
 ): boolean {
   const row = sourceNodeId
-    ? db()
+    ? getDb()
         .prepare("SELECT 1 FROM artifacts WHERE source_kind = ? AND source_run_id = ? AND source_node_id = ? LIMIT 1")
         .get(sourceKind, sourceRunId, sourceNodeId)
-    : db()
+    : getDb()
         .prepare("SELECT 1 FROM artifacts WHERE source_kind = ? AND source_run_id = ? AND source_node_id IS NULL LIMIT 1")
         .get(sourceKind, sourceRunId);
   return Boolean(row);

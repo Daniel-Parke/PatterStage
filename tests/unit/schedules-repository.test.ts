@@ -5,7 +5,7 @@
  * Tests for the PatterStage-owned scheduler state repository
  * (src/lib/schedules-repository.ts), driven against a real in-memory
  * SQLite DB seeded with the baseline schema. `@/lib/db` is mocked so the
- * repo's `db()` calls hit the test DB; `inTransaction` is stubbed to run
+ * repo's `getDb()` calls hit the test DB; `inTransaction` is stubbed to run
  * the callback directly (the real one closes over the real singleton).
  */
 import type Database from "better-sqlite3";
@@ -54,7 +54,7 @@ describe("schedules-repository", () => {
       const actual = jest.requireActual("@/lib/db");
       return {
         ...actual,
-        db: () => tdb.db,
+        getDb: () => tdb.db,
         inTransaction: (fn: () => unknown) => fn(),
       };
     });

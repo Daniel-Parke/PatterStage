@@ -114,7 +114,6 @@ jest.mock("better-sqlite3", () => ({
 }));
 
 jest.mock("@/lib/db", () => ({
-  db: jest.fn(() => mockDbMethods),
   getDb: jest.fn(() => mockDbMethods),
   ensureDb: jest.fn(),
   getSchemaHealth: jest.fn(() => ({

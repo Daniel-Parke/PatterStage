@@ -8,7 +8,7 @@
 import { access, constants } from "fs/promises";
 import { readFile } from "fs/promises";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 
@@ -94,7 +94,7 @@ export class EnvSync implements SyncSource {
       ];
 
       const now = new Date().toISOString();
-      const database = db();
+      const database = getDb();
       const upsert = database.prepare(
         `INSERT OR REPLACE INTO gateway_platforms (platform, enabled, bot_token_present, last_synced_at)
          VALUES (?, ?, ?, ?)`
