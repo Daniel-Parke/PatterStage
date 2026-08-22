@@ -131,6 +131,25 @@ function readText(file) {
   return readFileSync(file, "utf-8").replace(/^\uFEFF/, "").split("\r\n").join("\n");
 }
 
+/**
+ * Digest a checked-in file by its CONTENT, not its bytes.
+ *
+ * The golden is blessed on a maintainer's machine and checked on a CI runner,
+ * so anything that differs between the two is not part of the output contract.
+ * Line endings are exactly that: git hands a Windows checkout CRLF and a Linux
+ * runner LF, so hashing raw bytes made the golden unmatchable off the machine
+ * that wrote it. That is how this shipped red the first time.
+ *
+ * A file with a NUL byte is treated as binary and hashed as bytes, because
+ * rewriting CRLF inside binary content would corrupt the very thing being
+ * pinned. Every file the canary hashes today is text (sql, md, yaml, json).
+ */
+function hashFileContent(file) {
+  const buf = readFileSync(file);
+  if (buf.includes(0)) return sha256(buf);
+  return sha256(buf.toString("utf-8").replace(/^\uFEFF/, "").split("\r\n").join("\n"));
+}
+
 /* --------------------------------------------------- module normalisation */
 
 const SOURCE_EXTENSIONS = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
@@ -361,7 +380,7 @@ function surfaceSeedPack() {
   const seedRoot = join(ROOT, "data", "seed");
   for (const file of walk(seedRoot)) {
     const rel = toPosix(relative(seedRoot, file));
-    lines.push(`pack:${rel} ${sha256(readFileSync(file))}`);
+    lines.push(`pack:${rel} ${hashFileContent(file)}`);
   }
   const sorted = [lines[0], lines[1], lines[2], ...lines.slice(3).sort()];
   return { hash: sha256(sorted.join("\n")), detail: { files: lines.length - 3, lines: sorted } };
@@ -376,7 +395,7 @@ function surfaceGeneratedArtefacts() {
   const lines = [];
   for (const [kind, dir] of groups) {
     for (const file of walk(dir)) {
-      lines.push(`${kind}:${basename(file)} ${sha256(readFileSync(file))}`);
+      lines.push(`${kind}:${basename(file)} ${hashFileContent(file)}`);
     }
   }
   lines.sort();

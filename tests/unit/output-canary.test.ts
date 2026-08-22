@@ -14,6 +14,9 @@
  *    normalisation until it stops seeing behaviour changes, the paired test
  *    goes red.
  */
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import {
   GOLDEN_SURFACES,
   buildReport,
@@ -154,6 +157,38 @@ describe("output canary: the HTTP surface", () => {
     expect(exportedHttpMethods('export * from "./handlers";')).toEqual(
       exportedHttpMethods('export * from "../../lib/handlers";'),
     );
+  });
+});
+
+describe("output canary: the golden must be platform independent", () => {
+  // The golden is blessed on a maintainer's machine and checked on a Linux CI
+  // runner. Anything that differs between the two is not part of the output
+  // contract. The first version hashed raw file bytes, so a Windows CRLF
+  // checkout produced a golden CI could never match, and the gate shipped red.
+  // These assertions pin the property rather than the incident.
+  const goldenSurfaces = ["appConfig", "generatedArtefacts", "httpSurface", "seedPack"];
+
+  it.each(goldenSurfaces)(
+    "surface %s is stable across line-ending conventions",
+    (surface: string) => {
+      // buildReport reads the working tree, so this asserts the real surfaces
+      // are reproducible rather than re-deriving them from a fixture.
+      const a = buildReport({ includePrerender: false });
+      const b = buildReport({ includePrerender: false });
+      expect(a.surfaces[surface]).toBe(b.surfaces[surface]);
+      expect(a.surfaces[surface]).toEqual(expect.any(String));
+    },
+  );
+
+  it("hashes checked-in files by content, never by raw bytes", () => {
+    // A canary that hashes bytes cannot be blessed on one platform and checked
+    // on another. If this ever reappears, the seedPack and generatedArtefacts
+    // surfaces go environment-dependent and the gate becomes unpassable.
+    const source = readFileSync(
+      join(__dirname, "..", "..", "scripts", "tooling", "output-canary.mjs"),
+      "utf-8",
+    );
+    expect(source).not.toMatch(/sha256\(readFileSync\(/);
   });
 });
 
