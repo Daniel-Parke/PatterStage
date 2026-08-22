@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFileSync } from "fs";
 import { z } from "zod";
 
 import { getActiveHermesPaths } from "@/modules/hermes/lib/agent-runtime";
+import { writeHermesConfigFile } from "@/modules/hermes/lib/hermes-config-write";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { forbidden, ok } from "@/lib/api-response";
-import { readCachedConfig, invalidateConfigCache } from "@/lib/config-cache";
+import { readCachedConfig } from "@/lib/config-cache";
 import { dumpYamlConfig } from "@/lib/yaml-config";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
@@ -126,18 +126,20 @@ export async function PUT(request: NextRequest) {
     const current = (config[section] as Record<string, unknown>) || {};
     config[section] = deepMerge(current, values as Record<string, unknown>);
 
-    // Write back
+    // Write back through the one config.yaml writer. It drops the read
+    // cache in the same call, so the next GET sees this change instead of
+    // waiting out the 15s TTL. This route used to write with a raw
+    // writeFileSync and then invalidate on the next line, which worked
+    // right up until a writer forgot, and an enumerated list of writers is
+    // how WO-0006's gap opened in the first place (WG-ARCH-003).
     const content = dumpYamlConfig(config);
-    writeFileSync(paths.config, content, "utf-8");
+    writeHermesConfigFile(paths.config, content);
 
     appendAuditLine({
       action: "config.put",
       resource: section,
       ok: true,
     });
-
-    // Invalidate cache so next read picks up the change
-    invalidateConfigCache();
 
     return ok({ success: true, section, values });
   } catch (error) {

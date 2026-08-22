@@ -1,5 +1,7 @@
+/**
+ * @jest-environment node
+ */
 /* eslint-disable @typescript-eslint/no-require-imports */
-/** @jest-environment node */
 
 /**
  * WO-0006 / WG-ARCH-003 (B for the config read).
@@ -18,6 +20,13 @@
  *
  * Each test states the stale value it would have observed, so a regression
  * reports the bug rather than just a failed equality.
+ *
+ * The `@jest-environment node` docblock has to be the FIRST block comment in
+ * the file. Jest reads one docblock, the first it finds, so while the
+ * eslint-disable sat above it the pragma was inert and this file ran under
+ * jsdom. That was invisible until the PUT test arrived: jsdom has no fetch
+ * globals, jest.setup.ts substitutes a Request with no `json()`, and the route
+ * answered every request with 400 Invalid JSON. Do not reorder these two lines.
  */
 
 import { mkdtempSync, writeFileSync, existsSync, rmSync } from "fs";
@@ -61,6 +70,15 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
     };
   },
   getActiveHermesHome: () => (global as { __FAKE_HERMES_ROOT__?: string }).__FAKE_HERMES_ROOT__,
+}));
+
+// The only mock that is not about isolating the cache. `PUT /api/config`
+// appends an audit line, and `PATHS.auditLog` resolves from the real data dir
+// rather than the fake Hermes root, so an unmocked call would write into the
+// operator's own audit log from a unit test. The audit line is not part of the
+// invalidation contract; everything that is stays real.
+jest.mock("@/lib/audit-log", () => ({
+  appendAuditLine: jest.fn(),
 }));
 
 function loadRealBetterSqlite3(): typeof import("better-sqlite3") {
@@ -198,6 +216,34 @@ describe("every writer of config.yaml invalidates the read cache", () => {
     expect((readCachedConfig() as { model: { default: string } }).model.default).toBe(
       "anthropic/final",
     );
+  });
+
+  it("PUT /api/config, the writer that used to invalidate by hand", async () => {
+    // The fifth writer. It was correct on its own terms, a raw writeFileSync
+    // followed by an invalidateConfigCache() on the next line, and this test
+    // exists because that is exactly the shape WO-0006 set out to remove. The
+    // route now writes through `writeHermesConfigFile`, so the invalidation
+    // arrives with the write rather than with the author remembering.
+    const { PUT } = require("@/app/api/config/route") as typeof import("@/app/api/config/route");
+    const { NextRequest } = require("next/server") as typeof import("next/server");
+    const { readCachedConfig } = require("@/lib/config-cache") as typeof import("@/lib/config-cache");
+
+    writeFileSync(configPath(), yaml.dump({ agent: { max_turns: 100 } }), "utf-8");
+    expect((readCachedConfig() as { agent: { max_turns: number } }).agent.max_turns).toBe(100);
+    expect(cachedRowCount()).toBe(2);
+
+    const res = await PUT(
+      new NextRequest("http://localhost/api/config", {
+        method: "PUT",
+        body: JSON.stringify({ section: "agent", values: { max_turns: 200 } }),
+      }),
+    );
+    expect(res.status).toBe(200);
+
+    expect(cachedRowCount()).toBe(0);
+    // Without invalidation this GET-shaped read returns 100 for up to 15
+    // seconds, so the operator saves a setting and the UI reloads the old one.
+    expect((readCachedConfig() as { agent: { max_turns: number } }).agent.max_turns).toBe(200);
   });
 });
 

@@ -16,12 +16,19 @@ const mockWriteFileSync = jest.fn();
 const mockExistsSync = jest.fn();
 const mockMkdirSync = jest.fn();
 const mockRequireAuth = jest.fn();
+// The route writes config.yaml through `writeHermesConfigFile`, which stages to
+// a tmpfile and renames. A mock without these two is a route that throws 500 on
+// the success path, so they belong to the write, not to any one assertion.
+const mockRenameSync = jest.fn();
+const mockUnlinkSync = jest.fn();
 
 jest.mock("fs", () => ({
   readFileSync: mockReadFileSync,
   writeFileSync: mockWriteFileSync,
   existsSync: mockExistsSync,
   mkdirSync: mockMkdirSync,
+  renameSync: mockRenameSync,
+  unlinkSync: mockUnlinkSync,
 }));
 
 jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
@@ -115,10 +122,11 @@ describe("PUT /api/config deep merge (List 4 — Models/Settings)", () => {
 
     expect(res.status).toBe(200);
     // `writeFileSync` is called twice on success: once by `backupFile`
-    // (writes the pre-merge config to backups/) and once by the route
-    // (writes the post-merge config back to disk). The second call is
-    // the one we want to assert against. Decode the dumped YAML and
-    // assert the shape.
+    // (writes the pre-merge config to backups/) and once by the route's
+    // write helper (stages the post-merge config to a tmpfile, which is
+    // then renamed over config.yaml). The second call is the one we want
+    // to assert against, same content whatever the path argument says.
+    // Decode the dumped YAML and assert the shape.
     const written = mockWriteFileSync.mock.calls[1]?.[1] as string;
     expect(written).toMatch(/max_turns: 100/);
     expect(written).toMatch(/default: NewHermes/);

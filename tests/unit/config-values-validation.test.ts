@@ -8,12 +8,19 @@ const mockWriteFileSync = jest.fn();
 const mockExistsSync = jest.fn();
 const mockMkdirSync = jest.fn();
 const mockRequireAuth = jest.fn();
+// The route writes config.yaml through `writeHermesConfigFile`, which stages to
+// a tmpfile and renames. A mock without these two is a route that throws 500 on
+// the success path, so they belong to the write, not to any one assertion.
+const mockRenameSync = jest.fn();
+const mockUnlinkSync = jest.fn();
 
 jest.mock("fs", () => ({
   readFileSync: mockReadFileSync,
   writeFileSync: mockWriteFileSync,
   existsSync: mockExistsSync,
   mkdirSync: mockMkdirSync,
+  renameSync: mockRenameSync,
+  unlinkSync: mockUnlinkSync,
 }));
 
 jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
