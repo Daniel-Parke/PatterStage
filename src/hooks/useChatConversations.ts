@@ -1,0 +1,178 @@
+// ═══════════════════════════════════════════════════════════════
+// useChatConversations — the sidebar list and which one is active
+// ═══════════════════════════════════════════════════════════════
+//
+// Split out of useChatPage (Phase 4 god-file decomposition). Owns the
+// server-persisted conversation list, the active id, and the four
+// things a user does to a row: start a new one, select it, delete it,
+// export it. Plus `refreshActiveConversation`, the reconciliation read
+// the stream falls back to when the socket closes without a terminal
+// event.
+//
+// Composed after useChatTranscript because every one of these actions
+// tears down whatever stream is live before it changes what is on
+// screen.
+
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import type { Dispatch, MouseEvent, RefObject, SetStateAction } from "react";
+
+import type { ToastType } from "@/components/ui/Toast";
+import type { ChatConversation, ChatMessage } from "@/types/chat";
+import {
+  fetchConversations,
+  fetchConversation,
+  createConversationApi,
+  deleteConversationApi,
+  conversationToJson,
+  conversationToCsv,
+  sanitiseFilename,
+  downloadFile,
+} from "@/lib/chat-utils";
+import { stopEvent, type PendingApproval } from "@/hooks/chat-local-message";
+
+type ToastFn = (message: string, type?: ToastType) => void;
+
+export interface UseChatConversationsArgs {
+  /** Tear down the live run-event stream / fast-mode fetch. */
+  closeStream: () => void;
+  messages: ChatMessage[];
+  setMessages: Dispatch<SetStateAction<ChatMessage[]>>;
+  setIsStreaming: Dispatch<SetStateAction<boolean>>;
+  setPendingApproval: Dispatch<SetStateAction<PendingApproval | null>>;
+  /** The model a newly created conversation is stamped with. */
+  model: string;
+  setInput: Dispatch<SetStateAction<string>>;
+  inputRef: RefObject<HTMLTextAreaElement | null>;
+  showToast: ToastFn;
+}
+
+export function useChatConversations({
+  closeStream,
+  messages,
+  setMessages,
+  setIsStreaming,
+  setPendingApproval,
+  model,
+  setInput,
+  inputRef,
+  showToast,
+}: UseChatConversationsArgs) {
+  const [conversations, setConversations] = useState<ChatConversation[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  // ── Load conversations on mount ─────────────────────────────
+  const loadConversations = useCallback(async () => {
+    const list = await fetchConversations();
+    setConversations(list);
+    return list;
+  }, []);
+
+  useEffect(() => {
+    void (async () => {
+      const list = await loadConversations();
+      if (list.length > 0) setActiveId(list[0].id);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const refreshActiveConversation = useCallback(async () => {
+    if (!activeId) return;
+    const loaded = await fetchConversation(activeId);
+    if (loaded) setMessages(loaded.messages);
+  }, [activeId, setMessages]);
+
+  // ── New conversation ────────────────────────────────────────
+  const handleNewChat = useCallback(async () => {
+    closeStream();
+    // Reuse an existing blank "New Chat" instead of creating a duplicate.
+    // Sending a message auto-titles the conversation, so a still-"New Chat"
+    // entry is an unused blank one — and creating a second collides on the
+    // session title (invalid_title). Just switch to the existing blank.
+    const existingBlank = conversations.find((c) => c.title === "New Chat");
+    if (existingBlank) {
+      setActiveId(existingBlank.id);
+      setMessages([]);
+      setInput("");
+      inputRef.current?.focus();
+      return;
+    }
+    const conversation = await createConversationApi({ title: "New Chat", model });
+    if (!conversation) {
+      showToast("Failed to start a new conversation", "error");
+      return;
+    }
+    setConversations((prev) => [conversation, ...prev]);
+    setActiveId(conversation.id);
+    setMessages([]);
+    setInput("");
+    inputRef.current?.focus();
+  }, [closeStream, conversations, model, showToast, setMessages, setInput, inputRef]);
+
+  const handleSelectConversation = useCallback(
+    (id: string) => {
+      if (id === activeId) return;
+      closeStream();
+      setIsStreaming(false);
+      setPendingApproval(null);
+      setActiveId(id);
+    },
+    [activeId, closeStream, setIsStreaming, setPendingApproval],
+  );
+
+  // ── Delete conversation ─────────────────────────────────────
+  const handleDeleteConversation = useCallback(
+    async (id: string, e?: MouseEvent) => {
+      stopEvent(e);
+      if (id === activeId) closeStream();
+      const { ok, error } = await deleteConversationApi(id);
+      if (!ok) {
+        showToast(error || "Failed to delete conversation", "error");
+        return;
+      }
+      setConversations((prev) => {
+        const remaining = prev.filter((c) => c.id !== id);
+        if (id === activeId) setActiveId(remaining.length > 0 ? remaining[0].id : null);
+        return remaining;
+      });
+      showToast("Conversation deleted", "success");
+    },
+    [activeId, closeStream, showToast],
+  );
+
+  // ── Download conversation ───────────────────────────────────
+  const handleDownloadConversation = useCallback(
+    (conversation: ChatConversation, format: "json" | "csv", e?: MouseEvent) => {
+      stopEvent(e);
+      const safeTitle = sanitiseFilename(conversation.title);
+      const ts = Date.now();
+      if (format === "json") {
+        downloadFile(conversationToJson(conversation, messages), `${safeTitle}_${ts}.json`, "application/json");
+        showToast("Conversation exported as JSON", "success");
+      } else {
+        downloadFile(conversationToCsv(messages), `${safeTitle}_${ts}.csv`, "text/csv");
+        showToast("Conversation exported as CSV", "success");
+      }
+    },
+    [messages, showToast],
+  );
+
+  const activeConversation = conversations.find((c) => c.id === activeId);
+  const hasActiveConversation = activeConversation !== undefined;
+
+  return {
+    conversations,
+    setConversations,
+    activeId,
+    setActiveId,
+    activeConversation,
+    hasActiveConversation,
+    loadConversations,
+    refreshActiveConversation,
+    handleNewChat,
+    handleSelectConversation,
+    handleDeleteConversation,
+    handleDownloadConversation,
+  };
+}
