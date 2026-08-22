@@ -8,11 +8,13 @@
 //
 // Env: PS_URL (default http://127.0.0.1:41234; CH_URL still honoured for
 // back-compat), HERMES_URL (default http://127.0.0.1:8642), API_SERVER_KEY
-// (optional bearer).
+// (optional bearer), PS_AUTH_TOKEN (PatterStage operator token — required
+// unless the target runs with auth disabled; sent as a Bearer header).
 // ═══════════════════════════════════════════════════════════════
 
 const CH = process.env.PS_URL || process.env.CH_URL || "http://127.0.0.1:41234";
 const HERMES = process.env.HERMES_URL || "http://127.0.0.1:8642";
+const PS_TOKEN = process.env.PS_AUTH_TOKEN || "";
 
 let failures = 0;
 function ok(msg) {
@@ -27,9 +29,13 @@ function check(cond, msg) {
 }
 
 async function req(method, url, body) {
+  // Only PatterStage gets the operator token — Hermes has its own key, and a
+  // mismatched bearer must not leak across services.
+  const headers = { "Content-Type": "application/json" };
+  if (PS_TOKEN && url.startsWith(CH)) headers.Authorization = `Bearer ${PS_TOKEN}`;
   const res = await fetch(url, {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const text = await res.text();
@@ -237,63 +243,12 @@ async function main() {
     check(del.status === 200 && del.data?.data?.deleted === true, "conversation deleted");
   }
 
-  // ── 10. Benchmark run over the runtime (agent target) ─────
-  // Drive the headless benchmark engine end-to-end: list suites → start an
-  // agent run against the default profile → poll to terminal → assert the
-  // summary + per-item results + the benchmark.* analytics landed. Scores are
-  // irrelevant here (the mock agent won't match answer keys) — this proves the
-  // pipeline (submitRun → grade → aggregate → persist) works against real Hermes.
-  console.log("10. Benchmark engine over the runtime");
-  const suitesRes = await req("GET", `${CH}/api/benchmarks/suites`);
-  const suites = suitesRes.data?.data?.suites ?? [];
-  check(suitesRes.status === 200 && suites.length >= 1, `benchmark suites listed (${suites.length})`);
-  const profilesRes = await req("GET", `${CH}/api/agent/profiles`);
-  const benchProfile = profilesRes.data?.data?.profiles?.[0]?.id;
-  check(Boolean(benchProfile), `agent profile available for benchmark (${benchProfile ?? "none"})`);
-
-  if (suites.length >= 1 && benchProfile) {
-    // Brain-only (augmentation off) → the reliable callLLM path → deterministic
-    // for the smoke. Records the resolved brain + exec_mode (the v2 unit).
-    const startBench = await req("POST", `${CH}/api/benchmarks/runs`, {
-      suiteKey: suites[0].key,
-      mode: "single",
-      targetKind: "agent",
-      targetRef: benchProfile,
-      augmentation: { skills: false, tools: false, memory: false },
-      repeats: 1,
-    });
-    const benchRunId = startBench.data?.data?.run?.id;
-    check(startBench.status === 201 && Boolean(benchRunId), `benchmark run started (${benchRunId ?? "none"})`);
-    check(startBench.data?.data?.run?.execMode === "model", `brain-only run records exec_mode=model (${startBench.data?.data?.run?.execMode})`);
-
-    if (benchRunId) {
-      const benchDone = await pollUntil(
-        async () => {
-          const r = await req("GET", `${CH}/api/benchmarks/runs/${benchRunId}`);
-          const status = r.data?.data?.run?.status;
-          return status && status !== "pending" && status !== "running" ? r.data.data : null;
-        },
-        { tries: 120, delayMs: 1000 },
-      );
-      check(benchDone?.run?.status === "completed", `benchmark run completed (status=${benchDone?.run?.status})`);
-      check(
-        benchDone?.run?.summary != null && typeof benchDone.run.summary.overallRating === "number",
-        `benchmark summary computed (rating=${benchDone?.run?.summary?.overallRating})`,
-      );
-      check((benchDone?.run?.summary?.itemsRun ?? 0) >= 1, `benchmark scored items (${benchDone?.run?.summary?.itemsRun ?? 0})`);
-      check(Array.isArray(benchDone?.results) && benchDone.results.length >= 1, `per-item results persisted (${benchDone?.results?.length ?? 0})`);
-
-      const benchAnalytics = await req("GET", `${CH}/api/analytics`);
-      const benchTotals = benchAnalytics.data?.data?.analytics?.totals ?? {};
-      check((benchTotals["benchmark.completed"] ?? 0) >= 1, `benchmark.completed recorded (${benchTotals["benchmark.completed"] ?? 0})`);
-
-      const board = await req("GET", `${CH}/api/benchmarks/leaderboard?suite=${suites[0].key}`);
-      check(
-        board.status === 200 && Array.isArray(board.data?.data?.entries) && board.data.data.entries.some((e) => e.targetRef === benchProfile),
-        "agent appears on the benchmark leaderboard",
-      );
-    }
-  }
+  // Section 10 (benchmark engine over the runtime) was deleted here on
+  // 2026-08-22. Commit 4935ac31 removed the benchmark subsystem entirely on the
+  // operator's ruling and amended ADR-0004 to say so, taking its 135 unit tests
+  // with it, but missed this smoke: the job is push-only (ci.yml), so it never
+  // ran on that pull request. /api/benchmarks/* now 404s, so these assertions
+  // tested a surface that no longer exists by decision.
 
   finish();
 }

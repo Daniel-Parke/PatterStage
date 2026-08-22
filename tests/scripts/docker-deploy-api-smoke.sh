@@ -26,9 +26,12 @@ docker run -d --name "$NAME" \
   -e PS_ENABLE_DEPLOY_API=true \
   "$IMAGE"
 
+# Since the auth boundary (src/proxy.ts), /api/health is the ONE public path;
+# every other path 401s without a token, and curl -f treats 401 as failure —
+# probing "/" here would therefore never report ready even with the app up.
 ready=0
 for _ in $(seq 1 60); do
-  if curl -sf -o /dev/null "http://127.0.0.1:${HOST_PORT}/"; then
+  if curl -sf -o /dev/null "http://127.0.0.1:${HOST_PORT}/api/health"; then
     ready=1
     break
   fi
@@ -40,7 +43,20 @@ if [ "$ready" -ne 1 ]; then
   exit 1
 fi
 
-curl -sf "http://127.0.0.1:${HOST_PORT}/api/update?branch=dev" | grep -q '"data"' || {
+# Boot instrumentation (src/instrumentation.ts) mints the token file BEFORE any
+# request is served, so once /api/health answers, a single read is race-free.
+# Path = $HOME (/home/nextjs, set in the Dockerfile) + the PS_DATA_DIR default
+# (src/lib/paths.ts) + /auth-token (src/lib/auth-token.ts). Wrapped in `sh -c`
+# so Git Bash on Windows does not rewrite the absolute path (MSYS mangling).
+TOKEN="$(docker exec "$NAME" sh -c 'cat /home/nextjs/patterstage/data/auth-token' 2>/dev/null | tr -d '[:space:]' || true)"
+if [ -z "$TOKEN" ]; then
+  echo "ERROR: could not read auth token from container" >&2
+  docker logs "$NAME" 2>&1 | tail -80 >&2 || true
+  exit 1
+fi
+
+curl -sf -H "Authorization: Bearer ${TOKEN}" \
+  "http://127.0.0.1:${HOST_PORT}/api/update?branch=dev" | grep -q '"data"' || {
   echo "ERROR: GET /api/update?branch=dev unexpected body" >&2
   exit 1
 }
@@ -64,6 +80,7 @@ resp=""
 # success (which is covered by the in-repo integration tests on dev).
 http_code="$(curl -s -o /tmp/ps-api-smoke-resp.$$.body -w '%{http_code}' \
   -X POST "http://127.0.0.1:${HOST_PORT}/api/update" \
+  -H "Authorization: Bearer ${TOKEN}" \
   -H "Content-Type: application/json" \
   -d '{"action":"restart"}' || true)"
 resp="$(cat /tmp/ps-api-smoke-resp.$$.body 2>/dev/null || echo '')"

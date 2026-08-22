@@ -28,4 +28,22 @@ test.describe("Smoke", () => {
     expect(response.status()).toBe(404);
   });
 
+  test.describe("auth boundary", () => {
+    // Drop the config-level Authorization header — even contexts made via
+    // playwright.request.newContext() inherit it, so an override is the only
+    // way to send a genuinely unauthenticated request.
+    test.use({ extraHTTPHeaders: {} });
+
+    test("unauthenticated API request is refused; /api/health stays public", async ({
+      request,
+    }) => {
+      // The proxy must 401 a real API route while keeping the deliberate
+      // public liveness path open.
+      const refused = await request.get("/api/stats");
+      expect(refused.status()).toBe(401);
+      const health = await request.get("/api/health");
+      expect(health.status()).toBe(200);
+    });
+  });
+
 });

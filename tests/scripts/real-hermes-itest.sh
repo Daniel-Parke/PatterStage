@@ -10,6 +10,8 @@ COMPOSE="docker compose -f docker-compose.real-hermes.yml -p ${PROJECT}"
 PS_PORT="${PORT:-42069}"
 H_PORT="${HERMES_PORT:-8642}"
 KEY="hermes-real-itest-key"
+# PatterStage operator token; must match PS_AUTH_TOKEN in docker-compose.real-hermes.yml.
+PS_TOKEN="hermes-real-itest-token"
 
 cleanup() { [ "${KEEP_STACK:-0}" = "1" ] || ${COMPOSE} down -v >/dev/null 2>&1 || true; }
 trap cleanup EXIT
@@ -38,6 +40,7 @@ HERMES_URL="http://localhost:${H_PORT}" API_SERVER_KEY="${KEY}" \
 
 echo "[itest] ── full-stack smoke (PatterStage → real Hermes) ──"
 PS_URL="http://localhost:${PS_PORT}" HERMES_URL="http://localhost:${H_PORT}" API_SERVER_KEY="${KEY}" \
+  PS_AUTH_TOKEN="${PS_TOKEN}" \
   node tests/integration/runtime/full-stack-smoke.mjs
 
 echo "[itest] ── DB upgrade path (legacy DB self-migrates on boot) ──"
@@ -76,8 +79,8 @@ fi
 # /api/cron was removed with the legacy cron page (Phase M); assert /api/schedules
 # instead — it requires the `schedules` table the legacy seed dropped, so a 200
 # proves the v2→latest migration restored the runs/schedules schema.
-mcode=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/missions")
-scode=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:${PS_PORT}/api/schedules")
+mcode=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${PS_TOKEN}" "http://localhost:${PS_PORT}/api/missions")
+scode=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${PS_TOKEN}" "http://localhost:${PS_PORT}/api/schedules")
 echo "[itest] post-upgrade: /api/missions=${mcode} /api/schedules=${scode}"
 if [ "$mcode" != "200" ] || [ "$scode" != "200" ]; then
   echo "[itest] upgrade FAILED — runs/schedules migration likely incomplete"; ${COMPOSE} logs --tail 40 patterstage; exit 1

@@ -54,6 +54,9 @@ services:
       HERMES_HOME: /data/hermes
       HERMES_GATEWAY_URL: http://hermes:8642
       API_SERVER_KEY: hermes-real-itest-key
+      # Fixed operator token (wins over the volume-minted auth-token file) so
+      # the itest harness can authenticate; must match real-hermes-itest.sh.
+      PS_AUTH_TOKEN: hermes-real-itest-token
     ports:
       - "${PORT:-42069}:42069"
     depends_on:
