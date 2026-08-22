@@ -53,6 +53,7 @@ export function ensureProfilesToolsParity(database: Database.Database): void {
         updated_at          TEXT NOT NULL DEFAULT (datetime('now'))
       );
       INSERT OR IGNORE INTO agent_root (id, display_name, description)
+      -- design-lint-disable-next-line hermes-outside-adapter -- seed data, not a path lookup: the env var name is one word inside a human description of the root agent, shown to whoever opens the row. The pragma is a SQL comment because the line it guards is SQL.
       VALUES (1, 'Bob', 'Local Hermes default agent at HERMES_HOME');
     `);
   }

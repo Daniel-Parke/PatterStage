@@ -364,6 +364,7 @@ export default function ModelEditor({
             </FieldRow>
             <FieldRow
               label="API Key"
+              // design-lint-disable-next-line hermes-outside-adapter -- a credential warning. It tells the operator, before they paste a key, exactly which file on disk that key will end up in readable form in. That disclosure is the field's reason for existing.
               description="Stored plain text in the registry and synced to ~/.hermes/.env so Hermes can read it."
             >
               <Input

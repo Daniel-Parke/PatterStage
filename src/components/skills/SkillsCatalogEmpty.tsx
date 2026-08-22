@@ -19,6 +19,7 @@ export default function SkillsCatalogEmpty({
     <EmptyState
       icon={FileText}
       title="No skills in catalog"
+      // design-lint-disable-next-line hermes-outside-adapter -- empty-state copy for an import button. It tells the operator where the skills are being imported FROM, which is the one thing they need before pressing a button that writes to the catalog.
       description="Import the global skills tree from ~/.hermes/skills into PatterStage SQLite, then push to sync disk."
       action={
         <Button

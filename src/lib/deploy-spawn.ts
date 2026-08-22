@@ -85,6 +85,7 @@ export async function probeDeployLiveness(
     const log = status.logHint || "ps-update.log";
     return {
       ok: false,
+      // design-lint-disable-next-line hermes-outside-adapter -- the deploy runner is a detached child process, so its failure reason is only ever in its log file. This message exists to hand the operator that filename; the port has no seam that carries a sentence.
       error: `Deploy failed early — ${status.message || "see logs"}. Check ~/.hermes/logs/${log} for the cause.`,
     };
   };
@@ -103,6 +104,7 @@ export async function probeDeployLiveness(
       const log = s.logHint || "ps-update.log";
       return {
         ok: false,
+        // design-lint-disable-next-line hermes-outside-adapter -- same reason as the branch above: a runner that died before writing a status has left nothing behind except its log, and this string is how the operator is told where that is.
         error: `Deploy runner exited immediately (PID ${childPid} after ${deps.now() - probeStart}ms). Check ~/.hermes/logs/${log}.`,
       };
     }

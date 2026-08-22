@@ -78,6 +78,7 @@ export async function POST(
           pushDiff(
             "model-env",
             "Credential",
+            // design-lint-disable-next-line hermes-outside-adapter -- this is the diff row an operator reads before approving a push, and the file the key is about to be written into is the fact being disclosed. Resolving it through the port would print the same path with the disclosure removed.
             `Write ${envVar}=${maskKeyHint(model.apiKey)} to ~/.hermes/.env`,
           );
         }

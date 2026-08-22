@@ -129,6 +129,7 @@ export default function ModelsPage() {
               icon={refreshing ? Loader2 : RefreshCw}
               onClick={handleRefresh}
               disabled={refreshing}
+              // design-lint-disable-next-line hermes-outside-adapter -- tooltip copy. It names the two files Refresh reads so the operator knows what a refresh will and will not pick up; a button that hid the files it reads would be less honest, not better layered.
               title="Sync models from ~/.hermes/config.yaml and ~/.hermes/.env"
             >
               {refreshing ? "Refreshing…" : "Refresh Models"}

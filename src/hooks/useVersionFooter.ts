@@ -216,6 +216,7 @@ export function useVersionFooter(): VersionFooterState {
     if (busyRef.current) return;
     return runDeployAction({
       action: "restart",
+      // design-lint-disable-next-line hermes-outside-adapter -- a restart kills the server that would otherwise report on it, so this toast is the last thing the operator sees. Naming the log file is the only way they can find out how the restart went.
       startedMessage: "Restart requested (~/.hermes/logs/ps-restart.log)…",
       runningMessage: "Restarting server…",
       setBusy: setRestarting,

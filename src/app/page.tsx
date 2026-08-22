@@ -264,6 +264,7 @@ export default function Dashboard() {
               <p className="font-semibold text-neon-orange">Hermes config.yaml cannot be parsed</p>
               <p className="mt-0.5 break-words font-mono text-neon-orange/70">{monitor.system.configYamlError}</p>
               <p className="mt-1 text-white/40">
+                {/* design-lint-disable-next-line hermes-outside-adapter -- the whole point of this alert is to tell the operator which file to open. A parse error with the filename removed is an alert you cannot act on. */}
                 Config + profile syncs are paused until this is fixed. Edit <code className="text-white/60">~/.hermes/config.yaml</code> to correct the YAML.
               </p>
             </div>

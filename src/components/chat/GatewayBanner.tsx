@@ -53,6 +53,7 @@ const COPY: Record<
     title: "Gateway up — PatterStage can't authenticate",
     body:
       "The gateway is reachable but rejected PatterStage's request (401). " +
+      // design-lint-disable-next-line hermes-outside-adapter -- recovery instructions for a 401 the operator is looking at. Naming both files they must put the key in is the entire remedy; a banner that said "set it somewhere" would not be a banner.
       "Set {code}API_SERVER_KEY{/code} in {code}~/.hermes/.env{/code}, mirror it " +
       "into {code}~/patterstage/.env.local{/code}, and restart PatterStage.",
   },
@@ -62,6 +63,7 @@ const COPY: Record<
     body:
       "Set an agent default under Config → Models, push to Hermes (or " +
       "Operations → Agents → Push Bob), or run {code}hermes model{/code}. " +
+      // design-lint-disable-next-line hermes-outside-adapter -- this sentence exists to correct a specific operator misconception: that the chat dropdown label selects the inference model. Saying which file actually decides is what corrects it.
       "The gateway reads {code}~/.hermes/config.yaml{/code} model.default — " +
       "the chat dropdown label alone does not change inference.",
   },

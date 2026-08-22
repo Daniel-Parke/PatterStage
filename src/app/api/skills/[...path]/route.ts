@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { readFileSync, existsSync, readdirSync, statSync } from "fs";
 
+// design-lint-disable-next-line hermes-outside-adapter -- this route is a browser onto the agent's own skills tree, so knowing that layout is its whole job. runtime/workspace.ts deliberately keeps `skills` off the port (an authoring tree is framework-shaped in a way a log or transcript directory is not), and widening the port with a field one route would use would move the knowledge without removing it.
 import { getActiveHermesPaths } from "@/modules/hermes/lib/agent-runtime";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { resolveSkillDirUnderRoot } from "@/lib/fs/path-security";
@@ -15,6 +16,7 @@ export async function GET(
   const auth = requireAuth(request);
   if (auth) return auth;
   const { path } = await params;
+  // design-lint-disable-next-line hermes-outside-adapter -- the skills root is the containment boundary this request is checked against, so the route must name it; see the import for why it is not on the port.
   const resolved = resolveSkillDirUnderRoot(getActiveHermesPaths().skills, path);
   if (!resolved.ok) {
     return badRequest(resolved.error);
