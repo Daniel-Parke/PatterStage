@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getActiveHermesPaths } from "@/modules/hermes/lib/agent-runtime";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { writeHermesConfigFile } from "@/modules/hermes/lib/hermes-config-write";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
@@ -108,7 +108,7 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const paths = getActiveHermesPaths();
+    const paths = getAgentWorkspace();
 
     // Create backup (no-op when config.yaml doesn't exist) — single call
     // to the canonical backupFile() helper replaces the 4-line inline

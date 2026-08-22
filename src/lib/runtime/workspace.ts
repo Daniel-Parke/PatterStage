@@ -12,23 +12,30 @@
 // workspace. Core depends on THIS; only this file knows the answer comes from
 // Hermes today.
 //
-// Deliberately narrow. `HermesPathBundle` has 19 fields; core needs six, and
-// the other thirteen (profiles, skills, soul, cronJobs, hindsightConfig) are
+// Deliberately narrow. `HermesPathBundle` has 19 fields; core needs seven, and
+// the other twelve (profiles, skills, soul, cronJobs, hindsightConfig) are
 // Hermes' own layout and belong to the hermes surfaces that already import it
 // directly. A neutral interface that mirrored all nineteen would just be the
 // Hermes bundle wearing a different name.
 //
-// Five became six in Phase 7 (T-0014), when GET /api/sessions/[id] stopped
-// calling getActiveHermesPaths() and came through here instead. `sessions`
-// answers a question this port was already half-answering: it reads transcripts
-// out of the agent's state DB in state-db.ts, and `sessions` is the same
-// question asked of the filesystem, for transcripts written before that DB
-// existed.
+// Five became seven in Phase 7 (T-0014), when the two API routes still calling
+// getActiveHermesPaths() for a directory came through here instead. Neither
+// addition is a new idea; each finishes an answer this port was already giving
+// half of:
 //
-// `skills` deliberately did NOT join it, though the skills route was in the
+//   sessions  GET /api/sessions/[id] reads transcripts out of the agent's
+//             state DB through state-db.ts already. `sessions` is the same
+//             question asked of the filesystem, for transcripts written
+//             before that DB existed.
+//   backups   PUT /api/config writes the file this port hands out as
+//             `config`, and backs it up first. A write path without its
+//             backup path is half a port, so the route was reaching around
+//             the seam for the other half.
+//
+// `skills` deliberately did NOT join them, though the skills route was in the
 // same sweep. A skills tree is an authoring layout, Hermes-shaped in a way a
-// transcript directory is not, so that route says so in a pragma rather than
-// borrowing this file's neutrality for a path that has none.
+// transcript or backup directory is not, so that route says so in a pragma
+// rather than borrowing this file's neutrality for a path that has none.
 // ═══════════════════════════════════════════════════════════════
 
 import { getActiveHermesPaths } from "@/modules/hermes/lib/agent-runtime";
@@ -43,6 +50,8 @@ export interface AgentWorkspace {
   config: string;
   /** Environment file holding provider credentials. */
   env: string;
+  /** Directory the agent keeps timestamped copies of overwritten files in. */
+  backups: string;
   /** Directory the agent writes session transcripts into. */
   sessions: string;
   /** Local long-term-memory store. */
@@ -63,6 +72,7 @@ export function getAgentWorkspace(): AgentWorkspace {
     logs: paths.logs,
     config: paths.config,
     env: paths.env,
+    backups: paths.backups,
     sessions: paths.sessions,
     memoryDb: paths.memoryDb,
   };
