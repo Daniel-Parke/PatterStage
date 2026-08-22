@@ -256,7 +256,7 @@ export default function MissionCreateForm({
   // sequence used to be inline in the LocalDirRow onClick. Now extracted
   // to a named callback (mirrors the `addReferenceFromInput` pattern for
   // references, line 265). The actual dedupe + push logic is delegated
-  // to `commitLocalDirDraft` in `@/lib/local-dir-entry`, which is shared
+  // to `commitLocalDirDraft` in `@/lib/fs/local-dir-entry`, which is shared
   // with the template editor (TemplateModals.tsx) — same call site, same
   // helper. Returns early on the no-op cases (empty path, duplicate)
   // without touching state.

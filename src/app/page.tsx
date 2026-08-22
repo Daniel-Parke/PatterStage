@@ -117,7 +117,7 @@ export default function Dashboard() {
     }
     // Collapse consecutive identical (source, message) pairs into a
     // single row with a "(×N)" suffix. The algorithm is in
-    // dedupErrors (src/lib/dashboard-error-dedup.ts) — see that file
+    // dedupErrors (src/lib/dashboard/dashboard-error-dedup.ts) — see that file
     // for the full rationale (gateway-reconnect errors that log the
     // same line every few minutes would otherwise dominate the
     // panel).
@@ -183,7 +183,7 @@ export default function Dashboard() {
   // the registry's "default agent" (the user has set a default in the
   // Models registry but hasn't yet pushed it to config.yaml); else "-".
   // The 3-source priority ladder lives in `formatModelSubtitle`
-  // (src/lib/dashboard-model-subtitle.ts) so the rule is
+  // (src/lib/dashboard/dashboard-model-subtitle.ts) so the rule is
   // unit-testable in isolation.
   const modelSubtitle = useMemo(
     () => formatModelSubtitle(diskModel, diskProvider, registryAgentModelLabel),
@@ -209,7 +209,7 @@ export default function Dashboard() {
 
   // Sessions stat-pill subtitle: "N active · M last 7d" derived from
   // the 5 most recent sessions exposed by /api/monitor. The full
-  // window math lives in countInWindow (src/lib/session-window.ts) so
+  // window math lives in countInWindow (src/lib/sessions/session-window.ts) so
   // it's unit-testable without rendering the dashboard.
   const sessionWindowSubtitle = useMemo(() => {
     const recent = monitor?.sessions.recent ?? [];

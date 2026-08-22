@@ -1,5 +1,5 @@
 /**
- * Unit tests for src/lib/hindsight-bridge.ts — pure response-shaping
+ * Unit tests for src/lib/memory/hindsight-bridge.ts — pure response-shaping
  * helpers extracted from the /api/memory/hindsight route.
  */
 

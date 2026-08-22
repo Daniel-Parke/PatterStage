@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 //
 // Memories are consumed directly from the mapped payload produced by
-// `mapMemoryItem` in `@/lib/hindsight-bridge` — the API route returns
+// `mapMemoryItem` in `@/lib/memory/hindsight-bridge` — the API route returns
 // `{ content, type, tags, created_at, score, ... }` as plain JSON
 // fields, not a Python `repr()` string. The old `parseMemoryContent`
 // regex parser is no longer used and has been removed.

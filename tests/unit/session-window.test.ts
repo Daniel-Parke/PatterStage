@@ -1,5 +1,5 @@
 // Unit tests for the session-window counter
-// (src/lib/session-window.ts)
+// (src/lib/sessions/session-window.ts)
 
 import {
   countInWindow,

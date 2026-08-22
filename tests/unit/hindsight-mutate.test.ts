@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  *
- * Unit tests for `hindsightMutate` (src/lib/hindsight-mutate.ts).
+ * Unit tests for `hindsightMutate` (src/lib/memory/hindsight-mutate.ts).
  *
  * The helper is a thin 2-line composition of `safeApiCall` +
  * `toastFromResult` that targets `/api/memory/hindsight` exclusively.

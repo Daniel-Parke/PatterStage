@@ -1,5 +1,5 @@
 // Unit tests for the toastFromResult helper
-// (src/lib/toast-from-result.ts)
+// (src/lib/dashboard/toast-from-result.ts)
 //
 // Locks the showToast contract:
 //   - success branch uses default tone (no second arg)

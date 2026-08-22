@@ -1,6 +1,6 @@
 // Unit tests for the 4 dashboard helpers extracted in session 174:
-//   - dedupErrors (src/lib/dashboard-error-dedup.ts)
-//   - formatModelSubtitle (src/lib/dashboard-model-subtitle.ts)
+//   - dedupErrors (src/lib/dashboard/dashboard-error-dedup.ts)
+//   - formatModelSubtitle (src/lib/dashboard/dashboard-model-subtitle.ts)
 //   - topNTemplates (src/lib/dashboard-top-templates.ts)
 //   - loadInitialDashboardData (src/lib/dashboard-initial-load.ts)
 //

@@ -1,5 +1,5 @@
 /** @jest-environment node */
-// Pure selectors extracted from useMissionsPage (lib/mission-filters.ts).
+// Pure selectors extracted from useMissionsPage (lib/missions/mission-filters.ts).
 
 import {
   filterMissions,

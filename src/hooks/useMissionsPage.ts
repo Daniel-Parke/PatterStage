@@ -31,7 +31,7 @@ import {
 // to src/lib/mission-composer-utils.ts (shared by useMissionComposer + this
 // hook, imported above). The pure board/category selectors (filterMissions,
 // computeMissionCounts, *CategoryPills, filterGroupedTemplates) and the
-// dispatch-toast copy live in src/lib/mission-filters.ts.
+// dispatch-toast copy live in src/lib/missions/mission-filters.ts.
 
 export type MissionRow = Mission & {
   cronJob?: {

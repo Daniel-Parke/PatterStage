@@ -2,7 +2,7 @@
 
 /**
  * Tests for the pure helpers extracted from `closeOrphanedActiveSessions`
- * and `previewOrphanSweep` in `src/lib/session-repository.ts`:
+ * and `previewOrphanSweep` in `src/lib/sessions/session-repository.ts`:
  *
  *   - `computeOrphanCutoffs(now?)` — derives the 5-min and 30-min cutoffs
  *     from a single `now` so the dry-run SELECT and the write UPDATE

@@ -1,5 +1,5 @@
 /**
- * Tests for the `commitLocalDirDraft` helper in `@/lib/local-dir-entry`.
+ * Tests for the `commitLocalDirDraft` helper in `@/lib/fs/local-dir-entry`.
  *
  * History: the "Add" button for working directories in
  * `MissionCreateForm.tsx` and the "Add" button for local directories in

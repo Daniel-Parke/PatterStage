@@ -2,7 +2,7 @@
 // Shared parsing utilities for Hindsight memory data
 // ═══════════════════════════════════════════════════════════════
 //
-// The direct-HTTP bridge (`@/lib/hindsight-bridge`) returns plain
+// The direct-HTTP bridge (`@/lib/memory/hindsight-bridge`) returns plain
 // JSON objects — no Python `repr()` strings to parse. The previous
 // `parseMemoryContent` / `parseReflectResponse` regex parsers have
 // been removed because the API no longer sends the data shape they
