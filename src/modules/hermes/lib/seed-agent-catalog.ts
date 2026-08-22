@@ -28,7 +28,7 @@ import {
   platformToolsetsFromJson,
 } from "./profile-config-builder";
 import { upsertProfile, getProfileBySeedKey } from "./profiles-repository";
-import { pushProfileToHermes, pushAllProfiles, pushRootToHermes, pushSkillToHermes } from "./profile-sync";
+import { pushProfileToHermes, pushAllProfiles, pushRootToHermes, pushSkillToHermes } from "./profile-push";
 
 type SeedMode = "merge" | "replace";
 

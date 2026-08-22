@@ -2,9 +2,9 @@ import {
   discoverLocalProfiles,
   importAllSkillsFromDisk,
   importDiscoveredProfile,
-  pullRootFromHermes,
-  type SyncResult,
-} from "./profile-sync";
+} from "./profile-discovery";
+import { pullRootFromHermes } from "./profile-pull";
+import { type SyncResult } from "./profile-sync-shared";
 import { ensureDb, getDb } from "@/lib/db";
 import { isProfilesToolsParityComplete } from "@/lib/db/profiles-tools-parity-ensure";
 import { getHermesDefaultRoot } from "./profile-paths";

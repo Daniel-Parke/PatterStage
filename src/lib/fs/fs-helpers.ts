@@ -24,7 +24,7 @@
 //
 // Keep this module tiny and dependency-free (fs only). Heavier
 // file-orchestration (e.g. atomic write + rollback) belongs in
-// `modules/hermes/lib/config-sync.ts` / `modules/hermes/lib/profile-sync.ts`.
+// `modules/hermes/lib/hermes-config-write.ts` / `modules/hermes/lib/profile-sync-shared.ts`.
 // ══════════════════════════════════════════════════════════════════════════════
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
@@ -49,7 +49,7 @@ export function ensureDir(dir: string): void {
  * platform. Format: `2026-06-03T12-34-56-789Z`.
  *
  * The 3 pre-refactor inline call sites (`config/route.ts`,
- * `agent/files/[key]/route.ts`, `modules/hermes/lib/profile-sync.ts`) and a
+ * `agent/files/[key]/route.ts`, `modules/hermes/lib/profile-sync-shared.ts`) and a
  * private `backupTimestamp()` that used to live in
  * `modules/hermes/lib/config-sync.ts` all used the
  * same `new Date().toISOString().replace(/[:.]/g, "-")` expression —
@@ -83,7 +83,7 @@ export function backupFile(originalPath: string, backupsDir: string): string | n
 /**
  * SHA-256 hex digest of a UTF-8 string. The canonical "is this content
  * the same as what we have?" primitive used by the profile/root/skill
- * drift detectors (`modules/hermes/lib/profile-sync.ts`). Promoted here so the hash
+ * drift detectors (`modules/hermes/lib/profile-drift.ts`). Promoted here so the hash
  * is unit-testable and a future second drift consumer can share it.
  */
 export function contentHash(content: string): string {
@@ -94,7 +94,7 @@ export function contentHash(content: string): string {
  * SHA-256 hex digest of a file's UTF-8 content, or `null` when the file
  * is missing or unreadable (so callers can distinguish "no file" from a
  * real hash). Byte-equivalent to the pre-extraction private `fileHash`
- * in `modules/hermes/lib/profile-sync.ts`.
+ * in `modules/hermes/lib/profile-drift.ts`.
  */
 export function fileHash(path: string): string | null {
   if (!existsSync(path)) return null;

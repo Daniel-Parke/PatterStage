@@ -10,7 +10,7 @@ import { getProfile } from "@/modules/hermes/lib/profiles-repository";
 import { listSkills, deriveCategory } from "@/lib/skills-repository";
 import { skillFilePath, skillsRootForProfile } from "@/modules/hermes/lib/skills-config";
 import { requireSafeProfileName } from "@/lib/fs/path-security";
-import { scanDiskSkillsCatalog } from "@/modules/hermes/lib/profile-sync";
+import { scanDiskSkillsCatalog } from "@/modules/hermes/lib/profile-discovery";
 import { groupByCategory } from "@/lib/skills-grouping";
 import type { Skill } from "@/types/console";
 

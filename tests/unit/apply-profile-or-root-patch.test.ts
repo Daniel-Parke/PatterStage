@@ -133,7 +133,7 @@ describe("assertPatchSucceeded", () => {
 //
 // These tests mock the underlying `applyProfileOrRootPatch` indirectly
 // by mocking the modules it imports (agent-root-repository,
-// profiles-repository, hermes-profile-sync). The combined helper then
+// profiles-repository, profile-push). The combined helper then
 // runs the full 3-step pipeline and we assert on the wire output.
 
 jest.mock("@/lib/agent-root-repository", () => ({
@@ -145,7 +145,7 @@ jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   updateProfileContent: jest.fn(),
 }));
 
-jest.mock("@/modules/hermes/lib/profile-sync", () => ({
+jest.mock("@/modules/hermes/lib/profile-push", () => ({
   pushProfileToHermes: jest.fn(),
   pushRootToHermes: jest.fn(),
 }));
@@ -156,7 +156,7 @@ jest.mock("@/lib/api-response", () => {
 });
 
 import { getProfile, updateProfileContent } from "@/modules/hermes/lib/profiles-repository";
-import { pushProfileToHermes, pushRootToHermes } from "@/modules/hermes/lib/profile-sync";
+import { pushProfileToHermes, pushRootToHermes } from "@/modules/hermes/lib/profile-push";
 
 const mockGetProfile = getProfile as jest.MockedFunction<typeof getProfile>;
 const mockUpdateProfileContent = updateProfileContent as jest.MockedFunction<typeof updateProfileContent>;

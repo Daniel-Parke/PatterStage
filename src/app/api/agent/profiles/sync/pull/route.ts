@@ -11,10 +11,12 @@ import {
   pullProfileFromHermes,
   pullRootFromHermes,
   pullSkillFromHermes,
+} from "@/modules/hermes/lib/profile-pull";
+import {
   importAllSkillsFromDisk,
   discoverLocalProfiles,
   importDiscoveredProfile,
-} from "@/modules/hermes/lib/profile-sync";
+} from "@/modules/hermes/lib/profile-discovery";
 
 export async function POST(request: NextRequest) {
   const auth = requireAuth(request);

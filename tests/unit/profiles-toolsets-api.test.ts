@@ -29,7 +29,7 @@ jest.mock("@/lib/agent-root-repository", () => ({
   updateAgentRoot: (...args: unknown[]) => mockUpdateRoot(...args),
 }));
 
-jest.mock("@/modules/hermes/lib/profile-sync", () => ({
+jest.mock("@/modules/hermes/lib/profile-push", () => ({
   pushProfileToHermes: (...args: unknown[]) => mockPushProfile(...args),
   pushRootToHermes: (...args: unknown[]) => mockPushRoot(...args),
 }));

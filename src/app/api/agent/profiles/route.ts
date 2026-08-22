@@ -15,13 +15,9 @@ import {
   defaultConfigYaml,
 } from "@/modules/hermes/lib/profiles-repository";
 import { getAgentRoot } from "@/lib/agent-root-repository";
-import {
-  pushProfileToHermes,
-  detectProfileDrift,
-  detectRootDrift,
-  countProfileSkills,
-  countProfileToolsets,
-} from "@/modules/hermes/lib/profile-sync";
+import { pushProfileToHermes } from "@/modules/hermes/lib/profile-push";
+import { detectProfileDrift, detectRootDrift } from "@/modules/hermes/lib/profile-drift";
+import { countProfileSkills, countProfileToolsets } from "@/modules/hermes/lib/profile-counts";
 import { slugifyDisplayName } from "@/lib/profile-slug";
 import { buildProfileHermesPathBundle } from "@/modules/hermes/lib/profile-paths";
 import type { AgentProfile, ProfileFile } from "@/types/console";

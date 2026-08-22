@@ -13,7 +13,8 @@ import {
   deleteProfile,
   updateProfileContent,
 } from "@/modules/hermes/lib/profiles-repository";
-import { pushProfileToHermes, removeProfileFromDisk } from "@/modules/hermes/lib/profile-sync";
+import { pushProfileToHermes } from "@/modules/hermes/lib/profile-push";
+import { removeProfileFromDisk } from "@/modules/hermes/lib/profile-discovery";
 import { resolveProfileHermesHome } from "@/modules/hermes/lib/profile-paths";
 import { slugifyDisplayName } from "@/lib/profile-slug";
 import { badRequest, conflict, notFound, ok, serverError } from "@/lib/api-response";

@@ -24,7 +24,7 @@ jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   updateProfileContent: jest.fn(() => true),
 }));
 
-jest.mock("@/modules/hermes/lib/profile-sync", () => ({
+jest.mock("@/modules/hermes/lib/profile-push", () => ({
   pushProfileToHermes: jest.fn(() => ({ success: true })),
   pushRootToHermes: jest.fn(() => ({ success: true })),
 }));

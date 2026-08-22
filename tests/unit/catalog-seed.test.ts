@@ -26,7 +26,7 @@ jest.mock("@/lib/db", () => {
   };
 });
 
-jest.mock("@/modules/hermes/lib/profile-sync", () => ({
+jest.mock("@/modules/hermes/lib/profile-push", () => ({
   pushProfileToHermes: jest.fn(() => ({ success: true, slug: "qa", backupPath: null, error: null })),
   pushAllProfiles: jest.fn(() => [{ success: true, slug: "qa", backupPath: null, error: null }]),
 }));

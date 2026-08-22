@@ -50,7 +50,7 @@ jest.mock("@/lib/skills-repository", () => ({
 const mockPushSkillToHermes = jest.fn(
   (..._a: unknown[]): { success: boolean; error?: string } => ({ success: true }),
 );
-jest.mock("@/modules/hermes/lib/profile-sync", () => ({
+jest.mock("@/modules/hermes/lib/profile-push", () => ({
   pushSkillToHermes: (...args: unknown[]) => mockPushSkillToHermes(...args),
 }));
 

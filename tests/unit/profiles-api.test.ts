@@ -201,10 +201,16 @@ jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   defaultConfigYaml: jest.fn((p: string) => `agent:\n  personality: ${p}\nskills:\n  enabled: []\n`),
 }));
 
-jest.mock("@/modules/hermes/lib/profile-sync", () => ({
+jest.mock("@/modules/hermes/lib/profile-push", () => ({
   pushProfileToHermes: jest.fn(() => ({ success: true, slug: "", backupPath: null, error: null })),
+}));
+
+jest.mock("@/modules/hermes/lib/profile-drift", () => ({
   detectProfileDrift: jest.fn(() => ({ slug: "", drifted: false, fields: [], syncError: null })),
   detectRootDrift: jest.fn(() => ({ drifted: false, fields: [], syncError: null })),
+}));
+
+jest.mock("@/modules/hermes/lib/profile-counts", () => ({
   countProfileSkills: jest.fn(() => 0),
   countProfileToolsets: jest.fn(() => 0),
 }));

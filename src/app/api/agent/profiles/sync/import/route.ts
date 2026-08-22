@@ -10,7 +10,7 @@ import {
   discoverLocalProfiles,
   importDiscoveredProfile,
   importAllSkillsFromDisk,
-} from "@/modules/hermes/lib/profile-sync";
+} from "@/modules/hermes/lib/profile-discovery";
 import { isValidProfileSlug } from "@/lib/profile-slug";
 
 export async function GET(request: NextRequest) {
