@@ -11,7 +11,7 @@
 import type { ServerModule } from "@/lib/modules/server";
 import type { AgentRosterEntry } from "@/lib/agents/roster";
 import type { SyncSource } from "@/lib/sync/types";
-import type { CronJobEntry } from "@/lib/session-title";
+import type { CronJobEntry } from "@/lib/sessions/session-title";
 
 import { listProfiles } from "./lib/profiles-repository";
 import { loadCronJobsMap } from "./lib/cron-jobs";

@@ -13,7 +13,7 @@ jest.mock("@/lib/missions/mission-repository", () => ({
   getMission: jest.fn(),
   updateMission: jest.fn(),
 }));
-jest.mock("@/lib/session-repository", () => ({
+jest.mock("@/lib/sessions/session-repository", () => ({
   closeSessionForMission: jest.fn(),
 }));
 jest.mock("@/lib/db", () => ({ now: jest.fn(() => new Date().toISOString()) }));

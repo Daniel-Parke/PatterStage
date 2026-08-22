@@ -9,7 +9,7 @@
 "use client";
 
 import { useApiResource } from "./useApiResource";
-import type { SessionRecord, SessionSource } from "@/lib/session-repository";
+import type { SessionRecord, SessionSource } from "@/lib/sessions/session-repository";
 
 export interface SessionsResponse {
   sessions: SessionRecord[];

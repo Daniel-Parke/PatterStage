@@ -6,7 +6,7 @@
 // Previously both were duplicated inline across multiple components.
 
 import { Bot, Calendar, Cpu, Globe, Wrench, User, Zap } from "lucide-react";
-import type { SessionSource } from "@/lib/session-repository";
+import type { SessionSource } from "@/lib/sessions/session-repository";
 
 // ── Role Metadata (session transcript viewer) ───────────────
 

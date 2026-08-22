@@ -64,7 +64,7 @@ export interface ServerModule {
    * the framework's own schema crosses. Session titling degrades gracefully
    * without it, which is why it is optional in every sense.
    */
-  loadAgentCronJobs?: () => Map<string, import("@/lib/session-title").CronJobEntry>;
+  loadAgentCronJobs?: () => Map<string, import("@/lib/sessions/session-title").CronJobEntry>;
   /**
    * Seed this module's own rows from the bundled data/seed pack, and write them
    * through to wherever the module keeps its files.

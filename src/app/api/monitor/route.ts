@@ -12,7 +12,7 @@ import type { NextRequest } from "next/server";
 
 import { ensureSyncLayer, getSyncScheduler } from "@/lib/sync";
 import { getSystemStat, getSystemStatNumber } from "@/lib/system-repository";
-import { listSessions } from "@/lib/session-repository";
+import { listSessions } from "@/lib/sessions/session-repository";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { getGatewayPlatforms, getDb } from "@/lib/db";
@@ -23,7 +23,7 @@ import type { SessionBrief, MonitorData } from "@/types/console";
 
 /** Convert a SessionRecord to the brief shape the frontend expects. */
 function toSessionBrief(
-  session: import("@/lib/session-repository").SessionRecord
+  session: import("@/lib/sessions/session-repository").SessionRecord
 ): SessionBrief {
   return {
     id: session.id,

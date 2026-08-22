@@ -26,11 +26,11 @@ import {
   type AgentType,
   type SessionSource,
   type SessionStatus,
-} from "@/lib/session-repository";
+} from "@/lib/sessions/session-repository";
 import {
   parseSessionQuery,
   triggerSyncOnce,
-} from "@/lib/sessions-api-helpers";
+} from "@/lib/sessions/sessions-api-helpers";
 
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request);

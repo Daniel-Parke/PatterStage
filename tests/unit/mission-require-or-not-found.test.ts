@@ -100,7 +100,7 @@ jest.mock("@/lib/sync", () => ({
   ensureSyncLayer: jest.fn(),
 }));
 
-jest.mock("@/lib/session-repository", () => ({
+jest.mock("@/lib/sessions/session-repository", () => ({
   updateSession: jest.fn(),
 }));
 

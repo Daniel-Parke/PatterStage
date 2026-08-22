@@ -38,7 +38,7 @@ import { runMutation } from "@/lib/run-mutation";
 import { toastFromResult } from "@/lib/toast-from-result";
 import { dispatchMissionAction } from "@/hooks/success-message-for-dispatch";
 import { isMissionActive } from "@/lib/missions/mission-board";
-import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
+import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/sessions/session-window";
 import { dedupErrors } from "@/lib/dashboard-error-dedup";
 import { formatModelSubtitle } from "@/lib/dashboard-model-subtitle";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";

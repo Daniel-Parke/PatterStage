@@ -10,7 +10,7 @@
 import { NextResponse } from "next/server";
 
 import { updateMission } from "@/lib/missions/mission-repository";
-import { updateSession } from "@/lib/session-repository";
+import { updateSession } from "@/lib/sessions/session-repository";
 import { logApiError } from "@/lib/api-logger";
 import { ok, notFound } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";

@@ -16,7 +16,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useSessionDetail } from "@/hooks/useSessionDetail";
 import { ROLE_META, getMessageRole } from "@/components/session/constants";
 import { MessageBubble, type SessionMessage } from "@/components/session/MessageBubble";
-import { isSessionStillRunning } from "@/lib/session-title";
+import { isSessionStillRunning } from "@/lib/sessions/session-title";
 
 // ── Page ────────────────────────────────────────────────────
 

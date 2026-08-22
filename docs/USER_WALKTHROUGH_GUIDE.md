@@ -769,7 +769,7 @@ For the bundled host-script catalogue (e.g. `ps-backup.sh` for a Hindsight memor
 
 ### Notes
 
-- "Active" sessions (the ones with a pulsing dot) are sessions that have a recent message but no end-time row. The session-closure bridge in `src/lib/session-repository.ts` keeps these in lockstep with the mission lifecycle, so a session is only "active" when its parent mission is actually running.
+- "Active" sessions (the ones with a pulsing dot) are sessions that have a recent message but no end-time row. The session-closure bridge in `src/lib/sessions/session-repository.ts` keeps these in lockstep with the mission lifecycle, so a session is only "active" when its parent mission is actually running.
 - The session-closure logic has two safety paths: parent-mission-gated (close when the parent is no longer dispatched) and age-only fallback (close parentless sessions after 30 minutes, with a 5-minute boot window for new sessions).
 
 ---

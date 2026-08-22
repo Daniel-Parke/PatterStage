@@ -20,7 +20,7 @@ jest.mock("@/lib/api-auth", () => ({
   isReadOnly: jest.fn(() => false),
 }));
 
-jest.mock("@/lib/session-repository", () => ({
+jest.mock("@/lib/sessions/session-repository", () => ({
   createSession: jest.fn(),
   updateSession: jest.fn(),
   getSession: jest.fn(),

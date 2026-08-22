@@ -13,7 +13,7 @@
 // boundary ages, and case-insensitive matching without rendering the
 // full page.
 
-import type { SessionRecord } from "@/lib/session-repository";
+import type { SessionRecord } from "@/lib/sessions/session-repository";
 
 /** Threshold (in bytes) below which an api-source session is considered "noise". */
 const API_NOISE_MAX_BYTES = 1024;

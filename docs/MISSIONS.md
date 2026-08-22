@@ -34,7 +34,7 @@ How missions are stored, dispatched, and cancelled. Missions live in SQLite (`mi
 
 ### Model resolution at dispatch
 
-The models registry (`models` table) is the **single source of truth** for what any mission can run on. `parseMissionBodyFields()` in `src/lib/mission-body.ts` validates the request body:
+The models registry (`models` table) is the **single source of truth** for what any mission can run on. `parseMissionBodyFields()` in `src/lib/missions/mission-body.ts` validates the request body:
 
 - `modelId` is checked against the registry via `findModelByModelId()`. A foreign `modelId` (not in the table) is **silently dropped**.
 - `provider` is **never trusted from the body** — it is derived from the registry row at dispatch time (and stripped whenever the `modelId` was dropped, to keep `missions.provider` consistent).
@@ -108,7 +108,7 @@ Local run/mission/session state is finalised even if the backend stop call fails
 
 Every mission dispatch pre-registers a `sessions` row with `status="active"` before submitting the run (see `src/lib/orchestration/dispatch.ts`). The mission lifecycle and the session lifecycle therefore need to stay in lockstep — otherwise the Sessions page shows a "live" pulsing dot on rows whose mission is already `successful` or `failed` days ago.
 
-The bridge is `closeSessionForMission(missionId, updates)` in `src/lib/session-repository.ts`, called from two places:
+The bridge is `closeSessionForMission(missionId, updates)` in `src/lib/sessions/session-repository.ts`, called from two places:
 
 1. **`reconcileActiveRuns()`** (`src/lib/orchestration/run-reconcile.ts`, on the 15s background tick via `RunSync`) — polls each non-terminal run with `runtime.getRun()`. When the backend reports a terminal state (completed/failed/cancelled), or a stuck run passes its deadline, it writes the terminal state to the run, mission, and session rows in the same pass. This replaced the old `MissionSync` / `status.json` polling.
 2. **Admin backfill** — `POST /api/admin/sessions/backfill-status` with `{"dryRun": false}` runs the same logic for any pre-existing stuck rows. The matching `dryRun: true` returns counts without writing. Default is `dryRun: true` for safety.

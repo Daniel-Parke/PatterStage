@@ -15,7 +15,7 @@ jest.mock("@/lib/db", () => {
   return { ...actual, getDb: () => testDb! };
 });
 
-import { listSessions } from "@/lib/session-repository";
+import { listSessions } from "@/lib/sessions/session-repository";
 
 const baselineSql = readFileSync(
   join(process.cwd(), "src", "lib", "db", "migrations", "001_baseline.sql"),

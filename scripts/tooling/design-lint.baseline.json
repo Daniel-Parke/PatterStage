@@ -173,7 +173,7 @@
   "sql-outside-repository::src/lib/missions/mission-model-audit.ts": 2,
   "sql-outside-repository::src/lib/orchestration/scheduler/BackgroundScheduler.ts": 2,
   "sql-outside-repository::src/lib/seed/catalog-seed.ts": 5,
-  "sql-outside-repository::src/lib/session-sync.ts": 13,
+  "sql-outside-repository::src/lib/sessions/session-sync.ts": 13,
   "sql-outside-repository::src/lib/stats/agent-experience.ts": 1,
   "sql-outside-repository::src/lib/stats/agent-stats.ts": 5,
   "sql-outside-repository::src/lib/sync/sources/EnvSync.ts": 1,

@@ -19,7 +19,7 @@ import { ensureSyncLayer } from "@/lib/sync";
 import type {
   AgentType,
   SessionSource,
-} from "@/lib/session-repository";
+} from "@/lib/sessions/session-repository";
 
 // ── Type constants ──────────────────────────────────────────────
 

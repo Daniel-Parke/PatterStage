@@ -14,10 +14,10 @@
 // Schema: src/lib/db/migrations/009_sessions.sql
 // ═══════════════════════════════════════════════════════════════
 
-import { getDb, uuid, now } from "./db";
+import { getDb, uuid, now } from "../db";
 import { syncHermesSessionsToDb } from "./session-sync";
-import { getActiveFrameworkConfig } from "./frameworks/repository";
-import type { FrameworkType } from "./frameworks/types";
+import { getActiveFrameworkConfig } from "../frameworks/repository";
+import type { FrameworkType } from "../frameworks/types";
 
 // ── Types ───────────────────────────────────────────────────
 

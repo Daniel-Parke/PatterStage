@@ -25,7 +25,7 @@ jest.mock("@/lib/schedules-repository", () => ({
 }));
 
 const mockUpdateSession = jest.fn();
-jest.mock("@/lib/session-repository", () => ({
+jest.mock("@/lib/sessions/session-repository", () => ({
   updateSession: (...a: unknown[]) => mockUpdateSession(...a),
 }));
 

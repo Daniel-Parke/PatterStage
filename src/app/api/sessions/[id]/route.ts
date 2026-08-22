@@ -8,19 +8,19 @@ import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { badRequest, notFound, ok, payloadTooLarge } from "@/lib/api-response";
 import { safeStat } from "@/lib/fs-stats";
-import { getSession, estimateSessionSize } from "@/lib/session-repository";
-import { lookupMissionIdForCronSession } from "@/lib/session-sync";
+import { getSession, estimateSessionSize } from "@/lib/sessions/session-repository";
+import { lookupMissionIdForCronSession } from "@/lib/sessions/session-sync";
 import { PATHS } from "@/lib/paths";
 import {
   getMaxSessionFileBytes,
   sessionsRateLimitResponse,
-} from "@/lib/sessions-api-guard";
+} from "@/lib/sessions/sessions-api-guard";
 import {
   buildSessionData,
   dbSessionFields,
   findFileWithExtension,
   parseAssistantLines,
-} from "@/lib/session-detail";
+} from "@/lib/sessions/session-detail";
 
 // ── Mission-output file extensions to try in preference order ───────────
 // Recurring mission dispatch writes a `.session` file (full transcript);

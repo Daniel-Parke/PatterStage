@@ -57,7 +57,7 @@ jest.mock("fs", () => {
   };
 });
 
-jest.mock("@/lib/session-repository", () => ({
+jest.mock("@/lib/sessions/session-repository", () => ({
   createSession: jest.fn(),
   updateSession: jest.fn(),
   getSession: jest.fn(),
@@ -67,11 +67,11 @@ jest.mock("@/lib/session-repository", () => ({
 
 // lookupMissionIdForCronSession moved to session-sync (the route imports it
 // from there); the in-flight-note tests only need it to no-op.
-jest.mock("@/lib/session-sync", () => ({
+jest.mock("@/lib/sessions/session-sync", () => ({
   lookupMissionIdForCronSession: jest.fn(() => null),
 }));
 
-jest.mock("@/lib/sessions-api-guard", () => ({
+jest.mock("@/lib/sessions/sessions-api-guard", () => ({
   getMaxSessionFileBytes: jest.fn(() => 50 * 1024 * 1024),
   sessionsRateLimitResponse: jest.fn(() => null),
 }));

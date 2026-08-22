@@ -18,7 +18,7 @@ import {
   ALL_AGENT_TYPES,
   ALL_SOURCES,
   type ParsedSessionQuery,
-} from "@/lib/sessions-api-helpers";
+} from "@/lib/sessions/sessions-api-helpers";
 
 // Mock the sync layer so triggerSyncOnce doesn't try to initialize
 // the real background syncer (which would touch the filesystem).

@@ -23,7 +23,7 @@ import {
   dbSessionFields,
   findFileWithExtension,
   parseAssistantLines,
-} from "@/lib/session-detail";
+} from "@/lib/sessions/session-detail";
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";

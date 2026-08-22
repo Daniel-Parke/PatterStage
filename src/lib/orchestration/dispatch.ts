@@ -15,7 +15,7 @@ import {
   updateRun,
   getLatestRunForMission,
 } from "@/lib/runs-repository";
-import { createSession, closeSessionForMission } from "@/lib/session-repository";
+import { createSession, closeSessionForMission } from "@/lib/sessions/session-repository";
 import { runtime } from "@/lib/runtime";
 import { uuid, now } from "@/lib/db";
 import { messageFromError } from "@/lib/api-fetch";

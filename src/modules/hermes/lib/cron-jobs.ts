@@ -9,7 +9,7 @@
 import { existsSync, readFileSync, statSync } from "fs";
 import { join } from "path";
 import { getActiveHermesHome } from "./agent-runtime";
-import type { CronJobEntry } from "@/lib/session-title";
+import type { CronJobEntry } from "@/lib/sessions/session-title";
 
 let cachedCronJobs: Map<string, CronJobEntry> | null = null;
 let cachedCronJobsMtimeMs = 0;

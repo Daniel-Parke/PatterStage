@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { Activity, Clock, MessageSquare, Terminal } from "lucide-react";
 import StatStrip from "@/components/viz/StatStrip";
-import type { SessionRecord } from "@/lib/session-repository";
+import type { SessionRecord } from "@/lib/sessions/session-repository";
 
 /**
  * Insights strip for the session history — source mix donut, count tiles, and an

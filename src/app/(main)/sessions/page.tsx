@@ -52,13 +52,13 @@ import { timeAgo, formatElapsed, pluralise } from "@/lib/utils";
 import { useSessions } from "@/hooks/useSessions";
 import { useInterval } from "@/hooks/useInterval";
 import { useStoredBool } from "@/hooks/useStoredBool";
-import { isApiNoiseSession } from "@/lib/session-filters";
-import { buildGroupedEntries, type MissionGroup } from "@/lib/sessions-grouping";
+import { isApiNoiseSession } from "@/lib/sessions/session-filters";
+import { buildGroupedEntries, type MissionGroup } from "@/lib/sessions/sessions-grouping";
 import AppPageShell from "@/components/layout/AppPageShell";
-import type { SessionRecord } from "@/lib/session-repository";
-import type { SessionSource } from "@/lib/session-repository";
+import type { SessionRecord } from "@/lib/sessions/session-repository";
+import type { SessionSource } from "@/lib/sessions/session-repository";
 import { SOURCE_META } from "@/components/session/constants";
-import { formatSessionTitle } from "@/lib/session-title";
+import { formatSessionTitle } from "@/lib/sessions/session-title";
 import SessionInsights from "@/components/session/SessionInsights";
 
 // ── Constants ────────────────────────────────────────────────

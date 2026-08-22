@@ -71,6 +71,7 @@ independent of HTTP traffic. State is SQLite (`src/lib/db.ts`, migrations in
 | `src/lib/orchestration/` | dispatch, run-reconcile, `scheduler/` |
 | `src/lib/sync/` | `SyncSource` implementations + `SyncScheduler` |
 | `src/lib/missions/` | Mission domain: board, composer, dispatch, queue, `mission-handlers/` |
+| `src/lib/sessions/` | Session domain: detail, filters, grouping, sync, title, window, API guards |
 | `src/lib/*-repository.ts` | Data access, one module per aggregate; a domain's repository sits inside that domain's folder |
 | `tests/unit` · `tests/e2e` · `tests/integration` | Jest · Playwright · Docker + runtime harnesses |
 | `scripts/` | `bootstrap/`, `application/`, `tooling/`, `hardware/`, `maintenance/` |

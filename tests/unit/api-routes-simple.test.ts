@@ -97,11 +97,11 @@ jest.mock("@/lib/api-logger", () => ({
   safeReadJsonFile: jest.fn(),
 }));
 
-jest.mock("@/lib/sessions-api-guard", () => ({
+jest.mock("@/lib/sessions/sessions-api-guard", () => ({
   sessionsRateLimitResponse: jest.fn(() => null),
 }));
 
-jest.mock("@/lib/session-repository", () => ({
+jest.mock("@/lib/sessions/session-repository", () => ({
   createSession: jest.fn(),
   updateSession: jest.fn(),
   getSession: jest.fn(),
@@ -156,7 +156,7 @@ describe("GET /api/sessions", () => {
   });
 
   it("lists session files from repository", async () => {
-    const { listSessions } = await import("@/lib/session-repository");
+    const { listSessions } = await import("@/lib/sessions/session-repository");
     (listSessions as jest.Mock).mockReturnValueOnce({
       sessions: [
         {

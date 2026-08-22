@@ -15,7 +15,7 @@
 // Extracted from the page so the function lives in a single place
 // and the page JSX stays a pure render of the precomputed entries.
 
-import type { SessionRecord } from "@/lib/session-repository";
+import type { SessionRecord } from "@/lib/sessions/session-repository";
 
 /** A session card rendered as part of a mission group (collapsed or expanded). */
 export interface MissionGroup {

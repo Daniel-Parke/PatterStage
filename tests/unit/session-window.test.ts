@@ -6,7 +6,7 @@ import {
   ACTIVE_WINDOW_MS,
   RECENT_WINDOW_MS,
   type SessionModified,
-} from "@/lib/session-window";
+} from "@/lib/sessions/session-window";
 
 const FIXED_NOW = new Date("2026-06-02T12:00:00Z").getTime();
 

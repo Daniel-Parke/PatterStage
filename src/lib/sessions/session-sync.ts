@@ -25,9 +25,9 @@ import Database from "better-sqlite3";
 import { existsSync } from "fs";
 import { join } from "path";
 
-import { getDb } from "./db";
-import { getAgentWorkspace } from "./runtime/workspace";
-import { SERVER_MODULES } from "./modules/server";
+import { getDb } from "../db";
+import { getAgentWorkspace } from "../runtime/workspace";
+import { SERVER_MODULES } from "../modules/server";
 import { parseCronSessionId, cronJobIdFromSessionId } from "./session-title";
 import { estimateSessionSize, type SessionStatus } from "./session-repository";
 

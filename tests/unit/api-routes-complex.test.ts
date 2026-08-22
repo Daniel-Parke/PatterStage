@@ -96,7 +96,7 @@ jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
   getProfile: jest.fn(() => null),
 }));
 
-jest.mock("@/lib/sessions-api-guard", () => ({
+jest.mock("@/lib/sessions/sessions-api-guard", () => ({
   sessionsRateLimitResponse: jest.fn(() => null),
 }));
 

@@ -10,8 +10,8 @@ import {
   searchSessionsByQuery,
   sessionMatchesQuery,
   isApiNoiseSession,
-} from "@/lib/session-filters";
-import type { SessionRecord } from "@/lib/session-repository";
+} from "@/lib/sessions/session-filters";
+import type { SessionRecord } from "@/lib/sessions/session-repository";
 
 const FIXED_NOW = new Date("2026-06-02T12:00:00Z").getTime();
 

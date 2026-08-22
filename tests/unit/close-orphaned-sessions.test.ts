@@ -27,8 +27,8 @@ import { join } from "path";
 import {
   closeOrphanedActiveSessions,
   previewOrphanSweep,
-} from "@/lib/session-sync";
-import { closeSessionForMission } from "@/lib/session-repository";
+} from "@/lib/sessions/session-sync";
+import { closeSessionForMission } from "@/lib/sessions/session-repository";
 
 const repoRoot = join(__dirname, "..", "..");
 const migrationsDir = join(repoRoot, "src", "lib", "db", "migrations");
@@ -394,7 +394,7 @@ describe("closeSessionForMission — the MissionSync bridge", () => {
 
   it("closes the active session for a mission with status='completed'", () => {
     // Re-import after mock is set
-    const { closeSessionForMission: close } = require("@/lib/session-repository") as {
+    const { closeSessionForMission: close } = require("@/lib/sessions/session-repository") as {
       closeSessionForMission: typeof closeSessionForMission;
     };
     seedMission(tdb.db, { id: "m1", status: "dispatched" });
@@ -416,7 +416,7 @@ describe("closeSessionForMission — the MissionSync bridge", () => {
   });
 
   it("closes with status='failed' and preserves error message", () => {
-    const { closeSessionForMission: close } = require("@/lib/session-repository") as {
+    const { closeSessionForMission: close } = require("@/lib/sessions/session-repository") as {
       closeSessionForMission: typeof closeSessionForMission;
     };
     seedMission(tdb.db, { id: "m1", status: "dispatched" });
@@ -437,7 +437,7 @@ describe("closeSessionForMission — the MissionSync bridge", () => {
   });
 
   it("returns null and is a no-op when no active session exists", () => {
-    const { closeSessionForMission: close } = require("@/lib/session-repository") as {
+    const { closeSessionForMission: close } = require("@/lib/sessions/session-repository") as {
       closeSessionForMission: typeof closeSessionForMission;
     };
     seedMission(tdb.db, { id: "m1", status: "successful" });
@@ -454,7 +454,7 @@ describe("closeSessionForMission — the MissionSync bridge", () => {
   });
 
   it("picks the most recently started active session for recurring missions", () => {
-    const { closeSessionForMission: close } = require("@/lib/session-repository") as {
+    const { closeSessionForMission: close } = require("@/lib/sessions/session-repository") as {
       closeSessionForMission: typeof closeSessionForMission;
     };
     seedMission(tdb.db, { id: "m1", status: "dispatched" });
