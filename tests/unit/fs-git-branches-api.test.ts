@@ -9,7 +9,7 @@ jest.mock("@/lib/path-security", () => ({
   resolveAllowedWorkspacePath: (input: string) => mockResolveAllowed(input),
 }));
 
-jest.mock("@/lib/git-workspace-branches", () => ({
+jest.mock("@/lib/git/git-workspace-branches", () => ({
   readGitBranchMetadataForWorkspacePath: (abs: string) => mockReadGit(abs),
 }));
 

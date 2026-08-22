@@ -8,7 +8,7 @@
 import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
-import { sanitizeGitBranch } from "@/lib/git-branch";
+import { sanitizeGitBranch } from "@/lib/git/git-branch";
 
 export function BranchDropdown({
   branches,

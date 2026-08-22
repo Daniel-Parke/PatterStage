@@ -9,7 +9,7 @@ import { existsSync } from "fs";
 import { resolve as pathResolve } from "path";
 
 import { logApiError } from "@/lib/api-logger";
-import { normalizeGitCurrentForBranchesList } from "@/lib/git-branch-current";
+import { normalizeGitCurrentForBranchesList } from "@/lib/git/git-branch-current";
 
 export type GitExecFileAsync = (
   file: string,

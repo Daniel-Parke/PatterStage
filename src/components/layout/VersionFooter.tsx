@@ -10,7 +10,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { RefreshCw, AlertTriangle, Check, Hammer, Power } from "lucide-react";
 
 import { setErrorFromCaught, safeApiCallData } from "@/lib/api-fetch";
-import { sanitizeGitBranch } from "@/lib/git-branch";
+import { sanitizeGitBranch } from "@/lib/git/git-branch";
 import { fallbackForDeployMessage } from "@/lib/deploy-action-fallback";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { BranchDropdown } from "./BranchDropdown";

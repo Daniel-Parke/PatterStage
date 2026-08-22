@@ -12,7 +12,7 @@ import {
   tailLogHint,
   writeDeployStatusRunning,
 } from "@/lib/deploy-status";
-import { sanitizeGitBranch } from "@/lib/git-branch";
+import { sanitizeGitBranch } from "@/lib/git/git-branch";
 import { spawnDeploy } from "@/lib/deploy-spawn";
 
 // ═══════════════════════════════════════════════════════════════
