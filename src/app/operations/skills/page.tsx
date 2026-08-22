@@ -5,32 +5,30 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { FileText, ToggleRight, ToggleLeft, Edit3, Save, RotateCcw } from "lucide-react";
-import Modal from "@/components/ui/Modal";
-import Button from "@/components/ui/Button";
+import { FileText } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
-import { SearchInput } from "@/components/ui/Input";
-import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
 import SkillsInsights from "@/components/skills/SkillsInsights";
-import { SkillSection } from "@/components/skills/SkillSection";
-import { SkillCategoryGrid } from "@/components/skills/SkillCategoryGrid";
+import SkillsSections from "@/components/skills/SkillsSections";
+import SkillsDenylistNote from "@/components/skills/SkillsDenylistNote";
+import SkillsCatalogEmpty from "@/components/skills/SkillsCatalogEmpty";
+import SkillEditorModal from "@/components/skills/SkillEditorModal";
 import { apiFetch, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import {
   effectiveSkillEnabled,
   filterBySearch,
-  groupCategories,
 } from "@/lib/skills-page-helpers";
 import { pluralise } from "@/lib/utils";
 import type { Skill, SkillsData } from "@/types/console";
 
-// Presentational subcomponents (SkillSection / SkillCategoryGrid / SkillCard /
-// CategoryLabel) live in src/components/skills/. The pure derivations
-// (effectiveSkillEnabled / filterBySearch / groupCategories) live in
-// src/lib/skills-page-helpers.ts.
+// Presentational subcomponents (SkillsSections / SkillSection /
+// SkillCategoryGrid / SkillCard / CategoryLabel / SkillEditorModal) live in
+// src/components/skills/. The pure derivations (effectiveSkillEnabled /
+// filterBySearch / groupCategories) live in src/lib/skills-page-helpers.ts.
 
 export default function SkillsPage() {
   const [data, setData] = useState<SkillsData | null>(null);
@@ -43,25 +41,17 @@ export default function SkillsPage() {
   const [activeCollapsed, setActiveCollapsed] = useState(false);
   const [inactiveCollapsed, setInactiveCollapsed] = useState(true);
 
-  // toggleActiveCollapsed / toggleInactiveCollapsed — the 2 section
-  // collapse headers (Active, Inactive) each have a 1-setter toggle
-  // inline arrow of the form `() => setXCollapsed((v) => !v)` passed
-  // as the `onToggleCollapse` prop on the sibling `<SkillSection>`
-  // (lines 385 + 430). Pre-refactor the inline form was repeated at
-  // both sites with byte-equivalent semantics (a single boolean
-  // flip of the section's `useState` setter, default value
-  // preserved). Extracting to `useCallback` siblings matches the
-  // A3 single-setter close-callback pattern that session 100/103
-  // established for `closeDelete` / `closeEditor` / `closeSkillEditor`
-  // and the `closeEdit` extraction in operations/personalities
-  // (session 100). The deps array is `[]` per session 119 P-3
-  // codebase convention (useState setters are stable). A future
-  // "also reset section search on collapse" or "track which
-  // section is open for keyboard navigation" extension lands in
-  // one place, keeping the 2 call sites in lockstep. The category
-  // collapse toggle (`toggleCategory`, below) takes an argument
-  // (the category key) and is a different shape — left as a
-  // direct arrow, not part of this 1-setter family.
+  // toggleActiveCollapsed / toggleInactiveCollapsed — one per section
+  // header, handed to <SkillsSections> as onToggleActiveCollapsed /
+  // onToggleInactiveCollapsed. Both were inline
+  // `() => setXCollapsed((v) => !v)` arrows repeated at the two call
+  // sites; extracting them as `useCallback` siblings matches the A3
+  // single-setter pattern session 100/103 established (`closeDelete`,
+  // `closeEditor`, `closeSkillEditor`, `closeEdit` in
+  // operations/personalities). Empty deps per session 119 P-3: useState
+  // setters are stable. The category collapse toggle (`toggleCategory`,
+  // below) takes the category key and is a different shape, so it is
+  // not part of this 1-setter family.
   const toggleActiveCollapsed = useCallback(
     () => setActiveCollapsed((v) => !v),
     [],
@@ -88,23 +78,16 @@ export default function SkillsPage() {
   const [editOriginal, setEditOriginal] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
 
-  // closeSkillEditor — the Edit Skill modal has 4 single-setter
-  // close sites that all do the same thing: `() => setEditingSkill(null)`.
-  //   1. Modal `onClose` (X-button / overlay click)
-  //   2. Modal Cancel button (footer)
-  //   3. The load-failure path in openSkillEditor's catch block
-  //      (if the GET to fetch the skill's content fails, dismiss
-  //      the modal rather than leaving it open with empty fields)
-  //   4. saveSkillEdit's success path (dismiss the modal after a
-  //      successful PUT; the conditional `if (expandedSkill ===
-  //      editingSkill) setSkillContent(...)` is a sibling update
-  //      for the in-page preview, not part of the close)
-  // Centralising into a `useCallback` with empty deps (useState setters
-  // are stable) keeps the 4 sites in lockstep if a future "clear
-  // editContent on close" or "reset editOriginal" extension lands.
-  // This is the A3 single-setter close pattern that session 100's
-  // discriminated-close audit established: a 1-setter callback is
-  // worth extracting when it has 3+ identical call sites.
+  // closeSkillEditor — the Edit Skill modal has 4 single-setter close
+  // sites that all do `() => setEditingSkill(null)`: the modal's
+  // onClose and its Cancel button (both now inside SkillEditorModal),
+  // openSkillEditor's catch (dismiss rather than leave the modal open
+  // with empty fields) and saveSkillEdit's success path (the
+  // conditional `setSkillContent` beside it updates the in-page
+  // preview and is not part of the close). One `useCallback` with
+  // empty deps keeps the 4 in lockstep. A3 single-setter close
+  // pattern, session 100's discriminated-close audit: extract a
+  // 1-setter callback once it has 3+ identical call sites.
   const closeSkillEditor = useCallback(() => setEditingSkill(null), []);
 
   // Optimistic toggle state — key: skillName, value: the effective (pending) enabled state
@@ -210,30 +193,14 @@ export default function SkillsPage() {
     [data, selectedProfile, showToast],
   );
 
-  // handleToggleSkill — centralises the (skill, fallback) → toggle
-  // dispatch shape used by both the Active and Inactive section
-  // grids. The pre-refactor code inlined the same
+  // handleToggleSkill — the one (skill, fallback) → toggle dispatch
+  // shape for both section grids, replacing the same inline
   // `(skill) => toggleSkill(skill.name, effectiveSkillEnabled(skill, toggling, <fallback>))`
-  // callback at 2 sites (the Active section's `onToggleSkill`
-  // prop on line ~414 and the Inactive section's on line ~459).
-  // The 2 sites are byte-equivalent except for the fallback:
-  //   - Active section: uses the default `skill.enabled` (the
-  //     `effectiveSkillEnabled` helper's default param value, so
-  //     the caller doesn't pass a 2nd argument).
-  //   - Inactive section: passes `!skill.enabled` because the
-  //     Inactive grid is the negation of the active state — a
-  //     skill in the Inactive list has `enabled === false`, so the
-  //     "current enabled" that `toggleSkill` reads must be the
-  //     inversion (otherwise the toggle would no-op on the wrong
-  //     current state).
-  // The helper defaults the fallback to `skill.enabled` so the
-  // Active call site is `onToggleSkill={handleToggleSkill}` (no
-  // args) and the Inactive call site is
-  // `onToggleSkill={(skill) => handleToggleSkill(skill, !skill.enabled)}`.
-  // Same byte-equivalent semantics, but the dispatch shape lives
-  // in one place — a future "track toggle analytics" or
-  // "throttle double-clicks" extension lands in one place instead
-  // of having to update 2 inline arrows.
+  // arrow written twice. The fallback defaults to `skill.enabled`,
+  // which is what the Active grid wants; the Inactive grid passes
+  // `!skill.enabled` (see the note in SkillsSections, which owns both
+  // call sites now). A future "track toggle analytics" or "throttle
+  // double-clicks" extension lands here instead of in two arrows.
   const handleToggleSkill = useCallback(
     (skill: Skill, fallback: boolean = skill.enabled) => {
       return toggleSkill(skill.name, effectiveSkillEnabled(skill, toggling, fallback));
@@ -332,170 +299,51 @@ export default function SkillsPage() {
       />
 
       <div className="px-6 py-4">
-        <p className="text-xs text-white/40 font-mono mb-4 max-w-3xl">
-          Hermes uses a <strong className="text-white/60">denylist</strong> (
-          <code className="text-white/50">skills.disabled</code> in config.yaml). Short names in YAML
-          are matched to catalog paths (e.g. <code className="text-white/50">apple-notes</code> →{" "}
-          <code className="text-white/50">apple/apple-notes</code>). If you edited disk config,
-          use <strong className="text-white/60">Operations → Agents → Pull</strong> for that profile
-          before toggling skills here.
-        </p>
+        <SkillsDenylistNote />
         {!loading && total > 0 && <SkillsInsights skills={data?.skills ?? []} activeCount={activeSkills.length} />}
         {loading ? (
           <LoadingSpinner text="Loading skills..." />
         ) : total === 0 ? (
-          <EmptyState
-            icon={FileText}
-            title="No skills in catalog"
-            description="Import the global skills tree from ~/.hermes/skills into PatterStage SQLite, then push to sync disk."
-            action={
-              <Button
-                variant="primary"
-                color="green"
-                onClick={() => void importSkillsFromHermes()}
-                disabled={importing}
-              >
-                {importing ? "Importing…" : "Import skills from Hermes"}
-              </Button>
-            }
+          <SkillsCatalogEmpty
+            importing={importing}
+            onImport={() => void importSkillsFromHermes()}
           />
         ) : (
-          <div className="flex flex-col gap-6">
-            {/* ── Active Skills ── */}
-            <SkillSection
-              title="Active"
-              icon={ToggleRight}
-              iconColor="text-neon-green"
-              count={activeFiltered.length}
-              ofTotal={activeSkills.length}
-              collapsed={activeCollapsed}
-              onToggleCollapse={toggleActiveCollapsed}
-              search={
-                <SearchInput
-                  value={activeSearch}
-                  onChange={setActiveSearch}
-                  placeholder="Search active skills..."
-                  accentColor="green"
-                />
-              }
-            >
-              {activeFiltered.length === 0 ? (
-                <EmptyState
-                  icon={ToggleRight}
-                  title="No active skills"
-                  description={
-                    activeSearch
-                      ? "No active skills match your search"
-                      : "Toggle skills below to enable them"
-                  }
-                />
-              ) : (
-                <SkillCategoryGrid
-                  categories={groupCategories(activeFiltered)}
-                  categoryCollapsed={categoryCollapsed}
-                  onToggleCategory={toggleCategory}
-                  accentColor="text-neon-green/50"
-                  enabled
-                  expandedSkill={expandedSkill}
-                  skillContent={skillContent}
-                  toggling={toggling}
-                  onToggleSkill={handleToggleSkill}
-                  onViewSkill={viewSkill}
-                  onEditSkill={openSkillEditor}
-                />
-              )}
-            </SkillSection>
-
-            {/* ── Inactive Skills ── */}
-            <SkillSection
-              title="Inactive"
-              icon={ToggleLeft}
-              iconColor="text-white/30"
-              count={inactiveFiltered.length}
-              ofTotal={inactiveSkills.length}
-              collapsed={inactiveCollapsed}
-              onToggleCollapse={toggleInactiveCollapsed}
-              search={
-                <SearchInput
-                  value={inactiveSearch}
-                  onChange={setInactiveSearch}
-                  placeholder="Search inactive skills..."
-                  accentColor="white"
-                />
-              }
-            >
-              {inactiveFiltered.length === 0 ? (
-                <EmptyState
-                  icon={ToggleLeft}
-                  title="No inactive skills"
-                  description={
-                    inactiveSearch
-                      ? "No inactive skills match your search"
-                      : "All skills are currently active"
-                  }
-                />
-              ) : (
-                <SkillCategoryGrid
-                  categories={groupCategories(inactiveFiltered)}
-                  categoryCollapsed={categoryCollapsed}
-                  onToggleCategory={toggleCategory}
-                  accentColor="text-white/30"
-                  enabled={false}
-                  expandedSkill={expandedSkill}
-                  skillContent={skillContent}
-                  toggling={toggling}
-                  onToggleSkill={(skill) => handleToggleSkill(skill, !skill.enabled)}
-                  onViewSkill={viewSkill}
-                  onEditSkill={openSkillEditor}
-                />
-              )}
-            </SkillSection>
-          </div>
+          <SkillsSections
+            activeSkills={activeFiltered}
+            activeTotal={activeSkills.length}
+            activeSearch={activeSearch}
+            onActiveSearchChange={setActiveSearch}
+            activeCollapsed={activeCollapsed}
+            onToggleActiveCollapsed={toggleActiveCollapsed}
+            inactiveSkills={inactiveFiltered}
+            inactiveTotal={inactiveSkills.length}
+            inactiveSearch={inactiveSearch}
+            onInactiveSearchChange={setInactiveSearch}
+            inactiveCollapsed={inactiveCollapsed}
+            onToggleInactiveCollapsed={toggleInactiveCollapsed}
+            categoryCollapsed={categoryCollapsed}
+            onToggleCategory={toggleCategory}
+            expandedSkill={expandedSkill}
+            skillContent={skillContent}
+            toggling={toggling}
+            onToggleSkill={handleToggleSkill}
+            onViewSkill={viewSkill}
+            onEditSkill={openSkillEditor}
+          />
         )}
       </div>
 
-      <Modal
-        open={editingSkill !== null}
+      <SkillEditorModal
+        skillName={editingSkill}
+        content={editContent}
+        original={editOriginal}
+        saving={savingEdit}
+        onContentChange={setEditContent}
+        onReset={() => setEditContent(editOriginal)}
         onClose={closeSkillEditor}
-        title={editingSkill ? `Edit: ${editingSkill}` : "Edit skill"}
-        icon={Edit3}
-        iconColor="text-neon-green"
-        size="lg"
-        footer={
-          <>
-            <Button
-              variant="ghost"
-              size="sm"
-              icon={RotateCcw}
-              onClick={() => setEditContent(editOriginal)}
-              disabled={editContent === editOriginal}
-            >
-              Reset
-            </Button>
-            <Button variant="ghost" size="sm" onClick={closeSkillEditor}>
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              color="green"
-              size="sm"
-              icon={Save}
-              onClick={saveSkillEdit}
-              disabled={savingEdit || editContent === editOriginal}
-              loading={savingEdit}
-            >
-              Save
-            </Button>
-          </>
-        }
-      >
-        <textarea
-          value={editContent}
-          onChange={(e) => setEditContent(e.target.value)}
-          className="w-full min-h-[320px] bg-dark-800 border border-white/10 rounded-lg p-4 text-sm text-white/80 font-mono resize-y focus:border-neon-green/50 focus:outline-none"
-          spellCheck={false}
-        />
-      </Modal>
+        onSave={saveSkillEdit}
+      />
     </AppPageShell>
   );
 }
