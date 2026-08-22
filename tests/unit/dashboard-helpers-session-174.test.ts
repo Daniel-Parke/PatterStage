@@ -13,9 +13,9 @@
 import {
   dedupErrors,
   type DedupableError,
-} from "@/lib/dashboard-error-dedup";
-import { formatModelSubtitle } from "@/lib/dashboard-model-subtitle";
-import { topNTemplates } from "@/lib/dashboard-top-templates";
+} from "@/lib/dashboard/dashboard-error-dedup";
+import { formatModelSubtitle } from "@/lib/dashboard/dashboard-model-subtitle";
+import { topNTemplates } from "@/lib/dashboard/dashboard-top-templates";
 // Note: `loadInitialDashboardData` is imported via the test name
 // only; the test bodies use `require()` inside `jest.isolateModules`
 // to re-require the helper after `jest.doMock` registers the mock.
@@ -25,7 +25,7 @@ import {
   loadInitialDashboardData as _loadInitialDashboardData,
   type DashboardTemplate,
   type ModelsDefaults,
-} from "@/lib/dashboard-initial-load";
+} from "@/lib/dashboard/dashboard-initial-load";
 import { safeApiCallData } from "@/lib/api-fetch";
 
 // ── dedupErrors ───────────────────────────────────────────────
@@ -246,7 +246,7 @@ describe("loadInitialDashboardData", () => {
     // Re-require the helper after the mock is registered.
     jest.isolateModules(() => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { loadInitialDashboardData: load } = require("@/lib/dashboard-initial-load");
+      const { loadInitialDashboardData: load } = require("@/lib/dashboard/dashboard-initial-load");
       // The mocked fetch returns null for every endpoint, so the
       // helper's `?? null` / `?? []` defensive defaults fire.
       return load({}).then((result: unknown) => {
@@ -291,7 +291,7 @@ describe("loadInitialDashboardData", () => {
     }));
     jest.isolateModules(() => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { loadInitialDashboardData: load } = require("@/lib/dashboard-initial-load");
+      const { loadInitialDashboardData: load } = require("@/lib/dashboard/dashboard-initial-load");
       return load({}).then((result: unknown) => {
         const r = result as {
           dashboardData: {

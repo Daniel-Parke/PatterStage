@@ -23,9 +23,9 @@ import {
   type TemplateLike,
 } from "@/lib/missions/mission-categories";
 import type { MissionCategory } from "@/lib/missions/mission-category-repository";
-import type { DashboardTemplate } from "@/lib/dashboard-initial-load";
+import type { DashboardTemplate } from "@/lib/dashboard/dashboard-initial-load";
 import { composeTemplateUrl } from "@/lib/dashboard-helpers";
-import { topNTemplates } from "@/lib/dashboard-top-templates";
+import { topNTemplates } from "@/lib/dashboard/dashboard-top-templates";
 import type { AccentColor } from "@/types/console";
 
 export interface DispatchStripProps {

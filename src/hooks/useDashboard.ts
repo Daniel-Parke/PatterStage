@@ -38,7 +38,7 @@ import { safeApiCall, safeApiCallData } from "@/lib/api-fetch";
 import {
   loadInitialDashboardData,
   type DashboardTemplate,
-} from "@/lib/dashboard-initial-load";
+} from "@/lib/dashboard/dashboard-initial-load";
 import type { MissionCategory } from "@/lib/missions/mission-category-repository";
 import type {
   SystemStatus,

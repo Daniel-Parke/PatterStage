@@ -6,7 +6,7 @@
 //   - failure branch uses "error" tone
 //   - uses result.error when present, else the fallback
 
-import { toastFromResult } from "@/lib/toast-from-result";
+import { toastFromResult } from "@/lib/dashboard/toast-from-result";
 
 describe("toastFromResult", () => {
   let showToast: jest.Mock;

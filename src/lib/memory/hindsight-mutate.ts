@@ -26,7 +26,7 @@
 // is the correct return-shape annotation.
 
 import { safeApiCall, type SafeApiCallResult } from "@/lib/api-fetch";
-import { toastFromResult } from "@/lib/toast-from-result";
+import { toastFromResult } from "@/lib/dashboard/toast-from-result";
 
 type ShowToast = (message: string, tone?: "success" | "error" | "info") => void;
 
