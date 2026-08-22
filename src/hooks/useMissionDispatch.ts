@@ -1,0 +1,346 @@
+// ═══════════════════════════════════════════════════════════════
+// useMissionDispatch — the mission write path
+// ═══════════════════════════════════════════════════════════════
+//
+// Split out of useMissionsPage (Phase 4 god-file decomposition). Owns
+// every handler that changes a mission on the wire — create / update /
+// promote / re-dispatch, edit, duplicate, delete, cancel — plus the two
+// in-flight flags the UI disables buttons on (`dispatching`,
+// `cancellingMissionId`) and the form reset that follows a successful
+// write.
+//
+// Reads the composer's form state and the data hook's list + refetch
+// callbacks; owns none of either. Every wire call goes through
+// `dispatchMissionAction`, the shared POST /api/missions envelope.
+
+"use client";
+
+import { useCallback, useState } from "react";
+
+import type { ToastType } from "@/components/ui/Toast";
+import { toastError } from "@/lib/api-fetch";
+import { toastFromResult } from "@/lib/dashboard/toast-from-result";
+import {
+  successMessageForDispatch,
+  dispatchMissionAction,
+} from "@/hooks/success-message-for-dispatch";
+import type { useMissionComposer } from "@/hooks/useMissionComposer";
+import type { MissionRow } from "@/hooks/missions-page-types";
+import {
+  isMissionDraft,
+  isMissionQueuedForRun,
+} from "@/lib/missions/mission-board";
+import { submitToastForDispatch } from "@/lib/missions/mission-filters";
+
+type ToastFn = (message: string, type?: ToastType) => void;
+
+export interface UseMissionDispatchArgs {
+  composer: ReturnType<typeof useMissionComposer>;
+  missions: MissionRow[];
+  updateMission: (id: string, updater: (mission: MissionRow) => MissionRow) => void;
+  fetchData: () => Promise<void>;
+  fetchDetail: (id: string, showLoading?: boolean) => void;
+  expandedId: string | null;
+  setExpandedId: (id: string | null) => void;
+  editingId: string | null;
+  setEditingId: (id: string | null) => void;
+  setShowCreate: (open: boolean) => void;
+  /** Close the create/edit sheet (clears `editingId` too). */
+  closeComposer: () => void;
+  showToast: ToastFn;
+}
+
+export function useMissionDispatch({
+  composer,
+  missions,
+  updateMission,
+  fetchData,
+  fetchDetail,
+  expandedId,
+  setExpandedId,
+  editingId,
+  setEditingId,
+  setShowCreate,
+  closeComposer,
+  showToast,
+}: UseMissionDispatchArgs) {
+  const {
+    newName,
+    newInstruction,
+    dispatchAcknowledged,
+    setDispatchAcknowledged,
+    newDispatch,
+    setNewDispatch,
+    newSchedule,
+    dispatchPayload,
+    clearMissionFormFields,
+    populateFormFromMission,
+  } = composer;
+
+  const [dispatching, setDispatching] = useState(false);
+  const [cancellingMissionId, setCancellingMissionId] = useState<string | null>(
+    null,
+  );
+
+  const resetForm = useCallback(() => {
+    clearMissionFormFields();
+    setDispatchAcknowledged(false);
+    setNewDispatch("save");
+    setShowCreate(false);
+    // setDispatchAcknowledged + setNewDispatch are stable composer-hook
+    // setters (listed to satisfy exhaustive-deps now that they're
+    // destructured, not local useState setters the linter auto-exempts).
+  }, [clearMissionFormFields, setDispatchAcknowledged, setNewDispatch, setShowCreate]);
+
+  const handleCreate = useCallback(async () => {
+    if (!newName.trim() || !newInstruction.trim()) return;
+    if (!editingId && !dispatchAcknowledged) {
+      showToast("Open Dispatch to choose how this mission runs.", "error");
+      return;
+    }
+    if (dispatching) return;
+    setDispatching(true);
+
+    try {
+      if (editingId) {
+        const existingMission = missions.find((m) => m.id === editingId);
+        const isCompleted =
+          existingMission &&
+          (existingMission.status === "successful" ||
+            existingMission.status === "failed");
+        const isRunning = existingMission?.status === "dispatched";
+        const isPromotable =
+          existingMission &&
+          (isMissionDraft(existingMission) || isMissionQueuedForRun(existingMission));
+
+        if (isRunning) {
+          showToast("Updating mission...", "info");
+          // The `dispatchMissionAction` helper composes the
+          // `safeApiCall<MissionActionResponse>("/api/missions", { method:
+          // "POST", body: { action, ...body } })` shape that all 4 action
+          // branches in this function share — see JSDoc on the helper
+          // for the 4-site rationale and the byte-equivalence claim.
+          const result = await dispatchMissionAction("update", {
+            missionId: editingId,
+            name: newName,
+            ...dispatchPayload(),
+          });
+          toastFromResult(
+            showToast,
+            result,
+            "Mission updated",
+            "Failed to update mission",
+          );
+          if (result.ok) {
+            closeComposer();
+            void fetchData();
+            if (expandedId === editingId) void fetchDetail(editingId);
+          }
+          return;
+        }
+
+        if (isPromotable) {
+          showToast(submitToastForDispatch(newDispatch), "info");
+          // The route returns `{ data: { mission: {...} } }` (envelope).
+          // The `dispatchMissionAction` helper unwraps the inner `data` via
+          // the `MissionActionResponse` envelope type — see JSDoc on the
+          // helper. We only read `ok`/`error` here, so we destructure the
+          // safe-result tuple and pass the relevant fields to
+          // `toastFromResult`.
+          const { ok, error } = await dispatchMissionAction("promote", {
+            missionId: editingId,
+            name: newName,
+            ...dispatchPayload({
+              dispatchMode: newDispatch,
+            }),
+          });
+          toastFromResult(
+            showToast,
+            { ok, error },
+            () => successMessageForDispatch(newDispatch, newSchedule),
+            "Failed to update mission",
+          );
+          if (ok) {
+            closeComposer();
+            resetForm();
+            await fetchData();
+            if (expandedId === editingId) void fetchDetail(editingId);
+          }
+          return;
+        }
+
+        if (!isCompleted) return;
+
+        setEditingId(null);
+
+        // The route returns `{ data: { mission: { id } } }` (envelope).
+        // The `dispatchMissionAction` helper unwraps the inner envelope via
+        // the `MissionActionPayload` type, so `result.data?.data?.mission?.id`
+        // (the pre-helper two-level indirection) collapses to
+        // `result.data?.mission?.id` (one level). Same wire shape, same
+        // byte-level outcome on success and on error. See JSDoc on the
+        // helper in `src/hooks/success-message-for-dispatch.ts` for the
+        // 1-level unwrap contract.
+        const result = await dispatchMissionAction("dispatch", {
+          name: newName,
+          ...dispatchPayload({ dispatchMode: "now" }),
+        });
+
+        toastFromResult(
+          showToast,
+          result,
+          "Mission re-dispatched",
+          "Failed to re-dispatch mission",
+        );
+        if (result.ok) {
+          const body = result.data;
+          await fetchData();
+          if (body?.mission?.id) {
+            setExpandedId(body.mission.id);
+            void fetchDetail(body.mission.id);
+          }
+        }
+        return;
+      }
+
+      showToast(submitToastForDispatch(newDispatch), "info");
+
+      // The route returns `{ data: { mission: { id } } }` (envelope).
+      // The `dispatchMissionAction` helper unwraps the inner envelope via
+      // the `MissionActionPayload` type, so `data.data?.mission?.id` (the
+      // pre-helper two-level indirection) collapses to `data?.mission?.id`
+      // (one level). Same wire shape, same byte-level outcome. See JSDoc
+      // on the helper in `src/hooks/success-message-for-dispatch.ts` for
+      // the 1-level unwrap contract.
+      const { ok, error, data } = await dispatchMissionAction("dispatch", {
+        name: newName,
+        ...dispatchPayload({
+          dispatchMode: newDispatch,
+        }),
+      });
+
+      toastFromResult(
+        showToast,
+        { ok, error },
+        () => successMessageForDispatch(newDispatch, newSchedule),
+        "Failed to create mission",
+      );
+      if (ok) {
+        if (newDispatch === "save" || newDispatch === "queue") {
+          resetForm();
+          void fetchData();
+        } else if (newDispatch === "now") {
+          const body = data;
+          await fetchData();
+          if (body?.mission?.id) {
+            setExpandedId(body.mission.id);
+            void fetchDetail(body.mission.id);
+          }
+        } else {
+          await fetchData();
+        }
+      }
+    } catch (err) {
+      toastError(showToast, err, "Network error — please try again");
+    } finally {
+      setDispatching(false);
+    }
+  }, [newName, newInstruction, editingId, dispatchAcknowledged, dispatching, showToast, newDispatch, newSchedule, missions, dispatchPayload, fetchData, resetForm, fetchDetail, expandedId, closeComposer, setEditingId, setExpandedId]);
+
+  const handleEdit = useCallback((m: MissionRow) => {
+    setEditingId(m.id);
+    populateFormFromMission(m, { editing: true });
+    setShowCreate(true);
+  }, [populateFormFromMission, setEditingId, setShowCreate]);
+
+  const handleDuplicateMission = useCallback((m: MissionRow) => {
+    setEditingId(null);
+    populateFormFromMission(m, { editing: false, namePrefix: "(copy)" });
+    setNewDispatch("save");
+    setShowCreate(true);
+    showToast("Mission duplicated as draft", "success");
+  }, [populateFormFromMission, showToast, setNewDispatch, setEditingId, setShowCreate]);
+
+  const handleDelete = useCallback(async (id: string) => {
+    // Migrated from the inline `safeApiCall("/api/missions", { method: "POST", body: { action: "delete", missionId: id } })`
+    // form to the shared `dispatchMissionAction` helper. The helper's `MissionActionResponse`
+    // envelope type is typed once at the helper, so the call site no longer needs the inline
+    // call shape. The toast + fetchData + setExpandedId(null) post-success flow is preserved
+    // byte-equivalent. The pre-session 207 form had a `window.confirm(...)` pre-confirm
+    // guard here — that guard has moved into the `MissionEditorPanel` leaf component as a
+    // per-row `useTwoStepConfirm({ autoDismissMs: 4000 })` instance, where the mission id
+    // is in scope at render time. By the time `handleDelete` is called, the user has
+    // already confirmed in the leaf; this hook is a thin transport wrapper.
+    const result = await dispatchMissionAction("delete", { missionId: id });
+    toastFromResult(showToast, result, "Mission deleted", "Failed to delete mission");
+    if (result.ok) {
+      if (expandedId === id) setExpandedId(null);
+      fetchData();
+    }
+  }, [showToast, expandedId, fetchData, setExpandedId]);
+
+  const handleCancel = useCallback(async (id: string) => {
+    // The pre-session 207 form had a `window.confirm(...)` pre-confirm
+    // guard here — that guard has moved into the `MissionEditorPanel`
+    // leaf component as a per-row `useTwoStepConfirm({ autoDismissMs:
+    // 4000 })` instance, where the mission id is in scope at render
+    // time. By the time `handleCancel` is called, the user has already
+    // confirmed in the leaf; this hook is a thin transport wrapper
+    // (optimistic status flip + wire cancel + toast + restore-on-fail).
+    const previousMission = missions.find((m) => m.id === id);
+    setCancellingMissionId(id);
+    showToast("Cancelling mission…", "info");
+    // Optimistic status flip via the `updateMission(id, updater)`
+    // helper — the same id-discriminator + setMissions((prev) =>
+    // prev.map((m) => m.id === ID ? updater(m) : m)) shape, just
+    // composed once. The updater is intentionally narrow (only the
+    // fields the cancel-flip touches) so a future "also clear
+    // cronJobId" extension lands in the updater, not in a duplicated
+    // inline map call.
+    updateMission(id, (m) => ({
+      ...m,
+      status: "failed" as const,
+      result: "Cancelled by user",
+    }));
+
+    try {
+      // Migrated from the inline `safeApiCall("/api/missions", { method: "POST", body: { action: "cancel", missionId: id } })`
+      // form to the shared `dispatchMissionAction` helper. Same wire call, same envelope
+      // type, same `ok`/`error` fields. The restore-on-failure path (the 2 sites
+      // that used to call the `restoreMission(restored)` 1-line wrapper) now inlines
+      // `updateMission(id, () => restored)` directly — the wrapper was just a closure
+      // capture of the same `id`, and inlining saves a 3-line closure declaration.
+      const result = await dispatchMissionAction("cancel", { missionId: id });
+      toastFromResult(
+        showToast,
+        result,
+        "Mission cancelled",
+        "Failed to cancel mission",
+      );
+      if (result.ok) {
+        await fetchData();
+        if (expandedId === id) void fetchDetail(id);
+      } else if (previousMission) {
+        updateMission(id, () => previousMission);
+      }
+    } catch (err) {
+      if (previousMission) {
+        updateMission(id, () => previousMission);
+      }
+      toastError(showToast, err, "Network error — could not cancel mission");
+    } finally {
+      setCancellingMissionId(null);
+    }
+  }, [missions, showToast, fetchData, expandedId, fetchDetail, updateMission]);
+
+  return {
+    dispatching,
+    cancellingMissionId,
+    resetForm,
+    handleCreate,
+    handleEdit,
+    handleDuplicateMission,
+    handleDelete,
+    handleCancel,
+  };
+}

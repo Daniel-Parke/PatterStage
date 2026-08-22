@@ -14,7 +14,7 @@ import { ChevronRight } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { timeAgo, titleCase } from "@/lib/utils";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
-import type { MissionDetail, MissionRow } from "@/hooks/useMissionsPage";
+import type { MissionDetail, MissionRow } from "@/hooks/missions-page-types";
 import {
   isMissionDraft,
   isMissionQueuedForRun,

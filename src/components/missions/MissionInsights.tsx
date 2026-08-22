@@ -5,7 +5,7 @@ import { Rocket, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import Donut from "@/components/viz/Donut";
 import ProgressRing from "@/components/viz/ProgressRing";
 import { neon, neonAlpha, type NeonColor } from "@/components/viz/colors";
-import type { MissionRow } from "@/hooks/useMissionsPage";
+import type { MissionRow } from "@/hooks/missions-page-types";
 
 function Tile({
   icon: Icon,
