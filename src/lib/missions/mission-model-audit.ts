@@ -15,7 +15,7 @@
 //      to the agent default rather than re-using the foreign value.
 // ═══════════════════════════════════════════════════════════════
 
-import { getDb } from "./db";
+import { getDb } from "../db";
 
 export interface ForeignMissionModelRow {
   id: string;

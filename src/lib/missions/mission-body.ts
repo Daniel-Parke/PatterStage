@@ -6,7 +6,7 @@
 // implementation is the registry check on `modelId` — see below.
 // ═══════════════════════════════════════════════════════════════
 
-import { findModelByModelId } from "./models-repository";
+import { findModelByModelId } from "../models-repository";
 
 /** Shared fields destructured from mission action body (dispatch/promote/update). */
 export interface MissionBodyFields {

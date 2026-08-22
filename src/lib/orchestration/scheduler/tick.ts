@@ -16,7 +16,7 @@ import {
   type ScheduleRecord,
 } from "@/lib/schedules-repository";
 import { createRun } from "@/lib/runs-repository";
-import { hasDispatchedMission } from "@/lib/mission-repository";
+import { hasDispatchedMission } from "@/lib/missions/mission-repository";
 import { computeNextRun } from "@/lib/schedule/next-run";
 import { dispatchMissionRun } from "@/lib/orchestration/dispatch";
 import { logApiError } from "@/lib/api-logger";

@@ -9,7 +9,7 @@ import { NextRequest } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, notFound, serverError } from "@/lib/api-response";
-import { getMission } from "@/lib/mission-repository";
+import { getMission } from "@/lib/missions/mission-repository";
 import { dispatchMissionRun } from "@/lib/orchestration";
 
 interface Ctx {

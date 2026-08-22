@@ -30,7 +30,7 @@ jest.mock("next/server", () => {
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 jest.mock("@/lib/api-auth", () => ({ requireAuth: jest.fn(() => null), isReadOnly: jest.fn(() => false) }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/mission-repository", () => ({
+jest.mock("@/lib/missions/mission-repository", () => ({
   listMissions: jest.fn(() => []),
   getMission: jest.fn(),
 }));

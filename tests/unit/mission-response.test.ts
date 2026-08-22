@@ -29,11 +29,11 @@ jest.mock("next/server", () => {
 });
 
 const mockGetMission = jest.fn();
-jest.mock("@/lib/mission-repository", () => ({
+jest.mock("@/lib/missions/mission-repository", () => ({
   getMission: (id: string) => mockGetMission(id),
 }));
 
-import { missionResponse, enrichedMission } from "@/lib/mission-response";
+import { missionResponse, enrichedMission } from "@/lib/missions/mission-response";
 
 beforeEach(() => {
   responses.length = 0;

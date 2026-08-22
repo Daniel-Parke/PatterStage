@@ -24,17 +24,17 @@ import { useState, useEffect, useCallback } from "react";
 import { apiFetch, safeApiCallData } from "@/lib/api-fetch";
 import type { LocalDirEntry, Mission } from "@/types/console";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
-import { parseMissionPrompt } from "@/lib/build-mission-prompt";
+import { parseMissionPrompt } from "@/lib/missions/build-mission-prompt";
 import type { MissionFormState } from "@/components/missions/MissionCreateForm";
 import type { MissionTemplate } from "@/components/missions/TemplateModals";
-import { splitGoals } from "@/lib/mission-form-utils";
+import { splitGoals } from "@/lib/missions/mission-form-utils";
 import { scheduleForDispatch } from "@/lib/dispatch-mode";
-import { isMissionQueuedForRun } from "@/lib/mission-board";
+import { isMissionQueuedForRun } from "@/lib/missions/mission-board";
 import {
   getCategoryIdFromTemplate,
   rememberLastCategory,
   readLastCategory,
-} from "@/lib/mission-composer-utils";
+} from "@/lib/missions/mission-composer-utils";
 
 export interface UseMissionComposerArgs {
   /** Whether the create/edit sheet is open (owned by useMissionsPage). */

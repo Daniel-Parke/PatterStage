@@ -21,7 +21,7 @@ jest.mock("@/lib/paths", () => ({
   PATHS: { templates: "/tmp/__no_such_templates_dir__" },
 }));
 
-import { countTemplatesInCategory } from "@/lib/mission-category-repository";
+import { countTemplatesInCategory } from "@/lib/missions/mission-category-repository";
 
 const baselineSql = readFileSync(
   join(process.cwd(), "src", "lib", "db", "migrations", "001_baseline.sql"),

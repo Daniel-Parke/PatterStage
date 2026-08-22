@@ -70,7 +70,8 @@ independent of HTTP traffic. State is SQLite (`src/lib/db.ts`, migrations in
 | `src/lib/runtime/` | `AgentRuntime` port + `HermesRuntime` adapter + gateway manager |
 | `src/lib/orchestration/` | dispatch, run-reconcile, `scheduler/` |
 | `src/lib/sync/` | `SyncSource` implementations + `SyncScheduler` |
-| `src/lib/*-repository.ts` | Data access, one module per aggregate |
+| `src/lib/missions/` | Mission domain: board, composer, dispatch, queue, `mission-handlers/` |
+| `src/lib/*-repository.ts` | Data access, one module per aggregate; a domain's repository sits inside that domain's folder |
 | `tests/unit` · `tests/e2e` · `tests/integration` | Jest · Playwright · Docker + runtime harnesses |
 | `scripts/` | `bootstrap/`, `application/`, `tooling/`, `hardware/`, `maintenance/` |
 
@@ -94,7 +95,7 @@ Next.js static files go in `public/` at the repo root; the Dockerfile runs
   `types.ts` and implement it in `HermesRuntime.ts`; never reach into agent
   internals from orchestration code.
 - **Large action-router routes split into per-action modules** — a thin `route.ts`
-  dispatches on `action` to `src/lib/{mission,story}-handlers/*`.
+  dispatches on `action` to `src/lib/missions/mission-handlers/*`.
 - **Read-only data hooks wrap `useApiResource`** (`src/hooks/useApiResource.ts`).
   Hooks with mutations or multi-query bundles stay bespoke; don't force them onto
   the generic.

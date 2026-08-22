@@ -8,7 +8,7 @@
 // reconciles them by polling the runtime.
 // ═══════════════════════════════════════════════════════════════
 
-import { getMission, updateMission } from "@/lib/mission-repository";
+import { getMission, updateMission } from "@/lib/missions/mission-repository";
 import {
   createRun,
   attachBackendRun,

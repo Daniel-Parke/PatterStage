@@ -37,7 +37,7 @@ afterEach(() => {
 describe("mission suggested_toolsets", () => {
   it("round-trips suggestedToolsets on create and update", () => {
     const { createMission, getMission, updateMission } =
-      require("@/lib/mission-repository") as typeof import("@/lib/mission-repository");
+      require("@/lib/missions/mission-repository") as typeof import("@/lib/missions/mission-repository");
 
     const created = createMission({
       name: "Tool hint mission",

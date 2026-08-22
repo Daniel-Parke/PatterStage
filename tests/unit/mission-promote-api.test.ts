@@ -30,12 +30,12 @@ jest.mock("next/server", () => {
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 jest.mock("@/lib/api-auth", () => ({ requireAuth: jest.fn(() => null), isReadOnly: jest.fn(() => false) }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/mission-category-repository", () => ({ getCategory: jest.fn() }));
+jest.mock("@/lib/missions/mission-category-repository", () => ({ getCategory: jest.fn() }));
 jest.mock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
 
 const mockPromoteMission = jest.fn();
 
-jest.mock("@/lib/mission-promote-handler", () => ({
+jest.mock("@/lib/missions/mission-promote-handler", () => ({
   promoteMission: (...args: unknown[]) => mockPromoteMission(...args),
 }));
 

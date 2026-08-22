@@ -14,7 +14,7 @@ How missions are stored, dispatched, and cancelled. Missions live in SQLite (`mi
 ## Prompt model
 
 - The UI sends **raw** fields (`instruction`, `context`, `goals`, `outputFormat`, `constraints`, dirs, refs, skills, suggested toolsets) on dispatch/update.
-- The API builds the stored `prompt` via `buildMissionPrompt()` in `src/lib/build-mission-prompt.ts` — XML under `<hermes_mission>` (agent payload).
+- The API builds the stored `prompt` via `buildMissionPrompt()` in `src/lib/missions/build-mission-prompt.ts` — XML under `<hermes_mission>` (agent payload).
 - The composer preview can toggle **Human** (form mirror) vs **AI** (stored agent prompt).
 - Editing uses `parseMissionPrompt()` for instruction/context/output/constraints; goals, dirs, refs, skills, and suggested toolsets load from DB columns.
 - **Recommended toolsets** are prompt hints only (`<recommended_toolsets>`); runtime tools still come from the mission profile's `platform_toolsets`. The composer lists only toolsets enabled on the selected profile. See [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md).

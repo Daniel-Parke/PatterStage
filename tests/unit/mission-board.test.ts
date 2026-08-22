@@ -3,7 +3,7 @@ import {
   isMissionDraft,
   isMissionQueuedForRun,
   missionBoardColumn,
-} from "@/lib/mission-board";
+} from "@/lib/missions/mission-board";
 
 describe("mission-board helpers", () => {
   it("classifies drafts vs queued-for-run", () => {

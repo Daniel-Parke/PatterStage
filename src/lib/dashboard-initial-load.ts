@@ -32,7 +32,7 @@
 import { safeApiCallData } from "@/lib/api-fetch";
 
 import type { SystemStatus, MonitorData, HermesProcess, MissionBrief } from "@/types/console";
-import type { MissionCategory } from "@/lib/mission-category-repository";
+import type { MissionCategory } from "@/lib/missions/mission-category-repository";
 
 /**
  * Subset of the dashboard's template shape. The full `TemplateListItem`

@@ -18,7 +18,7 @@ import { useMissionsPage } from "@/hooks/useMissionsPage";
 import MissionsList from "@/components/missions/MissionsList";
 import MissionInsights from "@/components/missions/MissionInsights";
 import ScheduledMissions from "@/components/missions/ScheduledMissions";
-import { mapCategories } from "@/lib/mission-form-utils";
+import { mapCategories } from "@/lib/missions/mission-form-utils";
 
 export default function MissionsPage() {
   const vm = useMissionsPage();

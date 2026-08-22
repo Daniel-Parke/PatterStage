@@ -22,7 +22,7 @@ jest.mock("@/lib/schedules-repository", () => ({
   advanceSchedule: (...a: unknown[]) => advanceSchedule(...a),
 }));
 jest.mock("@/lib/runs-repository", () => ({ createRun: (...a: unknown[]) => createRun(...a) }));
-jest.mock("@/lib/mission-repository", () => ({
+jest.mock("@/lib/missions/mission-repository", () => ({
   hasDispatchedMission: (...a: unknown[]) => hasDispatchedMission(...a),
 }));
 jest.mock("@/lib/orchestration/dispatch", () => ({

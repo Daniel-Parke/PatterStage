@@ -5,7 +5,7 @@ import { Copy } from "lucide-react";
 import {
   buildMissionPrompt,
   buildMissionPromptHuman,
-} from "@/lib/build-mission-prompt";
+} from "@/lib/missions/build-mission-prompt";
 import type { LocalDirEntry } from "@/types/console";
 
 export type PromptPreviewMode = "human" | "ai";

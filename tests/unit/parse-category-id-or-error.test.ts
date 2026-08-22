@@ -61,7 +61,7 @@ jest.mock("@/lib/api-auth", () => ({
   isReadOnly: jest.fn(() => false),
 }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
-jest.mock("@/lib/mission-repository", () => ({
+jest.mock("@/lib/missions/mission-repository", () => ({
   listMissions: jest.fn(() => []),
   getMission: jest.fn(() => undefined),
   createMission: jest.fn(),
@@ -74,7 +74,7 @@ jest.mock("@/lib/mission-repository", () => ({
   ),
 }));
 jest.mock("@/lib/sync", () => ({ ensureSyncLayer: jest.fn() }));
-jest.mock("@/lib/mission-category-repository", () => ({
+jest.mock("@/lib/missions/mission-category-repository", () => ({
   getCategory: jest.fn((id: string) =>
     id === "valid-cat" ? { id: "valid-cat", name: "Valid" } : null,
   ),
@@ -84,7 +84,7 @@ import { POST } from "@/app/api/missions/route";
 const { __responses } = require("next/server") as {
   __responses: Array<{ data: unknown; init?: ResponseInit }>;
 };
-const { createMission } = require("@/lib/mission-repository") as {
+const { createMission } = require("@/lib/missions/mission-repository") as {
   createMission: jest.Mock;
 };
 

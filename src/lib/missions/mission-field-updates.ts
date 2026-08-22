@@ -2,11 +2,11 @@
 // mission-field-updates.ts — shared prompt/field merge for update & promote
 // ═══════════════════════════════════════════════════════════════
 
-import { buildMissionPrompt, parseMissionPrompt } from "@/lib/build-mission-prompt";
+import { buildMissionPrompt, parseMissionPrompt } from "@/lib/missions/build-mission-prompt";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import type { LocalDirEntry } from "@/types/console";
-import type { Mission } from "@/lib/mission-types";
-import type { MissionStatus } from "@/lib/mission-types";
+import type { Mission } from "@/lib/missions/mission-types";
+import type { MissionStatus } from "@/lib/missions/mission-types";
 
 export interface MissionFieldPatchInput {
   name?: string;

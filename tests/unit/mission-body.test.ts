@@ -5,7 +5,7 @@ jest.mock("@/lib/models-repository", () => ({
 }));
 
 import { findModelByModelId } from "@/lib/models-repository";
-import { parseMissionBodyFields } from "@/lib/mission-body";
+import { parseMissionBodyFields } from "@/lib/missions/mission-body";
 
 const mockFindByModelId = findModelByModelId as jest.Mock;
 

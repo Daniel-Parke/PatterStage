@@ -10,18 +10,18 @@
 // shared by the handlers + GET live in mission-handlers/shared.ts.
 import { NextRequest, NextResponse } from "next/server";
 
-import { listMissions } from "@/lib/mission-repository";
+import { listMissions } from "@/lib/missions/mission-repository";
 import { requireAuth, isReadOnly } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, ok, serviceUnavailable } from "@/lib/api-response";
 import { ensureSyncLayer } from "@/lib/sync";
-import { getMissionOrNotFound } from "@/lib/mission-handlers/shared";
-import { handleDispatchMission } from "@/lib/mission-handlers/dispatch";
-import { handlePromoteMission } from "@/lib/mission-handlers/promote";
-import { handleUpdateMission } from "@/lib/mission-handlers/update";
-import { handleCancelMission } from "@/lib/mission-handlers/cancel";
-import { handleDeleteMission } from "@/lib/mission-handlers/delete";
+import { getMissionOrNotFound } from "@/lib/missions/mission-handlers/shared";
+import { handleDispatchMission } from "@/lib/missions/mission-handlers/dispatch";
+import { handlePromoteMission } from "@/lib/missions/mission-handlers/promote";
+import { handleUpdateMission } from "@/lib/missions/mission-handlers/update";
+import { handleCancelMission } from "@/lib/missions/mission-handlers/cancel";
+import { handleDeleteMission } from "@/lib/missions/mission-handlers/delete";
 
 // ── GET ───────────────────────────────────────────────────────
 

@@ -13,7 +13,7 @@ import {
   createMission,
   updateMission,
   buildMissionPrompt,
-} from "@/lib/mission-repository";
+} from "@/lib/missions/mission-repository";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 import { logApiError } from "@/lib/api-logger";
 import { badRequest, serverError } from "@/lib/api-response";
@@ -22,10 +22,10 @@ import { resolveAgentSlug } from "@/lib/agents/roster";
 import { createSchedule } from "@/lib/schedules-repository";
 import { parseSchedule, scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
 import { computeNextRun } from "@/lib/schedule/next-run";
-import { dispatchMissionNow } from "@/lib/mission-dispatch";
-import { parseMissionBodyFields } from "@/lib/mission-body";
-import { runMissionQueueTick } from "@/lib/mission-queue-tick";
-import { missionResponse } from "@/lib/mission-response";
+import { dispatchMissionNow } from "@/lib/missions/mission-dispatch";
+import { parseMissionBodyFields } from "@/lib/missions/mission-body";
+import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
+import { missionResponse } from "@/lib/missions/mission-response";
 import { parseDispatchMode } from "@/lib/dispatch-mode";
 
 import { parseCategoryIdOrError } from "./shared";

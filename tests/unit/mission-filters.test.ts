@@ -9,8 +9,8 @@ import {
   filterGroupedTemplates,
   submitToastForDispatch,
   type MissionFilterFields,
-} from "@/lib/mission-filters";
-import type { CategoryLike } from "@/lib/mission-categories";
+} from "@/lib/missions/mission-filters";
+import type { CategoryLike } from "@/lib/missions/mission-categories";
 import type { MissionTemplate } from "@/components/missions/TemplateModals";
 
 const m = (over: Partial<MissionFilterFields> = {}): MissionFilterFields => ({

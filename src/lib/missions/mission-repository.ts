@@ -5,10 +5,10 @@
 import { existsSync, unlinkSync } from "fs";
 import { join } from "path";
 
-import { getDb, inTransaction, uuid, now } from "./db";
-import { safeJsonParse } from "./utils";
-import { PATHS } from "./paths";
-import type { Mission, MissionStatus } from "@/lib/mission-types";
+import { getDb, inTransaction, uuid, now } from "../db";
+import { safeJsonParse } from "../utils";
+import { PATHS } from "../paths";
+import type { Mission, MissionStatus } from "@/lib/missions/mission-types";
 import type { LocalDirEntry } from "@/types/console";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 
@@ -80,7 +80,7 @@ function rowToMission(row: MissionRow | undefined): Mission | null {
 // ── Prompt builder (delegates to shared utility) ───────────────
 // Keeps the stored prompt complete (used by both dispatch and cron).
 
-export { buildMissionPrompt } from "@/lib/build-mission-prompt";
+export { buildMissionPrompt } from "@/lib/missions/build-mission-prompt";
 
 // ── CRUD ─────────────────────────────────────────────────────
 

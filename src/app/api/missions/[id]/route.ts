@@ -8,7 +8,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, notFound } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
-import { getMission } from "@/lib/mission-repository";
+import { getMission } from "@/lib/missions/mission-repository";
 
 interface Ctx {
   params: Promise<{ id: string }>;

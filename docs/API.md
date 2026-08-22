@@ -93,7 +93,7 @@ Several routes use **GET for reads** and **POST with an `action` field** for mut
 
 ### `/api/missions` — `POST` body `action`
 
-Each action body lives in its own handler under `src/lib/mission-handlers/*` behind a thin router in the route.
+Each action body lives in its own handler under `src/lib/missions/mission-handlers/*` behind a thin router in the route.
 
 | `action` | Purpose |
 |----------|---------|

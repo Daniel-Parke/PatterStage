@@ -26,8 +26,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from "next/server";
-import { getMission } from "@/lib/mission-repository";
-import type { Mission } from "@/lib/mission-types";
+import { getMission } from "@/lib/missions/mission-repository";
+import type { Mission } from "@/lib/missions/mission-types";
 
 /**
  * Return a `NextResponse` carrying the enriched mission row under

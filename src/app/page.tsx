@@ -37,7 +37,7 @@ import { toastError } from "@/lib/api-fetch";
 import { runMutation } from "@/lib/run-mutation";
 import { toastFromResult } from "@/lib/toast-from-result";
 import { dispatchMissionAction } from "@/hooks/success-message-for-dispatch";
-import { isMissionActive } from "@/lib/mission-board";
+import { isMissionActive } from "@/lib/missions/mission-board";
 import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/session-window";
 import { dedupErrors } from "@/lib/dashboard-error-dedup";
 import { formatModelSubtitle } from "@/lib/dashboard-model-subtitle";

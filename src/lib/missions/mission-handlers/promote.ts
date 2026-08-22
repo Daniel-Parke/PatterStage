@@ -11,8 +11,8 @@ import { NextResponse } from "next/server";
 
 import { ok, badRequest } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
-import { parseMissionBodyFields } from "@/lib/mission-body";
-import { promoteMission } from "@/lib/mission-promote-handler";
+import { parseMissionBodyFields } from "@/lib/missions/mission-body";
+import { promoteMission } from "@/lib/missions/mission-promote-handler";
 
 import { requireMissionId, parseCategoryIdOrError } from "./shared";
 

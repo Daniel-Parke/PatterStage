@@ -78,7 +78,7 @@ afterEach(() => {
 
 describe("deleteMission — on-disk cleanup", () => {
   it("removes all 5 on-disk artifact files for the deleted mission", () => {
-    const { createMission, deleteMission } = require("@/lib/mission-repository") as {
+    const { createMission, deleteMission } = require("@/lib/missions/mission-repository") as {
       createMission: (data: { name: string; prompt: string }) => { id: string };
       deleteMission: (id: string) => boolean;
     };
@@ -113,7 +113,7 @@ describe("deleteMission — on-disk cleanup", () => {
   });
 
   it("does not throw when on-disk artifacts are missing (idempotent disk delete)", () => {
-    const { createMission, deleteMission } = require("@/lib/mission-repository") as {
+    const { createMission, deleteMission } = require("@/lib/missions/mission-repository") as {
       createMission: (data: { name: string; prompt: string }) => { id: string };
       deleteMission: (id: string) => boolean;
     };
@@ -131,7 +131,7 @@ describe("deleteMission — on-disk cleanup", () => {
   });
 
   it("returns false and does not crash for a non-existent mission id", () => {
-    const { deleteMission } = require("@/lib/mission-repository") as {
+    const { deleteMission } = require("@/lib/missions/mission-repository") as {
       deleteMission: (id: string) => boolean;
     };
     expect(deleteMission("does-not-exist")).toBe(false);

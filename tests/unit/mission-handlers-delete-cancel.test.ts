@@ -13,7 +13,7 @@
 const mockGetMission = jest.fn();
 const mockDeleteMission = jest.fn();
 const mockUpdateMission = jest.fn();
-jest.mock("@/lib/mission-repository", () => ({
+jest.mock("@/lib/missions/mission-repository", () => ({
   getMission: (...a: unknown[]) => mockGetMission(...a),
   deleteMission: (...a: unknown[]) => mockDeleteMission(...a),
   updateMission: (...a: unknown[]) => mockUpdateMission(...a),
@@ -44,13 +44,13 @@ jest.mock("@/lib/api-logger", () => ({
   logApiError: (...a: unknown[]) => mockLogApiError(...a),
 }));
 
-jest.mock("@/lib/mission-category-repository", () => ({
+jest.mock("@/lib/missions/mission-category-repository", () => ({
   getCategory: jest.fn(() => null),
 }));
 
-import type { Mission } from "@/lib/mission-types";
-import { handleDeleteMission } from "@/lib/mission-handlers/delete";
-import { handleCancelMission } from "@/lib/mission-handlers/cancel";
+import type { Mission } from "@/lib/missions/mission-types";
+import { handleDeleteMission } from "@/lib/missions/mission-handlers/delete";
+import { handleCancelMission } from "@/lib/missions/mission-handlers/cancel";
 
 function mission(over: Partial<Mission> = {}): Mission {
   return {

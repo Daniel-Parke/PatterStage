@@ -112,7 +112,7 @@ jest.mock("@/lib/db", () => ({
   getSchemaHealth: (...args: unknown[]) => mockGetSchemaHealth(...args),
 }));
 
-jest.mock("@/lib/mission-category-repository", () => ({
+jest.mock("@/lib/missions/mission-category-repository", () => ({
   listCategoriesWithDefaults: (...args: unknown[]) => mockListCategories(...args),
   countMissionsInCategory: (...args: unknown[]) => mockCountMissions(...args),
   countTemplatesInCategory: (...args: unknown[]) => mockCountTemplates(...args),

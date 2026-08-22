@@ -7,12 +7,12 @@
 
 import { NextResponse } from "next/server";
 
-import { updateMission } from "@/lib/mission-repository";
+import { updateMission } from "@/lib/missions/mission-repository";
 import { badRequest, notFound } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
-import { buildMissionFieldPatch } from "@/lib/mission-field-updates";
-import { parseMissionBodyFields } from "@/lib/mission-body";
-import { missionResponse } from "@/lib/mission-response";
+import { buildMissionFieldPatch } from "@/lib/missions/mission-field-updates";
+import { parseMissionBodyFields } from "@/lib/missions/mission-body";
+import { missionResponse } from "@/lib/missions/mission-response";
 
 import { requireMissionOrNotFound, parseCategoryIdOrError } from "./shared";
 

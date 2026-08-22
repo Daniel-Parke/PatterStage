@@ -13,7 +13,7 @@ import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import {
   groupTemplatesByCategory,
   type CategoryLike,
-} from "@/lib/mission-categories";
+} from "@/lib/missions/mission-categories";
 import type { MissionTemplate } from "./types";
 
 interface TemplateManagerModalProps {

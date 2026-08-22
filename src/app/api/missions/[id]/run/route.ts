@@ -8,7 +8,7 @@
 import { NextRequest } from "next/server";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, notFound } from "@/lib/api-response";
-import { getMission } from "@/lib/mission-repository";
+import { getMission } from "@/lib/missions/mission-repository";
 import { getLatestRunForMission } from "@/lib/runs-repository";
 
 interface Ctx {

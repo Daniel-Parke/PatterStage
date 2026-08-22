@@ -9,7 +9,7 @@
 // don't need to change until the Phase 7 god-route split.
 // ═══════════════════════════════════════════════════════════════
 
-import { getMission, updateMission } from "@/lib/mission-repository";
+import { getMission, updateMission } from "@/lib/missions/mission-repository";
 import { dispatchMissionRun } from "@/lib/orchestration";
 
 export interface DispatchMissionNowOverrides {

@@ -155,7 +155,7 @@ describe("profile-config-builder", () => {
 
 describe("buildMissionPrompt toolsets", () => {
   it("includes recommended_toolsets when provided", async () => {
-    const { buildMissionPrompt } = await import("@/lib/build-mission-prompt");
+    const { buildMissionPrompt } = await import("@/lib/missions/build-mission-prompt");
     const prompt = buildMissionPrompt({
       instruction: "Run checks",
       toolsets: ["terminal", "file"],

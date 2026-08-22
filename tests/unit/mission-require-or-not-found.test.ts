@@ -57,7 +57,7 @@ jest.mock("@/lib/api-auth", () => ({
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
 const mockGetMission = jest.fn();
-jest.mock("@/lib/mission-repository", () => ({
+jest.mock("@/lib/missions/mission-repository", () => ({
   getMission: (...args: unknown[]) => mockGetMission(...args),
   updateMission: jest.fn(),
   listMissions: jest.fn(),
@@ -67,7 +67,7 @@ jest.mock("@/lib/mission-repository", () => ({
 }));
 
 
-jest.mock("@/lib/mission-category-repository", () => ({
+jest.mock("@/lib/missions/mission-category-repository", () => ({
   getCategory: jest.fn(),
 }));
 
@@ -84,15 +84,15 @@ jest.mock("@/lib/orchestration", () => ({
   dispatchMissionRun: jest.fn(() => Promise.resolve({ ok: true })),
 }));
 
-jest.mock("@/lib/mission-promote-handler", () => ({
+jest.mock("@/lib/missions/mission-promote-handler", () => ({
   promoteMission: jest.fn(),
 }));
 
-jest.mock("@/lib/mission-dispatch", () => ({
+jest.mock("@/lib/missions/mission-dispatch", () => ({
   dispatchMissionNow: jest.fn(),
 }));
 
-jest.mock("@/lib/mission-queue-tick", () => ({
+jest.mock("@/lib/missions/mission-queue-tick", () => ({
   runMissionQueueTick: jest.fn(),
 }));
 
@@ -211,7 +211,7 @@ describe("requireMissionOrNotFound (via POST /api/missions)", () => {
     // The cancel branch's continuation calls `updateMission(cancelId, ...)`.
     // We mock it to capture the call and verify the id resolution worked
     // end-to-end.
-    const mockUpdateMission = require("@/lib/mission-repository").updateMission as jest.Mock;
+    const mockUpdateMission = require("@/lib/missions/mission-repository").updateMission as jest.Mock;
     mockGetMission.mockReturnValue({
       id: "m-1",
       status: "dispatched",

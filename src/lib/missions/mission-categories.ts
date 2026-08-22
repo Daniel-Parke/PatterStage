@@ -2,7 +2,7 @@
 // mission-categories.ts — UI helpers for category grouping/filters
 // ═══════════════════════════════════════════════════════════════
 
-import type { MissionCategory } from "@/lib/mission-category-repository";
+import type { MissionCategory } from "@/lib/missions/mission-category-repository";
 
 export interface CategoryLike {
   id: string;

@@ -2,7 +2,7 @@
 // sync/sources/MissionQueueSync.ts — Background dispatch for queued missions
 // ═══════════════════════════════════════════════════════════════
 
-import { runMissionQueueTick } from "@/lib/mission-queue-tick";
+import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 

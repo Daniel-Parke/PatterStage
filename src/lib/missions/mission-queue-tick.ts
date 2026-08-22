@@ -5,8 +5,8 @@
 import {
   getNextQueuedMission,
   hasDispatchedMission,
-} from "@/lib/mission-repository";
-import { dispatchMissionNow } from "@/lib/mission-dispatch";
+} from "@/lib/missions/mission-repository";
+import { dispatchMissionNow } from "@/lib/missions/mission-dispatch";
 
 export interface MissionQueueTickResult {
   ran: boolean;

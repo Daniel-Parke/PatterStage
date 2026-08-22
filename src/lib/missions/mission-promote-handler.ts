@@ -5,18 +5,18 @@
 import {
   getMission,
   updateMission,
-} from "@/lib/mission-repository";
-import { buildMissionFieldPatch } from "@/lib/mission-field-updates";
-import { dispatchMissionNow } from "@/lib/mission-dispatch";
-import { runMissionQueueTick } from "@/lib/mission-queue-tick";
+} from "@/lib/missions/mission-repository";
+import { buildMissionFieldPatch } from "@/lib/missions/mission-field-updates";
+import { dispatchMissionNow } from "@/lib/missions/mission-dispatch";
+import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
 import { createSchedule } from "@/lib/schedules-repository";
 import { parseSchedule, scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
 import { computeNextRun } from "@/lib/schedule/next-run";
-import { enrichedMission } from "@/lib/mission-response";
+import { enrichedMission } from "@/lib/missions/mission-response";
 import { logApiError } from "@/lib/api-logger";
-import { isMissionDraft, isMissionQueuedForRun } from "@/lib/mission-board";
+import { isMissionDraft, isMissionQueuedForRun } from "@/lib/missions/mission-board";
 import { parseDispatchMode } from "@/lib/dispatch-mode";
-import type { Mission } from "@/lib/mission-types";
+import type { Mission } from "@/lib/missions/mission-types";
 
 export interface PromoteMissionInput {
   missionId: string;

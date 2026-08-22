@@ -16,7 +16,7 @@ import {
   CATEGORY_COLOR_CLASSES,
   resolveCategoryDisplay,
   buildCategoryMap,
-} from "@/lib/mission-categories";
+} from "@/lib/missions/mission-categories";
 import { timeAgo, titleCase } from "@/lib/utils";
 import type { MissionsPageViewModel, MissionRow } from "@/hooks/useMissionsPage";
 import {
@@ -27,7 +27,7 @@ import {
   isMissionDraft,
   isMissionQueuedForRun,
   missionBoardColumn,
-} from "@/lib/mission-board";
+} from "@/lib/missions/mission-board";
 import MissionEditorPanel from "./MissionEditorPanel";
 
 const STATUS_FILTERS = ["all", "draft", "queued", "dispatched", "successful", "failed"] as const;

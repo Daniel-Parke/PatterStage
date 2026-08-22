@@ -18,7 +18,7 @@ jest.mock("@/lib/db", () => ({
 import {
   auditForeignMissionModelRows,
   fixupForeignMissionModelRows,
-} from "@/lib/mission-model-audit";
+} from "@/lib/missions/mission-model-audit";
 
 beforeEach(() => {
   const Database = loadRealBetterSqlite3();

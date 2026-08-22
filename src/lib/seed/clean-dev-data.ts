@@ -12,7 +12,7 @@
 
 import { listWorkflows, deleteWorkflow } from "@/lib/composer/composer-repository";
 import { SERVER_MODULES } from "@/lib/modules/server";
-import { listMissions, deleteMission } from "@/lib/mission-repository";
+import { listMissions, deleteMission } from "@/lib/missions/mission-repository";
 
 const TEST_NAME = /^(testy?\b|test[\s_-]|untitled story\b)/i;
 

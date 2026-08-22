@@ -27,7 +27,7 @@ import {
   getCategory,
   listCategoriesWithDefaults,
   updateCategory,
-} from "@/lib/mission-category-repository";
+} from "@/lib/missions/mission-category-repository";
 
 function withCounts() {
   return listCategoriesWithDefaults().map((cat) => ({

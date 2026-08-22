@@ -10,7 +10,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, FolderOpen, Loader2, Plus } from "lucide-react";
-import { CATEGORY_COLOR_CLASSES } from "@/lib/mission-categories";
+import { CATEGORY_COLOR_CLASSES } from "@/lib/missions/mission-categories";
 
 export interface CategoryOption {
   id: string;

@@ -11,7 +11,7 @@ jest.mock("@/modules/rec-room/lib/story-repository", () => ({
   listStories: jest.fn(),
   deleteStory: jest.fn(),
 }));
-jest.mock("@/lib/mission-repository", () => ({
+jest.mock("@/lib/missions/mission-repository", () => ({
   listMissions: jest.fn(),
   deleteMission: jest.fn(),
 }));
@@ -19,7 +19,7 @@ jest.mock("@/lib/mission-repository", () => ({
 import { previewDevDataCleanup, cleanDevData } from "@/lib/seed/clean-dev-data";
 import { listWorkflows, deleteWorkflow } from "@/lib/composer/composer-repository";
 import { listStories, deleteStory } from "@/modules/rec-room/lib/story-repository";
-import { listMissions, deleteMission } from "@/lib/mission-repository";
+import { listMissions, deleteMission } from "@/lib/missions/mission-repository";
 
 const mockListWorkflows = listWorkflows as jest.Mock;
 const mockDeleteWorkflow = deleteWorkflow as jest.Mock;

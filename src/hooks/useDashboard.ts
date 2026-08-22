@@ -39,7 +39,7 @@ import {
   loadInitialDashboardData,
   type DashboardTemplate,
 } from "@/lib/dashboard-initial-load";
-import type { MissionCategory } from "@/lib/mission-category-repository";
+import type { MissionCategory } from "@/lib/missions/mission-category-repository";
 import type {
   SystemStatus,
   MonitorData,

@@ -18,7 +18,7 @@ import type { MissionDetail, MissionRow } from "@/hooks/useMissionsPage";
 import {
   isMissionDraft,
   isMissionQueuedForRun,
-} from "@/lib/mission-board";
+} from "@/lib/missions/mission-board";
 import MissionLiveProgress from "@/components/missions/MissionLiveProgress";
 
 export interface MissionEditorPanelProps {

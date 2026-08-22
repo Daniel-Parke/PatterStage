@@ -13,8 +13,8 @@
 
 import { NextResponse } from "next/server";
 
-import { getMission } from "@/lib/mission-repository";
-import { getCategory } from "@/lib/mission-category-repository";
+import { getMission } from "@/lib/missions/mission-repository";
+import { getCategory } from "@/lib/missions/mission-category-repository";
 import { badRequest, notFound } from "@/lib/api-response";
 
 function resolveMissionId(body: Record<string, unknown>): string | undefined {

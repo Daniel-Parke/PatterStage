@@ -48,7 +48,7 @@
 //   description at all (src/components/ui/TemplateCard.tsx:46-54).
 
 import TemplateCard from "@/components/ui/TemplateCard";
-import type { TemplateLike } from "@/lib/mission-categories";
+import type { TemplateLike } from "@/lib/missions/mission-categories";
 
 export interface TemplatePillProps {
   /** The template to render as a compact pill. Accepts the wider

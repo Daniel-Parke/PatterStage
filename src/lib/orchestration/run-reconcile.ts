@@ -10,7 +10,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { listActiveRuns, updateRun, type RunRecord } from "@/lib/runs-repository";
-import { updateMission, getMission } from "@/lib/mission-repository";
+import { updateMission, getMission } from "@/lib/missions/mission-repository";
 import { closeSessionForMission } from "@/lib/session-repository";
 import { runtime } from "@/lib/runtime";
 import { now } from "@/lib/db";

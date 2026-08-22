@@ -9,15 +9,15 @@ import { toastFromResult } from "@/lib/toast-from-result";
 import { successMessageForDispatch, dispatchMissionAction } from "@/hooks/success-message-for-dispatch";
 import type { Mission } from "@/types/console";
 import type { MissionTemplate } from "@/components/missions/TemplateModals";
-import { buildTemplatePayload } from "@/lib/mission-form-utils";
+import { buildTemplatePayload } from "@/lib/missions/mission-form-utils";
 import {
   isMissionDraft,
   isMissionQueuedForRun,
-} from "@/lib/mission-board";
+} from "@/lib/missions/mission-board";
 import {
   getCategoryIdFromTemplate,
   rememberLastCategory,
-} from "@/lib/mission-composer-utils";
+} from "@/lib/missions/mission-composer-utils";
 import {
   filterMissions,
   computeMissionCounts,
@@ -25,7 +25,7 @@ import {
   computeTemplateCategoryPills,
   filterGroupedTemplates,
   submitToastForDispatch,
-} from "@/lib/mission-filters";
+} from "@/lib/missions/mission-filters";
 
 // getCategoryIdFromTemplate / rememberLastCategory / readLastCategory moved
 // to src/lib/mission-composer-utils.ts (shared by useMissionComposer + this

@@ -22,7 +22,7 @@ import { commitLocalDirDraft } from "@/lib/local-dir-entry";
 import {
   isMissionDraft,
   isMissionQueuedForRun,
-} from "@/lib/mission-board";
+} from "@/lib/missions/mission-board";
 
 export interface MissionFormState {
   newName: string;

@@ -21,8 +21,8 @@ import TemplatePill from "@/components/ui/TemplatePill";
 import {
   groupTemplatesByCategory,
   type TemplateLike,
-} from "@/lib/mission-categories";
-import type { MissionCategory } from "@/lib/mission-category-repository";
+} from "@/lib/missions/mission-categories";
+import type { MissionCategory } from "@/lib/missions/mission-category-repository";
 import type { DashboardTemplate } from "@/lib/dashboard-initial-load";
 import { composeTemplateUrl } from "@/lib/dashboard-helpers";
 import { topNTemplates } from "@/lib/dashboard-top-templates";

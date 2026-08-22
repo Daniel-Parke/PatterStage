@@ -13,7 +13,7 @@ import { ensureDb } from "@/lib/db";
 import { PATHS } from "@/lib/paths";
 import { requireAuth } from "@/lib/api-auth";
 import { listCatalogTemplates } from "@/lib/catalog-template-repository";
-import { resolveTemplateCategoryId } from "@/lib/mission-category-repository";
+import { resolveTemplateCategoryId } from "@/lib/missions/mission-category-repository";
 import type { LocalDirEntry } from "@/types/console";
 import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
 

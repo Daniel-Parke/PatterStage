@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import Modal from "@/components/ui/Modal";
-import { CATEGORY_COLOR_CLASSES } from "@/lib/mission-categories";
+import { CATEGORY_COLOR_CLASSES } from "@/lib/missions/mission-categories";
 
 export interface ManagedCategory {
   id: string;

@@ -13,15 +13,15 @@ import {
   isMissionDraft,
   isMissionQueuedForRun,
   missionBoardColumn,
-} from "@/lib/mission-board";
+} from "@/lib/missions/mission-board";
 import {
   categoryFilterPills,
   groupTemplatesByCategory,
   type CategoryLike,
   type CategoryCount,
-} from "@/lib/mission-categories";
-import { getCategoryIdFromTemplate } from "@/lib/mission-composer-utils";
-import type { MissionCategory } from "@/lib/mission-category-repository";
+} from "@/lib/missions/mission-categories";
+import { getCategoryIdFromTemplate } from "@/lib/missions/mission-composer-utils";
+import type { MissionCategory } from "@/lib/missions/mission-category-repository";
 import type { MissionTemplate } from "@/components/missions/TemplateModals";
 
 /** Minimal mission shape the selectors read (subset of MissionRow). */

@@ -9,7 +9,7 @@ jest.mock("@/lib/runs-repository", () => ({
   listActiveRuns: jest.fn(),
   updateRun: jest.fn(),
 }));
-jest.mock("@/lib/mission-repository", () => ({
+jest.mock("@/lib/missions/mission-repository", () => ({
   getMission: jest.fn(),
   updateMission: jest.fn(),
 }));
@@ -23,7 +23,7 @@ jest.mock("@/lib/runtime", () => ({
 
 import { reconcileActiveRuns } from "@/lib/orchestration/run-reconcile";
 import { listActiveRuns, updateRun } from "@/lib/runs-repository";
-import { getMission, updateMission } from "@/lib/mission-repository";
+import { getMission, updateMission } from "@/lib/missions/mission-repository";
 import { runtime } from "@/lib/runtime";
 
 const mockListActiveRuns = listActiveRuns as jest.Mock;
