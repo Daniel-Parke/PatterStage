@@ -11,14 +11,15 @@
   "tier_proposed": "R1",
   "tier_ruled": "R0",
   "reasons": [],
-  "status": "proposed",
-  "owner_session": "unassigned",
+  "status": "done",
+  "owner_session": "phase7-hermes-crossings-2026-08-22",
   "claims": [
     "src/",
     "scripts/tooling/design-lint.baseline.json"
   ],
   "timestamps": {
     "opened": "2026-07-25T00:00:00Z",
-    "updated": "2026-08-22T21:00:00Z"
+    "updated": "2026-08-23T02:00:00Z",
+    "closed": "2026-08-23T02:00:00Z"
   }
 }

@@ -149,15 +149,28 @@ because the whole point of this section is that it cannot quietly stop being tru
   retries survive as quarantined flakes with a written reason and a 2027-01
   review, which is the alternative the ruling itself offers: they absorb GitHub
   and npm registry failures rather than defects in this code. WO-0002.
+- **No file's knowledge of the agent framework is licensed by a number.**
+  WG-ARCH-001 (B). `design-lint hermes-outside-adapter` fails the build on
+  `getActiveHermesPaths`, `getAgentLlmEndpoints`, `HERMES_HOME` or `.hermes/`
+  anywhere under `src/` outside `src/lib/runtime/`, `src/lib/frameworks/` and
+  `src/modules/hermes/`, and as of 2026-08-22 it holds no baseline entries at
+  all. The 21 crossings the ruling named, 20 by the time this landed, are gone
+  as a count: four API routes now ask the AgentRuntime port, where `sessions`
+  and `backups` joined `AgentWorkspace` to finish answers it was already giving
+  half of, and every other site carries an inline pragma with a written reason.
+  Most of those are operator prose, where the Hermes path is the payload: a
+  credential warning, a parse-error alert, a restart log the operator is about
+  to need. A file may still know a Hermes path; it may no longer do so silently.
+  WO-0004.
 
 **Ruled and NOT yet enforced.** Each carries its queue item; none may be quietly
 dropped:
 
-- **No file's knowledge of the agent framework is licensed by a number.**
-  WG-ARCH-001 (B). Unmet: `hermes-outside-adapter` is baselined at 21 crossings.
-  → WO-0004.
 - **A move must be provable output-neutral before it is made.** WG-ARCH-006 (B).
-  Unmet: no canary exists, which is why WG-ARCH-001 cannot rule C. → WO-0008.
+  The canary exists now and is gated (`docs/OUTPUT_CANARY.md`, `npm run
+  canary:check` in CI), which discharges the condition WG-ARCH-001's option C
+  was waiting on. Whether that closes this row is WO-0008's call, not
+  WO-0004's. → WO-0008.
 - **Contracts that leave the repo are gated.** WG-ARCH-005 (B for departing
   artefacts). Unmet: `generate:schema-json` runs in no gate. → WO-0007.
 - **No table grows without bound.** WG-ARCH-008 (A with C's seam, ruled by the
