@@ -10,7 +10,7 @@
 // Hermes-specific things (the provider list and its env-var map). That made
 // eight core modules import a `hermes-*` file to say the word "agent", which
 // counted against the framework-agnostic claim without any Hermes coupling
-// actually existing. See docs/adr/0005-product-modules.md, "the hermes module".
+// actually existing. See org/decisions/ADR-0005-product-modules.md, "the hermes module".
 // ═══════════════════════════════════════════════════════════════
 
 /**

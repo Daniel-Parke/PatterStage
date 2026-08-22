@@ -9,7 +9,7 @@
 // get a URL, and not one of them used any Hermes knowledge beyond that URL —
 // an OpenAI-compatible chat endpoint is the most framework-neutral thing in
 // the whole system. It counted against the framework-agnostic claim purely
-// because of which file the constant lived in (docs/adr/0005).
+// because of which file the constant lived in (org/decisions/ADR-0005).
 //
 // Core depends on THIS; only this file knows the answer comes from Hermes.
 // ═══════════════════════════════════════════════════════════════

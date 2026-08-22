@@ -1,3 +1,10 @@
+---
+summary: What a fork must change before it distributes this software under its own name
+type: legal
+tags: [branding, licensing]
+compiled_from: normalised
+---
+
 # Rebranding guide for forks
 
 If you modify this software and distribute your version, you must rebrand it. The code is open; the Patter name and visual identity are not.

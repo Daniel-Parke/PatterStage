@@ -2,7 +2,7 @@
 // models/sync-result.ts — the wire shape of a model-sync action (CORE)
 //
 // Extracted from sync-manager.ts for the hermes module move
-// (docs/adr/0005-product-modules.md). sync-manager itself is Hermes end to end
+// (org/decisions/ADR-0005-product-modules.md). sync-manager itself is Hermes end to end
 // — its header reads "Push/Pull orchestration between PatterStage and Hermes
 // config files" — but this type is not: it is the response body of
 // PatterStage's OWN /api/models/sync/push, and its three consumers are core

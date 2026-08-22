@@ -3,6 +3,7 @@ summary: The LLM is the Brain and the framework configuration is the Body; progr
 type: decision
 tags: [product, arch]
 status: accepted
+compiled_from: preserved
 ---
 
 # ADR-0004 · Brain and Body

@@ -1,3 +1,10 @@
+---
+summary: REST route inventory and the response envelope every PatterStage API handler returns
+type: reference
+tags: [product, api]
+compiled_from: normalised
+---
+
 # API Reference
 
 Dry reference for REST routes—envelope shape, inventory, auth notes. For behaviour in plain language, see [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) or the feature docs linked from [README.md](README.md).

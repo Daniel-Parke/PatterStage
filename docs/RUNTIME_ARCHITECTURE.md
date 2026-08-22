@@ -1,3 +1,10 @@
+---
+summary: How PatterStage executes and schedules agent work, and the single adapter seam to the backend
+type: design
+tags: [product, architecture]
+compiled_from: normalised
+---
+
 # Runtime architecture
 
 How PatterStage executes and schedules agent work after the runtime rewrite. The short version: **Hermes is a remote HTTP service**, PatterStage owns orchestration and scheduling, and a single adapter is the only seam to the backend.

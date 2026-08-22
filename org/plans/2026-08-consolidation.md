@@ -5,6 +5,7 @@ tags: [plan]
 status: approved
 approved_by: Daniel Parke (operator), 2026-08-22, at plan approval
 session: S-0002 (PLAN)
+compiled_from: preserved
 ---
 
 # PatterStage Consolidation Programme · approved plan

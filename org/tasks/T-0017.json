@@ -1,0 +1,55 @@
+{
+  "id": "T-0017",
+  "intent": "Phase 7, fourth: declare retention for the two unbounded tables and implement the prune. Warrant WG-ARCH-008 (A with C's seam), ruled by the operator. analytics_events and chat_messages are append-only with no expiry column, on machines belonging to people the operator has never met. Source row WO-0009. Runs only after T-0016 has captured history, and the operator merges this task because it is data safety. Acceptance: (1) the consumer, the retention window, the prune path and the split migration written into the migration headers and an ADR; (2) the prune implemented; (3) ordered after T-0016, so no history is destroyed before it is captured. Done when neither table can grow without bound, and the owner of each is named. Tier proposal R3, matching the declared facts: the prune deletes rows from databases on other people's machines, which is writes-production-data and irreversible-action; migrates-schema covers the split migration; handles-pii is declared because chat_messages carries user-authored content on installs the operator does not own, which is the warrant's own reasoning. Per the plan's section 12, the acceptance oracle is authored before implementation by a session that has not seen the implementation.",
+  "declared": {
+    "capabilities": [
+      "database",
+      "filesystem"
+    ],
+    "side_effects": [
+      "migrates-schema",
+      "writes-production-data",
+      "irreversible-action",
+      "handles-pii"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R3",
+  "tier_ruled": "R3",
+  "reasons": [
+    {
+      "factor": "irreversible-action",
+      "tier_floor": "R3",
+      "source": "declared",
+      "evidence": "declared side effect: irreversible-action"
+    },
+    {
+      "factor": "data-deletion",
+      "tier_floor": "R3",
+      "source": "declared",
+      "evidence": "declared side effect: writes-production-data"
+    },
+    {
+      "factor": "schema-change",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: migrates-schema"
+    },
+    {
+      "factor": "pii-handling",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: handles-pii"
+    }
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/lib/",
+    "org/decisions/"
+  ],
+  "timestamps": {
+    "opened": "2026-07-25T00:00:00Z",
+    "updated": "2026-08-22T21:00:00Z"
+  }
+}

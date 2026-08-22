@@ -3,6 +3,7 @@ summary: Adopt the v2 EOS by recompile at ORG scale; the v1 org machinery is rep
 type: decision
 tags: [process, governance, eos]
 status: accepted
+compiled_from: preserved
 ---
 
 # ADR-0008 · Adopt the v2 EOS by recompile at ORG scale

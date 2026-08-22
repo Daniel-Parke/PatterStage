@@ -5,7 +5,7 @@
 //
 // Replaces AgentBenchmarkPanel, which showed the experience level next to an
 // Agent Rating and a six-axis stat radar. The rating and the radar are gone with
-// the benchmark subsystem (docs/adr/0004): the suites were all closed-book, so
+// the benchmark subsystem (org/decisions/ADR-0004): the suites were all closed-book, so
 // skills, tools and memory could not move the number, and the radar's axes came
 // from hand-picked domain weights with no stated basis.
 //

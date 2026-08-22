@@ -1,10 +1,17 @@
+---
+summary: Index of the technical documentation for PatterStage, one row per document
+type: index
+tags: [product, docs]
+compiled_from: normalised
+---
+
 # Documentation index
 
 Technical reference for PatterStage. Tone elsewhere in this folder is deliberately plain—I maintain the project solo and would rather you get accurate answers than corporate filler.
 
 | Document | Description |
 |----------|-------------|
-| [adr/](adr/) | **Decisions.** A recorded decision wins over anything you infer from the code |
+| [adr/](adr/) | **Decisions, pointer.** The ADRs live in `org/decisions/`; this page forwards to them. A recorded decision wins over anything you infer from the code |
 | [REPO_GUIDE.md](REPO_GUIDE.md) | Repo layout, conventions, shared utilities, design tokens, deploy |
 | [PATTERSTAGE.md](PATTERSTAGE.md) | What this repo is and where to read next |
 | [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) | Operator guide: every sidebar page, every common action (dashboard, missions + scheduling, scripts, chat, agents + performance, skills, tools, personalities, sessions, memory, logs, all Config pages, Story Weaver) |

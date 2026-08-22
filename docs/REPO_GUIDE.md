@@ -1,3 +1,10 @@
+---
+summary: Repository layout, conventions, gates and shared utilities: the working detail the router no longer carries
+type: guide
+tags: [product, process]
+compiled_from: normalised
+---
+
 # Repository guide
 
 The working detail that used to live in `AGENTS.md`. The router is capped at 40
@@ -156,4 +163,4 @@ PatterStage is a command centre, not a file manager: the operator opens it and
 knows what is running, what needs attention, and can dispatch in one or two clicks.
 
 The rebuild sharpens that to four verbs — **found, commission, gate, watch** — over
-Organisation → Venture → Project. See [docs/adr/](adr/).
+Organisation → Venture → Project. See [org/decisions/](../org/decisions/).

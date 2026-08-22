@@ -1,0 +1,34 @@
+{
+  "id": "T-0019",
+  "intent": "The install harness's update scenario fails on CI only, so CI gates the first install but not the update path. Warrant WG-OPS-002; the update path is half of what the install path is a gate means. Source row WO-0019. Independent of the programme's phase chain: any execution session may take it once Phase 0 closes, which it has. Symptom: fatal: not in a git directory, from the FIRST git command in the update scenario's setup block, so /workspace inside the container has no .git. The other four scenarios never touch git and pass identically on both machines; locally the full five pass in 570s, on CI it is 4 of 5, twice. Ruled out, so nobody repeats it: .git is not in the harness's COPY_IGNORE_DIR_NAMES and shutil.copytree therefore copies it; docker cp of the workspace directory copies dotfiles; and fetch-depth 0 on the checkout changed nothing, so the shallow-clone theory was wrong, and it was the first hypothesis and cost a CI cycle to disprove. Next step, recorded on the row: put a diagnostic in the job before theorising again, ls -la /workspace/.git inside the container plus git status on the runner before the copy, which says in one run whether .git leaves the runner, survives the copytree or survives the docker cp; three candidates, one cheap experiment. Acceptance: (1) the cause identified from evidence, not inference; (2) update restored to the CI scenario list; (3) the exclusion comment in ci.yml removed. Done when CI runs the same five scenarios that pass locally. Tier proposal R2, anticipated factor ci-stateful-infra from derived signal ci-config, evidence .github/workflows/ci.yml is edited to restore the scenario.",
+  "declared": {
+    "capabilities": [
+      "filesystem",
+      "container-runtime",
+      "network"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    ".github/workflows/ci.yml",
+    "tests/integration/test_full_install_update_process.py"
+  ],
+  "timestamps": {
+    "opened": "2026-07-26T00:00:00Z",
+    "updated": "2026-08-22T21:00:00Z"
+  },
+  "hypothesis_ledger": [
+    {
+      "hypothesis": "The update scenario fails on CI because the checkout is shallow, so the copied /workspace has no usable .git.",
+      "test": "Set fetch-depth: 0 on the actions/checkout step and re-run the install-harness job.",
+      "result": "Falsified. The run failed identically, at the first git command in the update scenario's setup block.",
+      "learning": "The missing .git is not a clone-depth problem. The next round instruments where .git is lost, on the runner, through shutil.copytree, or through docker cp, instead of theorising again."
+    }
+  ]
+}

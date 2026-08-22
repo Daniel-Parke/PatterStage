@@ -1,3 +1,10 @@
+---
+summary: How missions are stored, dispatched and cancelled, and how the stored prompt is built
+type: reference
+tags: [product, orchestration]
+compiled_from: normalised
+---
+
 # Missions
 
 How missions are stored, dispatched, and cancelled. Missions live in SQLite (`missions` table) with optional JSON overlays under `PS_DATA_DIR/missions/`.

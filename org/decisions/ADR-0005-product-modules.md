@@ -3,6 +3,7 @@ summary: Product surfaces plug in through one ProductModule seam; Rec Room is th
 type: decision
 tags: [arch, product]
 status: accepted
+compiled_from: preserved
 ---
 
 # ADR-0005 · Product modules

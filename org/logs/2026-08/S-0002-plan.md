@@ -1,4 +1,8 @@
 ---
+summary: Session log S-0002, the PLAN session that wrote and got approval for the 2026-08 consolidation programme
+type: venture
+tags: [log]
+compiled_from: preserved
 id: S-0002
 role: PLAN
 date: 2026-08-22

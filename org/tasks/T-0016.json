@@ -1,0 +1,34 @@
+{
+  "id": "T-0016",
+  "intent": "Phase 7, third: write the per-Body progression snapshot, so an agent's recorded growth survives the deletion of the events it was derived from. Warrant WG-ARCH-003 (C for the per-Body progression record) and ADR-0004. Progression is currently recomputed from raw history, so pruning that history would silently change past levels. Source row WO-0010. Ordered strictly BEFORE T-0017, and the operator merges this task because it is data safety. Acceptance: (1) one immutable row per agent profile carrying level, achievements, the inputs digest and versions; (2) corrections land as new rows, never edits; (3) it lands BEFORE T-0017's prune. Done when an agent's recorded growth survives the deletion of the events it was derived from. Tier proposal R2, matching the declared facts: migrates-schema is declared because a new table and a numbered migration are added. Per the plan's section 12, the acceptance oracle is authored before implementation by a session that has not seen the implementation.",
+  "declared": {
+    "capabilities": [
+      "database",
+      "filesystem"
+    ],
+    "side_effects": [
+      "migrates-schema"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "schema-change",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: migrates-schema"
+    }
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/lib/",
+    "docs/"
+  ],
+  "timestamps": {
+    "opened": "2026-07-25T00:00:00Z",
+    "updated": "2026-08-22T21:00:00Z"
+  }
+}

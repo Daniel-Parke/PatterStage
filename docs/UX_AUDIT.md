@@ -1,3 +1,10 @@
+---
+summary: The prioritised UX and branding audit, with the PatterTech alignment assessment and the asset checklist
+type: notes
+tags: [product, design]
+compiled_from: normalised
+---
+
 # PatterStage — UX & Branding Audit
 
 A prioritized catalogue of interactivity / clarity / "fun & useful" improvements across the app, plus the **PatterTech-hybrid** branding-alignment assessment and the **brand-asset checklist** needed to finish the visual alignment.

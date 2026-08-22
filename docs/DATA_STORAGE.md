@@ -1,3 +1,10 @@
+---
+summary: Where PatterStage keeps its data, and why the legacy control-hub names are still read
+type: reference
+tags: [product, data]
+compiled_from: normalised
+---
+
 # Data Storage
 
 Where PatterStage keeps its data, and how the legacy `control-hub` / `ch.*`

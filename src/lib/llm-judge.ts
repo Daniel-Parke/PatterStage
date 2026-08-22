@@ -20,7 +20,7 @@
 // sitting in the product's real path -- a stage agent reporting on its own work.
 // Replacing that with a second opinion changes how every existing workflow
 // routes, so it is an owner decision rather than a refactor, and it is recorded
-// as one in docs/adr/0004.
+// as one in org/decisions/ADR-0004.
 // ═══════════════════════════════════════════════════════════════
 
 import { callLLM } from "@/lib/llm";

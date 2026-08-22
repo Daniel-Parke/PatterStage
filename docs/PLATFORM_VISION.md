@@ -1,3 +1,10 @@
+---
+summary: The platform vision: a control plane that owns orchestration and hands execution to a backend over HTTP
+type: design
+tags: [product, architecture]
+compiled_from: normalised
+---
+
 # PatterStage platform vision
 
 PatterStage is the **Next.js control plane and orchestrator** I ship for [Hermes Agent](https://github.com/NousResearch/hermes-agent). It owns missions, scheduling, configuration, sessions, memory, and day-to-day operator workflows. Agent **execution** is handed off to a backend over its HTTP API — Hermes today, any framework tomorrow — through a single runtime adapter. PatterStage state lives in its own SQLite database; the agent is a remote service it talks to, not a process it shell-spawns.

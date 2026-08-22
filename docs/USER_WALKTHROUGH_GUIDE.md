@@ -2,6 +2,7 @@
 summary: PatterStage operator manual, every surface and how the machinery behind it works
 type: guide
 tags: [docs, operator]
+compiled_from: normalised
 ---
 
 # PatterStage — User walkthrough
@@ -259,17 +260,21 @@ cannot support.
 ## Governance: the `org/` directory
 
 New in July 2026, and it will look odd if you are not expecting it. PatterStage now
-governs itself with the PatterTech EOS at scale **M**:
+governs itself with the PatterTech EOS at scale **ORG**:
 
 - **`docs/VENTURE_BRIEF.md`**: what this is, who it serves, and the three cheapest
   ways it dies. Written from the operator's own words.
-- **`docs/LOCKBOOK.md`**: 33 rulings, and the structural contracts a future edit
-  must not break. Split into what is *enforced* and what is *ruled but not yet
-  enforced*, so the difference is visible.
-- **`org/QUEUE.md`**: the work, ordered. 17 items, each tracing to a ruling the
-  code does not yet meet.
-- **`org/QUESTIONS.md`**: three open questions, recorded rather than guessed at.
-- **`docs/EOS_FEEDBACK.md`**: five defects PatterStage found in the EOS itself.
+- **`docs/LOCKBOOK.md`**: the pinned build contract, and the structural contracts a
+  future edit must not break. Split into what is *enforced* and what is *ruled but
+  not yet enforced*, so the difference is visible.
+- **`docs/RULINGS.json`**: the rulings themselves, one record each, carrying the
+  argument that produced them.
+- **`org/tasks/`**: the work, one JSON record per task, each tracing to the warrant
+  that asked for it.
+- **`org/decisions/`**: the architecture decision records. A recorded decision wins
+  over anything you infer from the code.
+- **`org/QUESTIONS.md`**: the open questions, recorded rather than guessed at.
+- **`docs/EOS_FEEDBACK.md`**: defects PatterStage found in the EOS itself.
 
 If a rule in `docs/LOCKBOOK.md` and the code disagree, the lock-book is the
 intention and the code is the bug.

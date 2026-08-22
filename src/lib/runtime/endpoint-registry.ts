@@ -9,7 +9,7 @@
 // It used to carry an exception: ephemeral `__bench_<runId>` profiles were routed
 // to their own short-lived gateway, spawned per benchmark run on a dedicated
 // port. That was the ONLY reason this file needed per-profile branching at all,
-// and it went with the benchmark subsystem (docs/adr/0004). The 353-line spawner
+// and it went with the benchmark subsystem (org/decisions/ADR-0004). The 353-line spawner
 // behind it had no other caller.
 //
 // Worth knowing before adding a branch back: if a second framework or a

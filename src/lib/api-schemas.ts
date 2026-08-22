@@ -18,7 +18,7 @@ import { z } from "zod";
 // relocating the guard into one route. That weakens validation on every other
 // caller to buy a boundary, which is a product change nobody asked for.
 //
-// So the edge stays, visible and gated. See docs/adr/0005-product-modules.md.
+// So the edge stays, visible and gated. See org/decisions/ADR-0005-product-modules.md.
 // design-lint-disable-next-line core-imports-no-module -- the provider list is genuinely the agent CLI's; moving it to core would hide the coupling rather than remove it
 import { HERMES_PROVIDERS } from "@/modules/hermes/lib/providers";
 import { TASK_TYPES, type TaskType } from "./models/task-types";

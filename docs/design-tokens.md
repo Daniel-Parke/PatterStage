@@ -1,3 +1,10 @@
+---
+summary: The Cherenkov palette, the semantic colour layer, and how TypeScript maps to CSS tokens
+type: reference
+tags: [product, design]
+compiled_from: normalised
+---
+
 # PatterStage — design tokens
 
 Reference for the Cherenkov-forward palette, semantic colours, and how TypeScript maps to CSS. Use this when adding UI so new screens match the rest of the app.

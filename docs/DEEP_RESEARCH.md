@@ -1,3 +1,10 @@
+---
+summary: The native Deep Research engine, its plan, search, reason and synthesize loop, and where inference comes from
+type: guide
+tags: [product, laboratory]
+compiled_from: normalised
+---
+
 # Deep Research
 
 Native, provider-flexible research under the [Laboratory](LABORATORY.md): submit a question and the engine runs an iterative loop — **plan → (search → visit sources → reason)×rounds → synthesize** — producing a cited report. It depends on no external service (no Odysseus): inference reuses PatterStage's own `callLLM`, and web search is a shared, free/local-first module.

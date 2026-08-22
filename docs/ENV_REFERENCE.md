@@ -1,3 +1,10 @@
+---
+summary: Every PatterStage and Hermes environment variable, its default and what reads it
+type: reference
+tags: [product, config]
+compiled_from: normalised
+---
+
 # Environment reference
 
 Quick lookup for PatterStage and Hermes paths. Set values in `.env.local` (created by `scripts/bootstrap/setup.sh`) or export them before `npm run start`.

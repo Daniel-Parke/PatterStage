@@ -1,3 +1,10 @@
+---
+summary: How to report a vulnerability in PatterStage privately, and what to include
+type: policy
+tags: [security]
+compiled_from: normalised
+---
+
 # Security
 
 Found something that could let an attacker run code, steal keys, or trash someone's install? **Tell me privately first.**, pretty please! 

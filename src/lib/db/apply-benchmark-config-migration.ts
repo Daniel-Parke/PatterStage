@@ -8,7 +8,7 @@
 // duplicate-column error on a partially-applied DB is swallowed and the rest
 // still apply. See [[db-migration-applier-footgun]].
 //
-// VESTIGIAL as of the benchmark deletion (docs/adr/0004-brain-and-body.md).
+// VESTIGIAL as of the benchmark deletion (org/decisions/ADR-0004-brain-and-body.md).
 // Adds columns to benchmark_runs, which nothing reads or writes.
 // The feature is gone; this applier is NOT. schema_version is a strictly
 // increasing chain to 29, so deleting a migration in the middle would renumber

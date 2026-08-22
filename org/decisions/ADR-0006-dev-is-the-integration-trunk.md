@@ -3,6 +3,7 @@ summary: dev is the integration trunk; WORK branches from dev, done means merged
 type: decision
 tags: [process, governance]
 status: accepted
+compiled_from: preserved
 ---
 
 # ADR-0006 · dev is the integration trunk

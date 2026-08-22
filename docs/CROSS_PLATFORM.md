@@ -1,3 +1,10 @@
+---
+summary: The Linux-first platform ruling, and what Linux, macOS and Windows under WSL2 each get
+type: reference
+tags: [product, platform]
+compiled_from: normalised
+---
+
 # Platforms (Linux · macOS · Windows/WSL2)
 
 PatterStage is a **Linux-first** application — Linux is the only supported,

@@ -1,3 +1,10 @@
+---
+summary: The reserved Patter names, and what the Apache-2.0 licence does not grant
+type: legal
+tags: [branding, licensing]
+compiled_from: normalised
+---
+
 # Trademark Policy
 
 The software in this repository is licensed under the [Apache License 2.0](LICENSE). That license lets you use, modify, and redistribute the code. It does **not** let you use our names or visual branding as your own product identity. Apache 2.0 Section 6 reserves all trademark rights to the licensor.

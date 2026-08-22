@@ -1,3 +1,10 @@
+---
+summary: How data survives upgrades, and what the repository rename means for existing clones and forks
+type: guide
+tags: [product, upgrade]
+compiled_from: normalised
+---
+
 # PatterStage — Migrations & Upgrades
 
 How PatterStage keeps your data across upgrades, and what happens when an existing install moves to a newer version. If something here doesn't match what you see on disk, open an issue with your paths and `PS_DATA_DIR`.

@@ -6,7 +6,7 @@
 // Replaces useLeaderboard from useBenchmarks, which read
 // /api/benchmarks/leaderboard. That endpoint ranked agents by a benchmark rating
 // and carried the experience level along as a passenger; only the passenger
-// survives (docs/adr/0004).
+// survives (org/decisions/ADR-0004).
 // ═══════════════════════════════════════════════════════════════
 
 import { useApiResource } from "./useApiResource";

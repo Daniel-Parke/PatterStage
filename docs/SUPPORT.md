@@ -1,3 +1,10 @@
+---
+summary: Where to get help, and which questions belong to Hermes rather than to this repository
+type: policy
+tags: [community]
+compiled_from: normalised
+---
+
 # Support
 
 Need help? Here is how to get unstuck without shouting into the void.

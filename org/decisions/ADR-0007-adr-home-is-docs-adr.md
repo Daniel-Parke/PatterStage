@@ -3,6 +3,7 @@ summary: docs/adr/ is the single ADR home; org/decisions/ holds a pointer so the
 type: decision
 tags: [process, governance]
 status: superseded
+compiled_from: preserved
 ---
 
 # ADR-0007 · The ADR home is docs/adr/

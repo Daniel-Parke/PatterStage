@@ -1,0 +1,24 @@
+{
+  "id": "T-0024",
+  "intent": "Vendor the bloom field, so brightness reads as energy in the system rather than as decoration. Warrant WG-WEB-011 (C, field-reactive) and WG-WEB-005 (C, full). Source row WO-0017. Outside the consolidation programme. Acceptance: (1) BloomField.tsx copied verbatim from PatterTech_Website into src/kit/ with a PROVENANCE.md naming the source repository and commit, per ADR-0003 Part 1; (2) mounted once in the root layout; (3) the [data-bloom]::after paint rule ported using the existing Cherenkov RGB, so no new token is minted; (4) data-bloom set on the ledger rows, panels, cards and buttons that WG-WEB-003 names as the console's containers; (5) the fine-pointer and reduced-motion opt-outs carried across exactly. Done when brightness reads as energy in the system rather than decoration. Tier proposal R1, anticipated factor size-threshold from derived signal diff-size; the copy reads a second repository on the same filesystem, which is declared as a capability and reaches no factor, because capabilities are context for the reviewer and side effects are what rule the tier.",
+  "declared": {
+    "capabilities": [
+      "filesystem-outside-repo"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/kit/",
+    "src/app/"
+  ],
+  "timestamps": {
+    "opened": "2026-07-25T00:00:00Z",
+    "updated": "2026-08-22T21:00:00Z"
+  }
+}

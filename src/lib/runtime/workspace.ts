@@ -6,7 +6,7 @@
 // needed that too: log tailing, config drift, env sync, memory size, the
 // sessions root. So thirteen modules in src/lib called getActiveHermesPaths()
 // directly, and PatterStage's "framework-agnostic" claim was false in a way a
-// grep could prove (docs/adr/0005, "the hermes module").
+// grep could prove (org/decisions/ADR-0005, "the hermes module").
 //
 // This is the missing half of the port: a small, neutral view of an agent
 // workspace. Core depends on THIS; only this file knows the answer comes from

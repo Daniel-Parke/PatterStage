@@ -1,3 +1,10 @@
+---
+summary: All rights reserved terms for the branding directory, separate from the repository's Apache-2.0 code
+type: legal
+tags: [branding, licensing]
+compiled_from: normalised
+---
+
 # Branding — All Rights Reserved
 
 Copyright 2026 Daniel Parke. All rights reserved.
