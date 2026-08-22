@@ -7,32 +7,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { existsSync, statSync } from "fs";
-import Database from "better-sqlite3";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
+import { readHolographicFactCount } from "@/lib/runtime/memory-db";
 import { setMultipleStats, setSystemStatBoolean } from "@/lib/system-repository";
 import { getMemoryProviderType, getActiveMemoryProvider } from "@/lib/memory/memory-providers";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
-
-/** Get fact count from local SQLite (holographic provider). */
-function getHolographicFactCount(): number {
-  try {
-    const dbPath = getAgentWorkspace().memoryDb;
-    if (!existsSync(dbPath)) return 0;
-
-    const memDb = new Database(dbPath, { readonly: true });
-    try {
-      const row = memDb
-        .prepare("SELECT COUNT(*) as count FROM facts")
-        .get() as { count: number };
-      return row.count;
-    } finally {
-      memDb.close();
-    }
-  } catch {
-    return 0;
-  }
-}
 
 /** Get memory database file size. */
 function getMemoryDbSize(): string {
@@ -63,7 +43,7 @@ export class MemorySync implements SyncSource {
 
       if (providerType === "holographic") {
         provider = "Holographic";
-        factCount = getHolographicFactCount();
+        factCount = readHolographicFactCount();
         dbSize = getMemoryDbSize();
       } else {
         // hindsight OR none: probe the active provider (DB-owned endpoint)
