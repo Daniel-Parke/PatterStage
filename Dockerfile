@@ -45,7 +45,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/scripts ./scripts
 # Migration + seed SQL is read at runtime via a cwd-relative path (see
-# resolveMigrationsDir in src/lib/db.ts); the Next bundle does not co-locate
+# resolveMigrationsDir in src/lib/db/index.ts); the Next bundle does not co-locate
 # these next to __dirname, so copy the source SQL explicitly.
 COPY --from=builder /app/src/lib/db ./src/lib/db
 # Seed catalog data (profiles, skills, tools, memories, template packs) is read

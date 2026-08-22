@@ -1,7 +1,14 @@
 // ═══════════════════════════════════════════════════════════════
-// db.ts — SQLite connection + migration runner
+// db/index.ts — SQLite connection + migration runner
 // Database: ~/patterstage/data/patterstage.db
 //   (legacy fallback: ~/control-hub/data/control-hub.db until migrated)
+//
+// Relocated from src/lib/db.ts by operator ruling D8 (2026-08-22), so
+// the connection module sits inside the directory that already holds
+// the migration chain it runs. Every `@/lib/db` import is byte-identical
+// across the move; only this file's own relative specifiers changed,
+// and `resolveMigrationsDir`'s __dirname candidate, which now resolves
+// to the same absolute path from one directory deeper.
 //
 // Three statements remain in this file, and all three are plumbing:
 // the connection module's own work, not any table's business.
@@ -21,45 +28,51 @@
 // missions/mission-category-schema-repository.ts (which takes an open
 // handle rather than calling getDb, so nothing cycles back through
 // this module).
+//
+// The three are no longer counted by `sql-outside-repository`, because
+// src/lib/db/ is exempt by location. They were not deleted and they did
+// not move behind a seam; the file moved into the exempt directory by a
+// sanctioned ruling, and this comment is where that is written down so
+// the drop in the count is not mistaken for a migration.
 // ═══════════════════════════════════════════════════════════════
 
 import Database, { type Database as _DatabaseType } from "better-sqlite3";
 import { join } from "path";
 import { existsSync, readFileSync } from "fs";
-import { PS_DATA_DIR, getDbPath } from "./paths";
-import { getSchemaVersion, setSchemaVersion } from "./db-schema";
+import { PS_DATA_DIR, getDbPath } from "../paths";
+import { getSchemaVersion, setSchemaVersion } from "../db-schema";
 import {
   countMissionCategories,
   missionCategoriesTableExists,
-} from "./missions/mission-category-schema-repository";
-import { ensureDir } from "./fs/fs-helpers";
-import { needsBaselineRebuild, rebuildToBaseline } from "./db/upgrade";
-import { applyProfilesToolsParityUpgrade } from "./db/apply-profiles-tools-upgrade";
-import { applyMissionRepeatMigration } from "./db/apply-mission-repeat-migration";
-import { applyMissionQueueMigration } from "./db/apply-mission-queue-migration";
-import { applyCronScheduleCanonicalisation } from "./db/apply-cron-schedule-canonicalisation";
-import { applyRunsSchedulesMigration } from "./db/apply-runs-schedules-migration";
-import { applyLegacyColumnRepair } from "./db/apply-legacy-column-repair";
-import { applyDropGameTablesMigration } from "./db/apply-drop-game-tables-migration";
-import { applyAnalyticsEventsMigration } from "./db/apply-analytics-events-migration";
-import { applyChatMigration } from "./db/apply-chat-migration";
-import { applyBenchmarksMigration } from "./db/apply-benchmarks-migration";
-import { applyBenchmarkConfigMigration } from "./db/apply-benchmark-config-migration";
-import { applyBenchmarkCatalogMigration } from "./db/apply-benchmark-catalog-migration";
-import { applyBenchGatewaysMigration } from "./db/apply-bench-gateways-migration";
-import { applyMissionPhasesMigration } from "./db/apply-mission-phases-migration";
-import { applyDeepResearchMigration } from "./db/apply-deep-research-migration";
-import { applyRetireMissionPhasesMigration } from "./db/apply-retire-mission-phases-migration";
-import { applyComposerMigration } from "./db/apply-composer-migration";
-import { applyMemoryProvidersMigration } from "./db/apply-memory-providers-migration";
-import { applyResearchOptionsMigration } from "./db/apply-research-options-migration";
-import { applyModelsApiStyleMigration } from "./db/apply-models-api-style-migration";
-import { applyResearchComposerLinkMigration } from "./db/apply-research-composer-link-migration";
-import { applyComposerGroupLinkMigration } from "./db/apply-composer-group-link-migration";
-import { applyFrameworksMigration } from "./db/apply-frameworks-migration";
-import { applyArtifactsMigration } from "./db/apply-artifacts-migration";
-import { applyRecroomLibraryMigration } from "./db/apply-recroom-library-migration";
-import { applyNeutralColumnNames } from "./db/apply-neutral-column-names";
+} from "../missions/mission-category-schema-repository";
+import { ensureDir } from "../fs/fs-helpers";
+import { needsBaselineRebuild, rebuildToBaseline } from "./upgrade";
+import { applyProfilesToolsParityUpgrade } from "./apply-profiles-tools-upgrade";
+import { applyMissionRepeatMigration } from "./apply-mission-repeat-migration";
+import { applyMissionQueueMigration } from "./apply-mission-queue-migration";
+import { applyCronScheduleCanonicalisation } from "./apply-cron-schedule-canonicalisation";
+import { applyRunsSchedulesMigration } from "./apply-runs-schedules-migration";
+import { applyLegacyColumnRepair } from "./apply-legacy-column-repair";
+import { applyDropGameTablesMigration } from "./apply-drop-game-tables-migration";
+import { applyAnalyticsEventsMigration } from "./apply-analytics-events-migration";
+import { applyChatMigration } from "./apply-chat-migration";
+import { applyBenchmarksMigration } from "./apply-benchmarks-migration";
+import { applyBenchmarkConfigMigration } from "./apply-benchmark-config-migration";
+import { applyBenchmarkCatalogMigration } from "./apply-benchmark-catalog-migration";
+import { applyBenchGatewaysMigration } from "./apply-bench-gateways-migration";
+import { applyMissionPhasesMigration } from "./apply-mission-phases-migration";
+import { applyDeepResearchMigration } from "./apply-deep-research-migration";
+import { applyRetireMissionPhasesMigration } from "./apply-retire-mission-phases-migration";
+import { applyComposerMigration } from "./apply-composer-migration";
+import { applyMemoryProvidersMigration } from "./apply-memory-providers-migration";
+import { applyResearchOptionsMigration } from "./apply-research-options-migration";
+import { applyModelsApiStyleMigration } from "./apply-models-api-style-migration";
+import { applyResearchComposerLinkMigration } from "./apply-research-composer-link-migration";
+import { applyComposerGroupLinkMigration } from "./apply-composer-group-link-migration";
+import { applyFrameworksMigration } from "./apply-frameworks-migration";
+import { applyArtifactsMigration } from "./apply-artifacts-migration";
+import { applyRecroomLibraryMigration } from "./apply-recroom-library-migration";
+import { applyNeutralColumnNames } from "./apply-neutral-column-names";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -142,7 +155,7 @@ function tableExists(database: Database.Database, name: string): boolean {
  */
 function resolveMigrationsDir(): string {
   const candidates = [
-    join(__dirname, "db", "migrations"),
+    join(__dirname, "migrations"),
     join(process.cwd(), "src", "lib", "db", "migrations"),
   ];
   for (const dir of candidates) {

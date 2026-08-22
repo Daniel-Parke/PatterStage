@@ -49,7 +49,7 @@ runs over HTTP. The orchestration core (`src/lib/orchestration/`) reaches the
 agent through the `AgentRuntime` port (`src/lib/runtime/types.ts`), implemented by
 `HermesRuntime.ts`. A PatterStage-owned scheduler (`src/lib/orchestration/scheduler/`)
 boots from `src/instrumentation.ts` and fires due schedules on a 15s tick,
-independent of HTTP traffic. State is SQLite (`src/lib/db.ts`, migrations in
+independent of HTTP traffic. State is SQLite (`src/lib/db/index.ts`, migrations in
 `src/lib/db/migrations/*.sql`) behind hand-written repositories. Full detail:
 [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md).
 

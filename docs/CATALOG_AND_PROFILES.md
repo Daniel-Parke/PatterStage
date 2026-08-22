@@ -95,7 +95,7 @@ Seed state: `PS_DATA_DIR/seed-state.json`.
 
 `001_baseline.sql` is the squashed fresh-install schema (v3). Upgrades from `main` apply **`002_profiles_tools_parity.sql`** once.
 
-The **runtime** `schema_version` is whatever the last applier in `runMigrations` sets, currently **30**; the v3 above is the baseline a fresh DB starts from, not where it ends up. Do not restate the current number in prose that will not be updated with it: read `getSchemaVersion()`, or the last applier wired in [`db.ts`](../src/lib/db.ts).
+The **runtime** `schema_version` is whatever the last applier in `runMigrations` sets, currently **30**; the v3 above is the baseline a fresh DB starts from, not where it ends up. Do not restate the current number in prose that will not be updated with it: read `getSchemaVersion()`, or the last applier wired in [`db/index.ts`](../src/lib/db/index.ts).
 
 Two columns here were renamed at v30 ([`030_neutral_column_names.sql`](../src/lib/db/migrations/030_neutral_column_names.sql)): `agent_root.hermes_md` is now **`framework_md`**, and `cron_jobs.hermes_job_id` is now **`external_job_id`**. The `/config/hermes_md` route and the `"hermes"` file key in `GET /api/agent/files/[key]` deliberately keep their names: they identify the FILE (HERMES.md), not the column that caches it.
 

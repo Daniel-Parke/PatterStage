@@ -3,7 +3,7 @@
  * Apply ALL PatterStage SQLite migrations to the runtime database (PS_DATA_DIR).
  *
  * Single source of truth: this delegates to `getDb()` → `runMigrations()` in
- * src/lib/db.ts — the exact applier chain the app runs at boot — so
+ * src/lib/db/index.ts — the exact applier chain the app runs at boot — so
  * `npm run db:migrate` and the running app can never drift. This replaces the
  * old partial migrate-db.mjs that stopped at schema_version 3 and relied on the
  * app to silently finish the chain at first boot (the migration-applier
@@ -79,6 +79,9 @@ async function main(): Promise<void> {
   // Dynamic import AFTER PS_DATA_DIR is set — db.ts resolves the data dir at
   // import time (via paths.ts). getDb() opens the connection and runs the full
   // applier chain (runMigrations), exactly as the app does at boot.
+  // The specifier is unchanged across the D8 move of db.ts into db/index.ts:
+  // tsx resolves the directory to its index, same as the bundler and Jest.
+  // Smoke-tested both ways on a fresh database (0 -> 30) before leaving it.
   const { getDb, runMigrations } = await import("../../src/lib/db");
   const database = getDb();
 

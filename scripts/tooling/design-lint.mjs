@@ -145,14 +145,17 @@ const RULES = [
     // global @/lib/db Jest mock does not intercept it. That is a real constraint,
     // not an accident, so it gets a named exemption instead of a wider glob.
     //
-    // src/lib/db.ts is deliberately NOT exempt, and its 6 sites are baselined.
-    // Two are sqlite_master probes and two are the migration runner's own exec,
-    // which are genuine plumbing -- but getGatewayPlatforms() at :99 is a
-    // repository function that happens to live in the connection file, and a
-    // wholesale exemption would license it forever. The target state is db.ts
-    // moving to src/lib/db/index.ts, which keeps every `@/lib/db` import byte
-    // identical; that move waits on WO-0008's output canary, because WG-ARCH-006
-    // rules that a move is proved output-neutral before it is made.
+    // src/lib/db.ts used to be deliberately outside that exemption, with its 6
+    // sites baselined: four were plumbing, but getGatewayPlatforms() was a
+    // repository function that happened to live in the connection file, and a
+    // wholesale exemption would have licensed it forever. Operator ruling D8
+    // (2026-08-22) closed that out. getGatewayPlatforms went to
+    // sync/sync-repository.ts and getSchemaHealth's two mission_categories
+    // statements to missions/mission-category-schema-repository.ts; the file
+    // then moved to src/lib/db/index.ts, keeping every `@/lib/db` import byte
+    // identical. The three statements it still holds -- a sqlite_master probe
+    // and the migration runner's two execs -- are exempt by that location now,
+    // and their own reasons are recorded in the file's header.
     files: (f) =>
       f.startsWith("src/") &&
       (f.endsWith(".ts") || f.endsWith(".tsx")) &&
