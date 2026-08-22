@@ -1,32 +1,28 @@
 // ═══════════════════════════════════════════════════════════════
 // System Logs — Live log viewer for Hermes log files
+//
+// Thin page shell: the query, the auto-scroll bookkeeping and the
+// two-step delete live here. The header controls, the file sidebar and
+// the terminal pane are presentational components under
+// src/components/logs/.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import {
-  Terminal,
-  RefreshCw,
-  Search,
-  ChevronDown,
-  FileText,
-  X,
-  Play,
-  Trash2,
-} from "lucide-react";
+import { Terminal, Search, ChevronDown, X } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
 import AppPageShell from "@/components/layout/AppPageShell";
-import Button from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
 import { safeApiCallData, setErrorFromCaught } from "@/lib/api-fetch";
 import { useLogs } from "@/hooks/useLogs";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { formatBytes } from "@/lib/utils";
-import { LogRow } from "@/components/logs/LogRow";
-import { GROUP_ORDER, GROUP_LABELS } from "@/components/logs/constants";
 import LogInsights from "@/components/logs/LogInsights";
+import LogsHeaderActions from "@/components/logs/LogsHeaderActions";
+import LogFilePicker from "@/components/logs/LogFilePicker";
+import LogTerminal from "@/components/logs/LogTerminal";
 
 export default function LogsPage() {
   const [activeLog, setActiveLog] = useState("agent");
@@ -108,14 +104,14 @@ export default function LogsPage() {
   }, [data?.lines, autoScroll]);
 
   // Open/close sibling pair for the search input. The X button on
-  // the visible search input (line 308) and the "Filter lines" pill
-  // (line 320) form a 2-state toggle. The X path is a 2-setter close
-  // (clear the search query AND hide the input); the open path is
-  // the 1-setter show. Both promoted to useCallback-wrapped named
-  // callbacks following the session 116 P-7 / session 118 P-7 pattern
-  // (named open/close siblings next to each other, with the stable
-  // `useState` setters listed explicitly in the deps array to satisfy
-  // the `react-hooks/exhaustive-deps` rule). The close path used to
+  // the visible search input and the "Filter lines" pill form a
+  // 2-state toggle. The X path is a 2-setter close (clear the search
+  // query AND hide the input); the open path is the 1-setter show.
+  // Both promoted to useCallback-wrapped named callbacks following
+  // the session 116 P-7 / session 118 P-7 pattern (named open/close
+  // siblings next to each other, with the stable `useState` setters
+  // listed explicitly in the deps array to satisfy the
+  // `react-hooks/exhaustive-deps` rule). The close path used to
   // be an inline 3-line arrow on the X button's `onClick` prop.
   const openSearchInput = useCallback(
     () => setSearchVisible(true),
@@ -125,14 +121,13 @@ export default function LogsPage() {
     setSearch("");
     setSearchVisible(false);
   }, [setSearch, setSearchVisible]);
-  // The "Latest lines" pill (line 331) is a 2-step action: re-enable
-  // auto-scroll AND scroll the terminal to the top. The inline
-  // 4-line arrow on the button's `onClick` prop is promoted to a
-  // named useCallback so the page's intent is named (the inline
-  // form was a 5-line body buried in the JSX). The terminalRef
-  // read is unconditional — `current` is null only on the first
-  // render, in which case the autoScroll state still flips so the
-  // next render scrolls correctly.
+  // The "Latest lines" pill is a 2-step action: re-enable auto-scroll
+  // AND scroll the terminal to the top. The inline 4-line arrow on the
+  // button's `onClick` prop is promoted to a named useCallback so the
+  // page's intent is named (the inline form was a 5-line body buried
+  // in the JSX). The terminalRef read is unconditional — `current` is
+  // null only on the first render, in which case the autoScroll state
+  // still flips so the next render scrolls correctly.
   const jumpToLatestLines = useCallback(() => {
     setAutoScroll(true);
     if (terminalRef.current) {
@@ -142,7 +137,7 @@ export default function LogsPage() {
   // Dismiss the action message toast. Single-setter close callback
   // following the same useCallback pattern as the sibling open/close
   // callbacks above. Used by the small "×" button on the action
-  // message banner (line 221).
+  // message banner.
   const dismissActionMessage = useCallback(
     () => setActionMessage(null),
     [setActionMessage],
@@ -157,6 +152,15 @@ export default function LogsPage() {
   const handleRefresh = useCallback(() => {
     void refetch();
   }, [refetch]);
+
+  // Named sibling for the header's auto-refresh pill. Byte-equivalent to
+  // the inline `() => setAutoRefresh(!autoRefresh)` arrow it replaces; the
+  // captured boolean is listed in the deps array so the
+  // `react-hooks/exhaustive-deps` rule is satisfied.
+  const toggleAutoRefresh = useCallback(
+    () => setAutoRefresh(!autoRefresh),
+    [autoRefresh, setAutoRefresh],
+  );
 
   const filteredFiles = useMemo(() => {
     if (!data?.availableLogs) return [];
@@ -189,70 +193,17 @@ export default function LogsPage() {
         }
         color="cyan"
         actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setAutoRefresh(!autoRefresh)}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all duration-300 ${
-                autoRefresh
-                  ? "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50 shadow-[0_0_8px_rgba(6,214,214,0.3)]"
-                  : "bg-dark-900/50 text-white/40 border border-white/10 hover:text-white/60"
-              } ${autoRefresh ? "animate-auto-refresh-tick" : ""}`}
-              title={autoRefresh ? "Auto-refresh on (click to disable)" : "Auto-refresh off (click to enable)"}
-            >
-              {autoRefresh ? (
-                <RefreshCw className={`w-3.5 h-3.5 ${autoRefresh ? "animate-spin-slow" : ""}`} />
-              ) : (
-                <Play className="w-3.5 h-3.5" />
-              )}
-            </button>
-            <select
-              value={lineCount}
-              onChange={(e) => {
-                // Defensive: `parseInt(value, 10)` returns NaN for empty
-                // strings, non-numeric input, or values out of the
-                // <select>'s 100/200/500/1000 range. The API route
-                // (`src/app/api/logs/route.ts`) handles this with
-                // `parseInt(...) + Number.isFinite + Math.min(...,1000) +
-                // 200` default — the page mirrors that shape so a future
-                // change to a number input (or an empty selection) lands
-                // on a stable fallback (200) instead of NaN propagating
-                // into the `useLogs` query key. Byte-equivalent for the
-                // current <select> (all 4 options pass the `>= 1` and
-                // `<= 1000` gates).
-                const parsed = parseInt(e.target.value, 10);
-                setLineCount(Number.isFinite(parsed) && parsed >= 1 ? Math.min(parsed, 1000) : 200);
-              }}
-              className="bg-dark-900/50 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono appearance-none cursor-pointer outline-none focus:border-neon-cyan/50"
-            >
-              <option value={100} className="bg-dark-900">100 lines</option>
-              <option value={200} className="bg-dark-900">200 lines</option>
-              <option value={500} className="bg-dark-900">500 lines</option>
-              <option value={1000} className="bg-dark-900">1000 lines</option>
-            </select>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => void handleRefresh()}
-              loading={refreshing}
-              icon={RefreshCw}
-            >
-              Refresh
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              onClick={() => void handleDeleteAllLogs()}
-              icon={Trash2}
-            >
-              {deleteArmed ? "Confirm Clear" : "Delete All"}
-            </Button>
-            {deleteArmed && (
-              <Button variant="ghost" size="sm" onClick={cancelDelete}>
-                Cancel
-              </Button>
-            )}
-          </div>
+          <LogsHeaderActions
+            autoRefresh={autoRefresh}
+            onToggleAutoRefresh={toggleAutoRefresh}
+            lineCount={lineCount}
+            onLineCountChange={setLineCount}
+            refreshing={refreshing}
+            onRefresh={() => void handleRefresh()}
+            deleteArmed={deleteArmed}
+            onDeleteAll={() => void handleDeleteAllLogs()}
+            onCancelDelete={cancelDelete}
+          />
         }
       />
 
@@ -279,59 +230,13 @@ export default function LogsPage() {
 
         <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
           {/* File picker */}
-          <aside className="w-full lg:w-72 shrink-0 flex flex-col gap-2 min-h-0 border border-white/10 rounded-xl bg-dark-900/40 p-3">
-            <label className="text-[10px] font-mono uppercase tracking-wide text-white/40">
-              Log file
-            </label>
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/35" />
-              <input
-                type="text"
-                value={fileQuery}
-                onChange={(e) => setFileQuery(e.target.value)}
-                placeholder="Filter by name…"
-                className="w-full bg-dark-950/80 border border-white/10 rounded-lg pl-8 pr-2 py-2 text-xs text-white placeholder:text-white/25 outline-none focus:border-neon-cyan/40 font-mono"
-              />
-            </div>
-            <div className="flex-1 min-h-[12rem] max-h-[40vh] lg:max-h-[calc(100vh-280px)] overflow-y-auto space-y-3 pr-1">
-              {GROUP_ORDER.map((group) => {
-                const items = filteredFiles.filter((l) => l.group === group);
-                if (items.length === 0) return null;
-                return (
-                  <div key={group}>
-                    <div className="text-[10px] font-mono uppercase tracking-wider text-white/35 mb-1.5">
-                      {GROUP_LABELS[group]}
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      {items.map((log) => (
-                        <button
-                          key={log.name}
-                          type="button"
-                          onClick={() => setActiveLog(log.name)}
-                          className={`flex items-start gap-2 text-left rounded-lg px-2.5 py-2 text-xs font-mono border transition-colors ${
-                            activeLog === log.name
-                              ? "bg-neon-cyan/10 text-neon-cyan border-neon-cyan/35"
-                              : "border-transparent text-white/55 hover:bg-white/5 hover:text-white/80"
-                          }`}
-                        >
-                          <FileText className="w-3.5 h-3.5 shrink-0 mt-0.5 opacity-60" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate">{log.name}.log</span>
-                            <span className="block text-[10px] text-white/30 mt-0.5">
-                              {formatBytes(log.size)}
-                            </span>
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-              {filteredFiles.length === 0 && (
-                <p className="text-xs text-white/35 py-4 text-center">No matching log files</p>
-              )}
-            </div>
-          </aside>
+          <LogFilePicker
+            files={filteredFiles}
+            query={fileQuery}
+            onQueryChange={setFileQuery}
+            activeLog={activeLog}
+            onSelect={setActiveLog}
+          />
 
           <div className="flex-1 flex flex-col min-w-0 min-h-0">
             <div className="flex items-center gap-3 mb-4 flex-wrap">
@@ -388,47 +293,16 @@ export default function LogsPage() {
             {loading && !data ? (
               <LoadingSpinner text="Loading logs..." />
             ) : data ? (
-              <div
-                ref={terminalRef}
+              <LogTerminal
+                containerRef={terminalRef}
                 onScroll={handleScroll}
-                className="rounded-xl border border-white/10 bg-dark-900/50 overflow-hidden flex flex-col flex-1 min-h-0"
-              >
-                <div className="flex items-center gap-2 px-4 py-2 border-b border-white/10 bg-dark-800/50 shrink-0">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                    <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                  </div>
-                  <span className="text-xs text-white/40 font-mono ml-2 truncate">
-                    {activeLog}.log
-                    <span className="text-white/20 ml-2">
-                      (showing {data.showingLines}/{data.totalLines})
-                    </span>
-                  </span>
-                </div>
-
-                <div className="px-3 py-2 border-b border-white/5 bg-dark-950/30 shrink-0 hidden sm:grid sm:grid-cols-[minmax(0,9.5rem)_minmax(0,4.5rem)_1fr] gap-x-3 text-[10px] font-mono uppercase tracking-wide text-white/30">
-                  <span>Time</span>
-                  <span>Level</span>
-                  <span>Message</span>
-                </div>
-
-                <div className="p-3 sm:p-4 text-xs overflow-auto flex-1 min-h-0 max-h-[calc(100vh-320px)] lg:max-h-none">
-                  {filteredLines.length > 0 ? (
-                    filteredLines.map((line, i) => (
-                      <LogRow
-                        key={`${data.name}-${i}`}
-                        line={line}
-                        searchTerm={search}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-center text-white/20 py-8">
-                      {search ? "No matching lines" : "Log file is empty"}
-                    </div>
-                  )}
-                </div>
-              </div>
+                logName={data.name}
+                activeLog={activeLog}
+                showingLines={data.showingLines}
+                totalLines={data.totalLines}
+                lines={filteredLines}
+                searchTerm={search}
+              />
             ) : null}
           </div>
         </div>
