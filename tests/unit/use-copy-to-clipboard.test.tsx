@@ -8,8 +8,13 @@
  *      "[copied, setCopied] + useRef<setTimeout> + unmount cleanup"
  *      pattern that was previously inlined in:
  *        - src/components/session/MessageBubble.tsx (handleCopy, 1500ms)
- *        - src/app/operations/personalities/page.tsx
- *          (PersonalityCard.handleCopy, 2000ms)
+ *        - PersonalityCard.handleCopy, 2000ms. That card was declared
+ *          inside src/app/operations/personalities/page.tsx until
+ *          T-0011 / WO-0025 split the page; it now lives at
+ *          src/components/personalities/PersonalityCard.tsx and the
+ *          assertions below follow it there, exactly as this file's
+ *          own note anticipated. The page keeps the two negative
+ *          assertions so the inline form cannot regrow in either file.
  *
  *   2. Source-pattern test pinning that the 2 migrated call sites
  *      (a) import the hook and (b) no longer contain the inline
@@ -193,6 +198,16 @@ const PERSONALITIES_PATH = join(
   "personalities",
   "page.tsx",
 );
+// The copy button moved here with PersonalityCard when T-0011 split the
+// page. The hook wiring is asserted against the card; the page keeps the
+// negative assertions below.
+const PERSONALITY_CARD_PATH = join(
+  REPO_ROOT,
+  "src",
+  "components",
+  "personalities",
+  "PersonalityCard.tsx",
+);
 
 // Strip block + line comments so JSDoc-style prose notes don't
 // false-positive the negative assertions. Same pre-filter pattern
@@ -206,8 +221,10 @@ function stripComments(source: string): string {
 describe("useCopyToClipboard — call-site source pattern (List 3 sister + MessageBubble)", () => {
   const messageBubbleRaw = readFileSync(MESSAGE_BUBBLE_PATH, "utf-8");
   const personalitiesRaw = readFileSync(PERSONALITIES_PATH, "utf-8");
+  const personalityCardRaw = readFileSync(PERSONALITY_CARD_PATH, "utf-8");
   const messageBubbleCode = stripComments(messageBubbleRaw);
   const personalitiesCode = stripComments(personalitiesRaw);
+  const personalityCardCode = stripComments(personalityCardRaw);
 
   it("MessageBubble.tsx imports the hook", () => {
     expect(messageBubbleRaw).toContain("useCopyToClipboard");
@@ -227,21 +244,31 @@ describe("useCopyToClipboard — call-site source pattern (List 3 sister + Messa
     expect(messageBubbleCode).toMatch(/useCopyToClipboard\s*\(\s*\{\s*resetMs:\s*1500\s*\}\s*\)/);
   });
 
-  it("personalities/page.tsx imports the hook", () => {
-    expect(personalitiesRaw).toContain("useCopyToClipboard");
+  it("PersonalityCard.tsx imports the hook", () => {
+    expect(personalityCardRaw).toContain("useCopyToClipboard");
   });
 
-  it("personalities/page.tsx no longer declares the inline copiedTimerRef", () => {
+  it("PersonalityCard.tsx no longer declares the inline copiedTimerRef", () => {
+    expect(personalityCardCode).not.toMatch(
+      /const\s+copiedTimerRef\s*=\s*useRef<ReturnType<typeof\s+setTimeout>/,
+    );
+  });
+
+  it("PersonalityCard.tsx no longer contains the inline navigator.clipboard.writeText", () => {
+    expect(personalityCardCode).not.toMatch(/navigator\.clipboard\.writeText/);
+  });
+
+  it("PersonalityCard.tsx wires the hook with the pre-refactor 2000ms reset", () => {
+    expect(personalityCardCode).toMatch(/useCopyToClipboard\s*\(\s*\{\s*resetMs:\s*2000\s*\}\s*\)/);
+  });
+
+  it("personalities/page.tsx does not declare the inline copiedTimerRef either", () => {
     expect(personalitiesCode).not.toMatch(
       /const\s+copiedTimerRef\s*=\s*useRef<ReturnType<typeof\s+setTimeout>/,
     );
   });
 
-  it("personalities/page.tsx no longer contains the inline navigator.clipboard.writeText in the PersonalityCard", () => {
+  it("personalities/page.tsx does not contain the inline navigator.clipboard.writeText either", () => {
     expect(personalitiesCode).not.toMatch(/navigator\.clipboard\.writeText/);
-  });
-
-  it("personalities/page.tsx wires the hook with the pre-refactor 2000ms reset", () => {
-    expect(personalitiesCode).toMatch(/useCopyToClipboard\s*\(\s*\{\s*resetMs:\s*2000\s*\}\s*\)/);
   });
 });
