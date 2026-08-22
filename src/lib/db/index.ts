@@ -73,6 +73,7 @@ import { applyFrameworksMigration } from "./apply-frameworks-migration";
 import { applyArtifactsMigration } from "./apply-artifacts-migration";
 import { applyRecroomLibraryMigration } from "./apply-recroom-library-migration";
 import { applyNeutralColumnNames } from "./apply-neutral-column-names";
+import { applyAgentProgressionMigration } from "./apply-agent-progression-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -273,6 +274,12 @@ export function runMigrations(database: Database.Database): void {
   // agent_root.framework_md -> framework_md, cron_jobs.external_job_id ->
   // external_job_id. RENAME at v30.
   applyNeutralColumnNames(database);
+
+  // The append-only per-Body progression record (WG-ARCH-003, ADR-0004): the
+  // level and achievements an agent had reached, captured so they survive the
+  // retention prune of the history they were derived from. CREATE + two
+  // append-only triggers at v31.
+  applyAgentProgressionMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

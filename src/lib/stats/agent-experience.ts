@@ -13,7 +13,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { computeLevel, type LevelInfo } from "./derive";
-import { getAgentPerformance } from "./agent-stats";
+import { getAgentPerformance, type AgentPerformance } from "./agent-stats";
 import { countAgentActiveDays } from "./agent-stats-repository";
 
 /** Per-agent signals that accrue Experience. */
@@ -95,12 +95,20 @@ function safeCount(read: () => number | undefined): number {
   }
 }
 
-/** Resolve the Experience level for one agent profile from its signals. */
-export function agentExperienceForProfile(slug: string): AgentExperience | null {
-  const perf = getAgentPerformance().find((p) => p.slug === slug);
-  if (!perf) return null;
-
-  const activeDays = safeCount(() => countAgentActiveDays(slug));
+/**
+ * Resolve the Experience level from an already-measured performance row.
+ *
+ * Split out of `agentExperienceForProfile` so a caller that has already paid for
+ * `getAgentPerformance()` does not pay for it again per profile. The progression
+ * snapshot (`agent-progression.ts`) is that caller: it records the answer the
+ * dashboard aggregate just computed, and re-deriving it from scratch would mean
+ * a full scan of `runs` per agent on every capture.
+ *
+ * The derivation is byte-identical to the one that used to be inline below, so
+ * both entry points give the same answer for the same profile.
+ */
+export function agentExperienceFromPerformance(perf: AgentPerformance): AgentExperience {
+  const activeDays = safeCount(() => countAgentActiveDays(perf.slug));
 
   const signals: AgentExperienceSignals = {
     runsCompleted: perf.runs,
@@ -111,5 +119,12 @@ export function agentExperienceForProfile(slug: string): AgentExperience | null 
     memoryFacts: 0, // provider-side; surfaced when a count API lands (BB6)
   };
   const xp = computeAgentXp(signals);
-  return { slug, level: computeAgentLevel(xp), xp, signals };
+  return { slug: perf.slug, level: computeAgentLevel(xp), xp, signals };
+}
+
+/** Resolve the Experience level for one agent profile from its signals. */
+export function agentExperienceForProfile(slug: string): AgentExperience | null {
+  const perf = getAgentPerformance().find((p) => p.slug === slug);
+  if (!perf) return null;
+  return agentExperienceFromPerformance(perf);
 }

@@ -33,9 +33,11 @@ import type Database from "better-sqlite3";
 import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
 
 /**
- * @public Reserved for T-0016, which ties the migration head constant to this
- * value. T-0007 deleted the rest of the dead exports and deliberately left this
- * one standing, so the widened knip gate can still land at zero in the meantime.
+ * @public This applier held the head until T-0016 appended v31. It keeps its
+ * exported gate because `tests/unit/run-migrations-upgrade.integration.test.ts`
+ * asserts the new head sits exactly one above it, which is what
+ * `docs/MIGRATION.md`'s "schema_version strictly increases" rule looks like from
+ * the outside: it catches a later migration that reuses or skips a number.
  */
 export const NEUTRAL_COLUMN_NAMES_SCHEMA_VERSION = 30;
 

@@ -39,7 +39,8 @@ Some error responses also include `details` (Zod validation). Handlers must call
 | `/api/schedules` | `GET`, `POST` | PatterStage-owned recurring missions (the scheduler fires these; no `jobs.json`). |
 | `/api/schedules/[id]` | `PATCH`, `DELETE` | Pause/resume (`{ enabled }`) or delete a schedule. |
 | `/api/schedules/[id]/run` | `POST` | Dispatch a scheduled mission immediately (run-now). |
-| `/api/stats` | `GET` | Dashboard analytics aggregate (throughput, mission mix, run activity, tokens, per-agent performance, derived progression + the ~36 achievements). |
+| `/api/stats` | `GET` | Dashboard analytics aggregate (throughput, mission mix, run activity, tokens, per-agent performance, derived progression + the ~36 achievements). Also appends a per-agent progression snapshot when an agent's recorded level or unlocked set has moved. |
+| `/api/agents/progression` | `GET` | The **recorded** per-agent growth, from the append-only `agent_progression_snapshots` table: newest row per profile, or one profile's whole trail with `?slug=`. Survives the retention prune of the events it was derived from (see [MIGRATION.md](MIGRATION.md)). |
 | `/api/analytics` | `GET` | Interaction analytics summary (`{ totals, last30, activeDays }`) over the `analytics_events` log. Read-only — events are server-emitted, so there is no `POST`. See [ANALYTICS.md](ANALYTICS.md). |
 | `/api/analytics/timeseries` | `GET` | Gap-filled daily event counts (`?type=&days=&bucket=day`; `days` clamped 1–365). |
 | `/api/fs/git/branches` | `GET` | List git branches for a workspace path. |

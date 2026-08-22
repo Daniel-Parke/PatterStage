@@ -13,8 +13,10 @@ import {
   getSchemaVersion,
   setSchemaVersion,
 } from "@/lib/db-schema";
-// The last applier's own gate. Imported by its own specifier, which the global
-// "@/lib/db" mock does not intercept, so this is the real number the chain ends on.
+// The last applier's own gate, and the one before it. Imported by their own
+// specifiers, which the global "@/lib/db" mock does not intercept, so these are
+// the real numbers the chain ends on.
+import { AGENT_PROGRESSION_SCHEMA_VERSION } from "@/lib/db/apply-agent-progression-migration";
 import { NEUTRAL_COLUMN_NAMES_SCHEMA_VERSION } from "@/lib/db/apply-neutral-column-names";
 
 // jest.setup globally mocks "@/lib/db" (no runMigrations on the mock); pull the
@@ -128,10 +130,12 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     ).toBe(1);
     // The unified artifacts registry lands via the wired v28 applier; the
     // Story Weaver character/theme library is v29; the vendor-name renames are
-    // v30 and are the current terminal.
+    // v30; the append-only per-Body progression record is v31 and is the
+    // current terminal.
     expect(tableNames(db)).toContain("artifacts");
     expect(tableNames(db)).toContain("story_characters");
     expect(tableNames(db)).toContain("story_themes");
+    expect(tableNames(db)).toContain("agent_progression_snapshots");
     expect(getSchemaVersion(db)).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
 
     // v30 renamed two vendor-named columns in tables PatterStage owns. This is
@@ -208,7 +212,15 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
   // rather than on the install that trips over it.
   describe("the head constant cannot drift from the chain", () => {
     it("equals the last applier's version gate", () => {
-      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(NEUTRAL_COLUMN_NAMES_SCHEMA_VERSION);
+      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(AGENT_PROGRESSION_SCHEMA_VERSION);
+    });
+
+    // schema_version strictly increases and a gate is claimed once, which is
+    // docs/MIGRATION.md's going-forward rule. The head moving by exactly one
+    // above the applier that used to hold it is what that rule looks like from
+    // the outside, and it catches a new migration that reuses or skips a number.
+    it("sits exactly one above the gate it displaced", () => {
+      expect(AGENT_PROGRESSION_SCHEMA_VERSION).toBe(NEUTRAL_COLUMN_NAMES_SCHEMA_VERSION + 1);
     });
 
     it("equals the highest-numbered migration file on disk", () => {
