@@ -20,49 +20,55 @@ close. A claim older than a day is stale; sweep it and note the sweep.
 
 ## Now
 
-Session 0 is compiled and phases A to D are complete; **phase E is not, and it
-is the gate on everything below it.** The EOS runs GENESIS-LITE (WO-0001) after
-Session 0 closes, so Genesis cannot start until the operator signs the seed.
-Six queue items have been closed ahead of Genesis on the operator's instruction
-to do minimal prep first, on the reasoning that Genesis re-orders the queue and
-work done before it may be reshaped by the sketch that follows.
+**The 2026-08 consolidation programme is approved and owns the queue.**
+The operator ruled at plan approval (2026-08-22, session S-0002): the approved
+plan (`org/plans/2026-08-consolidation.md`) stands in place of the Genesis-lite
+re-order, and Session 0 phase E is signed/waived in the same ruling, so the
+gate that blocked WO-0001 and everything below it is discharged. WO-0001 is
+superseded on its row. The programme: Phase 0 restores a green line (WO-0018 +
+WO-0020), Phase 0b consolidates branches (WO-0028), Phases 1 to 7 run the
+consolidation rows, then ONE release at programme end (operator ruling D13):
+full local Playwright matrix, real-Hermes suite and upgrade test before the
+operator merges PR #157 dev to main.
 
-The code is on `dev` and green. `main` is the pre-rebuild tree and still carries
-the old MIT licence; the Apache-2.0 relicence, the security hotfix, the hermes
-module extraction and every queue item below are unshipped until `dev` merges.
+The code is on `dev`. `main` is 203 commits behind, fully contained in dev,
+still MIT and pre-security-hotfix; the operator accepted that state for the
+programme's duration (D13). Corrections applied this session under START's
+"code and tests outrank notes": the design-lint baseline total is **918**, not
+919 (mechanical sum of the 188 baseline entries).
 
 ## In progress
 
-none. WO-0011 is part-closed by construction rather than claimed: its
-committable half has landed and its remaining two acceptance items are GitHub
-branch-protection settings, which no session can do.
+none. S-0002 (PLAN) closed with the approval paperwork committed: the plan
+artefact, the queue re-order and new rows WO-0020 to WO-0029, ADR-0006 and
+ADR-0007 (both proposed, awaiting the operator's signature), the
+`org/decisions/` pointer, questions Q-004 to Q-008, and this file.
 
 ## Flags for the operator
 
-- **CI is red on `dev` and has been since the security hotfix.** WO-0018, filed
-  P0. `e2e-smoke` fails 3 of 4 because the auth middleware fails closed and the
-  Playwright harness never mints a token, so every request gets 503.
-  `docker-image` also fails and is not yet diagnosed. Read that row before
-  trusting any earlier "gate green" in this repo's history: every one of them
-  meant lint, tsc, jest and build on the operator's machine, and CI status was
-  never checked.
-- **Sign Session 0, phase E.** The H1 to H5 rubric, the cold-start test and the
-  signature in `docs/COMPILE_REPORT.md`, then a row in the EOS
-  `registry/PROJECTS.md`. Nobody who wrote the seed can judge it, which is the
-  whole point of the rubric. **This blocks WO-0001 and therefore everything.**
-- **The cold-start test needs an unclaimed queue item.** WO-0003, WO-0005 and
-  WO-0006 were the small self-contained ones and are now closed. Use WO-0007 or
-  WO-0013: hand a fresh session only the seed and that row, and see whether it
-  completes with zero questions. That is H1 and it is the only test of the seed
-  that matters.
-- **Two branch-protection clicks, for WO-0011.** Add `install-harness` to the
-  required checks once you have read one green run of it, and remove
-  `docker-image` from them. The job is deliberately non-required until then.
-- **Q-003 is still open** and only the cold-start test answers it: does an agent
-  reading `AGENTS.md`, and following it to `org/START.md`, reach the lock-book's
-  structural contracts reliably?
-- **No spend decision is outstanding.** The WO-0014 ruling is recorded on its
-  row: warn by default, hard stop available but opt-in, never forced.
+- **CI is red on `dev` with THREE failing jobs, not two.** `e2e-smoke` (3 of 4,
+  the harness has no auth token, WO-0018), `docker-image` (now DIAGNOSED: the
+  smoke harness probes port 42090 while the containerised app boots on 42069;
+  your ruling D3 says fix it, WO-0018), and `real-hermes-integration`
+  ("SMOKE FAILED (2 assertion(s))", push-only so PR views miss it, WO-0020).
+  No CI run has executed on dev since 2026-07-27.
+- **One branch-protection click, not two** (WO-0011 corrected): add
+  `install-harness` to the required checks. Measured 2026-08-22: the required
+  set is EMPTY (`contexts=[]`), so there is no docker-image to remove.
+- **Two signatures wanted:** ADR-0006 (dev is the integration trunk) and
+  ADR-0007 (ADR home is docs/adr/), both proposed under the approved plan.
+  WO-0029 stays blocked until ADR-0006 is signed.
+- **One settings action from ruling D14:** pause/snooze Dependabot for the
+  programme's duration (the agent half of WO-0028 closes the 12 open
+  Dependabot PRs; the pause is yours).
+- **Questions Q-004 to Q-008 are open**: the queue-header defect, three
+  lock-book corrections, the missing session-1 log, the Done-rows-in-Ready
+  formatting, and the update-baseline guard suggestion.
+- **Q-003 is still open** and only the cold-start test answers it. The
+  consolidation programme's WORK sessions are, in effect, repeated cold-start
+  tests of the seed; their friction reports will answer it.
+- The restore-test cadence has never run (`org/CADENCE.md`, last_run: never).
+  The programme does not touch backups, but a first run remains due.
 
 ## Resume Packet
 
@@ -72,26 +78,28 @@ names, alone.
 
 - venture: PatterStage, scale M, `dev` branch, schema v30
 - eos_pin: v1.0, commit `cc18755`, per `docs/LOCKBOOK.md`
-- phase: Session 0 phases A to D complete, phase E unsigned. Pre-Genesis prep.
-  Closed since the seed compiled: WO-0002 (fonts vendored, CI retries gone),
-  WO-0003 (`sql-outside-repository` lint rule), WO-0005 (one reading register),
-  WO-0006 (config cache invalidation), WO-0011 committable half, Q-002 folded.
-- last_verified: LOCALLY, 2026-07-26: `npm run lint` (check-agent-files,
-  check-doc-links, design-lint, eslint, typecheck:tests), `tsc --noEmit`, 2285
-  jest tests, `next build`, `eos_check.py --seed` clean on the seed files, and
-  the install harness at 5 of 5 scenarios under Docker 29.4.1.
-  **CI is a different answer: red.** See WO-0018. A local green is necessary and
-  has never been sufficient, and this repo learned that the expensive way.
-- next_action: the operator signs Session 0 phase E, then a fresh session runs
-  WO-0001 GENESIS-LITE per the EOS launcher. Its output re-orders this queue,
-  so do not start queue items below it first.
-- blockers: phase E needs the operator and cannot be done by a session that
-  wrote the seed. WO-0011's last two acceptance items need GitHub branch
-  protection, which is outside the repository.
+- phase: consolidation programme approved (2026-08-22); Phase 0 not started.
+  Session 0 phase E discharged by the operator's D1 ruling at plan approval.
+  Programme map: `org/plans/2026-08-consolidation.md` (phases, rows, rulings
+  D1 to D14, dispositions, risk register, Appendix A scope lists).
+- last_verified: 2026-08-22, read-only: eight parallel verifiers re-measured
+  the plan's inventory against the tree at `d36eb817` (design-lint sum 918;
+  sql-outside-repository 57 sites in 19 files; hermes-outside-adapter 21 in
+  13; knip 38/18/2/1/11; migrations one chain to v30; branch containment
+  proofs). CI was READ, not assumed: red, three jobs, evidence on WO-0018 and
+  WO-0020. No gate was run this session beyond `npm run lint` on the paperwork
+  (PLAN wrote no code).
+- next_action: a WORK session takes WO-0018 (top of queue) per the plan's
+  Phase 0. Its launcher may also name WO-0020; both are Phase 0. The session
+  branches from `dev` per CONTRIBUTING and ADR-0006 (proposed).
+- blockers: WO-0024/0025/0026 blocked on WO-0008 then WO-0025 (recorded on
+  rows); WO-0029 blocked on ADR-0006's signature; the operator's click and
+  Dependabot pause are outside any session's reach.
 - constraints: (1) the design-lint baseline shrinks and never grows, currently
-  919; (2) a gate never retries, and the two surviving CI retries are filed as
+  **918**; (2) a gate never retries, and the two surviving CI retries are
   quarantined flakes reviewable 2027-01; (3) no spend without the operator's
-  approval, and the WO-0014 ruling is warn-by-default with an opt-in hard stop.
-- files_in_flight: none uncommitted. Everything is committed to `dev` and
-  unmerged; `main` is still the pre-rebuild tree on the old MIT licence.
-
+  approval, and the WO-0014 ruling is warn-by-default with an opt-in hard
+  stop; (4) behaviour preservation is the programme's default, hard rule 2 of
+  the plan; (5) one release, at programme end, ruling D13.
+- files_in_flight: none uncommitted at close. `main` still pre-rebuild, MIT,
+  by ruling D13.

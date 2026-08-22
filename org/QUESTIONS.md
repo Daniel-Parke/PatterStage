@@ -51,6 +51,69 @@ split.
   org/START.md, arrives at those contracts reliably. The cold-start test at
   phase E is what answers this, and it is the only test of the seed that matters.
 
+### Q-004 · The queue header contradicts the separation of duties
+- raised: 2026-08-22, PLAN session S-0002, at consolidation-plan approval.
+- the defect: `org/QUEUE.md`'s header says a session "moves it to Done at
+  close", but Part II Article 3 says no session approves its own output, and
+  the practised protocol (recorded in the approved plan, section 7) is that a
+  WORK session sets its row to in_verification and only a VERIFY session or
+  the operator moves it to done.
+- what is asked: sanction rewriting the header sentence to match the
+  constitution. The plan treats the header as the defect and does not obey it
+  meanwhile; PLAN did not rewrite it unprompted because the brief ordered the
+  contradiction flagged rather than silently resolved.
+- owner: operator.
+
+### Q-005 · Three lock-book corrections need sanction
+- raised: 2026-08-22, PLAN session S-0002, from the plan's verification sweep.
+- (a) `docs/LOCKBOOK.md:188-190` (WG-OPS-002 body) asserts `docker-image` sits
+  in branch protection's required set. Measured via `gh api`:
+  `required_status_checks.contexts = []`, zero required checks. The paragraph
+  needs a one-line factual correction, same duty as the STATE 919-to-918 fix.
+- (b) Five frontmatter ruling notes are the literal string "undefined"
+  (WG-DEL-001, WG-DEL-002, WG-DEL-003, WG-OPS-004, WG-OPS-002): a compile
+  defect, the serializer wrote a missing field. The argued full texts survive
+  in `docs/eos-session0/WALK_RAW.json` and `CORRECTIVE_RAW.json`.
+- (c) The dependency-free lint constraint is conventionally attributed to
+  WG-WEB-013, whose recorded text concerns where law strings live. The real
+  carriers are `design-lint.mjs`'s own header and WO-0003's queue note.
+  Tighten the lock-book wording or bless the attribution.
+- what is asked: sanction the three corrections; the lock-book records closed
+  rulings and PLAN does not touch it without a ruling.
+- owner: operator.
+
+### Q-006 · No session log exists for session 1
+- raised: 2026-08-22, PLAN session S-0002.
+- the fact: `org/logs/` was empty despite queue rows citing
+  `session-1-2026-07-26` and START's close ritual demanding a log per session.
+  S-0002 starts the series properly. The append-only history article means the
+  gap should be acknowledged, not papered over.
+- what is asked: acknowledge the gap, and say whether a reconstruction of
+  session 1's log from git history and the queue rows is wanted (a cheap DOCS
+  row) or whether the gap is simply recorded here.
+- owner: operator.
+
+### Q-007 · Done rows sit in the Ready section
+- raised: 2026-08-22, PLAN session S-0002.
+- the fact: WO-0002, WO-0003, WO-0005 and WO-0006 are status DONE but live in
+  Ready; the Done section says "(none)". The consolidation plan's re-order
+  kept them in Ready, at the bottom, untouched, because tidying them
+  unprompted was explicitly out of scope.
+- what is asked: move them to the Done section (id, session, date per the
+  template), or leave them in place.
+- owner: operator.
+
+### Q-008 · Suggestion: make the design-lint baseline mechanically shrink-only
+- raised: 2026-08-22, PLAN session S-0002, from the verification sweep.
+- the fact: `--update-baseline` writes current counts unconditionally; run
+  after a regression it would grow the baseline. Shrink-only is doctrine in
+  comments and error text, not mechanism.
+- the suggestion: the flag refuses to write a larger total (or a larger
+  per-key count) without an explicit second flag carrying a written reason.
+  Strengthens a check; touches nothing else.
+- what is asked: promote to a queue row or decline with a reason.
+- owner: operator.
+
 ## Folded
 
 ### Q-002 · Which licence does the public repository carry? · FOLDED 2026-07-26
