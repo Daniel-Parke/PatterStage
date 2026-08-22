@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server";
-import Database from "better-sqlite3";
-import { existsSync, readFileSync, statSync } from "fs";
-import { basename, join } from "path";
+import { readFileSync, statSync } from "fs";
+import { basename } from "path";
 
 import { getActiveHermesPaths } from "@/modules/hermes/lib/agent-runtime";
+import { readAgentSessionDetail } from "@/lib/runtime/state-db";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { badRequest, notFound, ok, payloadTooLarge } from "@/lib/api-response";
@@ -46,128 +46,105 @@ export async function GET(
   }
 
   // ── Step 1: Try Hermes state.db (v0.14+ — canonical source) ──────────
-  const root = getActiveHermesPaths().root;
-  const stateDbPath = join(root, "state.db");
+  // The state.db read itself lives in the runtime adapter: it is the
+  // agent's own database, not PatterStage's. A null detail means either
+  // no state.db or no such session, and both fall through to Step 2.
+  try {
+    const detail = readAgentSessionDetail(sanitizedId);
 
-  if (existsSync(stateDbPath)) {
-    let hermesDb: Database.Database | null = null;
-    try {
-      hermesDb = new Database(stateDbPath, { readonly: true });
+    if (detail) {
+      const sessionRow = detail.session;
+      const messageRows = detail.messages;
 
-      // Check if this session exists in Hermes state.db
-      const sessionRow = hermesDb
-        .prepare("SELECT id, source, model, title, started_at, ended_at, end_reason, message_count, api_call_count FROM sessions WHERE id = ?")
-        .get(sanitizedId) as {
-          id: string; source: string; model: string; title: string | null;
-          started_at: number; ended_at: number | null; end_reason: string | null;
-          message_count: number | null; api_call_count: number | null;
-        } | undefined;
+      // ── In-flight empty-state note ───────────────────────────
+      // When the session exists in state.db but the messages table
+      // is empty AND ended_at is still NULL, the session is in
+      // flight — Hermes has the row but hasn't flushed any messages
+      // yet (the agent loop persists at turn boundaries, and
+      // in-flight sessions may have api_call_count > 0 with no
+      // committed messages). Without a `note` field the frontend
+      // falls through to the generic "No messages in this session"
+      // empty state, which the user reported as confusing — the
+      // session is healthy and live, just not yet flushed. The
+      // existing isSessionStillRunning() helper in src/lib/session-title.ts
+      // pattern-matches the note text ("still running"/"in progress"/
+      // "mid-flight") to drive the refresh-CTA render, so we keep
+      // the same vocabulary.
+      //
+      // Two flavours: cron-spawned sessions get the more specific
+      // "this cron job is still running" wording; everything else
+      // gets a generic "session is in progress" note. The source
+      // discrimination is cheap (sessionRow.source is read-only)
+      // and lets the UI optionally render cron-specific CTAs later.
+      const isInFlight = sessionRow.ended_at === null;
+      const isEmpty = messageRows.length === 0;
+      const inFlightNote =
+        isInFlight && isEmpty
+          ? sessionRow.source === "cron"
+            ? "This cron-spawned session is still running. Messages will appear here as the agent writes them — refresh to check."
+            : "This session is in progress. Messages will appear here as the agent writes them — refresh to check."
+          : undefined;
 
-      if (sessionRow) {
-        // Read messages for this session
-        const messageRows = hermesDb
-          .prepare(
-            `SELECT role, content, tool_name, tool_calls, tool_call_id, finish_reason, reasoning, timestamp
-             FROM messages WHERE session_id = ? ORDER BY timestamp ASC`,
-          )
-          .all(sanitizedId) as Array<{
-            role: string; content: string | null; tool_name: string | null;
-            tool_calls: string | null; tool_call_id: string | null;
-            finish_reason: string | null; reasoning: string | null; timestamp: number;
-          }>;
+      const messages = messageRows.map((m, i) => {
+        let toolCalls = null;
+        if (m.tool_calls) {
+          try { toolCalls = JSON.parse(m.tool_calls); } catch { /* not JSON */ }
+        }
+        return {
+          index: i,
+          role: m.role,
+          content: m.content ?? "",
+          tool_calls: toolCalls,
+          tool_name: m.tool_name ?? null,
+          tool_call_id: m.tool_call_id ?? null,
+          finish_reason: m.finish_reason ?? null,
+          reasoning: m.reasoning ?? null,
+          timestamp: m.timestamp,
+        };
+      });
 
-        // ── In-flight empty-state note ───────────────────────────
-        // When the session exists in state.db but the messages table
-        // is empty AND ended_at is still NULL, the session is in
-        // flight — Hermes has the row but hasn't flushed any messages
-        // yet (the agent loop persists at turn boundaries, and
-        // in-flight sessions may have api_call_count > 0 with no
-        // committed messages). Without a `note` field the frontend
-        // falls through to the generic "No messages in this session"
-        // empty state, which the user reported as confusing — the
-        // session is healthy and live, just not yet flushed. The
-        // existing isSessionStillRunning() helper in src/lib/session-title.ts
-        // pattern-matches the note text ("still running"/"in progress"/
-        // "mid-flight") to drive the refresh-CTA render, so we keep
-        // the same vocabulary.
-        //
-        // Two flavours: cron-spawned sessions get the more specific
-        // "this cron job is still running" wording; everything else
-        // gets a generic "session is in progress" note. The source
-        // discrimination is cheap (sessionRow.source is read-only)
-        // and lets the UI optionally render cron-specific CTAs later.
-        const isInFlight = sessionRow.ended_at === null;
-        const isEmpty = messageRows.length === 0;
-        const inFlightNote =
-          isInFlight && isEmpty
-            ? sessionRow.source === "cron"
-              ? "This cron-spawned session is still running. Messages will appear here as the agent writes them — refresh to check."
-              : "This session is in progress. Messages will appear here as the agent writes them — refresh to check."
-            : undefined;
+      const size = estimateSessionSize(
+        sessionRow.message_count,
+        sessionRow.api_call_count,
+        messages.length * 300,
+      );
 
-        const messages = messageRows.map((m, i) => {
-          let toolCalls = null;
-          if (m.tool_calls) {
-            try { toolCalls = JSON.parse(m.tool_calls); } catch { /* not JSON */ }
-          }
-          return {
-            index: i,
-            role: m.role,
-            content: m.content ?? "",
-            tool_calls: toolCalls,
-            tool_name: m.tool_name ?? null,
-            tool_call_id: m.tool_call_id ?? null,
-            finish_reason: m.finish_reason ?? null,
-            reasoning: m.reasoning ?? null,
-            timestamp: m.timestamp,
-          };
-        });
-
-        const size = estimateSessionSize(
-          sessionRow.message_count,
-          sessionRow.api_call_count,
-          messages.length * 300,
-        );
-
-        // Inline the `ok(buildSessionData({...}))` form rather than
-        // `const response = NextResponse.json({ data: buildSessionData({...}) })`
-        // because the variable is never modified (no headers, no status override)
-        // and the `ok()` factory already wraps the `{ data: ... }` envelope.
-        //
-        // The `note` field is conditionally passed: only present when the
-        // session is in flight (ended_at IS NULL in state.db) and has no
-        // flushed messages yet. For completed sessions or in-flight
-        // sessions with messages, the note is omitted — the messages
-        // themselves are the signal. The frontend's isSessionStillRunning()
-        // helper pattern-matches the note text to decide whether to render
-        // the refresh CTA vs the normal transcript view.
-        return ok(
-          buildSessionData({
-            id: sanitizedId,
-            filename: sanitizedId,
-            format: "db",
-            title: sessionRow.title ?? sanitizedId,
-            model: sessionRow.model ?? "",
-            source: sessionRow.source,
-            messages,
-            size,
-            created: sessionRow.started_at
-              ? new Date(sessionRow.started_at * 1000).toISOString()
-              : null,
-            // Look up the PatterStage mission id by matching the embedded
-            // cron job id against the missions table. Lets the detail page
-            // render a "Open Mission" link for cron-spawned sessions.
-            missionId: lookupMissionIdForCronSession(sanitizedId),
-            ...(inFlightNote ? { note: inFlightNote } : {}),
-          }),
-        );
-      }
-    } catch (err) {
-      logApiError("GET /api/sessions/[id]", "reading Hermes state.db for " + sanitizedId, err);
-      // Non-fatal — fall through to file-based lookup
-    } finally {
-      if (hermesDb) { try { hermesDb.close(); } catch { /* already closed */ } }
+      // Inline the `ok(buildSessionData({...}))` form rather than
+      // `const response = NextResponse.json({ data: buildSessionData({...}) })`
+      // because the variable is never modified (no headers, no status override)
+      // and the `ok()` factory already wraps the `{ data: ... }` envelope.
+      //
+      // The `note` field is conditionally passed: only present when the
+      // session is in flight (ended_at IS NULL in state.db) and has no
+      // flushed messages yet. For completed sessions or in-flight
+      // sessions with messages, the note is omitted — the messages
+      // themselves are the signal. The frontend's isSessionStillRunning()
+      // helper pattern-matches the note text to decide whether to render
+      // the refresh CTA vs the normal transcript view.
+      return ok(
+        buildSessionData({
+          id: sanitizedId,
+          filename: sanitizedId,
+          format: "db",
+          title: sessionRow.title ?? sanitizedId,
+          model: sessionRow.model ?? "",
+          source: sessionRow.source,
+          messages,
+          size,
+          created: sessionRow.started_at
+            ? new Date(sessionRow.started_at * 1000).toISOString()
+            : null,
+          // Look up the PatterStage mission id by matching the embedded
+          // cron job id against the missions table. Lets the detail page
+          // render a "Open Mission" link for cron-spawned sessions.
+          missionId: lookupMissionIdForCronSession(sanitizedId),
+          ...(inFlightNote ? { note: inFlightNote } : {}),
+        }),
+      );
     }
+  } catch (err) {
+    logApiError("GET /api/sessions/[id]", "reading Hermes state.db for " + sanitizedId, err);
+    // Non-fatal — fall through to file-based lookup
   }
 
   // ── Step 2: Legacy file-based sessions (~/.hermes/sessions/) ──────────

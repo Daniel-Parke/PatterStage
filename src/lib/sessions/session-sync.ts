@@ -8,9 +8,14 @@
 //
 //   read rows → resolve mission links → title → upsert → sweep
 //
-// The three pieces it orchestrates each own their own file:
-//   - ./hermes-state-sessions, which reads the agent's state.db and
-//     translates its end_reason vocabulary.
+// The pieces it orchestrates each own their own file:
+//   - ../runtime/state-db, which reads the agent's own state.db (a
+//     foreign database, hence the adapter layer rather than a
+//     repository).
+//   - ./hermes-state-sessions, which translates the agent's end_reason
+//     vocabulary into a PatterStage status and exit code.
+//   - ./session-sync-repository, which owns every statement this
+//     pipeline runs against PatterStage's own `sessions` table.
 //   - ./session-mission-links, which resolves a session to its parent
 //     mission (bulk shape, used once per tick).
 //   - ./session-orphan-sweep, which closes rows the agent will never
@@ -33,10 +38,8 @@ import { getDb } from "../db";
 import { SERVER_MODULES } from "../modules/server";
 import { parseCronSessionId } from "./session-title";
 import { estimateSessionSize } from "./session-repository";
-import {
-  hermesStatusFromEndReason,
-  readHermesSessionsFromStateDb,
-} from "./hermes-state-sessions";
+import { readHermesSessionsFromStateDb } from "../runtime/state-db";
+import { hermesStatusFromEndReason } from "./hermes-state-sessions";
 import {
   buildMissionIdByJobId,
   buildValidMissionIdSet,
