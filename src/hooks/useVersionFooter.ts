@@ -30,10 +30,15 @@ import {
 } from "@/lib/deploy-action-labels";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 
-/** Where the "Check for updates" button is in its little state machine. */
-export type VersionCheckState = "idle" | "checking" | "up-to-date" | "update-available";
+// VersionCheckState and VersionInfo stay module-private, as they were
+// before the split: VersionFooterState is the only shape a caller needs,
+// and exporting the two it is built from would add unused public names to
+// the knip report.
 
-export interface VersionInfo {
+/** Where the "Check for updates" button is in its little state machine. */
+type VersionCheckState = "idle" | "checking" | "up-to-date" | "update-available";
+
+interface VersionInfo {
   localHash: string;
   remoteHash: string;
   updateAvailable: boolean;
