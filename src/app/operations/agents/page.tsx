@@ -1,41 +1,41 @@
+// ═══════════════════════════════════════════════════════════════
+// Agent Profiles — SOUL.md and config.yaml per profile
+//
+// Thin page shell: the profile fetch, the Hermes push/pull actions, the
+// create/delete calls and the file-editor buffer live here. The list,
+// the detail column, the overview strip, the editor card and the two
+// modals are presentational components under src/components/agents/.
+//
+// OVER THE 350-LINE TARGET, and why (T-0011 / WO-0025). Every piece of
+// presentation is out; what is left is this page's own data flow -- the
+// profiles fetch, five Hermes sync actions over one doSync, create,
+// delete, and the editor buffer with its save-status timer. Folding
+// those into a hook is the obvious next cut, and it is deliberately NOT
+// made here: T-0011 scopes the page components to presentation
+// extraction so the split stays provably render-neutral. The file is
+// inside the 400 ceiling and that cut is the way past 350.
+// ═══════════════════════════════════════════════════════════════
+
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Users, FileText, Save, RotateCcw, Eye, EyeOff,
-  Check, AlertCircle, Plus, Trash2,
-} from "lucide-react";
-import ProfilesDriftBanner from "@/components/profiles/ProfilesDriftBanner";
-import AgentPerformanceStrip from "@/components/agents/AgentPerformanceStrip";
-import AgentGrowthPanel from "@/components/agents/AgentGrowthPanel";
-import ProfileSyncBar from "@/components/profiles/ProfileSyncBar";
+import { Users } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
-import Button from "@/components/ui/Button";
-import Badge from "@/components/ui/Badge";
-import Modal from "@/components/ui/Modal";
-import { Field, Input, Select } from "@/components/ui/field";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import type { AgentProfile, ProfileFile } from "@/types/console";
 import { apiFetch, toastError } from "@/lib/api-fetch";
 import { profileSyncBody } from "@/lib/profile-sync-body";
 import { runSyncAction } from "@/lib/operation-sync-action";
-
-interface EditorState {
-  profileId: string;
-  fileKey: string;
-  fileName: string;
-  content: string;
-  original: string;
-}
-
-/** Build the file URL for /api/agent/files/[key], with profile query param when scoped. */
-function agentFileUrl(profileId: string, fileKey: string): string {
-  return profileId === "default"
-    ? `/api/agent/files/${fileKey}`
-    : `/api/agent/files/${fileKey}?profile=${profileId}`;
-}
+import { agentFileUrl } from "@/components/agents/agent-file-url";
+import AgentsPageHeader from "@/components/agents/AgentsPageHeader";
+import AgentProfilesOverview from "@/components/agents/AgentProfilesOverview";
+import AgentProfileList from "@/components/agents/AgentProfileList";
+import AgentProfileDetail from "@/components/agents/AgentProfileDetail";
+import type { EditorState } from "@/components/agents/AgentFileEditor";
+import CreateProfileModal from "@/components/agents/CreateProfileModal";
+import DeleteProfileModal from "@/components/agents/DeleteProfileModal";
 
 export default function BehaviourPage() {
   const [profiles, setProfiles] = useState<AgentProfile[]>([]);
@@ -75,54 +75,25 @@ export default function BehaviourPage() {
     };
   }, []);
 
-  // closeDelete — the Delete Profile modal has 3 single-setter
-  // close sites that all do the same thing: `() => setDeleteTarget(null)`.
-  //   1. Modal `onClose` (X-button / overlay click)
-  //   2. Modal Cancel button (footer)
-  //   3. handleDelete's success path (the unconditional `setDeleteTarget(null)`
-  //      that dismisses the modal after a successful delete; the
-  //      `if (selectedProfileId === target)` block in the same
-  //      `onSuccess` body additionally clears `selectedProfileId`
-  //      and `editor`, but those are conditional on the deleted
-  //      profile being the one currently being edited, so they
-  //      stay inline as direct setters)
-  // Centralising into a `useCallback` with empty deps (useState
-  // setters are stable) keeps the 3 sites in lockstep. The pre-session
-  // rationale for not migrating the 3rd site ("threading a target
-  // into a setter-pair callback is over-engineering") was over-
-  // conservative — the `closeDelete()` body is just `setDeleteTarget(null)`
-  // (no target param needed), so the 3rd site is byte-equivalent to
-  // the 2 modal-close sites. Session 183 migrated the 3rd site.
+  // closeDelete — the Delete Profile modal has 3 single-setter close
+  // sites that all do `() => setDeleteTarget(null)`: the modal's
+  // onClose and its Cancel button (both now inside DeleteProfileModal)
+  // and handleDelete's success path. Centralising into a `useCallback`
+  // with empty deps (useState setters are stable) keeps the 3 in
+  // lockstep. In handleDelete the two setters beside it
+  // (`setSelectedProfileId` / `closeEditor`) are conditional on the
+  // deleted profile being the one being edited, so they stay inline.
   const closeDelete = useCallback(() => setDeleteTarget(null), []);
 
-  // closeEditor — the file-editor card has 3 single-setter
-  // close sites that all do the same thing: `() => setEditor(null)`.
-  //   1. handleDelete's success path (around line 282) — but only
-  //      when the deleted profile was the one being edited
-  //   2. Profile-button onClick (around line 404) — when switching
-  //      to a different profile
-  //   3. Editor's "Close" button (around line 567)
-  // Centralising into a `useCallback` with empty deps (useState
-  // setters are stable) keeps the 3 sites in lockstep. The handleDelete
-  // site is part of a 3-call success block (`closeDelete();
-  // setSelectedProfileId(null); closeEditor();`), so the inline
-  // `setEditor(null)` becomes `closeEditor()` — but the surrounding
-  // 2 calls stay inline. This mirrors the closeDelete pattern: a
-  // pure 1-setter helper extracted, leaving the multi-call success
-  // path partially inline (which is the existing pattern in this page
-  // for both `closeDelete` and the 4-setter `closeCreate` block).
+  // closeEditor — the file-editor card has 3 single-setter close sites
+  // that all do `() => setEditor(null)`: handleDelete's success path
+  // (only when the deleted profile was the one being edited), the
+  // profile-button onClick when switching profiles, and the editor's
+  // own "Close" button (now inside AgentFileEditor). Centralising into
+  // a `useCallback` with empty deps keeps the 3 in lockstep.
   const closeEditor = useCallback(() => setEditor(null), []);
 
   const { showToast, toastElement } = useToast();
-
-  const { driftCount, syncErrorCount } = profiles.reduce(
-    (acc, p) => {
-      if (p.syncStatus === "drift") acc.driftCount += 1;
-      else if (p.syncStatus === "error") acc.syncErrorCount += 1;
-      return acc;
-    },
-    { driftCount: 0, syncErrorCount: 0 },
-  );
 
   const doSync = async (
     url: string,
@@ -194,20 +165,13 @@ export default function BehaviourPage() {
     }
   }, [showToast]);
 
-  // Close the New Agent Profile modal. The same 4-setter pair
-  //   setShowCreate(false); setCreateName(""); setCreateDescription(""); setCreateCloneFrom("default");
-  // appears at 2 sites — the modal's `onClose` (X-button / overlay
-  // click) and the `handleCreate` success path (`onSuccess` after
-  // the POST resolves). Centralising it here keeps the 2 sites in
-  // lockstep if a future "clear profile-suggestion cache" or "reset
-  // clone-from default" reset is added — a single edit here updates
-  // both. The pattern mirrors the A3 page-local modal setter-pair
-  // callbacks (session 100: `closeAgentModal` / `closeSystemModal`
-  // in cron; session 98: `closeComposer` in useMissionsPage).
-  // Note: the modal's Cancel button (around line 600) uses a deliberate
-  // SOFT close (1 setter, no clear) to preserve the user's in-flight
-  // form input if they cancel by accident. That is a discriminated
-  // pattern, not a duplicate — left inline.
+  // Close the New Agent Profile modal. The same 4-setter block appears
+  // at 2 sites — the modal's `onClose` (X-button / overlay click) and
+  // `handleCreate`'s success path — so it lives here and both call it.
+  // Note: the modal's Cancel button uses a deliberate SOFT close (1
+  // setter, no clear) to preserve the user's in-flight form input if
+  // they cancel by accident. That is a discriminated pattern, not a
+  // duplicate, and it stays a separate prop on the modal.
   const closeCreate = useCallback(() => {
     setShowCreate(false);
     setCreateName("");
@@ -215,18 +179,11 @@ export default function BehaviourPage() {
     setCreateCloneFrom("default");
   }, []);
 
-  // openCreate — sibling of `closeCreate` (session 116 P-7 /
-  // session 118 P-7 open/close sibling pattern). The "New Profile"
-  // header button (around line 364) was an inline
-  // `() => setShowCreate(true)` arrow, sitting next to the
-  // `closeCreate` callback that handles the close path. Promoting
-  // the open to a useCallback sibling names the page's intent
-  // ("open the create modal") and keeps the open/close pair
-  // symmetric so a future "reset form on open" or "track last-
-  // opened create-tab" extension lands in one place. The deps
-  // array lists the stable setter explicitly to satisfy
-  // `react-hooks/exhaustive-deps` (per session 119 P-3 codebase
-  // convention).
+  // openCreate — sibling of `closeCreate` (session 116 P-7 / session
+  // 118 P-7 open/close sibling pattern). Naming the open path keeps the
+  // pair symmetric so a future "reset form on open" extension lands in
+  // one place. The deps array lists the stable setter explicitly to
+  // satisfy `react-hooks/exhaustive-deps`.
   const openCreate = useCallback(
     () => setShowCreate(true),
     [setShowCreate],
@@ -275,12 +232,9 @@ export default function BehaviourPage() {
       successMessage: "Profile deleted",
       errorMessage: "Failed to delete profile",
       onSuccess: async () => {
-        // `closeDelete()` dismisses the modal (was inline
-        // `setDeleteTarget(null)`). The 2-setter conditional block
-        // below is gated on `selectedProfileId === target`, so those
-        // setters stay inline (the helper triplet pattern from
-        // session 100 doesn't apply — it's an unrelated 1-setter
-        // closure, not a discriminated close).
+        // `closeDelete()` dismisses the modal. The 2-setter conditional
+        // block below is gated on `selectedProfileId === target`, so
+        // those setters stay inline.
         closeDelete();
         if (selectedProfileId === target) {
           setSelectedProfileId(null);
@@ -339,8 +293,19 @@ export default function BehaviourPage() {
     }
   };
 
+  const handleSelectProfile = (profile: AgentProfile) => {
+    setSelectedProfileId(profile.id);
+    if (editor && editor.profileId !== profile.id) {
+      closeEditor();
+    }
+  };
+
   const hasChanges = editor ? editor.content !== editor.original : false;
   const selectedProfile = profiles.find((p) => p.id === selectedProfileId) ?? null;
+  // The file open in the editor FOR THE SELECTED PROFILE, or null. Same
+  // condition the file list used inline before the split.
+  const openFileKey =
+    editor && selectedProfile && editor.profileId === selectedProfile.id ? editor.fileKey : null;
 
   if (loading) {
     return (
@@ -355,333 +320,66 @@ export default function BehaviourPage() {
   return (
     <AppPageShell>
       {toastElement}
-      <PageHeader
-        icon={Users}
-        title="Agent Profiles"
-        subtitle={`${profiles.length} profiles configured`}
-        color="purple"
-        actions={
-          <Button
-            variant="primary"
-            color="purple"
-            icon={Plus}
-            onClick={openCreate}
-          >
-            New Profile
-          </Button>
-        }
-      />
+      <AgentsPageHeader profileCount={profiles.length} onNewProfile={openCreate} />
 
       <div className="px-6 py-6">
-        <p className="text-xs text-white/40 font-mono mb-4 max-w-3xl">
-          Agent identity lives in <strong className="text-white/60">SOUL.md</strong>. Runtime policy
-          (skills.disabled, platform_toolsets, model blocks) is in each profile&apos;s{" "}
-          <strong className="text-white/60">config.yaml</strong>. Pull imports from Hermes disk into
-          SQLite; push writes PatterStage back to disk.
-        </p>
-
-        <AgentPerformanceStrip />
-
-        <ProfilesDriftBanner
-          driftCount={driftCount}
-          errorCount={syncErrorCount}
-          onPushAll={handlePushAll}
-          pushing={syncBusy}
-        />
-        <ProfileSyncBar
-          selectedSlug={selectedProfileId}
+        <AgentProfilesOverview
+          profiles={profiles}
+          selectedProfileId={selectedProfileId}
+          syncBusy={syncBusy}
           onPushAll={handlePushAll}
           onPullAll={handlePullAll}
           onImportDiscovered={handleImportDiscovered}
           onPushOne={handlePushOne}
           onPullOne={handlePullOne}
-          busy={syncBusy}
         />
 
         <div className="flex flex-col lg:flex-row gap-6 min-h-[520px]">
-          <div className="w-full lg:w-64 shrink-0 space-y-2">
-            {profiles.map((profile) => {
-              const selected = selectedProfileId === profile.id;
-              return (
-                <button
-                  key={profile.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedProfileId(profile.id);
-                    if (editor && editor.profileId !== profile.id) {
-                      closeEditor();
-                    }
-                  }}
-                  className={`w-full text-left rounded-xl border p-3 transition-all ${
-                    selected
-                      ? profile.isDefault
-                        ? "border-cyan-500/50 bg-cyan-500/10"
-                        : "border-purple-500/50 bg-purple-500/10"
-                      : "border-white/10 bg-dark-900/50 hover:border-white/20"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <Users
-                      className={`w-4 h-4 ${profile.isDefault ? "text-cyan-400" : "text-purple-400"}`}
-                    />
-                    <span className="font-semibold text-white text-sm truncate">
-                      {profile.isDefault ? profile.name.replace(/\s*\(local default\)\s*$/i, "") : profile.name}
-                    </span>
-                    {profile.isDefault && <Badge color="cyan" size="sm">Local default</Badge>}
-                    {profile.syncStatus === "drift" && (
-                      <Badge color="orange" size="sm">Drift</Badge>
-                    )}
-                    {profile.syncStatus === "error" && (
-                      <Badge color="orange" size="sm">Sync error</Badge>
-                    )}
-                  </div>
-                  {!profile.isDefault && (
-                    <p className="text-[10px] font-mono text-white/25 mb-1">{profile.id}</p>
-                  )}
-                  <p className="text-xs text-white/40 line-clamp-2 mb-2">{profile.description}</p>
-                  <div className="flex items-center gap-2 text-[10px] text-white/30 font-mono">
-                    <span>{profile.skillsCount} skills</span>
-                    <span>·</span>
-                    <span>{profile.files.length} files</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+          <AgentProfileList
+            profiles={profiles}
+            selectedProfileId={selectedProfileId}
+            onSelect={handleSelectProfile}
+          />
 
-          <div className="flex-1 min-w-0 rounded-xl border border-white/10 bg-dark-900/40 flex flex-col">
-            {!selectedProfile ? (
-              <div className="flex-1 flex items-center justify-center text-sm text-white/30 p-8">
-                Select a profile
-              </div>
-            ) : (
-              <>
-                <div className="p-4 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="font-semibold text-white">{selectedProfile.name}</h2>
-                      {selectedProfile.isDefault && <Badge color="cyan" size="sm">Default</Badge>}
-                    </div>
-                    {!selectedProfile.isDefault && (
-                      <p className="text-[10px] font-mono text-white/30 mt-0.5">slug: {selectedProfile.id}</p>
-                    )}
-                    <p className="text-sm text-white/50 mt-1">{selectedProfile.description}</p>
-                  </div>
-                  {!selectedProfile.isDefault && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      color="orange"
-                      icon={Trash2}
-                      onClick={() => setDeleteTarget(selectedProfile.id)}
-                    >
-                      Delete profile
-                    </Button>
-                  )}
-                </div>
-
-                {/* Growth: level + the accumulated signals behind it. */}
-                <div className="p-4 border-b border-white/10">
-                  <AgentGrowthPanel key={selectedProfile.id} profileId={selectedProfile.id} />
-                </div>
-
-                <div className="p-4 border-b border-white/10">
-                  <p className="text-xs text-white/40 font-mono">
-                    Edit <strong className="text-white/60">SOUL.md</strong> for voice and identity.
-                    Use <strong className="text-white/60">config.yaml</strong> for skills.disabled and
-                    platform_toolsets. Session display presets:{" "}
-                    <a href="/operations/personalities" className="text-neon-cyan hover:underline">
-                      Personalities
-                    </a>
-                    .
-                  </p>
-                </div>
-
-                <div className="p-4 flex-1 overflow-auto">
-                  <h3 className="text-xs font-semibold text-white/30 uppercase tracking-wider mb-3">
-                    Behaviour files
-                  </h3>
-                  <div className="space-y-1">
-                    {selectedProfile.files.map((file) => (
-                      <div
-                        key={file.key}
-                        className={`flex items-center justify-between py-2 px-3 rounded-lg border transition-colors ${
-                          editor?.fileKey === file.key &&
-                          editor.profileId === selectedProfile.id
-                            ? "border-purple-500/40 bg-purple-500/5"
-                            : "border-transparent hover:bg-white/5"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <FileText className="w-4 h-4 text-white/30 shrink-0" />
-                          <span className="text-sm text-white/70 font-mono truncate">{file.name}</span>
-                          {file.exists ? (
-                            <span className="text-xs text-white/20 shrink-0">
-                              {(file.size / 1024).toFixed(1)}KB
-                            </span>
-                          ) : (
-                            <span className="text-xs text-white/25 shrink-0">missing</span>
-                          )}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          color="cyan"
-                          onClick={() => openFile(selectedProfile.id, file)}
-                        >
-                          {file.exists ? "Edit" : "Create"}
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {editor && editor.profileId === selectedProfile.id && (
-                  <div className="border-t border-white/10 p-4 flex flex-col gap-3 max-h-[50vh]">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm text-white">{editor.fileName}</span>
-                        {hasChanges && <Badge color="orange" size="sm">Unsaved</Badge>}
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          icon={previewMode ? EyeOff : Eye}
-                          onClick={() => setPreviewMode(!previewMode)}
-                        >
-                          {previewMode ? "Edit" : "Preview"}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          icon={RotateCcw}
-                          onClick={() => setEditor({ ...editor, content: editor.original })}
-                          disabled={!hasChanges}
-                        >
-                          Reset
-                        </Button>
-                        <Button
-                          variant="primary"
-                          color="purple"
-                          size="sm"
-                          icon={
-                            saveStatus === "saved"
-                              ? Check
-                              : saveStatus === "error"
-                                ? AlertCircle
-                                : Save
-                          }
-                          onClick={handleSave}
-                          disabled={!hasChanges || saving}
-                        >
-                          {saving ? "Saving..." : saveStatus === "saved" ? "Saved!" : "Save"}
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={closeEditor}>
-                          Close
-                        </Button>
-                      </div>
-                    </div>
-                    {previewMode ? (
-                      <pre className="whitespace-pre-wrap text-sm text-white/80 font-mono bg-dark-800 rounded-lg p-4 overflow-auto max-h-64">
-                        {editor.content}
-                      </pre>
-                    ) : (
-                      <textarea
-                        value={editor.content}
-                        onChange={(e) => setEditor({ ...editor, content: e.target.value })}
-                        className="w-full min-h-[200px] max-h-64 bg-dark-800 border border-white/10 rounded-lg p-4 text-sm text-white/80 font-mono resize-y focus:border-purple-500/50 focus:outline-none"
-                        spellCheck={false}
-                      />
-                    )}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          <AgentProfileDetail
+            profile={selectedProfile}
+            onDelete={setDeleteTarget}
+            openFileKey={openFileKey}
+            onOpenFile={openFile}
+            editor={editor}
+            hasChanges={hasChanges}
+            previewMode={previewMode}
+            saveStatus={saveStatus}
+            saving={saving}
+            onTogglePreview={() => setPreviewMode(!previewMode)}
+            onResetEditor={() => editor && setEditor({ ...editor, content: editor.original })}
+            onEditorContentChange={(content) => editor && setEditor({ ...editor, content })}
+            onSaveEditor={handleSave}
+            onCloseEditor={closeEditor}
+          />
         </div>
 
-        <Modal
+        <CreateProfileModal
           open={showCreate}
+          profiles={profiles}
+          name={createName}
+          onNameChange={setCreateName}
+          description={createDescription}
+          onDescriptionChange={setCreateDescription}
+          cloneFrom={createCloneFrom}
+          onCloneFromChange={setCreateCloneFrom}
+          creating={creating}
           onClose={closeCreate}
-          title="New Agent Profile"
-          icon={Plus}
-          iconColor="text-neon-purple"
-          size="md"
-          footer={
-            <>
-              <Button variant="ghost" size="sm" onClick={() => setShowCreate(false)}>Cancel</Button>
-              <Button
-                variant="primary"
-                color="purple"
-                size="sm"
-                icon={Plus}
-                onClick={handleCreate}
-                disabled={!createName.trim() || creating}
-              >
-                {creating ? "Creating..." : "Create"}
-              </Button>
-            </>
-          }
-        >
-          <div className="space-y-4">
-            <Field label="Name">
-              <Input
-                type="text"
-                value={createName}
-                onChange={(e) => setCreateName(e.target.value)}
-                placeholder="e.g. Research Assistant"
-              />
-            </Field>
-            <Field label="Description">
-              <Input
-                type="text"
-                value={createDescription}
-                onChange={(e) => setCreateDescription(e.target.value)}
-                placeholder="e.g. Academic research and analysis"
-              />
-            </Field>
-            <Field label="Clone From">
-              <Select
-                ariaLabel="Clone from profile"
-                value={createCloneFrom}
-                onChange={setCreateCloneFrom}
-                options={[
-                  { value: "default", label: "Default (Bob)" },
-                  ...profiles.filter((p) => !p.isDefault).map((p) => ({ value: p.id, label: p.name })),
-                ]}
-              />
-            </Field>
-          </div>
-        </Modal>
+          onCancel={() => setShowCreate(false)}
+          onCreate={handleCreate}
+        />
 
-        <Modal
+        <DeleteProfileModal
           open={deleteTarget !== null}
+          deleting={deleting}
           onClose={closeDelete}
-          title="Delete Profile"
-          icon={Trash2}
-          iconColor="text-red-400"
-          size="sm"
-          footer={
-            <>
-              <Button variant="ghost" size="sm" onClick={closeDelete}>Cancel</Button>
-              <Button
-                variant="primary"
-                color="orange"
-                size="sm"
-                icon={Trash2}
-                onClick={handleDelete}
-                disabled={deleting}
-              >
-                {deleting ? "Deleting..." : "Delete"}
-              </Button>
-            </>
-          }
-        >
-          <p className="text-sm text-white/70">
-            This will permanently delete the profile and all its files. This action cannot be undone.
-          </p>
-        </Modal>
+          onDelete={handleDelete}
+        />
       </div>
     </AppPageShell>
   );
