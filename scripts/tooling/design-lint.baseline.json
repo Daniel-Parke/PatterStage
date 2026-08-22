@@ -180,8 +180,5 @@
   "sql-outside-repository::src/lib/missions/mission-model-audit.ts": 2,
   "sql-outside-repository::src/lib/orchestration/scheduler/BackgroundScheduler.ts": 2,
   "sql-outside-repository::src/lib/sessions/hermes-state-sessions.ts": 2,
-  "sql-outside-repository::src/lib/sessions/session-mission-links.ts": 3,
-  "sql-outside-repository::src/lib/sessions/session-orphan-sweep.ts": 4,
-  "sql-outside-repository::src/lib/sessions/session-sync.ts": 4,
   "sql-outside-repository::src/modules/hermes/lib/state-import.ts": 1
 }

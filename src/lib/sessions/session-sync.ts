@@ -42,6 +42,12 @@ import {
   buildValidMissionIdSet,
 } from "./session-mission-links";
 import { closeOrphanedActiveSessions } from "./session-orphan-sweep";
+import {
+  addSessionMessageCountColumn,
+  clearStaleCronMissionLinks,
+  hasSessionMessageCountColumn,
+  prepareSessionUpsert,
+} from "./session-sync-repository";
 
 /**
  * Idempotent runtime check that the sessions.message_count column exists.
@@ -57,11 +63,8 @@ import { closeOrphanedActiveSessions } from "./session-orphan-sweep";
  */
 function ensureMessageCountColumn(database: Database.Database): void {
   try {
-    const col = database
-      .prepare("SELECT 1 FROM pragma_table_info('sessions') WHERE name='message_count'")
-      .get();
-    if (!col) {
-      database.exec("ALTER TABLE sessions ADD COLUMN message_count INTEGER");
+    if (!hasSessionMessageCountColumn(database)) {
+      addSessionMessageCountColumn(database);
     }
   } catch {
     // Non-fatal: the column will simply remain unavailable and the upsert
@@ -100,50 +103,12 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
   // NULL out mission_ids that point to soft-deleted or missing missions
   // to prevent FK violations on subsequent upserts.
   try {
-    database.prepare(/* sql */ `
-      UPDATE sessions
-      SET mission_id = NULL
-      WHERE source = 'cron'
-        AND mission_id IS NOT NULL
-        AND mission_id NOT IN (SELECT id FROM missions WHERE deleted_at IS NULL)
-    `).run();
+    clearStaleCronMissionLinks(database);
   } catch {
     // non-fatal — the individual try/catch below will handle any remaining FK issues
   }
 
-  const upsert = database.prepare(/* sql */ `
-    INSERT INTO sessions (
-      id, agent_type, source, mission_id,
-      model_id, provider, title, size, started_at, ended_at,
-      status, exit_code, message_count
-    ) VALUES (
-      ?, 'hermes', ?, ?,
-      ?, NULL, ?, ?, ?, ?,
-      ?, ?, ?
-    )
-    ON CONFLICT(id) DO UPDATE SET
-      source        = excluded.source,
-      title         = excluded.title,
-      model_id      = COALESCE(excluded.model_id, model_id),
-      mission_id    = COALESCE(excluded.mission_id, mission_id),
-      size          = excluded.size,
-      started_at    = excluded.started_at,
-      ended_at      = COALESCE(excluded.ended_at, ended_at),
-      -- A session we've already closed locally (orphan sweep or a real
-      -- end_reason) must NOT be resurrected to 'active' just because Hermes
-      -- still reports end_reason: null. Without this guard the orphan sweep
-      -- re-closes the same rows every 15s tick forever (active↔closed churn +
-      -- write amplification). A real terminal end_reason (excluded.status is
-      -- then 'completed'/'failed', not 'active') still flows through.
-      status        = CASE
-                         WHEN excluded.status = 'active'
-                              AND sessions.status IN ('completed', 'failed', 'cancelled')
-                           THEN sessions.status
-                         ELSE excluded.status
-                       END,
-      exit_code     = COALESCE(excluded.exit_code, exit_code),
-      message_count = COALESCE(excluded.message_count, message_count)
-  `);
+  const upsert = prepareSessionUpsert(database);
 
   const tx = database.transaction(() => {
     let synced = 0;
@@ -182,19 +147,19 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
       }
 
       try {
-        upsert.run(
-          row.id,
-          row.source === "api_server" ? "api" : row.source,
+        upsert({
+          id: row.id,
+          source: row.source === "api_server" ? "api" : row.source,
           missionId,
-          row.model ?? null,
+          modelId: row.model ?? null,
           title,
           size,
           startedAt,
           endedAt,
           status,
           exitCode,
-          row.message_count ?? null,
-        );
+          messageCount: row.message_count ?? null,
+        });
         synced++;
       } catch {
         // FK violation or other transient error — skip this session

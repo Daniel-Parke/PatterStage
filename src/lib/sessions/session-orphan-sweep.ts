@@ -22,12 +22,21 @@
 // belongs to the write path and nothing else may touch it. It is
 // audit-referenced: see dogfood-output/report.md Issue #3.
 //
-// The four prepared statements are carried in the design-lint
-// baseline; moving them behind the repository seam is T-0012's work,
-// not this split's.
+// The four statements now live in ./session-sync-repository, where the
+// dry-run SELECTs sit beside the UPDATEs they have to mirror. The
+// try/catch around each call stays here: a failed sweep is a
+// non-fatal "closed nothing this tick", and that judgement belongs to
+// the sweep, not to the repository.
 // ═══════════════════════════════════════════════════════════════
 
 import type Database from "better-sqlite3";
+
+import {
+  closeMissionGatedOrphans,
+  closeParentlessOrphans,
+  selectMissionGatedOrphans,
+  selectParentlessOrphans,
+} from "./session-sync-repository";
 
 // Tracks the most recent orphan-close count so the periodic log can
 // suppress the steady-state churn and only fire when the count changes
@@ -116,23 +125,7 @@ export function previewOrphanSweep(
   // mission_id IS NOT NULL keeps parentless rows out — they belong
   // to path (B))
   try {
-    const rows = database
-      .prepare(/* sql */ `
-        SELECT sessions.source,
-               CASE
-                 WHEN m.id IS NULL OR m.deleted_at IS NOT NULL THEN 'completed'
-                 WHEN m.status = 'successful' THEN 'completed'
-                 WHEN m.status IN ('failed', 'cancelled') THEN 'failed'
-                 ELSE 'completed'
-               END AS new_status
-        FROM sessions
-        LEFT JOIN missions m ON m.id = sessions.mission_id
-        WHERE sessions.status = 'active'
-          AND sessions.mission_id IS NOT NULL
-          AND sessions.started_at < ?
-          AND (m.id IS NULL OR m.deleted_at IS NOT NULL OR m.status != 'dispatched')
-      `)
-      .all(cutoff) as Array<{ source: string; new_status: string }>;
+    const rows = selectMissionGatedOrphans(database, cutoff);
     tallyOrphanRows(
       rows.map((r) => ({ source: r.source, status: r.new_status })),
       counters,
@@ -146,16 +139,7 @@ export function previewOrphanSweep(
   // Per the tally contract, the (B) path always assigns status='completed',
   // so the source row is tagged as such before being tallied.
   try {
-    const rows = database
-      .prepare(/* sql */ `
-        SELECT source
-        FROM sessions
-        WHERE status = 'active'
-          AND mission_id IS NULL
-          AND started_at < ?
-          AND (size > 0 OR started_at < ?)
-      `)
-      .all(cutoff, longCutoff) as Array<{ source: string }>;
+    const rows = selectParentlessOrphans(database, cutoff, longCutoff);
     tallyOrphanRows(
       rows.map((r) => ({ source: r.source, status: "completed" })),
       counters,
@@ -215,43 +199,7 @@ export function closeOrphanedActiveSessions(
   // changes this call made (not a re-read of all matching rows,
   // which would double-count across sync ticks).
   try {
-    const changedRows = database
-      .prepare(/* sql */ `
-        WITH session_with_mission AS (
-          SELECT s.id AS session_id,
-                 s.source AS source,
-                 m.id AS mission_id,
-                 m.status AS mission_status,
-                 m.deleted_at AS mission_deleted_at
-          FROM sessions s
-          LEFT JOIN missions m ON m.id = s.mission_id
-          WHERE s.status = 'active'
-            AND s.mission_id IS NOT NULL
-            AND s.started_at < ?
-            AND (m.id IS NULL OR m.deleted_at IS NOT NULL OR m.status != 'dispatched')
-        )
-        UPDATE sessions
-        SET status = CASE
-              WHEN swm.mission_id IS NULL OR swm.mission_deleted_at IS NOT NULL THEN 'completed'
-              WHEN swm.mission_status = 'successful' THEN 'completed'
-              WHEN swm.mission_status IN ('failed', 'cancelled') THEN 'failed'
-              ELSE 'completed'
-            END,
-            ended_at = COALESCE(sessions.ended_at, sessions.started_at),
-            exit_code = COALESCE(
-              sessions.exit_code,
-              CASE
-                WHEN swm.mission_id IS NULL OR swm.mission_deleted_at IS NOT NULL THEN 0
-                WHEN swm.mission_status = 'successful' THEN 0
-                WHEN swm.mission_status IN ('failed', 'cancelled') THEN 1
-                ELSE 0
-              END
-            )
-        FROM session_with_mission swm
-        WHERE swm.session_id = sessions.id
-        RETURNING sessions.source, sessions.status
-      `)
-      .all(cutoff) as Array<{ source: string; status: string }>;
+    const changedRows = closeMissionGatedOrphans(database, cutoff);
     tallyOrphanRows(changedRows, counters);
   } catch {
     // non-fatal — the table layout or FK may not permit the join
@@ -280,18 +228,7 @@ export function closeOrphanedActiveSessions(
   // the noise; only log on first occurrence and on a real shift
   // of >=100. Audit reference: dogfood-output/report.md Issue #3.
   try {
-    const changedRows = database
-      .prepare(/* sql */ `
-        UPDATE sessions
-        SET status = 'completed',
-            ended_at = COALESCE(ended_at, started_at)
-        WHERE status = 'active'
-          AND mission_id IS NULL
-          AND started_at < ?
-          AND (size > 0 OR started_at < ?)
-        RETURNING source
-      `)
-      .all(cutoff, longCutoff) as Array<{ source: string }>;
+    const changedRows = closeParentlessOrphans(database, cutoff, longCutoff);
     // The (B) UPDATE always assigns status='completed' (the SQL has
     // no CASE branch). Tag each source row as such before tallying
     // — `tallyOrphanRows` reads `row.status` directly.

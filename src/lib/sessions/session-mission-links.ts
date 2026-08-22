@@ -22,14 +22,16 @@
 //
 // Every function swallows its errors and degrades to "no link". A
 // missing mission link costs a UI affordance; a throw here would take
-// down a sync tick or a transcript page.
-//
-// The three prepared statements are carried in the design-lint
-// baseline; moving them behind the repository seam is T-0012's work,
-// not this split's.
+// down a sync tick or a transcript page. The swallows stay HERE: the
+// three statements now live in ./session-sync-repository, which throws,
+// so each caller keeps deciding what "no link" means for itself.
 // ═══════════════════════════════════════════════════════════════
 
-import { getDb } from "../db";
+import {
+  readAllMissionIds,
+  readMissionIdForExternalJobId,
+  readMissionIdsByExternalJobId,
+} from "./session-sync-repository";
 import { cronJobIdFromSessionId } from "./session-title";
 
 /**
@@ -40,9 +42,7 @@ import { cronJobIdFromSessionId } from "./session-title";
  */
 export function buildValidMissionIdSet(): Set<string> {
   try {
-    const rows = getDb()
-      .prepare("SELECT id FROM missions")
-      .all() as Array<{ id: string }>;
+    const rows = readAllMissionIds();
     return new Set(rows.map((r) => r.id));
   } catch {
     return new Set();
@@ -62,14 +62,7 @@ export function buildValidMissionIdSet(): Set<string> {
 export function buildMissionIdByJobId(): Map<string, string> {
   const missionIdByJobId = new Map<string, string>();
   try {
-    const rows = getDb()
-      .prepare(`
-        SELECT m.id AS mission_id, c.external_job_id
-        FROM missions m
-        JOIN cron_jobs c ON c.id = m.cron_job_id
-        WHERE c.external_job_id IS NOT NULL AND c.external_job_id != ''
-      `)
-      .all() as Array<{ mission_id: string; external_job_id: string }>;
+    const rows = readMissionIdsByExternalJobId();
     for (const row of rows) {
       missionIdByJobId.set(row.external_job_id, row.mission_id);
     }
@@ -97,15 +90,7 @@ export function buildMissionIdByJobId(): Map<string, string> {
 function lookupMissionIdForHermesJob(externalJobId: string): string | null {
   if (!externalJobId) return null;
   try {
-    const row = getDb()
-      .prepare(
-        `SELECT m.id AS mission_id
-         FROM missions m
-         JOIN cron_jobs c ON c.id = m.cron_job_id
-         WHERE c.external_job_id = ?
-         LIMIT 1`,
-      )
-      .get(externalJobId) as { mission_id: string } | undefined;
+    const row = readMissionIdForExternalJobId(externalJobId);
     return row?.mission_id ?? null;
   } catch {
     // DB unavailable or schema differs — non-fatal
