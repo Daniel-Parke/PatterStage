@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { readFileSync, statSync } from "fs";
 import { basename } from "path";
 
-import { getActiveHermesPaths } from "@/modules/hermes/lib/agent-runtime";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { readAgentSessionDetail } from "@/lib/runtime/state-db";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
@@ -148,7 +148,7 @@ export async function GET(
   }
 
   // ── Step 2: Legacy file-based sessions (~/.hermes/sessions/) ──────────
-  const sessionsPath = getActiveHermesPaths().sessions;
+  const sessionsPath = getAgentWorkspace().sessions;
   // Try the raw name first, then `.json`, then `.jsonl`. Legacy sessions
   // were written both with and without an extension.
   const filePath = findFileWithExtension(sessionsPath, sanitizedId, ["", ".json", ".jsonl"]);
@@ -196,6 +196,7 @@ export async function GET(
           size: dbSession.size,
           missionId: dbSession.missionId ?? null,
           note: dbSession.source === "mission"
+            // design-lint-disable-next-line hermes-outside-adapter -- operator prose in the response body, not a path lookup. It tells a human which file on the agent's install their output went to when no transcript exists yet; routing a sentence through the port would only hide who wrote it.
             ? "This mission-spawned session has no output file yet. The agent may still be running, or the output was written to ~/.hermes/state.db — refresh to check."
             : dbSession.source === "cron"
               ? "This cron-spawned session is still running. Messages will appear here when the agent completes."

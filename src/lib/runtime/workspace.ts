@@ -12,11 +12,23 @@
 // workspace. Core depends on THIS; only this file knows the answer comes from
 // Hermes today.
 //
-// Deliberately narrow. `HermesPathBundle` has 19 fields; core only ever needed
-// five, and the other fourteen (profiles, skills, soul, cronJobs, hindsightConfig)
-// are Hermes' own layout and belong to the hermes surfaces that already import
-// it directly. A neutral interface that mirrored all nineteen would just be the
+// Deliberately narrow. `HermesPathBundle` has 19 fields; core needs six, and
+// the other thirteen (profiles, skills, soul, cronJobs, hindsightConfig) are
+// Hermes' own layout and belong to the hermes surfaces that already import it
+// directly. A neutral interface that mirrored all nineteen would just be the
 // Hermes bundle wearing a different name.
+//
+// Five became six in Phase 7 (T-0014), when GET /api/sessions/[id] stopped
+// calling getActiveHermesPaths() and came through here instead. `sessions`
+// answers a question this port was already half-answering: it reads transcripts
+// out of the agent's state DB in state-db.ts, and `sessions` is the same
+// question asked of the filesystem, for transcripts written before that DB
+// existed.
+//
+// `skills` deliberately did NOT join it, though the skills route was in the
+// same sweep. A skills tree is an authoring layout, Hermes-shaped in a way a
+// transcript directory is not, so that route says so in a pragma rather than
+// borrowing this file's neutrality for a path that has none.
 // ═══════════════════════════════════════════════════════════════
 
 import { getActiveHermesPaths } from "@/modules/hermes/lib/agent-runtime";
@@ -31,6 +43,8 @@ export interface AgentWorkspace {
   config: string;
   /** Environment file holding provider credentials. */
   env: string;
+  /** Directory the agent writes session transcripts into. */
+  sessions: string;
   /** Local long-term-memory store. */
   memoryDb: string;
 }
@@ -49,6 +63,7 @@ export function getAgentWorkspace(): AgentWorkspace {
     logs: paths.logs,
     config: paths.config,
     env: paths.env,
+    sessions: paths.sessions,
     memoryDb: paths.memoryDb,
   };
 }

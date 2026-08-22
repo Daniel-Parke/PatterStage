@@ -1,8 +1,6 @@
 {
   "hermes-outside-adapter::src/app/api/config/route.ts": 2,
-  "hermes-outside-adapter::src/app/api/logs/route.ts": 2,
   "hermes-outside-adapter::src/app/api/models/[id]/diff/route.ts": 1,
-  "hermes-outside-adapter::src/app/api/sessions/[id]/route.ts": 3,
   "hermes-outside-adapter::src/app/api/skills/[...path]/route.ts": 2,
   "hermes-outside-adapter::src/app/config/models/page.tsx": 1,
   "hermes-outside-adapter::src/app/page.tsx": 1,

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { existsSync, writeFileSync } from "fs";
 import { resolve } from "path";
 
-import { getActiveHermesPaths } from "@/modules/hermes/lib/agent-runtime";
+import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import {
   listLogFilesInDir,
@@ -24,11 +24,11 @@ interface LogsDirResult {
 }
 
 /**
- * Resolve the active Hermes logs directory and its resolved form.
+ * Resolve the active agent's logs directory and its resolved form.
  * Returns null when the directory doesn't exist (caller handles 404).
  */
 function resolveLogsDir(): LogsDirResult | null {
-  const logsDir = getActiveHermesPaths().logs;
+  const logsDir = getAgentWorkspace().logs;
   if (!existsSync(logsDir)) return null;
   return { logsDir, resolvedLogsDir: resolve(logsDir) };
 }
