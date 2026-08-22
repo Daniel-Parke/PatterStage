@@ -1,0 +1,20 @@
+{
+  "global": {
+    "statements": 38,
+    "branches": 27,
+    "lines": 40,
+    "functions": 27
+  },
+  "src/lib/": {
+    "statements": 69,
+    "branches": 59,
+    "lines": 70,
+    "functions": 72
+  },
+  "src/app/api/": {
+    "statements": 42,
+    "branches": 36,
+    "lines": 45,
+    "functions": 44
+  }
+}
