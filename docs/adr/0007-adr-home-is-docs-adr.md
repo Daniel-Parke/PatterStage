@@ -2,15 +2,16 @@
 summary: docs/adr/ is the single ADR home; org/decisions/ holds a pointer so the constitutional path stays true
 type: decision
 tags: [process, governance]
-status: proposed
+status: superseded
 ---
 
 # ADR-0007 · The ADR home is docs/adr/
 
-**Status:** proposed by PLAN session S-0002, 2026-08-22. The operator approved
-the consolidation plan that proposes this ADR (`org/plans/2026-08-consolidation.md`,
-approved 2026-08-22); acceptance is the operator's signature, recorded by
-flipping `status` to `accepted` here and naming the date.
+**Status:** superseded by ADR-0008 before acceptance, 2026-08-22. The operator
+declined this proposal in the interactive sign-off round and ruled the
+opposite under v2 EOS conventions: the ADR home becomes `org/decisions/`
+(v2-native), with `docs/adr/README.md` kept as a public pointer. See
+`0008-adopt-the-v2-eos.md`, Decision item 5.
 **Date:** 2026-08-22.
 
 ## Context

@@ -450,3 +450,48 @@ hermes baseline entry).
 
 **Phase 5 dispositions:** table in §6.
 **Branch proofs:** table in §3.
+
+---
+
+## 12 · Part II: EOS v2 adoption (added 2026-08-22, operator-ruled)
+
+At the interactive sign-off round the operator redirected the programme: the
+rebuilt PatterTech_EOS (unreleased v2 line, tooling 0.4.0) is adopted into
+PatterStage as its own phase. Four rulings, all 2026-08-22:
+
+- **R-A (sequencing):** Phase 0 (green line) and Phase 0b (branches) run
+  first under current rules; the EOS recompile runs next; ALL remaining work
+  (Phases 1-7 plus WO-0012, WO-0014 rewritten, WO-0015/0016/0017, and the
+  promoted Q-008 guard task) then executes as v2 task records under v2 modes.
+- **R-B (ADR-0008 accepted):** the full recompile at ORG scale, per the ADR:
+  pin repair (cc18755 recorded as c6f94df; new pin = current pushed EOS
+  head), v2 kernel file set replaces the v1 org machinery, rulings migrate to
+  docs/RULINGS.json with retired-id triage and the WG-DRAFT-001 to
+  DOC-IDENT-001 re-anchor, open queue rows become org/tasks/T-####.json
+  records, hand-kept STATE and session logs retire (git is the log).
+- **R-C (ADR home):** all ADRs move to org/decisions/ under ADR-####-slug
+  naming; docs/adr/README.md stays as a public pointer. ADR-0007 superseded.
+- **R-D (EOS-side writes):** registration lands directly on the EOS's dev
+  branch: registry/PROJECTS.md row, estate/repos.json run-engine correction
+  per ADR-0002, and the v2-template feedback re-cut (FB-001/003/005 recorded
+  as independently resolved; FB-002 re-aimed as a worked-ruling offer against
+  the identity-access pack; FB-004 kept). Next harvest: 2026-09-08.
+
+Dispositions this settles: Q-004, Q-006, Q-007 dissolve with the files they
+concern (folded at cutover); Q-005's corrections ride the rulings migration;
+Q-008 is promoted to a task; WO-0029 is discarded-with-note (the recompile
+replaces WORK.md wholesale; ADR-0006 already records the doctrine and
+survives unchanged). The scope ruling ("everything ready in the queue")
+brings WO-0012, WO-0014 (acceptance rewritten per its 2026-07-26 ruling),
+WO-0015, WO-0016 and WO-0017 into the execution phase.
+
+Execution-session model from here to the cutover: EXECUTOR-style agents own
+tasks end to end; independent verifier agents review diffs the executing
+agent did not write before anything merges; after the cutover the compiled
+v2 policy rules modes and review sampling. Oracle independence is preserved
+throughout: acceptance tests for data-safety work are authored before
+implementation by an agent that has not seen the implementation.
+
+Pending operator items after the cutover: re-sign the human rubric headed by
+the cold-start test (a migrated seed is a new seed), the branch-protection
+click, and the Dependabot pause.

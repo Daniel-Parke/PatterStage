@@ -51,7 +51,7 @@ split.
   org/START.md, arrives at those contracts reliably. The cold-start test at
   phase E is what answers this, and it is the only test of the seed that matters.
 
-### Q-004 · The queue header contradicts the separation of duties
+### Q-004 · The queue header contradicts the separation of duties · ANSWERED 2026-08-22, folds at cutover
 - raised: 2026-08-22, PLAN session S-0002, at consolidation-plan approval.
 - the defect: `org/QUEUE.md`'s header says a session "moves it to Done at
   close", but Part II Article 3 says no session approves its own output, and
@@ -63,8 +63,11 @@ split.
   meanwhile; PLAN did not rewrite it unprompted because the brief ordered the
   contradiction flagged rather than silently resolved.
 - owner: operator.
+- ANSWER (operator, 2026-08-22, via ADR-0008): dissolved structurally. The v2
+  EOS recompile retires org/QUEUE.md entirely; task records and router-ruled
+  modes replace the header's protocol. Folded when the cutover lands.
 
-### Q-005 · Three lock-book corrections need sanction
+### Q-005 · Three lock-book corrections need sanction · SANCTIONED 2026-08-22
 - raised: 2026-08-22, PLAN session S-0002, from the plan's verification sweep.
 - (a) `docs/LOCKBOOK.md:188-190` (WG-OPS-002 body) asserts `docker-image` sits
   in branch protection's required set. Measured via `gh api`:
@@ -81,8 +84,10 @@ split.
 - what is asked: sanction the three corrections; the lock-book records closed
   rulings and PLAN does not touch it without a ruling.
 - owner: operator.
+- ANSWER (operator, 2026-08-22, via ADR-0008): sanctioned; all three land as
+  part of the rulings migration to docs/RULINGS.json (ADR-0008 decision 3).
 
-### Q-006 · No session log exists for session 1
+### Q-006 · No session log exists for session 1 · ANSWERED 2026-08-22, folds at cutover
 - raised: 2026-08-22, PLAN session S-0002.
 - the fact: `org/logs/` was empty despite queue rows citing
   `session-1-2026-07-26` and START's close ritual demanding a log per session.
@@ -92,8 +97,11 @@ split.
   session 1's log from git history and the queue rows is wanted (a cheap DOCS
   row) or whether the gap is simply recorded here.
 - owner: operator.
+- ANSWER (operator, 2026-08-22, via ADR-0008): the gap stays recorded here; no
+  reconstruction. v2 retires session logs (git is the log), so the series ends
+  with the migration record.
 
-### Q-007 · Done rows sit in the Ready section
+### Q-007 · Done rows sit in the Ready section · ANSWERED 2026-08-22, folds at cutover
 - raised: 2026-08-22, PLAN session S-0002.
 - the fact: WO-0002, WO-0003, WO-0005 and WO-0006 are status DONE but live in
   Ready; the Done section says "(none)". The consolidation plan's re-order
@@ -102,8 +110,10 @@ split.
 - what is asked: move them to the Done section (id, session, date per the
   template), or leave them in place.
 - owner: operator.
+- ANSWER (operator, 2026-08-22, via ADR-0008): moot; the queue file retires at
+  the cutover and closed rows live in git history.
 
-### Q-008 · Suggestion: make the design-lint baseline mechanically shrink-only
+### Q-008 · Suggestion: make the design-lint baseline mechanically shrink-only · PROMOTED 2026-08-22
 - raised: 2026-08-22, PLAN session S-0002, from the verification sweep.
 - the fact: `--update-baseline` writes current counts unconditionally; run
   after a regression it would grow the baseline. Shrink-only is doctrine in
@@ -113,6 +123,9 @@ split.
   Strengthens a check; touches nothing else.
 - what is asked: promote to a queue row or decline with a reason.
 - owner: operator.
+- ANSWER (operator, 2026-08-22): promoted; executes as a task in the v2
+  execution phase (the guard refuses to write a larger total without an
+  explicit second flag carrying a written reason).
 
 ## Folded
 

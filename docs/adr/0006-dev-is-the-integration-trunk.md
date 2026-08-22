@@ -2,15 +2,14 @@
 summary: dev is the integration trunk; WORK branches from dev, done means merged to green dev, main moves only through gated release PRs
 type: decision
 tags: [process, governance]
-status: proposed
+status: accepted
 ---
 
 # ADR-0006 · dev is the integration trunk
 
-**Status:** proposed by PLAN session S-0002, 2026-08-22. The operator approved
-the consolidation plan that proposes this ADR (`org/plans/2026-08-consolidation.md`,
-approved 2026-08-22); acceptance of the ADR itself is the operator's signature,
-recorded by flipping `status` to `accepted` here and naming the date.
+**Status:** accepted by Daniel (operator), 2026-08-22, in the interactive
+sign-off round following plan approval. Proposed the same day by PLAN session
+S-0002 under `org/plans/2026-08-consolidation.md`.
 **Date:** 2026-08-22.
 
 ## Context

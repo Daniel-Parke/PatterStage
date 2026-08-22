@@ -14,8 +14,9 @@ itself. Do not build on a proposed ADR without saying that is what you are doing
 | [0003](0003-shared-kit-distribution.md) | One shared repo for agnostic layers; vendor the design kit by copy-in first | accepted |
 | [0004](0004-brain-and-body.md) | The LLM is the Brain, the framework is the Body; progression measures the Body | accepted |
 | [0005](0005-product-modules.md) | Product surfaces plug in through one ProductModule seam; Rec Room proves it | accepted |
-| [0006](0006-dev-is-the-integration-trunk.md) | dev is the integration trunk; done means merged to green dev; main moves via gated release PRs | proposed |
-| [0007](0007-adr-home-is-docs-adr.md) | docs/adr/ is the single ADR home; org/decisions/ holds a pointer | proposed |
+| [0006](0006-dev-is-the-integration-trunk.md) | dev is the integration trunk; done means merged to green dev; main moves via gated release PRs | accepted |
+| [0007](0007-adr-home-is-docs-adr.md) | docs/adr/ is the single ADR home; org/decisions/ holds a pointer | superseded |
+| [0008](0008-adopt-the-v2-eos.md) | Adopt the v2 EOS by recompile at ORG scale; ADRs move to org/decisions/ | accepted |
 
 ## Relationship to the EOS
 
