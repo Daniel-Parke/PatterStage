@@ -1,3 +1,10 @@
+---
+summary: The Chat page, its Agent and Fast modes, and how a turn becomes a real agent run
+type: guide
+tags: [product, chat]
+compiled_from: normalised
+---
+
 # PatterStage — Agent Chat
 
 The Chat page (`/orchestration/chat`) is a real conversation with your Hermes

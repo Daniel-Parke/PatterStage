@@ -1,3 +1,10 @@
+---
+summary: The versioned schema artifacts, the bump policy, and how the JSON Schema files are generated
+type: reference
+tags: [product, schema]
+compiled_from: normalised
+---
+
 # Schema versioning
 
 ## Current versions

@@ -1,0 +1,25 @@
+{
+  "id": "T-0009",
+  "intent": "Phase 2: build the output canary, so a future file move can be proved output-neutral rather than asserted. Warrant WG-ARCH-006 (B, behaviour pinned first). All 2,279 tests are option A: no snapshot, golden or characterisation test and no output hash exists, which is why the 2026-07 module move was made without one and why WG-ARCH-001 cannot rule C. Source row WO-0008. Every later phase leans on this task. Acceptance: (1) a build-output hash or golden set that a pure file move leaves unchanged; (2) it runs in a gate; (3) npm run seed-pack's deterministic artefacts are covered; (4) added by plan amendment 2026-08-22, beyond the row's original text, a deliberate one-line change is proved non-neutral by the same gate, so the canary cannot pass trivially. Done when a future move can be proved output-neutral rather than asserted. Tier proposal R2, anticipated factor ci-stateful-infra from derived signal ci-config, evidence the canary must run in a gate, which means a job under .github/workflows/.",
+  "declared": {
+    "capabilities": [
+      "filesystem",
+      "build"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "scripts/tooling/",
+    ".github/workflows/"
+  ],
+  "timestamps": {
+    "opened": "2026-07-25T00:00:00Z",
+    "updated": "2026-08-22T21:00:00Z"
+  }
+}

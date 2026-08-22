@@ -1,69 +1,57 @@
 ---
-summary: PatterStage Venture lock-book , the machine rulings header and the module contract sections
+summary: PatterStage venture lock-book, the machine header and the module contract sections
 type: venture
 tags: [eos]
 supersedes: the v0.1 PROJECT_LOCKIN migration
 eos_root: ../PatterTech_EOS
-eos_version: v1.0
-eos_commit: cc18755
-scale: M
+eos_version: 0.4.0
+eos_commit: 727bee44bdd83ce569a8d711d51eccf79851af92
+scale: ORG
 stack: none of the three registry profiles fits; see docs/EOS_FEEDBACK.md EOS-FB-004. PatterStage is a local-first Next.js application with an EMBEDDED database (better-sqlite3), no separate backend service and no hosting: the user runs it on their own machine. Pinned as `local-app (authored, pending a registry profile)`
+policy_profile: org/policy.json
+packs_adopted: [identity-access, security-privacy, architecture, coding, delivery-testing, devops-reliability, docs-dx, ui-ux, writing-content, agentic-development, agentic-swarm, ai-ml-llm, supply-chain-integrity, legal-licensing, data-analytics, pattertech-house]
 addons: [ops-runbook, restore-test]
-compiled: 2026-07-25
-rulings:
-  - WG-EOS-001 · M · argued · server state, auth and standing ops force at least M; every L trigger silent on the operator's answers
-  - WG-EOS-002 · A monorepo · argued · the repo exists, is public with one remote, and is handed over as a unit; claimed rather than created
-  - WG-VOX-001 · B professional-calm · argued · The operator's audience answer is "both, equally" and both halves are technical (people who already installed a Hermes agent, plus himself), so the mixed-audience
-  - WG-ARCH-001 · B · argued · B, machine contract: two of design-lint's three boundary rules are clean contracts, hermes-outside-adapter's 21 baselined crossings are not
-  - WG-ARCH-002 · B and B is not met · argued · B stands as the option and is unmet in fact: 19 files hold 49 prepare() sites outside the 25 repositories and the db/ plumbing, so the seam needs a shrink-only
-  - WG-ARCH-003 · A for stats generally; C for the per-Body progression · argued · A for stats, C for the per-Body progression snapshot (inputs digest, written before any analytics_events prune), and B for the config read only once every config.yaml
-  - WG-ARCH-004 · A with B's seam designed in, the doctrine's own · argued · A with B's seam designed in: the deterministic-occurrence claim is real, the unit-builder registry is absent everywhere, and boot recovery re-fails rather than rebuilds
-  - WG-ARCH-005 · C for the in-repo TypeScript seam · argued · C in-repo (one language, apiFetch throws on non-2xx), B for everything that leaves it: generate:schema-json runs in no gate anywhere, and ADR-0002 decision 3's
-  - WG-ARCH-006 · B · argued · All 2,279 tests are option A: tests/ holds no snapshot, golden or characterisation test and no output hash, while npm run seed-pack emits deterministic artefacts that
-  - WG-ARCH-007 · B · argued · No vendor SDK appears in package.json at all
-  - WG-ARCH-008 · A with C 's seam · argued · A with C's seam: one patterstage.db, but analytics_events and chat_messages are declared readings, consumer, retention window and prune path designed now, and the
-  - WG-WEB-001 · A Dark-first · argued · A, dark-first, single register, no exception
-  - WG-WEB-002 · App shell for all 27 routes; long read (article kit) · argued · Every route hangs off one persistent sidebar+main chrome in src/app/layout.tsx and the visitor's verb on all of them is operate, which the decision rule sends straight
-  - WG-WEB-003 · D · argued · Sessions, logs, models, missions and skills are records with 3+ comparable fields, which the decision rule sends to a table or a ledger, not to the rounded-xl box the
-  - WG-WEB-004 · B Concentrated · argued · The one place continuous motion belongs is the live run, `ps-rail-flow` and `ps-edge-glow` on the Composer canvas are the signature animated piece, and
-  - WG-WEB-005 · C full · argued · amended in the second corrective pass; its fork was withdrawn once the prerequisite ruling eliminated two of three options
-  - WG-WEB-006 · Reference-first for the 27 operator routes · argued · Reference-first on the 27 routes, skim-first dashboard, and the mandatory takeaways band on every long read, owed in full by the deep-research report.
-  - WG-WEB-007 · C Server-rendered app · argued · Auth is enforced in src/proxy.ts, all state is better-sqlite3 at schema v30, and instrumentation.ts opens the DB at boot for the orchestration scheduler, none of which
-  - WG-WEB-008 · B next/image with the built-in local loader · argued · PatterStage runs a real Next 16 server (src/proxy.ts, better-sqlite3, instrumentation), not a static export, so request-time optimisation is available, but "no spend
-  - WG-WEB-009 · B · argued · ADR-0005 makes the module the unit and src/lib/modules/registry.ts registers four (core, hermes, laboratory, rec-room), but accent is set per nav link today, so the
-  - WG-WEB-010 · The house trio: Space Grotesk display, Inter text · argued · ADR-0003 (accepted 2026-07-25) orders @pattertech/ui vendored verbatim and its theme.css declares --font-display: "Space Grotesk", while src/app/layout.tsx imports only
-  - WG-WEB-011 · C Field-reactive · argued · C, field-reactive, with B's hover layer beneath it: vendor BloomField (66 lines) from PatterTech_Website into src/kit/, not a wait on the kit.
-  - WG-WEB-012 · A generated only · argued · The whole repo holds one binary (src/app/favicon.ico), every atmosphere is already computed (grid-bg layered gradients, ps-rail-flow, the SVG viz components, glow-*)
-  - WG-WEB-013 · C · argued · find src -iname GUIDE.md returns nothing and no component carries a JSDoc law header, so every law string lives in scripts/tooling/design-lint.mjs, one directory away
-  - WG-WEB-014 · A argued · argued · A, argued not inherited: media is a citation, and the seven shipped screenshots in docs/ owe captions, a measure, and the deletion of the uncited one.
-  - WG-DEL-001 · B with the two clauses the original left out · argued · undefined
-  - WG-DEL-002 · B letter unchanged · argued · undefined
-  - WG-DEL-003 · B · argued · undefined
-  - WG-DEL-004 · C Determinism first · argued · The live flake is exactly the class rule 4 names: six next/font/google families across two layouts make next build fetch a CDN inside CI, and ci.yml's own comment
-  - WG-OPS-003 · B - snapshots plus a scheduled restore test · argued · Production data exists at schema v30 across ~43 tables and backups are written in three places, yet grep for pre-migrate/pre-baseline/.bak across src, scripts and tests
-  - WG-OPS-004 · B and C split by whose money it is · argued · undefined
-  - WG-OPS-001 · C - self-hosting · argued · The decision rule reserves C for when sovereignty is the product, and local-first is the opening clause of the operator-confirmed restatement plus cheapest death #3
-  - WG-OPS-002 · A One deployment model · argued · undefined
+compiled: 2026-08-22
+rulings_record: docs/RULINGS.json
 compiled_from: kernel/templates/LOCKBOOK.tpl.md
 ---
 
 # PatterStage lock-book
 
 The venture's contract with the EOS. This file wins on specifics; EOS
-doctrine wins on principles. The YAML header above is machine-read: the
-seed check validates it, the harvest counts its rulings, upgrades diff
-against its pins. Rulings rows are one line each,
-`WG-ID · ruling · argued|inherited · note`; argued means the triggers
-were engaged afresh, inherited means the default was taken without new
-argument. Only argued rulings are promotion evidence.
+Doctrine wins on standing rules. The YAML header above is machine-read:
+the seed check validates it, the harvest reads the structured Rulings
+record, and upgrades diff against the pins. `policy_profile` names the
+compiled policy instance; `packs_adopted` lists the knowledge packs this
+venture activates, and house style activates only by adoption here.
+`docs/RULINGS.json` records why each candidate Wargame was selected or
+omitted and holds the argued outcomes. Inherited Doctrine is carried by
+the EOS pin and adopted packs, so it is not expanded into empty rows.
+
+**The pin translation, recorded rather than silently swapped.** Session 0
+compiled this seed on 2026-07-25 against EOS v1.0 at commit `cc18755`.
+The EOS then rewrote its history, so `cc18755` no longer resolves; its
+post-rewrite identity is `c6f94df`, which is dated 2026-07-15 and is an
+ancestor of the pushed `archive/v1-final` tag. The header now pins the v2
+line at `727bee44bdd83ce569a8d711d51eccf79851af92`. Both dead ids are kept
+here on purpose: a reader checking this seed against its own history needs
+to be able to follow the chain, and deleting an id that a later record
+still cites is how provenance breaks.
+
+**Where `packs_adopted` came from.** The list is the proposed set read off
+this venture's true predicates at the ADR-0008 cutover, not yet the output
+of `python -m tools.eos wargame match --facts`. Running the matcher in the
+confirmation pass is what settles it, and a pack leaving the list there is
+a subtraction the matcher earned rather than a defect in this header.
 
 ## Identity
 
 - One-word feel: instrument
 - Signature motif (promoted everywhere): the lit console in a dark room: a dense operator surface where the only bright things are live state
 - Signature animated pieces (the sanctioned exceptions, by name): set at first build, ruled by WG-WEB-011 (C, field-reactive) and WG-WEB-005 (C, full)
-- Voice register ruling (WG-VOX-001): in the header; banned list per
-  the voice module.
+- Voice register ruling (WG-VOX-001, a retired identity carried as
+  provenance): in `docs/RULINGS.json`, not in the header any more; banned
+  list per the voice module.
 
 ## Narrative brief
 
@@ -109,7 +97,9 @@ because the whole point of this section is that it cannot quietly stop being tru
 **Enforced today, in `npm run lint`:**
 
 - **Authentication is enforced once, in `src/proxy.ts`, and never in a route
-  handler.** WG-DRAFT-001 (B). `design-lint no-auth-in-route-handler` fails the
+  handler.** `DOC-IDENT-001`, binding estate doctrine, from the identity-access
+  pack: deny unless something permitted, and decide at one layer.
+  `design-lint no-auth-in-route-handler` fails the
   build on `readAuthToken`, `tokenMatches` or `ps_session` under `src/app/api/`.
   The prohibition exists because the alternative gives no way to distinguish a
   route that is deliberately public from one where somebody forgot, which is
@@ -186,8 +176,11 @@ dropped:
   now names one supported deployment model with the container demoted to the CI
   parity rig. Green on CI at run 30226331826, four scenarios; the fifth (update) fails on CI only and is WO-0019.
   Outstanding, and NOT doable from inside the repository: the job is not yet in
-  branch protection's required set and `docker-image` has not been removed from
-  it, so a broken install still cannot block a merge. → WO-0011, operator's half.
+  branch protection's required set. Measured 2026-08-22 via `gh api`:
+  `required_status_checks.contexts` is empty, so nothing at all is required and a
+  broken install still cannot block a merge. Correcting the earlier claim that
+  `docker-image` sat in that set is Q-005a, sanctioned by the operator on
+  2026-08-22. → WO-0011, operator's half.
 - **The suite that exists is the suite that runs.** WG-DEL-002 (B). Unmet: CI runs
   smoke-only, so 38 of 42 Playwright tests never execute on a pull request.
   → WO-0012.
@@ -242,7 +235,13 @@ continued.**
   `local-app (authored, pending a registry profile)` rather than falsely naming a
   profile that is wrong in its load-bearing half.
 
-**Not a deviation, recorded so it is not mistaken for one.** `WG-DRAFT-001` is a
-draft wargame rather than a deviation: the `auth` trigger names no wargame in the
-corpus (EOS-FB-002), so PatterStage drafted one and ruled against it. The
-prescribed remedy was followed rather than departed from.
+**Not a deviation, recorded so it is not mistaken for one.** At Session 0 the
+`auth` trigger named no wargame in the v1 corpus (EOS-FB-002), so PatterStage
+drafted `WG-DRAFT-001` and ruled against it. The prescribed remedy was followed
+rather than departed from. At the ADR-0008 cutover that draft retires: the rule
+it carried now stands as `DOC-IDENT-001`, binding estate doctrine in the
+identity-access pack, whose statement is PatterStage's rule almost word for word.
+A binding doctrine binds without a venture ruling, so nothing needs to cite it for
+it to hold. The structural contract it produced, authentication enforced once in
+`src/proxy.ts`, is unchanged and still enforced by
+`design-lint no-auth-in-route-handler`.

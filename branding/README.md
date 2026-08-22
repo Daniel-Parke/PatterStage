@@ -1,3 +1,10 @@
+---
+summary: What the branding directory holds, and why it is not open source
+type: brand
+tags: [branding]
+compiled_from: normalised
+---
+
 # Official branding
 
 This directory holds PatterStage and PatterTech visual identity, colour guidelines, and logos or icons as they are added.

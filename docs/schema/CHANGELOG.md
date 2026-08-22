@@ -1,3 +1,10 @@
+---
+summary: Version history for the published Mission and template pack schemas
+type: reference
+tags: [product, schema]
+compiled_from: normalised
+---
+
 # Changelog
 
 ## 1.0.0

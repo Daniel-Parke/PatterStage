@@ -1,3 +1,10 @@
+---
+summary: The bash integration checks for the install and deploy helpers, and how to run them
+type: guide
+tags: [testing]
+compiled_from: normalised
+---
+
 # Shell integration tests (Hermes profile helpers)
 
 Bash checks for install/deploy helpers—fake `HERMES_HOME` under `/tmp`, so your real `~/.hermes` is untouched. I run these in CI on every push.

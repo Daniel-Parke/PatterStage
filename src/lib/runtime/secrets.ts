@@ -16,7 +16,7 @@
  *
  * `profileName` is retained but no longer consulted: it existed so ephemeral
  * benchmark gateways could present their own generated key, and that subsystem is
- * gone (docs/adr/0004). Keeping the parameter means a genuine per-profile key
+ * gone (org/decisions/ADR-0004). Keeping the parameter means a genuine per-profile key
  * scheme has somewhere to land without a signature change at 30-odd call sites.
  */
 export function getGatewayKey(_profileName?: string): string | null {

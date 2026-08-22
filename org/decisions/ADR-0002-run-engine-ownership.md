@@ -3,6 +3,7 @@ summary: PatterStage keeps its run engine; the estate's shared asset is the cont
 type: decision
 tags: [arch, delivery]
 status: accepted
+compiled_from: preserved
 ---
 
 # ADR-0002 · Run-engine ownership

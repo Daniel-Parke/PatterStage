@@ -1,3 +1,10 @@
+---
+summary: Hermes toolsets per profile, how PatterStage stores them, and how push and pull work
+type: reference
+tags: [product, agents]
+compiled_from: normalised
+---
+
 # Hermes toolsets and missions
 
 ## Runtime tools (Hermes)

@@ -1,3 +1,10 @@
+---
+summary: How to run and read a QA walkthrough so the same non-bugs are not refiled every pass
+type: notes
+tags: [product, qa]
+compiled_from: normalised
+---
+
 # QA Notes
 
 Guidance for running (and reading) QA walkthroughs of PatterStage, so the same

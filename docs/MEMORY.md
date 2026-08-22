@@ -1,3 +1,10 @@
+---
+summary: The Memory page and the Hindsight provider behind it, and how the agent's long-term memory is browsed
+type: guide
+tags: [product, memory]
+compiled_from: normalised
+---
+
 # Memory (Hindsight)
 
 PatterStage's **Memory** page is a browser over your agent's long-term memory. The supported provider is **Hindsight** — a knowledge-graph memory server (Postgres + pgvector) that stores *memories*, *directives*, and *mental models*, and answers semantic queries. This is how the agent grows over time: facts it learns persist and resurface on later runs.

@@ -7,7 +7,7 @@
 // already-migrated DBs alike. See [[db-migration-applier-footgun]] — a .sql
 // file is inert without a version-guarded applier wired into runMigrations().
 //
-// VESTIGIAL as of the benchmark deletion (docs/adr/0004-brain-and-body.md).
+// VESTIGIAL as of the benchmark deletion (org/decisions/ADR-0004-brain-and-body.md).
 // Creates benchmark_runs + benchmark_item_results, which nothing reads or writes.
 // The feature is gone; this applier is NOT. schema_version is a strictly
 // increasing chain to 29, so deleting a migration in the middle would renumber

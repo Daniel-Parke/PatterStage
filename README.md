@@ -1,3 +1,10 @@
+---
+summary: The public front door for PatterStage: what it is, what it does, and how to install it
+type: venture
+tags: [product]
+compiled_from: normalised
+---
+
 # PatterStage
 
 **The Stage is _Yours._**
@@ -158,7 +165,7 @@ App pages live under `src/app/`; API routes under `src/app/api/`. Orchestration 
 - **REST API:** [docs/API.md](docs/API.md)
 - **Analytics & achievements:** [docs/ANALYTICS.md](docs/ANALYTICS.md)
 - **Agent entry point:** [AGENTS.md](AGENTS.md) · **repo tree & conventions:** [docs/REPO_GUIDE.md](docs/REPO_GUIDE.md)
-- **Decisions:** [docs/adr/](docs/adr/)
+- **Decisions:** [org/decisions/](org/decisions/)
 
 ---
 

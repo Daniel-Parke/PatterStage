@@ -1,3 +1,10 @@
+---
+summary: The Laboratory section: Insights, Benchmarks and Deep Research, and how they fit together
+type: guide
+tags: [product, laboratory]
+compiled_from: normalised
+---
+
 # Laboratory
 
 The **Laboratory** sidebar section is PatterStage's home for measuring and improving how you use your agent. It groups the analysis + experimentation tools:

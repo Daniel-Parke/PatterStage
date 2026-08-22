@@ -1,0 +1,35 @@
+{
+  "id": "T-0002",
+  "intent": "Phase 0, leg 2: fix real-hermes-integration, red on dev push runs and invisible in pull request views because ci.yml:291 makes the job push-only. Warrant WG-DEL-004 and Part II Article 6, a red gate is never bypassed; found by the plan's CI verification, run 30226692050, job 89857954990, SMOKE FAILED (2 assertions). Source row WO-0020, plan org/plans/2026-08-consolidation.md Phase 0. Acceptance: (1) the two failing assertions identified from the job log and the cause diagnosed from evidence; (2) fixed without weakening the smoke, no assertion deleted and no retry added; (3) a note recording why a push-only job hid it, and the question, also run on pull_request, put to the operator. Done when the dev push run is green on real-hermes-integration. Closed by commit 47b59b01, 2026-08-22: docker-compose.real-hermes.yml injects a fixture token, the itest script and full-stack-smoke carry it scoped to the PatterStage base URL so nothing leaks to Hermes, and the exact two CI assertions were reproduced locally before the fix, with 33 assertions green after. The same commit completes 4935ac31, which deleted the benchmark subsystem on the operator's ruling but missed this smoke's section 10 because the job never ran on the pull request; /api/benchmarks routes 404 by decision, so the section was deleted with the reason recorded in place. Acceptance item 3 is half satisfied: the commit records why the job was hidden, and the pull_request trigger choice is still open for the operator, so it is carried into T-0020, which owns making the suite that exists the suite that runs. Tier proposal R2, anticipated factor ci-stateful-infra from derived signal ci-config; the gate recomputation over 47b59b01 confirms it.",
+  "declared": {
+    "capabilities": [
+      "filesystem",
+      "container-runtime",
+      "network"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "ci-stateful-infra",
+      "tier_floor": "R2",
+      "source": "derived",
+      "evidence": "CI or infra file touched: docker-compose.real-hermes.yml"
+    }
+  ],
+  "status": "done",
+  "owner_session": "phase0-ci-repair-2026-08-22",
+  "claims": [
+    "docker-compose.real-hermes.yml",
+    "tests/integration/runtime/full-stack-smoke.mjs",
+    "tests/scripts/real-hermes-itest.sh"
+  ],
+  "timestamps": {
+    "opened": "2026-08-22T00:00:00Z",
+    "updated": "2026-08-22T21:00:00Z",
+    "closed": "2026-08-22T15:44:18Z"
+  }
+}

@@ -8,7 +8,7 @@
 // runMigrations. ALTER is guarded separately so a re-run can't abort the table
 // create. See [[db-migration-applier-footgun]].
 //
-// VESTIGIAL as of the benchmark deletion (docs/adr/0004-brain-and-body.md).
+// VESTIGIAL as of the benchmark deletion (org/decisions/ADR-0004-brain-and-body.md).
 // Creates bench_gateways, which nothing reads or writes now the spawner is gone.
 // The feature is gone; this applier is NOT. schema_version is a strictly
 // increasing chain to 29, so deleting a migration in the middle would renumber

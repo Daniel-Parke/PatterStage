@@ -1,3 +1,10 @@
+---
+summary: The quick path to a merged pull request, the code standards and the checks CI runs
+type: policy
+tags: [community, process]
+compiled_from: normalised
+---
+
 # Contributing
 
 If you've got this far thank you for considering to pitch in.

@@ -1,0 +1,33 @@
+{
+  "id": "T-0021",
+  "intent": "Make LLM provider spend visible and stoppable. Warrant WG-OPS-004 (B for the operator's own install, C for shipped ones) and the operator's standing rule, no spend without my approval. Source row WO-0014. Outside the consolidation programme. Operator ruling, 2026-07-26, in his words: We should just have a warning here, AND the ability for the user to have a hard stop, but we should not force this in a way that is awkward for users. Scope confirmed as LLM provider spend, the only thing in PatterStage that costs money: agent runs, Composer stages and Deep Research. Acceptance as filed: (1) the monthly figure and the spend rule written into the venture state; (2) run-aggregate spend displayed against it; (3) a triage pause stops unattended dispatch once breached; (4) for shipped installs, a provider ceiling documented as a precondition of enabling unattended work, with the running total surfaced at that point. The ruling supersedes item 3: the default is a warning, not a stop; the hard stop exists, is off by default, and is the user's to switch on with his own figure; no ceiling ships pre-set and nothing refuses to dispatch because a number was never entered. The row's own note records that this reverses the option the session recommended and that the ruling is the better one for a product a stranger installs, because a tool that refuses to work until you have filled in a budget field teaches you to resent it, and the operator's rule is about his install and is served by the figure being visible rather than by the software policing everyone else's. Item 1 names the venture state, which the recompile retires, so its home is re-decided at start. The first thing the owning session does is rewrite this acceptance against the ruling. Done when an unattended agent cannot spend past a number the operator set, on an install where he set one. Tier proposal R2, matching the declared facts: financial-impact is declared because the feature governs money the user spends with an LLM provider, and the money factor floors at R2.",
+  "declared": {
+    "capabilities": [
+      "database",
+      "filesystem"
+    ],
+    "side_effects": [
+      "financial-impact"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "money",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: financial-impact"
+    }
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/"
+  ],
+  "timestamps": {
+    "opened": "2026-07-25T00:00:00Z",
+    "updated": "2026-08-22T21:00:00Z"
+  }
+}

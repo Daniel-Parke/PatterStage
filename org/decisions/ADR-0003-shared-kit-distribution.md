@@ -3,6 +3,7 @@ summary: One shared repo for the estate's agnostic layers; PatterStage vendors t
 type: decision
 tags: [arch, web, brand]
 status: accepted
+compiled_from: preserved
 ---
 
 # ADR-0003 · Shared kit distribution

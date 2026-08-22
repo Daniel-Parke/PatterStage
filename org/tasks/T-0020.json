@@ -1,0 +1,26 @@
+{
+  "id": "T-0020",
+  "intent": "Run the full end-to-end suite where it can block, because CI runs smoke-only and 38 of 42 Playwright tests never execute on a pull request. Warrant WG-DEL-002 (B). Source row WO-0012. Outside the consolidation programme's phase chain and surfaced to the operator; the programme's release gate runs the full matrix locally regardless. Acceptance: (1) a main-blocking job runs the full suite with PLAYWRIGHT_SMOKE unset; (2) real-hermes-integration also runs on pull_request targeting main, which is the open choice T-0002 handed to the operator when it recorded why a push-only job hid a red gate; (3) the install journey wired in, now that T-0004's committable half has landed; (4) missions-runtime.spec.ts converted to a journey, as its own header asks. Done when the suite that exists is the suite that runs. Tier proposal R2, anticipated factor ci-stateful-infra from derived signal ci-config, evidence .github/workflows/ci.yml gains a job and changes a trigger.",
+  "declared": {
+    "capabilities": [
+      "filesystem",
+      "container-runtime",
+      "network"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    ".github/workflows/ci.yml",
+    "tests/e2e/"
+  ],
+  "timestamps": {
+    "opened": "2026-07-25T00:00:00Z",
+    "updated": "2026-08-22T21:00:00Z"
+  }
+}

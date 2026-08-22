@@ -1,3 +1,10 @@
+---
+summary: Composer, the graph orchestrator: staged agent runs, conditional edges and human-in-the-loop gates
+type: guide
+tags: [product, orchestration]
+compiled_from: normalised
+---
+
 # Composer
 
 Composer is PatterStage's **graph orchestrator**: it runs a methodical, multi-stage workflow where each stage is an agent run, stages are connected by **conditional + looping edges**, and selected stages pause at **human-in-the-loop (HIL) gates**. It is separate from [Missions](MISSIONS.md) — Missions stay simple (single/recurring "cron for AI agents"); Composer is for orchestrated processes like "feature request → … → PR".

@@ -3,6 +3,7 @@ summary: PatterStage install and update runbook, authored at Session 0 for the o
 type: runbook
 tags: [ops, hosting]
 authored: true
+compiled_from: authored
 ---
 
 # Install and update runbook
@@ -66,7 +67,8 @@ complete, is what step 3 exists to prevent.
 ## Restore
 
 The restore-test add-on exists because a backup nobody has restored is a belief,
-not a backup. See the cadence row in `org/CADENCE.md`.
+not a backup. The cadence row is in `org/cadence.json` and the procedure it
+names is `org/PLAYBOOKS.md#restore-test`.
 
 ```bash
 # stop the app first: a live process holds the SQLite file

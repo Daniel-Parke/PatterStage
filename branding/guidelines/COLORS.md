@@ -1,3 +1,10 @@
+---
+summary: The official Cherenkov colour palette for PatterStage and PatterTech, and where it is implemented
+type: brand
+tags: [branding, design]
+compiled_from: normalised
+---
+
 # PatterStage colour palette
 
 Official visual identity for PatterStage and PatterTech. Inspired by Cherenkov radiation: the blue glow produced by charged particles moving through water.

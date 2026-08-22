@@ -27,7 +27,7 @@ import type { FrameworkType } from "./frameworks/types";
  * `sessions.agent_type` already had a neutral COLUMN name, and the coupling was
  * entirely in core supplying the literal `"hermes"` as its default. The literal
  * now lives only in the frameworks layer, which is the adapter
- * (docs/adr/0005-product-modules.md).
+ * (org/decisions/ADR-0005-product-modules.md).
  */
 export type AgentType = FrameworkType;
 export type SessionSource = "cli" | "cron" | "mission" | "api";

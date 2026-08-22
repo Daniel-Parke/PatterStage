@@ -71,7 +71,7 @@ const RULES = [
   },
   {
     id: "hermes-outside-adapter",
-    law: "Hermes filesystem layout is an ADAPTER detail. Only src/lib/runtime/, the Hermes adapters and the config-sync layer may know it; orchestration and UI go through the AgentRuntime port (docs/adr/0002).",
+    law: "Hermes filesystem layout is an ADAPTER detail. Only src/lib/runtime/, the Hermes adapters and the config-sync layer may know it; orchestration and UI go through the AgentRuntime port (org/decisions/ADR-0002).",
     files: (f) =>
       f.startsWith("src/") &&
       !f.startsWith("src/lib/runtime/") &&

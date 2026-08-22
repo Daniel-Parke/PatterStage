@@ -1,3 +1,10 @@
+---
+summary: Keeping paths consistent when a separate hermes-config repository shares the machine
+type: guide
+tags: [product, config]
+compiled_from: normalised
+---
+
 # Hermes config integration
 
 If you also use a separate **`hermes-config`** repo (dotfiles, extra scripts), keep paths consistent with PatterStage and Hermes when both exist on a machine.

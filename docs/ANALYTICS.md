@@ -1,3 +1,10 @@
+---
+summary: How PatterStage logs interactions, turns them into achievements and surfaces them on the Insights page
+type: reference
+tags: [product, analytics]
+compiled_from: normalised
+---
+
 # PatterStage — Analytics & Achievements
 
 How PatterStage logs meaningful interactions, turns them into achievements, and

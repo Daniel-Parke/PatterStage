@@ -34,7 +34,7 @@ export interface AgentExperienceSignals {
 
 /**
  * XP weights: usage + footprint. `perBenchmark: 30` was removed with the
- * benchmark subsystem (docs/adr/0004). It read benchmark_runs through scalar(),
+ * benchmark subsystem (org/decisions/ADR-0004). It read benchmark_runs through scalar(),
  * which try/catches to 0, so leaving it would have kept every Agent Level
  * computing with a silently missing term.
  */

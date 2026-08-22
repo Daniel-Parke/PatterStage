@@ -1,3 +1,10 @@
+---
+summary: The map of Jest, Playwright and shell harnesses, and the gotchas each one hides
+type: guide
+tags: [product, testing]
+compiled_from: normalised
+---
+
 # Testing
 
 I expect PRs to pass the same checks CI runs. This page is the map of Jest, Playwright, shell harnesses, and the gotchas that wasted my time once already.

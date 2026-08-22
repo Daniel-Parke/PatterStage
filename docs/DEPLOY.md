@@ -1,3 +1,10 @@
+---
+summary: The one supported deployment model, the native host install, plus ports, scripts and the deploy buttons
+type: guide
+tags: [product, ops]
+compiled_from: normalised
+---
+
 # Deploying PatterStage
 
 How I run this in production and on a home LAN: ports, scripts, and the deploy buttons in the sidebar. Read [CONTRIBUTING.md](CONTRIBUTING.md) if you are changing deploy behaviour itself.

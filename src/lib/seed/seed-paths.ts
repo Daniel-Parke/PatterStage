@@ -6,7 +6,7 @@
 // any framework's directory, so the resolver is core and both halves of the seed
 // share it.
 //
-// Extracted when catalog-seed was split (docs/adr/0005-product-modules.md): the
+// Extracted when catalog-seed was split (org/decisions/ADR-0005-product-modules.md): the
 // agent-shaped half moved to the hermes module and needed the same root, and
 // duplicating a filesystem probe in two places is how the two silently disagree
 // about where the data is.

@@ -5,7 +5,7 @@
 //
 // Replaces AgentRatingBadge. That badge's ring showed a 0-100 Agent Rating from
 // the latest benchmark run, and the level was a sublabel under it. The benchmark
-// subsystem is gone (docs/adr/0004), and with it the rating: its suites were all
+// subsystem is gone (org/decisions/ADR-0004), and with it the rating: its suites were all
 // closed-book, so skills, tools and memory could not move the number the rating
 // claimed to measure.
 //

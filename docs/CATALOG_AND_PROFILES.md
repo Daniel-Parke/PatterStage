@@ -1,3 +1,10 @@
+---
+summary: How SQLite holds agent profiles and the skills catalog, and how push and pull mirror them to Hermes on disk
+type: reference
+tags: [product, agents]
+compiled_from: normalised
+---
+
 # Catalog and professional profiles
 
 PatterStage SQLite is the **source of truth** for agent profiles (including Bob), the global skills catalog, and per-profile policy (`disabled_skills`, `platform_toolsets`). Hermes disk is a **runtime mirror** updated via push/pull sync (same contract as Config → Models).

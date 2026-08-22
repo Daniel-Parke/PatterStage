@@ -1,3 +1,10 @@
+---
+summary: The pull request template: base branch, the gate checklist, and what a description must carry
+type: process
+tags: [process, ci]
+compiled_from: normalised
+---
+
 ## Summary
 
 <!-- What does this PR change and why? Keep it concrete—I merge from dev when CI is green and the diff matches the description. -->

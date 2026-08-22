@@ -7,7 +7,7 @@
 // design tokens (AccentColor). None of that is Hermes. The old name made a grep
 // for "hermes" in core return 60 false positives and made the
 // framework-agnostic claim look far more broken than it was
-// (docs/adr/0005-product-modules.md).
+// (org/decisions/ADR-0005-product-modules.md).
 //
 // One export IS framework-specific and stays deliberately: `HermesProcess`
 // describes what ProcessSync observes in `ps aux`, so it is named after the

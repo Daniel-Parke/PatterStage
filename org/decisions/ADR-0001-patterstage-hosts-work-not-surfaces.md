@@ -3,6 +3,7 @@ summary: PatterStage is the estate's operator console; it hosts other products' 
 type: decision
 tags: [arch, product]
 status: accepted
+compiled_from: preserved
 ---
 
 # ADR-0001 · PatterStage hosts work, not surfaces
