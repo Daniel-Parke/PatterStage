@@ -25,7 +25,7 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 
-import { HermesRuntime } from "@/lib/runtime/HermesRuntime";
+import { HermesRuntime, parseSseEvent } from "@/lib/runtime/HermesRuntime";
 import type { RuntimeEndpoint } from "@/lib/runtime/endpoint-registry";
 import type { RunEvent, RunHandle, RunResult, RunUsage } from "@/lib/runtime/types";
 
@@ -230,5 +230,50 @@ describe("AgentRuntime wire contract (tests/fixtures/agentruntime-wire.json)", (
         );
       });
     }
+  });
+});
+
+// ── The SSE type precedence, pinned locally ──────────────────────────
+//
+// Added 2026-08-23 after an independent review found a real hole in the gate
+// above: HermesRuntime's own doc comment states the precedence as the SSE
+// `event:` field, else `data.event`, else `data.type`, and calls it verified
+// against Hermes 0.16. But no fixture case carries BOTH `event` and `type`, so
+// the reviewer swapped the two branches, ran the whole suite, and all 2361
+// tests still passed. A documented, version-verified wire rule that nothing
+// pins is a rule the next refactor is free to invert.
+//
+// This is deliberately a LOCAL supplement rather than a fixture edit. The
+// fixture is vendored byte-identical from PatterStudio and its sha256 is
+// asserted above; editing it here would break that provenance and silently
+// fork the shared contract. The real fix is an upstream case. Until then these
+// cases hold the line on this side, which is exactly what ADR-0002 decision 3
+// asks each product to do.
+describe("AgentRuntime wire contract: SSE type precedence", () => {
+  const parse = (block: string) => parseSseEvent(block);
+
+  it("prefers the SSE event: field over anything in the payload", () => {
+    const evt = parse('event: run.completed\ndata: {"event":"message.delta","type":"ignored"}');
+    expect(evt?.type).toBe("run.completed");
+  });
+
+  it("prefers data.event over data.type when there is no SSE event: field", () => {
+    // The case the fixture does not carry, and the one that inverts silently.
+    const evt = parse('data: {"event":"message.delta","type":"something.else"}');
+    expect(evt?.type).toBe("message.delta");
+    expect(evt?.type).not.toBe("something.else");
+  });
+
+  it("falls back to data.type when data.event is absent", () => {
+    expect(parse('data: {"type":"reasoning.available"}')?.type).toBe("reasoning.available");
+  });
+
+  it("falls back to message when the payload names no type at all", () => {
+    expect(parse('data: {"delta":"hello"}')?.type).toBe("message");
+  });
+
+  it("ignores a non-string event or type rather than coercing it", () => {
+    // A number here must not become the event name; it falls through.
+    expect(parse('data: {"event":7,"type":"run.failed"}')?.type).toBe("run.failed");
   });
 });

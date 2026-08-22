@@ -26,11 +26,11 @@ The records under org/tasks/ are canonical.
 | T-0011 | standard | R0 | done | phase4-god-files-2026-08-22 |
 | T-0012 | high-assurance | R3 | done | phase5-repository-seam-2026-08-22 |
 | T-0013 | standard | R0 | done | phase6-migration-truth-2026-08-22 |
-| T-0014 | standard | R0 | proposed | unassigned |
-| T-0015 | standard | R0 | proposed | unassigned |
+| T-0014 | standard | R0 | done | phase7-hermes-crossings-2026-08-22 |
+| T-0015 | standard | R0 | done | phase7-schema-gate-2026-08-23 |
 | T-0016 | high-assurance | R2 | proposed | unassigned |
 | T-0017 | high-assurance | R3 | proposed | unassigned |
-| T-0018 | standard | R0 | proposed | unassigned |
+| T-0018 | standard | R0 | done | phase7-coverage-ratchet-2026-08-23 |
 | T-0019 | standard | R0 | proposed | unassigned |
 | T-0020 | standard | R0 | proposed | unassigned |
 | T-0021 | high-assurance | R2 | proposed | unassigned |
@@ -41,4 +41,4 @@ The records under org/tasks/ are canonical.
 | T-0026 | standard | R0 | discarded | unassigned |
 | T-0027 | standard | R0 | discarded | unassigned |
 | T-0028 | standard | R0 | proposed | unassigned |
-| T-0029 | standard | R0 | proposed | unassigned |
+| T-0029 | standard | R0 | done | phase7-config-writer-2026-08-23 |

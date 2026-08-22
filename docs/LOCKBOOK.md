@@ -143,6 +143,17 @@ because the whole point of this section is that it cannot quietly stop being tru
   invalidation stays OUT of `atomicWriteFile`, which also writes `.env`. A direct
   hand edit to `config.yaml` still waits for the TTL, which is what a TTL is for.
   WO-0006.
+- **Contracts that leave the repo are gated.** WG-ARCH-005 (B for departing
+  artefacts). `tests/unit/schema-json-drift.test.ts` regenerates
+  `mission-v1.schema.json` and `template-pack-v1.schema.json` from their Zod
+  sources and fails on any diff, and both halves call the same
+  `buildSchemaJsonArtefacts`, so the gate cannot agree only with itself.
+  `tests/unit/agentruntime-wire-contract.test.ts` asserts the port's wire
+  shapes against `tests/fixtures/agentruntime-wire.json`, vendored
+  byte-identical from PatterStudio with its sha256 recorded, executing ADR-0002
+  decision 3. Both were proved to fail by perturbation before being believed.
+  WO-0007.
+
 - **A gate never retries.** WG-DEL-004 (C, determinism first). Playwright is at
   `retries: 0` unconditionally, and the six font families are vendored under
   `next/font/local` so the build reaches no network. The `checkout` and `npm ci`
@@ -171,8 +182,7 @@ dropped:
   canary:check` in CI), which discharges the condition WG-ARCH-001's option C
   was waiting on. Whether that closes this row is WO-0008's call, not
   WO-0004's. → WO-0008.
-- **Contracts that leave the repo are gated.** WG-ARCH-005 (B for departing
-  artefacts). Unmet: `generate:schema-json` runs in no gate. → WO-0007.
+
 - **No table grows without bound.** WG-ARCH-008 (A with C's seam, ruled by the
   operator). Unmet: `analytics_events` and `chat_messages` are append-only with no
   expiry column. → WO-0009, ordered after WO-0010.

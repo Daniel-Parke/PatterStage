@@ -138,7 +138,7 @@ async function safeText(res: Response): Promise<string> {
  * Hermes 0.16. We therefore key the type off the SSE `event:` field if present,
  * else `data.event`, else `data.type`.
  */
-function parseSseEvent(block: string): RunEvent | null {
+export function parseSseEvent(block: string): RunEvent | null {
   let eventName = "";
   const dataLines: string[] = [];
   for (const line of block.split("\n")) {

@@ -10,6 +10,18 @@
 // coverage-floors.baseline.json and fails the build if one has gone DOWN. See
 // that file's header for the ratchet law.
 //
+// HEADROOM, measured 2026-08-23. Every floor is floor(measured), so some sit
+// within a hair of the real number. In covered units the tightest are:
+//   global.lines            1 unit of 7196
+//   src/app/api functions   2 of 229
+//   src/app/api lines       6
+//   src/lib functions       6
+// A single uncovered line added outside src/lib and src/app/api can therefore
+// turn global.lines red. That is the ratchet doing its job, not a flake: the
+// answer is to cover the line you just added, never to lower the floor, which
+// the check refuses anyway. Recorded here because the first person to hit a
+// 0.02 percent margin will assume the build is flaky unless someone told them.
+//
 // ── The bands, and why they are ordered ─────────────────────────────────────
 //
 //   src/lib/       the engine. Pure-ish logic, repositories, adapters, schemas.
