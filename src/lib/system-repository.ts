@@ -1,10 +1,22 @@
 // ═══════════════════════════════════════════════════════════════
-// system-repository.ts — Key-value system stat management
+// system-repository.ts — the `meta` table
 //
-// Wraps the `meta` table for reading/writing system-level
-// key-value pairs. Used by the sync sources to cache computed
-// stats (memory fact count, skills count, etc.) so API routes
-// read from the DB instead of performing filesystem operations.
+// The ONE repository for `meta`. Three unrelated features keep rows in
+// it and each used to prepare its own statements: the sync sources'
+// computed stats (memory fact count, uptime, config presence), the
+// config cache's JSON blob and timestamp, and the background
+// scheduler's ownership lease. Three writers to one table meant three
+// versions of "how do you upsert a meta row", and they did not agree.
+//
+// They still do not agree, and that is on purpose: INSERT OR REPLACE
+// and INSERT ... ON CONFLICT DO UPDATE differ in what happens to the
+// row (replace deletes and reinserts, so the rowid moves). Both forms
+// are kept, named for what they do, rather than merged into one and
+// hoping nothing depended on the difference.
+//
+// Nothing here swallows. The config cache treats every failure as a
+// miss and the scheduler treats every failure as "no lease info", and
+// those are policies about the caller, not about the table.
 // ═══════════════════════════════════════════════════════════════
 
 import { getDb } from "./db";
@@ -19,6 +31,15 @@ export function getSystemStat(key: string): string | null {
   return row?.value ?? null;
 }
 
+/** Read two `meta` keys in one query. Missing keys are simply absent from the result. */
+export function getMetaPair(keyA: string, keyB: string): Array<{ key: string; value: string }> {
+  return getDb()
+    .prepare(
+      `SELECT key, value FROM meta WHERE key IN (?, ?)`,
+    )
+    .all(keyA, keyB) as { key: string; value: string }[];
+}
+
 // ── Write ────────────────────────────────────────────────────
 
 /** Set a single system stat in the `meta` table. Upserts if key exists. */
@@ -26,6 +47,28 @@ export function setSystemStat(key: string, value: string): void {
   getDb()
     .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
     .run(key, value);
+}
+
+/**
+ * Upsert one `meta` row in place, keeping the existing row.
+ *
+ * Distinct from setSystemStat's INSERT OR REPLACE, which deletes and
+ * reinserts. The scheduler lease uses this form and the difference is
+ * not cosmetic, so the two are separate functions rather than one.
+ */
+export function upsertMetaValue(key: string, value: string): void {
+  getDb()
+    .prepare(
+      "INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+    )
+    .run(key, value);
+}
+
+/** Delete two `meta` keys (the config cache invalidates its blob and timestamp together). */
+export function deleteMetaPair(keyA: string, keyB: string): void {
+  getDb()
+    .prepare(`DELETE FROM meta WHERE key IN (?, ?)`)
+    .run(keyA, keyB);
 }
 
 // ── Batch ────────────────────────────────────────────────────

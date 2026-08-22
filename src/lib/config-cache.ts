@@ -14,6 +14,9 @@
 //      to 1 const, and a future "switch to Redis" or "switch to memjs" can
 //      replace the read/write functions in this file without touching the
 //      route.
+//      The keys stay here; the SQL does not. The `meta` table has one
+//      repository (system-repository.ts), shared with the scheduler
+//      lease, so there is a single answer to "how is a meta row written".
 //   2. The cache shape (read + invalidate pair) is a 2-method API — moving
 //      it out of the route shrinks the route from 215 lines to ~190 lines
 //      and keeps the request handler focused on HTTP shape.
@@ -29,7 +32,7 @@ import { existsSync, readFileSync } from "fs";
 import yaml from "js-yaml";
 
 import { getAgentWorkspace } from "./runtime/workspace";
-import { getDb } from "./db";
+import { deleteMetaPair, getMetaPair, setMultipleStats } from "./system-repository";
 
 const CACHE_TTL_MS = 15_000; // 15 seconds
 
@@ -44,11 +47,7 @@ const CACHE_KEY_AT = "config.cached_at";
  */
 function readConfigCache(): Record<string, unknown> | null {
   try {
-    const rows = getDb()
-      .prepare(
-        `SELECT key, value FROM meta WHERE key IN (?, ?)`,
-      )
-      .all(CACHE_KEY_JSON, CACHE_KEY_AT) as { key: string; value: string }[];
+    const rows = getMetaPair(CACHE_KEY_JSON, CACHE_KEY_AT);
 
     const cachedJson = rows.find((r) => r.key === CACHE_KEY_JSON)?.value;
     const cachedAt = rows.find((r) => r.key === CACHE_KEY_AT)?.value;
@@ -73,15 +72,13 @@ function readConfigCache(): Record<string, unknown> | null {
  */
 function writeConfigCache(config: Record<string, unknown>): void {
   try {
-    const dbInstance = getDb();
-    const txn = dbInstance.transaction(() => {
-      const stmt = dbInstance.prepare(
-        "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)",
-      );
-      stmt.run(CACHE_KEY_JSON, JSON.stringify(config));
-      stmt.run(CACHE_KEY_AT, new Date().toISOString());
+    // setMultipleStats is the same statement in the same transaction,
+    // run for each entry in insertion order — json first, then the
+    // timestamp, exactly as the inline version did.
+    setMultipleStats({
+      [CACHE_KEY_JSON]: JSON.stringify(config),
+      [CACHE_KEY_AT]: new Date().toISOString(),
     });
-    txn();
   } catch {
     // Cache write failure is non-critical
   }
@@ -123,9 +120,7 @@ export function readCachedConfig(): Record<string, unknown> {
  */
 export function invalidateConfigCache(): void {
   try {
-    getDb()
-      .prepare(`DELETE FROM meta WHERE key IN (?, ?)`)
-      .run(CACHE_KEY_JSON, CACHE_KEY_AT);
+    deleteMetaPair(CACHE_KEY_JSON, CACHE_KEY_AT);
   } catch {
     // Cache invalidation failure is non-critical
   }

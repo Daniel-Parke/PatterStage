@@ -18,7 +18,7 @@
 
 import { SyncScheduler } from "@/lib/sync/SyncScheduler";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
-import { getDb } from "@/lib/db";
+import { getSystemStat, upsertMetaValue } from "@/lib/system-repository";
 import { RunSync } from "@/lib/orchestration/RunSync";
 import { reconcileRunsOnBoot } from "@/lib/orchestration/run-reconcile";
 import { ensureDefaultComposerWorkflows } from "@/lib/composer/seed";
@@ -31,12 +31,16 @@ const META_HEARTBEAT = "scheduler_heartbeat_at";
 /** A heartbeat older than this is treated as a dead owner — the lease is up for grabs. */
 const HEARTBEAT_STALE_MS = 60_000;
 
+// The `meta` statements themselves live in system-repository.ts, the one
+// repository for that table. These two wrappers stay HERE because the
+// try/catch is the point: a lease read that throws must read as "no
+// lease info" and a lease write that throws must not crash server boot.
+// That is a scheduler policy, not a table policy, and moving the swallow
+// into the repository would impose it on every other meta caller.
+
 function readMeta(key: string): string | null {
   try {
-    const row = getDb().prepare("SELECT value FROM meta WHERE key = ?").get(key) as
-      | { value: string }
-      | undefined;
-    return row?.value ?? null;
+    return getSystemStat(key);
   } catch {
     return null;
   }
@@ -44,11 +48,7 @@ function readMeta(key: string): string | null {
 
 function writeMeta(key: string, value: string): void {
   try {
-    getDb()
-      .prepare(
-        "INSERT INTO meta (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-      )
-      .run(key, value);
+    upsertMetaValue(key, value);
   } catch {
     // Best-effort: never crash server boot on a meta write failure.
   }
