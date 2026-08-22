@@ -1,250 +1,26 @@
 // ═══════════════════════════════════════════════════════════════
 // Personality Manager — profile SOUL.md identity editor
+//
+// Thin page shell: data loading, activation and the edit-modal
+// lifecycle live here; the row and the modal are presentational
+// components under src/components/personalities/.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import {
-  Brain,
-  Plus,
-  Edit3,
-  Check,
-  Loader2,
-  AlertCircle,
-  Sparkles,
-  Copy,
-  ChevronDown,
-} from "lucide-react";
+import { Brain } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
-import Button from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/Input";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
-import Modal from "@/components/ui/Modal";
-import {
-  getPersonalityEmoji,
-} from "@/lib/personalities";
-import { apiFetch, setErrorFromCaught, toastError } from "@/lib/api-fetch";
+import { apiFetch, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { filterByCaseInsensitiveSubstring } from "@/lib/list-search";
-import { useCopyToClipboard } from "@/hooks/useCopyToClipboard";
 import PersonalitiesInsights from "@/components/personalities/PersonalitiesInsights";
-
-interface Personality {
-  name: string;
-  prompt: string;
-}
-
-function PersonalityCard({
-  personality,
-  onEdit,
-  onActivate,
-  isActive,
-}: {
-  personality: Personality;
-  onEdit: (p: Personality) => void;
-  onActivate: (name: string) => void;
-  isActive: boolean;
-}) {
-  const [textExpanded, setTextExpanded] = useState(false);
-  // Use the shared `useCopyToClipboard` hook (sister to the
-  // MessageBubble migration in components/session/MessageBubble.tsx)
-  // so the "[copied, setCopied] + useRef<setTimeout> + unmount
-  // cleanup" pattern lives in exactly one place. The 2000ms reset
-  // matches the pre-refactor inline timer (MessageBubble uses 1500ms
-  // — a different value passed via the hook's `resetMs` option).
-  const [copied, copy] = useCopyToClipboard({ resetMs: 2000 });
-
-  const handleCopy = () => {
-    copy(personality.prompt);
-  };
-
-  const preview =
-    personality.prompt.length > 120
-      ? personality.prompt.slice(0, 120) + "..."
-      : personality.prompt;
-
-  return (
-    <div
-      className={`rounded-xl border transition-all ${
-        isActive
-          ? "border-neon-cyan/50 bg-neon-cyan/5"
-          : "border-white/10 bg-dark-900/50 hover:border-white/20"
-      }`}
-    >
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-lg">{getPersonalityEmoji(personality.name)}</span>
-              <h3 className="font-semibold text-white truncate font-mono">
-                {personality.name}
-              </h3>
-              {isActive && (
-                <span className="text-[10px] font-mono bg-neon-cyan/15 text-neon-cyan px-1.5 py-0.5 rounded">
-                  ACTIVE
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-white/40 leading-relaxed">
-              {textExpanded ? personality.prompt : preview}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <button
-              onClick={() => setTextExpanded(!textExpanded)}
-              className={`p-1.5 rounded-lg text-white/30 hover:bg-white/5 transition-colors ${textExpanded ? "bg-white/5" : ""}`}
-              title={textExpanded ? "Collapse" : "Expand prompt"}
-            >
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${textExpanded ? "" : "rotate-90"}`} />
-            </button>
-            <button
-              onClick={handleCopy}
-              className="p-1.5 rounded-lg text-white/30 hover:bg-white/5 transition-colors"
-              title={copied ? "Copied!" : "Copy prompt"}
-            >
-              {copied ? (
-                <Check className="w-3.5 h-3.5 text-neon-green" />
-              ) : (
-                <Copy className="w-3.5 h-3.5" />
-              )}
-            </button>
-            {!isActive && (
-              <button
-                onClick={() => onActivate(personality.name)}
-                className="p-1.5 rounded-lg text-neon-cyan hover:bg-neon-cyan/10 transition-colors"
-                title="Set as active"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-              </button>
-            )}
-            <button
-              onClick={() => onEdit(personality)}
-              className="p-1.5 rounded-lg text-white/30 hover:bg-white/5 transition-colors"
-              title="Edit personality"
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EditPersonalityModal({
-  personality,
-  onClose,
-  onSaved,
-}: {
-  personality: Personality | null; // null = create mode
-  onClose: () => void;
-  onSaved: () => void;
-}) {
-  const [name] = useState(personality?.name || "");
-  const [prompt, setPrompt] = useState(personality?.prompt || "");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const isEdit = personality !== null;
-
-  const handleSubmit = async () => {
-    if (!name.trim() || !prompt.trim()) {
-      setError("Name and prompt are required");
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    try {
-      await apiFetch("/api/personalities", {
-        method: isEdit ? "PUT" : "POST",
-        body: JSON.stringify({ profile: name.trim(), prompt: prompt.trim() }),
-      });
-      onSaved();
-    } catch (err) {
-      setErrorFromCaught(setError, err, "Unknown error");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <Modal
-      open
-      onClose={onClose}
-      title={isEdit ? `Edit: ${personality.name}` : "New Personality"}
-      icon={isEdit ? Edit3 : Plus}
-      iconColor="text-neon-purple"
-      size="lg"
-      footer={
-        <>
-          <Button variant="ghost" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            color="purple"
-            onClick={handleSubmit}
-            loading={saving}
-            icon={saving ? Loader2 : Check}
-          >
-            {isEdit ? "Save Changes" : "Create"}
-          </Button>
-        </>
-      }
-    >
-      <div className="space-y-4">
-        {error && (
-          <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            {error}
-          </div>
-        )}
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-white/70">Agent Profile</label>
-          <input
-            type="text"
-            value={name}
-            readOnly
-            className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/60 outline-none font-mono opacity-70 cursor-not-allowed"
-          />
-          <p className="text-xs text-white/30 font-mono">
-            The profile whose SOUL.md voice this is — create profiles on the Agents page
-          </p>
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium text-white/70">System Prompt</label>
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            rows={6}
-            placeholder="You are a helpful assistant who..."
-            className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-neon-purple/50 transition-colors font-mono resize-y"
-          />
-          <p className="text-xs text-white/30 font-mono">
-            {prompt.length} characters — this prompt is prepended to the agent&apos;s system prompt
-          </p>
-        </div>
-
-        {/* Live preview */}
-        {prompt.trim() && (
-          <div className="space-y-1.5">
-            <label className="text-xs font-mono text-white/30 uppercase tracking-widest">
-              Preview
-            </label>
-            <div className="bg-dark-800/50 border border-white/5 rounded-lg p-3 text-sm text-white/60 font-mono max-h-40 overflow-y-auto whitespace-pre-wrap">
-              {prompt}
-            </div>
-          </div>
-        )}
-      </div>
-    </Modal>
-  );
-}
+import PersonalityCard, { type Personality } from "@/components/personalities/PersonalityCard";
+import EditPersonalityModal from "@/components/personalities/EditPersonalityModal";
 
 export default function PersonalitiesPage() {
   const [personalities, setPersonalities] = useState<Personality[]>([]);
