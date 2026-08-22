@@ -34,7 +34,7 @@ jest.mock("@/modules/hermes/lib/agent-runtime", () => ({
 }));
 
 // Import after the mock so the module-level getActiveHermesPaths call sees it
-import { readHermesYamlConfig } from "@/modules/hermes/lib/config-sync";
+import { readHermesYamlConfig } from "@/modules/hermes/lib/hermes-config-read";
 
 let fakeRoot: string;
 

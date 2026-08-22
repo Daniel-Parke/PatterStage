@@ -18,7 +18,7 @@
 
 import yaml from "js-yaml";
 
-import { loadHermesConfigFromString } from "@/modules/hermes/lib/config-sync";
+import { loadHermesConfigFromString } from "@/modules/hermes/lib/hermes-config-read";
 
 describe("loadHermesConfigFromString", () => {
   test("returns an empty object for the empty string", () => {

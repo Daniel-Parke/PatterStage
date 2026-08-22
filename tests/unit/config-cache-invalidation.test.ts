@@ -160,7 +160,7 @@ describe("every writer of config.yaml invalidates the read cache", () => {
 
   it("syncFallbacksToHermesConfig", () => {
     const { syncFallbacksToHermesConfig } =
-      require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
+      require("@/modules/hermes/lib/hermes-fallback-config") as typeof import("@/modules/hermes/lib/hermes-fallback-config");
     const { readCachedConfig } = require("@/lib/config-cache") as typeof import("@/lib/config-cache");
 
     writeFileSync(configPath(), yaml.dump({ agent: { api_max_retries: 2 } }), "utf-8");
@@ -205,9 +205,10 @@ describe("invalidation does not fire for writes that are not config.yaml", () =>
   it("an .env write leaves a warm config cache alone", () => {
     // `atomicWriteFile` deliberately does NOT invalidate: it writes .env as well,
     // and a generic file writer should not know which caches exist. If this test
-    // ever fails, the invalidation has been pushed down too far.
+    // ever fails, the invalidation has been pushed down too far. Both writers
+    // live in `hermes-config-write.ts` so the line between them stays visible.
     const { syncCredentialToHermesEnv } =
-      require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
+      require("@/modules/hermes/lib/hermes-env-sync") as typeof import("@/modules/hermes/lib/hermes-env-sync");
     const { readCachedConfig } = require("@/lib/config-cache") as typeof import("@/lib/config-cache");
 
     writeFileSync(configPath(), yaml.dump({ agent: { max_turns: 7 } }), "utf-8");

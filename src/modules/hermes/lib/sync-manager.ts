@@ -5,12 +5,9 @@
 
 import { getModel, listModels, getModelDefaults } from "@/lib/models-repository";
 import { getCredentialWithKey } from "@/lib/credentials-repository";
-import {
-  syncSingleModelToHermesConfig,
-  syncCredentialToHermesEnv,
-  readHermesConfigModels,
-  readHermesYamlConfig,
-} from "./config-sync";
+import { syncSingleModelToHermesConfig } from "./config-sync";
+import { syncCredentialToHermesEnv } from "./hermes-env-sync";
+import { readHermesConfigModels, readHermesYamlConfig } from "./hermes-config-read";
 import { isHermesProvider, type HermesProvider } from "./providers";
 import { modelKey } from "@/lib/model-key";
 import { messageFromError } from "@/lib/api-fetch";

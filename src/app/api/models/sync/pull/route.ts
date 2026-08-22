@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { updateModel, listModels } from "@/lib/models-repository";
-import { readHermesConfigModels, type HermesConfigModelEntry } from "@/modules/hermes/lib/config-sync";
+import { readHermesConfigModels, type HermesConfigModelEntry } from "@/modules/hermes/lib/hermes-config-read";
 import { notFound, ok } from "@/lib/api-response";
 import { modelKey } from "@/lib/model-key";
 import { z } from "zod";

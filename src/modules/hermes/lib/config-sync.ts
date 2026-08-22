@@ -1,349 +1,46 @@
 // ═══════════════════════════════════════════════════════════════
-// config-sync.ts — Write-through to ~/.hermes/.env + config.yaml
+// config-sync.ts: the model + auxiliary sections of config.yaml
 // ═══════════════════════════════════════════════════════════════
 //
 // Without this module, `hermes chat --model X` would fail because
-// Hermes can't resolve credentials. Every credential mutation in
-// /api/credentials and every default-set in /api/models/defaults must
-// run through these helpers (PR 7 wires them up).
+// Hermes can't resolve which model to run. Every default-set in
+// /api/models/defaults and every per-model push runs through here.
 //
-// Guarantees:
+// What used to be one file is now five, split by responsibility:
+//
+//   config-sync.ts (this file)   model.* + auxiliary.* from the
+//                                Models registry, and the post-push
+//                                root reconcile.
+//   hermes-config-write.ts       atomicWriteFile / writeHermesConfigFile
+//                                and the deliberate line between them.
+//   hermes-config-read.ts        every read of config.yaml, and the
+//                                HermesConfig shape itself.
+//   hermes-env-sync.ts           the .env half (credentials).
+//   hermes-fallback-config.ts    fallback_providers + agent.*.
+//
+// Guarantees, unchanged by the split:
 //   - atomic writes via tmpfile + fs.renameSync
 //   - timestamped backups under <root>/backups/ before any write
 //   - idempotent: re-applying the same input produces the same file
+//   - every config.yaml write goes through `writeHermesConfigFile`,
+//     so the read cache is dropped in the same call (WG-ARCH-003).
 
-import {
-  existsSync,
-  readFileSync,
-  renameSync,
-  unlinkSync,
-  writeFileSync,
-} from "fs";
+import { existsSync, readFileSync } from "fs";
 import * as yaml from "js-yaml";
 
 import { dumpYamlConfig } from "@/lib/yaml-config";
-import { invalidateConfigCache } from "@/lib/config-cache";
 import { getActiveHermesPaths } from "./agent-runtime";
-import { envVarForProvider, isHermesProvider, type HermesProvider } from "./providers";
 import { AUXILIARY_TASK_TYPES } from "@/lib/models/task-types";
 import { updateAgentRoot } from "@/lib/agent-root-repository";
 import { getModelDefaults, getModel } from "@/lib/models-repository";
-import { modelKey } from "@/lib/model-key";
 import { toError } from "@/lib/api-fetch";
-import { backupFile as backupFileShared, ensureDir } from "@/lib/fs/fs-helpers";
-import { parseFallbackAgentSettingsFromYaml } from "@/lib/fallback-config-yaml";
-import { parseEnvFile, ENV_LINE_RE } from "@/lib/env-file";
-import type { FallbackConfigPutInput } from "@/lib/fallback-config-schema";
-
-/**
- * Read `~/.hermes/config.yaml` and return the parsed YAML object, or
- * `null` if the file is missing or unparseable. Single source of truth
- * for the "existsSync + readFileSync + yaml.load + try/catch fallback"
- * pattern that was duplicated across 5 sites (this module, the drift
- * detector, the per-model diff route, and the fallbacks/import GET/POST).
- *
- * Byte-equivalence: callers that previously did
- *   `yaml.load(raw) as HermesConfig ?? {}`
- * get `null` instead and must handle the missing-file case explicitly —
- * a more honest contract than silently substituting an empty object
- * (which previously masked missing files in 2 of the 5 sites).
- */
-export function readHermesYamlConfig<T = Record<string, unknown>>(): T | null {
-  const paths = getActiveHermesPaths();
-  if (!existsSync(paths.config)) return null;
-  try {
-    const raw = readFileSync(paths.config, "utf-8");
-    return (yaml.load(raw) as T) ?? null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Parse a YAML string into a HermesConfig, treating empty/whitespace-only
- * content as an empty object. The 3 callers that previously wrote
- *   `original ? ((yaml.load(original) as HermesConfig) ?? {}) : {}`
- * inline (syncDefaultsToHermesConfig's tail, syncSingleModelToHermesConfig,
- * syncFallbacksToHermesConfig) all want the same "empty-string → {}" short
- * circuit. Centralises the load + empty-fallback so a future parser tweak
- * (e.g. swapping js-yaml for a different library) lands in one place.
- *
- * **Does NOT catch parse errors** — the three pre-refactor sites all
- * allowed yaml.load throws to propagate, so this helper matches that
- * behaviour. The exception is `syncDefaultsToHermesConfig`, which has a
- * custom try/catch that *surfaces* the parse error to server logs and
- * skips the write to avoid corrupting the on-disk file. That site stays
- * inline (with a comment pointing here) because the recovery logic is
- * specific to "must not overwrite a partially-written file".
- */
-export function loadHermesConfigFromString(content: string): HermesConfig {
-  if (!content) return {};
-  return (yaml.load(content) as HermesConfig) ?? {};
-}
-
-/**
- * Atomic write: stage to a sibling tmpfile, then rename. fs.rename on
- * POSIX is atomic for same-volume operations. Caller must ensure dir
- * exists.
- */
-export function atomicWriteFile(targetPath: string, content: string): void {
-  const tmpPath = `${targetPath}.tmp-${process.pid}-${Date.now()}`;
-  try {
-    writeFileSync(tmpPath, content, { encoding: "utf-8" });
-    renameSync(tmpPath, targetPath);
-  } catch (err) {
-    if (existsSync(tmpPath)) {
-      try {
-        unlinkSync(tmpPath);
-      } catch {
-        // best-effort cleanup; surface the original error below
-      }
-    }
-    throw err;
-  }
-}
-
-/**
- * Write config.yaml and drop the read cache in the same breath.
- *
- * WG-ARCH-003 rules B for the config read: one writer, or an invalidation every
- * writer must call. Before this existed only `PUT /api/config` invalidated, so
- * every other path left the 15s TTL as the sole owner of correctness. Push a
- * model and read it back inside that window and you saw the old value.
- *
- * Why a helper rather than a call at each site: WO-0006 named four writers, and
- * an enumerated list is precisely how the gap opened. Routing the write through
- * one function attaches invalidation to the ACT of writing config.yaml, so a
- * fifth writer inherits it. `finalizeRootConfigOnDisk` is already covered that
- * way, since it writes by calling `syncDefaultsToHermesConfig`.
- *
- * Deliberately NOT folded into `atomicWriteFile`: that also writes `.env`, and a
- * generic file writer should not know which caches exist.
- *
- * Invalidate rather than repopulate. A write is rare and a stale entry is the
- * failure mode worth removing; re-reading costs one yaml.parse on the next GET.
- * If the invalidation throws it is swallowed inside `invalidateConfigCache`,
- * which leaves the TTL as the backstop it was always meant to be.
- */
-function writeHermesConfigFile(configPath: string, serialized: string): void {
-  atomicWriteFile(configPath, serialized);
-  invalidateConfigCache();
-}
-
-function backupFile(originalPath: string, backupsDir: string): string | null {
-  return backupFileShared(originalPath, backupsDir);
-}
-
-// ── ENV (.env) sync ────────────────────────────────────────────
-//
-// `parseEnvFile` and the `ENV_LINE_RE` regex now live in
-// `@/lib/env-file` (shared with `@/modules/hermes/lib/config-import.ts`). They were
-// promoted from this module's private implementation in session 164
-// because the same parser was duplicated across 2 files. The sibling
-// `serializeEnvFile` (this module) preserves blank lines and `#`
-// comments verbatim, so it can't call `parseEnvFile` directly — it
-// reaches for the shared `ENV_LINE_RE` to identify keyval lines while
-// iterating the raw file content.
-
-function serializeEnvFile(
-  prior: Map<string, string>,
-  next: Map<string, string>,
-  originalContent: string
-): string {
-  // Strategy: keep the user's original ordering and any comments/blank
-  // lines, then update or remove keys, then append any newly added keys
-  // at the end.
-  const seen = new Set<string>();
-  const lines = originalContent.split(/\r?\n/);
-  const out: string[] = [];
-  for (const raw of lines) {
-    const line = raw;
-    const trimmed = line.trim();
-    if (trimmed.length === 0 || trimmed.startsWith("#")) {
-      out.push(line);
-      continue;
-    }
-    const m = ENV_LINE_RE.exec(trimmed);
-    if (!m) {
-      out.push(line);
-      continue;
-    }
-    const key = m[1];
-    if (!next.has(key)) {
-      // key removed — drop the line
-      continue;
-    }
-    seen.add(key);
-    out.push(`${key}=${next.get(key)!}`);
-  }
-  for (const [k, v] of next) {
-    if (seen.has(k)) continue;
-    if (prior.has(k)) continue; // shouldn't happen, but defensive
-    out.push(`${k}=${v}`);
-  }
-  if (out.length === 0 || out[out.length - 1].length !== 0) {
-    out.push("");
-  }
-  return out.join("\n");
-}
-
-export interface SyncCredentialInput {
-  provider: HermesProvider;
-  apiKey: string;
-}
-
-/**
- * Write `<PROVIDER>_API_KEY=<plaintext>` into ~/.hermes/.env. Atomic +
- * backed-up. Returns the path of the backup created (if any) for tests.
- */
-export function syncCredentialToHermesEnv(input: SyncCredentialInput): { backupPath: string | null } {
-  if (!isHermesProvider(input.provider)) {
-    throw new Error(`Unknown provider: ${input.provider}`);
-  }
-  const paths = getActiveHermesPaths();
-  const envPath = paths.env;
-
-  // OAuth-only providers (e.g. nous) have no env var — nothing to write.
-  const envVar = envVarForProvider(input.provider);
-  if (!envVar) {
-    throw new Error(`Provider "${input.provider}" uses OAuth -- no API key env var to write`);
-  }
-
-  ensureDir(paths.root);
-  const backupPath = backupFile(envPath, paths.backups);
-
-  const original = existsSync(envPath) ? readFileSync(envPath, "utf-8") : "";
-  const prior = parseEnvFile(original);
-  const next = new Map(prior);
-  next.set(envVar, input.apiKey);
-
-  atomicWriteFile(envPath, serializeEnvFile(prior, next, original));
-
-  return { backupPath };
-}
-
-/**
- * Remove all rows for a given provider's API key from ~/.hermes/.env.
- * Used when a credential is deleted — we can only target the env var
- * tied to the credential's provider; if multiple credentials share the
- * same provider, the caller (PR 7) must repick a winner before calling.
- *
- * @public Kept exported for tests/unit/hermes-config-sync-env.test.ts, which
- * reaches it through `require("@/modules/hermes/lib/config-sync")`. knip does
- * not follow a path-aliased `require()`, so it reports this as unused;
- * deleting it would break that suite.
- */
-export function removeCredentialFromHermesEnv(provider: HermesProvider): { backupPath: string | null } {
-  if (!isHermesProvider(provider)) {
-    throw new Error(`Unknown provider: ${provider}`);
-  }
-  const paths = getActiveHermesPaths();
-  if (!existsSync(paths.env)) return { backupPath: null };
-  const backupPath = backupFile(paths.env, paths.backups);
-
-  const original = readFileSync(paths.env, "utf-8");
-  const prior = parseEnvFile(original);
-  const next = new Map(prior);
-  const envVar = envVarForProvider(provider);
-  // OAuth-only providers (e.g. nous) have no .env key — nothing to remove
-  if (!envVar) return { backupPath };
-  next.delete(envVar);
-
-  atomicWriteFile(paths.env, serializeEnvFile(prior, next, original));
-  return { backupPath };
-}
-
-// ── config.yaml sync ───────────────────────────────────────────
-
-interface AuxiliarySection {
-  provider?: string;
-  model?: string;
-  base_url?: string;
-  api_key?: string;
-  timeout?: number;
-}
-
-interface HermesConfig {
-  model?: { default?: string; provider?: string; base_url?: string; api_key?: string; context_length?: number };
-  auxiliary?: Record<string, AuxiliarySection>;
-  fallback_providers?: Array<{ provider: string; model: string; base_url?: string; api_key?: string }>;
-  [key: string]: unknown;
-}
-
-/**
- * Collect every unique (provider, modelId) pair currently written in
- * config.yaml's model.* + auxiliary.* + fallback_providers.* sections.
- *
- * Shared by sync-manager.ts (drift detection) and the sync/pull route
- * (per-model pull from Hermes config → DB).
- */
-export interface HermesConfigModelEntry {
-  modelId: string;
-  provider: string;
-  baseUrl: string | null;
-  contextLength: number | null;
-}
-
-export function readHermesConfigModels(): Map<string, HermesConfigModelEntry> {
-  const config = readHermesYamlConfig<Record<string, unknown>>();
-  if (!config) return new Map();
-
-  try {
-    const map = new Map<string, HermesConfigModelEntry>();
-
-    type ConfigModelSlice = {
-      default?: string;
-      model?: string;
-      provider?: string;
-      base_url?: string;
-      context_length?: number;
-    };
-
-    const entryFromSlice = (slice: ConfigModelSlice): HermesConfigModelEntry | null => {
-      const modelId = slice.default ?? slice.model;
-      if (!modelId || !slice.provider) return null;
-      return {
-        modelId,
-        provider: slice.provider,
-        baseUrl: slice.base_url?.trim() || null,
-        contextLength:
-          typeof slice.context_length === "number" ? slice.context_length : null,
-      };
-    };
-
-    // Primary model section
-    const model = config.model as ConfigModelSlice | undefined;
-    const primary = model ? entryFromSlice(model) : null;
-    if (primary) {
-      map.set(modelKey(primary.provider, primary.modelId), primary);
-    }
-
-    // Auxiliary sections
-    const aux = config.auxiliary as Record<string, ConfigModelSlice> | undefined;
-    for (const entry of Object.values(aux ?? {})) {
-      const parsed = entryFromSlice(entry);
-      if (parsed) {
-        map.set(modelKey(parsed.provider, parsed.modelId), parsed);
-      }
-    }
-
-    // Fallback providers chain — models used as fallbacks
-    const fallback = config.fallback_providers as ConfigModelSlice[] | undefined;
-    for (const entry of fallback ?? []) {
-      const parsed = entryFromSlice(entry);
-      if (parsed) {
-        const key = modelKey(parsed.provider, parsed.modelId);
-        if (!map.has(key)) {
-          map.set(key, parsed);
-        }
-      }
-    }
-
-    return map;
-  } catch {
-    return new Map();
-  }
-}
+import { ensureDir } from "@/lib/fs/fs-helpers";
+import {
+  loadHermesConfigFromString,
+  type AuxiliarySection,
+  type HermesConfig,
+} from "./hermes-config-read";
+import { backupFile, writeHermesConfigFile } from "./hermes-config-write";
 
 /** Auxiliary slots written through to `auxiliary.<task>.*`.
  *  See `AUXILIARY_TASK_TYPES` in `@/lib/models/task-types` (canonical). */
@@ -478,120 +175,4 @@ export function syncSingleModelToHermesConfig(modelId: string): { backupPath: st
   writeHermesConfigFile(configPath, serialized);
 
   return { backupPath };
-}
-
-// ── Per-credential sync to .env ──────────────────────────────
-
-/**
- * Read `agent.*` fallback fields from on-disk config.yaml (post-write verify).
- * Thin wrapper over `parseFallbackAgentSettingsFromYaml` — keeps the file I/O
- * + YAML parse + null-on-missing-file contract at this layer and delegates
- * the field-mapping + clamp (apiMaxRetries → 0..10) to the single source of
- * truth. Previously this function duplicated the field extraction AND
- * skipped the clamp, which let a corrupt on-disk value (e.g. apiMaxRetries
- * 15) slip past `assertFallbackAgentSettingsWritten`'s "matches expected"
- * check silently. Now both the import path (read Hermes → DB) and the
- * read-back path enforce the same 0..10 contract defined by the Zod
- * schema (`fallbackConfigPutSchema`).
- */
-export function readFallbackAgentSettingsFromConfig(
-  configPath?: string,
-): FallbackConfigPutInput | null {
-  const paths = getActiveHermesPaths();
-  const target = configPath ?? paths.config;
-  if (!existsSync(target)) return null;
-
-  try {
-    const raw = readFileSync(target, "utf-8");
-    const yamlConfig = (yaml.load(raw) as HermesConfig) ?? {};
-    return parseFallbackAgentSettingsFromYaml(yamlConfig.agent);
-  } catch {
-    return null;
-  }
-}
-
-function assertFallbackAgentSettingsWritten(
-  configPath: string,
-  expected: {
-    apiMaxRetries?: number | null;
-    restorePrimaryOnFallback?: boolean;
-    fallbackNotification?: boolean;
-  },
-): void {
-  const readBack = readFallbackAgentSettingsFromConfig(configPath);
-  if (!readBack) {
-    throw new Error("Failed to read back config.yaml after fallback sync");
-  }
-  if (expected.apiMaxRetries !== undefined && readBack.apiMaxRetries !== expected.apiMaxRetries) {
-    throw new Error(
-      `config.yaml api_max_retries mismatch: expected ${expected.apiMaxRetries}, got ${readBack.apiMaxRetries ?? "missing"}`,
-    );
-  }
-  if (
-    expected.restorePrimaryOnFallback !== undefined &&
-    readBack.restorePrimaryOnFallback !== expected.restorePrimaryOnFallback
-  ) {
-    throw new Error("config.yaml restore_primary_on_fallback did not persist");
-  }
-  if (
-    expected.fallbackNotification !== undefined &&
-    readBack.fallbackNotification !== expected.fallbackNotification
-  ) {
-    throw new Error("config.yaml fallback_notification did not persist");
-  }
-}
-
-/**
- * Write the fallback chain and behavioural config entries to
- * ~/.hermes/config.yaml as `fallback_providers` (chain) +
- * `agent.api_max_retries`, `agent.restore_primary_on_fallback`,
- * `agent.fallback_notification`.
- */
-export function syncFallbacksToHermesConfig(
-  chain: Array<{ modelId: string; provider: string; baseUrl: string | null; apiKey: string | null; overrideBaseUrl?: string | null }>,
-  config: {
-    restorePrimaryOnFallback?: boolean;
-    fallbackNotification?: boolean;
-    apiMaxRetries?: number;
-  }
-): { backupPath: string | null; configPath: string; hermesHome: string } {
-  const paths = getActiveHermesPaths();
-  const configPath = paths.config;
-  ensureDir(paths.root);
-  const backupPath = backupFile(configPath, paths.backups);
-
-  const original = existsSync(configPath) ? readFileSync(configPath, "utf-8") : "";
-  const yamlConfig: HermesConfig = loadHermesConfigFromString(original);
-
-  // Write fallback_providers chain
-  yamlConfig.fallback_providers = chain.map(
-    (entry): { provider: string; model: string; base_url?: string; api_key?: string } => {
-      const result: { provider: string; model: string; base_url?: string; api_key?: string } = {
-        provider: entry.provider,
-        model: entry.modelId,
-      };
-      const url = entry.overrideBaseUrl || entry.baseUrl;
-      if (url) result.base_url = url;
-      if (entry.apiKey) result.api_key = entry.apiKey;
-      return result;
-    },
-  );
-
-  // Write agent behavioural settings
-  const agentSection: Record<string, unknown> = { ...(yamlConfig.agent ?? {}) };
-  if (config.apiMaxRetries !== undefined) agentSection.api_max_retries = config.apiMaxRetries;
-  if (config.restorePrimaryOnFallback !== undefined) agentSection.restore_primary_on_fallback = config.restorePrimaryOnFallback;
-  if (config.fallbackNotification !== undefined) agentSection.fallback_notification = config.fallbackNotification;
-  yamlConfig.agent = agentSection;
-
-  const serialized = dumpYamlConfig(yamlConfig);
-  writeHermesConfigFile(configPath, serialized);
-
-  assertFallbackAgentSettingsWritten(configPath, {
-    apiMaxRetries: config.apiMaxRetries,
-    restorePrimaryOnFallback: config.restorePrimaryOnFallback,
-    fallbackNotification: config.fallbackNotification,
-  });
-
-  return { backupPath, configPath, hermesHome: paths.root };
 }

@@ -21,7 +21,7 @@ import {
 import { parseFallbackAgentSettingsFromYaml } from "@/lib/fallback-config-yaml";
 import { upsertModel } from "@/lib/models-repository";
 import { syncEnabledFallbackChainToHermes } from "./fallback-sync";
-import { readHermesYamlConfig } from "./config-sync";
+import { readHermesYamlConfig } from "./hermes-config-read";
 import { notFound, ok } from "@/lib/api-response";
 import { fallbackKey } from "@/lib/model-key";
 

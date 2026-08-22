@@ -80,7 +80,7 @@ describe("syncFallbacksToHermesConfig", () => {
       yaml.dump({ agent: { api_max_retries: 2 } }),
       "utf-8",
     );
-    const { syncFallbacksToHermesConfig } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
+    const { syncFallbacksToHermesConfig } = require("@/modules/hermes/lib/hermes-fallback-config") as typeof import("@/modules/hermes/lib/hermes-fallback-config");
 
     syncFallbacksToHermesConfig([], { apiMaxRetries: 5 });
 

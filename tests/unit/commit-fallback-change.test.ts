@@ -15,7 +15,7 @@ jest.mock("@/lib/audit-log", () => ({
   appendAuditLine: (...args: unknown[]) => mockAppendAuditLine(...args),
 }));
 
-jest.mock("@/modules/hermes/lib/config-sync", () => ({
+jest.mock("@/modules/hermes/lib/hermes-fallback-config", () => ({
   syncFallbacksToHermesConfig: jest.fn(() => ({
     backupPath: null,
     configPath: "/tmp/test-hermes/config.yaml",
