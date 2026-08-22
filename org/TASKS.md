@@ -24,8 +24,8 @@ The records under org/tasks/ are canonical.
 | T-0009 | standard | R0 | done | phase2-canary-2026-08-22 |
 | T-0010 | standard | R0 | done | phase3-domains-2026-08-22 |
 | T-0011 | standard | R0 | done | phase4-god-files-2026-08-22 |
-| T-0012 | high-assurance | R3 | proposed | unassigned |
-| T-0013 | standard | R0 | proposed | unassigned |
+| T-0012 | high-assurance | R3 | done | phase5-repository-seam-2026-08-22 |
+| T-0013 | standard | R0 | done | phase6-migration-truth-2026-08-22 |
 | T-0014 | standard | R0 | proposed | unassigned |
 | T-0015 | standard | R0 | proposed | unassigned |
 | T-0016 | high-assurance | R2 | proposed | unassigned |

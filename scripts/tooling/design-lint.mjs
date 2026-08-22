@@ -150,7 +150,8 @@ const RULES = [
     // repository function that happened to live in the connection file, and a
     // wholesale exemption would have licensed it forever. Operator ruling D8
     // (2026-08-22) closed that out. getGatewayPlatforms went to
-    // sync/sync-repository.ts and getSchemaHealth's two mission_categories
+    // sync/sync-repository.ts, where it is named readGatewayPlatforms, and
+    // getSchemaHealth's two mission_categories
     // statements to missions/mission-category-schema-repository.ts; the file
     // then moved to src/lib/db/index.ts, keeping every `@/lib/db` import byte
     // identical. The three statements it still holds -- a sqlite_master probe
