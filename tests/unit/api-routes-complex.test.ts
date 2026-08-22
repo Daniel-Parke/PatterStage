@@ -72,7 +72,7 @@ jest.mock("@/lib/api-auth", () => ({
 // /api/memory now probes the DB-owned active provider (like MemorySync) instead
 // of regex-parsing config.yaml. Mock the provider so the GET test controls stats.
 const mockMemoryStats = jest.fn();
-jest.mock("@/lib/memory-providers", () => ({
+jest.mock("@/lib/memory/memory-providers", () => ({
   getMemoryProviderType: jest.fn(() => "hindsight"),
   getActiveMemoryProvider: jest.fn(() => ({ stats: mockMemoryStats })),
 }));

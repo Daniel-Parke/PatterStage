@@ -27,7 +27,7 @@
  *     throw-propagation semantics are preserved)
  */
 
-import { loadHindsightList } from "@/lib/hindsight-client";
+import { loadHindsightList } from "@/lib/memory/hindsight-client";
 
 interface Directive {
   id: string;

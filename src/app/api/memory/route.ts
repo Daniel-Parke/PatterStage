@@ -7,10 +7,10 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { getActiveMemoryProvider, getMemoryProviderType } from "@/lib/memory-providers";
+import { getActiveMemoryProvider, getMemoryProviderType } from "@/lib/memory/memory-providers";
 import { requireAuth } from "@/lib/api-auth";
 import { badRequest, ok } from "@/lib/api-response";
-import type { MemoryReadResult } from "@/lib/memory-providers";
+import type { MemoryReadResult } from "@/lib/memory/memory-providers";
 
 // ── GET — Memory status ──────────────────────────────────────
 // Resolves the provider the SAME way MemorySync + /api/monitor do — by probing

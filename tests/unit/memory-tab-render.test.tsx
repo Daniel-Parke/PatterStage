@@ -13,7 +13,7 @@
  *
  * The fix: `MemoryTab` now reads `memory.content`, `memory.type`,
  * and `memory.tags` directly off the mapped payload from
- * `mapMemoryItem` in `@/lib/hindsight-bridge`. The `parseMemoryContent`
+ * `mapMemoryItem` in `@/lib/memory/hindsight-bridge`. The `parseMemoryContent`
  * helper has been deleted entirely.
  *
  * These tests render the component with a modern mapped payload

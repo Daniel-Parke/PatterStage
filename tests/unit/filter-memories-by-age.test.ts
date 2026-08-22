@@ -12,7 +12,7 @@
 import {
   filterMemoriesByAge,
   HINDSIGHT_DEFAULT_MAX_AGE_DAYS,
-} from "@/lib/hindsight-client";
+} from "@/lib/memory/hindsight-client";
 
 describe("filterMemoriesByAge", () => {
   // Use a fixed reference time so threshold-edge tests are not racy.

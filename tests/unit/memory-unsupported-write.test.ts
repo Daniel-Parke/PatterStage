@@ -24,7 +24,7 @@ jest.mock("@/lib/api-logger", () => ({
   logApiError: jest.fn(),
 }));
 
-jest.mock("@/lib/memory-providers", () => ({
+jest.mock("@/lib/memory/memory-providers", () => ({
   getMemoryProviderType: jest.fn(() => "hindsight"),
 }));
 

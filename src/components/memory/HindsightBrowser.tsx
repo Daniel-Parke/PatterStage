@@ -17,7 +17,7 @@ import {
 import { SearchInput } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { HINDSIGHT_DEFAULT_MAX_AGE_DAYS } from "@/lib/hindsight-client";
+import { HINDSIGHT_DEFAULT_MAX_AGE_DAYS } from "@/lib/memory/hindsight-client";
 import type { Tab } from "./hindsight/types";
 import HealthBanner from "./hindsight/HealthBanner";
 import MemoryInsights from "@/components/memory/MemoryInsights";

@@ -8,7 +8,7 @@ import {
   mapDirectiveItem,
   mapMentalModelItem,
   normalizeTags,
-} from "@/lib/hindsight-bridge";
+} from "@/lib/memory/hindsight-bridge";
 
 describe("normalizeTags", () => {
   it("returns [] for non-array input", () => {

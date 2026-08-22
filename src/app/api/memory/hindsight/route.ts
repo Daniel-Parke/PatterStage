@@ -12,21 +12,21 @@ import { logApiError } from "@/lib/api-logger";
 import { messageFromError } from "@/lib/api-fetch";
 import { requireAuth } from "@/lib/api-auth";
 import { badRequest, ok } from "@/lib/api-response";
-import { getActiveMemoryProvider, getActiveMemoryConfig } from "@/lib/memory-providers";
+import { getActiveMemoryProvider, getActiveMemoryConfig } from "@/lib/memory/memory-providers";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import {
   mapMemoryItem,
   mapDirectiveItem,
   mapMentalModelItem,
   normalizeTags,
-} from "@/lib/hindsight-bridge";
+} from "@/lib/memory/hindsight-bridge";
 import {
   buildPartialUpdateBody,
   DIRECTIVE_UPDATE_FIELDS,
   extractListItems,
   hindsightErrorFromCatch,
   MENTAL_MODEL_UPDATE_FIELDS,
-} from "@/lib/hindsight-route-helpers";
+} from "@/lib/memory/hindsight-route-helpers";
 
 // ── Connection-error detection ─────────────────────────────────
 

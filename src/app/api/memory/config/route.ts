@@ -18,8 +18,8 @@ import {
   getActiveMemoryConfig,
   listMemoryProviders,
   updateMemoryProvider,
-} from "@/lib/memory-providers";
-import { HindsightMemoryProvider } from "@/lib/memory-providers/hindsight-provider";
+} from "@/lib/memory/memory-providers";
+import { HindsightMemoryProvider } from "@/lib/memory/memory-providers/hindsight-provider";
 
 const configSchema = z.object({
   host: z.string().min(1),

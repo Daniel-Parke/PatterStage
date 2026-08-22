@@ -12,8 +12,8 @@ PatterStage's **Memory** page is a browser over your agent's long-term memory. T
 ## How it connects
 
 - Hindsight runs as an HTTP server on **`localhost:9177`**.
-- PatterStage talks to it directly from [`/api/memory/hindsight`](../src/app/api/memory/hindsight/route.ts) (no Python subprocess) — list/recall/reflect, plus CRUD for directives + mental models. Pure response mapping lives in [`hindsight-bridge.ts`](../src/lib/hindsight-bridge.ts).
-- The active provider is read from `~/.hermes/config.yaml` (`memory: { provider: hindsight }`) — see [`memory-providers/index.ts`](../src/lib/memory-providers/index.ts). With no provider configured, the Memory page degrades gracefully.
+- PatterStage talks to it directly from [`/api/memory/hindsight`](../src/app/api/memory/hindsight/route.ts) (no Python subprocess) — list/recall/reflect, plus CRUD for directives + mental models. Pure response mapping lives in [`hindsight-bridge.ts`](../src/lib/memory/hindsight-bridge.ts).
+- The active provider is read from `~/.hermes/config.yaml` (`memory: { provider: hindsight }`) — see [`memory-providers/index.ts`](../src/lib/memory/memory-providers/index.ts). With no provider configured, the Memory page degrades gracefully.
 
 ## Running Hindsight
 

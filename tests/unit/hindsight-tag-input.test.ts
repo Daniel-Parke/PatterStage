@@ -1,4 +1,4 @@
-import { parseTagsInput, parseOptionalTagsInput } from "@/lib/hindsight-tag-input";
+import { parseTagsInput, parseOptionalTagsInput } from "@/lib/memory/hindsight-tag-input";
 
 describe("parseTagsInput", () => {
   it("returns [] for empty string", () => {

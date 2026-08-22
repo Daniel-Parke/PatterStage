@@ -12,7 +12,7 @@ import { REPO_ROOT } from "./seed-paths";
 import { upsertCatalogTemplate, getCatalogTemplate } from "../catalog-template-repository";
 import { upsertSkill, getSkill } from "../skills-repository";
 import { upsertToolBundle, getToolBundle } from "../tool-catalog-repository";
-import { upsertMemoryFact } from "../memory-catalog-repository";
+import { upsertMemoryFact } from "../memory/memory-catalog-repository";
 import { getDb } from "../db";
 import { PS_DATA_DIR } from "../paths";
 import { ensureDir } from "../fs-helpers";

@@ -8,9 +8,9 @@
 
 import { useState, useCallback, useEffect } from "react";
 import type { ToastType } from "@/components/ui/Toast";
-import { loadHindsightList } from "@/lib/hindsight-client";
-import { hindsightMutate } from "@/lib/hindsight-mutate";
-import { parseOptionalTagsInput, parseTagsInput } from "@/lib/hindsight-tag-input";
+import { loadHindsightList } from "@/lib/memory/hindsight-client";
+import { hindsightMutate } from "@/lib/memory/hindsight-mutate";
+import { parseOptionalTagsInput, parseTagsInput } from "@/lib/memory/hindsight-tag-input";
 import { runMutation } from "@/lib/run-mutation";
 import type { Tab, Directive } from "./types";
 

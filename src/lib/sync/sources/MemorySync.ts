@@ -10,7 +10,7 @@ import { existsSync, statSync } from "fs";
 import Database from "better-sqlite3";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { setMultipleStats, setSystemStatBoolean } from "@/lib/system-repository";
-import { getMemoryProviderType, getActiveMemoryProvider } from "@/lib/memory-providers";
+import { getMemoryProviderType, getActiveMemoryProvider } from "@/lib/memory/memory-providers";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 

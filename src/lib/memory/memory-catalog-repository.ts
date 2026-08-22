@@ -7,7 +7,7 @@
 // to retrieve. See [[phase-b-benchmarking]].
 // ═══════════════════════════════════════════════════════════════
 
-import { getDb, now, uuid } from "./db";
+import { getDb, now, uuid } from "../db";
 
 type MemorySource = "bundled" | "custom";
 

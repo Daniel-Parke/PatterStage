@@ -16,7 +16,7 @@ jest.mock("@/lib/system-repository", () => ({
 let providerStats: { available: boolean; factCount: number; dbSize?: string };
 // config.yaml says "none" — the blank-provider case the old code mishandled —
 // but the active provider (Hindsight via DB config) is what actually decides.
-jest.mock("@/lib/memory-providers", () => ({
+jest.mock("@/lib/memory/memory-providers", () => ({
   getMemoryProviderType: () => "none",
   getActiveMemoryProvider: () => ({ stats: async () => providerStats }),
 }));

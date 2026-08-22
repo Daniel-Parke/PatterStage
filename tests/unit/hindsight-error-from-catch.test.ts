@@ -37,7 +37,7 @@ import { logApiError } from "@/lib/api-logger";
 import {
   hindsightErrorFromCatch,
   hindsightErrorResponse,
-} from "@/lib/hindsight-route-helpers";
+} from "@/lib/memory/hindsight-route-helpers";
 
 describe("hindsightErrorFromCatch", () => {
   let consoleErrorSpy: jest.SpyInstance;

@@ -24,7 +24,7 @@
  *     can `if (!result.ok) return;` and run post-success work)
  */
 
-import { hindsightMutate } from "@/lib/hindsight-mutate";
+import { hindsightMutate } from "@/lib/memory/hindsight-mutate";
 
 describe("hindsightMutate: wire call shape", () => {
   const originalFetch = globalThis.fetch;

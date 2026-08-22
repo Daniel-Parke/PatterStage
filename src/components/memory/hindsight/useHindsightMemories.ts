@@ -12,8 +12,8 @@ import {
   hindsightGet,
   filterMemoriesByAge,
   HINDSIGHT_DEFAULT_MAX_AGE_DAYS,
-} from "@/lib/hindsight-client";
-import { parseOptionalTagsInput } from "@/lib/hindsight-tag-input";
+} from "@/lib/memory/hindsight-client";
+import { parseOptionalTagsInput } from "@/lib/memory/hindsight-tag-input";
 import { runMutation } from "@/lib/run-mutation";
 import { stringOr } from "./utils";
 import type { Memory, HealthState } from "./types";

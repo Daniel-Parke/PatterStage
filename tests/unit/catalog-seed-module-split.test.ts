@@ -37,7 +37,7 @@ jest.mock("@/lib/tool-catalog-repository", () => ({
   upsertToolBundle: jest.fn(),
   getToolBundle: jest.fn(() => null),
 }));
-jest.mock("@/lib/memory-catalog-repository", () => ({ upsertMemoryFact: jest.fn() }));
+jest.mock("@/lib/memory/memory-catalog-repository", () => ({ upsertMemoryFact: jest.fn() }));
 jest.mock("@/lib/db", () => ({
   ensureDb: jest.fn(),
   getDb: jest.fn(() => ({
