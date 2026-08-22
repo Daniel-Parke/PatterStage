@@ -296,6 +296,7 @@ this one file it was.
 | docs/SUPPORT.md | normalised | - | - |
 | docs/SYSTEM-CRON.md | normalised | - | - |
 | docs/TESTING.md | normalised | - | - |
+| docs/OUTPUT_CANARY.md | authored | - | - |
 | docs/TOOLS_AND_MISSIONS.md | normalised | - | - |
 | docs/USER_WALKTHROUGH_GUIDE.md | normalised plus one corrected section | - | - |
 | docs/UX_AUDIT.md | normalised | - | - |
