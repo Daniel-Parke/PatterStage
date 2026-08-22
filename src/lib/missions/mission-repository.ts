@@ -9,6 +9,9 @@ import { getDb, inTransaction, uuid, now } from "../db";
 import { safeJsonParse } from "../utils";
 import { PATHS } from "../paths";
 import type { Mission, MissionStatus } from "@/lib/missions/mission-types";
+// Type-only, so it is erased at compile time and no runtime cycle is
+// created with the audit module that consumes these two functions.
+import type { ForeignMissionModelRow } from "@/lib/missions/mission-model-audit";
 import type { LocalDirEntry } from "@/types/console";
 import { normalizeLocalDirsInput } from "@/lib/fs/local-dir-entry";
 
@@ -346,4 +349,57 @@ export function deleteMission(id: string): boolean {
     }
   }
   return true;
+}
+
+// ── Foreign model audit ──────────────────────────────────────
+//
+// The two statements behind mission-model-audit.ts, which finds and
+// repairs mission rows whose model_id is no longer in the models
+// registry. They are here rather than there because they are reads and
+// writes of the missions table like every other statement in this file.
+
+/**
+ * Mission rows whose `model_id` is set but absent from the registry,
+ * most-recently-touched first.
+ *
+ * The row keys are the SQL column names (`model_id`, `updated_at`); the
+ * declared shape is the caller's, and the mismatch predates this move.
+ * It is preserved rather than corrected, because correcting it would
+ * change what the audit surface returns.
+ */
+export function readForeignMissionModelRows(): ForeignMissionModelRow[] {
+  return getDb()
+    .prepare(
+      `SELECT m.id, m.name, m.model_id, m.provider, m.status, m.updated_at
+         FROM missions m
+        WHERE m.model_id IS NOT NULL
+          AND m.model_id != ''
+          AND NOT EXISTS (
+            SELECT 1 FROM models mo WHERE mo.model_id = m.model_id
+          )
+        ORDER BY m.updated_at DESC`,
+    )
+    .all() as ForeignMissionModelRow[];
+}
+
+/**
+ * Null out `model_id` and `provider` on every mission row whose
+ * `model_id` is not in the registry. Returns the rows affected.
+ *
+ * Non-correlated `NOT IN` on purpose. An UPDATE with a correlated
+ * subquery in the WHERE clause (`NOT EXISTS (SELECT 1 FROM models mo
+ * WHERE mo.model_id = model_id)`) silently matches zero rows in SQLite,
+ * even when the audit form of the same query finds them.
+ */
+export function clearForeignMissionModelRows(): number {
+  const result = getDb()
+    .prepare(
+      `UPDATE missions
+          SET model_id = NULL, provider = NULL
+        WHERE model_id IS NOT NULL
+          AND model_id != ''
+          AND model_id NOT IN (SELECT model_id FROM models WHERE model_id IS NOT NULL)`,
+    )
+    .run();
+  return result.changes;
 }

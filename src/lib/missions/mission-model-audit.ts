@@ -15,7 +15,10 @@
 //      to the agent default rather than re-using the foreign value.
 // ═══════════════════════════════════════════════════════════════
 
-import { getDb } from "../db";
+import {
+  clearForeignMissionModelRows,
+  readForeignMissionModelRows,
+} from "./mission-repository";
 
 export interface ForeignMissionModelRow {
   id: string;
@@ -33,18 +36,7 @@ export interface ForeignMissionModelRow {
  * highest-relevance orphans at the top.
  */
 export function auditForeignMissionModelRows(): ForeignMissionModelRow[] {
-  return getDb()
-    .prepare(
-      `SELECT m.id, m.name, m.model_id, m.provider, m.status, m.updated_at
-         FROM missions m
-        WHERE m.model_id IS NOT NULL
-          AND m.model_id != ''
-          AND NOT EXISTS (
-            SELECT 1 FROM models mo WHERE mo.model_id = m.model_id
-          )
-        ORDER BY m.updated_at DESC`,
-    )
-    .all() as ForeignMissionModelRow[];
+  return readForeignMissionModelRows();
 }
 
 /**
@@ -54,20 +46,9 @@ export function auditForeignMissionModelRows(): ForeignMissionModelRow[] {
  * ensure no mission will re-dispatch a foreign value.
  */
 export function fixupForeignMissionModelRows(): number {
-  // Use a non-correlated `NOT IN` form here. An UPDATE with a correlated
-  // subquery in the WHERE clause (`NOT EXISTS (SELECT 1 FROM models mo
-  // WHERE mo.model_id = model_id)`) silently matches zero rows in
-  // SQLite, even when the audit form of the same query finds them — a
-  // well-known quirk of the SQLite UPDATE planner. `NOT IN` is
-  // unambiguous and matches what the audit function returns.
-  const result = getDb()
-    .prepare(
-      `UPDATE missions
-          SET model_id = NULL, provider = NULL
-        WHERE model_id IS NOT NULL
-          AND model_id != ''
-          AND model_id NOT IN (SELECT model_id FROM models WHERE model_id IS NOT NULL)`,
-    )
-    .run();
-  return result.changes;
+  // The statement uses a non-correlated `NOT IN` form, and the reason
+  // travels with it in mission-repository.ts: an UPDATE with a
+  // correlated subquery in the WHERE clause silently matches zero rows
+  // in SQLite, even when the audit form of the same query finds them.
+  return clearForeignMissionModelRows();
 }
