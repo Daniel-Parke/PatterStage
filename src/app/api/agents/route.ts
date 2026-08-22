@@ -5,7 +5,7 @@
 // instead of running execSync on every request.
 // ═══════════════════════════════════════════════════════════════
 
-import { getDb } from "@/lib/db";
+import { readAgentProcesses } from "@/lib/sync/sync-repository";
 import { ensureSyncLayer } from "@/lib/sync";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
@@ -17,21 +17,7 @@ export async function GET() {
     ensureSyncLayer();
 
     // Read from the agent_processes table
-    const rows = getDb()
-      .prepare(
-        "SELECT id, type, name, status, pid, model, turns, last_activity, last_seen_at FROM agent_processes ORDER BY type, name"
-      )
-      .all() as Array<{
-      id: string;
-      type: string;
-      name: string;
-      status: string;
-      pid: number | null;
-      model: string;
-      turns: number;
-      last_activity: string | null;
-      last_seen_at: string;
-    }>;
+    const rows = readAgentProcesses();
 
     const processes: HermesProcess[] = rows.map((r) => ({
       id: r.id,

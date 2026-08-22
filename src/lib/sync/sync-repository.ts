@@ -75,6 +75,23 @@ export function insertErrorLogEntries(
   tx();
 }
 
+/** One stored error log entry, as the dashboard's Errors panel reads it. */
+export interface ErrorLogEntryRow {
+  source: string;
+  message: string;
+  timestamp: string;
+  severity: string;
+}
+
+/** The ten most recent error log entries, newest first. */
+export function readRecentErrorLogEntries(): ErrorLogEntryRow[] {
+  return getDb()
+    .prepare(
+      "SELECT source, message, timestamp, severity FROM error_log_entries ORDER BY timestamp DESC LIMIT 10",
+    )
+    .all() as ErrorLogEntryRow[];
+}
+
 /** Keep only the 500 most recent error log entries. */
 export function pruneErrorLogEntries(): void {
   getDb()
@@ -98,6 +115,28 @@ export interface AgentProcessInput {
   model: string;
   turns: number;
   lastActivity: string;
+}
+
+/** One stored process row, as /api/agents reads it back out. */
+export interface AgentProcessRow {
+  id: string;
+  type: string;
+  name: string;
+  status: string;
+  pid: number | null;
+  model: string;
+  turns: number;
+  last_activity: string | null;
+  last_seen_at: string;
+}
+
+/** Every known agent process, ordered by type then name. */
+export function readAgentProcesses(): AgentProcessRow[] {
+  return getDb()
+    .prepare(
+      "SELECT id, type, name, status, pid, model, turns, last_activity, last_seen_at FROM agent_processes ORDER BY type, name",
+    )
+    .all() as AgentProcessRow[];
 }
 
 /** Clear the process table before a fresh scan writes into it. */
