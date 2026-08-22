@@ -95,7 +95,8 @@ Next.js static files go in `public/` at the repo root; the Dockerfile runs
   path built from input — `resolveScriptPath()` in `src/lib/scripts-manager.ts` is
   the reference implementation.
 - **Never validate an attacker-controlled command string — regenerate it.** See
-  `canonicaliseScriptsCommand` in `src/app/api/cron/hardware/route.ts` for why.
+  `canonicaliseScriptsCommand` in
+  `src/lib/hardware-cron-handlers/crontab-command.ts` for why.
 - **Agent integration goes through the `AgentRuntime` port.** Add a capability to
   `types.ts` and implement it in `HermesRuntime.ts`; never reach into agent
   internals from orchestration code.

@@ -21,45 +21,35 @@
 //   - "5 msgs" badge per row from messageCount, populated by the
 //     Hermes state.db sync.
 //   - Title fallback resolves cron job names from ~/.hermes/cron/jobs.json
-//     via src/lib/session-title.ts so recurring cron sessions get
+//     via src/lib/sessions/session-title.ts so recurring cron sessions get
 //     human-readable names like "Cron: Review & Refactor — 20260601 185050".
+//
+// The row, the mission-group row and the filter bar are presentational
+// components under src/components/session/; this file is the shell that
+// owns the query, the filters and the paging.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
 
 import { useCallback, useEffect, useState, useMemo } from "react";
-import Link from "next/link";
-import {
-  Clock,
-  MessageSquare,
-  HardDrive,
-  ChevronRight,
-  ChevronDown,
-  Filter,
-  Layers,
-  EyeOff,
-  Activity,
-} from "lucide-react";
+import { Clock } from "lucide-react";
 import PageHeader from "@/components/layout/PageHeader";
-import { SearchInput } from "@/components/ui/Input";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
-import Badge from "@/components/ui/Badge";
 import Pagination from "@/components/ui/Pagination";
 import { useToast } from "@/components/ui/Toast";
-import { LiveDot } from "@/components/ui/LiveDot";
 import LoadErrorBanner from "@/components/ui/LoadErrorBanner";
-import { timeAgo, formatElapsed, pluralise } from "@/lib/utils";
 import { useSessions } from "@/hooks/useSessions";
 import { useInterval } from "@/hooks/useInterval";
 import { useStoredBool } from "@/hooks/useStoredBool";
 import { isApiNoiseSession } from "@/lib/sessions/session-filters";
-import { buildGroupedEntries, type MissionGroup } from "@/lib/sessions/sessions-grouping";
+import { buildGroupedEntries } from "@/lib/sessions/sessions-grouping";
 import AppPageShell from "@/components/layout/AppPageShell";
-import type { SessionRecord } from "@/lib/sessions/session-repository";
 import type { SessionSource } from "@/lib/sessions/session-repository";
 import { SOURCE_META } from "@/components/session/constants";
-import { formatSessionTitle } from "@/lib/sessions/session-title";
 import SessionInsights from "@/components/session/SessionInsights";
+import SessionCard from "@/components/session/SessionCard";
+import MissionGroupCard from "@/components/session/MissionGroupCard";
+import SessionFilterBar from "@/components/session/SessionFilterBar";
 
 // ── Constants ────────────────────────────────────────────────
 
@@ -70,144 +60,6 @@ const GROUP_BY_MISSION_STORAGE_KEY = "ps.sessions.groupByMission";
 const GROUP_BY_MISSION_LEGACY_KEY = "ch.sessions.groupByMission";
 const HIDE_API_NOISE_STORAGE_KEY = "ps.sessions.hideApiNoise";
 const HIDE_API_NOISE_LEGACY_KEY = "ch.sessions.hideApiNoise";
-
-// ── Components ───────────────────────────────────────────────
-
-function SessionCard({ session }: { session: SessionRecord }) {
-  const title = formatSessionTitle(session);
-  const meta = SOURCE_META[session.source] ?? SOURCE_META.cli;
-  const isActive = session.status === "active";
-
-  return (
-    <Link href={`/sessions/${session.id}`}>
-      <div className="rounded-xl border border-white/10 bg-dark-900/50 p-4 hover:border-neon-orange/30 transition-colors group cursor-pointer">
-        <div className="flex items-start justify-between">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              {isActive && <LiveDot />}
-              <MessageSquare className="w-4 h-4 text-neon-orange flex-shrink-0" />
-              <h3 className="font-semibold text-white truncate">{title}</h3>
-            </div>
-            <div className="flex items-center gap-3 text-xs text-white/30 font-mono flex-wrap">
-              <span
-                className={`flex items-center gap-1 ${isActive ? "text-neon-green" : ""}`}
-              >
-                <Clock className="w-3 h-3" />
-                {isActive ? `${formatElapsed(session.startedAt)} ago` : timeAgo(session.startedAt)}
-              </span>
-              <span className="flex items-center gap-1">
-                <span
-                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono ${meta.colorClass}`}
-                >
-                  {meta.icon}
-                  {meta.label}
-                </span>
-              </span>
-              {session.profileName && (
-                <span className="text-white/40">{session.profileName}</span>
-              )}
-              {session.modelId && <Badge color="purple">{session.modelId}</Badge>}
-              {typeof session.messageCount === "number" && session.messageCount > 0 && (
-                <span
-                  className="flex items-center gap-1 text-white/40"
-                  title={`${session.messageCount} message${pluralise(session.messageCount)}`}
-                >
-                  <MessageSquare className="w-3 h-3" />
-                  {session.messageCount} msgs
-                </span>
-              )}
-              {session.size > 0 && (
-                <span className="flex items-center gap-1">
-                  <HardDrive className="w-3 h-3" />
-                  {(session.size / 1024).toFixed(1)} KB
-                </span>
-              )}
-              {session.missionId && (
-                <Link
-                  href={`/orchestration/missions/${session.missionId}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="z-10"
-                  title="Open parent mission"
-                >
-                  <Badge color="green">mission</Badge>
-                </Link>
-              )}
-            </div>
-          </div>
-          <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-neon-orange group-hover:translate-x-0.5 transition-all flex-shrink-0 ml-4" />
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-function MissionGroupCard({ group }: { group: MissionGroup }) {
-  const [expanded, setExpanded] = useState(false);
-  const hasActive = group.activeCount > 0;
-  const oldest = group.sessions[group.sessions.length - 1];
-  const latest = group.sessions[0];
-  const title = formatSessionTitle(latest);
-
-  return (
-    <div className="rounded-xl border border-neon-green/20 bg-neon-green/[0.03] overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setExpanded(!expanded)}
-        className="w-full p-4 hover:bg-neon-green/[0.04] transition-colors text-left flex items-center justify-between gap-3"
-      >
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            {hasActive && <LiveDot />}
-            <Layers className="w-4 h-4 text-neon-green flex-shrink-0" />
-            <h3 className="font-semibold text-white truncate">{title}</h3>
-            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neon-green/10 text-neon-green">
-              {group.sessions.length} sessions
-            </span>
-            {hasActive && (
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neon-green/20 text-neon-green">
-                {group.activeCount} active
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-3 text-xs text-white/30 font-mono flex-wrap">
-            <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {timeAgo(group.firstStartedAt)} → {timeAgo(group.lastStartedAt)}
-            </span>
-            <span>id: {group.missionId.slice(0, 8)}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <Link
-            href={`/orchestration/missions/${group.missionId}`}
-            onClick={(e) => e.stopPropagation()}
-            className="text-[10px] font-mono px-2 py-1 rounded bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-colors"
-            title="Open the parent mission"
-          >
-            ↗ Mission
-          </Link>
-          {expanded ? (
-            <ChevronDown className="w-4 h-4 text-white/30" />
-          ) : (
-            <ChevronRight className="w-4 h-4 text-white/30" />
-          )}
-        </div>
-      </button>
-      {expanded && (
-        <div className="border-t border-white/5 p-3 space-y-2 bg-dark-900/30">
-          {group.sessions.map((s) => (
-            <SessionCard key={s.id} session={s} />
-          ))}
-          {oldest && oldest.id !== latest.id && (
-            <p className="text-[10px] font-mono text-white/20 px-2">
-              Showing all {group.sessions.length} sessions · oldest: {timeAgo(oldest.startedAt)}
-            </p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ── Page ────────────────────────────────────────────────────
 
@@ -232,8 +84,8 @@ export default function SessionsPage() {
   const { toastElement } = useToast();
 
   // Open/close sibling pair for the source filter. The "All" button
-  // (line 327) clears the filter (sets it to `null`); each source button
-  // in the .map() (line 339) sets it to that source. Both paths were
+  // clears the filter (sets it to `null`); each source button in the
+  // filter bar's .map() sets it to that source. Both paths were
   // inline `() => setSourceFilter(X)` arrows — promoting to named
   // useCallback siblings follows the session 116 P-7 / session 118 P-7
   // pattern. `selectSourceFilter` takes a parameter because the .map()
@@ -338,88 +190,18 @@ export default function SessionsPage() {
         )}
         <SessionInsights sessions={sessions} />
         {/* Search + Source Filter + View Options */}
-        <div className="flex flex-col gap-3 mb-6">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1">
-              <SearchInput
-                value={search}
-                onChange={setSearch}
-                placeholder="Search sessions by title, ID, profile, or mission id..."
-                accentColor="orange"
-              />
-            </div>
-            {sources.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                <Filter className="w-4 h-4 text-white/30 flex-shrink-0" />
-                <button
-                  onClick={clearSourceFilter}
-                  aria-pressed={!sourceFilter}
-                  className={`text-xs font-mono px-2 py-1 rounded transition-colors ${
-                    !sourceFilter
-                      ? "bg-neon-orange/20 text-neon-orange"
-                      : "text-white/40 hover:text-white/60"
-                  }`}
-                >
-                  All
-                </button>
-                {sources.map((src) => (
-                  <button
-                    key={src}
-                    onClick={() => selectSourceFilter(src)}
-                    aria-pressed={sourceFilter === src}
-                    className={`text-xs font-mono px-2 py-1 rounded transition-colors flex items-center gap-1 ${
-                      sourceFilter === src
-                        ? "bg-neon-orange/20 text-neon-orange"
-                        : "text-white/40 hover:text-white/60"
-                    }`}
-                  >
-                    {SOURCE_META[src]?.icon}
-                    {SOURCE_META[src]?.label ?? src}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* View options row: group-by-mission, hide-api-noise, live indicator hint */}
-          <div className="flex items-center gap-2 flex-wrap text-[10px] font-mono">
-            <button
-              type="button"
-              onClick={toggleGroupByMission}
-              aria-pressed={groupByMission}
-              className={`flex items-center gap-1 px-2 py-1 rounded transition-colors ${
-                groupByMission
-                  ? "bg-neon-green/10 text-neon-green"
-                  : "text-white/40 hover:text-white/60"
-              }`}
-              title="Collapse sessions with the same missionId into a single card"
-            >
-              <Layers className="w-3 h-3" />
-              Group by mission
-            </button>
-            <button
-              type="button"
-              onClick={toggleHideApiNoise}
-              aria-pressed={hideApiNoise}
-              className={`flex items-center gap-1 px-2 py-1 rounded transition-colors ${
-                hideApiNoise
-                  ? "bg-neon-purple/10 text-neon-purple"
-                  : "text-white/40 hover:text-white/60"
-              }`}
-              title="Hide short-lived api-source sessions (< 1KB, < 1 min) that dominate the list during stress testing"
-            >
-              <EyeOff className="w-3 h-3" />
-              Hide API noise
-            </button>
-            <span
-              className="flex items-center gap-1 text-white/20 px-2 py-1"
-              title="Active sessions get a pulsing dot and live elapsed time"
-            >
-              <Activity className="w-3 h-3" />
-              <LiveDot /> = live
-            </span>
-          </div>
-        </div>
+        <SessionFilterBar
+          search={search}
+          onSearchChange={setSearch}
+          sources={sources}
+          sourceFilter={sourceFilter}
+          onClearSourceFilter={clearSourceFilter}
+          onSelectSourceFilter={selectSourceFilter}
+          groupByMission={groupByMission}
+          onToggleGroupByMission={toggleGroupByMission}
+          hideApiNoise={hideApiNoise}
+          onToggleHideApiNoise={toggleHideApiNoise}
+        />
 
         {loading ? (
           <LoadingSpinner text="Loading sessions..." />
