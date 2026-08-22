@@ -6,10 +6,12 @@
 // sessions API call. Agent-native sessions (mission dispatch, cron)
 // are written here directly.
 //
-// This module is the pure CRUD half of the registry. The Hermes
-// state.db sync + orphan-sweep machinery lives in `./session-sync`
-// (listSessions pulls in `syncHermesSessionsToDb` for the optional
-// `syncIfActive` one-shot).
+// This module is the pure CRUD half of the registry. The sync side
+// lives in four siblings: `./session-sync` (the upsert pipeline;
+// listSessions pulls in `syncHermesSessionsToDb` for the optional
+// `syncIfActive` one-shot), `./hermes-state-sessions` (reads the
+// agent's state.db), `./session-mission-links` (session → parent
+// mission) and `./session-orphan-sweep` (closes stuck rows).
 //
 // Schema: src/lib/db/migrations/009_sessions.sql
 // ═══════════════════════════════════════════════════════════════

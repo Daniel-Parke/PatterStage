@@ -65,9 +65,9 @@ jest.mock("@/lib/sessions/session-repository", () => ({
   estimateSessionSize: jest.fn(() => 0),
 }));
 
-// lookupMissionIdForCronSession moved to session-sync (the route imports it
-// from there); the in-flight-note tests only need it to no-op.
-jest.mock("@/lib/sessions/session-sync", () => ({
+// lookupMissionIdForCronSession lives in session-mission-links (the route
+// imports it from there); the in-flight-note tests only need it to no-op.
+jest.mock("@/lib/sessions/session-mission-links", () => ({
   lookupMissionIdForCronSession: jest.fn(() => null),
 }));
 

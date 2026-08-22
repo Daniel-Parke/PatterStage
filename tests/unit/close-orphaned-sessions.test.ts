@@ -27,7 +27,7 @@ import { join } from "path";
 import {
   closeOrphanedActiveSessions,
   previewOrphanSweep,
-} from "@/lib/sessions/session-sync";
+} from "@/lib/sessions/session-orphan-sweep";
 import { closeSessionForMission } from "@/lib/sessions/session-repository";
 
 const repoRoot = join(__dirname, "..", "..");

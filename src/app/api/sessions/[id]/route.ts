@@ -9,7 +9,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { badRequest, notFound, ok, payloadTooLarge } from "@/lib/api-response";
 import { safeStat } from "@/lib/fs/fs-stats";
 import { getSession, estimateSessionSize } from "@/lib/sessions/session-repository";
-import { lookupMissionIdForCronSession } from "@/lib/sessions/session-sync";
+import { lookupMissionIdForCronSession } from "@/lib/sessions/session-mission-links";
 import { PATHS } from "@/lib/paths";
 import {
   getMaxSessionFileBytes,
