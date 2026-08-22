@@ -7,7 +7,14 @@
 // Powers the AgentPerformanceStrip on the Agents page via /api/stats.
 // ═══════════════════════════════════════════════════════════════
 
-import { getDb } from "@/lib/db";
+import {
+  countSkills,
+  readAgentProfileStatsRows,
+  readAgentRootStatsRow,
+  readMissionStatusCountsByProfile,
+  readRunProfileRows,
+  type RunProfileRow,
+} from "./agent-stats-repository";
 
 export interface AgentPerformance {
   slug: string;
@@ -30,9 +37,10 @@ function num(v: unknown): number {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 }
-function scalar(sql: string, ...p: unknown[]): number {
+/** Run a repository count read, degrading to 0 exactly as the old inline `scalar` did. */
+function safeCount(read: () => number | undefined): number {
   try {
-    return num((getDb().prepare(sql).get(...p) as { v: number } | undefined)?.v);
+    return num(read());
   } catch {
     return 0;
   }
@@ -68,11 +76,9 @@ interface RunAgg {
 /** Aggregate runs per profile (the core of an agent's performance). */
 function runsByProfile(): Map<string, RunAgg> {
   const out = new Map<string, RunAgg>();
-  let rows: Array<{ profile_name: string | null; status: string; usage_json: string | null; submitted_at: string; completed_at: string | null }> = [];
+  let rows: RunProfileRow[] = [];
   try {
-    rows = getDb()
-      .prepare("SELECT profile_name, status, usage_json, submitted_at, completed_at FROM runs")
-      .all() as typeof rows;
+    rows = readRunProfileRows();
   } catch {
     return out;
   }
@@ -97,11 +103,7 @@ function runsByProfile(): Map<string, RunAgg> {
 function missionsByProfile(): Map<string, { completed: number; failed: number }> {
   const out = new Map<string, { completed: number; failed: number }>();
   try {
-    const rows = getDb()
-      .prepare(
-        "SELECT COALESCE(profile_name, profile_id, 'default') AS p, status, COUNT(*) c FROM missions WHERE deleted_at IS NULL GROUP BY p, status",
-      )
-      .all() as Array<{ p: string; status: string; c: number }>;
+    const rows = readMissionStatusCountsByProfile();
     for (const r of rows) {
       const key = r.p && r.p.trim() ? r.p : "default";
       const e = out.get(key) ?? { completed: 0, failed: 0 };
@@ -123,7 +125,7 @@ function missionsByProfile(): Map<string, { completed: number; failed: number }>
 export function getAgentPerformance(): AgentPerformance[] {
   const runsAgg = runsByProfile();
   const missionsAgg = missionsByProfile();
-  const totalSkills = scalar("SELECT COUNT(*) AS v FROM skills");
+  const totalSkills = safeCount(countSkills);
   const agents: AgentPerformance[] = [];
 
   const push = (slug: string, name: string, personality: string | undefined, disabledSkills: string | null, toolsets: string | null) => {
@@ -144,15 +146,11 @@ export function getAgentPerformance(): AgentPerformance[] {
   };
 
   try {
-    const root = getDb()
-      .prepare("SELECT display_name, personality, disabled_skills, platform_toolsets FROM agent_root WHERE id = 1")
-      .get() as { display_name: string; personality: string; disabled_skills: string; platform_toolsets: string } | undefined;
+    const root = readAgentRootStatsRow();
     if (root) {
       push("default", root.display_name || "Bob", root.personality, root.disabled_skills, root.platform_toolsets);
     }
-    const profiles = getDb()
-      .prepare("SELECT slug, display_name, personality, disabled_skills, platform_toolsets FROM agent_profiles")
-      .all() as Array<{ slug: string; display_name: string; personality: string; disabled_skills: string; platform_toolsets: string }>;
+    const profiles = readAgentProfileStatsRows();
     for (const p of profiles) {
       push(p.slug, p.display_name || p.slug, p.personality, p.disabled_skills, p.platform_toolsets);
     }

@@ -12,9 +12,9 @@
 // unit-tested; agentExperienceForProfile reads the per-agent signals.
 // ═══════════════════════════════════════════════════════════════
 
-import { getDb } from "@/lib/db";
 import { computeLevel, type LevelInfo } from "./derive";
 import { getAgentPerformance } from "./agent-stats";
+import { countAgentActiveDays } from "./agent-stats-repository";
 
 /** Per-agent signals that accrue Experience. */
 export interface AgentExperienceSignals {
@@ -85,10 +85,10 @@ export interface AgentExperience {
   signals: AgentExperienceSignals;
 }
 
-function scalar(sql: string, ...params: unknown[]): number {
+/** Run a repository count read, degrading to 0 exactly as the old inline `scalar` did. */
+function safeCount(read: () => number | undefined): number {
   try {
-    const row = getDb().prepare(sql).get(...params) as { v: number } | undefined;
-    const n = Number(row?.v);
+    const n = Number(read());
     return Number.isFinite(n) ? n : 0;
   } catch {
     return 0;
@@ -100,10 +100,7 @@ export function agentExperienceForProfile(slug: string): AgentExperience | null 
   const perf = getAgentPerformance().find((p) => p.slug === slug);
   if (!perf) return null;
 
-  const activeDays = scalar(
-    "SELECT COUNT(DISTINCT date(completed_at)) AS v FROM runs WHERE profile_name = ? AND status = 'completed'",
-    slug,
-  );
+  const activeDays = safeCount(() => countAgentActiveDays(slug));
 
   const signals: AgentExperienceSignals = {
     runsCompleted: perf.runs,
