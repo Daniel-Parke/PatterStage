@@ -1,5 +1,5 @@
 ---
-summary: How data survives upgrades, and what the repository rename means for existing clones and forks
+summary: How data survives upgrades, the rule for adding a schema change, and what the repository rename means for existing clones and forks
 type: guide
 tags: [product, upgrade]
 compiled_from: normalised
@@ -60,10 +60,66 @@ It moves the repo + data dir, fixes `.env.local` paths, renames the DB, and prin
 
 ## How migrations work
 
-- **One source of truth.** All schema migrations live in **`runMigrations()`** (`src/lib/db.ts`) — a hand-wired chain of idempotent, version-gated appliers (`src/lib/db/apply-*.ts`) plus the SQL in `src/lib/db/migrations/`. The running app applies them at first DB open (`getDb()`), and the **`db:migrate`** script (`scripts/tooling/migrate-db.ts`) runs the **exact same** chain. They can never drift.
-- **`schema_version`.** Stored in the `meta` table. Fresh installs apply `001_baseline.sql` (the full current schema, `schema_version 3`); existing installs climb through the upgrade-only appliers to the current head (**`schema_version 13`** — v12 added the `analytics_events` log; v13 added the `chat_conversations` + `chat_messages` tables for server-persisted agent chat). Both end with an equivalent schema.
+- **One source of truth.** All schema migrations live in **`runMigrations()`**, exported from the `@/lib/db` entry module: a hand-wired chain of idempotent, version-gated appliers (`src/lib/db/apply-*.ts`) plus the SQL in `src/lib/db/migrations/`. The running app applies them at first DB open (`getDb()`), and the **`db:migrate`** script (`scripts/tooling/migrate-db.ts`) runs the **exact same** chain. They can never drift.
+- **`schema_version`.** Stored in the `meta` table. Fresh installs apply `001_baseline.sql` (the squashed schema, `schema_version 3`); existing installs climb through the 26 upgrade-only appliers, v3 to the current head of **`schema_version 30`**. Both end with an equivalent schema.
+- **The head is a constant, not a number typed into prose.** It is `MIGRATION_HEAD_SCHEMA_VERSION` in `src/lib/db-schema.ts`, and `tests/unit/run-migrations-upgrade.integration.test.ts` asserts the chain actually reaches it, that it equals the last applier's own gate, and that it equals the highest-numbered file in `src/lib/db/migrations/`. This section claimed 13, and two others claimed 11, for a long stretch while the code climbed to 30. That is what the constant and those assertions exist to prevent.
+- **A fresh database converges over several passes.** `runMigrations()` applies the baseline and returns; the incremental appliers only run on later passes. `getDb()` loops until the version stops moving, so one boot still reaches the head.
 - **Idempotent.** Re-running migrations is always safe — appliers gate on the stored version and no-op when already applied.
 - **Backed up first.** Every migration through `setup.sh`, `ps-deploy.sh update|rebuild`, or `ps-migrate.sh` snapshots `patterstage.db` → **`patterstage.db.pre-migrate-<timestamp>.bak`** under `PS_DATA_DIR` before touching anything.
+
+## Adding a schema change: the going-forward rule
+
+A schema change is **a new numbered `.sql` plus a version-gated applier that execs it**, appended to the hand-wired order. Three steps, in one commit:
+
+1. **Add the `.sql`.** A new file in `src/lib/db/migrations/`, taking the next free number.
+2. **Add the applier.** A new `src/lib/db/apply-*.ts` that reads `getSchemaVersion`, returns early when the database is already at or past its gate, execs its `.sql` through `execMigrationFile` (`src/lib/db/apply-sql.ts`), and calls `setSchemaVersion` only after that succeeds.
+3. **Wire it and raise the head.** Append one call to the end of `runMigrations()` and bump `MIGRATION_HEAD_SCHEMA_VERSION` in `src/lib/db-schema.ts` to match the new gate.
+
+The rules around it are not negotiable:
+
+- **The order is load-bearing.** The chain is hand-wired, not discovered by scanning the directory. Appliers run in written order, and several depend on an earlier one having run. Append to the end. Never insert into the middle, never reorder.
+- **A `.sql` file alone is inert.** Nothing scans the directory and runs what it finds. A migration that is not called from `runMigrations()` does nothing at all, on any install, forever. The upgrade-path test asserts the tables of the recent migrations exist specifically to catch that.
+- **Shipped migrations are immutable.** Once a numbered `.sql` has been released it is history and is never edited, not even when it created a column that has since been renamed. `030` renames `agent_root.hermes_md`, and `001` and `002` still create `hermes_md`, deliberately. Migration history is a record of what happened, not a description of the current schema.
+- **`schema_version` strictly increases.** A gate is claimed once, never reused and never lowered. A mistake in a shipped migration is corrected by a new, higher-numbered migration.
+- **Bump the version last.** `execMigrationFile` swallows only already-applied errors (`duplicate column name`, `already exists`) and rethrows everything else, so a genuine failure leaves the version un-bumped and the boot fails loudly. Setting the version before the work, or wrapping the work in a blanket `catch`, records a half-migrated database as done and there is no retry.
+
+### Historical exceptions
+
+Of the 26 appliers, 19 exec their numbered `.sql` through `execMigrationFile`. The other seven do not. They are **grandfathered, not a precedent**, and they are worth naming precisely, because calling all seven "embedded SQL" is less accurate than what is actually on disk.
+
+**Four read the numbered `.sql` directly with `readFileSync`.** They predate `apply-sql.ts` and its fail-loudly contract:
+
+| Applier | Reads | Note |
+|---|---|---|
+| `apply-profiles-tools-upgrade.ts` | `002_profiles_tools_parity.sql` | Reaches the file by scanning the migrations directory, not by naming it. Gates at v3. |
+| `apply-mission-repeat-migration.ts` | `003_mission_infinite_repeat.sql` | Gates at v4. |
+| `apply-mission-queue-migration.ts` | `004_mission_queue.sql` | Gates at v5. |
+| `apply-benchmark-config-migration.ts` | `015_benchmark_config.sql` | Gates at v15. |
+
+**Three carry their SQL in TypeScript**, with no `.sql` of their own to exec:
+
+| Applier | Gate | Why it is not a file |
+|---|---|---|
+| `apply-cron-schedule-canonicalisation.ts` | v7 | Rewrites `cron_jobs.schedule` values. The work is string parsing, not DDL, so there is no SQL to put in a file. |
+| `apply-legacy-column-repair.ts` | v9 | Catch-up repair for the `005` and `006` column adds the ladder skipped. Runs late so it repairs already-deployed installs too. |
+| `apply-neutral-column-names.ts` | v30 | `ALTER TABLE ... RENAME COLUMN` is not idempotent: it throws on a second run. Each rename is guarded on the live shape read from `PRAGMA table_info`, which a static `.sql` cannot do. |
+
+### Ladder quirks
+
+The version ladder is not a clean one-step-per-number run. The gaps are real history, not mess to tidy up, and nothing should be renumbered to close them:
+
+- **No applier sets v6.** Canonicalisation jumps 5 straight to 7. That orphaned the `005_cron_workdir` and `006_sessions_message_count` column adds, which are repaired at v9 by `apply-legacy-column-repair.ts`.
+- **There is no `010`.** The files run 001 to 030 with 010 absent: it created the `game_*` tables and was deleted with the gamification dial-back. `011_drop_game_tables.sql` drops what it created and documents the removal. Twenty-nine files, thirty numbers.
+- **`007` and `008` are inert markers.** Both are comment-only `.sql` files that exec nothing. Their logic is `applyCronScheduleCanonicalisation()` in TypeScript, and the pair is covered by the single v7 gate. They exist so the migration index increments.
+- **The file number does not always equal the gate.** `002` bumps to v3 and `008` bumps to v7. Going forward the two match, and the upgrade-path test asserts it for the head. Historically they do not, which is why the gate in the applier, not the filename, is the authority for any migration below 012.
+
+### Ruling D6: session-sync's lazy self-heal is sanctioned
+
+One place outside the chain still alters a table. `ensureMessageCountColumn()` in `src/lib/sessions/session-sync.ts` adds `sessions.message_count` when a `pragma_table_info` probe says it is missing.
+
+**Operator ruling D6 (2026-08-22): this is deliberate and sanctioned, not debt.** It is paired with `006_sessions_message_count.sql` and with the v9 repair that covers the orphaned column adds, and it protects a database that pre-dates migration 006 and runs a session sync before it finishes climbing. The pragma guard means a database that already has the column pays one cheap read and nothing else.
+
+Sanctioned does not mean invisible. It is **not** exempted from `design-lint`'s `sql-outside-repository` rule and must not be: it stays counted in that rule's baseline so it keeps showing up in the report. The ruling covers this one site, paired with this one migration. It is not a licence for the next lazy `ALTER`. New columns go through the chain.
 
 ## Running a migration
 
@@ -83,7 +139,7 @@ Moving from a pre-runtime `main` install (file/`jobs.json`-era) to the current r
 2. **Schema upgrade** — the appliers add the `runs` and `schedules` tables, mission/run columns, and the catch-up repairs; they **drop only the never-shipped-to-`main` `game_*` tables** (the dialed-back gamification). Your `missions`, `models`, `credentials`, `sessions`, `cron_jobs`, and `stories` are preserved.
 3. **Legacy data migration** — recurring missions that were backed by a Hermes cron job become PatterStage `schedules` (mission-linked), firing on the next scheduler tick. The old `cron_jobs` rows are left in place (orphaned/backup only); the legacy agent-cron **Cron page + `jobs.json` bridge have been removed** — scheduling lives in Missions.
 
-The proof is `tests/unit/run-migrations-upgrade.integration.test.ts`, which drives the real `runMigrations` against a degraded legacy DB and asserts the schema climbs to 11 **with the seeded mission and cron job still present**.
+The proof is `tests/unit/run-migrations-upgrade.integration.test.ts`, which drives the real `runMigrations` against a degraded legacy DB and asserts the schema climbs to the head (`schema_version 30`) **with the seeded mission and cron job still present**.
 
 ### If a database can't be migrated in place
 
@@ -108,6 +164,6 @@ Hermes/Hindsight memory backups are separate (`scripts/hardware/ps-backup.sh`). 
 
 ## Release checklist (`dev` → `main`)
 
-1. On a copy of a real install, run `bash scripts/maintenance/ps-migrate.sh` and confirm: a `pre-migrate-*.bak` exists, `schema_version` is 11, `schedules` is populated from any mission-linked cron jobs, and missions/models/sessions are intact.
+1. On a copy of a real install, run `bash scripts/maintenance/ps-migrate.sh` and confirm: a `pre-migrate-*.bak` exists, `schema_version` matches the head (30 today, and always `MIGRATION_HEAD_SCHEMA_VERSION` in `src/lib/db-schema.ts`), `schedules` is populated from any mission-linked cron jobs, and missions/models/sessions are intact.
 2. `npm test` (incl. the upgrade-path test) and `npm run test:e2e-hermes` (real-Hermes gate).
 3. `npm run test:full-install` on a staging host (`tests/integration/test_full_install_update_process.py`).

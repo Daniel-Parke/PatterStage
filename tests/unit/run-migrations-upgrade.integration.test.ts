@@ -5,10 +5,17 @@
 // up fully migrated. Guards the wiring so a future edit that drops an applier
 // from runMigrations is caught in CI.
 
-import { readFileSync } from "fs";
+import { readdirSync, readFileSync } from "fs";
 import { join } from "path";
 import type DatabaseNs from "better-sqlite3";
-import { getSchemaVersion, setSchemaVersion } from "@/lib/db-schema";
+import {
+  MIGRATION_HEAD_SCHEMA_VERSION,
+  getSchemaVersion,
+  setSchemaVersion,
+} from "@/lib/db-schema";
+// The last applier's own gate. Imported by its own specifier, which the global
+// "@/lib/db" mock does not intercept, so this is the real number the chain ends on.
+import { NEUTRAL_COLUMN_NAMES_SCHEMA_VERSION } from "@/lib/db/apply-neutral-column-names";
 
 // jest.setup globally mocks "@/lib/db" (no runMigrations on the mock); pull the
 // real implementation so we exercise the actual wiring.
@@ -125,7 +132,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     expect(tableNames(db)).toContain("artifacts");
     expect(tableNames(db)).toContain("story_characters");
     expect(tableNames(db)).toContain("story_themes");
-    expect(getSchemaVersion(db)).toBe(30);
+    expect(getSchemaVersion(db)).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
 
     // v30 renamed two vendor-named columns in tables PatterStage owns. This is
     // the only DESTRUCTIVE-shaped migration in the chain (a rename, not an add),
@@ -166,7 +173,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
       if (next === last) break;
       last = next;
     }
-    expect(getSchemaVersion(db)).toBe(30);
+    expect(getSchemaVersion(db)).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
     expect(tableNames(db)).toEqual(
       expect.arrayContaining([
         "composer_workflows",
@@ -189,7 +196,29 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     const v1 = getSchemaVersion(db);
     expect(() => runMigrations(db)).not.toThrow();
     expect(getSchemaVersion(db)).toBe(v1);
-    expect(getSchemaVersion(db)).toBe(30);
+    expect(getSchemaVersion(db)).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
     db.close();
+  });
+
+  // The head is stated in three places: the constant, the last applier's gate and
+  // the migrations directory. Nothing forces them to agree, and for a long time
+  // they did not: docs/MIGRATION.md claimed 13 and 11 while the chain climbed to
+  // 30. These two assertions are what stop that happening again. They are cheap,
+  // they need no database, and they fail on the commit that introduces the drift
+  // rather than on the install that trips over it.
+  describe("the head constant cannot drift from the chain", () => {
+    it("equals the last applier's version gate", () => {
+      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(NEUTRAL_COLUMN_NAMES_SCHEMA_VERSION);
+    });
+
+    it("equals the highest-numbered migration file on disk", () => {
+      const numbers = readdirSync(migrationsDir)
+        .filter((f) => /^\d{3}_.*\.sql$/.test(f))
+        .map((f) => parseInt(f.slice(0, 3), 10));
+
+      // Guard the guard: an empty or unreadable directory must not read as pass.
+      expect(numbers.length).toBeGreaterThan(20);
+      expect(Math.max(...numbers)).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
+    });
   });
 });
