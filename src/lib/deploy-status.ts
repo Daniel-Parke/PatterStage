@@ -2,7 +2,7 @@ import { existsSync, readFileSync, renameSync, writeFileSync } from "fs";
 import { dirname } from "path";
 
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
-import { ensureDir } from "@/lib/fs-helpers";
+import { ensureDir } from "@/lib/fs/fs-helpers";
 
 function deployStatusDir(): string {
   return dirname(deployStatusPath());

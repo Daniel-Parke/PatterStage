@@ -8,7 +8,7 @@ import {
   readLastLines,
   resolveLogFilePath,
   sanitizeLogBasename,
-} from "@/lib/log-files";
+} from "@/lib/fs/log-files";
 
 describe("sanitizeLogBasename", () => {
   it("accepts letters digits dot underscore hyphen", () => {

@@ -9,7 +9,7 @@ import { resolve as pathResolve } from "path";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { badRequest, ok } from "@/lib/api-response";
-import { resolveAllowedWorkspacePath } from "@/lib/path-security";
+import { resolveAllowedWorkspacePath } from "@/lib/fs/path-security";
 
 export async function GET(request: NextRequest) {
   try {

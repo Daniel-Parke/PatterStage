@@ -8,7 +8,7 @@ import { ensureDb } from "@/lib/db";
 import { getAgentRoot } from "@/lib/agent-root-repository";
 import { listProfiles } from "@/modules/hermes/lib/profiles-repository";
 import { applyProfileOrRootPatchOrFail } from "@/modules/hermes/handlers/profile-patch";
-import { requireSafeProfileName } from "@/lib/path-security";
+import { requireSafeProfileName } from "@/lib/fs/path-security";
 
 /** Shared upsert logic used by both POST (create) and PUT (update). */
 async function upsertPersonality(request: NextRequest) {

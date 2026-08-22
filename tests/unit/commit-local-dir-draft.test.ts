@@ -16,7 +16,7 @@
  *   - the order of `nextEntries` is the input order + the new entry at
  *     the end (insertion order, not sort order)
  */
-import { commitLocalDirDraft } from "@/lib/local-dir-entry";
+import { commitLocalDirDraft } from "@/lib/fs/local-dir-entry";
 import type { LocalDirEntry } from "@/types/console";
 
 describe("local-dir-entry — commitLocalDirDraft", () => {

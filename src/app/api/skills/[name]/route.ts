@@ -5,7 +5,7 @@ import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
 import { badRequest, notFound, ok, serverError } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { safeStat } from "@/lib/fs-stats";
+import { safeStat } from "@/lib/fs/fs-stats";
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
 import { getSkill, upsertSkill, parseSkillFrontmatter } from "@/lib/skills-repository";

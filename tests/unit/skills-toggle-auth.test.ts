@@ -56,7 +56,7 @@ const mockResolveSafeProfileName = jest.fn(
   }
 );
 
-jest.mock("@/lib/path-security", () => ({
+jest.mock("@/lib/fs/path-security", () => ({
   resolveSafeProfileName: (param: string | null) => mockResolveSafeProfileName(param),
   requireSafeProfileName: (param: string | null) => {
     const r = mockResolveSafeProfileName(param);

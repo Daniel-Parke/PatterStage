@@ -71,7 +71,7 @@ jest.mock("@/lib/missions/mission-category-repository", () => ({
   getCategory: jest.fn(),
 }));
 
-jest.mock("@/lib/local-dir-entry", () => ({
+jest.mock("@/lib/fs/local-dir-entry", () => ({
   normalizeLocalDirsInput: jest.fn((d) => d ?? []),
 }));
 

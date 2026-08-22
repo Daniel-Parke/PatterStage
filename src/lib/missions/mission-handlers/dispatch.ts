@@ -14,7 +14,7 @@ import {
   updateMission,
   buildMissionPrompt,
 } from "@/lib/missions/mission-repository";
-import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
+import { normalizeLocalDirsInput } from "@/lib/fs/local-dir-entry";
 import { logApiError } from "@/lib/api-logger";
 import { badRequest, serverError } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";

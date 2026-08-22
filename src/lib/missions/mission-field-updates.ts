@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { buildMissionPrompt, parseMissionPrompt } from "@/lib/missions/build-mission-prompt";
-import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
+import { normalizeLocalDirsInput } from "@/lib/fs/local-dir-entry";
 import type { LocalDirEntry } from "@/types/console";
 import type { Mission } from "@/lib/missions/mission-types";
 import type { MissionStatus } from "@/lib/missions/mission-types";

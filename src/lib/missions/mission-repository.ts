@@ -10,7 +10,7 @@ import { safeJsonParse } from "../utils";
 import { PATHS } from "../paths";
 import type { Mission, MissionStatus } from "@/lib/missions/mission-types";
 import type { LocalDirEntry } from "@/types/console";
-import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
+import { normalizeLocalDirsInput } from "@/lib/fs/local-dir-entry";
 
 // ── Row shape ─────────────────────────────────────────────────
 

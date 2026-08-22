@@ -18,7 +18,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 
-import { ensureDir, backupTimestamp, backupFile } from "@/lib/fs-helpers";
+import { ensureDir, backupTimestamp, backupFile } from "@/lib/fs/fs-helpers";
 
 function makeTmpDir(label: string): string {
   const dir = join(

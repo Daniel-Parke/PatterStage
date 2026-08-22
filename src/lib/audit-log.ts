@@ -5,7 +5,7 @@
 import { appendFileSync } from "fs";
 
 import { PATHS } from "@/lib/paths";
-import { ensureDir } from "@/lib/fs-helpers";
+import { ensureDir } from "@/lib/fs/fs-helpers";
 
 function ensureLogsDir(): void {
   ensureDir(PATHS.auditLog);

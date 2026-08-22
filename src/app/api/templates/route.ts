@@ -8,14 +8,14 @@ import { parseTemplatePackManifestV1 } from "@/lib/schema";
 import { zodErrorResponse } from "@/lib/api-schemas";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { ensureDir } from "@/lib/fs-helpers";
+import { ensureDir } from "@/lib/fs/fs-helpers";
 import { ensureDb } from "@/lib/db";
 import { PATHS } from "@/lib/paths";
 import { requireAuth } from "@/lib/api-auth";
 import { listCatalogTemplates } from "@/lib/catalog-template-repository";
 import { resolveTemplateCategoryId } from "@/lib/missions/mission-category-repository";
 import type { LocalDirEntry } from "@/types/console";
-import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
+import { normalizeLocalDirsInput } from "@/lib/fs/local-dir-entry";
 
 const DATA_DIR = PATHS.templates;
 

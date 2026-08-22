@@ -6,7 +6,7 @@ import { NextRequest } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, badRequest } from "@/lib/api-response";
-import { resolveAllowedWorkspacePath } from "@/lib/path-security";
+import { resolveAllowedWorkspacePath } from "@/lib/fs/path-security";
 import { readGitBranchMetadataForWorkspacePath } from "@/lib/git/git-workspace-branches";
 
 export async function GET(request: NextRequest) {

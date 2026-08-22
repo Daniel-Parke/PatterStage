@@ -29,7 +29,7 @@ jest.mock("@/modules/hermes/lib/profile-sync", () => ({
   pushRootToHermes: jest.fn(() => ({ success: true })),
 }));
 
-jest.mock("@/lib/path-security", () => ({
+jest.mock("@/lib/fs/path-security", () => ({
   resolveSafeProfileName: jest.fn((param: string | null) => {
     const profile = (param || "default").trim();
     if (profile === "default") return { ok: true, profile: "default" };

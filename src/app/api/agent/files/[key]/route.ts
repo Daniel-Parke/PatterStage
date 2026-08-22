@@ -6,9 +6,9 @@ import { resolveProfileHermesHome, buildProfileHermesPathBundle } from "@/module
 import { getBehaviorFiles } from "@/modules/hermes/lib/behavior-files";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { safeStat } from "@/lib/fs-stats";
-import { ensureDir, backupTimestamp } from "@/lib/fs-helpers";
-import { resolveSafeProfileName } from "@/lib/path-security";
+import { safeStat } from "@/lib/fs/fs-stats";
+import { ensureDir, backupTimestamp } from "@/lib/fs/fs-helpers";
+import { resolveSafeProfileName } from "@/lib/fs/path-security";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";

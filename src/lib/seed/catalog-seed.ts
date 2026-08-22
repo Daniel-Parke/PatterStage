@@ -15,7 +15,7 @@ import { upsertToolBundle, getToolBundle } from "../tool-catalog-repository";
 import { upsertMemoryFact } from "../memory/memory-catalog-repository";
 import { getDb } from "../db";
 import { PS_DATA_DIR } from "../paths";
-import { ensureDir } from "../fs-helpers";
+import { ensureDir } from "../fs/fs-helpers";
 
 const SKILLS_MANIFEST = join(REPO_ROOT, "data/seed/skills/manifest.json");
 const TOOLS_MANIFEST = join(REPO_ROOT, "data/seed/tools/manifest.json");

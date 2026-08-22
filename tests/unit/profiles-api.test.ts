@@ -76,7 +76,7 @@ jest.mock("@/lib/api-logger", () => ({
   ),
 }));
 
-jest.mock("@/lib/path-security", () => ({
+jest.mock("@/lib/fs/path-security", () => ({
   resolveSafeProfileName: (p: string | null) => {
     const profile = (p || "default").trim();
     if (profile === "default" || profile === "") return { ok: true, profile: "default" };

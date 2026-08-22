@@ -1,7 +1,7 @@
 /** @jest-environment node */
 import { NextResponse } from "next/server";
 
-import { resolveSafeProfileName, requireSafeProfileName } from "@/lib/path-security";
+import { resolveSafeProfileName, requireSafeProfileName } from "@/lib/fs/path-security";
 
 describe("resolveSafeProfileName", () => {
   it("returns 'default' for null input", () => {

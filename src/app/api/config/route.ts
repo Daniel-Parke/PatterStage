@@ -12,7 +12,7 @@ import { dumpYamlConfig } from "@/lib/yaml-config";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
-import { backupFile } from "@/lib/fs-helpers";
+import { backupFile } from "@/lib/fs/fs-helpers";
 import { deepMerge } from "@/lib/deep-merge";
 
 // Dynamically derive writable sections from the schema

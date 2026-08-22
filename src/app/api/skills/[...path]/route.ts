@@ -3,7 +3,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from "fs";
 
 import { getActiveHermesPaths } from "@/modules/hermes/lib/agent-runtime";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
-import { resolveSkillDirUnderRoot } from "@/lib/path-security";
+import { resolveSkillDirUnderRoot } from "@/lib/fs/path-security";
 import { parseSkillFrontmatter, stripSkillFrontmatter } from "@/lib/skills-repository";
 import { requireAuth } from "@/lib/api-auth";
 import { badRequest, notFound, ok } from "@/lib/api-response";

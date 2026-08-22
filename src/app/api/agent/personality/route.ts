@@ -6,7 +6,7 @@ import { badRequest, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { applyProfileOrRootPatchOrFail } from "@/modules/hermes/handlers/profile-patch";
-import { requireSafeProfileName } from "@/lib/path-security";
+import { requireSafeProfileName } from "@/lib/fs/path-security";
 import { recordEvent } from "@/lib/analytics/record-event";
 
 export async function PUT(request: NextRequest) {

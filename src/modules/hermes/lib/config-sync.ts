@@ -30,7 +30,7 @@ import { updateAgentRoot } from "@/lib/agent-root-repository";
 import { getModelDefaults, getModel } from "@/lib/models-repository";
 import { modelKey } from "@/lib/model-key";
 import { toError } from "@/lib/api-fetch";
-import { backupFile as backupFileShared, ensureDir } from "@/lib/fs-helpers";
+import { backupFile as backupFileShared, ensureDir } from "@/lib/fs/fs-helpers";
 import { parseFallbackAgentSettingsFromYaml } from "@/lib/fallback-config-yaml";
 import { parseEnvFile, ENV_LINE_RE } from "@/lib/env-file";
 import type { FallbackConfigPutInput } from "@/lib/fallback-config-schema";

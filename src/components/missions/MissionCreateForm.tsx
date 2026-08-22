@@ -18,7 +18,7 @@ import {
   ComposerFieldLabel,
 } from "@/components/missions/MissionComposerLayout";
 import type { LocalDirEntry } from "@/types/console";
-import { commitLocalDirDraft } from "@/lib/local-dir-entry";
+import { commitLocalDirDraft } from "@/lib/fs/local-dir-entry";
 import {
   isMissionDraft,
   isMissionQueuedForRun,

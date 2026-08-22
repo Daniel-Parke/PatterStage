@@ -10,11 +10,11 @@ import {
   logValidationError,
   readLastLines,
   resolveLogFilePath,
-} from "@/lib/log-files";
+} from "@/lib/fs/log-files";
 import { injectMissingTimestamps } from "@/lib/log-line-format";
 import { requireAuth } from "@/lib/api-auth";
 import { badRequest, notFound, ok } from "@/lib/api-response";
-import type { LogFileMeta } from "@/lib/log-files";
+import type { LogFileMeta } from "@/lib/fs/log-files";
 
 // ── Shared log directory resolution ──────────────────────────
 

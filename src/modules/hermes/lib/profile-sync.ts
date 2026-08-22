@@ -12,7 +12,7 @@ import {
 } from "fs";
 
 import { atomicWriteFile, finalizeRootConfigOnDisk } from "@/modules/hermes/lib/config-sync";
-import { backupTimestamp, ensureDir, fileHash, contentHash } from "@/lib/fs-helpers";
+import { backupTimestamp, ensureDir, fileHash, contentHash } from "@/lib/fs/fs-helpers";
 import { messageFromError } from "@/lib/api-fetch";
 import { getHermesDefaultRoot } from "./profile-paths";
 import { resolveProfileHermesHome } from "./profile-paths";

@@ -13,7 +13,7 @@ import {
 } from "fs";
 import { dirname, join } from "path";
 import { PATHS } from "../paths";
-import { ensureDir } from "../fs-helpers";
+import { ensureDir } from "../fs/fs-helpers";
 
 /** Squashed baseline schema, including profile/root/skills source-of-truth tables. */
 export const BASELINE_SCHEMA_VERSION = 3;

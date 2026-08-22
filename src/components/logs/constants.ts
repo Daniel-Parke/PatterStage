@@ -2,7 +2,7 @@
 // Logs Constants — Shared log viewer constants
 // ═══════════════════════════════════════════════════════════════
 
-import type { LogFileGroup } from "@/lib/log-files";
+import type { LogFileGroup } from "@/lib/fs/log-files";
 
 // ── Level text class lookup (const map, faster than switch) ──
 export const LEVEL_TEXT_CLASS: Record<string, string> = {

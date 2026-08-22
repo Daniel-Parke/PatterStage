@@ -3,7 +3,7 @@ import { renameSync, existsSync } from "fs";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { resolveSafeProfileName, requireSafeProfileName } from "@/lib/path-security";
+import { resolveSafeProfileName, requireSafeProfileName } from "@/lib/fs/path-security";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";

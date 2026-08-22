@@ -5,7 +5,7 @@ import { mkdtempSync, writeFileSync, rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { createHash } from "crypto";
-import { contentHash, fileHash } from "@/lib/fs-helpers";
+import { contentHash, fileHash } from "@/lib/fs/fs-helpers";
 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 

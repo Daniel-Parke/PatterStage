@@ -15,7 +15,7 @@ import {
   platformsDiffer,
   unionToolsetsFromPlatforms,
 } from "@/modules/hermes/lib/toolset-unify";
-import { requireSafeProfileName } from "@/lib/path-security";
+import { requireSafeProfileName } from "@/lib/fs/path-security";
 
 export async function GET(
   request: NextRequest,

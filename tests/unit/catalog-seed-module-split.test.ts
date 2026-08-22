@@ -45,7 +45,7 @@ jest.mock("@/lib/db", () => ({
     prepare: jest.fn(() => ({ get: () => ({ c: 0 }), run: jest.fn(), all: () => [] })),
   })),
 }));
-jest.mock("@/lib/fs-helpers", () => ({ ensureDir: jest.fn() }));
+jest.mock("@/lib/fs/fs-helpers", () => ({ ensureDir: jest.fn() }));
 jest.mock("fs", () => {
   const actual = jest.requireActual("fs");
   return { ...actual, writeFileSync: jest.fn() };

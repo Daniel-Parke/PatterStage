@@ -4,7 +4,7 @@
 // Agent prompts use XML under <hermes_mission>. Keep buildMissionPrompt,
 // buildMissionPromptHuman, and parseMissionPrompt in sync.
 
-import { normalizeLocalDirsInput } from "@/lib/local-dir-entry";
+import { normalizeLocalDirsInput } from "@/lib/fs/local-dir-entry";
 import type { LocalDirEntry } from "@/types/console";
 
 // ── Build options ──────────────────────────────────────────────

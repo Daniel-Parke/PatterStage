@@ -5,7 +5,7 @@ import { NextRequest } from "next/server";
 const mockResolveAllowed = jest.fn();
 const mockReadGit = jest.fn();
 
-jest.mock("@/lib/path-security", () => ({
+jest.mock("@/lib/fs/path-security", () => ({
   resolveAllowedWorkspacePath: (input: string) => mockResolveAllowed(input),
 }));
 

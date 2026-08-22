@@ -3,8 +3,8 @@ import { existsSync } from "fs";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { safeStat } from "@/lib/fs-stats";
-import { requireSafeProfileName } from "@/lib/path-security";
+import { safeStat } from "@/lib/fs/fs-stats";
+import { requireSafeProfileName } from "@/lib/fs/path-security";
 import { requireAuth } from "@/lib/api-auth";
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
