@@ -19,7 +19,8 @@ import { access, constants } from "fs/promises";
 import { join } from "path";
 import { createInterface } from "readline";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
-import { getDb, now } from "@/lib/db";
+import { now } from "@/lib/db";
+import { insertErrorLogEntries, pruneErrorLogEntries } from "@/lib/sync/sync-repository";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 
@@ -153,27 +154,10 @@ export class LogSync implements SyncSource {
       });
 
       const ingestedAt = now();
-      const database = getDb();
-      const insert = database.prepare(
-        `INSERT INTO error_log_entries (source, message, timestamp, severity, ingested_at)
-         VALUES (?, ?, ?, ?, ?)`
-      );
-
-      const tx = database.transaction(() => {
-        for (const entry of uniqueEntries) {
-          insert.run(entry.source, entry.message, entry.timestamp, entry.severity, ingestedAt);
-        }
-      });
-      tx();
+      insertErrorLogEntries(uniqueEntries, ingestedAt);
 
       // Prune old entries — keep only the most recent 500
-      database
-        .prepare(
-          `DELETE FROM error_log_entries WHERE id NOT IN (
-            SELECT id FROM error_log_entries ORDER BY timestamp DESC LIMIT 500
-          )`
-        )
-        .run();
+      pruneErrorLogEntries();
 
       return {
         sourceName: this.name,

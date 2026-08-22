@@ -185,10 +185,6 @@
   "sql-outside-repository::src/lib/sessions/session-mission-links.ts": 3,
   "sql-outside-repository::src/lib/sessions/session-orphan-sweep.ts": 4,
   "sql-outside-repository::src/lib/sessions/session-sync.ts": 4,
-  "sql-outside-repository::src/lib/sync/sources/EnvSync.ts": 1,
-  "sql-outside-repository::src/lib/sync/sources/LogSync.ts": 2,
   "sql-outside-repository::src/lib/sync/sources/MemorySync.ts": 1,
-  "sql-outside-repository::src/lib/sync/sources/ProcessSync.ts": 3,
-  "sql-outside-repository::src/lib/sync/sources/SessionSync.ts": 2,
   "sql-outside-repository::src/modules/hermes/lib/state-import.ts": 1
 }

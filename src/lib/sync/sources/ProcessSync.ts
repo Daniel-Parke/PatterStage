@@ -9,7 +9,9 @@
 import { exec } from "child_process";
 import { access, constants, readFile } from "fs/promises";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
-import { getDb, now } from "@/lib/db";
+import { now } from "@/lib/db";
+import { deleteAllAgentProcesses, insertAgentProcesses } from "@/lib/sync/sync-repository";
+import { setSystemStat } from "@/lib/system-repository";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 
@@ -152,33 +154,13 @@ export class ProcessSync implements SyncSource {
       }
 
       // ── Write to DB ───────────────────────────────────────
-      const database = getDb();
       const timestamp = now();
 
       // Clear stale entries first
-      database.prepare("DELETE FROM agent_processes").run();
+      deleteAllAgentProcesses();
 
       if (processes.length > 0) {
-        const insert = database.prepare(
-          `INSERT INTO agent_processes (id, type, name, status, pid, model, turns, last_activity, last_seen_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-        );
-        const tx = database.transaction(() => {
-          for (const p of processes) {
-            insert.run(
-              p.id,
-              p.type,
-              p.name,
-              p.status,
-              p.pid,
-              p.model,
-              p.turns,
-              p.lastActivity,
-              timestamp
-            );
-          }
-        });
-        tx();
+        insertAgentProcesses(processes, timestamp);
       }
 
       // ── Track system uptime from /proc/uptime ─────────────
@@ -189,11 +171,7 @@ export class ProcessSync implements SyncSource {
           const hours = Math.floor(uptimeSeconds / 3600);
           const minutes = Math.floor((uptimeSeconds % 3600) / 60);
           const uptimeStr = `${hours}h ${minutes}m`;
-          getDb()
-            .prepare(
-              "INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)"
-            )
-            .run("system.uptime", uptimeStr);
+          setSystemStat("system.uptime", uptimeStr);
         }
       } catch {
         // /proc/uptime not available (non-Linux) — skip silently

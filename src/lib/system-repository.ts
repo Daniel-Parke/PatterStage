@@ -22,7 +22,7 @@ export function getSystemStat(key: string): string | null {
 // ── Write ────────────────────────────────────────────────────
 
 /** Set a single system stat in the `meta` table. Upserts if key exists. */
-function setSystemStat(key: string, value: string): void {
+export function setSystemStat(key: string, value: string): void {
   getDb()
     .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)")
     .run(key, value);

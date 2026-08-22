@@ -8,7 +8,7 @@
 
 import { syncHermesSessionsToDb } from "@/lib/sessions/session-sync";
 import { logApiError } from "@/lib/api-logger";
-import { getDb } from "@/lib/db";
+import { recordSyncFailure, recordSyncSuccess } from "@/lib/sync/sync-repository";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
 
 export class SessionSync implements SyncSource {
@@ -20,10 +20,7 @@ export class SessionSync implements SyncSource {
       const result = syncHermesSessionsToDb();
 
       // Record sync status in sync_registry
-      getDb().prepare(/* sql */ `
-        INSERT OR REPLACE INTO sync_registry (source_name, last_synced_at, status, synced_count, error)
-        VALUES (?, datetime('now'), 'ok', ?, NULL)
-      `).run(this.name, result.synced);
+      recordSyncSuccess(this.name, result.synced);
 
       if (result.skipped > 0) {
         logApiError("SessionSync", `${result.skipped} sessions skipped (FK violations)`, new Error(`${result.skipped} skipped`));
@@ -40,10 +37,7 @@ export class SessionSync implements SyncSource {
 
       // Record failure in sync_registry
       try {
-        getDb().prepare(/* sql */ `
-          INSERT OR REPLACE INTO sync_registry (source_name, last_synced_at, status, synced_count, error)
-          VALUES (?, datetime('now'), 'error', 0, ?)
-        `).run(this.name, String(err));
+        recordSyncFailure(this.name, String(err));
       } catch { /* best-effort */ }
 
       return {
