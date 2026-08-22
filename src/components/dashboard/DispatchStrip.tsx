@@ -24,9 +24,18 @@ import {
 } from "@/lib/missions/mission-categories";
 import type { MissionCategory } from "@/lib/missions/mission-category-repository";
 import type { DashboardTemplate } from "@/lib/dashboard/dashboard-initial-load";
-import { composeTemplateUrl } from "@/lib/dashboard-helpers";
 import { topNTemplates } from "@/lib/dashboard/dashboard-top-templates";
 import type { AccentColor } from "@/types/console";
+
+/**
+ * Build the missions page URL that opens the compose form prefilled with this
+ * template. Lived in `src/lib/dashboard-helpers.ts` until this strip became its
+ * only caller; a one-function module with one importer is indirection, not a
+ * seam. Exported because it is the thing the unit test asserts.
+ */
+export function composeTemplateUrl(templateId: string): string {
+  return `/orchestration/missions?template=${templateId}&compose=1`;
+}
 
 export interface DispatchStripProps {
   templates: DashboardTemplate[];
