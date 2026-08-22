@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { execFileSync } from "child_process";
-import { existsSync, writeFileSync, readFileSync, unlinkSync } from "fs";
-import { tmpdir } from "os";
 
 import { logApiError } from "@/lib/api-logger";
 import { getCorrelationId, requireAuth, requireDeployApiEnabled, requireSignedRequest } from "@/lib/api-auth";
-import { appendAuditLine } from "@/lib/audit-log";
-import {
-  isDeployInProgress,
-  readDeployStatus,
-  tailLogHint,
-  writeDeployStatusRunning,
-} from "@/lib/deploy-status";
+import { isDeployInProgress, readDeployStatus, tailLogHint } from "@/lib/deploy-status";
 import { sanitizeGitBranch } from "@/lib/git/git-branch";
-import { spawnDeploy } from "@/lib/deploy-spawn";
+import {
+  handleRebuildAction,
+  handleRestartAction,
+  handleUpdateAction,
+} from "@/lib/update-handlers/deploy-actions";
+import { listRemoteBranches } from "@/lib/update-handlers/remote-branches";
+import { UPDATE_BRANCH } from "@/lib/update-handlers/shared";
+import { checkVersion } from "@/lib/update-handlers/version-check";
 
 // ═══════════════════════════════════════════════════════════════
 // Update API — Version Check + Update + Restart
@@ -27,206 +25,18 @@ import { spawnDeploy } from "@/lib/deploy-spawn";
 // PS_ENABLE_DEPLOY_API=true required for POST.
 // Optional PS_REQUEST_SIGNING_SECRET + signature headers for POST hardening.
 // PS_UPDATE_GIT_BRANCH (default dev) — remote tracking branch for deploy.
-
-const APP_DIR = process.cwd();
-// Cross-platform Node deploy runner (Windows/macOS/Linux). The bash
-// scripts/application/ps-deploy.sh is now a thin wrapper around this.
-const PS_DEPLOY_SCRIPT = APP_DIR + "/scripts/tooling/ps-deploy.mjs";
-const CACHE_FILE = tmpdir() + "/ps-version-cache.json";
-const CACHE_TTL_MS = 5 * 60 * 1000;
-
-const UPDATE_BRANCH = sanitizeGitBranch(
-  process.env.PS_UPDATE_GIT_BRANCH || process.env.CH_UPDATE_GIT_BRANCH || "dev"
-);
-
-// ── Branch listing ──────────────────────────────────────────────
-
-const MAX_REMOTE_BRANCHES = 50;
-
-function listRemoteBranches(): string[] {
-  try {
-    // Ensure we have the latest remote refs (execFileSync: no shell, so no
-    // "2>/dev/null" — which breaks on Windows cmd; stderr is dropped via stdio).
-    execFileSync("git", ["fetch", "origin", "--quiet"], {
-      cwd: APP_DIR,
-      timeout: 15000,
-      stdio: ["ignore", "ignore", "ignore"],
-    });
-
-    // Get remote branches
-    const rawRemote = execFileSync("git", ["branch", "-r", "--format=%(refname:short)"], {
-      cwd: APP_DIR,
-      encoding: "utf-8",
-      timeout: 10000,
-      stdio: ["ignore", "pipe", "ignore"],
-    });
-
-    // Get local branches — only include branches that exist locally (active/checked-out)
-    const rawLocal = execFileSync("git", ["branch", "--format=%(refname:short)"], {
-      cwd: APP_DIR,
-      encoding: "utf-8",
-      timeout: 10000,
-      stdio: ["ignore", "pipe", "ignore"],
-    });
-    const localSet = new Set<string>();
-    for (const line of rawLocal.split("\n")) {
-      const b = line.trim();
-      if (b) localSet.add(b);
-    }
-
-    const seen = new Set<string>();
-    const out: string[] = [];
-    for (const line of rawRemote.split("\n")) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed === "origin/HEAD" || !trimmed.startsWith("origin/")) continue;
-      const short = trimmed.replace(/^origin\//, "");
-      const clean = sanitizeGitBranch(short);
-      if (!clean || clean === "HEAD") continue;
-      if (seen.has(clean)) continue;
-      // Only include branches that exist locally (active) or are the configured deploy branch
-      const isDeployBranch = clean === UPDATE_BRANCH;
-      const existsLocally = localSet.has(clean);
-      if (!existsLocally && !isDeployBranch) continue;
-      seen.add(clean);
-      out.push(clean);
-    }
-    // Always include UPDATE_BRANCH even if never checked out locally
-    if (!seen.has(UPDATE_BRANCH)) {
-      try {
-        execFileSync("git", ["ls-remote", "--heads", "origin", UPDATE_BRANCH], {
-          cwd: APP_DIR,
-          encoding: "utf-8",
-          timeout: 10000,
-          stdio: ["ignore", "pipe", "ignore"],
-        });
-        out.push(UPDATE_BRANCH);
-      } catch {
-        // branch doesn't exist on remote — skip
-      }
-    }
-    out.sort((a, b) => a.localeCompare(b));
-    return out.slice(0, MAX_REMOTE_BRANCHES);
-  } catch {
-    return [];
-  }
-}
-
-interface VersionCache {
-  localHash: string;
-  remoteHash: string;
-  updateAvailable: boolean;
-  commitMessage: string;
-  commitDate: string;
-  behind: number;
-  /** Remote branch compared against `origin/<name>` (cache key). */
-  comparedBranch: string;
-  /** Local checkout name (`git rev-parse --abbrev-ref HEAD`). */
-  checkoutBranch: string;
-  lastChecked: string;
-}
-
-function runGit(args: string[]): string {
-  return execFileSync("git", args, {
-    cwd: APP_DIR,
-    encoding: "utf-8",
-    timeout: 30000,
-  }).trim();
-}
-
-/** Resolves `origin/<branch>` after fetch; returns an error message or null if OK. */
-function verifyDeployBranchOnOrigin(branch: string): string | null {
-  const name = sanitizeGitBranch(branch);
-  try {
-    runGit(["fetch", "origin", name, "--quiet"]);
-    const full = runGit(["rev-parse", "origin/" + name]);
-    if (!/^[0-9a-f]{40}$/i.test(full)) {
-      return "Branch not found on origin: " + name;
-    }
-    return null;
-  } catch {
-    return "Branch not found on origin: " + name;
-  }
-}
-
-function getCachedVersion(): VersionCache | null {
-  try {
-    if (!existsSync(CACHE_FILE)) return null;
-    const raw = JSON.parse(readFileSync(CACHE_FILE, "utf-8")) as Partial<VersionCache>;
-    if (Date.now() - new Date(raw.lastChecked ?? 0).getTime() > CACHE_TTL_MS)
-      return null;
-    if (typeof raw.comparedBranch !== "string" || typeof raw.checkoutBranch !== "string") {
-      return null;
-    }
-    return raw as VersionCache;
-  } catch {
-    return null;
-  }
-}
-
-function saveVersionCache(cache: VersionCache): void {
-  try {
-    writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2));
-  } catch {
-    // ignore
-  }
-}
-
-function checkVersion(branch?: string): VersionCache {
-  const targetBranch = branch ?? UPDATE_BRANCH;
-  const cached = getCachedVersion();
-  if (cached && cached.comparedBranch === targetBranch) return cached;
-
-  try {
-    runGit(["fetch", "origin", targetBranch, "--quiet"]);
-    const localHash = runGit(["rev-parse", "HEAD"]);
-    const remoteRef = "origin/" + targetBranch;
-    const remoteHash = runGit(["rev-parse", remoteRef]);
-    const currentBranch = runGit(["rev-parse", "--abbrev-ref", "HEAD"]);
-
-    let commitMessage = "";
-    let commitDate = "";
-    let behind = 0;
-
-    if (localHash !== remoteHash) {
-      try {
-        commitMessage = runGit(["log", "--format=%s", "-1", remoteRef]);
-        commitDate = runGit(["log", "--format=%ci", "-1", remoteRef]);
-        behind = parseInt(
-          runGit(["rev-list", "--count", localHash + ".." + remoteHash]) || "0",
-          10
-        );
-      } catch {
-        // ignore
-      }
-    }
-
-    const cache: VersionCache = {
-      localHash: localHash.substring(0, 7),
-      remoteHash: remoteHash.substring(0, 7),
-      updateAvailable: localHash !== remoteHash,
-      commitMessage,
-      commitDate,
-      behind,
-      comparedBranch: targetBranch,
-      checkoutBranch: currentBranch,
-      lastChecked: new Date().toISOString(),
-    };
-    saveVersionCache(cache);
-    return cache;
-  } catch {
-    return {
-      localHash: "unknown",
-      remoteHash: "unknown",
-      updateAvailable: false,
-      commitMessage: "",
-      commitDate: "",
-      behind: 0,
-      comparedBranch: targetBranch,
-      checkoutBranch: "unknown",
-      lastChecked: new Date().toISOString(),
-    };
-  }
-}
+//
+// This file is the gate-and-dispatch layer. The work lives under
+// src/lib/update-handlers/:
+//
+//   shared.ts           deploy-runner path, cache path, deploy branch, runGit
+//   remote-branches.ts  the deployable branch list and the origin check
+//   version-check.ts    HEAD vs origin/<branch>, cached for five minutes
+//   deploy-actions.ts   restart, rebuild, update
+//
+// Authentication is enforced once in src/proxy.ts; the gates below are
+// this route's own and never a second token check (design-lint
+// no-auth-in-route-handler).
 
 // GET /api/update
 export async function GET(request: NextRequest) {
@@ -289,109 +99,15 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "restart") {
-      const missing = deployScriptMissingResponse();
-      if (missing) return missing;
-      writeDeployStatusRunning("restart", "restart", "Restart queued…");
-      const spawned = await spawnDeploy(PS_DEPLOY_SCRIPT, "ps-restart", ["restart"]);
-      if (!spawned.ok) {
-        return NextResponse.json(
-          { error: spawned.error ?? "Failed to start restart" },
-          { status: 500 }
-        );
-      }
-      appendAuditLine({
-        action: "deploy.restart",
-        resource: "update",
-        ok: true,
-        correlationId,
-      });
-      return NextResponse.json({ data: { action: "restart", status: "started" } });
+      return await handleRestartAction(correlationId);
     }
 
     if (action === "rebuild") {
-      const missing = deployScriptMissingResponse();
-      if (missing) return missing;
-
-      const rebuildArgs = ["rebuild"];
-      let rebuildBranch: string | undefined;
-      if (body.branch && typeof body.branch === "string" && body.branch.trim()) {
-        rebuildBranch = sanitizeGitBranch(String(body.branch));
-        rebuildArgs.push("--branch", rebuildBranch);
-      }
-
-      writeDeployStatusRunning("rebuild", "build", "Rebuild queued…");
-      const spawnedRebuild = await spawnDeploy(PS_DEPLOY_SCRIPT, "ps-rebuild", rebuildArgs);
-      if (!spawnedRebuild.ok) {
-        logApiError("POST /api/update", "spawn rebuild", new Error(spawnedRebuild.error ?? ""));
-        appendAuditLine({
-          action: "deploy.rebuild",
-          resource: "build",
-          ok: false,
-          correlationId,
-        });
-        return NextResponse.json(
-          { error: spawnedRebuild.error ?? "Failed to start build" },
-          { status: 500 }
-        );
-      }
-
-      appendAuditLine({
-        action: "deploy.rebuild",
-        resource: "build",
-        ok: true,
-        correlationId,
-      });
-      return NextResponse.json({
-        data: {
-          action: "rebuild",
-          status: "started",
-          ...(rebuildBranch ? { branch: rebuildBranch } : {}),
-        },
-      });
+      return await handleRebuildAction(body, correlationId);
     }
 
     if (action === "update") {
-      const updateBranch = body.branch
-        ? sanitizeGitBranch(String(body.branch))
-        : UPDATE_BRANCH;
-      const updateBranchErr = verifyDeployBranchOnOrigin(updateBranch);
-      if (updateBranchErr) {
-        return NextResponse.json({ error: updateBranchErr }, { status: 400 });
-      }
-      const missing = deployScriptMissingResponse();
-      if (missing) return missing;
-      writeDeployStatusRunning("update", "git", "Update queued…");
-      const spawnedUpdate = await spawnDeploy(PS_DEPLOY_SCRIPT, "ps-update", ["update", "--branch", updateBranch]);
-      if (!spawnedUpdate.ok) {
-        logApiError("POST /api/update", "spawn update", new Error(spawnedUpdate.error ?? ""));
-        appendAuditLine({
-          action: "deploy.update",
-          resource: "ps-deploy",
-          ok: false,
-          correlationId,
-        });
-        return NextResponse.json(
-          { error: spawnedUpdate.error ?? "Failed to start update" },
-          { status: 500 }
-        );
-      }
-      try {
-        unlinkSync(CACHE_FILE);
-      } catch (error) {
-        logApiError("POST /api/update", "cache cleanup", error);
-      }
-
-      appendAuditLine({
-        action: "deploy.update",
-        resource: "full",
-        ok: true,
-        detail: updateBranch,
-        correlationId,
-      });
-
-      return NextResponse.json({
-        data: { action: "update", status: "started", branch: updateBranch },
-      });
+      return await handleUpdateAction(body, correlationId);
     }
 
     return NextResponse.json(
@@ -402,14 +118,4 @@ export async function POST(request: NextRequest) {
     logApiError("POST /api/update", "processing request", error);
     return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
-}
-
-function deployScriptMissingResponse(): NextResponse | null {
-  if (!existsSync(PS_DEPLOY_SCRIPT)) {
-    return NextResponse.json(
-      { error: "Deploy runner missing (scripts/tooling/ps-deploy.mjs)" },
-      { status: 500 }
-    );
-  }
-  return null;
 }
