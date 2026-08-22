@@ -288,3 +288,64 @@ export function distinctEventTypeCount(): number {
     return row?.c ?? 0;
   }, 0);
 }
+
+// ── Run aggregates ───────────────────────────────────────────
+//
+// The reads behind run-aggregates.ts. They mine `runs` (joined to
+// `missions` for the model dimension) rather than analytics_events,
+// which is why they carry their own section rather than hiding among
+// the event queries. Each one throws on failure: run-aggregates.ts
+// already wraps every call in its own `safeRead` with the fallback
+// value that surface needs, and swallowing here would pre-empt it.
+
+/** Submit/complete timestamps for completed runs in the window (`sinceExpr` is a `'-N days'` modifier). */
+export function readCompletedRunTimings(
+  sinceExpr: string,
+): Array<{ submitted_at: string; completed_at: string }> {
+  return getDb()
+    .prepare(
+      `SELECT submitted_at, completed_at FROM runs
+         WHERE status = 'completed' AND completed_at IS NOT NULL
+           AND submitted_at >= datetime('now', ?)`,
+    )
+    .all(sinceExpr) as { submitted_at: string; completed_at: string }[];
+}
+
+/** Per-run usage JSON with the model dimension from the linked mission. */
+export function readRunUsageByModel(
+  sinceExpr: string,
+): Array<{ model: string | null; provider: string | null; usage: string }> {
+  return getDb()
+    .prepare(
+      `SELECT m.model_id AS model, m.provider AS provider, r.usage_json AS usage
+         FROM runs r JOIN missions m ON r.mission_id = m.id
+         WHERE r.submitted_at >= datetime('now', ?) AND r.usage_json IS NOT NULL`,
+    )
+    .all(sinceExpr) as { model: string | null; provider: string | null; usage: string }[];
+}
+
+/** Completed-run counts per mission in the window. */
+export function readCompletedRunCountsByMission(
+  sinceExpr: string,
+): Array<{ id: string; name: string; runs: number; usage: string | null }> {
+  return getDb()
+    .prepare(
+      `SELECT r.mission_id AS id, m.name AS name, COUNT(*) AS runs, r.usage_json AS usage
+         FROM runs r JOIN missions m ON r.mission_id = m.id
+         WHERE r.status = 'completed' AND r.submitted_at >= datetime('now', ?)
+         GROUP BY r.mission_id`,
+    )
+    .all(sinceExpr) as { id: string; name: string; runs: number; usage: string | null }[];
+}
+
+/** Per-run usage JSON keyed by mission, for the token totals GROUP BY cannot compute. */
+export function readCompletedRunUsageByMission(
+  sinceExpr: string,
+): Array<{ id: string; usage: string }> {
+  return getDb()
+    .prepare(
+      `SELECT mission_id AS id, usage_json AS usage FROM runs
+         WHERE status = 'completed' AND submitted_at >= datetime('now', ?) AND usage_json IS NOT NULL`,
+    )
+    .all(sinceExpr) as { id: string; usage: string }[];
+}

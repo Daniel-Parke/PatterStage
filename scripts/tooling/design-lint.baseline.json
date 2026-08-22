@@ -176,7 +176,6 @@
   "sql-outside-repository::src/app/api/agents/route.ts": 1,
   "sql-outside-repository::src/app/api/monitor/route.ts": 1,
   "sql-outside-repository::src/app/api/sessions/[id]/route.ts": 2,
-  "sql-outside-repository::src/lib/analytics/run-aggregates.ts": 4,
   "sql-outside-repository::src/lib/composer/seed.ts": 2,
   "sql-outside-repository::src/lib/config-cache.ts": 3,
   "sql-outside-repository::src/lib/db.ts": 6,

@@ -5,7 +5,12 @@
 // Reads are defensive (try/catch → empty) like the other repos.
 // ═══════════════════════════════════════════════════════════════
 
-import { getDb } from "../db";
+import {
+  readCompletedRunCountsByMission,
+  readCompletedRunTimings,
+  readCompletedRunUsageByMission,
+  readRunUsageByModel,
+} from "./analytics-repository";
 import { estimateCost } from "./model-cost";
 import type { HistogramBin } from "@/components/viz/DistributionHistogram";
 
@@ -47,13 +52,7 @@ export function bucketDurations(durationsSec: number[]): HistogramBin[] {
 /** Run-duration histogram for completed runs in the window. */
 export function getRunDurationBuckets(sinceDays = 90): HistogramBin[] {
   return safeRead(() => {
-    const rows = getDb()
-      .prepare(
-        `SELECT submitted_at, completed_at FROM runs
-         WHERE status = 'completed' AND completed_at IS NOT NULL
-           AND submitted_at >= datetime('now', ?)`,
-      )
-      .all(days(sinceDays)) as { submitted_at: string; completed_at: string }[];
+    const rows = readCompletedRunTimings(days(sinceDays));
     const durations = rows.map(
       // submitted_at/completed_at are ISO-8601 with a 'Z' (now() = toISOString());
       // appending another 'Z' made Date.parse return NaN → an all-zero histogram.
@@ -82,13 +81,7 @@ export interface ModelUsageRow {
  */
 export function getModelUsage(sinceDays = 90): ModelUsageRow[] {
   return safeRead(() => {
-    const rows = getDb()
-      .prepare(
-        `SELECT m.model_id AS model, m.provider AS provider, r.usage_json AS usage
-         FROM runs r JOIN missions m ON r.mission_id = m.id
-         WHERE r.submitted_at >= datetime('now', ?) AND r.usage_json IS NOT NULL`,
-      )
-      .all(days(sinceDays)) as { model: string | null; provider: string | null; usage: string }[];
+    const rows = readRunUsageByModel(days(sinceDays));
 
     const byModel = new Map<string, ModelUsageRow>();
     for (const r of rows) {
@@ -136,21 +129,9 @@ export interface TopMissionRow {
 /** Most-run missions in the window (by completed runs), with token totals. */
 export function getTopMissions(limit = 6, sinceDays = 90): TopMissionRow[] {
   return safeRead(() => {
-    const rows = getDb()
-      .prepare(
-        `SELECT r.mission_id AS id, m.name AS name, COUNT(*) AS runs, r.usage_json AS usage
-         FROM runs r JOIN missions m ON r.mission_id = m.id
-         WHERE r.status = 'completed' AND r.submitted_at >= datetime('now', ?)
-         GROUP BY r.mission_id`,
-      )
-      .all(days(sinceDays)) as { id: string; name: string; runs: number; usage: string | null }[];
+    const rows = readCompletedRunCountsByMission(days(sinceDays));
     // token totals need a second pass (GROUP BY can't sum parsed JSON)
-    const tokenRows = getDb()
-      .prepare(
-        `SELECT mission_id AS id, usage_json AS usage FROM runs
-         WHERE status = 'completed' AND submitted_at >= datetime('now', ?) AND usage_json IS NOT NULL`,
-      )
-      .all(days(sinceDays)) as { id: string; usage: string }[];
+    const tokenRows = readCompletedRunUsageByMission(days(sinceDays));
     const tokensByMission = new Map<string, number>();
     for (const t of tokenRows) {
       try {
