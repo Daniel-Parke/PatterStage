@@ -13,7 +13,13 @@ import { upsertCatalogTemplate, getCatalogTemplate } from "../catalog-template-r
 import { upsertSkill, getSkill } from "../skills-repository";
 import { upsertToolBundle, getToolBundle } from "../tool-catalog-repository";
 import { upsertMemoryFact } from "../memory/memory-catalog-repository";
-import { getDb } from "../db";
+import {
+  countSeededMissionCategories,
+  deleteSeededMissionCategories,
+  execSeedScript,
+  markCatalogSeeded,
+  readCatalogSeededFlag,
+} from "./seed-repository";
 import { PS_DATA_DIR } from "../paths";
 import { ensureDir } from "../fs/fs-helpers";
 
@@ -86,13 +92,10 @@ function seedCategories(mode: SeedMode): number {
   if (!existsSync(sqlPath)) return 0;
   const sql = readFileSync(sqlPath, "utf-8");
   if (mode === "replace") {
-    getDb().exec("DELETE FROM mission_categories WHERE seed_key IS NOT NULL");
+    deleteSeededMissionCategories();
   }
-  getDb().exec(sql);
-  const row = getDb()
-    .prepare("SELECT COUNT(*) AS c FROM mission_categories WHERE seed_key IS NOT NULL")
-    .get() as { c: number } | undefined;
-  return row?.c ?? 0;
+  execSeedScript(sql);
+  return countSeededMissionCategories() ?? 0;
 }
 
 interface SkillManifestEntry {
@@ -342,14 +345,10 @@ export function runCatalogSeed(options: SeedTarget): SeedResult {
 export function ensureCatalogSeededOnce(): SeedResult | null {
   try {
     ensureDb();
-    const row = getDb().prepare("SELECT value FROM meta WHERE key = 'catalog_seeded'").get() as
-      | { value: string }
-      | undefined;
+    const row = readCatalogSeededFlag();
     if (row) return null;
     const result = runCatalogSeed({ target: "all", mode: "merge" });
-    getDb()
-      .prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('catalog_seeded', ?)")
-      .run(new Date().toISOString());
+    markCatalogSeeded(new Date().toISOString());
     return result;
   } catch {
     return null;
