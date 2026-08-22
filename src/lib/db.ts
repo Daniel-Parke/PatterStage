@@ -2,6 +2,25 @@
 // db.ts — SQLite connection + migration runner
 // Database: ~/patterstage/data/patterstage.db
 //   (legacy fallback: ~/control-hub/data/control-hub.db until migrated)
+//
+// Three statements remain in this file, and all three are plumbing:
+// the connection module's own work, not any table's business.
+//
+//   - tableExists()'s sqlite_master probe, which the migration runner
+//     uses to decide whether a database is empty enough to take the
+//     baseline. It reads the schema catalogue, not a table.
+//   - runMigrations()'s CREATE TABLE IF NOT EXISTS meta, which has to
+//     run before any repository can read anything, `meta` included.
+//   - runMigrations()'s exec of the baseline .sql file, which IS the
+//     schema. There is no repository to route it through, because
+//     until it has run there are no tables to have one.
+//
+// Everything else that used to live here has gone to a repository:
+// getGatewayPlatforms to sync/sync-repository.ts, and getSchemaHealth's
+// two mission_categories statements to
+// missions/mission-category-schema-repository.ts (which takes an open
+// handle rather than calling getDb, so nothing cycles back through
+// this module).
 // ═══════════════════════════════════════════════════════════════
 
 import Database, { type Database as _DatabaseType } from "better-sqlite3";
@@ -9,6 +28,10 @@ import { join } from "path";
 import { existsSync, readFileSync } from "fs";
 import { PS_DATA_DIR, getDbPath } from "./paths";
 import { getSchemaVersion, setSchemaVersion } from "./db-schema";
+import {
+  countMissionCategories,
+  missionCategoriesTableExists,
+} from "./missions/mission-category-schema-repository";
 import { ensureDir } from "./fs/fs-helpers";
 import { needsBaselineRebuild, rebuildToBaseline } from "./db/upgrade";
 import { applyProfilesToolsParityUpgrade } from "./db/apply-profiles-tools-upgrade";
@@ -76,28 +99,6 @@ export function getDb(): Database.Database {
   }
 
   return _db!;
-}
-
-/** Result row from gateway_platforms table */
-interface GatewayPlatformRow {
-  platform: string;
-  enabled: number;
-  bot_token_present: number;
-  last_synced_at: string;
-}
-
-/**
- * Read all gateway platform records from the DB.
- * Returns empty array if table doesn't exist or query fails.
- */
-export function getGatewayPlatforms(): GatewayPlatformRow[] {
-  try {
-    return getDb()
-      .prepare("SELECT platform, enabled, bot_token_present, last_synced_at FROM gateway_platforms")
-      .all() as GatewayPlatformRow[];
-  } catch {
-    return [];
-  }
 }
 
 // ── Shorthand helpers ─────────────────────────────────────────
@@ -288,18 +289,10 @@ export function getSchemaHealth(): SchemaHealth {
   ensureDb();
   const database = getDb();
   const schemaVersion = getSchemaVersion(database);
-  const tableRow = database
-    .prepare(
-      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'mission_categories'",
-    )
-    .get() as { name: string } | undefined;
-  const hasMissionCategoriesTable = Boolean(tableRow);
+  const hasMissionCategoriesTable = missionCategoriesTableExists(database);
   let categoryCount = 0;
   if (hasMissionCategoriesTable) {
-    const row = database
-      .prepare("SELECT COUNT(*) AS c FROM mission_categories")
-      .get() as { c: number };
-    categoryCount = row.c ?? 0;
+    categoryCount = countMissionCategories(database);
   }
   if (schemaVersion >= 2 && !hasMissionCategoriesTable) {
     console.error(

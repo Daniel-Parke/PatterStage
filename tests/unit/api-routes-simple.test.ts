@@ -17,7 +17,6 @@ jest.mock("@/lib/db", () => ({
   ensureDb: jest.fn(),
   now: jest.fn(() => "2026-05-15T00:00:00.000Z"),
   uuid: jest.fn(() => "test-uuid"),
-  getGatewayPlatforms: jest.fn(),
 }));
 
 jest.mock("@/lib/sync", () => ({
@@ -194,11 +193,9 @@ describe("GET /api/monitor", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("returns aggregated status", async () => {
-    const { getGatewayPlatforms } = await import("@/lib/db");
-    (getGatewayPlatforms as jest.Mock).mockReturnValue([
-      { platform: "discord", enabled: 1, bot_token_present: 1 },
-    ]);
-
+    // The gateway platforms now come back through sync-repository, which
+    // reads them off the mocked getDb below — the "SELECT platform, enabled"
+    // branch supplies the same row the old getGatewayPlatforms mock did.
     // Mock DB reads
     const stmt = (rows: unknown[]) => ({
       get: jest.fn(() => rows[0]),

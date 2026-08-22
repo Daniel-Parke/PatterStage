@@ -46,8 +46,8 @@ export interface HermesSessionRow {
   api_call_count: number | null;
 }
 
-/** One message row as the agent stores it. */
-export interface HermesMessageRow {
+/** One message row as the agent stores it. Reachable through HermesSessionDetail. */
+interface HermesMessageRow {
   role: string;
   content: string | null;
   tool_name: string | null;

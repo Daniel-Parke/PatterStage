@@ -15,8 +15,7 @@ import { getSystemStat, getSystemStatNumber } from "@/lib/system-repository";
 import { listSessions } from "@/lib/sessions/session-repository";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
-import { getGatewayPlatforms } from "@/lib/db";
-import { readRecentErrorLogEntries } from "@/lib/sync/sync-repository";
+import { readGatewayPlatforms, readRecentErrorLogEntries } from "@/lib/sync/sync-repository";
 import { getActiveFramework } from "@/lib/frameworks";
 import type { SessionBrief, MonitorData } from "@/types/console";
 
@@ -47,7 +46,7 @@ export async function GET(request: NextRequest) {
     const { sessions: recentSessions, total: totalSessions } = listSessions({ limit: 5 });
 
     // ── Gateway Platforms (from DB) ─────────────────────────
-    const platformsRaw = getGatewayPlatforms();
+    const platformsRaw = readGatewayPlatforms();
 
     const platforms: Record<string, boolean> = {};
     let connectedCount = 0;

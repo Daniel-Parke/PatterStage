@@ -173,5 +173,5 @@
   "no-unsanitised-html::src/app/laboratory/artifacts/page.tsx": 1,
   "no-unsanitised-html::src/components/chat/MessageBubble.tsx": 1,
   "no-unsanitised-html::src/components/research/ResearchReport.tsx": 2,
-  "sql-outside-repository::src/lib/db.ts": 6
+  "sql-outside-repository::src/lib/db.ts": 3
 }

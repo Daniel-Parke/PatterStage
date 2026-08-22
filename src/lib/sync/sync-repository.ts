@@ -11,7 +11,10 @@
 // The `meta` table is deliberately NOT here. It has one repository,
 // system-repository.ts, and a second writer would defeat the point.
 //
-// Every function throws on failure. The sources are already wrapped
+// Every function throws on failure, with ONE exception carried over
+// intact: readGatewayPlatforms answers [] on a missing table, because
+// the dashboard that calls it has always treated "no gateway table" as
+// "no platforms configured". The sources are otherwise already wrapped
 // in a try/catch that turns a failure into `{ success: false }` with
 // the error attached to the SyncResult, which is the report the sync
 // scheduler is built to surface; swallowing here would report success
@@ -27,6 +30,28 @@ export interface GatewayPlatformState {
   platform: string;
   enabled: number;
   bot_token_present: number;
+}
+
+/** A stored gateway platform row. */
+export interface GatewayPlatformRow {
+  platform: string;
+  enabled: number;
+  bot_token_present: number;
+  last_synced_at: string;
+}
+
+/**
+ * Read all gateway platform records from the DB.
+ * Returns empty array if table doesn't exist or query fails.
+ */
+export function readGatewayPlatforms(): GatewayPlatformRow[] {
+  try {
+    return getDb()
+      .prepare("SELECT platform, enabled, bot_token_present, last_synced_at FROM gateway_platforms")
+      .all() as GatewayPlatformRow[];
+  } catch {
+    return [];
+  }
 }
 
 /** Replace the gateway platform rows, stamping each with the same sync time. */
