@@ -11,10 +11,10 @@
 // `loadAll` is the single refetch every write path on this page calls
 // after it succeeds, so it is defined here, where the setters it
 // writes through live, and passed down to the action hooks. The
-// fallback slice's own state (dirty/saving/error/busy flags) stays in
-// useModelFallbacks; only the two values `loadAll` populates are held
-// here, with `setFallbackConfig` handed back so the debounced save can
-// write through it.
+// fallback slices' own state (dirty/saving/error/busy flags) stays in
+// useModelFallbackChain and useModelFallbackConfig; only the two values
+// `loadAll` populates are held here, with `setFallbackConfig` handed
+// back so the debounced save can write through it.
 
 "use client";
 
