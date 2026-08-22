@@ -266,6 +266,41 @@ class Harness:
             ["docker", "cp", str(workspace) + "/.", f"{container}:/workspace"],
             check=True,
         )
+        self.normalize_workspace_ownership(container)
+
+    def normalize_workspace_ownership(self, container: str) -> None:
+        """Make ``/workspace`` owned by the user the container's commands run as.
+
+        ``docker cp`` (without ``-a``) preserves the *source* uid/gid whenever the
+        source filesystem carries POSIX ownership. On a Linux host that is the
+        invoking user — uid 1001 on a GitHub runner — while everything inside the
+        container runs as root, so the copied tree lands owned by a stranger. Git
+        refuses such a repository ("detected dubious ownership"), and commands that
+        set up gently, like ``git config``, degrade that into the far less obvious
+        ``fatal: not in a git directory`` — which reads as "there is no .git here"
+        and sent WO-0019 hunting a missing directory that was present all along.
+
+        A Windows host has no POSIX ownership to preserve, so the same copy lands
+        root-owned and every git scenario passes. That asymmetry, not the checkout
+        depth, is why ``update`` passed locally and failed on CI.
+
+        A real install is owned by the user who runs it; mixed ownership is an
+        artefact of the copy, so normalising it here restores fidelity rather than
+        silencing a check. The line it prints is the diagnostic WO-0019 asked for:
+        it records, every run, whether ``.git`` survived the copy and what git
+        makes of the result.
+        """
+        self.docker_exec(
+            container,
+            "set -e\n"
+            "before=$(stat -c '%u:%g' /workspace/.git 2>/dev/null || echo absent)\n"
+            'chown -R "$(id -u):$(id -g)" /workspace\n'
+            "after=$(stat -c '%u:%g' /workspace/.git 2>/dev/null || echo absent)\n"
+            "tree=$(git -C /workspace rev-parse --is-inside-work-tree 2>&1 | tail -n1)\n"
+            'echo "[harness] /workspace .git owner ${before} -> ${after}'
+            ' (container user $(id -u):$(id -g)); git repo: ${tree}"\n',
+            workdir="/",
+        )
 
     def docker_exec(
         self,

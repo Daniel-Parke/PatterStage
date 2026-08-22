@@ -244,14 +244,15 @@ jobs:
     # but a cold GitHub runner has no layer cache at all.
     timeout-minutes: 45
     steps:
-      # fetch-depth: 0 is REQUIRED here, unlike every other job in this file.
+      # fetch-depth: 0, unlike every other job in this file. The update scenario
+      # copies the workspace into a container, runs `git clone --bare .` against
+      # it and pushes to that clone, so `ps-deploy.sh update` runs against a real
+      # origin. A real user's clone carries its history, so the copy should too.
       #
-      # The update scenario copies the workspace into a container, then runs
-      # `git clone --bare .` against it and pushes to the clone, so the harness
-      # can exercise `ps-deploy.sh update` against a real origin. actions/checkout
-      # defaults to a depth-1 shallow clone, and you cannot clone from a shallow
-      # repository. The other four scenarios never touch git, which is exactly
-      # why the first CI run passed 4 of 5 and failed only on update.
+      # It is NOT what unblocked the update scenario. A shallow checkout was the
+      # first hypothesis for `fatal: not in a git directory` and the run failed
+      # identically with fetch-depth: 0, which falsified it. The cause was file
+      # ownership; see normalize_workspace_ownership() in the harness (WO-0019).
       - name: Checkout repository
         uses: actions/checkout@v5
         id: checkout1
@@ -268,17 +269,13 @@ jobs:
       # No node/npm setup step: everything happens inside the containers, which
       # is the point. The runner supplies Docker and a stdlib-only Python 3.
       #
-      # `update` is EXCLUDED, and the exclusion is a known gap rather than a
-      # tidy-up. It fails on CI only, with `fatal: not in a git directory` on the
-      # first git command, meaning /workspace has no .git inside the container.
-      # It passes here at 5 of 5. `.git` is not in the harness's copy-ignore list
-      # and fetch-depth: 0 did not change the outcome, so the shallow-checkout
-      # explanation was wrong and the real cause is not yet known. Scoping to
-      # what is proven beats either a red gate nobody trusts or a guess dressed
-      # up as a fix. WO-0019 owns the diagnosis; the four below still cover
-      # death #1, which is a stranger's FIRST install failing.
-      - name: Fresh install, in throwaway containers
-        run: python3 tests/integration/test_full_install_update_process.py --profile smoke --skip-http --scenarios fresh,hermes,dashboard,both
+      # All five smoke scenarios run. `update` was excluded while WO-0019 was
+      # open: it failed on Linux only because `docker cp` preserves the runner's
+      # uid, leaving the copied /workspace owned by a user the container's root
+      # git calls dubious. The harness now normalises that ownership after the
+      # copy and prints what it found, so a repeat says so in the log.
+      - name: Fresh install + update, in throwaway containers
+        run: python3 tests/integration/test_full_install_update_process.py --profile smoke --skip-http --scenarios fresh,hermes,dashboard,both,update
 
   docker-image:
     runs-on: ubuntu-latest

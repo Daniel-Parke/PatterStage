@@ -13,15 +13,15 @@
   "tier_proposed": "R2",
   "tier_ruled": "R0",
   "reasons": [],
-  "status": "proposed",
-  "owner_session": "unassigned",
+  "status": "active",
+  "owner_session": "install-harness-update-2026-08-22",
   "claims": [
     ".github/workflows/ci.yml",
     "tests/integration/test_full_install_update_process.py"
   ],
   "timestamps": {
     "opened": "2026-07-26T00:00:00Z",
-    "updated": "2026-08-22T21:00:00Z"
+    "updated": "2026-08-22T23:10:00Z"
   },
   "hypothesis_ledger": [
     {
@@ -29,6 +29,12 @@
       "test": "Set fetch-depth: 0 on the actions/checkout step and re-run the install-harness job.",
       "result": "Falsified. The run failed identically, at the first git command in the update scenario's setup block.",
       "learning": "The missing .git is not a clone-depth problem. The next round instruments where .git is lost, on the runner, through shutil.copytree, or through docker cp, instead of theorising again."
+    },
+    {
+      "hypothesis": "The update scenario fails on CI because /workspace inside the container has no .git, so the copy loses it on the runner, through shutil.copytree or through docker cp.",
+      "test": "Instrument the copy: print .git's owner inside the container immediately after docker cp. Then reproduce the runner's conditions locally, running the harness from a Linux filesystem as uid 1001 against the same Docker daemon, which is the one thing a Windows host cannot express.",
+      "result": "Falsified as stated, and the cause found underneath it. .git survives every step and is present in the container, owned by uid 1001, because docker cp without -a preserves the source uid whenever the source filesystem carries POSIX ownership, and on a runner that is the runner user. Container commands run as root, so git calls /workspace dubious ownership. git status says exactly that; git config, which sets up gently, degrades the same condition into 'fatal: not in a git directory' and exit 128, byte-identical to the CI log. A Windows host has no POSIX ownership to preserve, so the same copy lands root-owned and git is content, which is the whole of the platform difference. Controlled locally on a Linux filesystem as uid 1001 against the same daemon: without the normalisation the scenario fails at the first git command in 122.8s, the CI failure reproduced off CI for the first time; with it the scenario passes end to end in 142.3s, ps-deploy update included.",
+      "learning": "The message was read literally, as an absent directory, and that reading cost two rounds. The harness now normalises /workspace ownership to the container's user after every copy and prints the before and after owner alongside git's own verdict, so this class of failure names itself in the log. Acceptance item 3, a green CI run of all five scenarios, is still unobserved: the fix is committed, not yet pushed."
     }
   ]
 }
