@@ -162,6 +162,31 @@ describe("agent_progression_snapshots is append-only", () => {
     expect(readAgentProgressionHistory("scout")).toHaveLength(1);
   });
 
+  it("force appends even when the answer has not moved, without editing anything", () => {
+    // The retention prune's interlock (ADR-0009) reads the newest capture's
+    // timestamp to decide what it may delete, so it needs a row written NOW even
+    // on an install whose answer has been still for months. Forcing must still
+    // APPEND: if it were ever implemented as an in-place refresh of the existing
+    // row, migration 031's trigger would abort and this would fail.
+    expect(captureAgentProgressionSnapshots({ agents: [agent()], achievements: ACHIEVEMENTS })).toBe(
+      1,
+    );
+    const first = readAgentProgressionHistory("scout")[0];
+
+    expect(
+      captureAgentProgressionSnapshots(
+        { agents: [agent()], achievements: ACHIEVEMENTS },
+        { force: true },
+      ),
+    ).toBe(1);
+
+    const history = readAgentProgressionHistory("scout");
+    expect(history).toHaveLength(2);
+    expect(history[0]).toEqual(first);
+    expect(history[1].xp).toBe(first.xp); // same answer, recorded again
+    expect(history[1].id).toBeGreaterThan(first.id);
+  });
+
   it("records the schema and computation versions the row was written under", () => {
     captureAgentProgressionSnapshots({ agents: [agent()], achievements: ACHIEVEMENTS });
 

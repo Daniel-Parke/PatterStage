@@ -41,6 +41,16 @@
 // unchanged answer needs no correction, so the steady state is one row per agent
 // profile and the table grows only when an agent actually does.
 //
+// THE ONE EXCEPTION IS THE RETENTION PRUNE (ADR-0009), which passes
+// `{ force: true }`. Lazy capture is right for the dashboard's 20-second poll
+// and wrong immediately before a deletion: an install whose answer has not moved
+// for months has a months-old newest row, and the prune's interlock reads the
+// newest row's timestamp to decide what it is allowed to delete. Forcing a row
+// makes that timestamp NOW, so the interlock passes on the strength of a capture
+// that genuinely just happened rather than on a stale one. The cost is one row
+// per profile per applied prune, which is the cheapest possible price for the
+// only guarantee this table exists to provide.
+//
 // Regression is recorded, not suppressed. The achievement inputs are measured
 // over a rolling window, so a value can fall and an unlocked achievement can
 // read as locked again. The append-only table is what makes that safe: the
@@ -235,6 +245,18 @@ export function isCorrection(
   return before !== answerKey(record.level, record.xp, record.achievements);
 }
 
+/** How a capture behaves when the answer has not moved. */
+export interface CaptureAgentProgressionOptions {
+  /**
+   * Append a row for every profile even when its answer is unchanged.
+   *
+   * Only the retention prune sets this, and only immediately before deleting.
+   * See the header: the prune's interlock is a timestamp, and a timestamp is
+   * only evidence if something actually wrote it just now.
+   */
+  force?: boolean;
+}
+
 /**
  * Capture the current progression for every agent profile, appending a row for
  * each one whose answer has moved. Returns the number of rows appended.
@@ -248,10 +270,13 @@ export function isCorrection(
  * means; swallowing here would report a refused write as "nothing to do", which
  * is the one lie this record cannot afford.
  */
-export function captureAgentProgressionSnapshots(input: {
-  agents: AgentPerformance[];
-  achievements: Achievement[];
-}): number {
+export function captureAgentProgressionSnapshots(
+  input: {
+    agents: AgentPerformance[];
+    achievements: Achievement[];
+  },
+  options: CaptureAgentProgressionOptions = {},
+): number {
   const achievements = agentScopedAchievements(input.achievements);
   const previous = new Map(
     readLatestAgentProgressionSnapshots().map((row) => [row.profileSlug, row]),
@@ -260,7 +285,7 @@ export function captureAgentProgressionSnapshots(input: {
   const pending: AgentProgressionSnapshotWrite[] = [];
   for (const perf of input.agents) {
     const record = buildAgentProgressionRecord(perf, achievements);
-    if (!isCorrection(record, previous.get(record.profileSlug))) continue;
+    if (!options.force && !isCorrection(record, previous.get(record.profileSlug))) continue;
     pending.push({
       profileSlug: record.profileSlug,
       level: record.level,

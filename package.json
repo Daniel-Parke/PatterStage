@@ -12,6 +12,7 @@
     "prebuild": "node scripts/tooling/prebuild-db.mjs",
     "db:migrate": "npx tsx scripts/tooling/migrate-db.ts",
     "db:seed": "npx tsx scripts/tooling/import-hermes-state.ts && npx tsx scripts/tooling/seed-catalog.ts --merge",
+    "db:retention": "npx tsx scripts/tooling/retention-prune.ts",
     "build": "next build",
     "start": "next start",
     "lint": "node scripts/tooling/check-agent-files.mjs && node scripts/tooling/check-doc-links.mjs && node scripts/tooling/design-lint.mjs && node scripts/tooling/coverage-floor-check.mjs && eslint . --max-warnings 0 && npm run typecheck:tests",

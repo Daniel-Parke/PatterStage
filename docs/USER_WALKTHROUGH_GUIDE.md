@@ -163,8 +163,15 @@ provider you configured.
   its files so the UI can edit them.
 - **`credentials`**: API keys. **Stored in plaintext today.** They are on your own
   machine behind file permissions, but this is worth knowing rather than assuming.
-- **`analytics_events`, `chat_messages`**: append-only and currently **unbounded**.
-  A retention window is ruled and queued (WO-0009) but not yet implemented.
+- **`analytics_events`, `chat_messages`**: append-only, and the two tables that
+  grow with use rather than with anything you create. Both now carry a declared
+  retention window (400 days and 365 days), and both ship with the prune
+  **switched off**, so nothing is ever deleted by an upgrade. Turning it on and
+  running it are two separate commands you type yourself: `npm run db:retention`
+  shows the policy and exactly what a prune would take, and changes nothing.
+  See [MIGRATION.md](MIGRATION.md) for the rules and
+  [ADR-0009](../org/decisions/ADR-0009-retention-for-the-readings-tables.md) for
+  why those numbers.
 
 **Migrations run forward only.** There is no down-migration, which is why the
 update script backs up the database *before* migrating: the backup is the rollback.

@@ -42,6 +42,14 @@ Migration: `013_chat.sql` + `apply-chat-migration.ts`, wired into
 `runMigrations()` (see [MIGRATION.md](./MIGRATION.md)). Repository:
 `src/lib/chat-repository.ts`.
 
+**Retention (v32, [ADR-0009](../org/decisions/ADR-0009-retention-for-the-readings-tables.md)).**
+Conversations have a declared window of **365 days of inactivity**, and the unit
+is the whole conversation, never the individual turn: a transcript that starts in
+the middle is worse than either keeping it or dropping it, so one recent turn
+keeps every older turn with it. The prune ships **disabled** on every install and
+is a command an operator runs by hand (`npm run db:retention`). Nothing in the
+Chat surface deletes a message on a timer.
+
 ## Request flow (Agent mode)
 
 1. `POST /api/chat` → create a conversation + a Hermes session

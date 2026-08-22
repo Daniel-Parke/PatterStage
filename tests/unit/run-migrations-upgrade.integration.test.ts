@@ -16,8 +16,8 @@ import {
 // The last applier's own gate, and the one before it. Imported by their own
 // specifiers, which the global "@/lib/db" mock does not intercept, so these are
 // the real numbers the chain ends on.
+import { RETENTION_SCHEMA_VERSION } from "@/lib/db/apply-retention-migration";
 import { AGENT_PROGRESSION_SCHEMA_VERSION } from "@/lib/db/apply-agent-progression-migration";
-import { NEUTRAL_COLUMN_NAMES_SCHEMA_VERSION } from "@/lib/db/apply-neutral-column-names";
 
 // jest.setup globally mocks "@/lib/db" (no runMigrations on the mock); pull the
 // real implementation so we exercise the actual wiring.
@@ -130,13 +130,28 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     ).toBe(1);
     // The unified artifacts registry lands via the wired v28 applier; the
     // Story Weaver character/theme library is v29; the vendor-name renames are
-    // v30; the append-only per-Body progression record is v31 and is the
-    // current terminal.
+    // v30; the append-only per-Body progression record is v31; the declared
+    // retention policy is v32 and is the current terminal.
     expect(tableNames(db)).toContain("artifacts");
     expect(tableNames(db)).toContain("story_characters");
     expect(tableNames(db)).toContain("story_themes");
     expect(tableNames(db)).toContain("agent_progression_snapshots");
+    expect(tableNames(db)).toEqual(
+      expect.arrayContaining(["retention_policy", "retention_prune_runs"]),
+    );
     expect(getSchemaVersion(db)).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
+
+    // The single most important assertion about this upgrade (ADR-0009): a real
+    // install climbing the ladder arrives with retention SWITCHED OFF. The
+    // seeded mission above is still here for the same reason: an upgrade adds
+    // capability and never removes history.
+    expect(
+      (
+        db.prepare("SELECT COUNT(*) c FROM retention_policy WHERE enabled = 0").get() as {
+          c: number;
+        }
+      ).c,
+    ).toBe(2);
 
     // v30 renamed two vendor-named columns in tables PatterStage owns. This is
     // the only DESTRUCTIVE-shaped migration in the chain (a rename, not an add),
@@ -212,7 +227,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
   // rather than on the install that trips over it.
   describe("the head constant cannot drift from the chain", () => {
     it("equals the last applier's version gate", () => {
-      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(AGENT_PROGRESSION_SCHEMA_VERSION);
+      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(RETENTION_SCHEMA_VERSION);
     });
 
     // schema_version strictly increases and a gate is claimed once, which is
@@ -220,7 +235,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     // above the applier that used to hold it is what that rule looks like from
     // the outside, and it catches a new migration that reuses or skips a number.
     it("sits exactly one above the gate it displaced", () => {
-      expect(AGENT_PROGRESSION_SCHEMA_VERSION).toBe(NEUTRAL_COLUMN_NAMES_SCHEMA_VERSION + 1);
+      expect(RETENTION_SCHEMA_VERSION).toBe(AGENT_PROGRESSION_SCHEMA_VERSION + 1);
     });
 
     it("equals the highest-numbered migration file on disk", () => {

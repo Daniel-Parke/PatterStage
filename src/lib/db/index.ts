@@ -74,6 +74,7 @@ import { applyArtifactsMigration } from "./apply-artifacts-migration";
 import { applyRecroomLibraryMigration } from "./apply-recroom-library-migration";
 import { applyNeutralColumnNames } from "./apply-neutral-column-names";
 import { applyAgentProgressionMigration } from "./apply-agent-progression-migration";
+import { applyRetentionMigration } from "./apply-retention-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -280,6 +281,12 @@ export function runMigrations(database: Database.Database): void {
   // retention prune of the history they were derived from. CREATE + two
   // append-only triggers at v31.
   applyAgentProgressionMigration(database, migrationsDir);
+
+  // Declared retention for the two readings tables (WG-ARCH-008, ADR-0009):
+  // the policy rows naming owner, consumer and window, plus the append-only
+  // record of every applied prune. CREATE + seed at v32. Seeded DISABLED on
+  // every install, so an upgrade deletes nothing.
+  applyRetentionMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

@@ -32,6 +32,17 @@ would force a migration per type and reject forward-compatible writes from newer
 code against an older DB. The taxonomy is enforced at the TypeScript boundary
 (`recordEvent` only accepts an `AnalyticsEventType`).
 
+**Retention (v32, [ADR-0009](../org/decisions/ADR-0009-retention-for-the-readings-tables.md)).**
+This table has a declared window of **400 days**, with a schema-enforced floor of
+365 because that is the longest read any consumer on this page performs. The
+prune ships **disabled** on every install and is a command an operator runs by
+hand (`npm run db:retention`); nothing on this page or anywhere else deletes an
+event on its own. The lifetime aggregates below (`countByType`,
+`distinctActiveDays`, the breadth counts) are the reason the prune first captures
+an `agent_progression_snapshots` row and refuses to run if it cannot: no finite
+window can satisfy a lifetime count, so the answer is recorded instead of the
+inputs being kept.
+
 ### Taxonomy (`src/lib/analytics/event-types.ts`)
 
 `mission.dispatched` · `mission.completed` · `mission.failed` ·

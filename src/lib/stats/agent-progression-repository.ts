@@ -1,11 +1,11 @@
 // ═══════════════════════════════════════════════════════════════
 // stats/agent-progression-repository.ts · the append-only per-Body record
 //
-// Every statement against `agent_progression_snapshots` lives here, and there
-// are only two of them: one INSERT and one SELECT. That is not an accident of
-// how much has been built yet. The table is append-only (WG-ARCH-003), so an
-// UPDATE or a DELETE in this file would be the defect, and its absence is the
-// first half of the guarantee.
+// Every statement against `agent_progression_snapshots` lives here, and every
+// one of them is an INSERT or a SELECT. That is not an accident of how much has
+// been built yet. The table is append-only (WG-ARCH-003), so an UPDATE or a
+// DELETE in this file would be the defect, and its absence is the first half of
+// the guarantee.
 //
 // The second half is in migration 031: two BEFORE triggers that RAISE(ABORT) on
 // any UPDATE or DELETE. This file could not mutate a row even if a later edit
@@ -148,4 +148,30 @@ export function readAgentProgressionHistory(profileSlug: string): AgentProgressi
     )
     .all(profileSlug) as RawRow[];
   return rows.map(toRow);
+}
+
+/**
+ * The instant of the newest capture anywhere in the table, or null when nothing
+ * has ever been captured.
+ *
+ * THIS IS THE RETENTION PRUNE'S SAFETY INTERLOCK (ADR-0009), which is why it
+ * lives with the table it reads rather than in the retention repository. The
+ * prune may only delete rows that are older than this instant, because those are
+ * the rows a capture has already seen and folded into a recorded answer.
+ *
+ * MAX over the whole table, not per profile, is the right question for that use.
+ * The achievements half of a row is computed install-wide (`achievements_scope`
+ * says so), so whichever profile happened to move last carries the newest
+ * install-wide measurements, and that is the guarantee the prune needs. A
+ * per-profile watermark would answer a question about level and XP, which are
+ * derived from `runs` and are not at risk from this prune at all.
+ *
+ * `captured_at` is written by the column DEFAULT `datetime('now')`, the same
+ * format `retentionCutoff` produces, so the two compare directly as strings.
+ */
+export function readNewestProgressionCapture(): string | null {
+  const row = getDb()
+    .prepare(`SELECT MAX(captured_at) AS newest FROM agent_progression_snapshots`)
+    .get() as { newest: string | null } | undefined;
+  return row?.newest ?? null;
 }
