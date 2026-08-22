@@ -343,3 +343,16 @@ export function defaultConfigYaml(personality: string): string {
     extraYamlLines: [],
   });
 }
+
+/**
+ * Number of catalogued skills.
+ *
+ * Used by the state import to decide whether a first-run import has
+ * already happened. It lives here rather than in state-import.ts
+ * because a module's own repository IS the repository layer (the
+ * WO-0003 ruling): forcing module SQL into src/lib would break the
+ * ADR-0005 boundary to satisfy the SQL rule.
+ */
+export function countSkills(): number | undefined {
+  return (getDb().prepare("SELECT COUNT(*) AS c FROM skills").get() as { c: number } | undefined)?.c;
+}

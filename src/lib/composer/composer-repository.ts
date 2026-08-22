@@ -359,3 +359,34 @@ export function listComposerApprovals(composerRunId: string): ComposerApproval[]
   const rows = getDb().prepare("SELECT * FROM composer_approvals WHERE composer_run_id = ? ORDER BY created_at ASC").all(composerRunId) as ApprovalRow[];
   return rows.map(rowToApproval);
 }
+
+// ── Seed back-fills ──────────────────────────────────────────
+//
+// The two statements behind composer/seed.ts, which idempotently
+// back-fills the shipped workflow on installs that predate a change to
+// its definition. They are here, beside createWorkflowFromDef's own
+// inserts, because they write the same two tables.
+
+/** Insert one edge into an existing workflow. */
+export function insertWorkflowEdge(edge: {
+  id: string;
+  workflowId: string;
+  fromNodeId: string;
+  toNodeId: string;
+  condition: string;
+  label: string;
+  createdAt: string;
+}): void {
+  getDb()
+    .prepare(
+      "INSERT INTO composer_edges (id, workflow_id, from_node_id, to_node_id, condition, label, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    )
+    .run(edge.id, edge.workflowId, edge.fromNodeId, edge.toNodeId, edge.condition, edge.label, edge.createdAt);
+}
+
+/** Replace one node's serialised config. */
+export function updateWorkflowNodeConfig(nodeId: string, configJson: string): void {
+  getDb()
+    .prepare("UPDATE composer_nodes SET config_json = ? WHERE id = ?")
+    .run(configJson, nodeId);
+}

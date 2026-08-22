@@ -173,7 +173,5 @@
   "no-unsanitised-html::src/app/laboratory/artifacts/page.tsx": 1,
   "no-unsanitised-html::src/components/chat/MessageBubble.tsx": 1,
   "no-unsanitised-html::src/components/research/ResearchReport.tsx": 2,
-  "sql-outside-repository::src/lib/composer/seed.ts": 2,
-  "sql-outside-repository::src/lib/db.ts": 6,
-  "sql-outside-repository::src/modules/hermes/lib/state-import.ts": 1
+  "sql-outside-repository::src/lib/db.ts": 6
 }

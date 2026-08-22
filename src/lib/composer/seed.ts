@@ -5,12 +5,14 @@
 // (keyed, so re-running is a no-op). Called from the orchestration boot path.
 // ═══════════════════════════════════════════════════════════════
 
-import { getDb, uuid, now } from "@/lib/db";
+import { uuid, now } from "@/lib/db";
 import {
   createWorkflowFromDef,
   getWorkflowByKey,
+  insertWorkflowEdge,
   listWorkflowEdges,
   listWorkflowNodes,
+  updateWorkflowNodeConfig,
 } from "./composer-repository";
 import {
   DEFAULT_SOFTWARE_DELIVERY_WORKFLOW,
@@ -45,11 +47,15 @@ function ensureRecoveryEdges(): void {
       (e) => e.fromNodeId === from && e.toNodeId === to && e.condition === re.condition,
     );
     if (exists) continue;
-    getDb()
-      .prepare(
-        "INSERT INTO composer_edges (id, workflow_id, from_node_id, to_node_id, condition, label, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      )
-      .run(uuid(), wf.id, from, to, re.condition, re.label, ts);
+    insertWorkflowEdge({
+      id: uuid(),
+      workflowId: wf.id,
+      fromNodeId: from,
+      toNodeId: to,
+      condition: re.condition,
+      label: re.label,
+      createdAt: ts,
+    });
   }
 }
 
@@ -70,9 +76,7 @@ function ensureSoftwareDeliveryStartConfig(): void {
   if (!config.inputSpec) { config.inputSpec = SOFTWARE_DELIVERY_INPUT_SPEC; changed = true; }
   if (!config.framing) { config.framing = "software"; changed = true; }
   if (!changed) return;
-  getDb()
-    .prepare("UPDATE composer_nodes SET config_json = ? WHERE id = ?")
-    .run(JSON.stringify(config), start.id);
+  updateWorkflowNodeConfig(start.id, JSON.stringify(config));
 }
 
 /** Idempotently ensure the default Composer workflow(s) exist. */

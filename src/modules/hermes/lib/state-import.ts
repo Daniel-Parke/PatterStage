@@ -7,6 +7,7 @@ import { pullRootFromHermes } from "./profile-pull";
 import { type SyncResult } from "./profile-sync-shared";
 import { ensureDb, getDb } from "@/lib/db";
 import { isProfilesToolsParityComplete } from "@/lib/db/profiles-tools-parity-ensure";
+import { countSkills } from "./profiles-repository";
 import { getHermesDefaultRoot } from "./profile-paths";
 import { getAgentRoot } from "@/lib/agent-root-repository";
 import { existsSync } from "fs";
@@ -27,9 +28,7 @@ export interface HermesStateImportResult {
 
 function isHermesStateAlreadyImported(): boolean {
   const root = getAgentRoot();
-  const skillCount = (
-    getDb().prepare("SELECT COUNT(*) AS c FROM skills").get() as { c: number } | undefined
-  )?.c ?? 0;
+  const skillCount = countSkills() ?? 0;
   return skillCount > 0 && root.soulMd.trim().length > 0;
 }
 
