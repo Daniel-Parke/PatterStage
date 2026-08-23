@@ -156,8 +156,11 @@ export default function ArtifactsPage() {
           {!detail ? (
             <p className="text-xs text-white/40">Loading…</p>
           ) : isMarkup ? (
+            /* WG-WEB-014: the reading column, same measure as the Story Weaver
+               reader and the research report. max-w-none was the unbounded case
+               the ruling is against, on a surface that renders whole documents. */
             <div
-              className="prose prose-invert max-w-none text-sm text-white/80"
+              className="prose prose-invert max-w-3xl text-sm text-white/80"
               dangerouslySetInnerHTML={{ __html: renderReportHtml(detail.content ?? "") }}
             />
           ) : (

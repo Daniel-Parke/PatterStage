@@ -15,6 +15,8 @@ It owns its own state (SQLite under `PS_DATA_DIR`) and talks to the agent over H
 
 ![PatterStage dashboard](docs/images/dashboard.png)
 
+*The dashboard you land on after install: live agent state, active missions and host vitals in one view.*
+
 > A [PatterTech](https://www.pattertech.com) venture.
 
 **Docs:** [Doc index](docs/README.md) · [Platform vision](docs/PLATFORM_VISION.md) · [PatterStage overview](docs/PATTERSTAGE.md) · [Runtime architecture](docs/RUNTIME_ARCHITECTURE.md) · [Missions](docs/MISSIONS.md) · [User walkthrough](docs/USER_WALKTHROUGH_GUIDE.md) · [Cross-platform](docs/CROSS_PLATFORM.md) · [Deploy](docs/DEPLOY.md) · [Migration](docs/MIGRATION.md)

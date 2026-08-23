@@ -291,6 +291,8 @@ intention and the code is the bug.
 
 ![PatterStage dashboard](images/dashboard.png)
 
+*The dashboard with work in flight, showing the header bar, stat pills, Mission Dispatch strip and system monitor this section walks through.*
+
 The dashboard is your **status board**, not the primary place to launch missions. It is meant to answer "what is happening on this machine right now?" at a glance, and to give you one-click access into the deeper pages. Polls `/api/monitor` every 10 seconds, `/api/agents` every 15 seconds, and `/api/missions` every 15 seconds.
 
 ### What you see
@@ -344,6 +346,10 @@ The dashboard is your **status board**, not the primary place to launch missions
 
 ## Main → Insights
 
+![Insights](images/insights.png)
+
+*Insights, showing the activity chart, category ring, run heatmap and achievement grid that the rest of this section walks through.*
+
 **Main → Insights** (`/insights`) is the analytics + achievements view. It reads
 the `analytics_events` interaction log (via `/api/analytics`) plus the dashboard
 stats, so it starts empty and fills in as you use PatterStage.
@@ -377,6 +383,8 @@ stats, so it starts empty and fills in as you use PatterStage.
 ## Orchestration → Missions
 
 ![Missions board](images/missions-board.png)
+
+*The missions board, the five-column view that tracks a mission from Draft to Failed and holds the composer that creates them.*
 
 The mission board is where you **compose, dispatch, schedule, and cancel** agent work. Almost all logic lives in `hooks/useMissionsPage.ts` and `components/missions/`; the page is a thin view-model wiring it all up.
 
@@ -498,6 +506,8 @@ For the bundled host-script catalogue (e.g. `ps-backup.sh` for a Hindsight memor
 
 ![Orchestration chat](images/chat.png)
 
+*Orchestration Chat, with the saved-session sidebar on the left and a live thread on the right: the gateway path, not the mission path.*
+
 **Orchestration → Chat** is a **web chat** against the Hermes gateway — not the same as dispatching a mission. Missions use non-interactive `hermes chat -q` with a structured mission prompt; chat uses the gateway completion path with full conversation history. Sessions persist to localStorage so they survive page reloads.
 
 ### What you see
@@ -544,6 +554,8 @@ For the bundled host-script catalogue (e.g. `ps-backup.sh` for a Hindsight memor
 ## Operations → Agents
 
 ![Agent profiles](images/agent-profiles.png)
+
+*The Agents page in its two-column form: the profile list on the left, the selected profile's behaviour files and sync state on the right.*
 
 **Operations → Agents** is the agent-profile editor. It lists **professional profiles** (QA, SWE, DevOps, Data Scientist, Creative Lead, Support, DevOps Engineer) plus the default **Bob** persona, and lets you edit each profile's behaviour files, push and pull between PatterStage SQLite and `HERMES_HOME/profiles/`, and clone / delete profiles.
 
@@ -602,6 +614,8 @@ For the bundled host-script catalogue (e.g. `ps-backup.sh` for a Hindsight memor
 ## Operations → Skills
 
 ![Skills manager](images/skills-manager.png)
+
+*The skills manager, showing the Active and Inactive split that a profile's `skills.disabled` denylist produces.*
 
 **Operations → Skills** shows the skills available to the active profile, grouped by category. Skills are denylisted per profile via `skills.disabled` in the Hermes `config.yaml`. The UI reads from `~/.hermes/skills/` and applies the profile's denylist to compute the **Active** vs **Inactive** split.
 
@@ -957,6 +971,8 @@ For the bundled host-script catalogue (e.g. `ps-backup.sh` for a Hindsight memor
 ## Config → Models
 
 ![Models configuration](images/models-config.png)
+
+*The model registry, with the table above the agent default, fallback chain and per-task slots that all write through to Hermes.*
 
 **Config → Models** is the **model registry**: credentials, defaults, and the fallback chain. Writes through to `~/.hermes/.env` (for credentials) and `~/.hermes/config.yaml` (for the model block).
 

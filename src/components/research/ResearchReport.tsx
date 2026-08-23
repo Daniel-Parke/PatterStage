@@ -40,8 +40,14 @@ const STEP_DOT: Record<string, string> = {
   synthesize: "bg-neon-pink",
 };
 
+// The reading column. WG-WEB-014 rules media a citation IN the reading column,
+// which presupposes there is one; an unbounded measure on the longest-form thing
+// this app produces is the case the ruling is against. max-w-3xl is not a number
+// invented here: it is the measure the tree already holds, on the Story Weaver
+// reader (src/modules/rec-room/components/ChapterReader.tsx). The lock-book's
+// "Measures" slot is still "set at first build", so the code is the convention.
 const PROSE =
-  "text-sm leading-relaxed text-white/80 " +
+  "max-w-3xl text-sm leading-relaxed text-white/80 " +
   "[&_h1]:mt-6 [&_h1]:mb-2 [&_h1]:text-lg [&_h1]:font-bold [&_h1]:text-white " +
   "[&_h2]:mt-6 [&_h2]:mb-2 [&_h2]:border-b [&_h2]:border-white/10 [&_h2]:pb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-white " +
   "[&_h3]:mt-4 [&_h3]:mb-1 [&_h3]:font-semibold [&_h3]:text-white/90 " +
