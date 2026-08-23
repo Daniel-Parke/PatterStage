@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { safeApiCallData } from "@/lib/api-fetch";
+import { useInterval } from "@/hooks/useInterval";
 import { CHAT_DEFAULT_MODEL } from "@/types/chat";
 
 const GATEWAY_HEALTH_URL = "/api/gateway/health";
@@ -171,12 +172,15 @@ export function useGatewayHealth(): GatewayHealth & {
   }, [checkOnline, checkAgentModel, fetchModels]);
 
   // ── Poll gateway health every 30s ───────────────────────────
-  useEffect(() => {
-    const id = setInterval(() => {
-      void checkOnline();
-    }, 30_000);
-    return () => clearInterval(id);
-  }, [checkOnline]);
+  //
+  // Via `useInterval` rather than a raw `setInterval`, so the poll stops while
+  // the chat tab is hidden and re-checks once the moment it comes back. A
+  // background tab was probing the gateway 2,880 times a day to update a dot
+  // nobody was looking at, and the value the operator actually cares about is
+  // the one on screen when they return.
+  useInterval(() => {
+    void checkOnline();
+  }, { ms: 30_000 });
 
   return {
     online,
