@@ -3,9 +3,9 @@
  *
  * Captures the pages embedded in docs/USER_WALKTHROUGH_GUIDE.md + README.md
  * into docs/images/*. Reuses the standard e2e harness (playwright.config.ts
- * starts the app on an isolated CH_DATA_DIR; tests/e2e/global-setup.ts seeds
- * the catalog). Seeds a few draft missions first so the dashboard + board
- * aren't empty.
+ * starts the app on an isolated data dir that tests/e2e/prepare-data-dir.mjs
+ * wipes before boot; the app seeds the catalog itself during boot). Seeds a few
+ * draft missions first so the dashboard + board aren't empty.
  *
  * Opt-in so the normal CI e2e run doesn't rewrite committed images:
  *   npm run screenshots              # locally

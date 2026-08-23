@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 // Behavioral coverage of the missions page so the useMissionsPage refactor is
 // verifiable: composer form state + dispatch-mode switching, save-draft → board,
 // detail expansion, edit-draft repopulation, and category creation. Runs against
-// an isolated fresh DB (see global-setup); no agent gateway is required for these
+// an isolated fresh DB (see prepare-data-dir.mjs); no agent gateway is required for these
 // flows (drafts persist locally).
 
 const uniq = (p: string) => `${p}-${Date.now()}-${Math.floor(Math.random() * 1e4)}`;

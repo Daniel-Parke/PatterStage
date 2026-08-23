@@ -54,12 +54,28 @@ export default defineConfig({
   },
   webServer: {
     // Force -p so E2E matches baseURL even when .env.local sets a different PORT.
-    command: `npm run start -- -p ${port} -H 0.0.0.0`,
+    //
+    // The wipe runs HERE, as the first half of the command, and not in
+    // globalSetup. Playwright boots webServer before globalSetup, and the server
+    // seeds its catalogue during boot, so a wipe from globalSetup deletes the
+    // database the running server just seeded. See tests/e2e/prepare-data-dir.mjs
+    // for the full account and the CI failure it caused.
+    command:
+      `node tests/e2e/prepare-data-dir.mjs "${e2eDataDir}" && ` +
+      `npm run start -- -p ${port} -H 0.0.0.0`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-    // Isolated, fresh DB per run (global-setup wipes it) — independent of the
-    // developer's working DB and free of legacy schema drift.
-    env: { CH_DATA_DIR: e2eDataDir, PS_AUTH_TOKEN: authToken },
+    // Isolated, fresh DB per run (prepare-data-dir.mjs wipes it before boot),
+    // independent of the developer's working DB and free of legacy schema drift.
+    //
+    // PS_DATA_DIR as well as CH_DATA_DIR, because src/lib/paths.ts resolves
+    // PS_DATA_DIR first and .env.local sets it. Next.js loads .env.local on
+    // `next start` and does not override variables already present in the
+    // environment, so setting only CH_DATA_DIR meant any developer with
+    // PS_DATA_DIR in .env.local ran the whole suite against their working
+    // database while believing it was isolated. That is why the CI-only failure
+    // in tools-personalities.spec.ts could not be reproduced locally.
+    env: { PS_DATA_DIR: e2eDataDir, CH_DATA_DIR: e2eDataDir, PS_AUTH_TOKEN: authToken },
   },
 });
