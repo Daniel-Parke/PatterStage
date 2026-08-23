@@ -16,8 +16,8 @@ import {
 // The last applier's own gate, and the one before it. Imported by their own
 // specifiers, which the global "@/lib/db" mock does not intercept, so these are
 // the real numbers the chain ends on.
+import { SPEND_POLICY_SCHEMA_VERSION } from "@/lib/db/apply-spend-policy-migration";
 import { RETENTION_SCHEMA_VERSION } from "@/lib/db/apply-retention-migration";
-import { AGENT_PROGRESSION_SCHEMA_VERSION } from "@/lib/db/apply-agent-progression-migration";
 
 // jest.setup globally mocks "@/lib/db" (no runMigrations on the mock); pull the
 // real implementation so we exercise the actual wiring.
@@ -131,7 +131,8 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     // The unified artifacts registry lands via the wired v28 applier; the
     // Story Weaver character/theme library is v29; the vendor-name renames are
     // v30; the append-only per-Body progression record is v31; the declared
-    // retention policy is v32 and is the current terminal.
+    // retention policy is v32; the operator's optional spend budget is v33 and
+    // is the current terminal.
     expect(tableNames(db)).toContain("artifacts");
     expect(tableNames(db)).toContain("story_characters");
     expect(tableNames(db)).toContain("story_themes");
@@ -139,7 +140,20 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     expect(tableNames(db)).toEqual(
       expect.arrayContaining(["retention_policy", "retention_prune_runs"]),
     );
+    expect(tableNames(db)).toContain("spend_policy");
     expect(getSchemaVersion(db)).toBe(MIGRATION_HEAD_SCHEMA_VERSION);
+
+    // The sister of the retention assertion below, and the reason T-0021 is
+    // tier R2: an install climbing this ladder arrives with NO budget figure and
+    // NO hard stop. An upgrade that silently started refusing to dispatch, or
+    // that shipped somebody else's ceiling, would be the exact failure the
+    // operator's ruling was written against.
+    expect(
+      db.prepare("SELECT limit_usd, hard_stop FROM spend_policy WHERE id = 1").get() as {
+        limit_usd: number | null;
+        hard_stop: number;
+      },
+    ).toEqual({ limit_usd: null, hard_stop: 0 });
 
     // The single most important assertion about this upgrade (ADR-0009): a real
     // install climbing the ladder arrives with retention SWITCHED OFF. The
@@ -227,7 +241,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
   // rather than on the install that trips over it.
   describe("the head constant cannot drift from the chain", () => {
     it("equals the last applier's version gate", () => {
-      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(RETENTION_SCHEMA_VERSION);
+      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(SPEND_POLICY_SCHEMA_VERSION);
     });
 
     // schema_version strictly increases and a gate is claimed once, which is
@@ -235,7 +249,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     // above the applier that used to hold it is what that rule looks like from
     // the outside, and it catches a new migration that reuses or skips a number.
     it("sits exactly one above the gate it displaced", () => {
-      expect(RETENTION_SCHEMA_VERSION).toBe(AGENT_PROGRESSION_SCHEMA_VERSION + 1);
+      expect(SPEND_POLICY_SCHEMA_VERSION).toBe(RETENTION_SCHEMA_VERSION + 1);
     });
 
     it("equals the highest-numbered migration file on disk", () => {

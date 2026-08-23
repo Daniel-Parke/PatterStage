@@ -71,8 +71,11 @@ function insertRun(
 beforeEach(() => {
   testDb = new Database(":memory:");
   execBaselineSchema(testDb);
-  applyComposerMigration(testDb, migrationsDir);
+  // In ladder order. Each applier gates on the stored version, so running
+  // Composer (v21) before Deep Research (v19) would make the second one a
+  // silent no-op and leave research_runs missing.
   applyDeepResearchMigration(testDb, migrationsDir);
+  applyComposerMigration(testDb, migrationsDir);
   applySpendPolicyMigration(testDb, migrationsDir);
   testDb
     .prepare("INSERT INTO missions (id, name, prompt, model_id) VALUES ('m1','M','p','claude-sonnet-4')")

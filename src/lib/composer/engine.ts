@@ -14,6 +14,7 @@ import { logApiError } from "@/lib/api-logger";
 import { captureArtifactOnce } from "@/lib/artifacts-repository";
 import type { RunStatus } from "@/lib/runtime/types";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { checkUnattendedSpend } from "@/lib/spend/spend-guard";
 import { getResearchRunByComposerNodeRunId } from "@/lib/laboratory/deep-research/research-repository";
 import { parseVerdict } from "./verdict";
 import { dispatchComposerNode } from "./dispatch";
@@ -449,10 +450,30 @@ export function finalizeComposerNodeRun(
   return nodeRun.composerRunId;
 }
 
+export interface ComposerTickResult {
+  advanced: number;
+  /**
+   * Set when the operator's hard spend stop refused this tick. Present only
+   * when something was actually refused.
+   */
+  blocked?: string;
+}
+
 /** One Composer tick: advance every active run (skip those awaiting a human). */
-export async function composerTick(opts: { isOwner?: boolean } = {}): Promise<{ advanced: number }> {
+export async function composerTick(opts: { isOwner?: boolean } = {}): Promise<ComposerTickResult> {
   if (opts.isOwner === false) return { advanced: 0 };
   if (!isFeatureEnabled("composer")) return { advanced: 0 };
+
+  // The operator's hard spend stop, when he has set a figure AND armed one
+  // (T-0021, WO-0014). The tick is the unattended half of Composer: it starts
+  // pending runs and advances in-flight ones with nobody watching.
+  //
+  // advanceComposerRun itself is NOT gated, deliberately. It is also the path a
+  // human takes when he approves a gate, and clause 5 says attended use is
+  // never blocked. Gating the tick and not the function is what makes the
+  // difference between "the workflow paused" and "the workflow is stuck".
+  const gate = checkUnattendedSpend();
+  if (!gate.allowed) return { advanced: 0, blocked: gate.reason ?? "spend stop" };
 
   let advanced = 0;
   for (const run of listActiveComposerRuns()) {

@@ -21,6 +21,7 @@ import { computeNextRun } from "@/lib/schedule/next-run";
 import { dispatchMissionRun } from "@/lib/orchestration/dispatch";
 import { logApiError } from "@/lib/api-logger";
 import { recordEvent } from "@/lib/analytics/record-event";
+import { checkUnattendedSpend } from "@/lib/spend/spend-guard";
 
 /** Occurrences more than this late are treated as catch-up (post-downtime). */
 const CATCH_UP_GRACE_MS = 120_000;
@@ -125,11 +126,31 @@ export interface SchedulerTickOptions {
   isOwner?: boolean;
 }
 
+export interface SchedulerTickResult {
+  fired: number;
+  /**
+   * Set when the operator's hard spend stop refused this tick. Present only
+   * when something was actually refused, so the ordinary result is unchanged.
+   */
+  blocked?: string;
+}
+
 /** Run one scheduler tick. Returns how many schedules dispatched a run. */
 export async function runSchedulerTick(
   opts: SchedulerTickOptions = {},
-): Promise<{ fired: number }> {
+): Promise<SchedulerTickResult> {
   if (opts.isOwner === false) return { fired: 0 };
+
+  // The operator's hard spend stop, when he has set a figure AND armed one
+  // (T-0021, WO-0014). This is UNATTENDED dispatch, which is what his rule is
+  // about; a human clicking dispatch never reaches this file.
+  //
+  // The check happens BEFORE getDueSchedules, so a blocked tick does not
+  // advance next_run_at and does not consume the occurrence. That makes the
+  // stop a pause: the schedule fires on the first tick after the period rolls
+  // over or the figure is raised, rather than having silently skipped a run.
+  const gate = checkUnattendedSpend();
+  if (!gate.allowed) return { fired: 0, blocked: gate.reason ?? "spend stop" };
 
   const nowDate = opts.now ?? new Date();
   const due = getDueSchedules(nowDate.toISOString());
@@ -150,7 +171,16 @@ export class ScheduleTickSource implements SyncSource {
   constructor(private readonly isOwner: () => boolean) {}
 
   async sync(): Promise<SyncResult> {
-    const { fired } = await runSchedulerTick({ isOwner: this.isOwner() });
-    return { sourceName: this.name, success: true, syncedCount: fired, durationMs: 0 };
+    const { fired, blocked } = await runSchedulerTick({ isOwner: this.isOwner() });
+    // A spend stop is a deliberate refusal, not a failure, so success stays
+    // true. The reason rides along so the monitor surface can say why nothing
+    // is firing instead of looking like a wedged scheduler.
+    return {
+      sourceName: this.name,
+      success: true,
+      syncedCount: fired,
+      error: blocked,
+      durationMs: 0,
+    };
   }
 }

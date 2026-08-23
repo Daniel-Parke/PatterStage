@@ -75,6 +75,7 @@ import { applyRecroomLibraryMigration } from "./apply-recroom-library-migration"
 import { applyNeutralColumnNames } from "./apply-neutral-column-names";
 import { applyAgentProgressionMigration } from "./apply-agent-progression-migration";
 import { applyRetentionMigration } from "./apply-retention-migration";
+import { applySpendPolicyMigration } from "./apply-spend-policy-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -287,6 +288,12 @@ export function runMigrations(database: Database.Database): void {
   // record of every applied prune. CREATE + seed at v32. Seeded DISABLED on
   // every install, so an upgrade deletes nothing.
   applyRetentionMigration(database, migrationsDir);
+
+  // The operator's OPTIONAL provider-spend budget (WO-0014, T-0021): one row
+  // holding a figure, the period it covers and whether breaching it stops
+  // unattended dispatch. Seeded with NO figure and NO stop on every install, so
+  // this upgrade changes no install's behaviour. CREATE + seed at v33.
+  applySpendPolicyMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

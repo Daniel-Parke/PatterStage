@@ -15,10 +15,14 @@ export class MissionQueueSync implements SyncSource {
     try {
       const tick = await runMissionQueueTick();
       if (!tick.ran) {
+        // `blocked` is the operator's hard spend stop refusing an unattended
+        // dispatch. That is a deliberate refusal, not a failure, so success
+        // stays true and the reason rides along for the monitor surface.
         return {
           sourceName: this.name,
           success: true,
           syncedCount: 0,
+          error: tick.blocked,
           durationMs: Math.round(performance.now() - start),
         };
       }

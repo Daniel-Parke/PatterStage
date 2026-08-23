@@ -15,7 +15,15 @@ export class ComposerTickSource implements SyncSource {
   constructor(private readonly isOwner: () => boolean) {}
 
   async sync(): Promise<SyncResult> {
-    const { advanced } = await composerTick({ isOwner: this.isOwner() });
-    return { sourceName: this.name, success: true, syncedCount: advanced, durationMs: 0 };
+    const { advanced, blocked } = await composerTick({ isOwner: this.isOwner() });
+    // A spend stop is a deliberate refusal, not a failure, so success stays
+    // true and the reason rides along for the monitor surface.
+    return {
+      sourceName: this.name,
+      success: true,
+      syncedCount: advanced,
+      error: blocked,
+      durationMs: 0,
+    };
   }
 }
