@@ -63,8 +63,9 @@ npm run test:e2e
 ```
 
 - **`PORT`:** `playwright.config.ts` uses `process.env.PORT` (default `3000`). CI sets `PORT=3000`.
-- **`PLAYWRIGHT_SMOKE=1`:** When set, only [`tests/e2e/smoke.spec.ts`](../tests/e2e/smoke.spec.ts) runs (used in CI for speed). Omit it for the **full** E2E suite (navigation matrix, config sections, Story Weaver, etc.).
-- **Pre-release:** Run the full navigation matrix locally (`npm run test:e2e` without `PLAYWRIGHT_SMOKE`) before merging `dev` → `main`. CI does not run the full matrix on every push.
+- **`PLAYWRIGHT_SMOKE=1`:** When set, only [`tests/e2e/smoke.spec.ts`](../tests/e2e/smoke.spec.ts) runs (5 of the suite's 97 tests). Omit it for the **full** E2E suite (navigation matrix, config sections, Story Weaver, the missions journeys, etc.).
+- **Where each one runs.** The `e2e-smoke` job keeps `PLAYWRIGHT_SMOKE=1` and runs on every push and pull request. The `e2e-full` job runs the same command **without** it, on pull requests targeting `main` and on manual dispatch (WO-0012, WG-DEL-002 ruled B). The two jobs differ by exactly that one environment variable, so they cannot drift into different suites. Before this, 92 of the 97 tests ran on no branch in CI at all.
+- **Pre-release:** running `npm run test:e2e` locally without `PLAYWRIGHT_SMOKE` before a `dev` → `main` merge is still the fastest way to find a failure, but it is no longer the only thing standing between the suite and main.
 
 ### Navigation matrix and sidebar
 
@@ -139,6 +140,12 @@ The runners exit non-zero on any failed assertion. CI is unchanged — it runs t
 ## Continuous integration
 
 Primary pipeline: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — Ubuntu (`shell-custom-scripts`, install, `prebuild`, ESLint with **`--max-warnings 0`**, Hermes-path grep gate, `tsc`, Jest coverage, build, Playwright smoke with `PLAYWRIGHT_SMOKE=1`) plus macOS build/test, E2E smoke on Ubuntu, and a **`docker-image`** job that runs **`docker build -f Dockerfile .`** then **`tests/scripts/docker-deploy-api-smoke.sh`** (GET version check + POST restart + HTTP still up) so the production image and dashboard deploy path do not silently rot. The **`build-test-*`** jobs use separate named steps (ESLint, TypeScript, unit tests, build) so the first failing step is obvious in the Actions UI. Actions use **`actions/checkout@v5`** and **`actions/setup-node@v5`** (action runtime on Node 24 per upstream; app build still uses `node-version: "20"` in the workflow).
+
+### The main-blocking acceptance set
+
+Three jobs run only for pull requests targeting `main` (and on manual dispatch), because that is where WG-DEL-002 (ruled B) puts the assembled proof: **`e2e-full`** (the whole Playwright suite), **`install-harness`** (the install journey, which also runs on every push and pull request), and **`real-hermes-integration`** (which used to be push-only, so a red gate stayed invisible in PR views). **`acceptance-gate`** aggregates the three into one check that fails unless all three succeeded.
+
+A workflow file can only decide which jobs run. Which ones *block* a merge is a branch-protection setting, and branch protection on `main` currently requires zero checks, so `acceptance-gate` reports and blocks nothing until the operator makes it a required check (the remaining half of WO-0011).
 
 [`tests/scripts/run-shell-custom-tests.sh`](../tests/scripts/run-shell-custom-tests.sh) covers dotenv, profile sync gates, and **`bash -n`** on key scripts. For **`ps-deploy.sh`** restart/stop loops on a real host, run manual checks on staging (see [DEPLOY.md](DEPLOY.md)).
 
