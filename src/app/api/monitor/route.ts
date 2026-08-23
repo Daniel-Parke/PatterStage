@@ -17,6 +17,7 @@ import { serverErrorFromCatch } from "@/lib/api-logger";
 import { requireAuth } from "@/lib/api-auth";
 import { readGatewayPlatforms, readRecentErrorLogEntries } from "@/lib/sync/sync-repository";
 import { getActiveFramework } from "@/lib/frameworks";
+import { readSchedulerHealth } from "@/lib/orchestration/scheduler/health";
 import type { SessionBrief, MonitorData } from "@/types/console";
 
 // ── Helpers ─────────────────────────────────────────────────
@@ -102,6 +103,12 @@ export async function GET(request: NextRequest) {
       if (!sourceStatuses[name]) sourceStatuses[name] = "pending";
     }
 
+    // ── Background scheduler lease (from meta) ──────────────
+    // Read from the DB, not from this process's in-memory scheduler: the
+    // heartbeat is cross-process by design, and a follower process serving
+    // this request must still report the real owner's liveness.
+    const schedulerHealth = readSchedulerHealth();
+
     const data: MonitorData = {
       sessions: {
         total: totalSessions,
@@ -129,6 +136,7 @@ export async function GET(request: NextRequest) {
         allSuccessful,
         sourceStatuses,
       },
+      scheduler: schedulerHealth,
     };
 
     return NextResponse.json(

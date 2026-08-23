@@ -15,6 +15,8 @@
 // same rule ConfigSync established.
 // ═══════════════════════════════════════════════════════════════
 
+import type { SchedulerHealth } from "@/lib/orchestration/scheduler/health";
+
 // ── API Response Envelope ──────────────────────────────────────
 
 export interface ApiResponse<T> {
@@ -66,6 +68,12 @@ export interface MonitorData {
     allSuccessful: boolean;
     sourceStatuses: Record<string, string>;
   };
+  /**
+   * The background scheduler's cross-process lease + heartbeat. This is the
+   * loop that fires due schedules and reconciles dispatched runs, so a stale
+   * heartbeat is the reason a schedule did not fire and a run never resolved.
+   */
+  scheduler: SchedulerHealth;
   /** The active agent framework (DB-owned registry). */
   framework?: {
     type: string;

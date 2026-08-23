@@ -24,12 +24,12 @@ import { reconcileRunsOnBoot } from "@/lib/orchestration/run-reconcile";
 import { ensureDefaultComposerWorkflows } from "@/lib/composer/seed";
 import { ComposerTickSource } from "@/lib/composer/scheduler/composer-tick";
 import { ScheduleTickSource } from "./tick";
-
-const META_OWNER_PID = "scheduler_owner_pid";
-const META_HEARTBEAT = "scheduler_heartbeat_at";
-
-/** A heartbeat older than this is treated as a dead owner — the lease is up for grabs. */
-const HEARTBEAT_STALE_MS = 60_000;
+// The two key names and the stale window are the read side's contract as much
+// as this file's, so they live in health.ts and are imported here. A surface
+// that reports "the scheduler last ticked N seconds ago" and a scheduler that
+// decides "the previous owner is dead" must agree on the same window, and two
+// copies of 60_000 in two files is how they stop agreeing.
+import { HEARTBEAT_STALE_MS, META_HEARTBEAT, META_OWNER_PID } from "./health";
 
 // The `meta` statements themselves live in system-repository.ts, the one
 // repository for that table. These two wrappers stay HERE because the

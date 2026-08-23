@@ -17,6 +17,7 @@ import {
   Gamepad2,
   BookOpen,
   AlertTriangle,
+  Timer,
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { timeAgo } from "@/lib/utils";
@@ -41,6 +42,7 @@ import { dispatchMissionAction } from "@/hooks/success-message-for-dispatch";
 import { isMissionActive } from "@/lib/missions/mission-board";
 import { countInWindow, ACTIVE_WINDOW_MS, RECENT_WINDOW_MS } from "@/lib/sessions/session-window";
 import { dedupErrors } from "@/lib/dashboard/dashboard-error-dedup";
+import { describeSchedulerHealth } from "@/lib/dashboard/scheduler-pill";
 import { formatModelSubtitle } from "@/lib/dashboard/dashboard-model-subtitle";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { useInterval } from "@/hooks/useInterval";
@@ -225,6 +227,15 @@ export default function Dashboard() {
   const [now, setNow] = useState(() => new Date().getTime());
   useInterval(() => setNow(new Date().getTime()), { ms: 30_000 });
 
+  // The background scheduler's heartbeat, which the console previously threw
+  // away: a stalled loop is why a schedule did not fire and why a dispatched
+  // mission never resolves. `now` is the same 30s-refreshed reading the
+  // session windows use, so the age advances without its own timer.
+  const schedulerPill = useMemo(
+    () => describeSchedulerHealth(monitor?.scheduler, now),
+    [monitor?.scheduler, now],
+  );
+
   // Sessions stat-pill subtitle: "N active · M last 7d" derived from
   // the 5 most recent sessions exposed by /api/monitor. The full
   // window math lives in countInWindow (src/lib/sessions/session-window.ts) so
@@ -329,6 +340,13 @@ export default function Dashboard() {
                 value={monitor.memory.factCount >= 0 ? `${monitor.memory.factCount} facts` : "0 facts"}
                 color="pink"
                 href="/memory"
+              />
+              <StatPill
+                icon={Timer}
+                label="Scheduler"
+                value={schedulerPill.value}
+                color={schedulerPill.color}
+                subtitle={schedulerPill.subtitle}
               />
             </>
           ) : (
