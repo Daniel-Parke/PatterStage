@@ -33,8 +33,21 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["better-sqlite3"],
 
   // Allow devices on local network to access dev server (explicit list; no CIDR).
-
-  allowedDevOrigins: ["*.local", ...extraOrigins],
+  //
+  // The loopback names are hard defaults rather than setup.sh's job. Next 16
+  // blocks cross-origin access to dev resources, and it treats 127.0.0.1 and
+  // localhost as different origins, so opening the wrong one blocks the HMR
+  // socket. In Next 16 that does not degrade to "no hot reload": hydration
+  // never completes, so every page paints its server markup, sits on a
+  // spinner, and issues zero API calls, with nothing in the browser console
+  // to say why. Only the dev server's own log mentions it.
+  //
+  // That mattered here because `npm run dev` prints
+  // "Open PatterStage at http://127.0.0.1:<port>/?ps_token=..." — the product
+  // handed the user the one URL that breaks it, and a fresh clone that has not
+  // run setup.sh has no PS_ALLOWED_DEV_ORIGINS to save it. Production is
+  // unaffected: allowedDevOrigins applies to `next dev` only.
+  allowedDevOrigins: ["localhost", "127.0.0.1", "[::1]", "*.local", ...extraOrigins],
 
   // Benchmarks + Insights moved under the Laboratory section. Keep the old
   // top-level URLs working (bookmarks, external links) via permanent redirects.

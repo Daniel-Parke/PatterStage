@@ -566,35 +566,46 @@ answered without reconstructing the reasoning.
 
 ## Sign-off (human rubric items)
 
-A migrated seed is a new seed, so every item is unsigned until the operator
-judges it against this compile. The Session 0 sign-off below does not carry
+A migrated seed is a new seed, so every item was unsigned until the operator
+judged it against this compile. The Session 0 sign-off below does not carry
 over.
 
-- [ ] H1 cold-start test · - [ ] H2 brief reads true · - [ ] H3
-  rulings honest · - [ ] H4 voice holds · - [ ] H5 operator can run it
-- Path and items: full. All five are judged, because the kernel under the
+**SIGNED by Daniel Parke (operator), 2026-08-23, session S-0004.**
+
+- [x] H1 cold-start test · [x] H2 brief reads true · [x] H3 rulings honest ·
+  [x] H4 voice holds · [x] H5 operator can run it
+- Path and items: full. All five judged, because the kernel under the
   organisation was replaced rather than patched.
-- H3 carries a specific duty this time. The four rulings `RUL-SEC-001` to
-  `RUL-SEC-004`, argued against wargames `WG-SEC-001` to `WG-SEC-004`,
-  land as drafts: they were drafted at adoption by the agent and have not
-  been ruled by the operator, and they wait on his signature here. **The
-  mechanism is a sentence, not a field, and that is a weakness worth
-  stating.** `kernel/schemas/rulings.schema.json` is
-  `additionalProperties: false` and its `execution` enum offers only
-  `argued` and `legacy-inherited`, so there is no draft or provisional
-  marker to set. Each of the four therefore carries the words `DRAFT, NOT
-  RULED` inside its `reason`, saying plainly that it was drafted at
-  adoption, that it has not been ruled by the operator, and that it must
-  not be cited as settled judgement until he signs. A reader who reads
-  the `reason` sees it. A reader who reads only `decision`, `execution`
-  and `decided` sees `argued` and a date and will take the ruling as
-  settled, because the schema gives those three fields no way to say
-  otherwise. Until the operator signs H3, prose is the only guard on
-  these four.
-- Genesis: TBD. It is the operator's launch decision rather than a gate, so
-  declined is a complete answer; blank is not, because blank cannot tell
-  declined from forgotten.
-- Signed: Daniel Parke · date: TBD, at cutover sign-off
+- What each was signed against, so the signature means something a year from
+  now:
+  - **H1** is signed on evidence rather than on a ceremony. The consolidation
+    programme ran roughly sixty sessions that booted from these files with no
+    prior context and executed a task each, which is the cold-start test
+    performed repeatedly rather than once. It largely held. Where it did not,
+    the failures were recorded rather than smoothed over: a router that
+    pointed at a file which did not exist, and three compile-report claims
+    that were not true of the tree, both caught by review and fixed.
+  - **H2** the brief reads true, with two slots still owed the operator's own
+    words and named as such in the file rather than filled by an agent.
+  - **H3** is the item that carried a specific duty, and it is now discharged.
+    `RUL-SEC-001` to `RUL-SEC-004` were drafted at adoption by an agent and
+    marked `DRAFT, NOT RULED` in prose, because the schema is
+    `additionalProperties: false` with an `execution` enum offering no draft
+    marker. On 2026-08-23 the operator ruled all four: 002, 003 and 004
+    accepted as drafted, and **001 re-ruled and softened**. The DRAFT
+    sentences are struck because they are no longer true.
+  - **H4** the voice holds; `no-em-dash` is enforced in the gate over `docs/`.
+  - **H5** the operator has been running it throughout this programme.
+- **The schema weakness that made H3 awkward is NOT fixed and is worth
+  carrying upstream.** `kernel/schemas/rulings.schema.json` still offers no
+  way to mark a ruling provisional, so the only guard on an unruled ruling is
+  a sentence inside `reason` that a reader of `decision`/`execution`/`decided`
+  never sees. That cost this venture a month of four rulings that read as
+  settled. Filed as EOS feedback rather than worked around again.
+- Genesis: still the operator's, deliberately left open rather than recorded
+  as declined. It is a launch decision, not a gate, and no session should
+  answer it for him.
+- Signed: Daniel Parke · date: 2026-08-23.
 
 ### Preserved: the Session 0 sign-off, 2026-07-25
 
