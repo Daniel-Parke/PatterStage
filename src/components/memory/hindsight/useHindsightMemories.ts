@@ -73,14 +73,20 @@ export function useHindsightMemories(showToast: ShowToast) {
       "list",
       { limit: 50 },
     );
-    if (inner?.error) {
-      void fetchHealthOnly();
+    // `hindsightGet` returns null on a non-2xx response, and an unreachable
+    // Hindsight is exactly that: the route answers 503 with
+    // `{ available: false, error: "fetch failed" }`. That null used to fall
+    // into the success branch below, which left `health` at null, so the health
+    // banner never rendered and the page told a first-time user "No memories
+    // yet. Hermes will start storing them as you converse" while no memory
+    // provider was running at all. A null response is a health question, not an
+    // empty store.
+    if (!inner || inner.error) {
+      await fetchHealthOnly();
     } else {
-      setMemories(inner?.memories || []);
-      setTotalFacts(typeof inner?.total === "number" ? inner.total : null);
-      if (inner) {
-        setHealth({ available: true, mode: stringOr(inner.mode, "ok") });
-      }
+      setMemories(inner.memories || []);
+      setTotalFacts(typeof inner.total === "number" ? inner.total : null);
+      setHealth({ available: true, mode: stringOr(inner.mode, "ok") });
     }
     setLoadingInitial(false);
   }, [fetchHealthOnly]);

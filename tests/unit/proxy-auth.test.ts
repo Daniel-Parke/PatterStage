@@ -10,6 +10,10 @@
  *
  * These tests assert the boundary itself, at the one place it is enforced.
  */
+import { rmSync, writeFileSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
+
 import { NextRequest } from "next/server";
 
 import { SESSION_COOKIE, TOKEN_QUERY_PARAM } from "@/lib/auth-token";
@@ -156,5 +160,70 @@ describe("proxy — the authentication boundary", () => {
     process.env.PS_AUTH_MODE = "none";
     const proxy = await loadProxy();
     expect(proxy(req("http://localhost:4242/api/status")).status).toBe(200);
+  });
+});
+
+/**
+ * The 401 is the first PatterStage screen a new operator sees when they open
+ * the bare URL, so it is a product surface and not just a status code. It has
+ * to name the real token location on THIS install: "PS_DATA_DIR/auth-token" is
+ * a variable name, and someone who lost the boot line cannot expand it.
+ */
+describe("proxy — the 401 tells a locked-out operator what to do", () => {
+  const savedEnv = { ...process.env };
+  const tokenFile = join(tmpdir(), `ps-proxy-auth-${process.pid}-token`);
+
+  beforeEach(() => {
+    delete process.env.PS_AUTH_MODE;
+    delete process.env.PS_READ_ONLY;
+    delete process.env.CH_READ_ONLY;
+    delete process.env.PS_AUTH_TOKEN;
+    writeFileSync(tokenFile, TOKEN + "\n");
+    process.env.PS_AUTH_TOKEN_FILE = tokenFile;
+  });
+
+  afterEach(() => {
+    process.env = { ...savedEnv };
+    rmSync(tokenFile, { force: true });
+  });
+
+  it("names the resolved token file on the HTML page, not the variable", async () => {
+    const proxy = await loadProxy();
+    const body = await proxy(req("http://localhost:4242/")).text();
+    expect(body).toContain(tokenFile);
+    expect(body).not.toContain("PS_DATA_DIR/auth-token");
+  });
+
+  it("shows both steps: read the file, then sign in with the query param", async () => {
+    const proxy = await loadProxy();
+    const body = await proxy(req("http://localhost:4242/")).text();
+    expect(body).toContain(`cat ${tokenFile}`);
+    expect(body).toContain(`?${TOKEN_QUERY_PARAM}=`);
+    expect(body.toLowerCase()).toContain("restart");
+  });
+
+  it("never prints the token itself on the page that rejected it", async () => {
+    const proxy = await loadProxy();
+    const body = await proxy(req("http://localhost:4242/")).text();
+    expect(body).not.toContain(TOKEN);
+  });
+
+  it("gives an API caller the same location in the JSON error", async () => {
+    const proxy = await loadProxy();
+    const res = proxy(req("http://localhost:4242/api/status"));
+    expect(res.status).toBe(401);
+    const payload = (await res.json()) as { error: string; tokenLocation: string };
+    expect(payload.tokenLocation).toBe(tokenFile);
+    expect(payload.error).toContain("Bearer");
+    expect(payload.error).not.toContain(TOKEN);
+  });
+
+  it("points a container install at PS_AUTH_TOKEN, not a file it never reads", async () => {
+    process.env.PS_AUTH_TOKEN = TOKEN;
+    const proxy = await loadProxy();
+    const body = await proxy(req("http://localhost:4242/")).text();
+    expect(body).toContain("PS_AUTH_TOKEN");
+    expect(body).not.toContain(tokenFile);
+    expect(body).not.toContain(TOKEN);
   });
 });

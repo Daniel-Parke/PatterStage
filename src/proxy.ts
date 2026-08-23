@@ -23,6 +23,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import {
   SESSION_COOKIE,
   TOKEN_QUERY_PARAM,
+  describeTokenSource,
   getAuthMode,
   readAuthToken,
   tokenMatches,
@@ -47,22 +48,72 @@ function isApiPath(pathname: string): boolean {
   return pathname.startsWith("/api/");
 }
 
+/**
+ * HTML-escape a server-derived string before it goes into the 401 page. The
+ * only interpolation is the token path, which comes from env/config rather than
+ * the request, but a page that hand-builds HTML should escape unconditionally
+ * rather than rely on where today's input happens to come from.
+ */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * The 401 is the first PatterStage screen a lot of people ever see: the
+ * installer finishes, they open the bare URL, and this is what answers. So it
+ * has to be a set of instructions, not a refusal.
+ *
+ * It names the RESOLVED token location (a first-time user cannot expand
+ * "PS_DATA_DIR" themselves), the command that prints it, and the way to recover
+ * a token that is lost entirely. It reflects nothing from the request, so there
+ * is no host or path to smuggle into the markup.
+ *
+ * None of this relaxes the check. The token requirement is unchanged; only the
+ * explanation of how to satisfy it is.
+ */
 function unauthorized(request: NextRequest): NextResponse {
+  const source = describeTokenSource();
+  const where =
+    source.kind === "env"
+      ? "the PS_AUTH_TOKEN environment variable this server was started with"
+      : source.location;
+
   if (isApiPath(request.nextUrl.pathname)) {
     return NextResponse.json(
       {
-        error:
-          "Unauthorized. Send 'Authorization: Bearer <token>' — the token is in PS_DATA_DIR/auth-token and is printed in the server log at boot.",
+        error: `Unauthorized. Send 'Authorization: Bearer <token>'. This server's token is in ${where}, and the full sign-in URL is printed in the server log at every start.`,
+        tokenLocation: where,
       },
       { status: 401 },
     );
   }
+
+  const readHint =
+    source.kind === "env"
+      ? `<p>This server takes its token from the <code>PS_AUTH_TOKEN</code> environment variable it was started with. Read it from your container or service definition.</p>`
+      : `<p><strong>1.</strong> Your token is the single line in this file:</p>` +
+        `<pre style="background:#0d1420;padding:.6rem .8rem;border-radius:6px;overflow-x:auto"><code>${escapeHtml(source.location)}</code></pre>` +
+        `<p>Print it with <code>cat ${escapeHtml(source.location)}</code>.</p>`;
+
   return new NextResponse(
-    `<!doctype html><meta charset="utf-8"><title>PatterStage — token required</title>` +
-      `<body style="font:16px/1.6 system-ui;max-width:34rem;margin:12vh auto;padding:0 1.5rem;background:#05080d;color:#eaf2f8">` +
+    `<!doctype html><meta charset="utf-8"><title>PatterStage: access token required</title>` +
+      `<body style="font:16px/1.6 system-ui;max-width:38rem;margin:10vh auto;padding:0 1.5rem;background:#05080d;color:#eaf2f8">` +
       `<h1 style="font-size:1.4rem">PatterStage needs your access token</h1>` +
-      `<p>Open the URL printed in the server log at startup, or append <code>?${TOKEN_QUERY_PARAM}=&lt;token&gt;</code> to this address once.</p>` +
-      `<p>The token lives in <code>PS_DATA_DIR/auth-token</code>.</p></body>`,
+      `<p>PatterStage is a single-operator control plane, so there is no login. The server minted one random token for you on first boot and every request is checked against it.</p>` +
+      readHint +
+      `<p><strong>${source.kind === "env" ? "Then" : "2."}</strong> Open this address once with the token on the end:</p>` +
+      `<pre style="background:#0d1420;padding:.6rem .8rem;border-radius:6px;overflow-x:auto"><code>?${TOKEN_QUERY_PARAM}=&lt;your token&gt;</code></pre>` +
+      `<p>PatterStage swaps it for a session cookie and strips it back out of the URL, so you only paste it once per browser.</p>` +
+      `<h2 style="font-size:1rem;margin-top:2rem">Lost it completely?</h2>` +
+      `<p>Restart PatterStage. It prints the whole sign-in URL, token included, on the first <code>[auth]</code> line of the server log at every start.</p>` +
+      (source.kind === "file"
+        ? `<p>Deleting that file and restarting mints a fresh token. That is also how you revoke the old one: every browser signed in with it is signed out.</p>`
+        : "") +
+      `</body>`,
     { status: 401, headers: { "content-type": "text/html; charset=utf-8" } },
   );
 }

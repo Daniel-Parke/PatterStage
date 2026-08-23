@@ -29,6 +29,7 @@ import { Panel, PanelHeader } from "@/components/dashboard/Panel";
 import CommandCenter from "@/components/dashboard/CommandCenter";
 import { FadeIn } from "@/components/motion";
 import DispatchStrip from "@/components/dashboard/DispatchStrip";
+import FirstRunPanel from "@/components/dashboard/FirstRunPanel";
 import ActiveMissionsPanel from "@/components/dashboard/ActiveMissionsPanel";
 import PlatformsPanel from "@/modules/hermes/components/PlatformsPanel";
 import ErrorsPanel from "@/components/dashboard/ErrorsPanel";
@@ -189,6 +190,23 @@ export default function Dashboard() {
     () => formatModelSubtitle(diskModel, diskProvider, registryAgentModelLabel),
     [diskModel, diskProvider, registryAgentModelLabel],
   );
+  // Is there actually an agent behind this control plane? `framework.available`
+  // is the adapter's own answer (the DB-owned registry probes the install), and
+  // `undefined` means the monitor could not tell — which is not the same as
+  // "absent", so only an explicit `false` counts as not configured.
+  const agentName = monitor?.framework?.name ?? "Hermes";
+  const agentConfigured = monitor?.framework?.available !== false;
+
+  const firstRunFacts = useMemo(
+    () => ({
+      frameworkName: agentName,
+      frameworkAvailable: agentConfigured,
+      sessionCount: monitor?.sessions.total ?? 0,
+      missionCount: missions.length,
+    }),
+    [agentName, agentConfigured, monitor?.sessions.total, missions.length],
+  );
+
   const activeProcesses = useMemo(() => processes.filter((p) => p.status === "running"), [processes]);
   const activeMissions = useMemo(
     () => missions.filter(isMissionActive),
@@ -241,10 +259,21 @@ export default function Dashboard() {
           <div className="text-right">
             <LiveClock />
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-neon-green pulse-glow" />
-            <span className="text-xs text-ps-text-secondary font-mono">ONLINE</span>
-          </div>
+          {/* The badge used to be a hardcoded green ONLINE, sitting directly
+              under the agent-framework heading. On an install with no agent it
+              claimed the agent was up. It now reports what the monitor actually
+              found. */}
+          {agentConfigured ? (
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-neon-green pulse-glow" />
+              <span className="text-xs text-ps-text-secondary font-mono">ONLINE</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2" title={`${agentName} is not installed on this machine`}>
+              <div className="w-2 h-2 rounded-full bg-neon-orange" />
+              <span className="text-xs text-neon-orange font-mono">NOT INSTALLED</span>
+            </div>
+          )}
         </div>
       </div>
       {toastElement}
@@ -255,6 +284,9 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+        {/* First run: an empty install gets a checklist before it gets widgets.
+            Renders nothing once there is an agent and any activity. */}
+        <FirstRunPanel facts={firstRunFacts} />
         {/* Malformed config.yaml — one actionable alert (ConfigSync sets the
             stat; the sync no longer spams the log). */}
         {monitor?.system?.configYamlError ? (

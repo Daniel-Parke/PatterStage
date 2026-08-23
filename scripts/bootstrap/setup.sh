@@ -305,6 +305,17 @@ echo ""
 echo "Local URL:  http://127.0.0.1:${PS_PORT_DISPLAY}/"
 echo "LAN: use http://<this-host-ip>:${PS_PORT_DISPLAY}/ or http://<hostname>.local:${PS_PORT_DISPLAY}/"
 echo ""
+# The bare URL above answers 401 by design: PatterStage mints a random access
+# token on its FIRST BOOT, which has not happened yet at setup time. Sending an
+# operator to a URL that rejects them without saying why is how a first install
+# dies, so name the token, the file and the recovery here.
+echo "First open needs your access token:"
+echo "  The server mints one on first boot and prints the full sign-in URL:"
+echo "    [auth] Open PatterStage at http://127.0.0.1:${PS_PORT_DISPLAY}/?ps_token=<token>"
+echo "  Open that URL once; PatterStage swaps it for a session cookie."
+echo "  Lost it? The token is the single line in ${PS_DATA_ROOT}/auth-token,"
+echo "  and every restart prints the URL again. See docs/SECURITY.md."
+echo ""
 echo "Development (hot reload):"
 echo "  npm run dev            # PORT and PS_ALLOWED_DEV_ORIGINS come from .env.local"
 echo ""

@@ -44,6 +44,7 @@ import { useStoredBool } from "@/hooks/useStoredBool";
 import { isApiNoiseSession } from "@/lib/sessions/session-filters";
 import { buildGroupedEntries } from "@/lib/sessions/sessions-grouping";
 import AppPageShell from "@/components/layout/AppPageShell";
+import AgentSetupNotice from "@/components/agents/AgentSetupNotice";
 import type { SessionSource } from "@/lib/sessions/session-repository";
 import { SOURCE_META } from "@/components/session/constants";
 import SessionInsights from "@/components/session/SessionInsights";
@@ -179,6 +180,11 @@ export default function SessionsPage() {
         subtitle={`${data?.total ?? 0} recorded sessions across all agents`}
         color="orange"
       />
+
+      {/* An empty session list means one of two very different things. On an
+          install with no agent it is not "you have not run anything yet", it is
+          "nothing can produce a transcript here". Say which. */}
+      <AgentSetupNotice what="Recording sessions" />
 
       <div className="px-6 py-6">
         {loadError && (

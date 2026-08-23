@@ -80,3 +80,41 @@ describe("health-message: does not crash on odd inputs", () => {
     expect(healthBannerMessage(h)).toBe("Hindsight external: not responding");
   });
 });
+
+/**
+ * A PatterStage install with no memory provider is a supported state, not a
+ * fault. The health route reports it as `{ available: false, error: "fetch
+ * failed" }` with no mode, which used to render "Hindsight undefined: fetch
+ * failed" — two pieces of jargon and a bug, on a first-run screen.
+ */
+describe("health-message: nothing installed is a supported state", () => {
+  it("translates a bare transport failure into something a new user can act on", () => {
+    const h = { available: false, error: "fetch failed" } as unknown as HealthState;
+    const message = healthBannerMessage(h);
+    expect(message).toContain("No memory provider is answering");
+    expect(message).not.toContain("fetch failed");
+    expect(message).not.toContain("undefined");
+  });
+
+  it("covers the other transport phrasings the same way", () => {
+    for (const error of ["connect ECONNREFUSED 127.0.0.1:9177", "Connection refused", "ETIMEDOUT"]) {
+      const h = { available: false, error } as unknown as HealthState;
+      expect(healthBannerMessage(h)).toContain("No memory provider is answering");
+    }
+  });
+
+  it("never says 'Hindsight undefined' when the payload carried no mode", () => {
+    const h = { available: false, error: "boom" } as unknown as HealthState;
+    expect(healthBannerMessage(h)).toBe("Hindsight: boom");
+  });
+
+  it("still quotes a provider that explained itself, transport error or not", () => {
+    const h = {
+      available: false,
+      mode: "external",
+      message: "bank 'default' is migrating",
+      error: "fetch failed",
+    } as HealthState;
+    expect(healthBannerMessage(h)).toBe("Hindsight external: bank 'default' is migrating");
+  });
+});

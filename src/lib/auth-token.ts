@@ -38,6 +38,21 @@ export function getAuthTokenPath(): string {
   return readEnv("PS_AUTH_TOKEN_FILE") ?? PS_DATA_DIR + "/auth-token";
 }
 
+/**
+ * Where the ACTIVE token actually comes from, resolved the same way
+ * `readAuthToken()` resolves it.
+ *
+ * The 401 page used to say "the token lives in PS_DATA_DIR/auth-token", which
+ * is the name of a variable, not a place: a first-time user who lost the boot
+ * line has no way to expand it. This returns the real answer for the install in
+ * front of them, including the container case where the file is not read at all
+ * because `PS_AUTH_TOKEN` won.
+ */
+export function describeTokenSource(): { kind: "env" | "file"; location: string } {
+  if (readEnv("PS_AUTH_TOKEN")) return { kind: "env", location: "PS_AUTH_TOKEN" };
+  return { kind: "file", location: getAuthTokenPath() };
+}
+
 // The token is read on every request, so cache it and re-read only when the
 // file's mtime/size changes (statSync is cheap; a rotated token takes effect
 // without a restart).

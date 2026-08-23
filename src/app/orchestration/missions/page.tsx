@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { Loader2, Plus, RefreshCw, Rocket } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
+import AgentSetupNotice from "@/components/agents/AgentSetupNotice";
 import Button from "@/components/ui/Button";
 import Sheet from "@/components/ui/Sheet";
 import MissionCreateForm, {
@@ -210,6 +211,11 @@ export default function MissionsPage() {
           </>
         }
       />
+
+      {/* Renders nothing when an agent is configured. On an install without
+          one, this is the only place the page admits that composing a mission
+          here will not dispatch anywhere. */}
+      <AgentSetupNotice what="Dispatching a mission" />
 
       <div className="max-w-screen-xl mx-auto w-full px-4 sm:px-6">
         <MissionInsights missions={missions} />

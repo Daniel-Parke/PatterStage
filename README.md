@@ -67,13 +67,23 @@ How the pieces fit together: [docs/RUNTIME_ARCHITECTURE.md](docs/RUNTIME_ARCHITE
 
    **Windows** — run under **WSL2 (Ubuntu)**: `wsl --install -d Ubuntu` (one-time, elevated PowerShell), then open Ubuntu and follow the Linux steps above. See [Cross-platform](docs/CROSS_PLATFORM.md).
 
-3. **Start the server** and open the dashboard:
+3. **Start the server:**
    ```bash
-   npm run start:network          # binds 0.0.0.0 for LAN
+   npm run start                  # this machine only
+   npm run start:network          # binds 0.0.0.0 for LAN access
    ```
-   The URL is `http://127.0.0.1:<PORT>/` — `PORT` is written to `.env.local` during setup (usually **42069–42100**).
+   `PORT` is written to `.env.local` during setup (usually **42069–42100**).
 
-4. **Catalog seeds during setup** — six professional agent profiles + mission templates land in PatterStage SQLite automatically, and are pushed to `~/.hermes/profiles/` when `HERMES_HOME` is ready. You don't need Config → Seed on a first install.
+4. **Open the dashboard with the link the server prints.** PatterStage has no login: it mints one random access token on first boot and checks every request against it, so the bare `http://127.0.0.1:<PORT>/` answers **401** on purpose. The first `[auth]` line of the server output is your way in:
+
+   ```
+   [auth] Open PatterStage at http://127.0.0.1:<PORT>/?ps_token=<your token>
+   [auth] Token file: <PS_DATA_DIR>/auth-token
+   ```
+
+   Open that URL once. PatterStage exchanges the token for an httpOnly session cookie and strips it back out of the address bar, so you paste it once per browser. If you lose the line, the token is the single line in `<PS_DATA_DIR>/auth-token`, and restarting the server prints the URL again. Details and the container options: [docs/SECURITY.md](docs/SECURITY.md).
+
+5. **Catalog seeds during setup** — six professional agent profiles + mission templates land in PatterStage SQLite automatically, and are pushed to `~/.hermes/profiles/` when `HERMES_HOME` is ready. You don't need Config → Seed on a first install.
 
 ### Non-interactive install (VPS / CI / unattended)
 
@@ -142,6 +152,7 @@ See [docs/DEPLOY.md](docs/DEPLOY.md) for Docker, TLS, ports, and the LAN relay.
 
 | Problem | What to try |
 |---------|-------------|
+| **"PatterStage needs your access token" / 401** | Working as designed. Print your token with `cat <PS_DATA_DIR>/auth-token` and open `http://127.0.0.1:<PORT>/?ps_token=<token>` once, or restart the server and use the URL on its first `[auth]` line. Deleting the token file and restarting mints a new one and signs every browser out. |
 | **Port already in use** | Read `PORT` in `.env.local`; run `bash scripts/bootstrap/stop.sh`, or change `PORT` and re-run setup. |
 | **Hermes not found / missions fail** | Install Hermes; set `HERMES_HOME` in `.env.local`; confirm `hermes` is on `PATH` and the API Server is enabled. |
 | **Schedules / scripts not firing** | The scheduler boots with the server (`src/instrumentation.ts`); confirm the server is running and check Main → Logs. |

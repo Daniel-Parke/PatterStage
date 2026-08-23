@@ -30,6 +30,7 @@ import { profileSyncBody } from "@/lib/profile-sync-body";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { agentFileUrl } from "@/components/agents/agent-file-url";
 import AgentsPageHeader from "@/components/agents/AgentsPageHeader";
+import AgentSetupNotice from "@/components/agents/AgentSetupNotice";
 import AgentProfilesOverview from "@/components/agents/AgentProfilesOverview";
 import AgentProfileList from "@/components/agents/AgentProfileList";
 import AgentProfileDetail from "@/components/agents/AgentProfileDetail";
@@ -321,6 +322,11 @@ export default function BehaviourPage() {
     <AppPageShell>
       {toastElement}
       <AgentsPageHeader profileCount={profiles.length} onNewProfile={openCreate} />
+
+      {/* Without an agent installed, this page is a wall of "drift" and
+          "missing" against a disk that was never there. Name the cause before
+          the alarms. */}
+      <AgentSetupNotice what="Pushing and pulling profiles" />
 
       <div className="px-6 py-6">
         <AgentProfilesOverview
