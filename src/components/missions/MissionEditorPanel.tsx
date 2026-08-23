@@ -19,6 +19,8 @@ import {
   isMissionDraft,
   isMissionQueuedForRun,
 } from "@/lib/missions/mission-board";
+import { describeMissionRunState } from "@/lib/missions/mission-run-state";
+import { RUN_TONE_TEXT } from "@/components/missions/mission-page-constants";
 import MissionLiveProgress from "@/components/missions/MissionLiveProgress";
 
 export interface MissionEditorPanelProps {
@@ -72,6 +74,13 @@ export default function MissionEditorPanel({
   // component, where the mission id is in scope at render time.
   const deleteConfirm = useTwoStepConfirm({ autoDismissMs: 4000 });
   const cancelConfirm = useTwoStepConfirm({ autoDismissMs: 4000 });
+
+  // The run behind this mission. `detail.run` is the authoritative copy
+  // (fetched with the mission itself); the row's own copy is the fallback for
+  // the poll window before the detail request lands.
+  const run = detail?.run ?? mission.run ?? null;
+  /* eslint-disable-next-line react-hooks/purity -- a live duration reads the wall clock; the missions page repolls every 15s, which is what advances it */
+  const runState = describeMissionRunState({ ...(detail?.mission ?? mission), run }, Date.now());
 
   // Click handlers for the 2 destructive buttons. Each branches on
   // whether the per-row key (the mission id) is currently armed: if
@@ -138,19 +147,9 @@ export default function MissionEditorPanel({
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-ps-text-muted">Elapsed</span>
-              <span className="text-ps-text-secondary ml-2 text-right">
-                {(() => {
-                  const created = new Date(detail.mission.createdAt).getTime();
-                  /* eslint-disable-next-line react-hooks/purity -- elapsed uses wall clock; list polls every 5s */
-                  const now = Date.now();
-                  const elapsed = Math.floor((now - created) / 1000);
-                  if (elapsed < 60) return `${elapsed}s`;
-                  if (elapsed < 3600) return `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
-                  const h = Math.floor(elapsed / 3600);
-                  const m = Math.floor((elapsed % 3600) / 60);
-                  return `${h}h ${m}m`;
-                })()}
+              <span className="text-ps-text-muted">{runState.label}</span>
+              <span className={`ml-2 text-right ${RUN_TONE_TEXT[runState.tone]}`}>
+                {runState.duration}
               </span>
             </div>
             {categoryLabel && (
@@ -245,10 +244,13 @@ export default function MissionEditorPanel({
                   </span>
                 </div>
                 <Link
+                  // /orchestration/cron has never existed. The cron surface is
+                  // /config/cron (src/lib/modules/registry.ts), so this "view"
+                  // link answered "which job is this?" with a 404.
                   href={
                     detail.cronJob.id
-                      ? `/orchestration/cron?highlight=${encodeURIComponent(detail.cronJob.id)}`
-                      : "/orchestration/cron"
+                      ? `/config/cron?highlight=${encodeURIComponent(detail.cronJob.id)}`
+                      : "/config/cron"
                   }
                   onClick={(e) => e.stopPropagation()}
                   className="text-xs font-mono text-neon-orange hover:underline flex items-center gap-0.5"
@@ -293,28 +295,46 @@ export default function MissionEditorPanel({
             </div>
           )}
 
+          {/* The timing note is the "is it stuck" answer: how long is left
+              before the reconciler stops waiting, or that it is already past
+              that point. Rendered only while there is something to say. */}
+          {runState.note && (
+            <div
+              className={`rounded-lg border px-2 py-1.5 text-xs font-mono ${
+                runState.tone === "overdue"
+                  ? "border-neon-orange/30 bg-neon-orange/5 text-neon-orange"
+                  : "border-white/5 bg-dark-900/50 text-ps-text-muted"
+              }`}
+            >
+              {runState.note}
+            </div>
+          )}
+
           {mission.status === "dispatched" && (
             <MissionLiveProgress missionId={mission.id} />
           )}
 
-          {detail.mission.results && (
+          {detail.mission.result && (
             <div>
               <div className="text-xs font-mono text-ps-text-muted uppercase mb-1">
-                Results
+                Result
               </div>
-              <div className="text-xs text-ps-text-muted font-mono whitespace-pre-wrap bg-dark-900/50 rounded-lg p-2 border border-white/5 max-h-16 overflow-y-auto">
-                {detail.mission.results}
+              <div className="text-xs text-ps-text-secondary font-mono whitespace-pre-wrap bg-dark-900/50 rounded-lg p-2 border border-white/5 max-h-40 overflow-y-auto">
+                {detail.mission.result}
               </div>
             </div>
           )}
 
-          {detail.mission.error && (
+          {/* The backend's own failure text. It has always been stored on the
+              run row and never shown: the panel read `mission.error`, a field
+              no route sets, so a failed mission explained nothing. */}
+          {run?.error && (
             <div className="rounded-lg bg-red-500/5 border border-red-500/10 p-2">
               <div className="text-xs font-mono text-red-400 uppercase mb-0.5">
-                Error
+                Run error
               </div>
-              <div className="text-xs font-mono text-red-400/60">
-                {detail.mission.error}
+              <div className="text-xs font-mono text-red-300 whitespace-pre-wrap break-words">
+                {run.error}
               </div>
             </div>
           )}

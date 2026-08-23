@@ -11,6 +11,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { listMissions } from "@/lib/missions/mission-repository";
+import { getLatestRunForMission, listLatestRunsForMissions } from "@/lib/runs-repository";
+import { buildMissionRunView } from "@/lib/orchestration/run-deadline";
 import { requireAuth, isReadOnly } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
@@ -37,8 +39,11 @@ export async function GET(request: NextRequest) {
     if (id) {
       const mission = getMissionOrNotFound(id);
       if (mission instanceof NextResponse) return mission;
-      // Mission status is synced in background by MissionSync
-      return ok({ mission });
+      // Mission status is synced in background by MissionSync. The run row is
+      // sent alongside it: it carries the only honest answer to "how long has
+      // this been going and when does the reconciler give up on it", and the
+      // detail panel was previously guessing from the mission's createdAt.
+      return ok({ mission, run: buildMissionRunView(mission, getLatestRunForMission(mission.id)) });
     }
 
     const categoryIdParam = url.searchParams.get("categoryId");
@@ -49,7 +54,16 @@ export async function GET(request: NextRequest) {
           ? { categoryId: categoryIdParam }
           : undefined,
     );
-    return ok({ missions });
+    // One extra query for the whole page, not one per row: the board needs the
+    // run anchor to distinguish a mission that started ten seconds ago from one
+    // that has been dispatched for two hours.
+    const runs = listLatestRunsForMissions(missions.map((m) => m.id));
+    return ok({
+      missions: missions.map((m) => ({
+        ...m,
+        run: buildMissionRunView(m, runs.get(m.id) ?? null),
+      })),
+    });
   } catch (error) {
     return serverErrorFromCatch("GET /api/missions", id ? `mission ${id}` : "listing missions", error, "Failed to load missions");
   }

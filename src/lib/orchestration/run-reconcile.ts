@@ -19,6 +19,12 @@ import { recordEvent } from "@/lib/analytics/record-event";
 import { finalizeComposerNodeRun, advanceComposerRun } from "@/lib/composer/engine";
 import { captureArtifactOnce } from "@/lib/artifacts-repository";
 import { logApiError } from "@/lib/api-logger";
+import {
+  DEFAULT_MAX_RUN_MINUTES,
+  GRACE_MINUTES,
+  declaredTimeoutMinutes,
+  parseRunTimestamp,
+} from "@/lib/orchestration/run-deadline";
 
 /** Map a terminal run status onto the mission status enum (no 'cancelled'). */
 function missionStatusFor(runStatus: RunStatus): "successful" | "failed" {
@@ -33,28 +39,20 @@ function missionStatusFor(runStatus: RunStatus): "successful" | "failed" {
 //   • backend still reports 'started' past a DECLARED timeout → fail (enforce it).
 // An untimed mission the backend still reports running is left alone (the user
 // chose no timeout; it isn't "stuck", just long).
-const GRACE_MINUTES = 5;
-const DEFAULT_MAX_RUN_MINUTES = Math.max(
-  10,
-  Number(process.env.PS_RUN_MAX_MINUTES || process.env.CH_RUN_MAX_MINUTES) || 120,
-);
-
-function parseTs(s: string): number {
-  const hasTz = s.endsWith("Z") || /[+-]\d\d:\d\d$/.test(s);
-  return Date.parse(hasTz ? s : `${s}Z`);
-}
+//
+// The two constants and the timestamp parse moved to run-deadline.ts so the
+// mission API can publish the same instant to the console. The rule they encode
+// is unchanged; it is now readable by the surface that has to explain it.
 
 function ageMinutes(run: RunRecord): number {
-  const start = parseTs(run.submittedAt);
+  const start = parseRunTimestamp(run.submittedAt);
   return Number.isFinite(start) ? (Date.now() - start) / 60_000 : 0;
 }
 
 /** The mission's declared max runtime in minutes, if any (timeout wins). */
-function declaredTimeoutMinutes(missionId: string | null): number | null {
+function missionDeadlineMinutes(missionId: string | null): number | null {
   if (!missionId) return null;
-  const m = getMission(missionId);
-  const t = m?.timeoutMinutes ?? m?.missionTimeMinutes;
-  return typeof t === "number" && t > 0 ? t : null;
+  return declaredTimeoutMinutes(getMission(missionId));
 }
 
 /**
@@ -174,7 +172,7 @@ async function reconcileOne(run: RunRecord): Promise<boolean> {
   }
 
   const age = ageMinutes(run);
-  const declared = declaredTimeoutMinutes(run.missionId);
+  const declared = missionDeadlineMinutes(run.missionId);
 
   try {
     const result = await runtime.getRun(run.runId, run.profileName ?? undefined);

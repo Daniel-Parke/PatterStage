@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlertTriangle,
   ChevronRight,
   Clock,
   Layers,
@@ -17,18 +18,16 @@ import {
   resolveCategoryDisplay,
   buildCategoryMap,
 } from "@/lib/missions/mission-categories";
-import { timeAgo, titleCase } from "@/lib/utils";
+import { titleCase } from "@/lib/utils";
 import type { MissionsPageViewModel } from "@/hooks/useMissionsPage";
 import type { MissionRow } from "@/hooks/missions-page-types";
 import {
   FALLBACK_CATEGORY_ACTIVE,
+  RUN_TONE_TEXT,
   STATUS_CONFIG,
 } from "./mission-page-constants";
-import {
-  isMissionDraft,
-  isMissionQueuedForRun,
-  missionBoardColumn,
-} from "@/lib/missions/mission-board";
+import { missionBoardColumn } from "@/lib/missions/mission-board";
+import { describeMissionRunState } from "@/lib/missions/mission-run-state";
 import MissionEditorPanel from "./MissionEditorPanel";
 
 const STATUS_FILTERS = ["all", "draft", "queued", "dispatched", "successful", "failed"] as const;
@@ -74,6 +73,11 @@ export default function MissionsList({ vm }: MissionsListProps) {
   } = vm;
 
   const categoryMap = buildCategoryMap(categories);
+  // One clock reading for the whole board, so every card's duration is
+  // measured from the same instant. The missions page repolls every 15s,
+  // which is what advances these numbers.
+  /* eslint-disable-next-line react-hooks/purity -- live durations read the wall clock; the 15s poll re-renders the board */
+  const renderedAt = Date.now();
 
   return (
     <div className="w-full max-w-none px-6 py-6">
@@ -346,6 +350,10 @@ export default function MissionsList({ vm }: MissionsListProps) {
                               text: "text-ps-text-muted",
                             };
                           const isExpanded = expandedId === mission.id;
+                          const runState = describeMissionRunState(
+                            mission,
+                            renderedAt,
+                          );
                           const catDisplay = resolveCategoryDisplay(
                             mission.categoryId,
                             categoryMap,
@@ -385,24 +393,21 @@ export default function MissionsList({ vm }: MissionsListProps) {
                                       )}
                                     </div>
                                     <div className="flex items-center gap-2 mt-1.5 text-xs font-mono text-ps-text-faint flex-wrap">
-                                      <span className="flex items-center gap-0.5">
-                                        {isMissionDraft(mission) ? (
-                                          <>
-                                            <Clock className="w-2.5 h-2.5 text-ps-text-muted" />
-                                            <span className="text-ps-text-muted">Draft</span>
-                                          </>
-                                        ) : isMissionQueuedForRun(mission) ? (
-                                          <>
-                                            <Clock className="w-2.5 h-2.5 text-neon-orange" />
-                                            <span className="text-neon-orange/90">
-                                              Waiting to run
-                                            </span>
-                                          </>
-                                        ) : (
-                                          <>
-                                            <Clock className="w-2.5 h-2.5" />
-                                            {timeAgo(mission.createdAt)}
-                                          </>
+                                      {/* "Running 2h 14m" and "Running 12s" are
+                                          the same row with different numbers,
+                                          which is the point: the card used to
+                                          print an unlabelled timeAgo(createdAt)
+                                          for every state, so a dispatched
+                                          mission read as its own age. */}
+                                      <span
+                                        className={`flex items-center gap-1 ${RUN_TONE_TEXT[runState.tone]}`}
+                                        title={runState.note ?? undefined}
+                                      >
+                                        <Clock className="w-2.5 h-2.5" />
+                                        <span>{runState.label}</span>
+                                        <span>{runState.duration}</span>
+                                        {runState.tone === "overdue" && (
+                                          <AlertTriangle className="w-2.5 h-2.5" />
                                         )}
                                       </span>
                                       {mission.status !== "queued" &&

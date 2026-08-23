@@ -130,6 +130,37 @@ export function getLatestRunForMission(missionId: string): RunRecord | null {
   return rowToRun(row);
 }
 
+/**
+ * The latest run for each of the given missions, keyed by mission id.
+ *
+ * The mission board needs the run anchor for every row it draws, and the
+ * obvious `getLatestRunForMission` in a loop is one query per mission on a
+ * 15-second poll. This is the same answer in one query. An empty id list
+ * short-circuits rather than building `IN ()`, which SQLite rejects.
+ */
+export function listLatestRunsForMissions(missionIds: string[]): Map<string, RunRecord> {
+  const byMission = new Map<string, RunRecord>();
+  if (missionIds.length === 0) return byMission;
+  const placeholders = missionIds.map(() => "?").join(", ");
+  const rows = getDb()
+    .prepare(
+      `SELECT r.* FROM runs r
+        WHERE r.mission_id IN (${placeholders})
+          AND r.submitted_at = (
+            SELECT MAX(r2.submitted_at) FROM runs r2 WHERE r2.mission_id = r.mission_id
+          )`,
+    )
+    .all(...missionIds) as RunRow[];
+  for (const row of rows) {
+    const run = rowToRun(row);
+    // A mission with two runs sharing one submitted_at timestamp yields two
+    // rows; last write wins, which is the same arbitrary-but-stable pick
+    // getLatestRunForMission's LIMIT 1 makes.
+    if (run?.missionId) byMission.set(run.missionId, run);
+  }
+  return byMission;
+}
+
 /** All non-terminal runs (the reconcile loop polls these). */
 export function listActiveRuns(): RunRecord[] {
   const rows = getDb()
