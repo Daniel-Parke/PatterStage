@@ -101,14 +101,21 @@ describe("backupTimestamp", () => {
     // in different milliseconds; freezing the clock makes the test
     // assert the property the comment describes (same instant →
     // same string) rather than timing luck.
-    const fixedNow = new Date("2026-06-11T11:08:35.585Z").getTime();
-    const dateSpy = jest.spyOn(Date, "now").mockReturnValue(fixedNow);
+    // Freeze the clock with fake timers, NOT jest.spyOn(Date, "now").
+    // backupTimestamp() reads `new Date()`, which a Date.now spy does not
+    // intercept, so the older form left the assertion depending on two calls
+    // landing in the same millisecond. It passed locally for weeks and went
+    // red on a CI runner on 2026-08-23. WG-DEL-004 rules determinism first:
+    // the fix is to make the freeze real, never to loosen the assertion.
+    jest.useFakeTimers({ now: new Date("2026-06-11T11:08:35.585Z").getTime() });
     try {
       const a = backupTimestamp();
       const b = backupTimestamp();
       expect(a).toBe(b);
+      // Pin the exact shape too, now that the instant is genuinely fixed.
+      expect(a).toBe("2026-06-11T11-08-35-585Z");
     } finally {
-      dateSpy.mockRestore();
+      jest.useRealTimers();
     }
   });
 });
