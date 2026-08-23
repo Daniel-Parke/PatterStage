@@ -17,11 +17,30 @@
 // gate that is red on day one gets deleted rather than fixed. So violations that
 // exist TODAY are recorded in design-lint.baseline.json and allowed; the gate
 // fails on anything NEW, and on any file whose count grows. The baseline only
-// ever shrinks — `--update-baseline` after a genuine cleanup.
+// ever shrinks: `--update-baseline` after a genuine cleanup.
+//
+// ── The ratchet (T-0025, warrant Q-008, drift finding D-14) ─────────────────
+// That paragraph used to be the whole mechanism. --update-baseline wrote
+// whatever the scan had just counted, so running it after a regression grew the
+// baseline in silence, and "the baseline only ever shrinks" lived in this
+// comment and in the failure text rather than in the code. Doctrine in a comment
+// is not a mechanism, and the plan's risk register named a baseline grown to
+// absorb violations as an all-phase risk whose only control was a person
+// comparing two totals by eye.
+//
+// So --update-baseline now REFUSES to write a baseline whose total, or whose
+// count for any single key, is higher than the committed one. The one way past
+// it is `--allow-growth "<reason>"`, and the reason is recorded in the baseline
+// file itself under the `__growth__` key, where the next person to open it will
+// read it. This is coverage-floor-check.mjs's ratchet pointed the other way:
+// that one refuses to write a DECLARED floor lower than the recorded one, this
+// refuses to write a DERIVED count higher. Two gates met in the same week should
+// behave the same way.
 //
 //   node scripts/tooling/design-lint.mjs                  # gate (runs in npm run lint)
 //   node scripts/tooling/design-lint.mjs --report         # every violation, grouped
 //   node scripts/tooling/design-lint.mjs --update-baseline
+//   node scripts/tooling/design-lint.mjs --update-baseline --allow-growth "<reason>"
 
 import { readFileSync, readdirSync, statSync, writeFileSync, existsSync } from "fs";
 import { join, relative, sep } from "path";
@@ -199,104 +218,273 @@ function walk(dir, out = []) {
   return out;
 }
 
-const files = SCAN_DIRS.filter((d) => existsSync(join(ROOT, d))).flatMap((d) =>
-  walk(join(ROOT, d)),
-);
+/**
+ * Walk the tree once and count every violation.
+ *
+ * Lifted out of the top level, unchanged, so that importing this module (its own
+ * test does) neither scans 79k lines nor lands on a process.exit. What counts as
+ * a violation is exactly what it was.
+ *
+ * @returns {{ found: Map<string, {line:number,text:string}[]>, counts: Record<string, number> }}
+ */
+export function scanTree() {
+  const files = SCAN_DIRS.filter((d) => existsSync(join(ROOT, d))).flatMap((d) =>
+    walk(join(ROOT, d)),
+  );
 
-/** violations keyed `rule::file` -> [{line, text}] */
-const found = new Map();
+  /** violations keyed `rule::file` -> [{line, text}] */
+  const found = new Map();
 
-for (const abs of files) {
-  const path = rel(abs);
-  const lines = readFileSync(abs, "utf-8").split(/\r?\n/);
-  for (const rule of RULES) {
-    if (!rule.files(path)) continue;
-    for (let i = 0; i < lines.length; i++) {
-      if (!rule.pattern.test(lines[i])) continue;
-      // A rule that flags prose about the anti-pattern makes documenting it
-      // impossible. Code rules ignore comment-only lines; the voice rule does not
-      // (a comment is still text a human reads).
-      if (rule.codeOnly !== false) {
-        const t = lines[i].trimStart();
-        if (t.startsWith("//") || t.startsWith("*") || t.startsWith("/*")) continue;
+  for (const abs of files) {
+    const path = rel(abs);
+    const lines = readFileSync(abs, "utf-8").split(/\r?\n/);
+    for (const rule of RULES) {
+      if (!rule.files(path)) continue;
+      for (let i = 0; i < lines.length; i++) {
+        if (!rule.pattern.test(lines[i])) continue;
+        // A rule that flags prose about the anti-pattern makes documenting it
+        // impossible. Code rules ignore comment-only lines; the voice rule does not
+        // (a comment is still text a human reads).
+        if (rule.codeOnly !== false) {
+          const t = lines[i].trimStart();
+          if (t.startsWith("//") || t.startsWith("*") || t.startsWith("/*")) continue;
+        }
+        const prev = i > 0 ? lines[i - 1] : "";
+        const pragma = PRAGMA.exec(prev);
+        if (pragma && pragma[1] === rule.id) continue;
+        const key = `${rule.id}::${path}`;
+        if (!found.has(key)) found.set(key, []);
+        found.get(key).push({ line: i + 1, text: lines[i].trim().slice(0, 120) });
       }
-      const prev = i > 0 ? lines[i - 1] : "";
-      const pragma = PRAGMA.exec(prev);
-      if (pragma && pragma[1] === rule.id) continue;
-      const key = `${rule.id}::${path}`;
-      if (!found.has(key)) found.set(key, []);
-      found.get(key).push({ line: i + 1, text: lines[i].trim().slice(0, 120) });
     }
   }
+
+  const counts = Object.fromEntries(
+    [...found.entries()].map(([k, v]) => [k, v.length]).sort((a, b) => a[0].localeCompare(b[0])),
+  );
+
+  return { found, counts };
 }
 
-const counts = Object.fromEntries(
-  [...found.entries()].map(([k, v]) => [k, v.length]).sort((a, b) => a[0].localeCompare(b[0])),
-);
+// ── The ratchet ─────────────────────────────────────────────────────────────
+//
+// Everything below decides what --update-baseline is ALLOWED to write. The gate
+// itself is untouched by it: a normal run still reads the committed counts and
+// fails on anything new, exactly as before.
+
+/** Reserved. Unreachable as a violation key, which is always `rule::path`. */
+export const GROWTH_LOG_KEY = "__growth__";
+
+/** The one way past the refusal, and it costs a written reason. */
+export const ALLOW_GROWTH_FLAG = "--allow-growth";
+
+/** A reason shorter than this is a keystroke rather than a reason. */
+export const MIN_REASON_LENGTH = 12;
+
+const total = (counts) => Object.values(counts).reduce((a, b) => a + b, 0);
+
+/**
+ * Split a parsed baseline file into the counts the gate compares against and the
+ * log of every growth ever allowed through. Keeping the log inside the baseline
+ * file means the reason travels with the number it excuses.
+ */
+export function splitBaseline(parsed) {
+  const source = parsed && typeof parsed === "object" ? parsed : {};
+  const counts = {};
+  for (const [key, value] of Object.entries(source)) {
+    if (key === GROWTH_LOG_KEY) continue;
+    counts[key] = value;
+  }
+  const raw = source[GROWTH_LOG_KEY];
+  return { counts, log: Array.isArray(raw) ? raw : [] };
+}
+
+/** Every key that grew, plus both totals. Either kind of growth is growth. */
+export function baselineGrowth(current, committed) {
+  const grown = [];
+  for (const [key, count] of Object.entries(current)) {
+    const was = committed[key] ?? 0;
+    if (count > was) grown.push({ key, was, now: count });
+  }
+  const totalWas = total(committed);
+  const totalNow = total(current);
+  return { grown, totalWas, totalNow, grew: grown.length > 0 || totalNow > totalWas };
+}
+
+/** Read `--allow-growth <reason>` or `--allow-growth=<reason>` out of argv. */
+export function parseGrowthAllowance(argv) {
+  const idx = argv.findIndex(
+    (a) => a === ALLOW_GROWTH_FLAG || a.startsWith(`${ALLOW_GROWTH_FLAG}=`),
+  );
+  if (idx < 0) return { present: false, reason: "" };
+  const raw = argv[idx].startsWith(`${ALLOW_GROWTH_FLAG}=`)
+    ? argv[idx].slice(ALLOW_GROWTH_FLAG.length + 1)
+    : (argv[idx + 1] ?? "");
+  const reason = raw.trim();
+  if (reason === "" || reason.startsWith("--")) {
+    return {
+      present: true,
+      reason: "",
+      problem: `${ALLOW_GROWTH_FLAG} carries a written reason: ${ALLOW_GROWTH_FLAG} "why this baseline may grow".`,
+    };
+  }
+  if (reason.length < MIN_REASON_LENGTH) {
+    return {
+      present: true,
+      reason: "",
+      problem: `${ALLOW_GROWTH_FLAG} needs a reason a reviewer can read, at least ${MIN_REASON_LENGTH} characters. Got ${reason.length}.`,
+    };
+  }
+  return { present: true, reason };
+}
+
+/**
+ * The ONE place that decides what gets written, so the write cannot be reached
+ * around it. Returns either a refusal carrying the growth that caused it, or the
+ * exact object to serialise.
+ */
+export function planBaselineWrite({
+  counts,
+  committed,
+  log = [],
+  allowance = { present: false, reason: "" },
+  when,
+}) {
+  const growth = baselineGrowth(counts, committed);
+  if (growth.grew && !allowance.reason) return { ok: false, growth };
+
+  const nextLog = [...log];
+  if (growth.grew) {
+    nextLog.push({
+      when,
+      reason: allowance.reason,
+      total: `${growth.totalWas} -> ${growth.totalNow}`,
+      grew: growth.grown.map((g) => `${g.key}: ${g.was} -> ${g.now}`),
+    });
+  }
+
+  const file = {};
+  if (nextLog.length > 0) file[GROWTH_LOG_KEY] = nextLog;
+  Object.assign(file, counts);
+
+  return { ok: true, growth, file, recorded: growth.grew ? nextLog[nextLog.length - 1] : null };
+}
 
 // ── Modes ───────────────────────────────────────────────────────────────────
 
-const mode = process.argv[2];
+function main(argv) {
+  const mode = argv[0];
+  const allowance = parseGrowthAllowance(argv);
 
-if (mode === "--update-baseline") {
-  writeFileSync(BASELINE_PATH, JSON.stringify(counts, null, 2) + "\n");
-  const total = Object.values(counts).reduce((a, b) => a + b, 0);
-  console.log(`design-lint: baseline written — ${Object.keys(counts).length} files, ${total} violations`);
-  process.exit(0);
-}
-
-if (mode === "--report") {
-  const byRule = new Map();
-  for (const [key, hits] of found) {
-    const [ruleId, path] = key.split("::");
-    if (!byRule.has(ruleId)) byRule.set(ruleId, []);
-    byRule.get(ruleId).push({ path, hits });
+  if (allowance.present && mode !== "--update-baseline") {
+    console.error(
+      `design-lint: ${ALLOW_GROWTH_FLAG} means nothing without --update-baseline.\n` +
+        "The gate has no escape hatch. Escape a single line with\n" +
+        "`// design-lint-disable-next-line <rule> -- <reason>` instead.",
+    );
+    return 2;
   }
-  for (const rule of RULES) {
-    const entries = byRule.get(rule.id) ?? [];
-    const total = entries.reduce((a, e) => a + e.hits.length, 0);
-    console.log(`\n${rule.id}  (${total} in ${entries.length} files)`);
-    console.log(`  ${rule.law}`);
-    for (const { path, hits } of entries.sort((a, b) => b.hits.length - a.hits.length).slice(0, 12)) {
-      console.log(`    ${path}: ${hits.length}  e.g. :${hits[0].line} ${hits[0].text}`);
+
+  const { found, counts } = scanTree();
+
+  if (mode === "--report") {
+    const byRule = new Map();
+    for (const [key, hits] of found) {
+      const [ruleId, path] = key.split("::");
+      if (!byRule.has(ruleId)) byRule.set(ruleId, []);
+      byRule.get(ruleId).push({ path, hits });
     }
-    if (entries.length > 12) console.log(`    ... and ${entries.length - 12} more files`);
+    for (const rule of RULES) {
+      const entries = byRule.get(rule.id) ?? [];
+      const count = entries.reduce((a, e) => a + e.hits.length, 0);
+      console.log(`\n${rule.id}  (${count} in ${entries.length} files)`);
+      console.log(`  ${rule.law}`);
+      for (const { path, hits } of entries.sort((a, b) => b.hits.length - a.hits.length).slice(0, 12)) {
+        console.log(`    ${path}: ${hits.length}  e.g. :${hits[0].line} ${hits[0].text}`);
+      }
+      if (entries.length > 12) console.log(`    ... and ${entries.length - 12} more files`);
+    }
+    return 0;
   }
-  process.exit(0);
-}
 
-const baseline = existsSync(BASELINE_PATH)
-  ? JSON.parse(readFileSync(BASELINE_PATH, "utf-8"))
-  : {};
-
-const regressions = [];
-for (const [key, count] of Object.entries(counts)) {
-  const allowed = baseline[key] ?? 0;
-  if (count > allowed) {
-    const [ruleId, path] = key.split("::");
-    const rule = RULES.find((r) => r.id === ruleId);
-    regressions.push({ ruleId, path, count, allowed, rule, hits: found.get(key) });
-  }
-}
-
-if (regressions.length > 0) {
-  console.error("design-lint: NEW violations\n");
-  for (const r of regressions) {
-    console.error(`  ${r.ruleId}  ${r.path}  (${r.allowed} allowed, ${r.count} found)`);
-    console.error(`    ${r.rule.law}`);
-    for (const hit of r.hits.slice(0, 3)) console.error(`    :${hit.line}  ${hit.text}`);
-    console.error("");
-  }
-  console.error(
-    "Fix them, or add `// design-lint-disable-next-line <rule> -- <reason>` above the line.\n" +
-      "Do NOT run --update-baseline to silence a new violation; the baseline only shrinks.",
+  const { counts: baseline, log } = splitBaseline(
+    existsSync(BASELINE_PATH) ? JSON.parse(readFileSync(BASELINE_PATH, "utf-8")) : {},
   );
-  process.exit(1);
+
+  if (mode === "--update-baseline") {
+    if (allowance.problem) {
+      console.error(`design-lint: ${allowance.problem}`);
+      return 2;
+    }
+    const plan = planBaselineWrite({
+      counts,
+      committed: baseline,
+      log,
+      allowance,
+      when: new Date().toISOString().slice(0, 10),
+    });
+    if (!plan.ok) {
+      console.error("design-lint: refusing to write a baseline that GROWS.\n");
+      for (const g of plan.growth.grown) console.error(`  ${g.key}: ${g.was} -> ${g.now}`);
+      console.error(`  total: ${plan.growth.totalWas} -> ${plan.growth.totalNow}\n`);
+      console.error(
+        "The baseline is the ratchet pawl, and a pawl you can wind backwards with a\n" +
+          "flag is decorative. Fix the violation, or escape the single line with\n" +
+          "`// design-lint-disable-next-line <rule> -- <reason>`.\n\n" +
+          "If the growth is genuinely warranted, say so in writing and it is recorded\n" +
+          `in the baseline itself:\n` +
+          `  node scripts/tooling/design-lint.mjs --update-baseline ${ALLOW_GROWTH_FLAG} "<reason>"`,
+      );
+      return 1;
+    }
+    writeFileSync(BASELINE_PATH, JSON.stringify(plan.file, null, 2) + "\n");
+    console.log(
+      `design-lint: baseline written, ${Object.keys(counts).length} files, ` +
+        `${plan.growth.totalNow} violations (was ${plan.growth.totalWas}).`,
+    );
+    if (plan.recorded) {
+      console.log(
+        `design-lint: GROWTH ALLOWED, reason recorded in ${rel(BASELINE_PATH)}: ` +
+          `${plan.recorded.reason}`,
+      );
+    }
+    return 0;
+  }
+
+  const regressions = [];
+  for (const [key, count] of Object.entries(counts)) {
+    const allowed = baseline[key] ?? 0;
+    if (count > allowed) {
+      const [ruleId, path] = key.split("::");
+      const rule = RULES.find((r) => r.id === ruleId);
+      regressions.push({ ruleId, path, count, allowed, rule, hits: found.get(key) });
+    }
+  }
+
+  if (regressions.length > 0) {
+    console.error("design-lint: NEW violations\n");
+    for (const r of regressions) {
+      console.error(`  ${r.ruleId}  ${r.path}  (${r.allowed} allowed, ${r.count} found)`);
+      console.error(`    ${r.rule.law}`);
+      for (const hit of r.hits.slice(0, 3)) console.error(`    :${hit.line}  ${hit.text}`);
+      console.error("");
+    }
+    console.error(
+      "Fix them, or add `// design-lint-disable-next-line <rule> -- <reason>` above the line.\n" +
+        "Do NOT run --update-baseline to silence a new violation; it will refuse.",
+    );
+    return 1;
+  }
+
+  console.log(
+    `design-lint: no new violations (${total(counts)} baselined, ${total(baseline)} allowed). ` +
+      `Run with --report to see the debt.`,
+  );
+  return 0;
 }
 
-const outstanding = Object.values(counts).reduce((a, b) => a + b, 0);
-const allowed = Object.values(baseline).reduce((a, b) => a + b, 0);
-console.log(
-  `design-lint: no new violations (${outstanding} baselined, ${allowed} allowed). ` +
-    `Run with --report to see the debt.`,
-);
+const invokedDirectly =
+  process.argv[1] && process.argv[1].split(sep).join("/").endsWith("design-lint.mjs");
+if (invokedDirectly) {
+  process.exit(main(process.argv.slice(2)));
+}

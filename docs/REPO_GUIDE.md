@@ -31,8 +31,11 @@ npm run typecheck:tests  # type-check tests/ too (not yet gated, see below)
   `CLAUDE.md` byte-identical, counting lines the way `eos_check.py` does.
 - **`design-lint`** enforces the laws this repo kept breaking, against a
   **shrink-only baseline** in `scripts/tooling/design-lint.baseline.json`: today's
-  violations are allowed, anything new fails. Never run `--update-baseline` to
-  silence a new violation. Escape a single line with
+  violations are allowed, anything new fails. Shrink-only is mechanical, not a
+  request: `--update-baseline` refuses to write a total, or any single key, that
+  is higher than the committed one. The one way past it is
+  `--allow-growth "<reason>"`, and the reason is written into the baseline file
+  under `__growth__` where the next reader will find it. Escape a single line with
   `// design-lint-disable-next-line <rule> -- <reason>`; the reason is required.
 - **`typecheck:tests`** is not in the lint gate yet. 73 errors remain, mostly
   `jest.mock` factories whose argument lists no longer match the function they
