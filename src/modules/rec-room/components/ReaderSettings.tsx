@@ -117,7 +117,7 @@ export default function ReaderSettings({ settings, onChange }: {
     <>
       {/* Toggle Button */}
       <button onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-mono text-white/50 hover:text-white/70 hover:bg-white/5 transition-colors"
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 text-xs font-mono text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-colors"
         aria-label="Reading settings (font, size, theme)"
         title="Reading settings">
         <span className="text-sm">Aa</span>
@@ -130,30 +130,30 @@ export default function ReaderSettings({ settings, onChange }: {
           <div className="fixed inset-0 z-[55]" onClick={() => setOpen(false)} />
           <div className="fixed top-[52px] right-4 w-72 rounded-xl border border-white/10 bg-dark-900/95 backdrop-blur-xl p-5 z-[60] shadow-2xl max-h-[80vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-mono text-white/40 uppercase tracking-widest">Reading Settings</span>
-            <button onClick={() => setOpen(false)} className="p-1 text-white/30 hover:text-white/50"><X className="w-3.5 h-3.5" /></button>
+            <span className="text-xs font-mono text-ps-text-muted uppercase tracking-widest">Reading Settings</span>
+            <button onClick={() => setOpen(false)} className="p-1 text-ps-text-muted hover:text-ps-text-muted"><X className="w-3.5 h-3.5" /></button>
           </div>
 
           {/* Font Size */}
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-mono text-white/30">Font Size</span>
-              <span className="text-[10px] font-mono text-white/40">{settings.fontSize}px</span>
+              <span className="text-xs font-mono text-ps-text-muted">Font Size</span>
+              <span className="text-xs font-mono text-ps-text-muted">{settings.fontSize}px</span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-white/20">A</span>
+              <span className="text-xs text-ps-text-faint">A</span>
               <input type="range" min={12} max={28} value={settings.fontSize}
                 onChange={(e) => update({ fontSize: parseInt(e.target.value) })}
                 className="flex-1 accent-neon-purple h-1" />
-              <span className="text-lg text-white/40">A</span>
+              <span className="text-lg text-ps-text-muted">A</span>
             </div>
           </div>
 
           {/* Line Spacing */}
           <div className="mb-4">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-mono text-white/30">Line Spacing</span>
-              <span className="text-[10px] font-mono text-white/40">{settings.lineHeight.toFixed(1)}</span>
+              <span className="text-xs font-mono text-ps-text-muted">Line Spacing</span>
+              <span className="text-xs font-mono text-ps-text-muted">{settings.lineHeight.toFixed(1)}</span>
             </div>
             <input type="range" min={12} max={25} value={Math.round(settings.lineHeight * 10)}
               onChange={(e) => update({ lineHeight: parseInt(e.target.value) / 10 })}
@@ -162,12 +162,12 @@ export default function ReaderSettings({ settings, onChange }: {
 
           {/* Font Family */}
           <div className="mb-4">
-            <span className="text-[10px] font-mono text-white/30 block mb-2">Font</span>
+            <span className="text-xs font-mono text-ps-text-muted block mb-2">Font</span>
             <div className="grid grid-cols-1 gap-1.5">
               {FONTS.map((f) => (
                 <button key={f.name} onClick={() => update({ fontFamily: f.name })}
                   className={`text-left px-3 py-1.5 rounded-lg text-xs transition-colors ${
-                    settings.fontFamily === f.name ? "bg-neon-purple/15 text-neon-purple border border-neon-purple/30" : "text-white/40 hover:text-white/60 hover:bg-white/5 border border-transparent"
+                    settings.fontFamily === f.name ? "bg-neon-purple/15 text-neon-purple border border-neon-purple/30" : "text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 border border-transparent"
                   }`}
                   style={{ fontFamily: f.family }}>
                   {f.label}
@@ -178,7 +178,7 @@ export default function ReaderSettings({ settings, onChange }: {
 
           {/* Page Theme */}
           <div className="mb-4">
-            <span className="text-[10px] font-mono text-white/30 block mb-2">Page Theme</span>
+            <span className="text-xs font-mono text-ps-text-muted block mb-2">Page Theme</span>
             <div className="grid grid-cols-4 gap-2">
               {Object.entries(THEMES).map(([key, t]) => (
                 <button key={key} onClick={() => update({ pageTheme: key as ReadingSettings["pageTheme"] })}
@@ -186,7 +186,7 @@ export default function ReaderSettings({ settings, onChange }: {
                     settings.pageTheme === key ? "border-neon-purple/40" : "border-white/5 hover:border-white/15"
                   }`}>
                   <div className="w-8 h-8 rounded-md border border-white/10" style={{ background: t.bg }} />
-                  <span className="text-[9px] font-mono text-white/30 capitalize">{key}</span>
+                  <span className="text-xs font-mono text-ps-text-muted capitalize">{key}</span>
                 </button>
               ))}
             </div>
@@ -194,7 +194,7 @@ export default function ReaderSettings({ settings, onChange }: {
 
           {/* Reset */}
           <button onClick={() => { onChange(DEFAULT_SETTINGS); saveSettings(DEFAULT_SETTINGS); }}
-            className="w-full text-center text-[10px] font-mono text-white/25 hover:text-white/40 py-1.5 rounded-lg hover:bg-white/5 transition-colors">
+            className="w-full text-center text-xs font-mono text-ps-text-faint hover:text-ps-text-muted py-1.5 rounded-lg hover:bg-white/5 transition-colors">
             Reset to Defaults
           </button>
           </div>

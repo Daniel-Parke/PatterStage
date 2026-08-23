@@ -15,8 +15,8 @@ export const STATUS_CONFIG: Record<string, StatusConfig> = {
   draft: {
     dot: "idle",
     bg: "bg-white/5",
-    text: "text-white/50",
-    icon: <Clock className="w-3.5 h-3.5 text-white/40" />,
+    text: "text-ps-text-muted",
+    icon: <Clock className="w-3.5 h-3.5 text-ps-text-muted" />,
     columnDot: "bg-white/30",
   },
   queued: {

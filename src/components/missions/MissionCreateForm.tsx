@@ -196,7 +196,7 @@ export function MissionComposerActions({
   return (
     <div className="space-y-2">
       {needsDispatchAck && (
-        <p className="text-xs font-mono text-neon-orange/80">
+        <p className="text-xs font-mono text-neon-orange/90">
           Open <strong className="text-neon-cyan/90">Dispatch</strong> to choose
           how this mission runs before submitting.
         </p>
@@ -295,26 +295,26 @@ export default function MissionCreateForm({
         </div>
       )}
       {editingId && isRunningEdit && (
-        <div className="rounded-lg bg-neon-orange/5 border border-neon-orange/20 p-3 text-xs text-neon-orange/80 font-mono">
+        <div className="rounded-lg bg-neon-orange/5 border border-neon-orange/20 p-3 text-xs text-neon-orange/90 font-mono">
           Updates apply to this running mission. Linked cron jobs sync when
           schedule, profile, model, or prompt fields change.
         </div>
       )}
       {editingId && isDraftEdit && (
-        <div className="rounded-lg bg-white/5 border border-white/10 p-3 text-xs text-white/50 font-mono">
+        <div className="rounded-lg bg-white/5 border border-white/10 p-3 text-xs text-ps-text-muted font-mono">
           This mission is a draft. Choose how to run it in Dispatch — save,
           queue for when the agent is idle, run now, or schedule.
         </div>
       )}
       {editingId && isQueuedEdit && (
-        <div className="rounded-lg bg-neon-orange/5 border border-neon-orange/20 p-3 text-xs text-neon-orange/80 font-mono">
+        <div className="rounded-lg bg-neon-orange/5 border border-neon-orange/20 p-3 text-xs text-neon-orange/90 font-mono">
           This mission is waiting in the queue. You can update fields, dispatch
           immediately, or move it back to drafts.
         </div>
       )}
 
       {(categoriesLoadError || categories.length === 0) && (
-        <p className="text-xs font-mono text-neon-orange/80 bg-neon-orange/5 border border-neon-orange/20 rounded-lg px-3 py-2">
+        <p className="text-xs font-mono text-neon-orange/90 bg-neon-orange/5 border border-neon-orange/20 rounded-lg px-3 py-2">
           {categoriesLoadError ??
             "No categories loaded — run npm run db:migrate or restart PatterStage, then"}{" "}
           {onRetryCategories && (
@@ -378,7 +378,7 @@ export default function MissionCreateForm({
           maxRows={8}
           placeholder="Gather data&#10;Analyze findings&#10;Write report"
         />
-        <p className="text-[10px] text-white/25 font-mono mt-1.5">
+        <p className="text-xs text-ps-text-faint font-mono mt-1.5">
           One goal per line — checklist the agent completes alongside the task.
         </p>
       </div>
@@ -446,7 +446,7 @@ export default function MissionCreateForm({
                       formState.newReferences.filter((_, j) => j !== i),
                     )
                   }
-                  className="text-white/30 hover:text-red-400 text-xs"
+                  className="text-ps-text-muted hover:text-red-400 text-xs"
                 >
                   ×
                 </button>
@@ -598,14 +598,14 @@ export default function MissionCreateForm({
               className={`h-9 px-3 rounded-lg text-xs font-mono border transition-colors ${
                 formState.newDispatch === mode.id
                   ? "border-neon-cyan/50 bg-cyan-500/10 text-neon-cyan"
-                  : "border-white/10 text-white/40 hover:text-white/60"
+                  : "border-white/10 text-ps-text-muted hover:text-ps-text-secondary"
               }`}
             >
               {mode.label}
             </button>
           ))}
         </div>
-        <p className="text-xs text-white/30 font-mono">
+        <p className="text-xs text-ps-text-muted font-mono">
           The button below runs the selected dispatch mode.
         </p>
         {formState.newDispatch === "cron" && (

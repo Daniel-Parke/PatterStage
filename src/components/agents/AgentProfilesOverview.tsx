@@ -50,10 +50,10 @@ export default function AgentProfilesOverview({
 
   return (
     <>
-      <p className="text-xs text-white/40 font-mono mb-4 max-w-3xl">
-        Agent identity lives in <strong className="text-white/60">SOUL.md</strong>. Runtime policy
+      <p className="text-xs text-ps-text-muted font-mono mb-4 max-w-3xl">
+        Agent identity lives in <strong className="text-ps-text-secondary">SOUL.md</strong>. Runtime policy
         (skills.disabled, platform_toolsets, model blocks) is in each profile&apos;s{" "}
-        <strong className="text-white/60">config.yaml</strong>. Pull imports from Hermes disk into
+        <strong className="text-ps-text-secondary">config.yaml</strong>. Pull imports from Hermes disk into
         SQLite; push writes PatterStage back to disk.
       </p>
 

@@ -42,8 +42,8 @@ function TrophyChip({ a }: { a: Achievement }) {
         <Icon className="h-3.5 w-3.5" style={{ color: neon(tc) }} />
       </div>
       <div className="min-w-0">
-        <div className="truncate text-xs font-medium text-white/85">{a.name}</div>
-        <div className="text-[9px] font-mono uppercase tracking-wider" style={{ color: neon(tc) }}>
+        <div className="truncate text-xs font-medium text-ps-text-primary">{a.name}</div>
+        <div className="text-xs font-mono uppercase tracking-wider" style={{ color: neon(tc) }}>
           {TIER_LABEL[a.tier]} · {a.points}pts
         </div>
       </div>
@@ -81,10 +81,10 @@ export default function AchievementShowcase({
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Trophy className="h-4 w-4 text-neon-yellow" />
-          <span className="text-xs font-mono uppercase tracking-widest text-white/50">
+          <span className="text-xs font-mono uppercase tracking-widest text-ps-text-muted">
             Achievements
           </span>
-          <span className="rounded-full border border-neon-yellow/30 bg-neon-yellow/10 px-2 py-0.5 text-[10px] font-mono text-neon-yellow">
+          <span className="rounded-full border border-neon-yellow/30 bg-neon-yellow/10 px-2 py-0.5 text-xs font-mono text-neon-yellow">
             {summary.points} / {summary.totalPoints} pts
           </span>
         </div>
@@ -98,7 +98,7 @@ export default function AchievementShowcase({
               return (
                 <span
                   key={t}
-                  className="rounded px-1.5 py-0.5 text-[9px] font-mono uppercase tracking-wider"
+                  className="rounded px-1.5 py-0.5 text-xs font-mono uppercase tracking-wider"
                   style={{ color: neon(tc), background: neonAlpha(tc, 10) }}
                   title={`${TIER_LABEL[t]}: ${b.unlocked}/${b.total}`}
                 >
@@ -108,7 +108,7 @@ export default function AchievementShowcase({
               );
             })}
           </div>
-          <span className="font-mono text-xs text-white/50">
+          <span className="font-mono text-xs text-ps-text-muted">
             {summary.unlocked}/{summary.total} · {pct}%
           </span>
         </div>
@@ -119,7 +119,7 @@ export default function AchievementShowcase({
         <div className="space-y-3">
           {featured.length > 0 ? (
             <div>
-              <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-white/30">
+              <div className="mb-1.5 flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-ps-text-muted">
                 <Trophy className="h-3 w-3" /> Rarest earned
               </div>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
@@ -129,14 +129,14 @@ export default function AchievementShowcase({
               </div>
             </div>
           ) : (
-            <p className="text-xs text-white/40">
+            <p className="text-xs text-ps-text-muted">
               No achievements unlocked yet — dispatch a mission or weave a story to begin.
             </p>
           )}
 
           {nearest.length > 0 && (
             <div>
-              <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-white/30">
+              <div className="mb-1.5 flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-ps-text-muted">
                 <Target className="h-3 w-3" /> Closest to unlock
               </div>
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
@@ -159,10 +159,10 @@ export default function AchievementShowcase({
                 key={f}
                 type="button"
                 onClick={() => setFilter(f)}
-                className={`rounded-md px-2.5 py-1 text-[11px] font-mono capitalize transition-colors ${
+                className={`rounded-md px-2.5 py-1 text-xs font-mono capitalize transition-colors ${
                   filter === f
                     ? "bg-neon-purple/20 text-neon-purple"
-                    : "text-white/40 hover:text-white/70"
+                    : "text-ps-text-muted hover:text-ps-text-secondary"
                 }`}
               >
                 {f}
@@ -183,7 +183,7 @@ export default function AchievementShowcase({
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
-        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/5 py-1.5 text-[11px] font-mono text-white/40 transition-colors hover:border-white/15 hover:text-white/70"
+        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/5 py-1.5 text-xs font-mono text-ps-text-muted transition-colors hover:border-white/15 hover:text-ps-text-secondary"
       >
         {expanded ? "Show less" : `Show all ${summary.total}`}
         <ChevronDown

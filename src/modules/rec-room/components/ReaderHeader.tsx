@@ -49,11 +49,11 @@ export default function ReaderHeader({
     <div className="sticky top-0 lg:top-0 z-30 border-b border-white/10 bg-dark-950/95 backdrop-blur-xl flex-shrink-0">
       <div className="flex items-center justify-between px-3 md:px-6 min-h-[var(--ps-shell-header-min-height)]">
         <button onClick={onBack}
-          className="p-2.5 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/5 transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center">
+          className="p-2.5 rounded-lg text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-colors flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center">
           <ChevronLeft className="w-5 h-5" />
         </button>
         <div className="flex-1 min-w-0 mx-2 text-center">
-          <div className="text-[9px] font-mono text-white/20 uppercase tracking-wider">Story Weaver</div>
+          <div className="text-xs font-mono text-ps-text-faint uppercase tracking-wider">Story Weaver</div>
           <h1 className="text-sm font-semibold text-white truncate">{title}</h1>
         </div>
         <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -76,13 +76,13 @@ export default function ReaderHeader({
             </button>
           )}
           <button onClick={onOpenBible}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-neon-purple/20 text-xs font-bold text-neon-purple/80 hover:text-neon-purple hover:bg-neon-purple/10 transition-colors min-w-[44px] min-h-[44px] justify-center"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-neon-purple/20 text-xs font-bold text-neon-purple hover:text-neon-purple hover:bg-neon-purple/10 transition-colors min-w-[44px] min-h-[44px] justify-center"
             title="Story Bible — arc, plot points & character journeys">
             <BookMarked className="w-4 h-4" />
             <span className="hidden md:inline">Bible</span>
           </button>
           <button onClick={onToggleSidebar}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-xs font-bold text-white/70 hover:text-white hover:bg-white/5 transition-colors min-w-[44px] min-h-[44px] justify-center"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 text-xs font-bold text-ps-text-secondary hover:text-white hover:bg-white/5 transition-colors min-w-[44px] min-h-[44px] justify-center"
             title={sidebarOpen ? "Hide Chapters" : "Show Chapters"}>
             <BookOpen className="w-4 h-4" />
             <span className="hidden md:inline">Chapters</span>

@@ -20,13 +20,13 @@ export default function ApprovalPrompt({
   return (
     <div className="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-neon-yellow/30 bg-neon-yellow/[0.08] px-4 py-2.5">
       <ShieldQuestion className="h-4 w-4 text-neon-yellow shrink-0" />
-      <span className="text-xs text-white/70">
+      <span className="text-xs text-ps-text-secondary">
         The agent wants to run <span className="font-mono text-neon-yellow">{toolName}</span>. Allow it?
       </span>
       <div className="ml-auto flex items-center gap-2">
         <button
           onClick={onDeny}
-          className="rounded-md border border-white/15 px-3 py-1 text-xs font-mono text-white/60 hover:bg-white/5"
+          className="rounded-md border border-white/15 px-3 py-1 text-xs font-mono text-ps-text-secondary hover:bg-white/5"
         >
           Deny
         </button>

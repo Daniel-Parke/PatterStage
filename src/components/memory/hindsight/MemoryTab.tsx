@@ -52,12 +52,12 @@ export default function MemoryTab({ memories, loading, loadingInitial, showStale
   return (
     <div className="space-y-3">
       {showStaleToggle && (
-        <div className="flex items-center justify-between gap-3 px-4 py-2 rounded-lg border border-white/10 bg-dark-900/30 text-xs text-white/60">
+        <div className="flex items-center justify-between gap-3 px-4 py-2 rounded-lg border border-white/10 bg-dark-900/30 text-xs text-ps-text-secondary">
           <div className="flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5 text-white/40" />
+            <Clock className="w-3.5 h-3.5 text-ps-text-muted" />
             <span>
               {showStaleToggle.showStale
-                ? <>Showing <span className="text-white/80 font-medium">all</span> memories (stale filter off).</>
+                ? <>Showing <span className="text-ps-text-primary font-medium">all</span> memories (stale filter off).</>
                 : <>Hiding {showStaleToggle.hiddenCount} {showStaleToggle.hiddenCount === 1 ? "memory" : "memories"} older than {showStaleToggle.thresholdDays} days.</>
               }
             </span>
@@ -89,8 +89,8 @@ export default function MemoryTab({ memories, loading, loadingInitial, showStale
             key={memory.id || i}
             className="rounded-xl border border-white/10 bg-dark-900/50 p-4 hover:border-pink-500/20 transition-colors"
           >
-            <p className="text-sm text-white/70 leading-relaxed mb-2">{text}</p>
-            <div className="flex flex-wrap items-center gap-3 text-xs text-white/30">
+            <p className="text-sm text-ps-text-secondary leading-relaxed mb-2">{text}</p>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-ps-text-muted">
               {type && type !== "unknown" && (
                 <Badge color={hindsightFactTypeBadgeColor(type)} size="sm">
                   {type}

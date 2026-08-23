@@ -53,7 +53,7 @@ export default function AgentProfileDetail({
   return (
     <div className="flex-1 min-w-0 rounded-xl border border-white/10 bg-dark-900/40 flex flex-col">
       {!profile ? (
-        <div className="flex-1 flex items-center justify-center text-sm text-white/30 p-8">
+        <div className="flex-1 flex items-center justify-center text-sm text-ps-text-muted p-8">
           Select a profile
         </div>
       ) : (

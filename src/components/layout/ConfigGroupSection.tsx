@@ -40,7 +40,7 @@ export function ConfigGroupSection({
     <div>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1 w-full text-[10px] font-mono text-white/30 uppercase tracking-widest px-3 mb-1 mt-3 first:mt-0 hover:text-white/50 transition-colors"
+        className="flex items-center gap-1 w-full text-xs font-mono text-ps-text-muted uppercase tracking-widest px-3 py-1.5 mb-1 mt-3 first:mt-0 hover:text-ps-text-secondary transition-colors"
       >
         <ChevronDown
           className={`w-3 h-3 transition-transform ${open ? "" : "-rotate-90"}`}

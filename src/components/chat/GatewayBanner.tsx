@@ -28,7 +28,7 @@ function renderBody(body: string) {
     const isCode = segment.startsWith("{code}") && segment.endsWith("{/code}");
     if (!isCode) return <span key={i}>{segment}</span>;
     const text = segment.slice("{code}".length, -"{/code}".length);
-    const tone = i === 1 ? "text-neon-cyan" : "text-white/50";
+    const tone = i === 1 ? "text-neon-cyan" : "text-ps-text-muted";
     return (
       <code key={i} className={tone}>
         {text}
@@ -80,8 +80,8 @@ export default function GatewayBanner({ status }: GatewayBannerProps) {
   if (copy.tone === "muted") {
     return (
       <div className="flex items-center gap-2 mb-4 justify-center">
-        <Loader2 className="w-3 h-3 text-white/30 animate-spin" />
-        <span className="text-xs text-white/30">{copy.title}</span>
+        <Loader2 className="w-3 h-3 text-ps-text-muted animate-spin" />
+        <span className="text-xs text-ps-text-muted">{copy.title}</span>
       </div>
     );
   }
@@ -99,7 +99,7 @@ export default function GatewayBanner({ status }: GatewayBannerProps) {
         <AlertTriangle className="w-4 h-4" />
         <span className="text-sm font-semibold">{copy.title}</span>
       </div>
-      <p className="text-xs text-white/60">{renderBody(copy.body)}</p>
+      <p className="text-xs text-ps-text-secondary">{renderBody(copy.body)}</p>
     </div>
   );
 }

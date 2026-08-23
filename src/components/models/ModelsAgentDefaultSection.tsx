@@ -48,7 +48,7 @@ export default function ModelsAgentDefaultSection({
             />
 
             <div className="flex flex-col justify-center gap-3">
-              <label className="block text-xs font-mono text-white/50 uppercase tracking-wider">
+              <label className="block text-xs font-mono text-ps-text-muted uppercase tracking-wider">
                 Default Model
               </label>
               <div className="flex items-center gap-3 flex-wrap">
@@ -65,10 +65,10 @@ export default function ModelsAgentDefaultSection({
 
                 {activeModel && (
                   <div className="min-w-0 flex-1">
-                    <span className="text-xs text-white/40 font-mono">
+                    <span className="text-xs text-ps-text-muted font-mono">
                       {" "}
                       {activeModel.provider}/
-                      <span className="text-white/60">{activeModel.modelId}</span>
+                      <span className="text-ps-text-secondary">{activeModel.modelId}</span>
                     </span>
                     {" "}
                     <span className="inline-flex items-center gap-1 text-green-400 text-xs font-mono">
@@ -77,7 +77,7 @@ export default function ModelsAgentDefaultSection({
                   </div>
                 )}
                 {!defaults.agent && (
-                  <span className="text-xs text-white/30 font-mono">No default set</span>
+                  <span className="text-xs text-ps-text-muted font-mono">No default set</span>
                 )}
               </div>
             </div>

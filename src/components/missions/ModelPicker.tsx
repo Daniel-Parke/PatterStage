@@ -81,7 +81,7 @@ export default function ModelPicker({
       <select
         id={id}
         disabled
-        className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/40 font-mono"
+        className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-ps-text-muted font-mono"
       >
         <option>Loading models…</option>
       </select>
@@ -103,7 +103,7 @@ export default function ModelPicker({
               ? `${optionLabel}\n\n${EMPTY_DEFAULT_HINT}`
               : String(error ?? "Models unavailable")
           }
-          className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/40 font-mono"
+          className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-ps-text-muted font-mono"
         >
           <option>{optionLabel}</option>
         </select>
@@ -114,11 +114,11 @@ export default function ModelPicker({
         <select
           id={id}
           disabled
-          className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-white/40 font-mono"
+          className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-ps-text-muted font-mono"
         >
           <option>{optionLabel}</option>
         </select>
-        <p className="text-[10px] text-white/25 font-mono">{EMPTY_DEFAULT_HINT}</p>
+        <p className="text-xs text-ps-text-faint font-mono">{EMPTY_DEFAULT_HINT}</p>
       </div>
     );
   }

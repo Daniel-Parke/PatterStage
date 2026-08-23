@@ -162,16 +162,16 @@ export default function ConfigSeedPage() {
               </p>
             ) : null}
 
-            <p className="text-xs text-white/40 font-mono border border-amber-500/20 rounded-lg p-3 bg-amber-500/5">
+            <p className="text-xs text-ps-text-muted font-mono border border-amber-500/20 rounded-lg p-3 bg-amber-500/5">
               <strong className="text-amber-200/80">Import before seed:</strong> if{" "}
-              <code className="text-white/50">~/.hermes</code> exists, run{" "}
-              <code className="text-white/50">npx tsx scripts/tooling/import-hermes-state.ts</code>{" "}
+              <code className="text-ps-text-muted">~/.hermes</code> exists, run{" "}
+              <code className="text-ps-text-muted">npx tsx scripts/tooling/import-hermes-state.ts</code>{" "}
               (or use setup/ps-deploy) before merge seed. Merge never overwrites imported Bob or
               seeded profiles with existing content.
             </p>
 
-            <p className="text-xs text-white/40 font-mono border border-neon-purple/20 rounded-lg p-3 bg-neon-purple/5">
-              <strong className="text-neon-purple/80">About Bob:</strong> Bob is your local default
+            <p className="text-xs text-ps-text-muted font-mono border border-neon-purple/20 rounded-lg p-3 bg-neon-purple/5">
+              <strong className="text-neon-purple">About Bob:</strong> Bob is your local default
               agent — the one missions and chat use when no profile is chosen. The shipped catalog
               below is the seed source; restoring it re-creates Bob and the professional pack if
               they are missing, but it never replaces a Bob you have already imported or customised.
@@ -182,7 +182,7 @@ export default function ConfigSeedPage() {
                 <RotateCcw className="w-5 h-5 text-neon-cyan" />
                 Reseed all
               </h2>
-              <p className="text-sm text-white/60 mb-4">
+              <p className="text-sm text-ps-text-secondary mb-4">
                 Imports existing Hermes state first, then restores Bob, {profiles.length} professional
                 agents, {templates.length} mission templates, and default categories.
               </p>
@@ -209,12 +209,12 @@ export default function ConfigSeedPage() {
                 type="button"
                 disabled={isBusy}
                 onClick={() => runSeed("root", "replace")}
-                className="ml-3 px-4 py-2 rounded-lg bg-white/5 text-white/60 border border-white/10 hover:bg-white/10 font-mono text-sm disabled:opacity-50"
+                className="ml-3 px-4 py-2 rounded-lg bg-white/5 text-ps-text-secondary border border-white/10 hover:bg-white/10 font-mono text-sm disabled:opacity-50"
               >
                 {busy?.startsWith("root-replace") ? "Working…" : "Restore Bob only"}
               </button>
               {state?.lastRun ? (
-                <p className="text-[10px] font-mono text-white/30 mt-3">
+                <p className="text-xs font-mono text-ps-text-muted mt-3">
                   Last run: {state.lastRun}
                 </p>
               ) : null}
@@ -225,18 +225,18 @@ export default function ConfigSeedPage() {
                 <Trash2 className="w-5 h-5 text-neon-orange" />
                 Clean dev / test data
               </h2>
-              <p className="text-sm text-white/60 mb-4">
+              <p className="text-sm text-ps-text-secondary mb-4">
                 Removes obvious throwaway artifacts — workflows, stories, and missions whose names
-                start with <code className="text-white/50">Testy</code>, <code className="text-white/50">Test …</code>, or{" "}
-                <code className="text-white/50">Untitled Story</code>. Agent profiles are never touched.
+                start with <code className="text-ps-text-muted">Testy</code>, <code className="text-ps-text-muted">Test …</code>, or{" "}
+                <code className="text-ps-text-muted">Untitled Story</code>. Agent profiles are never touched.
                 {" "}First click scans; second click confirms.
               </p>
 
               {cleanConfirm.isArmed && cleanPreview ? (
                 cleanTotal === 0 ? (
-                  <p className="text-xs font-mono text-white/40 mb-3">No test data found — nothing to remove.</p>
+                  <p className="text-xs font-mono text-ps-text-muted mb-3">No test data found — nothing to remove.</p>
                 ) : (
-                  <div className="text-xs font-mono text-white/50 mb-3 rounded-lg border border-white/10 bg-dark-900/50 p-3 space-y-1 max-h-48 overflow-auto">
+                  <div className="text-xs font-mono text-ps-text-muted mb-3 rounded-lg border border-white/10 bg-dark-900/50 p-3 space-y-1 max-h-48 overflow-auto">
                     {[
                       ["Workflows", cleanPreview.workflows],
                       ["Stories", cleanPreview.stories],
@@ -244,7 +244,7 @@ export default function ConfigSeedPage() {
                     ].map(([label, items]) =>
                       (items as { id: string; label: string }[]).length > 0 ? (
                         <div key={label as string}>
-                          <span className="text-white/30 uppercase tracking-wider">{label as string}:</span>{" "}
+                          <span className="text-ps-text-muted uppercase tracking-wider">{label as string}:</span>{" "}
                           {(items as { id: string; label: string }[]).map((i) => i.label).join(", ")}
                         </div>
                       ) : null,
@@ -290,7 +290,7 @@ export default function ConfigSeedPage() {
                   >
                     <div>
                       <div className="font-mono text-white">{p.name}</div>
-                      <div className="text-[10px] text-white/40">
+                      <div className="text-xs text-ps-text-muted">
                         {p.syncStatus === "drift"
                           ? "Drift — disk differs from database"
                           : p.syncStatus === "error"
@@ -335,12 +335,12 @@ export default function ConfigSeedPage() {
                     key={t.id}
                     className="flex items-center justify-between gap-2 border border-white/10 rounded-lg px-3 py-2 text-sm"
                   >
-                    <span className="font-mono text-white/80">{t.name}</span>
+                    <span className="font-mono text-ps-text-primary">{t.name}</span>
                     <button
                       type="button"
                       disabled={isBusy}
                       onClick={() => runSeed("templates", "replace", { templateId: t.id })}
-                      className="text-[10px] font-mono px-2 py-1 rounded border border-white/20 text-white/60 hover:text-neon-cyan disabled:opacity-50"
+                      className="text-xs font-mono px-2 py-1 rounded border border-white/20 text-ps-text-secondary hover:text-neon-cyan disabled:opacity-50"
                     >
                       Restore
                     </button>
@@ -350,7 +350,7 @@ export default function ConfigSeedPage() {
             </section>
 
             <section className="border border-white/10 rounded-lg p-4">
-              <h2 className="text-sm font-semibold text-white/70 mb-2 flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-ps-text-secondary mb-2 flex items-center gap-2">
                 <Database className="w-4 h-4" />
                 Categories & advanced
               </h2>
@@ -358,7 +358,7 @@ export default function ConfigSeedPage() {
                 type="button"
                 disabled={isBusy}
                 onClick={() => runSeed("categories", "replace")}
-                className="text-xs font-mono px-3 py-1.5 rounded border border-white/20 text-white/50 hover:text-white disabled:opacity-50 mr-2"
+                className="text-xs font-mono px-3 py-1.5 rounded border border-white/20 text-ps-text-muted hover:text-white disabled:opacity-50 mr-2"
               >
                 Restore categories
               </button>
@@ -366,7 +366,7 @@ export default function ConfigSeedPage() {
                 type="button"
                 disabled={isBusy}
                 onClick={() => runSeed("all", "merge")}
-                className="text-xs font-mono px-3 py-1.5 rounded border border-white/20 text-white/50 hover:text-white disabled:opacity-50"
+                className="text-xs font-mono px-3 py-1.5 rounded border border-white/20 text-ps-text-muted hover:text-white disabled:opacity-50"
               >
                 Merge missing defaults
               </button>

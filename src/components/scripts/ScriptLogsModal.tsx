@@ -27,7 +27,7 @@ export default function ScriptLogsModal({
       {loading ? (
         <div className="py-8"><LoadingSpinner text="Loading log..." /></div>
       ) : (
-        <pre className="max-h-[60vh] overflow-auto rounded-lg bg-dark-800 p-4 font-mono text-xs text-white/70 whitespace-pre-wrap">
+        <pre className="max-h-[60vh] overflow-auto rounded-lg bg-dark-800 p-4 font-mono text-xs text-ps-text-secondary whitespace-pre-wrap">
           {text || "(no log output yet — run the script first)"}
         </pre>
       )}

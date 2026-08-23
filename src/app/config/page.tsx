@@ -88,12 +88,12 @@ function CardLink({
     >
       <div className="flex items-center justify-between mb-3">
         <Icon className={`w-5 h-5 ${iconColorMap[color]}`} />
-        <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-white/60 group-hover:translate-x-1 transition-all" />
+        <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-ps-text-secondary group-hover:translate-x-1 transition-all" />
       </div>
       <h3 className="text-base font-semibold text-white mb-1">
         {title}
       </h3>
-      <p className="text-xs text-white/40 leading-relaxed">
+      <p className="text-xs text-ps-text-muted leading-relaxed">
         {description}
       </p>
       {footer && <div className="mt-3 flex items-center gap-2 flex-wrap">{footer}</div>}
@@ -125,16 +125,16 @@ function SectionCard({
       color={section.color}
       footer={
         <>
-          <span className="text-[10px] font-mono text-white/25 bg-white/5 px-1.5 py-0.5 rounded">
+          <span className="text-xs font-mono text-ps-text-faint bg-white/5 px-1.5 py-0.5 rounded">
             {fieldCount} field{pluralise(fieldCount)}
           </span>
           {sectionData && (
-            <span className="text-[10px] font-mono text-neon-green/60 bg-neon-green/5 px-1.5 py-0.5 rounded">
+            <span className="text-xs font-mono text-neon-green/70 bg-neon-green/5 px-1.5 py-0.5 rounded">
               configured
             </span>
           )}
           {section.complexKeys && section.complexKeys.length > 0 && (
-            <span className="text-[10px] font-mono text-neon-orange/60 bg-neon-orange/5 px-1.5 py-0.5 rounded">
+            <span className="text-xs font-mono text-neon-orange/90 bg-neon-orange/5 px-1.5 py-0.5 rounded">
               +{section.complexKeys.length} advanced
             </span>
           )}
@@ -180,11 +180,11 @@ function QuickLinkCard({
       footer={
         <span
           // iconColorMap/badgeBgMap are already complete classes. Appending a
-          // further "/60" and "/5" built `text-neon-cyan/60` (never generated,
+          // further "/60" and "/5" built `text-neon-cyan/80` (never generated,
           // because it is interpolated) and `bg-neon-cyan/10/5` (not a valid
           // class at all), so this badge rendered with no colour and no
           // background. Use the maps as they are.
-          className={`text-[10px] font-mono ${iconColorMap[color]} ${badgeBgMap[color]} px-1.5 py-0.5 rounded`}
+          className={`text-xs font-mono ${iconColorMap[color]} ${badgeBgMap[color]} px-1.5 py-0.5 rounded`}
         >
           {badge}
         </span>
@@ -215,7 +215,7 @@ export default function ConfigIndexPage() {
         {!config && loading ? (
           <LoadingSpinner text="Loading configuration..." />
         ) : !config ? (
-          <p className="text-xs text-white/40 font-mono">Failed to load configuration.</p>
+          <p className="text-xs text-ps-text-muted font-mono">Failed to load configuration.</p>
         ) : (
           <>
             {/* Quick links */}
@@ -242,10 +242,10 @@ export default function ConfigIndexPage() {
             {CATEGORIES.map((cat) => (
               <div key={cat.label}>
                 <div className="mb-4">
-                  <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider">
+                  <h2 className="text-sm font-bold text-ps-text-secondary uppercase tracking-wider">
                     {cat.label}
                   </h2>
-                  <p className="text-xs text-white/30 mt-0.5">{cat.description}</p>
+                  <p className="text-xs text-ps-text-muted mt-0.5">{cat.description}</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {cat.sectionIds.map((sectionId) => (

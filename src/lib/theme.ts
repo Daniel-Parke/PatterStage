@@ -94,7 +94,7 @@ export const focusColorMap: Record<AccentColor, ColorEntry> = {
 
 /** RGB triplets for `rgb(var(--glow-surface-rgb) / …)` */
 const GLOW_RGBS: Record<AccentColor, string> = {
-  cyan: "0, 191, 255", purple: "139, 92, 255", green: "163, 255, 18",
+  cyan: "0, 191, 255", purple: "164, 128, 255", green: "163, 255, 18",
   pink: "232, 121, 249", orange: "255, 102, 34", red: "239, 68, 68",
   blue: "96, 165, 250", yellow: "250, 204, 21",
 } as const;

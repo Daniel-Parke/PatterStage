@@ -52,14 +52,14 @@ export default function SessionFilterBar({
         </div>
         {sources.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="w-4 h-4 text-white/30 flex-shrink-0" />
+            <Filter className="w-4 h-4 text-ps-text-muted flex-shrink-0" />
             <button
               onClick={onClearSourceFilter}
               aria-pressed={!sourceFilter}
               className={`text-xs font-mono px-2 py-1 rounded transition-colors ${
                 !sourceFilter
                   ? "bg-neon-orange/20 text-neon-orange"
-                  : "text-white/40 hover:text-white/60"
+                  : "text-ps-text-muted hover:text-ps-text-secondary"
               }`}
             >
               All
@@ -72,7 +72,7 @@ export default function SessionFilterBar({
                 className={`text-xs font-mono px-2 py-1 rounded transition-colors flex items-center gap-1 ${
                   sourceFilter === src
                     ? "bg-neon-orange/20 text-neon-orange"
-                    : "text-white/40 hover:text-white/60"
+                    : "text-ps-text-muted hover:text-ps-text-secondary"
                 }`}
               >
                 {SOURCE_META[src]?.icon}
@@ -84,7 +84,7 @@ export default function SessionFilterBar({
       </div>
 
       {/* View options row: group-by-mission, hide-api-noise, live indicator hint */}
-      <div className="flex items-center gap-2 flex-wrap text-[10px] font-mono">
+      <div className="flex items-center gap-2 flex-wrap text-xs font-mono">
         <button
           type="button"
           onClick={onToggleGroupByMission}
@@ -92,7 +92,7 @@ export default function SessionFilterBar({
           className={`flex items-center gap-1 px-2 py-1 rounded transition-colors ${
             groupByMission
               ? "bg-neon-green/10 text-neon-green"
-              : "text-white/40 hover:text-white/60"
+              : "text-ps-text-muted hover:text-ps-text-secondary"
           }`}
           title="Collapse sessions with the same missionId into a single card"
         >
@@ -106,7 +106,7 @@ export default function SessionFilterBar({
           className={`flex items-center gap-1 px-2 py-1 rounded transition-colors ${
             hideApiNoise
               ? "bg-neon-purple/10 text-neon-purple"
-              : "text-white/40 hover:text-white/60"
+              : "text-ps-text-muted hover:text-ps-text-secondary"
           }`}
           title="Hide short-lived api-source sessions (< 1KB, < 1 min) that dominate the list during stress testing"
         >
@@ -114,7 +114,7 @@ export default function SessionFilterBar({
           Hide API noise
         </button>
         <span
-          className="flex items-center gap-1 text-white/20 px-2 py-1"
+          className="flex items-center gap-1 text-ps-text-faint px-2 py-1"
           title="Active sessions get a pulsing dot and live elapsed time"
         >
           <Activity className="w-3 h-3" />

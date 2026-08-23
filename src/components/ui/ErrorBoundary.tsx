@@ -43,13 +43,13 @@ export class ErrorBoundary extends Component<Props, State> {
             <p className="text-sm font-medium text-neon-red">
               {this.props.label ?? "Something went wrong"}
             </p>
-            <p className="text-xs text-white/40 font-mono mt-0.5 truncate">
+            <p className="text-xs text-ps-text-muted font-mono mt-0.5 truncate">
               {this.state.message}
             </p>
           </div>
           <button
             onClick={this.handleReload}
-            className="ml-auto flex items-center gap-1.5 text-xs text-white/40 hover:text-white transition-colors px-2 py-1 rounded border border-white/10 hover:border-white/20"
+            className="ml-auto flex items-center gap-1.5 text-xs text-ps-text-muted hover:text-white transition-colors px-2 py-1 rounded border border-white/10 hover:border-white/20"
           >
             <RefreshCw className="w-3 h-3" />
             Retry

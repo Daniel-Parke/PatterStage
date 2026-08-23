@@ -60,7 +60,7 @@ export default function Donut({ segments, size = 120, thickness = 14, center, ce
       {(center != null || centerSub != null) && (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center leading-none">
           {center != null && <span className="font-mono text-lg font-semibold text-white">{center}</span>}
-          {centerSub != null && <span className="mt-0.5 text-[10px] uppercase tracking-wider text-white/40">{centerSub}</span>}
+          {centerSub != null && <span className="mt-0.5 text-xs uppercase tracking-wider text-ps-text-muted">{centerSub}</span>}
         </div>
       )}
     </div>

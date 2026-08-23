@@ -26,7 +26,7 @@ function AssistantBody({ msg }: { msg: ChatMessage }) {
   }
   // No content yet — render an explicit state from the message status.
   if (msg.status === "streaming" || msg.status === "pending") {
-    return <span className="text-white/30 italic text-sm">Thinking…</span>;
+    return <span className="text-ps-text-muted italic text-sm">Thinking…</span>;
   }
   if (msg.status === "failed") {
     return (
@@ -36,9 +36,9 @@ function AssistantBody({ msg }: { msg: ChatMessage }) {
     );
   }
   if (msg.status === "cancelled") {
-    return <span className="text-white/30 italic text-sm">Stopped.</span>;
+    return <span className="text-ps-text-muted italic text-sm">Stopped.</span>;
   }
-  return <span className="text-white/30 italic text-sm">(no response)</span>;
+  return <span className="text-ps-text-muted italic text-sm">(no response)</span>;
 }
 
 export default function MessageBubble({ msg }: { msg: ChatMessage }) {
@@ -51,7 +51,7 @@ export default function MessageBubble({ msg }: { msg: ChatMessage }) {
         className={`max-w-[70%] rounded-xl px-4 py-3 ${
           isUser
             ? "bg-neon-cyan/10 border border-neon-cyan/20 text-white"
-            : "bg-white/5 border border-white/10 text-white/80"
+            : "bg-white/5 border border-white/10 text-ps-text-primary"
         }`}
       >
         {isUser ? (
@@ -65,7 +65,7 @@ export default function MessageBubble({ msg }: { msg: ChatMessage }) {
             <AssistantBody msg={msg} />
           </>
         )}
-        <div className="text-[10px] text-white/20 font-mono mt-1 text-right">
+        <div className="text-xs text-ps-text-faint font-mono mt-1 text-right">
           {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </div>
       </div>

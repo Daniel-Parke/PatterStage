@@ -24,7 +24,7 @@ export default function AgentProfileFiles({
 }) {
   return (
     <div className="p-4 flex-1 overflow-auto">
-      <h3 className="text-xs font-semibold text-white/30 uppercase tracking-wider mb-3">
+      <h3 className="text-xs font-semibold text-ps-text-muted uppercase tracking-wider mb-3">
         Behaviour files
       </h3>
       <div className="space-y-1">
@@ -38,14 +38,14 @@ export default function AgentProfileFiles({
             }`}
           >
             <div className="flex items-center gap-2 min-w-0">
-              <FileText className="w-4 h-4 text-white/30 shrink-0" />
-              <span className="text-sm text-white/70 font-mono truncate">{file.name}</span>
+              <FileText className="w-4 h-4 text-ps-text-muted shrink-0" />
+              <span className="text-sm text-ps-text-secondary font-mono truncate">{file.name}</span>
               {file.exists ? (
-                <span className="text-xs text-white/20 shrink-0">
+                <span className="text-xs text-ps-text-faint shrink-0">
                   {(file.size / 1024).toFixed(1)}KB
                 </span>
               ) : (
-                <span className="text-xs text-white/25 shrink-0">missing</span>
+                <span className="text-xs text-ps-text-faint shrink-0">missing</span>
               )}
             </div>
             <Button

@@ -24,7 +24,7 @@ export default function AgentPerformanceStrip() {
 
   return (
     <div className="animate-float-in mb-5 rounded-2xl border border-white/10 bg-dark-900/40 p-4">
-      <div className="mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-white/50">
+      <div className="mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-ps-text-muted">
         <Activity className="h-3.5 w-3.5 text-neon-cyan" /> Agent performance · from real activity
       </div>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -40,14 +40,14 @@ export default function AgentPerformanceStrip() {
             >
               <div className="mb-2 flex items-center gap-2">
                 <div
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg font-mono text-[11px] font-bold"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-bold"
                   style={{ background: neonAlpha(color, 18), color: neon(color) }}
                 >
                   {a.name.slice(0, 2).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm text-white/85">{a.name}</div>
-                  <div className="flex items-center gap-1 text-[10px] font-mono text-white/30">
+                  <div className="truncate text-sm text-ps-text-primary">{a.name}</div>
+                  <div className="flex items-center gap-1 text-xs font-mono text-ps-text-muted">
                     <Bot className="h-3 w-3" /> {a.skills} skills · {a.toolsets} toolsets
                   </div>
                 </div>
@@ -72,7 +72,7 @@ function Metric({ label, value, color }: { label: string; value: string; color: 
       <div className="font-mono text-sm font-bold leading-none" style={{ color: neon(color) }}>
         {value}
       </div>
-      <div className="mt-0.5 text-[9px] uppercase tracking-wider text-white/35">{label}</div>
+      <div className="mt-0.5 text-xs uppercase tracking-wider text-ps-text-muted">{label}</div>
     </div>
   );
 }

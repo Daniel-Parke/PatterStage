@@ -42,7 +42,7 @@ TypeScript `AccentColor` in `src/types/hermes.ts` is unchanged: `cyan | purple |
 | Slot | Hex | RGB | Role |
 |------|-----|-----|------|
 | `cyan` | `#00bfff` | 0, 191, 255 | Primary brand / Cherenkov interactive |
-| `purple` | `#8b5cff` | 139, 92, 255 | Blue-violet / orchestration |
+| `purple` | `#a480ff` | 164, 128, 255 | Blue-violet / orchestration (brightened 2026-08-23: #8b5cff failed WCAG AA as text even at full opacity) |
 | `green` | `#a3ff12` | 163, 255, 18 | Success / online / electric lime |
 | `pink` | `#e879f9` | 232, 121, 249 | Cool magenta–fuchsia |
 | `orange` | `#ff6622` | 255, 102, 34 | Heat / Cherenkov complement (Sparrow's Fire) accent |

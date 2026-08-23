@@ -80,8 +80,8 @@ export default function ScheduleScriptModal({
       }
     >
       <div className="space-y-4">
-        <p className="font-mono text-xs text-white/40">
-          Runs <span className="text-white/60">{script.name}</span> on the host crontab.
+        <p className="font-mono text-xs text-ps-text-muted">
+          Runs <span className="text-ps-text-secondary">{script.name}</span> on the host crontab.
         </p>
         <SchedulePicker value={schedule} onChange={(v) => { setSchedule(v); setScheduleError(null); }} error={scheduleError} />
       </div>

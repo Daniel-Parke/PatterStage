@@ -41,7 +41,7 @@ export default function ProfileSelector({
     return (
       <button
         onClick={() => setOpen(!open)}
-        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-white/60 hover:border-neon-purple/50 hover:text-neon-purple transition-colors relative"
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 text-xs font-mono text-ps-text-secondary hover:border-neon-purple/50 hover:text-neon-purple transition-colors relative"
         title={selected?.name ?? "Select profile"}
       >
         {loading ? (
@@ -56,7 +56,7 @@ export default function ProfileSelector({
             className="absolute top-full left-0 mt-1 z-50 w-56 bg-dark-900 border border-white/10 rounded-lg shadow-xl overflow-hidden max-h-80 overflow-y-auto"
           >
             {profiles.length === 0 && !loading ? (
-              <div className="px-3 py-3 text-xs text-white/30 text-center">
+              <div className="px-3 py-3 text-xs text-ps-text-muted text-center">
                 No profiles found
               </div>
             ) : (
@@ -69,12 +69,12 @@ export default function ProfileSelector({
                     setOpen(false);
                   }}
                   className={`w-full text-left px-3 py-2 text-xs hover:bg-white/5 ${
-                    value === p.id ? "text-neon-purple" : "text-white/60"
+                    value === p.id ? "text-neon-purple" : "text-ps-text-secondary"
                   }`}
                 >
                   <div className="font-medium">{p.name}</div>
                   {p.description && (
-                    <div className="text-[10px] text-white/30 mt-0.5">
+                    <div className="text-xs text-ps-text-muted mt-0.5">
                       {p.description}
                     </div>
                   )}
@@ -112,21 +112,21 @@ export default function ProfileSelector({
             <div className="text-left min-w-0">
               <div className="font-medium truncate">{selected.name}</div>
               {subtitle === "inline" && selected.description && (
-                <div className="text-[10px] text-white/40 line-clamp-2">
+                <div className="text-xs text-ps-text-muted line-clamp-2">
                   {selected.description}
                 </div>
               )}
             </div>
           ) : (
             <div className="text-left min-w-0">
-              <div className="font-medium text-white/40 truncate">
+              <div className="font-medium text-ps-text-muted truncate">
                 {placeholder ?? "Select profile"}
               </div>
             </div>
           )}
         </div>
         <ChevronDown
-          className={`w-4 h-4 text-white/30 transition-transform ${
+          className={`w-4 h-4 text-ps-text-muted transition-transform ${
             open ? "rotate-180" : ""
           }`}
         />
@@ -135,7 +135,7 @@ export default function ProfileSelector({
       {open && (
         <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-dark-900 border border-white/10 rounded-lg shadow-xl overflow-hidden max-h-80 overflow-y-auto">
           {profiles.length === 0 && !loading ? (
-            <div className="px-3 py-4 text-xs text-white/30 text-center">
+            <div className="px-3 py-4 text-xs text-ps-text-muted text-center">
               No profiles found
             </div>
           ) : (
@@ -149,7 +149,7 @@ export default function ProfileSelector({
                 className={`w-full text-left px-3 py-2.5 text-sm hover:bg-white/5 ${
                   value === p.id
                     ? "text-neon-purple bg-neon-purple/5"
-                    : "text-white/70"
+                    : "text-ps-text-secondary"
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -161,7 +161,7 @@ export default function ProfileSelector({
                   <span className="font-medium">{p.name}</span>
                 </div>
                 {p.description && (
-                  <div className="text-xs text-white/40 mt-0.5 ml-4">
+                  <div className="text-xs text-ps-text-muted mt-0.5 ml-4">
                     {p.description}
                   </div>
                 )}

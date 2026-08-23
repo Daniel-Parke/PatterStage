@@ -41,7 +41,7 @@ interface RowEditButtonProps {
  * ```tsx
  * <button
  *   onClick={onClick}
- *   className="p-1.5 rounded-lg hover:bg-white/5 text-white/40 hover:text-white/70 transition-colors"
+ *   className="p-1.5 rounded-lg hover:bg-white/5 text-ps-text-muted hover:text-ps-text-secondary transition-colors"
  *   title="Edit"
  * >
  *   <Pencil className="w-4 h-4" />
@@ -56,7 +56,7 @@ export function RowEditButton({ onClick }: RowEditButtonProps) {
   return (
     <button
       onClick={onClick}
-      className="p-1.5 rounded-lg hover:bg-white/5 text-white/40 hover:text-white/70 transition-colors"
+      className="p-1.5 rounded-lg hover:bg-white/5 text-ps-text-muted hover:text-ps-text-secondary transition-colors"
       title="Edit"
     >
       <Pencil className="w-4 h-4" />
@@ -78,7 +78,7 @@ interface RowDeleteButtonProps {
  * ```tsx
  * <button
  *   onClick={onClick}
- *   className="p-1.5 rounded-lg hover:bg-red-500/10 text-white/40 hover:text-red-400 transition-colors"
+ *   className="p-1.5 rounded-lg hover:bg-red-500/10 text-ps-text-muted hover:text-red-400 transition-colors"
  *   title="Delete"
  * >
  *   <Trash2 className="w-4 h-4" />
@@ -87,7 +87,7 @@ interface RowDeleteButtonProps {
  *
  * Distinguishing styling from the Edit button: hover bg is
  * `bg-red-500/10` (not `bg-white/5`) and the hover text is
- * `text-red-400` (not `text-white/70`). The destructive-intent
+ * `text-red-400` (not `text-ps-text-secondary`). The destructive-intent
  * colour stays the same in both tabs; consolidating the colour
  * into the shared component ensures a future "make destructive
  * actions more obvious" tweak lands in one place.
@@ -96,7 +96,7 @@ export function RowDeleteButton({ onClick }: RowDeleteButtonProps) {
   return (
     <button
       onClick={onClick}
-      className="p-1.5 rounded-lg hover:bg-red-500/10 text-white/40 hover:text-red-400 transition-colors"
+      className="p-1.5 rounded-lg hover:bg-red-500/10 text-ps-text-muted hover:text-red-400 transition-colors"
       title="Delete"
     >
       <Trash2 className="w-4 h-4" />

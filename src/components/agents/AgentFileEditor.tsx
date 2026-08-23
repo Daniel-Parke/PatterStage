@@ -95,14 +95,14 @@ export default function AgentFileEditor({
         </div>
       </div>
       {previewMode ? (
-        <pre className="whitespace-pre-wrap text-sm text-white/80 font-mono bg-dark-800 rounded-lg p-4 overflow-auto max-h-64">
+        <pre className="whitespace-pre-wrap text-sm text-ps-text-primary font-mono bg-dark-800 rounded-lg p-4 overflow-auto max-h-64">
           {editor.content}
         </pre>
       ) : (
         <textarea
           value={editor.content}
           onChange={(e) => onContentChange(e.target.value)}
-          className="w-full min-h-[200px] max-h-64 bg-dark-800 border border-white/10 rounded-lg p-4 text-sm text-white/80 font-mono resize-y focus:border-purple-500/50 focus:outline-none"
+          className="w-full min-h-[200px] max-h-64 bg-dark-800 border border-white/10 rounded-lg p-4 text-sm text-ps-text-primary font-mono resize-y focus:border-purple-500/50 focus:outline-none"
           spellCheck={false}
         />
       )}

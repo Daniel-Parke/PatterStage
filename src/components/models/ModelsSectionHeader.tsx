@@ -7,7 +7,7 @@
 // ModelsTaskDefaultsSection) all open with the same chrome:
 //
 //   <section data-section="..." className="space-y-4">
-//     <h2 className="text-sm font-bold text-white/70 uppercase
+//     <h2 className="text-sm font-bold text-ps-text-secondary uppercase
 //                    tracking-wider flex items-center gap-2">
 //       <Icon className="w-4 h-4 text-neon-{color}[/60]" />
 //       {title}
@@ -66,7 +66,7 @@ export default function ModelsSectionHeader({
 }: ModelsSectionHeaderProps) {
   const opacityClass = iconTone === "muted" ? "/60" : "";
   return (
-    <h2 className="text-sm font-bold text-white/70 uppercase tracking-wider flex items-center gap-2">
+    <h2 className="text-sm font-bold text-ps-text-secondary uppercase tracking-wider flex items-center gap-2">
       <Icon className={`w-4 h-4 ${iconColorMap[color]}${opacityClass}`} />
       {title}
     </h2>

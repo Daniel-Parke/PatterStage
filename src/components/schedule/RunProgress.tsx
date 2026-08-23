@@ -21,13 +21,13 @@ export default function RunProgress({ runId }: { runId: string }) {
 
   return (
     <div className="rounded-xl border border-white/10 bg-dark-900/40 p-4">
-      <div className="flex items-center gap-2 mb-2 text-xs font-mono text-white/50">
+      <div className="flex items-center gap-2 mb-2 text-xs font-mono text-ps-text-muted">
         {icon}
         <span>live run · {status}</span>
-        <span className="ml-auto text-white/25">{events.length} events</span>
+        <span className="ml-auto text-ps-text-faint">{events.length} events</span>
       </div>
       {error && <div className="text-xs text-red-300 mb-2 font-mono">{error}</div>}
-      <pre className="text-xs text-white/70 font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
+      <pre className="text-xs text-ps-text-secondary font-mono whitespace-pre-wrap max-h-48 overflow-y-auto">
         {text || "(waiting for output…)"}
       </pre>
     </div>

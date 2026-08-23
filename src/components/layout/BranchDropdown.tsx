@@ -45,10 +45,10 @@ export function BranchDropdown({
     >
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
-        <span className="text-xs font-mono text-white/50">Branch</span>
+        <span className="text-xs font-mono text-ps-text-muted">Branch</span>
         <button
           onClick={onCancel}
-          className="p-0.5 rounded text-white/30 hover:text-white/60 transition-colors"
+          className="p-0.5 rounded text-ps-text-muted hover:text-ps-text-secondary transition-colors"
         >
           <X className="w-3.5 h-3.5" />
         </button>
@@ -67,7 +67,7 @@ export function BranchDropdown({
             </option>
           ))}
         </select>
-        <label className="block mt-2 text-[10px] font-mono text-white/40 uppercase tracking-wide">
+        <label className="block mt-2 text-xs font-mono text-ps-text-muted uppercase tracking-wide">
           Other branch
         </label>
         <input
@@ -75,7 +75,7 @@ export function BranchDropdown({
           value={customBranch}
           onChange={(e) => setCustomBranch(e.target.value)}
           placeholder="e.g. feature/my-branch"
-          className="w-full mt-0.5 px-2 py-1.5 rounded-md bg-dark-900 border border-white/10 text-white text-xs placeholder:text-white/25 focus:outline-none focus:border-neon-cyan/50"
+          className="w-full mt-0.5 px-2 py-1.5 rounded-md bg-dark-900 border border-white/10 text-white text-xs placeholder:text-ps-text-faint focus:outline-none focus:border-neon-cyan/50"
         />
       </div>
 
@@ -84,7 +84,7 @@ export function BranchDropdown({
         <button
           onClick={onCancel}
           disabled={loading}
-          className="px-3 py-1 rounded text-xs text-white/40 hover:text-white/70 transition-colors disabled:opacity-50"
+          className="px-3 py-1 rounded text-xs text-ps-text-muted hover:text-ps-text-secondary transition-colors disabled:opacity-50"
         >
           Cancel
         </button>

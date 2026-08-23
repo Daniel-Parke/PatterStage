@@ -17,16 +17,16 @@ import { safeApiCall } from "@/lib/api-fetch";
 import type { ComposerNode, ComposerNodeRun } from "@/lib/composer/schema";
 
 const STATUS_TEXT: Record<string, string> = {
-  pending: "text-white/40",
+  pending: "text-ps-text-muted",
   running: "text-neon-cyan",
   completed: "text-neon-green",
   failed: "text-neon-pink",
-  skipped: "text-white/30",
+  skipped: "text-ps-text-muted",
 };
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-[10px] font-mono uppercase tracking-widest text-white/35">{children}</h3>
+    <h3 className="text-xs font-mono uppercase tracking-widest text-ps-text-muted">{children}</h3>
   );
 }
 
@@ -70,20 +70,20 @@ export default function ComposerNodeRunDetail({
     <Sheet open={open} onClose={onClose} title={node?.label ?? "Stage"} subtitle={subtitle}>
       <div className="space-y-5 px-6 py-5 text-sm">
         {!nodeRun ? (
-          <p className="text-white/40">This stage hasn&apos;t run yet.</p>
+          <p className="text-ps-text-muted">This stage hasn&apos;t run yet.</p>
         ) : (
           <>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              <span className={`font-mono text-xs uppercase ${STATUS_TEXT[nodeRun.status] ?? "text-white/40"}`}>
+              <span className={`font-mono text-xs uppercase ${STATUS_TEXT[nodeRun.status] ?? "text-ps-text-muted"}`}>
                 {nodeRun.status}
               </span>
               {nodeRun.attempt > 1 ? (
-                <span className="text-xs text-white/40">attempt {nodeRun.attempt}</span>
+                <span className="text-xs text-ps-text-muted">attempt {nodeRun.attempt}</span>
               ) : null}
               {nodeRun.completedAt ? (
-                <span className="text-xs text-white/30">{timeAgo(nodeRun.completedAt)}</span>
+                <span className="text-xs text-ps-text-muted">{timeAgo(nodeRun.completedAt)}</span>
               ) : nodeRun.startedAt ? (
-                <span className="text-xs text-white/30">started {timeAgo(nodeRun.startedAt)}</span>
+                <span className="text-xs text-ps-text-muted">started {timeAgo(nodeRun.startedAt)}</span>
               ) : null}
             </div>
 
@@ -95,10 +95,10 @@ export default function ComposerNodeRunDetail({
                   {verdict.outcome ? ` · ${verdict.outcome}` : ""}
                 </span>
                 {verdict.reasons.length > 0 ? (
-                  <ul className="space-y-1 text-xs text-white/70">
+                  <ul className="space-y-1 text-xs text-ps-text-secondary">
                     {verdict.reasons.map((r, i) => (
                       <li key={i} className="flex gap-1.5">
-                        <span className="text-white/25">•</span>
+                        <span className="text-ps-text-faint">•</span>
                         <span>{r}</span>
                       </li>
                     ))}
@@ -107,10 +107,10 @@ export default function ComposerNodeRunDetail({
                 {verdict.suggestions.length > 0 ? (
                   <div className="space-y-1">
                     <Label>Suggestions</Label>
-                    <ul className="space-y-1 text-xs text-white/55">
+                    <ul className="space-y-1 text-xs text-ps-text-muted">
                       {verdict.suggestions.map((s, i) => (
                         <li key={i} className="flex gap-1.5">
-                          <span className="text-white/25">→</span>
+                          <span className="text-ps-text-faint">→</span>
                           <span>{s}</span>
                         </li>
                       ))}
@@ -137,17 +137,17 @@ export default function ComposerNodeRunDetail({
                     type="button"
                     onClick={() => void saveAsArtifact()}
                     disabled={saveState !== "idle"}
-                    className="inline-flex items-center gap-1 rounded border border-white/10 px-2 py-0.5 text-[10px] font-mono text-white/50 transition hover:border-neon-orange/40 hover:text-neon-orange disabled:opacity-60"
+                    className="inline-flex items-center gap-1 rounded border border-white/10 px-2 py-0.5 text-xs font-mono text-ps-text-muted transition hover:border-neon-orange/40 hover:text-neon-orange disabled:opacity-60"
                   >
                     {saveState === "saved" ? <><Check className="h-3 w-3" /> Saved</> : <><Save className="h-3 w-3" /> {saveState === "saving" ? "Saving…" : "Save as artifact"}</>}
                   </button>
                 </div>
-                <pre className="max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-lg border border-white/10 bg-dark-900/60 px-3 py-2 text-xs leading-relaxed text-white/70">
+                <pre className="max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-lg border border-white/10 bg-dark-900/60 px-3 py-2 text-xs leading-relaxed text-ps-text-secondary">
                   {nodeRun.output}
                 </pre>
               </div>
             ) : !verdict && !nodeRun.error ? (
-              <p className="text-xs text-white/30">No output recorded for this stage.</p>
+              <p className="text-xs text-ps-text-muted">No output recorded for this stage.</p>
             ) : null}
           </>
         )}

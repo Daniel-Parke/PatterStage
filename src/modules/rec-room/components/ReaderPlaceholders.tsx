@@ -19,7 +19,7 @@ export function ReaderNotFound({ onBack }: { onBack: () => void }) {
   return (
     <div className="min-h-screen bg-dark-950 flex items-center justify-center">
       <div className="text-center">
-        <p className="text-sm text-white/40 mb-4">Story not found</p>
+        <p className="text-sm text-ps-text-muted mb-4">Story not found</p>
         <button onClick={onBack} className="text-xs text-neon-purple">← Back to Dashboard</button>
       </div>
     </div>

@@ -119,7 +119,7 @@ export default function SessionDetailPage() {
         <div className="min-h-[60vh] flex items-center justify-center">
           <div className="text-center">
             <h2 className="text-xl font-bold text-white mb-2">Session Not Found</h2>
-            <p className="text-white/40 font-mono mb-4">{error || "Unknown error"}</p>
+            <p className="text-ps-text-muted font-mono mb-4">{error || "Unknown error"}</p>
             <Link
               href="/sessions"
               className="text-neon-orange text-sm font-mono hover:underline"
@@ -160,7 +160,7 @@ export default function SessionDetailPage() {
             {data.missionId && (
               <a
                 href={`/orchestration/missions/${data.missionId}`}
-                className="text-[10px] font-mono px-2 py-1 rounded bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-colors"
+                className="text-xs font-mono px-2 py-1 rounded bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-colors"
                 title="Open the parent mission"
               >
                 ↗ Mission
@@ -170,7 +170,7 @@ export default function SessionDetailPage() {
               <button
                 type="button"
                 onClick={() => void refetch()}
-                className="text-[10px] font-mono px-2 py-1 rounded bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20 transition-colors"
+                className="text-xs font-mono px-2 py-1 rounded bg-neon-cyan/10 text-neon-cyan hover:bg-neon-cyan/20 transition-colors"
                 title="Reload to check for new messages"
               >
                 ⟳ Refresh
@@ -200,7 +200,7 @@ export default function SessionDetailPage() {
               <button
                 type="button"
                 onClick={clearRoleFilter}
-                className="text-[10px] font-mono text-white/30 hover:text-white/60 px-1.5 py-1 rounded bg-white/5"
+                className="text-xs font-mono text-ps-text-muted hover:text-ps-text-secondary px-1.5 py-1 rounded bg-white/5"
               >
                 clear
               </button>
@@ -212,7 +212,7 @@ export default function SessionDetailPage() {
       {/* Messages */}
       <div className="max-w-4xl mx-auto px-6 py-6 flex-1 w-full">
         {roleFilter && (
-          <div className="text-xs text-white/30 font-mono mb-3">
+          <div className="text-xs text-ps-text-muted font-mono mb-3">
             Showing {filteredMessages.length} {roleFilter} messages of {data.messages.length} total
           </div>
         )}
@@ -227,7 +227,7 @@ export default function SessionDetailPage() {
             <MessageSquare className="w-8 h-8 text-white/20 mx-auto mb-3" />
             {data.note ? (
               <>
-                <p className="text-white/60 font-mono mb-3">{data.note}</p>
+                <p className="text-ps-text-secondary font-mono mb-3">{data.note}</p>
                 {data.missionId && (
                   <a
                     href={`/orchestration/missions/${data.missionId}`}
@@ -238,7 +238,7 @@ export default function SessionDetailPage() {
                 )}
               </>
             ) : (
-              <p className="text-white/40 font-mono">No messages in this session</p>
+              <p className="text-ps-text-muted font-mono">No messages in this session</p>
             )}
           </div>
         )}

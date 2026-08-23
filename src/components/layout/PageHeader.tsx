@@ -43,7 +43,7 @@ export default function PageHeader({
           <>
             <Link
               href={backHref}
-              className={`flex items-center text-white/40 hover:text-white transition-colors shrink-0 ${
+              className={`flex items-center text-ps-text-muted hover:text-white transition-colors shrink-0 ${
                 backIconOnly ? "" : "gap-2"
               }`}
               aria-label={backIconOnly ? backLabel : undefined}
@@ -64,7 +64,7 @@ export default function PageHeader({
               {status && <StatusDot status={status} pulse />}
             </h1>
             {subtitle && (
-              <p className="text-xs text-white/40 font-mono truncate">
+              <p className="text-xs text-ps-text-muted font-mono truncate">
                 {subtitle}
               </p>
             )}

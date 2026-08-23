@@ -81,11 +81,11 @@ export default function MemoryProviderSettings() {
       <div className="mb-3 flex items-center gap-2">
         <Plug className="h-4 w-4 text-neon-pink" />
         <h2 className="text-sm font-semibold text-white">Memory provider</h2>
-        <span className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] font-mono uppercase tracking-wider text-white/40">
+        <span className="rounded bg-white/5 px-1.5 py-0.5 text-xs font-mono uppercase tracking-wider text-ps-text-muted">
           Hindsight
         </span>
       </div>
-      <p className="mb-4 text-xs text-white/40">
+      <p className="mb-4 text-xs text-ps-text-muted">
         PatterStage owns this connection — edit it here, no Hermes file edits. Stored in the database.
       </p>
 
@@ -132,11 +132,11 @@ export default function MemoryProviderSettings() {
             {health.available ? `Connected (${health.status ?? "healthy"})` : health.error ?? "Unreachable"}
           </span>
         ) : testing ? (
-          <span className="inline-flex items-center gap-1.5 text-xs text-white/40">
+          <span className="inline-flex items-center gap-1.5 text-xs text-ps-text-muted">
             <Loader2 className="h-4 w-4 animate-spin" /> Probing…
           </span>
         ) : null}
-        {savedMsg ? <span className="text-xs text-white/40">{savedMsg}</span> : null}
+        {savedMsg ? <span className="text-xs text-ps-text-muted">{savedMsg}</span> : null}
       </div>
     </Card>
   );

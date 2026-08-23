@@ -217,7 +217,7 @@ export default function SessionsPage() {
           />
         ) : (
           <>
-            <div className="text-xs text-white/30 font-mono mb-3">
+            <div className="text-xs text-ps-text-muted font-mono mb-3">
               Showing {entries.length} {groupByMission ? "entries" : "sessions"} of{" "}
               {data?.total ?? 0} {debouncedSearch ? "matching" : "total"}
               {hideApiNoise ? " · API noise hidden" : ""}

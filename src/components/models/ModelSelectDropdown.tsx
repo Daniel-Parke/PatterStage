@@ -26,7 +26,7 @@
 //       ))}
 //     </select>
 //     <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2
-//                             w-4 h-4 text-white/30 pointer-events-none" />
+//                             w-4 h-4 text-ps-text-muted pointer-events-none" />
 //   </div>
 //
 // The two sites were identical except for (a) the placeholder text

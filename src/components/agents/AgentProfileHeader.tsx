@@ -30,9 +30,9 @@ export default function AgentProfileHeader({
             {profile.isDefault && <Badge color="cyan" size="sm">Default</Badge>}
           </div>
           {!profile.isDefault && (
-            <p className="text-[10px] font-mono text-white/30 mt-0.5">slug: {profile.id}</p>
+            <p className="text-xs font-mono text-ps-text-muted mt-0.5">slug: {profile.id}</p>
           )}
-          <p className="text-sm text-white/50 mt-1">{profile.description}</p>
+          <p className="text-sm text-ps-text-muted mt-1">{profile.description}</p>
         </div>
         {!profile.isDefault && (
           <Button
@@ -53,9 +53,9 @@ export default function AgentProfileHeader({
       </div>
 
       <div className="p-4 border-b border-white/10">
-        <p className="text-xs text-white/40 font-mono">
-          Edit <strong className="text-white/60">SOUL.md</strong> for voice and identity.
-          Use <strong className="text-white/60">config.yaml</strong> for skills.disabled and
+        <p className="text-xs text-ps-text-muted font-mono">
+          Edit <strong className="text-ps-text-secondary">SOUL.md</strong> for voice and identity.
+          Use <strong className="text-ps-text-secondary">config.yaml</strong> for skills.disabled and
           platform_toolsets. Session display presets:{" "}
           <a href="/operations/personalities" className="text-neon-cyan hover:underline">
             Personalities

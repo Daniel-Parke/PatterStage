@@ -54,13 +54,13 @@ export default function ConfigField({ field, value, sectionDef, onUpdate }: Conf
       if (typeof value === "object" && value !== null) {
         return (
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-white/70">
+            <label className="text-sm font-medium text-ps-text-secondary">
               {field.label}
             </label>
             {field.description && (
-              <p className="text-xs text-white/40">{field.description}</p>
+              <p className="text-xs text-ps-text-muted">{field.description}</p>
             )}
-            <div className="text-xs text-white/30 bg-dark-800/50 rounded-lg p-3 font-mono max-h-60 overflow-y-auto whitespace-pre-wrap">
+            <div className="text-xs text-ps-text-muted bg-dark-800/50 rounded-lg p-3 font-mono max-h-60 overflow-y-auto whitespace-pre-wrap">
               {JSON.stringify(value, null, 2) || "(not configured)"}
             </div>
           </div>

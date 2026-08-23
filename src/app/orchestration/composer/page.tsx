@@ -48,13 +48,13 @@ function runTitle(input: string | null): string {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  pending: "text-white/40",
+  pending: "text-ps-text-muted",
   running: "text-neon-cyan",
   awaiting_approval: "text-neon-yellow",
   completed: "text-neon-green",
   failed: "text-neon-pink",
   cancelled: "text-neon-orange",
-  skipped: "text-white/30",
+  skipped: "text-ps-text-muted",
 };
 
 const STATUS_FILTERS = [
@@ -197,7 +197,7 @@ export default function ComposerPage() {
             type="button"
             onClick={() => setMode(m)}
             className={`-mb-px border-b-2 px-3 py-2 text-xs font-mono uppercase tracking-widest transition ${
-              mode === m ? "border-neon-cyan text-neon-cyan" : "border-transparent text-white/40 hover:text-white/70"
+              mode === m ? "border-neon-cyan text-neon-cyan" : "border-transparent text-ps-text-muted hover:text-ps-text-secondary"
             }`}
           >
             {m === "run" ? "Run" : "Build"}
@@ -229,11 +229,11 @@ export default function ComposerPage() {
           <button
             type="button"
             onClick={() => setForceForm(true)}
-            className="flex w-full items-center gap-2 px-1 py-1 text-left text-sm text-white/60 transition hover:text-neon-cyan"
+            className="flex w-full items-center gap-2 px-1 py-1 text-left text-sm text-ps-text-secondary transition hover:text-neon-cyan"
           >
             <Plus className="h-4 w-4" />
             New run
-            <span className="ml-auto truncate text-xs text-white/30">
+            <span className="ml-auto truncate text-xs text-ps-text-muted">
               {workflows?.find((w) => w.id === activeWorkflowId)?.name ?? ""}
             </span>
           </button>
@@ -244,13 +244,13 @@ export default function ComposerPage() {
         {/* Runs list */}
         <Card padding="sm">
           <div className="mb-2 flex items-center gap-2 px-1">
-            <h2 className="text-xs font-mono uppercase tracking-widest text-white/40">Runs</h2>
+            <h2 className="text-xs font-mono uppercase tracking-widest text-ps-text-muted">Runs</h2>
             <div className="ml-auto w-36">
               <Select value={statusFilter} onChange={setStatusFilter} options={STATUS_FILTERS} />
             </div>
           </div>
           {visibleRuns.length === 0 ? (
-            <p className="px-1 py-4 text-xs text-white/30">
+            <p className="px-1 py-4 text-xs text-ps-text-muted">
               {(runs ?? []).length === 0 ? "No workflow runs yet." : "No runs match this filter."}
             </p>
           ) : (
@@ -262,10 +262,10 @@ export default function ComposerPage() {
                     onClick={() => selectRun(r.id)}
                     className={`w-full rounded-lg px-2 py-2 text-left text-xs transition hover:bg-white/5 ${selectedId === r.id ? "bg-white/5" : ""}`}
                   >
-                    <div className="truncate text-white/80">{runTitle(r.input)}</div>
-                    <div className="mt-0.5 flex items-center justify-between gap-2 font-mono text-[10px] uppercase">
-                      <span className={STATUS_COLOR[r.status] ?? "text-white/40"}>{r.status}</span>
-                      <span className="normal-case text-white/30">{timeAgo(r.createdAt)}</span>
+                    <div className="truncate text-ps-text-primary">{runTitle(r.input)}</div>
+                    <div className="mt-0.5 flex items-center justify-between gap-2 font-mono text-xs uppercase">
+                      <span className={STATUS_COLOR[r.status] ?? "text-ps-text-muted"}>{r.status}</span>
+                      <span className="normal-case text-ps-text-muted">{timeAgo(r.createdAt)}</span>
                     </div>
                   </button>
                 </li>
@@ -280,8 +280,8 @@ export default function ComposerPage() {
             // Nothing selected yet — the genuine empty state.
             <div className="flex h-[60vh] min-h-[420px] flex-col items-center justify-center gap-2 text-center">
               <GitBranch className="h-6 w-6 text-white/15" />
-              <p className="text-sm text-white/50">Select a run to watch it live</p>
-              <p className="text-xs text-white/30">Stages light up as they run — click any stage for its details.</p>
+              <p className="text-sm text-ps-text-muted">Select a run to watch it live</p>
+              <p className="text-xs text-ps-text-muted">Stages light up as they run — click any stage for its details.</p>
             </div>
           ) : !run || !graph ? (
             // A run IS selected but its graph is still loading — show a skeleton,
@@ -289,25 +289,25 @@ export default function ComposerPage() {
             <div className="flex h-[60vh] min-h-[420px] items-center justify-center rounded-xl border border-white/10 bg-dark-900/40">
               <div className="flex flex-col items-center gap-2 text-center">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/15 border-t-neon-cyan" />
-                <p className="text-xs text-white/40">Loading run…</p>
+                <p className="text-xs text-ps-text-muted">Loading run…</p>
               </div>
             </div>
           ) : (
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-3 rounded-lg border border-white/10 bg-dark-900/40 px-3 py-2.5">
                 <div className="min-w-0">
-                  <div className="truncate text-sm text-white/85">{runTitle(run.input)}</div>
+                  <div className="truncate text-sm text-ps-text-primary">{runTitle(run.input)}</div>
                   {run.error ? (
                     <p className="mt-1 text-xs text-neon-pink">{run.error}</p>
                   ) : (
-                    <p className="mt-1 text-[11px] text-white/30">Click a stage for its verdict & output</p>
+                    <p className="mt-1 text-xs text-ps-text-muted">Click a stage for its verdict & output</p>
                   )}
                 </div>
                 <div className="shrink-0 text-right">
-                  <div className={`font-mono text-[11px] uppercase ${STATUS_COLOR[run.status] ?? "text-white/40"}`}>
+                  <div className={`font-mono text-xs uppercase ${STATUS_COLOR[run.status] ?? "text-ps-text-muted"}`}>
                     {run.status}
                   </div>
-                  <div className="mt-0.5 text-[10px] text-white/30">{timeAgo(run.createdAt)}</div>
+                  <div className="mt-0.5 text-xs text-ps-text-muted">{timeAgo(run.createdAt)}</div>
                 </div>
               </div>
               <WorkflowRunCanvas

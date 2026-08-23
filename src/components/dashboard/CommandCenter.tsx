@@ -66,7 +66,7 @@ function CardHeader({ icon: Icon, label, color = "cyan", right }: { icon: React.
     <div className="mb-3 flex items-center justify-between">
       <div className="flex items-center gap-2">
         <Icon className="h-3.5 w-3.5" style={{ color: neon(color) }} />
-        <span className="font-mono text-xs uppercase tracking-wider text-white/50">{label}</span>
+        <span className="font-mono text-xs uppercase tracking-wider text-ps-text-muted">{label}</span>
       </div>
       {right}
     </div>
@@ -94,11 +94,11 @@ function StatTile({
     <div className="rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2.5" style={{ boxShadow: `inset 0 0 16px ${neonAlpha(color, 5)}` }}>
       <div className="flex items-center gap-1.5">
         <Icon className="h-3 w-3" style={{ color: neon(color) }} />
-        <span className="text-[10px] uppercase tracking-wider text-white/40">{label}</span>
+        <span className="text-xs uppercase tracking-wider text-ps-text-muted">{label}</span>
       </div>
       <div className="mt-1 font-mono text-2xl font-bold leading-none text-white">
         {display}
-        {suffix && <span className="ml-0.5 text-sm font-normal text-white/40">{suffix}</span>}
+        {suffix && <span className="ml-0.5 text-sm font-normal text-ps-text-muted">{suffix}</span>}
       </div>
     </div>
   );
@@ -176,8 +176,8 @@ export default function CommandCenter() {
         {next && (
           <div className="relative mt-3 flex items-center gap-2 border-t border-white/5 pt-3 text-xs">
             <CalendarClock className="h-3.5 w-3.5 text-neon-cyan" />
-            <span className="text-white/50">Next automation</span>
-            <span className="font-medium text-white/80">{next.name}</span>
+            <span className="text-ps-text-muted">Next automation</span>
+            <span className="font-medium text-ps-text-primary">{next.name}</span>
             {next.kind === "script" ? (
               <Terminal className="h-3 w-3 text-neon-green" />
             ) : (
@@ -195,14 +195,14 @@ export default function CommandCenter() {
             icon={TrendingUp}
             label="Mission throughput · 30d"
             right={
-              <span className="font-mono text-sm text-white/70">
-                {throughputTotal} <span className="text-xs text-white/40">completed</span>
+              <span className="font-mono text-sm text-ps-text-secondary">
+                {throughputTotal} <span className="text-xs text-ps-text-muted">completed</span>
               </span>
             }
           />
           <AreaTrend data={throughput} color="cyan" failColor="pink" height={110} />
           <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3">
-            <div className="flex items-center gap-2 text-[11px] text-white/40">
+            <div className="flex items-center gap-2 text-xs text-ps-text-muted">
               <Coins className="h-3 w-3 text-neon-yellow" /> Token usage · 30d
             </div>
             <Sparkline data={tokensByDay.map((d) => d.value)} color="yellow" width={160} height={28} />
@@ -235,8 +235,8 @@ export default function CommandCenter() {
               ].map((s) => (
                 <div key={s.label} className="flex items-center gap-2">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ background: neon(s.color), boxShadow: `0 0 6px ${neonAlpha(s.color, 60)}` }} />
-                  <span className="text-white/50">{s.label}</span>
-                  <span className="ml-auto font-mono text-white/80">{s.value}</span>
+                  <span className="text-ps-text-muted">{s.label}</span>
+                  <span className="ml-auto font-mono text-ps-text-primary">{s.value}</span>
                 </div>
               ))}
             </div>
@@ -247,7 +247,7 @@ export default function CommandCenter() {
       {/* ── Activity heatmap + vitals ── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2" accent="green">
-          <CardHeader icon={Activity} label="Run activity · 13 weeks" right={<span className="font-mono text-xs text-white/40">{runs.completed} runs</span>} />
+          <CardHeader icon={Activity} label="Run activity · 13 weeks" right={<span className="font-mono text-xs text-ps-text-muted">{runs.completed} runs</span>} />
           <ActivityHeatmap data={runActivity} color="green" />
         </Card>
         <Card accent="cyan">
@@ -263,7 +263,7 @@ export default function CommandCenter() {
               sublabel="active"
             />
           </div>
-          <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3 text-[11px] text-white/40">
+          <div className="mt-3 flex items-center justify-between border-t border-white/5 pt-3 text-xs text-ps-text-muted">
             <span>avg run {runs.avgDurationSec > 0 ? `${runs.avgDurationSec}s` : "—"}</span>
             <span>{automations.schedulesEnabled + automations.scriptsEnabled} automations live</span>
           </div>

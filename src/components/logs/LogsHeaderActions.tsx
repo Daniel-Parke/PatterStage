@@ -42,7 +42,7 @@ export default function LogsHeaderActions({
         className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-all duration-300 ${
           autoRefresh
             ? "bg-neon-cyan/20 text-neon-cyan border border-neon-cyan/50 shadow-[0_0_8px_rgba(6,214,214,0.3)]"
-            : "bg-dark-900/50 text-white/40 border border-white/10 hover:text-white/60"
+            : "bg-dark-900/50 text-ps-text-muted border border-white/10 hover:text-ps-text-secondary"
         } ${autoRefresh ? "animate-auto-refresh-tick" : ""}`}
         title={autoRefresh ? "Auto-refresh on (click to disable)" : "Auto-refresh off (click to enable)"}
       >

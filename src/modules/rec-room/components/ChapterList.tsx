@@ -40,10 +40,10 @@ export default function ChapterList({ chapters, currentChapter, onSelect }: {
             <div className="flex items-center gap-2.5 min-w-0">
               {getStatusDot(ch)}
               <div className="min-w-0">
-                <div className={`text-xs truncate ${isCurrent ? "text-white" : "text-white/60"}`}>
+                <div className={`text-xs truncate ${isCurrent ? "text-white" : "text-ps-text-secondary"}`}>
                   {ch.title}
                 </div>
-                <div className="text-[9px] font-mono text-white/20">
+                <div className="text-xs font-mono text-ps-text-faint">
                   {ch.status === "complete" ? `${ch.wordCount} words` : ch.status}
                 </div>
               </div>

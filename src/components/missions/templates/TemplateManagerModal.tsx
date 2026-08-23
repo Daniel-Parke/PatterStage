@@ -57,9 +57,9 @@ function TemplateRow({
       className="flex items-center justify-between p-2.5 rounded-lg border border-white/5 bg-dark-800/30 hover:border-white/10 transition-colors group"
     >
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
-        <div className="text-sm text-white/80 truncate">{template.name}</div>
+        <div className="text-sm text-ps-text-primary truncate">{template.name}</div>
         {!template.isCustom && (
-          <span className="text-[9px] font-mono text-white/15 flex-shrink-0">
+          <span className="text-xs font-mono text-ps-text-faint flex-shrink-0">
             built-in
           </span>
         )}
@@ -68,7 +68,7 @@ function TemplateRow({
         <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={() => onEdit(template)}
-            className="p-1.5 rounded text-white/40 hover:text-neon-cyan hover:bg-cyan-500/10 transition-colors"
+            className="p-1.5 rounded text-ps-text-muted hover:text-neon-cyan hover:bg-cyan-500/10 transition-colors"
             title="Edit"
           >
             <Edit3 className="w-3.5 h-3.5" />
@@ -78,7 +78,7 @@ function TemplateRow({
             className={`p-1.5 rounded transition-colors ${
               isArmed
                 ? "text-neon-red bg-neon-red/15 ring-1 ring-neon-red/40"
-                : "text-white/40 hover:text-red-400 hover:bg-red-500/10"
+                : "text-ps-text-muted hover:text-red-400 hover:bg-red-500/10"
             }`}
             title={isArmed ? "Click again to confirm" : "Delete"}
           >
@@ -126,7 +126,7 @@ export function TemplateManagerModal({
       <div className="space-y-2">
         {isEmpty && (
           <div className="py-8 text-center space-y-3">
-            <p className="text-xs font-mono text-white/40">
+            <p className="text-xs font-mono text-ps-text-muted">
               No templates to show. Built-in templates load from the server —
               if this stays empty, check the browser console and restart Control
               Hub after <code className="text-neon-cyan">npm run db:migrate</code>.

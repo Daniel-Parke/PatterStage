@@ -270,8 +270,8 @@ export default function ToolsPage() {
               Toolset policy on disk differs from PatterStage (format or values).{" "}
               <strong>Pull from Hermes</strong> imports disk into SQLite;{" "}
               <strong>Save &amp; push toolsets</strong> or <strong>Push</strong> writes canonical{" "}
-              <code className="text-white/50">config.yaml</code> to{" "}
-              <code className="text-white/50">~/.hermes</code>.
+              <code className="text-ps-text-muted">config.yaml</code> to{" "}
+              <code className="text-ps-text-muted">~/.hermes</code>.
             </p>
           </div>
         )}
@@ -288,17 +288,17 @@ export default function ToolsPage() {
             <p className="text-xs text-semantic-warning/90">
               Platforms have different toolsets on disk. The grid below shows the union.
               <strong>Save &amp; push</strong> applies one list to all gateways (like
-              <code className="text-white/50">hermes tools</code> configure all).
+              <code className="text-ps-text-muted">hermes tools</code> configure all).
             </p>
           </div>
         )}
         <div className="mb-4 p-3 rounded-lg bg-dark-900/50 border border-white/5 flex items-start gap-2">
-          <Info className="w-4 h-4 text-white/30 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-white/30">
-            Hermes stores <code className="text-white/40">platform_toolsets</code> per gateway key;
+          <Info className="w-4 h-4 text-ps-text-muted flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-ps-text-muted">
+            Hermes stores <code className="text-ps-text-muted">platform_toolsets</code> per gateway key;
             PatterStage uses one enabled list per profile and fans it out on save (Nous-aligned with
-            configure all platforms). Use <strong className="text-white/50">Pull</strong> after{" "}
-            <code className="text-white/40">hermes tools</code> on disk.
+            configure all platforms). Use <strong className="text-ps-text-muted">Pull</strong> after{" "}
+            <code className="text-ps-text-muted">hermes tools</code> on disk.
           </p>
         </div>
 
@@ -318,7 +318,7 @@ export default function ToolsPage() {
             </div>
             <div className="flex-1 min-w-0">
               {toolsetsSource && toolsetsSource !== "database" && (
-                <p className="text-[10px] font-mono text-neon-orange/70 mb-2">
+                <p className="text-xs font-mono text-neon-orange/90 mb-2">
                   Hydrated from{" "}
                   {toolsetsSource === "config_yaml" ? "config.yaml" : "seed pack"} into SQLite.
                 </p>
@@ -328,7 +328,7 @@ export default function ToolsPage() {
               ) : (
                 <>
                   <div>
-                    <h3 className="text-xs font-mono text-white/50 uppercase tracking-widest mb-2">
+                    <h3 className="text-xs font-mono text-ps-text-muted uppercase tracking-widest mb-2">
                       Enabled toolsets
                     </h3>
                     <div className="flex flex-wrap gap-2">
@@ -340,10 +340,10 @@ export default function ToolsPage() {
                             type="button"
                             title={toolset.description}
                             onClick={() => toggleUnifiedToolset(toolset.id)}
-                            className={`text-[10px] font-mono px-2 py-1 rounded border transition-colors ${
+                            className={`text-xs font-mono px-2 py-1 rounded border transition-colors ${
                               on
                                 ? "border-neon-orange/50 bg-neon-orange/15 text-neon-orange"
-                                : "border-white/10 bg-white/5 text-white/40 hover:border-white/20"
+                                : "border-white/10 bg-white/5 text-ps-text-muted hover:border-white/20"
                             }`}
                           >
                             {toolset.label}
@@ -355,7 +355,7 @@ export default function ToolsPage() {
                   <div className="mt-4 border-t border-white/10 pt-3">
                     <button
                       type="button"
-                      className="text-[10px] font-mono text-white/40 hover:text-white/60"
+                      className="text-xs font-mono text-ps-text-muted hover:text-ps-text-secondary"
                       onClick={() => setShowAdvancedJson((v) => !v)}
                     >
                       {showAdvancedJson ? "Hide" : "Show"} advanced JSON
@@ -364,7 +364,7 @@ export default function ToolsPage() {
                       <textarea
                         value={toolsetsJson}
                         onChange={(event) => setToolsetsJson(event.target.value)}
-                        className="mt-2 w-full min-h-32 rounded-lg bg-dark-950/80 border border-white/10 p-3 text-xs font-mono text-white/80 outline-none focus:border-neon-orange/50"
+                        className="mt-2 w-full min-h-32 rounded-lg bg-dark-950/80 border border-white/10 p-3 text-xs font-mono text-ps-text-primary outline-none focus:border-neon-orange/50"
                         spellCheck={false}
                       />
                     )}
@@ -376,17 +376,17 @@ export default function ToolsPage() {
         </div>
 
         <div className="mt-6 rounded-xl border border-white/10 bg-dark-900/30 p-4">
-          <h3 className="text-xs font-mono text-white/50 uppercase tracking-widest mb-2">
+          <h3 className="text-xs font-mono text-ps-text-muted uppercase tracking-widest mb-2">
             Reference — Hermes toolset IDs
           </h3>
-          <p className="text-[10px] text-white/30 mb-3">
+          <p className="text-xs text-ps-text-muted mb-3">
             Catalog for labels only. Enabling toolsets above updates the selected profile config.
           </p>
-          <ul className="grid sm:grid-cols-2 gap-2 text-[10px] font-mono text-white/40">
+          <ul className="grid sm:grid-cols-2 gap-2 text-xs font-mono text-ps-text-muted">
             {HERMES_CONFIGURABLE_TOOLSETS.map((entry) => (
               <li key={entry.id}>
-                <span className="text-white/55">{entry.id}</span>
-                <span className="text-white/25"> — {entry.description}</span>
+                <span className="text-ps-text-muted">{entry.id}</span>
+                <span className="text-ps-text-faint"> — {entry.description}</span>
               </li>
             ))}
           </ul>

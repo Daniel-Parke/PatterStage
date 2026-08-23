@@ -71,8 +71,8 @@ export default function StoryWeaverDashboard() {
             { label: "Words Written", value: totalWords.toLocaleString() },
           ].map((stat) => (
             <div key={stat.label} className="rounded-xl border border-white/5 bg-dark-900/30 p-4 text-center">
-              <div className="text-2xl font-bold text-white/80">{stat.value}</div>
-              <div className="text-[10px] font-mono text-white/25 uppercase tracking-wider mt-1">{stat.label}</div>
+              <div className="text-2xl font-bold text-ps-text-primary">{stat.value}</div>
+              <div className="text-xs font-mono text-ps-text-faint uppercase tracking-wider mt-1">{stat.label}</div>
             </div>
           ))}
         </div>
@@ -84,15 +84,15 @@ export default function StoryWeaverDashboard() {
             <Plus className="w-4 h-4" /> Create
           </button>
           <button onClick={() => router.push("/recroom/story-weaver/library")}
-            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-white/10 text-sm font-mono text-white/50 hover:text-white/70 hover:bg-white/5 transition-all">
+            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-white/10 text-sm font-mono text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-all">
             <Library className="w-4 h-4" /> Library
           </button>
           <button onClick={() => router.push("/recroom/story-weaver/characters")}
-            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-white/10 text-sm font-mono text-white/50 hover:text-white/70 hover:bg-white/5 transition-all">
+            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-white/10 text-sm font-mono text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-all">
             <Users className="w-4 h-4" /> Characters
           </button>
           <button onClick={() => router.push("/recroom/story-weaver/themes")}
-            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-white/10 text-sm font-mono text-white/50 hover:text-white/70 hover:bg-white/5 transition-all">
+            className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl border border-white/10 text-sm font-mono text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-all">
             <FileText className="w-4 h-4" /> Themes
           </button>
         </div>
@@ -101,10 +101,10 @@ export default function StoryWeaverDashboard() {
         {recent.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-mono text-white/40 uppercase tracking-widest">Recent Stories</h2>
+              <h2 className="text-sm font-mono text-ps-text-muted uppercase tracking-widest">Recent Stories</h2>
               {stories.length > 3 && (
                 <button onClick={() => router.push("/recroom/story-weaver/library")}
-                  className="text-[10px] font-mono text-neon-purple hover:underline flex items-center gap-1">
+                  className="text-xs font-mono text-neon-purple hover:underline flex items-center gap-1">
                   View all <ChevronRight className="w-3 h-3" />
                 </button>
               )}
@@ -123,8 +123,8 @@ export default function StoryWeaverDashboard() {
         {stories.length === 0 && !loading && (
           <div className="text-center py-16">
             <Sparkles className="w-12 h-12 text-white/10 mx-auto mb-4" />
-            <h3 className="text-lg font-serif text-white/50 mb-2">Your story awaits</h3>
-            <p className="text-sm text-white/25">Create your first story and let the adventure begin.</p>
+            <h3 className="text-lg font-serif text-ps-text-muted mb-2">Your story awaits</h3>
+            <p className="text-sm text-ps-text-faint">Create your first story and let the adventure begin.</p>
           </div>
         )}
       </div>

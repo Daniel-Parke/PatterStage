@@ -58,13 +58,13 @@ export default function ToolsetSelector({
         onClick={() => setOpen(!open)}
         className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm hover:border-white/30 transition-colors text-left"
       >
-        <Wrench className="w-4 h-4 text-neon-orange/70 flex-shrink-0" />
-        <span className="text-white/50 flex-1">
+        <Wrench className="w-4 h-4 text-neon-orange/90 flex-shrink-0" />
+        <span className="text-ps-text-muted flex-1">
           {value.length === 0
             ? "Recommend Hermes toolsets (optional)…"
             : `${value.length} toolset${pluralise(value.length)} selected`}
         </span>
-        <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`w-4 h-4 text-ps-text-muted transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {value.length > 0 && (
@@ -72,7 +72,7 @@ export default function ToolsetSelector({
           {value.map((id) => (
             <span
               key={id}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-neon-orange/10 border border-neon-orange/20 text-xs font-mono text-neon-orange/80"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-neon-orange/10 border border-neon-orange/20 text-xs font-mono text-neon-orange/90"
             >
               {toolsetLabel(id)}
               <button type="button" onClick={() => remove(id)} className="hover:text-white">
@@ -87,7 +87,7 @@ export default function ToolsetSelector({
         <div className="absolute z-50 mt-1 w-full rounded-lg border border-white/10 bg-dark-900 shadow-xl">
           <div className="p-2 border-b border-white/10">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-white/30" />
+              <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-ps-text-muted" />
               <input
                 type="text"
                 value={search}
@@ -96,21 +96,21 @@ export default function ToolsetSelector({
                 className="w-full pl-8 pr-3 py-2 text-xs bg-dark-950 border border-white/10 rounded text-white focus:outline-none focus:border-neon-orange/40"
               />
             </div>
-            <p className="text-[10px] text-white/30 mt-1.5 px-1">
+            <p className="text-xs text-ps-text-muted mt-1.5 px-1">
               Prompt hints only — runtime tools come from the profile config.
             </p>
           </div>
           <div className="max-h-48 overflow-y-auto p-1">
             {loading ? (
-              <div className="flex items-center justify-center py-4 text-white/30">
+              <div className="flex items-center justify-center py-4 text-ps-text-muted">
                 <Loader2 className="w-4 h-4 animate-spin" />
               </div>
             ) : available.length === 0 ? (
-              <p className="text-xs text-white/30 px-2 py-3">
+              <p className="text-xs text-ps-text-muted px-2 py-3">
                 No toolsets on this profile. Configure on Operations → Tools.
               </p>
             ) : filtered.length === 0 ? (
-              <p className="text-xs text-white/30 px-2 py-3">No matches</p>
+              <p className="text-xs text-ps-text-muted px-2 py-3">No matches</p>
             ) : (
               filtered.map((id) => (
                 <button
@@ -120,10 +120,10 @@ export default function ToolsetSelector({
                     add(id);
                     setSearch("");
                   }}
-                  className="w-full text-left px-2 py-1.5 rounded text-xs font-mono text-white/70 hover:bg-white/5"
+                  className="w-full text-left px-2 py-1.5 rounded text-xs font-mono text-ps-text-secondary hover:bg-white/5"
                 >
                   {toolsetLabel(id)}
-                  <span className="text-white/25 ml-1">({id})</span>
+                  <span className="text-ps-text-faint ml-1">({id})</span>
                 </button>
               ))
             )}

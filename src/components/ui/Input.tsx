@@ -29,7 +29,7 @@ export function SearchInput({
 
   return (
     <div className="relative">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ps-text-muted" />
       <input
         type="text"
         value={value}
@@ -63,9 +63,9 @@ export function TextInput({
   // labeled text field shares one border/hover/focus-ring treatment.
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-white/70">{label}</label>
+      <label className="text-sm font-medium text-ps-text-secondary">{label}</label>
       {description && (
-        <p className="text-xs text-white/40">{description}</p>
+        <p className="text-xs text-ps-text-muted">{description}</p>
       )}
       <FieldInput
         type={type}
@@ -97,9 +97,9 @@ export function NumberInput({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-white/70">{label}</label>
+      <label className="text-sm font-medium text-ps-text-secondary">{label}</label>
       {description && (
-        <p className="text-xs text-white/40">{description}</p>
+        <p className="text-xs text-ps-text-muted">{description}</p>
       )}
       <FieldInput
         type="number"
@@ -139,9 +139,9 @@ export function Toggle({
   return (
     <div className="flex items-center justify-between py-2">
       <div>
-        <div className="text-sm font-medium text-white/70">{label}</div>
+        <div className="text-sm font-medium text-ps-text-secondary">{label}</div>
         {description && (
-          <p className="text-xs text-white/40 mt-0.5">{description}</p>
+          <p className="text-xs text-ps-text-muted mt-0.5">{description}</p>
         )}
       </div>
       <InlineToggle value={value} onChange={onChange} color={color} />
@@ -204,8 +204,8 @@ export function Select({
   // instead of falling back to the OS-native control.
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-white/70">{label}</label>
-      {description && <p className="text-xs text-white/40">{description}</p>}
+      <label className="text-sm font-medium text-ps-text-secondary">{label}</label>
+      {description && <p className="text-xs text-ps-text-muted">{description}</p>}
       <FieldSelect
         ariaLabel={label}
         value={value}

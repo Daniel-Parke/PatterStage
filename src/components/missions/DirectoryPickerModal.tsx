@@ -102,7 +102,7 @@ export default function DirectoryPickerModal({
             <ChevronUp className="w-4 h-4" />
             Up
           </Button>
-          <div className="text-[10px] font-mono text-white/50 truncate flex-1" title={path}>
+          <div className="text-xs font-mono text-ps-text-muted truncate flex-1" title={path}>
             {path || "…"}
           </div>
         </div>
@@ -113,7 +113,7 @@ export default function DirectoryPickerModal({
         )}
         <div className="max-h-72 overflow-y-auto rounded-lg border border-white/10 bg-dark-900/50">
           {loading ? (
-            <div className="p-6 text-center text-xs text-white/40 font-mono">Loading…</div>
+            <div className="p-6 text-center text-xs text-ps-text-muted font-mono">Loading…</div>
           ) : (
             <ul className="divide-y divide-white/5">
               {entries.map((e) => (
@@ -130,8 +130,8 @@ export default function DirectoryPickerModal({
                     }}
                     className={`w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-mono transition-colors ${
                       e.isDir
-                        ? "hover:bg-white/5 text-white/80"
-                        : "text-white/25 cursor-not-allowed"
+                        ? "hover:bg-white/5 text-ps-text-primary"
+                        : "text-ps-text-faint cursor-not-allowed"
                     }`}
                   >
                     {e.isDir ? (
@@ -144,7 +144,7 @@ export default function DirectoryPickerModal({
                 </li>
               ))}
               {entries.length === 0 && !loading && (
-                <li className="px-3 py-4 text-xs text-white/30 font-mono text-center">
+                <li className="px-3 py-4 text-xs text-ps-text-muted font-mono text-center">
                   Empty folder
                 </li>
               )}

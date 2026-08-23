@@ -30,7 +30,7 @@ export default function ComposerGatePrompt({
     <div className="space-y-2 rounded-lg border border-neon-yellow/30 bg-neon-yellow/[0.08] px-3 py-2.5">
       <div className="flex items-center gap-2">
         <ShieldQuestion className="h-4 w-4 shrink-0 text-neon-yellow" />
-        <span className="text-xs text-white/70">
+        <span className="text-xs text-ps-text-secondary">
           Gate at <span className="font-mono text-neon-yellow">{nodeLabel}</span> — your call:
         </span>
       </div>
@@ -39,7 +39,7 @@ export default function ComposerGatePrompt({
         onChange={(e) => setNote(e.target.value)}
         rows={2}
         placeholder="Optional note (e.g. what to change on reject)…"
-        className="w-full rounded border border-white/10 bg-dark-950/60 px-2 py-1 text-xs text-white/80 placeholder:text-white/25 focus:border-neon-yellow/40 focus:outline-none"
+        className="w-full rounded border border-white/10 bg-dark-950/60 px-2 py-1 text-xs text-ps-text-primary placeholder:text-ps-text-faint focus:border-neon-yellow/40 focus:outline-none"
       />
       <div className="flex items-center gap-2">
         <button

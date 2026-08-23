@@ -59,7 +59,7 @@ function FallbackRow({
       className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"
     >
       <td className="px-3 py-2">
-        <span className="inline-flex items-center justify-center w-5 h-5 text-[10px] font-mono bg-white/10 text-white/50 rounded">
+        <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-mono bg-white/10 text-ps-text-muted rounded">
           {position + 1}
         </span>
       </td>
@@ -67,7 +67,7 @@ function FallbackRow({
         <div className="font-mono text-white truncate max-w-[200px]">
           {entry.modelName}
         </div>
-        <div className="text-[10px] font-mono text-white/30 truncate max-w-[200px]">
+        <div className="text-xs font-mono text-ps-text-muted truncate max-w-[200px]">
           {entry.provider} / {entry.modelIdString}
         </div>
       </td>
@@ -87,7 +87,7 @@ function FallbackRow({
             onClick={() => onReorder(entry.id, "up")}
             disabled={disabled || position === 0}
             title="Move up"
-            className="p-1 rounded text-white/30 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-1 rounded text-ps-text-muted hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronUp className="w-3.5 h-3.5" />
           </button>
@@ -96,7 +96,7 @@ function FallbackRow({
             onClick={() => onReorder(entry.id, "down")}
             disabled={disabled || position === total - 1}
             title="Move down"
-            className="p-1 rounded text-white/30 hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-1 rounded text-ps-text-muted hover:text-white hover:bg-white/5 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
@@ -106,7 +106,7 @@ function FallbackRow({
             onClick={() => onEdit(entry)}
             disabled={disabled}
             title="Edit"
-            className="p-1 rounded text-white/30 hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-50"
+            className="p-1 rounded text-ps-text-muted hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-50"
           >
             <Edit3 className="w-3.5 h-3.5" />
           </button>
@@ -149,7 +149,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
     >
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-[10px] font-mono text-white/40 uppercase mb-0.5">
+          <label className="block text-xs font-mono text-ps-text-muted uppercase mb-0.5">
             Name
           </label>
           <input
@@ -162,7 +162,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
           />
         </div>
         <div>
-          <label className="block text-[10px] font-mono text-white/40 uppercase mb-0.5">
+          <label className="block text-xs font-mono text-ps-text-muted uppercase mb-0.5">
             Provider
           </label>
           <input
@@ -176,7 +176,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
         </div>
       </div>
       <div>
-        <label className="block text-[10px] font-mono text-white/40 uppercase mb-0.5">
+        <label className="block text-xs font-mono text-ps-text-muted uppercase mb-0.5">
           Model ID
         </label>
         <input
@@ -189,7 +189,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
         />
       </div>
       <div>
-        <label className="block text-[10px] font-mono text-white/40 uppercase mb-0.5">
+        <label className="block text-xs font-mono text-ps-text-muted uppercase mb-0.5">
           Base URL (optional)
         </label>
         <input
@@ -204,7 +204,7 @@ function AddCustomForm({ onConfirm, onCancel }: AddCustomFormProps) {
         <button
           type="button"
           onClick={onCancel}
-          className="px-3 py-1 text-xs font-mono text-white/50 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+          className="px-3 py-1 text-xs font-mono text-ps-text-muted hover:text-white rounded-lg hover:bg-white/5 transition-colors"
         >
           Cancel
         </button>
@@ -256,7 +256,7 @@ export default function FallbackChainList({
     <div className="space-y-2">
       {sortedChain.length === 0 && !showAddCustom ? (
         <GlowSurface accent="purple">
-          <div className="text-center py-6 rounded-xl border border-white/10 bg-dark-900/50 text-xs text-white/30 font-mono">
+          <div className="text-center py-6 rounded-xl border border-white/10 bg-dark-900/50 text-xs text-ps-text-muted font-mono">
             No fallback models configured
           </div>
         </GlowSurface>
@@ -264,7 +264,7 @@ export default function FallbackChainList({
         <GlowSurface accent="purple">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-[10px] font-mono uppercase tracking-widest text-white/40 border-b border-white/5">
+              <tr className="text-left text-xs font-mono uppercase tracking-widest text-ps-text-muted border-b border-white/5">
                 <th className="px-3 py-2 w-10">#</th>
                 <th className="px-3 py-2">Model</th>
                 <th className="px-3 py-2 w-16 text-center">Enabled</th>
@@ -309,7 +309,7 @@ export default function FallbackChainList({
             type="button"
             onClick={() => setShowRegistryDropdown((v) => !v)}
             disabled={disabled || models.length === 0}
-            className="flex items-center gap-1.5 px-3 h-8 text-xs font-mono text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-3 h-8 text-xs font-mono text-ps-text-muted hover:text-white bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-3.5 h-3.5" />
             Add from Registry
@@ -327,7 +327,7 @@ export default function FallbackChainList({
                   <div className="text-xs font-mono text-white truncate">
                     {m.name}
                   </div>
-                  <div className="text-[10px] font-mono text-white/30 truncate">
+                  <div className="text-xs font-mono text-ps-text-muted truncate">
                     {m.provider} / {m.modelId}
                   </div>
                 </button>
@@ -341,7 +341,7 @@ export default function FallbackChainList({
           type="button"
           onClick={() => setShowAddCustom(true)}
           disabled={disabled}
-          className="flex items-center gap-1.5 px-3 h-8 text-xs font-mono text-white/50 hover:text-white bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-3 h-8 text-xs font-mono text-ps-text-muted hover:text-white bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus className="w-3.5 h-3.5" />
           Add Custom

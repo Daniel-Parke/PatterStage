@@ -52,16 +52,16 @@ const STEP_DOT: Record<string, string> = {
 // reader (src/modules/rec-room/components/ChapterReader.tsx). The lock-book's
 // "Measures" slot is still "set at first build", so the code is the convention.
 const PROSE =
-  "max-w-3xl text-sm leading-relaxed text-white/80 " +
+  "max-w-3xl text-sm leading-relaxed text-ps-text-primary " +
   "[&_h1]:mt-6 [&_h1]:mb-2 [&_h1]:text-lg [&_h1]:font-bold [&_h1]:text-white " +
   "[&_h2]:mt-6 [&_h2]:mb-2 [&_h2]:scroll-mt-20 [&_h2]:border-b [&_h2]:border-white/10 [&_h2]:pb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-white " +
-  "[&_h3]:mt-4 [&_h3]:mb-1 [&_h3]:font-semibold [&_h3]:text-white/90 " +
+  "[&_h3]:mt-4 [&_h3]:mb-1 [&_h3]:font-semibold [&_h3]:text-ps-text-primary " +
   "[&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 " +
   "[&_a]:text-neon-cyan hover:[&_a]:underline " +
   "[&_code]:rounded [&_code]:bg-dark-800 [&_code]:px-1 [&_code]:text-[0.85em] [&_code]:text-neon-green " +
   "[&_pre.dr-code]:my-3 [&_pre.dr-code]:overflow-x-auto [&_pre.dr-code]:rounded-lg [&_pre.dr-code]:border [&_pre.dr-code]:border-white/10 [&_pre.dr-code]:bg-dark-950 [&_pre.dr-code]:p-3 " +
-  "[&_pre.dr-code_code]:bg-transparent [&_pre.dr-code_code]:p-0 [&_pre.dr-code_code]:text-white/70 " +
-  "[&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-neon-cyan/50 [&_blockquote]:pl-3 [&_blockquote]:text-white/60 " +
+  "[&_pre.dr-code_code]:bg-transparent [&_pre.dr-code_code]:p-0 [&_pre.dr-code_code]:text-ps-text-secondary " +
+  "[&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-neon-cyan/50 [&_blockquote]:pl-3 [&_blockquote]:text-ps-text-secondary " +
   "[&_.dr-cite]:font-medium [&_.dr-cite]:text-neon-cyan [&_.dr-cite]:no-underline hover:[&_.dr-cite]:underline";
 
 // The skim layer (T-0023, WG-WEB-006). A research report is read once and it is
@@ -76,19 +76,19 @@ const BRIEF =
   "rounded-xl border border-neon-cyan/25 bg-neon-cyan/5 px-4 py-3 " +
   "[&_.dr-brief-lbl]:mb-2 [&_.dr-brief-lbl]:font-mono [&_.dr-brief-lbl]:text-xs [&_.dr-brief-lbl]:uppercase [&_.dr-brief-lbl]:tracking-widest [&_.dr-brief-lbl]:text-neon-cyan " +
   "[&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-5 " +
-  "[&_li]:text-sm [&_li]:leading-relaxed [&_li]:text-white/80 " +
+  "[&_li]:text-sm [&_li]:leading-relaxed [&_li]:text-ps-text-primary " +
   "[&_a]:text-neon-cyan hover:[&_a]:underline";
 
 const NAV =
   "rounded-xl border border-white/10 bg-dark-900/40 px-4 py-3 " +
-  "[&_.dr-nav-lbl]:mb-2 [&_.dr-nav-lbl]:font-mono [&_.dr-nav-lbl]:text-xs [&_.dr-nav-lbl]:uppercase [&_.dr-nav-lbl]:tracking-widest [&_.dr-nav-lbl]:text-white/40 " +
+  "[&_.dr-nav-lbl]:mb-2 [&_.dr-nav-lbl]:font-mono [&_.dr-nav-lbl]:text-xs [&_.dr-nav-lbl]:uppercase [&_.dr-nav-lbl]:tracking-widest [&_.dr-nav-lbl]:text-ps-text-muted " +
   "[&_ol]:flex [&_ol]:list-none [&_ol]:flex-wrap [&_ol]:gap-x-5 [&_ol]:gap-y-1 [&_ol]:p-0 " +
-  "[&_li]:text-sm [&_a]:text-white/70 hover:[&_a]:text-neon-cyan hover:[&_a]:underline";
+  "[&_li]:text-sm [&_a]:text-ps-text-secondary hover:[&_a]:text-neon-cyan hover:[&_a]:underline";
 
 const SOURCES =
   "[&_ol.dr-sources]:list-none [&_ol.dr-sources]:space-y-2 [&_ol.dr-sources]:pl-0 " +
   "[&_ol.dr-sources_li]:rounded-lg [&_ol.dr-sources_li]:border [&_ol.dr-sources_li]:border-white/10 [&_ol.dr-sources_li]:bg-dark-900/50 [&_ol.dr-sources_li]:p-2.5 [&_ol.dr-sources_li]:scroll-mt-20 " +
-  "[&_.n]:font-semibold [&_.n]:text-neon-cyan [&_a]:text-white/80 hover:[&_a]:text-neon-cyan [&_.u]:mt-0.5 [&_.u]:break-all [&_.u]:text-[11px] [&_.u]:text-white/30";
+  "[&_.n]:font-semibold [&_.n]:text-neon-cyan [&_a]:text-ps-text-primary hover:[&_a]:text-neon-cyan [&_.u]:mt-0.5 [&_.u]:break-all [&_.u]:text-xs [&_.u]:text-ps-text-muted";
 
 export default function ResearchReport({ run, steps }: { run: ResearchRun; steps: ResearchStep[] }) {
   const [copied, setCopied] = useState(false);
@@ -143,7 +143,7 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
       {report ? (
         <div className={PROSE} dangerouslySetInnerHTML={{ __html: report.html }} />
       ) : run.status === "running" || run.status === "pending" ? (
-        <div className="flex items-center gap-2 text-sm text-white/40">
+        <div className="flex items-center gap-2 text-sm text-ps-text-muted">
           <Loader2 className="h-4 w-4 animate-spin" /> Researching…
         </div>
       ) : null}
@@ -151,7 +151,7 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
       {/* Sources */}
       {sources.length ? (
         <div>
-          <h3 className="mb-2 text-[11px] font-mono uppercase tracking-widest text-white/40">
+          <h3 className="mb-2 text-xs font-mono uppercase tracking-widest text-ps-text-muted">
             Sources ({sources.length})
           </h3>
           <div className={SOURCES} dangerouslySetInnerHTML={{ __html: renderSourcesHtml(sources) }} />
@@ -162,7 +162,7 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
           While the run is live the rail "electrifies" and a working head pulses. */}
       {steps.length ? (
         <div>
-          <h3 className="mb-2 text-[11px] font-mono uppercase tracking-widest text-white/40">
+          <h3 className="mb-2 text-xs font-mono uppercase tracking-widest text-ps-text-muted">
             Research timeline
           </h3>
           <ol className="relative space-y-2">
@@ -185,13 +185,13 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
                   />
                   <details open={active} className="rounded-lg border border-white/10 bg-dark-900/40">
                     <summary className="cursor-pointer list-none px-3 py-2 text-xs">
-                      <span className={`font-mono uppercase tracking-wider ${STEP_COLOR[s.kind] ?? "text-white/60"}`}>
+                      <span className={`font-mono uppercase tracking-wider ${STEP_COLOR[s.kind] ?? "text-ps-text-secondary"}`}>
                         {STEP_LABEL[s.kind] ?? s.kind}
                       </span>
-                      {s.input ? <span className="ml-2 text-white/40">{s.input.slice(0, 70)}</span> : null}
+                      {s.input ? <span className="ml-2 text-ps-text-muted">{s.input.slice(0, 70)}</span> : null}
                     </summary>
                     {s.output ? (
-                      <pre className="max-h-60 overflow-y-auto whitespace-pre-wrap px-3 pb-3 text-[11px] text-white/50">
+                      <pre className="max-h-60 overflow-y-auto whitespace-pre-wrap px-3 pb-3 text-xs text-ps-text-muted">
                         {s.output}
                       </pre>
                     ) : null}
@@ -202,7 +202,7 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
             {run.status === "running" ? (
               <li className="relative pl-7">
                 <span className="absolute left-1 top-1.5 h-3.5 w-3.5 animate-pulse rounded-full bg-neon-cyan/60 ring-2 ring-dark-900" aria-hidden />
-                <span className="inline-flex items-center gap-2 text-xs text-white/40">
+                <span className="inline-flex items-center gap-2 text-xs text-ps-text-muted">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" /> working…
                 </span>
               </li>

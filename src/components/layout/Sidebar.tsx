@@ -49,7 +49,7 @@ export default function Sidebar() {
           <Link
             href={link.href}
             className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-              active ? "bg-white/10 text-white" : "text-white/50 hover:bg-white/5 hover:text-white/80"
+              active ? "bg-white/10 text-white" : "text-ps-text-muted hover:bg-white/5 hover:text-ps-text-primary"
             }`}
             onClick={closeMobile}
           >
@@ -65,7 +65,7 @@ export default function Sidebar() {
                   key={sub.href}
                   href={sub.href}
                   className={`block py-1 text-xs transition-colors ${
-                    pathname === sub.href ? "text-white/80" : "text-white/30 hover:text-white/60"
+                    pathname === sub.href ? "text-ps-text-primary" : "text-ps-text-muted hover:text-ps-text-secondary"
                   }`}
                   onClick={closeMobile}
                 >
@@ -95,7 +95,7 @@ export default function Sidebar() {
               <div className="text-sm font-bold tracking-tight text-white">
                 PatterStage
               </div>
-              <div className="text-[10px] text-white/45 mt-0.5">
+              <div className="text-xs text-ps-text-muted mt-0.5">
                 The Stage is{" "}
                 <span className="font-bold text-neon-cyan text-glow-cyan">Yours</span>
               </div>
@@ -110,7 +110,7 @@ export default function Sidebar() {
         {mainSections.map((section) => (
           <div key={section.label}>
             {!collapsed && (
-              <div className="text-[10px] font-mono text-white/30 uppercase tracking-widest px-3 mb-2 mt-4 first:mt-0">
+              <div className="text-xs font-mono text-ps-text-muted uppercase tracking-widest px-3 mb-2 mt-4 first:mt-0">
                 {section.label}
               </div>
             )}
@@ -120,7 +120,7 @@ export default function Sidebar() {
 
         {/* Config Settings section */}
         {!collapsed && (
-          <div className="text-[10px] font-mono text-white/30 uppercase tracking-widest px-3 mb-2 mt-4">
+          <div className="text-xs font-mono text-ps-text-muted uppercase tracking-widest px-3 mb-2 mt-4">
             Config Settings
           </div>
         )}
@@ -147,7 +147,7 @@ export default function Sidebar() {
         <VersionFooter collapsed={collapsed} />
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="hidden lg:flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors font-mono"
+          className="hidden lg:flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-colors font-mono"
         >
           {collapsed ? (
             <ChevronRight className="w-4 h-4" />

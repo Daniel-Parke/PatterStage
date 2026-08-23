@@ -98,7 +98,7 @@ export default function ChatPage() {
           {/* Sidebar */}
           <div className="w-60 shrink-0 border-r border-white/10 bg-white/[0.01] flex flex-col min-h-0">
             <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
-              <span className="text-[10px] font-mono text-white/30 uppercase tracking-wider">
+              <span className="text-xs font-mono text-ps-text-muted uppercase tracking-wider">
                 Conversations ({conversations.length})
               </span>
             </div>
@@ -114,14 +114,14 @@ export default function ChatPage() {
                 >
                   <div className="flex items-center justify-between gap-1">
                     <div className="min-w-0 flex-1">
-                      <div className="text-xs text-white/70 truncate font-medium">{c.title}</div>
-                      <div className="text-[10px] text-white/30 mt-0.5 font-mono">{timeAgo(c.updatedAt)}</div>
+                      <div className="text-xs text-ps-text-secondary truncate font-medium">{c.title}</div>
+                      <div className="text-xs text-ps-text-muted mt-0.5 font-mono">{timeAgo(c.updatedAt)}</div>
                     </div>
                     <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <div className="relative group/download">
                         <button
                           onClick={(e) => handleDownloadConversation(c, "json", e)}
-                          className="w-7 h-7 flex items-center justify-center rounded hover:bg-neon-cyan/20 hover:text-neon-cyan text-white/30"
+                          className="w-7 h-7 flex items-center justify-center rounded hover:bg-neon-cyan/20 hover:text-neon-cyan text-ps-text-muted"
                           title="Download as JSON"
                         >
                           <Download className="w-4 h-4" />
@@ -129,7 +129,7 @@ export default function ChatPage() {
                         <div className="absolute right-0 top-full mt-0.5 hidden group-hover/download:block z-50">
                           <button
                             onClick={(e) => handleDownloadConversation(c, "csv", e)}
-                            className="whitespace-nowrap text-[10px] font-mono px-2 py-1 rounded bg-dark-900 border border-white/10 text-white/60 hover:text-white hover:bg-white/5 transition-colors shadow-lg"
+                            className="whitespace-nowrap text-xs font-mono px-2 py-1 rounded bg-dark-900 border border-white/10 text-ps-text-secondary hover:text-white hover:bg-white/5 transition-colors shadow-lg"
                           >
                             as CSV
                           </button>
@@ -142,7 +142,7 @@ export default function ChatPage() {
                           if (!deleteConfirm.isArmedFor(c.id)) deleteConfirm.arm(c.id);
                           else void deleteConfirm.confirm(() => handleDeleteConversation(c.id));
                         }}
-                        className={`w-7 h-7 flex items-center justify-center rounded text-white/30 ${
+                        className={`w-7 h-7 flex items-center justify-center rounded text-ps-text-muted ${
                           deleteConfirm.isArmedFor(c.id)
                             ? "bg-neon-red/20 text-neon-red"
                             : "hover:bg-neon-red/20 hover:text-neon-red"
@@ -156,7 +156,7 @@ export default function ChatPage() {
                 </button>
               ))}
               {conversations.length === 0 && (
-                <div className="p-3 text-xs text-white/20 italic">No conversations yet</div>
+                <div className="p-3 text-xs text-ps-text-faint italic">No conversations yet</div>
               )}
             </div>
           </div>
@@ -179,12 +179,12 @@ export default function ChatPage() {
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-24">
                   <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
-                    <MessageCircle className="w-8 h-8 text-white/30" />
+                    <MessageCircle className="w-8 h-8 text-ps-text-muted" />
                   </div>
-                  <h3 className="text-lg font-semibold text-white/60 mb-1">
+                  <h3 className="text-lg font-semibold text-ps-text-secondary mb-1">
                     {hasActiveConversation ? activeConversation?.title || "New Chat" : "Chat with your agent"}
                   </h3>
-                  <p className="text-sm text-white/40 mb-2 max-w-md">
+                  <p className="text-sm text-ps-text-muted mb-2 max-w-md">
                     {mode === "agent"
                       ? "Agent mode: the assistant can use tools and remembers this conversation."
                       : "Fast mode: a quick raw-model reply with no tools."}

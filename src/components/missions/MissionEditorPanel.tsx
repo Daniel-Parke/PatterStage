@@ -106,40 +106,40 @@ export default function MissionEditorPanel({
         </div>
       ) : detail ? (
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px] font-mono">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs font-mono">
             <div className="flex justify-between">
-              <span className="text-white/30">Agent</span>
-              <span className="text-white/70 truncate ml-2 text-right">
+              <span className="text-ps-text-muted">Agent</span>
+              <span className="text-ps-text-secondary truncate ml-2 text-right">
                 {detail.mission.profileName || detail.mission.profileId || "—"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/30">Model</span>
-              <span className="text-white/70 truncate ml-2 text-right">
+              <span className="text-ps-text-muted">Model</span>
+              <span className="text-ps-text-secondary truncate ml-2 text-right">
                 {detail.mission.modelId || detail.mission.model || "—"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/30">Provider</span>
-              <span className="text-white/70 truncate ml-2 text-right">
+              <span className="text-ps-text-muted">Provider</span>
+              <span className="text-ps-text-secondary truncate ml-2 text-right">
                 {detail.mission.provider || "—"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/30">Scope</span>
-              <span className="text-white/70 ml-2 text-right">
+              <span className="text-ps-text-muted">Scope</span>
+              <span className="text-ps-text-secondary ml-2 text-right">
                 {detail.mission.missionTimeMinutes ? `${detail.mission.missionTimeMinutes}m` : "—"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/30">Timeout</span>
-              <span className="text-white/70 ml-2 text-right">
+              <span className="text-ps-text-muted">Timeout</span>
+              <span className="text-ps-text-secondary ml-2 text-right">
                 {detail.mission.timeoutMinutes ? `${detail.mission.timeoutMinutes}m` : "—"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/30">Elapsed</span>
-              <span className="text-white/70 ml-2 text-right">
+              <span className="text-ps-text-muted">Elapsed</span>
+              <span className="text-ps-text-secondary ml-2 text-right">
                 {(() => {
                   const created = new Date(detail.mission.createdAt).getTime();
                   /* eslint-disable-next-line react-hooks/purity -- elapsed uses wall clock; list polls every 5s */
@@ -155,19 +155,19 @@ export default function MissionEditorPanel({
             </div>
             {categoryLabel && (
               <div className="flex justify-between">
-                <span className="text-white/30">Category</span>
-                <span className="text-white/70 ml-2 text-right">{categoryLabel}</span>
+                <span className="text-ps-text-muted">Category</span>
+                <span className="text-ps-text-secondary ml-2 text-right">{categoryLabel}</span>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-white/30">Schedule</span>
-              <span className="text-white/70 truncate ml-2 text-right">
+              <span className="text-ps-text-muted">Schedule</span>
+              <span className="text-ps-text-secondary truncate ml-2 text-right">
                 {detail.mission.schedule || "One-shot"}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-white/30">Skills</span>
-              <span className="text-white/70 truncate ml-2 text-right">
+              <span className="text-ps-text-muted">Skills</span>
+              <span className="text-ps-text-secondary truncate ml-2 text-right">
                 {(detail.mission.skills?.length ?? 0) > 0
                   ? `${detail.mission.skills!.length} attached`
                   : "—"}
@@ -183,11 +183,11 @@ export default function MissionEditorPanel({
               }
               className="w-full flex items-center justify-between mb-1 hover:opacity-80 transition-opacity"
             >
-              <div className="text-[10px] font-mono text-white/30 uppercase flex items-center gap-1.5">
+              <div className="text-xs font-mono text-ps-text-muted uppercase flex items-center gap-1.5">
                 <Edit3 className="w-3 h-3" />
                 Full Template Details
               </div>
-              <div className="flex items-center gap-1 text-[10px] font-mono text-white/30">
+              <div className="flex items-center gap-1 text-xs font-mono text-ps-text-muted">
                 <span>
                   {promptCollapsed
                     ? "show"
@@ -201,7 +201,7 @@ export default function MissionEditorPanel({
             <div
               className={`overflow-hidden transition-all duration-200 ${promptCollapsed ? "max-h-20" : "max-h-none"}`}
             >
-              <div className="text-[10px] text-white/50 font-mono whitespace-pre-wrap bg-dark-900/50 rounded-lg p-2 border border-white/5">
+              <div className="text-xs text-ps-text-muted font-mono whitespace-pre-wrap bg-dark-900/50 rounded-lg p-2 border border-white/5">
                 {detail.mission.prompt}
               </div>
             </div>
@@ -209,7 +209,7 @@ export default function MissionEditorPanel({
 
           {(detail.mission.goals?.length ?? 0) > 0 && (
             <div>
-              <div className="text-[10px] font-mono text-white/30 uppercase mb-1">
+              <div className="text-xs font-mono text-ps-text-muted uppercase mb-1">
                 Goals
               </div>
               <div className="flex flex-wrap gap-1">
@@ -218,13 +218,13 @@ export default function MissionEditorPanel({
                   .map((goal, i) => (
                     <span
                       key={i}
-                      className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-white/40 border border-white/5"
+                      className="text-xs font-mono px-1.5 py-0.5 rounded bg-white/5 text-ps-text-muted border border-white/5"
                     >
                       {goal}
                     </span>
                   ))}
                 {(detail.mission.goals?.length ?? 0) > 3 && (
-                  <span className="text-[9px] font-mono text-white/25">
+                  <span className="text-xs font-mono text-ps-text-faint">
                     +
                     {(detail.mission.goals?.length ?? 0) - 3}
                     {" "}
@@ -240,7 +240,7 @@ export default function MissionEditorPanel({
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-1">
                   <Zap className="w-3 h-3 text-neon-orange" />
-                  <span className="text-[10px] font-mono text-white/60">
+                  <span className="text-xs font-mono text-ps-text-secondary">
                     Cron Job
                   </span>
                 </div>
@@ -251,23 +251,23 @@ export default function MissionEditorPanel({
                       : "/orchestration/cron"
                   }
                   onClick={(e) => e.stopPropagation()}
-                  className="text-[9px] font-mono text-neon-orange hover:underline flex items-center gap-0.5"
+                  className="text-xs font-mono text-neon-orange hover:underline flex items-center gap-0.5"
                 >
                   view
                   {" "}
                   <ExternalLink className="w-2.5 h-2.5" />
                 </Link>
               </div>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[9px] font-mono">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs font-mono">
                 <div className="flex justify-between">
-                  <span className="text-white/20">
+                  <span className="text-ps-text-faint">
                     State
                   </span>
                   <span
                     className={
                       detail.cronJob.enabled
                         ? "text-neon-green"
-                        : "text-white/40"
+                        : "text-ps-text-muted"
                     }
                   >
                     {detail.cronJob.enabled
@@ -278,10 +278,10 @@ export default function MissionEditorPanel({
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-white/20">
+                  <span className="text-ps-text-faint">
                     Last
                   </span>
-                  <span className="text-white/50">
+                  <span className="text-ps-text-muted">
                     {detail.cronJob.lastRun
                       ? timeAgo(
                           detail.cronJob.lastRun,
@@ -299,10 +299,10 @@ export default function MissionEditorPanel({
 
           {detail.mission.results && (
             <div>
-              <div className="text-[10px] font-mono text-white/30 uppercase mb-1">
+              <div className="text-xs font-mono text-ps-text-muted uppercase mb-1">
                 Results
               </div>
-              <div className="text-[10px] text-white/50 font-mono whitespace-pre-wrap bg-dark-900/50 rounded-lg p-2 border border-white/5 max-h-16 overflow-y-auto">
+              <div className="text-xs text-ps-text-muted font-mono whitespace-pre-wrap bg-dark-900/50 rounded-lg p-2 border border-white/5 max-h-16 overflow-y-auto">
                 {detail.mission.results}
               </div>
             </div>
@@ -310,10 +310,10 @@ export default function MissionEditorPanel({
 
           {detail.mission.error && (
             <div className="rounded-lg bg-red-500/5 border border-red-500/10 p-2">
-              <div className="text-[10px] font-mono text-red-400 uppercase mb-0.5">
+              <div className="text-xs font-mono text-red-400 uppercase mb-0.5">
                 Error
               </div>
-              <div className="text-[10px] font-mono text-red-400/60">
+              <div className="text-xs font-mono text-red-400/60">
                 {detail.mission.error}
               </div>
             </div>
@@ -388,7 +388,7 @@ export default function MissionEditorPanel({
           </div>
         </div>
       ) : (
-        <div className="text-[10px] text-white/30 text-center py-3">
+        <div className="text-xs text-ps-text-muted text-center py-3">
           Failed to load details
         </div>
       )}

@@ -27,7 +27,7 @@ export function AddMemoryModal({
     <Modal open={open} onClose={onClose} title="Store New Memory" size="md">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-white/50 mb-1">Memory Content</label>
+          <label className="block text-sm text-ps-text-muted mb-1">Memory Content</label>
           <textarea
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
@@ -36,7 +36,7 @@ export function AddMemoryModal({
           />
         </div>
         <div>
-          <label className="block text-sm text-white/50 mb-1">Tags (comma-separated)</label>
+          <label className="block text-sm text-ps-text-muted mb-1">Tags (comma-separated)</label>
           <input
             type="text"
             value={tags}
@@ -82,7 +82,7 @@ export function DirectiveModal({
     <Modal open={open} onClose={onClose} title={isEdit ? "Edit Directive" : "Create Directive"} size="md">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-white/50 mb-1">Directive Name</label>
+          <label className="block text-sm text-ps-text-muted mb-1">Directive Name</label>
           <input
             type="text"
             value={name}
@@ -92,7 +92,7 @@ export function DirectiveModal({
           />
         </div>
         <div>
-          <label className="block text-sm text-white/50 mb-1">Directive Content</label>
+          <label className="block text-sm text-ps-text-muted mb-1">Directive Content</label>
           <textarea
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
@@ -102,7 +102,7 @@ export function DirectiveModal({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm text-white/50 mb-1">Priority</label>
+            <label className="block text-sm text-ps-text-muted mb-1">Priority</label>
             <input
               type="number"
               value={priority}
@@ -112,7 +112,7 @@ export function DirectiveModal({
             />
           </div>
           <div>
-            <label className="block text-sm text-white/50 mb-1">Tags (comma-separated)</label>
+            <label className="block text-sm text-ps-text-muted mb-1">Tags (comma-separated)</label>
             <input
               type="text"
               value={tags}
@@ -160,7 +160,7 @@ export function MentalModelModal({
     <Modal open={open} onClose={onClose} title={isEdit ? "Edit Mental Model" : "Create Mental Model"} size="md">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-white/50 mb-1">Model Name</label>
+          <label className="block text-sm text-ps-text-muted mb-1">Model Name</label>
           <input
             type="text"
             value={name}
@@ -170,21 +170,21 @@ export function MentalModelModal({
           />
         </div>
         <div>
-          <label className="block text-sm text-white/50 mb-1">Source Query</label>
+          <label className="block text-sm text-ps-text-muted mb-1">Source Query</label>
           <textarea
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder="e.g. What are Daniel's communication preferences and working style?"
             className={`w-full h-28 ${HINDSIGHT_TEXTAREA_CLASS}`}
           />
-          <p className="text-xs text-white/30 mt-1">
+          <p className="text-xs text-ps-text-muted mt-1">
             {isEdit
               ? "Changing the query won't re-generate content. Use Refresh to re-run reflect."
               : "Hindsight will run reflect with this query to generate the model content."}
           </p>
         </div>
         <div>
-          <label className="block text-sm text-white/50 mb-1">Tags (comma-separated)</label>
+          <label className="block text-sm text-ps-text-muted mb-1">Tags (comma-separated)</label>
           <input
             type="text"
             value={tags}

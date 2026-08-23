@@ -215,12 +215,12 @@ export default function LogsPage() {
           />
         )}
         {actionMessage && (
-          <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-dark-900/50 px-4 py-2 text-xs font-mono text-white/70">
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-dark-900/50 px-4 py-2 text-xs font-mono text-ps-text-secondary">
             <span>{actionMessage}</span>
             <button
               type="button"
               onClick={dismissActionMessage}
-              className="p-1 rounded text-white/40 hover:text-white/70"
+              className="p-1 rounded text-ps-text-muted hover:text-ps-text-secondary"
               aria-label="Dismiss"
             >
               <X className="w-4 h-4" />
@@ -243,7 +243,7 @@ export default function LogsPage() {
               {searchVisible ? (
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <div className="relative flex-1 max-w-md min-w-0">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ps-text-muted" />
                     <input
                       type="text"
                       value={search}
@@ -261,7 +261,7 @@ export default function LogsPage() {
                   <button
                     type="button"
                     onClick={closeSearchInput}
-                    className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 shrink-0"
+                    className="p-1.5 rounded-lg text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 shrink-0"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -270,7 +270,7 @@ export default function LogsPage() {
                 <button
                   type="button"
                   onClick={openSearchInput}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-white/40 hover:text-white/60 hover:bg-white/5 font-mono"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 font-mono"
                 >
                   <Search className="w-3 h-3" />
                   Filter lines

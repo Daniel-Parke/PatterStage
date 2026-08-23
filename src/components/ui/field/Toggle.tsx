@@ -28,10 +28,10 @@ export function Toggle({
       title={hint}
       disabled={disabled}
       onClick={() => !disabled && onChange(!checked)}
-      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[11px] transition-colors focus:outline-none focus:ring-1 focus:ring-neon-cyan/30 disabled:cursor-not-allowed disabled:opacity-40 ${
+      className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs transition-colors focus:outline-none focus:ring-1 focus:ring-neon-cyan/30 disabled:cursor-not-allowed disabled:opacity-40 ${
         checked
           ? "border-neon-cyan/40 bg-neon-cyan/10 text-neon-cyan"
-          : "border-white/10 text-white/40 hover:text-white/70"
+          : "border-white/10 text-ps-text-muted hover:text-ps-text-secondary"
       }`}
     >
       <span className={`h-2 w-2 rounded-full ${checked ? "bg-neon-cyan" : "bg-white/20"}`} />

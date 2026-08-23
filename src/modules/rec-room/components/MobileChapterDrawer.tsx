@@ -26,7 +26,7 @@ export default function MobileChapterDrawer({
         onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-end p-3">
           <button onClick={onClose}
-            className="p-2 rounded-lg text-white/40 hover:text-white/60 hover:bg-white/5 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
+            className="p-2 rounded-lg text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
             <X className="w-5 h-5" />
           </button>
         </div>

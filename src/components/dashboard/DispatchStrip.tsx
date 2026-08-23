@@ -69,9 +69,9 @@ export default function DispatchStrip({ templates, categories }: DispatchStripPr
       >
         <div className="flex items-center gap-2">
           <Rocket className="w-4 h-4 text-neon-cyan" />
-          <span className="text-sm font-mono text-white/80">Launch a Mission</span>
+          <span className="text-sm font-mono text-ps-text-primary">Launch a Mission</span>
           <span
-            className="text-[10px] font-mono text-white/25"
+            className="text-xs font-mono text-ps-text-faint"
             title="Mission templates you can launch from here — not a count of active missions"
           >
             · {templates.length} templates
@@ -81,7 +81,7 @@ export default function DispatchStrip({ templates, categories }: DispatchStripPr
           <Link
             href="/orchestration/missions"
             onClick={(e) => e.stopPropagation()}
-            className="text-[10px] font-mono text-neon-cyan hover:underline flex items-center gap-1"
+            className="text-xs font-mono text-neon-cyan hover:underline flex items-center gap-1"
           >
             full control <ChevronRight className="w-3 h-3" />
           </Link>
@@ -102,7 +102,7 @@ export default function DispatchStrip({ templates, categories }: DispatchStripPr
           {templates.length > 12 && (
             <button
               onClick={open}
-              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-mono text-white/30 hover:text-neon-cyan transition-colors"
+              className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs font-mono text-ps-text-muted hover:text-neon-cyan transition-colors"
             >
               +{templates.length - 12} more
             </button>

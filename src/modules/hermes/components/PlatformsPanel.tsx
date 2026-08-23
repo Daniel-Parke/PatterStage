@@ -36,20 +36,20 @@ export default function PlatformsPanel({ monitor, syncNowBusy, onSyncNow }: Plat
             <div key={p.id} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <StatusDot status={configured ? "online" : "idle"} pulse={configured} />
-                <span className="text-xs text-white/70 capitalize">{p.id}</span>
+                <span className="text-xs text-ps-text-secondary capitalize">{p.id}</span>
               </div>
-              <span className={`text-[10px] font-mono ${configured ? "text-neon-green" : "text-white/25"}`}>
+              <span className={`text-xs font-mono ${configured ? "text-neon-green" : "text-ps-text-faint"}`}>
                 {configured ? "Configured" : "Not configured"}
               </span>
             </div>
           );
         })}
         {monitor && monitor.gateway.connectedCount === 0 && (
-          <div className="text-[10px] text-white/30 text-center py-2">No platforms configured</div>
+          <div className="text-xs text-ps-text-muted text-center py-2">No platforms configured</div>
         )}
       </div>
       <div className="px-4 py-2 border-t border-white/10 flex items-center justify-between gap-2">
-        <div className="text-[10px] text-white/30 font-mono flex items-center gap-2 min-w-0">
+        <div className="text-xs text-ps-text-muted font-mono flex items-center gap-2 min-w-0">
           <RefreshCw className="w-3 h-3 shrink-0" />
           {monitor?.sync.lastRun ? (
             <>
@@ -68,7 +68,7 @@ export default function PlatformsPanel({ monitor, syncNowBusy, onSyncNow }: Plat
           type="button"
           disabled={syncNowBusy}
           onClick={onSyncNow}
-          className="shrink-0 px-2 py-1 text-[10px] font-mono rounded border border-neon-cyan/30 text-neon-cyan/80 hover:bg-neon-cyan/10 disabled:opacity-50"
+          className="shrink-0 px-2 py-1 text-xs font-mono rounded border border-neon-cyan/30 text-neon-cyan/80 hover:bg-neon-cyan/10 disabled:opacity-50"
         >
           {syncNowBusy ? "Syncing…" : "Sync now"}
         </button>

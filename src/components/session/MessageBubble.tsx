@@ -108,7 +108,7 @@ export function MessageBubble({
             {config.label}
           </span>
           {msg.tool_call_id && (
-            <span className="text-[10px] font-mono text-white/30 bg-white/5 px-1.5 py-0.5 rounded">
+            <span className="text-xs font-mono text-ps-text-muted bg-white/5 px-1.5 py-0.5 rounded">
               {msg.tool_call_id.slice(0, 12)}
             </span>
           )}
@@ -118,21 +118,21 @@ export function MessageBubble({
             </span>
           )}
           {!expanded && (
-            <span className="text-xs text-white/30 font-mono truncate ml-1">
+            <span className="text-xs text-ps-text-muted font-mono truncate ml-1">
               {summary}
             </span>
           )}
         </div>
         <div className="flex items-center gap-1 flex-shrink-0 ml-2">
           {isLong && (
-            <span className="text-[10px] font-mono text-white/20 mr-1">
+            <span className="text-xs font-mono text-ps-text-faint mr-1">
               {(content.length / 1024).toFixed(1)}KB
             </span>
           )}
           {expanded ? (
-            <ChevronDown className="w-3.5 h-3.5 text-white/30" />
+            <ChevronDown className="w-3.5 h-3.5 text-ps-text-muted" />
           ) : (
-            <ChevronRight className="w-3.5 h-3.5 text-white/30" />
+            <ChevronRight className="w-3.5 h-3.5 text-ps-text-muted" />
           )}
         </div>
       </button>
@@ -141,7 +141,7 @@ export function MessageBubble({
           <div className="flex justify-end mb-2">
             <button
               onClick={handleCopy}
-              className="p-1 rounded text-white/30 hover:text-white/60 transition-colors"
+              className="p-1 rounded text-ps-text-muted hover:text-ps-text-secondary transition-colors"
               title="Copy"
             >
               {copied ? (
@@ -151,12 +151,12 @@ export function MessageBubble({
               )}
             </button>
           </div>
-          <pre className="text-sm text-white/80 font-mono whitespace-pre-wrap break-words">
+          <pre className="text-sm text-ps-text-primary font-mono whitespace-pre-wrap break-words">
             {content || "(no content)"}
           </pre>
           {Array.isArray(msg.tool_calls) && msg.tool_calls.length > 0 && (
             <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
-              <div className="text-[10px] font-mono text-white/30 uppercase tracking-widest">
+              <div className="text-xs font-mono text-ps-text-muted uppercase tracking-widest">
                 Tool Calls ({msg.tool_calls.length})
               </div>
               {msg.tool_calls.map((tc: unknown, i: number) => {
@@ -172,7 +172,7 @@ export function MessageBubble({
                     className="bg-dark-900/50 rounded-lg p-3 text-xs font-mono"
                   >
                     <span className="text-neon-green">{fnName}</span>
-                    <pre className="mt-1 text-white/40 whitespace-pre-wrap">
+                    <pre className="mt-1 text-ps-text-muted whitespace-pre-wrap">
                       {typeof fn?.arguments === "string"
                         ? fn.arguments
                         : JSON.stringify(fn?.arguments, null, 2)}

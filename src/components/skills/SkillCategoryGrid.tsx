@@ -22,14 +22,14 @@ function CategoryLabel({ category, count, accentColor, collapsed, onToggle }: Ca
       title={collapsed ? `Expand ${category}` : `Collapse ${category}`}
     >
       <ChevronRight
-        className={`w-3 h-3 flex-shrink-0 text-white/20 group-hover:text-white/50 transition-all ${
+        className={`w-3 h-3 flex-shrink-0 text-white/20 group-hover:text-ps-text-muted transition-all ${
           collapsed ? "" : "rotate-90"
         }`}
       />
-      <span className={`text-[10px] font-mono font-semibold uppercase tracking-widest ${accentColor}`}>
+      <span className={`text-xs font-mono font-semibold uppercase tracking-widest ${accentColor}`}>
         {category}
       </span>
-      <span className={`text-[10px] font-mono ${accentColor}`}>
+      <span className={`text-xs font-mono ${accentColor}`}>
         ({count})
       </span>
       <div className={`h-px flex-1 bg-gradient-to-r from-white/10 to-transparent ${accentColor.replace(/\/\d+$/, "/5")}`} />

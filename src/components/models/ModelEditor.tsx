@@ -313,7 +313,7 @@ export default function ModelEditor({
             label={
               <>
                 Base URL
-                <span className="ml-2 text-xs text-white/30 font-mono">(optional)</span>
+                <span className="ml-2 text-xs text-ps-text-muted font-mono">(optional)</span>
               </>
             }
           >
@@ -328,7 +328,7 @@ export default function ModelEditor({
             label={
               <>
                 Context Length
-                <span className="ml-2 text-xs text-white/30 font-mono">(optional)</span>
+                <span className="ml-2 text-xs text-ps-text-muted font-mono">(optional)</span>
               </>
             }
           >
@@ -351,7 +351,7 @@ export default function ModelEditor({
 
         {!usingExisting && (
           <div className="space-y-3 rounded-lg border border-neon-purple/15 bg-neon-purple/5 p-3">
-            <p className="text-xs font-mono text-neon-purple/70 uppercase tracking-widest">
+            <p className="text-xs font-mono text-neon-purple uppercase tracking-widest">
               New credential
             </p>
             <FieldRow label="Credential Label">

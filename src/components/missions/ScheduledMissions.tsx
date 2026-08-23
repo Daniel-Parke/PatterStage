@@ -67,7 +67,7 @@ export default function ScheduledMissions() {
   };
 
   const inputCls =
-    "w-full rounded-lg border border-white/10 bg-dark-900/60 px-3 py-2 text-sm text-white/80 focus:border-neon-orange/50 focus:outline-none";
+    "w-full rounded-lg border border-white/10 bg-dark-900/60 px-3 py-2 text-sm text-ps-text-primary focus:border-neon-orange/50 focus:outline-none";
 
   return (
     <section className="mt-6">
@@ -75,9 +75,9 @@ export default function ScheduledMissions() {
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <CalendarClock className="h-4 w-4 text-neon-orange" />
-          <h2 className="font-mono text-sm uppercase tracking-wider text-white/60">Scheduled missions</h2>
+          <h2 className="font-mono text-sm uppercase tracking-wider text-ps-text-secondary">Scheduled missions</h2>
           {schedules.length > 0 && (
-            <span className="font-mono text-[11px] text-white/35">
+            <span className="font-mono text-xs text-ps-text-muted">
               {enabledCount} active{pausedCount > 0 ? ` · ${pausedCount} paused` : ""}
             </span>
           )}
@@ -96,13 +96,13 @@ export default function ScheduledMissions() {
       {/* ── Create form (collapsible) ── */}
       {showForm && (
         <form onSubmit={submit} className="mb-3 space-y-3 rounded-xl border border-white/10 bg-dark-900/30 p-4">
-          <p className="font-mono text-[11px] text-white/35">
+          <p className="font-mono text-xs text-ps-text-muted">
             Put an existing saved mission on a timer. (New missions can be scheduled directly from the composer&apos;s
             &quot;Schedule&quot; dispatch mode.)
           </p>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div>
-              <label className="text-[10px] font-mono uppercase tracking-wider text-white/30">Mission</label>
+              <label className="text-xs font-mono uppercase tracking-wider text-ps-text-muted">Mission</label>
               {missions.data && missions.data.length > 0 ? (
                 <select className={inputCls} value={missionId} onChange={(e) => setMissionId(e.target.value)}>
                   <option value="">Select a mission…</option>
@@ -117,12 +117,12 @@ export default function ScheduledMissions() {
               )}
             </div>
             <div>
-              <label className="text-[10px] font-mono uppercase tracking-wider text-white/30">Name (optional)</label>
+              <label className="text-xs font-mono uppercase tracking-wider text-ps-text-muted">Name (optional)</label>
               <input className={inputCls} placeholder="daily digest" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
           </div>
           <div>
-            <label className="text-[10px] font-mono uppercase tracking-wider text-white/30">
+            <label className="text-xs font-mono uppercase tracking-wider text-ps-text-muted">
               Schedule (cron or &quot;every Nm/Nh/Nd&quot;)
             </label>
             <input className={inputCls} value={schedule} onChange={(e) => setSchedule(e.target.value)} />
@@ -132,7 +132,7 @@ export default function ScheduledMissions() {
                   key={p}
                   type="button"
                   onClick={() => setSchedule(p)}
-                  className="rounded-md border border-white/10 px-2 py-1 font-mono text-[11px] text-white/40 hover:bg-white/5 hover:text-white/70"
+                  className="rounded-md border border-white/10 px-2 py-1 font-mono text-xs text-ps-text-muted hover:bg-white/5 hover:text-ps-text-secondary"
                 >
                   {p}
                 </button>
@@ -162,25 +162,25 @@ export default function ScheduledMissions() {
 
       {activeRunId && (
         <div className="mb-3 space-y-2">
-          <div className="font-mono text-xs text-white/40">Triggered run</div>
+          <div className="font-mono text-xs text-ps-text-muted">Triggered run</div>
           <RunProgress runId={activeRunId} />
         </div>
       )}
 
       {/* ── List ── */}
       {isLoading ? (
-        <div className="py-6 text-center font-mono text-sm text-white/30">Loading schedules…</div>
+        <div className="py-6 text-center font-mono text-sm text-ps-text-muted">Loading schedules…</div>
       ) : schedules.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-white/10 bg-dark-900/20 px-4 py-6 text-center text-sm text-white/30">
-          No recurring missions yet. Use a mission&apos;s <span className="text-white/50">Schedule</span> dispatch mode, or schedule an existing one above.
+        <div className="rounded-xl border border-dashed border-white/10 bg-dark-900/20 px-4 py-6 text-center text-sm text-ps-text-muted">
+          No recurring missions yet. Use a mission&apos;s <span className="text-ps-text-muted">Schedule</span> dispatch mode, or schedule an existing one above.
         </div>
       ) : (
         <div className="space-y-2">
           {schedules.map((s) => (
             <div key={s.id} className="flex items-center gap-4 rounded-xl border border-white/10 bg-dark-900/30 px-4 py-3">
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm text-white/80">{s.name || s.scheduleDisplay || s.schedule}</div>
-                <div className="truncate font-mono text-[11px] text-white/30">
+                <div className="truncate text-sm text-ps-text-primary">{s.name || s.scheduleDisplay || s.schedule}</div>
+                <div className="truncate font-mono text-xs text-ps-text-muted">
                   {s.schedule}
                   {" · "}
                   {s.enabled ? (s.nextRunAt ? <>next {timeUntil(s.nextRunAt)}</> : "no next run") : "paused"}
@@ -190,21 +190,21 @@ export default function ScheduledMissions() {
               <button
                 type="button"
                 onClick={() => toggle.mutate({ id: s.id, enabled: !s.enabled })}
-                className="rounded-lg border border-white/10 px-2.5 py-1 font-mono text-[11px] text-white/50 hover:bg-white/5"
+                className="rounded-lg border border-white/10 px-2.5 py-1 font-mono text-xs text-ps-text-muted hover:bg-white/5"
               >
                 {s.enabled ? "Pause" : "Resume"}
               </button>
               <button
                 type="button"
                 onClick={() => triggerRun(s.id)}
-                className="flex items-center gap-1 rounded-lg border border-neon-cyan/30 px-2.5 py-1 font-mono text-[11px] text-neon-cyan hover:bg-neon-cyan/10"
+                className="flex items-center gap-1 rounded-lg border border-neon-cyan/30 px-2.5 py-1 font-mono text-xs text-neon-cyan hover:bg-neon-cyan/10"
               >
                 <Play className="h-3 w-3" /> Run
               </button>
               <button
                 type="button"
                 onClick={() => remove.mutate(s.id)}
-                className="flex items-center gap-1 rounded-lg border border-red-500/30 px-2.5 py-1 font-mono text-[11px] text-red-300 hover:bg-red-500/10"
+                className="flex items-center gap-1 rounded-lg border border-red-500/30 px-2.5 py-1 font-mono text-xs text-red-300 hover:bg-red-500/10"
               >
                 <Trash2 className="h-3 w-3" />
               </button>

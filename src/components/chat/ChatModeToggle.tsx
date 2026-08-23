@@ -37,7 +37,7 @@ export function ChatModeToggle({
             className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-mono transition-colors disabled:opacity-40 ${
               active
                 ? "bg-neon-cyan/20 text-neon-cyan"
-                : "text-white/40 hover:text-white/70"
+                : "text-ps-text-muted hover:text-ps-text-secondary"
             }`}
           >
             <Icon className="h-3 w-3" />

@@ -28,20 +28,20 @@ export default function ProcessesPanel({ processes, onRefresh }: ProcessesPanelP
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-mono text-white/40 uppercase tracking-widest flex items-center gap-2">
+        <h2 className="text-sm font-mono text-ps-text-muted uppercase tracking-widest flex items-center gap-2">
           <Radio className="w-3 h-3 text-neon-purple" />
           Running Hermes Processes
-          <span className="text-[10px] text-white/25 ml-1">({activeCount} Active)</span>
+          <span className="text-xs text-ps-text-faint ml-1">({activeCount} Active)</span>
         </h2>
         <RefreshCw
-          className="w-3 h-3 text-white/20 hover:text-white/50 cursor-pointer"
+          className="w-3 h-3 text-white/20 hover:text-ps-text-muted cursor-pointer"
           onClick={onRefresh}
         />
       </div>
       {processes.length === 0 ? (
         <div className="rounded-xl border border-neon-purple/20 bg-dark-900/50 p-6 text-center">
           <Radio className="w-8 h-8 text-white/20 mx-auto mb-2" />
-          <div className="text-xs text-white/30">No Active Processes Detected</div>
+          <div className="text-xs text-ps-text-muted">No Active Processes Detected</div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -49,36 +49,36 @@ export default function ProcessesPanel({ processes, onRefresh }: ProcessesPanelP
             <div key={proc.id} className="rounded-xl border border-neon-purple/20 bg-dark-900/50 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <Radio className={`w-4 h-4 ${proc.status === "running" ? "text-neon-green pulse-glow" : "text-white/30"}`} />
-                  <span className="text-sm text-white/90 font-medium truncate">{proc.name}</span>
+                  <Radio className={`w-4 h-4 ${proc.status === "running" ? "text-neon-green pulse-glow" : "text-ps-text-muted"}`} />
+                  <span className="text-sm text-ps-text-primary font-medium truncate">{proc.name}</span>
                 </div>
-                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${
-                  proc.status === "running" ? "bg-neon-green/10 text-neon-green" : "bg-white/5 text-white/30"
+                <span className={`text-xs font-mono px-2 py-0.5 rounded-full ${
+                  proc.status === "running" ? "bg-neon-green/10 text-neon-green" : "bg-white/5 text-ps-text-muted"
                 }`}>
                   {titleCase(proc.status)}
                 </span>
               </div>
-              <div className="space-y-1 text-[10px] font-mono text-white/40">
+              <div className="space-y-1 text-xs font-mono text-ps-text-muted">
                 <div className="flex justify-between">
                   <span>Type</span>
-                  <span className="text-white/60 capitalize">{proc.type}</span>
+                  <span className="text-ps-text-secondary capitalize">{proc.type}</span>
                 </div>
                 {proc.model !== "unknown" && proc.model !== "gateway" && (
                   <div className="flex justify-between">
                     <span>Model</span>
-                    <span className="text-white/60">{proc.model}</span>
+                    <span className="text-ps-text-secondary">{proc.model}</span>
                   </div>
                 )}
                 {proc.turns > 0 && (
                   <div className="flex justify-between">
                     <span>Turns</span>
-                    <span className="text-white/60">{proc.turns}</span>
+                    <span className="text-ps-text-secondary">{proc.turns}</span>
                   </div>
                 )}
                 {proc.lastActivity && (
                   <div className="flex justify-between">
                     <span>Last activity</span>
-                    <span className="text-white/60">{timeAgo(proc.lastActivity)}</span>
+                    <span className="text-ps-text-secondary">{timeAgo(proc.lastActivity)}</span>
                   </div>
                 )}
               </div>

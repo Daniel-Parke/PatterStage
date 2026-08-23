@@ -54,7 +54,7 @@ export default function LocalDirRow({
               branch: e.target.value === "" ? null : e.target.value,
             })
           }
-          className="bg-dark-800/50 border border-white/10 rounded-lg px-2 py-1.5 text-[10px] text-white font-mono outline-none focus:border-neon-cyan/50 max-w-[140px]"
+          className="bg-dark-800/50 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white font-mono outline-none focus:border-neon-cyan/50 max-w-[140px]"
         >
           <option value="">branch</option>
           {git.branches.map((b) => (
@@ -68,7 +68,7 @@ export default function LocalDirRow({
         type="button"
         title="Browse"
         onClick={() => setPickerOpen(true)}
-        className="p-1.5 rounded-lg border border-white/10 text-white/50 hover:text-neon-cyan hover:border-neon-cyan/30 transition-colors"
+        className="p-1.5 rounded-lg border border-white/10 text-ps-text-muted hover:text-neon-cyan hover:border-neon-cyan/30 transition-colors"
       >
         <FolderOpen className="w-4 h-4" />
       </button>
@@ -86,7 +86,7 @@ export default function LocalDirRow({
         <button
           type="button"
           onClick={onDelete}
-          className="p-1.5 rounded-lg border border-white/10 text-white/40 hover:text-red-400 hover:border-red-500/30 transition-colors"
+          className="p-1.5 rounded-lg border border-white/10 text-ps-text-muted hover:text-red-400 hover:border-red-500/30 transition-colors"
           title="Remove"
         >
           <Trash2 className="w-4 h-4" />

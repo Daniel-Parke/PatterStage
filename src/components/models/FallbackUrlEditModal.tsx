@@ -40,7 +40,7 @@ export default function FallbackUrlEditModal({
           </h3>
         </div>
         <div className="p-4">
-          <label className="block text-[10px] font-mono text-white/40 uppercase mb-1.5">
+          <label className="block text-xs font-mono text-ps-text-muted uppercase mb-1.5">
             Override Base URL
           </label>
           <input
@@ -51,7 +51,7 @@ export default function FallbackUrlEditModal({
             className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-neon-purple/50 transition-colors"
             autoFocus
           />
-          <p className="text-[10px] text-white/30 font-mono mt-1.5">
+          <p className="text-xs text-ps-text-muted font-mono mt-1.5">
             Leave empty to use the model&apos;s default base URL
           </p>
         </div>
@@ -59,7 +59,7 @@ export default function FallbackUrlEditModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 text-xs font-mono text-white/50 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+            className="px-3 py-1.5 text-xs font-mono text-ps-text-muted hover:text-white rounded-lg hover:bg-white/5 transition-colors"
           >
             Cancel
           </button>

@@ -26,14 +26,14 @@ export default function ComposerClarifyPrompt({
     <div className="space-y-2 rounded-lg border border-neon-cyan/30 bg-neon-cyan/[0.08] px-3 py-2.5">
       <div className="flex items-start gap-2">
         <HelpCircle className="mt-0.5 h-4 w-4 shrink-0 text-neon-cyan" />
-        <span className="text-xs text-white/80">{question}</span>
+        <span className="text-xs text-ps-text-primary">{question}</span>
       </div>
       <textarea
         value={answer}
         onChange={(e) => setAnswer(e.target.value)}
         rows={3}
         placeholder="Your answer…"
-        className="w-full rounded border border-white/10 bg-dark-950/60 px-2 py-1 text-xs text-white/80 placeholder:text-white/25 focus:border-neon-cyan/40 focus:outline-none"
+        className="w-full rounded border border-white/10 bg-dark-950/60 px-2 py-1 text-xs text-ps-text-primary placeholder:text-ps-text-faint focus:border-neon-cyan/40 focus:outline-none"
       />
       <button
         type="button"

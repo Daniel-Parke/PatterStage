@@ -66,12 +66,12 @@ export default function PersonalityCard({
                 {personality.name}
               </h3>
               {isActive && (
-                <span className="text-[10px] font-mono bg-neon-cyan/15 text-neon-cyan px-1.5 py-0.5 rounded">
+                <span className="text-xs font-mono bg-neon-cyan/15 text-neon-cyan px-1.5 py-0.5 rounded">
                   ACTIVE
                 </span>
               )}
             </div>
-            <p className="text-xs text-white/40 leading-relaxed">
+            <p className="text-xs text-ps-text-muted leading-relaxed">
               {textExpanded ? personality.prompt : preview}
             </p>
           </div>
@@ -79,14 +79,14 @@ export default function PersonalityCard({
           <div className="flex items-center gap-1 flex-shrink-0">
             <button
               onClick={() => setTextExpanded(!textExpanded)}
-              className={`p-1.5 rounded-lg text-white/30 hover:bg-white/5 transition-colors ${textExpanded ? "bg-white/5" : ""}`}
+              className={`p-1.5 rounded-lg text-ps-text-muted hover:bg-white/5 transition-colors ${textExpanded ? "bg-white/5" : ""}`}
               title={textExpanded ? "Collapse" : "Expand prompt"}
             >
               <ChevronDown className={`w-3.5 h-3.5 transition-transform ${textExpanded ? "" : "rotate-90"}`} />
             </button>
             <button
               onClick={handleCopy}
-              className="p-1.5 rounded-lg text-white/30 hover:bg-white/5 transition-colors"
+              className="p-1.5 rounded-lg text-ps-text-muted hover:bg-white/5 transition-colors"
               title={copied ? "Copied!" : "Copy prompt"}
             >
               {copied ? (
@@ -106,7 +106,7 @@ export default function PersonalityCard({
             )}
             <button
               onClick={() => onEdit(personality)}
-              className="p-1.5 rounded-lg text-white/30 hover:bg-white/5 transition-colors"
+              className="p-1.5 rounded-lg text-ps-text-muted hover:bg-white/5 transition-colors"
               title="Edit personality"
             >
               <Edit3 className="w-3.5 h-3.5" />

@@ -89,7 +89,7 @@ export default function CategoryManagerModal({
   return (
     <Modal open={open} onClose={onClose} title="Manage categories" size="lg">
       <div className="mb-4 p-3 rounded-lg border border-white/10 bg-dark-900/50 space-y-2">
-        <label className="text-xs text-white/40 font-mono block">
+        <label className="text-xs text-ps-text-muted font-mono block">
           New category
         </label>
         <div className="flex flex-wrap gap-2 items-center">
@@ -103,7 +103,7 @@ export default function CategoryManagerModal({
               }
             }}
             placeholder="Category name"
-            className="flex-1 min-w-[140px] h-9 px-3 text-sm font-mono bg-dark-950 border border-white/10 rounded-lg text-white/80"
+            className="flex-1 min-w-[140px] h-9 px-3 text-sm font-mono bg-dark-950 border border-white/10 rounded-lg text-ps-text-primary"
           />
           <select
             value={newColor}
@@ -129,7 +129,7 @@ export default function CategoryManagerModal({
       </div>
 
       {categoriesLoadError && (
-        <div className="mb-4 p-3 rounded-lg border border-neon-orange/30 bg-neon-orange/5 text-xs font-mono text-neon-orange/80">
+        <div className="mb-4 p-3 rounded-lg border border-neon-orange/30 bg-neon-orange/5 text-xs font-mono text-neon-orange/90">
           {categoriesLoadError}
           <button
             type="button"
@@ -143,7 +143,7 @@ export default function CategoryManagerModal({
 
       <div className="space-y-2 max-h-[50vh] overflow-y-auto">
         {categories.length === 0 && !categoriesLoadError && (
-          <p className="text-xs font-mono text-white/40 py-4 text-center">
+          <p className="text-xs font-mono text-ps-text-muted py-4 text-center">
             No categories yet. Create one above, or run{" "}
             <code className="text-neon-cyan">npm run db:migrate</code> if you
             upgraded from an older install.
@@ -182,7 +182,7 @@ export default function CategoryManagerModal({
                 <button
                   type="button"
                   onClick={() => setEditingId(null)}
-                  className="text-xs font-mono text-white/40"
+                  className="text-xs font-mono text-ps-text-muted"
                 >
                   Cancel
                 </button>
@@ -196,20 +196,20 @@ export default function CategoryManagerModal({
                   }`}
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-mono text-white/80 truncate">
+                  <div className="text-sm font-mono text-ps-text-primary truncate">
                     {c.name}
                     {c.seedKey ? (
-                      <span className="text-white/30 ml-1">(default)</span>
+                      <span className="text-ps-text-muted ml-1">(default)</span>
                     ) : null}
                   </div>
-                  <div className="text-[10px] font-mono text-white/30">
+                  <div className="text-xs font-mono text-ps-text-muted">
                     {c.missionCount} missions · {c.templateCount} templates
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => startEdit(c)}
-                  className="p-1 text-white/30 hover:text-neon-cyan"
+                  className="p-1 text-ps-text-muted hover:text-neon-cyan"
                 >
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
@@ -219,7 +219,7 @@ export default function CategoryManagerModal({
                     setDeleteTarget(c.id);
                     setReassignId(null);
                   }}
-                  className="p-1 text-white/30 hover:text-red-400"
+                  className="p-1 text-ps-text-muted hover:text-red-400"
                 >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -231,7 +231,7 @@ export default function CategoryManagerModal({
 
       {deleteTarget && (
         <div className="mt-4 p-3 rounded-lg border border-red-500/30 bg-red-500/5">
-          <p className="text-xs font-mono text-white/60 mb-2">
+          <p className="text-xs font-mono text-ps-text-secondary mb-2">
             Reassign missions and templates before deleting:
           </p>
           <select
@@ -261,7 +261,7 @@ export default function CategoryManagerModal({
             <button
               type="button"
               onClick={() => setDeleteTarget(null)}
-              className="px-3 py-1.5 text-xs font-mono text-white/40"
+              className="px-3 py-1.5 text-xs font-mono text-ps-text-muted"
             >
               Cancel
             </button>

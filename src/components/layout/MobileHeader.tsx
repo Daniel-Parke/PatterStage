@@ -11,7 +11,7 @@ export default function MobileHeader() {
     <div className="lg:hidden sticky top-0 z-50 flex items-center min-h-[var(--ps-mobile-header-min-height)] px-3 bg-dark-950/95 backdrop-blur-xl border-b border-white/10 flex-shrink-0 gap-3">
       <button
         onClick={toggleMobile}
-        className="p-2 rounded-lg text-white/60 hover:text-white/80 hover:bg-white/5 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+        className="p-2 rounded-lg text-ps-text-secondary hover:text-ps-text-primary hover:bg-white/5 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
         aria-label="Open navigation"
       >
         <Menu className="w-5 h-5" />
@@ -24,7 +24,7 @@ export default function MobileHeader() {
         </div>
         <span className="text-sm font-bold tracking-tight">
           <span className="text-neon-cyan">PT</span>
-          <span className="text-white/40 mx-0.5">/</span>
+          <span className="text-ps-text-muted mx-0.5">/</span>
           <span className="text-white">Hermes</span>
         </span>
       </Link>

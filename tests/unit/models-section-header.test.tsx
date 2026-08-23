@@ -3,7 +3,7 @@
  *
  * Unit test for the `ModelsSectionHeader` component extraction
  * (List 4 refactor — session carryover). Pre-extraction: the same
- * 3-line `<h2>` chrome (`text-sm font-bold text-white/70 uppercase
+ * 3-line `<h2>` chrome (`text-sm font-bold text-ps-text-secondary uppercase
  * tracking-wider flex items-center gap-2` + the icon with
  * `w-4 h-4 text-neon-{color}[/60]`) was inlined in 3 sibling
  * Models-* section components
@@ -15,7 +15,7 @@
  * The test pins the post-extraction shape with positive + negative
  * assertions:
  *   1. The shared component renders the h2 with the canonical
- *      className chrome (text-sm, font-bold, text-white/70,
+ *      className chrome (text-sm, font-bold, text-ps-text-secondary,
  *      uppercase, tracking-wider, flex, items-center, gap-2) —
  *      this is the contract the 3 call sites depend on.
  *   2. The icon picks the neon-{color} class from `iconColorMap`
@@ -49,7 +49,7 @@ describe("ModelsSectionHeader", () => {
       const h2 = screen.getByRole("heading", { level: 2, name: /agent default/i });
       expect(h2).toHaveClass("text-sm");
       expect(h2).toHaveClass("font-bold");
-      expect(h2).toHaveClass("text-white/70");
+      expect(h2).toHaveClass("text-ps-text-secondary");
       expect(h2).toHaveClass("uppercase");
       expect(h2).toHaveClass("tracking-wider");
       expect(h2).toHaveClass("flex");

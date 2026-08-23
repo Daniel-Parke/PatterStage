@@ -67,7 +67,7 @@ export function VersionFooterCollapsed({ state }: { state: VersionFooterState })
           <button
             onClick={() => openCheckDropdown()}
             disabled={checkState === "checking" || isBusy}
-            className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
+            className="p-1.5 rounded-lg text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-colors"
             title={checkState === "checking" ? "Checking..." : "Check for Update"}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${checkState === "checking" ? "animate-spin" : ""}`} />
@@ -78,7 +78,7 @@ export function VersionFooterCollapsed({ state }: { state: VersionFooterState })
         <button
           onClick={onRebuildClick}
           disabled={isBusy}
-          className={`p-1.5 rounded-lg transition-colors ${isArmedFor("rebuild") ? "text-neon-orange bg-orange-500/10" : "text-white/30 hover:text-white/60 hover:bg-white/5"}`}
+          className={`p-1.5 rounded-lg transition-colors ${isArmedFor("rebuild") ? "text-neon-orange bg-orange-500/10" : "text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5"}`}
           title={isArmedFor("rebuild") ? "Click again to confirm rebuild" : (message || "Rebuild App")}
         >
           <Hammer className={`w-3.5 h-3.5 flex-shrink-0 ${rebuilding ? "animate-spin" : ""}`} />
@@ -88,7 +88,7 @@ export function VersionFooterCollapsed({ state }: { state: VersionFooterState })
         <button
           onClick={onRestartClick}
           disabled={isBusy}
-          className={`p-1.5 rounded-lg transition-colors ${isArmedFor("restart") ? "text-red-400 bg-red-500/10" : "text-white/30 hover:text-red-400 hover:bg-red-500/10"}`}
+          className={`p-1.5 rounded-lg transition-colors ${isArmedFor("restart") ? "text-red-400 bg-red-500/10" : "text-ps-text-muted hover:text-red-400 hover:bg-red-500/10"}`}
           title={isArmedFor("restart") ? "Click again to confirm restart" : (message || "Restart App")}
         >
           <Power className={`w-3.5 h-3.5 flex-shrink-0 ${restarting ? "animate-spin" : ""}`} />
@@ -178,7 +178,7 @@ export function VersionFooterExpanded({ state }: { state: VersionFooterState }) 
       <div className="space-y-1.5">
         {/* Status message — visible inline when operation is in progress */}
         {message && (
-          <div className="min-h-[1.25rem] px-1 text-[10px] font-mono text-white/50 text-center leading-tight">
+          <div className="min-h-[1.25rem] px-1 text-xs font-mono text-ps-text-muted text-center leading-tight">
             {message}
           </div>
         )}
@@ -194,7 +194,7 @@ export function VersionFooterExpanded({ state }: { state: VersionFooterState }) 
             disabled={isBusy}
             className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-mono transition-colors disabled:opacity-50 ${
               rebuilding || isArmedFor("rebuild")
-                ? "bg-neon-purple/20 border border-neon-purple/30 text-neon-purple/90"
+                ? "bg-neon-purple/20 border border-neon-purple/30 text-neon-purple"
                 : "bg-neon-purple/10 border border-neon-purple/20 text-neon-purple hover:bg-neon-purple/20"
             }`}
           >

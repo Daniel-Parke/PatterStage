@@ -23,11 +23,11 @@ function Section({
 }) {
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-wider text-neon-purple/80">
+      <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-neon-purple">
         <Icon className="h-3.5 w-3.5" />
         {title}
       </div>
-      <div className="text-xs leading-relaxed text-white/65">{children}</div>
+      <div className="text-xs leading-relaxed text-ps-text-secondary">{children}</div>
     </div>
   );
 }
@@ -59,7 +59,7 @@ export default function StoryBiblePanel({
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-white/40 hover:bg-white/5 hover:text-white/70"
+            className="rounded-lg p-1.5 text-ps-text-muted hover:bg-white/5 hover:text-ps-text-secondary"
             aria-label="Close story bible"
           >
             <X className="h-4 w-4" />
@@ -67,7 +67,7 @@ export default function StoryBiblePanel({
         </div>
 
         {!arc ? (
-          <p className="text-xs italic text-white/30">
+          <p className="text-xs italic text-ps-text-muted">
             No story arc is available for this story yet.
           </p>
         ) : (
@@ -75,12 +75,12 @@ export default function StoryBiblePanel({
             <Section icon={MapPin} title="Throughline">
               <p>{arc.storyArc || "(unspecified)"}</p>
               {arc.themes?.length > 0 && (
-                <p className="mt-2 text-white/45">
-                  <span className="text-white/30">Themes:</span> {arc.themes.join(", ")}
+                <p className="mt-2 text-ps-text-muted">
+                  <span className="text-ps-text-muted">Themes:</span> {arc.themes.join(", ")}
                 </p>
               )}
               {arc.worldRules?.length > 0 && (
-                <ul className="mt-2 list-disc space-y-0.5 pl-4 text-white/45">
+                <ul className="mt-2 list-disc space-y-0.5 pl-4 text-ps-text-muted">
                   {arc.worldRules.map((r, i) => (
                     <li key={i}>{r}</li>
                   ))}
@@ -96,10 +96,10 @@ export default function StoryBiblePanel({
                     .sort((a, b) => a.chapter - b.chapter)
                     .map((p, i) => (
                       <li key={i} className="flex gap-2">
-                        <span className="shrink-0 font-mono text-[10px] text-neon-purple/70">Ch {p.chapter}</span>
+                        <span className="shrink-0 font-mono text-xs text-neon-purple">Ch {p.chapter}</span>
                         <span>
                           {p.event}
-                          {p.setup ? <span className="text-white/35"> — {p.setup}</span> : null}
+                          {p.setup ? <span className="text-ps-text-muted"> — {p.setup}</span> : null}
                         </span>
                       </li>
                     ))}
@@ -112,9 +112,9 @@ export default function StoryBiblePanel({
                 <div className="space-y-2.5">
                   {arc.characterArcs.map((c, i) => (
                     <div key={i}>
-                      <div className="font-medium text-white/75">{c.name}</div>
-                      <div className="text-white/45">{c.journey}</div>
-                      <div className="mt-0.5 text-[11px] text-white/35">
+                      <div className="font-medium text-ps-text-secondary">{c.name}</div>
+                      <div className="text-ps-text-muted">{c.journey}</div>
+                      <div className="mt-0.5 text-xs text-ps-text-muted">
                         {c.startingState} → {c.endingState}
                       </div>
                     </div>
@@ -128,12 +128,12 @@ export default function StoryBiblePanel({
                 <div className="space-y-2">
                   {arc.chapterOutlines.map((o, i) => (
                     <div key={i} className="rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2">
-                      <div className="font-medium text-white/70">
+                      <div className="font-medium text-ps-text-secondary">
                         {o.number}. {o.title}
                       </div>
-                      <div className="text-white/40">{o.purpose}</div>
+                      <div className="text-ps-text-muted">{o.purpose}</div>
                       {o.keyBeats?.length > 0 && (
-                        <div className="mt-1 text-[11px] text-white/35">{o.keyBeats.join(" · ")}</div>
+                        <div className="mt-1 text-xs text-ps-text-muted">{o.keyBeats.join(" · ")}</div>
                       )}
                     </div>
                   ))}

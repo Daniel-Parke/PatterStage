@@ -203,7 +203,7 @@ export function TemplateEditorModal({
         )}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-white/40 font-mono block mb-1">
+            <label className="text-xs text-ps-text-muted font-mono block mb-1">
               Template Name
             </label>
             <input
@@ -214,7 +214,7 @@ export function TemplateEditorModal({
             />
           </div>
           <div>
-            <label className="text-xs text-white/40 font-mono block mb-1">
+            <label className="text-xs text-ps-text-muted font-mono block mb-1">
               Description
             </label>
             <input
@@ -226,7 +226,7 @@ export function TemplateEditorModal({
           </div>
         </div>
         <div>
-          <label className="text-xs text-white/40 font-mono block mb-1">
+          <label className="text-xs text-ps-text-muted font-mono block mb-1">
             Instruction Prompt
           </label>
           <AutoTextarea
@@ -238,8 +238,8 @@ export function TemplateEditorModal({
           />
         </div>
         <div>
-          <label className="text-xs text-white/40 font-mono block mb-1">
-            Context Prompt <span className="text-white/20">(optional)</span>
+          <label className="text-xs text-ps-text-muted font-mono block mb-1">
+            Context Prompt <span className="text-ps-text-faint">(optional)</span>
           </label>
           <AutoTextarea
             value={newContext}
@@ -250,7 +250,7 @@ export function TemplateEditorModal({
           />
         </div>
         <div>
-          <label className="text-xs text-white/40 font-mono block mb-1">
+          <label className="text-xs text-ps-text-muted font-mono block mb-1">
             Goals (one per line)
           </label>
           <AutoTextarea
@@ -277,9 +277,9 @@ export function TemplateEditorModal({
           onSkillsChange={onNewSkillsChange}
         />
         <div>
-          <label className="text-xs text-white/40 font-mono block mb-1">
+          <label className="text-xs text-ps-text-muted font-mono block mb-1">
             Local Directories{" "}
-            <span className="text-white/20">(optional)</span>
+            <span className="text-ps-text-faint">(optional)</span>
           </label>
           <div className="space-y-2">
             <LocalDirRow
@@ -315,9 +315,9 @@ export function TemplateEditorModal({
           </div>
         </div>
         <div>
-          <label className="text-xs text-white/40 font-mono block mb-1">
+          <label className="text-xs text-ps-text-muted font-mono block mb-1">
             Key References{" "}
-            <span className="text-white/20">(optional)</span>
+            <span className="text-ps-text-faint">(optional)</span>
           </label>
           <div className="space-y-1.5">
             {newReferences.map((ref, i) => (
@@ -333,7 +333,7 @@ export function TemplateEditorModal({
                   onClick={() =>
                     onNewReferencesChange((r) => r.filter((_, j) => j !== i))
                   }
-                  className="text-white/30 hover:text-red-400 transition-colors flex-shrink-0"
+                  className="text-ps-text-muted hover:text-red-400 transition-colors flex-shrink-0"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -378,7 +378,7 @@ export function TemplateEditorModal({
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="text-xs text-white/40 font-mono block mb-1">
+            <label className="text-xs text-ps-text-muted font-mono block mb-1">
               Icon
             </label>
             <div className="flex flex-wrap gap-1.5">
@@ -396,7 +396,7 @@ export function TemplateEditorModal({
                     title={icon}
                   >
                     <Icon
-                      className={`w-4 h-4 ${templateIcon === icon ? "text-neon-cyan" : "text-white/40"}`}
+                      className={`w-4 h-4 ${templateIcon === icon ? "text-neon-cyan" : "text-ps-text-muted"}`}
                     />
                   </button>
                 );
@@ -404,7 +404,7 @@ export function TemplateEditorModal({
             </div>
           </div>
           <div>
-            <label className="text-xs text-white/40 font-mono block mb-1">
+            <label className="text-xs text-ps-text-muted font-mono block mb-1">
               Color
             </label>
             <div className="flex gap-1.5">

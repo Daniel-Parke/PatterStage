@@ -345,21 +345,21 @@ function CreateStoryPage() {
           <div className="bg-dark-900 border border-neon-purple/20 rounded-xl w-full max-w-lg p-6 space-y-4 max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white">Import Character</h3>
-              <button onClick={() => setShowCharPicker(false)} className="text-white/30 hover:text-white/60"><X className="w-4 h-4" /></button>
+              <button onClick={() => setShowCharPicker(false)} className="text-ps-text-muted hover:text-ps-text-secondary"><X className="w-4 h-4" /></button>
             </div>
             {savedCharacters.length === 0 ? (
-              <p className="text-xs text-white/30">No saved characters. Create some in the Characters page first.</p>
+              <p className="text-xs text-ps-text-muted">No saved characters. Create some in the Characters page first.</p>
             ) : (
               <div className="space-y-2">
                 {savedCharacters.map(cs => (
                   <button key={cs.id} onClick={() => importCharacter(cs)}
                     disabled={characters.some(c => c.name === cs.name)}
                     className="w-full text-left p-3 rounded-lg border border-white/5 hover:border-neon-purple/20 bg-white/[0.02] hover:bg-neon-purple/5 transition-all disabled:opacity-30">
-                    <div className="text-xs font-semibold text-white/80">{cs.name}</div>
-                    <div className="text-[10px] text-white/30 font-mono">{cs.role} — {cs.description?.slice(0, 80)}</div>
+                    <div className="text-xs font-semibold text-ps-text-primary">{cs.name}</div>
+                    <div className="text-xs text-ps-text-muted font-mono">{cs.role} — {cs.description?.slice(0, 80)}</div>
                     {cs.personality?.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {cs.personality.slice(0, 3).map(p => <span key={p} className="px-1.5 py-0.5 rounded text-[8px] font-mono border border-white/5 bg-white/[0.02] text-white/25">{p}</span>)}
+                        {cs.personality.slice(0, 3).map(p => <span key={p} className="px-1.5 py-0.5 rounded text-xs font-mono border border-white/5 bg-white/[0.02] text-ps-text-faint">{p}</span>)}
                       </div>
                     )}
                   </button>
@@ -375,12 +375,12 @@ function CreateStoryPage() {
         <div className="fixed inset-0 z-[60] bg-dark-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-dark-900 border border-green-500/20 rounded-xl w-full max-w-md p-6 space-y-4">
             <h3 className="text-sm font-semibold text-white">Save as Theme</h3>
-            <p className="text-xs text-white/40">Save your current story concept as a reusable theme.</p>
+            <p className="text-xs text-ps-text-muted">Save your current story concept as a reusable theme.</p>
             <input value={newThemeName} onChange={(e) => setNewThemeName(e.target.value)}
               placeholder="Theme name..." autoFocus
               className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 outline-none font-mono" />
             <div className="flex gap-2 justify-end">
-              <button onClick={() => setShowSaveTheme(false)} className="px-4 py-2 text-xs text-white/40 hover:text-white/60 rounded-lg border border-white/10">Cancel</button>
+              <button onClick={() => setShowSaveTheme(false)} className="px-4 py-2 text-xs text-ps-text-muted hover:text-ps-text-secondary rounded-lg border border-white/10">Cancel</button>
               <button onClick={saveAsTheme} disabled={!newThemeName.trim() || !premise.trim()}
                 className="px-4 py-2 text-xs text-green-400 rounded-lg border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 disabled:opacity-30 flex items-center gap-2">
                 <Save className="w-3 h-3" /> Save Theme
@@ -401,7 +401,7 @@ function CreateStoryPage() {
             <button
               type="button"
               onClick={loadDraft}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-orange-500/20 text-[10px] font-mono text-orange-400 hover:bg-orange-500/10"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-orange-500/20 text-xs font-mono text-orange-400 hover:bg-orange-500/10"
             >
               <FolderOpen className="w-3 h-3" /> Load Draft
             </button>
@@ -414,9 +414,9 @@ function CreateStoryPage() {
         {/* ═══ SECTION A: Templates + Clear ═══ */}
         <div className="rounded-xl border border-neon-purple/15 bg-dark-900/50 p-5">
           <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-mono text-white/40 uppercase tracking-widest">Quick Start — Templates</label>
+            <label className="text-xs font-mono text-ps-text-muted uppercase tracking-widest">Quick Start — Templates</label>
             <button onClick={clearAllInputs}
-              className="flex items-center gap-1 text-[10px] font-mono text-red-400 hover:text-red-300">
+              className="flex items-center gap-1 text-xs font-mono text-red-400 hover:text-red-300">
               <X className="w-3 h-3" /> Clear all inputs
             </button>
           </div>
@@ -426,8 +426,8 @@ function CreateStoryPage() {
                 className={`text-left p-3 rounded-lg border transition-all ${
                   selectedTheme === t.id ? "border-neon-purple/40 bg-neon-purple/10" : "border-white/5 bg-white/[0.02] hover:border-white/15"
                 }`}>
-                <div className="text-xs font-semibold text-white/80 mb-0.5">{t.name}</div>
-                <div className="text-[9px] font-mono text-white/30">{t.genre.join(", ")}</div>
+                <div className="text-xs font-semibold text-ps-text-primary mb-0.5">{t.name}</div>
+                <div className="text-xs font-mono text-ps-text-muted">{t.genre.join(", ")}</div>
               </button>
             ))}
           </div>
@@ -435,7 +435,7 @@ function CreateStoryPage() {
 
         {/* ═══ SECTION B: Title ═══ */}
         <div className="rounded-xl border border-neon-purple/20 bg-dark-900/50 p-5">
-          <label className="text-xs font-mono text-white/40 uppercase tracking-widest block mb-2">Story Title</label>
+          <label className="text-xs font-mono text-ps-text-muted uppercase tracking-widest block mb-2">Story Title</label>
           <input value={title} onChange={(e) => { setTitle(e.target.value); setTitleManuallyEdited(true); }} placeholder="Give your story a name..."
             className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-4 py-3 text-lg text-white placeholder-white/20 outline-none focus:border-neon-purple/30 font-serif font-semibold" />
         </div>
@@ -443,13 +443,13 @@ function CreateStoryPage() {
         {/* ═══ SECTION C: Theme (Premise + Tags + Saved Themes) ═══ */}
         <div className="rounded-xl border border-white/8 bg-dark-900/50 p-5 mt-2">
           <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-mono text-white/40 uppercase tracking-widest">Theme</label>
+            <label className="text-xs font-mono text-ps-text-muted uppercase tracking-widest">Theme</label>
             <button onClick={() => setShowSaveTheme(true)} disabled={!premise.trim()}
-              className="flex items-center gap-1 text-[10px] font-mono text-green-400 hover:text-green-300 disabled:opacity-30">
+              className="flex items-center gap-1 text-xs font-mono text-green-400 hover:text-green-300 disabled:opacity-30">
               <Save className="w-3 h-3" /> Save as Theme
             </button>
           </div>
-          <label className="text-[10px] font-mono text-white/25 uppercase tracking-wider block mb-2">What&apos;s your story about?</label>
+          <label className="text-xs font-mono text-ps-text-faint uppercase tracking-wider block mb-2">What&apos;s your story about?</label>
           <textarea value={premise} onChange={(e) => setPremise(e.target.value)} rows={4}
             className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-green-500/30 font-mono resize-none leading-relaxed mb-4" placeholder="Describe your story concept..." />
           <div className="space-y-3">
@@ -461,16 +461,16 @@ function CreateStoryPage() {
           {/* Saved themes — prominent at top of Theme section */}
           {savedThemes.length > 0 && (
             <div className="mb-4 pb-4 border-b border-white/5">
-              <label className="text-[10px] font-mono text-white/25 uppercase tracking-wider block mb-2">Saved Themes — click to load</label>
+              <label className="text-xs font-mono text-ps-text-faint uppercase tracking-wider block mb-2">Saved Themes — click to load</label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {savedThemes.map((t) => (
                   <div key={t.id} className={`relative group p-3 rounded-lg border transition-all cursor-pointer ${
                     selectedTheme === t.id ? "border-white/15 bg-white/[0.04]" : "border-white/8 bg-white/[0.02] hover:border-white/15 hover:bg-white/[0.04]"
                   }`} onClick={() => applyTheme(t)}>
-                    <div className="text-xs font-semibold text-white/70 mb-0.5">{t.name}</div>
-                    <div className="text-[9px] font-mono text-white/20 truncate">{t.genre?.join(", ") || "Custom"} — {t.era || "Any era"}</div>
+                    <div className="text-xs font-semibold text-ps-text-secondary mb-0.5">{t.name}</div>
+                    <div className="text-xs font-mono text-ps-text-faint truncate">{t.genre?.join(", ") || "Custom"} — {t.era || "Any era"}</div>
                     <button onClick={(e) => { e.stopPropagation(); deleteTheme(t.id); }}
-                      className="absolute top-1.5 right-1.5 p-1.5 text-white/20 hover:text-red-400 transition-opacity">
+                      className="absolute top-1.5 right-1.5 p-1.5 text-ps-text-faint hover:text-red-400 transition-opacity">
                       <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
@@ -483,18 +483,18 @@ function CreateStoryPage() {
         {/* ═══ SECTION D: Characters ═══ */}
         <div className="rounded-xl border border-white/8 bg-dark-900/50 p-5">
           <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-mono text-white/40 uppercase tracking-widest flex items-center gap-2">
+            <label className="text-xs font-mono text-ps-text-muted uppercase tracking-widest flex items-center gap-2">
               <Users className="w-3.5 h-3.5" /> Characters ({characters.length})
             </label>
             <div className="flex items-center gap-2">
               {savedCharacters.length > 0 && (
                 <button onClick={() => setShowCharPicker(true)}
-                  className="flex items-center gap-1 text-[10px] font-mono text-neon-purple hover:text-purple-300">
+                  className="flex items-center gap-1 text-xs font-mono text-neon-purple hover:text-purple-300">
                   <Users className="w-3 h-3" /> From Library
                 </button>
               )}
               <button onClick={() => setCharacters(prev => [...prev, { ...EMPTY_CHARACTER }])}
-                className="flex items-center gap-1 text-[10px] font-mono text-neon-purple hover:text-purple-300">
+                className="flex items-center gap-1 text-xs font-mono text-neon-purple hover:text-purple-300">
                 <Plus className="w-3 h-3" /> Add Character
               </button>
             </div>
@@ -502,7 +502,7 @@ function CreateStoryPage() {
           {characters.length === 0 ? (
             <div className="text-center py-8">
               <Users className="w-8 h-8 text-white/10 mx-auto mb-2" />
-              <p className="text-xs text-white/25">No characters yet. Add one or import from your library.</p>
+              <p className="text-xs text-ps-text-faint">No characters yet. Add one or import from your library.</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -525,10 +525,10 @@ function CreateStoryPage() {
 
         {/* ═══ SECTION E: Story Parameters ═══ */}
         <div className="rounded-xl border border-white/8 bg-dark-900/50 p-5 space-y-4">
-          <label className="text-xs font-mono text-white/40 uppercase tracking-widest block">Story Parameters</label>
+          <label className="text-xs font-mono text-ps-text-muted uppercase tracking-widest block">Story Parameters</label>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-2">Point of View</label>
+              <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-2">Point of View</label>
               <select value={pov} onChange={(e) => setPov(e.target.value)}
                 className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none font-mono">
                 <option value="first">First Person</option>
@@ -537,7 +537,7 @@ function CreateStoryPage() {
               </select>
             </div>
             <div>
-              <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-2">Length</label>
+              <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-2">Length</label>
               <select value={length} onChange={(e) => setLength(e.target.value)}
                 className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none font-mono">
                 <option value="short">Short (3-4 chapters)</option>
@@ -547,12 +547,12 @@ function CreateStoryPage() {
             </div>
           </div>
           <div>
-            <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-2">Chapter Length (words per chapter)</label>
+            <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-2">Chapter Length (words per chapter)</label>
             <div className="flex flex-wrap gap-2">
               {WORD_COUNT_OPTIONS.map((opt) => (
                 <button key={opt.id} onClick={() => setWordCountRange(opt.id)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-mono border transition-all ${
-                    wordCountRange === opt.id ? "border-neon-purple/40 bg-neon-purple/15 text-neon-purple" : "border-white/8 text-white/30 hover:text-white/50"
+                    wordCountRange === opt.id ? "border-neon-purple/40 bg-neon-purple/15 text-neon-purple" : "border-white/8 text-ps-text-muted hover:text-ps-text-muted"
                   }`}>{opt.label}</button>
               ))}
             </div>

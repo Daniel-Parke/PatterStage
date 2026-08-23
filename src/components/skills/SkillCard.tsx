@@ -47,7 +47,7 @@ export function SkillCard({
         <div className="flex items-start justify-between gap-2 mb-1.5">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-mono font-semibold text-white/80 truncate">
+              <span className="text-sm font-mono font-semibold text-ps-text-primary truncate">
                 {skill.name}
               </span>
               {isPending && (
@@ -56,7 +56,7 @@ export function SkillCard({
                 </Badge>
               )}
             </div>
-            <p className="text-[10px] text-white/30 font-mono mt-0.5">
+            <p className="text-xs text-ps-text-muted font-mono mt-0.5">
               {skill.category}
             </p>
           </div>
@@ -78,7 +78,7 @@ export function SkillCard({
 
         {/* Description */}
         <p
-          className="text-xs text-white/40 leading-relaxed line-clamp-2 mb-3"
+          className="text-xs text-ps-text-muted leading-relaxed line-clamp-2 mb-3"
           title={skill.description}
         >
           {skill.description}
@@ -88,12 +88,12 @@ export function SkillCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {enabled ? (
-              <span className="inline-flex items-center gap-1 text-[10px] text-neon-green/70">
+              <span className="inline-flex items-center gap-1 text-xs text-neon-green/70">
                 <span className="w-1.5 h-1.5 rounded-full bg-neon-green animate-pulse" />
                 Active
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-[10px] text-white/30">
+              <span className="inline-flex items-center gap-1 text-xs text-ps-text-muted">
                 <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
                 Inactive
               </span>
@@ -103,17 +103,17 @@ export function SkillCard({
           <button
             type="button"
             onClick={onEdit}
-            className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border border-white/10 text-white/30 hover:border-neon-green/30 hover:text-neon-green transition-all"
+            className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-white/10 text-ps-text-muted hover:border-neon-green/30 hover:text-neon-green transition-all"
           >
             <Edit3 className="w-3 h-3" /> Edit
           </button>
           <button
             type="button"
             onClick={onView}
-            className={`flex items-center gap-1 text-[10px] px-2 py-0.5 rounded border transition-all ${
+            className={`flex items-center gap-1 text-xs px-2 py-1 rounded border transition-all ${
               isExpanded
-                ? "border-white/20 text-white/50 bg-white/5"
-                : "border-white/10 text-white/30 hover:border-white/20 hover:text-white/60"
+                ? "border-white/20 text-ps-text-muted bg-white/5"
+                : "border-white/10 text-ps-text-muted hover:border-white/20 hover:text-ps-text-secondary"
             }`}
           >
             {isExpanded ? (
@@ -131,7 +131,7 @@ export function SkillCard({
         {/* Expanded content */}
         {isExpanded && (
           <div className="mt-3 pt-3 border-t border-white/5">
-            <pre className="text-[11px] text-white/50 font-mono whitespace-pre-wrap max-h-48 overflow-auto leading-relaxed">
+            <pre className="text-xs text-ps-text-muted font-mono whitespace-pre-wrap max-h-48 overflow-auto leading-relaxed">
               {expandedContent ?? "// Loading..."}
             </pre>
           </div>

@@ -45,15 +45,15 @@ export default function LogTerminal({
           <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
           <div className="w-3 h-3 rounded-full bg-green-500/80" />
         </div>
-        <span className="text-xs text-white/40 font-mono ml-2 truncate">
+        <span className="text-xs text-ps-text-muted font-mono ml-2 truncate">
           {activeLog}.log
-          <span className="text-white/20 ml-2">
+          <span className="text-ps-text-faint ml-2">
             (showing {showingLines}/{totalLines})
           </span>
         </span>
       </div>
 
-      <div className="px-3 py-2 border-b border-white/5 bg-dark-950/30 shrink-0 hidden sm:grid sm:grid-cols-[minmax(0,9.5rem)_minmax(0,4.5rem)_1fr] gap-x-3 text-[10px] font-mono uppercase tracking-wide text-white/30">
+      <div className="px-3 py-2 border-b border-white/5 bg-dark-950/30 shrink-0 hidden sm:grid sm:grid-cols-[minmax(0,9.5rem)_minmax(0,4.5rem)_1fr] gap-x-3 text-xs font-mono uppercase tracking-wide text-ps-text-muted">
         <span>Time</span>
         <span>Level</span>
         <span>Message</span>
@@ -69,7 +69,7 @@ export default function LogTerminal({
             />
           ))
         ) : (
-          <div className="text-center text-white/20 py-8">
+          <div className="text-center text-ps-text-faint py-8">
             {searchTerm ? "No matching lines" : "Log file is empty"}
           </div>
         )}

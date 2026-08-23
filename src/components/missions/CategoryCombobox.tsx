@@ -172,14 +172,14 @@ export default function CategoryCombobox({
                   }
                 }}
                 placeholder={searchPlaceholder}
-                className="w-full px-2 py-1.5 text-xs font-mono bg-dark-950 border border-white/10 rounded text-white/80 outline-none focus:border-neon-cyan/40"
+                className="w-full px-2 py-1.5 text-xs font-mono bg-dark-950 border border-white/10 rounded text-ps-text-primary outline-none focus:border-neon-cyan/40"
               />
             </div>
             <ul className="max-h-48 overflow-y-auto py-1">
               <li>
                 <button
                   type="button"
-                  className="w-full px-3 py-2 text-left text-xs font-mono text-white/50 hover:bg-white/5"
+                  className="w-full px-3 py-2 text-left text-xs font-mono text-ps-text-muted hover:bg-white/5"
                   onClick={() => {
                     onChange(null);
                     setOpen(false);
@@ -192,7 +192,7 @@ export default function CategoryCombobox({
                 <li key={c.id}>
                   <button
                     type="button"
-                    className="w-full px-3 py-2 text-left text-xs font-mono text-white/80 hover:bg-white/5 flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-xs font-mono text-ps-text-primary hover:bg-white/5 flex items-center gap-2"
                     onClick={() => {
                       onChange(c.id);
                       setOpen(false);
@@ -230,7 +230,7 @@ export default function CategoryCombobox({
                       setOpen(false);
                       onManageCategories();
                     }}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-mono text-white/40 hover:bg-white/5 border-t border-white/5"
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-mono text-ps-text-muted hover:bg-white/5 border-t border-white/5"
                   >
                     <FolderOpen className="w-3.5 h-3.5" />
                     Manage all categories…
@@ -245,7 +245,7 @@ export default function CategoryCombobox({
 
   return (
     <div className="relative">
-      <label className="text-xs text-white/40 font-mono block mb-1.5">
+      <label className="text-xs text-ps-text-muted font-mono block mb-1.5">
         {label}
       </label>
       <button
@@ -262,11 +262,11 @@ export default function CategoryCombobox({
               selected ? dotClass(selected.color) : "bg-white/20"
             }`}
           />
-          <span className="truncate text-white/80">
+          <span className="truncate text-ps-text-primary">
             {selected?.name ?? "Uncategorized"}
           </span>
         </span>
-        <ChevronDown className="w-4 h-4 text-white/30 shrink-0" />
+        <ChevronDown className="w-4 h-4 text-ps-text-muted shrink-0" />
       </button>
       {menu}
     </div>

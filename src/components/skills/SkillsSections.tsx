@@ -183,7 +183,7 @@ export default function SkillsSections({
         title="Active"
         icon={ToggleRight}
         iconColor="text-neon-green"
-        accentColor="text-neon-green/50"
+        accentColor="text-neon-green/70"
         enabled
         searchAccent="green"
         searchPlaceholder="Search active skills..."
@@ -204,8 +204,8 @@ export default function SkillsSections({
         {...shared}
         title="Inactive"
         icon={ToggleLeft}
-        iconColor="text-white/30"
-        accentColor="text-white/30"
+        iconColor="text-ps-text-muted"
+        accentColor="text-ps-text-muted"
         enabled={false}
         searchAccent="white"
         searchPlaceholder="Search inactive skills..."

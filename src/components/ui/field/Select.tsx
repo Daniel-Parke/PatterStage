@@ -94,10 +94,10 @@ export function Select({
         aria-label={ariaLabel}
         onClick={() => !disabled && setOpen((o) => !o)}
         onKeyDown={onKeyDown}
-        className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-dark-900/80 px-3 py-2 text-left text-sm text-white/90 transition-colors hover:border-white/20 focus:border-neon-cyan/50 focus:outline-none focus:ring-1 focus:ring-neon-cyan/30 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-dark-900/80 px-3 py-2 text-left text-sm text-ps-text-primary transition-colors hover:border-white/20 focus:border-neon-cyan/50 focus:outline-none focus:ring-1 focus:ring-neon-cyan/30 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        <span className={`truncate ${selected ? "" : "text-white/35"}`}>{selected?.label ?? placeholder}</span>
-        <ChevronDown className={`h-4 w-4 shrink-0 text-white/40 transition-transform ${open ? "rotate-180" : ""}`} />
+        <span className={`truncate ${selected ? "" : "text-ps-text-muted"}`}>{selected?.label ?? placeholder}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 text-ps-text-muted transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open ? (
         <ul
@@ -115,15 +115,15 @@ export function Select({
               onClick={() => commit(i)}
               className={`flex cursor-pointer items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-sm ${
                 o.disabled
-                  ? "cursor-not-allowed text-white/25"
+                  ? "cursor-not-allowed text-ps-text-faint"
                   : i === active
                     ? "bg-neon-cyan/10 text-neon-cyan"
-                    : "text-white/80 hover:bg-white/5"
+                    : "text-ps-text-primary hover:bg-white/5"
               }`}
             >
               <span className="truncate">
                 {o.label}
-                {o.hint ? <span className="ml-2 text-[11px] text-white/30">{o.hint}</span> : null}
+                {o.hint ? <span className="ml-2 text-xs text-ps-text-muted">{o.hint}</span> : null}
               </span>
               {o.value === value ? <Check className="h-3.5 w-3.5 shrink-0 text-neon-cyan" /> : null}
             </li>

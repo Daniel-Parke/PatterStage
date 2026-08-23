@@ -33,7 +33,7 @@ export default function SessionCard({ session }: { session: SessionRecord }) {
               <MessageSquare className="w-4 h-4 text-neon-orange flex-shrink-0" />
               <h3 className="font-semibold text-white truncate">{title}</h3>
             </div>
-            <div className="flex items-center gap-3 text-xs text-white/30 font-mono flex-wrap">
+            <div className="flex items-center gap-3 text-xs text-ps-text-muted font-mono flex-wrap">
               <span
                 className={`flex items-center gap-1 ${isActive ? "text-neon-green" : ""}`}
               >
@@ -42,19 +42,19 @@ export default function SessionCard({ session }: { session: SessionRecord }) {
               </span>
               <span className="flex items-center gap-1">
                 <span
-                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono ${meta.colorClass}`}
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-mono ${meta.colorClass}`}
                 >
                   {meta.icon}
                   {meta.label}
                 </span>
               </span>
               {session.profileName && (
-                <span className="text-white/40">{session.profileName}</span>
+                <span className="text-ps-text-muted">{session.profileName}</span>
               )}
               {session.modelId && <Badge color="purple">{session.modelId}</Badge>}
               {typeof session.messageCount === "number" && session.messageCount > 0 && (
                 <span
-                  className="flex items-center gap-1 text-white/40"
+                  className="flex items-center gap-1 text-ps-text-muted"
                   title={`${session.messageCount} message${pluralise(session.messageCount)}`}
                 >
                   <MessageSquare className="w-3 h-3" />

@@ -119,11 +119,11 @@ export default function DefaultsGrid({
                 <div className="text-sm font-semibold text-white flex items-center gap-2">
                   {meta.label}
                 </div>
-                <p className="text-xs text-white/30 font-mono mt-0.5 truncate">
+                <p className="text-xs text-ps-text-muted font-mono mt-0.5 truncate">
                   {meta.description}
                 </p>
               </div>
-              <span className="text-[10px] font-mono text-white/30 bg-white/5 px-1.5 py-0.5 rounded uppercase tracking-widest flex-shrink-0">
+              <span className="text-xs font-mono text-ps-text-muted bg-white/5 px-1.5 py-0.5 rounded uppercase tracking-widest flex-shrink-0">
                 {slot}
               </span>
             </div>

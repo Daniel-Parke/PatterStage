@@ -25,7 +25,7 @@ import { useEventStream } from "@/hooks/useEventStream";
 import type { ResearchConfig, ResearchRun, ResearchStep } from "@/lib/laboratory/deep-research/types";
 
 const STATUS_COLOR: Record<string, string> = {
-  pending: "text-white/40",
+  pending: "text-ps-text-muted",
   running: "text-neon-cyan",
   completed: "text-neon-green",
   failed: "text-neon-pink",
@@ -190,7 +190,7 @@ export default function DeepResearchPage() {
               {!submitting ? <Send className="h-4 w-4" /> : null} Start research
             </Button>
             {query.trim().length < 3 ? (
-              <p className="text-[11px] text-white/35">Enter a research question (≥ 3 characters) to start.</p>
+              <p className="text-xs text-ps-text-muted">Enter a research question (≥ 3 characters) to start.</p>
             ) : null}
           </div>
         </div>
@@ -199,9 +199,9 @@ export default function DeepResearchPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[300px_1fr]">
         {/* Runs list */}
         <Card padding="sm">
-          <h2 className="mb-2 px-1 text-xs font-mono uppercase tracking-widest text-white/40">Runs</h2>
+          <h2 className="mb-2 px-1 text-xs font-mono uppercase tracking-widest text-ps-text-muted">Runs</h2>
           {(runs ?? []).length === 0 ? (
-            <p className="px-1 py-4 text-xs text-white/30">No research runs yet.</p>
+            <p className="px-1 py-4 text-xs text-ps-text-muted">No research runs yet.</p>
           ) : (
             <ul className="space-y-1">
               {(runs ?? []).map((r) => (
@@ -211,10 +211,10 @@ export default function DeepResearchPage() {
                     onClick={() => setSelectedId(r.id)}
                     className={`w-full rounded-lg px-2 py-2 text-left text-xs transition hover:bg-white/5 ${selectedId === r.id ? "bg-white/5" : ""}`}
                   >
-                    <div className="truncate text-white/80">
+                    <div className="truncate text-ps-text-primary">
                       {(r.query.split("\n").find((l) => l.trim()) ?? r.query).trim()}
                     </div>
-                    <div className={`mt-0.5 font-mono uppercase ${STATUS_COLOR[r.status] ?? "text-white/40"}`}>
+                    <div className={`mt-0.5 font-mono uppercase ${STATUS_COLOR[r.status] ?? "text-ps-text-muted"}`}>
                       {r.status}
                     </div>
                   </button>
@@ -227,12 +227,12 @@ export default function DeepResearchPage() {
         {/* Detail */}
         <Card padding="md">
           {!detail ? (
-            <p className="text-xs text-white/30">Select a run to read its report, sources, and timeline.</p>
+            <p className="text-xs text-ps-text-muted">Select a run to read its report, sources, and timeline.</p>
           ) : (
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-3">
-                <div className="text-sm font-medium text-white/90">{detail.run.query}</div>
-                <div className={`shrink-0 font-mono text-[11px] uppercase ${STATUS_COLOR[detail.run.status] ?? "text-white/40"}`}>
+                <div className="text-sm font-medium text-ps-text-primary">{detail.run.query}</div>
+                <div className={`shrink-0 font-mono text-xs uppercase ${STATUS_COLOR[detail.run.status] ?? "text-ps-text-muted"}`}>
                   {detail.run.status}
                 </div>
               </div>

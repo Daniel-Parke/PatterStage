@@ -57,7 +57,7 @@ export function ChatModelSelector({
         disabled={modelsLoading}
       />
       {modelsError && (
-        <span className="text-[10px] text-neon-orange/80 font-mono" title={modelsError}>
+        <span className="text-xs text-neon-orange/90 font-mono" title={modelsError}>
           !
         </span>
       )}

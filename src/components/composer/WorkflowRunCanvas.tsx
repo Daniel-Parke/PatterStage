@@ -61,13 +61,13 @@ function LiveNodeView({ data }: NodeProps<LiveNode>) {
       <Handle type="target" position={Position.Top} className="!h-2 !w-2 !border-0 !bg-white/40" />
       <div className="flex items-center gap-1.5">
         <span className={`h-2 w-2 rounded-full ${STATUS_DOT[data.status] ?? "bg-white/25"} ${data.isCurrent ? "animate-pulse" : ""}`} />
-        <span className="truncate text-sm text-white/90">{data.label}</span>
-        {data.gate === "hil" ? <span className="rounded bg-neon-yellow/15 px-1 text-[8px] font-mono text-neon-yellow">HIL</span> : null}
-        {data.attempt > 1 ? <span className="ml-auto rounded bg-white/10 px-1 text-[8px] font-mono text-white/50">×{data.attempt}</span> : null}
+        <span className="truncate text-sm text-ps-text-primary">{data.label}</span>
+        {data.gate === "hil" ? <span className="rounded bg-neon-yellow/15 px-1 text-xs font-mono text-neon-yellow">HIL</span> : null}
+        {data.attempt > 1 ? <span className="ml-auto rounded bg-white/10 px-1 text-xs font-mono text-ps-text-muted">×{data.attempt}</span> : null}
       </div>
-      <div className="mt-0.5 flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-wider text-white/30">
+      <div className="mt-0.5 flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-ps-text-muted">
         <span>{data.kind}</span>
-        <span className={data.status === "failed" ? "text-neon-pink" : data.status === "completed" ? "text-neon-green" : "text-white/40"}>{data.status}</span>
+        <span className={data.status === "failed" ? "text-neon-pink" : data.status === "completed" ? "text-neon-green" : "text-ps-text-muted"}>{data.status}</span>
         {data.verdictPass === false ? <span className="text-neon-pink">fail</span> : null}
       </div>
       <Handle type="source" position={Position.Bottom} className="!h-2 !w-2 !border-0 !bg-neon-cyan/70" />

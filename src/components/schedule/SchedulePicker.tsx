@@ -229,17 +229,17 @@ export default function SchedulePicker({
           className={`w-full flex items-center justify-between ${baseInputStyles} pr-3 disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           <span className="flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5 text-neon-orange/60 flex-shrink-0" />
+            <Clock className="w-3.5 h-3.5 text-neon-orange/90 flex-shrink-0" />
             {displayLabel}
           </span>
-          <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+          <ChevronDown className={`w-4 h-4 text-ps-text-muted transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
         </button>
         {dropdownOpen && (
           <div className="absolute z-50 mt-1 w-full bg-dark-900 border border-white/10 rounded-xl shadow-2xl overflow-hidden">
             <div className="max-h-72 overflow-y-auto py-1">
               {groups.map(({ group, items }) => (
                 <div key={group}>
-                  <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-white/30 font-mono">
+                  <div className="px-3 py-1.5 text-xs uppercase tracking-wider text-ps-text-muted font-mono">
                     {group}
                   </div>
                   {items.map((p) => (
@@ -250,7 +250,7 @@ export default function SchedulePicker({
                       className={`w-full text-left px-3 py-2 text-sm transition-colors ${
                         matchedPreset?.id === p.id
                           ? "bg-neon-orange/15 text-neon-orange"
-                          : "text-white/70 hover:bg-white/5 hover:text-white"
+                          : "text-ps-text-secondary hover:bg-white/5 hover:text-white"
                       }`}
                     >
                       {p.label}
@@ -273,7 +273,7 @@ export default function SchedulePicker({
 
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-white/70">
+      <label className="text-sm font-medium text-ps-text-secondary">
         Schedule
       </label>
 
@@ -287,10 +287,10 @@ export default function SchedulePicker({
           className={`w-full flex items-center justify-between ${baseInputStyles} pr-3 disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           <span className="flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5 text-neon-orange/60 flex-shrink-0" />
+            <Clock className="w-3.5 h-3.5 text-neon-orange/90 flex-shrink-0" />
             {displayLabel}
           </span>
-          <ChevronDown className={`w-4 h-4 text-white/30 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+          <ChevronDown className={`w-4 h-4 text-ps-text-muted transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
         </button>
 
         {dropdownOpen && (
@@ -298,7 +298,7 @@ export default function SchedulePicker({
             <div className="max-h-72 overflow-y-auto py-1">
               {groups.map(({ group, items }) => (
                 <div key={group}>
-                  <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-white/30 font-mono sticky top-0 bg-dark-900">
+                  <div className="px-3 py-1.5 text-xs uppercase tracking-wider text-ps-text-muted font-mono sticky top-0 bg-dark-900">
                     {group}
                   </div>
                   {items.map((p) => (
@@ -309,7 +309,7 @@ export default function SchedulePicker({
                       className={`w-full text-left px-3 py-2 text-sm transition-colors ${
                         matchedPreset?.id === p.id
                           ? "bg-neon-orange/15 text-neon-orange"
-                          : "text-white/70 hover:bg-white/5 hover:text-white"
+                          : "text-ps-text-secondary hover:bg-white/5 hover:text-white"
                       }`}
                     >
                       {p.label}
@@ -351,15 +351,15 @@ export default function SchedulePicker({
       {canonicalCron && (
         <div className="rounded-lg bg-dark-800/50 border border-white/5 px-3 py-1.5 space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-white/40 font-mono shrink-0">Cron:</span>
+            <span className="text-xs text-ps-text-muted font-mono shrink-0">Cron:</span>
             <code className="text-xs font-mono text-neon-orange truncate">{canonicalCron}</code>
           </div>
           {nextRuns.length > 0 && (
             <div className="flex items-start gap-2">
-              <span className="text-[10px] text-white/40 font-mono shrink-0 mt-px">Next:</span>
+              <span className="text-xs text-ps-text-muted font-mono shrink-0 mt-px">Next:</span>
               <div className="flex flex-wrap gap-x-3 gap-y-0.5">
                 {nextRuns.map((d, i) => (
-                  <span key={i} className="text-[10px] font-mono text-white/55">
+                  <span key={i} className="text-xs font-mono text-ps-text-muted">
                     {d.toLocaleString("en-US", {
                       weekday: "short",
                       month: "short",
@@ -380,7 +380,7 @@ export default function SchedulePicker({
       <button
         type="button"
         onClick={() => setShowAdvanced((v) => !v)}
-        className="text-[10px] text-white/30 hover:text-white/60 font-mono underline"
+        className="text-xs text-ps-text-muted hover:text-ps-text-secondary font-mono underline"
         disabled={disabled}
       >
         {showAdvanced ? "Hide" : "Show"} advanced (raw cron)

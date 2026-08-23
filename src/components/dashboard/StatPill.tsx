@@ -52,14 +52,14 @@ export function StatPill({
     <>
       <Icon className={`w-4 h-4 opacity-60 flex-shrink-0 ${textColor}`} />
       <div className="min-w-0 flex-1">
-        <div className="text-[10px] font-mono text-white/40 uppercase truncate">
+        <div className="text-xs font-mono text-ps-text-muted uppercase truncate">
           {label}
         </div>
         <div className={`text-lg font-bold font-mono truncate ${textColor}`}>
           {value}
         </div>
         {subtitle && (
-          <div className="text-[10px] font-mono text-white/30 truncate">
+          <div className="text-xs font-mono text-ps-text-muted truncate">
             {subtitle}
           </div>
         )}

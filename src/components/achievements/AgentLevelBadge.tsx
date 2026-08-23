@@ -50,7 +50,7 @@ export default function AgentLevelBadge({
         {experience ? (
           <div className="text-xs text-neon-purple">{experience.title}</div>
         ) : (
-          <div className="text-xs text-white/40">Run a mission to start growing this agent</div>
+          <div className="text-xs text-ps-text-muted">Run a mission to start growing this agent</div>
         )}
       </div>
     </div>

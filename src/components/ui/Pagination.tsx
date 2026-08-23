@@ -16,17 +16,17 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 0}
-        className="text-xs font-mono px-3 py-1.5 rounded bg-white/5 text-white/40 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        className="text-xs font-mono px-3 py-1.5 rounded bg-white/5 text-ps-text-muted hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
         Previous
       </button>
-      <span className="text-xs text-white/30 font-mono">
+      <span className="text-xs text-ps-text-muted font-mono">
         Page {currentPage + 1} of {totalPages}
       </span>
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage >= totalPages - 1}
-        className="text-xs font-mono px-3 py-1.5 rounded bg-white/5 text-white/40 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        className="text-xs font-mono px-3 py-1.5 rounded bg-white/5 text-ps-text-muted hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
         Next
       </button>

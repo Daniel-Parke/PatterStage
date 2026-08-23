@@ -51,9 +51,9 @@ function CardTitle({ icon: Icon, hint, children }: { icon: React.ComponentType<{
   return (
     <div className="mb-3 flex items-center gap-2">
       <Icon className="h-4 w-4 text-neon-cyan" />
-      <h2 className="text-xs font-mono uppercase tracking-widest text-white/50">{children}</h2>
+      <h2 className="text-xs font-mono uppercase tracking-widest text-ps-text-muted">{children}</h2>
       {hint ? (
-        <span title={hint} aria-label={hint} className="ml-0.5 cursor-help text-white/25 transition-colors hover:text-white/60">
+        <span title={hint} aria-label={hint} className="ml-0.5 cursor-help text-ps-text-faint transition-colors hover:text-ps-text-secondary">
           <Info className="h-3 w-3" />
         </span>
       ) : null}
@@ -65,7 +65,7 @@ function MetricTile({ label, value, color = "cyan" }: { label: string; value: st
   return (
     <div className="rounded-xl border border-white/10 bg-dark-900/40 p-3" style={{ boxShadow: `inset 0 0 18px ${neonAlpha(color, 5)}` }}>
       <div className="font-mono text-2xl font-bold text-white">{value}</div>
-      <div className="mt-0.5 text-[11px] uppercase tracking-wider text-white/40">{label}</div>
+      <div className="mt-0.5 text-xs uppercase tracking-wider text-ps-text-muted">{label}</div>
     </div>
   );
 }
@@ -118,8 +118,8 @@ export default function InsightsPage() {
                 key={r}
                 type="button"
                 onClick={() => setDays(r)}
-                className={`rounded-md px-2.5 py-1 text-[11px] font-mono transition-colors ${
-                  days === r ? "bg-neon-cyan/20 text-neon-cyan" : "text-white/40 hover:text-white/70"
+                className={`rounded-md px-2.5 py-1 text-xs font-mono transition-colors ${
+                  days === r ? "bg-neon-cyan/20 text-neon-cyan" : "text-ps-text-muted hover:text-ps-text-secondary"
                 }`}
               >
                 {r}d
@@ -149,8 +149,8 @@ export default function InsightsPage() {
             {!error && stats && totalEvents === 0 && (
               <div className="rounded-2xl border border-neon-cyan/20 bg-dark-900/60 p-6 text-center" style={{ boxShadow: `0 0 24px ${neonAlpha("cyan", 6)}` }}>
                 <Sparkles className="mx-auto h-6 w-6 text-neon-cyan" />
-                <h2 className="mt-2 text-sm font-semibold text-white/85">No activity yet</h2>
-                <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-white/50">
+                <h2 className="mt-2 text-sm font-semibold text-ps-text-primary">No activity yet</h2>
+                <p className="mx-auto mt-1 max-w-md text-xs leading-relaxed text-ps-text-muted">
                   Dispatch a mission, write a Story Weaver chapter, or fire a schedule — your
                   interaction analytics and achievements will start filling in here.
                 </p>
@@ -193,7 +193,7 @@ export default function InsightsPage() {
                         <StackedAreaTrend data={insights.categoryDaily} series={insights.categorySeries} height={150} />
                         <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
                           {insights.categorySeries.map((s) => (
-                            <span key={s.key} className="flex items-center gap-1.5 text-[10px] text-white/50">
+                            <span key={s.key} className="flex items-center gap-1.5 text-xs text-ps-text-muted">
                               <span className="h-2 w-2 rounded-sm" style={{ background: neonAlpha(s.color, 90) }} />
                               {s.label}
                             </span>
@@ -211,15 +211,15 @@ export default function InsightsPage() {
                       <Donut segments={segments} size={120} center={totalEvents.toLocaleString()} centerSub="events" />
                       <ul className="flex-1 space-y-1.5">
                         {segments.length === 0 && (
-                          <li className="text-xs text-white/40">No activity recorded yet.</li>
+                          <li className="text-xs text-ps-text-muted">No activity recorded yet.</li>
                         )}
                         {segments.map((s) => (
                           <li key={s.label} className="flex items-center justify-between gap-2 text-xs">
-                            <span className="flex items-center gap-2 text-white/70">
+                            <span className="flex items-center gap-2 text-ps-text-secondary">
                               <span className="h-2 w-2 rounded-full" style={{ background: neonAlpha(s.color, 90) }} />
                               {s.label}
                             </span>
-                            <span className="font-mono text-white/50">{s.value.toLocaleString()}</span>
+                            <span className="font-mono text-ps-text-muted">{s.value.toLocaleString()}</span>
                           </li>
                         ))}
                       </ul>
@@ -244,7 +244,7 @@ export default function InsightsPage() {
                   <Card>
                     <CardTitle icon={TrendingUp} hint="Completed vs failed missions per day over the selected range.">Mission success trend</CardTitle>
                     <AreaTrend data={insights?.successTrend ?? []} color="green" failColor="pink" height={150} />
-                    <div className="mt-2 flex gap-3 text-[10px] text-white/50">
+                    <div className="mt-2 flex gap-3 text-xs text-ps-text-muted">
                       <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-neon-green" />completed</span>
                       <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-neon-pink" />failed</span>
                     </div>
@@ -287,13 +287,13 @@ export default function InsightsPage() {
                 <Card>
                   <div className="mb-3 flex items-center gap-2">
                     <CalendarRange className="h-4 w-4 text-neon-cyan" />
-                    <h2 className="text-xs font-mono uppercase tracking-widest text-white/50">Run activity — last 91 days</h2>
+                    <h2 className="text-xs font-mono uppercase tracking-widest text-ps-text-muted">Run activity — last 91 days</h2>
                     {(() => {
                       const pts = stats?.runActivity ?? [];
                       const activeDays = pts.filter((p) => p.value > 0).length;
                       const totalRuns = pts.reduce((sum, p) => sum + p.value, 0);
                       return (
-                        <span className="ml-auto text-[10px] font-mono text-white/30" title="Days with at least one run · total runs in the window">
+                        <span className="ml-auto text-xs font-mono text-ps-text-muted" title="Days with at least one run · total runs in the window">
                           {activeDays} active {activeDays === 1 ? "day" : "days"} · {totalRuns} run{totalRuns === 1 ? "" : "s"}
                         </span>
                       );

@@ -76,9 +76,9 @@ export default function LibraryPage() {
             { label: "Words Written", value: totalWords.toLocaleString(), icon: Sparkles },
           ].map((stat) => (
             <div key={stat.label} className="rounded-xl border border-white/5 bg-dark-900/30 p-4 text-center">
-              <stat.icon className="w-4 h-4 text-neon-purple/50 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-white/80">{stat.value}</div>
-              <div className="text-[10px] font-mono text-white/25 uppercase tracking-wider mt-1">{stat.label}</div>
+              <stat.icon className="w-4 h-4 text-neon-purple mx-auto mb-2" />
+              <div className="text-2xl font-bold text-ps-text-primary">{stat.value}</div>
+              <div className="text-xs font-mono text-ps-text-faint uppercase tracking-wider mt-1">{stat.label}</div>
             </div>
           ))}
         </div>
@@ -94,7 +94,7 @@ export default function LibraryPage() {
               className={`px-3 py-1.5 rounded-lg text-xs font-mono border transition-all ${
                 filter === f.id
                   ? "border-neon-purple/40 bg-neon-purple/15 text-neon-purple"
-                  : "border-white/8 text-white/30 hover:text-white/50"
+                  : "border-white/8 text-ps-text-muted hover:text-ps-text-muted"
               }`}>
               {f.label}
             </button>
@@ -109,10 +109,10 @@ export default function LibraryPage() {
         ) : filtered.length === 0 ? (
           <div className="text-center py-16">
             <BookOpen className="w-12 h-12 text-white/10 mx-auto mb-4" />
-            <h3 className="text-lg font-serif text-white/50 mb-2">
+            <h3 className="text-lg font-serif text-ps-text-muted mb-2">
               {filter === "all" ? "Your bookshelf is empty" : `No ${filter} stories`}
             </h3>
-            <p className="text-sm text-white/25 mb-6">
+            <p className="text-sm text-ps-text-faint mb-6">
               {filter === "all"
                 ? "Create your first story to start reading."
                 : "Stories will appear here once they match this filter."}
@@ -149,10 +149,10 @@ export default function LibraryPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <Link href={"/recroom/story-weaver/" + story.id}
-                            className="block text-base font-semibold text-white/90 truncate group-hover:text-white transition-colors">
+                            className="block text-base font-semibold text-ps-text-primary truncate group-hover:text-white transition-colors">
                             {story.title}
                           </Link>
-                          <div className="flex items-center gap-3 mt-1 text-[10px] font-mono text-white/25">
+                          <div className="flex items-center gap-3 mt-1 text-xs font-mono text-ps-text-faint">
                             <span>{story.config?.genre || "General"}</span>
                             <span>·</span>
                             <span>{chapters.length} chapters</span>
@@ -166,10 +166,10 @@ export default function LibraryPage() {
 
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <button onClick={(e) => { e.stopPropagation(); handleDelete(story.id); }}
-                            className="p-1 text-white/10 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete story">
+                            className="p-1 text-ps-text-faint hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete story">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
-                          <div className={`text-[9px] font-mono px-2.5 py-1 rounded-full ${
+                          <div className={`text-xs font-mono px-2.5 py-1 rounded-full ${
                           complete
                             ? "bg-green-500/10 text-neon-green"
                             : "bg-neon-purple/10 text-neon-purple"
@@ -180,7 +180,7 @@ export default function LibraryPage() {
                       </div>
 
                       {story.premise && (
-                        <p className="text-xs text-white/30 leading-relaxed mt-2 line-clamp-2">
+                        <p className="text-xs text-ps-text-muted leading-relaxed mt-2 line-clamp-2">
                           {story.premise}
                         </p>
                       )}
@@ -198,7 +198,7 @@ export default function LibraryPage() {
                       )}
 
                       {/* Last updated */}
-                      <div className="mt-2 text-[9px] font-mono text-white/15">
+                      <div className="mt-2 text-xs font-mono text-ps-text-faint">
                         {complete ? "Finished" : "Last updated"} {timeAgo(story.updatedAt || story.createdAt || "")}
                       </div>
                     </div>

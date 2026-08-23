@@ -176,10 +176,10 @@ export default function PersonalitiesPage() {
 
         {/* Info */}
         <div className="mt-8 p-4 rounded-xl border border-white/5 bg-dark-900/30">
-          <h3 className="text-xs font-mono text-white/30 uppercase tracking-widest mb-2">
+          <h3 className="text-xs font-mono text-ps-text-muted uppercase tracking-widest mb-2">
             How Personalities Work
           </h3>
-          <ul className="space-y-1.5 text-xs text-white/40 font-mono">
+          <ul className="space-y-1.5 text-xs text-ps-text-muted font-mono">
             <li>• Hermes identity is stored in SOUL.md for Bob and each profile</li>
             <li>• PatterStage stores SOUL.md in SQLite and pushes it to Hermes on save</li>
             <li>• config.yaml is used for runtime policy such as skills.disabled and platform_toolsets</li>

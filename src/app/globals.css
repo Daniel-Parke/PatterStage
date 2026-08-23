@@ -13,7 +13,13 @@
 
   /* Accent slots — semantic roles (see docs/design-tokens.md) */
   --color-neon-cyan: #00bfff;
-  --color-neon-purple: #8b5cff;
+  /* Brightened from #8b5cff on 2026-08-23. The original measured 4.78:1 on
+     --color-dark-950 flat, and 4.03:1 as actually painted on a card, so it
+     failed WCAG AA as text even at FULL opacity: no opacity rule could rescue
+     it. This value keeps the hue (257deg) and saturation (1.00) exactly and
+     raises only lightness, to 6.68:1. It is the one accent that needed the
+     token changed rather than its usage. */
+  --color-neon-purple: #a480ff;
   --color-neon-pink: #e879f9;
   --color-neon-green: #a3ff12;
   --color-neon-orange: #ff6622;
@@ -31,6 +37,33 @@
   --color-semantic-warning: #fbbf24;
   --color-semantic-danger: #f87171;
   --color-semantic-info: #00a1e6;
+
+  /* ── Text tiers ───────────────────────────────────────────────────────────
+     The semantic layer WG-WEB-003 asks for and the lock-book deferred as "set
+     at first build". Before this, hierarchy was written as ad-hoc white
+     opacities (text-white/20 through /90) chosen by eye, and 2,377 rendered
+     elements failed WCAG AA as a result.
+
+     These four are DERIVED, not picked. Measured against --color-dark-950
+     (#040b12), the app's actual painted background, white at 45% is exactly
+     the 4.5:1 AA floor for normal text and white at 34% the 3:1 floor for
+     large or bold text. Every tier below therefore sits at 50% or above, so
+     all four pass AA for body text with headroom rather than balancing on the
+     boundary.
+
+       tier        alpha   contrast   use
+       primary      92%     16.7:1    headings, the number you came to read
+       secondary    70%      9.7:1    body copy, most labels
+       muted        55%      6.3:1    supporting detail, timestamps, units
+       faint        50%      5.3:1    the quietest thing still meant to be READ
+
+     There is deliberately no tier below `faint`. Anything quieter than this is
+     decoration, not text, and it should be a border, a background or absent.
+     Re-derive with scripts/tooling/contrast-check.mjs if the background moves. */
+  --color-ps-text-primary: rgb(255 255 255 / 0.92);
+  --color-ps-text-secondary: rgb(255 255 255 / 0.70);
+  --color-ps-text-muted: rgb(255 255 255 / 0.55);
+  --color-ps-text-faint: rgb(255 255 255 / 0.50);
 }
 
 /* Shell + RGB mirrors for effects (keep aligned with @theme / docs/design-tokens.md) */
@@ -38,7 +71,7 @@
   --ps-shell-header-min-height: 5rem;
   --ps-mobile-header-min-height: 3rem;
   --ps-rgb-neon-cyan: 0, 191, 255;
-  --ps-rgb-neon-purple: 139, 92, 255;
+  --ps-rgb-neon-purple: 164, 128, 255;
   --ps-rgb-neon-green: 163, 255, 18;
   --ps-rgb-neon-pink: 232, 121, 249;
   --ps-rgb-neon-orange: 255, 102, 34;

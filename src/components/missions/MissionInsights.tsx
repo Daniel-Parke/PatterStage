@@ -22,7 +22,7 @@ function Tile({
     <div className="rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2" style={{ boxShadow: `inset 0 0 16px ${neonAlpha(color, 5)}` }}>
       <div className="flex items-center gap-1.5">
         <Icon className="h-3 w-3" style={{ color: neon(color) }} />
-        <span className="text-[10px] uppercase tracking-wider text-white/40">{label}</span>
+        <span className="text-xs uppercase tracking-wider text-ps-text-muted">{label}</span>
       </div>
       <div className="mt-0.5 font-mono text-xl font-bold leading-none text-white">{value}</div>
     </div>

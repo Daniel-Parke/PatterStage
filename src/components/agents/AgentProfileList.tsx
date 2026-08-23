@@ -54,10 +54,10 @@ export default function AgentProfileList({
               )}
             </div>
             {!profile.isDefault && (
-              <p className="text-[10px] font-mono text-white/25 mb-1">{profile.id}</p>
+              <p className="text-xs font-mono text-ps-text-faint mb-1">{profile.id}</p>
             )}
-            <p className="text-xs text-white/40 line-clamp-2 mb-2">{profile.description}</p>
-            <div className="flex items-center gap-2 text-[10px] text-white/30 font-mono">
+            <p className="text-xs text-ps-text-muted line-clamp-2 mb-2">{profile.description}</p>
+            <div className="flex items-center gap-2 text-xs text-ps-text-muted font-mono">
               <span>{profile.skillsCount} skills</span>
               <span>·</span>
               <span>{profile.files.length} files</span>

@@ -116,66 +116,66 @@ export default function PromptsPage() {
           <div className="bg-dark-900 border border-green-500/20 rounded-xl w-full max-w-2xl p-6 space-y-4 mb-12">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white">{isNew ? "New Story Theme" : "Edit Story Theme"}</h3>
-              <button onClick={() => setEditing(null)} className="text-white/30 hover:text-white/60"><X className="w-4 h-4" /></button>
+              <button onClick={() => setEditing(null)} className="text-ps-text-muted hover:text-ps-text-secondary"><X className="w-4 h-4" /></button>
             </div>
 
             <div>
-              <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-1">Name</label>
+              <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1">Name</label>
               <input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })}
                 placeholder="Give this prompt a name" className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono" />
             </div>
 
             <div>
-              <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-1">Premise</label>
+              <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1">Premise</label>
               <textarea value={editing.premise} onChange={(e) => setEditing({ ...editing, premise: e.target.value })}
                 rows={4} placeholder="Describe your story concept..."
                 className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-3 text-sm text-white placeholder-white/20 outline-none font-mono resize-none leading-relaxed" />
             </div>
 
             <div>
-              <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-1.5">Genre</label>
+              <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1.5">Genre</label>
               <div className="flex flex-wrap gap-1.5">
                 {DEFAULT_GENRES.map(g => (
                   <button key={g} onClick={() => toggleTag("genre", g)}
-                    className={`px-2.5 py-1 rounded-md text-[10px] font-mono border transition-all ${
-                      editing.genre.includes(g) ? "border-green-500/40 bg-green-500/15 text-green-400" : "border-white/8 text-white/30 hover:text-white/50"
+                    className={`px-2.5 py-1 rounded-md text-xs font-mono border transition-all ${
+                      editing.genre.includes(g) ? "border-green-500/40 bg-green-500/15 text-green-400" : "border-white/8 text-ps-text-muted hover:text-ps-text-muted"
                     }`}>{g}</button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-1.5">Era</label>
+              <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1.5">Era</label>
               <div className="flex flex-wrap gap-1.5">
                 {DEFAULT_ERAS.map(e => (
                   <button key={e} onClick={() => setEditing({ ...editing, era: editing.era === e ? "" : e })}
-                    className={`px-2.5 py-1 rounded-md text-[10px] font-mono border transition-all ${
-                      editing.era === e ? "border-green-500/40 bg-green-500/15 text-green-400" : "border-white/8 text-white/30 hover:text-white/50"
+                    className={`px-2.5 py-1 rounded-md text-xs font-mono border transition-all ${
+                      editing.era === e ? "border-green-500/40 bg-green-500/15 text-green-400" : "border-white/8 text-ps-text-muted hover:text-ps-text-muted"
                     }`}>{e}</button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-1.5">Mood</label>
+              <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1.5">Mood</label>
               <div className="flex flex-wrap gap-1.5">
                 {DEFAULT_MOODS.map(m => (
                   <button key={m} onClick={() => toggleTag("mood", m)}
-                    className={`px-2.5 py-1 rounded-md text-[10px] font-mono border transition-all ${
-                      editing.mood.includes(m) ? "border-green-500/40 bg-green-500/15 text-green-400" : "border-white/8 text-white/30 hover:text-white/50"
+                    className={`px-2.5 py-1 rounded-md text-xs font-mono border transition-all ${
+                      editing.mood.includes(m) ? "border-green-500/40 bg-green-500/15 text-green-400" : "border-white/8 text-ps-text-muted hover:text-ps-text-muted"
                     }`}>{m}</button>
                 ))}
               </div>
             </div>
 
             <div>
-              <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-1">Setting</label>
+              <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1">Setting</label>
               <input value={editing.setting} onChange={(e) => setEditing({ ...editing, setting: e.target.value })}
                 placeholder="Where does the story take place?" className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono" />
             </div>
 
             <div>
-              <label className="text-[10px] font-mono text-white/30 uppercase tracking-wider block mb-1">Notes</label>
+              <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1">Notes</label>
               <textarea value={editing.notes} onChange={(e) => setEditing({ ...editing, notes: e.target.value })}
                 rows={2} placeholder="Additional notes, character ideas, plot points..."
                 className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono resize-none" />
@@ -183,7 +183,7 @@ export default function PromptsPage() {
 
             <div className="flex gap-2 justify-end pt-2">
               <button onClick={() => setEditing(null)}
-                className="px-4 py-2 text-xs text-white/40 hover:text-white/60 rounded-lg border border-white/10 hover:bg-white/5">
+                className="px-4 py-2 text-xs text-ps-text-muted hover:text-ps-text-secondary rounded-lg border border-white/10 hover:bg-white/5">
                 Cancel
               </button>
               <button onClick={save} disabled={!editing.name.trim() || !editing.premise.trim() || saving}
@@ -218,8 +218,8 @@ export default function PromptsPage() {
         {themes.length === 0 ? (
           <div className="text-center py-16">
             <FileText className="w-12 h-12 text-white/10 mx-auto mb-4" />
-            <p className="text-sm text-white/30 mb-2">No saved themes yet</p>
-            <p className="text-xs text-white/20 mb-6">Save story concepts to build on over time</p>
+            <p className="text-sm text-ps-text-muted mb-2">No saved themes yet</p>
+            <p className="text-xs text-ps-text-faint mb-6">Save story concepts to build on over time</p>
             <button onClick={startNew}
               className="px-4 py-2 rounded-lg border border-green-500/30 bg-green-500/10 text-sm font-mono text-green-400 hover:bg-green-500/20">
               Create Your First Theme
@@ -231,35 +231,35 @@ export default function PromptsPage() {
               <div key={theme.id} className="rounded-xl border border-white/5 bg-dark-900/50 p-4 space-y-3 hover:border-white/10 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold text-white/90 truncate">{theme.name}</h3>
-                    <p className="text-xs text-white/40 mt-1 line-clamp-3">{theme.premise}</p>
+                    <h3 className="text-sm font-semibold text-ps-text-primary truncate">{theme.name}</h3>
+                    <p className="text-xs text-ps-text-muted mt-1 line-clamp-3">{theme.premise}</p>
                   </div>
                 </div>
 
                 {(theme.genre.length > 0 || theme.era || theme.mood.length > 0) && (
                   <div className="flex flex-wrap gap-1">
                     {theme.genre.map(g => (
-                      <span key={g} className="px-1.5 py-0.5 rounded text-[9px] font-mono border border-green-500/20 bg-green-500/5 text-green-400/70">{g}</span>
+                      <span key={g} className="px-1.5 py-0.5 rounded text-xs font-mono border border-green-500/20 bg-green-500/5 text-green-400/70">{g}</span>
                     ))}
                     {theme.era && (
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-mono border border-white/5 bg-white/[0.02] text-white/30">{theme.era}</span>
+                      <span className="px-1.5 py-0.5 rounded text-xs font-mono border border-white/5 bg-white/[0.02] text-ps-text-muted">{theme.era}</span>
                     )}
                     {theme.mood.slice(0, 2).map(m => (
-                      <span key={m} className="px-1.5 py-0.5 rounded text-[9px] font-mono border border-white/5 bg-white/[0.02] text-white/30">{m}</span>
+                      <span key={m} className="px-1.5 py-0.5 rounded text-xs font-mono border border-white/5 bg-white/[0.02] text-ps-text-muted">{m}</span>
                     ))}
                   </div>
                 )}
 
                 <div className="flex items-center gap-1 justify-end">
                   <button onClick={() => loadTheme(theme)}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-green-500/20 text-[10px] font-mono text-green-400 hover:bg-green-500/10">
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-green-500/20 text-xs font-mono text-green-400 hover:bg-green-500/10">
                     <ArrowRight className="w-3 h-3" /> Use
                   </button>
                   <button onClick={() => startEdit(theme)}
-                    className="p-1.5 rounded text-white/20 hover:text-green-400 hover:bg-green-500/10"><Edit2 className="w-3.5 h-3.5" /></button>
+                    className="p-1.5 rounded text-ps-text-faint hover:text-green-400 hover:bg-green-500/10"><Edit2 className="w-3.5 h-3.5" /></button>
                   <button onClick={() => deleteTheme(theme.id)}
                     disabled={deleting === theme.id}
-                    className="p-1.5 rounded text-white/20 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-30">
+                    className="p-1.5 rounded text-ps-text-faint hover:text-red-400 hover:bg-red-500/10 disabled:opacity-30">
                     {deleting === theme.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                   </button>
                 </div>

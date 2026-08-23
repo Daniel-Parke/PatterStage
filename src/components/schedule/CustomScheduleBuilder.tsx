@@ -41,11 +41,11 @@ export function CustomScheduleBuilder({
   return (
     <div className="rounded-lg border border-white/10 bg-dark-800/50 p-3 space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-white/60">Custom schedule</span>
+        <span className="text-xs font-medium text-ps-text-secondary">Custom schedule</span>
         <button
           type="button"
           onClick={onClose}
-          className="text-white/30 hover:text-white/60"
+          className="text-ps-text-muted hover:text-ps-text-secondary"
           aria-label="Close custom builder"
         >
           <X className="w-3.5 h-3.5" />
@@ -54,7 +54,7 @@ export function CustomScheduleBuilder({
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-[10px] text-white/40 font-mono block mb-1">
+          <label className="text-xs text-ps-text-muted font-mono block mb-1">
             Frequency
           </label>
           <select
@@ -78,7 +78,7 @@ export function CustomScheduleBuilder({
           </select>
         </div>
         <div>
-          <label className="text-[10px] text-white/40 font-mono block mb-1">
+          <label className="text-xs text-ps-text-muted font-mono block mb-1">
             Time of day
           </label>
           <input
@@ -92,7 +92,7 @@ export function CustomScheduleBuilder({
       </div>
 
       <div>
-        <label className="text-[10px] text-white/40 font-mono block mb-1.5">
+        <label className="text-xs text-ps-text-muted font-mono block mb-1.5">
           Days of week
         </label>
         <div className="flex gap-1.5 flex-wrap">
@@ -109,7 +109,7 @@ export function CustomScheduleBuilder({
                 className={`px-2.5 py-1 rounded-md text-xs font-mono transition-colors ${
                   checked
                     ? "bg-neon-orange/20 text-neon-orange border border-neon-orange/40"
-                    : "bg-white/5 text-white/40 border border-white/10 hover:text-white/60"
+                    : "bg-white/5 text-ps-text-muted border border-white/10 hover:text-ps-text-secondary"
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {label}
@@ -122,7 +122,7 @@ export function CustomScheduleBuilder({
             type="button"
             onClick={() => setCustomDays(allDays())}
             disabled={disabled}
-            className="text-[10px] text-white/40 hover:text-white/70 font-mono"
+            className="text-xs text-ps-text-muted hover:text-ps-text-secondary font-mono"
           >
             All days
           </button>
@@ -130,7 +130,7 @@ export function CustomScheduleBuilder({
             type="button"
             onClick={() => setCustomDays(new Set([1, 2, 3, 4, 5]))}
             disabled={disabled}
-            className="text-[10px] text-white/40 hover:text-white/70 font-mono"
+            className="text-xs text-ps-text-muted hover:text-ps-text-secondary font-mono"
           >
             Weekdays
           </button>
@@ -138,7 +138,7 @@ export function CustomScheduleBuilder({
             type="button"
             onClick={() => setCustomDays(new Set())}
             disabled={disabled}
-            className="text-[10px] text-white/40 hover:text-white/70 font-mono"
+            className="text-xs text-ps-text-muted hover:text-ps-text-secondary font-mono"
           >
             Clear
           </button>
@@ -146,7 +146,7 @@ export function CustomScheduleBuilder({
       </div>
 
       <div className="flex items-center justify-between gap-2 pt-1">
-        <div className="text-[10px] text-white/30 font-mono">
+        <div className="text-xs text-ps-text-muted font-mono">
           Preview: <code className="text-neon-orange">{previewCron(customTime, customDays)}</code>
         </div>
         <button

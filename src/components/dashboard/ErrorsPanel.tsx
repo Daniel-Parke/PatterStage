@@ -38,8 +38,8 @@ export default function ErrorsPanel({ errors, severity, onSelectSeverity }: Erro
               <button
                 key={sev}
                 onClick={() => onSelectSeverity(sev)}
-                className={`text-[10px] font-mono px-1.5 py-0.5 rounded transition-colors ${
-                  severity === sev ? "bg-red-500/20 text-red-400" : "text-white/30 hover:text-white/60"
+                className={`text-xs font-mono px-1.5 py-0.5 rounded transition-colors ${
+                  severity === sev ? "bg-red-500/20 text-red-400" : "text-ps-text-muted hover:text-ps-text-secondary"
                 }`}
               >
                 {titleCase(sev)}
@@ -57,8 +57,8 @@ export default function ErrorsPanel({ errors, severity, onSelectSeverity }: Erro
         )}
         {errors.map((err) => (
           <div key={`${err.source}-${err.message}`} className="px-4 py-2 border-b border-white/5 last:border-0">
-            <div className="text-[10px] text-red-400/80 font-mono truncate">{err.message}</div>
-            <div className="text-[10px] text-white/20 font-mono mt-0.5">
+            <div className="text-xs text-red-400/80 font-mono truncate">{err.message}</div>
+            <div className="text-xs text-ps-text-faint font-mono mt-0.5">
               {err.source} {err.timestamp && `· ${err.timestamp}`}
             </div>
           </div>

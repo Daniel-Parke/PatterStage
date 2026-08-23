@@ -27,7 +27,7 @@ export default function TopList({
 }: TopListProps) {
   const max = Math.max(1, ...rows.map((r) => r.value));
   if (rows.length === 0) {
-    return <p className={`text-xs text-white/30 ${className}`}>No data yet.</p>;
+    return <p className={`text-xs text-ps-text-muted ${className}`}>No data yet.</p>;
   }
   return (
     <div className={`space-y-1.5 ${className}`}>
@@ -43,12 +43,12 @@ export default function TopList({
             }}
           />
           <div className="relative flex items-center justify-between gap-2 px-2 py-1">
-            <span className="min-w-0 flex-1 truncate text-xs text-white/75" title={r.label}>
-              <span className="mr-1.5 font-mono text-[10px] text-white/30">{i + 1}</span>
+            <span className="min-w-0 flex-1 truncate text-xs text-ps-text-secondary" title={r.label}>
+              <span className="mr-1.5 font-mono text-xs text-ps-text-muted">{i + 1}</span>
               {r.label}
             </span>
             <span className="flex items-baseline gap-1.5 font-mono text-xs" style={{ color: neon(color) }}>
-              {r.sub && <span className="text-[10px] text-white/30">{r.sub}</span>}
+              {r.sub && <span className="text-xs text-ps-text-muted">{r.sub}</span>}
               {format(r.value)}
             </span>
           </div>

@@ -26,7 +26,7 @@
 //     <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-dark-800/50">
 //       <div className="flex items-center gap-2">
 //         <Icon className="w-3.5 h-3.5 text-{accent}" />
-//         <span className="text-xs font-mono text-white/60">{label}</span>
+//         <span className="text-xs font-mono text-ps-text-secondary">{label}</span>
 //       </div>
 //       {rightSlot}
 //     </div>
@@ -122,7 +122,7 @@ export function Panel({
  *   <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-dark-800/50">
  *     <div className="flex items-center gap-2">
  *       <Icon className="w-3.5 h-3.5 text-{accent}" />
- *       <span className="text-xs font-mono text-white/60">{label}</span>
+ *       <span className="text-xs font-mono text-ps-text-secondary">{label}</span>
  *     </div>
  *     {rightSlot}
  *   </div>
@@ -152,10 +152,10 @@ export function PanelHeader({
   accent: AccentColor;
   /**
    * Optional count rendered next to the label in the same dimmed
-   * `text-white/25` style as the pre-extraction inline form. Used by
+   * `text-ps-text-faint` style as the pre-extraction inline form. Used by
    * the Active Missions panel ("Active Missions (3)"). Pass a string
    * to wrap in parens (the standard "(N)" form) or any ReactNode for
-   * a custom badge. The default `text-[10px] font-mono` styling is
+   * a custom badge. The default `text-xs font-mono` styling is
    * owned by the component — call sites don't get to override it
    * (the styling is the same in every pre-extraction site).
    */
@@ -167,9 +167,9 @@ export function PanelHeader({
     <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-dark-800/50">
       <div className="flex items-center gap-2">
         <Icon className={`w-3.5 h-3.5 ${iconColorMap[accent]}`} />
-        <span className="text-xs font-mono text-white/60">{label}</span>
+        <span className="text-xs font-mono text-ps-text-secondary">{label}</span>
         {count !== undefined && (
-          <span className="text-[10px] font-mono text-white/25">{count}</span>
+          <span className="text-xs font-mono text-ps-text-faint">{count}</span>
         )}
       </div>
       {rightSlot}

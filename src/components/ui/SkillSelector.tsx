@@ -58,7 +58,7 @@ export default function SkillSelector({
       >
         <Cpu className="w-4 h-4 text-neon-purple flex-shrink-0" />
         {value.length === 0 ? (
-          <span className="text-white/40 text-xs font-mono">
+          <span className="text-ps-text-muted text-xs font-mono">
             Attach skills (enabled for profile, max {max})...
           </span>
         ) : (
@@ -67,13 +67,13 @@ export default function SkillSelector({
           </span>
         )}
         <ChevronDown
-          className={`w-4 h-4 text-white/30 ml-auto flex-shrink-0 transition-transform ${
+          className={`w-4 h-4 text-ps-text-muted ml-auto flex-shrink-0 transition-transform ${
             open ? "rotate-180" : ""
           }`}
         />
       </button>
 
-      <p className="text-[10px] text-white/25 font-mono mt-1 px-0.5">
+      <p className="text-xs text-ps-text-faint font-mono mt-1 px-0.5">
         Showing only skills enabled for this profile.
       </p>
 
@@ -82,7 +82,7 @@ export default function SkillSelector({
           {value.map((name) => (
             <span
               key={name}
-              className="flex items-center gap-1 pl-2 pr-1.5 py-0.5 rounded-full bg-neon-purple/10 border border-neon-purple/30 text-[10px] text-neon-purple font-mono"
+              className="flex items-center gap-1 pl-2 pr-1.5 py-0.5 rounded-full bg-neon-purple/10 border border-neon-purple/30 text-xs text-neon-purple font-mono"
             >
               {name}
               <button
@@ -117,7 +117,7 @@ export default function SkillSelector({
                 <Loader2 className="w-4 h-4 animate-spin text-neon-purple" />
               </div>
             ) : filtered.length === 0 ? (
-              <div className="text-xs text-white/30 text-center py-4">
+              <div className="text-xs text-ps-text-muted text-center py-4">
                 {search ? "No skills match your search" : "No skills available"}
               </div>
             ) : (
@@ -135,12 +135,12 @@ export default function SkillSelector({
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-medium text-white/80">{skill.name}</span>
-                    <span className="text-[9px] font-mono text-white/20">
+                    <span className="font-medium text-ps-text-primary">{skill.name}</span>
+                    <span className="text-xs font-mono text-ps-text-faint">
                       {skill.category}
                     </span>
                   </div>
-                  <div className="text-white/30 text-[10px] mt-0.5 line-clamp-1">
+                  <div className="text-ps-text-muted text-xs mt-0.5 line-clamp-1">
                     {skill.description || "No description"}
                   </div>
                 </button>

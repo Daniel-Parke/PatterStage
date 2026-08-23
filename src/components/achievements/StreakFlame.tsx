@@ -14,16 +14,16 @@ export default function StreakFlame({ current, longest }: { current: number; lon
         style={{ background: hot ? neonAlpha(color, 18) : "rgba(255,255,255,0.04)" }}
       >
         <Flame
-          className={`h-5 w-5 ${hot ? "animate-flame" : "text-white/25"}`}
+          className={`h-5 w-5 ${hot ? "animate-flame" : "text-ps-text-faint"}`}
           style={hot ? { color: neon(color), filter: `drop-shadow(0 0 6px ${neonAlpha(color, 60)})` } : undefined}
         />
       </div>
       <div>
         <div className="font-mono text-lg font-bold leading-none text-white">
           {current}
-          <span className="ml-1 text-xs font-normal text-white/40">day{current === 1 ? "" : "s"}</span>
+          <span className="ml-1 text-xs font-normal text-ps-text-muted">day{current === 1 ? "" : "s"}</span>
         </div>
-        <div className="text-[11px] text-white/40">best {longest}</div>
+        <div className="text-xs text-ps-text-muted">best {longest}</div>
       </div>
     </div>
   );

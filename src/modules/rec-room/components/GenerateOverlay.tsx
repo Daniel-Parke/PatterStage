@@ -80,7 +80,7 @@ export default function GenerateOverlay({ title, visible, done, onComplete }: Ge
           <>
             <Sparkles className="w-12 h-12 text-neon-purple animate-pulse mx-auto mb-6" />
             <h2 className="text-xl font-serif text-white mb-1">{title || "Your Story"}</h2>
-            <p className="text-sm text-white/40 mb-6 h-5 transition-opacity">{msg}</p>
+            <p className="text-sm text-ps-text-muted mb-6 h-5 transition-opacity">{msg}</p>
           </>
         ) : (
           <>
@@ -97,7 +97,7 @@ export default function GenerateOverlay({ title, visible, done, onComplete }: Ge
           }`} style={{ width: `${progress}%` }} />
         </div>
 
-        <p className="text-[10px] font-mono text-white/20">{Math.round(progress)}%</p>
+        <p className="text-xs font-mono text-ps-text-faint">{Math.round(progress)}%</p>
       </div>
     </div>
   );

@@ -86,7 +86,7 @@ export default function SkillDetailPage() {
       <div className="min-h-screen bg-dark-950 grid-bg flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-bold text-white mb-2">Skill Not Found</h2>
-          <p className="text-white/40 font-mono mb-4">{error}</p>
+          <p className="text-ps-text-muted font-mono mb-4">{error}</p>
           <Link
             href="/operations/skills"
             className="text-neon-green text-sm font-mono hover:underline"
@@ -113,7 +113,7 @@ export default function SkillDetailPage() {
           <button
             type="button"
             onClick={() => setShowRaw(!showRaw)}
-            className="text-xs font-mono text-white/40 hover:text-white/60 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 transition-colors"
+            className="text-xs font-mono text-ps-text-muted hover:text-ps-text-secondary px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 transition-colors"
           >
             {showRaw ? "Rendered" : "Raw"}
           </button>
@@ -126,7 +126,7 @@ export default function SkillDetailPage() {
           <div className="flex-1 min-w-0">
             <div className="rounded-xl border border-white/10 bg-dark-900/50 p-6">
               {showRaw ? (
-                <pre className="text-sm font-mono text-white/70 whitespace-pre-wrap break-words">
+                <pre className="text-sm font-mono text-ps-text-secondary whitespace-pre-wrap break-words">
                   {data.rawContent}
                 </pre>
               ) : (
@@ -140,16 +140,16 @@ export default function SkillDetailPage() {
             {/* Frontmatter */}
             {Object.keys(data.frontmatter).length > 0 && (
               <div className="rounded-xl border border-white/10 bg-dark-900/50 p-4">
-                <h3 className="text-[10px] font-mono text-white/30 uppercase tracking-widest mb-3">
+                <h3 className="text-xs font-mono text-ps-text-muted uppercase tracking-widest mb-3">
                   Metadata
                 </h3>
                 <div className="space-y-2">
                   {Object.entries(data.frontmatter).map(([key, value]) => (
                     <div key={key}>
-                      <div className="text-[10px] font-mono text-white/30 uppercase">
+                      <div className="text-xs font-mono text-ps-text-muted uppercase">
                         {key}
                       </div>
-                      <div className="text-sm text-white/60 font-mono truncate">
+                      <div className="text-sm text-ps-text-secondary font-mono truncate">
                         {String(value)}
                       </div>
                     </div>
@@ -161,7 +161,7 @@ export default function SkillDetailPage() {
             {/* Linked files */}
             {data.linkedFiles.length > 0 && (
               <div className="rounded-xl border border-white/10 bg-dark-900/50 p-4">
-                <h3 className="text-[10px] font-mono text-white/30 uppercase tracking-widest mb-3">
+                <h3 className="text-xs font-mono text-ps-text-muted uppercase tracking-widest mb-3">
                   Linked Files
                 </h3>
                 <div className="space-y-1.5">
@@ -170,11 +170,11 @@ export default function SkillDetailPage() {
                       key={file.path}
                       className="flex items-center justify-between text-xs"
                     >
-                      <span className="flex items-center gap-1.5 text-white/60 font-mono">
-                        <Folder className="w-3 h-3 text-neon-green/60" />
+                      <span className="flex items-center gap-1.5 text-ps-text-secondary font-mono">
+                        <Folder className="w-3 h-3 text-neon-green/70" />
                         {file.name}
                       </span>
-                      <span className="text-white/30 font-mono">
+                      <span className="text-ps-text-muted font-mono">
                         {(file.size / 1024).toFixed(1)}K
                       </span>
                     </div>

@@ -83,24 +83,24 @@ function SyncModal({
           <button
             type="button"
             onClick={onCancel}
-            className="p-1 rounded text-white/30 hover:text-white hover:bg-white/5 transition-colors"
+            className="p-1 rounded text-ps-text-muted hover:text-white hover:bg-white/5 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
-        <p className="px-4 py-2 text-[10px] font-mono text-white/40">{subtitle}</p>
+        <p className="px-4 py-2 text-xs font-mono text-ps-text-muted">{subtitle}</p>
 
         {/* Diffs list */}
         <div className="px-4 py-3 max-h-72 overflow-y-auto">
           {visibleChanges.length === 0 ? (
-            <p className="text-xs text-white/40 font-mono text-center py-4">
+            <p className="text-xs text-ps-text-muted font-mono text-center py-4">
               All changes removed — nothing will be synced
             </p>
           ) : (
             <div className="space-y-1.5">
               {/* Summary */}
               {visibleCount < totalCount && (
-                <div className="text-[10px] font-mono text-neon-orange/60 mb-2">
+                <div className="text-xs font-mono text-neon-orange/90 mb-2">
                   {totalCount - visibleCount} of {totalCount} changes excluded
                 </div>
               )}
@@ -110,10 +110,10 @@ function SyncModal({
                   className="flex items-start justify-between gap-2 px-3 py-2.5 bg-white/5 rounded-lg"
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs font-semibold text-white/70">
+                    <div className="text-xs font-semibold text-ps-text-secondary">
                       {diff.label}
                     </div>
-                    <div className="text-[10px] text-white/40 font-mono truncate mt-0.5">
+                    <div className="text-xs text-ps-text-muted font-mono truncate mt-0.5">
                       {diff.detail}
                     </div>
                   </div>
@@ -136,7 +136,7 @@ function SyncModal({
           <button
             type="button"
             onClick={onCancel}
-            className="px-3 py-1.5 text-xs font-mono text-white/50 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+            className="px-3 py-1.5 text-xs font-mono text-ps-text-muted hover:text-white hover:bg-white/5 rounded-lg transition-colors"
           >
             Cancel
           </button>
@@ -259,7 +259,7 @@ export default function ModelSyncButtons({
           onClick={() => void handlePull()}
           disabled={disabled || loadingDiff}
           title="Import: read matching model settings from Hermes config into the database"
-          className="p-1.5 rounded-lg text-white/30 hover:text-neon-cyan hover:bg-neon-cyan/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-1.5 rounded-lg text-ps-text-muted hover:text-neon-cyan hover:bg-neon-cyan/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loadingDiff && modalState?.direction === "pull" ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -272,7 +272,7 @@ export default function ModelSyncButtons({
           onClick={() => void handlePush()}
           disabled={disabled || loadingDiff}
           title="Export: write this model's settings into Hermes config.yaml"
-          className="p-1.5 rounded-lg text-white/30 hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="p-1.5 rounded-lg text-ps-text-muted hover:text-neon-purple hover:bg-neon-purple/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loadingDiff && modalState?.direction === "push" ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />

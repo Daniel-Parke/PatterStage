@@ -47,10 +47,10 @@ export const ROLE_META: Record<
   },
   system: {
     icon: <Cpu className="w-3.5 h-3.5" />,
-    color: "text-white/50",
+    color: "text-ps-text-muted",
     bg: "border-white/10 bg-white/5",
     bgSolid: "bg-white/5",
-    text: "text-white/40",
+    text: "text-ps-text-muted",
     label: "SYSTEM",
   },
 };

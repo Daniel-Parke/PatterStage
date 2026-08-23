@@ -96,8 +96,8 @@ export function renderMarkdown(text: string): string {
   let html = safe.replace(
     /```(\w*)\n([\s\S]*?)```/g,
     `<div class="relative group"><div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">` +
-      `<button class="${COPY_BTN_CLASS} text-[10px] font-mono text-white/40 hover:text-white/80 bg-gray-900/80 px-2 py-1 rounded border border-white/10" ${COPY_BTN_DATA_ATTR}="$2">Copy</button></div>` +
-      '<pre class="bg-gray-900 border border-white/10 rounded-lg p-4 overflow-x-auto text-sm font-mono text-white/80 leading-relaxed my-2"><code>$2</code></pre></div>',
+      `<button class="${COPY_BTN_CLASS} text-xs font-mono text-ps-text-muted hover:text-ps-text-primary bg-gray-900/80 px-2 py-1 rounded border border-white/10" ${COPY_BTN_DATA_ATTR}="$2">Copy</button></div>` +
+      '<pre class="bg-gray-900 border border-white/10 rounded-lg p-4 overflow-x-auto text-sm font-mono text-ps-text-primary leading-relaxed my-2"><code>$2</code></pre></div>',
   );
   html = html.replace(/`([^`]+)`/g, '<code class="bg-white/10 px-1 py-0.5 rounded text-xs font-mono text-neon-cyan">$1</code>');
   html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");

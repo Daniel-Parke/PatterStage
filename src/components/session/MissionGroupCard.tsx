@@ -36,16 +36,16 @@ export default function MissionGroupCard({ group }: { group: MissionGroup }) {
             {hasActive && <LiveDot />}
             <Layers className="w-4 h-4 text-neon-green flex-shrink-0" />
             <h3 className="font-semibold text-white truncate">{title}</h3>
-            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neon-green/10 text-neon-green">
+            <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-neon-green/10 text-neon-green">
               {group.sessions.length} sessions
             </span>
             {hasActive && (
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-neon-green/20 text-neon-green">
+              <span className="text-xs font-mono px-1.5 py-0.5 rounded bg-neon-green/20 text-neon-green">
                 {group.activeCount} active
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3 text-xs text-white/30 font-mono flex-wrap">
+          <div className="flex items-center gap-3 text-xs text-ps-text-muted font-mono flex-wrap">
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {timeAgo(group.firstStartedAt)} → {timeAgo(group.lastStartedAt)}
@@ -57,15 +57,15 @@ export default function MissionGroupCard({ group }: { group: MissionGroup }) {
           <Link
             href={`/orchestration/missions/${group.missionId}`}
             onClick={(e) => e.stopPropagation()}
-            className="text-[10px] font-mono px-2 py-1 rounded bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-colors"
+            className="text-xs font-mono px-2 py-1 rounded bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-colors"
             title="Open the parent mission"
           >
             ↗ Mission
           </Link>
           {expanded ? (
-            <ChevronDown className="w-4 h-4 text-white/30" />
+            <ChevronDown className="w-4 h-4 text-ps-text-muted" />
           ) : (
-            <ChevronRight className="w-4 h-4 text-white/30" />
+            <ChevronRight className="w-4 h-4 text-ps-text-muted" />
           )}
         </div>
       </button>
@@ -75,7 +75,7 @@ export default function MissionGroupCard({ group }: { group: MissionGroup }) {
             <SessionCard key={s.id} session={s} />
           ))}
           {oldest && oldest.id !== latest.id && (
-            <p className="text-[10px] font-mono text-white/20 px-2">
+            <p className="text-xs font-mono text-ps-text-faint px-2">
               Showing all {group.sessions.length} sessions · oldest: {timeAgo(oldest.startedAt)}
             </p>
           )}

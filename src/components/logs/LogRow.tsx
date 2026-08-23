@@ -43,8 +43,8 @@ export function LogRow({
         isMatch ? "bg-neon-cyan/5 -mx-2 px-2 rounded" : ""
       }`}
     >
-      <span className="text-neon-cyan/45 truncate tabular-nums">{p.timestamp ?? "—"}</span>
-      <span className={`uppercase tracking-wide text-[10px] ${LEVEL_TEXT_CLASS[p.level] ?? LEVEL_TEXT_CLASS.unknown}`}>
+      <span className="text-neon-cyan/80 truncate tabular-nums">{p.timestamp ?? "—"}</span>
+      <span className={`uppercase tracking-wide text-xs ${LEVEL_TEXT_CLASS[p.level] ?? LEVEL_TEXT_CLASS.unknown}`}>
         {p.level}
       </span>
       <span className={`min-w-0 break-words ${LEVEL_TEXT_CLASS[p.level] ?? LEVEL_TEXT_CLASS.unknown}`}>

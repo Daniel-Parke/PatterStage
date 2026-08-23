@@ -133,7 +133,7 @@ export default function HindsightBrowser() {
       <div className="flex gap-3 mb-6">
         <div className="flex-1 flex flex-col gap-1">
           <SearchInput value={search} onChange={setSearch} placeholder="Search memories (semantic search)..." accentColor="pink" />
-          <p className="text-xs text-white/30 pl-1">Press Enter to search</p>
+          <p className="text-xs text-ps-text-muted pl-1">Press Enter to search</p>
         </div>
         <Button variant="secondary" color="pink" size="sm" icon={Search} onClick={() => void runRecall()} disabled={!search.trim() || loading}>
           Recall
@@ -156,7 +156,7 @@ export default function HindsightBrowser() {
             <Sparkles className="w-4 h-4 text-purple-400" />
             <span className="text-sm font-semibold text-purple-300">Reflection</span>
           </div>
-          <p className="text-sm text-white/70 leading-relaxed">{reflectResult}</p>
+          <p className="text-sm text-ps-text-secondary leading-relaxed">{reflectResult}</p>
         </div>
       )}
 
@@ -167,7 +167,7 @@ export default function HindsightBrowser() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-              activeTab === tab.id ? "bg-pink-500/20 text-pink-300" : "text-white/40 hover:text-white/60"
+              activeTab === tab.id ? "bg-pink-500/20 text-pink-300" : "text-ps-text-muted hover:text-ps-text-secondary"
             }`}
           >
             <tab.icon className="w-3.5 h-3.5" />

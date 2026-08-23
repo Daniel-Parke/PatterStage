@@ -54,7 +54,7 @@ const KIND_OPTIONS = [
 ].map((k) => ({ value: k, label: k }));
 
 const PALETTE = [
-  { kind: "custom", label: "Task", color: "border-white/20 text-white/70" },
+  { kind: "custom", label: "Task", color: "border-white/20 text-ps-text-secondary" },
   { kind: "research", label: "Research", color: "border-neon-cyan/40 text-neon-cyan" },
   { kind: "validate", label: "Validate", color: "border-neon-yellow/40 text-neon-yellow" },
   { kind: "test", label: "Test", color: "border-neon-green/40 text-neon-green" },
@@ -90,14 +90,14 @@ function WorkflowNode({ data, selected }: NodeProps<WfNode>) {
     >
       <Handle type="target" position={Position.Top} className="!h-2 !w-2 !border-0 !bg-white/40" />
       <div className="flex items-center gap-1.5">
-        <span className="truncate text-sm text-white/90">{data.label || "(unnamed)"}</span>
-        {data.gate === "hil" ? <span className="rounded bg-neon-yellow/15 px-1 text-[8px] font-mono text-neon-yellow">HIL</span> : null}
+        <span className="truncate text-sm text-ps-text-primary">{data.label || "(unnamed)"}</span>
+        {data.gate === "hil" ? <span className="rounded bg-neon-yellow/15 px-1 text-xs font-mono text-neon-yellow">HIL</span> : null}
       </div>
-      <div className="mt-0.5 flex items-center gap-1.5 font-mono text-[8px] uppercase tracking-wider text-white/30">
+      <div className="mt-0.5 flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-ps-text-muted">
         <span>{data.kind}</span>
         {data.isStart ? <span className="text-neon-cyan">start</span> : null}
-        {data.isTerminal ? <span className="text-white/40">end</span> : null}
-        {isGroup ? <span className="text-neon-purple/80">▣ sub-workflow</span> : null}
+        {data.isTerminal ? <span className="text-ps-text-muted">end</span> : null}
+        {isGroup ? <span className="text-neon-purple">▣ sub-workflow</span> : null}
       </div>
       <Handle type="source" position={Position.Bottom} className="!h-2 !w-2 !border-0 !bg-neon-cyan/70" />
     </div>
@@ -324,7 +324,7 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
         <Button variant="secondary" color="cyan" onClick={relayout}><Wand2 className="h-4 w-4" /> Auto-layout</Button>
         <Button variant="primary" color="cyan" loading={saving} onClick={() => void save()}><Save className="h-4 w-4" /> {selectedWorkflowId === NEW ? "Create" : "Save"}</Button>
         {selectedWorkflowId !== NEW ? <Button variant="secondary" color="pink" onClick={() => void removeWorkflow()} disabled={saving}><Trash2 className="h-4 w-4" /> Delete</Button> : null}
-        {message ? <span className="text-xs text-white/50">{message}</span> : null}
+        {message ? <span className="text-xs text-ps-text-muted">{message}</span> : null}
       </div>
 
       {/* Full-width canvas with floating palette + inspector overlays (so
@@ -355,7 +355,7 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
 
         {/* Palette (top-left overlay) */}
         <div className="absolute left-3 top-3 z-10 w-36 space-y-1.5 rounded-lg border border-white/10 bg-dark-900/85 p-2 backdrop-blur">
-          <h3 className="text-[10px] font-mono uppercase tracking-widest text-white/40">Drag to add</h3>
+          <h3 className="text-xs font-mono uppercase tracking-widest text-ps-text-muted">Drag to add</h3>
           {PALETTE.map((p) => (
             <div
               key={p.kind}
@@ -366,13 +366,13 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
               {p.label}
             </div>
           ))}
-          <p className="pt-0.5 text-[9px] leading-relaxed text-white/25">Drag onto the board, then handle → handle to connect.</p>
+          <p className="pt-0.5 text-xs leading-relaxed text-ps-text-faint">Drag onto the board, then handle → handle to connect.</p>
         </div>
 
         {/* Inspector (right overlay; only when something is selected) */}
         {node ? (
           <div className="absolute right-3 top-3 z-10 w-72 space-y-3 rounded-lg border border-white/10 bg-dark-900/90 p-3 backdrop-blur">
-            <h3 className="text-[10px] font-mono uppercase tracking-widest text-white/40">Stage</h3>
+            <h3 className="text-xs font-mono uppercase tracking-widest text-ps-text-muted">Stage</h3>
             <Field label="Label"><Input value={node.data.label} onChange={(e) => patchNode(node.id, { label: e.target.value })} /></Field>
             <Field label="Kind"><Select value={node.data.kind} onChange={(v) => patchNode(node.id, { kind: v })} options={KIND_OPTIONS} /></Field>
             <Field label="Instruction (optional override)">
@@ -392,7 +392,7 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
                 const setSpec = (patch: Partial<typeof spec>) => patchNodeConfig(node.id, "inputSpec", { ...spec, ...patch });
                 return (
                   <div className="space-y-2 rounded-lg border border-neon-cyan/20 bg-dark-950/40 p-2">
-                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-neon-cyan/70">Workflow input (Run form)</h4>
+                    <h4 className="text-xs font-mono uppercase tracking-widest text-neon-cyan/80">Workflow input (Run form)</h4>
                     <Field label="Objective label"><Input value={spec.objectiveLabel ?? ""} onChange={(e) => setSpec({ objectiveLabel: e.target.value })} placeholder="e.g. Research question" /></Field>
                     <Field label="Hint / placeholder"><Input value={spec.objectiveHint ?? ""} onChange={(e) => setSpec({ objectiveHint: e.target.value })} placeholder="shown inside the input box" /></Field>
                     <Field label="Examples (one per line)">
@@ -412,9 +412,9 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
           </div>
         ) : edge ? (
           <div className="absolute right-3 top-3 z-10 w-72 space-y-3 rounded-lg border border-white/10 bg-dark-900/90 p-3 backdrop-blur">
-            <h3 className="text-[10px] font-mono uppercase tracking-widest text-white/40">Route</h3>
+            <h3 className="text-xs font-mono uppercase tracking-widest text-ps-text-muted">Route</h3>
             <Field label="Condition"><Input value={edge.data?.condition ?? "always"} onChange={(e) => patchEdge(edge.id, { condition: e.target.value })} placeholder="always / on_pass…" /></Field>
-            <p className="text-[10px] text-white/30">{CONDITION_HINT}</p>
+            <p className="text-xs text-ps-text-muted">{CONDITION_HINT}</p>
             <Field label="Label (optional)"><Input value={edge.data?.label ?? ""} onChange={(e) => patchEdge(edge.id, { label: e.target.value })} /></Field>
             <Button variant="secondary" color="pink" size="sm" onClick={deleteSelected}><Trash2 className="h-3.5 w-3.5" /> Delete route</Button>
           </div>

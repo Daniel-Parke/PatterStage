@@ -187,11 +187,11 @@ export default function ConfigSectionPage() {
       <div className="min-h-screen bg-dark-950 grid-bg flex items-center justify-center">
         <div className="text-center">
           {aliasTarget ? (
-            <p className="text-white/40 font-mono">Redirecting…</p>
+            <p className="text-ps-text-muted font-mono">Redirecting…</p>
           ) : (
             <>
               <h2 className="text-xl font-bold text-white mb-2">Unknown Config Section</h2>
-              <p className="text-white/40 font-mono mb-4">Section &quot;{sectionId}&quot; not found</p>
+              <p className="text-ps-text-muted font-mono mb-4">Section &quot;{sectionId}&quot; not found</p>
               <Link href="/config" className="text-neon-cyan text-sm font-mono hover:underline">
                 ← Back to Config
               </Link>
@@ -263,9 +263,9 @@ export default function ConfigSectionPage() {
 
       <div className="max-w-3xl mx-auto px-6 py-6 flex-1 w-full">
         {sectionId === "platform_toolsets" ? (
-          <p className="text-xs text-white/40 font-mono border border-neon-orange/20 rounded-lg p-3 mb-6 bg-neon-orange/5">
-            This section edits the <strong className="text-white/60">root</strong> Hermes{" "}
-            <code className="text-white/50">config.yaml</code> only. Per-profile toolsets are managed
+          <p className="text-xs text-ps-text-muted font-mono border border-neon-orange/20 rounded-lg p-3 mb-6 bg-neon-orange/5">
+            This section edits the <strong className="text-ps-text-secondary">root</strong> Hermes{" "}
+            <code className="text-ps-text-muted">config.yaml</code> only. Per-profile toolsets are managed
             on{" "}
             <a href="/operations/tools" className="text-neon-orange hover:underline">
               Operations → Tools
@@ -278,7 +278,7 @@ export default function ConfigSectionPage() {
         {/* File editor for file-type sections */}
         {isFileSection && (
           <div className="rounded-xl border border-white/10 bg-dark-900/50 p-6 mb-6">
-            <p className="text-xs text-white/30 font-mono uppercase tracking-widest mb-4">
+            <p className="text-xs text-ps-text-muted font-mono uppercase tracking-widest mb-4">
               {sectionDef.sensitive ? "Sensitive File — .env" : "File Content"}
             </p>
             {sectionDef.sensitive ? (
@@ -295,7 +295,7 @@ export default function ConfigSectionPage() {
                     />
                   );
                 })}
-                <p className="text-xs text-white/20 mt-4">
+                <p className="text-xs text-ps-text-faint mt-4">
                   Edit .env directly on the server for security. This view is read-only for sensitive values.
                 </p>
               </div>
@@ -304,7 +304,7 @@ export default function ConfigSectionPage() {
               <textarea
                 value={fileContent}
                 onChange={(e) => setFileContent(e.target.value)}
-                className="w-full h-96 bg-dark-800 border border-white/10 rounded-lg p-4 text-sm text-white/80 font-mono resize-none focus:border-cyan-500/50 focus:outline-none"
+                className="w-full h-96 bg-dark-800 border border-white/10 rounded-lg p-4 text-sm text-ps-text-primary font-mono resize-none focus:border-cyan-500/50 focus:outline-none"
                 spellCheck={false}
               />
             )}
@@ -330,7 +330,7 @@ export default function ConfigSectionPage() {
         {sectionDef.complexKeys && sectionDef.complexKeys.length > 0 && (
           <div className="rounded-xl border border-white/10 bg-dark-900/50 p-6">
             {showActions && (
-              <p className="text-xs text-white/30 font-mono uppercase tracking-widest mb-4">
+              <p className="text-xs text-ps-text-muted font-mono uppercase tracking-widest mb-4">
                 Complex Fields
               </p>
             )}
@@ -348,14 +348,14 @@ export default function ConfigSectionPage() {
                 return (
                   <div key={key}>
                     <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-sm text-white/60 font-mono">{key}</span>
+                      <span className="text-sm text-ps-text-secondary font-mono">{key}</span>
                       {isEmpty && (
-                        <span className="text-[10px] font-mono text-white/20 bg-white/5 px-1.5 py-0.5 rounded">
+                        <span className="text-xs font-mono text-ps-text-faint bg-white/5 px-1.5 py-0.5 rounded">
                           empty
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-white/30 bg-dark-800/50 rounded-lg p-3 font-mono max-h-60 overflow-y-auto whitespace-pre-wrap">
+                    <div className="text-xs text-ps-text-muted bg-dark-800/50 rounded-lg p-3 font-mono max-h-60 overflow-y-auto whitespace-pre-wrap">
                       {isEmpty
                         ? "(not configured)"
                         : isObj
@@ -366,7 +366,7 @@ export default function ConfigSectionPage() {
                 );
               })}
             </div>
-            <p className="text-xs text-white/20 mt-4 pt-4 border-t border-white/5">
+            <p className="text-xs text-ps-text-faint mt-4 pt-4 border-t border-white/5">
               {isPlatformToolsetsPreview ? (
                 <>
                   Edit Bob (root) toolsets on{" "}

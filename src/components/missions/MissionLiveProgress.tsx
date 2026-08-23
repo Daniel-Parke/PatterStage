@@ -31,7 +31,7 @@ export default function MissionLiveProgress({ missionId }: { missionId: string }
 
   return (
     <div>
-      <div className="text-[10px] font-mono text-white/30 uppercase mb-1">Live run</div>
+      <div className="text-xs font-mono text-ps-text-muted uppercase mb-1">Live run</div>
       <RunProgress runId={runId} />
     </div>
   );

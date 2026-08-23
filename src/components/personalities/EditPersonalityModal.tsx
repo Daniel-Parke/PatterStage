@@ -84,20 +84,20 @@ export default function EditPersonalityModal({
         )}
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-white/70">Agent Profile</label>
+          <label className="text-sm font-medium text-ps-text-secondary">Agent Profile</label>
           <input
             type="text"
             value={name}
             readOnly
-            className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white/60 outline-none font-mono opacity-70 cursor-not-allowed"
+            className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-ps-text-secondary outline-none font-mono opacity-70 cursor-not-allowed"
           />
-          <p className="text-xs text-white/30 font-mono">
+          <p className="text-xs text-ps-text-muted font-mono">
             The profile whose SOUL.md voice this is — create profiles on the Agents page
           </p>
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-white/70">System Prompt</label>
+          <label className="text-sm font-medium text-ps-text-secondary">System Prompt</label>
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -105,7 +105,7 @@ export default function EditPersonalityModal({
             placeholder="You are a helpful assistant who..."
             className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-neon-purple/50 transition-colors font-mono resize-y"
           />
-          <p className="text-xs text-white/30 font-mono">
+          <p className="text-xs text-ps-text-muted font-mono">
             {prompt.length} characters — this prompt is prepended to the agent&apos;s system prompt
           </p>
         </div>
@@ -113,10 +113,10 @@ export default function EditPersonalityModal({
         {/* Live preview */}
         {prompt.trim() && (
           <div className="space-y-1.5">
-            <label className="text-xs font-mono text-white/30 uppercase tracking-widest">
+            <label className="text-xs font-mono text-ps-text-muted uppercase tracking-widest">
               Preview
             </label>
-            <div className="bg-dark-800/50 border border-white/5 rounded-lg p-3 text-sm text-white/60 font-mono max-h-40 overflow-y-auto whitespace-pre-wrap">
+            <div className="bg-dark-800/50 border border-white/5 rounded-lg p-3 text-sm text-ps-text-secondary font-mono max-h-40 overflow-y-auto whitespace-pre-wrap">
               {prompt}
             </div>
           </div>

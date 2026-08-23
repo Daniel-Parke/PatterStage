@@ -112,11 +112,11 @@ export default function AchievementBadge({ achievement }: { achievement: Achieve
       >
         <Icon className="h-5 w-5" style={{ color: unlocked ? neon(c) : "rgba(255,255,255,0.22)" }} />
         {!unlocked && (
-          <Lock className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-dark-800 p-[3px] text-white/40" />
+          <Lock className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-dark-800 p-[3px] text-ps-text-muted" />
         )}
       </div>
       <span
-        className={`text-center text-[11px] font-medium leading-tight ${unlocked ? "text-white/85" : "text-white/35"}`}
+        className={`text-center text-xs font-medium leading-tight ${unlocked ? "text-ps-text-primary" : "text-ps-text-muted"}`}
       >
         {name}
       </span>

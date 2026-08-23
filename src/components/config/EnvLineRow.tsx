@@ -42,9 +42,9 @@ interface EnvLineRowProps {
  * is exhaustive over the `EnvLine` discriminated union — adding a
  * new variant to `parseEnvLine` surfaces a TypeScript error here.
  *
- * - `blank`   → text-white/30 placeholder (`&nbsp;` for empty lines)
- * - `comment` → text-white/30 verbatim raw line
- * - `invalid` → text-white/50 verbatim raw line (preserved for the user
+ * - `blank`   → text-ps-text-muted placeholder (`&nbsp;` for empty lines)
+ * - `comment` → text-ps-text-muted verbatim raw line
+ * - `invalid` → text-ps-text-muted verbatim raw line (preserved for the user
  *               to see they have a malformed line that the parser couldn't
  *               recognise as `key=val`)
  * - `keyval`  → 3-column flex: neon-cyan key, `=` separator, masked value
@@ -58,19 +58,19 @@ export default function EnvLineRow({ lineKey, parsed, raw }: EnvLineRowProps) {
   switch (parsed.kind) {
     case "blank":
       return (
-        <div key={lineKey} className="text-xs text-white/30 font-mono">
+        <div key={lineKey} className="text-xs text-ps-text-muted font-mono">
           {raw || "\u00A0"}
         </div>
       );
     case "comment":
       return (
-        <div key={lineKey} className="text-xs text-white/30 font-mono">
+        <div key={lineKey} className="text-xs text-ps-text-muted font-mono">
           {raw}
         </div>
       );
     case "invalid":
       return (
-        <div key={lineKey} className="text-xs font-mono text-white/50">
+        <div key={lineKey} className="text-xs font-mono text-ps-text-muted">
           {parsed.raw}
         </div>
       );
@@ -80,8 +80,8 @@ export default function EnvLineRow({ lineKey, parsed, raw }: EnvLineRowProps) {
           <span className="text-neon-cyan w-48 flex-shrink-0 truncate">
             {parsed.key}
           </span>
-          <span className="text-white/50">=</span>
-          <span className="text-white/30">{maskEnvValue(parsed.key, parsed.value)}</span>
+          <span className="text-ps-text-muted">=</span>
+          <span className="text-ps-text-muted">{maskEnvValue(parsed.key, parsed.value)}</span>
         </div>
       );
   }

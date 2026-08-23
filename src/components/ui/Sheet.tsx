@@ -78,7 +78,7 @@ export default function Sheet({
                 {title}
               </h2>
               {subtitle && (
-                <p className="text-xs text-white/40 font-mono mt-1 leading-relaxed">
+                <p className="text-xs text-ps-text-muted font-mono mt-1 leading-relaxed">
                   {subtitle}
                 </p>
               )}
@@ -86,7 +86,7 @@ export default function Sheet({
             <button
               type="button"
               onClick={onClose}
-              className="p-1 rounded text-white/40 hover:text-white/80 shrink-0"
+              className="p-1 rounded text-ps-text-muted hover:text-ps-text-primary shrink-0"
               aria-label="Close panel"
             >
               <X className="w-4 h-4" />

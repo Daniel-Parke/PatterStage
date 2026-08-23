@@ -55,7 +55,7 @@ const LiveClock = reactMemo(function LiveClock() {
       <div className="text-sm font-mono text-neon-cyan" suppressHydrationWarning>
         {time.toLocaleTimeString("en-US", { hour12: false })}
       </div>
-      <div className="text-xs text-white/40" suppressHydrationWarning>
+      <div className="text-xs text-ps-text-muted" suppressHydrationWarning>
         {time.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
       </div>
     </>
@@ -231,11 +231,11 @@ export default function Dashboard() {
               implementation, see src/lib/runtime/types.ts) plus the model. */}
           <h1 className="text-xl font-bold tracking-tight flex items-baseline gap-2">
             <span className="text-neon-cyan text-glow-cyan">Hermes</span>
-            <span className="hidden sm:inline text-[10px] font-normal font-mono text-white/40 uppercase tracking-wider">
+            <span className="hidden sm:inline text-xs font-normal font-mono text-ps-text-muted uppercase tracking-wider">
               Agent Framework
             </span>
           </h1>
-          <p className="text-xs text-white/40 font-mono">{modelSubtitle}</p>
+          <p className="text-xs text-ps-text-muted font-mono">{modelSubtitle}</p>
         </div>
         <div className="flex items-center gap-6">
           <div className="text-right">
@@ -243,7 +243,7 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-neon-green pulse-glow" />
-            <span className="text-xs text-white/60 font-mono">ONLINE</span>
+            <span className="text-xs text-ps-text-secondary font-mono">ONLINE</span>
           </div>
         </div>
       </div>
@@ -262,10 +262,10 @@ export default function Dashboard() {
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-neon-orange" />
             <div className="min-w-0 text-xs">
               <p className="font-semibold text-neon-orange">Hermes config.yaml cannot be parsed</p>
-              <p className="mt-0.5 break-words font-mono text-neon-orange/70">{monitor.system.configYamlError}</p>
-              <p className="mt-1 text-white/40">
+              <p className="mt-0.5 break-words font-mono text-neon-orange/90">{monitor.system.configYamlError}</p>
+              <p className="mt-1 text-ps-text-muted">
                 {/* design-lint-disable-next-line hermes-outside-adapter -- the whole point of this alert is to tell the operator which file to open. A parse error with the filename removed is an alert you cannot act on. */}
-                Config + profile syncs are paused until this is fixed. Edit <code className="text-white/60">~/.hermes/config.yaml</code> to correct the YAML.
+                Config + profile syncs are paused until this is fixed. Edit <code className="text-ps-text-secondary">~/.hermes/config.yaml</code> to correct the YAML.
               </p>
             </div>
           </div>
@@ -312,10 +312,10 @@ export default function Dashboard() {
         {/* ═══ Handoff / continuation ═══ */}
         <div className="rounded-xl border border-white/10 bg-dark-900/40 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-[10px] font-mono text-white/40 uppercase tracking-wider">
+            <div className="text-xs font-mono text-ps-text-muted uppercase tracking-wider">
               Continue work
             </div>
-            <div className="text-sm text-white/80 mt-1">
+            <div className="text-sm text-ps-text-primary mt-1">
               {monitor?.sessions?.recent?.[0] ? (
                 <>
                   Latest session {timeAgo(monitor.sessions.recent[0].modified)}{" "}
@@ -374,7 +374,7 @@ export default function Dashboard() {
           <PanelHeader icon={Gamepad2} label="Rec Room" accent="purple" />
           <Link href="/recroom/story-weaver" className="flex items-center justify-center gap-3 py-4 hover:bg-white/[0.02] transition-colors">
             <BookOpen className="w-5 h-5 text-neon-purple" />
-            <span className="text-sm font-mono text-white/60">Story Weaver</span>
+            <span className="text-sm font-mono text-ps-text-secondary">Story Weaver</span>
           </Link>
         </Panel>
 

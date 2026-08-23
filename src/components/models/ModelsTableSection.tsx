@@ -72,36 +72,36 @@ function ModelRow({
       className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"
     >
       <td className="px-4 py-3 font-mono text-white">{model.name}</td>
-      <td className="px-4 py-3 font-mono text-white/70">{model.provider}</td>
-      <td className="px-4 py-3 font-mono text-white/70">{model.modelId}</td>
+      <td className="px-4 py-3 font-mono text-ps-text-secondary">{model.provider}</td>
+      <td className="px-4 py-3 font-mono text-ps-text-secondary">{model.modelId}</td>
       <td className="px-4 py-3">
         {model.apiStyle ? (
           <span
-            className="rounded bg-neon-cyan/10 px-1.5 py-0.5 text-[10px] font-mono uppercase tracking-widest text-neon-cyan/80"
+            className="rounded bg-neon-cyan/10 px-1.5 py-0.5 text-xs font-mono uppercase tracking-widest text-neon-cyan/80"
             title={`Direct-provider wire protocol: ${model.apiStyle === "anthropic" ? "Anthropic /v1/messages" : "OpenAI /chat/completions"}`}
           >
             {model.apiStyle}
           </span>
         ) : (
-          <span className="font-mono text-xs text-white/30" title="Auto-detected from provider/base URL at call time">
+          <span className="font-mono text-xs text-ps-text-muted" title="Auto-detected from provider/base URL at call time">
             auto
           </span>
         )}
       </td>
-      <td className="px-4 py-3 font-mono text-white/40">
+      <td className="px-4 py-3 font-mono text-ps-text-muted">
         {model.contextLength ?? (
           <span title="Context length not set for this model">—</span>
         )}
       </td>
       <td className="px-4 py-3">
         {badges.length === 0 ? (
-          <span className="text-white/30 font-mono text-xs">—</span>
+          <span className="text-ps-text-muted font-mono text-xs">—</span>
         ) : (
           <div className="flex flex-wrap gap-1">
             {badges.map((b) => (
               <span
                 key={b}
-                className="text-[10px] font-mono bg-neon-purple/15 text-neon-purple px-1.5 py-0.5 rounded uppercase tracking-widest"
+                className="text-xs font-mono bg-neon-purple/15 text-neon-purple px-1.5 py-0.5 rounded uppercase tracking-widest"
               >
                 {b}
               </span>
@@ -123,7 +123,7 @@ function ModelRow({
           <button
             type="button"
             onClick={() => onEdit(toModelEditorRecord(model))}
-            className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+            className="p-1.5 rounded-lg text-ps-text-muted hover:text-white hover:bg-white/5 transition-colors"
             aria-label={`Edit ${model.name}`}
             title="Edit"
           >
@@ -202,7 +202,7 @@ export default function ModelsTableSection({
           <div className="overflow-x-auto rounded-xl border border-white/10 bg-dark-900/40">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-[10px] font-mono uppercase tracking-widest text-white/40 border-b border-white/5">
+                <tr className="text-left text-xs font-mono uppercase tracking-widest text-ps-text-muted border-b border-white/5">
                   <th className="px-4 py-2">Name</th>
                   <th className="px-4 py-2">Provider</th>
                   <th className="px-4 py-2">Model ID</th>

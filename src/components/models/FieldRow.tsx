@@ -44,10 +44,10 @@ export default function FieldRow({
 }: FieldRowProps) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium text-white/70">{label}</label>
+      <label className="text-sm font-medium text-ps-text-secondary">{label}</label>
       {children}
       {description && (
-        <p className="text-xs text-white/30 font-mono">{description}</p>
+        <p className="text-xs text-ps-text-muted font-mono">{description}</p>
       )}
     </div>
   );

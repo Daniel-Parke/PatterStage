@@ -20,7 +20,7 @@
 //     className={`p-1.5 rounded-lg transition-colors ${
 //       isArmed
 //         ? "text-red-300 bg-red-500/20 ring-1 ring-red-500/40"
-//         : "text-white/30 hover:text-red-400 hover:bg-red-500/10"
+//         : "text-ps-text-muted hover:text-red-400 hover:bg-red-500/10"
 //     }`}
 //     aria-label={
 //       isArmed
@@ -88,7 +88,7 @@ export default function PerRowDeleteButton({
       className={`p-1.5 rounded-lg transition-colors disabled:opacity-50 ${
         isArmed
           ? "text-red-300 bg-red-500/20 ring-1 ring-red-500/40"
-          : "text-white/30 hover:text-red-400 hover:bg-red-500/10"
+          : "text-ps-text-muted hover:text-red-400 hover:bg-red-500/10"
       }`}
       aria-label={
         isArmed

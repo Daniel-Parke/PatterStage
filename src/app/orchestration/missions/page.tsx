@@ -199,7 +199,7 @@ export default function MissionsPage() {
             <button
               type="button"
               onClick={fetchData}
-              className="p-2 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
+              className="p-2 rounded-lg text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-colors"
               aria-label="Refresh missions"
             >
               <RefreshCw className="w-4 h-4" />

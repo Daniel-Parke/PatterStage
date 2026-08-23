@@ -163,7 +163,7 @@ export default function ScriptsPage() {
             <button
               type="button"
               onClick={() => refetch()}
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 font-mono text-xs text-white/50 transition-colors hover:bg-white/5 hover:text-white/80"
+              className="flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 font-mono text-xs text-ps-text-muted transition-colors hover:bg-white/5 hover:text-ps-text-primary"
             >
               <RefreshCw className="h-3 w-3" /> Refresh
             </button>
@@ -172,9 +172,9 @@ export default function ScriptsPage() {
       />
 
       <div className="px-6 py-6">
-        <p className="mb-5 max-w-3xl font-mono text-xs text-white/40">
-          Drop a <span className="text-white/60">.sh</span> file under{" "}
-          <span className="text-white/60">PS_DATA_DIR/scripts</span> and it appears here — backups, cleanups, health
+        <p className="mb-5 max-w-3xl font-mono text-xs text-ps-text-muted">
+          Drop a <span className="text-ps-text-secondary">.sh</span> file under{" "}
+          <span className="text-ps-text-secondary">PS_DATA_DIR/scripts</span> and it appears here — backups, cleanups, health
           checks. Scheduling agent work is on the{" "}
           <a href="/orchestration/missions" className="text-neon-cyan hover:underline">Missions</a> page.
         </p>

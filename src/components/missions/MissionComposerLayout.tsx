@@ -5,7 +5,7 @@ import { ChevronRight } from "lucide-react";
 
 export function ComposerFieldLabel({ children }: { children: ReactNode }) {
   return (
-    <label className="text-xs text-white/40 font-mono block mb-1.5">
+    <label className="text-xs text-ps-text-muted font-mono block mb-1.5">
       {children}
     </label>
   );
@@ -62,28 +62,28 @@ export function ComposerAccordion({
         >
           <span className="min-w-0 flex items-start gap-2">
             {step != null && (
-              <span className="shrink-0 w-5 h-5 rounded-full border border-white/20 text-[10px] font-mono text-white/50 flex items-center justify-center mt-0.5">
+              <span className="shrink-0 w-5 h-5 rounded-full border border-white/20 text-xs font-mono text-ps-text-muted flex items-center justify-center mt-0.5">
                 {step}
               </span>
             )}
             <span className="min-w-0">
-              <span className="block text-xs font-mono text-white/50 uppercase tracking-widest">
+              <span className="block text-xs font-mono text-ps-text-muted uppercase tracking-widest">
                 {title}
               </span>
               {description && (
-                <span className="block text-xs text-white/30 font-mono mt-1 leading-relaxed">
+                <span className="block text-xs text-ps-text-muted font-mono mt-1 leading-relaxed">
                   {description}
                 </span>
               )}
               {!open && hintWhenCollapsed && (
-                <span className="block text-[10px] text-neon-cyan/50 font-mono mt-1.5">
+                <span className="block text-xs text-neon-cyan/80 font-mono mt-1.5">
                   {hintWhenCollapsed}
                 </span>
               )}
             </span>
           </span>
           <ChevronRight
-            className={`w-4 h-4 text-white/40 shrink-0 mt-0.5 transition-transform ${open ? "rotate-90" : ""}`}
+            className={`w-4 h-4 text-ps-text-muted shrink-0 mt-0.5 transition-transform ${open ? "rotate-90" : ""}`}
           />
         </button>
         {actions && (

@@ -67,7 +67,7 @@ export default function MemoryInsights({
         }}
       />
       {realTotal ? (
-        <p className="mt-2 text-center text-[11px] text-white/35">
+        <p className="mt-2 text-center text-xs text-ps-text-muted">
           Showing the {s.total.toLocaleString()} most recent of {realTotal.toLocaleString()} stored facts — the fresh/stale mix and tags reflect this sample.
         </p>
       ) : null}
