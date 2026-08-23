@@ -29,6 +29,8 @@ import { AchievementShowcase, StreakFlame } from "@/components/achievements";
 import { Stagger, StaggerItem } from "@/components/motion";
 import { useStats } from "@/hooks/useStats";
 import { useAnalytics, useAnalyticsTimeseries, useInsights } from "@/hooks/useAnalytics";
+import { useSpend } from "@/hooks/useSpend";
+import SpendPanel from "@/components/spend/SpendPanel";
 import { categoryForEventType } from "@/lib/analytics/categories";
 
 const RANGES = [7, 30, 90] as const;
@@ -76,6 +78,10 @@ export default function InsightsPage() {
   const { summary, error: summaryError, refetch: refetchSummary } = useAnalytics();
   const { points } = useAnalyticsTimeseries(undefined, days);
   const { insights, error: insightsError } = useInsights(days);
+  // Provider spend is the one number here that is money rather than activity
+  // (T-0021, WO-0014). It carries its own periods, so it does not follow the
+  // 7/30/90 range switch above: a budget is a calendar month, not a window.
+  const { spend, saving, saveBudget } = useSpend();
 
   const totalEvents = useMemo(
     () => Object.values(summary?.totals ?? {}).reduce((a, b) => a + b, 0),
@@ -95,10 +101,14 @@ export default function InsightsPage() {
 
   const areaData = useMemo(() => points.map((p) => ({ date: p.date, completed: p.value })), [points]);
 
-  const estSpend = useMemo(
-    () => (insights?.modelUsage ?? []).reduce((s, m) => s + m.costUsd, 0),
-    [insights],
-  );
+  // The headline strip used to carry an "Est. spend" tile summing
+  // insights.modelUsage. It is gone, and its removal is part of T-0021 rather
+  // than tidying. That figure came from a query that INNER JOINs missions, so
+  // every Composer stage run was missing from it, and it was drawn over the
+  // 7/30/90 range switch, which is not a period anybody budgets in. Two spend
+  // numbers on one page, one of them quietly incomplete, is worse than one.
+  // SpendPanel below is the single answer: all recorded sources, calendar
+  // periods, and an explicit note about what it cannot measure.
 
   const error = statsError ?? summaryError ?? insightsError;
   const achievements = stats?.achievements ?? [];
@@ -172,15 +182,25 @@ export default function InsightsPage() {
                 <div className="flex items-center gap-5">
                   {stats && <StreakFlame current={stats.streak.current} longest={stats.streak.longest} />}
                 </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <MetricTile label="Interactions" value={totalEvents.toLocaleString()} color="cyan" />
                   <MetricTile label={`Active days (${days}d)`} value={String(summary?.activeDays ?? 0)} color="green" />
                   <MetricTile label="Tokens" value={compactNum(stats?.runs.totalTokens ?? 0)} color="yellow" />
-                  <MetricTile label="Est. spend" value={`$${estSpend.toFixed(2)}`} color="pink" />
                   <MetricTile label="Achievements" value={`${unlocked}/${achievements.length}`} color="orange" />
                 </div>
               </div>
             </Card>
+
+            {/* ── Provider spend (T-0021, WO-0014) ──
+                The only money in this product. Visible by default; silent until
+                the operator sets a figure of his own. */}
+            <SpendPanel
+              summary={spend}
+              saving={saving}
+              onSave={(draft) => {
+                void saveBudget(draft);
+              }}
+            />
 
             <Stagger className="space-y-4">
               {/* ── Activity by category (stacked) + breakdown ── */}

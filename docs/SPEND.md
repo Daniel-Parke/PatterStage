@@ -1,0 +1,86 @@
+---
+summary: Provider spend in PatterStage, how it is estimated, the optional budget, and the hard stop that is off until you turn it on
+type: guide
+tags: [product, spend]
+compiled_from: normalised
+---
+
+# PatterStage - Provider spend
+
+LLM provider spend is the only thing in PatterStage that costs money. Everything else runs on your own machine. This page is what the product knows about that spend, what it will tell you, and the two switches you own.
+
+The short version: **spend is always visible, a budget is optional, a budget only warns, and stopping work is a separate switch that ships off.** If you never open this page, nothing about your install changes.
+
+## Where to find it
+
+**Laboratory > Insights**, in the Provider spend panel near the top. It is on screen by default. There is nothing to enable.
+
+## What it shows
+
+Three period totals, always: today, this week, this month. Calendar periods, in UTC, not rolling windows. A person who budgets forty dollars a month means the month, and wants it to reset on the first.
+
+Under them, the same period split by the three things that spend tokens:
+
+| Source | What it is | Recorded? |
+|---|---|---|
+| Agent runs | A mission dispatched by you, a schedule or the queue | Yes |
+| Composer stages | One node of a Composer workflow, executed as a run | Yes |
+| Deep Research | A research run from the Laboratory | **No** |
+
+### Deep Research is not counted, and the panel says so
+
+Deep Research drives the model directly and throws the token counts away: nothing in the database records them. So the panel shows the number of research runs and the words "cost not recorded" rather than a confident `$0.00`, and the totals above carry a note saying what they exclude.
+
+That is a real gap and it is stated rather than papered over. If you lean on Deep Research heavily, the totals here are an underestimate, and so is anything measured against them, including the hard stop below.
+
+### It is an estimate, not an invoice
+
+The figures come from token counts already recorded against each run, priced against a published per-model rate table (`src/lib/analytics/model-cost.ts`). Two consequences worth knowing:
+
+- A run with **no model recorded** (every Composer stage, which has no mission to carry the model) is priced at a conservative default rather than at zero. Unknown must never read as free.
+- Rates change and the table is static. Treat the number as the right order of magnitude, and your provider's dashboard as the truth.
+
+Runs of every status are counted, not just successful ones. A run that failed after burning tokens still cost you money.
+
+## The budget, which is optional
+
+There is no budget on a fresh install, and nothing asks you to set one. An install with no figure shows its spend and warns about nothing, however much has been spent.
+
+If you want one: open **Set a budget** under the panel, choose a period, type a number of US dollars, and save. Clearing the field removes the budget entirely and puts you back where you started.
+
+**A figure on its own only warns.** You get a meter, a quiet nudge at 80 percent, and a plain sentence when you pass it. Nothing is blocked. That is the default and it is deliberate.
+
+## The hard stop, which is off
+
+Beside the figure is a checkbox. Turning it on means: when the figure is passed, **unattended dispatch pauses**.
+
+Unattended means the three things that dispatch work with nobody watching:
+
+- a schedule falling due,
+- the queued-mission drain,
+- a Composer workflow advancing on the background tick.
+
+They pause. They do not fail, cancel or drop anything. A schedule keeps its place and fires on the first tick after the period rolls over or you raise the figure.
+
+**Attended use is never blocked.** Clicking dispatch on a mission, running a schedule now, approving a Composer gate, starting a Deep Research run: all of these work identically whether the budget is unset, breached or armed. A human clicking dispatch is answering for the spend himself.
+
+You cannot arm the stop without a figure. The interface refuses it and so does the database, because a stop with no ceiling would refuse every unattended dispatch forever with no number anybody could raise.
+
+### One case where it stops without a breach
+
+If the hard stop is armed and the spend cannot be measured at all, because the database read failed, unattended dispatch pauses and says so. The reasoning is short: you asked for a ceiling, the system cannot show it is under the ceiling, and spending real money on an unprovable assumption is the expensive mistake. A delayed run is the cheap one, and you can dispatch by hand.
+
+A failure to read the budget itself does the opposite and allows dispatch, because there is no evidence a stop was ever armed and almost no install has one.
+
+## Where the setting lives
+
+In your database, in the `spend_policy` table, added by migration `033`. It is a user setting, so it sits with your data rather than in a file you have to edit. See [MIGRATION.md](MIGRATION.md).
+
+## API
+
+| Route | What it does |
+|---|---|
+| `GET /api/spend` | The full summary: three periods, three sources each, your policy, and the verdict. |
+| `PUT /api/spend` | Set `limitUsd` (a positive number, or `null` to remove it), `period` (`day`, `week` or `month`), or `hardStop` (boolean). |
+
+Clearing `limitUsd` disarms the stop in the same write, so the forbidden pair never exists.

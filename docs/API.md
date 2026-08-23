@@ -43,6 +43,7 @@ Some error responses also include `details` (Zod validation). Handlers must call
 | `/api/agents/progression` | `GET` | The **recorded** per-agent growth, from the append-only `agent_progression_snapshots` table: newest row per profile, or one profile's whole trail with `?slug=`. Survives the retention prune of the events it was derived from (see [MIGRATION.md](MIGRATION.md)). |
 | `/api/analytics` | `GET` | Interaction analytics summary (`{ totals, last30, activeDays }`) over the `analytics_events` log. Read-only — events are server-emitted, so there is no `POST`. See [ANALYTICS.md](ANALYTICS.md). |
 | `/api/analytics/timeseries` | `GET` | Gap-filled daily event counts (`?type=&days=&bucket=day`; `days` clamped 1–365). |
+| `/api/spend` | `GET`, `PUT` | Provider spend per calendar period and per source, plus the operator's **optional** budget and the verdict against it. `PUT` sets `limitUsd` (positive number, or `null` to remove the budget), `period` (`day`/`week`/`month`) and `hardStop`. Arming `hardStop` without a figure is a 400. See [SPEND.md](SPEND.md). |
 | `/api/fs/git/branches` | `GET` | List git branches for a workspace path. |
 | `/api/fs/list` | `GET` | List directory entries (path-validated). |
 | `/api/gateway/health` | `GET` | Gateway probe → `{ online, authConfigured }`. Any HTTP response (incl. 401/403) ⇒ reachable; 401/403 ⇒ reachable but the `API_SERVER_KEY` is missing/wrong. |

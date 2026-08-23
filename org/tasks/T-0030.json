@@ -1,0 +1,34 @@
+{
+  "id": "T-0030",
+  "intent": "Record Deep Research token usage so its spend can be counted. Discovered by T-0021 (WO-0014) and proposed rather than absorbed into it, because that row said to compute spend from data ALREADY RECORDED and this is the one source where none is. Deep Research drives callLLM directly and discards the usage it returns: research_runs holds query/status/provider/model_id/config/report and no token or cost column, and research_steps holds prompt and output text but no counts. So T-0021 reports Deep Research as 'cost not recorded' with a run count, states the exclusion on the summary and in the console, and documents it in docs/SPEND.md, rather than drawing it as $0.00. That is honest but incomplete, and it has one consequence worth naming: the optional hard stop measures recorded spend only, so an install that leans on Deep Research is under-counted and can pass its ceiling by an amount nothing can see. Scope: thread usage through the engine's LlmFn contract (src/lib/laboratory/deep-research/engine.ts, which today returns { content } and drops LLMResponse.usage), persist it on the research run, and have src/lib/spend/spend-summary.ts report the research source as recorded. A schema change means a new numbered .sql plus a version-gated applier appended to the chain in src/lib/db/index.ts and the head constant in src/lib/db-schema.ts moved with it; head is 33 after T-0021. Done when the research row in the console carries a real cost, the summary's `unmeasured` list is empty on an install whose only unmeasured source was this one, and the guard's total includes it. Tier proposed R2 on the same money factor as T-0021: it changes what a hard stop measures.",
+  "declared": {
+    "capabilities": [
+      "database"
+    ],
+    "side_effects": [
+      "financial-impact"
+    ]
+  },
+  "mode": "high-assurance",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [
+    {
+      "factor": "money",
+      "tier_floor": "R2",
+      "source": "declared",
+      "evidence": "declared side effect: financial-impact"
+    }
+  ],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/lib/laboratory/deep-research/",
+    "src/lib/spend/",
+    "src/lib/db/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-24T00:00:00Z",
+    "updated": "2026-08-24T00:00:00Z"
+  }
+}

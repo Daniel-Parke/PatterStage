@@ -21,13 +21,20 @@
       "evidence": "declared side effect: financial-impact"
     }
   ],
-  "status": "proposed",
-  "owner_session": "unassigned",
+  "status": "done",
+  "owner_session": "t0021-provider-spend-2026-08-24",
   "claims": [
-    "src/"
+    "src/lib/spend/",
+    "src/lib/db/migrations/033_spend_policy.sql",
+    "src/lib/db/apply-spend-policy-migration.ts",
+    "src/app/api/spend/",
+    "src/components/spend/",
+    "src/hooks/useSpend.ts",
+    "docs/SPEND.md"
   ],
   "timestamps": {
     "opened": "2026-07-25T00:00:00Z",
-    "updated": "2026-08-23T06:00:00Z"
+    "updated": "2026-08-24T00:00:00Z",
+    "closed": "2026-08-24T00:00:00Z"
   }
 }
