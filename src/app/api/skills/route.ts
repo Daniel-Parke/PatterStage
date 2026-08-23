@@ -7,7 +7,7 @@ import { ensureDb } from "@/lib/db";
 import { safeStat } from "@/lib/fs/fs-stats";
 import { resolveEffectiveDisabledSkills } from "@/modules/hermes/lib/effective-disabled-skills";
 import { getProfile } from "@/modules/hermes/lib/profiles-repository";
-import { listSkills, deriveCategory } from "@/lib/skills-repository";
+import { listSkillCatalog, deriveCategory } from "@/lib/skills-repository";
 import { skillFilePath, skillsRootForProfile } from "@/modules/hermes/lib/skills-config";
 import { requireSafeProfileName } from "@/lib/fs/path-security";
 import { scanDiskSkillsCatalog } from "@/modules/hermes/lib/profile-discovery";
@@ -37,7 +37,10 @@ export async function GET(request: NextRequest) {
     const disabled = resolveEffectiveDisabledSkills(profile, { refreshFromDisk });
     const skillsDir = skillsRootForProfile();
 
-    const dbSkills = listSkills();
+    // Catalog metadata only: this handler needs each body's LENGTH, never the
+    // body, and `listSkills()` would ship every SKILL.md through SQLite and
+    // into JS strings to be discarded a line later.
+    const dbSkills = listSkillCatalog();
     const dbKeys = new Set(dbSkills.map((s) => s.skillKey));
     const skills: Skill[] = dbSkills.map((row) => {
       const path = skillFilePath(skillsDir, row.skillKey);
@@ -50,7 +53,7 @@ export async function GET(request: NextRequest) {
         path,
         description: row.description,
         enabled: !disabled.has(row.skillKey),
-        size: st?.size ?? row.content.length,
+        size: st?.size ?? row.contentLength,
         lastModified: st?.mtime ?? row.updatedAt,
       };
     });
@@ -85,6 +88,16 @@ export async function GET(request: NextRequest) {
     // `Record<string, Skill[]>` with the same shape as the old loop
     // (Map<string, Skill[]> → Record<string, Skill[]>) so the rest of
     // the handler is byte-equivalent.
+    //
+    // MEASURED, NOT YET CUT: `categories` re-serves every Skill object that
+    // `skills` above already carries, which is 69,574 of this response's
+    // 137,534 bytes, in the largest body the app serves. The only
+    // consumer (src/app/operations/skills/page.tsx:120) reads
+    // `Object.keys(categories)` and groups `skills` itself, so replacing the
+    // buckets with their sizes is a 49.3% cut with no call-site change. It
+    // needs `SkillsData.categories` in src/types/console.ts to change with it,
+    // and that file is under concurrent edit, so it is left for a run that can
+    // move both together.
     const categoryGroups = groupByCategory(skills, "uncategorized");
     const categories = Object.fromEntries(categoryGroups) as Record<string, Skill[]>;
 

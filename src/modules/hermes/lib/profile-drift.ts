@@ -13,11 +13,12 @@
 //   - every other file is compared by content hash, because for those
 //     a byte is a byte.
 //
-// A profile or skill that is not in the database reports
-// `drifted: false` with a syncError of "not in database". That is not
-// a fudge: an absent row has nothing to drift FROM, and reporting it
-// as drift would make the banner permanently red for anything the
-// operator has on disk but has not adopted.
+// A profile that is not in the database reports `drifted: false` with
+// a syncError of "not in database". That is not a fudge: an absent row
+// has nothing to drift FROM, and reporting it as drift would make the
+// banner permanently red for anything the operator has on disk but has
+// not adopted. Skills need no such branch: the only caller walks the
+// rows the catalog just returned, so the row always exists.
 // ═══════════════════════════════════════════════════════════════
 
 import { existsSync, readFileSync } from "fs";
@@ -31,7 +32,7 @@ import {
   configYamlSemanticallyMatches,
   disabledSkillsMatchJson,
 } from "./profile-config-builder";
-import { getSkill, listSkills } from "@/lib/skills-repository";
+import { listSkills, type SkillRow } from "@/lib/skills-repository";
 import { skillFilePath } from "./skills-config";
 import {
   assembleRootConfig,
@@ -143,17 +144,12 @@ export function detectRootDrift(): RootDriftEntry {
   };
 }
 
-function detectSkillDrift(skillKey: string): SkillDriftEntry {
-  const skill = getSkill(skillKey);
-  if (!skill) {
-    return { skillKey, drifted: false, syncError: "not in database" };
-  }
-  const skillsRoot = globalSkillsRoot();
-  const path = skillFilePath(skillsRoot, skillKey);
+function detectSkillDrift(skill: SkillRow, skillsRoot: string): SkillDriftEntry {
+  const path = skillFilePath(skillsRoot, skill.skillKey);
   const disk = fileHash(path);
   const db = contentHash(skill.content);
   return {
-    skillKey,
+    skillKey: skill.skillKey,
     drifted: disk !== db,
     syncError: skill.syncError,
   };
@@ -164,9 +160,15 @@ function detectAllProfileDrift(): ProfileDriftEntry[] {
 }
 
 export function detectFullDrift(): FullDriftReport {
+  // `listSkills()` already returns every row, body included. The previous
+  // `detectSkillDrift(s.skillKey)` then re-fetched each of those rows one at a
+  // time (1 + N queries for N skills) to read the body it had just discarded.
+  // Hand the row straight in, and resolve the skills root once rather than per
+  // skill.
+  const skillsRoot = globalSkillsRoot();
   return {
     root: detectRootDrift(),
     profiles: detectAllProfileDrift(),
-    skills: listSkills().map((s) => detectSkillDrift(s.skillKey)),
+    skills: listSkills().map((s) => detectSkillDrift(s, skillsRoot)),
   };
 }

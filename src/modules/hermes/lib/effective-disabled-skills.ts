@@ -10,13 +10,15 @@ import {
 } from "./skills-config";
 import { disabledSkillsFromJson } from "./profile-config-builder";
 import { getDisabledSkills } from "./profiles-repository";
-import { listSkills } from "@/lib/skills-repository";
+import { listSkillKeys } from "@/lib/skills-repository";
 
 /** Union of SQLite catalog keys and on-disk skill directory paths. */
 function listCatalogSkillKeys(): string[] {
+  // Keys only. This used to call `listSkills()`, which drags every SKILL.md
+  // body out of SQLite so that the loop below can throw all of them away.
   const keys = new Set<string>();
-  for (const row of listSkills()) {
-    keys.add(row.skillKey);
+  for (const key of listSkillKeys()) {
+    keys.add(key);
   }
   for (const name of collectSkillDirectoryNames(skillsRootForProfile())) {
     keys.add(name);

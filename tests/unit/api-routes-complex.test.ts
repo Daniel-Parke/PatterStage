@@ -82,7 +82,15 @@ jest.mock("@/lib/audit-log", () => ({
 }));
 
 jest.mock("@/lib/skills-repository", () => ({
+  // An empty catalog, read four ways. The route reads the metadata-only shape
+  // and resolveEffectiveDisabledSkills reads the keys, so a mock that offers
+  // only listSkills leaves the route calling `undefined()` and reports the
+  // resulting throw as a 500 rather than the empty 200 this suite asserts.
   listSkills: jest.fn(() => []),
+  listSkillCatalog: jest.fn(() => []),
+  listSkillKeys: jest.fn(() => []),
+  countSkills: jest.fn(() => 0),
+  deriveCategory: jest.fn(() => "uncategorized"),
 }));
 
 jest.mock("@/lib/agent-root-repository", () => ({

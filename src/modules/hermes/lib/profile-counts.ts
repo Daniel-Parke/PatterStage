@@ -14,7 +14,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { getAgentRoot } from "@/lib/agent-root-repository";
-import { listSkills } from "@/lib/skills-repository";
+import { countSkills } from "@/lib/skills-repository";
 import { getProfile, hydratePlatformToolsetsForSlug } from "./profiles-repository";
 import { unionToolsetsFromPlatforms } from "./toolset-unify";
 import { disabledSkillsFromJson } from "./profile-config-builder";
@@ -27,7 +27,10 @@ export function countProfileToolsets(slug: string): number {
 }
 
 export function countProfileSkills(slug: string): number {
-  const total = listSkills().length;
+  // A COUNT, not a SELECT. GET /api/agent/profiles calls this once per profile,
+  // and the old `listSkills().length` loaded every SKILL.md body from SQLite
+  // each time only to read the array's length off the result.
+  const total = countSkills();
   if (slug === "default") {
     const row = getAgentRoot();
     return Math.max(0, total - disabledSkillsFromJson(row.disabledSkillsJson).length);
