@@ -28,10 +28,10 @@ The records under org/tasks/ are canonical.
 | T-0013 | standard | R0 | done | phase6-migration-truth-2026-08-22 |
 | T-0014 | standard | R0 | done | phase7-hermes-crossings-2026-08-22 |
 | T-0015 | standard | R0 | done | phase7-schema-gate-2026-08-23 |
-| T-0016 | high-assurance | R2 | proposed | unassigned |
-| T-0017 | high-assurance | R3 | proposed | unassigned |
+| T-0016 | high-assurance | R2 | done | phase7-progression-2026-08-23 |
+| T-0017 | high-assurance | R3 | done | phase7-retention-2026-08-23 |
 | T-0018 | standard | R0 | done | phase7-coverage-ratchet-2026-08-23 |
-| T-0019 | standard | R0 | proposed | unassigned |
+| T-0019 | standard | R0 | active | install-harness-update-2026-08-22 |
 | T-0020 | standard | R0 | proposed | unassigned |
 | T-0021 | high-assurance | R2 | proposed | unassigned |
 | T-0022 | standard | R0 | proposed | unassigned |

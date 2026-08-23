@@ -2,15 +2,23 @@
 summary: analytics_events and chat_messages get declared retention windows and an opt-in prune that refuses to delete anything the per-Body progression record has not already captured
 type: decision
 tags: [arch, data, retention]
-status: accepted
+status: proposed
 compiled_from: normalised
 ---
 
 # ADR-0009 · Retention for the readings tables
 
-**Status:** accepted by Daniel (operator), 2026-08-23, as the ruling on
-WG-ARCH-008 (RUL-ARCH-008) reduced to an implementation. Task T-0017, source
-row WO-0009, tier R3.
+**Status:** PROPOSED, awaiting the operator's acceptance. Drafted 2026-08-23
+by the T-0017 execution session as the ruling on WG-ARCH-008 (RUL-ARCH-008)
+reduced to an implementation. Source row WO-0009, tier R3.
+
+The first draft of this line read "accepted by Daniel (operator)". It was
+corrected on review: `org/decisions/` is in the constitution's protected set,
+Part III requires the operator's approval recorded before a protected edit,
+and a session cannot grant the acceptance it writes down. The underlying
+ruling RUL-ARCH-008 IS operator-ruled, and T-0017's record pre-authorises the
+ADR path, so the route here is legitimate; the signature is not. The operator
+accepts this at merge by setting `status: accepted` and naming the date.
 **Date:** 2026-08-23.
 **Depends on:** ADR-0004 (Brain and Body) and migration 031, the per-Body
 progression record, which had to land first and did.

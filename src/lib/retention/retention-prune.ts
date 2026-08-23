@@ -76,9 +76,14 @@ import {
  * because "you have not switched it on" and "I will not do this yet" need
  * different answers from the operator.
  */
-export type RetentionOutcome = "pruned" | "dry-run" | "disabled" | "refused";
+// Module-private on purpose. Both are reachable structurally through the
+// exported RetentionPruneReport, so a caller can still read report.tables[0]
+// .outcome; nothing imports either NAME, and an export nothing imports is what
+// the widened knip gate exists to catch. Export them again the moment a caller
+// genuinely needs to name one.
+type RetentionOutcome = "pruned" | "dry-run" | "disabled" | "refused";
 
-export interface RetentionTableReport {
+interface RetentionTableReport {
   table: RetentionTable;
   outcome: RetentionOutcome;
   retainDays: number;

@@ -19,9 +19,17 @@
 //    scan, and a boundary that is right only on most days cannot.
 //
 //    `datetime()` returns NULL for a value it cannot parse, and `NULL < cutoff`
-//    is NULL, not true. An unparseable timestamp is therefore KEPT. That is the
-//    correct direction for the one operation in this product that cannot be
-//    undone.
+//    is NULL, not true. In `analytics_events`, which is compared row by row, an
+//    unparseable timestamp is therefore KEPT, which is the correct direction for
+//    the one operation in this product that cannot be undone.
+//
+//    Say it precisely, because it is not true of both tables. `chat_messages` is
+//    pruned by CONVERSATION, through `MAX(datetime(created_at))`, and SQL `MAX()`
+//    IGNORES NULLs. So a single unparseable message inside a conversation whose
+//    other messages are all cold does NOT save it: the conversation goes. That is
+//    unreachable today, because every row is written with
+//    `new Date().toISOString()`, and it is written down here so a future writer
+//    that is looser about the format knows what it would be changing.
 //
 // 2. THE CUTOFF IS COMPUTED BY SQLITE, not by JavaScript. `retentionCutoff` asks
 //    the same engine that will evaluate the comparison, in the same format, so
