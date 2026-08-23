@@ -37,7 +37,7 @@ export default function MissionLiveProgress({ missionId }: { missionId: string }
       return { runId: res.data?.data?.run?.id ?? null, error: null };
     },
     // Poll until a run id exists (dispatch may not have created it yet), then
-    // stop. A failed lookup keeps polling — the server may just be busy — but
+    // stop. A failed lookup keeps polling, since the server may just be busy, but
     // the operator can now see that it is failing rather than waiting on a
     // blank panel.
     refetchInterval: (query) => (query.state.data?.runId ? false : 2000),

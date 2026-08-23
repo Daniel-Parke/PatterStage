@@ -103,7 +103,7 @@ export function useRunProgress(runId: string | null): RunProgressState {
     }
     es.onerror = () => {
       // EventSource gives an error event with no detail, so there is no server
-      // message to pass on — but "error" with an empty reason rendered as a red
+      // message to pass on. But "error" with an empty reason rendered as a red
       // icon and nothing else, which reads as "the run failed" rather than "the
       // stream dropped". Those are different facts and the poller settles the
       // first one; say which this is.

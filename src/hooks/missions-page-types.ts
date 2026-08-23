@@ -34,7 +34,7 @@ export type MissionRow = Mission & {
 
 export interface MissionDetail {
   mission: MissionRow;
-  /** The mission's latest run — see MissionRow.run. */
+  /** The mission's latest run. See MissionRow.run. */
   run?: MissionRunView | null;
   cronJob: {
     id: string;
