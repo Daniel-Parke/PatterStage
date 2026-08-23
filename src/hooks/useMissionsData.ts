@@ -35,6 +35,10 @@ import {
   getCategoryIdFromTemplate,
   rememberLastCategory,
 } from "@/lib/missions/mission-composer-utils";
+import {
+  MISSIONS_PATH,
+  resolveMissionDeepLink,
+} from "@/lib/missions/mission-deep-link";
 
 type ToastFn = (message: string, type?: ToastType) => void;
 
@@ -69,6 +73,10 @@ export function useMissionsData({
   const [detailLoading, setDetailLoading] = useState(false);
   const [promptCollapsed, setPromptCollapsed] = useState(true);
   const templateApplied = useRef(false);
+  const missionFocused = useRef(false);
+  const [deepLinkedMissionId, setDeepLinkedMissionId] = useState<string | null>(
+    null,
+  );
   const expandedIdRef = useRef<string | null>(null);
 
   // Generalised mission-by-id updater. Updates the mission matching
@@ -172,7 +180,7 @@ export function useMissionsData({
       setShowCreate(true);
       showToast(`Template loaded: ${t.name}`, "success");
       if (opts.clearQueryParam) {
-        window.history.replaceState({}, "", "/orchestration/missions");
+        window.history.replaceState({}, "", MISSIONS_PATH);
       }
     },
     [applyTemplateToForm, setShowCreate, showToast],
@@ -182,6 +190,31 @@ export function useMissionsData({
     try {
       const list = await fetchMissions();
       setMissions(list);
+      // `?mission=<id>` deep link, the destination of every "open the
+      // parent mission" affordance on the sessions surface. Sibling of the
+      // `?template=<id>` branch below, and latched the same way so the 15s
+      // poll does not re-open a panel the user closed.
+      if (!missionFocused.current) {
+        const link = resolveMissionDeepLink(window.location.href, list);
+        if (link.kind !== "none") {
+          missionFocused.current = true;
+          window.history.replaceState({}, "", MISSIONS_PATH);
+          if (link.kind === "open") {
+            setExpandedId(link.missionId);
+            // Published so the board's view state can make the panel
+            // actually visible, because the Completed and Failed columns start
+            // collapsed, and an arrived-at mission usually lives in one
+            // of them. Distinct from `expandedId` because a plain click
+            // must NOT expand the column it was clicked in.
+            setDeepLinkedMissionId(link.missionId);
+          } else {
+            showToast(
+              `Mission ${link.missionId.slice(0, 8)} no longer exists`,
+              "error",
+            );
+          }
+        }
+      }
     } catch (error) {
       // `toastError` is the user-facing surface; the pre-session-178
       // `console.error` was the only error reporting and the user
@@ -290,6 +323,7 @@ export function useMissionsData({
     loading,
     expandedId,
     setExpandedId,
+    deepLinkedMissionId,
     detail,
     detailLoading,
     promptCollapsed,

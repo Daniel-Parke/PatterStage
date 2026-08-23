@@ -17,6 +17,7 @@ import { timeAgo, formatElapsed, pluralise } from "@/lib/utils";
 import { SOURCE_META } from "@/components/session/constants";
 import { formatSessionTitle } from "@/lib/sessions/session-title";
 import type { SessionRecord } from "@/lib/sessions/session-repository";
+import { MISSIONS_PATH } from "@/lib/missions/mission-deep-link";
 
 export default function SessionCard({ session }: { session: SessionRecord }) {
   const title = formatSessionTitle(session);
@@ -69,7 +70,7 @@ export default function SessionCard({ session }: { session: SessionRecord }) {
               )}
               {session.missionId && (
                 <Link
-                  href={`/orchestration/missions/${session.missionId}`}
+                  href={`${MISSIONS_PATH}?mission=${session.missionId}`}
                   onClick={(e) => e.stopPropagation()}
                   className="z-10"
                   title="Open parent mission"

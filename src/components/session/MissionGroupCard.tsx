@@ -16,6 +16,7 @@ import { timeAgo } from "@/lib/utils";
 import { formatSessionTitle } from "@/lib/sessions/session-title";
 import type { MissionGroup } from "@/lib/sessions/sessions-grouping";
 import SessionCard from "@/components/session/SessionCard";
+import { MISSIONS_PATH } from "@/lib/missions/mission-deep-link";
 
 export default function MissionGroupCard({ group }: { group: MissionGroup }) {
   const [expanded, setExpanded] = useState(false);
@@ -55,7 +56,7 @@ export default function MissionGroupCard({ group }: { group: MissionGroup }) {
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <Link
-            href={`/orchestration/missions/${group.missionId}`}
+            href={`${MISSIONS_PATH}?mission=${group.missionId}`}
             onClick={(e) => e.stopPropagation()}
             className="text-xs font-mono px-2 py-1 rounded bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-colors"
             title="Open the parent mission"

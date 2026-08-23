@@ -8,6 +8,7 @@
 
 "use client";
 
+import Link from "next/link";
 import { Globe, RefreshCw } from "lucide-react";
 
 import { StatusDot } from "@/components/ui/Card";
@@ -45,7 +46,18 @@ export default function PlatformsPanel({ monitor, syncNowBusy, onSyncNow }: Plat
           );
         })}
         {monitor && monitor.gateway.connectedCount === 0 && (
-          <div className="text-xs text-ps-text-muted text-center py-2">No platforms configured</div>
+          // "No platforms configured" on its own is the emptiest kind of
+          // empty state: it restates the seven "Not configured" rows above it
+          // and gives the reader nowhere to go. A platform is configured by
+          // its token in the agent .env, and /config/env is the screen that
+          // shows that file, so the sentence now ends somewhere.
+          <div className="text-xs text-ps-text-muted text-center py-2">
+            No platforms configured. Each one is a token in the agent&apos;s{" "}
+            <Link href="/config/env" className="text-neon-cyan hover:underline">
+              .env
+            </Link>
+            .
+          </div>
         )}
       </div>
       <div className="px-4 py-2 border-t border-white/10 flex items-center justify-between gap-2">

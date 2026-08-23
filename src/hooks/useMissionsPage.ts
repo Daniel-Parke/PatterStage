@@ -114,6 +114,7 @@ export function useMissionsPage() {
     missions: data.missions,
     templates: data.templates,
     categories: data.categories,
+    deepLinkedMissionId: data.deepLinkedMissionId,
   });
 
   return {

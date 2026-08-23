@@ -211,8 +211,17 @@ export default function ConfigSectionPage() {
   }
 
   const SectionIcon = sectionDef.icon;
+  // A sensitive file section (.env) renders a masked, read-only preview: no
+  // textarea, no field inputs, nothing that can make `hasChanges` true. Its
+  // Save and Reset buttons were therefore drawn on every visit and could
+  // never leave the disabled state, which reads as "this page is broken"
+  // rather than "this page is deliberately read-only". The banner under the
+  // preview already says which it is, so the buttons come off.
+  const isReadOnlyFileSection = isFileSection && sectionDef.sensitive === true;
   const showActions =
-    !isPlatformToolsetsPreview && (sectionDef.fields.length > 0 || isFileSection);
+    !isPlatformToolsetsPreview &&
+    !isReadOnlyFileSection &&
+    (sectionDef.fields.length > 0 || isFileSection);
 
   return (
     <AppPageShell>
@@ -376,11 +385,17 @@ export default function ConfigSectionPage() {
                   (profile: Bob / default), then Push to Hermes.
                 </>
               ) : (
+                /* This used to read "Edit complex fields in config.yaml raw
+                   editor" and link to /config. There is no raw editor, and
+                   /config is the section index, so the one control that
+                   promised a way to change these values delivered a
+                   directory listing. Saying plainly that they are read-only
+                   here is the honest version of the same sentence. */
                 <>
-                  Edit complex fields in{" "}
-                  <Link href="/config" className="text-neon-cyan hover:underline">
-                    config.yaml raw editor
-                  </Link>
+                  Complex fields are read-only in the console. Edit them in the
+                  agent&apos;s <code className="text-ps-text-muted">config.yaml</code>{" "}
+                  on disk; this page reads that file, so the new value appears
+                  on reload.
                 </>
               )}
             </p>

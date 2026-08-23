@@ -17,6 +17,7 @@ import { useSessionDetail } from "@/hooks/useSessionDetail";
 import { ROLE_META, getMessageRole } from "@/components/session/constants";
 import { MessageBubble, type SessionMessage } from "@/components/session/MessageBubble";
 import { isSessionStillRunning } from "@/lib/sessions/session-title";
+import { MISSIONS_PATH } from "@/lib/missions/mission-deep-link";
 
 // ── Page ────────────────────────────────────────────────────
 
@@ -159,7 +160,7 @@ export default function SessionDetailPage() {
           <div className="flex items-center gap-2 flex-wrap justify-end">
             {data.missionId && (
               <a
-                href={`/orchestration/missions/${data.missionId}`}
+                href={`${MISSIONS_PATH}?mission=${data.missionId}`}
                 className="text-xs font-mono px-2 py-1 rounded bg-neon-green/10 text-neon-green hover:bg-neon-green/20 transition-colors"
                 title="Open the parent mission"
               >
@@ -230,7 +231,7 @@ export default function SessionDetailPage() {
                 <p className="text-ps-text-secondary font-mono mb-3">{data.note}</p>
                 {data.missionId && (
                   <a
-                    href={`/orchestration/missions/${data.missionId}`}
+                    href={`${MISSIONS_PATH}?mission=${data.missionId}`}
                     className="text-neon-orange text-sm font-mono hover:underline"
                   >
                     Open the parent mission →

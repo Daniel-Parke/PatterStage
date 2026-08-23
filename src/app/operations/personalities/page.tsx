@@ -9,9 +9,11 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Brain } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
+import Button from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/Input";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
@@ -23,6 +25,7 @@ import PersonalityCard, { type Personality } from "@/components/personalities/Pe
 import EditPersonalityModal from "@/components/personalities/EditPersonalityModal";
 
 export default function PersonalitiesPage() {
+  const router = useRouter();
   const [personalities, setPersonalities] = useState<Personality[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -154,10 +157,26 @@ export default function PersonalitiesPage() {
           <EmptyState
             icon={Brain}
             title={search ? "No matches" : "No personalities yet"}
+            // A personality is not a thing you create HERE. It is a profile's
+            // SOUL.md, so the only way to get a first one is to create a
+            // profile. The empty state used to state the absence and stop,
+            // which left the one screen that knows the answer refusing to give
+            // it. It now hands over the next step.
             description={
               search
                 ? "Try a different search term"
-                : "No profile SOUL identities found yet"
+                : "A personality is an agent profile's SOUL.md voice, so the first one arrives with your first profile."
+            }
+            action={
+              search ? undefined : (
+                <Button
+                  variant="primary"
+                  color="purple"
+                  onClick={() => router.push("/operations/agents")}
+                >
+                  Create an agent profile
+                </Button>
+              )
             }
           />
         ) : (

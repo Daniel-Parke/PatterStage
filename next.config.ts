@@ -49,11 +49,18 @@ const nextConfig: NextConfig = {
   // unaffected: allowedDevOrigins applies to `next dev` only.
   allowedDevOrigins: ["localhost", "127.0.0.1", "[::1]", "*.local", ...extraOrigins],
 
-  // Benchmarks + Insights moved under the Laboratory section. Keep the old
-  // top-level URLs working (bookmarks, external links) via permanent redirects.
+  // Insights moved under the Laboratory section. Keep the old top-level URL
+  // working (bookmarks, external links) via a permanent redirect.
+  //
+  // There is deliberately NO /benchmarks entry. It used to redirect to
+  // /laboratory/benchmarks, and `4935ac31 feat!: delete the benchmark
+  // subsystem` deleted the page it pointed at, so the redirect had been
+  // sending every visitor to a 404. A 308 is the worst possible way to reach
+  // one: browsers cache a permanent redirect indefinitely, so the dead hop
+  // survives even after the URL is put back. An honest 404 at /benchmarks is
+  // strictly better than a permanent redirect into a 404.
   async redirects() {
     return [
-      { source: "/benchmarks", destination: "/laboratory/benchmarks", permanent: true },
       { source: "/insights", destination: "/laboratory/insights", permanent: true },
     ];
   },
