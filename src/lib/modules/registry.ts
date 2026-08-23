@@ -12,6 +12,7 @@
 // check can assert that nothing outside the hermes module knows Hermes' layout.
 // ═══════════════════════════════════════════════════════════════
 
+import type { AccentColor } from "@/types/console";
 import type { ProductModule } from "./types";
 import { moduleRoutes } from "./types";
 
@@ -192,6 +193,49 @@ export const MODULES: readonly ProductModule[] = [
 export function getModule(id: string): ProductModule | undefined {
   return MODULES.find((m) => m.id === id);
 }
+
+/**
+ * The module-to-accent map. WG-WEB-009 (B) rules ONE registered map of four
+ * entries, and until now there was no map at all: five accents were applied
+ * decoratively and a module's colour was whatever its links happened to grow.
+ * Ruled at the first-build lock-in sitting of 2026-08-24 (docs/LOCKBOOK.md).
+ *
+ * Five accents, four modules, so one accent leaves, and it is green:
+ * `--color-neon-green` and `--color-semantic-success` are the same hex
+ * (#a3ff12), and docs/design-tokens.md gives green the role "Success / online".
+ * A hue that already means "this finished" cannot also mean "this is the
+ * Laboratory". That is the arithmetic behind the ruling's four entries.
+ *
+ * The remaining four go to the module that already flies them. Counted across
+ * each module's own route tree and component directories on 2026-08-24, with
+ * the shared kit (src/components/ui, providers, motion) excluded because it
+ * belongs to no module:
+ *
+ *   core        cyan     186 uses against 97 orange, and cyan is the Cherenkov
+ *                        primary. Core is the console itself.
+ *   rec-room    purple   115 of its 117 non-green accent uses, and the reading
+ *                        register's own `--ps-reader-accent` is a purple.
+ *   hermes      orange   47 uses against 0 pink. Purple is its own plurality at
+ *                        60, but rec-room holds purple by a factor of two.
+ *   laboratory  pink     the remainder. Laboratory owns no hue: its top accent
+ *                        is cyan at 24, which is core's by a factor of eight.
+ *                        Its own use of pink (5) already beats its orange (2).
+ *
+ * Registering the map is not applying it. The nav links above still carry the
+ * hues the tree grew, and pink still doubles as the failure tint on two
+ * Laboratory surfaces, which belong on `--color-semantic-danger` before this
+ * map can be read off a screen. That repaint is separate work, deliberately not
+ * taken in the sitting that ruled the map.
+ *
+ * tests/unit/lockbook-tokens.test.ts holds the map to the ruling: one entry per
+ * registered module, four entries, four distinct accents, none of them green.
+ */
+export const MODULE_ACCENTS = {
+  core: "cyan",
+  hermes: "orange",
+  laboratory: "pink",
+  "rec-room": "purple",
+} as const satisfies Record<string, AccentColor>;
 
 /**
  * Every route every module contributes, plus the config index itself.

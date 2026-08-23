@@ -66,18 +66,81 @@ A single operator sits at a dark console and watches work they did not do themse
 
 ## Tokens
 
-Before a first build exists, design-system slots below take the
-sanctioned deferral: `set at first build` plus where the value gets
-ruled. The first-build lock-in session replaces every deferral in one
-sitting and notes it in the worklog or queue.
+Before a first build exists, the design-system slots take the sanctioned
+deferral: the marker plus where the value gets ruled. The lock-in sitting
+replaces the marker with a value and records how the value was reached.
 
-- Token home: src/app/globals.css (@theme, Tailwind v4) · Code mirror: src/lib/theme.ts ·
-  Styleguide route: set at first build; owed by WG-DEL-003, which rules pixel baselines against a styleguide surface that does not yet exist
-- Surface ladder: set at first build. Currently 32 appearance-named primitives (dark-950 and siblings) with no semantic layer, which TOKENS.md forbids by name; the ladder is ruled when the vendored @pattertech/ui lands
-- Accents: set at first build. Ruled by WG-WEB-009 (B): one registered module-to-accent map of four entries. Today five accents are applied decoratively and the map does not exist
-- Text tiers and measured contrast: set at first build. Measured contrast is owed: the design-lint baseline records sub-12px type as the single largest debt category
-- Measures: reading set at first build · wide set at first build · full
-  set at first build · block gap set at first build
+**The sitting for the rows below was held on 2026-08-24 (T-0028).** Nothing here
+was picked by eye. Every value is read off what the tree already paints, each row
+carries the count that produced it, and each carries the mechanism that reddens
+the build when the value and the code drift apart. One row still defers, the
+styleguide route, and it carries a dated warrant and a review rather than an open
+intention.
+
+- Token home: src/app/globals.css (@theme, Tailwind v4) · Code mirror:
+  src/lib/theme.ts. The two are held together by
+  tests/unit/lockbook-tokens.test.ts, which reads the CSS and fails on a mirror
+  naming a token nobody declared. A class string for a token that does not exist
+  compiles, lints and renders nothing, which is the failure this file's own
+  accent-map comment was written about.
+- Styleguide route: **deferred 2026-08-24, review by 2027-01-31**, and this is
+  admitted debt, not a re-ruling. WG-DEL-003 stands at B with its fork
+  withdrawn: pixel baselines over the 24 primitives' states, zero threshold,
+  pinned render container, baselines committed. A route on its own discharges
+  none of that, and a styleguide surface with no comparison behind it goes stale
+  in a fortnight while reading as a gate, which is worse than an admitted gap.
+  The precondition the WG-WEB-012 collision named is also still open: install.sh
+  clones `--single-branch` with no `--depth`, verified 2026-08-24, so every
+  committed baseline would be paid by the stranger at install. Order is clone
+  depth, then the render rig, then the surface. Until it lands the ruled tokens
+  are still checkable without a page, by scripts/tooling/contrast-check.mjs in
+  `npm run lint` and by the test above.
+- Surface ladder: four semantic roles over the appearance-named primitives, in
+  globals.css @theme. `ground` is dark-950 (the page itself, 50 uses), `panel`
+  is dark-900 (a raised card or bar, 160), `well` is dark-800 (a sunken field,
+  code block or row, 68), `hairline` is white at 10 percent (the rule between
+  two surfaces, 280). No colour is minted: three of the four are aliases, so
+  moving a primitive moves its role with it. The hairline is the exception and
+  it is recorded rather than invented, because the tree draws its rules as
+  `border-white/10`, which resolves to #1e232a over the ground and matches no
+  rung; naming a rung there would repaint 280 borders. dark-700 and dark-600
+  stay un-roled on purpose: four backgrounds and a scrollbar thumb between them
+  is not a role. Naming is not migration, and the 278 appearance-named
+  backgrounds are all still there. Open, and not this sitting's to rule: whether
+  the ladder is re-minted in the vendored @pattertech/ui when it lands or stays
+  here.
+- Accents: the map exists, in src/lib/modules/registry.ts beside the modules it
+  keys, which is what WG-WEB-009 (B) rules: four entries, one per registered
+  module. core cyan, hermes orange, laboratory pink, rec-room purple. Green is
+  the accent that leaves, because `--color-neon-green` and
+  `--color-semantic-success` are the same hex and a hue that already means
+  "finished" cannot also mean "Laboratory"; that is the arithmetic behind four
+  entries against five accents applied. Each of the four is the hue that module
+  already flies, counted 2026-08-24 over its own routes and components: core
+  cyan 186 against 97 orange, rec-room purple 115 of its 117 non-green uses,
+  hermes orange 47 against 0 pink, laboratory the remainder, owning no hue of
+  its own. Registering is not applying: the nav links still carry the hues the
+  tree grew, and pink still doubles as the failure tint on two Laboratory
+  surfaces, which belong on `--color-semantic-danger` before the map can be read
+  off a screen. That repaint is work this sitting did not take.
+- Text tiers and measured contrast: ruled and shipped. Four derived tiers in
+  globals.css, white at 92, 70, 55 and 50 percent, measured against #040b12,
+  which is the app's actually painted ground: 16.7:1, 9.7:1, 6.3:1 and 5.3:1, so
+  every tier clears WCAG AA for normal text with headroom instead of balancing
+  on the 4.5:1 line. There is deliberately no tier below `faint`; anything
+  quieter is decoration rather than text. scripts/tooling/contrast-check.mjs
+  re-derives all four in `npm run lint` and fails if the background moves under
+  them.
+- Measures: reading 48rem · wide 56rem · full 80rem · block gap 1.5rem, declared
+  as `--container-ps-*` and `--spacing-ps-block`. Reading is not a second
+  number: it is the longform column the UX pass already set on the Story Weaver
+  reader, the research report and the artifact viewer, cited to WG-WEB-014 in
+  two of the three, and this row records it. The other three are the tree's own
+  page shells, all sixteen `mx-auto` containers under src/app measured
+  2026-08-24: wide is the modal shell (7 of 16), full is the widest (4 of 16,
+  the dashboard, the config index and the missions board, which spells the same
+  80rem as `max-w-screen-xl`), and the block gap matches the shells' own 1.5rem
+  gutter, which is what breaks the 3 to 3 tie between space-y-6 and space-y-8.
 
 ## QC gates (exact commands)
 
@@ -212,11 +275,18 @@ dropped:
   operator's own standing rule, "No spend without my approval", so it is a
   contract before it is a feature.
 
-**Design contracts, deferred to first build.** WG-WEB-001 rules one register,
+**Design contracts, at the first-build lock-in.** WG-WEB-001 rules one register,
 dark-first, no exception; WG-WEB-009 one registered module-to-accent map of four
-entries; WG-WEB-010 the house trio. None can be enforced before the semantic token
-layer exists, and today 32 appearance-named primitives stand where it should be.
-The deferral is dated to the first-build lock-in, not open-ended.
+entries; WG-WEB-010 the house trio. The blocker the three shared, that no
+semantic token layer existed to enforce anything against, is gone as of
+2026-08-24: the Tokens section above carries a four-role surface ladder over the
+appearance-named primitives, four measured text tiers and the four measures.
+WG-WEB-001 stays enforced by the typed `pageTheme` recorded above. WG-WEB-009's
+map now exists in src/lib/modules/registry.ts and is held to its shape by
+tests/unit/lockbook-tokens.test.ts; what is still **unenforced** is that a
+surface obeys its module's entry, because the nav links carry the hues the tree
+grew rather than the map's, and that repaint has no queue item yet. WG-WEB-010 is
+a type ruling and this sitting did not touch it.
 
 ## Deviations from doctrine
 

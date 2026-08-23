@@ -35,6 +35,40 @@ Dark scales are slightly mixed toward `#0071c2` so panels read “cool reactor c
 | `dark-700` | `#1c2d40` |
 | `dark-600` | `#263d54` |
 
+### Layer B2, surface roles (the semantic layer)
+
+Layer B names surfaces for how they look, which is why it cannot say whether
+`dark-900` is a panel or a well. These four say it. Ruled at the first-build
+lock-in sitting of 2026-08-24 (`docs/LOCKBOOK.md`, Tokens), derived from what the
+tree already paints, and minting no new colour.
+
+| Role | Utility | Is | Use |
+|------|---------|----|-----|
+| ground | `bg-ps-surface-ground` | `var(--color-dark-950)` | the page itself |
+| panel | `bg-ps-surface-panel` | `var(--color-dark-900)` | a raised card, panel or bar |
+| well | `bg-ps-surface-well` | `var(--color-dark-800)` | a sunken field, code block or row |
+| hairline | `border-ps-surface-hairline` | `rgb(255 255 255 / 0.10)` | the rule between two surfaces |
+
+The hairline is the one role with no `dark-*` rung behind it: the tree draws its
+rules as `border-white/10`, which matches no rung, so the composite is recorded
+rather than a rung invented. `dark-700` and `dark-600` carry no role.
+
+New surfaces use the role names. The appearance-named spellings still paint the
+same pixels and are still everywhere, so both are live until the migration lands.
+
+### Measures
+
+| Utility | Value | Is |
+|---------|-------|----|
+| `max-w-ps-reading` | 48rem | the longform column (reader, research report, artifact viewer) |
+| `max-w-ps-wide` | 56rem | the ordinary page shell |
+| `max-w-ps-full` | 80rem | the dense boards |
+| `space-y-ps-block` | 1.5rem | the gap between blocks on a page shell |
+
+Text hierarchy is the `--color-ps-text-*` tiers in `globals.css`, gated by
+`scripts/tooling/contrast-check.mjs`; the derivation is in the comment beside
+them. Never spell hierarchy as a raw white opacity.
+
 ## Layer C — Accent slots (`AccentColor` → `--color-neon-*`)
 
 TypeScript `AccentColor` in `src/types/hermes.ts` is unchanged: `cyan | purple | green | pink | orange`. Utilities stay `text-neon-cyan`, `bg-neon-purple/20`, etc.; only **hex values** change.

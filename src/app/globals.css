@@ -64,6 +64,63 @@
   --color-ps-text-secondary: rgb(255 255 255 / 0.70);
   --color-ps-text-muted: rgb(255 255 255 / 0.55);
   --color-ps-text-faint: rgb(255 255 255 / 0.50);
+
+  /* ── Surface ladder ────────────────────────────────────────────────────────
+     The semantic layer the lock-book's Tokens section owed, ruled at the
+     first-build lock-in sitting of 2026-08-24. The five `--color-dark-*` rungs
+     above are named for how they LOOK; docs/design-tokens.md forbids that as
+     the only layer, because "dark-900" says nothing about whether a surface is
+     a panel or a well and so nothing stops the two diverging.
+
+     No colour is minted here. Each role is an alias for the primitive the tree
+     already paints in that role, counted across src/**/*.tsx on 2026-08-24:
+
+       role      alias         uses   what it is
+       ground    dark-950       50    the page itself (src/app/layout.tsx body)
+       panel     dark-900      160    a raised card, panel or bar
+       well      dark-800       68    a sunken field, code block or table row
+       hairline  white / 10%   280    the rule between two surfaces
+
+     `hairline` is the one role with no `--color-dark-*` behind it, and naming
+     one would be inventing rather than recording: the tree draws its rules as
+     `border-white/10`, which over the ground resolves to #1e232a and matches no
+     rung. dark-700 (#1c2d40) and dark-600 (#263d54) stay un-roled on purpose:
+     four backgrounds and the scrollbar thumb between them is not a role.
+
+     These name what exists; they do not repaint anything. Migrating the 278
+     appearance-named usages onto them is separate work, and until it happens
+     both spellings are live and mean the same pixels. */
+  --color-ps-surface-ground: var(--color-dark-950);
+  --color-ps-surface-panel: var(--color-dark-900);
+  --color-ps-surface-well: var(--color-dark-800);
+  --color-ps-surface-hairline: rgb(255 255 255 / 0.10);
+
+  /* ── Measures ──────────────────────────────────────────────────────────────
+     Three column widths and one block rhythm, also owed by the Tokens section
+     and ruled in the same sitting. Read off the tree's own page shells rather
+     than chosen: every `mx-auto` page container under src/app was measured on
+     2026-08-24, sixteen in all.
+
+       reading  48rem  the longform column, already set during the UX pass on
+                       the Story Weaver reader, the research report and the
+                       artifact viewer, and cited to WG-WEB-014 in two of them.
+                       This records that number; it does not mint a second one.
+       wide     56rem  the modal page shell, 7 of the 16 (sessions, seed,
+                       personalities, skills, three Story Weaver surfaces).
+       full     80rem  the widest shell in the tree, 4 of the 16: the two dense
+                       boards (dashboard, config index) and the missions board,
+                       which spells the same width `max-w-screen-xl`.
+       block   1.5rem  the gap between blocks on a page shell: `space-y-6` on 3
+                       shells against `space-y-8` on 3, broken by the shells'
+                       own `px-6 py-6` gutter, which is 1.5rem on 7 of them. One
+                       step for the gutter and the rhythm, not two.
+
+     Tailwind reads `--container-*` for max-w-* and `--spacing-*` for gap,
+     padding and space-y, so these are utilities the moment they are declared. */
+  --container-ps-reading: 48rem;
+  --container-ps-wide: 56rem;
+  --container-ps-full: 80rem;
+  --spacing-ps-block: 1.5rem;
 }
 
 /* Shell + RGB mirrors for effects (keep aligned with @theme / docs/design-tokens.md) */

@@ -8,6 +8,36 @@ import type { AccentColor } from "@/types/console";
 export const shellHeaderBarClasses =
   "border-b border-white/10 bg-dark-900/50 backdrop-blur-xl min-h-[var(--ps-shell-header-min-height)] flex items-center px-6";
 
+// ═══════════════════════════════════════════════════════════════
+// The surface ladder and the measures — the code mirror of the tokens ruled at
+// the first-build lock-in sitting of 2026-08-24 (docs/LOCKBOOK.md, Tokens).
+//
+// The lock-book names two homes for a token, globals.css @theme and this file,
+// and says they must agree. Two homes with nothing holding them together is how
+// a mirror goes stale, so tests/unit/lockbook-tokens.test.ts reads the CSS and
+// fails if either map names a token globals.css does not declare.
+//
+// These are the semantic names. The appearance-named spellings (bg-dark-900,
+// max-w-4xl) still paint the same pixels and are still everywhere; nothing is
+// repainted by declaring a name for what is already there.
+// ═══════════════════════════════════════════════════════════════
+
+/** Semantic surfaces: the page ground, a raised panel, a sunken well, a rule. */
+export const surfaceClasses = {
+  ground: "bg-ps-surface-ground",
+  panel: "bg-ps-surface-panel",
+  well: "bg-ps-surface-well",
+  hairline: "border-ps-surface-hairline",
+} as const;
+
+/** Column widths and the block rhythm. `block` is a `space-y-*`, not a width. */
+export const measureClasses = {
+  reading: "max-w-ps-reading",
+  wide: "max-w-ps-wide",
+  full: "max-w-ps-full",
+  block: "space-y-ps-block",
+} as const;
+
 type ColorEntry = string;
 
 const ALL_COLORS: AccentColor[] = ["cyan", "purple", "green", "pink", "orange", "red", "blue", "yellow"];
