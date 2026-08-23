@@ -83,6 +83,7 @@ block keeps its body and loses its markers, which is not a pruning.
 | org/decisions/ADR-0006-dev-is-the-integration-trunk.md | preserved | - | - |
 | org/decisions/ADR-0007-adr-home-is-docs-adr.md | preserved | - | - |
 | org/decisions/ADR-0008-adopt-the-v2-eos.md | preserved | - | - |
+| org/decisions/ADR-0009-retention-for-the-readings-tables.md | authored | - | - |
 | org/plans/2026-08-consolidation.md | preserved | - | - |
 | org/logs/2026-08/S-0002-plan.md | preserved | - | - |
 
@@ -297,6 +298,7 @@ this one file it was.
 | docs/SYSTEM-CRON.md | normalised | - | - |
 | docs/TESTING.md | normalised | - | - |
 | docs/OUTPUT_CANARY.md | authored | - | - |
+| org/logs/2026-08/S-0003-execution.md | authored | - | - |
 | docs/TOOLS_AND_MISSIONS.md | normalised | - | - |
 | docs/USER_WALKTHROUGH_GUIDE.md | normalised plus one corrected section | - | - |
 | docs/UX_AUDIT.md | normalised | - | - |
