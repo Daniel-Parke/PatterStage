@@ -63,6 +63,28 @@ function escapeHtml(value: string): string {
 }
 
 /**
+ * Did this request arrive over loopback?
+ *
+ * It decides whether the 401 may name the token file's RESOLVED absolute path.
+ * A caller on the machine needs that path to sign in; a caller across the
+ * network must not be handed the OS username and install layout, which is what
+ * an absolute home-directory path discloses. Under `npm run start:network` the
+ * server binds 0.0.0.0, so the two are genuinely different audiences.
+ *
+ * The Host header is the right signal here: a request that reached a loopback
+ * address is one that came through loopback, because a remote client cannot
+ * route to another machine's 127.0.0.1. Getting this wrong only ever costs a
+ * less specific error message; it can never grant access.
+ */
+function isLoopbackRequest(request: NextRequest): boolean {
+  const host = (request.headers.get("host") || request.nextUrl.hostname || "")
+    .replace(/:\d+$/, "")
+    .replace(/^\[|\]$/g, "")
+    .toLowerCase();
+  return host === "localhost" || host === "127.0.0.1" || host === "::1" || host.endsWith(".localhost");
+}
+
+/**
  * The 401 is the first PatterStage screen a lot of people ever see: the
  * installer finishes, they open the bare URL, and this is what answers. So it
  * has to be a set of instructions, not a refusal.
@@ -77,27 +99,31 @@ function escapeHtml(value: string): string {
  */
 function unauthorized(request: NextRequest): NextResponse {
   const source = describeTokenSource();
-  const where =
-    source.kind === "env"
-      ? "the PS_AUTH_TOKEN environment variable this server was started with"
-      : source.location;
 
   if (isApiPath(request.nextUrl.pathname)) {
+    // No path here, on purpose. The consumer is a script, which cannot act on a
+    // filesystem hint anyway, and this branch answers unauthenticated callers
+    // from anywhere the server is reachable.
     return NextResponse.json(
       {
-        error: `Unauthorized. Send 'Authorization: Bearer <token>'. This server's token is in ${where}, and the full sign-in URL is printed in the server log at every start.`,
-        tokenLocation: where,
+        error:
+          "Unauthorized. Send 'Authorization: Bearer <token>'. The server prints the full sign-in URL on the first [auth] line of its log at every start.",
       },
       { status: 401 },
     );
   }
 
+  // Only a caller at the machine gets the resolved path.
+  const local = isLoopbackRequest(request);
+
   const readHint =
     source.kind === "env"
       ? `<p>This server takes its token from the <code>PS_AUTH_TOKEN</code> environment variable it was started with. Read it from your container or service definition.</p>`
-      : `<p><strong>1.</strong> Your token is the single line in this file:</p>` +
-        `<pre style="background:#0d1420;padding:.6rem .8rem;border-radius:6px;overflow-x:auto"><code>${escapeHtml(source.location)}</code></pre>` +
-        `<p>Print it with <code>cat ${escapeHtml(source.location)}</code>.</p>`;
+      : local
+        ? `<p><strong>1.</strong> Your token is the single line in this file:</p>` +
+          `<pre style="background:#0d1420;padding:.6rem .8rem;border-radius:6px;overflow-x:auto"><code>${escapeHtml(source.location)}</code></pre>` +
+          `<p>Print it with <code>cat ${escapeHtml(source.location)}</code>.</p>`
+        : `<p><strong>1.</strong> Your token is the single line in <code>auth-token</code>, inside the data directory on the machine running PatterStage. Read it there, or read the sign-in URL off that server's log.</p>`;
 
   return new NextResponse(
     `<!doctype html><meta charset="utf-8"><title>PatterStage: access token required</title>` +
@@ -110,7 +136,7 @@ function unauthorized(request: NextRequest): NextResponse {
       `<p>PatterStage swaps it for a session cookie and strips it back out of the URL, so you only paste it once per browser.</p>` +
       `<h2 style="font-size:1rem;margin-top:2rem">Lost it completely?</h2>` +
       `<p>Restart PatterStage. It prints the whole sign-in URL, token included, on the first <code>[auth]</code> line of the server log at every start.</p>` +
-      (source.kind === "file"
+      (source.kind === "file" && local
         ? `<p>Deleting that file and restarting mints a fresh token. That is also how you revoke the old one: every browser signed in with it is signed out.</p>`
         : "") +
       `</body>`,

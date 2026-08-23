@@ -71,6 +71,33 @@ PatterStage is a single-operator control plane, so authentication is one shared 
 
 Rotate by deleting the token file and restarting; the new token is picked up without a rebuild.
 
+### What the 401 page discloses, and to whom
+
+When a request arrives without a valid token, PatterStage answers with an
+instruction page rather than a bare refusal, because for most people that page
+is the first screen they ever see. What it says depends on where the request
+came from, and that is deliberate.
+
+- **Over loopback** (`localhost`, `127.0.0.1`, `::1`, `*.localhost`) it names
+  the resolved absolute path of the token file. Someone sitting at the machine
+  needs the real path; telling them `PS_DATA_DIR/auth-token` is telling them a
+  variable name they cannot expand.
+- **From anywhere else** it says the token is in `auth-token` inside the data
+  directory, and stops there. An absolute home-directory path discloses the OS
+  username and the install layout, and under `npm run start:network` the server
+  binds `0.0.0.0`, so that reaches whoever can route to the port.
+- **The JSON 401**, served to API callers, names no path at all in either case.
+  A script cannot act on a filesystem hint.
+
+Neither page ever prints the token itself, and none of this changes what is
+required to authenticate: the token check is identical for every caller.
+Getting the loopback signal wrong can only produce a less specific error
+message; it can never grant access.
+
+Decided 2026-08-23 after review flagged that an earlier version returned the
+resolved path to unauthenticated remote callers. Pinned by
+`tests/unit/proxy-auth.test.ts`.
+
 ## If you run PatterStage yourself
 
 - Prefer binding to loopback and reaching it over SSH port-forwarding. `npm run start:network` binds `0.0.0.0` — only do that on a network you trust.

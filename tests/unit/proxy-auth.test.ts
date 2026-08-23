@@ -208,14 +208,46 @@ describe("proxy — the 401 tells a locked-out operator what to do", () => {
     expect(body).not.toContain(TOKEN);
   });
 
-  it("gives an API caller the same location in the JSON error", async () => {
+  it("tells an API caller how to authenticate WITHOUT disclosing a filesystem path", async () => {
+    // A script cannot act on a path hint, and this branch answers unauthenticated
+    // callers from anywhere the server is reachable. It says how, not where.
     const proxy = await loadProxy();
     const res = proxy(req("http://localhost:4242/api/status"));
     expect(res.status).toBe(401);
-    const payload = (await res.json()) as { error: string; tokenLocation: string };
-    expect(payload.tokenLocation).toBe(tokenFile);
+    const payload = (await res.json()) as { error: string; tokenLocation?: string };
     expect(payload.error).toContain("Bearer");
     expect(payload.error).not.toContain(TOKEN);
+    expect(payload.tokenLocation).toBeUndefined();
+    expect(JSON.stringify(payload)).not.toContain(tokenFile);
+  });
+
+  /**
+   * The resolved path is for the operator AT the machine. Under
+   * `npm run start:network` the server binds 0.0.0.0, and an absolute
+   * home-directory path hands a stranger the OS username and the install
+   * layout. Loopback gets the path; everyone else gets the same instructions
+   * without it.
+   */
+  it("does NOT name the resolved path to a caller arriving over the network", async () => {
+    const proxy = await loadProxy();
+    // req() defaults the Host header to localhost, so a remote caller has to be
+    // stated explicitly: Host is the signal the proxy reads.
+    const body = await proxy(
+      req("http://192.168.1.50:4242/", { headers: { host: "192.168.1.50:4242" } }),
+    ).text();
+    expect(body).not.toContain(tokenFile);
+    // Still useful: it must say what to look for and where the log line is.
+    expect(body).toContain("auth-token");
+    expect(body).toContain(`?${TOKEN_QUERY_PARAM}=`);
+    expect(body).not.toContain(TOKEN);
+  });
+
+  it("still names the resolved path over loopback, including IPv6 and .localhost", async () => {
+    const proxy = await loadProxy();
+    for (const host of ["127.0.0.1:4242", "localhost:4242", "app.localhost:4242", "[::1]:4242"]) {
+      const body = await proxy(req("http://localhost:4242/", { headers: { host } })).text();
+      expect(body).toContain(tokenFile);
+    }
   });
 
   it("points a container install at PS_AUTH_TOKEN, not a file it never reads", async () => {
