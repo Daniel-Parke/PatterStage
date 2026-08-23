@@ -404,3 +404,74 @@
 .animate-spin-slow {
   animation: spin-slow 3s linear infinite;
 }
+
+/* ── Bloom tier: the field answering presence ────────────────────────────────
+   WG-WEB-011 ruled C (field-reactive) and WG-WEB-005 ruled C (full). The brand
+   physics is a field: brightness is a readout of energy in the system, not
+   decoration, so an idle console is dim and a working one is not.
+
+   src/kit/BloomField.tsx (vendored, one delegated listener, mounted once in
+   layout.tsx) sets --bx/--by/--bloom on the [data-bloom] element under the
+   cursor. This is the paint half. Ported from PatterTech_Website's globals.css
+   with one substitution: the literal rgba(51, 221, 255, a) becomes a mix of
+   --color-cherenkov-100, which is #33ddff, which IS 51, 221, 255. Same colour,
+   existing token, nothing minted.
+
+   Why not --ps-rgb-cherenkov-glow, which holds that triplet and which the task
+   named. Because a rule written that way paints NOTHING, and this was measured
+   in Chrome against a production build of this branch rather than reasoned
+   about. The token holds a COMMA list, "51, 221, 255", so rgb(var(token) / a)
+   expands to rgb(51, 221, 255 / 0.07), which mixes a comma list with a slash
+   alpha and is invalid: the declaration is dropped. Authoring the legacy form
+   rgba(var(token), a) does not save it either, because Lightning CSS
+   normalises rgba(x, a) to rgb(x / a) during minification and hands back the
+   same dead declaration. There is no spelling of that token that survives this
+   build pipeline.
+
+   That is a live defect with nineteen other sites in this file, including
+   .scanlines, .grid-bg, .text-glow-* and every .glow-* box-shadow, all of
+   which currently paint nothing. It is pre-existing, it is much wider than
+   this task, and it is filed separately rather than quietly fixed here.
+   color-mix keeps the bloom out of it. Do not "simplify" these two lines onto
+   the --ps-rgb-* triplet; that is a straight revert to invisible.
+
+   The 0.07 alpha under a 0.4s fade sits far below the pulse-glow / glow-surface
+   threshold this console reserves for live and active state, so the bloom does
+   not compete with "glow means running".
+
+   Both opt-outs are carried across from the source exactly. The fine-pointer
+   guard wraps the whole paint rule, because a touch device has no cursor to
+   answer and would otherwise be left with a permanently lit ::after. The
+   reduced-motion guard removes the pseudo-element outright: the field IS the
+   motion, so there is nothing left to soften once it is off. */
+@media (hover: hover) and (pointer: fine) {
+  [data-bloom] {
+    position: relative;
+  }
+  [data-bloom]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      200px circle at var(--bx, 50%) var(--by, 50%),
+      color-mix(in srgb, var(--color-cherenkov-100) 7%, transparent),
+      transparent 70%
+    );
+    opacity: var(--bloom, 0);
+    transition: opacity 0.4s ease;
+  }
+  [data-bloom="tight"]::after {
+    background: radial-gradient(
+      90px circle at var(--bx, 50%) var(--by, 50%),
+      color-mix(in srgb, var(--color-cherenkov-100) 10%, transparent),
+      transparent 70%
+    );
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-bloom]::after {
+    display: none;
+  }
+}

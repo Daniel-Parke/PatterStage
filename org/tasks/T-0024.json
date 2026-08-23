@@ -11,14 +11,31 @@
   "tier_proposed": "R1",
   "tier_ruled": "R0",
   "reasons": [],
-  "status": "proposed",
-  "owner_session": "unassigned",
+  "status": "done",
+  "owner_session": "bloom-field-t0024-2026-08-24",
   "claims": [
     "src/kit/",
-    "src/app/"
+    "src/app/globals.css",
+    "src/app/layout.tsx",
+    "src/components/ui/Card.tsx",
+    "src/components/ui/Button.tsx",
+    "src/components/dashboard/Panel.tsx",
+    "src/components/dashboard/ActiveMissionsPanel.tsx",
+    "src/components/dashboard/ErrorsPanel.tsx",
+    "src/components/dashboard/ProcessesPanel.tsx",
+    "tests/unit/bloom-field.test.tsx",
+    "tests/unit/bloom-paint-rule.test.ts",
+    "tests/unit/kit-provenance.test.ts"
   ],
   "timestamps": {
     "opened": "2026-07-25T00:00:00Z",
-    "updated": "2026-08-22T21:00:00Z"
-  }
+    "updated": "2026-08-24T00:00:00Z",
+    "closed": "2026-08-24T00:00:00Z"
+  },
+  "notes": [
+    "Claims widened from the two directory globs on the record to the exact files touched. The record's own acceptance (4) puts data-bloom on the console's container COMPONENTS, and those live under src/components/, which the original two globs did not cover. The widening is recorded rather than silent.",
+    "Deviation, criterion 3. The paint rule does NOT spell the colour as --ps-rgb-cherenkov-glow. That token holds a comma list, '51, 221, 255', so rgb(var(token) / a) expands to rgb(51, 221, 255 / 0.07), which mixes a comma list with a slash alpha and is invalid: the declaration is dropped and the field paints nothing. Writing rgba(var(token), a) does not survive either, because Lightning CSS normalises it back to the slash form during minification. Verified against a production build in Chrome. The rule uses color-mix(in srgb, var(--color-cherenkov-100) X%, transparent) instead: --color-cherenkov-100 is #33ddff, which IS 51, 221, 255, and is an existing token, so no token is minted and the ruled colour is unchanged.",
+    "Coverage limit worth knowing. data-bloom is set on the container COMPONENTS (Card, Panel, Button) and on the three dashboard ledger-row sites. Most of the console does not go through those components: 313 raw <button> elements and 209 inline rounded-*-border boxes bypass them. Lighting those means the WG-WEB-003 container migration, not sprinkling the attribute across 500 call sites, so it is left to that work.",
+    "Discovered, not fixed here: nineteen pre-existing sites in globals.css use rgb(var(--ps-rgb-*) / a) and therefore paint nothing at all, including .scanlines, .grid-bg, .text-glow-* and every .glow-* box-shadow. GlowSurface is affected too, since src/lib/theme.ts GLOW_RGBS holds comma lists as well, so the Card `glow` prop is a no-op. Filed separately."
+  ]
 }

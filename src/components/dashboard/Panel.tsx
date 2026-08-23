@@ -110,6 +110,12 @@ export function Panel({
   return (
     <div
       className={`rounded-xl border ${panelBorderClass(accent)} bg-dark-900/50 overflow-hidden`}
+      // Bloom tier (WG-WEB-011 C). The panel is the container WG-WEB-003 rules
+      // for the genuinely self-contained thing, so it answers the pointer.
+      // Rows inside a panel carry their own `data-bloom="tight"`; the listener
+      // resolves to the innermost match, so a row wins over its panel and the
+      // two never light at once.
+      data-bloom=""
     >
       {children}
     </div>

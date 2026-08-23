@@ -101,6 +101,14 @@ export default function Button({
       type="button"
       className={`inline-flex items-center justify-center rounded-lg font-mono transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${variantStyles} ${s} ${className}`}
       disabled={disabled || loading}
+      // Bloom tier (WG-WEB-011 C), tight variant: a button is a small target
+      // and the 200px field would overflow it into a flat wash, so it takes the
+      // 90px one. Declared BEFORE the prop spread, so a call site that needs a
+      // button not to answer can pass data-bloom={undefined} and win.
+      // A disabled button needs no opt-out: browsers do not deliver pointer
+      // events to it, so the listener resolves to the container behind it,
+      // which is the correct reading. Nothing dead lights up.
+      data-bloom="tight"
       {...props}
     >
       {loading ? (

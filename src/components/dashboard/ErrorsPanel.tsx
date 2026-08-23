@@ -56,7 +56,12 @@ export default function ErrorsPanel({ errors, severity, onSelectSeverity }: Erro
           </div>
         )}
         {errors.map((err) => (
-          <div key={`${err.source}-${err.message}`} className="px-4 py-2 border-b border-white/5 last:border-0">
+          <div
+            key={`${err.source}-${err.message}`}
+            // Ledger row (WG-WEB-003 A). Tight field, as on every other row.
+            data-bloom="tight"
+            className="px-4 py-2 border-b border-white/5 last:border-0"
+          >
             {/* Truncated to one line with no way to read the rest: these
                 messages are frequently a whole JSON tool result, and the part
                 that names the failure is past the cut. The title attribute is

@@ -45,6 +45,12 @@ export default function Card({
       intensity={glowIntensity}
       animated={glowAnimated}
       className={innerClasses}
+      // Bloom tier (WG-WEB-011 C). The card is one of the containers
+      // WG-WEB-003 names, so it answers the pointer. The paint rule lives in
+      // globals.css and the listener in src/kit/BloomField.tsx; this attribute
+      // is the only thing a container needs. Full radius, not "tight": a card
+      // is a large surface and the 200px field is sized for one.
+      data-bloom=""
     >
       {children}
     </GlowSurface>

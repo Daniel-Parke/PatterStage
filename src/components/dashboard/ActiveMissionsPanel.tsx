@@ -49,7 +49,14 @@ export default function ActiveMissionsPanel({
       />
       <div className="divide-y divide-white/5">
         {missions.map((m) => (
-          <div key={m.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-white/[0.02] transition-colors">
+          <div
+            key={m.id}
+            // Ledger row (WG-WEB-003 A): a parallel-fact list, so the row is
+            // the container the pointer answers, not the panel around it.
+            // Tight field, because a row is short and wide.
+            data-bloom="tight"
+            className="flex items-center justify-between px-4 py-2.5 hover:bg-white/[0.02] transition-colors"
+          >
             <div className="flex items-center gap-2 min-w-0">
               <StatusDot
                 status={m.status === "dispatched" ? "online" : "warning"}

@@ -46,7 +46,13 @@ export default function ProcessesPanel({ processes, onRefresh }: ProcessesPanelP
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {processes.map((proc) => (
-            <div key={proc.id} className="rounded-xl border border-neon-purple/20 bg-dark-900/50 p-4">
+            <div
+              key={proc.id}
+              // Card-shaped container, so the full 200px field rather than the
+              // tight one the flat ledger rows take.
+              data-bloom=""
+              className="rounded-xl border border-neon-purple/20 bg-dark-900/50 p-4"
+            >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <Radio className={`w-4 h-4 ${proc.status === "running" ? "text-neon-green pulse-glow" : "text-ps-text-muted"}`} />

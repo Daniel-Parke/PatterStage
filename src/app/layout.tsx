@@ -5,6 +5,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import MobileHeader from "@/components/layout/MobileHeader";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import QueryProvider from "@/components/providers/QueryProvider";
+import BloomField from "@/kit/BloomField";
 import "./globals.css";
 
 // Vendored, not fetched (WG-DEL-004, ruled C: determinism first). These were
@@ -47,6 +48,16 @@ export default function RootLayout({
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="h-full bg-dark-950 text-white">
+        {/*
+          The bloom tier: ONE delegated pointer listener for the whole console,
+          vendored from PatterTech_Website (src/kit/PROVENANCE.md). It renders
+          nothing and mounts exactly once, here, because a second mount would
+          mean a second listener doing identical work. It sets --bx/--by/--bloom
+          on the [data-bloom] element under the cursor; globals.css paints the
+          radial. Fine pointers only, and reduced motion opts out in both the
+          listener and the paint rule.
+        */}
+        <BloomField />
         <QueryProvider>
         <SidebarProvider>
           <div className="h-full flex flex-col lg:flex-row">
