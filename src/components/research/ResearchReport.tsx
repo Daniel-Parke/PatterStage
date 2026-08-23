@@ -14,8 +14,13 @@ import { useState } from "react";
 import { Check, Copy, Download, ExternalLink, Loader2 } from "lucide-react";
 
 import Button from "@/components/ui/Button";
-import { renderReportHtml } from "@/lib/laboratory/deep-research/markdown";
-import { collectSources, renderSourcesHtml } from "@/lib/laboratory/deep-research/report";
+import { renderReport } from "@/lib/laboratory/deep-research/markdown";
+import {
+  collectSources,
+  renderInBriefHtml,
+  renderReportNavHtml,
+  renderSourcesHtml,
+} from "@/lib/laboratory/deep-research/report";
 import type { ResearchRun, ResearchStep } from "@/lib/laboratory/deep-research/types";
 
 const STEP_LABEL: Record<string, string> = {
@@ -49,7 +54,7 @@ const STEP_DOT: Record<string, string> = {
 const PROSE =
   "max-w-3xl text-sm leading-relaxed text-white/80 " +
   "[&_h1]:mt-6 [&_h1]:mb-2 [&_h1]:text-lg [&_h1]:font-bold [&_h1]:text-white " +
-  "[&_h2]:mt-6 [&_h2]:mb-2 [&_h2]:border-b [&_h2]:border-white/10 [&_h2]:pb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-white " +
+  "[&_h2]:mt-6 [&_h2]:mb-2 [&_h2]:scroll-mt-20 [&_h2]:border-b [&_h2]:border-white/10 [&_h2]:pb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-white " +
   "[&_h3]:mt-4 [&_h3]:mb-1 [&_h3]:font-semibold [&_h3]:text-white/90 " +
   "[&_p]:my-2 [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 " +
   "[&_a]:text-neon-cyan hover:[&_a]:underline " +
@@ -58,6 +63,27 @@ const PROSE =
   "[&_pre.dr-code_code]:bg-transparent [&_pre.dr-code_code]:p-0 [&_pre.dr-code_code]:text-white/70 " +
   "[&_blockquote]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-neon-cyan/50 [&_blockquote]:pl-3 [&_blockquote]:text-white/60 " +
   "[&_.dr-cite]:font-medium [&_.dr-cite]:text-neon-cyan [&_.dr-cite]:no-underline hover:[&_.dr-cite]:underline";
+
+// The skim layer (T-0023, WG-WEB-006). A research report is read once and it is
+// long, so the top of it has to answer the question and the middle of it has to
+// be reachable without scrolling for it.
+//
+// Both bands hold the existing type scale on purpose. A navigator is exactly the
+// place a designer reaches for 11px to buy back vertical space, and the
+// no-sub-12px-type baseline shrinks only, so the labels are text-xs (12px) and
+// the links are text-sm. Fewer sections listed, not smaller ones.
+const BRIEF =
+  "rounded-xl border border-neon-cyan/25 bg-neon-cyan/5 px-4 py-3 " +
+  "[&_.dr-brief-lbl]:mb-2 [&_.dr-brief-lbl]:font-mono [&_.dr-brief-lbl]:text-xs [&_.dr-brief-lbl]:uppercase [&_.dr-brief-lbl]:tracking-widest [&_.dr-brief-lbl]:text-neon-cyan " +
+  "[&_ul]:list-disc [&_ul]:space-y-1.5 [&_ul]:pl-5 " +
+  "[&_li]:text-sm [&_li]:leading-relaxed [&_li]:text-white/80 " +
+  "[&_a]:text-neon-cyan hover:[&_a]:underline";
+
+const NAV =
+  "rounded-xl border border-white/10 bg-dark-900/40 px-4 py-3 " +
+  "[&_.dr-nav-lbl]:mb-2 [&_.dr-nav-lbl]:font-mono [&_.dr-nav-lbl]:text-xs [&_.dr-nav-lbl]:uppercase [&_.dr-nav-lbl]:tracking-widest [&_.dr-nav-lbl]:text-white/40 " +
+  "[&_ol]:flex [&_ol]:list-none [&_ol]:flex-wrap [&_ol]:gap-x-5 [&_ol]:gap-y-1 [&_ol]:p-0 " +
+  "[&_li]:text-sm [&_a]:text-white/70 hover:[&_a]:text-neon-cyan hover:[&_a]:underline";
 
 const SOURCES =
   "[&_ol.dr-sources]:list-none [&_ol.dr-sources]:space-y-2 [&_ol.dr-sources]:pl-0 " +
@@ -68,6 +94,11 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
   const [copied, setCopied] = useState(false);
 
   const sources = collectSources(steps);
+  // A report from before the In brief section existed comes back with an empty
+  // band and, if it is short, an empty navigator. Both render as nothing.
+  const report = run.report ? renderReport(run.report) : null;
+  const briefHtml = report ? renderInBriefHtml(report.inBrief) : "";
+  const navHtml = report ? renderReportNavHtml(report.headings) : "";
 
   async function copy() {
     if (!run.report) return;
@@ -98,9 +129,19 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
         </div>
       ) : null}
 
+      {/* Skim layer: the In brief band, then the navigator, then the prose. */}
+      {briefHtml ? (
+        /* design-lint-disable-next-line no-unsanitised-html -- renderInBriefHtml only wraps bullets that renderReport produced, escaped at the Markdown boundary by the same renderer as the prose below. */
+        <div className={BRIEF} dangerouslySetInnerHTML={{ __html: briefHtml }} />
+      ) : null}
+      {navHtml ? (
+        /* design-lint-disable-next-line no-unsanitised-html -- renderReportNavHtml emits only escaped heading text and the slugs it was given, no model HTML. */
+        <div className={NAV} dangerouslySetInnerHTML={{ __html: navHtml }} />
+      ) : null}
+
       {/* Report */}
-      {run.report ? (
-        <div className={PROSE} dangerouslySetInnerHTML={{ __html: renderReportHtml(run.report) }} />
+      {report ? (
+        <div className={PROSE} dangerouslySetInnerHTML={{ __html: report.html }} />
       ) : run.status === "running" || run.status === "pending" ? (
         <div className="flex items-center gap-2 text-sm text-white/40">
           <Loader2 className="h-4 w-4 animate-spin" /> Researching…

@@ -1,7 +1,14 @@
 /** @jest-environment node */
 // Deep Research source collection + the standalone interactive HTML export.
 
-import { collectSources, renderSourcesHtml, buildExportHtml } from "@/lib/laboratory/deep-research/report";
+import {
+  collectSources,
+  renderSourcesHtml,
+  buildExportHtml,
+  renderInBriefHtml,
+  renderReportNavHtml,
+  NAV_MIN_HEADINGS,
+} from "@/lib/laboratory/deep-research/report";
 import type { ResearchRun, ResearchStep } from "@/lib/laboratory/deep-research/types";
 
 function step(kind: ResearchStep["kind"], sources: string[]): ResearchStep {
@@ -55,5 +62,68 @@ describe("buildExportHtml", () => {
     expect(html).toContain('<a href="#dr-src-1" class="dr-cite">[1]</a>'); // clickable citation
     expect(html).toContain('id="dr-src-1"'); // matching source anchor
     expect(html).toContain("Research timeline"); // step timeline
+  });
+
+  it("renders the In brief band and the navigator above the prose", () => {
+    const long = {
+      ...run,
+      report:
+        "## In brief\n\n- Point one [1]\n- Point two\n- Point three\n\n" +
+        "## Executive summary\n\na\n\n## Key findings\n\nb\n\n" +
+        "## Evidence\n\nc\n\n## Conclusion\n\nd\n",
+    };
+    const html = buildExportHtml(long, [step("synthesize", ["https://x.test"])]);
+    expect(html).toContain('class="dr-brief"');
+    expect(html).toContain("Point one");
+    expect(html).toContain('class="dr-nav"');
+    // The navigator's links match the ids the prose actually rendered.
+    expect(html).toContain('<a href="#dr-h-key-findings">Key findings</a>');
+    expect(html).toContain('<h2 id="dr-h-key-findings">');
+    // Band and navigator lead the prose, so the page opens on the skim layer.
+    expect(html.indexOf('class="dr-brief"')).toBeLessThan(html.indexOf('class="dr-nav"'));
+    expect(html.indexOf('class="dr-nav"')).toBeLessThan(html.indexOf('<div class="report">'));
+  });
+
+  it("renders an older report, with no In brief and too few headings, unchanged", () => {
+    const html = buildExportHtml(run, [step("synthesize", ["https://x.test"])]);
+    // The stylesheet always carries the rules; what must be absent is the markup.
+    expect(html).not.toContain('class="dr-brief"');
+    expect(html).not.toContain('class="dr-nav"');
+    expect(html).toContain("SQLite is great for single-node apps");
+  });
+});
+
+describe("renderInBriefHtml", () => {
+  it("renders nothing for a report with no In brief", () => {
+    expect(renderInBriefHtml([])).toBe("");
+  });
+
+  it("passes the renderer's inline HTML straight through", () => {
+    const html = renderInBriefHtml(['A point <a href="#dr-src-1" class="dr-cite">[1]</a>']);
+    expect(html).toContain('<li>A point <a href="#dr-src-1" class="dr-cite">[1]</a></li>');
+    expect(html).toContain('aria-label="In brief"');
+  });
+});
+
+describe("renderReportNavHtml", () => {
+  const headings = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ text: `Section ${i}`, slug: `dr-h-section-${i}` }));
+
+  it(`stays out of the way below ${NAV_MIN_HEADINGS} headings`, () => {
+    expect(renderReportNavHtml(headings(NAV_MIN_HEADINGS - 1))).toBe("");
+  });
+
+  it(`appears at ${NAV_MIN_HEADINGS} headings`, () => {
+    const html = renderReportNavHtml(headings(NAV_MIN_HEADINGS));
+    expect(html).toContain('aria-label="On this page"');
+    expect(html).toContain('<a href="#dr-h-section-0">Section 0</a>');
+  });
+
+  it("escapes heading text into the link", () => {
+    const html = renderReportNavHtml(
+      headings(NAV_MIN_HEADINGS - 1).concat({ text: 'a <b> "c"', slug: "dr-h-a-b-c" }),
+    );
+    expect(html).toContain("&lt;b&gt; &quot;c&quot;");
+    expect(html).not.toContain("<b>");
   });
 });

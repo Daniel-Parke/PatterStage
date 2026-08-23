@@ -5,9 +5,15 @@
 // step's sources, else the deduped union). buildExportHtml() renders a single,
 // self-contained, themed HTML page (report + clickable citations + sources +
 // timeline) — the shareable "cool HTML page".
+//
+// This file is also where HTML shared by the in-app report and the export
+// lives: the sources list, the In brief band and the on-page navigator. One
+// producer per fragment, styled twice (Tailwind in the app, the inline
+// stylesheet below in the export), because a skim layer that is only in one of
+// the two surfaces is a skim layer a reader cannot rely on.
 // ═══════════════════════════════════════════════════════════════
 
-import { renderReportHtml } from "./markdown";
+import { renderReport, type ReportHeading } from "./markdown";
 import type { ResearchRun, ResearchStep } from "./types";
 
 /** Citation-ordered source URLs for a run's steps. */
@@ -51,6 +57,36 @@ export function renderSourcesHtml(sources: string[]): string {
   return `<ol class="dr-sources">\n${items}\n</ol>`;
 }
 
+/**
+ * The skim band: the report's In brief bullets, rendered above the prose.
+ *
+ * Items arrive as inline HTML from the Markdown renderer, which escaped them at
+ * the boundary, so citations stay clickable in the band instead of degrading to
+ * a literal "[3]". Empty string for a report with no In brief, which the
+ * callers drop entirely rather than render an empty box.
+ */
+export function renderInBriefHtml(items: string[]): string {
+  if (!items.length) return "";
+  const lis = items.map((html) => `<li>${html}</li>`).join("\n");
+  return `<aside class="dr-brief" aria-label="In brief"><p class="dr-brief-lbl">In brief</p><ul>\n${lis}\n</ul></aside>`;
+}
+
+/**
+ * Below this many `##` headings a report is short enough to scan by scrolling,
+ * and a navigator is furniture. At or above it the navigator is the cheapest
+ * way to reach section four.
+ */
+export const NAV_MIN_HEADINGS = 4;
+
+/** The on-page navigator, or "" when the report is short enough not to need one. */
+export function renderReportNavHtml(headings: ReportHeading[]): string {
+  if (headings.length < NAV_MIN_HEADINGS) return "";
+  const items = headings
+    .map((h) => `<li><a href="#${h.slug}">${escAttr(h.text)}</a></li>`)
+    .join("\n");
+  return `<nav class="dr-nav" aria-label="On this page"><p class="dr-nav-lbl">On this page</p><ol>\n${items}\n</ol></nav>`;
+}
+
 const STEP_LABEL: Record<string, string> = {
   plan: "Plan",
   search: "Search",
@@ -62,7 +98,10 @@ const STEP_LABEL: Record<string, string> = {
 /** A self-contained, themed HTML document for a completed research run. */
 export function buildExportHtml(run: ResearchRun, steps: ResearchStep[]): string {
   const sources = collectSources(steps);
-  const body = run.report ? renderReportHtml(run.report) : "<p><em>No report.</em></p>";
+  const rendered = run.report ? renderReport(run.report) : null;
+  const body = rendered ? rendered.html : "<p><em>No report.</em></p>";
+  const briefHtml = rendered ? renderInBriefHtml(rendered.inBrief) : "";
+  const navHtml = rendered ? renderReportNavHtml(rendered.headings) : "";
   const sourcesHtml = renderSourcesHtml(sources);
   const cfg = run.config ?? {};
   const meta = [
@@ -92,7 +131,7 @@ export function buildExportHtml(run: ResearchRun, steps: ResearchStep[]): string
   .eyebrow { font: 600 11px/1 ui-monospace, monospace; letter-spacing: .15em; text-transform: uppercase; color: #5eead4; }
   h1.q { font-size: 26px; line-height: 1.25; margin: 10px 0 6px; }
   .meta { color: #8b97a8; font-size: 13px; margin-bottom: 32px; }
-  h1,h2,h3,h4 { line-height: 1.3; margin: 1.6em 0 .5em; }
+  h1,h2,h3,h4 { line-height: 1.3; margin: 1.6em 0 .5em; scroll-margin-top: 24px; }
   h2 { font-size: 20px; border-bottom: 1px solid #1b2436; padding-bottom: .3em; }
   h3 { font-size: 17px; }
   p { margin: .8em 0; } a { color: #67e8f9; } a:hover { color: #a5f3fc; }
@@ -102,6 +141,13 @@ export function buildExportHtml(run: ResearchRun, steps: ResearchStep[]): string
   pre.dr-code code { background: none; border: none; padding: 0; }
   blockquote { border-left: 3px solid #2dd4bf; margin: .8em 0; padding: .2em 0 .2em 1em; color: #aeb9c9; }
   .dr-cite { font-size: .85em; color: #5eead4; text-decoration: none; padding: 0 1px; } .dr-cite:hover { text-decoration: underline; }
+  .dr-brief { background: #0d1b23; border: 1px solid #164e52; border-left: 3px solid #2dd4bf; border-radius: 10px; padding: 16px 20px; margin: 0 0 20px; }
+  .dr-brief-lbl { font: 600 12px/1 ui-monospace, monospace; letter-spacing: .15em; text-transform: uppercase; color: #5eead4; margin: 0 0 10px; }
+  .dr-brief ul { margin: 0; padding-left: 1.2em; } .dr-brief li { margin: .35em 0; }
+  .dr-nav { border: 1px solid #1b2436; border-radius: 10px; padding: 12px 16px; margin: 0 0 28px; }
+  .dr-nav-lbl { font: 600 12px/1 ui-monospace, monospace; letter-spacing: .15em; text-transform: uppercase; color: #8b97a8; margin: 0 0 8px; }
+  .dr-nav ol { display: flex; flex-wrap: wrap; gap: 4px 20px; list-style: none; margin: 0; padding: 0; font-size: 14px; }
+  .dr-nav a { color: #aeb9c9; text-decoration: none; } .dr-nav a:hover { color: #67e8f9; text-decoration: underline; }
   .section { margin-top: 48px; }
   .section > h2.lbl { font: 600 12px/1 ui-monospace, monospace; letter-spacing: .15em; text-transform: uppercase; color: #8b97a8; border: none; padding: 0; }
   ol.dr-sources { list-style: none; padding: 0; } ol.dr-sources li { background: #0f1626; border: 1px solid #1b2436; border-radius: 8px; padding: 10px 12px; margin: 8px 0; }
@@ -115,6 +161,8 @@ export function buildExportHtml(run: ResearchRun, steps: ResearchStep[]): string
   <div class="eyebrow">PatterStage &middot; Deep Research</div>
   <h1 class="q">${escAttr(run.query)}</h1>
   <div class="meta">${meta}</div>
+  ${briefHtml}
+  ${navHtml}
   <div class="report">${body}</div>
   ${sourcesHtml ? `<div class="section"><h2 class="lbl">Sources</h2>${sourcesHtml}</div>` : ""}
   ${timeline ? `<div class="section"><h2 class="lbl">Research timeline</h2>${timeline}</div>` : ""}
