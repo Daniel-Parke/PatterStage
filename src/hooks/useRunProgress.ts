@@ -115,7 +115,7 @@ export function useRunProgress(runId: string | null): RunProgressState {
               status: "error",
               error:
                 prev.error ??
-                "event stream disconnected — the run may still be going; the reconciler has the authoritative state",
+                "event stream disconnected; the run may still be going, and the reconciler holds the authoritative state",
             },
       );
       es.close();
