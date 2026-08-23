@@ -96,10 +96,16 @@ test.describe("Skills page", () => {
       return;
     }
     const skill = skills[0];
-    const segments =
-      skill.category && skill.category !== "uncategorized"
-        ? [skill.category, skill.name]
-        : [skill.name];
+    // `name` is the catalog key and already carries its category ("engineering/
+    // code-review"); `category` is derived from it (deriveCategory splits on the
+    // first "/"). Prefixing the category again built
+    // /operations/skills/engineering/engineering%2Fcode-review, and that encoded
+    // slash is precisely what the route's path guard refuses: the page rendered
+    // "Skill Not Found · Invalid skill path" from
+    // resolveSkillDirUnderRoot in src/lib/fs/path-security.ts. The guard is
+    // right; the URL the test built was wrong. One key segment, one path
+    // segment.
+    const segments = skill.name.split("/").filter(Boolean);
     const path = segments.map((s) => encodeURIComponent(s)).join("/");
     const detailRes = await page.goto(`/operations/skills/${path}`, {
       waitUntil: "domcontentloaded",
@@ -113,8 +119,12 @@ test.describe("Skills page", () => {
 test.describe("Memory page", () => {
   test("loads memory page", async ({ page }) => {
     await page.goto("/memory");
+    // The page title, not any heading containing "Memory": the memory-provider
+    // tile added a second one ("Memory provider", an h2), so the unqualified
+    // regex became a strict-mode violation. Level 1 names the page heading the
+    // test was always about.
     await expect(
-      page.getByRole("heading", { name: /Memory/i })
+      page.getByRole("heading", { level: 1, name: /Memory/i })
     ).toBeVisible();
   });
 });
