@@ -3,9 +3,15 @@
 //
 // Self-contained: resolves the mission's current PatterStage run id (polling
 // briefly until dispatch has created it), then streams agent output via the
-// validated RunProgress + /api/runs/[id]/events chain. Renders nothing until a
-// run exists, so it is safe to drop into the detail panel unconditionally for
-// dispatched missions.
+// validated RunProgress + /api/runs/[id]/events chain.
+//
+// It used to render nothing at all when the run lookup failed, and the
+// failure was indistinguishable from "dispatch has not created the run
+// yet": both produced `null`, so the poll retried every two seconds
+// forever and the panel stayed blank. A mission the operator had just
+// dispatched simply showed nothing, with the real error (a 500, a
+// dropped connection) discarded inside the queryFn. Now the two states
+// are separate and the failure says what it was.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -14,25 +20,43 @@ import { useQuery } from "@tanstack/react-query";
 import { safeApiCall } from "@/lib/api-fetch";
 import RunProgress from "@/components/schedule/RunProgress";
 
+/** Either the run id (null while dispatch has not created one) or the reason we could not ask. */
+interface RunLookup {
+  runId: string | null;
+  error: string | null;
+}
+
 export default function MissionLiveProgress({ missionId }: { missionId: string }) {
-  const { data: runId } = useQuery({
+  const { data } = useQuery<RunLookup>({
     queryKey: ["mission-run", missionId],
-    queryFn: async (): Promise<string | null> => {
+    queryFn: async (): Promise<RunLookup> => {
       const res = await safeApiCall<{ data?: { run?: { id?: string } | null } }>(
         `/api/missions/${missionId}/run`,
       );
-      return res.ok ? (res.data?.data?.run?.id ?? null) : null;
+      if (!res.ok) return { runId: null, error: res.error ?? "Could not read the mission's run" };
+      return { runId: res.data?.data?.run?.id ?? null, error: null };
     },
-    // Poll until a run id exists (dispatch may not have created it yet), then stop.
-    refetchInterval: (query) => (query.state.data ? false : 2000),
+    // Poll until a run id exists (dispatch may not have created it yet), then
+    // stop. A failed lookup keeps polling — the server may just be busy — but
+    // the operator can now see that it is failing rather than waiting on a
+    // blank panel.
+    refetchInterval: (query) => (query.state.data?.runId ? false : 2000),
   });
 
-  if (!runId) return null;
+  if (data?.error) {
+    return (
+      <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-xs font-mono text-red-300">
+        Live run unavailable: {data.error}
+      </div>
+    );
+  }
+
+  if (!data?.runId) return null;
 
   return (
     <div>
       <div className="text-xs font-mono text-ps-text-muted uppercase mb-1">Live run</div>
-      <RunProgress runId={runId} />
+      <RunProgress runId={data.runId} />
     </div>
   );
 }

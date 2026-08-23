@@ -57,7 +57,13 @@ export default function ErrorsPanel({ errors, severity, onSelectSeverity }: Erro
         )}
         {errors.map((err) => (
           <div key={`${err.source}-${err.message}`} className="px-4 py-2 border-b border-white/5 last:border-0">
-            <div className="text-xs text-red-400/80 font-mono truncate">{err.message}</div>
+            {/* Truncated to one line with no way to read the rest: these
+                messages are frequently a whole JSON tool result, and the part
+                that names the failure is past the cut. The title attribute is
+                the cheapest way to make the full text reachable. */}
+            <div className="text-xs text-red-400/80 font-mono truncate" title={err.message}>
+              {err.message}
+            </div>
             <div className="text-xs text-ps-text-faint font-mono mt-0.5">
               {err.source} {err.timestamp && `· ${err.timestamp}`}
             </div>

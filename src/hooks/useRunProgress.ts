@@ -102,7 +102,22 @@ export function useRunProgress(runId: string | null): RunProgressState {
       es.addEventListener(type, fn as EventListener);
     }
     es.onerror = () => {
-      setState((prev) => (prev.status === "done" ? prev : { ...prev, status: "error" }));
+      // EventSource gives an error event with no detail, so there is no server
+      // message to pass on — but "error" with an empty reason rendered as a red
+      // icon and nothing else, which reads as "the run failed" rather than "the
+      // stream dropped". Those are different facts and the poller settles the
+      // first one; say which this is.
+      setState((prev) =>
+        prev.status === "done"
+          ? prev
+          : {
+              ...prev,
+              status: "error",
+              error:
+                prev.error ??
+                "event stream disconnected — the run may still be going; the reconciler has the authoritative state",
+            },
+      );
       es.close();
     };
 
