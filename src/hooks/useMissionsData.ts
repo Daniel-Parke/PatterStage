@@ -24,6 +24,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useInterval } from "@/hooks/useInterval";
+
 import type { ToastType } from "@/components/ui/Toast";
 import { toastError } from "@/lib/api-fetch";
 import { useMissionsApi } from "@/hooks/useMissionsApi";
@@ -297,16 +299,23 @@ export function useMissionsData({
     void fetchData().finally(() => {
       if (!cancelled) setLoading(false);
     });
-    const interval = setInterval(() => {
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchData]);
+
+  // The 15s refresh. Routed through useInterval rather than a raw setInterval
+  // so it stops while the tab is hidden and takes one catch-up tick on return.
+  // Each tick costs three requests (missions, templates, categories), so a
+  // console left open overnight was making about 5,700 of them at nothing.
+  useInterval(
+    () => {
       void fetchData();
       const id = expandedIdRef.current;
       if (id) fetchDetail(id, false);
-    }, 15_000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [fetchData, fetchDetail]);
+    },
+    { ms: 15_000 },
+  );
 
   useEffect(() => {
     if (expandedId) {

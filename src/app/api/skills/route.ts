@@ -89,17 +89,15 @@ export async function GET(request: NextRequest) {
     // (Map<string, Skill[]> → Record<string, Skill[]>) so the rest of
     // the handler is byte-equivalent.
     //
-    // MEASURED, NOT YET CUT: `categories` re-serves every Skill object that
-    // `skills` above already carries, which is 69,574 of this response's
-    // 137,534 bytes, in the largest body the app serves. The only
-    // consumer (src/app/operations/skills/page.tsx:120) reads
-    // `Object.keys(categories)` and groups `skills` itself, so replacing the
-    // buckets with their sizes is a 49.3% cut with no call-site change. It
-    // needs `SkillsData.categories` in src/types/console.ts to change with it,
-    // and that file is under concurrent edit, so it is left for a run that can
-    // move both together.
+    // `categories` carries SIZES, not the skill objects. Serving the buckets
+    // re-serialised every Skill that `skills` already carries: 69,574 of this
+    // response's 137,534 bytes, in the largest body the app serves. The only
+    // consumer reads Object.keys() and groups `skills` itself, so this is a
+    // 49.3% cut with no call-site change.
     const categoryGroups = groupByCategory(skills, "uncategorized");
-    const categories = Object.fromEntries(categoryGroups) as Record<string, Skill[]>;
+    const categories = Object.fromEntries(
+      [...categoryGroups].map(([name, items]) => [name, items.length]),
+    ) as Record<string, number>;
 
     return ok({
       skills,

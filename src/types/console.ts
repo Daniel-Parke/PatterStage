@@ -129,7 +129,12 @@ export interface Skill {
 
 export interface SkillsData {
   skills: Skill[];
-  categories: Record<string, Skill[]>;
+  /** Category name -> how many skills are in it. Deliberately NOT the skill
+   *  objects: `skills` above already carries every one of them, and serving
+   *  them twice was 69,574 of this response's 137,534 bytes. The only
+   *  consumer groups `skills` itself and reads these keys for its collapse
+   *  state, so the counts are all it ever needed. */
+  categories: Record<string, number>;
   total: number;
   categoryCount: number;
   profile: string;
