@@ -19,6 +19,7 @@ import { safeApiCallData, setErrorFromCaught } from "@/lib/api-fetch";
 import { useLogs } from "@/hooks/useLogs";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { formatBytes } from "@/lib/utils";
+import { formatLogAge } from "@/lib/log-freshness";
 import LogInsights from "@/components/logs/LogInsights";
 import LogsHeaderActions from "@/components/logs/LogsHeaderActions";
 import LogFilePicker from "@/components/logs/LogFilePicker";
@@ -180,6 +181,10 @@ export default function LogsPage() {
   }, [allLines, search]);
 
   const searchMatches = search ? filteredLines.length : 0;
+  // Recomputed on every poll tick (the query refetches every 5s while
+  // auto-refresh is on), which is what makes the age visibly count up.
+  /* eslint-disable-next-line react-hooks/purity -- a freshness readout is a wall-clock fact; the 5s refetch is what advances it */
+  const logAge = formatLogAge(data?.modified, Date.now());
 
   return (
     <AppPageShell>
@@ -188,7 +193,17 @@ export default function LogsPage() {
         title="System Logs"
         subtitle={
           data
-            ? `${data.name}.log — ${data.totalLines} lines (${formatBytes(data.size)})`
+            ? [
+                `${data.name}.log`,
+                `${data.totalLines} lines`,
+                formatBytes(data.size),
+                // The mtime has always been in the response and never on the
+                // screen, so a log that stopped being written three days ago
+                // looked exactly like one being appended to right now.
+                logAge ? `written ${logAge} ago` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")
             : "Hermes agent and gateway logs"
         }
         color="cyan"
