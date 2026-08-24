@@ -9,6 +9,15 @@
 // eslint, renders nothing, and looks exactly like a working style. That is the
 // same failure mode the accent maps in theme.ts were already fixed for once.
 //
+// FIRST it PARSES the CSS, and that assertion exists because of a real
+// incident. The first version of this test read globals.css as text and
+// regexed for token declarations, so it passed green against a stylesheet
+// that could not compile: a `*/` inside a glob in a comment terminated the
+// comment early and `npm run build` failed, while lint, tsc, this test and
+// the output canary all stayed green, because none of them parses CSS. A
+// test that reads its subject as a string cannot tell you the subject is
+// valid.
+//
 // So this reads the CSS and holds the mirror against it. It also holds the
 // module-to-accent map to the shape WG-WEB-009 (B) rules: one registered map,
 // one entry per module, four entries, and no state hue carrying an identity.
@@ -44,6 +53,25 @@ function tokenForClass(cls: string): string {
   if (cls.startsWith("space-y-")) return `--spacing-${measure}`;
   return `--container-${measure}`;
 }
+
+describe("globals.css is valid CSS at all", () => {
+  // The cheapest possible guard on the most expensive possible mistake: this
+  // stylesheet is the only one src/app/layout.tsx imports, so if it does not
+  // parse, nothing in it ships. Not the token ladder below, not the bloom
+  // paint rule, not one colour.
+  it("parses", async () => {
+    const postcss = (await import("postcss")).default;
+    expect(() => postcss.parse(CSS, { from: "globals.css" })).not.toThrow();
+  });
+
+  it("has no unterminated or prematurely closed block comment", () => {
+    // The specific shape that bit: a `*/` appearing inside comment prose,
+    // usually from writing a glob like src/ ** / *.tsx.
+    const opens = (CSS.match(/\/\*/g) || []).length;
+    const closes = (CSS.match(/\*\//g) || []).length;
+    expect(closes).toBe(opens);
+  });
+});
 
 describe("the surface ladder", () => {
   const tokens = declaredTokens();
@@ -114,5 +142,44 @@ describe("the module-to-accent map", () => {
     for (const accent of Object.values(MODULE_ACCENTS)) {
       expect(tokens.has(`--color-neon-${accent}`)).toBe(true);
     }
+  });
+});
+
+describe("the RGB mirror tokens are usable by the rules that consume them", () => {
+  /**
+   * Every consumer writes `rgb(var(--ps-rgb-x) / <alpha>)`, which is CSS
+   * Color 4 slash-alpha syntax and REQUIRES space-separated channels. Written
+   * as a comma list, `rgb(51, 221, 255 / 0.07)` mixes legacy and modern syntax,
+   * is invalid, and the browser drops the whole declaration.
+   *
+   * That is not theoretical. Until 2026-08-24 all six mirrors held comma lists,
+   * so eighteen paint rules in this stylesheet rendered NOTHING: every
+   * .text-glow-*, every .glow-* box-shadow, .scanlines and .grid-bg, plus
+   * GlowSurface through --glow-surface-rgb. docs/design-tokens.md reserves
+   * those for LIVE state and the lock-book's motif is "the only bright things
+   * are live state", so the entire liveness signal was invisible and a running
+   * session looked exactly like a finished one. Nothing failed, because a
+   * dropped declaration is silent.
+   */
+  const mirrors = [...CSS.matchAll(/(--ps-rgb-[a-z-]+):\s*([^;]+);/g)];
+
+  it("declares at least one mirror, so this test cannot pass vacuously", () => {
+    expect(mirrors.length).toBeGreaterThan(0);
+  });
+
+  it.each(mirrors.map((m) => [m[1], m[2].trim()]))(
+    "%s is space separated, not a comma list",
+    (_name, value) => {
+      expect(value).not.toContain(",");
+      expect(value).toMatch(/^\d{1,3} \d{1,3} \d{1,3}$/);
+    },
+  );
+
+  it("keeps the code mirror in the same form, since it feeds the same syntax", async () => {
+    const theme = readFileSync(join(process.cwd(), "src/lib/theme.ts"), "utf-8");
+    const block = theme.slice(theme.indexOf("const GLOW_RGBS"));
+    const values = [...block.slice(0, block.indexOf("} as const;")).matchAll(/"([^"]+)"/g)];
+    expect(values.length).toBeGreaterThan(0);
+    for (const [, v] of values) expect(v).toMatch(/^\d{1,3} \d{1,3} \d{1,3}$/);
   });
 });

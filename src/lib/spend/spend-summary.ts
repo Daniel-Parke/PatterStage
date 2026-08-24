@@ -49,7 +49,11 @@ import {
   type SpendUsageRow,
 } from "./spend-repository";
 
-export interface SpendSourceRow {
+// Module-private on purpose. Reachable structurally through the exported
+// parent type, so a caller can still read the field; nothing imports the
+// NAME, and an export nothing imports is what the widened knip gate exists
+// to catch. Export it again the moment a caller genuinely needs to name it.
+interface SpendSourceRow {
   source: SpendSource;
   label: string;
   runs: number;
@@ -61,7 +65,11 @@ export interface SpendSourceRow {
   recorded: boolean;
 }
 
-export interface SpendPeriodRow {
+// Module-private on purpose. Reachable structurally through the exported
+// parent type, so a caller can still read the field; nothing imports the
+// NAME, and an export nothing imports is what the widened knip gate exists
+// to catch. Export it again the moment a caller genuinely needs to name it.
+interface SpendPeriodRow {
   period: SpendPeriod;
   label: string;
   /** The calendar instant the window opened, in SQLite format. */

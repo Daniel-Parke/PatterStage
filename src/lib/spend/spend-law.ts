@@ -95,7 +95,11 @@ export const SPEND_WARN_FRACTION = 0.8;
  * approaching at or past the warning line, under the figure.
  * over        at or past the figure.
  */
-export type SpendState = "unset" | "ok" | "approaching" | "over";
+// Module-private on purpose. Reachable structurally through the exported
+// parent type, so a caller can still read the field; nothing imports the
+// NAME, and an export nothing imports is what the widened knip gate exists
+// to catch. Export it again the moment a caller genuinely needs to name it.
+type SpendState = "unset" | "ok" | "approaching" | "over";
 
 export interface SpendVerdict {
   state: SpendState;

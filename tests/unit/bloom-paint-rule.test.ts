@@ -81,15 +81,21 @@ describe("the [data-bloom] paint rule", () => {
     // That token is one this repo already had, not one this task added, and it
     // is the same colour the task named: #33ddff IS 51, 221, 255.
     expect(css).toContain("--color-cherenkov-100: #33ddff;");
-    expect(css).toContain("--ps-rgb-cherenkov-glow: 51, 221, 255;");
+    // Assert the CHANNELS, not the punctuation. Those channels were written as
+    // a comma list until 2026-08-24, when all six mirrors moved to
+    // space-separated form so the eighteen rgb(var(...) / a) rules that consume
+    // them would stop being dropped as invalid CSS. The colour is what this
+    // assertion is about; the separator is not.
+    expect(css).toMatch(/--ps-rgb-cherenkov-glow:\s*51[ ,]\s*221[ ,]\s*255;/);
   });
 
   /**
    * The one that caught a real defect, and the reason the rule above does NOT
    * spell the colour as the --ps-rgb-cherenkov-glow triplet the task named.
    *
-   * That token holds a COMMA list, "51, 221, 255". rgb(var(token) / a) expands
-   * to rgb(51, 221, 255 / 0.07), which mixes a comma list with a slash alpha
+   * That token HELD a comma list, "51, 221, 255", when this rule was written.
+   * rgb(var(token) / a) expanded to rgb(51, 221, 255 / 0.07), which mixes a
+   * comma list with a slash alpha
    * and is invalid, so the declaration is dropped and the bloom paints nothing
    * at all. Writing the legacy rgba(var(token), a) does not rescue it either:
    * Lightning CSS normalises that to the slash form during minification, so it

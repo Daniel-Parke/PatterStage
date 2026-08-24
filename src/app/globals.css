@@ -73,7 +73,7 @@
      a panel or a well and so nothing stops the two diverging.
 
      No colour is minted here. Each role is an alias for the primitive the tree
-     already paints in that role, counted across src/**/*.tsx on 2026-08-24:
+     already paints in that role, counted across the tsx tree on 2026-08-24:
 
        role      alias         uses   what it is
        ground    dark-950       50    the page itself (src/app/layout.tsx body)
@@ -127,12 +127,12 @@
 :root {
   --ps-shell-header-min-height: 5rem;
   --ps-mobile-header-min-height: 3rem;
-  --ps-rgb-neon-cyan: 0, 191, 255;
-  --ps-rgb-neon-purple: 164, 128, 255;
-  --ps-rgb-neon-green: 163, 255, 18;
-  --ps-rgb-neon-pink: 232, 121, 249;
-  --ps-rgb-neon-orange: 255, 102, 34;
-  --ps-rgb-cherenkov-glow: 51, 221, 255;
+  --ps-rgb-neon-cyan: 0 191 255;
+  --ps-rgb-neon-purple: 164 128 255;
+  --ps-rgb-neon-green: 163 255 18;
+  --ps-rgb-neon-pink: 232 121 249;
+  --ps-rgb-neon-orange: 255 102 34;
+  --ps-rgb-cherenkov-glow: 51 221 255;
 
   /* Story Weaver reading register (WG-WEB-001: dark-first, one register, no
      exception; WO-0005). Two page tints, dark and black, and nothing else. The
@@ -419,7 +419,7 @@
 
    Why not --ps-rgb-cherenkov-glow, which holds that triplet and which the task
    named. Because a rule written that way paints NOTHING, and this was measured
-   in Chrome against a production build of this branch rather than reasoned
+   in Chrome against a production build taken from 11c9d296, the commit this work branched from, rather than reasoned
    about. The token holds a COMMA list, "51, 221, 255", so rgb(var(token) / a)
    expands to rgb(51, 221, 255 / 0.07), which mixes a comma list with a slash
    alpha and is invalid: the declaration is dropped. Authoring the legacy form
