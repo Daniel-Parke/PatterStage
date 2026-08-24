@@ -33,12 +33,13 @@ The records under org/tasks/ are canonical.
 | T-0018 | standard | R0 | done | phase7-coverage-ratchet-2026-08-23 |
 | T-0019 | standard | R0 | done | t0019-install-harness-2026-08-23 |
 | T-0020 | standard | R0 | done | t0020-full-e2e-gate-2026-08-23 |
-| T-0021 | high-assurance | R2 | proposed | unassigned |
+| T-0021 | high-assurance | R2 | done | t0021-provider-spend-2026-08-24 |
 | T-0022 | standard | R0 | done | final-captions-2026-08-23 |
 | T-0023 | standard | R0 | done | final-skim-layer-2026-08-23 |
-| T-0024 | standard | R0 | proposed | unassigned |
+| T-0024 | standard | R0 | done | t0024-bloom-2026-08-24 |
 | T-0025 | standard | R0 | done | final-baseline-ratchet-2026-08-23 |
 | T-0026 | standard | R0 | discarded | unassigned |
 | T-0027 | standard | R0 | discarded | unassigned |
-| T-0028 | standard | R0 | proposed | unassigned |
+| T-0028 | standard | R0 | done | t0028-lockin-2026-08-24 |
 | T-0029 | standard | R0 | done | phase7-config-writer-2026-08-23 |
+| T-0030 | high-assurance | R2 | proposed | unassigned |
