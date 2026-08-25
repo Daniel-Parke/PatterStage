@@ -14,6 +14,7 @@ import { Rocket, ChevronRight } from "lucide-react";
 
 import { StatusDot } from "@/components/ui/Card";
 import { Panel, PanelHeader } from "@/components/dashboard/Panel";
+import { LedgerRow } from "@/components/dashboard/LedgerRow";
 import { MissionStatusBadge } from "@/components/dashboard/StatusBadge";
 import { timeAgo } from "@/lib/utils";
 import type { MissionBrief } from "@/types/console";
@@ -49,14 +50,11 @@ export default function ActiveMissionsPanel({
       />
       <div className="divide-y divide-white/5">
         {missions.map((m) => (
-          <div
-            key={m.id}
-            // Ledger row (WG-WEB-003 A): a parallel-fact list, so the row is
-            // the container the pointer answers, not the panel around it.
-            // Tight field, because a row is short and wide.
-            data-bloom="tight"
-            className="flex items-center justify-between px-4 py-2.5 hover:bg-white/[0.02] transition-colors"
-          >
+          // Ledger row (WG-WEB-003): a parallel-fact list, so the row is the
+          // container the pointer answers, not the panel around it. The row,
+          // its padding and its tight field now come from the shared component
+          // rather than from this file's own copy of them (T-0033).
+          <LedgerRow key={m.id} hover className="flex items-center justify-between">
             <div className="flex items-center gap-2 min-w-0">
               <StatusDot
                 status={m.status === "dispatched" ? "online" : "warning"}
@@ -93,7 +91,7 @@ export default function ActiveMissionsPanel({
                 {isArmedFor(m.id) ? "Confirm?" : "Cancel"}
               </button>
             </div>
-          </div>
+          </LedgerRow>
         ))}
       </div>
     </Panel>

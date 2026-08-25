@@ -11,6 +11,7 @@
 
 import type { RefObject } from "react";
 import { LogRow } from "@/components/logs/LogRow";
+import { Panel } from "@/components/dashboard/Panel";
 
 export interface LogTerminalProps {
   containerRef: RefObject<HTMLDivElement | null>;
@@ -34,10 +35,14 @@ export default function LogTerminal({
   searchTerm,
 }: LogTerminalProps) {
   return (
-    <div
+    // The shell was a hand-rolled copy of Panel down to the class list:
+    // rounded-xl, border-white/10, bg-dark-900/50, overflow-hidden. It is the
+    // Panel now (T-0033), and the scroll ref and scroll handler reach the same
+    // div they always did, through the props Panel forwards.
+    <Panel
       ref={containerRef}
       onScroll={onScroll}
-      className="rounded-xl border border-white/10 bg-dark-900/50 overflow-hidden flex flex-col flex-1 min-h-0"
+      className="flex flex-col flex-1 min-h-0"
     >
       <div className="flex items-center gap-2 px-4 py-2 border-b border-white/10 bg-dark-800/50 shrink-0">
         <div className="flex gap-1.5">
@@ -74,6 +79,6 @@ export default function LogTerminal({
           </div>
         )}
       </div>
-    </div>
+    </Panel>
   );
 }

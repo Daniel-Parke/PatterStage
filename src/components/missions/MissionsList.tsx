@@ -11,6 +11,8 @@ import {
   Zap,
 } from "lucide-react";
 import { StatusDot } from "@/components/ui/Card";
+import { Panel } from "@/components/dashboard/Panel";
+import { LedgerRowButton } from "@/components/dashboard/LedgerRow";
 import CategoryAccordion from "@/components/ui/CategoryAccordion";
 import TemplatePill from "@/components/ui/TemplatePill";
 import {
@@ -341,117 +343,123 @@ export default function MissionsList({ vm }: MissionsListProps) {
                         No missions
                       </div>
                     ) : (
-                      <div className="contents">
-                        {visibleMissions.map((mission: MissionRow) => {
-                          const rowStatus =
-                            STATUS_CONFIG[mission.status] || {
-                              dot: "idle" as const,
-                              bg: "bg-white/5",
-                              text: "text-ps-text-muted",
-                            };
-                          const isExpanded = expandedId === mission.id;
-                          const runState = describeMissionRunState(
-                            mission,
-                            renderedAt,
-                          );
-                          const catDisplay = resolveCategoryDisplay(
-                            mission.categoryId,
-                            categoryMap,
-                          );
-                          return (
-                            <div
-                              key={mission.id}
-                              className="rounded-xl border border-white/10 bg-dark-900/50 overflow-hidden"
-                            >
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setExpandedId(isExpanded ? null : mission.id)
-                                }
-                                className="w-full text-left p-3 hover:bg-white/[0.02] transition-colors"
-                              >
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                                      <StatusDot
-                                        status={rowStatus.dot}
-                                        pulse={mission.status === "dispatched"}
-                                      />
-                                      <span className="text-xs font-semibold text-white truncate">
-                                        {mission.name}
-                                      </span>
-                                      {mission.categoryId && (
-                                        <span
-                                          className={`text-xs font-mono px-1.5 py-0.5 rounded-full border ${
-                                            CATEGORY_COLOR_CLASSES[
-                                              catDisplay.color
-                                            ] ?? FALLBACK_CATEGORY_ACTIVE
-                                          }`}
-                                        >
-                                          {catDisplay.name}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="flex items-center gap-2 mt-1.5 text-xs font-mono text-ps-text-faint flex-wrap">
-                                      {/* "Running 2h 14m" and "Running 12s" are
-                                          the same row with different numbers,
-                                          which is the point: the card used to
-                                          print an unlabelled timeAgo(createdAt)
-                                          for every state, so a dispatched
-                                          mission read as its own age. */}
-                                      <span
-                                        className={`flex items-center gap-1 ${RUN_TONE_TEXT[runState.tone]}`}
-                                        title={runState.note ?? undefined}
-                                      >
-                                        <Clock className="w-2.5 h-2.5" />
-                                        <span>{runState.label}</span>
-                                        <span>{runState.duration}</span>
-                                        {runState.tone === "overdue" && (
-                                          <AlertTriangle className="w-2.5 h-2.5" />
-                                        )}
-                                      </span>
-                                      {mission.status !== "queued" &&
-                                        mission.cronJob?.lastStatus && (
-                                          <span
-                                            className={
-                                              mission.cronJob.lastStatus ===
-                                              "ok"
-                                                ? "text-neon-green"
-                                                : "text-red-400"
-                                            }
-                                          >
-                                            {mission.cronJob.lastStatus}
+                      <>
+                        {/* One container per COLUMN, not per mission. A mission
+                            row carries a name, a category, a run state and a
+                            cron result, which WG-WEB-003 (D) rules is a ledger;
+                            the column is the panel and the divider is what
+                            separates two missions (T-0033). */}
+                        <Panel>
+                          <div className="divide-y divide-white/5">
+                            {visibleMissions.map((mission: MissionRow) => {
+                              const rowStatus =
+                                STATUS_CONFIG[mission.status] || {
+                                  dot: "idle" as const,
+                                  bg: "bg-white/5",
+                                  text: "text-ps-text-muted",
+                                };
+                              const isExpanded = expandedId === mission.id;
+                              const runState = describeMissionRunState(
+                                mission,
+                                renderedAt,
+                              );
+                              const catDisplay = resolveCategoryDisplay(
+                                mission.categoryId,
+                                categoryMap,
+                              );
+                              return (
+                                <div key={mission.id}>
+                                  <LedgerRowButton
+                                    padding="none"
+                                    onClick={() =>
+                                      setExpandedId(isExpanded ? null : mission.id)
+                                    }
+                                    className="w-full text-left p-3"
+                                  >
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                                          <StatusDot
+                                            status={rowStatus.dot}
+                                            pulse={mission.status === "dispatched"}
+                                          />
+                                          <span className="text-xs font-semibold text-white truncate">
+                                            {mission.name}
                                           </span>
-                                        )}
+                                          {mission.categoryId && (
+                                            <span
+                                              className={`text-xs font-mono px-1.5 py-0.5 rounded-full border ${
+                                                CATEGORY_COLOR_CLASSES[
+                                                  catDisplay.color
+                                                ] ?? FALLBACK_CATEGORY_ACTIVE
+                                              }`}
+                                            >
+                                              {catDisplay.name}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-1.5 text-xs font-mono text-ps-text-faint flex-wrap">
+                                          {/* "Running 2h 14m" and "Running 12s" are
+                                              the same row with different numbers,
+                                              which is the point: the card used to
+                                              print an unlabelled timeAgo(createdAt)
+                                              for every state, so a dispatched
+                                              mission read as its own age. */}
+                                          <span
+                                            className={`flex items-center gap-1 ${RUN_TONE_TEXT[runState.tone]}`}
+                                            title={runState.note ?? undefined}
+                                          >
+                                            <Clock className="w-2.5 h-2.5" />
+                                            <span>{runState.label}</span>
+                                            <span>{runState.duration}</span>
+                                            {runState.tone === "overdue" && (
+                                              <AlertTriangle className="w-2.5 h-2.5" />
+                                            )}
+                                          </span>
+                                          {mission.status !== "queued" &&
+                                            mission.cronJob?.lastStatus && (
+                                              <span
+                                                className={
+                                                  mission.cronJob.lastStatus ===
+                                                  "ok"
+                                                    ? "text-neon-green"
+                                                    : "text-red-400"
+                                                }
+                                              >
+                                                {mission.cronJob.lastStatus}
+                                              </span>
+                                            )}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-1 flex-shrink-0">
+                                        {STATUS_CONFIG[mission.status]?.icon ?? null}
+                                        <ChevronRight
+                                          className={`w-3.5 h-3.5 text-white/20 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                                        />
+                                      </div>
                                     </div>
-                                  </div>
-                                  <div className="flex items-center gap-1 flex-shrink-0">
-                                    {STATUS_CONFIG[mission.status]?.icon ?? null}
-                                    <ChevronRight
-                                      className={`w-3.5 h-3.5 text-white/20 transition-transform ${isExpanded ? "rotate-90" : ""}`}
-                                    />
-                                  </div>
-                                </div>
-                              </button>
+                                  </LedgerRowButton>
 
-                              {isExpanded && (
-                                <MissionEditorPanel
-                                  detail={detail}
-                                  detailLoading={detailLoading}
-                                  mission={mission}
-                                  categoryLabel={catDisplay.name}
-                                  promptCollapsed={promptCollapsed}
-                                  onPromptCollapsedChange={setPromptCollapsed}
-                                  onEdit={handleEdit}
-                                  onCancel={handleCancel}
-                                  isCancelling={cancellingMissionId === mission.id}
-                                  onDelete={handleDelete}
-                                  onDuplicate={handleDuplicateMission}
-                                />
-                              )}
-                            </div>
-                          );
-                        })}
+                                  {isExpanded && (
+                                    <MissionEditorPanel
+                                      detail={detail}
+                                      detailLoading={detailLoading}
+                                      mission={mission}
+                                      categoryLabel={catDisplay.name}
+                                      promptCollapsed={promptCollapsed}
+                                      onPromptCollapsedChange={setPromptCollapsed}
+                                      onEdit={handleEdit}
+                                      onCancel={handleCancel}
+                                      isCancelling={cancellingMissionId === mission.id}
+                                      onDelete={handleDelete}
+                                      onDuplicate={handleDuplicateMission}
+                                    />
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </Panel>
                         {isCollapsible &&
                           collapsedColumns[status] &&
                           columnMissions.length > 5 && (
@@ -463,7 +471,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
                               Show all {columnMissions.length} missions →
                             </button>
                           )}
-                      </div>
+                      </>
                     )}
                   </div>
                 </div>

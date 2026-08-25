@@ -11,6 +11,7 @@
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
 import { Panel, PanelHeader } from "@/components/dashboard/Panel";
+import { LedgerRow } from "@/components/dashboard/LedgerRow";
 import { titleCase } from "@/lib/utils";
 import type { MonitorData } from "@/types/console";
 
@@ -56,10 +57,11 @@ export default function ErrorsPanel({ errors, severity, onSelectSeverity }: Erro
           </div>
         )}
         {errors.map((err) => (
-          <div
+          // Ledger row (WG-WEB-003). Tight field, as on every other row, and
+          // now from the shared component rather than from this file (T-0033).
+          <LedgerRow
             key={`${err.source}-${err.message}`}
-            // Ledger row (WG-WEB-003 A). Tight field, as on every other row.
-            data-bloom="tight"
+            padding="none"
             className="px-4 py-2 border-b border-white/5 last:border-0"
           >
             {/* Truncated to one line with no way to read the rest: these
@@ -72,7 +74,7 @@ export default function ErrorsPanel({ errors, severity, onSelectSeverity }: Erro
             <div className="text-xs text-ps-text-faint font-mono mt-0.5">
               {err.source} {err.timestamp && `· ${err.timestamp}`}
             </div>
-          </div>
+          </LedgerRow>
         ))}
       </div>
     </Panel>

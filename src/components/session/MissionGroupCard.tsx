@@ -4,6 +4,13 @@
 // Extracted verbatim from app/(main)/sessions/page.tsx. The expanded
 // flag is local card state; the grouping itself is computed upstream by
 // buildGroupedEntries in src/lib/sessions/sessions-grouping.ts.
+//
+// T-0033 turned the green rounded box into a ledger row inside the page's
+// one Panel, per WG-WEB-003 (D). A group row is still a group: it keeps
+// its green wash, its counts and its expansion, and the sessions it opens
+// are the same SessionCard rows the ungrouped list renders, divided the
+// same way. What went is the second border drawn around a record that was
+// already inside a bordered list.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -12,6 +19,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown, ChevronRight, Clock, Layers } from "lucide-react";
 import { LiveDot } from "@/components/ui/LiveDot";
+import { LedgerRowButton } from "@/components/dashboard/LedgerRow";
 import { timeAgo } from "@/lib/utils";
 import { formatSessionTitle } from "@/lib/sessions/session-title";
 import type { MissionGroup } from "@/lib/sessions/sessions-grouping";
@@ -26,11 +34,11 @@ export default function MissionGroupCard({ group }: { group: MissionGroup }) {
   const title = formatSessionTitle(latest);
 
   return (
-    <div className="rounded-xl border border-neon-green/20 bg-neon-green/[0.03] overflow-hidden">
-      <button
-        type="button"
+    <div className="bg-neon-green/5">
+      <LedgerRowButton
+        padding="block"
         onClick={() => setExpanded(!expanded)}
-        className="w-full p-4 hover:bg-neon-green/[0.04] transition-colors text-left flex items-center justify-between gap-3"
+        className="w-full text-left flex items-center justify-between gap-3"
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
@@ -69,14 +77,14 @@ export default function MissionGroupCard({ group }: { group: MissionGroup }) {
             <ChevronRight className="w-4 h-4 text-ps-text-muted" />
           )}
         </div>
-      </button>
+      </LedgerRowButton>
       {expanded && (
-        <div className="border-t border-white/5 p-3 space-y-2 bg-dark-900/30">
+        <div className="border-t border-white/5 bg-dark-900/30 divide-y divide-white/5">
           {group.sessions.map((s) => (
             <SessionCard key={s.id} session={s} />
           ))}
           {oldest && oldest.id !== latest.id && (
-            <p className="text-xs font-mono text-ps-text-faint px-2">
+            <p className="text-xs font-mono text-ps-text-faint px-4 py-2">
               Showing all {group.sessions.length} sessions · oldest: {timeAgo(oldest.startedAt)}
             </p>
           )}

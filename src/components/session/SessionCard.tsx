@@ -1,10 +1,18 @@
 // ═══════════════════════════════════════════════════════════════
-// SessionCard — one session as a clickable row
+// SessionCard — one session as a ledger row
 //
 // Extracted verbatim from app/(main)/sessions/page.tsx so the page
 // stays a thin shell (docs/CONTRIBUTING.md, "Where UI lives").
 // Presentation only: it derives its title and source badge from the
 // record it is handed and owns no state.
+//
+// It rendered a rounded box of its own until T-0033. A session record
+// carries eight comparable fields (age, source, profile, model, message
+// count, size, parent mission, live state), which is what WG-WEB-003 (D)
+// rules is a ledger rather than a box: the fields line up down the page
+// and the page's Panel is the one container around the lot. The name is
+// left alone because nothing about the component's contract changed and
+// a rename would churn every import for no reader's benefit.
 // ═══════════════════════════════════════════════════════════════
 
 "use client";
@@ -12,6 +20,7 @@
 import Link from "next/link";
 import { ChevronRight, Clock, HardDrive, MessageSquare } from "lucide-react";
 import Badge from "@/components/ui/Badge";
+import { LedgerRow } from "@/components/dashboard/LedgerRow";
 import { LiveDot } from "@/components/ui/LiveDot";
 import { timeAgo, formatElapsed, pluralise } from "@/lib/utils";
 import { SOURCE_META } from "@/components/session/constants";
@@ -26,7 +35,7 @@ export default function SessionCard({ session }: { session: SessionRecord }) {
 
   return (
     <Link href={`/sessions/${session.id}`}>
-      <div className="rounded-xl border border-white/10 bg-dark-900/50 p-4 hover:border-neon-orange/30 transition-colors group cursor-pointer">
+      <LedgerRow hover padding="block" className="group cursor-pointer">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -82,7 +91,7 @@ export default function SessionCard({ session }: { session: SessionRecord }) {
           </div>
           <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-neon-orange group-hover:translate-x-0.5 transition-all flex-shrink-0 ml-4" />
         </div>
-      </div>
+      </LedgerRow>
     </Link>
   );
 }

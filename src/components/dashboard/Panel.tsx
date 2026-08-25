@@ -68,7 +68,14 @@ import { iconColorMap } from "@/lib/theme";
  */
 // Literal classes only — Tailwind cannot see an interpolated one, so
 // `border-${accent}-500/20` produced no border at all. See src/lib/theme.ts.
-function panelBorderClass(accent: AccentColor): string {
+//
+// `accent` is optional as of T-0033. A record surface is usually not accented
+// at all — the sessions ledger, the log pane, the log file picker and the
+// toolset reference are all plain surfaces — and before this they each spelled
+// `border border-white/10 bg-dark-900/50` for themselves, which is exactly the
+// raw box WG-WEB-003 rules against. Omitting the accent now gives them the
+// panel they were imitating.
+function panelBorderClass(accent?: AccentColor): string {
   switch (accent) {
     case "red":
       return "border-red-500/20";
@@ -86,6 +93,40 @@ function panelBorderClass(accent: AccentColor): string {
       return "border-neon-pink/20";
     case "orange":
       return "border-neon-orange/20";
+    default:
+      return "border-white/10";
+  }
+}
+
+/**
+ * Optional accent wash over the panel interior, replacing the neutral
+ * `bg-dark-900/50`. Two surfaces had hand-rolled one: the sessions page's
+ * mission group (`bg-neon-green/[0.03]`) and the Hermes toolsets card
+ * (`bg-neon-orange/5`). One ruled intensity now serves both, because two
+ * near-identical washes is a difference nobody chose.
+ *
+ * Literal classes, same reason as the borders above.
+ */
+function panelTintClass(tint?: AccentColor): string {
+  switch (tint) {
+    case "red":
+      return "bg-red-500/5";
+    case "blue":
+      return "bg-blue-500/5";
+    case "yellow":
+      return "bg-yellow-500/5";
+    case "cyan":
+      return "bg-neon-cyan/5";
+    case "purple":
+      return "bg-neon-purple/5";
+    case "green":
+      return "bg-neon-green/5";
+    case "pink":
+      return "bg-neon-pink/5";
+    case "orange":
+      return "bg-neon-orange/5";
+    default:
+      return "bg-dark-900/50";
   }
 }
 
@@ -100,22 +141,36 @@ function panelBorderClass(accent: AccentColor): string {
  * a future panel needs only the body shell (none today, but the
  * split is cheap and keeps the props simple).
  */
+export interface PanelProps extends React.ComponentPropsWithRef<"div"> {
+  /** Static accent border. Omit for the neutral `border-white/10` surface. */
+  accent?: AccentColor;
+  /** Optional accent wash over the interior, replacing `bg-dark-900/50`. */
+  tint?: AccentColor;
+  children: ReactNode;
+}
+
 export function Panel({
   accent,
+  tint,
+  className = "",
   children,
-}: {
-  accent: AccentColor;
-  children: ReactNode;
-}) {
+  ...props
+}: PanelProps) {
   return (
     <div
-      className={`rounded-xl border ${panelBorderClass(accent)} bg-dark-900/50 overflow-hidden`}
+      className={`rounded-xl border ${panelBorderClass(accent)} ${panelTintClass(tint)} overflow-hidden ${className}`}
       // Bloom tier (WG-WEB-011 C). The panel is the container WG-WEB-003 rules
       // for the genuinely self-contained thing, so it answers the pointer.
-      // Rows inside a panel carry their own `data-bloom="tight"`; the listener
-      // resolves to the innermost match, so a row wins over its panel and the
-      // two never light at once.
+      // Rows inside a panel carry their own tight field via LedgerRow; the
+      // listener resolves to the innermost match, so a row wins over its panel
+      // and the two never light at once.
+      //
+      // Before the spread, as on Button and LedgerRow: a call site that needs a
+      // panel dark can pass data-bloom={undefined} and win. Everything else in
+      // `props` reaches the div too, which is how the log pane keeps the scroll
+      // ref and the scroll handler it has always had.
       data-bloom=""
+      {...props}
     >
       {children}
     </div>

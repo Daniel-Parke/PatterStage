@@ -4,6 +4,7 @@
 
 import type { ReactNode } from "react";
 import { parseLogLine } from "@/lib/log-line-format";
+import { LedgerRow } from "@/components/dashboard/LedgerRow";
 import { LEVEL_TEXT_CLASS } from "./constants";
 
 /**
@@ -38,7 +39,12 @@ export function LogRow({
   // so every rendered LogRow is already a match when search is active.
   const isMatch = !!searchTerm;
   return (
-    <div
+    // A log line is three comparable fields under three headings, which is the
+    // ledger WG-WEB-003 (D) rules for. The column grid and the match highlight
+    // are still this component's; the row, and the tight bloom field it answers
+    // the pointer with, come from the shared one (T-0033).
+    <LedgerRow
+      padding="none"
       className={`grid grid-cols-1 sm:grid-cols-[minmax(0,9.5rem)_minmax(0,4.5rem)_1fr] gap-x-3 gap-y-0.5 items-baseline text-xs font-mono py-1.5 border-b border-white/[0.06] ${
         isMatch ? "bg-neon-cyan/5 -mx-2 px-2 rounded" : ""
       }`}
@@ -50,6 +56,6 @@ export function LogRow({
       <span className={`min-w-0 break-words ${LEVEL_TEXT_CLASS[p.level] ?? LEVEL_TEXT_CLASS.unknown}`}>
         {highlightText(p.message, searchTerm)}
       </span>
-    </div>
+    </LedgerRow>
   );
 }

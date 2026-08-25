@@ -32,6 +32,8 @@ import {
   unionToolsetsFromPlatforms,
 } from "@/modules/hermes/lib/toolset-unify";
 import ToolsInsights from "@/modules/hermes/components/ToolsInsights";
+import { Panel } from "@/components/dashboard/Panel";
+import ToolsetReferenceTable from "@/components/tools/ToolsetReferenceTable";
 
 export default function ToolsPage() {
   const [selectedProfile, setSelectedProfile] = useState("default");
@@ -306,7 +308,10 @@ export default function ToolsPage() {
           <ToolsInsights total={HERMES_CONFIGURABLE_TOOLSETS.length} enabled={enabledCount} />
         )}
 
-        <div className="rounded-xl border border-neon-orange/20 bg-neon-orange/5 p-4 space-y-4">
+        {/* Was a hand-rolled copy of the accented panel, down to the class
+            list. It is the Panel now, with the wash it was painting itself
+            (T-0033, WG-WEB-003 D). */}
+        <Panel accent="orange" tint="orange" className="p-4 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-start gap-4">
             <div className="sm:w-72 flex-shrink-0">
               <h2 className="text-sm font-mono text-neon-orange mb-2">Profile</h2>
@@ -335,31 +340,36 @@ export default function ToolsPage() {
                       {HERMES_CONFIGURABLE_TOOLSETS.map((toolset) => {
                         const on = isUnifiedEnabled(toolset.id);
                         return (
-                          <button
+                          // A toggle is a control, and the console has a
+                          // control component: 36 files use Button against 313
+                          // raw <button> elements, which is why a styling
+                          // ruling reaches so little of this app (T-0033).
+                          // primary is the on state, secondary the off one.
+                          <Button
                             key={`unified-${toolset.id}`}
-                            type="button"
+                            variant={on ? "primary" : "secondary"}
+                            color="orange"
+                            size="sm"
+                            aria-pressed={on}
                             title={toolset.description}
                             onClick={() => toggleUnifiedToolset(toolset.id)}
-                            className={`text-xs font-mono px-2 py-1 rounded border transition-colors ${
-                              on
-                                ? "border-neon-orange/50 bg-neon-orange/15 text-neon-orange"
-                                : "border-white/10 bg-white/5 text-ps-text-muted hover:border-white/20"
-                            }`}
                           >
                             {toolset.label}
-                          </button>
+                          </Button>
                         );
                       })}
                     </div>
                   </div>
                   <div className="mt-4 border-t border-white/10 pt-3">
-                    <button
-                      type="button"
-                      className="text-xs font-mono text-ps-text-muted hover:text-ps-text-secondary"
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      color="orange"
+                      aria-expanded={showAdvancedJson}
                       onClick={() => setShowAdvancedJson((v) => !v)}
                     >
                       {showAdvancedJson ? "Hide" : "Show"} advanced JSON
-                    </button>
+                    </Button>
                     {showAdvancedJson && (
                       <textarea
                         value={toolsetsJson}
@@ -373,24 +383,19 @@ export default function ToolsPage() {
               )}
             </div>
           </div>
-        </div>
+        </Panel>
 
-        <div className="mt-6 rounded-xl border border-white/10 bg-dark-900/30 p-4">
+        <Panel className="mt-6 p-4">
           <h3 className="text-xs font-mono text-ps-text-muted uppercase tracking-widest mb-2">
             Reference — Hermes toolset IDs
           </h3>
           <p className="text-xs text-ps-text-muted mb-3">
             Catalog for labels only. Enabling toolsets above updates the selected profile config.
           </p>
-          <ul className="grid sm:grid-cols-2 gap-2 text-xs font-mono text-ps-text-muted">
-            {HERMES_CONFIGURABLE_TOOLSETS.map((entry) => (
-              <li key={entry.id}>
-                <span className="text-ps-text-muted">{entry.id}</span>
-                <span className="text-ps-text-faint"> — {entry.description}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+          {/* The catalogue is read here, in src/app/, because ADR-0005 forbids
+              core importing a module and the table lives in src/components/. */}
+          <ToolsetReferenceTable entries={HERMES_CONFIGURABLE_TOOLSETS} />
+        </Panel>
       </div>
     </AppPageShell>
   );

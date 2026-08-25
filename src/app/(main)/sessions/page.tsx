@@ -44,6 +44,7 @@ import { useStoredBool } from "@/hooks/useStoredBool";
 import { isApiNoiseSession } from "@/lib/sessions/session-filters";
 import { buildGroupedEntries } from "@/lib/sessions/sessions-grouping";
 import AppPageShell from "@/components/layout/AppPageShell";
+import { Panel } from "@/components/dashboard/Panel";
 import AgentSetupNotice from "@/components/agents/AgentSetupNotice";
 import type { SessionSource } from "@/lib/sessions/session-repository";
 import { SOURCE_META } from "@/components/session/constants";
@@ -228,15 +229,21 @@ export default function SessionsPage() {
               {data?.total ?? 0} {debouncedSearch ? "matching" : "total"}
               {hideApiNoise ? " · API noise hidden" : ""}
             </div>
-            <div className="grid gap-3">
-              {entries.map((entry) =>
-                entry.kind === "mission" ? (
-                  <MissionGroupCard key={entry.key} group={entry} />
-                ) : (
-                  <SessionCard key={entry.key} session={entry.session} />
-                ),
-              )}
-            </div>
+            {/* One container around the lot, not one per record. A session
+                carries eight comparable fields, which WG-WEB-003 (D) rules is
+                a ledger; the divider is what separates two records now, and
+                the Panel is what a future styling ruling edits. */}
+            <Panel>
+              <div className="divide-y divide-white/5">
+                {entries.map((entry) =>
+                  entry.kind === "mission" ? (
+                    <MissionGroupCard key={entry.key} group={entry} />
+                  ) : (
+                    <SessionCard key={entry.key} session={entry.session} />
+                  ),
+                )}
+              </div>
+            </Panel>
             {totalPages > 1 && (
               <Pagination
                 currentPage={page}
