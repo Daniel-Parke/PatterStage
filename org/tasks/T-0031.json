@@ -1,0 +1,24 @@
+{
+  "id": "T-0031",
+  "intent": "Retire the em-dash debt in docs/. Warrant: the EOS voice law makes an em-dash a hard E004 error, and design-lint tracks 438 of them across docs/ as shrink-only debt, 158 in USER_WALKTHROUGH_GUIDE.md alone. Operator ruled 2026-08-24: sweep them all. Each one is REWRITTEN into the punctuation the sentence actually wants (a comma, a colon, a full stop, a pair of brackets), never swapped wholesale for a hyphen, because a mechanical substitution produces prose nobody would have written. Done when the no-em-dash baseline keys for docs/ are gone and the total falls from 461 to about 23.",
+  "declared": {
+    "capabilities": [
+      "edit-docs"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "docs/",
+    "scripts/tooling/design-lint.baseline.json"
+  ],
+  "timestamps": {
+    "opened": "2026-08-24T03:00:00Z",
+    "updated": "2026-08-24T03:00:00Z"
+  }
+}

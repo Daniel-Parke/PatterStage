@@ -1,0 +1,26 @@
+{
+  "id": "T-0032",
+  "intent": "Restructure the skills page, the heaviest surface in the app. Measured 2026-08-24: 178 skills rendered unpaginated, 5,446 DOM nodes, 625 buttons, 35,218 characters of body text, 7x the next heaviest page. Operator ruled 2026-08-24: restructure it properly rather than take the cheap win. Collapse categories by default, virtualise or paginate the list, and keep search working across ALL skills rather than only the rendered ones, which is the trap in every list virtualisation. Done when the page is comparable in weight to its siblings and a skill can still be found in one action.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/app/operations/skills/",
+    "src/components/skills/",
+    "src/lib/skills-page-helpers.ts",
+    "tests/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-24T03:00:00Z",
+    "updated": "2026-08-24T03:00:00Z"
+  }
+}

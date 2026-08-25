@@ -43,3 +43,7 @@ The records under org/tasks/ are canonical.
 | T-0028 | standard | R0 | done | t0028-lockin-2026-08-24 |
 | T-0029 | standard | R0 | done | phase7-config-writer-2026-08-23 |
 | T-0030 | high-assurance | R2 | proposed | unassigned |
+| T-0031 | standard | R2 | proposed | unassigned |
+| T-0032 | standard | R2 | proposed | unassigned |
+| T-0033 | standard | R2 | proposed | unassigned |
+| T-0034 | standard | R2 | proposed | unassigned |

@@ -1,0 +1,29 @@
+{
+  "id": "T-0034",
+  "intent": "Clear the small deferred findings the 2026-08 reviews recorded rather than fixed. Each was found, measured and consciously left, and each is named with its evidence: (1) LogInsights severityOf counts any line containing 'error' as an error, so a line reading 'no errors' inflates the error donut and depresses the clean-rate ring; (2) SyncScheduler keeps a per-source failure message and /api/monitor flattens it to ok/error, so the dashboard shows a red cross with no reason while the text exists and is discarded; (3) 19 raw colours remain, mostly per-series chart colours in viz components, which are legitimate values in the wrong place: they belong in tokens; (4) four dangerouslySetInnerHTML sites need a written reason each or a sanitiser; (5) @xyflow/react (213 KB) and motion (135 KB) load on every route while three pages use them; (6) /api/missions/[id]/run carries no requireAuth while its siblings do, which is not a hole because auth is enforced in proxy.ts, but the inconsistency invites the belief that routes without one are unprotected by choice.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/components/logs/",
+    "src/components/viz/",
+    "src/app/api/monitor/",
+    "src/lib/sync/",
+    "src/app/api/missions/",
+    "src/app/orchestration/composer/",
+    "tests/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-24T03:00:00Z",
+    "updated": "2026-08-24T03:00:00Z"
+  }
+}
