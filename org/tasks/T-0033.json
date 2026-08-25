@@ -11,7 +11,7 @@
   "tier_proposed": "R1",
   "tier_ruled": "R2",
   "reasons": [],
-  "status": "active",
+  "status": "done",
   "owner_session": "t0033-record-surfaces-2026-08-25",
   "claims": [
     "src/app/(main)/sessions/page.tsx",
@@ -43,6 +43,16 @@
   "oracle_provenance": "Authored by the executor in this session BEFORE any file under src/ was edited, and committed on its own ahead of the implementation, per the EXECUTOR R2 clause. Three files: tests/unit/ledger-row.test.tsx (the shared row primitive and its two bloom tiers), tests/unit/record-surface-containers.test.ts (the structural half, held as source-level fact: which shared container each record surface goes through, and the absence of the raw record box), tests/unit/record-surfaces.test.tsx (the behaviour-preserving half, rendered: same records, same text, same handlers, same hrefs).",
   "timestamps": {
     "opened": "2026-08-24T03:00:00Z",
-    "updated": "2026-08-25T00:00:00Z"
-  }
+    "updated": "2026-08-25T23:59:00Z",
+    "closed": "2026-08-25T23:59:00Z"
+  },
+  "notes": [
+    "Closed 2026-08-25 in three commits: cf9fe3a6 froze the oracle, d2e61a3c migrated the surfaces, a4bf3f08 fixed a defect the browser found and jsdom could not. All six invariants hold. httpSurface did not move; moduleGraph and prerender did, which is the task doing what it says.",
+    "Measured, not asserted. Panel goes from 4 importer files to 9. The raw record box, a rounded-xl surface painted bg-dark-900/50, is gone from all eight files in the record-surface set. Raw button elements across those eight fall 15 to 10. Button's importer count is unchanged at 36: the Toolsets page already imported it for three header actions while hand-rolling the 23 controls below them, which is the shape of the problem the ruling names.",
+    "HONEST LIMIT, the ten raw buttons that remain. All are MissionsList's view controls: the status filter group, the two category pill rows, the search clear, and the column collapse and show-all pair. They are not records, and converting a two-state filter pill needs a selected or pressed variant on Button that nothing has ruled. Recorded rather than half-done, because a pill given `variant=primary` when active is a guess at a ruling, not a migration.",
+    "OUT OF SCOPE and still a raw box: ProcessesPanel renders a card grid of process records with data-bloom set by hand, and the dashboard was not one of the four surfaces the operator named. Same for the notice boxes on the Toolsets page, which are messages rather than records. Both are candidates for the next pass at this ruling.",
+    "The browser earned its place. jsdom computes no layout, so the render oracle called the sessions ledger green while its divider painted on top of the next row instead of between the two: SessionCard wraps its row in a Link, an <a> is display:inline, and a border on an inline box reserves no layout space. Read out of Chrome on the production build against a copy of the real database, then fixed with one class. This is the T-0024 lesson applied to its own successor.",
+    "Verification ran against a COPY of the data directory on a spare port, never the live one. Checked first that no mission was queued_for_run and no cron job enabled, so the background scheduler had nothing to dispatch and the operator's no-spend-without-approval rule was not put at risk to check a CSS class.",
+    "Concurrency, recorded because it shaped the evidence. Three other agents were editing this tree throughout, and at one point a sibling git worktree under tmp/ put another task's in-flight source into this tree's tsc and next build, which are not directory-scoped. The gate was therefore run in a detached worktree of these commits alone. Two facts fall out of that and are worth a task: tmp/ is gitignored but tsconfig.json does not exclude it, so any scratch checkout there breaks the build for everyone; and the design-lint baseline read 461 at the start of this task and 23 at the end, shrunk by T-0031's docs cleanup, not by anything here. Nothing in this task added a baseline entry."
+  ]
 }
