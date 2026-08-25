@@ -115,3 +115,54 @@ describe("the shape of the panel's own arithmetic", () => {
     expect(errors).toBe(0);
   });
 });
+
+/**
+ * The three defects an independent review found in the first version of this
+ * rule, each pinned so it cannot come back.
+ *
+ * They are grouped together deliberately: two of them exist because the finding
+ * that motivated this whole change was overstated, and one because a narrowing
+ * went undisclosed. Getting the story of a heuristic wrong is how the next
+ * person "fixes" it back.
+ */
+describe("severityOf: the review's findings", () => {
+  it("counts npm ERR!, the commonest failure line in a Node project", () => {
+    // The first version lost this. `ERR!` has no delimiter the tag pass
+    // recognised, so it fell through to prose, where a bare `err` is
+    // deliberately not an error word. It was classified info.
+    expect(severityOf("npm ERR! code ELIFECYCLE")).toBe("error");
+    expect(severityOf("npm ERR! errno 1")).toBe("error");
+    expect(severityOf("npm ERR! Failed at the build script")).toBe("error");
+  });
+
+  it("does not count a zero-valued singular level field", () => {
+    // `error: 0` matched the tag pass on `error:` and returned before the
+    // zero-strike could run. The plural was already handled; the singular
+    // was not.
+    expect(severityOf("error: 0")).toBe("info");
+    expect(severityOf("errors: 0")).toBe("info");
+    expect(severityOf("error_count=0")).toBe("info");
+  });
+
+  it("leaves a bare err in prose alone, which is the disclosed narrowing", () => {
+    // The old rule called this an error. This one does not, because `err` in
+    // running text is as often the verb. Pinned so the trade is deliberate
+    // rather than rediscovered as a bug.
+    expect(severityOf("connection err after 3 tries")).toBe("info");
+    expect(severityOf("to err is human")).toBe("info");
+  });
+
+  it("was never wrong about the plural, whatever the first write-up said", () => {
+    // The old regex ended in \b and so could not match "errors" at all. These
+    // two were cited as the motivation for the change and were already correct.
+    expect(severityOf("Found 0 errors.")).toBe("info");
+    expect(severityOf("completed with no errors")).toBe("info");
+  });
+
+  it("still catches what it is actually for", () => {
+    expect(severityOf("[ERROR] database is locked")).toBe("error");
+    expect(severityOf("Unhandled exception in worker")).toBe("error");
+    expect(severityOf("level=error something broke")).toBe("error");
+    expect(severityOf("[WARN] one probe failed")).toBe("warn");
+  });
+});

@@ -18,21 +18,34 @@
 // ── What this counts, and why it changed (T-0034) ───────────────────────────
 //
 // The previous rule was one regex: a line containing the word "error", "err",
-// "fail", "fatal", "exception" or "traceback" was an error. That is the whole
-// heuristic, and it read `Found 0 errors` as an error, `completed with no
-// errors` as an error, and `[INFO] error budget still healthy` as an error.
-// Every false positive went twice into the panel: once into the error donut,
-// and again into the clean-rate ring, which is 1 - errors/total. A clean tsc
-// run reported errors and a health score below 100%.
+// "fail", "fatal", "exception" or "traceback" was an error.
+//
+// BE PRECISE ABOUT WHAT IT ACTUALLY GOT WRONG, because the first write-up of
+// this task, and the task record itself, overstated it. The old pattern ended
+// in , so it could never match a PLURAL: `Found 0 errors` and `completed
+// with no errors` were already classified info, and citing them as the
+// motivation was wrong. Both were re-run against the old regex before this
+// paragraph was rewritten.
+//
+// What it genuinely miscounted was the SINGULAR and the incidental mention:
+// `no error found` was an error, and so was `[INFO] error budget still
+// healthy`. Every such false positive went twice into the panel, once into the
+// error donut and again into the clean-rate ring, which is 1 - errors/total.
+//
+// KNOWN NARROWING, disclosed rather than discovered later: a bare `err` in
+// prose (`connection err after 3 tries`) was an error under the old rule and is
+// info under this one, because `err` in running text is as often the verb. A
+// LEVEL TAG spelling of it still counts, which is what matters in practice:
+// `npm ERR!` is the commonest failure line in a Node project and is an error.
 //
 // The rule now works in the order a log line is actually written:
 //
-//   1. A LEVEL the logger emitted wins. `[WARN] one probe failed` is a warning,
+//   1. NEGATED and ZERO-COUNTED mentions are struck out first, so nothing
+//      downstream can read them.
+//   2. A LEVEL the logger emitted wins. `[WARN] one probe failed` is a warning,
 //      whatever the prose after it says, because the process that wrote the
 //      line already classified it and it knows better than a regex does.
-//   2. NEGATED and ZERO-COUNTED mentions are struck out before anything is
-//      counted, so "no errors", "without failures" and "errors: 0" say nothing.
-//   3. Only what survives both is read as prose.
+//   3. Only what survives is read as prose.
 //
 // It is still a heuristic over unstructured text and it will still be wrong on
 // something. What it may no longer be is wrong in the flattering direction on
@@ -50,12 +63,17 @@ const LEVEL_FIELD = new RegExp(String.raw`\b(?:level|lvl|severity)\s*[=:]\s*"?($
 
 /**
  * A level TAG at the head of a line or inside a bracket: `[ERROR]`, `ERROR:`,
- * `<warn>`, `INFO - started`. The trailing delimiter is what makes it a tag
- * rather than a word, which is why `information:` and `errorProne.ts` do not
- * match it.
+ * `<warn>`, `INFO - started`, `npm ERR!`. The trailing delimiter is what makes
+ * it a tag rather than a word, which is why `information:` and `errorProne.ts`
+ * do not match it.
+ *
+ * `!` is in the delimiter set for one specific reason: `npm ERR!` is the
+ * commonest failure line in a Node project, and without it that line has no
+ * tag, falls through to the prose pass, and is not caught there either because
+ * a bare `err` is deliberately not an error word.
  */
 const LEVEL_TAG = new RegExp(
-  String.raw`(?:^|[\s[(<|])(${LEVELS})(?:\s*[\]>)|:]|\s+[-|]\s)`,
+  String.raw`(?:^|[\s[(<|])(${LEVELS})(?:\s*[\]>)|:!]|\s+[-|]\s)`,
   "i",
 );
 
@@ -91,7 +109,13 @@ const WARN_WORDS = "warn(?:ing)?s?|deprecated";
 
 /** The severity of one raw log line. See the header for what each tier means. */
 export function severityOf(line: string): LogSeverity {
-  const tag = LEVEL_FIELD.exec(line) ?? LEVEL_TAG.exec(line);
+  // Strike the negated and zeroed mentions FIRST, before anything is read.
+  // Order matters and used to be wrong: with the tag pass first, `error: 0`
+  // matched LEVEL_TAG on `error:` and returned "error" before the zero-strike
+  // ever ran, so a line reporting no errors counted as one.
+  const residue = line.replace(NEGATED, " ").replace(ZERO_COUNTED, " ");
+
+  const tag = LEVEL_FIELD.exec(residue) ?? LEVEL_TAG.exec(residue);
   if (tag) {
     const level = tag[1].toLowerCase();
     if (level === "fatal" || level === "critical" || level === "crit" || level === "error" || level === "err") {
@@ -101,7 +125,6 @@ export function severityOf(line: string): LogSeverity {
     return "info";
   }
 
-  const residue = line.replace(NEGATED, " ").replace(ZERO_COUNTED, " ");
   if (mentions(residue, ERROR_WORDS)) return "error";
   if (mentions(residue, WARN_WORDS)) return "warn";
   return "info";
