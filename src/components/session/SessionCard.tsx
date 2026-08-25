@@ -34,7 +34,12 @@ export default function SessionCard({ session }: { session: SessionRecord }) {
   const isActive = session.status === "active";
 
   return (
-    <Link href={`/sessions/${session.id}`}>
+    // `block` is load-bearing, not tidiness. An <a> defaults to display:inline,
+    // and the list's `divide-y` puts the divider on this element: a border on an
+    // inline box reserves no layout space, so the rule sat on top of the next
+    // row instead of between them, and would repeat per line box the moment the
+    // row wrapped. Read out of Chrome, not assumed.
+    <Link href={`/sessions/${session.id}`} className="block">
       <LedgerRow hover padding="block" className="group cursor-pointer">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
