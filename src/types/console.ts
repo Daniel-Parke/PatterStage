@@ -67,6 +67,20 @@ export interface MonitorData {
     lastRun: string | null;
     allSuccessful: boolean;
     sourceStatuses: Record<string, string>;
+    /**
+     * The last failure message per source, for the sources that have one.
+     *
+     * `sourceStatuses` flattens a source to "ok" / "error" / "pending", which
+     * is enough to draw a red cross and nothing else. SyncScheduler has kept
+     * the actual message all along and /api/sync has served it, but the
+     * dashboard reads THIS route, so the reason was thrown away one call
+     * short of the screen (T-0034).
+     *
+     * A healthy source contributes no key. An empty string is not "no error",
+     * and a panel that renders every key draws an empty reason box for every
+     * source that is fine.
+     */
+    sourceErrors: Record<string, string>;
   };
   /**
    * The background scheduler's cross-process lease + heartbeat. This is the

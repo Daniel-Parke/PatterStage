@@ -348,9 +348,21 @@ function CanvasInner({ workflows, onSaved }: { workflows: ComposerWorkflow[]; on
           fitView
           proOptions={{ hideAttribution: true }}
         >
-          <Background color="#1e293b" gap={18} />
+          {/* The canvas furniture is xyflow's, so its colours arrive as props
+              rather than classes. They were slate-800 and slate-700, which are
+              Tailwind defaults nobody chose for this app: the surfaces here are
+              blue-tinted. These are the two un-roled rungs of the dark ladder,
+              which is what those rungs are FOR, and the shift is a couple of
+              values per channel (T-0034). */}
+          <Background color="var(--color-dark-700)" gap={18} />
           <Controls className="!bg-dark-900 !border-white/10" />
-          <MiniMap pannable zoomable className="!bg-dark-900" maskColor="rgba(0,0,0,0.6)" nodeColor="#334155" />
+          <MiniMap
+            pannable
+            zoomable
+            className="!bg-dark-900"
+            maskColor="var(--color-ps-viz-scrim)"
+            nodeColor="var(--color-dark-600)"
+          />
         </ReactFlow>
 
         {/* Palette (top-left overlay) */}

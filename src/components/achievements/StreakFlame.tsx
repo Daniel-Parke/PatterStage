@@ -11,7 +11,7 @@ export default function StreakFlame({ current, longest }: { current: number; lon
     <div className="flex items-center gap-2.5" title={`Current streak: ${current} day(s) · Best: ${longest}`}>
       <div
         className="relative flex h-11 w-11 items-center justify-center rounded-full"
-        style={{ background: hot ? neonAlpha(color, 18) : "rgba(255,255,255,0.04)" }}
+        style={{ background: hot ? neonAlpha(color, 18) : "var(--color-ps-viz-empty)" }}
       >
         <Flame
           className={`h-5 w-5 ${hot ? "animate-flame" : "text-ps-text-faint"}`}

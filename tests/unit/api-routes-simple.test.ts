@@ -24,6 +24,10 @@ jest.mock("@/lib/sync", () => ({
   getSyncScheduler: jest.fn(() => ({
     getLastCycleResult: jest.fn(() => null),
     getSourceNames: jest.fn(() => ["cron", "sessions", "config", "env", "logs", "processes", "memory"]),
+    // /api/monitor now reads the per-source failure MESSAGE as well as the
+    // status, so the stand-in has to answer the same interface the real
+    // SyncScheduler does. See tests/unit/monitor-sync-source-errors.test.ts.
+    getLastErrorBySource: jest.fn(() => ({})),
     isRunning: false,
   })),
   runFullSync: jest.fn(),

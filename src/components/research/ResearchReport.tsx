@@ -88,7 +88,10 @@ const NAV =
 const SOURCES =
   "[&_ol.dr-sources]:list-none [&_ol.dr-sources]:space-y-2 [&_ol.dr-sources]:pl-0 " +
   "[&_ol.dr-sources_li]:rounded-lg [&_ol.dr-sources_li]:border [&_ol.dr-sources_li]:border-white/10 [&_ol.dr-sources_li]:bg-dark-900/50 [&_ol.dr-sources_li]:p-2.5 [&_ol.dr-sources_li]:scroll-mt-20 " +
-  "[&_.n]:font-semibold [&_.n]:text-neon-cyan [&_a]:text-ps-text-primary hover:[&_a]:text-neon-cyan [&_.u]:mt-0.5 [&_.u]:break-all [&_.u]:text-xs [&_.u]:text-ps-text-muted";
+  "[&_.n]:font-semibold [&_.n]:text-neon-cyan [&_a]:text-ps-text-primary hover:[&_a]:text-neon-cyan "
+  // `.h` is a source whose URL is not http(s), so renderSourcesHtml refuses
+  // to make it a link. It still reads as the host it claims to be.
+  + "[&_.h]:text-ps-text-secondary [&_.u]:mt-0.5 [&_.u]:break-all [&_.u]:text-xs [&_.u]:text-ps-text-muted";
 
 export default function ResearchReport({ run, steps }: { run: ResearchRun; steps: ResearchStep[] }) {
   const [copied, setCopied] = useState(false);
@@ -141,6 +144,7 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
 
       {/* Report */}
       {report ? (
+        /* design-lint-disable-next-line no-unsanitised-html -- report.html comes from renderReport() in deep-research/markdown.ts, which escapes the model's Markdown before emitting a fixed tag set and linkifies only http(s) URLs; it is the same renderer as the two pragmas above. */
         <div className={PROSE} dangerouslySetInnerHTML={{ __html: report.html }} />
       ) : run.status === "running" || run.status === "pending" ? (
         <div className="flex items-center gap-2 text-sm text-ps-text-muted">
@@ -154,6 +158,7 @@ export default function ResearchReport({ run, steps }: { run: ResearchRun; steps
           <h3 className="mb-2 text-xs font-mono uppercase tracking-widest text-ps-text-muted">
             Sources ({sources.length})
           </h3>
+          {/* design-lint-disable-next-line no-unsanitised-html -- renderSourcesHtml escapes the host and the URL as text AND refuses an href whose scheme is not http(s); escaping alone was not enough here, because a javascript: URL is well-formed and still runs. */}
           <div className={SOURCES} dangerouslySetInnerHTML={{ __html: renderSourcesHtml(sources) }} />
         </div>
       ) : null}

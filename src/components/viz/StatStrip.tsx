@@ -57,7 +57,12 @@ export default function StatStrip({
 }: {
   donut?: { segments: DonutSegment[]; center: ReactNode; centerSub?: ReactNode };
   tiles: StatTileSpec[];
-  ring?: { value: number; color: NeonColor; label: ReactNode; sublabel?: ReactNode };
+  /**
+   * `hint` is the same affordance the tiles carry: a ring shows a rate, and a
+   * rate is a division whose denominator the reader cannot see. Optional, so
+   * every existing caller is unchanged.
+   */
+  ring?: { value: number; color: NeonColor; label: ReactNode; sublabel?: ReactNode; hint?: string };
   className?: string;
 }) {
   // Literal class strings so Tailwind's JIT can compile the arbitrary columns.
@@ -84,7 +89,7 @@ export default function StatStrip({
         ))}
       </div>
       {ring && (
-        <div className="flex justify-center">
+        <div className="flex justify-center" title={ring.hint}>
           <ProgressRing value={ring.value} color={ring.color} size={84} thickness={8} label={ring.label} sublabel={ring.sublabel} />
         </div>
       )}

@@ -103,14 +103,14 @@ export default function AchievementBadge({ achievement }: { achievement: Achieve
       style={
         unlocked
           ? { borderColor: neonAlpha(c, 30), background: neonAlpha(c, 8), boxShadow: `0 0 18px ${neonAlpha(c, 12)}` }
-          : { borderColor: "rgba(255,255,255,0.06)" }
+          : { borderColor: "var(--color-ps-viz-track)" }
       }
     >
       <div
         className="relative flex h-11 w-11 items-center justify-center rounded-full"
-        style={{ background: unlocked ? neonAlpha(c, 18) : "rgba(255,255,255,0.04)" }}
+        style={{ background: unlocked ? neonAlpha(c, 18) : "var(--color-ps-viz-empty)" }}
       >
-        <Icon className="h-5 w-5" style={{ color: unlocked ? neon(c) : "rgba(255,255,255,0.22)" }} />
+        <Icon className="h-5 w-5" style={{ color: unlocked ? neon(c) : "var(--color-ps-viz-glyph-idle)" }} />
         {!unlocked && (
           <Lock className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full bg-dark-800 p-[3px] text-ps-text-muted" />
         )}

@@ -161,6 +161,7 @@ export default function ArtifactsPage() {
                the ruling is against, on a surface that renders whole documents. */
             <div
               className="prose prose-invert max-w-3xl text-sm text-ps-text-primary"
+              // design-lint-disable-next-line no-unsanitised-html -- renderReportHtml escapes every byte first and emits only its own tag set, so a text/html artifact renders as visible source rather than live markup; that is the safe side of the trade and it is deliberate.
               dangerouslySetInnerHTML={{ __html: renderReportHtml(detail.content ?? "") }}
             />
           ) : (

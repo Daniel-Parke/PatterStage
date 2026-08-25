@@ -4,7 +4,6 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, notFound } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
@@ -14,10 +13,7 @@ interface Ctx {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(request: NextRequest, ctx: Ctx) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET(_request: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
   try {
     ensureDb();

@@ -28,8 +28,8 @@ export default function RadialActivityClock({
   return (
     <svg viewBox={`0 0 ${size} ${size}`} width="100%" height="100%" className={className}>
       {/* guide rings */}
-      <circle cx={cx} cy={cy} r={rOuter} fill="none" stroke="rgba(255,255,255,0.05)" />
-      <circle cx={cx} cy={cy} r={rInner} fill="none" stroke="rgba(255,255,255,0.05)" />
+      <circle cx={cx} cy={cy} r={rOuter} fill="none" stroke="var(--color-ps-viz-guide)" />
+      <circle cx={cx} cy={cy} r={rInner} fill="none" stroke="var(--color-ps-viz-guide)" />
       {/* quadrant ticks (0/6/12/18h) */}
       {[0, 6, 12, 18].map((h) => {
         const a = (h / 24) * 360;
@@ -42,7 +42,7 @@ export default function RadialActivityClock({
             y1={p1.y}
             x2={p2.x}
             y2={p2.y}
-            stroke="rgba(255,255,255,0.08)"
+            stroke="var(--color-ps-viz-axis)"
             strokeWidth={1}
           />
         );
@@ -60,7 +60,7 @@ export default function RadialActivityClock({
             key={h}
             x={p.x}
             y={p.y}
-            fill="rgba(255,255,255,0.3)"
+            fill="var(--color-ps-text-faint)"
             fontSize={8}
             fontFamily="monospace"
             textAnchor="middle"

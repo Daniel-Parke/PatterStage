@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
+import { requireNotReadOnly } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, notFound, serverError } from "@/lib/api-response";
 import { getMission } from "@/lib/missions/mission-repository";
@@ -16,9 +16,14 @@ interface Ctx {
   params: Promise<{ id: string }>;
 }
 
-export async function POST(request: NextRequest, ctx: Ctx) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
+export async function POST(_request: NextRequest, ctx: Ctx) {
+  // Read-only mode. NOT authentication: src/proxy.ts authenticates every
+  // request before a handler runs, and design-lint forbids a per-route auth
+  // check. The proxy also refuses unsafe METHODS under PS_READ_ONLY, so this
+  // is defence in depth on a write, spelled with the name that says what it
+  // does (T-0034).
+  const readOnly = requireNotReadOnly("missions cannot be dispatched");
+  if (readOnly) return readOnly;
 
   const { id } = await ctx.params;
   try {

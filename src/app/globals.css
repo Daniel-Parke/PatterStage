@@ -95,6 +95,51 @@
   --color-ps-surface-well: var(--color-dark-800);
   --color-ps-surface-hairline: rgb(255 255 255 / 0.10);
 
+  /* ── Viz chrome ────────────────────────────────────────────────────────────
+     The furniture a chart is drawn ON, as opposed to the data drawn IN it.
+     Series colour was never the problem: it already goes through a named scale
+     in src/components/viz/colors.ts, which resolves to the --color-neon-*
+     tokens. What stayed inline was the chrome, and design-lint counted it as
+     nineteen raw colours across eleven files (T-0034).
+
+     Every rung is the value the tree already painted, read off the components
+     on 2026-08-25. Naming is not repainting: not one pixel moves by declaring
+     these, and re-valuing a rung is a design decision for the lock-book's
+     Tokens section rather than something a refactor may do quietly.
+
+       role        alpha  what it is                          where it was
+       empty       4%     the disc behind a locked badge or   AchievementBadge,
+                          a cold streak: nothing here yet     StreakFlame
+       guide       5%     a ring or cell marking where data   RadialActivityClock
+                          would be, if there were any         (x2), ActivityHeatmap
+       track       6%     the unfilled remainder of a gauge,  Donut,
+                          and the rule round an unearned badge AchievementBadge
+       axis        8%     the baseline a chart is measured    DistributionHistogram,
+                          against, and its quadrant ticks     StackedAreaTrend,
+                                                              RadialActivityClock
+       inert      15%     a graph edge that is not on the     WorkflowRunCanvas
+                          live path
+       glyph-idle 22%     a locked achievement's icon. NOT a  AchievementBadge
+                          text tier: the badge's name is text
+                          and already reads at ps-text-muted,
+                          with a lock glyph beside it, so this
+                          carries state and not meaning
+       scrim      black   the veil the minimap draws over the WorkflowCanvas
+                  at 60%  canvas it is not showing
+
+     There is deliberately no rung here for chart TEXT. An axis label is text,
+     it reads through --color-ps-text-*, and scripts/tooling/contrast-check.mjs
+     measures those four and nothing else. The tick labels used to be painted
+     white at 30 and 35 percent, below the 50 percent floor the `faint` tier
+     sets; they are on the tier now. */
+  --color-ps-viz-empty: rgb(255 255 255 / 0.04);
+  --color-ps-viz-guide: rgb(255 255 255 / 0.05);
+  --color-ps-viz-track: rgb(255 255 255 / 0.06);
+  --color-ps-viz-axis: rgb(255 255 255 / 0.08);
+  --color-ps-viz-inert: rgb(255 255 255 / 0.15);
+  --color-ps-viz-glyph-idle: rgb(255 255 255 / 0.22);
+  --color-ps-viz-scrim: rgb(0 0 0 / 0.6);
+
   /* ── Measures ──────────────────────────────────────────────────────────────
      Three column widths and one block rhythm, also owed by the Tokens section
      and ruled in the same sitting. Read off the tree's own page shells rather
@@ -153,6 +198,26 @@
   /* Both registers share the console accent and the panel rule. */
   --ps-reader-accent: #a855f7;
   --ps-reader-rule: #2a2520;
+
+  /* Chapter-dot states, shared by ReaderHeader and ReaderNavigation, which
+     carried the same five-branch conditional as inline hex twice over
+     (T-0034). Values read off those components on 2026-08-25.
+
+     `idle` mints nothing: the dot for a chapter that does not exist yet was
+     already the panel rule's own colour, and saying so is better than
+     repeating the hex. The other four are warm tints belonging to the reading
+     register, which is why they live here beside it rather than in @theme.
+
+     Open, and not this task's to rule: writing / pending / failed are a
+     status ladder, and the app HAS one (--color-semantic-info / -warning /
+     -danger). Moving them onto it is a visible repaint of the reader's warm
+     register with the console's cold one, so it is a design decision for the
+     lock-book, not a side effect of moving a value out of a component. */
+  --ps-reader-chapter-done: #4a3f35;
+  --ps-reader-chapter-writing: #3b82f6;
+  --ps-reader-chapter-pending: #f59e0b;
+  --ps-reader-chapter-failed: #7f1d1d;
+  --ps-reader-chapter-idle: var(--ps-reader-rule);
 }
 
 /* Scrollbar styling */

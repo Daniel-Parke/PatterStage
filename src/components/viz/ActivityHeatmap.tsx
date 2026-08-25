@@ -43,7 +43,7 @@ export default function ActivityHeatmap({
   });
 
   const intensity = (v: number): string => {
-    if (v <= 0) return "rgba(255,255,255,0.05)";
+    if (v <= 0) return "var(--color-ps-viz-guide)";
     const t = 0.2 + 0.8 * (v / max); // 20%–100%
     return neonAlpha(color, Math.round(t * 100));
   };

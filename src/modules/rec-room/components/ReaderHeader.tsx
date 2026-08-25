@@ -8,6 +8,7 @@
 
 import { BookMarked, BookOpen, ChevronLeft, PlayCircle, RefreshCw } from "lucide-react";
 import ReaderSettings, { type ReadingSettings } from "@/modules/rec-room/components/ReaderSettings";
+import { chapterDotColor } from "@/modules/rec-room/components/chapter-dot";
 import type { Chapter, ReaderTheme } from "@/modules/rec-room/components/story-reader-types";
 
 export interface ReaderHeaderProps {
@@ -98,7 +99,7 @@ export default function ReaderHeader({
             className={`w-2 h-2 rounded-full transition-all ${
               i + 1 === currentChapter ? "scale-150" : "opacity-40 hover:opacity-70"
             }`}
-            style={{ background: ch.status === "complete" ? (i + 1 === currentChapter ? theme.accent : "#4a3f35") : ch.status === "writing" ? "#3b82f6" : ch.status === "pending" ? "#f59e0b" : ch.status === "failed" ? "#7f1d1d" : "#2a2520" }}
+            style={{ background: chapterDotColor(ch.status, i + 1 === currentChapter, theme.accent) }}
             title={`Chapter ${i + 1}: ${ch.title} (${ch.status})`} />
         ))}
       </div>

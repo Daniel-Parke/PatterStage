@@ -45,14 +45,46 @@ function hostOf(url: string): string {
   }
 }
 
+/**
+ * The URL, but only if following it is navigation.
+ *
+ * escAttr() stops a value breaking OUT of an attribute; it has nothing to say
+ * about what the attribute then means. `href="javascript:alert(1)"` is
+ * perfectly well-formed HTML and perfectly escaped, and it still runs on click.
+ * These URLs come off the network (the search provider's results and the pages
+ * the research loop visited) and the same list is written into the standalone
+ * export a user is invited to open and share, so the scheme is checked here
+ * rather than assumed.
+ *
+ * renderInline() in markdown.ts already applies this rule to links in the prose
+ * by linkifying only `https?://`. This is the sources list catching up
+ * (T-0034). Returns null for anything that is not http or https, including a
+ * URL that does not parse at all; the caller still LISTS the entry, because the
+ * citations in the prose are numbered against this list and dropping a row
+ * would renumber every citation after it.
+ */
+function navigableHref(url: string): string | null {
+  try {
+    const parsed = new URL(url.trim());
+    return parsed.protocol === "http:" || parsed.protocol === "https:" ? url.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Render the numbered, anchored Sources list HTML (shared by page + export). */
 export function renderSourcesHtml(sources: string[]): string {
   if (!sources.length) return "";
   const items = sources
-    .map(
-      (url, i) =>
-        `<li id="dr-src-${i + 1}"><span class="n">[${i + 1}]</span> <a href="${escAttr(url)}" target="_blank" rel="noopener noreferrer">${escAttr(hostOf(url))}</a><div class="u">${escAttr(url)}</div></li>`,
-    )
+    .map((url, i) => {
+      const href = navigableHref(url);
+      // A source that is not navigable is still a source: it keeps its number
+      // and its text, it simply is not a link.
+      const label = href
+        ? `<a href="${escAttr(href)}" target="_blank" rel="noopener noreferrer">${escAttr(hostOf(url))}</a>`
+        : `<span class="h">${escAttr(hostOf(url))}</span>`;
+      return `<li id="dr-src-${i + 1}"><span class="n">[${i + 1}]</span> ${label}<div class="u">${escAttr(url)}</div></li>`;
+    })
     .join("\n");
   return `<ol class="dr-sources">\n${items}\n</ol>`;
 }
@@ -152,6 +184,7 @@ export function buildExportHtml(run: ResearchRun, steps: ResearchStep[]): string
   .section > h2.lbl { font: 600 12px/1 ui-monospace, monospace; letter-spacing: .15em; text-transform: uppercase; color: #8b97a8; border: none; padding: 0; }
   ol.dr-sources { list-style: none; padding: 0; } ol.dr-sources li { background: #0f1626; border: 1px solid #1b2436; border-radius: 8px; padding: 10px 12px; margin: 8px 0; }
   ol.dr-sources .n { color: #5eead4; font-weight: 600; } ol.dr-sources .u { color: #6b7688; font-size: 12px; word-break: break-all; margin-top: 2px; }
+  ol.dr-sources .h { color: #aeb9c9; }
   .dr-step { background: #0f1626; border: 1px solid #1b2436; border-radius: 8px; margin: 6px 0; padding: 8px 12px; }
   .dr-step summary { cursor: pointer; } .dr-step .k { color: #67e8f9; font: 600 11px/1 ui-monospace, monospace; text-transform: uppercase; letter-spacing: .1em; }
   .dr-step .i { color: #8b97a8; font-size: 12px; } .dr-step pre { white-space: pre-wrap; color: #aeb9c9; font-size: 13px; margin: 8px 0 0; }

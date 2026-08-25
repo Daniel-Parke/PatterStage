@@ -1,16 +1,1 @@
-{
-  "no-raw-colour-in-tsx::src/components/achievements/AchievementBadge.tsx": 3,
-  "no-raw-colour-in-tsx::src/components/achievements/StreakFlame.tsx": 1,
-  "no-raw-colour-in-tsx::src/components/composer/WorkflowCanvas.tsx": 2,
-  "no-raw-colour-in-tsx::src/components/composer/WorkflowRunCanvas.tsx": 2,
-  "no-raw-colour-in-tsx::src/components/viz/ActivityHeatmap.tsx": 1,
-  "no-raw-colour-in-tsx::src/components/viz/DistributionHistogram.tsx": 2,
-  "no-raw-colour-in-tsx::src/components/viz/Donut.tsx": 1,
-  "no-raw-colour-in-tsx::src/components/viz/RadialActivityClock.tsx": 4,
-  "no-raw-colour-in-tsx::src/components/viz/StackedAreaTrend.tsx": 1,
-  "no-raw-colour-in-tsx::src/modules/rec-room/components/ReaderHeader.tsx": 1,
-  "no-raw-colour-in-tsx::src/modules/rec-room/components/ReaderNavigation.tsx": 1,
-  "no-unsanitised-html::src/app/laboratory/artifacts/page.tsx": 1,
-  "no-unsanitised-html::src/components/chat/MessageBubble.tsx": 1,
-  "no-unsanitised-html::src/components/research/ResearchReport.tsx": 2
-}
+{}

@@ -86,6 +86,7 @@ export async function GET(request: NextRequest) {
     let lastSync: string | null = null;
     let allSuccessful = true;
     const sourceStatuses: Record<string, string> = {};
+    const sourceErrors: Record<string, string> = {};
 
     if (scheduler) {
       const lastCycle = scheduler.getLastCycleResult();
@@ -95,6 +96,14 @@ export async function GET(request: NextRequest) {
         for (const r of lastCycle.results) {
           sourceStatuses[r.sourceName] = r.success ? "ok" : "error";
         }
+      }
+      // The REASON, not just the cross. The scheduler has kept the last failure
+      // message per source since it was written and /api/sync serves it, but the
+      // dashboard reads this route: it drew a red tick-mark with no text while
+      // the text sat in memory one call away (T-0034). Only sources that
+      // actually have a message get a key; see MonitorData.sync.sourceErrors.
+      for (const [name, message] of Object.entries(scheduler.getLastErrorBySource())) {
+        if (message) sourceErrors[name] = message;
       }
     }
 
@@ -135,6 +144,7 @@ export async function GET(request: NextRequest) {
         lastRun: lastSync,
         allSuccessful,
         sourceStatuses,
+        sourceErrors,
       },
       scheduler: schedulerHealth,
     };

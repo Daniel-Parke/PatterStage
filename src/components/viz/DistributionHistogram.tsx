@@ -44,7 +44,7 @@ export default function DistributionHistogram({
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} className={className} preserveAspectRatio="none">
-      <line x1={0} y1={H - padBottom} x2={W} y2={H - padBottom} stroke="rgba(255,255,255,0.08)" />
+      <line x1={0} y1={H - padBottom} x2={W} y2={H - padBottom} stroke="var(--color-ps-viz-axis)" />
       {bins.map((b, i) => {
         const h = (b.value / max) * innerH;
         const x = padX + i * slot + (slot - barW) / 2;
@@ -72,7 +72,7 @@ export default function DistributionHistogram({
             <text
               x={padX + i * slot + slot / 2}
               y={H - padBottom + 13}
-              fill="rgba(255,255,255,0.35)"
+              fill="var(--color-ps-text-faint)"
               fontSize={8}
               fontFamily="monospace"
               textAnchor="middle"

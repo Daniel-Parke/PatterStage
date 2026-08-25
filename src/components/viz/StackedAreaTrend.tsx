@@ -36,7 +36,7 @@ export default function StackedAreaTrend({
   if (n === 0) {
     return (
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} className={className} preserveAspectRatio="none">
-        <line x1="0" y1={H - 1} x2={W} y2={H - 1} stroke="rgba(255,255,255,0.08)" />
+        <line x1="0" y1={H - 1} x2={W} y2={H - 1} stroke="var(--color-ps-viz-axis)" />
       </svg>
     );
   }

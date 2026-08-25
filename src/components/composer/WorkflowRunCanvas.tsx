@@ -126,7 +126,12 @@ function RunCanvasInner({
         label: e.data.condition === "always" ? undefined : e.data.condition,
         animated: active,
         className: active ? "ps-edge-glow" : undefined,
-        style: active ? { stroke: "#22d3ee", strokeWidth: 2 } : { stroke: "rgba(255,255,255,0.15)" },
+        // The live pathway flies the console accent, not a hand-picked cyan
+        // one shade off it. The node this edge leads to already draws its
+        // ring with ring-neon-cyan, so the two were never meant to differ.
+        style: active
+          ? { stroke: "var(--color-neon-cyan)", strokeWidth: 2 }
+          : { stroke: "var(--color-ps-viz-inert)" },
       };
     });
 
@@ -148,7 +153,7 @@ function RunCanvasInner({
         minZoom={0.2}
         proOptions={{ hideAttribution: true }}
       >
-        <Background color="#1e293b" gap={18} />
+        <Background color="var(--color-dark-700)" gap={18} />
       </ReactFlow>
       {gate ? <div className="absolute right-3 top-3 z-10 w-72 rounded-lg border border-white/10 bg-dark-900/90 p-3 backdrop-blur">{gate}</div> : null}
     </div>

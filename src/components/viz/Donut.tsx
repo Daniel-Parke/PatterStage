@@ -54,7 +54,7 @@ export default function Donut({ segments, size = 120, thickness = 14, center, ce
   return (
     <div className={`relative inline-flex items-center justify-center ${className ?? ""}`} style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={cx} cy={cx} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={thickness} />
+        <circle cx={cx} cy={cx} r={r} fill="none" stroke="var(--color-ps-viz-track)" strokeWidth={thickness} />
         {arcs}
       </svg>
       {(center != null || centerSub != null) && (

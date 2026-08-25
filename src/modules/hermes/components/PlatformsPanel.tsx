@@ -23,7 +23,25 @@ export interface PlatformsPanelProps {
   onSyncNow: () => void;
 }
 
+/**
+ * The sources whose last sync failed, each with the reason if the scheduler
+ * kept one.
+ *
+ * A source can be in `sourceStatuses` as "error" with no message (a failure
+ * that produced no text, or a process restarted since), and that case must
+ * still be named: the defect being fixed here is a silent failure, so falling
+ * back to silence for the harder half would be the same defect with a smaller
+ * blast radius (T-0034).
+ */
+function failingSources(sync: MonitorData["sync"]): Array<{ name: string; reason: string | null }> {
+  return Object.entries(sync.sourceStatuses)
+    .filter(([, status]) => status === "error")
+    .map(([name]) => ({ name, reason: sync.sourceErrors?.[name] ?? null }));
+}
+
 export default function PlatformsPanel({ monitor, syncNowBusy, onSyncNow }: PlatformsPanelProps) {
+  const failures = monitor ? failingSources(monitor.sync) : [];
+
   return (
     <Panel accent="cyan">
       <PanelHeader icon={Globe} label="Platforms" accent="cyan" />
@@ -85,6 +103,22 @@ export default function PlatformsPanel({ monitor, syncNowBusy, onSyncNow }: Plat
           {syncNowBusy ? "Syncing…" : "Sync now"}
         </button>
       </div>
+      {failures.length > 0 && (
+        // The cross above says something broke. This says what, which is the
+        // only version of that sentence an operator can act on. The message is
+        // the scheduler's own, so it names the source's real failure (a missing
+        // crontab, a refused socket) rather than a re-worded summary of it.
+        <div className="px-4 pb-3 space-y-1">
+          {failures.map((f) => (
+            <div key={f.name} className="text-xs font-mono leading-snug">
+              <span className="text-red-400">{f.name}</span>{" "}
+              <span className="text-ps-text-muted break-words">
+                {f.reason ?? "failed on its last run, with no message recorded."}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </Panel>
   );
 }

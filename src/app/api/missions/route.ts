@@ -13,10 +13,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { listMissions } from "@/lib/missions/mission-repository";
 import { getLatestRunForMission, listLatestRunsForMissions } from "@/lib/runs-repository";
 import { buildMissionRunView } from "@/lib/orchestration/run-deadline";
-import { requireAuth, isReadOnly } from "@/lib/api-auth";
+import { requireNotReadOnly } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
-import { badRequest, ok, serviceUnavailable } from "@/lib/api-response";
+import { badRequest, ok } from "@/lib/api-response";
 import { ensureSyncLayer } from "@/lib/sync";
 import { getMissionOrNotFound } from "@/lib/missions/mission-handlers/shared";
 import { handleDispatchMission } from "@/lib/missions/mission-handlers/dispatch";
@@ -27,10 +27,12 @@ import { handleDeleteMission } from "@/lib/missions/mission-handlers/delete";
 
 // ── GET ───────────────────────────────────────────────────────
 
+// A READ. No guard of any kind: src/proxy.ts authenticates every request
+// before this handler exists, and read-only mode is a restriction on WRITES.
+// This route used to call requireAuth(), which authenticates nothing and
+// answers 503 under PS_READ_ONLY, so setting the flag to browse safely made
+// the missions board unreadable (T-0034).
 export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   ensureSyncLayer();
   const url = new URL(request.url);
   const id = url.searchParams.get("id");
@@ -72,11 +74,12 @@ export async function GET(request: NextRequest) {
 // ── POST ──────────────────────────────────────────────────────
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-  if (isReadOnly()) {
-    return serviceUnavailable("PatterStage is in read-only mode");
-  }
+  // One read-only guard, not two. This handler carried requireAuth() AND an
+  // isReadOnly() block, which are the same check: requireAuth IS
+  // requireNotReadOnly under an older name. The duplication is what the name
+  // was costing (T-0034).
+  const readOnly = requireNotReadOnly("missions cannot be created or changed");
+  if (readOnly) return readOnly;
 
   ensureSyncLayer();
 
