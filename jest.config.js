@@ -37,6 +37,22 @@ const config = {
     "<rootDir>/tests/unit/**/*.test.ts",
     "<rootDir>/tests/unit/**/*.test.tsx",
   ],
+  // Keep jest out of tmp/ entirely.
+  //
+  // testMatch already stops tests THERE from running, but jest-haste-map scans
+  // wider than testMatch: it indexes package names and manual mocks across the
+  // whole rootDir. A scratch checkout under tmp/ (an agent's git worktree, a
+  // release probe) therefore produced two warnings on every run:
+  //
+  //   jest-haste-map: duplicate manual mock found: better-sqlite3
+  //   jest-haste-map: Haste module naming collision: patterstage
+  //
+  // The duplicate-mock one is not cosmetic. Which of two identically-named
+  // manual mocks wins is not something to leave to scan order when the mock in
+  // question is the database.
+  //
+  // tmp/ is gitignored, so nothing in it is ever part of this project.
+  modulePathIgnorePatterns: ["<rootDir>/tmp/"],
 };
 
 module.exports = createJestConfig(config);
