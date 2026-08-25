@@ -1,26 +1,28 @@
 // ── SkillsSections — the Active and Inactive halves of the Skills Manager.
-// Extracted verbatim from app/operations/skills/page.tsx. The two sections
-// are the same shape with different accents, counts and empty-state copy, so
-// they share one private panel here and the page passes the difference in.
 //
-// Presentation only: every piece of state stays on the page.
+// The two sections are the same shape with different accents and empty-state
+// copy, so they share one private panel here and the page passes the
+// difference in. Presentation only: every piece of state stays on the page.
 //
-// The two grids differ in one substantive way. Active calls
-// `onToggleSkill(skill)` and takes the page helper's default fallback,
-// `skill.enabled`. Inactive calls `onToggleSkill(skill, !skill.enabled)`,
-// because the Inactive list is the negation of the active state: a skill
-// listed here has `enabled === false`, so the "current enabled" the page's
-// toggleSkill reads must be the inversion, or the toggle no-ops against
-// the wrong current state. That was true of the page's inline callbacks
-// before the split and is preserved exactly.
+// What changed in T-0032. Each section used to render a grid of every card it
+// held, all categories open, both sections at once: 178 cards, 5,450 DOM nodes
+// and 625 buttons on load. A section is now a list of category ROWS, and only
+// a category someone has opened renders a page window of skills. The
+// per-section search boxes went with it, up to one catalogue-wide box on the
+// page, so a search no longer has to be run twice to cover the catalogue.
+//
+// The Inactive grid also used to hand its cards a negated toggle fallback,
+// which made the toggle on an inactive skill compute its current state as
+// ENABLED and ask the API to disable a skill that was already disabled. Cards
+// read their own effective state now (see SkillRowList), so there is no
+// per-section negation left to get backwards.
 
 "use client";
 
 import { ToggleLeft, ToggleRight, type LucideIcon } from "lucide-react";
-import { SearchInput } from "@/components/ui/Input";
 import { EmptyState } from "@/components/ui/LoadingSpinner";
 import { SkillSection } from "@/components/skills/SkillSection";
-import { SkillCategoryGrid } from "@/components/skills/SkillCategoryGrid";
+import { SkillCategoryList } from "@/components/skills/SkillCategoryList";
 import { groupCategories } from "@/lib/skills-page-helpers";
 import type { Skill } from "@/types/console";
 
@@ -29,20 +31,16 @@ interface SkillsSectionPanelProps {
   icon: LucideIcon;
   iconColor: string;
   accentColor: string;
-  enabled: boolean;
-  searchAccent: "green" | "white";
-  searchPlaceholder: string;
+  scope: string;
   emptyTitle: string;
-  emptyWithSearch: string;
-  emptyWithoutSearch: string;
+  emptyDescription: string;
   skills: Skill[];
-  ofTotal: number;
-  search: string;
-  onSearchChange: (value: string) => void;
   collapsed: boolean;
   onToggleCollapse: () => void;
-  categoryCollapsed: Record<string, boolean>;
-  onToggleCategory: (cat: string) => void;
+  expandedCategories: Record<string, boolean>;
+  onToggleCategory: (stateKey: string) => void;
+  categoryPage: Record<string, number>;
+  onCategoryPageChange: (stateKey: string, page: number) => void;
   expandedSkill: string | null;
   skillContent: string;
   toggling: Record<string, boolean>;
@@ -56,20 +54,16 @@ function SkillsSectionPanel({
   icon,
   iconColor,
   accentColor,
-  enabled,
-  searchAccent,
-  searchPlaceholder,
+  scope,
   emptyTitle,
-  emptyWithSearch,
-  emptyWithoutSearch,
+  emptyDescription,
   skills,
-  ofTotal,
-  search,
-  onSearchChange,
   collapsed,
   onToggleCollapse,
-  categoryCollapsed,
+  expandedCategories,
   onToggleCategory,
+  categoryPage,
+  onCategoryPageChange,
   expandedSkill,
   skillContent,
   toggling,
@@ -77,37 +71,29 @@ function SkillsSectionPanel({
   onViewSkill,
   onEditSkill,
 }: SkillsSectionPanelProps) {
+  const categories = groupCategories(skills);
+
   return (
     <SkillSection
       title={title}
       icon={icon}
       iconColor={iconColor}
       count={skills.length}
-      ofTotal={ofTotal}
+      categoryCount={categories.length}
       collapsed={collapsed}
       onToggleCollapse={onToggleCollapse}
-      search={
-        <SearchInput
-          value={search}
-          onChange={onSearchChange}
-          placeholder={searchPlaceholder}
-          accentColor={searchAccent}
-        />
-      }
     >
       {skills.length === 0 ? (
-        <EmptyState
-          icon={icon}
-          title={emptyTitle}
-          description={search ? emptyWithSearch : emptyWithoutSearch}
-        />
+        <EmptyState icon={icon} title={emptyTitle} description={emptyDescription} />
       ) : (
-        <SkillCategoryGrid
-          categories={groupCategories(skills)}
-          categoryCollapsed={categoryCollapsed}
+        <SkillCategoryList
+          categories={categories}
+          scope={scope}
+          expandedCategories={expandedCategories}
           onToggleCategory={onToggleCategory}
+          categoryPage={categoryPage}
+          onCategoryPageChange={onCategoryPageChange}
           accentColor={accentColor}
-          enabled={enabled}
           expandedSkill={expandedSkill}
           skillContent={skillContent}
           toggling={toggling}
@@ -122,42 +108,34 @@ function SkillsSectionPanel({
 
 export interface SkillsSectionsProps {
   activeSkills: Skill[];
-  activeTotal: number;
-  activeSearch: string;
-  onActiveSearchChange: (value: string) => void;
   activeCollapsed: boolean;
   onToggleActiveCollapsed: () => void;
   inactiveSkills: Skill[];
-  inactiveTotal: number;
-  inactiveSearch: string;
-  onInactiveSearchChange: (value: string) => void;
   inactiveCollapsed: boolean;
   onToggleInactiveCollapsed: () => void;
-  categoryCollapsed: Record<string, boolean>;
-  onToggleCategory: (cat: string) => void;
+  expandedCategories: Record<string, boolean>;
+  onToggleCategory: (stateKey: string) => void;
+  categoryPage: Record<string, number>;
+  onCategoryPageChange: (stateKey: string, page: number) => void;
   expandedSkill: string | null;
   skillContent: string;
   toggling: Record<string, boolean>;
-  onToggleSkill: (skill: Skill, fallback?: boolean) => void;
+  onToggleSkill: (skill: Skill) => void;
   onViewSkill: (skill: Skill) => void;
   onEditSkill: (skill: Skill) => void;
 }
 
 export default function SkillsSections({
   activeSkills,
-  activeTotal,
-  activeSearch,
-  onActiveSearchChange,
   activeCollapsed,
   onToggleActiveCollapsed,
   inactiveSkills,
-  inactiveTotal,
-  inactiveSearch,
-  onInactiveSearchChange,
   inactiveCollapsed,
   onToggleInactiveCollapsed,
-  categoryCollapsed,
+  expandedCategories,
   onToggleCategory,
+  categoryPage,
+  onCategoryPageChange,
   expandedSkill,
   skillContent,
   toggling,
@@ -166,11 +144,14 @@ export default function SkillsSections({
   onEditSkill,
 }: SkillsSectionsProps) {
   const shared = {
-    categoryCollapsed,
+    expandedCategories,
     onToggleCategory,
+    categoryPage,
+    onCategoryPageChange,
     expandedSkill,
     skillContent,
     toggling,
+    onToggleSkill,
     onViewSkill,
     onEditSkill,
   };
@@ -184,19 +165,12 @@ export default function SkillsSections({
         icon={ToggleRight}
         iconColor="text-neon-green"
         accentColor="text-neon-green/70"
-        enabled
-        searchAccent="green"
-        searchPlaceholder="Search active skills..."
+        scope="active"
         emptyTitle="No active skills"
-        emptyWithSearch="No active skills match your search"
-        emptyWithoutSearch="Toggle skills below to enable them"
+        emptyDescription="Open a category below and toggle a skill to enable it"
         skills={activeSkills}
-        ofTotal={activeTotal}
-        search={activeSearch}
-        onSearchChange={onActiveSearchChange}
         collapsed={activeCollapsed}
         onToggleCollapse={onToggleActiveCollapsed}
-        onToggleSkill={onToggleSkill}
       />
 
       {/* ── Inactive Skills ── */}
@@ -206,19 +180,12 @@ export default function SkillsSections({
         icon={ToggleLeft}
         iconColor="text-ps-text-muted"
         accentColor="text-ps-text-muted"
-        enabled={false}
-        searchAccent="white"
-        searchPlaceholder="Search inactive skills..."
+        scope="inactive"
         emptyTitle="No inactive skills"
-        emptyWithSearch="No inactive skills match your search"
-        emptyWithoutSearch="All skills are currently active"
+        emptyDescription="All skills are currently active"
         skills={inactiveSkills}
-        ofTotal={inactiveTotal}
-        search={inactiveSearch}
-        onSearchChange={onInactiveSearchChange}
         collapsed={inactiveCollapsed}
         onToggleCollapse={onToggleInactiveCollapsed}
-        onToggleSkill={(skill) => onToggleSkill(skill, !skill.enabled)}
       />
     </div>
   );

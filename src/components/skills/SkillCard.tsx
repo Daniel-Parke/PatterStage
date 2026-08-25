@@ -42,7 +42,7 @@ export function SkillCard({
         }`}
       />
 
-      <div className="p-3 pl-4">
+      <div className="p-3 pl-4" data-testid="skill-card" data-skill={skill.name}>
         {/* Header row */}
         <div className="flex items-start justify-between gap-2 mb-1.5">
           <div className="flex-1 min-w-0">
@@ -63,6 +63,8 @@ export function SkillCard({
 
           {/* Toggle */}
           <button
+            type="button"
+            data-testid="skill-toggle"
             onClick={onToggle}
             disabled={isPending}
             className="flex-shrink-0 mt-0.5 disabled:opacity-40"
@@ -102,6 +104,7 @@ export function SkillCard({
 
           <button
             type="button"
+            data-testid="skill-edit"
             onClick={onEdit}
             className="flex items-center gap-1 text-xs px-2 py-1 rounded border border-white/10 text-ps-text-muted hover:border-neon-green/30 hover:text-neon-green transition-all"
           >
@@ -109,6 +112,7 @@ export function SkillCard({
           </button>
           <button
             type="button"
+            data-testid="skill-view"
             onClick={onView}
             className={`flex items-center gap-1 text-xs px-2 py-1 rounded border transition-all ${
               isExpanded
