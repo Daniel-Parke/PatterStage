@@ -9,12 +9,12 @@ compiled_from: normalised
 
 How missions are stored, dispatched, and cancelled. Missions live in SQLite (`missions` table) with optional JSON overlays under `PS_DATA_DIR/missions/`.
 
-> Missions are intentionally **simple** — a single or recurring agent task (think "cron for AI agents"). For methodical, **multi-stage** workflows with conditional branches, loop-backs, and human-in-the-loop gates, use **[Composer](COMPOSER.md)** (a separate orchestrator). Missions are not phased.
+> Missions are intentionally **simple**: a single or recurring agent task (think "cron for AI agents"). For methodical, **multi-stage** workflows with conditional branches, loop-backs, and human-in-the-loop gates, use **[Composer](COMPOSER.md)** (a separate orchestrator). Missions are not phased.
 
 ## Prompt model
 
 - The UI sends **raw** fields (`instruction`, `context`, `goals`, `outputFormat`, `constraints`, dirs, refs, skills, suggested toolsets) on dispatch/update.
-- The API builds the stored `prompt` via `buildMissionPrompt()` in `src/lib/missions/build-mission-prompt.ts` — XML under `<hermes_mission>` (agent payload).
+- The API builds the stored `prompt` via `buildMissionPrompt()` in `src/lib/missions/build-mission-prompt.ts`: XML under `<hermes_mission>` (agent payload).
 - The composer preview can toggle **Human** (form mirror) vs **AI** (stored agent prompt).
 - Editing uses `parseMissionPrompt()` for instruction/context/output/constraints; goals, dirs, refs, skills, and suggested toolsets load from DB columns.
 - **Recommended toolsets** are prompt hints only (`<recommended_toolsets>`); runtime tools still come from the mission profile's `platform_toolsets`. The composer lists only toolsets enabled on the selected profile. See [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md).
@@ -37,7 +37,7 @@ How missions are stored, dispatched, and cancelled. Missions live in SQLite (`mi
 The models registry (`models` table) is the **single source of truth** for what any mission can run on. `parseMissionBodyFields()` in `src/lib/missions/mission-body.ts` validates the request body:
 
 - `modelId` is checked against the registry via `findModelByModelId()`. A foreign `modelId` (not in the table) is **silently dropped**.
-- `provider` is **never trusted from the body** — it is derived from the registry row at dispatch time (and stripped whenever the `modelId` was dropped, to keep `missions.provider` consistent).
+- `provider` is **never trusted from the body**: it is derived from the registry row at dispatch time (and stripped whenever the `modelId` was dropped, to keep `missions.provider` consistent).
 - If no valid `modelId` survives, the dispatch path falls through to `getDefaultModel("agent")` (the registry **agent** default).
 
 The composer pre-fills the agent default model from `GET /api/models/defaults` when opening a new mission.
@@ -53,8 +53,8 @@ Dashboard **active** count includes `dispatched` missions and queued-for-run mis
 ## Editing drafts and promoting queued missions
 
 - **Draft** (`status=queued`, `queued_for_run=0`): edit in the composer, choose a dispatch mode, and submit. The UI calls `POST /api/missions` with `action: "promote"` (not `update`).
-- **Queued for run** (`status=queued`, `queued_for_run=1`): same promote path — you can update fields, move back to drafts (`dispatchMode: save`), keep in queue (`queue`), or run immediately (`now`).
-- **Running** (`status=dispatched`): `action: "update"` only — fields and linked cron sync; no duplicate mission.
+- **Queued for run** (`status=queued`, `queued_for_run=1`): same promote path. You can update fields, move back to drafts (`dispatchMode: save`), keep in queue (`queue`), or run immediately (`now`).
+- **Running** (`status=dispatched`): `action: "update"` only. Fields and linked cron sync; no duplicate mission.
 - **Completed / failed**: re-dispatch creates a **new** mission id with `action: "dispatch"` and `dispatchMode: now`.
 
 `promote` accepts the same payload fields as dispatch (instruction, profile, model, schedule, etc.). Queue promote triggers an immediate `runMissionQueueTick()` when nothing is already dispatched.
@@ -88,7 +88,7 @@ Runtime database path: `PS_DATA_DIR/patterstage.db` (default `~/patterstage/data
 
 ## Recurring missions
 
-Recurring runs are **PatterStage-owned schedules** — the agent's `jobs.json` cron is no longer used:
+Recurring runs are **PatterStage-owned schedules**, and the agent's `jobs.json` cron is no longer used:
 
 - A `schedules` row links to a mission and holds the canonical schedule, `next_run_at`, `catch_up_policy`, and repeat count. The scheduler tick (`src/lib/orchestration/scheduler/`) selects due rows and dispatches a run via the runtime; **PatterStage owns the timer**.
 - Manage via `/api/schedules` or the **Scheduled missions** section on the **Orchestration → Missions** page (create, pause/resume, run-now, delete). Old-fashioned **host shell scripts** on a timer live on the separate **Orchestration → Scripts** page (system crontab), not here.
@@ -98,27 +98,27 @@ Recurring runs are **PatterStage-owned schedules** — the agent's `jobs.json` c
 
 When you cancel a **running** mission, `cancelMissionRun()` (orchestration core):
 
-1. **Backend** — calls `runtime.stopRun(run_id)` over HTTP (the Hermes API Server's `POST /v1/runs/{id}/stop`). No process signals, no pid files, no `pkill`, no platform restriction.
-2. **SQLite** — the `runs` row becomes `cancelled`; the mission becomes `failed` with result `Cancelled by user`.
-3. **Session** — the linked session row is ended.
+1. **Backend:** calls `runtime.stopRun(run_id)` over HTTP (the Hermes API Server's `POST /v1/runs/{id}/stop`). No process signals, no pid files, no `pkill`, no platform restriction.
+2. **SQLite:** the `runs` row becomes `cancelled`; the mission becomes `failed` with result `Cancelled by user`.
+3. **Session:** the linked session row is ended.
 
 Local run/mission/session state is finalised even if the backend stop call fails, so the board never shows a stuck "running" row.
 
 ## Session closure bridge
 
-Every mission dispatch pre-registers a `sessions` row with `status="active"` before submitting the run (see `src/lib/orchestration/dispatch.ts`). The mission lifecycle and the session lifecycle therefore need to stay in lockstep — otherwise the Sessions page shows a "live" pulsing dot on rows whose mission is already `successful` or `failed` days ago.
+Every mission dispatch pre-registers a `sessions` row with `status="active"` before submitting the run (see `src/lib/orchestration/dispatch.ts`). The mission lifecycle and the session lifecycle therefore need to stay in lockstep. Otherwise the Sessions page shows a "live" pulsing dot on rows whose mission is already `successful` or `failed` days ago.
 
 The bridge is `closeSessionForMission(missionId, updates)` in `src/lib/sessions/session-repository.ts`, called from two places:
 
-1. **`reconcileActiveRuns()`** (`src/lib/orchestration/run-reconcile.ts`, on the 15s background tick via `RunSync`) — polls each non-terminal run with `runtime.getRun()`. When the backend reports a terminal state (completed/failed/cancelled), or a stuck run passes its deadline, it writes the terminal state to the run, mission, and session rows in the same pass. This replaced the old `MissionSync` / `status.json` polling.
-2. **Admin backfill** — `POST /api/admin/sessions/backfill-status` with `{"dryRun": false}` runs the same logic for any pre-existing stuck rows. The matching `dryRun: true` returns counts without writing. Default is `dryRun: true` for safety.
+1. **`reconcileActiveRuns()`** (`src/lib/orchestration/run-reconcile.ts`, on the 15s background tick via `RunSync`) polls each non-terminal run with `runtime.getRun()`. When the backend reports a terminal state (completed/failed/cancelled), or a stuck run passes its deadline, it writes the terminal state to the run, mission, and session rows in the same pass. This replaced the old `MissionSync` / `status.json` polling.
+2. **Admin backfill:** `POST /api/admin/sessions/backfill-status` with `{"dryRun": false}` runs the same logic for any pre-existing stuck rows. The matching `dryRun: true` returns counts without writing. Default is `dryRun: true` for safety.
 
-The recurring orphan-sweep in `syncHermesSessionsToDb` (every 15s sync tick) also calls `closeOrphanedActiveSessions()` to catch any sessions the mission-side bridge missed — it has two paths:
+The recurring orphan-sweep in `syncHermesSessionsToDb` (every 15s sync tick) also calls `closeOrphanedActiveSessions()` to catch any sessions the mission-side bridge missed. It has two paths:
 
-- **Path A — parent-mission gated.** Active session whose `mission_id` points to a mission that is no longer `dispatched` (status `successful`/`failed`/`cancelled`/anything-else-terminal, or the mission is missing/soft-deleted). Closes as `completed`/`failed` derived from the parent.
-- **Path B — age-only fallback.** Active session with no `mission_id` AND (size > 0 with age > 5 min, OR age > 30 min). The 30-min orphan gate catches parentless empty sessions that the original `size > 0` guard would have missed (e.g. orphaned api/cli/telegram sessions whose gateway never wrote `end_reason`).
+- **Path A: parent-mission gated.** Active session whose `mission_id` points to a mission that is no longer `dispatched` (status `successful`/`failed`/`cancelled`/anything-else-terminal, or the mission is missing/soft-deleted). Closes as `completed`/`failed` derived from the parent.
+- **Path B: age-only fallback.** Active session with no `mission_id` AND (size > 0 with age > 5 min, OR age > 30 min). The 30-min orphan gate catches parentless empty sessions that the original `size > 0` guard would have missed (e.g. orphaned api/cli/telegram sessions whose gateway never wrote `end_reason`).
 
-Both paths share a 5-min boot safety window — a session that started in the last 5 minutes is never closed, even if its parent is long gone.
+Both paths share a 5-min boot safety window: a session that started in the last 5 minutes is never closed, even if its parent is long gone.
 
 ## UI
 

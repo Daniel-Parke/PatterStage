@@ -53,7 +53,7 @@ Hermes identity is `SOUL.md`. PatterStage stores root/profile SOUL content in SQ
 
 Hermes runtime toolsets are profile-scoped `platform_toolsets` in SQLite (`agent_root` / `agent_profiles`), pushed into Hermes `config.yaml`. Edit on **Operations → Tools**; sync with **Pull** / **Push** (same contract as Agents). Pull normalizes duplicate or CLI-expanded toolset lists.
 
-The `/api/tools` route exposes a **read-only catalog** of known Hermes toolset IDs — it does not enable/disable runtime tools. See [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md).
+The `/api/tools` route exposes a **read-only catalog** of known Hermes toolset IDs. It does not enable/disable runtime tools. See [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md).
 
 ## Seed operations
 

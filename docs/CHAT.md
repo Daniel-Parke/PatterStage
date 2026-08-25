@@ -5,7 +5,7 @@ tags: [product, chat]
 compiled_from: normalised
 ---
 
-# PatterStage — Agent Chat
+# PatterStage: Agent Chat
 
 The Chat page (`/orchestration/chat`) is a real conversation with your Hermes
 agent: it runs over the same agent runtime as Missions, so the assistant can use
@@ -15,12 +15,12 @@ completions.
 
 ## Two modes
 
-- **Agent** (default) — each turn is a real agent **run** submitted through the
+- **Agent** (default): each turn is a real agent **run** submitted through the
   runtime (`runtime.submitRun`). The agent has tools and memory; reasoning, tool
   calls, and the reply stream live into the bubble; tool gates can pause for your
   approval.
-- **Fast** — a raw model completion straight from the gateway
-  (`/api/orchestration/chat`). No tools, no run — just a quick answer. The turn
+- **Fast:** a raw model completion straight from the gateway
+  (`/api/orchestration/chat`). No tools, no run, just a quick answer. The turn
   is still persisted to the conversation so history stays unified.
 
 Toggle modes in the chat header. The model selector is shown in Fast mode (Agent
@@ -30,10 +30,10 @@ mode uses the active profile's model).
 
 Conversations are server-side, not localStorage:
 
-- **`chat_conversations`** — one row per thread, mapped to a Hermes **session**
+- **`chat_conversations`**: one row per thread, mapped to a Hermes **session**
   (`session_id`) for memory continuity; stores `profile_name`, `model`, and
   `previous_response_id` (multi-turn).
-- **`chat_messages`** — user/assistant turns. An assistant turn is linked to the
+- **`chat_messages`**: user/assistant turns. An assistant turn is linked to the
   PatterStage **run** that produced it (`run_id`) and carries `reasoning`,
   `tool_calls_json`, and a `status` (`pending → streaming → complete | failed |
   cancelled`).
@@ -71,7 +71,7 @@ forwards a tool-approval decision (`runtime.resolveApproval`).
 ## Robustness
 
 - **No stuck "Thinking…".** The bubble's empty state is driven by message
-  `status`, not "content is empty" — a completed-but-empty, failed, or cancelled
+  `status`, not "content is empty". A completed-but-empty, failed, or cancelled
   run shows an explicit terminal state, never a permanent placeholder.
 - **Self-healing.** `GET /api/chat/[id]` reconciles any assistant turn still
   `pending`/`streaming` whose underlying run has reached a terminal state

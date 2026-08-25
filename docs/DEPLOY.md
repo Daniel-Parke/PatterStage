@@ -32,11 +32,11 @@ Override the host port in Docker Compose with **`PORT`** (see `docker-compose.ym
 | Location | Role |
 |----------|------|
 | `scripts/bootstrap/` | **`install.sh`** (clone or `--in-repo`), **`setup.sh`**, **`stop.sh`**, **`backup-hermes-config.sh`**, **`setup-hindsight.sh`**, Python helper for Hindsight |
-| `scripts/application/` | **`ps-deploy.sh`** — single deploy entry for CLI and dashboard (`update`, `restart`, `rebuild`; optional `--branch`) |
+| `scripts/application/` | **`ps-deploy.sh`**, the single deploy entry for CLI and dashboard (`update`, `restart`, `rebuild`; optional `--branch`) |
 | `scripts/lib/` | Shared bash modules (`ps-deploy-impl.sh`, Hermes profile templates, dotenv, port helpers, …) |
 | `scripts/tooling/` | **`prebuild-db.mjs`**, **`discover-agents.mjs`**, **`generate-json-schema.ts`** (also run via `npm run prebuild`, `npm run discover-agents`, `npm run generate:schema-json`) |
 | `scripts/hardware/` | Preset cron scripts; copied into **`PS_DATA_DIR/scripts`** when missing during **`scripts/bootstrap/setup.sh`**. Behaviour: **[SYSTEM-CRON.md](SYSTEM-CRON.md)**. |
-| `data/seed/` | Professional catalog (profiles, template packs); seeded via `npm run db:seed` / `ps-deploy update` — [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md) |
+| `data/seed/` | Professional catalog (profiles, template packs); seeded via `npm run db:seed` / `ps-deploy update` (see [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md)) |
 | `scripts/git-hooks/` | Optional Git hooks (see [CONTRIBUTING.md](CONTRIBUTING.md)) |
 
 Deploy from a shell (same commands the dashboard triggers via **`POST /api/update`**):
@@ -55,7 +55,7 @@ bash scripts/application/ps-deploy.sh rebuild --branch dev   # optional local ch
 |--------|-----|-------|---------|
 | **update** | `fetch` + `reset --hard origin/<branch>` | `npm install` if lockfiles changed, then `npm run build` | yes |
 | **rebuild** | optional `git checkout` **only** when `--branch` is passed | `npm install` if `package-lock.json` is newer than `.next/BUILD_ID`, then `npm run build` | yes |
-| **restart** | — | — | yes |
+| **restart** | n/a | n/a | yes |
 
 **Status file:** `~/.hermes/logs/ps-deploy.status` (`state`, `action`, `phase`, `message`, …). The sidebar polls **`GET /api/update?deploy=1`** until `success` or `failed`. Concurrent deploys return **exit 1** from the script and **409** from the API.
 
@@ -117,7 +117,7 @@ The production image includes the full **`scripts/`** tree (and `bash`, `git`, `
 
 **`update` / `rebuild` / GET branch list** need a **git working tree** at `process.cwd()` (`/app`). The default **`.dockerignore` excludes `.git`**, so a plain image build is not a checkout; mount a clone if you need those flows in a container.
 
-**CI / local smoke:** after `docker build`, run **`npm run test:docker-deploy-smoke`** (or `bash tests/scripts/docker-deploy-api-smoke.sh`) — waits for the app, **`GET /api/update?branch=dev`**, **`POST` restart**, then checks the server still answers **`/`**.
+**CI / local smoke:** after `docker build`, run **`npm run test:docker-deploy-smoke`** (or `bash tests/scripts/docker-deploy-api-smoke.sh`). It waits for the app, **`GET /api/update?branch=dev`**, **`POST` restart**, then checks the server still answers **`/`**.
 
 Mount `PS_DATA_DIR` (and optionally `PS_SCRIPTS_DIR` / `PS_HARDWARE_LOG_DIR` if you keep hardware cron scripts outside the data tree) so the active Hermes install and PatterStage state match the host.
 
@@ -125,8 +125,8 @@ Mount `PS_DATA_DIR` (and optionally `PS_SCRIPTS_DIR` / `PS_HARDWARE_LOG_DIR` if 
 
 After **`npm run build`**, **`setup.sh`**, and **`ps-deploy update` / `rebuild`**:
 
-1. **`npm run db:migrate`** — SQLite migrations on `PS_DATA_DIR/patterstage.db`
-2. **`npm run db:seed`** — upsert categories, catalog templates, and `agent_profiles`, then push profiles to **`HERMES_HOME/profiles/<slug>/`**
+1. **`npm run db:migrate`**: SQLite migrations on `PS_DATA_DIR/patterstage.db`
+2. **`npm run db:seed`**: upsert categories, catalog templates, and `agent_profiles`, then push profiles to **`HERMES_HOME/profiles/<slug>/`**
 
 PatterStage SQLite is the **source of truth** for professional profiles; Hermes disk is the **runtime target** for missions/cron. Restore defaults at **Config → Seed** (`/config/seed`).
 
@@ -138,11 +138,11 @@ Shipped seeds: **`data/seed/profiles/`**, **`data/seed/template-packs/patterstag
 
 Use a reverse proxy with automatic certificates (Let's Encrypt). Do not commit TLS material into the repo.
 
-## Hindsight Memory — Safe Reconnection After Deploy
+## Hindsight Memory: Safe Reconnection After Deploy
 
 Deploy updates (`ps-deploy update`, `seed-catalog.ts --replace`, or Config → Seed
 push) can strip Hindsight memory configuration from `~/.hermes/config.yaml` if the
-SQLite `agent_root` row is out of sync with disk — for example, if Hindsight was
+SQLite `agent_root` row is out of sync with disk, for example if Hindsight was
 wired after the initial import.
 
 ### Prevention (automatic)

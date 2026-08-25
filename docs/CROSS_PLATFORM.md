@@ -7,13 +7,13 @@ compiled_from: normalised
 
 # Platforms (Linux · macOS · Windows/WSL2)
 
-PatterStage is a **Linux-first** application — Linux is the only supported,
+PatterStage is a **Linux-first** application: Linux is the only supported,
 tested production target, in line with the [PatterTech](https://pattertech.com)
 local-first vision and **[PatterOS](https://github.com/Daniel-Parke/PatterOS)**
 (the Ubuntu/Mint AI-workstation setup PatterStage folds into). It also runs on
-**macOS** as a best-effort developer environment (macOS is Unix — bash, cron,
+**macOS** as a best-effort developer environment (macOS is Unix: bash, cron,
 `better-sqlite3`, the same scripts). On **Windows**, run it under **WSL2
-(Ubuntu)** — which *is* Linux, so you get the fully-supported path.
+(Ubuntu)**, which *is* Linux, so you get the fully-supported path.
 
 There is no native-Windows operational layer (Task Scheduler, PowerShell
 installer). This keeps the codebase focused on one OS family and removes the
@@ -25,7 +25,7 @@ most fragile, highest-maintenance code.
 |------|----------|--------|
 | **1** | **Linux** (Ubuntu/Debian/Mint) | Supported + tested in CI. The production + PatterOS target. |
 | **2** | **macOS** | Best-effort developer environment (Unix); built + unit-tested in CI. |
-| — | **Windows** | Via **WSL2 (Ubuntu)** — a Tier-1 Linux environment. No native-Windows support. |
+| n/a | **Windows** | Via **WSL2 (Ubuntu)**, a Tier-1 Linux environment. No native-Windows support. |
 
 The app UI + the PatterStage ↔ Hermes link are pure HTTP and identical
 everywhere; the only OS-specific code is PatterStage's *operational* layer
@@ -53,7 +53,7 @@ wsl --install -d Ubuntu
 
 WSL2 forwards `localhost`, so the dashboard is reachable from a Windows browser
 at the URL setup prints (e.g. `http://127.0.0.1:42069/`). Running under WSL2 also
-gives you the Linux paths the rest of the stack expects — the Hermes gateway,
+gives you the Linux paths the rest of the stack expects. The Hermes gateway,
 Hindsight memory (Postgres + the systemd/Docker server), and host-script cron all
 "just work" as on a Linux box. (`install.ps1` is only a pointer to these steps.)
 
@@ -74,13 +74,13 @@ PID + detached `next start` + `/api/status` readiness poll). `ps-deploy.sh` is a
 thin `exec node …` wrapper. The optional LAN `socat` relay is Unix-only.
 
 > `src/lib/platform.ts` still carries thin Windows fallbacks for its primitives,
-> so the dev server (`npm run dev`) incidentally runs on a native-Windows box —
+> so the dev server (`npm run dev`) incidentally runs on a native-Windows box,
 > but that path is **not** tested or supported; use WSL2.
 
 ## Host-script scheduling (crontab)
 
 Host scripts (the **Scripts** page) are scheduled in the user **crontab** on
-Linux + macOS. There is no native-Windows backend — under WSL2 the Ubuntu
+Linux + macOS. There is no native-Windows backend. Under WSL2 the Ubuntu
 crontab is used like any Linux host. The bundled hardware scripts are
 cross-platform Node (`.mjs`): `ps-db-backup.mjs`, `ps-health-check.mjs`,
 `ps-log-rotate.mjs`, `ps-disk-report.mjs`, `ps-system-report.mjs`. The Hindsight
@@ -91,7 +91,7 @@ backup (`ps-backup.sh`) is Linux-only.
 [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) runs `build-test-ubuntu`
 and `build-test-macos` (lint + `tsc` + the full unit suite + production build),
 plus a `boot-smoke` matrix (`ubuntu` · `macos`) running
-[`tests/scripts/boot-smoke.mjs`](../tests/scripts/boot-smoke.mjs) — the OS-seam
+[`tests/scripts/boot-smoke.mjs`](../tests/scripts/boot-smoke.mjs), which covers the OS-seam
 primitives (detached-spawn survival, port probing, process kill) + a bundled
 `.mjs`. Docker, e2e (Playwright), and real-Hermes jobs are Linux-only. There is
 no Windows CI job.

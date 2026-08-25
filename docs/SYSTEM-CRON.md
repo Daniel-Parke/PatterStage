@@ -5,13 +5,13 @@ tags: [product, ops]
 compiled_from: normalised
 ---
 
-# System cron — Hindsight backup
+# System cron: Hindsight backup
 
 PatterStage ships one host-level cron script: **`ps-backup.sh`** (Hindsight snapshot). During [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh), the script is copied into **`PS_DATA_DIR/scripts`** when missing (see [`getPsScriptsDir()`](../src/lib/paths.ts)). Register jobs from the **Orchestration → Scripts** page; each crontab line must invoke a script under that directory ([`POST /api/cron/hardware`](../src/app/api/cron/hardware/route.ts)).
 
 Preset label and filename: [`src/lib/hardware-cron.ts`](../src/lib/hardware-cron.ts) (`HARDWARE_CRON_UI_PRESETS`). Log output defaults to **`PS_HARDWARE_LOG_DIR`** (`PS_DATA_DIR/logs`).
 
-> **Cross-platform:** the Scripts page works on Windows too — schedules go to **Task Scheduler** (`schtasks`) instead of `crontab`, and the bundled scripts are cross-platform Node (`.mjs`: `ps-db-backup`, `ps-health-check`, `ps-log-rotate`, `ps-disk-report`, `ps-system-report`). `ps-backup.sh` (Hindsight, below) is **Linux-only** and hidden from the Windows presets. See [CROSS_PLATFORM.md](CROSS_PLATFORM.md) for the cron → `schtasks` translation table and which schedules are supported on Windows.
+> **Cross-platform:** the Scripts page works on Windows too. Schedules go to **Task Scheduler** (`schtasks`) instead of `crontab`, and the bundled scripts are cross-platform Node (`.mjs`: `ps-db-backup`, `ps-health-check`, `ps-log-rotate`, `ps-disk-report`, `ps-system-report`). `ps-backup.sh` (Hindsight, below) is **Linux-only** and hidden from the Windows presets. See [CROSS_PLATFORM.md](CROSS_PLATFORM.md) for the cron → `schtasks` translation table and which schedules are supported on Windows.
 
 | Preset | File | Purpose |
 |--------|------|---------|

@@ -9,7 +9,7 @@ compiled_from: normalised
 
 Quick lookup for PatterStage and Hermes paths. Set values in `.env.local` (created by `scripts/bootstrap/setup.sh`) or export them before `npm run start`.
 
-> **Env naming:** canonical variables use the **`PS_`** prefix. The legacy **`CH_`** names (and `CONTROL_HUB_*`) are still read as fallbacks, so an existing `.env.local` keeps working — see [MIGRATION.md → Path & environment rename](MIGRATION.md#path--environment-rename-control-hub--patterstage).
+> **Env naming:** canonical variables use the **`PS_`** prefix. The legacy **`CH_`** names (and `CONTROL_HUB_*`) are still read as fallbacks, so an existing `.env.local` keeps working. See [MIGRATION.md → Path & environment rename](MIGRATION.md#path--environment-rename-control-hub--patterstage).
 
 ## Naming
 
@@ -42,9 +42,9 @@ Quick lookup for PatterStage and Hermes paths. Set values in `.env.local` (creat
 
 | Variable | Purpose |
 |----------|---------|
-| `PS_INSTALL_NONINTERACTIVE` | `1` — non-interactive bootstrap |
-| `PS_SETUP_SKIP_CATALOG_SEED` | `1` — skip catalog seed during setup |
-| `INSTALL_HERMES_PROFILE_TEMPLATES` | `yes` — optional bash copy of missing profile files (catalog seed is the main path) |
+| `PS_INSTALL_NONINTERACTIVE` | `1`: non-interactive bootstrap |
+| `PS_SETUP_SKIP_CATALOG_SEED` | `1`: skip catalog seed during setup |
+| `INSTALL_HERMES_PROFILE_TEMPLATES` | `yes`: optional bash copy of missing profile files (catalog seed is the main path) |
 
 ## Access control
 
@@ -54,14 +54,14 @@ Enforced in `src/proxy.ts` for every request. See [SECURITY.md](SECURITY.md) for
 |----------|---------|
 | `PS_AUTH_TOKEN` | Supply the operator token directly (containers). Wins over the token file. |
 | `PS_AUTH_TOKEN_FILE` | Override the token path (default `PS_DATA_DIR/auth-token`, minted on first boot). |
-| `PS_AUTH_MODE` | `none` — disable authentication entirely. Only correct behind your own access control; host-executing writes are refused in this mode. |
-| `PS_READ_ONLY` | `1` — reject unsafe HTTP **methods** (503). Reads keep working. |
+| `PS_AUTH_MODE` | `none`: disable authentication entirely. Only correct behind your own access control; host-executing writes are refused in this mode. |
+| `PS_READ_ONLY` | `1`: reject unsafe HTTP **methods** (503). Reads keep working. |
 
 ## Deploy API (sidebar Update / Rebuild)
 
 | Variable | Purpose |
 |----------|---------|
-| `PS_ENABLE_DEPLOY_API` | `1` — allow `POST /api/update` |
+| `PS_ENABLE_DEPLOY_API` | `1`: allow `POST /api/update` |
 | `PS_UPDATE_GIT_BRANCH` | Branch for `ps-deploy update` (default `dev`) |
 | `PS_REQUEST_SIGNING_SECRET` | Optional HMAC for selected routes |
 
@@ -71,7 +71,7 @@ The runtime adapter (`src/lib/runtime/`) dispatches missions as HTTP **runs** to
 
 | Variable | Purpose |
 |----------|---------|
-| `HERMES_GATEWAY_URL` | Hermes API Server base the runtime targets (default `http://127.0.0.1:8642`) — run dispatch, health, chat. |
+| `HERMES_GATEWAY_URL` | Hermes API Server base the runtime targets (default `http://127.0.0.1:8642`). Used for run dispatch, health, chat. |
 | `API_SERVER_KEY` | Bearer key the runtime sends (`Authorization: Bearer …`). **Must match** the gateway's `API_SERVER_KEY` in `{HERMES_HOME}/.env`. `setup.sh` generates one and wires both sides. |
 | `PS_LLM_API` / `CONTROL_HUB_LLM_API` | Full chat-completions URL or gateway-derived base (alternative to `HERMES_GATEWAY_URL`). |
 
@@ -79,7 +79,7 @@ The runtime adapter (`src/lib/runtime/`) dispatches missions as HTTP **runs** to
 
 | Variable | Purpose |
 |----------|---------|
-| `PS_COMPOSER` | **Default ON.** Set to `0` (or `false`/`no`/`off`) to disable the [Composer](COMPOSER.md) graph orchestrator — its sidebar link is hidden, the page 404s, and the engine + API go dormant. Any other value (unset / `1` / `true`) keeps it enabled. |
+| `PS_COMPOSER` | **Default ON.** Set to `0` (or `false`/`no`/`off`) to disable the [Composer](COMPOSER.md) graph orchestrator: its sidebar link is hidden, the page 404s, and the engine + API go dormant. Any other value (unset / `1` / `true`) keeps it enabled. |
 | `PS_SEARCH_PROVIDER` | Search backend for [Deep Research](DEEP_RESEARCH.md): `duckduckgo` (default, free/no-key), `searxng`, or `none`. |
 | `PS_SEARXNG_URL` | Base URL of a self-hosted SearXNG instance (fully local search). When set without `PS_SEARCH_PROVIDER`, SearXNG is auto-preferred. |
 | `PS_BENCH_JUDGE_MODEL` | Model-registry id (or provider model id) used as the **independent LLM judge** for quality-graded Benchmark items. Set this to a strong model so the judge isn't the model under test (self-grading inflates scores). Unset → the judge falls back to the agent's own model. The default **Frontier** suite leans on deterministic adversarial items so it still discriminates even when self-graded. |
@@ -90,6 +90,6 @@ After setup or `ps-deploy update`, `scripts/tooling/discover-agents.mjs` writes 
 
 ## Related docs
 
-- [DEPLOY.md](DEPLOY.md) — `ps-deploy`, Docker, TLS
-- [MIGRATION.md](MIGRATION.md) — data directory moves, schema v3
-- [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md) — Hermes + PatterStage path checklist
+- [DEPLOY.md](DEPLOY.md): `ps-deploy`, Docker, TLS
+- [MIGRATION.md](MIGRATION.md): data directory moves, schema v3
+- [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md): Hermes + PatterStage path checklist

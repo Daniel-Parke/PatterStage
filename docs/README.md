@@ -7,7 +7,7 @@ compiled_from: normalised
 
 # Documentation index
 
-Technical reference for PatterStage. Tone elsewhere in this folder is deliberately plain—I maintain the project solo and would rather you get accurate answers than corporate filler.
+Technical reference for PatterStage. Tone elsewhere in this folder is deliberately plain: I maintain the project solo and would rather you get accurate answers than corporate filler.
 
 | Document | Description |
 |----------|-------------|
@@ -16,7 +16,7 @@ Technical reference for PatterStage. Tone elsewhere in this folder is deliberate
 | [PATTERSTAGE.md](PATTERSTAGE.md) | What this repo is and where to read next |
 | [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) | Operator guide: every sidebar page, every common action (dashboard, missions + scheduling, scripts, chat, agents + performance, skills, tools, personalities, sessions, memory, logs, all Config pages, Story Weaver) |
 | [MISSIONS.md](MISSIONS.md) | Mission board, dispatch, cancellation, templates (simple single/recurring runs) |
-| [COMPOSER.md](COMPOSER.md) | Composer: the graph orchestrator — multi-stage workflows with loops + HIL gates |
+| [COMPOSER.md](COMPOSER.md) | Composer: the graph orchestrator for multi-stage workflows with loops + HIL gates |
 | [LABORATORY.md](LABORATORY.md) | Laboratory section: Insights, Benchmarks, Deep Research |
 | [DEEP_RESEARCH.md](DEEP_RESEARCH.md) | Native iterative web research (provider-flexible, free/local-first search) |
 | [CHAT.md](CHAT.md) | Agent chat: server-persisted conversations, run-event streaming, tools + HITL approvals, Agent/Fast modes |
@@ -45,8 +45,8 @@ Technical reference for PatterStage. Tone elsewhere in this folder is deliberate
 
 Versioned Zod schemas live under [`src/lib/schema/`](../src/lib/schema/). JSON Schema mirrors live in `src/lib/schema/json/`. Maintainer notes:
 
-- [SCHEMA_VERSIONING.md](schema/SCHEMA_VERSIONING.md) — versioning and bump policy
-- [CHANGELOG.md](schema/CHANGELOG.md) — schema contract history
+- [SCHEMA_VERSIONING.md](schema/SCHEMA_VERSIONING.md): versioning and bump policy
+- [CHANGELOG.md](schema/CHANGELOG.md): schema contract history
 
 After changing Zod definitions, regenerate JSON from the repo root (runs [`scripts/tooling/generate-json-schema.ts`](../scripts/tooling/generate-json-schema.ts) via npm):
 
@@ -56,10 +56,10 @@ npm run generate:schema-json
 
 ## Scripts and deploy
 
-- **`scripts/bootstrap/`** — install, setup, stop, Hindsight bootstrap.
-- **`scripts/application/ps-deploy.sh`** — unified **`update`** / **`restart`** / **`rebuild`** for CLI and **`POST /api/update`** (backs up + migrates the DB on update/rebuild).
-- **`scripts/maintenance/ps-migrate.sh`** — backup + full DB migration (schema + legacy data); interactive, `--yes` to skip prompts.
-- **`scripts/tooling/`** — DB migrate (`migrate-db.ts` → `runMigrations`), runtime data migration, agent discovery, JSON Schema emit.
+- **`scripts/bootstrap/`**: install, setup, stop, Hindsight bootstrap.
+- **`scripts/application/ps-deploy.sh`**: unified **`update`** / **`restart`** / **`rebuild`** for CLI and **`POST /api/update`** (backs up + migrates the DB on update/rebuild).
+- **`scripts/maintenance/ps-migrate.sh`**: backup + full DB migration (schema + legacy data); interactive, `--yes` to skip prompts.
+- **`scripts/tooling/`**: DB migrate (`migrate-db.ts` → `runMigrations`), runtime data migration, agent discovery, JSON Schema emit.
 - **`scripts/lib/`** (shared bash incl. `ps-log.sh` logging/prompt helpers + `ps-migrate.sh`), **`scripts/hardware/`** (host cron presets), **`data/seed/`** (catalog).
 
 Details: **[DEPLOY.md](DEPLOY.md)**.

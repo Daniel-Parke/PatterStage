@@ -5,7 +5,7 @@ tags: [product, analytics]
 compiled_from: normalised
 ---
 
-# PatterStage — Analytics & Achievements
+# PatterStage: Analytics & Achievements
 
 How PatterStage logs meaningful interactions, turns them into achievements, and
 surfaces them on the **Insights** page (`/insights`). Added in Phase Q3.
@@ -62,7 +62,7 @@ One helper: **`recordEvent(type, { entityType, entityId, profile, metadata })`**
 
 Emit **after** the action succeeds. Mission terminal events are emitted from
 `run-reconcile.ts`'s live terminal transition (`finalizeAndRecord`), **not** the
-idempotent `finalizeMissionForRun` (which also runs on boot recovery) — otherwise
+idempotent `finalizeMissionForRun` (which also runs on boot recovery). Otherwise
 a restart would double-count. Call sites: `orchestration/dispatch.ts`,
 `orchestration/run-reconcile.ts`, `orchestration/scheduler/tick.ts`, and the
 `schedules` / `skills/[name]/toggle` / `agent/personality` / `orchestration/chat`
@@ -70,7 +70,7 @@ a restart would double-count. Call sites: `orchestration/dispatch.ts`,
 
 ## 3. The API (`/api/analytics`)
 
-Read-only — events are server-emitted, so there is **no POST** (a client must not
+Read-only: events are server-emitted, so there is **no POST** (a client must not
 be able to forge achievement progress).
 
 - `GET /api/analytics` → `{ analytics: { totals, last30, activeDays, generatedAt } }`
@@ -95,7 +95,7 @@ active-days into the streak so chat/story-only days keep a streak alive.
 Adding an achievement: append a def (`{ id, name, description, icon, color,
 target, measure }`), add any new `RawMetrics` field it needs (+ populate it in
 `getDashboardStats`), and register the lucide `icon` in
-`AchievementBadge.ICONS` — the catalogue-integrity test asserts every icon is
+`AchievementBadge.ICONS`. The catalogue-integrity test asserts every icon is
 registered (no silent `Medal` fallback) and colours are valid neon accents.
 
 **Unlock UX:** `useAchievementUnlocks` diffs the unlocked set across `useStats`

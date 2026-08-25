@@ -88,22 +88,22 @@ Next.js static files go in `public/` at the repo root; the Dockerfile runs
 
 ## Conventions
 
-- **TypeScript strict** — no `any`, no `@ts-ignore`.
+- **TypeScript strict:** no `any`, no `@ts-ignore`.
 - **API routes return `{ data?, error? }`** via the status-code-locked factories in
   `src/lib/api-response.ts`. Do not add overloads to those factories.
 - **Every catch calls `logApiError(route, context, error)`** (`src/lib/api-logger.ts`).
 - **Authentication is not a route's job.** `src/proxy.ts` enforces it for every
   request. `requireAuth()` only checks the read-only flag despite its name.
 - **Whitelist body fields in PUT handlers** (no mass assignment) and validate any
-  path built from input — `resolveScriptPath()` in `src/lib/scripts-manager.ts` is
+  path built from input. `resolveScriptPath()` in `src/lib/scripts-manager.ts` is
   the reference implementation.
-- **Never validate an attacker-controlled command string — regenerate it.** See
+- **Never validate an attacker-controlled command string. Regenerate it.** See
   `canonicaliseScriptsCommand` in
   `src/lib/hardware-cron-handlers/crontab-command.ts` for why.
 - **Agent integration goes through the `AgentRuntime` port.** Add a capability to
   `types.ts` and implement it in `HermesRuntime.ts`; never reach into agent
   internals from orchestration code.
-- **Large action-router routes split into per-action modules** — a thin `route.ts`
+- **Large action-router routes split into per-action modules**: a thin `route.ts`
   dispatches on `action` to `src/lib/missions/mission-handlers/*`.
 - **Read-only data hooks wrap `useApiResource`** (`src/hooks/useApiResource.ts`).
   Hooks with mutations or multi-query bundles stay bespoke; don't force them onto
@@ -111,7 +111,7 @@ Next.js static files go in `public/` at the repo root; the Dockerfile runs
 - **Big page = page-core hook + render shell.** Past ~600 lines, lift the stateful
   core into a `use<Page>` hook and leave the `.tsx` as a shell. Move logic verbatim.
 - **Prefer composable helpers over wrappers/base classes.** No `withApiRoute` HOF,
-  no base-repository class — the routes are too heterogeneous.
+  no base-repository class: the routes are too heterogeneous.
 - **Form inputs use the Field Kit** (`src/components/ui/field/`): `Field`, `Input`,
   `Textarea`, `Select`, `Toggle`. Do not reach for raw `<input>`.
 - **Use `js-yaml` for YAML.**
@@ -127,7 +127,7 @@ introduce raw hex or ad-hoc `purple-500` / `rgba(...)` in TSX.
 
 The shell/effect custom properties are **`--ps-*`** (`--ps-rgb-neon-*`,
 `--ps-shell-header-min-height`, `--ps-mobile-header-min-height`). There are no
-`--ch-*` variables — this file told contributors to write them for months and the
+`--ch-*` variables: this file told contributors to write them for months and the
 resulting CSS silently did nothing.
 
 - **Page chrome:** `PageHeader` for sticky top bars; `shellHeaderBarClasses` only
@@ -151,7 +151,7 @@ Conventional commits (`feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`).
 Run the gate before pushing. Never merge your own PR. On a merge conflict, stop and
 report.
 
-`gh` is the tool for GitHub operations — never the browser, which blocks with
+`gh` is the tool for GitHub operations, never the browser, which blocks with
 CAPTCHAs.
 
 ## Deployment
@@ -159,11 +159,11 @@ CAPTCHAs.
 Entrypoint `scripts/application/ps-deploy.sh` (thin wrapper over
 `scripts/tooling/ps-deploy.mjs`), also driven by `POST /api/update`:
 
-- **`restart`** — stop the port, restart next-server. No git, no build.
-- **`rebuild`** — build the current tree + restart.
-- **`update`** — pull, install if needed, build, seed, restart.
+- **`restart`**: stop the port, restart next-server. No git, no build.
+- **`rebuild`**: build the current tree + restart.
+- **`update`**: pull, install if needed, build, seed, restart.
 
-Readiness is probed at `GET /api/health` — the one unauthenticated route. Status
+Readiness is probed at `GET /api/health`, the one unauthenticated route. Status
 goes to `ps-deploy.status`; logs to `ps-update.log` / `ps-build.log` /
 `ps-restart.log`. Layout and flags: [DEPLOY.md](DEPLOY.md).
 
@@ -172,5 +172,5 @@ goes to `ps-deploy.status`; logs to `ps-update.log` / `ps-build.log` /
 PatterStage is a command centre, not a file manager: the operator opens it and
 knows what is running, what needs attention, and can dispatch in one or two clicks.
 
-The rebuild sharpens that to four verbs — **found, commission, gate, watch** — over
+The rebuild sharpens that to four verbs (**found, commission, gate, watch**) over
 Organisation → Venture → Project. See [org/decisions/](../org/decisions/).

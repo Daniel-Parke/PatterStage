@@ -10,7 +10,7 @@ compiled_from: normalised
 Where PatterStage keeps its data, and how the legacy `control-hub` / `ch.*`
 names are handled. PatterStage was renamed from `hermes-control-hub` (and earlier
 `control-hub`); the leftover names below are **intentional, working back-compat**,
-not rot — they let existing installs keep running without a forced migration.
+not rot: they let existing installs keep running without a forced migration.
 
 ## The SQLite database (source of truth)
 
@@ -21,8 +21,8 @@ registry. Hand-written repositories (`src/lib/*-repository.ts`) read/write it;
 schema is versioned migrations under `src/lib/db/migrations/*.sql`.
 
 - **File:** `$PS_DATA_DIR/patterstage.db`. On an un-migrated install the resolver
-  falls back to a pre-existing `control-hub.db` — see `getDbPath()` in
-  [`src/lib/paths.ts`](../src/lib/paths.ts). When both exist it prefers the one
+  falls back to a pre-existing `control-hub.db` (see `getDbPath()` in
+  [`src/lib/paths.ts`](../src/lib/paths.ts)). When both exist it prefers the one
   with data (larger file) so a stale empty `patterstage.db` never shadows a
   populated `control-hub.db`. The on-disk rename is an optimisation, not a
   requirement; the rename/relocate scripts (`scripts/lib/ps-rename-migrate.sh`,
@@ -40,7 +40,7 @@ is the **source of truth** and *projects* models/profiles/config onto Hermes
 files; it talks to the agent only over HTTP through the `AgentRuntime` port. It
 does **not** store its own data under `~/.hermes`. Memory is reached through the
 DB-owned `MemoryProvider` config (`memory_providers` table), never by parsing
-Hermes files — see [`MEMORY.md`](MEMORY.md).
+Hermes files. See [`MEMORY.md`](MEMORY.md).
 
 ## Browser localStorage (client UI prefs only)
 
@@ -52,8 +52,8 @@ saved preference. No app data lives in localStorage.
 
 ## Committed vs runtime data
 
-- **Committed (`data/seed/**`):** the bundled seed catalog — default profiles,
-  mission templates, skills/tools, agent-root files. This is the *source* the
+- **Committed (`data/seed/**`):** the bundled seed catalog of default profiles,
+  mission templates, skills/tools and agent-root files. This is the *source* the
   Seed page restores from.
 - **Gitignored (everything else under `data/`):** the live `patterstage.db` /
   `control-hub.db`, WAL/SHM, and `*.pre-baseline-*` backups. `.gitignore` has

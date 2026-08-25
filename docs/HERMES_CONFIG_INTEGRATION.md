@@ -28,7 +28,7 @@ After bootstrap/setup, [`scripts/tooling/discover-agents.mjs`](../scripts/toolin
 
 2. **Backup/sync jobs** should include `PS_DATA_DIR` alongside `HERMES_HOME`.
 
-3. **Scheduling** — recurring missions are **PatterStage-owned** (the `schedules` table + built-in scheduler); PatterStage no longer writes the legacy Hermes `{HERMES_HOME}/cron/jobs.json` agent-cron bridge. That file is only *read* when present, to give cron-sourced agent sessions human-friendly titles (`session-title-server.ts`).
+3. **Scheduling:** recurring missions are **PatterStage-owned** (the `schedules` table + built-in scheduler); PatterStage no longer writes the legacy Hermes `{HERMES_HOME}/cron/jobs.json` agent-cron bridge. That file is only *read* when present, to give cron-sourced agent sessions human-friendly titles (`session-title-server.ts`).
 
 4. **Config and behaviour files** Hermes reads must exist under the resolved `HERMES_HOME` for that profile.
 

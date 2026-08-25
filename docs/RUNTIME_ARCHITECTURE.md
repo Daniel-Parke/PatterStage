@@ -20,15 +20,15 @@ Orchestration core  src/lib/orchestration/
     │   scheduler/         BackgroundScheduler · tick.ts · (next-run math)
     │
 Runtime adapter  src/lib/runtime/
-    │   AgentRuntime (types.ts) — the one seam: submit/poll/stream/stop/approve + discovery
-    │   HermesRuntime — typed client over the Hermes API Server
+    │   AgentRuntime (types.ts)  the one seam: submit/poll/stream/stop/approve + discovery
+    │   HermesRuntime            typed client over the Hermes API Server
     │
 Hermes API Server  :8642  (API_SERVER_ENABLED=true, bearer auth)
 ```
 
 ## The runtime adapter (`src/lib/runtime/`)
 
-`AgentRuntime` is framework-agnostic — nothing Hermes-specific leaks through it. `HermesRuntime` maps it to the API Server:
+`AgentRuntime` is framework-agnostic: nothing Hermes-specific leaks through it. `HermesRuntime` maps it to the API Server:
 
 | AgentRuntime method | Hermes endpoint |
 |---|---|
@@ -40,11 +40,11 @@ Hermes API Server  :8642  (API_SERVER_ENABLED=true, bearer auth)
 | `listModels/Skills/Toolsets` | `GET /v1/models` · `/v1/skills` · `/v1/toolsets` |
 | `createSession` | `POST /api/sessions` |
 
-Auth: `Authorization: Bearer ${API_SERVER_KEY}` (resolved in `runtime/secrets.ts`). Endpoints are resolved per profile in `runtime/endpoint-registry.ts` (each Hermes profile is its own gateway process/port; Phase-1 default resolves all to the configured gateway). Swap in another backend by implementing `AgentRuntime` and changing the `runtime` binding in `runtime/index.ts` — nothing above the seam changes.
+Auth: `Authorization: Bearer ${API_SERVER_KEY}` (resolved in `runtime/secrets.ts`). Endpoints are resolved per profile in `runtime/endpoint-registry.ts` (each Hermes profile is its own gateway process/port; Phase-1 default resolves all to the configured gateway). Swap in another backend by implementing `AgentRuntime` and changing the `runtime` binding in `runtime/index.ts`. Nothing above the seam changes.
 
 ### The DB is the source of truth
 
-PatterStage's SQLite DB is authoritative for models, profiles, memory config, and the active framework; the Hermes config/profile files are a **downstream projection** written from the DB. `importHermesStateFromDisk` is the one path that reads Hermes → DB, and it is **idempotent + explicit**: guarded by `isHermesStateAlreadyImported`, run only on first setup or an explicit `--pull`, and never at boot — so the DB is never silently overwritten. A parallel **`FrameworkAdapter`** seam ([`src/lib/frameworks/`](../src/lib/frameworks/)) records the active agent framework + its home in the DB-owned `frameworks` registry (Hermes is impl #1); add a `case` + adapter to support a second framework. (Memory has the analogous [`MemoryProvider`](MEMORY.md) seam.)
+PatterStage's SQLite DB is authoritative for models, profiles, memory config, and the active framework; the Hermes config/profile files are a **downstream projection** written from the DB. `importHermesStateFromDisk` is the one path that reads Hermes → DB, and it is **idempotent + explicit**: guarded by `isHermesStateAlreadyImported`, run only on first setup or an explicit `--pull`, and never at boot, so the DB is never silently overwritten. A parallel **`FrameworkAdapter`** seam ([`src/lib/frameworks/`](../src/lib/frameworks/)) records the active agent framework + its home in the DB-owned `frameworks` registry (Hermes is impl #1); add a `case` + adapter to support a second framework. (Memory has the analogous [`MemoryProvider`](MEMORY.md) seam.)
 
 ## Mission runs (no bash)
 
@@ -52,7 +52,7 @@ A dispatch is one HTTP **run**:
 
 1. `dispatchMissionRun(missionId)` inserts a `runs` row (id = Idempotency-Key), pre-registers a session, and calls `runtime.submitRun()`.
 2. `RunSync` (on the background tick) polls `runtime.getRun()` for `started` runs and writes terminal state to the run + mission + session rows. A 404 from the backend means the run is gone → failed.
-3. Cancellation is `runtime.stopRun()` — no pid files, signals, or `pkill`.
+3. Cancellation is `runtime.stopRun()`: no pid files, signals, or `pkill`.
 
 The whole app routes through this: the missions god-route and the queue both call `dispatchMissionNow`, which delegates to `dispatchMissionRun`.
 
@@ -69,9 +69,9 @@ Manage via `/api/schedules` or **Orchestration → Schedules**.
 
 ## Data model
 
-- `runs` — one agent execution (id, backend run_id, mission_id, schedule_id, status, output, usage, timestamps).
-- `schedules` — CH-owned recurring definitions (next_run_at drives firing).
-- `agent_profiles.{gateway_host,gateway_port,api_key_ref}` — per-profile gateway endpoints.
+- `runs`: one agent execution (id, backend run_id, mission_id, schedule_id, status, output, usage, timestamps).
+- `schedules`: CH-owned recurring definitions (next_run_at drives firing).
+- `agent_profiles.{gateway_host,gateway_port,api_key_ref}`: per-profile gateway endpoints.
 
 ## Testing the whole stack
 
@@ -88,13 +88,13 @@ npm run test:e2e-runtime
 
 ### Real-Hermes integration gate (validated)
 
-`docker-compose.real-hermes.yml` runs PatterStage against the **actual Hermes Agent** (official `nousresearch/hermes-agent` image, API server enabled) pointed at a deterministic **mock LLM** (`mock-llm/`) — real Hermes machinery, no API keys/cost. Swap the mock for a real local model via `HERMES_LLM_BASE_URL`.
+`docker-compose.real-hermes.yml` runs PatterStage against the **actual Hermes Agent** (official `nousresearch/hermes-agent` image, API server enabled) pointed at a deterministic **mock LLM** (`mock-llm/`): real Hermes machinery, no API keys/cost. Swap the mock for a real local model via `HERMES_LLM_BASE_URL`.
 
 ```bash
 npm run test:e2e-hermes      # build stack, run contract + smoke against REAL Hermes, tear down
 ```
 
-`tests/integration/runtime/hermes-contract.mjs` asserts the exact API shapes `HermesRuntime` depends on. **Confirmed against Hermes 0.16** — and the four shapes the docs got wrong (now handled + tested):
+`tests/integration/runtime/hermes-contract.mjs` asserts the exact API shapes `HermesRuntime` depends on. **Confirmed against Hermes 0.16**, including the four shapes the docs got wrong (now handled + tested):
 
 | Contract point | Real shape |
 |---|---|
@@ -109,11 +109,11 @@ For a **production real Hermes**: enable the API server (`setup.sh` writes `API_
 
 ## Composer rides the same substrate
 
-[Composer](COMPOSER.md) (the graph orchestrator) reuses this layer rather than adding a second one. Each Composer **stage** is an ordinary agent run (linked via `runs.composer_node_run_id`); a `ComposerTickSource` joins `RunSync` + `ScheduleTickSource` on the `BackgroundScheduler` (gated by the ownership lease + the `composer` flag); and `reconcileOne` is **polymorphic** — it branches on `composer_node_run_id` to finalize a stage (parse its verdict, merge context) and advance the graph, otherwise it finalizes a mission. This is why we did **not** adopt LangGraph: it would bolt a second durable/checkpoint model onto the restart-safe, single-flight, idempotent substrate we already hardened. We added only the graph control-flow layer.
+[Composer](COMPOSER.md) (the graph orchestrator) reuses this layer rather than adding a second one. Each Composer **stage** is an ordinary agent run (linked via `runs.composer_node_run_id`); a `ComposerTickSource` joins `RunSync` + `ScheduleTickSource` on the `BackgroundScheduler` (gated by the ownership lease + the `composer` flag); and `reconcileOne` is **polymorphic**: it branches on `composer_node_run_id` to finalize a stage (parse its verdict, merge context) and advance the graph, otherwise it finalizes a mission. This is why we did **not** adopt LangGraph: it would bolt a second durable/checkpoint model onto the restart-safe, single-flight, idempotent substrate we already hardened. We added only the graph control-flow layer.
 
 ## Live updates: polling + SSE
 
-Durable state is always the DB; **polling is authoritative** (it drives reconcile and survives reconnect/restart/multi-tab). **SSE is the live-richness layer** (`src/lib/sse/event-stream.ts` + `useEventStream`): because PatterStage can run multiple processes, the stream bridges via the shared DB — it polls a snapshot of the authoritative rows and pushes deltas, closing on a terminal snapshot or disconnect. If SSE drops, `useApiResource` polling keeps the view correct. Used by Composer (`…/runs/[id]/events`) and Deep Research (`…/research/[id]/events`).
+Durable state is always the DB; **polling is authoritative** (it drives reconcile and survives reconnect/restart/multi-tab). **SSE is the live-richness layer** (`src/lib/sse/event-stream.ts` + `useEventStream`): because PatterStage can run multiple processes, the stream bridges via the shared DB: it polls a snapshot of the authoritative rows and pushes deltas, closing on a terminal snapshot or disconnect. If SSE drops, `useApiResource` polling keeps the view correct. Used by Composer (`…/runs/[id]/events`) and Deep Research (`…/research/[id]/events`).
 
 ## What was removed
 

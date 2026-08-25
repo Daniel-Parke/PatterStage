@@ -38,12 +38,12 @@ Config: [`jest.config.js`](../jest.config.js) at repo root. Coverage thresholds 
 
 ### Hermes pathing (unit)
 
-- [`tests/unit/hermes-profile-paths.test.ts`](../tests/unit/hermes-profile-paths.test.ts) — `getHermesDefaultRoot()`, `resolveProfileHermesHome()` (standard, profile subdir, profile-as-home, Docker root).
+- [`tests/unit/hermes-profile-paths.test.ts`](../tests/unit/hermes-profile-paths.test.ts): `getHermesDefaultRoot()`, `resolveProfileHermesHome()` (standard, profile subdir, profile-as-home, Docker root).
 
 ### SQLite baseline upgrade tests
 
-- [`tests/unit/db-baseline.test.ts`](../tests/unit/db-baseline.test.ts) — in-memory schema smoke.
-- [`tests/unit/db-upgrade.integration.test.ts`](../tests/unit/db-upgrade.integration.test.ts) — on-disk legacy DB → `rebuildToBaseline` preserves credentials, models, cron, sessions.
+- [`tests/unit/db-baseline.test.ts`](../tests/unit/db-baseline.test.ts): in-memory schema smoke.
+- [`tests/unit/db-upgrade.integration.test.ts`](../tests/unit/db-upgrade.integration.test.ts): on-disk legacy DB → `rebuildToBaseline` preserves credentials, models, cron, sessions.
 
 **Dual DB paths:** `npm run prebuild` writes `{repo}/data/patterstage.db`; runtime uses `{PS_DATA_DIR}/patterstage.db` (default `~/patterstage/data/patterstage.db`). Prebuild rebuilds the repo DB when `schema_version` is not the current baseline (**v3**).
 
@@ -89,13 +89,13 @@ python tests/integration/test_full_install_update_process.py --profile release -
 
 npm: `npm run test:full-install` (smoke + `--skip-http`), `npm run test:full-install-release` (release profile).
 
-**Flags:** `--with-real-hermes-install` appends **`hermes-upstream`** (network). **`--with-interactive`** appends a slow **TTY / expect** pack after **`--scenarios all`** (same ordering as non-interactive scenarios, then interactive ones). Rebuild the harness image after pulling changes so **`expect`** is present (`docker/TestHarness.dockerfile`). Use `--continue-on-failure` for a full matrix run; interactive scenarios complement non-interactive env-driven paths—they do not replace them.
+**Flags:** `--with-real-hermes-install` appends **`hermes-upstream`** (network). **`--with-interactive`** appends a slow **TTY / expect** pack after **`--scenarios all`** (same ordering as non-interactive scenarios, then interactive ones). Rebuild the harness image after pulling changes so **`expect`** is present (`docker/TestHarness.dockerfile`). Use `--continue-on-failure` for a full matrix run; interactive scenarios complement non-interactive env-driven paths. They do not replace them.
 
 **Interactive pack:** Runs only inside the container (`expect -f` via `docker exec -t`); the host stays cross-platform (no Windows `pty`). Longer wall time (`npm install` / `npm run build`). You can also run a single id explicitly, e.g. `--scenarios setup_interactive`.
 
 **Non-interactive default:** Plain `docker exec` still uses env vars (`INSTALL_HINDSIGHT=no`, `PS_INSTALL_NONINTERACTIVE=1`, etc.). Base image: [`docker/TestHarness.dockerfile`](../docker/TestHarness.dockerfile). CRLF in `*.sh` is normalized on the copied workspace for Linux bash.
 
-## Live smoke against a Hermes (mock or real) — cross-platform
+## Cross-platform live smoke against a Hermes (mock or real)
 
 Two zero-dependency Node runners drive PatterStage's real HTTP surface against a running stack. They work the same on **Linux, macOS, and Windows** (pure `fetch`):
 
@@ -107,7 +107,7 @@ Two zero-dependency Node runners drive PatterStage's real HTTP surface against a
 ### Against the mock Hermes (offline, any OS)
 
 ```bash
-npm run mock-hermes                       # terminal 1 — stand-in API server on :8642
+npm run mock-hermes                       # terminal 1: stand-in API server on :8642
 HERMES_GATEWAY_URL=http://127.0.0.1:8642 PS_SEARCH_PROVIDER=none npm run dev   # terminal 2
 PS_URL=http://127.0.0.1:3000 npm run test:smoke-composer   # terminal 3
 ```
@@ -135,11 +135,11 @@ npm run dev
 $env:PS_URL = "http://127.0.0.1:3000"; npm run test:smoke-composer
 ```
 
-The runners exit non-zero on any failed assertion. CI is unchanged — it runs the mock smoke on all three OSes plus the Ubuntu Docker real-Hermes job; the runners above are the manual path for validating a real (or Windows) Hermes.
+The runners exit non-zero on any failed assertion. CI is unchanged: it runs the mock smoke on all three OSes plus the Ubuntu Docker real-Hermes job; the runners above are the manual path for validating a real (or Windows) Hermes.
 
 ## Continuous integration
 
-Primary pipeline: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — Ubuntu (`shell-custom-scripts`, install, `prebuild`, ESLint with **`--max-warnings 0`**, Hermes-path grep gate, `tsc`, Jest coverage, build, Playwright smoke with `PLAYWRIGHT_SMOKE=1`) plus macOS build/test, E2E smoke on Ubuntu, and a **`docker-image`** job that runs **`docker build -f Dockerfile .`** then **`tests/scripts/docker-deploy-api-smoke.sh`** (GET version check + POST restart + HTTP still up) so the production image and dashboard deploy path do not silently rot. The **`build-test-*`** jobs use separate named steps (ESLint, TypeScript, unit tests, build) so the first failing step is obvious in the Actions UI. Actions use **`actions/checkout@v5`** and **`actions/setup-node@v5`** (action runtime on Node 24 per upstream; app build still uses `node-version: "20"` in the workflow).
+Primary pipeline: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml), which runs Ubuntu (`shell-custom-scripts`, install, `prebuild`, ESLint with **`--max-warnings 0`**, Hermes-path grep gate, `tsc`, Jest coverage, build, Playwright smoke with `PLAYWRIGHT_SMOKE=1`) plus macOS build/test, E2E smoke on Ubuntu, and a **`docker-image`** job that runs **`docker build -f Dockerfile .`** then **`tests/scripts/docker-deploy-api-smoke.sh`** (GET version check + POST restart + HTTP still up) so the production image and dashboard deploy path do not silently rot. The **`build-test-*`** jobs use separate named steps (ESLint, TypeScript, unit tests, build) so the first failing step is obvious in the Actions UI. Actions use **`actions/checkout@v5`** and **`actions/setup-node@v5`** (action runtime on Node 24 per upstream; app build still uses `node-version: "20"` in the workflow).
 
 ### The main-blocking acceptance set
 
@@ -155,7 +155,7 @@ Other workflows: **gitleaks** (secret scan).
 
 Many Jest suites mock **`@/lib/api-auth`** (`requireAuth` returns `null` when allowed). Mirror that pattern when adding new mutating API route tests.
 
-## Hermes pathing — manual verification matrix
+## Hermes pathing: manual verification matrix
 
 Run before merging Hermes multi-profile changes (complements unit tests above):
 
@@ -167,4 +167,4 @@ Run before merging Hermes multi-profile changes (complements unit tests above):
 | Mission + cron | Dispatch mission; Hermes updates `PS_DATA_DIR/missions/*.json` | Status visible in UI |
 | Gateway override | `HERMES_GATEWAY_URL` set | Health/chat use custom URL |
 
-After `setup.sh`, inspect `PS_DATA_DIR/hermes-detection.json` for `valid`, `hermesAgentPath`, and `defaultRoot` (debug artifact only—the app does not read it at runtime; see [ENV_REFERENCE.md](ENV_REFERENCE.md)).
+After `setup.sh`, inspect `PS_DATA_DIR/hermes-detection.json` for `valid`, `hermesAgentPath`, and `defaultRoot`. That file is a debug artifact only; the app does not read it at runtime (see [ENV_REFERENCE.md](ENV_REFERENCE.md)).

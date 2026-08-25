@@ -15,12 +15,12 @@ It would be very much appreciated if you allowed me time to apply a fix, before 
 
 1. **Do not** open a public GitHub issue with exploit details.
 2. **Preferred:** [GitHub private vulnerability reporting](https://github.com/Daniel-Parke/PatterStage/security/advisories/new) (if enabled on the repo: **Settings → Security → Private vulnerability reporting**).
-3. **Otherwise:** contact me privately (see [.github/CODEOWNERS](../.github/CODEOWNERS))—email or DM you already use for confidential stuff.
+3. **Otherwise:** contact me privately on the email or DM you already use for confidential stuff (see [.github/CODEOWNERS](../.github/CODEOWNERS)).
 
 Include whatever helps me reproduce fast:
 
 - What you think is wrong (RCE, auth bypass, path traversal, secret leak, etc.)
-- Steps to reproduce (commands, routes, config snippets—**redact real keys**)
+- Steps to reproduce (commands, routes, config snippets, with **real keys redacted**)
 - What you think the impact is
 - Your environment (OS, Node version, how PatterStage is exposed) if it matters
 
@@ -42,9 +42,9 @@ I aim for **coordinated disclosure**: fix first, then a short public note (chang
 
 ## Out of scope (usually)
 
-- Issues in **Hermes Agent upstream** — report those to [Nous Research / Hermes](https://github.com/NousResearch/hermes-agent) unless PatterStage is clearly wrapping the bug wrong
-- Social engineering, physical access, or "you left SSH open on the internet" — still bad, but not something I patch in this repo
-- Theoretical issues with no practical exploit path—send anyway if you are unsure; I will triage
+- Issues in **Hermes Agent upstream**, which go to [Nous Research / Hermes](https://github.com/NousResearch/hermes-agent) unless PatterStage is clearly wrapping the bug wrong
+- Social engineering, physical access, or "you left SSH open on the internet" (still bad, but not something I patch in this repo)
+- Theoretical issues with no practical exploit path. Send anyway if you are unsure; I will triage
 
 ## The access model
 
@@ -56,7 +56,7 @@ PatterStage is a single-operator control plane, so authentication is one shared 
 - **Browser:** open `http://127.0.0.1:<PORT>/?ps_token=<token>` once. The proxy exchanges it for an httpOnly `ps_session` cookie and redirects to strip the token from the URL and history.
 - **Scripts / curl:** send `Authorization: Bearer <token>`.
 - Cookie-authenticated writes must be **same-origin** (`Sec-Fetch-Site` / `Origin`), so a page you visit in another tab cannot drive your control plane.
-- `PS_READ_ONLY=1` rejects unsafe **methods** — reads keep working.
+- `PS_READ_ONLY=1` rejects unsafe **methods**. Reads keep working.
 - `/api/health` is the only unauthenticated route. It returns `{"ok":true}` and nothing about your system; the deploy runner and container health checks use it.
 
 > **Treat the token as root on the host.** It grants mission dispatch and agent access, and the agent's toolset includes terminal access.
@@ -100,7 +100,7 @@ resolved path to unauthenticated remote callers. Pinned by
 
 ## If you run PatterStage yourself
 
-- Prefer binding to loopback and reaching it over SSH port-forwarding. `npm run start:network` binds `0.0.0.0` — only do that on a network you trust.
+- Prefer binding to loopback and reaching it over SSH port-forwarding. `npm run start:network` binds `0.0.0.0`, so only do that on a network you trust.
 - Keep the token out of shell history and shared screenshots; it is equivalent to a shell on the box.
 - Set `PS_READ_ONLY=1` on instances that should not mutate config.
 - Rotate keys if you think they leaked; check `~/.hermes/logs` and deploy logs for accidental echo.

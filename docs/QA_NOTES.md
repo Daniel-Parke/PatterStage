@@ -14,7 +14,7 @@ non-bugs don't get re-filed every pass.
 
 Two consecutive walkthroughs flagged a cluster of "broken" widgets that are
 **code-correct in the current source**. The common cause was an **un-rebuilt /
-un-restarted dev server** — the running bundle predated the fixes. Before filing
+un-restarted dev server**: the running bundle predated the fixes. Before filing
 any "X doesn't work" UI bug:
 
 ```bash
@@ -30,7 +30,7 @@ stale.
 One-click actions (Sync Now, Push all, Pull, Import, Save, etc.) confirm via a
 **toast that auto-dismisses after ~4 seconds** (`useToast` + `runSyncAction` /
 `runFallbackMutation`). A DOM snapshot taken a moment after the click will miss
-it — that is a tooling artifact, not a missing-feedback bug. Persistent busy
+it. That is a tooling artifact, not a missing-feedback bug. Persistent busy
 states exist where it matters (the drift banners show "Pushing…/Syncing…").
 
 ## Confirmed code-correct (do not re-file without a post-rebuild repro)
@@ -38,7 +38,7 @@ states exist where it matters (the drift banners show "Pushing…/Syncing…").
 These have been read at the source level and verified working; re-file only with
 a fresh-build reproduction:
 
-- **Composer** workflow/profile dropdowns — the field-kit `Select` commits
+- **Composer** workflow/profile dropdowns: the field-kit `Select` commits
   `onChange` and the label is bound to `value` (`src/components/ui/field/Select.tsx`).
 - **Composer** page subtitle is present; the run canvas + approve/reject gate render.
 - **Chat** "New Chat" intentionally **reuses** an existing blank chat instead of

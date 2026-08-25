@@ -7,7 +7,7 @@ compiled_from: normalised
 
 # API Reference
 
-Dry reference for REST routes—envelope shape, inventory, auth notes. For behaviour in plain language, see [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) or the feature docs linked from [README.md](README.md).
+Dry reference for REST routes: envelope shape, inventory, auth notes. For behaviour in plain language, see [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) or the feature docs linked from [README.md](README.md).
 
 All API routes return the envelope:
 
@@ -24,24 +24,24 @@ Some error responses also include `details` (Zod validation). Handlers must call
 | `/api/agent/files/[key]` | `GET`, `PUT` | Read/update one behavior file (`soul`, `hermes`, `user`, `memory`, `agent`, `env`). Optional `?profile=` for non-default profiles. |
 | `/api/agent/personality` | `PUT` | Set personality for one agent profile (Operations → Agents). |
 | `/api/agent/profiles` | `GET`, `POST` | Professional profiles (SQLite source of truth; each row includes `syncStatus` for drift). |
-| `/api/agent/profiles/[id]` | `PUT`, `DELETE` | Update or delete one profile (no `GET` — use list + id). |
+| `/api/agent/profiles/[id]` | `PUT`, `DELETE` | Update or delete one profile (no `GET`, use list + id). |
 | `/api/agent/profiles/sync/drift` | `GET` | Full drift report (root, named profiles, skills catalog). Returns the per-resource sync state that the drift banner reads. |
 | `/api/agent/profiles/sync/push` | `POST` | Push profile(s) to `HERMES_HOME/profiles/<slug>/` (`{ slug }` or `{ all: true }`). |
 | `/api/agent/profiles/sync/pull` | `POST` | Pull one profile from Hermes disk into DB (`{ slug }` required). |
 | `/api/agents` | `GET` | Inspect running Hermes agent processes (OS-dependent). Not the same as `agent/profiles`. |
 | `/api/config` | `GET`, `PUT` | Read/update parsed Hermes config content. |
 | `/api/credentials` | `GET`, `POST` | API key credentials (masked list; create via POST). No per-id route. |
-| `/api/cron/hardware` | `GET`, `POST`, `PUT`, `DELETE` | Host **scripts** (system cron) under `PS_SCRIPTS_DIR` / `PS_HARDWARE_LOG_DIR` — powers the Scripts page. (The legacy `/api/cron` agent-cron bridge has been removed; recurring agent work uses `/api/schedules`.) |
+| `/api/cron/hardware` | `GET`, `POST`, `PUT`, `DELETE` | Host **scripts** (system cron) under `PS_SCRIPTS_DIR` / `PS_HARDWARE_LOG_DIR`, powering the Scripts page. (The legacy `/api/cron` agent-cron bridge has been removed; recurring agent work uses `/api/schedules`.) |
 | `/api/cron/hardware/meta` | `GET` | `{ scriptsDir, logDir }`. |
 | `/api/scripts` | `GET` | List host script files under `PS_DATA_DIR/scripts` with schedule + last-run (powers the Scripts page). |
-| `/api/scripts/run` | `POST` | Run a script on demand (`{ name }`) — path-validated, no shell. |
+| `/api/scripts/run` | `POST` | Run a script on demand (`{ name }`). Path-validated, no shell. |
 | `/api/scripts/logs` | `GET` | Tail a script's log (`?name=&lines=`). |
 | `/api/schedules` | `GET`, `POST` | PatterStage-owned recurring missions (the scheduler fires these; no `jobs.json`). |
 | `/api/schedules/[id]` | `PATCH`, `DELETE` | Pause/resume (`{ enabled }`) or delete a schedule. |
 | `/api/schedules/[id]/run` | `POST` | Dispatch a scheduled mission immediately (run-now). |
 | `/api/stats` | `GET` | Dashboard analytics aggregate (throughput, mission mix, run activity, tokens, per-agent performance, derived progression + the ~36 achievements). Also appends a per-agent progression snapshot when an agent's recorded level or unlocked set has moved. |
 | `/api/agents/progression` | `GET` | The **recorded** per-agent growth, from the append-only `agent_progression_snapshots` table: newest row per profile, or one profile's whole trail with `?slug=`. Survives the retention prune of the events it was derived from (see [MIGRATION.md](MIGRATION.md)). |
-| `/api/analytics` | `GET` | Interaction analytics summary (`{ totals, last30, activeDays }`) over the `analytics_events` log. Read-only — events are server-emitted, so there is no `POST`. See [ANALYTICS.md](ANALYTICS.md). |
+| `/api/analytics` | `GET` | Interaction analytics summary (`{ totals, last30, activeDays }`) over the `analytics_events` log. Read-only: events are server-emitted, so there is no `POST`. See [ANALYTICS.md](ANALYTICS.md). |
 | `/api/analytics/timeseries` | `GET` | Gap-filled daily event counts (`?type=&days=&bucket=day`; `days` clamped 1–365). |
 | `/api/spend` | `GET`, `PUT` | Provider spend per calendar period and per source, plus the operator's **optional** budget and the verdict against it. `PUT` sets `limitUsd` (positive number, or `null` to remove the budget), `period` (`day`/`week`/`month`) and `hardStop`. Arming `hardStop` without a figure is a 400. See [SPEND.md](SPEND.md). |
 | `/api/fs/git/branches` | `GET` | List git branches for a workspace path. |
@@ -75,7 +75,7 @@ Some error responses also include `details` (Zod validation). Handlers must call
 | `/api/skills/[name]/toggle` | `PUT` | Enable/disable a skill for a profile. |
 | `/api/skills/[...path]` | `GET` | Read files under a skill tree (`SKILL.md`, etc.). |
 | `/api/status` | `GET` | Basic readiness endpoint. |
-| `/api/stories` | `POST` | Story Weaver — all operations via `action` (see [RPC-style routes](#rpc-style-routes)). |
+| `/api/stories` | `POST` | Story Weaver: all operations via `action` (see [RPC-style routes](#rpc-style-routes)). |
 | `/api/sync` | `GET`, `POST` | Background sync control and status. |
 | `/api/templates` | `GET`, `POST` | Mission templates; mutations via `action` on `POST`. |
 | `/api/tools` | `GET` | Read-only Hermes toolset ID catalog. `POST` returns **410** (writes not supported). |
@@ -93,7 +93,7 @@ Some error responses also include `details` (Zod validation). Handlers must call
 
 Several routes use **GET for reads** and **POST with an `action` field** for mutations (not HTTP `PUT`/`DELETE` on the same path).
 
-### `/api/missions` — `POST` body `action`
+### `/api/missions`: `POST` body `action`
 
 Each action body lives in its own handler under `src/lib/missions/mission-handlers/*` behind a thin router in the route.
 
@@ -107,7 +107,7 @@ Each action body lives in its own handler under `src/lib/missions/mission-handle
 
 `GET` supports `?id=` for one mission (status synced in background) or list with optional `?categoryId=`.
 
-### `/api/models/fallbacks` — `POST` body `action`
+### `/api/models/fallbacks`: `POST` body `action`
 
 | `action` | Purpose |
 |----------|---------|
@@ -120,7 +120,7 @@ Each action body lives in its own handler under `src/lib/missions/mission-handle
 
 `GET` returns the chain entries + behaviour config. Per-entry `GET`/`PUT`/`DELETE` live at `/api/models/fallbacks/[id]`; the behaviour config at `/api/models/fallbacks/config`.
 
-### `/api/templates` — `POST` body `action`
+### `/api/templates`: `POST` body `action`
 
 | `action` | Purpose |
 |----------|---------|
@@ -131,7 +131,7 @@ Each action body lives in its own handler under `src/lib/missions/mission-handle
 
 `GET` lists templates (cached).
 
-### `/api/stories` — `POST` body `action`
+### `/api/stories`: `POST` body `action`
 
 | `action` | Purpose |
 |----------|---------|
@@ -148,7 +148,7 @@ Each action body lives in its own handler under `src/lib/missions/mission-handle
 | `continue` | Continue generation |
 | `sync-titles` | Sync chapter titles |
 
-### `/api/sessions` — `POST` body `action`
+### `/api/sessions`: `POST` body `action`
 
 | `action` | Purpose |
 |----------|---------|
@@ -157,21 +157,21 @@ Each action body lives in its own handler under `src/lib/missions/mission-handle
 
 ### Hindsight actions
 
-**`GET /api/memory/hindsight`** — query param `action` (default `list`):
+**`GET /api/memory/hindsight`**, query param `action` (default `list`):
 
 `list`, `recall`, `reflect`, `directives`, `mental-models`, `health`, `count`
 
-**`POST /api/memory/hindsight`** — body `action` (default `retain`):
+**`POST /api/memory/hindsight`**, body `action` (default `retain`):
 
 `retain`, `create-directive`, `create-model`, `update-directive`, `update-model`, `refresh-model`
 
-**`DELETE /api/memory/hindsight`** — body `{ type, id, bank? }` removes a directive or mental model.
+**`DELETE /api/memory/hindsight`** with body `{ type, id, bank? }` removes a directive or mental model.
 
 ## Naming notes
 
-- **`/api/agent/*`** — Hermes install config: profiles, behavior files, per-profile personality.
-- **`/api/agents`** — Running OS processes (gateways, `hermes chat`), not profile CRUD.
-- **`/api/personalities`** vs **`/api/agent/personality`** — global `config.yaml` personalities vs one profile’s selected personality.
+- **`/api/agent/*`**: Hermes install config (profiles, behavior files, per-profile personality).
+- **`/api/agents`**: Running OS processes (gateways, `hermes chat`), not profile CRUD.
+- **`/api/personalities`** vs **`/api/agent/personality`**: global `config.yaml` personalities vs one profile’s selected personality.
 
 ## System cron notes
 

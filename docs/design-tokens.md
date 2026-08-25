@@ -5,11 +5,11 @@ tags: [product, design]
 compiled_from: normalised
 ---
 
-# PatterStage — design tokens
+# PatterStage: design tokens
 
 Reference for the Cherenkov-forward palette, semantic colours, and how TypeScript maps to CSS. Use this when adding UI so new screens match the rest of the app.
 
-## Layer A — Cherenkov primitives
+## Layer A: Cherenkov primitives
 
 Source ladder ([Cherenkov radiation palette](https://www.color-hex.com/color-palette/1022135)):
 
@@ -23,7 +23,7 @@ Source ladder ([Cherenkov radiation palette](https://www.color-hex.com/color-pal
 
 Registered in `src/app/globals.css` as `--color-cherenkov-100` … `--color-cherenkov-500` (100 = brightest).
 
-## Layer B — Surfaces (blue-tinted neutrals)
+## Layer B: Surfaces (blue-tinted neutrals)
 
 Dark scales are slightly mixed toward `#0071c2` so panels read “cool reactor core” rather than flat gray.
 
@@ -69,7 +69,7 @@ Text hierarchy is the `--color-ps-text-*` tiers in `globals.css`, gated by
 `scripts/tooling/contrast-check.mjs`; the derivation is in the comment beside
 them. Never spell hierarchy as a raw white opacity.
 
-## Layer C — Accent slots (`AccentColor` → `--color-neon-*`)
+## Layer C: Accent slots (`AccentColor` → `--color-neon-*`)
 
 TypeScript `AccentColor` in `src/types/hermes.ts` is unchanged: `cyan | purple | green | pink | orange`. Utilities stay `text-neon-cyan`, `bg-neon-purple/20`, etc.; only **hex values** change.
 
@@ -82,7 +82,7 @@ TypeScript `AccentColor` in `src/types/hermes.ts` is unchanged: `cyan | purple |
 | `orange` | `#ff6622` | 255, 102, 34 | Heat / Cherenkov complement (Sparrow's Fire) accent |
 | `neon-yellow` (non-AccentColor) | `#facc15` | 250, 204, 21 | Crown / leader highlights |
 
-## Layer D — Semantic status (Tailwind utilities)
+## Layer D: Semantic status (Tailwind utilities)
 
 | Token | Hex | Use |
 |-------|-----|-----|
@@ -95,7 +95,7 @@ TypeScript `AccentColor` in `src/types/hermes.ts` is unchanged: `cyan | purple |
 
 `src/lib/theme.ts` exports `glowSurfaceRgbMap` with **comma-separated RGB triplets** matching the table above for each `AccentColor`. If you change `@theme` neon hexes, update `glowSurfaceRgbMap` in the same PR.
 
-**Restraint (deep-space Cherenkov):** the `.glow-*` box-shadows in `globals.css` are intentionally soft (`14px @ 0.08` + `28px @ 0.025`) so glow reads as a subtle luminescence, not a flat light source. The brand's "reactor core" signature lives in the stronger `pulse-glow` + `glow-surface` reserved for **live/active** states (running process, live session) — not static cards. New surfaces follow the same discipline: cyan (Cherenkov) is *the* primary; the other accents (purple/green/pink/orange) are semantic, not decorative — keep few competing accents per screen.
+**Restraint (deep-space Cherenkov):** the `.glow-*` box-shadows in `globals.css` are intentionally soft (`14px @ 0.08` + `28px @ 0.025`) so glow reads as a subtle luminescence, not a flat light source. The brand's "reactor core" signature lives in the stronger `pulse-glow` + `glow-surface` reserved for **live/active** states (running process, live session), not static cards. New surfaces follow the same discipline: cyan (Cherenkov) is *the* primary; the other accents (purple/green/pink/orange) are semantic, not decorative. Keep few competing accents per screen.
 
 ## Form inputs
 
@@ -103,13 +103,13 @@ Prefer `inputFieldClasses(accent)` from `src/lib/theme.ts` (wraps `baseInputStyl
 
 ## Shell chrome
 
-- `--ch-shell-header-min-height`: `5rem` — sidebar brand row + `PageHeader` / dashboard bar.
-- `--ch-mobile-header-min-height`: `3rem` — mobile compact chrome for touch targets.
+- `--ch-shell-header-min-height`: `5rem`, the sidebar brand row + `PageHeader` / dashboard bar.
+- `--ch-mobile-header-min-height`: `3rem`, the compact mobile chrome for touch targets.
 
 ## Forbidden patterns
 
 - Do not add raw `#rrggbb` or `rgba(...)` for brand accents in TSX; use `neon-*`, `cherenkov-*`, `semantic-*`, or `dark-*` utilities.
-- Exceptions: rare third-party embeds or one-off charts — comment why.
+- Exceptions: rare third-party embeds or one-off charts. Comment why.
 
 ## Adding a colour
 
