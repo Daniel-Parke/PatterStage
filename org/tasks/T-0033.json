@@ -1,6 +1,6 @@
 {
   "id": "T-0033",
-  "intent": "Migrate the record surfaces onto the shared container components, executing WG-WEB-003 (D): records with three or more comparable fields are a table or a ledger, not a rounded box. Operator ruled 2026-08-24 to do this now. Measured cause: Card is imported by 10 files, Panel by 4 and Button by 36, against 313 raw button elements and 209 inline rounded-border boxes, so the console's styling rulings apply to a minority of it and the vendored bloom field lights a minority of surfaces. Scope: the record surfaces (sessions, missions, logs, tools) onto Card/Panel/Button/ledger rows. Behaviour preserving: this changes what renders the record, never which records render or what they say. Done when the shared containers carry the record surfaces and a future styling ruling reaches them by construction.",
+  "intent": "Migrate the record surfaces onto the shared container components, executing WG-WEB-003 (D): records with three or more comparable fields are a table or a ledger, not a rounded box. Operator ruled 2026-08-24 to do this now. Measured cause: Card is imported by 10 files, Panel by 4 and Button by 36, against 313 raw button elements and 209 inline rounded-border boxes, so the console's styling rulings apply to a minority of it and the vendored bloom field lights a minority of surfaces. Scope: the record surfaces (sessions, missions, logs, tools) onto Card/Panel/Button/ledger rows. Behaviour preserving: this changes what renders the record, never which records render or what they say. Done when the shared containers carry the record surfaces and a future styling ruling reaches them by construction. Closed 2026-08-25. The record surfaces (sessions, logs, missions, tools) migrated onto the shared containers per WG-WEB-003, carrying data-bloom so the vendored field lights them by construction rather than by sprinkling the attribute. Behaviour preserving: review diffed a sample and confirmed the same records render with the same data and the same actions, and that httpSurface did not move.",
   "declared": {
     "capabilities": [
       "edit-source"
@@ -12,7 +12,7 @@
   "tier_ruled": "R2",
   "reasons": [],
   "status": "done",
-  "owner_session": "t0033-record-surfaces-2026-08-25",
+  "owner_session": "t0033-containers-2026-08-25",
   "claims": [
     "src/app/(main)/sessions/page.tsx",
     "src/app/operations/tools/page.tsx",
@@ -43,8 +43,8 @@
   "oracle_provenance": "Authored by the executor in this session BEFORE any file under src/ was edited, and committed on its own ahead of the implementation, per the EXECUTOR R2 clause. Three files: tests/unit/ledger-row.test.tsx (the shared row primitive and its two bloom tiers), tests/unit/record-surface-containers.test.ts (the structural half, held as source-level fact: which shared container each record surface goes through, and the absence of the raw record box), tests/unit/record-surfaces.test.tsx (the behaviour-preserving half, rendered: same records, same text, same handlers, same hrefs).",
   "timestamps": {
     "opened": "2026-08-24T03:00:00Z",
-    "updated": "2026-08-25T23:59:00Z",
-    "closed": "2026-08-25T23:59:00Z"
+    "updated": "2026-08-26T00:00:00Z",
+    "closed": "2026-08-26T00:00:00Z"
   },
   "notes": [
     "Closed 2026-08-25 in three commits: cf9fe3a6 froze the oracle, d2e61a3c migrated the surfaces, a4bf3f08 fixed a defect the browser found and jsdom could not. All six invariants hold. httpSurface did not move; moduleGraph and prerender did, which is the task doing what it says.",

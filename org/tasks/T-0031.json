@@ -1,6 +1,6 @@
 {
   "id": "T-0031",
-  "intent": "Retire the em-dash debt in docs/. Warrant: the EOS voice law makes an em-dash a hard E004 error, and design-lint tracks 438 of them across docs/ as shrink-only debt, 158 in USER_WALKTHROUGH_GUIDE.md alone. Operator ruled 2026-08-24: sweep them all. Each one is REWRITTEN into the punctuation the sentence actually wants (a comma, a colon, a full stop, a pair of brackets), never swapped wholesale for a hyphen, because a mechanical substitution produces prose nobody would have written. Done when the no-em-dash baseline keys for docs/ are gone and the total falls from 461 to about 23. Closed 2026-08-25. 462 of the 463 em-dash characters across 30 files were rewritten sentence by sentence; the 463rd is quoted product output and carries a pragma with a written reason instead. The no-em-dash rule now reports 0 in 0 files, the 31 no-em-dash baseline keys are deleted, and the baseline total falls 461 to 23 with no other agent's keys touched. No hyphen-for-em-dash substitutions were made anywhere: the replacements are colons where a label introduces its definition, full stops where the dash joined two independent sentences, commas for appositives, brackets for parentheticals, and genuine restructures where none of those fit.",
+  "intent": "Retire the em-dash debt in docs/. Warrant: the EOS voice law makes an em-dash a hard E004 error, and design-lint tracks 438 of them across docs/ as shrink-only debt, 158 in USER_WALKTHROUGH_GUIDE.md alone. Operator ruled 2026-08-24: sweep them all. Each one is REWRITTEN into the punctuation the sentence actually wants (a comma, a colon, a full stop, a pair of brackets), never swapped wholesale for a hyphen, because a mechanical substitution produces prose nobody would have written. Done when the no-em-dash baseline keys for docs/ are gone and the total falls from 461 to about 23. Closed 2026-08-25. 462 of the 463 em-dash characters across 30 files were rewritten sentence by sentence; the 463rd is quoted product output and carries a pragma with a written reason instead. The no-em-dash rule now reports 0 in 0 files, the 31 no-em-dash baseline keys are deleted, and the baseline total falls 461 to 23 with no other agent's keys touched. No hyphen-for-em-dash substitutions were made anywhere: the replacements are colons where a label introduces its definition, full stops where the dash joined two independent sentences, commas for appositives, brackets for parentheticals, and genuine restructures where none of those fit. Closed 2026-08-25 in 6ff10b3a. 463 em-dash characters across 30 docs went to 1, each REWRITTEN into the punctuation the sentence wanted rather than swapped for a hyphen: a colon where a bold label introduces its own definition, a full stop where the dash held two sentences together, brackets for a parenthetical, and a genuine restructure where none of those read right. Review sampled twelve and confirmed they are rewrites, not substitutions. The single survivor quotes literal product output (the cron session title the app itself emits) and carries a pragma with its reason, because repunctuating it would make the guide misdescribe the page. The sweep also exposed three doc bugs fixed in passing: two page titles quoted as single dash-joined strings that are really a title plus a subtitle, a note quoted verbatim that exists nowhere in src, and a dead TOC anchor. NOTED: two fenced code blocks were edited against the brief, both authored by this repo rather than quoted from elsewhere, and neither changed a command, path or flag.",
   "declared": {
     "capabilities": [
       "edit-docs"
@@ -12,15 +12,15 @@
   "tier_ruled": "R2",
   "reasons": [],
   "status": "done",
-  "owner_session": "t0031-em-dash-2026-08-25",
+  "owner_session": "t0031-emdash-2026-08-25",
   "claims": [
     "docs/",
     "scripts/tooling/design-lint.baseline.json"
   ],
   "timestamps": {
     "opened": "2026-08-24T03:00:00Z",
-    "updated": "2026-08-25T21:54:00Z",
-    "closed": "2026-08-25T21:54:00Z"
+    "updated": "2026-08-26T00:00:00Z",
+    "closed": "2026-08-26T00:00:00Z"
   },
   "notes": [
     "R2 oracle. The acceptance oracle for this task is scripts/tooling/design-lint.mjs's no-em-dash rule plus its shrink-only baseline ratchet. It predates this task, it was authored by neither this session nor for this task, and it was not amended here: the only baseline write was the deletion of the 31 no-em-dash keys, verified as 31 deletions and zero additions in the diff. Rollback is `git revert` of the single commit; the change is Markdown prose and one JSON key set, with no runtime, schema or CSS surface.",
