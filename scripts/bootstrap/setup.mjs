@@ -10,7 +10,7 @@
 
 import { spawnSync } from "child_process";
 import {
-  existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, readdirSync, appendFileSync,
+  existsSync, mkdirSync, readFileSync, copyFileSync, readdirSync, appendFileSync,
 } from "fs";
 import { homedir, networkInterfaces } from "os";
 import { join, dirname } from "path";
@@ -18,6 +18,7 @@ import { fileURLToPath } from "url";
 import { randomBytes } from "crypto";
 
 import { isWindows, portInUse } from "../tooling/_platform.mjs";
+import { readEnvFile, setEnvVar } from "./env-local.mjs";
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const args = process.argv.slice(2);
@@ -40,23 +41,13 @@ function tsx(scriptRel, scriptArgs, env = {}) {
 }
 
 // ── .env.local ──────────────────────────────────────────────────
+// The reader and writer live in ./env-local.mjs so they can be tested against a
+// temp file. The old writer here kept every line it did not recognise as
+// `KEY=`, so orphan lines from a corrupt earlier write were preserved on every
+// re-run, and it accepted a multi-line value without a word.
 const ENV_FILE = join(REPO_ROOT, ".env.local");
-function readEnvLocal() {
-  const map = {};
-  if (!existsSync(ENV_FILE)) return map;
-  for (let line of readFileSync(ENV_FILE, "utf-8").split("\n")) {
-    line = line.replace(/\r$/, "");
-    const eq = line.indexOf("=");
-    if (eq > 0 && !line.startsWith("#")) map[line.slice(0, eq)] = line.slice(eq + 1);
-  }
-  return map;
-}
-function setEnvLocal(key, val) {
-  const existing = existsSync(ENV_FILE) ? readFileSync(ENV_FILE, "utf-8").split("\n") : [];
-  const kept = existing.filter((l) => l.trim() !== "" && !l.startsWith(`${key}=`));
-  kept.push(`${key}=${val}`);
-  writeFileSync(ENV_FILE, kept.join("\n") + "\n");
-}
+const readEnvLocal = () => readEnvFile(ENV_FILE);
+const setEnvLocal = (key, val) => setEnvVar(ENV_FILE, key, val);
 
 // ── data dir ────────────────────────────────────────────────────
 function resolveDataDir() {

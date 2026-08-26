@@ -43,6 +43,14 @@ hermes_default_root() {
   fi
 }
 
+# Print the Hermes venv interpreter on stdout, or return 1.
+#
+# It RETURNS on failure, it does not exit. This function is only ever run inside
+# $( ), and an `exit 1` there kills the subshell, not the script: the status is
+# handed back to the assignment and, in any context where `set -e` is not in
+# force (a caller that sources this file, an `if`, a `&&` chain), the script
+# carries on with an empty interpreter path. A return status the caller checks
+# works in every one of those contexts.
 resolve_python() {
   local default_root
   default_root="$(hermes_default_root "$1")"
@@ -56,10 +64,12 @@ resolve_python() {
     fi
   done
   echo "[$(date -Iseconds 2>/dev/null || date)] [ps-backup] ERROR: Hermes venv not found under $default_root/hermes-agent" >&2
-  exit 1
+  return 1
 }
 
-PYTHON="$(resolve_python "$HERMES_HOME")"
+if ! PYTHON="$(resolve_python "$HERMES_HOME")"; then
+  exit 1
+fi
 CFG="$HERMES_HOME/hindsight/config.json"
 API_KEY="${HINDSIGHT_API_KEY:-}"
 if [[ -z "$API_KEY" && -f "$CFG" ]]; then
