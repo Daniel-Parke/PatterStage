@@ -21,6 +21,45 @@ export function toError(e: unknown): Error {
 }
 
 /**
+ * Walk an error's `cause` chain, outermost first, stopping at the first
+ * link that is not an Error.
+ *
+ * Node's fetch is the reason this exists. undici throws
+ * `TypeError: fetch failed` and puts the only sentence worth reading one
+ * level down: `Error: connect ECONNREFUSED 127.0.0.1:8642`. Anything that
+ * reads `.message` alone therefore reports the wrapper and discards the
+ * fact, which is how a chat turn against a stopped gateway came back as
+ * "fetch failed" and, further downstream, as the bare string "run failed".
+ *
+ * Two deliberate properties, both load-bearing:
+ *
+ *   * A non-Error input yields an EMPTY chain, not a wrapped one. The
+ *     sibling reader `isHindsightConnectionError` is pinned on
+ *     `("fetch failed")` (a bare string) being FALSE, because a string is
+ *     not evidence of a transport failure. A walker that coerced its input
+ *     would quietly flip that. Callers that want String() coercion compose
+ *     with `toError()` first, which is exactly what `messageFromError` does.
+ *   * The depth cap makes a cyclic `cause` terminate rather than hang.
+ *     Self-referential causes are rare but real, and a diagnostic helper
+ *     that can hang is worse than no diagnostic at all.
+ *
+ * This is the ONE cause walker. `src/lib/memory/hindsight-request.ts`
+ * still carries a second copy of the same loop (shipped in 8247b3ab for
+ * the same reason, against Hindsight rather than the gateway); that file
+ * is outside this task's claims, so folding it onto this helper is a
+ * separate change, not a silent one.
+ */
+export function errorChain(e: unknown, maxDepth = 5): Error[] {
+  const chain: Error[] = [];
+  let current: unknown = e;
+  for (let depth = 0; depth < maxDepth && current instanceof Error; depth++) {
+    chain.push(current);
+    current = (current as { cause?: unknown }).cause;
+  }
+  return chain;
+}
+
+/**
  * Coerce an unknown caught value to a user-friendly error message,
  * falling back to `fallback` when the error is empty/unknown.
  *
@@ -31,13 +70,52 @@ export function toError(e: unknown): Error {
  * `|| fallback` discipline so every catch block is guaranteed to
  * produce a non-empty string.
  *
+ * It also unwraps the cause chain, joining the distinct links with ": ",
+ * so `TypeError: fetch failed` reaches the user as
+ * `fetch failed: connect ECONNREFUSED 127.0.0.1:8642`. A cause whose text
+ * an outer link already quotes is dropped rather than repeated: wrappers
+ * that interpolate their own cause are common, and saying it twice reads
+ * as two faults.
+ *
  * @example
  *   } catch (err) {
  *     showToast(messageFromError(err, "Failed to load"), "error");
  *   }
  */
 export function messageFromError(e: unknown, fallback: string): string {
-  return toError(e).message || fallback;
+  const parts: string[] = [];
+  for (const link of errorChain(toError(e))) {
+    const message = link.message.trim();
+    if (!message) continue;
+    if (parts.some((seen) => seen.includes(message))) continue;
+    parts.push(message);
+  }
+  return parts.join(": ") || fallback;
+}
+
+/**
+ * How long the browser waits for one API call before giving up on it.
+ *
+ * Deliberately LONGER than the server's own deadline. HermesRuntime times its
+ * gateway calls out at 30s, so a route that is waiting on a stopped gateway
+ * answers at ~30s with a real diagnosis. A client deadline at or under that
+ * would win the race and replace the diagnosis with "timed out", which is the
+ * one thing the user already knows. Above it, the server's answer arrives
+ * first and this only ever catches the case where no answer is coming at all.
+ *
+ * Without any deadline the chat composer sat on "Thinking…" for as long as the
+ * server took, with no upper bound and nothing on screen to say why.
+ */
+export const API_FETCH_TIMEOUT_MS = 45_000;
+
+/**
+ * A deadline signal, or null where the runtime has no `AbortSignal.timeout`
+ * (older jsdom in particular). No signal is strictly better than throwing at
+ * the first line of every fetch in the app.
+ */
+function timeoutSignal(): AbortSignal | null {
+  if (typeof AbortSignal === "undefined" || typeof AbortSignal.timeout !== "function") return null;
+  return AbortSignal.timeout(API_FETCH_TIMEOUT_MS);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic JSON fetch returns arbitrary shapes
@@ -45,10 +123,26 @@ export async function apiFetch<T = any>(
   path: string,
   options?: RequestInit
 ): Promise<T> {
-  const res = await fetch(path, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...options?.headers },
-  });
+  // A caller-supplied signal always wins: several call sites use one to cancel
+  // on unmount or on a superseded request, and overriding it would leak both
+  // the request and the state update it resolves into.
+  const deadline = options?.signal ? null : timeoutSignal();
+
+  let res: Response;
+  try {
+    res = await fetch(path, {
+      ...options,
+      signal: options?.signal ?? deadline,
+      headers: { "Content-Type": "application/json", ...options?.headers },
+    });
+  } catch (e) {
+    if (deadline?.aborted) {
+      throw new Error(
+        `No response after ${Math.round(API_FETCH_TIMEOUT_MS / 1000)}s (${path})`,
+      );
+    }
+    throw e;
+  }
 
   const json = await res.json().catch(() => {
     throw new Error(`API returned invalid JSON (HTTP ${res.status})`);

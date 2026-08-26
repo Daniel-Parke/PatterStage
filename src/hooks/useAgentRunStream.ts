@@ -20,6 +20,14 @@
 // after "done", so an error with no terminal event means the run may
 // still be completing. It reconciles from the server, which self-heals
 // the message from the run row, rather than guessing a failure.
+//
+// That path was unreachable until T-0040. The client also subscribed to
+// an SSE event named "error", which is the same name EventSource fires
+// on transport failure, so the run-level handler ran first on a plain
+// data-less Event, resolved the turn to the hardcoded string "run
+// failed", and latched `finalized` before `onerror` could do anything.
+// The proxy now sends the run's own failure as "run.error"; nothing here
+// may subscribe to "error" again.
 
 "use client";
 
@@ -37,6 +45,7 @@ import {
   extractRunError,
   parseToolEvent,
   mergeToolCall,
+  reframeToolsForFailedRun,
 } from "@/lib/chat-utils";
 import type { PendingApproval } from "@/hooks/chat-local-message";
 
@@ -73,19 +82,23 @@ export function useAgentRunStream({
         finalized = true;
         esRef.current?.close();
         esRef.current = null;
+        // A run that died takes its unfinished tool calls with it. Persisting
+        // the accumulator as-is left rows spinning "running" forever beside a
+        // turn that had already failed.
+        const tools = status === "failed" ? reframeToolsForFailedRun(acc.tools) : acc.tools;
         updateLocalMessage(assistantId, {
           content,
           status,
           error: error ?? null,
           reasoning: acc.reasoning || null,
-          toolCalls: acc.tools.length > 0 ? acc.tools : null,
+          toolCalls: tools.length > 0 ? tools : null,
         });
         setIsStreaming(false);
         setPendingApproval(null);
         void finalizeMessageApi(conversationId, assistantId, {
           content,
           reasoning: acc.reasoning || undefined,
-          toolCalls: acc.tools.length > 0 ? acc.tools : undefined,
+          toolCalls: tools.length > 0 ? tools : undefined,
           status,
           error: error ?? undefined,
         });

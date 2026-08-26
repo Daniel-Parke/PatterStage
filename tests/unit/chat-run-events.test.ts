@@ -26,7 +26,13 @@ describe("classifyRunEvent", () => {
     expect(classifyRunEvent("run.completed")).toBe("completed");
     expect(classifyRunEvent("response.completed")).toBe("completed");
     expect(classifyRunEvent("run.failed")).toBe("failed");
-    expect(classifyRunEvent("error")).toBe("failed");
+    expect(classifyRunEvent("run.error")).toBe("failed");
+    // NOT "failed". This line used to read `classifyRunEvent("error")` and pin
+    // the defect T-0040 fixed: "error" is the name EventSource fires on
+    // transport failure, so classifying it as a run failure turned every
+    // dropped socket into a fabricated one and pre-empted the reconcile path.
+    // See tests/unit/chat-failure-truth.test.ts for the full statement.
+    expect(classifyRunEvent("error")).toBe("ignore");
     expect(classifyRunEvent("run.cancelled")).toBe("cancelled");
     expect(classifyRunEvent("done")).toBe("done");
     expect(classifyRunEvent("open")).toBe("open");

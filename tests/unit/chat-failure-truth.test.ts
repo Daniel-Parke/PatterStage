@@ -94,8 +94,6 @@ describe("the run-event proxy does not send anything under EventSource's own err
   it("emits the run-level failure as run.error, never as error", async () => {
     streamRunEvents.mockImplementation(async function* () {
       throw gatewayDown();
-      // eslint-disable-next-line no-unreachable -- generator needs a yield for its type
-      yield { type: "message.delta", data: {} };
     });
 
     const body = await eventStreamBody();
@@ -109,8 +107,6 @@ describe("the run-event proxy does not send anything under EventSource's own err
   it("says what actually happened, cause and all, not just 'fetch failed'", async () => {
     streamRunEvents.mockImplementation(async function* () {
       throw gatewayDown();
-      // eslint-disable-next-line no-unreachable -- generator needs a yield for its type
-      yield { type: "message.delta", data: {} };
     });
 
     const body = await eventStreamBody();

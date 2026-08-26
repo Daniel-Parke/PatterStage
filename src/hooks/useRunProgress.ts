@@ -29,8 +29,15 @@ export interface RunProgressState {
 // Real Hermes (0.16) emits message.delta / reasoning.available / run.completed /
 // run.failed. The response.* names are kept as a superset for any backend that
 // uses the OpenAI-Responses-style stream.
+//
+// "error" appears in neither list, and must not be added back. EventSource
+// fires a built-in event of that exact type when the transport drops, so a
+// subscription to it fires on a plain Event with no `data` and records a run
+// failure that never happened — while also pre-empting the onerror handler
+// below, whose entire job is to say "the stream dropped" instead. The proxy
+// sends the run's own failure as "run.error".
 const TERMINAL = new Set(["done", "run.completed", "response.completed"]);
-const FAILED = new Set(["run.failed", "error"]);
+const FAILED = new Set(["run.failed", "run.error"]);
 const DELTA_EVENTS = new Set(["message.delta", "response.output_text.delta"]);
 const SSE_EVENTS = [
   "open",
@@ -44,7 +51,7 @@ const SSE_EVENTS = [
   "response.output_item.added",
   "response.completed",
   "done",
-  "error",
+  "run.error",
 ];
 
 export function useRunProgress(runId: string | null): RunProgressState {
