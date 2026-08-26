@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useId, useRef } from "react";
 import { Send, Save } from "lucide-react";
 
 import Button from "@/components/ui/Button";
@@ -75,6 +76,35 @@ export interface MissionCreateFormProps {
   dispatchAcknowledged?: boolean;
   onDispatchOpenChange?: (open: boolean) => void;
 }
+
+/**
+ * The Dispatch step opens BY DEFAULT, and being open IS the acknowledgement
+ * (T-0043, operator ruling 2026-08-26).
+ *
+ * The gate is by design: a new mission may not be submitted until the operator
+ * has been shown how it will run. What was wrong was the price of admission.
+ * Dispatch used to open collapsed, so satisfying the acknowledgement meant
+ * guessing that a closed accordion four steps down was what stood between you
+ * and a disabled button. A competent tester read a working form as a broken
+ * one. Showing the choice answers the same question the click did, without
+ * charging for the discovery.
+ *
+ * The gate itself is untouched: collapse Dispatch and it comes back, hint and
+ * all. That is the one path where this friction still earns its click.
+ */
+const DISPATCH_OPEN_BY_DEFAULT = true;
+
+/**
+ * Why a disabled submit is disabled, said ON the control (T-0043).
+ *
+ * A paragraph elsewhere on the form is not an answer to "why is this button
+ * dead?" when the operator's eye is on the button. So the requirement travels
+ * with the control: `title` for the pointer, `aria-describedby` pointing at
+ * the same hint for a screen reader. The paragraph stays; it is no longer the
+ * only place the requirement is written.
+ */
+const DISPATCH_ACK_REQUIREMENT =
+  "Open Dispatch to choose how this mission runs before submitting.";
 
 export const DISPATCH_MODES = [
   { id: "save" as const, label: "Save" },
@@ -192,11 +222,12 @@ export function MissionComposerActions({
   });
 
   const needsDispatchAck = !editingId && !dispatchAcknowledged;
+  const dispatchHintId = useId();
 
   return (
     <div className="space-y-2">
       {needsDispatchAck && (
-        <p className="text-xs font-mono text-neon-orange/90">
+        <p id={dispatchHintId} className="text-xs font-mono text-neon-orange/90">
           Open <strong className="text-neon-cyan/90">Dispatch</strong> to choose
           how this mission runs before submitting.
         </p>
@@ -211,6 +242,8 @@ export function MissionComposerActions({
             needsDispatchAck
           }
           loading={dispatching}
+          title={needsDispatchAck ? DISPATCH_ACK_REQUIREMENT : undefined}
+          aria-describedby={needsDispatchAck ? dispatchHintId : undefined}
         >
           <Send className="w-3.5 h-3.5" />
           {submitLabel}
@@ -250,6 +283,23 @@ export default function MissionCreateForm({
 }: MissionCreateFormProps) {
   const editingCtx = resolveEditContext(editingId, missions);
   const { isReDispatch, isRunningEdit, isDraftEdit, isQueuedEdit } = editingCtx;
+
+  // Report the Dispatch step's DEFAULT state to the owner of the
+  // acknowledgement, once per mount. `ComposerAccordion` only calls
+  // `onOpenChange` on a toggle, so a section that starts open would otherwise
+  // never say so, and the operator would face a disabled button under a
+  // choice already in front of him.
+  //
+  // Once, deliberately: `onDispatchOpenChange` is an inline arrow at the call
+  // site, so a plain effect would re-run on every render and quietly undo a
+  // collapse. The composer unmounts with its sheet, so re-opening it reports
+  // the default afresh.
+  const dispatchDefaultReported = useRef(false);
+  useEffect(() => {
+    if (dispatchDefaultReported.current) return;
+    dispatchDefaultReported.current = true;
+    onDispatchOpenChange?.(DISPATCH_OPEN_BY_DEFAULT);
+  }, [onDispatchOpenChange]);
 
   // Helper: commit the current `localDirDraft` to `newLocalDirs` and
   // clear the draft. The 4-line "trim → dedupe-by-path → push → reset"
@@ -582,12 +632,12 @@ export default function MissionCreateForm({
       <ComposerAccordion
         title="Dispatch"
         description="When and how this mission runs"
-        defaultOpen={false}
+        defaultOpen={DISPATCH_OPEN_BY_DEFAULT}
         step={4}
         accent="green"
-        onOpenChange={(open) => {
-          if (open) onDispatchOpenChange?.(true);
-        }}
+        // Both directions, not just the open one: collapsing the choice
+        // withdraws the acknowledgement, and the gate returns.
+        onOpenChange={(open) => onDispatchOpenChange?.(open)}
       >
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {DISPATCH_MODES.map((mode) => (

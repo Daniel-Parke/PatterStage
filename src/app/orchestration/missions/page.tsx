@@ -260,9 +260,10 @@ export default function MissionsPage() {
             onClose={handleCloseCreate}
             dispatching={dispatching}
             dispatchAcknowledged={dispatchAcknowledged}
-            onDispatchOpenChange={(open) => {
-              if (open) setDispatchAcknowledged(true);
-            }}
+            // The acknowledgement mirrors the Dispatch step's open state
+            // (T-0043). It starts satisfied because the step starts open;
+            // collapsing the choice withdraws it and the gate returns.
+            onDispatchOpenChange={(open) => setDispatchAcknowledged(open)}
           />
         </div>
       </Sheet>
