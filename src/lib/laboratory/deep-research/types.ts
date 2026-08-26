@@ -7,6 +7,8 @@
 // provider-flexible via callLLM (local endpoint or cloud, default = Hermes).
 // ═══════════════════════════════════════════════════════════════
 
+import type { ResearchUsageTotal } from "./usage";
+
 export type ResearchStatus = "pending" | "running" | "completed" | "failed" | "cancelled";
 
 export type ResearchStepKind = "plan" | "search" | "visit" | "reason" | "synthesize";
@@ -39,6 +41,14 @@ export interface ResearchRun {
   error: string | null;
   createdAt: string;
   completedAt: string | null;
+  /**
+   * Tokens the run's LLM calls reported, or null when none did.
+   *
+   * null is NOT zero. Every run before migration 034 is null, meaning the cost
+   * is unknown, and the spend console reports those separately rather than
+   * folding them in at nothing (T-0030).
+   */
+  usage: ResearchUsageTotal | null;
 }
 
 /** A saved, reusable Deep Research configuration. */

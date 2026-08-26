@@ -12,18 +12,22 @@
 // could see. So the research row reports `recorded: false` and a null cost, and
 // the summary carries the exclusion in `unmeasured` where the UI must show it.
 
-import type { SpendUsageRow } from "@/lib/spend/spend-repository";
+import type { ResearchUsageRow, SpendUsageRow } from "@/lib/spend/spend-repository";
 
 const readRunUsageSince = jest.fn<SpendUsageRow[], [string]>();
-const countResearchRunsSince = jest.fn<number, [string]>();
+const readResearchUsageSince = jest.fn<ResearchUsageRow[], [string]>();
 const readSpendPolicy = jest.fn();
 
 jest.mock("@/lib/spend/spend-repository", () => ({
   readRunUsageSince: (since: string) => readRunUsageSince(since),
-  countResearchRunsSince: (since: string) => countResearchRunsSince(since),
+  readResearchUsageSince: (since: string) => readResearchUsageSince(since),
   readSpendPolicy: () => readSpendPolicy(),
   writeSpendPolicy: jest.fn(),
 }));
+
+/** N research runs whose usage was never recorded (every run before 034). */
+const unrecordedRuns = (n: number): ResearchUsageRow[] =>
+  Array.from({ length: n }, () => ({ promptTokens: null, completionTokens: null, model: null }));
 
 import { getSpendSummary } from "@/lib/spend/spend-summary";
 import { UNSET_SPEND_POLICY } from "@/lib/spend/spend-law";
@@ -43,7 +47,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   readSpendPolicy.mockReturnValue({ ...UNSET_SPEND_POLICY });
   readRunUsageSince.mockReturnValue([]);
-  countResearchRunsSince.mockReturnValue(0);
+  readResearchUsageSince.mockReturnValue([]);
 });
 
 describe("getSpendSummary: clause 1, per period and per source", () => {
@@ -58,7 +62,7 @@ describe("getSpendSummary: clause 1, per period and per source", () => {
 
   it("splits agent runs from Composer stages and totals only what is recorded", () => {
     readRunUsageSince.mockReturnValue([sonnetRun("agent"), sonnetRun("agent"), sonnetRun("composer")]);
-    countResearchRunsSince.mockReturnValue(4);
+    readResearchUsageSince.mockReturnValue(unrecordedRuns(4));
 
     const month = getSpendSummary(NOW).periods.find((p) => p.period === "month");
     const agent = month?.sources.find((r) => r.source === "agent");
@@ -97,24 +101,55 @@ describe("getSpendSummary: clause 1, per period and per source", () => {
 });
 
 describe("getSpendSummary: what is NOT recorded is said out loud", () => {
-  it("reports Deep Research as unrecorded rather than as zero spend", () => {
-    countResearchRunsSince.mockReturnValue(3);
+  // These two assertions used to read the other way round, and they were RIGHT
+  // to: before migration 034 Deep Research recorded no tokens at all, so the
+  // source was unrecorded by construction and `costUsd` was null to keep a
+  // genuine unknown from rendering as a confident $0.00.
+  //
+  // T-0030 made research runs record their usage, so the source is now recorded
+  // like the other two. The old expectation is corrected IN PLACE rather than
+  // deleted, because the FACT it was protecting has not gone away: a run whose
+  // usage was never recorded still must not be priced at zero. That fact now
+  // lives on `unmeasured` and in the run count, which is what these assert.
+  it("prices a research run that recorded its usage", () => {
+    readResearchUsageSince.mockReturnValue([
+      { promptTokens: 1000, completionTokens: 500, model: null },
+    ]);
+    const month = getSpendSummary(NOW).periods.find((p) => p.period === "month");
+    const research = month?.sources.find((r) => r.source === "research");
+    // Narrowed rather than asserted through the optional chain: `?.x!` tells the
+    // compiler to trust a value the expression itself says may be absent, and a
+    // missing row would then fail on the WRONG assertion.
+    expect(research).toBeDefined();
+    if (!research) return;
+
+    expect(research.recorded).toBe(true);
+    expect(research.runs).toBe(1);
+    expect(research.costUsd).not.toBeNull();
+    expect(research.costUsd).toBeGreaterThan(0);
+  });
+
+  it("still refuses to price a run whose usage was never recorded", () => {
+    readResearchUsageSince.mockReturnValue(unrecordedRuns(3));
     const month = getSpendSummary(NOW).periods.find((p) => p.period === "month");
     const research = month?.sources.find((r) => r.source === "research");
 
-    expect(research?.recorded).toBe(false);
-    expect(research?.costUsd).toBeNull();
     expect(research?.runs).toBe(3);
+    // Nothing was added to the total for them: three unknown costs, not $0.00
+    // of real spend.
+    expect(research?.costUsd).toBe(0);
+    expect(month?.totalUsd).toBe(0);
   });
 
   it("carries the exclusion on the summary so the console cannot omit it", () => {
-    countResearchRunsSince.mockReturnValue(3);
+    readResearchUsageSince.mockReturnValue(unrecordedRuns(3));
     const s = getSpendSummary(NOW);
     expect(s.unmeasured.join(" ")).toMatch(/deep research/i);
+    expect(s.unmeasured.join(" ")).toContain("3");
   });
 
   it("says nothing about Deep Research when no research has run", () => {
-    countResearchRunsSince.mockReturnValue(0);
+    readResearchUsageSince.mockReturnValue([]);
     expect(getSpendSummary(NOW).unmeasured).toEqual([]);
   });
 });

@@ -76,6 +76,7 @@ import { applyNeutralColumnNames } from "./apply-neutral-column-names";
 import { applyAgentProgressionMigration } from "./apply-agent-progression-migration";
 import { applyRetentionMigration } from "./apply-retention-migration";
 import { applySpendPolicyMigration } from "./apply-spend-policy-migration";
+import { applyResearchUsageMigration } from "./apply-research-usage-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -294,6 +295,12 @@ export function runMigrations(database: Database.Database): void {
   // unattended dispatch. Seeded with NO figure and NO stop on every install, so
   // this upgrade changes no install's behaviour. CREATE + seed at v33.
   applySpendPolicyMigration(database, migrationsDir);
+
+  // Deep Research token counts on research_runs, so the one source of spend the
+  // database could not answer for becomes countable and the operator's hard stop
+  // stops under-measuring. Three NULLABLE columns, no backfill: NULL means the
+  // cost is unknown, which every pre-034 run genuinely is. ALTER at v34.
+  applyResearchUsageMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

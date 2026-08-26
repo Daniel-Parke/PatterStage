@@ -11,6 +11,7 @@
 import { callLLM, type LLMMessage } from "@/lib/llm";
 import { visitPage } from "@/lib/search";
 import type { ResearchStepKind, SearchProvider, SearchResult, VisitedPage } from "./types";
+import { accumulateUsage, type ResearchUsage, type ResearchUsageTotal } from "./usage";
 
 const PLAN_SYSTEM =
   "You are a meticulous research strategist. Given a question, produce a short, " +
@@ -44,7 +45,7 @@ const SYNTHESIZE_SYSTEM =
 export type LlmFn = (
   messages: LLMMessage[],
   opts: { modelId?: string; temperature?: number; maxTokens?: number },
-) => Promise<{ content: string }>;
+) => Promise<{ content: string; usage?: ResearchUsage }>;
 
 export interface ResearchStepRecord {
   kind: ResearchStepKind;
@@ -85,6 +86,16 @@ export interface DeepResearchResult {
    * which failed a whole run rather than score it zero when everything errored.
    */
   searchFailures: number;
+  /**
+   * Tokens every LLM call in the run reported, summed, or null if none did.
+   *
+   * null is NOT a zero total. It means the providers reported nothing, so the
+   * run's cost is unknown and must be persisted as NULL and declared in the
+   * spend console rather than folded into a figure at zero (T-0030). The same
+   * honest-failure stance as `searchFailures` above: say the thing is unknown
+   * instead of shipping a confident number that looks real.
+   */
+  usage: ResearchUsageTotal | null;
 }
 
 const VISIT_PER_ROUND = 2;
@@ -115,6 +126,10 @@ export async function runDeepResearch(
   const visitsPerRound = Math.max(0, deps.visitsPerRound ?? VISIT_PER_ROUND);
 
   // 1. Plan
+  // Every LLM call in the run lands here, so the total below is the whole run
+  // rather than whichever call was most convenient to instrument (T-0030).
+  const usageCalls: Array<ResearchUsage | undefined> = [];
+
   const plan = await deps.llm(
     [
       { role: "system", content: PLAN_SYSTEM },
@@ -122,6 +137,7 @@ export async function runDeepResearch(
     ],
     { modelId, temperature: 0.4, maxTokens: 800 },
   );
+  usageCalls.push(plan.usage);
   deps.onStep({ kind: "plan", input: query, output: plan.content, sources: [] });
 
   const notes: string[] = [];
@@ -187,6 +203,7 @@ export async function runDeepResearch(
       ],
       { modelId, temperature: 0.5, maxTokens: 1000 },
     );
+    usageCalls.push(reason.usage);
     deps.onStep({ kind: "reason", input: q, output: reason.content, sources: [] });
     notes.push(reason.content);
 
@@ -211,6 +228,7 @@ export async function runDeepResearch(
     ],
     { modelId, temperature: 0.5, maxTokens: 4000 },
   );
+  usageCalls.push(synth.usage);
   deps.onStep({
     kind: "synthesize",
     input: sourceBlock,
@@ -218,13 +236,24 @@ export async function runDeepResearch(
     sources: sources.map((r) => r.url),
   });
 
-  return { report: synth.content, provider: deps.search.name, searchAttempts, searchFailures };
+  return {
+    report: synth.content,
+    provider: deps.search.name,
+    searchAttempts,
+    searchFailures,
+    // null, NOT a zeroed total, when no provider reported anything. The
+    // caller persists that as NULL so the spend console can say the cost is
+    // unknown rather than showing a confident $0.00.
+    usage: accumulateUsage(usageCalls),
+  };
 }
 
 /** The real inference fn — callLLM, so local/cloud/Hermes-default all work. */
 export const defaultLlm: LlmFn = async (messages, opts) => {
   const res = await callLLM(messages, opts);
-  return { content: res.content };
+  // res.usage was dropped here until T-0030, which is the whole reason Deep
+  // Research spend could not be counted even in principle.
+  return { content: res.content, usage: res.usage };
 };
 
 /** The real page-visit fn. */

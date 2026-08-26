@@ -30,9 +30,12 @@ function summary(policy: SpendPolicy, spent: number, unmeasured: string[] = []):
   ];
   return {
     periods: [
-      { period: "day", label: "Today", since: "2026-08-23 00:00:00", totalUsd: 1, sources: sources(1) },
-      { period: "week", label: "This week", since: "2026-08-17 00:00:00", totalUsd: 5, sources: sources(5) },
-      { period: "month", label: "This month", since: "2026-08-01 00:00:00", totalUsd: spent, sources: sources(spent) },
+      // unrecordedResearchRuns: 3 to match the `research` source row above, whose
+      // runs are unpriced in this fixture. The two must agree, because the panel
+      // renders the count from one and the money from the other (T-0030).
+      { period: "day", label: "Today", since: "2026-08-23 00:00:00", totalUsd: 1, sources: sources(1), unrecordedResearchRuns: 3 },
+      { period: "week", label: "This week", since: "2026-08-17 00:00:00", totalUsd: 5, sources: sources(5), unrecordedResearchRuns: 3 },
+      { period: "month", label: "This month", since: "2026-08-01 00:00:00", totalUsd: spent, sources: sources(spent), unrecordedResearchRuns: 3 },
     ],
     policy,
     budgetPeriod: policy.period,

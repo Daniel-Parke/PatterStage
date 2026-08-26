@@ -22,6 +22,7 @@ import { execBaselineSchema } from "../helpers/baseline-db";
 import { applyComposerMigration } from "@/lib/db/apply-composer-migration";
 import { applyDeepResearchMigration } from "@/lib/db/apply-deep-research-migration";
 import { applySpendPolicyMigration } from "@/lib/db/apply-spend-policy-migration";
+import { applyResearchUsageMigration } from "@/lib/db/apply-research-usage-migration";
 
 type RealDb = DatabaseNs.Database;
 
@@ -40,7 +41,7 @@ const Database = jest.requireActual(
 const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
 
 import {
-  countResearchRunsSince,
+  readResearchUsageSince,
   readRunUsageSince,
   readSpendPolicy,
   writeSpendPolicy,
@@ -77,6 +78,7 @@ beforeEach(() => {
   applyDeepResearchMigration(testDb, migrationsDir);
   applyComposerMigration(testDb, migrationsDir);
   applySpendPolicyMigration(testDb, migrationsDir);
+  applyResearchUsageMigration(testDb, migrationsDir);
   testDb
     .prepare("INSERT INTO missions (id, name, prompt, model_id) VALUES ('m1','M','p','claude-sonnet-4')")
     .run();
@@ -137,19 +139,48 @@ describe("readRunUsageSince", () => {
   });
 });
 
-describe("countResearchRunsSince", () => {
-  it("counts research runs inside the window", () => {
+describe("readResearchUsageSince", () => {
+  const insert = (id: string, at: string, prompt: number | null, completion: number | null) =>
     testDb!
-      .prepare("INSERT INTO research_runs (id, query, created_at) VALUES ('rr1','q','2026-08-20 10:00:00')")
-      .run();
-    testDb!
-      .prepare("INSERT INTO research_runs (id, query, created_at) VALUES ('rr2','q','2026-07-01 10:00:00')")
-      .run();
-    expect(countResearchRunsSince("2026-08-01 00:00:00")).toBe(1);
+      .prepare(
+        `INSERT INTO research_runs (id, query, created_at, prompt_tokens, completion_tokens, total_tokens)
+         VALUES (?, 'q', ?, ?, ?, ?)`,
+      )
+      .run(id, at, prompt, completion, prompt === null ? null : prompt + (completion ?? 0));
+
+  it("returns the recorded counts for runs inside the window", () => {
+    insert("rr1", "2026-08-20 10:00:00", 100, 50);
+    const rows = readResearchUsageSince("2026-08-01 00:00:00");
+    expect(rows).toEqual([{ promptTokens: 100, completionTokens: 50, model: null }]);
   });
 
-  it("is zero on an install that has never run one", () => {
-    expect(countResearchRunsSince("2026-08-01 00:00:00")).toBe(0);
+  it("excludes runs outside the window", () => {
+    insert("rr1", "2026-08-20 10:00:00", 100, 50);
+    insert("rr2", "2026-07-01 10:00:00", 999, 999);
+    expect(readResearchUsageSince("2026-08-01 00:00:00")).toHaveLength(1);
+  });
+
+  // The load-bearing one. A run whose usage was never recorded MUST come back,
+  // with nulls intact, so the summary can price the counted runs and still
+  // declare this one. Filtering it out here would silently resume reporting
+  // pre-034 research as free, which is the whole defect T-0030 removed.
+  it("returns pre-034 runs with their nulls, rather than dropping them", () => {
+    insert("rr1", "2026-08-20 10:00:00", null, null);
+    insert("rr2", "2026-08-21 10:00:00", 10, 5);
+    const rows = readResearchUsageSince("2026-08-01 00:00:00");
+    expect(rows).toHaveLength(2);
+    expect(rows.filter((r) => r.promptTokens === null)).toHaveLength(1);
+  });
+
+  it("distinguishes a recorded zero from an absent count", () => {
+    insert("rr1", "2026-08-20 10:00:00", 0, 0);
+    const rows = readResearchUsageSince("2026-08-01 00:00:00");
+    expect(rows[0].promptTokens).toBe(0);
+    expect(rows[0].promptTokens).not.toBeNull();
+  });
+
+  it("is empty on an install that has never run one", () => {
+    expect(readResearchUsageSince("2026-08-01 00:00:00")).toEqual([]);
   });
 });
 

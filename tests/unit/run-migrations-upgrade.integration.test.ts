@@ -16,6 +16,7 @@ import {
 // The last applier's own gate, and the one before it. Imported by their own
 // specifiers, which the global "@/lib/db" mock does not intercept, so these are
 // the real numbers the chain ends on.
+import { RESEARCH_USAGE_SCHEMA_VERSION } from "@/lib/db/apply-research-usage-migration";
 import { SPEND_POLICY_SCHEMA_VERSION } from "@/lib/db/apply-spend-policy-migration";
 import { RETENTION_SCHEMA_VERSION } from "@/lib/db/apply-retention-migration";
 
@@ -241,7 +242,7 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
   // rather than on the install that trips over it.
   describe("the head constant cannot drift from the chain", () => {
     it("equals the last applier's version gate", () => {
-      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(SPEND_POLICY_SCHEMA_VERSION);
+      expect(MIGRATION_HEAD_SCHEMA_VERSION).toBe(RESEARCH_USAGE_SCHEMA_VERSION);
     });
 
     // schema_version strictly increases and a gate is claimed once, which is
@@ -249,6 +250,10 @@ describe("runMigrations upgrade path (real SQLite, real wiring)", () => {
     // above the applier that used to hold it is what that rule looks like from
     // the outside, and it catches a new migration that reuses or skips a number.
     it("sits exactly one above the gate it displaced", () => {
+      expect(RESEARCH_USAGE_SCHEMA_VERSION).toBe(SPEND_POLICY_SCHEMA_VERSION + 1);
+      // The rung below, kept so the ladder is checked over three rungs rather
+      // than two: a pair of appliers that BOTH moved wrongly could otherwise
+      // still sit one apart and pass.
       expect(SPEND_POLICY_SCHEMA_VERSION).toBe(RETENTION_SCHEMA_VERSION + 1);
     });
 

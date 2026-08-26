@@ -15,12 +15,10 @@ import { UNSET_SPEND_POLICY } from "@/lib/spend/spend-law";
 
 const readSpendPolicy = jest.fn();
 const readRunUsageSince = jest.fn();
-const countResearchRunsSince = jest.fn();
 
 jest.mock("@/lib/spend/spend-repository", () => ({
   readSpendPolicy: () => readSpendPolicy(),
   readRunUsageSince: (since: string) => readRunUsageSince(since),
-  countResearchRunsSince: (since: string) => countResearchRunsSince(since),
   writeSpendPolicy: jest.fn(),
 }));
 
@@ -39,7 +37,6 @@ beforeEach(() => {
   jest.clearAllMocks();
   readSpendPolicy.mockReturnValue({ ...UNSET_SPEND_POLICY });
   readRunUsageSince.mockReturnValue([]);
-  countResearchRunsSince.mockReturnValue(0);
 });
 
 describe("checkUnattendedSpend: the default is yes", () => {

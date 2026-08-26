@@ -78,21 +78,35 @@ export function readRunUsageSince(sinceExpr: string): SpendUsageRow[] {
     .all(sinceExpr) as SpendUsageRow[];
 }
 
+/** One Deep Research run's recorded usage. NULL columns mean "never recorded". */
+export interface ResearchUsageRow {
+  promptTokens: number | null;
+  completionTokens: number | null;
+  model: string | null;
+}
+
 /**
- * How many Deep Research runs started in the window.
+ * What each Deep Research run in the window cost, in tokens.
  *
- * A COUNT and nothing else, because there is nothing else to read. Deep
- * Research drives `callLLM` directly and discards the usage it returns:
- * `research_runs` has no token or cost column, and `research_steps` stores
- * prompt and output text but no counts. So its spend is genuinely NOT
- * recoverable from this database, and the count is here so the console can say
- * "three runs, cost not recorded" instead of showing a confident $0.00.
+ * Returns a row per run INCLUDING the ones whose columns are NULL, which is the
+ * whole point: the caller has to be able to tell a run that cost nothing from a
+ * run whose cost was never recorded. Filtering the NULLs out here would leave
+ * the summary unable to declare them, and it would quietly resume reporting
+ * pre-034 research as free.
+ *
+ * Throws on failure, like `readRunUsageSince`, so each caller keeps its own
+ * fallback: the summary degrades to zero, the guard refuses.
  */
-export function countResearchRunsSince(sinceExpr: string): number {
-  const row = getDb()
-    .prepare(`SELECT COUNT(*) AS c FROM research_runs WHERE datetime(created_at) >= ?`)
-    .get(sinceExpr) as { c: number } | undefined;
-  return row?.c ?? 0;
+export function readResearchUsageSince(sinceExpr: string): ResearchUsageRow[] {
+  return getDb()
+    .prepare(
+      `SELECT prompt_tokens AS promptTokens,
+              completion_tokens AS completionTokens,
+              model_id AS model
+         FROM research_runs
+        WHERE datetime(created_at) >= ?`,
+    )
+    .all(sinceExpr) as ResearchUsageRow[];
 }
 
 interface RawSpendPolicy {

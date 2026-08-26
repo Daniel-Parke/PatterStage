@@ -28,7 +28,6 @@ async function summaryWith(rows: ResearchRow[], nowIso = "2026-08-26T12:00:00.00
   jest.doMock("@/lib/spend/spend-repository", () => ({
     readRunUsageSince: () => [],
     readSpendPolicy: () => ({ limitUsd: null, period: "month", hardStop: false, updatedAt: "" }),
-    countResearchRunsSince: () => rows.length,
     readResearchUsageSince: () => rows,
   }));
   const mod = await import("@/lib/spend/spend-summary");
@@ -81,7 +80,13 @@ describe("Deep Research spend is counted once it is recorded", () => {
       { promptTokens: null, completionTokens: null, model: null },
     ]);
     expect(summary.unmeasured).toHaveLength(1);
-    expect(summary.unmeasured[0]).toMatch(/2 research run/);
+    // The COUNT and the exclusion are what matter; the prose around them is the
+    // implementation's to choose. Pinning the sentence would make this a
+    // wording test, and the next person to improve the wording would read a red
+    // build as a behaviour regression.
+    expect(summary.unmeasured[0]).toContain("2");
+    expect(summary.unmeasured[0]).toMatch(/Research/i);
+    expect(summary.unmeasured[0]).toMatch(/not counted/i);
     // Two uncounted runs must not add up to a confident $0.00 in the source row.
     expect(research(summary).costUsd).toBe(0);
     expect(research(summary).runs).toBe(2);
@@ -96,7 +101,9 @@ describe("Deep Research spend is counted once it is recorded", () => {
     expect(row.costUsd!).toBeGreaterThan(0);
     expect(row.inputTokens).toBe(1000);
     expect(summary.unmeasured).toHaveLength(1);
-    expect(summary.unmeasured[0]).toMatch(/1 research run/);
+    expect(summary.unmeasured[0]).toContain("1");
+    expect(summary.unmeasured[0]).toMatch(/Research/i);
+    expect(summary.unmeasured[0]).toMatch(/not counted/i);
   });
 
   it("counts a genuine zero-token run as counted, not as missing", async () => {
