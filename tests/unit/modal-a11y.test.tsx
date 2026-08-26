@@ -30,6 +30,7 @@ import { useState } from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 
 import Modal from "@/components/ui/Modal";
+import Sheet from "@/components/ui/Sheet";
 import CategoryManagerModal from "@/components/missions/CategoryManagerModal";
 import { TemplateManagerModal } from "@/components/missions/templates/TemplateManagerModal";
 
@@ -317,5 +318,79 @@ describe("Modal · real usages keep working with the trap installed", () => {
 
     fireEvent.keyDown(document, { key: "Escape" });
     expect(onClose).toHaveBeenCalledTimes(2);
+  });
+});
+
+/**
+ * Stacked dialogs: only the one on top reacts to Escape.
+ *
+ * Found by review, and measured before it was fixed: on the missions page the
+ * category modal opens OVER the composer sheet (opening it does not close the
+ * sheet), both registered a document-level Escape listener, and ONE keypress
+ * called BOTH onClose handlers. The operator dismissing the modal on top also
+ * lost the half-filled mission composer behind it.
+ *
+ * Not a regression in outcome, which is why it did not block: before Modal had
+ * any Escape handler at all, Escape already reached the sheet. But it is a real
+ * way to lose work, so the invariant is pinned rather than left to mount order.
+ */
+describe("stacked dialogs", () => {
+  // Sheet reads window.matchMedia for its mobile breakpoint and jsdom ships
+  // none at all, so it is defined here rather than spied on (a spy throws
+  // "Property matchMedia does not exist in the provided object").
+  beforeAll(() => {
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      value: (query: string) => ({
+        matches: false, media: query, onchange: null,
+        addEventListener: () => {}, removeEventListener: () => {},
+        addListener: () => {}, removeListener: () => {}, dispatchEvent: () => false,
+      }),
+    });
+  });
+  afterAll(() => {
+    delete (window as unknown as { matchMedia?: unknown }).matchMedia;
+  });
+
+  function Stack({ onOuter, onInner, innerOpen }: { onOuter: () => void; onInner: () => void; innerOpen: boolean }) {
+    return (
+      <>
+        <Sheet open onClose={onOuter} title="Composer">
+          <input aria-label="mission name" />
+        </Sheet>
+        <Modal open={innerOpen} onClose={onInner} title="Manage categories">
+          <input aria-label="category name" />
+        </Modal>
+      </>
+    );
+  }
+
+  it("closes only the topmost dialog on Escape", async () => {
+    const onOuter = jest.fn();
+    const onInner = jest.fn();
+    render(<Stack onOuter={onOuter} onInner={onInner} innerOpen />);
+
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(onInner).toHaveBeenCalledTimes(1);
+    // The one underneath must be untouched. This is the assertion that was
+    // failing: it received the same keystroke and closed too.
+    expect(onOuter).not.toHaveBeenCalled();
+  });
+
+  it("hands Escape back to the dialog underneath once the top one closes", async () => {
+    const onOuter = jest.fn();
+    const onInner = jest.fn();
+    const { rerender } = render(<Stack onOuter={onOuter} onInner={onInner} innerOpen />);
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onInner).toHaveBeenCalledTimes(1);
+
+    // The modal closes; the sheet is now topmost and must respond again.
+    rerender(<Stack onOuter={onOuter} onInner={onInner} innerOpen={false} />);
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(onOuter).toHaveBeenCalledTimes(1);
+    expect(onInner).toHaveBeenCalledTimes(1);
   });
 });

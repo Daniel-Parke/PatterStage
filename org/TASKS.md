@@ -47,3 +47,14 @@ The records under org/tasks/ are canonical.
 | T-0032 | standard | R2 | done | t0032-skills-2026-08-25 |
 | T-0033 | standard | R2 | done | t0033-containers-2026-08-25 |
 | T-0034 | standard | R2 | done | t0034-deferred-2026-08-25 |
+| T-0035 | standard | R2 | done | t0035-first-paint-2026-08-26 |
+| T-0036 | standard | R2 | done | t0036-modal-dialog-2026-08-26 |
+| T-0037 | standard | R2 | done | t0037-grouping-2026-08-26 |
+| T-0038 | standard | R2 | done | t0038-config-unknown-section-2026-08-26 |
+| T-0039 | standard | R2 | done | t0039-stdout-capture-2026-08-26 |
+| T-0040 | standard | R2 | proposed | unassigned |
+| T-0041 | standard | R2 | proposed | unassigned |
+| T-0042 | standard | R2 | proposed | unassigned |
+| T-0043 | standard | R2 | proposed | unassigned |
+| T-0044 | standard | R2 | proposed | unassigned |
+| T-0045 | standard | R2 | done | qa-batch-a-remediation-2026-08-26 |

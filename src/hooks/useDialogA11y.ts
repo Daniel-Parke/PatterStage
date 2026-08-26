@@ -26,6 +26,26 @@
 import { useEffect, useRef, type RefObject } from "react";
 
 /**
+ * The open dialogs, innermost last.
+ *
+ * Escape and the Tab trap must belong to the TOPMOST dialog only. Without
+ * this, every open dialog registers its own document-level keydown listener
+ * and they all fire together: on the missions page the category modal opens
+ * OVER the composer sheet (the opener does not close the sheet), so one
+ * Escape closed both and the operator lost a half-filled mission to a
+ * keystroke aimed at the modal on top of it. The Tab trap only avoided the
+ * same fight by accident of mount order.
+ *
+ * Module-level because it is genuinely global: two components, any number of
+ * instances, one keyboard.
+ */
+const dialogStack: symbol[] = [];
+
+function isTopmost(id: symbol): boolean {
+  return dialogStack.length > 0 && dialogStack[dialogStack.length - 1] === id;
+}
+
+/**
  * Everything tabbable, MINUS anything explicitly removed from the tab order.
  *
  * Deliberately NOT filtered by visibility. The obvious extra guard here is
@@ -92,8 +112,15 @@ export function useDialogA11y({
     onCloseRef.current = onClose;
   });
 
+  // Identity for this dialog instance on the stack. A ref so it survives
+  // re-renders: a new symbol each render would corrupt the stack.
+  const idRef = useRef<symbol | null>(null);
+  if (idRef.current === null) idRef.current = Symbol("dialog");
+
   useEffect(() => {
     if (!open) return;
+    const id = idRef.current as symbol;
+    dialogStack.push(id);
 
     const panel = panelRef.current;
     const previouslyFocused =
@@ -102,6 +129,9 @@ export function useDialogA11y({
         : null;
 
     const onKey = (e: KeyboardEvent) => {
+      // Only the dialog on top reacts. A dialog underneath keeps its listener
+      // registered so it takes over the moment the one above it closes.
+      if (!isTopmost(id)) return;
       if (e.key === "Escape") {
         onCloseRef.current();
         return;
@@ -152,6 +182,8 @@ export function useDialogA11y({
     panel?.focus();
 
     return () => {
+      const at = dialogStack.lastIndexOf(id);
+      if (at !== -1) dialogStack.splice(at, 1);
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = previousOverflow;
       // Restore focus to the trigger, unless it has left the document in the

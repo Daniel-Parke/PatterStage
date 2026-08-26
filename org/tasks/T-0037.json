@@ -1,6 +1,6 @@
 {
   "id": "T-0037",
-  "intent": "Category grouping must normalise as much as the display does. skills-grouping.ts:36 keys on raw.toLowerCase() while titleCaseCategory ALSO folds [-_]+ to spaces, so 'Control Hub' and 'controlhub' become two buckets rendering near-identical labels (QA saw CONTROL HUB (6) beside CONTROLHUB (1)). Since T-0032 the key is load-bearing: collapse and paging state key off it, so a split bucket splits its state too. NOTE the existing test pins the buggy behaviour ('Fine-Tuning' -> 'fine-tuning' while the display renders 'Fine Tuning'); it must be corrected, not deleted. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26. Root cause traced by three read-only investigations and re-verified independently; NOT a regression from the consolidation work, which only put a QA pass in front of pages nobody had text-scraped before.",
+  "intent": "Category grouping must normalise as much as the display does. skills-grouping.ts:36 keys on raw.toLowerCase() while titleCaseCategory ALSO folds [-_]+ to spaces, so 'Control Hub' and 'controlhub' become two buckets rendering near-identical labels (QA saw CONTROL HUB (6) beside CONTROLHUB (1)). Since T-0032 the key is load-bearing: collapse and paging state key off it, so a split bucket splits its state too. NOTE the existing test pins the buggy behaviour ('Fine-Tuning' -> 'fine-tuning' while the display renders 'Fine Tuning'); it must be corrected, not deleted. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26. Root cause traced by three read-only investigations and re-verified independently; NOT a regression from the consolidation work, which only put a QA pass in front of pages nobody had text-scraped before. Closed 2026-08-26 in ba96b3b8. REJECTED on first review, and rightly: the fix shipped a NEW contradiction on the page it was fixing, because SkillsInsights counted categories with its own lowercase Set that no longer matched the widened grouping key. That is now T-0045, fixed and tracked as its own row rather than left as prose in a closed record. The test-expectation change was verified legitimate: the old assertion encoded the bug, and the diff raised the assertion count rather than lowering it.",
   "declared": {
     "capabilities": [
       "edit-source"
@@ -12,15 +12,15 @@
   "tier_ruled": "R2",
   "reasons": [],
   "status": "done",
-  "owner_session": "t0037-category-key-2026-08-26",
+  "owner_session": "t0037-grouping-2026-08-26",
   "claims": [
     "src/lib/skills-grouping.ts",
     "tests/"
   ],
   "timestamps": {
     "opened": "2026-08-26T09:00:00Z",
-    "updated": "2026-08-26T21:00:00Z",
-    "closed": "2026-08-26T21:00:00Z"
+    "updated": "2026-08-26T20:00:00Z",
+    "closed": "2026-08-26T20:00:00Z"
   },
   "invariants": [
     "INV-1 The grouping key is what the display renders, lowercased: titleCaseCategory(raw).toLowerCase() IS the key, for every spelling. Both are built from one fold, categoryWords, so neither can drift from the other again.",
