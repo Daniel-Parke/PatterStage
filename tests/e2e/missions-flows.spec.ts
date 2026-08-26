@@ -5,6 +5,11 @@ import { test, expect } from "@playwright/test";
 // detail expansion, edit-draft repopulation, and category creation. Runs against
 // an isolated fresh DB (see prepare-data-dir.mjs); no agent gateway is required for these
 // flows (drafts persist locally).
+//
+// T-0043: Dispatch opens BY DEFAULT, so no flow here clicks its way in any
+// more — showing the operator the choice IS the acknowledgement. The gate is
+// unchanged and still asserted, on the collapsed path, by
+// "Dispatch collapsed re-arms the gate" below.
 
 const uniq = (p: string) => `${p}-${Date.now()}-${Math.floor(Math.random() * 1e4)}`;
 
@@ -17,9 +22,9 @@ async function openComposer(page: import("@playwright/test").Page) {
   });
 }
 
-async function openDispatchAccordion(page: import("@playwright/test").Page) {
-  await page.getByRole("button", { name: /When and how this mission runs/ }).click();
-}
+/** The Dispatch accordion header. Open by default; clicking it collapses. */
+const dispatchToggle = (page: import("@playwright/test").Page) =>
+  page.getByRole("button", { name: /When and how this mission runs/ });
 
 test.describe("Missions page flows", () => {
   test("compose → save draft → board → expand → edit repopulates", async ({ page }) => {
@@ -29,7 +34,8 @@ test.describe("Missions page flows", () => {
     await page.getByPlaceholder("e.g., Research quantum computing trends").fill(name);
     await page.getByPlaceholder("The agent's task instructions...").fill("E2E instruction body");
 
-    await openDispatchAccordion(page);
+    // No dispatch click: the choice is already on screen, so the mission is
+    // submittable as soon as it has a name and an instruction.
     await page.getByRole("button", { name: "Save draft", exact: true }).click();
 
     // Draft appears on the board.
@@ -47,9 +53,33 @@ test.describe("Missions page flows", () => {
     );
   });
 
+  test("Dispatch is open by default, and collapsing it re-arms the gate", async ({ page }) => {
+    await openComposer(page);
+    await page.getByPlaceholder("e.g., Research quantum computing trends").fill(uniq("e2e-gate"));
+    await page.getByPlaceholder("The agent's task instructions...").fill("Gate check");
+
+    const save = page.getByRole("button", { name: "Save draft", exact: true });
+    const hint = page.getByText(/to choose how this mission runs before submitting/i);
+
+    // Default: the choice is visible and that is the acknowledgement.
+    await expect(page.getByRole("button", { name: "Run now", exact: true })).toBeVisible();
+    await expect(save).toBeEnabled();
+    await expect(hint).toHaveCount(0);
+
+    // Collapsed: the gate is still there, and the button itself says why.
+    await dispatchToggle(page).click();
+    await expect(page.getByRole("button", { name: "Run now", exact: true })).toHaveCount(0);
+    await expect(save).toBeDisabled();
+    await expect(hint).toBeVisible();
+    await expect(save).toHaveAttribute("title", /Dispatch/);
+
+    // Re-opened: gate lifted again.
+    await dispatchToggle(page).click();
+    await expect(save).toBeEnabled();
+  });
+
   test("dispatch mode 'Schedule' reveals the cron schedule picker", async ({ page }) => {
     await openComposer(page);
-    await openDispatchAccordion(page);
     await page.getByRole("button", { name: "Schedule", exact: true }).click();
     // SchedulePicker renders only for cron mode.
     await expect(page.getByText(/every|cron|schedule/i).first()).toBeVisible();
