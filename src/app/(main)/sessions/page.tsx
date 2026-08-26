@@ -195,7 +195,10 @@ export default function SessionsPage() {
             hint="The list below may be empty because the load failed — not because there are no sessions to show."
           />
         )}
-        <SessionInsights sessions={sessions} />
+        {/* The tiles read the same `data` object the header above reads its
+            count from, and the repository computes both from one aggregate,
+            so the two cannot say different things (T-0042). */}
+        <SessionInsights totals={data?.totals} />
         {/* Search + Source Filter + View Options */}
         <SessionFilterBar
           search={search}

@@ -9,12 +9,25 @@
 "use client";
 
 import { useApiResource } from "./useApiResource";
-import type { SessionRecord, SessionSource } from "@/lib/sessions/session-repository";
+import type {
+  SessionRecord,
+  SessionSource,
+  SessionTotals,
+} from "@/lib/sessions/session-repository";
 
 export interface SessionsResponse {
   sessions: SessionRecord[];
   total: number;
+  /**
+   * Whole-table figures for the same filter, which the insight tiles render.
+   * `totals.total` is `total`; both come from one aggregate in the repository,
+   * so the tiles cannot contradict the header (T-0042).
+   */
+  totals: SessionTotals;
 }
+
+/** What the tiles show before the first response lands: nothing. */
+const NO_TOTALS: SessionTotals = { total: 0, active: 0, messages: 0, bySource: {} };
 
 export function useSessions(
   page: number,
@@ -34,7 +47,7 @@ export function useSessions(
     `/api/sessions?${params}`,
     {
       select: (p) => p as SessionsResponse | undefined,
-      fallback: { sessions: [], total: 0 },
+      fallback: { sessions: [], total: 0, totals: NO_TOTALS },
       errorMessage: "Failed to load sessions",
     },
   );

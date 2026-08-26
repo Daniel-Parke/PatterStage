@@ -189,7 +189,7 @@ function sum(counts: Record<string, number>): number {
 
 describe("listSessions totals are whole-table, not page-scoped", () => {
   it("counts every row, not the 50 the page loaded", () => {
-    const { sessions, total, totals } = listSessions({ limit: PAGE_ROWS });
+    const { sessions, totals } = listSessions({ limit: PAGE_ROWS });
 
     // The page really is one page: this is the number the old tile printed.
     expect(sessions).toHaveLength(PAGE_ROWS);
