@@ -4,6 +4,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
+import { useDialogA11y } from "@/hooks/useDialogA11y";
+
 export interface SheetProps {
   open: boolean;
   onClose: () => void;
@@ -26,19 +28,11 @@ export default function Sheet({
 }: SheetProps) {
   const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [open, onClose]);
+  // Escape, the body scroll lock and, new with T-0036, the focus trap and
+  // focus restoration. This used to be an inline effect here; Modal needed
+  // the same behaviour, so it moved to a hook both components call rather
+  // than being written a second time. Sheet's props are unchanged.
+  const panelRef = useDialogA11y({ open, onClose });
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
@@ -66,10 +60,12 @@ export default function Sheet({
         onClick={onClose}
       />
       <div
-        className={`${panelClass} flex flex-col bg-dark-950 shadow-2xl`}
+        ref={panelRef}
+        className={`${panelClass} flex flex-col bg-dark-950 shadow-2xl outline-none`}
         role="dialog"
         aria-modal="true"
         aria-label={title ?? "Panel"}
+        tabIndex={-1}
       >
         {title && (
           <div className="flex items-start justify-between gap-3 px-6 py-4 border-b border-white/10 shrink-0">
