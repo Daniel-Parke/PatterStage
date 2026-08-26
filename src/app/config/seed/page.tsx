@@ -6,7 +6,7 @@ import { RotateCcw, Database, Bot, ListTodo, Trash2 } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
+import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import type { AgentProfile } from "@/types/console";
 
@@ -76,6 +76,8 @@ export default function ConfigSeedPage() {
       await apiFetch("/api/seed", {
         method: "POST",
         body: JSON.stringify({ target, mode, ...extra }),
+        // Bulk: work scales with the install, not the request (T-0047).
+        timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
       });
       await load();
     } catch (e) {
@@ -130,7 +132,11 @@ export default function ConfigSeedPage() {
     setBusy("clean");
     setError(null);
     try {
-      await apiFetch("/api/seed/clean", { method: "POST" });
+      await apiFetch("/api/seed/clean", {
+        method: "POST",
+        // Bulk: deletes across every seeded table (T-0047).
+        timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
+      });
       cleanConfirm.cancel();
       setCleanPreview(null);
       await load();

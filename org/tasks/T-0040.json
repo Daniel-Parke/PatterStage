@@ -1,0 +1,36 @@
+{
+  "id": "T-0040",
+  "intent": "Chat failure must say what actually happened. With the gateway down, a message sits on Thinking for ~35s and ends as the bare string 'run failed', preceded by tool rows reading 'skill_view done' and 'terminal done' that look like successes. THREE independent defects. (1) 'error' in RUN_SSE_EVENT_NAMES collides with EventSource's BUILT-IN transport-error event: that event is a plain Event, so e.data is undefined, JSON.parse throws, and extractRunError falls through to the literal 'run failed'. Worse, the listener sets finalized=true before es.onerror can run, so the deliberate self-healing fallback in useAgentRunStream (which carries a comment explaining how it reconciles from the server) is DEAD CODE, and useRunProgress has the identical collision. Rename the event the proxy emits to run.error and swap it in all four places. (2) messageFromError returns only .message, so undici's 'TypeError: fetch failed' hides 'connect ECONNREFUSED 127.0.0.1:8642'. Append cause?.message, reusing the approach already shipped for Hindsight in 8247b3ab. (3) parseToolEvent derives status from the event NAME alone and finalize('failed') persists acc.tools untouched, so rows left invoked spin forever and completed rows read as successes beside a failed run: reframe them when the run dies. Also: the messages route discards userMessageId and assistantMessageId on the failure branch despite a comment claiming it surfaces them, and apiFetch passes no signal so the browser holds Thinking for as long as the server takes. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26; root cause traced and independently re-verified. Not a regression from the consolidation work. Closed 2026-08-26. The run-level failure event is renamed error -> run.error at the producer and at all four consumer sites, and a BACKEND event named error is normalised on the way through the proxy, because passing it verbatim reintroduces the identical collision one hop later. messageFromError now walks the cause chain via a new errorChain helper, so a stopped gateway reaches the user as 'fetch failed: connect ECONNREFUSED 127.0.0.1:8642'. Tool rows still invoked/approval_required settle to failed when the run dies. The messages route's failure branch returns the message ids its own comment already claimed. apiFetch gained a 45s deadline. Both self-healing fallbacks, dead code until the rename, are now reachable and pinned by tests.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0040-chat-failure-truth-2026-08-26",
+  "claims": [
+    "src/lib/chat-utils.ts",
+    "src/hooks/useAgentRunStream.ts",
+    "src/hooks/useRunProgress.ts",
+    "src/lib/api-fetch.ts",
+    "src/app/api/runs/",
+    "src/app/api/chat/",
+    "tests/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T09:30:00Z",
+    "updated": "2026-08-26T18:40:00Z",
+    "closed": "2026-08-26T18:40:00Z"
+  },
+  "oracle_provenance": "Authored BEFORE any production file was opened for edit, per the EXECUTOR R2 clause, and committed on its own at 3b5bb009 ahead of the implementation at d740ca3c. Two files, tests/unit/chat-failure-truth.test.ts and tests/unit/chat-failure-truth-streams.test.tsx, run against the unfixed tree at dev@841ebd9c first: 21 failed, 8 passed, 29 total. That run is the freeze point. Every red was behavioural, not merely a missing export: classifyRunEvent('error') returned 'failed' where it must return 'ignore'; parseToolEvent('tool.completed', {error:'exit status 1'}) returned 'completed'; useRunProgress reported 'run failed' where it must report 'event stream disconnected'; useAgentRunStream fabricated a failed status on transport death and never called refreshActiveConversation. The 8 greens are deliberate no-regression guards. The oracle models the collision faithfully, which is what makes it worth anything: FakeEventSource.fail() dispatches a data-less Event of type 'error' to BOTH the registered listener and onerror, exactly as a real EventSource does, so a reintroduced collision goes red for the original reason rather than a paraphrase of it.",
+  "pinned_defect_corrected": "tests/unit/chat-run-events.test.ts:29 asserted classifyRunEvent('error') === 'failed', pinning the defect. It went red against the fix and was corrected IN PLACE to 'ignore' (plus a new assertion for run.error), with a comment saying why it now reads the other way. Not deleted, not skipped, not weakened.",
+  "deferred": [
+    "src/lib/sse/event-stream.ts emitted event: error with the identical collision on the composer and laboratory research streams, out of this task's claims. Raised by the batch-B review and tracked as T-0046, now closed.",
+    "The 45s client deadline reached every apiFetch call, not only chat. Raised by the batch-B review and tracked as T-0047, now closed."
+  ]
+}

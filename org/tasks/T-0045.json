@@ -1,0 +1,25 @@
+{
+  "id": "T-0045",
+  "intent": "The Skills Categories tile must agree with the category rows beneath it. Found by review of T-0037 BEFORE it shipped, and fixed in the same pass. SkillsInsights kept a private category.toLowerCase() Set while the list grouped through groupByCategory; that matched only while the grouping key was also a bare lowercase. T-0037 taught the key to fold hyphens, underscores and whitespace runs, so 'Control Hub' and 'control-hub' rendered as ONE row while the tile counted TWO. That is the same tile-contradicts-the-page defect class T-0042 exists to remove, reintroduced on the page T-0037 was fixing. The tile now counts through groupByCategory with the same 'Other' fallback the page uses, so the two agree by construction rather than by two implementations staying in step. Recorded as its own row because a disclosure in the body of a record marked done is not tracking: it never reaches the derived board.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "qa-batch-a-remediation-2026-08-26",
+  "claims": [
+    "src/components/skills/SkillsInsights.tsx",
+    "tests/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T20:00:00Z",
+    "updated": "2026-08-26T20:00:00Z",
+    "closed": "2026-08-26T20:00:00Z"
+  }
+}

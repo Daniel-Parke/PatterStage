@@ -20,12 +20,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import {
-  safeApiCallData,
-  apiFetch,
-  messageFromError,
-  setErrorFromCaught,
-} from "@/lib/api-fetch";
+import { API_FETCH_BULK_TIMEOUT_MS, safeApiCallData, apiFetch, messageFromError, setErrorFromCaught } from "@/lib/api-fetch";
 import type { DefaultsModelOption } from "@/components/models/DefaultsGrid";
 import { type TaskType } from "@/lib/models/task-types";
 import type { FallbackChainEntry, FallbackConfig } from "@/types/console";
@@ -56,7 +51,11 @@ export function useModelsRegistry() {
     try {
       // First, sync models from ~/.hermes/config.yaml — ensures we show
       // live data even if the user changed defaults externally via hermes CLI
-      await apiFetch("/api/models/import", { method: "POST" }).catch((err) => {
+      await apiFetch("/api/models/import", {
+        method: "POST",
+        // Bulk: walks the whole catalogue (T-0047).
+        timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
+      }).catch((err) => {
         // `messageFromError` falls back to `String(err)` when the caught
         // value has no `message` — equivalent to the verbose
         // `toError(err).message || String(err)` form, with a name + JSDoc.

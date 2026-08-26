@@ -146,7 +146,11 @@ export default function ComposerRunForm({
           onClick={() => setConfirming(true)}
           disabled={tooShort || !workflow}
         >
-          {!submitting ? <Play className="h-4 w-4" /> : null} Review &amp; run
+          {/* "Review…", not "Review & run": the ellipsis is the convention for
+              a control that opens a further step, and this one opens the
+              pre-launch review below. Nothing runs until "Confirm & launch"
+              inside it. (T-0043) */}
+          {!submitting ? <Play className="h-4 w-4" /> : null} Review…
         </Button>
       </div>
       {tooShort ? (

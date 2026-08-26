@@ -50,6 +50,12 @@ export default function CollapsibleSection({
         type="button"
         onClick={() => setExpanded((v) => !v)}
         className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-white/5 transition-colors"
+        // A disclosure button that does not announce its state is a working
+        // control that reads as an inert one, to a screen reader and to any
+        // automated pass alike. The chevron below says "open" in pixels only.
+        // Same defect as Modal announcing itself as a plain div (T-0036), and
+        // MissionComposerLayout's accordion already does this correctly.
+        aria-expanded={expanded}
       >
         <div className="flex items-center gap-3">
           <h2 className="text-sm font-bold text-ps-text-secondary uppercase tracking-wider">

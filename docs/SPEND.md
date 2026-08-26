@@ -25,13 +25,15 @@ Under them, the same period split by the three things that spend tokens:
 |---|---|---|
 | Agent runs | A mission dispatched by you, a schedule or the queue | Yes |
 | Composer stages | One node of a Composer workflow, executed as a run | Yes |
-| Deep Research | A research run from the Laboratory | **No** |
+| Deep Research | A research run from the Laboratory | Yes, since schema 34 |
 
-### Deep Research is not counted, and the panel says so
+### Deep Research runs from before the upgrade are still not counted
 
-Deep Research drives the model directly and throws the token counts away: nothing in the database records them. So the panel shows the number of research runs and the words "cost not recorded" rather than a confident `$0.00`, and the totals above carry a note saying what they exclude.
+Deep Research used to drive the model directly and throw the token counts away, so nothing in the database recorded them. Migration `034` added the token columns and the engine now sums the usage of every call it makes, so a research run is priced exactly like an agent run or a Composer stage.
 
-That is a real gap and it is stated rather than papered over. If you lean on Deep Research heavily, the totals here are an underestimate, and so is anything measured against them, including the hard stop below.
+Runs that finished **before** that upgrade keep NULL token columns, and they stay out of the totals. That is deliberate. Their cost is genuinely unknown, and folding them in at zero would take a real cost and report it as free, which is the whole thing this section used to warn about. The panel counts them separately and says so, and the note disappears on its own as those runs age out of the period you are looking at.
+
+One case still records nothing: a run that **crashes mid-way**. The engine throws before it can return a total, so the tokens it burned are unknowable and the run is recorded as unmeasured rather than as free.
 
 ### It is an estimate, not an invoice
 

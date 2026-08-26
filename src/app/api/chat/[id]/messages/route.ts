@@ -41,9 +41,24 @@ export async function POST(request: NextRequest, ctx: Ctx) {
     }
     const result = await dispatchChatTurn(id, content.trim());
     if (!result.ok) {
-      // The user message + a failed assistant placeholder were still persisted,
-      // so surface the ids alongside the error (the client renders the failure).
-      return serviceUnavailable(result.error ?? "Failed to submit chat turn");
+      // The user message + a failed assistant placeholder ARE persisted on this
+      // branch, so the ids go out with the error. The comment here used to say
+      // exactly that while `serviceUnavailable(error)` dropped them on the
+      // floor, which left the client rendering the failure on its own optimistic
+      // stand-in rather than on the rows the server actually wrote.
+      //
+      // Custom 503 body (error + the persisted ids) kept inline, in the manner
+      // of mission-categories/route.ts, because no factory covers 503 with an
+      // extended body shape.
+      return NextResponse.json(
+        {
+          error: result.error ?? "Failed to submit chat turn",
+          runId: result.runId,
+          userMessageId: result.userMessageId,
+          assistantMessageId: result.assistantMessageId,
+        },
+        { status: 503 },
+      );
     }
     return ok({
       runId: result.runId,

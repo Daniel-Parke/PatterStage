@@ -19,12 +19,7 @@
 import { useCallback, useState, type Dispatch, type SetStateAction } from "react";
 
 import type { ToastType } from "@/components/ui/Toast";
-import {
-  apiFetch,
-  messageFromError,
-  safeApiCallData,
-  toastError,
-} from "@/lib/api-fetch";
+import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, messageFromError, safeApiCallData, toastError } from "@/lib/api-fetch";
 import type { ModelEditorRecord } from "@/components/models/ModelEditor";
 import { type TaskType } from "@/lib/models/task-types";
 import type { SyncActionResult } from "@/lib/models/sync-result";
@@ -63,6 +58,8 @@ export function useModelActions({
         await apiFetch(`/api/models/sync/${action}`, {
           method: "POST",
           body: JSON.stringify({ modelId, ...options }),
+          // Bulk: work scales with the install, not the request (T-0047).
+          timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
         });
         showToast(`Model ${action}ed to Hermes`, "success");
         void loadAll();
@@ -199,7 +196,11 @@ export function useModelActions({
         modelsImported?: number;
         modelsSkipped?: number;
         credentialsUpdated?: number;
-      }>("/api/models/import", { method: "POST" });
+      }>("/api/models/import", {
+        method: "POST",
+        // Bulk: walks the whole catalogue (T-0047).
+        timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
+      });
       const modelsImported = result?.modelsImported ?? 0;
       const creds = result?.credentialsUpdated ?? 0;
       showToast(

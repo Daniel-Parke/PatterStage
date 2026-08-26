@@ -7,22 +7,31 @@
 //
 // ── THE HONESTY PROBLEM, WHICH IS THE POINT OF THIS FILE ───────
 //
-// Two of the three sources are recoverable from recorded data and one is not.
+// All three sources are recoverable, and the third one only became so recently.
 //
 //   agent      a `runs` row with a mission. Tokens in `usage_json`, model on
 //              the mission. Fully recoverable.
 //   composer   a `runs` row with a `composer_node_run_id` and no mission.
 //              Tokens in `usage_json`, no model dimension, so it is priced at
 //              model-cost's conservative DEFAULT_RATE.
-//   research   NOT RECOVERABLE. Deep Research calls `callLLM` directly and
-//              throws the usage away; `research_runs` has no token or cost
-//              column and `research_steps` stores text, not counts.
+//   research   a `research_runs` row. Recoverable SINCE MIGRATION 034 (T-0030),
+//              which added the token columns; before that the engine called
+//              `callLLM` directly and threw the usage away.
 //
-// A summary that folded the third one in as zero would be a lie that looks like
-// a number, and it would make the hard stop under-count by an amount nobody
-// could see. So the research row reports `recorded: false` and a NULL cost, the
-// total sums only what was recorded, and `unmeasured` carries the exclusion up
-// to the UI, which is asserted to render it.
+// The honesty problem did not go away with 034, it MOVED. Every research run
+// that predates the migration keeps NULL token columns, and NULL is not zero:
+// it means the cost is unknown. Folding those in at zero would be a lie that
+// looks like a number, and it would make the hard stop under-count by an amount
+// nobody could see. So `foldResearch` counts them in the run count, skips them
+// in the priced total, and reports them through `unmeasured`, which the UI is
+// asserted to render.
+//
+// `SpendSourceRow.recorded` is the older expression of the same idea, from when
+// the whole research source was unrecorded. Every row this file builds now sets
+// it true, so the panel's "cost not recorded" branch is currently unreachable.
+// It is kept rather than deleted because it is the contract a genuinely
+// unrecorded FUTURE source would use, and because deleting it would leave the
+// panel with no way to say "unknown" at all.
 //
 // Making Deep Research measurable is a real piece of work (a usage column, a
 // change to the engine's LlmFn contract, and a migration) and it is NOT this
@@ -43,9 +52,10 @@ import {
   type SpendVerdict,
 } from "./spend-law";
 import {
-  countResearchRunsSince,
+  readResearchUsageSince,
   readRunUsageSince,
   readSpendPolicy,
+  type ResearchUsageRow,
   type SpendUsageRow,
 } from "./spend-repository";
 
@@ -77,6 +87,15 @@ interface SpendPeriodRow {
   /** Sum of the RECORDED sources only. */
   totalUsd: number;
   sources: SpendSourceRow[];
+  /**
+   * Research runs in this period whose token columns are NULL.
+   *
+   * Carried on the row rather than recomputed by the caller, so the count and
+   * the priced total come from ONE pass over the same rows. Two passes is how a
+   * source row and the sentence describing it come to disagree, which is the
+   * defect T-0037 and T-0042 spent their whole scope removing elsewhere.
+   */
+  unrecordedResearchRuns: number;
 }
 
 export interface SpendSummary {
@@ -154,18 +173,52 @@ function foldUsage(rows: SpendUsageRow[]): Record<"agent" | "composer", SpendSou
   return acc;
 }
 
+/**
+ * Deep Research, folded the same way the other two sources are, plus a count of
+ * the runs whose usage was NEVER recorded.
+ *
+ * The second number is the reason this cannot just call `foldUsage`. Every run
+ * before migration 034 has NULL token columns, and NULL is not zero: it means
+ * the cost is unknown. Those runs stay OUT of the priced total and stay
+ * declared in `unmeasured`. Folding them in at zero would take a real,
+ * uncounted cost and paint it as free, which is the same misreporting T-0030
+ * removed, one layer further down.
+ */
+function foldResearch(rows: ResearchUsageRow[]): { row: SpendSourceRow; unrecorded: number } {
+  const row = emptySource("research", true);
+  let unrecorded = 0;
+
+  for (const r of rows) {
+    row.runs += 1;
+    if (r.promptTokens === null && r.completionTokens === null) {
+      unrecorded += 1;
+      continue;
+    }
+    const input = Number.isFinite(r.promptTokens) ? (r.promptTokens as number) : 0;
+    const output = Number.isFinite(r.completionTokens) ? (r.completionTokens as number) : 0;
+    row.inputTokens += input;
+    row.outputTokens += output;
+    // A null model means the Hermes default, which resolves to model-cost's
+    // DEFAULT_RATE. Deliberately non-zero: unknown must never read as free.
+    row.costUsd = (row.costUsd ?? 0) + estimateCost(r.model, input, output);
+  }
+
+  return { row, unrecorded };
+}
+
 function periodRow(period: SpendPeriod, nowIso: string): SpendPeriodRow {
   const since = periodStart(period, nowIso);
   const folded = foldUsage(safeRead(() => readRunUsageSince(since), []));
-  const research = emptySource("research", false);
-  research.runs = safeRead(() => countResearchRunsSince(since), 0);
+  const research = foldResearch(safeRead(() => readResearchUsageSince(since), []));
 
   return {
     period,
     label: periodLabel(period),
     since,
-    totalUsd: (folded.agent.costUsd ?? 0) + (folded.composer.costUsd ?? 0),
-    sources: [folded.agent, folded.composer, research],
+    totalUsd:
+      (folded.agent.costUsd ?? 0) + (folded.composer.costUsd ?? 0) + (research.row.costUsd ?? 0),
+    sources: [folded.agent, folded.composer, research.row],
+    unrecordedResearchRuns: research.unrecorded,
   };
 }
 
@@ -189,12 +242,16 @@ export function getSpendSummary(nowIso: string = new Date().toISOString()): Spen
   const budget = periods.find((p) => p.period === policy.period) ?? periods[periods.length - 1];
 
   const unmeasured: string[] = [];
-  const researchRuns = budget.sources.find((s) => s.source === "research")?.runs ?? 0;
-  if (researchRuns > 0) {
+  // Only the runs that genuinely carry no counts. Since migration 034 a research
+  // run records its tokens like any other source, so this list empties itself as
+  // the pre-034 runs age out of the period rather than being suppressed.
+  const unrecorded = budget.unrecordedResearchRuns;
+  if (unrecorded > 0) {
     unmeasured.push(
-      `Deep Research records no token usage, so the ${researchRuns} research ` +
-        `run${researchRuns === 1 ? "" : "s"} in this period ` +
-        `${researchRuns === 1 ? "is" : "are"} not counted in the totals above.`,
+      `${unrecorded} Deep Research run${unrecorded === 1 ? "" : "s"} in this period ` +
+        `predate${unrecorded === 1 ? "s" : ""} token recording, so ` +
+        `${unrecorded === 1 ? "its cost is" : "their costs are"} not counted in the ` +
+        `totals above.`,
     );
   }
 

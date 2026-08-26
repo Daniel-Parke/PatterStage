@@ -155,6 +155,15 @@ export interface RunSyncActionOptions {
    *  Set false for endpoints that throw on error (rely on the catch
    *  path). */
   checkSuccess?: boolean;
+  /**
+   * Deadline for this call, in ms. Omit for the interactive default.
+   *
+   * Bulk actions — "Push all", "Pull all", catalogue sync and import — pass
+   * `API_FETCH_BULK_TIMEOUT_MS`, because their work scales with the size of the
+   * install rather than with the request, and the interactive ceiling aborted
+   * large ones mid-flight and called it a timeout (T-0047).
+   */
+  timeoutMs?: number;
 }
 
 export async function runSyncAction({
@@ -167,10 +176,11 @@ export async function runSyncAction({
   errorMessage,
   onSuccess,
   checkSuccess = true,
+  timeoutMs,
 }: RunSyncActionOptions): Promise<void> {
   setBusy(true);
   try {
-    const data = await apiFetch(url, { method, body: JSON.stringify(body) });
+    const data = await apiFetch(url, { method, body: JSON.stringify(body), timeoutMs });
     if (checkSuccess && isApiSuccessFalse(data)) {
       const errMsg =
         typeof data.data.error === "string" ? data.data.error : errorMessage;

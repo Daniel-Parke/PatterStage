@@ -12,6 +12,23 @@
 #   PS_ASSUME_YES=1 · PS_INSTALL_NONINTERACTIVE=1 · CI=1|true
 #   stdout/stdin is not a TTY (piped / spawned by the dashboard)
 # Colours auto-disable when stdout is not a TTY or NO_COLOR is set.
+#
+# ── WHICH OF THESE IS SAFE INSIDE $( ) ────────────────────────
+# Only ps_warn, ps_err and ps_fail are capture-safe. They write to stderr.
+#
+#   capture-safe (stderr):  ps_warn  ps_err  ps_fail
+#   CAPTURE-UNSAFE (stdout): ps_info  ps_ok  ps_step  ps_dim
+#
+# The good-news loggers are exactly the ones that corrupt a capture, which is
+# the wrong way round for how carefully people read them. Call ps_ok inside a
+# function whose stdout is a value and the tick, the text and the colour codes
+# all become part of that value. This is not hypothetical: ps_resolve_port_
+# interactive printed its banner to stdout inside a $( ), and a clean bootstrap
+# wrote the banner into .env.local as PORT= (see scripts/lib/ps-port.sh).
+#
+# So: a function whose stdout is a value prints ONLY that value, with printf,
+# and sends every human-facing line to stderr or to ps_warn/ps_err. If you want
+# ps_ok's phrasing in such a function, redirect it: `ps_ok "..." >&2`.
 # ═══════════════════════════════════════════════════════════════
 
 if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then

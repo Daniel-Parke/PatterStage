@@ -83,7 +83,7 @@ export default function ComposerPage() {
   const { data: runs, refetch } = useComposerRuns();
   const { data: profiles } = useProfiles();
   const { data: detail } = useComposerRun(selectedId);
-  const { data: live } = useEventStream<{ run: ComposerRun; nodeRuns: ComposerNodeRun[] }>(
+  const { data: live, error: liveError } = useEventStream<{ run: ComposerRun; nodeRuns: ComposerNodeRun[] }>(
     selectedId ? `/api/composer/runs/${selectedId}/events` : null,
   );
 
@@ -188,6 +188,9 @@ export default function ComposerPage() {
       />
 
       {workflowsError ? <LoadErrorBanner error={workflowsError} /> : null}
+      {/* A failed live read, as distinct from a dropped socket. The run
+          detail below still renders from the polled copy (T-0046). */}
+      {liveError ? <LoadErrorBanner error={`Live updates: ${liveError}`} /> : null}
 
       {/* Run / Build tabs */}
       <div className="flex gap-1 border-b border-white/10">

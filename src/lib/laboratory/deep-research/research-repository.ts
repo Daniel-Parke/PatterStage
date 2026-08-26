@@ -7,6 +7,7 @@
 
 import { getDb, uuid, now } from "@/lib/db";
 import { parseStringArrayOrEmpty, parseJson } from "@/lib/db/parse-json";
+import type { ResearchUsageTotal } from "./usage";
 import type {
   ResearchConfig,
   ResearchPreset,
@@ -27,6 +28,12 @@ interface RunRow {
   error: string | null;
   created_at: string;
   completed_at: string | null;
+  // NULL means the usage was never recorded, which every run before migration
+  // 034 genuinely is. It is NOT zero, and the spend console depends on the
+  // difference (T-0030).
+  prompt_tokens: number | null;
+  completion_tokens: number | null;
+  total_tokens: number | null;
 }
 
 interface StepRow {
@@ -48,6 +55,14 @@ function rowToRun(row: RunRow): ResearchRun {
     provider: row.provider,
     modelId: row.model_id,
     config: parseJson<ResearchConfig>(row.config_json),
+    usage:
+      row.prompt_tokens === null && row.completion_tokens === null
+        ? null
+        : {
+            promptTokens: row.prompt_tokens ?? 0,
+            completionTokens: row.completion_tokens ?? 0,
+            totalTokens: row.total_tokens ?? (row.prompt_tokens ?? 0) + (row.completion_tokens ?? 0),
+          },
     report: row.report,
     error: row.error,
     createdAt: row.created_at,
@@ -121,6 +136,8 @@ export interface UpdateResearchRunInput {
   report?: string | null;
   error?: string | null;
   completedAt?: string | null;
+  /** null persists as NULL: usage was never recorded, which is not zero. */
+  usage?: ResearchUsageTotal | null;
 }
 
 export function updateResearchRun(id: string, input: UpdateResearchRunInput): ResearchRun | null {
@@ -131,6 +148,14 @@ export function updateResearchRun(id: string, input: UpdateResearchRunInput): Re
   if (input.report !== undefined) { sets.push("report = ?"); vals.push(input.report); }
   if (input.error !== undefined) { sets.push("error = ?"); vals.push(input.error); }
   if (input.completedAt !== undefined) { sets.push("completed_at = ?"); vals.push(input.completedAt); }
+  if (input.usage !== undefined) {
+    sets.push("prompt_tokens = ?", "completion_tokens = ?", "total_tokens = ?");
+    vals.push(
+      input.usage?.promptTokens ?? null,
+      input.usage?.completionTokens ?? null,
+      input.usage?.totalTokens ?? null,
+    );
+  }
   if (sets.length === 0) return getResearchRun(id);
   getDb().prepare(`UPDATE research_runs SET ${sets.join(", ")} WHERE id = ?`).run(...vals, id);
   return getResearchRun(id);

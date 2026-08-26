@@ -3,19 +3,67 @@
 # PatterStage — shared .env.local helpers (sourced by setup.sh / install)
 # ═══════════════════════════════════════════════════════════════
 
-# Set KEY=value in a dotenv file (removes prior KEY= lines, appends one).
+# Set KEY=value in a dotenv file: drop prior KEY= lines, append one, return 0.
+#
+# This function is the last thing standing between a bad value and a broken
+# install, so it does two jobs the original did not.
+#
+# 1. It refuses a multi-line value. A value with a newline in it is never a
+#    dotenv value; it is a command substitution that captured something printed
+#    to stdout. Writing it produced a PORT= line followed by four lines of
+#    banner prose, and every reader of .env.local then saw an empty PORT.
+# 2. It rewrites the file to valid dotenv lines only. `grep -v "^KEY="` removed
+#    the KEY= line and nothing else, so the orphan lines a previous bad write
+#    left behind could not be cleaned up by writing the key again: the
+#    corruption survived every re-run of setup and had to be edited out by
+#    hand. Anything that is not blank, not a comment and not KEY=VALUE is such
+#    an orphan and is dropped here.
+#
+# The cost of (2) is that a hand-written multi-line quoted value would be
+# dropped. Nothing reads one: both ps_load_patterstage_env_local and
+# readEnvFile() in scripts/bootstrap/env-local.mjs parse strictly line by line,
+# so such a value never worked in the first place.
 ps_env_set() {
   local file="$1"
   local key="$2"
   local val="$3"
+
+  if ! [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+    echo "✗ ps_env_set: refusing to write a key that is not an identifier: ${key}" >&2
+    return 1
+  fi
+  case "$val" in
+    *$'\n'* | *$'\r'*)
+      echo "✗ ps_env_set: refusing to write a multi-line value for ${key}." >&2
+      echo "  First line: ${val%%$'\n'*}" >&2
+      echo "  A newline in a dotenv value means a \$( ) capture picked up stdout." >&2
+      return 1
+      ;;
+  esac
+
   local dir
   dir="$(dirname "$file")"
   mkdir -p "$dir"
   touch "$file"
   local tmp
   tmp="$(mktemp)"
-  grep -v "^${key}=" "$file" >"$tmp" 2>/dev/null || true
-  echo "${key}=${val}" >>"$tmp"
+  local line stripped
+  {
+    while IFS= read -r line || [ -n "$line" ]; do
+      stripped="${line%$'\r'}"
+      case "$stripped" in
+        "${key}"=*) continue ;;
+        '' | \#*)
+          printf '%s\n' "$line"
+          continue
+          ;;
+      esac
+      if [[ "$stripped" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; then
+        printf '%s\n' "$line"
+      fi
+    done <"$file"
+    printf '%s\n' "${key}=${val}"
+  } >"$tmp"
   mv "$tmp" "$file"
 }
 

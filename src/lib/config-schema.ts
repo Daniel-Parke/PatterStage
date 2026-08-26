@@ -395,8 +395,105 @@ export const CONFIG_SECTIONS: Record<string, SectionDef> = {
   },
 };
 
+/**
+ * Common typo and alias redirects to the real config routes.
+ *
+ * Values are FULL paths rather than section ids, because an alias may point
+ * at a route that is not a CONFIG_SECTIONS entry at all: /config/models is
+ * its own page and there is no `models` section. Anything derived from
+ * CONFIG_SECTIONS therefore has to build `/config/<id>` itself rather than
+ * hand a bare id to the same consumer.
+ */
+export const SECTION_ALIASES: Record<string, string> = {
+  model: "/config/models",
+};
+
+/**
+ * Own-key lookup.
+ *
+ * A plain object literal answers truthily to `constructor`, `toString` and
+ * every other Object.prototype key, so a bare `map[key]` reports those as
+ * sections and hands the caller a Function where a SectionDef was expected.
+ * /config/constructor took that path and crashed the render on
+ * `sectionDef.fields.length`.
+ */
+function ownValue<T>(map: Record<string, T>, key: string): T | undefined {
+  return Object.prototype.hasOwnProperty.call(map, key) ? map[key] : undefined;
+}
+
+/** Lowercase; each run of non-alphanumerics becomes one hyphen; ends trimmed. */
+function slugifyLabel(label: string): string {
+  return label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+/, "")
+    .replace(/-+$/, "");
+}
+
+/**
+ * slugify(label) to section id, built once at module load. First writer wins,
+ * which is a formality: tests/unit/config-section-redirect.test.ts asserts
+ * that no two section labels slugify the same.
+ */
+const ID_BY_LABEL_SLUG: Record<string, string> = (() => {
+  const map: Record<string, string> = {};
+  for (const id of Object.keys(CONFIG_SECTIONS)) {
+    const slug = slugifyLabel(CONFIG_SECTIONS[id].label);
+    if (!Object.prototype.hasOwnProperty.call(map, slug)) map[slug] = id;
+  }
+  return map;
+})();
+
 export function getSectionDef(sectionId: string): SectionDef | null {
-  return CONFIG_SECTIONS[sectionId] || null;
+  return ownValue(CONFIG_SECTIONS, sectionId) ?? null;
+}
+
+/**
+ * Where an unknown `/config/<slug>` should be sent, or null to stay put and
+ * let the page offer the operator the whole list.
+ *
+ * The two ways this can do harm are both closed here rather than at the call
+ * site, because the call site is a useEffect that has already fired by the
+ * time anyone notices:
+ *
+ * - It never redirects a slug that IS a section. That is the first check.
+ * - It never sends a slug somewhere that redirects again. Every non-null
+ *   result is either a literal SECTION_ALIASES value or `/config/<id>` for a
+ *   known id, and a known id returns null on the next hop, so one replace
+ *   always terminates.
+ *
+ * Ambiguity is a deliberate non-answer. A slug prefixing several sections
+ * resolves to null, because guessing one of six is worse than showing all of
+ * them, which is what the page does with a null.
+ */
+export function resolveSectionRedirect(slug: string): string | null {
+  if (!slug) return null;
+  if (ownValue(CONFIG_SECTIONS, slug)) return null;
+
+  const alias = ownValue(SECTION_ALIASES, slug);
+  if (alias) return alias;
+
+  // 1. Hyphen to underscore. Section ids are snake_case and every link the
+  //    console renders is already correct, so a slug that reaches here was
+  //    typed or guessed, and kebab-case is the usual guess. This step alone
+  //    rescues session-reset, platform-toolsets, code-execution,
+  //    smart-model-routing, human-delay and hermes-md.
+  const underscored = slug.replace(/-/g, "_");
+  if (ownValue(CONFIG_SECTIONS, underscored)) return `/config/${underscored}`;
+
+  // 2. The label, slugified. "agent-settings" is exactly
+  //    slugify("Agent Settings"), and the label is what the operator read on
+  //    the card they were trying to reach; the id is the thing they never saw.
+  const byLabel = ownValue(ID_BY_LABEL_SLUG, slug);
+  if (byLabel) return `/config/${byLabel}`;
+
+  // 3. A unique id prefix. Uniqueness is the whole rule.
+  const prefixed = Object.keys(CONFIG_SECTIONS).filter((id) =>
+    id.startsWith(underscored),
+  );
+  if (prefixed.length === 1) return `/config/${prefixed[0]}`;
+
+  return null;
 }
 
 /**

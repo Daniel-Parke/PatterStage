@@ -55,7 +55,7 @@ export default function DeepResearchPage() {
 
   const { data: runs, refetch, error: runsError } = useResearchRuns();
   const { data: polled } = useResearchRun(selectedId);
-  const { data: live } = useEventStream<{ run: ResearchRun; steps: ResearchStep[] }>(
+  const { data: live, error: liveError } = useEventStream<{ run: ResearchRun; steps: ResearchStep[] }>(
     selectedId ? `/api/laboratory/research/${selectedId}/events` : null,
   );
   const detail = live ?? polled;
@@ -124,6 +124,9 @@ export default function DeepResearchPage() {
       />
 
       {runsError ? <LoadErrorBanner error={runsError} /> : null}
+      {/* A failed live read, as distinct from a dropped socket. The run
+          detail below still renders from the polled copy (T-0046). */}
+      {liveError ? <LoadErrorBanner error={`Live updates: ${liveError}`} /> : null}
 
       {/* Launch form */}
       <Card padding="md" glow="cyan">

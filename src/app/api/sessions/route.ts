@@ -67,6 +67,10 @@ export async function GET(request: NextRequest) {
     return ok({
       sessions: result.sessions,
       total: result.total,
+      // The whole-table figures behind the insight tiles. They travel with the
+      // page rather than being recomputed from it: `totals.total` IS `total`,
+      // which is what stops a tile contradicting the header above it (T-0042).
+      totals: result.totals,
     });
   } catch (error) {
     return serverErrorFromCatch("GET /api/sessions", "listing sessions", error, "Failed to load sessions");

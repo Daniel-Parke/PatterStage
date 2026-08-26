@@ -25,6 +25,20 @@ ps_noninteractive_install() {
   [[ "${CI:-}" == "1" || "${PS_INSTALL_NONINTERACTIVE:-}" == "1" ]]
 }
 
+# Prompt the operator for a port. STDOUT OF THIS FUNCTION IS ITS RETURN VALUE:
+# the only caller runs it inside $( ), so every byte printed to stdout is stored
+# as the PORT. That is not a style point. It shipped: the banner below used to go
+# to stdout, so a clean bootstrap wrote four lines of prose into .env.local as
+# PORT= and the install was unusable from that moment on.
+#
+# The contract, therefore:
+#   - every human-facing line goes to stderr (`>&2`), including the errors;
+#   - `read -r -p` is safe, because bash writes its prompt to stderr;
+#   - the chosen port leaves by exactly one `printf '%s'` on stdout, no newline;
+#   - nothing here may call ps_info / ps_ok / ps_step / ps_dim, which log to
+#     stdout (see the header of scripts/lib/ps-log.sh).
+# The caller validates what comes back regardless, so a future slip is caught
+# rather than written.
 ps_resolve_port_interactive() {
   local chosen=""
   while true; do
@@ -116,12 +130,22 @@ ps_setup_port_and_dev_origins() {
     fi
   else
     chosen="$(ps_resolve_port_interactive)" || return 1
+    # The branch above validates what it read from the environment; this one is
+    # a stdout capture, which is the branch that can be polluted by anything
+    # printed inside the prompt. Validate it the same way, so a non-port can
+    # never reach ps_env_set no matter who logs to stdout in future.
+    if ! ps_validate_port_number "$chosen"; then
+      echo "✗ Interactive port selection returned something that is not a port." >&2
+      echo "  First line of what it returned: ${chosen%%$'\n'*}" >&2
+      echo "  Something printed to stdout inside ps_resolve_port_interactive." >&2
+      return 1
+    fi
   fi
 
   local origins
   origins="$(ps_build_allowed_dev_origins "$chosen")"
-  ps_env_set "$env_file" "PORT" "$chosen"
-  ps_env_set "$env_file" "PS_ALLOWED_DEV_ORIGINS" "$origins"
+  ps_env_set "$env_file" "PORT" "$chosen" || return 1
+  ps_env_set "$env_file" "PS_ALLOWED_DEV_ORIGINS" "$origins" || return 1
   export PS_SELECTED_PORT="$chosen"
   echo "✓ Wrote PORT and PS_ALLOWED_DEV_ORIGINS to .env.local"
 }

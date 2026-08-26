@@ -21,6 +21,45 @@ export function toError(e: unknown): Error {
 }
 
 /**
+ * Walk an error's `cause` chain, outermost first, stopping at the first
+ * link that is not an Error.
+ *
+ * Node's fetch is the reason this exists. undici throws
+ * `TypeError: fetch failed` and puts the only sentence worth reading one
+ * level down: `Error: connect ECONNREFUSED 127.0.0.1:8642`. Anything that
+ * reads `.message` alone therefore reports the wrapper and discards the
+ * fact, which is how a chat turn against a stopped gateway came back as
+ * "fetch failed" and, further downstream, as the bare string "run failed".
+ *
+ * Two deliberate properties, both load-bearing:
+ *
+ *   * A non-Error input yields an EMPTY chain, not a wrapped one. The
+ *     sibling reader `isHindsightConnectionError` is pinned on
+ *     `("fetch failed")` (a bare string) being FALSE, because a string is
+ *     not evidence of a transport failure. A walker that coerced its input
+ *     would quietly flip that. Callers that want String() coercion compose
+ *     with `toError()` first, which is exactly what `messageFromError` does.
+ *   * The depth cap makes a cyclic `cause` terminate rather than hang.
+ *     Self-referential causes are rare but real, and a diagnostic helper
+ *     that can hang is worse than no diagnostic at all.
+ *
+ * This is the ONE cause walker. `src/lib/memory/hindsight-request.ts`
+ * still carries a second copy of the same loop (shipped in 8247b3ab for
+ * the same reason, against Hindsight rather than the gateway); that file
+ * is outside this task's claims, so folding it onto this helper is a
+ * separate change, not a silent one.
+ */
+export function errorChain(e: unknown, maxDepth = 5): Error[] {
+  const chain: Error[] = [];
+  let current: unknown = e;
+  for (let depth = 0; depth < maxDepth && current instanceof Error; depth++) {
+    chain.push(current);
+    current = (current as { cause?: unknown }).cause;
+  }
+  return chain;
+}
+
+/**
  * Coerce an unknown caught value to a user-friendly error message,
  * falling back to `fallback` when the error is empty/unknown.
  *
@@ -31,24 +70,120 @@ export function toError(e: unknown): Error {
  * `|| fallback` discipline so every catch block is guaranteed to
  * produce a non-empty string.
  *
+ * It also unwraps the cause chain, joining the distinct links with ": ",
+ * so `TypeError: fetch failed` reaches the user as
+ * `fetch failed: connect ECONNREFUSED 127.0.0.1:8642`. A cause whose text
+ * an outer link already quotes is dropped rather than repeated: wrappers
+ * that interpolate their own cause are common, and saying it twice reads
+ * as two faults.
+ *
  * @example
  *   } catch (err) {
  *     showToast(messageFromError(err, "Failed to load"), "error");
  *   }
  */
 export function messageFromError(e: unknown, fallback: string): string {
-  return toError(e).message || fallback;
+  const parts: string[] = [];
+  for (const link of errorChain(toError(e))) {
+    const message = link.message.trim();
+    if (!message) continue;
+    if (parts.some((seen) => seen.includes(message))) continue;
+    parts.push(message);
+  }
+  return parts.join(": ") || fallback;
+}
+
+/**
+ * How long the browser waits for one INTERACTIVE API call before giving up.
+ *
+ * Deliberately LONGER than the server's own deadline. HermesRuntime times its
+ * gateway calls out at 30s, so a route that is waiting on a stopped gateway
+ * answers at ~30s with a real diagnosis. A client deadline at or under that
+ * would win the race and replace the diagnosis with "timed out", which is the
+ * one thing the user already knows. Above it, the server's answer arrives
+ * first and this only ever catches the case where no answer is coming at all.
+ *
+ * Without any deadline the chat composer sat on "Thinking…" for as long as the
+ * server took, with no upper bound and nothing on screen to say why.
+ *
+ * THE REACH OF THIS NUMBER (T-0047). The argument above is about chat, but this
+ * is the default for every call through `apiFetch`, which is most of the app.
+ * That is right for anything a person is sitting and waiting on. It is wrong
+ * for bulk work, which has no 30s gateway bound to sit above and can honestly
+ * run longer — see `API_FETCH_BULK_TIMEOUT_MS`. Callers choose; nothing here is
+ * imposed on a route that knows better.
+ */
+export const API_FETCH_TIMEOUT_MS = 45_000;
+
+/**
+ * The ceiling for bulk operations: "Push all", "Pull all", model-catalogue
+ * sync, catalogue import, seeding.
+ *
+ * These walk every profile or every model, so the work scales with the size of
+ * the install rather than with the request. Under the interactive ceiling a
+ * large install had its sync aborted mid-flight and was told it had timed out,
+ * which is both wrong and alarming: the operation was progressing.
+ *
+ * Five minutes is a deliberate compromise. Long enough that reaching it means
+ * something is genuinely stuck rather than merely large; short enough that a
+ * wedged request does not hold a spinner forever, which is the failure this
+ * whole mechanism exists to prevent.
+ */
+export const API_FETCH_BULK_TIMEOUT_MS = 300_000;
+
+/**
+ * A deadline signal, or null where the runtime has no `AbortSignal.timeout`
+ * (older jsdom in particular). No signal is strictly better than throwing at
+ * the first line of every fetch in the app.
+ */
+function timeoutSignal(ms: number): AbortSignal | null {
+  if (typeof AbortSignal === "undefined" || typeof AbortSignal.timeout !== "function") return null;
+  return AbortSignal.timeout(ms);
+}
+
+/** `RequestInit`, plus the deadline this one call wants. */
+export interface ApiFetchOptions extends RequestInit {
+  /**
+   * Milliseconds before this call is abandoned. Defaults to
+   * `API_FETCH_TIMEOUT_MS`. Ignored when the caller passes its own `signal`,
+   * which always wins.
+   */
+  timeoutMs?: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic JSON fetch returns arbitrary shapes
 export async function apiFetch<T = any>(
   path: string,
-  options?: RequestInit
+  options?: ApiFetchOptions
 ): Promise<T> {
-  const res = await fetch(path, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...options?.headers },
-  });
+  // Kept out of the RequestInit that reaches fetch: it is ours, not the
+  // platform's, and passing it through would be noise in every devtools entry.
+  const { timeoutMs, ...init } = options ?? {};
+  const budget = timeoutMs ?? API_FETCH_TIMEOUT_MS;
+
+  // A caller-supplied signal always wins: several call sites use one to cancel
+  // on unmount or on a superseded request, and overriding it would leak both
+  // the request and the state update it resolves into.
+  const deadline = init.signal ? null : timeoutSignal(budget);
+
+  let res: Response;
+  try {
+    res = await fetch(path, {
+      ...init,
+      signal: init.signal ?? deadline,
+      headers: { "Content-Type": "application/json", ...init.headers },
+    });
+  } catch (e) {
+    if (deadline?.aborted) {
+      // Report the budget that actually fired, not the default. A bulk call
+      // saying "no response after 45s" when it waited five minutes sends the
+      // reader looking for the wrong problem.
+      throw new Error(
+        `No response after ${Math.round(budget / 1000)}s (${path})`,
+      );
+    }
+    throw e;
+  }
 
   const json = await res.json().catch(() => {
     throw new Error(`API returned invalid JSON (HTTP ${res.status})`);
@@ -106,7 +241,7 @@ export type SafeApiCallResult<T = unknown> = {
 
 export async function safeApiCall<T = unknown>(
   path: string,
-  options?: Omit<RequestInit, "body"> & { body?: unknown }
+  options?: Omit<ApiFetchOptions, "body"> & { body?: unknown }
 ): Promise<SafeApiCallResult<T>> {
   try {
     const data = await apiFetch(path, {
@@ -182,7 +317,7 @@ export async function safeApiCall<T = unknown>(
  */
 export async function safeApiCallData<T = unknown>(
   path: string,
-  options?: Omit<RequestInit, "body"> & { body?: unknown }
+  options?: Omit<ApiFetchOptions, "body"> & { body?: unknown }
 ): Promise<T | null> {
   const { ok, data } = await safeApiCall<{ data?: T }>(path, options);
   if (!ok) return null;

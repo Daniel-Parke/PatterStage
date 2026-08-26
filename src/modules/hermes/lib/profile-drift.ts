@@ -19,6 +19,42 @@
 // banner permanently red for anything the operator has on disk but has
 // not adopted. Skills need no such branch: the only caller walks the
 // rows the catalog just returned, so the row always exists.
+//
+// The mirror of that rule, and for the same reason: a file that is not
+// on DISK is not drift either (`fileDiffers`, T-0041). Drift here means
+// two versions of one file disagree. A file with no version on disk has
+// nothing to disagree with, and the sole consumer of `drifted` is the
+// banner, whose whole promise is that Push or Pull will clear it.
+//
+// It could not. `pullProfileFromHermes` writes `soulMd`, `agentsMd`,
+// `userMd` and `memoryMd` only when the file exists, so an absent file
+// left the column untouched, while `fileHash` returned null and
+// `contentHash(profile.userMd || "# User\n")` returned a real digest.
+// Null is never a digest, so a profile with no memories/USER.md was
+// drifted for ever and no pull could clear it. Only Push could, which
+// is why the banner's only CTA reads "Push all to Hermes". The operator
+// saw it directly: a "Pull all" that visibly worked, a profile's skills
+// going 183 to 218, and a banner that did not move.
+//
+// So is an absent file silent, or is it a different kind of drift worth
+// naming? Silent, and the argument is that it was never a signal to
+// begin with. Nobody designed "missing shows as drift"; it fell out of
+// `null !== hash`, it was indistinguishable from a real difference in
+// the one field the banner renders, and being indistinguishable is
+// precisely what made the real signal unreadable during that QA pass.
+// Deleting it raises the information content of the banner rather than
+// lowering it. "Absent on disk" IS a real and actionable fact, and it
+// is worth naming one day, but naming it honestly means a banner with
+// a second state and a second CTA (only Push can materialise a file),
+// which is a UI decision with a UI owner, and it is the same larger
+// design call as teaching Pull to create missing files. Both are out of
+// scope here and are recorded on T-0041 as follow-up rather than
+// smuggled in behind a bug fix.
+//
+// config.yaml is not an exception to this rule, it is the boundary of
+// it: it keeps an explicit `else if` that DOES report drift when the
+// file is missing and the assembled config is non-empty. Note that the
+// two comparisons are not symmetrical, and that is deliberate.
 // ═══════════════════════════════════════════════════════════════
 
 import { existsSync, readFileSync } from "fs";
@@ -66,6 +102,20 @@ export interface FullDriftReport {
   skills: SkillDriftEntry[];
 }
 
+/**
+ * True when `path` is on disk AND its bytes differ from `dbContent`.
+ *
+ * Both halves are load-bearing and they fail in opposite directions, so
+ * the pair lives here once rather than being spelled out at each of the
+ * eight call sites. Drop the `existsSync` and every absent file drifts
+ * for ever, because `fileHash` returns null and null never equals a
+ * digest. Drop the hash comparison and drift is disabled outright while
+ * every "a missing file is not drift" test still passes.
+ */
+function fileDiffers(path: string, dbContent: string): boolean {
+  return existsSync(path) && fileHash(path) !== contentHash(dbContent);
+}
+
 export function detectProfileDrift(slug: string): ProfileDriftEntry {
   const profile = getProfile(slug);
   if (!profile) {
@@ -85,10 +135,10 @@ export function detectProfileDrift(slug: string): ProfileDriftEntry {
   } else if (expectedConfig.trim().length > 0) {
     fields.push("config.yaml");
   }
-  if (fileHash(bundle.soul) !== contentHash(profile.soulMd)) fields.push("SOUL.md");
-  if (fileHash(bundle.agents) !== contentHash(profile.agentsMd)) fields.push("AGENTS.md");
-  if (fileHash(bundle.userMemory) !== contentHash(profile.userMd || "# User\n")) fields.push("USER.md");
-  if (fileHash(bundle.agentMemory) !== contentHash(profile.memoryMd || "# Memory\n")) {
+  if (fileDiffers(bundle.soul, profile.soulMd)) fields.push("SOUL.md");
+  if (fileDiffers(bundle.agents, profile.agentsMd)) fields.push("AGENTS.md");
+  if (fileDiffers(bundle.userMemory, profile.userMd || "# User\n")) fields.push("USER.md");
+  if (fileDiffers(bundle.agentMemory, profile.memoryMd || "# Memory\n")) {
     fields.push("MEMORY.md");
   }
   if (existsSync(bundle.config)) {
@@ -127,13 +177,11 @@ export function detectRootDrift(): RootDriftEntry {
       fields.push("skills.disabled");
     }
   }
-  if (fileHash(bundle.soul) !== contentHash(row.soulMd)) fields.push("SOUL.md");
-  if (fileHash(bundle.agents) !== contentHash(row.agentsMd)) fields.push("AGENTS.md");
-  if (existsSync(bundle.hermes) && fileHash(bundle.hermes) !== contentHash(row.frameworkMd)) {
-    fields.push("HERMES.md");
-  }
-  if (fileHash(bundle.userMemory) !== contentHash(row.userMd || "# User\n")) fields.push("USER.md");
-  if (fileHash(bundle.agentMemory) !== contentHash(row.memoryMd || "# Memory\n")) {
+  if (fileDiffers(bundle.soul, row.soulMd)) fields.push("SOUL.md");
+  if (fileDiffers(bundle.agents, row.agentsMd)) fields.push("AGENTS.md");
+  if (fileDiffers(bundle.hermes, row.frameworkMd)) fields.push("HERMES.md");
+  if (fileDiffers(bundle.userMemory, row.userMd || "# User\n")) fields.push("USER.md");
+  if (fileDiffers(bundle.agentMemory, row.memoryMd || "# Memory\n")) {
     fields.push("MEMORY.md");
   }
 

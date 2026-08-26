@@ -36,6 +36,13 @@ function Tile({ icon: Icon, label, value, color, suffix, compact, hint }: StatTi
       className="rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2"
       style={{ boxShadow: `inset 0 0 16px ${neonAlpha(color, 5)}` }}
       title={hint}
+      // A stat tile is a CLAIM about the list beneath it, and that claim has
+      // been wrong twice (T-0037 on skills, T-0042 on sessions) and painted as
+      // a literal 0 on first frame once (T-0035). These two hooks let a test
+      // read the rendered number rather than the props behind it, which is the
+      // only reading that catches all three.
+      data-testid="stat-tile"
+      data-stat-label={label}
     >
       <div className="flex items-center gap-1.5">
         <Icon className="h-3 w-3" style={{ color: neon(color) }} />

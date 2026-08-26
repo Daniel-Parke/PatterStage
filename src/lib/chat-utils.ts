@@ -204,7 +204,18 @@ export async function resolveApprovalApi(
 
 // ── Run-event SSE (agent mode) ──────────────────────────────────
 
-/** Named SSE events the run-event proxy (/api/runs/[id]/events) emits. */
+/**
+ * Named SSE events the run-event proxy (/api/runs/[id]/events) emits.
+ *
+ * "error" is NOT on this list and must never be added back. EventSource fires
+ * a built-in event of that exact type when the transport drops, so subscribing
+ * to it means the handler below runs on a plain Event with no `data`:
+ * `JSON.parse(undefined)` throws, the payload reads as empty, and a dropped
+ * socket renders as a run that failed for no stated reason. Worse, it ran
+ * BEFORE `es.onerror`, latching the terminal state and making the reconcile
+ * path in useAgentRunStream unreachable. The proxy sends the run's own failure
+ * as "run.error" for this reason.
+ */
 const RUN_SSE_EVENT_NAMES = [
   "open",
   "message.delta",
@@ -221,7 +232,7 @@ const RUN_SSE_EVENT_NAMES = [
   "tool.failed",
   "tool.approval_required",
   "done",
-  "error",
+  "run.error",
 ];
 
 export type RunEventKind =
@@ -241,7 +252,10 @@ export function classifyRunEvent(type: string): RunEventKind {
   if (type.startsWith("reasoning")) return "reasoning";
   if (type.startsWith("tool")) return "tool";
   if (type === "run.completed" || type === "response.completed") return "completed";
-  if (type === "run.failed" || type === "error") return "failed";
+  // "error" is deliberately absent: that name belongs to EventSource's own
+  // transport-failure event, and reading it as a run failure turns every
+  // dropped socket into a fabricated one. The proxy sends "run.error".
+  if (type === "run.failed" || type === "run.error") return "failed";
   if (type === "run.cancelled") return "cancelled";
   if (type === "done") return "done";
   if (type === "open") return "open";
@@ -274,21 +288,76 @@ export function extractRunError(data: unknown): string {
   return firstString(asObj(data), ["error", "message", "detail"]) || "run failed";
 }
 
+/**
+ * Does this payload report its own failure, whatever the event is called?
+ *
+ * A backend is free to close a tool call with `tool.completed` and put the bad
+ * news in the body: "completed" is a statement about the call finishing, not
+ * about it working. Deriving the chip from the event NAME alone is how a run
+ * that died against a stopped gateway still showed "skill_view done" and
+ * "terminal done" above the failure, which reads as three facts agreeing when
+ * only one of them was true.
+ *
+ * Kept narrow on purpose: an explicit negative flag or a non-empty error field,
+ * at the top level or one level down inside a `result` envelope. Over-matching
+ * here would paint working tools red, which is the same lie pointing the other
+ * way.
+ */
+function payloadReportsError(o: Record<string, unknown> | null, depth = 0): boolean {
+  if (!o) return false;
+  if (o.ok === false || o.success === false) return true;
+  if (typeof o.status === "string" && /^(error|failed|failure)$/i.test(o.status.trim())) return true;
+  for (const key of ["error", "errorMessage", "error_message"]) {
+    const value = o[key];
+    if (value === true) return true;
+    if (typeof value === "string" && value.trim()) return true;
+    if (value && typeof value === "object") return true;
+  }
+  if (depth === 0) return payloadReportsError(asObj(o.result), depth + 1);
+  return false;
+}
+
 /** Parse a `tool.*` SSE event into a ToolCall card. */
 export function parseToolEvent(type: string, data: unknown): ToolCall {
   const o = asObj(data);
   const name = firstString(o, ["name", "tool", "tool_name"]) || "tool";
-  const status: ToolCall["status"] = type.includes("approval")
+  const named: ToolCall["status"] = type.includes("approval")
     ? "approval_required"
     : type.endsWith("completed")
       ? "completed"
       : type.endsWith("failed")
         ? "failed"
         : "invoked";
+  // The payload outranks the name, except for an approval request, which is a
+  // question rather than an outcome.
+  const status: ToolCall["status"] =
+    named !== "approval_required" && payloadReportsError(o) ? "failed" : named;
   const tc: ToolCall = { name, status };
   if (o && "arguments" in o) tc.arguments = o.arguments;
   if (o && "result" in o) tc.result = o.result;
   return tc;
+}
+
+/**
+ * Settle the tool rows of a run that ended in failure.
+ *
+ * `finalize("failed")` used to persist the accumulator untouched, so a row the
+ * stream left as `invoked` kept its spinner and its "running" chip for as long
+ * as the transcript stayed open, on a turn that had already been dead for
+ * minutes. The call did not complete and now never will, which is what
+ * `failed` says. A row that genuinely completed is left alone: reframing it
+ * would be a second lie in place of the first.
+ *
+ * Returns the same array when nothing needed settling, so an unchanged list
+ * cannot trigger a pointless re-render.
+ */
+export function reframeToolsForFailedRun(tools: ToolCall[]): ToolCall[] {
+  if (!tools.some((t) => t.status === "invoked" || t.status === "approval_required")) return tools;
+  return tools.map((t) =>
+    t.status === "invoked" || t.status === "approval_required"
+      ? { ...t, status: "failed" as const }
+      : t,
+  );
 }
 
 /**

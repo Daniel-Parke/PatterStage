@@ -66,6 +66,11 @@ export async function runResearchJob(
           }
         : {}),
       completedAt: now(),
+      // Persisted on BOTH outcomes of this branch, the search-down failure
+      // included, because a run that failed still burned the tokens it burned.
+      // Excluding failures would under-count spend in exactly the situation
+      // that produces the most retries (T-0030).
+      usage: result.usage,
     });
     // Capture the report as an artifact (idempotent; best-effort — never fail
     // the run on a capture error).
@@ -84,6 +89,9 @@ export async function runResearchJob(
     }
   } catch (err) {
     logApiError("deep-research.runResearchJob", runId, err);
+    // No `usage` here, deliberately. The engine threw before it could return a
+    // total, so the tokens this run burned are genuinely unknown, and NULL is
+    // the honest record of that. Writing 0 would report a crashed run as free.
     updateResearchRun(runId, {
       status: "failed",
       error: messageFromError(err, "research failed"),

@@ -20,11 +20,23 @@ test.describe("Missions page", () => {
 
   test("can open create mission form", async ({ page }) => {
     await page.goto("/orchestration/missions");
-    const createBtn = page.getByRole("button", { name: /Create|New Mission|Draft/i });
-    if (await createBtn.isVisible()) {
-      await createBtn.click();
-      await expect(page.getByText(/Mission Name|Name/i).first()).toBeVisible();
-    }
+
+    // EXACT name, not /Create|New Mission|Draft/i. That pattern also matched the
+    // "draft" status-filter chip, so once both had rendered the locator resolved
+    // to two elements and `isVisible()` threw a strict-mode violation. Under
+    // fullyParallel the chips sometimes rendered after the check and sometimes
+    // before, which is why it passed alone and failed in the full run. Retries
+    // are zero here by policy (WG-DEL-004, determinism first), so the fix is to
+    // remove the ambiguity rather than to paper over the race.
+    const createBtn = page.getByRole("button", { name: "New Mission", exact: true });
+
+    // Unconditional. This was `if (await createBtn.isVisible()) { ... }`, which
+    // meant that whenever the button had not rendered yet the test passed having
+    // asserted NOTHING — the same shape of hole T-0044 closed elsewhere. An
+    // auto-retrying expect waits for the button instead of sampling for it.
+    await expect(createBtn).toBeVisible();
+    await createBtn.click();
+    await expect(page.getByText(/Mission Name|Name/i).first()).toBeVisible();
   });
 });
 

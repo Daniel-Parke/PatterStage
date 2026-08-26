@@ -18,6 +18,7 @@
 
 import { getDb, uuid, now } from "../db";
 import { syncHermesSessionsToDb } from "./session-sync";
+import { hasSessionMessageCountColumn } from "./session-sync-repository";
 import { getActiveFrameworkConfig } from "../frameworks/repository";
 import type { FrameworkType } from "../frameworks/types";
 
@@ -81,6 +82,33 @@ export interface UpdateSessionInput {
   error?: string | null;
   size?: number;
   title?: string | null;
+}
+
+/**
+ * Whole-table figures for a session listing, over exactly the rows the
+ * listing's filter selects rather than over the page it returns.
+ *
+ * The Sessions page draws four tiles from these. It used to draw them from the
+ * loaded page instead, so the tile labelled TOTAL printed 50 beside a header
+ * printing the real count (T-0042). `total` here is not counted separately
+ * from the header's number: it IS the header's number, summed out of the same
+ * one aggregate the rest of these fields come from, so a tile and the header
+ * cannot come apart.
+ */
+export interface SessionTotals {
+  /** Rows matching the filter. The number the page header prints. */
+  total: number;
+  /** Matching rows with status `active`. */
+  active: number;
+  /** SUM(message_count) over the matching rows. */
+  messages: number;
+  /**
+   * Matching rows per `source`, keyed by the value stored in the column, not
+   * by a fixed set of names. `source` is free text and real installs carry
+   * values the UI has no bucket for (the operator's database holds `subagent`
+   * and `tui` rows), and a fixed map counts those as nothing at all.
+   */
+  bySource: Record<string, number>;
 }
 
 export interface ListSessionsOptions {
@@ -266,9 +294,67 @@ export function getSession(id: string): SessionRecord | null {
   return rowToSession(row);
 }
 
+/** One row of the totals aggregate. */
+interface SessionTotalsRow {
+  status: string;
+  source: string;
+  c: number;
+  m: number;
+}
+
+/**
+ * The whole-table figures behind the Sessions insight tiles, in ONE pass over
+ * the rows `where`/`params` select.
+ *
+ * This replaces the listing's separate `SELECT COUNT(*)`: `total` is the sum
+ * of the group counts, so the header's number and the tiles' numbers are
+ * arithmetically the same number and the query count is unchanged.
+ *
+ * Cost, measured on 2026-08-26: the operator's database holds 35 sessions and
+ * the aggregate runs in 0.09ms. Synthesised to 35,790 rows it is a full scan
+ * plus a temp b-tree (there is no index on `status`) at 15.4ms median against
+ * 0.013ms for the COUNT(*) it replaces, which is still far below the sync this
+ * same request performs. A covering index on (status, source, message_count)
+ * would bring it to 2.4ms if the table ever grows enough to want one; that is
+ * a schema change and needs its own ruling.
+ *
+ * `message_count` is guarded rather than assumed: 001_baseline.sql predates
+ * 006_sessions_message_count and `runMigrations` returns straight after
+ * applying the baseline, so a fresh install's first boot has a `sessions`
+ * table without that column. The same pragma guard the sync layer uses for
+ * the same reason (operator ruling D6).
+ */
+function readSessionTotals(
+  database: ReturnType<typeof getDb>,
+  where: string,
+  params: (string | number)[],
+): SessionTotals {
+  const messages = hasSessionMessageCountColumn(database)
+    ? "COALESCE(SUM(message_count), 0)"
+    : "0";
+  const rows = database
+    .prepare(/* sql */ `
+      SELECT status, source, COUNT(*) AS c, ${messages} AS m
+      FROM sessions
+      ${where}
+      GROUP BY status, source
+    `)
+    .all(...params) as SessionTotalsRow[];
+
+  const totals: SessionTotals = { total: 0, active: 0, messages: 0, bySource: {} };
+  for (const row of rows) {
+    totals.total += row.c;
+    totals.messages += row.m;
+    if (row.status === "active") totals.active += row.c;
+    totals.bySource[row.source] = (totals.bySource[row.source] ?? 0) + row.c;
+  }
+  return totals;
+}
+
 export function listSessions(opts: ListSessionsOptions = {}): {
   sessions: SessionRecord[];
   total: number;
+  totals: SessionTotals;
 } {
   const { agentType, source, missionId, search, limit = 50, offset = 0, syncIfActive = false } = opts;
 
@@ -316,11 +402,11 @@ export function listSessions(opts: ListSessionsOptions = {}): {
 
   const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
   const database = getDb();
-  const total = (
-    database
-      .prepare(`SELECT COUNT(*) as c FROM sessions ${where}`)
-      .get(...params) as { c: number }
-  ).c;
+  // The listing's count and the insight tiles' figures come out of one query
+  // over one filter. `total` is returned alongside `totals` because callers
+  // (the page header, /api/monitor) read it by that name, but it is the same
+  // number, not a second count that could drift from the first.
+  const totals = readSessionTotals(database, where, params);
 
   const rows = database
     .prepare(
@@ -328,7 +414,11 @@ export function listSessions(opts: ListSessionsOptions = {}): {
     )
     .all(...params, limit, offset) as SessionRow[];
 
-  return { sessions: rows.map(rowToSession).filter(Boolean) as SessionRecord[], total };
+  return {
+    sessions: rows.map(rowToSession).filter(Boolean) as SessionRecord[],
+    total: totals.total,
+    totals,
+  };
 }
 
 // ── Shared helpers ─────────────────────────────────────────────

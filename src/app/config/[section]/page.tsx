@@ -12,16 +12,70 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
 import { LoadingSpinner, ErrorBanner } from "@/components/ui/LoadingSpinner";
-import { getSectionDef, fileKeyForFilePath } from "@/lib/config-schema";
+import {
+  CONFIG_SECTIONS,
+  getSectionDef,
+  fileKeyForFilePath,
+  resolveSectionRedirect,
+} from "@/lib/config-schema";
 import { apiFetch, setErrorFromCaught } from "@/lib/api-fetch";
 import { parseEnvLine, envLineKey } from "@/lib/env-line";
+import { iconColorMap, colorBorderMap } from "@/lib/theme";
 import ConfigField from "@/components/config/ConfigField";
 import EnvLineRow from "@/components/config/EnvLineRow";
 
-/** Common typo/alias redirects to the real config routes. */
-const SECTION_ALIASES: Record<string, string> = {
-  model: "/config/models",
-};
+/**
+ * The recovery view for a slug that is not a config section.
+ *
+ * It used to echo the slug back and offer a single Back link, which sent the
+ * operator to the index to start guessing again. The console already knows
+ * every section it has, so it says so: one link per section, carrying that
+ * section's own label, icon and colour. The list is derived from
+ * CONFIG_SECTIONS, so a section added to the schema shows up here with no
+ * second edit and no count to keep in step.
+ */
+function UnknownConfigSection({ slug }: { slug: string }) {
+  return (
+    <AppPageShell>
+      <PageHeader
+        icon={AlertCircle}
+        title="Unknown Config Section"
+        subtitle="Pick the section you meant"
+        color="orange"
+        backHref="/config"
+        backLabel="CONFIG"
+      />
+
+      <div className="max-w-5xl mx-auto px-6 py-6 flex-1 w-full">
+        <p className="text-sm text-ps-text-muted font-mono mb-6">
+          No config section is called{" "}
+          <code className="text-ps-text-primary">{slug}</code>. These are the
+          ones there are.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {Object.entries(CONFIG_SECTIONS).map(([id, section]) => {
+            const SectionIcon = section.icon;
+            return (
+              <Link
+                key={id}
+                href={`/config/${id}`}
+                className={`flex items-center gap-3 rounded-xl border bg-dark-900/50 px-4 py-3 transition-all ${colorBorderMap[section.color]}`}
+              >
+                <SectionIcon
+                  className={`w-4 h-4 shrink-0 ${iconColorMap[section.color]}`}
+                />
+                <span className="text-sm text-ps-text-primary truncate">
+                  {section.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </AppPageShell>
+  );
+}
 
 export default function ConfigSectionPage() {
   const params = useParams();
@@ -29,11 +83,16 @@ export default function ConfigSectionPage() {
   const sectionId = params.section as string;
   const sectionDef = getSectionDef(sectionId);
 
-  // Redirect known aliases (e.g. the singular /config/model → /config/models).
-  const aliasTarget = !sectionDef ? SECTION_ALIASES[sectionId] : undefined;
+  // Redirect a near miss to the section it obviously meant: the singular
+  // /config/model, the kebab-cased /config/session-reset, the label the
+  // operator actually read on the card (/config/agent-settings). The
+  // `sectionDef ?` guard is belt as well as braces: resolveSectionRedirect
+  // returns null for a valid section, and a valid section never reaches the
+  // effect either way.
+  const redirectTarget = sectionDef ? null : resolveSectionRedirect(sectionId);
   useEffect(() => {
-    if (aliasTarget) router.replace(aliasTarget);
-  }, [aliasTarget, router]);
+    if (redirectTarget) router.replace(redirectTarget);
+  }, [redirectTarget, router]);
   const isFileSection = sectionDef?.type === "file";
 
   const [values, setValues] = useState<Record<string, unknown>>({});
@@ -183,23 +242,15 @@ export default function ConfigSectionPage() {
   }, []);
 
   if (!sectionDef) {
-    return (
-      <div className="min-h-screen bg-dark-950 grid-bg flex items-center justify-center">
-        <div className="text-center">
-          {aliasTarget ? (
-            <p className="text-ps-text-muted font-mono">Redirecting…</p>
-          ) : (
-            <>
-              <h2 className="text-xl font-bold text-white mb-2">Unknown Config Section</h2>
-              <p className="text-ps-text-muted font-mono mb-4">Section &quot;{sectionId}&quot; not found</p>
-              <Link href="/config" className="text-neon-cyan text-sm font-mono hover:underline">
-                ← Back to Config
-              </Link>
-            </>
-          )}
+    // While a replace is in flight, show nothing that invites a second click.
+    if (redirectTarget) {
+      return (
+        <div className="min-h-screen bg-dark-950 grid-bg flex items-center justify-center">
+          <p className="text-ps-text-muted font-mono">Redirecting…</p>
         </div>
-      </div>
-    );
+      );
+    }
+    return <UnknownConfigSection slug={sectionId} />;
   }
 
   if (loading) {
