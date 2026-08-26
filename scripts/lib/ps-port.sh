@@ -28,29 +28,29 @@ ps_noninteractive_install() {
 ps_resolve_port_interactive() {
   local chosen=""
   while true; do
-    echo ""
-    echo "PatterStage will listen on a TCP port (Next.js PORT)."
-    echo "  • Press Enter for auto: first free port in 42069–42100 (auto-selected if no input)."
-    echo "  • Or type a port 1–65535 (1024–65535 suggested; <1024 may need root)."
+    echo "" >&2
+    echo "PatterStage will listen on a TCP port (Next.js PORT)." >&2
+    echo "  • Press Enter for auto: first free port in 42069–42100 (auto-selected if no input)." >&2
+    echo "  • Or type a port 1–65535 (1024–65535 suggested; <1024 may need root)." >&2
     read -r -p "Port [Enter = auto]: " reply
-    echo ""
+    echo "" >&2
     if [ -z "${reply// /}" ]; then
       chosen="$(ps_auto_pick_port)" || {
-        echo "✗ No free port in 42069–42100. Install ss/lsof or set PORT in .env.local."
+        echo "✗ No free port in 42069–42100. Install ss/lsof or set PORT in .env.local." >&2
         return 1
       }
-      echo "✓ Auto-selected port: $chosen"
+      echo "✓ Auto-selected port: $chosen" >&2
       printf '%s' "$chosen"
       return 0
     fi
     chosen="${reply// /}"
     if ! ps_validate_port_number "$chosen"; then
-      echo "✗ Invalid port (need 1–65535). Try again."
+      echo "✗ Invalid port (need 1–65535). Try again." >&2
       continue
     fi
     if [ "$((10#$chosen))" -lt 1024 ]; then
       read -r -p "Ports below 1024 are privileged on many systems. Continue? [y/N]: " lo
-      echo ""
+      echo "" >&2
       if ! [[ "$lo" =~ ^[Yy]$ ]]; then
         continue
       fi
@@ -59,31 +59,31 @@ ps_resolve_port_interactive() {
       printf '%s' "$chosen"
       return 0
     fi
-    echo "✗ Port $chosen is already in use."
-    echo "  [a] Try next free port upward from $chosen"
-    echo "  [b] Enter a different port"
-    echo "  [c] Cancel"
+    echo "✗ Port $chosen is already in use." >&2
+    echo "  [a] Try next free port upward from $chosen" >&2
+    echo "  [b] Enter a different port" >&2
+    echo "  [c] Cancel" >&2
     read -r -p "Choice (a/b/c): " oc
-    echo ""
+    echo "" >&2
     case "$oc" in
       a|A)
         local p=$((10#$chosen + 1))
         while [ "$p" -le 65535 ]; do
           if ! ps_tcp_port_in_use "$p"; then
-            echo "✓ Using port: $p"
+            echo "✓ Using port: $p" >&2
             printf '%s' "$p"
             return 0
           fi
           p=$((p + 1))
         done
-        echo "✗ No free port found up to 65535."
+        echo "✗ No free port found up to 65535." >&2
         return 1
         ;;
       b|B)
         continue
         ;;
       *)
-        echo "Aborted."
+        echo "Aborted." >&2
         return 1
         ;;
     esac
