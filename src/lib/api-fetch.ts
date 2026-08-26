@@ -94,7 +94,7 @@ export function messageFromError(e: unknown, fallback: string): string {
 }
 
 /**
- * How long the browser waits for one API call before giving up on it.
+ * How long the browser waits for one INTERACTIVE API call before giving up.
  *
  * Deliberately LONGER than the server's own deadline. HermesRuntime times its
  * gateway calls out at 30s, so a route that is waiting on a stopped gateway
@@ -105,40 +105,81 @@ export function messageFromError(e: unknown, fallback: string): string {
  *
  * Without any deadline the chat composer sat on "Thinking…" for as long as the
  * server took, with no upper bound and nothing on screen to say why.
+ *
+ * THE REACH OF THIS NUMBER (T-0047). The argument above is about chat, but this
+ * is the default for every call through `apiFetch`, which is most of the app.
+ * That is right for anything a person is sitting and waiting on. It is wrong
+ * for bulk work, which has no 30s gateway bound to sit above and can honestly
+ * run longer — see `API_FETCH_BULK_TIMEOUT_MS`. Callers choose; nothing here is
+ * imposed on a route that knows better.
  */
 export const API_FETCH_TIMEOUT_MS = 45_000;
+
+/**
+ * The ceiling for bulk operations: "Push all", "Pull all", model-catalogue
+ * sync, catalogue import, seeding.
+ *
+ * These walk every profile or every model, so the work scales with the size of
+ * the install rather than with the request. Under the interactive ceiling a
+ * large install had its sync aborted mid-flight and was told it had timed out,
+ * which is both wrong and alarming: the operation was progressing.
+ *
+ * Five minutes is a deliberate compromise. Long enough that reaching it means
+ * something is genuinely stuck rather than merely large; short enough that a
+ * wedged request does not hold a spinner forever, which is the failure this
+ * whole mechanism exists to prevent.
+ */
+export const API_FETCH_BULK_TIMEOUT_MS = 300_000;
 
 /**
  * A deadline signal, or null where the runtime has no `AbortSignal.timeout`
  * (older jsdom in particular). No signal is strictly better than throwing at
  * the first line of every fetch in the app.
  */
-function timeoutSignal(): AbortSignal | null {
+function timeoutSignal(ms: number): AbortSignal | null {
   if (typeof AbortSignal === "undefined" || typeof AbortSignal.timeout !== "function") return null;
-  return AbortSignal.timeout(API_FETCH_TIMEOUT_MS);
+  return AbortSignal.timeout(ms);
+}
+
+/** `RequestInit`, plus the deadline this one call wants. */
+export interface ApiFetchOptions extends RequestInit {
+  /**
+   * Milliseconds before this call is abandoned. Defaults to
+   * `API_FETCH_TIMEOUT_MS`. Ignored when the caller passes its own `signal`,
+   * which always wins.
+   */
+  timeoutMs?: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic JSON fetch returns arbitrary shapes
 export async function apiFetch<T = any>(
   path: string,
-  options?: RequestInit
+  options?: ApiFetchOptions
 ): Promise<T> {
+  // Kept out of the RequestInit that reaches fetch: it is ours, not the
+  // platform's, and passing it through would be noise in every devtools entry.
+  const { timeoutMs, ...init } = options ?? {};
+  const budget = timeoutMs ?? API_FETCH_TIMEOUT_MS;
+
   // A caller-supplied signal always wins: several call sites use one to cancel
   // on unmount or on a superseded request, and overriding it would leak both
   // the request and the state update it resolves into.
-  const deadline = options?.signal ? null : timeoutSignal();
+  const deadline = init.signal ? null : timeoutSignal(budget);
 
   let res: Response;
   try {
     res = await fetch(path, {
-      ...options,
-      signal: options?.signal ?? deadline,
-      headers: { "Content-Type": "application/json", ...options?.headers },
+      ...init,
+      signal: init.signal ?? deadline,
+      headers: { "Content-Type": "application/json", ...init.headers },
     });
   } catch (e) {
     if (deadline?.aborted) {
+      // Report the budget that actually fired, not the default. A bulk call
+      // saying "no response after 45s" when it waited five minutes sends the
+      // reader looking for the wrong problem.
       throw new Error(
-        `No response after ${Math.round(API_FETCH_TIMEOUT_MS / 1000)}s (${path})`,
+        `No response after ${Math.round(budget / 1000)}s (${path})`,
       );
     }
     throw e;
@@ -200,7 +241,7 @@ export type SafeApiCallResult<T = unknown> = {
 
 export async function safeApiCall<T = unknown>(
   path: string,
-  options?: Omit<RequestInit, "body"> & { body?: unknown }
+  options?: Omit<ApiFetchOptions, "body"> & { body?: unknown }
 ): Promise<SafeApiCallResult<T>> {
   try {
     const data = await apiFetch(path, {
@@ -276,7 +317,7 @@ export async function safeApiCall<T = unknown>(
  */
 export async function safeApiCallData<T = unknown>(
   path: string,
-  options?: Omit<RequestInit, "body"> & { body?: unknown }
+  options?: Omit<ApiFetchOptions, "body"> & { body?: unknown }
 ): Promise<T | null> {
   const { ok, data } = await safeApiCall<{ data?: T }>(path, options);
   if (!ok) return null;

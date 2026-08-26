@@ -18,7 +18,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import Button from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
-import { apiFetch, safeApiCallData, toastError } from "@/lib/api-fetch";
+import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, safeApiCallData, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { profileSyncBody } from "@/lib/profile-sync-body";
 import { pluralise } from "@/lib/utils";
@@ -204,6 +204,8 @@ export default function ToolsPage() {
       setBusy,
       showToast,
       url: `/api/agent/profiles/sync/${mode}`,
+      // Bulk: work scales with the install, not the request (T-0047).
+      timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
       body: profileSyncBody(selectedProfile),
       successMessage,
       errorMessage: mode === "pull" ? "Pull failed" : "Push failed",

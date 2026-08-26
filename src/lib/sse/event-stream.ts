@@ -51,8 +51,18 @@ export function sseStream<T>(opts: SseStreamOptions<T>): Response {
         let snap: T | null;
         try {
           snap = opts.snapshot();
-        } catch {
-          enqueue(`event: error\ndata: {"error":"snapshot failed"}\n\n`);
+        } catch (e) {
+          // NOT `event: error`. EventSource reserves that name for its own
+          // transport failure and dispatches it with NO `data`, so a server
+          // frame sharing the name arrives indistinguishable from a dropped
+          // socket and its diagnosis is thrown away. T-0040 fixed this exact
+          // collision on the chat run stream; this is the same rename for the
+          // composer and laboratory research streams (T-0046).
+          //
+          // JSON.stringify rather than a hand-built literal: a real message
+          // can carry a quote or a backslash, and a Windows path has both.
+          const why = e instanceof Error ? e.message : "snapshot failed";
+          enqueue(`event: stream.error\ndata: ${JSON.stringify({ error: why })}\n\n`);
           return true;
         }
         if (snap === null) {

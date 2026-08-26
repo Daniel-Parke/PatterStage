@@ -44,7 +44,7 @@ import SkillsSearchResults from "@/components/skills/SkillsSearchResults";
 import SkillsDenylistNote from "@/components/skills/SkillsDenylistNote";
 import SkillsCatalogEmpty from "@/components/skills/SkillsCatalogEmpty";
 import SkillEditorModal from "@/components/skills/SkillEditorModal";
-import { apiFetch, toastError } from "@/lib/api-fetch";
+import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import {
   clampPage,
@@ -148,6 +148,8 @@ export default function SkillsPage() {
       setBusy: setImporting,
       showToast,
       url: "/api/agent/profiles/sync/import",
+      // Bulk: work scales with the install, not the request (T-0047).
+      timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
       body: { importSkills: true },
       successMessage: "Skills catalog imported from Hermes disk",
       errorMessage: "Import failed",

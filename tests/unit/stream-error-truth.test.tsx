@@ -23,7 +23,6 @@
 import { act, renderHook } from "@testing-library/react";
 
 import { useEventStream } from "@/hooks/useEventStream";
-import { sseStream } from "@/lib/sse/event-stream";
 
 // ── consumer ────────────────────────────────────────────────────
 

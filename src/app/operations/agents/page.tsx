@@ -25,7 +25,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/components/ui/Toast";
 import type { AgentProfile, ProfileFile } from "@/types/console";
-import { apiFetch, toastError } from "@/lib/api-fetch";
+import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, toastError } from "@/lib/api-fetch";
 import { profileSyncBody } from "@/lib/profile-sync-body";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { agentFileUrl } from "@/components/agents/agent-file-url";
@@ -110,6 +110,8 @@ export default function BehaviourPage() {
       successMessage,
       errorMessage,
       onSuccess: loadProfiles,
+      // Bulk: work scales with the install, not the request (T-0047).
+      timeoutMs: API_FETCH_BULK_TIMEOUT_MS,
     });
 
   const handlePushAll = () =>
