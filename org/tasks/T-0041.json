@@ -1,0 +1,24 @@
+{
+  "id": "T-0041",
+  "intent": "Pull must be able to converge what Drift measures. detectProfileDrift compares SOUL/AGENTS/USER/MEMORY unconditionally; fileHash returns null for a missing file while contentHash('# User\n') is a real digest, so a profile with no USER.md on disk is PERMANENTLY drifted. profile-pull writes those columns only when the file exists, so Pull can never clear them; only Push can, which is why the banner's own CTA says Push all. QA saw Pull all visibly work (a profile's skills count went 183 to 218) while the drift banner persisted. Guard each comparison with existsSync, exactly as the config.yaml branch already does. No behaviour change for files that DO exist: a genuinely differing file must still report drift. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26; root cause traced and independently re-verified. Not a regression from the consolidation work.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/modules/hermes/lib/profile-drift.ts",
+    "tests/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T09:30:00Z",
+    "updated": "2026-08-26T09:30:00Z"
+  }
+}

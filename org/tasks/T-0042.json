@@ -1,0 +1,26 @@
+{
+  "id": "T-0042",
+  "intent": "Sessions tiles must mean what their labels say. SessionInsights receives only the 50-row page and computes total: sessions.length, so the tile labelled TOTAL showed 50 against 35,790 real sessions, contradicting the page header directly above it. ACTIVE, MESSAGES and CLI are page-scoped too; only TOTAL was caught because it had a contradicting number beside it. The real COUNT(*) is ALREADY in the payload and already feeds the header; it is simply never passed to the tiles. Operator ruled 2026-08-26: real totals for all four, which needs one new aggregate (GROUP BY status, source plus SUM(message_count)) in the sessions repository. CHECK THE INDEX before shipping, this runs against 35k rows; if the aggregate is slow, relabel the three as page-scoped rather than ship a slow page. SQL goes in the repository file: sql-outside-repository is at zero and stays there. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26; root cause traced and independently re-verified. Not a regression from the consolidation work.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/app/(main)/sessions/",
+    "src/components/session/",
+    "src/lib/sessions/",
+    "tests/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T09:30:00Z",
+    "updated": "2026-08-26T09:30:00Z"
+  }
+}

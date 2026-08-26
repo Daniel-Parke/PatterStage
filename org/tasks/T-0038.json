@@ -1,0 +1,25 @@
+{
+  "id": "T-0038",
+  "intent": "An unknown config section should help the operator recover. The 404 branch echoes the slug and offers one Back link. CONFIG_SECTIONS is already imported in that file and already enumerated by the sibling page, so listing the 26 valid sections needs no new import or data source. Add a nearest-match resolver feeding the EXISTING SECTION_ALIASES/aliasTarget redirect: the guessed slug 'agent-settings' is exactly slugify('Agent Settings'), and slug.replace(/-/g,'_') alone rescues six more. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26. Root cause traced by three read-only investigations and re-verified independently; NOT a regression from the consolidation work, which only put a QA pass in front of pages nobody had text-scraped before.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/app/config/",
+    "src/lib/config-schema.ts",
+    "tests/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T09:00:00Z",
+    "updated": "2026-08-26T09:00:00Z"
+  }
+}

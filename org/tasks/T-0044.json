@@ -1,0 +1,24 @@
+{
+  "id": "T-0044",
+  "intent": "Close the test holes the QA pass exposed. NO test renders a stat tile at all. The skills restructure test MOCKS SkillsInsights away, so it cannot see the tiles it is nominally covering. No component test renders ComposerRunForm, so nothing asserts that Review opens the confirm or that Confirm and launch posts. 'Edit Templates' has no test, while its sibling 'Manage categories' does, which is precisely how we know the wiring works. And jest.config excludes !src/**/page.tsx from coverage, so exactly the page-level wiring a QA pass probes is invisible to the floors: raise that as a decision for the operator rather than silently changing it, because it would move every measured band. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26; root cause traced and independently re-verified. Not a regression from the consolidation work.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "tests/",
+    "jest.config.js"
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T09:30:00Z",
+    "updated": "2026-08-26T09:30:00Z"
+  }
+}

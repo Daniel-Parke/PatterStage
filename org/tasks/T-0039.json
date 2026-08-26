@@ -1,0 +1,25 @@
+{
+  "id": "T-0039",
+  "intent": "Close the stdout-capture bug class in the shell scripts. ps_resolve_port_interactive writes its entire UI to stdout inside $( ), so the banner is captured as the PORT value and .env.local becomes multi-line prose. The corruption is STICKY: ps_env_set de-dups with grep -v '^KEY=', which cannot remove the orphan lines it wrote. QA hit this on a clean bootstrap and it blocked all downstream testing; their fix (prompts to stderr, printf the value) is correct but is unpushed and not in this tree, so reproduce it here. Then close the class: add the missing ps_validate_port_number guard after the interactive branch (the non-interactive branch already validates); harden ps_env_set and setup.mjs's setEnvLocal against multi-line values; fix resolve_python, which calls exit 1 inside a function only ever run in $( ) so the failure exits the subshell and the script continues with an empty interpreter path; and document that ps_info/ps_ok/ps_step/ps_dim all write to stdout while only ps_warn/ps_err use stderr, which is the standing landmine. Interactive setup has NO test: the shell harness only runs bash -n and its file list does not even include ps-port.sh. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26. Root cause traced by three read-only investigations and re-verified independently; NOT a regression from the consolidation work, which only put a QA pass in front of pages nobody had text-scraped before.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "scripts/lib/",
+    "scripts/bootstrap/",
+    "tests/scripts/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T09:00:00Z",
+    "updated": "2026-08-26T09:00:00Z"
+  }
+}

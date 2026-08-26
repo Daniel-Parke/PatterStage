@@ -1,0 +1,29 @@
+{
+  "id": "T-0040",
+  "intent": "Chat failure must say what actually happened. With the gateway down, a message sits on Thinking for ~35s and ends as the bare string 'run failed', preceded by tool rows reading 'skill_view done' and 'terminal done' that look like successes. THREE independent defects. (1) 'error' in RUN_SSE_EVENT_NAMES collides with EventSource's BUILT-IN transport-error event: that event is a plain Event, so e.data is undefined, JSON.parse throws, and extractRunError falls through to the literal 'run failed'. Worse, the listener sets finalized=true before es.onerror can run, so the deliberate self-healing fallback in useAgentRunStream (which carries a comment explaining how it reconciles from the server) is DEAD CODE, and useRunProgress has the identical collision. Rename the event the proxy emits to run.error and swap it in all four places. (2) messageFromError returns only .message, so undici's 'TypeError: fetch failed' hides 'connect ECONNREFUSED 127.0.0.1:8642'. Append cause?.message, reusing the approach already shipped for Hindsight in 8247b3ab. (3) parseToolEvent derives status from the event NAME alone and finalize('failed') persists acc.tools untouched, so rows left invoked spin forever and completed rows read as successes beside a failed run: reframe them when the run dies. Also: the messages route discards userMessageId and assistantMessageId on the failure branch despite a comment claiming it surfaces them, and apiFetch passes no signal so the browser holds Thinking for as long as the server takes. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26; root cause traced and independently re-verified. Not a regression from the consolidation work.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/lib/chat-utils.ts",
+    "src/hooks/useAgentRunStream.ts",
+    "src/hooks/useRunProgress.ts",
+    "src/lib/api-fetch.ts",
+    "src/app/api/runs/",
+    "src/app/api/chat/",
+    "tests/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T09:30:00Z",
+    "updated": "2026-08-26T09:30:00Z"
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "id": "T-0043",
+  "intent": "By-design friction must be legible. Two controls are working as specified and a competent tester concluded both were broken. Operator ruled 2026-08-26 on all three parts. (1) Rename Composer's 'Review & run' to 'Review...': the ellipsis is the convention for a control that opens a further step, and the two-step confirm flow is untouched. (2) Open the mission Dispatch accordion BY DEFAULT, satisfying the acknowledgement by showing the choice rather than demanding a click. (3) Keep the gate and its hint for the collapsed path, and surface the requirement on the disabled button itself rather than only in a paragraph elsewhere on the form. TWO EXISTING TESTS ENCODE THE GATE as a requirement and are to be REWRITTEN to encode the new intent, NOT weakened: the gate still exists and is still asserted for the collapsed case, and what changes is the default. The operator's ruling is the warrant and belongs in the commit message. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26; root cause traced and independently re-verified. Not a regression from the consolidation work.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/components/composer/ComposerRunForm.tsx",
+    "src/components/missions/MissionCreateForm.tsx",
+    "tests/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T09:30:00Z",
+    "updated": "2026-08-26T09:30:00Z"
+  }
+}

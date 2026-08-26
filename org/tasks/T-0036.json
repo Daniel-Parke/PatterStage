@@ -1,0 +1,24 @@
+{
+  "id": "T-0036",
+  "intent": "Modal gets the accessibility contract Sheet already has. src/components/ui/Modal.tsx sets no role, no aria-modal, no aria-labelledby, no focus trap and no Escape handler, while its sibling Sheet.tsx has all of them. This is not cosmetic: QA counted [role=dialog], got 0 twice, and reported three WORKING controls as dead buttons (Manage categories, Edit Templates, Composer Review and run). A screen-reader user gets the same experience. Port the Escape handler from Sheet.tsx:32 rather than writing a second one. Acceptance: after clicking those controls, [role=dialog] is at least 1; Escape closes; focus is trapped. Source: the operator's live Hermes QA pass on dev@43d16c30, 2026-08-26. Root cause traced by three read-only investigations and re-verified independently; NOT a regression from the consolidation work, which only put a QA pass in front of pages nobody had text-scraped before.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [
+    "src/components/ui/Modal.tsx",
+    "tests/"
+  ],
+  "timestamps": {
+    "opened": "2026-08-26T09:00:00Z",
+    "updated": "2026-08-26T09:00:00Z"
+  }
+}
