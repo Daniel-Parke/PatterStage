@@ -26,7 +26,9 @@
     "src/app/(main)/sessions/",
     "src/components/session/",
     "src/lib/sessions/",
-    "tests/"
+    "tests/",
+    "src/app/api/sessions/route.ts",
+    "src/hooks/useSessions.ts"
   ],
   "claims_extended": [
     "src/app/api/sessions/route.ts and src/hooks/useSessions.ts, the two links of the wire the task text itself names ('the real COUNT(*) is ALREADY in the payload, useSessions returns it, pass it through'), and the only path by which a repository figure reaches a tile"
@@ -40,7 +42,8 @@
   },
   "timestamps": {
     "opened": "2026-08-26T09:30:00Z",
-    "updated": "2026-08-26T12:00:00Z",
+    "updated": "2026-08-26T18:40:00Z",
     "closed": "2026-08-26T12:00:00Z"
-  }
+  },
+  "claims_note": "Claims extended after the close commit, per the batch-B review. The work also edited src/app/api/sessions/route.ts and src/hooks/useSessions.ts, which is the minimum needed to carry `totals` from the repository to the page: the aggregate is useless if the route does not return it and the hook does not type it. The extension was declared in the executor's report at the time; this record now says so too."
 }
