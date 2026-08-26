@@ -11,39 +11,47 @@ This guide is the **operator manual** for PatterStage. It describes every area o
 
 The guide is written for the **Junior developer / operator**: every page is documented, every common action has a "Typical use" walkthrough, and "Notes" call out non-obvious behaviour. If you have not used PatterStage before, read the "What PatterStage is" section and the "Dashboard" section first, then jump to the page you need.
 
-**How this guide is organised:** one section per sidebar entry, in the order you see them in the app. Cross-references to the sibling technical docs ([MISSIONS.md](MISSIONS.md), [DEPLOY.md](DEPLOY.md), [API.md](API.md), [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md), [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md), [MIGRATION.md](MIGRATION.md), [ENV_REFERENCE.md](ENV_REFERENCE.md), [TESTING.md](TESTING.md), [SYSTEM-CRON.md](SYSTEM-CRON.md), [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md), [PATTERSTAGE.md](PATTERSTAGE.md)) are made inline.
+**How this guide is organised:** one section per sidebar entry, grouped by sidebar section (Orchestration, Operations, Laboratory, Main, Config, Rec Room) and in sidebar order within each group. Cross-references to the sibling technical docs ([MISSIONS.md](MISSIONS.md), [DEPLOY.md](DEPLOY.md), [API.md](API.md), [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md), [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md), [MIGRATION.md](MIGRATION.md), [ENV_REFERENCE.md](ENV_REFERENCE.md), [TESTING.md](TESTING.md), [SYSTEM-CRON.md](SYSTEM-CRON.md), [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md), [PATTERSTAGE.md](PATTERSTAGE.md)) are made inline.
 
 ---
 
 ## Table of contents
 
 1. [What PatterStage is](#what-patterstage-is)
-2. [Dashboard](#dashboard)
-   - [Main → Insights](#main--insights)
-3. [Orchestration → Missions](#orchestration--missions)
-4. [Orchestration → Scripts](#orchestration--scripts)
-5. [Orchestration → Chat](#orchestration--chat)
-6. [Operations → Agents](#operations--agents)
-7. [Operations → Skills](#operations--skills)
-8. [Operations → Tools](#operations--tools)
-9. [Operations → Personalities](#operations--personalities)
-10. [Main → Sessions](#main--sessions)
-11. [Main → Sessions (detail)](#main--sessions-detail)
-12. [Main → Memory](#main--memory)
-13. [Main → Logs](#main--logs)
-14. [Config → All Settings](#config--all-settings)
-15. [Config → Models](#config--models)
-16. [Config → A section](#config--a-section)
-17. [Config → Seed](#config--seed)
-18. [Rec Room → Story Weaver (dashboard)](#rec-room--story-weaver-dashboard)
-19. [Rec Room → Story Weaver / create](#rec-room--story-weaver--create)
-20. [Rec Room → Story Weaver / library](#rec-room--story-weaver--library)
-21. [Rec Room → Story Weaver / characters](#rec-room--story-weaver--characters)
-22. [Rec Room → Story Weaver / themes](#rec-room--story-weaver--themes)
-23. [Rec Room → Story Weaver / [id]: Story Reader](#rec-room--story-weaver--id-story-reader)
-24. [Sidebar deploy buttons (Update / Rebuild / Restart)](#sidebar-deploy-buttons-update--rebuild--restart)
-25. [Suggested workflows](#suggested-workflows)
-26. [Related documentation](#related-documentation)
+2. [First run, and how you get in](#first-run-and-how-you-get-in)
+3. [How it works behind the scenes](#how-it-works-behind-the-scenes)
+4. [What changed in the July 2026 rebuild](#what-changed-in-the-july-2026-rebuild)
+5. [Governance: the `org/` directory](#governance-the-org-directory)
+6. [Dashboard](#dashboard)
+7. [Orchestration → Missions](#orchestration--missions)
+8. [Orchestration → Composer](#orchestration--composer)
+9. [Orchestration → Scripts](#orchestration--scripts)
+10. [Orchestration → Chat](#orchestration--chat)
+11. [Operations → Agents](#operations--agents)
+12. [Operations → Skills](#operations--skills)
+13. [Operations → Tools](#operations--tools)
+14. [Operations → Personalities](#operations--personalities)
+15. [Laboratory → Insights](#laboratory--insights)
+16. [Laboratory → Insights: provider spend](#laboratory--insights-provider-spend)
+17. [Laboratory → Deep Research](#laboratory--deep-research)
+18. [Laboratory → Artifacts](#laboratory--artifacts)
+19. [Main → Sessions](#main--sessions)
+20. [Main → Sessions (detail)](#main--sessions-detail)
+21. [Main → Memory](#main--memory)
+22. [Main → Logs](#main--logs)
+23. [Config → All Settings](#config--all-settings)
+24. [Config → Models](#config--models)
+25. [Config → A section](#config--a-section)
+26. [Config → Seed](#config--seed)
+27. [Rec Room → Story Weaver (dashboard)](#rec-room--story-weaver-dashboard)
+28. [Rec Room → Story Weaver / create](#rec-room--story-weaver--create)
+29. [Rec Room → Story Weaver / library](#rec-room--story-weaver--library)
+30. [Rec Room → Story Weaver / characters](#rec-room--story-weaver--characters)
+31. [Rec Room → Story Weaver / themes](#rec-room--story-weaver--themes)
+32. [Rec Room → Story Weaver / [id]: Story Reader](#rec-room--story-weaver--id-story-reader)
+33. [Sidebar deploy buttons (Update / Rebuild / Restart)](#sidebar-deploy-buttons-update--rebuild--restart)
+34. [Suggested workflows](#suggested-workflows)
+35. [Related documentation](#related-documentation)
 
 ---
 
@@ -344,42 +352,6 @@ The dashboard is your **status board**, not the primary place to launch missions
 
 ---
 
-## Main → Insights
-
-![Insights](images/insights.png)
-
-*Insights, showing the activity chart, category ring, run heatmap and achievement grid that the rest of this section walks through.*
-
-**Main → Insights** (`/insights`) is the analytics + achievements view. It reads
-the `analytics_events` interaction log (via `/api/analytics`) plus the dashboard
-stats, so it starts empty and fills in as you use PatterStage.
-
-### What you see
-
-- A **level / streak** header with a headline-metric strip: total interactions,
-  active days (last 30), achievements unlocked (`N / 36`), and the longest streak.
-- **Activity, last 30 days:** an area chart of daily interaction volume.
-- **By category:** a ring that folds the 14 event types into 6 readable buckets
-  (Missions, Stories, Sessions, Automation, Config, Chat).
-- **Run activity, last 91 days:** the GitHub-style contribution heatmap.
-- **Achievements:** the full grid of ~36 badges with progress bars; locked badges
-  show a lock + how close you are.
-
-### Typical use
-
-1. Dispatch a few missions, write a Story Weaver chapter, fire a schedule.
-2. Open **Insights**: the activity chart and category ring update on a 30s cadence,
-  and achievement progress advances (e.g. *Dispatcher*, *Wordsmith*, *Set & Forget*).
-3. Newly-earned achievements pop a 🏆 toast **on the Dashboard** (the Insights grid
-  is read-only and never double-fires the toast).
-
-### Notes
-
-- Events are recorded **server-side** only (there is no public write endpoint), so
-  the numbers reflect real activity and can't be forged from the client.
-- Achievements are **derived live** from your activity: there is no separate save;
-  full reference in [ANALYTICS.md](ANALYTICS.md).
-
 ## Orchestration → Missions
 
 ![Missions board](images/missions-board.png)
@@ -465,6 +437,101 @@ For mission lifecycle details (single-flight queue, model resolution, cancel sig
 Below the board is the **Scheduled missions** section, the recurring agent work that the PatterStage scheduler fires (no Hermes `jobs.json`). Each row shows **name · cadence · next run · last status** with **Pause/Resume**, **Run now**, and **Delete**. New recurring missions land here automatically when you dispatch with **Schedule**; you can also put an existing saved mission on a timer with **Schedule a mission** (pick the mission, a cadence like `every 30m` or `0 9 * * *`, and a catch-up policy). Deleting a mission removes its schedule.
 
 This replaced the separate "Schedules" page: scheduling now lives with the missions it drives.
+
+---
+
+## Orchestration → Composer
+
+**Orchestration → Composer** is the **graph orchestrator**. A **workflow** is a stored directed graph: nodes are **stages**, edges are guarded transitions (`always`, `on_pass`, `on_fail`, `on_approve`, `on_reject`, or a custom `on_<outcome>` branch label). A **run** executes that graph one stage at a time, and a stage is normally one agent run submitted through the runtime (`research` and `group` stages are the exceptions; see **Notes**), so a "loop" is nothing more than an edge pointing back at an earlier node, and a "human gate" is a node whose `gate` is `hil`. Missions dispatch one agent; Composer dispatches a whole process.
+
+The page reads workflows from `GET /api/composer/workflows` (`useComposerWorkflows`), the run list from `GET /api/composer/runs` (`useComposerRuns`, polled every 4s), and the selected run plus its graph from `GET /api/composer/runs/[id]` (`useComposerRun`, polled every 3s). On top of that it opens an SSE subscription to `/api/composer/runs/[id]/events` via `useEventStream`, and prefers the streamed snapshot over the polled copy. The engine is `src/lib/composer/engine.ts`, driven by `ComposerTickSource` on the BackgroundScheduler and by reconcile whenever a stage's agent run goes terminal. The whole page is behind the `composer` feature flag; see **Notes**.
+
+### What you see
+
+**Header**
+- `GitBranch` icon, title "Composer".
+- Subtitle: "Graph-orchestrated, multi-stage agent workflows", then "with loops and human-in-the-loop gates".
+- Two banners can appear beneath it: a `LoadErrorBanner` when the workflow list fails to load, and a second one prefixed "Live updates: " when the SSE endpoint reports a server-side read failure.
+
+**Run / Build tabs**
+- Two tabs, **Run** (the default) and **Build**. Run launches and watches; Build is the workflow editor.
+
+**Launch form (Run tab)**
+
+`ComposerRunForm` describes itself from the *selected* workflow's start-node `config.inputSpec`, so its labels change per workflow.
+- **Orientation card:** the workflow name, an "N stages" count, the workflow description, then one chip per stage in `pos` order joined by arrows. An HIL stage's chip is yellow and titled "human-in-the-loop gate".
+- **Objective box:** a textarea whose `Field` label comes from `objectiveLabel`. The seeded **Software Delivery** workflow labels it "Feature request / bug report" and hints "e.g. Add a dark-mode toggle to the settings page, persisted per user." A workflow with no input contract falls back to the label "Objective".
+- **Examples row:** a label reading "Examples" then "click to fill", followed by one chip per example. Clicking a chip replaces the objective text.
+- **"Workflow"** select and **"Agent profile"** select. Profiles come from `/api/agent/profiles`, with "Default profile" as the first option.
+- Primary button: **"Review…"**. Disabled until the objective is at least 3 characters and a workflow is selected; while it is too short the form shows "Describe your objective (≥ 3 characters) to enable the run."
+- Once a run is selected the form collapses to a one-line bar reading **"New run"** with the active workflow's name on the right. Clicking it re-expands the form.
+
+**"Review before launch" modal**
+
+Opened by "Review…", and the second half of a deliberate two-step launch. Nothing has been submitted at this point.
+- Title: "Review before launch".
+- The workflow name and description, the objective echoed back verbatim, then a line reading "N stages · profile <name>" (or "profile default").
+- One chip per stage. Stages whose `kind` is `implement`, `build_tests` or `pr` (the `WRITE_KINDS` set) are drawn in orange and titled "This stage can modify your repository".
+- When any such stage is present, an orange warning box states "This workflow can modify your repository." and names the stages that "may write code, tests, or open a pull request."
+- Footer: **"Cancel"**, and the confirm button. With no write stages it reads **"Confirm & launch"**; with write stages it turns orange and reads "Confirm", then "includes write stages". Only this button issues `POST /api/composer/runs`.
+
+**Runs list (left column)**
+- Header "Runs", plus a status `Select` offering "All runs", "Running", "Awaiting gate", "Completed", "Failed".
+- Each row: a title derived from the run input (first non-blank line, leading `#` stripped, truncated at 60 characters), the status word colour-coded (`running` cyan, `awaiting_approval` yellow, `completed` green, `failed` pink, `cancelled` orange), and a relative timestamp.
+- Empty states: "No workflow runs yet." when there are none at all, and "No runs match this filter." when the filter hides them.
+
+**Pipeline detail (right column)**
+- Nothing selected: "Select a run to watch it live", with a second line saying stages light up as they run and that any stage can be clicked for its details.
+- Selected but the graph has not arrived yet: a spinner and "Loading run…". This is deliberately not the empty state, so a click never looks like it did nothing.
+- Loaded: a summary bar with the run title, the run status, its age, and either the run's error in pink or the hint "Click a stage for its verdict & output".
+- **`WorkflowRunCanvas`:** the same react-flow board as the builder, read-only. Each node shows its label, an `HIL` badge on a human-gated stage, an "×N" badge once `attempt` exceeds 1, then the kind, the node-run status, and the word "fail" when the verdict failed. Border and dot colour track status: `running` cyan, `completed` green, `failed` pink, with `pending` and `skipped` left neutral. The current node carries a cyan ring and a pulsing dot, and the edges leaving it animate and glow. Edge labels show the condition unless it is `always`.
+- Nodes cannot be dragged or connected here; clicking one opens the stage sheet.
+
+**The gate prompt (top right of the canvas)**
+- Shown only while the run status is `awaiting_approval` on a human-gated stage. A yellow panel reads "Gate at", then the stage label, then "your call:", with a note textarea placeholder "Optional note (e.g. what to change on reject)…" and two buttons, **"Accept"** and **"Reject"**. Both post to `/api/composer/runs/[id]/nodes/[nodeId]/approve`, carrying the note when you typed one.
+- **Clarification variant:** when the run's `context.__clarify` marker is set, the same slot shows a cyan panel with the stage's question, a textarea placeholder "Your answer…", and a **"Submit answer"** button posting to `/api/composer/runs/[id]/clarify`.
+
+**Stage side-sheet (`ComposerNodeRunDetail`)**
+- Opens when you click a node. The title is the stage label; the subtitle is the kind followed by "human gate" or "auto".
+- If the stage has not executed: "This stage hasn't run yet."
+- Otherwise: the node-run status, "attempt N" when greater than 1, and a timestamp; a **"Verdict"** block showing `PASS` or `FAIL` plus the optional outcome label, the reasons as bullets and a **"Suggestions"** list; an **"Error"** block in pink; and an **"Output"** block with the raw stage text.
+- The Output header carries a **"Save as artifact"** button, which becomes "Saving…" and then "Saved". With no output, no verdict and no error, the sheet reads "No output recorded for this stage."
+
+**Build tab (the workflow editor)**
+- Toolbar: an "Edit workflow" select (first option "+ New workflow"), a "Name" field, **"Auto-layout"**, **"Create"** or **"Save"**, and **"Delete"** for an existing workflow.
+- A "Drag to add" palette on the left offering Task, Research, Validate, Test and Group, with the hint "Drag onto the board, then handle → handle to connect."
+- Clicking a node opens the **"Stage"** inspector: "Label", "Kind", "Instruction (optional override)", "Research query (optional)" on a `research` node, "Sub-workflow" on a `group` node, a "Workflow input (Run form)" block on the start node ("Objective label", "Hint / placeholder", "Examples (one per line)", "Domain framing (optional)"), the "HIL gate", "Start" and "End" toggles, and **"Delete stage"**.
+- Clicking an edge opens the **"Route"** inspector: "Condition" (hinted as `always · on_pass · on_fail · on_approve · on_reject · on_<outcome>`), a "Label (optional)" field, and **"Delete route"**.
+
+### Typical use
+
+1. Open **Orchestration → Composer** and stay on the **Run** tab.
+2. In **"Workflow"**, pick **Software Delivery**. It is seeded on boot by `ensureDefaultComposerWorkflows()` and runs Review, Validate, Research, Hypothesise, Plan (HIL), Build tests (TDD), Implement, Test, Documentation, Open PR (HIL), Unit tests, Integration tests, Acceptance tests, Final assessment, Update PR (HIL), Done.
+3. Write the objective in the **"Feature request / bug report"** box, or click an example chip to fill it.
+4. Leave **"Agent profile"** on "Default profile" unless this run should use a specific Hermes profile.
+5. Click **"Review…"**. Still nothing has been dispatched.
+6. In **"Review before launch"**, check the workflow, the objective exactly as it will be submitted, and the stage chips. If the orange "This workflow can modify your repository." warning is present, confirm the scope is what you meant.
+7. Click **"Confirm & launch"** (or the orange confirm button when write stages are present). The run is created, the launch form collapses onto it, and the first stage dispatches immediately rather than waiting for the next tick.
+8. Watch the board. The active stage rings cyan and its outgoing edges animate; completed stages turn green and failed ones pink.
+9. When the run reaches a human gate it parks at `awaiting_approval` and the gate panel appears. Click that stage first to read what it produced, then **"Accept"** to follow the `on_approve` edge or **"Reject"** to follow `on_reject`. On Software Delivery, rejecting at "Plan" loops back to "Review" and rejecting at "Open PR" loops back to "Implement". The optional note is persisted on the approval record.
+10. Click any stage for its verdict and output, and use **"Save as artifact"** to keep a stage's text. When the run completes, its final stage output is captured automatically to **Laboratory → Artifacts**.
+
+### Notes
+
+- **This page is feature-flagged.** The flag key is `composer` and the env var is **`PS_COMPOSER`** (`src/lib/feature-flags.ts`). It **defaults to ON**: set `PS_COMPOSER=0` (or `false` / `no` / `off`) and restart, and three things happen together. The sidebar link disappears (`Sidebar.tsx` hides any link whose flag is explicitly false), the route 404s (`layout.tsx` calls `requireFeatureOr404("composer")`), and the `/api/composer/*` routes return 503 with "Composer is not enabled. Set PS_COMPOSER=1 to enable workflows." The one exception is the live stream `/api/composer/runs/[id]/events`, which carries no flag check of its own; nothing reaches it once the page 404s. The composer tick short-circuits as well, so in-flight runs simply stop advancing. Any other value, including unset, keeps it enabled.
+- **"Review…" never launches anything.** The ellipsis is the convention for a control that opens a further step. The click only opens the modal; `POST /api/composer/runs` is issued by the modal's confirm button.
+- **Assessing stages must state a verdict.** Kinds `validate`, `test`, `unit_test`, `integration_test`, `acceptance_test`, `final_assessment` and `review` are told by the stage prompt to end with `VERDICT: PASS` or `VERDICT: FAIL`. An assessing stage that emits no marker **fails**, with the reason "The stage did not report a verdict, so its result cannot be trusted." A verdict written inside a reasoning block (`<think>`, `<thinking>`, `<reasoning>`, `<scratchpad>` or `<reflection>`) does not count, and the literal instruction line "VERDICT: PASS or FAIL" is refused as a template rather than read as a pass.
+- **A failed stage cannot be approved.** If the stage crashed or its verdict failed, the engine routes `on_fail` whatever the gate says, so clicking "Accept" on a broken stage cannot carry a run to `completed` with nothing behind it.
+- **Loops are bounded.** A single stage may execute at most 5 times in one run, that is four re-runs after the first attempt (overridable per node via `config.maxAttempts`), and a run may execute at most 100 stages in total. Hitting either limit stops the run with a readable error instead of looping forever.
+- **A failure with nowhere to go fails the run.** If a stage fails or is rejected and the graph has no `on_fail` or `on_reject` edge leaving it, the run fails with the stage label and the verdict reasons, for example "Review failed: the goal is too vague". That sentence is what the pink line under the run title shows.
+- **With no Hermes gateway, runs fail at the first stage.** `dispatchComposerNode` submits each stage through the runtime; when the gateway is unreachable the node-run is marked `failed` with the transport error (falling back to "stage dispatch failed"), and the next composer tick routes that as an `on_fail`. Browsing workflows, reading past runs, and the whole Build tab work with no gateway at all. A gateway answering 429 is not failed on the spot: the submit is retried up to four times on a short linear backoff, about 12 seconds in the worst case, so a brief brush with its concurrency cap costs no attempt. A 429 that outlasts the retries still fails the stage.
+- **`research` and `group` stages do not use the agent runtime.** A `research` node drives a Deep Research run and is force-failed after 20 minutes so an interrupted one cannot wedge the workflow. A `group` node spawns its referenced workflow as a nested run, blocked from recursing into a workflow already in its own parent chain and capped at 8 levels of nesting.
+- **The stream is a convenience; the database is the truth.** A dropped socket is silent and self-healing, because polling still covers it. Only a genuine server-side read failure raises the "Live updates: " banner, and the last good snapshot stays on screen underneath it.
+- **The view is deep-linkable.** The selected workflow and run are mirrored into the URL as `?workflow=` and `?runId=` with `history.replaceState`, so a reload or a shared link lands on the same run.
+- **The unattended spend stop pauses the tick, not you.** When the operator has armed a hard spend stop and it is breached, `composerTick` refuses to advance runs on its own; approving a gate still calls the engine directly, because attended work is never blocked.
+- **Editing a workflow can destroy run history.** A save from the Build tab replaces the whole graph, so once a workflow has any past run at all, completed, failed or cancelled alike, the save returns 409 and the canvas asks first, naming how many runs, with their stage outputs and approvals, would be permanently deleted. A workflow with a run still in flight is refused outright, and told to let it finish or cancel it first.
+- **Artifact capture is idempotent and top-level only.** The automatic capture on completion (tagged `composer`) is skipped for nested sub-workflow runs, since the parent run holds the deliverable people care about. A manual "Save as artifact" is tagged `composer` and `saved`.
+- Deeper reference, including the schema tables and the full API table: [COMPOSER.md](COMPOSER.md).
 
 ---
 
@@ -667,6 +734,7 @@ For the bundled host-script catalogue (e.g. `ps-backup.sh` for a Hindsight memor
 - Skills live at `~/.hermes/skills/<category>/<name>/SKILL.md` and may have `references/`, `templates/`, `scripts/`, and `assets/` siblings.
 - **Active** is computed as "exists in `~/.hermes/skills/` AND not in the profile's `skills.disabled` list". There is no per-profile copy of a skill on disk.
 - Missions can include `recommended_toolsets` in the assembled prompt. See [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md) for the relationship between mission toolset hints and the profile's `platform_toolsets`.
+- There is a **standalone skill viewer** at `/operations/skills/<category>/<name>`, a catch-all route that renders one `SKILL.md` on its own page with a Raw/Rendered toggle, the YAML metadata, a size and last-modified subtitle, and the skill's linked files. **Nothing in the app links to it**: the Skills Manager expands a skill inline and edits it in a modal instead, so you reach the viewer by typing the URL. One URL segment per path segment; an encoded slash inside a segment is rejected with "Invalid skill path. Use the skills list to navigate."
 
 ---
 
@@ -716,12 +784,12 @@ For the bundled host-script catalogue (e.g. `ps-backup.sh` for a Hindsight memor
 ### What you see
 
 **Header**
-- Subtitle: "Hermes identities are SOUL.md files. Edit profile identity from Agents or this page."
+- Subtitle: "A personality is a profile's SOUL.md voice. Edit an existing profile's identity here; create profiles on the Agents page."
 - Active personality indicator line: "Active: <name>".
 
 **Toolbar**
-- Search (purple accent).
-- **+ New** button: opens the `EditPersonalityModal` in create mode.
+- Search only, placeholder "Search profiles...", purple accent.
+- There is **no "+ New" button, by design**: a personality IS a profile's identity, so a new one comes from creating a profile at **Operations → Agents**, not from here. This page edits the identities of profiles that already exist.
 
 **List**
 - Sorted: active first, then alphabetical.
@@ -739,15 +807,460 @@ For the bundled host-script catalogue (e.g. `ps-backup.sh` for a Hindsight memor
 
 ### Typical use
 
-1. Click **+ New** and write a system prompt: the agent's voice for this profile.
-2. Save and then click **Set as active** on the card to make it the active personality.
-3. Use **copy-to-clipboard** to grab a prompt for use elsewhere.
-4. **Edit** revises; **Set as active** is a single click and persists across the active Hermes install.
+1. Create the profile first at **Operations → Agents** if it does not exist yet; its identity appears here.
+2. Click **edit** on the card and write a system prompt: the agent's voice for this profile.
+3. Save, then click **Set as active** on the card to make it the active personality.
+4. Use **copy-to-clipboard** to grab a prompt for use elsewhere.
+5. **edit** revises; **Set as active** is a single click and persists across the active Hermes install.
 
 ### Notes
 
 - This page is for **presets**. The raw SOUL.md for a profile (its actual identity) is at **Operations → Agents**. The two are intentionally separate: presets are reusable across profiles; SOUL.md is per-profile identity.
 - Activating a personality writes through to `~/.hermes/config.yaml` on save.
+
+---
+
+## Laboratory → Insights
+
+![Insights](images/insights.png)
+
+*Insights on a fresh install: the 7d / 30d / 90d range switch, the first-run "No activity yet" card, the four-tile metric strip (interactions, active days, tokens, achievements out of 36) and the provider spend panel with all three periods at zero. Everything below the spend panel is out of frame.*
+
+**Laboratory → Insights** (`/laboratory/insights`) is the analytics and achievements workbench. Everything on it is recomputed at read time from three sources: the `analytics_events` interaction log (`GET /api/analytics`, `GET /api/analytics/timeseries`, and the composed bundle at `GET /api/analytics/insights?days=N`), the `runs` and `missions` tables that the same bundle mines for durations, per-model tokens and top missions (`src/lib/analytics/run-aggregates.ts`), and the dashboard stats (`GET /api/stats`, which supply the streak, the 91-day run heatmap, the token total and the achievement list). No figure on this page is stored as its own record, so the page starts empty on a fresh install and fills in as you use PatterStage. The analytics and achievements are read-only; the one control here that writes anything is the budget field inside the provider spend panel. The page component is `src/app/laboratory/insights/page.tsx`; the achievement definitions live in `src/lib/stats/derive.ts`.
+
+### What you see
+
+**Header** (`PageHeader`)
+- Title "Insights", subtitle "Interaction analytics & achievements".
+- A range switch on the right with three buttons: "7d", "30d", "90d". Default is 30.
+- The range drives `useAnalyticsTimeseries(undefined, days)` and `useInsights(days)` only. The "Interactions" tile, the donut, the heatmap, the streak, the token tile, the spend panel and the achievements ignore it, and so does the *value* under "Active days" despite its label. See the Notes.
+
+**Load and error states**
+- While the first stats poll is in flight: a spinner reading "Loading insights…".
+- On any failure from stats, summary or the insights bundle: a `LoadErrorBanner` carrying the hint "Analytics start empty and fill in as you use PatterStage." Its retry re-fetches stats and the analytics summary; the insights bundle is not re-fetched by that button and refreshes on its own poll.
+- First run, when no events have been recorded at all: a card headed "No activity yet", body copy suggesting you dispatch a mission, write a Story Weaver chapter or fire a schedule, and a "Go to Missions" link pointing at `/orchestration/missions`.
+
+**Metric strip**
+- `StreakFlame`: the current streak in days plus "best N" underneath. At a streak of 0 the flame is grey and unlit; it is cyan at 1 to 2 days, yellow from 3, orange from 7. Its tooltip reads "Current streak: N day(s) · Best: M".
+- Four tiles: "Interactions" (all-time event count), "Active days (30d)" where the number in the label follows the range switch, "Tokens", and "Achievements" showing unlocked over total, for example `0/36`. Tile labels and card titles are set in capitals by the stylesheet, so on screen they read "INTERACTIONS", "ACTIVE DAYS (30D)" and so on.
+- There is no operator level or XP bar on this page. ADR-0004 moved level onto the agent profile, so it now lives with the agent that earned it at [Operations → Agents](#operations--agents).
+
+**Provider spend**
+- A spend panel sits between the metric strip and the charts. It runs on calendar periods of its own and does not follow the 7/30/90 switch, and its budget field is the only write on the page. The guide has no walkthrough section for it; the reference is [SPEND.md](SPEND.md).
+
+**Charts, first row**
+- **Activity by category**: a stacked area of daily event counts per category over the selected range, with a colour legend beneath it. The on-screen title appends a dash and "last N days" for the selected window. The six categories are Missions, Stories, Sessions, Automation, Config and Chat, folded from the 14 event types by `categoryForEventType` in `src/lib/analytics/categories.ts`. The card falls back to a single cyan area chart of raw daily event volume whenever the bundle has no non-zero category value, which also covers the moments when the bundle has not loaded or has errored.
+- **By category (all-time)**: a donut with the total event count in the middle over the word "events", and a per-category list with counts. Empty state: "No activity recorded yet."
+
+**Charts, second row**
+- **When you work (hour of day)**: a 24-spoke radial clock. A longer spoke means more activity in that hour.
+- **Run duration**: a histogram of completed run durations in seven fixed bins, "<5s", "5–15s", "15–30s", "30–60s", "1–2m", "2–5m" and "5m+", defined by `DURATION_BUCKETS` in `src/lib/analytics/run-aggregates.ts`.
+- **Mission success trend**: completed against failed missions per day, green for "completed" and pink for "failed", with a legend using those two words.
+
+**Charts, third row**
+- **Tokens by model**: a ranked list of models by total tokens over the range, each row subtitled with an estimated dollar cost from `estimateCost`. Empty state: "No data yet."
+- **Top missions**: your missions with the most *completed* runs over the range, at most 6, formatted as "1 run" or "N runs" with a token subtotal.
+
+**Run activity heatmap**
+- A GitHub-style contribution grid whose title carries the last-91-days window, with a summary on the right of the title reading "N active days · M runs" and the tooltip "Days with at least one run · total runs in the window".
+
+**Achievements** (`AchievementShowcase`)
+- Header row: a points chip reading "earned / total pts", per-tier chips rendered as a capitalised initial plus unlocked over total (`L0/7` legendary, `E0/9` epic, `R0/14` rare, `C0/6` common; hidden on narrow screens), and a progress readout "unlocked/total · percent".
+- Collapsed by default into a trophy case: "Rarest earned" (up to 5 unlocked, rarest first) and "Closest to unlock" (up to 4 locked badges with the highest progress). Only locked badges whose progress is above zero qualify, so on a fresh install the "Closest to unlock" row does not appear at all.
+- Before anything is unlocked, the compact view reads "No achievements unlocked yet" followed by a prompt to dispatch a mission or weave a story.
+- A toggle at the bottom reading "Show all 36" expands the full grid, with filter buttons rendered as "All", "Unlocked" and "Locked". Expanded, the toggle reads "Show less".
+- Locked badges carry a padlock glyph and, once progress is above zero, a progress bar. Hovering a badge in "Closest to unlock" or in the expanded grid gives its name, a dash, its description, and then a tick when unlocked or a `current/target` count when locked. The "Rarest earned" chips are a different component: their tooltip appends the tier and the points instead of a tick.
+
+### Typical use
+
+1. Use PatterStage normally for a while: dispatch a few missions, write a Story Weaver chapter, create and fire a schedule. Nothing on this page is worth opening until events exist.
+2. Open **Laboratory → Insights**. If the first-run card is still showing, no events have been recorded yet; click **Go to Missions** and dispatch one.
+3. Pick a window with **7d**, **30d** or **90d**. The stacked area, the hour clock, the duration histogram, the success trend, "Tokens by model" and "Top missions" all re-query at that range.
+4. Read the strip for the headline numbers, then use **Mission success trend** and **Run duration** to answer the two questions that usually matter: are runs failing, and are they getting slower.
+5. Check **Tokens by model** and **Top missions** to see which mission and which model are consuming the tokens.
+6. Expand the achievements case with **Show all 36** and filter to **Locked** to see what is close. Progress is recomputed on every poll, so there is nothing to save or claim.
+7. Leave the tab open if you are watching a run land. The analytics queries poll every 30 seconds and the stats query every 20 seconds; no manual refresh exists on this page apart from the error banner's retry.
+
+### Notes
+
+- **Route and nav.** The page is `/laboratory/insights`, under the **Laboratory** sidebar group, alongside Deep Research and Artifacts. It is registered in `src/lib/modules/registry.ts` as the laboratory module's first nav link. There is no `/insights` route; an earlier version of this guide filed the page under **Main** and gave that path, and both were wrong.
+- **"Active days" does not follow the range switch.** The label is built from the selected range, but the value comes from `getAnalyticsSummary()`, which is hard-coded to `distinctActiveDays(30)`. Switch to 7d or 90d and the label changes while the number stays a 30-day figure.
+- **"Tokens" is a 91-day figure.** The tile reads `stats.runs.totalTokens`, and the stats repository only selects runs with `submitted_at >= datetime('now', '-91 days')`, summing usage across every one of them regardless of status. It is neither all-time nor tied to the range switch.
+- **The hour-of-day tooltip overstates its window.** It says all-time, but the bundle calls `countByHourAllTypes(n)` with the selected range. The "all types" in that function name refers to event types, not to time.
+- **"Tokens by model" is structurally incomplete.** The model dimension lives on the mission, so `getModelUsage` reads runs joined to their mission and any run without one, chat runs included, is excluded. Do not treat this card as a billing total; the spend panel is the number to trust for money.
+- **The heatmap counts completed runs, not events.** `runActivity` is built from runs whose status is `completed`, bucketed by `completed_at`. Activity that never produces a run is what pulls the two apart: skill toggles, personality changes and Story Weaver chapters (`src/modules/rec-room/handlers/generate.ts` records its event and creates no run) can fill the donut and leave the heatmap cell empty. Chat is not an example of this, because `dispatchChatTurn` does create a run.
+- **Events are written server-side only.** `/api/analytics` exposes `GET` and deliberately no `POST`; events are emitted by `recordEvent()` inside the server. A client cannot forge achievement progress.
+- **Achievements are derived, never stored.** `ACHIEVEMENT_DEFS` currently holds 36 definitions across missions, stories, sessions, automation, config, chat, tokens, streaks, timing and breadth, and `evaluateAchievements` recomputes every one of them from raw metrics on each stats poll, one achievement per definition. The strip renders `unlocked/achievements.length` over that derived list, so the denominator moves if definitions are added. Points come from the tier: common 10, rare 25, epic 50, legendary 100.
+- **The unlock toast fires on the Dashboard, not here.** `CommandCenter` is the sole owner of `useAchievementUnlocks` and shows the trophy toast; this page intentionally does not use that hook, so the grid never double-fires it. The first poll after a page load seeds the baseline silently, and each achievement id toasts at most once per mount.
+- **Achievement scope.** Story Weaver achievements carry `scope: "recroom"` and are excluded from an agent's own progression record, per ADR-0004. They still appear in this grid.
+- Full reference for the event catalogue and the aggregate queries is in [ANALYTICS.md](ANALYTICS.md).
+
+---
+
+## Laboratory → Insights: provider spend
+
+**Laboratory → Insights: provider spend** is the money panel on the Insights page (`/laboratory/insights`). It is not a separate route: `SpendPanel` (`src/components/spend/SpendPanel.tsx`) renders inside the Insights page directly under the streak / headline-metric card, and it is on screen by default with nothing to enable. LLM provider spend is the only thing in PatterStage that costs money, and this panel is the product's one budget-shaped answer about it.
+
+Its data comes from `GET /api/spend`, which returns the read-model built by `getSpendSummary()` in `src/lib/spend/spend-summary.ts` under a `{ spend: … }` envelope. Agent runs and Composer stages are mined from rows the database was already writing before the feature existed: `runs.usage_json` (the token counts the runtime reports, stamped on reconcile) and the `model_id` on the linked mission. That "no new tracking" rule, set out in the header of `src/lib/spend/spend-repository.ts`, covers those two sources only. Deep Research was not recoverable at all until T-0030 added the tracking: migration `034_research_usage.sql` added `prompt_tokens`, `completion_tokens` and `total_tokens` to `research_runs`, `accumulateUsage()` (`src/lib/laboratory/deep-research/usage.ts`) totals a run's calls, and `run-job.ts` persists the total. The hook is `useSpend()` (`src/hooks/useSpend.ts`), which re-reads on a 30s interval, matching the analytics queries on the page (`useStats` runs at 20s).
+
+Nothing here is billed data. Costs are **estimated** by pricing recorded token counts against a static per-model rate table, `src/lib/analytics/model-cost.ts`.
+
+### What you see
+
+**Header**
+- A wallet icon and the title **Provider spend** (the heading is CSS-uppercased, so on screen it reads PROVIDER SPEND).
+- An info icon whose tooltip reads: "Estimated from the token usage already recorded against each run. Prices are the published per-model rates, so treat this as an estimate, not an invoice."
+- Before the summary arrives (and while it is failing to arrive), the whole panel is replaced by the placeholder **"Loading provider spend…"**. On a cold load you see the page's own **"Loading insights…"** spinner first: the whole page body is gated on `useStats`, so the spend panel is not on screen at all until the dashboard stats resolve.
+
+**Period totals (three tiles, always on screen)**
+- **Today**, **This week**, **This month**, each a dollar figure formatted by `formatUsd` (`$0.00`).
+- These are **calendar** periods in **UTC**, not rolling windows, computed by `periodStart()` in `src/lib/spend/spend-law.ts`. The week starts on **Monday**. The reasoning is in the file: someone who types "40 dollars a month" means the month, and a rolling 30 day window would put him over budget on a day he had spent nothing, with no date on which it resets.
+- The tiles do **not** follow the 7d / 30d / 90d range switch in the Insights page header. A budget is a calendar month, not a window.
+
+**Source breakdown (one line per source)**
+The list below the tiles splits **one** period, the period the budget covers (`summary.budgetPeriod`, which is `month` on a fresh install because that is the seeded default). The three sources come from `SPEND_SOURCES`:
+- **Agent runs**: a `runs` row with **no** `composer_node_run_id`. Tokens from `usage_json`, model from `missions.model_id` where a mission is linked.
+- **Composer stages**: a `runs` row that **has** a `composer_node_run_id`. The source is decided by that column alone, not by whether a mission is attached. The join to `missions` in `src/lib/spend/spend-repository.ts` is a deliberate `LEFT JOIN`, so a stage run with no mission still comes through, carrying a null model.
+- **Deep Research**: a `research_runs` row, priced from its own token columns since migration `034_research_usage.sql`.
+- Each line reads `<N> run<s> · $X.XX`. A source that recorded nothing would read **"cost not recorded"** rather than a confident `$0.00`, on the principle that an honest blank beats a number that is not true. Since migration `034` all three sources do record, so you will not normally see it; spend that genuinely cannot be priced is reported in the exclusion note instead (see **Notes**).
+
+**The exclusion note**
+- When the budget period contains Deep Research runs whose `prompt_tokens` **and** `completion_tokens` are both NULL, a faint line appears underneath the source list: "N Deep Research runs in this period predate token recording, so their costs are not counted in the totals above."
+- The one-run form changes the verb and the possessive too: "1 Deep Research run in this period predates token recording, so its cost is not counted in the totals above."
+- The count is taken from the budget period only, not from all three tiles. When there is nothing to exclude, the line is absent entirely.
+
+**The budget meter (only when a figure is set)**
+- A line reading `<Today | This week | This month> against $X.XX` on the left and the percentage on the right, rounded and capped at 100%.
+- A bar underneath. It is green normally and **pink** once `verdict.breached` is true, which happens at exactly 100%, not only past it.
+- With no budget set there is no meter, no percentage and no colour, however much has been spent.
+
+**Warning and hard stop banners**
+- **Warning** (orange, `AlertTriangle`): shown when spend has **reached or passed** the figure and the hard stop is off. Text: "$X of the $Y you set for this month is spent. Nothing has been stopped: your hard stop is off."
+- **Hard stop** (pink, `ShieldAlert`): shown when spend has reached or passed the figure and the hard stop is on. Text: "Hard stop: $X of the $Y you set for this month is spent, so unattended dispatch is paused until the month rolls over or you raise the figure. Dispatching by hand still works."
+- Both sentences substitute the period noun, so a `day` or `week` budget reads "this day" / "this week" and "until the day / week rolls over".
+- Only these two states render a sentence. See the note about the 80% line below.
+
+**The budget control (one line until you open it)**
+- A toggle button reading **"Set a budget (optional)"** when no figure exists, or `Budget: $40.00 per month` (with `, hard stop on` appended when armed) when one does.
+- Clicking it opens the form:
+  - Label **"USD per"**, then a period `<select>` with the options **day**, **week**, **month**.
+  - A text field (`inputMode="decimal"`) whose placeholder is **"no budget"**.
+  - A checkbox labelled: "Hard stop: pause unattended dispatch when this figure is passed. Off by default. Scheduled runs, the queue and Composer wait; dispatching by hand always works." It is **disabled** while the figure field is empty or blank.
+  - The validation message, on a bad figure: **"Enter a positive number of US dollars, or leave it blank for no budget."**
+  - A **"Save budget"** button, which is disabled and reads **"Saving…"** while the `PUT` is in flight.
+
+### Typical use
+
+1. Open **Laboratory → Insights**. The **Provider spend** panel sits just under the streak and headline-metric card.
+2. Read the three tiles for the shape of your spend, then the source lines to see which of **Agent runs**, **Composer stages** or **Deep Research** is producing it.
+3. Click **"Set a budget (optional)"** to open the form.
+4. Choose a period in the select (**day**, **week** or **month**) and type a positive number of US dollars in the field beside it.
+5. Leave the hard stop checkbox **unticked** for a budget that only warns. This is the recommended starting point and the shipped default.
+6. Click **"Save budget"**. The panel `PUT`s to `/api/spend` and then re-reads the summary rather than patching its own state, so the meter and verdict you see are the server's, not a local guess.
+7. Later, if you want unattended work to actually pause at the ceiling, reopen the form and tick the hard stop, then save again.
+8. To remove the budget entirely, clear the figure field and save. The panel's `save()` sends `hardStop: false` alongside `limitUsd: null`, so clearing the figure disarms the stop in the same write, and `PUT /api/spend` forces the same pairing again server-side. You are back to the shipped state.
+
+### Notes
+
+- **It is an estimate, not an invoice.** `estimateCost()` prices tokens at USD per 1M against the substring-matched `RATES` table in `src/lib/analytics/model-cost.ts` (longest matching key wins, so `gpt-4o-mini` beats `gpt-4o`). The table is static and real provider prices change. Treat the figure as the right order of magnitude and your provider's own dashboard as the truth.
+- **Unknown is never free.** A model id that matches nothing in the table resolves to `DEFAULT_RATE`, which is deliberately non-zero (`$1` per 1M input, `$3` per 1M output). Every **Composer stage** takes this path, because a stage run has no mission and therefore no model to price against. Deep Research runs with a null `model_id` (which means the Hermes default model) take it too.
+- **Deep Research from before migration `034` stays out of the totals and is declared instead.** Those runs keep NULL token columns. `foldResearch()` counts them in the line's run count, skips them in the priced total, and reports them through `unmeasured`, which is what the exclusion note renders. NULL is not zero: NULL means the cost is unknown, and folding an unknown in at zero would take a real cost and paint it as free. The note empties itself as those runs age out of the period, with no suppression needed. A run that **crashes mid way** records nothing either: `run-job.ts` deliberately omits `usage` on the throw path because the engine never returned a total. A run that merely *failed* with usage in hand, such as one whose search backend was down, does record it.
+- **Every run status counts, not just successes.** `readRunUsageSince()` filters on `usage_json IS NOT NULL` and the time window, nothing else, and `readResearchUsageSince()` filters on the time window alone. A run that failed after burning tokens still cost money. Two corollaries: the run counts on the **Agent runs** and **Composer stages** lines are runs that recorded usage rather than all runs, and a run whose `usage_json` will not parse is skipped rather than guessed at; while the **Deep Research** count is every `research_runs` row created in the window, pending, running, cancelled and failed alike.
+- **A figure on its own only warns. Nothing is blocked by a budget alone.** That is clause 3 of the design in `spend-law.ts`, and it is the default.
+- **What the hard stop blocks: exactly three unattended callers.** `checkUnattendedSpend()` in `src/lib/spend/spend-guard.ts` is imported by precisely three files, all of them on the BackgroundScheduler: the schedule tick (`src/lib/orchestration/scheduler/tick.ts`), the queued-mission drain (`src/lib/missions/mission-queue-tick.ts`), and the Composer tick (`src/lib/composer/engine.ts`). Its refusal sentence is not the panel's banner; it reads "Hard spend stop: $X of the $Y budget for this month is already spent. Unattended dispatch is paused. Dispatching by hand still works."
+- **What the hard stop does not block: anything a human clicks.** Attended dispatch never consults the guard. Dispatching a mission by hand, running a mission or schedule now, approving a Composer gate and starting a Deep Research run all behave identically whether the budget is unset, breached or armed. This is held as source level fact, not just convention: `tests/unit/spend-unattended-dispatch.test.ts` reads `src/lib/orchestration/dispatch.ts`, `src/lib/missions/mission-dispatch.ts`, `src/app/api/missions/[id]/dispatch/route.ts`, `src/app/api/missions/[id]/run/route.ts`, `src/app/api/schedules/[id]/run/route.ts`, `src/app/api/composer/runs/[id]/nodes/[nodeId]/approve/route.ts` and `src/app/api/laboratory/research/route.ts` and asserts that none of them so much as mentions `spend-guard`. A human clicking dispatch is answering for the spend himself.
+- **A stop is a pause, not a cancellation.** Nothing is failed, cancelled or dropped. The scheduler checks the guard **before** `getDueSchedules()`, so a blocked tick does not advance `next_run_at` and does not consume the occurrence: the schedule fires on the first tick after the period rolls over or you raise the figure. The queue tick leaves the mission exactly where it is, still queued and still dispatchable by hand. In Composer only the tick is gated; `advanceComposerRun()` itself is not, which is what makes an approved gate still move a workflow forward and is the difference between "paused" and "stuck".
+- **The two database-failure directions are deliberately asymmetric.** If the **policy** read fails, unattended dispatch is **allowed**: there is no evidence a stop was ever armed, and refusing would break every install that never set a budget. If the **spend** read fails while a stop **is** armed, unattended dispatch is **refused**, with the reason "Hard spend stop is on, but this period's spend could not be measured, so unattended dispatch is paused. Dispatching by hand still works." You asked for a ceiling and the system cannot show it is under it. A delayed run is the cheap mistake. Note that the summary the console draws takes the opposite posture on purpose: every read there is wrapped in `safeRead` and degrades to zeros so a mid-migration database yields a quiet page rather than a broken one.
+- **A blocked tick is not an error.** `ScheduleTickSource.sync()` returns `success: true` and carries the refusal in the `error` field so monitoring surfaces can say why nothing is firing instead of reporting a wedged scheduler.
+- **A stop cannot exist without a figure**, in four places. The checkbox is disabled with an empty field; the panel's `save()` and `PUT /api/spend` both force `hardStop: false` when the figure is cleared, and `PUT` answers **"Set a budget figure before switching the hard stop on"** when you try to arm one without a figure; migration `033_spend_policy.sql` carries `CHECK (hard_stop = 0 OR limit_usd IS NOT NULL)`; and `evaluateSpend()` checks `limitUsd` first, so even a pair that somehow reached the law returns `unset` and cannot block. A stop with no ceiling would refuse every unattended dispatch forever with no number anybody could raise.
+- **Where the setting lives.** The `spend_policy` table, one row, `id = 1`, added by migration `033_spend_policy.sql` and seeded `INSERT OR IGNORE` with `limit_usd = NULL`, `period = 'month'`, `hard_stop = 0`. It is a user setting, so it sits in the database with your data rather than in a file you edit by hand. `writeSpendPolicy()` writes every changed field in one `UPDATE`, so the pair the database forbids never exists even for a statement.
+- **The API.** `GET /api/spend` returns the whole summary: three periods, three sources each, plus `budgetPeriod`, `budgetSpentUsd`, your policy, the verdict, the `unmeasured` sentences and `generatedAt`. `PUT /api/spend` accepts `limitUsd` (a positive number, or `null` to remove it), `period` (`day`, `week`, `month`) and `hardStop` (boolean); it rejects a bad figure with **"Budget must be a positive number of US dollars, or null to remove it"**, a bad period with **"Period must be one of: day, week, month"**, a non-boolean stop with **"hardStop must be true or false"**, and an empty body with **"Nothing to change: send limitUsd, period or hardStop"**.
+- **Both verbs are authenticated; only `PUT` is refused in read-only mode.** Authentication is not a per-route matter here: `src/proxy.ts` is the one authentication boundary and runs before every handler, and its `PUBLIC_PATHS` set contains only `/api/health`. The `requireAuth()` call at the top of `PUT` does **not** authenticate anything, despite the name: it is `requireNotReadOnly()`, and it returns a 503 when `PS_READ_ONLY=true`. `GET` has no such call, so the spend read still works on a read-only install.
+- **The 80% line is in the data, not on the screen.** `SPEND_WARN_FRACTION` is `0.8` and `evaluateSpend()` returns an `approaching` state with a sentence at that point, but `SpendPanel` renders a sentence only for `over`. Between 80% and 100% you get the meter reading 80% or more and nothing else. `docs/SPEND.md` disagrees: it promises "a meter, a quiet nudge at 80 percent, and a plain sentence when you pass it", listing the nudge as a third thing beside the meter and the sentence. There is no such nudge in the panel today, and the doc is the side that is wrong.
+- **A failed spend fetch is silent on this page.** The Insights page composes its `LoadErrorBanner` from the stats, analytics and insights errors only; `useSpend()`'s error (`"Failed to load provider spend"`) is not consumed. When the fetch fails, `spend` is undefined and the panel simply keeps showing **"Loading provider spend…"**. If the panel never resolves, check `GET /api/spend` directly rather than waiting.
+- **There used to be a headline spend tile on this page and it was wrong.** The old **"Est. spend"** tile in the headline strip summed a query that inner-joins missions, so every Composer stage run was missing from it, and it was drawn over the 7/30/90 range switch, which is not a period anybody budgets in. It was removed as part of this work. Note that the **Tokens by model** card lower down the page still prints a per-model `$X.XX` from that same mission-joined aggregate over the selected range; this panel, not that card, is the budget-shaped number.
+
+---
+
+## Laboratory → Deep Research
+
+**Laboratory → Deep Research** (`/laboratory/research`) is PatterStage's own
+research agent. You give it a question and it runs an iterative loop, producing a
+cited Markdown report you can read in the app, copy, or open as a standalone HTML
+page. It depends on no external research service: inference goes through the same
+`callLLM` the rest of the app uses (`src/lib/llm.ts`), and web search goes
+through the shared search module (`src/lib/search/`). Runs, their steps and your
+saved presets all live in the local database (`research_runs`, `research_steps`,
+`research_presets`), read back through `/api/laboratory/research`,
+`/api/laboratory/research/[id]` and `/api/laboratory/research/presets`. The model
+dropdown is filled from `/api/models`, the same registry behind **Config → Models**.
+
+A run is not one prompt. The engine
+(`src/lib/laboratory/deep-research/engine.ts`) walks a loop:
+
+1. **Plan.** The model is asked for sub-questions, the evidence that would settle
+   each, and one opening search query on a `QUERY:` line.
+2. **Rounds** (`Depth`, default 3). Search the current query, visit and read the
+   top results, then reason over that evidence plus every prior round's notes.
+   The loop goes round again only when that reasoning carries a `NEXT QUERY:`
+   line and the word `DONE` appears nowhere in it, so a question that is answered
+   in round one does not burn three.
+3. **Synthesize.** One final call writes the report from the plan, the notes and
+   the deduplicated source list, under a fixed section skeleton: `## In brief`,
+   Executive summary, Key findings, Evidence & analysis, Open questions /
+   limitations, Conclusion, with `[n]` citations on the sentences they support.
+
+Every step is written to `research_steps` as it lands, which is what makes the
+timeline replayable rather than a log that scrolls past.
+
+### What you see
+
+**Header**
+- Telescope icon, title "Deep Research", subtitle: "Provider-flexible iterative
+  research → an interactive, cited report".
+- A banner if the runs list fails to load, and a second one prefixed
+  "Live updates: " if the live event stream reports a failure. The second is not
+  fatal: the run detail keeps showing the last snapshot the stream did deliver,
+  and falls back to the polled copy only if no snapshot ever arrived. A socket
+  that merely drops raises no banner, because polling already covers it.
+
+**Launch form** (the cyan card at the top)
+- **Research question**: a three-row textarea, placeholder "e.g. What are the
+  trade-offs between SQLite and Postgres for a self-hosted app?".
+- **Model**: first option "Agent default model"; below it one option per
+  registered model, labelled `<name> · <provider>`. Read the note on model
+  selection below before you change it.
+- **Search**: "DuckDuckGo (free)", "SearXNG (local)", "No web (model only)".
+- **Depth**, hinted "rounds": a number input, 1 to 8, default 3. This is how many
+  search/read/reason iterations the loop may spend.
+- **Breadth**, hinted "results/query": a number input, 1 to 12, default 6. This is
+  how many results each search asks for. Both are clamped in the browser and
+  validated again by the route's zod schema, so a hand-crafted request cannot
+  exceed them either.
+- **Presets**: a dropdown that always reads "Load preset…" and applies on
+  selection, a text input placeholder "Save current as…", and a **Save** button
+  that stays disabled until you type a name.
+- **Start research**: the primary button. Disabled until the question is at least
+  three characters; while it is disabled a line under it reads "Enter a research
+  question (≥ 3 characters) to start."
+
+**Runs** (left column)
+- Heading "Runs", then the 50 most recent runs, newest first.
+- Each row shows the first non-blank line of the question and the status below
+  it, coloured from the theme tokens: `pending` muted grey, `running` cyan,
+  `completed` green, `failed` pink, `cancelled` orange. In practice only the
+  first four ever appear. `cancelled` exists in the status type and in the
+  stream's terminal set, but nothing in the engine, the job runner, the API or
+  the UI ever sets it.
+- Empty state: "No research runs yet."
+
+**Run detail** (right column)
+- Empty state: "Select a run to read its report, sources, and timeline."
+- With a run selected: the full question, the status, and the run's `error` text
+  in pink when there is one, then the report itself (`ResearchReport`).
+- **Actions**, shown only when the run is `completed` and has a report: **Copy**
+  (copies the raw Markdown; the button reads "Copied" for a second and a half),
+  **View report** (opens the standalone HTML export in a new tab), and
+  **Download** (the same export, saved as `research-<first 8 of the run id>.html`).
+  A run that the search-down path below marked `failed` still carries a report and
+  still renders it, but gets none of these three buttons.
+- **In brief**: a cyan band above the report, lifted out of the report's leading
+  `## In brief` bullets. A report that does not have one renders no band.
+- **On this page**: a navigator of the report's `##` headings, rendered only when
+  there are at least four of them (`NAV_MIN_HEADINGS`).
+- The report prose, with every `[n]` rendered as a link down to the numbered
+  source.
+- **Sources (N)**: the numbered list the citations point at, each row showing the
+  host as a link and the full URL underneath.
+- **Research timeline**: a stepper of every persisted step, labelled Plan, Search,
+  Read, Reason, Synthesize (a `visit` step displays as "Read"). Each row is a
+  collapsed `<details>` holding that step's raw output; while the run is live the
+  last row is open, the rail animates and a "working…" row pulses at the bottom.
+  While a run with no report yet is `pending` or `running`, the body reads
+  "Researching…"; a `failed` run that never produced one shows its error line
+  above an empty body instead.
+
+### Typical use
+
+1. Type a question into **Research question**. One clear question does better
+   than three stapled together, because the plan step turns it into
+   sub-questions for you.
+2. Leave **Model** on "Agent default model". Picking a registered model is
+   recorded on the run but is not honoured at run time today (see the note
+   below), so the inference goes to the Hermes gateway default either way. Leave
+   **Search** on "DuckDuckGo (free)" unless you run your own SearXNG.
+3. Set **Depth** and **Breadth**. 3 and 6 are a sensible first run: more depth
+   costs more tokens and more wall-clock, and the loop may stop early anyway.
+4. Click **Start research**. The question box clears, the new run is selected for
+   you, and its status moves `pending` to `running`.
+5. Watch the **Research timeline** fill in. Steps arrive over SSE
+   (`/api/laboratory/research/[id]/events`), with polling as the fallback, so
+   progress shows even if the stream drops.
+6. When the status turns `completed`, read **In brief** first, then the prose.
+   Click any `[n]` to jump to that source and check it yourself.
+7. Use **Copy** to paste the Markdown elsewhere, or **View report** / **Download**
+   for the self-contained HTML page.
+8. If the settings were good, type a name into "Save current as…" and click
+   **Save** to keep them as a preset.
+
+### Notes
+
+- **What it actually needs.** A model and a web-search provider. Inference
+  resolves through `callLLM`, which uses the Hermes gateway default unless it is
+  handed a registry row id; see the next note for why this page never hands it
+  one. The search default is **DuckDuckGo**: free, keyless, zero configuration,
+  and what a fresh install uses. "SearXNG (local)" needs `PS_SEARXNG_URL` pointed
+  at your own instance; if that variable is empty, `resolveSearchProvider()`
+  quietly falls back to DuckDuckGo, so you get results but not the private ones
+  you asked for. "No web (model only)" wires in a provider that returns nothing,
+  on purpose.
+- **Choosing a model does not currently change the model.** This is a known
+  defect, not a design. The dropdown gives each option the provider model string
+  (`m.modelId`) as its value, but `callLLM` resolves what it is handed through
+  `getModelWithKey()`, which looks the registry row up by primary key. Row ids
+  are generated uuids and never equal a `model_id` like
+  `anthropic/claude-sonnet-4`, so the lookup always misses and the call falls
+  through to the Hermes gateway under the model name `hermes`, exactly as if you
+  had left the dropdown alone. Every other model picker in the app passes the row
+  id instead. Your choice is still recorded, and two surfaces read as though it
+  took effect, because both read `research_runs.model_id`: the HTML export's meta
+  line prints the model you picked, and **Provider spend** prices the run at that
+  model's rate.
+- **When search fails, the report says so.** This is the page's most important
+  behaviour. The engine tolerates a search that finds nothing: it keeps going,
+  and the synthesize step is told there were no external sources and instructed
+  to answer from the model's own knowledge and say that it did. You get a report
+  with an empty Sources panel and prose that admits it is ungrounded, rather than
+  a confident, cited-looking report you cannot tell from a real one. Both shipped
+  providers return an empty list rather than throwing when the network is down,
+  so an outage usually arrives as "found nothing". If a provider does throw on
+  every attempt in a run, `run-job.ts` refuses to call that `completed`: the run
+  is marked `failed` and carries the error "Search provider unavailable: all N
+  search attempt(s) failed. The report below was written without any external
+  sources, so its claims are ungrounded." A search that legitimately returned
+  zero results is not that case and still completes.
+- **A round that found nothing records no Search step**, because the engine only
+  persists one when there were results. The timeline can therefore jump from Plan
+  straight to Reason, which is itself the signal that search came back empty.
+- **Cost, and where it shows up.** Since migration `034` a run sums the token
+  usage of every LLM call it makes (the plan, one reason per round, the
+  synthesis) and stores it on `research_runs`. That cost is priced and shown in
+  the **Provider spend** panel on **Laboratory → Insights**; the full reference is
+  [SPEND.md](SPEND.md). Nothing about tokens is shown on this page. Three caveats
+  the code is deliberate about: runs that finished **before** that migration have
+  NULL token columns and are declared as unmeasured rather than folded into the
+  totals at zero; a run that **crashes mid-way** records nothing at all, because
+  the tokens it burned are genuinely unknown and writing 0 would report a burned
+  run as free; but a run that fails the search-down path above **does** record its
+  usage, because it still spent those tokens.
+- **Visits per round is not on the form.** `ResearchConfig.visitsPerRound` (top
+  pages actually fetched and read per round, default 2, accepted range 0 to 6) is
+  part of the config and is saved into presets, but the launch form has no
+  control for it. Every run started from this page therefore attempts the top 2
+  results per round, and reads fewer when a page is unreachable, refused by the
+  SSRF guard, not HTML, or slower than the 12-second budget. Only the API can
+  create a preset carrying a different value, but once you load one the form will
+  write that value into the next preset you save from it.
+- **The in-app view does not show how a past run was configured.** The model,
+  provider and depth appear only in the meta line of the HTML export
+  ("Model: agent default", "Search: duckduckgo", "Depth: 3 rounds",
+  "Completed: ..."). The config is stored on the run either way
+  (`research_runs.config_json`).
+- **Presets** save whatever is in the form right now, and loading one merges it
+  over the built-in defaults. There is no delete button on this page:
+  `DELETE /api/laboratory/research/presets?id=` exists but nothing in the UI
+  calls it.
+- **There is no cancel button.** The job is fire and forget, so a crashed or
+  restarted process would leave a row stuck `running` forever. Boot recovery
+  (`failStuckResearchRuns()`, wired in `src/instrumentation.ts`) sweeps every row
+  still marked `running` that was created more than 30 minutes ago, including
+  the ones a Composer node spawned, and fails each with "Research run was
+  interrupted or exceeded the maximum runtime.", so the page stops spinning.
+  Rows in any other status are left alone.
+- **Every report the engine returns is also captured as an artifact**, tagged
+  `report` and `research`, so it turns up on **Laboratory → Artifacts**. That
+  includes a run the search-down path marked `failed`, because the capture sits
+  after the status write and is not conditional on it; only a run that threw
+  outright is never captured. The capture is best-effort and idempotent: a
+  failure there is logged and never fails the run.
+- **The report is rendered defensively.** A zero-dependency Markdown renderer
+  (`markdown.ts`) escapes the model's output and emits a fixed tag set, and only
+  `http(s)` URLs become links, in the prose and in the Sources list alike. A
+  source whose URL is not `http(s)` keeps its number and its text but is not
+  clickable, because dropping it would renumber every citation after it.
+  `visitPage` checks every URL and every redirect hop against an SSRF guard,
+  caps the text it extracts, and gives up after 12 seconds.
+- **Composer orchestrates research, not the reverse.** `research` is a Composer
+  node kind, so a workflow can run a research run as one stage
+  (**Orchestration → Composer**). That is why there is no "launch as a workflow"
+  action on the report.
+
+---
+
+## Laboratory → Artifacts
+
+**Laboratory → Artifacts** is the registry of deliverables your agents produced. An artifact is one output body from one run: a Deep Research report, a completed Composer workflow's final stage output, a finished Mission's result text, or a stage output you saved by hand. The page reads the SQLite `artifacts` table (created by `src/lib/db/migrations/028_artifacts.sql`) over `/api/artifacts`, through the `useArtifacts` / `useArtifact` hooks in `src/hooks/useArtifacts.ts`. It never talks to Hermes: by the time an artifact exists, the run that produced it is already over, and the artifact is a copy of that run's text output, not a live view of it.
+
+Today every artifact is inline text. The schema is already future-proofed for real files: `content_type` is one of `inline | file_path | url`, and the columns `file_path` and `url` exist and stay `NULL` until the agent runtime can emit files.
+
+### What you see
+
+**Header**
+- `PageHeader` with the `FileStack` icon, title "Artifacts", orange accent (`color="orange"`), on a `max-w-5xl` page column.
+- A `LoadErrorBanner` appears above the toolbar if the list request fails.
+
+<!-- design-lint-disable-next-line no-em-dash -- the next line quotes the page subtitle exactly as `src/app/laboratory/artifacts/page.tsx` sets it, so the dashes in it are product output, not prose. Repunctuating it would misdescribe what the page shows. -->
+**Subtitle**, verbatim: "Deliverables your agents produced — reports, run outputs, saved snippets — collected to view + download"
+
+**Toolbar** (a single `Card`, `padding="sm"`)
+- Left: a mono count, "<n> artifacts", singularised to "1 artifact" when there is exactly one. The span is `uppercase`, so what you read on screen is "12 ARTIFACTS" / "1 ARTIFACT". It counts what is currently listed, so it drops when a filter is applied, and the toolbar stays on screen in the empty state reading "0 ARTIFACTS".
+- Right: the kind filter, an on-brand `Select` with five options: "All kinds" (the default, value `""`), "Deep Research" (`research`), "Composer" (`composer`), "Missions" (`mission`), "Saved" (`manual`). Choosing one re-requests `/api/artifacts?kind=<value>`; the filter is applied in SQL by `listArtifacts`, not in the browser. A `kind` the route does not recognise is ignored rather than rejected, so a bad value returns the unfiltered list.
+- There is **no search box** on this page. The kind filter is the only narrowing control.
+
+**List** (responsive grid: 1 column, 2 at `sm`, 3 at `lg`)
+- Newest first (`ORDER BY created_at DESC`), capped at 200 rows: the GET route passes no `limit`, so `listArtifacts` falls back to its default of 200, and nothing in the UI raises it. The repository would clamp a caller-supplied limit to 500, and the route also accepts a `runId` filter that no page currently uses.
+- Each card is a button covering the whole tile. It shows a kind icon (`research` = Telescope/cyan, `composer` = GitBranch/purple, `mission` = Rocket/orange, `chat` = MessageCircle/green, `manual` = FileText in secondary text; an unrecognised kind falls back to FileText in muted text) beside the artifact name; below that a mono, uppercased meta row of source kind and the extension derived from the mime type, with the size (`formatBytes`) right-aligned in normal case; and below that a relative timestamp (`timeAgo`).
+- The list body carries no content: `listArtifacts` deliberately omits the `content` column from its SELECT, so the grid stays cheap even with large reports. The body is fetched only when you open one.
+
+**Empty state**
+- Heading line: "No artifacts yet", under a dimmed `FileStack` icon.
+- This same empty state is shown when a filter matches nothing; there is no separate "no matches" copy, so an empty grid with, say, "Missions" selected means no mission artifacts, not an empty registry.
+
+<!-- design-lint-disable-next-line no-em-dash -- the next line quotes the empty-state hint exactly as `src/app/laboratory/artifacts/page.tsx` sets it, so the dash in it is product output, not prose. -->
+**Hint line** under the heading, verbatim: "Run Deep Research or a Composer workflow — its output is captured here automatically."
+
+**Detail sheet** (a `Sheet`: right-hand panel on desktop, bottom sheet at 767px and below)
+- Title is the artifact name, which `Sheet` renders mono and uppercased; it reads "Artifact" until the body arrives. Subtitle is "<source kind> · <mime type> · <size>".
+- Body until then: "Loading…". `useArtifact` has no fallback, so a detail fetch that fails looks identical: the sheet sits on "Loading…" and the footer buttons are not rendered at all.
+- Markdown and HTML artifacts (chosen by the mime type containing `markdown` or `html`, not by sniffing the body) render through `renderReportHtml` (`src/lib/laboratory/deep-research/markdown.ts`) into a `prose` reading column capped at `max-w-3xl`, the same measure as the research report and the Story Weaver reader. Anything else renders in a scrollable preformatted block, showing "(empty)" when the stored content is `NULL`.
+- Footer: **Download .<ext>** (cyan primary, Download icon) and **Delete** (pink ghost, Trash2 icon).
+- The stored `description` and `tags` are not displayed anywhere on this page; they exist in the row for filtering and future use.
+
+### Typical use
+
+1. Run something that produces a deliverable: a query on **Laboratory → Deep Research**, a Composer workflow, or a Mission.
+2. When the run reaches a terminal state, open **Laboratory → Artifacts**. The list polls every 5 seconds, so a newly captured artifact appears without a reload.
+3. Narrow with the kind filter if the registry is busy, for example "Deep Research" to see only reports.
+4. Click a card. The sheet opens and fetches the full body from `/api/artifacts/<id>`.
+5. Read it in place, or click **Download .md** (the label carries whichever extension the mime type maps to: `md`, `html`, `json`, `csv`, otherwise `txt`). The download is built client-side as a Blob from the content already in the browser, with a filename slugged from the artifact name: each run of characters outside `a-zA-Z0-9_-` collapses to one `_`, leading and trailing underscores are stripped, the result is cut to 60 characters, and an empty result falls back to `artifact`. On an artifact with an empty body the button does nothing at all.
+6. Click **Delete** when you no longer need the copy. There is **no confirmation prompt**: the sheet closes on the first click and the list refetches. The page does not check the response, so a delete that failed looks the same as one that worked, until the row reappears on the next poll.
+
+### Notes
+
+- **Three producers capture automatically, and each attributes its output differently.** All three call `captureArtifactOnce` from `src/lib/artifacts-repository.ts`:
+  - **Deep Research** (`src/lib/laboratory/deep-research/run-job.ts`) captures the finished report right after it stamps the run row: `sourceKind: "research"`, `sourceRunId` = the research run id, no `sourceNodeId`, name = the trimmed query (a query over 80 characters is cut to 80 with an ellipsis appended; an empty query falls back to "Research report"), description "Deep Research report", tags `["report", "research"]`. It fires on the search-outage path too, where the run itself is marked `failed` but the ungrounded report was still written, so an artifact can exist for a research run the Deep Research page shows as failed. It does not fire when the engine throws: that path marks the run failed and never reaches the capture, because there is no report to capture.
+  - **Composer** (`src/lib/composer/engine.ts`, `captureComposerArtifact`) captures the final stage's output when a run completes, either by reaching the `complete` step or by routing to a terminal node: `sourceKind: "composer"`, `sourceRunId` = the composer run id, `sourceNodeId` = the id of the node run that finished the workflow, name = the first non-empty line of the run's input (cut to 80 with an ellipsis, falling back to "Composer result"), description "Composer run output", tags `["composer"]`. **Nested sub-workflow runs are skipped** (a run with a `parentNodeRunId`, or a run row that cannot be loaded, returns early), so a workflow that calls sub-workflows yields one artifact, the parent's, not one per level. Failed runs capture nothing.
+  - **Missions** (`src/lib/orchestration/run-reconcile.ts`, inside `finalizeAndRecord`) captures the run's result text when reconcile sees a run go terminal with status `completed`, it belongs to a mission, and the result text is non-empty: `sourceKind: "mission"`, `sourceRunId` = the *run* id (not the mission id), name = the mission's name, falling back to "Mission output", description "Mission run output", tags `["mission"]`. Because the dedupe key is the run id, re-running the same mission adds a second artifact carrying the same name.
+- **Capture is idempotent, as long as the producer supplies a run id.** `captureArtifactOnce` returns `null` without writing when the content is empty or whitespace-only, and, *only when `sourceRunId` is set*, when `hasArtifactForSource` already finds a row for that `(source_kind, source_run_id, source_node_id)` triple (a missing node id is matched with `IS NULL`, not `=`). All three producers pass a run id, so re-running reconcile, replaying a Composer tick, or any other repeat of a finalize hook cannot duplicate a row. A capture with no run id is never deduped.
+- **Capture is best-effort and never fails the producing run.** Every call site wraps it in `try`/`catch` and reports through `logApiError` (`deep-research.captureArtifact`, `composer.captureArtifact`, `mission.captureArtifact`). If the registry write throws, the run still finalises correctly and the failure shows up in **Main → Logs**, not as a broken run.
+- **Deleting an artifact does not affect the run that produced it.** `deleteArtifact` is a plain `DELETE FROM artifacts`; the research run, composer run, mission and session rows are untouched, and the run's own detail page still shows its output. The artifact is a catalogued copy, not the record of record. The one consequence is that the dedupe key disappears with it, so a later finalize hook for that same source would be free to capture it again.
+- **`source_run_id` has no foreign key, by design.** Depending on `source_kind` it points into `research_runs`, `composer_runs` or `runs`, so the migration documents the omission rather than picking one parent table. Nothing cascades: deleting a run leaves its artifact in place.
+- **The "Save as artifact" button on a Composer stage does not land under "Saved".** `ComposerNodeRunDetail` posts to `/api/artifacts` with `sourceKind: "composer"`, `sourceRunId` = the composer run id, `sourceNodeId` = the node-run id, name `<stage label> output`, description "Saved from a Composer stage" and tags `["composer", "saved"]`, so a hand-saved stage output appears under the **Composer** filter. The button label runs "Save as artifact", then "Saving…", then "Saved", and it does not reset, so a stage saves once per open sheet. The **Saved** filter selects `manual`, which nothing in the app currently writes.
+- **A hand-save can pre-empt the automatic capture.** That button sends the same `sourceRunId` plus `sourceNodeId` pair the engine would use. If you save the *final* stage's output before the run completes, the later `captureArtifactOnce` sees an existing row for that source and no-ops, which is the intended dedupe behaviour, not a lost artifact.
+- **The `chat` source kind is defined but unused.** It exists in the enum, in the schema comment and in the icon map, and the POST route accepts it, but no code in the repository writes one: `createArtifact` is reached only from the three capture hooks and the POST route, and no script, seed or migration inserts into `artifacts`. No filter option selects it either. **Saved** is in the same position from the other direction: the POST body defaults `sourceKind` to `"manual"`, so a hand-rolled POST that omits the field is the only thing that puts a row under that filter.
+- **HTML artifacts render as visible source, not as live markup.** `renderReportHtml` escapes every byte before emitting its own limited tag set, which is why the page can use `dangerouslySetInnerHTML` safely. A `text/html` artifact is therefore readable but not rendered as a page.
+- **Manual creation is capped.** The POST schema on `/api/artifacts` limits `content` to 2,000,000 characters (minimum 1), `name` to 200, `description` to 1,000 and `tags` to 20 entries of 50 characters. It is `.strict()`, and it accepts no `contentType`, `filePath` or `url`, so the API cannot create anything but an inline artifact. Automatic capture goes through the repository directly and is not bound by any of that.
+- All artifact routes are behind `requireAuth`, and `size_bytes` is computed once at insert as the UTF-8 byte length of the content, so the size shown is the size at capture time.
 
 ---
 
@@ -1387,6 +1900,32 @@ The three buttons at the bottom of the sidebar (**Update**, **Restart**, and **R
 2. Find the skill category → toggle **Active**.
 3. Dispatch a mission using that profile.
 
+### Run a multi-stage workflow
+
+1. **Orchestration → Composer**, **Run** tab. Pick a workflow and an agent profile.
+2. Write the objective, or click one of the **Examples** chips to fill it.
+3. Click **Review…**. Read the stage list; orange stages can modify your repository.
+4. Click **Confirm & launch**. Nothing is submitted until you do.
+5. Watch the canvas. Click any stage for its verdict and output.
+6. At a human gate, write an optional note and click **Accept** or **Reject**.
+7. The finished output is captured at **Laboratory → Artifacts**.
+
+### Research a question with citations
+
+1. **Laboratory → Deep Research**. Choose a search provider and set the depth and breadth.
+2. Write the question and start the run.
+3. Watch the steps stream: plan, search, visit, reason, then synthesize.
+4. Read the report and follow the numbered citations back to their sources.
+5. Copy, download or view the standalone report; it is also filed at **Laboratory → Artifacts**.
+6. Check what it cost at **Laboratory → Insights: provider spend**.
+
+### See what your agents are costing you
+
+1. **Laboratory → Insights**, then the provider spend panel.
+2. Compare the day, week and month periods, and the split across agent runs, Composer stages and Deep Research.
+3. Set a budget for the period you care about.
+4. Turn on the hard stop only if you want unattended dispatch to pause on a breach. Clicking dispatch yourself is never blocked.
+
 ### Set a default model
 
 1. **Config → Models** → set **Agent default**.
@@ -1395,7 +1934,7 @@ The three buttons at the bottom of the sidebar (**Update**, **Restart**, and **R
 
 ### Edit a profile's voice (SOUL-style identity)
 
-1. **Operations → Personalities** → **+ New** (or **Set as active** on an existing card).
+1. **Operations → Personalities** → **edit** on the profile's card (or **Set as active** on an existing card). New personalities come from creating a profile at **Operations → Agents**.
 2. Write the system prompt and save.
 3. Verify in the profile detail at **Operations → Agents** that the active personality matches.
 
@@ -1450,6 +1989,15 @@ The three buttons at the bottom of the sidebar (**Update**, **Restart**, and **R
 | Install & quick start | [README.md](../README.md) |
 | Architecture map | [PATTERSTAGE.md](PATTERSTAGE.md) |
 | Mission prompts & cancel | [MISSIONS.md](MISSIONS.md) |
+| Composer workflows | [COMPOSER.md](COMPOSER.md) |
+| Deep Research | [DEEP_RESEARCH.md](DEEP_RESEARCH.md) |
+| Laboratory overview | [LABORATORY.md](LABORATORY.md) |
+| Provider spend & budget | [SPEND.md](SPEND.md) |
+| Chat internals | [CHAT.md](CHAT.md) |
+| Where data lives | [DATA_STORAGE.md](DATA_STORAGE.md) |
+| Runtime architecture | [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md) |
+| Platform support tiers | [CROSS_PLATFORM.md](CROSS_PLATFORM.md) |
+| Running a QA walkthrough | [QA_NOTES.md](QA_NOTES.md) |
 | Profiles & catalog seed | [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md) |
 | Toolsets & mission tool hints | [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md) |
 | REST API | [API.md](API.md) |
