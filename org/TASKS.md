@@ -42,7 +42,7 @@ The records under org/tasks/ are canonical.
 | T-0027 | standard | R0 | discarded | unassigned |
 | T-0028 | standard | R0 | done | t0028-lockin-2026-08-24 |
 | T-0029 | standard | R0 | done | phase7-config-writer-2026-08-23 |
-| T-0030 | high-assurance | R2 | proposed | unassigned |
+| T-0030 | high-assurance | R2 | done | t0030-research-spend-2026-08-26 |
 | T-0031 | standard | R2 | done | t0031-emdash-2026-08-25 |
 | T-0032 | standard | R2 | done | t0032-skills-2026-08-25 |
 | T-0033 | standard | R2 | done | t0033-containers-2026-08-25 |
