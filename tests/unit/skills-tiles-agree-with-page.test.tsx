@@ -77,12 +77,20 @@ function makeCatalogue(): Skill[] {
   const skills: Skill[] = [];
   for (let i = 0; i < 118; i++) {
     const base = `cat-${String(i % 11).padStart(2, "0")}`;
+    // Bucket 3 is spelled three ways that must all collapse to ONE category.
+    //
+    // The case variant alone is not enough to discriminate, which mutation
+    // testing caught: a naive `new Set(c.toLowerCase())` folds case too, so a
+    // fixture that only SHOUTS agrees with the buggy implementation and the
+    // guard proves nothing. The SEPARATOR variant is the discriminator, because
+    // the display normaliser also folds [-_]+ to spaces while toLowerCase does
+    // not. That is exactly the T-0037 defect: "Control Hub" and "control-hub"
+    // rendered one identical label out of two buckets.
+    let category = base;
+    if (i % 11 === 3) category = i % 22 === 3 ? base.toUpperCase() : base.replace("-", " ");
     skills.push({
       name: `${base}-skill-${String(i).padStart(3, "0")}`,
-      // Every eleventh skill SHOUTS its category. Same bucket, different case:
-      // if the tile counts spellings while the page counts rendered rows, the
-      // two disagree here and nowhere else.
-      category: i % 11 === 3 ? base.toUpperCase() : base,
+      category,
       description: `does ${base} things`,
       enabled: true,
     } as Skill);
