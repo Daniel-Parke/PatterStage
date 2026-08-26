@@ -56,7 +56,7 @@ The records under org/tasks/ are canonical.
 | T-0041 | standard | R2 | done | t0041-drift-absent-files-2026-08-26 |
 | T-0042 | standard | R2 | done | t0042-session-tiles-2026-08-26 |
 | T-0043 | standard | R2 | done | t0043-legible-friction-2026-08-26 |
-| T-0044 | standard | R2 | proposed | unassigned |
+| T-0044 | standard | R2 | done | t0044-test-holes-2026-08-26 |
 | T-0045 | standard | R2 | done | qa-batch-a-remediation-2026-08-26 |
 | T-0046 | standard | R2 | done | t0046-stream-error-truth-2026-08-26 |
 | T-0047 | standard | R2 | done | t0047-deadline-reach-2026-08-26 |
