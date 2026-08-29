@@ -5,7 +5,6 @@ import { NextRequest } from "next/server";
 const mockRequireAuth = jest.fn();
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: mockRequireAuth,
 }));
 
 jest.mock("@/lib/api-logger", () => ({

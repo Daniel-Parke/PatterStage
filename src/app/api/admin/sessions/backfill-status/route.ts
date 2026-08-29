@@ -14,9 +14,13 @@
 // running the backfill explicitly produces an audit-log entry and
 // makes the change visible in the admin UI immediately.
 //
-// Auth: requires an authenticated session, like every other admin
-// route. Read-only mode (PS_READ_ONLY=true) blocks the write path;
-// dry-run is allowed in read-only mode for inspection.
+// Auth: requires an authenticated session, like every other admin route.
+//
+// Read-only mode refuses this endpoint outright, dry-run included, because
+// src/proxy.ts rejects unsafe METHODS and this is a POST. The comment here used
+// to promise that a dry run was still allowed for inspection; that has not been
+// true since the proxy took over enforcement, and the inner guard below was
+// unreachable. Kept as defence-in-depth under the shared message (T-0048).
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
@@ -28,6 +32,7 @@ import {
 } from "@/lib/sessions/session-orphan-sweep";
 import { isReadOnly } from "@/lib/api-auth";
 import { serviceUnavailable } from "@/lib/api-response";
+import { readOnlyMessage } from "@/lib/read-only";
 import { appendAuditLine } from "@/lib/audit-log";
 import { logApiError } from "@/lib/api-logger";
 
@@ -42,7 +47,7 @@ export async function POST(request: NextRequest) {
 
   if (dryRun === false && isReadOnly()) {
     return serviceUnavailable(
-      "PatterStage is in read-only mode (set PS_READ_ONLY=false to allow backfill writes)"
+      readOnlyMessage("the orphan-session backfill cannot write")
     );
   }
 

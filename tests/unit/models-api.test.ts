@@ -37,7 +37,6 @@ jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
 }));
 
 jest.mock("@/lib/parse-json-body", () => {
@@ -96,13 +95,10 @@ jest.mock("@/modules/hermes/lib/config-sync", () => ({
 }));
 
 const repo = require("@/lib/models-repository") as Record<string, jest.Mock>;
-const auth = require("@/lib/api-auth") as Record<string, jest.Mock>;
 const audit = require("@/lib/audit-log") as { appendAuditLine: jest.Mock };
 
 beforeEach(() => {
   jest.clearAllMocks();
-  auth.requireAuth.mockReturnValue(null);
-  auth.requireAuth.mockReturnValue(null);
 });
 
 const SAMPLE_MODEL = {

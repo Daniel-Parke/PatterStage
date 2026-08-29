@@ -28,9 +28,7 @@ jest.mock("@/lib/memory/memory-providers", () => ({
   getMemoryProviderType: jest.fn(() => "hindsight"),
 }));
 
-const requireAuthMock = jest.fn((_req: NextRequest): Response | null => null);
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: (req: NextRequest): Response | null => requireAuthMock(req),
 }));
 
 const SUPPORTED_VERBS = ["POST", "PUT", "DELETE"] as const;
@@ -41,7 +39,6 @@ const UNSUPPORTED_MESSAGE_FRAGMENT = "Memory management via the dashboard";
 describe("/api/memory write verbs (unsupportedWriteHandler)", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    requireAuthMock.mockReturnValue(null);
   });
 
   it.each(SUPPORTED_VERBS)(

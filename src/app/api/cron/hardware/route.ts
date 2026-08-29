@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 
 import { requireAuthenticatedHostWrites, isReadOnly } from "@/lib/api-auth";
 import { serviceUnavailable } from "@/lib/api-response";
+import { readOnlyMessage } from "@/lib/read-only";
 import { handleCreateHardwareCron } from "@/lib/hardware-cron-handlers/create";
 import { handleDeleteHardwareCron } from "@/lib/hardware-cron-handlers/delete";
 import { handleListHardwareCrons } from "@/lib/hardware-cron-handlers/list";
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
   const hostWrites = requireAuthenticatedHostWrites();
   if (hostWrites) return hostWrites;
   if (isReadOnly()) {
-    return serviceUnavailable("PatterStage is in read-only mode");
+    return serviceUnavailable(readOnlyMessage("hardware cron jobs cannot be changed"));
   }
 
   return handleCreateHardwareCron(request);
@@ -57,7 +58,7 @@ export async function PUT(request: NextRequest) {
   const hostWrites = requireAuthenticatedHostWrites();
   if (hostWrites) return hostWrites;
   if (isReadOnly()) {
-    return serviceUnavailable("PatterStage is in read-only mode");
+    return serviceUnavailable(readOnlyMessage("hardware cron jobs cannot be changed"));
   }
 
   return handleUpdateHardwareCron(request);
@@ -68,7 +69,7 @@ export async function DELETE(request: NextRequest) {
   const hostWrites = requireAuthenticatedHostWrites();
   if (hostWrites) return hostWrites;
   if (isReadOnly()) {
-    return serviceUnavailable("PatterStage is in read-only mode");
+    return serviceUnavailable(readOnlyMessage("hardware cron jobs cannot be changed"));
   }
 
   return handleDeleteHardwareCron(request);

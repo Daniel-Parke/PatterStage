@@ -1,9 +1,12 @@
 /** @jest-environment node */
 
-// These tests verify auth middleware is correctly wired on tool routes.
 // /api/tools only has GET and POST — PUT is tested via POST(action="configure").
-
-const mockRequireAuth = jest.fn();
+//
+// These used to verify that auth middleware was wired on the tool routes. It
+// never was: `requireAuth` checked the read-only flag and authenticated
+// nothing, and authentication has lived in src/proxy.ts since the security
+// hotfix. T-0048 deleted the function; what remains here is the route's own
+// behaviour.
 const mockReadFileSync = jest.fn();
 const mockWriteFileSync = jest.fn();
 const mockExistsSync = jest.fn();
@@ -59,7 +62,6 @@ jest.mock("@/lib/api-logger", () => ({
 }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: mockRequireAuth,
   requireNotReadOnly: jest.fn(() => null),
   isReadOnly: jest.fn(() => false),
 }));

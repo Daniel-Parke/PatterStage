@@ -66,7 +66,6 @@ jest.mock("@/lib/api-logger", () => ({
 }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
 }));
 
 // /api/memory now probes the DB-owned active provider (like MemorySync) instead

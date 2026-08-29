@@ -80,11 +80,20 @@ function mockedApiAuthNames(file: string): string[] {
 
 describe("read-only mode is observable by the suite that guards it", () => {
   it("the shared helper does not hard-wire the mode off", () => {
-    const src = readFileSync(HELPERS, "utf-8");
+    // Comment-aware, like design-lint and the T-0048 oracle. The prose in that
+    // helper explains the old shape in order to warn against it, and a check
+    // that tripped on its own explanation would force the explanation out.
+    const code = readFileSync(HELPERS, "utf-8")
+      .split(/\r?\n/)
+      .filter((l) => {
+        const t = l.trim();
+        return !t.startsWith("//") && !t.startsWith("*") && !t.startsWith("/*");
+      })
+      .join("\n");
     // The precise shape that hid the defect: a factory value that decides the
     // answer, rather than the real function reading the real environment.
-    expect(src).not.toMatch(/isReadOnly:\s*jest\.fn\(\(\)\s*=>\s*false\)/);
-    expect(src).not.toMatch(/isReadOnly:\s*\(\)\s*=>\s*false/);
+    expect(code).not.toMatch(/isReadOnly:\s*jest\.fn\(\(\)\s*=>\s*false\)/);
+    expect(code).not.toMatch(/isReadOnly:\s*\(\)\s*=>\s*false/);
   });
 
   it("the shared helper keeps the real read-only implementation", () => {
