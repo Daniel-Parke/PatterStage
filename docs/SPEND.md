@@ -24,7 +24,7 @@ Under them, the same period split by the three things that spend tokens:
 | Source | What it is | Recorded? |
 |---|---|---|
 | Agent runs | A mission dispatched by you, a schedule or the queue | Yes |
-| Composer stages | One node of a Composer workflow, executed as a run | Yes |
+| Composer stages | One node of a Composer workflow, executed as a run | Yes, since T-0058 |
 | Deep Research | A research run from the Laboratory | Yes, since schema 34 |
 
 ### Deep Research runs from before the upgrade are still not counted
@@ -40,6 +40,7 @@ One case still records nothing: a run that **crashes mid-way**. The engine throw
 The figures come from token counts already recorded against each run, priced against a published per-model rate table (`src/lib/analytics/model-cost.ts`). Two consequences worth knowing:
 
 - A run with **no model recorded** (every Composer stage, which has no mission to carry the model) is priced at a conservative default rather than at zero. Unknown must never read as free.
+- **True only since T-0058 (2026-08-30).** Before it, this sentence described an intention rather than the product. Composer stages recorded no usage at all: the reconciler dropped the gateway's token counts on the way to the database, and the spend read requires `usage_json IS NOT NULL`, so the whole source was EXCLUDED and the Composer row showed `$0.00`. Not a conservative estimate; nothing. Composer runs that finished before that fix stay absent rather than being reported as unmeasured, which is a known gap and narrower than the research one described above.
 - Rates change and the table is static. Treat the number as the right order of magnitude, and your provider's dashboard as the truth.
 
 Runs of every status are counted, not just successful ones. A run that failed after burning tokens still cost you money.
