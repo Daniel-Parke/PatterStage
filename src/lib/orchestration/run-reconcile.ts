@@ -14,7 +14,7 @@ import { updateMission, getMission } from "@/lib/missions/mission-repository";
 import { closeSessionForMission } from "@/lib/sessions/session-repository";
 import { runtime } from "@/lib/runtime";
 import { now } from "@/lib/db";
-import { RuntimeRequestError, type RunStatus } from "@/lib/runtime/types";
+import { RuntimeRequestError, type RunStatus, type RunUsage } from "@/lib/runtime/types";
 import { recordEvent } from "@/lib/analytics/record-event";
 import { finalizeComposerNodeRun, advanceComposerRun } from "@/lib/composer/engine";
 import { captureArtifactOnce } from "@/lib/artifacts-repository";
@@ -120,8 +120,16 @@ async function finalizeComposerStage(
   status: RunStatus,
   output: string | null,
   error: string | null,
+  usage: RunUsage | null = null,
 ): Promise<void> {
-  updateRun(run.id, { status, output, error });
+  // `usage` is written for the same reason the agent branch writes it below:
+  // spend-repository selects `WHERE usage_json IS NOT NULL`, so a stage that
+  // does not record its tokens is not priced conservatively, it is priced at
+  // nothing. It defaults to null rather than being omitted because the three
+  // callers that finalize a stage WITHOUT reaching the gateway genuinely have
+  // no tokens to report, and null says that where a missing argument would
+  // only mean "leave unchanged".
+  updateRun(run.id, { status, output, error, usage });
   const composerRunId = finalizeComposerNodeRun(run.id, status, output, error);
   if (composerRunId) await advanceComposerRun(composerRunId);
 }
@@ -144,7 +152,13 @@ async function reconcileComposerRun(run: RunRecord): Promise<boolean> {
       }
       return false;
     }
-    await finalizeComposerStage(run, result.status, result.output ?? null, result.error ?? null);
+    await finalizeComposerStage(
+      run,
+      result.status,
+      result.output ?? null,
+      result.error ?? null,
+      result.usage ?? null,
+    );
     return true;
   } catch (err) {
     if (err instanceof RuntimeRequestError && err.status === 404) {

@@ -13,13 +13,22 @@
 //              the mission. Fully recoverable.
 //   composer   a `runs` row with a `composer_node_run_id` and no mission.
 //              Tokens in `usage_json`, no model dimension, so it is priced at
-//              model-cost's conservative DEFAULT_RATE.
+//              model-cost's conservative DEFAULT_RATE. Recoverable SINCE
+//              T-0058: this comment previously asserted that pricing as
+//              though it were already true, and it was not. The reconciler
+//              dropped every stage's usage on the floor (run-reconcile.ts
+//              diverts composer runs before the write), so the rows arrived
+//              with a NULL usage_json and the read below excluded all of
+//              them. The row said $0.00 and read as a measurement.
 //   research   a `research_runs` row. Recoverable SINCE MIGRATION 034 (T-0030),
 //              which added the token columns; before that the engine called
 //              `callLLM` directly and threw the usage away.
 //
-// The honesty problem did not go away with 034, it MOVED. Every research run
-// that predates the migration keeps NULL token columns, and NULL is not zero:
+// The honesty problem did not go away with 034, it MOVED -- and 034 was not the
+// end of it. T-0058 found the same class again in Composer, which 034 had not
+// measured, and the lesson is that a comment claiming a source is priced is not
+// evidence that anything writes its tokens. Every research run that predates
+// the migration keeps NULL token columns, and NULL is not zero:
 // it means the cost is unknown. Folding those in at zero would be a lie that
 // looks like a number, and it would make the hard stop under-count by an amount
 // nobody could see. So `foldResearch` counts them in the run count, skips them
