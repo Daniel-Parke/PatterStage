@@ -19,7 +19,8 @@
     "docs/USER_WALKTHROUGH_GUIDE.md filed Insights under the Main nav group and gave its route as /insights, which does not exist; described a '+ New' button on Personalities that the page deliberately does not have; and carried a screenshot caption admitting the image was 'stale in three ways'.",
     "The guide had NO coverage at all of Composer, Deep Research, Artifacts or the spend console, four surfaces that had shipped.",
     "A QA brief written from a survey of the codebase repeated two errors it inherited: that POST /api/tools returns 410 (it returns 405, via methodNotAllowed) and that the boot line advertises the wrong port (it does not; Next assigns process.env.PORT at bind time). Both were caught only by measuring.",
-    "docs/PRODUCT_MAP.md is a blank Genesis template that says of itself 'Until Genesis runs this file is a blank form and every section is draft'. Whether it should exist yet is a decision, not an oversight, but a reader cannot tell that from the file's position in the index."
+    "docs/PRODUCT_MAP.md is a blank Genesis template that says of itself 'Until Genesis runs this file is a blank form and every section is draft'. Whether it should exist yet is a decision, not an oversight, but a reader cannot tell that from the file's position in the index.",
+    "2026-08-30, and the sharpest evidence yet because it is self-inflicted: spend-summary.ts carried a comment asserting that Composer runs are priced at a conservative DEFAULT_RATE. Nothing wrote their tokens, so the spend console excluded the whole source and showed $0.00. The comment was written during T-0030 and then READ BACK AS EVIDENCE when writing a QA brief, which carried the false claim to a tester as a do-not-file instruction. A wrong comment did not merely fail to help; it actively suppressed the report of a real money-adjacent defect for as long as it stood. See T-0058."
   ],
   "scope": [
     "docs/ — 39 markdown files, 28 to 2016 lines. For each: is it TRUE of the code at HEAD, is it still RELEVANT, and is it discoverable from the index. Retire what describes a subsystem that no longer exists (the benchmark subsystem was deleted at 4935ac31; check what still mentions it).",
@@ -35,7 +36,7 @@
     "AGENTS.md still passes its 40-line cap and CLAUDE.md is still byte-identical.",
     "npm run lint stays green, including check-doc-links and the no-em-dash rule, which has one sanctioned pragma today and should not gain more without a written reason."
   ],
-  "proposed_ratchet": "The deeper problem is that nothing checks a document against the code it describes. check-doc-links.mjs proves links RESOLVE; it cannot notice that API.md documents a deleted function. Worth considering as part of this task, and worth costing before committing to: a dependency-free check that every `src/...` path and every exported identifier quoted in backticks inside docs/ actually exists. That would have caught API.md's requireAuth reference, the walkthrough guide's /insights route, and the Personalities '+ New' button. It would NOT have caught the aspirational 'Reads keep working', which no mechanical check can reach; that one needs a human reading the sentence against the behaviour.",
+  "proposed_ratchet": "The deeper problem is that nothing checks a document against the code it describes. check-doc-links.mjs proves links RESOLVE; it cannot notice that API.md documents a deleted function. Worth considering as part of this task, and worth costing before committing to: a dependency-free check that every `src/...` path and every exported identifier quoted in backticks inside docs/ actually exists. That would have caught API.md's requireAuth reference, the walkthrough guide's /insights route, and the Personalities '+ New' button. It would NOT have caught the aspirational 'Reads keep working', which no mechanical check can reach; that one needs a human reading the sentence against the behaviour. T-0058 sharpens the case for a second, narrower check that would have caught the worst instance: spend-summary.ts names its three sources in prose, and nothing asserts that each named source actually has a writer. Both spend defects found so far (T-0030 research, T-0058 composer) were found by a human reading that one comment, months apart. A test that enumerates the sources the comment claims and asserts a writer exists for each would have caught the second at the first.",
   "claims": [
     "docs/",
     "README.md",
@@ -50,6 +51,10 @@
   ],
   "timestamps": {
     "opened": "2026-08-30T08:00:00Z",
-    "updated": "2026-08-30T08:00:00Z"
-  }
+    "updated": "2026-08-30T10:30:00Z"
+  },
+  "already_done": [
+    "Three defects from this audit are FIXED at 17c0b662 and should not be re-investigated: API.md said POST /api/tools returns 410 (it returns 405); USER_WALKTHROUGH_GUIDE.md still offered the sepia and light reader themes removed in WO-0005; QA_NOTES.md said toasts auto-dismiss in ~4s, which stopped being true of ERROR toasts at T-0050 and was the dangerous half.",
+    "The walkthrough guide was substantially rewritten this round and now covers Composer, Deep Research, Artifacts and the spend console, which it previously did not mention at all. Audit it for accuracy, not for coverage of those four."
+  ]
 }
