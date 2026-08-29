@@ -18,7 +18,14 @@ export default function QueryProvider({ children }: { children: ReactNode }) {
         defaultOptions: {
           queries: {
             staleTime: 10_000,
-            refetchOnWindowFocus: false,
+            // Catch up when the tab comes back. useInterval already does this
+            // deliberately and its comment claims it was made to MATCH the
+            // query layer; the query layer had focus-refetch off, so the two
+            // quietly disagreed in the opposite direction. A backgrounded tab
+            // resumed showing data up to a full poll period stale with no way
+            // to know (T-0053). staleTime keeps it cheap: a refocus inside ten
+            // seconds still serves the cache.
+            refetchOnWindowFocus: true,
             retry: 1,
           },
         },

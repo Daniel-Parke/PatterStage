@@ -36,6 +36,17 @@ export async function register(): Promise<void> {
     console.error("[auth] could not establish an access token", error);
   }
 
+  // How this instance is configured, printed unconditionally beside the [auth]
+  // line. A diagnostic that only appears when something is wrong cannot be used
+  // to establish that nothing is, and three QA sessions were lost to a watchdog
+  // restarting the server without their environment (T-0053).
+  try {
+    const { describeOperationalFlags } = await import("@/lib/boot-diagnostics");
+    console.info(`[config] ${describeOperationalFlags()}`);
+  } catch {
+    /* non-fatal diagnostic */
+  }
+
   // Loud warning if we may be reading the wrong (emptier) DB than a sibling data
   // dir — e.g. an empty ~/patterstage/data shadowing a populated ~/PatterStage.
   try {
