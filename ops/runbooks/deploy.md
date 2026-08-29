@@ -35,9 +35,11 @@ One Next.js process, one SQLite file, one optional agent alongside it.
 bash scripts/bootstrap/install.sh
 ```
 
-Then reach the app on the port it prints. The first request mints an auth token
-into `PS_DATA_DIR/auth-token` at mode 0600; there is no signup, because there is
-one operator and it is you.
+Then reach the app on the port it prints. The auth token is minted **at boot**, not
+on first request: `src/instrumentation.ts` calls `ensureAuthToken()` during startup
+and prints both a ready-to-click sign-in URL and the token's path in the boot log.
+Read it there rather than hunting for it. The file is `PS_DATA_DIR/auth-token` at
+mode 0600; there is no signup, because there is one operator and it is you.
 
 **Verify the install rather than assuming it.** `GET /api/health` is the only
 unauthenticated route by design. If any other route answers without a token, stop
@@ -72,7 +74,10 @@ names is `org/PLAYBOOKS.md#restore-test`.
 
 ```bash
 # stop the app first: a live process holds the SQLite file
-cp "$PS_DATA_DIR/backups/<timestamp>-patterstage.db" "$PS_DATA_DIR/patterstage.db"
+# scheduled backups (scripts/hardware/ps-db-backup.mjs) land here, name first:
+cp "$PS_DATA_DIR/backups/db/patterstage.<timestamp>.db" "$PS_DATA_DIR/patterstage.db"
+# a pre-migration backup from ps-deploy sits BESIDE the db instead:
+#   cp "$PS_DATA_DIR/patterstage.db.pre-migrate-<timestamp>.bak" "$PS_DATA_DIR/patterstage.db"
 ```
 
 Then start the app and confirm the schema version and a known row:

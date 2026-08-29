@@ -6,9 +6,12 @@
 //
 // Why here and not in route handlers: `requireAuth()` in src/lib/api-auth.ts
 // never authenticated anything (it only checked the read-only flag), so all 100
-// API routes were open to anyone who could reach the port — and `npm run
-// start:network` binds 0.0.0.0. A boundary that each new route has to remember
-// to opt into is not a boundary. This one cannot be forgotten.
+// API routes were open to anyone who could reach the port — and BOTH start
+// scripts bind 0.0.0.0, not just `start:network`. `next start` has no loopback
+// default; with no -H it listens on every interface and prints the LAN URL. The
+// naming used to suggest otherwise here and in the README, which made the
+// exposure sound opt-in when it is the default. A boundary that each new route
+// has to remember to opt into is not a boundary. This one cannot be forgotten.
 //
 // Three checks, in order:
 //   1. read-only     — PS_READ_ONLY rejects unsafe METHODS (not, as before,

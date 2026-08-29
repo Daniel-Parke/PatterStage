@@ -69,8 +69,8 @@ How the pieces fit together: [docs/RUNTIME_ARCHITECTURE.md](docs/RUNTIME_ARCHITE
 
 3. **Start the server:**
    ```bash
-   npm run start                  # this machine only
-   npm run start:network          # binds 0.0.0.0 for LAN access
+   npm run start                  # binds every interface (Next's default)
+   npm run start:network          # identical; passes -H 0.0.0.0 explicitly
    ```
    `PORT` is written to `.env.local` during setup (usually **42069–42100**).
 
