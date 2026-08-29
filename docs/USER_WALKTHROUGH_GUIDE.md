@@ -1795,7 +1795,7 @@ Today every artifact is inline text. The schema is already future-proofed for re
 - **Continue** button (only when `allComplete`): opens the Continue modal.
 - **Retry** button (only when `anyFailed`): retries the first failed chapter.
 - **Chapters** sidebar toggle.
-- **ReaderSettings**, Kindle-style: font size, font family, line height, brightness, page theme (dark / black / sepia / light). Persisted to `localStorage`.
+- **ReaderSettings**, Kindle-style: font size, font family, line height, brightness, page theme (dark / black). Persisted to `localStorage`. The `sepia` and `light` tints were removed in WO-0005 under WG-WEB-001 (dark-first, no exception); a saved setting naming either is normalised back to `dark` on load, so an existing reader is not left on a theme the code no longer renders.
 
 **Chapter indicator dots row** (under the header)
 - One dot per chapter; click completed chapters to jump.

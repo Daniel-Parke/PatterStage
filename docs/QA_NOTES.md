@@ -28,10 +28,27 @@ stale.
 ## Transient feedback is not "no feedback"
 
 One-click actions (Sync Now, Push all, Pull, Import, Save, etc.) confirm via a
-**toast that auto-dismisses after ~4 seconds** (`useToast` + `runSyncAction` /
-`runFallbackMutation`). A DOM snapshot taken a moment after the click will miss
-it. That is a tooling artifact, not a missing-feedback bug. Persistent busy
-states exist where it matters (the drift banners show "Pushing…/Syncing…").
+**toast**, via `useToast` + `runSyncAction` / `runFallbackMutation`. Since T-0050
+the duration depends on the kind: a SUCCESS toast still auto-dismisses after ~4
+seconds, but an ERROR toast now PERSISTS until dismissed, because the reason a
+mutation failed should not self-destruct while it is being read.
+
+So a DOM snapshot taken a moment after a successful click will still miss the
+toast, and that remains a tooling artifact rather than a missing-feedback bug.
+A snapshot that misses an ERROR toast is now a real finding and should be filed.
+
+Two other things changed with T-0050 and are worth probing directly. Toasts are
+portaled to `document.body` at `z-[80]`, above the Sheet backdrop (`z-[60]`) and
+panel (`z-[61]`); before that they rendered UNDERNEATH an open sheet, which is
+why an earlier pass reported "no toast appeared" and was describing an invisible
+one. And every toast is now an ARIA live region (`role="status"` polite for
+success/info, `role="alert"` assertive for errors), so `[role=status], [role=alert]`
+is a valid probe where it previously returned nothing.
+
+Persistent busy states exist where it matters (the drift banners show
+"Pushing…/Syncing…"), and settings-shaped surfaces additionally keep a
+`[data-testid="last-result"]` line reading "Saved at HH:MM: …" that outlives the
+toast entirely.
 
 ## Confirmed code-correct (do not re-file without a post-rebuild repro)
 
