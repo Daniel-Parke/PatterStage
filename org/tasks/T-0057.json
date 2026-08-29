@@ -1,0 +1,55 @@
+{
+  "id": "T-0057",
+  "intent": "Audit every document in the repository so that what is written is current, relevant and navigable, for a human operator and for an agent booting cold. Operator asked for this on 2026-08-30, framed as keeping the codebase clean and tidy and easy for both humans and AI agents to navigate. Scope is the whole documentary surface: 39 files under docs/, the agentic entry points (AGENTS.md and its byte-identical CLAUDE.md copy, README.md), and the EOS governance files under org/. The case for it is not hypothetical: this session alone found and fixed six separate pieces of documentation that were wrong about the running code, listed under evidence.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "evidence_this_is_needed": [
+    "docs/API.md described read-only as enforced per route by requireAuth(), a model the security hotfix replaced long before T-0048 deleted the function. It documented an architecture that had not existed for months.",
+    "docs/ENV_REFERENCE.md and docs/SECURITY.md both said 'Reads keep working' under PS_READ_ONLY. That was ASPIRATIONAL, not descriptive: 34 read handlers returned 503. The docs were right about the intent and wrong about the product, which is the most misleading combination.",
+    "docs/USER_WALKTHROUGH_GUIDE.md filed Insights under the Main nav group and gave its route as /insights, which does not exist; described a '+ New' button on Personalities that the page deliberately does not have; and carried a screenshot caption admitting the image was 'stale in three ways'.",
+    "The guide had NO coverage at all of Composer, Deep Research, Artifacts or the spend console, four surfaces that had shipped.",
+    "A QA brief written from a survey of the codebase repeated two errors it inherited: that POST /api/tools returns 410 (it returns 405, via methodNotAllowed) and that the boot line advertises the wrong port (it does not; Next assigns process.env.PORT at bind time). Both were caught only by measuring.",
+    "docs/PRODUCT_MAP.md is a blank Genesis template that says of itself 'Until Genesis runs this file is a blank form and every section is draft'. Whether it should exist yet is a decision, not an oversight, but a reader cannot tell that from the file's position in the index."
+  ],
+  "scope": [
+    "docs/ — 39 markdown files, 28 to 2016 lines. For each: is it TRUE of the code at HEAD, is it still RELEVANT, and is it discoverable from the index. Retire what describes a subsystem that no longer exists (the benchmark subsystem was deleted at 4935ac31; check what still mentions it).",
+    "The agentic entry points. AGENTS.md is hard-capped at 40 lines by check-agent-files.mjs and CLAUDE.md must stay byte-identical; the cap exists because AGENTS.md once reached 183 lines, went stale, and agents followed it anyway into CSS variables that did not exist. The question is not whether it is short but whether the 31 lines it spends are the right ones for an agent booting cold.",
+    "org/ — CONSTITUTION, START, PLAYBOOKS, TEMPLATES, TESTING, GRAPH_BUILD, QUESTIONS. TASKS.md and STATE.md are DERIVED and must not be hand-edited; check-derived-views.mjs enforces that.",
+    "README.md as the front door for a human arriving from GitHub.",
+    "The relationship between them. A reader should be able to answer 'where do I look for X' without grep. Today there are at least three overlapping entry points (README, docs/README, REPO_GUIDE) and it is not obvious which is authoritative for what."
+  ],
+  "acceptance": [
+    "Every doc is either current, or deleted, or explicitly marked as historical with a date and a reason. A stale document that nobody can tell is stale is worse than a missing one, because it is followed.",
+    "No document describes an architecture the code does not have. Spot-checked against source, not against other documents.",
+    "One authoritative index, and every document reachable from it in one hop.",
+    "AGENTS.md still passes its 40-line cap and CLAUDE.md is still byte-identical.",
+    "npm run lint stays green, including check-doc-links and the no-em-dash rule, which has one sanctioned pragma today and should not gain more without a written reason."
+  ],
+  "proposed_ratchet": "The deeper problem is that nothing checks a document against the code it describes. check-doc-links.mjs proves links RESOLVE; it cannot notice that API.md documents a deleted function. Worth considering as part of this task, and worth costing before committing to: a dependency-free check that every `src/...` path and every exported identifier quoted in backticks inside docs/ actually exists. That would have caught API.md's requireAuth reference, the walkthrough guide's /insights route, and the Personalities '+ New' button. It would NOT have caught the aspirational 'Reads keep working', which no mechanical check can reach; that one needs a human reading the sentence against the behaviour.",
+  "claims": [
+    "docs/",
+    "README.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "org/"
+  ],
+  "notes": [
+    "Do NOT hand-edit org/TASKS.md or org/STATE.md. They are derived and regenerated by taskops.render_views. Note that `python -m tools.eos task views` regenerates the EOS checkout's own views rather than this repo's, which is filed as friction in EOS_FEEDBACK.md; the working invocation is in the failure message of check-derived-views.mjs.",
+    "docs/QA_NOTES.md grew substantially on 2026-08-30 and is current. It is the one document a QA pass must read first, and the audit should protect rather than trim it.",
+    "docs/EOS_FEEDBACK.md is append-only by convention and carries a finding about the EOS tooling itself. It is a channel, not a description of the product; audit it for accuracy, not for relevance."
+  ],
+  "timestamps": {
+    "opened": "2026-08-30T08:00:00Z",
+    "updated": "2026-08-30T08:00:00Z"
+  }
+}
