@@ -82,10 +82,11 @@ function SyncModal({
           </div>
           <button
             type="button"
+            aria-label="Close sync panel"
             onClick={onCancel}
             className="p-1 rounded text-ps-text-muted hover:text-white hover:bg-white/5 transition-colors"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
         <p className="px-4 py-2 text-xs font-mono text-ps-text-muted">{subtitle}</p>

@@ -206,7 +206,7 @@ export default function CharactersPage() {
                 <input value={personalityInput} onChange={(e) => setPersonalityInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addPersonality(); } }}
                   placeholder="Add trait..." className="flex-1 bg-dark-800/50 border border-white/10 rounded px-2 py-1 text-xs text-white placeholder-white/20 outline-none font-mono" />
-                <button onClick={addPersonality} className="px-2 py-1 text-xs text-neon-purple"><Plus className="w-3 h-3" /></button>
+                <button type="button" aria-label="Add personality trait" onClick={addPersonality} className="px-2 py-1 text-xs text-neon-purple"><Plus className="w-3 h-3" aria-hidden="true" /></button>
               </div>
             </div>
 
@@ -225,7 +225,7 @@ export default function CharactersPage() {
                 <input value={tagInput} onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
                   placeholder="Add tag..." className="flex-1 bg-dark-800/50 border border-white/10 rounded px-2 py-1 text-xs text-white placeholder-white/20 outline-none font-mono" />
-                <button onClick={addTag} className="px-2 py-1 text-xs text-neon-purple"><Plus className="w-3 h-3" /></button>
+                <button type="button" aria-label="Add tag" onClick={addTag} className="px-2 py-1 text-xs text-neon-purple"><Plus className="w-3 h-3" aria-hidden="true" /></button>
               </div>
             </div>
 

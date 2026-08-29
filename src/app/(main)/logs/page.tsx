@@ -275,10 +275,11 @@ export default function LogsPage() {
                   )}
                   <button
                     type="button"
+                    aria-label="Close log search"
                     onClick={closeSearchInput}
                     className="p-1.5 rounded-lg text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 shrink-0"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-4 h-4" aria-hidden="true" />
                   </button>
                 </div>
               ) : (

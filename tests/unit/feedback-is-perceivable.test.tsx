@@ -33,6 +33,7 @@ import { act, render, screen } from "@testing-library/react";
 import { readFileSync } from "fs";
 import { join } from "path";
 
+import Modal from "@/components/ui/Modal";
 import Sheet from "@/components/ui/Sheet";
 import { useToast } from "@/components/ui/Toast";
 
@@ -47,7 +48,15 @@ function maxZ(file: string): number {
 }
 
 /** A harness that shows a toast on demand, inside a Sheet when asked. */
-function Harness({ sheet = false, type = "success" as const }: { sheet?: boolean; type?: "success" | "error" }) {
+function Harness({
+  sheet = false,
+  modal = false,
+  type = "success" as const,
+}: {
+  sheet?: boolean;
+  modal?: boolean;
+  type?: "success" | "error";
+}) {
   const { showToast, toastElement, lastResult } = useToast();
   return (
     <div>
@@ -56,6 +65,11 @@ function Harness({ sheet = false, type = "success" as const }: { sheet?: boolean
         <Sheet open onClose={() => undefined} title="Composer">
           <p>sheet body</p>
         </Sheet>
+      ) : null}
+      {modal ? (
+        <Modal open onClose={() => undefined} title="Manage categories">
+          <p>modal body</p>
+        </Modal>
       ) : null}
       {/* Rendered inline rather than through a shared component, so that the
           accessibility, stacking and duration assertions above stay red for
@@ -71,6 +85,25 @@ function fire() {
     screen.getByText("fire").click();
   });
 }
+
+// Sheet reads window.matchMedia to pick its mobile layout, and jsdom does not
+// implement it. `Object.defineProperty` rather than `jest.spyOn`, because
+// spyOn throws on a property that does not exist in the first place.
+beforeAll(() => {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      onchange: null,
+      dispatchEvent: () => false,
+    }),
+  });
+});
 
 describe("a toast is announced", () => {
   it("uses a polite live region for a success", () => {
@@ -118,6 +151,20 @@ describe("a toast is visible", () => {
     render(<Harness sheet />);
     fire();
     expect(screen.getByRole("status")).toHaveTextContent("the thing happened");
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("outranks the Modal, which is the tallest overlay in the app", () => {
+    // Modal sits at z-[70], above the Sheet's z-[61], and unlike the Sheet it
+    // renders inline rather than portaling. Both facts are covered: the toast
+    // is a direct child of body AND numerically above, so no ordering of the
+    // two can put the confirmation underneath the thing that produced it.
+    render(<Harness modal />);
+    fire();
+    const region = screen.getByRole("status");
+    expect(document.body.contains(region)).toBe(true);
+    expect(region.parentElement).toBe(document.body);
+    expect(maxZ("Toast.tsx")).toBeGreaterThan(maxZ("Modal.tsx"));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 });

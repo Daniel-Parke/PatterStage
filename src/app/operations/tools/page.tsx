@@ -16,7 +16,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import Button from "@/components/ui/Button";
-import { useToast } from "@/components/ui/Toast";
+import { LastResult, useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
 import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, safeApiCallData, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
@@ -46,7 +46,7 @@ export default function ToolsPage() {
   const [platformsDiverged, setPlatformsDiverged] = useState(false);
   const [showAdvancedJson, setShowAdvancedJson] = useState(false);
   const [profileSyncStatus, setProfileSyncStatus] = useState<AgentProfile["syncStatus"] | null>(null);
-  const { showToast, toastElement } = useToast();
+  const { showToast, toastElement, lastResult } = useToast();
 
   // loadProfileSyncStatus — fetches the agent-profiles registry and
   // surfaces the selected profile's syncStatus (drift | error | null).
@@ -267,6 +267,7 @@ export default function ToolsPage() {
       />
 
       <div className="px-6 py-6 max-w-5xl">
+        <LastResult result={lastResult} />
         {profileSyncStatus === "drift" && (
           <div className="mb-4 p-3 rounded-lg bg-semantic-warning/10 border border-semantic-warning/30 flex items-start gap-2">
             <Info className="w-4 h-4 text-semantic-warning flex-shrink-0 mt-0.5" />
