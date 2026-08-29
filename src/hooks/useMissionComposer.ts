@@ -43,6 +43,17 @@ export interface UseMissionComposerArgs {
   editingId: string | null;
 }
 
+/**
+ * The schedule a new mission starts with.
+ *
+ * Named rather than repeated because it is now used in three places: the
+ * initial state, the reset that clears the form, and the reset that runs when
+ * the composer is populated from an existing mission. It was a literal in two
+ * of them and absent from the third, which is how a schedule survived a form
+ * reset and reappeared on the next mission (T-0051).
+ */
+const DEFAULT_SCHEDULE = "every 5m";
+
 export function useMissionComposer({ showCreate, editingId }: UseMissionComposerArgs) {
   const [newName, setNewName] = useState("");
   const [newInstruction, setNewInstruction] = useState("");
@@ -54,7 +65,7 @@ export function useMissionComposer({ showCreate, editingId }: UseMissionComposer
   const [newDispatch, setNewDispatch] = useState<"save" | "now" | "cron" | "queue">(
     "save",
   );
-  const [newSchedule, setNewSchedule] = useState("every 5m");
+  const [newSchedule, setNewSchedule] = useState(DEFAULT_SCHEDULE);
   const [newMissionTime, setNewMissionTime] = useState(15);
   const [newTimeout, setNewTimeout] = useState(10);
   const [newProfile, setNewProfile] = useState("");
@@ -134,7 +145,14 @@ export function useMissionComposer({ showCreate, editingId }: UseMissionComposer
   // update) from the current form state. The `schedule` field is derived
   // internally via `scheduleForDispatch(newDispatch, newSchedule)`.
   const dispatchPayload = useCallback(
-    (overrides: Record<string, unknown> = {}): Record<string, unknown> => ({
+    (overrides: Record<string, unknown> = {}): Record<string, unknown> => {
+      // The EFFECTIVE mode, not the form's. `schedule` is derived, so deriving
+      // it from state while the caller overrides the mode produces a payload
+      // that contradicts itself: the re-dispatch branch calls
+      // `dispatchPayload({ dispatchMode: "now" })`, and with the form left in
+      // cron mode that used to send a schedule alongside "now" (T-0051).
+      const mode = (overrides.dispatchMode as typeof newDispatch) ?? newDispatch;
+      return {
       instruction: newInstruction.trim(),
       context: newContext.trim() || undefined,
       outputFormat: newOutputFormat.trim() || undefined,
@@ -146,13 +164,14 @@ export function useMissionComposer({ showCreate, editingId }: UseMissionComposer
       provider: newProvider || undefined,
       missionTimeMinutes: newMissionTime,
       timeoutMinutes: newTimeout,
-      schedule: scheduleForDispatch(newDispatch, newSchedule),
+      schedule: scheduleForDispatch(mode, newSchedule),
       localDirs: newLocalDirs,
       references: newReferences,
       skills: newSkills,
       suggestedToolsets: newToolsets,
       ...overrides,
-    }),
+      };
+    },
     [
       newInstruction, newContext, newOutputFormat, newConstraints, newCategoryId, newGoals,
       newProfile, newModel, newProvider, newMissionTime, newTimeout,
@@ -188,6 +207,11 @@ export function useMissionComposer({ showCreate, editingId }: UseMissionComposer
     setNewReferences([]);
     setNewSkills([]);
     setNewToolsets([]);
+    // The schedule is a form field like the rest of them. It was left out, so
+    // the next New Mission opened holding the previous mission's cron, and a
+    // schedule nobody chose is a mission dispatched on a cadence nobody chose
+    // (T-0051).
+    setNewSchedule(DEFAULT_SCHEDULE);
   }, [setModelAndProvider]);
 
   const setCategoryId = useCallback((id: string | null) => {
@@ -307,7 +331,7 @@ export function useMissionComposer({ showCreate, editingId }: UseMissionComposer
     if (m.schedule) {
       setNewSchedule(m.schedule);
     } else {
-      setNewSchedule("every 5m");
+      setNewSchedule(DEFAULT_SCHEDULE);
     }
     if (opts.editing) {
       if (m.status === "successful" || m.status === "failed") {

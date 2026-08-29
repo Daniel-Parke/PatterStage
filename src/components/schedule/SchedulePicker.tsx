@@ -181,16 +181,30 @@ export default function SchedulePicker({
   // and on Enter. Validates with `parseSchedule`; reverts to the
   // previous canonical value on empty / invalid input so the parent
   // never sees garbage.
-  const commitAdvancedDraft = useCallback(() => {
+  /**
+   * Commit the advanced draft to the parent.
+   *
+   * Returns whether the draft was usable, so a caller that is about to SUBMIT
+   * can tell a silent revert from a successful commit. It used to return
+   * nothing and revert quietly on invalid input, which meant a typed cron could
+   * sit in the box, never commit, and ship the preset default instead, with no
+   * error anywhere (T-0051).
+   */
+  const [draftError, setDraftError] = useState<string | null>(null);
+
+  const commitAdvancedDraft = useCallback((): boolean => {
     const trimmed = advancedDraft.trim();
     if (!trimmed) {
       setAdvancedDraft(canonicalCron ?? value);
-      return;
+      setDraftError(null);
+      return true;
     }
     const parsed = parseSchedule(trimmed);
     if (parsed.kind === "invalid") {
-      setAdvancedDraft(canonicalCron ?? value);
-      return;
+      // Say so. Reverting in silence is how a schedule the operator typed
+      // becomes a schedule they did not choose.
+      setDraftError(`Not a schedule this understands: "${trimmed}"`);
+      return false;
     }
     const emitted =
       parsed.kind === "cron" && "expr" in parsed ? parsed.expr : trimmed;
@@ -198,6 +212,8 @@ export default function SchedulePicker({
       onChange(emitted);
     }
     setAdvancedDraft(emitted);
+    setDraftError(null);
+    return true;
   }, [advancedDraft, canonicalCron, value, onChange]);
 
   const toggleDay = useCallback((d: DayOfWeek) => {
@@ -396,6 +412,11 @@ export default function SchedulePicker({
               e.preventDefault();
               commitAdvancedDraft();
             } else if (e.key === "Escape") {
+              // Do not let Escape reach the sheet. `useDialogA11y` listens on
+              // the document and closes the topmost dialog, so abandoning a
+              // cron typo used to discard the whole half-filled mission
+              // (T-0051). Same class as the stacked-dialog bug T-0045 fixed.
+              e.stopPropagation();
               setAdvancedDraft(canonicalCron ?? value);
             }
           }}
@@ -406,11 +427,12 @@ export default function SchedulePicker({
         />
       )}
 
-      {/* Error */}
-      {error && (
+      {/* Error. `draftError` is the picker's own: the composer never passes
+          `error`, so before T-0051 this block could not fire at all. */}
+      {(error || draftError) && (
         <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          {error}
+          <AlertCircle className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
+          {error ?? draftError}
         </div>
       )}
     </div>

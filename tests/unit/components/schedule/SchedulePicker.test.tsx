@@ -154,16 +154,73 @@ describe("SchedulePicker", () => {
     expect(onChange).toHaveBeenCalledWith("0 9 * * 1-5");
   });
 
-  it("reverts an invalid advanced draft on blur (does not emit onChange)", () => {
+  // This test used to end at `expect(onChange).not.toHaveBeenCalled()` and
+  // called the behaviour a SILENT revert, approvingly. Rewritten under T-0051,
+  // not weakened: the half it protected is still asserted, and the half that
+  // was a defect is now asserted the other way.
+  //
+  // Not emitting garbage to the parent is right. Saying nothing about it is
+  // not: a live QA pass typed a cron, watched it sit in the box, submitted, and
+  // shipped the preset default instead, with no error anywhere on the form.
+  it("does not emit an invalid advanced draft to the parent", () => {
     const onChange = jest.fn();
     render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
     fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
     const advancedInput = screen.getByDisplayValue("0 */2 * * *") as HTMLInputElement;
     fireEvent.change(advancedInput, { target: { value: "not a cron at all" } });
     fireEvent.blur(advancedInput);
-    // The invalid draft should NOT propagate to the parent; the
-    // picker silently reverts to the last good value.
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("says WHY an invalid advanced draft was not accepted", () => {
+    const onChange = jest.fn();
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
+    fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
+    const advancedInput = screen.getByDisplayValue("0 */2 * * *") as HTMLInputElement;
+    fireEvent.change(advancedInput, { target: { value: "not a cron at all" } });
+    fireEvent.blur(advancedInput);
+    expect(screen.getByText(/not a schedule this understands/i)).toBeInTheDocument();
+  });
+
+  it("keeps the operator's text on screen so they can fix it", () => {
+    // Reverting the box as well as refusing the value means the typo vanishes
+    // before it can be corrected, and the operator cannot see what was wrong.
+    const onChange = jest.fn();
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
+    fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
+    const advancedInput = screen.getByDisplayValue("0 */2 * * *") as HTMLInputElement;
+    fireEvent.change(advancedInput, { target: { value: "not a cron at all" } });
+    fireEvent.blur(advancedInput);
+    expect(advancedInput.value).toBe("not a cron at all");
+  });
+
+  it("clears the error once the draft becomes valid", () => {
+    const onChange = jest.fn();
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
+    fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
+    const advancedInput = screen.getByDisplayValue("0 */2 * * *") as HTMLInputElement;
+    fireEvent.change(advancedInput, { target: { value: "nope" } });
+    fireEvent.blur(advancedInput);
+    expect(screen.getByText(/not a schedule this understands/i)).toBeInTheDocument();
+    fireEvent.change(advancedInput, { target: { value: "5 1 * * *" } });
+    fireEvent.blur(advancedInput);
+    expect(screen.queryByText(/not a schedule this understands/i)).toBeNull();
+    expect(onChange).toHaveBeenCalledWith("5 1 * * *");
+  });
+
+  it("Escape does not reach the dialog behind the field", () => {
+    // useDialogA11y listens on the document; without stopPropagation, pressing
+    // Escape to abandon a cron typo closed the whole composer and discarded a
+    // half-filled mission.
+    const onChange = jest.fn();
+    const onDocEscape = jest.fn();
+    document.addEventListener("keydown", onDocEscape);
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
+    fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
+    const advancedInput = screen.getByDisplayValue("0 */2 * * *") as HTMLInputElement;
+    fireEvent.keyDown(advancedInput, { key: "Escape", bubbles: true });
+    expect(onDocEscape).not.toHaveBeenCalled();
+    document.removeEventListener("keydown", onDocEscape);
   });
 
   it("commits the advanced draft on Enter", () => {
