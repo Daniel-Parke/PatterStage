@@ -37,7 +37,7 @@ function withCounts() {
   }));
 }
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     ensureDb();
     ensureDefaultCategories();

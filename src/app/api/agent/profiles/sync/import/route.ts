@@ -12,7 +12,7 @@ import {
 } from "@/modules/hermes/lib/profile-discovery";
 import { isValidProfileSlug } from "@/lib/profile-slug";
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     ensureDb();
     const discovered = discoverLocalProfiles();

@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 // ═══════════════════════════════════════════════════════════════
 // /api/models/import — Import Hermes models from config.yaml + .env
 // ═══════════════════════════════════════════════════════════════
@@ -22,7 +23,7 @@ import { appendAuditLine } from "@/lib/audit-log";
 import { maskKeyHint } from "@/lib/secret-mask";
 
 // GET /api/models/import — dry-run preview
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     const parsed = parseHermesConfig();
     return ok({
@@ -52,7 +53,7 @@ export async function GET() {
 }
 
 // POST /api/models/import — execute import
-export async function POST() {
+export async function POST(_request: NextRequest) {
   try {
     const parsed = parseHermesConfig();
 

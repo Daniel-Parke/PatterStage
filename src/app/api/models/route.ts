@@ -15,7 +15,7 @@ import { modelPostSchema } from "@/lib/api-schemas";
 import { created, ok } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/modules/hermes/lib/config-sync";
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     return ok({ models: listModels() });
   } catch (error) {

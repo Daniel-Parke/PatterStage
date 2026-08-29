@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 // ═══════════════════════════════════════════════════════════════
 // /api/models/sync/drift — detect config drift between DB and config.yaml
 // ═══════════════════════════════════════════════════════════════
@@ -8,7 +9,7 @@ import { serverErrorFromCatch } from "@/lib/api-logger";
 import { buildDriftDetails, detectConfigDrift } from "@/modules/hermes/lib/sync-manager";
 import type { SyncDrift } from "@/components/models/types";
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     const driftDetails = buildDriftDetails(detectConfigDrift());
 

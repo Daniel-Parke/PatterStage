@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 // ═══════════════════════════════════════════════════════════════
 // /api/seed/clean — preview (GET) + purge (POST) throwaway test data
 // ═══════════════════════════════════════════════════════════════
@@ -7,7 +8,7 @@ import { ok } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { cleanDevData, previewDevDataCleanup } from "@/lib/seed/clean-dev-data";
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     return ok({ preview: previewDevDataCleanup() });
   } catch (error) {
@@ -15,7 +16,7 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+export async function POST(_request: NextRequest) {
   try {
     const result = cleanDevData();
     appendAuditLine({ action: "seed.clean_dev_data", resource: `${result.counts.total} items`, ok: true });

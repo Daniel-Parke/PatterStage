@@ -29,7 +29,7 @@ import { importFallbacksFromHermesYaml } from "@/modules/hermes/lib/fallback-imp
 import { inTransaction } from "@/lib/db";
 import { created, notFound, ok, serverError } from "@/lib/api-response";
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     return ok({ entries: listFallbackChain(), config: getFallbackConfig() });
   } catch (error) {

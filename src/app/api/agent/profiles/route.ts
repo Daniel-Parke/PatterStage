@@ -105,7 +105,7 @@ function rowToApiProfile(slug: string): AgentProfile | null {
   };
 }
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     ensureDb();
     const profiles: AgentProfile[] = [];

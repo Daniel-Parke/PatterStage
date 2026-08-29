@@ -15,7 +15,7 @@ import { credentialPostSchema } from "@/lib/api-schemas";
 import { created, ok } from "@/lib/api-response";
 import { syncCredentialToHermesEnv } from "@/modules/hermes/lib/hermes-env-sync";
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     return ok({ credentials: listCredentials() });
   } catch (error) {

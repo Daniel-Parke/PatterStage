@@ -54,7 +54,7 @@ async function upsertPersonality(request: NextRequest) {
   return ok({ success: true, name: result.profile, prompt, source: "SOUL.md" });
 }
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     ensureDb();
     const root = getAgentRoot();

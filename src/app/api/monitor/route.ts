@@ -7,6 +7,7 @@
 // dashboard's inline views.
 // ═══════════════════════════════════════════════════════════════
 
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { ensureSyncLayer, getSyncScheduler } from "@/lib/sync";
@@ -34,7 +35,7 @@ function toSessionBrief(
 
 // ── Route ───────────────────────────────────────────────────
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     // Ensure sync layer is active (idempotent)
     ensureSyncLayer();

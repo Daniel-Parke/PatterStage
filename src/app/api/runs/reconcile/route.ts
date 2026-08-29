@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 // ═══════════════════════════════════════════════════════════════
 // POST /api/runs/reconcile — reconcile active runs on demand
 //
@@ -10,7 +11,7 @@ import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { reconcileActiveRuns } from "@/lib/orchestration";
 
-export async function POST() {
+export async function POST(_request: NextRequest) {
   try {
     const advanced = await reconcileActiveRuns();
     return ok({ advanced });

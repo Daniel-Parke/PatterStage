@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 // ═══════════════════════════════════════════════════════════════
 // /api/tools — Hermes toolset catalog (read-only reference)
 // ═══════════════════════════════════════════════════════════════
@@ -24,7 +25,7 @@ export async function GET() {
   });
 }
 
-export async function POST() {
+export async function POST(_request: NextRequest) {
   const ro = requireNotReadOnly("tool mutations are disabled");
   if (ro) return ro;
 

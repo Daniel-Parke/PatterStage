@@ -69,7 +69,7 @@ function maskApiKeyField(record: Record<string, unknown>, key: string): void {
 }
 
 // GET /api/config — return full config (with secrets masked)
-export async function GET() {
+export async function GET(_request: NextRequest) {
   // Auth check outside the main try/catch so it matches the PUT pattern
   // and so any future throw inside requireAuth would be classified as an
   // auth failure rather than a "reading config.yaml" error in the log.

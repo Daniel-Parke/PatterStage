@@ -14,7 +14,7 @@ import { notFound, ok } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/modules/hermes/lib/config-sync";
 import { recordEvent } from "@/lib/analytics/record-event";
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     // `defaults` carries registry UUIDs (the Models UI needs them to know which
     // model each slot points at). `agentModelLabel` is the RESOLVED display name

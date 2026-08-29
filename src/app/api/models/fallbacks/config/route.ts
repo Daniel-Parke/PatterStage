@@ -11,7 +11,7 @@ import { fallbackConfigPutSchema } from "@/lib/fallback-config-schema";
 import { syncEnabledFallbackChainToHermes } from "@/modules/hermes/lib/fallback-sync";
 import { ok } from "@/lib/api-response";
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     return ok({ config: getFallbackConfig() });
   } catch (error) {

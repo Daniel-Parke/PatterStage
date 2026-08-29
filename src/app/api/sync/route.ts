@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ensureSyncLayer, getSyncScheduler, runFullSync } from "@/lib/sync";
 import { logApiError } from "@/lib/api-logger";
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   try {
     ensureSyncLayer();
     const scheduler = getSyncScheduler();

@@ -37,7 +37,7 @@ import { handleUpdateHardwareCron } from "@/lib/hardware-cron-handlers/update";
  * directory carries either check (T-0048).
  */
 
-export async function GET() {
+export async function GET(_request: NextRequest) {
   return handleListHardwareCrons();
 }
 
