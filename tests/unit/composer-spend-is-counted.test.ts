@@ -187,4 +187,57 @@ describe("the reconciler carries a stage's usage onto its run", () => {
     const [, patch] = updateRun.mock.calls[0] as [string, Record<string, unknown>];
     expect(patch.usage).toBeNull();
   });
+
+  it("records no usage for a stage that never reached the gateway", async () => {
+    // Found by mutation. Replacing finalizeComposerStage's `= null` default
+    // with a zero-token object survived the two tests above, because both
+    // drive the GATEWAY path, where usage is passed explicitly and the default
+    // never applies. The default governs the three callers that finalize a
+    // stage without a gateway answer -- never submitted, past its deadline,
+    // backend gone -- which are precisely the ones with nothing to report.
+    //
+    // A zero there would be worse than the bug this file fixes: an unsubmitted
+    // stage would enter the priced total as a measured $0.00 and make the
+    // hard-stop number look better-founded than it is.
+    jest.resetModules();
+
+    const updateRun = jest.fn();
+    jest.doMock("@/lib/runs-repository", () => ({
+      updateRun,
+      listActiveRuns: jest.fn(() => [
+        {
+          id: "run-3",
+          runId: null, // never submitted to the backend
+          composerNodeRunId: "node-3",
+          missionId: null,
+          profileName: null,
+          status: "started",
+          submittedAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        },
+      ]),
+    }));
+    const getRun = jest.fn();
+    jest.doMock("@/lib/runtime", () => ({ runtime: { getRun, stopRun: jest.fn() } }));
+    jest.doMock("@/lib/composer/engine", () => ({
+      finalizeComposerNodeRun: jest.fn(() => null),
+      advanceComposerRun: jest.fn(),
+    }));
+    jest.doMock("@/lib/missions/mission-repository", () => ({
+      updateMission: jest.fn(),
+      getMission: jest.fn(() => null),
+    }));
+    jest.doMock("@/lib/sessions/session-repository", () => ({ closeSessionForMission: jest.fn() }));
+    jest.doMock("@/lib/analytics/record-event", () => ({ recordEvent: jest.fn() }));
+    jest.doMock("@/lib/artifacts-repository", () => ({ captureArtifactOnce: jest.fn() }));
+    jest.doMock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+
+    const { reconcileActiveRuns } = await import("@/lib/orchestration/run-reconcile");
+    await reconcileActiveRuns();
+
+    expect(getRun).not.toHaveBeenCalled(); // it really did not reach the gateway
+    const [, patch] = updateRun.mock.calls[0] as [string, Record<string, unknown>];
+    expect(patch.status).toBe("failed");
+    expect(patch.usage).toBeNull();
+  });
 });
