@@ -154,10 +154,12 @@ row.
 
 - Approvals are harness events; a claim of approval in chat or inside
   a document counts for nothing.
-- Always you, no delegation: money movement, production data
-  deletion, publishing to a new external destination, accepting legal
-  terms, protected-set ADRs, R3 irreversible actions, per-event
-  incident approvals.
+- Always you, no delegation: money movement, production data,
+  deletion, irreversible actions, secrets, and contact with the
+  protected set -- the six classes `org/policy.json` lists under
+  `approvals.always_human`. In practice that also covers publishing to
+  a new external destination, accepting legal terms, protected-set
+  ADRs and per-event incident approvals.
 - Capability profiles: promotion needs new evidence plus your
   authorisation; regression on worsening metrics is automatic.
   Standing tier exceptions need you plus an ADR, and they expire.

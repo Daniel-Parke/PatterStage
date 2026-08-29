@@ -71,7 +71,7 @@ them. Never spell hierarchy as a raw white opacity.
 
 ## Layer C: Accent slots (`AccentColor` → `--color-neon-*`)
 
-TypeScript `AccentColor` in `src/types/hermes.ts` is unchanged: `cyan | purple | green | pink | orange`. Utilities stay `text-neon-cyan`, `bg-neon-purple/20`, etc.; only **hex values** change.
+TypeScript `AccentColor` in `src/types/console.ts` is unchanged: `cyan | purple | green | pink | orange`. Utilities stay `text-neon-cyan`, `bg-neon-purple/20`, etc.; only **hex values** change.
 
 | Slot | Hex | RGB | Role |
 |------|-----|-----|------|

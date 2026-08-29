@@ -57,7 +57,7 @@ One helper: **`recordEvent(type, { entityType, entityId, profile, metadata })`**
 
 - **never throws** into the caller's hot path (the whole body is wrapped, including
   `JSON.stringify` on a bad `metadata`),
-- **no-ops in read-only mode** (`isChReadOnly()`),
+- **no-ops in read-only mode** (`isReadOnly()`, from `src/lib/read-only.ts`),
 - logs failures via `logApiError` rather than surfacing them.
 
 Emit **after** the action succeeds. Mission terminal events are emitted from

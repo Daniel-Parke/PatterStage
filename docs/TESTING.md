@@ -153,7 +153,25 @@ Other workflows: **gitleaks** (secret scan).
 
 ## Auth in route tests
 
-Many Jest suites mock **`@/lib/api-auth`** (`requireAuth` returns `null` when allowed). Mirror that pattern when adding new mutating API route tests.
+Route tests use the shared helper in `tests/helpers/api-test-helpers.ts`, which
+mocks **`@/lib/api-auth`** by spreading the REAL module and stubbing only the
+signing check:
+
+```ts
+jest.mock("@/lib/api-auth", () => ({
+  ...jest.requireActual("@/lib/api-auth"),
+  requireSignedRequest: jest.fn(() => null),
+}));
+```
+
+Do NOT replace the whole module. It used to, including `isReadOnly: () => false`,
+and that is how a read-only defect reached 34 route handlers with the suite green
+throughout: every route test ran with the mode hard-wired off, so no test could
+observe the bug even in principle (T-0048, T-0049). Spreading the real module means
+a test that sets `PS_READ_ONLY` actually gets read-only behaviour.
+
+A mock factory naming an export the module does not have is now a build failure, so
+mocking the long-deleted `requireAuth` fails rather than silently passing.
 
 ## Hermes pathing: manual verification matrix
 

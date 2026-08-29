@@ -70,9 +70,11 @@ function maskApiKeyField(record: Record<string, unknown>, key: string): void {
 
 // GET /api/config — return full config (with secrets masked)
 export async function GET(_request: NextRequest) {
-  // Auth check outside the main try/catch so it matches the PUT pattern
-  // and so any future throw inside requireAuth would be classified as an
-  // auth failure rather than a "reading config.yaml" error in the log.
+  // No auth or read-only check here, and that is deliberate: src/proxy.ts
+  // authenticates every request and refuses unsafe methods under PS_READ_ONLY
+  // before a handler runs. This comment used to describe a `requireAuth` call
+  // sitting outside the try/catch; both the call and the function were deleted
+  // in T-0048, and the comment outlived them.
   try {
     const config = readCachedConfig();
     return ok(maskConfigSecrets(config));

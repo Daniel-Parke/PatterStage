@@ -92,8 +92,15 @@ Next.js static files go in `public/` at the repo root; the Dockerfile runs
 - **API routes return `{ data?, error? }`** via the status-code-locked factories in
   `src/lib/api-response.ts`. Do not add overloads to those factories.
 - **Every catch calls `logApiError(route, context, error)`** (`src/lib/api-logger.ts`).
-- **Authentication is not a route's job.** `src/proxy.ts` enforces it for every
-  request. `requireAuth()` only checks the read-only flag despite its name.
+- **Authentication is not a route's job, and neither is read-only.** `src/proxy.ts`
+  enforces both for every request, authentication first and read-only by HTTP
+  method. Do not add either check to a handler: `requireAuth()` was exactly that
+  mistake -- a misnamed read-only check that 34 GET handlers called, which blanked
+  the dashboard under `PS_READ_ONLY` -- and it was deleted in T-0048.
+  `scripts/tooling/check-read-only-guards.mjs` fails the build if a read-only guard
+  reappears in a GET, HEAD or OPTIONS handler. The guards that DO belong in a
+  handler are the narrow ones: `requireNotReadOnly` for a non-route caller,
+  `requireDeployApiEnabled`, `requireAuthenticatedHostWrites`, `requireSignedRequest`.
 - **Whitelist body fields in PUT handlers** (no mass assignment) and validate any
   path built from input. `resolveScriptPath()` in `src/lib/scripts-manager.ts` is
   the reference implementation.

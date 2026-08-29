@@ -34,7 +34,7 @@ Override the host port in Docker Compose with **`PORT`** (see `docker-compose.ym
 | `scripts/bootstrap/` | **`install.sh`** (clone or `--in-repo`), **`setup.sh`**, **`stop.sh`**, **`backup-hermes-config.sh`**, **`setup-hindsight.sh`**, Python helper for Hindsight |
 | `scripts/application/` | **`ps-deploy.sh`**, the single deploy entry for CLI and dashboard (`update`, `restart`, `rebuild`; optional `--branch`) |
 | `scripts/lib/` | Shared bash modules (`ps-deploy-impl.sh`, Hermes profile templates, dotenv, port helpers, …) |
-| `scripts/tooling/` | **`prebuild-db.mjs`**, **`discover-agents.mjs`**, **`generate-json-schema.ts`** (also run via `npm run prebuild`, `npm run discover-agents`, `npm run generate:schema-json`) |
+| `scripts/tooling/` | **`prebuild-db.mjs`**, **`discover-agents.mjs`**, **`generate-json-schema.ts`** (also run via `npm run prebuild`, `npm run discover-hermes`, `npm run generate:schema-json`) |
 | `scripts/hardware/` | Preset cron scripts; copied into **`PS_DATA_DIR/scripts`** when missing during **`scripts/bootstrap/setup.sh`**. Behaviour: **[SYSTEM-CRON.md](SYSTEM-CRON.md)**. |
 | `data/seed/` | Professional catalog (profiles, template packs); seeded via `npm run db:seed` / `ps-deploy update` (see [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md)) |
 | `scripts/git-hooks/` | Optional Git hooks (see [CONTRIBUTING.md](CONTRIBUTING.md)) |

@@ -17,7 +17,7 @@ Technical reference for PatterStage. Tone elsewhere in this folder is deliberate
 | [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) | Operator guide: every sidebar page, every common action (dashboard, missions + scheduling, scripts, chat, agents + performance, skills, tools, personalities, sessions, memory, logs, all Config pages, Story Weaver) |
 | [MISSIONS.md](MISSIONS.md) | Mission board, dispatch, cancellation, templates (simple single/recurring runs) |
 | [COMPOSER.md](COMPOSER.md) | Composer: the graph orchestrator for multi-stage workflows with loops + HIL gates |
-| [LABORATORY.md](LABORATORY.md) | Laboratory section: Insights, Benchmarks, Deep Research |
+| [LABORATORY.md](LABORATORY.md) | Laboratory section: Insights, Deep Research, Artifacts |
 | [DEEP_RESEARCH.md](DEEP_RESEARCH.md) | Native iterative web research (provider-flexible, free/local-first search) |
 | [CHAT.md](CHAT.md) | Agent chat: server-persisted conversations, run-event streaming, tools + HITL approvals, Agent/Fast modes |
 | [MEMORY.md](MEMORY.md) | Agent long-term memory (Hindsight): how it connects, the mock, Docker + native setup |
