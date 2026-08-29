@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-import { requireAuth, requireAuthenticatedHostWrites, isReadOnly } from "@/lib/api-auth";
+import { requireAuthenticatedHostWrites, isReadOnly } from "@/lib/api-auth";
 import { serviceUnavailable } from "@/lib/api-response";
 import { handleCreateHardwareCron } from "@/lib/hardware-cron-handlers/create";
 import { handleDeleteHardwareCron } from "@/lib/hardware-cron-handlers/delete";
@@ -32,21 +32,16 @@ import { handleUpdateHardwareCron } from "@/lib/hardware-cron-handlers/update";
  *   disabled-state.ts   the paused-job id sidecar
  *   list/create/update/delete.ts   one per HTTP verb
  *
- * Authentication is enforced once in src/proxy.ts; `requireAuth` here is the
- * route's own gate and never a second token check (design-lint
- * no-auth-in-route-handler).
+ * Authentication is enforced once in src/proxy.ts, and so is read-only mode,
+ * which refuses unsafe methods before any handler runs. No route in this
+ * directory carries either check (T-0048).
  */
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET() {
   return handleListHardwareCrons();
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   // Installing a crontab line makes the host execute code on a timer.
   const hostWrites = requireAuthenticatedHostWrites();
   if (hostWrites) return hostWrites;
@@ -58,8 +53,6 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   // Installing a crontab line makes the host execute code on a timer.
   const hostWrites = requireAuthenticatedHostWrites();
   if (hostWrites) return hostWrites;
@@ -71,8 +64,6 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   // Installing a crontab line makes the host execute code on a timer.
   const hostWrites = requireAuthenticatedHostWrites();
   if (hostWrites) return hostWrites;

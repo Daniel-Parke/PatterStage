@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getDefaultModel, getModelDefaults, setDefaultModel } from "@/lib/models-repository";
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { setDefaultPutSchema } from "@/lib/api-schemas";
@@ -14,10 +14,7 @@ import { notFound, ok } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/modules/hermes/lib/config-sync";
 import { recordEvent } from "@/lib/analytics/record-event";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET() {
   try {
     // `defaults` carries registry UUIDs (the Models UI needs them to know which
     // model each slot points at). `agentModelLabel` is the RESOLVED display name
@@ -38,9 +35,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const parsed = await parseAndValidateJsonBody(request, setDefaultPutSchema);
   if (parsed instanceof NextResponse) return parsed;
 

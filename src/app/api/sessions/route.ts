@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth, isReadOnly } from "@/lib/api-auth";
+import { isReadOnly } from "@/lib/api-auth";
 import { badRequest, created, notFound, ok, serviceUnavailable } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import {
@@ -33,9 +33,6 @@ import {
 } from "@/lib/sessions/sessions-api-helpers";
 
 export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   try {
     const q = parseSessionQuery(request);
 
@@ -78,9 +75,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   if (isReadOnly()) {
     return serviceUnavailable("PatterStage is in read-only mode");
   }

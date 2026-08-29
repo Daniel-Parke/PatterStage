@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+
 import { badRequest, methodNotAllowed, notFound, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
@@ -54,10 +54,7 @@ async function upsertPersonality(request: NextRequest) {
   return ok({ success: true, name: result.profile, prompt, source: "SOUL.md" });
 }
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET() {
   try {
     ensureDb();
     const root = getAgentRoot();
@@ -89,9 +86,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   try {
     return await upsertPersonality(request);
   }
@@ -114,9 +108,6 @@ export async function DELETE() {
 }
 
 export async function PUT(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   try {
     return await upsertPersonality(request);
   }

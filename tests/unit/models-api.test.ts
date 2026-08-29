@@ -76,7 +76,6 @@ jest.mock("@/lib/models-repository", () => {
   };
 });
 
-
 // Mock the sync-manager for any push/pull imports
 jest.mock("@/modules/hermes/lib/sync-manager", () => ({
   pushModelToHermes: jest.fn(() => ({ success: true, backupPath: null, details: [] })),
@@ -201,27 +200,13 @@ describe("/api/models", () => {
     expect(res.status).toBe(400);
   });
 
-  it("POST is gated by readonly mode", async () => {
-    auth.requireAuth.mockReturnValue({ status: 503, json: async () => ({}) });
-    const res = await postModels({
-      name: "x",
-      provider: "anthropic",
-      modelId: "x",
-    });
-    expect(res.status).toBe(503);
-    expect(repo.__createModel).not.toHaveBeenCalled();
-  });
+  // Read-only refusal is no longer asserted here, because it is no longer
+  // enforced here. T-0048 deleted the per-route guard: src/proxy.ts refuses
+  // every unsafe method under PS_READ_ONLY before a handler runs, so a test that
+  // calls this handler directly bypasses the thing it means to check. The
+  // guarantee is asserted per route, in both directions, in
+  // tests/unit/read-only-actually-reads.test.ts.
 
-  it("POST is gated by api-key auth", async () => {
-    auth.requireAuth.mockReturnValue({ status: 401, json: async () => ({}) });
-    const res = await postModels({
-      name: "x",
-      provider: "anthropic",
-      modelId: "x",
-    });
-    expect(res.status).toBe(401);
-    expect(repo.__createModel).not.toHaveBeenCalled();
-  });
 });
 
 describe("/api/models/[id]", () => {

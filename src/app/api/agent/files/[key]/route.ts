@@ -9,7 +9,7 @@ import { parseJsonBody } from "@/lib/parse-json-body";
 import { safeStat } from "@/lib/fs/fs-stats";
 import { ensureDir, backupTimestamp } from "@/lib/fs/fs-helpers";
 import { resolveSafeProfileName } from "@/lib/fs/path-security";
-import { requireAuth } from "@/lib/api-auth";
+
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
 import { getProfile } from "@/modules/hermes/lib/profiles-repository";
@@ -138,9 +138,6 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ key: string }> },
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { key } = await params;
   const profile = request.nextUrl.searchParams.get("profile");
   const resolved = resolveFilePath(key, profile);
@@ -211,9 +208,6 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ key: string }> },
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { key } = await params;
   const profile = request.nextUrl.searchParams.get("profile");
   const resolved = resolveFilePath(key, profile);

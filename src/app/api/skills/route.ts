@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+
 import { notFound, ok } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
 import { safeStat } from "@/lib/fs/fs-stats";
@@ -15,9 +15,6 @@ import { groupByCategory } from "@/lib/skills-grouping";
 import type { Skill } from "@/types/console";
 
 export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const profileParam = request.nextUrl.searchParams.get("profile") || "default";
   const refreshFromDisk = request.nextUrl.searchParams.get("refresh") === "1";
   const prof = requireSafeProfileName(profileParam);

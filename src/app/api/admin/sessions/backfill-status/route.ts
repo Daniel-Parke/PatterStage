@@ -26,15 +26,12 @@ import {
   closeOrphanedActiveSessions,
   previewOrphanSweep,
 } from "@/lib/sessions/session-orphan-sweep";
-import { requireAuth, isReadOnly } from "@/lib/api-auth";
+import { isReadOnly } from "@/lib/api-auth";
 import { serviceUnavailable } from "@/lib/api-response";
 import { appendAuditLine } from "@/lib/audit-log";
 import { logApiError } from "@/lib/api-logger";
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   let body: { dryRun?: boolean } = {};
   try {
     body = (await request.json().catch(() => ({}))) as { dryRun?: boolean };

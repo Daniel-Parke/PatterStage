@@ -73,62 +73,12 @@ describe("PUT /api/skills/[name]/toggle", () => {
     mockRequireAuth.mockReturnValue(null);
   });
 
-  it("rejects request when requireAuth returns a response (read-only)", async () => {
-    const readOnlyResponse = NextResponse.json(
-      { error: "Read-only mode" },
-      { status: 403 }
-    );
-    mockRequireAuth.mockReturnValue(readOnlyResponse);
-
-    const { PUT } = await import("@/app/api/skills/[name]/toggle/route");
-    const req = new NextRequest("http://localhost/api/skills/test-skill/toggle", {
-      method: "PUT",
-      body: JSON.stringify({ enabled: true }),
-      headers: { "content-type": "application/json" },
-    });
-
-    const res = await PUT(req, { params: Promise.resolve({ name: "test-skill" }) });
-
-    expect(res.status).toBe(403);
-    const data = await res.json();
-    expect(data.error).toBe("Read-only mode");
-  });
-
-  it("rejects request when requireAuth returns unauthorized", async () => {
-    const authResponse = NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
-    mockRequireAuth.mockReturnValue(authResponse);
-
-    const { PUT } = await import("@/app/api/skills/[name]/toggle/route");
-    const req = new NextRequest("http://localhost/api/skills/test-skill/toggle", {
-      method: "PUT",
-      body: JSON.stringify({ enabled: true }),
-      headers: { "content-type": "application/json" },
-    });
-
-    const res = await PUT(req, { params: Promise.resolve({ name: "test-skill" }) });
-
-    expect(res.status).toBe(401);
-  });
-
-  it("allows toggle when auth passes", async () => {
-    mockExistsSync.mockReturnValue(true);
-    mockReadFileSync.mockReturnValue("skills:\n  enabled: []\n");
-
-    const { PUT } = await import("@/app/api/skills/[name]/toggle/route");
-    const req = new NextRequest("http://localhost/api/skills/test-skill/toggle", {
-      method: "PUT",
-      body: JSON.stringify({ enabled: true }),
-      headers: { "content-type": "application/json" },
-    });
-
-    const res = await PUT(req, { params: Promise.resolve({ name: "test-skill" }) });
-
-    expect(res.status).toBeLessThan(500);
-    expect(mockRequireAuth).toHaveBeenCalled();
-  });
+  // Read-only refusal is no longer asserted here, because it is no longer
+  // enforced here. T-0048 deleted the per-route guard: `src/proxy.ts` refuses
+  // every unsafe method under PS_READ_ONLY before a handler runs, so a test that
+  // calls this handler directly bypasses the thing it means to check. The
+  // guarantee is asserted per route, in both directions, in
+  // tests/unit/read-only-actually-reads.test.ts.
 
   it("returns 400 on invalid JSON body (regression — was 500)", async () => {
     // Before parseJsonBody was extracted, request.json() was inside the
@@ -146,4 +96,21 @@ describe("PUT /api/skills/[name]/toggle", () => {
     const body = await res.json();
     expect(body.error).toMatch(/invalid json/i);
   });
+
+  // Restored from the T-0048 sweep, minus the `mockRequireAuth` assertion. What
+  // remains is the real guarantee: the handler does not fall into the 500 branch.
+  it("does not 500 on a well-formed toggle", async () => {
+    mockExistsSync.mockReturnValue(true);
+    mockReadFileSync.mockReturnValue("skills:\n  enabled: []\n");
+
+    const { PUT } = await import("@/app/api/skills/[name]/toggle/route");
+    const req = new NextRequest("http://localhost/api/skills/test-skill/toggle", {
+      method: "PUT",
+      body: JSON.stringify({ enabled: true }),
+      headers: { "content-type": "application/json" },
+    });
+    const res = await PUT(req, { params: Promise.resolve({ name: "test-skill" }) });
+    expect(res.status).toBeLessThan(500);
+  });
+
 });

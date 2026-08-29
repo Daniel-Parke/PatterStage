@@ -13,18 +13,12 @@ describe("personality route security", () => {
 
   // ── Read-only mode ───────────────────────────────────────────
 
-  it("rejects writes when CH_READ_ONLY is set", async () => {
-    process.env.CH_READ_ONLY = "true";
-    const { PUT } = await import("@/app/api/agent/personality/route");
-
-    const request = new NextRequest("http://localhost/api/agent/personality", {
-      method: "PUT",
-      body: JSON.stringify({ personality: "friendly" }),
-    });
-
-    const response = await PUT(request);
-    expect(response.status).toBe(503);
-  });
+  // Read-only refusal is no longer asserted here, because it is no longer
+  // enforced here. T-0048 deleted the per-route guard: `src/proxy.ts` refuses
+  // every unsafe method under PS_READ_ONLY before a handler runs, so a test that
+  // calls this handler directly bypasses the thing it means to check. The
+  // guarantee is asserted per route, in both directions, in
+  // tests/unit/read-only-actually-reads.test.ts.
 
   // ── Path traversal prevention ─────────────────────────────────
 

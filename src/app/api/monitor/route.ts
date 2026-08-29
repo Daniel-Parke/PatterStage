@@ -8,13 +8,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
 import { ensureSyncLayer, getSyncScheduler } from "@/lib/sync";
 import { getSystemStat, getSystemStatNumber } from "@/lib/system-repository";
 import { listSessions } from "@/lib/sessions/session-repository";
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+
 import { readGatewayPlatforms, readRecentErrorLogEntries } from "@/lib/sync/sync-repository";
 import { getActiveFramework } from "@/lib/frameworks";
 import { readSchedulerHealth } from "@/lib/orchestration/scheduler/health";
@@ -35,10 +34,7 @@ function toSessionBrief(
 
 // ── Route ───────────────────────────────────────────────────
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET() {
   try {
     // Ensure sync layer is active (idempotent)
     ensureSyncLayer();

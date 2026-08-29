@@ -9,8 +9,6 @@
 // GET: returns a dry-run preview of what would be imported without
 //   writing anything to the database.
 
-import { NextRequest } from "next/server";
-
 import { parseHermesConfig } from "@/modules/hermes/lib/config-import";
 import { modelKey } from "@/lib/model-key";
 import { upsertModel, updateModel, listModels } from "@/lib/models-repository";
@@ -19,15 +17,12 @@ import { envVarForProvider } from "@/modules/hermes/lib/providers";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { toError } from "@/lib/api-fetch";
-import { requireAuth } from "@/lib/api-auth";
+
 import { appendAuditLine } from "@/lib/audit-log";
 import { maskKeyHint } from "@/lib/secret-mask";
 
 // GET /api/models/import — dry-run preview
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET() {
   try {
     const parsed = parseHermesConfig();
     return ok({
@@ -57,10 +52,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/models/import — execute import
-export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function POST() {
   try {
     const parsed = parseHermesConfig();
 

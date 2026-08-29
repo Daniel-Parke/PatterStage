@@ -72,46 +72,26 @@ describe("POST /api/tools configure action auth", () => {
     mockExistsSync.mockReturnValue(true);
   });
 
-  it("rejects when read-only mode is active", async () => {
-    const readOnlyResponse = new Response("Read only", { status: 403 });
-    mockRequireAuth.mockReturnValue(readOnlyResponse);
+  // Read-only refusal is no longer asserted here, because it is no longer
+  // enforced here. T-0048 deleted the per-route guard: `src/proxy.ts` refuses
+  // every unsafe method under PS_READ_ONLY before a handler runs, so a test that
+  // calls this handler directly bypasses the thing it means to check. The
+  // guarantee is asserted per route, in both directions, in
+  // tests/unit/read-only-actually-reads.test.ts.
 
+
+  // Restored from the T-0048 sweep. The mock plumbing this was entangled with is
+  // gone; the 405 it asserts is real behaviour and worth keeping: the tools
+  // registry is a read-only catalogue and POST is not a verb it supports.
+  it("returns 405: the tool registry is a read-only catalogue", async () => {
     const req = new NextRequest("http://localhost/api/tools", {
       method: "POST",
       body: JSON.stringify({ action: "configure", id: "terminal", enabled: true }),
     });
     const res = await POST(req);
-
-    expect(res.status).toBe(403);
-    expect(mockRequireAuth).toHaveBeenCalled();
-  });
-
-  it("rejects when API key is missing/invalid", async () => {
-    mockRequireAuth.mockReturnValue(null);
-    const authResponse = new Response("Unauthorized", { status: 401 });
-    mockRequireAuth.mockReturnValue(authResponse);
-
-    const req = new NextRequest("http://localhost/api/tools", {
-      method: "POST",
-      body: JSON.stringify({ action: "configure", id: "terminal", enabled: true }),
-    });
-    const res = await POST(req);
-
-    expect(res.status).toBe(401);
-    expect(mockRequireAuth).toHaveBeenCalled();
-  });
-
-  it("returns 405 when auth passes (POST not allowed on read-only tool registry)", async () => {
-    mockRequireAuth.mockReturnValue(null);
-
-    const req = new NextRequest("http://localhost/api/tools", {
-      method: "POST",
-      body: JSON.stringify({ action: "configure", id: "terminal", enabled: true }),
-    });
-    const res = await POST(req);
-
     expect(res.status).toBe(405);
   });
+
 });
 
 // Helper to call POST /api/tools

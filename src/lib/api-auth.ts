@@ -4,28 +4,22 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { serviceUnavailable } from "@/lib/api-response";
 import { getAuthMode } from "@/lib/auth-token";
-
-function firstEnvFlag(keys: string[]): string | undefined {
-  for (const key of keys) {
-    const value = process.env[key];
-    if (value !== undefined && String(value).trim() !== "") return String(value).trim();
-  }
-  return undefined;
-}
+import { readEnv } from "@/lib/paths";
+import { isReadOnly, readOnlyMessage } from "@/lib/read-only";
 
 function isDeployApiEnabled(): boolean {
-  const raw = firstEnvFlag(["PS_ENABLE_DEPLOY_API", "CH_ENABLE_DEPLOY_API"]);
+  const raw = readEnv("PS_ENABLE_DEPLOY_API", "CH_ENABLE_DEPLOY_API");
   const value = raw?.toLowerCase();
   if (value === "1" || value === "true" || value === "yes") return true;
   if (value === "0" || value === "false" || value === "no") return false;
   return process.env.NODE_ENV !== "production";
 }
 
-export function isReadOnly(): boolean {
-  const raw = firstEnvFlag(["PS_READ_ONLY", "CH_READ_ONLY"]);
-  const value = raw?.toLowerCase();
-  return value === "1" || value === "true";
-}
+/**
+ * Re-exported from `@/lib/read-only` so the route layer and the proxy read the
+ * same function, not two implementations of the same sentence (T-0048).
+ */
+export { isReadOnly };
 
 export function getCorrelationId(request: NextRequest): string {
   return (
@@ -36,7 +30,7 @@ export function getCorrelationId(request: NextRequest): string {
 }
 
 export function requireSignedRequest(request: NextRequest): NextResponse | null {
-  const secret = firstEnvFlag(["PS_REQUEST_SIGNING_SECRET", "CH_REQUEST_SIGNING_SECRET"]) || "";
+  const secret = readEnv("PS_REQUEST_SIGNING_SECRET", "CH_REQUEST_SIGNING_SECRET") || "";
   if (!secret) return null;
   const ts = request.headers.get("x-ps-ts") || request.headers.get("x-ch-ts") || "";
   const sig = request.headers.get("x-ps-signature") || request.headers.get("x-ch-signature") || "";
@@ -58,25 +52,26 @@ export function requireSignedRequest(request: NextRequest): NextResponse | null 
 }
 
 /**
- * Guard for write endpoints. Returns a 503 NextResponse (to be returned
- * from the route handler) if PatterStage is in read-only mode, or
- * `null` if writes are allowed.
+ * Guard for a WRITE endpoint that needs its own resource-specific wording.
  *
- * Optional `context` is appended to the default message as a
- * resource-specific hint (e.g. "skill toggles are disabled",
- * "tool mutations are disabled"). When omitted, the canonical default
- * message including the env-var hint is used.
+ * ⚠️ Almost nothing should call this. `src/proxy.ts` refuses every unsafe method
+ * under read-only before a handler runs, so a route-level call is redundant. It
+ * survives only for the handful of endpoints that are not simply "a write":
+ * a GET that performs a side effect, or a route whose refusal is more useful
+ * with a resource named in it.
+ *
+ * NEVER call it from a GET, HEAD or OPTIONS handler. That is the defect T-0048
+ * removed: `requireAuth()` was a thin alias for this function, 34 read handlers
+ * called it, and `PS_READ_ONLY` therefore 503'd the dashboard it exists to
+ * enable. `scripts/tooling/check-read-only-guards.mjs` fails the build on it.
+ *
+ * The message is `readOnlyMessage()` so the operator sees one sentence whichever
+ * layer refused. The wording here used to say "set PS_READ_ONLY=true to allow
+ * writes", which is the opposite of the fix.
  */
 export function requireNotReadOnly(context?: string): NextResponse | null {
   if (!isReadOnly()) return null;
-  if (!context) {
-    return serviceUnavailable(
-      "PatterStage is in read-only mode (set PS_READ_ONLY=true to allow writes)."
-    );
-  }
-  return serviceUnavailable(
-    `PatterStage is in read-only mode — ${context}`,
-  );
+  return serviceUnavailable(readOnlyMessage(context));
 }
 
 export function requireDeployApiEnabled(): NextResponse | null {
@@ -107,22 +102,4 @@ export function requireAuthenticatedHostWrites(): NextResponse | null {
     },
     { status: 403 },
   );
-}
-
-/**
- * Write-access guard: checks the read-only mode flag ONLY.
- *
- * ⚠️ This function does NOT authenticate. Authentication lives in `src/proxy.ts`
- * and is enforced on every request before a handler runs — it cannot be
- * forgotten by a new route, which is the whole point. These per-route calls are
- * now redundant defence-in-depth for the read-only flag; do not treat the
- * presence of this call as evidence that a route is protected.
- *
- * Historical: the name dates from when every caller was a write route. It is
- * kept only to avoid churning ~30 call sites in a security hotfix; the rename to
- * `requireWriteAccess()` and the deletion of the redundant calls happen when the
- * read-only check moves wholly into the proxy.
- */
-export function requireAuth(_request: NextRequest): NextResponse | null {
-  return requireNotReadOnly();
 }

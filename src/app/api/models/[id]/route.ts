@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getModel, updateModel, deleteModel } from "@/lib/models-repository";
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { modelPutSchema } from "@/lib/api-schemas";
@@ -33,9 +33,6 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
 }
 
 export async function PUT(request: NextRequest, ctx: Ctx) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await ctx.params;
 
   const parsed = await parseAndValidateJsonBody(request, modelPutSchema);
@@ -60,9 +57,6 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
 }
 
 export async function DELETE(request: NextRequest, ctx: Ctx) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await ctx.params;
   try {
     const okDeleted = deleteModel(id);

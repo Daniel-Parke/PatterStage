@@ -4,14 +4,13 @@
 // DB records by provider+modelId.
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
+
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { updateModel, listModels } from "@/lib/models-repository";
 import { readHermesConfigModels, type HermesConfigModelEntry } from "@/modules/hermes/lib/hermes-config-read";
 import { notFound, ok } from "@/lib/api-response";
 import { modelKey } from "@/lib/model-key";
 import { z } from "zod";
-
 
 interface Diff { field: string; before: unknown; after: unknown }
 
@@ -58,9 +57,6 @@ function computeDiffs(
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   // Body is entirely optional — `{}` triggers a bulk pull, `{ modelId }`
   // triggers a single-model pull, `{ modelId, excluded: [...] }` pulls
   // one model minus the excluded fields. All fields are optional.

@@ -58,20 +58,12 @@ describe("/api/stories auth checks", () => {
     jest.clearAllMocks();
   });
 
-  it("POST returns 503 when CH_READ_ONLY=true", async () => {
-    process.env.CH_READ_ONLY = "true";
-
-    const { POST } = await import("@/app/api/stories/route");
-    const request = new NextRequest("http://localhost/api/stories", {
-      method: "POST",
-      body: JSON.stringify({ action: "list" }),
-    });
-    const res = await POST(request);
-
-    expect(res.status).toBe(503);
-    const data = await res.json();
-    expect(data.error).toContain("read-only");
-  });
+  // Read-only refusal is no longer asserted here, because it is no longer
+  // enforced here. T-0048 deleted the per-route guard: `src/proxy.ts` refuses
+  // every unsafe method under PS_READ_ONLY before a handler runs, so a test that
+  // calls this handler directly bypasses the thing it means to check. The
+  // guarantee is asserted per route, in both directions, in
+  // tests/unit/read-only-actually-reads.test.ts.
 
   it("POST proceeds when not read-only", async () => {
     delete process.env.CH_READ_ONLY;

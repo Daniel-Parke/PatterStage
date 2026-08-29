@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { existsSync, readFileSync } from "fs";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
+import { requireNotReadOnly } from "@/lib/api-auth";
 import { badRequest, notFound, ok, serverError } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { safeStat } from "@/lib/fs/fs-stats";
@@ -17,9 +17,6 @@ export async function GET(
   { params }: { params: Promise<{ name: string }> },
 ) {
   const { name } = await params;
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   try {
     ensureDb();
     const row = getSkill(name);
@@ -64,8 +61,6 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ name: string }> },
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   const ro = requireNotReadOnly("skill writes are disabled");
   if (ro) return ro;
 

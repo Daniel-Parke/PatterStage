@@ -8,17 +8,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { listCredentials, createCredential, deleteCredential } from "@/lib/credentials-repository";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { credentialPostSchema } from "@/lib/api-schemas";
 import { created, ok } from "@/lib/api-response";
 import { syncCredentialToHermesEnv } from "@/modules/hermes/lib/hermes-env-sync";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET() {
   try {
     return ok({ credentials: listCredentials() });
   } catch (error) {
@@ -32,9 +29,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   // Hoist body parsing out of the main try/catch so malformed JSON returns
   // 400 (via parseAndValidateJsonBody) rather than 500. Aligns with every
   // other route in the Models/Config/Fallbacks surface.

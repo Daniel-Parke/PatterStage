@@ -9,7 +9,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, ok } from "@/lib/api-response";
 import { getAgentGateway } from "@/lib/runtime/gateway";
@@ -53,9 +53,6 @@ async function fetchGateway(
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const bodyResult = await parseJsonBody(request);
   if (bodyResult instanceof NextResponse) return bodyResult;
   const body = bodyResult as { messages?: unknown; model?: string; stream?: boolean };

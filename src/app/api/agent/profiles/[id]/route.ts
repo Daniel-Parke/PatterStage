@@ -4,7 +4,7 @@ import { renameSync, existsSync } from "fs";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { resolveSafeProfileName, requireSafeProfileName } from "@/lib/fs/path-security";
-import { requireAuth } from "@/lib/api-auth";
+
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
 import {
@@ -23,9 +23,6 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await params;
   const prof = requireSafeProfileName(id);
   if (prof instanceof NextResponse) return prof;
@@ -105,9 +102,6 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await params;
   const prof = requireSafeProfileName(id);
   if (prof instanceof NextResponse) return prof;

@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
+
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, notFound } from "@/lib/api-response";
 import { deleteArtifact, getArtifact } from "@/lib/artifacts-repository";
@@ -13,8 +13,6 @@ interface Ctx {
 }
 
 export async function GET(request: NextRequest, ctx: Ctx) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   const { id } = await ctx.params;
   try {
     const artifact = getArtifact(id);
@@ -26,8 +24,6 @@ export async function GET(request: NextRequest, ctx: Ctx) {
 }
 
 export async function DELETE(request: NextRequest, ctx: Ctx) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   const { id } = await ctx.params;
   try {
     const deleted = deleteArtifact(id);

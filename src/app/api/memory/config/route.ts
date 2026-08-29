@@ -9,7 +9,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, badRequest } from "@/lib/api-response";
 import { ensureDb } from "@/lib/db";
@@ -50,8 +49,6 @@ export async function GET() {
 }
 
 export async function PUT(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   const parsed = await parseAndValidateJsonBody(request, putSchema);
   if (parsed instanceof NextResponse) return parsed;
   try {
@@ -70,8 +67,6 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   const parsed = await parseAndValidateJsonBody(request, testSchema);
   if (parsed instanceof NextResponse) return parsed;
   try {

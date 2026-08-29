@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 
-import { requireAuth } from "@/lib/api-auth";
 import { badRequest, ok } from "@/lib/api-response";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
@@ -13,10 +12,7 @@ import {
 } from "@/modules/hermes/lib/profile-discovery";
 import { isValidProfileSlug } from "@/lib/profile-slug";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET() {
   try {
     ensureDb();
     const discovered = discoverLocalProfiles();
@@ -33,9 +29,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   // Body is a bag of optional flags (slug, importSkills,
   // importAllDiscovered); missing or malformed body is treated as {}.
   const body = await parseOptionalJsonBody(request);

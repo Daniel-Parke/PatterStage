@@ -9,7 +9,7 @@
 //        per-entry GET/PUT/DELETE stays at /[id] and the behaviour
 //        config at /config.
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
+
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { toError } from "@/lib/api-fetch";
@@ -29,10 +29,7 @@ import { importFallbacksFromHermesYaml } from "@/modules/hermes/lib/fallback-imp
 import { inTransaction } from "@/lib/db";
 import { created, notFound, ok, serverError } from "@/lib/api-response";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET() {
   try {
     return ok({ entries: listFallbackChain(), config: getFallbackConfig() });
   } catch (error) {
@@ -46,9 +43,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const parsed = await parseAndValidateJsonBody(request, fallbackActionSchema);
   if (parsed instanceof NextResponse) return parsed;
 

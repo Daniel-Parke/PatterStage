@@ -6,15 +6,11 @@
 // tests that don't want to wait a full tick). Idempotent and safe.
 // ═══════════════════════════════════════════════════════════════
 
-import { NextRequest } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { reconcileActiveRuns } from "@/lib/orchestration";
 
-export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
+export async function POST() {
   try {
     const advanced = await reconcileActiveRuns();
     return ok({ advanced });

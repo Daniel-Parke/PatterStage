@@ -104,8 +104,19 @@ describe("the read-only guard has left the route handlers", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("`requireAuth` is gone from the route tree entirely", () => {
-    const callers = files.filter((f) => /\brequireAuth\b/.test(readFileSync(f, "utf-8")));
+  it("`requireAuth` is called nowhere in the route tree", () => {
+    // Comment-aware, like design-lint. Prose recording WHY a route no longer
+    // carries the guard is the most useful thing left in these files, and a
+    // check that forbade the word outright would delete its own explanation.
+    const callers = files.filter((file) =>
+      readFileSync(file, "utf-8")
+        .split(/\r?\n/)
+        .some((raw) => {
+          const t = raw.trim();
+          if (t.startsWith("//") || t.startsWith("*") || t.startsWith("/*")) return false;
+          return /\brequireAuth\s*\(/.test(raw);
+        }),
+    );
     expect(callers.map((f) => f.replace(/\\/g, "/").split("/src/")[1])).toEqual([]);
   });
 
@@ -162,12 +173,58 @@ describe("proxy — read-only reads, refuses writes, and authenticates first", (
     expect(res.status).toBe(401);
   });
 
+  // Every write route that used to carry its own `requireAuth` guard and had a
+  // test pinning it. Those tests mocked `requireAuth` and asserted the handler
+  // forwarded its response, so they exercised plumbing rather than the mode.
+  // The guarantee they stood for is asserted here instead, at the layer that
+  // now enforces it for EVERY route rather than the ones that remembered to ask.
+  const FORMERLY_SELF_GUARDED = [
+    "/api/templates",
+    "/api/skills/some-skill",
+    "/api/skills/some-skill/toggle",
+    "/api/tools",
+    "/api/models",
+    "/api/memory",
+    "/api/personalities",
+    "/api/stories",
+    "/api/credentials",
+    "/api/update",
+  ];
+
+  it.each(FORMERLY_SELF_GUARDED)("refuses a write to %s under PS_READ_ONLY", async (path) => {
+    process.env.PS_READ_ONLY = "1";
+    const proxy = await loadProxy();
+    const res = proxy(
+      req(`http://localhost:4242${path}`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${TOKEN}` },
+      }),
+    );
+    expect(res.status).toBe(503);
+  });
+
+  it.each(FORMERLY_SELF_GUARDED)("still serves a READ of %s under PS_READ_ONLY", async (path) => {
+    process.env.PS_READ_ONLY = "1";
+    const proxy = await loadProxy();
+    const res = proxy(
+      req(`http://localhost:4242${path}`, { headers: { authorization: `Bearer ${TOKEN}` } }),
+    );
+    expect(res.status).toBe(200);
+  });
+
   it("does not let a public path punch a write through read-only", async () => {
     // /api/health is GET-only today, so this is a guard on the guard: adding a
     // POST to a public path must not silently bypass the mode.
+    // Authenticated on purpose. Anonymous, this would be 401 by the ordering
+    // rule above, which would make the assertion about the wrong thing.
     process.env.PS_READ_ONLY = "1";
     const proxy = await loadProxy();
-    const res = proxy(req("http://localhost:4242/api/health", { method: "POST" }));
+    const res = proxy(
+      req("http://localhost:4242/api/health", {
+        method: "POST",
+        headers: { authorization: `Bearer ${TOKEN}` },
+      }),
+    );
     expect(res.status).toBe(503);
   });
 

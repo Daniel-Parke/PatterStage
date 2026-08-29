@@ -12,7 +12,7 @@ import {
   resolveLogFilePath,
 } from "@/lib/fs/log-files";
 import { injectMissingTimestamps } from "@/lib/log-line-format";
-import { requireAuth } from "@/lib/api-auth";
+
 import { badRequest, notFound, ok } from "@/lib/api-response";
 import type { LogFileMeta } from "@/lib/fs/log-files";
 
@@ -44,9 +44,6 @@ export interface LogGetData {
 }
 
 export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   try {
     const { searchParams } = new URL(request.url);
     const parsedLines = parseInt(searchParams.get("lines") || "200", 10);
@@ -100,9 +97,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { searchParams } = new URL(request.url);
   const logName = searchParams.get("name");
 

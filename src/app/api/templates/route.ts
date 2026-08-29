@@ -13,7 +13,6 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { handleCreateTemplate } from "@/lib/templates-handlers/create";
@@ -28,9 +27,6 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   try {
     // Body shape is action-discriminated and validated per-branch below;
     // parseJsonBody gives us a 400 on malformed JSON but the inner field

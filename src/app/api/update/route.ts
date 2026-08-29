@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
-import { getCorrelationId, requireAuth, requireDeployApiEnabled, requireSignedRequest } from "@/lib/api-auth";
+import { getCorrelationId, requireDeployApiEnabled, requireSignedRequest } from "@/lib/api-auth";
 import { isDeployInProgress, readDeployStatus, tailLogHint } from "@/lib/deploy-status";
 import { sanitizeGitBranch } from "@/lib/git/git-branch";
 import {
@@ -82,8 +82,6 @@ export async function POST(request: NextRequest) {
   const gated = requireDeployApiEnabled();
   if (gated) return gated;
 
-  const auth = requireAuth(request);
-  if (auth) return auth;
   const signed = requireSignedRequest(request);
   if (signed) return signed;
 

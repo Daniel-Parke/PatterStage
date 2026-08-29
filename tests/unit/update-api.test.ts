@@ -43,11 +43,9 @@ jest.mock("fs", () => ({
 }));
 
 let deployApiEnabled = true;
-let readOnlyGate: { status: number; json: () => Promise<unknown> } | null = null;
 
 jest.mock("@/lib/api-auth", () => ({
   getCorrelationId: () => "cid-test",
-  requireAuth: () => readOnlyGate,
   requireDeployApiEnabled: () =>
     deployApiEnabled
       ? null
@@ -212,7 +210,6 @@ describe("POST /api/update", () => {
     mockWriteDeployStatusRunning.mockReset();
     mockTailLogHint.mockReset();
     deployApiEnabled = true;
-    readOnlyGate = null;
     mockIsDeployInProgress.mockReturnValue(false);
     mockGitForDeploy(mockExecFileSync);
     mockSpawnChDeploy.mockReset();
@@ -235,15 +232,12 @@ describe("POST /api/update", () => {
     expect(res.status).toBe(403);
   });
 
-  it("returns 503 when read-only", async () => {
-    readOnlyGate = {
-      status: 503,
-      json: () => Promise.resolve({ error: "read only" }),
-    };
-    const { POST } = await import("@/app/api/update/route");
-    const res = await POST(postReq({ action: "restart" }));
-    expect(res.status).toBe(503);
-  });
+  // Read-only refusal is no longer asserted here, because it is no longer
+  // enforced here. T-0048 deleted the per-route guard: src/proxy.ts refuses
+  // every unsafe method under PS_READ_ONLY before a handler runs, so a test that
+  // calls this handler directly bypasses the thing it means to check. The
+  // guarantee is asserted for /api/update, in both directions, in
+  // tests/unit/read-only-actually-reads.test.ts.
 
   it("returns 500 when the deploy fails to start", async () => {
     mockSpawnChDeploy.mockResolvedValue({

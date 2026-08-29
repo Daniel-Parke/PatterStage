@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
@@ -25,9 +24,6 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   // Hoist body parsing out of the main try/catch so malformed JSON returns
   // 400 (via parseAndValidateJsonBody → parseJsonBody) rather than 500.
   // seedPostSchema validates target/mode against the canonical enums and

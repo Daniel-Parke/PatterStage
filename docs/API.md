@@ -179,8 +179,9 @@ Managed crontab lines must run a script **under** `scriptsDir` (default `PS_DATA
 
 ## Auth and safety notes
 
-- **`PS_READ_ONLY`** blocks writes (503) on routes that call `requireAuth()` from `@/lib/api-auth.ts`.
-- Not all mutating routes use `requireAuth` (e.g. some `memory` and `personalities` writes).
+- **`PS_READ_ONLY`** rejects unsafe HTTP **methods** with a 503, in `src/proxy.ts`, before any handler runs. Reads keep working, which is the point of the mode. It applies to every route uniformly: there is nothing a route can forget to call.
+- The refusal happens **after** authentication, so an unauthenticated write gets a 401 rather than learning whether the instance is read-only.
+- Routes used to carry their own `requireAuth()` guard. It authenticated nothing, and because 34 GET handlers called it the mode blanked the dashboard it exists to enable. It was deleted in T-0048; `scripts/tooling/check-read-only-guards.mjs` fails the build if one comes back.
 - Deploy actions (`/api/update` `POST`) require `PS_ENABLE_DEPLOY_API`.
 - Optional signed requests: `PS_REQUEST_SIGNING_SECRET`.
 - Correlation IDs: `x-correlation-id` or `x-request-id`.

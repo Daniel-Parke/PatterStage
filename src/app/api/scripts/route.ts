@@ -4,15 +4,11 @@
 // Scheduling CRUD stays on /api/cron/hardware; running + logs are siblings here.
 // ═══════════════════════════════════════════════════════════════
 
-import { NextRequest } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { listScriptFiles } from "@/lib/scripts-manager";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
+export async function GET() {
   try {
     const scripts = await listScriptFiles();
     return ok({ scripts, total: scripts.length });

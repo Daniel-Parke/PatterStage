@@ -8,7 +8,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
+
 import { serverErrorFromCatch, logApiError } from "@/lib/api-logger";
 import { ok, created } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
@@ -24,9 +24,6 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const body = await parseJsonBody(request);
   if (body instanceof NextResponse) return body;
   const { title, profileName, model } = body as {

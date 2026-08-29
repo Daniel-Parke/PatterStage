@@ -6,15 +6,13 @@ import { getActiveHermesPaths } from "@/modules/hermes/lib/agent-runtime";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 import { resolveSkillDirUnderRoot } from "@/lib/fs/path-security";
 import { parseSkillFrontmatter, stripSkillFrontmatter } from "@/lib/skills-repository";
-import { requireAuth } from "@/lib/api-auth";
+
 import { badRequest, notFound, ok } from "@/lib/api-response";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   const { path } = await params;
   // design-lint-disable-next-line hermes-outside-adapter -- the skills root is the containment boundary this request is checked against, so the route must name it; see the import for why it is not on the port.
   const resolved = resolveSkillDirUnderRoot(getActiveHermesPaths().skills, path);

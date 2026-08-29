@@ -83,21 +83,12 @@ describe("PUT /api/skills/[name]", () => {
     expect(mockPushSkillToHermes).toHaveBeenCalledWith("demo");
   });
 
-  it("rejects when requireAuth returns a response", async () => {
-    const readOnlyResponse = NextResponse.json({ error: "Read-only" }, { status: 403 });
-    mockRequireAuth.mockReturnValue(readOnlyResponse);
-
-    const { PUT } = await import("@/app/api/skills/[name]/route");
-    const req = new NextRequest("http://localhost/api/skills/demo", {
-      method: "PUT",
-      body: JSON.stringify({ content: "x" }),
-      headers: { "content-type": "application/json" },
-    });
-
-    const res = await PUT(req, { params: Promise.resolve({ name: "demo" }) });
-    expect(res.status).toBe(403);
-    expect(mockUpsertSkill).not.toHaveBeenCalled();
-  });
+  // Read-only refusal is no longer asserted here, because it is no longer
+  // enforced here. T-0048 deleted the per-route guard: `src/proxy.ts` refuses
+  // every unsafe method under PS_READ_ONLY before a handler runs, so a test that
+  // calls this handler directly bypasses the thing it means to check. The
+  // guarantee is asserted per route, in both directions, in
+  // tests/unit/read-only-actually-reads.test.ts.
 
   it("returns 500 when skill push fails", async () => {
     mockPushSkillToHermes.mockReturnValue({ success: false, error: "Push failed" });
