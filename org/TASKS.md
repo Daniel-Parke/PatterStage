@@ -62,3 +62,4 @@ The records under org/tasks/ are canonical.
 | T-0047 | standard | R2 | done | t0047-deadline-reach-2026-08-26 |
 | T-0048 | standard | R2 | done | t0048-read-only-reads-2026-08-29 |
 | T-0049 | standard | R2 | done | t0049-read-only-ratchets-2026-08-29 |
+| T-0050 | standard | R2 | done | t0050-feedback-durability-2026-08-29 |
