@@ -70,4 +70,16 @@ export async function register(): Promise<void> {
   } catch {
     /* non-fatal recovery */
   }
+
+  // Chat recovery, the same shape and for the same reason. A fast-mode turn has
+  // no run behind it, so reconcilePendingChatMessages cannot reach it: a tab
+  // closed mid-stream left the row `streaming` for the life of the database.
+  // Deep Research got this sweep years ago; chat never did (T-0052).
+  try {
+    const { failStuckChatMessages } = await import("@/lib/chat-repository");
+    const failed = failStuckChatMessages();
+    if (failed > 0) console.warn(`[chat] failed ${failed} interrupted chat turn(s) on boot`);
+  } catch {
+    /* non-fatal recovery */
+  }
 }

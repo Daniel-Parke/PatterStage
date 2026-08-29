@@ -316,3 +316,43 @@ export function updateMessage(
   });
   return getMessage(id);
 }
+
+/**
+ * Watchdog: fail assistant turns that can never reach a terminal state.
+ *
+ * Chat had no equivalent of `failStuckResearchRuns`, and it needed one for the
+ * same reason. `reconcilePendingChatMessages` heals a turn by looking up its
+ * run, so it can only heal turns that HAVE one:
+ *
+ *   · A fast-mode turn never has a run (`useChatSend` sets `runId: null`), so a
+ *     tab closed mid-stream left a row `streaming` for the life of the database.
+ *   · A turn whose run has since been pruned is the same wedge by a different
+ *     route: the lookup finds nothing and the loop moves on, forever.
+ *
+ * Both are swept here. A row whose run STILL EXISTS is deliberately left alone
+ * however old it is, because that one belongs to the reconciler and sweeping it
+ * would race a live agent turn that is simply taking its time (T-0052).
+ *
+ * Returns the count failed, so the boot log can say what it did.
+ */
+export function failStuckChatMessages(maxMinutes = 30): number {
+  const cutoff = new Date(Date.now() - maxMinutes * 60_000).toISOString();
+  const res = getDb()
+    .prepare(
+      `UPDATE chat_messages
+          SET status = 'failed', error = ?, updated_at = ?
+        WHERE role = 'assistant'
+          AND status IN ('pending', 'streaming')
+          AND created_at < ?
+          AND (
+            run_id IS NULL
+            OR NOT EXISTS (SELECT 1 FROM runs WHERE runs.id = chat_messages.run_id)
+          )`,
+    )
+    .run(
+      "This reply was interrupted and did not finish. The server restarted, or the tab closed mid-stream.",
+      now(),
+      cutoff,
+    );
+  return res.changes;
+}

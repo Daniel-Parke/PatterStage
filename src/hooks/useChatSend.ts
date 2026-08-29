@@ -195,14 +195,22 @@ export function useChatSend({
       );
       if (gen !== streamGenRef.current) return;
       const status = acc.content ? "complete" : "failed";
-      updateLocalMessage(assistantMessageId, {
-        content: acc.content,
-        status,
-        error: acc.content ? null : "No response",
-      });
+      const error = acc.content
+        ? null
+        : "The model returned nothing. Check the gateway is reachable and the model is configured.";
+      updateLocalMessage(assistantMessageId, { content: acc.content, status, error });
       setIsStreaming(false);
       abortRef.current = null;
-      void finalizeMessageApi(conversationId, assistantMessageId, { content: acc.content, status });
+      // `error` was omitted here, so fast mode displayed a reason it never
+      // saved: the row persisted as failed with error NULL, and a reload showed
+      // a failure with no explanation. Agent mode has always passed it
+      // (useAgentRunStream), and both the helper and the PATCH route accept it
+      // (T-0052).
+      void finalizeMessageApi(conversationId, assistantMessageId, {
+        content: acc.content,
+        status,
+        error,
+      });
       void loadConversations();
     }
   }, [

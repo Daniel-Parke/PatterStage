@@ -28,17 +28,29 @@
  * reconciler looks the run up, finds nothing, and moves on forever.
  */
 
-import Database from "better-sqlite3";
+import { join } from "path";
 
-const testDb = new Database(":memory:");
+import type DatabaseNs from "better-sqlite3";
+
+type RealDb = DatabaseNs.Database;
+
+let testDb: RealDb | null = null;
 
 jest.mock("@/lib/db", () => ({
-  getDb: () => testDb,
+  getDb: () => testDb!,
   ensureDb: () => undefined,
   uuid: () => `id-${Math.random().toString(36).slice(2)}`,
   now: () => new Date().toISOString(),
-  inTransaction: (fn: () => unknown) => fn(),
+  inTransaction: <T,>(fn: () => T) => testDb!.transaction(fn)(),
 }));
+
+// `better-sqlite3` is itself mapped to a stub in jest.config.js, so importing it
+// normally here yields a no-op driver that silently swallows every write. The
+// repository tests in this repo all reach past the mapper for the real driver;
+// this one has to as well, or the assertions run against nothing.
+const Database = jest.requireActual(
+  join(process.cwd(), "node_modules", "better-sqlite3", "lib", "index.js"),
+) as unknown as new (path: string) => RealDb;
 
 import {
   createConversation,
@@ -50,10 +62,17 @@ import {
 
 /** Minimal schema: the two chat tables plus the runs table the sweep consults. */
 beforeAll(() => {
+  testDb = new Database(":memory:");
   testDb.exec(`
     CREATE TABLE chat_conversations (
-      id TEXT PRIMARY KEY, title TEXT, profile_name TEXT, model_id TEXT,
-      created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now'))
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL DEFAULT 'New Chat',
+      session_id TEXT,
+      profile_name TEXT,
+      model TEXT,
+      previous_response_id TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE TABLE chat_messages (
       id TEXT PRIMARY KEY,
@@ -72,18 +91,22 @@ beforeAll(() => {
   `);
 });
 
+afterAll(() => {
+  testDb?.close();
+});
+
 const ago = (minutes: number) => new Date(Date.now() - minutes * 60_000).toISOString();
 
 let conversationId = "";
 beforeEach(() => {
-  testDb.exec("DELETE FROM chat_messages; DELETE FROM chat_conversations; DELETE FROM runs;");
+  testDb!.exec("DELETE FROM chat_messages; DELETE FROM chat_conversations; DELETE FROM runs;");
   conversationId = createConversation({ title: "t" }).id;
 });
 
 /** An assistant row in a non-terminal state, planted at a chosen age. */
 function planted(opts: { status: string; minutesAgo: number; runId?: string | null }) {
   const id = `m-${Math.random().toString(36).slice(2)}`;
-  testDb
+  testDb!
     .prepare(
       `INSERT INTO chat_messages (id, conversation_id, role, status, run_id, created_at, updated_at)
        VALUES (?, ?, 'assistant', ?, ?, ?, ?)`,
@@ -130,7 +153,7 @@ describe("a run-backed turn belongs to the reconciler, not the sweep", () => {
   it("leaves an old row alone while its run still exists", () => {
     // Even a long-running agent turn is the reconciler's business: it can see
     // the run and fold its result on. Sweeping it here would race that.
-    testDb.prepare("INSERT INTO runs (id, status) VALUES ('r1','started')").run();
+    testDb!.prepare("INSERT INTO runs (id, status) VALUES ('r1','started')").run();
     const id = planted({ status: "streaming", minutesAgo: 600, runId: "r1" });
     expect(failStuckChatMessages()).toBe(0);
     expect(getMessage(id)?.status).toBe("streaming");
