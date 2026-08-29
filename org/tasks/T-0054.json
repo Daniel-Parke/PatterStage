@@ -1,0 +1,46 @@
+{
+  "id": "T-0054",
+  "intent": "Drive the untested territory the operator's second live Hermes QA pass left as a work list, against the three mocks it never wired up (mock-hermes, mock-hindsight, mock-llm). The report called section C 'where most of the remaining risk lives' and asked that it be treated as a queue rather than a suggestion list. Closed 2026-08-29 with one defect found and fixed (a flagged-off route returning HTTP 200 with 404 content), four journeys passing, and the remainder recorded below as not reached.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0054-untested-queue-2026-08-29",
+  "what_was_tested": [
+    "J9 gateway killed mid-run: PASS. A mission dispatched with no gateway fails in ~2s naming `connect ECONNREFUSED 127.0.0.1:8642`. A mission killed MID-run stays `started`, which is deliberate: run-deadline.ts fails an unreachable run after its declared timeout plus a 5-minute grace, so a gateway blip cannot kill a legitimate long run. Every surface (monitor, missions, sessions, gateway/health) kept answering 200 with the gateway down, and health honestly reported online:false. Recovery on gateway restart needed no reload.",
+    "PS_COMPOSER=0 feature flag: DEFECT FOUND AND FIXED. See the T-0054 commit; the route served the 404 page with an HTTP 200 because it was statically generated while the flag is a runtime value.",
+    "Config corruption: PASS for stability, FINDING for silence. Eight APIs and six pages all answered 200 with an unparseable config.yaml, and the write path is properly defended: it refuses to overwrite a malformed file, backs it up, and logs precisely which line failed. See deferred for what it does not do.",
+    "Multi-tab / poll clobbering: PASS. The brief asked this explicitly and the report never answered it. The 15s missions poll writes only the board list; the composer's fields are separate state, and both form-population effects are guarded (one bails when the field is already set). A poll landing on a dirty form cannot overwrite it.",
+    "Large data: PASS. At 20,017 sessions the first page returns in 63-90ms, search in 66ms, a deep offset (19,000) in 34ms, and the whole-table total from T-0042 is still correct."
+  ],
+  "what_was_not_reached": [
+    "J8 restart under load with four things in flight at once. The server was restarted many times during this sweep, but never with a long mission, a research run, a Composer run at an approval gate and an agent chat all live together, which is the case the report actually asked for.",
+    "J10 approval gates end to end, and the reject path in particular. The report is right that rejects are where state machines rot.",
+    "J11 Story Weaver end to end, including the delete-a-dependency-then-reopen legs.",
+    "J6 seed fan-out, clean, and the restart-without-double-seeding leg.",
+    "Responsive at 375x812 and 768x1024, and the keyboard/screen-reader pass.",
+    "C1 re-verification of stat-tile first paint in a browser. It has unit coverage (stat-tiles-first-paint, skills-tiles-agree-with-page) asserting the real number is present with no timer flush, which is the same claim; a real first-frame capture would be stronger."
+  ],
+  "honesty_note": "One measurement in this sweep was invalid and is recorded rather than quietly redone: the first large-data timing ran against a database where the bulk insert had failed, so 5ms page loads were measured on 17 rows. Caught by checking the row count instead of trusting the numbers. The figures above are from the corrected run at 20,017 rows.",
+  "claims": [
+    "src/app/orchestration/composer/layout.tsx",
+    "scripts/tooling/output-canary.golden.json",
+    "tests/"
+  ],
+  "deferred": [
+    "A corrupt config.yaml is invisible to the UI. /api/config returns {} , which is indistinguishable from a genuinely empty config, so an operator opening /config sees empty forms with no indication that their file failed to parse. The server log says exactly what is wrong ('bad indentation of a mapping entry (3:9)') and the write path refuses to clobber the file, so this is a reporting gap rather than a data-loss risk. Surfacing it means giving the config read path a way to say 'unparseable' distinctly from 'empty', which is a shape change to that contract and wants its own record.",
+    "The journeys listed under what_was_not_reached. They are not abandoned; they are the next sweep, and they are written down so the next pass starts from a queue rather than from the report again."
+  ],
+  "timestamps": {
+    "opened": "2026-08-30T03:30:00Z",
+    "updated": "2026-08-30T07:00:00Z",
+    "closed": "2026-08-30T07:00:00Z"
+  }
+}

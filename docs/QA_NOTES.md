@@ -51,6 +51,54 @@ a fresh-build reproduction:
 - **Artifacts** page has an empty state ("No artifacts yet").
 - **Agents / Models** sync & drift-resolution buttons fire and toast.
 
+## Confirmed code-correct, round 2 (2026-08-29 pass)
+
+Four findings from the second live pass were accurate observations with the
+wrong mechanism. Each cost a real investigation; none was a defect.
+
+- **Deep Research runs DO live-update.** The runs list polls every **4 seconds**
+  and the detail view every 3, on top of an SSE stream. Missions are the slow
+  one at 15s. A headless browser that never focuses the tab is the likely cause
+  of a list that appears frozen: TanStack suspends `refetchInterval` while a tab
+  is hidden. Drive it focused, or assert against the API.
+- **Writes are guarded BEFORE the body is parsed.** All 51 write handlers call
+  their guard first; none parses first. Under `PS_READ_ONLY` the proxy refuses
+  by method before a handler runs at all, so a malformed-JSON 400 cannot precede
+  the 503.
+- **`title` is a valid accessible name.** Per HTML-AAM, a `title` attribute
+  supplies an accessible name when nothing else does, so an icon-only button
+  carrying one is announced. It is the weaker mechanism (not exposed on touch or
+  to keyboard-only users) and `aria-label` is preferred for new controls, but a
+  button with `title` is not unlabelled.
+- **A toast under a sheet was invisible, not absent.** Until T-0050 the toast
+  sat at `z-50` beneath the Sheet's `z-[61]`, so a mutation confirmed from inside
+  a dialog was covered by that dialog. It is now `z-[80]` and portaled to the
+  body, and it carries `role="status"` / `role="alert"`. If you count live
+  regions and find zero, that is now a real finding.
+
+## Read the boot line before filing anything about a mode
+
+Three sessions of the 2026-08-29 pass were lost to a watchdog restarting the
+server without their environment, and one finding had to be retracted because of
+it. The server now prints, beside the `[auth]` line:
+
+```
+[config] read-only=off  deploy-api=off  auth=token  composer=on  gateway=default
+```
+
+That is what the process actually booted with. It costs nothing to check and it
+settles the whole class of question.
+
+Two related traps from the same pass:
+
+- **A mission killed mid-run is not wedged.** A run whose backend is unreachable
+  is failed after its declared timeout plus a five-minute grace, so a gateway
+  blip cannot kill a legitimate long run. Waiting thirty seconds and calling it
+  stuck is impatience.
+- **The advertised port is trustworthy.** Next assigns `process.env.PORT` at
+  bind time before the boot line is printed, so the URL it prints always matches
+  the port actually listening, `-p` or not.
+
 ## Known data-vs-code distinction
 
 Some "bugs" are **data in the live DB**, not code or seed: a `Testy` workflow,

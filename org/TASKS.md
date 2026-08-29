@@ -66,3 +66,6 @@ The records under org/tasks/ are canonical.
 | T-0051 | standard | R2 | done | t0051-composer-finishes-2026-08-29 |
 | T-0052 | standard | R2 | done | t0052-chat-terminal-state-2026-08-29 |
 | T-0053 | standard | R1 | done | t0053-label-and-boot-2026-08-29 |
+| T-0054 | standard | R1 | done | t0054-untested-queue-2026-08-29 |
+| T-0055 | standard | R0 | proposed | unassigned |
+| T-0056 | standard | R2 | proposed | unassigned |
