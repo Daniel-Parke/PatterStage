@@ -68,7 +68,7 @@ A mission dispatch is a single HTTP **run**: `runtime.submitRun()` returns a `ru
 
 ## Related docs
 
-- [PATTERSTAGE.md](PATTERSTAGE.md): repository overview and where to read next.
+- [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md): how a dispatch becomes a run, end to end.
 - [MISSIONS.md](MISSIONS.md): mission board, dispatch, cancellation.
 - [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md): Hermes path/config integration.
 - [DEPLOY.md](DEPLOY.md): host, port, TLS, Docker.

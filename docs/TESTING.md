@@ -69,7 +69,11 @@ npm run test:e2e
 
 ### Navigation matrix and sidebar
 
-[`tests/e2e/app-routes.ts`](../tests/e2e/app-routes.ts) lists every path exercised by the navigation matrix. **`src/components/layout/sidebar-config.ts`** includes a comment: when you add or change sidebar `href` values, update `app-routes.ts` so E2E stays aligned.
+[`tests/e2e/app-routes.ts`](../tests/e2e/app-routes.ts) lists every path exercised by the navigation
+matrix, and it is DERIVED: `export const APP_NAV_ROUTES = allModuleRoutes()`. Nothing to keep in sync.
+Add the surface to [`src/lib/modules/registry.ts`](../src/lib/modules/registry.ts) and both the sidebar
+and the matrix follow. This used to be a hand-mirrored list with a "keep in sync" comment, and it had
+already drifted -- `/laboratory/artifacts` was missing, so the matrix silently stopped covering a page.
 
 ## Install harness (Docker): a gate, not a ritual
 

@@ -54,14 +54,18 @@ If your change touches behaviour or config, **update docs in the same PR**. Stal
 
 The **`(main)`** group keeps Dashboard at `/` ([`src/app/page.tsx`](../src/app/page.tsx)) while grouping Sessions, Memory, and Logs in one folder without a `/main/` prefix. This is standard Next.js behaviour. See [Route Groups](https://nextjs.org/docs/app/building-your-application/routing/route-groups).
 
-When you add or change sidebar links in [`src/components/layout/sidebar-config.ts`](../src/components/layout/sidebar-config.ts), update [`tests/e2e/app-routes.ts`](../tests/e2e/app-routes.ts) so Playwright navigation-matrix tests stay aligned.
+To add or change a sidebar surface, edit [`src/lib/modules/registry.ts`](../src/lib/modules/registry.ts) -- and only that. Both
+[`src/components/layout/sidebar-config.ts`](../src/components/layout/sidebar-config.ts) and
+[`tests/e2e/app-routes.ts`](../tests/e2e/app-routes.ts) are DERIVED from the registry (ADR-0005) and
+say so in their own headers. They were once hand-mirrored, drifted apart, and silently dropped a whole
+page from the navigation matrix; deriving them removed the class of bug. Do not hand-sync them.
 
 ## Local dev and tests
 
 - First-time setup: `bash scripts/bootstrap/setup.sh` (writes `.env.local`, picks a free **PORT** in **42069–42100**, sets LAN dev origins).
 - `npm run dev` / `npm run start` read `PORT` from the environment; the UI uses same-origin `/api/...` so it does not hardcode a port.
 - **Playwright:** CI pins `PORT=3000`; locally follow `.env.local` unless you export `PORT` yourself.
-- Fresh DB before E2E: `npm run prebuild`. Full detail: **[TESTING.md](TESTING.md)** (Jest layout, smoke flag, keeping `tests/e2e/app-routes.ts` in sync with the sidebar).
+- Fresh DB before E2E: `npm run prebuild`. Full detail: **[TESTING.md](TESTING.md)** (Jest layout, smoke flag, and why `tests/e2e/app-routes.ts` needs no syncing).
 
 ## Git hooks and CI
 

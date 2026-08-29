@@ -37,13 +37,24 @@ npm run typecheck:tests  # type-check tests/ too (not yet gated, see below)
   `--allow-growth "<reason>"`, and the reason is written into the baseline file
   under `__growth__` where the next reader will find it. Escape a single line with
   `// design-lint-disable-next-line <rule> -- <reason>`; the reason is required.
-- **`typecheck:tests`** is not in the lint gate yet. 73 errors remain, mostly
-  `jest.mock` factories whose argument lists no longer match the function they
-  replace, which is exactly the drift that made the suite unable to catch
-  refactors. Move it into `lint` when it reaches zero.
+- **`typecheck:tests` is the last step of `npm run lint`** and passes at zero. It
+  used to sit outside the gate with 73 errors -- mostly `jest.mock` factories whose
+  argument lists no longer matched the function they replaced, which is exactly the
+  drift that made the suite unable to catch refactors. It was moved in when it
+  reached zero, so a mock that lies about a module's shape is now a red build.
 
 On first boot an access token is minted into `PS_DATA_DIR/auth-token` and the
 sign-in URL is printed to the log. See [SECURITY.md](SECURITY.md).
+
+## Where data lives
+
+PatterStage data lives under **`PS_DATA_DIR`** (`src/lib/paths.ts`). The local Hermes
+install is resolved from **`HERMES_HOME`** / **`AGENT_HOME`** (default `~/.hermes`) via
+`getActiveHermesPaths()` / `getActiveHermesHome()` in
+`src/modules/hermes/lib/agent-runtime.ts`. System cron uses **`PS_SCRIPTS_DIR`** /
+**`PS_HARDWARE_LOG_DIR`** (defaults under `PS_DATA_DIR`). Bootstrap and deploy shells
+live under **`scripts/`** (`bootstrap/`, `application/ps-deploy.sh`, `tooling/`).
+See **[DEPLOY.md](DEPLOY.md)** and **[ENV_REFERENCE.md](ENV_REFERENCE.md)**.
 
 ## Architecture in one paragraph
 
