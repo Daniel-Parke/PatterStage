@@ -1,0 +1,48 @@
+{
+  "id": "T-0062",
+  "intent": "The accessibility guard shipped in T-0050 matched 3 of 394 buttons and 26 unnamed icon buttons shipped underneath it, including a destructive Delete (the QA pass's F-9) and three that are the only exit from their UI. Replace it with a guard that inspects its whole subject and cannot go inert silently, then name every offender.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0062-icon-button-names-2026-08-30",
+  "claims": [
+    "scripts/tooling/check-icon-button-names.mjs",
+    "src/components/",
+    "src/modules/rec-room/",
+    "src/app/recroom/",
+    "package.json",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A button whose children render no text UNCONDITIONALLY needs a name. Unconditionally is the load-bearing word: a ternary passes only if BOTH branches render, which is what catches {armed ? ' Confirm?' : ''}. A name that exists in one state is not a name.",
+    "I2 The guard asserts a denominator ON THE NOUN THE RULE IS ABOUT. T-0050 asserted files.length > 100 and was inert anyway, because the rule is about buttons and it counted files.",
+    "I3 The guard carries a positive control. Floors catch 'the walk found nothing'; fixtures catch 'the matcher stopped matching'. Neither substitutes for the other.",
+    "I4 The guard PRINTS its denominator. A guard that does not cannot be audited from a build log, and a guard nobody can audit is a guard nobody notices going quiet.",
+    "I5 aria-label, never title. title is a valid accessible name and is invisible to touch and keyboard-only users; the 112-vs-27 title debt is a separate ruling."
+  ],
+  "the_lesson": "MUTATION TESTING PROVES A GUARD IS SENSITIVE, NOT COMPREHENSIVE. T-0050's guard was mutation-tested and it did have a denominator, and it was still inert. Mutation asks 'if this defect returned, would it go red?' for the defects you thought to inject, and the mutation and the guard share a blind spot: T-0050 mutated a compliant single-line icon button, watched the guard go red, and shipped something that saw 0.76% of its subject. It also found one real offender on day one, which is the most persuasive possible camouflage.",
+  "oracle_provenance": "The gate's FIRST RUN printed 27, against a hand-verified list of 26 plus one nobody had found: ReaderNavigation.tsx:47, a self-closing chapter dot with no children at all, invisible to both the old regex and to a hand-rolled masking scanner. It printed 0 after the fixes. Sequenced so the lint chain is never committed red: the gate and its fixtures landed with the 27 fixes in one commit, and the 27 count is recorded here because a new sweep printing 0 on its first run against a tree with 27 known offenders is evidence of an inert guard, not a clean tree.",
+  "verification": "Five mutations, all caught. The decisive one is the failure mode that killed the predecessor: making the classifier read every button as text-bearing turns 8 tests red AND trips the gate itself, which reports 'icon-only 4 (floor 40)'. Also caught: a ternary passing on either branch (re-admits F-9), only lowercase <button> counting (the old blind spot), a reasonless pragma exempting anyway, and removing one aria-label. Gate: lint 0 across ten steps, tsc 0, 3270 tests / 384 suites, knip 0, canary 0, build 0.",
+  "parser_ruling": "Operator ruled on 2026-08-30 that ts.createSourceFile is acceptable under WG-WEB-013, on the reading that the rule forbids a gate needing an INSTALL step rather than reuse of a devDependency the lint chain already executes twice (eslint's parser, typecheck:tests). The evidence was measured: the parser gives 27 with no false positives, a hand-rolled masking scanner gives 79 with roughly 53 false, because whether a subtree renders text is a tree question. The companion test asserts the import list explicitly rather than widening a regex, so the exception stays visible.",
+  "no_baseline": "Fix-then-gate at zero, not baseline-and-ratchet. A baseline is a written promise to keep shipping its entries, and three of the 27 are the sole exit from their UI, one is a destructive Delete and one is a shared component. It would also make the guard GREEN on the commit that introduces it, which is the T-0050 failure re-enacted while fixing the T-0050 failure. design-lint's baseline is already {}.",
+  "beyond_naming": "InlineToggle needed semantics, not only a name: it was a bare button with no role='switch' and no aria-checked, so its on/off state was invisible even once named. It now adopts the shape ui/field/Toggle.tsx:23 already ships, and its label is REQUIRED so a forgetful call site is a red tsc. Toggle points at its visible label with aria-labelledby rather than duplicating the string, which fixes the relationship rather than the symptom and keeps WCAG 2.5.3 true by construction.",
+  "rollback": "Revert 90b4aea7. The 27 offenders return and the gate reports them.",
+  "deferred": [
+    "Four other sweep-style tests lack a denominator on the right noun and should get one: viz-chrome-tokens.test.ts:143, missions-read-only-reads.test.ts:158 (asserts > 0, which passes on one file), module-registry.test.ts:94, and read-only-actually-reads.test.ts:91, which counts route FILES but not handlers, so rewriting a route as `export const GET = ...` would make every assertion in that describe pass vacuously. Its own sibling script gets this right at check-read-only-guards.mjs:98.",
+    "ReaderNavigation.tsx:47's chapter dots are 10px while every sibling in that file carries min-h-[44px]. A target-size finding, not a naming one.",
+    "The house still leans on title over aria-label, 112 to 27. A ruling, not a defect."
+  ],
+  "timestamps": {
+    "opened": "2026-08-30T17:30:00Z",
+    "updated": "2026-08-30T18:30:00Z",
+    "closed": "2026-08-30T18:30:00Z"
+  }
+}
