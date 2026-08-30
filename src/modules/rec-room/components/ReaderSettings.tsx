@@ -131,7 +131,7 @@ export default function ReaderSettings({ settings, onChange }: {
           <div className="fixed top-[52px] right-4 w-72 rounded-xl border border-white/10 bg-dark-900/95 backdrop-blur-xl p-5 z-[60] shadow-2xl max-h-[80vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs font-mono text-ps-text-muted uppercase tracking-widest">Reading Settings</span>
-            <button onClick={() => setOpen(false)} className="p-1 text-ps-text-muted hover:text-ps-text-muted"><X className="w-3.5 h-3.5" /></button>
+            <button onClick={() => setOpen(false)} aria-label="Close reading settings" className="p-1 text-ps-text-muted hover:text-ps-text-muted"><X className="w-3.5 h-3.5" /></button>
           </div>
 
           {/* Font Size */}

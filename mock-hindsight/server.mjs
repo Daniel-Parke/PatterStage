@@ -239,6 +239,22 @@ const server = createServer(async (req, res) => {
   return send(res, 404, { error: `no mock route for ${method} ${url.pathname}` });
 });
 
+// Fail with a sentence, not a stack. This mock's default port is one the
+// real thing may already hold, so EADDRINUSE is the LIKELY first-run
+// outcome rather than an exotic one, and an unhandled 'error' event here
+// prints a trace that says nothing about what to do.
+server.on("error", (err) => {
+  if (err && err.code === "EADDRINUSE") {
+    console.error(
+      `[${"mock-hindsight"}] port ${PORT} is already in use. Another Hindsight may be running.
+` +
+      `Set HINDSIGHT_PORT to a free port, or stop whatever holds it.`,
+    );
+    process.exit(1);
+  }
+  throw err;
+});
+
 server.listen(PORT, HOST, () => {
   console.log(
     `[mock-hindsight] listening on http://${HOST}:${PORT} (seed ${SEED ? "ON" : "OFF"})`,

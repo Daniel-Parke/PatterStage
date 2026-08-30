@@ -116,7 +116,7 @@ export default function PromptsPage() {
           <div className="bg-dark-900 border border-green-500/20 rounded-xl w-full max-w-2xl p-6 space-y-4 mb-12">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white">{isNew ? "New Story Theme" : "Edit Story Theme"}</h3>
-              <button onClick={() => setEditing(null)} className="text-ps-text-muted hover:text-ps-text-secondary"><X className="w-4 h-4" /></button>
+              <button onClick={() => setEditing(null)} aria-label="Close the theme editor" className="text-ps-text-muted hover:text-ps-text-secondary"><X className="w-4 h-4" /></button>
             </div>
 
             <div>
@@ -255,9 +255,9 @@ export default function PromptsPage() {
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-green-500/20 text-xs font-mono text-green-400 hover:bg-green-500/10">
                     <ArrowRight className="w-3 h-3" /> Use
                   </button>
-                  <button onClick={() => startEdit(theme)}
+                  <button onClick={() => startEdit(theme)} aria-label={`Edit theme ${theme.name}`}
                     className="p-1.5 rounded text-ps-text-faint hover:text-green-400 hover:bg-green-500/10"><Edit2 className="w-3.5 h-3.5" /></button>
-                  <button onClick={() => deleteTheme(theme.id)}
+                  <button onClick={() => deleteTheme(theme.id)} aria-label={`Delete theme ${theme.name}`}
                     disabled={deleting === theme.id}
                     className="p-1.5 rounded text-ps-text-faint hover:text-red-400 hover:bg-red-500/10 disabled:opacity-30">
                     {deleting === theme.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}

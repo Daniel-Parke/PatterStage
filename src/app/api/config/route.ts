@@ -1,13 +1,17 @@
+import { existsSync, readFileSync } from "fs";
+
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { writeHermesConfigFile } from "@/modules/hermes/lib/hermes-config-write";
-import { serverErrorFromCatch } from "@/lib/api-logger";
+import { loadHermesConfigFromString } from "@/modules/hermes/lib/hermes-config-read";
+import { toError } from "@/lib/api-fetch";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 
 import { appendAuditLine } from "@/lib/audit-log";
-import { forbidden, ok } from "@/lib/api-response";
-import { readCachedConfig } from "@/lib/config-cache";
+import { conflict, forbidden, ok } from "@/lib/api-response";
+import { readCachedConfigResult } from "@/lib/config-cache";
 import { dumpYamlConfig } from "@/lib/yaml-config";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
@@ -76,8 +80,13 @@ export async function GET(_request: NextRequest) {
   // sitting outside the try/catch; both the call and the function were deleted
   // in T-0048, and the comment outlived them.
   try {
-    const config = readCachedConfig();
-    return ok(maskConfigSecrets(config));
+    // Read the truth here rather than borrowing the monitor's config.yaml_error
+    // stat: that source has a 60s staleness budget, so a gate built on it would
+    // be up to a minute wrong in BOTH directions. An operator who has just
+    // repaired the YAML would face a dead Save for a minute, and one who has
+    // just broken it would get a live Save.
+    const { config, error: configError } = readCachedConfigResult();
+    return ok(maskConfigSecrets(config), configError ? { configError } : undefined);
   } catch (error) {
     return serverErrorFromCatch(
       "GET /api/config",
@@ -110,9 +119,53 @@ export async function PUT(request: NextRequest) {
     // Create backup (no-op when config.yaml doesn't exist) — single call
     // to the canonical backupFile() helper replaces the 4-line inline
     // `existsSync + ensureDir + backupTimestamp + writeFileSync` block.
-    backupFile(paths.config, paths.backups);
+    //
+    // It stays HERE, ahead of the parse below, and the ordering is load-bearing.
+    // It is the only reason the pre-T-0060 defect was recoverable rather than
+    // terminal, it is the path the refusal names, and if the refusal itself ever
+    // has a bug this is the net underneath it. Mirrors config-sync.ts:61.
+    const backupPath = backupFile(paths.config, paths.backups);
 
-    const config = readCachedConfig();
+    // Parse from disk, synchronously, and refuse if it will not parse.
+    //
+    // NOT readCachedConfig(): it degrades a YAML parse error to {} , which is
+    // right for the GET above and catastrophic four lines above a write. Merging
+    // into that {} and writing the result is how a config.yaml holding models,
+    // providers, fallback chains and toolsets became 23 bytes while this route
+    // answered 200 (T-0060). The cache is the second reason: within its 15s TTL
+    // it holds the config as it was BEFORE the corruption, so a cache-based
+    // check would see nothing wrong and silently replace the operator's broken
+    // file with a stale snapshot, discarding whatever they were mid-way through
+    // hand-editing.
+    //
+    // This is the shape src/modules/hermes/lib/config-sync.ts:69-80 has always
+    // used on the same file. Two sites is not three: the shape is mirrored, not
+    // extracted (see the Rule of Three in src/lib/api-response.ts).
+    const raw = existsSync(paths.config) ? readFileSync(paths.config, "utf-8") : "";
+    let config: Record<string, unknown>;
+    try {
+      config = loadHermesConfigFromString(raw) as Record<string, unknown>;
+    } catch (err) {
+      // FIRST LINE ONLY. The rest of a js-yaml message quotes the offending
+      // lines of config.yaml, and this route masks api_key on the way out
+      // (maskConfigSecrets) for exactly that reason. The whole message goes to
+      // the server log, where config-sync.ts already puts it.
+      const firstLine = toError(err).message.split("\n")[0];
+      logApiError("PUT /api/config", "parsing config.yaml before merge", err);
+      appendAuditLine({
+        action: "config.put",
+        resource: section,
+        ok: false,
+        detail: `refused: config.yaml did not parse (${firstLine})`,
+      });
+      return conflict(
+        `config.yaml did not parse, so the '${section}' update was refused rather than ` +
+          `written over it: ${firstLine}.` +
+          (backupPath
+            ? ` The file as found was copied to ${backupPath}. Repair the YAML and retry.`
+            : ` Repair the YAML and retry.`),
+      );
+    }
 
     // Merge values into section — deep merge so a patch to a nested
     // object (e.g. `personalities.default`) preserves sibling keys.

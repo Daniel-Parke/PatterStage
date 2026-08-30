@@ -208,6 +208,7 @@ export default function CategoryManagerModal({
                 </div>
                 <button
                   type="button"
+                  aria-label={`Rename category ${c.name}`}
                   onClick={() => startEdit(c)}
                   className="p-1 text-ps-text-muted hover:text-neon-cyan"
                 >
@@ -215,6 +216,7 @@ export default function CategoryManagerModal({
                 </button>
                 <button
                   type="button"
+                  aria-label={`Delete category ${c.name}`}
                   onClick={() => {
                     setDeleteTarget(c.id);
                     setReassignId(null);

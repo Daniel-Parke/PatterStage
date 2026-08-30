@@ -80,9 +80,33 @@ export function parseDispatchMode(
  * @param schedule     The cron schedule expression, if any.
  * @returns `schedule` when `dispatchMode === "cron"`, `undefined` otherwise.
  */
+/** The one place that decides which modes carry a schedule at all. */
+function sendsSchedule(dispatchMode: DispatchMode): boolean {
+  return dispatchMode === "cron";
+}
+
 export function scheduleForDispatch(
   dispatchMode: DispatchMode,
   schedule?: string,
 ): string | undefined {
-  return dispatchMode === "cron" ? schedule : undefined;
+  return sendsSchedule(dispatchMode) ? schedule : undefined;
+}
+
+/**
+ * Should this dispatch be refused because the schedule field holds something
+ * unusable?
+ *
+ * Twinned deliberately with `scheduleForDispatch` above and sharing one
+ * predicate, so the set of modes that CARRY a schedule and the set that can be
+ * BLOCKED by a bad one cannot drift apart. A test iterates every DispatchMode
+ * and asserts the two agree; without that, teaching one a new mode and
+ * forgetting the other silently reopens T-0063.
+ *
+ * Returns the message to show, or null when there is nothing to refuse.
+ */
+export function scheduleBlocksDispatch(
+  dispatchMode: DispatchMode,
+  draftError: string | null,
+): string | null {
+  return sendsSchedule(dispatchMode) ? draftError : null;
 }

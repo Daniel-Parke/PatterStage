@@ -395,6 +395,7 @@ export default function MissionEditorPanel({
             <Button
               variant="ghost"
               size="sm"
+              aria-label="Delete mission"
               onClick={handleDeleteClick}
               className={
                 deleteConfirm.isArmedFor(mission.id)

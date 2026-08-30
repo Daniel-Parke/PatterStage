@@ -335,7 +335,7 @@ function CreateStoryPage() {
             <p className="text-xs text-red-300/60">{genError}</p>
             <p className="text-xs text-red-300/40 mt-1">Your configuration has been saved. You can retry without re-entering everything.</p>
           </div>
-          <button onClick={() => setGenError(null)} className="text-red-400/50 hover:text-red-400"><X className="w-4 h-4" /></button>
+          <button onClick={() => setGenError(null)} aria-label="Dismiss this error" className="text-red-400/50 hover:text-red-400"><X className="w-4 h-4" /></button>
         </div>
       )}
 
@@ -345,7 +345,7 @@ function CreateStoryPage() {
           <div className="bg-dark-900 border border-neon-purple/20 rounded-xl w-full max-w-lg p-6 space-y-4 max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white">Import Character</h3>
-              <button onClick={() => setShowCharPicker(false)} className="text-ps-text-muted hover:text-ps-text-secondary"><X className="w-4 h-4" /></button>
+              <button onClick={() => setShowCharPicker(false)} aria-label="Close the character picker" className="text-ps-text-muted hover:text-ps-text-secondary"><X className="w-4 h-4" /></button>
             </div>
             {savedCharacters.length === 0 ? (
               <p className="text-xs text-ps-text-muted">No saved characters. Create some in the Characters page first.</p>
@@ -469,7 +469,7 @@ function CreateStoryPage() {
                   }`} onClick={() => applyTheme(t)}>
                     <div className="text-xs font-semibold text-ps-text-secondary mb-0.5">{t.name}</div>
                     <div className="text-xs font-mono text-ps-text-faint truncate">{t.genre?.join(", ") || "Custom"} — {t.era || "Any era"}</div>
-                    <button onClick={(e) => { e.stopPropagation(); deleteTheme(t.id); }}
+                    <button onClick={(e) => { e.stopPropagation(); deleteTheme(t.id); }} aria-label={`Delete theme ${t.name}`}
                       className="absolute top-1.5 right-1.5 p-1.5 text-ps-text-faint hover:text-red-400 transition-opacity">
                       <Trash2 className="w-3 h-3" />
                     </button>

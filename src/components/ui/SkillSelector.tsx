@@ -87,6 +87,7 @@ export default function SkillSelector({
               {name}
               <button
                 type="button"
+                aria-label={`Remove skill ${name}`}
                 onClick={() => remove(name)}
                 className="hover:text-red-400 transition-colors"
               >

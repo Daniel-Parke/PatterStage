@@ -16,7 +16,7 @@ import {
 import { pushProfileToHermes } from "@/modules/hermes/lib/profile-push";
 import { removeProfileFromDisk } from "@/modules/hermes/lib/profile-discovery";
 import { resolveProfileHermesHome } from "@/modules/hermes/lib/profile-paths";
-import { slugifyDisplayName } from "@/lib/profile-slug";
+import { slugifyDisplayName, validateProfileDisplayName, DEFAULT_PROFILE_SLUG } from "@/lib/profile-slug";
 import { badRequest, conflict, notFound, ok, serverError } from "@/lib/api-response";
 
 export async function PUT(
@@ -43,8 +43,22 @@ export async function PUT(
     const { name, description } = bodyResult as { name?: string; description?: string };
 
     let slug = prof.profile;
-    if (name && typeof name === "string" && name.trim().length >= 2) {
+    if (name && typeof name === "string") {
+      // Same laundering as the create path, and the same fix: judge the name.
+      const nameCheck = validateProfileDisplayName(name);
+      if (!nameCheck.ok) return badRequest(nameCheck.error);
+
       const newSlug = slugifyDisplayName(name);
+
+      // The guard above rejects renaming the default profile; this rejects
+      // renaming any profile INTO it. Without both, a rename reaches the root
+      // agent's directory by the same route a create did.
+      if (newSlug === DEFAULT_PROFILE_SLUG) {
+        return conflict(
+          `"${name.trim()}" resolves to the slug "default", which is the root agent rather than ` +
+            `a profile. Choose a different name.`,
+        );
+      }
 
       if (newSlug && newSlug !== prof.profile) {
         const newProf = resolveSafeProfileName(newSlug);

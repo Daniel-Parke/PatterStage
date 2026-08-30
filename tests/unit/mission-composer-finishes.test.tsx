@@ -50,7 +50,14 @@ jest.mock("@/hooks/success-message-for-dispatch", () => ({
 
 type Mode = "save" | "queue" | "now" | "cron";
 
-function harness(opts: { mode?: Mode; editingId?: string | null; missions?: unknown[] } = {}) {
+function harness(
+  opts: {
+    mode?: Mode;
+    editingId?: string | null;
+    missions?: unknown[];
+    scheduleDraftError?: string | null;
+  } = {},
+) {
   const setShowCreate = jest.fn();
   const closeComposer = jest.fn();
   const clearMissionFormFields = jest.fn();
@@ -67,6 +74,7 @@ function harness(opts: { mode?: Mode; editingId?: string | null; missions?: unkn
     newDispatch: opts.mode ?? "save",
     setNewDispatch: jest.fn(),
     newSchedule: "5 1 * * *",
+    scheduleDraftError: opts.scheduleDraftError ?? null,
     dispatchPayload: jest.fn(() => ({ instruction: "do the thing" })),
     clearMissionFormFields,
     populateFormFromMission: jest.fn(),
@@ -189,5 +197,74 @@ describe("the form does not leak into the next mission", () => {
       src.indexOf("const setCategoryId"),
     );
     expect(body).toMatch(/setNewSchedule\(/);
+  });
+});
+
+
+// ── The seam, not the helper (T-0063) ───────────────────────────
+//
+// Added because a mutation survived. `scheduleBlocksDispatch` had unit tests and
+// the picker had unit tests, and removing the gate from `handleCreate` entirely
+// turned NOTHING red, because nothing asserted that handleCreate consults it.
+// That is the same mistake as the test this batch deleted: cover the pieces,
+// miss the join. These drive the real handler.
+describe("a mission whose schedule was never usable is not dispatched", () => {
+  it("fires no dispatch at all", async () => {
+    const h = harness({ mode: "cron", scheduleDraftError: 'Not a schedule this understands: "x"' });
+    await act(async () => {
+      await h.result.current.handleCreate();
+    });
+    expect(dispatchMissionAction).not.toHaveBeenCalled();
+  });
+
+  it("keeps the composer open so the operator can fix it", async () => {
+    const h = harness({ mode: "cron", scheduleDraftError: "bad" });
+    await act(async () => {
+      await h.result.current.handleCreate();
+    });
+    expect(h.closeComposer).not.toHaveBeenCalled();
+    expect(h.clearMissionFormFields).not.toHaveBeenCalled();
+  });
+
+  it("says why, rather than returning silently", async () => {
+    const h = harness({ mode: "cron", scheduleDraftError: 'Not a schedule this understands: "x"' });
+    await act(async () => {
+      await h.result.current.handleCreate();
+    });
+    expect(h.showToast).toHaveBeenCalledWith(
+      expect.stringMatching(/not a schedule this understands/i),
+      "error",
+    );
+  });
+
+  it("never claims a cadence the operator did not type", async () => {
+    const h = harness({ mode: "cron", scheduleDraftError: "bad" });
+    await act(async () => {
+      await h.result.current.handleCreate();
+    });
+    for (const call of h.showToast.mock.calls) {
+      expect(String(call[0])).not.toMatch(/Mission scheduled/i);
+      expect(String(call[0])).not.toMatch(/every 5m/i);
+    }
+  });
+
+  it("still dispatches a mission that sends no schedule", async () => {
+    // GREEN CONTROL, and load-bearing: it scopes the gate to the mode that
+    // actually carries a schedule. Garbage left in a hidden advanced box must
+    // not block a "run it now".
+    const h = harness({ mode: "now", scheduleDraftError: "bad" });
+    await act(async () => {
+      await h.result.current.handleCreate();
+    });
+    expect(dispatchMissionAction).toHaveBeenCalled();
+  });
+
+  it("still dispatches once the draft is corrected", async () => {
+    // The gate is not a one-way latch.
+    const h = harness({ mode: "cron", scheduleDraftError: null });
+    await act(async () => {
+      await h.result.current.handleCreate();
+    });
+    expect(dispatchMissionAction).toHaveBeenCalled();
   });
 });

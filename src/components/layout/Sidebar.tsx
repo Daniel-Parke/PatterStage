@@ -146,6 +146,8 @@ export default function Sidebar() {
       <div className="px-3 py-3 border-t border-white/10 space-y-2 flex-shrink-0">
         <VersionFooter collapsed={collapsed} />
         <button
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          aria-expanded={!collapsed}
           onClick={() => setCollapsed(!collapsed)}
           className="hidden lg:flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-colors font-mono"
         >

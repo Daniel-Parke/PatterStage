@@ -45,6 +45,8 @@ export default function ReaderNavigation({
       <div className="flex gap-1.5 overflow-x-auto max-w-[200px] md:max-w-none">
         {chapters.map((ch, i) => (
           <button key={i} onClick={() => ch.status === "complete" && onSelectChapter(i + 1)}
+            aria-label={`Chapter ${i + 1}${ch.title ? `: ${ch.title}` : ""}`}
+            aria-current={i + 1 === currentChapter ? "true" : undefined}
             className={`w-2.5 h-2.5 rounded-full transition-all flex-shrink-0 ${i + 1 === currentChapter ? "scale-125" : "opacity-40 hover:opacity-70"}`}
             style={{ background: chapterDotColor(ch.status, i + 1 === currentChapter, theme.accent) }} />
         ))}

@@ -22,10 +22,12 @@ export class SessionSync implements SyncSource {
       // Record sync status in sync_registry
       recordSyncSuccess(this.name, result.synced);
 
-      if (result.skipped > 0) {
-        logApiError("SessionSync", `${result.skipped} sessions skipped (FK violations)`, new Error(`${result.skipped} skipped`));
-      }
-
+      // No second line here. syncHermesSessionsToDb already reports skips, with
+      // the actual causes and a signature gate. This used to log the same fact
+      // through logApiError, at ERROR level, having SYNTHESISED an Error from
+      // the count, so the only thing it could print was the number already in
+      // its own context string. Two lines per tick, four times a minute, for a
+      // stable non-actionable condition, and an ERROR for a sync that succeeded.
       return {
         sourceName: this.name,
         success: true,

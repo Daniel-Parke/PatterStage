@@ -203,6 +203,7 @@ export default function ScheduledMissions() {
               </button>
               <button
                 type="button"
+                aria-label={`Delete the schedule "${s.name}"`}
                 onClick={() => remove.mutate(s.id)}
                 className="flex items-center gap-1 rounded-lg border border-red-500/30 px-2.5 py-1 font-mono text-xs text-red-300 hover:bg-red-500/10"
               >

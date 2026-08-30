@@ -14,7 +14,11 @@ import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 
 const PORT = Number(process.env.MOCK_LLM_PORT || 8000);
-const HOST = process.env.MOCK_LLM_HOST || "0.0.0.0";
+// Loopback by default, matching mock-hermes and mock-hindsight. An
+// unauthenticated completion stub has no business on a dev machine's LAN.
+// The compose stack is unaffected: mock-llm/Dockerfile pins
+// MOCK_LLM_HOST=0.0.0.0 explicitly, as mock-hermes/Dockerfile does.
+const HOST = process.env.MOCK_LLM_HOST || "127.0.0.1";
 const REPLY =
   process.env.MOCK_LLM_REPLY ||
   "MOCK_LLM_OK — task acknowledged and completed by the deterministic test model.";
@@ -131,6 +135,22 @@ const server = createServer(async (req, res) => {
   }
 
   return send(res, 404, { error: { message: `no mock-llm route for ${method} ${path}` } });
+});
+
+// Fail with a sentence, not a stack. This mock's default port is one the
+// real thing may already hold, so EADDRINUSE is the LIKELY first-run
+// outcome rather than an exotic one, and an unhandled 'error' event here
+// prints a trace that says nothing about what to do.
+server.on("error", (err) => {
+  if (err && err.code === "EADDRINUSE") {
+    console.error(
+      `[${"mock-llm"}] port ${PORT} is already in use. Another service may hold this port.
+` +
+      `Set MOCK_LLM_PORT to a free port, or stop whatever holds it.`,
+    );
+    process.exit(1);
+  }
+  throw err;
 });
 
 server.listen(PORT, HOST, () => {

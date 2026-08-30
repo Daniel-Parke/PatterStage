@@ -250,6 +250,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
             {search && (
               <button
                 type="button"
+                aria-label="Clear the mission search"
                 onClick={() => setSearch("")}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-ps-text-muted hover:text-ps-text-secondary transition-colors"
               >

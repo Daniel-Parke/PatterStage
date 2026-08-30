@@ -15,7 +15,7 @@
     "db:retention": "npx tsx scripts/tooling/retention-prune.ts",
     "build": "next build",
     "start": "next start",
-    "lint": "node scripts/tooling/check-agent-files.mjs && node scripts/tooling/check-doc-links.mjs && node scripts/tooling/check-derived-views.mjs && node scripts/tooling/check-read-only-guards.mjs && node scripts/tooling/design-lint.mjs && node scripts/tooling/contrast-check.mjs && node scripts/tooling/coverage-floor-check.mjs && eslint . --max-warnings 0 && npm run typecheck:tests",
+    "lint": "node scripts/tooling/check-agent-files.mjs && node scripts/tooling/check-doc-links.mjs && node scripts/tooling/check-derived-views.mjs && node scripts/tooling/check-read-only-guards.mjs && node scripts/tooling/check-icon-button-names.mjs && node scripts/tooling/design-lint.mjs && node scripts/tooling/contrast-check.mjs && node scripts/tooling/coverage-floor-check.mjs && eslint . --max-warnings 0 && npm run typecheck:tests",
     "lint:design": "node scripts/tooling/design-lint.mjs --report",
     "lint:coverage-floors": "node scripts/tooling/coverage-floor-check.mjs",
     "typecheck:tests": "tsc --noEmit -p tsconfig.tests.json",

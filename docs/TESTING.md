@@ -122,6 +122,9 @@ PS_AUTH_MODE=none HERMES_GATEWAY_URL=http://127.0.0.1:8642 PS_SEARCH_PROVIDER=no
 PS_URL=http://127.0.0.1:3000 npm run test:smoke-composer   # terminal 3
 ```
 
+The mock defaults to **:8642, the real gateway's own port**, because it impersonates it. On a machine running the real Hermes API Server that collides: set `MOCK_HERMES_PORT` to a free port, or stop the agent's server first. The mock exits with that advice rather than a stack trace. It binds loopback by default; the compose stack overrides that in its Dockerfile.
+
+
 `PS_SEARCH_PROVIDER=none` keeps Deep Research fully offline (no live web search). On a **fresh** `PS_DATA_DIR`, run `PS_DATA_DIR=<dir> npm run db:migrate` once before starting the server (the boot-time Composer seed needs the schema present).
 
 For `test:e2e-runtime` you can keep auth on instead: start the server normally and pass the same value in `PS_AUTH_TOKEN` to both sides.

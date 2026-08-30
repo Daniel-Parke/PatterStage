@@ -50,6 +50,33 @@ Persistent busy states exist where it matters (the drift banners show
 `[data-testid="last-result"]` line reading "Saved at HH:MM: …" that outlives the
 toast entirely.
 
+## A claim this file used to make, retired by a tester who ignored it
+
+**"The config write path refuses to overwrite a malformed config.yaml."** That
+sentence was wrong, it came from here, and it cost a round.
+
+T-0054 corrupted a config.yaml, watched the server stay up, saw a refusal logged,
+and concluded the write path was defended. It was: `syncDefaultsToHermesConfig`
+in the Hermes adapter genuinely refuses, logs the line and column, and hands the
+backup path back. But `PUT /api/config` is a different writer and it was never
+tested against a malformed file. Generalising "a write path" to "the write path"
+turned a real observation into a false guarantee, and the record went further,
+calling a malformed config **"a reporting gap rather than a data-loss risk"**.
+
+That phrase then travelled into a QA brief as a do-not-file. A tester ignored it,
+typed a value into `/config/agent`, pressed Save, and watched 15,016 bytes of
+operator configuration become 23. Fixed in T-0060: the route now parses the file
+itself and answers 409, and the whole config survives, byte-identical.
+
+Two things to take from it when reading anything else in this file:
+
+- **A defence proved for one caller is not proved for the caller beside it.**
+  If a note says "the X path is safe", ask which X.
+- **A do-not-file entry is a claim like any other.** Everything in the appendix of
+  a QA brief, and everything below in this file, is written by someone who could
+  be wrong. If the product disagrees with it, the product wins and I want the
+  report.
+
 ## Confirmed code-correct (do not re-file without a post-rebuild repro)
 
 These have been read at the source level and verified working; re-file only with

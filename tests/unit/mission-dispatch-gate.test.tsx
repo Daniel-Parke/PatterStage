@@ -80,6 +80,8 @@ function ComposerHarness() {
     <MissionCreateForm
       editingId={null}
       missions={[]}
+      scheduleDraftError={null}
+      onScheduleDraftError={jest.fn()}
       formState={formState}
       setFormField={setFormField}
       categories={[]}

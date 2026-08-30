@@ -25,7 +25,7 @@ export default function MobileChapterDrawer({
       <div className="absolute left-0 top-0 bottom-0 w-72 border-r border-white/10 overflow-y-auto" style={{ background: theme.panel }}
         onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-end p-3">
-          <button onClick={onClose}
+          <button onClick={onClose} aria-label="Close chapter list"
             className="p-2 rounded-lg text-ps-text-muted hover:text-ps-text-secondary hover:bg-white/5 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
             <X className="w-5 h-5" />
           </button>

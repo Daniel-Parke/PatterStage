@@ -75,7 +75,12 @@ export default function ToolsetSelector({
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-neon-orange/10 border border-neon-orange/20 text-xs font-mono text-neon-orange/90"
             >
               {toolsetLabel(id)}
-              <button type="button" onClick={() => remove(id)} className="hover:text-white">
+              <button
+                type="button"
+                aria-label={`Remove toolset ${toolsetLabel(id)}`}
+                onClick={() => remove(id)}
+                className="hover:text-white"
+              >
                 <X className="w-3 h-3" />
               </button>
             </span>

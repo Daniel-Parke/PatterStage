@@ -22,6 +22,7 @@ import {
   type SchedulePreset,
 } from "@/lib/schedule/presets";
 import {
+  advancedDraftProblem,
   resolveToCron,
   groupSchedulePresets,
 } from "@/lib/schedule/picker-resolver";
@@ -44,6 +45,19 @@ export interface SchedulePickerProps {
   compact?: boolean;
   /** Optional mode hint (kept for legacy callers; affects display ordering only). */
   mode?: ScheduleMode;
+  /**
+   * Called whenever the advanced (raw cron) draft's usability changes: the
+   * message when the box holds something this cannot parse, null when it does
+   * not.
+   *
+   * REQUIRED, not optional, and that is the fix. `commitAdvancedDraft` already
+   * returned a boolean "so a caller that is about to SUBMIT can tell a silent
+   * revert from a successful commit" (T-0051) and nothing ever consumed it. An
+   * optional callback is the same bug with a nicer name: making it required
+   * turns "a caller forgot" into a red `tsc`, which is WG-WEB-013's principle
+   * applied to the type system rather than to a lint script.
+   */
+  onDraftError: (message: string | null) => void;
 }
 
 // resolveToCron / previewCron / groupSchedulePresets moved to
@@ -59,6 +73,7 @@ export default function SchedulePicker({
   error = null,
   compact = false,
   mode: _mode,
+  onDraftError,
 }: SchedulePickerProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -405,7 +420,14 @@ export default function SchedulePicker({
         <input
           type="text"
           value={advancedDraft}
-          onChange={(e) => setAdvancedDraft(e.target.value)}
+          onChange={(e) => {
+            setAdvancedDraft(e.target.value);
+            // Report on change, display on blur. The composer must know the
+            // draft is unusable without the field ever having been left; see
+            // advancedDraftProblem's comment for why blur ordering is not
+            // something to lean on.
+            onDraftError(advancedDraftProblem(e.target.value));
+          }}
           onBlur={commitAdvancedDraft}
           onKeyDown={(e) => {
             if (e.key === "Enter") {

@@ -15,6 +15,8 @@
 
 "use client";
 
+import { scheduleBlocksDispatch } from "@/lib/dispatch-mode";
+import { firstUnmetSubmitRequirement } from "@/lib/missions/mission-submit-requirement";
 import { useCallback, useState } from "react";
 
 import type { ToastType } from "@/components/ui/Toast";
@@ -70,7 +72,9 @@ export function useMissionDispatch({
     dispatchAcknowledged,
     setDispatchAcknowledged,
     newDispatch,
+    scheduleDraftError,
     setNewDispatch,
+    setFormField,
     newSchedule,
     dispatchPayload,
     clearMissionFormFields,
@@ -110,9 +114,35 @@ export function useMissionDispatch({
   }, [closeComposer, resetForm]);
 
   const handleCreate = useCallback(async () => {
-    if (!newName.trim() || !newInstruction.trim()) return;
-    if (!editingId && !dispatchAcknowledged) {
-      showToast("Open Dispatch to choose how this mission runs.", "error");
+    // One check, one message, in the same order the button reports. It used to
+    // return SILENTLY on an empty name or instruction while the acknowledgement
+    // branch toasted, so the ack was the only blocker with a voice on either
+    // surface (T-0065).
+    const blocker = firstUnmetSubmitRequirement({
+      name: newName,
+      instruction: newInstruction,
+      dispatching,
+      needsDispatchAck: !editingId && !dispatchAcknowledged,
+    });
+    if (blocker) {
+      // A double-click still returns silently: a spinner already says this.
+      if (blocker.code !== "dispatching") showToast(blocker.message, "error");
+      return;
+    }
+    // Above every wire branch, and above setDispatching, so a refusal costs
+    // nothing and leaves no spinner. The server WOULD reject this
+    // (mission-handlers/dispatch.ts returns badRequest on an invalid schedule);
+    // it never got the chance, because the client substituted DEFAULT_SCHEDULE
+    // for the draft it could not parse and shipped a cadence the operator never
+    // typed, under a green toast affirming it (T-0063).
+    //
+    // The button is deliberately NOT disabled. This hook already carries the
+    // ruling that a control which returns silently is "a button that does
+    // nothing and explains nothing": let the click land, refuse the POST, say
+    // why.
+    const scheduleBlocked = scheduleBlocksDispatch(newDispatch, scheduleDraftError);
+    if (scheduleBlocked) {
+      showToast(scheduleBlocked, "error");
       return;
     }
     if (dispatching) return;
@@ -241,17 +271,21 @@ export function useMissionDispatch({
       // (one level). Same wire shape, same byte-level outcome. See JSDoc
       // on the helper in `src/hooks/success-message-for-dispatch.ts` for
       // the 1-level unwrap contract.
+      // Built once, so the toast can report what was actually SENT.
+      const payload = dispatchPayload({ dispatchMode: newDispatch });
       const { ok, error, data } = await dispatchMissionAction("dispatch", {
         name: newName,
-        ...dispatchPayload({
-          dispatchMode: newDispatch,
-        }),
+        ...payload,
       });
 
       toastFromResult(
         showToast,
         { ok, error },
-        () => successMessageForDispatch(newDispatch, newSchedule),
+        // From the payload, not from form state. Two sources for one claim is
+        // how a green toast came to read "Mission scheduled: every 5m" for a
+        // cadence the operator never typed: the schedule on the wire and the
+        // schedule in the form had diverged, and the toast trusted the form.
+        () => successMessageForDispatch(newDispatch, payload.schedule as string | undefined),
         "Failed to create mission",
       );
       if (ok) {
@@ -274,7 +308,7 @@ export function useMissionDispatch({
     } finally {
       setDispatching(false);
     }
-  }, [newName, newInstruction, editingId, dispatchAcknowledged, dispatching, showToast, newDispatch, newSchedule, missions, dispatchPayload, fetchData, fetchDetail, expandedId, finishComposer, setEditingId, setExpandedId]);
+  }, [newName, newInstruction, editingId, dispatchAcknowledged, dispatching, showToast, newDispatch, newSchedule, scheduleDraftError, missions, dispatchPayload, fetchData, fetchDetail, expandedId, finishComposer, setEditingId, setExpandedId]);
 
   const handleEdit = useCallback((m: MissionRow) => {
     setEditingId(m.id);
@@ -285,10 +319,22 @@ export function useMissionDispatch({
   const handleDuplicateMission = useCallback((m: MissionRow) => {
     setEditingId(null);
     populateFormFromMission(m, { editing: false, namePrefix: "(copy)" });
-    setNewDispatch("save");
+    // Through setFormField, not the raw setter. populateFormFromMission clears
+    // the dispatch acknowledgement (editing: false), and only the wrapper
+    // re-acknowledges. With the sheet ALREADY OPEN the form does not remount, so
+    // its once-per-mount default-reporting effect never runs, and the composer
+    // was left with Dispatch rendered open, the ack false, and a dead submit
+    // button whose tooltip told the operator to open something already open
+    // (T-0065). Duplicating from a CLOSED sheet remounted and healed itself,
+    // which is why this only ever reproduced sometimes.
+    //
+    // Note resetForm keeps the raw setter deliberately: it clears the ack on
+    // purpose and routing it through the wrapper would re-acknowledge a form
+    // that has just been emptied.
+    setFormField("newDispatch", "save");
     setShowCreate(true);
     showToast("Mission duplicated as draft", "success");
-  }, [populateFormFromMission, showToast, setNewDispatch, setEditingId, setShowCreate]);
+  }, [populateFormFromMission, showToast, setFormField, setEditingId, setShowCreate]);
 
   const handleDelete = useCallback(async (id: string) => {
     // Migrated from the inline `safeApiCall("/api/missions", { method: "POST", body: { action: "delete", missionId: id } })`

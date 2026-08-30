@@ -18,7 +18,9 @@
  *   - `invalidateConfigCache()` removes both keys
  *   - Cache write populates both keys in a transaction
  *   - Missing file returns `{}` and skips cache write
- *   - YAML parse error returns `{}` and does not crash
+ *   - YAML parse error returns `{}` on the READ path and does not crash. A GET
+ *     contract ONLY: a read-modify-write must parse explicitly and refuse. See
+ *     tests/unit/config-put-refuses-unparseable-yaml.test.ts (T-0060).
  */
 
 import { readCachedConfig, invalidateConfigCache } from "@/lib/config-cache";
@@ -178,13 +180,24 @@ describe("config-cache — List 4 extraction (session 187)", () => {
     expect(metaStore.has("config.cached_json")).toBe(false);
   });
 
-  test("returns {} on YAML parse error and does not crash", () => {
+  test("returns {} on a YAML parse error: a READ-path degrade, never the basis for a write", () => {
+    // The assertion is right and the SCOPE was not. GET /api/config must keep
+    // rendering when config.yaml is broken, or the operator is blanked out of
+    // the very screens that would tell them it is broken. What it must never be
+    // taken for is a general contract: a read-modify-write that consumes this {}
+    // writes it back over the file. That is exactly what PUT /api/config did
+    // until T-0060, destroying the config and answering 200. The enforcing test
+    // is tests/unit/config-put-refuses-unparseable-yaml.test.ts.
     allReturn = [];
-    // Malformed YAML that yaml.load throws on
     writeFileSync(fakeConfigPath, "model: { broken: [unclosed\n");
 
     const result = readCachedConfig();
     expect(result).toEqual({});
+
+    // The failed parse is NOT cached. Pinning this stops a future "cache the {}
+    // so we stop re-reading a broken file" optimisation from making the degrade
+    // sticky for a TTL and pushing it into callers that never asked for it.
+    expect(metaStore.has("config.cached_json")).toBe(false);
   });
 
   test("falls through to the filesystem when the SELECT throws (db unavailable)", () => {

@@ -36,9 +36,16 @@ function tickAge(ms: number): string {
 /**
  * Describe the scheduler's heartbeat for the dashboard stat row.
  *
- * Three states, and the difference between them is what an operator
- * needs: never started (nothing has ever held the lease), stalled (it
- * held the lease and stopped refreshing it), ticking.
+ * Five states, and the difference between them is what an operator needs:
+ * never started (nothing has ever held the lease), unknown (the heartbeat is
+ * unreadable), stalled (something held the lease and stopped refreshing it),
+ * follower (the lease is live and held by ANOTHER process, so this one will
+ * never dispatch), ticking.
+ *
+ * ORDER MATTERS. Stalled sits above Follower deliberately: a stale lease means
+ * nothing is firing at all, whoever holds it, and that is the more urgent fact.
+ * The docstring said "three states" for two states longer than it was true,
+ * which is its own small lesson about counts in prose.
  */
 export function describeSchedulerHealth(
   health: SchedulerHealth | undefined,
@@ -69,6 +76,19 @@ export function describeSchedulerHealth(
       value: "Stalled",
       subtitle: `last tick ${age} · ${owner}`,
       color: "pink",
+    };
+  }
+
+  // Live lease, held by someone else. Not a fault: schedules ARE firing, just
+  // not here. Cyan rather than orange for exactly that reason, since an orange
+  // pill beside a green one is what makes two healthy processes read as a
+  // problem. The owner pid is printed in BOTH this and Ticking, so if a reading
+  // ever alternates the value that changed is visible rather than mysterious.
+  if (health.selfPid != null && health.ownerPid != null && health.ownerPid !== health.selfPid) {
+    return {
+      value: "Follower",
+      subtitle: `last tick ${age} · owner ${owner} · this process (pid ${health.selfPid}) will not dispatch`,
+      color: "cyan",
     };
   }
 

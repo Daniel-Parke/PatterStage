@@ -81,6 +81,8 @@ export default function MissionsPage() {
     dispatching,
     dispatchAcknowledged,
     setDispatchAcknowledged,
+    scheduleDraftError,
+    setScheduleDraftError,
     categories,
     newCategoryId,
     setCategoryId,
@@ -264,6 +266,8 @@ export default function MissionsPage() {
             // (T-0043). It starts satisfied because the step starts open;
             // collapsing the choice withdraws it and the gate returns.
             onDispatchOpenChange={(open) => setDispatchAcknowledged(open)}
+            scheduleDraftError={scheduleDraftError}
+            onScheduleDraftError={setScheduleDraftError}
           />
         </div>
       </Sheet>

@@ -236,3 +236,93 @@ describe("finalizeRootConfigOnDisk", () => {
     expect(cfg.model?.default).toBe("deepseek/deepseek-v4-flash");
   });
 });
+
+describe("syncDefaultsToHermesConfig refuses a config.yaml it cannot parse", () => {
+  // CHARACTERISATION PIN, NOT A REPRO. Every assertion here is GREEN the day it
+  // is written, and that is the point.
+  //
+  // This is the defence that DOES exist (config-sync.ts:69-80): back up, refuse,
+  // log the js-yaml line:col, hand the backup path back. It has never had a
+  // test. T-0054 observed it working, generalised it to "the write path",
+  // singular, and concluded a malformed config was "a reporting gap rather than
+  // a data-loss risk". PUT /api/config had no such defence and destroyed the
+  // file, which is T-0060.
+  //
+  // So the lesson is not only that the route needed fixing. It is that an
+  // untested defence is a defence a refactor can delete with a green build, and
+  // a defence nobody can point a test at is a defence that gets generalised to
+  // code it does not cover.
+  //
+  // WHICH OF THESE IS REFUSAL-SENSITIVE, measured by mutation. Replacing
+  // `return { backupPath }` at config-sync.ts:79 with a degrade to `{}` turns
+  // exactly ONE of the three red: the byte-identical test. The other two hold
+  // properties that are true whether the write happens or not (the happy path at
+  // :119 returns `{ backupPath }` too, and the console.error lines fire before
+  // the return). They are worth keeping and they are not the fence. Said here so
+  // nobody reads three green tests as three guarantees.
+
+  // Built by join so the literal carries no escape sequence.
+  const MALFORMED = ["agent:", "  max_turns: 100", "  max_turns: 200", ""].join("\n");
+
+  it("leaves the file byte-identical rather than overwriting it", () => {
+    const { createModel, setDefaultModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { syncDefaultsToHermesConfig } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
+    const configPath = join(fakeRoot, "config.yaml");
+    writeFileSync(configPath, MALFORMED);
+    const m = createModel({
+      name: "Refuse",
+      provider: "nous",
+      modelId: "x/refuse",
+      baseUrl: "https://example.invalid/v1",
+    });
+    setDefaultModel("agent", m.id);
+
+    syncDefaultsToHermesConfig();
+
+    expect(readFileSync(configPath, "utf-8")).toBe(MALFORMED);
+  });
+
+  it("captures the pre-write content in a backup the caller can name", () => {
+    const { createModel, setDefaultModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { syncDefaultsToHermesConfig } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
+    const configPath = join(fakeRoot, "config.yaml");
+    writeFileSync(configPath, MALFORMED);
+    const m = createModel({
+      name: "Refuse2",
+      provider: "nous",
+      modelId: "x/refuse2",
+      baseUrl: "https://example.invalid/v1",
+    });
+    setDefaultModel("agent", m.id);
+
+    const result = syncDefaultsToHermesConfig();
+
+    expect(result.backupPath).toBeTruthy();
+    expect(existsSync(result.backupPath!)).toBe(true);
+    expect(readFileSync(result.backupPath!, "utf-8")).toBe(MALFORMED);
+  });
+
+  it("says which file it refused to write, and why", () => {
+    const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+    try {
+    const { createModel, setDefaultModel } = require("@/lib/models-repository") as typeof import("@/lib/models-repository");
+    const { syncDefaultsToHermesConfig } = require("@/modules/hermes/lib/config-sync") as typeof import("@/modules/hermes/lib/config-sync");
+      writeFileSync(join(fakeRoot, "config.yaml"), MALFORMED);
+      const m = createModel({
+        name: "Refuse3",
+        provider: "nous",
+        modelId: "x/refuse3",
+        baseUrl: "https://example.invalid/v1",
+      });
+      setDefaultModel("agent", m.id);
+
+      syncDefaultsToHermesConfig();
+
+      const said = spy.mock.calls.map((c) => c.join(" ")).join(" | ");
+      expect(said).toMatch(/duplicated mapping key/i);
+      expect(said).toMatch(/not overwriting/i);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});

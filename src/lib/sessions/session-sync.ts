@@ -38,6 +38,7 @@ import { getDb } from "../db";
 import { SERVER_MODULES } from "../modules/server";
 import { parseCronSessionId } from "./session-title";
 import { estimateSessionSize } from "./session-repository";
+import { messageFromError } from "@/lib/api-fetch";
 import { readHermesSessionsFromStateDb } from "../runtime/state-db";
 import { hermesStatusFromEndReason } from "./hermes-state-sessions";
 import {
@@ -88,6 +89,49 @@ function ensureMessageCountColumn(database: Database.Database): void {
  * Completed sessions in Hermes are updated to "completed"/"failed"
  * status here — their end state is always driven by Hermes.
  */
+/** At most this many row-level causes are carried into the log line. */
+const MAX_SKIP_SAMPLES = 3;
+
+/**
+ * Suppression keyed on the CAUSE, not on the count.
+ *
+ * Modelled on ConfigSync's `lastYamlErrorSignature` rather than on the orphan
+ * sweep's magnitude rule, and the difference matters: the sweep watches a count
+ * oscillating around a steady state, while here the interesting variable is what
+ * is going wrong. Keying on the error text means a stable pair of broken rows
+ * logs once instead of four times a minute forever, and a NEW failure mode is
+ * news immediately rather than being swallowed by a count that did not move.
+ *
+ * Row ids and digits are stripped from the signature, so two rows failing the
+ * same way and forty-seven rows failing the same way are one signature.
+ */
+let lastSkipSignature: string | null = null;
+
+function reportSkips(skipped: number, samples: string[]): void {
+  if (skipped === 0) {
+    if (lastSkipSignature !== null) {
+      // The drained transition. Without it the log simply stops, and an operator
+      // cannot tell "it cleared" from "the sync died".
+      console.warn("[syncHermesSessionsToDb] session skips cleared");
+      lastSkipSignature = null;
+    }
+    return;
+  }
+
+  const signature = [...new Set(samples.map((s) => s.replace(/\d+/g, "#")))].sort().join(" | ");
+  if (signature === lastSkipSignature) return;
+  lastSkipSignature = signature;
+
+  // WARN, not ERROR. The sync SUCCEEDED; some rows were skipped. Logging this
+  // through logApiError said "Error" four times a minute for a stable,
+  // non-actionable condition, which is how it trained an operator's watchdog to
+  // treat this file as noise.
+  console.warn(
+    `[syncHermesSessionsToDb] skipped ${skipped} session(s). ` +
+      `Causes (up to ${MAX_SKIP_SAMPLES}): ${samples.join(" | ")}`,
+  );
+}
+
 export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
   const hermesSessions = readHermesSessionsFromStateDb();
   const missionIdByJobId = buildMissionIdByJobId();
@@ -116,6 +160,7 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
   const tx = database.transaction(() => {
     let synced = 0;
     let skipped = 0;
+    const skipSamples: string[] = [];
     for (const row of hermesSessions) {
       const startedAt = new Date(row.started_at * 1000).toISOString();
       const endedAt = row.ended_at
@@ -164,19 +209,24 @@ export function syncHermesSessionsToDb(): { synced: number; skipped: number } {
           messageCount: row.message_count ?? null,
         });
         synced++;
-      } catch {
-        // FK violation or other transient error — skip this session
-        // so it doesn't kill the entire transaction
+      } catch (err) {
+        // Capture the CAUSE. A bare `catch { skipped++ }` here meant neither the
+        // log nor anyone reading it could say which rows failed or why, and the
+        // summary below asserted "FK/constraint errors", a cause the code had
+        // never observed. The two realistic causes are neither: a NaN `size`
+        // bound as NULL against a NOT NULL column, and a better-sqlite3 bind
+        // TypeError (T-0064).
         skipped++;
+        if (skipSamples.length < MAX_SKIP_SAMPLES) {
+          skipSamples.push(`${row.id}: ${messageFromError(err, "unknown error")}`);
+        }
       }
     }
-    return { synced, skipped };
+    return { synced, skipped, samples: skipSamples };
   });
 
   const result = tx();
-  if (result.skipped > 0) {
-    console.warn(`[syncHermesSessionsToDb] skipped ${result.skipped} sessions due to FK/constraint errors`);
-  }
+  reportSkips(result.skipped, result.samples);
 
   // ── Step 3: Close orphaned active sessions ──────────────────
   // Two independent mechanisms protect the Sessions page from rows
