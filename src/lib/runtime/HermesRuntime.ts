@@ -31,6 +31,7 @@ import {
   resolveEndpoint as defaultResolveEndpoint,
   type RuntimeEndpoint,
 } from "./endpoint-registry";
+import { normaliseUsage } from "@/lib/usage-shape";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -93,13 +94,18 @@ function normalizeRunStatus(s?: string): RunStatus {
   }
 }
 
+/**
+ * This was the first of what became four private conversions of the same three
+ * numbers, and the only one that handled both wire vocabularies. It now defers
+ * to the shared normaliser (T-0068) and keeps only the rename into RunUsage's
+ * input/output naming, which is this layer's own vocabulary rather than a
+ * provider's.
+ */
 function mapUsage(u: unknown): RunUsage | undefined {
-  if (!u || typeof u !== "object") return undefined;
-  const o = u as Record<string, unknown>;
-  const input = Number(o.input_tokens ?? o.prompt_tokens ?? 0);
-  const output = Number(o.output_tokens ?? o.completion_tokens ?? 0);
-  const total = Number(o.total_tokens ?? input + output);
-  return { inputTokens: input, outputTokens: output, totalTokens: total };
+  const n = normaliseUsage(u);
+  return n
+    ? { inputTokens: n.promptTokens, outputTokens: n.completionTokens, totalTokens: n.totalTokens }
+    : undefined;
 }
 
 interface HermesRunDto {

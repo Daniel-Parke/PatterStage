@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { getAgentGateway } from "./runtime/gateway";
+import { normaliseUsage } from "./usage-shape";
 import { getModelWithKey, type ModelWithKey } from "./models-repository";
 import { getGatewayKey } from "./runtime/secrets";
 import { buildDirectRequest, inferApiStyle, type ApiStyle } from "./llm-endpoint";
@@ -221,14 +222,10 @@ async function callDirectProvider(input: CallDirectInput): Promise<LLMResponse> 
     if (input.apiStyle === "anthropic") {
       const blocks = Array.isArray(data?.content) ? (data.content as { text?: string }[]) : [];
       const content = blocks.map((b) => b?.text ?? "").join("").trim();
-      const u = data?.usage as { input_tokens?: number; output_tokens?: number } | undefined;
-      const usage = u
-        ? {
-            promptTokens: u.input_tokens ?? 0,
-            completionTokens: u.output_tokens ?? 0,
-            totalTokens: (u.input_tokens ?? 0) + (u.output_tokens ?? 0),
-          }
-        : undefined;
+      // This branch was the only one that normalised, because an explicit cast
+      // forced its author to name the wire shape. It now shares the one
+      // normaliser rather than keeping a private copy of the same knowledge.
+      const usage = normaliseUsage(data?.usage);
       return { content, model: data?.model ?? input.model, usage };
     }
 
@@ -236,7 +233,7 @@ async function callDirectProvider(input: CallDirectInput): Promise<LLMResponse> 
     return {
       content: data.choices?.[0]?.message?.content?.trim() ?? "",
       model: data.model ?? input.model,
-      usage: data.usage,
+      usage: normaliseUsage(data.usage),
     };
   } finally {
     clearTimeout(timeout);
@@ -302,7 +299,11 @@ async function callGateway(input: CallGatewayInput): Promise<LLMResponse> {
       return {
         content,
         model: data.model ?? model,
-        usage: data.usage,
+        // Through the normaliser, not straight through. `data` is `any` (
+        // Response.json() is typed Promise<any>), so assigning the provider's
+        // snake_case object into this camelCase field type-checked cleanly and
+        // silently zeroed every Deep Research run (T-0068).
+        usage: normaliseUsage(data.usage),
       };
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
