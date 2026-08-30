@@ -3,7 +3,11 @@
 // ═══════════════════════════════════════════════════════════════
 //
 // The pattern `showToast(ok ? success : (error ?? fallback), ok ? undefined : "error")`
-// repeats across useCronJobs + useSystemCronJobs (and other API hooks).
+// repeats across every caller that mutates through the API: today
+// useMissionDispatch, useMissionTemplateActions, useHindsightDirectives,
+// hindsight-mutate, success-message-for-dispatch and the dashboard page.
+// (It once named useCronJobs and useSystemCronJobs; neither has existed for
+// some time, which is the sort of drift a comment cannot be trusted to notice.)
 // Centralising it here:
 //   1. locks the showToast contract (success uses default tone, error uses "error")
 //   2. makes the per-call error fallback the only knob — no risk of a caller

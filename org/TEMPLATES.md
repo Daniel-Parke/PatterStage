@@ -88,7 +88,8 @@ history.
 ## Parallel plan (integrator only)
 
 Before dispatch: lanes with disjoint path claims written to
-org/claims.json (kernel/schemas/claims.schema.json) and committed to
+org/claims.json (the EOS checkout's kernel/schemas/claims.schema.json,
+at the commit this venture pins) and committed to
 the integration branch. Each lane's task record carries its claim
 copy. At merge the integrator verifies the actual diff against the
 assigned claims and regenerates the derived views.

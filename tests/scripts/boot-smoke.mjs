@@ -2,7 +2,7 @@
 // ═══════════════════════════════════════════════════════════════
 // boot-smoke.mjs — cross-platform operational smoke (no app build / no Hermes)
 // ═══════════════════════════════════════════════════════════════
-// The CI `boot-smoke` matrix runs this on ubuntu + macos + windows. It exercises
+// The CI `boot-smoke` matrix runs this on ubuntu + macos (ci.yml). It exercises
 // the OS-seam primitives the deploy runner and host scheduler depend on — the
 // code most likely to differ per OS — without needing a full Next build or a
 // running Hermes:

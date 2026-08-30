@@ -32,7 +32,10 @@ reading one mandatory.
 1. Open or take the task record; declare facts, let the router rule.
 2. Plan briefly inside the record's budget, implement with tests per
    org/TESTING.md, document in the same change.
-3. Run the affected tests the map names, widening on low confidence.
+3. Run the affected tests, widening on low confidence. There is no test
+   map to name them: org/TESTING.md records that the map is NOT
+   INSTANTIATED here, because the generator its stack profile calls for
+   does not exist. Choose the affected set by reading the change.
 4. Close: gate-time re-route against the actual diff, then merge on
    green. The task joins the sampled-review pool unless the routing
    reasons demand independent review.
@@ -176,7 +179,9 @@ for every install that follows the same runbook.
    drill with no hypothesis cannot falsify anything and is not a drill.
 2. **Pick a real backup, not a fresh one.** Two writers exist and they
    land in different places, so name the one you drilled. The archive is
-   `PS_DATA_DIR/backups/db/<db>.<timestamp>.db`, written by the
+   `PS_DATA_DIR/backups/db/patterstage.<timestamp>.db` (the stem is the
+   database's own filename, so the literal `db/` directory and the stem
+   are not the same token), written by the
    scheduled `ps-db-backup` job and pruned to the newest
    `PS_DB_BACKUP_KEEP` snapshots (default 14); that is the retention
    window, and the oldest snapshot still inside it is the one to

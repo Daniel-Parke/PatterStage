@@ -65,8 +65,11 @@ position held until a run record exists to argue it higher, so a
 partition wider than two needs a policy amendment first, not a bigger
 cut. The pack's three-to-five default (`packs/agentic-swarm` D1) and its
 rule that above five the reason goes on the run record are the general
-case, and they take effect here only once the cap is raised. Above two
-with no decidable oracle, do not.
+case, and they take effect here only once the cap is raised.
+
+Nothing enforces this. `parallelism.max_lanes` is read by no script in
+this repository, so the ceiling holds only because a partition step
+reads it. Treat it as a rule you keep, not a rule that keeps you.
 
 ## 2. Write the lane brief
 
