@@ -1,0 +1,44 @@
+{
+  "id": "T-0067",
+  "intent": "POST /api/missions with an unrecognised dispatchMode returned 201 and dispatched the mission immediately. The operator asked for a schedule and got an unattended run. Reported as the only release-blocker of the 2026-08-30 QA pass, and confirmed as such.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0067-dispatch-mode-2026-08-31",
+  "claims": [
+    "src/lib/dispatch-mode.ts",
+    "src/lib/missions/mission-handlers/dispatch.ts",
+    "src/lib/templates-handlers/",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A dispatchMode that was SUPPLIED and is unrecognised is refused with a 400 naming the four legal values.",
+    "I2 An ABSENT dispatchMode still means now. That is a legacy contract asserted over HTTP by full-stack-smoke.mjs, so a blanket not-valid check would have been wrong.",
+    "I3 A refusal leaves NO mission row. The row was written twenty lines before the mode was read.",
+    "I4 cron with no schedule is its own 400, not a fall-through to run-now.",
+    "I5 A template cannot store an invalid mode, which is what made this UI-reachable.",
+    "I6 A failed immediate dispatch is not audited as ok:true."
+  ],
+  "root_cause": "dispatch.ts destructured parseDispatchMode as isSaveMode/isQueueMode/isCronMode and dropped the valid flag that exists for exactly this. The run-now branch is written as a NEGATIVE, so it is the else-of-everything rather than an explicit isNowMode test, and any string the four comparisons miss lands there. dispatch-mode.ts's own header says the flag lets callers write if-not-valid-return-error; of its two callers, promote did and dispatch did not. The route validates its outer action vocabulary with a default 400 and then hands an unvalidated inner enum to a handler that treats unrecognised as run-it.",
+  "beyond_the_report": [
+    "cron with a missing or empty schedule un-sets isCronMode and takes the identical run-now path. The client has refused that since T-0063; the API did not.",
+    "Templates persist an arbitrary dispatchMode (the action body is typed any, update writes the field unvalidated) and useMissionComposer casts it back into form state, so a poisoned template plus Apply plus submit was an immediate unattended run. That is what turned an API-only defect into a UI-reachable one.",
+    "The template's stored type was save|now|cron, missing queue, drifted from DispatchMode. Aliased to the real type now.",
+    "dispatchMissionNow's result was discarded and the audit line hardcoded ok:true, so a dispatch that had already flipped the mission to failed was recorded as a success."
+  ],
+  "oracle_provenance": "Committed alone at 7142f462 ahead of the implementation at 9f100455. Measured against dev@07e36857: 15 red, 5 green. The greens are the legal-mode controls, and one is load-bearing: the ABSENT-mode contract. Pinning it meant the obvious fix would go red in the unit suite rather than silently breaking the integration smoke.",
+  "verification": "Five mutations, all caught, including the one that matters most: treating absent as invalid turns the legacy-contract control red. Proved end to end against a real server on a temp HERMES_HOME: four invalid cases answered 400 with precise messages, four legal modes and the absent-mode case answered 201, and the missions list held EXACTLY five rows for five successful dispatches, so none of the four refusals left an orphan. Gate: lint 0, tsc 0, 3340 tests / 387 suites, knip 0, canary 0, build 0.",
+  "timestamps": {
+    "opened": "2026-08-31T09:00:00Z",
+    "updated": "2026-08-31T10:30:00Z",
+    "closed": "2026-08-31T10:30:00Z"
+  }
+}

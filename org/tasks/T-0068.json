@@ -1,0 +1,42 @@
+{
+  "id": "T-0068",
+  "intent": "Deep Research persisted NULL for every token column on every run, and had done since T-0030 shipped, so 100 percent of research spend was excluded from the number the optional hard stop compares against. The spend console then explained the absence with a sentence that could never be true. Third defect of this family after T-0030 and T-0058.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0068-usage-shape-2026-08-31",
+  "claims": [
+    "src/lib/usage-shape.ts",
+    "src/lib/llm.ts",
+    "src/lib/runtime/HermesRuntime.ts",
+    "src/lib/spend/spend-summary.ts",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A provider's token counts survive into the run, in whichever of the three vocabularies they arrived: OpenAI prompt/completion, Anthropic input/output, or the internal camelCase.",
+    "I2 ABSENT is still not ZERO. The normaliser returns undefined when the provider reported nothing and never invents zeroes to make a shape line up, because a run nobody priced must not appear as a measured zero-dollar cost.",
+    "I3 A provider's own total is believed over the sum, because some bill for tokens neither counter covers.",
+    "I4 The unmeasured message describes THIS run's data rather than making a claim about history it cannot check."
+  ],
+  "root_cause": "llm.ts assigned the provider's object straight into a field declared camelCase, at two sites: the gateway path and the OpenAI-compatible direct path. accumulateUsage read promptTokens off a snake_case object, got undefined for every call, never set sawAny, and returned null. The Anthropic branch fifteen lines away DID normalise, because an explicit cast forced its author to name the wire shape and build a new object.",
+  "why_the_compiler_could_not_help": "Every annotation in the chain was correct and correctly placed. LLMResponse.usage is declared camelCase and both callers are annotated to return it. The laundering is one expression: Response.json() is typed Promise<any>, so data.usage is any and assigns to anything. Strict mode does not close that. The declared type was a lie the compiler is structurally unable to detect, because the only place the shape is asserted is the unvalidated JSON boundary.",
+  "why_the_tests_were_green": "Three research-usage tests existed and each stopped one module short of the seam, on both sides. The decisive one is titled 'defaultLlm stops discarding what callLLM reported' and mocks callLLM returning CAMELCASE, which the real callLLM never produced. It encoded the intended contract as its own fixture, so it was green by construction and could never have failed. That is the T-0062 lesson again: the guard inspected something other than the thing that breaks. The new oracle drives the real callLLM and fakes only the HTTP response, which is the shape T-0058's composer test took.",
+  "the_message_that_could_never_be_true": "The console said N runs predate token recording, and the comment above it claimed the list empties itself as pre-034 runs age out. The trigger is purely promptTokens === null with no date comparison anywhere, so a run created today was reported as predating the feature; and since every run landed null, the list could never empty. It now says the runs recorded no token usage.",
+  "rule_of_three_met": "Three vocabularies, and there were already two private conversions (HermesRuntime mapUsage and llm.ts's Anthropic branch) with the gateway and direct paths needing a third and fourth. Extracted to src/lib/usage-shape.ts per the convention api-response.ts's header states. HermesRuntime keeps only the rename into RunUsage's input/output naming, which is its own layer's vocabulary.",
+  "oracle_provenance": "Committed alone at 567fcacd ahead of the implementation at 533f4daf. Measured against dev@9f100455: 4 red, 2 green, and the failure was the whole defect in one diff: minus promptTokens 20, plus prompt_tokens 20.",
+  "mutation_finding": "TWO mutations survived the first pass and both were real holes. Removing the neither-count-present guard turned nothing red, because the absent-usage control passes undefined and the type check catches that first; the branch that matters is an object PRESENT but carrying no counts, such as a bare total, where reporting zero-zero-n would be a fabrication dressed as a measurement. And ignoring the provider's own total turned nothing red because every case had total equal to the sum. Both closed at 8c2b7b09.",
+  "verification": "Proved end to end against a real server on a temp HERMES_HOME: a Deep Research run persisted prompt 60 / completion 90 / total 150, exactly three LLM calls times the mock's 20/30/50, where every previous run persisted NULL. The spend console reports Deep Research at inputTokens 60, outputTokens 90, costUsd 0.00033 at DEFAULT_RATE, with unrecordedResearchRuns 0, so the unmeasured sentence correctly does not appear at all. Gate: lint 0, tsc 0, 3348 tests / 388 suites, knip 0, canary 0, build 0.",
+  "timestamps": {
+    "opened": "2026-08-31T10:30:00Z",
+    "updated": "2026-08-31T12:00:00Z",
+    "closed": "2026-08-31T12:00:00Z"
+  }
+}

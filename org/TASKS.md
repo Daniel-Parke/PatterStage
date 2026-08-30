@@ -79,3 +79,5 @@ The records under org/tasks/ are canonical.
 | T-0064 | standard | R1 | done | t0064-say-what-you-know-2026-08-30 |
 | T-0065 | standard | R1 | done | t0065-small-ux-2026-08-30 |
 | T-0066 | standard | R0 | proposed | unassigned |
+| T-0067 | standard | R2 | done | t0067-dispatch-mode-2026-08-31 |
+| T-0068 | standard | R2 | done | t0068-usage-shape-2026-08-31 |
