@@ -45,6 +45,18 @@ export interface SchedulerHealth {
   stale: boolean;
   /** The stale window, so a surface can say what "stale" means without hardcoding it. */
   staleAfterMs: number;
+  /**
+   * The pid of the process that produced this reading.
+   *
+   * `ownerPid` alone cannot answer "will THIS process fire a schedule", because
+   * the client has no way to know which process served the request. Without
+   * both, a follower renders exactly what the owner renders and an operator
+   * running two instances is told everything is fine while their dispatches
+   * happen somewhere they are not looking (T-0064).
+   *
+   * Nullable so a caller that cannot supply it keeps the old reading.
+   */
+  selfPid: number | null;
 }
 
 /**
@@ -57,6 +69,7 @@ export interface SchedulerHealth {
  * waiting on a schedule.
  */
 export function readSchedulerHealth(now: number = Date.now()): SchedulerHealth {
+  const selfPid = typeof process !== "undefined" ? process.pid : null;
   let ownerPid: number | null = null;
   let lastTickAt: string | null = null;
   try {
@@ -75,5 +88,5 @@ export function readSchedulerHealth(now: number = Date.now()): SchedulerHealth {
   const beat = lastTickAt ? Date.parse(lastTickAt) : NaN;
   const stale = !Number.isFinite(beat) || now - beat >= HEARTBEAT_STALE_MS;
 
-  return { ownerPid, lastTickAt, stale, staleAfterMs: HEARTBEAT_STALE_MS };
+  return { ownerPid, lastTickAt, stale, staleAfterMs: HEARTBEAT_STALE_MS, selfPid };
 }

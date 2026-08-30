@@ -31,7 +31,13 @@ function monitor(sync: Partial<MonitorData["sync"]>): MonitorData {
       sourceErrors: {},
       ...sync,
     },
-    scheduler: { ownerPid: 1, lastTickAt: "2026-08-25T09:00:00Z", stale: false, staleAfterMs: 90_000 },
+    scheduler: {
+      ownerPid: 1,
+      lastTickAt: "2026-08-25T09:00:00Z",
+      stale: false,
+      staleAfterMs: 90_000,
+      selfPid: 1,
+    },
   };
 }
 
