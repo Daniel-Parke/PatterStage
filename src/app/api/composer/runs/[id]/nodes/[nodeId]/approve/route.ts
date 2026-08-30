@@ -24,6 +24,40 @@ import { approvalActionSchema } from "@/lib/composer/schema";
 
 const bodySchema = z.object({ action: approvalActionSchema, note: z.string().optional() }).strict();
 
+/**
+ * Explain the state we are refusing FROM.
+ *
+ * The guard used to answer a bare "Run is not awaiting approval" while
+ * `run.status` and `run.error` were both in scope -- and `run.error` is where
+ * the engine's `describeStageFailure` already put the sentence the operator
+ * needs ("Gate A was rejected and the workflow has no recovery path from
+ * here"). The message existed and was thrown away one line from where it was
+ * wanted (T-0069).
+ *
+ * This is a real race, not a hypothetical: the gate panel renders from a polled
+ * copy, so a run that ended between the poll and the click leaves the Accept and
+ * Reject buttons on screen. The operator's click then has to explain that the
+ * decision has already been made.
+ */
+function describeNotAwaiting(run: { status: string; error: string | null }): string {
+  const because = run.error ? ` ${run.error}` : "";
+  if (run.status === "rejected") {
+    return `This gate was already rejected, so there is nothing left to decide.${because}`;
+  }
+  if (run.status === "failed") {
+    return `This run has already failed, so the gate can no longer be decided.${because}`;
+  }
+  if (run.status === "completed") {
+    return "This run has already completed, so the gate can no longer be decided.";
+  }
+  if (run.status === "cancelled") {
+    return "This run was cancelled, so the gate can no longer be decided.";
+  }
+  // pending / running: the gate is genuinely not open yet, which usually means
+  // a stale panel or a double-click that beat the refresh.
+  return `This run is ${run.status}, not waiting at a gate. Reload to see where it is now.`;
+}
+
 interface Ctx {
   params: Promise<{ id: string; nodeId: string }>;
 }
@@ -40,7 +74,7 @@ export async function POST(request: NextRequest, ctx: Ctx) {
   try {
     const run = getComposerRun(id);
     if (!run) return notFound("Composer run not found");
-    if (run.status !== "awaiting_approval") return badRequest("Run is not awaiting approval");
+    if (run.status !== "awaiting_approval") return badRequest(describeNotAwaiting(run));
     if (!getNode(nodeId)) return notFound("Node not found");
 
     recordComposerApproval({ composerRunId: id, nodeId, action: parsed.action, note: parsed.note ?? null });

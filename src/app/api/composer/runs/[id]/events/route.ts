@@ -9,12 +9,14 @@ import { NextRequest } from "next/server";
 import { ensureDb } from "@/lib/db";
 import { sseStream } from "@/lib/sse/event-stream";
 import { getComposerRun, listNodeRuns } from "@/lib/composer/composer-repository";
+import { isTerminalComposerRunStatus } from "@/lib/composer/schema";
 
 interface Ctx {
   params: Promise<{ id: string }>;
 }
 
-const TERMINAL = new Set(["completed", "failed", "cancelled"]);
+// The one list, not a local copy: a status that ends a run but is missing here
+// leaves the stream open on a finished run forever. See schema.ts.
 
 export async function GET(request: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
@@ -25,7 +27,7 @@ export async function GET(request: NextRequest, ctx: Ctx) {
       if (!run) return null;
       return { run, nodeRuns: listNodeRuns(id) };
     },
-    isTerminal: (s) => TERMINAL.has(s.run.status),
+    isTerminal: (s) => isTerminalComposerRunStatus(s.run.status),
     signal: request.signal,
   });
 }

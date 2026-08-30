@@ -22,15 +22,66 @@ export type EdgeCondition =
   | "on_reject"
   | (string & {});
 
+/**
+ * A run's lifecycle state.
+ *
+ * `rejected` is terminal and DELIBERATE: the operator turned a HIL gate down and
+ * the workflow had no `on_reject` edge to follow. It is separated from `failed`
+ * because the two need to read differently -- one is a decision, the other is a
+ * defect -- and because collapsing them is what let a rejected run render as a
+ * pink error above a canvas still drawing the rejected gate green (T-0069).
+ *
+ * `cancelled` is admitted by the CHECK and read by the engine's terminal set,
+ * but nothing writes it today. Left in place rather than removed, since the two
+ * cancel entry points are being converged separately (T-0070).
+ */
 export type ComposerRunStatus =
   | "pending"
   | "running"
   | "awaiting_approval"
   | "completed"
   | "failed"
-  | "cancelled";
+  | "cancelled"
+  | "rejected";
 
-export type NodeRunStatus = "pending" | "running" | "completed" | "failed" | "skipped";
+/**
+ * A single stage execution's state. `rejected` is the gate the operator turned
+ * down; without it the stage kept `completed` from its own successful run and
+ * the canvas contradicted the run header.
+ */
+export type NodeRunStatus =
+  | "pending"
+  | "running"
+  | "completed"
+  | "failed"
+  | "skipped"
+  | "rejected";
+
+/**
+ * The run statuses that mean "this run is over".
+ *
+ * THE RULE OF THREE IS MET, and the third site is why this exists. The same
+ * vocabulary was open-coded in the engine's do-not-advance set, in
+ * `settleGroupNode`'s did-the-child-end check, and in the SSE route's
+ * stop-streaming set -- three lists that had to be edited together and nothing
+ * saying so. Adding `rejected` to the union alone would have left a rejected
+ * sub-workflow hanging its parent's group stage forever and left the event
+ * stream open on a finished run (T-0069).
+ *
+ * The `satisfies` clause makes a new status that is never classified a compile
+ * error at the point it is added, rather than a silent omission from all three.
+ */
+export const TERMINAL_COMPOSER_RUN_STATUSES = [
+  "completed",
+  "failed",
+  "cancelled",
+  "rejected",
+] as const satisfies readonly ComposerRunStatus[];
+
+/** Is this run over? See `TERMINAL_COMPOSER_RUN_STATUSES`. */
+export function isTerminalComposerRunStatus(status: string): boolean {
+  return (TERMINAL_COMPOSER_RUN_STATUSES as readonly string[]).includes(status);
+}
 
 export const approvalActionSchema = z.enum(["accept", "reject", "review", "add_feature"]);
 export type ApprovalAction = z.infer<typeof approvalActionSchema>;
