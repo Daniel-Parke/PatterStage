@@ -259,17 +259,21 @@ export function useMissionDispatch({
       // (one level). Same wire shape, same byte-level outcome. See JSDoc
       // on the helper in `src/hooks/success-message-for-dispatch.ts` for
       // the 1-level unwrap contract.
+      // Built once, so the toast can report what was actually SENT.
+      const payload = dispatchPayload({ dispatchMode: newDispatch });
       const { ok, error, data } = await dispatchMissionAction("dispatch", {
         name: newName,
-        ...dispatchPayload({
-          dispatchMode: newDispatch,
-        }),
+        ...payload,
       });
 
       toastFromResult(
         showToast,
         { ok, error },
-        () => successMessageForDispatch(newDispatch, newSchedule),
+        // From the payload, not from form state. Two sources for one claim is
+        // how a green toast came to read "Mission scheduled: every 5m" for a
+        // cadence the operator never typed: the schedule on the wire and the
+        // schedule in the form had diverged, and the toast trusted the form.
+        () => successMessageForDispatch(newDispatch, payload.schedule as string | undefined),
         "Failed to create mission",
       );
       if (ok) {
