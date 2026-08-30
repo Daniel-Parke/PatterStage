@@ -360,6 +360,61 @@ describe("a degraded gather is recorded, and the report says so", () => {
     expect(visitOnly).not.toMatch(/searches failed/);
   });
 
+  it("the ENGINE actually counts the failed page reads", async () => {
+    // Found by mutation, not by design. Deleting `if (!page) visitFailures += 1`
+    // left every assertion above green, because they all exercise the FORMATTER
+    // and none of them exercise the code that produces the number. The counter
+    // could have been permanently zero and the caveat would simply never have
+    // mentioned visits -- which is the exact silence the counter was added to
+    // break. Same lesson as T-0069's settleGroupNode.
+    const { runDeepResearch } = await import("@/lib/laboratory/deep-research/engine");
+
+    const result = await runDeepResearch("q", {
+      llm: async () => ({ content: "DONE" }),
+      search: {
+        name: "fake",
+        search: async () => [
+          { title: "a", url: "https://a", snippet: "s" },
+          { title: "b", url: "https://b", snippet: "s" },
+        ],
+      },
+      // Every page read comes back with nothing usable: blocked, paywalled,
+      // timed out. The old loop skipped each with a bare `if (page)`.
+      visit: async () => null,
+      onStep: () => {},
+      maxRounds: 1,
+      visitsPerRound: 2,
+    });
+
+    expect(result.visitAttempts).toBe(2);
+    expect(result.visitFailures).toBe(2);
+  });
+
+  it("the ENGINE does not count a page it read successfully as a failure", async () => {
+    // The other direction, so the counter cannot be "always increment".
+    const { runDeepResearch } = await import("@/lib/laboratory/deep-research/engine");
+
+    const result = await runDeepResearch("q", {
+      llm: async () => ({ content: "DONE" }),
+      search: {
+        name: "fake",
+        search: async () => [
+          { title: "a", url: "https://a", snippet: "s" },
+          { title: "b", url: "https://b", snippet: "s" },
+        ],
+      },
+      visit: async (url: string) =>
+        url === "https://a" ? { url, title: "a", content: "body" } : null,
+      onStep: () => {},
+      maxRounds: 1,
+      visitsPerRound: 2,
+    });
+
+    expect(result.visitAttempts).toBe(2);
+    expect(result.visitFailures).toBe(1);
+    expect(result.searchFailures).toBe(0);
+  });
+
   it("migration 036 adds the four counters, nullable and unbackfilled", () => {
     const sql = readFileSync(
       join(process.cwd(), "src", "lib", "db", "migrations", "036_research_gather_health.sql"),
