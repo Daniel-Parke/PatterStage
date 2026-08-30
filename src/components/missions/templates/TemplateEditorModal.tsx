@@ -330,6 +330,7 @@ export function TemplateEditorModal({
                 </span>
                 <button
                   type="button"
+                  aria-label={`Remove reference ${ref}`}
                   onClick={() =>
                     onNewReferencesChange((r) => r.filter((_, j) => j !== i))
                   }

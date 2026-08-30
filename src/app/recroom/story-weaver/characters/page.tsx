@@ -138,7 +138,7 @@ export default function CharactersPage() {
           <div className="bg-dark-900 border border-neon-purple/20 rounded-xl w-full max-w-2xl p-6 space-y-4 mb-12">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white">{isNew ? "New Character" : "Edit Character"}</h3>
-              <button onClick={() => setEditing(null)} className="text-ps-text-muted hover:text-ps-text-secondary"><X className="w-4 h-4" /></button>
+              <button onClick={() => setEditing(null)} aria-label="Close the character editor" className="text-ps-text-muted hover:text-ps-text-secondary"><X className="w-4 h-4" /></button>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -198,7 +198,7 @@ export default function CharactersPage() {
                 {editing.personality.map(t => (
                   <span key={t} className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-mono border border-neon-purple/30 bg-neon-purple/10 text-neon-purple">
                     {t}
-                    <button onClick={() => setEditing({ ...editing, personality: editing.personality.filter(p => p !== t) })} className="text-neon-purple hover:text-red-400"><X className="w-2.5 h-2.5" /></button>
+                    <button onClick={() => setEditing({ ...editing, personality: editing.personality.filter(p => p !== t) })} aria-label={`Remove personality trait ${t}`} className="text-neon-purple hover:text-red-400"><X className="w-2.5 h-2.5" /></button>
                   </span>
                 ))}
               </div>
@@ -217,7 +217,7 @@ export default function CharactersPage() {
                 {editing.tags.map(t => (
                   <span key={t} className="flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-mono border border-white/10 bg-white/5 text-ps-text-muted">
                     {t}
-                    <button onClick={() => setEditing({ ...editing, tags: editing.tags.filter(p => p !== t) })} className="text-ps-text-muted hover:text-red-400"><X className="w-2.5 h-2.5" /></button>
+                    <button onClick={() => setEditing({ ...editing, tags: editing.tags.filter(p => p !== t) })} aria-label={`Remove tag ${t}`} className="text-ps-text-muted hover:text-red-400"><X className="w-2.5 h-2.5" /></button>
                   </span>
                 ))}
               </div>
@@ -297,9 +297,9 @@ export default function CharactersPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
-                      <button onClick={(e) => { e.stopPropagation(); startEdit(c); }}
+                      <button onClick={(e) => { e.stopPropagation(); startEdit(c); }} aria-label={`Edit character ${c.name}`}
                         className="p-1.5 rounded text-ps-text-faint hover:text-neon-purple hover:bg-neon-purple/10"><Edit2 className="w-3.5 h-3.5" /></button>
-                      <button onClick={(e) => { e.stopPropagation(); deleteChar(c.id); }}
+                      <button onClick={(e) => { e.stopPropagation(); deleteChar(c.id); }} aria-label={`Delete character ${c.name}`}
                         disabled={deleting === c.id}
                         className="p-1.5 rounded text-ps-text-faint hover:text-red-400 hover:bg-red-500/10 disabled:opacity-30">
                         {deleting === c.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}

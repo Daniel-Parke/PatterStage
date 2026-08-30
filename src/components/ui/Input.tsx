@@ -4,6 +4,8 @@
 
 "use client";
 
+import { useId } from "react";
+
 import { Search } from "lucide-react";
 import { Input as FieldInput, Select as FieldSelect } from "@/components/ui/field";
 
@@ -136,35 +138,74 @@ export function Toggle({
   description?: string;
   color?: string;
 }) {
+  // The visible label is pointed at rather than copied. Before this the text and
+  // the control were two unrelated boxes: the label was not announced with the
+  // switch and clicking it did nothing.
+  const labelId = useId();
+  const descId = useId();
   return (
     <div className="flex items-center justify-between py-2">
       <div>
-        <div className="text-sm font-medium text-ps-text-secondary">{label}</div>
+        <div id={labelId} className="text-sm font-medium text-ps-text-secondary">
+          {label}
+        </div>
         {description && (
-          <p className="text-xs text-ps-text-muted mt-0.5">{description}</p>
+          <p id={descId} className="text-xs text-ps-text-muted mt-0.5">
+            {description}
+          </p>
         )}
       </div>
-      <InlineToggle value={value} onChange={onChange} color={color} />
+      <InlineToggle
+        value={value}
+        onChange={onChange}
+        color={color}
+        labelledBy={labelId}
+        describedBy={description ? descId : undefined}
+      />
     </div>
   );
 }
 
-// ── Inline Toggle (no label/description — for use inside tables, lists) ─
+// ── Inline Toggle (no visible label of its own: for tables, lists, rows) ─
+//
+// It renders no text, so it MUST be given a name. `label` is required rather
+// than optional, so a call site that forgets is a red tsc rather than a control
+// a screen reader announces as "button" with no state. It also carries
+// role="switch" + aria-checked, adopting the shape src/components/ui/field/
+// Toggle.tsx:23 already ships; without them the on/off state is invisible to
+// assistive tech even when the control is named (T-0062).
+//
+// Prefer `labelledBy` when a visible label exists elsewhere on screen: pointing
+// at it makes the accessible name and the visible name the same string by
+// construction, which is what WCAG 2.5.3 asks for and what a duplicated
+// `label` string quietly stops being the first time one of them is edited.
 export function InlineToggle({
   value,
   onChange,
   disabled = false,
   color = "cyan",
+  label,
+  labelledBy,
+  describedBy,
 }: {
   value: boolean;
   onChange: (v: boolean) => void;
   disabled?: boolean;
   color?: string;
+  /** Required unless `labelledBy` points at visible text that names it. */
+  label?: string;
+  labelledBy?: string;
+  describedBy?: string;
 }) {
   const colors = toggleColorMap[color] || toggleColorMap.cyan;
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={value}
+      aria-label={labelledBy ? undefined : label}
+      aria-labelledby={labelledBy}
+      aria-describedby={describedBy}
       onClick={() => onChange(!value)}
       disabled={disabled}
       className={`relative w-9 h-5 rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${

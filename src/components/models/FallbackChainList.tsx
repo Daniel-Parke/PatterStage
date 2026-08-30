@@ -77,6 +77,7 @@ function FallbackRow({
           onChange={(enabled) => onToggle(entry.id, enabled)}
           disabled={disabled}
           color="purple"
+          label={`Enable ${entry.provider} / ${entry.modelIdString} in the fallback chain`}
         />
       </td>
       <td className="px-3 py-2">
