@@ -64,6 +64,7 @@ import {
   createNodeRun,
   createWorkflowFromDef,
   getComposerRun,
+  getComposerRunByParentNodeRunId,
   listNodeRuns,
   recordComposerApproval,
   updateComposerRun,
@@ -132,6 +133,19 @@ function runParkedAtGate(): { runId: string; nodeRunId: string; nodeId: string }
   });
   updateComposerRun(run.id, { status: "awaiting_approval", currentNodeId: gate.id });
   return { runId: run.id, nodeRunId: nodeRun.id, nodeId: gate.id };
+}
+
+/** A composer-capable database at v26, i.e. everything 035 expects to find. */
+function freshComposerDbAtV34(): import("better-sqlite3").Database {
+  const Database = require("better-sqlite3/lib/index.js") as typeof import("better-sqlite3");
+  const db = new (Database as unknown as new (p: string) => import("better-sqlite3").Database)(
+    ":memory:",
+  );
+  db.pragma("foreign_keys = ON");
+  execBaselineSchema(db);
+  applyComposerMigration(db, migrationsDir);
+  applyComposerGroupLinkMigration(db, migrationsDir);
+  return db;
 }
 
 async function reject(runId: string, nodeId: string): Promise<void> {
@@ -288,6 +302,99 @@ describe("the approve route explains the state it is refusing from", () => {
 
     expect(status).toBe(200);
     expect(getComposerRun(runId)!.status).not.toBe("awaiting_approval");
+  });
+});
+
+describe("a rejected SUB-workflow settles its parent's group stage", () => {
+  it("does not leave the parent waiting forever", async () => {
+    // Found by mutation, not by design. The oracle's terminal-vocabulary check
+    // passed while settleGroupNode still tested `failed || cancelled`
+    // literally -- so a rejected child matched neither branch, settleGroupNode
+    // returned "still in flight", and the parent's group stage hung for good.
+    // Asserting that a list CONTAINS a value does not assert that the code
+    // reading it was ever changed to use the list.
+    const child = createWorkflowFromDef(DEAD_END_GATE);
+    const parent = createWorkflowFromDef({
+      key: "parent-of-gate",
+      name: "Parent",
+      nodes: [
+        {
+          key: "grp",
+          label: "Sub",
+          kind: "group",
+          gate: "auto" as const,
+          isStart: true,
+          config: { workflowRef: child.id },
+        },
+        { key: "pdone", label: "Done", kind: "custom", gate: "auto" as const, isTerminal: true },
+      ],
+      edges: [{ from: "grp", to: "pdone", condition: "on_pass" }],
+    });
+    const run = createComposerRun({ workflowId: parent.id, input: "go" });
+
+    await advanceComposerRun(run.id); // dispatch the group node
+    await flush();
+    const grpNodeRun = listNodeRuns(run.id).find((nr) => nr.status === "running")!;
+    const childRun = getComposerRunByParentNodeRunId(grpNodeRun.id)!;
+
+    updateComposerRun(childRun.id, {
+      status: "rejected",
+      error: "Plan was rejected and the workflow has no recovery path from here.",
+    });
+    await advanceComposerRun(run.id);
+
+    const settled = listNodeRuns(run.id).find((nr) => nr.nodeId === grpNodeRun.nodeId)!;
+    expect(settled.status).not.toBe("running"); // the hang
+    expect(settled.status).toBe("failed"); // the stage did not deliver
+    // …and the child's own reason reaches the parent rather than a generic one.
+    expect(settled.error).toMatch(/rejected/i);
+  });
+});
+
+describe("the migration refuses to rebuild a table it would truncate", () => {
+  it("throws instead of silently dropping a column it does not copy", () => {
+    // The rebuild copies an EXPLICIT column list, and the failure mode of a
+    // stale list is not an error -- it is operator data quietly disappearing.
+    // So the guard has to fire, and this is the only thing that proves it does.
+    const db = freshComposerDbAtV34();
+    db.exec("ALTER TABLE composer_node_runs ADD COLUMN cost_usd REAL");
+
+    expect(() => applyComposerRejectedMigration(db, migrationsDir)).toThrow(
+      /composer_node_runs[\s\S]*drifted/,
+    );
+    // And it threw BEFORE touching anything: the version did not move, so the
+    // next boot retries rather than recording a rebuild that never happened.
+    expect(
+      (db.prepare("SELECT value FROM meta WHERE key = 'schema_version'").get() as { value: string })
+        .value,
+    ).toBe("26");
+    expect(
+      (db.prepare("PRAGMA table_info(composer_node_runs)").all() as { name: string }[]).map(
+        (r) => r.name,
+      ),
+    ).toContain("cost_usd");
+    db.close();
+  });
+
+  it("GREEN CONTROL: an undrifted table rebuilds and keeps every row", () => {
+    const db = freshComposerDbAtV34();
+    const wfId = "w-keep";
+    db.prepare("INSERT INTO composer_workflows (id, name) VALUES (?, 'W')").run(wfId);
+    db.prepare(
+      "INSERT INTO composer_runs (id, workflow_id, status, input) VALUES ('keep', ?, 'completed', 'the input')",
+    ).run(wfId);
+
+    applyComposerRejectedMigration(db, migrationsDir);
+
+    const row = db.prepare("SELECT status, input FROM composer_runs WHERE id = 'keep'").get() as {
+      status: string;
+      input: string;
+    };
+    expect(row).toEqual({ status: "completed", input: "the input" });
+    // Foreign keys survived the drop-and-rename, and are ON again.
+    expect(db.pragma("foreign_key_check")).toEqual([]);
+    expect(db.pragma("foreign_keys", { simple: true })).toBe(1);
+    db.close();
   });
 });
 
