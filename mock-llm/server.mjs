@@ -133,6 +133,22 @@ const server = createServer(async (req, res) => {
   return send(res, 404, { error: { message: `no mock-llm route for ${method} ${path}` } });
 });
 
+// Fail with a sentence, not a stack. This mock's default port is one the
+// real thing may already hold, so EADDRINUSE is the LIKELY first-run
+// outcome rather than an exotic one, and an unhandled 'error' event here
+// prints a trace that says nothing about what to do.
+server.on("error", (err) => {
+  if (err && err.code === "EADDRINUSE") {
+    console.error(
+      `[${"mock-llm"}] port ${PORT} is already in use. Another service may hold this port.
+` +
+      `Set MOCK_LLM_PORT to a free port, or stop whatever holds it.`,
+    );
+    process.exit(1);
+  }
+  throw err;
+});
+
 server.listen(PORT, HOST, () => {
   console.log(`[mock-llm] OpenAI-compatible stub on http://${HOST}:${PORT}`);
 });

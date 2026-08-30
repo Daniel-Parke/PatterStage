@@ -16,6 +16,7 @@
 "use client";
 
 import { scheduleBlocksDispatch } from "@/lib/dispatch-mode";
+import { firstUnmetSubmitRequirement } from "@/lib/missions/mission-submit-requirement";
 import { useCallback, useState } from "react";
 
 import type { ToastType } from "@/components/ui/Toast";
@@ -73,6 +74,7 @@ export function useMissionDispatch({
     newDispatch,
     scheduleDraftError,
     setNewDispatch,
+    setFormField,
     newSchedule,
     dispatchPayload,
     clearMissionFormFields,
@@ -112,9 +114,19 @@ export function useMissionDispatch({
   }, [closeComposer, resetForm]);
 
   const handleCreate = useCallback(async () => {
-    if (!newName.trim() || !newInstruction.trim()) return;
-    if (!editingId && !dispatchAcknowledged) {
-      showToast("Open Dispatch to choose how this mission runs.", "error");
+    // One check, one message, in the same order the button reports. It used to
+    // return SILENTLY on an empty name or instruction while the acknowledgement
+    // branch toasted, so the ack was the only blocker with a voice on either
+    // surface (T-0065).
+    const blocker = firstUnmetSubmitRequirement({
+      name: newName,
+      instruction: newInstruction,
+      dispatching,
+      needsDispatchAck: !editingId && !dispatchAcknowledged,
+    });
+    if (blocker) {
+      // A double-click still returns silently: a spinner already says this.
+      if (blocker.code !== "dispatching") showToast(blocker.message, "error");
       return;
     }
     // Above every wire branch, and above setDispatching, so a refusal costs
@@ -307,10 +319,22 @@ export function useMissionDispatch({
   const handleDuplicateMission = useCallback((m: MissionRow) => {
     setEditingId(null);
     populateFormFromMission(m, { editing: false, namePrefix: "(copy)" });
-    setNewDispatch("save");
+    // Through setFormField, not the raw setter. populateFormFromMission clears
+    // the dispatch acknowledgement (editing: false), and only the wrapper
+    // re-acknowledges. With the sheet ALREADY OPEN the form does not remount, so
+    // its once-per-mount default-reporting effect never runs, and the composer
+    // was left with Dispatch rendered open, the ack false, and a dead submit
+    // button whose tooltip told the operator to open something already open
+    // (T-0065). Duplicating from a CLOSED sheet remounted and healed itself,
+    // which is why this only ever reproduced sometimes.
+    //
+    // Note resetForm keeps the raw setter deliberately: it clears the ack on
+    // purpose and routing it through the wrapper would re-acknowledge a form
+    // that has just been emptied.
+    setFormField("newDispatch", "save");
     setShowCreate(true);
     showToast("Mission duplicated as draft", "success");
-  }, [populateFormFromMission, showToast, setNewDispatch, setEditingId, setShowCreate]);
+  }, [populateFormFromMission, showToast, setFormField, setEditingId, setShowCreate]);
 
   const handleDelete = useCallback(async (id: string) => {
     // Migrated from the inline `safeApiCall("/api/missions", { method: "POST", body: { action: "delete", missionId: id } })`

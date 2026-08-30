@@ -20,8 +20,18 @@
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 
-const PORT = Number(process.env.API_SERVER_PORT || 8642);
-const HOST = process.env.API_SERVER_HOST || "0.0.0.0";
+// MOCK_HERMES_PORT first, and that ordering is the fix. Reading the AGENT's
+// API_SERVER_PORT to configure the MOCK is the original sin: it is exactly the
+// variable a machine running the real Hermes gateway already has set, so
+// `npm run mock-hermes` collided with the thing it impersonates and a QA pass
+// lost time to it. 8642 stays the final default so every doc, compose file and
+// smoke test keeps working untouched.
+const PORT = Number(process.env.MOCK_HERMES_PORT || process.env.API_SERVER_PORT || 8642);
+// Loopback by default, matching mock-hindsight. This is an UNAUTHENTICATED fake
+// agent gateway that accepts run submissions; it has no business on the LAN of a
+// dev machine. The compose stack is unaffected: mock-hermes/Dockerfile pins
+// API_SERVER_HOST=0.0.0.0 explicitly.
+const HOST = process.env.MOCK_HERMES_HOST || process.env.API_SERVER_HOST || "127.0.0.1";
 const KEY = process.env.API_SERVER_KEY || "";
 const RUN_DELAY_MS = Number(process.env.RUN_DELAY_MS || 1200);
 
@@ -222,6 +232,22 @@ const server = createServer(async (req, res) => {
   }
 
   return send(res, 404, { error: `no mock route for ${method} ${path}` });
+});
+
+// Fail with a sentence, not a stack. This mock's default port is one the
+// real thing may already hold, so EADDRINUSE is the LIKELY first-run
+// outcome rather than an exotic one, and an unhandled 'error' event here
+// prints a trace that says nothing about what to do.
+server.on("error", (err) => {
+  if (err && err.code === "EADDRINUSE") {
+    console.error(
+      `[${"mock-hermes"}] port ${PORT} is already in use. The real Hermes gateway listens on 8642.
+` +
+      `Set MOCK_HERMES_PORT to a free port, or stop whatever holds it.`,
+    );
+    process.exit(1);
+  }
+  throw err;
 });
 
 server.listen(PORT, HOST, () => {

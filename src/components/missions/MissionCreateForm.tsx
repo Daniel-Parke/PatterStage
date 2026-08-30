@@ -24,6 +24,7 @@ import {
   isMissionDraft,
   isMissionQueuedForRun,
 } from "@/lib/missions/mission-board";
+import { firstUnmetSubmitRequirement } from "@/lib/missions/mission-submit-requirement";
 
 export interface MissionFormState {
   newName: string;
@@ -107,9 +108,6 @@ const DISPATCH_OPEN_BY_DEFAULT = true;
  * the same hint for a screen reader. The paragraph stays; it is no longer the
  * only place the requirement is written.
  */
-const DISPATCH_ACK_REQUIREMENT =
-  "Open Dispatch to choose how this mission runs before submitting.";
-
 export const DISPATCH_MODES = [
   { id: "save" as const, label: "Save" },
   { id: "queue" as const, label: "Queue" },
@@ -228,26 +226,33 @@ export function MissionComposerActions({
   const needsDispatchAck = !editingId && !dispatchAcknowledged;
   const dispatchHintId = useId();
 
+  // ONE source for the disabled state, the tooltip and the hint. They used to be
+  // three expressions that could disagree, and did: the tooltip named the
+  // acknowledgement whatever was actually blocking, and went silent entirely
+  // once the acknowledgement cleared (T-0065).
+  const blocker = firstUnmetSubmitRequirement({
+    name: formState.newName,
+    instruction: formState.newInstruction,
+    dispatching,
+    needsDispatchAck,
+  });
+  // A spinner already says "submitting". A tooltip repeating it is noise.
+  const blockerToShow = blocker && blocker.code !== "dispatching" ? blocker : null;
+
   return (
     <div className="space-y-2">
-      {needsDispatchAck && (
+      {blockerToShow && (
         <p id={dispatchHintId} className="text-xs font-mono text-neon-orange/90">
-          Open <strong className="text-neon-cyan/90">Dispatch</strong> to choose
-          how this mission runs before submitting.
+          {blockerToShow.message}
         </p>
       )}
       <div className="flex flex-wrap gap-2">
         <Button
           onClick={onSubmit}
-          disabled={
-            !formState.newName.trim() ||
-            !formState.newInstruction.trim() ||
-            dispatching ||
-            needsDispatchAck
-          }
+          disabled={blocker !== null}
           loading={dispatching}
-          title={needsDispatchAck ? DISPATCH_ACK_REQUIREMENT : undefined}
-          aria-describedby={needsDispatchAck ? dispatchHintId : undefined}
+          title={blockerToShow?.message}
+          aria-describedby={blockerToShow ? dispatchHintId : undefined}
         >
           <Send className="w-3.5 h-3.5" />
           {submitLabel}
