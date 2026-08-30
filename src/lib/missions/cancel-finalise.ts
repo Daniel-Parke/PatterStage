@@ -33,8 +33,15 @@ import type { Mission } from "@/lib/missions/mission-types";
 import { getLatestRunForMission, updateRun } from "@/lib/runs-repository";
 import { closeSessionForMission } from "@/lib/sessions/session-repository";
 
-/** The text every writer uses, so the three tables cannot tell three stories. */
-export const CANCELLED_BY_USER = "Cancelled by user";
+/**
+ * The text every writer uses, so the three tables cannot tell three stories.
+ *
+ * Module-private on purpose. It is the one WRITER's constant, not a shared
+ * vocabulary: the tests assert the literal a reader would actually see, so an
+ * accidental edit here shows up as a failing expectation rather than as two
+ * sides of the same rename agreeing with each other.
+ */
+const CANCELLED_BY_USER = "Cancelled by user";
 
 /**
  * Record a cancellation across the mission, its latest run and its session.
