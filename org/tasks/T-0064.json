@@ -1,0 +1,52 @@
+{
+  "id": "T-0064",
+  "intent": "Three surfaces that knew something and did not say it: the Config pages showed an unparseable config.yaml as an empty one, the session-sync log reported a cause it had never observed four times a minute at ERROR level, and a scheduler follower rendered identically to the owner while never firing a schedule. F-8, F-8b and F-1 from the 2026-08-30 QA pass.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0064-say-what-you-know-2026-08-30",
+  "claims": [
+    "src/lib/config-cache.ts",
+    "src/lib/api-response.ts",
+    "src/app/api/config/route.ts",
+    "src/components/config/",
+    "src/app/config/",
+    "src/app/page.tsx",
+    "src/lib/sessions/",
+    "src/lib/sync/sources/SessionSync.ts",
+    "src/lib/orchestration/scheduler/health.ts",
+    "src/lib/dashboard/scheduler-pill.ts",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A Config page says when config.yaml did not parse, and refuses to Save into it. Read at the ROUTE, not from the monitor stat, whose 60s staleness budget would make the gate a minute wrong in both directions.",
+    "I2 The GET keeps degrading to {} and 200. A read that refuses to read blanks the screens the operator needs in order to discover the file is broken.",
+    "I3 File sections are NOT gated: .env and HERMES.md write elsewhere, and gating them would strand an operator on an editor that has nothing to do with the fault.",
+    "I4 A skip log names the rows and the cause it actually observed, once per distinct cause, at WARN.",
+    "I5 A process that will not fire a schedule says so, in a colour that does not read as a fault."
+  ],
+  "what_the_log_was_guessing": "The per-row handler was a bare catch, so 'FK/constraint errors' was a cause the code had never observed, and it was the wrong one. The real cause is estimateSessionSize's `?? 0`, which catches null and undefined and NOT NaN: fed from a blind cast over the agent's state.db, a non-numeric message_count became NaN, better-sqlite3 bound it as a double, SQLite stored it as NULL, and the NOT NULL on sessions.size rejected the row. Not a foreign key anywhere in it. The parameters are now `unknown` deliberately, because widening the type is what stops the upstream cast being laundered by the compiler again.",
+  "suppression_model_chosen": "Keyed on the error TEXT (ConfigSync's model) rather than on the count (the orphan sweep's model). The sweep watches a count oscillating around a steady state; here the interesting variable is what is going wrong, so a stable pair of broken rows logs once while a NEW failure mode is news immediately rather than being swallowed by a count that did not move. Row ids and digits are stripped, so two rows and forty-seven rows failing the same way are one signature. A drained transition exists because a log that simply stops cannot be told from a sync that died.",
+  "colour_decision": "The Follower pill is cyan, not orange. A follower is not a fault: schedules ARE firing, elsewhere. An orange pill beside a green one is exactly what makes two healthy processes read as a problem. Both Ticking and Follower print the owner pid, so if a reading ever alternates the value that changed is visible rather than mysterious. Stalled stays ABOVE Follower, because a stale lease means nothing is firing at all, whoever holds it.",
+  "verification": "Six scheduler tests (2 measured red, 4 ordering/back-compat fences), nine session-size tests, four GET-envelope tests. Gate: lint 0, tsc 0, 3299 tests / 385 suites, knip 0, canary 0, build 0.",
+  "honesty_note": "The session-sync item was IMPLEMENTED BEFORE ITS TEST WAS WRITTEN, which inverts the discipline the rest of this round followed. Its test file says so in its own header rather than leaving a reader to assume otherwise. The scheduler and config items were oracle-first.",
+  "rollback": "Revert 6515eeb8, 80bfbe9b and e5eb6fb8 independently; they touch disjoint files.",
+  "deferred": [
+    "The multi-process flapping caveat for the Follower pill does not apply today (`start` is a bare `next start`, one process serves every request) and is recorded in the module header rather than built for. If a cluster ever lands, each BackgroundScheduler should write its own pid to a per-process meta row instead of deriving self-ness from the serving process.",
+    "clearStaleCronMissionLinks only covers source='cron'. Widening it to all sources would also null links to SOFT-DELETED missions and lose history the Sessions page shows, so it wants a second, narrower statement keyed on existence only rather than a widened WHERE.",
+    "ConfigSync.ts still has no test, so the stat the Dashboard alert renders is itself uncovered."
+  ],
+  "timestamps": {
+    "opened": "2026-08-30T19:30:00Z",
+    "updated": "2026-08-30T21:00:00Z",
+    "closed": "2026-08-30T21:00:00Z"
+  }
+}

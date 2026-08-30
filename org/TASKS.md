@@ -76,3 +76,4 @@ The records under org/tasks/ are canonical.
 | T-0061 | standard | R2 | done | t0061-profile-names-2026-08-30 |
 | T-0062 | standard | R2 | done | t0062-icon-button-names-2026-08-30 |
 | T-0063 | standard | R2 | done | t0063-schedule-gate-2026-08-30 |
+| T-0064 | standard | R1 | done | t0064-say-what-you-know-2026-08-30 |
