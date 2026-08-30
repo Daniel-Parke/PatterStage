@@ -16,6 +16,50 @@ import { insertResearchStep, updateResearchRun } from "./research-repository";
 import { captureArtifactOnce } from "@/lib/artifacts-repository";
 import type { ResearchConfig } from "./types";
 
+/**
+ * Prepend an honest note to a report the run could not fully gather the evidence
+ * for.
+ *
+ * The engine counted its search and visit failures and the caller read them for
+ * exactly ONE case: EVERY search failed, which fails the run outright. Five out
+ * of eight was invisible -- a report written from three sources instead of
+ * eight, marked `completed`, reading exactly like a healthy one (T-0070).
+ *
+ * The note goes in the REPORT rather than only in a column because the report is
+ * what gets read, exported and captured as an artifact. A number in a table
+ * nobody opens does not stop a confident-sounding paragraph being believed.
+ *
+ * A clean gather gets nothing added. The caveat has to stay rare to mean
+ * anything, and a banner on every run is a banner nobody reads.
+ */
+export function withGatherCaveat(
+  report: string,
+  counts: {
+    searchAttempts: number;
+    searchFailures: number;
+    visitAttempts: number;
+    visitFailures: number;
+  },
+): string {
+  const parts: string[] = [];
+  if (counts.searchFailures > 0) {
+    parts.push(
+      `${counts.searchFailures} of ${counts.searchAttempts} searches failed`,
+    );
+  }
+  if (counts.visitFailures > 0) {
+    parts.push(
+      `${counts.visitFailures} of ${counts.visitAttempts} pages could not be read`,
+    );
+  }
+  if (parts.length === 0) return report;
+  return (
+    `> **Incomplete evidence.** ${parts.join(", and ")}. ` +
+    `This report was written from less than it set out to gather, so treat its ` +
+    `coverage as partial.\n\n${report}`
+  );
+}
+
 export async function runResearchJob(
   runId: string,
   query: string,
@@ -55,7 +99,7 @@ export async function runResearchJob(
     const searchDown = result.searchAttempts > 0 && result.searchFailures === result.searchAttempts;
     updateResearchRun(runId, {
       status: searchDown ? "failed" : "completed",
-      report: result.report,
+      report: searchDown ? result.report : withGatherCaveat(result.report, result),
       provider: result.provider,
       ...(searchDown
         ? {
@@ -71,6 +115,15 @@ export async function runResearchJob(
       // Excluding failures would under-count spend in exactly the situation
       // that produces the most retries (T-0030).
       usage: result.usage,
+      // Likewise on both. The counters were computed and discarded, so anything
+      // short of a TOTAL outage left no record that the gather was degraded
+      // (T-0070).
+      gather: {
+        searchAttempts: result.searchAttempts,
+        searchFailures: result.searchFailures,
+        visitAttempts: result.visitAttempts,
+        visitFailures: result.visitFailures,
+      },
     });
     // Capture the report as an artifact (idempotent; best-effort — never fail
     // the run on a capture error).

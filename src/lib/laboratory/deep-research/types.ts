@@ -49,6 +49,23 @@ export interface ResearchRun {
    * folding them in at nothing (T-0030).
    */
   usage: ResearchUsageTotal | null;
+  /**
+   * How much of the run's evidence was actually gathered, or null when the run
+   * predates migration 036 and nobody measured.
+   *
+   * Same rule as `usage` above: null is not a clean gather, it is an unmeasured
+   * one. A run with `{searchAttempts: 8, searchFailures: 5}` wrote its report
+   * from three sources out of eight and said nothing about it (T-0070).
+   */
+  gather: ResearchGatherHealth | null;
+}
+
+/** The four counters describing how much of a run's evidence was collected. */
+export interface ResearchGatherHealth {
+  searchAttempts: number;
+  searchFailures: number;
+  visitAttempts: number;
+  visitFailures: number;
 }
 
 /** A saved, reusable Deep Research configuration. */

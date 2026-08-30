@@ -118,7 +118,16 @@ export async function promoteMission(
 
   // Re-activating a mission clears any stale result from a previous run so the
   // queued/dispatched mission doesn't surface old output. (QA #9/#43)
-  const mission = updateMission(input.missionId, { ...updates, result: null });
+  //
+  // NOT on save. `dispatchMode:"save"` is the no-op the console uses to RENAME a
+  // draft or edit its prompt, and it was taking this line too -- so renaming a
+  // finished mission silently destroyed the output it had produced, with no
+  // warning and nothing to undo it with (T-0070). Nothing is being re-activated,
+  // so there is no stale result to clear.
+  const mission = updateMission(
+    input.missionId,
+    isSaveMode ? updates : { ...updates, result: null },
+  );
   if (!mission) {
     return { ok: false, status: 404, error: "Mission not found" };
   }

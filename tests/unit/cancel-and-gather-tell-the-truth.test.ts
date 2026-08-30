@@ -60,14 +60,21 @@ jest.mock("@/lib/runs-repository", () => ({
   updateRun: (...a: unknown[]) => mockUpdateRun(...a),
 }));
 
-const mockCancelMissionRun = jest.fn(() => Promise.resolve({ ok: true }));
+const mockStopBackendRunForMission = jest.fn(() => Promise.resolve());
 jest.mock("@/lib/orchestration", () => ({
-  cancelMissionRun: (...a: unknown[]) => mockCancelMissionRun(...(a as [])),
+  cancelMissionRun: jest.fn(),
+  stopBackendRunForMission: (...a: unknown[]) => mockStopBackendRunForMission(...(a as [])),
 }));
 
 const mockAppendAuditLine = jest.fn();
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: (...a: unknown[]) => mockAppendAuditLine(...a) }));
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
+jest.mock("@/lib/schedules-repository", () => ({ createSchedule: jest.fn(() => ({ id: "s1" })) }));
+const mockDispatchMissionNow = jest.fn().mockResolvedValue({ ok: true });
+jest.mock("@/lib/missions/mission-dispatch", () => ({
+  dispatchMissionNow: (...a: unknown[]) => mockDispatchMissionNow(...a),
+}));
+jest.mock("@/lib/missions/mission-queue-tick", () => ({ runMissionQueueTick: jest.fn() }));
 jest.mock("@/lib/missions/mission-category-repository", () => ({ getCategory: jest.fn(() => null) }));
 
 import { readFileSync } from "fs";
@@ -113,7 +120,7 @@ function mission(over: Partial<Mission> = {}): Mission {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockCancelMissionRun.mockReturnValue(Promise.resolve({ ok: true }));
+  mockStopBackendRunForMission.mockReturnValue(Promise.resolve());
   mockGetLatestRunForMission.mockReturnValue(null);
 });
 
@@ -268,22 +275,92 @@ describe("one interrupt reads one way", () => {
 });
 
 describe("a rename does not wipe the draft's output", () => {
-  const promote = readFileSync(
-    join(process.cwd(), "src", "lib", "missions", "mission-promote-handler.ts"),
-    "utf-8",
-  );
+  const draft = {
+    id: "m_draft1",
+    name: "Draft",
+    prompt: "<hermes_mission></hermes_mission>",
+    status: "queued",
+    queuedForRun: false,
+    result: "the output of the run that already happened",
+  };
+  const promote = async (dispatchMode: string, over: Record<string, unknown> = {}) => {
+    mockGetMission.mockReturnValue(draft);
+    mockUpdateMission.mockImplementation((_id: string, u: Record<string, unknown>) => ({
+      ...draft,
+      ...u,
+    }));
+    const { promoteMission } = await import("@/lib/missions/mission-promote-handler");
+    await promoteMission({ missionId: "m_draft1", dispatchMode, ...over } as never);
+    return mockUpdateMission.mock.calls.at(0)![1] as Record<string, unknown>;
+  };
 
-  it("clears the result only when the mission is actually re-activated", () => {
-    // `result: null` is right for queue/now/cron -- a re-activated mission must
-    // not surface a previous run's output (QA #9/#43). `save` is the no-op the
-    // console uses to rename a draft, and it took the same line.
-    expect(promote).not.toMatch(/updateMission\(\s*input\.missionId,\s*\{\s*\.\.\.updates,\s*result:\s*null\s*\}\s*\)/);
-    expect(promote).toMatch(/isSaveMode[\s\S]{0,400}result\s*=\s*null|result:\s*isSaveMode|!isSaveMode/);
+  it("keeps the result when save is being used to rename", async () => {
+    // `dispatchMode:"save"` is the no-op the console uses to rename a draft or
+    // edit its prompt. Nothing is being re-activated, so there is no stale
+    // output to clear -- and clearing it destroyed a finished mission's report
+    // with no warning and nothing to undo it with.
+    const patch = await promote("save", { name: "A better name" });
+    expect(patch).not.toHaveProperty("result", null);
+  });
+
+  it("GREEN CONTROL: re-activating still clears the stale result", async () => {
+    // The behaviour QA #9/#43 asked for, and the reason the line exists. A
+    // mission going back into the queue must not surface the previous run's
+    // output as though it were the new one's.
+    expect(await promote("queue")).toHaveProperty("result", null);
+    jest.clearAllMocks();
+    expect(await promote("now")).toHaveProperty("result", null);
+  });
+
+  it("GREEN CONTROL: save still parks the mission as a draft", async () => {
+    // The rest of save's job must be untouched by the narrowing.
+    expect(await promote("save", { name: "A better name" })).toHaveProperty("queuedForRun", false);
   });
 });
 
 describe("a degraded gather is recorded, and the report says so", () => {
-  it("migration 036 adds the three counters, nullable", () => {
+  const CLEAN = { searchAttempts: 8, searchFailures: 0, visitAttempts: 6, visitFailures: 0 };
+
+  it("says how much of the evidence is missing, in the report itself", async () => {
+    // The counters were computed and thrown away, and the caller read them for
+    // exactly ONE case: EVERY search failed. Five of eight was invisible -- a
+    // report written from three sources, marked `completed`, reading exactly
+    // like a healthy one.
+    const { withGatherCaveat } = await import("@/lib/laboratory/deep-research/run-job");
+    const out = withGatherCaveat("The answer is 42.", {
+      ...CLEAN,
+      searchFailures: 5,
+      visitFailures: 4,
+    });
+
+    expect(out).toMatch(/5 of 8/);
+    expect(out).toMatch(/4 of 6/);
+    // It goes in the REPORT, not only in a column, because the report is what
+    // gets read, exported and captured as an artifact.
+    expect(out).toContain("The answer is 42.");
+    expect(out.indexOf("Incomplete")).toBeLessThan(out.indexOf("The answer is 42."));
+  });
+
+  it("says nothing at all when the gather was clean", async () => {
+    // GREEN CONTROL, and load-bearing: a caveat on every run is a caveat nobody
+    // reads, which would make the degraded case invisible again by a different
+    // route.
+    const { withGatherCaveat } = await import("@/lib/laboratory/deep-research/run-job");
+    expect(withGatherCaveat("The answer is 42.", CLEAN)).toBe("The answer is 42.");
+  });
+
+  it("reports only the half that actually degraded", async () => {
+    const { withGatherCaveat } = await import("@/lib/laboratory/deep-research/run-job");
+    const searchOnly = withGatherCaveat("x", { ...CLEAN, searchFailures: 2 });
+    expect(searchOnly).toMatch(/2 of 8/);
+    expect(searchOnly).not.toMatch(/pages could not be read/);
+
+    const visitOnly = withGatherCaveat("x", { ...CLEAN, visitFailures: 3 });
+    expect(visitOnly).toMatch(/3 of 6/);
+    expect(visitOnly).not.toMatch(/searches failed/);
+  });
+
+  it("migration 036 adds the four counters, nullable and unbackfilled", () => {
     const sql = readFileSync(
       join(process.cwd(), "src", "lib", "db", "migrations", "036_research_gather_health.sql"),
       "utf-8",
@@ -291,10 +368,20 @@ describe("a degraded gather is recorded, and the report says so", () => {
     for (const col of ["search_attempts", "search_failures", "visit_attempts", "visit_failures"]) {
       expect(sql).toContain(col);
     }
-    // Same discipline as 034: a pre-036 run recorded nothing, and NULL is the
-    // honest answer for that. A DEFAULT 0 would make every historical run read
-    // as a clean gather.
-    expect(sql).not.toMatch(/DEFAULT\s+0/i);
+    // Same discipline as 034's token columns: a pre-036 run measured nothing,
+    // and NULL is the honest answer for that. DEFAULT 0 would report every
+    // historical run as a clean gather nobody observed.
+    //
+    // Scoped to the STATEMENTS. The first draft matched the whole file and went
+    // red on the migration's own comment explaining why DEFAULT 0 is wrong --
+    // a guard failing on its own rationale.
+    const statements = sql
+      .split(/\r?\n/)
+      .filter((l) => !l.trim().startsWith("--"))
+      .join("\n");
+    expect(statements).toMatch(/ALTER TABLE research_runs ADD COLUMN/);
+    expect(statements).not.toMatch(/DEFAULT/i);
+    expect(statements).not.toMatch(/NOT NULL/i);
   });
 
   it("the head constant moves with it", () => {

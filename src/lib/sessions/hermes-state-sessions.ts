@@ -33,8 +33,14 @@ export function hermesStatusFromEndReason(
     case "max_iterations":
       return { status: "completed", exitCode: 0 };
     case "timeout":
-    case "interrupt":
       return { status: "completed", exitCode: 143 };
+    // `interrupt` is somebody stopping the run, and PatterStage's own cancel
+    // writes `failed` with exit 143 for exactly that. Mapping it to `completed`
+    // meant one event read two ways and whichever writer won the race decided
+    // what the operator saw (T-0070). The board still LABELS it "Cancelled",
+    // from the run row; this is the storage, not the display.
+    case "interrupt":
+      return { status: "failed", exitCode: 143 };
     case "error":
       return { status: "failed", exitCode: 1 };
     default:

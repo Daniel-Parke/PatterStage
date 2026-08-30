@@ -78,6 +78,7 @@ import { applyRetentionMigration } from "./apply-retention-migration";
 import { applySpendPolicyMigration } from "./apply-spend-policy-migration";
 import { applyResearchUsageMigration } from "./apply-research-usage-migration";
 import { applyComposerRejectedMigration } from "./apply-composer-rejected-migration";
+import { applyResearchGatherMigration } from "./apply-research-gather-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -309,6 +310,14 @@ export function runMigrations(database: Database.Database): void {
   // it owns its own transaction and foreign_keys pragma, and it refuses to
   // run at all if either table's columns have drifted. REBUILD at v35.
   applyComposerRejectedMigration(database, migrationsDir);
+
+  // How much of a research run's evidence was actually gathered. The engine
+  // counted its search failures and threw the number away, so anything short of
+  // a TOTAL outage shipped a confident report with no record that most of the
+  // gather had failed. Four NULLABLE columns, no backfill: a pre-036 run
+  // measured nothing, and zero would claim it measured a clean gather.
+  // ALTER at v36.
+  applyResearchGatherMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

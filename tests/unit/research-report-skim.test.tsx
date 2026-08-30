@@ -32,6 +32,8 @@ function makeRun(report: string | null): ResearchRun {
     // Fixtures predate migration 034: null is the honest value for a run
     // whose token usage was never recorded (T-0030).
     usage: null,
+    // T-0070: unmeasured, exactly as a pre-036 run is.
+    gather: null,
   };
 }
 

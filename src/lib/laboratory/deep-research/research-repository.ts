@@ -9,6 +9,7 @@ import { getDb, uuid, now } from "@/lib/db";
 import { parseStringArrayOrEmpty, parseJson } from "@/lib/db/parse-json";
 import type { ResearchUsageTotal } from "./usage";
 import type {
+  ResearchGatherHealth,
   ResearchConfig,
   ResearchPreset,
   ResearchRun,
@@ -34,6 +35,11 @@ interface RunRow {
   prompt_tokens: number | null;
   completion_tokens: number | null;
   total_tokens: number | null;
+  // Likewise NULL for every run before 036: unmeasured, not a clean gather.
+  search_attempts: number | null;
+  search_failures: number | null;
+  visit_attempts: number | null;
+  visit_failures: number | null;
 }
 
 interface StepRow {
@@ -62,6 +68,15 @@ function rowToRun(row: RunRow): ResearchRun {
             promptTokens: row.prompt_tokens ?? 0,
             completionTokens: row.completion_tokens ?? 0,
             totalTokens: row.total_tokens ?? (row.prompt_tokens ?? 0) + (row.completion_tokens ?? 0),
+          },
+    gather:
+      row.search_attempts === null && row.visit_attempts === null
+        ? null
+        : {
+            searchAttempts: row.search_attempts ?? 0,
+            searchFailures: row.search_failures ?? 0,
+            visitAttempts: row.visit_attempts ?? 0,
+            visitFailures: row.visit_failures ?? 0,
           },
     report: row.report,
     error: row.error,
@@ -138,6 +153,8 @@ export interface UpdateResearchRunInput {
   completedAt?: string | null;
   /** null persists as NULL: usage was never recorded, which is not zero. */
   usage?: ResearchUsageTotal | null;
+  /** null persists as NULL: the gather was never measured, which is not clean. */
+  gather?: ResearchGatherHealth | null;
 }
 
 export function updateResearchRun(id: string, input: UpdateResearchRunInput): ResearchRun | null {
@@ -154,6 +171,15 @@ export function updateResearchRun(id: string, input: UpdateResearchRunInput): Re
       input.usage?.promptTokens ?? null,
       input.usage?.completionTokens ?? null,
       input.usage?.totalTokens ?? null,
+    );
+  }
+  if (input.gather !== undefined) {
+    sets.push("search_attempts = ?", "search_failures = ?", "visit_attempts = ?", "visit_failures = ?");
+    vals.push(
+      input.gather?.searchAttempts ?? null,
+      input.gather?.searchFailures ?? null,
+      input.gather?.visitAttempts ?? null,
+      input.gather?.visitFailures ?? null,
     );
   }
   if (sets.length === 0) return getResearchRun(id);

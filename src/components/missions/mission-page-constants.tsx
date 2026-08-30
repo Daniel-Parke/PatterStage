@@ -67,4 +67,7 @@ export const RUN_TONE_TEXT: Record<MissionRunTone, string> = {
   overdue: "text-neon-orange",
   good: "text-ps-text-secondary",
   bad: "text-red-400",
+  // Not red. See MissionRunTone -- a cancellation is the operator's own action,
+  // not a fault report.
+  stopped: "text-neon-orange",
 };
