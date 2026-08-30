@@ -1,0 +1,31 @@
+{
+  "id": "T-0066",
+  "intent": "Findings from the 2026-08-30 round that are real and are not defects, recorded so they are tracked work rather than prose in a report. Nothing here is scheduled; each is a decision waiting for a ruling or for evidence.",
+  "declared": {
+    "capabilities": [],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R0",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [],
+  "items": [
+    "FOUR SWEEP-STYLE TESTS COUNT THE WRONG NOUN. The T-0062 lesson generalises. viz-chrome-tokens.test.ts:143 sweeps with no denominator in its describe; missions-read-only-reads.test.ts:158 asserts files.length > 0, which passes on one file; module-registry.test.ts:94 walks src/app with no floor. The pointed one is read-only-actually-reads.test.ts:91, which counts route FILES but attributes guard calls to handlers via a regex on an exported function declaration: rewrite a route as an exported const and the attribution stays empty forever, so every assertion in that describe passes vacuously against a full 96-file walk. Its own sibling script gets this right at check-read-only-guards.mjs:98, which asserts handlersSeen as well as scanned.",
+    "LABORATORY vs ANALYTICS. Operator ruled 2026-08-30: leave the name, keep the evidence. Two independent QA passes reached for Analytics and did not find it. Recorded so a future decision has the history rather than a third report.",
+    "THE HOUSE LEANS ON title OVER aria-label, 112 to 27. title is a valid accessible name per HTML-AAM, so T-0062's gate accepts it, but it is invisible to touch and keyboard-only users. Migrating the 112 is a ruling, not a defect fix.",
+    "BACKUPS HAVE NO RETENTION POLICY. Every failed config PUT now mints another .bak under the Hermes root, and retention-prune.ts is DB-only. Bounded by operator retries rather than by a timer, and it predates T-0060, but it is real.",
+    "THE PROFILE COLLISION CHECK IS DB-ONLY. A profile directory on disk with no matching row is not detected, so pushProfileToHermes writes over it and answers 200. writeWithBackup backs up first, so it is recoverable, but it is a silent overwrite of someone else's data. Related: because the collision key is the mangled slug, Evil! and evil both give evil, and the 409 names a slug the caller never typed.",
+    "A FAILED PROFILE PUSH LEAVES AN ORPHAN DB ROW. upsertProfile runs before pushProfileToHermes and nothing rolls it back. Reachable via a Windows reserved device name, which T-0061 now refuses, so the path is narrower than it was but not closed.",
+    "RESEARCH STAGES SHOW NO LIVE PROGRESS ON THE COMPOSER CANVAS. Retained from the tester's own retraction of F-4: the observation, a stage appearing stuck for 5.5 minutes with no visible progress, was accurate even though the diagnosis was not. dispatchResearchNode deliberately creates no runs row, so there is nothing for the canvas to poll, and the 20-minute cap exists and works. An S4 polish item, and a real one.",
+    "clearStaleCronMissionLinks ONLY COVERS cron-sourced sessions. Widening the existing statement would also null links to SOFT-DELETED missions and lose history the Sessions page shows. The safe shape is a second, narrower statement keyed on existence only. The tester hand-repaired 16 such rows.",
+    "ConfigSync.ts HAS NO TEST. It sets the config.yaml_error stat the Dashboard alert renders, so the operator's only ambient signal that config.yaml is broken is itself uncovered.",
+    "finalizeRootConfigOnDisk COPIES A MALFORMED config.yaml INTO the agent_root row even after syncDefaultsToHermesConfig has refused to write it to disk."
+  ],
+  "timestamps": {
+    "opened": "2026-08-30T21:30:00Z",
+    "updated": "2026-08-30T21:30:00Z"
+  }
+}
