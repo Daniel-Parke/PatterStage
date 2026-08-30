@@ -13,7 +13,7 @@ import {
   readCrontab,
   writeCrontab,
 } from "./crontab-store";
-import { applyDisabledChange, loadDisabledIds } from "./disabled-state";
+import { applyDisabledChange, readDisabledIdsForWrite } from "./disabled-state";
 
 export async function handleDeleteHardwareCron(request: NextRequest): Promise<NextResponse> {
   try {
@@ -23,6 +23,12 @@ export async function handleDeleteHardwareCron(request: NextRequest): Promise<Ne
     if (!id) {
       return badRequest("id is required");
     }
+
+    // HOISTED, deliberately. This read used to sit after writeCrontab, so a
+    // refusal here would have left the crontab already rewritten and then
+    // answered 409: a half-done delete. Refuse before anything is touched.
+    const disabledIds = readDisabledIdsForWrite();
+    if (disabledIds instanceof NextResponse) return disabledIds;
 
     const crontab = await readCrontab();
     const lines = crontab.split("\n");
@@ -54,8 +60,7 @@ export async function handleDeleteHardwareCron(request: NextRequest): Promise<Ne
       return serverErrorFromHelperResult(result, "unknown error");
     }
 
-    // Remove from disabled set if present
-    const disabledIds = loadDisabledIds();
+    // Remove from disabled set if present (read hoisted above, before any write)
     applyDisabledChange(disabledIds, id, true);
 
     return ok({ id });

@@ -28,7 +28,7 @@ import {
   serialiseLine,
   writeCrontab,
 } from "./crontab-store";
-import { loadDisabledIds, saveDisabledIds } from "./disabled-state";
+import { readDisabledIdsForWrite, saveDisabledIds } from "./disabled-state";
 
 export async function handleCreateHardwareCron(request: NextRequest): Promise<NextResponse> {
   try {
@@ -38,7 +38,8 @@ export async function handleCreateHardwareCron(request: NextRequest): Promise<Ne
 
     // ── pauseAll action ────────────────────────────────────────────────
     if ((body as Record<string, unknown>).action === "pauseAll") {
-      const disabledIds = loadDisabledIds();
+      const disabledIds = readDisabledIdsForWrite();
+      if (disabledIds instanceof NextResponse) return disabledIds;
       const crontab = await readCrontab();
       const lines = crontab.split("\n");
       const jobIds: string[] = [];

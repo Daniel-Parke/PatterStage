@@ -300,7 +300,17 @@ describe("the PUT path does not read config through the degrading reader", () =>
       "utf-8",
     );
 
-    const put = text.slice(text.indexOf("export async function PUT"));
+    // Strip comments first. The handler deliberately CONTAINS the words
+    // "NOT readCachedConfig()" explaining why it parses itself, and a scanner
+    // that cannot tell a call from a comment would force that explanation out of
+    // the file to stay green.
+    const put = text
+      .slice(text.indexOf("export async function PUT"))
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .split(/\r?\n/)
+      .map((l) => l.replace(/\/\/.*$/, ""))
+      .join(" ");
+
     expect(put).not.toMatch(/readCachedConfig/);
   });
 });

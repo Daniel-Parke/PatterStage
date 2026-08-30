@@ -27,7 +27,7 @@ import {
   serialiseLine,
   writeCrontab,
 } from "./crontab-store";
-import { applyDisabledChange, loadDisabledIds } from "./disabled-state";
+import { applyDisabledChange, readDisabledIdsForWrite } from "./disabled-state";
 
 export async function handleUpdateHardwareCron(request: NextRequest): Promise<NextResponse> {
   try {
@@ -54,7 +54,10 @@ export async function handleUpdateHardwareCron(request: NextRequest): Promise<Ne
     }
 
     const crontab = await readCrontab();
-    const disabledIds = loadDisabledIds();
+    // Refuse before setEnabled or writeCrontab: a refusal that has already
+    // changed the machine is not a refusal.
+    const disabledIds = readDisabledIdsForWrite();
+    if (disabledIds instanceof NextResponse) return disabledIds;
     const lines = crontab.split("\n");
     const newLines: string[] = [];
     let found = false;
