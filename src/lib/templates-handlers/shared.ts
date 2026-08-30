@@ -16,6 +16,7 @@ import { normalizeLocalDirsInput } from "@/lib/fs/local-dir-entry";
 import { resolveTemplateCategoryId } from "@/lib/missions/mission-category-repository";
 import { PATHS } from "@/lib/paths";
 import type { LocalDirEntry } from "@/types/console";
+import type { DispatchMode } from "@/lib/dispatch-mode";
 
 export const DATA_DIR = PATHS.templates;
 
@@ -71,7 +72,11 @@ export interface CustomTemplate {
   goals: string[];
   suggestedSkills: string[];
   suggestedToolsets?: string[];
-  dispatchMode: "save" | "now" | "cron";
+  /**
+   * Was `"save" | "now" | "cron"`, missing `queue` and so drifted from
+   * DispatchMode. Aliased to the real type now so the two cannot part again.
+   */
+  dispatchMode: DispatchMode;
   schedule: string;
   /** Hermes CLI model id, e.g. anthropic/claude-sonnet-4 */
   defaultModel?: string;

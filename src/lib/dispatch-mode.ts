@@ -39,6 +39,33 @@
 export type DispatchMode = "save" | "now" | "cron" | "queue";
 
 /**
+ * The legal modes as a runtime value.
+ *
+ * `DispatchMode` is erased at compile time, so a server reading an untrusted
+ * body cannot check against it. Without a runtime list the only validation was
+ * `parseDispatchMode`'s `valid` flag, which the dispatch route computed and
+ * discarded, and unrecognised modes fell into an immediate unattended run
+ * (T-0067). Exported so a refusal can also NAME the legal values: an operator
+ * who typed "schedule" previously got no hint what to type instead.
+ *
+ * Kept beside the type on purpose. A `satisfies` check means adding a mode to
+ * one and not the other is a compile error rather than a silent gap.
+ */
+export const DISPATCH_MODES = ["save", "now", "cron", "queue"] as const satisfies readonly DispatchMode[];
+
+/**
+ * Narrow an untrusted value to a `DispatchMode`.
+ *
+ * For the boundaries that STORE a mode rather than act on one: a template
+ * persists whatever it is handed, and the composer casts it straight back into
+ * form state, so an unvalidated write there is a delayed-action version of the
+ * same defect (T-0067).
+ */
+export function isDispatchMode(value: unknown): value is DispatchMode {
+  return typeof value === "string" && (DISPATCH_MODES as readonly string[]).includes(value);
+}
+
+/**
  * The 4 boolean decompositions of a `dispatchMode` value, plus a
  * `valid` flag that is `true` only when the mode is one of the 4
  * supported values.
