@@ -314,3 +314,59 @@ describe("the PUT path does not read config through the degrading reader", () =>
     expect(put).not.toMatch(/readCachedConfig/);
   });
 });
+
+
+// ── The other half of the same defect (T-0064) ──────────────────
+//
+// Refusing the write stops the destruction. It does not stop the operator
+// walking into it: with an unparseable config.yaml, GET /api/config returned
+// {} , byte-identical to a legitimately empty config, so /config showed zero
+// "configured" pills and every section page rendered "(not configured)" with no
+// warning anywhere. It looked like a fresh install, on the very pages an
+// operator goes to in order to FIX the config.
+describe("GET /api/config says when the file did not parse", () => {
+  it("carries the parse error beside the data", async () => {
+    mockReadFileSync.mockReturnValue(MALFORMED);
+    const { GET } = await import("@/app/api/config/route");
+
+    const res = await GET(new NextRequest("http://localhost/api/config"));
+    const body = (await res.json()) as { data?: unknown; configError?: string };
+
+    expect(res.status).toBe(200);
+    expect(body.data).toEqual({});
+    expect(body.configError).toMatch(/duplicated mapping key/i);
+  });
+
+  it("still returns the config, because a read that refuses to read is its own defect", async () => {
+    // The GET must keep degrading. A 500 here would blank the screens the
+    // operator needs in order to discover that the config is broken.
+    mockReadFileSync.mockReturnValue(MALFORMED);
+    const { GET } = await import("@/app/api/config/route");
+
+    const res = await GET(new NextRequest("http://localhost/api/config"));
+
+    expect(res.status).toBe(200);
+  });
+
+  it("omits the field entirely on a clean parse", async () => {
+    // So a null does not appear on every response, and so a consumer can use
+    // presence rather than truthiness.
+    mockReadFileSync.mockReturnValue("agent:\n  max_turns: 100\n");
+    const { GET } = await import("@/app/api/config/route");
+
+    const body = (await (await GET(new NextRequest("http://localhost/api/config"))).json()) as
+      Record<string, unknown>;
+
+    expect("configError" in body).toBe(false);
+  });
+
+  it("does not leak config.yaml contents through the read path either", async () => {
+    mockReadFileSync.mockReturnValue(MALFORMED_WITH_SECRET);
+    const { GET } = await import("@/app/api/config/route");
+
+    const body = (await (await GET(new NextRequest("http://localhost/api/config"))).json()) as
+      { configError?: string };
+
+    expect(body.configError).not.toMatch(/sk-live/);
+  });
+});

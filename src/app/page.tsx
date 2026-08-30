@@ -16,7 +16,6 @@ import {
   ChevronRight,
   Gamepad2,
   BookOpen,
-  AlertTriangle,
   Timer,
 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
@@ -47,6 +46,7 @@ import { formatModelSubtitle } from "@/lib/dashboard/dashboard-model-subtitle";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
 import { useInterval } from "@/hooks/useInterval";
 import { useDashboard } from "@/hooks/useDashboard";
+import { ConfigYamlErrorAlert } from "@/components/config/ConfigYamlErrorAlert";
 
 // ── Live Clock (isolated re-render) ───────────────────────────
 
@@ -301,17 +301,7 @@ export default function Dashboard() {
         {/* Malformed config.yaml — one actionable alert (ConfigSync sets the
             stat; the sync no longer spams the log). */}
         {monitor?.system?.configYamlError ? (
-          <div className="flex items-start gap-3 rounded-xl border border-neon-orange/40 bg-neon-orange/10 px-4 py-3">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-neon-orange" />
-            <div className="min-w-0 text-xs">
-              <p className="font-semibold text-neon-orange">Hermes config.yaml cannot be parsed</p>
-              <p className="mt-0.5 break-words font-mono text-neon-orange/90">{monitor.system.configYamlError}</p>
-              <p className="mt-1 text-ps-text-muted">
-                {/* design-lint-disable-next-line hermes-outside-adapter -- the whole point of this alert is to tell the operator which file to open. A parse error with the filename removed is an alert you cannot act on. */}
-                Config + profile syncs are paused until this is fixed. Edit <code className="text-ps-text-secondary">~/.hermes/config.yaml</code> to correct the YAML.
-              </p>
-            </div>
-          </div>
+          <ConfigYamlErrorAlert message={monitor.system.configYamlError} />
         ) : null}
         {/* ═══ Compact Stat Row ═══ */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-w-0">

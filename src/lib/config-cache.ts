@@ -90,6 +90,41 @@ function writeConfigCache(config: Record<string, unknown>): void {
  * fast. Returns an empty object when the file does not exist or fails to
  * parse — matching the pre-extraction behaviour.
  */
+/**
+ * The config, AND whether the file on disk failed to parse.
+ *
+ * `readCachedConfig` below is this with the error thrown away, which is the
+ * right contract for a render path and the wrong one for anything that must
+ * decide whether to let the operator hit Save. Splitting them lets the GET keep
+ * degrading while the page it feeds stops pretending an unparseable config is an
+ * empty one (T-0064).
+ */
+export function readCachedConfigResult(): {
+  config: Record<string, unknown>;
+  error: string | null;
+} {
+  const cached = readConfigCache();
+  if (cached) return { config: cached, error: null };
+
+  const configPath = getAgentWorkspace().config;
+  if (!existsSync(configPath)) return { config: {}, error: null };
+
+  const content = readFileSync(configPath, "utf-8");
+  let config: Record<string, unknown>;
+  try {
+    config = (yaml.load(content) as Record<string, unknown>) || {};
+  } catch (err) {
+    // First line only, for the same reason PUT /api/config carries only the
+    // first line: the rest of a js-yaml message quotes the offending LINES of
+    // config.yaml, and this file holds api_key values.
+    const message = err instanceof Error ? err.message : String(err);
+    return { config: {}, error: message.split("\n")[0] };
+  }
+
+  writeConfigCache(config);
+  return { config, error: null };
+}
+
 export function readCachedConfig(): Record<string, unknown> {
   const cached = readConfigCache();
   if (cached) return cached;

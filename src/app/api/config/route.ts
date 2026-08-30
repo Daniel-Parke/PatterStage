@@ -11,7 +11,7 @@ import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 
 import { appendAuditLine } from "@/lib/audit-log";
 import { conflict, forbidden, ok } from "@/lib/api-response";
-import { readCachedConfig } from "@/lib/config-cache";
+import { readCachedConfigResult } from "@/lib/config-cache";
 import { dumpYamlConfig } from "@/lib/yaml-config";
 import { CONFIG_SECTIONS } from "@/lib/config-schema";
 import { maskApiKey } from "@/lib/secret-mask";
@@ -80,8 +80,13 @@ export async function GET(_request: NextRequest) {
   // sitting outside the try/catch; both the call and the function were deleted
   // in T-0048, and the comment outlived them.
   try {
-    const config = readCachedConfig();
-    return ok(maskConfigSecrets(config));
+    // Read the truth here rather than borrowing the monitor's config.yaml_error
+    // stat: that source has a 60s staleness budget, so a gate built on it would
+    // be up to a minute wrong in BOTH directions. An operator who has just
+    // repaired the YAML would face a dead Save for a minute, and one who has
+    // just broken it would get a live Save.
+    const { config, error: configError } = readCachedConfigResult();
+    return ok(maskConfigSecrets(config), configError ? { configError } : undefined);
   } catch (error) {
     return serverErrorFromCatch(
       "GET /api/config",

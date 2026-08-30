@@ -23,6 +23,7 @@ import { parseEnvLine, envLineKey } from "@/lib/env-line";
 import { iconColorMap, colorBorderMap } from "@/lib/theme";
 import ConfigField from "@/components/config/ConfigField";
 import EnvLineRow from "@/components/config/EnvLineRow";
+import { ConfigYamlErrorAlert } from "@/components/config/ConfigYamlErrorAlert";
 
 /**
  * The recovery view for a slug that is not a config section.
@@ -101,6 +102,10 @@ export default function ConfigSectionPage() {
   // Single source of truth for save flow — `saving` is derived as
   // saveStatus === "saving" so the two are never out of sync.
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  // The parse error reported beside the config payload. Not the monitor stat:
+  // that has a 60s staleness budget, so a Save gate built on it would be up to a
+  // minute wrong in both directions (T-0064).
+  const [configError, setConfigError] = useState<string | null>(null);
   const saving = saveStatus === "saving";
   const [error, setError] = useState<string | null>(null);
 
@@ -144,6 +149,11 @@ export default function ConfigSectionPage() {
   );
 
   const hasChanges = isFileSection ? fileHasChanges : yamlHasChanges;
+  // File sections (.env, HERMES.md) PUT to /api/agent/files, not to
+  // /api/config, so a config.yaml parse error is none of their business.
+  // Gating them would strand an operator on the very editor they might be
+  // using to look around.
+  const yamlSaveBlocked = !isFileSection && Boolean(configError);
 
   const isPlatformToolsetsPreview = sectionId === "platform_toolsets";
 
@@ -165,6 +175,7 @@ export default function ConfigSectionPage() {
         setOriginalValues({ ...platformToolsets });
       } else {
         const json = await apiFetch("/api/config", { signal });
+        setConfigError((json as { configError?: string }).configError ?? null);
         const config = json.data || json;
         const sectionValues = (config[sectionId] as Record<string, unknown>) || {};
         setValues(sectionValues);
@@ -306,7 +317,8 @@ export default function ConfigSectionPage() {
                 color={sectionDef.color}
                 size="sm"
                 onClick={handleSave}
-                disabled={!hasChanges}
+                disabled={!hasChanges || yamlSaveBlocked}
+                title={yamlSaveBlocked ? `config.yaml did not parse: ${configError}` : undefined}
                 loading={saving}
                 icon={saveStatus === "saved" ? Check : Save}
               >
@@ -333,6 +345,20 @@ export default function ConfigSectionPage() {
             (profile selector + push).
           </p>
         ) : null}
+        {yamlSaveBlocked && (
+          <div className="mb-4">
+            <ConfigYamlErrorAlert
+              message={configError!}
+              detail={
+                <>
+                  Saving is disabled here until this is fixed. A save merges into the parsed
+                  config, and there is nothing to merge into: it would write this section over
+                  everything else in the file. Repair the YAML and reload.
+                </>
+              }
+            />
+          </div>
+        )}
         {error && <ErrorBanner message={error} />}
 
         {/* File editor for file-type sections */}

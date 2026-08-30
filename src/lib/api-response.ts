@@ -194,8 +194,11 @@ export function created<T>(data: T): NextResponse {
  *   // Factory form (post-refactor):
  *   return ok({ model });
  */
-export function ok<T>(data: T): NextResponse {
-  return NextResponse.json({ data }, { status: 200 });
+export function ok<T>(data: T, extra?: Record<string, unknown>): NextResponse {
+  // `extra` is a SIBLING of data, never merged into it, so a route can carry a
+  // fact about the response without polluting the payload. Byte-equivalent when
+  // omitted, which is why the thirty-plus existing call sites are untouched.
+  return NextResponse.json(extra ? { data, ...extra } : { data }, { status: 200 });
 }
 
 /**
