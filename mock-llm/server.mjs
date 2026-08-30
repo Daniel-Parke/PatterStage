@@ -14,7 +14,11 @@ import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 
 const PORT = Number(process.env.MOCK_LLM_PORT || 8000);
-const HOST = process.env.MOCK_LLM_HOST || "0.0.0.0";
+// Loopback by default, matching mock-hermes and mock-hindsight. An
+// unauthenticated completion stub has no business on a dev machine's LAN.
+// The compose stack is unaffected: mock-llm/Dockerfile pins
+// MOCK_LLM_HOST=0.0.0.0 explicitly, as mock-hermes/Dockerfile does.
+const HOST = process.env.MOCK_LLM_HOST || "127.0.0.1";
 const REPLY =
   process.env.MOCK_LLM_REPLY ||
   "MOCK_LLM_OK — task acknowledged and completed by the deterministic test model.";
