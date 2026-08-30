@@ -445,3 +445,131 @@ describe("POST /api/agent/profiles", () => {
     expect(store.get("cloned-agent")?.soulMd).toContain("Source Agent");
   });
 });
+
+// T-0060/T-0061 acceptance oracle — the create path must judge the NAME, not the
+// slug it has already laundered out of the name.
+//
+// THE DEFECT. route.ts slugifies at :146 and validates at :148-149. Because
+// PROFILE_SLUG_PATTERN is a strict SUBSET of PROFILE_PATTERN, every value
+// slugifyDisplayName can return satisfies the validator by construction,
+// including its literal "profile" fallback. Those two lines can never return
+// 400. The sanitiser has already destroyed the evidence the validator exists to
+// inspect, so "../evil" arrives as a legitimate-looking profile called "evil".
+//
+// AND ONE NAME IS DESTRUCTIVE. "Default" slugifies to "default", which is absent
+// from agent_profiles (the root agent lives in agent_root), so the 409 never
+// fires. resolveProfileHermesHome("default") then returns the ROOT Hermes home
+// rather than profiles/default, and the push rewrites config.yaml, SOUL.md,
+// AGENTS.md, USER.md and MEMORY.md with boilerplate. HTTP 200. Reachable from
+// "Default", "DEFAULT", "de fault" and "Default!".
+describe("POST /api/agent/profiles refuses a name that was never a name", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    store.clear();
+    mockExistsSync.mockReturnValue(false);
+    mockReadFileSync.mockReturnValue("");
+  });
+
+  const hostile: Array<[string, string]> = [
+    ["..", "traversal"],
+    ["../evil", "traversal"],
+    ["a/../b", "a path separator"],
+    [".hidden", "a leading dot"],
+    ["CON", "a Windows reserved device name"],
+  ];
+
+  it.each(hostile)("refuses %s (%s) with a 400 and creates nothing", async (name) => {
+    const { POST } = await import("@/app/api/agent/profiles/route");
+    const { pushProfileToHermes } = jest.requireMock("@/modules/hermes/lib/profile-push") as {
+      pushProfileToHermes: jest.Mock;
+    };
+
+    const res = await POST(makeRequest("http://localhost/api/agent/profiles", "POST", { name }));
+
+    expect(res.status).toBe(400);
+    expect(store.size).toBe(0);
+    expect(pushProfileToHermes).not.toHaveBeenCalled();
+  });
+
+  it("refuses a name with nothing left to slugify, rather than calling it 'profile'", async () => {
+    // A rocket emoji has length 2, so it clears the min-length check, then
+    // slugifies to "" and hits the literal "profile" fallback. Two operators
+    // naming their agents with different emoji would collide on one slug and be
+    // told a profile they never named already exists.
+    const { POST } = await import("@/app/api/agent/profiles/route");
+
+    const res = await POST(
+      makeRequest("http://localhost/api/agent/profiles", "POST", { name: "\u{1F680}" }),
+    );
+
+    expect(res.status).toBe(400);
+    expect(store.size).toBe(0);
+  });
+
+  it("keeps emoji that is decoration rather than the whole name", async () => {
+    // GREEN CONTROL. The rule rejects a name that yields no slug, NOT a name
+    // that happens to contain an emoji. Without this the fix could over-reach
+    // into "reject anything non-ascii" and the test above would still pass.
+    const { POST } = await import("@/app/api/agent/profiles/route");
+
+    const res = await POST(
+      makeRequest("http://localhost/api/agent/profiles", "POST", { name: "Rocket \u{1F680}" }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(store.has("rocket")).toBe(true);
+  });
+
+  it("refuses a name that resolves to the root agent, and pushes nothing", async () => {
+    // The destructive one. Today this answers 200 and overwrites the root
+    // agent's identity files.
+    const { POST } = await import("@/app/api/agent/profiles/route");
+    const { pushProfileToHermes } = jest.requireMock("@/modules/hermes/lib/profile-push") as {
+      pushProfileToHermes: jest.Mock;
+    };
+
+    const res = await POST(
+      makeRequest("http://localhost/api/agent/profiles", "POST", { name: "Default" }),
+    );
+
+    expect(res.status).toBe(409);
+    expect(pushProfileToHermes).not.toHaveBeenCalled();
+    expect(store.size).toBe(0);
+  });
+
+  it.each(["default", "DEFAULT", "de fault", "Default!"])(
+    "refuses %s too, because the slug is what decides",
+    async (name) => {
+      const { POST } = await import("@/app/api/agent/profiles/route");
+      const res = await POST(makeRequest("http://localhost/api/agent/profiles", "POST", { name }));
+      expect(res.status).toBe(409);
+    },
+  );
+
+  it("still creates an ordinary profile", async () => {
+    // GREEN CONTROL. Stops the fix degenerating into "refuse everything".
+    const { POST } = await import("@/app/api/agent/profiles/route");
+
+    const res = await POST(
+      makeRequest("http://localhost/api/agent/profiles", "POST", { name: "QA Engineer" }),
+    );
+
+    expect(res.status).toBe(200);
+    expect((await res.json()).data.slug).toBe("qa-engineer");
+  });
+});
+
+describe("the slug validator on the create path is unreachable, and that is the bug", () => {
+  it("no hostile name survives slugifyDisplayName as an invalid slug", async () => {
+    // GREEN ON ARRIVAL, and it is the proof that route.ts:148-149 is dead code
+    // rather than a working guard. Every value the sanitiser can produce already
+    // satisfies the validator, so the validator can never fire. Keeping the
+    // check is right (it is a fence at a filesystem boundary); believing it
+    // guards the create path is not.
+    const { slugifyDisplayName, isValidProfileSlug } = await import("@/lib/profile-slug");
+
+    for (const name of ["..", "../evil", "a/../b", ".hidden", "\u{1F680}", "!!!", "///"]) {
+      expect(isValidProfileSlug(slugifyDisplayName(name))).toBe(true);
+    }
+  });
+});
