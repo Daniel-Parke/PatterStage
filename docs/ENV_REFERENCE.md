@@ -1,5 +1,5 @@
 ---
-summary: Every PatterStage and Hermes environment variable, its default and what reads it
+summary: Every environment variable PatterStage reads, plus the Hermes paths and keys it needs, with defaults and what consumes them
 type: reference
 tags: [product, config]
 compiled_from: normalised
@@ -33,7 +33,7 @@ Quick lookup for PatterStage and Hermes paths. Set values in `.env.local` (creat
 
 | Location | When written | Notes |
 |----------|--------------|-------|
-| `{repo}/data/patterstage.db` | `npm run prebuild` (before `next build`) | Dev/CI convenience; recreated when `schema_version !== 3` |
+| `{repo}/data/patterstage.db` | `npm run prebuild` (before `next build`) | Dev/CI convenience. Deleted and rebuilt from the baseline **only** when `schema_version < 3`; migrations then carry it up to head (`MIGRATION_HEAD_SCHEMA_VERSION` in `src/lib/db-schema.ts`). A repo DB already at or above the baseline survives a build untouched. |
 | `{PS_DATA_DIR}/patterstage.db` | Runtime API + `npm run db:migrate` | **Production source of truth** on the host |
 
 `ps-deploy update` runs `npm run build` (prebuild on repo DB) then `db:migrate` on `PS_DATA_DIR`. Use the same `PS_DATA_DIR` as the running server when troubleshooting.
@@ -61,9 +61,9 @@ Enforced in `src/proxy.ts` for every request. See [SECURITY.md](SECURITY.md) for
 
 | Variable | Purpose |
 |----------|---------|
-| `PS_ENABLE_DEPLOY_API` | `1`: allow `POST /api/update` |
+| `PS_ENABLE_DEPLOY_API` | Gates `POST /api/update`. **This is an opt-out, not an opt-in, outside production:** unset, the gate is open whenever `NODE_ENV !== "production"`, so dev and test allow the route by default. In production it is closed unless you set `1`/`true`/`yes`. Set `0`/`false`/`no` to close it anywhere. |
 | `PS_UPDATE_GIT_BRANCH` | Branch for `ps-deploy update` (default `dev`) |
-| `PS_REQUEST_SIGNING_SECRET` | Optional HMAC for selected routes |
+| `PS_REQUEST_SIGNING_SECRET` | Optional HMAC on `POST /api/update`, the only route that checks it. When set, the request must carry `x-ps-ts` and `x-ps-signature` inside a 5 minute window. |
 
 ## Runtime / gateway
 
@@ -82,7 +82,19 @@ The runtime adapter (`src/lib/runtime/`) dispatches missions as HTTP **runs** to
 | `PS_COMPOSER` | **Default ON.** Set to `0` (or `false`/`no`/`off`) to disable the [Composer](COMPOSER.md) graph orchestrator: its sidebar link is hidden, the page 404s, and the engine + API go dormant. Any other value (unset / `1` / `true`) keeps it enabled. |
 | `PS_SEARCH_PROVIDER` | Search backend for [Deep Research](DEEP_RESEARCH.md): `duckduckgo` (default, free/no-key), `searxng`, or `none`. |
 | `PS_SEARXNG_URL` | Base URL of a self-hosted SearXNG instance (fully local search). When set without `PS_SEARCH_PROVIDER`, SearXNG is auto-preferred. |
-| `PS_BENCH_JUDGE_MODEL` | Model-registry id (or provider model id) used as the **independent LLM judge** for quality-graded Benchmark items. Set this to a strong model so the judge isn't the model under test (self-grading inflates scores). Unset → the judge falls back to the agent's own model. The default **Frontier** suite leans on deterministic adversarial items so it still discriminates even when self-graded. |
+
+> `PS_BENCH_JUDGE_MODEL` used to be listed here. The benchmark subsystem was deleted (see `org/decisions/`), nothing reads the variable, and setting it does nothing.
+
+## Runtime limits and sync
+
+Read straight from the process environment; `setup.sh` writes no `.env.local` entry for these, so export them or add them by hand.
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `PS_RUN_MAX_MINUTES` / `CH_RUN_MAX_MINUTES` | `120` (never below `10`) | Safety cap for a mission that declared no timeout of its own. Past this plus a 5 minute grace, reconcile treats the run as stuck. A mission's own `timeoutMinutes` wins over it. |
+| `MAX_SESSION_FILE_BYTES` | `67108864` (64 MiB) | `GET /api/sessions/[id]` answers **413** rather than loading a transcript bigger than this. |
+| `SESSIONS_API_RATE_LIMIT_MAX` | `120` | Reads of `/api/sessions*` allowed per client per rolling 60 second window. Over it the route answers **429**. |
+| `PS_PULL_RECONCILE_DISK` / `CH_PULL_RECONCILE_DISK` | unset | `1`: `POST /api/agent/profiles/sync/pull` reconciles against disk on every call, as if the request body had set `reconcileDisk`. |
 
 ## Debug artifact (not read by the app)
 
@@ -91,5 +103,5 @@ After setup or `ps-deploy update`, `scripts/tooling/discover-agents.mjs` writes 
 ## Related docs
 
 - [DEPLOY.md](DEPLOY.md): `ps-deploy`, Docker, TLS
-- [MIGRATION.md](MIGRATION.md): data directory moves, schema v3
+- [MIGRATION.md](MIGRATION.md): the path and environment rename, data directory moves, how migrations work
 - [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md): Hermes + PatterStage path checklist

@@ -70,14 +70,34 @@ forwards a tool-approval decision (`runtime.resolveApproval`).
 
 ## Robustness
 
-- **No stuck "Thinking…".** The bubble's empty state is driven by message
-  `status`, not "content is empty". A completed-but-empty, failed, or cancelled
-  run shows an explicit terminal state, never a permanent placeholder.
-- **Self-healing.** `GET /api/chat/[id]` reconciles any assistant turn still
-  `pending`/`streaming` whose underlying run has reached a terminal state
-  (e.g. the client disconnected mid-stream): it copies the run's output onto the
-  message (`reconcilePendingChatMessages`). The background RunSync writes the run
-  row; the load path folds it onto the message.
+- **The empty bubble is driven by `status`, not by "content is empty".** A
+  completed-but-empty, failed, or cancelled turn renders an explicit terminal
+  state rather than a placeholder. An assistant row still `pending`/`streaming`
+  with no content renders the literal "Thinking…", so the guarantee that it is
+  never permanent rests entirely on something moving that row to a terminal
+  status. In **Agent** mode two mechanisms do; in **Fast** mode only the third
+  does, and only after 30 minutes.
+- **Self-healing (Agent mode).** `GET /api/chat/[id]` reconciles any assistant
+  turn still `pending`/`streaming` whose underlying run has reached a terminal
+  state (e.g. the client disconnected mid-stream): it copies the run's output
+  onto the message (`reconcilePendingChatMessages`). The background RunSync
+  writes the run row; the load path folds it onto the message. This can only
+  heal a turn that **has** a run: the loop skips every message with a null
+  `run_id`.
+- **The Fast-mode gap.** `appendFastTurn` inserts the assistant row as
+  `streaming` with no `run_id`, and only the client's finalize `PATCH` moves it
+  off. Close the tab mid-stream and the row stays `streaming`. Pressing Stop
+  does not rescue it either, because `POST /api/chat/[id]/stop` only considers
+  assistant turns that carry a `runId` and otherwise answers
+  `{ stopped: false, reason: "no active run" }`. There is nothing for it to
+  cancel.
+- **Boot sweep (T-0052).** On startup, `failStuckChatMessages()` fails any
+  assistant turn still `pending`/`streaming` after 30 minutes **whose run is
+  NULL or has been pruned**, with a reason the bubble can show. That covers both
+  wedges: the Fast-mode turn that never had a run, and the agent turn whose run
+  was pruned out from under the reconciler. A row whose run still exists is
+  deliberately left alone at any age, because sweeping it would race a live
+  agent turn that is simply taking its time. That one belongs to the reconciler.
 
 ## Analytics
 

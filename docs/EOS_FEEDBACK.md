@@ -35,6 +35,111 @@ where it did not.
 
 ## Entries
 
+- `2026-08-30 · friction` · **`eos-compile.mjs` has been a silent no-op
+  and reported success the whole time.** Found during the T-0057
+  documentation audit, when the audit's own premise (that seven `docs/`
+  paths are matrix-owned and would be regenerated) turned out to be
+  false in practice. `readMatrix()` matches rows with a regex expecting
+  five columns, `path | template | S | M | L`. The matrix at
+  `kernel/SCALE_MATRIX.md` now has four, `path | source | S | ORG`. The
+  regex therefore matches nothing, `readMatrix()` returns an empty
+  array, and the script writes no file while printing `0 missing
+  template(s), 0 unfilled slot(s)` and exiting 0. Independently,
+  `const SCALE = "M"` names a column that no longer exists, so even a
+  correct row parse would select nothing. Either fault alone is enough.
+  The cost is not the wasted run, it is the false belief: an audit
+  concluded six documents could not be corrected in this repo because a
+  compile would overwrite them, which was wrong, and correctable
+  documents were nearly left broken on the strength of it. The repair
+  applied here is deliberately NOT to fix the parse. Making it match
+  would regenerate 32 files from pack templates, including `AGENTS.md`,
+  `CLAUDE.md`, `OPERATORS_GUIDE.md`, `org/CONSTITUTION.md`,
+  `org/START.md` and `docs/LOCKBOOK.md`, discarding hand corrections in
+  all of them, and would write `docs/policy.json` and `docs/TASKS.md` at
+  paths this venture does not use, since both live under `org/`. That is
+  an operator decision about seed ancestry. Instead the script now exits
+  1 when the matrix parses to zero rows, on the principle the venture
+  already applies to its own gates: a tool that cannot fail is not a
+  check. For the pack: the matrix shape changed without the consumer
+  changing, and nothing detected it, because the consumer's failure mode
+  was silence.
+
+- `2026-08-30 · friction` · **`task-record.schema.json` forbids the keys
+  the practice actually needs, and 26 of this venture's 58 records
+  violate it.** The schema sets `additionalProperties: false` over
+  fifteen keys. The corpus adds `invariants`, `rollback`,
+  `verification`, `deferred` and `notes` almost universally, from
+  T-0024 onward, and those sections carry the most load-bearing content
+  in the records: what the task guarantees, how to undo it, and how it
+  was proved. Two observations rather than a request. First, the pack
+  contradicts itself: `org/policy.json` requires `rollback-plan` and
+  `review-verdict` artefacts, and `additionalProperties: false` leaves
+  them nowhere legal to live inside the record. Second, nothing in the
+  venture runs the schema, so a divergence this wide went unnoticed for
+  35 records. Three genuine violations were fixed here, being ones the
+  schema is unambiguously right about: a `status` of `in_progress` that
+  is not in the enum, corrected to `active`, and two records missing the
+  required `claims` key. The `additionalProperties` divergence is left
+  standing and reported rather than resolved, because resolving it
+  downward would delete the best content in 26 records and resolving it
+  upward is the pack's call, not the venture's.
+
+- `2026-08-30 · lesson` · **The 2026-08-22 `DOC-IDENT-001` ruling-report
+  below overstates itself twice, and the corrected version is worth more
+  to the pack than the original.** That entry is left standing, as this
+  file's convention requires; this is the qualification a harvest should
+  carry with it. It was found by an audit of this repository's own
+  documentation, not by the estate, which is itself part of the report:
+  an entry offered as countable evidence went eight days unchallenged.
+
+  **First, the word is wrong.** What is decided once, at a single
+  interception layer every request passes through, is AUTHENTICATION.
+  `src/proxy.ts` resolves the shared access token for every request and
+  fails closed, refusing with a 503 when boot has not minted one yet. The
+  read-only refusal is decided in the same place, by HTTP method. The
+  entry claimed that of AUTHORISATION, "never inside a route handler",
+  and that absolute is false as written:
+  `requireAuthenticatedHostWrites()` in `src/lib/api-auth.ts` returns a
+  403 from inside five handlers, across
+  `src/app/api/cron/hardware/route.ts` and the scripts-by-name route
+  beside it. The qualification that matters to the pack is what those
+  five sites are. The mode they read comes from an environment variable
+  and is constant for the life of the process, so they inspect nothing
+  about the caller: they are a deployment-posture capability gate,
+  structurally the same as the deploy-API gate declared next to them,
+  refusing host-affecting writes when the operator has switched
+  authentication off entirely. The doctrine's one-layer rule does not
+  name that category, so a venture that has one can report itself
+  compliant or in breach on a coin toss. Naming it would fix that.
+
+  **Second, the enforcement claim is wider than the rule.** The entry
+  said a lint rule fails the build if authorisation identifiers appear
+  anywhere under the route directory. The rule is
+  `no-auth-in-route-handler` in `scripts/tooling/design-lint.mjs`, and it
+  matches three authentication-token identifiers under the API route
+  directory: the token reader, the token comparison, and the session
+  cookie name. Its own law text says "Authentication is enforced once",
+  which is the accurate word; the report is what drifted. The rule does
+  not match the other primitives exported by the very module it guards,
+  so a handler that reads the auth mode directly to decide access keeps
+  the build green, and the five sites above are live proof that it does.
+  One tempting overcount to avoid, because this correction nearly made
+  it: the read-only guards are not a gap in that rule. They are a mode
+  restriction rather than an authorisation decision, they are correctly
+  outside its scope, and they are policed separately by
+  `scripts/tooling/check-read-only-guards.mjs`, which forbids them only
+  inside GET, HEAD and OPTIONS handlers.
+
+  **The lesson the estate would pay for.** An identifier denylist is a
+  good rule and a bad claim. It buys "these three names may not appear
+  here". It does not buy "this decision is never made here", and the
+  distance between the two is invisible in the green build that seems to
+  prove it. A ruling-report that offers the second while shipping the
+  first is a shape the harvest should learn to discount on sight, and the
+  cheapest test is the one that caught this: ask which identifiers the
+  rule actually lists, then grep the guarded directory for every other
+  export of the module it guards.
+
 - `2026-08-26 · friction` · **`python -m tools.eos task views` cannot
   regenerate the calling venture's views; it silently regenerates the
   EOS repo's own.** The command is the one both derived files name in

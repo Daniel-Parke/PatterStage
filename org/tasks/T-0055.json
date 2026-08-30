@@ -11,6 +11,7 @@
   "reasons": [],
   "status": "proposed",
   "owner_session": "unassigned",
+  "claims": [],
   "items": [
     "HOSTILE PROFILE SLUGS ARE GUARDED BUT UNTESTED. requireSafeProfileName / resolveSafeProfileName in src/lib/fs/path-security.ts already reject empty, '.', '..' and separator-bearing segments, so POST/DELETE /api/agent/profiles/constructor is defended. Nothing asserts it. A test is cheap and would close the report's B7.",
     "THE SCHEDULER LEASE HAS NO CATCH-UP STORY. BackgroundScheduler claims ownership by pid and heartbeat; during the QA pass a lease-holder died and roughly 55 minutes of an every-5m schedule did not fire, then the fresh server caught up exactly once (catchUpPolicy fire_once). Whether that is right is a product decision, not a bug: firing 11 missed runs at once would be worse. Either way it should be documented in QA_NOTES, and a follower that can prove the owner's pid is dead could take over sooner than heartbeat staleness allows.",

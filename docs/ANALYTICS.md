@@ -8,7 +8,9 @@ compiled_from: normalised
 # PatterStage: Analytics & Achievements
 
 How PatterStage logs meaningful interactions, turns them into achievements, and
-surfaces them on the **Insights** page (`/insights`). Added in Phase Q3.
+surfaces them on the **Insights** page (`/laboratory/insights`). The old
+top-level `/insights` survives only as a 308 redirect for existing bookmarks
+(`next.config.ts`); there is no page at that path. Added in Phase Q3.
 
 ## 1. The event log (`analytics_events`)
 
@@ -63,10 +65,12 @@ One helper: **`recordEvent(type, { entityType, entityId, profile, metadata })`**
 Emit **after** the action succeeds. Mission terminal events are emitted from
 `run-reconcile.ts`'s live terminal transition (`finalizeAndRecord`), **not** the
 idempotent `finalizeMissionForRun` (which also runs on boot recovery). Otherwise
-a restart would double-count. Call sites: `orchestration/dispatch.ts`,
-`orchestration/run-reconcile.ts`, `orchestration/scheduler/tick.ts`, and the
-`schedules` / `skills/[name]/toggle` / `agent/personality` / `orchestration/chat`
-/ `stories` / `models/defaults` routes.
+a restart would double-count. Call sites, as of 2026-08-30:
+`src/lib/orchestration/dispatch.ts`, `run-reconcile.ts`, `chat-dispatch.ts`,
+`scheduler/tick.ts`; the `schedules` / `skills/[name]/toggle` / `agent/personality`
+/ `orchestration/chat` / `models/defaults` routes; and, for the `story.*` types,
+`src/modules/rec-room/handlers/create.ts` and `generate.ts`, which the `stories`
+route delegates to rather than emitting itself.
 
 ## 3. The API (`/api/analytics`)
 
@@ -76,8 +80,14 @@ be able to forge achievement progress).
 - `GET /api/analytics` → `{ analytics: { totals, last30, activeDays, generatedAt } }`
   (per-type counts all-time + last 30 days + distinct active days).
 - `GET /api/analytics/timeseries?type=&days=&bucket=day` → gap-filled daily
-  counts. `days` is clamped **1–365** (`analyticsTimeseriesQuerySchema`), bounding
+  counts. `days` is clamped **1-365** (`analyticsTimeseriesQuerySchema`), bounding
   the only request value that reaches a SQL interval. `type` is the event-type enum.
+- `GET /api/analytics/insights?days=N` → `{ insights: { days, hourOfDay,
+  categorySeries, categoryDaily, durationBuckets, modelUsage, topMissions,
+  successTrend, generatedAt } }`, the composed bundle that feeds most of the page's cards
+  (`src/lib/analytics/insights-bundle.ts`). Note that `days` here is coerced
+  (`Number(...)`, default 30 on a non-finite value) rather than Zod-clamped like
+  `timeseries`.
 
 The aggregations live in `src/lib/analytics/analytics-repository.ts` (all reads
 defensive → zeros on an empty/pre-v12 DB).
@@ -102,10 +112,43 @@ registered (no silent `Medal` fallback) and colours are valid neon accents.
 polls (first poll seeds silently, per-id dedup) and fires a toast. `CommandCenter`
 is the sole owner of that toast; the Insights grid is read-only.
 
-## 5. Insights page (`/insights`)
+## 5. Insights page (`/laboratory/insights`)
 
-`src/app/(main)/insights/page.tsx` composes `useStats` + `useAnalytics` +
-`useAnalyticsTimeseries`: a level/streak + headline-metric strip, a 30-day
-activity area chart, a per-category breakdown ring (the 14 types folded into 6
-categories), the 91-day run-activity heatmap, and the full achievement grid.
+`src/app/laboratory/insights/page.tsx` composes five hooks: `useStats`,
+`useAnalytics`, `useAnalyticsTimeseries`, `useInsights` (the
+`/api/analytics/insights` bundle) and `useSpend`. A 7/30/90-day range switch in
+the page header drives the first four; spend does not follow it, because a budget
+is a calendar month rather than a rolling window.
+
+Top to bottom:
+
+- a **streak flame** and four headline tiles (Interactions, Active days, Tokens,
+  Achievements). There is no level here: [ADR-0004](../org/decisions/ADR-0004-brain-and-body.md)
+  moved the level onto the agent profile, so `AgentLevelBadge` renders on
+  `/operations/agents` and per-agent on `CommandCenter`, and the global operator
+  `LevelBadge` that once stood here no longer exists,
+- the **provider spend panel** (`SpendPanel`, see [SPEND.md](SPEND.md)), the only
+  money on the page and the only place it is reported,
+- a **stacked activity-by-category area** over the selected range, falling back to
+  a plain area chart when the bundle is empty, beside the all-time **category
+  breakdown ring** (the 14 event types folded into 6 categories),
+- an **hour-of-day radial clock**, a **run-duration histogram** and a **mission
+  success trend** (completed vs failed per day),
+- **tokens by model** (with estimated cost) and **top missions**. Both aggregate
+  `runs` INNER JOINed to `missions`, because the model dimension lives on the
+  mission, so a run without one (a Composer stage run, which carries a
+  `composer_node_run_id` and no `mission_id`) is absent from them. That is a
+  known chart hole, not a money hole: `src/lib/spend/spend-repository.ts` LEFT
+  JOINs on purpose so the spend panel counts those runs,
+- the **91-day run-activity heatmap**, from `stats.runActivity` rather than the
+  range switch,
+- the **achievement showcase**: a compact trophy case that expands to the full
+  grid.
+
 Built entirely on the existing `src/components/viz/` primitives.
+
+An "Est. spend" tile used to sit in the headline strip. It was removed with the
+spend panel's arrival (T-0021): it summed `insights.modelUsage`, so it inherited
+the missing-Composer hole above, and it was drawn over the 7/30/90 switch, which
+is not a period anyone budgets in. Two spend numbers on one page, one of them
+quietly incomplete, is worse than one.

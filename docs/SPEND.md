@@ -69,6 +69,12 @@ They pause. They do not fail, cancel or drop anything. A schedule keeps its plac
 
 You cannot arm the stop without a figure. The interface refuses it and so does the database, because a stop with no ceiling would refuse every unattended dispatch forever with no number anybody could raise.
 
+### The stop counts less than the panel does
+
+The figure on screen and the figure the stop checks are not built from the same rows. The panel totals all three sources: agent runs, Composer stages and Deep Research. The guard that pauses unattended dispatch ([`spend-guard.ts`](../src/lib/spend/spend-guard.ts)) reads recorded run usage only, which is agent runs and Composer stages, and never reads the research table at all.
+
+So on an install that spends most of its money on Deep Research, the panel can show the meter full and print the over-budget sentence while unattended dispatch carries on, because the number the guard measured is smaller than the number you are looking at. Read the stop as a ceiling on dispatched runs rather than on every dollar the panel reports. This is a gap in the code, not a design decision, and it is worth checking whether it has been closed before leaning on the checkbox.
+
 ### One case where it stops without a breach
 
 If the hard stop is armed and the spend cannot be measured at all, because the database read failed, unattended dispatch pauses and says so. The reasoning is short: you asked for a ceiling, the system cannot show it is under the ceiling, and spending real money on an unprovable assumption is the expensive mistake. A delayed run is the cheap one, and you can dispatch by hand.

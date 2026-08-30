@@ -137,6 +137,41 @@ const VALUES = JSON.parse(
 VENTURE_NAME = VALUES.VENTURE_NAME || VENTURE_NAME;
 
 const matrix = readMatrix();
+
+// GUARD THE GUARD. readMatrix() returns [] whenever its row regex stops matching
+// the matrix's shape, and an empty matrix makes this whole script a silent no-op
+// that still prints "0 missing template(s), 0 unfilled slot(s)" and exits 0. That
+// is indistinguishable from success, which is how it went unnoticed.
+//
+// It is unnoticed RIGHT NOW, and deliberately left unrepaired: the regex expects
+// five columns (path, template, S, M, L) and SCALE_MATRIX.md has four
+// (path, source, S, ORG), so nothing has matched since the matrix changed shape.
+// `const SCALE = "M"` also names a column that no longer exists.
+//
+// The repair is NOT to make the regex match. Doing that would immediately
+// regenerate 32 files from the sibling repo's templates, including AGENTS.md,
+// CLAUDE.md, OPERATORS_GUIDE.md, org/CONSTITUTION.md, org/START.md and
+// docs/LOCKBOOK.md, discarding every hand correction in them, and would write
+// docs/policy.json and docs/TASKS.md at paths this repo does not use (they live
+// under org/). That is an operator decision about seed ancestry, not a lint fix.
+//
+// So: fail loudly instead of pretending. A tool that cannot fail is not a check.
+if (matrix.length === 0) {
+  console.error(
+    `eos-compile: the matrix at ${join(EOS, "kernel", "SCALE_MATRIX.md")} parsed to ZERO rows.
+` +
+      `This script would do nothing while reporting success, so it refuses to run.
+` +
+      `Cause: readMatrix()'s row regex expects 5 columns and the matrix now has 4
+` +
+      `(path | source | S | ORG), and SCALE is "${SCALE}", which is not one of them.
+` +
+      `Repairing the parse REGENERATES 32 files from sibling-repo templates and
+` +
+      `overwrites hand-edited governance. See docs/EOS_FEEDBACK.md before changing it.`,
+  );
+  process.exit(1);
+}
 const report = [];
 let missingTemplates = 0;
 let unfilled = 0;

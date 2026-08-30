@@ -21,7 +21,7 @@ How I run this in production and on a home LAN: ports, scripts, and the deploy b
 
 Next.js reads **`PORT`**. After **`bash scripts/bootstrap/setup.sh`**, `.env.local` contains **`PORT`** (first free in **42069–42100** by default, or your chosen port) and **`PS_ALLOWED_DEV_ORIGINS`** for LAN development.
 
-For **production / household LAN**, prefer **`npm run start:network`** (`next start -H 0.0.0.0`), which avoids Next.js dev-only cross-origin checks on `/_next/webpack-hmr`.
+For **production / household LAN**, use **`npm run start:network`** (`next start -H 0.0.0.0`). Note that **`npm run start`** reaches the LAN too: `next start` already defaults to `0.0.0.0`, and `start:network` only states the bind explicitly. The dev-only cross-origin check on `/_next/webpack-hmr` this section used to cite belongs to `next dev`, covered next.
 
 For **`next dev` on another machine** using a URL with a **literal IP** (e.g. `http://192.168.1.10:42069`), the browser `Origin` must be listed in **`PS_ALLOWED_DEV_ORIGINS`** (setup generates common cases). Opening the site via a **`.local` hostname** matches the `*.local` pattern in `next.config.ts` without extra entries.
 
@@ -31,15 +31,15 @@ Override the host port in Docker Compose with **`PORT`** (see `docker-compose.ym
 
 | Location | Role |
 |----------|------|
-| `scripts/bootstrap/` | **`install.sh`** (clone or `--in-repo`), **`setup.sh`**, **`stop.sh`**, **`backup-hermes-config.sh`**, **`setup-hindsight.sh`**, Python helper for Hindsight |
-| `scripts/application/` | **`ps-deploy.sh`**, the single deploy entry for CLI and dashboard (`update`, `restart`, `rebuild`; optional `--branch`) |
-| `scripts/lib/` | Shared bash modules (`ps-deploy-impl.sh`, Hermes profile templates, dotenv, port helpers, …) |
-| `scripts/tooling/` | **`prebuild-db.mjs`**, **`discover-agents.mjs`**, **`generate-json-schema.ts`** (also run via `npm run prebuild`, `npm run discover-hermes`, `npm run generate:schema-json`) |
-| `scripts/hardware/` | Preset cron scripts; copied into **`PS_DATA_DIR/scripts`** when missing during **`scripts/bootstrap/setup.sh`**. Behaviour: **[SYSTEM-CRON.md](SYSTEM-CRON.md)**. |
+| `scripts/bootstrap/` | **`install.sh`** (clone or `--in-repo`), **`setup.sh`** and its Node twin **`setup.mjs`**, **`stop.sh`**, **`backup-hermes-config.sh`**, **`setup-hindsight.sh`**, Python helper for Hindsight |
+| `scripts/application/` | **`ps-deploy.sh`**, the Unix CLI entry (`update`, `restart`, `rebuild`; optional `--branch`). It is one `exec node …` line: the deploy implementation is **`scripts/tooling/ps-deploy.mjs`**, which the dashboard spawns directly. |
+| `scripts/lib/` | Shared bash modules (`ps-deploy-status.sh`, `ps-migrate.sh`, `ps-rename-migrate.sh`, Hermes profile templates, dotenv, port helpers). The deploy implementation used to live here as `ps-deploy-impl.sh`; it was ported to Node and that file is gone. |
+| `scripts/tooling/` | **`ps-deploy.mjs`** (the deploy runner), **`prebuild-db.mjs`**, **`discover-agents.mjs`**, **`generate-json-schema.ts`** (also run via `npm run prebuild`, `npm run discover-hermes`, `npm run generate:schema-json`) |
+| `scripts/hardware/` | Bundled host scripts. **Every** `.sh` and `.mjs` here is copied into **`PS_DATA_DIR/scripts`** when a file of that name is missing, during **`scripts/bootstrap/setup.sh`**. Behaviour: **[SYSTEM-CRON.md](SYSTEM-CRON.md)**. |
 | `data/seed/` | Professional catalog (profiles, template packs); seeded via `npm run db:seed` / `ps-deploy update` (see [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md)) |
 | `scripts/git-hooks/` | Optional Git hooks (see [CONTRIBUTING.md](CONTRIBUTING.md)) |
 
-Deploy from a shell (same commands the dashboard triggers via **`POST /api/update`**):
+Deploy from a shell. These are the same actions the dashboard triggers via **`POST /api/update`**, which runs the same `ps-deploy.mjs` runner without going through the bash wrapper:
 
 ```bash
 bash scripts/application/ps-deploy.sh update
@@ -53,19 +53,21 @@ bash scripts/application/ps-deploy.sh rebuild --branch dev   # optional local ch
 
 | Action | Git | Build | Restart |
 |--------|-----|-------|---------|
-| **update** | `fetch` + `reset --hard origin/<branch>` | `npm install` if lockfiles changed, then `npm run build` | yes |
-| **rebuild** | optional `git checkout` **only** when `--branch` is passed | `npm install` if `package-lock.json` is newer than `.next/BUILD_ID`, then `npm run build` | yes |
+| **update** | `fetch` + `reset --hard origin/<branch>` | `npm install` if `package-lock.json` is newer than `.next/BUILD_ID` (or `BUILD_ID` is absent), then `npm run build` | yes |
+| **rebuild** | optional `git checkout` **only** when `--branch` is passed | identical to **update** | yes |
 | **restart** | n/a | n/a | yes |
+
+`update` and `rebuild` share one code path (`runBuildAndMigrate()` → `npmInstallIfNeeded()`), so the install rule is the same mtime test for both. Only the git step differs.
 
 **Status file:** `~/.hermes/logs/ps-deploy.status` (`state`, `action`, `phase`, `message`, …). The sidebar polls **`GET /api/update?deploy=1`** until `success` or `failed`. Concurrent deploys return **exit 1** from the script and **409** from the API.
 
-**Logs:** full npm output → `ps-build.log`; restart steps → `ps-restart.log`; git/update steps → `ps-update.log` (also listed under **Logs** in the UI).
+**Logs:** all under `~/.hermes/logs/`, listed under **Logs** in the UI. Each action writes its npm and git output to one file, `ps-update.log` for **update** and `ps-build.log` for **rebuild**; restart steps go to `ps-restart.log`, and the restarted server's own stdout to `ps-runtime.log`.
 
 ### Destructive git and `PORT`
 
 - **`ps-deploy.sh update`** runs **`git reset --hard origin/<branch>`**. That **discards local commits** on the checked-out branch. Use only on machines where the app directory is a throwaway deploy checkout.
 - **`rebuild`** does **not** pull or reset; it builds the **current working tree** unless you pass **`--branch`** to switch local checkout first.
-- **`ps-deploy.sh restart`** stops whatever is listening on **`PORT`** (from the environment or the last `PORT=` line in `.env.local`, default **42069**) using **`lsof`** (Linux and macOS; `fuser` when available on Linux). A wrong **`PORT`** can kill an unrelated process; set it deliberately. If you migrated from an old install on **3000**, do a **one-time manual** cleanup of stale listeners; the script does not clear arbitrary ports by default.
+- **`ps-deploy.sh restart`** stops whatever is listening on **`PORT`** (from the environment, else the last `PORT=` line in `.env.local`, else the first free port in **42069–42100**). It resolves the listening PIDs with **`ss -tlnp sport = :<port>`** and falls back to **`lsof -tiTCP:<port> -sTCP:LISTEN`**, then kills each process tree. A wrong **`PORT`** can kill an unrelated process; set it deliberately. If you migrated from an old install on **3000**, do a **one-time manual** cleanup of stale listeners; the script does not clear arbitrary ports by default.
 
 ## Required environment
 
@@ -83,9 +85,9 @@ Full table: **[ENV_REFERENCE.md](ENV_REFERENCE.md)**.
 | Script | What it backs up | When to use |
 |--------|------------------|-------------|
 | [`scripts/bootstrap/backup-hermes-config.sh`](../scripts/bootstrap/backup-hermes-config.sh) | Entire `PS_DATA_DIR` tree (SQLite, missions, templates, stories) | Manual operator backup before risky changes |
-| [`scripts/hardware/ps-backup.sh`](../scripts/hardware/ps-backup.sh) | Hindsight memory JSON via `hindsight_bridge.py` under `$HERMES_HOME` | System cron preset; wired in UI under Orchestration → Scripts |
+| [`scripts/hardware/ps-backup.sh`](../scripts/hardware/ps-backup.sh) | Hindsight memory JSON via `hindsight_bridge.py` under `$HERMES_HOME` | Schedule it from Orchestration → Scripts |
 
-`ps-backup.sh` is copied into `PS_DATA_DIR/scripts` during setup when missing. `backup-hermes-config.sh` is not scheduled by PatterStage.
+`ps-backup.sh` is copied into `PS_DATA_DIR/scripts` during setup when missing, along with every other `.sh` and `.mjs` in `scripts/hardware/`. `backup-hermes-config.sh` is not scheduled by PatterStage.
 
 Run PatterStage where you trust the network, or place it behind your own reverse proxy and access controls. **`PS_REQUEST_SIGNING_SECRET`** can optionally protect specific flows (see `src/lib/api-auth.ts`).
 
@@ -113,7 +115,15 @@ docker compose up -d
 
 The image defaults to **`PORT=42069`** (override with `-e PORT=...` or Compose `environment`). Map the same value on the host, e.g. `PORT=42069 docker compose up -d`.
 
-The production image includes the full **`scripts/`** tree (and `bash`, `git`, `curl`, `ss` via `iproute2`, `fuser` via `psmisc`, `socat`) so **`POST /api/update`** can spawn **`scripts/application/ps-deploy.sh`**. **`restart`** brings Next back on **`0.0.0.0:$PORT`** by default (same as `npm run start:network`). For a **public relay port** without picking a LAN IP, set **`PS_SOCAT_RELAY=yes`** and optional **`PS_SOCAT_RELAY_PORT`** (default **42069**): socat listens on **`0.0.0.0:$PS_SOCAT_RELAY_PORT`** → **`127.0.0.1:$PORT`**. Override **`PS_SOCAT_BIND`** only if you need the relay on a specific interface IP (see `.env.example`).
+The production image includes the full **`scripts/`** tree, plus `bash`, `ca-certificates`, `curl`, `git`, `iproute2` (`ss`), `psmisc` and `socat`, so **`POST /api/update`** can spawn **`node scripts/tooling/ps-deploy.mjs`**. Of those the runner itself shells out to `git`, `npm` and `ss`/`lsof`; `bash` is there for the CLI wrapper and the bundled `.sh` host scripts. `psmisc` (`fuser`) and `socat` are installed but nothing in the repo calls either. **`restart`** brings Next back on **`0.0.0.0:$PORT`** by default (same as `npm run start:network`).
+
+> **`PS_SOCAT_RELAY`, `PS_SOCAT_RELAY_PORT` and `PS_SOCAT_BIND` are inert.** The
+> relay was launched by the old bash `ps-deploy-impl.sh`; when deploy moved to
+> Node, the launcher went with it and only the stop-side pid cleanup in
+> [`scripts/lib/ps-env.sh`](../scripts/lib/ps-env.sh) and the commented-out lines
+> in `.env.example` survive. Setting them starts nothing. Since both `restart`
+> and `npm run start:network` already bind `0.0.0.0`, there is nothing left for a
+> loopback relay to do; put a reverse proxy in front if you need a second port.
 
 **`update` / `rebuild` / GET branch list** need a **git working tree** at `process.cwd()` (`/app`). The default **`.dockerignore` excludes `.git`**, so a plain image build is not a checkout; mount a clone if you need those flows in a container.
 

@@ -78,10 +78,17 @@ wrong mechanism. Each cost a real investigation; none was a defect.
   one at 15s. A headless browser that never focuses the tab is the likely cause
   of a list that appears frozen: TanStack suspends `refetchInterval` while a tab
   is hidden. Drive it focused, or assert against the API.
-- **Writes are guarded BEFORE the body is parsed.** All 51 write handlers call
-  their guard first; none parses first. Under `PS_READ_ONLY` the proxy refuses
-  by method before a handler runs at all, so a malformed-JSON 400 cannot precede
-  the 503.
+- **A write cannot reach a handler under `PS_READ_ONLY`.** The observation was
+  right, the mechanism was not: it is not that every write handler guards before
+  it parses. `src/proxy.ts` refuses every unsafe method before any handler runs,
+  so a malformed-JSON 400 cannot precede the 503 whatever the handler does with
+  the body. Most write handlers carry no guard of their own at all since T-0048
+  deleted `requireAuth`. The handful that do are there for the wording or for a
+  second condition: `requireNotReadOnly` names the resource in the refusal
+  (missions, skills, tools), `requireAuthenticatedHostWrites` covers writes that
+  reach the host (scripts, crontab), and the update route additionally demands
+  the deploy API be enabled and the request signed. Do not file a route for
+  parsing first, and do not file one for carrying no guard.
 - **`title` is a valid accessible name.** Per HTML-AAM, a `title` attribute
   supplies an accessible name when nothing else does, so an icon-only button
   carrying one is announced. It is the weaker mechanism (not exposed on touch or

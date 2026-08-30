@@ -11,9 +11,14 @@ The **Laboratory** sidebar section is PatterStage's home for measuring and impro
 
 | Page | URL | What it does |
 |---|---|---|
-| **Insights** | `/laboratory/insights` | Interaction analytics + the gamification layer (level, streak, achievements, activity). See [ANALYTICS.md](ANALYTICS.md). |
+| **Insights** | `/laboratory/insights` | Interaction analytics, provider spend, and the gamification layer (streak, achievements, activity). See [ANALYTICS.md](ANALYTICS.md). |
 | **Deep Research** | `/laboratory/research` | Native, provider-flexible iterative web research → cited report. See [DEEP_RESEARCH.md](DEEP_RESEARCH.md). |
-| **Artifacts** | `/laboratory/artifacts` | Every deliverable a Deep Research run or a Composer workflow produced, collected to view and download. |
+| **Artifacts** | `/laboratory/artifacts` | Every deliverable a Deep Research run, a Composer workflow or a mission produced, auto-captured, plus anything you saved by hand. Collected to view and download. |
+
+There is no operator **level** on Insights. [ADR-0004](../org/decisions/ADR-0004-brain-and-body.md)
+ruled that a level belongs to a Body (an agent profile) rather than to the person
+clicking, so levels are per-agent and live on Operations → Agents
+(`/operations/agents`) and on each agent's card on the dashboard.
 
 Insights moved here from the top-level nav; the old URL (`/insights`) **308-redirects** to `/laboratory/insights`, so existing bookmarks keep working (`next.config.ts`).
 
@@ -21,8 +26,8 @@ There is no Benchmarks page. The benchmark subsystem was deleted in `4935ac31`, 
 
 ## How it fits the bigger picture
 
-- **Deep Research** is the planning brain: it gathers and synthesizes evidence, and can hand off to **[Composer](COMPOSER.md)** (the graph orchestrator) to turn a research brief into an executed, multi-stage workflow.
-- **Artifacts** is where the output of both lands, so a finished run leaves something you can open rather than a log you have to scroll.
-- **Insights** is the gamified feedback loop that keeps the whole thing rewarding to use.
+- **Deep Research** is the evidence gatherer: it plans, searches, reasons and synthesizes into a cited report. It does **not** launch workflows. The arrow runs the other way: **[Composer](COMPOSER.md)** (the graph orchestrator) has a `research` node kind, so a research run is one stage of a workflow rather than the thing that starts one. A report page therefore offers copy, download and standalone HTML export, and no "launch as Composer" action.
+- **Artifacts** is where the output lands, from research, Composer and missions alike, so a finished run leaves something you can open rather than a log you have to scroll.
+- **Insights** is the gamified feedback loop that keeps the whole thing rewarding to use, and the one place provider spend is reported (see [SPEND.md](SPEND.md)).
 
 Together they make PatterStage a place to experiment with your agent and keep getting more out of it as the AI landscape changes.

@@ -27,7 +27,7 @@ PatterStage stores toolsets in SQLite (`agent_profiles.platform_toolsets`, `agen
 Missions can include **recommended toolsets** in the assembled prompt (`<recommended_toolsets>`), same pattern as **recommended skills**:
 
 - Stored in `missions.suggested_toolsets` (JSON array).
-- **Not enforced** at dispatch: `hermes chat` still uses the profile's `platform_toolsets`.
+- **Not enforced** at dispatch. A mission is submitted to the runtime over HTTP (`dispatchMissionRun` → `runtime.submitRun`, no `hermes chat` shell-out any more), carrying the prompt and the mission's profile. What the agent may actually call is that profile's `platform_toolsets`; `suggested_toolsets` reaches it as prompt text and nothing else.
 - Mission composer **ToolsetSelector** only lists toolsets enabled on the selected profile.
 
 ## Operator bootstrap
@@ -40,4 +40,4 @@ npm run db:seed
 
 Then open **Operations → Tools**, select each profile, **Pull from Hermes** if you edited toolsets with `hermes tools`, or confirm seeded toolsets appear. **Save & push** when editing in PatterStage.
 
-Schema version after this release: **3** (`002_profiles_tools_parity.sql` on upgrade; squashed `001_baseline.sql` on fresh install).
+A fresh install starts from the squashed `001_baseline.sql`; an upgrade from `main` applies `002_profiles_tools_parity.sql` once. Neither is where the database ends up: `runMigrations` then applies the whole chain. For the number the running database is actually at, read `getSchemaVersion()` rather than any figure written into prose. See [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md#schema).

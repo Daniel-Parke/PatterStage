@@ -7,7 +7,7 @@ compiled_from: normalised
 
 # Missions
 
-How missions are stored, dispatched, and cancelled. Missions live in SQLite (`missions` table) with optional JSON overlays under `PS_DATA_DIR/missions/`.
+How missions are stored, dispatched, and cancelled. Missions live in SQLite (`missions` table), and the database is the single source of truth. `PS_DATA_DIR/missions/` holds only legacy artifacts from the pre-rewrite bash dispatch. There are exactly three readers left: the one-time `*.json` import inside a baseline rebuild of a pre-rewrite database ([MIGRATION.md](MIGRATION.md)), a fallback `.session` / `.output.log` read when a mission-born session has no transcript on disk, and a best-effort unlink of the old artifact names when a mission is deleted. Nothing writes there now, and no file overlays a mission row on read.
 
 > Missions are intentionally **simple**: a single or recurring agent task (think "cron for AI agents"). For methodical, **multi-stage** workflows with conditional branches, loop-backs, and human-in-the-loop gates, use **[Composer](COMPOSER.md)** (a separate orchestrator). Missions are not phased.
 
@@ -28,19 +28,21 @@ How missions are stored, dispatched, and cancelled. Missions live in SQLite (`mi
 | Mode | Behavior |
 |------|----------|
 | `save` | Persists a **draft** (`status=queued`, `queued_for_run=0`). Does not spawn Hermes. Shown in the **Drafts** board column. |
-| `queue` | Persists as **queued for run** (`queued_for_run=1`). `MissionQueueSync` dispatches the oldest queued mission when no mission is `dispatched` (single-flight, ~15s tick). |
+| `queue` | Persists as **queued for run** (`queued_for_run=1`). `MissionQueueSync` dispatches the oldest queued mission when no mission is `dispatched` (single-flight, ~15s tick) **and** the operator's hard spend stop allows unattended dispatch. The spend gate is checked first, so a blocked tick leaves the mission queued and still dispatchable by hand. |
 | `now` | Creates the mission and dispatches immediately via `dispatchMissionNow()`. |
 | `cron` | Creates a linked PatterStage `schedules` row and runs the **first** execution immediately; later runs are fired by the PatterStage scheduler. |
+
+A queued mission that will not start is worth checking against the spend stop first. `MissionQueueSync` treats a spend refusal as a deliberate outcome rather than a failure: it reports `success: true` with the reason carried in the result's `error` field, so it surfaces on the monitor rather than as a red sync error. See [SPEND.md](SPEND.md).
 
 ### Model resolution at dispatch
 
 The models registry (`models` table) is the **single source of truth** for what any mission can run on. `parseMissionBodyFields()` in `src/lib/missions/mission-body.ts` validates the request body:
 
-- `modelId` is checked against the registry via `findModelByModelId()`. A foreign `modelId` (not in the table) is **silently dropped**.
-- `provider` is **never trusted from the body**: it is derived from the registry row at dispatch time (and stripped whenever the `modelId` was dropped, to keep `missions.provider` consistent).
-- If no valid `modelId` survives, the dispatch path falls through to `getDefaultModel("agent")` (the registry **agent** default).
+- `modelId` is checked against the registry via `findModelByModelId()`. A foreign `modelId` (not in the table) is **silently dropped**, and only the registry row's own `modelId` is stored.
+- `provider` is accepted **only alongside a `modelId` that resolved**, and is stripped whenever the `modelId` was dropped, so `missions.provider` can never contradict `missions.model_id`. It is not re-derived from the registry row: a resolved `modelId` lets the caller's `provider` string through verbatim onto the mission row, and `dispatchMissionRun` reads it straight back out onto the session.
+- If no valid `modelId` survives, `missions.model_id` stays NULL and nothing substitutes a default. **Runs carry no model over the wire at all**: `RunSubmit` has `input`, `idempotencyKey`, `profileName`, `sessionId` and friends, but no model field, so the profile's own Hermes configuration decides what actually answers. `mission.model_id` is recorded on the run's pre-registered session row for reporting, and that is the whole of its effect at dispatch time.
 
-The composer pre-fills the agent default model from `GET /api/models/defaults` when opening a new mission.
+`getDefaultModel("agent")` is therefore not a dispatch-time fallback. It has two callers: the tie-break inside `findModelByModelId()` when two registry rows share a `model_id`, and `GET /api/models/defaults`, which the composer reads to pre-fill the model selector when opening a new mission.
 
 ### Board columns vs status
 
@@ -72,7 +74,7 @@ Dashboard **active** count includes `dispatched` missions and queued-for-run mis
 
 ### Database migrations (operator)
 
-Runtime database path: `PS_DATA_DIR/patterstage.db` (default `~/patterstage/data/patterstage.db`).
+Runtime database path: `PS_DATA_DIR/patterstage.db`. Setting `PS_DATA_DIR` (or the legacy `CH_DATA_DIR` / `CONTROL_HUB_DATA_DIR`) always wins and stops the guessing. With none of them set, PatterStage discovers the directory: it probes `~/PatterStage/data`, then `~/patterstage/data`, then the pre-rename `~/control-hub/data`, taking the first that already holds a database, else the first that merely exists, else creating `~/patterstage/data`. Inside that directory it prefers `patterstage.db` but opens a pre-existing `control-hub.db` when that is the only one, or the larger of the two when both exist. So an install can legitimately be running out of a capitalised directory or a legacy filename. Check which file the server actually opened before assuming it is `~/patterstage/data/patterstage.db`.
 
 1. After deploying new code, **restart** the PatterStage process so `getDb()` runs pending migrations.
 2. `npm run build` alone does **not** migrate your live DB (prebuild only touches `repo/data/`).

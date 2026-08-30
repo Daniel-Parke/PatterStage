@@ -11,9 +11,10 @@ PatterStage's **Memory** page is a browser over your agent's long-term memory. T
 
 ## How it connects
 
-- Hindsight runs as an HTTP server on **`localhost:9177`**.
+- Hindsight runs as an HTTP server, by default on **`127.0.0.1:9177`**.
 - PatterStage talks to it directly from [`/api/memory/hindsight`](../src/app/api/memory/hindsight/route.ts) (no Python subprocess): list/recall/reflect, plus CRUD for directives + mental models. Pure response mapping lives in [`hindsight-bridge.ts`](../src/lib/memory/hindsight-bridge.ts).
-- The active provider is read from `~/.hermes/config.yaml` (`memory: { provider: hindsight }`). See [`memory-providers/index.ts`](../src/lib/memory/memory-providers/index.ts). With no provider configured, the Memory page degrades gracefully.
+- **PatterStage's own database owns the connection, not a config file.** The active provider and the host, port and bank used to reach it live in the `memory_providers` table (migration `022`), read by [`getActiveMemoryConfig()`](../src/lib/memory/memory-providers/repository.ts) and turned into a live provider by [`registry.ts`](../src/lib/memory/memory-providers/registry.ts). Edit them in the **provider panel at the top of the Memory page** (backed by `GET`/`PUT /api/memory/config`, which also offers a Test connection probe): changing the endpoint needs no file edits, which is the point of the table. With nothing reachable, the Memory page degrades gracefully.
+- The agent's `config.yaml` (`$HERMES_HOME`, `~/.hermes` by default) is still consulted for one thing: `memory: { provider: holographic }` is how `GET /api/memory` and MemorySync recognise a holographic install. It does not decide where Hindsight is reached.
 
 ## Running Hindsight
 
@@ -50,4 +51,4 @@ The installer ([`install.sh`](../scripts/bootstrap/install.sh)) offers all of th
 
 ## Banks
 
-Memories live in **banks**; the default is `hermes`. All routes accept an optional `bank` parameter.
+Memories live in **banks**. The default is whatever the active provider row carries (`hermes` out of the box), and every route accepts an optional `bank` parameter to override it for one request.

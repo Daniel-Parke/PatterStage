@@ -13,9 +13,12 @@ dates are ISO. The task tooling allocates ids.
 
 ## Task record · org/tasks/T-####.json
 
-One record per task, validated by
-kernel/schemas/task-record.schema.json at the pinned EOS commit.
-Forty lines is the budget; the shape:
+One record per task. The contract is
+kernel/schemas/task-record.schema.json in the EOS checkout at the commit
+this venture pins, but nothing in this repository runs it: the only tool
+that reads `org/tasks/` is `check-derived-views.mjs`, which compares the
+fields org/TASKS.md shows and validates no others. Treat the schema as
+binding by convention. Forty lines is the budget; the shape:
 
 ```json
 {
@@ -40,9 +43,25 @@ Forty lines is the budget; the shape:
 ```
 
 The agent proposes the declared facts and tier_proposed; the router
-rules tier_ruled with reasons. High-assurance adds
-oracle_provenance; diagnosis adds the hypothesis ledger;
-interruption adds resume.
+rules tier_ruled with reasons. All eleven keys above are required. The
+schema allows four more and no others: `oracle_provenance`, which
+high-assurance owes; `hypothesis_ledger`, once the circuit breaker is in
+play; `resume`, while status is interrupted; and `verdicts`.
+
+Neither diagnosis nor interruption is a mode. `org/policy.json` names
+the five modes (express, standard, exploration, high-assurance,
+parallel), interrupted is one of the statuses, and that file, not this
+one, says what a mode owes. High-assurance owes four artefacts there:
+the task record, oracle-provenance, a rollback plan and a review
+verdict.
+
+Read a few recent records before writing one, because the set has
+drifted past the schema and nothing catches it. `invariants`,
+`rollback`, `verification` and `deferred` are common on standard-mode
+records, most of the high-assurance records carry no
+`oracle_provenance` at all, and one-off narrative keys are frequent.
+Where the schema and the corpus disagree, say on the record which you
+followed rather than settling the question silently.
 
 ## Resume keys (only while status is interrupted)
 
@@ -78,18 +97,29 @@ assigned claims and regenerates the derived views.
 
 ```markdown
 ---
-id: ADR-0000
-title:
+summary: one line stating the decision, not the topic
+type: decision
+tags: [process]
 status: proposed|accepted|superseded
-supersedes: null
-superseded_by: null
-created:
-approved_by: null
+compiled_from: authored
 ---
+
+# ADR-#### · Title
+
+**Status:** ACCEPTED by the operator, <date>, <how approval was given>.
+A superseded record names the superseding ADR here instead.
+**Date:** <date>
+
 ## Context
 ## Decision
 ## Consequences
 ```
+
+That is the shape every record in `org/decisions/` uses, and the
+identity keys live in the filename and the H1 rather than the
+front-matter. `org/decisions/` is the home, ruled by ADR-0008 over the
+earlier ADR-0007's proposal; `docs/adr/README.md` stays as the public
+pointer to it.
 
 Durable-band decisions get one before merge; protected-set changes
 need the operator's approval recorded in it. Accepted ADRs are

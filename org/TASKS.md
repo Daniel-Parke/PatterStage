@@ -69,5 +69,5 @@ The records under org/tasks/ are canonical.
 | T-0054 | standard | R1 | done | t0054-untested-queue-2026-08-29 |
 | T-0055 | standard | R0 | proposed | unassigned |
 | T-0056 | standard | R2 | proposed | unassigned |
-| T-0057 | standard | R1 | in_progress | t0057-doc-audit-2026-08-30 |
+| T-0057 | standard | R1 | active | t0057-doc-audit-2026-08-30 |
 | T-0058 | standard | R2 | done | t0058-composer-spend-2026-08-30 |

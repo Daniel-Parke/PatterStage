@@ -13,6 +13,7 @@
   "reasons": [],
   "status": "proposed",
   "owner_session": "unassigned",
+  "claims": [],
   "items": [
     "1. PRE-DISPATCH COST ESTIMATE. The spend console is retrospective only, and the model registry already holds per-model pricing (src/lib/analytics/model-cost.ts). An estimate on the mission dispatch sheet is cheap and, in the reviewer's words, 'would be used constantly'. First because the inputs already exist: this is arithmetic on data the app has, not a new source.",
     "2. PER-STAGE RUN LOGS. The missions board shows status; understanding WHY a run failed means leaving the app for ~/.hermes/logs. The Composer already models per-node output, so the shape exists to copy.",

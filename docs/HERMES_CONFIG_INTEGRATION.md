@@ -24,11 +24,11 @@ After bootstrap/setup, [`scripts/tooling/discover-agents.mjs`](../scripts/toolin
 
 ## What to verify in hermes-config scripts
 
-1. **PatterStage data** lives at `PS_DATA_DIR` (default `~/patterstage/data`), not under `HERMES_HOME` unless you intentionally colocate.
+1. **PatterStage data** lives at `PS_DATA_DIR`, not under `HERMES_HOME` unless you intentionally colocate. With the variable unset, PatterStage probes `~/PatterStage/data`, `~/patterstage/data` and `~/control-hub/data` in that order and prefers whichever already holds a database, creating `~/patterstage/data` only if none of the three exists. If your hermes-config scripts hardcode one of those paths, set `PS_DATA_DIR` explicitly on both sides so the two never disagree about which is live.
 
 2. **Backup/sync jobs** should include `PS_DATA_DIR` alongside `HERMES_HOME`.
 
-3. **Scheduling:** recurring missions are **PatterStage-owned** (the `schedules` table + built-in scheduler); PatterStage no longer writes the legacy Hermes `{HERMES_HOME}/cron/jobs.json` agent-cron bridge. That file is only *read* when present, to give cron-sourced agent sessions human-friendly titles (`session-title-server.ts`).
+3. **Scheduling:** recurring missions are **PatterStage-owned** (the `schedules` table + built-in scheduler); PatterStage no longer writes the legacy Hermes `{HERMES_HOME}/cron/jobs.json` agent-cron bridge. That file is only *read* when present, to give cron-sourced agent sessions human-friendly titles. The reader is `loadCronJobsMap()` in [`src/modules/hermes/lib/cron-jobs.ts`](../src/modules/hermes/lib/cron-jobs.ts), reached through the module port as `loadAgentCronJobs`. It returns an empty map on a missing or unparseable file and never throws, so an install with no `jobs.json` simply falls back to the raw job id.
 
 4. **Config and behaviour files** Hermes reads must exist under the resolved `HERMES_HOME` for that profile.
 

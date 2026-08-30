@@ -28,9 +28,20 @@ most fragile, highest-maintenance code.
 | n/a | **Windows** | Via **WSL2 (Ubuntu)**, a Tier-1 Linux environment. No native-Windows support. |
 
 The app UI + the PatterStage ↔ Hermes link are pure HTTP and identical
-everywhere; the only OS-specific code is PatterStage's *operational* layer
-(self-update, host-script scheduling), which is Unix (Linux + macOS) behind one
-seam, [`src/lib/platform.ts`](../src/lib/platform.ts).
+everywhere; the OS-specific code is PatterStage's *operational* layer
+(self-update, host-script scheduling), which is Unix (Linux + macOS) behind
+**two** seams:
+
+| Seam | Used by |
+|------|---------|
+| [`src/lib/platform.ts`](../src/lib/platform.ts) | everything inside the Next app: host-script scheduling and interpreter choice, the deploy spawn, port probes |
+| [`scripts/tooling/_platform.mjs`](../scripts/tooling/_platform.mjs) | the standalone deploy runner only |
+
+The runner ([`ps-deploy.mjs`](../scripts/tooling/ps-deploy.mjs)) executes in bare
+`node`, outside the Next build, so it cannot import the first seam and carries
+its own copy of the same primitives (`isWindows`, `detachedSpawn`, `isPidAlive`,
+`killByPort`, `killPid`, `portInUse`). Change one and change the other: looking
+for the self-update OS coupling in `src/lib/platform.ts` alone will not find it.
 
 ## Install
 
@@ -70,8 +81,14 @@ Hindsight memory (Postgres + the systemd/Docker server), and host-script cron al
 Self-update ([`scripts/tooling/ps-deploy.mjs`](../scripts/tooling/ps-deploy.mjs))
 is one Node program: a lock (atomic `mkdir`), `git fetch`/`reset`, conditional
 `npm install`, `npm run build`, DB migrate, then restart (`killByPort` + kill old
-PID + detached `next start` + `/api/status` readiness poll). `ps-deploy.sh` is a
-thin `exec node …` wrapper. The optional LAN `socat` relay is Unix-only.
+PID + detached `next start` + a readiness poll on **`/api/health`**). The poll
+targets `/api/health` deliberately: it is the one endpoint
+[`src/proxy.ts`](../src/proxy.ts) leaves unauthenticated, so it is the only one a
+token-less restart can reach. `ps-deploy.sh` is a thin `exec node …` wrapper.
+
+The `PS_SOCAT_RELAY` LAN relay no longer exists. Its launcher went with the bash
+deploy implementation; nothing in the repo starts `socat` now, so the
+`PS_SOCAT_*` variables are inert. See [DEPLOY.md](DEPLOY.md).
 
 > `src/lib/platform.ts` still carries thin Windows fallbacks for its primitives,
 > so the dev server (`npm run dev`) incidentally runs on a native-Windows box,
@@ -81,10 +98,17 @@ thin `exec node …` wrapper. The optional LAN `socat` relay is Unix-only.
 
 Host scripts (the **Scripts** page) are scheduled in the user **crontab** on
 Linux + macOS. There is no native-Windows backend. Under WSL2 the Ubuntu
-crontab is used like any Linux host. The bundled hardware scripts are
-cross-platform Node (`.mjs`): `ps-db-backup.mjs`, `ps-health-check.mjs`,
-`ps-log-rotate.mjs`, `ps-disk-report.mjs`, `ps-system-report.mjs`. The Hindsight
-backup (`ps-backup.sh`) is Linux-only.
+crontab is used like any Linux host.
+
+Schedule the cross-platform Node versions of the bundled hardware scripts:
+`ps-db-backup.mjs`, `ps-health-check.mjs`, `ps-log-rotate.mjs`,
+`ps-disk-report.mjs`, `ps-system-report.mjs`. What ships and what gets installed
+is not Node-only, though: `scripts/hardware/` also holds a bash sibling of each
+of those five, the Hindsight backup `ps-backup.sh`, and six pre-rename `ch-*.sh`
+shims, and setup copies **every** `.sh` and `.mjs` into `PS_DATA_DIR/scripts`. So
+the Scripts page will list the `.sh` files too. `ps-backup.sh` needs bash and a
+running Hindsight server, which makes it Unix-only rather than Linux-only: it
+works on macOS.
 
 ## CI
 

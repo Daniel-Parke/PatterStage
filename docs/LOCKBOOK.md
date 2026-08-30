@@ -187,10 +187,12 @@ because the whole point of this section is that it cannot quietly stop being tru
   remedy was a shrink-only counter. `design-lint sql-outside-repository` fails the
   build on `.prepare(`, and on a db-receiver `.exec(`, anywhere under `src/`
   outside a `*repository*.ts`, `src/lib/db/` or `src/lib/db-schema.ts`. Baselined
-  2026-07-26 at 19 files and 57 sites, which is the debt and may only fall.
-  `src/lib/db.ts` is baselined rather than exempted, because two of its six sites
-  are `sqlite_master` plumbing but `getGatewayPlatforms()` is a repository
-  function in the connection file. WO-0003.
+  2026-07-26 at 19 files and 57 sites, which was the debt and could only fall.
+  DISCHARGED: the baseline file is now an empty object, zero files and zero sites,
+  for this rule and every other. The connection file that carried six of those
+  sites, then `src/lib/db.ts`, has since become the `src/lib/db/` directory, and
+  `getGatewayPlatforms()` moved to `sync/sync-repository.ts` as
+  `readGatewayPlatforms`. WO-0003 closed.
 - **One reading register, dark-first, no exception.** WG-WEB-001 (A). The
   Story Weaver reader offers two page tints, `dark` and `black`, and `pageTheme`
   is typed to exactly those, so a third is a compile error rather than an
@@ -247,11 +249,18 @@ dropped:
   WO-0004's. → WO-0008.
 
 - **No table grows without bound.** WG-ARCH-008 (A with C's seam, ruled by the
-  operator). Unmet: `analytics_events` and `chat_messages` are append-only with no
-  expiry column. → WO-0009, ordered after WO-0010.
+  operator). MET as of migration `032_retention.sql`, verified 2026-08-30: it
+  creates `retention_policy` with a declared owner, consumer, window and floor for
+  both `analytics_events` and `chat_messages`, plus an append-only
+  `retention_prune_runs` record. WO-0009 closed. This row read "Unmet" for some
+  time after the work landed, which is its own lesson: a ratchet nobody re-reads
+  understates what the system guarantees and keeps a closed work order looking open.
 - **Recorded growth survives the deletion of the history it came from.**
-  WG-ARCH-003 (C for the per-Body record), ADR-0004. Unmet: progression is
-  recomputed from raw history. → WO-0010.
+  WG-ARCH-003 (C for the per-Body record), ADR-0004. MET as of migration
+  `031_agent_progression.sql`, verified 2026-08-30: `agent_progression_snapshots`
+  is an append-only per-Body record protected by BEFORE UPDATE and BEFORE DELETE
+  triggers, and the retention prune refuses to run until the capture has happened.
+  WO-0010 closed.
 - **A dispatched unit is rebuildable, not merely re-failable.** WG-ARCH-004 (A with
   B's seam). Unmet: boot recovery marks interrupted work failed rather than
   rebuilding it, and the LLM spend it consumed is unrecoverable. → WO-0008 and
@@ -260,20 +269,31 @@ dropped:
   #1 in the brief. Partly met: the `install-harness` job runs the harness on
   every push and pull request, the disclaimer is struck, and `docs/DEPLOY.md`
   now names one supported deployment model with the container demoted to the CI
-  parity rig. Green on CI at run 30226331826, four scenarios; the fifth (update) fails on CI only and is WO-0019.
+  parity rig. All five scenarios now run: the harness step passes
+  `--scenarios fresh,hermes,dashboard,both,update`, and WO-0019's cause (docker cp
+  not preserving the runner uid) was fixed. Verified 2026-08-30.
   Outstanding, and NOT doable from inside the repository: the job is not yet in
   branch protection's required set. Measured 2026-08-22 via `gh api`:
   `required_status_checks.contexts` is empty, so nothing at all is required and a
   broken install still cannot block a merge. Correcting the earlier claim that
   `docker-image` sat in that set is Q-005a, sanctioned by the operator on
   2026-08-22. → WO-0011, operator's half.
-- **The suite that exists is the suite that runs.** WG-DEL-002 (B). Unmet: CI runs
-  smoke-only, so 38 of 42 Playwright tests never execute on a pull request.
-  → WO-0012.
+- **The suite that exists is the suite that runs.** WG-DEL-002 (B). MET, verified
+  2026-08-30 by listing the suite rather than counting by hand: `e2e-full`
+  (ci.yml, `PLAYWRIGHT_SMOKE` unset) runs all 98 tests across 13 files on every
+  pull request into main and on workflow_dispatch, while `e2e-smoke` keeps the
+  5-test fast lane on every push. The old figure of "38 of 42" was wrong in both
+  numbers as well as in its conclusion. WO-0012 closed.
 - **Unattended work cannot spend past a number the operator set.** WG-OPS-004.
-  Unmet: no figure is recorded and no pause exists. → WO-0014. This one is the
+  MET as of migration `033_spend_policy.sql`, verified 2026-08-30: it creates
+  `spend_policy` and seeds exactly one row with the limit optional and null by
+  default, and `src/lib/spend/spend-guard.ts` pauses unattended dispatch once the
+  budget is spent while leaving a hand dispatch through, because a human clicking
+  dispatch is answering for the spend himself. WO-0014 closed. This one is the
   operator's own standing rule, "No spend without my approval", so it is a
-  contract before it is a feature.
+  contract before it is a feature. Note the measurement it rests on was itself
+  incomplete until T-0058: Composer stages recorded no tokens at all, so the
+  figure the guard compares against under-counted by that whole source.
 
 **Design contracts, at the first-build lock-in.** WG-WEB-001 rules one register,
 dark-first, no exception; WG-WEB-009 one registered module-to-accent map of four

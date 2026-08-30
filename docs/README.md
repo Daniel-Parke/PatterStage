@@ -13,7 +13,7 @@ Technical reference for PatterStage. Tone elsewhere in this folder is deliberate
 |----------|-------------|
 | [adr/](adr/) | **Decisions, pointer.** The ADRs live in `org/decisions/`; this page forwards to them. A recorded decision wins over anything you infer from the code |
 | [REPO_GUIDE.md](REPO_GUIDE.md) | Repo layout, conventions, shared utilities, design tokens, deploy |
-| [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) | Operator guide: every sidebar page, every common action (dashboard, missions + scheduling, scripts, chat, agents + performance, skills, tools, personalities, sessions, memory, logs, all Config pages, Story Weaver) |
+| [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md) | Operator guide: one section per sidebar page and the common actions on it, Dashboard through Rec Room, including Composer and the whole Laboratory (Insights, provider spend, Deep Research, Artifacts) |
 | [MISSIONS.md](MISSIONS.md) | Mission board, dispatch, cancellation, templates (simple single/recurring runs) |
 | [COMPOSER.md](COMPOSER.md) | Composer: the graph orchestrator for multi-stage workflows with loops + HIL gates |
 | [LABORATORY.md](LABORATORY.md) | Laboratory section: Insights, Deep Research, Artifacts |
@@ -28,13 +28,13 @@ Technical reference for PatterStage. Tone elsewhere in this folder is deliberate
 | [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md) | Profile `platform_toolsets`, Tools UI, mission tool hints |
 | [ENV_REFERENCE.md](ENV_REFERENCE.md) | Environment variables, dual DB paths, install flags |
 | [DEPLOY.md](DEPLOY.md) | Deploy, **`ps-deploy`**, TLS, Docker, ports, scripts layout |
-| [CROSS_PLATFORM.md](CROSS_PLATFORM.md) | Windows · macOS · Linux: support matrix, Windows install/update, host scheduling (cron vs Task Scheduler), bundled `.mjs` scripts |
+| [CROSS_PLATFORM.md](CROSS_PLATFORM.md) | The Linux-first ruling: Linux is the supported target, macOS is a dev tier, Windows runs under WSL2. Host scheduling is the Unix `crontab` and nothing else; bundled `.mjs` scripts |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Development workflow and standards |
 | [TESTING.md](TESTING.md) | Jest, Playwright, CI, and navigation-matrix upkeep |
 | [OUTPUT_CANARY.md](OUTPUT_CANARY.md) | The output canary: what it hashes, proving a move neutral, re-blessing the golden |
 | [SYSTEM-CRON.md](SYSTEM-CRON.md) | Scripts page + host cron presets (`scripts/hardware/`), including Hindsight backup |
 | [SUPPORT.md](SUPPORT.md) | Where to get help; upstream vs this repo |
-| [SECURITY.md](SECURITY.md) | Vulnerability reporting |
+| [SECURITY.md](SECURITY.md) | **The access model**, and the one document to read before exposing an install: the single boundary in `src/proxy.ts`, the minted token and its file, the `ps_token` to cookie handoff, same-origin write checks, read-only, the container env vars, and what the 401 discloses. Vulnerability reporting is at the top |
 | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | How collaboration works here (people-wise) |
 | [MIGRATION.md](MIGRATION.md) | Migrations, backups, and the runtime upgrade path for existing installs |
 | [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md) | Hermes `config.yaml` integration |

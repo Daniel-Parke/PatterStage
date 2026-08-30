@@ -11,7 +11,7 @@
   "tier_proposed": "R1",
   "tier_ruled": "R1",
   "reasons": [],
-  "status": "in_progress",
+  "status": "active",
   "owner_session": "t0057-doc-audit-2026-08-30",
   "evidence_this_is_needed": [
     "docs/API.md described read-only as enforced per route by requireAuth(), a model the security hotfix replaced long before T-0048 deleted the function. It documented an architecture that had not existed for months.",
