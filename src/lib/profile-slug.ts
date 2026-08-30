@@ -66,9 +66,13 @@ export function validateProfileDisplayName(
   const trimmed = (name ?? "").trim();
 
   if (trimmed.length < 2) return { ok: false, error: "Name is required (min 2 characters)" };
-  if (trimmed.includes("..")) {
-    return { ok: false, error: 'Name cannot contain "..", which is a path traversal, not a name' };
-  }
+  // NO SEPARATE ".." CHECK, and that is deliberate rather than an omission.
+  // Mutation testing showed one added here was dead: every traversal-shaped name
+  // is already refused by the separator check below or the leading-dot check
+  // after it (".." and "../evil" start with a dot; "a/../b" carries a
+  // separator). The only names it caught that they do not are shapes like
+  // "a..b", which slugifies to "a-b" and is harmless, so the check refused safe
+  // names and protected nothing.
   if (trimmed.includes("/") || trimmed.includes("\\")) {
     return { ok: false, error: "Name cannot contain a path separator" };
   }
