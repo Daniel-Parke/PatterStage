@@ -23,7 +23,7 @@ import SchedulePicker from "@/components/schedule/SchedulePicker";
 describe("SchedulePicker", () => {
   it("renders with a 5-field cron value and shows the matching preset label", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} onDraftError={jest.fn()} />);
     // The dropdown button should display "Every 2 hours"
     expect(screen.getByRole("button", { name: /Every 2 hours/i })).toBeInTheDocument();
     // The canonical cron display should be visible
@@ -32,7 +32,7 @@ describe("SchedulePicker", () => {
 
   it("accepts 'every Nh' shorthand on load and canonicalises it", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="every 2h" onChange={onChange} />);
+    render(<SchedulePicker value="every 2h" onChange={onChange} onDraftError={jest.fn()} />);
     // The button shows the preset label
     expect(screen.getByRole("button", { name: /Every 2 hours/i })).toBeInTheDocument();
     // The canonical cron is displayed in the read-only box
@@ -42,14 +42,14 @@ describe("SchedulePicker", () => {
   it("accepts JSON-serialised ParsedSchedule on load (live mission's storage format)", () => {
     const onChange = jest.fn();
     const stored = JSON.stringify({ kind: "interval", minutes: 120, display: "every 2h" });
-    render(<SchedulePicker value={stored} onChange={onChange} />);
+    render(<SchedulePicker value={stored} onChange={onChange} onDraftError={jest.fn()} />);
     expect(screen.getByRole("button", { name: /Every 2 hours/i })).toBeInTheDocument();
     expect(screen.getByText("0 */2 * * *")).toBeInTheDocument();
   });
 
   it("calls onChange with the canonical 5-field cron when a preset is selected", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="" onChange={onChange} />);
+    render(<SchedulePicker value="" onChange={onChange} onDraftError={jest.fn()} />);
 
     // Open the dropdown
     const dropdownButton = screen.getAllByRole("button")[0];
@@ -63,7 +63,7 @@ describe("SchedulePicker", () => {
 
   it("emits 0 9 * * 1-5 for the existing live mission's expected replacement", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} onDraftError={jest.fn()} />);
     const dropdownButton = screen.getAllByRole("button")[0];
     fireEvent.click(dropdownButton);
     fireEvent.click(screen.getByRole("button", { name: /Weekdays at 9am/i }));
@@ -72,7 +72,7 @@ describe("SchedulePicker", () => {
 
   it("shows the custom builder when 'Custom…' is clicked", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="" onChange={onChange} />);
+    render(<SchedulePicker value="" onChange={onChange} onDraftError={jest.fn()} />);
 
     // Open dropdown
     fireEvent.click(screen.getAllByRole("button")[0]);
@@ -87,7 +87,7 @@ describe("SchedulePicker", () => {
 
   it("in custom builder, checking Mon/Wed/Fri at 18:00 calls onChange with 0 18 * * 1,3,5", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="" onChange={onChange} />);
+    render(<SchedulePicker value="" onChange={onChange} onDraftError={jest.fn()} />);
 
     // Open dropdown
     fireEvent.click(screen.getAllByRole("button")[0]);
@@ -114,7 +114,7 @@ describe("SchedulePicker", () => {
 
   it("in custom builder, the Weekdays shortcut sets days 1-5", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="" onChange={onChange} />);
+    render(<SchedulePicker value="" onChange={onChange} onDraftError={jest.fn()} />);
 
     fireEvent.click(screen.getAllByRole("button")[0]);
     fireEvent.click(screen.getByRole("button", { name: /Custom/i }));
@@ -133,7 +133,7 @@ describe("SchedulePicker", () => {
 
   it("typing a cron expression in the advanced field calls onChange on blur", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} onDraftError={jest.fn()} />);
 
     // Open the advanced section
     fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
@@ -164,7 +164,7 @@ describe("SchedulePicker", () => {
   // shipped the preset default instead, with no error anywhere on the form.
   it("does not emit an invalid advanced draft to the parent", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} onDraftError={jest.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
     const advancedInput = screen.getByDisplayValue("0 */2 * * *") as HTMLInputElement;
     fireEvent.change(advancedInput, { target: { value: "not a cron at all" } });
@@ -174,7 +174,7 @@ describe("SchedulePicker", () => {
 
   it("says WHY an invalid advanced draft was not accepted", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} onDraftError={jest.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
     const advancedInput = screen.getByDisplayValue("0 */2 * * *") as HTMLInputElement;
     fireEvent.change(advancedInput, { target: { value: "not a cron at all" } });
@@ -186,7 +186,7 @@ describe("SchedulePicker", () => {
     // Reverting the box as well as refusing the value means the typo vanishes
     // before it can be corrected, and the operator cannot see what was wrong.
     const onChange = jest.fn();
-    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} onDraftError={jest.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
     const advancedInput = screen.getByDisplayValue("0 */2 * * *") as HTMLInputElement;
     fireEvent.change(advancedInput, { target: { value: "not a cron at all" } });
@@ -196,7 +196,7 @@ describe("SchedulePicker", () => {
 
   it("clears the error once the draft becomes valid", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} onDraftError={jest.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
     const advancedInput = screen.getByDisplayValue("0 */2 * * *") as HTMLInputElement;
     fireEvent.change(advancedInput, { target: { value: "nope" } });
@@ -215,7 +215,7 @@ describe("SchedulePicker", () => {
     const onChange = jest.fn();
     const onDocEscape = jest.fn();
     document.addEventListener("keydown", onDocEscape);
-    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} onDraftError={jest.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
     const advancedInput = screen.getByDisplayValue("0 */2 * * *") as HTMLInputElement;
     fireEvent.keyDown(advancedInput, { key: "Escape", bubbles: true });
@@ -225,7 +225,7 @@ describe("SchedulePicker", () => {
 
   it("commits the advanced draft on Enter", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} />);
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} onDraftError={jest.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: /Show advanced/i }));
     const advancedInput = screen.getByDisplayValue("0 */2 * * *") as HTMLInputElement;
     fireEvent.change(advancedInput, { target: { value: "0 9 * * 1-5" } });
@@ -235,20 +235,20 @@ describe("SchedulePicker", () => {
 
   it("displays the error message when error prop is set", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} error="Invalid cron" />);
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} error="Invalid cron" onDraftError={jest.fn()} />);
     expect(screen.getByText("Invalid cron")).toBeInTheDocument();
   });
 
   it("disables all interactive controls when disabled prop is set", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} disabled />);
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} disabled onDraftError={jest.fn()} />);
     const dropdownButton = screen.getAllByRole("button")[0];
     expect(dropdownButton).toBeDisabled();
   });
 
   it("compact mode renders just the preset dropdown (no custom builder)", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} compact />);
+    render(<SchedulePicker value="0 */2 * * *" onChange={onChange} compact onDraftError={jest.fn()} />);
     // No "Schedule" label in compact mode
     expect(screen.queryByText(/^Schedule$/i)).not.toBeInTheDocument();
     // The preset label is shown
@@ -257,7 +257,7 @@ describe("SchedulePicker", () => {
 
   it("compact mode opens dropdown and selecting a preset calls onChange", () => {
     const onChange = jest.fn();
-    render(<SchedulePicker value="" onChange={onChange} compact />);
+    render(<SchedulePicker value="" onChange={onChange} compact onDraftError={jest.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: /Select a frequency/i }));
     fireEvent.click(screen.getByRole("button", { name: /Weekdays at 9am/i }));
@@ -268,7 +268,7 @@ describe("SchedulePicker", () => {
   it("renders the schedule label and cron display in a read-only state for the existing live mission", () => {
     const onChange = jest.fn();
     const stored = JSON.stringify({ kind: "interval", minutes: 120, display: "every 2h" });
-    render(<SchedulePicker value={stored} onChange={onChange} />);
+    render(<SchedulePicker value={stored} onChange={onChange} onDraftError={jest.fn()} />);
 
     // Label is "Every 2 hours" (matched preset)
     expect(screen.getByRole("button", { name: /Every 2 hours/i })).toBeInTheDocument();

@@ -97,3 +97,24 @@ export function groupSchedulePresets(): Array<{
   for (const p of SCHEDULE_PRESETS) groups[p.group].push(p);
   return SCHEDULE_GROUP_ORDER.map((g) => ({ group: g, items: groups[g] }));
 }
+
+/**
+ * Is this raw advanced-field draft usable, and if not, why not?
+ *
+ * Extracted so the picker can report a bad draft on CHANGE and still display it
+ * on blur, from ONE definition. Reporting on change matters: the composer used
+ * to learn about a bad draft only through the blur that a submit click happens
+ * to fire first, and relying on that ordering is the assumption that produced
+ * the defect. jsdom does not move focus on click at all, so a test written
+ * against blur ordering tests the harness rather than the app (T-0063).
+ *
+ * An empty draft is not a problem: it reverts to the committed value, which is
+ * a perfectly good way to abandon an edit.
+ */
+export function advancedDraftProblem(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  return parseSchedule(trimmed).kind === "invalid"
+    ? `Not a schedule this understands: "${trimmed}"`
+    : null;
+}

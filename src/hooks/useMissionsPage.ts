@@ -201,6 +201,8 @@ export function useMissionsPage() {
     newConstraints: composer.newConstraints,
     setNewConstraints: composer.setNewConstraints,
     dispatchAcknowledged: composer.dispatchAcknowledged,
+    scheduleDraftError: composer.scheduleDraftError,
+    setScheduleDraftError: composer.setScheduleDraftError,
     setDispatchAcknowledged: composer.setDispatchAcknowledged,
     newProfile: composer.newProfile,
     setNewProfile: composer.setNewProfile,

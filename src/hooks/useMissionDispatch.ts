@@ -15,6 +15,7 @@
 
 "use client";
 
+import { scheduleBlocksDispatch } from "@/lib/dispatch-mode";
 import { useCallback, useState } from "react";
 
 import type { ToastType } from "@/components/ui/Toast";
@@ -70,6 +71,7 @@ export function useMissionDispatch({
     dispatchAcknowledged,
     setDispatchAcknowledged,
     newDispatch,
+    scheduleDraftError,
     setNewDispatch,
     newSchedule,
     dispatchPayload,
@@ -113,6 +115,22 @@ export function useMissionDispatch({
     if (!newName.trim() || !newInstruction.trim()) return;
     if (!editingId && !dispatchAcknowledged) {
       showToast("Open Dispatch to choose how this mission runs.", "error");
+      return;
+    }
+    // Above every wire branch, and above setDispatching, so a refusal costs
+    // nothing and leaves no spinner. The server WOULD reject this
+    // (mission-handlers/dispatch.ts returns badRequest on an invalid schedule);
+    // it never got the chance, because the client substituted DEFAULT_SCHEDULE
+    // for the draft it could not parse and shipped a cadence the operator never
+    // typed, under a green toast affirming it (T-0063).
+    //
+    // The button is deliberately NOT disabled. This hook already carries the
+    // ruling that a control which returns silently is "a button that does
+    // nothing and explains nothing": let the click land, refuse the POST, say
+    // why.
+    const scheduleBlocked = scheduleBlocksDispatch(newDispatch, scheduleDraftError);
+    if (scheduleBlocked) {
+      showToast(scheduleBlocked, "error");
       return;
     }
     if (dispatching) return;
@@ -274,7 +292,7 @@ export function useMissionDispatch({
     } finally {
       setDispatching(false);
     }
-  }, [newName, newInstruction, editingId, dispatchAcknowledged, dispatching, showToast, newDispatch, newSchedule, missions, dispatchPayload, fetchData, fetchDetail, expandedId, finishComposer, setEditingId, setExpandedId]);
+  }, [newName, newInstruction, editingId, dispatchAcknowledged, dispatching, showToast, newDispatch, newSchedule, scheduleDraftError, missions, dispatchPayload, fetchData, fetchDetail, expandedId, finishComposer, setEditingId, setExpandedId]);
 
   const handleEdit = useCallback((m: MissionRow) => {
     setEditingId(m.id);

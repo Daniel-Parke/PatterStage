@@ -66,6 +66,10 @@ export function useMissionComposer({ showCreate, editingId }: UseMissionComposer
     "save",
   );
   const [newSchedule, setNewSchedule] = useState(DEFAULT_SCHEDULE);
+  // Deliberately NOT part of MissionFormState: it is not a field the operator
+  // fills, it is the picker telling us its draft cannot be parsed. Putting it in
+  // the form state would ripple through the mapped setter map for no reason.
+  const [scheduleDraftError, setScheduleDraftError] = useState<string | null>(null);
   const [newMissionTime, setNewMissionTime] = useState(15);
   const [newTimeout, setNewTimeout] = useState(10);
   const [newProfile, setNewProfile] = useState("");
@@ -195,6 +199,7 @@ export function useMissionComposer({ showCreate, editingId }: UseMissionComposer
   // handleCreateNewTemplate. Does NOT touch the dispatch-acknowledgement
   // flag or the visibility of the create sheet — callers decide those.
   const clearMissionFormFields = useCallback(() => {
+    setScheduleDraftError(null);
     setNewName("");
     setNewInstruction("");
     setNewContext("");
@@ -395,6 +400,7 @@ export function useMissionComposer({ showCreate, editingId }: UseMissionComposer
     dispatchAcknowledged, setDispatchAcknowledged,
     newDispatch, setNewDispatch,
     newSchedule, setNewSchedule,
+    scheduleDraftError, setScheduleDraftError,
     newMissionTime, setNewMissionTime,
     newTimeout, setNewTimeout,
     newProfile, setNewProfile,

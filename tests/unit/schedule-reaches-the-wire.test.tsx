@@ -52,7 +52,7 @@ describe("a schedule typed into the picker reaches the dispatch payload", () => 
 
     // The picker, driven exactly as an operator drives it.
     const onChange = jest.fn((s: string) => act(() => result.current.setNewSchedule(s)));
-    render(<SchedulePicker value={result.current.newSchedule} onChange={onChange} />);
+    render(<SchedulePicker value={result.current.newSchedule} onChange={onChange} onDraftError={jest.fn()} />);
     const input = openAdvanced("*/5 * * * *");
     fireEvent.change(input, { target: { value: "5 1 * * *" } });
     fireEvent.blur(input);
@@ -67,7 +67,7 @@ describe("a schedule typed into the picker reaches the dispatch payload", () => 
   it("carries a raw cron committed on Enter", () => {
     const { result } = renderHook(() => useMissionComposer({ showCreate: true, editingId: null }));
     const onChange = jest.fn((s: string) => act(() => result.current.setNewSchedule(s)));
-    render(<SchedulePicker value={result.current.newSchedule} onChange={onChange} />);
+    render(<SchedulePicker value={result.current.newSchedule} onChange={onChange} onDraftError={jest.fn()} />);
     const input = openAdvanced("*/5 * * * *");
     fireEvent.change(input, { target: { value: "30 3 * * 1" } });
     fireEvent.keyDown(input, { key: "Enter" });
@@ -81,7 +81,7 @@ describe("a schedule typed into the picker reaches the dispatch payload", () => 
     // what T-0051 removed.
     const { result } = renderHook(() => useMissionComposer({ showCreate: true, editingId: null }));
     const onChange = jest.fn((s: string) => act(() => result.current.setNewSchedule(s)));
-    render(<SchedulePicker value={result.current.newSchedule} onChange={onChange} />);
+    render(<SchedulePicker value={result.current.newSchedule} onChange={onChange} onDraftError={jest.fn()} />);
     const input = openAdvanced("*/5 * * * *");
     fireEvent.change(input, { target: { value: "5 1 * * *" } });
     fireEvent.blur(input);

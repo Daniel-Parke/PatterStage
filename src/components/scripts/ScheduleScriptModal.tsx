@@ -36,7 +36,17 @@ export default function ScheduleScriptModal({
     setScheduleError(null);
   }, [script.name]);
 
+  const [draftError, setDraftError] = useState<string | null>(null);
+
   const save = async () => {
+    // The same defect as the mission composer, on the HOST CRONTAB. This guard
+    // reads the COMMITTED value, which is the untouched default when the draft
+    // is unusable, so it could never fire on bad input: typing garbage and
+    // clicking Schedule wrote "0 3 * * *" to the real crontab (T-0063).
+    if (draftError) {
+      setScheduleError(draftError);
+      return;
+    }
     const fields = schedule.trim().split(/\s+/);
     if (fields.length !== 5) {
       setScheduleError("Schedule must have exactly 5 fields: min hour dom mon dow");
@@ -83,7 +93,12 @@ export default function ScheduleScriptModal({
         <p className="font-mono text-xs text-ps-text-muted">
           Runs <span className="text-ps-text-secondary">{script.name}</span> on the host crontab.
         </p>
-        <SchedulePicker value={schedule} onChange={(v) => { setSchedule(v); setScheduleError(null); }} error={scheduleError} />
+        <SchedulePicker
+          value={schedule}
+          onChange={(v) => { setSchedule(v); setScheduleError(null); }}
+          error={scheduleError ?? draftError}
+          onDraftError={setDraftError}
+        />
       </div>
     </Modal>
   );

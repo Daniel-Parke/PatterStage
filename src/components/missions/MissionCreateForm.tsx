@@ -75,6 +75,10 @@ export interface MissionCreateFormProps {
   dispatching: boolean;
   dispatchAcknowledged?: boolean;
   onDispatchOpenChange?: (open: boolean) => void;
+  /** The picker's current complaint about its raw-cron draft, or null. */
+  scheduleDraftError: string | null;
+  /** Receives that complaint. Required, so a call site cannot silently drop it. */
+  onScheduleDraftError: (message: string | null) => void;
 }
 
 /**
@@ -280,6 +284,8 @@ export default function MissionCreateForm({
   dispatching,
   dispatchAcknowledged = false,
   onDispatchOpenChange,
+  scheduleDraftError,
+  onScheduleDraftError,
 }: MissionCreateFormProps) {
   const editingCtx = resolveEditContext(editingId, missions);
   const { isReDispatch, isRunningEdit, isDraftEdit, isQueuedEdit } = editingCtx;
@@ -662,6 +668,12 @@ export default function MissionCreateForm({
           <SchedulePicker
             value={formState.newSchedule}
             onChange={(s) => setFormField("newSchedule", s)}
+            // The `error` prop has always existed here and was never passed, so
+            // the picker's own complaint was the only copy and it died with the
+            // sheet. Passing it makes the reason survive a blocked submit
+            // independently of whether the field was ever blurred.
+            error={scheduleDraftError}
+            onDraftError={onScheduleDraftError}
           />
         )}
       </ComposerAccordion>
