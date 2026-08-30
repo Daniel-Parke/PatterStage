@@ -102,6 +102,33 @@ describe("callLLM reports usage in the shape its own type declares", () => {
     expect(res.usage).toEqual({ promptTokens: 11, completionTokens: 4, totalTokens: 15 });
   });
 
+  it("reports nothing for an object that carries no counts", async () => {
+    // Found by mutation: the absent-usage control below passes `undefined`,
+    // which the type check catches first, so it never exercised this branch.
+    // A total with no input or output is not enough to price a run, and
+    // reporting {0, 0, n} would be a fabrication dressed as a measurement.
+    global.fetch = jest.fn(async () =>
+      openAiReply({ total_tokens: 5 }),
+    ) as unknown as typeof fetch;
+
+    const { callLLM } = await import("@/lib/llm");
+    expect((await callLLM([{ role: "user", content: "q" }], {})).usage).toBeUndefined();
+  });
+
+  it("believes the provider's own total over the sum", async () => {
+    // Also found by mutation: every other case here has total === sum, so
+    // nothing pinned which one wins. It matters because some providers bill for
+    // tokens neither counter covers, such as cached reads and reasoning tokens.
+    global.fetch = jest.fn(async () =>
+      openAiReply({ prompt_tokens: 10, completion_tokens: 5, total_tokens: 99 }),
+    ) as unknown as typeof fetch;
+
+    const { callLLM } = await import("@/lib/llm");
+    const res = await callLLM([{ role: "user", content: "q" }], {});
+
+    expect(res.usage?.totalTokens).toBe(99);
+  });
+
   it("reports nothing when the provider reported nothing", async () => {
     // GREEN CONTROL, and load-bearing: it stops the fix being "always emit
     // zeroes", which would turn an honest absence into a measured $0.00. That
