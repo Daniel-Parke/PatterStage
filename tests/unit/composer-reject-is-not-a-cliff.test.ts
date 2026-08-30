@@ -376,6 +376,36 @@ describe("the migration refuses to rebuild a table it would truncate", () => {
     db.close();
   });
 
+  it("cleans up a half-applied rebuild left by the legacy prebuild loop", () => {
+    // Not hypothetical. scripts/tooling/db-schema-ensure.mjs upgrades a
+    // pre-v3 install by exec'ing EVERY .sql in order under a blanket catch --
+    // the one path where this migration runs outside its applier. It fails
+    // there (parent_node_run_id is added by a TS applier, not a .sql file) and
+    // leaves `composer_runs_new` behind. Measured, not assumed:
+    //
+    //   Warning applying 035_composer_rejected.sql: no such column: parent_node_run_id
+    //
+    // composer_runs itself survives -- the INSERT fails before the DROP -- so
+    // the cost is a stray table, and the boot that follows has to tolerate it.
+    // `DROP TABLE IF EXISTS` at the top of the migration is what does that, and
+    // this is the only thing holding it there.
+    const db = freshComposerDbAtV34();
+    db.exec("CREATE TABLE composer_runs_new (id TEXT PRIMARY KEY)");
+    db.exec("CREATE TABLE composer_node_runs_new (id TEXT PRIMARY KEY)");
+
+    expect(() => applyComposerRejectedMigration(db, migrationsDir)).not.toThrow();
+
+    const tables = (
+      db
+        .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'composer%'")
+        .all() as { name: string }[]
+    ).map((r) => r.name);
+    expect(tables).not.toContain("composer_runs_new");
+    expect(tables).not.toContain("composer_node_runs_new");
+    expect(tables).toEqual(expect.arrayContaining(["composer_runs", "composer_node_runs"]));
+    db.close();
+  });
+
   it("GREEN CONTROL: an undrifted table rebuilds and keeps every row", () => {
     const db = freshComposerDbAtV34();
     const wfId = "w-keep";
