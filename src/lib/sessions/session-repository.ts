@@ -429,13 +429,22 @@ export function listSessions(opts: ListSessionsOptions = {}): {
  * Formula: message_count * 200 + api_call_count * 50, floored at a minimum.
  * The minimum is per-caller — default 0 for bulk sync, caller provides for individual display.
  */
+/**
+ * `?? 0` catches null and undefined and NOT NaN, and the rows this is fed come
+ * from a blind cast over the agent's own state.db (`state-db.ts` ends in
+ * `.all() as HermesSessionRow[]`). A non-numeric message_count therefore
+ * produced NaN, better-sqlite3 bound it as a double, SQLite stored a NaN double
+ * as NULL, and the NOT NULL on `sessions.size` rejected the row. That is the
+ * skip the log had been calling an "FK violation" for months (T-0064).
+ *
+ * Takes `unknown` deliberately: widening the parameter is what stops the
+ * upstream cast being laundered by the type system a second time.
+ */
 export function estimateSessionSize(
-  messageCount: number | null,
-  apiCallCount: number | null,
+  messageCount: unknown,
+  apiCallCount: unknown,
   minSize = 0,
 ): number {
-  return Math.max(
-    (messageCount ?? 0) * 200 + (apiCallCount ?? 0) * 50,
-    minSize,
-  );
+  const n = (v: unknown): number => (typeof v === "number" && Number.isFinite(v) ? v : 0);
+  return Math.max(n(messageCount) * 200 + n(apiCallCount) * 50, minSize);
 }
