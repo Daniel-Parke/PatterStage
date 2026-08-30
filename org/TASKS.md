@@ -82,3 +82,4 @@ The records under org/tasks/ are canonical.
 | T-0067 | standard | R2 | done | t0067-dispatch-mode-2026-08-31 |
 | T-0068 | standard | R2 | done | t0068-usage-shape-2026-08-31 |
 | T-0069 | standard | R2 | done | t0069-composer-reject-2026-08-31 |
+| T-0070 | standard | R2 | done | t0070-tell-the-truth-2026-08-31 |

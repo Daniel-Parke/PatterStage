@@ -1,0 +1,58 @@
+{
+  "id": "T-0070",
+  "intent": "Five places where PatterStage stored one fact and showed the operator another: a cancellation painted red as a failure, two cancel entry points writing different state, one agent event reading two ways, a rename destroying a mission's output, and a research report written from a third of its evidence with nothing said. F4 of the 2026-08-30 QA pass plus four defects nobody reported.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "migrate-schema"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R2",
+  "reasons": [
+    "Raised from the planned R1: the gather counters needed migration 036, and a schema change is R2."
+  ],
+  "status": "done",
+  "owner_session": "t0070-tell-the-truth-2026-08-31",
+  "claims": [
+    "src/lib/missions/cancel-finalise.ts",
+    "src/lib/missions/mission-run-state.ts",
+    "src/lib/missions/mission-handlers/cancel.ts",
+    "src/lib/missions/mission-promote-handler.ts",
+    "src/lib/orchestration/dispatch.ts",
+    "src/lib/sessions/hermes-state-sessions.ts",
+    "src/lib/db/migrations/036_research_gather_health.sql",
+    "src/lib/db/apply-research-gather-migration.ts",
+    "src/lib/laboratory/deep-research/",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 A cancelled mission is LABELLED Cancelled, from the run row that already recorded it, and is not painted in the failure colour. It is the operator's own action, not a fault report.",
+    "I2 Both cancel entry points leave identical state: mission, run row, session and audit line.",
+    "I3 A run that had already finished keeps its real ending. A cancellation arriving after the fact did not cause it, and the board reads that row.",
+    "I4 Exactly ONE audit line per cancellation, not one per writer.",
+    "I5 One agent event has one meaning. `interrupt` and PatterStage's own cancel agree; `timeout` is left exactly where it was, because it is a different event.",
+    "I6 A rename preserves the mission's output. Re-activation still clears it.",
+    "I7 A degraded gather is persisted AND said out loud in the report; a clean one adds nothing, because a banner on every report is a banner nobody reads.",
+    "I8 NULL gather counters mean unmeasured, not clean. No DEFAULT, no backfill."
+  ],
+  "root_cause": "Each of the five is the same shape: the fact was recorded and the reader looked somewhere else. describeMissionRunState read mission.status while runs.status already said cancelled. The two cancel paths were written independently and drifted. hermesStatusFromEndReason and cancelMissionRun both wrote a session close for the same event without either knowing about the other. promote cleared the result for the whole action rather than for the modes that re-activate. And the research engine computed its gather counters, handed them to a caller that read them for exactly one case, and dropped the rest.",
+  "the_prerequisite_nobody_would_have_noticed": "The label fix ALONE would have been unreliable. Neither entry point wrote the run row synchronously -- the action handler reached it only through a background cancelMissionRun, and only for a dispatched mission -- so a board reading runs.status would have shown Failed until that round-tripped. Converging the two writers is what makes the label true, which is why they are one change.",
+  "beyond_the_report": [
+    "POST /api/missions/[id]/cancel left queued_for_run = 1 on a cancelled mission and wrote no audit line at all. The stranded flag is latent only because getNextQueuedMission also filters on status='queued'; one filter change from a cancelled mission re-dispatching itself. Proved fixed end to end: the row now reads queued_for_run 0 and the audit file holds exactly one mission.cancel line where it held none.",
+    "The session close diverged too. The action handler used updateSession(mission.sessionId, ...), which records no exit code and does nothing at all when the mission row never got a sessionId written back -- leaving that session `active` forever. Both now use closeSessionForMission, which resolves the session from the mission and records 143.",
+    "A run that had already completed was about to be relabelled `cancelled` by the shared writer. Guarded to status === 'started' only, with a test in the other direction: the board reads that row, so the overwrite would have been a visible lie rather than a harmless one.",
+    "Deep Research counted no visit failures whatsoever. `if (page)` skipped a blocked, paywalled or timed-out page read and incremented nothing, so a run where every fetch failed reported identically to one that read every page in full."
+  ],
+  "oracle_provenance": "Committed alone at 4fc2fa59 ahead of the implementation at fc26d15e: sixteen assertions, seven red and nine green, and the nine controls are as much the point as the seven. They pin that a genuine failure still reads Failed (so the fix cannot be 'never say Failed'), that a mission with no run row does not crash the board, that every end_reason except `interrupt` keeps its meaning, and that an unknown mission is still a 404 that writes and audits nothing. Two assertions started as source regexes and were rewritten to drive the real handlers before the implementation landed.",
+  "mutation_finding": "Seventeen mutations. Two survived the first pass and both were the same mistake in different places: the oracle tested the code on EITHER SIDE of a seam and not the seam. Deleting the engine's visit counter left everything green, because every assertion exercised the caveat FORMATTER and none exercised the code producing the number it formats. Deleting the `gather` field from run-job left ALL 85 research tests green -- the whole defect restored, counters computed and discarded, with nothing anywhere to say so. That is T-0068's shape exactly: two well-tested ends and an untested strip in the middle, which is the only code that has ever been wrong. One mutation also proved nothing -- `gather: undefined ?? {...}` is a no-op -- and was rewritten and re-run rather than counted.",
+  "two_tests_changed_deliberately": "mission-handlers-delete-cancel.test.ts asserted updateSession(mission.sessionId, ...), which is strictly weaker than what replaced it, and 'skips the session update when the mission has no session' asserted a behaviour that was itself the bug. Both were rewritten with the reason recorded in place. The test that asserts a cancellation is stored as `failed` was NOT changed: the operator ruled the mission enum stays as it is, so its comment about catching a half-migration is still true.",
+  "verification": "Proved end to end against a real server on a temp HERMES_HOME. Schema climbed to 36 with all four gather columns present. A cancel through POST /api/missions/[id]/cancel -- the entry point that did neither -- left the mission failed with 'Cancelled by user' and queued_for_run 0, the run row `cancelled` with the same reason, and exactly one mission.cancel line in the audit file. A save-mode promote renamed a queued mission carrying 'the report it produced' to 'A better name' and LEFT THE RESULT INTACT, where it would previously have been nulled; the re-activation control is covered by the unit test, since the live one dispatches. Gate: lint 0, tsc 0, 3391 tests / 391 suites, knip 0, canary blessed (the only generatedArtefacts delta is 036, verified line by line), build 0.",
+  "timestamps": {
+    "opened": "2026-08-31T14:30:00Z",
+    "updated": "2026-08-31T17:00:00Z",
+    "closed": "2026-08-31T17:00:00Z"
+  }
+}
