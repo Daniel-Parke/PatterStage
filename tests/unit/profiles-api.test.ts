@@ -537,7 +537,11 @@ describe("POST /api/agent/profiles refuses a name that was never a name", () => 
     expect(store.size).toBe(0);
   });
 
-  it.each(["default", "DEFAULT", "de fault", "Default!"])(
+  // NOT "de fault": it slugifies to "de-fault" and is a perfectly good name.
+  // An earlier draft of this list included it on the strength of an analysis
+  // rather than a measurement, and it is the only case here that does not
+  // actually reach the root agent.
+  it.each(["default", "DEFAULT", "Default!", " default ", "DeFaUlT"])(
     "refuses %s too, because the slug is what decides",
     async (name) => {
       const { POST } = await import("@/app/api/agent/profiles/route");

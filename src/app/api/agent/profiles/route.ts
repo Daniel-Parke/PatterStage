@@ -18,7 +18,7 @@ import { getAgentRoot } from "@/lib/agent-root-repository";
 import { pushProfileToHermes } from "@/modules/hermes/lib/profile-push";
 import { detectProfileDrift, detectRootDrift } from "@/modules/hermes/lib/profile-drift";
 import { countProfileSkills, countProfileToolsets } from "@/modules/hermes/lib/profile-counts";
-import { slugifyDisplayName } from "@/lib/profile-slug";
+import { slugifyDisplayName, validateProfileDisplayName, DEFAULT_PROFILE_SLUG } from "@/lib/profile-slug";
 import { buildProfileHermesPathBundle } from "@/modules/hermes/lib/profile-paths";
 import type { AgentProfile, ProfileFile } from "@/types/console";
 import { badRequest, conflict, ok, serverError } from "@/lib/api-response";
@@ -139,14 +139,41 @@ export async function POST(request: NextRequest) {
       cloneFrom?: string;
     };
 
-    if (!name || typeof name !== "string" || name.trim().length < 2) {
+    if (!name || typeof name !== "string") {
       return badRequest("Name is required (min 2 characters)");
     }
 
+    // Judge the NAME, before it is slugified. The check below used to run on the
+    // already-slugified value, and every value slugifyDisplayName can produce
+    // satisfies the slug pattern by construction, so it could never fire:
+    // "../evil" was laundered into a legitimate-looking profile called "evil"
+    // and ".." into the literal fallback "profile" (T-0061).
+    const nameCheck = validateProfileDisplayName(name);
+    if (!nameCheck.ok) return badRequest(nameCheck.error);
+
     const slug = slugifyDisplayName(name);
 
+    // Kept, and now honestly labelled: an invariant assertion at a filesystem
+    // boundary, not a working guard on this path. It cannot fire for any output
+    // of slugifyDisplayName, and there is a test asserting exactly that. It
+    // stays because the day someone widens the slugifier is the day it earns
+    // its place, and deleting a fence at a path boundary to save two lines is
+    // the wrong trade.
     const prof = requireSafeProfileName(slug);
     if (prof instanceof NextResponse) return prof;
+
+    // The root agent is NOT in agent_profiles (it lives in agent_root), so the
+    // ordinary collision check below cannot see it, and
+    // resolveProfileHermesHome("default") resolves to the ROOT Hermes home
+    // rather than profiles/default. Creating a profile named "Default"
+    // therefore rewrote the operator's own config.yaml, SOUL.md, AGENTS.md,
+    // USER.md and MEMORY.md with boilerplate and answered 200 (T-0061).
+    if (slug === DEFAULT_PROFILE_SLUG) {
+      return conflict(
+        `"${name.trim()}" resolves to the slug "default", which is the root agent rather than a ` +
+          `profile. Rename the root agent from Operations, or choose a different name.`,
+      );
+    }
 
     if (getProfile(slug)) {
       return conflict(`Profile "${slug}" already exists`);
