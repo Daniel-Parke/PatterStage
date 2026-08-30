@@ -16,7 +16,7 @@ import PageHeader from "@/components/layout/PageHeader";
 import Button from "@/components/ui/Button";
 import { SearchInput } from "@/components/ui/Input";
 import { LoadingSpinner, EmptyState } from "@/components/ui/LoadingSpinner";
-import { useToast } from "@/components/ui/Toast";
+import { LastResult, useToast } from "@/components/ui/Toast";
 import { apiFetch, toastError } from "@/lib/api-fetch";
 import { runSyncAction } from "@/lib/operation-sync-action";
 import { filterByCaseInsensitiveSubstring } from "@/lib/list-search";
@@ -31,7 +31,7 @@ export default function PersonalitiesPage() {
   const [search, setSearch] = useState("");
   const [activePersonality, setActivePersonality] = useState<string>("");
   const [editTarget, setEditTarget] = useState<Personality | null | undefined>(undefined);
-  const { showToast, toastElement } = useToast();
+  const { showToast, toastElement, lastResult } = useToast();
 
   const loadPersonalities = useCallback(async () => {
     setLoading(true);
@@ -215,6 +215,8 @@ export default function PersonalitiesPage() {
           onSaved={handleSaved}
         />
       )}
+
+      <LastResult result={lastResult} />
 
       {toastElement}
     </AppPageShell>

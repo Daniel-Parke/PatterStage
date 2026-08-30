@@ -8,7 +8,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
+
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, badRequest, notFound } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
@@ -24,9 +24,6 @@ type Ctx = { params: Promise<{ id: string; messageId: string }> };
 const TERMINAL: ReadonlySet<string> = new Set(["complete", "failed", "cancelled", "streaming"]);
 
 export async function PATCH(request: NextRequest, ctx: Ctx) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id, messageId } = await ctx.params;
   const existing = getMessage(messageId);
   if (!existing || existing.conversationId !== id) return notFound("Message not found");

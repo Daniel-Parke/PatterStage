@@ -60,3 +60,15 @@ The records under org/tasks/ are canonical.
 | T-0045 | standard | R2 | done | qa-batch-a-remediation-2026-08-26 |
 | T-0046 | standard | R2 | done | t0046-stream-error-truth-2026-08-26 |
 | T-0047 | standard | R2 | done | t0047-deadline-reach-2026-08-26 |
+| T-0048 | standard | R2 | done | t0048-read-only-reads-2026-08-29 |
+| T-0049 | standard | R2 | done | t0049-read-only-ratchets-2026-08-29 |
+| T-0050 | standard | R2 | done | t0050-feedback-durability-2026-08-29 |
+| T-0051 | standard | R2 | done | t0051-composer-finishes-2026-08-29 |
+| T-0052 | standard | R2 | done | t0052-chat-terminal-state-2026-08-29 |
+| T-0053 | standard | R1 | done | t0053-label-and-boot-2026-08-29 |
+| T-0054 | standard | R1 | done | t0054-untested-queue-2026-08-29 |
+| T-0055 | standard | R0 | proposed | unassigned |
+| T-0056 | standard | R2 | proposed | unassigned |
+| T-0057 | standard | R1 | done | t0057-doc-audit-2026-08-30 |
+| T-0058 | standard | R2 | done | t0058-composer-spend-2026-08-30 |
+| T-0059 | standard | R2 | proposed | unassigned |

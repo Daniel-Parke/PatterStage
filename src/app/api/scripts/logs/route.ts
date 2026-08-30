@@ -3,15 +3,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
+
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, badRequest } from "@/lib/api-response";
 import { tailScriptLog } from "@/lib/scripts-manager";
 
 export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { searchParams } = new URL(request.url);
   const name = searchParams.get("name") ?? "";
   if (!name) return badRequest("name is required");

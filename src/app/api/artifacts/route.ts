@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireAuth } from "@/lib/api-auth";
+
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok } from "@/lib/api-response";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
@@ -30,8 +30,6 @@ const createSchema = z
   .strict();
 
 export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   try {
     const sp = request.nextUrl.searchParams;
     const kindParam = sp.get("kind");
@@ -49,8 +47,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   const parsed = await parseAndValidateJsonBody(request, createSchema);
   if (parsed instanceof NextResponse) return parsed;
   try {

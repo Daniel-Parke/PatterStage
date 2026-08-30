@@ -1,17 +1,15 @@
+import type { NextRequest } from "next/server";
 // ═══════════════════════════════════════════════════════════════
 // /api/models/sync/drift — detect config drift between DB and config.yaml
 // ═══════════════════════════════════════════════════════════════
-import { NextRequest } from "next/server";
+
 import { ok } from "@/lib/api-response";
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+
 import { buildDriftDetails, detectConfigDrift } from "@/modules/hermes/lib/sync-manager";
 import type { SyncDrift } from "@/components/models/types";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET(_request: NextRequest) {
   try {
     const driftDetails = buildDriftDetails(detectConfigDrift());
 

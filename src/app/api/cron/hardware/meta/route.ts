@@ -1,6 +1,6 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 
-import { requireAuth } from "@/lib/api-auth";
+
 import { logApiError } from "@/lib/api-logger";
 import { ok, serverError } from "@/lib/api-response";
 import { getPsHardwareLogDir, getPsScriptsDir } from "@/lib/paths";
@@ -9,9 +9,7 @@ import { toError } from "@/lib/api-fetch";
 /**
  * GET /api/cron/hardware/meta — scriptsDir + logDir for UI (single source of truth).
  */
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
+export async function GET(_request: NextRequest) {
   try {
     return ok({
       scriptsDir: getPsScriptsDir(),

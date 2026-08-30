@@ -24,7 +24,7 @@ Under them, the same period split by the three things that spend tokens:
 | Source | What it is | Recorded? |
 |---|---|---|
 | Agent runs | A mission dispatched by you, a schedule or the queue | Yes |
-| Composer stages | One node of a Composer workflow, executed as a run | Yes |
+| Composer stages | One node of a Composer workflow, executed as a run | Yes, since T-0058 |
 | Deep Research | A research run from the Laboratory | Yes, since schema 34 |
 
 ### Deep Research runs from before the upgrade are still not counted
@@ -40,6 +40,7 @@ One case still records nothing: a run that **crashes mid-way**. The engine throw
 The figures come from token counts already recorded against each run, priced against a published per-model rate table (`src/lib/analytics/model-cost.ts`). Two consequences worth knowing:
 
 - A run with **no model recorded** (every Composer stage, which has no mission to carry the model) is priced at a conservative default rather than at zero. Unknown must never read as free.
+- **True only since T-0058 (2026-08-30).** Before it, this sentence described an intention rather than the product. Composer stages recorded no usage at all: the reconciler dropped the gateway's token counts on the way to the database, and the spend read requires `usage_json IS NOT NULL`, so the whole source was EXCLUDED and the Composer row showed `$0.00`. Not a conservative estimate; nothing. Composer runs that finished before that fix stay absent rather than being reported as unmeasured, which is a known gap and narrower than the research one described above.
 - Rates change and the table is static. Treat the number as the right order of magnitude, and your provider's dashboard as the truth.
 
 Runs of every status are counted, not just successful ones. A run that failed after burning tokens still cost you money.
@@ -67,6 +68,12 @@ They pause. They do not fail, cancel or drop anything. A schedule keeps its plac
 **Attended use is never blocked.** Clicking dispatch on a mission, running a schedule now, approving a Composer gate, starting a Deep Research run: all of these work identically whether the budget is unset, breached or armed. A human clicking dispatch is answering for the spend himself.
 
 You cannot arm the stop without a figure. The interface refuses it and so does the database, because a stop with no ceiling would refuse every unattended dispatch forever with no number anybody could raise.
+
+### The stop counts less than the panel does
+
+The figure on screen and the figure the stop checks are not built from the same rows. The panel totals all three sources: agent runs, Composer stages and Deep Research. The guard that pauses unattended dispatch ([`spend-guard.ts`](../src/lib/spend/spend-guard.ts)) reads recorded run usage only, which is agent runs and Composer stages, and never reads the research table at all.
+
+So on an install that spends most of its money on Deep Research, the panel can show the meter full and print the over-budget sentence while unattended dispatch carries on, because the number the guard measured is smaller than the number you are looking at. Read the stop as a ceiling on dispatched runs rather than on every dollar the panel reports. This is a gap in the code, not a design decision, and it is worth checking whether it has been closed before leaning on the checkbox.
 
 ### One case where it stops without a breach
 

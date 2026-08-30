@@ -41,7 +41,6 @@ jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: jest.fn() }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
 }));
 
 jest.mock("@/modules/hermes/lib/config-sync", () => ({
@@ -71,12 +70,10 @@ jest.mock("@/lib/credentials-repository", () => {
 });
 
 const repo = require("@/lib/credentials-repository") as Record<string, jest.Mock>;
-const auth = require("@/lib/api-auth") as Record<string, jest.Mock>;
 const audit = require("@/lib/audit-log") as { appendAuditLine: jest.Mock };
 
 beforeEach(() => {
   jest.clearAllMocks();
-  auth.requireAuth.mockReturnValue(null);
 });
 
 const SAMPLE = {
@@ -161,17 +158,12 @@ describe("/api/credentials", () => {
     expect(res.status).toBe(400);
   });
 
-  it("POST is gated by readonly", async () => {
-    auth.requireAuth.mockReturnValue({ status: 503, json: async () => ({}) });
-    const res = await postCreds({ label: "x", provider: "anthropic", apiKey: "y" });
-    expect(res.status).toBe(503);
-  });
-
-  it("POST is gated by api-key auth", async () => {
-    auth.requireAuth.mockReturnValue({ status: 401, json: async () => ({}) });
-    const res = await postCreds({ label: "x", provider: "anthropic", apiKey: "y" });
-    expect(res.status).toBe(401);
-  });
+  // Read-only refusal is no longer asserted here, because it is no longer
+  // enforced here. T-0048 deleted the per-route guard: src/proxy.ts refuses
+  // every unsafe method under PS_READ_ONLY before a handler runs, so a test that
+  // calls this handler directly bypasses the thing it means to check. The
+  // guarantee is asserted per route, in both directions, in
+  // tests/unit/read-only-actually-reads.test.ts.
 
   it("POST returns 400 on malformed JSON", async () => {
     // Regression for the request.json() bug class: malformed JSON previously

@@ -1,0 +1,28 @@
+{
+  "id": "T-0055",
+  "intent": "Record the findings from the 2026-08-29 QA review that are real but are not defects, so they are tracked work rather than prose in a report that gets lost. Operator ruled 2026-08-29: file as tracked records. Nothing here is scheduled; each is a decision waiting for evidence or a ruling.",
+  "declared": {
+    "capabilities": [],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R0",
+  "tier_ruled": "R0",
+  "reasons": [],
+  "status": "proposed",
+  "owner_session": "unassigned",
+  "claims": [],
+  "items": [
+    "HOSTILE PROFILE SLUGS ARE GUARDED BUT UNTESTED. requireSafeProfileName / resolveSafeProfileName in src/lib/fs/path-security.ts already reject empty, '.', '..' and separator-bearing segments, so POST/DELETE /api/agent/profiles/constructor is defended. Nothing asserts it. A test is cheap and would close the report's B7.",
+    "THE SCHEDULER LEASE HAS NO CATCH-UP STORY. BackgroundScheduler claims ownership by pid and heartbeat; during the QA pass a lease-holder died and roughly 55 minutes of an every-5m schedule did not fire, then the fresh server caught up exactly once (catchUpPolicy fire_once). Whether that is right is a product decision, not a bug: firing 11 missed runs at once would be worse. Either way it should be documented in QA_NOTES, and a follower that can prove the owner's pid is dead could take over sooner than heartbeat staleness allows.",
+    "zodErrorResponse RETURNS FIELD-LEVEL SCHEMA DETAIL. src/lib/api-schemas.ts:169 sends error.flatten() to the client on a 400. It is one choke point funnelled through parseAndValidateJsonBody, so changing it is a one-line decision covering 51 routes. Not obviously wrong for a single-operator control plane behind a token; recorded so it is a choice rather than an accident.",
+    "THE MISSIONS POST ROUTE CARRIES FIVE ACTIONS AND NO 'create'. dispatch/promote/update/cancel/delete in one handler, with creation going through action:'dispatch' with dispatchMode:'save'. The report argues this is why A3 and A4 style bugs are easy to introduce, and T-0051 found three defects in exactly that path. Splitting create from dispatch at the API level is a real option with a real migration cost.",
+    "THE HOUSE LEANS ON `title` OVER `aria-label`: 112 uses against 27. `title` IS a valid accessible-name source per HTML-AAM, so the T-0050 guard accepts it, but it is not exposed to touch or keyboard-only users. Migrating the 112 is a ruling, not a defect fix.",
+    "THE PHANTOM-MOCK CHECK COVERS ONE MODULE. T-0049 fails the suite when a test mocks a name @/lib/api-auth does not export. The same lie is possible against any module and there is no reason to think api-auth was the only one that had drifted; a general rule needs a measured baseline first.",
+    "THE CHAT AND RESEARCH STUCK-SWEEPS RUN AT BOOT ONLY. T-0052 mirrored the existing Deep Research shape deliberately. A long-lived server holds a wedged row until it restarts. Moving both onto the BackgroundScheduler tick should be one change covering both, not one covering either."
+  ],
+  "timestamps": {
+    "opened": "2026-08-30T07:00:00Z",
+    "updated": "2026-08-30T07:00:00Z"
+  }
+}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
+import { requireNotReadOnly } from "@/lib/api-auth";
 import { badRequest, notFound, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
@@ -20,8 +20,6 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ name: string }> },
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   const ro = requireNotReadOnly("skill toggles are disabled");
   if (ro) return ro;
 

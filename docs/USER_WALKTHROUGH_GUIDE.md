@@ -11,7 +11,7 @@ This guide is the **operator manual** for PatterStage. It describes every area o
 
 The guide is written for the **Junior developer / operator**: every page is documented, every common action has a "Typical use" walkthrough, and "Notes" call out non-obvious behaviour. If you have not used PatterStage before, read the "What PatterStage is" section and the "Dashboard" section first, then jump to the page you need.
 
-**How this guide is organised:** one section per sidebar entry, grouped by sidebar section (Orchestration, Operations, Laboratory, Main, Config, Rec Room) and in sidebar order within each group. Cross-references to the sibling technical docs ([MISSIONS.md](MISSIONS.md), [DEPLOY.md](DEPLOY.md), [API.md](API.md), [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md), [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md), [MIGRATION.md](MIGRATION.md), [ENV_REFERENCE.md](ENV_REFERENCE.md), [TESTING.md](TESTING.md), [SYSTEM-CRON.md](SYSTEM-CRON.md), [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md), [PATTERSTAGE.md](PATTERSTAGE.md)) are made inline.
+**How this guide is organised:** one section per sidebar entry, grouped by sidebar section (Orchestration, Operations, Laboratory, Main, Config, Rec Room) and in sidebar order within each group. Cross-references to the sibling technical docs ([MISSIONS.md](MISSIONS.md), [DEPLOY.md](DEPLOY.md), [API.md](API.md), [CATALOG_AND_PROFILES.md](CATALOG_AND_PROFILES.md), [TOOLS_AND_MISSIONS.md](TOOLS_AND_MISSIONS.md), [MIGRATION.md](MIGRATION.md), [ENV_REFERENCE.md](ENV_REFERENCE.md), [TESTING.md](TESTING.md), [SYSTEM-CRON.md](SYSTEM-CRON.md), [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md), [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md)) are made inline.
 
 ---
 
@@ -65,17 +65,24 @@ PatterStage is **a Next.js app** that talks to a SQLite database under `~/patter
 
 **Why a separate app and not just a CLI?** Some things are easier in a UI: a session transcript with markdown rendering, a kanban mission board, a per-profile drift banner, a per-row Push/Pull on model records. PatterStage is the place to drive those workflows.
 
-**The sidebar groups features into five sections:**
+**The sidebar groups features into six sections**, in this order:
 
 | Section | Purpose |
 |---------|---------|
 | **Main** | Overview, sessions, memory, logs |
-| **Orchestration** | Missions (one-off + recurring), Scripts (host cron), gateway chat |
+| **Orchestration** | Missions (one-off + recurring), Composer workflows, Scripts (host cron), Chat |
 | **Operations** | Agent profiles, skills, tools, personalities |
+| **Laboratory** | Insights (analytics, achievements and provider spend), Deep Research, Artifacts |
 | **Rec Room** | Story Weaver (interactive fiction) |
 | **Config** | Models, HERMES.md, environment, YAML sections |
 
-At the bottom of the sidebar are three deploy buttons (**Update**, **Restart**, and **Rebuild**) that talk to the host's `ps-deploy.sh` and rebuild the running PatterStage process. See [Sidebar deploy buttons](#sidebar-deploy-buttons-update--rebuild--restart) and [DEPLOY.md](DEPLOY.md).
+The first five are not a hand-written list. `src/components/layout/sidebar-config.ts`
+builds them from every registered module's `nav` in registration order, so a
+section appears where its module sits in `src/lib/modules/registry.ts`. **Config
+Settings** is assembled separately, from the same modules' pinned links and
+config groups, and always renders last.
+
+At the bottom of the sidebar are three deploy buttons (**Update**, **Restart**, and **Rebuild**) that run the host's deploy runner, `scripts/tooling/ps-deploy.mjs`, and rebuild the running PatterStage process. See [Sidebar deploy buttons](#sidebar-deploy-buttons-update--rebuild--restart) and [DEPLOY.md](DEPLOY.md).
 
 ---
 
@@ -160,7 +167,9 @@ the two are reported separately on purpose.
 
 ### Where your data lives
 
-One SQLite file under `PS_DATA_DIR`, currently at schema version 30 with 49 tables.
+One SQLite file under `PS_DATA_DIR`, currently at schema version 34 with 47 tables.
+Both numbers move, so the authority is `MIGRATION_HEAD_SCHEMA_VERSION` in
+`src/lib/db-schema.ts`: that constant is the head a migrated database must reach.
 Nothing leaves your machine except the calls your agent makes to whichever model
 provider you configured.
 
@@ -216,17 +225,21 @@ Four things it now refuses to do, each of which it used to do silently:
 
 ### The gates you inherit
 
-`npm run lint` runs five checks, and they are the repo's actual law:
+`npm run lint` runs nine checks in this order, and they are the repo's actual law:
 
 | check | what it stops |
 |---|---|
 | `check-agent-files` | `AGENTS.md` over 40 lines, or `CLAUDE.md` drifting from it |
 | `check-doc-links` | a link in `docs/` pointing at a file that does not exist |
+| `check-derived-views` | a derived view (`org/TASKS.md`) disagreeing with the records under `org/tasks/` |
+| `check-read-only-guards` | a read-only guard inside a `GET`, `HEAD` or `OPTIONS` handler, the defect described under [Read-only mode](#first-run-and-how-you-get-in) |
 | `design-lint` | 11 rules on a **shrink-only** baseline: it may fall, never rise |
+| `contrast-check` | a text tier drifting below the WCAG AA floor it claims to clear |
+| `coverage-floor-check` | a declared coverage floor being edited downwards |
 | `eslint` | zero warnings tolerated |
 | `typecheck:tests` | a test that lies about a real function signature |
 
-Then `tsc`, `jest` (2,279 tests), and `next build`.
+Then `tsc`, `jest` (3,214 tests at the time of writing; read the run, not this number), and `next build`.
 
 **The shrink-only baseline is the important idea.** Turning ten design rules on
 against a large codebase produces hundreds of failures, and a gate that is red on
@@ -307,13 +320,14 @@ The dashboard is your **status board**, not the primary place to launch missions
 
 **Header bar**
 - Live clock and weekday/date, updating every 1 second.
-- **ONLINE** status dot (green) when the dashboard's own `/api/status` is responsive; otherwise **OFFLINE**.
+- **ONLINE** status dot (green) when `/api/monitor` reports the agent framework is available; **NOT INSTALLED** (orange, with a tooltip naming the agent) when the monitor says it is not. A monitor that cannot tell either way is read as available, so this badge only ever goes orange on a definite answer.
 - Subtitle showing the active model, read from `~/.hermes/config.yaml` first and from the Models registry as a fallback. If the registry disagrees, a hint suggests "push Bob to write config.yaml".
 
-**Compact stat row (three pills)**
+**Compact stat row (four pills)**
 - **Processes:** number of active Hermes processes. Shows "N Active" when there is at least one agent running, "Idle" when no agents are running, and "Offline" when the agent detector is unreachable.
 - **Sessions:** total session count plus "N active · M last 7d" to summarise recent activity.
 - **Memory:** fact count and provider name (Holographic, Hindsight, or whatever the active backend is).
+- **Scheduler:** the background scheduler's heartbeat, reading **Ticking**, **Stalled**, **Never started** or **Unknown**, with the age of the last tick and the pid holding the lease underneath. This is the only surface that tells you the scheduler has stopped: when it stops, schedules quietly do not fire and a dispatched mission stays "running" forever.
 
 **Continue work card**
 - A link to the most recent session with "open transcript" and "X minutes ago".
@@ -366,8 +380,10 @@ The mission board is where you **compose, dispatch, schedule, and cancel** agent
 - Refresh button to re-fetch the mission list.
 - **+ New Mission** button that opens the composer sheet.
 
-**Stat row (four cards)**
-- Total, Active, Completed, Failed counts.
+**Stat strip**
+- A donut splitting missions into Successful / Failed / Dispatched / Queued with the total in the middle.
+- Four tiles: **Total**, **Active**, **Done**, **Failed**.
+- A success-rate ring on the right.
 
 **Quick templates strip** (only when the composer is closed)
 - Category filter pills at the top.
@@ -395,7 +411,7 @@ The mission board is where you **compose, dispatch, schedule, and cancel** agent
 - **Duplicate:** clone the mission as a new draft.
 - **Edit:** re-open the composer for the existing mission (the form title becomes "Edit Mission" or "Re-Dispatch: <name>" depending on status).
 - **Delete:** two-step confirm; removes the mission and any linked schedule (or legacy cron job).
-- **Cancel:** two-step confirm; stops the running agent. Works for **running** and **queued** missions. The UI updates immediately; the underlying `hermes chat` process is stopped in the background.
+- **Cancel:** two-step confirm; stops the running agent. Works for **running** and **queued** missions. The UI updates immediately. Behind it, `cancelMissionRun()` asks the gateway to stop the run over HTTP (`runtime.stopRun`), then finalises the local run, mission and session rows whether or not that call succeeded. There are no signals and no `pkill`.
 
 **Composer sheet (opens for new / edit / re-dispatch / template-apply)**
 
@@ -422,13 +438,13 @@ The composer also has a **Save as Template** button that stores the current form
 4. Expand **Assembled agent prompt** to sanity-check the agent-facing text.
 5. Click **Run now** for immediate runs, or **Schedule** for recurring work.
 6. Watch the card move from **Queued** to **Dispatched**, then to **Successful** or **Failed**.
-7. To stop early, expand the card and click **Cancel**. The card moves to **Failed** immediately; the agent process stops shortly after (the Hermes delegation pattern: stopping the parent run stops delegated subagents).
+7. To stop early, expand the card and click **Cancel**. The card moves to **Failed** immediately, because local state is finalised regardless; the stop request travels to the gateway separately.
 
 For mission lifecycle details (single-flight queue, model resolution, cancel signal sequence, session closure bridge), see [MISSIONS.md](MISSIONS.md).
 
 ### Notes
 
-- Cancel is implemented for Linux and macOS only. On other platforms, the DB and cron-pause still apply; check `~/.hermes/logs` for the underlying process state.
+- Cancel has no platform branch: it is one HTTP stop call plus a local write, so it behaves the same on Linux, macOS and Windows. The caveat worth knowing is a different one. The stop call is best-effort, so a gateway that does not answer it leaves the remote run alive while PatterStage has already marked the mission failed. If a cancelled mission still seems to be burning tokens, check the gateway, not PatterStage.
 - "Re-Dispatch" opens the same composer with the existing fields; choosing a dispatch mode creates a brand-new mission id (not an in-place update of the completed one).
 - Promoting a draft or queued mission uses `action: "promote"` on `POST /api/missions`. The route the API uses depends on the mission's current status, and the UI handles this for you.
 
@@ -524,7 +540,7 @@ Opened by "Review…", and the second half of a deliberate two-step launch. Noth
 - **A failed stage cannot be approved.** If the stage crashed or its verdict failed, the engine routes `on_fail` whatever the gate says, so clicking "Accept" on a broken stage cannot carry a run to `completed` with nothing behind it.
 - **Loops are bounded.** A single stage may execute at most 5 times in one run, that is four re-runs after the first attempt (overridable per node via `config.maxAttempts`), and a run may execute at most 100 stages in total. Hitting either limit stops the run with a readable error instead of looping forever.
 - **A failure with nowhere to go fails the run.** If a stage fails or is rejected and the graph has no `on_fail` or `on_reject` edge leaving it, the run fails with the stage label and the verdict reasons, for example "Review failed: the goal is too vague". That sentence is what the pink line under the run title shows.
-- **With no Hermes gateway, runs fail at the first stage.** `dispatchComposerNode` submits each stage through the runtime; when the gateway is unreachable the node-run is marked `failed` with the transport error (falling back to "stage dispatch failed"), and the next composer tick routes that as an `on_fail`. Browsing workflows, reading past runs, and the whole Build tab work with no gateway at all. A gateway answering 429 is not failed on the spot: the submit is retried up to four times on a short linear backoff, about 12 seconds in the worst case, so a brief brush with its concurrency cap costs no attempt. A 429 that outlasts the retries still fails the stage.
+- **With no Hermes gateway, runs fail at the first stage.** `dispatchComposerNode` submits each stage through the runtime; when the gateway is unreachable the node-run is marked `failed` with the transport error (falling back to "stage dispatch failed"), and the next composer tick routes that as an `on_fail`. Browsing workflows, reading past runs, and the whole Build tab work with no gateway at all. A gateway answering 429 is not failed on the spot: the submit is retried up to three times on a short linear backoff (2s, 4s, 6s), four attempts in all and about 12 seconds in the worst case, so a brief brush with its concurrency cap costs no attempt. A 429 that outlasts the retries still fails the stage.
 - **`research` and `group` stages do not use the agent runtime.** A `research` node drives a Deep Research run and is force-failed after 20 minutes so an interrupted one cannot wedge the workflow. A `group` node spawns its referenced workflow as a nested run, blocked from recursing into a workflow already in its own parent chain and capped at 8 levels of nesting.
 - **The stream is a convenience; the database is the truth.** A dropped socket is silent and self-healing, because polling still covers it. Only a genuine server-side read failure raises the "Live updates: " banner, and the last good snapshot stays on screen underneath it.
 - **The view is deep-linkable.** The selected workflow and run are mirrored into the URL as `?workflow=` and `?runId=` with `history.replaceState`, so a reload or a shared link lands on the same run.
@@ -537,27 +553,27 @@ Opened by "Review…", and the second half of a deliberate two-step launch. Noth
 
 ## Orchestration → Scripts
 
-The **Scripts** page is a file-aware manager for **host shell scripts** under `PS_DATA_DIR/scripts` (backups, cleanups, health checks), separate from agent missions. (Scheduling *agent* work is done from the Missions composer's **Schedule** mode; see the [Scheduled missions](#scheduled-missions) note above.) It reads the script files (`/api/scripts`), cross-references the host crontab for each one's schedule, runs them on demand, and tails their logs. The bundled `ps-backup.sh` ships under `scripts/hardware/` and is copied into `PS_DATA_DIR/scripts` during `setup.sh`.
+The **Scripts** page is a file-aware manager for **host scripts** under `PS_DATA_DIR/scripts` (backups, cleanups, health checks), separate from agent missions. (Scheduling *agent* work is done from the Missions composer's **Schedule** mode; see the [Scheduled missions](#scheduled-missions) note above.) It reads the script files (`/api/scripts`), cross-references the host crontab for each one's schedule, runs them on demand, and tails their logs. The bundled host scripts ship under `scripts/hardware/`, and `setup.sh` copies every `.sh` and `.mjs` among them into `PS_DATA_DIR/scripts`. On a stock install that means the page already has rows in it, the cross-platform `ps-db-backup.mjs`, `ps-health-check.mjs`, `ps-log-rotate.mjs`, `ps-disk-report.mjs` and `ps-system-report.mjs` among them.
 
 ### What you see
 
-A row per `.sh` file in `PS_DATA_DIR/scripts`, each showing **name · size · schedule (or "not scheduled") · last run**, with actions:
+A row per script file in `PS_DATA_DIR/scripts`, each showing **name · size · schedule (or "not scheduled") · last run**, with actions:
 - **Run now:** execs the script server-side (path-validated, no shell) and appends output to its log.
 - **Logs:** opens a modal tailing the script's log under `PS_HARDWARE_LOG_DIR`.
 - **Schedule:** puts the script on the host crontab (a 5-field cron); once scheduled it shows the cadence and an **Unschedule** action.
 - **Refresh:** re-reads the files + crontab.
 
-Drop a new `.sh` file into `PS_DATA_DIR/scripts` and it appears automatically.
+Seven extensions are listed, run and scheduled: `.sh`, `.mjs`, `.cjs`, `.js`, `.ps1`, `.bat` and `.cmd` (`ALLOWED_SCRIPT_EXTS` in `src/lib/scripts-manager.ts`). Drop a file with any of them into `PS_DATA_DIR/scripts` and it appears automatically. Anything else is ignored.
 
 ### Typical use
 
-1. Drop or edit a script under `PS_DATA_DIR/scripts` (e.g. `ps-backup.sh`).
+1. Drop or edit a script under `PS_DATA_DIR/scripts` (e.g. `ps-db-backup.mjs`, or `ps-backup.sh` where bash is present).
 2. **Run now** to test it; check **Logs** for output.
 3. **Schedule** it with a cron expression so the host runs it on a timer (or **Unschedule** to stop).
 
 ### Notes
 
-- Running execs the script with the PatterStage process's permissions, the same as a crontab entry would. Only files directly under `PS_DATA_DIR/scripts` can be run (no traversal, `.sh` only, no shell interpolation).
+- Running execs the script with the PatterStage process's permissions, the same as a crontab entry would. Only files directly under `PS_DATA_DIR/scripts` can be run: no traversal, one of the seven allowed extensions, and no shell interpolation. The interpreter is resolved from the extension and the OS by `interpreterFor()` in `src/lib/platform.ts`: Node for `.mjs` / `.cjs` / `.js`, bash for `.sh`, PowerShell for `.ps1`, `cmd.exe` for `.bat` / `.cmd`. A script whose interpreter is not available on this platform (a `.bat` on Linux, say) is listed but refuses to run, with a message naming the platform.
 - The legacy agent-cron **Cron** page (Hermes `jobs.json`) has been **removed**: scheduled *agent* work belongs in **Missions**; existing cron jobs migrate to schedules automatically on update.
 
 For the bundled host-script catalogue (e.g. `ps-backup.sh` for a Hindsight memory snapshot) and the script-level env vars, see [SYSTEM-CRON.md](SYSTEM-CRON.md).
@@ -573,24 +589,27 @@ For the bundled host-script catalogue (e.g. `ps-backup.sh` for a Hindsight memor
 
 ![Orchestration chat](images/chat.png)
 
-*Orchestration Chat, with the saved-session sidebar on the left and a live thread on the right: the gateway path, not the mission path.*
+*Orchestration Chat, with the saved-conversation sidebar on the left and a live thread on the right.*
 
-**Orchestration → Chat** is a **web chat** against the Hermes gateway, not the same as dispatching a mission. Missions use non-interactive `hermes chat -q` with a structured mission prompt; chat uses the gateway completion path with full conversation history. Sessions persist to localStorage so they survive page reloads.
+**Orchestration → Chat** is a **web chat** with your agent, and it has two modes. In **Agent** mode, the default, a turn becomes a real PatterStage run submitted through the runtime, with tools, memory, live tool cards and human-in-the-loop approvals. In **Fast** mode a turn is a raw model completion straight from the gateway, with no tools. Missions differ from both: a mission is a structured mission prompt dispatched as its own run from the missions board.
+
+Conversations are stored **server-side** in SQLite (`chat_conversations` and `chat_messages`, added by migration 013) and read back through `/api/chat`, so they survive a reload, a restart, and a different browser. Nothing about a conversation lives in `localStorage`.
 
 ### What you see
 
 **Header**
-- **Model selector** (`InlineSelect`, purple accent): a merged list of registry models and gateway models. The model you pick here is **per-session**: switching it on one session does not affect other sessions.
-- **+ New Chat** button: starts a fresh session.
+- **Mode toggle** (**Agent** / **Fast**), the first control in the header. Agent is the default (`CHAT_DEFAULT_MODE`). It is disabled while a reply is streaming.
+- **Model selector** (`InlineSelect`, purple accent), **shown only in Fast mode**. Its list is the Models registry plus the `hermes-agent` default; gateway `/v1/models` ids are deliberately excluded, so a model the registry does not know about is not selectable here. The model is **per-conversation**: opening a conversation adopts the model it was created with.
+- **+ New Chat** button: starts a fresh conversation.
 
 **Left sidebar (always visible)**
-- "Sessions (N)" header.
-- A list of saved sessions (filtered to those with messages, capped at `CHAT_MAX_SESSIONS`).
-- Per session: title, message count, hover actions (**Download as JSON** with an "as CSV" submenu, and **Delete**).
-- Active session highlighted with a neon-cyan left border.
+- "Conversations (N)" header.
+- Every conversation `/api/chat` returns. There is no cap and no message-count filter.
+- Per conversation: title, relative last-activity time, hover actions (**Download as JSON** with an "as CSV" submenu, and **Delete**, which is a two-step confirm).
+- Active conversation highlighted with a neon-cyan left border.
 
 **Main area**
-- **GatewayBanner** at the top, shown when no active session is selected, is one of four banners: **offline** (gateway unreachable), **auth-missing** (gateway up but PatterStage can't authenticate, so set `API_SERVER_KEY`), **model-missing** (no agent default set), or **checking** (initial load).
+- **GatewayBanner** at the top, shown when no conversation is open and there are no messages, is one of four banners: **offline** (gateway unreachable), **auth-missing** (gateway up but PatterStage can't authenticate, so set `API_SERVER_KEY`), **model-missing** (no agent default set), or **checking** (initial load).
 - **Empty state** when nothing is selected: a large icon, "Chat with your agent" prompt, and short instruction text.
 - **Message thread** when a session is active: user bubbles on the right (neon-cyan tint) and assistant bubbles on the left (neon-purple icon). Assistant messages are markdown-rendered with copy buttons on code blocks. Timestamps in 24-hour format.
 - **TypingIndicator** while the assistant is streaming.
@@ -602,19 +621,20 @@ For the bundled host-script catalogue (e.g. `ps-backup.sh` for a Hindsight memor
 
 ### Typical use
 
-1. Pick a model from the dropdown: this is per-session, so different sessions can use different models.
-2. Type a question and press **Enter**.
-3. If the answer is taking too long, hit **Stop** to abort.
-4. To save the session, just leave it. It persists in localStorage.
-5. To export, hover a session in the sidebar and choose **Download as JSON** or **Download as CSV**.
+1. Choose **Agent** (tools and memory, a real run) or **Fast** (a raw completion). Agent is the default.
+2. In Fast mode, pick a model from the dropdown; it is per-conversation, so different conversations can use different models.
+3. Type a question and press **Enter**.
+4. If the answer is taking too long, hit **Stop** to abort.
+5. To save the conversation, just leave it. It is already on the server.
+6. To export, hover a conversation in the sidebar and choose **Download as JSON** or **Download as CSV**.
 
-**Model resolution.** Inference uses whichever model is selected in the dropdown. If that model is not the Models registry's agent default, the dropdown value still wins for this session. For global default behaviour, set **Agent default** at **Config → Models** and **Sync to Hermes** so `config.yaml` matches.
+**Model resolution.** In Fast mode, inference uses whichever model is selected in the dropdown, and that value wins over the Models registry's agent default for this conversation. In Agent mode there is no dropdown: the run resolves its model the way any other run does. For global default behaviour, set **Agent default** at **Config → Models** and **Sync to Hermes** so `config.yaml` matches.
 
 ### Notes
 
-- Chat uses the **gateway completion path**; missions use `hermes chat -q`. They have separate session lifecycles. Mission sessions show up under **Main → Sessions**; chat sessions live in this page's localStorage.
-- Per-session model is restored when you switch back to a session.
-- `CHAT_DEFAULT_MODEL` in `.env.local` sets the default for new sessions.
+- **Agent mode creates a run; Fast mode does not.** `dispatchChatTurn` (`src/lib/orchestration/chat-dispatch.ts`) calls `runtime.submitRun()` and threads the turn onto the conversation's agent session, so memory carries across turns. Because it is a real `runs` row, an Agent-mode turn also lands in the run-derived figures on **Laboratory → Insights** and in the **Agent runs** line of provider spend.
+- Per-conversation model is restored when you switch back to a conversation.
+- `CHAT_DEFAULT_MODEL` is a **constant in `src/types/chat.ts`**, currently `"hermes-agent"`, not an environment variable. Putting it in `.env.local` does nothing. To change what new conversations use, set **Agent default** at **Config → Models**.
 
 ---
 
@@ -624,7 +644,7 @@ For the bundled host-script catalogue (e.g. `ps-backup.sh` for a Hindsight memor
 
 *The Agents page in its two-column form: the profile list on the left, the selected profile's behaviour files and sync state on the right.*
 
-**Operations → Agents** is the agent-profile editor. It lists **professional profiles** (QA, SWE, DevOps, Data Scientist, Creative Lead, Support, DevOps Engineer) plus the default **Bob** persona, and lets you edit each profile's behaviour files, push and pull between PatterStage SQLite and `HERMES_HOME/profiles/`, and clone / delete profiles.
+**Operations → Agents** is the agent-profile editor. It lists the seven **professional profiles** the seed pack ships (QA, SWE, DevOps, Data Scientist, Creative Lead, Support, Baseline) plus the default **Bob** persona, and lets you edit each profile's behaviour files, push and pull between PatterStage SQLite and `HERMES_HOME/profiles/`, and clone / delete profiles.
 
 ### What you see
 
@@ -975,7 +995,7 @@ The list below the tiles splits **one** period, the period the budget covers (`s
 - **A stop cannot exist without a figure**, in four places. The checkbox is disabled with an empty field; the panel's `save()` and `PUT /api/spend` both force `hardStop: false` when the figure is cleared, and `PUT` answers **"Set a budget figure before switching the hard stop on"** when you try to arm one without a figure; migration `033_spend_policy.sql` carries `CHECK (hard_stop = 0 OR limit_usd IS NOT NULL)`; and `evaluateSpend()` checks `limitUsd` first, so even a pair that somehow reached the law returns `unset` and cannot block. A stop with no ceiling would refuse every unattended dispatch forever with no number anybody could raise.
 - **Where the setting lives.** The `spend_policy` table, one row, `id = 1`, added by migration `033_spend_policy.sql` and seeded `INSERT OR IGNORE` with `limit_usd = NULL`, `period = 'month'`, `hard_stop = 0`. It is a user setting, so it sits in the database with your data rather than in a file you edit by hand. `writeSpendPolicy()` writes every changed field in one `UPDATE`, so the pair the database forbids never exists even for a statement.
 - **The API.** `GET /api/spend` returns the whole summary: three periods, three sources each, plus `budgetPeriod`, `budgetSpentUsd`, your policy, the verdict, the `unmeasured` sentences and `generatedAt`. `PUT /api/spend` accepts `limitUsd` (a positive number, or `null` to remove it), `period` (`day`, `week`, `month`) and `hardStop` (boolean); it rejects a bad figure with **"Budget must be a positive number of US dollars, or null to remove it"**, a bad period with **"Period must be one of: day, week, month"**, a non-boolean stop with **"hardStop must be true or false"**, and an empty body with **"Nothing to change: send limitUsd, period or hardStop"**.
-- **Both verbs are authenticated; only `PUT` is refused in read-only mode.** Authentication is not a per-route matter here: `src/proxy.ts` is the one authentication boundary and runs before every handler, and its `PUBLIC_PATHS` set contains only `/api/health`. The `requireAuth()` call at the top of `PUT` does **not** authenticate anything, despite the name: it is `requireNotReadOnly()`, and it returns a 503 when `PS_READ_ONLY=true`. `GET` has no such call, so the spend read still works on a read-only install.
+- **Both verbs are authenticated; only `PUT` is refused in read-only mode.** Authentication is not a per-route matter here: `src/proxy.ts` is the one authentication boundary and runs before every handler, and its `PUBLIC_PATHS` set contains only `/api/health`. Neither verb carries an auth or read-only call of its own any more: `requireAuth()` was deleted in T-0048, and the proxy refuses unsafe methods under `PS_READ_ONLY` before a handler runs. So the `PUT` is refused with the proxy's 503 and the `GET` is untouched, which is why the spend read still works on a read-only install.
 - **The 80% line is in the data, not on the screen.** `SPEND_WARN_FRACTION` is `0.8` and `evaluateSpend()` returns an `approaching` state with a sentence at that point, but `SpendPanel` renders a sentence only for `over`. Between 80% and 100% you get the meter reading 80% or more and nothing else. `docs/SPEND.md` disagrees: it promises "a meter, a quiet nudge at 80 percent, and a plain sentence when you pass it", listing the nudge as a third thing beside the meter and the sentence. There is no such nudge in the panel today, and the doc is the side that is wrong.
 - **A failed spend fetch is silent on this page.** The Insights page composes its `LoadErrorBanner` from the stats, analytics and insights errors only; `useSpend()`'s error (`"Failed to load provider spend"`) is not consumed. When the fetch fails, `spend` is undefined and the panel simply keeps showing **"Loading provider spend…"**. If the panel never resolves, check `GET /api/spend` directly rather than waiting.
 - **There used to be a headline spend tile on this page and it was wrong.** The old **"Est. spend"** tile in the headline strip summed a query that inner-joins missions, so every Composer stage run was missing from it, and it was drawn over the 7/30/90 range switch, which is not a period anybody budgets in. It was removed as part of this work. Note that the **Tokens by model** card lower down the page still prints a per-model `$X.XX` from that same mission-joined aggregate over the selected range; this panel, not that card, is the budget-shaped number.
@@ -1260,13 +1280,13 @@ Today every artifact is inline text. The schema is already future-proofed for re
 - **The `chat` source kind is defined but unused.** It exists in the enum, in the schema comment and in the icon map, and the POST route accepts it, but no code in the repository writes one: `createArtifact` is reached only from the three capture hooks and the POST route, and no script, seed or migration inserts into `artifacts`. No filter option selects it either. **Saved** is in the same position from the other direction: the POST body defaults `sourceKind` to `"manual"`, so a hand-rolled POST that omits the field is the only thing that puts a row under that filter.
 - **HTML artifacts render as visible source, not as live markup.** `renderReportHtml` escapes every byte before emitting its own limited tag set, which is why the page can use `dangerouslySetInnerHTML` safely. A `text/html` artifact is therefore readable but not rendered as a page.
 - **Manual creation is capped.** The POST schema on `/api/artifacts` limits `content` to 2,000,000 characters (minimum 1), `name` to 200, `description` to 1,000 and `tags` to 20 entries of 50 characters. It is `.strict()`, and it accepts no `contentType`, `filePath` or `url`, so the API cannot create anything but an inline artifact. Automatic capture goes through the repository directly and is not bound by any of that.
-- All artifact routes are behind `requireAuth`, and `size_bytes` is computed once at insert as the UTF-8 byte length of the content, so the size shown is the size at capture time.
+- All artifact routes are authenticated by `src/proxy.ts` rather than by anything in the handlers (they carry no auth or read-only call of their own), and `size_bytes` is computed once at insert as the UTF-8 byte length of the content, so the size shown is the size at capture time.
 
 ---
 
 ## Main → Sessions
 
-**Main → Sessions** is the unified session history. It reads from the PatterStage SQLite `sessions` table, which is populated by the dispatcher when missions are created and by the recurring sync that pulls CLI / cron / api sessions from `~/.hermes/<profile>/sessions/`. Pagination is 50 per page.
+**Main → Sessions** is the unified session history. It reads from the PatterStage SQLite `sessions` table, which is populated by the dispatcher when missions are created and by the recurring 15-second sync that reads the agent's own `state.db` (a single SQLite file at the agent workspace root, Hermes v0.14+) and upserts the CLI / cron / api sessions it finds there. Pagination is 50 per page.
 
 ### What you see
 
@@ -1279,17 +1299,17 @@ Today every artifact is inline text. The schema is already future-proofed for re
 
 **View options row**
 - **Group by mission** toggle (persisted to localStorage; default ON). When ON, sessions from the same mission are grouped under a `MissionGroupCard`; when OFF, every session is a row.
-- **Hide API noise** toggle (persisted; default OFF). When ON, short `api`-source sessions under 1 KB or under 1 minute are hidden. Useful when you are looking for substantial runs.
+- **Hide API noise** toggle (persisted; default OFF). When ON, an `api`-source session is hidden only when it is **both** under 1 KB **and** less than a minute old. A 5 KB api session and a small one from yesterday both stay visible. Useful when you are looking for substantial runs.
 - "= live" legend explains the pulsing dot.
 
 **List: single-session cards** (`SessionCard`)
 - Pulsing `LiveDot` when active.
 - `MessageSquare` icon, title, time-ago / live-elapsed, source badge, profile name, model badge, "N msgs" badge, size in KB.
-- Mission badge linking to `/orchestration/missions/<id>`.
+- Mission badge linking to `/orchestration/missions?mission=<id>`: the board, with that mission's panel already expanded. There is no mission detail page; the panel is the detail.
 - Chevron to expand.
 
 **List: mission group cards** (`MissionGroupCard`) when grouping is on
-- Green border, "N sessions" header, "M active" pill, time-ago range, mission id, "↗ Mission" link, chevron to expand to the underlying session cards.
+- Green border, "N sessions" header, "M active" pill, time-ago range, mission id, "↗ Mission" link (the same `?mission=<id>` deep link), chevron to expand to the underlying session cards.
 
 <!-- design-lint-disable-next-line no-em-dash -- the next line quotes the literal session title `session-sync.ts` writes, so the dash in it is product output, not prose. Repunctuating it would misdescribe what the Sessions page shows. -->
 **Title fallback for cron sessions** uses `~/.hermes/cron/jobs.json` to give cron sessions human-friendly names like "Cron: <job> — <date>".
@@ -1305,7 +1325,7 @@ Today every artifact is inline text. The schema is already future-proofed for re
 ### Notes
 
 - "Active" sessions (the ones with a pulsing dot) are sessions that have a recent message but no end-time row. The session-closure bridge in `src/lib/sessions/session-repository.ts` keeps these in lockstep with the mission lifecycle, so a session is only "active" when its parent mission is actually running.
-- The session-closure logic has two safety paths: parent-mission-gated (close when the parent is no longer dispatched) and age-only fallback (close parentless sessions after 30 minutes, with a 5-minute boot window for new sessions).
+- The session-closure logic has two safety paths: parent-mission-gated (close when the parent is no longer dispatched) and an age-only fallback for parentless sessions. That fallback closes a session after **5 minutes** once it has written anything at all, and after **30 minutes** regardless of size. Nothing younger than 5 minutes is ever closed, which is the boot window that lets a just-started agent write its first message. So the common case is the 5-minute one, not the 30-minute one.
 
 ---
 
@@ -1347,17 +1367,22 @@ Today every artifact is inline text. The schema is already future-proofed for re
 ### Notes
 
 - The detail page is read-only. To dispatch a new mission, use **Orchestration → Missions**.
-- The "↗ Mission" link jumps to the mission board filtered by mission id (the board will scroll to and highlight that mission).
+- The "↗ Mission" link opens the mission board at `?mission=<id>` with that mission's panel expanded, expanding its column if the mission sits in a collapsed one. If the mission no longer exists, the board says so rather than silently doing nothing.
 
 ---
 
 ## Main → Memory
 
-**Main → Memory** is the Hindsight Memory Browser. The actual UI lives in `components/memory/HindsightBrowser.tsx`. The page title is "Hindsight Memory" with the subtitle "Knowledge graph memory with semantic search".
+**Main → Memory** is the Hindsight Memory Browser. The page title is "Hindsight Memory" with the subtitle "Knowledge graph memory with semantic search". It is two stacked components: the **Memory provider** card (`components/memory/MemoryProviderSettings.tsx`) at the top, then the browser itself (`components/memory/HindsightBrowser.tsx`) below it.
 
 ### What you see
 
-**Three tabs at the top**
+**Memory provider card** (pink, at the top of the page)
+- **Host**, **Port** and **Bank** inputs, holding the endpoint PatterStage talks to. These live in PatterStage's own database (the `memory_providers` table), not in any Hermes file.
+- **Test connection** button: probes the endpoint and reports "Connected (‹status›)" in green or the error in pink.
+- **Save** button: writes the row.
+
+**Three tabs, below the provider card**
 - **Memories** (default): the fact list.
 - **Directives:** file-text icon.
 - **Mental Models:** settings icon.
@@ -1367,8 +1392,8 @@ Today every artifact is inline text. The schema is already future-proofed for re
 
 **Search bar (Memories tab)**
 - Search input (semantic).
-- **Recall** button: POST `/api/memory/hindsight?action=recall`. Runs semantic search and renders results.
-- **Reflect** button: POST `/api/memory/hindsight?action=reflect`. Renders an AI-reflection result panel using the matched facts.
+- **Recall** button: GET `/api/memory/hindsight?action=recall&query=…`. Runs semantic search and renders results.
+- **Reflect** button: GET `/api/memory/hindsight?action=reflect&query=…`. Renders an AI-reflection result panel using the matched facts.
 - **Add Memory** button: opens the `AddMemoryModal`.
 - On mount, the 50 most recent memories are auto-loaded.
 
@@ -1390,15 +1415,16 @@ Today every artifact is inline text. The schema is already future-proofed for re
 
 ### Typical use
 
-1. Land on the **Memories** tab.
-2. Type a question in the search bar and hit **Recall** for semantic search, or **Reflect** for a synthesised answer grounded in the matched facts.
-3. **Add Memory** when you want to seed the system with a fact the agent should remember.
-4. Use the **Directives** tab to author higher-priority instructions (the "always do X" kind of memory).
-5. Use the **Mental Models** tab to define reusable query templates that the agent can reflect against.
+1. If the health banner is showing, start at the **Memory provider** card: check host, port and bank, hit **Test connection**, then **Save**.
+2. Land on the **Memories** tab.
+3. Type a question in the search bar and hit **Recall** for semantic search, or **Reflect** for a synthesised answer grounded in the matched facts.
+4. **Add Memory** when you want to seed the system with a fact the agent should remember.
+5. Use the **Directives** tab to author higher-priority instructions (the "always do X" kind of memory).
+6. Use the **Mental Models** tab to define reusable query templates that the agent can reflect against.
 
 ### Notes
 
-- Memory is provided by **Hindsight**. If Hindsight is unavailable, the HealthBanner explains why. The most common cause is `memory: { provider: "hindsight" }` not being set in `~/.hermes/config.yaml`. After a deploy that strips Hindsight config, see [DEPLOY.md](DEPLOY.md#hindsight-memory----safe-reconnection-after-deploy) for recovery.
+- Memory is provided by **Hindsight**. If Hindsight is unavailable, the HealthBanner explains why. The most common cause is that no Hindsight server is answering at the host and port in the **Memory provider** card at the top of this page: fix it there and hit **Test connection**. The endpoint is PatterStage's, stored in the `memory_providers` table, so a `memory:` block in `~/.hermes/config.yaml` has no bearing on what this page connects to. After a deploy that strips Hindsight config, see [DEPLOY.md](DEPLOY.md#hindsight-memory----safe-reconnection-after-deploy) for recovery.
 - The `/api/memory/hindsight` route uses an `action` field for `list`, `recall`, `reflect`, `directives`, `mental-models`, `health`, and `count` on GET; `retain`, `create-directive`, `create-model`, `update-directive`, `update-model`, and `refresh-model` on POST. See [API.md](API.md#hindsight-actions).
 
 ---
@@ -1432,7 +1458,7 @@ Today every artifact is inline text. The schema is already future-proofed for re
 
 1. Open the page and pick a log file from the left.
 2. Toggle **Auto-refresh** to keep the view live (5-second polling).
-3. Use the line-count select if the default 100 is too few.
+3. Use the line-count select if the default 200 is too few. 100 is the first option in the list, not the default.
 4. Use the search input to filter lines (e.g. "ERROR").
 5. **Delete All** is a two-step action, useful when logs are getting unwieldy. The action message confirms how many files were cleared.
 
@@ -1473,7 +1499,7 @@ Today every artifact is inline text. The schema is already future-proofed for re
 
 1. Open **Config → All Settings** to see the full map of editable sections.
 2. Click a section card to open its editor at `/config/[section]`.
-3. Use the quick-link cards for the dedicated pages (Models, Tools, Personalities).
+3. Use the quick-link cards for **Personalities** and **Toolsets**, the only two on this page. Models is not a card here: it is the pinned sidebar entry `/config/models`.
 
 ### Notes
 
@@ -1567,13 +1593,19 @@ Today every artifact is inline text. The schema is already future-proofed for re
 
 ### What you see
 
-**Pre-run banner**
-- Reminder: if `~/.hermes` exists, run `npx tsx scripts/tooling/import-hermes-state.ts` (or `setup.sh` / `ps-deploy.sh`) **before** merge seed: merge never overwrites imported Bob / profiles.
+**Two banners at the top**
+- **Import before seed:** if `~/.hermes` exists, run `npx tsx scripts/tooling/import-hermes-state.ts` (or `setup.sh` / `ps-deploy`) **before** merge seed: merge never overwrites imported Bob / profiles.
+- **About Bob:** what Bob is (the local default agent missions and chat use when no profile is chosen) and the promise that restoring the catalog re-creates him only if he is missing, never over a Bob you imported or customised.
 
 **Reseed all section**
 - **Restore entire default catalog:** two-step confirm; replaces Bob + all bundled profiles + templates + categories.
 - **Restore Bob only:** single click; replaces only Bob (default).
 - "Last run: <timestamp>" line if a previous run is recorded.
+
+**Clean dev / test data section** (orange, destructive)
+- **Scan for test data:** the first click only scans. It lists, by name, the workflows, stories and missions whose names start with `Testy`, `Test …` or `Untitled Story`.
+- The button then becomes **Remove N items**, and only that second click deletes. If the scan found nothing it reads **Dismiss** instead.
+- Agent profiles are never touched by it.
 
 **Professional agents section**
 - One row per bundled, non-default profile: name, sync status (Synced / Drift / Sync error), **Restore this agent** two-step button.
@@ -1587,10 +1619,11 @@ Today every artifact is inline text. The schema is already future-proofed for re
 
 ### Typical use
 
-1. Read the pre-run banner. If `~/.hermes` exists, the merge seed will **not** overwrite your imported Bob / profiles. Run `import-hermes-state.ts` first if you want your disk state to be the source of truth.
+1. Read the **Import before seed** banner. If `~/.hermes` exists, the merge seed will **not** overwrite your imported Bob / profiles. Run `import-hermes-state.ts` first if you want your disk state to be the source of truth.
 2. **Restore entire default catalog** if you have trashed the SQLite and want a clean re-seed. Two-step confirm.
 3. **Restore Bob only** if you just want to reset the default persona.
 4. Per-profile / per-template restore is for when you want to keep most things and just bring back one specific row.
+5. **Scan for test data** when a dogfooding session has littered the database with throwaway rows. Read the list it prints before the second click: that click is the delete.
 
 ### Notes
 
@@ -1658,7 +1691,7 @@ Today every artifact is inline text. The schema is already future-proofed for re
 - Per-character **Save to Library** button (POSTs to `/api/stories action=characters,subAction=create`).
 - **Import Character** modal: pick from previously saved character sheets.
 - **Save as Theme** modal: save the current premise + tags + characters as a reusable theme.
-- **Generate** → POST `/api/stories action=create`. On success, navigates to `/recroom/story-weaver/<storyId>`.
+- **Begin Writing** (the submit button, with a Sparkles icon) → POST `/api/stories action=create`. On success, navigates to `/recroom/story-weaver/<storyId>`.
 - Error banner: "Story generation failed" with a retry hint.
 - **GenerateOverlay:** spinner + completion animation.
 
@@ -1668,13 +1701,13 @@ Today every artifact is inline text. The schema is already future-proofed for re
 2. Fill title, premise, and tags.
 3. Adjust era, POV, length, and word-count range.
 4. Add or import characters.
-5. Click **Generate** to start the chapter-by-chapter generation.
+5. Click **Begin Writing** to start the chapter-by-chapter generation.
 
 ### Notes
 
 - Drafts persist in `localStorage` so a browser refresh does not lose your work. Clear the key (`story-weaver-draft`) to start fresh.
-- The 8 character roles are: protagonist, ally, antagonist, supporting, mystery, mentor, trickster, guardian.
-- The word-count range is a coarse slider, not exact. Actual chapter length is driven by the **Length** setting per chapter.
+- The character cards on this page offer **five** roles: protagonist, ally, antagonist, supporting, mystery. Those are the only values the `StoryCharacter` type allows. The separate [Characters library](#rec-room--story-weaver--characters) page has eight (those five plus mentor, trickster and guardian), and an imported character keeps whichever role it was saved with.
+- The two length controls are easy to swap. **Length** sets how many *chapters* the story gets: Short is 3-4, Medium 5-7, Long 8-12. The **Chapter Length (words per chapter)** band is what drives how long each chapter is, and it is a coarse target rather than an exact count.
 
 ---
 
@@ -1794,8 +1827,9 @@ Today every artifact is inline text. The schema is already future-proofed for re
 - Title and "Story Weaver" eyebrow.
 - **Continue** button (only when `allComplete`): opens the Continue modal.
 - **Retry** button (only when `anyFailed`): retries the first failed chapter.
+- **Bible** button (BookMarked icon, always present): opens the Story Bible panel with the story arc, plot points and character journeys.
 - **Chapters** sidebar toggle.
-- **ReaderSettings**, Kindle-style: font size, font family, line height, brightness, page theme (dark / black / sepia / light). Persisted to `localStorage`.
+- **ReaderSettings**, Kindle-style: font size, font family, line height, brightness, page theme (dark / black). Persisted to `localStorage`. The `sepia` and `light` tints were removed in WO-0005 under WG-WEB-001 (dark-first, no exception); a saved setting naming either is normalised back to `dark` on load, so an existing reader is not left on a theme the code no longer renders.
 
 **Chapter indicator dots row** (under the header)
 - One dot per chapter; click completed chapters to jump.
@@ -1825,7 +1859,7 @@ Today every artifact is inline text. The schema is already future-proofed for re
 
 **Error banner**: "Story generation failed" + "Retry from Create" button.
 
-**Auto-generation**: on mount, if any chapter is "pending" and none is "writing", the reader auto-calls `generateNext` in a `useEffect`.
+**Auto-generation**: on mount, if any chapter is "pending", none is "writing", and fewer than three consecutive generation failures have been recorded, the reader auto-calls `generateNext` in a `useEffect`. After three failures in a row it pauses instead of retrying the model forever; a successful chapter, or a deliberate **Retry this chapter**, re-arms it.
 
 **GenerateOverlay**: spinner during continue / edit / initial generation.
 
@@ -1840,7 +1874,7 @@ Today every artifact is inline text. The schema is already future-proofed for re
 
 ### Notes
 
-- The reader auto-generates the next pending chapter on mount, so reloading a story resumes generation automatically.
+- The reader auto-generates the next pending chapter on mount, so reloading a story resumes generation automatically. The one exception is the three-failure ceiling above: if generation keeps failing, auto-generation stops rather than billing you for an unbounded retry loop.
 - The Continue modal adds 2–5 new chapters after the last complete one.
 - Edit Chapter regenerates the current chapter and the next N. Use it for rewrites, not for adding new chapters.
 
@@ -1848,14 +1882,14 @@ Today every artifact is inline text. The schema is already future-proofed for re
 
 ## Sidebar deploy buttons (Update / Rebuild / Restart)
 
-The three buttons at the bottom of the sidebar (**Update**, **Restart**, and **Rebuild**) talk to the host's `ps-deploy.sh` and rebuild / restart the running PatterStage process. The full deployment story is in [DEPLOY.md](DEPLOY.md); this section is the user-side walkthrough.
+The three buttons at the bottom of the sidebar (**Update**, **Restart**, and **Rebuild**) run the host's deploy runner and rebuild / restart the running PatterStage process. That runner is `scripts/tooling/ps-deploy.mjs`, a cross-platform Node script; `scripts/application/ps-deploy.sh` still exists but is now a thin wrapper around it, and it is the `.mjs` path the API checks for and names when it is missing. The full deployment story is in [DEPLOY.md](DEPLOY.md); this section is the user-side walkthrough.
 
 ### What you see
 
 - **Check:** compares the local checkout to the remote `dev` (or whichever branch `PS_UPDATE_GIT_BRANCH` is set to) and shows a "behind" / "in sync" indicator.
 - **Update:** `POST /api/update` with `action: "update"`. Fetches + resets to `origin/<PS_UPDATE_GIT_BRANCH>`, runs `npm install` if lockfiles changed, runs `npm run build`, restarts.
 - **Rebuild:** `POST /api/update` with `action: "rebuild"`. Builds the current working tree (no `git pull` / reset). Use this when you have local-only changes you want to deploy.
-- **Restart:** `POST /api/update` with `action: "restart"`. Stops whatever is on `PORT` and starts `next start -H 0.0.0.0`.
+- **Restart:** `POST /api/update` with `action: "restart"`. Stops whatever is on `PORT` and starts `next start -p <PORT> -H <host>`, where the host is `PS_NEXT_BIND_HOST` if you set it and `0.0.0.0` otherwise. It then polls `/api/health` and reports a failure to come up rather than claiming success.
 
 ### Typical use
 
@@ -1866,7 +1900,7 @@ The three buttons at the bottom of the sidebar (**Update**, **Restart**, and **R
 
 ### Notes
 
-- All three require `PS_ENABLE_DEPLOY_API=1` to be set in `.env.local`. Otherwise the route returns 403.
+- **The deploy gate is not off by default; it is off in production by default.** `isDeployApiEnabled()` treats `1`, `true` and `yes` as on and `0`, `false` and `no` as off. With `PS_ENABLE_DEPLOY_API` **unset** it falls back to `NODE_ENV !== "production"`, so under `npm run dev` all three endpoints are open and no 403 is raised. In a production build you must set it truthy in `.env.local` or the route returns 403.
 - The sidebar polls `GET /api/update?deploy=1` while a deploy is in progress; the message in the sidebar updates as the deploy moves through `state: success` or `failed`.
 - Status file: `~/.hermes/logs/ps-deploy.status`. Logs: `ps-build.log`, `ps-restart.log`, `ps-update.log` (also listed under **Logs**).
 - Concurrent deploys return **409** from the API and exit 1 from the script.
@@ -1975,7 +2009,7 @@ The three buttons at the bottom of the sidebar (**Update**, **Restart**, and **R
 
 ### Run a long story
 
-1. **Rec Room → Story Weaver** → **Create** → fill the form → **Generate**.
+1. **Rec Room → Story Weaver** → **Create** → fill the form → **Begin Writing**.
 2. The reader auto-generates the next pending chapter; reload to resume.
 3. **Continue** to add 2–5 more chapters when all are complete.
 4. **Edit Chapter** (pencil) to rewrite the current chapter and the next N.
@@ -1987,7 +2021,7 @@ The three buttons at the bottom of the sidebar (**Update**, **Restart**, and **R
 | Topic | Document |
 |-------|----------|
 | Install & quick start | [README.md](../README.md) |
-| Architecture map | [PATTERSTAGE.md](PATTERSTAGE.md) |
+| Architecture map | [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md) |
 | Mission prompts & cancel | [MISSIONS.md](MISSIONS.md) |
 | Composer workflows | [COMPOSER.md](COMPOSER.md) |
 | Deep Research | [DEEP_RESEARCH.md](DEEP_RESEARCH.md) |

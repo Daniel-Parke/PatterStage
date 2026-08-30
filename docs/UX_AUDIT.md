@@ -11,6 +11,8 @@ A prioritized catalogue of interactivity / clarity / "fun & useful" improvements
 
 Tags: **Impact** (H/M/L) · **Effort** (S/M/L). "Quick win" = H or M impact at S effort, the set implemented in Phase P6.
 
+> **Status: point-in-time audit, cut 2026-06-19 (commit `bef00ba7`).** The catalogue below was written against the app as it stood that day and has not been re-walked since. Two rows were re-checked against source on 2026-08-30 and corrected in place, B5 and CF1, and both were wrong about the code rather than merely out of date. Everything else is as first written, so read an item as a lead to verify, not as a description of today's build. The app has already grown past the catalogue: the Laboratory section (Insights, Deep Research, Artifacts) landed on 2026-06-21 and 2026-06-22 and has no per-page notes here at all. Re-walk the app before scheduling from this list.
+
 ---
 
 ## 1. Branding alignment: PatterTech = deep-space Cherenkov
@@ -27,7 +29,7 @@ Tags: **Impact** (H/M/L) · **Effort** (S/M/L). "Quick win" = H or M impact at S
 | B2 | **Glow = luminescence, not floodlight.** `.glow-*` stays soft on static cards; the "reactor core" pulse is reserved for *live/active* states (running process, live session). ✅ done in P6, recalibrated in Q1. | H | S |
 | B3 | **Increase whitespace + vertical rhythm.** Standardise section spacing (`space-y-6`), card padding, and the 10px micro-label scale; let panels breathe. | M | M |
 | B4 | **Tighten typography.** Inter is already the sans. Define a clear H1/H2/section-label/body ladder; reduce the all-caps + mono-everywhere density (mono for data/IDs only). | M | M |
-| B5 | **Brand chrome.** Keep the **"PT / Hermes"** mark in the sidebar brand row; the logo slot (sidebar + dashboard + mobile header) is ready to drop a supplied PatterTech logo. | M | S |
+| B5 | **Brand chrome.** *Rewritten 2026-08-30: this row used to say "keep the PT / Hermes mark in the sidebar brand row", and the rename had already removed it.* The sidebar brand row is settled: a terminal glyph, the **PatterStage** wordmark, and the "The Stage is Yours" tagline (`src/components/layout/Sidebar.tsx`). The **"PT / Hermes"** mark now survives in exactly one place, the mobile header (`src/components/layout/MobileHeader.tsx`), so the open item is that inconsistency rather than preserving the mark. The logo slot (sidebar + dashboard + mobile header) is still ready to drop a supplied PatterTech logo. | M | S |
 
 **Brand-asset checklist (palette is now settled; only chrome is outstanding):**
 - [x] Primary + neutral palette: the Cherenkov ramp above (no longer a stand-in).
@@ -96,7 +98,7 @@ Tags: **Impact** (H/M/L) · **Effort** (S/M/L). "Quick win" = H or M impact at S
 - SW1. Reading view polish: typography settings exist; add progress + estimated reading time + chapter nav rail. *M/S*
 
 ### Config (`/config` + sections)
-- CF1. The 28-section index is clean. Add **search across config fields** and a "changed from default" badge per section. *H/M*
+- CF1. The config index is clean. Add **search across config fields** and a "changed from default" badge per section. *H/M* (This row used to say "the 28-section index" and the count was wrong. The page derives it from `CONFIG_SECTIONS` at render time, so prose here carries no number.)
 - CF2. Per-section editors: show the on-disk YAML diff before save; "reset section to default". *M/M*
 
 ---
@@ -104,3 +106,5 @@ Tags: **Impact** (H/M/L) · **Effort** (S/M/L). "Quick win" = H or M impact at S
 ## 4. Phase P6 shortlist (implemented this pass)
 
 The low-risk **quick wins** pulled forward into P6: **B1, B2, B3, B4, B5** (restraint + chrome), **X1, X2** (consistent states + micro-interactions), **D1, D4, M3, ME1** (clickable pills, live-timestamp, next-runs preview, relevance bars). Everything else is catalogued here for follow-up, sized so it can be scheduled independently.
+
+B5 is the one entry on that list that P6 did not close. The rename overtook it: the sidebar took the PatterStage wordmark, the mobile header kept "PT / Hermes", and the two have disagreed since. See the rewritten B5 row above.

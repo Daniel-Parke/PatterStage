@@ -10,11 +10,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { ensureSyncLayer, getSyncScheduler, runFullSync } from "@/lib/sync";
 import { logApiError } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
+export async function GET(_request: NextRequest) {
   try {
     ensureSyncLayer();
     const scheduler = getSyncScheduler();
@@ -66,8 +63,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   try {
     ensureSyncLayer();
 

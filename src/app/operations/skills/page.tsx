@@ -36,7 +36,7 @@ import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { SearchInput } from "@/components/ui/Input";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { useToast } from "@/components/ui/Toast";
+import { LastResult, useToast } from "@/components/ui/Toast";
 import ProfileSelector from "@/components/ui/ProfileSelector";
 import SkillsInsights from "@/components/skills/SkillsInsights";
 import SkillsSections from "@/components/skills/SkillsSections";
@@ -120,7 +120,7 @@ export default function SkillsPage() {
   const [toggling, setToggling] = useState<Record<string, boolean>>({});
   const [importing, setImporting] = useState(false);
 
-  const { showToast, toastElement } = useToast();
+  const { showToast, toastElement, lastResult } = useToast();
 
   // Shared URL builder for skill API calls (GET and PUT)
   const skillApiUrl = (name: string) =>
@@ -306,6 +306,7 @@ export default function SkillsPage() {
 
   return (
     <AppPageShell>
+      <LastResult result={lastResult} />
       {toastElement}
       <PageHeader
         icon={FileText}

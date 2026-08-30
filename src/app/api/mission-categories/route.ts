@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { logApiError } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb, getSchemaHealth } from "@/lib/db";
 import { toError } from "@/lib/api-fetch";
@@ -37,10 +37,7 @@ function withCounts() {
   }));
 }
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET(_request: NextRequest) {
   try {
     ensureDb();
     ensureDefaultCategories();
@@ -71,9 +68,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   try {
     ensureDb();
     ensureDefaultCategories();
@@ -110,9 +104,6 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   try {
     const body = await parseJsonBody(request);
     if (body instanceof NextResponse) return body;
@@ -143,9 +134,6 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   try {
     const url = new URL(request.url);
     const id = url.searchParams.get("id");

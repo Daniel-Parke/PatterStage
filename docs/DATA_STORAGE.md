@@ -16,9 +16,9 @@ not rot: they let existing installs keep running without a forced migration.
 
 Almost everything lives in one SQLite file: missions, runs, sessions, profiles,
 templates, skills/tools, chat conversations, composer workflows, stories,
-benchmarks, deep-research runs, the memory-provider config, and the artifacts
-registry. Hand-written repositories (`src/lib/*-repository.ts`) read/write it;
-schema is versioned migrations under `src/lib/db/migrations/*.sql`.
+deep-research runs, the memory-provider config, and the artifacts registry.
+Hand-written repositories (`src/lib/*-repository.ts`) read/write it; schema is
+versioned migrations under `src/lib/db/migrations/*.sql`.
 
 - **File:** `$PS_DATA_DIR/patterstage.db`. On an un-migrated install the resolver
   falls back to a pre-existing `control-hub.db` (see `getDbPath()` in
@@ -29,8 +29,11 @@ schema is versioned migrations under `src/lib/db/migrations/*.sql`.
   `scripts/maintenance/ps-relocate.sh`) move it forward when convenient.
 - **Data dir:** resolved by `getPsDataDir()`. An explicit env var wins
   (`PS_DATA_DIR` → `CH_DATA_DIR` → `CONTROL_HUB_DATA_DIR`); otherwise it probes
-  `~/PatterStage/data`, `~/patterstage/data`, `~/control-hub/data` and the
-  repo-adjacent `data/`, preferring whichever already contains a DB.
+  exactly three candidates, `~/PatterStage/data`, `~/patterstage/data` and
+  `~/control-hub/data`, preferring whichever already contains a DB, then
+  whichever merely exists, and creating `~/patterstage/data` if none does. The
+  repo-adjacent `data/` is **not** a candidate: it is where the committed seed
+  pack lives, and a repo checkout is never discovered as a data dir.
 
 ## The Hermes agent (separate, not our DB)
 
@@ -42,13 +45,30 @@ does **not** store its own data under `~/.hermes`. Memory is reached through the
 DB-owned `MemoryProvider` config (`memory_providers` table), never by parsing
 Hermes files. See [`MEMORY.md`](MEMORY.md).
 
-## Browser localStorage (client UI prefs only)
+## Browser localStorage (UI prefs, plus one unsaved draft)
 
-Non-critical UI preferences (e.g. the Sessions "group by mission" / "hide API
-noise" toggles, the Story-Weaver reader settings) are stored under the `ps.*`
-prefix. The pre-rename `ch.*` keys are migrated forward **once** via
-`useStoredBool`'s `legacyKey` param (copy → delete) so a rename never loses a
-saved preference. No app data lives in localStorage.
+The `ps.*` prefix is the convention, not a description of every key. Grepping
+for `ps.*` alone will miss three of the five keys the app writes:
+
+| Key | Written by | What it holds |
+|-----|-----------|---------------|
+| `ps.sessions.groupByMission` | `src/app/(main)/sessions/page.tsx` | "Group by mission" toggle |
+| `ps.sessions.hideApiNoise` | `src/app/(main)/sessions/page.tsx` | "Hide API noise" toggle |
+| `ps-last-mission-category` | `src/lib/missions/mission-composer-utils.ts` | Last mission category picked (hyphen form, predates the dotted convention) |
+| `story-weaver-reader-settings` | `src/modules/rec-room/components/ReaderSettings.tsx` | Reader font/theme prefs (unprefixed, predates the convention) |
+| `story-weaver-draft` | `src/app/recroom/story-weaver/create/page.tsx` | An unsaved story in progress |
+
+Only the two `ps.sessions.*` toggles go through `useStoredBool`, and only they
+carry a pre-rename `ch.*` key that is migrated forward **once** via the
+`legacyKey` param (copy → delete), so a rename never loses a saved preference.
+The other three are read and written directly and have no legacy alias.
+
+`story-weaver-draft` is the one entry that is not a preference. The composer
+auto-saves the title, premise and characters there on every keystroke and offers
+to restore them on return, so until the story is saved to the DB that draft is
+the only copy of the user's own prose. It is cleared on a successful save.
+Nothing else in the app treats localStorage as durable storage: clear it and you
+lose some toggles and, if one is open, an unsaved draft, and nothing more.
 
 ## Committed vs runtime data
 
@@ -59,7 +79,7 @@ saved preference. No app data lives in localStorage.
   `control-hub.db`, WAL/SHM, and `*.pre-baseline-*` backups. `.gitignore` has
   `/data/*` + `!/data/seed/**`, so **no database is ever committed** to the repo.
 
-## Intentional legacy names (do NOT "clean up" without a migration)
+## Intentional leftovers (do NOT "clean up" without a migration)
 
 These are deliberate and load-bearing; removing them breaks existing installs:
 
@@ -68,7 +88,10 @@ These are deliberate and load-bearing; removing them breaks existing installs:
 | `control-hub.db` fallback | `paths.ts`, `scripts/**` | un-migrated installs still open their existing DB |
 | `CH_*` / `CONTROL_HUB_*` env vars | `paths.ts` `readEnv(...)`, deploy scripts | a user's existing `.env.local` keeps working (PS_* supersedes) |
 | `ch.cat.*` / `ch.tpl.*` / `ch.prof.*` seed keys | `mission-category-repository.ts`, seed packs, DB `seed_key` columns | renaming requires a DB migration to rewrite the unique `seed_key`, for ~zero user benefit |
+| `benchmark_runs`, `benchmark_item_results`, `bench_gateways` | created by migrations 014, 015 and 017 | the benchmark subsystem was deleted ([ADR-0004](../org/decisions/ADR-0004-brain-and-body.md)) but `schema_version` strictly increases, so pulling those appliers out of the chain would renumber every later one and break every existing database. They stay as no-op-shaped version bumps and the tables stay permanently empty. Migration `016`'s `tool_catalog` and `seed_memory_facts` are *not* in this category: they outlived the benchmark work and are still read and written. |
 
-The CSS tokens were fully renamed to `--ps-*`; the localStorage keys are migrated
-(above). The remaining legacy names are confined to the back-compat shims listed
-here.
+The CSS tokens were fully renamed to `--ps-*`. Of the localStorage keys, only the
+two `ps.sessions.*` toggles ever had a `ch.*` predecessor, and those are migrated
+on read (above); the three unprefixed keys are a naming inconsistency rather than
+a back-compat shim, so renaming them costs a stored value per user and buys no
+compatibility. Everything else legacy is confined to the shims listed here.

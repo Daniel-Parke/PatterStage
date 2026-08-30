@@ -6,9 +6,12 @@
 //
 // Why here and not in route handlers: `requireAuth()` in src/lib/api-auth.ts
 // never authenticated anything (it only checked the read-only flag), so all 100
-// API routes were open to anyone who could reach the port — and `npm run
-// start:network` binds 0.0.0.0. A boundary that each new route has to remember
-// to opt into is not a boundary. This one cannot be forgotten.
+// API routes were open to anyone who could reach the port — and BOTH start
+// scripts bind 0.0.0.0, not just `start:network`. `next start` has no loopback
+// default; with no -H it listens on every interface and prints the LAN URL. The
+// naming used to suggest otherwise here and in the README, which made the
+// exposure sound opt-in when it is the default. A boundary that each new route
+// has to remember to opt into is not a boundary. This one cannot be forgotten.
 //
 // Three checks, in order:
 //   1. read-only     — PS_READ_ONLY rejects unsafe METHODS (not, as before,
@@ -28,7 +31,7 @@ import {
   readAuthToken,
   tokenMatches,
 } from "@/lib/auth-token";
-import { readEnv } from "@/lib/paths";
+import { isReadOnly, readOnlyMessage } from "@/lib/read-only";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -39,9 +42,16 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
  */
 const PUBLIC_PATHS = new Set(["/api/health"]);
 
-function isReadOnly(): boolean {
-  const raw = readEnv("PS_READ_ONLY", "CH_READ_ONLY")?.toLowerCase();
-  return raw === "1" || raw === "true";
+/**
+ * The read-only refusal.
+ *
+ * Deliberately raised only AFTER the caller has been authenticated. Refusing an
+ * anonymous write with 503 tells anyone who can reach the port whether this
+ * instance is read-only, and `npm run start:network` binds 0.0.0.0. An
+ * unauthenticated caller learns nothing but 401 (T-0048).
+ */
+function refuseReadOnly(): NextResponse {
+  return NextResponse.json({ error: readOnlyMessage() }, { status: 503 });
 }
 
 function isApiPath(pathname: string): boolean {
@@ -166,19 +176,17 @@ export function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
   const isSafe = SAFE_METHODS.has(request.method);
 
-  if (PUBLIC_PATHS.has(pathname)) return NextResponse.next();
+  // A public path is exempt from AUTHENTICATION, never from read-only. It used
+  // to return here, above the read-only branch, so any non-safe method added to
+  // a public path would have punched straight through the mode. /api/health is
+  // GET-only today, so this was a latent hole rather than a live one (T-0048).
+  if (PUBLIC_PATHS.has(pathname) && isSafe) return NextResponse.next();
 
-  // 1. Read-only mode rejects writes by METHOD. The old per-route guards also
-  //    fired on ~35 GET handlers, which 503'd the read-only UI it was meant to
-  //    enable; enforcing here means read-only actually reads.
-  if (!isSafe && isReadOnly()) {
-    return NextResponse.json(
-      { error: "PatterStage is in read-only mode (unset PS_READ_ONLY to allow writes)." },
-      { status: 503 },
-    );
+  const readOnlyRefusal = !isSafe && isReadOnly();
+
+  if (getAuthMode() === "none") {
+    return readOnlyRefusal ? refuseReadOnly() : NextResponse.next();
   }
-
-  if (getAuthMode() === "none") return NextResponse.next();
 
   const expected = readAuthToken();
   if (!expected) {
@@ -212,7 +220,8 @@ export function proxy(request: NextRequest): NextResponse {
   // 2b. Bearer beats cookie: a bearer request is not CSRF-able, so it skips (3).
   const bearer = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   if (bearer) {
-    return tokenMatches(bearer, expected) ? NextResponse.next() : unauthorized(request);
+    if (!tokenMatches(bearer, expected)) return unauthorized(request);
+    return readOnlyRefusal ? refuseReadOnly() : NextResponse.next();
   }
 
   const cookie = request.cookies.get(SESSION_COOKIE)?.value;
@@ -226,7 +235,7 @@ export function proxy(request: NextRequest): NextResponse {
     );
   }
 
-  return NextResponse.next();
+  return readOnlyRefusal ? refuseReadOnly() : NextResponse.next();
 }
 
 export const config = {

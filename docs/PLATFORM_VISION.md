@@ -59,12 +59,16 @@ A mission dispatch is a single HTTP **run**: `runtime.submitRun()` returns a `ru
 
 ## Security
 
-- Treat the UI and API as **same-trust**: run on a private network or behind your own access controls.
+- **Every request is authenticated.** `src/proxy.ts` requires a bearer token or the
+  `ps_session` cookie on every path except a small public set on safe methods, and
+  fails closed when no token has been minted. Do not design as though the UI and API
+  were same-trust: they are not, and new code must not assume a caller is already
+  trusted because it reached the port.
 - The runtime authenticates to the Hermes API Server with a bearer key (`API_SERVER_KEY`); keep that gateway bound to localhost, because it grants the agent's full toolset including terminal access.
 
 ## Related docs
 
-- [PATTERSTAGE.md](PATTERSTAGE.md): repository overview and where to read next.
+- [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md): how a dispatch becomes a run, end to end.
 - [MISSIONS.md](MISSIONS.md): mission board, dispatch, cancellation.
 - [HERMES_CONFIG_INTEGRATION.md](HERMES_CONFIG_INTEGRATION.md): Hermes path/config integration.
 - [DEPLOY.md](DEPLOY.md): host, port, TLS, Docker.

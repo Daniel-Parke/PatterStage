@@ -28,9 +28,7 @@ jest.mock("@/lib/memory/memory-providers", () => ({
   getMemoryProviderType: jest.fn(() => "hindsight"),
 }));
 
-const requireAuthMock = jest.fn((_req: NextRequest): Response | null => null);
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: (req: NextRequest): Response | null => requireAuthMock(req),
 }));
 
 const SUPPORTED_VERBS = ["POST", "PUT", "DELETE"] as const;
@@ -41,7 +39,6 @@ const UNSUPPORTED_MESSAGE_FRAGMENT = "Memory management via the dashboard";
 describe("/api/memory write verbs (unsupportedWriteHandler)", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    requireAuthMock.mockReturnValue(null);
   });
 
   it.each(SUPPORTED_VERBS)(
@@ -56,20 +53,10 @@ describe("/api/memory write verbs (unsupportedWriteHandler)", () => {
     },
   );
 
-  it.each(SUPPORTED_VERBS)(
-    "%s runs requireAuth before returning the 400",
-    async (verb: SupportedVerb) => {
-      const { [verb]: handler } = await import("@/app/api/memory/route");
-      // Simulate an auth failure: requireAuth returns a 401 response
-      // (NextResponse is opaque to us here; we just need a truthy return).
-      const authFailure = new Response("Unauthorized", { status: 401 });
-      requireAuthMock.mockReturnValueOnce(authFailure);
-
-      const req = new NextRequest("http://localhost/api/memory", { method: verb });
-      const res = await handler(req);
-      // The handler should short-circuit on the auth failure and return
-      // the auth 401, not the unsupported-write 400.
-      expect(res.status).toBe(401);
-    },
-  );
+  // Read-only refusal is no longer asserted here, because it is no longer
+  // enforced here. T-0048 deleted the per-route guard: src/proxy.ts refuses
+  // every unsafe method under PS_READ_ONLY before a handler runs, so a test that
+  // calls this handler directly bypasses the thing it means to check. The
+  // guarantee is asserted per route, in both directions, in
+  // tests/unit/read-only-actually-reads.test.ts.
 });

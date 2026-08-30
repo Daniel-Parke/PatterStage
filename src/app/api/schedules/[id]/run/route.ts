@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
+
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, notFound, badRequest, serverError } from "@/lib/api-response";
 import { getSchedule, recordScheduleRun } from "@/lib/schedules-repository";
@@ -15,9 +15,6 @@ interface Ctx {
 }
 
 export async function POST(request: NextRequest, ctx: Ctx) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await ctx.params;
   try {
     const schedule = getSchedule(id);

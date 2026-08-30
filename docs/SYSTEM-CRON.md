@@ -1,5 +1,5 @@
 ---
-summary: The one host-level cron script PatterStage ships, and how the Scripts page registers jobs
+summary: The host-level cron scripts PatterStage ships, the Hindsight backup in detail, and how the Scripts page registers jobs
 type: reference
 tags: [product, ops]
 compiled_from: normalised
@@ -7,15 +7,24 @@ compiled_from: normalised
 
 # System cron: Hindsight backup
 
-PatterStage ships one host-level cron script: **`ps-backup.sh`** (Hindsight snapshot). During [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh), the script is copied into **`PS_DATA_DIR/scripts`** when missing (see [`getPsScriptsDir()`](../src/lib/paths.ts)). Register jobs from the **Orchestration → Scripts** page; each crontab line must invoke a script under that directory ([`POST /api/cron/hardware`](../src/app/api/cron/hardware/route.ts)).
+PatterStage's host-level cron scripts live in `scripts/hardware/`. During [`scripts/bootstrap/setup.sh`](../scripts/bootstrap/setup.sh) (or its Node twin `setup.mjs`), **every** `.sh` and `.mjs` in that directory is copied into **`PS_DATA_DIR/scripts`** when no file of that name is there yet (see [`getPsScriptsDir()`](../src/lib/paths.ts)). That is `ps-backup.sh`, an `.sh`/`.mjs` pair each for DB backup, disk report, health check, log rotate and system report, the `reconnect-hindsight.sh` recovery helper, and six pre-rename `ch-*.sh` shims. Register jobs from the **Orchestration → Scripts** page; each crontab line must invoke a script under that directory ([`POST /api/cron/hardware`](../src/app/api/cron/hardware/route.ts)).
 
-Preset label and filename: [`src/lib/hardware-cron.ts`](../src/lib/hardware-cron.ts) (`HARDWARE_CRON_UI_PRESETS`). Log output defaults to **`PS_HARDWARE_LOG_DIR`** (`PS_DATA_DIR/logs`).
+This page documents **`ps-backup.sh`** (the Hindsight snapshot) in detail. For the rest, and for which version of a pair to schedule, see [CROSS_PLATFORM.md](CROSS_PLATFORM.md).
 
-> **Cross-platform:** the Scripts page works on Windows too. Schedules go to **Task Scheduler** (`schtasks`) instead of `crontab`, and the bundled scripts are cross-platform Node (`.mjs`: `ps-db-backup`, `ps-health-check`, `ps-log-rotate`, `ps-disk-report`, `ps-system-report`). `ps-backup.sh` (Hindsight, below) is **Linux-only** and hidden from the Windows presets. See [CROSS_PLATFORM.md](CROSS_PLATFORM.md) for the cron → `schtasks` translation table and which schedules are supported on Windows.
+What the Scripts page lists is not a curated preset list: it is every file with a runnable extension found in the scripts directory, via `listScriptFiles()` in [`src/lib/scripts-manager.ts`](../src/lib/scripts-manager.ts). The gallery's starter cards are three blank `.sh` skeletons in [`src/components/scripts/script-templates.ts`](../src/components/scripts/script-templates.ts). `HARDWARE_CRON_UI_PRESETS` in [`src/lib/hardware-cron.ts`](../src/lib/hardware-cron.ts) is **not** wired to any surface: only unit tests import it, so editing it changes nothing a user sees. Log output defaults to **`PS_HARDWARE_LOG_DIR`** (`PS_DATA_DIR/logs`).
 
-| Preset | File | Purpose |
+> **Platforms:** scheduling has one backend, the user `crontab`
+> ([`src/lib/host-scheduler.ts`](../src/lib/host-scheduler.ts)), on Linux and
+> macOS. There is **no** native-Windows Task Scheduler backend: the `schtasks`
+> path an earlier version of this page described was dropped with the rest of the
+> native-Windows operational layer, and no translation table exists. On Windows,
+> run PatterStage under WSL2 (Ubuntu) and use the Linux path. `ps-backup.sh`
+> needs bash and a running Hindsight server, so it is Unix-only rather than
+> Linux-only: macOS is fine. See [CROSS_PLATFORM.md](CROSS_PLATFORM.md).
+
+| Script | File | Purpose |
 |--------|------|---------|
-| Backup | `ps-backup.sh` | Hindsight snapshot via [`hindsight_bridge.py`](https://github.com/NousResearch/hermes-agent/blob/main/scripts/hindsight_bridge.py) (`list`, `directives`, `mental-models`), merged with **`jq`**, written under `HINDSIGHT_BACKUP_DIR`, rotated by age. Requires a running Hindsight HTTP server ([Hermes Memory / Hindsight](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory)). |
+| Hindsight backup | `ps-backup.sh` | Hindsight snapshot via [`hindsight_bridge.py`](https://github.com/NousResearch/hermes-agent/blob/main/scripts/hindsight_bridge.py) (`list`, `directives`, `mental-models`), merged with **`jq`**, written under `HINDSIGHT_BACKUP_DIR`, rotated by age. Requires a running Hindsight HTTP server ([Hermes Memory / Hindsight](https://hermes-agent.nousresearch.com/docs/user-guide/features/memory)). |
 
 ## `ps-backup.sh` environment
 
@@ -30,10 +39,12 @@ Preset label and filename: [`src/lib/hardware-cron.ts`](../src/lib/hardware-cron
 
 **Dependencies:** `bash`, `jq`, and Hermes venv Python at `$HERMES_HOME/hermes-agent/venv/bin/python3` (or `.venv`).
 
-**Suggested schedule:** `0 1 * * *` (daily 01:00) with stderr appended under `PS_HARDWARE_LOG_DIR`:
+**Suggested schedule:** `0 1 * * *` (daily 01:00) with stdout and stderr appended under `PS_HARDWARE_LOG_DIR`:
 
 ```cron
-0 1 * * * LOG_DIR=$HOME/patterstage/data/logs $HOME/patterstage/data/scripts/ps-backup.sh >> $HOME/patterstage/data/logs/ps-backup.log 2>&1
+0 1 * * * $HOME/patterstage/data/scripts/ps-backup.sh >> $HOME/patterstage/data/logs/ps-backup.log 2>&1
 ```
 
-Replace paths with your `PS_DATA_DIR` if set. The System Cron UI builds the same `>> …log 2>&1` suffix.
+Replace paths with your `PS_DATA_DIR` if set. The script reads only the six variables in the table above, so do not bother prefixing others: an earlier version of this example set `LOG_DIR=…`, which `ps-backup.sh` never reads (that variable belongs to `ps-log-rotate`), and the `>> …log 2>&1` redirect is what actually places the output.
+
+Scheduling through the UI rather than by hand is stricter still. `canonicaliseScriptsCommand()` in [`src/lib/hardware-cron-handlers/crontab-command.ts`](../src/lib/hardware-cron-handlers/crontab-command.ts) takes **only the script's basename** out of what you submit, resolves it under the scripts directory, and rebuilds the command from the interpreter map. Any env prefix, path or extra argument you paste alongside it is discarded, not approved. The `>> …log 2>&1` suffix is then appended when the line is written ([`crontab-store.ts`](../src/lib/hardware-cron-handlers/crontab-store.ts)), from a log name constrained to a plain `*.log` basename inside `PS_HARDWARE_LOG_DIR`.

@@ -8,7 +8,7 @@ import { serverErrorFromCatch } from "@/lib/api-logger";
 import { getModelWithKey } from "@/lib/models-repository";
 import { readHermesYamlConfig } from "@/modules/hermes/lib/hermes-config-read";
 import { envVarForProvider, isHermesProvider } from "@/modules/hermes/lib/providers";
-import { requireAuth } from "@/lib/api-auth";
+
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { maskKeyHint } from "@/lib/secret-mask";
 import { notFound, ok } from "@/lib/api-response";
@@ -30,9 +30,6 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   // Body is `{ direction?: "push" | "pull" }` (default "push").
   const diffPostSchema = z
     .object({

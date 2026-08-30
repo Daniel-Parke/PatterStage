@@ -8,17 +8,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { listModels, createModel, deleteModel } from "@/lib/models-repository";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { appendAuditLine } from "@/lib/audit-log";
 import { modelPostSchema } from "@/lib/api-schemas";
 import { created, ok } from "@/lib/api-response";
 import { syncDefaultsToHermesConfig } from "@/modules/hermes/lib/config-sync";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET(_request: NextRequest) {
   try {
     return ok({ models: listModels() });
   } catch (error) {
@@ -32,9 +29,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const parsed = await parseAndValidateJsonBody(request, modelPostSchema);
   if (parsed instanceof NextResponse) return parsed;
 

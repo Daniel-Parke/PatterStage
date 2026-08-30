@@ -5,7 +5,7 @@ import { serverErrorFromCatch } from "@/lib/api-logger";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { safeStat } from "@/lib/fs/fs-stats";
 import { requireSafeProfileName } from "@/lib/fs/path-security";
-import { requireAuth } from "@/lib/api-auth";
+
 import { appendAuditLine } from "@/lib/audit-log";
 import { ensureDb } from "@/lib/db";
 import {
@@ -105,10 +105,7 @@ function rowToApiProfile(slug: string): AgentProfile | null {
   };
 }
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET(_request: NextRequest) {
   try {
     ensureDb();
     const profiles: AgentProfile[] = [];
@@ -132,9 +129,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   try {
     ensureDb();
     const bodyResult = await parseJsonBody(request);

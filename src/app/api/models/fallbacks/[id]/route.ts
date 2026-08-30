@@ -2,7 +2,7 @@
 // /api/models/fallbacks/[id] — GET/PUT/DELETE single fallback entry
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
+
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { getFallbackEntry, updateFallbackEntry, deleteFallbackEntry } from "@/lib/fallbacks-repository";
@@ -14,9 +14,6 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await params;
   try {
     const entry = getFallbackEntry(id);
@@ -38,9 +35,6 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await params;
 
   const parsed = await parseAndValidateJsonBody(request, fallbackEntryPutSchema);
@@ -68,9 +62,6 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await params;
 
   try {

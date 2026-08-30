@@ -82,10 +82,21 @@ export function groupByCategory<T extends HasCategory>(
  *   "creative" -> "Creative"
  *   "code-review" -> "Code Review"
  *   "mlops" -> "Mlops"   (intentional; no special-casing for acronyms)
+ *   "MLOps" -> "Mlops"   (same, and deliberately: see titleCaseCategory)
  */
 export function titleCaseCategory(s: string | null | undefined): string {
   if (!s) return "";
   return categoryWords(s)
-    .map((w) => w[0].toUpperCase() + w.slice(1))
+    // The REMAINDER is lower-cased, not just the first letter raised. Without
+    // it, "CONTROL HUB" rendered as "CONTROL HUB" while "control-hub" rendered
+    // as "Control Hub", and since skills-page-helpers takes a bucket's heading
+    // from its FIRST member, the heading depended on catalogue order. That is
+    // the exact failure the comment above says this design prevents (T-0053).
+    //
+    // The cost, accepted deliberately and already stated in the examples below:
+    // an acronym is title-cased too, so "MLOps" renders "Mlops". A category
+    // whose heading flickers with data order is worse than one that is
+    // consistently plain.
+    .map((w) => w[0].toUpperCase() + w.slice(1).toLowerCase())
     .join(" ");
 }

@@ -227,11 +227,11 @@ jobs:
   # The whole Playwright suite, which is e2e-smoke minus one environment
   # variable (WG-DEL-002, ruled B: the full end-to-end acceptance suite blocks
   # main). PLAYWRIGHT_SMOKE=1 narrows testMatch to smoke.spec.ts, so e2e-smoke
-  # runs 5 of the suite's 97 tests and the other 92 ran on no branch in CI at
+  # runs 5 of the suite's 98 tests and the other 93 ran on no branch in CI at
   # all: not on pull requests, not on dev, not on main. That is what this ends.
   #
   # Pull requests targeting main only, plus manual dispatch. The suite boots a
-  # production server and drives a browser through 97 tests, main is the branch
+  # production server and drives the whole suite, main is the branch
   # the ruling is about, and pushes and dev pull requests keep the fast smoke.
   # `github.base_ref` is the PR's target branch and is empty on other events, so
   # the condition cannot fire outside a pull request.

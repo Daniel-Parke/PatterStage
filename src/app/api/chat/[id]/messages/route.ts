@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
+
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
@@ -17,9 +17,6 @@ import { dispatchChatTurn, appendFastTurn } from "@/lib/orchestration/chat-dispa
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function POST(request: NextRequest, ctx: Ctx) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await ctx.params;
   if (!getConversation(id)) return notFound("Conversation not found");
 

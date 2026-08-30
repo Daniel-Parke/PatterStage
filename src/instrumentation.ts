@@ -36,6 +36,17 @@ export async function register(): Promise<void> {
     console.error("[auth] could not establish an access token", error);
   }
 
+  // How this instance is configured, printed unconditionally beside the [auth]
+  // line. A diagnostic that only appears when something is wrong cannot be used
+  // to establish that nothing is, and three QA sessions were lost to a watchdog
+  // restarting the server without their environment (T-0053).
+  try {
+    const { describeOperationalFlags } = await import("@/lib/boot-diagnostics");
+    console.info(`[config] ${describeOperationalFlags()}`);
+  } catch {
+    /* non-fatal diagnostic */
+  }
+
   // Loud warning if we may be reading the wrong (emptier) DB than a sibling data
   // dir — e.g. an empty ~/patterstage/data shadowing a populated ~/PatterStage.
   try {
@@ -67,6 +78,18 @@ export async function register(): Promise<void> {
     const { failStuckResearchRuns } = await import("@/lib/laboratory/deep-research/research-repository");
     const failed = failStuckResearchRuns();
     if (failed > 0) console.warn(`[deep-research] failed ${failed} stuck research run(s) on boot`);
+  } catch {
+    /* non-fatal recovery */
+  }
+
+  // Chat recovery, the same shape and for the same reason. A fast-mode turn has
+  // no run behind it, so reconcilePendingChatMessages cannot reach it: a tab
+  // closed mid-stream left the row `streaming` for the life of the database.
+  // Deep Research got this sweep years ago; chat never did (T-0052).
+  try {
+    const { failStuckChatMessages } = await import("@/lib/chat-repository");
+    const failed = failStuckChatMessages();
+    if (failed > 0) console.warn(`[chat] failed ${failed} interrupted chat turn(s) on boot`);
   } catch {
     /* non-fatal recovery */
   }

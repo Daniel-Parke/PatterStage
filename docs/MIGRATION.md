@@ -39,7 +39,7 @@ The internal operational identifiers were renamed to PatterStage. **Existing ins
 
 **Back-compat, so you don't have to do anything:**
 
-- **Path resolution** prefers `~/patterstage/data` but falls back to a pre-existing `~/control-hub/data`, so an un-migrated install reads its data unchanged. The DB resolver prefers `patterstage.db`, else an existing `control-hub.db`.
+- **Path resolution** probes three candidates in order, `~/PatterStage/data`, `~/patterstage/data`, then a pre-existing `~/control-hub/data`, and a candidate that already holds a database wins over that order, so an un-migrated install reads its data unchanged. When none of the three exists the lowercase `~/patterstage/data` is the default. The DB resolver prefers `patterstage.db`, else an existing `control-hub.db`.
 - **`.env.local`** is loaded under both prefixes: a legacy `CH_DATA_DIR=` line is bridged to `PS_DATA_DIR` automatically.
 - **Old `ch-*.sh` paths** remain as thin shims that forward to the `ps-*.sh` scripts, so existing host-cron entries keep firing.
 
@@ -61,8 +61,8 @@ It moves the repo + data dir, fixes `.env.local` paths, renames the DB, and prin
 ## How migrations work
 
 - **One source of truth.** All schema migrations live in **`runMigrations()`**, exported from the `@/lib/db` entry module: a hand-wired chain of idempotent, version-gated appliers (`src/lib/db/apply-*.ts`) plus the SQL in `src/lib/db/migrations/`. The running app applies them at first DB open (`getDb()`), and the **`db:migrate`** script (`scripts/tooling/migrate-db.ts`) runs the **exact same** chain. They can never drift.
-- **`schema_version`.** Stored in the `meta` table. Fresh installs apply `001_baseline.sql` (the squashed schema, `schema_version 3`); existing installs climb through the 30 upgrade-only appliers, v3 to the current head of **`schema_version 34`**. Both end with an equivalent schema.
-- **The head is a constant, not a number typed into prose.** It is `MIGRATION_HEAD_SCHEMA_VERSION` in `src/lib/db-schema.ts`, and `tests/unit/run-migrations-upgrade.integration.test.ts` asserts the chain actually reaches it, that it equals the last applier's own gate, that the last gate sits exactly one above the gate it displaced, and that it equals the highest-numbered file in `src/lib/db/migrations/`. This section claimed 13, and two others claimed 11, for a long stretch while the code climbed to 30. That is what the constant and those assertions exist to prevent.
+- **`schema_version`.** Stored in the `meta` table. Fresh installs apply `001_baseline.sql` (the squashed schema, `schema_version 3`); existing installs climb through the 30 upgrade-only appliers, v3 to the current head. Both end with an equivalent schema. The head is a constant and not a number this page will keep re-typing, for the reason in the next bullet.
+- **The head is a constant, not a number typed into prose.** It is `MIGRATION_HEAD_SCHEMA_VERSION` in `src/lib/db-schema.ts`, and `tests/unit/run-migrations-upgrade.integration.test.ts` asserts the chain actually reaches it, that it equals the last applier's own gate, that the last gate sits exactly one above the gate it displaced, and that it equals the highest-numbered file in `src/lib/db/migrations/`. This section claimed 13, and two others claimed 11, for a long stretch while the code climbed well past both, and a later pass left 33 in two further places after the chain had already reached 34. That is what the constant and those assertions exist to prevent, and it is why the head is no longer written out anywhere on this page.
 - **A fresh database converges over several passes.** `runMigrations()` applies the baseline and returns; the incremental appliers only run on later passes. `getDb()` loops until the version stops moving, so one boot still reaches the head.
 - **Idempotent.** Re-running migrations is always safe: appliers gate on the stored version and no-op when already applied.
 - **Backed up first.** Every migration through `setup.sh`, `ps-deploy.sh update|rebuild`, or `ps-migrate.sh` snapshots `patterstage.db` → **`patterstage.db.pre-migrate-<timestamp>.bak`** under `PS_DATA_DIR` before touching anything.
@@ -115,7 +115,7 @@ Attended dispatch is never affected by any of this, at any setting. Clicking dis
 
 ### Historical exceptions
 
-Of the 29 appliers, 22 exec their numbered `.sql` through `execMigrationFile`. The other seven do not. They are **grandfathered, not a precedent**, and they are worth naming precisely, because calling all seven "embedded SQL" is less accurate than what is actually on disk.
+Of the 30 appliers, 23 exec their numbered `.sql` through `execMigrationFile`. The other seven do not. They are **grandfathered, not a precedent**, and they are worth naming precisely, because calling all seven "embedded SQL" is less accurate than what is actually on disk.
 
 **Four read the numbered `.sql` directly with `readFileSync`.** They predate `apply-sql.ts` and its fail-loudly contract:
 
@@ -126,13 +126,13 @@ Of the 29 appliers, 22 exec their numbered `.sql` through `execMigrationFile`. T
 | `apply-mission-queue-migration.ts` | `004_mission_queue.sql` | Gates at v5. |
 | `apply-benchmark-config-migration.ts` | `015_benchmark_config.sql` | Gates at v15. |
 
-**Three carry their SQL in TypeScript**, with no `.sql` of their own to exec:
+**Three do the work in TypeScript instead.** Only one of the three has no `.sql` at all, so do not read this table as "these have no file":
 
-| Applier | Gate | Why it is not a file |
-|---|---|---|
-| `apply-cron-schedule-canonicalisation.ts` | v7 | Rewrites `cron_jobs.schedule` values. The work is string parsing, not DDL, so there is no SQL to put in a file. |
-| `apply-legacy-column-repair.ts` | v9 | Catch-up repair for the `005` and `006` column adds the ladder skipped. Runs late so it repairs already-deployed installs too. |
-| `apply-neutral-column-names.ts` | v30 | `ALTER TABLE ... RENAME COLUMN` is not idempotent: it throws on a second run. Each rename is guarded on the live shape read from `PRAGMA table_info`, which a static `.sql` cannot do. |
+| Applier | Gate | Its `.sql` | Why it does not exec one |
+|---|---|---|---|
+| `apply-cron-schedule-canonicalisation.ts` | v7 | `007` + `008`, both inert | Rewrites `cron_jobs.schedule` values. The work is string parsing, not DDL, so its two numbered files are the comment-only markers described under Ladder quirks and there is nothing in them to exec. |
+| `apply-legacy-column-repair.ts` | v9 | none | Catch-up repair for the `005` and `006` column adds the ladder skipped. Runs late so it repairs already-deployed installs too. This is the one applier here with no numbered file of its own. |
+| `apply-neutral-column-names.ts` | v30 | `030_neutral_column_names.sql`, deliberately not exec'd | `ALTER TABLE ... RENAME COLUMN` is not idempotent: it throws on a second run. The applier re-implements both renames guarded on the live shape read from `PRAGMA table_info`, which a static `.sql` cannot do. The file stays on disk as the shipped record of what `030` was, and is never run. |
 
 ### Ladder quirks
 
@@ -183,13 +183,13 @@ Moving from a pre-runtime `main` install (file/`jobs.json`-era) to the current r
 2. **Schema upgrade:** the appliers add the `runs` and `schedules` tables, mission/run columns, and the catch-up repairs; they **drop only the never-shipped-to-`main` `game_*` tables** (the dialed-back gamification). Your `missions`, `models`, `credentials`, `sessions`, `cron_jobs`, and `stories` are preserved.
 3. **Legacy data migration:** recurring missions that were backed by a Hermes cron job become PatterStage `schedules` (mission-linked), firing on the next scheduler tick. The old `cron_jobs` rows are left in place (orphaned/backup only); the legacy agent-cron **Cron page + `jobs.json` bridge have been removed**. Scheduling lives in Missions.
 
-The proof is `tests/unit/run-migrations-upgrade.integration.test.ts`, which drives the real `runMigrations` against a degraded legacy DB and asserts the schema climbs to the head (`schema_version 33`) **with the seeded mission and cron job still present**, and with both retention policies seeded off.
+The proof is `tests/unit/run-migrations-upgrade.integration.test.ts`, which drives the real `runMigrations` against a degraded legacy DB and asserts the schema climbs to the head (`getSchemaVersion` equals `MIGRATION_HEAD_SCHEMA_VERSION`, not a literal) **with the seeded mission and cron job still present**, and with both retention policies seeded off.
 
 ### If a database can't be migrated in place
 
 For a database too old or corrupted to upgrade incrementally, PatterStage falls back to a **baseline rebuild**: it backs up the DB to `patterstage.db.pre-baseline-<timestamp>`, recreates it from `001_baseline.sql`, and re-imports the preserved tables. Anything that couldn't be carried over **remains in that backup**, and the migration prints a loud **WARNING** pointing at it. Nothing is silently discarded. Review the backup before deleting it.
 
-**Preserved on a baseline rebuild:** `credentials`, `models`, `model_defaults`, `model_fallbacks`, `fallback_config`, `missions`, `cron_jobs`, `sessions`, `stories`, `sync_registry`, `gateway_platforms`.
+**Preserved on a baseline rebuild:** `credentials`, `models`, `model_defaults`, `model_fallbacks`, `fallback_config`, `missions`, `cron_jobs`, `sessions`, `stories`, `sync_registry`, `gateway_platforms`, `agent_profiles`, `agent_root`, `skills`. That is the whole of `PRESERVE_TABLES` in [`src/lib/db/upgrade.ts`](../src/lib/db/upgrade.ts); read the constant rather than this list if the two ever disagree. Your agent profiles, the Bob root row and the skills catalog are carried across, not left behind in the backup.
 
 ## Backups
 
@@ -202,12 +202,12 @@ Hermes/Hindsight memory backups are separate (`scripts/hardware/ps-backup.sh`). 
 
 ## Data directory & paths
 
-- PatterStage data lives under **`PS_DATA_DIR`** (default `$HOME/patterstage/data`). A pre-existing `~/control-hub/data` (or the even older `$HERMES_HOME/control-hub/data`) is read as a fallback. Set `PS_DATA_DIR` explicitly if your data is elsewhere.
+- PatterStage data lives under **`PS_DATA_DIR`**. An explicit `PS_DATA_DIR` (or the legacy `CH_DATA_DIR` / `CONTROL_HUB_DATA_DIR`) always wins. With none set, `resolveDataDir()` in [`src/lib/paths.ts`](../src/lib/paths.ts) probes `~/PatterStage/data`, `~/patterstage/data` and a pre-existing `~/control-hub/data`, takes the first that already holds a database, falls back to the first that merely exists, and creates `$HOME/patterstage/data` if none does. Set `PS_DATA_DIR` explicitly if your data is elsewhere. `$HERMES_HOME/control-hub/data` is **not** one of the candidates the app resolves; it survives only as a backup source in `scripts/bootstrap/backup-hermes-config.sh`.
 - Hermes lives at **`HERMES_HOME`** (default `~/.hermes`), package at `~/.hermes/hermes-agent/`.
 - Full path/env reference: [ENV_REFERENCE.md](ENV_REFERENCE.md).
 
 ## Release checklist (`dev` → `main`)
 
-1. On a copy of a real install, run `bash scripts/maintenance/ps-migrate.sh` and confirm: a `pre-migrate-*.bak` exists, `schema_version` matches the head (33 today, and always `MIGRATION_HEAD_SCHEMA_VERSION` in `src/lib/db-schema.ts`), `schedules` is populated from any mission-linked cron jobs, and missions/models/sessions are intact.
+1. On a copy of a real install, run `bash scripts/maintenance/ps-migrate.sh` and confirm: a `pre-migrate-*.bak` exists, `schema_version` matches the head, which is always whatever `MIGRATION_HEAD_SCHEMA_VERSION` in `src/lib/db-schema.ts` currently says and never a number remembered from a previous release, `schedules` is populated from any mission-linked cron jobs, and missions/models/sessions are intact.
 2. `npm test` (incl. the upgrade-path test) and `npm run test:e2e-hermes` (real-Hermes gate).
 3. `npm run test:full-install` on a staging host (`tests/integration/test_full_install_update_process.py`).

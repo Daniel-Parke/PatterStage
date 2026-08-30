@@ -68,7 +68,6 @@ jest.mock("@/lib/api-logger", () => ({
 }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: mockRequireAuth,
 }));
 
 jest.mock("@/lib/audit-log", () => ({

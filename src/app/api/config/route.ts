@@ -4,7 +4,7 @@ import { z } from "zod";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { writeHermesConfigFile } from "@/modules/hermes/lib/hermes-config-write";
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+
 import { appendAuditLine } from "@/lib/audit-log";
 import { forbidden, ok } from "@/lib/api-response";
 import { readCachedConfig } from "@/lib/config-cache";
@@ -69,12 +69,12 @@ function maskApiKeyField(record: Record<string, unknown>, key: string): void {
 }
 
 // GET /api/config — return full config (with secrets masked)
-export async function GET(request: NextRequest) {
-  // Auth check outside the main try/catch so it matches the PUT pattern
-  // and so any future throw inside requireAuth would be classified as an
-  // auth failure rather than a "reading config.yaml" error in the log.
-  const auth = requireAuth(request);
-  if (auth) return auth;
+export async function GET(_request: NextRequest) {
+  // No auth or read-only check here, and that is deliberate: src/proxy.ts
+  // authenticates every request and refuses unsafe methods under PS_READ_ONLY
+  // before a handler runs. This comment used to describe a `requireAuth` call
+  // sitting outside the try/catch; both the call and the function were deleted
+  // in T-0048, and the comment outlived them.
   try {
     const config = readCachedConfig();
     return ok(maskConfigSecrets(config));
@@ -90,9 +90,6 @@ export async function GET(request: NextRequest) {
 
 // PUT /api/config — update specific section
 export async function PUT(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const parsed = await parseAndValidateJsonBody(request, configPutSchema);
   if (parsed instanceof NextResponse) return parsed;
   const { section, values } = parsed;

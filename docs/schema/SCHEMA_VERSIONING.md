@@ -11,8 +11,13 @@ compiled_from: normalised
 
 | Artifact | Constant | Location |
 |----------|-----------|----------|
-| Mission record | `MISSION_SCHEMA_VERSION` (`1.0.0`) | `src/lib/schema/mission-v1.ts` |
-| Template pack manifest | `TEMPLATE_PACK_SCHEMA_VERSION` (`1.0.0`) | `src/lib/schema/template-pack-v1.ts` |
+| Mission record | inline `z.literal("1.0.0")` on `schemaVersion` | `src/lib/schema/mission-v1.ts` |
+| Template pack manifest | inline `z.literal("1.0.0")` on `schemaVersion` | `src/lib/schema/template-pack-v1.ts` |
+
+There is no `MISSION_SCHEMA_VERSION` or `TEMPLATE_PACK_SCHEMA_VERSION` constant.
+This table named both for a long time; neither has ever existed in `src/`. The
+version is an inline Zod literal, which is why bumping it means editing the schema
+file rather than a shared constant.
 
 ## Bump policy
 

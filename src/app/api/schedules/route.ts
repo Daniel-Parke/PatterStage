@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireAuth } from "@/lib/api-auth";
+
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, created, badRequest } from "@/lib/api-response";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
@@ -38,9 +38,6 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const parsed = await parseAndValidateJsonBody(request, scheduleCreateSchema);
   if (parsed instanceof NextResponse) return parsed;
 

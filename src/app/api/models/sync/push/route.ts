@@ -4,7 +4,7 @@
 // pushes linked credential to .env if pushCredential is true.
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
+
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { pushModelToHermes, pushCredential } from "@/modules/hermes/lib/sync-manager";
@@ -13,9 +13,6 @@ import { ok } from "@/lib/api-response";
 import { z } from "zod";
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   // `modelId` is required; `pushCredential` defaults to `true` when
   // absent (matches the pre-refactor `!== false` semantics). The zod
   // `.min(1)` + string check makes the post-parse `if (!modelId)`

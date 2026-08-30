@@ -180,10 +180,20 @@ export function reconcilePendingChatMessages(conversationId: string): ChatMessag
     // keep any streamed content the client already persisted if the run output
     // is empty (e.g. an early failure after partial deltas).
     const content = run.output && run.output.length > 0 ? run.output : m.content;
+    const status = messageStatusForRun(run.status);
     updateMessage(m.id, {
       content,
-      status: messageStatusForRun(run.status),
-      error: run.error ?? undefined,
+      status,
+      // `undefined` means "leave unchanged" in updateMessage, so a FAILED run
+      // carrying no error of its own used to leave the message's error column
+      // exactly as it was: null. The row then read "failed" with no reason
+      // anywhere, which is the symptom a QA pass reported (T-0052). A failure
+      // always says something; a success clears whatever a previous attempt
+      // left behind.
+      error:
+        status === "failed"
+          ? (run.error ?? "The run failed without reporting a reason.")
+          : null,
     });
     changed = true;
   }

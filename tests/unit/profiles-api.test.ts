@@ -95,7 +95,6 @@ jest.mock("@/lib/fs/path-security", () => ({
 }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
 }));
 
 jest.mock("@/lib/audit-log", () => ({

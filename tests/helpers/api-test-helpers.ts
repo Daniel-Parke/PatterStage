@@ -99,13 +99,25 @@ export function setupRouteMocks() {
     safeReadJsonFile: jest.fn(() => ({ ok: true, data: {} })),
   }));
 
+  // The REAL module, with only the signing check stubbed.
+  //
+  // This used to replace the whole module, including `isReadOnly: () => false`.
+  // That is how a read-only defect reached 34 route handlers with the suite
+  // green throughout: every test that touched a route ran with the mode
+  // hard-wired off, so no test could observe the bug even in principle
+  // (T-0048, T-0049).
+  //
+  // `isReadOnly` and `requireNotReadOnly` now read the real environment, which
+  // is unset in a normal test run and therefore behaves exactly as the old stub
+  // did. The difference is that a test which SETS PS_READ_ONLY now gets the
+  // truth instead of a decision made for it.
+  //
+  // `requireSignedRequest` stays stubbed: it needs an HMAC over a shared secret
+  // that no route test is about, and leaving it real would make every one of
+  // them carry signing headers to test something else entirely.
   jest.mock("@/lib/api-auth", () => ({
-    requireMcApiKey: jest.fn(() => null),
-    requireChApiKey: jest.fn(() => null),
-    requireAuth: jest.fn(() => null),
-    requireNotReadOnly: jest.fn(() => null),
+    ...jest.requireActual("@/lib/api-auth"),
     requireSignedRequest: jest.fn(() => null),
-    isReadOnly: jest.fn(() => false),
   }));
 
   jest.mock("@/lib/parse-json-body", () => ({

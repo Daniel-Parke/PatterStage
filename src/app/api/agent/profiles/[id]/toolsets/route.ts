@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { methodNotAllowed, notFound, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
@@ -21,9 +20,6 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await params;
   const prof = requireSafeProfileName(id);
   if (prof instanceof NextResponse) return prof;
@@ -58,9 +54,6 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await params;
   const prof = requireSafeProfileName(id);
   if (prof instanceof NextResponse) return prof;

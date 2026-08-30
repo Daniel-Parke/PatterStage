@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 
-import { requireAuth } from "@/lib/api-auth";
 import { badRequest, ok } from "@/lib/api-response";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
@@ -15,9 +14,6 @@ import {
 } from "@/modules/hermes/lib/profile-push";
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   // Body is a bag of optional flags (slug, all, root, skills, ...);
   // missing or malformed body is treated as {} so callers can POST
   // with no payload to trigger default behaviour.

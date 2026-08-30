@@ -16,7 +16,6 @@ jest.mock("fs", () => ({
 }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
   isReadOnly: jest.fn(() => false),
 }));
 

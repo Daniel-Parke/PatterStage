@@ -143,16 +143,23 @@ describe("groupByCategory: parity with the display (T-0037)", () => {
     expect(groups[0][0]).toBe("control hub");
     expect(groups[0][1]).toHaveLength(4);
 
-    // The premise of the merge, stated exactly. The first three DO render one
-    // identical label, and that is the separator fold this task added. The
-    // fourth renders "CONTROL HUB", because titleCaseCategory raises the first
-    // letter of each word and leaves the rest alone; it was already in this
-    // bucket before T-0037, because the key has been case-insensitive since the
-    // helper was written. The separators are what were missing.
-    expect(
-      new Set(skills.slice(0, 3).map((s) => titleCaseCategory(s.category))),
-    ).toEqual(new Set(["Control Hub"]));
-    expect(titleCaseCategory("CONTROL  HUB")).toBe("CONTROL HUB");
+    // The premise of the merge, stated exactly. All FOUR now render one
+    // identical label. This assertion used to end
+    // `expect(titleCaseCategory("CONTROL  HUB")).toBe("CONTROL HUB")`, with a
+    // comment explaining that titleCaseCategory raises the first letter of each
+    // word and leaves the rest alone.
+    //
+    // That was an accurate description of a defect, pinned as if it were a
+    // design. Four spellings shared a bucket while rendering two different
+    // labels, and skills-page-helpers takes a bucket's heading from its FIRST
+    // member, so the heading depended on catalogue order. Corrected in place
+    // under T-0053, not deleted: the merge this test protects is unchanged, and
+    // what changes is that the premise it states is now true of all four rather
+    // than three.
+    expect(new Set(skills.map((s) => titleCaseCategory(s.category)))).toEqual(
+      new Set(["Control Hub"]),
+    );
+    expect(titleCaseCategory("CONTROL  HUB")).toBe("Control Hub");
   });
 
   it("keys exactly what the display renders, for every spelling", () => {

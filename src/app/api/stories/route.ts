@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { handleCreate } from "@/modules/rec-room/handlers/create";
 import {
@@ -26,9 +26,6 @@ import {
 import { handleCharacters, handleThemes } from "@/modules/rec-room/handlers/library";
 
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   try {
     const body = await parseJsonBody(request);
     if (body instanceof NextResponse) return body;

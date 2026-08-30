@@ -92,6 +92,23 @@ export function useMissionDispatch({
     // destructured, not local useState setters the linter auto-exempts).
   }, [clearMissionFormFields, setDispatchAcknowledged, setNewDispatch, setShowCreate]);
 
+  /**
+   * Finish. One step, used by every branch that succeeded.
+   *
+   * There used to be two ways to end (`resetForm()` and `closeComposer()`),
+   * chosen per branch, and three of the seven branches chose NEITHER: create
+   * with dispatchMode `now`, create with `cron`, and re-dispatching a completed
+   * mission. The operator submitted a form and it stayed open in front of them
+   * (T-0051). All three also expand a row on the board behind the sheet, so even
+   * the incidental confirmation was hidden.
+   *
+   * Ending is not a per-branch decision, so it stops being expressed as one.
+   */
+  const finishComposer = useCallback(() => {
+    closeComposer();
+    resetForm();
+  }, [closeComposer, resetForm]);
+
   const handleCreate = useCallback(async () => {
     if (!newName.trim() || !newInstruction.trim()) return;
     if (!editingId && !dispatchAcknowledged) {
@@ -132,7 +149,7 @@ export function useMissionDispatch({
             "Failed to update mission",
           );
           if (result.ok) {
-            closeComposer();
+            finishComposer();
             void fetchData();
             if (expandedId === editingId) void fetchDetail(editingId);
           }
@@ -161,17 +178,23 @@ export function useMissionDispatch({
             "Failed to update mission",
           );
           if (ok) {
-            closeComposer();
-            resetForm();
+            finishComposer();
             await fetchData();
             if (expandedId === editingId) void fetchDetail(editingId);
           }
           return;
         }
 
-        if (!isCompleted) return;
-
-        setEditingId(null);
+        if (!isCompleted) {
+          // Used to return here with no toast and no state change: a button
+          // that does nothing and explains nothing. Reachable whenever the
+          // edited mission is not in the board (a stale row, a filtered view).
+          showToast(
+            "That mission is no longer on the board. Reload and try again.",
+            "error",
+          );
+          return;
+        }
 
         // The route returns `{ data: { mission: { id } } }` (envelope).
         // The `dispatchMissionAction` helper unwraps the inner envelope via
@@ -193,6 +216,12 @@ export function useMissionDispatch({
           "Failed to re-dispatch mission",
         );
         if (result.ok) {
+          // AFTER the request, not before. Clearing it first flips the sheet
+          // from "Edit Mission" to "New Mission" mid-flight and can re-arm the
+          // dispatch gate; a failure then strands the operator in a
+          // create-shaped composer holding edit data.
+          setEditingId(null);
+          finishComposer();
           const body = result.data;
           await fetchData();
           if (body?.mission?.id) {
@@ -226,10 +255,10 @@ export function useMissionDispatch({
         "Failed to create mission",
       );
       if (ok) {
-        if (newDispatch === "save" || newDispatch === "queue") {
-          resetForm();
-          void fetchData();
-        } else if (newDispatch === "now") {
+        // Every mode finishes. What differs is only what happens NEXT: `now`
+        // expands the row it just created so the operator can watch it.
+        finishComposer();
+        if (newDispatch === "now") {
           const body = data;
           await fetchData();
           if (body?.mission?.id) {
@@ -237,7 +266,7 @@ export function useMissionDispatch({
             void fetchDetail(body.mission.id);
           }
         } else {
-          await fetchData();
+          void fetchData();
         }
       }
     } catch (err) {
@@ -245,7 +274,7 @@ export function useMissionDispatch({
     } finally {
       setDispatching(false);
     }
-  }, [newName, newInstruction, editingId, dispatchAcknowledged, dispatching, showToast, newDispatch, newSchedule, missions, dispatchPayload, fetchData, resetForm, fetchDetail, expandedId, closeComposer, setEditingId, setExpandedId]);
+  }, [newName, newInstruction, editingId, dispatchAcknowledged, dispatching, showToast, newDispatch, newSchedule, missions, dispatchPayload, fetchData, fetchDetail, expandedId, finishComposer, setEditingId, setExpandedId]);
 
   const handleEdit = useCallback((m: MissionRow) => {
     setEditingId(m.id);

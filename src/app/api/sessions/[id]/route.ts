@@ -5,7 +5,7 @@ import { basename } from "path";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { readAgentSessionDetail } from "@/lib/runtime/state-db";
 import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
-import { requireAuth } from "@/lib/api-auth";
+
 import { badRequest, notFound, ok, payloadTooLarge } from "@/lib/api-response";
 import { safeStat } from "@/lib/fs/fs-stats";
 import { getSession, estimateSessionSize } from "@/lib/sessions/session-repository";
@@ -34,9 +34,6 @@ export async function GET(
 ) {
   const limited = sessionsRateLimitResponse(request, "GET /api/sessions/[id]");
   if (limited) return limited;
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await params;
 
   // Security: prevent path traversal

@@ -13,7 +13,7 @@ I expect PRs to pass the same checks CI runs. This page is the map of Jest, Play
 
 | Path | Runner | Role |
 |------|--------|------|
-| `tests/unit/` | Jest | API contracts, parsers, security, repositories (heavy use of `jest.mock` for `fs`, `@/lib/hermes-agent-runtime`, DB). |
+| `tests/unit/` | Jest | API contracts, parsers, security, repositories (heavy use of `jest.mock` for `@/lib/db`, `@/lib/api-logger`, `@/modules/hermes/lib/agent-runtime`, `fs`). |
 | `tests/e2e/` | Playwright | Browser flows against a real `next start` server (see `playwright.config.ts`). |
 | `tests/jest.setup.ts` | Jest | Global setup and shared mocks (`jest.config.js` → `setupFilesAfterEnv`). |
 | `tests/__mocks__/better-sqlite3.cjs` | Jest | CJS shim so the native `better-sqlite3` addon is never loaded in unit tests. |
@@ -34,7 +34,9 @@ npm test
 npm run test:coverage
 ```
 
-Config: [`jest.config.js`](../jest.config.js) at repo root. Coverage thresholds apply globally and with a higher bar for **`src/lib/**`** (pages and `src/app/**` routes are excluded from `collectCoverageFrom`).
+Config: [`jest.config.js`](../jest.config.js) at repo root. Coverage is collected from every `src/**/*.{ts,tsx}` except `.d.ts` files and `layout.tsx`. Pages and `src/app/**` route handlers **are** measured: `!src/app/**` and `!src/**/page.tsx` used to sit in `collectCoverageFrom` and were deliberately removed in T-0044, because the wiring defects a live QA pass found were exactly the code no floor could see.
+
+Three floor bands apply, engine above service above UI: `src/lib/` carries the highest, `src/app/api/` a middle one, and the global group is the remainder (overwhelmingly UI). The numbers live in [`scripts/tooling/coverage-floors.cjs`](../scripts/tooling/coverage-floors.cjs), not in `jest.config.js`, and they ratchet: `npm run lint:coverage-floors` (also chained into `npm run lint`) fails the build if a floor goes down. Raise one by writing tests, never by editing the number alone.
 
 ### Hermes pathing (unit)
 
@@ -45,7 +47,7 @@ Config: [`jest.config.js`](../jest.config.js) at repo root. Coverage thresholds 
 - [`tests/unit/db-baseline.test.ts`](../tests/unit/db-baseline.test.ts): in-memory schema smoke.
 - [`tests/unit/db-upgrade.integration.test.ts`](../tests/unit/db-upgrade.integration.test.ts): on-disk legacy DB → `rebuildToBaseline` preserves credentials, models, cron, sessions.
 
-**Dual DB paths:** `npm run prebuild` writes `{repo}/data/patterstage.db`; runtime uses `{PS_DATA_DIR}/patterstage.db` (default `~/patterstage/data/patterstage.db`). Prebuild rebuilds the repo DB when `schema_version` is not the current baseline (**v3**).
+**Dual DB paths:** `npm run prebuild` writes `{repo}/data/patterstage.db`; runtime uses `{PS_DATA_DIR}/patterstage.db` (default `~/patterstage/data/patterstage.db`). Prebuild rebuilds the repo DB from `001_baseline.sql` when `schema_version` is **below** the baseline (**v3**), then applies the migrations on top; a DB already at or above the baseline is upgraded in place, not rebuilt.
 
 ### Bootstrap test gate
 
@@ -62,14 +64,18 @@ npm run build
 npm run test:e2e
 ```
 
-- **`PORT`:** `playwright.config.ts` uses `process.env.PORT` (default `3000`). CI sets `PORT=3000`.
-- **`PLAYWRIGHT_SMOKE=1`:** When set, only [`tests/e2e/smoke.spec.ts`](../tests/e2e/smoke.spec.ts) runs (5 of the suite's 97 tests). Omit it for the **full** E2E suite (navigation matrix, config sections, Story Weaver, the missions journeys, etc.).
-- **Where each one runs.** The `e2e-smoke` job keeps `PLAYWRIGHT_SMOKE=1` and runs on every push and pull request. The `e2e-full` job runs the same command **without** it, on pull requests targeting `main` and on manual dispatch (WO-0012, WG-DEL-002 ruled B). The two jobs differ by exactly that one environment variable, so they cannot drift into different suites. Before this, 92 of the 97 tests ran on no branch in CI at all.
+- **`PORT`:** pinned by the npm script, not by CI. `npm run test:e2e` is `cross-env PORT=3000 playwright test`, so 3000 wins locally and in CI alike, over any `PORT` you exported and over `.env.local` (which nothing in this chain reads). `playwright.config.ts` also passes `-p` to the server it starts, so the `next start` child cannot drift onto another port. For a different port, run `npx playwright test` directly with `PORT` set.
+- **`PLAYWRIGHT_SMOKE=1`:** When set, `testMatch` narrows to [`tests/e2e/smoke.spec.ts`](../tests/e2e/smoke.spec.ts), which holds 5 tests. Omit it for the **full** E2E suite (navigation matrix, config sections, Story Weaver, the missions journeys, etc.). Do not go looking for a fixed total here: the navigation matrix generates one test per route and the routes are derived from the module registry, so the count moves whenever a surface is added. Run `npx playwright test --list` for the number today, and `CAPTURE_SCREENSHOTS=1` for the doc-screenshot tests, which skip themselves otherwise.
+- **Where each one runs.** The `e2e-smoke` job keeps `PLAYWRIGHT_SMOKE=1` and runs on every push and pull request. The `e2e-full` job runs the same command **without** it, on pull requests targeting `main` and on manual dispatch (WO-0012, WG-DEL-002 ruled B). The two jobs differ by exactly that one environment variable, so they cannot drift into different suites. Before this, everything outside `smoke.spec.ts` ran on no branch in CI at all.
 - **Pre-release:** running `npm run test:e2e` locally without `PLAYWRIGHT_SMOKE` before a `dev` → `main` merge is still the fastest way to find a failure, but it is no longer the only thing standing between the suite and main.
 
 ### Navigation matrix and sidebar
 
-[`tests/e2e/app-routes.ts`](../tests/e2e/app-routes.ts) lists every path exercised by the navigation matrix. **`src/components/layout/sidebar-config.ts`** includes a comment: when you add or change sidebar `href` values, update `app-routes.ts` so E2E stays aligned.
+[`tests/e2e/app-routes.ts`](../tests/e2e/app-routes.ts) lists every path exercised by the navigation
+matrix, and it is DERIVED: `export const APP_NAV_ROUTES = allModuleRoutes()`. Nothing to keep in sync.
+Add the surface to [`src/lib/modules/registry.ts`](../src/lib/modules/registry.ts) and both the sidebar
+and the matrix follow. This used to be a hand-mirrored list with a "keep in sync" comment, and it had
+already drifted -- `/laboratory/artifacts` was missing, so the matrix silently stopped covering a page.
 
 ## Install harness (Docker): a gate, not a ritual
 
@@ -99,20 +105,26 @@ npm: `npm run test:full-install` (smoke + `--skip-http`), `npm run test:full-ins
 
 Two zero-dependency Node runners drive PatterStage's real HTTP surface against a running stack. They work the same on **Linux, macOS, and Windows** (pure `fetch`):
 
-| Runner | npm | Covers |
-|--------|-----|--------|
-| [`full-stack-smoke.mjs`](../tests/integration/runtime/full-stack-smoke.mjs) | `test:e2e-runtime` | Missions, schedules, cancel, chat, analytics, benchmarks |
-| [`composer-smoke.mjs`](../tests/integration/runtime/composer-smoke.mjs) | `test:smoke-composer` | Composer (dispatch → HIL gate → approve → advance) + Deep Research |
+| Runner | npm | Covers | Auth |
+|--------|-----|--------|------|
+| [`full-stack-smoke.mjs`](../tests/integration/runtime/full-stack-smoke.mjs) | `test:e2e-runtime` | Gateway reachability, missions, dispatch and reconcile, schedules, cancel, legacy now-dispatch, analytics + achievements, chat | Sends `PS_AUTH_TOKEN` as a Bearer when set |
+| [`composer-smoke.mjs`](../tests/integration/runtime/composer-smoke.mjs) | `test:smoke-composer` | Composer (dispatch → HIL gate → approve → advance) + Deep Research | None. Needs a server started with `PS_AUTH_MODE=none` |
+
+The benchmark section of `full-stack-smoke.mjs` was deleted with the rest of the benchmark subsystem (commit 4935ac31); `/api/benchmarks/*` 404s by decision, and a tombstone at the foot of the runner records it.
+
+**Both recipes below have to deal with auth.** [`src/proxy.ts`](../src/proxy.ts) authenticates every request except a safe-method `GET /api/health`, and `PS_AUTH_MODE` defaults to `token`, so a server started with a bare `npm run dev` refuses these runners. `full-stack-smoke.mjs` can present a token; `composer-smoke.mjs` sends no `Authorization` header at all, so the only way to run it is with auth off. Turning auth off is fine for a local smoke against a throwaway data dir and is not fine anywhere else.
 
 ### Against the mock Hermes (offline, any OS)
 
 ```bash
 npm run mock-hermes                       # terminal 1: stand-in API server on :8642
-HERMES_GATEWAY_URL=http://127.0.0.1:8642 PS_SEARCH_PROVIDER=none npm run dev   # terminal 2
+PS_AUTH_MODE=none HERMES_GATEWAY_URL=http://127.0.0.1:8642 PS_SEARCH_PROVIDER=none npm run dev   # terminal 2
 PS_URL=http://127.0.0.1:3000 npm run test:smoke-composer   # terminal 3
 ```
 
 `PS_SEARCH_PROVIDER=none` keeps Deep Research fully offline (no live web search). On a **fresh** `PS_DATA_DIR`, run `PS_DATA_DIR=<dir> npm run db:migrate` once before starting the server (the boot-time Composer seed needs the schema present).
+
+For `test:e2e-runtime` you can keep auth on instead: start the server normally and pass the same value in `PS_AUTH_TOKEN` to both sides.
 
 ### Against a real local Hermes
 
@@ -123,27 +135,39 @@ PatterStage talks to Hermes **only** through its HTTP API Server (the gateway) +
 
 **bash (Linux/macOS/WSL):**
 ```bash
-export HERMES_GATEWAY_URL=http://127.0.0.1:8642 API_SERVER_KEY=<key>
+export HERMES_GATEWAY_URL=http://127.0.0.1:8642 API_SERVER_KEY=<key> PS_AUTH_MODE=none
 npm run dev
 PS_URL=http://127.0.0.1:3000 npm run test:smoke-composer
 ```
 
 **PowerShell (Windows):**
 ```powershell
-$env:HERMES_GATEWAY_URL = "http://127.0.0.1:8642"; $env:API_SERVER_KEY = "<key>"
+$env:HERMES_GATEWAY_URL = "http://127.0.0.1:8642"; $env:API_SERVER_KEY = "<key>"; $env:PS_AUTH_MODE = "none"
 npm run dev
 $env:PS_URL = "http://127.0.0.1:3000"; npm run test:smoke-composer
 ```
 
-The runners exit non-zero on any failed assertion. CI is unchanged: it runs the mock smoke on all three OSes plus the Ubuntu Docker real-Hermes job; the runners above are the manual path for validating a real (or Windows) Hermes.
+`API_SERVER_KEY` is the key PatterStage presents to Hermes. It is not PatterStage's own token, and it does not satisfy `src/proxy.ts`.
+
+The runners exit non-zero on any failed assertion. **Neither runner is wired into CI**; both are manual. What CI does run cross-OS is `boot-smoke` (OS-seam primitives: detached spawn survival, port probing, process kill), on Ubuntu and macOS only, plus the Ubuntu Docker `real-hermes-integration` job, which drives `full-stack-smoke.mjs` against a real Hermes image. There is no Windows runner in `ci.yml`, so a Windows stack is validated only by running the two runners above by hand.
 
 ## Continuous integration
 
-Primary pipeline: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml), which runs Ubuntu (`shell-custom-scripts`, install, `prebuild`, ESLint with **`--max-warnings 0`**, Hermes-path grep gate, `tsc`, Jest coverage, build, Playwright smoke with `PLAYWRIGHT_SMOKE=1`) plus macOS build/test, E2E smoke on Ubuntu, and a **`docker-image`** job that runs **`docker build -f Dockerfile .`** then **`tests/scripts/docker-deploy-api-smoke.sh`** (GET version check + POST restart + HTTP still up) so the production image and dashboard deploy path do not silently rot. The **`build-test-*`** jobs use separate named steps (ESLint, TypeScript, unit tests, build) so the first failing step is obvious in the Actions UI. Actions use **`actions/checkout@v5`** and **`actions/setup-node@v5`** (action runtime on Node 24 per upstream; app build still uses `node-version: "20"` in the workflow).
+Primary pipeline: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml). The `build-test-ubuntu` job runs, in order: install, `prebuild`, the step **labelled ESLint**, the **output canary** (`npm run canary:check`), **knip** (`npm run lint:knip`), the Hermes-path grep gate, `tsc --noEmit`, Jest coverage, the production build, then a second recorded canary run over the rendered surfaces. Alongside it: `shell-custom-scripts`, `build-test-macos` (build + test), `boot-smoke` (Ubuntu and macOS), `e2e-smoke` (Playwright with `PLAYWRIGHT_SMOKE=1`), `install-harness`, and a **`docker-image`** job that runs **`docker build -f Dockerfile .`** then **`tests/scripts/docker-deploy-api-smoke.sh`** (GET version check + POST restart + HTTP still up) so the production image and dashboard deploy path do not silently rot. Separate named steps mean the first failing one is obvious in the Actions UI. Actions use **`actions/checkout@v5`** and **`actions/setup-node@v5`** (action runtime on Node 24 per upstream; app build still uses `node-version: "20"` in the workflow).
+
+**The step named "ESLint" is not eslint.** It runs `npm run lint`, which chains nine gates: `check-agent-files`, `check-doc-links`, `check-derived-views`, `check-read-only-guards`, `design-lint`, `contrast-check`, `coverage-floor-check`, then `eslint . --max-warnings 0`, then `typecheck:tests`. A broken relative link in `docs/`, a colour literal, a coverage floor or a type error in a test file all fail that step. `canary:check` and `lint:knip` are **not** in that chain and are separate blocking steps, so a green local `npm run lint` is not by itself a green CI.
 
 ### The main-blocking acceptance set
 
-Three jobs run only for pull requests targeting `main` (and on manual dispatch), because that is where WG-DEL-002 (ruled B) puts the assembled proof: **`e2e-full`** (the whole Playwright suite), **`install-harness`** (the install journey, which also runs on every push and pull request), and **`real-hermes-integration`** (which used to be push-only, so a red gate stayed invisible in PR views). **`acceptance-gate`** aggregates the three into one check that fails unless all three succeeded.
+Three jobs make up the assembled proof WG-DEL-002 (ruled B) puts on `main`. Only one of them is restricted to that branch; the other two also run more widely, so read the trigger column rather than the heading:
+
+| Job | What it proves | When it runs |
+|-----|----------------|--------------|
+| **`e2e-full`** | The whole Playwright suite | PRs targeting `main`, and manual dispatch. Nothing else. |
+| **`install-harness`** | The install journey | Every push and every pull request, `dev` included. A fresh install breaking is death #1, so a branch hears about it early. |
+| **`real-hermes-integration`** | The stack against a real Hermes image | Every push to `main` or `dev`, plus manual dispatch, plus PRs targeting `main`. It was once push-only, which is how a red gate stayed invisible in PR views for four weeks; the PR trigger was added without removing the push one. |
+
+**`acceptance-gate`** aggregates the three into one check that fails unless all three succeeded, and it alone is gated to PRs targeting `main` and manual dispatch.
 
 A workflow file can only decide which jobs run. Which ones *block* a merge is a branch-protection setting, and branch protection on `main` currently requires zero checks, so `acceptance-gate` reports and blocks nothing until the operator makes it a required check (the remaining half of WO-0011).
 
@@ -153,7 +177,37 @@ Other workflows: **gitleaks** (secret scan).
 
 ## Auth in route tests
 
-Many Jest suites mock **`@/lib/api-auth`** (`requireAuth` returns `null` when allowed). Mirror that pattern when adding new mutating API route tests.
+Route tests use the shared helper in `tests/helpers/api-test-helpers.ts`, which
+mocks **`@/lib/api-auth`** by spreading the REAL module and stubbing only the
+signing check:
+
+```ts
+jest.mock("@/lib/api-auth", () => ({
+  ...jest.requireActual("@/lib/api-auth"),
+  requireSignedRequest: jest.fn(() => null),
+}));
+```
+
+Do NOT replace the whole module. It used to, including `isReadOnly: () => false`,
+and that is how a read-only defect reached 34 route handlers with the suite green
+throughout: every route test ran with the mode hard-wired off, so no test could
+observe the bug even in principle (T-0048, T-0049). Spreading the real module means
+a test that sets `PS_READ_ONLY` actually gets read-only behaviour.
+
+`requireAuth` is gone. T-0048 deleted it because it authenticated nothing and only
+checked the read-only flag; authentication and read-only now live once in
+[`src/proxy.ts`](../src/proxy.ts), enforced by HTTP method. Mocking it grants a route
+test nothing. Worse, a factory without `requireActual` replaces the whole module, so
+the name the handler really imports (`requireNotReadOnly`, `isReadOnly`,
+`requireAuthenticatedHostWrites`) comes back undefined and the handler throws.
+
+`tests/unit/read-only-is-testable.test.ts` fails the build on a factory that names an
+export `@/lib/api-auth` does not have. Know its limit before you lean on it: it reads
+names off their own indented line, so a **single-line** factory such as
+`jest.mock("@/lib/api-auth", () => ({ requireAuth: () => null }))` slips past. Nine
+of those survive in `tests/unit/`, green only because the routes they exercise import
+nothing from `api-auth` at all, which makes the mock dead weight rather than harmless
+precedent. They are vestigial. Do not copy them.
 
 ## Hermes pathing: manual verification matrix
 

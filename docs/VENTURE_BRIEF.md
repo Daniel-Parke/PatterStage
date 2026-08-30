@@ -16,14 +16,20 @@ disagree, fix this file.
 
 PatterStage is a local-first application a single operator installs on their own
 machine to control one Hermes AI agent: configure it, commission work, gate the
-work that needs judgement, and watch what ran. It also generates PatterTech EOS
-seed packs, so a user can found a governed project from the same console. Nothing
-else plugs in until someone other than its author has installed it from scratch
-and used it for a week: integrating PatterTech's wider product layers is
-deliberately deferred, not undecided.
+work that needs judgement, and watch what ran. Founding a governed project from
+PatterTech EOS seed packs is the venture's other half, and today it is an
+intention rather than a surface: this paragraph used to say the console generated
+them, and no page, route or library under `src/` mentions EOS at all. The only
+compiler in the tree is `scripts/tooling/eos-compile.mjs`, a Session 0
+command-line artefact the application never invokes, which reads its templates
+from a separate PatterTech_EOS checkout named by `EOS_ROOT` and pins the scale at
+M; `docs/COMPILE_REPORT.md` item 5 already records that it owes a v2 pass or a
+retirement note. Nothing else plugs in until someone other than its author has
+installed it from scratch and used it for a week: integrating PatterTech's wider
+product layers is deliberately deferred, not undecided.
 
 - One line: the local console for one AI agent, and the place a governed project
-  is founded.
+  is meant to be founded once that compiler is ported.
 - Who it serves: **both, equally** (the operator's word). A public open-source
   control plane for anyone running Hermes locally, AND PatterTech's own estate
   console. Neither audience is the junior partner.
@@ -37,7 +43,9 @@ deliberately deferred, not undecided.
   offered. The first was rejected in effect rather than in words: adopting the
   strictly smaller version reshaped the scope, so the restatement was re-cut and
   the narrower version confirmed verbatim. The confirmed text is the "What it is"
-  paragraph above.
+  paragraph above, whose seed-pack sentence was later corrected against the code.
+  The scope the operator adopted is unchanged and is quoted verbatim below; only a
+  capability the console never had was demoted to the intention it always was.
 
 - The three cheapest ways this dies: accepted as written. These are the cheapest,
   not the most dramatic, and they are the risk register at birth:
@@ -70,7 +78,9 @@ deliberately deferred, not undecided.
 ## Scale and triggers
 
 Ruled by WG-EOS-001 into the lock-book header. Triggers present at
-Session 0: **server state** (SQLite, schema v30), **auth** (single-operator
+Session 0: **server state** (SQLite, migrated forward by a versioned chain whose
+current head is `MIGRATION_HEAD_SCHEMA_VERSION` in `src/lib/db-schema.ts`; this
+line used to pin a version number and it rotted), **auth** (single-operator
 bearer token in `src/proxy.ts`), **standing ops** (Docker image, `ps-deploy`
 update path, backups), **web surface**, **written surfaces**, and a **years**
 lifespan. Triggers absent, each ruled rather than assumed: no money, no personal
@@ -138,7 +148,7 @@ workstreams is not ready for a blueprint.
 > to eight lines, one per part of PatterStage somebody has to sit down and
 > build, in the operator's own words rather than the agent's. Not the task
 > records under `org/tasks/`, which are the work already scoped, and not a
-> plan or an estimate. The 28 task records could be summarised into a list
+> plan or an estimate. Those records could be summarised into a list
 > that looks like this section and would not be it: those are work, and this
 > is the shape of the venture the work serves. Until it is filled, Genesis has
 > nothing to cut a research packet or a work package from, which is the

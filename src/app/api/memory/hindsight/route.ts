@@ -15,15 +15,15 @@
 //                               health, count
 //   hindsight-write-actions.ts  retain plus the directive/model mutations
 //
-// Authentication is enforced once in src/proxy.ts; `requireAuth` here is
-// the route's own gate and never a second token check (design-lint
-// no-auth-in-route-handler).
+// Authentication is enforced once in src/proxy.ts, and so is read-only mode,
+// which refuses unsafe methods before any handler runs. This route carries
+// neither check (T-0048).
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
 import { logApiError } from "@/lib/api-logger";
 import { messageFromError } from "@/lib/api-fetch";
-import { requireAuth } from "@/lib/api-auth";
+
 import { badRequest, ok } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import {
@@ -55,8 +55,6 @@ import { hindsightErrorFromCatch } from "@/lib/memory/hindsight-route-helpers";
 
 // GET — List memories, recall, reflect, health check
 export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   const action = request.nextUrl.searchParams.get("action") || "list";
   const query = request.nextUrl.searchParams.get("query") || undefined;
   const budget = request.nextUrl.searchParams.get("budget") || undefined;
@@ -117,8 +115,6 @@ export async function GET(request: NextRequest) {
 
 // POST — Retain memory, create directive, create mental model
 export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   const bodyResult = await parseJsonBody(request);
   if (bodyResult instanceof NextResponse) return bodyResult;
 
@@ -204,8 +200,6 @@ export async function POST(request: NextRequest) {
 
 // DELETE — Remove directive or mental model
 export async function DELETE(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
   const bodyResult = await parseJsonBody(request);
   if (bodyResult instanceof NextResponse) return bodyResult;
   const body = bodyResult;

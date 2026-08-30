@@ -1,5 +1,5 @@
 ---
-summary: PatterStage adaptive testing law, staged verification, timing by change class, the test map, quality signals
+summary: PatterStage adaptive testing law, staged verification, timing by change class, why the test map is not instantiated, quality signals
 type: venture
 tags: [eos]
 compiled_from: kernel/templates/org/TESTING.tpl.md
@@ -68,21 +68,38 @@ consequence class and on measured behaviour. While the harness is
 deferred, name the deferral at the retro, because deferred breadth is a
 loan and nobody sees the interest until it is due.
 
-## The test map
+## The test map: NOT INSTANTIATED HERE
 
-In-loop verification runs the affected tests named by the queryable
-test map, a derived artefact whose generator the stack profile names.
-Every mapping row carries a confidence score built from generator
-freshness, coverage of the touched paths and recent miss history. Low
-or unknown confidence widens the run to the module's broader suite
-and logs a finding; the map is never trusted blind. Full suites run
-at integration and at release, by tier.
+The kernel template this file is compiled from describes a queryable
+test map: a derived artefact whose generator the stack profile names,
+every row carrying a confidence score built from generator freshness,
+path coverage and recent miss history, with low confidence widening the
+run. **None of that exists in PatterStage.** There is no map, no
+generator and no confidence score, and the stack profile that was
+supposed to name the generator does not exist either: the lock-book
+records that no registry profile fits and pins the stack as authored
+prose (`docs/LOCKBOOK.md`, the `stack:` field). Nothing in this
+repository consumes or produces such an artefact.
+
+**The resolution in force until a generator exists.** Affected suites
+are selected by hand, from the layout table in `docs/TESTING.md`, by
+the agent making the change. `npm test` is the whole Jest suite, and
+both build-and-test jobs in CI run `npm run test:coverage` over all of
+it, so a full run is always available and is the honest fallback when
+the affected set is unclear. Widen rather than guess. Full suites run
+at integration and at release, by tier, as below.
+
+Anything below that says "the map" means this manual selection. Do not
+write instructions that assume the artefact, and do not treat a
+selection made this way as evidence of anything more than the reasoning
+recorded beside it.
 
 ## Verification by mode
 
 - Express: targeted checks only, the affected tests plus lint and
   types on the touched scope.
-- Standard: affected tests via the map; sampled review.
+- Standard: affected tests, selected by hand per the section above;
+  sampled review.
 - Exploration: checks may wait, inside the spike only; the hardening
   gate runs everything the ruling demands before anything merges.
 - High-assurance: the frozen acceptance oracle, the full affected

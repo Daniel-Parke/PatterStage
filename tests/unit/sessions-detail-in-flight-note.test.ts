@@ -77,7 +77,6 @@ jest.mock("@/lib/sessions/sessions-api-guard", () => ({
 }));
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
 }));
 
 jest.mock("@/lib/api-logger", () => ({

@@ -2,7 +2,7 @@
 // /api/models/fallbacks/config — GET/PUT fallback behaviour config
 // ═══════════════════════════════════════════════════════════════
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth } from "@/lib/api-auth";
+
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { appendAuditLine } from "@/lib/audit-log";
@@ -11,10 +11,7 @@ import { fallbackConfigPutSchema } from "@/lib/fallback-config-schema";
 import { syncEnabledFallbackChainToHermes } from "@/modules/hermes/lib/fallback-sync";
 import { ok } from "@/lib/api-response";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET(_request: NextRequest) {
   try {
     return ok({ config: getFallbackConfig() });
   } catch (error) {
@@ -28,9 +25,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const parsed = await parseAndValidateJsonBody(request, fallbackConfigPutSchema);
   if (parsed instanceof NextResponse) return parsed;
 

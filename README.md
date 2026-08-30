@@ -19,7 +19,7 @@ It owns its own state (SQLite under `PS_DATA_DIR`) and talks to the agent over H
 
 > A [PatterTech](https://www.pattertech.com) venture.
 
-**Docs:** [Doc index](docs/README.md) · [Platform vision](docs/PLATFORM_VISION.md) · [PatterStage overview](docs/PATTERSTAGE.md) · [Runtime architecture](docs/RUNTIME_ARCHITECTURE.md) · [Missions](docs/MISSIONS.md) · [User walkthrough](docs/USER_WALKTHROUGH_GUIDE.md) · [Cross-platform](docs/CROSS_PLATFORM.md) · [Deploy](docs/DEPLOY.md) · [Migration](docs/MIGRATION.md)
+**Docs:** [Doc index](docs/README.md) · [Platform vision](docs/PLATFORM_VISION.md) · [Runtime architecture](docs/RUNTIME_ARCHITECTURE.md) · [Missions](docs/MISSIONS.md) · [User walkthrough](docs/USER_WALKTHROUGH_GUIDE.md) · [Cross-platform](docs/CROSS_PLATFORM.md) · [Deploy](docs/DEPLOY.md) · [Migration](docs/MIGRATION.md)
 
 > **Renamed:** this repo was `hermes-control-hub` and is now `PatterStage`. Existing clones and forks keep working via GitHub's automatic redirect — optionally run `git remote set-url origin https://github.com/Daniel-Parke/PatterStage.git` to repoint. Full details: [docs/MIGRATION.md](docs/MIGRATION.md#repository-renamed-hermes-control-hub--patterstage).
 
@@ -31,9 +31,11 @@ It owns its own state (SQLite under `PS_DATA_DIR`) and talks to the agent over H
 |------|--------------|
 | **Dashboard** | Live operational analytics — throughput, success rate, token usage, a 13-week run-activity heatmap, mission mix, vitals, and at-a-glance health. Lightweight progression flair (level / streak / milestones) derived from real activity — never gates anything. |
 | **Missions** | Compose, dispatch, track, and **cancel** agent missions as HTTP runs. One-off or **recurring** (a mission's "Schedule" mode creates a PatterStage schedule that the built-in scheduler fires). |
+| **Composer** | The **graph orchestrator**: multi-stage workflows where each stage is an agent run, stages are joined by conditional and looping edges, and chosen stages pause at human-in-the-loop gates. Ships **on**; `PS_COMPOSER=0` disables it. |
 | **Scripts** | Schedule **host scripts** in the user `crontab` (Linux/macOS; Windows via WSL2) — backups, cleanups, health checks — separate from agent missions. The bundled scripts are cross-platform Node (`.mjs`). |
 | **Chat** | Gateway-backed chat, separate from mission dispatch. |
 | **Sessions & Memory** | Browse transcripts; view the configured memory provider (Hindsight or none). |
+| **Laboratory** | **Insights** (interaction analytics, achievements, and **provider spend**: the running LLM bill with an optional budget and an off-by-default hard stop), **Deep Research** (a native plan, search, reason, synthesize loop that returns a cited report), and **Artifacts** (every deliverable those runs produced, in one place). |
 | **Agents / Skills / Tools / Personalities** | Profile-aware configuration + a per-agent **performance** view (runs · success% · tokens · avg duration). |
 | **Models** | SQLite-backed model/credential registry with write-through to Hermes `config.yaml` / `.env`. |
 | **Story Weaver** | Rec Room interactive-fiction tool. |
@@ -69,8 +71,8 @@ How the pieces fit together: [docs/RUNTIME_ARCHITECTURE.md](docs/RUNTIME_ARCHITE
 
 3. **Start the server:**
    ```bash
-   npm run start                  # this machine only
-   npm run start:network          # binds 0.0.0.0 for LAN access
+   npm run start                  # binds every interface (Next's default)
+   npm run start:network          # identical; passes -H 0.0.0.0 explicitly
    ```
    `PORT` is written to `.env.local` during setup (usually **42069–42100**).
 
@@ -93,7 +95,7 @@ The bootstrap and deploy scripts prompt by default and **skip every prompt** whe
 |------------|--------|
 | `PS_INSTALL_NONINTERACTIVE=1` or `CI=1` | Skip all install/setup prompts (use the env vars below for the choices). |
 | `INSTALL_HERMES=yes\|no` | Install upstream Hermes then exit (re-run after), or continue without it. |
-| `INSTALL_HINDSIGHT=yes\|no` | Set up the Hindsight memory provider, or skip. |
+| `INSTALL_HINDSIGHT=docker\|yes\|no` | Set up the Hindsight memory provider via Docker (cross-platform), natively (apt + systemd, so Linux only), or skip it. |
 | `INSTALL_HERMES_PROFILE_TEMPLATES=yes\|no` | Copy bundled profile files (catalog seed is the main path). |
 | `PS_SETUP_SKIP_CATALOG_SEED=1` | Skip the professional catalog seed. |
 | `--yes` / `PS_ASSUME_YES=1` | Skip confirmation prompts on maintenance scripts (migrate, etc.). |
@@ -107,13 +109,15 @@ The bootstrap and deploy scripts prompt by default and **skip every prompt** whe
 | Sidebar area | What to do there |
 |--------------|------------------|
 | **Dashboard** | One-glance situational awareness: analytics, active missions, health, sync. Earns **achievements** as you work. |
-| **Main → Insights** | Interaction analytics + achievements: activity over time, per-category breakdown, streaks, and the full achievement grid ([details](docs/ANALYTICS.md)). |
 | **Orchestration → Missions** | Compose, dispatch, **schedule**, and **cancel** missions ([details](docs/MISSIONS.md)). The **Scheduled missions** section lists recurring missions with pause/resume/run-now. |
+| **Orchestration → Composer** | Build and run staged workflows: conditional and looping edges, human-in-the-loop gates ([details](docs/COMPOSER.md)). |
 | **Orchestration → Scripts** | Host shell scripts on a timer (system crontab) — backups, cleanups, health checks. |
 | **Orchestration → Chat** | Gateway-backed chat (separate from mission dispatch). |
 | **Main → Sessions / Memory / Logs** | Transcripts, memory store, Hermes log tail. |
+| **Laboratory → Insights** | Interaction analytics + achievements: activity over time, per-category breakdown, streaks, the full achievement grid ([details](docs/ANALYTICS.md)), and the **provider spend** panel with its budget and hard stop ([details](docs/SPEND.md)). |
+| **Laboratory → Deep Research / Artifacts** | Run the iterative research loop and read the cited report; collect every deliverable it and Composer produced ([details](docs/LABORATORY.md)). |
 | **Operations → Agents / Skills / Tools / Personalities** | Profile-aware configuration + per-agent performance analytics. |
-| **Config → Models / HERMES.md / YAML** | Model registry, environment, Hermes `config.yaml` sections. |
+| **Config → Models / HERMES.md / Environment** | Model registry, `.env` editor, and below the pinned three, the grouped Hermes `config.yaml` section editors. |
 | **Sidebar (bottom)** | **Check** compares to remote; **Update** pulls, backs up + migrates, rebuilds, and restarts; **Rebuild** builds the current tree and restarts. |
 
 > The legacy **Cron** page + Hermes `jobs.json` agent-cron bridge have been **removed** — scheduled agent work lives in **Missions** (recurring missions on the PatterStage scheduler), and host scripts in **Scripts**. Existing cron jobs are migrated to schedules automatically on update (see below).

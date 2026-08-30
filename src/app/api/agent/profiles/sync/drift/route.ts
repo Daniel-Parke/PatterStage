@@ -1,15 +1,12 @@
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
+
 import { ok } from "@/lib/api-response";
 
-import { requireAuth } from "@/lib/api-auth";
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ensureDb } from "@/lib/db";
 import { detectFullDrift } from "@/modules/hermes/lib/profile-drift";
 
-export async function GET(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
+export async function GET(_request: NextRequest) {
   try {
     ensureDb();
     const drift = detectFullDrift();

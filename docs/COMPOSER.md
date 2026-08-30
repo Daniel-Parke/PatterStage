@@ -30,7 +30,7 @@ A **workflow** is a reusable graph definition; a **run** is one execution; a **n
 
 **Conditional branching:** a stage can emit `OUTCOME: <label>` in its output; the engine then follows an `on_<label>` edge if one exists (else falls back to `on_pass`/`on_fail`). This lets a node fan out to >2 paths (e.g. a triage stage → `on_implement_fix` / `on_further_research` / `on_write_report`).
 
-**Interactive clarification:** instead of dead-ending on a too-vague objective, an assessing stage can emit `OUTCOME: needs_clarification` + a `QUESTION:` line. The engine pauses the run (reusing the `awaiting_approval` state + a `__clarify` context marker, with no extra status/migration) and the Run UI asks the question; the answer (`POST …/clarify`) enriches the objective and re-runs the asking stage (bounded by the per-node attempt cap). This is Anthropic's "interactive discussion to clarify the task".
+**Interactive clarification:** instead of dead-ending on a too-vague objective, an assessing stage can emit `OUTCOME: needs_clarification` + a `QUESTION:` line. The engine pauses the run (reusing the `awaiting_approval` state + a `__clarify` context marker, with no extra status/migration) and the Run UI asks the question; the answer (`POST …/clarify`) enriches the objective and re-runs the asking stage. This is Anthropic's "interactive discussion to clarify the task". Note the bound: the clarify route calls `dispatchComposerNode` directly, and the per-node attempt cap is enforced only in the engine's `applyNext`, which this path does not go through. Repeated clarification rounds on one stage are held by the per-run total-step backstop, not by the per-node cap.
 
 The default **"Software Delivery"** workflow is seeded on boot ([`schema.ts`](../src/lib/composer/schema.ts)): review → validate → research → hypothesise → plan **(HIL)** → build-tests → implement → test → documentation → PR **(HIL)** → unit/integration/acceptance → final-assessment → update-PR **(HIL)** → done, with `on_fail` loop-backs (test→implement, final-assessment→implement, plan→review-on-reject) and `on_fail` **forward-recovery** on the best-effort enrichment stages (research→hypothesise, hypothesise→plan) so a transient search/LLM blip doesn't dead-end the run. The forward-recovery edges are back-filled idempotently into older seeded workflows ([`seed.ts`](../src/lib/composer/seed.ts)).
 
@@ -56,7 +56,7 @@ Each workflow declares its own **input contract** on the start node's `config.in
 
 ## API
 
-All gated by `PS_COMPOSER` (on by default; `PS_COMPOSER=0` makes them return `503`).
+Gated by `PS_COMPOSER` (on by default; `PS_COMPOSER=0` makes them return `503`), with one exception noted in the table: the SSE stream carries no flag check and still serves an existing run.
 
 | Method + path | Purpose |
 |---|---|
@@ -65,11 +65,11 @@ All gated by `PS_COMPOSER` (on by default; `PS_COMPOSER=0` makes them return `50
 | `GET /api/composer/runs` | List runs |
 | `POST /api/composer/runs` | Start a run `{ workflowId \| workflowKey, input }` |
 | `GET /api/composer/runs/[id]` | Run + node-runs + workflow graph |
-| `GET /api/composer/runs/[id]/events` | Live SSE (`{ run, nodeRuns }`), see [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md) |
-| `POST /api/composer/runs/[id]/nodes/[nodeId]/approve` | Resolve a HIL gate `{ action: accept\|reject, note? }` |
+| `GET /api/composer/runs/[id]/events` | Live SSE (`{ run, nodeRuns }`), see [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md). No `PS_COMPOSER` check |
+| `POST /api/composer/runs/[id]/nodes/[nodeId]/approve` | Resolve a HIL gate `{ action: accept\|reject\|review\|add_feature, note? }` |
 | `POST /api/composer/runs/[id]/clarify` | Answer a stage's clarification question `{ answer }` |
 
-Deep Research is a Composer **node kind** (`research`), not a separate launcher. Orchestrate research as one stage of a workflow. See [DEEP_RESEARCH.md](DEEP_RESEARCH.md).
+Deep Research is **also** a Composer node kind (`research`), so research can run as one stage of a workflow instead of only from its own page. The standalone launcher remains: **Laboratory → Deep Research** at `/laboratory/research`, backed by `POST /api/laboratory/research`, which starts a research run with no Composer involvement and is behind no feature flag. See [DEEP_RESEARCH.md](DEEP_RESEARCH.md).
 
 ## Verification
 

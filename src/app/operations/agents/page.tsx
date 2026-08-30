@@ -23,7 +23,7 @@ import { Users } from "lucide-react";
 import AppPageShell from "@/components/layout/AppPageShell";
 import PageHeader from "@/components/layout/PageHeader";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { useToast } from "@/components/ui/Toast";
+import { LastResult, useToast } from "@/components/ui/Toast";
 import type { AgentProfile, ProfileFile } from "@/types/console";
 import { API_FETCH_BULK_TIMEOUT_MS, apiFetch, toastError } from "@/lib/api-fetch";
 import { profileSyncBody } from "@/lib/profile-sync-body";
@@ -94,7 +94,7 @@ export default function BehaviourPage() {
   // a `useCallback` with empty deps keeps the 3 in lockstep.
   const closeEditor = useCallback(() => setEditor(null), []);
 
-  const { showToast, toastElement } = useToast();
+  const { showToast, toastElement, lastResult } = useToast();
 
   const doSync = async (
     url: string,
@@ -313,6 +313,7 @@ export default function BehaviourPage() {
   if (loading) {
     return (
       <AppPageShell>
+        <LastResult result={lastResult} />
         {toastElement}
         <PageHeader icon={Users} title="Agents" subtitle="Loading profiles..." color="purple" />
         <div className="px-6 py-12"><LoadingSpinner text="Loading profiles..." /></div>

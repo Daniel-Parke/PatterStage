@@ -18,7 +18,7 @@ If the agent itself misbehaves on Discord or in a CLI session, Hermes docs and c
 
 ## Getting help with PatterStage
 
-1. **Docs first:** [documentation index](README.md), then [PATTERSTAGE.md](PATTERSTAGE.md), [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md), and [DEPLOY.md](DEPLOY.md).
+1. **Docs first:** [documentation index](README.md), then [USER_WALKTHROUGH_GUIDE.md](USER_WALKTHROUGH_GUIDE.md), [RUNTIME_ARCHITECTURE.md](RUNTIME_ARCHITECTURE.md), and [DEPLOY.md](DEPLOY.md).
 2. **Bug or feature:** [open an issue](https://github.com/Daniel-Parke/PatterStage/issues) with steps to reproduce or a clear use case. Screenshots help.
 3. **You want to contribute:** [CONTRIBUTING.md](CONTRIBUTING.md) and [TESTING.md](TESTING.md).
 

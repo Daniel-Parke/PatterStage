@@ -12,6 +12,12 @@ stable; the evolving detail lives here, so improving a procedure
 means editing one file. Every procedure starts from the router's
 ruling and ends with the close rule in org/START.md.
 
+Paths below that begin `packs/` are not in this repository. They resolve
+inside the EOS checkout that `docs/LOCKBOOK.md` pins as `eos_root`
+(`../PatterTech_EOS`), at the commit this venture pins. A session without
+that checkout cannot read them, and cannot run a procedure that makes
+reading one mandatory.
+
 ## express
 
 1. Confirm the ruling is R0 and the free band covers every decision
@@ -26,7 +32,10 @@ ruling and ends with the close rule in org/START.md.
 1. Open or take the task record; declare facts, let the router rule.
 2. Plan briefly inside the record's budget, implement with tests per
    org/TESTING.md, document in the same change.
-3. Run the affected tests the map names, widening on low confidence.
+3. Run the affected tests, widening on low confidence. There is no test
+   map to name them: org/TESTING.md records that the map is NOT
+   INSTANTIATED here, because the generator its stack profile calls for
+   does not exist. Choose the affected set by reading the change.
 4. Close: gate-time re-route against the actual diff, then merge on
    green. The task joins the sampled-review pool unless the routing
    reasons demand independent review.
@@ -74,7 +83,9 @@ ruling and ends with the close rule in org/START.md.
 
 For work wide enough to run several lanes at once, and only then. It is
 a shape for the parallel wrapper above, not a new mode: every lane still
-carries its own ruled mode and its own claim.
+carries its own ruled mode and its own claim. `org/policy.json` caps
+this venture at two lanes (`parallelism.max_lanes`), and raising that
+takes a policy amendment, not a wider partition.
 
 1. Rule the fork before anything is dispatched. The question is whether
    this work wants lanes at all, and
@@ -87,7 +98,8 @@ carries its own ruled mode and its own claim.
    venture, and the procedure is written there and nowhere else, so
    there is one copy to keep true. The pack behind it holds the rules,
    the defaults and the evidence, including the evidence against
-   running wide at all. Read the pack before the first partition.
+   running wide at all. Read the pack before the first partition; a
+   session that cannot reach the EOS checkout does not run wide.
 3. Close by journalling the run: the partition, what each lane
    returned, and what the integrator had to repair. That journal is the
    only evidence the venture will have about whether running wide paid.
@@ -161,13 +173,24 @@ path works, on real data the operator owns, and the evidence stands
 for every install that follows the same runbook.
 
 1. **State the hypothesis before touching anything.** One sentence, in
-   the record, saying what is believed true: for example, a backup
-   written by `ps-deploy.sh update` restores to a working app inside
-   fifteen minutes with no rows lost since the backup ran. A drill with
-   no hypothesis cannot falsify anything and is not a drill.
-2. **Pick a real backup, not a fresh one.** The oldest file in
-   `PS_DATA_DIR/backups/` that the retention window still keeps. A
-   backup taken minutes ago tests the writer, not the archive.
+   the record, saying what is believed true: for example, a rotated
+   snapshot from `PS_DATA_DIR/backups/db` restores to a working app
+   inside fifteen minutes with no rows lost since the snapshot ran. A
+   drill with no hypothesis cannot falsify anything and is not a drill.
+2. **Pick a real backup, not a fresh one.** Two writers exist and they
+   land in different places, so name the one you drilled. The archive is
+   `PS_DATA_DIR/backups/db/patterstage.<timestamp>.db` (the stem is the
+   database's own filename, so the literal `db/` directory and the stem
+   are not the same token), written by the
+   scheduled `ps-db-backup` job and pruned to the newest
+   `PS_DB_BACKUP_KEEP` snapshots (default 14); that is the retention
+   window, and the oldest snapshot still inside it is the one to
+   restore. The copy `ps-deploy.sh update` takes before a migration is a
+   different artefact: it sits beside the database as
+   `PS_DATA_DIR/<db>.pre-migrate-<timestamp>.bak`, nothing prunes it, and
+   it has no retention window at all. `PS_DATA_DIR/backups/` itself holds
+   no files, only the `db/` directory, and only once the backup job has
+   run. A backup taken minutes ago tests the writer, not the archive.
 3. **Restore into a fresh location, never over the live file.** Copy
    the backup to a scratch `PS_DATA_DIR` and start the app against it.
    Restoring over production to prove production restores is how a

@@ -1,7 +1,6 @@
 /** @jest-environment node */
 
 jest.mock("@/lib/api-auth", () => ({
-  requireAuth: jest.fn(() => null),
 }));
 
 jest.mock("@/lib/api-logger", () => ({ logApiError: jest.fn() }));

@@ -35,7 +35,7 @@ export function ReaderErrorBanner({
           </>
         )}
       </span>
-      <button onClick={onDismiss} className="text-red-400/50 hover:text-red-400"><X className="w-4 h-4" /></button>
+      <button type="button" aria-label="Dismiss error" onClick={onDismiss} className="text-red-400/50 hover:text-red-400"><X className="w-4 h-4" aria-hidden="true" /></button>
     </div>
   );
 }

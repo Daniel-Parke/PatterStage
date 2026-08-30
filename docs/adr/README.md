@@ -29,6 +29,7 @@ itself. Do not build on a proposed ADR without saying that is what you are doing
 | [ADR-0006](../../org/decisions/ADR-0006-dev-is-the-integration-trunk.md) | dev is the integration trunk; done means merged to green dev; main moves via gated release PRs | accepted |
 | [ADR-0007](../../org/decisions/ADR-0007-adr-home-is-docs-adr.md) | docs/adr/ is the single ADR home; org/decisions/ holds a pointer | superseded |
 | [ADR-0008](../../org/decisions/ADR-0008-adopt-the-v2-eos.md) | Adopt the v2 EOS by recompile at ORG scale; ADRs move to org/decisions/ | accepted |
+| [ADR-0009](../../org/decisions/ADR-0009-retention-for-the-readings-tables.md) | Retention windows for analytics_events and chat_messages, with an opt-in prune that refuses to delete anything the progression record has not captured | accepted |
 
 ## Relationship to the EOS
 

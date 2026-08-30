@@ -19,7 +19,7 @@ compiled yet.
 
 ## What it hashes
 
-Five surfaces, in two groups.
+Six surfaces, in two groups: four held against a golden, two recorded only.
 
 **Held against the committed golden** (`scripts/tooling/output-canary.golden.json`),
 so a change here fails the build:
@@ -44,19 +44,41 @@ is worthless, and one that occasionally says "look again" is merely annoying.
 
 ## Proving a move is neutral
 
+Two modes, and they take different arguments. The first is the one to reach for.
+
+**Against committed history.** Commit the move with `[move]` in the subject line,
+then from the branch tip:
+
+```bash
+npm run canary:move-neutral -- origin/dev
+```
+
+The argument is a **git base ref**, never a file. It walks `<baseRef>..HEAD`, picks
+out the commits whose subject matches `[move]`, and rebuilds the canary on both
+sides of each one in a throwaway worktree. The `[move]` marker is not decoration
+here, it is the whole selector: without it the command prints "no `[move]` commits",
+exits 0, and proves nothing. Hand it a filename and `git rev-list` fails.
+
+**Comparing two working trees by hand.** A snapshot file goes to `canary:assert`,
+which is a different flag:
+
 ```bash
 npm run canary:snapshot -- before.json    # on the commit before the move
 # ... perform the move ...
-npm run canary:move-neutral -- before.json
+npm run canary:assert -- before.json
 ```
 
-`moduleGraph` is the surface that matters here. It hashes a multiset of
+`moduleGraph` is the surface that matters in both. It hashes a multiset of
 normalised sources with paths discarded and internal import specifiers
 collapsed to a bare module name, so moving `src/lib/foo.ts` into
 `src/lib/missions/foo.ts` and repointing its importers leaves the hash
 unchanged. Changing one line inside `foo.ts` does not.
 
-A move commit may declare itself with `[move]` in the commit message.
+The marker is matched case-insensitively against the commit **subject** only, so
+`[move]` has to be on the first line. Automatic detection was considered and
+rejected: a real move commit is renames plus the import rewrites those renames
+force, so no diff-shaped rule separates it from ordinary work. Making the claim
+explicit puts it on the record and holds the author to it.
 
 ## Reading a failure
 

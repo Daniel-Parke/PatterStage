@@ -94,8 +94,15 @@ execution waits on the answer.
 - Q-006 (process): no session log exists for session 1. Folded 2026-08-22
   at the cutover. Answer, from the operator via ADR-0008: the gap stays
   recorded and is not reconstructed. v2 retires session logs, git is the
-  log, so the series ends with the migration record at
+  log, so the series was expected to end with the migration record at
   `org/logs/2026-08/S-0002-plan.md`.
+  - what happened next: two more logs were written after the fold,
+    `org/logs/2026-08/S-0003-execution.md` (2026-08-23) and
+    `org/logs/2026-08/S-0004-ux-and-value.md` (2026-08-24). S-0004 is the
+    last one, and both are cited as real sessions elsewhere in the
+    record, so they are part of the series rather than strays. The
+    retirement itself stands: ADR-0008 rules it, no later ADR reverses
+    it, and practice simply ran two sessions past the ruling.
 
 - Q-007 (process): four done rows sat in the queue's Ready section.
   Folded 2026-08-22 at the cutover. Answer, from the operator via

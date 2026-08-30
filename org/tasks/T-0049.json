@@ -1,0 +1,44 @@
+{
+  "id": "T-0049",
+  "intent": "Land the ratchets that stop T-0048 recurring. That defect reached 34 read handlers across 33 files while a 3,000-test suite stayed green, and the two mechanisms that allowed it are the real subject here. First, tests/helpers/api-test-helpers.ts replaced @/lib/api-auth wholesale including isReadOnly returning false, and forty test files repeat the pattern inline, so read-only mode did not exist in the unit suite and no test could observe the bug even in principle. Second, a jest factory may return any object and nothing compared it to the real exports, so requireAuth sat in thirty mock factories after being deleted from src, and requireMcApiKey and requireChApiKey had been fictional far longer. Closed 2026-08-29. The helper now spreads jest.requireActual, 29 phantom entries are gone, the oracle fails on any name the module does not export, and scripts/tooling/check-read-only-guards.mjs fails the build on a guard inside a read handler.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R2",
+  "tier_ruled": "R2",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0049-read-only-ratchets-2026-08-29",
+  "invariants": [
+    "I1 A test can observe read-only. Proved with a throwaway test rather than asserted: isReadOnly() returns true under PS_READ_ONLY=1 THROUGH the shared helper's mock, which was impossible before. Behaviour in a normal run is unchanged because the variable is unset.",
+    "I2 A mock may not name an export the module does not have. The phantom entry is the mechanism by which a deletion stays invisible to the suite that should have caught it.",
+    "I3 A read handler that self-guards fails the build. Proved by exit code in four directions, including that a pragma without a written reason does NOT exempt.",
+    "I4 The gate cannot pass on an empty walk. A mis-rooted API_ROOT exits 1 with a count, rather than reporting success over one file."
+  ],
+  "oracle_provenance": "Authored BEFORE any production file was opened for edit and committed on its own at a3f4a015, ahead of the implementation at c1bdd34e. One file, tests/unit/read-only-is-testable.test.ts, measured against dev@bc76e7fa: 6 red, 1 green. The oracle commit message says 5 red / 2 green and is WRONG by one: the dependency-free assertion also fails when the file it reads does not exist yet. Recorded rather than amended, because a measurement stated in a commit is evidence and correcting it elsewhere is how the record stays honest.",
+  "verification": "The gate proved in four directions by exit code, with the tree restored after each: reintroducing the exact T-0048 defect exits 1 naming file, line and method; a pragma with a written reason exempts a genuine GET-that-writes; a pragma without a reason does not; a mis-rooted walk fails loudly. The un-mocking proved by a throwaway test that was removed after it passed.",
+  "design_note_not_a_design_lint_rule": "check-read-only-guards.mjs is a standalone script, not a twelfth design-lint rule, and the file says why in its header. design-lint rules are a single-line regex plus a path predicate. This question is not answerable one line at a time, because the identical call is correct in a POST and wrong in a GET; the check has to know which handler encloses the line, which makes it stateful. Extending design-lint with a stateful hook was the alternative and was rejected: scanTree is imported by design-lint-baseline-ratchet.test.ts, so the blast radius is larger than the problem.",
+  "message_consolidation_completed": "T-0048 unified two of the four read-only wordings. The rest are done here: cron/hardware (three), scripts/run, scripts/[name] (two), sessions and admin/sessions/backfill-status now call readOnlyMessage() with a resource context, so every refusal in the tree offers the same remedy. backfill-status also carried a comment promising a dry run was still allowed in read-only mode; the proxy has refused the whole POST since it landed, so the comment now describes what happens.",
+  "rollback": "Revert c1bdd34e. The oracle at a3f4a015 then goes red again.",
+  "claims": [
+    "tests/helpers/api-test-helpers.ts",
+    "tests/",
+    "scripts/tooling/check-read-only-guards.mjs",
+    "package.json",
+    "src/app/api/"
+  ],
+  "deferred": [
+    "The phantom-mock check covers @/lib/api-auth only. The same class of lie is possible against any module, and a general rule would be far more valuable, but it needs a baseline measured first: there is no reason to think api-auth is the only module whose mocks have drifted from its exports. Worth its own record.",
+    "Fifteen test files still stub isReadOnly inline to a constant. Unlike the shared helper these are per-file and visible at the top of the file that relies on them, and no route calls isReadOnly on a read path any more, so they mislead nobody today. Left rather than swept, because touching fifteen unrelated suites to remove a now-inert stub is churn without a defect behind it.",
+    "The 14 surviving in-route guards are all single and all in write handlers, which is the shape T-0034 blessed in its invariant I3. They are redundant with the proxy but carry resource-specific wording that a generic refusal would lose."
+  ],
+  "timestamps": {
+    "opened": "2026-08-29T12:30:00Z",
+    "updated": "2026-08-29T15:00:00Z",
+    "closed": "2026-08-29T15:00:00Z"
+  }
+}

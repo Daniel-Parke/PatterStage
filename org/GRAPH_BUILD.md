@@ -10,7 +10,15 @@ compiled_from: kernel/templates/org/GRAPH_BUILD.tpl.md
 The executable half of `packs/agentic-swarm/PACK.md`, compiled into
 this venture. The pack holds the reasoning, the evidence and the
 counter-evidence; this file holds the procedure. Where they disagree,
-the pack is right and this file is stale.
+the pack is right and this file is stale. Where either disagrees with
+this venture's own `org/policy.json`, the policy binds until it is
+amended: the pack argues the general case, the policy is what PatterStage
+has actually adopted.
+
+Every `packs/` path here is EOS-relative, not repo-relative. It resolves
+inside the checkout that `docs/LOCKBOOK.md` pins as `eos_root`
+(`../PatterTech_EOS`), at the commit this venture pins; there is no
+`packs/` directory in this repository.
 
 Nothing here lowers a tier floor or converts a manual-only action class
 into an autonomous one. A parallel run is still ruled by the router and
@@ -51,9 +59,17 @@ Method and options: `packs/agentic-swarm/wargames/WG-SWARM-002-cut-the-partition
 6. Commit `org/claims.json` covering every lane's write set, before
    dispatch. The claim file is the mutex.
 
-Three to five lanes is the default, per `packs/agentic-swarm` D1. Above
-five, the reason goes on the run record. Above two with no decidable
-oracle, do not.
+Two lanes is this venture's ceiling. `org/policy.json` sets
+`parallelism.max_lanes` to 2, and `org/claims.json` records that as the
+position held until a run record exists to argue it higher, so a
+partition wider than two needs a policy amendment first, not a bigger
+cut. The pack's three-to-five default (`packs/agentic-swarm` D1) and its
+rule that above five the reason goes on the run record are the general
+case, and they take effect here only once the cap is raised.
+
+Nothing enforces this. `parallelism.max_lanes` is read by no script in
+this repository, so the ceiling holds only because a partition step
+reads it. Treat it as a rule you keep, not a rule that keeps you.
 
 ## 2. Write the lane brief
 

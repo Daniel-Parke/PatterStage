@@ -100,7 +100,15 @@ resolved path to unauthenticated remote callers. Pinned by
 
 ## If you run PatterStage yourself
 
-- Prefer binding to loopback and reaching it over SSH port-forwarding. `npm run start:network` binds `0.0.0.0`, so only do that on a network you trust.
+- **Both start scripts bind every interface.** `next start` has no `-H` default of
+  loopback: with no flag it listens on `0.0.0.0` and `::`, and Next prints the LAN
+  URL to prove it. `npm run start` and `npm run start:network` therefore expose the
+  port identically. To bind loopback you must pass it yourself:
+  `npx next start -H 127.0.0.1`. Reaching that over SSH port-forwarding is the
+  safest posture on an untrusted network.
+- The access token is what actually protects the port, not the bind address. Every
+  request is refused without it (`src/proxy.ts`), and a missing token file fails
+  closed with a 503 rather than opening up.
 - Keep the token out of shell history and shared screenshots; it is equivalent to a shell on the box.
 - Set `PS_READ_ONLY=1` on instances that should not mutate config.
 - Rotate keys if you think they leaked; check `~/.hermes/logs` and deploy logs for accidental echo.

@@ -47,10 +47,12 @@ export function BranchDropdown({
       <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
         <span className="text-xs font-mono text-ps-text-muted">Branch</span>
         <button
+          type="button"
+          aria-label="Close branch picker"
           onClick={onCancel}
           className="p-0.5 rounded text-ps-text-muted hover:text-ps-text-secondary transition-colors"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
       </div>
 

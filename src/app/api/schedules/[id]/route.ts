@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireAuth } from "@/lib/api-auth";
+
 import { serverErrorFromCatch } from "@/lib/api-logger";
 import { ok, notFound, badRequest } from "@/lib/api-response";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
@@ -40,9 +40,6 @@ export async function GET(_request: NextRequest, ctx: Ctx) {
 }
 
 export async function PATCH(request: NextRequest, ctx: Ctx) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await ctx.params;
   const parsed = await parseAndValidateJsonBody(request, schedulePatchSchema);
   if (parsed instanceof NextResponse) return parsed;
@@ -77,9 +74,6 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
 }
 
 export async function DELETE(request: NextRequest, ctx: Ctx) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
-
   const { id } = await ctx.params;
   try {
     const deleted = deleteSchedule(id);

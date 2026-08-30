@@ -1,12 +1,11 @@
+import type { NextRequest } from "next/server";
 // ═══════════════════════════════════════════════════════════════
 // /api/tools — Hermes toolset catalog (read-only reference)
 // ═══════════════════════════════════════════════════════════════
 // Runtime tool access is configured per profile via platform_toolsets
 // (Operations → Tools). This route does not control Hermes runtime.
 
-import { NextRequest } from "next/server";
-
-import { requireAuth, requireNotReadOnly } from "@/lib/api-auth";
+import { requireNotReadOnly } from "@/lib/api-auth";
 import { methodNotAllowed, ok } from "@/lib/api-response";
 import {
   HERMES_CONFIGURABLE_TOOLSETS,
@@ -26,9 +25,7 @@ export async function GET() {
   });
 }
 
-export async function POST(request: NextRequest) {
-  const auth = requireAuth(request);
-  if (auth) return auth;
+export async function POST(_request: NextRequest) {
   const ro = requireNotReadOnly("tool mutations are disabled");
   if (ro) return ro;
 
