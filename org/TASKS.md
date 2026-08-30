@@ -73,3 +73,4 @@ The records under org/tasks/ are canonical.
 | T-0058 | standard | R2 | done | t0058-composer-spend-2026-08-30 |
 | T-0059 | standard | R2 | proposed | unassigned |
 | T-0060 | standard | R2 | done | t0060-write-paths-2026-08-30 |
+| T-0061 | standard | R2 | done | t0061-profile-names-2026-08-30 |
