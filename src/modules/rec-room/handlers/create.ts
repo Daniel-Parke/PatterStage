@@ -15,6 +15,7 @@ import type { StoryArc as StoryArcType, ChapterOutline } from "@/modules/rec-roo
 
 import { buildMasterPrompt, getChapterCount, safeArc, validateChapterOutput } from "./shared";
 
+import { chapterTitle } from "../lib/chapter-title";
 export async function handleCreate(body: Record<string, unknown>): Promise<NextResponse> {
   const { title, config } = body;
   if (!config || !(config as Record<string, unknown>)?.premise) {
@@ -124,7 +125,10 @@ export async function handleCreate(body: Record<string, unknown>): Promise<NextR
 
     const chapters: Array<{ number: number; title: string; status: "pending" | "complete" | "writing" | "failed"; wordCount: number; generatedAt?: string; error?: string }> = storyArc.chapterOutlines.map((ch: ChapterOutline, i: number) => ({
       number: i + 1,
-      title: ch.title,
+      // Bounded, not verbatim. The model's title is rendered in a heading and
+      // in the reader's chapter nav, both single-line, and it arrived
+      // unchecked: any length, newlines included, or empty (T-0071).
+      title: chapterTitle(ch.title, i),
       status: i === 0 ? "complete" : "pending",
       wordCount: i === 0 ? chapter1.split(/\s+/).length : 0,
       generatedAt: i === 0 ? new Date().toISOString() : undefined,

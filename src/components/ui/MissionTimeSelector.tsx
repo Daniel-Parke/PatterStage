@@ -32,17 +32,22 @@ export default function MissionTimeSelector({ value, onChange, compact = false }
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Trigger and menu as SIBLINGS in a positioned wrapper, matching the
+  // non-compact branch below. This branch rendered the menu inside the trigger,
+  // making every option a button inside a button (T-0071).
   if (compact) {
     return (
-      <button
-        onClick={() => setOpen(!open)}
-        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 text-xs font-mono text-ps-text-secondary hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors relative"
-        title={`Mission time: ${selected.label} (${selected.minutes}m ≈ ${selected.devHours} dev work)`}
-      >
-        <Clock className="w-3 h-3" />
-        {selected.minutes}m
+      <span ref={ref} className="relative inline-flex">
+        <button
+          onClick={() => setOpen(!open)}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 text-xs font-mono text-ps-text-secondary hover:border-neon-cyan/50 hover:text-neon-cyan transition-colors"
+          title={`Mission time: ${selected.label} (${selected.minutes}m ≈ ${selected.devHours} dev work)`}
+        >
+          <Clock className="w-3 h-3" />
+          {selected.minutes}m
+        </button>
         {open && (
-          <div ref={ref} className="absolute top-full left-0 mt-1 z-50 w-48 bg-dark-900 border border-white/10 rounded-lg shadow-xl overflow-hidden">
+          <div className="absolute top-full left-0 mt-1 z-50 w-48 bg-dark-900 border border-white/10 rounded-lg shadow-xl overflow-hidden">
             {PRESETS.map((p) => (
               <button
                 key={p.minutes}
@@ -55,7 +60,7 @@ export default function MissionTimeSelector({ value, onChange, compact = false }
             ))}
           </div>
         )}
-      </button>
+      </span>
     );
   }
 

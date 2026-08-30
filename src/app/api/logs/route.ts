@@ -13,7 +13,7 @@ import {
 } from "@/lib/fs/log-files";
 import { injectMissingTimestamps } from "@/lib/log-line-format";
 
-import { badRequest, notFound, ok } from "@/lib/api-response";
+import { badRequest, notFound, notFoundWith, ok } from "@/lib/api-response";
 import type { LogFileMeta } from "@/lib/fs/log-files";
 
 // ── Shared log directory resolution ──────────────────────────
@@ -73,7 +73,11 @@ export async function GET(request: NextRequest) {
     const { safeName, absolutePath: logPath } = resolved;
 
     if (!existsSync(logPath)) {
-      return notFound(`Log file '${safeName}.log' not found`);
+      // The list is already in hand, and the page's "auto-select the first
+      // available log" effect cannot fire without it. `activeLog` starts at a
+      // hard-coded "agent", so an install whose logs directory has no agent.log
+      // used to 404 on every poll with no way to correct itself (T-0071).
+      return notFoundWith(`Log file '${safeName}.log' not found`, { availableLogs });
     }
 
     const { allLines, lines, mtime, size } = readLastLines(logPath, maxLines);

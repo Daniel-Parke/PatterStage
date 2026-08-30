@@ -37,22 +37,26 @@ export default function ProfileSelector({
 
   const selected = profiles.find((p) => p.id === value) ?? (profiles[0] ?? null);
 
+  // Trigger and menu as SIBLINGS in a positioned wrapper, matching the
+  // non-compact branch below. This branch rendered the menu inside the trigger,
+  // making every profile option a button inside a button (T-0071).
   if (compact) {
     return (
-      <button
-        onClick={() => setOpen(!open)}
-        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 text-xs font-mono text-ps-text-secondary hover:border-neon-purple/50 hover:text-neon-purple transition-colors relative"
-        title={selected?.name ?? "Select profile"}
-      >
-        {loading ? (
-          <Loader2 className="w-3 h-3 animate-spin" />
-        ) : (
-          <User className="w-3 h-3" />
-        )}
-        {selected?.name.split(" - ")[0] ?? "Profile"}
+      <span ref={ref} className="relative inline-flex">
+        <button
+          onClick={() => setOpen(!open)}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 text-xs font-mono text-ps-text-secondary hover:border-neon-purple/50 hover:text-neon-purple transition-colors"
+          title={selected?.name ?? "Select profile"}
+        >
+          {loading ? (
+            <Loader2 className="w-3 h-3 animate-spin" />
+          ) : (
+            <User className="w-3 h-3" />
+          )}
+          {selected?.name.split(" - ")[0] ?? "Profile"}
+        </button>
         {open && (
           <div
-            ref={ref}
             className="absolute top-full left-0 mt-1 z-50 w-56 bg-dark-900 border border-white/10 rounded-lg shadow-xl overflow-hidden max-h-80 overflow-y-auto"
           >
             {profiles.length === 0 && !loading ? (
@@ -83,7 +87,7 @@ export default function ProfileSelector({
             )}
           </div>
         )}
-      </button>
+      </span>
     );
   }
 

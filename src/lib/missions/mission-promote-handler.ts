@@ -15,7 +15,7 @@ import { computeNextRun } from "@/lib/schedule/next-run";
 import { enrichedMission } from "@/lib/missions/mission-response";
 import { logApiError } from "@/lib/api-logger";
 import { isMissionDraft, isMissionQueuedForRun } from "@/lib/missions/mission-board";
-import { parseDispatchMode } from "@/lib/dispatch-mode";
+import { DISPATCH_MODES, parseDispatchMode } from "@/lib/dispatch-mode";
 import type { Mission } from "@/lib/missions/mission-types";
 
 export interface PromoteMissionInput {
@@ -56,15 +56,25 @@ export async function promoteMission(
     return {
       ok: false,
       status: 400,
-      error: "Use update for running missions; promote applies to drafts and queued missions",
+      error:
+        `promote applies to a draft or queued mission; this one is 'dispatched'. ` +
+        `To change a running mission, send ` +
+        `{"action":"update","id":"${input.missionId}"} with the fields to change, ` +
+        `or {"action":"cancel","id":"${input.missionId}"} to stop it first.`,
     };
   }
 
   if (existing.status === "successful" || existing.status === "failed") {
+    // `re-dispatch` is not an action this API has -- the switch is
+    // dispatch | promote | update | cancel | delete -- so an operator searching
+    // for it found nothing. Name the call that exists (T-0071).
     return {
       ok: false,
       status: 400,
-      error: "Use re-dispatch for completed missions",
+      error:
+        `promote applies to a draft or queued mission; this one is ` +
+        `'${existing.status}'. A finished mission is not re-opened: send ` +
+        `{"action":"dispatch", ...} to start a new run from the same brief.`,
     };
   }
 
@@ -79,7 +89,18 @@ export async function promoteMission(
   const { isSaveMode, isQueueMode, isCronMode, isNowMode, valid } = parseDispatchMode(dispatchMode, input.schedule);
 
   if (!valid) {
-    return { ok: false, status: 400, error: "Invalid dispatchMode for promote" };
+    // Enumerated, and it names what was actually sent. "Invalid dispatchMode
+    // for promote" told an operator neither what they typed nor what they could
+    // have typed instead (T-0071). The same refusal covers an ABSENT mode,
+    // which is why it says "expected one of" rather than "not recognised".
+    return {
+      ok: false,
+      status: 400,
+      error:
+        `dispatchMode ${dispatchMode === undefined ? "is required" : `${JSON.stringify(dispatchMode)} is not recognised`}. ` +
+        `Expected one of: ${DISPATCH_MODES.join(", ")}. ` +
+        `Use "save" to edit a draft without running it.`,
+    };
   }
 
   if (isCronMode && !input.schedule?.trim()) {

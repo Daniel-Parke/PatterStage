@@ -61,7 +61,9 @@ describe("the gate learns to see a button inside a button", () => {
        );`,
     );
     expect(r.nested).toHaveLength(1);
-    expect(r.nested[0].line).toBe(4);
+    // The .mjs gate is untyped, so `nested` widens to never[] under the tests
+    // tsconfig; the assertion is on the value, not the shape.
+    expect((r.nested as { line: number }[])[0].line).toBe(4);
   });
 
   it("reports one three deep, which is the shape that actually shipped", () => {
