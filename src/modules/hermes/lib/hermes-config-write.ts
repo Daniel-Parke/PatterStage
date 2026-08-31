@@ -127,3 +127,13 @@ export function describeWriteFailure(err: unknown): string {
   const staged = (err as Error).message.match(/'([^']+)'/)?.[1];
   return staged && staged !== target ? raw.split(staged).join(target) : raw;
 }
+
+/** Placeholder — see T-0086. Today: no validation happens before a write. */
+export function assertParseableConfigYaml(_content: string, _targetPath: string): void {
+  // no-op
+}
+
+/** Placeholder — see T-0086. Today: no backup discovery exists. */
+export function findLatestParseableBackup(_backupsDir: string): string | null {
+  return null;
+}
