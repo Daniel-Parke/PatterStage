@@ -112,7 +112,7 @@ Two zero-dependency Node runners drive PatterStage's real HTTP surface against a
 
 The benchmark section of `full-stack-smoke.mjs` was deleted with the rest of the benchmark subsystem (commit 4935ac31); `/api/benchmarks/*` 404s by decision, and a tombstone at the foot of the runner records it.
 
-**Both recipes below have to deal with auth.** [`src/proxy.ts`](../src/proxy.ts) authenticates every request except a safe-method `GET /api/health`, and `PS_AUTH_MODE` defaults to `token`, so a server started with a bare `npm run dev` refuses these runners. `full-stack-smoke.mjs` can present a token; `composer-smoke.mjs` sends no `Authorization` header at all, so the only way to run it is with auth off. Turning auth off is fine for a local smoke against a throwaway data dir and is not fine anywhere else.
+**Both recipes below have to deal with auth.** [`src/proxy.ts`](../src/proxy.ts) authenticates every request except the safe-method routes in `PUBLIC_PATHS` (`GET /api/health`, `GET /api/healthz`, `GET /healthz`), and `PS_AUTH_MODE` defaults to `token`, so a server started with a bare `npm run dev` refuses these runners. `full-stack-smoke.mjs` can present a token; `composer-smoke.mjs` sends no `Authorization` header at all, so the only way to run it is with auth off. Turning auth off is fine for a local smoke against a throwaway data dir and is not fine anywhere else.
 
 ### Against the mock Hermes (offline, any OS)
 

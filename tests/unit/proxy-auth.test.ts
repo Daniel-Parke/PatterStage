@@ -120,6 +120,15 @@ describe("proxy — the authentication boundary", () => {
     expect(proxy(req("http://localhost:4242/api/health")).status).toBe(200);
   });
 
+  it("leaves /api/healthz public too (alias of /api/health)", async () => {
+    const proxy = await loadProxy();
+    expect(proxy(req("http://localhost:4242/api/healthz")).status).toBe(200);
+    // Same GET-only discipline as /api/health: non-safe methods stay refused.
+    expect(
+      proxy(req("http://localhost:4242/api/healthz", { method: "POST" })).status,
+    ).toBe(401);
+  });
+
   it("exchanges ?ps_token for a session cookie and strips it from the URL", async () => {
     const proxy = await loadProxy();
     const res = proxy(req(`http://localhost:4242/?${TOKEN_QUERY_PARAM}=${TOKEN}`));
