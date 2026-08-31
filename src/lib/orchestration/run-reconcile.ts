@@ -226,7 +226,12 @@ const firstNotFoundAt = new Map<string, number>();
  */
 function stillActive(runPk: string): boolean {
   const fresh = getLocalRun(runPk);
-  return !fresh || fresh.status === "started";
+  // A row that has VANISHED is not ours either: deleting a mission cascades to
+  // its runs, so this is reachable when a delete lands during the await. There
+  // is nothing left to finalize, and writing mission state for a run that no
+  // longer exists would be inventing history.
+  if (!fresh) return false;
+  return fresh.status === "started";
 }
 
 /** Has this run been answering 404 for longer than the grace? Records if new. */

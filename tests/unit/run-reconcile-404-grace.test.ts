@@ -290,3 +290,36 @@ describe("a decision made while we were waiting wins", () => {
     );
   });
 });
+
+describe("the two survivors mutation found", () => {
+  it("a run whose row vanished mid-await is not finalized", async () => {
+    // Deleting a mission cascades to its runs, so a row CAN disappear between
+    // the snapshot and the verdict. Nothing is left to finalize, and writing
+    // mission state for a run that no longer exists would be inventing history.
+    // Found by mutation: every test supplied a row, so the branch was unreached
+    // and either answer passed.
+    mockListActiveRuns.mockReturnValue([makeRun()]);
+    mockGetRun.mockImplementation(() => Promise.resolve({ status: "completed", output: "done" }));
+    mockGetLocalRun.mockImplementation(() => null);
+
+    await reconcileActiveRuns();
+
+    expect(mockUpdateRun).not.toHaveBeenCalled();
+  });
+
+  it("an unreachable gateway never enters the 404 grace, even across it", async () => {
+    // Found by mutation: the existing control used a run already past its
+    // deadline, so routing ECONNREFUSED into the 404 branch changed nothing --
+    // both paths failed it. A YOUNG run separates them. Under the correct code
+    // it survives indefinitely until its deadline; under the mutant the 404
+    // grace expires and kills it with the wrong reason.
+    mockListActiveRuns.mockReturnValue([makeRun()]);
+    mockGetRun.mockImplementation(() => Promise.reject(new TypeError("fetch failed")));
+
+    await reconcileActiveRuns();
+    advance(RUN_NOT_FOUND_GRACE_MS + 60_000);
+    await reconcileActiveRuns();
+
+    expect(mockUpdateRun).not.toHaveBeenCalled();
+  });
+});

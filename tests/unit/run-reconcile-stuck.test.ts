@@ -8,6 +8,11 @@
 jest.mock("@/lib/runs-repository", () => ({
   listActiveRuns: jest.fn(),
   updateRun: jest.fn(),
+  // reconcile re-reads the row before finalizing, so a cancellation landing
+  // during the gateway await is not overwritten by a stale verdict (T-0078).
+  // This mock previously omitted it and passed only because a missing row was
+  // treated as "still active"; those semantics are now explicit and inverted.
+  getRun: jest.fn(),
 }));
 jest.mock("@/lib/missions/mission-repository", () => ({
   getMission: jest.fn(),
@@ -22,7 +27,7 @@ jest.mock("@/lib/runtime", () => ({
 }));
 
 import { reconcileActiveRuns } from "@/lib/orchestration/run-reconcile";
-import { listActiveRuns, updateRun } from "@/lib/runs-repository";
+import { listActiveRuns, updateRun, getRun as getLocalRun } from "@/lib/runs-repository";
 import { getMission, updateMission } from "@/lib/missions/mission-repository";
 import { runtime } from "@/lib/runtime";
 
@@ -46,6 +51,7 @@ function makeRun(submittedAt: string) {
 beforeEach(() => {
   jest.clearAllMocks();
   mockGetMission.mockReturnValue({ id: "m1" }); // no declared timeout by default
+  (getLocalRun as jest.Mock).mockImplementation(() => makeRun(minutesAgo(1)));
 });
 
 describe("reconcile self-heal — stuck single-flight (K4)", () => {
