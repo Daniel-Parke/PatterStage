@@ -164,6 +164,32 @@ describe("the door never welds shut", () => {
     expect(MAX_AUTH_PENALTY_SECONDS).toBeLessThanOrEqual(60);
   });
 
+  it("the ceiling HOLDS under sustained failure, not just on the first 429", async () => {
+    // Mutation found this. Reading Retry-After off the FIRST 429 proves
+    // nothing: the first penalty is one second whether or not a cap exists.
+    // The cap only matters after the doubling has had time to run away, which
+    // is exactly the case that would lock the operator out for hours.
+    jest.useFakeTimers();
+    try {
+      const proxy = await loadProxy();
+      let worst = 0;
+      for (let i = 0; i < 30; i++) {
+        const res = proxy(bearer(WRONG));
+        if (res.status === 429) {
+          worst = Math.max(worst, Number(res.headers.get("retry-after")));
+          // Step past the current penalty so the next attempt is counted and
+          // the doubling continues, rather than bouncing off the same window.
+          jest.advanceTimersByTime((MAX_AUTH_PENALTY_SECONDS + 1) * 1000);
+        }
+      }
+
+      expect(worst).toBeGreaterThan(0);
+      expect(worst).toBeLessThanOrEqual(MAX_AUTH_PENALTY_SECONDS);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it("a correct token works again the moment the penalty elapses", async () => {
     jest.useFakeTimers();
     try {
@@ -190,9 +216,14 @@ describe("the door never welds shut", () => {
       jest.advanceTimersByTime((MAX_AUTH_PENALTY_SECONDS + 1) * 1000);
       expect(proxy(bearer(TOKEN)).status).not.toBe(429);
 
-      // Back to full speed: the first failure after a success is a 401, not a
-      // 429 — the counter was cleared rather than merely paused.
-      expect(proxy(bearer(WRONG)).status).toBe(401);
+      // Back to full speed: the counter was CLEARED, not merely paused. The
+      // whole free budget has to be available again, because asserting only
+      // the next single failure is a 401 passes even when nothing was cleared
+      // -- the penalty window had already expired on the clock. Mutation found
+      // exactly that.
+      for (let i = 0; i < FREE_AUTH_ATTEMPTS; i++) {
+        expect(proxy(bearer(WRONG)).status).toBe(401);
+      }
     } finally {
       jest.useRealTimers();
     }
@@ -228,6 +259,39 @@ describe("GREEN CONTROLS: the boundary is otherwise unchanged", () => {
     const proxy = await loadProxy();
 
     expect(proxy(req("http://localhost:4242/api/sessions")).status).toBe(401);
+  });
+
+  it("a browser that keeps arriving without a cookie is never throttled", async () => {
+    // Mutation found this. Asserting ONE credential-less request is a 401
+    // proves nothing -- the first few failures are free anyway. A browser
+    // polling a page it is not signed into does this dozens of times, and
+    // counting it would lock the operator out of their own sign-in page.
+    const proxy = await loadProxy();
+
+    for (let i = 0; i < 20; i++) {
+      expect(proxy(req("http://localhost:4242/api/sessions")).status).toBe(401);
+    }
+  });
+
+  it("does not grow a record for every client that ever failed", async () => {
+    // The other resource question. An attacker controls x-forwarded-for, so an
+    // unpruned map is an unbounded allocation they can drive. Records for
+    // clients that have stopped failing are forgotten.
+    jest.useFakeTimers();
+    try {
+      const proxy = await loadProxy();
+      const { authThrottleRecordCount } = await import("@/lib/auth-throttle");
+
+      for (let i = 0; i < 50; i++) proxy(bearer(WRONG, `10.0.0.${i}`));
+      expect(authThrottleRecordCount()).toBeGreaterThan(10);
+
+      jest.advanceTimersByTime(20 * 60_000);
+      proxy(bearer(WRONG, "10.0.1.1"));
+
+      expect(authThrottleRecordCount()).toBeLessThanOrEqual(2);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it("auth mode none is untouched", async () => {

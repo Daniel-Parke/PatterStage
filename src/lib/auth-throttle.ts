@@ -119,6 +119,20 @@ export function clearAuthFailures(key: string): void {
   records.delete(key);
 }
 
-// No reset seam. Each proxy test calls jest.resetModules() and re-imports, so
-// the module -- and this Map with it -- is built fresh; an exported clear()
-// would have been dead code pretending to be a test affordance.
+/**
+ * How many clients are currently remembered.
+ *
+ * Exported for one assertion, and it earns its place: `x-forwarded-for` is
+ * attacker-controlled, so an unpruned map is an unbounded allocation somebody
+ * else decides the size of. That the map SHRINKS is not observable from any
+ * response, so without this the pruning could be deleted and nothing would
+ * notice.
+ *
+ * There is deliberately no reset seam beside it: each proxy test calls
+ * jest.resetModules() and re-imports, so the module -- and this Map with it --
+ * is rebuilt fresh, and an exported clear() would be dead code pretending to
+ * be a test affordance.
+ */
+export function authThrottleRecordCount(): number {
+  return records.size;
+}

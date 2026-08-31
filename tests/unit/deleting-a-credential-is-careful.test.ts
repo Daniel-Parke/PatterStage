@@ -153,6 +153,29 @@ describe("the .env var goes ONLY when nothing else needs it", () => {
 });
 
 describe("a model that loses its key is named", () => {
+  it("reads the attachments BEFORE the delete, while the link still exists", async () => {
+    // Mutation found this. ON DELETE SET NULL means the link is GONE the
+    // instant the row goes, so a filter run afterwards matches nothing and the
+    // warning is silently always empty. The earlier test could not see it,
+    // because its listModels mock answered the same thing whenever it was
+    // called. This one simulates the foreign key.
+    mockListCredentials.mockReturnValue([]);
+    let rowDeleted = false;
+    mockDeleteCredential.mockImplementation(() => {
+      rowDeleted = true;
+      return true;
+    });
+    mockListModels.mockImplementation(() =>
+      rowDeleted
+        ? [{ id: "m1", modelId: "gpt-4o", credentialsId: null }]
+        : [{ id: "m1", modelId: "gpt-4o", credentialsId: "c1" }],
+    );
+
+    const body = await bodyOf(await DELETE({} as never, ctx("c1")));
+
+    expect(JSON.stringify(body.data)).toContain("gpt-4o");
+  });
+
   it("warns about the models that were attached", async () => {
     // ON DELETE SET NULL unlinks them silently, and the next call they make
     // fails with a missing key. Saying so at the moment of deletion is the only
