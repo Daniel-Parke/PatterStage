@@ -439,9 +439,18 @@ describe("a degraded gather is recorded, and the report says so", () => {
     expect(statements).not.toMatch(/NOT NULL/i);
   });
 
-  it("the head constant moves with it", () => {
-    expect(readFileSync(join(process.cwd(), "src", "lib", "db-schema.ts"), "utf-8")).toMatch(
-      /MIGRATION_HEAD_SCHEMA_VERSION = 36/,
+  it("the gather migration claims its own version, 36", async () => {
+    // CHANGED at T-0076. This asserted MIGRATION_HEAD_SCHEMA_VERSION === 36,
+    // which was only true while 036 happened to be the LAST migration. The head
+    // moves every time anyone adds one, so pinning it here made this file fail
+    // for a reason that has nothing to do with research gather counters.
+    // run-migrations-upgrade.integration.test.ts is where the head belongs: it
+    // asserts the head equals the last applier's gate, sits one above the gate
+    // it displaced, and matches the highest file on disk. This asserts the only
+    // thing that is this migration's business — its own number.
+    const { RESEARCH_GATHER_SCHEMA_VERSION } = await import(
+      "@/lib/db/apply-research-gather-migration"
     );
+    expect(RESEARCH_GATHER_SCHEMA_VERSION).toBe(36);
   });
 });

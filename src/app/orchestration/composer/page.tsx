@@ -23,6 +23,8 @@ import ComposerClarifyPrompt from "@/components/composer/ComposerClarifyPrompt";
 import ComposerNodeRunDetail from "@/components/composer/ComposerNodeRunDetail";
 import ComposerRunForm from "@/components/composer/ComposerRunForm";
 import { safeApiCall } from "@/lib/api-fetch";
+import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
+import { isTerminalComposerRunStatus } from "@/lib/composer/schema";
 import { timeAgo } from "@/lib/utils";
 
 // react-flow needs the DOM — load the canvases client-only.
@@ -65,6 +67,7 @@ const STATUS_FILTERS = [
   { value: "completed", label: "Completed" },
   { value: "failed", label: "Failed" },
   { value: "rejected", label: "Rejected" },
+  { value: "cancelled", label: "Cancelled" },
 ];
 
 export default function ComposerPage() {
@@ -80,6 +83,7 @@ export default function ComposerPage() {
   // throws, so before T-0069 the 400 was dropped on the floor and the only
   // visible effect of a refused click was the button ceasing to spin.
   const [gateError, setGateError] = useState<string | null>(null);
+  const cancelConfirm = useTwoStepConfirm();
   const [selectedNodeKey, setSelectedNodeKey] = useState<string | null>(null);
   // When a run is selected the launch form collapses to a compact bar to free the
   // vertical space; "New run" re-expands it.
@@ -180,6 +184,21 @@ export default function ComposerPage() {
       // types `error` as optional, and setting the banner to undefined would
       // hide the refusal again -- the exact defect being fixed.
       if (!res.ok) setGateError(res.error ?? "The server refused that decision.");
+    } finally {
+      setGateBusy(false);
+    }
+  }
+
+  async function cancelRun() {
+    if (!run || gateBusy) return;
+    setGateBusy(true);
+    setGateError(null);
+    try {
+      const res = await safeApiCall(`/api/composer/runs/${run.id}/cancel`, { method: "POST" });
+      // Same reasoning as decideGate: safeApiCall RETURNS rather than throws,
+      // and a refusal the operator cannot see is the defect T-0069 removed.
+      if (!res.ok) setGateError(res.error ?? "The server refused to cancel that run.");
+      await refetch();
     } finally {
       setGateBusy(false);
     }
@@ -323,7 +342,16 @@ export default function ComposerPage() {
                 <div className="min-w-0">
                   <div className="truncate text-sm text-ps-text-primary">{runTitle(run.input)}</div>
                   {run.error ? (
-                    <p className="mt-1 text-xs text-neon-pink">{run.error}</p>
+                    // Orange, not pink, when the run was cancelled. "Cancelled by
+                    // user" rendered in the failure colour under an orange status
+                    // pill is the contradiction T-0069 and T-0070 both removed.
+                    <p
+                      className={`mt-1 text-xs ${
+                        run.status === "cancelled" ? "text-neon-orange" : "text-neon-pink"
+                      }`}
+                    >
+                      {run.error}
+                    </p>
                   ) : (
                     <p className="mt-1 text-xs text-ps-text-muted">Click a stage for its verdict & output</p>
                   )}
@@ -333,6 +361,25 @@ export default function ComposerPage() {
                     {run.status}
                   </div>
                   <div className="mt-0.5 text-xs text-ps-text-muted">{timeAgo(run.createdAt)}</div>
+                  {!isTerminalComposerRunStatus(run.status) && (
+                    // Two-step, because one click ends a multi-stage run that may
+                    // be parked at a gate waiting for a person.
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!cancelConfirm.isArmedFor(run.id)) cancelConfirm.arm(run.id);
+                        else void cancelConfirm.confirm(cancelRun);
+                      }}
+                      disabled={gateBusy}
+                      className={`mt-1.5 rounded-lg border px-2 py-1 text-xs font-mono transition-colors disabled:opacity-40 ${
+                        cancelConfirm.isArmedFor(run.id)
+                          ? "border-neon-orange/60 bg-neon-orange/20 text-neon-orange"
+                          : "border-white/15 text-ps-text-muted hover:border-neon-orange/50 hover:text-neon-orange"
+                      }`}
+                    >
+                      {cancelConfirm.isArmedFor(run.id) ? "Confirm cancel?" : "Cancel run"}
+                    </button>
+                  )}
                 </div>
               </div>
               {/* A gate decision the server refused. It sits above the canvas

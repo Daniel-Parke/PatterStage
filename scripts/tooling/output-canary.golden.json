@@ -8,8 +8,8 @@
   ],
   "surfaces": {
     "appConfig": "21a2a859930976a0ecf737d0edbc8bfdbba5dbc9232272bad467a5fc1a82b1c9",
-    "generatedArtefacts": "dc5c34518aa13ddf1516c61cb353aa82fce202abb4970b582e2ede2c74b763bd",
-    "httpSurface": "996a7d948e056f6aae7c3bc8847f7fb547ab3fb77d2bb9089a2b5abc3e76d115",
+    "generatedArtefacts": "05d1e62efc44c5daeda9ba826c7c9b8b8dfaf2c5b9eed8df4a97ea1070efa21b",
+    "httpSurface": "bc7086c24644170dd0fa6a776f416c94a22a8c42f384802c67dca63d356491f2",
     "seedPack": "1b02d9fecf97d1fa06efb71b718c4d53d1c8368a4a3cae256a44c53b9f03ac65"
   }
 }

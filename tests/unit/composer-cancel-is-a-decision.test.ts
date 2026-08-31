@@ -135,7 +135,7 @@ function runInFlight(): { runId: string; nodeRunId: string; nodeId: string; agen
   // and the BACKEND id lands on that row via attachBackendRun.
   const agentRunId = `cn_${nodeRun.id}`;
   createRun({ id: agentRunId, composerNodeRunId: nodeRun.id });
-  attachBackendRun(agentRunId, "backend-xyz");
+  attachBackendRun(agentRunId, { runId: "backend-xyz" });
   updateNodeRun(nodeRun.id, { status: "running", runId: agentRunId });
   updateComposerRun(run.id, { status: "running", currentNodeId: stage.id });
   return { runId: run.id, nodeRunId: nodeRun.id, nodeId: stage.id, agentRunId };
@@ -431,7 +431,7 @@ describe("migration 037 rebuilds the node table without losing anything", () => 
     db.prepare(
       "INSERT INTO composer_runs (id, workflow_id, status) VALUES ('r-keep','w-keep','running')",
     ).run();
-    db.prepare("INSERT INTO composer_nodes (id, workflow_id, node_key, label) VALUES ('n1','w-keep','k','L')").run();
+    db.prepare("INSERT INTO composer_nodes (id, workflow_id, key, label) VALUES ('n1','w-keep','k','L')").run();
     db.prepare(
       "INSERT INTO composer_node_runs (id, composer_run_id, node_id, status, output) VALUES ('nr-keep','r-keep','n1','completed','kept')",
     ).run();

@@ -31,9 +31,10 @@ export type EdgeCondition =
  * defect -- and because collapsing them is what let a rejected run render as a
  * pink error above a canvas still drawing the rejected gate green (T-0069).
  *
- * `cancelled` is admitted by the CHECK and read by the engine's terminal set,
- * but nothing writes it today. Left in place rather than removed, since the two
- * cancel entry points are being converged separately (T-0070).
+ * `cancelled` is the operator stopping a run that was still going. It was dead
+ * vocabulary for a long time -- admitted by the CHECK, read by the terminal set,
+ * written by nothing -- which is what T-0069 warned `rejected` must not become.
+ * POST /api/composer/runs/[id]/cancel writes it now (T-0076).
  */
 export type ComposerRunStatus =
   | "pending"
@@ -48,6 +49,11 @@ export type ComposerRunStatus =
  * A single stage execution's state. `rejected` is the gate the operator turned
  * down; without it the stage kept `completed` from its own successful run and
  * the canvas contradicted the run header.
+ *
+ * `cancelled` is the stage that was in flight when the operator stopped the run
+ * (T-0076, migration 037). It is NOT `failed` -- that would repeat the mistake
+ * above with a different status -- and it is NOT `skipped`, which means a stage
+ * that never ran.
  */
 export type NodeRunStatus =
   | "pending"
@@ -55,7 +61,8 @@ export type NodeRunStatus =
   | "completed"
   | "failed"
   | "skipped"
-  | "rejected";
+  | "rejected"
+  | "cancelled";
 
 /**
  * The run statuses that mean "this run is over".

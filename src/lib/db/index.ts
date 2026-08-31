@@ -79,6 +79,7 @@ import { applySpendPolicyMigration } from "./apply-spend-policy-migration";
 import { applyResearchUsageMigration } from "./apply-research-usage-migration";
 import { applyComposerRejectedMigration } from "./apply-composer-rejected-migration";
 import { applyResearchGatherMigration } from "./apply-research-gather-migration";
+import { applyComposerNodeCancelledMigration } from "./apply-composer-node-cancelled-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -318,6 +319,11 @@ export function runMigrations(database: Database.Database): void {
   // measured nothing, and zero would claim it measured a clean gather.
   // ALTER at v36.
   applyResearchGatherMigration(database, migrationsDir);
+
+  // A cancelled Composer STAGE gets its own status, so stopping a run reads as
+  // the deliberate act it is rather than as a crash. One table: composer_runs
+  // has admitted `cancelled` since 021. REBUILD at v37.
+  applyComposerNodeCancelledMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────
