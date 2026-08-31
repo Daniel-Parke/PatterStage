@@ -94,3 +94,4 @@ The records under org/tasks/ are canonical.
 | T-0079 | standard | R1 | done | t0079-boundary-column-2026-08-31 |
 | T-0080 | standard | R1 | done | t0080-gateway-error-2026-08-31 |
 | T-0081 | standard | R1 | done | t0081-numbers-2026-08-31 |
+| T-0082 | standard | R1 | done | t0082-push-truth-2026-08-31 |
