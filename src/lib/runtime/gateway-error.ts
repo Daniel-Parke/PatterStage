@@ -75,10 +75,17 @@ function transportCode(err: unknown): string | null {
  * from a transport failure. Reporting a deliberate cancel as "the gateway is
  * not responding" is the defect class T-0069 removed -- a decision rendered as
  * a crash -- so a caller abort is rethrown untouched and never mapped.
+ *
+ * THE SIGNAL IS THE WHOLE TEST, and the error's shape is not consulted at all.
+ * That started narrower -- `AbortError` or `TimeoutError` by name -- and a
+ * mutation sweep showed the narrow version missing the commonest case:
+ * aborting a fetch that is already on the wire rejects with a RESET SOCKET, so
+ * a cancelled mission was reported as "not responding (ECONNRESET)". Once we
+ * have pulled the plug ourselves there is no gateway diagnosis worth giving,
+ * whatever came back, so the aborted signal alone decides it.
  */
-function callerCancelled(err: unknown, callerSignal?: AbortSignal): boolean {
-  if (!callerSignal?.aborted) return false;
-  return err instanceof Error && (err.name === "AbortError" || err.name === "TimeoutError");
+function callerCancelled(callerSignal?: AbortSignal): boolean {
+  return callerSignal?.aborted === true;
 }
 
 function isOurTimeout(err: unknown): boolean {
@@ -106,7 +113,7 @@ export function describeGatewayFailure(
   err: unknown,
   ctx: GatewayFailureContext,
 ): RuntimeRequestError | null {
-  if (callerCancelled(err, ctx.callerSignal)) return null;
+  if (callerCancelled(ctx.callerSignal)) return null;
 
   if (isOurTimeout(err)) {
     const seconds = ctx.timeoutMs ? Math.round(ctx.timeoutMs / 1000) : null;

@@ -110,6 +110,18 @@ describe("a stopped gateway is reported as a stopped gateway", () => {
     expect(stored).not.toMatch(/fetch failed/i);
   });
 
+  it("leaves alone an error that is not a transport failure at all", async () => {
+    // Evidence discipline. A gateway that answers with unparseable JSON, or a
+    // bug in our own mapping code, is not the gateway being down -- and
+    // rewriting it as "not responding" would replace a true message with a
+    // confident guess, sending the operator to restart something that is
+    // running fine.
+    const bug = new SyntaxError("Unexpected token < in JSON at position 0");
+    const err = await caught(() => runtimeThatThrows(bug).getRun("r1"));
+
+    expect(err).toBe(bug);
+  });
+
   it("still carries the transport code, because a diagnosis is not noise", async () => {
     // Readable is not the same as vague. ECONNREFUSED (nothing listening) and
     // ENOTFOUND (the name does not resolve) are different problems with
@@ -172,6 +184,85 @@ describe("a cancelled call is not a broken gateway", () => {
 
     expect((err as Error).message).not.toMatch(/not responding/i);
     expect(err).not.toBeInstanceOf(RuntimeRequestError);
+  });
+
+  it("re-throws a caller abort that ARRIVES AS a transport failure", async () => {
+    // Mutation found this gap, and it is the one that matters. The test above
+    // passes even with the cancel guard deleted, because "This operation was
+    // aborted" carries no transport code and falls through to the same `null`.
+    // It proves the outcome, not the guard.
+    //
+    // This is the case that needs the guard: aborting an in-flight fetch
+    // commonly surfaces as a reset socket. Without it, cancelling a mission
+    // stores "Hermes gateway is not responding (ECONNRESET)" -- a deliberate
+    // act reported as an outage.
+    //
+    // The abort lands MID-FLIGHT, which is the only way this shape occurs: a
+    // signal already aborted never reaches fetch at all, because
+    // submitWithBackoff calls throwIfAborted() first.
+    const ctrl = new AbortController();
+    const reset = Object.assign(new Error("socket hang up"), { code: "ECONNRESET" });
+
+    const runtime = new HermesRuntime({
+      resolve: () => endpoint,
+      fetchImpl: () => {
+        ctrl.abort();
+        return Promise.reject(reset);
+      },
+    });
+
+    const err = await caught(() =>
+      runtime.submitRun({ input: "hi", signal: ctrl.signal } as never),
+    );
+
+    expect((err as Error).message).not.toMatch(/not responding/i);
+    expect((err as Error).message).toBe("socket hang up");
+  });
+
+  it("re-throws a caller abort that arrives as THEIR timeout, not ours", async () => {
+    // The second shape of the same trap. A caller that brought its own
+    // AbortSignal.timeout produces a TimeoutError, and claiming it as our 30s
+    // deadline would name a budget that never applied.
+    const ctrl = new AbortController();
+    const theirs = Object.assign(new Error("The operation was aborted due to timeout"), {
+      name: "TimeoutError",
+    });
+
+    const runtime = new HermesRuntime({
+      resolve: () => endpoint,
+      fetchImpl: () => {
+        ctrl.abort();
+        return Promise.reject(theirs);
+      },
+      timeoutMs: 30_000,
+    });
+
+    const err = await caught(() =>
+      runtime.submitRun({ input: "hi", signal: ctrl.signal } as never),
+    );
+
+    expect((err as Error).message).not.toMatch(/30s/);
+  });
+
+  it("a LIVE signal does not excuse a real failure from being translated", async () => {
+    // The other direction, and the sharper defect. Every mission dispatch
+    // passes a signal, so a guard that keyed off "has a signal" rather than
+    // "was aborted" would leave the raw undici string in place for the exact
+    // caller QA reported -- the one whose errors land in missions.result --
+    // while every signal-free call looked fixed.
+    const ctrl = new AbortController(); // never aborted
+
+    const runtime = new HermesRuntime({
+      resolve: () => endpoint,
+      fetchImpl: () => Promise.reject(connectionRefused()),
+    });
+
+    const err = await caught(() =>
+      runtime.submitRun({ input: "hi", signal: ctrl.signal } as never),
+    );
+
+    expect((err as Error).message).toContain("http://127.0.0.1:8652");
+    expect((err as Error).message).not.toMatch(/fetch failed/i);
   });
 
   it("but OUR OWN deadline is reported as ours, with the budget that fired", async () => {
