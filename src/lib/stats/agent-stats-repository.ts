@@ -72,11 +72,21 @@ export function readAgentProfileStatsRows(): Array<AgentProfileStatsRow & { slug
 }
 
 /** Distinct days on which the named profile completed a run. */
+/**
+ * Distinct days on which this agent completed a run.
+ *
+ * COALESCEs the profile exactly as `runsByProfile` does. A run against the root
+ * agent stores `profile_name = NULL`, so a bare `profile_name = ?` matched none
+ * of them: the SAME run earned XP through the coalescing aggregate and
+ * contributed no active day here, and two numbers on one dashboard panel
+ * disagreed about whether it had happened (T-0081, RC-C).
+ */
 export function countAgentActiveDays(slug: string): number | undefined {
   return (
     getDb()
       .prepare(
-        "SELECT COUNT(DISTINCT date(completed_at)) AS v FROM runs WHERE profile_name = ? AND status = 'completed'",
+        "SELECT COUNT(DISTINCT date(completed_at)) AS v FROM runs " +
+          "WHERE COALESCE(profile_name, 'default') = ? AND status = 'completed'",
       )
       .get(slug) as { v: number } | undefined
   )?.v;

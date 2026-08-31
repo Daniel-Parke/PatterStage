@@ -21,6 +21,7 @@ import dynamic from "next/dynamic";
 import ComposerGatePrompt from "@/components/composer/ComposerGatePrompt";
 import ComposerClarifyPrompt from "@/components/composer/ComposerClarifyPrompt";
 import ComposerNodeRunDetail from "@/components/composer/ComposerNodeRunDetail";
+import { profileOptionsFor } from "@/components/composer/profile-options";
 import ComposerRunForm from "@/components/composer/ComposerRunForm";
 import { safeApiCall } from "@/lib/api-fetch";
 import { useTwoStepConfirm } from "@/hooks/useTwoStepConfirm";
@@ -102,10 +103,7 @@ export default function ComposerPage() {
   const nodeRuns = live?.nodeRuns ?? detail?.nodeRuns ?? [];
   const graph = detail?.graph ?? null;
 
-  const profileOptions = [
-    { value: "", label: "Default profile" },
-    ...(profiles ?? []).map((p) => ({ value: p.name, label: p.name })),
-  ];
+  const profileOptions = profileOptionsFor(profiles);
   const visibleRuns = useMemo(
     () => (runs ?? []).filter((r) => !statusFilter || r.status === statusFilter),
     [runs, statusFilter],

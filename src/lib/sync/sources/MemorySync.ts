@@ -9,7 +9,7 @@
 import { existsSync, statSync } from "fs";
 import { getAgentWorkspace } from "@/lib/runtime/workspace";
 import { readHolographicFactCount } from "@/lib/runtime/memory-db";
-import { setMultipleStats, setSystemStatBoolean } from "@/lib/system-repository";
+import { setMultipleStats } from "@/lib/system-repository";
 import { getMemoryProviderType, getActiveMemoryProvider } from "@/lib/memory/memory-providers";
 import { logApiError } from "@/lib/api-logger";
 import type { SyncSource, SyncResult } from "@/lib/sync/types";
@@ -63,12 +63,14 @@ export class MemorySync implements SyncSource {
         "memory.db_size": dbSize,
         "memory.provider": provider,
       });
-      setSystemStatBoolean("memory.available", provider !== "Not Installed");
+      // `memory.available` was written here on every tick and read by nobody.
+      // It is also derivable from `memory.provider`, which IS read: "Not
+      // Installed" is exactly the unavailable case (T-0081).
 
       return {
         sourceName: this.name,
         success: true,
-        syncedCount: 4,
+        syncedCount: 3,
         durationMs: Math.round(performance.now() - start),
       };
     } catch (err) {

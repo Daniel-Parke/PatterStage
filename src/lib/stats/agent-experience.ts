@@ -13,8 +13,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { computeLevel, type LevelInfo } from "./derive";
-import { getAgentPerformance, type AgentPerformance } from "./agent-stats";
 import { countAgentActiveDays } from "./agent-stats-repository";
+import type { AgentPerformance } from "./agent-stats";
 
 /** Per-agent signals that accrue Experience. */
 export interface AgentExperienceSignals {
@@ -111,7 +111,7 @@ export function agentExperienceFromPerformance(perf: AgentPerformance): AgentExp
   const activeDays = safeCount(() => countAgentActiveDays(perf.slug));
 
   const signals: AgentExperienceSignals = {
-    runsCompleted: perf.runs,
+    runsCompleted: perf.runsCompleted,
     totalTokens: perf.totalTokens,
     activeDays,
     skillsEnabled: perf.skills,
@@ -122,9 +122,9 @@ export function agentExperienceFromPerformance(perf: AgentPerformance): AgentExp
   return { slug: perf.slug, level: computeAgentLevel(xp), xp, signals };
 }
 
-/** Resolve the Experience level for one agent profile from its signals. */
-export function agentExperienceForProfile(slug: string): AgentExperience | null {
-  const perf = getAgentPerformance().find((p) => p.slug === slug);
-  if (!perf) return null;
-  return agentExperienceFromPerformance(perf);
-}
+// `agentExperienceForProfile(slug)` was here, and it was the reason the
+// experience board listed profiles only: it took a slug, so its caller had to
+// produce a list of slugs, and the list it reached for excluded the root agent
+// (T-0081, RC-D). The route now maps getAgentPerformance() -- which has always
+// included the root -- straight through agentExperienceFromPerformance, so no
+// caller has to know the population in advance. Nothing else used the slug form.

@@ -1,9 +1,14 @@
 // ═══════════════════════════════════════════════════════════════
 // sync/sources/ConfigSync.ts — Sync config.yaml → meta table
 //
-// Reads Hermes config.yaml, extracts key metadata (memory provider,
-// default model, skills count), and writes it to the meta table
-// so API routes can read from SQLite instead of the filesystem.
+// Reads Hermes config.yaml and writes to the meta table what an API route
+// actually reads from SQLite instead of walking the filesystem: whether the
+// config and SOUL files are present, and any parse error.
+//
+// It used to claim it extracted "memory provider, default model, skills count".
+// It never wrote a skills count at all, and the other two were written on every
+// tick and read by nobody -- work done for no reader, under a comment that sent
+// the next person looking for a writer that was never there (T-0081).
 //
 // All filesystem I/O is async (fs.promises) so the event loop is
 // not blocked while reading config.yaml. While config.yaml is
@@ -49,15 +54,13 @@ export class ConfigSync implements SyncSource {
         const soulPresent = (await fileExists(H.soul)) ? "true" : "false";
         setMultipleStats({
           "config.present": "false",
-          "config.memory_provider": "",
-          "config.default_model": "",
           "config.soul_present": soulPresent,
           "config.yaml_error": "",
         });
         return {
           sourceName: this.name,
           success: true,
-          syncedCount: 3,
+          syncedCount: 2,
           durationMs: Math.round(performance.now() - start),
         };
       }
@@ -69,9 +72,13 @@ export class ConfigSync implements SyncSource {
       // try/catch around yaml.load and will surface the actual error.
       // We don't want to spam the sync error channel for a config that's
       // known to be temporarily broken.
-      let cfg: Record<string, unknown> = {};
+      //
+      // The PARSE is the point, not the result. Nothing here reads the parsed
+      // document any more: the two values that used to be pulled out of it went
+      // with the keys nobody read (T-0081). What survives is the answer to "does
+      // this file parse", which `config.yaml_error` carries to the dashboard.
       try {
-        cfg = yaml.load(raw) as Record<string, unknown>;
+        yaml.load(raw);
       } catch (yamlErr) {
         const message = yamlErr instanceof Error ? yamlErr.message : String(yamlErr);
         // Log once per distinct error (no per-tick spam).
@@ -95,30 +102,19 @@ export class ConfigSync implements SyncSource {
       // Parsed cleanly — clear any prior malformed-config alert + log gate.
       lastYamlErrorSignature = null;
 
-      // Memory provider
-      const mem = cfg.memory;
-      const memoryProvider =
-        mem && typeof mem === "object"
-          ? String((mem as Record<string, unknown>).provider ?? "")
-          : "";
-
-      // Default model (model.default when model is an object, or string shorthand)
-      let defaultModel = "";
-      const modelCfg = cfg.model;
-      if (typeof modelCfg === "string") {
-        defaultModel = modelCfg;
-      } else if (modelCfg && typeof modelCfg === "object" && !Array.isArray(modelCfg)) {
-        const m = modelCfg as Record<string, unknown>;
-        defaultModel = String(m.default ?? m.model ?? "");
-      }
+      // The memory-provider and default-model extraction that used to live here
+      // went with the keys it fed. Both are still available where they are
+      // actually read: the active memory provider comes from the DB via
+      // getActiveMemoryConfig (migration 022 made PatterStage the owner of that
+      // answer, T-0077), and the default model is read live by
+      // useGatewayHealth off /api/config. Re-parsing config.yaml on every tick
+      // to store a second copy nobody consulted was the whole defect.
 
       // Soul present
       const soulPresent = (await fileExists(H.soul)) ? "true" : "false";
 
       setMultipleStats({
         "config.present": "true",
-        "config.memory_provider": memoryProvider,
-        "config.default_model": defaultModel,
         "config.soul_present": soulPresent,
         "config.yaml_error": "",
       });
@@ -126,7 +122,7 @@ export class ConfigSync implements SyncSource {
       return {
         sourceName: this.name,
         success: true,
-        syncedCount: 4,
+        syncedCount: 2,
         durationMs: Math.round(performance.now() - start),
       };
     } catch (err) {

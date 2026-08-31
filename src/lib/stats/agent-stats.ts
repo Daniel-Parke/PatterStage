@@ -20,8 +20,17 @@ export interface AgentPerformance {
   slug: string;
   name: string;
   personality?: string;
-  /** Total runs dispatched under this profile. */
+  /** Total runs dispatched under this profile, whatever became of them. */
   runs: number;
+  /**
+   * Runs that reached `completed`.
+   *
+   * Distinct from `runs` because the Experience signal is named
+   * `runsCompleted` and the growth panel labels it "Runs completed", while it
+   * was fed the total. `countAgentActiveDays` has always filtered on
+   * completion, so the two signals disagreed about what counted (T-0081).
+   */
+  runsCompleted: number;
   missionsCompleted: number;
   missionsFailed: number;
   totalTokens: number;
@@ -68,6 +77,7 @@ function jsonLen(raw: string | null): number {
 
 interface RunAgg {
   runs: number;
+  completed: number;
   tokens: number;
   durSum: number;
   durCount: number;
@@ -84,8 +94,9 @@ function runsByProfile(): Map<string, RunAgg> {
   }
   for (const r of rows) {
     const key = r.profile_name && r.profile_name.trim() ? r.profile_name : "default";
-    const a = out.get(key) ?? { runs: 0, tokens: 0, durSum: 0, durCount: 0 };
+    const a = out.get(key) ?? { runs: 0, completed: 0, tokens: 0, durSum: 0, durCount: 0 };
     a.runs++;
+    if (r.status === "completed") a.completed++;
     a.tokens += parseTotalTokens(r.usage_json);
     if (r.status === "completed" && r.completed_at && r.submitted_at) {
       // Timestamps are ISO-8601 with a 'Z'; appending another 'Z' → NaN → no avg.
@@ -129,13 +140,14 @@ export function getAgentPerformance(): AgentPerformance[] {
   const agents: AgentPerformance[] = [];
 
   const push = (slug: string, name: string, personality: string | undefined, disabledSkills: string | null, toolsets: string | null) => {
-    const r = runsAgg.get(slug) ?? { runs: 0, tokens: 0, durSum: 0, durCount: 0 };
+    const r = runsAgg.get(slug) ?? { runs: 0, completed: 0, tokens: 0, durSum: 0, durCount: 0 };
     const m = missionsAgg.get(slug) ?? { completed: 0, failed: 0 };
     agents.push({
       slug,
       name,
       personality,
       runs: r.runs,
+      runsCompleted: r.completed,
       missionsCompleted: m.completed,
       missionsFailed: m.failed,
       totalTokens: r.tokens,

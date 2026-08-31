@@ -97,9 +97,7 @@ export function getSystemStatNumber(key: string, defaultVal = 0): number {
   return isNaN(n) ? defaultVal : n;
 }
 
-// ── Boolean helpers ──────────────────────────────────────────
-
-/** Set a boolean system stat. */
-export function setSystemStatBoolean(key: string, value: boolean): void {
-  setSystemStat(key, value ? "true" : "false");
-}
+// The boolean pair went with its only key. `setSystemStatBoolean` had exactly
+// one caller -- MemorySync writing `memory.available`, which nothing read
+// (T-0081) -- and there has never been a getSystemStatBoolean to pair with it.
+// Callers that want a boolean compare the string, as `config.present` does.

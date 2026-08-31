@@ -76,6 +76,7 @@ function agent(over: Partial<AgentPerformance> = {}): AgentPerformance {
     slug: "scout",
     name: "Scout",
     runs: 3,
+    runsCompleted: 3,
     missionsCompleted: 2,
     missionsFailed: 0,
     totalTokens: 2_000,

@@ -1,4 +1,5 @@
 /** @jest-environment node */
+/* eslint-disable @typescript-eslint/no-require-imports -- better-sqlite3's package root is not newable under the jest transform; same construction as agent-progression-immutability.test.ts */
 
 // T-0081 acceptance oracle, behavioural half. Its sibling
 // `the-numbers-stop-lying.test.ts` proves no meta key is an orphan; this proves

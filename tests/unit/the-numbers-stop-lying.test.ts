@@ -102,15 +102,38 @@ describe("every meta key has both a writer and a reader", () => {
 
 describe("ConfigSync does not claim work it does not do", () => {
   it("its header does not promise a skills count", () => {
-    const header = readFileSync(
+    const source = readFileSync(
       join(SRC, "modules", "hermes", "sync", "ConfigSync.ts"),
       "utf-8",
-    ).slice(0, 1200);
+    );
 
-    // It says "extracts key metadata (memory provider, default model, skills
-    // count)". It has never written a skills count. A false comment is worse
-    // than no comment: it sends the next reader looking for a writer that was
-    // never there, which is exactly the search finding 3 required.
-    expect(header).not.toMatch(/skills count/i);
+    // Only the DESCRIPTIVE part is judged -- everything before the historical
+    // note that begins "It used to claim". A header that records a removed
+    // false claim has to be able to quote it; what must not survive is the
+    // claim itself, stated in the present tense as something the file does.
+    //
+    // The claim was "extracts key metadata (memory provider, default model,
+    // skills count)". It has never written a skills count. A false comment is
+    // worse than no comment: it sends the next reader hunting for a writer that
+    // was never there, which is exactly the search finding 3 required.
+    const marker = source.indexOf("It used to claim");
+    const describes = source.slice(0, marker === -1 ? 1200 : marker);
+
+    expect(describes).not.toMatch(/skills/i);
+  });
+
+  it("GUARD: the header slice being judged is not empty", () => {
+    // Without this, a renamed marker string would silently shrink the judged
+    // text to nothing and the test above would pass by measuring no header at
+    // all -- the vacuous-sweep shape this whole task is about.
+    const source = readFileSync(
+      join(SRC, "modules", "hermes", "sync", "ConfigSync.ts"),
+      "utf-8",
+    );
+    const marker = source.indexOf("It used to claim");
+    const describes = source.slice(0, marker === -1 ? 1200 : marker);
+
+    expect(describes.length).toBeGreaterThan(200);
+    expect(describes).toMatch(/config\.yaml/);
   });
 });

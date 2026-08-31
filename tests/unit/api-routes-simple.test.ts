@@ -33,6 +33,10 @@ jest.mock("@/lib/sync", () => ({
   runFullSync: jest.fn(),
 }));
 
+jest.mock("@/lib/skills-repository", () => ({
+  countSkills: jest.fn(() => 0),
+}));
+
 jest.mock("@/lib/system-repository", () => ({
   getSystemStat: jest.fn(() => null),
   getSystemStatNumber: jest.fn(() => 0),
@@ -118,18 +122,27 @@ describe("GET /api/status", () => {
   beforeEach(() => jest.clearAllMocks());
 
   it("returns system status", async () => {
-    const { getSystemStat, getSystemStatNumber } = await import("@/lib/system-repository");
+    const { getSystemStat } = await import("@/lib/system-repository");
     (getSystemStat as jest.Mock).mockImplementation((key: string) => {
       if (key === "config.soul_present") return "true";
       if (key === "config.present") return "true";
       if (key === "memory.db_size") return "1.2 MB";
       return null;
     });
-    (getSystemStatNumber as jest.Mock).mockImplementation((key: string) => {
-      if (key === "skills.count") return 12;
-      if (key === "sessions.total") return 42;
-      return 0;
-    });
+    // THIS TEST IS WHY FINDING 3 LIVED FOR SO LONG. It used to mock
+    // getSystemStatNumber to answer 12 and 42 for `skills.count` and
+    // `sessions.total`, and assert the route echoed them. Nothing in the
+    // product has ever WRITTEN either key, so the route reported 0 on every
+    // real install while this suite proved the plumbing worked -- the
+    // vacuous-sweep class T-0075 named. The counts are measured now (T-0081),
+    // so the mocks moved to the repositories the route actually asks.
+    const { countSkills } = await import("@/lib/skills-repository");
+    (countSkills as jest.Mock).mockReturnValueOnce(12);
+    const { listSessions } = await import("@/lib/sessions/session-repository");
+    // Once, not permanently: jest.clearAllMocks() clears calls but keeps
+    // implementations, and a sticky 42 leaked into the /api/sessions test
+    // below.
+    (listSessions as jest.Mock).mockReturnValueOnce({ sessions: [], total: 42 });
 
     const { GET } = await import("@/app/api/status/route");
     const res = await GET();
