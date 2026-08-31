@@ -89,4 +89,5 @@ The records under org/tasks/ are canonical.
 | T-0074 | standard | R0 | proposed | t0074-missions-actions-adr-2026-08-31 |
 | T-0075 | standard | R1 | done | t0075-sweep-denominators-2026-08-31 |
 | T-0076 | standard | R2 | done | t0076-composer-cancel-2026-08-31 |
+| T-0077 | standard | R2 | done | t0077-memory-switch-2026-08-31 |
 | T-0078 | standard | R1 | done | t0078-harnesses-2026-08-31 |
