@@ -73,11 +73,13 @@ async function promoteError(
 describe("update's refusal composes the request that would work", () => {
   it("names the action, the mode and the mission", async () => {
     const err = await updateError("queued");
-    expect(err).toMatch(/promote/);
-    // The part that was missing: promote REQUIRES dispatchMode, and following
-    // the old advice literally earned a third 400 saying so.
-    expect(err).toMatch(/dispatchMode/);
-    expect(err).toMatch(/save/);
+    // The whole call, not the words in it. Mutation found the hole: deleting
+    // the clause that carries the JSON left /promote/, /dispatchMode/ and
+    // /save/ all still matching elsewhere in the sentence, so the assertion
+    // passed on a message that no longer told anyone what to send.
+    expect(err).toContain('{"action":"promote"');
+    expect(err).toContain('"dispatchMode":"save"');
+    expect(err).toContain('"missionId":"m1"');
   });
 
   it("says which state it saw, so the advice is checkable", async () => {

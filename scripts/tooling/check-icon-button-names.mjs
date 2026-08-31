@@ -200,63 +200,73 @@ export function formatSummary(c) {
   );
 }
 
-function main() {
-  const counts = scanTree();
-
+/**
+ * Turn a scan into an exit code and the text to print.
+ *
+ * Extracted from `main()` so the DECISION can be tested without spawning a
+ * process or writing a fixture into src/. Mutation found the hole this closes:
+ * deleting the nested branch's `process.exit(1)` left every assertion green,
+ * because every test drove the CLASSIFIER and none drove the verdict. A gate
+ * that reports and does not fail the build is decoration (T-0071).
+ */
+export function verdict(counts) {
   // Guard the guard. Floors chosen against a measured 227 files / 394 buttons /
   // 77 icon-only, low enough to survive ordinary churn and high enough that a
   // walk which stopped finding things cannot read as a pass.
   if (counts.filesScanned < 150 || counts.buttonsSeen < 250 || counts.iconOnlySeen < 40) {
-    console.error(
-      `icon-button names: refusing to pass on a population this small.\n` +
+    return {
+      code: 1,
+      message:
+        `icon-button names: refusing to pass on a population this small.\n` +
         `  files ${counts.filesScanned} (floor 150), buttons ${counts.buttonsSeen} (floor 250), ` +
         `icon-only ${counts.iconOnlySeen} (floor 40).\n` +
         `Either the tree moved or the classifier stopped classifying. A guard that\n` +
         `inspects nothing passes everything, which is how the check this replaced\n` +
         `shipped 26 unnamed buttons while green.`,
-    );
-    process.exit(1);
+    };
   }
 
   if (counts.nested.length > 0) {
-    console.error(
-      `icon-button names: ${counts.nested.length} button(s) inside another button.
-
-` +
-        `Nested interactive content is invalid HTML. The browser recovers by hoisting
-` +
-        `the inner control OUT of the outer button, so the rendered tree stops matching
-` +
-        `the source: the click target, the focus order and the accessible name all move
-` +
-        `somewhere you did not put them. Keyboard and screen-reader users lose the
-` +
-        `control entirely.
-
-` +
-        `Make the outer element a container and put the actions BESIDE the label
-` +
-        `rather than inside it. See src/app/orchestration/chat/page.tsx (T-0071).
-`,
-    );
-    for (const n of counts.nested) console.error(`  ${n}`);
-    process.exit(1);
+    return {
+      code: 1,
+      message:
+        `icon-button names: ${counts.nested.length} button(s) inside another button.\n\n` +
+        `Nested interactive content is invalid HTML. The browser recovers by hoisting\n` +
+        `the inner control OUT of the outer button, so the rendered tree stops matching\n` +
+        `the source: the click target, the focus order and the accessible name all move\n` +
+        `somewhere you did not put them. Keyboard and screen-reader users lose the\n` +
+        `control entirely.\n\n` +
+        `Make the outer element a container and put the actions BESIDE the label\n` +
+        `rather than inside it. See src/app/orchestration/chat/page.tsx (T-0071).\n\n` +
+        counts.nested.map((n) => `  ${n}`).join("\n"),
+    };
   }
 
   if (counts.offenders.length > 0) {
-    console.error(`icon-button names: ${counts.offenders.length} button(s) with no accessible name.\n`);
-    for (const o of counts.offenders) console.error(`  ${o}`);
-    console.error(
-      `\nA button whose children render no text needs aria-label (preferred),` +
+    return {
+      code: 1,
+      message:
+        `icon-button names: ${counts.offenders.length} button(s) with no accessible name.\n\n` +
+        counts.offenders.map((o) => `  ${o}`).join("\n") +
+        `\n\nA button whose children render no text needs aria-label (preferred),` +
         `\naria-labelledby, or title. A name that exists in only one state is not a name:` +
         `\n{armed ? " Confirm?" : ""} reads as unnamed, deliberately.` +
         `\n\nIf a button genuinely needs no name, exempt the line above it with:` +
         `\n  // ${PRAGMA} -- <reason, at least ${MIN_REASON_LENGTH} chars>`,
-    );
-    process.exit(1);
+    };
   }
 
-  console.log(formatSummary(counts));
+  return { code: 0, message: formatSummary(counts) };
+}
+
+function main() {
+  const { code, message } = verdict(scanTree());
+  if (code !== 0) {
+    console.error(message);
+    process.exit(code);
+  }
+
+  console.log(message);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();

@@ -44,7 +44,7 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 
-import { classifyButtons, scanTree } from "../../scripts/tooling/check-icon-button-names.mjs";
+import { classifyButtons, scanTree, verdict } from "../../scripts/tooling/check-icon-button-names.mjs";
 
 const read = (...p: string[]) => readFileSync(join(process.cwd(), ...p), "utf-8");
 
@@ -168,5 +168,42 @@ describe("a chapter title is bounded", () => {
     expect(read("src", "modules", "rec-room", "handlers", "create.ts")).toMatch(
       /chapterTitle\(/,
     );
+  });
+});
+
+describe("the gate FAILS on a nested button, not merely reports one", () => {
+  // Found by mutation: deleting the nested branch's exit left everything green,
+  // because every assertion above drives the CLASSIFIER and none of them drove
+  // the verdict. A gate that prints and returns 0 is decoration.
+  const healthy = { filesScanned: 228, buttonsSeen: 394, iconOnlySeen: 77, offenders: [], nested: [] };
+
+  it("exits non-zero and says which files", () => {
+    const v = verdict({ ...healthy, nested: ["src/a.tsx:12 <button>"] });
+    expect(v.code).toBe(1);
+    expect(v.message).toContain("src/a.tsx:12");
+    expect(v.message).toMatch(/inside another button/);
+  });
+
+  it("still exits non-zero for an unnamed button", () => {
+    const v = verdict({ ...healthy, offenders: ["src/b.tsx:9 <button>"] });
+    expect(v.code).toBe(1);
+    expect(v.message).toContain("src/b.tsx:9");
+  });
+
+  it("still refuses a population too small to have inspected anything", () => {
+    expect(verdict({ ...healthy, buttonsSeen: 3 }).code).toBe(1);
+    expect(verdict({ ...healthy, iconOnlySeen: 0 }).code).toBe(1);
+    expect(verdict({ ...healthy, filesScanned: 4 }).code).toBe(1);
+  });
+
+  it("GREEN CONTROL: a healthy tree exits zero and prints the denominator", () => {
+    const v = verdict(healthy);
+    expect(v.code).toBe(0);
+    expect(v.message).toContain("394 button elements");
+    expect(v.message).toContain("0 nested");
+  });
+
+  it("and the real tree is one", () => {
+    expect(verdict(scanTree()).code).toBe(0);
   });
 });
