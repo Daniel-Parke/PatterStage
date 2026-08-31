@@ -20,6 +20,12 @@ interface SelectProps {
   accentColor?: AccentColor;
   className?: string;
   disabled?: boolean;
+  /**
+   * The accessible name when no visible <label> is wired to this control.
+   * InlineSelect has no label by construction, so without this it is a
+   * dropdown that announces only its current value.
+   */
+  ariaLabel?: string;
 }
 
 // ── Inline Select (no label/wrapper, for tight layouts) ──────
@@ -30,12 +36,14 @@ export function InlineSelect({
   accentColor = "cyan",
   className = "",
   disabled = false,
+  ariaLabel,
 }: Omit<SelectProps, "label" | "description">) {
   const focusClass = focusColorMap[accentColor];
 
   return (
     <div className={`relative ${className}`}>
       <select
+        aria-label={ariaLabel}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}

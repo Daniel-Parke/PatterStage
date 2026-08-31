@@ -4,6 +4,7 @@
 // mission-handlers layout). All LLM generation logic is preserved there.
 // ═══════════════════════════════════════════════════════════════
 
+import { methodNotAllowed } from "@/lib/api-response";
 import { NextRequest, NextResponse } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
@@ -52,4 +53,13 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     return serverErrorFromCatch("POST /api/stories", "request", err, "Request failed");
   }
+}
+
+// GET is not supported here. Stories live under a profile, so the list lives
+// at /api/rec-room/stories — a bare GET on this path returns nothing useful
+// and the 404 it used to produce read like the feature was missing (T-0083).
+export async function GET() {
+  return methodNotAllowed(
+    "GET is not supported here — POST creates a story; list them from the Story Weaver page",
+  );
 }

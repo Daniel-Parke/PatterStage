@@ -106,7 +106,7 @@ export default function SkillSelector({
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search skills..."
+                placeholder="Search skills..." aria-label="Search skills"
                 autoFocus
                 className="w-full bg-dark-800/50 border border-white/10 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-white/20 outline-none focus:border-neon-purple/50 font-mono"
               />

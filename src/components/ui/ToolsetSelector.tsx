@@ -97,7 +97,7 @@ export default function ToolsetSelector({
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search toolsets…"
+                placeholder="Search toolsets…" aria-label="Search toolsets"
                 className="w-full pl-8 pr-3 py-2 text-xs bg-dark-950 border border-white/10 rounded text-white focus:outline-none focus:border-neon-orange/40"
               />
             </div>

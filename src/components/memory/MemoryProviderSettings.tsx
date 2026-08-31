@@ -33,12 +33,22 @@ export default function MemoryProviderSettings() {
   const [saving, setSaving] = useState(false);
   const [health, setHealth] = useState<Health | null>(null);
   const [savedMsg, setSavedMsg] = useState("");
+  // Whether a human has ever saved this endpoint, or it is still the shipped
+  // guess. See the note beside the banner below.
+  const [confirmed, setConfirmed] = useState<boolean | null>(null);
 
   useEffect(() => {
     void (async () => {
-      const res = await safeApiCall<{ active?: { config?: Cfg } }>("/api/memory/config");
-      const c = (res.data as { active?: { config?: Cfg } } | undefined)?.active?.config;
+      const res = await safeApiCall<{
+        data?: { active?: { config?: Cfg }; providers?: { type: string; isActive: boolean; confirmed: boolean }[] };
+      }>("/api/memory/config");
+      const payload = (res.data as {
+        data?: { active?: { config?: Cfg }; providers?: { type: string; isActive: boolean; confirmed: boolean }[] };
+      } | undefined)?.data;
+      const c = payload?.active?.config;
       if (c) setCfg({ host: c.host, port: c.port, bank: c.bank });
+      const activeRow = payload?.providers?.find((p) => p.isActive);
+      setConfirmed(activeRow ? activeRow.confirmed : null);
     })();
   }, []);
 
@@ -70,7 +80,10 @@ export default function MemoryProviderSettings() {
         body: { type: "hindsight", label: "Hindsight", enabled: true, makeActive: true, config: cfg },
       });
       setSavedMsg(res.ok ? "Saved — endpoint updated." : res.error ?? "Save failed");
-      if (res.ok) await test();
+      if (res.ok) {
+        setConfirmed(true);
+        await test();
+      }
     } finally {
       setSaving(false);
     }
@@ -88,6 +101,28 @@ export default function MemoryProviderSettings() {
       <p className="mb-4 text-xs text-ps-text-muted">
         PatterStage owns this connection — edit it here, no Hermes file edits. Stored in the database.
       </p>
+
+      {/* Say out loud that the endpoint below is a guess until somebody confirms
+          it. The shipped default is 127.0.0.1:9177, which is exactly where a
+          real Hindsight listens — so a second install on one machine connects
+          to the first operator's memory and renders their facts as its own.
+          That is not hypothetical: it is how a throwaway QA instance came to
+          display the operator's real memories. The auto-connect stays, because
+          it is what makes a fresh install work with no setup; what changes is
+          that the product stops presenting a guess as a decision (T-0077). */}
+      {confirmed === false && (
+        <div
+          role="status"
+          className="mb-4 rounded-lg border border-neon-orange/30 bg-neon-orange/10 px-3 py-2 text-xs text-neon-orange"
+        >
+          Using the built-in default — not yet confirmed. PatterStage guessed{" "}
+          <span className="font-mono">
+            {cfg.host}:{cfg.port}
+          </span>
+          . If another memory service is already running there, this will show its
+          memories rather than yours. Check the values and press Save to confirm.
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_120px_1fr]">
         <Field label="Host" htmlFor="mp-host">

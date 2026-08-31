@@ -32,6 +32,12 @@ import {
   tokenMatches,
 } from "@/lib/auth-token";
 import { isReadOnly, readOnlyMessage } from "@/lib/read-only";
+import {
+  authClientKey,
+  authPenaltySeconds,
+  clearAuthFailures,
+  recordAuthFailure,
+} from "@/lib/auth-throttle";
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
@@ -188,6 +194,22 @@ export function proxy(request: NextRequest): NextResponse {
     return readOnlyRefusal ? refuseReadOnly() : NextResponse.next();
   }
 
+  // FAILED-AUTH THROTTLE (T-0083, operator ruling 2). Checked before the token
+  // is read or compared, so a client inside its penalty window gets no
+  // comparison at all — which is the only version that actually slows a brute
+  // force down. The window is capped at MAX_AUTH_PENALTY_SECONDS precisely
+  // because it refuses valid tokens too: on loopback the operator and an
+  // attacker are the same client, and an unbounded lock would be a denial of
+  // service against the operator.
+  const clientKey = authClientKey(request.headers);
+  const penalty = authPenaltySeconds(clientKey);
+  if (penalty > 0) {
+    return NextResponse.json(
+      { error: `Too many failed sign-in attempts. Try again in ${penalty}s.` },
+      { status: 429, headers: { "Retry-After": String(penalty) } },
+    );
+  }
+
   const expected = readAuthToken();
   if (!expected) {
     // Fail CLOSED. A missing token file means boot has not minted one yet; the
@@ -203,7 +225,11 @@ export function proxy(request: NextRequest): NextResponse {
   //     (and from the browser history / referrer).
   const handoff = request.nextUrl.searchParams.get(TOKEN_QUERY_PARAM);
   if (handoff && isSafe) {
-    if (!tokenMatches(handoff, expected)) return unauthorized(request);
+    if (!tokenMatches(handoff, expected)) {
+      recordAuthFailure(clientKey);
+      return unauthorized(request);
+    }
+    clearAuthFailures(clientKey);
     const clean = request.nextUrl.clone();
     clean.searchParams.delete(TOKEN_QUERY_PARAM);
     const response = NextResponse.redirect(clean);
@@ -220,12 +246,22 @@ export function proxy(request: NextRequest): NextResponse {
   // 2b. Bearer beats cookie: a bearer request is not CSRF-able, so it skips (3).
   const bearer = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   if (bearer) {
-    if (!tokenMatches(bearer, expected)) return unauthorized(request);
+    if (!tokenMatches(bearer, expected)) {
+      recordAuthFailure(clientKey);
+      return unauthorized(request);
+    }
+    clearAuthFailures(clientKey);
     return readOnlyRefusal ? refuseReadOnly() : NextResponse.next();
   }
 
   const cookie = request.cookies.get(SESSION_COOKIE)?.value;
-  if (!tokenMatches(cookie, expected)) return unauthorized(request);
+  if (!tokenMatches(cookie, expected)) {
+    // A request carrying NO cookie at all is the normal first visit, not an
+    // attempt: counting it would penalise a browser for arriving.
+    if (cookie) recordAuthFailure(clientKey);
+    return unauthorized(request);
+  }
+  clearAuthFailures(clientKey);
 
   // 3. Cookie-authenticated writes must be same-origin.
   if (!isSafe && !isSameOrigin(request)) {

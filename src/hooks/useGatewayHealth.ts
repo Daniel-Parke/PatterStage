@@ -29,6 +29,12 @@ export interface GatewayHealth {
    * API_SERVER_KEY); `null` during initial load.
    */
   authConfigured: boolean | null;
+  /**
+   * WHICH gateway was probed, e.g. `http://127.0.0.1:8652`. `null` until the
+   * first probe answers. The offline banner names it rather than guessing a
+   * port (T-0080).
+   */
+  baseUrl: string | null;
   /** Whether both registry and disk have an agent default model set */
   agentDefaultModelSet: boolean | null;
   /** Model IDs from the registry catalog */
@@ -67,6 +73,7 @@ export function useGatewayHealth(): GatewayHealth & {
 } {
   const [online, setOnline] = useState<boolean | null>(null);
   const [authConfigured, setAuthConfigured] = useState<boolean | null>(null);
+  const [baseUrl, setBaseUrl] = useState<string | null>(null);
   const [agentDefaultModelSet, setAgentDefaultModelSet] = useState<boolean | null>(null);
   const [registryModelIds, setRegistryModelIds] = useState<string[]>([]);
   const [modelLabels, setModelLabels] = useState<Record<string, string>>({});
@@ -81,13 +88,18 @@ export function useGatewayHealth(): GatewayHealth & {
   // as offline — byte-equivalent to the pre-refactor
   // `result.ok ? result.data?.online === true : false` shape.
   const checkOnline = useCallback(async () => {
-    const data = await safeApiCallData<{ online: boolean; authConfigured?: boolean }>(
-      GATEWAY_HEALTH_URL,
-      { signal: AbortSignal.timeout(3000) },
-    );
+    const data = await safeApiCallData<{
+      online: boolean;
+      authConfigured?: boolean;
+      baseUrl?: string;
+    }>(GATEWAY_HEALTH_URL, { signal: AbortSignal.timeout(3000) });
     setOnline(data?.online === true);
     // Only meaningful when reachable; null when the probe failed entirely.
     setAuthConfigured(data?.online === true ? data?.authConfigured !== false : null);
+    // Kept from the last answer when a probe fails to reach OUR OWN server:
+    // the gateway address did not change because the browser lost the tab's
+    // connection, and blanking it would drop the banner back to a guess.
+    if (typeof data?.baseUrl === "string" && data.baseUrl) setBaseUrl(data.baseUrl);
   }, []);
 
   // ── Check agent default model setup ─────────────────────────
@@ -185,6 +197,7 @@ export function useGatewayHealth(): GatewayHealth & {
   return {
     online,
     authConfigured,
+    baseUrl,
     agentDefaultModelSet,
     registryModelIds,
     modelLabels,

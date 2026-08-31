@@ -76,6 +76,8 @@ export function useModelsPage() {
     handlePull: actions.handlePull,
     handleSaved: actions.handleSaved,
     handleDelete: actions.handleDelete,
+    handleDeleteCredential: actions.handleDeleteCredential,
+    busyCredentialId: actions.busyCredentialId,
     handleSetDefault: actions.handleSetDefault,
     handleBulkAuxiliaryChange: actions.handleBulkAuxiliaryChange,
     handleFallbackReorder: chain.handleFallbackReorder,

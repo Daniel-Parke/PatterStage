@@ -31,7 +31,7 @@ export function AddMemoryModal({
           <textarea
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
-            placeholder="What should the agent remember?"
+            placeholder="What should the agent remember?" aria-label="What should the agent remember?"
             className={`w-full h-32 ${HINDSIGHT_TEXTAREA_CLASS}`}
           />
         </div>
@@ -41,7 +41,7 @@ export function AddMemoryModal({
             type="text"
             value={tags}
             onChange={(e) => onTagsChange(e.target.value)}
-            placeholder="e.g. user_pref, project, tech"
+            placeholder="e.g. user_pref, project, tech" aria-label="e.g. user_pref, project, tech"
             className={HINDSIGHT_TEXT_INPUT_CLASS}
           />
         </div>
@@ -87,7 +87,7 @@ export function DirectiveModal({
             type="text"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
-            placeholder="e.g. Always cite sources"
+            placeholder="e.g. Always cite sources" aria-label="e.g. Always cite sources"
             className={HINDSIGHT_TEXT_INPUT_CLASS}
           />
         </div>
@@ -96,7 +96,7 @@ export function DirectiveModal({
           <textarea
             value={content}
             onChange={(e) => onContentChange(e.target.value)}
-            placeholder="The rule to inject into agent prompts..."
+            placeholder="The rule to inject into agent prompts..." aria-label="The rule to inject into agent prompts"
             className={`w-full h-28 ${HINDSIGHT_TEXTAREA_CLASS}`}
           />
         </div>
@@ -107,7 +107,7 @@ export function DirectiveModal({
               type="number"
               value={priority}
               onChange={(e) => onPriorityChange(e.target.value)}
-              placeholder="0"
+              placeholder="0" aria-label="0"
               className={HINDSIGHT_TEXT_INPUT_CLASS}
             />
           </div>
@@ -117,7 +117,7 @@ export function DirectiveModal({
               type="text"
               value={tags}
               onChange={(e) => onTagsChange(e.target.value)}
-              placeholder="e.g. safety, behavior"
+              placeholder="e.g. safety, behavior" aria-label="e.g. safety, behavior"
               className={HINDSIGHT_TEXT_INPUT_CLASS}
             />
           </div>
@@ -165,7 +165,7 @@ export function MentalModelModal({
             type="text"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
-            placeholder="e.g. User Communication Style"
+            placeholder="e.g. User Communication Style" aria-label="e.g. User Communication Style"
             className={HINDSIGHT_TEXT_INPUT_CLASS}
           />
         </div>
@@ -174,7 +174,7 @@ export function MentalModelModal({
           <textarea
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            placeholder="e.g. What are Daniel's communication preferences and working style?"
+            placeholder="e.g. What are Daniel's communication preferences and working style?" aria-label="e.g. What are Daniel's communication preferences and working style?"
             className={`w-full h-28 ${HINDSIGHT_TEXTAREA_CLASS}`}
           />
           <p className="text-xs text-ps-text-muted mt-1">
@@ -189,7 +189,7 @@ export function MentalModelModal({
             type="text"
             value={tags}
             onChange={(e) => onTagsChange(e.target.value)}
-            placeholder="e.g. user, preferences"
+            placeholder="e.g. user, preferences" aria-label="e.g. user, preferences"
             className={HINDSIGHT_TEXT_INPUT_CLASS}
           />
         </div>

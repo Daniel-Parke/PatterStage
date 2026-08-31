@@ -9,7 +9,12 @@
 // Polling is the source of truth; SSE (runtime.streamRunEvents) is UX-only.
 // ═══════════════════════════════════════════════════════════════
 
-import { listActiveRuns, updateRun, type RunRecord } from "@/lib/runs-repository";
+import {
+  getRun as getLocalRun,
+  listActiveRuns,
+  updateRun,
+  type RunRecord,
+} from "@/lib/runs-repository";
 import { updateMission, getMission } from "@/lib/missions/mission-repository";
 import { closeSessionForMission } from "@/lib/sessions/session-repository";
 import { runtime } from "@/lib/runtime";
@@ -144,6 +149,10 @@ async function reconcileComposerRun(run: RunRecord): Promise<boolean> {
   const cap = DEFAULT_MAX_RUN_MINUTES + GRACE_MINUTES;
   try {
     const result = await runtime.getRun(run.runId, run.profileName ?? undefined);
+    // It answered, so it is not missing. A gateway restarting mid-poll can 404
+    // once and reply normally moments later; that run was never lost, and any
+    // future disappearance must start its window from zero (T-0078).
+    clearNotFound(run.id);
     if (result.status === "started") {
       if (age > cap) {
         await runtime.stopRun(run.runId, run.profileName ?? undefined).catch(() => {});
@@ -162,8 +171,12 @@ async function reconcileComposerRun(run: RunRecord): Promise<boolean> {
     return true;
   } catch (err) {
     if (err instanceof RuntimeRequestError && err.status === 404) {
-      await finalizeComposerStage(run, "failed", null, "backend no longer has this stage run (404)");
-      return true;
+      // Same shape as the mission branch: inside the grace, fall through to the
+      // stage deadline rather than returning early.
+      if (notFoundPersisted(run.id)) {
+        await finalizeComposerStage(run, "failed", null, "backend no longer has this stage run (404)");
+        return true;
+      }
     }
     if (age > cap) {
       await finalizeComposerStage(run, "failed", null, "backend unreachable past the stage deadline");
@@ -171,6 +184,74 @@ async function reconcileComposerRun(run: RunRecord): Promise<boolean> {
     }
     return false; // transient — retry next tick
   }
+}
+
+/**
+ * How long a 404 must PERSIST before it is accepted as the backend's final
+ * answer about a run.
+ *
+ * Hermes keeps its run registry in memory, so a restart answers 404 for every
+ * live run. Treating the first 404 as terminal — which is what this did — fails
+ * every in-flight mission and Composer stage within one tick of an upgrade or a
+ * crash (T-0078). Roughly eight scheduler ticks: long enough that a bounce
+ * heals itself, short enough that a genuinely lost run does not hold the
+ * single-flight gate for the 125-minute deadline.
+ */
+export const RUN_NOT_FOUND_GRACE_MS = 2 * 60_000;
+
+/**
+ * When each run was FIRST seen missing. Process-local on purpose.
+ *
+ * A counter would not do: POST /api/runs/reconcile is public and the smokes
+ * poll it every second, so "N consecutive 404s" can elapse in N seconds and
+ * measures how often somebody asked rather than how long the run has been gone.
+ * Elapsed time is the only honest evidence here.
+ *
+ * Losing this map on restart costs one fresh window — a new process making a
+ * new observation, which is arguably the more correct behaviour — and the
+ * deadline cap remains the backstop either way. A column would publish a
+ * process-local judgement as durable operator-facing truth, and nothing renders
+ * it.
+ */
+const firstNotFoundAt = new Map<string, number>();
+
+/**
+ * Is this run still ours to finalize?
+ *
+ * reconcile snapshots listActiveRuns and THEN awaits the gateway per row, so a
+ * cancellation landing during that await would otherwise be overwritten by a
+ * verdict computed before it happened -- resurrecting a run the operator
+ * stopped, and re-opening the mission behind it. T-0076 closed the same race on
+ * the Composer side; this is the mission half, which predates it (T-0078).
+ */
+function stillActive(runPk: string): boolean {
+  const fresh = getLocalRun(runPk);
+  // A row that has VANISHED is not ours either: deleting a mission cascades to
+  // its runs, so this is reachable when a delete lands during the await. There
+  // is nothing left to finalize, and writing mission state for a run that no
+  // longer exists would be inventing history.
+  if (!fresh) return false;
+  return fresh.status === "started";
+}
+
+/** Has this run been answering 404 for longer than the grace? Records if new. */
+function notFoundPersisted(runPk: string): boolean {
+  const first = firstNotFoundAt.get(runPk);
+  if (first === undefined) {
+    firstNotFoundAt.set(runPk, Date.now());
+    return false;
+  }
+  return Date.now() - first >= RUN_NOT_FOUND_GRACE_MS;
+}
+
+/** A run answered, or ended — it is not missing any more. */
+function clearNotFound(runPk: string): void {
+  firstNotFoundAt.delete(runPk);
+}
+
+/** Test seam: the tracker outlives a jest `beforeEach`, so tests reset it. */
+export function resetNotFoundTracker(): void {
+  firstNotFoundAt.clear();
 }
 
 /** Poll one active run and write any terminal transition. Returns true if it advanced. */
@@ -190,6 +271,10 @@ async function reconcileOne(run: RunRecord): Promise<boolean> {
 
   try {
     const result = await runtime.getRun(run.runId, run.profileName ?? undefined);
+    // It answered, so it is not missing. A gateway restarting mid-poll can 404
+    // once and reply normally moments later; that run was never lost, and any
+    // future disappearance must start its window from zero (T-0078).
+    clearNotFound(run.id);
     if (result.status === "started") {
       // Enforce a DECLARED timeout even if the backend still reports running, so
       // a runaway mission can't hold the single-flight gate forever.
@@ -203,6 +288,10 @@ async function reconcileOne(run: RunRecord): Promise<boolean> {
       return false; // still running, within its window
     }
 
+    // Someone may have cancelled this run while we were awaiting the gateway.
+    // Their decision is newer than this verdict and wins.
+    if (!stillActive(run.id)) return true;
+
     updateRun(run.id, {
       status: result.status,
       output: result.output ?? null,
@@ -213,11 +302,19 @@ async function reconcileOne(run: RunRecord): Promise<boolean> {
     finalizeAndRecord(run, result.status, result.output ?? result.error ?? null);
     return true;
   } catch (err) {
-    // 404 → the backend no longer knows this run; treat as terminal failure.
+    // 404 → the backend no longer knows this run. Terminal, but only once it
+    // has PERSISTED: a Hermes restart 404s every live run, and failing them all
+    // on the first observation is a fleet-wide false negative (T-0078).
     if (err instanceof RuntimeRequestError && err.status === 404) {
-      updateRun(run.id, { status: "failed", error: "backend no longer has this run (404)" });
-      finalizeAndRecord(run, "failed", "backend lost the run");
-      return true;
+      // Inside the grace, fall THROUGH to the deadline check below rather than
+      // returning early: the grace delays a 404 verdict, and must never become
+      // a way for a permanently-404ing backend to hold the single-flight gate
+      // open past the run's own deadline.
+      if (notFoundPersisted(run.id)) {
+        updateRun(run.id, { status: "failed", error: "backend no longer has this run (404)" });
+        finalizeAndRecord(run, "failed", "backend lost the run");
+        return true;
+      }
     }
     // Transient (gateway down / timeout). Self-heal: if the run is older than its
     // deadline, the backend has been unreachable past the point we'd expect a

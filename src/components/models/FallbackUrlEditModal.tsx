@@ -47,7 +47,7 @@ export default function FallbackUrlEditModal({
             type="text"
             value={url}
             onChange={(e) => onUrlChange(e.target.value)}
-            placeholder="https://api.openai.com/v1"
+            placeholder="https://api.openai.com/v1" aria-label="https://api.openai.com/v1"
             className="w-full bg-dark-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-mono outline-none focus:border-neon-purple/50 transition-colors"
             autoFocus
           />

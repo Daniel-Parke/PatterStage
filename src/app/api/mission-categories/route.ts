@@ -166,7 +166,11 @@ export async function DELETE(request: NextRequest) {
       return badRequest("Reassign target category not found");
     }
 
-    deleteCategory(id, reassignToId);
+    // deleteCategory already answers whether the row existed; the route used
+    // to throw that away and echo the id back as deleted, so DELETE with an
+    // unknown id answered 200 and did nothing. The sibling route
+    // schedules/[id] has always got this right (T-0079).
+    if (!deleteCategory(id, reassignToId)) return notFound("Category not found");
     return ok({ deleted: id });
   } catch (error) {
     const msg = toError(error).message || "Delete failed";

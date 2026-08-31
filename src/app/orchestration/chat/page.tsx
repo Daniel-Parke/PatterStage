@@ -42,9 +42,8 @@ export default function ChatPage() {
     handleNewChat,
     handleDeleteConversation,
     handleDownloadConversation,
-    gatewayOnline,
-    gatewayAuthConfigured,
-    agentDefaultModelSet,
+    gatewayUrl,
+    bannerStates,
     messages,
     isStreaming,
     pendingApproval,
@@ -176,26 +175,22 @@ export default function ChatPage() {
           {/* Main chat area */}
           <div className="flex-1 flex flex-col min-w-0 min-h-0">
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-              {!hasActiveConversation && messages.length === 0 && (
-                <>
-                  {gatewayOnline === false && <GatewayBanner status="offline" />}
-                  {gatewayOnline === true && gatewayAuthConfigured === false && (
-                    <GatewayBanner status="auth-missing" />
-                  )}
-                  {gatewayOnline !== false &&
-                    gatewayAuthConfigured !== false &&
-                    agentDefaultModelSet === false && <GatewayBanner status="model-missing" />}
-                  {gatewayOnline === null && <GatewayBanner status="checking" />}
-                </>
-              )}
+              {bannerStates.map((state) => (
+                <GatewayBanner key={state} status={state} gatewayUrl={gatewayUrl} />
+              ))}
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-24">
                   <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
                     <MessageCircle className="w-8 h-8 text-ps-text-muted" />
                   </div>
-                  <h3 className="text-lg font-semibold text-ps-text-secondary mb-1">
+                  {/* h2, not h3. PageHeader renders the page's only h1, and this
+                      empty-state title is the next level down — a jump to h3
+                      tells a screen-reader user there is a section they missed
+                      (P0-3, found by a keyboard/heading-order pass). The size is
+                      a class, not the tag. */}
+                  <h2 className="text-lg font-semibold text-ps-text-secondary mb-1">
                     {hasActiveConversation ? activeConversation?.title || "New Chat" : "Chat with your agent"}
-                  </h3>
+                  </h2>
                   <p className="text-sm text-ps-text-muted mb-2 max-w-md">
                     {mode === "agent"
                       ? "Agent mode: the assistant can use tools and remembers this conversation."
@@ -221,7 +216,7 @@ export default function ChatPage() {
                 />
               )}
               <div className="flex items-end gap-2">
-                <textarea
+                <textarea aria-label="Message"
                   ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}

@@ -21,7 +21,7 @@ import { appendAuditLine } from "@/lib/audit-log";
 import { resolveAgentSlug } from "@/lib/agents/roster";
 import { createSchedule } from "@/lib/schedules-repository";
 import { parseSchedule, scheduleDisplayFromParsed } from "@/lib/schedule/parse-schedule";
-import { computeNextRun } from "@/lib/schedule/next-run";
+import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
 import { dispatchMissionNow } from "@/lib/missions/mission-dispatch";
 import { parseMissionBodyFields } from "@/lib/missions/mission-body";
 import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
@@ -30,6 +30,7 @@ import { parseDispatchMode, DISPATCH_MODES, type DispatchMode } from "@/lib/disp
 
 import { parseCategoryIdOrError } from "./shared";
 
+import { missionNameFrom } from "@/lib/missions/mission-name";
 export async function handleDispatchMission(
   body: Record<string, unknown>,
 ): Promise<NextResponse> {
@@ -109,7 +110,11 @@ export async function handleDispatchMission(
   }
 
   const mission = createMission({
-    name: (name as string)?.trim() || "Untitled Mission",
+    // Derived from the instruction when no name was given, so the board does
+    // not fill with rows called "Untitled Mission" that nobody can tell apart.
+    // Story Weaver already titles from the premise for exactly this reason
+    // (T-0079).
+    name: missionNameFrom(name, instruction),
     prompt,
     profileId: resolvedProfileId ?? profileId,
     localDirs: dirsNorm,
@@ -147,6 +152,16 @@ export async function handleDispatchMission(
     const parsedSchedule = parseSchedule(scheduleVal!);
     if (parsedSchedule.kind === "invalid") {
       return badRequest(`Unrecognized schedule: ${scheduleVal}`);
+    }
+    // Shape is not satisfiability. `0 0 30 2 *` is five well-formed fields
+    // naming a date that never comes: it stored enabled, computed a null
+    // next-run, and getDueSchedules filters `next_run_at IS NOT NULL` -- so
+    // the row sat enabled forever and dead forever (T-0079).
+    if (!scheduleCanEverFire(scheduleVal!)) {
+      return badRequest(
+        `Schedule "${scheduleVal}" can never fire: it names a date that does not ` +
+          `exist, or a field outside its range. Check the day-of-month against the month.`,
+      );
     }
 
     try {

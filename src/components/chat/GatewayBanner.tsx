@@ -2,20 +2,35 @@
 // GatewayBanner — Connection-status banners for the chat page
 // ═══════════════════════════════════════════════════════════════
 //
-// Three states are surfaced as full-width banners shown when the
-// page has no active session: gateway offline (red), agent default
-// model missing (orange), and gateway check still in-flight (muted
-// spinner). All three share the same outer card layout and only
-// differ in colour, icon, title, and body content.
+// Four states are surfaced as full-width banners: gateway offline
+// (red), gateway up but unauthenticated (orange), agent default model
+// missing (orange), and gateway check still in-flight (muted spinner).
+// All share the same outer card layout and only differ in colour, icon,
+// title, and body content.
+//
+// WHICH of them show WHERE is not decided here -- see
+// `gateway-banner-states.ts`, which the page reads. This file draws what
+// it is told to draw.
 
 "use client";
 
 import { AlertTriangle, Loader2 } from "lucide-react";
 
-type GatewayStatus = "offline" | "auth-missing" | "model-missing" | "checking";
+import type { GatewayBannerState } from "./gateway-banner-states";
+
+type GatewayStatus = GatewayBannerState;
 
 interface GatewayBannerProps {
   status: GatewayStatus;
+  /**
+   * The gateway that was actually probed, e.g. `http://127.0.0.1:8652`.
+   *
+   * This banner used to say "port 8642" as a literal, and said it while the
+   * gateway was on 8652 -- sending the operator to check a port that was not
+   * the one that was down (T-0080). `null` while the first probe is in flight,
+   * and the copy then omits the address rather than inventing one.
+   */
+  gatewayUrl?: string | null;
 }
 
 /**
@@ -37,6 +52,29 @@ function renderBody(body: string) {
   });
 }
 
+function copyFor(
+  status: GatewayStatus,
+  gatewayUrl: string | null,
+): { tone: "red" | "orange" | "muted"; title: string; body: string } {
+  if (status !== "offline") return COPY[status];
+  // Naming the address is the whole point, so it goes in as a {code} token
+  // rather than prose -- an operator copying it into a curl or a browser bar
+  // should get exactly what PatterStage tried.
+  //
+  // It goes SECOND deliberately. `renderBody` emphasises the first code token
+  // and mutes the rest, and across all three banners that first token is the
+  // thing to act on: the key to set, the command to run. Leading with the
+  // address would move the emphasis onto a fact and away from the remedy.
+  const where = gatewayUrl ? ` PatterStage is looking for it at {code}${gatewayUrl}{/code}.` : "";
+  return {
+    tone: "red",
+    title: "Gateway Offline",
+    body:
+      "The Hermes Gateway is not responding. " +
+      `Start it with: {code}hermes gateway start{/code}.${where}`,
+  };
+}
+
 const COPY: Record<
   GatewayStatus,
   { tone: "red" | "orange" | "muted"; title: string; body: string }
@@ -45,7 +83,7 @@ const COPY: Record<
     tone: "red",
     title: "Gateway Offline",
     body:
-      "The Hermes Gateway (port 8642) is not responding. " +
+      "The Hermes Gateway is not responding. " +
       "Start it with: {code}hermes gateway start{/code}",
   },
   "auth-missing": {
@@ -74,8 +112,8 @@ const COPY: Record<
   },
 };
 
-export default function GatewayBanner({ status }: GatewayBannerProps) {
-  const copy = COPY[status];
+export default function GatewayBanner({ status, gatewayUrl = null }: GatewayBannerProps) {
+  const copy = copyFor(status, gatewayUrl);
 
   if (copy.tone === "muted") {
     return (

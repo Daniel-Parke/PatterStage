@@ -2,6 +2,7 @@
 
 import { AlertTriangle } from "lucide-react";
 import { pluralise } from "@/lib/utils";
+import { driftBannerHeadline } from "./drift-banner-headline";
 
 interface ProfilesDriftBannerProps {
   driftCount: number;
@@ -16,7 +17,8 @@ export default function ProfilesDriftBanner({
   onPushAll,
   pushing,
 }: ProfilesDriftBannerProps) {
-  if (driftCount === 0 && errorCount === 0) return null;
+  const headline = driftBannerHeadline({ driftCount, errorCount });
+  if (!headline) return null;
 
   const parts: string[] = [];
   if (driftCount > 0) {
@@ -31,7 +33,7 @@ export default function ProfilesDriftBanner({
       <AlertTriangle className="w-4 h-4 text-neon-orange/90 flex-shrink-0" />
       <div className="flex-1 min-w-0">
         <span className="text-xs font-mono text-neon-orange/90">
-          Profile drift — database and Hermes disk differ
+          {headline}
         </span>
         <p className="mt-1 text-xs font-mono text-ps-text-muted">
           {parts.join(" · ")}. Pull imports disk into SQLite; Push writes canonical config.yaml.

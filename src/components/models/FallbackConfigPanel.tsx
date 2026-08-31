@@ -87,7 +87,7 @@ export default function FallbackConfigPanel({
           <label className="block text-xs font-mono text-ps-text-muted uppercase tracking-widest mb-2">
             Retry Threshold
           </label>
-          <input
+          <input aria-label="Retry threshold"
             type="number"
             min="0"
             max="10"

@@ -8,6 +8,7 @@
 
 import type { StoryArc as StoryArcType, ChapterOutline } from "@/modules/rec-room/types";
 
+import { normaliseStoryCharacters } from "../lib/characters";
 export function safeArc(arc: unknown): StoryArcType | undefined {
   // Handle JSON string stored in DB (common for SQLite JSON columns)
   if (typeof arc === "string") {
@@ -75,7 +76,10 @@ export function buildMasterPrompt(config: Record<string, unknown>): string {
   };
   const wcRange = wordRanges[(config.wordCountRange as string) || "standard"] || "1800-2500";
 
-  const characters = (config.characters as Array<Record<string, string>>) || [];
+  // Normalised, not cast. A caller writing `characters: ["QA-Bot"]` -- which
+  // reads as perfectly reasonable, and which nothing validates -- used to reach
+  // the model as "- undefined (undefined): undefined" (T-0079).
+  const characters = normaliseStoryCharacters(config.characters);
   const charProfiles = characters.map(c => {
     const parts = [`- ${c.name} (${c.role}): ${c.description}`];
     if (c.personality) parts.push(`  Personality: ${c.personality}`);

@@ -460,6 +460,18 @@ export function finalizeComposerNodeRun(
 ): string | null {
   const nodeRun = getNodeRunByRunId(runId);
   if (!nodeRun) return null;
+
+  // A run that has ENDED keeps its ending. Reconcile snapshots the active set,
+  // then awaits the gateway per row — so a cancellation landing during that
+  // await would otherwise come back here holding a stale verdict and overwrite
+  // the stage's status and merge dead output into a finished run's context.
+  //
+  // The `runs` row being written `cancelled` already removes it from
+  // listActiveRuns, so this is defence in depth for the in-flight await and for
+  // any future writer that leaves the row `started` (T-0076).
+  const owningRun = getComposerRun(nodeRun.composerRunId);
+  if (owningRun && isTerminalComposerRunStatus(owningRun.status)) return null;
+
   const node = getNode(nodeRun.nodeId);
 
   const status = runStatus === "completed" ? "completed" : "failed";

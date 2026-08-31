@@ -88,3 +88,13 @@ The records under org/tasks/ are canonical.
 | T-0073 | standard | R0 | done | t0073-f9-record-2026-08-31 |
 | T-0074 | standard | R0 | proposed | t0074-missions-actions-adr-2026-08-31 |
 | T-0075 | standard | R1 | done | t0075-sweep-denominators-2026-08-31 |
+| T-0076 | standard | R2 | done | t0076-composer-cancel-2026-08-31 |
+| T-0077 | standard | R2 | done | t0077-memory-switch-2026-08-31 |
+| T-0078 | standard | R1 | done | t0078-harnesses-2026-08-31 |
+| T-0079 | standard | R1 | done | t0079-boundary-column-2026-08-31 |
+| T-0080 | standard | R1 | done | t0080-gateway-error-2026-08-31 |
+| T-0081 | standard | R1 | done | t0081-numbers-2026-08-31 |
+| T-0082 | standard | R1 | done | t0082-push-truth-2026-08-31 |
+| T-0083 | standard | R2 | done | t0083-guards-doors-2026-08-31 |
+| T-0084 | standard | R0 | done | t0084-records-2026-08-31 |
+| T-0085 | standard | R1 | done | t0085-form-labels-2026-09-01 |

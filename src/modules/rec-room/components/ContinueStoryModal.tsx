@@ -38,7 +38,7 @@ export default function ContinueStoryModal({
           value={direction}
           onChange={(e) => onDirectionChange(e.target.value)}
           rows={3}
-          placeholder="e.g., A new threat emerges from the east, forcing the heroes to ally with old enemies..."
+          placeholder="e.g., A new threat emerges from the east, forcing the heroes to ally with old enemies..." aria-label="e.g., A new threat emerges from the east, forcing the heroes to ally with old enemies"
           className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-green-500/30 font-mono resize-none"
         />
         <div>

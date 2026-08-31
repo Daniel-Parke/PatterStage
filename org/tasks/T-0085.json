@@ -1,0 +1,45 @@
+{
+  "id": "T-0085",
+  "intent": "P0-2 and P0-3, found by the live browser pass the 2026-08-30 QA report could not run: eight unlabelled form controls across four pages with no gate watching, and a heading-order jump on Chat.",
+  "declared": {
+    "capabilities": [
+      "edit-source"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0085-form-labels-2026-09-01",
+  "claims": [
+    "scripts/tooling/check-form-control-names.mjs",
+    "package.json",
+    "src/components/ui/",
+    "src/components/missions/",
+    "src/components/schedule/",
+    "src/app/recroom/",
+    "src/app/orchestration/chat/page.tsx",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 Every raw input, textarea and select has an accessible name.",
+    "I2 A PLACEHOLDER IS NOT A NAME. It disappears the moment the field has content.",
+    "I3 A visible label that is merely ADJACENT does not name a control. Association is htmlFor+id, or wrapping.",
+    "I4 A name that exists in only one branch is not a name -- the same rule the icon-button gate applies to buttons.",
+    "I5 An exemption costs a written reason of at least twelve characters.",
+    "I6 The gate refuses to pass on a collapsed population, because a broken walk reports no offenders and reads exactly like a clean tree.",
+    "I7 A heading level below the page h1 is h2. A jump tells a screen-reader user there is a section they missed."
+  ],
+  "the_gate_found_eleven_times_what_the_browser_pass_did": "The browser pass covered four pages and found eight. The gate walks the tree and found NINETY, of 100 controls. That ratio is the argument for a gate over a pass: a manual sweep is bounded by where somebody looked.",
+  "why_a_parser": "Two of the four ways a control can be named are STRUCTURAL -- an id matched by a <label htmlFor> anywhere in the same file, or a text-rendering <label> wrapping it -- and neither is visible to a line-oriented matcher. This is the lesson T-0050 paid for and check-icon-button-names.mjs records: a matcher that sees a fraction of its subject is worse than none, because it looks green.",
+  "where_the_names_came_from": "Three sources, in descending order of confidence. 54 from the control's own STRING-LITERAL placeholder -- truthful by construction, because the author had already written a human-readable name in the one place that stops being readable the moment somebody types. 30 from the visible <label> sitting beside the control unassociated, read by hand one at a time. 6 from the shared primitives, which gained an ariaLabel prop where they have a closed prop list, or a pragma where they are a pure {...rest} pass-through and genuinely cannot supply a name. Dynamic placeholders were deliberately NOT used as labels: a conditional placeholder is prose, not a name, and guessing at those is how a mechanical pass ships wrong labels.",
+  "mutation_finding": "Fourteen mutations against the gate, fourteen caught -- including the two that matter most: accepting `placeholder` into NAME_ATTRS (which would bless 59 of the 90 offenders), and a verdict that reports offenders and never fails the build. That second one is the T-0071 lesson built in from the start: the companion test drives the VERDICT separately from the classifier, because a gate whose tests only exercise the classifier can lose its process.exit and stay green. Two mutations needed re-expressing for escaping and were re-run rather than counted.",
+  "verification": "The gate reports 100 controls, 0 unnamed across 43 of 229 .tsx files, and is wired into `npm run lint` beside its icon-button sibling. Verified in a browser on the page the pass found worst -- Story Weaver create, previously 4 of 4 unlabelled -- which now reports 4 controls, 0 unnamed, announcing 'Give your story a name', 'Describe your story concept', 'Point of view' and 'Length'. Gate: lint 0, tsc 0, 3705 tests / 414 suites, knip 0, canary OK, build 0.",
+  "timestamps": {
+    "opened": "2026-09-01T02:35:00Z",
+    "updated": "2026-09-01T04:10:00Z",
+    "closed": "2026-09-01T04:10:00Z"
+  }
+}

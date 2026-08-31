@@ -24,6 +24,7 @@ import ModelsDriftBanner from "@/components/models/ModelsDriftBanner";
 import ModelsFallbackSection from "@/components/models/ModelsFallbackSection";
 import ModelsTableSection from "@/components/models/ModelsTableSection";
 import ModelInsights from "@/components/models/ModelInsights";
+import CredentialsPanel from "@/components/models/CredentialsPanel";
 import ModelsTaskDefaultsSection from "@/components/models/ModelsTaskDefaultsSection";
 import { pluralise } from "@/lib/utils";
 import { useModelsPage } from "@/hooks/useModelsPage";
@@ -64,6 +65,8 @@ export default function ModelsPage() {
     handlePull,
     handleSaved,
     handleDelete,
+    handleDeleteCredential,
+    busyCredentialId,
     handleSetDefault,
     handleBulkAuxiliaryChange,
     handleFallbackReorder,
@@ -163,6 +166,11 @@ export default function ModelsPage() {
         ) : (
           <>
             <ModelInsights models={models} credentialCount={credentials.length} />
+            <CredentialsPanel
+              credentials={credentials}
+              onDelete={handleDeleteCredential}
+              busyId={busyCredentialId}
+            />
             <ModelsTableSection
               models={models}
               defaults={defaults}

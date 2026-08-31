@@ -17,7 +17,7 @@ import { pushProfileToHermes } from "@/modules/hermes/lib/profile-push";
 import { removeProfileFromDisk } from "@/modules/hermes/lib/profile-discovery";
 import { resolveProfileHermesHome } from "@/modules/hermes/lib/profile-paths";
 import { slugifyDisplayName, validateProfileDisplayName, DEFAULT_PROFILE_SLUG } from "@/lib/profile-slug";
-import { badRequest, conflict, notFound, ok, serverError } from "@/lib/api-response";
+import { badRequest, conflict, notFound, ok, serverError, methodNotAllowed } from "@/lib/api-response";
 
 export async function PUT(
   request: NextRequest,
@@ -146,4 +146,12 @@ export async function DELETE(
       "Failed to delete profile",
     );
   }
+}
+
+// GET is not supported on a single profile: the list route returns every
+// profile in full, so there is nothing this could add.
+export async function GET() {
+  return methodNotAllowed(
+    "GET is not supported here — /api/agent/profiles returns every profile in full",
+  );
 }

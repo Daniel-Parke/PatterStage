@@ -207,7 +207,7 @@ export default function SpendPanel({ summary, onSave, saving = false }: SpendPan
               <label className="text-xs text-ps-text-muted" htmlFor="spend-limit">
                 USD per
               </label>
-              <select
+              <select aria-label="Spend limit period"
                 id="spend-period"
                 data-testid="spend-period-select"
                 value={draftPeriod}

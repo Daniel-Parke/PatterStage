@@ -15,11 +15,18 @@ export function SearchInput({
   onChange,
   placeholder = "Search...",
   accentColor = "cyan",
+  ariaLabel,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   accentColor?: string;
+  /**
+   * What this box searches. Defaults to "Search", which is honest for a
+   * magnifier-and-field with no other context; a caller with something more
+   * specific should say so (T-0083 / the form-control gate).
+   */
+  ariaLabel?: string;
 }) {
   const focusBorder: Record<string, string> = {
     cyan: "focus:border-neon-cyan/50",
@@ -36,6 +43,7 @@ export function SearchInput({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        aria-label={ariaLabel ?? placeholder ?? "Search"}
         placeholder={placeholder}
         className={`w-full bg-dark-900/50 border border-white/10 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-white/30 outline-none transition-colors font-mono ${focusBorder[accentColor] || focusBorder.cyan}`}
       />

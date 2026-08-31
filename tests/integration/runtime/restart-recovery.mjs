@@ -104,6 +104,18 @@ function startServer() {
         PS_DATA_DIR: HOME,
         PS_AUTH_MODE: "none",
         PS_SEARCH_PROVIDER: "none",
+        // Pin the gateway at a port nothing can be listening on.
+        //
+        // WITHOUT THIS THE HARNESS IS MACHINE-DEPENDENT, and it failed exactly
+        // that way on a reviewer's box. The default gateway is 8642 -- the
+        // mock's own port -- and this file inherits `process.env`, so a
+        // developer running mock-hermes (or a real Hermes) gets a live answer
+        // for the seeded `backend-abc`: `404 run not found`. reconcile treats a
+        // 404 as authoritative, and the CONTROL below then fails on the first
+        // tick, taking the mission-result assertion with it. A dead port yields
+        // ECONNREFUSED, which is deadline-gated, which is the branch the
+        // control's comment has always described.
+        HERMES_GATEWAY_URL: "http://127.0.0.1:9",
       },
     },
   );
@@ -169,9 +181,12 @@ async function main() {
   check("mission created over HTTP", typeof missionId === "string", `status ${created.status}`);
 
   // ── Seed four things mid-flight, as a crash would leave them ──
+  // `seededAt` is hoisted so the CONTROL below can prove the row was not
+  // written, rather than merely that it still reads `started`.
+  const seededAt = new Date().toISOString();
   {
     const db = open();
-    const now = new Date().toISOString();
+    const now = seededAt;
 
     // 1. A run that never reached the backend. reconcileRunsOnBoot's subject.
     db.prepare(
@@ -233,12 +248,25 @@ async function main() {
   check("…and its mission is finalised too", mission?.status === "failed", `status ${mission?.status}`);
   check("…with the interruption as the result", /interrupt/i.test(mission?.result ?? ""), mission?.result);
 
-  // 2. CONTROL: the submitted run is untouched.
-  const run2 = one("SELECT status FROM runs WHERE id='run-submitted'");
+  // 2. CONTROL: the submitted run is untouched — by ANY writer.
+  //
+  // Asserting only `status === 'started'` was too weak, and this file's own
+  // header says why: two writers can agree on a status and disagree about the
+  // explanation. Every writer that touches a run here signs its work in
+  // `error` ("PatterStage restarted before the run was submitted", "backend no
+  // longer has this run (404)", "backend unreachable past the run deadline"),
+  // and any writer at all moves `updated_at`. So the control asserts the row
+  // was NOT WRITTEN, rather than that it happens to still read `started`.
+  const run2 = one("SELECT status, error, updated_at FROM runs WHERE id='run-submitted'");
   check(
     "CONTROL: a run that reached the backend is NOT failed on boot",
     run2?.status === "started",
     `status ${run2?.status} — boot recovery must not report a job the backend may still be running as dead`,
+  );
+  check(
+    "…and no writer touched it at all",
+    run2?.error === null && run2?.updated_at === seededAt,
+    `error ${JSON.stringify(run2?.error)}, updated_at ${run2?.updated_at} vs seeded ${seededAt}`,
   );
 
   // 3. The stuck research run is failed.

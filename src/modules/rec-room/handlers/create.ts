@@ -16,6 +16,7 @@ import type { StoryArc as StoryArcType, ChapterOutline } from "@/modules/rec-roo
 import { buildMasterPrompt, getChapterCount, safeArc, validateChapterOutput } from "./shared";
 
 import { chapterTitle } from "../lib/chapter-title";
+import { normaliseStoryCharacters } from "../lib/characters";
 export async function handleCreate(body: Record<string, unknown>): Promise<NextResponse> {
   const { title, config } = body;
   if (!config || !(config as Record<string, unknown>)?.premise) {
@@ -100,7 +101,10 @@ export async function handleCreate(body: Record<string, unknown>): Promise<NextR
       storyArc = {
         storyArc: `A ${cfg.genre || "general"} story.`,
         fixedPlotPoints: Array.from({ length: expectedChapters }, (_, i) => ({ chapter: i + 1, event: `Chapter ${i + 1} advances the plot` })),
-        characterArcs: ((cfg.characters as Array<Record<string, string>>) || []).map(c => ({ name: c.name, startingState: c.description || "Unknown", journey: "Grows through challenges", endingState: "Transformed" })),
+        // The second consumer of the same unchecked cast: this fallback runs
+        // whenever the model's arc JSON fails to parse, and wrote
+        // `name: undefined` into the persisted story (T-0079).
+        characterArcs: normaliseStoryCharacters(cfg.characters).map(c => ({ name: c.name, startingState: c.description || "Unknown", journey: "Grows through challenges", endingState: "Transformed" })),
         worldRules: [cfg.setting ? `Setting: ${cfg.setting}` : "As described"],
         themes: [cfg.genre ? `Themes of ${cfg.genre}` : "Human nature"],
         chapterOutlines: Array.from({ length: expectedChapters }, (_, i) => ({

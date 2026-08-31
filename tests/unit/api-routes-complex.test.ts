@@ -73,7 +73,17 @@ jest.mock("@/lib/api-auth", () => ({
 const mockMemoryStats = jest.fn();
 jest.mock("@/lib/memory/memory-providers", () => ({
   getMemoryProviderType: jest.fn(() => "hindsight"),
-  getActiveMemoryProvider: jest.fn(() => ({ stats: mockMemoryStats })),
+  // `type` is part of the MemoryProvider contract and the route now reports
+  // it rather than a hardcoded literal, so a stand-in that omits it is a
+  // provider that cannot say what it is. Before T-0077 this mock passed only
+  // because the route answered "hindsight" whatever it was handed.
+  getActiveMemoryProvider: jest.fn(() => ({ type: "hindsight", stats: mockMemoryStats })),
+  // The route reads the DB-owned config on the unreachable path so it can name
+  // WHICH backend failed and at what address.
+  getActiveMemoryConfig: jest.fn(() => ({
+    type: "hindsight",
+    config: { host: "127.0.0.1", port: 9177, bank: "hermes" },
+  })),
 }));
 
 jest.mock("@/lib/audit-log", () => ({
@@ -227,7 +237,14 @@ describe("GET /api/memory", () => {
     expect(data.data.total).toBe(17638);
   });
 
-  it("reports 'none' when the provider is unreachable", async () => {
+  it("names the unreachable provider rather than flattening it to 'none'", async () => {
+    // CHANGED DELIBERATELY at T-0077. This asserted a flat "none" for every
+    // unreachable case, which collapsed two different problems into one word:
+    // "nothing is configured" and "the provider you chose is configured and not
+    // answering". The operator cannot act on the second without being told
+    // WHICH backend is meant, so the route now reports the active type and the
+    // endpoint it tried. `available: false` is unchanged — the honesty about
+    // reachability was never the problem.
     mockMemoryStats.mockResolvedValue({ available: false, factCount: 0 });
 
     const { GET } = await import("@/app/api/memory/route");
@@ -235,7 +252,9 @@ describe("GET /api/memory", () => {
     const data = await res.json();
 
     expect(res.status).toBe(200);
-    expect(data.data.provider).toBe("none");
     expect(data.data.available).toBe(false);
+    expect(data.data.provider).toBe("hindsight");
+    expect(data.data.message).toMatch(/hindsight/i);
+    expect(data.data.message).toMatch(/127\.0\.0\.1:9177/);
   });
 });

@@ -31,6 +31,7 @@ import {
   resolveEndpoint as defaultResolveEndpoint,
   type RuntimeEndpoint,
 } from "./endpoint-registry";
+import { describeGatewayFailure } from "./gateway-error";
 import { normaliseUsage } from "@/lib/usage-shape";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
@@ -201,12 +202,29 @@ export class HermesRuntime implements AgentRuntime {
     opts: RequestOpts = {},
   ): Promise<T> {
     const ep = this.resolve(profile);
-    const res = await this.fetchImpl(`${ep.baseUrl}${path}`, {
-      method: opts.method ?? "GET",
-      headers: this.buildHeaders(ep, opts),
-      body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
-      signal: opts.signal ?? AbortSignal.timeout(this.timeoutMs),
-    });
+    let res: Response;
+    try {
+      res = await this.fetchImpl(`${ep.baseUrl}${path}`, {
+        method: opts.method ?? "GET",
+        headers: this.buildHeaders(ep, opts),
+        body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+        signal: opts.signal ?? AbortSignal.timeout(this.timeoutMs),
+      });
+    } catch (err) {
+      // One of the two places in the product where a raw fetch to the gateway
+      // happens, and the only place where `ep.baseUrl` is known. Everything
+      // downstream reads this through `messageFromError`, so translating here
+      // fixes all seven storage columns at once (T-0080).
+      throw (
+        describeGatewayFailure(err, {
+          baseUrl: ep.baseUrl,
+          // The deadline only applies when it is OURS. A caller that brought
+          // its own signal owns the timing, and naming our 30s would be a lie.
+          timeoutMs: opts.signal ? undefined : this.timeoutMs,
+          callerSignal: opts.signal,
+        }) ?? err
+      );
+    }
     if (!res.ok) {
       const detail = await safeText(res);
       throw new RuntimeRequestError(
@@ -290,14 +308,21 @@ export class HermesRuntime implements AgentRuntime {
 
   async *streamRunEvents(runId: string, profile?: string): AsyncIterable<RunEvent> {
     const ep = this.resolve(profile);
-    const res = await this.fetchImpl(
-      `${ep.baseUrl}/v1/runs/${encodeURIComponent(runId)}/events`,
-      {
-        headers: { ...this.buildHeaders(ep, {}), Accept: "text/event-stream" },
-        // No timeout: this is a long-lived stream. UX-only — getRun() polling
-        // remains the authoritative source of run state.
-      },
-    );
+    let res: Response;
+    try {
+      res = await this.fetchImpl(
+        `${ep.baseUrl}/v1/runs/${encodeURIComponent(runId)}/events`,
+        {
+          headers: { ...this.buildHeaders(ep, {}), Accept: "text/event-stream" },
+          // No timeout: this is a long-lived stream. UX-only — getRun() polling
+          // remains the authoritative source of run state.
+        },
+      );
+    } catch (err) {
+      // The second raw fetch, and the one behind the live chat spinner. No
+      // timeout applies here by design, so none is claimed.
+      throw describeGatewayFailure(err, { baseUrl: ep.baseUrl }) ?? err;
+    }
     if (!res.ok || !res.body) {
       throw new RuntimeRequestError(
         `stream /v1/runs/${runId}/events → ${res.status} ${res.statusText}`,

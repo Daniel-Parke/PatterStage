@@ -78,7 +78,7 @@ export default function ModelPicker({
 
   if (loading) {
     return (
-      <select
+      <select aria-label="Model"
         id={id}
         disabled
         className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-ps-text-muted font-mono"
@@ -111,7 +111,7 @@ export default function ModelPicker({
     }
     return (
       <div className="space-y-1">
-        <select
+        <select aria-label="Model"
           id={id}
           disabled
           className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-xs text-ps-text-muted font-mono"
@@ -124,7 +124,7 @@ export default function ModelPicker({
   }
 
   return (
-    <select
+    <select aria-label="Model"
       id={id}
       value={selectedValue}
       onChange={(e) => handleSelect(e.target.value)}

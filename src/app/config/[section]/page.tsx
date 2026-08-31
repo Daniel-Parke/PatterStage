@@ -387,7 +387,7 @@ export default function ConfigSectionPage() {
               </div>
             ) : (
               // Markdown file editor
-              <textarea
+              <textarea aria-label="File content"
                 value={fileContent}
                 onChange={(e) => setFileContent(e.target.value)}
                 className="w-full h-96 bg-dark-800 border border-white/10 rounded-lg p-4 text-sm text-ps-text-primary font-mono resize-none focus:border-cyan-500/50 focus:outline-none"

@@ -34,6 +34,8 @@ const STATUS_BORDER: Record<string, string> = {
   // down from the stage that broke. Before T-0069 a rejected gate kept its
   // `completed` status and drew GREEN, contradicting the failed run header.
   rejected: "border-neon-orange/70",
+  // Same orange as rejected: both are the operator's decision, not a fault.
+  cancelled: "border-neon-orange/70",
   skipped: "border-white/10",
 };
 const STATUS_DOT: Record<string, string> = {
@@ -42,6 +44,7 @@ const STATUS_DOT: Record<string, string> = {
   completed: "bg-neon-green",
   failed: "bg-neon-pink",
   rejected: "bg-neon-orange",
+  cancelled: "bg-neon-orange",
   skipped: "bg-white/15",
 };
 

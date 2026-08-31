@@ -4,6 +4,12 @@
  * MemorySync must report a LIVE memory provider as installed even when the
  * Hermes config.yaml `memory.provider` is blank (the dashboard-tile honesty
  * fix). It probes the active provider (DB-owned endpoint) directly.
+ *
+ * These used to also assert a `memory.available` boolean. Nothing ever read it
+ * (T-0081), and it was derivable from `memory.provider`, which IS read: "Not
+ * Installed" is precisely the unavailable case. The assertions moved onto that
+ * key rather than being deleted, so all three cases are still pinned — on the
+ * value a reader actually sees.
  */
 
 const mockSetMultipleStats = jest.fn();
@@ -40,20 +46,27 @@ describe("MemorySync — honest tile", () => {
     await new MemorySync().sync();
     expect(statsOf()["memory.provider"]).toBe("Hindsight");
     expect(statsOf()["memory.fact_count"]).toBe("17638");
-    expect(mockSetSystemStatBoolean).toHaveBeenCalledWith("memory.available", true);
   });
 
   it("reports a healthy-but-empty provider as installed (available, 0 facts)", async () => {
     providerStats = { available: true, factCount: 0 };
     await new MemorySync().sync();
+    // Available and empty is still installed. The tile said "Not Installed" for
+    // a working provider with nothing in it yet, which is the honesty fix this
+    // file is named for.
     expect(statsOf()["memory.provider"]).toBe("Hindsight");
-    expect(mockSetSystemStatBoolean).toHaveBeenCalledWith("memory.available", true);
+    expect(statsOf()["memory.fact_count"]).toBe("0");
   });
 
   it("reports Not Installed when the provider is unreachable", async () => {
     providerStats = { available: false, factCount: 0 };
     await new MemorySync().sync();
     expect(statsOf()["memory.provider"]).toBe("Not Installed");
-    expect(mockSetSystemStatBoolean).toHaveBeenCalledWith("memory.available", false);
+  });
+
+  it("writes no key that nothing reads", () => {
+    // The removal, pinned. `memory.available` going back in would pass every
+    // test above and put the sync layer back to doing work for no reader.
+    expect(mockSetSystemStatBoolean).not.toHaveBeenCalled();
   });
 });

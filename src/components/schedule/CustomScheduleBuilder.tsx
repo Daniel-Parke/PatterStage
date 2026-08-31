@@ -57,7 +57,7 @@ export function CustomScheduleBuilder({
           <label className="text-xs text-ps-text-muted font-mono block mb-1">
             Frequency
           </label>
-          <select
+          <select aria-label="Frequency"
             value={customFrequency}
             onChange={(e) => setCustomFrequency(e.target.value)}
             disabled={disabled}
@@ -81,7 +81,7 @@ export function CustomScheduleBuilder({
           <label className="text-xs text-ps-text-muted font-mono block mb-1">
             Time of day
           </label>
-          <input
+          <input aria-label="Time of day"
             type="time"
             value={customTime}
             onChange={(e) => setCustomTime(e.target.value)}

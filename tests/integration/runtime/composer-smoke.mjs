@@ -11,12 +11,19 @@
 // This is a MANUAL runner (not wired into CI) — point it at whatever stack you
 // want to validate. Exits non-zero on any failed assertion.
 //
-// Env: PS_URL (default http://127.0.0.1:3000), API_SERVER_KEY (optional).
+// Env: PS_URL (default http://127.0.0.1:3000), API_SERVER_KEY (optional),
+// PS_AUTH_TOKEN (PatterStage operator token — required unless the target runs
+// with auth disabled; sent as a Bearer header). Without it every request after
+// the health probe 401s: /api/health is the ONLY public path in src/proxy.ts,
+// so a token-less run reports "composer workflows listed (0)" and "research run
+// started (none)" while the server is perfectly healthy. This file was the last
+// harness in the tree still written against the pre-auth surface.
 // Tip: run the PatterStage server with PS_SEARCH_PROVIDER=none for a fully
 // offline Deep Research smoke (no live web search).
 // ═══════════════════════════════════════════════════════════════
 
 const PS = process.env.PS_URL || process.env.CH_URL || "http://127.0.0.1:3000";
+const PS_TOKEN = process.env.PS_AUTH_TOKEN || "";
 
 let failures = 0;
 function ok(msg) {
@@ -31,9 +38,16 @@ function check(cond, msg) {
 }
 
 async function req(method, url, body) {
+  // Only PatterStage gets the operator token — Hermes has its own key, and a
+  // mismatched bearer must not leak across services. Every URL here is
+  // PatterStage's today, so the guard is redundant; it is kept so this file and
+  // full-stack-smoke.mjs stay diffable, and so it stays correct if a Hermes
+  // call is ever added.
+  const headers = { "Content-Type": "application/json" };
+  if (PS_TOKEN && url.startsWith(PS)) headers.Authorization = `Bearer ${PS_TOKEN}`;
   const res = await fetch(url, {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const text = await res.text();
@@ -97,7 +111,12 @@ async function main() {
           const r = await req("GET", `${PS}/api/composer/runs/${runId}`);
           const run = r.data?.data?.run;
           if (!run) return null;
-          return ["awaiting_approval", "completed", "failed"].includes(run.status) ? r.data.data : null;
+          // `rejected` and `cancelled` are terminal too. Omitting them made a run
+          // that ended either way poll for the full 120 tries before reporting a
+          // timeout instead of the actual ending.
+          return ["awaiting_approval", "completed", "failed", "rejected", "cancelled"].includes(run.status)
+            ? r.data.data
+            : null;
         });
 
         check(gated?.run?.status === "awaiting_approval", `run reached a HIL gate (status=${gated?.run?.status})`);

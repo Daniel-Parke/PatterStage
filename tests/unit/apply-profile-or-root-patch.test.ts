@@ -59,19 +59,28 @@ describe("toPatchResponse", () => {
     expect(res).not.toBeNull();
     expect(res!.status).toBe(500);
     const body = await res!.json();
-    expect(body.error).toBe("yaml parse error");
+    // The reason survives; it is no longer the WHOLE message. T-0082 wraps it
+    // in what actually happened -- the DB write lands before the push, so a
+    // push failure leaves the change saved here and absent from Hermes, and
+    // "yaml parse error" alone left the operator unable to tell whether their
+    // edit had taken.
+    expect(body.error).toContain("yaml parse error");
+    expect(body.error).toMatch(/saved/i);
   });
 
-  it("passes an empty error through verbatim, because suppressing it is the producer's job", async () => {
-    // Companion to api-response-server-error-from-helper-result.test.ts,
-    // which rules that the factory must never rewrite a caller's wire output.
-    // The guard against an empty message lives at the producer instead — see
-    // the pushProfileOrRoot test below.
+  it("never emits an empty message, even from an empty error", async () => {
+    // This used to assert the empty string passed through VERBATIM, on the rule
+    // that the factory must never rewrite a caller's wire output and that the
+    // empty-message guard belongs at the producer.
     //
-    // The previous version of this test constructed `{ ok: false, reason:
-    // "push-failed" }` with no `error` at all, which the union forbids: it
-    // asserted a fallback on a state that cannot exist. Type-checking the
-    // tests is what surfaced that.
+    // The factory rule still holds and is still tested where it lives, in
+    // api-response-server-error-from-helper-result.test.ts: toPatchResponse
+    // hands serverErrorFromHelperResult a fully-formed message and the factory
+    // passes it through untouched. What changed is this LAYER. toPatchResponse
+    // knows something neither the factory nor the push functions know -- that a
+    // patch was committed before the push was attempted -- so composing the
+    // sentence is its job, and an empty 500 body was never useful to anyone
+    // (T-0082).
     const result: ProfileOrRootPatchResult = {
       ok: false,
       reason: "push-failed",
@@ -81,7 +90,8 @@ describe("toPatchResponse", () => {
     expect(res).not.toBeNull();
     expect(res!.status).toBe(500);
     const body = await res!.json();
-    expect(body.error).toBe("");
+    expect(body.error).toContain("Failed to toggle skill");
+    expect(body.error).toMatch(/saved/i);
   });
 });
 
@@ -251,7 +261,10 @@ describe("applyProfileOrRootPatchOrFail", () => {
     const res = result as NextResponse;
     expect(res.status).toBe(500);
     const body = await res.json();
-    expect(body.error).toBe("yaml parse error");
+    // Same wrapping as toPatchResponse: the reason survives inside a
+    // sentence that says the change WAS saved (T-0082).
+    expect(body.error).toContain("yaml parse error");
+    expect(body.error).toMatch(/saved/i);
   });
 
   it("returns a 500 NextResponse on push-failed (uses underlying error or 'Push failed')", async () => {
@@ -278,7 +291,8 @@ describe("applyProfileOrRootPatchOrFail", () => {
     // caller's fallbackError. This matches the existing helper
     // contract — the underlying push is expected to surface a useful
     // error message; the fallback is a defence in depth.
-    expect(body.error).toBe("Push failed");
+    expect(body.error).toContain("Push failed");
+    expect(body.error).toMatch(/saved/i);
   });
 
   it("byte-equivalent to the 3-call form on success", () => {
@@ -349,7 +363,14 @@ describe("pushProfileOrRootOrFail", () => {
     expect(result).toBeInstanceOf(NextResponse);
     const res = result as NextResponse;
     expect(res.status).toBe(500);
-    await expect(res.json()).resolves.toEqual({ error: "Push failed" });
+    // The guard it names is still here and still load-bearing: `push.error ||
+    // "Push failed"` in pushProfileOrRoot is what stops "" reaching the wire.
+    // What changed is that toPatchResponse then wraps that message in what
+    // happened (T-0082), so the assertion is on the guard's output being
+    // PRESENT rather than on it being the entire body.
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toContain("Push failed");
+    expect(body.error.length).toBeGreaterThan(0);
   });
 
   it("returns a 500 NextResponse on push-failed", () => {

@@ -30,6 +30,7 @@ import { useEffect } from "react";
 
 import { useToast } from "@/components/ui/Toast";
 import { COPY_BTN_CLASS, COPY_BTN_DATA_ATTR } from "@/lib/chat-utils";
+import { bannerStatesFor } from "@/components/chat/gateway-banner-states";
 import { useGatewayHealth } from "@/hooks/useGatewayHealth";
 import { useChatInput } from "@/hooks/useChatInput";
 import { useChatTranscript } from "@/hooks/useChatTranscript";
@@ -46,6 +47,7 @@ export function useChatPage() {
   const {
     online: gatewayOnline,
     authConfigured: gatewayAuthConfigured,
+    baseUrl: gatewayUrl,
     agentDefaultModelSet,
     registryModelIds,
     modelLabels,
@@ -139,9 +141,22 @@ export function useChatPage() {
     handleDeleteConversation: conversations.handleDeleteConversation,
     handleDownloadConversation: conversations.handleDownloadConversation,
     // gateway banners
+    //
+    // The page renders `bannerStates`; the three raw fields stay exported
+    // because other consumers (the send guard, the model dropdown) read them
+    // directly. Which banners show is one rule in one place -- see
+    // gateway-banner-states.ts.
     gatewayOnline,
     gatewayAuthConfigured,
     agentDefaultModelSet,
+    gatewayUrl,
+    bannerStates: bannerStatesFor({
+      gatewayOnline,
+      gatewayAuthConfigured,
+      agentDefaultModelSet,
+      hasActiveConversation: conversations.hasActiveConversation,
+      messageCount: transcript.messages.length,
+    }),
     // messages + streaming
     messages: transcript.messages,
     isStreaming: transcript.isStreaming,

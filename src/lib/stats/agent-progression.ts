@@ -69,6 +69,7 @@ import {
 } from "./derive";
 import { agentExperienceFromPerformance, type AgentExperienceSignals } from "./agent-experience";
 import type { AgentPerformance } from "./agent-stats";
+import { getDashboardStats } from "./stats-repository";
 import {
   insertAgentProgressionSnapshots,
   readLatestAgentProgressionSnapshots,
@@ -86,7 +87,16 @@ import {
  * different answers are the second case; without this number they are
  * indistinguishable from each other and the record stops being evidence.
  */
-export const AGENT_PROGRESSION_COMPUTATION_VERSION = 1;
+export const AGENT_PROGRESSION_COMPUTATION_VERSION = 2;
+
+// VERSION HISTORY
+//   1 → 2  (T-0081) The `runsCompleted` signal stopped counting every run and
+//          started counting runs that COMPLETED, and `activeDays` began
+//          coalescing a NULL profile to "default" the way its sibling aggregate
+//          always had. Both change the stored answer for unchanged history,
+//          which is exactly what this number exists to separate from an agent
+//          having grown. Rows written at version 1 are still true about what
+//          version 1 measured; they are not comparable to version 2 rows.
 
 /**
  * The only `achievementsScope` value written today: the achievements were
@@ -300,4 +310,33 @@ export function captureAgentProgressionSnapshots(
   }
 
   return insertAgentProgressionSnapshots(pending);
+}
+
+/**
+ * Capture from the live dashboard computation, for a reader that has not
+ * already paid for it.
+ *
+ * WHY A READER WRITES. Capture used to happen in exactly one place: inside
+ * `GET /api/stats`, the dashboard poll. So an install driven over HTTP -- a QA
+ * pass, a scripted operator, anything that never opens the dashboard -- never
+ * captured, and `GET /api/agents/progression` answered with rows that had never
+ * been written. Spend read live and progression read stored, and the two
+ * disagreed. That asymmetry was the whole of finding 12's RC-A.
+ *
+ * It stays a CORRECTION, not a heartbeat: `captureAgentProgressionSnapshots`
+ * writes only when the recorded answer has moved, so a reader polled every
+ * twenty seconds still produces one row per agent per genuine change.
+ *
+ * IT DOES NOT SWALLOW. The caller guards and LOGS, which is what
+ * `GET /api/stats` has always done. A swallow here would have been a second
+ * rule for the same thing and a quieter one: the error would vanish rather
+ * than reach the log, and a capture that had stopped working would look
+ * exactly like one that had nothing to write.
+ */
+export function captureAgentProgressionFromLiveStats(): number {
+  const stats = getDashboardStats();
+  return captureAgentProgressionSnapshots({
+    agents: stats.agents,
+    achievements: stats.achievements,
+  });
 }

@@ -10,7 +10,7 @@ import { ok, notFound, badRequest } from "@/lib/api-response";
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { getSchedule, updateSchedule, deleteSchedule } from "@/lib/schedules-repository";
 import { parseSchedule } from "@/lib/schedule/parse-schedule";
-import { computeNextRun } from "@/lib/schedule/next-run";
+import { computeNextRun, scheduleCanEverFire } from "@/lib/schedule/next-run";
 
 interface Ctx {
   params: Promise<{ id: string }>;
@@ -52,6 +52,15 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     if (parsed.schedule !== undefined) {
       if (parseSchedule(parsed.schedule).kind === "invalid") {
         return badRequest(`Unrecognized schedule: ${parsed.schedule}`);
+      }
+      // Shape is not satisfiability -- see the note in
+      // src/app/api/schedules/route.ts. `0 0 30 2 *` parses cleanly and can
+      // never fire (T-0079).
+      if (!scheduleCanEverFire(parsed.schedule)) {
+        return badRequest(
+          `Schedule "${parsed.schedule}" can never fire: it names a date that does not ` +
+            `exist, or a field outside its range. Check the day-of-month against the month.`,
+        );
       }
       const next = computeNextRun(parsed.schedule, new Date());
       nextRunAt = next ? next.toISOString() : null;

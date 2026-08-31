@@ -377,7 +377,7 @@ function CreateStoryPage() {
             <h3 className="text-sm font-semibold text-white">Save as Theme</h3>
             <p className="text-xs text-ps-text-muted">Save your current story concept as a reusable theme.</p>
             <input value={newThemeName} onChange={(e) => setNewThemeName(e.target.value)}
-              placeholder="Theme name..." autoFocus
+              placeholder="Theme name..." aria-label="Theme name" autoFocus
               className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 outline-none font-mono" />
             <div className="flex gap-2 justify-end">
               <button onClick={() => setShowSaveTheme(false)} className="px-4 py-2 text-xs text-ps-text-muted hover:text-ps-text-secondary rounded-lg border border-white/10">Cancel</button>
@@ -436,7 +436,7 @@ function CreateStoryPage() {
         {/* ═══ SECTION B: Title ═══ */}
         <div className="rounded-xl border border-neon-purple/20 bg-dark-900/50 p-5">
           <label className="text-xs font-mono text-ps-text-muted uppercase tracking-widest block mb-2">Story Title</label>
-          <input value={title} onChange={(e) => { setTitle(e.target.value); setTitleManuallyEdited(true); }} placeholder="Give your story a name..."
+          <input value={title} onChange={(e) => { setTitle(e.target.value); setTitleManuallyEdited(true); }} placeholder="Give your story a name..." aria-label="Give your story a name"
             className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-4 py-3 text-lg text-white placeholder-white/20 outline-none focus:border-neon-purple/30 font-serif font-semibold" />
         </div>
 
@@ -451,7 +451,7 @@ function CreateStoryPage() {
           </div>
           <label className="text-xs font-mono text-ps-text-faint uppercase tracking-wider block mb-2">What&apos;s your story about?</label>
           <textarea value={premise} onChange={(e) => setPremise(e.target.value)} rows={4}
-            className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-green-500/30 font-mono resize-none leading-relaxed mb-4" placeholder="Describe your story concept..." />
+            className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-green-500/30 font-mono resize-none leading-relaxed mb-4" placeholder="Describe your story concept..." aria-label="Describe your story concept" />
           <div className="space-y-3">
             <Tags label="Genre" options={genreOpts} selected={genres} onToggle={(t) => toggle(genres, setGenres, t)} onAdd={(t) => addOpt(genreOpts, setGenreOpts, t)} />
             <Tags label="Era" options={eraOpts} selected={[era]} onToggle={(t) => setEra(t === era ? "" : t)} onAdd={(t) => addOpt(eraOpts, setEraOpts, t)} />
@@ -529,7 +529,7 @@ function CreateStoryPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-2">Point of View</label>
-              <select value={pov} onChange={(e) => setPov(e.target.value)}
+              <select aria-label="Point of view" value={pov} onChange={(e) => setPov(e.target.value)}
                 className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none font-mono">
                 <option value="first">First Person</option>
                 <option value="third-limited">Third Person Limited</option>
@@ -538,7 +538,7 @@ function CreateStoryPage() {
             </div>
             <div>
               <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-2">Length</label>
-              <select value={length} onChange={(e) => setLength(e.target.value)}
+              <select aria-label="Length" value={length} onChange={(e) => setLength(e.target.value)}
                 className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none font-mono">
                 <option value="short">Short (3-4 chapters)</option>
                 <option value="medium">Medium (5-7 chapters)</option>

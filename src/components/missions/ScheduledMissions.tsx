@@ -104,7 +104,7 @@ export default function ScheduledMissions() {
             <div>
               <label className="text-xs font-mono uppercase tracking-wider text-ps-text-muted">Mission</label>
               {missions.data && missions.data.length > 0 ? (
-                <select className={inputCls} value={missionId} onChange={(e) => setMissionId(e.target.value)}>
+                <select aria-label="Mission" className={inputCls} value={missionId} onChange={(e) => setMissionId(e.target.value)}>
                   <option value="">Select a mission…</option>
                   {missions.data.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -113,19 +113,19 @@ export default function ScheduledMissions() {
                   ))}
                 </select>
               ) : (
-                <input className={inputCls} placeholder="mission id" value={missionId} onChange={(e) => setMissionId(e.target.value)} />
+                <input className={inputCls} placeholder="mission id" aria-label="mission id" value={missionId} onChange={(e) => setMissionId(e.target.value)} />
               )}
             </div>
             <div>
               <label className="text-xs font-mono uppercase tracking-wider text-ps-text-muted">Name (optional)</label>
-              <input className={inputCls} placeholder="daily digest" value={name} onChange={(e) => setName(e.target.value)} />
+              <input className={inputCls} placeholder="daily digest" aria-label="daily digest" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
           </div>
           <div>
             <label className="text-xs font-mono uppercase tracking-wider text-ps-text-muted">
               Schedule (cron or &quot;every Nm/Nh/Nd&quot;)
             </label>
-            <input className={inputCls} value={schedule} onChange={(e) => setSchedule(e.target.value)} />
+            <input aria-label="Schedule (cron, or every Nm/Nh/Nd)" className={inputCls} value={schedule} onChange={(e) => setSchedule(e.target.value)} />
             <div className="mt-2 flex flex-wrap gap-2">
               {PRESETS.map((p) => (
                 <button
@@ -140,7 +140,7 @@ export default function ScheduledMissions() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <select
+            <select aria-label="Catch-up policy"
               className={`${inputCls} max-w-[180px]`}
               value={catchUpPolicy}
               onChange={(e) => setCatchUpPolicy(e.target.value as "fire_once" | "skip")}

@@ -142,7 +142,7 @@ export default function ReaderSettings({ settings, onChange }: {
             </div>
             <div className="flex items-center gap-3">
               <span className="text-xs text-ps-text-faint">A</span>
-              <input type="range" min={12} max={28} value={settings.fontSize}
+              <input aria-label="Font size" type="range" min={12} max={28} value={settings.fontSize}
                 onChange={(e) => update({ fontSize: parseInt(e.target.value) })}
                 className="flex-1 accent-neon-purple h-1" />
               <span className="text-lg text-ps-text-muted">A</span>
@@ -155,7 +155,7 @@ export default function ReaderSettings({ settings, onChange }: {
               <span className="text-xs font-mono text-ps-text-muted">Line Spacing</span>
               <span className="text-xs font-mono text-ps-text-muted">{settings.lineHeight.toFixed(1)}</span>
             </div>
-            <input type="range" min={12} max={25} value={Math.round(settings.lineHeight * 10)}
+            <input aria-label="Line spacing" type="range" min={12} max={25} value={Math.round(settings.lineHeight * 10)}
               onChange={(e) => update({ lineHeight: parseInt(e.target.value) / 10 })}
               className="w-full accent-neon-purple h-1" />
           </div>

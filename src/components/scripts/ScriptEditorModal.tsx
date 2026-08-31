@@ -72,7 +72,7 @@ export default function ScriptEditorModal({
             <input
               value={name}
               onChange={(e) => onNameChange(e.target.value)}
-              placeholder="my-script.sh"
+              placeholder="my-script.sh" aria-label="my-script.sh"
               spellCheck={false}
               className="w-full rounded-lg border border-white/10 bg-dark-800 px-3 py-2 font-mono text-sm text-ps-text-primary outline-none focus:border-neon-cyan/50"
             />
@@ -82,7 +82,7 @@ export default function ScriptEditorModal({
           <div className="py-8"><LoadingSpinner text="Loading script…" /></div>
         ) : (
           <>
-            <textarea
+            <textarea aria-label="Script content"
               value={content}
               onChange={(e) => onContentChange(e.target.value)}
               onKeyDown={(e) => {

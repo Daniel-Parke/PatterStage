@@ -4,15 +4,21 @@
 // GET /api/agents/progression is the read side: latest-per-profile by default,
 // one profile's whole trail when a slug is given.
 //
-// GET /api/stats is where the capture is wired, and the assertion that earns its
-// place is the last one: a capture failure must be logged and swallowed. The
-// dashboard is the product's front page, and it must not go dark because a
-// bookkeeping write was refused.
+// BOTH of them capture. That used to be true of /api/stats alone, so an install
+// driven over HTTP -- a QA pass, a scripted operator -- never captured, and the
+// read side answered with rows nobody had written while the spend figures
+// beside them read live (T-0081, RC-A).
+//
+// The assertions that earn their place are the swallow ones: a capture failure
+// must be logged and swallowed on the dashboard, which must not go dark because
+// a bookkeeping write was refused, and swallowed on the read, which owes its
+// caller the stored rows whatever happened to a courtesy write on the way past.
 
 const readLatestAgentProgressionSnapshots = jest.fn();
 const readAgentProgressionHistory = jest.fn();
 const getDashboardStats = jest.fn();
 const captureAgentProgressionSnapshots = jest.fn();
+const captureAgentProgressionFromLiveStats = jest.fn();
 
 jest.mock("@/lib/db", () => ({ ensureDb: jest.fn() }));
 jest.mock("@/lib/stats/agent-progression-repository", () => ({
@@ -24,6 +30,7 @@ jest.mock("@/lib/stats/stats-repository", () => ({
 }));
 jest.mock("@/lib/stats/agent-progression", () => ({
   captureAgentProgressionSnapshots: (input: unknown) => captureAgentProgressionSnapshots(input),
+  captureAgentProgressionFromLiveStats: () => captureAgentProgressionFromLiveStats(),
 }));
 
 import type { NextRequest } from "next/server";
@@ -79,6 +86,46 @@ describe("GET /api/agents/progression", () => {
       snapshots: [ROW, { ...ROW, id: 9, xp: 900 }],
     });
     expect(readLatestAgentProgressionSnapshots).not.toHaveBeenCalled();
+  });
+
+  it("captures on the way past, so an API-only install is not blind", async () => {
+    // The wiring half of RC-A. That the capture actually WRITES a row is proved
+    // against real SQLite in the-numbers-are-measured.test.ts; this is the
+    // assertion that the route asks for it at all.
+    readLatestAgentProgressionSnapshots.mockReturnValue([ROW]);
+
+    await progressionGET(req(""));
+
+    expect(captureAgentProgressionFromLiveStats).toHaveBeenCalled();
+  });
+
+  it("captures BEFORE reading, or the first request still answers empty", async () => {
+    // Ordering is the whole point. A capture after the read would leave the
+    // very first caller -- the one who has never opened the dashboard, which is
+    // exactly the reported case -- looking at nothing.
+    const order: string[] = [];
+    captureAgentProgressionFromLiveStats.mockImplementation(() => order.push("capture"));
+    readLatestAgentProgressionSnapshots.mockImplementation(() => {
+      order.push("read");
+      return [ROW];
+    });
+
+    await progressionGET(req(""));
+
+    expect(order).toEqual(["capture", "read"]);
+  });
+
+  it("still answers when the capture throws", async () => {
+    captureAgentProgressionFromLiveStats.mockImplementation(() => {
+      throw new Error("stats unavailable");
+    });
+    readLatestAgentProgressionSnapshots.mockReturnValue([ROW]);
+    const spy = jest.spyOn(console, "error").mockImplementation(() => undefined);
+
+    const res = await progressionGET(req(""));
+
+    expect(res.status).toBe(200);
+    spy.mockRestore();
   });
 
   it("500s with a message when the read throws", async () => {

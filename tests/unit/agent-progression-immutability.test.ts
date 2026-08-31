@@ -29,7 +29,10 @@ jest.mock("@/lib/db", () => ({
   now: () => new Date().toISOString(),
 }));
 
-import { captureAgentProgressionSnapshots } from "@/lib/stats/agent-progression";
+import {
+  captureAgentProgressionSnapshots,
+  AGENT_PROGRESSION_COMPUTATION_VERSION,
+} from "@/lib/stats/agent-progression";
 import { readAgentProgressionHistory } from "@/lib/stats/agent-progression-repository";
 import type { AgentPerformance } from "@/lib/stats/agent-stats";
 import type { Achievement } from "@/lib/stats/derive";
@@ -41,6 +44,7 @@ function agent(over: Partial<AgentPerformance> = {}): AgentPerformance {
     slug: "scout",
     name: "Scout",
     runs: 1,
+    runsCompleted: 1,
     missionsCompleted: 1,
     missionsFailed: 0,
     totalTokens: 1_000,
@@ -192,7 +196,12 @@ describe("agent_progression_snapshots is append-only", () => {
 
     const row = readAgentProgressionHistory("scout")[0];
     expect(row.schemaVersion).toBe(31);
-    expect(row.computationVersion).toBe(1);
+    // The CONSTANT, not the literal 1. The claim in this test's name is that a
+    // row records the version in force when it was written -- so a deliberate
+    // bump (T-0081 raised it to 2 when runsCompleted began counting
+    // completions) is the formula version doing its job, not a regression, and
+    // should not need an assertion edited to stay true.
+    expect(row.computationVersion).toBe(AGENT_PROGRESSION_COMPUTATION_VERSION);
     expect(row.achievementsScope).toBe("install");
   });
 });

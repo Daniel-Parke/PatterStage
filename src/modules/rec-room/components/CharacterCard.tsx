@@ -47,12 +47,12 @@ export default function CharacterCard({ char, index, onUpdate, onRemove, onSave,
             <div className="flex-1">
               <label className="text-xs font-mono text-ps-text-faint uppercase block mb-1">Name</label>
               <input value={char.name} onChange={(e) => onUpdate(index, "name", e.target.value)}
-                placeholder="Character name..."
+                placeholder="Character name..." aria-label="Character name"
                 className="w-full bg-dark-700/30 border border-white/5 rounded-lg px-3 py-2.5 text-sm text-white placeholder-white/15 outline-none font-semibold" />
             </div>
             <div className="w-32">
               <label className="text-xs font-mono text-ps-text-faint uppercase block mb-1">Role</label>
-              <select value={char.role} onChange={(e) => onUpdate(index, "role", e.target.value)}
+              <select aria-label="Role" value={char.role} onChange={(e) => onUpdate(index, "role", e.target.value)}
                 className="w-full bg-dark-700/30 border border-white/5 rounded-lg px-3 py-2.5 text-sm text-white outline-none font-mono">
                 {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
               </select>
@@ -63,7 +63,7 @@ export default function CharacterCard({ char, index, onUpdate, onRemove, onSave,
           <div>
             <label className="text-xs font-mono text-ps-text-faint uppercase block mb-1">Description</label>
             <textarea value={char.description} onChange={(e) => onUpdate(index, "description", e.target.value)}
-              rows={2} placeholder="A brief summary of who they are..."
+              rows={2} placeholder="A brief summary of who they are..." aria-label="A brief summary of who they are"
               className="w-full bg-dark-700/30 border border-white/5 rounded-lg px-3 py-2.5 text-sm text-ps-text-secondary placeholder-white/15 outline-none font-mono resize-y min-h-[60px] leading-relaxed" />
           </div>
 
@@ -77,7 +77,7 @@ export default function CharacterCard({ char, index, onUpdate, onRemove, onSave,
           ].map(({ field, label, ph }) => (
             <div key={field}>
               <label className="text-xs font-mono text-ps-text-faint uppercase block mb-1">{label}</label>
-              <textarea value={char[field] || ""} onChange={(e) => onUpdate(index, field, e.target.value)}
+              <textarea aria-label={label} value={char[field] || ""} onChange={(e) => onUpdate(index, field, e.target.value)}
                 rows={2} placeholder={ph}
                 className="w-full bg-dark-700/30 border border-white/5 rounded-lg px-3 py-2.5 text-sm text-ps-text-secondary placeholder-white/15 outline-none font-mono resize-y min-h-[60px] leading-relaxed" />
             </div>

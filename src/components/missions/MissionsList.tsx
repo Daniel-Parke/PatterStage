@@ -244,7 +244,7 @@ export default function MissionsList({ vm }: MissionsListProps) {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search missions..."
+              placeholder="Search missions..." aria-label="Search missions"
               className="w-full bg-dark-900/50 border border-white/10 rounded-lg pl-9 pr-8 py-1.5 text-xs text-white placeholder-white/20 outline-none focus:border-neon-cyan/50 font-mono"
             />
             {search && (

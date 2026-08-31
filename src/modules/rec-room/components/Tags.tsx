@@ -26,7 +26,7 @@ export default function Tags({ label, options, selected, onToggle, onAdd }: {
           <div className="flex items-center gap-1">
             <input value={val} onChange={(e) => setVal(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && val.trim()) { onAdd(val.trim()); setVal(""); setAdding(false); } if (e.key === "Escape") setAdding(false); }}
-              className="w-24 bg-dark-800/50 border border-green-500/30 rounded px-2 py-1 text-xs font-mono text-white outline-none" autoFocus placeholder="Custom..." />
+              className="w-24 bg-dark-800/50 border border-green-500/30 rounded px-2 py-1 text-xs font-mono text-white outline-none" autoFocus placeholder="Custom..." aria-label="Custom" />
             <button onClick={() => { if (val.trim()) { onAdd(val.trim()); setVal(""); setAdding(false); } }} aria-label="Add tag" className="p-0.5 text-green-400"><Plus className="w-3 h-3" /></button>
             <button onClick={() => setAdding(false)} aria-label="Cancel adding a tag" className="p-0.5 text-ps-text-muted"><X className="w-3 h-3" /></button>
           </div>

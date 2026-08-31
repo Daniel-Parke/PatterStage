@@ -25,7 +25,7 @@ import { type TaskType } from "@/lib/models/task-types";
 import type { SyncActionResult } from "@/lib/models/sync-result";
 import { pluralise } from "@/lib/utils";
 
-import type { ApiModel } from "@/components/models/types";
+import type { ApiModel, ApiCredential } from "@/components/models/types";
 
 type ToastFn = (message: string, type?: ToastType) => void;
 
@@ -40,6 +40,7 @@ export function useModelActions({
   setDefaults,
   showToast,
 }: UseModelActionsArgs) {
+  const [busyCredentialId, setBusyCredentialId] = useState<string | null>(null);
   const [editing, setEditing] = useState<ModelEditorRecord | null | undefined>(
     undefined
   );
@@ -114,6 +115,55 @@ export function useModelActions({
       }
     },
     [loadAll, showToast]
+  );
+
+  /**
+   * Delete a credential, and TELL THE OPERATOR WHAT ELSE HAPPENED.
+   *
+   * The route answers with three facts the toast would otherwise swallow:
+   * whether the Hermes .env variable went with it, whether it was kept because
+   * a same-provider sibling still needs it, and which models were unlinked by
+   * the foreign key. Reporting only "Deleted" would hide the two that change
+   * what the operator does next (T-0083).
+   */
+  const handleDeleteCredential = useCallback(
+    async (credential: ApiCredential) => {
+      setBusyCredentialId(credential.id);
+      try {
+        const res = await apiFetch<{
+          data?: {
+            envVarRemoved?: boolean;
+            envVarKeptForSibling?: boolean;
+            envError?: string | null;
+            orphanedModels?: string[];
+          };
+        }>(`/api/credentials/${encodeURIComponent(credential.id)}`, { method: "DELETE" });
+
+        const d = res?.data ?? {};
+        const notes: string[] = [];
+        if (d.envVarKeptForSibling) {
+          notes.push("another credential for this provider still uses the key in ~/.hermes/.env");
+        } else if (d.envVarRemoved) {
+          notes.push("removed from ~/.hermes/.env");
+        }
+        if (d.envError) notes.push(`.env not updated: ${d.envError}`);
+        const orphans = d.orphanedModels ?? [];
+        if (orphans.length > 0) {
+          notes.push(`${orphans.join(", ")} now ${orphans.length === 1 ? "has" : "have"} no key`);
+        }
+
+        showToast(
+          `Deleted ${credential.label}${notes.length ? ` — ${notes.join("; ")}` : ""}`,
+          orphans.length > 0 || d.envError ? "info" : "success",
+        );
+        await loadAll();
+      } catch (err) {
+        toastError(showToast, err, "Delete failed");
+      } finally {
+        setBusyCredentialId(null);
+      }
+    },
+    [loadAll, showToast],
   );
 
   const handleSetDefault = useCallback(
@@ -224,6 +274,8 @@ export function useModelActions({
     handlePull,
     handleSaved,
     handleDelete,
+    handleDeleteCredential,
+    busyCredentialId,
     handleSetDefault,
     handleBulkAuxiliaryChange,
     handleRefresh,
