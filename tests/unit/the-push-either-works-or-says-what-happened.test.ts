@@ -101,7 +101,10 @@ jest.mock("@/lib/db", () => ({
 
 import { execBaselineSchema } from "../helpers/baseline-db";
 import { pushRootToHermes } from "@/modules/hermes/lib/profile-push";
-import { targetPathFromWriteError } from "@/modules/hermes/lib/hermes-config-write";
+import {
+  describeWriteFailure,
+  targetPathFromWriteError,
+} from "@/modules/hermes/lib/hermes-config-write";
 import { driftBannerHeadline } from "@/components/profiles/drift-banner-headline";
 
 function freshHome(): void {
@@ -224,6 +227,16 @@ describe("a write error names the file the operator meant", () => {
     expect(targetPathFromWriteError(err)).toBe("/h/config.yaml");
   });
 
+  it("only strips the suffix at the END, so a real path keeps its own .tmp-", () => {
+    // Mutation found this. An unanchored replace would eat a directory that
+    // legitimately contains ".tmp-1-2" in the middle of its name and hand the
+    // operator a path that never existed -- the same defect, pointing somewhere
+    // new.
+    const err = new Error("EACCES: permission denied, open '/h/notes.tmp-1-2/USER.md'");
+
+    expect(targetPathFromWriteError(err)).toBe("/h/notes.tmp-1-2/USER.md");
+  });
+
   it("returns null rather than guessing when there is no path at all", () => {
     expect(targetPathFromWriteError(new Error("disk on fire"))).toBeNull();
     expect(targetPathFromWriteError("not an error")).toBeNull();
@@ -235,6 +248,109 @@ describe("a write error names the file the operator meant", () => {
     );
 
     expect(targetPathFromWriteError(err)).toBe("C:\\h\\memories\\USER.md");
+  });
+});
+
+describe("a push that REALLY fails reports the file the operator meant", () => {
+  // Mutation found the gap, and it is this programme's usual one: the helper
+  // was tested and the function that USES it was not. Every push test above
+  // asserts a success path, so routing the catch through describeWriteFailure
+  // could have been undone -- or inverted -- with nothing to notice.
+  //
+  // This makes a real push fail on a real filesystem, by putting a DIRECTORY
+  // where memories/USER.md belongs. The staged write succeeds and the rename
+  // does not, which is exactly the shape that produced the phantom path.
+  function blockUserMemory(): void {
+    mkdirSync(join(hermesHome, "memories", "USER.md"), { recursive: true });
+  }
+
+  it("fails, rather than silently succeeding", () => {
+    blockUserMemory();
+
+    expect(pushRootToHermes().success).toBe(false);
+  });
+
+  it("names memories/USER.md", () => {
+    blockUserMemory();
+
+    expect(pushRootToHermes().error).toContain("USER.md");
+  });
+
+  it("does NOT name the staging file that never existed", () => {
+    // The whole point. `USER.md.tmp-15220-1788188853250` is not a file the
+    // operator can look for, create, or reason about.
+    blockUserMemory();
+
+    expect(pushRootToHermes().error).not.toMatch(/\.tmp-\d+-\d+/);
+  });
+
+  it("keeps the errno, because EPERM and ENOENT need different fixes", () => {
+    blockUserMemory();
+
+    expect(pushRootToHermes().error).toMatch(/E[A-Z]{3,}/);
+  });
+
+  it("records the failure on the row, so the UI can show it", () => {
+    blockUserMemory();
+    pushRootToHermes();
+
+    const [syncedAt, error] = mockSetAgentRootSyncStatus.mock.calls.at(-1) as [
+      string | null,
+      string | null,
+    ];
+    expect(syncedAt).toBeNull();
+    expect(error).toContain("USER.md");
+  });
+});
+
+describe("describeWriteFailure, the function the push routes its errors through", () => {
+  // Pinned directly, because mutation showed it could not be reached through
+  // the push any more -- and that is the fix working rather than a gap. Once
+  // ensureProfileDirs runs, every failure this push can actually produce comes
+  // from the BACKUP copy, which names the real target and never a staging file.
+  // The staging path only appears when atomicWriteFile itself fails, which now
+  // requires the directory to vanish mid-push.
+  //
+  // So the contract is held here, one layer down, where it can be exercised.
+
+  it("replaces the staging path with the file the operator meant", () => {
+    const err = Object.assign(
+      new Error(
+        "EPERM: operation not permitted, rename '/h/memories/USER.md.tmp-15220-1788188853250' -> '/h/memories/USER.md'",
+      ),
+      { code: "EPERM" },
+    );
+
+    const described = describeWriteFailure(err);
+
+    expect(described).not.toMatch(/\.tmp-\d+-\d+/);
+    expect(described).toContain("/h/memories/USER.md");
+  });
+
+  it("keeps the errno and the reason", () => {
+    const err = new Error(
+      "ENOENT: no such file or directory, open '/h/memories/USER.md.tmp-1-2'",
+    );
+
+    const described = describeWriteFailure(err);
+
+    expect(described).toContain("ENOENT");
+    expect(described).toContain("no such file or directory");
+  });
+
+  it("passes through an error that names no staging path", () => {
+    const err = new Error("EACCES: permission denied, open '/h/config.yaml'");
+
+    expect(describeWriteFailure(err)).toBe("EACCES: permission denied, open '/h/config.yaml'");
+  });
+
+  it("never returns an empty message", () => {
+    // messageFromError(err, "") -- what the push used before -- returns "" for
+    // a message-less throw, and an empty sync_error on the row is a failure the
+    // UI cannot render. This is the difference between the two functions that
+    // survives even when no staging path is involved.
+    expect(describeWriteFailure(new Error(""))).toBe("Write failed");
+    expect(describeWriteFailure(undefined)).toBeTruthy();
   });
 });
 
