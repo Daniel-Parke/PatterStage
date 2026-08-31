@@ -41,6 +41,7 @@
 jest.mock("@/lib/runs-repository", () => ({
   listActiveRuns: jest.fn(),
   updateRun: jest.fn(),
+  getRun: jest.fn(),
 }));
 jest.mock("@/lib/missions/mission-repository", () => ({
   getMission: jest.fn(),
@@ -64,7 +65,7 @@ import {
   resetNotFoundTracker,
   RUN_NOT_FOUND_GRACE_MS,
 } from "@/lib/orchestration/run-reconcile";
-import { listActiveRuns, updateRun } from "@/lib/runs-repository";
+import { listActiveRuns, updateRun, getRun as getLocalRun } from "@/lib/runs-repository";
 import { getMission } from "@/lib/missions/mission-repository";
 import { runtime } from "@/lib/runtime";
 import { RuntimeRequestError } from "@/lib/runtime/types";
@@ -73,6 +74,7 @@ const mockListActiveRuns = listActiveRuns as jest.Mock;
 const mockUpdateRun = updateRun as jest.Mock;
 const mockGetMission = getMission as jest.Mock;
 const mockGetRun = runtime.getRun as jest.Mock;
+const mockGetLocalRun = getLocalRun as jest.Mock;
 
 const minutesAgo = (m: number) => new Date(Date.now() - m * 60_000).toISOString();
 
@@ -92,9 +94,10 @@ const notFound = () => Promise.reject(new RuntimeRequestError("run not found", 4
 beforeEach(() => {
   jest.clearAllMocks();
   jest.useFakeTimers({ doNotFake: ["nextTick", "setImmediate"] });
-  jest.setSystemTime(new Date("2026-08-31T12:00:00Z"));
+  jest.setSystemTime(new Date("2026-08-31T12:00:00Z").getTime());
   resetNotFoundTracker();
   mockGetMission.mockReturnValue({ id: "m1" }); // no declared timeout
+  mockGetLocalRun.mockImplementation(() => makeRun()); // still started unless a test says otherwise
 });
 afterEach(() => {
   jest.useRealTimers();
@@ -102,7 +105,7 @@ afterEach(() => {
 
 /** Advance both the fake clock and the tracker's notion of elapsed time. */
 function advance(ms: number) {
-  jest.setSystemTime(new Date(Date.now() + ms));
+  jest.setSystemTime(Date.now() + ms);
 }
 
 describe("a single 404 is not proof the run is gone", () => {
@@ -248,6 +251,36 @@ describe("GREEN CONTROLS: nothing else about reconcile moves", () => {
     mockGetRun.mockImplementation(() =>
       Promise.resolve({ status: "completed", output: "done" }),
     );
+
+    await reconcileActiveRuns();
+
+    expect(mockUpdateRun).toHaveBeenCalledWith(
+      "r1",
+      expect.objectContaining({ status: "completed" }),
+    );
+  });
+});
+
+describe("a decision made while we were waiting wins", () => {
+  it("does not resurrect a run cancelled during the gateway await", async () => {
+    // reconcile snapshots the active set and THEN awaits the gateway per row. A
+    // cancel landing inside that await used to be overwritten by a verdict
+    // computed before it happened -- putting a stopped run back to `completed`
+    // and re-opening the mission behind it. T-0076 closed this on the Composer
+    // side; this is the mission half, which predates it.
+    mockListActiveRuns.mockReturnValue([makeRun()]);
+    mockGetRun.mockImplementation(() => Promise.resolve({ status: "completed", output: "done" }));
+    // By the time the await resolves, the row has been cancelled.
+    mockGetLocalRun.mockImplementation(() => makeRun({ status: "cancelled" }));
+
+    await reconcileActiveRuns();
+
+    expect(mockUpdateRun).not.toHaveBeenCalled();
+  });
+
+  it("GREEN CONTROL: a run still started is finalized as normal", async () => {
+    mockListActiveRuns.mockReturnValue([makeRun()]);
+    mockGetRun.mockImplementation(() => Promise.resolve({ status: "completed", output: "done" }));
 
     await reconcileActiveRuns();
 
