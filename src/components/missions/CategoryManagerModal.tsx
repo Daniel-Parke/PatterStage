@@ -102,10 +102,10 @@ export default function CategoryManagerModal({
                 void handleCreate();
               }
             }}
-            placeholder="Category name"
+            placeholder="Category name" aria-label="Category name"
             className="flex-1 min-w-[140px] h-9 px-3 text-sm font-mono bg-dark-950 border border-white/10 rounded-lg text-ps-text-primary"
           />
-          <select
+          <select aria-label="Category colour"
             value={newColor}
             onChange={(e) => setNewColor(e.target.value)}
             className="h-9 px-2 text-xs font-mono bg-dark-950 border border-white/10 rounded-lg"
@@ -156,12 +156,12 @@ export default function CategoryManagerModal({
           >
             {editingId === c.id ? (
               <div className="flex-1 flex flex-wrap gap-2 items-center">
-                <input
+                <input aria-label="Category name"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   className="flex-1 min-w-[120px] px-2 py-1 text-xs font-mono bg-dark-950 border border-white/10 rounded"
                 />
-                <select
+                <select aria-label="Category colour"
                   value={editColor}
                   onChange={(e) => setEditColor(e.target.value)}
                   className="px-2 py-1 text-xs font-mono bg-dark-950 border border-white/10 rounded"
@@ -236,7 +236,7 @@ export default function CategoryManagerModal({
           <p className="text-xs font-mono text-ps-text-secondary mb-2">
             Reassign missions and templates before deleting:
           </p>
-          <select
+          <select aria-label="Reassign missions to category"
             value={reassignId ?? ""}
             onChange={(e) =>
               setReassignId(e.target.value === "" ? null : e.target.value)

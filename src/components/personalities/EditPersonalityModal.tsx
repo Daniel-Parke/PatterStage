@@ -85,7 +85,7 @@ export default function EditPersonalityModal({
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-ps-text-secondary">Agent Profile</label>
-          <input
+          <input aria-label="Agent profile"
             type="text"
             value={name}
             readOnly
@@ -102,7 +102,7 @@ export default function EditPersonalityModal({
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             rows={6}
-            placeholder="You are a helpful assistant who..."
+            placeholder="You are a helpful assistant who..." aria-label="You are a helpful assistant who"
             className="w-full bg-dark-900/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-neon-purple/50 transition-colors font-mono resize-y"
           />
           <p className="text-xs text-ps-text-muted font-mono">

@@ -52,7 +52,7 @@ export default function LogFilePicker({
             type="text"
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
-            placeholder="Filter by name…"
+            placeholder="Filter by name…" aria-label="Filter by name"
             className="w-full bg-dark-950/80 border border-white/10 rounded-lg pl-8 pr-2 py-2 text-xs text-white placeholder:text-ps-text-faint outline-none focus:border-neon-cyan/40 font-mono"
           />
         </div>

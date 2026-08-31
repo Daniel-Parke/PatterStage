@@ -52,7 +52,7 @@ export default function LogsHeaderActions({
           <Play className="w-3.5 h-3.5" />
         )}
       </button>
-      <select
+      <select aria-label="Lines to show"
         value={lineCount}
         onChange={(e) => {
           // Defensive: `parseInt(value, 10)` returns NaN for empty

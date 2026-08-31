@@ -374,7 +374,7 @@ export default function ToolsPage() {
                       {showAdvancedJson ? "Hide" : "Show"} advanced JSON
                     </Button>
                     {showAdvancedJson && (
-                      <textarea
+                      <textarea aria-label="Advanced toolsets JSON"
                         value={toolsetsJson}
                         onChange={(event) => setToolsetsJson(event.target.value)}
                         className="mt-2 w-full min-h-32 rounded-lg bg-dark-950/80 border border-white/10 p-3 text-xs font-mono text-ps-text-primary outline-none focus:border-neon-orange/50"

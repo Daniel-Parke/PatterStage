@@ -41,7 +41,7 @@ export default function EditChapterModal({
           value={prompt}
           onChange={(e) => onPromptChange(e.target.value)}
           rows={4}
-          placeholder="e.g., Make the dialogue more tense, add a plot twist about the captain..."
+          placeholder="e.g., Make the dialogue more tense, add a plot twist about the captain..." aria-label="e.g., Make the dialogue more tense, add a plot twist about the captain"
           className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-4 py-3 text-sm text-white placeholder-white/20 outline-none focus:border-neon-purple/30 font-mono resize-none"
         />
         <div>

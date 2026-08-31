@@ -122,13 +122,13 @@ export default function PromptsPage() {
             <div>
               <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1">Name</label>
               <input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                placeholder="Give this prompt a name" className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono" />
+                placeholder="Give this prompt a name" aria-label="Give this prompt a name" className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono" />
             </div>
 
             <div>
               <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1">Premise</label>
               <textarea value={editing.premise} onChange={(e) => setEditing({ ...editing, premise: e.target.value })}
-                rows={4} placeholder="Describe your story concept..."
+                rows={4} placeholder="Describe your story concept..." aria-label="Describe your story concept"
                 className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-3 text-sm text-white placeholder-white/20 outline-none font-mono resize-none leading-relaxed" />
             </div>
 
@@ -171,13 +171,13 @@ export default function PromptsPage() {
             <div>
               <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1">Setting</label>
               <input value={editing.setting} onChange={(e) => setEditing({ ...editing, setting: e.target.value })}
-                placeholder="Where does the story take place?" className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono" />
+                placeholder="Where does the story take place?" aria-label="Where does the story take place?" className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono" />
             </div>
 
             <div>
               <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1">Notes</label>
               <textarea value={editing.notes} onChange={(e) => setEditing({ ...editing, notes: e.target.value })}
-                rows={2} placeholder="Additional notes, character ideas, plot points..."
+                rows={2} placeholder="Additional notes, character ideas, plot points..." aria-label="Additional notes, character ideas, plot points"
                 className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono resize-none" />
             </div>
 

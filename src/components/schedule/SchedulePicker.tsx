@@ -442,7 +442,7 @@ export default function SchedulePicker({
               setAdvancedDraft(canonicalCron ?? value);
             }
           }}
-          placeholder="e.g. 0 9 * * 1-5"
+          placeholder="e.g. 0 9 * * 1-5" aria-label="e.g. 0 9 * * 1-5"
           className={baseInputStyles}
           spellCheck={false}
           disabled={disabled}

@@ -160,7 +160,7 @@ export default function CategoryCombobox({
             }}
           >
             <div className="p-2 border-b border-white/10">
-              <input
+              <input aria-label="Search categories"
                 ref={inputRef}
                 type="text"
                 value={query}

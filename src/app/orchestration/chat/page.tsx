@@ -183,9 +183,14 @@ export default function ChatPage() {
                   <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
                     <MessageCircle className="w-8 h-8 text-ps-text-muted" />
                   </div>
-                  <h3 className="text-lg font-semibold text-ps-text-secondary mb-1">
+                  {/* h2, not h3. PageHeader renders the page's only h1, and this
+                      empty-state title is the next level down — a jump to h3
+                      tells a screen-reader user there is a section they missed
+                      (P0-3, found by a keyboard/heading-order pass). The size is
+                      a class, not the tag. */}
+                  <h2 className="text-lg font-semibold text-ps-text-secondary mb-1">
                     {hasActiveConversation ? activeConversation?.title || "New Chat" : "Chat with your agent"}
-                  </h3>
+                  </h2>
                   <p className="text-sm text-ps-text-muted mb-2 max-w-md">
                     {mode === "agent"
                       ? "Agent mode: the assistant can use tools and remembers this conversation."
@@ -211,7 +216,7 @@ export default function ChatPage() {
                 />
               )}
               <div className="flex items-end gap-2">
-                <textarea
+                <textarea aria-label="Message"
                   ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}

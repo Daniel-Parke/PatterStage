@@ -145,11 +145,11 @@ export default function CharactersPage() {
               <div>
                 <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1">Name</label>
                 <input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                  placeholder="Character name" className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono" />
+                  placeholder="Character name" aria-label="Character name" className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono" />
               </div>
               <div>
                 <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1">Role</label>
-                <select value={editing.role} onChange={(e) => setEditing({ ...editing, role: e.target.value })}
+                <select aria-label="Role" value={editing.role} onChange={(e) => setEditing({ ...editing, role: e.target.value })}
                   className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none font-mono">
                   {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
@@ -159,35 +159,35 @@ export default function CharactersPage() {
             <div>
               <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1">Description</label>
               <textarea value={editing.description} onChange={(e) => setEditing({ ...editing, description: e.target.value })}
-                rows={2} placeholder="Short description of who they are"
+                rows={2} placeholder="Short description of who they are" aria-label="Short description of who they are"
                 className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono resize-none" />
             </div>
 
             <div>
               <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1">Appearance</label>
               <textarea value={editing.appearance} onChange={(e) => setEditing({ ...editing, appearance: e.target.value })}
-                rows={2} placeholder="Physical description"
+                rows={2} placeholder="Physical description" aria-label="Physical description"
                 className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono resize-none" />
             </div>
 
             <div>
               <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1">Backstory</label>
               <textarea value={editing.backstory} onChange={(e) => setEditing({ ...editing, backstory: e.target.value })}
-                rows={3} placeholder="Their history, motivations, what drives them"
+                rows={3} placeholder="Their history, motivations, what drives them" aria-label="Their history, motivations, what drives them"
                 className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono resize-none" />
             </div>
 
             <div>
               <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1">Speech Patterns</label>
               <textarea value={editing.speechPatterns} onChange={(e) => setEditing({ ...editing, speechPatterns: e.target.value })}
-                rows={2} placeholder="How they talk — formal, slang, accent, catchphrases"
+                rows={2} placeholder="How they talk — formal, slang, accent, catchphrases" aria-label="How they talk — formal, slang, accent, catchphrases"
                 className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono resize-none" />
             </div>
 
             <div>
               <label className="text-xs font-mono text-ps-text-muted uppercase tracking-wider block mb-1">Relationships</label>
               <textarea value={editing.relationships} onChange={(e) => setEditing({ ...editing, relationships: e.target.value })}
-                rows={2} placeholder="Connections to other characters"
+                rows={2} placeholder="Connections to other characters" aria-label="Connections to other characters"
                 className="w-full bg-dark-800/50 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 outline-none font-mono resize-none" />
             </div>
 
@@ -205,7 +205,7 @@ export default function CharactersPage() {
               <div className="flex gap-1">
                 <input value={personalityInput} onChange={(e) => setPersonalityInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addPersonality(); } }}
-                  placeholder="Add trait..." className="flex-1 bg-dark-800/50 border border-white/10 rounded px-2 py-1 text-xs text-white placeholder-white/20 outline-none font-mono" />
+                  placeholder="Add trait..." aria-label="Add trait" className="flex-1 bg-dark-800/50 border border-white/10 rounded px-2 py-1 text-xs text-white placeholder-white/20 outline-none font-mono" />
                 <button type="button" aria-label="Add personality trait" onClick={addPersonality} className="px-2 py-1 text-xs text-neon-purple"><Plus className="w-3 h-3" aria-hidden="true" /></button>
               </div>
             </div>
@@ -224,7 +224,7 @@ export default function CharactersPage() {
               <div className="flex gap-1">
                 <input value={tagInput} onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
-                  placeholder="Add tag..." className="flex-1 bg-dark-800/50 border border-white/10 rounded px-2 py-1 text-xs text-white placeholder-white/20 outline-none font-mono" />
+                  placeholder="Add tag..." aria-label="Add tag" className="flex-1 bg-dark-800/50 border border-white/10 rounded px-2 py-1 text-xs text-white placeholder-white/20 outline-none font-mono" />
                 <button type="button" aria-label="Add tag" onClick={addTag} className="px-2 py-1 text-xs text-neon-purple"><Plus className="w-3 h-3" aria-hidden="true" /></button>
               </div>
             </div>
