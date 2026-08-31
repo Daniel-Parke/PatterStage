@@ -48,6 +48,22 @@
 //    failing it here would report a running job as dead. That is the control
 //    below, and it is the assertion most likely to catch a well-meant widening.
 //
+// ── PROVED TO GO RED ───────────────────────────────────────────
+//
+// Five mutations, five caught. Worth recording one of them: removing
+// reconcileRunsOnBoot ENTIRELY still leaves the run `failed`, because the live
+// reconcile tick reaches it too -- with a different message ("run was never
+// submitted to the backend" rather than "PatterStage restarted before the run
+// was submitted"). So the status assertion alone would have passed on a build
+// with the boot sweep deleted, and it is the REASON assertions that carry the
+// weight. Two sweeps agreeing on an outcome and disagreeing on the explanation
+// is exactly the kind of thing a status-only test cannot see.
+//
+// The others: deleting either instrumentation sweep leaves its row untouched;
+// widening reconcileRunsOnBoot to fail every active run trips the control; and
+// dropping the isPidAlive check from claimOwnership leaves the lease with the
+// killed pid.
+//
 // Env: none required. Uses a throwaway HERMES_HOME under the OS temp dir and a
 // port of its own. Exits non-zero on any failed assertion.
 // ═══════════════════════════════════════════════════════════════
