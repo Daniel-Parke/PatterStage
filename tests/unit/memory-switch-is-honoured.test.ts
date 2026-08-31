@@ -143,6 +143,19 @@ describe("an active row that is switched off is not quietly replaced", () => {
     expect(holo?.enabled).toBe(false);
   });
 
+  it("with NO row at all, still auto-connects to the built-in default", () => {
+    // Found by mutation. The control below uses the SEEDED row, so the
+    // no-row-at-all fallback -- a database predating migration 022, or one
+    // whose rows were deleted -- was never exercised. That path is what makes a
+    // fresh install work with no setup, and the operator ruled it stays.
+    testDb!.prepare("DELETE FROM memory_providers").run();
+
+    const { type, config } = getActiveMemoryConfig();
+    expect(type).toBe("hindsight");
+    expect(config.host).toBe("127.0.0.1");
+    expect(config.port).toBe(9177);
+  });
+
   it("GREEN CONTROL: a fresh install still auto-connects, per the operator's ruling", () => {
     // Zero-config connect is deliberate and stays. The seeded row is active AND
     // enabled, so this must resolve to hindsight on the built-in endpoint — the
@@ -174,13 +187,11 @@ describe("the built-in default says it is the built-in default", () => {
     expect(row?.confirmed).toBe(true);
   });
 
-  it("the settings card tells the operator which it is", () => {
-    const card = require("fs").readFileSync(
-      join(process.cwd(), "src", "components", "memory", "MemoryProviderSettings.tsx"),
-      "utf-8",
-    ) as string;
-    expect(card).toMatch(/built-in default|not yet confirmed/i);
-  });
+  // The card's banner is asserted by RENDERING it, in
+  // memory-default-says-it-guessed.test.tsx. A source grep lived here first and
+  // mutation killed it: replacing the JSX condition with `{false && (` left the
+  // phrase in the file -- in the comment explaining the banner -- so the check
+  // passed while the banner was unreachable.
 });
 
 describe("the API names the provider it actually resolved", () => {
