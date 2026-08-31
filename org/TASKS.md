@@ -97,3 +97,4 @@ The records under org/tasks/ are canonical.
 | T-0082 | standard | R1 | done | t0082-push-truth-2026-08-31 |
 | T-0083 | standard | R2 | done | t0083-guards-doors-2026-08-31 |
 | T-0084 | standard | R0 | done | t0084-records-2026-08-31 |
+| T-0085 | standard | R1 | done | t0085-form-labels-2026-09-01 |
