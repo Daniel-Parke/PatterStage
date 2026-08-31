@@ -75,6 +75,7 @@ import { GET as experienceGet } from "@/app/api/agents/experience/route";
 import { countAgentActiveDays } from "@/lib/stats/agent-stats-repository";
 import { agentExperienceFromPerformance } from "@/lib/stats/agent-experience";
 import { profileOptionsFor } from "@/components/composer/profile-options";
+import { AGENT_PROGRESSION_COMPUTATION_VERSION } from "@/lib/stats/agent-progression";
 import type { AgentPerformance } from "@/lib/stats/agent-stats";
 
 const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
@@ -242,6 +243,22 @@ describe("RC-C: a root-agent run counts for active days too", () => {
     expect(countAgentActiveDays("default")).toBe(0);
   });
 
+  it("a run that FAILED is not an active day, even though it finished", () => {
+    // Mutation found the gap: the existing control used a run with no
+    // completed_at, and COUNT(DISTINCT date(NULL)) is 0 whether or not the
+    // status filter is there -- so dropping the filter changed nothing and the
+    // control proved nothing. A failed run DOES carry a completed_at, and it is
+    // not a day the agent completed work.
+    testDb!
+      .prepare(
+        `INSERT INTO runs (id, mission_id, status, profile_name, submitted_at, completed_at)
+         VALUES ('rf', NULL, 'failed', NULL, '2026-08-30T10:00:00Z', '2026-08-30T10:01:00Z')`,
+      )
+      .run();
+
+    expect(countAgentActiveDays("default")).toBe(0);
+  });
+
   it("GREEN CONTROL: an unfinished run is not an active day", () => {
     testDb!
       .prepare(
@@ -353,5 +370,91 @@ describe("RC-B: the Composer picker sends a slug", () => {
   it("survives an empty or missing profile list", () => {
     expect(profileOptionsFor([])).toHaveLength(1);
     expect(profileOptionsFor(undefined)).toHaveLength(1);
+  });
+});
+
+describe("the aggregate that PRODUCES runsCompleted counts correctly", () => {
+  // Mutation found this gap. Every test above hands `runsCompleted` in on a
+  // fixture, so `runsByProfile` -- the function that derives it from the runs
+  // table -- was measured by nobody. Deleting its status check entirely
+  // changed no result. This drives the real aggregation against real rows.
+  //
+  // agent-stats is mocked at the top of this file for the route tests, so the
+  // real implementation is pulled in explicitly here.
+  const { getAgentPerformance: realGetAgentPerformance } = jest.requireActual(
+    "@/lib/stats/agent-stats",
+  ) as typeof import("@/lib/stats/agent-stats");
+
+  function seedRoot(): void {
+    // The baseline schema already seeds the singleton root row, so this only
+    // has to name it. OR IGNORE rather than an INSERT, because the row being
+    // there is the normal case and this test is not about creating it.
+    testDb!
+      .prepare("INSERT OR IGNORE INTO agent_root (id, display_name) VALUES (1, 'Bob')")
+      .run();
+  }
+
+  function seedRun(id: string, status: string, profile: string | null): void {
+    testDb!
+      .prepare(
+        `INSERT INTO runs (id, mission_id, status, profile_name, submitted_at, completed_at)
+         VALUES (?, NULL, ?, ?, '2026-08-30T10:00:00Z', '2026-08-30T10:01:00Z')`,
+      )
+      .run(id, status, profile);
+  }
+
+  it("separates runs from runs that completed", () => {
+    seedRoot();
+    seedRun("a", "completed", null);
+    seedRun("b", "failed", null);
+    seedRun("c", "cancelled", null);
+
+    const root = realGetAgentPerformance().find((p) => p.slug === "default");
+
+    expect(root?.runs).toBe(3);
+    expect(root?.runsCompleted).toBe(1);
+  });
+
+  it("counts nothing as completed when nothing completed", () => {
+    seedRoot();
+    seedRun("a", "failed", null);
+    seedRun("b", "started", null);
+
+    expect(realGetAgentPerformance().find((p) => p.slug === "default")?.runsCompleted).toBe(0);
+  });
+
+  it("GREEN CONTROL: an agent whose runs all completed reports both the same", () => {
+    seedRoot();
+    seedRun("a", "completed", null);
+    seedRun("b", "completed", null);
+
+    const root = realGetAgentPerformance().find((p) => p.slug === "default");
+
+    expect(root?.runs).toBe(2);
+    expect(root?.runsCompleted).toBe(2);
+  });
+
+  it("attributes a NULL profile to the root agent, as it always has", () => {
+    // The coalescing half of RC-C, on the aggregate side. Stated here as well
+    // as on countAgentActiveDays because the whole defect was the two
+    // disagreeing.
+    seedRoot();
+    seedRun("a", "completed", null);
+    seedRun("b", "completed", "scout");
+
+    expect(realGetAgentPerformance().find((p) => p.slug === "default")?.runs).toBe(1);
+  });
+});
+
+describe("the formula version moved when the formula did", () => {
+  it("is at least 2, because runsCompleted changed meaning", () => {
+    // Mutation found that nothing pinned the bump: the immutability test
+    // asserts a ROW carries the version in force, which stays true whatever
+    // that version is. This is the other half -- T-0081 changed what
+    // runsCompleted and activeDays measure, so the stored answer moves for
+    // unchanged history, and reverting the number while keeping the formula
+    // change would make two incomparable rows look comparable. That is the one
+    // thing this field exists to prevent.
+    expect(AGENT_PROGRESSION_COMPUTATION_VERSION).toBeGreaterThanOrEqual(2);
   });
 });
