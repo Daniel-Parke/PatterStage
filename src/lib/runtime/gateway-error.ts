@@ -24,6 +24,7 @@
 // "nothing is listening" from "that name does not resolve".
 // ═══════════════════════════════════════════════════════════════
 
+import { errorChain } from "@/lib/api-fetch";
 import { RuntimeRequestError } from "./types";
 
 /**
@@ -49,19 +50,27 @@ const TRANSPORT_CODES = [
   "UND_ERR_SOCKET",
 ];
 
-/** The transport code from anywhere in the cause chain, or null. */
+/**
+ * The transport code from anywhere in the cause chain, or null.
+ *
+ * Walks with `errorChain` rather than rolling a third copy of the same loop.
+ * `api-fetch.ts` calls itself "the ONE cause walker" and records that a second
+ * copy already survives in the memory module; a third one here would have made
+ * that comment quietly false.
+ *
+ * Its non-Error-yields-an-EMPTY-chain property is exactly what is wanted: a
+ * bare string is not evidence of a transport failure.
+ */
 function transportCode(err: unknown): string | null {
-  let current: unknown = err;
-  for (let depth = 0; depth < 5 && current instanceof Error; depth++) {
-    const code = (current as NodeJS.ErrnoException).code;
+  for (const link of errorChain(err)) {
+    const code = (link as NodeJS.ErrnoException).code;
     if (typeof code === "string" && TRANSPORT_CODES.includes(code)) return code;
     // undici does not always set `code` on the link that names the problem, so
-    // fall back to the text. Anchored on the code token, not on loose words
+    // fall back to the text. Anchored on the code TOKEN, not on loose words
     // like "network", to avoid claiming a transport failure over a phrase that
     // merely mentions one.
-    const match = current.message.match(/\b(E[A-Z]{3,}|UND_ERR_[A-Z_]+)\b/);
+    const match = link.message.match(/\b(E[A-Z]{3,}|UND_ERR_[A-Z_]+)\b/);
     if (match && TRANSPORT_CODES.includes(match[1])) return match[1];
-    current = (current as { cause?: unknown }).cause;
   }
   return null;
 }
