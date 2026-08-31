@@ -42,9 +42,8 @@ export default function ChatPage() {
     handleNewChat,
     handleDeleteConversation,
     handleDownloadConversation,
-    gatewayOnline,
-    gatewayAuthConfigured,
-    agentDefaultModelSet,
+    gatewayUrl,
+    bannerStates,
     messages,
     isStreaming,
     pendingApproval,
@@ -176,18 +175,9 @@ export default function ChatPage() {
           {/* Main chat area */}
           <div className="flex-1 flex flex-col min-w-0 min-h-0">
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
-              {!hasActiveConversation && messages.length === 0 && (
-                <>
-                  {gatewayOnline === false && <GatewayBanner status="offline" />}
-                  {gatewayOnline === true && gatewayAuthConfigured === false && (
-                    <GatewayBanner status="auth-missing" />
-                  )}
-                  {gatewayOnline !== false &&
-                    gatewayAuthConfigured !== false &&
-                    agentDefaultModelSet === false && <GatewayBanner status="model-missing" />}
-                  {gatewayOnline === null && <GatewayBanner status="checking" />}
-                </>
-              )}
+              {bannerStates.map((state) => (
+                <GatewayBanner key={state} status={state} gatewayUrl={gatewayUrl} />
+              ))}
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-24">
                   <div className="w-16 h-16 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
