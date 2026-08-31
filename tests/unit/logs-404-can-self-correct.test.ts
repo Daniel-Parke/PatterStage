@@ -114,3 +114,30 @@ describe("a 404 for one log still hands back the others", () => {
     expect(body.data?.availableLogs?.length).toBe(2);
   });
 });
+
+describe("a missing logs DIRECTORY explains itself too", () => {
+  it("answers 404 with a reason, not a bare not-found", async () => {
+    // The sibling of the case above, and the one T-0071 never touched. A fresh
+    // install has no logs directory at all, so this is the FIRST thing a new
+    // operator hits — and it used to return a bare 404 that the page rendered
+    // as "No matching log files", an error indistinguishable from an empty
+    // state (T-0079).
+    mockExistsSync.mockReturnValue(false); // not even the directory
+
+    const { status, body } = await get("agent");
+
+    expect(status).toBe(404);
+    expect(body.error).toMatch(/logs directory/i);
+    // It must say this is NORMAL on a fresh install, or the reader reasonably
+    // concludes something is broken.
+    expect(body.error).toMatch(/fresh install|first time/i);
+  });
+
+  it("still carries an availableLogs field, so the page has something to read", async () => {
+    mockExistsSync.mockReturnValue(false);
+
+    const { body } = await get("agent");
+
+    expect(body.data?.availableLogs).toEqual([]);
+  });
+});
