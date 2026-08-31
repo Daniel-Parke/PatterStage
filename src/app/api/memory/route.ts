@@ -8,7 +8,11 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { getActiveMemoryProvider, getMemoryProviderType } from "@/lib/memory/memory-providers";
+import {
+  getActiveMemoryConfig,
+  getActiveMemoryProvider,
+  getMemoryProviderType,
+} from "@/lib/memory/memory-providers";
 
 import { badRequest, ok } from "@/lib/api-response";
 import type { MemoryReadResult } from "@/lib/memory/memory-providers";
@@ -47,9 +51,19 @@ export async function GET(_request: NextRequest) {
     /* unreachable — fall through to the not-configured response */
   }
 
+  // Name the provider the DATABASE says is active, even when it cannot be
+  // reached — the operator needs to know WHICH backend is unreachable before
+  // they can do anything about it. Reporting a flat "none" for both "nothing is
+  // configured" and "holographic is configured and we have no client for it"
+  // collapses two different problems into one unhelpful word (T-0077).
+  const active = getActiveMemoryConfig();
   return ok<MemoryReadResult>({
-    facts: [], total: 0, dbSize: 0, available: false, provider: "none",
-    message: "No memory provider configured or reachable. Run: hermes memory setup",
+    facts: [], total: 0, dbSize: 0, available: false, provider: active.type,
+    message:
+      active.type === "none"
+        ? "No memory provider configured or reachable. Run: hermes memory setup"
+        : `The '${active.type}' memory provider is selected but not reachable at ` +
+          `${active.config.host}:${active.config.port}. Check it on the Memory page.`,
   });
 }
 

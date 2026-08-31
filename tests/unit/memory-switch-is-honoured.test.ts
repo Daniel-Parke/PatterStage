@@ -195,13 +195,17 @@ describe("the built-in default says it is the built-in default", () => {
 });
 
 describe("the API names the provider it actually resolved", () => {
-  it("GET /api/memory does not hardcode the provider name", () => {
-    // RC-2. Even with the registry fixed, a literal in the response body keeps
-    // the wire answer wrong.
+  it("neither the success body nor the fallback hardcodes a provider name", () => {
+    // RC-2, and its twin found while proving this batch end to end: the success
+    // path said "hindsight" whatever was active, and the NOT-REACHABLE path said
+    // a flat "none" -- collapsing "nothing is configured" and "holographic is
+    // configured and we have no client for it" into one unhelpful word. The
+    // operator cannot act on either without knowing WHICH backend is meant.
     const route = require("fs").readFileSync(
       join(process.cwd(), "src", "app", "api", "memory", "route.ts"),
       "utf-8",
     ) as string;
     expect(route).not.toMatch(/provider:\s*"hindsight"/);
+    expect(route).not.toMatch(/provider:\s*"none"/);
   });
 });
