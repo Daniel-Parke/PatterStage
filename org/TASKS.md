@@ -92,3 +92,4 @@ The records under org/tasks/ are canonical.
 | T-0077 | standard | R2 | done | t0077-memory-switch-2026-08-31 |
 | T-0078 | standard | R1 | done | t0078-harnesses-2026-08-31 |
 | T-0079 | standard | R1 | done | t0079-boundary-column-2026-08-31 |
+| T-0080 | standard | R1 | done | t0080-gateway-error-2026-08-31 |
