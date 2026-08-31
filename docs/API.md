@@ -17,9 +17,10 @@ All JSON API routes return the envelope:
 
 Some error responses also include `details` (Zod validation). Handlers must call `logApiError(route, context, error)` from `@/lib/api-logger` in catch blocks.
 
-Five routes deliberately sit outside the envelope, and a client integrator should special-case them:
+Six routes deliberately sit outside the envelope, and a client integrator should special-case them:
 
-- `/api/health` returns a bare `{ ok: true }` (no `data` wrapper) because it is the one unauthenticated route and must stay trivially parseable by a container probe.
+- `/api/health` returns a bare `{ ok: true }` (no `data` wrapper) because it is the one unauthenticated JSON route and must stay trivially parseable by a container probe.
+- `/healthz` returns a plain-text `ok` (200, `text/plain`, `no-store`) — the bare liveness probe. It is unauthenticated and carries no JSON, no version info, and no system state. Use it for uptime checks and load-balancer probes; for anything describing real state, use `/api/status`.
 - The three SSE routes (`/api/runs/[id]/events`, `/api/composer/runs/[id]/events`, `/api/laboratory/research/[id]/events`) return a `text/event-stream` body, and their pre-stream errors are plain text, not JSON.
 - `/api/laboratory/research/[id]/export` returns raw HTML with a `Content-Disposition` header.
 
@@ -97,7 +98,9 @@ Every `route.ts` under `src/app/api` has a row, here or in the Chat / Composer /
 | `/api/skills/[name]/toggle` | `PUT` | Enable/disable a skill for a profile. |
 | `/api/skills/[...path]` | `GET` | Read files under a skill tree (`SKILL.md`, etc.). |
 | `/api/status` | `GET` | Basic readiness endpoint, read from the `meta` table. Requires auth. |
-| `/api/health` | `GET` | The one **unauthenticated** route (the `PUBLIC_PATHS` allow-list in `src/proxy.ts`). Returns a bare `{ ok: true }` and deliberately reports nothing about the system, so a container probe never needs the access token. Anything describing real state belongs on `/api/status`. |
+| `/api/health` | `GET` | The one **unauthenticated** JSON route (the `PUBLIC_PATHS` allow-list in `src/proxy.ts`). Returns a bare `{ ok: true }` and deliberately reports nothing about the system, so a container probe never needs the access token. Anything describing real state belongs on `/api/status`. |
+| `/api/healthz` | `GET` | Unauthenticated JSON alias of `/api/health` (`{ ok: true }`), in `PUBLIC_PATHS`. Only `GET`/`HEAD` pass the proxy; other methods get 401. |
+| `/healthz` | `GET` | Bare **liveness probe**: plain-text `ok` (200, `text/plain`, `cache-control: no-store`). Unauthenticated (`PUBLIC_PATHS`), no JSON, no DB, no version/config info. The lightest endpoint a load balancer or uptime monitor can hit. |
 | `/api/feature-flags` | `GET` | Current feature-flag state (`{ flags }`), so client components can hide disabled surfaces without a rebuild. Flags default ON; today the only flag is `composer`. |
 | `/api/stories` | `POST` | Story Weaver: all operations via `action` (see [RPC-style routes](#rpc-style-routes)). |
 | `/api/sync` | `GET`, `POST` | Background sync control and status. |

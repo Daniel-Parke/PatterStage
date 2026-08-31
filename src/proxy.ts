@@ -46,7 +46,7 @@ const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
  * runner and container health checks need before a token can be presented.
  * `/api/status` is NOT here — it reports real system state.
  */
-const PUBLIC_PATHS = new Set(["/api/health"]);
+const PUBLIC_PATHS = new Set(["/api/health", "/api/healthz", "/healthz"]);
 
 /**
  * The read-only refusal.
