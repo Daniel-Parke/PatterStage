@@ -1,0 +1,30 @@
+{
+  "id": "T-0078",
+  "intent": "Two integration harnesses were reported as product failures by a fresh QA pass. Neither was. composer-smoke had no bearer token and restart-recovery was machine-dependent.",
+  "declared": {
+    "capabilities": [
+      "edit-tests"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0078-harnesses-2026-08-31",
+  "claims": [
+    "tests/integration/runtime/composer-smoke.mjs",
+    "tests/integration/runtime/restart-recovery.mjs"
+  ],
+  "composer_smoke_root_cause": "No Authorization header anywhere in the file. /api/health is the ONLY public path in src/proxy.ts, so the health probe passes and every request after it 401s -- producing exactly the two reported failures, in order, with those strings, against a healthy server whose workflows were correctly seeded. Reproduced verbatim before the fix and 11/11 green after it. The commit that fixed every CI harness for this boundary (47b59b01) skipped this one because its own header says it is manual-only; it was the last pre-auth harness in the tree.",
+  "qa_hypotheses_refuted": "The pass offered two explanations and both are wrong. The seed is unconditional at boot and NOT gated by PS_COMPOSER (the flag gates the route, and a flag-off server returns 503 which the harness skips cleanly). The assertion was always correct. Demonstrated rather than argued: the same binary fails without a token and passes with one.",
+  "restart_recovery_root_cause": "The harness inherits process.env and the default gateway is 8642 -- the mock's own port. With nothing listening, ECONNREFUSED takes the deadline-gated branch and the control holds; with ANY gateway answering, GET /v1/runs/backend-abc returns 404, reconcile treats that as authoritative, and the control dies on the first tick while its sibling assertion loses the boot sweep's mission result to a second writer. Exactly the reported 2/17. Pinning HERMES_GATEWAY_URL to a dead port makes the branch the control's own comment describes the only reachable one.",
+  "the_control_now_names_the_writer": "Asserting status === 'started' was too weak for the reason the file's own header gives: two writers can agree on a status and disagree about the explanation. It now asserts the row was not WRITTEN -- error still NULL, updated_at still the seeded instant. Proved by removing the pin, which reproduces the reported failures and adds a third reading `error \"backend no longer has this run (404)\", updated_at ... vs seeded ...`. That is the reviewer's mystery turned into a diagnosis.",
+  "verification": "18/18 green with a 404-answering gateway on the default port -- the exact machine shape that failed. composer-smoke reproduced red without a token and 11/11 green with one, both against a live isolated server. Gate: lint 0, tsc 0.",
+  "timestamps": {
+    "opened": "2026-08-31T13:00:00Z",
+    "updated": "2026-08-31T13:40:00Z",
+    "closed": "2026-08-31T13:40:00Z"
+  }
+}
