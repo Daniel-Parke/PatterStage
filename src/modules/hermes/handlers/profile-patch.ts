@@ -145,9 +145,29 @@ export function toPatchResponse(
 ): NextResponse | null {
   if (result.ok) return null;
   if (result.reason === "not-found") {
+    // Nothing was written, so nothing was saved. Telling this operator their
+    // change is safe would replace one lie with another.
     return notFound("Profile not found");
   }
-  return serverErrorFromHelperResult(result, fallbackError);
+  // THE ORDERING IS DELIBERATE AND THE MESSAGE HAS TO CARRY IT. The DB write
+  // happens before the push, so a push failure leaves the change committed
+  // here and absent from Hermes. Saying only "failed" over an edit the
+  // operator can still see on reload is a contradiction they have to resolve
+  // by guessing (QA finding 7, T-0082).
+  //
+  // Inverting the order is not the smaller fix it looks like: both push
+  // functions READ the committed row, so there is nothing to push before the
+  // commit without restructuring them to take a proposed state.
+  const reason = result.error || fallbackError;
+  return serverErrorFromHelperResult(
+    {
+      ...result,
+      error:
+        `Saved to PatterStage, but the push to Hermes did not complete: ${reason}. ` +
+        `Your change is not lost — retry the push from Operations → Agents.`,
+    },
+    fallbackError,
+  );
 }
 
 /**

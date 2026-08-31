@@ -47,7 +47,7 @@ import {
   writeWithBackup,
   type SyncResult,
 } from "./profile-sync-shared";
-import { atomicWriteFile } from "./hermes-config-write";
+import { atomicWriteFile, describeWriteFailure } from "./hermes-config-write";
 
 export function pushProfileToHermes(slug: string): SyncResult {
   const profile = getProfile(slug);
@@ -76,7 +76,7 @@ export function pushProfileToHermes(slug: string): SyncResult {
     return { success: true, slug, backupPath: backupsDir, error: null };
   }
   catch (err) {
-    const message = messageFromError(err, "");
+    const message = describeWriteFailure(err);
     setProfileSyncStatus(slug, null, message);
     return { success: false, slug, backupPath: null, error: message };
   }
@@ -87,6 +87,12 @@ export function pushRootToHermes(): SyncResult {
   try {
     const defaultRoot = getHermesDefaultRoot();
     const bundle = buildHermesPathBundle(defaultRoot);
+    // The line pushProfileToHermes has always had and this one did not. Without
+    // it a Hermes home with no memories/ directory takes four of the seven
+    // writes and then ENOENTs on the fifth -- which is every fresh install, so
+    // the operator's FIRST save reported a crash over a change that had already
+    // been committed to the database (QA finding 7, T-0082).
+    ensureProfileDirs(defaultRoot);
     const backupsDir = bundle.backups;
     const configYaml = assembleRootConfig(row);
 
@@ -105,7 +111,7 @@ export function pushRootToHermes(): SyncResult {
     return { success: true, slug: "default", backupPath: backupsDir, error: null };
   }
   catch (err) {
-    const message = messageFromError(err, "");
+    const message = describeWriteFailure(err);
     setAgentRootSyncStatus(null, message);
     return { success: false, slug: "default", backupPath: null, error: message };
   }

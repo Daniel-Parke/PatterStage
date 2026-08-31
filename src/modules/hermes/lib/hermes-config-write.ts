@@ -30,6 +30,7 @@ import {
   writeFileSync,
 } from "fs";
 
+import { messageFromError } from "@/lib/api-fetch";
 import { invalidateConfigCache } from "@/lib/config-cache";
 import { backupFile as backupFileShared } from "@/lib/fs/fs-helpers";
 
@@ -92,9 +93,37 @@ export function backupFile(originalPath: string, backupsDir: string): string | n
   return backupFileShared(originalPath, backupsDir);
 }
 
-/** Placeholder — see T-0082. Returns whatever path the error names, verbatim. */
+/**
+ * The file the operator was actually trying to write, from a failed write.
+ *
+ * `atomicWriteFile` stages at `<target>.tmp-<pid>-<ms>` and rethrows the raw
+ * error, so a failure reported the staging path -- a file that does not exist,
+ * has never existed, and in the case that motivated this sits inside the very
+ * directory that was missing. An operator handed
+ * `memories/USER.md.tmp-15220-1788188853250` cannot search for it, cannot
+ * create it, and cannot tell what went wrong (T-0082).
+ *
+ * Returns null rather than guessing when the error names no path at all.
+ */
 export function targetPathFromWriteError(err: unknown): string | null {
   if (!(err instanceof Error)) return null;
-  const match = err.message.match(/'([^']+)'/);
-  return match ? match[1] : null;
+  const quoted = err.message.match(/'([^']+)'/);
+  if (!quoted) return null;
+  // Only OUR staging suffix is stripped, anchored to the end, so a real file
+  // that happens to contain ".tmp-" survives intact.
+  return quoted[1].replace(/\.tmp-\d+-\d+$/, "");
+}
+
+/**
+ * A write failure, said in terms of the file the operator meant.
+ *
+ * Keeps the errno and the reason -- ENOENT and EACCES are different problems
+ * with different fixes -- and only replaces the path.
+ */
+export function describeWriteFailure(err: unknown): string {
+  const raw = messageFromError(err, "Write failed");
+  const target = targetPathFromWriteError(err);
+  if (!target) return raw;
+  const staged = (err as Error).message.match(/'([^']+)'/)?.[1];
+  return staged && staged !== target ? raw.split(staged).join(target) : raw;
 }
