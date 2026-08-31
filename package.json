@@ -44,6 +44,7 @@
     "mock-llm": "node mock-llm/server.mjs",
     "test:e2e-runtime": "node tests/integration/runtime/full-stack-smoke.mjs",
     "test:smoke-composer": "node tests/integration/runtime/composer-smoke.mjs",
+    "test:restart-recovery": "node tests/integration/runtime/restart-recovery.mjs",
     "test:e2e-hermes": "bash tests/scripts/real-hermes-itest.sh",
     "test:e2e-bench-gateway": "bash tests/scripts/bench-gateway-itest.sh"
   },
