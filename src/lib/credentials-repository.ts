@@ -207,7 +207,15 @@ export interface UpsertCredentialResult {
  * management is handled externally (e.g. hermes model → device code
  * login).
  *
- * Credentials are matched by `provider` (unique constraint).
+ * Credentials are matched by `provider` — by THIS QUERY, not by the schema.
+ * Migration 001 creates a plain `CREATE INDEX idx_credentials_provider`, so
+ * nothing at the database level stops two rows sharing a provider, and the
+ * comment that claimed a unique constraint was simply wrong (T-0083). It
+ * mattered: the Hermes `.env` variable is keyed by provider rather than by
+ * row, so DELETE /api/credentials/[id] has to check for a surviving sibling
+ * before removing it, and a reader who believed the constraint existed would
+ * not have thought to.
+ *
  * Used by modules/hermes/lib/config-import.ts so re-importing the same .env
  * never creates duplicate credential rows.
  */

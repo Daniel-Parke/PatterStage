@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
-import { ok, badRequest, notFound, serviceUnavailable } from "@/lib/api-response";
+import { ok, badRequest, notFound, serviceUnavailable, methodNotAllowed } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { getConversation } from "@/lib/chat-repository";
 import { dispatchChatTurn, appendFastTurn } from "@/lib/orchestration/chat-dispatch";
@@ -65,4 +65,12 @@ export async function POST(request: NextRequest, ctx: Ctx) {
   } catch (error) {
     return serverErrorFromCatch("POST /api/chat/[id]/messages", id, error, "Failed to send message");
   }
+}
+
+// GET is not supported. Messages arrive with the conversation from
+// /api/chat/[id]; this route only appends.
+export async function GET() {
+  return methodNotAllowed(
+    "GET is not supported here — messages come back with GET /api/chat/[id]",
+  );
 }

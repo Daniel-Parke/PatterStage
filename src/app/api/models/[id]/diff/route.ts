@@ -11,7 +11,7 @@ import { envVarForProvider, isHermesProvider } from "@/modules/hermes/lib/provid
 
 import { parseAndValidateJsonBody } from "@/lib/parse-json-body";
 import { maskKeyHint } from "@/lib/secret-mask";
-import { notFound, ok } from "@/lib/api-response";
+import { notFound, ok, methodNotAllowed } from "@/lib/api-response";
 import type { ConfigModelSection } from "@/modules/hermes/lib/config-import";
 import { z } from "zod";
 
@@ -118,4 +118,11 @@ export async function POST(
       "Failed to compute diff",
     );
   }
+}
+
+// A diff is computed from a submitted candidate, so there is nothing to GET.
+export async function GET() {
+  return methodNotAllowed(
+    "GET is not supported here — POST the candidate model to diff it against the stored one",
+  );
 }

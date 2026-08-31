@@ -15,6 +15,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { serverErrorFromCatch } from "@/lib/api-logger";
+import { sessionsRateLimitResponse } from "@/lib/sessions/sessions-api-guard";
 import { isReadOnly } from "@/lib/api-auth";
 import { badRequest, created, notFound, ok, serviceUnavailable } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
@@ -33,6 +34,14 @@ import {
 } from "@/lib/sessions/sessions-api-helpers";
 
 export async function GET(request: NextRequest) {
+  // The limiter has existed since the sessions API was written and was wired
+  // only to /api/sessions/[id] — not to the LIST route, which is the one a QA
+  // pass hit 130 times without ever seeing a 429 (finding 13). The list is
+  // also the more expensive read of the two: it syncs from Hermes and scans
+  // the table, where the [id] route reads one row.
+  const limited = sessionsRateLimitResponse(request, "GET /api/sessions");
+  if (limited) return limited;
+
   try {
     const q = parseSessionQuery(request);
 

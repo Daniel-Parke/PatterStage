@@ -30,14 +30,14 @@
 // unchanged. So the penalty refuses to process at all, for seconds rather than
 // minutes, and any correct token clears the record outright.
 
-import { rmSync, writeFileSync } from "fs";
+import { mkdirSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
 import { NextRequest } from "next/server";
 
 import { SESSION_COOKIE } from "@/lib/auth-token";
-import { MAX_AUTH_PENALTY_SECONDS } from "@/lib/auth-throttle";
+import { FREE_AUTH_ATTEMPTS, MAX_AUTH_PENALTY_SECONDS } from "@/lib/auth-throttle";
 
 const TOKEN = "test-token-abcdefghijklmnop";
 const WRONG = "wrong-token-0000000000000";
@@ -68,7 +68,7 @@ async function loadProxy() {
 beforeEach(() => {
   tokenDir = join(tmpdir(), `ps-throttle-${Math.random().toString(36).slice(2)}`);
   process.env.PS_DATA_DIR = tokenDir;
-  require("fs").mkdirSync(tokenDir, { recursive: true });
+  mkdirSync(tokenDir, { recursive: true });
   writeFileSync(join(tokenDir, "auth-token"), TOKEN, "utf-8");
 });
 
@@ -84,9 +84,13 @@ describe("a wrong token starts costing something", () => {
     // support question.
     const proxy = await loadProxy();
 
-    for (let i = 0; i < 3; i++) {
+    // Exactly the declared budget, not an arbitrary three: this asserts the
+    // whole of the free allowance is actually free, so shrinking the constant
+    // without meaning to is caught here rather than by a confused operator.
+    for (let i = 0; i < FREE_AUTH_ATTEMPTS; i++) {
       expect(proxy(bearer(WRONG)).status).toBe(401);
     }
+    expect(FREE_AUTH_ATTEMPTS).toBeGreaterThanOrEqual(3);
   });
 
   it("answers 429 once the failures stop looking like typos", async () => {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { serverErrorFromCatch } from "@/lib/api-logger";
 
-import { badRequest, ok } from "@/lib/api-response";
+import { badRequest, ok, methodNotAllowed } from "@/lib/api-response";
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { ensureDb } from "@/lib/db";
 import { applyProfileOrRootPatchOrFail } from "@/modules/hermes/handlers/profile-patch";
@@ -52,4 +52,13 @@ export async function PUT(request: NextRequest) {
       "Failed to update personality",
     );
   }
+}
+
+// GET is not supported. The personality is part of the profile, so it is read
+// through /api/agent/profiles — this route only WRITES it. A bare 404 here
+// read as "there is no personality" (T-0083).
+export async function GET() {
+  return methodNotAllowed(
+    "GET is not supported here — read the personality from /api/agent/profiles",
+  );
 }

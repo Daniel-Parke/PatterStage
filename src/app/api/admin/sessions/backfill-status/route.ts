@@ -31,7 +31,7 @@ import {
   previewOrphanSweep,
 } from "@/lib/sessions/session-orphan-sweep";
 import { isReadOnly } from "@/lib/api-auth";
-import { serviceUnavailable } from "@/lib/api-response";
+import { serviceUnavailable, methodNotAllowed } from "@/lib/api-response";
 import { readOnlyMessage } from "@/lib/read-only";
 import { appendAuditLine } from "@/lib/audit-log";
 import { logApiError } from "@/lib/api-logger";
@@ -83,4 +83,12 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
+}
+
+// Named "status", so a GET is the natural guess — and it is a WRITE: it
+// backfills. Saying so is the whole point of this stub.
+export async function GET() {
+  return methodNotAllowed(
+    "GET is not supported here — this endpoint BACKFILLS session status and is POST-only",
+  );
 }
