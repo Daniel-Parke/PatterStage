@@ -62,7 +62,12 @@ jest.mock("@/lib/runtime", () => ({
 }));
 jest.mock("@/lib/feature-flags", () => ({ isFeatureEnabled: () => true }));
 jest.mock("@/lib/audit-log", () => ({ appendAuditLine: (...a: unknown[]) => mockAudit(...a) }));
+jest.mock("@/lib/api-logger", () => ({
+  logApiError: (...a: unknown[]) => mockLogApiError(...a),
+  serverErrorFromCatch: jest.fn(),
+}));
 const mockAudit = jest.fn();
+const mockLogApiError = jest.fn();
 
 import {
   createComposerRun,
@@ -77,7 +82,7 @@ import {
   deleteWorkflow,
 } from "@/lib/composer/composer-repository";
 import { advanceComposerRun, finalizeComposerNodeRun } from "@/lib/composer/engine";
-import { createRun, getRun, listActiveRuns, attachBackendRun } from "@/lib/runs-repository";
+import { createRun, getRun, listActiveRuns, attachBackendRun, updateRun } from "@/lib/runs-repository";
 import { POST as cancelPOST } from "@/app/api/composer/runs/[id]/cancel/route";
 
 const migrationsDir = join(process.cwd(), "src", "lib", "db", "migrations");
@@ -208,6 +213,42 @@ describe("cancelled stops being dead vocabulary", () => {
     expect(status).toBe(200);
     expect(getComposerRun(runId)!.status).toBe("cancelled");
     expect(listNodeRuns(runId).find((n) => n.id === nodeRunId)!.status).toBe("cancelled");
+  });
+
+  it("leaves an agent run that had ALREADY finished with its real ending", async () => {
+    // Found by mutation: nothing exercised the `status === "started"` guard, so
+    // widening it to "any run at all" passed. A stage that completed a second
+    // before the cancel really did complete, and overwriting that with
+    // `cancelled` would misreport what the agent actually did — the same rule
+    // cancel-finalise.ts applies on the mission side.
+    const { runId, nodeRunId, agentRunId } = runInFlight();
+    updateRun(agentRunId, { status: "completed", output: "it finished first" });
+    updateNodeRun(nodeRunId, { status: "running" });
+
+    await cancel(runId);
+
+    const agentRun = getRun(agentRunId)!;
+    expect(agentRun.status).toBe("completed");
+    expect(agentRun.error).toBeNull();
+  });
+
+  it("logs a backend that refused to stop rather than swallowing it", async () => {
+    // Found by mutation: Promise.allSettled already prevents the rejection from
+    // breaking the cancellation, so deleting the catch changed nothing
+    // observable. The catch earns its place by making the failure VISIBLE — a
+    // gateway that ignored a stop request is exactly the kind of thing this
+    // codebase keeps discovering was silently dropped.
+    mockStopRun.mockRejectedValueOnce(new Error("ECONNREFUSED"));
+    const { runId } = runInFlight();
+
+    await cancel(runId);
+    await flush();
+
+    expect(mockLogApiError).toHaveBeenCalledWith(
+      "composer.cancel",
+      expect.stringContaining("backend-xyz"),
+      expect.any(Error),
+    );
   });
 
   it("writes one audit line, not one per row it touched", async () => {
