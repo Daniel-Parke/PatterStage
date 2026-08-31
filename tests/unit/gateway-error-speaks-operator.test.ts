@@ -265,6 +265,30 @@ describe("a cancelled call is not a broken gateway", () => {
     expect((err as Error).message).not.toMatch(/fetch failed/i);
   });
 
+  it("does not claim OUR budget for a deadline the caller set", async () => {
+    // Mutation found this. When a caller brings its own signal we never arm
+    // our 30s timer at all, so naming 30s in the message would invent a
+    // deadline that never applied -- and send a reader looking for a timeout
+    // setting that had nothing to do with it.
+    const ctrl = new AbortController(); // live: this is not a cancel
+    const theirDeadline = Object.assign(new Error("The operation was aborted due to timeout"), {
+      name: "TimeoutError",
+    });
+
+    const runtime = new HermesRuntime({
+      resolve: () => endpoint,
+      fetchImpl: () => Promise.reject(theirDeadline),
+      timeoutMs: 30_000,
+    });
+
+    const err = await caught(() =>
+      runtime.submitRun({ input: "hi", signal: ctrl.signal } as never),
+    );
+
+    expect((err as Error).message).toContain("http://127.0.0.1:8652");
+    expect((err as Error).message).not.toMatch(/30s/);
+  });
+
   it("but OUR OWN deadline is reported as ours, with the budget that fired", async () => {
     // The other half: nobody cancelled this, we gave up. Saying so -- and
     // saying after how long -- is the difference between a bug report and a
@@ -417,6 +441,16 @@ describe("the banner shows up where it is needed (P0-5)", () => {
         messageCount: 0,
       }),
     ).toEqual([]);
+  });
+
+  it("does not accuse the gateway of refusing a key before it has answered", () => {
+    // Mutation found this. `auth-missing` is a claim about what the gateway
+    // DID -- it answered and rejected our bearer key. While the first probe is
+    // still in flight there is no answer to have rejected anything, and saying
+    // so would send the operator to check a key that was never tried.
+    expect(
+      bannerStatesFor({ ...live, gatewayOnline: null, gatewayAuthConfigured: false }),
+    ).not.toContain("auth-missing");
   });
 
   it("never shows offline and auth-missing at once", () => {
