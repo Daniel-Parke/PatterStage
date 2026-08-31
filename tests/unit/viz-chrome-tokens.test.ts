@@ -141,6 +141,14 @@ describe("no chart paints text below the measured tiers", () => {
   // --color-ps-text-* tokens. This is the only thing that looks.
   const files = tsxUnder("src/components/viz");
 
+  it("has charts to check, so an empty walk cannot read as a pass", () => {
+    // The denominator this describe never had (T-0066, closed in T-0075).
+    // `expect(bad).toEqual([])` is satisfied just as well by finding nothing to
+    // look at as by finding nothing wrong, and the two are indistinguishable
+    // from the outside. Measured at 10.
+    expect(files.length).toBeGreaterThanOrEqual(8);
+  });
+
   it.each(["fill", "color"])("uses no bare white alpha for an SVG %s", (attr) => {
     const bad: string[] = [];
     for (const f of files) {

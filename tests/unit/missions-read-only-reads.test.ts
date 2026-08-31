@@ -162,7 +162,12 @@ describe("no route handler authenticates", () => {
         else if (p.endsWith(".ts")) files.push(p);
       }
     })(dir);
-    expect(files.length).toBeGreaterThan(0);
+    // A floor, not a presence check. `> 0` passes on ONE file, so a walk that
+    // lost its way — a moved directory, a changed extension — would report a
+    // clean tree while inspecting almost none of it (T-0066, closed in T-0075).
+    // Measured at 5; four leaves room for churn without leaving room for a
+    // collapse.
+    expect(files.length).toBeGreaterThanOrEqual(4);
     for (const f of files) {
       const src = readFileSync(f, "utf8");
       expect(src).not.toMatch(/readAuthToken|tokenMatches|ps_session/);

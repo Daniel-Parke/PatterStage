@@ -90,6 +90,13 @@ describe("every page is reachable from the registry", () => {
     return out;
   }
 
+  it("finds the pages to check, so an empty walk cannot read as a pass", () => {
+    // `missing` is empty when the walk finds nothing, which is the same green
+    // as a registry that covers everything (T-0066, closed in T-0075).
+    // Measured at 27 page.tsx files.
+    expect(pageRoutes(join(process.cwd(), "src", "app")).length).toBeGreaterThanOrEqual(20);
+  });
+
   it("has a registry entry for every non-dynamic page", () => {
     const pages = pageRoutes(join(process.cwd(), "src", "app"));
     const routes = new Set(allModuleRoutes());
