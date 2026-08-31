@@ -28,6 +28,20 @@ export interface UseApiResourceOptions<T> {
   enabled?: boolean;
 }
 
+/** An Error that carries the failed response's parsed body. */
+function failure(message: string, body: unknown): Error {
+  const err = new Error(message) as Error & { responseBody?: unknown };
+  err.responseBody = body;
+  return err;
+}
+
+/** The `data` field of a failed response's body, when there is one. */
+function bodyOf(error: unknown): unknown {
+  const body = (error as { responseBody?: unknown } | null)?.responseBody;
+  if (!body || typeof body !== "object") return null;
+  return (body as { data?: unknown }).data ?? null;
+}
+
 export function useApiResource<T>(
   queryKey: QueryKey,
   endpoint: string,
@@ -37,11 +51,11 @@ export function useApiResource<T>(
     queryKey,
     queryFn: async (): Promise<T> => {
       const res = await safeApiCall<{ data?: unknown }>(endpoint);
-      if (!res.ok) throw new Error(res.error ?? opts.errorMessage ?? "Failed to load");
+      if (!res.ok) throw failure(res.error ?? opts.errorMessage ?? "Failed to load", res.body);
       const value = opts.select(res.data?.data);
       if (value === undefined) {
         if (opts.fallback !== undefined) return opts.fallback;
-        throw new Error(res.error ?? opts.errorMessage ?? "Failed to load");
+        throw failure(res.error ?? opts.errorMessage ?? "Failed to load", res.body);
       }
       return value;
     },
@@ -54,6 +68,19 @@ export function useApiResource<T>(
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     error: query.isError ? (query.error as Error).message : null,
+    /**
+     * The `data` field of a FAILED response, when the server sent one.
+     *
+     * A 4xx is not always a dead end: /logs answers a missing log file with the
+     * list of files that do exist, which is the only thing that lets the page
+     * pick a different one. Throwing the Error and dropping the body meant that
+     * list was computed, serialised, received and discarded — a route saying
+     * the right thing to a caller that was not listening (T-0071).
+     *
+     * `error` stays set. This is recovery DATA, not a success: a page that
+     * rendered as though nothing were wrong would be a different lie.
+     */
+    errorBody: query.isError ? bodyOf(query.error) : null,
     refetch: query.refetch,
   };
 }

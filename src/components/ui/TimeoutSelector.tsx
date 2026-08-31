@@ -40,17 +40,26 @@ export default function TimeoutSelector({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // The trigger and the menu are SIBLINGS inside a positioned wrapper — which is
+  // the shape the non-compact branch below already uses. This branch rendered the
+  // menu INSIDE the trigger button, so every option was a button inside a button:
+  // invalid HTML that the browser recovers from by hoisting the options out,
+  // moving their click target and focus order somewhere the source does not show
+  // (T-0071). The ref moves to the wrapper so the outside-click handler still
+  // counts the trigger as inside.
   if (compact) {
     return (
-      <button
-        onClick={() => setOpen(!open)}
-        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 text-xs font-mono text-ps-text-muted hover:border-white/30 hover:text-ps-text-secondary transition-colors relative"
-        title={`Inactivity timeout: ${value === 0 ? "unlimited" : value + "m"}`}
-      >
-        <Timer className="w-3 h-3" />
-        {value === 0 ? "∞" : `${value}m`}
+      <span ref={ref} className="relative inline-flex">
+        <button
+          onClick={() => setOpen(!open)}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white/5 border border-white/10 text-xs font-mono text-ps-text-muted hover:border-white/30 hover:text-ps-text-secondary transition-colors"
+          title={`Inactivity timeout: ${value === 0 ? "unlimited" : value + "m"}`}
+        >
+          <Timer className="w-3 h-3" />
+          {value === 0 ? "∞" : `${value}m`}
+        </button>
         {open && (
-          <div ref={ref} className="absolute top-full left-0 mt-1 z-50 w-44 bg-dark-900 border border-white/10 rounded-lg shadow-xl overflow-hidden">
+          <div className="absolute top-full left-0 mt-1 z-50 w-44 bg-dark-900 border border-white/10 rounded-lg shadow-xl overflow-hidden">
             {PRESETS.map((p) => (
               <button
                 key={p.minutes}
@@ -62,7 +71,7 @@ export default function TimeoutSelector({
             ))}
           </div>
         )}
-      </button>
+      </span>
     );
   }
 

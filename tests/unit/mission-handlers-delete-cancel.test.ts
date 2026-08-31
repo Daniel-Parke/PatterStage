@@ -25,13 +25,27 @@ jest.mock("@/lib/schedules-repository", () => ({
 }));
 
 const mockUpdateSession = jest.fn();
+const mockCloseSessionForMission = jest.fn();
 jest.mock("@/lib/sessions/session-repository", () => ({
   updateSession: (...a: unknown[]) => mockUpdateSession(...a),
+  closeSessionForMission: (...a: unknown[]) => mockCloseSessionForMission(...a),
 }));
 
+// T-0070 moved the local record into one shared writer; these are its seams.
+const mockGetLatestRunForMission = jest.fn(() => null as unknown);
+const mockUpdateRun = jest.fn();
+jest.mock("@/lib/runs-repository", () => ({
+  getLatestRunForMission: (...a: unknown[]) => mockGetLatestRunForMission(...(a as [])),
+  updateRun: (...a: unknown[]) => mockUpdateRun(...a),
+}));
+
+// T-0070 renamed this seam. The action handler now writes the local record
+// itself (via the shared finaliser both entry points share) and triggers only
+// the REMOTE half in the background, so what it fires is the backend stop.
 const mockCancelMissionRun = jest.fn(() => Promise.resolve());
 jest.mock("@/lib/orchestration", () => ({
-  cancelMissionRun: (_id: string) => mockCancelMissionRun(),
+  cancelMissionRun: jest.fn(),
+  stopBackendRunForMission: (_id: string) => mockCancelMissionRun(),
 }));
 
 const mockAppendAuditLine = jest.fn();
@@ -190,24 +204,36 @@ describe("handleCancelMission", () => {
   });
 
   it("marks the linked session failed with the cancellation reason", () => {
+    // CHANGED DELIBERATELY at T-0070. This asserted updateSession(mission.sessionId, …),
+    // which is a strictly weaker close: it never set an exit code, and it did
+    // nothing at all unless the MISSION row happened to carry a sessionId --
+    // while the other cancel entry point was already using
+    // closeSessionForMission, which resolves the session from the mission and
+    // records 143. Two writers, two closes. There is now one, and 143 is the
+    // same marker the agent's own `interrupt` end-reason maps to.
     mockGetMission.mockReturnValue(mission({ status: "queued", sessionId: "s1" }));
     mockUpdateMission.mockReturnValue(mission({ status: "failed", sessionId: "s1" }));
 
     handleCancelMission({ id: "m1" });
 
-    expect(mockUpdateSession).toHaveBeenCalledWith(
-      "s1",
-      expect.objectContaining({ status: "failed", error: "Cancelled by user" }),
+    expect(mockCloseSessionForMission).toHaveBeenCalledWith(
+      "m1",
+      expect.objectContaining({ status: "failed", error: "Cancelled by user", exitCode: 143 }),
     );
   });
 
-  it("skips the session update when the mission has no session", () => {
+  it("closes the session even when the mission row carries no sessionId", () => {
+    // The replacement for "skips the session update when the mission has no
+    // session", and the reason that behaviour was worth losing: a mission whose
+    // sessionId was never written back left its session `active` forever. The
+    // repository resolves the session from the mission, so the handler no
+    // longer has to know.
     mockGetMission.mockReturnValue(mission({ status: "queued" }));
     mockUpdateMission.mockReturnValue(mission({ status: "failed" }));
 
     handleCancelMission({ id: "m1" });
 
-    expect(mockUpdateSession).not.toHaveBeenCalled();
+    expect(mockCloseSessionForMission).toHaveBeenCalledWith("m1", expect.anything());
   });
 
   it("still cancels when the session update throws, and logs it", () => {
@@ -215,7 +241,11 @@ describe("handleCancelMission", () => {
     // mission the operator asked to cancel. But it must be logged, not eaten.
     mockGetMission.mockReturnValue(mission({ status: "queued", sessionId: "s1" }));
     mockUpdateMission.mockReturnValue(mission({ status: "failed", sessionId: "s1" }));
-    mockUpdateSession.mockImplementation(() => {
+    // Once, not permanently: clearAllMocks resets calls but keeps
+    // implementations, and closeSessionForMission is now called on EVERY cancel
+    // rather than only when the mission row carried a sessionId -- so a
+    // permanent throw here leaks into the next test.
+    mockCloseSessionForMission.mockImplementationOnce(() => {
       throw new Error("db locked");
     });
 

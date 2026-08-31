@@ -42,6 +42,22 @@ export function notFound(error: string): NextResponse {
 }
 
 /**
+ * A 404 that also hands back what the caller needs to ask a better question.
+ *
+ * Sibling of `notFound`, and deliberately a separate function rather than an
+ * optional second argument: a not-found that carries a payload is a decision,
+ * and it should be visible at the call site that one was made.
+ *
+ * The case it exists for: /logs asks for a hard-coded default log name, the
+ * route computes the list of logs that DO exist, and the bare 404 threw that
+ * list away — so the page could never pick a different file and 404ed on every
+ * poll, forever, with the answer one field away (T-0071).
+ */
+export function notFoundWith(error: string, data: Record<string, unknown>): NextResponse {
+  return NextResponse.json({ error, data }, { status: 404 });
+}
+
+/**
  * Return a 403 Forbidden with the given error message. Use in route
  * handlers when a request is well-formed but the caller is not allowed
  * to access the resource (e.g. PUT to a non-writable config section,

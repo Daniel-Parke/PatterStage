@@ -77,6 +77,8 @@ import { applyAgentProgressionMigration } from "./apply-agent-progression-migrat
 import { applyRetentionMigration } from "./apply-retention-migration";
 import { applySpendPolicyMigration } from "./apply-spend-policy-migration";
 import { applyResearchUsageMigration } from "./apply-research-usage-migration";
+import { applyComposerRejectedMigration } from "./apply-composer-rejected-migration";
+import { applyResearchGatherMigration } from "./apply-research-gather-migration";
 
 // ── Ensure data directory exists ───────────────────────────────
 
@@ -301,6 +303,21 @@ export function runMigrations(database: Database.Database): void {
   // stops under-measuring. Three NULLABLE columns, no backfill: NULL means the
   // cost is unknown, which every pre-034 run genuinely is. ALTER at v34.
   applyResearchUsageMigration(database, migrationsDir);
+
+  // A rejected Composer gate gets its own terminal status, so it stops being
+  // rendered as a defect and stops leaving the rejected stage drawn green.
+  // SQLite cannot ALTER a CHECK, so this is the chain's first table REBUILD:
+  // it owns its own transaction and foreign_keys pragma, and it refuses to
+  // run at all if either table's columns have drifted. REBUILD at v35.
+  applyComposerRejectedMigration(database, migrationsDir);
+
+  // How much of a research run's evidence was actually gathered. The engine
+  // counted its search failures and threw the number away, so anything short of
+  // a TOTAL outage shipped a confident report with no record that most of the
+  // gather had failed. Four NULLABLE columns, no backfill: a pre-036 run
+  // measured nothing, and zero would claim it measured a clean gather.
+  // ALTER at v36.
+  applyResearchGatherMigration(database, migrationsDir);
 }
 
 // ── Bootstrap: ensure DB + schema exist ───────────────────────

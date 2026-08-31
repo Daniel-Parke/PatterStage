@@ -86,6 +86,19 @@ export interface DeepResearchResult {
    * which failed a whole run rather than score it zero when everything errored.
    */
   searchFailures: number;
+  /** How many page reads were attempted across every round. */
+  visitAttempts: number;
+  /**
+   * How many of those came back with nothing usable.
+   *
+   * The visit loop skipped a null page with a bare `if (page)` and counted
+   * nothing, so a run where every page fetch was blocked -- paywalls, robots,
+   * timeouts -- reported identically to one where every page was read in full.
+   * Unlike a search failure this is not fatal on its own: the round still has
+   * the search snippets to reason over. It is evidence the report was written
+   * from less than it looks like, which is what the caveat says (T-0070).
+   */
+  visitFailures: number;
   /**
    * Tokens every LLM call in the run reported, summed, or null if none did.
    *
@@ -145,6 +158,8 @@ export async function runDeepResearch(
   let nextQuery: string | null = firstQuery(plan.content, query);
   let searchAttempts = 0;
   let searchFailures = 0;
+  let visitAttempts = 0;
+  let visitFailures = 0;
 
   // 2. Iterate
   for (let round = 0; round < maxRounds && nextQuery; round++) {
@@ -173,7 +188,9 @@ export async function runDeepResearch(
 
     const visited: VisitedPage[] = [];
     for (const r of results.slice(0, visitsPerRound)) {
+      visitAttempts += 1;
       const page = await deps.visit(r.url);
+      if (!page) visitFailures += 1;
       if (page) {
         visited.push(page);
         deps.onStep({
@@ -241,6 +258,8 @@ export async function runDeepResearch(
     provider: deps.search.name,
     searchAttempts,
     searchFailures,
+    visitAttempts,
+    visitFailures,
     // null, NOT a zeroed total, when no provider reported anything. The
     // caller persists that as NULL so the spend console can say the cost is
     // unknown rather than showing a confident $0.00.

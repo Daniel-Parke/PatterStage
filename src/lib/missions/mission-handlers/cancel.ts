@@ -9,12 +9,10 @@
 
 import { NextResponse } from "next/server";
 
-import { updateMission } from "@/lib/missions/mission-repository";
-import { updateSession } from "@/lib/sessions/session-repository";
 import { logApiError } from "@/lib/api-logger";
 import { ok, notFound } from "@/lib/api-response";
-import { appendAuditLine } from "@/lib/audit-log";
-import { cancelMissionRun } from "@/lib/orchestration";
+import { finaliseCancelledMission } from "@/lib/missions/cancel-finalise";
+import { stopBackendRunForMission } from "@/lib/orchestration";
 
 import { requireMissionOrNotFound } from "./shared";
 
@@ -23,35 +21,25 @@ export function handleCancelMission(body: Record<string, unknown>): NextResponse
   if (existingMission instanceof NextResponse) return existingMission;
 
   const cancelId = existingMission.id;
-  const mission = updateMission(cancelId, {
-    status: "failed",
-    result: "Cancelled by user",
-    queuedForRun: false,
-  });
+  // One writer for the local record, shared with POST /api/missions/[id]/cancel
+  // so the two entry points cannot leave different state. It writes the RUN row
+  // synchronously, which the board's "Cancelled" label depends on: reaching
+  // that row only through the background stop below would show "Failed" for as
+  // long as the backend took to answer (T-0070).
+  const mission = finaliseCancelledMission(cancelId);
   if (!mission)
     return notFound("Mission not found");
 
-  if (mission.sessionId) {
-    try {
-      updateSession(mission.sessionId, {
-        status: "failed",
-        endedAt: new Date().toISOString(),
-        error: "Cancelled by user",
-      });
-    } catch (err) {
-      logApiError("POST /api/missions", "cancelMission session update", err);
-    }
-  }
-
   const shouldKillProcess = existingMission.status === "dispatched";
   if (shouldKillProcess) {
-    // Stop the backend run over HTTP (runtime.stopRun) — no pid/signal.
-    void cancelMissionRun(cancelId).catch((err: unknown) => {
-      logApiError("POST /api/missions", "cancelMissionRun (background)", err);
+    // Stop the backend run over HTTP (runtime.stopRun) — no pid/signal. The
+    // local record is already written; this is the remote half only, and it is
+    // deliberately NOT cancelMissionRun, which would finalise and audit a
+    // second time.
+    void stopBackendRunForMission(cancelId).catch((err: unknown) => {
+      logApiError("POST /api/missions", "stopBackendRunForMission (background)", err);
     });
   }
-
-  appendAuditLine({ action: "mission.cancel", resource: cancelId, ok: true });
   return ok({
     mission,
     cancel: {

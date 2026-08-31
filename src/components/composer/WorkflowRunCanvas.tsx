@@ -30,6 +30,10 @@ const STATUS_BORDER: Record<string, string> = {
   running: "border-neon-cyan",
   completed: "border-neon-green/70",
   failed: "border-neon-pink/70",
+  // A decision, not a defect: orange separates the gate the operator turned
+  // down from the stage that broke. Before T-0069 a rejected gate kept its
+  // `completed` status and drew GREEN, contradicting the failed run header.
+  rejected: "border-neon-orange/70",
   skipped: "border-white/10",
 };
 const STATUS_DOT: Record<string, string> = {
@@ -37,6 +41,7 @@ const STATUS_DOT: Record<string, string> = {
   running: "bg-neon-cyan",
   completed: "bg-neon-green",
   failed: "bg-neon-pink",
+  rejected: "bg-neon-orange",
   skipped: "bg-white/15",
 };
 

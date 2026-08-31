@@ -21,6 +21,7 @@ const STATUS_TEXT: Record<string, string> = {
   running: "text-neon-cyan",
   completed: "text-neon-green",
   failed: "text-neon-pink",
+  rejected: "text-neon-orange",
   skipped: "text-ps-text-muted",
 };
 

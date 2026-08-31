@@ -66,6 +66,20 @@ describe("the engine hands its usage back", () => {
 });
 
 describe("defaultLlm stops discarding what callLLM reported", () => {
+  // WHY THIS TEST COULD NOT CATCH T-0068, recorded rather than deleted.
+  //
+  // The mock below returns CAMELCASE. Until T-0068 the real callLLM returned the
+  // provider's snake_case verbatim, so this fixture described a contract that
+  // nothing upstream honoured: defaultLlm forwarded correctly, this test proved
+  // it, and every research run still recorded null tokens. A test whose mock
+  // states the intended shape rather than the observed one is green by
+  // construction.
+  //
+  // It is kept because the assertion is now TRUE -- callLLM normalises at the
+  // boundary, so camelCase is what it really produces. What it is not is
+  // evidence about the boundary itself. That lives in
+  // tests/unit/llm-usage-is-normalised.test.ts, which drives the real callLLM
+  // and fakes only the HTTP response.
   it("passes usage through", async () => {
     jest.resetModules();
     jest.doMock("@/lib/llm", () => ({

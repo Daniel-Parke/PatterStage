@@ -26,7 +26,7 @@ import { dispatchMissionNow } from "@/lib/missions/mission-dispatch";
 import { parseMissionBodyFields } from "@/lib/missions/mission-body";
 import { runMissionQueueTick } from "@/lib/missions/mission-queue-tick";
 import { missionResponse } from "@/lib/missions/mission-response";
-import { parseDispatchMode } from "@/lib/dispatch-mode";
+import { parseDispatchMode, DISPATCH_MODES, type DispatchMode } from "@/lib/dispatch-mode";
 
 import { parseCategoryIdOrError } from "./shared";
 
@@ -47,6 +47,36 @@ export async function handleDispatchMission(
 
   if (!instruction || typeof instruction !== "string" || !instruction.trim()) {
     return badRequest("instruction is required");
+  }
+
+  // The mode is judged HERE, before createMission below, and the position is
+  // load-bearing. The row is written twenty lines down; a refusal placed beside
+  // the mode branch would leave an orphan mission the operator never created,
+  // showing on the board as a Draft. The cron-schedule 400 further down still
+  // does exactly that, which is why this one moved up rather than joining it.
+  //
+  // ABSENT is not INVALID. Omitting dispatchMode means "now", a documented
+  // legacy contract asserted over HTTP by
+  // tests/integration/runtime/full-stack-smoke.mjs. So a blanket `if (!valid)`
+  // would be wrong: only a mode that was SUPPLIED and is unrecognised is an
+  // error.
+  //
+  // Without this, parseDispatchMode's `valid` flag was computed and discarded,
+  // and the run-now branch below is a negative (`!isSaveMode && !isQueueMode`),
+  // so every unrecognised string fell into an immediate unattended run (T-0067).
+  if (dispatchMode !== undefined) {
+    if (typeof dispatchMode !== "string" || !DISPATCH_MODES.includes(dispatchMode as DispatchMode)) {
+      return badRequest(
+        `Unknown dispatchMode: ${JSON.stringify(dispatchMode)}. Expected one of: ${DISPATCH_MODES.join(", ")}.`,
+      );
+    }
+    // "cron" without a schedule is not cron: parseDispatchMode un-sets
+    // isCronMode, and before T-0067 that dropped into run-now too. It gets its
+    // own message because "cron" IS a legal mode, so listing the modes would be
+    // the wrong advice.
+    if (dispatchMode === "cron" && !scheduleVal?.trim()) {
+      return badRequest("dispatchMode cron requires a schedule.");
+    }
   }
 
   const dirsNorm = normalizeLocalDirsInput(localDirs);
@@ -151,15 +181,19 @@ export async function handleDispatchMission(
     }
   }
 
+  let dispatchOk = true;
   if (!isSaveMode && !isQueueMode) {
     // See JSDoc above the cron-mode branch for the typing rationale —
     // `DispatchMissionNowOverrides` accepts `string | undefined`
     // directly, so no `as` casts are needed on the body fields.
-    await dispatchMissionNow(mission.id, { profileName, modelId, provider });
+    dispatchOk = (await dispatchMissionNow(mission.id, { profileName, modelId, provider })).ok;
   } else if (isQueueMode) {
     void runMissionQueueTick();
   }
 
-  appendAuditLine({ action: "mission.dispatch", resource: mission.id, ok: true });
+  // The result used to be discarded and the audit line hardcoded ok:true, so a
+  // dispatch that dispatchMissionRun had already flipped to `failed` was still
+  // recorded as a success. promote checks this; dispatch did not.
+  appendAuditLine({ action: "mission.dispatch", resource: mission.id, ok: dispatchOk });
   return missionResponse(mission.id, 201);
 }

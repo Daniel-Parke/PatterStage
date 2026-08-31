@@ -14,6 +14,7 @@ import {
   invalidateTemplatesCache,
   saveTemplate,
 } from "./shared";
+import { isDispatchMode } from "@/lib/dispatch-mode";
 
 export function handleCreateTemplate(body: TemplateActionBody): NextResponse {
   const id = "ct_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 4);
@@ -46,7 +47,7 @@ export function handleCreateTemplate(body: TemplateActionBody): NextResponse {
     suggestedToolsets: Array.isArray(body.suggestedToolsets)
       ? (body.suggestedToolsets as unknown[]).map((x) => String(x))
       : [],
-    dispatchMode: body.dispatchMode || "now",
+    dispatchMode: isDispatchMode(body.dispatchMode) ? body.dispatchMode : "now",
     schedule: body.schedule || "every 5m",
     defaultModel:
       typeof body.defaultModel === "string" && body.defaultModel.trim() !== ""

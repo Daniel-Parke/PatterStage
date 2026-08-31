@@ -104,20 +104,32 @@ export default function ChatPage() {
             </div>
             <div className="flex-1 overflow-y-auto min-h-0">
               {conversations.map((c) => (
-                <button
+                // The row is a CONTAINER, and the three controls inside it are
+                // siblings. It used to be a <button> wrapping all three, with
+                // the "as CSV" one nested three deep — invalid HTML, which the
+                // browser recovers from by hoisting the inner controls out of
+                // the outer button. The rendered tree then stops matching the
+                // source: click targets, focus order and accessible names all
+                // move somewhere the markup does not show, and a keyboard or
+                // screen-reader user cannot reach them at all (T-0071).
+                <div
                   key={c.id}
-                  onClick={() => handleSelectConversation(c.id)}
-                  className={`w-full text-left px-3 py-2 border-b border-white/5 transition-colors hover:bg-white/5 group relative ${
+                  className={`w-full px-3 py-2 border-b border-white/5 transition-colors hover:bg-white/5 group relative ${
                     c.id === activeId ? "bg-white/10 border-l-2 border-l-neon-cyan" : ""
                   }`}
-                  title={c.title}
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <div className="min-w-0 flex-1">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectConversation(c.id)}
+                      className="min-w-0 flex-1 text-left"
+                      title={c.title}
+                      aria-current={c.id === activeId ? "true" : undefined}
+                    >
                       <div className="text-xs text-ps-text-secondary truncate font-medium">{c.title}</div>
                       <div className="text-xs text-ps-text-muted mt-0.5 font-mono">{timeAgo(c.updatedAt)}</div>
-                    </div>
-                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    </button>
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0">
                       <div className="relative group/download">
                         <button
                           onClick={(e) => handleDownloadConversation(c, "json", e)}
@@ -153,7 +165,7 @@ export default function ChatPage() {
                       </button>
                     </div>
                   </div>
-                </button>
+                </div>
               ))}
               {conversations.length === 0 && (
                 <div className="p-3 text-xs text-ps-text-faint italic">No conversations yet</div>

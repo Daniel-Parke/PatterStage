@@ -40,7 +40,19 @@ export interface MissionRunView {
 }
 
 /** How the row should read. Maps to colour at the call site, never here. */
-export type MissionRunTone = "idle" | "waiting" | "running" | "overdue" | "good" | "bad";
+/**
+ * `stopped` is deliberately not `bad`. A cancellation is something the
+ * operator asked for, and painting it in the failure colour told them their
+ * own action had gone wrong.
+ */
+export type MissionRunTone =
+  | "idle"
+  | "waiting"
+  | "running"
+  | "overdue"
+  | "good"
+  | "bad"
+  | "stopped";
 
 export interface MissionRunState {
   tone: MissionRunTone;
@@ -151,6 +163,21 @@ export function describeMissionRunState(
 
   const finishedAt = run?.completedAt ?? mission.updatedAt;
   const ago = since(finishedAt, now);
+
+  // A cancellation is recorded on the mission as `failed` with the result
+  // "Cancelled by user", because the mission enum has no `cancelled` and the
+  // operator ruled it stays that way. The RUN row does carry it, honestly, and
+  // was simply not being read -- so the board painted a deliberate stop in the
+  // same red as a crash, with no way to tell them apart (T-0070).
+  if (run?.status === "cancelled") {
+    return {
+      tone: "stopped",
+      label: "Cancelled",
+      duration: ago ? `${ago} ago` : "—",
+      note: "Stopped by the operator",
+    };
+  }
+
   return {
     tone: status === "successful" ? "good" : "bad",
     label: status === "successful" ? "Finished" : "Failed",

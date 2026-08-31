@@ -17,6 +17,8 @@ import {
   sanitizeTemplateId,
   saveTemplate,
 } from "./shared";
+import { isDispatchMode, DISPATCH_MODES } from "@/lib/dispatch-mode";
+import { badRequest } from "@/lib/api-response";
 
 export function handleUpdateTemplate(body: TemplateActionBody): NextResponse {
   const { templateId } = body;
@@ -46,7 +48,18 @@ export function handleUpdateTemplate(body: TemplateActionBody): NextResponse {
   if (body.suggestedToolsets !== undefined && Array.isArray(body.suggestedToolsets)) {
     template.suggestedToolsets = (body.suggestedToolsets as unknown[]).map((x) => String(x));
   }
-  if (body.dispatchMode !== undefined) template.dispatchMode = body.dispatchMode;
+  // Validated here, not just on dispatch. A template persists whatever it is
+  // given and useMissionComposer casts it straight back into form state, so an
+  // unvalidated field here is what turned T-0067 from an API-only defect into
+  // one an operator reaches by clicking Apply.
+  if (body.dispatchMode !== undefined) {
+    if (!isDispatchMode(body.dispatchMode)) {
+      return badRequest(
+        `Unknown dispatchMode: ${JSON.stringify(body.dispatchMode)}. Expected one of: ${DISPATCH_MODES.join(", ")}.`,
+      );
+    }
+    template.dispatchMode = body.dispatchMode;
+  }
   if (body.schedule !== undefined) template.schedule = body.schedule;
   if (body.defaultModel !== undefined) {
     template.defaultModel =

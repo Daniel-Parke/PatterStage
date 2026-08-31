@@ -34,7 +34,17 @@ export function handleUpdateMission(body: Record<string, unknown>): NextResponse
   if (categoryId instanceof NextResponse) return categoryId;
 
   if (existing.status !== "dispatched") {
-    return badRequest("Use promote for draft or queued missions; update is for running missions");
+    // Name the CALL, not just the verb. The old message said "use promote" and
+    // stopped -- but promote REQUIRES dispatchMode, which this did not mention,
+    // so an operator who followed it literally earned a second 400 telling them
+    // so. It also never said which state it had actually seen, which is what
+    // makes the advice checkable (T-0071).
+    return badRequest(
+      `update applies to a running mission; this one is '${existing.status}'. ` +
+        `To edit it without running it, send ` +
+        `{"action":"promote","missionId":"${missionIdFinal}","dispatchMode":"save"} ` +
+        `with the fields you want to change.`,
+    );
   }
 
   const { updates } = buildMissionFieldPatch(

@@ -16,6 +16,7 @@ import {
   getLatestRunForMission,
 } from "@/lib/runs-repository";
 import { createSession, closeSessionForMission } from "@/lib/sessions/session-repository";
+import { finaliseCancelledMission } from "@/lib/missions/cancel-finalise";
 import { runtime } from "@/lib/runtime";
 import { uuid, now } from "@/lib/db";
 import { messageFromError } from "@/lib/api-fetch";
@@ -112,30 +113,35 @@ export async function dispatchMissionRun(
  * backend stop — local state is always finalised so the UI never shows a stuck
  * "running" row.
  */
+/**
+ * Ask the backend to stop a mission's run. The REMOTE half of a cancellation
+ * only — it writes nothing locally.
+ *
+ * Split out of `cancelMissionRun` so the action handler, which has already
+ * written the local record synchronously, can trigger the stop in the
+ * background without finalising and auditing the cancellation a second time
+ * (T-0070).
+ */
+export async function stopBackendRunForMission(missionId: string): Promise<void> {
+  const run = getLatestRunForMission(missionId);
+  if (!run?.runId) return;
+  try {
+    await runtime.stopRun(run.runId, run.profileName ?? undefined);
+  } catch (err) {
+    logApiError("orchestration.stopBackendRunForMission", missionId, err);
+    // best-effort: the local record is the operator's answer either way
+  }
+}
+
 export async function cancelMissionRun(
   missionId: string,
 ): Promise<{ ok: boolean; error?: string }> {
   const mission = getMission(missionId);
   if (!mission) return { ok: false, error: "mission not found" };
 
-  const run = getLatestRunForMission(missionId);
-  if (run?.runId) {
-    try {
-      await runtime.stopRun(run.runId, run.profileName ?? undefined);
-    } catch (err) {
-      logApiError("orchestration.cancelMissionRun", missionId, err);
-      // best-effort — still finalise local state below
-    }
-  }
-  if (run && run.status === "started") {
-    updateRun(run.id, { status: "cancelled", error: "Cancelled by user" });
-  }
-  updateMission(missionId, { status: "failed", result: "Cancelled by user" });
-  closeSessionForMission(missionId, {
-    status: "failed",
-    endedAt: now(),
-    exitCode: 143,
-    error: "Cancelled by user",
-  });
+  await stopBackendRunForMission(missionId);
+  // The same writer the action handler uses. This route used to leave
+  // queuedForRun set and write no audit line at all (T-0070).
+  finaliseCancelledMission(missionId);
   return { ok: true };
 }

@@ -279,8 +279,17 @@ export default function CharactersPage() {
               const isExpanded = expanded[c.id];
               return (
                 <div key={c.id} className="rounded-xl border border-white/5 bg-dark-900/50 overflow-hidden">
-                  <button onClick={() => toggleExpand(c.id)} className="w-full text-left p-4 flex items-start gap-3 hover:bg-white/[0.02] transition-colors">
-                    <div className="flex-1 min-w-0">
+                  {/* The expand toggle and the row actions are SIBLINGS. The
+                      toggle used to wrap Edit and Delete, which is a button
+                      inside a button: invalid HTML the browser recovers from by
+                      hoisting the actions out of the toggle, so their click
+                      target and focus order stop matching the source (T-0071). */}
+                  <div className="w-full p-4 flex items-start gap-3 hover:bg-white/[0.02] transition-colors">
+                    <button
+                      onClick={() => toggleExpand(c.id)}
+                      aria-expanded={!!isExpanded}
+                      className="flex-1 min-w-0 text-left"
+                    >
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-semibold text-ps-text-primary">{c.name}</span>
                         <span className={`px-2 py-0.5 rounded-md text-xs font-mono border ${ROLE_COLORS[c.role] || ROLE_COLORS.supporting}`}>
@@ -295,7 +304,7 @@ export default function CharactersPage() {
                           ))}
                         </div>
                       )}
-                    </div>
+                    </button>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       <button onClick={(e) => { e.stopPropagation(); startEdit(c); }} aria-label={`Edit character ${c.name}`}
                         className="p-1.5 rounded text-ps-text-faint hover:text-neon-purple hover:bg-neon-purple/10"><Edit2 className="w-3.5 h-3.5" /></button>
@@ -305,7 +314,7 @@ export default function CharactersPage() {
                         {deleting === c.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                       </button>
                     </div>
-                  </button>
+                  </div>
                   {isExpanded && (
                     <div className="px-4 pb-4 pt-0 border-t border-white/5 space-y-3">
                       {c.appearance && (

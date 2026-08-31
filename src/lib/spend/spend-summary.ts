@@ -251,14 +251,21 @@ export function getSpendSummary(nowIso: string = new Date().toISOString()): Spen
   const budget = periods.find((p) => p.period === policy.period) ?? periods[periods.length - 1];
 
   const unmeasured: string[] = [];
-  // Only the runs that genuinely carry no counts. Since migration 034 a research
-  // run records its tokens like any other source, so this list empties itself as
-  // the pre-034 runs age out of the period rather than being suppressed.
+  // Only the runs that genuinely carry no counts.
+  //
+  // This used to say the runs "predate token recording" and that the list would
+  // empty itself as pre-034 runs aged out. Both were false. The trigger is
+  // purely `promptTokens === null` with no date comparison anywhere, so a run
+  // created today with no usage was reported as predating the feature. And
+  // until T-0068 EVERY research run landed with null usage, because llm.ts
+  // handed the accumulator a snake_case object it read camelCase off, so the
+  // list could never empty. The wording now describes this run's data rather
+  // than making a claim about history it cannot check.
   const unrecorded = budget.unrecordedResearchRuns;
   if (unrecorded > 0) {
     unmeasured.push(
       `${unrecorded} Deep Research run${unrecorded === 1 ? "" : "s"} in this period ` +
-        `predate${unrecorded === 1 ? "s" : ""} token recording, so ` +
+        `recorded no token usage, so ` +
         `${unrecorded === 1 ? "its cost is" : "their costs are"} not counted in the ` +
         `totals above.`,
     );

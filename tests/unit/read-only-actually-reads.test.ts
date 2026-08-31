@@ -67,13 +67,30 @@ function routeFiles(dir = API_ROOT, out: string[] = []): string[] {
  * lines are skipped so prose describing the anti-pattern does not register as
  * the anti-pattern, which is the same allowance `design-lint.mjs` makes.
  */
+/**
+ * How many HTTP handlers the attribution regex above actually recognised.
+ *
+ * This is the DENOMINATOR the sweep below was missing (filed in T-0066, closed
+ * in T-0075). `files.length` only proves the WALK ran; the rule is about
+ * HANDLERS, and they are attributed by a regex on `export [async] function
+ * METHOD`. Rewrite a route as an exported const — or drift that pattern any
+ * other way — and the attribution goes empty for every file, so every assertion
+ * below passes vacuously against a full 96-file walk while reporting nothing.
+ * The sibling script gets this right at check-read-only-guards.mjs:98 with
+ * exactly this floor.
+ */
+let handlersSeen = 0;
+
 function guardCallsByMethod(file: string): Array<{ method: string; line: number; text: string }> {
   const found: Array<{ method: string; line: number; text: string }> = [];
   let current = "";
   const lines = readFileSync(file, "utf-8").split(/\r?\n/);
   lines.forEach((raw, i) => {
     const handler = /^export (?:async )?function (GET|HEAD|OPTIONS|POST|PUT|DELETE|PATCH)\b/.exec(raw);
-    if (handler) current = handler[1];
+    if (handler) {
+      current = handler[1];
+      handlersSeen += 1;
+    }
     const trimmed = raw.trim();
     if (trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*")) return;
     if (/\b(requireAuth|requireNotReadOnly|isReadOnly)\s*\(/.test(raw)) {
@@ -90,6 +107,11 @@ describe("the read-only guard has left the route handlers", () => {
 
   it("finds a route tree to check, so an empty walk cannot read as a pass", () => {
     expect(files.length).toBeGreaterThan(50);
+  });
+
+  it("and recognises the HANDLERS in it, which is the noun the rule is about", () => {
+    files.forEach((f) => guardCallsByMethod(f));
+    expect(handlersSeen).toBeGreaterThan(50);
   });
 
   it("no GET, HEAD or OPTIONS handler carries a read-only guard", () => {

@@ -79,3 +79,12 @@ The records under org/tasks/ are canonical.
 | T-0064 | standard | R1 | done | t0064-say-what-you-know-2026-08-30 |
 | T-0065 | standard | R1 | done | t0065-small-ux-2026-08-30 |
 | T-0066 | standard | R0 | proposed | unassigned |
+| T-0067 | standard | R2 | done | t0067-dispatch-mode-2026-08-31 |
+| T-0068 | standard | R2 | done | t0068-usage-shape-2026-08-31 |
+| T-0069 | standard | R2 | done | t0069-composer-reject-2026-08-31 |
+| T-0070 | standard | R2 | done | t0070-tell-the-truth-2026-08-31 |
+| T-0071 | standard | R1 | done | t0071-console-shapes-2026-08-31 |
+| T-0072 | standard | R1 | done | t0072-restart-recovery-2026-08-31 |
+| T-0073 | standard | R0 | done | t0073-f9-record-2026-08-31 |
+| T-0074 | standard | R0 | proposed | t0074-missions-actions-adr-2026-08-31 |
+| T-0075 | standard | R1 | done | t0075-sweep-denominators-2026-08-31 |

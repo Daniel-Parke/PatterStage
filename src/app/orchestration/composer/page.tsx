@@ -54,6 +54,7 @@ const STATUS_COLOR: Record<string, string> = {
   completed: "text-neon-green",
   failed: "text-neon-pink",
   cancelled: "text-neon-orange",
+  rejected: "text-neon-orange",
   skipped: "text-ps-text-muted",
 };
 
@@ -63,6 +64,7 @@ const STATUS_FILTERS = [
   { value: "awaiting_approval", label: "Awaiting gate" },
   { value: "completed", label: "Completed" },
   { value: "failed", label: "Failed" },
+  { value: "rejected", label: "Rejected" },
 ];
 
 export default function ComposerPage() {
@@ -74,6 +76,10 @@ export default function ComposerPage() {
   const [submitting, setSubmitting] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [gateBusy, setGateBusy] = useState(false);
+  // A gate decision that the server REFUSED. safeApiCall returns rather than
+  // throws, so before T-0069 the 400 was dropped on the floor and the only
+  // visible effect of a refused click was the button ceasing to spin.
+  const [gateError, setGateError] = useState<string | null>(null);
   const [selectedNodeKey, setSelectedNodeKey] = useState<string | null>(null);
   // When a run is selected the launch form collapses to a compact bar to free the
   // vertical space; "New run" re-expands it.
@@ -124,6 +130,7 @@ export default function ComposerPage() {
   function selectRun(id: string) {
     setSelectedId(id);
     setForceForm(false);
+    setGateError(null); // a refusal belongs to the run it was refused on
   }
 
   function latestNodeRun(nodeId: string): ComposerNodeRun | null {
@@ -147,6 +154,7 @@ export default function ComposerPage() {
       if (id) {
         setInput("");
         setSelectedId(id);
+        setGateError(null);
         setForceForm(false); // collapse the launch form onto the new run
         await refetch();
       }
@@ -158,11 +166,20 @@ export default function ComposerPage() {
   async function decideGate(action: "accept" | "reject", note?: string) {
     if (!run || !run.currentNodeId || gateBusy) return;
     setGateBusy(true);
+    setGateError(null);
     try {
-      await safeApiCall(`/api/composer/runs/${run.id}/nodes/${run.currentNodeId}/approve`, {
-        method: "POST",
-        body: { action, note },
-      });
+      const res = await safeApiCall(
+        `/api/composer/runs/${run.id}/nodes/${run.currentNodeId}/approve`,
+        { method: "POST", body: { action, note } },
+      );
+      // The gate panel renders from a POLLED copy, so a run that ended between
+      // the poll and the click still shows Accept/Reject. That refusal explains
+      // what happened to the run, and it is the whole reason the route composes
+      // a state-aware message.
+      // The fallback is load-bearing, not defensive noise: SafeApiCallResult
+      // types `error` as optional, and setting the banner to undefined would
+      // hide the refusal again -- the exact defect being fixed.
+      if (!res.ok) setGateError(res.error ?? "The server refused that decision.");
     } finally {
       setGateBusy(false);
     }
@@ -171,8 +188,13 @@ export default function ComposerPage() {
   async function submitClarification(answer: string) {
     if (!run || gateBusy) return;
     setGateBusy(true);
+    setGateError(null);
     try {
-      await safeApiCall(`/api/composer/runs/${run.id}/clarify`, { method: "POST", body: { answer } });
+      const res = await safeApiCall(`/api/composer/runs/${run.id}/clarify`, {
+        method: "POST",
+        body: { answer },
+      });
+      if (!res.ok) setGateError(res.error ?? "The server refused that answer.");
     } finally {
       setGateBusy(false);
     }
@@ -313,6 +335,19 @@ export default function ComposerPage() {
                   <div className="mt-0.5 text-xs text-ps-text-muted">{timeAgo(run.createdAt)}</div>
                 </div>
               </div>
+              {/* A gate decision the server refused. It sits above the canvas
+                  rather than inside the gate panel because the commonest cause
+                  -- the run already ended -- also REMOVES the gate panel on the
+                  next poll, and an error rendered inside it would vanish with
+                  it (T-0069). */}
+              {gateError ? (
+                <LoadErrorBanner
+                  error={gateError}
+                  onRetry={() => setGateError(null)}
+                  retryLabel="Dismiss"
+                  className="mb-0"
+                />
+              ) : null}
               <WorkflowRunCanvas
                 graph={graph}
                 latestNodeRun={latestNodeRun}

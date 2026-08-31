@@ -25,6 +25,20 @@ import LogsHeaderActions from "@/components/logs/LogsHeaderActions";
 import LogFilePicker from "@/components/logs/LogFilePicker";
 import LogTerminal from "@/components/logs/LogTerminal";
 
+import type { LogFileMeta } from "@/lib/fs/log-files";
+/**
+ * The available-log list a FAILED /logs read still carried.
+ *
+ * `errorBody` is the response's `data` field, typed `unknown` because a failure
+ * body is not schema-checked anywhere. Narrowed here rather than cast, since the
+ * whole point is that this arrived on a path nothing validates.
+ */
+function errorAvailableLogs(errorBody: unknown): LogFileMeta[] | null {
+  if (!errorBody || typeof errorBody !== "object") return null;
+  const logs = (errorBody as { availableLogs?: unknown }).availableLogs;
+  return Array.isArray(logs) ? (logs as LogFileMeta[]) : null;
+}
+
 export default function LogsPage() {
   const [activeLog, setActiveLog] = useState("agent");
   const [search, setSearch] = useState("");
@@ -47,7 +61,7 @@ export default function LogsPage() {
   // counts refetches. `isLoading` drives the first-load full-page
   // spinner; `isFetching` (any in-flight fetch on top of cached data)
   // drives the "Refresh" button spinner.
-  const { data, isLoading: loading, isFetching, error: loadError, refetch } = useLogs(
+  const { data, isLoading: loading, isFetching, error: loadError, errorBody, refetch } = useLogs(
     activeLog,
     lineCount,
     { autoRefresh },
@@ -86,14 +100,23 @@ export default function LogsPage() {
     });
   }, [deleteArmed, armDelete, confirmDelete, refetch]);
 
-  // Auto-set activeLog to first available log when list loads
+  // The list of logs that exist, from a successful read OR from a 404 body.
+  //
+  // `activeLog` starts at a hard-coded "agent". On an install whose logs
+  // directory holds anything else, the first request 404s -- and a 404 that
+  // carried no list left the effect below with nothing to act on, so the page
+  // asked for the same missing file on every 5s poll, forever. The route now
+  // sends the list with the 404 and this is the line that reads it (T-0071).
+  const availableLogs = data?.availableLogs ?? errorAvailableLogs(errorBody);
+
+  // Auto-set activeLog to first available log when the list arrives.
   useEffect(() => {
-    if (!data?.availableLogs?.length) return;
-    const ok = data.availableLogs.some((l) => l.name === activeLog);
+    if (!availableLogs?.length) return;
+    const ok = availableLogs.some((l) => l.name === activeLog);
     if (!ok) {
-      setActiveLog(data.availableLogs[0].name);
+      setActiveLog(availableLogs[0].name);
     }
-  }, [data?.availableLogs, activeLog]);
+  }, [availableLogs, activeLog]);
 
   // Auto-refresh is now owned by the hook (refreshIntervalMs: 5000 above).
 
@@ -164,11 +187,11 @@ export default function LogsPage() {
   );
 
   const filteredFiles = useMemo(() => {
-    if (!data?.availableLogs) return [];
+    if (!availableLogs) return [];
     const q = fileQuery.trim().toLowerCase();
-    if (!q) return data.availableLogs;
-    return data.availableLogs.filter((l) => l.name.toLowerCase().includes(q));
-  }, [data?.availableLogs, fileQuery]);
+    if (!q) return availableLogs;
+    return availableLogs.filter((l) => l.name.toLowerCase().includes(q));
+  }, [availableLogs, fileQuery]);
 
   const allLines = useMemo(() => data?.lines || [], [data?.lines]);
   // Pre-normalize the search term once instead of calling

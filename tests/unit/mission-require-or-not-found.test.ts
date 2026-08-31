@@ -82,7 +82,16 @@ jest.mock("@/modules/hermes/lib/profiles-repository", () => ({
 
 jest.mock("@/lib/orchestration", () => ({
   cancelMissionRun: jest.fn(() => Promise.resolve({ ok: true })),
+  // T-0070: the action handler writes the local record itself and fires only
+  // the REMOTE half in the background.
+  stopBackendRunForMission: jest.fn(() => Promise.resolve()),
   dispatchMissionRun: jest.fn(() => Promise.resolve({ ok: true })),
+}));
+
+// The seams the shared cancel finaliser touches (T-0070).
+jest.mock("@/lib/runs-repository", () => ({
+  getLatestRunForMission: jest.fn(() => null),
+  updateRun: jest.fn(),
 }));
 
 jest.mock("@/lib/missions/mission-promote-handler", () => ({
@@ -103,6 +112,7 @@ jest.mock("@/lib/sync", () => ({
 
 jest.mock("@/lib/sessions/session-repository", () => ({
   updateSession: jest.fn(),
+  closeSessionForMission: jest.fn(),
 }));
 
 import { NextResponse } from "next/server";

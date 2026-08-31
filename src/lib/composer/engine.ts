@@ -33,13 +33,20 @@ import {
   updateComposerRun,
   updateNodeRun,
 } from "./composer-repository";
+import { TERMINAL_COMPOSER_RUN_STATUSES, isTerminalComposerRunStatus } from "./schema";
 import type {
   ComposerApproval,
   ComposerNode,
   ComposerNodeRun,
 } from "./schema";
 
-const TERMINAL_RUN_STATUSES = new Set(["completed", "failed", "cancelled", "awaiting_approval"]);
+// Runs the tick must not advance. That is every TERMINAL status, plus
+// `awaiting_approval` -- which is not terminal but is not ours to move either:
+// the operator's decision is what unparks it.
+const TERMINAL_RUN_STATUSES = new Set<string>([
+  ...TERMINAL_COMPOSER_RUN_STATUSES,
+  "awaiting_approval",
+]);
 
 /**
  * Max wall-clock a "research" node-run may stay running before it is force-
@@ -155,8 +162,12 @@ function settleGroupNode(node: ComposerNode, nodeRun: ComposerNodeRun): boolean 
     applyGroupOutcome(node, nodeRun, "completed", child, null);
     return true;
   }
-  if (child.status === "failed" || child.status === "cancelled") {
-    applyGroupOutcome(node, nodeRun, "failed", child, child.error ?? "sub-workflow failed");
+  if (isTerminalComposerRunStatus(child.status)) {
+    // Anything terminal that is not `completed` settles the parent stage as
+    // failed: from the parent's side the stage did not deliver, whatever the
+    // child's own reason was. The child's error carries that reason through --
+    // for a rejection it is already the sentence describeStageFailure composed.
+    applyGroupOutcome(node, nodeRun, "failed", child, child.error ?? "sub-workflow did not complete");
     return true;
   }
   return false; // sub-workflow still in flight (incl. its own HIL gate)
@@ -197,7 +208,12 @@ function nudgeParentRun(composerRunId: string): void {
 export type NextStep =
   | { kind: "node"; nodeId: string }
   | { kind: "complete" }
-  | { kind: "fail"; error: string };
+  /**
+   * A dead end. `rejected` distinguishes the operator turning a gate down from a
+   * stage that failed -- `resolveNext` already knows which, and used to throw the
+   * distinction away by collapsing both into one status on the run row.
+   */
+  | { kind: "fail"; error: string; rejected: boolean };
 
 /** Pick the outgoing edge to follow from a completed node, by verdict/approval. */
 export function resolveNext(
@@ -228,7 +244,11 @@ export function resolveNext(
   }
   if (!edge) {
     if (cond === "on_fail" || cond === "on_reject") {
-      return { kind: "fail", error: describeStageFailure(node, nodeRun, cond) };
+      return {
+        kind: "fail",
+        error: describeStageFailure(node, nodeRun, cond),
+        rejected: cond === "on_reject",
+      };
     }
     return { kind: "complete" };
   }
@@ -286,7 +306,19 @@ async function applyNext(
     return;
   }
   if (next.kind === "fail") {
-    updateComposerRun(composerRunId, { status: "failed", error: next.error, completedAt: now() });
+    // The STAGE is marked as well as the run. It used to be run-only, so a gate
+    // the operator rejected kept the `completed` that finalizeComposerNodeRun
+    // had just written and the canvas drew it green, two elements below a pink
+    // failed header -- the picture contradicted the status line (T-0069).
+    //
+    // Only the rejected case rewrites the stage: a stage that genuinely FAILED
+    // already carries its own `failed` status and its own error, and
+    // overwriting those with the routing error would lose the real cause.
+    const status = next.rejected ? "rejected" : "failed";
+    if (next.rejected) {
+      updateNodeRun(fromNodeRun.id, { status: "rejected", completedAt: now() });
+    }
+    updateComposerRun(composerRunId, { status, error: next.error, completedAt: now() });
     nudgeParentRun(composerRunId);
     return;
   }
