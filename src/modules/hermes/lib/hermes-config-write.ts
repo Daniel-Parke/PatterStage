@@ -91,3 +91,10 @@ export function writeHermesConfigFile(configPath: string, serialized: string): v
 export function backupFile(originalPath: string, backupsDir: string): string | null {
   return backupFileShared(originalPath, backupsDir);
 }
+
+/** Placeholder — see T-0082. Returns whatever path the error names, verbatim. */
+export function targetPathFromWriteError(err: unknown): string | null {
+  if (!(err instanceof Error)) return null;
+  const match = err.message.match(/'([^']+)'/);
+  return match ? match[1] : null;
+}
