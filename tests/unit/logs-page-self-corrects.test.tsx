@@ -111,6 +111,23 @@ describe("a 404 on the default log name does not strand the page", () => {
     expect(new Set(requested())).toEqual(new Set(["agent"]));
   });
 
+  it("does nothing when the failure body is not a list at all", async () => {
+    // Found by mutation: dropping the Array.isArray check left everything green,
+    // because the only "no list" case tested was a null body — which returns
+    // early before the check. This is the one that reaches it. A failure body is
+    // schema-checked nowhere, so a route answering `{availableLogs: "none"}`
+    // would otherwise crash the effect on `.some`.
+    mockUseLogs.mockReturnValue({
+      ...notFoundWithList(),
+      errorBody: { availableLogs: "none" },
+    });
+
+    render(<LogsPage />);
+    await waitFor(() => expect(requested().length).toBeGreaterThan(0));
+
+    expect(new Set(requested())).toEqual(new Set(["agent"]));
+  });
+
   it("GREEN CONTROL: a successful read still drives the same correction", async () => {
     // The pre-existing behaviour, which the change must not have broken: a 200
     // whose availableLogs does not include the active name also re-points it.

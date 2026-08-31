@@ -1,0 +1,55 @@
+{
+  "id": "T-0071",
+  "intent": "Five console defects that share one shape: the product knows the answer and does not hand it over. F7 nested buttons on Chat, F8 a /logs 404 that cannot self-correct, F11 an unbounded chapter title, F10 a wire field with no fence, and F6 two refusals that name a verb and not a call.",
+  "declared": {
+    "capabilities": [
+      "edit-source",
+      "edit-tooling"
+    ],
+    "side_effects": []
+  },
+  "mode": "standard",
+  "tier_proposed": "R1",
+  "tier_ruled": "R1",
+  "reasons": [],
+  "status": "done",
+  "owner_session": "t0071-console-shapes-2026-08-31",
+  "claims": [
+    "scripts/tooling/check-icon-button-names.mjs",
+    "src/app/orchestration/chat/page.tsx",
+    "src/components/ui/MissionTimeSelector.tsx",
+    "src/components/ui/ProfileSelector.tsx",
+    "src/components/ui/TimeoutSelector.tsx",
+    "src/app/recroom/story-weaver/characters/page.tsx",
+    "src/app/api/logs/route.ts",
+    "src/app/(main)/logs/page.tsx",
+    "src/hooks/useApiResource.ts",
+    "src/lib/api-response.ts",
+    "src/modules/rec-room/lib/chapter-title.ts",
+    "src/modules/rec-room/handlers/create.ts",
+    "src/lib/missions/mission-handlers/update.ts",
+    "src/lib/missions/mission-promote-handler.ts",
+    "tests/"
+  ],
+  "invariants": [
+    "I1 No button contains another button, anywhere in the tree, and the gate FAILS the build on one rather than merely printing it.",
+    "I2 A 404 for one log still hands back the logs that do exist, and the page reads that list. Both halves, or the fix is a better response nobody sees.",
+    "I3 The recovery does not read as success: error stays set and data stays null.",
+    "I4 A model-supplied chapter title is bounded once, with the fallback the file already uses.",
+    "I5 A refusal composes the next request. A person holding only the message can send it.",
+    "I6 selfPid crosses the wire, asserted at runtime because no type can see that boundary."
+  ],
+  "the_gate_found_more_than_the_report": "Teaching check-icon-button-names.mjs to ask whether a button is inside another button took eight lines and immediately reported EIGHT, where the QA pass found three. The five nobody reported: an expand toggle on the story-weaver characters page wrapping Edit and Delete, and three compact dropdowns -- MissionTimeSelector, ProfileSelector, TimeoutSelector -- each rendering its menu INSIDE its own trigger button. The three selectors are the clearest case in the batch: every one of them already had a correct non-compact branch a few lines below, using exactly the shape the fix needs, and a compact branch that did the opposite. The fix is to make each compact branch match what its own file already got right.",
+  "why_nesting_is_not_cosmetic": "Nested interactive content is invalid HTML and the browser does not ignore it -- it recovers by HOISTING the inner control out of the outer button. The rendered tree then stops matching the source, so the click target, the focus order and the accessible name all move somewhere the markup does not show, and a keyboard or screen-reader user cannot reach the control at all. That is also why the hover-revealed 'as CSV' button on Chat behaved unpredictably.",
+  "the_half_the_report_could_not_see": "Returning availableLogs with the 404 was half of F8 and worth nothing alone: useApiResource threw on !ok and dropped res.body, so the list was computed, serialised, received and discarded one line before anything could read it. That is the T-0069 lesson repeating -- a better response nobody reads is not an improvement. The hook now exposes errorBody and the page reads the list from it, while error stays set and data stays null: recovery DATA, not a success, because a page rendering as though nothing were wrong would be a different lie.",
+  "f10_needed_no_fix_and_says_so": "selfPid already crosses the wire. The reporter flagged it with explicit uncertainty and was right to. monitor-selfpid-crosses-the-wire.test.ts was green the day it was written and its own header states that; it is a FENCE, since /api/monitor's response is parsed as any and no type can see that boundary, which is T-0068's defect exactly. It earns its place because it CAN go red: the mutation record includes nulling the field.",
+  "f6_was_partly_refuted_and_the_correction_is_recorded": "The reporter described a circular trap: update says use promote, promote says use update. The two guards are complementary, not circular, and promote+save is the rename that actually works. What made it read as a trap was the messages: each named a WORD, none said what to send, neither mentioned the dispatchMode promote requires, and 'Use re-dispatch for completed missions' named an action the API does not have -- the switch is dispatch|promote|update|cancel|delete. A green control now asserts the pair is complementary, so the correction is pinned as well as stated.",
+  "oracle_provenance": "Committed alone at 90fdac96 ahead of the implementation at 7f1e4d9c: twenty-five assertions across four files, twenty red. Split by MOCK STACK rather than by theme, so no assertion stands on a fake of the thing it is about. Three assertions started as source regexes and were rewritten to behaviour before the commit: the chapter title became an extracted pure helper, the /logs 404 became a real handler driven with a faked filesystem, and the refusals became the real handlers.",
+  "mutation_finding": "Eighteen mutations. Four survived the first pass and they group into two lessons. THE GATE REPORTED AND DID NOT FAIL: deleting the nested branch's exit left everything green, because every test drove the CLASSIFIER and none drove the verdict. verdict(counts) is now a pure exported function returning an exit code, so the decision is testable without spawning a process or writing a fixture into src/. THE F8 FIX WAS TESTED AT BOTH ENDS AND NOT IN THE MIDDLE, for the third time in this programme after T-0068 and T-0070: the route test proved the server sends the list and nothing proved anyone reads it. Two files close it, one per seam. A fourth assertion was simply too loose -- deleting the clause carrying the JSON left every word it matched still present elsewhere in the sentence. A fifth survivor found on the second pass: the page's Array.isArray guard was unreachable by the only no-list case tested, which passed a null body and returned early.",
+  "verification": "Gate: lint 0 (icon-button names reports 77 icon-only, 0 unnamed, 0 nested across 394 buttons in 129 of 228 .tsx files), tsc 0, 3432 tests / 397 suites, knip 0, canary OK, build 0. Eighteen of eighteen mutations caught after the two rounds above.",
+  "timestamps": {
+    "opened": "2026-08-31T17:00:00Z",
+    "updated": "2026-08-31T19:30:00Z",
+    "closed": "2026-08-31T19:30:00Z"
+  }
+}
