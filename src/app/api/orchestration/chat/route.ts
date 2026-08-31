@@ -8,11 +8,12 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { NextRequest, NextResponse } from "next/server";
-import { serverErrorFromCatch } from "@/lib/api-logger";
+import { logApiError, serverErrorFromCatch } from "@/lib/api-logger";
 
 import { parseJsonBody } from "@/lib/parse-json-body";
 import { badRequest, ok } from "@/lib/api-response";
 import { getAgentGateway } from "@/lib/runtime/gateway";
+import { describeGatewayFailure } from "@/lib/runtime/gateway-error";
 import { CHAT_DEFAULT_MODEL } from "@/types/chat";
 import { recordEvent } from "@/lib/analytics/record-event";
 
@@ -77,8 +78,28 @@ export async function POST(request: NextRequest) {
       max_tokens: 4096,
     };
 
-    return fetchGateway(apiUrl, gatewayBody, isStreaming);
+    // `return await`, not `return`. A bare return of a promise inside try
+    // settles it AFTER the block has exited, so the catch below never saw a
+    // connection failure and the handler answered a bodiless 500 — the
+    // operator's chat failing with nothing on screen at all (T-0080).
+    return await fetchGateway(apiUrl, gatewayBody, isStreaming);
   } catch (error) {
+    // The third raw fetch to the gateway in the product, and the only one on
+    // the fast-mode chat path. Same treatment as HermesRuntime's two: name the
+    // address, say what to do, and answer 503 rather than 500 — PatterStage is
+    // working correctly and reporting that something it depends on is not.
+    // Re-resolved here rather than hoisted above the try: it is a pure read
+    // of configuration, and hoisting it would run it on the 400 path too.
+    const gatewayFailure = describeGatewayFailure(error, {
+      baseUrl: getAgentGateway().baseUrl,
+    });
+    if (gatewayFailure) {
+      logApiError("POST /api/orchestration/chat", "calling gateway", error);
+      return NextResponse.json(
+        { error: gatewayFailure.message },
+        { status: gatewayFailure.status },
+      );
+    }
     return serverErrorFromCatch(
       "POST /api/orchestration/chat",
       "calling gateway",
