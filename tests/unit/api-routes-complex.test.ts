@@ -73,7 +73,11 @@ jest.mock("@/lib/api-auth", () => ({
 const mockMemoryStats = jest.fn();
 jest.mock("@/lib/memory/memory-providers", () => ({
   getMemoryProviderType: jest.fn(() => "hindsight"),
-  getActiveMemoryProvider: jest.fn(() => ({ stats: mockMemoryStats })),
+  // `type` is part of the MemoryProvider contract and the route now reports
+  // it rather than a hardcoded literal, so a stand-in that omits it is a
+  // provider that cannot say what it is. Before T-0077 this mock passed only
+  // because the route answered "hindsight" whatever it was handed.
+  getActiveMemoryProvider: jest.fn(() => ({ type: "hindsight", stats: mockMemoryStats })),
 }));
 
 jest.mock("@/lib/audit-log", () => ({

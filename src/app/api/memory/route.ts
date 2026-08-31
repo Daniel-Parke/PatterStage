@@ -30,10 +30,14 @@ export async function GET(_request: NextRequest) {
   }
 
   try {
-    const stats = await getActiveMemoryProvider().stats();
+    // The provider the DB actually resolved, not a literal. This body used to
+    // say "hindsight" whatever was active, so even a correct registry would
+    // still have answered the wrong name on the wire (T-0077).
+    const provider = getActiveMemoryProvider();
+    const stats = await provider.stats();
     if (stats.available) {
       return ok<MemoryReadResult>({
-        facts: [], total: stats.factCount, dbSize: 0, available: true, provider: "hindsight",
+        facts: [], total: stats.factCount, dbSize: 0, available: true, provider: provider.type,
         message:
           "Hindsight memory is active. Facts are managed through agent tools: " +
           "hindsight_retain (store), hindsight_recall (search), hindsight_reflect (reason).",
